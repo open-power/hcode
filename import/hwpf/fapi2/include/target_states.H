@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/hwpf/fapi2/include/error_scope.H $                     */
+/* $Source: import/hwpf/fapi2/include/target_states.H $                   */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -23,15 +23,23 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 /**
- * @file error_scope.H
- * @brief platform specializations which create a scope for automatic error handling
+ * @file target_states.H
+ * @brief common state for fapi2 targets
  */
 
-#ifndef __FAPI2_ERROR_SCOPE__
-#define __FAPI2_ERROR_SCOPE__
+#ifndef __FAPI2_TARGET_STATES__
+#define __FAPI2_TARGET_STATES__
 
-#include <plat_error_scope.H>
-#include <fapi2_error_scope.H>
-
+namespace fapi2
+{
+    ///
+    /// @brief Enumeration of target state values (bitmask values)
+    ///
+    enum TargetState
+    {
+        TARGET_STATE_PRESENT    = 0x00000001,
+        TARGET_STATE_FUNCTIONAL = 0x00000002,
+    };
+}
 
 #endif
