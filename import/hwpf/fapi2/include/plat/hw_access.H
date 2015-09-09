@@ -420,7 +420,7 @@ inline ReturnCode getSpy(const Target<K>& i_target,
                          const spyId_t i_spyId,
                          variable_buffer& o_data)
 {
-    static_assert(K == 0, "implement getSpy (string)");
+    static_assert(K == 0, "implement getSpy (enum)");
     return ~FAPI2_RC_SUCCESS;
 }
 #endif
@@ -477,7 +477,7 @@ inline ReturnCode getSpy(const Target<K>& i_target,
 template< TargetType K >
 inline ReturnCode putSpy(const Target<K>& i_target,
                          const spyId_t i_spyId,
-                         variable_buffer& i_data)
+                         const variable_buffer& i_data)
 {
     static_assert(K == 0, "implement putSpy (enum)");
     return ~FAPI2_RC_SUCCESS;
@@ -487,7 +487,7 @@ inline ReturnCode putSpy(const Target<K>& i_target,
 template< TargetType K >
 inline ReturnCode putSpy(const Target<K>& i_target,
                          const char* const i_spyId,
-                         variable_buffer& i_data)
+                         const variable_buffer& i_data)
 {
     static_assert(K == 0, "implement putSpy (string)");
     return ~FAPI2_RC_SUCCESS;
