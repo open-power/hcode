@@ -43,8 +43,9 @@ STOP-C-SOURCES   = stop_cme/p9_cme_stop_irq_handlers.c \
                    stop_cme/p9_hcd_core_scominit.c \
                    stop_cme/p9_hcd_core_scomcust.c \
                    stop_cme/p9_hcd_core_ras_runtime_scom.c \
-                   stop_cme/p9_hcd_core_occ_runtime_scom.c 
-TOP-S-SOURCES =
+                   stop_cme/p9_hcd_core_occ_runtime_scom.c \
+				   stop_cme/p9_cme_copy_scan_ring.c
+TOP-S-SOURCES =    stop_cme/p9_cme_header.S
 
 TOP_OBJECTS    = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) 
 PSTATE_OBJECTS = $(PSTATE-C-SOURCES:.c=.o) 

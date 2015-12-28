@@ -25,6 +25,7 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
+#include "p9_hcd_sgpe_boot_cme.h"
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
@@ -200,8 +201,10 @@ p9_sgpe_stop_exit()
             //==================================
 
             PK_TRACE("Boot CME");
-            //cme_boot();
-
+            //FIXME cmeBootList to be eventually replaced with actual vector
+            uint16_t cmeBootList = 0x8000;
+            boot_cme( cmeBootList );
+            //MARK_TRAP(SX_CME_BOOT_END)
             //=======================================
             MARK_TAG(SX_RUNTIME_INITS, (32 >> qloop))
             //=======================================

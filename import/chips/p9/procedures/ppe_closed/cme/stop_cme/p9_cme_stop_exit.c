@@ -25,6 +25,7 @@
 
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
+#include "p9_cme_copy_scan_ring.h"
 
 extern CmeStopRecord G_cme_stop_record;
 
@@ -163,7 +164,10 @@ p9_cme_stop_exit()
         do   //catchup loop
         {
 
-            // todo PK_TRACE("BCE Runtime Kickoff");
+            PK_TRACE("BCE Runtime Kickoff");
+
+            //right now a blocking call. Need to confirm this.
+            instance_scan_init();
 
             // todo for catch up case
             //PK_TRACE("X1: Request PCB Arbiter");
@@ -366,8 +370,13 @@ p9_cme_stop_exit()
 
         //==========================
         MARK_TAG(SX_BCE_CHECK, core)
+
         //==========================
-        // todo PK_TRACE("BCE Runtime Check");
+        if( BLOCK_COPY_SUCCESS != isScanRingCopyDone() )
+        {
+            PK_TRACE("BC2: Copy of Instance Specific Scan ring failed");
+            // TODO should return an error code.
+        }
 
         // todo
         //PK_TRACE("X11: XIP Customized Scoms");
@@ -463,7 +472,7 @@ p9_cme_stop_exit()
     PK_TRACE("XF: Now Wakeup the Core(pm_exit=1)");
     out32(CME_LCL_SICR_OR, core << SHIFT32(5));
 
-    PK_TRACE("XF: Polling for Core Wakeup(pm_active=0)");
+//    PK_TRACE("XF: Polling for Core Wakeup(pm_active=0)");
 
     while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 

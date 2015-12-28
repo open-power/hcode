@@ -583,7 +583,7 @@ def p2p_combine(first_line, second_line, first_op, second_op):
   if 'f' in rule:
 
     if not P2P_COMPARE_BRANCH:
-      return True,False 
+      return True,False
 
     # fusing compare and branch
     ppe_op = ppe_op + second_op
@@ -739,7 +739,7 @@ def p2p_onefile(ppcFileName):
   # initialize storage variables for previous line that needs to be remembered
   pre_line = ""
   pre_op = ""
-
+  done = True
   # use inline file editing, back up original PPC assembly file as <filename>.S
   for line in fileinput.input(ppeFileName, inplace=1, backup='.405'):
 
@@ -949,7 +949,7 @@ def p2p_main():
   global P2P_COMPARE_BRANCH; P2P_COMPARE_BRANCH = options.compare_branch
    # enable only combined virtual double function
   global P2P_VIRTUAL_DOUBLE; P2P_VIRTUAL_DOUBLE = options.virtual_double
- 
+
   if P2P_VERBOSE :
     print "PPC405 Assembly to PPE42 Assembly Post-Compiler Proceesor (P2P)"
     print "Version: " + P2P_VERSION

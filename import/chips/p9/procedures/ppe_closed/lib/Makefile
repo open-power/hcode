@@ -1,7 +1,7 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p9/common/pmlib/common/libcommonfiles.mk $
+# $Source: import/chips/p9/procedures/ppe_closed/lib/Makefile $
 #
 # OpenPOWER HCODE Project
 #
@@ -22,33 +22,35 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-#  @file libcommonfiles.mk
+#  This Makefile currently builds a single archive, 'libhcode.a', from
+#  various library source files. 
 #
-#  @brief mk for libcommon.a object files
+#  part of the complete application build.
 #
-#  @page ChangeLogs Change Logs
-#  @section ofiles.mk
-#  @verbatim
-#
-#
-# Change Log ******************************************************************
-# Flag     Defect/Feature  User        Date         Description
-# ------   --------------  ----------  ------------ -----------
-#
-# @endverbatim
-#
-##########################################################################
-# INCLUDES
-##########################################################################
 
-C-SOURCES = \
-    memcpy.c \
-	memset.c \
-	rand32.c \
-	string.c \
-	sync.c 
+#all generated files from this makefile will end up in obj/$(IMAGE_NAME)/common
+export SUB_OBJDIR = /hcodelib
 
+include img_defs.mk
+include hcodelibfiles.mk
 
-S-SOURCES =  
+OBJS := $(addprefix $(OBJDIR)/, $(LIBCOMMON_OBJECTS))
 
-LIBCOMMON_OBJECTS = $(C-SOURCES:.c=.o) $(S-SOURCES:.S=.o)
+libhcode.a: local
+	$(AR) crs $(OBJDIR)/libhcode.a $(OBJDIR)/*.o
+
+.PHONY: clean
+
+local: $(OBJS)
+
+$(OBJS) $(OBJS:.o=.d): | $(OBJDIR)
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+clean:
+	rm -fr $(OBJDIR)
+
+ifneq ($(MAKECMDGOALS),clean)
+#include $(OBJS:.o=.d) 
+endif

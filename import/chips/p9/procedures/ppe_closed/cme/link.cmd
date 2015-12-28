@@ -31,10 +31,7 @@
 #endif
 
 OUTPUT_FORMAT(elf32-powerpc);
-
-#define SRAM_START 0xffff8000
-#define SRAM_LENGTH 0x8000
-#define PPE_DEBUG_PTRS_OFFSET 0x180
+#include "p9_cme_img_layout.h"
 
 MEMORY
 {

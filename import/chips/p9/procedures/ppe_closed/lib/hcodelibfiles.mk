@@ -1,7 +1,7 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p9/common/pmlib/common/libcommonfiles.mk $
+# $Source: import/chips/p9/procedures/ppe_closed/lib/hcodelibfiles.mk $
 #
 # OpenPOWER HCODE Project
 #
@@ -42,11 +42,7 @@
 ##########################################################################
 
 C-SOURCES = \
-    memcpy.c \
-	memset.c \
-	rand32.c \
-	string.c \
-	sync.c 
+	p9_hcd_block_copy.c
 
 
 S-SOURCES =  

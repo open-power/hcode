@@ -41,7 +41,9 @@ TOP-C-SOURCES = p9_sgpe_main.c \
                 p9_hcd_cache_scominit.c \
                 p9_hcd_cache_scomcust.c \
                 p9_hcd_cache_occ_runtime_scom.c \
-                p9_hcd_cache_ras_runtime_scom.c 
-TOP-S-SOURCES =
+                p9_hcd_cache_ras_runtime_scom.c \
+                p9_hcd_sgpe_boot_cme.c
+		  				
+TOP-S-SOURCES =  p9_sgpe_image_header.S 
 
-TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)
+TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) $(TOP-SRC:.C=.o)
