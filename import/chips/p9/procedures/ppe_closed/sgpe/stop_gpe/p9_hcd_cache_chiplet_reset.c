@@ -32,30 +32,21 @@ p9_hcd_cache_chiplet_reset(uint8_t quad)
     int rc = SGPE_STOP_SUCCESS;
 
     PK_TRACE("Init NETWORK_CONTROL0, step needed for hotplug");
-    GPE_PUTSCOM(EQ_NET_CTRL0_WOR, QUAD_ADDR_BASE, quad, NET_CTRL0_INIT_VECTOR);
-
-    PK_TRACE("Init Cache Glitchless Mux Reset/Select via CLOCK_GRID_CTRL[0:3]");
-    GPE_PUTSCOM(PPM_CGCR_OR,  QUAD_ADDR_BASE, quad, BIT64(0));
-    GPE_PUTSCOM(PPM_CGCR_CLR, QUAD_ADDR_BASE, quad, BIT64(3));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), NET_CTRL0_INIT_VECTOR);
 
     MARK_TRAP(SX_CHIPLET_RESET_GLSMUX_RESET)
 
-    PK_TRACE("Clear Cache Glitchless Mux Async Reset via CLOCK_GRID_CTRL[0]");
-    GPE_PUTSCOM(PPM_CGCR_CLR, QUAD_ADDR_BASE, quad, BIT64(0));
+    PK_TRACE("Init Cache Glitchless Mux Reset/Select via CLOCK_GRID_CTRL[0:3]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), 0);
+
+    PK_TRACE("Init L2 Glitchless Mux Reset/Select via EXCLK_GRID_CTRL[32:33]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, quad), BITS64(32, 4));
 
     PK_TRACE("Clear PCB Endpoint Reset via NET_CTRL0[1]");
-    GPE_PUTSCOM(EQ_NET_CTRL0_WAND, QUAD_ADDR_BASE, quad, ~BIT64(1));
-
-    // needed by sbe
-    //PK_TRACE("Reset PCB Slave Error Register");
-    //CME_PUTSCOM(C_ERROR_REG, core, BITS64(0,64));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(1));
 
     PK_TRACE("Remove chiplet electrical fence via NET_CTRL0[26]");
-    GPE_PUTSCOM(EQ_NET_CTRL0_WAND, QUAD_ADDR_BASE, quad, ~BIT64(26));
-
-    // needed by sbe
-    //PK_TRACE("Configure HANG_PULSE1 for chiplet hang counters");
-    //CME_PUTSCOM(C_HANG_PULSE_1_REG, core, HANG_PULSE1_INIT_VECTOR);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(26));
 
 #if !SKIP_SCAN0
     // Marker for scan0

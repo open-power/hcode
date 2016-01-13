@@ -34,16 +34,17 @@
 /// \brief Application specific overrides go here.
 ///
 
-//#include "occ_app_cfg.h"
-//GPE3 is the SGPE and is the route owner for now.
-// (Change this to #4 for the 405 when we pull that in.)
-#define OCCHW_IRQ_ROUTE_OWNER  3
+#define STOP_PRIME          0
+#define SKIP_L3_PURGE       0
+#define SKIP_L3_PURGE_ABORT 0
 
-//#include "global_app_cfg.h"
+// --------------------
+
 #define USE_SIMICS_IO 0
 #define EPM_P9_TUNING 1
 #define DEV_DEBUG     1
 
+// --------------------
 
 // This application will use the external timebase register
 // (comment this line out to use the decrementer as timebase)
@@ -61,8 +62,11 @@
     #define PPE_TIMEBASE_HZ 600000000
 #endif /* APPCFG_USE_EXT_TIMEBASE */
 
+// --------------------
 
-#define LAB_MODE 1
+// GPE3 is the SGPE and is the route owner for now.
+// (Change this to #4 for the 405 when we pull that in.)
+#define OCCHW_IRQ_ROUTE_OWNER  3
 
 /// The Instance ID of the OCC processor that this application is intended to run on
 ///// 0-3 -> GPE, 4 -> 405

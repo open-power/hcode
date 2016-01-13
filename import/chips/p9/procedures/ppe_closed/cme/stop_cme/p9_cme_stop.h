@@ -53,24 +53,35 @@
 #define RAM_MODEREG        0x20010A51
 #define RAM_CTRL           0x20010A52
 #define RAM_STATUS         0x20010A53
+
+#define C_SYNC_CONFIG      0x20030000
+#define C_OPCG_ALIGN       0x20030001
 #define C_SCAN_REGION_TYPE 0x20030005
 #define C_CLK_REGION       0x20030006
 #define C_CLOCK_STAT_SL    0x20030008
 #define C_CLOCK_STAT_NSL   0x20030009
 #define C_CLOCK_STAT_ARY   0x2003000a
-#define C_SLAVE_CONFIG_REG 0x200F001E
-#define C_CPLT_CTRL0_CLEAR 0x20000020
-#define C_CPLT_CTRL1_CLEAR 0x20000021
 #define C_BIST             0x2003000B
+
+#define C_SLAVE_CONFIG_REG 0x200F001E
 #define C_ERROR_REG        0x200F001F
 #define C_HANG_PULSE_1_REG 0x200F0021
+#define C_PPM_CGCR         0x200F0164
+
+#define C_CPLT_CTRL0_OR    0x20000010
+#define C_CPLT_CTRL0_CLEAR 0x20000020
+#define C_CPLT_CTRL1_OR    0x20000011
+#define C_CPLT_CTRL1_CLEAR 0x20000021
+
 #define PERV_CPLT_CTRL0_OR 0x00000010
 #define PERV_CPLT_CTRL0_CLEAR 0x00000020
-#define PERV_BIST          0x0003000B
-#define PERV_CLK_REGION    0x00030006
 #define PERV_OPCG_REG0     0x00030002
 #define PERV_OPCG_REG1     0x00030003
+#define PERV_CLK_REGION    0x00030006
+#define PERV_BIST          0x0003000B
 #define PERV_CPLT_STAT0    0x00000100
+
+#define NCU_STATUS_REG     0x1001140F
 
 /// Macro to update STOP History
 #define CME_STOP_UPDATE_HISTORY(core,gated,trans,req_l,act_l,req_e,act_e) \
@@ -99,14 +110,8 @@ enum CME_STOP_RETURN_CODE
 /// CME STOP IRQs with shorter names
 enum CME_STOP_IRQ_SHORT_NAME
 {
-    IRQ_DB0_C0                       = CMEHW_IRQ_DOORBELL0_C0,
-    IRQ_DB0_C1                       = CMEHW_IRQ_DOORBELL0_C1,
     IRQ_DB1_C0                       = CMEHW_IRQ_DOORBELL1_C0,
     IRQ_DB1_C1                       = CMEHW_IRQ_DOORBELL1_C1,
-    IRQ_DB2_C0                       = CMEHW_IRQ_DOORBELL2_C0,
-    IRQ_DB2_C1                       = CMEHW_IRQ_DOORBELL2_C1,
-    IRQ_DB3_C0                       = CMEHW_IRQ_DOORBELL3_C0,
-    IRQ_DB3_C1                       = CMEHW_IRQ_DOORBELL3_C1,
     IRQ_STOP_C0                      = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0,
     IRQ_STOP_C1                      = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C1,
     IRQ_PC_C0                        = CMEHW_IRQ_PC_INTR_PENDING_C0,
@@ -126,23 +131,30 @@ enum CME_STOP_FLAGS
     FLAG_PARTIAL_GOOD_C1             = BIT32(31)
 };
 
+
 /// Stop Score Board Structure
 typedef struct
 {
-    uint8_t pm_state_c0;
-    uint8_t pm_state_c1;
-    uint8_t cme_wakenup;
-    uint8_t cme_flags;
+    uint8_t       req_stop_c0;
+    uint8_t       req_stop_c1;
+    uint8_t       act_stop_c0;
+    uint8_t       act_stop_c1;
+    uint8_t       active_core;
+    uint8_t       cme_flags;
+    uint64_t      mask_vector;
+    PkSemaphore   sem[2];
 } CmeStopRecord;
 
 
 /// CME STOP Entry and Exit Prototypes
 void p9_cme_stop_enter_thread(void*);
+void p9_cme_stop_exit_thread(void*);
 int  p9_cme_stop_entry();
 int  p9_cme_stop_exit();
 
-void p9_cme_stop_enter_handler(void*, PkIrqId);
-void p9_cme_stop_exit_handler(void*, PkIrqId);
+void p9_cme_stop_enter_semaphore_callback(void*);
+void p9_cme_stop_exit_semaphore_callback(void*);
+void p9_cme_stop_event_handler(void*, PkIrqId);
 void p9_cme_stop_doorbell_handler(void*, PkIrqId);
 
 int  p9_hcd_core_pcb_arb(uint32_t, uint8_t);
@@ -158,4 +170,3 @@ int  p9_hcd_core_scominit(uint32_t);
 int  p9_hcd_core_scomcust(uint32_t);
 int  p9_hcd_core_ras_runtime_scom(uint32_t);
 int  p9_hcd_core_occ_runtime_scom(uint32_t);
-int  p9_hcd_core_selfrestore(uint32_t);

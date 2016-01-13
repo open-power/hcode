@@ -66,16 +66,16 @@ enum CME_SX_MARKS
     SX_SCOMCUST     =   0x168,
     SX_SCOMCUST_END     =   0x1e0,
     SX_RAS_RUNTIME_SCOM     =   0x1e8,
-    SX_RAS_RUNTIME_SCOM_END     =   0x1f0,
-    SX_OCC_RUNTIME_SCOM     =   0x1f8,
+    SX_RAS_RUNTIME_SCOM_END     =   0x230,
+    SX_OCC_RUNTIME_SCOM     =   0x238,
     SX_OCC_RUNTIME_SCOM_END     =   0x200,
     SX_SELFRESTORE      =   0x208,
     SX_RAM_HRMOR        =   0x210,
     SX_SRESET_THREADS       =   0x218,
     SX_STOP15_THREADS       =   0x220,
     SX_SELFRESTORE_END      =   0x228,
-    BEGINSCOPE_STOP_EXIT        =   0x1f10,
-    ENDSCOPE_STOP_EXIT      =   0x1f18
+    BEGINSCOPE_STOP_EXIT        =   0x1f28,
+    ENDSCOPE_STOP_EXIT      =   0x1f30
 };
 
 

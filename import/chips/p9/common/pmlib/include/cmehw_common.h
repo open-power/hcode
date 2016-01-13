@@ -26,14 +26,6 @@
 #define __CMEHW_COMMON_H__
 
 
-/// Wait Macro
-
-#define CME_CORE_CYCLE_RATIO       8 // core is 8 times faster than cme
-#define CME_FOR_LOOP_CYCLES        4 // fused compare branch(3), addition(1) 
-#define CME_CORE_CYCLE_DIVIDER     (CME_CORE_CYCLE_RATIO*CME_FOR_LOOP_CYCLES)
-#define CME_WAIT_CORE_CYCLES(l,cc) for(l=0;l<cc/CME_CORE_CYCLE_DIVIDER;l++);
-
-
 /// Second Half Local Register Access
 /// use in32/out32 for first half
 #define in32_sh(addr)                   in32(addr+4)

@@ -30,33 +30,32 @@ int
 p9_hcd_core_chiplet_reset(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
+    uint64_t data, loop;
 
     PK_TRACE("Init NETWORK_CONTROL0, step needed for hotplug");
-    //CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, ~NET_CTRL0_INIT_VECTOR);
-    CME_PUTSCOM(CPPM_NC0INDIR_OR,  core, NET_CTRL0_INIT_VECTOR);
+    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, NET_CTRL0_INIT_VECTOR);
 
-    PK_TRACE("Init Core Glitchless Mux Reset/Select via CLOCK_GRID_CTRL[0:3]");
-    CME_PUTSCOM(PPM_CGCR_OR, core, BIT64(0));
-    CME_PUTSCOM(PPM_CGCR_CLR, core, BIT64(3));
+    PK_TRACE("ONLY till TP030: SET VITL_PHASE=1");
+    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(8));
+    PPE_WAIT_CORE_CYCLES(loop, 50);
 
     MARK_TRAP(SX_CHIPLET_RESET_GLSMUX_RESET)
 
-    PK_TRACE("Clear Core Glitchless Mux Async Reset via CLOCK_GRID_CTRL[0]");
-    CME_PUTSCOM(PPM_CGCR_CLR, core, BIT64(0));
+    PK_TRACE("Init Core Glitchless Mux Reset/Select via CLOCK_GRID_CTRL[0:3]");
+    CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
 
     PK_TRACE("Clear PCB Endpoint Reset via NET_CTRL0[1]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(1));
-
-    // needed by sbe
-    //PK_TRACE("Reset PCB Slave Error Register");
-    //CME_PUTSCOM(C_ERROR_REG, core, BITS64(0,64));
+    PPE_WAIT_CORE_CYCLES(loop, 50);
 
     PK_TRACE("Remove chiplet electrical fence via NET_CTRL0[26]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(26));
 
-    // needed by sbe
-    //PK_TRACE("Configure HANG_PULSE1 for chiplet hang counters");
-    //CME_PUTSCOM(C_HANG_PULSE_1_REG, core, HANG_PULSE1_INIT_VECTOR);
+    PK_TRACE("ONLY till TP030: SET SYNC_PULSE_DELAY=0b0011");
+    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, data);
+    data = data | 0x3000000000000000;
+    data = data & 0x3FFFFFFFFFFFFFFF;
+    CME_PUTSCOM(C_SYNC_CONFIG, core, data);
 
 #if !SKIP_SCAN0
     // Marker for scan0

@@ -41,8 +41,7 @@ TOP-C-SOURCES = p9_sgpe_main.c \
                 p9_hcd_cache_scominit.c \
                 p9_hcd_cache_scomcust.c \
                 p9_hcd_cache_occ_runtime_scom.c \
-                p9_hcd_cache_ras_runtime_scom.c \
-                pk_app_irq_table.c
+                p9_hcd_cache_ras_runtime_scom.c 
 TOP-S-SOURCES =
 
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)

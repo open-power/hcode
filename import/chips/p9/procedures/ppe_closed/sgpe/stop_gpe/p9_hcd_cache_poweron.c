@@ -32,9 +32,19 @@ p9_hcd_cache_poweron(uint8_t quad)
     int rc = SGPE_STOP_SUCCESS;
     uint64_t scom_data;
 
+    PK_TRACE("Set L3 glsmux reset via CLOCK_GRID_CTRL[0]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), BIT64(0));
+
+    PK_TRACE("Set L2 glsmux reset via EXCLK_GRID_CTRL[32:33]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), BITS64(32, 2));
+
+    PK_TRACE("Set DPLL ff_bypass via EQ_QPPM_DPLL_CTRL[2]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_CTRL_OR, quad), BIT64(2));
+
+#if !EPM_P9_TUNNING
     // vdd_pfet_force_state == 00 (Nop)
     PK_TRACE("Make sure we are not forcing PFET for VDD off");
-    GPE_GETSCOM(PPM_PFCS, QUAD_ADDR_BASE, quad, scom_data);
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, quad), scom_data);
 
     if (scom_data & BITS64(0, 2))
     {
@@ -44,17 +54,19 @@ p9_hcd_cache_poweron(uint8_t quad)
     // vdd_pfet_val/sel_override     = 0 (disbaled)
     // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
     PK_TRACE("Prepare PFET Controls");
-    GPE_PUTSCOM(PPM_PFCS_CLR, QUAD_ADDR_BASE, quad, BIT64(4) | BIT64(5) | BIT64(8));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, quad),
+                BIT64(4) | BIT64(5) | BIT64(8));
+#endif
 
     // vdd_pfet_force_state = 11 (Force Von)
     PK_TRACE("Power Off Core VDD");
-    GPE_PUTSCOM(PPM_PFCS_OR, QUAD_ADDR_BASE, quad, BITS64(0, 2));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, quad), BITS64(0, 2));
 
     PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle)");
 
     do
     {
-        GPE_GETSCOM(PPM_PFCS, QUAD_ADDR_BASE, quad, scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, quad), scom_data);
     }
     while(!(scom_data & BIT64(42)));
 
@@ -65,16 +77,16 @@ p9_hcd_cache_poweron(uint8_t quad)
 
     do
     {
-        GPE_GETSCOM(PPM_PFCS, QUAD_ADDR_BASE, quad, scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, quad), scom_data);
     }
     while(scom_data & BIT64(46));
 
     MARK_TRAP(SX_POWERON_PG_SEL)
-#endif
 
     // vdd_pfet_force_state = 00 (Nop)
     PK_TRACE("Turn Off Force Von");
-    GPE_PUTSCOM(PPM_PFCS_CLR, QUAD_ADDR_BASE, quad, BITS64(0, 2));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, quad), BITS64(0, 2));
+#endif
 
     return rc;
 }

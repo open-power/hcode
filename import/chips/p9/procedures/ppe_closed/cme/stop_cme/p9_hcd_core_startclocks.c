@@ -30,23 +30,41 @@ int
 p9_hcd_core_startclocks(uint32_t core)
 {
     int      rc = CME_STOP_SUCCESS;
-    uint64_t data;
+    uint64_t data, loop;
 
-    //PK_TRACE("Drop the Pervasive THOLD via SLAVE_CONFIG[0]");
+    PK_TRACE("Setup OPCG_ALIGN Register");
+    CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, data);
+    data = data & (BITS64(0, 4) & BITS64(12, 8) & BITS64(52, 12));
+    data = data | (BIT64(1) | BIT64(3) | BIT64(59));
+    CME_PUTSCOM(C_OPCG_ALIGN, core, data);
 
-    PK_TRACE("Drop Vital Fence via CPLT_CTRL1[3]");
+    PK_TRACE("Drop partial good fences via CPLT_CTRL1");
+    CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, 0xFFFF700000000000);
+
+    PK_TRACE("Drop vital fences via CPLT_CTRL1");
     CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, BIT64(3));
 
     PK_TRACE("Reset abstclk & syncclk muxsel(io_clk_sel) via CPLT_CTRL0[0:1]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BITS64(0, 2));
 
-    PK_TRACE("Set abist_mode_dc for core chiplet(core recovery) via BIST[1]");
-    CME_GETSCOM(C_BIST, core, CME_SCOM_OR, data);
-    data = data | BIT64(1);
-    CME_PUTSCOM(C_BIST, core, data);
+    PK_TRACE("Set flushmode_inhibit via CPLT_CTRL0[2]");
+    CME_PUTSCOM(C_CPLT_CTRL0_OR, core, BIT64(2));
 
-    PK_TRACE("Switch core glsmux to DPLL output");
-    CME_PUTSCOM(PPM_CGCR_OR, core, BIT64(3));
+    PK_TRACE("Set force_align via CPLT_CTRL0[3]");
+    CME_PUTSCOM(C_CPLT_CTRL0_OR, core, BIT64(3));
+
+    PK_TRACE("Set/Unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
+    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, data);
+    data = data | BIT64(7);
+    CME_PUTSCOM(C_SYNC_CONFIG, core, data);
+    data = data & BIT64(7);
+    CME_PUTSCOM(C_SYNC_CONFIG, core, data);
+
+    // align chiplets
+
+    PK_TRACE("Clear force_align via CPLT_CTRL0[3]");
+    CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(3));
+    PPE_WAIT_CORE_CYCLES(loop, 450);
 
     PK_TRACE("Raise core clock sync enable");
     CME_PUTSCOM(CPPM_CACCR_OR, core, BIT64(15));
@@ -85,20 +103,18 @@ p9_hcd_core_startclocks(uint32_t core)
 
     MARK_TRAP(SX_STARTCLOCKS_DONE)
 
-    PK_TRACE("Drop remaining fences via CPLT_CTRL1");
-    CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, 0xEFFF700000000000);
-
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
 
     PK_TRACE("Drop fence to allow PCB operations to chiplet via NC0INDIR[26]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(25));
 
-    PK_TRACE("Clear force_align via CPLT_CTRL0[3]");
-    CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(3));
+    // checkstop
 
     PK_TRACE("Clear flushmode_inhibit via CPLT_CTRL0[2]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(2));
+
+    // check align
 
     // needed by cme
     PK_TRACE("Drop Core-L2 + Core-CC Quiesces");

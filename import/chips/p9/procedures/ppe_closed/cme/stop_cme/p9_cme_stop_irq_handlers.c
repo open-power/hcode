@@ -24,49 +24,51 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "p9_cme_stop.h"
+#include "p9_cme_stop_enter_marks.h"
+
+extern CmeStopRecord G_cme_stop_record;
 
 void
-p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
+p9_cme_stop_event_handler(void* arg, PkIrqId irq)
 {
-    // Disable Fired IRQ First
-    out32(CME_LCL_EIMR_OR, BIT32(irq));
-
-    // If any are asserted, post cme_stop_entry_thread semaphore
-    //if (irq == IRQ_STOP_C0 || irq == IRQ_STOP_C1) {
+    MARK_TRAP(STOP_EVENT_HANDLER)
     PK_TRACE("SE-IRQ: %d", irq);
-    pk_semaphore_post((PkSemaphore*)arg);
-    //}
-}
 
-void
-p9_cme_stop_exit_handler(void* arg, PkIrqId irq)
-{
-    // Disable Fired IRQ First
-    out32(CME_LCL_EIMR_OR, BIT32(irq));
-
-    // If any are asserted, call cme_stop_exit() aka core_runinit()
-    //if (irq >= IRQ_PC_C0 && irq <= IRQ_SWU_C1) {
-    PK_TRACE("SX-IRQ: %d", irq);
-
-    if (p9_cme_stop_exit())
+    if (irq == IRQ_STOP_C0 || irq == IRQ_STOP_C1)
     {
-        pk_halt();
+        out32(CME_LCL_EIMR_OR, BITS32(20, 2));
     }
 
-    //}
+    if (irq >= IRQ_PC_C0 && irq <= IRQ_SWU_C1)
+    {
+        out32(CME_LCL_EIMR_OR, BITS32(12, 6));
+    }
+
+    pk_semaphore_post((PkSemaphore*)arg);
 }
 
 void
 p9_cme_stop_doorbell_handler(void* arg, PkIrqId irq)
 {
-    // Unmask Stop and Wakeup Interrupts
+    int rc = 0;
+    MARK_TRAP(STOP_DOORBELL_HANDLER)
+    PK_TRACE("DB-IRQ: %d", irq);
+
+    out32_sh(CME_LCL_EIMR_OR, BIT32(irq - 32));
+    out32_sh(CME_LCL_EISR_CLR, BIT32(irq - 32));
+
     if (irq == IRQ_DB1_C0)
     {
-        out32(CME_LCL_EIMR_CLR, BIT32(12) | BIT32(14) | BIT32(16) | BIT32(20));
+        CME_PUTSCOM(CPPM_CMEDB1, CME_MASK_C0, 0);
+        out32(CME_LCL_EIMR_CLR, BIT32(12) | BIT32(14) | BIT32(16));
     }
 
     if (irq == IRQ_DB1_C1)
     {
-        out32(CME_LCL_EIMR_CLR, BIT32(13) | BIT32(15) | BIT32(17) | BIT32(21));
+        CME_PUTSCOM(CPPM_CMEDB1, CME_MASK_C1, 0);
+        out32(CME_LCL_EIMR_CLR, BIT32(13) | BIT32(15) | BIT32(17));
     }
+
+    // TODO mask pc_itr_pending as workaround for double interrupts of pc and rwu
+    out32(CME_LCL_EIMR_OR, BITS32(12, 2));
 }

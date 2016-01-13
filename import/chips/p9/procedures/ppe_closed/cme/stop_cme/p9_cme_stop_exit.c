@@ -38,6 +38,10 @@ p9_cme_stop_exit()
     uint32_t     deeper_core  = 0;
     uint32_t     wakeup;
     uint32_t     core;
+#if !SKIP_CATCHUP
+    uint8_t      core_catchup;
+#endif
+    uint8_t      catchup_ongoing = 0;
     uint8_t      pcwu, spwu, rgwu;
     //uint8_t      grant;
     ppm_sshsrc_t hist;
@@ -48,7 +52,7 @@ p9_cme_stop_exit()
 
     // extract wakeup signals, clear status, and mask wakeup interrupts
     wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
-    out32(CME_LCL_EISR_CLR, wakeup << SHIFT32(17));
+    out32(CME_LCL_EISR_CLR, (wakeup << SHIFT32(17)) | BITS32(24, 2));
 
     // build the core select for wakeup
     pcwu   = (wakeup >> 4) & CME_MASK_BC;
@@ -57,9 +61,7 @@ p9_cme_stop_exit()
     core   = pcwu | spwu | rgwu;
 
     // mask wake up interrupts
-    out32(CME_LCL_EIMR_OR,  (core << SHIFT32(13)) |
-          (core << SHIFT32(15)) |
-          (core << SHIFT32(17)));
+    out32(CME_LCL_EIMR_OR, BITS32(12, 6));
 
     PK_TRACE("X0: Core Select[%d], pcwu[%d], spwu[%d], rgwu[%d]",
              core, pcwu, spwu, rgwu);
@@ -74,14 +76,14 @@ p9_cme_stop_exit()
     MARK_TAG(BEGINSCOPE_STOP_EXIT, core)
     //==================================
 
-    PK_TRACE("X0: Stop Levels[%d %d]",
-             G_cme_stop_record.pm_state_c0, G_cme_stop_record.pm_state_c1);
+    PK_TRACE("X0: Actual Stop Levels[%d %d]",
+             G_cme_stop_record.act_stop_c0, G_cme_stop_record.act_stop_c1);
 
     // Code Error: by default stop 1 auto wakeup should be enabled
-    if ((core == CME_MASK_C0 && G_cme_stop_record.pm_state_c0 < 2) ||
-        (core == CME_MASK_C1 && G_cme_stop_record.pm_state_c1 < 2) ||
-        (core == CME_MASK_BC && (G_cme_stop_record.pm_state_c0 < 2 ||
-                                 G_cme_stop_record.pm_state_c1 < 2)))
+    if ((core == CME_MASK_C0 && G_cme_stop_record.act_stop_c0 < 2) ||
+        (core == CME_MASK_C1 && G_cme_stop_record.act_stop_c1 < 2) ||
+        (core == CME_MASK_BC && (G_cme_stop_record.act_stop_c0 < 2 ||
+                                 G_cme_stop_record.act_stop_c1 < 2)))
     {
         return CME_STOP_EXIT_WAKEUP_FROM_STOP1;
     }
@@ -89,23 +91,23 @@ p9_cme_stop_exit()
     // set target_level to STOP level for c0
     // unless c1(also or only) wants to wakeup
     target_level = deeper_level =
-                       (core == CME_MASK_C0) ? G_cme_stop_record.pm_state_c0 :
-                       G_cme_stop_record.pm_state_c1;
+                       (core == CME_MASK_C0) ? G_cme_stop_record.act_stop_c0 :
+                       G_cme_stop_record.act_stop_c1;
 
     // If both cores want to wakeup but are in different STOP levels,
     // set deeper_level to the deeper level targeted by deeper core
     if ((core == CME_MASK_BC) &&
-        (G_cme_stop_record.pm_state_c0 != G_cme_stop_record.pm_state_c1))
+        (G_cme_stop_record.act_stop_c0 != G_cme_stop_record.act_stop_c1))
     {
         // Assume C0 is deeper, target_level is already set to C1
-        deeper_level = G_cme_stop_record.pm_state_c0;
+        deeper_level = G_cme_stop_record.act_stop_c0;
         deeper_core  = CME_MASK_C0;
 
         // Otherwise correct assumption on which one is in lighter level
-        if (G_cme_stop_record.pm_state_c0 < G_cme_stop_record.pm_state_c1)
+        if (G_cme_stop_record.act_stop_c0 < G_cme_stop_record.act_stop_c1)
         {
-            target_level = G_cme_stop_record.pm_state_c0;
-            deeper_level = G_cme_stop_record.pm_state_c1;
+            target_level = G_cme_stop_record.act_stop_c0;
+            deeper_level = G_cme_stop_record.act_stop_c1;
             deeper_core  = CME_MASK_C1;
         }
     }
@@ -154,70 +156,158 @@ p9_cme_stop_exit()
             core      = deeper_core;
         }
 
-#if !STOP_PRIME
-        // todo PK_TRACE("BCE Runtime Kickoff");
-
-        // todo for catch up case
-        //PK_TRACE("X1: Request PCB Arbiter");
-        //p9_hcd_core_pcb_arb(core, 1);
-
-        PK_TRACE("X1: Core Poweron");
-        MARK_TRAP(SX_POWERON)
-
-        if(p9_hcd_core_poweron(core))
+        do   //catchup loop
         {
-            pk_halt();
-        }
 
-        MARK_TRAP(SX_POWERON_END)
+#if !STOP_PRIME
+            // todo PK_TRACE("BCE Runtime Kickoff");
 
-        PK_TRACE("X2: Core Chiplet Reset");
-        MARK_TRAP(SX_CHIPLET_RESET)
-        p9_hcd_core_chiplet_reset(core);
-        MARK_TRAP(SX_CHIPLET_RESET_END)
+            // todo for catch up case
+            //PK_TRACE("X1: Request PCB Arbiter");
+            //p9_hcd_core_pcb_arb(core, 1);
 
-#if !SKIP_INITF
-        PK_TRACE("X3: Core GPTR Time Initf");
-        MARK_TRAP(SX_GPTR_TIME_INITF)
-        p9_hcd_core_gptr_time_initf(core);
-        MARK_TRAP(SX_GPTR_TIME_INITF_END)
+            PK_TRACE("X1: Core Poweron");
+            MARK_TRAP(SX_POWERON)
+            p9_hcd_core_poweron(core);
+            MARK_TRAP(SX_POWERON_END)
+
+            PK_TRACE("X2: Core Chiplet Reset");
+            MARK_TRAP(SX_CHIPLET_RESET)
+            p9_hcd_core_chiplet_reset(core);
+            MARK_TRAP(SX_CHIPLET_RESET_END)
+
+#if !SKIP_CATCHUP
+
+            //catchup
+            if (catchup_ongoing)
+            {
+                core = CME_MASK_BC;
+                catchup_ongoing = 0;
+            }
+            else
+            {
+                wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
+                out32(CME_LCL_EISR_CLR, wakeup << SHIFT32(17));
+                core_catchup = ((wakeup >> 4) | (wakeup >> 2) | (wakeup >> 0)) &
+                               CME_MASK_BC;
+
+                if (core_catchup && (core_catchup + core) == CME_MASK_BC)
+                {
+                    out32(CME_LCL_SICR_OR, core_catchup << SHIFT32(11));
+
+                    if(((core_catchup & CME_MASK_C0) &&
+                        G_cme_stop_record.act_stop_c0 == STOP_LEVEL_2) ||
+                       ((core_catchup & CME_MASK_C1) &&
+                        G_cme_stop_record.act_stop_c1 == STOP_LEVEL_2))
+                    {
+                        deeper_core = core;
+                        d2u4_flag = 1;
+                    }
+                    else if(((core_catchup & CME_MASK_C0) &&
+                             G_cme_stop_record.act_stop_c0 == STOP_LEVEL_4) ||
+                            ((core_catchup & CME_MASK_C1) &&
+                             G_cme_stop_record.act_stop_c1 == STOP_LEVEL_4))
+                    {
+                        core = core_catchup;
+                        catchup_ongoing = 1;
+                        continue;
+                    }
+
+                    while((core_catchup & (in32(CME_LCL_SISR) >> SHIFT32(11))) !=
+                          core_catchup);
+                }
+            }
+
 #endif
 
-        PK_TRACE("X4: Switch glsmux to DPLL output");
-        CME_PUTSCOM(PPM_CGCR_OR, core, BIT64(3));
+#if !SKIP_INITF
+            PK_TRACE("X3: Core GPTR Time Initf");
+            MARK_TRAP(SX_GPTR_TIME_INITF)
+            p9_hcd_core_gptr_time_initf(core);
+            MARK_TRAP(SX_GPTR_TIME_INITF_END)
+#endif
 
-        PK_TRACE("X5: Core Chiplet Init");
-        MARK_TRAP(SX_CHIPLET_INIT)
-        p9_hcd_core_chiplet_init(core);
-        MARK_TRAP(SX_CHIPLET_INIT_END)
+            PK_TRACE("X5: Core Chiplet Init");
+            MARK_TRAP(SX_CHIPLET_INIT)
+            p9_hcd_core_chiplet_init(core);
+            MARK_TRAP(SX_CHIPLET_INIT_END)
 
 #if !SKIP_INITF
-        PK_TRACE("X6: Core Repair Initf");
-        MARK_TRAP(SX_REPAIR_INITF)
-        p9_hcd_core_repair_initf(core);
-        MARK_TRAP(SX_REPAIR_INITF_END)
+            PK_TRACE("X6: Core Repair Initf");
+            MARK_TRAP(SX_REPAIR_INITF)
+            p9_hcd_core_repair_initf(core);
+            MARK_TRAP(SX_REPAIR_INITF_END)
+#endif
+
+#if !SKIP_CATCHUP
+
+            //catchup
+            if (catchup_ongoing)
+            {
+                core = CME_MASK_BC;
+                catchup_ongoing = 0;
+            }
+            else
+            {
+                wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
+                out32(CME_LCL_EISR_CLR, wakeup << SHIFT32(17));
+                core_catchup = ((wakeup >> 4) | (wakeup >> 2) | (wakeup >> 0)) &
+                               CME_MASK_BC;
+
+                if (core_catchup && (core_catchup + core) == CME_MASK_BC)
+                {
+                    out32(CME_LCL_SICR_OR, core_catchup << SHIFT32(11));
+
+                    if(((core_catchup & CME_MASK_C0) &&
+                        G_cme_stop_record.act_stop_c0 == STOP_LEVEL_2) ||
+                       ((core_catchup & CME_MASK_C1) &&
+                        G_cme_stop_record.act_stop_c1 == STOP_LEVEL_2))
+                    {
+                        deeper_core = core;
+                        d2u4_flag = 1;
+                    }
+                    else if(((core_catchup & CME_MASK_C0) &&
+                             G_cme_stop_record.act_stop_c0 == STOP_LEVEL_4) ||
+                            ((core_catchup & CME_MASK_C1) &&
+                             G_cme_stop_record.act_stop_c1 == STOP_LEVEL_4))
+                    {
+                        core = core_catchup;
+                        catchup_ongoing = 1;
+                        continue;
+                    }
+
+                    while((core_catchup & (in32(CME_LCL_SISR) >> SHIFT32(11))) !=
+                          core_catchup);
+                }
+            }
+
 #endif
 
 #if !SKIP_ARY_INIT
-        PK_TRACE("X7: Core Array Init");
-        MARK_TRAP(SX_ARRAY_INIT)
-        p9_hcd_core_arrayinit(core);
-        MARK_TRAP(SX_ARRAY_INIT_END)
+            PK_TRACE("X7: Core Array Init");
+            MARK_TRAP(SX_ARRAY_INIT)
+            p9_hcd_core_arrayinit(core);
+            MARK_TRAP(SX_ARRAY_INIT_END)
 #endif
 
 #if !SKIP_INITF
-        PK_TRACE("X8: Core Func Scan");
-        MARK_TRAP(SX_INITF)
-        p9_hcd_core_initf(core);
-        MARK_TRAP(SX_INITF_END)
+            PK_TRACE("X8: Core Func Scan");
+            MARK_TRAP(SX_INITF)
+            p9_hcd_core_initf(core);
+            MARK_TRAP(SX_INITF_END)
 #endif
 #endif
+
+        }
+        while(catchup_ongoing);
 
         if (d2u4_flag)
         {
             core = CME_MASK_BC;
         }
     }
+
+    // todo STOP LEVEL 3
 
     //--------------------------------------------------------------------------
     // STOP LEVEL 2
@@ -298,7 +388,7 @@ p9_cme_stop_exit()
 
         PK_TRACE("Poll for Core stop again(pm_active=1)");
 
-        while(~(in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
+        while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)));
 
         MARK_TRAP(SX_STOP15_THREADS)
 
@@ -341,9 +431,17 @@ p9_cme_stop_exit()
                             STOP_REQ_DISABLE,
                             STOP_ACT_DISABLE)
 
-    // unmask stop interrupts
-    G_cme_stop_record.cme_wakenup |= core;
-    out32(CME_LCL_EIMR_CLR, (core << SHIFT32(21)));
+    G_cme_stop_record.active_core |= core;
+
+    if (core & CME_MASK_C0)
+    {
+        G_cme_stop_record.act_stop_c0 = 0;
+    }
+
+    if (core & CME_MASK_C1)
+    {
+        G_cme_stop_record.act_stop_c1 = 0;
+    }
 
     // If not special wakeup, allow core to go back into STOP in the future
     if (!spwu)
@@ -351,6 +449,12 @@ p9_cme_stop_exit()
         PK_TRACE("XF: Drop pm_exit if not special wakeup");
         out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
     }
+
+    // unmask stop interrupts
+    out32(CME_LCL_EIMR_CLR, ((core << SHIFT32(21)) |
+                             /*        ((~core & ~G_cme_stop_record.active_core & CME_MASK_BC)<<SHIFT32(13))| */
+                             ((~core & ~G_cme_stop_record.active_core & CME_MASK_BC) << SHIFT32(15)) |
+                             ((~core & ~G_cme_stop_record.active_core & CME_MASK_BC) << SHIFT32(17))));
 
     //===========================
     MARK_TRAP(ENDSCOPE_STOP_EXIT)

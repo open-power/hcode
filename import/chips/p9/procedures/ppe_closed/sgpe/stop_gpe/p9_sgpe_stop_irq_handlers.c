@@ -24,6 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "p9_sgpe_stop.h"
+#include "p9_sgpe_stop_enter_marks.h"
 
 SgpeStopRecord G_sgpe_stop_record;
 
@@ -58,6 +59,7 @@ p9_sgpe_stop_pig_type2_handler(void* arg, PkIrqId irq)
     uint32_t pending;
     uint32_t payload;
 
+    MARK_TRAP(STOP_TYPE2_HANDLER)
     // Disable Type2 Interrupt
     out32(OCB_OIMR1_OR, BIT32(15));
     // Cleart Type2 Interrupt
@@ -104,6 +106,10 @@ p9_sgpe_stop_pig_type2_handler(void* arg, PkIrqId irq)
                 event |= SGPE_EXIT_FLAG;
                 G_sgpe_stop_record.group.member.c_out |=
                     BIT32(((qloop << 2) + cloop));
+                G_sgpe_stop_record.group.member.x_out |=
+                    BIT16(((qloop << 1) + (cloop >> 1)));
+                G_sgpe_stop_record.group.member.q_out |=
+                    BIT16(qloop);
                 // otherwise it is entry request with stop level in payload
             }
             else
@@ -167,19 +173,22 @@ p9_sgpe_stop_pig_type2_handler(void* arg, PkIrqId irq)
         PK_TRACE("q[%d]st: %x", qloop, G_sgpe_stop_record.state[qloop].status);
     }
 
-    PK_TRACE("Entry: %x, Exit: %x, Q_Entry: %x, EX_Entry: %x",
-             G_sgpe_stop_record.group.action.entry,
-             G_sgpe_stop_record.group.action.exit,
-             G_sgpe_stop_record.group.member.q_in,
-             G_sgpe_stop_record.group.member.x_in);
+    PK_TRACE("Entry: C%x, X%x, Q%x",
+             G_sgpe_stop_record.group.member.c_in,
+             G_sgpe_stop_record.group.member.x_in,
+             G_sgpe_stop_record.group.member.q_in);
+    PK_TRACE("Exit: C%x, X%x, Q%x",
+             G_sgpe_stop_record.group.member.c_out,
+             G_sgpe_stop_record.group.member.x_out,
+             G_sgpe_stop_record.group.member.q_out);
 
-    if (G_sgpe_stop_record.group.action.entry)
+    if (G_sgpe_stop_record.group.member.c_in)
     {
         PK_TRACE("unblock entry");
         pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
     }
 
-    if (G_sgpe_stop_record.group.action.exit)
+    if (G_sgpe_stop_record.group.member.c_out)
     {
         PK_TRACE("unblock exit");
         pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));

@@ -55,15 +55,23 @@
 
 #define CODE2REGA(code)     ((code & 0x1F00) >> 8)
 #define CODE2REGB(code)     ((code & 0xF8) >> 3)
-#define CODE2TAG(code,core) ((core << 10) | (code >> 3))
+#define CODE2TAG(code,tag)  ((tag << 10) | (code >> 3))
 #define TAG_SPRG0(tag)      {ppe42_app_ctx_set(tag);}
 #define MARK_TRAP(code) \
     {asm volatile ("tw 0, %0, %1" : : \
                    "i" (CODE2REGA(code)), \
                    "i" (CODE2REGB(code)));}
 #define MARK_TAG(code, tag) \
-    MARK_TRAP(code) \
-    TAG_SPRG0(CODE2TAG(code, tag))
+    TAG_SPRG0(CODE2TAG(code, tag)) \
+    MARK_TRAP(code)
+
+
+/// Wait Macro
+
+#define PPE_CORE_CYCLE_RATIO       8 // core is 8 times faster than cme
+#define PPE_FOR_LOOP_CYCLES        4 // fused compare branch(3), addition(1)
+#define PPE_CORE_CYCLE_DIVIDER     (PPE_CORE_CYCLE_RATIO*PPE_FOR_LOOP_CYCLES)
+#define PPE_WAIT_CORE_CYCLES(l,cc) for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);
 
 
 /// IRQ Setup

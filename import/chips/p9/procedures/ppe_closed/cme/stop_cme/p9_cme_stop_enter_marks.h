@@ -53,8 +53,10 @@ enum CME_SE_MARKS
     SE_IS2_END      =   0xf0,
     SE_L2_PURGE_DONE        =   0xf8,
     SE_SGPE_HANDOFF     =   0x100,
-    BEGINSCOPE_STOP_ENTRY       =   0x1f00,
-    ENDSCOPE_STOP_ENTRY     =   0x1f08
+    BEGINSCOPE_STOP_ENTRY       =   0x1f08,
+    ENDSCOPE_STOP_ENTRY     =   0x1f10,
+    STOP_EVENT_HANDLER      =   0x1f18,
+    STOP_DOORBELL_HANDLER       =   0x1f20
 };
 
 
@@ -80,7 +82,9 @@ const std::vector<CME_SE_MARKS> MARKS =
     SE_L2_PURGE_DONE,
     SE_SGPE_HANDOFF,
     BEGINSCOPE_STOP_ENTRY,
-    ENDSCOPE_STOP_ENTRY
+    ENDSCOPE_STOP_ENTRY,
+    STOP_EVENT_HANDLER,
+    STOP_DOORBELL_HANDLER
 };
 
 }

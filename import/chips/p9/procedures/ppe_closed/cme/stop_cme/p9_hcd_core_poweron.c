@@ -32,6 +32,10 @@ p9_hcd_core_poweron(uint32_t core)
     int rc = CME_STOP_SUCCESS;
     uint64_t scom_data;
 
+    PK_TRACE("Set core glsmux reset");
+    CME_PUTSCOM(C_PPM_CGCR, core, BIT64(0));
+
+#if !EPM_P9_TUNNING
     // vdd_pfet_force_state == 00 (Nop)
     PK_TRACE("Make sure we are not forcing PFET for VDD off");
     CME_GETSCOM(PPM_PFCS, core, CME_SCOM_AND, scom_data);
@@ -45,6 +49,7 @@ p9_hcd_core_poweron(uint32_t core)
     // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
     PK_TRACE("Prepare PFET Controls");
     CME_PUTSCOM(PPM_PFCS_CLR, core, BIT64(4) | BIT64(5) | BIT64(8));
+#endif
 
     // vdd_pfet_force_state = 11 (Force Von)
     PK_TRACE("Power Off Core VDD");
@@ -70,11 +75,11 @@ p9_hcd_core_poweron(uint32_t core)
     while(scom_data & BIT64(46));
 
     MARK_TRAP(SX_POWERON_PG_SEL)
-#endif
 
     // vdd_pfet_force_state = 00 (Nop)
     PK_TRACE("Turn Off Force Von");
     CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));
+#endif
 
     return rc;
 }

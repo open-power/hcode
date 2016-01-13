@@ -36,7 +36,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////
-// IRQ
+// IRQ Definition
 ////////////////////////////////////////////////////////////////////////////
 
 // The CME interrupt controller consists of 1 x 64-bit controller.
@@ -47,21 +47,21 @@
 #define CMEHW_IRQ_DEBUGGER                        0 /* 0x00 */
 #define CMEHW_IRQ_DEBUG_TRIGGER                   1 /* 0x01 */
 #define CMEHW_IRQ_QUAD_CHECKSTOP                  2 /* 0x02 */
-#define CMEHW_IRQ_SPARE_3                         3 /* 0x03 */
+#define CMEHW_IRQ_PVREF_FAIL                      3 /* 0x03 */
 #define CMEHW_IRQ_OCC_HEARTBEAT_LOST              4 /* 0x04 */
 #define CMEHW_IRQ_CORE_CHECKSTOP                  5 /* 0x05 */
-#define CMEHW_IRQ_BCE_BUSY_HIGH                   6 /* 0x06 */
+#define CMEHW_IRQ_DROPOUT_DETECT                  6 /* 0x06 */
 #define CMEHW_IRQ_SPARE_7                         7 /* 0x07 */
-#define CMEHW_IRQ_DOORBELL3_C0                    8 /* 0x08 */
-#define CMEHW_IRQ_DOORBELL3_C1                    9 /* 0x09 */
-#define CMEHW_IRQ_PC_INTR_PENDING_C0              10 /* 0x0a */
-#define CMEHW_IRQ_PC_INTR_PENDING_C1              11 /* 0x0b */
-#define CMEHW_IRQ_REG_WAKEUP_C0                   12 /* 0x0c */
-#define CMEHW_IRQ_REG_WAKEUP_C1                   13 /* 0x0d */
-#define CMEHW_IRQ_SPECIAL_WAKEUP_C0               14 /* 0x0e */
-#define CMEHW_IRQ_SPECIAL_WAKEUP_C1               15 /* 0x0f */
-#define CMEHW_IRQ_SPARE_16                        16 /* 0x10 */
-#define CMEHW_IRQ_SPARE_17                        17 /* 0x11 */
+#define CMEHW_IRQ_BCE_BUSY_HIGH                   8 /* 0x08 */
+#define CMEHW_IRQ_BCE_TIMEOUT                     9 /* 0x09 */
+#define CMEHW_IRQ_DOORBELL3_C0                    10 /* 0x0a */
+#define CMEHW_IRQ_DOORBELL3_C1                    11 /* 0x0b */
+#define CMEHW_IRQ_PC_INTR_PENDING_C0              12 /* 0x0c */
+#define CMEHW_IRQ_PC_INTR_PENDING_C1              13 /* 0x0d */
+#define CMEHW_IRQ_REG_WAKEUP_C0                   14 /* 0x0e */
+#define CMEHW_IRQ_REG_WAKEUP_C1                   15 /* 0x0f */
+#define CMEHW_IRQ_SPECIAL_WAKEUP_C0               16 /* 0x10 */
+#define CMEHW_IRQ_SPECIAL_WAKEUP_C1               17 /* 0x11 */
 #define CMEHW_IRQ_DOORBELL2_C0                    18 /* 0x12 */
 #define CMEHW_IRQ_DOORBELL2_C1                    19 /* 0x13 */
 #define CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0           20 /* 0x14 */
@@ -71,8 +71,8 @@
 #define CMEHW_IRQ_CHTM_PURGE_DONE_C0              24 /* 0x18 */
 #define CMEHW_IRQ_CHTM_PURGE_DONE_C1              25 /* 0x19 */
 #define CMEHW_IRQ_BCE_BUSY_LOW                    26 /* 0x1a */
-#define CMEHW_IRQ_SPARE_27                        27 /* 0x1b */
-#define CMEHW_IRQ_SPARE_28                        28 /* 0x1c */
+#define CMEHW_IRQ_FINAL_VDM_DATA0                 27 /* 0x1b */
+#define CMEHW_IRQ_FINAL_VDM_DATA1                 28 /* 0x1c */
 #define CMEHW_IRQ_COMM_RECVD                      29 /* 0x1d */
 #define CMEHW_IRQ_COMM_SEND_ACK                   30 /* 0x1e */
 #define CMEHW_IRQ_COMM_SEND_NACK                  31 /* 0x1f */
@@ -118,11 +118,13 @@
                                                     "CMEHW_IRQ_DEBUGGER",                 \
                                                     "CMEHW_IRQ_DEBUG_TRIGGER",            \
                                                     "CMEHW_IRQ_QUAD_CHECKSTOP",           \
-                                                    "CMEHW_IRQ_SPARE_3",                  \
+                                                    "CMEHW_IRQ_PVREF_FAIL",               \
                                                     "CMEHW_IRQ_OCC_HEARTBEAT_LOST",       \
                                                     "CMEHW_IRQ_CORE_CHECKSTOP",           \
-                                                    "CMEHW_IRQ_BCE_BUSY_HIGH",            \
+                                                    "CMEHW_IRQ_DROPOUT_DETECT",           \
                                                     "CMEHW_IRQ_SPARE_7",                  \
+                                                    "CMEHW_IRQ_BCE_BUSY_HIGH",            \
+                                                    "CMEHW_IRQ_BCE_TIMEOUT",              \
                                                     "CMEHW_IRQ_DOORBELL3_C0",             \
                                                     "CMEHW_IRQ_DOORBELL3_C1",             \
                                                     "CMEHW_IRQ_PC_INTR_PENDING_C0",       \
@@ -131,8 +133,6 @@
                                                     "CMEHW_IRQ_REG_WAKEUP_C1",            \
                                                     "CMEHW_IRQ_SPECIAL_WAKEUP_C0",        \
                                                     "CMEHW_IRQ_SPECIAL_WAKEUP_C1",        \
-                                                    "CMEHW_IRQ_SPARE_16",                 \
-                                                    "CMEHW_IRQ_SPARE_17",                 \
                                                     "CMEHW_IRQ_DOORBELL2_C0",             \
                                                     "CMEHW_IRQ_DOORBELL2_C1",             \
                                                     "CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0",    \
@@ -142,8 +142,8 @@
                                                     "CMEHW_IRQ_CHTM_PURGE_DONE_C0",       \
                                                     "CMEHW_IRQ_CHTM_PURGE_DONE_C1",       \
                                                     "CMEHW_IRQ_BCE_BUSY_LOW",             \
-                                                    "CMEHW_IRQ_SPARE_27",                 \
-                                                    "CMEHW_IRQ_SPARE_28",                 \
+                                                    "CMEHW_IRQ_FANAL_VDM_DATA0",          \
+                                                    "CMEHW_IRQ_FANAL_VDM_DATA1",          \
                                                     "CMEHW_IRQ_COMM_RECVD",               \
                                                     "CMEHW_IRQ_COMM_SEND_ACK",            \
                                                     "CMEHW_IRQ_COMM_SEND_NACK",           \
@@ -180,6 +180,131 @@
                                                     "CMEHW_IRQ_RESERVED_62",              \
                                                     "CMEHW_IRQ_RESERVED_63",              \
                                   };
+
+
+////////////////////////////////////////////////////////////////////////////
+// IRQ Configuration
+////////////////////////////////////////////////////////////////////////////
+
+/// Static configuration data for external interrupts:
+///
+/// IRQ#, TYPE, POLARITY, ENABLE
+///
+#define APPCFG_EXT_IRQS_CONFIG \
+    CMEHW_IRQ_DEBUGGER              STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DEBUG_TRIGGER         STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_QUAD_CHECKSTOP        STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PVREF_FAIL            STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_ENABLED \
+    CMEHW_IRQ_OCC_HEARTBEAT_LOST    STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_CORE_CHECKSTOP        STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DROPOUT_DETECT        STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_SPARE_7               STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_BCE_BUSY_HIGH         STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_BCE_TIMEOUT           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DOORBELL3_C0          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DOORBELL3_C1          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PC_INTR_PENDING_C0    STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PC_INTR_PENDING_C1    STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_REG_WAKEUP_C0         STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_REG_WAKEUP_C1         STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_SPECIAL_WAKEUP_C0     STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_SPECIAL_WAKEUP_C1     STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DOORBELL2_C0          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DOORBELL2_C1          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0 STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PC_PM_STATE_ACTIVE_C1 STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_L2_PURGE_DONE         STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_NCU_PURGE_DONE        STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_CHTM_PURGE_DONE_C0    STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_CHTM_PURGE_DONE_C1    STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_BCE_BUSY_LOW          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_FINAL_VDM_DATA0       STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_FINAL_VDM_DATA1       STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_COMM_RECVD            STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_COMM_SEND_ACK         STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_COMM_SEND_NACK        STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_SPARE_32              STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_SPARE_33              STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PMCR_UPDATE_C0        STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PMCR_UPDATE_C1        STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DOORBELL0_C0          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DOORBELL0_C1          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_SPARE_38              STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_SPARE_39              STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DOORBELL1_C0          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_DOORBELL1_C1          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PECE_INTR_DISABLED_C0 STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PECE_INTR_DISABLED_C1 STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_44           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_45           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_46           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_47           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_48           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_49           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_50           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_51           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_52           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_53           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_54           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_55           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_56           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_57           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_58           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_59           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_60           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_61           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_62           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_RESERVED_63           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED
+
+
+#define APPCFG_IRQ_INVALID_MASK 0
+/*
+/// This 64 bit mask specifies which of the interrupts are not to be used.
+#define APPCFG_IRQ_INVALID_MASK \
+(\
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_44) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_45) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_46) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_47) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_48) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_49) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_50) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_51) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_52) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_53) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_54) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_55) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_56) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_57) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_58) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_59) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_60) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_61) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_62) |  \
+   STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_63))
+*/
+
+////////////////////////////////////////////////////////////////////////////
+// Interrupt Mask Vector
+////////////////////////////////////////////////////////////////////////////
+
+// First, it should always be true to mask the given interrupt and every
+// interrupts has larger irq id number than the given one. Then if the given
+// interrupt belongs to a group of interrupts with same priority and the given
+// one is not the first one in the group(in which case it will automatically
+// work by first rule along), then an override bit mask can be used to mask out
+// every one else in the group above the given one, or used for special cases.
+#define CME_IRQ_MASK_VECTOR(irq) ((0xffffffffffffffffull << (irq)) >> (irq))
+#define CME_IRQ_MASK_VECTOR_AND(irq, amask) (CME_IRQ_MASK_VECTOR(irq) & amask)
+#define CME_IRQ_MASK_VECTOR_OR(irq, omask)  (CME_IRQ_MASK_VECTOR(irq) | omask)
+
+#define CME_IRQ_MASK_DB3  CME_IRQ_MASK_VECTOR(CMEHW_IRQ_DOORBELL3_C0)
+#define CME_IRQ_MASK_WAKE CME_IRQ_MASK_VECTOR(CMEHW_IRQ_PC_INTR_PENDING_C0)
+#define CME_IRQ_MASK_DB2  CME_IRQ_MASK_VECTOR(CMEHW_IRQ_DOORBELL2_C0)
+#define CME_IRQ_MASK_STOP CME_IRQ_MASK_VECTOR(CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0)
+#define CME_IRQ_MASK_DB0  CME_IRQ_MASK_VECTOR(CMEHW_IRQ_PMCR_UPDATE_C0)
+#define CME_IRQ_MASK_DB1  CME_IRQ_MASK_VECTOR(CMEHW_IRQ_DOORBELL1_C0)
+
 
 
 #endif  /* __CMEHW_INTERRUPTS_H__ */

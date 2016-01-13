@@ -32,60 +32,78 @@ p9_hcd_cache_l2_startclocks(uint8_t ex, uint8_t quad)
     int      rc = SGPE_STOP_SUCCESS;
     uint64_t scom_data;
 
-    PK_TRACE("Switch glsmux to DPLL output");
-    GPE_PUTSCOM(EQ_QPPM_EXCGCR_OR, QUAD_ADDR_BASE, quad, (ex << SHIFT64(35)));
+    PK_TRACE("Switch L2 glsmux select to DPLL output");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), BITS64(34, 2));
+
+    PK_TRACE("Setup OPCG_ALIGN Register");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
+    scom_data = scom_data & (BITS64(0, 4) & BITS64(12, 8) & BITS64(52, 12));
+    scom_data = scom_data | (BIT64(1) | BIT64(3) | BIT64(59));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
+
+    PK_TRACE("Set flushmode_inhibit via CPLT_CTRL0[2]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(2));
+
+    PK_TRACE("Set force_align via CPLT_CTRL0[3]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(3));
+
+    PK_TRACE("Clear force_align via CPLT_CTRL0[3]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(3));
 
     PK_TRACE("Raise clock sync enable before switch to dpll");
-    GPE_PUTSCOM(EQ_QPPM_EXCGCR_OR, QUAD_ADDR_BASE, quad, (ex << SHIFT64(37)));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), (ex << SHIFT64(37)));
 
 #if !EPM_P9_TUNING
     PK_TRACE("Poll for clock sync done to raise");
 
     do
     {
-        GPE_GETSCOM(QPPM_QACSR, QUAD_ADDR_BASE, quad, scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QACSR, quad), scom_data);
     }
     while(!(scom_data & (ex << SHIFT64(37))));
 
 #endif
 
     PK_TRACE("Set all bits to zero prior clock start via SCAN_REGION_TYPE");
-    GPE_PUTSCOM(EQ_SCAN_REGION_TYPE, QUAD_ADDR_BASE, quad, 0);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
 
     PK_TRACE("Start clock(arrays+nsl clock region) via CLK_REGION");
     scom_data = 0x5000000000006000 | ((uint64_t)ex << SHIFT64(9));
-    GPE_PUTSCOM(EQ_CLK_REGION, QUAD_ADDR_BASE, quad, scom_data);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
 
     PK_TRACE("Start clock(sl+refresh clock region) via CLK_REGION");
     scom_data = 0x500000000000E000 | ((uint64_t)ex << SHIFT64(9));
-    GPE_PUTSCOM(EQ_CLK_REGION, QUAD_ADDR_BASE, quad, scom_data);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
 
     PK_TRACE("Polling for clocks starting via CLOCK_STAT_SL");
 
     do
     {
-        GPE_GETSCOM(EQ_CLOCK_STAT_SL, QUAD_ADDR_BASE, quad, scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data);
     }
     while(((~scom_data >> SHIFT64(9)) & ex) != ex);
 
     PK_TRACE("L2 clock is now running");
 
-    PK_TRACE("Drop remaining fences via CPLT_CTRL1");
-    GPE_PUTSCOM(EQ_CPLT_CTRL1_CLEAR, QUAD_ADDR_BASE, quad,
-                0xEFFF700000000000);
+    MARK_TRAP(SX_L2_STARTCLOCKS_DONE)
 
-    PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
-    GPE_PUTSCOM(EQ_NET_CTRL0_WAND, QUAD_ADDR_BASE, quad, ~BIT64(18));
+    PK_TRACE("Drop TLBIE Quiesce");
 
-    PK_TRACE("Drop fence to allow PCB operations to chiplet via NET_CTRL0[25]");
-    GPE_PUTSCOM(EQ_NET_CTRL0_WAND, QUAD_ADDR_BASE, quad, ~BIT64(25));
+    if (ex & FST_EX_IN_QUAD)
+    {
+        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 1), BIT64(21));
+    }
 
-    PK_TRACE("Clear force_align via CPLT_CTRL0[3]");
-    GPE_PUTSCOM(EQ_CPLT_CTRL0_CLEAR, QUAD_ADDR_BASE, quad, BIT64(3));
+    if (ex & SND_EX_IN_QUAD)
+    {
+        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 2), BIT64(21));
+    }
 
     PK_TRACE("Clear flushmode_inhibit via CPLT_CTRL0[2]");
-    GPE_PUTSCOM(EQ_CPLT_CTRL0_CLEAR, QUAD_ADDR_BASE, quad, BIT64(2));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
 
-    // Drop Quiesce
+    PK_TRACE("Drop L2 Snoop Disable");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, quad, ex), 0);
+
     return rc;
 }
