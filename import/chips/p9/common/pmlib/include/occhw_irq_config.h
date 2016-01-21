@@ -144,139 +144,139 @@
 #define OCCHW_IPI_HI_IRQ(instance_id) (OCCHW_IRQ_IPI0_HI_PRIORITY + instance_id)
 
 #ifdef __ASSEMBLER__
+// *INDENT-OFF*
 /// These macros aid in the initialization of the external interrupt globals.  I would
 /// prefer to use CPP macros, but they don't support recursive macros which I use to
 /// convert the variable number of interrupts that a processor can control into static
 /// bitmaps used by __hwmacro_setup() at runtime.
 
 
-//helper macro for setting up the irq configuration bitmaps for all entities in the occ complex
-.macro .occhw_irq_config irq_num = -1 irq_type = -1 irq_polarity = -1 irq_mask = -1 parms:
-                                   vararg
-                                   .if (( \irq_num == -1 ) && ( \irq_type == -1 ) && ( \irq_polarity == -1 ) && ( \irq_mask == -1 ))
-                                   .if ( .ext_irqs_defd != .ext_irqs_owned )
-                                   .error "###### .occhw_irq_config: Missing configuration for one or more interrupts ######"
-                                   .endif
+    //helper macro for setting up the irq configuration bitmaps for all entities in the occ complex
+    .macro .occhw_irq_config irq_num=-1 irq_type=-1 irq_polarity=-1 irq_mask=-1 parms:vararg
+        .if (( \irq_num == -1 ) && ( \irq_type == -1 ) && ( \irq_polarity == -1 ) && ( \irq_mask == -1 ))
+            .if ( .ext_irqs_defd != .ext_irqs_owned )
+                .error "###### .occhw_irq_config: Missing configuration for one or more interrupts ######"
+            .endif
 
-                                   .section .sdata
-                                   .align 3
-                                   .global g_ext_irqs_type
-                                   .global g_ext_irqs_polarity
-                                   .global g_ext_irqs_enable
-                                   g_ext_irqs_polarity:
-                                   .quad .ext_irqs_polarity
-                                   g_ext_irqs_type:
-                                   .quad .ext_irqs_type
-                                   g_ext_irqs_enable:
-                                   .quad .ext_irqs_enable
-                                   .else
-                                   .if (( \irq_num < 0 ) || ( \irq_num > (OCCHW_IRQS - 1)))
-                                   .error "###### .occhw_irq_config: invalid irq number \irq_num ######"
-                                   .elseif ((.ext_irqs_owned & (1 << ( OCCHW_IRQS - 1 - \irq_num ))) == 0 )
-                                   .error "###### .occhw_irq_config: Attempt to configure unowned irq number \irq_num ######"
-                                   .elseif (.ext_irqs_defd & (1 << ( OCCHW_IRQS - 1 - \irq_num )))
-                                   .error "###### .occhw_irq_config: duplicate definition for irq \irq_num ######"
-                                   .else
-                                   .ext_irqs_defd = .ext_irqs_defd | (1 << ( OCCHW_IRQS - 1 - \irq_num ))
-                                           .endif
+            .section .sdata
+            .align 3
+            .global g_ext_irqs_type
+            .global g_ext_irqs_polarity
+            .global g_ext_irqs_enable
+            g_ext_irqs_polarity:
+            .quad .ext_irqs_polarity
+            g_ext_irqs_type:
+            .quad .ext_irqs_type
+            g_ext_irqs_enable:
+            .quad .ext_irqs_enable
+        .else
+            .if (( \irq_num < 0 ) || ( \irq_num > (OCCHW_IRQS - 1)))
+                .error "###### .occhw_irq_config: invalid irq number \irq_num ######"
+            .elseif ((.ext_irqs_owned & (1 << ( OCCHW_IRQS - 1 - \irq_num ))) == 0 )
+                .error "###### .occhw_irq_config: Attempt to configure unowned irq number \irq_num ######" 
+            .elseif (.ext_irqs_defd & (1 << ( OCCHW_IRQS - 1 - \irq_num )))
+                .error "###### .occhw_irq_config: duplicate definition for irq \irq_num ######"
+            .else
+                .ext_irqs_defd = .ext_irqs_defd | (1 << ( OCCHW_IRQS - 1 - \irq_num ))
+            .endif
 
-                                           .if (( \irq_type < 0 ) || ( \irq_type > 1 ))
-                                           .error "###### .occhw_irq_config: invalid/unspecified irq type \irq_type for irq \irq_num ######"
-                                           .else
-                                           .ext_irqs_type = .ext_irqs_type | ( \irq_type << ( OCCHW_IRQS - 1 - \irq_num ))
-                                                   .endif
+            .if (( \irq_type < 0 ) || ( \irq_type > 1 ))
+                .error "###### .occhw_irq_config: invalid/unspecified irq type \irq_type for irq \irq_num ######" 
+            .else
+                .ext_irqs_type = .ext_irqs_type | ( \irq_type << ( OCCHW_IRQS - 1 - \irq_num ))
+            .endif
 
-                                                   .if (( \irq_polarity < 0 ) || ( \irq_polarity > 1 ))
-                                                   .error "###### .occhw_irq_config: invalid/unspecified irq polarity ( \irq_polarity ) for irq \irq_num ######"
-                                                   .else
-                                                   .ext_irqs_polarity = .ext_irqs_polarity | ( \irq_polarity << ( OCCHW_IRQS - 1 - \irq_num ))
-                                                           .endif
+            .if (( \irq_polarity < 0 ) || ( \irq_polarity > 1 ))
+                .error "###### .occhw_irq_config: invalid/unspecified irq polarity ( \irq_polarity ) for irq \irq_num ######" 
+            .else
+                .ext_irqs_polarity = .ext_irqs_polarity | ( \irq_polarity << ( OCCHW_IRQS - 1 - \irq_num ))
+            .endif
 
-                                                           .if (( \irq_mask < 0 ) || ( \irq_mask > 1 ))
-                                                           .error "###### .occhw_irq_config: invalid/unspecified irq mask ( \irq_mask ) for irq \irq_num ######"
-                                                           .else
-                                                           .ext_irqs_enable = .ext_irqs_enable | ( \irq_mask << ( OCCHW_IRQS - 1 - \irq_num ))
-                                                                   .endif
+            .if (( \irq_mask < 0 ) || ( \irq_mask > 1 ))
+                .error "###### .occhw_irq_config: invalid/unspecified irq mask ( \irq_mask ) for irq \irq_num ######" 
+            .else
+                .ext_irqs_enable = .ext_irqs_enable | ( \irq_mask << ( OCCHW_IRQS - 1 - \irq_num ))
+            .endif
 
-                                                                   .occhw_irq_config \parms
-                                                                   .endif
-                                                                   .endm
+            .occhw_irq_config \parms
+        .endif
+    .endm
 
-                                                                   //recursive helper macro for setting up the irq route bitmaps for all entities in the occ complex
-                                                                   //
-                                                                   //Once completed, g_ext_irqs_route(A,B,C) will hold the correct initialization values and
-                                                                   //g_ext_irqs_owned will hold a bitmap of interrupts owned by this OCC instance
-                                                                   .macro .occhw_irq_route irq_num = -1 irq_route = -1 parms:
-                                                                           vararg
-                                                                           .if (( \irq_num == -1 ) && ( \irq_route == -1 ))
-                                                                           .section .sdata
-                                                                           .align 3
-                                                                           .global g_ext_irqs_routeA
-                                                                           .global g_ext_irqs_routeB
-                                                                           .global g_ext_irqs_routeC
-                                                                           .global g_ext_irqs_owned
-                                                                           g_ext_irqs_routeA:
-                                                                           .quad .ext_irqs_routeA
-                                                                           g_ext_irqs_routeB:
-                                                                           .quad .ext_irqs_routeB
-                                                                           g_ext_irqs_routeC:
-                                                                           .quad .ext_irqs_routeC
-                                                                           g_ext_irqs_owned:
-                                                                           .quad .ext_irqs_owned
-                                                                           .else
-                                                                           .if (( \irq_num < 0) || ( \irq_num > (OCCHW_IRQS - 1)))
-                                                                           .error "###### .occhw_irq_route: invalid irq number \irq_num ######"
-                                                                           .elseif .ext_irqs_defd & (1 << ( OCCHW_IRQS - 1 - \irq_num ))
-                                                                           .error "###### .occhw_irq_route: Route for irq \irq_num is already defined ######"
-                                                                           .else
-                                                                           .ext_irqs_defd = .ext_irqs_defd | (1 << ( OCCHW_IRQS - 1 - \irq_num ))
-                                                                                   .endif
+    //recursive helper macro for setting up the irq route bitmaps for all entities in the occ complex
+    //
+    //Once completed, g_ext_irqs_route(A,B,C) will hold the correct initialization values and
+    //g_ext_irqs_owned will hold a bitmap of interrupts owned by this OCC instance
+    .macro .occhw_irq_route irq_num=-1 irq_route=-1 parms:vararg
+        .if (( \irq_num == -1 ) && ( \irq_route == -1 ))
+            .section .sdata
+            .align 3
+            .global g_ext_irqs_routeA
+            .global g_ext_irqs_routeB
+            .global g_ext_irqs_routeC
+            .global g_ext_irqs_owned
+            g_ext_irqs_routeA:
+            .quad .ext_irqs_routeA
+            g_ext_irqs_routeB:
+            .quad .ext_irqs_routeB
+            g_ext_irqs_routeC:
+            .quad .ext_irqs_routeC
+            g_ext_irqs_owned:
+            .quad .ext_irqs_owned
+        .else
+            .if (( \irq_num < 0) || ( \irq_num > (OCCHW_IRQS - 1)))
+                   .error "###### .occhw_irq_route: invalid irq number \irq_num ######"
+            .elseif .ext_irqs_defd & (1 << ( OCCHW_IRQS - 1 - \irq_num ))
+                .error "###### .occhw_irq_route: Route for irq \irq_num is already defined ######"
+            .else
+                .ext_irqs_defd = .ext_irqs_defd | (1 << ( OCCHW_IRQS - 1 - \irq_num ))
+            .endif
 
-                                                                                   .if (( \irq_route < 0) || ( \irq_route > 8 ))
-                                                                                   .error "###### .occhw_irq_route: route # \irq_route is invalid for irq # \irq_num ######"
-                                                                                   .endif
+            .if (( \irq_route < 0) || ( \irq_route > 8 ))
+                .error "###### .occhw_irq_route: route # \irq_route is invalid for irq # \irq_num ######"
+            .endif
 
-                                                                                   .irq_mask = 1 << ( OCCHW_IRQS - 1 - \irq_num)
-                                                                                           .if \irq_route & 4
-                                                                                           .ext_irqs_routeA = .ext_irqs_routeA | .irq_mask
-                                                                                                   .endif
+            .irq_mask = 1 << ( OCCHW_IRQS - 1 - \irq_num)
+            .if \irq_route & 4
+                .ext_irqs_routeA = .ext_irqs_routeA | .irq_mask
+            .endif
 
-                                                                                                   .if \irq_route & 2
-                                                                                                   .ext_irqs_routeB = .ext_irqs_routeB | .irq_mask
-                                                                                                           .endif
+            .if \irq_route & 2
+                .ext_irqs_routeB = .ext_irqs_routeB | .irq_mask
+            .endif
 
-                                                                                                           .if \irq_route & 1
-                                                                                                           .ext_irqs_routeC = .ext_irqs_routeC | .irq_mask
-                                                                                                                   .endif
+            .if \irq_route & 1
+                .ext_irqs_routeC = .ext_irqs_routeC | .irq_mask
+            .endif
 
-                                                                                                                   .if ( \irq_route == 8 )
-                                                                                                                   //do nothing, this irq is not owned by any OCC processor
-                                                                                                                   .elseif (( \irq_route < 4 ) && ( APPCFG_OCC_INSTANCE_ID == 4 ))
-                                                                                                                   .ext_irqs_owned = .ext_irqs_owned | .irq_mask
-                                                                                                                           .elseif ( \irq_route == (OCCHW_IRQ_TARGET_ID_GPE0 + APPCFG_OCC_INSTANCE_ID))
-                                                                                                                           .ext_irqs_owned = .ext_irqs_owned | .irq_mask
-                                                                                                                                   .endif
+            .if ( \irq_route == 8 )
+                //do nothing, this irq is not owned by any OCC processor
+            .elseif (( \irq_route < 4 ) && ( APPCFG_OCC_INSTANCE_ID == 4 ))
+                .ext_irqs_owned = .ext_irqs_owned | .irq_mask
+            .elseif ( \irq_route == (OCCHW_IRQ_TARGET_ID_GPE0 + APPCFG_OCC_INSTANCE_ID))
+                .ext_irqs_owned = .ext_irqs_owned | .irq_mask
+            .endif
 
-                                                                                                                                   .occhw_irq_route \parms
-                                                                                                                                   .endif
-                                                                                                                                   .endm
+            .occhw_irq_route \parms
+        .endif
+    .endm
 
-                                                                                                                                   //Top level macro for generating interrupt routing/configuration globals for all entities in the occ complex
-                                                                                                                                   .macro .occhw_irq_cfg_bitmaps
-                                                                                                                                   .ext_irqs_routeA = 0
-                                                                                                                                           .ext_irqs_routeB = 0
-                                                                                                                                                   .ext_irqs_routeC = 0
-                                                                                                                                                           .ext_irqs_owned = 0
-                                                                                                                                                                   .ext_irqs_type = 0
-                                                                                                                                                                           .ext_irqs_polarity = 0
-                                                                                                                                                                                   .ext_irqs_enable = 0
-                                                                                                                                                                                           .ext_irqs_defd = 0
-                                                                                                                                                                                                   .irq_mask = 0
-                                                                                                                                                                                                           .occhw_irq_route OCCHW_IRQ_ROUTES
-                                                                                                                                                                                                           .ext_irqs_defd = 0
-                                                                                                                                                                                                                   .occhw_irq_config APPCFG_EXT_IRQS_CONFIG
-                                                                                                                                                                                                                   .endm
+    //Top level macro for generating interrupt routing/configuration globals for all entities in the occ complex
+    .macro .occhw_irq_cfg_bitmaps
+        .ext_irqs_routeA = 0
+        .ext_irqs_routeB = 0
+        .ext_irqs_routeC = 0
+        .ext_irqs_owned = 0
+        .ext_irqs_type = 0
+        .ext_irqs_polarity = 0
+        .ext_irqs_enable = 0
+        .ext_irqs_defd = 0
+        .irq_mask = 0
+        .occhw_irq_route OCCHW_IRQ_ROUTES
+        .ext_irqs_defd = 0
+        .occhw_irq_config APPCFG_EXT_IRQS_CONFIG
+    .endm
 
+// *INDENT-ON*
 #endif /*__ASSEMBLER__*/
 
 #endif /*__OCCHW_IRQ_CONFIG_H__*/
