@@ -234,6 +234,7 @@ p9_cme_stop_entry()
 
         PK_TRACE("SE2.j");
         // Raise Core Chiplet Fence
+        CME_PUTSCOM(C_CPLT_CTRL0_OR, core, BIT64(2));
         CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(18));
 
         PK_TRACE("SE2.k");
@@ -280,10 +281,14 @@ p9_cme_stop_entry()
 
         PK_TRACE("SE2.p");
         // Switch glsmux to refclk to save clock grid power
-        CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
+        CME_PUTSCOM(C_PPM_CGCR, core, 0);
 
         // Assert PCB Fence
-        CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(25));
+        //CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(25));
+        // Assert Vital Fence
+        CME_PUTSCOM(C_CPLT_CTRL1_OR,  core, BIT64(3));
+        // Assert Regional Fences
+        CME_PUTSCOM(C_CPLT_CTRL1_OR, core, 0xFFFF700000000000);
 
         PK_TRACE("SE2.q");
         // Update Stop History: In Core Stop Level 2
@@ -500,11 +505,14 @@ p9_cme_stop_entry()
         MARK_TAG(SE_POWER_OFF_CORE, core)
         //===============================
 
-#if !STOP_PRIME
-        // Assert Cores Electrical Fences
+        // DD: Assert Cores Vital Thold/PCB Fence/Electrical Fence
         PK_TRACE("SE4.a");
+        CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(25));
         CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(26));
+        CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(16));
 
+#if !STOP_PRIME
+#if !EPM_P9_TUNING
         // Make sure we are not forcing PFET for VDD off
         // vdd_pfet_force_state == 00 (Nop)
         PK_TRACE("SE4.b");
@@ -514,6 +522,8 @@ p9_cme_stop_entry()
         {
             return CME_STOP_ENTRY_VDD_PFET_NOT_IDLE;
         }
+
+#endif
 
         // Prepare PFET Controls
         // vdd_pfet_val/sel_override     = 0 (disbaled)
@@ -546,7 +556,6 @@ p9_cme_stop_entry()
         while(!(scom_data & BIT64(46)));
 
 #endif
-
         // Turn Off Force Voff
         // vdd_pfet_force_state = 00 (Nop)
         PK_TRACE("SE4.g");
@@ -695,7 +704,7 @@ p9_cme_stop_entry()
             //===========================
             do
             {
-#if !SKIP_ABORT
+#if !SKIP_L2_PURGE_ABORT
 
                 if(in32(CME_LCL_EINR) & BITS32(12, 6))
                 {

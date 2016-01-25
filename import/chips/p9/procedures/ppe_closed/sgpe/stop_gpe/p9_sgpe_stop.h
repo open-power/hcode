@@ -49,6 +49,7 @@
 
 #include "p9_stop_common.h"
 
+#define EQ_SYNC_CONFIG           0x10030000
 #define EQ_OPCG_ALIGN            0x10030001
 #define EQ_SCAN_REGION_TYPE      0x10030005
 #define EQ_CLK_REGION            0x10030006
@@ -57,11 +58,14 @@
 #define EQ_BIST                  0x100F000B
 #define EQ_NET_CTRL0_WAND        0x100F0041
 #define EQ_NET_CTRL0_WOR         0x100F0042
+#define EQ_NET_CTRL1_WAND        0x100F0045
+#define EQ_NET_CTRL1_WOR         0x100F0046
 
 #define EQ_CPLT_CTRL0_OR         0x10000010
 #define EQ_CPLT_CTRL0_CLEAR      0x10000020
 #define EQ_CPLT_CTRL1_OR         0x10000011
 #define EQ_CPLT_CTRL1_CLEAR      0x10000021
+#define EQ_CPLT_STAT0            0x10000100
 
 #define EQ_QPPM_DPLL_CTRL_CLEAR  0x100F0153
 #define EQ_QPPM_DPLL_CTRL_OR     0x100F0154
