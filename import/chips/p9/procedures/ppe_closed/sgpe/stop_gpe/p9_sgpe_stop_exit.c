@@ -65,7 +65,6 @@ p9_sgpe_stop_exit()
                                      STOP_ACT_DISABLE);
             MARK_TRAP(SX_LV11_WAKEUP_START)
 
-#if !STOP_PRIME
             PK_TRACE("Cache Poweron");
             p9_hcd_cache_poweron(qloop);
             MARK_TRAP(SX_POWERON_END)
@@ -74,14 +73,17 @@ p9_sgpe_stop_exit()
             p9_hcd_cache_chiplet_reset(qloop);
             MARK_TRAP(SX_CHIPLET_RESET_END)
 
+#if !STOP_PRIME
             PK_TRACE("Cache Gptr Time Initf");
             p9_hcd_cache_gptr_time_initf(qloop);
             MARK_TRAP(SX_GPTR_TIME_INITF_END)
+#endif
 
             PK_TRACE("Cache Dpll Setup");
             p9_hcd_cache_dpll_setup(qloop);
             MARK_TRAP(SX_DPLL_SETUP_END)
 
+#if !STOP_PRIME
             PK_TRACE("Cache Chiplet Init");
             p9_hcd_cache_chiplet_init(qloop);
             MARK_TRAP(SX_CHIPLET_INIT_END)
@@ -103,7 +105,6 @@ p9_sgpe_stop_exit()
             p9_hcd_cache_startclocks(qloop);
             MARK_TRAP(SX_STARTCLOCKS_END)
 
-            G_sgpe_stop_record.state[qloop].detail.q_act = 0;
         }
 
         if((G_sgpe_stop_record.state[qloop].detail.x0act >= STOP_LEVEL_8 &&
@@ -170,7 +171,9 @@ p9_sgpe_stop_exit()
             PK_TRACE("Cache OCC Runtime Scom");
             p9_hcd_cache_occ_runtime_scom(qloop);
             MARK_TRAP(SX_OCC_RUNTIME_SCOM_END)
+
 #endif
+            G_sgpe_stop_record.state[qloop].detail.q_act = 0;
         }
 
         for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
@@ -186,12 +189,16 @@ p9_sgpe_stop_exit()
                 GPE_GETSCOM(CME_SCOM_FLAGS, QUAD_ADDR_BASE|CME_ADDR_OFFSET_EX0,
                             ((qloop<<2)+cloop), scom_data);
             } while(!(scom_data & BIT64(0)));*/
+            // TODO PUT THE FOLLOWING TWO BEFORE CME_BOOT()
             // Change PPM Wakeup to CME
             GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR, ((qloop << 2) + cloop)),
                         BIT64(13));
             PK_TRACE("Doorbell1 the CME");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG, ((qloop << 2) + cloop)),
+                        (BIT64(0)));
             GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1_OR, ((qloop << 2) + cloop)),
                         BIT64(7));
+
         }
     }
 

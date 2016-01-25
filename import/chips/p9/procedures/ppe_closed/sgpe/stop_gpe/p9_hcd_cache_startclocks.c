@@ -37,7 +37,8 @@ p9_hcd_cache_startclocks(uint8_t quad)
     // -------------------------------
 
     PK_TRACE("Enable L3 EDRAM/LCO setup on both EXs");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(23) | BIT64(24));
+    //DD:GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(23) | BIT64(24));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(23));
 
     // 0x0 -> 0x8 -> 0xC -> 0xE -> 0xF to turn on edram
     // stagger EDRAM turn-on per EX (not both at same time)
@@ -49,18 +50,19 @@ p9_hcd_cache_startclocks(uint8_t quad)
     PPE_WAIT_CORE_CYCLES(loop, 100);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(3));
     PPE_WAIT_CORE_CYCLES(loop, 100);
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(4));
-    PPE_WAIT_CORE_CYCLES(loop, 100);
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(5));
-    PPE_WAIT_CORE_CYCLES(loop, 100);
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(6));
-    PPE_WAIT_CORE_CYCLES(loop, 100);
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(7));
-    PPE_WAIT_CORE_CYCLES(loop, 100);
-
+    /* DD:
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(4));
+        PPE_WAIT_CORE_CYCLES(loop, 100);
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(5));
+        PPE_WAIT_CORE_CYCLES(loop, 100);
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(6));
+        PPE_WAIT_CORE_CYCLES(loop, 100);
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(7));
+        PPE_WAIT_CORE_CYCLES(loop, 100);
+    */
     PK_TRACE("Setup OPCG_ALIGN Register");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), data);
-    data = data & (BITS64(0, 4) & BITS64(12, 8) & BITS64(52, 12));
+    data = data & ~(BITS64(0, 4) & BITS64(12, 8) & BITS64(52, 12));
     data = data | (BIT64(1) | BIT64(3) | BIT64(59));
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), data);
 
@@ -68,7 +70,7 @@ p9_hcd_cache_startclocks(uint8_t quad)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad),
                 0xFFFF700000000000);
 
-    PK_TRACE("Drop vital fence via CPLT_CTRL1[4]");
+    PK_TRACE("Drop vital fence via CPLT_CTRL1[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), BIT64(3));
 
     PK_TRACE("Reset abstclk & syncclk muxsel(io_clk_sel) via CPLT_CTRL0[0:1]");
@@ -76,13 +78,28 @@ p9_hcd_cache_startclocks(uint8_t quad)
 
     /// @todo set fabric node/chip ID values(read from nest chiplet) still need?
 
+    // align_chiplets()
+
     PK_TRACE("Set flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(2));
 
     PK_TRACE("Set force_align via CPLT_CTRL0[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(3));
 
-    /// align chiplets
+    PK_TRACE("Set/Unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), data);
+    data = data | BIT64(7);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), data);
+    data = data & ~BIT64(7);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), data);
+
+    PK_TRACE("Check chiplet_is_aligned");
+
+    do
+    {
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), data);
+    }
+    while(~data & BIT64(9));
 
     PK_TRACE("Clear force_align via CPLT_CTRL0[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(3));
@@ -95,11 +112,13 @@ p9_hcd_cache_startclocks(uint8_t quad)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
 
     PK_TRACE("Start clock(arrays+nsl clock region) via CLK_REGION");
-    data = 0x5F3C000000006000;
+    //DD: data = 0x5F3C000000006000;
+    data = 0x5E3C000000006000;
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), data);
 
     PK_TRACE("Start clock(sl+refresh clock region) via CLK_REGION");
-    data = 0x5F3C00000000E000;
+    //DD: data = 0x5F3C00000000E000;
+    data = 0x5E3C00000000E000;
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), data);
 
     // Read Clock Status Register (Cache chiplet)
@@ -110,7 +129,9 @@ p9_hcd_cache_startclocks(uint8_t quad)
     {
         GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), data);
     }
-    while((~data & (BITS64(4, 4) | BITS64(10, 4))) != (BITS64(4, 4) | BITS64(10, 4)));
+
+    //while((~data & (BITS64(4, 3) | BITS64(10, 4))) != (BITS64(4, 3) | BITS64(10, 4)));
+    while((~data & (BITS64(4, 3) | BITS64(10, 4))) != (BITS64(4, 3) | BITS64(10, 4)));
 
     PK_TRACE("L3 clock running now");
 
@@ -124,8 +145,8 @@ p9_hcd_cache_startclocks(uint8_t quad)
     PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(18));
 
-    PK_TRACE("Drop fence to allow PCB operations to chiplet via NET_CTRL0[25]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(25));
+    //PK_TRACE("Drop fence to allow PCB operations to chiplet via NET_CTRL0[25]");
+    //GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(25));
 
     /// @todo Check the Global Checkstop FIR of dedicated EX chiplet
 

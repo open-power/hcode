@@ -41,11 +41,32 @@ p9_hcd_cache_l2_startclocks(uint8_t ex, uint8_t quad)
     scom_data = scom_data | (BIT64(1) | BIT64(3) | BIT64(59));
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
 
+    PK_TRACE("Drop L2 Regional Fences");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad),
+                ((uint64_t)ex << SHIFT64(9)));
+
+    // align_chiplets()
+
     PK_TRACE("Set flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(2));
 
     PK_TRACE("Set force_align via CPLT_CTRL0[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(3));
+
+    PK_TRACE("Set/Unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
+    scom_data = scom_data | BIT64(7);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
+    scom_data = scom_data & ~BIT64(7);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
+
+    PK_TRACE("Check chiplet_is_aligned");
+
+    do
+    {
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
+    }
+    while(~scom_data & BIT64(9));
 
     PK_TRACE("Clear force_align via CPLT_CTRL0[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(3));
@@ -63,6 +84,10 @@ p9_hcd_cache_l2_startclocks(uint8_t ex, uint8_t quad)
     while(!(scom_data & (ex << SHIFT64(37))));
 
 #endif
+
+    // -------------------------------
+    // Start L2 Clock
+    // -------------------------------
 
     PK_TRACE("Set all bits to zero prior clock start via SCAN_REGION_TYPE");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);

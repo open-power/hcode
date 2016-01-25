@@ -97,6 +97,9 @@ p9_sgpe_stop_entry()
             //========================
 
             PK_TRACE("SE8.a");
+            // Assert L2 Regional Fences
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop),
+                        ((uint64_t)ex << SHIFT64(9)));
             // Disable L2 Snoop(quiesce L2-L3 interface, what about NCU?)
             GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, qloop, ex), BIT64(0));
             PPE_WAIT_CORE_CYCLES(loop, 256)
@@ -273,6 +276,7 @@ p9_sgpe_stop_entry()
                         if (in32(OCB_OPIT2CN(((qloop << 2) + cloop))) &
                             TYPE2_PAYLOAD_STOP_EVENT)
                         {
+                            MARK_TRAP(SE_PURGE_L3_ABORT)
                             // Assert Purge L3 Abort
                             GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG,
                                                          qloop, ex), BIT64(2));
@@ -284,6 +288,8 @@ p9_sgpe_stop_entry()
                                                              qloop, ex), scom_data);
                             }
                             while(scom_data & (BIT64(0) | BIT64(2)));
+
+                            MARK_TRAP(SE_PURGE_L3_ABORT_DONE)
 
                             // Deassert LCO Disable
                             GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG,
@@ -369,6 +375,8 @@ p9_sgpe_stop_entry()
         // todo: check NCU_SATUS_REG[0:3] for all zeros
 
         PK_TRACE("SE11.k");
+        // Assert flush_inhibit
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, qloop), BIT64(2));
         // Raise Cache Logical fence
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(18));
 
@@ -379,7 +387,8 @@ p9_sgpe_stop_entry()
 
         PK_TRACE("SE11.m");
         // Stop Cache Clocks
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, qloop), 0x9F3E00000000E000);
+        //GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, qloop), 0x9F3E00000000E000);
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, qloop), 0x9E3E00000000E000);
 
         PK_TRACE("SE11.n");
 
@@ -388,7 +397,9 @@ p9_sgpe_stop_entry()
         {
             GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data);
         }
-        while((scom_data & BITS64(4, 10)) != BITS64(4, 10));
+
+        //while((scom_data & (BITS64(4, 4) | BITS64(10, 4))) != (BITS64(4, 4) | BITS64(10, 4)));
+        while((scom_data & (BITS64(4, 3) | BITS64(10, 5))) != (BITS64(4, 3) | BITS64(10, 5)));
 
         // MF: verify compiler generate single rlwmni
         // MF: delay may be needed for stage latch to propagate thold
@@ -397,7 +408,12 @@ p9_sgpe_stop_entry()
 
         PK_TRACE("SE11.o");
         // Switch glsmux to refclk to save clock grid power
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, qloop), BIT64(3));
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, qloop), 0);
+        // Assert Vital Fence
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop), BIT64(3));
+        // Raise Partial Good Fences
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop),
+                    0xFFFF700000000000);
 
         // Update QSSR: quad_stopped
         out32(OCB_QSSR_OR, BIT32(qloop + 14));
@@ -414,22 +430,27 @@ p9_sgpe_stop_entry()
         MARK_TAG(SE_POWER_OFF_CACHE, (32 >> qloop))
         //========================================
 
-        // Assert Cache Electrical Fence
+        // DD: Assert Cache Vital Thold/PCB Fence/Electrical Fence
         PK_TRACE("SE11.q");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(25));
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(26));
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(16));
 
-#if !STOP_PRIME
         // L3 edram shutdown
         PK_TRACE("SE11.r");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(7));
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(6));
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(5));
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(4));
+        /*
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(7));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(6));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(5));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(4));
+        */
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(3));
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(2));
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(1));
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(0));
 
+#if !STOP_PRIME
+#if !EPM_P9_TUNING
         // Make sure we are not forcing PFET for VDD or VCS off
         // vdd_pfet_force_state == 00 (Nop)
         // vcs_pfet_force_state == 00 (Nop)
@@ -441,6 +462,8 @@ p9_sgpe_stop_entry()
             return SGPE_STOP_ENTRY_VDD_PFET_NOT_IDLE;
         }
 
+#endif
+
         // Prepare PFET Controls
         // vdd_pfet_val/sel_override     = 0 (disbaled)
         // vcs_pfet_val/sel_override     = 0 (disbaled)
@@ -448,12 +471,11 @@ p9_sgpe_stop_entry()
         PK_TRACE("SE11.t");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop), BITS64(4, 4) | BIT64(8));
 
-        // Power Off Core VDD
+        // Power Off Cache VDD/VDS
         // vdd_pfet_force_state = 01 (Force Voff)
         // vcs_pfet_force_state = 01 (Force Voff)
         PK_TRACE("SE11.u");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(1) | BIT64(3));
-
         // Poll for power gate sequencer state: 0x8 (FSM Idle)
         PK_TRACE("SE11.v");
 

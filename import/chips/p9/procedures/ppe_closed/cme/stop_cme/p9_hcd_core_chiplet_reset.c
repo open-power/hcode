@@ -35,6 +35,15 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     PK_TRACE("Init NETWORK_CONTROL0, step needed for hotplug");
     CME_PUTSCOM(CPPM_NC0INDIR_OR, core, NET_CTRL0_INIT_VECTOR);
 
+    PK_TRACE("Assert Core Progdly and DCC Bypass");
+    CME_PUTSCOM(CPPM_NC1INDIR_OR, core, BITS64(1, 2));
+
+    PK_TRACE("Assert Core DCC Reset");
+    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(2));
+
+    PK_TRACE("Assert Vital Thold");
+    CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(16));
+
     PK_TRACE("ONLY till TP030: SET VITL_PHASE=1");
     CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(8));
     PPE_WAIT_CORE_CYCLES(loop, 50);
@@ -50,6 +59,7 @@ p9_hcd_core_chiplet_reset(uint32_t core)
 
     PK_TRACE("Remove chiplet electrical fence via NET_CTRL0[26]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(26));
+    CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(25));
 
     PK_TRACE("ONLY till TP030: SET SYNC_PULSE_DELAY=0b0011");
     CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, data);

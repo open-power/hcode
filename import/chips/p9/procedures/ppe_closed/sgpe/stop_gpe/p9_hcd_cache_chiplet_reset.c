@@ -34,6 +34,18 @@ p9_hcd_cache_chiplet_reset(uint8_t quad)
     PK_TRACE("Init NETWORK_CONTROL0, step needed for hotplug");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), NET_CTRL0_INIT_VECTOR);
 
+    PK_TRACE("Assert L3, L2-0, L2-1 Progdly, DCC Bypass and Reset");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WOR, quad), (BITS64(1, 2) | BITS64(23, 2)));
+
+    PK_TRACE("Assert Skew Adjust Reset");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(2));
+
+    PK_TRACE("Set DPLL ff_bypass to 1");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_OR, quad), BIT64(2));
+
+    PK_TRACE("Drop Vital Thold");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(16));
+
     MARK_TRAP(SX_CHIPLET_RESET_GLSMUX_RESET)
 
     PK_TRACE("Init Cache Glitchless Mux Reset/Select via CLOCK_GRID_CTRL[0:3]");
@@ -47,6 +59,10 @@ p9_hcd_cache_chiplet_reset(uint8_t quad)
 
     PK_TRACE("Remove chiplet electrical fence via NET_CTRL0[26]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(26));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(25));
+
+    PK_TRACE("Remove PCB fence via NET_CTRL0[25]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(25));
 
 #if !SKIP_SCAN0
     // Marker for scan0

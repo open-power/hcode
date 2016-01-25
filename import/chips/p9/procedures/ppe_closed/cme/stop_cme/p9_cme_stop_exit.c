@@ -159,7 +159,6 @@ p9_cme_stop_exit()
         do   //catchup loop
         {
 
-#if !STOP_PRIME
             // todo PK_TRACE("BCE Runtime Kickoff");
 
             // todo for catch up case
@@ -176,6 +175,7 @@ p9_cme_stop_exit()
             p9_hcd_core_chiplet_reset(core);
             MARK_TRAP(SX_CHIPLET_RESET_END)
 
+#if !STOP_PRIME
 #if !SKIP_CATCHUP
 
             //catchup

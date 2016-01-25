@@ -53,6 +53,9 @@ p9_hcd_cache_dpll_setup(uint8_t quad)
     PK_TRACE("Drop DPLL Test Mode and Reset");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BITS64(3, 2));
 
+    PK_TRACE("Drop DPLL Clock Region Fence");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), BIT64(14));
+
     PK_TRACE("Set all bits to zero prior clock start via SCAN_REGION_TYPE");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
 

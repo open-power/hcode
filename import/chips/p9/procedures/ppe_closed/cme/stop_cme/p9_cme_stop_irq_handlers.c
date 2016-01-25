@@ -69,6 +69,6 @@ p9_cme_stop_doorbell_handler(void* arg, PkIrqId irq)
         out32(CME_LCL_EIMR_CLR, BIT32(13) | BIT32(15) | BIT32(17));
     }
 
-    // TODO mask pc_itr_pending as workaround for double interrupts of pc and rwu
+    //TODO mask pc_itr_pending as workaround for double interrupts of pc and rwu
     out32(CME_LCL_EIMR_OR, BITS32(12, 2));
 }

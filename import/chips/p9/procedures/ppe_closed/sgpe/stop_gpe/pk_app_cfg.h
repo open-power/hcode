@@ -36,7 +36,7 @@
 
 #define STOP_PRIME          0
 #define SKIP_L3_PURGE       0
-#define SKIP_L3_PURGE_ABORT 0
+#define SKIP_L3_PURGE_ABORT 1
 
 // --------------------
 

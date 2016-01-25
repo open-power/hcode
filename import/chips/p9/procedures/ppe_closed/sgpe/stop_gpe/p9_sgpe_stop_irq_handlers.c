@@ -194,8 +194,10 @@ p9_sgpe_stop_pig_type2_handler(void* arg, PkIrqId irq)
         pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));
     }
 
-    if (!G_sgpe_stop_record.group.vector[0])
-    {
-        out32(OCB_OIMR1_CLR, BIT32(15));
-    }
+    /*
+        if (!G_sgpe_stop_record.group.vector[0])
+        {
+            out32(OCB_OIMR1_CLR, BIT32(15));
+        }
+    */
 }
