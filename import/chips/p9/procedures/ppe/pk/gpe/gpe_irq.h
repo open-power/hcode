@@ -63,6 +63,31 @@ pk_irq_enable(PkIrqId irq)
 }
 
 
+/// Enable a vector of interrupts by clearing the mask bits.
+
+UNLESS__PPE42_IRQ_CORE_C__(extern)
+inline void
+pk_irq_vec_enable(uint64_t irq_vec_mask)
+{
+    out32(OCB_OIMR0_CLR, (uint32_t)(irq_vec_mask >> 32));
+    out32(OCB_OIMR1_CLR, (uint32_t)irq_vec_mask);
+}
+
+
+/// Restore a vector of interrupts by overwriting OIMR.
+
+/*
+UNLESS__PPE42_IRQ_CORE_C__(extern)
+inline void
+pk_irq_vec_restore( PkMachineContext *context, uint64_t irq_vec_mask)
+{
+    pk_critical_section_enter(context);
+    out64( OCB_OIMR, irq_vec_mask);
+    pk_critical_section_exit(context);
+}
+*/
+
+
 /// Disable an interrupt by setting the mask bit.
 
 UNLESS__PPE42_IRQ_CORE_C__(extern)
@@ -70,6 +95,17 @@ inline void
 pk_irq_disable(PkIrqId irq)
 {
     out32(OCCHW_OIMR_OR(irq), OCCHW_IRQ_MASK32(irq));
+}
+
+
+/// Disable a vector of interrupts by setting the mask bits.
+
+UNLESS__PPE42_IRQ_CORE_C__(extern)
+inline void
+pk_irq_vec_disable(uint64_t irq_vec_mask)
+{
+    out32(OCB_OIMR0_OR, (uint32_t)(irq_vec_mask >> 32));
+    out32(OCB_OIMR1_OR, (uint32_t)irq_vec_mask);
 }
 
 
@@ -81,6 +117,18 @@ inline void
 pk_irq_status_clear(PkIrqId irq)
 {
     out32(OCCHW_OISR_CLR(irq), OCCHW_IRQ_MASK32(irq));
+}
+
+
+/// Clear a vector of interrupts status with an CLR mask.  Only meaningful for
+/// edge-triggered interrupts.
+
+UNLESS__PPE42_IRQ_CORE_C__(extern)
+inline void
+pk_irq_vec_status_clear(uint64_t irq_vec_mask)
+{
+    out32(OCB_OISR0_CLR, (uint32_t)(irq_vec_mask >> 32));
+    out32(OCB_OISR1_CLR, (uint32_t)irq_vec_mask);
 }
 
 

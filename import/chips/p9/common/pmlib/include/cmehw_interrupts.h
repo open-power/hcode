@@ -284,27 +284,4 @@
    STD_IRQ_MASK64(CMEHW_IRQ_RESERVED_63))
 */
 
-////////////////////////////////////////////////////////////////////////////
-// Interrupt Mask Vector
-////////////////////////////////////////////////////////////////////////////
-
-// First, it should always be true to mask the given interrupt and every
-// interrupts has larger irq id number than the given one. Then if the given
-// interrupt belongs to a group of interrupts with same priority and the given
-// one is not the first one in the group(in which case it will automatically
-// work by first rule along), then an override bit mask can be used to mask out
-// every one else in the group above the given one, or used for special cases.
-#define CME_IRQ_MASK_VECTOR(irq) ((0xffffffffffffffffull << (irq)) >> (irq))
-#define CME_IRQ_MASK_VECTOR_AND(irq, amask) (CME_IRQ_MASK_VECTOR(irq) & amask)
-#define CME_IRQ_MASK_VECTOR_OR(irq, omask)  (CME_IRQ_MASK_VECTOR(irq) | omask)
-
-#define CME_IRQ_MASK_DB3  CME_IRQ_MASK_VECTOR(CMEHW_IRQ_DOORBELL3_C0)
-#define CME_IRQ_MASK_WAKE CME_IRQ_MASK_VECTOR(CMEHW_IRQ_PC_INTR_PENDING_C0)
-#define CME_IRQ_MASK_DB2  CME_IRQ_MASK_VECTOR(CMEHW_IRQ_DOORBELL2_C0)
-#define CME_IRQ_MASK_STOP CME_IRQ_MASK_VECTOR(CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0)
-#define CME_IRQ_MASK_DB0  CME_IRQ_MASK_VECTOR(CMEHW_IRQ_PMCR_UPDATE_C0)
-#define CME_IRQ_MASK_DB1  CME_IRQ_MASK_VECTOR(CMEHW_IRQ_DOORBELL1_C0)
-
-
-
 #endif  /* __CMEHW_INTERRUPTS_H__ */

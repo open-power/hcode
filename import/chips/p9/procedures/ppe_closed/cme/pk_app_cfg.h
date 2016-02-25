@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/sgpe/stop_gpe/pk_app_cfg.h $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/cme/pk_app_cfg.h $      */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -34,22 +34,33 @@
 /// \brief Application specific overrides go here.
 ///
 
+#define EPM_P9_LEVEL        1
 #define STOP_PRIME          0
-#define SKIP_L3_PURGE       0
-#define SKIP_L3_PURGE_ABORT 0
+#define SKIP_ABORT          0
+#define SKIP_L2_PURGE_ABORT 0
+#define SKIP_ENTRY_CATCHUP  0
+#define SKIP_EXIT_CATCHUP   1
+#define SKIP_SCAN0          0
+#define SKIP_INITF          0
+#define SKIP_ARY_INIT       0
+#define SKIP_SELF_RESTORE   0
 
 // --------------------
 
-#define USE_SIMICS_IO 0
-#define EPM_P9_TUNING 1
-#define DEV_DEBUG     1
+#define EPM_P9_TUNING         1
+#define SIMICS_TUNING         1
+#define DEV_DEBUG             1
+#define USE_SIMICS_IO         0
+#define PK_TRACE_TIMER_OUTPUT 0
 
 // --------------------
+
+// Force CME and GPE tasks to use the unified interrupt handler.
+#define UNIFIED_IRQ_HANDLER_CME
 
 // This application will use the external timebase register
 // (comment this line out to use the decrementer as timebase)
 #define APPCFG_USE_EXT_TIMEBASE
-
 
 // If we are using the external timebase then assume
 // a frequency of 37.5Mhz.  Otherwise, the default is to use
@@ -64,33 +75,11 @@
 
 // --------------------
 
-// GPE3 is the SGPE and is the route owner for now.
-// (Change this to #4 for the 405 when we pull that in.)
-#define OCCHW_IRQ_ROUTE_OWNER  3
-
-/// The Instance ID of the OCC processor that this application is intended to run on
-///// 0-3 -> GPE, 4 -> 405
-#define APPCFG_OCC_INSTANCE_ID 3
+/// This file provides architecture-specific symbol names for each interrupt
+#include "cmehw_interrupts.h"
 
 /// This application will statically initialize it's external interrupt table
 /// using the table defined in pk_app_irq_table.c.
 #define STATIC_IRQ_TABLE
 
-/// About OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING :
-/// This interrupt is used by the PGPE (GPE2) exclusively. Thus, rather than
-///   defining the entire OCCHW_IRQ_ROUTES table here, and thus over-riding
-///   the default routing table, I've updated the default table in
-///   p9_code/include/occhw_irq_config.h .
-
-/// Static configuration data for external interrupts:
-/// Note, that these interrupts only have relevance for 405 IPC messaging and
-///   xstop. The PCB type 1 interrupt is configured manually in the code.)
-///
-/// IRQ#, TYPE, POLARITY, ENABLE
-///
-#define APPCFG_EXT_IRQS_CONFIG \
-    OCCHW_IRQ_CHECK_STOP_GPE3             OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
-    OCCHW_IRQ_IPI3_HI_PRIORITY            OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
-    OCCHW_IRQ_IPI3_LO_PRIORITY            OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
-    OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING  OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED
 #endif /*__PK_APP_CFG_H__*/

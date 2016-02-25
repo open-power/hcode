@@ -27,7 +27,7 @@
 #include "p9_sgpe_stop_exit_marks.h"
 
 int
-p9_hcd_cache_scominit(uint8_t quad)
+p9_hcd_cache_scominit(uint32_t quad)
 {
     int rc = SGPE_STOP_SUCCESS;
 

@@ -345,8 +345,8 @@ typedef union ppm_sshsrc
     {
 #ifdef _BIG_ENDIAN
         uint64_t stop_gated : 1;
-        uint64_t stop_transition : 2;
         uint64_t special_wkup_done : 1;
+        uint64_t stop_transition : 2;
         uint64_t req_stop_level : 4;
         uint64_t act_stop_level : 4;
         uint64_t req_write_enable : 1;
@@ -358,8 +358,8 @@ typedef union ppm_sshsrc
         uint64_t req_write_enable : 1;
         uint64_t act_stop_level : 4;
         uint64_t req_stop_level : 4;
-        uint64_t special_wkup_done : 1;
         uint64_t stop_transition : 2;
+        uint64_t special_wkup_done : 1;
         uint64_t stop_gated : 1;
 #endif // _BIG_ENDIAN
     } fields;

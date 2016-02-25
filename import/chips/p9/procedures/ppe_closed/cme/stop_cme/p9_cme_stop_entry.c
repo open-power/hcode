@@ -53,16 +53,19 @@ p9_cme_stop_entry()
 {
 
     int             rc                  = 0;
-    uint8_t         core_aborted        = 0;
-    uint8_t         core_catchup        = 0;
-    uint8_t         catchup_ongoing     = 0;
-    uint8_t         entry_ongoing       = 1;
+    int             catchup_ongoing     = 0;
+    int             entry_ongoing       = 1;
     uint8_t         target_level;
     uint8_t         deeper_level        = 0;
+    uint8_t         origin_level        = 0;
+    uint32_t        origin_core         = 0;
     uint32_t        deeper_core         = 0;
+    uint32_t        core_aborted        = 0;
+    uint32_t        core_catchup        = 0;
     uint32_t        core;
     uint32_t        loop;
     uint32_t        pm_states;
+    uint32_t        lclr_data;
     uint64_t        scom_data;
     ppm_sshsrc_t    hist;
     ppm_pig_t       pig;
@@ -77,15 +80,19 @@ p9_cme_stop_entry()
     // CME will do Daul-cast to both cores at the same time in entry flow.
     core = (in32(CME_LCL_EISR) & BITS32(20, 2)) >> SHIFT32(21);
 
-    // override with partial good core mask
-    core = core & G_cme_stop_record.cme_flags & CME_MASK_BC;
+    // filter with partial good and running core mask
+    // core cannot enter stop if core is already stopped
+    core = core & G_cme_stop_record.core_enabled &
+           G_cme_stop_record.core_running;
 
-    PK_TRACE("SE0: Core Select[%d]", core);
+    PK_TRACE("SE0: Core Select[%d] Enabled[%d] Running[%d]",
+             core, G_cme_stop_record.core_enabled,
+             G_cme_stop_record.core_running);
 
     // Return error if None of both fired
     if (!core)
     {
-        return CME_STOP_ENTRY_PM_NOT_ACTIVE;
+        pk_halt();
     }
 
     //===================================
@@ -95,57 +102,64 @@ p9_cme_stop_entry()
     do   // while(0) loop for stop flow control
     {
 
-        //--------------------------------------------------------------------------
+        //----------------------------------------------------------------------
         // STOP LEVEL 1 (should be done by hardware)
-        //--------------------------------------------------------------------------
+        //----------------------------------------------------------------------
 
         // Read SISR for pm_state_cX
         pm_states = in32_sh(CME_LCL_SISR);
-        G_cme_stop_record.req_stop_c0 = (pm_states & BITS32(4, 4)) >> SHIFT32(7);
-        G_cme_stop_record.req_stop_c1 = (pm_states & BITS32(8, 4)) >> SHIFT32(11);
 
-        // pm_active AND waken_up   : pm_state = sisr (new state)
-        // pm_active AND !waken_up  : pm_state = sisr (only with auto promote)
-        // !pm_active AND waken_up  : pm_state = 0    (out dated state)
-        // !pm_active AND !waken_up : pm_state = sisr (current state)
-        if (~core & G_cme_stop_record.active_core & CME_MASK_C0)
+        // entry:      req_level = target stop level
+        //             act_level = current stop level
+        //             running   = FALSE, TRUE if aborted
+        // stopped:    req_level = act_level = target and current stop level
+        //                                     (if<=5)
+        //             running   = FALSE
+        // exit/abort: req_level = requested stop level
+        //             act_level = latest stop level
+        //             running   = FALSE
+        // running:    req_level = act_level = 0
+        //             running   = TRUE
+        // pm_active AND running   : req_level = New requested stop level
+        // pm_active AND !running  : req_level = Not possible,
+        //                                       ignore false re-entry
+        // !pm_active AND running  : req_level = 0 by exit,
+        //                                       not changing req_level
+        // !pm_active AND !running : req_level = Current req_level
+        if (core & CME_MASK_C0)
         {
-            G_cme_stop_record.req_stop_c0 = 0;
+            G_cme_stop_record.req_level_c0 =
+                (pm_states & BITS32(4, 4)) >> SHIFT32(7);
         }
 
-        if (~core & G_cme_stop_record.active_core & CME_MASK_C1)
+        if (core & CME_MASK_C1)
         {
-            G_cme_stop_record.req_stop_c1 = 0;
+            G_cme_stop_record.req_level_c1 =
+                (pm_states & BITS32(8, 4)) >> SHIFT32(11);
         }
 
-        G_cme_stop_record.active_core &= ~core;
+        G_cme_stop_record.core_running &= ~core;
+        out32(CME_LCL_LMCR_OR, (core << SHIFT32(15)));
 
         PK_TRACE("SE1: Request Stop Levels[%d %d]",
-                 G_cme_stop_record.req_stop_c0, G_cme_stop_record.req_stop_c1);
+                 G_cme_stop_record.req_level_c0,
+                 G_cme_stop_record.req_level_c1);
 
         // Return error if target STOP level == 1(Nap)
-        if((core == CME_MASK_C0 && G_cme_stop_record.req_stop_c0 <= STOP_LEVEL_1) ||
-           (core == CME_MASK_C1 && G_cme_stop_record.req_stop_c1 <= STOP_LEVEL_1) ||
-           (core == CME_MASK_BC && (G_cme_stop_record.req_stop_c0 <= STOP_LEVEL_1 ||
-                                    G_cme_stop_record.req_stop_c1 <= STOP_LEVEL_1)))
+        if((core == CME_MASK_C0 &&
+            G_cme_stop_record.req_level_c0 <= STOP_LEVEL_1) ||
+           (core == CME_MASK_C1 &&
+            G_cme_stop_record.req_level_c1 <= STOP_LEVEL_1) ||
+           (core == CME_MASK_BC &&
+            (G_cme_stop_record.req_level_c0 <= STOP_LEVEL_1 ||
+             G_cme_stop_record.req_level_c1 <= STOP_LEVEL_1)))
         {
-            return CME_STOP_ENTRY_STOP1_SENT_IRQ;
+            pk_halt();
         }
 
-        //--------------------------------------------------------------------------
+        //----------------------------------------------------------------------
         // STOP LEVEL 2
-        //--------------------------------------------------------------------------
-
-        PK_TRACE("SE2.a");
-        // Disable fired Stop and corresponding Wakeup interrupts
-        out32(CME_LCL_EIMR_OR, (CME_MASK_BC << SHIFT32(21)) |
-              (core << SHIFT32(13)) |
-              (core << SHIFT32(15)) |
-              (core << SHIFT32(17)));
-
-        PK_TRACE("SE2.b");
-        // Also clear the status of the currently fired STOP interrupt(s)
-        out32(CME_LCL_EISR_CLR, core << SHIFT32(21));
+        //----------------------------------------------------------------------
 
         PK_TRACE("SE2.c");
         // Request PCB Mux
@@ -156,29 +170,29 @@ p9_cme_stop_entry()
         CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(0));
 
         // set target_level from pm_state for both cores or just one core
-        target_level = (core == CME_MASK_C0) ? G_cme_stop_record.req_stop_c0 :
-                       G_cme_stop_record.req_stop_c1;
+        target_level = (core == CME_MASK_C0) ? G_cme_stop_record.req_level_c0 :
+                       G_cme_stop_record.req_level_c1;
 
         // If both cores are going into STOP but targeting different levels,
         if ((core == CME_MASK_BC) &&
-            (G_cme_stop_record.req_stop_c0 != G_cme_stop_record.req_stop_c1))
+            (G_cme_stop_record.req_level_c0 != G_cme_stop_record.req_level_c1))
         {
             // set target_level to the lighter level targeted by one core
             // set deeper_level to the deeper level targeted by deeper core
-            deeper_level = G_cme_stop_record.req_stop_c0;
+            deeper_level = G_cme_stop_record.req_level_c0;
             deeper_core  = CME_MASK_C0;
 
-            if (G_cme_stop_record.req_stop_c0 < G_cme_stop_record.req_stop_c1)
+            if (G_cme_stop_record.req_level_c0 < G_cme_stop_record.req_level_c1)
             {
-                target_level = G_cme_stop_record.req_stop_c0;
-                deeper_level = G_cme_stop_record.req_stop_c1;
+                target_level = G_cme_stop_record.req_level_c0;
+                deeper_level = G_cme_stop_record.req_level_c1;
                 deeper_core  = CME_MASK_C1;
             }
         }
 
         PK_TRACE("SE2.e");
         // Update STOP History: In Transition of Entry
-        // Set req_stop_level to target_level of either both or just one core
+        // Set req_level_level to target_level of either both or just one core
         CME_STOP_UPDATE_HISTORY(core,
                                 STOP_CORE_READY_RUN,
                                 STOP_TRANS_ENTRY,
@@ -187,7 +201,7 @@ p9_cme_stop_entry()
                                 STOP_REQ_ENABLE,
                                 STOP_ACT_DISABLE);
 
-        // Set req_stop_level to deeper_level for deeper core
+        // Set req_level_level to deeper_level for deeper core
         if (deeper_core)
         {
             CME_STOP_UPDATE_HISTORY(deeper_core,
@@ -214,27 +228,39 @@ p9_cme_stop_entry()
 
         PK_TRACE("SE2: PCB Mux Granted");
 
-        //==========================
-        MARK_TRAP(SE_STOP_CORE_CLKS)
-        //==========================
+        //=============================
+        MARK_TRAP(SE_QUIESCE_CORE_INTF)
+        //=============================
 
         PK_TRACE("SE2.g");
         // Acknowledge the STOP Entry to PC with a pulse
-        out32(CME_LCL_SICR_OR, core << SHIFT32(1));
+        out32(CME_LCL_SICR_OR,  core << SHIFT32(1));
         out32(CME_LCL_SICR_CLR, core << SHIFT32(1));
+
+        /// @todo Set LMCR bits 14 and/or 15 (override disables)
 
         PK_TRACE("SE2.h");
         // Raise Core-L2 + Core-CC Quiesces
         out32(CME_LCL_SICR_OR, (core << SHIFT32(7)) | (core << SHIFT32(9)));
 
         PK_TRACE("SE2.i");
+
+        do
+        {
+            lclr_data = in32(CME_LCL_SISR);
+        }
+        while((lclr_data & core) != core);
+
         // Waits quiesce done for at least 512 core cycles
         // MF: verify generate FCB otherwise math is wrong.
         PPE_WAIT_CORE_CYCLES(loop, 512)
 
+        //==========================
+        MARK_TRAP(SE_STOP_CORE_CLKS)
+        //==========================
+
         PK_TRACE("SE2.j");
         // Raise Core Chiplet Fence
-        CME_PUTSCOM(C_CPLT_CTRL0_OR, core, BIT64(2));
         CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(18));
 
         PK_TRACE("SE2.k");
@@ -243,7 +269,7 @@ p9_cme_stop_entry()
 
         PK_TRACE("SE2.l");
         // Stop Core Clocks
-        CME_PUTSCOM(C_CLK_REGION, core, 0x9FFC00000000E000);
+        CME_PUTSCOM(C_CLK_REGION, core, 0x8FFC00000000E000);
 
         PK_TRACE("SE2.m");
 
@@ -259,15 +285,14 @@ p9_cme_stop_entry()
 
         PK_TRACE("SE2: Core Clock Stopped");
 
-        //=========================
-        MARK_TRAP(SE_DROP_CLK_SYNC)
-        //=========================
+        //==============================
+        MARK_TRAP(SE_STOP_CORE_GRID)
+        //==============================
 
         PK_TRACE("SE2.n");
         // Drop clock sync enable before switch to refclk
         CME_PUTSCOM(CPPM_CACCR_CLR, core, BIT64(15));
 
-#if !EPM_P9_TUNING
         PK_TRACE("SE2.o");
 
         // Poll for clock sync done to drop
@@ -277,24 +302,43 @@ p9_cme_stop_entry()
         }
         while(scom_data & BIT64(13));
 
-#endif
-
         PK_TRACE("SE2.p");
         // Switch glsmux to refclk to save clock grid power
         CME_PUTSCOM(C_PPM_CGCR, core, 0);
 
-        // Assert PCB Fence
-        //CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(25));
         // Assert Vital Fence
         CME_PUTSCOM(C_CPLT_CTRL1_OR,  core, BIT64(3));
         // Assert Regional Fences
         CME_PUTSCOM(C_CPLT_CTRL1_OR, core, 0xFFFF700000000000);
 
+        PK_TRACE("SE2: Clock Sync Dropped");
+
+        // Copy PECE CME sample to PPM Shadow
+        if (core & CME_MASK_C0)
+        {
+            scom_data = in64(CME_LCL_PECESR0);
+            CME_PUTSCOM(CPPM_PECES, core, scom_data);
+            G_cme_stop_record.act_level_c0 = STOP_LEVEL_2;
+        }
+
+        if (core & CME_MASK_C1)
+        {
+            scom_data = in64(CME_LCL_PECESR1);
+            CME_PUTSCOM(CPPM_PECES, core, scom_data);
+            G_cme_stop_record.act_level_c1 = STOP_LEVEL_2;
+        }
+
+        //===========================
+        MARK_TAG(SE_STOP2_DONE, core)
+        //===========================
+
         PK_TRACE("SE2.q");
         // Update Stop History: In Core Stop Level 2
         // Check if STOP level 2 reaches the target for both or one core
         entry_ongoing =
-            target_level == STOP_LEVEL_2 ? STOP_TRANS_COMPLETE : STOP_TRANS_ENTRY;
+            target_level == STOP_LEVEL_2 ?
+            STOP_TRANS_COMPLETE : STOP_TRANS_ENTRY;
+
         CME_STOP_UPDATE_HISTORY(core,
                                 STOP_CORE_IS_GATED,
                                 entry_ongoing,
@@ -323,27 +367,11 @@ p9_cme_stop_entry()
             entry_ongoing = 1;
         }
 
-        if (core & CME_MASK_C0)
-        {
-            G_cme_stop_record.act_stop_c0 = STOP_LEVEL_2;
-        }
-
-        if (core & CME_MASK_C1)
-        {
-            G_cme_stop_record.act_stop_c1 = STOP_LEVEL_2;
-        }
-
-        PK_TRACE("SE2: Clock Sync Dropped");
-
-        //===========================
-        MARK_TAG(SE_STOP2_DONE, core)
-        //===========================
-
         //===========================
         MARK_TRAP(SE_IS0_BEGIN)
         //===========================
 #if !SKIP_ABORT
-        out32(CME_LCL_EIMR_CLR, /*TODO(core << SHIFT32(13)) |*/
+        out32(CME_LCL_EIMR_CLR, (core << SHIFT32(13)) |
               (core << SHIFT32(15)) |
               (core << SHIFT32(17)));
         sync();
@@ -355,36 +383,19 @@ p9_cme_stop_entry()
         MARK_TRAP(SE_IS0_END)
         //===================
 
-        core_aborted = 0;
+        core_aborted = core & G_cme_stop_record.core_running;
 
-        if ((core & CME_MASK_C0) &&
-            G_cme_stop_record.act_stop_c0 == STOP_LEVEL_0 &&
-            G_cme_stop_record.req_stop_c0 != STOP_LEVEL_0)
+        if (core_aborted && deeper_core)
         {
-            core_aborted |= CME_MASK_C0;
-            core -= CME_MASK_C0;
-            deeper_core = 0;
-
-            if (deeper_core == CME_MASK_C1)
+            if (core_aborted != deeper_core)
             {
                 target_level = deeper_level;
             }
 
+            deeper_core  = 0;
         }
 
-        if ((core & CME_MASK_C1) &&
-            G_cme_stop_record.act_stop_c1 == STOP_LEVEL_0 &&
-            G_cme_stop_record.req_stop_c1 != STOP_LEVEL_0)
-        {
-            core_aborted |= CME_MASK_C1;
-            core -= CME_MASK_C1;
-            deeper_core = 0;
-
-            if (deeper_core == CME_MASK_C0)
-            {
-                target_level = deeper_level;
-            }
-        }
+        core = core & ~G_cme_stop_record.core_running;
 
         if (!core)
         {
@@ -393,21 +404,67 @@ p9_cme_stop_entry()
             break;
         }
 
+#if !SKIP_ENTRY_CATCHUP
+
         if (catchup_ongoing)
         {
-            core = CME_MASK_BC;
+            // Y = 2 eo = 0 same if X = 2
+            // Y > 2 eo = 1 c=c t=t same if X = 2
+            // if X > 2 eo = 1
+            //   if Y = 2 c=o t=o
+            //   else (Y > 2) c=2
+            //     if X != Y (X = Y: dl=0 dc=0 t=t)
+            //       dl=o dc=o (X > Y)
+            //       if X < Y
+            //         dl=t dc=c t=o
+            if (origin_level > STOP_LEVEL_2)
+            {
+                if (target_level == STOP_LEVEL_2)
+                {
+                    core         = origin_core;
+                    target_level = origin_level;
+                }
+                else
+                {
+                    if (origin_level != target_level)
+                    {
+                        deeper_core  = origin_core;
+                        deeper_level = origin_level;
+
+                        if (origin_level < target_level)
+                        {
+                            deeper_core  = core;
+                            deeper_level = target_level;
+                            target_level = origin_level;
+                        }
+                    }
+
+                    core = CME_MASK_BC;
+                }
+
+                entry_ongoing = 1;
+            }
+
             break;
         }
 
-#if !SKIP_CATCHUP
         core_catchup = (in32(CME_LCL_EISR) & BITS32(20, 2)) >> SHIFT32(21);
-#endif
+        core_catchup = core_catchup & G_cme_stop_record.core_enabled &
+                       G_cme_stop_record.core_running;
 
-        if (core_catchup > core)
+        if (core_catchup)
         {
-            core = core_catchup - core;
+            origin_core  = core;
+            origin_level = target_level;
+            core = core_catchup;
             catchup_ongoing = 1;
+
+            //========================
+            MARK_TAG(SE_CATCHUP, core)
+            //========================
         }
+
+#endif
 
     }
     while(catchup_ongoing);
@@ -425,9 +482,9 @@ p9_cme_stop_entry()
                   target_level[%d],deeper_level[%d]",
                  core, deeper_core, target_level, deeper_level);
 
-        //--------------------------------------------------------------------------
+        //----------------------------------------------------------------------
         // STOP LEVEL 3
-        //--------------------------------------------------------------------------
+        //----------------------------------------------------------------------
 
         if (target_level == 3)
         {
@@ -441,6 +498,20 @@ p9_cme_stop_entry()
 
             PK_TRACE("SE3.b");
             // Drop to Vmin
+
+            if(core & CME_MASK_C0)
+            {
+                G_cme_stop_record.act_level_c0 = STOP_LEVEL_3;
+            }
+
+            if(core & CME_MASK_C1)
+            {
+                G_cme_stop_record.act_level_c1 = STOP_LEVEL_3;
+            }
+
+            //===========================
+            MARK_TAG(SE_STOP3_DONE, core)
+            //===========================
 
             PK_TRACE("SE3.c");
             // Update Stop History: In Core Stop Level 3
@@ -476,20 +547,6 @@ p9_cme_stop_entry()
                 entry_ongoing = 0;
             }
 
-            if(core & CME_MASK_C0)
-            {
-                G_cme_stop_record.act_stop_c0 = STOP_LEVEL_3;
-            }
-
-            if(core & CME_MASK_C1)
-            {
-                G_cme_stop_record.act_stop_c1 = STOP_LEVEL_3;
-            }
-
-            //===========================
-            MARK_TAG(SE_STOP3_DONE, core)
-            //===========================
-
             // If we are done at STOP level 3
             if (!entry_ongoing)
             {
@@ -497,9 +554,9 @@ p9_cme_stop_entry()
             }
         }
 
-        //--------------------------------------------------------------------------
+        //----------------------------------------------------------------------
         // STOP LEVEL 4
-        //--------------------------------------------------------------------------
+        //----------------------------------------------------------------------
 
         //===============================
         MARK_TAG(SE_POWER_OFF_CORE, core)
@@ -512,18 +569,6 @@ p9_cme_stop_entry()
         CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(16));
 
 #if !STOP_PRIME
-#if !EPM_P9_TUNING
-        // Make sure we are not forcing PFET for VDD off
-        // vdd_pfet_force_state == 00 (Nop)
-        PK_TRACE("SE4.b");
-        CME_GETSCOM(PPM_PFCS, core, CME_SCOM_AND, scom_data);
-
-        if (scom_data & BITS64(0, 2))
-        {
-            return CME_STOP_ENTRY_VDD_PFET_NOT_IDLE;
-        }
-
-#endif
 
         // Prepare PFET Controls
         // vdd_pfet_val/sel_override     = 0 (disbaled)
@@ -545,22 +590,28 @@ p9_cme_stop_entry()
         }
         while(!(scom_data & BIT64(42)));
 
-#if !EPM_P9_TUNING
-        // Optional: Poll for vdd_pg_sel being: 0x8
-        PK_TRACE("SE4.f");
-
-        do
-        {
-            CME_GETSCOM(PPM_PFCS, core, CME_SCOM_AND, scom_data);
-        }
-        while(!(scom_data & BIT64(46)));
-
-#endif
         // Turn Off Force Voff
         // vdd_pfet_force_state = 00 (Nop)
         PK_TRACE("SE4.g");
         CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));
+
 #endif
+
+        PK_TRACE("SE4: Core Powered Off");
+
+        if (core & CME_MASK_C0)
+        {
+            G_cme_stop_record.act_level_c0 = STOP_LEVEL_4;
+        }
+
+        if (core & CME_MASK_C1)
+        {
+            G_cme_stop_record.act_level_c1 = STOP_LEVEL_4;
+        }
+
+        //===========================
+        MARK_TAG(SE_STOP4_DONE, core)
+        //===========================
 
         PK_TRACE("SE4.h");
         // Update Stop History: In Core Stop Level 4
@@ -596,27 +647,11 @@ p9_cme_stop_entry()
             entry_ongoing = 1;
         }
 
-        if (core & CME_MASK_C0)
-        {
-            G_cme_stop_record.act_stop_c0 = STOP_LEVEL_4;
-        }
-
-        if (core & CME_MASK_C1)
-        {
-            G_cme_stop_record.act_stop_c1 = STOP_LEVEL_4;
-        }
-
-        PK_TRACE("SE4: Core Powered Off");
-
-        //===========================
-        MARK_TAG(SE_STOP4_DONE, core)
-        //===========================
-
         //===========================
         MARK_TRAP(SE_IS1_BEGIN)
         //===========================
 #if !SKIP_ABORT
-        out32(CME_LCL_EIMR_CLR, /*TODO(core << SHIFT32(13)) |*/
+        out32(CME_LCL_EIMR_CLR, (core << SHIFT32(13)) |
               (core << SHIFT32(15)) |
               (core << SHIFT32(17)));
         sync();
@@ -628,39 +663,25 @@ p9_cme_stop_entry()
         MARK_TRAP(SE_IS1_END)
         //===================
 
-        if ((core & CME_MASK_C0) &&
-            G_cme_stop_record.act_stop_c0 == STOP_LEVEL_0 &&
-            G_cme_stop_record.req_stop_c0 != STOP_LEVEL_0)
-        {
-            core_aborted |= CME_MASK_C0;
-            core -= CME_MASK_C0;
-            deeper_core = 0;
+        core_aborted = core & G_cme_stop_record.core_running;
 
-            if (deeper_core == CME_MASK_C1)
+        if (core_aborted && deeper_core)
+        {
+            if (core_aborted != deeper_core)
             {
                 target_level = deeper_level;
             }
 
+            deeper_core  = 0;
         }
 
-        if ((core & CME_MASK_C1) &&
-            G_cme_stop_record.act_stop_c1 == STOP_LEVEL_0 &&
-            G_cme_stop_record.req_stop_c1 != STOP_LEVEL_0)
-        {
-            core_aborted |= CME_MASK_C1;
-            core -= CME_MASK_C1;
-            deeper_core = 0;
-
-            if (deeper_core == CME_MASK_C0)
-            {
-                target_level = deeper_level;
-            }
-        }
+        core = core & ~G_cme_stop_record.core_running;
 
         if (!core)
         {
             core |= core_aborted;
             entry_ongoing = 0;
+            break;
         }
 
         // If we are done at STOP level 4 or aborted
@@ -673,16 +694,16 @@ p9_cme_stop_entry()
                   target_level[%d],deeper_level[%d]",
                  core, deeper_core, target_level, deeper_level);
 
-        //--------------------------------------------------------------------------
+        //----------------------------------------------------------------------
         // STOP LEVEL 5 (preparsion of STOP LEVEL 8 and above)
-        //--------------------------------------------------------------------------
+        //----------------------------------------------------------------------
 
         // block all wake up before purge L2,
         // this is last chance either core can exit
-        out32(CME_LCL_EIMR_OR, BITS32(12, 6));
+        //out32(CME_LCL_EIMR_OR, BITS32(12, 6));
 
-        if ((G_cme_stop_record.req_stop_c0 >= STOP_LEVEL_8) &&
-            (G_cme_stop_record.req_stop_c1 >= STOP_LEVEL_8))
+        if ((G_cme_stop_record.req_level_c0 >= STOP_LEVEL_8) &&
+            (G_cme_stop_record.req_level_c1 >= STOP_LEVEL_8))
         {
 
             //=========================
@@ -698,16 +719,21 @@ p9_cme_stop_entry()
 
             // Poll for Purged Done
             PK_TRACE("SE5.1b");
-            //===========================
-            MARK_TRAP(SE_IS2_BEGIN)
 
             //===========================
+            MARK_TRAP(SE_IS2_BEGIN)
+            //===========================
+
             do
             {
 #if !SKIP_L2_PURGE_ABORT
 
                 if(in32(CME_LCL_EINR) & BITS32(12, 6))
                 {
+
+                    //===============================
+                    MARK_TAG(SE_PURGE_L2_ABORT, core)
+                    //===============================
                     // abort L2+NCU purges
                     out32(CME_LCL_SICR_OR, BIT32(19) | BIT32(23));
                 }
@@ -726,9 +752,9 @@ p9_cme_stop_entry()
 
             PK_TRACE("SE5.1: L2/NCU/CHTM Purged");
 
-            //=========================
-            MARK_TRAP(SE_L2_PURGE_DONE)
-            //=========================
+            //==============================
+            MARK_TAG(SE_PURGE_L2_DONE, core)
+            //==============================
         }
 
         //=============================
@@ -745,30 +771,24 @@ p9_cme_stop_entry()
                                 STOP_REQ_DISABLE,
                                 STOP_ACT_ENABLE);
 
-        if (core & CME_MASK_C0)
-        {
-            G_cme_stop_record.act_stop_c0 = STOP_LEVEL_5;
-        }
-
-        if (core & CME_MASK_C1)
-        {
-            G_cme_stop_record.act_stop_c1 = STOP_LEVEL_5;
-        }
-
         // Send PCB Interrupt per core
         PK_TRACE("SE5.2b");
         pig.fields.req_intr_type = 2; //0b010: STOP State Change
 
         if (core & CME_MASK_C0)
         {
-            pig.fields.req_intr_payload = G_cme_stop_record.req_stop_c0;
+            pig.fields.req_intr_payload = G_cme_stop_record.req_level_c0;
             CME_PUTSCOM(PPM_PIG, CME_MASK_C0, pig.value);
+            G_cme_stop_record.core_stopgpe |= core;
+            G_cme_stop_record.act_level_c0 = STOP_LEVEL_5;
         }
 
         if (core & CME_MASK_C1)
         {
-            pig.fields.req_intr_payload = G_cme_stop_record.req_stop_c1;
+            pig.fields.req_intr_payload = G_cme_stop_record.req_level_c1;
             CME_PUTSCOM(PPM_PIG, CME_MASK_C1, pig.value);
+            G_cme_stop_record.core_stopgpe |= core;
+            G_cme_stop_record.act_level_c1 = STOP_LEVEL_5;
         }
 
         // Change PPM Wakeup to STOPGPE
@@ -786,21 +806,6 @@ p9_cme_stop_entry()
 
     // Release PPM Write Protection
     CME_PUTSCOM(CPPM_CPMMR_CLR, core, BIT64(0));
-
-    // Enable Wakeup Interrupts of this entry core if no handoff to SGPE
-    // Otherwise enable Doorbell interrupts of this entry core
-    out32(CME_LCL_EIMR_CLR,
-          ((~core & G_cme_stop_record.active_core & CME_MASK_BC) << SHIFT32(21)));
-
-    if (!entry_ongoing)
-        out32(CME_LCL_EIMR_CLR,
-              /*TODO((core & ~core_aborted & CME_MASK_BC) << SHIFT32(13)) |*/
-              ((core & ~core_aborted & CME_MASK_BC) << SHIFT32(15)) |
-              ((core & ~core_aborted & CME_MASK_BC) << SHIFT32(17)));
-    else
-    {
-        out32_sh(CME_LCL_EIMR_CLR, (core << SHIFT32((41 - 32))));
-    }
 
     //============================
     MARK_TRAP(ENDSCOPE_STOP_ENTRY)

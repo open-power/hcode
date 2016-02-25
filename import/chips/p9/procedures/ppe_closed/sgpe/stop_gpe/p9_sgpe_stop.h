@@ -81,6 +81,7 @@
 #define EQ_QPPM_QCCR_WCLEAR      0x100F01BE
 #define EQ_QPPM_QCCR_WOR         0x100F01BF
 
+#define EX_NCU_STATUS_REG        0x1001100F
 #define EX_DRAM_REF_REG          0x1001180F
 #define EX_PM_PURGE_REG          0x10011813
 #define EX_PM_LCO_DIS_REG        0x10011816
@@ -99,18 +100,15 @@
     hist.fields.act_write_enable = act_e;                                     \
     GPE_PUTSCOM_VAR(PPM_SSHSRC, base, id, 0, hist.value);
 
-
 enum SGPE_STOP_RETURN_CODES
 {
-    SGPE_STOP_SUCCESS                 = 0,
-    SGPE_STOP_RECEIVE_WRONG_PM_STATE  = 0x00747301,
-    SGPE_STOP_ENTRY_VDD_PFET_NOT_IDLE = 0x00747302
+    SGPE_STOP_SUCCESS                 = 0
 };
 
 enum SGPE_STOP_IRQ_SHORT_NAMES
 {
     IRQ_STOP_TYPE2                    = OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING,
-    IRQ_STOP_TYPE5                    = OCCHW_IRQ_PMC_PCB_INTR_TYPE5_PENDING,
+    IRQ_STOP_TYPE3                    = OCCHW_IRQ_PMC_PCB_INTR_TYPE3_PENDING,
     IRQ_STOP_TYPE6                    = OCCHW_IRQ_PMC_PCB_INTR_TYPE6_PENDING
 };
 
@@ -132,63 +130,49 @@ enum SGPE_STOP_EVENT_FLAGS
     SGPE_EXIT_FLAG                    = 1
 };
 
-typedef union sgpe_level
+typedef struct
 {
-    uint16_t qlevel;
-    struct
-    {
-        uint8_t x0lv : 8;
-        uint8_t x1lv : 8;
-    } xlevel;
-    struct
-    {
-        uint8_t c0lv : 4;
-        uint8_t c1lv : 4;
-        uint8_t c2lv : 4;
-        uint8_t c3lv : 4;
-    } clevel;
-} sgpe_level_t;
-
-typedef union sgpe_state
-{
-    uint32_t status;
-    struct
-    {
-        uint8_t  spare0 : 4;
-        uint8_t  q_req  : 4;
-        uint8_t  x0req  : 4;
-        uint8_t  x1req  : 4;
-        uint8_t  spare1 : 4;
-        uint8_t  q_act  : 4;
-        uint8_t  x0act  : 4;
-        uint8_t  x1act  : 4;
-    } detail;
+    // requested stop state calculated from core stop levels
+    uint8_t req_state_x0;
+    uint8_t req_state_x1;
+    uint8_t req_state_q;
+    // actual stop state
+    uint8_t act_state_x0;
+    uint8_t act_state_x1;
+    uint8_t act_state_q;
 } sgpe_state_t;
 
-typedef union sgpe_group
+typedef struct
 {
-    uint64_t vector[2];
-    struct
-    {
-        uint32_t c_out;
-        uint16_t x_out;
-        uint16_t q_out;
-        uint32_t c_in;
-        uint16_t x_in;
-        uint16_t q_in;
-    } member;
+    uint32_t entry_x0;
+    uint32_t entry_x1;
+    uint32_t entry_x;
+    uint32_t entry_q;
+    uint32_t entry_c;
+    uint32_t exit_x0;
+    uint32_t exit_x1;
+    uint32_t exit_x;
+    uint32_t exit_q;
+    uint32_t exit_c;
+    uint32_t good_x0;
+    uint32_t good_x1;
+    uint32_t good_x;
+    uint32_t good_q;
+    uint32_t good_c;
 } sgpe_group_t;
-
 
 /// SGPE Stop Score Board Structure
 typedef struct
 {
-    sgpe_group_t group;
+    // requested stop level for all cores in all quads
+    // needs to be global variable for ex/quad stop evaluation
+    uint8_t      level[MAX_QUADS][CORES_PER_QUAD];
+    // requested and actual state of quad stop
     sgpe_state_t state[MAX_QUADS];
-    sgpe_level_t level[MAX_QUADS];
+    // group of ex and quad entering or exiting the stop
+    sgpe_group_t group;
     PkSemaphore  sem[2];
 } SgpeStopRecord;
-
 
 /// SGPE STOP Entry and Exit Prototypes
 void p9_sgpe_stop_pig_type2_handler(void*, PkIrqId);
@@ -197,17 +181,17 @@ void p9_sgpe_stop_exit_thread(void*);
 int  p9_sgpe_stop_entry();
 int  p9_sgpe_stop_exit();
 
-int  p9_hcd_cache_poweron(uint8_t);
-int  p9_hcd_cache_chiplet_reset(uint8_t);
-int  p9_hcd_cache_gptr_time_initf(uint8_t);
-int  p9_hcd_cache_dpll_setup(uint8_t);
-int  p9_hcd_cache_chiplet_init(uint8_t);
-int  p9_hcd_cache_repair_initf(uint8_t);
-int  p9_hcd_cache_arrayinit(uint8_t);
-int  p9_hcd_cache_initf(uint8_t);
-int  p9_hcd_cache_startclocks(uint8_t);
-int  p9_hcd_cache_l2_startclocks(uint8_t, uint8_t);
-int  p9_hcd_cache_scominit(uint8_t);
-int  p9_hcd_cache_scomcust(uint8_t);
-int  p9_hcd_cache_ras_runtime_scom(uint8_t);
-int  p9_hcd_cache_occ_runtime_scom(uint8_t);
+int  p9_hcd_cache_poweron(uint32_t);
+int  p9_hcd_cache_chiplet_reset(uint32_t);
+int  p9_hcd_cache_gptr_time_initf(uint32_t);
+int  p9_hcd_cache_dpll_setup(uint32_t);
+int  p9_hcd_cache_chiplet_init(uint32_t);
+int  p9_hcd_cache_repair_initf(uint32_t);
+int  p9_hcd_cache_arrayinit(uint32_t);
+int  p9_hcd_cache_initf(uint32_t);
+int  p9_hcd_cache_startclocks(uint32_t, uint32_t);
+int  p9_hcd_cache_l2_startclocks(uint32_t, uint32_t);
+int  p9_hcd_cache_scominit(uint32_t);
+int  p9_hcd_cache_scomcust(uint32_t);
+int  p9_hcd_cache_ras_runtime_scom(uint32_t);
+int  p9_hcd_cache_occ_runtime_scom(uint32_t);

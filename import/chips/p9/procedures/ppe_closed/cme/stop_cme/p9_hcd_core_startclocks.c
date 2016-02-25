@@ -30,84 +30,85 @@ int
 p9_hcd_core_startclocks(uint32_t core)
 {
     int      rc = CME_STOP_SUCCESS;
-    uint64_t data, loop;
+    uint64_t scom_data, loop;
 
-    PK_TRACE("Setup OPCG_ALIGN Register");
-    CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, data);
-    data = data & ~(BITS64(0, 4) & BITS64(12, 8) & BITS64(52, 12));
-    data = data | (BIT64(1) | BIT64(3) | BIT64(59));
-    CME_PUTSCOM(C_OPCG_ALIGN, core, data);
+    // do this again here for stop2 in addition to chiplet_reset
+    PK_TRACE("4S2: Set Core Glitchless Mux to DPLL");
+    CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
 
-    PK_TRACE("Drop partial good fences via CPLT_CTRL1");
+    PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
+    CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, scom_data);
+    scom_data = scom_data & ~(BITS64(0, 4) & BITS64(12, 8) & BITS64(52, 12));
+    scom_data = scom_data | (BIT64(1) | BIT64(3) | BIT64(59));
+    CME_PUTSCOM(C_OPCG_ALIGN, core, scom_data);
+
+    PK_TRACE("Drop partial good fences via CPLT_CTRL1[3-14]");
     CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, 0xFFFF700000000000);
 
-    PK_TRACE("Drop vital fences via CPLT_CTRL1");
+    PK_TRACE("Drop vital fences via CPLT_CTRL1[3]");
     CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, BIT64(3));
 
-    PK_TRACE("Raise core clock sync enable");
+    PK_TRACE("Assert core clock sync enable via CPPM_CACCR[15]");
     CME_PUTSCOM(CPPM_CACCR_OR, core, BIT64(15));
 
-#if !EPM_P9_TUNING
-    PK_TRACE("Poll for core clock sync done to raise");
+    PK_TRACE("Poll for core clock sync done via CPPM_CACSR[13]");
 
     do
     {
-        CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_AND, data);
+        CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_AND, scom_data);
     }
-    while(~data & BIT64(13));
-
-#endif
+    while(~scom_data & BIT64(13));
 
     PK_TRACE("Reset abstclk & syncclk muxsel(io_clk_sel) via CPLT_CTRL0[0:1]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BITS64(0, 2));
 
     // align_chiplets()
 
-    PK_TRACE("Set flushmode_inhibit via CPLT_CTRL0[2]");
+    PK_TRACE("Assert flushmode_inhibit via CPLT_CTRL0[2]");
     CME_PUTSCOM(C_CPLT_CTRL0_OR, core, BIT64(2));
 
-    PK_TRACE("Set force_align via CPLT_CTRL0[3]");
+    PK_TRACE("Assert force_align via CPLT_CTRL0[3]");
     CME_PUTSCOM(C_CPLT_CTRL0_OR, core, BIT64(3));
 
-    PK_TRACE("Set/Unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
-    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, data);
-    data = data | BIT64(7);
-    CME_PUTSCOM(C_SYNC_CONFIG, core, data);
-    data = data & ~BIT64(7);
-    CME_PUTSCOM(C_SYNC_CONFIG, core, data);
+    PK_TRACE("Set then unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
+    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data);
+    scom_data = scom_data | BIT64(7);
+    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
+    scom_data = scom_data & ~BIT64(7);
+    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
 
     PK_TRACE("Check chiplet_is_aligned");
 
     do
     {
-        CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, data);
+        CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
     }
-    while(~data & BIT64(9));
+    while(~scom_data & BIT64(9));
 
-    PK_TRACE("Clear force_align via CPLT_CTRL0[3]");
+    PK_TRACE("Drop force_align via CPLT_CTRL0[3]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(3));
     PPE_WAIT_CORE_CYCLES(loop, 450);
 
     // clock_start()
 
-    PK_TRACE("Set all bits to zero prior clock start via SCAN_REGION_TYPE");
+    PK_TRACE("Clear all bits prior start core clocks via SCAN_REGION_TYPE");
     CME_PUTSCOM(C_SCAN_REGION_TYPE, core, 0);
 
-    PK_TRACE("Start clock(arrays+nsl clock region) via CLK_REGION");
-    data = 0x5FFC000000006000;
-    CME_PUTSCOM(C_CLK_REGION, core, data);
+    PK_TRACE("Start core clocks(arrays+nsl clock region) via CLK_REGION");
+    scom_data = 0x4FFC000000006000;
+    CME_PUTSCOM(C_CLK_REGION, core, scom_data);
 
-    PK_TRACE("Start clock(sl+refresh clock region) via CLK_REGION");
-    data = 0x5FFC00000000E000;
-    CME_PUTSCOM(C_CLK_REGION, core, data);
+    PK_TRACE("Start core clocks(sl+refresh clock region) via CLK_REGION");
+    scom_data = 0x4FFC00000000E000;
+    CME_PUTSCOM(C_CLK_REGION, core, scom_data);
 
-    PK_TRACE("Polling for clocks starting via CLOCK_STAT_SL");
+    PK_TRACE("Polling for core clocks running via CLOCK_STAT_SL");
 
     do
     {
-        CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, data);
+        CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data);
     }
-    while((~data & BITS64(4, 10)) != BITS64(4, 10));
+    while((scom_data & BITS64(4, 10)) != 0);
 
     PK_TRACE("Core clock is now running");
 
@@ -116,12 +117,9 @@ p9_hcd_core_startclocks(uint32_t core)
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
 
-    //PK_TRACE("Drop fence to allow PCB operations to chiplet via NC0INDIR[26]");
-    //CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(25));
-
     // checkstop
 
-    PK_TRACE("Clear flushmode_inhibit via CPLT_CTRL0[2]");
+    PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(2));
 
     // check align

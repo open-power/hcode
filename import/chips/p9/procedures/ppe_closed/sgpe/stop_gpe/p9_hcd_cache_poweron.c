@@ -27,32 +27,30 @@
 #include "p9_sgpe_stop_exit_marks.h"
 
 int
-p9_hcd_cache_poweron(uint8_t quad)
+p9_hcd_cache_poweron(uint32_t quad)
 {
     int rc = SGPE_STOP_SUCCESS;
 
-    PK_TRACE("Set L3 glsmux reset via CLOCK_GRID_CTRL[0]");
+    PK_TRACE("Drop chiplet enable via NET_CTRL0[0]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(0));
+
+    PK_TRACE("Assert PCB fence via NET_CTRL0[25]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(25));
+
+    PK_TRACE("Assert chiplet electrical fence via NET_CTRL0[26]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(26));
+
+    PK_TRACE("Assert vital thold via NET_CTRL0[16]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(16));
+
+    PK_TRACE("Assert L3 glsmux reset via PPM_CGCR[0]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), BIT64(0));
 
-    PK_TRACE("Set L2 glsmux reset via EXCLK_GRID_CTRL[32:33]");
+    PK_TRACE("Assert L2 glsmux reset via QPPM_EXCGCR[32:33]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), BITS64(32, 2));
-
-    PK_TRACE("Set DPLL ff_bypass via EQ_QPPM_DPLL_CTRL[2]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_CTRL_OR, quad), BIT64(2));
 
 #if !STOP_PRIME
     uint64_t scom_data;
-#if !EPM_P9_TUNNING
-    // vdd_pfet_force_state == 00 (Nop)
-    PK_TRACE("Make sure we are not forcing PFET for VDD off");
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, quad), scom_data);
-
-    if (scom_data & BITS64(0, 2))
-    {
-        return SGPE_STOP_ENTRY_VDD_PFET_NOT_IDLE;
-    }
-
-#endif
 
     // vdd_pfet_val/sel_override     = 0 (disbaled)
     // vcs_pfet_val/sel_override     = 0 (disbaled)
@@ -87,21 +85,12 @@ p9_hcd_cache_poweron(uint8_t quad)
 
     MARK_TRAP(SX_POWERON_DONE)
 
-#if !EPM_P9_TUNNING
-    PK_TRACE("Optional: Poll for vdd_pg_sel being: 0x0");
-
-    do
-    {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, quad), scom_data);
-    }
-    while(scom_data & BIT64(46));
-
-    MARK_TRAP(SX_POWERON_PG_SEL)
-#endif
-
     // vdd_pfet_force_state = 00 (Nop)
+    // vcs_pfet_force_state = 00 (Nop)
     PK_TRACE("Turn Off Force Von");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, quad), BITS64(0, 2));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, quad), BITS64(0, 4));
+
 #endif
+
     return rc;
 }

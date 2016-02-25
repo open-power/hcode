@@ -27,7 +27,7 @@
 #include "p9_sgpe_stop_exit_marks.h"
 
 int
-p9_hcd_cache_ras_runtime_scom(uint8_t quad)
+p9_hcd_cache_ras_runtime_scom(uint32_t quad)
 {
     return 0;
 }

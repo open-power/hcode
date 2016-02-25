@@ -26,8 +26,8 @@
 /// Init Vectors for Register Setup
 enum P9_HCD_COMMON_INIT_VECTORS
 {
-    // (0)CHIPLET_ENABLE
     // (1)PCB_EP_RESET
+    // (2)CLK_ASYNC_RESET
     // (3)PLL_TEST_EN
     // (4)PLLRST
     // (5)PLLBYP
@@ -35,7 +35,9 @@ enum P9_HCD_COMMON_INIT_VECTORS
     // (13)VITL_MPW2
     // (14)VITL_MPW3
     // (18)FENCE_EN
-    NET_CTRL0_INIT_VECTOR = (BIT64(0) | BIT64(1) | BITS64(3, 3) | BITS64(12, 3) | BIT64(18)),
+    // (22)FUNC_CLKSEL
+    // (26)LVLTRANS_FENCE
+    NET_CTRL0_INIT_VECTOR = (BITS64(1, 5) | BITS64(3, 3) | BIT64(18) | BIT64(22) | BIT64(26)),
     HANG_PULSE1_INIT_VECTOR = BIT64(5)
 };
 

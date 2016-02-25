@@ -31,21 +31,23 @@ p9_hcd_core_poweron(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
 
-    PK_TRACE("Set core glsmux reset");
+    PK_TRACE("Drop chiplet enable via NET_CTRL0[0]");
+    CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(0));
+
+    PK_TRACE("Assert PCB fence via NET_CTRL0[25]");
+    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(25));
+
+    PK_TRACE("Assert chiplet electrical fence via NET_CTRL0[26]");
+    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(26));
+
+    PK_TRACE("Assert vital thold via NET_CTRL0[16]");
+    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(16));
+
+    PK_TRACE("Assert core glsmux reset via PPM_CGCR[0]");
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(0));
+
 #if !STOP_PRIME
     uint64_t scom_data;
-#if !EPM_P9_TUNNING
-    // vdd_pfet_force_state == 00 (Nop)
-    PK_TRACE("Make sure we are not forcing PFET for VDD off");
-    CME_GETSCOM(PPM_PFCS, core, CME_SCOM_AND, scom_data);
-
-    if (scom_data & BITS64(0, 2))
-    {
-        return CME_STOP_ENTRY_VDD_PFET_NOT_IDLE;
-    }
-
-#endif
 
     // vdd_pfet_val/sel_override     = 0 (disbaled)
     // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
@@ -66,17 +68,6 @@ p9_hcd_core_poweron(uint32_t core)
 
     MARK_TRAP(SX_POWERON_DONE)
 
-#if !EPM_P9_TUNNING
-    PK_TRACE("Optional: Poll for vdd_pg_sel being: 0x0");
-
-    do
-    {
-        CME_GETSCOM(PPM_PFCS, core, CME_SCOM_AND, scom_data);
-    }
-    while(scom_data & BIT64(46));
-
-    MARK_TRAP(SX_POWERON_PG_SEL)
-#endif
     // vdd_pfet_force_state = 00 (Nop)
     PK_TRACE("Turn Off Force Von");
     CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));

@@ -27,12 +27,13 @@
 #include "p9_sgpe_stop_exit_marks.h"
 
 int
-p9_hcd_cache_l2_startclocks(uint8_t ex, uint8_t quad)
+p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
 {
     int      rc = SGPE_STOP_SUCCESS;
     uint64_t scom_data;
 
-    PK_TRACE("Switch L2 glsmux select to DPLL output");
+    // do this again here for stop8 in addition to dpll_setup
+    PK_TRACE("4S8: Switch L2 glsmux select to DPLL output");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), BITS64(34, 2));
 
     PK_TRACE("Setup OPCG_ALIGN Register");
@@ -74,7 +75,6 @@ p9_hcd_cache_l2_startclocks(uint8_t ex, uint8_t quad)
     PK_TRACE("Raise clock sync enable before switch to dpll");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), (ex << SHIFT64(37)));
 
-#if !EPM_P9_TUNING
     PK_TRACE("Poll for clock sync done to raise");
 
     do
@@ -83,7 +83,7 @@ p9_hcd_cache_l2_startclocks(uint8_t ex, uint8_t quad)
     }
     while(!(scom_data & (ex << SHIFT64(37))));
 
-#endif
+    MARK_TRAP(SX_L2_STARTCLOCKS_GRID)
 
     // -------------------------------
     // Start L2 Clock
@@ -93,11 +93,11 @@ p9_hcd_cache_l2_startclocks(uint8_t ex, uint8_t quad)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
 
     PK_TRACE("Start clock(arrays+nsl clock region) via CLK_REGION");
-    scom_data = 0x5000000000006000 | ((uint64_t)ex << SHIFT64(9));
+    scom_data = 0x4000000000006000 | ((uint64_t)ex << SHIFT64(9));
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
 
     PK_TRACE("Start clock(sl+refresh clock region) via CLK_REGION");
-    scom_data = 0x500000000000E000 | ((uint64_t)ex << SHIFT64(9));
+    scom_data = 0x400000000000E000 | ((uint64_t)ex << SHIFT64(9));
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
 
     PK_TRACE("Polling for clocks starting via CLOCK_STAT_SL");
@@ -116,19 +116,28 @@ p9_hcd_cache_l2_startclocks(uint8_t ex, uint8_t quad)
 
     if (ex & FST_EX_IN_QUAD)
     {
-        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 1), BIT64(21));
+        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 0), BIT64(21));
     }
 
     if (ex & SND_EX_IN_QUAD)
     {
-        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 2), BIT64(21));
+        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 1), BIT64(21));
     }
 
     PK_TRACE("Clear flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
 
     PK_TRACE("Drop L2 Snoop Disable");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, quad, ex), 0);
+
+    if (ex & FST_EX_IN_QUAD)
+    {
+        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, quad, 0), 0);
+    }
+
+    if (ex & SND_EX_IN_QUAD)
+    {
+        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, quad, 1), 0);
+    }
 
     return rc;
 }

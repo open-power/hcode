@@ -31,29 +31,32 @@ extern SgpeStopRecord G_sgpe_stop_record;
 int
 p9_sgpe_stop_exit()
 {
-    int          rc;
-    uint8_t      ex;
-    uint8_t      cloop;
-    uint8_t      qloop;
+    int          rc = 0;
+    uint32_t     m_l2;
+    uint32_t     m_l3;
+    uint32_t     cloop;
+    uint32_t     qloop;
     uint32_t     cexit;
     //uint64_t     scom_data;
     ppm_sshsrc_t hist;
 
-    MARK_TAG(BEGINSCOPE_STOP_EXIT, (G_sgpe_stop_record.group.member.q_out >> 10))
+    //===============================
+    MARK_TAG(BEGINSCOPE_STOP_EXIT, 0)
+    //===============================
 
-    for(cexit = G_sgpe_stop_record.group.member.c_out, qloop = 0, ex = 0;
+    for(cexit = G_sgpe_stop_record.group.exit_c, qloop = 0, m_l2 = 0, m_l3 = 0;
         cexit > 0;
-        cexit = cexit << 4, qloop++, ex = 0)
+        cexit = cexit << 4, qloop++, m_l2 = 0, m_l3 = 0)
     {
-        ex |= ((cexit & BITS32(0, 2)) ? FST_EX_IN_QUAD : 0);
-        ex |= ((cexit & BITS32(2, 2)) ? SND_EX_IN_QUAD : 0);
+        m_l2 |= ((cexit & BITS32(0, 2)) ? FST_EX_IN_QUAD : 0);
+        m_l2 |= ((cexit & BITS32(2, 2)) ? SND_EX_IN_QUAD : 0);
 
-        if(!ex)
+        if(!m_l2)
         {
             continue;
         }
 
-        if(G_sgpe_stop_record.state[qloop].detail.q_act >= STOP_LEVEL_11)
+        if(G_sgpe_stop_record.state[qloop].act_state_q >= STOP_LEVEL_11)
         {
             SGPE_STOP_UPDATE_HISTORY(qloop,
                                      QUAD_ADDR_BASE,
@@ -63,54 +66,84 @@ p9_sgpe_stop_exit()
                                      STOP_LEVEL_0,
                                      STOP_REQ_DISABLE,
                                      STOP_ACT_DISABLE);
-            MARK_TRAP(SX_LV11_WAKEUP_START)
+
+            //=================================
+            MARK_TAG(SX_POWERON, (32 >> qloop))
+            //=================================
 
             PK_TRACE("Cache Poweron");
             p9_hcd_cache_poweron(qloop);
-            MARK_TRAP(SX_POWERON_END)
+
+            //=========================
+            MARK_TRAP(SX_CHIPLET_RESET)
+            //=========================
 
             PK_TRACE("Cache Chiplet Reset");
             p9_hcd_cache_chiplet_reset(qloop);
-            MARK_TRAP(SX_CHIPLET_RESET_END)
 
 #if !STOP_PRIME
             PK_TRACE("Cache Gptr Time Initf");
             p9_hcd_cache_gptr_time_initf(qloop);
-            MARK_TRAP(SX_GPTR_TIME_INITF_END)
 #endif
+
+            //====================================
+            MARK_TAG(SX_DPLL_SETUP, (32 >> qloop))
+            //====================================
+
+            ///@todo dpll_initf
 
             PK_TRACE("Cache Dpll Setup");
             p9_hcd_cache_dpll_setup(qloop);
-            MARK_TRAP(SX_DPLL_SETUP_END)
 
 #if !STOP_PRIME
+            //=======================================
+            MARK_TAG(SX_CHIPLET_INITS, (32 >> qloop))
+            //=======================================
+
             PK_TRACE("Cache Chiplet Init");
             p9_hcd_cache_chiplet_init(qloop);
-            MARK_TRAP(SX_CHIPLET_INIT_END)
 
             PK_TRACE("Cache Repair Initf");
             p9_hcd_cache_repair_initf(qloop);
-            MARK_TRAP(SX_REPAIR_INITF_END)
+
+            //====================================
+            MARK_TAG(SX_ARRAY_INIT, (32 >> qloop))
+            //====================================
 
             PK_TRACE("Cache Arrayinit");
             p9_hcd_cache_arrayinit(qloop);
-            MARK_TRAP(SX_ARRAYINIT_END)
+
+            //=====================
+            MARK_TRAP(SX_FUNC_INIT)
+            //=====================
 
             PK_TRACE("Cache Initf");
             p9_hcd_cache_initf(qloop);
-            MARK_TRAP(SX_INITF_END)
 #endif
 
+            if (G_sgpe_stop_record.group.good_x0 & BIT32(qloop))
+            {
+                m_l3 |= FST_EX_IN_QUAD;
+            }
+
+            if (G_sgpe_stop_record.group.good_x1 & BIT32(qloop))
+            {
+                m_l3 |= SND_EX_IN_QUAD;
+            }
+
+            //===========================================
+            MARK_TAG(SX_CACHE_STARTCLOCKS, (32 >> qloop))
+            //===========================================
+
             PK_TRACE("Cache Startclocks");
-            p9_hcd_cache_startclocks(qloop);
-            MARK_TRAP(SX_STARTCLOCKS_END)
+            p9_hcd_cache_startclocks(qloop, m_l3);
 
         }
 
-        if((G_sgpe_stop_record.state[qloop].detail.x0act >= STOP_LEVEL_8 &&
-            ex == FST_EX_IN_QUAD) ||
-           (G_sgpe_stop_record.state[qloop].detail.x1act >= STOP_LEVEL_8 &&
-            ex == SND_EX_IN_QUAD) )
+        if((G_sgpe_stop_record.state[qloop].act_state_x0 >= STOP_LEVEL_8 &&
+            m_l2 == FST_EX_IN_QUAD) ||
+           (G_sgpe_stop_record.state[qloop].act_state_x1 >= STOP_LEVEL_8 &&
+            m_l2 == SND_EX_IN_QUAD) )
         {
             for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
             {
@@ -129,51 +162,61 @@ p9_sgpe_stop_exit()
                                          STOP_ACT_DISABLE);
             }
 
-            MARK_TRAP(SX_LV8_WAKEUP_START)
+            //========================================================
+            MARK_TAG(SX_L2_STARTCLOCKS, ((m_l2 << 6) | (32 >> qloop)))
+            //========================================================
 
             PK_TRACE("Cache L2 Startclocks");
-            p9_hcd_cache_l2_startclocks(ex, qloop);
-            MARK_TRAP(SX_L2_STARTCLOCKS_END)
+            p9_hcd_cache_l2_startclocks(qloop, m_l2);
 
             // reset ex actual state if ex is exited.
-            if (ex & FST_EX_IN_QUAD)
+            if (m_l2 & FST_EX_IN_QUAD)
             {
-                G_sgpe_stop_record.state[qloop].detail.x0act = 0;
+                G_sgpe_stop_record.state[qloop].act_state_x0 = 0;
             }
 
-            if (ex & SND_EX_IN_QUAD)
+            if (m_l2 & SND_EX_IN_QUAD)
             {
-                G_sgpe_stop_record.state[qloop].detail.x1act = 0;
+                G_sgpe_stop_record.state[qloop].act_state_x1 = 0;
             }
         }
 
-        if(G_sgpe_stop_record.state[qloop].detail.q_act >= STOP_LEVEL_11)
+        if(G_sgpe_stop_record.state[qloop].act_state_q >= STOP_LEVEL_11)
         {
-            MARK_TRAP(SX_LV11_WAKEUP_CONTINUE)
 
 #if !STOP_PRIME
+            //====================================
+            MARK_TAG(SX_SCOM_INITS, (32 >> qloop))
+            //====================================
+
             PK_TRACE("Cache Scom Init");
             p9_hcd_cache_scominit(qloop);
-            MARK_TRAP(SX_SCOMINIT_END)
 
             PK_TRACE("Cache Scom Cust");
             p9_hcd_cache_scomcust(qloop);
-            MARK_TRAP(SX_SCOMCUST_END)
+
+            //==================================
+            MARK_TAG(SX_CME_BOOT, (32 >> qloop))
+            //==================================
 
             PK_TRACE("Boot CME");
             //cme_boot();
-            MARK_TRAP(SX_CME_BOOT_END)
+
+            //=======================================
+            MARK_TAG(SX_RUNTIME_INITS, (32 >> qloop))
+            //=======================================
 
             PK_TRACE("Cache RAS Runtime Scom");
             p9_hcd_cache_ras_runtime_scom(qloop);
-            MARK_TRAP(SX_RAS_RUNTIME_SCOM_END)
 
             PK_TRACE("Cache OCC Runtime Scom");
             p9_hcd_cache_occ_runtime_scom(qloop);
-            MARK_TRAP(SX_OCC_RUNTIME_SCOM_END)
 
+            //=========================
+            MARK_TRAP(SX_ENABLE_ANALOG)
+            //=========================
 #endif
-            G_sgpe_stop_record.state[qloop].detail.q_act = 0;
+            G_sgpe_stop_record.state[qloop].act_state_q = 0;
         }
 
         for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
@@ -184,27 +227,29 @@ p9_sgpe_stop_exit()
             }
 
             // reset clevel to 0 if core is going to wake up
-            G_sgpe_stop_record.level[qloop].qlevel &= ~BITS16((cloop << 2), 4);
+            G_sgpe_stop_record.level[qloop][cloop] = 0;
             /*do {
                 GPE_GETSCOM(CME_SCOM_FLAGS, QUAD_ADDR_BASE|CME_ADDR_OFFSET_EX0,
                             ((qloop<<2)+cloop), scom_data);
             } while(!(scom_data & BIT64(0)));*/
             // TODO PUT THE FOLLOWING TWO BEFORE CME_BOOT()
             // Change PPM Wakeup to CME
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR, ((qloop << 2) + cloop)),
-                        BIT64(13));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR,
+                                           ((qloop << 2) + cloop)), BIT64(13));
             PK_TRACE("Doorbell1 the CME");
             GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG, ((qloop << 2) + cloop)),
                         (BIT64(0)));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1_OR, ((qloop << 2) + cloop)),
-                        BIT64(7));
-
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1_OR,
+                                           ((qloop << 2) + cloop)), BIT64(7));
         }
     }
 
     // Enable Type2 Interrupt
     out32(OCB_OIMR1_CLR, BIT32(15));
 
+    //===========================
     MARK_TRAP(ENDSCOPE_STOP_EXIT)
+    //===========================
+
     return SGPE_STOP_SUCCESS;
 }

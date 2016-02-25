@@ -75,8 +75,8 @@ enum GPE_SCOM_ADDRESS_PARAMETERS
     EX0_ADDR_OFFSET             = 0x00000800,
     EX1_ADDR_OFFSET             = 0x00000C00,
     CME_ADDR_BASE               = 0x10012000,
-    CME0_ADDR_OFFSET            = 0x00000400,
-    CME1_ADDR_OFFSET            = 0x00000800
+    CME0_ADDR_OFFSET            = 0x00000000,
+    CME1_ADDR_OFFSET            = 0x00000400
 };
 
 

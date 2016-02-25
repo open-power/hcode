@@ -44,45 +44,54 @@
 #include "cppm_firmware_registers.h"
 
 #include "p9_stop_common.h"
-
+/*
+/// Compiler flags
+#define EPM_P9_LEVEL        1
+#define SKIP_ABORT          1
+#define SKIP_L2_PURGE_ABORT 1
+#define SKIP_CATCHUP        1
+#define STOP_PRIME          0
+#define SKIP_SCAN0          0
+#define SKIP_INITF          0
+#define SKIP_ARY_INIT       0
+#define SKIP_SELF_RESTORE   0
+*/
 /// handcoded addresses TO BE REMOVED
 
-#define THREAD_INFO        0x20010A9B
-#define DIRECT_CONTROLS    0x20010A9C
-#define RAS_STATUS         0x20010A02
-#define RAM_MODEREG        0x20010A51
-#define RAM_CTRL           0x20010A52
-#define RAM_STATUS         0x20010A53
+#define THREAD_INFO            0x20010A9B
+#define DIRECT_CONTROLS        0x20010A9C
+#define RAS_STATUS             0x20010A02
+#define RAM_MODEREG            0x20010A51
+#define RAM_CTRL               0x20010A52
+#define RAM_STATUS             0x20010A53
 
-#define C_SYNC_CONFIG      0x20030000
-#define C_OPCG_ALIGN       0x20030001
-#define C_SCAN_REGION_TYPE 0x20030005
-#define C_CLK_REGION       0x20030006
-#define C_CLOCK_STAT_SL    0x20030008
-#define C_CLOCK_STAT_NSL   0x20030009
-#define C_CLOCK_STAT_ARY   0x2003000a
-#define C_BIST             0x2003000B
+#define C_SYNC_CONFIG          0x20030000
+#define C_OPCG_ALIGN           0x20030001
+#define C_SCAN_REGION_TYPE     0x20030005
+#define C_CLK_REGION           0x20030006
+#define C_CLOCK_STAT_SL        0x20030008
+#define C_CLOCK_STAT_NSL       0x20030009
+#define C_CLOCK_STAT_ARY       0x2003000a
+#define C_BIST                 0x2003000B
 
-#define C_SLAVE_CONFIG_REG 0x200F001E
-#define C_ERROR_REG        0x200F001F
-#define C_HANG_PULSE_1_REG 0x200F0021
-#define C_PPM_CGCR         0x200F0164
+#define C_SLAVE_CONFIG_REG     0x200F001E
+#define C_ERROR_REG            0x200F001F
+#define C_HANG_PULSE_1_REG     0x200F0021
+#define C_PPM_CGCR             0x200F0164
 
-#define C_CPLT_CTRL0_OR    0x20000010
-#define C_CPLT_CTRL0_CLEAR 0x20000020
-#define C_CPLT_CTRL1_OR    0x20000011
-#define C_CPLT_CTRL1_CLEAR 0x20000021
-#define C_CPLT_STAT0       0x20000100
+#define C_CPLT_CTRL0_OR        0x20000010
+#define C_CPLT_CTRL0_CLEAR     0x20000020
+#define C_CPLT_CTRL1_OR        0x20000011
+#define C_CPLT_CTRL1_CLEAR     0x20000021
+#define C_CPLT_STAT0           0x20000100
 
-#define PERV_CPLT_CTRL0_OR 0x00000010
-#define PERV_CPLT_CTRL0_CLEAR 0x00000020
-#define PERV_OPCG_REG0     0x00030002
-#define PERV_OPCG_REG1     0x00030003
-#define PERV_CLK_REGION    0x00030006
-#define PERV_BIST          0x0003000B
-#define PERV_CPLT_STAT0    0x00000100
-
-#define NCU_STATUS_REG     0x1001140F
+#define PERV_CPLT_CTRL0_OR     0x00000010
+#define PERV_CPLT_CTRL0_CLEAR  0x00000020
+#define PERV_OPCG_REG0         0x00030002
+#define PERV_OPCG_REG1         0x00030003
+#define PERV_CLK_REGION        0x00030006
+#define PERV_BIST              0x0003000B
+#define PERV_CPLT_STAT0        0x00000100
 
 /// Macro to update STOP History
 #define CME_STOP_UPDATE_HISTORY(core,gated,trans,req_l,act_l,req_e,act_e) \
@@ -94,18 +103,15 @@
     hist.fields.act_write_enable = act_e;                                 \
     CME_PUTSCOM(PPM_SSHSRC, core, hist.value);
 
-
+#define IRQ_VEC_WAKE_C0   (uint64_t)(0x000A800000000000)
+#define IRQ_VEC_WAKE_C1   (uint64_t)(0x0005400000000000)
+#define IRQ_VEC_STOP_C0   (uint64_t)(0x0000080000000000)
+#define IRQ_VEC_STOP_C1   (uint64_t)(0x0000040000000000)
 
 /// CME STOP Return Codes
 enum CME_STOP_RETURN_CODE
 {
-    CME_STOP_SUCCESS                 = 0,
-    CME_STOP_ENTRY_PM_NOT_ACTIVE     = 0x00726301,
-    CME_STOP_ENTRY_STOP1_SENT_IRQ    = 0x00726302,
-    CME_STOP_ENTRY_VDD_PFET_NOT_IDLE = 0x00726303,
-    CME_STOP_EXIT_NO_WAKEUP          = 0x00726304,
-    CME_STOP_EXIT_WAKEUP_FROM_STOP1  = 0x00726305,
-    CME_STOP_EXIT_PCBMUX_LOST_GRANT  = 0x00726306
+    CME_STOP_SUCCESS                 = 0
 };
 
 /// CME STOP IRQs with shorter names
@@ -136,13 +142,23 @@ enum CME_STOP_FLAGS
 /// Stop Score Board Structure
 typedef struct
 {
-    uint8_t       req_stop_c0;
-    uint8_t       req_stop_c1;
-    uint8_t       act_stop_c0;
-    uint8_t       act_stop_c1;
-    uint8_t       active_core;
-    uint8_t       cme_flags;
-    uint64_t      mask_vector;
+    // requested stop levels are read from pm_state,
+    // need to be a global state for stop8 detection
+    uint8_t       req_level_c0;
+    uint8_t       req_level_c1;
+    // actual stop levels are changed through entry,
+    // need to be a global state for aborting entry
+    uint8_t       act_level_c0;
+    uint8_t       act_level_c1;
+    // whether core is in running state,
+    // need to be a global state for aborted entry detection and wakeup masking
+    uint32_t      core_running;
+    // core stop handoff to sgpe from cme
+    // need to be a global state for wakeup and pm_active masking
+    uint32_t      core_stopgpe;
+    // partial good configuration,
+    // todo: consider partial good changed during stop,
+    uint32_t      core_enabled;
     PkSemaphore   sem[2];
 } CmeStopRecord;
 

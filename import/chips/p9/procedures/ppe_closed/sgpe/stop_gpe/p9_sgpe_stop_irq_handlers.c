@@ -53,9 +53,10 @@ SgpeStopRecord G_sgpe_stop_record;
 void
 p9_sgpe_stop_pig_type2_handler(void* arg, PkIrqId irq)
 {
-    uint8_t  qloop;
-    uint8_t  cloop;
-    uint8_t  event;
+    int      event;
+    uint32_t qloop;
+    uint32_t cloop;
+    uint32_t cgood;
     uint32_t pending;
     uint32_t payload;
 
@@ -71,19 +72,34 @@ p9_sgpe_stop_pig_type2_handler(void* arg, PkIrqId irq)
 
     PK_TRACE("Type2: %x", pending);
     // clear group before analyzing input
-    G_sgpe_stop_record.group.vector[0] = 0;
-    G_sgpe_stop_record.group.vector[1] = 0;
+    G_sgpe_stop_record.group.entry_x0 = 0;
+    G_sgpe_stop_record.group.entry_x1 = 0;
+    G_sgpe_stop_record.group.entry_x  = 0;
+    G_sgpe_stop_record.group.entry_q  = 0;
+    G_sgpe_stop_record.group.entry_c  = 0;
+    G_sgpe_stop_record.group.exit_x0  = 0;
+    G_sgpe_stop_record.group.exit_x1  = 0;
+    G_sgpe_stop_record.group.exit_x   = 0;
+    G_sgpe_stop_record.group.exit_q   = 0;
+    G_sgpe_stop_record.group.exit_c   = 0;
 
     // loop all quads
-    for(qloop = 0; qloop < MAX_QUADS; qloop++, pending = pending << 4)
+    for(qloop = 0, cgood = G_sgpe_stop_record.group.good_c;
+        qloop < MAX_QUADS;
+        qloop++, pending = pending << 4, cgood = cgood << 4)
     {
         // if nothing happening to this quad, skip
-        if(!(BITS32(0, 4) & pending))
+        if(!(BITS32(0, 4) & pending & cgood))
         {
             continue;
         }
 
-        PK_TRACE("q[%d]lv: %x", qloop, G_sgpe_stop_record.level[qloop].qlevel);
+        PK_TRACE("q[%d]", qloop);
+        PK_TRACE("clv[%d][%d][%d][%d]",
+                 G_sgpe_stop_record.level[qloop][0],
+                 G_sgpe_stop_record.level[qloop][1],
+                 G_sgpe_stop_record.level[qloop][2],
+                 G_sgpe_stop_record.level[qloop][3]);
 
         // then loop all cores in the quad
         for(cloop = 0, event = 0; cloop < CORES_PER_QUAD; cloop++)
@@ -96,108 +112,153 @@ p9_sgpe_stop_pig_type2_handler(void* arg, PkIrqId irq)
 
             // read payload on core has interrupt pending
             payload = in32(OCB_OPIT2CN(((qloop << 2) + cloop)));
-            PK_TRACE("q[%d]c[%d] payload: %x", qloop, cloop, payload);
+            PK_TRACE("c[%d] payload [%x]", cloop, payload);
 
             // check if exit request
             if (payload & TYPE2_PAYLOAD_STOP_EVENT)
             {
-                PK_TRACE("q[%d]c[%d] requested exit", qloop, cloop);
+                PK_TRACE("c[%d] request exit", cloop);
                 // remember which core asking to exit
                 event |= SGPE_EXIT_FLAG;
-                G_sgpe_stop_record.group.member.c_out |=
+
+                if (cloop < CORES_PER_EX)
+                {
+                    G_sgpe_stop_record.group.exit_x0 |= BIT32(qloop);
+                    G_sgpe_stop_record.group.exit_x  |= BIT32(qloop << 1);
+                }
+                else
+                {
+                    G_sgpe_stop_record.group.exit_x1 |= BIT32(qloop);
+                    G_sgpe_stop_record.group.exit_x  |= BIT32((qloop << 1) + 1);
+                }
+
+                G_sgpe_stop_record.group.exit_q |= BIT32(qloop);
+                G_sgpe_stop_record.group.exit_c |=
                     BIT32(((qloop << 2) + cloop));
-                G_sgpe_stop_record.group.member.x_out |=
-                    BIT16(((qloop << 1) + (cloop >> 1)));
-                G_sgpe_stop_record.group.member.q_out |=
-                    BIT16(qloop);
-                // otherwise it is entry request with stop level in payload
             }
+            // otherwise it is entry request with stop level in payload
             else
             {
-                PK_TRACE("q[%d]c[%d] requested enter to lv%d", qloop, cloop,
+                PK_TRACE("c[%d] request enter to lv[%d]", cloop,
                          (payload & TYPE2_PAYLOAD_STOP_LEVEL));
                 // read stop level on core asking to enter
                 event |= SGPE_ENTRY_FLAG;
-                G_sgpe_stop_record.level[qloop].qlevel &= ~BITS16((cloop << 2), 4);
-                G_sgpe_stop_record.level[qloop].qlevel |=
-                    ((payload & TYPE2_PAYLOAD_STOP_LEVEL) << SHIFT16(((cloop << 2) + 3)));
-                G_sgpe_stop_record.group.member.c_in |=
+                G_sgpe_stop_record.level[qloop][cloop] =
+                    (payload & TYPE2_PAYLOAD_STOP_LEVEL);
+                G_sgpe_stop_record.group.entry_c |=
                     BIT32(((qloop << 2) + cloop));
             }
-        }
 
-        PK_TRACE("q[%d]lv: %x", qloop, G_sgpe_stop_record.level[qloop].qlevel);
-        PK_TRACE("q[%d]st: %x", qloop, G_sgpe_stop_record.state[qloop].status);
+        }
 
         // If an entry being requested by at least one core
         if (event & SGPE_ENTRY_FLAG)
         {
+            PK_TRACE("clv[%d][%d][%d][%d]",
+                     G_sgpe_stop_record.level[qloop][0],
+                     G_sgpe_stop_record.level[qloop][1],
+                     G_sgpe_stop_record.level[qloop][2],
+                     G_sgpe_stop_record.level[qloop][3]);
+
             // Calculate EX and Quad targets based on current core stop levels
-            G_sgpe_stop_record.state[qloop].detail.x0req =
-                G_sgpe_stop_record.level[qloop].clevel.c0lv <
-                G_sgpe_stop_record.level[qloop].clevel.c1lv ?
-                G_sgpe_stop_record.level[qloop].clevel.c0lv :
-                G_sgpe_stop_record.level[qloop].clevel.c1lv ;
-            G_sgpe_stop_record.state[qloop].detail.x1req =
-                G_sgpe_stop_record.level[qloop].clevel.c2lv <
-                G_sgpe_stop_record.level[qloop].clevel.c3lv ?
-                G_sgpe_stop_record.level[qloop].clevel.c2lv :
-                G_sgpe_stop_record.level[qloop].clevel.c3lv ;
-            G_sgpe_stop_record.state[qloop].detail.q_req =
-                G_sgpe_stop_record.state[qloop].detail.x0req <
-                G_sgpe_stop_record.state[qloop].detail.x1req ?
-                G_sgpe_stop_record.state[qloop].detail.x0req :
-                G_sgpe_stop_record.state[qloop].detail.x1req ;
+            G_sgpe_stop_record.state[qloop].req_state_x0 =
+                G_sgpe_stop_record.level[qloop][0] <
+                G_sgpe_stop_record.level[qloop][1] ?
+                G_sgpe_stop_record.level[qloop][0] :
+                G_sgpe_stop_record.level[qloop][1] ;
+            G_sgpe_stop_record.state[qloop].req_state_x1 =
+                G_sgpe_stop_record.level[qloop][2] <
+                G_sgpe_stop_record.level[qloop][3] ?
+                G_sgpe_stop_record.level[qloop][2] :
+                G_sgpe_stop_record.level[qloop][3] ;
+            G_sgpe_stop_record.state[qloop].req_state_q =
+                G_sgpe_stop_record.state[qloop].req_state_x0 <
+                G_sgpe_stop_record.state[qloop].req_state_x1 ?
+                G_sgpe_stop_record.state[qloop].req_state_x0 :
+                G_sgpe_stop_record.state[qloop].req_state_x1 ;
 
             // Check if EX and/or Quad qualifies to proceed with entry
-            if (G_sgpe_stop_record.state[qloop].detail.x0act < SGPE_EX_BASE_LV &&
-                G_sgpe_stop_record.state[qloop].detail.x0req >= SGPE_EX_BASE_LV)
+            if (G_sgpe_stop_record.state[qloop].act_state_x0 <
+                SGPE_EX_BASE_LV &&
+                G_sgpe_stop_record.state[qloop].req_state_x0 >=
+                SGPE_EX_BASE_LV)
             {
-                G_sgpe_stop_record.group.member.x_in |= BIT16((qloop << 1));
+                G_sgpe_stop_record.group.entry_x0 |= BIT32(qloop);
+                G_sgpe_stop_record.group.entry_x  |= BIT32(qloop << 1);
             }
 
-            if (G_sgpe_stop_record.state[qloop].detail.x1act < SGPE_EX_BASE_LV &&
-                G_sgpe_stop_record.state[qloop].detail.x1req >= SGPE_EX_BASE_LV)
+            if (G_sgpe_stop_record.state[qloop].act_state_x1 <
+                SGPE_EX_BASE_LV &&
+                G_sgpe_stop_record.state[qloop].req_state_x1 >=
+                SGPE_EX_BASE_LV)
             {
-                G_sgpe_stop_record.group.member.x_in |= BIT16(((qloop << 1) + 1));
+                G_sgpe_stop_record.group.entry_x1 |= BIT32(qloop);
+                G_sgpe_stop_record.group.entry_x  |= BIT32((qloop << 1) + 1);
             }
 
-            if (G_sgpe_stop_record.state[qloop].detail.q_act <
-                G_sgpe_stop_record.state[qloop].detail.q_req &&
-                G_sgpe_stop_record.state[qloop].detail.q_req >= SGPE_EQ_BASE_LV)
+            if (G_sgpe_stop_record.state[qloop].act_state_q <
+                G_sgpe_stop_record.state[qloop].req_state_q &&
+                G_sgpe_stop_record.state[qloop].req_state_q >=
+                SGPE_EQ_BASE_LV)
             {
-                G_sgpe_stop_record.group.member.q_in |= BIT16(qloop);
+                G_sgpe_stop_record.group.entry_q |= BIT32(qloop);
             }
+
         }
 
-        PK_TRACE("q[%d]st: %x", qloop, G_sgpe_stop_record.state[qloop].status);
+        // todo MARK_TAG(SE_LESSTHAN8_WAIT)
+        PK_TRACE("req:x0lv[%d]x1lv[%d]qlv[%d]",
+                 G_sgpe_stop_record.state[qloop].req_state_x0,
+                 G_sgpe_stop_record.state[qloop].req_state_x1,
+                 G_sgpe_stop_record.state[qloop].req_state_q);
+
+        PK_TRACE("act:x0lv[%d]x1lv[%d]qlv[%d]",
+                 G_sgpe_stop_record.state[qloop].act_state_x0,
+                 G_sgpe_stop_record.state[qloop].act_state_x1,
+                 G_sgpe_stop_record.state[qloop].act_state_q);
     }
 
-    PK_TRACE("Entry: C%x, X%x, Q%x",
-             G_sgpe_stop_record.group.member.c_in,
-             G_sgpe_stop_record.group.member.x_in,
-             G_sgpe_stop_record.group.member.q_in);
-    PK_TRACE("Exit: C%x, X%x, Q%x",
-             G_sgpe_stop_record.group.member.c_out,
-             G_sgpe_stop_record.group.member.x_out,
-             G_sgpe_stop_record.group.member.q_out);
+    G_sgpe_stop_record.group.entry_x0 &= G_sgpe_stop_record.group.good_x0;
+    G_sgpe_stop_record.group.entry_x1 &= G_sgpe_stop_record.group.good_x1;
+    G_sgpe_stop_record.group.entry_x  &= G_sgpe_stop_record.group.good_x;
+    G_sgpe_stop_record.group.entry_q  &= G_sgpe_stop_record.group.good_q;
+    G_sgpe_stop_record.group.entry_c  &= G_sgpe_stop_record.group.good_c;
+    G_sgpe_stop_record.group.exit_x0  &= G_sgpe_stop_record.group.good_x0;
+    G_sgpe_stop_record.group.exit_x1  &= G_sgpe_stop_record.group.good_x1;
+    G_sgpe_stop_record.group.exit_x   &= G_sgpe_stop_record.group.good_x;
+    G_sgpe_stop_record.group.exit_q   &= G_sgpe_stop_record.group.good_q;
+    G_sgpe_stop_record.group.exit_c   &= G_sgpe_stop_record.group.good_c;
 
-    if (G_sgpe_stop_record.group.member.c_in)
-    {
-        PK_TRACE("unblock entry");
-        pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
-    }
+    PK_TRACE("Good: X0[%x] X1[%x] Q[%x] C[%x]",
+             G_sgpe_stop_record.group.good_x0,
+             G_sgpe_stop_record.group.good_x1,
+             G_sgpe_stop_record.group.good_q,
+             G_sgpe_stop_record.group.good_c);
+    PK_TRACE("Entry: X0[%x] X1[%x] Q[%x] C[%x]",
+             G_sgpe_stop_record.group.entry_x0,
+             G_sgpe_stop_record.group.entry_x1,
+             G_sgpe_stop_record.group.entry_q,
+             G_sgpe_stop_record.group.entry_c);
+    PK_TRACE("Exit: X0[%x] X1[%x] Q[%x] C[%x]",
+             G_sgpe_stop_record.group.exit_x0,
+             G_sgpe_stop_record.group.exit_x1,
+             G_sgpe_stop_record.group.exit_q,
+             G_sgpe_stop_record.group.exit_c);
+    PK_TRACE("X: G[%x] E[%x] X[%x]",
+             G_sgpe_stop_record.group.good_x,
+             G_sgpe_stop_record.group.entry_x,
+             G_sgpe_stop_record.group.exit_x);
 
-    if (G_sgpe_stop_record.group.member.c_out)
+    if (G_sgpe_stop_record.group.exit_c)
     {
         PK_TRACE("unblock exit");
         pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));
     }
 
-    /*
-        if (!G_sgpe_stop_record.group.vector[0])
-        {
-            out32(OCB_OIMR1_CLR, BIT32(15));
-        }
-    */
+    if (G_sgpe_stop_record.group.entry_c)
+    {
+        PK_TRACE("unblock entry");
+        pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
+    }
+
 }

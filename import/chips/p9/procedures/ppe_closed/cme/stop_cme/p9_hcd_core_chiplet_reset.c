@@ -30,43 +30,55 @@ int
 p9_hcd_core_chiplet_reset(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
-    uint64_t data, loop;
+    //uint64_t scom_data,
+    uint32_t loop;
 
-    PK_TRACE("Init NETWORK_CONTROL0, step needed for hotplug");
+    PK_TRACE("Init NET_CTRL0[1-5,12-14,18,22,26],step needed for hotplug");
     CME_PUTSCOM(CPPM_NC0INDIR_OR, core, NET_CTRL0_INIT_VECTOR);
 
-    PK_TRACE("Assert Core Progdly and DCC Bypass");
+    PK_TRACE("Flip core glsmux to refclk via PPM_CGCR[3]");
+    CME_PUTSCOM(C_PPM_CGCR, core, BIT64(0));
+
+    PK_TRACE("Assert core progdly and DCC bypass via NET_CTRL1[1,2]");
     CME_PUTSCOM(CPPM_NC1INDIR_OR, core, BITS64(1, 2));
 
-    PK_TRACE("Assert Core DCC Reset");
+    PK_TRACE("Assert core DCC reset via NET_CTRL0[2]");
     CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(2));
 
-    PK_TRACE("Assert Vital Thold");
+    PK_TRACE("Drop vital thold via NET_CTRL0[16]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(16));
-
-    PK_TRACE("ONLY till TP030: SET VITL_PHASE=1");
-    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(8));
-    PPE_WAIT_CORE_CYCLES(loop, 50);
-
+    /*
+        PK_TRACE("ONLY till TP030: SET VITL_PHASE=1");
+        CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(8));
+        PPE_WAIT_CORE_CYCLES(loop, 50);
+    */
     MARK_TRAP(SX_CHIPLET_RESET_GLSMUX_RESET)
 
-    PK_TRACE("Init Core Glitchless Mux Reset/Select via CLOCK_GRID_CTRL[0:3]");
+    PK_TRACE("Drop core glsmux reset via PPM_CGCR[0]");
+    CME_PUTSCOM(C_PPM_CGCR, core, 0);
+    PPE_WAIT_CORE_CYCLES(loop, 400);
+
+    PK_TRACE("Flip core glsmux to DPLL via PPM_CGCR[3]");
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
 
-    PK_TRACE("Clear PCB Endpoint Reset via NET_CTRL0[1]");
+    PK_TRACE("Assert chiplet enable via NET_CTRL0[0]");
+    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(0));
+
+    PK_TRACE("Drop PCB endpoint reset via NET_CTRL0[1]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(1));
-    PPE_WAIT_CORE_CYCLES(loop, 50);
 
-    PK_TRACE("Remove chiplet electrical fence via NET_CTRL0[26]");
+    PK_TRACE("Drop chiplet electrical fence via NET_CTRL0[26]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(26));
+
+    PK_TRACE("Drop PCB fence via NET_CTRL0[25]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(25));
-
-    PK_TRACE("ONLY till TP030: SET SYNC_PULSE_DELAY=0b0011");
-    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, data);
-    data = data | 0x3000000000000000;
-    data = data & 0x3FFFFFFFFFFFFFFF;
-    CME_PUTSCOM(C_SYNC_CONFIG, core, data);
-
+    /*
+        PK_TRACE("ONLY till TP030: SET SYNC_PULSE_DELAY=0b0011");
+        CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data);
+        scom_data = scom_data | 0x3000000000000000;
+        scom_data = scom_data & 0x3FFFFFFFFFFFFFFF;
+        CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
+    */
 #if !SKIP_SCAN0
     // Marker for scan0
     MARK_TRAP(SX_CHIPLET_RESET_SCAN0)
