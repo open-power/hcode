@@ -82,7 +82,7 @@ fapi2::ReturnCode p9_check_idle_stop_state(
 
     fapi2::buffer<uint64_t> l_data64;
     uint32_t l_stop_gated = 0;
-    uint32_t l_stop_transition = p9_ciss::SSH_UNDEFINED;
+    uint32_t l_stop_transition = p9_ciss::SSH_COMPLETE;
     uint32_t l_stop_requested_level = 0; // Running Level
     uint32_t l_stop_actual_level = 0;    // Running Level
 
