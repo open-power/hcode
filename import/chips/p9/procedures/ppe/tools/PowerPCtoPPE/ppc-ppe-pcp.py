@@ -263,7 +263,7 @@ ReplaceRules = {#ppc_op   : [ rule | ppe_op ]
 # -1  0 | [ppe] ppe_op(cmp*b*)    | extended mnemonics of compares are handled
 #-------|-------------------------|--------------------------------------------
 # 'v'   | [ppc] ppc_op(lwz/stw)   | rule for combining double word aligned
-#       |       ppc_op(lwz/stw)   | load/store pairs into signle 'virtual'
+#       |       ppc_op(lwz/stw)   | load/store pairs into single 'virtual'
 # -1 -1 | [ppe] ppe_op(lvd/stvd)  | double word instructions(PPE specific)
 #-------|-------------------------|--------------------------------------------
 # 'l'   | [ppc]        .p2align   | compiler will insert ".p2align" directive to
@@ -740,6 +740,7 @@ def p2p_onefile(ppcFileName):
   pre_line = ""
   pre_op = ""
   done = True
+
   # use inline file editing, back up original PPC assembly file as <filename>.S
   for line in fileinput.input(ppeFileName, inplace=1, backup='.405'):
 
@@ -958,7 +959,7 @@ def p2p_main():
   if options.ppcFile:
 
     if P2P_VERBOSE :
-      print "Processing signle file: " + options.ppcFile
+      print "Processing single file: " + options.ppcFile
 
     p2p_onefile(options.ppcFile)
 
