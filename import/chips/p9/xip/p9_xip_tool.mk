@@ -23,12 +23,9 @@
 #
 # IBM_PROLOG_END_TAG
 
-EXE  = p9_xip_tool
-OBJS = p9_xip_tool.o
-
+EXE   = p9_xip_tool
+OBJS += $(EXE).o
 $(EXE)_DEPLIBS += p9_xip_image
 $(EXE)_DEPLIBS += p9_ring_identification
-
-$(call ADD_EXE_SRCDIR,$(EXE),$(ROOTPATH)/chips/p9/xip)
 
 $(call BUILD_EXE)
