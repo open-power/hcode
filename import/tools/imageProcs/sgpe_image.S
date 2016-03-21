@@ -1,0 +1,136 @@
+/* IBM_PROLOG_BEGIN_TAG                                                   */
+/* This is an automatically generated prolog.                             */
+/*                                                                        */
+/* $Source: import/tools/imageProcs/sgpe_image.S $                        */
+/*                                                                        */
+/* OpenPOWER HCODE Project                                                */
+/*                                                                        */
+/* COPYRIGHT 2016,2017                                                    */
+/* [+] International Business Machines Corp.                              */
+/*                                                                        */
+/*                                                                        */
+/* Licensed under the Apache License, Version 2.0 (the "License");        */
+/* you may not use this file except in compliance with the License.       */
+/* You may obtain a copy of the License at                                */
+/*                                                                        */
+/*     http://www.apache.org/licenses/LICENSE-2.0                         */
+/*                                                                        */
+/* Unless required by applicable law or agreed to in writing, software    */
+/* distributed under the License is distributed on an "AS IS" BASIS,      */
+/* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        */
+/* implied. See the License for the specific language governing           */
+/* permissions and limitations under the License.                         */
+/*                                                                        */
+/* IBM_PROLOG_END_TAG                                                     */
+
+// *INDENT-OFF*
+
+#include <p9_xip_image.h>
+
+    .macro P9XipHeader, magic, link_address, image_size
+
+        .section .header, "a", @progbits
+
+        ////////////////////////////////////////////////////////////////////
+        // First, reserve space for all the enteries in the header
+        // Identification - 8-byte aligned; 8 Entries; TOC-Indexed
+        ////////////////////////////////////////////////////////////////////
+
+__magic:
+        .quad (\magic)
+__L1_LoaderAddr:
+        .quad 0
+__L2_LoaderAddr:
+        .quad 0
+__kernelAddr:
+        .quad 0
+__link_address:
+        .quad (\link_address)
+__header_64_reserved:
+        .quad 0, 0, 0
+
+        .xip_toc magic, P9_XIP_UINT64, __magic
+        .xip_toc L1_LoaderAddr, P9_XIP_UINT64, __L1_LoaderAddr
+        .xip_toc L2_LoaderAddr, P9_XIP_UINT64, __L2_LoaderAddr
+        .xip_toc kernelAddr, P9_XIP_UINT64, __kernelAddr
+        .xip_toc link_address, P9_XIP_UINT64, __link_address
+
+        ////////////////////////////////////////////////////////////////////
+        // Section Table - 8-byte aligned; 15 entries; Not TOC-Indexed
+        ////////////////////////////////////////////////////////////////////
+
+        .xip_section header
+        .xip_section
+        .xip_section
+        .xip_section toc,               4
+        .xip_section strings
+
+        .xip_section qpmr,              8
+        .xip_section lvl1_bl,           8
+        .xip_section lvl2_bl,           8
+        .xip_section vect,              8
+        .xip_section sgpe_image_header  8
+        .xip_section hcode,             8
+
+        .xip_section
+        .xip_section
+        .xip_section
+        .xip_section
+
+        ////////////////////////////////////////////////////////////////////
+        // Other Information - 4-byte aligned; 8 entries; TOC-Indexed
+        ////////////////////////////////////////////////////////////////////
+
+__image_size:
+        .long (\image_size)
+__build_date:
+        .long 0
+__build_time:
+        .long 0
+__header_32_reserved:
+        .long 0, 0, 0, 0, 0
+
+        .xip_toc image_size, P9_XIP_UINT32, __image_size
+        .xip_toc build_date, P9_XIP_UINT32, __build_date
+        .xip_toc build_time, P9_XIP_UINT32, __build_time
+
+        ////////////////////////////////////////////////////////////////////
+        // Other Information - 1-byte aligned; 8 entries; TOC-Indexed
+        ////////////////////////////////////////////////////////////////////
+
+__header_version:
+        .byte P9_XIP_HEADER_VERSION
+__toc_normalized:
+        .byte 0
+__toc_sorted:
+        .byte 0
+__header_8_reserved:
+        .byte 0, 0, 0, 0, 0
+
+        .xip_toc header_version, P9_XIP_UINT8, __header_version
+        .xip_toc toc_normalized, P9_XIP_UINT8, __toc_normalized
+        .xip_toc toc_sorted, P9_XIP_UINT8, __toc_sorted
+
+        ////////////////////////////////////////////////////////////////////
+        // Strings; 64 characters allocated; TOC-Indexed
+        ////////////////////////////////////////////////////////////////////
+
+__build_user:
+        .asciz "unknown        "         # 16 Characters allocated
+__build_host:
+        .asciz "unknown                " # 24 characters allocated
+__header_string_reserved:
+        .space 24, 0
+
+        .xip_toc build_user, P9_XIP_STRING, __build_user
+        .xip_toc build_host, P9_XIP_STRING, __build_host
+
+    .endm
+
+    .section .toc, "a", @progbits
+    .section .strings, "aS", @progbits
+
+    // FIXME: start address of HW Image in PNOR
+    P9XipHeader P9_XIP_MAGIC_SGPE, 0x80000000, _sgpe_image_size
+
+// *INDENT-ON*
