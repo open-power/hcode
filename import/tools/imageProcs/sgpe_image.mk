@@ -23,7 +23,6 @@
 #
 # IBM_PROLOG_END_TAG
 IMAGE=sgpe_image
-$(call ADD_IMAGE_INCDIR,$(IMAGE),$(ROOTPATH)/chips/p9/xip)
 $(call APPEND_EMPTY_SECTION,qpmr,1024)
 $(call APPEND_EMPTY_SECTION,lvl1_bl,1024)
 $(call APPEND_EMPTY_SECTION,lvl2_bl,1024)

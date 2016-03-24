@@ -23,7 +23,6 @@
 #
 # IBM_PROLOG_END_TAG
 IMAGE=cme_image
-$(call ADD_IMAGE_INCDIR,$(IMAGE),$(ROOTPATH)/chips/p9/xip)
 $(call APPEND_EMPTY_SECTION,vect,1024)
 $(call APPEND_EMPTY_SECTION,cme_image_header,1024)
 $(call APPEND_EMPTY_SECTION,hcode,1024)

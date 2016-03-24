@@ -50,8 +50,6 @@ __header_64_reserved:
         .quad 0, 0, 0
 
         .xip_toc magic, P9_XIP_UINT64, __magic
-        .xip_toc L1_LoaderAddr, P9_XIP_UINT64, __L1_LoaderAddr
-        .xip_toc L2_LoaderAddr, P9_XIP_UINT64, __L2_LoaderAddr
         .xip_toc kernelAddr, P9_XIP_UINT64, __kernelAddr
         .xip_toc link_address, P9_XIP_UINT64, __link_address
 
@@ -60,8 +58,8 @@ __header_64_reserved:
         ////////////////////////////////////////////////////////////////////
 
         .xip_section header
-        .xip_section fixed,        8
-        .xip_section fixed_toc,    8
+        .xip_section
+        .xip_section
         .xip_section toc,          4
         .xip_section strings
 
@@ -127,8 +125,6 @@ __header_string_reserved:
 
     .endm
 
-    .section .fixed, "a", @progbits
-    .section .fixed_toc, "a", @progbits
     .section .toc, "a", @progbits
     .section .strings, "aS", @progbits
 

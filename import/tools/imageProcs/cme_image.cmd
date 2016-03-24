@@ -42,24 +42,6 @@ SECTIONS
     _header_size = . - _header_origin;
 
     ////////////////////////////////
-    // FIXED
-    ////////////////////////////////
-    . = ALIGN(512);
-    _fixed_origin = .;
-    _fixed_offset = . - _cme_image_origin;
-    .fixed . : { *(.fixed) }
-    _fixed_size = . - _fixed_origin;
-
-    ////////////////////////////////
-    // FIXED_TOC
-    ////////////////////////////////
-    . = ALIGN(8);
-    _fixed_toc_origin = .;
-    _fixed_toc_offset = . - _cme_image_origin;
-    .fixed_toc . : { *(.fixed_toc) }
-    _fixed_toc_size = . - _fixed_toc_origin;
-
-    ////////////////////////////////
     // TOC
     ////////////////////////////////
     . = ALIGN(4);
