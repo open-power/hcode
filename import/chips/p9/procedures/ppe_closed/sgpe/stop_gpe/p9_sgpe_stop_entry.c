@@ -48,18 +48,113 @@ p9_sgpe_stop_entry()
     MARK_TAG(BEGINSCOPE_STOP_ENTRY, 0)
     //================================
 
-    if (G_sgpe_stop_record.group.entry_q)
+    G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] = 0;
+    G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] = 0;
+    G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] = 0;
+    G_sgpe_stop_record.group.quad[VECTOR_ENTRY] = 0;
+
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
-        MARK_TRAP(SE_STOP_SUSPEND_PSTATE)
+
+        if (G_sgpe_stop_record.group.qswu[VECTOR_EXIT] & BIT32(qloop))
+        {
+            continue;
+        }
+
+        // Calculate EX and Quad targets based on current core stop levels
+        G_sgpe_stop_record.state[qloop].req_state_x0 =
+            G_sgpe_stop_record.level[qloop][0] <
+            G_sgpe_stop_record.level[qloop][1] ?
+            G_sgpe_stop_record.level[qloop][0] :
+            G_sgpe_stop_record.level[qloop][1] ;
+        G_sgpe_stop_record.state[qloop].req_state_x1 =
+            G_sgpe_stop_record.level[qloop][2] <
+            G_sgpe_stop_record.level[qloop][3] ?
+            G_sgpe_stop_record.level[qloop][2] :
+            G_sgpe_stop_record.level[qloop][3] ;
+        G_sgpe_stop_record.state[qloop].req_state_q =
+            G_sgpe_stop_record.state[qloop].req_state_x0 <
+            G_sgpe_stop_record.state[qloop].req_state_x1 ?
+            G_sgpe_stop_record.state[qloop].req_state_x0 :
+            G_sgpe_stop_record.state[qloop].req_state_x1 ;
+
+        // Check if EX and/or Quad qualifies to proceed with entry
+        if (G_sgpe_stop_record.state[qloop].act_state_x0 <  LEVEL_EX_BASE &&
+            G_sgpe_stop_record.state[qloop].req_state_x0 >= LEVEL_EX_BASE)
+        {
+            G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] |= BIT32(qloop);
+            G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] |= BIT32(qloop << 1);
+        }
+
+        if (G_sgpe_stop_record.state[qloop].act_state_x1 <  LEVEL_EX_BASE &&
+            G_sgpe_stop_record.state[qloop].req_state_x1 >= LEVEL_EX_BASE)
+        {
+            G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] |= BIT32(qloop);
+            G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] |=
+                BIT32((qloop << 1) + 1);
+        }
+
+        if (G_sgpe_stop_record.state[qloop].act_state_q <
+            G_sgpe_stop_record.state[qloop].req_state_q &&
+            G_sgpe_stop_record.state[qloop].req_state_q >= LEVEL_EQ_BASE)
+        {
+            G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
+        }
+
+        if (G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] ||
+            G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
+        {
+            PK_TRACE("clv[%d][%d][%d][%d]",
+                     G_sgpe_stop_record.level[qloop][0],
+                     G_sgpe_stop_record.level[qloop][1],
+                     G_sgpe_stop_record.level[qloop][2],
+                     G_sgpe_stop_record.level[qloop][3]);
+
+            PK_TRACE("act: qlv[%d]x0lv[%d]x1lv[%d]",
+                     G_sgpe_stop_record.state[qloop].act_state_q,
+                     G_sgpe_stop_record.state[qloop].act_state_x0,
+                     G_sgpe_stop_record.state[qloop].act_state_x1);
+
+            PK_TRACE("req: x0lv[%d]x1lv[%d]qlv[%d]",
+                     G_sgpe_stop_record.state[qloop].req_state_x0,
+                     G_sgpe_stop_record.state[qloop].req_state_x1,
+                     G_sgpe_stop_record.state[qloop].req_state_q);
+        }
     }
 
+    G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] &=
+        G_sgpe_stop_record.group.ex_b[VECTOR_CONFIG];
+    G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] &=
+        G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG];
+    G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] &=
+        G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG];
+
+    PK_TRACE("Core Entry Vectors:   X[%x] X0[%x] X1[%x] Q[%x]",
+             G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY],
+             G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY],
+             G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY],
+             G_sgpe_stop_record.group.quad[VECTOR_ENTRY]);
+
     //TODO: message pgpe to suspend Pstate only if stop level >= 8
+    if (G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
+    {
+        //===============================
+        MARK_TRAP(SE_STOP_SUSPEND_PSTATE)
+        //===============================
+    }
+    else if (!G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY])
+    {
+        //============================
+        MARK_TAG(SE_LESSTHAN8_WAIT, 0)
+        //============================
+    }
+
 
     // ------------------------------------------------------------------------
     // EX STOP ENTRY [LEVEL 8-10]
     // ------------------------------------------------------------------------
     // only stop 8 sets x_in
-    for(xentry = G_sgpe_stop_record.group.entry_x, qloop = 0;
+    for(xentry = G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY], qloop = 0;
         xentry > 0;
         xentry = xentry << 2, qloop++)
     {
@@ -195,7 +290,7 @@ p9_sgpe_stop_entry()
                                      STOP_ACT_ENABLE);
         }
 
-        // Update QSSR: l2_stopped, entry_ongoing = 0
+        // Update QSSR: l2_stopped, drop stop_entry_ongoing
         out32(OCB_QSSR_CLR, BIT32(qloop + 20));
         out32(OCB_QSSR_OR, (ex << SHIFT32((qloop << 1) + 1)));
 
@@ -209,9 +304,9 @@ p9_sgpe_stop_entry()
     // QUAD STOP ENTRY [LEVEL 11-15]
     // ------------------------------------------------------------------------
 
-    for(qentry = G_sgpe_stop_record.group.entry_q, qloop = 0;
+    for(qentry = G_sgpe_stop_record.group.quad[VECTOR_ENTRY], qloop = 0, ex = 0;
         qentry > 0;
-        qentry = qentry << 1, qloop++)
+        qentry = qentry << 1, qloop++, ex = 0)
     {
         // if this quad is not up to entry, skip
         if (!(qentry & BIT32(0)))
@@ -219,12 +314,12 @@ p9_sgpe_stop_entry()
             continue;
         }
 
-        if (G_sgpe_stop_record.group.good_x0 & BIT32(qloop))
+        if (G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop))
         {
             ex |= FST_EX_IN_QUAD;
         }
 
-        if (G_sgpe_stop_record.group.good_x1 & BIT32(qloop))
+        if (G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop))
         {
             ex |= SND_EX_IN_QUAD;
         }
@@ -286,73 +381,81 @@ p9_sgpe_stop_entry()
         {
 #if !SKIP_L3_PURGE_ABORT
 
-            if (in32(OCB_OISR1) & BIT32(15))
+            if (in32(OCB_OISR1) & (BITS32(15, 2) & BIT32(19)))
             {
-                if (in32(OCB_OPITNPRA(2)) & (BITS32((qloop << 2), 4)))
+                if ((in32(OCB_OPITNPRA(2)) & BITS32((qloop << 2), 4)) ||
+                    (in32(OCB_OPITNPRA(3)) & BITS32((qloop << 2), 4)))
                 {
                     for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
                     {
-                        // todo type3
-                        if (in32(OCB_OPIT2CN(((qloop << 2) + cloop))) &
-                            TYPE2_PAYLOAD_STOP_EVENT)
+                        if ((in32(OCB_OPIT2CN(((qloop << 2) + cloop))) &
+                             TYPE2_PAYLOAD_EXIT_EVENT) ||
+                            (in32(OCB_OPIT3CN(((qloop << 2) + cloop))) &
+                             TYPE3_PAYLOAD_EXIT_EVENT))
                         {
-
-                            //========================================
-                            MARK_TAG(SE_PURGE_L3_ABORT, (32 >> qloop))
-                            //========================================
-
-                            // Assert Purge L3 Abort
-                            if (ex & FST_EX_IN_QUAD)
-                                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG,
-                                                             qloop, 0),
-                                            BIT64(2));
-
-                            if (ex & SND_EX_IN_QUAD)
-                                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG,
-                                                             qloop, 1),
-                                            BIT64(2));
-
-                            // Poll for Abort Done
-                            if(ex & FST_EX_IN_QUAD)
-                            {
-                                do
-                                {
-                                    GPE_GETSCOM(GPE_SCOM_ADDR_EX(
-                                                    EX_PM_PURGE_REG,
-                                                    qloop, 0), scom_data);
-                                }
-                                while(scom_data & (BIT64(0) | BIT64(2)));
-                            }
-
-                            if(ex & SND_EX_IN_QUAD)
-                            {
-                                do
-                                {
-                                    GPE_GETSCOM(GPE_SCOM_ADDR_EX(
-                                                    EX_PM_PURGE_REG,
-                                                    qloop, 1), scom_data);
-                                }
-                                while(scom_data & (BIT64(0) | BIT64(2)));
-                            }
-
-                            //=============================================
-                            MARK_TAG(SE_PURGE_L3_ABORT_DONE, (32 >> qloop))
-                            //=============================================
-
-                            // Deassert LCO Disable
-                            if(ex & FST_EX_IN_QUAD)
-                                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG,
-                                                             qloop, 0), 0);
-
-                            if(ex & SND_EX_IN_QUAD)
-                                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG,
-                                                             qloop, 1), 0);
-
-                            // Notify PGPE to resume
                             l3_purge_aborted = 1;
                             break;
                         }
                     }
+                }
+
+                if ((in32(OCB_OPIT6PRB) & BIT32(qloop)) &&
+                    (in32(OCB_OPIT6QN(qloop)) & TYPE6_PAYLOAD_EXIT_EVENT))
+                {
+                    l3_purge_aborted = 1;
+                }
+
+                if (l3_purge_aborted)
+                {
+
+                    //========================================
+                    MARK_TAG(SE_PURGE_L3_ABORT, (32 >> qloop))
+                    //========================================
+
+                    // Assert Purge L3 Abort
+                    if (ex & FST_EX_IN_QUAD)
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 0),
+                                    BIT64(2));
+
+                    if (ex & SND_EX_IN_QUAD)
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 1),
+                                    BIT64(2));
+
+                    // Poll for Abort Done
+                    if(ex & FST_EX_IN_QUAD)
+                    {
+                        do
+                        {
+                            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG,
+                                                         qloop, 0), scom_data);
+                        }
+                        while(scom_data & (BIT64(0) | BIT64(2)));
+                    }
+
+                    if(ex & SND_EX_IN_QUAD)
+                    {
+                        do
+                        {
+                            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG,
+                                                         qloop, 1), scom_data);
+                        }
+                        while(scom_data & (BIT64(0) | BIT64(2)));
+                    }
+
+                    //=============================================
+                    MARK_TAG(SE_PURGE_L3_ABORT_DONE, (32 >> qloop))
+                    //=============================================
+
+                    // Deassert LCO Disable
+                    if (ex & FST_EX_IN_QUAD)
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG,
+                                                     qloop, 0), 0);
+
+                    if (ex & SND_EX_IN_QUAD)
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG,
+                                                     qloop, 1), 0);
+
+                    // Notify PGPE to resume
                 }
             }
 
@@ -489,9 +592,6 @@ p9_sgpe_stop_entry()
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop),
                     0xFFFF700000000000);
 
-        // Update QSSR: quad_stopped
-        out32(OCB_QSSR_OR, BIT32(qloop + 14));
-
         //=========================================
         MARK_TAG(SE_POWER_OFF_CACHE, (32 >> qloop))
         //=========================================
@@ -601,6 +701,9 @@ p9_sgpe_stop_entry()
                                  STOP_REQ_DISABLE,
                                  STOP_ACT_ENABLE);
 
+        // Update QSSR: quad_stopped
+        out32(OCB_QSSR_OR, BIT32(qloop + 14));
+
         // Update QSSR: drop stop_entry_ongoing
         out32(OCB_QSSR_CLR, BIT32(qloop + 20));
 
@@ -609,8 +712,18 @@ p9_sgpe_stop_entry()
         //=====================================
     }
 
-    // Enable Type2 Interrupt
-    out32(OCB_OIMR1_CLR, BIT32(15));
+    //loop quad to drop spwu done + clear qswu
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
+    {
+        if (G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] & BIT32(qloop))
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_CLR, qloop), BIT64(0));
+            G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] &= ~BIT32(qloop);
+        }
+    }
+
+    // Enable Type2/3/6 Interrupt
+    out32(OCB_OIMR1_CLR, (BITS32(15, 2) | BIT32(19)));
     //============================
     MARK_TRAP(ENDSCOPE_STOP_ENTRY)
     //============================
