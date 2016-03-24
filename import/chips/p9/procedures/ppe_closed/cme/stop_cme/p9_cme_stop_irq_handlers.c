@@ -29,57 +29,53 @@
 
 extern CmeStopRecord G_cme_stop_record;
 
+// Important: g_eimr_override at any time should mask wakeup interrupts of
+//            running core(s), the override vector should change after each
+//            entry and exit as core state is changed.
+// For Entry, mask the following interrupts via unified interrupt handler:
+//   lower priority interrupts than pm_active, and both pm_active (catchup)
+//   wakeup interrupts of the entering core(s) should still be masked
+//   via g_eimr_override (abortion), stopped core can still exit any time
+//   as their wakeup interrupts should be unmasked
+// After Entry, unmask the following interrupts via pk_irq_vec_restore:
+//   priority group on stack, likely at least both pm_active unmasked
+//   (stopped core cannot get extra pm_active, untouched core can enter)
+//   here needs to use g_eimr_override to mask wakeup of running core(s)
+//   wakeup of the stopped core(s) should be already unmasked by default
+//   (when restored, previous masked wakeups are being unmasked as well)
+// For Exit, mask the following interrupts via unified interrupt handler:
+//   lower priority interrupts than wakeup, including DB2+pm_active(catchup)
+// After Exit, unmask the following interrupts via pk_irq_vec_restore:
+//   priority group on stack, likely at least wakeup and DB2 unmasked
+//   here needs to use g_eimr_override to mask wakeup of exited core(s)
 void
 p9_cme_stop_event_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_EVENT_HANDLER)
-    PK_TRACE("SE-IRQ: %d", irq);
+    PK_TRACE("STOP-IRQ: %d", irq);
     pk_semaphore_post((PkSemaphore*)arg);
-
-    // Important: g_eimr_override at any time should mask wakeup interrupts of
-    //            running core(s), the override vector should change after each
-    //            entry and exit as core state is changed.
-    // For Entry, mask the following interrupts via unified interrupt handler:
-    //   lower priority interrupts than pm_active, and both pm_active (catchup)
-    //   wakeup interrupts of the entering core(s) should still be masked
-    //   via g_eimr_override (abortion), stopped core can still exit any time
-    //   as their wakeup interrupts should be unmasked
-    // After Entry, unmask the following interrupts via pk_irq_vec_restore:
-    //   priority group on stack, likely at least both pm_active unmasked
-    //   (stopped core cannot get extra pm_active, untouched core can enter)
-    //   here needs to use g_eimr_override to mask wakeup of running core(s)
-    //   wakeup of the stopped core(s) should be already unmasked by default
-    //   (when restored, previous masked wakeups are being unmasked as well)
-    // For Exit, mask the following interrupts via unified interrupt handler:
-    //   lower priority interrupts than wakeup, including DB2+pm_active(catchup)
-    // After Exit, unmask the following interrupts via pk_irq_vec_restore:
-    //   priority group on stack, likely at least wakeup and DB2 unmasked
-    //   here needs to use g_eimr_override to mask wakeup of exited core(s)
 }
 
 void
 p9_cme_stop_doorbell_handler(void* arg, PkIrqId irq)
 {
-    int               rc = 0;
+    uint32_t          db1;
     PkMachineContext  ctx;
+
     MARK_TRAP(STOP_DOORBELL_HANDLER)
     PK_TRACE("DB-IRQ: %d", irq);
 
-    out32_sh(CME_LCL_EIMR_OR, BIT32(irq - 32));
-    out32_sh(CME_LCL_EISR_CLR, BIT32(irq - 32));
+    db1 = in32_sh(CME_LCL_EISR);
+    g_eimr_override |= BITS64(40, 2);
 
-    if (irq == IRQ_DB1_C0)
+    if (db1 & BIT32(8))
     {
-        CME_PUTSCOM(CPPM_CMEDB1, CME_MASK_C0, 0);
         g_eimr_override &= ~IRQ_VEC_WAKE_C0;
-        //out32(CME_LCL_EIMR_CLR, BIT32(12) | BIT32(14) | BIT32(16));
     }
 
-    if (irq == IRQ_DB1_C1)
+    if (db1 & BIT32(9))
     {
-        CME_PUTSCOM(CPPM_CMEDB1, CME_MASK_C1, 0);
         g_eimr_override &= ~IRQ_VEC_WAKE_C1;
-        //out32(CME_LCL_EIMR_CLR, BIT32(13) | BIT32(15) | BIT32(17));
     }
 
     pk_irq_vec_restore(&ctx);

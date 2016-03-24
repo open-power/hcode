@@ -33,8 +33,9 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     //uint64_t scom_data,
     uint32_t loop;
 
-    PK_TRACE("Init NET_CTRL0[1-5,12-14,18,22,26],step needed for hotplug");
-    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, NET_CTRL0_INIT_VECTOR);
+    PK_TRACE("Init NET_CTRL0[1,3-5,11-14,18,22,26],step needed for hotplug");
+    CME_PUTSCOM(CPPM_NC0INDIR_OR,  core, C_NET_CTRL0_INIT_VECTOR);
+    CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, ~(C_NET_CTRL0_INIT_VECTOR | BIT64(2)));
 
     PK_TRACE("Flip core glsmux to refclk via PPM_CGCR[3]");
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(0));
@@ -42,17 +43,8 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     PK_TRACE("Assert core progdly and DCC bypass via NET_CTRL1[1,2]");
     CME_PUTSCOM(CPPM_NC1INDIR_OR, core, BITS64(1, 2));
 
-    PK_TRACE("Assert core DCC reset via NET_CTRL0[2]");
-    CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(2));
-
     PK_TRACE("Drop vital thold via NET_CTRL0[16]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(16));
-    /*
-        PK_TRACE("ONLY till TP030: SET VITL_PHASE=1");
-        CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(8));
-        PPE_WAIT_CORE_CYCLES(loop, 50);
-    */
-    MARK_TRAP(SX_CHIPLET_RESET_GLSMUX_RESET)
 
     PK_TRACE("Drop core glsmux reset via PPM_CGCR[0]");
     CME_PUTSCOM(C_PPM_CGCR, core, 0);
@@ -72,13 +64,7 @@ p9_hcd_core_chiplet_reset(uint32_t core)
 
     PK_TRACE("Drop PCB fence via NET_CTRL0[25]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(25));
-    /*
-        PK_TRACE("ONLY till TP030: SET SYNC_PULSE_DELAY=0b0011");
-        CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data);
-        scom_data = scom_data | 0x3000000000000000;
-        scom_data = scom_data & 0x3FFFFFFFFFFFFFFF;
-        CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
-    */
+
 #if !SKIP_SCAN0
     // Marker for scan0
     MARK_TRAP(SX_CHIPLET_RESET_SCAN0)

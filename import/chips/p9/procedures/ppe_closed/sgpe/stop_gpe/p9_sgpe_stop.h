@@ -58,6 +58,7 @@
 #define EQ_BIST                  0x100F000B
 #define EQ_NET_CTRL0_WAND        0x100F0041
 #define EQ_NET_CTRL0_WOR         0x100F0042
+#define C_NET_CTRL0_WOR          0x200F0042
 #define EQ_NET_CTRL1_WAND        0x100F0045
 #define EQ_NET_CTRL1_WOR         0x100F0046
 
@@ -114,20 +115,23 @@ enum SGPE_STOP_IRQ_SHORT_NAMES
 
 enum SGPE_STOP_IRQ_PAYLOAD_MASKS
 {
-    TYPE2_PAYLOAD_STOP_EVENT          = 0xC00,
-    TYPE2_PAYLOAD_STOP_LEVEL          = 0xF
+    TYPE2_PAYLOAD_EXIT_EVENT          = 0xC00,
+    TYPE2_PAYLOAD_STOP_LEVEL          = 0xF,
+    TYPE3_PAYLOAD_EXIT_EVENT          = 0xC00,
+    TYPE6_PAYLOAD_EXIT_EVENT          = 0xC00
 };
 
 enum SGPE_STOP_EVENT_LEVELS
 {
-    SGPE_EX_BASE_LV                   = 8,
-    SGPE_EQ_BASE_LV                   = 11
+    LEVEL_EX_BASE                     = 8,
+    LEVEL_EQ_BASE                     = 11
 };
 
-enum SGPE_STOP_EVENT_FLAGS
+enum SGPE_STOP_VECTOR_INDEX
 {
-    SGPE_ENTRY_FLAG                   = 2,
-    SGPE_EXIT_FLAG                    = 1
+    VECTOR_EXIT                       = 0,
+    VECTOR_ENTRY                      = 1,
+    VECTOR_CONFIG                     = 2
 };
 
 typedef struct
@@ -144,21 +148,12 @@ typedef struct
 
 typedef struct
 {
-    uint32_t entry_x0;
-    uint32_t entry_x1;
-    uint32_t entry_x;
-    uint32_t entry_q;
-    uint32_t entry_c;
-    uint32_t exit_x0;
-    uint32_t exit_x1;
-    uint32_t exit_x;
-    uint32_t exit_q;
-    uint32_t exit_c;
-    uint32_t good_x0;
-    uint32_t good_x1;
-    uint32_t good_x;
-    uint32_t good_q;
-    uint32_t good_c;
+    uint32_t core[3];
+    uint32_t ex_l[3];
+    uint32_t ex_r[3];
+    uint32_t ex_b[3];
+    uint32_t quad[3];
+    uint32_t qswu[2];
 } sgpe_group_t;
 
 /// SGPE Stop Score Board Structure
@@ -175,7 +170,7 @@ typedef struct
 } SgpeStopRecord;
 
 /// SGPE STOP Entry and Exit Prototypes
-void p9_sgpe_stop_pig_type2_handler(void*, PkIrqId);
+void p9_sgpe_stop_pig_handler(void*, PkIrqId);
 void p9_sgpe_stop_enter_thread(void*);
 void p9_sgpe_stop_exit_thread(void*);
 int  p9_sgpe_stop_entry();

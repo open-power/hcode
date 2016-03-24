@@ -31,10 +31,5 @@ p9_hcd_core_chiplet_init(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
 
-#if !SKIP_SCAN0
-    // Marker for scan0
-    MARK_TRAP(SX_CHIPLET_INIT_SCAN0)
-#endif
-
     return rc;
 }

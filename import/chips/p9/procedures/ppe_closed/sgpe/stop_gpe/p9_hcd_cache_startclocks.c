@@ -105,6 +105,8 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     }
     while(~scom_data & BIT64(9));
 
+    MARK_TRAP(SX_CACHE_STARTCLOCKS_REGION)
+
     PK_TRACE("Drop force_align via CPLT_CTRL0[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(3));
     PPE_WAIT_CORE_CYCLES(loop, 450);
@@ -136,8 +138,6 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
            (BITS64(4, 2) | ((uint64_t)ex << SHIFT64(7)) | BITS64(10, 4))) != 0);
 
     PK_TRACE("Cache clocks running now");
-
-    MARK_TRAP(SX_CACHE_STARTCLOCKS_DONE)
 
     // @todo
     // deskew_init()

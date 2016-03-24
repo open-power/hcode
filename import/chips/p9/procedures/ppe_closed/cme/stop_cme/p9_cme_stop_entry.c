@@ -92,6 +92,7 @@ p9_cme_stop_entry()
     // Return error if None of both fired
     if (!core)
     {
+        PK_TRACE("Error: no pm_active fired");
         pk_halt();
     }
 
@@ -139,7 +140,6 @@ p9_cme_stop_entry()
         }
 
         G_cme_stop_record.core_running &= ~core;
-        out32(CME_LCL_LMCR_OR, (core << SHIFT32(15)));
 
         PK_TRACE("SE1: Request Stop Levels[%d %d]",
                  G_cme_stop_record.req_level_c0,
@@ -154,6 +154,7 @@ p9_cme_stop_entry()
             (G_cme_stop_record.req_level_c0 <= STOP_LEVEL_1 ||
              G_cme_stop_record.req_level_c1 <= STOP_LEVEL_1)))
         {
+            PK_TRACE("Error: stop 1 requested to hcode");
             pk_halt();
         }
 
@@ -216,12 +217,6 @@ p9_cme_stop_entry()
         PK_TRACE("SE2: target_lv[%d], deeper_lv[%d], deeper_core[%d]",
                  target_level, deeper_level, deeper_core);
 
-        //=============================
-        MARK_TRAP(SE_POLL_PCBMUX_GRANT)
-        //=============================
-
-        PK_TRACE("SE2.f");
-
         // Poll Infinitely for PCB Mux Grant
         // MF: change watchdog timer in pk to ensure forward progress
         while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
@@ -237,7 +232,8 @@ p9_cme_stop_entry()
         out32(CME_LCL_SICR_OR,  core << SHIFT32(1));
         out32(CME_LCL_SICR_CLR, core << SHIFT32(1));
 
-        /// @todo Set LMCR bits 14 and/or 15 (override disables)
+        /// Set LMCR bits 12/13, 14/15 (override disables)
+        out32(CME_LCL_LMCR_OR, ((core << SHIFT32(13)) | (core << SHIFT32(15))));
 
         PK_TRACE("SE2.h");
         // Raise Core-L2 + Core-CC Quiesces
@@ -306,6 +302,8 @@ p9_cme_stop_entry()
         // Switch glsmux to refclk to save clock grid power
         CME_PUTSCOM(C_PPM_CGCR, core, 0);
 
+        // Assert skew sense to skewadjust Fence
+        CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(22));
         // Assert Vital Fence
         CME_PUTSCOM(C_CPLT_CTRL1_OR,  core, BIT64(3));
         // Assert Regional Fences
@@ -720,10 +718,6 @@ p9_cme_stop_entry()
             // Poll for Purged Done
             PK_TRACE("SE5.1b");
 
-            //===========================
-            MARK_TRAP(SE_IS2_BEGIN)
-            //===========================
-
             do
             {
 #if !SKIP_L2_PURGE_ABORT
@@ -741,10 +735,6 @@ p9_cme_stop_entry()
 #endif
             }
             while((in32(CME_LCL_EISR) & BITS32(22, 2)) != BITS32(22, 2));
-
-            //===================
-            MARK_TRAP(SE_IS2_END)
-            //===================
 
             // Deassert L2+NCU Purges, their possible aborts, NCU tlbie quiesce
             PK_TRACE("SE5.1c");
@@ -773,10 +763,20 @@ p9_cme_stop_entry()
 
         // Send PCB Interrupt per core
         PK_TRACE("SE5.2b");
-        pig.fields.req_intr_type = 2; //0b010: STOP State Change
 
         if (core & CME_MASK_C0)
         {
+            if (G_cme_stop_record.req_level_c0 < STOP_LEVEL_11)
+            {
+                CME_PUTSCOM(CPPM_CPMMR_OR, CME_MASK_C0, BIT64(10));
+                pig.fields.req_intr_type = PIG_TYPE3;
+            }
+            else
+            {
+                CME_PUTSCOM(CPPM_CPMMR_CLR, CME_MASK_C0, BIT64(10));
+                pig.fields.req_intr_type = PIG_TYPE2;
+            }
+
             pig.fields.req_intr_payload = G_cme_stop_record.req_level_c0;
             CME_PUTSCOM(PPM_PIG, CME_MASK_C0, pig.value);
             G_cme_stop_record.core_stopgpe |= core;
@@ -785,6 +785,17 @@ p9_cme_stop_entry()
 
         if (core & CME_MASK_C1)
         {
+            if (G_cme_stop_record.req_level_c1 < STOP_LEVEL_11)
+            {
+                CME_PUTSCOM(CPPM_CPMMR_OR, CME_MASK_C1, BIT64(10));
+                pig.fields.req_intr_type = PIG_TYPE3;
+            }
+            else
+            {
+                CME_PUTSCOM(CPPM_CPMMR_CLR, CME_MASK_C1, BIT64(10));
+                pig.fields.req_intr_type = PIG_TYPE2;
+            }
+
             pig.fields.req_intr_payload = G_cme_stop_record.req_level_c1;
             CME_PUTSCOM(PPM_PIG, CME_MASK_C1, pig.value);
             G_cme_stop_record.core_stopgpe |= core;

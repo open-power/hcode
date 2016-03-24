@@ -56,6 +56,7 @@ p9_cme_stop_exit()
     // extract wakeup signals, clear status, and mask wakeup interrupts
     wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
     out32(CME_LCL_EISR_CLR, (wakeup << SHIFT32(17)) | BITS32(24, 2));
+    out32_sh(CME_LCL_EISR_CLR, (in32_sh(CME_LCL_EISR) & BITS32(8, 2)));
 
     // build the core select for wakeup
     pcwu   = (wakeup >> 4) & CME_MASK_BC;
@@ -72,6 +73,7 @@ p9_cme_stop_exit()
     // Code Error: function should never be entered without wakeup source active
     if (!core)
     {
+        PK_TRACE("Error: no wakeup fired");
         pk_halt();
     }
 
@@ -146,16 +148,12 @@ p9_cme_stop_exit()
     // STOP LEVEL 4
     //--------------------------------------------------------------------------
 
-    //======================
-    MARK_TAG(SX_STOP3, core)
-    //======================
-
-    if (deeper_level >= 4)
+    if (deeper_level >= STOP_LEVEL_4)
     {
         PK_TRACE("STOP Level 4+ Sequence");
 
         // if deeper_core is set, then core must be 0b11
-        if (deeper_core && target_level < 4)
+        if (deeper_core && target_level < STOP_LEVEL_4)
         {
             d2u4_flag = 1;
             core      = deeper_core;
@@ -164,10 +162,11 @@ p9_cme_stop_exit()
         do   //catchup loop
         {
 
+#if !SKIP_BCE
             PK_TRACE("BCE Runtime Kickoff");
-
             //right now a blocking call. Need to confirm this.
             instance_scan_init();
+#endif
 
             // todo for catch up case
             //PK_TRACE("X1: Request PCB Arbiter");
@@ -331,7 +330,19 @@ p9_cme_stop_exit()
         }
     }
 
-    // todo STOP LEVEL 3
+    //--------------------------------------------------------------------------
+    // STOP LEVEL 3
+    //--------------------------------------------------------------------------
+    if (deeper_level == STOP_LEVEL_3 || target_level == STOP_LEVEL_3)
+    {
+        //======================
+        MARK_TAG(SX_STOP3, core)
+        //======================
+
+        PK_TRACE("STOP Level 3 Sequence");
+        //Return to full voltage
+        //disable ivrm?
+    }
 
     //--------------------------------------------------------------------------
     // STOP LEVEL 2
@@ -351,7 +362,7 @@ p9_cme_stop_exit()
     // STOP LEVEL 4
     //--------------------------------------------------------------------------
 
-    if (deeper_level >= 4)
+    if (deeper_level >= STOP_LEVEL_4)
     {
         PK_TRACE("STOP Level 4+ Sequence");
 
@@ -370,13 +381,18 @@ p9_cme_stop_exit()
 
         //==========================
         MARK_TAG(SX_BCE_CHECK, core)
-
         //==========================
+
+#if !SKIP_BCE
+        PK_TRACE("BCE Runtime Check");
+
         if( BLOCK_COPY_SUCCESS != isScanRingCopyDone() )
         {
             PK_TRACE("BC2: Copy of Instance Specific Scan ring failed");
             // TODO should return an error code.
         }
+
+#endif
 
         // todo
         //PK_TRACE("X11: XIP Customized Scoms");
@@ -406,10 +422,6 @@ p9_cme_stop_exit()
         PK_TRACE("Raise block interrupt to PC");
         out32(CME_LCL_SICR_OR, core << SHIFT32(3));
 
-        //=====================
-        MARK_TRAP(SX_RAM_HRMOR)
-        //=====================
-
         PK_TRACE("RAM HRMOR");
 
         PK_TRACE("Now Wakeup the Core(pm_exit=1)");
@@ -420,9 +432,8 @@ p9_cme_stop_exit()
         while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
         PK_TRACE("S-Reset all threads");
-        CME_PUTSCOM(DIRECT_CONTROLS, core, BIT64(4));
-        //            BIT64(3)|BIT64(11)|BIT64(19)|BIT64(27));
-        //            BIT64(4)|BIT64(12)|BIT64(20)|BIT64(28));
+        CME_PUTSCOM(DIRECT_CONTROLS, core,
+                    BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
 
         //==========================
         MARK_TRAP(SX_SRESET_THREADS)
@@ -434,10 +445,6 @@ p9_cme_stop_exit()
         PK_TRACE("Poll for Core stop again(pm_active=1)");
 
         while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)));
-
-        //==========================
-        MARK_TRAP(SX_STOP15_THREADS)
-        //==========================
 
         //PK_TRACE("Restore PSSCR back to actual level");
         //PLS here:
@@ -455,15 +462,15 @@ p9_cme_stop_exit()
         out32(CME_LCL_SICR_CLR, core << SHIFT32(3));
 #endif
 
-        //=========================
-        MARK_TRAP(SX_ENABLE_ANALOG)
-        //=========================
-
         if (d2u4_flag)
         {
             core = CME_MASK_BC;
         }
     }
+
+    //=========================
+    MARK_TRAP(SX_ENABLE_ANALOG)
+    //=========================
 
     //--------------------------------------------------------------------------
     // END OF STOP EXIT
@@ -472,7 +479,7 @@ p9_cme_stop_exit()
     PK_TRACE("XF: Now Wakeup the Core(pm_exit=1)");
     out32(CME_LCL_SICR_OR, core << SHIFT32(5));
 
-//    PK_TRACE("XF: Polling for Core Wakeup(pm_active=0)");
+    PK_TRACE("XF: Polling for Core Waking up(pm_active=0)");
 
     while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
@@ -492,7 +499,7 @@ p9_cme_stop_exit()
 
     G_cme_stop_record.core_running |=  core;
     G_cme_stop_record.core_stopgpe &= ~core;
-    out32(CME_LCL_LMCR_CLR, (core << SHIFT32(15)));
+    out32(CME_LCL_LMCR_CLR, ((core << SHIFT32(13)) | (core << SHIFT32(15))));
 
     if (core & CME_MASK_C0)
     {
@@ -506,12 +513,8 @@ p9_cme_stop_exit()
         G_cme_stop_record.act_level_c1 = 0;
     }
 
-    // If not special wakeup, allow core to go back into STOP in the future
-    if (!spwu)
-    {
-        PK_TRACE("XF: Drop pm_exit if special wakeup is not present");
-        out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
-    }
+    PK_TRACE("XF: Drop pm_exit to allow core to run if spwu is not present");
+    out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
 
     //===========================
     MARK_TRAP(ENDSCOPE_STOP_EXIT)

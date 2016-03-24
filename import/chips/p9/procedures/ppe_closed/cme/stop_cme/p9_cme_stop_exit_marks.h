@@ -36,33 +36,26 @@ namespace CME_STOP_EXIT_MARKS
 
 enum CME_SX_MARKS
 {
-    SX_STOP3        =   0x0,
-    SX_POWERON      =   0x8,
-    SX_POWERON_DONE     =   0x10,
-    SX_CHIPLET_RESET        =   0x18,
-    SX_CHIPLET_RESET_GLSMUX_RESET       =   0x20,
-    SX_CHIPLET_RESET_SCAN0      =   0x28,
-    SX_CATCHUP_A        =   0x30,
-    SX_CHIPLET_INITS        =   0x38,
-    SX_CHIPLET_INIT_SCAN0       =   0x40,
-    SX_CATCHUP_B        =   0x48,
-    SX_ARRAY_INIT       =   0x50,
-    SX_ARRAY_INIT_SUBMODULE     =   0x68,
-    SX_ARRAY_INIT_SCAN0     =   0xe0,
-    SX_FUNC_INIT        =   0xe8,
-    SX_STARTCLOCKS      =   0xf0,
-    SX_STARTCLOCKS_GRID     =   0xf8,
-    SX_STARTCLOCKS_DONE     =   0x100,
-    SX_SCOM_INITS       =   0x108,
-    SX_BCE_CHECK        =   0x110,
-    SX_RUNTIME_INITS        =   0x118,
-    SX_SELF_RESTORE     =   0x120,
-    SX_RAM_HRMOR        =   0x128,
-    SX_SRESET_THREADS       =   0x130,
-    SX_STOP15_THREADS       =   0x138,
-    SX_ENABLE_ANALOG        =   0x140,
-    BEGINSCOPE_STOP_EXIT        =   0x1f28,
-    ENDSCOPE_STOP_EXIT      =   0x1f30
+    BEGINSCOPE_STOP_EXIT        =   0x20,
+    ENDSCOPE_STOP_EXIT      =   0x28,
+    SX_STOP3        =   0x68,
+    SX_POWERON      =   0xe0,
+    SX_CHIPLET_RESET        =   0xe8,
+    SX_CHIPLET_RESET_SCAN0      =   0xf0,
+    SX_CATCHUP_A        =   0xf8,
+    SX_CHIPLET_INITS        =   0x100,
+    SX_CATCHUP_B        =   0x108,
+    SX_ARRAY_INIT       =   0x110,
+    SX_FUNC_INIT        =   0x118,
+    SX_STARTCLOCKS      =   0x120,
+    SX_STARTCLOCKS_ALIGN        =   0x128,
+    SX_STARTCLOCKS_REGION       =   0x130,
+    SX_SCOM_INITS       =   0x138,
+    SX_BCE_CHECK        =   0x140,
+    SX_RUNTIME_INITS        =   0x148,
+    SX_SELF_RESTORE     =   0x150,
+    SX_SRESET_THREADS       =   0x168,
+    SX_ENABLE_ANALOG        =   0x1e0
 };
 
 
@@ -70,33 +63,26 @@ enum CME_SX_MARKS
 
 const std::vector<CME_SX_MARKS> MARKS =
 {
+    BEGINSCOPE_STOP_EXIT,
+    ENDSCOPE_STOP_EXIT,
     SX_STOP3,
     SX_POWERON,
-    SX_POWERON_DONE,
     SX_CHIPLET_RESET,
-    SX_CHIPLET_RESET_GLSMUX_RESET,
     SX_CHIPLET_RESET_SCAN0,
     SX_CATCHUP_A,
     SX_CHIPLET_INITS,
-    SX_CHIPLET_INIT_SCAN0,
     SX_CATCHUP_B,
     SX_ARRAY_INIT,
-    SX_ARRAY_INIT_SUBMODULE,
-    SX_ARRAY_INIT_SCAN0,
     SX_FUNC_INIT,
     SX_STARTCLOCKS,
-    SX_STARTCLOCKS_GRID,
-    SX_STARTCLOCKS_DONE,
+    SX_STARTCLOCKS_ALIGN,
+    SX_STARTCLOCKS_REGION,
     SX_SCOM_INITS,
     SX_BCE_CHECK,
     SX_RUNTIME_INITS,
     SX_SELF_RESTORE,
-    SX_RAM_HRMOR,
     SX_SRESET_THREADS,
-    SX_STOP15_THREADS,
-    SX_ENABLE_ANALOG,
-    BEGINSCOPE_STOP_EXIT,
-    ENDSCOPE_STOP_EXIT
+    SX_ENABLE_ANALOG
 };
 
 }

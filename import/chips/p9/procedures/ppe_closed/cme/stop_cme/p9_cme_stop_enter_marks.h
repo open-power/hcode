@@ -36,31 +36,27 @@ namespace CME_STOP_ENTRY_MARKS
 
 enum CME_SE_MARKS
 {
-    SE_POLL_PCBMUX_GRANT        =   0x0,
-    SE_QUIESCE_CORE_INTF        =   0x8,
-    SE_STOP_CORE_CLKS       =   0x10,
-    SE_STOP_CORE_GRID       =   0x18,
-    SE_STOP2_DONE       =   0x20,
-    SE_IS0_BEGIN        =   0x28,
-    SE_IS0_END      =   0x30,
-    SE_CATCHUP      =   0x38,
-    SE_CORE_VMIN        =   0x40,
-    SE_STOP3_DONE       =   0x48,
-    SE_POWER_OFF_CORE       =   0x50,
-    SE_STOP4_DONE       =   0x68,
-    SE_IS1_BEGIN        =   0xe0,
-    SE_IS1_END      =   0xe8,
-    SE_PURGE_L2     =   0xf0,
-    SE_IS2_BEGIN        =   0xf8,
-    SE_PURGE_L2_ABORT       =   0x100,
-    SE_PURGE_L2_ABORT_DONE      =   0x108,
-    SE_IS2_END      =   0x110,
-    SE_PURGE_L2_DONE        =   0x118,
-    SE_SGPE_HANDOFF     =   0x120,
-    BEGINSCOPE_STOP_ENTRY       =   0x1f08,
-    ENDSCOPE_STOP_ENTRY     =   0x1f10,
-    STOP_EVENT_HANDLER      =   0x1f18,
-    STOP_DOORBELL_HANDLER       =   0x1f20
+    BEGINSCOPE_STOP_ENTRY       =   0x0,
+    ENDSCOPE_STOP_ENTRY     =   0x8,
+    STOP_EVENT_HANDLER      =   0x10,
+    STOP_DOORBELL_HANDLER       =   0x18,
+    SE_QUIESCE_CORE_INTF        =   0x68,
+    SE_STOP_CORE_CLKS       =   0xe0,
+    SE_STOP_CORE_GRID       =   0xe8,
+    SE_STOP2_DONE       =   0xf0,
+    SE_IS0_BEGIN        =   0xf8,
+    SE_IS0_END      =   0x100,
+    SE_CATCHUP      =   0x108,
+    SE_CORE_VMIN        =   0x110,
+    SE_STOP3_DONE       =   0x118,
+    SE_POWER_OFF_CORE       =   0x120,
+    SE_STOP4_DONE       =   0x128,
+    SE_IS1_BEGIN        =   0x130,
+    SE_IS1_END      =   0x138,
+    SE_PURGE_L2     =   0x140,
+    SE_PURGE_L2_ABORT       =   0x148,
+    SE_PURGE_L2_DONE        =   0x150,
+    SE_SGPE_HANDOFF     =   0x168
 };
 
 
@@ -68,7 +64,10 @@ enum CME_SE_MARKS
 
 const std::vector<CME_SE_MARKS> MARKS =
 {
-    SE_POLL_PCBMUX_GRANT,
+    BEGINSCOPE_STOP_ENTRY,
+    ENDSCOPE_STOP_ENTRY,
+    STOP_EVENT_HANDLER,
+    STOP_DOORBELL_HANDLER,
     SE_QUIESCE_CORE_INTF,
     SE_STOP_CORE_CLKS,
     SE_STOP_CORE_GRID,
@@ -83,16 +82,9 @@ const std::vector<CME_SE_MARKS> MARKS =
     SE_IS1_BEGIN,
     SE_IS1_END,
     SE_PURGE_L2,
-    SE_IS2_BEGIN,
     SE_PURGE_L2_ABORT,
-    SE_PURGE_L2_ABORT_DONE,
-    SE_IS2_END,
     SE_PURGE_L2_DONE,
-    SE_SGPE_HANDOFF,
-    BEGINSCOPE_STOP_ENTRY,
-    ENDSCOPE_STOP_ENTRY,
-    STOP_EVENT_HANDLER,
-    STOP_DOORBELL_HANDLER
+    SE_SGPE_HANDOFF
 };
 
 }

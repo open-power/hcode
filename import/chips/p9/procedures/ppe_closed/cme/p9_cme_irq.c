@@ -178,6 +178,6 @@ void pk_unified_irq_prty_mask_handler(void)
     l_vecL = 0;
     asm volatile ("lvd %[data], 0(%[addr]) \n" \
                   : [data]"=r"(l_vecH) \
-                  : [addr]"r"(&ext_irq_vectors_cme[iPrtyLvl][IDX_PRTY_VEC]) );
+                  : [addr]"r"(&ext_irq_vector_pk) );
 
 }

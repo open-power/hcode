@@ -44,18 +44,7 @@
 #include "cppm_firmware_registers.h"
 
 #include "p9_stop_common.h"
-/*
-/// Compiler flags
-#define EPM_P9_LEVEL        1
-#define SKIP_ABORT          1
-#define SKIP_L2_PURGE_ABORT 1
-#define SKIP_CATCHUP        1
-#define STOP_PRIME          0
-#define SKIP_SCAN0          0
-#define SKIP_INITF          0
-#define SKIP_ARY_INIT       0
-#define SKIP_SELF_RESTORE   0
-*/
+
 /// handcoded addresses TO BE REMOVED
 
 #define THREAD_INFO            0x20010A9B
@@ -136,6 +125,13 @@ enum CME_STOP_FLAGS
     FLAG_ENTRY_FIRST_C1              = BIT32(29),
     FLAG_PARTIAL_GOOD_C0             = BIT32(30),
     FLAG_PARTIAL_GOOD_C1             = BIT32(31)
+};
+
+
+enum CME_STOP_PIG_TYPES
+{
+    PIG_TYPE2                        = 2,
+    PIG_TYPE3                        = 3
 };
 
 

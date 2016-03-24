@@ -83,8 +83,6 @@ p9_hcd_cache_poweron(uint32_t quad)
     }
     while(!(scom_data & BIT64(50)));
 
-    MARK_TRAP(SX_POWERON_DONE)
-
     // vdd_pfet_force_state = 00 (Nop)
     // vcs_pfet_force_state = 00 (Nop)
     PK_TRACE("Turn Off Force Von");

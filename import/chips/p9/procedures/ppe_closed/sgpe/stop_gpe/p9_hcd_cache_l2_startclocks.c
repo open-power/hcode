@@ -46,6 +46,19 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad),
                 ((uint64_t)ex << SHIFT64(9)));
 
+    PK_TRACE("Raise clock sync enable before switch to dpll");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), (ex << SHIFT64(37)));
+
+    PK_TRACE("Poll for clock sync done to raise");
+
+    do
+    {
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QACSR, quad), scom_data);
+    }
+    while(!(scom_data & (ex << SHIFT64(37))));
+
+    MARK_TRAP(SX_L2_STARTCLOCKS_ALIGN)
+
     // align_chiplets()
 
     PK_TRACE("Set flushmode_inhibit via CPLT_CTRL0[2]");
@@ -72,18 +85,7 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
     PK_TRACE("Clear force_align via CPLT_CTRL0[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(3));
 
-    PK_TRACE("Raise clock sync enable before switch to dpll");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), (ex << SHIFT64(37)));
-
-    PK_TRACE("Poll for clock sync done to raise");
-
-    do
-    {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QACSR, quad), scom_data);
-    }
-    while(!(scom_data & (ex << SHIFT64(37))));
-
-    MARK_TRAP(SX_L2_STARTCLOCKS_GRID)
+    MARK_TRAP(SX_L2_STARTCLOCKS_REGION)
 
     // -------------------------------
     // Start L2 Clock
@@ -109,8 +111,6 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
     while(((~scom_data >> SHIFT64(9)) & ex) != ex);
 
     PK_TRACE("L2 clock is now running");
-
-    MARK_TRAP(SX_L2_STARTCLOCKS_DONE)
 
     PK_TRACE("Drop TLBIE Quiesce");
 

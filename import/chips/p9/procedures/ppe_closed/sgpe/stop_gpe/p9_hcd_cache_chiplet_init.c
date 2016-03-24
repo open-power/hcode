@@ -31,10 +31,5 @@ p9_hcd_cache_chiplet_init(uint32_t quad)
 {
     int rc = SGPE_STOP_SUCCESS;
 
-#if !SKIP_SCAN0
-    // Marker for scan0
-    MARK_TRAP(SX_CHIPLET_INIT_SCAN0)
-#endif
-
     return rc;
 }

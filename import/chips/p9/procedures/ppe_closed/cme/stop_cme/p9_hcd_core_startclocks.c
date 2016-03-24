@@ -48,6 +48,9 @@ p9_hcd_core_startclocks(uint32_t core)
     PK_TRACE("Drop vital fences via CPLT_CTRL1[3]");
     CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, BIT64(3));
 
+    PK_TRACE("Drop skew sense to skew adjust fence via NET_CTRL0[22]");
+    CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(22));
+
     PK_TRACE("Assert core clock sync enable via CPPM_CACCR[15]");
     CME_PUTSCOM(CPPM_CACCR_OR, core, BIT64(15));
 
@@ -58,6 +61,8 @@ p9_hcd_core_startclocks(uint32_t core)
         CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_AND, scom_data);
     }
     while(~scom_data & BIT64(13));
+
+    MARK_TRAP(SX_STARTCLOCKS_ALIGN)
 
     PK_TRACE("Reset abstclk & syncclk muxsel(io_clk_sel) via CPLT_CTRL0[0:1]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BITS64(0, 2));
@@ -85,6 +90,8 @@ p9_hcd_core_startclocks(uint32_t core)
     }
     while(~scom_data & BIT64(9));
 
+    MARK_TRAP(SX_STARTCLOCKS_REGION)
+
     PK_TRACE("Drop force_align via CPLT_CTRL0[3]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(3));
     PPE_WAIT_CORE_CYCLES(loop, 450);
@@ -111,8 +118,6 @@ p9_hcd_core_startclocks(uint32_t core)
     while((scom_data & BITS64(4, 10)) != 0);
 
     PK_TRACE("Core clock is now running");
-
-    MARK_TRAP(SX_STARTCLOCKS_DONE)
 
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));

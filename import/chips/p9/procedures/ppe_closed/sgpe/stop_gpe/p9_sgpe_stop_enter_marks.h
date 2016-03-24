@@ -36,22 +36,23 @@ namespace SGPE_STOP_ENTRY_MARKS
 
 enum SGPE_SE_MARKS
 {
-    SE_STOP_SUSPEND_PSTATE      =   0x0,
-    SE_STOP_L2_CLKS     =   0x8,
-    SE_STOP_L2_GRID     =   0x10,
-    SE_STOP8_DONE       =   0x18,
-    SE_PURGE_L3     =   0x20,
-    SE_PURGE_L3_ABORT       =   0x28,
-    SE_PURGE_L3_ABORT_DONE      =   0x30,
-    SE_PURGE_PB     =   0x38,
-    SE_WAIT_PGPE_SUSPEND        =   0x40,
-    SE_QUIESCE_QUAD     =   0x48,
-    SE_STOP_CACHE_CLKS      =   0x50,
-    SE_POWER_OFF_CACHE      =   0x68,
-    SE_STOP11_DONE      =   0xe0,
-    BEGINSCOPE_STOP_ENTRY       =   0x1f08,
-    ENDSCOPE_STOP_ENTRY     =   0x1f10,
-    STOP_TYPE2_HANDLER      =   0x1f18
+    BEGINSCOPE_STOP_ENTRY       =   0x0,
+    ENDSCOPE_STOP_ENTRY     =   0x8,
+    STOP_PIG_HANDLER        =   0x10,
+    SE_LESSTHAN8_WAIT       =   0x68,
+    SE_STOP_SUSPEND_PSTATE      =   0xe0,
+    SE_STOP_L2_CLKS     =   0xe8,
+    SE_STOP_L2_GRID     =   0xf0,
+    SE_STOP8_DONE       =   0xf8,
+    SE_PURGE_L3     =   0x100,
+    SE_PURGE_L3_ABORT       =   0x108,
+    SE_PURGE_L3_ABORT_DONE      =   0x110,
+    SE_PURGE_PB     =   0x118,
+    SE_WAIT_PGPE_SUSPEND        =   0x120,
+    SE_QUIESCE_QUAD     =   0x128,
+    SE_STOP_CACHE_CLKS      =   0x130,
+    SE_POWER_OFF_CACHE      =   0x138,
+    SE_STOP11_DONE      =   0x140
 };
 
 
@@ -59,6 +60,10 @@ enum SGPE_SE_MARKS
 
 const std::vector<SGPE_SE_MARKS> MARKS =
 {
+    BEGINSCOPE_STOP_ENTRY,
+    ENDSCOPE_STOP_ENTRY,
+    STOP_PIG_HANDLER,
+    SE_LESSTHAN8_WAIT,
     SE_STOP_SUSPEND_PSTATE,
     SE_STOP_L2_CLKS,
     SE_STOP_L2_GRID,
@@ -71,10 +76,7 @@ const std::vector<SGPE_SE_MARKS> MARKS =
     SE_QUIESCE_QUAD,
     SE_STOP_CACHE_CLKS,
     SE_POWER_OFF_CACHE,
-    SE_STOP11_DONE,
-    BEGINSCOPE_STOP_ENTRY,
-    ENDSCOPE_STOP_ENTRY,
-    STOP_TYPE2_HANDLER
+    SE_STOP11_DONE
 };
 
 }

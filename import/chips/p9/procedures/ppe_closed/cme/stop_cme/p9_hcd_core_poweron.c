@@ -66,8 +66,6 @@ p9_hcd_core_poweron(uint32_t core)
     }
     while(!(scom_data & BIT64(42)));
 
-    MARK_TRAP(SX_POWERON_DONE)
-
     // vdd_pfet_force_state = 00 (Nop)
     PK_TRACE("Turn Off Force Von");
     CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));

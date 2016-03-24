@@ -34,7 +34,6 @@
 /// \brief Application specific overrides go here.
 ///
 
-#define EPM_P9_LEVEL        1
 #define STOP_PRIME          0
 #define SKIP_ABORT          0
 #define SKIP_L2_PURGE_ABORT 0
@@ -44,13 +43,18 @@
 #define SKIP_INITF          0
 #define SKIP_ARY_INIT       0
 #define SKIP_SELF_RESTORE   0
+#define SKIP_BCE            1
 
 // --------------------
 
 #define EPM_P9_TUNING         1
-#define SIMICS_TUNING         1
-#define DEV_DEBUG             1
+#define SIMICS_TUNING         0
 #define USE_SIMICS_IO         0
+#define DEV_DEBUG             1
+
+#if EPM_P9_TUNING
+    #define PK_TRACE_BUFFER_WRAP_MARKER 1
+#endif
 #define PK_TRACE_TIMER_OUTPUT 0
 
 // --------------------

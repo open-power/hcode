@@ -80,12 +80,6 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     PK_TRACE("Drop DPLL bypass via NET_CTRL0[5]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(5));
 
-    PK_TRACE("Flip L3 glsmux select to DPLL output via PPM_CGCR[3]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), BIT64(3));
-
-    PK_TRACE("Flip L2 glsmux select to DPLL output via QPPM_EXCGCR[34,35]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), BITS64(34, 2));
-
     PK_TRACE("Drop DPLL ff_bypass via QPPM_DPLL_CTRL[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_CLEAR, quad), BIT64(2));
 

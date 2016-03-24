@@ -55,12 +55,18 @@
 
 #define CODE2REGA(code)     ((code & 0x1F00) >> 8)
 #define CODE2REGB(code)     ((code & 0xF8) >> 3)
-#define CODE2TAG(code,tag)  ((tag << 10) | (code >> 3))
+#define CODE2TAG(code,tag)  ((tag << 8) | (code >> 3))
 #define TAG_SPRG0(tag)      {ppe42_app_ctx_set(tag);}
+
+#if EPM_P9_TUNING
 #define MARK_TRAP(code) \
     {asm volatile ("tw 0, %0, %1" : : \
                    "i" (CODE2REGA(code)), \
                    "i" (CODE2REGB(code)));}
+#else
+#define MARK_TRAP(code)
+#endif
+
 #define MARK_TAG(code, tag) \
     TAG_SPRG0(CODE2TAG(code, tag)) \
     MARK_TRAP(code)
