@@ -22,10 +22,8 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-
-EXE   = p9_xip_tool
+EXE = p9_xip_tool
 OBJS += $(EXE).o
-$(EXE)_COMMONFLAGS = -DDEBUG_P9_XIP_IMAGE=1
+$(EXE)_COMMONFLAGS += -DDEBUG_P9_XIP_IMAGE=1
 $(EXE)_DEPLIBS += p9_xip_image
-$(EXE)_DEPLIBS += p9_ring_identification
 $(call BUILD_EXE)
