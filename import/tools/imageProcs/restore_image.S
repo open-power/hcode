@@ -114,11 +114,11 @@ __header_8_reserved:
         ////////////////////////////////////////////////////////////////////
 
 __build_user:
-        .asciz "unknown        "         # 16 Characters allocated
+        .asciz "unknown        "                         # 16 Characters
 __build_host:
-        .asciz "unknown                " # 24 characters allocated
+        .asciz "unknown                                " # 24 characters
 __header_string_reserved:
-        .space 24, 0
+        .space 8, 0
 
         .xip_toc build_user, P9_XIP_STRING, __build_user
         .xip_toc build_host, P9_XIP_STRING, __build_host
