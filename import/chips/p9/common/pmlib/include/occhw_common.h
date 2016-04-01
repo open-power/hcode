@@ -370,11 +370,11 @@
 // Macros for fields of PBA_MODECTL
 ////////////////////////////////////
 
-/// The 64KB OCI HTM marker space is enabled by default at 0x40070000
+/// The 64KB OCI HTM marker space is enabled by default at 0xC0070000
 ///
 /// See the comments for occhw_trace.h
 
-#define PBA_OCI_MARKER_BASE 0x40070000
+#define PBA_OCI_MARKER_BASE 0xC0070000
 
 
 // SSX Kernel reserved trace addresses, see occhw_trace.h.
