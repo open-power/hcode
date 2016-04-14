@@ -22,8 +22,9 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
+
 IMAGE=cme_image
-$(call APPEND_EMPTY_SECTION,vect,1024)
-$(call APPEND_EMPTY_SECTION,cme_image_header,1024)
-$(call APPEND_EMPTY_SECTION,hcode,1024)
+CME_IMAGE_DEPS=$$($(IMAGE)_PATH)/.cme_image.normalize.bin.built
+
+$(call APPEND_EMPTY_SECTION,hcode,1024,$(CME_IMAGE_DEPS))
 $(call BUILD_IMAGE)

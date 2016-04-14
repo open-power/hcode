@@ -23,10 +23,11 @@
 #
 # IBM_PROLOG_END_TAG
 IMAGE=sgpe_image
-$(call APPEND_EMPTY_SECTION,qpmr,1024)
-$(call APPEND_EMPTY_SECTION,lvl1_bl,1024)
-$(call APPEND_EMPTY_SECTION,lvl2_bl,1024)
-$(call APPEND_EMPTY_SECTION,vect,1024)
-$(call APPEND_EMPTY_SECTION,sgpe_image_header,1024)
-$(call XIP_TOOL,append,.hcode,$(ROOTPATH)/chips/p9/procedures/ppe_closed/sgpe/stop_gpe/obj/stop_gpe/stop_gpe.bin)
+
+STOP_GPE_DEPS=$$($(IMAGE)_PATH)/.sgpe_image.normalize.bin.built
+
+$(call APPEND_EMPTY_SECTION,qpmr,1024,$(STOP_GPE_DEPS))
+$(call APPEND_EMPTY_SECTION,lvl1_bl,1024,$$($(IMAGE)_PATH)/.$(IMAGE).append.qpmr)
+$(call APPEND_EMPTY_SECTION,lvl2_bl,1024,$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl)
+$(call APPEND_EMPTY_SECTION,hcode,1024,$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl)
 $(call BUILD_IMAGE)

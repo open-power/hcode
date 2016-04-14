@@ -23,6 +23,11 @@
 #
 # IBM_PROLOG_END_TAG
 IMAGE=restore_image
-#$(call XIP_TOOL,append,.cpmr,$(ROOTPATH)/chips/p9/procedures/ppe_closed/cme/stop_cme/obj/stop_cme/cpmr_header.bin)
-$(call XIP_TOOL,append,.self_restore,$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
+
+SELF_REST_TARGET=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin
+
+SELF_REST_DEPS=$$($(IMAGE)_PATH)/.restore_image.normalize.bin.built
+
+$(call XIP_TOOL,append,.self_restore,$(SELF_REST_DEPS),$(SELF_REST_TARGET))
+
 $(call BUILD_IMAGE)
