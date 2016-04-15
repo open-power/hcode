@@ -29,6 +29,7 @@
 #include <inttypes.h>
 
 #include <ecmdDataBufferBase.H>
+#include <ecmdUtils.H>
 
 #include <variable_buffer.H>
 #include <return_code_defs.H>
