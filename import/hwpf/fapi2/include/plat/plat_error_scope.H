@@ -59,7 +59,6 @@
         FAPI_ERR(__VA_ARGS__);                                  \
         goto fapi_try_exit;                                     \
     }
-/// @endcond
 
 ///
 /// @brief Create an error log based on __conditional__,
