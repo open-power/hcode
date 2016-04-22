@@ -1,11 +1,11 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p9/procedures/ppe_closed/lib/Makefile $
+# $Source: import/chips/p9/procedures/ppe_closed/cme/stop_cme/p9_cme_edit.mk $
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2016,2017
 # [+] International Business Machines Corp.
 #
 #
@@ -22,35 +22,10 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-#  This Makefile currently builds a single archive, 'libhcode.a', from
-#  various library source files. 
-#
-#  part of the complete application build.
-#
+EXE=cmeImgEdit
+OBJS=p9_cme_img_edit.o
+$(call BUILD_EXE)
 
-#all generated files from this makefile will end up in obj/$(IMAGE_NAME)/common
-export SUB_OBJDIR = /hcodelib
-
-include img_defs.mk
-include hcodelibfiles.mk
-
-OBJS := $(addprefix $(OBJDIR)/, $(HCODE_OBJECTS))
-
-libhcode.a: local
-	$(AR) crs $(OBJDIR)/libhcode.a $(OBJDIR)/*.o
-
-.PHONY: clean
-
-local: $(OBJS)
-
-$(OBJS) $(OBJS:.o=.d): | $(OBJDIR)
-
-$(OBJDIR):
-	mkdir -p $(OBJDIR)
-
-clean:
-	rm -fr $(OBJDIR)
-
-ifneq ($(MAKECMDGOALS),clean)
-#include $(OBJS:.o=.d) 
-endif
+EXE=cpmrHeaderImgEdit
+OBJS=p9_cme_img_edit.o
+$(call BUILD_EXE)

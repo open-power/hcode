@@ -39,14 +39,32 @@ enum
     CPMR_ATTN_WORD1     =   0x03,
     CPMR_BUILD_DATE_POS =   0x10,
     CPMR_BUILD_VER_POS  =   0x14,
-
+    CME_IMAGE           =   1,
+    CPMR_IMAGE          =   2,
 };
 
-int main()
+int main(int narg, char* argv[])
 {
 
-    FILE* pImage = fopen( "./obj/stop_cme/stop_cme.bin", "r+" );
-    FILE* pCpmr = fopen( "./obj/stop_cme/cpmrHeader", "r+" );
+    if(narg < 2)
+    {
+        printf("Usage: %s <full path to image>\n",
+               argv[0]);
+        return -1;
+    }
+
+    int imageType = CME_IMAGE;
+    long int buildDatePos = CME_BUILD_DATE_POS;
+    long int buildVerPos  = CME_BUILD_VER_POS;
+
+    FILE* pImage = fopen( argv[1], "r+" );
+
+    if( !pImage )
+    {
+        printf("Could not open %s\n", argv[1]);
+        return -2;
+    }
+
     time_t buildTime = time(NULL);
     struct tm* headerTime = localtime(&buildTime);
 
@@ -57,46 +75,51 @@ int main()
             break;
         }
 
-        if( !pCpmr )
-        {
-            break;
-        }
-
         fseek (pImage, 0, SEEK_END);
         uint32_t size = ftell (pImage);
         rewind(pImage);
 
+        // For ekb build it's desired to detect the image type w/o special
+        // make rules. Better way?
+        if(size < CME_HCODE_OFFSET)
+        {
+            imageType = CPMR_IMAGE;
+            buildDatePos = CPMR_BUILD_DATE_POS;
+            buildVerPos  = CPMR_BUILD_VER_POS;
+        }
+
         // cme build date  yyyymmdd
-        fseek ( pImage, CME_BUILD_DATE_POS , SEEK_SET );
-        fseek ( pCpmr, CPMR_BUILD_DATE_POS , SEEK_SET );
+        fseek ( pImage, buildDatePos , SEEK_SET );
+
         uint32_t temp = ( (headerTime->tm_year + 1900) << 16) |
-                        (headerTime->tm_mon << 8) |
+                        ((headerTime->tm_mon + 1) << 8) |
                         (headerTime->tm_mday + 1);
 
         temp = htonl(temp);
-        fwrite(&temp, sizeof(uint32_t), 1, pImage );
-        fwrite(&temp, sizeof(uint32_t), 1, pCpmr );
 
-        // cme build version
-        fseek ( pImage , CME_BUILD_VER_POS, SEEK_SET );
-        fseek ( pCpmr ,  CPMR_BUILD_VER_POS, SEEK_SET );
+        fwrite(&temp, sizeof(uint32_t), 1, pImage );
+
+        // build version
+        fseek ( pImage , buildVerPos, SEEK_SET );
         temp = htonl(CME_BUILD_VER);
         fwrite(&temp, sizeof(uint32_t), 1, pImage );
-        fwrite(&temp, sizeof(uint32_t), 1, pCpmr );
 
-        // cme hcode offset
-        fseek ( pImage, HCODE_OFFSET_POS , SEEK_SET );
-        temp = CME_HCODE_OFFSET;
-        temp = htonl(temp);
-        fwrite(&(temp), sizeof(uint32_t), 1, pImage );
 
-        // cme hcode length
-        fseek ( pImage , HCODE_LEN_POS , SEEK_SET );
-        temp = htonl( size );
-        fwrite(&temp, sizeof(uint32_t), 1, pImage );
+        if(imageType == CME_IMAGE)
+        {
+            // cme hcode offset
+            fseek ( pImage, HCODE_OFFSET_POS , SEEK_SET );
+            temp = CME_HCODE_OFFSET;
+            temp = htonl(temp);
+            fwrite(&(temp), sizeof(uint32_t), 1, pImage );
+
+            // cme hcode length
+            fseek ( pImage , HCODE_LEN_POS , SEEK_SET );
+            temp = htonl( size );
+            fwrite(&temp, sizeof(uint32_t), 1, pImage );
+        }
 
         fclose(pImage);
-        fclose(pCpmr);
     }
     while(0);
 

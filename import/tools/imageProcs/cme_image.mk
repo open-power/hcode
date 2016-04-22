@@ -27,4 +27,4 @@ IMAGE=cme_image
 CME_IMAGE_DEPS=$$($(IMAGE)_PATH)/.cme_image.normalize.bin.built
 
 $(call APPEND_EMPTY_SECTION,hcode,1024,$(CME_IMAGE_DEPS))
-$(call BUILD_IMAGE)
+$(call BUILD_XIPIMAGE)

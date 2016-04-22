@@ -173,9 +173,9 @@ void pk_unified_irq_prty_mask_handler(void)
     //    rest, i.e. route first found IRQ in the returned priority vector
     //    to the registered [unified] interrupt handler.
     uint32_t  register l_vecH asm("r5");
-    uint32_t  register l_vecL asm("r6");
+    //uint32_t  register l_vecL asm("r6");
 
-    l_vecL = 0;
+    //l_vecL = 0;
     asm volatile ("lvd %[data], 0(%[addr]) \n" \
                   : [data]"=r"(l_vecH) \
                   : [addr]"r"(&ext_irq_vector_pk) );

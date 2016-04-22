@@ -67,6 +67,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <string>
 #include <time.h>
 #include <fcntl.h>
@@ -198,7 +199,7 @@ bool chop_up_line(string& in_line, string& prefix, string& strings, string& salt
     }
 
     dprintf("--------\nchop_up_line: Passed basic checks. line= %s\n", line.c_str());
-    dprintf("pos1=%d, pos2=%d, pos3=%d\n", pos1, pos2, pos3);
+    dprintf("pos1=%lu, pos2=%lu, pos3=%lu\n", pos1, pos2, pos3);
 
     if ((pos1 != (pos2 - 1)) && (line.find_first_not_of(" \t", pos1, (pos2 - pos1) + 1) != string::npos))
     {
@@ -435,7 +436,7 @@ void get_hash(const string& i_str, const unsigned int salt_num, string& hash32, 
         exit(1);
     }
 
-//removing this since it doesn't seem to have any affect on the output
+    //removing this since it doesn't seem to have any affect on the output
 #if 0
 
     // If hash is empty, use the sum of the ord values in the original string
@@ -599,6 +600,12 @@ int main(int argc, char** argv)
         realcc = argv[argi++];
     }
 
+    if (realcc.find("LD_LIBRARY_PATH") != string::npos)
+    {
+        realcc.append(1, ' ');
+        realcc.append(argv[argi++]);
+    }
+
     // wait until -d options is handled before checking $debug
     dprintf("ppetracepp version %s - API/macro version %s\n", version.c_str(), macro_version.c_str());
 
@@ -619,9 +626,9 @@ int main(int argc, char** argv)
 
     dprintf("realcpp is %s\n", realcpp.c_str());
 
-//------------------------------------------------------------------------------
-// parse all the arguments
-//------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // parse all the arguments
+    //------------------------------------------------------------------------------
     string source;
     string object;
     vector<string> ccopts;
@@ -776,9 +783,9 @@ int main(int argc, char** argv)
         }
     }
 
-//------------------------------------------------------------------------------
-// set other parameters based on arguments specified
-//------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // set other parameters based on arguments specified
+    //------------------------------------------------------------------------------
     if (source.empty())
     {
         // this might be a call to link a program instead of compile a source (or asm source)
@@ -811,8 +818,8 @@ int main(int argc, char** argv)
         }
     }
 
-// set value of trace hash according to language
-// check source file extension if no explicit -x option given
+    // set value of trace hash according to language
+    // check source file extension if no explicit -x option given
     if (!optx_found)
     {
         if (realcc.find("g++") != string::npos)
@@ -860,7 +867,7 @@ int main(int argc, char** argv)
         hashtype_suffix = "U";
     }
 
-// define TRAC_PPETRACEPP for macros
+    // define TRAC_PPETRACEPP for macros
     tmp = "-DTRAC_PPETRACEPP -DTRAC_PPVER=";
     tmp += macro_version;
     cppopts.push_back(tmp);
@@ -894,9 +901,9 @@ int main(int argc, char** argv)
         cppopts.push_back(tmp);
     }
 
-//------------------------------------------------------------------------------
-// start cpp
-//------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // start cpp
+    //------------------------------------------------------------------------------
     cmd = realcpp;
 
     for(vector<string>::iterator p = cppopts.begin(); p != cppopts.end(); ++p)
@@ -918,9 +925,9 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-//------------------------------------------------------------------------------
-// start cc. manually set language as source file extension not available to cc
-//------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // start cc. manually set language as source file extension not available to cc
+    //------------------------------------------------------------------------------
     string type_str = "";
 
     if (!optx_found)

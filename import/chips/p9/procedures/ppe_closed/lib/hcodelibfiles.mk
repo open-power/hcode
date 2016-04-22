@@ -41,10 +41,10 @@
 # INCLUDES
 ##########################################################################
 
-C-SOURCES = \
+HCODE_C_SOURCES = \
 	p9_hcd_block_copy.c
 
 
-S-SOURCES =  
+HCODE_S_SOURCES =
 
-LIBCOMMON_OBJECTS = $(C-SOURCES:.c=.o) $(S-SOURCES:.S=.o)
+HCODE_OBJECTS = $(HCODE_C_SOURCES:.c=.o) $(HCODE_S_SOURCES:.S=.o)

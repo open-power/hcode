@@ -36,16 +36,28 @@ enum
     SGPE_BUILD_VER       =   0x01,
     QPMR_BUILD_DATE_POS  =   0x18,
     QPMR_BUILD_VER_POS   =   0x1C,
+    SGPE_IMAGE           =   1,
+    QPMR_IMAGE           =   2,
 };
 
-int main()
+int main(int narg, char* argv[])
 {
 
-    FILE* pImage = fopen( "obj/stop_gpe/stop_gpe.bin", "r+" );
+    if(narg < 2)
+    {
+        printf("Usage: %s <full path to image>\n",
+               argv[0]);
+        return -1;
+    }
+
+    int imageType = SGPE_IMAGE;
+    long int buildDatePos = SGPE_BUILD_DATE_POS;
+    long int buildVerPos  = SGPE_BUILD_VER_POS;
+
+    FILE* pImage = fopen( argv[1], "r+");
+
     time_t buildTime = time(NULL);
     struct tm* headerTime = localtime(&buildTime);
-
-    FILE* pQpmrHdr = fopen( "obj/stop_gpe/qpmrHeader", "r+" );
 
     do
     {
@@ -55,38 +67,47 @@ int main()
             break;
         }
 
-        if(!pQpmrHdr)
+        fseek (pImage, 0, SEEK_END);
+        uint32_t size = ftell (pImage);
+        rewind(pImage);
+
+        // For ekb build it's desired to detect the image type w/o special
+        // make rules. Better way?
+        if(size < 1024)
         {
-            printf("\n qpmr header not found");
-            break;
+            imageType = QPMR_IMAGE;
+            buildDatePos = QPMR_BUILD_DATE_POS;
+            buildVerPos  = QPMR_BUILD_VER_POS;
         }
 
-        //  populating SGPE Image Header
-        //  populating RESET address
-        fseek (pImage, SGPE_RESET_ADDR_POS, SEEK_SET);
-        uint32_t temp = SGPE_RESET_ADDRESS;
-        temp = htonl(temp);
-        fwrite(&(temp), sizeof(uint32_t), 1, pImage );
+        uint32_t temp = 0;
+
+        if(imageType == SGPE_IMAGE)
+        {
+            //  populating SGPE Image Header
+            //  populating RESET address
+            fseek (pImage, SGPE_RESET_ADDR_POS, SEEK_SET);
+            temp = SGPE_RESET_ADDRESS;
+            temp = htonl(temp);
+            fwrite(&(temp), sizeof(uint32_t), 1, pImage );
+        }
 
         //build date
-        fseek ( pImage , SGPE_BUILD_DATE_POS, SEEK_SET );
-        fseek ( pQpmrHdr , QPMR_BUILD_DATE_POS, SEEK_SET );
+        fseek( pImage, buildDatePos, SEEK_SET );
         // date format same as in XIP Header YYYYMMDD
-        temp = ((headerTime->tm_mday ) | ((headerTime->tm_mon + 1) << 8) | (headerTime->tm_year + 1900) << 16);
+        temp = ((headerTime->tm_mday ) |
+                ((headerTime->tm_mon + 1) << 8) |
+                (headerTime->tm_year + 1900) << 16);
+
         temp = htonl(temp);
         fwrite(&temp, sizeof(uint32_t), 1, pImage );
-        fwrite(&temp, sizeof(uint32_t), 1, pQpmrHdr );
-        //printf("\n temp is 0x%x08", temp );
 
         // build ver
-        fseek ( pImage , SGPE_BUILD_VER_POS, SEEK_SET );
-        fseek ( pQpmrHdr , QPMR_BUILD_VER_POS, SEEK_SET );
+        fseek( pImage,  buildVerPos, SEEK_SET );
         temp = htonl(SGPE_BUILD_VER);
         fwrite(&temp, sizeof(uint32_t), 1, pImage );
-        fwrite(&temp, sizeof(uint32_t), 1, pQpmrHdr );
 
         fclose(pImage);
-        fclose(pQpmrHdr);
     }
     while(0);
 
