@@ -30,4 +30,4 @@ SELF_REST_DEPS=$$($(IMAGE)_PATH)/.restore_image.normalize.bin.built
 
 $(call XIP_TOOL,append,.self_restore,$(SELF_REST_DEPS),$(SELF_REST_TARGET))
 
-$(call BUILD_IMAGE)
+$(call BUILD_XIPIMAGE)
