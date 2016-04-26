@@ -33,7 +33,6 @@ p9_sgpe_stop_entry()
 {
     int          entry_ongoing[2] = {0, 0};
     int          l3_purge_aborted = 0;
-    int          rc = 0;
     uint32_t     ex = 0;
     uint32_t     qloop;
     uint32_t     cloop;
@@ -42,6 +41,7 @@ p9_sgpe_stop_entry()
     uint32_t     qentry;
     uint32_t     loop;
     uint64_t     scom_data;
+    uint64_t     temp_data;
     ppm_sshsrc_t hist;
 
     //================================
@@ -94,8 +94,7 @@ p9_sgpe_stop_entry()
                 BIT32((qloop << 1) + 1);
         }
 
-        if (G_sgpe_stop_record.state[qloop].act_state_q <
-            G_sgpe_stop_record.state[qloop].req_state_q &&
+        if (G_sgpe_stop_record.state[qloop].act_state_q <  LEVEL_EQ_BASE &&
             G_sgpe_stop_record.state[qloop].req_state_q >= LEVEL_EQ_BASE)
         {
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
@@ -115,10 +114,10 @@ p9_sgpe_stop_entry()
                      G_sgpe_stop_record.state[qloop].act_state_x0,
                      G_sgpe_stop_record.state[qloop].act_state_x1);
 
-            PK_TRACE("req: x0lv[%d]x1lv[%d]qlv[%d]",
+            PK_TRACE("req: qlv[%d]x0lv[%d]x1lv[%d]",
+                     G_sgpe_stop_record.state[qloop].req_state_q,
                      G_sgpe_stop_record.state[qloop].req_state_x0,
-                     G_sgpe_stop_record.state[qloop].req_state_x1,
-                     G_sgpe_stop_record.state[qloop].req_state_q);
+                     G_sgpe_stop_record.state[qloop].req_state_x1);
         }
     }
 
@@ -202,6 +201,31 @@ p9_sgpe_stop_entry()
 
         PPE_WAIT_CORE_CYCLES(loop, 256)
 
+        PK_TRACE("set partial bad l2/l3 and stopping/stoped l2 pscom masks");
+        scom_data = 0;
+
+        if (!(G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop)))
+        {
+            scom_data |= (PSCOM_MASK_EX0_L2 | PSCOM_MASK_EX0_L3);
+        }
+        else if ((ex & FST_EX_IN_QUAD) ||
+                 (G_sgpe_stop_record.state[qloop].act_state_x0 >= LEVEL_EX_BASE))
+        {
+            scom_data |= PSCOM_MASK_EX0_L2;
+        }
+
+        if (!(G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop)))
+        {
+            scom_data |= (PSCOM_MASK_EX1_L2 | PSCOM_MASK_EX1_L3);
+        }
+        else if ((ex & SND_EX_IN_QUAD) ||
+                 (G_sgpe_stop_record.state[qloop].act_state_x1 >= LEVEL_EX_BASE))
+        {
+            scom_data |= PSCOM_MASK_EX1_L2;
+        }
+
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, qloop), scom_data);
+
         PK_TRACE("SE8.b");
         // Set all bits to zero prior stop cache clocks
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, qloop), 0);
@@ -209,16 +233,25 @@ p9_sgpe_stop_entry()
         PK_TRACE("SE8.c");
         // Stop L2 Clocks
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, qloop),
-                    (0x800000000000E000 | ((uint64_t)ex << SHIFT64(9))));
+                    (CLK_STOP_CMD | CLK_THOLD_ALL |
+                     ((uint64_t)ex << SHIFT64(9))));
 
         PK_TRACE("SE8.d");
-
         // Poll for L2 clocks stopped
+
         do
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data);
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, qloop), scom_data);
         }
-        while(((scom_data >> SHIFT64(9)) & ex) != ex);
+        while((~scom_data) & BIT64(8));
+
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data);
+
+        if (((~scom_data) & ((uint64_t)ex << SHIFT64(9))) != 0)
+        {
+            PK_TRACE("L2 clock stop failed");
+            pk_halt();
+        }
 
         // MF: verify compiler generate single rlwmni
         // MF: delay may be needed for stage latch to propagate thold
@@ -460,16 +493,22 @@ p9_sgpe_stop_entry()
             }
 
 #endif
+            scom_data = 0;
+            temp_data = 0;
 
             if (ex & FST_EX_IN_QUAD)
+            {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 0),
                             scom_data);
+            }
 
             if (ex & SND_EX_IN_QUAD)
+            {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 1),
-                            scom_data);
+                            temp_data);
+            }
         }
-        while(scom_data & BIT64(0));
+        while((scom_data | temp_data) & BIT64(0));
 
         if (l3_purge_aborted)
         {
@@ -565,18 +604,29 @@ p9_sgpe_stop_entry()
         PK_TRACE("SE11.m");
         // Stop Cache Clocks
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, qloop),
-                    0x8C3E00000000E000 | ((uint64_t)ex << SHIFT64(7)));
+                    (CLK_STOP_CMD | CLK_THOLD_ALL |
+                     CLK_REGION_ALL_BUT_EX        |
+                     ((uint64_t)ex << SHIFT64(7)) |
+                     ((uint64_t)ex << SHIFT64(13))));
 
         PK_TRACE("SE11.n");
-
         // Poll for Cache clocks stopped
+
         do
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data);
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, qloop), scom_data);
         }
-        while((scom_data &
-               (BITS64(4, 2) | ((uint64_t)ex << SHIFT64(7)) | BITS64(10, 5))) !=
-              (BITS64(4, 2) | ((uint64_t)ex << SHIFT64(7)) | BITS64(10, 5)));
+        while((~scom_data) & BIT64(8));
+
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data);
+
+        if (((~scom_data) & (CLK_REGION_ALL_BUT_EX        |
+                             ((uint64_t)ex << SHIFT64(7)) |
+                             ((uint64_t)ex << SHIFT64(13)))) != 0)
+        {
+            PK_TRACE("Cache clock stop failed");
+            pk_halt();
+        }
 
         // MF: verify compiler generate single rlwmni
         // MF: delay may be needed for stage latch to propagate thold
@@ -589,8 +639,16 @@ p9_sgpe_stop_entry()
         // Assert Vital Fence
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop), BIT64(3));
         // Raise Partial Good Fences
+        // Must cover partial bad fences as well or powerbus error will raise
+        // Note: Stop11 will lose all the fences so here needs to assert them
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop),
-                    0xFFFF700000000000);
+                    (CLK_REGION_ALL_BUT_EX        |
+                     ((uint64_t)ex << SHIFT64(7)) |
+                     ((uint64_t)ex << SHIFT64(9)) |
+                     ((uint64_t)ex << SHIFT64(13))));
+        /// @todo add VDM_ENABLE attribute control
+        PK_TRACE("Assert vdm enable via CPPM_VDMCR[0]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_CLR, qloop), BIT64(0));
 
         //=========================================
         MARK_TAG(SE_POWER_OFF_CACHE, (32 >> qloop))
@@ -603,7 +661,10 @@ p9_sgpe_stop_entry()
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(16));
 
         // L3 edram shutdown
-        // todo: not EPM flag for delay
+        // QCCR[0/4] EDRAM_ENABLE_DC
+        // QCCR[1/5] EDRAM_VWL_ENABLE_DC
+        // QCCR[2/6] L3_EX0/1_EDRAM_VROW_VBLH_ENABLE_DC
+        // QCCR[3/7] EDRAM_VPP_ENABLE_DC
         PK_TRACE("SE11.r");
 
         if (ex & SND_EX_IN_QUAD)
@@ -722,8 +783,6 @@ p9_sgpe_stop_entry()
         }
     }
 
-    // Enable Type2/3/6 Interrupt
-    out32(OCB_OIMR1_CLR, (BITS32(15, 2) | BIT32(19)));
     //============================
     MARK_TRAP(ENDSCOPE_STOP_ENTRY)
     //============================

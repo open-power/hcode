@@ -51,8 +51,6 @@ extern CmeStopRecord G_cme_stop_record;
 int
 p9_cme_stop_entry()
 {
-
-    int             rc                  = 0;
     int             catchup_ongoing     = 0;
     int             entry_ongoing       = 1;
     uint8_t         target_level;
@@ -141,9 +139,11 @@ p9_cme_stop_entry()
 
         G_cme_stop_record.core_running &= ~core;
 
-        PK_TRACE("SE1: Request Stop Levels[%d %d]",
+        PK_TRACE("SE1: Stop Levels Request[%d %d] Actual[%d, %d]",
                  G_cme_stop_record.req_level_c0,
-                 G_cme_stop_record.req_level_c1);
+                 G_cme_stop_record.req_level_c1,
+                 G_cme_stop_record.act_level_c0,
+                 G_cme_stop_record.act_level_c1);
 
         // Return error if target STOP level == 1(Nap)
         if((core == CME_MASK_C0 &&
@@ -169,6 +169,11 @@ p9_cme_stop_entry()
         PK_TRACE("SE2.d");
         // Protect PPM Register Write
         CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(0));
+
+        PK_TRACE("SE2.g");
+        // Acknowledge the STOP Entry to PC with a pulse
+        out32(CME_LCL_SICR_OR,  core << SHIFT32(1));
+        out32(CME_LCL_SICR_CLR, core << SHIFT32(1));
 
         // set target_level from pm_state for both cores or just one core
         target_level = (core == CME_MASK_C0) ? G_cme_stop_record.req_level_c0 :
@@ -214,8 +219,8 @@ p9_cme_stop_entry()
                                     STOP_ACT_DISABLE);
         }
 
-        PK_TRACE("SE2: target_lv[%d], deeper_lv[%d], deeper_core[%d]",
-                 target_level, deeper_level, deeper_core);
+        PK_TRACE("SE2: core[%d], target_lv[%d], deeper_lv[%d], deeper_core[%d]",
+                 core, target_level, deeper_level, deeper_core);
 
         // Poll Infinitely for PCB Mux Grant
         // MF: change watchdog timer in pk to ensure forward progress
@@ -227,14 +232,11 @@ p9_cme_stop_entry()
         MARK_TRAP(SE_QUIESCE_CORE_INTF)
         //=============================
 
-        PK_TRACE("SE2.g");
-        // Acknowledge the STOP Entry to PC with a pulse
-        out32(CME_LCL_SICR_OR,  core << SHIFT32(1));
-        out32(CME_LCL_SICR_CLR, core << SHIFT32(1));
-
         /// Set LMCR bits 12/13, 14/15 (override disables)
-        out32(CME_LCL_LMCR_OR, ((core << SHIFT32(13)) | (core << SHIFT32(15))));
-
+#if SPWU_AUTO
+        out32(CME_LCL_LMCR_OR, (core << SHIFT32(13)));
+#endif
+        out32(CME_LCL_LMCR_OR, (core << SHIFT32(15)));
         PK_TRACE("SE2.h");
         // Raise Core-L2 + Core-CC Quiesces
         out32(CME_LCL_SICR_OR, (core << SHIFT32(7)) | (core << SHIFT32(9)));
@@ -265,16 +267,25 @@ p9_cme_stop_entry()
 
         PK_TRACE("SE2.l");
         // Stop Core Clocks
-        CME_PUTSCOM(C_CLK_REGION, core, 0x8FFC00000000E000);
+        CME_PUTSCOM(C_CLK_REGION, core, (CLK_STOP_CMD | CLK_REGION_ALL_BUT_PLL | CLK_THOLD_ALL));
 
         PK_TRACE("SE2.m");
 
         // Poll for core clocks stopped
         do
         {
-            CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data);
+            CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
         }
-        while((scom_data & BITS64(4, 10)) != BITS64(4, 10));
+        while((~scom_data) & BIT64(8));
+
+        PK_TRACE("Check core clock is stopped via CLOCK_STAT_SL[4-13]");
+        CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data);
+
+        if (((~scom_data) & CLK_REGION_ALL_BUT_PLL) != 0)
+        {
+            PK_TRACE("Core clock stop failed");
+            pk_halt();
+        }
 
         // MF: verify compiler generate single rlwmni
         // MF: delay may be needed for stage latch to propagate thold
@@ -305,9 +316,15 @@ p9_cme_stop_entry()
         // Assert skew sense to skewadjust Fence
         CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(22));
         // Assert Vital Fence
-        CME_PUTSCOM(C_CPLT_CTRL1_OR,  core, BIT64(3));
+        CME_PUTSCOM(C_CPLT_CTRL1_OR, core, BIT64(3));
         // Assert Regional Fences
-        CME_PUTSCOM(C_CPLT_CTRL1_OR, core, 0xFFFF700000000000);
+        CME_PUTSCOM(C_CPLT_CTRL1_OR, core, BITS64(4, 11));
+        /// @todo add DD1 attribute control
+        PK_TRACE("DD1 only: reset sdis_n(flushing LCBES condition workaround");
+        CME_PUTSCOM(C_CPLT_CONF0_CLEAR, core, BIT64(34));
+        /// @todo add VDM_ENABLE attribute control
+        PK_TRACE("Drop vdm enable via CPPM_VDMCR[0]");
+        CME_PUTSCOM(PPM_VDMCR_CLR, core, BIT64(0));
 
         PK_TRACE("SE2: Clock Sync Dropped");
 
@@ -363,43 +380,6 @@ p9_cme_stop_entry()
             deeper_level  = 0;
             deeper_core   = 0;
             entry_ongoing = 1;
-        }
-
-        //===========================
-        MARK_TRAP(SE_IS0_BEGIN)
-        //===========================
-#if !SKIP_ABORT
-        out32(CME_LCL_EIMR_CLR, (core << SHIFT32(13)) |
-              (core << SHIFT32(15)) |
-              (core << SHIFT32(17)));
-        sync();
-        out32(CME_LCL_EIMR_OR,  (core << SHIFT32(13)) |
-              (core << SHIFT32(15)) |
-              (core << SHIFT32(17)));
-#endif
-        //===================
-        MARK_TRAP(SE_IS0_END)
-        //===================
-
-        core_aborted = core & G_cme_stop_record.core_running;
-
-        if (core_aborted && deeper_core)
-        {
-            if (core_aborted != deeper_core)
-            {
-                target_level = deeper_level;
-            }
-
-            deeper_core  = 0;
-        }
-
-        core = core & ~G_cme_stop_record.core_running;
-
-        if (!core)
-        {
-            core |= core_aborted;
-            entry_ongoing = 0;
-            break;
         }
 
 #if !SKIP_ENTRY_CATCHUP
@@ -462,6 +442,9 @@ p9_cme_stop_entry()
             //========================
         }
 
+        PK_TRACE("core[%d] running[%d] core_catchup[%d] origin_core[%d]",
+                 core, G_cme_stop_record.core_running, core_catchup, origin_core);
+
 #endif
 
     }
@@ -470,10 +453,49 @@ p9_cme_stop_entry()
     do
     {
 
-        // If we are done at STOP level 2 or aborted
+        // If we are done at STOP level 2
         if (!entry_ongoing)
         {
             break;
+        }
+
+        //===========================
+        MARK_TRAP(SE_IS0_BEGIN)
+        //===========================
+#if !SKIP_ABORT
+        out32(CME_LCL_EIMR_CLR, (core << SHIFT32(13)) |
+              (core << SHIFT32(15)) |
+              (core << SHIFT32(17)));
+        sync();
+        out32(CME_LCL_EIMR_OR,  (core << SHIFT32(13)) |
+              (core << SHIFT32(15)) |
+              (core << SHIFT32(17)));
+#endif
+        //===================
+        MARK_TRAP(SE_IS0_END)
+        //===================
+
+        core_aborted = core &  G_cme_stop_record.core_running;
+        core         = core & ~G_cme_stop_record.core_running;
+
+        PK_TRACE("core[%d] running[%d] core_aborted[%d]",
+                 core, G_cme_stop_record.core_running, core_aborted);
+
+        if (!core)
+        {
+            core |= core_aborted;
+            entry_ongoing = 0;
+            break;
+        }
+
+        if (core_aborted && deeper_core)
+        {
+            if (core_aborted != deeper_core)
+            {
+                target_level = deeper_level;
+            }
+
+            deeper_core  = 0;
         }
 
         PK_TRACE("SE2+:core[%d],deeper_core[%d],\
@@ -483,75 +505,75 @@ p9_cme_stop_entry()
         //----------------------------------------------------------------------
         // STOP LEVEL 3
         //----------------------------------------------------------------------
+        /*
+                if (target_level == 3)
+                {
 
-        if (target_level == 3)
-        {
+                    //==========================
+                    MARK_TAG(SE_CORE_VMIN, core)
+                    //==========================
 
-            //==========================
-            MARK_TAG(SE_CORE_VMIN, core)
-            //==========================
+                    PK_TRACE("SE3.a");
+                    // Enable IVRM if not already
 
-            PK_TRACE("SE3.a");
-            // Enable IVRM if not already
+                    PK_TRACE("SE3.b");
+                    // Drop to Vmin
 
-            PK_TRACE("SE3.b");
-            // Drop to Vmin
+                    if(core & CME_MASK_C0)
+                    {
+                        G_cme_stop_record.act_level_c0 = STOP_LEVEL_3;
+                    }
 
-            if(core & CME_MASK_C0)
-            {
-                G_cme_stop_record.act_level_c0 = STOP_LEVEL_3;
-            }
+                    if(core & CME_MASK_C1)
+                    {
+                        G_cme_stop_record.act_level_c1 = STOP_LEVEL_3;
+                    }
 
-            if(core & CME_MASK_C1)
-            {
-                G_cme_stop_record.act_level_c1 = STOP_LEVEL_3;
-            }
+                    //===========================
+                    MARK_TAG(SE_STOP3_DONE, core)
+                    //===========================
 
-            //===========================
-            MARK_TAG(SE_STOP3_DONE, core)
-            //===========================
+                    PK_TRACE("SE3.c");
+                    // Update Stop History: In Core Stop Level 3
+                    CME_STOP_UPDATE_HISTORY(core,
+                                            STOP_CORE_IS_GATED,
+                                            STOP_TRANS_COMPLETE,
+                                            target_level,
+                                            STOP_LEVEL_3,
+                                            STOP_REQ_DISABLE,
+                                            STOP_ACT_ENABLE);
 
-            PK_TRACE("SE3.c");
-            // Update Stop History: In Core Stop Level 3
-            CME_STOP_UPDATE_HISTORY(core,
-                                    STOP_CORE_IS_GATED,
-                                    STOP_TRANS_COMPLETE,
-                                    target_level,
-                                    STOP_LEVEL_3,
-                                    STOP_REQ_DISABLE,
-                                    STOP_ACT_ENABLE);
+                    // If both cores targeting different levels
+                    // deeper core should have at least deeper stop level than 3
+                    // only need to modify deeper core history if another one was done
+                    if (deeper_core)
+                    {
+                        CME_STOP_UPDATE_HISTORY(deeper_core,
+                                                STOP_CORE_IS_GATED,
+                                                STOP_TRANS_ENTRY,
+                                                deeper_level,
+                                                STOP_LEVEL_2,
+                                                STOP_REQ_DISABLE,
+                                                STOP_ACT_ENABLE);
+                        // from now on, proceed with only deeper core
+                        core          = deeper_core;
+                        target_level  = deeper_level;
+                        deeper_level  = 0;
+                        deeper_core   = 0;
+                        entry_ongoing = 1;
+                    }
+                    else
+                    {
+                        entry_ongoing = 0;
+                    }
 
-            // If both cores targeting different levels
-            // deeper core should have at least deeper stop level than 3
-            // only need to modify deeper core history if another one was done
-            if (deeper_core)
-            {
-                CME_STOP_UPDATE_HISTORY(deeper_core,
-                                        STOP_CORE_IS_GATED,
-                                        STOP_TRANS_ENTRY,
-                                        deeper_level,
-                                        STOP_LEVEL_2,
-                                        STOP_REQ_DISABLE,
-                                        STOP_ACT_ENABLE);
-                // from now on, proceed with only deeper core
-                core          = deeper_core;
-                target_level  = deeper_level;
-                deeper_level  = 0;
-                deeper_core   = 0;
-                entry_ongoing = 1;
-            }
-            else
-            {
-                entry_ongoing = 0;
-            }
-
-            // If we are done at STOP level 3
-            if (!entry_ongoing)
-            {
-                break;
-            }
-        }
-
+                    // If we are done at STOP level 3
+                    if (!entry_ongoing)
+                    {
+                        break;
+                    }
+                }
+        */
         //----------------------------------------------------------------------
         // STOP LEVEL 4
         //----------------------------------------------------------------------
@@ -626,7 +648,7 @@ p9_cme_stop_entry()
                                 STOP_ACT_ENABLE);
 
         // If both cores targeting different levels
-        // deeper core should have at least deeper stop level than 2
+        // deeper core should have at least deeper stop level than 4
         // only need to modify deeper core history if another one was done
         if (deeper_core && !entry_ongoing)
         {
@@ -645,6 +667,12 @@ p9_cme_stop_entry()
             entry_ongoing = 1;
         }
 
+        // If we are done at STOP level 4
+        if (!entry_ongoing)
+        {
+            break;
+        }
+
         //===========================
         MARK_TRAP(SE_IS1_BEGIN)
         //===========================
@@ -661,7 +689,18 @@ p9_cme_stop_entry()
         MARK_TRAP(SE_IS1_END)
         //===================
 
-        core_aborted = core & G_cme_stop_record.core_running;
+        core_aborted = core &  G_cme_stop_record.core_running;
+        core         = core & ~G_cme_stop_record.core_running;
+
+        PK_TRACE("core[%d] running[%d] core_aborted[%d]",
+                 core, G_cme_stop_record.core_running, core_aborted);
+
+        if (!core)
+        {
+            core |= core_aborted;
+            entry_ongoing = 0;
+            break;
+        }
 
         if (core_aborted && deeper_core)
         {
@@ -673,21 +712,6 @@ p9_cme_stop_entry()
             deeper_core  = 0;
         }
 
-        core = core & ~G_cme_stop_record.core_running;
-
-        if (!core)
-        {
-            core |= core_aborted;
-            entry_ongoing = 0;
-            break;
-        }
-
-        // If we are done at STOP level 4 or aborted
-        if (!entry_ongoing)
-        {
-            break;
-        }
-
         PK_TRACE("SE4+:core[%d],deeper_core[%d],\
                   target_level[%d],deeper_level[%d]",
                  core, deeper_core, target_level, deeper_level);
@@ -696,22 +720,21 @@ p9_cme_stop_entry()
         // STOP LEVEL 5 (preparsion of STOP LEVEL 8 and above)
         //----------------------------------------------------------------------
 
-        // block all wake up before purge L2,
-        // this is last chance either core can exit
-        //out32(CME_LCL_EIMR_OR, BITS32(12, 6));
-
         if ((G_cme_stop_record.req_level_c0 >= STOP_LEVEL_8) &&
             (G_cme_stop_record.req_level_c1 >= STOP_LEVEL_8))
         {
 
-            //=========================
-            MARK_TAG(SE_PURGE_L2, core)
-            //=========================
+            //================================
+            MARK_TAG(SE_PURGE_L2, CME_MASK_BC)
+            //================================
 
-            // Assert L2+NCU Purges(chtm purge will be done in SGPE),
-            // and NCU tlbie quiesce
+            // Assert L2+NCU Purge and NCU tlbie quiesce
+            // (chtm purge will be done in SGPE),
+            // insert tlbie quiesce before ncu purge to avoid window condition
+            // of ncu traffic still happening when purging starts
             PK_TRACE("SE5.1a");
-            out32(CME_LCL_SICR_OR, BIT32(18) | BIT32(21) | BIT32(22));
+            out32(CME_LCL_SICR_OR, BIT32(18) | BIT32(21));
+            out32(CME_LCL_SICR_OR, BIT32(22));
 
             // todo: poll for tlbie quiesce done?
 
@@ -722,12 +745,23 @@ p9_cme_stop_entry()
             {
 #if !SKIP_L2_PURGE_ABORT
 
-                if(in32(CME_LCL_EINR) & BITS32(12, 6))
+                if (!core_aborted &&
+                    (in32(CME_LCL_EINR) & BITS32(12, 6)))
                 {
+                    if (in32(CME_LCL_EINR) & IRQ_VEC_WAKE_C0)
+                    {
+                        core_aborted |= CME_MASK_C0;
+                    }
 
-                    //===============================
-                    MARK_TAG(SE_PURGE_L2_ABORT, core)
-                    //===============================
+                    if (in32(CME_LCL_EINR) & IRQ_VEC_WAKE_C1)
+                    {
+                        core_aborted |= CME_MASK_C1;
+                    }
+
+                    PK_TRACE("L2 Purge aborted by core[%d]", core_aborted);
+                    //=======================================
+                    MARK_TAG(SE_PURGE_L2_ABORT, core_aborted)
+                    //=======================================
                     // abort L2+NCU purges
                     out32(CME_LCL_SICR_OR, BIT32(19) | BIT32(23));
                 }
@@ -736,15 +770,24 @@ p9_cme_stop_entry()
             }
             while((in32(CME_LCL_EISR) & BITS32(22, 2)) != BITS32(22, 2));
 
-            // Deassert L2+NCU Purges, their possible aborts, NCU tlbie quiesce
+            // Deassert L2+NCU Purges, their possible aborts
             PK_TRACE("SE5.1c");
-            out32(CME_LCL_SICR_CLR, BITS32(18, 6));
+            out32(CME_LCL_SICR_CLR, (BITS32(18, 2) | BITS32(22, 2)));
 
             PK_TRACE("SE5.1: L2/NCU/CHTM Purged");
 
-            //==============================
-            MARK_TAG(SE_PURGE_L2_DONE, core)
-            //==============================
+            //===============================================================
+            MARK_TAG(SE_PURGE_L2_DONE, core_aborted ? core_aborted : CME_MASK_BC)
+            //===============================================================
+
+            if (core !=  core_aborted)
+            {
+                core &= ~core_aborted;
+            }
+            else
+            {
+                break;
+            }
         }
 
         //=============================
