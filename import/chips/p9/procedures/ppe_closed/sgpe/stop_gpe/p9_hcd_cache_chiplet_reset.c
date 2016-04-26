@@ -28,12 +28,33 @@
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
+enum P9_HCD_CACHE_CHIPLET_RESET_CONSTANTS
+{
+    // (1)PCB_EP_RESET
+    // (2)CLK_ASYNC_RESET
+    // (3)PLL_TEST_EN
+    // (4)PLLRST
+    // (5)PLLBYP
+    // (11)EDIS
+    // (12)VITL_MPW1
+    // (13)VITL_MPW2
+    // (14)VITL_MPW3
+    // (16)VITL_THOLD
+    // (18)FENCE_EN
+    // (22)FUNC_CLKSEL
+    // (25)PCB_FENCE
+    // (26)LVLTRANS_FENCE
+    Q_NET_CTRL0_INIT_VECTOR = (BITS64(1, 5) | BITS64(11, 4) | BIT64(16) |
+                               BIT64(18) | BIT64(22) | BITS64(25, 2))
+};
+
 int
-p9_hcd_cache_chiplet_reset(uint32_t quad)
+p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 {
     int rc = SGPE_STOP_SUCCESS;
     uint64_t scom_data;
     uint32_t core, cbit;
+    uint32_t loop;
 
     for(core = 0, cbit = BIT32((quad << 2));
         core < CORES_PER_QUAD;
@@ -46,7 +67,11 @@ p9_hcd_cache_chiplet_reset(uint32_t quad)
         }
     }
 
-    PK_TRACE("Init NET_CTRL0[1-5,11-14,18,22,26],step needed for hotplug");
+    /// @todo needs to revisit this sim workaround
+    PK_TRACE("Init heartbeat hang counter via HANG_PULSE_6[2]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_HANG_PULSE_6_REG, quad), BIT64(2));
+
+    PK_TRACE("Init NET_CTRL0[1-5,11-14,16,18,22,25,26],step needed for hotplug");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), Q_NET_CTRL0_INIT_VECTOR);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), Q_NET_CTRL0_INIT_VECTOR);
 
@@ -71,6 +96,9 @@ p9_hcd_cache_chiplet_reset(uint32_t quad)
     PK_TRACE("Drop L2 glsmux reset via QPPM_EXCGCR[32:33]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, quad), BITS64(32, 2));
 
+    // 40 ref cycles
+    PPE_WAIT_CORE_CYCLES(loop, 1600);
+
     PK_TRACE("Assert chiplet enable via NET_CTRL0[0]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(0));
 
@@ -88,14 +116,32 @@ p9_hcd_cache_chiplet_reset(uint32_t quad)
     scom_data &= ~BITS64(47, 5);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
 
-#if !SKIP_SCAN0
     // Marker for scan0
     MARK_TRAP(SX_CHIPLET_RESET_SCAN0)
+#if !SKIP_SCAN0
+    uint64_t regions = SCAN0_REGION_ALL_BUT_EX;
+
+    if (ex & FST_EX_IN_QUAD)
+    {
+        regions |= SCAN0_REGION_EX0_L2_L3_REFR;
+    }
+
+    if (ex & SND_EX_IN_QUAD)
+    {
+        regions |= SCAN0_REGION_EX1_L2_L3_REFR;
+    }
+
+    p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_GPTR_REPR_TIME);
+    p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
 #endif
 
+    /// content below from p9_hcd_cache_chiplet_l3_dcc_setup
     /// @todo scan_with_setpulse_module(l3 dcc)
-    //PK_TRACE("Drop L3 DCC bypass via NET_CTRL1[1]");
-    //GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WAND, quad), ~BIT64(1));
+    PK_TRACE("Drop L3 DCC bypass via NET_CTRL1[1]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WAND, quad), ~BIT64(1));
+    /// @todo add VDM_ENABLE attribute control
+    PK_TRACE("Assert vdm enable via CPPM_VDMCR[0]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_OR, quad), BIT64(0));
 
     return rc;
 }

@@ -50,18 +50,10 @@ enum GPE_CHIPLET_CONFIGS
 
 enum GPE_CHIPLET_MASKS
 {
-    ONE_QUAD_IN_CHIP             = 0x20,
-    ALL_QUADS_IN_CHIP            = 0x3F,
-    ONE_CORE_IN_QUAD             = 0x8,
-    ALL_CORES_IN_QUAD            = 0xF,
     FST_CORE_IN_EX               = 0x2,
     SND_CORE_IN_EX               = 0x1,
-    BOTH_CORES_IN_EX             = 0x3,
     FST_EX_IN_QUAD               = 0x2,
-    SND_EX_IN_QUAD               = 0x1,
-    BOTH_EX_IN_QUAD              = 0x3,
-    FST_2CORES_IN_QUAD           = 0xC,
-    SND_2CORES_IN_QUAD           = 0x3
+    SND_EX_IN_QUAD               = 0x1
 };
 
 
@@ -96,35 +88,14 @@ enum GPE_SCOM_ADDRESS_PARAMETERS
 #define GPE_SCOM_ADDR_CME(addr, quad, cme) \
     GPE_SCOM_ADDR(addr, QUAD_ADDR_BASE|CME_ADDR_BASE, quad, cme)
 
-#define GPE_GETSCOM(addr, data)                                                \
-    rc = getscom(0, addr, &data);                                              \
-    if (rc) {                                                                  \
-        PK_TRACE("getscom@%d failed w/rc=0x%08x", addr, rc);                   \
-        pk_halt();                                                             \
-    }
+#define GPE_GETSCOM(addr, data)   getscom(0, addr, &data);
 
-#define GPE_PUTSCOM(addr, data)                                                \
-    rc = putscom(0, addr, data);                                               \
-    if (rc) {                                                                  \
-        PK_TRACE("putscom@%d failed w/rc=0x%08x", addr, rc);                   \
-        pk_halt();                                                             \
-    }
+#define GPE_PUTSCOM(addr, data)   putscom(0, addr, data);
+#define GPE_GETSCOM_VAR(addr, cplt_base, cq_offset, ex_select, data) \
+    getscom(0,GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select),&data);
 
-#define GPE_GETSCOM_VAR(addr, cplt_base, cq_offset, ex_select, data)           \
-    rc = getscom(0,GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select),&data);\
-    if (rc) {                                                                  \
-        PK_TRACE("getscom@%d failed w/rc=0x%08x",                              \
-                 GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select), rc);    \
-        pk_halt();                                                             \
-    }
-
-#define GPE_PUTSCOM_VAR(addr, cplt_base, cq_offset, ex_select, data)           \
-    rc = putscom(0,GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select), data);\
-    if (rc) {                                                                  \
-        PK_TRACE("putscom@%d failed w/rc=0x%08x",                              \
-                 GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select), rc);    \
-        pk_halt();                                                             \
-    }
+#define GPE_PUTSCOM_VAR(addr, cplt_base, cq_offset, ex_select, data) \
+    putscom(0,GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select), data);
 
 
 #endif  /* __GPEHW_COMMON_H__ */

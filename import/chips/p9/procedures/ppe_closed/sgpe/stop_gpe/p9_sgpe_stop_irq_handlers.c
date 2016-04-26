@@ -62,6 +62,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
     uint32_t cpending_t3 = 0;
     uint32_t qpending_t6 = 0;
     uint32_t payload     = 0;
+    uint64_t scom_data;
 
     //=========================
     MARK_TRAP(STOP_PIG_HANDLER)
@@ -159,8 +160,8 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             if (!((cpending_t2 | cpending_t3) & BIT32((qloop << 2) + cloop)))
             {
                 continue;
-                // read payload on core has interrupt cpending
             }
+            // read payload on core has interrupt cpending
             else if (cpending_t2 & BIT32((qloop << 2) + cloop))
             {
                 payload = in32(OCB_OPIT2CN(((qloop << 2) + cloop)));
@@ -177,22 +178,38 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             {
                 PK_TRACE("c[%d] request exit", cloop);
 
-                if (cloop < CORES_PER_EX)
-                {
-                    G_sgpe_stop_record.group.ex_l[VECTOR_EXIT] |= BIT32(qloop);
-                    G_sgpe_stop_record.group.ex_b[VECTOR_EXIT] |=
-                        BIT32(qloop << 1);
-                }
-                else
-                {
-                    G_sgpe_stop_record.group.ex_r[VECTOR_EXIT] |= BIT32(qloop);
-                    G_sgpe_stop_record.group.ex_b[VECTOR_EXIT] |=
-                        BIT32((qloop << 1) + 1);
-                }
+                // Due to some wakeup signal sources can be "fake"
+                // as they are triggered regardless of the state of the core,
+                // check if the core is running, skip exit if so as fail safe.
+                // Using chiplet fence in NET_CTRL0[18] for this purpose;
+                // if chiplet fenced, core is stopped; otherwise running.
+                GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
+                                               ((qloop << 2) + cloop)), scom_data);
 
-                G_sgpe_stop_record.group.quad[VECTOR_EXIT] |= BIT32(qloop);
-                G_sgpe_stop_record.group.core[VECTOR_EXIT] |=
-                    BIT32(((qloop << 2) + cloop));
+                if (scom_data & BIT64(18))
+                {
+                    PK_TRACE("c[%d] confirmed stopped", cloop);
+
+                    if (cloop < CORES_PER_EX)
+                    {
+                        G_sgpe_stop_record.group.ex_l[VECTOR_EXIT] |=
+                            BIT32(qloop);
+                        G_sgpe_stop_record.group.ex_b[VECTOR_EXIT] |=
+                            BIT32(qloop << 1);
+                    }
+                    else
+                    {
+                        G_sgpe_stop_record.group.ex_r[VECTOR_EXIT] |=
+                            BIT32(qloop);
+                        G_sgpe_stop_record.group.ex_b[VECTOR_EXIT] |=
+                            BIT32((qloop << 1) + 1);
+                    }
+
+                    G_sgpe_stop_record.group.quad[VECTOR_EXIT] |=
+                        BIT32(qloop);
+                    G_sgpe_stop_record.group.core[VECTOR_EXIT] |=
+                        BIT32(((qloop << 2) + cloop));
+                }
             }
             // otherwise it is entry request with stop level in payload
             else
@@ -222,7 +239,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
     G_sgpe_stop_record.group.ex_r[VECTOR_EXIT] &=
         G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG];
 
-    PK_TRACE("Quad Speciali Wakeup: Raise[%x], Drop[%x]",
+    PK_TRACE("Quad Special Wakeup: Raise[%x], Drop[%x]",
              G_sgpe_stop_record.group.qswu[VECTOR_EXIT],
              G_sgpe_stop_record.group.qswu[VECTOR_ENTRY]);
     PK_TRACE("Core Request Stop:    Entry[%x], Exit[%x]",

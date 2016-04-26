@@ -32,9 +32,9 @@ p9_hcd_core_startclocks(uint32_t core)
     int      rc = CME_STOP_SUCCESS;
     uint64_t scom_data, loop;
 
-    // do this again here for stop2 in addition to chiplet_reset
-    PK_TRACE("4S2: Set Core Glitchless Mux to DPLL");
-    CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
+    /// @todo add DD1 attribute control
+    PK_TRACE("DD1 only: set sdis_n(flushing LCBES condition workaround");
+    CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
     CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, scom_data);
@@ -42,8 +42,8 @@ p9_hcd_core_startclocks(uint32_t core)
     scom_data = scom_data | (BIT64(1) | BIT64(3) | BIT64(59));
     CME_PUTSCOM(C_OPCG_ALIGN, core, scom_data);
 
-    PK_TRACE("Drop partial good fences via CPLT_CTRL1[3-14]");
-    CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, 0xFFFF700000000000);
+    PK_TRACE("Drop partial good fences via CPLT_CTRL1[4-14]");
+    CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, BITS64(4, 11));
 
     PK_TRACE("Drop vital fences via CPLT_CTRL1[3]");
     CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, BIT64(3));
@@ -81,6 +81,8 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
     scom_data = scom_data & ~BIT64(7);
     CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
+    // 255 cache cycles
+    PPE_WAIT_CORE_CYCLES(loop, 510);
 
     PK_TRACE("Check chiplet_is_aligned");
 
@@ -88,49 +90,53 @@ p9_hcd_core_startclocks(uint32_t core)
     {
         CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
     }
-    while(~scom_data & BIT64(9));
+    while((~scom_data) & BIT64(9));
 
     MARK_TRAP(SX_STARTCLOCKS_REGION)
 
     PK_TRACE("Drop force_align via CPLT_CTRL0[3]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(3));
-    PPE_WAIT_CORE_CYCLES(loop, 450);
 
     // clock_start()
 
     PK_TRACE("Clear all bits prior start core clocks via SCAN_REGION_TYPE");
     CME_PUTSCOM(C_SCAN_REGION_TYPE, core, 0);
 
-    PK_TRACE("Start core clocks(arrays+nsl clock region) via CLK_REGION");
-    scom_data = 0x4FFC000000006000;
+    PK_TRACE("Start core clocks(all but pll) via CLK_REGION");
+    scom_data = (CLK_START_CMD | CLK_REGION_ALL_BUT_PLL | CLK_THOLD_ALL);
     CME_PUTSCOM(C_CLK_REGION, core, scom_data);
 
-    PK_TRACE("Start core clocks(sl+refresh clock region) via CLK_REGION");
-    scom_data = 0x4FFC00000000E000;
-    CME_PUTSCOM(C_CLK_REGION, core, scom_data);
-
-    PK_TRACE("Polling for core clocks running via CLOCK_STAT_SL");
+    PK_TRACE("Polling for core clocks running via CPLT_STAT0[8]");
 
     do
     {
-        CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data);
+        CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
     }
-    while((scom_data & BITS64(4, 10)) != 0);
+    while((~scom_data) & BIT64(8));
+
+    PK_TRACE("Check core clock is running via CLOCK_STAT_SL[4-13]");
+    CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data);
+
+    if(scom_data & CLK_REGION_ALL_BUT_PLL)
+    {
+        PK_TRACE("Core clock start failed");
+        pk_halt();
+    }
 
     PK_TRACE("Core clock is now running");
+    MARK_TRAP(SX_STARTCLOCKS_DONE)
 
+    /// @todo add attr_pg control
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
 
-    // checkstop
+    /// @todo xstop check
 
     PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(2));
 
-    // check align
-
-    // needed by cme
-    PK_TRACE("Drop Core-L2 + Core-CC Quiesces");
+    /// @todo add ipl mode attr control
+    PK_TRACE("Drop Core-L2 + Core-CC Quiesces via CME_LCL_SICR[6,8]/[7,9]");
     out32(CME_LCL_SICR_CLR, (core << SHIFT32(7)) | (core << SHIFT32(9)));
 
     return rc;

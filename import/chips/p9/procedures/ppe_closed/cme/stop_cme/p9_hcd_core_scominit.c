@@ -30,9 +30,24 @@ int
 p9_hcd_core_scominit(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
-    PK_TRACE("TP.TCEC00.CORE.EPS.FIR.LOCAL_FIR_MASK = 0xBEEF");
-    CME_PUTSCOM(0x2004000D, core, 0xbeef);
-    PK_TRACE("EX00.EC.C0.PC.FIR.CORE_FIRMASK = 0xDEAD");
-    CME_PUTSCOM(0x20010A43, core, 0xdead);
+    uint64_t scom_data;
+
+    // how about bit 6?
+    PK_TRACE("Restore SYNC_CONFIG[8] for stop1");
+    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data);
+    scom_data = scom_data | BIT64(8);
+    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
+
+    /// @todo set the sample pulse count (bit 6:9)
+    /// enable the appropriate loops
+    /// (needs investigation with the Perv team on the EC wiring).
+    PK_TRACE("Enable DTS sampling via THERM_MODE_REG[5]");
+    CME_GETSCOM(C_THERM_MODE_REG, core, CME_SCOM_AND, scom_data);
+    scom_data = scom_data | BIT64(5);
+    CME_PUTSCOM(C_THERM_MODE_REG, core, scom_data);
+
+    PK_TRACE("Set core as ready to run in STOP history register");
+    CME_PUTSCOM(PPM_SSHSRC, core, 0);
+
     return rc;
 }

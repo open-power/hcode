@@ -43,11 +43,11 @@ p9_hcd_cache_poweron(uint32_t quad)
     PK_TRACE("Assert vital thold via NET_CTRL0[16]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(16));
 
-    PK_TRACE("Assert L3 glsmux reset via PPM_CGCR[0]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), BIT64(0));
-
     PK_TRACE("Assert L2 glsmux reset via QPPM_EXCGCR[32:33]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), BITS64(32, 2));
+
+    PK_TRACE("Assert cache glsmux reset via PPM_CGCR[0]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), BIT64(0));
 
 #if !STOP_PRIME
     uint64_t scom_data;

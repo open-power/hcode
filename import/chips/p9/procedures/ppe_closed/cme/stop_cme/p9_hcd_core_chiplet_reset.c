@@ -26,6 +26,26 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
+enum P9_HCD_CORE_CHIPLET_RESET_CONSTANTS
+{
+    // (1)PCB_EP_RESET
+    // (2)CLK_ASYNC_RESET
+    // (3)PLL_TEST_EN
+    // (4)PLLRST
+    // (5)PLLBYP
+    // (11)EDIS
+    // (12)VITL_MPW1
+    // (13)VITL_MPW2
+    // (14)VITL_MPW3
+    // (16)VITL_THOLD
+    // (18)FENCE_EN
+    // (22)FUNC_CLKSEL
+    // (25)PCB_FENCE
+    // (26)LVLTRANS_FENCE
+    C_NET_CTRL0_INIT_VECTOR = (BIT64(1) | BITS64(3, 3) | BITS64(11, 4) |
+                               BIT64(16) | BIT64(18) | BIT64(22) | BITS64(25, 2))
+};
+
 int
 p9_hcd_core_chiplet_reset(uint32_t core)
 {
@@ -33,7 +53,7 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     //uint64_t scom_data,
     uint32_t loop;
 
-    PK_TRACE("Init NET_CTRL0[1,3-5,11-14,18,22,26],step needed for hotplug");
+    PK_TRACE("Init NET_CTRL0[1,3-5,11-14,16,18,22,25,26],step needed for hotplug");
     CME_PUTSCOM(CPPM_NC0INDIR_OR,  core, C_NET_CTRL0_INIT_VECTOR);
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, ~(C_NET_CTRL0_INIT_VECTOR | BIT64(2)));
 
@@ -48,10 +68,11 @@ p9_hcd_core_chiplet_reset(uint32_t core)
 
     PK_TRACE("Drop core glsmux reset via PPM_CGCR[0]");
     CME_PUTSCOM(C_PPM_CGCR, core, 0);
-    PPE_WAIT_CORE_CYCLES(loop, 400);
 
     PK_TRACE("Flip core glsmux to DPLL via PPM_CGCR[3]");
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
+    // 200 core clocks
+    PPE_WAIT_CORE_CYCLES(loop, 200);
 
     PK_TRACE("Assert chiplet enable via NET_CTRL0[0]");
     CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(0));
@@ -65,10 +86,16 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     PK_TRACE("Drop PCB fence via NET_CTRL0[25]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(25));
 
-#if !SKIP_SCAN0
     // Marker for scan0
     MARK_TRAP(SX_CHIPLET_RESET_SCAN0)
+#if !SKIP_SCAN0
+    p9_hcd_core_scan0(core, SCAN0_REGION_ALL, SCAN0_TYPE_GPTR_REPR_TIME);
+    p9_hcd_core_scan0(core, SCAN0_REGION_ALL, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
 #endif
+
+    /// @todo add VDM_ENABLE attribute control
+    PK_TRACE("Assert vdm enable via CPPM_VDMCR[0]");
+    CME_PUTSCOM(PPM_VDMCR_OR, core, BIT64(0));
 
     return rc;
 }

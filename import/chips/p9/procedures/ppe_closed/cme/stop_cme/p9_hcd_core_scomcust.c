@@ -25,9 +25,22 @@
 
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
+#include "p9_hcode_image_defines.H"
 
 int
 p9_hcd_core_scomcust(uint32_t core)
 {
+    /*
+        CmeImageHeader_t* pCmeImgHdr  = (CmeImageHeader_t*)(CME_HEADER_IMAGE_OFFSET);
+        CmeScomRestore*   pCmeScomRes = (CmeScomRestore*)(pCmeImgHdr->coreScomRestoreOffset);
+        int i;
+
+        for(i=0; pCmeScomRes->pad; i++, pCmeScomRes += sizeof(CmeScomRestore))
+        {
+            PK_TRACE("scom[%d] addr[%x] data[%016llx]",
+                     i, pCmeScomRes->addr, pCmeScomRes->data);
+            CME_PUTSCOM(pCmeScomRes->addr, core, pCmeScomRes->data);
+        }
+    */
     return 0;
 }

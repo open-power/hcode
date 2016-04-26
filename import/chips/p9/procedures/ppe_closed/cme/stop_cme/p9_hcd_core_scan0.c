@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/common/pmlib/include/cmehw_common.h $         */
+/* $Source: import/chips/p9/procedures/ppe_closed/cme/stop_cme/p9_hcd_core_scan0.c $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -22,48 +22,54 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-#ifndef __CMEHW_COMMON_H__
-#define __CMEHW_COMMON_H__
 
+#include "p9_cme_stop.h"
+#include "p9_cme_stop_exit_marks.h"
 
-/// Second Half Local Register Access
-/// use in32/out32 for first half
-#define in32_sh(addr)                   in32(addr+4)
-#define out32_sh(addr, data)            out32(addr+4, data)
-
-
-/// Core Masks
-
-enum CME_CORE_MASKS
+int
+p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
 {
-    CME_MASK_C0                     = 2,
-    CME_MASK_C1                     = 1,
-    CME_MASK_BC                     = 3
-};
+    int rc = CME_STOP_SUCCESS;
+    uint64_t scom_data;
 
-/// CME SCOM
+    PK_TRACE("raise Vital clock region fence");
+    CME_PUTSCOM(PERV_CPLT_CTRL1_OR, core, BIT64(3));
 
-enum CME_SCOM_CONTROLS
-{
-    CME_SCOM_NOP                    = 0,
-    CME_SCOM_EQ                     = 0,
-    CME_SCOM_OR                     = 1,
-    CME_SCOM_AND                    = 2,
-    CME_SCOM_QUEUED                 = 3
-};
+    PK_TRACE("Raise region fences for scanned regions");
+    CME_PUTSCOM(PERV_CPLT_CTRL1_OR,  core, BITS64(4, 11));
 
-#define CME_SCOM_ADDR(addr, core, op)   (addr | (core << 22) | (op << 20))
+    PK_TRACE("Setup all Clock Domains and Clock Types");
+    CME_GETSCOM(PERV_CLK_REGION, core, CME_SCOM_AND, scom_data);
+    scom_data |= ((regions << SHIFT64(14)) | BITS64(48, 3));
+    CME_PUTSCOM(PERV_CLK_REGION, core, scom_data);
 
-#ifdef USE_PPE_IMPRECISE_MODE
-#define CME_GETSCOM(addr, core, scom_op, data)                 \
-    getscom(0, CME_SCOM_ADDR(addr, core, CME_SCOM_QUEUED), &data);
-#define CME_PUTSCOM(addr, core, data)                          \
-    putscom(0, CME_SCOM_ADDR(addr, core, CME_SCOM_QUEUED), data);
-#else
-#define CME_GETSCOM(addr, core, scom_op, data)                 \
-    getscom(0, CME_SCOM_ADDR(addr, core, scom_op), &data);
-#define CME_PUTSCOM(addr, core, data)                          \
-    putscom(0, CME_SCOM_ADDR(addr, core, CME_SCOM_NOP), data);
-#endif
+    PK_TRACE("Write scan select register");
+    scom_data = (scan_type << SHIFT64(59)) | (regions << SHIFT64(14));
+    CME_PUTSCOM(PERV_SCAN_REGION_TYPE, core, scom_data);
 
-#endif  /* __CMEHW_COMMON_H__ */
+    PK_TRACE("set OPCG_REG0 register bit 0='0'");
+    CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
+    scom_data &= ~BIT64(0);
+    CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
+
+    PK_TRACE("trigger Scan0");
+    CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
+    scom_data |= BIT64(2);
+    CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
+
+    PK_TRACE("Poll OPCG done bit to check for run-N completeness");
+
+    do
+    {
+        CME_GETSCOM(PERV_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
+    }
+    while(!(scom_data & BIT64(8)));
+
+    PK_TRACE("clear all clock REGIONS and type");
+    CME_PUTSCOM(PERV_CLK_REGION, core, 0);
+
+    PK_TRACE("Clear Scan Select Register");
+    CME_PUTSCOM(PERV_SCAN_REGION_TYPE, core, 0);
+
+    return rc;
+}

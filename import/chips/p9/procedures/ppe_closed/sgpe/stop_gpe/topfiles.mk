@@ -28,6 +28,7 @@ TOP-C-SOURCES = p9_sgpe_main.c \
                 p9_sgpe_stop_irq_handlers.c \
                 p9_sgpe_stop_enter_thread.c \
                 p9_sgpe_stop_exit_thread.c \
+                p9_hcd_cache_scan0.c \
                 p9_hcd_cache_poweron.c \
                 p9_hcd_cache_chiplet_reset.c \
                 p9_hcd_cache_gptr_time_initf.c \

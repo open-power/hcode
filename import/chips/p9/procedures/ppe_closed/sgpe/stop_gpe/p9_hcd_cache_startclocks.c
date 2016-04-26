@@ -38,41 +38,66 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     PK_TRACE("Sequence EX-L3 EDRAM enables via QPPM_QCCR[0-7]");
 
+    // QCCR[0/4] EDRAM_ENABLE_DC
+    // QCCR[1/5] EDRAM_VWL_ENABLE_DC
+    // QCCR[2/6] L3_EX0/1_EDRAM_VROW_VBLH_ENABLE_DC
+    // QCCR[3/7] EDRAM_VPP_ENABLE_DC
     // 0x0 -> 0x8 -> 0xC -> 0xE -> 0xF to turn on edram
     // stagger EDRAM turn-on per EX (not both at same time)
     if (ex & FST_EX_IN_QUAD)
     {
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(0));
-        //PPE_WAIT_CORE_CYCLES(loop, 48000);
+#if !EPM_P9_TUNING
+        PPE_WAIT_CORE_CYCLES(loop, 48000);
+#endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(1));
-        //PPE_WAIT_CORE_CYCLES(loop, 4000);
+#if !EPM_P9_TUNING
+        PPE_WAIT_CORE_CYCLES(loop, 4000);
+#endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(2));
-        //PPE_WAIT_CORE_CYCLES(loop, 16000);
+#if !EPM_P9_TUNING
+        PPE_WAIT_CORE_CYCLES(loop, 16000);
+#endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(3));
-        //PPE_WAIT_CORE_CYCLES(loop, 4000);
+#if !EPM_P9_TUNING
+        PPE_WAIT_CORE_CYCLES(loop, 4000);
+#endif
     }
 
     if (ex & SND_EX_IN_QUAD)
     {
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(4));
-        //PPE_WAIT_CORE_CYCLES(loop, 100);
+#if !EPM_P9_TUNING
+        PPE_WAIT_CORE_CYCLES(loop, 48000);
+#endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(5));
-        //PPE_WAIT_CORE_CYCLES(loop, 100);
+#if !EPM_P9_TUNING
+        PPE_WAIT_CORE_CYCLES(loop, 4000);
+#endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(6));
-        //PPE_WAIT_CORE_CYCLES(loop, 100);
+#if !EPM_P9_TUNING
+        PPE_WAIT_CORE_CYCLES(loop, 16000);
+#endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(7));
-        //PPE_WAIT_CORE_CYCLES(loop, 100);
+#if !EPM_P9_TUNING
+        PPE_WAIT_CORE_CYCLES(loop, 4000);
+#endif
     }
+
+    PK_TRACE("Assert cache EX1 ID bit2");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(6));
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
-    scom_data = scom_data & ~(BITS64(0, 4) & BITS64(12, 8) & BITS64(52, 12));
+    scom_data = scom_data & ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
     scom_data = scom_data | (BIT64(1) | BIT64(3) | BIT64(59));
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
 
-    PK_TRACE("Drop partial good fences via CPLT_CTRL1[3-14]");
+    PK_TRACE("Drop partial good fences via CPLT_CTRL1[4,5,6/7,11,12/13]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad),
-                0xFFFF700000000000);
+                (CLK_REGION_ALL_BUT_EX_DPLL  |
+                 ((uint64_t)ex << SHIFT64(7)) |
+                 ((uint64_t)ex << SHIFT64(13))));
 
     PK_TRACE("Drop vital fence via CPLT_CTRL1[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), BIT64(3));
@@ -80,7 +105,7 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     PK_TRACE("Reset abstclk & syncclk muxsel(io_clk_sel) via CPLT_CTRL0[0:1]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(0) | BIT64(1));
 
-    /// @todo set fabric node/chip ID values(read from nest chiplet) still need?
+    /// @todo set fabric node/chip ID values(read from nest chiplet)
 
     // align_chiplets()
 
@@ -97,19 +122,21 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     scom_data = scom_data & ~BIT64(7);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
 
+    // 255 cache cycles
+    PPE_WAIT_CORE_CYCLES(loop, 510);
+
     PK_TRACE("Check chiplet_is_aligned");
 
     do
     {
         GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
     }
-    while(~scom_data & BIT64(9));
+    while((~scom_data) & BIT64(9));
 
     MARK_TRAP(SX_CACHE_STARTCLOCKS_REGION)
 
     PK_TRACE("Drop force_align via CPLT_CTRL0[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(3));
-    PPE_WAIT_CORE_CYCLES(loop, 450);
 
     // -------------------------------
     // Start L3 Clock
@@ -118,34 +145,43 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     PK_TRACE("Clear all bits prior start cache clocks via SCAN_REGION_TYPE");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
 
-    PK_TRACE("Start cache clocks(arrays+nsl clock region) via CLK_REGION");
-    scom_data = 0x4C3C000000006000 | ((uint64_t)ex << SHIFT64(7));
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
-
-    PK_TRACE("Start cache clocks(sl+refresh clock region) via CLK_REGION");
-    scom_data = 0x4C3C00000000E000 | ((uint64_t)ex << SHIFT64(7));
+    PK_TRACE("Start cache clocks via CLK_REGION");
+    scom_data = (CLK_START_CMD | CLK_THOLD_ALL   |
+                 CLK_REGION_ALL_BUT_EX_ANEP_DPLL |
+                 ((uint64_t)ex << SHIFT64(7))    |
+                 ((uint64_t)ex << SHIFT64(13)));
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
 
     // Read Clock Status Register (Cache chiplet)
     // check for bits 4:14 eq. zero, no tholds on
-    PK_TRACE("Poll for cache clocks running");
+    PK_TRACE("Poll for cache clocks running via CPLT_STAT0[8]");
 
     do
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
     }
-    while((scom_data &
-           (BITS64(4, 2) | ((uint64_t)ex << SHIFT64(7)) | BITS64(10, 4))) != 0);
+    while((~scom_data) & BIT64(8));
+
+    PK_TRACE("Check cache clock running via CLOCK_STAT_SL[4-14]");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data);
+
+    if (scom_data & (CLK_REGION_ALL_BUT_EX_ANEP_DPLL |
+                     ((uint64_t)ex << SHIFT64(7))    |
+                     ((uint64_t)ex << SHIFT64(13))))
+    {
+        PK_TRACE("Cache clock start failed");
+        pk_halt();
+    }
 
     PK_TRACE("Cache clocks running now");
 
-    // @todo
-    // deskew_init()
+    /// @todo deskew_init()
 
     // -------------------------------
     // Cleaning up
     // -------------------------------
 
+    /// @todo add ipl mode attr control
     PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(18));
 
@@ -154,6 +190,20 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
 
+    PK_TRACE("Set all l2s and partial bad l3 pscom mask");
+    scom_data = PSCOM_MASK_ALL_L2;
+
+    if ((~ex) & FST_EX_IN_QUAD)
+    {
+        scom_data |= PSCOM_MASK_EX0_L3;
+    }
+
+    if ((~ex) & SND_EX_IN_QUAD)
+    {
+        scom_data |= PSCOM_MASK_EX1_L3;
+    }
+
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data);
 
     PK_TRACE("Drop refresh quiesce");
 

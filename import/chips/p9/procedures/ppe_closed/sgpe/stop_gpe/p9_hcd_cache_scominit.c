@@ -30,6 +30,14 @@ int
 p9_hcd_cache_scominit(uint32_t quad)
 {
     int rc = SGPE_STOP_SUCCESS;
+    uint64_t scom_data;
+
+    PK_TRACE("Enable DTS sampling via THERM_MODE_REG[5]");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_THERM_MODE_REG, quad), scom_data);
+    scom_data |= BIT64(5);
+    /// @todo set the sample pulse count (bit 6:9)
+    /// enable the appropriate loops (needs investigation with the Perv team on the EC wiring).
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_THERM_MODE_REG, quad), scom_data);
 
     return rc;
 }

@@ -54,17 +54,36 @@ p9_hcd_core_poweron(uint32_t core)
     PK_TRACE("Prepare PFET Controls");
     CME_PUTSCOM(PPM_PFCS_CLR, core, BIT64(4) | BIT64(5) | BIT64(8));
 
-    // vdd_pfet_force_state = 11 (Force Von)
-    PK_TRACE("Power Off Core VDD");
-    CME_PUTSCOM(PPM_PFCS_OR, core, BITS64(0, 2));
-
-    PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle)");
-
-    do
+    // Serialize only the PFET power-on for the Core Pair
+    if (core & CME_MASK_C0)
     {
-        CME_GETSCOM(PPM_PFCS, core, CME_SCOM_AND, scom_data);
+        // vdd_pfet_force_state = 11 (Force Von)
+        PK_TRACE("Power Off Core VDD");
+        CME_PUTSCOM(PPM_PFCS_OR, CME_MASK_C0, BITS64(0, 2));
+
+        PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle)");
+
+        do
+        {
+            CME_GETSCOM(PPM_PFCS, CME_MASK_C0, CME_SCOM_AND, scom_data);
+        }
+        while(!(scom_data & BIT64(42)));
     }
-    while(!(scom_data & BIT64(42)));
+
+    if (core & CME_MASK_C1)
+    {
+        // vdd_pfet_force_state = 11 (Force Von)
+        PK_TRACE("Power Off Core VDD");
+        CME_PUTSCOM(PPM_PFCS_OR, CME_MASK_C1, BITS64(0, 2));
+
+        PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle)");
+
+        do
+        {
+            CME_GETSCOM(PPM_PFCS, CME_MASK_C1, CME_SCOM_AND, scom_data);
+        }
+        while(!(scom_data & BIT64(42)));
+    }
 
     // vdd_pfet_force_state = 00 (Nop)
     PK_TRACE("Turn Off Force Von");

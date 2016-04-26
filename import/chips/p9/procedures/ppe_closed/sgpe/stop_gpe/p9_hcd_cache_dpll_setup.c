@@ -43,27 +43,33 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     PK_TRACE("Drop DPLL clock region fence via NET_CTRL1[14]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), BIT64(14));
 
+    // start_clock()
+
     PK_TRACE("Clear all bits prior start DPLL clock via SCAN_REGION_TYPE");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
 
-    PK_TRACE("Start DPLL clock(arrays+nsl clock region) via CLK_REGION");
-    scom_data = 0x4002000000006000;
+    PK_TRACE("Start DPLL clock via CLK_REGION");
+    scom_data = (CLK_START_CMD | CLK_REGION_DPLL | CLK_THOLD_ALL);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
 
-    PK_TRACE("Start DPLL clock(sl+refresh clock region) via CLK_REGION");
-    scom_data = 0x400200000000E000;
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
-
-    PK_TRACE("Polling for DPLL clock running via CLOCK_STAT_SL");
+    PK_TRACE("Polling for DPLL clock running via CPLT_STAT0[8]");
 
     do
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
     }
-    while((~scom_data & BIT64(14)) != BIT64(14));
+    while(!(scom_data & BIT64(8)));
+
+    PK_TRACE("Check DPLL clock running via CLOCK_STAT_SL[14]");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data);
+
+    if (scom_data & BIT64(14))
+    {
+        PK_TRACE("Start DPLL clock failed");
+        pk_halt();
+    }
 
     PK_TRACE("DPLL clock is now running");
-
     MARK_TRAP(SX_DPLL_START_DONE)
 
     PK_TRACE("Poll for DPLL lock");

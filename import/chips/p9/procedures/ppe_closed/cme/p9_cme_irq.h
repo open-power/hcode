@@ -78,18 +78,18 @@ extern const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
 // Group0: Non-task hi-prty IRQs
 #define IRQ_VEC_PRTY0_CME   (uint64_t)(0xFE00000000000000)
-// Group1: DB3 + BCE
-#define IRQ_VEC_PRTY1_CME   (uint64_t)(0x00F0000000000000)
-// Group2: DB2 + WAKEUP
-#define IRQ_VEC_PRTY2_CME   (uint64_t)(0x000FF00000000000)
-// Group3: STOP
-#define IRQ_VEC_PRTY3_CME   (uint64_t)(0x00000C0000000000)
+// Group1: DB3
+#define IRQ_VEC_PRTY1_CME   (uint64_t)(0x0030000000000000)
+// Group2: DB2
+#define IRQ_VEC_PRTY2_CME   (uint64_t)(0x0000300000000000)
+// Group3: WAKEUP + STOP
+#define IRQ_VEC_PRTY3_CME   (uint64_t)(0x000FCC0000000000)
 // Group4: DB1
 #define IRQ_VEC_PRTY4_CME   (uint64_t)(0x0000000000C00000)
 // Group5: BD0 + PMCR
 #define IRQ_VEC_PRTY5_CME   (uint64_t)(0x000000003C000000)
 // Group6: We should never detect these
-#define IRQ_VEC_PRTY6_CME   (uint64_t)(0x010003FFC33FFFFF)
+#define IRQ_VEC_PRTY6_CME   (uint64_t)(0x01C003FFC33FFFFF)
 
 // This should be 0xFFFFFFFFFFFFFFFF
 #define IRQ_VEC_PRTY_CHECK  ( IRQ_VEC_PRTY0_CME | \

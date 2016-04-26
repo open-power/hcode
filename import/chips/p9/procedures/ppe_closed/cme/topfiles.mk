@@ -32,6 +32,7 @@ STOP-C-SOURCES   = stop_cme/p9_cme_stop_irq_handlers.c \
                    stop_cme/p9_cme_stop_exit_thread.c \
                    stop_cme/p9_cme_stop_entry.c \
                    stop_cme/p9_cme_stop_exit.c \
+                   stop_cme/p9_hcd_core_scan0.c \
                    stop_cme/p9_hcd_core_poweron.c \
                    stop_cme/p9_hcd_core_chiplet_reset.c \
                    stop_cme/p9_hcd_core_gptr_time_initf.c \

@@ -32,21 +32,21 @@ extern CmeStopRecord G_cme_stop_record;
 int
 p9_cme_stop_exit()
 {
-    int          rc              = 0;
     int          d2u4_flag       = 0;
     int          catchup_ongoing = 0;
     uint8_t      target_level;
     uint8_t      deeper_level    = 0;
     uint32_t     deeper_core     = 0;
     uint32_t     wakeup;
-    uint32_t     pcwu;
-    uint32_t     spwu;
-    uint32_t     rgwu;
     uint32_t     core;
+#if !SPWU_AUTO
+    uint32_t     spwu_stop;
+    uint32_t     spwu_wake;
+#endif
 #if !SKIP_EXIT_CATCHUP
+    uint8_t      catchup_level;
     uint32_t     core_catchup;
 #endif
-    //uint32_t      grant;
     ppm_sshsrc_t hist;
 
     //--------------------------------------------------------------------------
@@ -55,43 +55,53 @@ p9_cme_stop_exit()
 
     // extract wakeup signals, clear status, and mask wakeup interrupts
     wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
-    out32(CME_LCL_EISR_CLR, (wakeup << SHIFT32(17)) | BITS32(24, 2));
-    out32_sh(CME_LCL_EISR_CLR, (in32_sh(CME_LCL_EISR) & BITS32(8, 2)));
-
-    // build the core select for wakeup
-    pcwu   = (wakeup >> 4) & CME_MASK_BC;
-    spwu   = (wakeup >> 2) & CME_MASK_BC;
-    rgwu   = (wakeup >> 0) & CME_MASK_BC;
-    core   = pcwu | spwu | rgwu;
+    core   = ((wakeup >> 4) | (wakeup >> 2) | wakeup) & CME_MASK_BC;
 
     // override with partial good core mask
-    core = core & G_cme_stop_record.core_enabled;
+    // also ignore wakeup to running cores
+    core = core & G_cme_stop_record.core_enabled &
+           (~G_cme_stop_record.core_running);
 
-    PK_TRACE("X0: Core Select[%d], pcwu[%d], spwu[%d], rgwu[%d]",
-             core, pcwu, spwu, rgwu);
+    PK_TRACE("X0: Core Select[%d] Wakeup[%x] Actual Stop Levels[%d %d]",
+             core, wakeup,
+             G_cme_stop_record.act_level_c0,
+             G_cme_stop_record.act_level_c1);
+
+#if !SPWU_AUTO
+    spwu_stop = (wakeup >> 2) & G_cme_stop_record.core_enabled;
+    spwu_wake = spwu_stop &   G_cme_stop_record.core_running;
+    spwu_stop = spwu_stop & (~G_cme_stop_record.core_running);
+
+    if (spwu_wake)
+    {
+        out32(CME_LCL_SICR_OR,  spwu << SHIFT32(17));
+    }
+
+#endif
 
     // Code Error: function should never be entered without wakeup source active
     if (!core)
     {
-        PK_TRACE("Error: no wakeup fired");
-        pk_halt();
+#if !SPWU_AUTO
+
+        if (!spwu_wake)
+        {
+#endif
+            PK_TRACE("Error: no wakeup fired");
+            pk_halt();
+#if !SPWU_AUTO
+        }
+        else
+        {
+            return CME_STOP_SUCCESS;
+        }
+
+#endif
     }
 
     //==================================
     MARK_TAG(BEGINSCOPE_STOP_EXIT, core)
     //==================================
-
-    PK_TRACE("X0: Actual Stop Levels[%d %d]",
-             G_cme_stop_record.act_level_c0, G_cme_stop_record.act_level_c1);
-
-    // Code Error: by default stop 1 auto wakeup should be enabled
-    if ((core == CME_MASK_C0 && G_cme_stop_record.act_level_c0 < 2) ||
-        (core == CME_MASK_C1 && G_cme_stop_record.act_level_c1 < 2) ||
-        (core == CME_MASK_BC && (G_cme_stop_record.act_level_c0 < 2 ||
-                                 G_cme_stop_record.act_level_c1 < 2)))
-    {
-        pk_halt();
-    }
 
     // set target_level to STOP level for c0
     // unless c1(also or only) wants to wakeup
@@ -120,6 +130,13 @@ p9_cme_stop_exit()
     PK_TRACE("X0: target_lv[%d], deeper_lv[%d], deeper_c[%d]",
              target_level, deeper_level, deeper_core);
 
+    // ensure PCB Mux grant is present for all cores that wants to wakeup
+    // only stop 11 needs to request for new grant
+    out32(CME_LCL_SICR_OR,  (core << SHIFT32(11)));
+
+    // chtm purge done
+    out32(CME_LCL_EISR_CLR, (core << SHIFT32(25)));
+
     PK_TRACE("X0: Update STOP History: In Transition of Exit");
     CME_STOP_UPDATE_HISTORY(core,
                             STOP_CORE_IS_GATED,
@@ -129,20 +146,9 @@ p9_cme_stop_exit()
                             STOP_REQ_DISABLE,
                             STOP_ACT_DISABLE);
 
-    // ensure PCB Mux grant is present for all cores that wants to wakeup
-    // only stop 11 needs to request for new grant
-    //if (!(grant=(core & (in32(CME_LCL_SISR) >> SHIFT32(11))))) {
     PK_TRACE("X0: Check and Request PCB Mux");
-    //    if (((~grant & CME_MASK_C0 & core) &&
-    //        (G_cme_stop_record.pm_state_c0 < 11)) ||
-    //        ((~grant & CME_MASK_C1 & core) &&
-    //        (G_cme_stop_record.pm_state_c1 < 11)))
-    //        pk_halt();
-    out32(CME_LCL_SICR_OR, core << SHIFT32(11));
 
     while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
-
-    //}
 
     //--------------------------------------------------------------------------
     // STOP LEVEL 4
@@ -162,15 +168,11 @@ p9_cme_stop_exit()
         do   //catchup loop
         {
 
-#if !SKIP_BCE
-            PK_TRACE("BCE Runtime Kickoff");
+#if !SKIP_BCE_SCOM_RESTORE
+            PK_TRACE("BCE Runtime Kickoff: copy scom restore");
             //right now a blocking call. Need to confirm this.
-            instance_scan_init();
+            instance_scom_restore();
 #endif
-
-            // todo for catch up case
-            //PK_TRACE("X1: Request PCB Arbiter");
-            //p9_hcd_core_pcb_arb(core, 1);
 
             //========================
             MARK_TAG(SX_POWERON, core)
@@ -189,7 +191,6 @@ p9_cme_stop_exit()
 #if !STOP_PRIME
 #if !SKIP_EXIT_CATCHUP
 
-            //catchup
             if (catchup_ongoing)
             {
                 core = CME_MASK_BC;
@@ -198,49 +199,61 @@ p9_cme_stop_exit()
             else
             {
                 wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
-                out32(CME_LCL_EISR_CLR, wakeup << SHIFT32(17));
-                core_catchup =
-                    ((wakeup >> 4) | (wakeup >> 2) | (wakeup >> 0)) &
-                    CME_MASK_BC;
+                core_catchup = (~core) &
+                               ((wakeup >> 4) | (wakeup >> 2) | wakeup);
+                core_catchup = core_catchup & G_cme_stop_record.core_enabled &
+                               (~G_cme_stop_record.core_running);
 
-                if (core_catchup && (core_catchup + core) == CME_MASK_BC)
+                if (core_catchup)
                 {
-                    out32(CME_LCL_SICR_OR, core_catchup << SHIFT32(11));
+                    //==================================
+                    MARK_TAG(SX_CATCHUP_B, core_catchup)
+                    //==================================
 
-                    if(((core_catchup & CME_MASK_C0) &&
-                        G_cme_stop_record.act_level_c0 == STOP_LEVEL_2) ||
-                       ((core_catchup & CME_MASK_C1) &&
-                        G_cme_stop_record.act_level_c1 == STOP_LEVEL_2))
+                    // pcbmux grant
+                    out32(CME_LCL_SICR_OR,  (core_catchup << SHIFT32(11)));
+                    // chtm purge done
+                    out32(CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
+
+                    CME_STOP_UPDATE_HISTORY(core_catchup,
+                                            STOP_CORE_IS_GATED,
+                                            STOP_TRANS_EXIT,
+                                            STOP_LEVEL_0,
+                                            STOP_LEVEL_0,
+                                            STOP_REQ_DISABLE,
+                                            STOP_ACT_DISABLE);
+
+                    catchup_level = (core_catchup & CME_MASK_C0) ?
+                                    G_cme_stop_record.act_level_c0 :
+                                    G_cme_stop_record.act_level_c1 ;
+
+                    PK_TRACE("core[%d] running[%d] core_catchup[%d] catchup_level[%d]",
+                             core, G_cme_stop_record.core_running,
+                             core_catchup, catchup_level);
+
+                    while((core_catchup & (in32(CME_LCL_SISR) >>
+                                           SHIFT32(11))) != core_catchup);
+
+                    if (catchup_level < STOP_LEVEL_4)
                     {
-                        deeper_core = core;
-                        d2u4_flag = 1;
+                        deeper_core  = core;
+                        d2u4_flag    = 1;
                     }
-                    else if(((core_catchup & CME_MASK_C0) &&
-                             G_cme_stop_record.act_level_c0 == STOP_LEVEL_4) ||
-                            ((core_catchup & CME_MASK_C1) &&
-                             G_cme_stop_record.act_level_c1 == STOP_LEVEL_4))
+                    else
                     {
                         core = core_catchup;
                         catchup_ongoing = 1;
                         continue;
                     }
-
-                    while((core_catchup & (in32(CME_LCL_SISR) >>
-                                           SHIFT32(11))) != core_catchup);
                 }
-
-                //==========================
-                MARK_TAG(SX_CATCHUP_A, core)
-                //==========================
             }
 
 #endif
 
-#if !SKIP_INITF
             //==============================
             MARK_TAG(SX_CHIPLET_INITS, core)
             //==============================
-
+#if !SKIP_INITF
             PK_TRACE("X3: Core GPTR Time Initf");
             p9_hcd_core_gptr_time_initf(core);
 #endif
@@ -255,7 +268,6 @@ p9_cme_stop_exit()
 
 #if !SKIP_EXIT_CATCHUP
 
-            //catchup
             if (catchup_ongoing)
             {
                 core = CME_MASK_BC;
@@ -264,58 +276,69 @@ p9_cme_stop_exit()
             else
             {
                 wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
-                out32(CME_LCL_EISR_CLR, wakeup << SHIFT32(17));
-                core_catchup =
-                    ((wakeup >> 4) | (wakeup >> 2) | (wakeup >> 0)) &
-                    CME_MASK_BC;
+                core_catchup = (~core) &
+                               ((wakeup >> 4) | (wakeup >> 2) | wakeup);
+                core_catchup = core_catchup & G_cme_stop_record.core_enabled &
+                               (~G_cme_stop_record.core_running);
 
-                if (core_catchup && (core_catchup + core) == CME_MASK_BC)
+                if (core_catchup)
                 {
-                    out32(CME_LCL_SICR_OR, core_catchup << SHIFT32(11));
+                    //==================================
+                    MARK_TAG(SX_CATCHUP_B, core_catchup)
+                    //==================================
 
-                    if(((core_catchup & CME_MASK_C0) &&
-                        G_cme_stop_record.act_level_c0 == STOP_LEVEL_2) ||
-                       ((core_catchup & CME_MASK_C1) &&
-                        G_cme_stop_record.act_level_c1 == STOP_LEVEL_2))
+                    // pcbmux grant
+                    out32(CME_LCL_SICR_OR,  (core_catchup << SHIFT32(11)));
+                    // chtm purge done
+                    out32(CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
+
+                    CME_STOP_UPDATE_HISTORY(core_catchup,
+                                            STOP_CORE_IS_GATED,
+                                            STOP_TRANS_EXIT,
+                                            STOP_LEVEL_0,
+                                            STOP_LEVEL_0,
+                                            STOP_REQ_DISABLE,
+                                            STOP_ACT_DISABLE);
+
+                    catchup_level = (core_catchup & CME_MASK_C0) ?
+                                    G_cme_stop_record.act_level_c0 :
+                                    G_cme_stop_record.act_level_c1 ;
+
+                    PK_TRACE("core[%d] running[%d] core_catchup[%d] catchup_level[%d]",
+                             core, G_cme_stop_record.core_running,
+                             core_catchup, catchup_level);
+
+                    while((core_catchup & (in32(CME_LCL_SISR) >>
+                                           SHIFT32(11))) != core_catchup);
+
+                    if (catchup_level < STOP_LEVEL_4)
                     {
-                        deeper_core = core;
-                        d2u4_flag = 1;
+                        deeper_core  = core;
+                        d2u4_flag    = 1;
                     }
-                    else if(((core_catchup & CME_MASK_C0) &&
-                             G_cme_stop_record.act_level_c0 == STOP_LEVEL_4) ||
-                            ((core_catchup & CME_MASK_C1) &&
-                             G_cme_stop_record.act_level_c1 == STOP_LEVEL_4))
+                    else
                     {
                         core = core_catchup;
                         catchup_ongoing = 1;
                         continue;
                     }
-
-                    while((core_catchup & (in32(CME_LCL_SISR) >>
-                                           SHIFT32(11))) != core_catchup);
                 }
-
-                //==========================
-                MARK_TAG(SX_CATCHUP_B, core)
-                //==========================
             }
 
 #endif
 
-#if !SKIP_ARY_INIT
             //===========================
             MARK_TAG(SX_ARRAY_INIT, core)
             //===========================
-
+#if !SKIP_ARRAYINIT
             PK_TRACE("X7: Core Array Init");
             p9_hcd_core_arrayinit(core);
 #endif
 
-#if !SKIP_INITF
             //=====================
             MARK_TRAP(SX_FUNC_INIT)
             //=====================
-
+#if !SKIP_INITF
             PK_TRACE("X8: Core Func Scan");
             p9_hcd_core_initf(core);
 #endif
@@ -333,17 +356,18 @@ p9_cme_stop_exit()
     //--------------------------------------------------------------------------
     // STOP LEVEL 3
     //--------------------------------------------------------------------------
-    if (deeper_level == STOP_LEVEL_3 || target_level == STOP_LEVEL_3)
-    {
-        //======================
-        MARK_TAG(SX_STOP3, core)
-        //======================
+    /*
+        if (deeper_level == STOP_LEVEL_3 || target_level == STOP_LEVEL_3)
+        {
+            //======================
+            MARK_TAG(SX_STOP3, core)
+            //======================
 
-        PK_TRACE("STOP Level 3 Sequence");
-        //Return to full voltage
-        //disable ivrm?
-    }
-
+            PK_TRACE("STOP Level 3 Sequence");
+            //Return to full voltage
+            //disable ivrm?
+        }
+    */
     //--------------------------------------------------------------------------
     // STOP LEVEL 2
     //--------------------------------------------------------------------------
@@ -351,6 +375,11 @@ p9_cme_stop_exit()
     //============================
     MARK_TAG(SX_STARTCLOCKS, core)
     //============================
+
+    // do this again here for stop2 in addition to chiplet_reset
+    // Note IPL doesnt need to do this twice
+    PK_TRACE("4S2: Set Core Glitchless Mux to DPLL");
+    CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
 
     PK_TRACE("X9: Start Core Clock");
     p9_hcd_core_startclocks(core);
@@ -383,21 +412,18 @@ p9_cme_stop_exit()
         MARK_TAG(SX_BCE_CHECK, core)
         //==========================
 
-#if !SKIP_BCE
+#if !SKIP_BCE_SCOM_RESTORE
         PK_TRACE("BCE Runtime Check");
 
         if( BLOCK_COPY_SUCCESS != isScanRingCopyDone() )
         {
-            PK_TRACE("BC2: Copy of Instance Specific Scan ring failed");
-            // TODO should return an error code.
+            PK_TRACE("BCE: Copy of scom restore failed");
+            pk_halt();
         }
 
+        PK_TRACE("X11: XIP Customized Scoms");
+        p9_hcd_core_scomcust(core);
 #endif
-
-        // todo
-        //PK_TRACE("X11: XIP Customized Scoms");
-        //MARK_TRAP(SX_SCOMCUST)
-        //p9_hcd_core_scomcust(core);
 
         //==============================
         MARK_TAG(SX_RUNTIME_INITS, core)
@@ -422,14 +448,61 @@ p9_cme_stop_exit()
         PK_TRACE("Raise block interrupt to PC");
         out32(CME_LCL_SICR_OR, core << SHIFT32(3));
 
-        PK_TRACE("RAM HRMOR");
-
         PK_TRACE("Now Wakeup the Core(pm_exit=1)");
         out32(CME_LCL_SICR_OR, core << SHIFT32(5));
 
         PK_TRACE("Polling for Core Wakeup(pm_active=0)");
 
         while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
+
+#if !SKIP_RAM_HRMOR
+        PK_TRACE("Activate Thread0 for RAM");
+        CME_PUTSCOM(THREAD_INFO, core, BIT64(18));
+
+        PK_TRACE("Enable RAM mode");
+        CME_PUTSCOM(RAM_MODEREG, core, BIT64(0));
+
+        PK_TRACE("Set SPR mode to LT0-7");
+        CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
+
+        if (core & CME_MASK_C0)
+        {
+            PK_TRACE("Set SPRC to Scratch0 for core0");
+            CME_PUTSCOM(SCOM_SPRC, CME_MASK_C0, 0);
+
+            PK_TRACE("Load Scratch0 with HOMER+2MB");
+#if EPM_P9_TUNING
+            CME_PUTSCOM(SCRACTH0, CME_MASK_C0, 0x200000);
+#else
+            CME_PUTSCOM(SCRACTH0, CME_MASK_C0, int64(SELF_RESTORE_ADDR_FETCH));
+#endif
+        }
+
+        if (core & CME_MASK_C1)
+        {
+            PK_TRACE("Set SPRC to Scratch1 for core1");
+            CME_PUTSCOM(SCOM_SPRC, CME_MASK_C1, BIT64(60));
+
+            PK_TRACE("Load Scratch1 with HOMER+2MB");
+#if EPM_P9_TUNING
+            CME_PUTSCOM(SCRACTH1, CME_MASK_C1, 0x200000);
+#else
+            CME_PUTSCOM(SCRACTH1, CME_MASK_C1, int64(SELF_RESTORE_ADDR_FETCH));
+#endif
+        }
+
+        PK_TRACE("RAM: mfspr sprd , gpr0");
+        CME_PUTSCOM(RAM_CTRL, core, RAM_MFSPR_SPRD_GPR0);
+
+        PK_TRACE("RAM: mtspr hrmor, gpr0");
+        CME_PUTSCOM(RAM_CTRL, core, RAM_MTSPR_HRMOR_GPR0);
+
+        PK_TRACE("Disable Thread0 for RAM");
+        CME_PUTSCOM(THREAD_INFO, core, 0);
+
+        PK_TRACE("Disable RAM mode");
+        CME_PUTSCOM(RAM_MODEREG, core, 0);
+#endif
 
         PK_TRACE("S-Reset all threads");
         CME_PUTSCOM(DIRECT_CONTROLS, core,
@@ -444,19 +517,14 @@ p9_cme_stop_exit()
 
         PK_TRACE("Poll for Core stop again(pm_active=1)");
 
-        while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)));
-
-        //PK_TRACE("Restore PSSCR back to actual level");
-        //PLS here:
-        if (core & CME_MASK_C0)
-            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0,
-                        (((uint64_t)G_cme_stop_record.act_level_c0 <<
-                          SHIFT64(36)) | BIT64(32)));
-
-        if (core & CME_MASK_C1)
-            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1,
-                        (((uint64_t)G_cme_stop_record.act_level_c1 <<
-                          SHIFT64(36)) | BIT64(32)));
+        while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)))
+        {
+            if (in32_sh(CME_LCL_SISR) & (core << SHIFT32(1)))
+            {
+                PK_TRACE("Error: Core Special Attention Detected");
+                pk_halt();
+            }
+        }
 
         PK_TRACE("Drop block interrupt to PC");
         out32(CME_LCL_SICR_CLR, core << SHIFT32(3));
@@ -475,6 +543,78 @@ p9_cme_stop_exit()
     //--------------------------------------------------------------------------
     // END OF STOP EXIT
     //--------------------------------------------------------------------------
+
+    PK_TRACE("Restore PSSCR.PLS+SRR1 back to actual level");
+
+    if (core & CME_MASK_C0)
+    {
+        CME_GETSCOM(PPM_SSHSRC, CME_MASK_C0, CME_SCOM_AND, hist.value);
+
+        if (hist.fields.act_stop_level >= STOP_LEVEL_8)
+        {
+            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0, CME_STOP_UPDATE_PLS_SRR1(
+                            hist.fields.act_stop_level,
+                            MOST_STATE_LOSS, MOST_STATE_LOSS,
+                            MOST_STATE_LOSS, MOST_STATE_LOSS));
+        }
+        else if (hist.fields.act_stop_level >= STOP_LEVEL_4)
+        {
+            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0, CME_STOP_UPDATE_PLS_SRR1(
+                            hist.fields.act_stop_level,
+                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
+                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
+                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
+                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE));
+        }
+        else
+        {
+            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0, CME_STOP_UPDATE_PLS_SRR1(
+                            hist.fields.act_stop_level,
+                            ((in32(CME_LCL_PSCRS00) & BIT32(2)) ?
+                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
+                            ((in32(CME_LCL_PSCRS10) & BIT32(2)) ?
+                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
+                            ((in32(CME_LCL_PSCRS20) & BIT32(2)) ?
+                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
+                            ((in32(CME_LCL_PSCRS30) & BIT32(2)) ?
+                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS)));
+        }
+    }
+
+    if (core & CME_MASK_C1)
+    {
+        CME_GETSCOM(PPM_SSHSRC, CME_MASK_C1, CME_SCOM_AND, hist.value);
+
+        if (hist.fields.act_stop_level >= STOP_LEVEL_8)
+        {
+            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1, CME_STOP_UPDATE_PLS_SRR1(
+                            hist.fields.act_stop_level,
+                            MOST_STATE_LOSS, MOST_STATE_LOSS,
+                            MOST_STATE_LOSS, MOST_STATE_LOSS));
+        }
+        else if(hist.fields.act_stop_level >= STOP_LEVEL_4)
+        {
+            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1, CME_STOP_UPDATE_PLS_SRR1(
+                            hist.fields.act_stop_level,
+                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
+                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
+                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
+                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE));
+        }
+        else
+        {
+            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1, CME_STOP_UPDATE_PLS_SRR1(
+                            hist.fields.act_stop_level,
+                            ((in32(CME_LCL_PSCRS01) & BIT32(2)) ?
+                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
+                            ((in32(CME_LCL_PSCRS11) & BIT32(2)) ?
+                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
+                            ((in32(CME_LCL_PSCRS21) & BIT32(2)) ?
+                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
+                            ((in32(CME_LCL_PSCRS31) & BIT32(2)) ?
+                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS)));
+        }
+    }
 
     PK_TRACE("XF: Now Wakeup the Core(pm_exit=1)");
     out32(CME_LCL_SICR_OR, core << SHIFT32(5));
@@ -499,7 +639,10 @@ p9_cme_stop_exit()
 
     G_cme_stop_record.core_running |=  core;
     G_cme_stop_record.core_stopgpe &= ~core;
-    out32(CME_LCL_LMCR_CLR, ((core << SHIFT32(13)) | (core << SHIFT32(15))));
+#if SPWU_AUTO
+    out32(CME_LCL_LMCR_CLR, (core << SHIFT32(13)));
+#endif
+    out32(CME_LCL_LMCR_CLR, (core << SHIFT32(15)));
 
     if (core & CME_MASK_C0)
     {
@@ -514,7 +657,22 @@ p9_cme_stop_exit()
     }
 
     PK_TRACE("XF: Drop pm_exit to allow core to run if spwu is not present");
+
+#if SPWU_AUTO
     out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
+#else
+
+    if (spwu_stop)
+    {
+        out32(CME_LCL_SICR_OR,  spwu << SHIFT32(17));
+    }
+
+    if ((core = (core & (~spwu_stop))))
+    {
+        out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
+    }
+
+#endif
 
     //===========================
     MARK_TRAP(ENDSCOPE_STOP_EXIT)

@@ -23,24 +23,34 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-/// Init Vectors for Register Setup
-enum P9_HCD_COMMON_INIT_VECTORS
+// Clock Control Constants
+enum P9_HCD_COMMON_CLK_CTRL_CONSTANTS
 {
-    // (1)PCB_EP_RESET
-    // (2)CLK_ASYNC_RESET
-    // (3)PLL_TEST_EN
-    // (4)PLLRST
-    // (5)PLLBYP
-    // (11)EDIS
-    // (12)VITL_MPW1
-    // (13)VITL_MPW2
-    // (14)VITL_MPW3
-    // (18)FENCE_EN
-    // (22)FUNC_CLKSEL
-    // (26)LVLTRANS_FENCE
-    C_NET_CTRL0_INIT_VECTOR = (BIT64(1) | BITS64(3, 3) | BITS64(11, 4) | BIT64(18) | BIT64(22) | BIT64(26)),
-    Q_NET_CTRL0_INIT_VECTOR = (BITS64(1, 5) | BITS64(11, 4) | BIT64(18) | BIT64(22) | BIT64(26)),
-    HANG_PULSE1_INIT_VECTOR = BIT64(5)
+    CLK_STOP_CMD                             = BIT64(0),
+    CLK_START_CMD                            = BIT64(1),
+    CLK_REGION_DPLL                          = BIT64(14),
+    CLK_REGION_ALL_BUT_EX                    = BITS64(4, 2) | BITS64(10, 2) | BIT64(14),
+    CLK_REGION_ALL_BUT_EX_DPLL               = BITS64(4, 2) | BITS64(10, 2),
+    CLK_REGION_ALL_BUT_EX_ANEP_DPLL          = BITS64(4, 2) | BIT64(11),
+    CLK_REGION_EX0_L2_L3_REFR                = BIT64(6) | BIT64(8) | BIT64(12),
+    CLK_REGION_EX1_L2_L3_REFR                = BIT64(7) | BIT64(9) | BIT64(13),
+    CLK_REGION_ALL_BUT_PLL                   = BITS64(4, 10),
+    CLK_REGION_ALL                           = BITS64(4, 11),
+    CLK_THOLD_ALL                            = BITS64(48, 3)
+};
+
+// SCAN0 Constants
+enum P9_HCD_COMMON_SCAN0_CONSTANTS
+{
+    SCAN0_REGION_ALL                         = 0x7FF,
+    SCAN0_REGION_ALL_BUT_PLL                 = 0x7FE,
+    SCAN0_REGION_ALL_BUT_EX                  = 0x619,
+    SCAN0_REGION_ALL_BUT_EX_DPLL             = 0x618,
+    SCAN0_REGION_ALL_BUT_EX_ANEP_DPLL        = 0x608,
+    SCAN0_REGION_EX0_L2_L3_REFR              = 0x144,
+    SCAN0_REGION_EX1_L2_L3_REFR              = 0x0A2,
+    SCAN0_TYPE_GPTR_REPR_TIME                = 0x230,
+    SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME        = 0xDCF
 };
 
 /// STOP Level constants
@@ -77,4 +87,20 @@ enum P9_STOP_HISTORY_CTRL_STATUS
     STOP_ACT_ENABLE              = 1,
     STOP_REQ_DISABLE             = 0,
     STOP_ACT_DISABLE             = 0
+};
+
+/// Homer Layout
+enum P9_HOMER_REGION_CONSTANTS
+{
+    CME_SRAM_BASE                = 0xFFFF8000,
+    // CPMR_BASE       = HOMER_BASE     + 2MB
+    CPMR_BASE_HOMER_OFFSET       = 0x200000,
+    // CME_IMAGE_BASE  = CPMR_BASE      + 6KB + 256KB(8KB + 256B(~56KB) + 192KB)
+    CME_IMAGE_CPMR_OFFSET        = 0x41800,
+    // CME_HEADER_BASE = CME_IMAGE_BASE + 384B
+    CME_HEADER_IMAGE_OFFSET      = 0x180,
+    // CPMR_ADDRESS is restored at 0x38 location of CME_IMAGE_HEADER
+    CPMR_ADDR_HEADER_OFFSET      = 0x38,
+    // CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET + CPMR_ADDR_HEADER_OFFSET
+    SELF_RESTORE_ADDR_FETCH      = 0xFFFF81B8
 };

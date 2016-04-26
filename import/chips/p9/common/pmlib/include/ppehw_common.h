@@ -45,10 +45,10 @@
 #define BIT8(b)  BITS8((b), 1)
 
 /// Create a amount of shift to bit location \a b
-#define SHIFT64(b) (63-b)
-#define SHIFT32(b) (31-b)
-#define SHIFT16(b) (15-b)
-#define SHIFT8(b)  (7-b)
+#define SHIFT64(b) (63-(b))
+#define SHIFT32(b) (31-(b))
+#define SHIFT16(b) (15-(b))
+#define SHIFT8(b)  (7-(b))
 
 
 /// Mark and Tag
@@ -77,7 +77,13 @@
 #define PPE_CORE_CYCLE_RATIO       8 // core is 8 times faster than cme
 #define PPE_FOR_LOOP_CYCLES        4 // fused compare branch(3), addition(1)
 #define PPE_CORE_CYCLE_DIVIDER     (PPE_CORE_CYCLE_RATIO*PPE_FOR_LOOP_CYCLES)
-#define PPE_WAIT_CORE_CYCLES(l,cc) for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);
+#ifdef USE_PPE_IMPRECISE_MODE
+#define PPE_WAIT_CORE_CYCLES(l,cc) \
+    for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);asm volatile ("sync");
+#else
+#define PPE_WAIT_CORE_CYCLES(l,cc) \
+    for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);
+#endif
 
 
 /// IRQ Setup

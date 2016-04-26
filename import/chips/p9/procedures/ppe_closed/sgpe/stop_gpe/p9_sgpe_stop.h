@@ -49,15 +49,19 @@
 
 #include "p9_stop_common.h"
 
+#define EQ_RING_FENCE_MASK_LATCH 0x10010008
 #define EQ_SYNC_CONFIG           0x10030000
 #define EQ_OPCG_ALIGN            0x10030001
 #define EQ_SCAN_REGION_TYPE      0x10030005
 #define EQ_CLK_REGION            0x10030006
 #define EQ_CLOCK_STAT_SL         0x10030008
+#define EQ_THERM_MODE_REG        0x1005000F
 
 #define EQ_BIST                  0x100F000B
+#define EQ_HANG_PULSE_6_REG      0x100F0026
 #define EQ_NET_CTRL0_WAND        0x100F0041
 #define EQ_NET_CTRL0_WOR         0x100F0042
+#define C_NET_CTRL0              0x200F0040
 #define C_NET_CTRL0_WOR          0x200F0042
 #define EQ_NET_CTRL1_WAND        0x100F0045
 #define EQ_NET_CTRL1_WOR         0x100F0046
@@ -66,6 +70,8 @@
 #define EQ_CPLT_CTRL0_CLEAR      0x10000020
 #define EQ_CPLT_CTRL1_OR         0x10000011
 #define EQ_CPLT_CTRL1_CLEAR      0x10000021
+#define EQ_CPLT_CONF0_OR         0x10000018
+#define EQ_CPLT_CONF0_CLEAR      0x10000028
 #define EQ_CPLT_STAT0            0x10000100
 
 #define EQ_QPPM_DPLL_CTRL_CLEAR  0x100F0153
@@ -88,8 +94,16 @@
 #define EX_PM_LCO_DIS_REG        0x10011816
 #define EX_PM_L2_RCMD_DIS_REG    0x10011818
 
-#define SGPE_STOP_L2_CLOCK_REGION(ex) (ex << SHIFT64(9))
-#define SGPE_STOP_L3_CLOCK_REGION(ex) (ex << SHIFT64(7))
+#define PERV_CPLT_CTRL0_OR       0x10000010
+#define PERV_CPLT_CTRL0_CLEAR    0x10000020
+#define PERV_CPLT_CTRL1_OR       0x10000011
+#define PERV_CPLT_CTRL1_CLEAR    0x10000021
+#define PERV_OPCG_REG0           0x10030002
+#define PERV_OPCG_REG1           0x10030003
+#define PERV_SCAN_REGION_TYPE    0x10030005
+#define PERV_CLK_REGION          0x10030006
+#define PERV_BIST                0x1003000B
+#define PERV_CPLT_STAT0          0x10000100
 
 /// Macro to update STOP History
 #define SGPE_STOP_UPDATE_HISTORY(id,base,gated,trans,req_l,act_l,req_e,act_e) \
@@ -127,6 +141,16 @@ enum SGPE_STOP_EVENT_LEVELS
     LEVEL_EQ_BASE                     = 11
 };
 
+enum SGPE_STOP_PSCOM_MASK
+{
+    PSCOM_MASK_ALL_L2                 = BITS64(2, 2) | BITS64(10, 2),
+    PSCOM_MASK_EX0_L2                 = BIT64(2) | BIT64(10),
+    PSCOM_MASK_EX1_L2                 = BIT64(3) | BIT64(11),
+    PSCOM_MASK_EX0_L3                 = BIT64(4) | BIT64(6) | BIT64(8),
+    PSCOM_MASK_EX1_L3                 = BIT64(5) | BIT64(7) | BIT64(9)
+};
+
+
 enum SGPE_STOP_VECTOR_INDEX
 {
     VECTOR_EXIT                       = 0,
@@ -144,6 +168,8 @@ typedef struct
     uint8_t act_state_x0;
     uint8_t act_state_x1;
     uint8_t act_state_q;
+    // both cme_flags: first(0:3) | enable(4:7)
+    uint8_t cme_flags;
 } sgpe_state_t;
 
 typedef struct
@@ -176,16 +202,17 @@ void p9_sgpe_stop_exit_thread(void*);
 int  p9_sgpe_stop_entry();
 int  p9_sgpe_stop_exit();
 
+int  p9_hcd_cache_scan0(uint32_t, uint64_t, uint64_t);
 int  p9_hcd_cache_poweron(uint32_t);
-int  p9_hcd_cache_chiplet_reset(uint32_t);
+int  p9_hcd_cache_chiplet_reset(uint32_t, uint32_t);
 int  p9_hcd_cache_gptr_time_initf(uint32_t);
 int  p9_hcd_cache_dpll_setup(uint32_t);
 int  p9_hcd_cache_chiplet_init(uint32_t);
 int  p9_hcd_cache_repair_initf(uint32_t);
-int  p9_hcd_cache_arrayinit(uint32_t);
+int  p9_hcd_cache_arrayinit(uint32_t, uint32_t ex);
 int  p9_hcd_cache_initf(uint32_t);
 int  p9_hcd_cache_startclocks(uint32_t, uint32_t);
-int  p9_hcd_cache_l2_startclocks(uint32_t, uint32_t);
+int  p9_hcd_cache_l2_startclocks(uint32_t, uint32_t, uint32_t);
 int  p9_hcd_cache_scominit(uint32_t);
 int  p9_hcd_cache_scomcust(uint32_t);
 int  p9_hcd_cache_ras_runtime_scom(uint32_t);

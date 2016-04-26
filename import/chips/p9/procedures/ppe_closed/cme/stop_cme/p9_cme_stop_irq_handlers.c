@@ -59,24 +59,8 @@ p9_cme_stop_event_handler(void* arg, PkIrqId irq)
 void
 p9_cme_stop_doorbell_handler(void* arg, PkIrqId irq)
 {
-    uint32_t          db1;
     PkMachineContext  ctx;
-
     MARK_TRAP(STOP_DOORBELL_HANDLER)
     PK_TRACE("DB-IRQ: %d", irq);
-
-    db1 = in32_sh(CME_LCL_EISR);
-    g_eimr_override |= BITS64(40, 2);
-
-    if (db1 & BIT32(8))
-    {
-        g_eimr_override &= ~IRQ_VEC_WAKE_C0;
-    }
-
-    if (db1 & BIT32(9))
-    {
-        g_eimr_override &= ~IRQ_VEC_WAKE_C1;
-    }
-
     pk_irq_vec_restore(&ctx);
 }

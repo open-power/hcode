@@ -34,11 +34,14 @@
 /// \brief Application specific overrides go here.
 ///
 
-#define STOP_PRIME          0
-#define SKIP_L3_PURGE       0
-#define SKIP_L3_PURGE_ABORT 0
-#define SKIP_CME_BOOT       1
-#define SKIP_IPL_SETUP      1
+#define STOP_PRIME           0
+#define SKIP_L3_PURGE        0
+#define SKIP_L3_PURGE_ABORT  0
+#define SKIP_CME_BOOT_STOP11 1
+#define SKIP_CME_BOOT_IPL_HB 1
+#define SKIP_ARRAYINIT       1
+#define SKIP_SCAN0           1
+#define SKIP_INITF           0
 
 // --------------------
 
@@ -51,6 +54,7 @@
     #define PK_TRACE_BUFFER_WRAP_MARKER 1
 #endif
 #define PK_TRACE_TIMER_OUTPUT 0
+#define PK_TRACE_ENABLE       1
 
 // --------------------
 
