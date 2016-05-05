@@ -24,7 +24,18 @@
 # IBM_PROLOG_END_TAG
 
 IMAGE=cme_image
-CME_IMAGE_DEPS=$$($(IMAGE)_PATH)/.cme_image.normalize.bin.built
 
-$(call APPEND_EMPTY_SECTION,hcode,1024,$(CME_IMAGE_DEPS))
+# before appending the various sectoins of the xip image
+# we need to wait until the raw xxx_image.bin and the
+# various sub images are finished - add a dependancy on both below
+CME_BIN_FILE=$(IMAGEPATH)/cme/cme.bin
+
+# adding the build user name is the last thing done to the
+# raw cem_image.bin file before we append sections
+CME_IMAGE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
+
+CME_IMAGE_DEPS+= $(CME_BIN_FILE)
+
+$(call XIP_TOOL,append,.hcode,$(CME_IMAGE_DEPS),$(CME_BIN_FILE))
+$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
 $(call BUILD_XIPIMAGE)

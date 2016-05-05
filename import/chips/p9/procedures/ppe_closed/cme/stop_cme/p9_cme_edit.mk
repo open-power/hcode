@@ -23,9 +23,11 @@
 #
 # IBM_PROLOG_END_TAG
 EXE=cmeImgEdit
+IMAGE_DEPS+=cmeImgEdit
 OBJS=p9_cme_img_edit.o
 $(call BUILD_EXE)
 
 EXE=cpmr_headerImgEdit
+IMAGE_DEPS+=cpmr_headerImgEdit
 OBJS=p9_cme_img_edit.o
 $(call BUILD_EXE)

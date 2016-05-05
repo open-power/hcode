@@ -24,10 +24,12 @@
 # IBM_PROLOG_END_TAG
 IMAGE=restore_image
 
+# create dependency on the restore image hcode and the final step in the
+# raw image.bin creation
 SELF_REST_TARGET=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin
 
-SELF_REST_DEPS=$$($(IMAGE)_PATH)/.restore_image.normalize.bin.built
+SELF_REST_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
 
 $(call XIP_TOOL,append,.self_restore,$(SELF_REST_DEPS),$(SELF_REST_TARGET))
-
+$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.self_restore,,)
 $(call BUILD_XIPIMAGE)

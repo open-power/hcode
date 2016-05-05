@@ -23,5 +23,6 @@
 #
 # IBM_PROLOG_END_TAG
 EXE=ppetracepp
+IMAGE_DEPS+=ppetracepp
 OBJS=ppetracepp.o
 $(call BUILD_EXE)

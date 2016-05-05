@@ -23,9 +23,11 @@
 #
 # IBM_PROLOG_END_TAG
 EXE=stop_gpeImgEdit
+IMAGE_DEPS+=stop_gpeImgEdit
 OBJS=p9_sgpe_img_edit.o
 $(call BUILD_EXE)
 
 EXE=qpmr_headerImgEdit
+IMAGE_DEPS+=qpmr_headerImgEdit
 OBJS=p9_sgpe_img_edit.o
 $(call BUILD_EXE)
