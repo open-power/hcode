@@ -45,7 +45,7 @@
 
 
 
-typedef union tpc_perv_gp3
+typedef union tpc_perv_ctrl0
 {
 
     uint64_t value;
@@ -63,21 +63,23 @@ typedef union tpc_perv_gp3
     {
 #ifdef _BIG_ENDIAN
         uint64_t tp_chiplet_chiplet_en_dc : 1;
-        uint64_t put_in_later0 : 25;
+        uint64_t put_in_later0 : 24;
         uint64_t tp_chiplet_fence_pcb_dc : 1;
-        uint64_t put_in_later1 : 37;
+        uint64_t put_in_later1 : 6;
+        uint64_t reserved : 32;
 #else
-        uint64_t put_in_later1 : 37;
+        uint64_t reserved : 32;
+        uint64_t put_in_later1 : 6;
         uint64_t tp_chiplet_fence_pcb_dc : 1;
-        uint64_t put_in_later0 : 25;
+        uint64_t put_in_later0 : 24;
         uint64_t tp_chiplet_chiplet_en_dc : 1;
 #endif // _BIG_ENDIAN
     } fields;
-} tpc_perv_gp3_t;
+} tpc_perv_ctrl0_t;
 
 
 
-typedef union tpc_gp0
+typedef union tpc_cplt_conf0
 {
 
     uint64_t value;
@@ -94,22 +96,22 @@ typedef union tpc_gp0
     struct
     {
 #ifdef _BIG_ENDIAN
-        uint64_t put_in_later0 : 40;
-        uint64_t tc_node_id_dc : 3;
-        uint64_t tc_chip_id_dc : 3;
-        uint64_t put_in_later1 : 18;
+        uint64_t put_in_later0 : 48;
+        uint64_t tc_unit_group_id_dc : 4;
+        uint64_t tc_unit_chip_id_dc : 3;
+        uint64_t put_in_later1 : 9;
 #else
-        uint64_t put_in_later1 : 18;
-        uint64_t tc_chip_id_dc : 3;
-        uint64_t tc_node_id_dc : 3;
-        uint64_t put_in_later0 : 40;
+        uint64_t put_in_later1 : 9;
+        uint64_t tc_unit_chip_id_dc : 3;
+        uint64_t tc_unit_group_id_dc : 4;
+        uint64_t put_in_later0 : 48;
 #endif // _BIG_ENDIAN
     } fields;
-} tpc_gp0_t;
+} tpc_cplt_conf0_t;
 
 
 
-typedef union tpc_gp0_and
+typedef union tpc_cplt_conf0_and
 {
 
     uint64_t value;
@@ -126,22 +128,22 @@ typedef union tpc_gp0_and
     struct
     {
 #ifdef _BIG_ENDIAN
-        uint64_t put_in_later0 : 40;
-        uint64_t tc_node_id_dc : 3;
-        uint64_t tc_chip_id_dc : 3;
-        uint64_t put_in_later1 : 18;
+        uint64_t put_in_later0 : 48;
+        uint64_t tc_unit_group_id_dc : 4;
+        uint64_t tc_unit_chip_id_dc : 3;
+        uint64_t put_in_later1 : 9;
 #else
-        uint64_t put_in_later1 : 18;
-        uint64_t tc_chip_id_dc : 3;
-        uint64_t tc_node_id_dc : 3;
-        uint64_t put_in_later0 : 40;
+        uint64_t put_in_later1 : 9;
+        uint64_t tc_unit_chip_id_dc : 3;
+        uint64_t tc_unit_group_id_dc : 4;
+        uint64_t put_in_later0 : 48;
 #endif // _BIG_ENDIAN
     } fields;
-} tpc_gp0_and_t;
+} tpc_cplt_conf0_and_t;
 
 
 
-typedef union tpc_gp0_or
+typedef union tpc_cplt_conf0_or
 {
 
     uint64_t value;
@@ -158,18 +160,18 @@ typedef union tpc_gp0_or
     struct
     {
 #ifdef _BIG_ENDIAN
-        uint64_t put_in_later0 : 40;
-        uint64_t tc_node_id_dc : 3;
-        uint64_t tc_chip_id_dc : 3;
-        uint64_t put_in_later1 : 18;
+        uint64_t put_in_later0 : 48;
+        uint64_t tc_unit_group_id_dc : 4;
+        uint64_t tc_unit_chip_id_dc : 3;
+        uint64_t put_in_later1 : 9;
 #else
-        uint64_t put_in_later1 : 18;
-        uint64_t tc_chip_id_dc : 3;
-        uint64_t tc_node_id_dc : 3;
-        uint64_t put_in_later0 : 40;
+        uint64_t put_in_later1 : 9;
+        uint64_t tc_unit_chip_id_dc : 3;
+        uint64_t tc_unit_group_id_dc : 4;
+        uint64_t put_in_later0 : 48;
 #endif // _BIG_ENDIAN
     } fields;
-} tpc_gp0_or_t;
+} tpc_cplt_conf0_or_t;
 
 
 
@@ -221,21 +223,31 @@ typedef union tpc_device_id
     {
 #ifdef _BIG_ENDIAN
         uint64_t cfam_id : 32;
+        uint64_t constant : 4;
+        uint64_t socket_id : 3;
+        uint64_t chippos_id : 1;
+        uint64_t io_tp_vsb_chip_pos : 1;
+        uint64_t constant1 : 7;
         uint64_t fuse_nx_allow_crypto : 1;
         uint64_t fuse_vmx_crypto_dis : 1;
         uint64_t fuse_fp_throttle_en : 1;
-        uint64_t reserved32 : 1;
-        uint64_t socket_id : 3;
-        uint64_t chippos_id : 1;
-        uint64_t _reserved0 : 24;
+        uint64_t tp_np_nvlink_disable : 1;
+        uint64_t fuse_topology_2chip : 1;
+        uint64_t fuse_topology_group : 2;
+        uint64_t constant2 : 9;
 #else
-        uint64_t _reserved0 : 24;
-        uint64_t chippos_id : 1;
-        uint64_t socket_id : 3;
-        uint64_t reserved32 : 1;
+        uint64_t constant2 : 9;
+        uint64_t fuse_topology_group : 2;
+        uint64_t fuse_topology_2chip : 1;
+        uint64_t tp_np_nvlink_disable : 1;
         uint64_t fuse_fp_throttle_en : 1;
         uint64_t fuse_vmx_crypto_dis : 1;
         uint64_t fuse_nx_allow_crypto : 1;
+        uint64_t constant1 : 7;
+        uint64_t io_tp_vsb_chip_pos : 1;
+        uint64_t chippos_id : 1;
+        uint64_t socket_id : 3;
+        uint64_t constant : 4;
         uint64_t cfam_id : 32;
 #endif // _BIG_ENDIAN
     } fields;
