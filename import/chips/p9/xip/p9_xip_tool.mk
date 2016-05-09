@@ -23,7 +23,8 @@
 #
 # IBM_PROLOG_END_TAG
 EXE = p9_xip_tool
+$(EXE)_COMMONFLAGS += -DXIP_TOOL_ENABLE_DISSECT
 OBJS += $(EXE).o
-$(EXE)_COMMONFLAGS += -DDEBUG_P9_XIP_IMAGE=1
-$(EXE)_DEPLIBS += p9_xip_image
+$(EXE)_DEPLIBS += p9_xip_image p9_tor p9_ringId
+$(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/tools/imageProcs)
 $(call BUILD_EXE)
