@@ -24,11 +24,16 @@
 # IBM_PROLOG_END_TAG
 IMAGE=sgpe_image
 
-STOP_GPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
+# add dependency on the raw image.bin file
+SGPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
 
-$(call APPEND_EMPTY_SECTION,qpmr,1024,$(STOP_GPE_DEPS))
+# dependencies for bin files needed in the sgpe xip image
+QPMR_BIN_FILE=$(IMAGEPATH)/qpmr_header/qpmr_header.bin
+SGPE_BIN_FILE=$(IMAGEPATH)/stop_gpe/stop_gpe.bin
+
+$(call XIP_TOOL,append,.qpmr,$(SGPE_DEPS) $(QPMR_BIN_FILE) ,$(QPMR_BIN_FILE))
 $(call APPEND_EMPTY_SECTION,lvl1_bl,1024,$$($(IMAGE)_PATH)/.$(IMAGE).append.qpmr)
 $(call APPEND_EMPTY_SECTION,lvl2_bl,1024,$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl)
-$(call APPEND_EMPTY_SECTION,hcode,1024,$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl)
-$(call XIP_TOOL,,report,$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode,)
+$(call XIP_TOOL,append,.hcode, $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl $(SGPE_BIN_FILE),$(SGPE_BIN_FILE))
+$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
 $(call BUILD_XIPIMAGE)
