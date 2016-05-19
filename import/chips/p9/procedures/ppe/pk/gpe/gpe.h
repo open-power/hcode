@@ -36,8 +36,14 @@
     #include "ppe42.h"
 #endif
 
+#ifndef PBASLVCTLN
+    #define PBASLVCTLN 0
+#endif
+
 #include "ocb_register_addresses.h"
 #include "gpe_common.h"
+
+#include "pba_register_addresses.h"
 
 /*
 #include "pcbs_register_addresses.h"

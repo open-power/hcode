@@ -41,7 +41,7 @@
 # Object Files
 ##########################################################################
 
-GPE-C-SOURCES = gpe_init.c gpe_irq_init.c
+GPE-C-SOURCES = gpe_init.c gpe_irq_init.c gpe_pba_cntl.c
 GPE-S-SOURCES = gpe_scom_handler.S
 
 GPE-TIMER-C-SOURCES = 
