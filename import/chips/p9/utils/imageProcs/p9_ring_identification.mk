@@ -1,11 +1,11 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p9/xip/p9_xip_tool.mk $
+# $Source: import/chips/p9/utils/imageProcs/p9_ring_identification.mk $
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2015,2017
 # [+] International Business Machines Corp.
 #
 #
@@ -22,9 +22,5 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-EXE = p9_xip_tool
-$(EXE)_COMMONFLAGS += -DXIP_TOOL_ENABLE_DISSECT
-OBJS += $(EXE).o
-$(EXE)_DEPLIBS += p9_xip_image p9_tor p9_ringId
-$(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/utils/imageProcs)
-$(call BUILD_EXE)
+PROCEDURE = p9_ring_identification
+$(call BUILD_PROCEDURE)
