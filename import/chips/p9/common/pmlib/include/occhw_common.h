@@ -572,12 +572,13 @@
 /// return to DIMM_SENSOR_STATUS_VALID_OLD after this register is read.
 #define DIMM_SENSOR_STATUS_VALID_NEW 3
 
-
-/// OCCHW common panic codes
-#define OCCHW_INSTANCE_MISMATCH     0x00622400
-#define OCCHW_IRQ_ROUTING_ERROR     0x00622401
-#define OCCHW_XIR_INVALID_POINTER   0x00622402
-#define OCCHW_XIR_INVALID_GPE       0x00622403
-
+/// OCCHW SSX panic codes
+/// For PK panic codes, see pk_panic_codes.h
+#ifdef __SSX__
+    #define OCCHW_INSTANCE_MISMATCH     0x00622400
+    #define OCCHW_IRQ_ROUTING_ERROR     0x00622401
+    #define OCCHW_XIR_INVALID_POINTER   0x00622402
+    #define OCCHW_XIR_INVALID_GPE       0x00622403
+#endif
 
 #endif  /* __OCCHW_COMMON_H__ */
