@@ -1,0 +1,149 @@
+#run-command-file "%script%/occ-complex-system.include"
+# copied here for simplicity
+###
+if defined verbose {echo "Hardware..."}
+if not defined gpes_per_occ      {$gpes_per_occ      = 4}
+if not defined freq_mhz_405      {$freq_mhz_405      = 600}
+if not defined freq_mhz_gpe      {$freq_mhz_gpe      = 600}
+if not defined sram_size_occ    {$sram_size_occ    = 786432}
+log-level 1
+#add-directory "%script%/images/"
+
+if defined verbose {echo "   - Load Simics Models"}
+load-module powman_complex
+
+if defined verbose {echo "   - Create OCC Objects"}
+$occ = (create-powman-complex complex_type = occ
+                              gpes_per_occ = $gpes_per_occ
+                              freq_mhz_405 = $freq_mhz_405
+                              freq_mhz_gpe = $freq_mhz_gpe
+                              sram_size_occ = $sram_size_occ)
+
+if defined verbose {echo "   - Instantiate System"}
+instantiate-components
+
+
+
+#run-command-file "%script%/occ-complex-setup.include"
+
+$verbose = 1
+
+if defined verbose {echo "Software..."}
+
+if defined verbose {echo "   - Configure Settings"}
+
+# Setup software here, $occ_sym_tbl_file can be same as $occ_binary_to_load.
+#if not defined occ_gpe0_binary_to_load {$occ_gpe0_binary_to_load = "../git/pm/p9_code/obj/sample_gpe/sample_gpe.out"}
+if not defined occ_gpe0_binary_to_load {$occ_gpe0_binary_to_load = "../../../obj/bootLoader/bootCopier.out"}
+if not defined occ_gpe0_sym_tbl_file   {$occ_gpe0_sym_tbl_file = $occ_gpe0_binary_to_load}
+if not defined occ_host_name      {$occ_host_name = "OCC Complex Model"}
+
+###
+
+if defined verbose {echo "   - Prepare OCC Binary"}
+
+p9chip0->system_info = $occ_host_name
+
+# Check the binary to load
+if not (lookup-file -query $occ_gpe0_binary_to_load) {
+        # Error if no binary provided
+        echo "There is no GPE0 software loaded on the machine."
+
+} else {
+        # Load the binary
+        p9chip0.pob_space.load-binary $occ_gpe0_binary_to_load
+
+        # Load Symbols from symbol table for debugging
+        if defined verbose {echo "   - Load Symbols Table"}
+
+        if (lookup-file -query $occ_gpe0_sym_tbl_file) {
+	        new-symtable -n sym_tbl_gpe3 file=$occ_gpe0_sym_tbl_file
+            p9chip0.gpe_ctx3.symtable sym_tbl_gpe3
+        #    sym_tbl.load-symbols "../occBootLoader/bootloader.out"
+        } else {
+	        echo "Could not locate symbol table file"
+	}
+}
+
+###############################################
+## Add some instructions that place the 405 in
+## the wait state so simics doesn't waste time
+## trying to run 405 code.
+###############################################
+#load imm 0x00040000 into r0
+p9chip0.oci_space.write 0xfffffff0 0x3c000004
+#move r0 to msr
+p9chip0.oci_space.write 0xfffffff4 0x7c000124
+#branch to self
+p9chip0.oci_space.write 0xfffffff8 0x48000000
+# reset vector: branch backwards 4 instructions (CIA - 12)
+p9chip0.oci_space.write 0xfffffffc 0x4bfffff4
+
+#Initialize IVPR
+#IVPR is set to the start of OCI-SRAM tank
+p9chip0.oci_space.write 0xc0030008 0xFFF30000 -b
+
+#p9chip0.gpe0.write-reg pir value=0x00000000
+p9chip0.gpe3.write-reg pir value=0x00000003
+
+#Write to gpe3 XCR to reset PPE, enable-timers and set state to running
+p9chip0.oci_space.write 0xc0030080 0x60000000 -b
+p9chip0.oci_space.write 0xc0030080 0x40000000 -b
+p9chip0.oci_space.write 0xc0030080 0x20000000 -b
+p9chip0.oci_space.write 0xc0030080 0x60000000 -b
+p9chip0.oci_space.write 0xc0030080 0x40000000 -b
+p9chip0.oci_space.write 0xc0030080 0x20000000 -b
+
+system-perfmeter 0.01 -summary -mips
+
+p9chip0.cell.cpu-switch-time cycles = 1000
+
+
+
+## Old code: 
+## p9chip0.pob_space.load-binary ../../../obj/bootLoader/bootCopier.out
+## p9chip0.pba->pba_bar0 = 0x0
+## p9chip0.pba->pba_slvctl0 = 0x87005cc000000000
+## p9chip0.gpe0.write-reg iar 0x10000040
+
+## New code(with correct offsets):
+## p9chip0.pob_space.load-file ../../../obj/bootLoader/bootCopier.bin 0x100200
+## ##p9chip0.pba->pba_bar0 = 0x0
+## p9chip0.pba->pba_bar0 = 0x100000
+## p9chip0.pba->pba_slvctl0 = 0x87005cc000000000
+## p9chip0.gpe0.write-reg iar 0x10100240
+
+
+p9chip0.pob_space.load-file ../../../obj/bootLoader/bootCopier.bin 0x200
+p9chip0.pob_space.load-file ../../../obj/bootLoader/bootLoader.bin 0x600
+p9chip0.pob_space.load-file ../../../ppe_closed/sgpe/stop_gpe/obj/stop_gpe/stop_gpe.bin 0x1400
+
+
+p9chip0.pba->pba_bar0 = 0x0
+#p9chip0.pba->pba_slvctl0 = 0x87005cc000000000
+p9chip0.pba->pba_slvctl0 = 0xF7005cc000000000
+p9chip0.gpe3.write-reg iar 0x80000240
+
+######QPMR Head setup
+# BootLoader Offset 
+p9chip0.pob_space.write 0x10 0x600
+#BootLoader Length
+p9chip0.pob_space.write 0x14 0x400
+#SGPE Hcode Offset
+p9chip0.pob_space.write 0x28 0x1400
+#SGPE Hcode Length (384B + 128B + 16KB - from spec)
+p9chip0.pob_space.write 0x2C 0x4200
+p9chip0.pba->pba_mode=0x0000800000000000
+#log-level 4
+#output-radix 16
+output-file-start -overwrite filename = session_new.txt 
+
+#p9chip0.oci_space.break 0xfff30000 4 -r -w
+#p9chip0.oci_space.break 0xfff3583c 4 -r -w
+#p9chip0.oci_space.break 0xfff3fcf4 4 -x
+#p9chip0.oci_space.break 0xfff35560 4 -x
+#p9chip0.oci_space.break 0xfff355b4 4 -x
+#p9chip0.oci_space.break 0xfff355b8 4 -x 
+#p9chip0.oci_space.break 0xfff3218c 4 -x 
+
+##wait for occflg 

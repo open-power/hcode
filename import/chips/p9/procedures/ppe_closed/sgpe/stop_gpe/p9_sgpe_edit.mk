@@ -26,6 +26,6 @@ EXE=stop_gpeImgEdit
 OBJS=p9_sgpe_img_edit.o
 $(call BUILD_EXE)
 
-EXE=qpmrHeaderImgEdit
+EXE=qpmr_headerImgEdit
 OBJS=p9_sgpe_img_edit.o
 $(call BUILD_EXE)

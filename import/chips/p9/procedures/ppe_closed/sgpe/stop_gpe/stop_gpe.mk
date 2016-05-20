@@ -23,13 +23,14 @@
 #
 # IBM_PROLOG_END_TAG
 #
-IMAGE=qpmrHeader
+
+IMAGE=qpmr_header
 
 # Target tool chain
 $(IMAGE)_TARGET=PPE
 
 #linkscript to use
-$(IMAGE)_LINK_SCRIPT=qpmrLink
+$(IMAGE)_LINK_SCRIPT=linkqpmr.cmd
 
 OBJS = p9_sgpe_qpmr.o
 $(call BUILD_BINHEADER)
@@ -44,7 +45,7 @@ EKB_BUILD = 1
 
 ## Set _TARGET = PPC2PPE to use the 405 compiler with PPE backend or
 #  set _TARGET = PPE to use the new native compiler
-$(IMAGE)_TARGET=PPC2PPE
+$(IMAGE)_TARGET=PPE
 
 ## PPE_TYPE can be std or gpe
 _PPE_TYPE=gpe

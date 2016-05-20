@@ -1,7 +1,7 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p9/procedures/ppe_closed/cme/stop_cme/p9_cme_edit.mk $
+# $Source: import/chips/p9/procedures/ppe_closed/pgpe/boot/topfiles.mk $
 #
 # OpenPOWER HCODE Project
 #
@@ -22,10 +22,18 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-EXE=cmeImgEdit
-OBJS=p9_cme_img_edit.o
-$(call BUILD_EXE)
+TOP-C-SOURCES = 
+TOP-S-SOURCES =  pgpe_boot_loader.S pgpe_boot_copier.S
 
-EXE=cpmr_headerImgEdit
-OBJS=p9_cme_img_edit.o
-$(call BUILD_EXE)
+TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)
+
+BOOT-LOADER-C-SOURCES = 
+BOOT-LOADER-S-SOURCES =  pgpe_boot_loader.S 
+
+BOOT_LOADER_OBJECTS = $(BOOT-LOADER-C-SOURCES:.c=.o) $(BOOT-LOADER-S-SOURCES:.S=.o)
+
+
+BOOT-COPIER-C-SOURCES = 
+BOOT-COPIER-S-SOURCES =  pgpe_boot_copier.S 
+
+BOOT_COPIER_OBJECTS = $(BOOT-COPIER-C-SOURCES:.c=.o) $(BOOT-COPIER-S-SOURCES:.S=.o)
