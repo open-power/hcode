@@ -48,10 +48,10 @@ void instance_scan_init( )
     uint32_t l_bceMbase = CME_INST_SPEC_RING_START;
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (l_cmePir) : "i" (SPR_NUM_PIR));
     l_cmePir = l_cmePir & CME_INST_ID_MASK;     // get CME instance number
-    CmeImageHeader_t* pCmeImgHdr = (CmeImageHeader_t*)(CME_IMG_HDR_ADDR);
+    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_IMG_HDR_ADDR);
 
     //calculate start address of block copy and length of block copy
-    l_bcLength = pCmeImgHdr->coreSpecificRingLength; // integral multiple of 32.
+    l_bcLength = pCmeImgHdr->g_cme_max_spec_ring_length; // integral multiple of 32.
     //let us find out HOMER address where core specific scan rings reside.
     l_bceMbase = l_bceMbase + ( l_cmePir * l_bcLength );
     l_bceMbase = (l_bceMbase >> 5 );
@@ -60,7 +60,7 @@ void instance_scan_init( )
     // Offset below is wrt start of CME's SRAM. It is an integral
     // multiple of 32 and is populated by Hcode Image build while
     // building HOMER.
-    uint32_t cmeSbase = pCmeImgHdr->coreSpecificRingOffset;
+    uint32_t cmeSbase = pCmeImgHdr->g_cme_core_spec_ring_offset;
     PK_TRACE( "Start second block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  CME Ist %d",
               l_bceMbase, cmeSbase, l_bcLength, l_cmePir );
 
