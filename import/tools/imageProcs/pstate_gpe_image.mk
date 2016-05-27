@@ -24,14 +24,18 @@
 # IBM_PROLOG_END_TAG
 
 IMAGE=pstate_gpe_image
+# add dependency on the raw image.bin file completion
+PGPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
 
-#binary image file to add into the image
+# dependencies for bin files needed in the pgpe xip image
+LVL1_BL_BIN_FILE=$(IMAGEPATH)/pgpe_lvl1_copier/pgpe_lvl1_copier.bin
+LVL2_BL_BIN_FILE=$(IMAGEPATH)/pgpe_lvl2_loader/pgpe_lvl2_loader.bin
 PGPE_BIN_FILE=$(IMAGEPATH)/pstate_gpe/pstate_gpe.bin
 
-PGPE_IMAGE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
-PGPE_IMAGE_DEPS+= $(PGPE_BIN_FILE)
-
-$(call XIP_TOOL,append,.hcode,$(PGPE_IMAGE_DEPS),$(PGPE_BIN_FILE))
-$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
-
+$(call XIP_TOOL,append,.lvl1_bl,$(PGPE_DEPS) $(LVL1_BL_BIN_FILE), $(LVL1_BL_BIN_FILE))
+$(call XIP_TOOL,append,.lvl2_bl,$(PGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl \
+   	$(LVL2_BL_BIN_FILE), $(LVL2_BL_BIN_FILE))
+$(call XIP_TOOL,append,.hcode,$(PGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl \
+	$(PGPE_BIN_FILE),$(PGPE_BIN_FILE))
+$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode,)
 $(call BUILD_XIPIMAGE)
