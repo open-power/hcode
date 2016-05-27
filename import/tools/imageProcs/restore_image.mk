@@ -26,10 +26,20 @@ IMAGE=restore_image
 
 # create dependency on the restore image hcode and the final step in the
 # raw image.bin creation
-SELF_REST_TARGET=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin
-
 SELF_REST_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
 
-$(call XIP_TOOL,append,.self_restore,$(SELF_REST_DEPS),$(SELF_REST_TARGET))
-$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.self_restore,,)
+SELF_RESTORE_BIN=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin
+CPRM_HEADER_BIN=$(IMAGEPATH)/cpmr_header/cpmr_header.bin
+
+# apending the cpmr header is also dependent on the raw image being complete
+CPMR_HEADER_DEPS=$(SELF_REST_DEPS)
+CPMR_HEADER_DEPS+=$(CPRM_HEADER_BIN)
+
+# make sure we append the restore image after the cpmr header
+SELF_RESTORE_DEPS+=$$($(IMAGE)_PATH)/.restore_image.append.cpmr
+
+$(call XIP_TOOL,append,.cpmr,$(CPMR_HEADER_DEPS),$(CPRM_HEADER_BIN))
+$(call XIP_TOOL,append,.self_restore,$(SELF_RESTORE_DEPS),$(SELF_RESTORE_BIN))
+$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.self_restore)
+
 $(call BUILD_XIPIMAGE)
