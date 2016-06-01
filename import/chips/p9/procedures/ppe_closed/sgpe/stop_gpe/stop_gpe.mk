@@ -111,6 +111,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(PM_LIBDIR)/occlib \
 	$(HCODE_LIBDIR) \
 	$(HCODE_COMMON_LIBDIR) \
+	$(HCODE_UTILS_INCDIR) \
 	)
 
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
