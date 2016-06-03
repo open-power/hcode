@@ -88,24 +88,6 @@ SECTIONS
     _lvl2_bl_size = . - _lvl2_bl_origin;
 
     ////////////////////////////////
-    // Vectors
-    ////////////////////////////////
-    . = ALIGN(8);
-    _vect_origin = .;
-    _vect_offset = . - _sgpe_image_origin;
-    .vect . : { *(.vect) }
-    _vect_size = . - _vect_origin;
-
-    ////////////////////////////////
-    // SGPE Image Header
-    ////////////////////////////////
-    . = ALIGN(8);
-    _sgpe_image_header_origin = .;
-    _sgpe_image_header_offset = . - _sgpe_image_origin;
-    .sgpe_image_header . : { *(.sgpe_image_header) }
-    _sgpe_image_header_size = . - _sgpe_image_header_origin;
-
-    ////////////////////////////////
     // HCODE
     ////////////////////////////////
     . = ALIGN(8);

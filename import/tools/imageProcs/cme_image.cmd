@@ -60,24 +60,6 @@ SECTIONS
     _strings_size = . - _strings_origin;
 
     ////////////////////////////////
-    // VECT
-    ////////////////////////////////
-    . = ALIGN(8);
-    _vect_origin = .;
-    _vect_offset = . - _cme_image_origin;
-    .vect . : { *(.vect) }
-    _vect_size = . - _vect_origin;
-
-    ////////////////////////////////
-    // CME IMAGE HEADER
-    ////////////////////////////////
-    . = ALIGN(8);
-    _cme_image_header_origin = .;
-    _cme_image_header_offset = . - _cme_image_origin;
-    .cme_image_header . : { *(.cme_image_header) }
-    _cme_image_header_size = . - _cme_image_header_origin;
-
-    ////////////////////////////////
     // HCODE
     ////////////////////////////////
     . = ALIGN(8);
@@ -85,24 +67,6 @@ SECTIONS
     _hcode_offset = . - _cme_image_origin;
     .hcode . : { *(.hcode) }
     _hcode_size = . - _hcode_origin;
-
-    ////////////////////////////////
-    // CMN RING
-    ////////////////////////////////
-    . = ALIGN(8);
-    _cmn_ring_origin = .;
-    _cmn_ring_offset = . - _cme_image_origin;
-    .cmn_ring . : { *(.cmn_ring) }
-    _cmn_ring_size = . - _cmn_ring_origin;
-
-    ////////////////////////////////
-    // SPEC RING
-    ///////////////////////////////
-    . = ALIGN(8);
-    _spec_ring_origin = .;
-    _spec_ring_offset = . - _cme_image_origin;
-    .spec_ring . : { *(.spec_ring) }
-    _spec_ring_size = . - _spec_ring_origin;
 
     ////////////////////////////////
     // end of the image

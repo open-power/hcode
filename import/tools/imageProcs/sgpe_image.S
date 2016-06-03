@@ -68,10 +68,10 @@ __header_64_reserved:
         .xip_section qpmr,              8
         .xip_section lvl1_bl,           8
         .xip_section lvl2_bl,           8
-        .xip_section vect,              8
-        .xip_section sgpe_image_header  8
         .xip_section hcode,             8
 
+        .xip_section
+        .xip_section
         .xip_section
         .xip_section
         .xip_section

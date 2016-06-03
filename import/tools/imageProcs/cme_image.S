@@ -63,12 +63,12 @@ __header_64_reserved:
         .xip_section toc,          4
         .xip_section strings
 
-        .xip_section vect,             8
-        .xip_section cme_image_header, 8
-        .xip_section hcode,            8
-        .xip_section cmn_ring,         8
-        .xip_section spec_ring,        8
+        .xip_section hcode,        8
 
+        .xip_section
+        .xip_section
+        .xip_section
+        .xip_section
         .xip_section
         .xip_section
         .xip_section
