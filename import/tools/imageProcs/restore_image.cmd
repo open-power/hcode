@@ -79,24 +79,6 @@ SECTIONS
     _self_restore_size = . - _self_restore_origin;
 
     ////////////////////////////////
-    // SPR Restore
-    ////////////////////////////////
-    . = ALIGN(8);
-    _spr_restore_origin = .;
-    _spr_restore_offset = . - _restore_image_origin;
-    .spr_restore . : { *(.spr_restore) }
-    _spr_restore_size = . - _spr_restore_origin;
-
-    ////////////////////////////////
-    // SCOM Restore
-    ////////////////////////////////
-    . = ALIGN(8);
-    _scom_restore_origin = .;
-    _scom_restore_offset = . - _restore_image_origin;
-    .scom_restore . : { *(.scom_restore) }
-    _scom_restore_size = . - _scom_restore_origin;
-
-    ////////////////////////////////
     // end of the image
     ////////////////////////////////
     . = ALIGN(8);
