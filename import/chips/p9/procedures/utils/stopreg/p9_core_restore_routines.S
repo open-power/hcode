@@ -295,10 +295,13 @@ rfid
 thread_launcher_start:
 
 mfspr PIR_VAL_REG, PIR       #Processor Identification Register
-mfspr CPMR_BASE_REG, HRMOR
-lbz FUSED_STATUS_REG, 31(CPMR_BASE_REG)
-cmpwi FUSED_STATUS_REG, FUSED_MODE_CONST
-bne core_is_not_fused
+
+#Select to read the Thread State Status register in PC using SPRC & SPRD
+li TEMP_REG, CORE_THREAD_STATE_REG_ID_CONST   
+mtspr SPRC, TEMP_REG
+mfspr FUSED_STATUS_REG, SPRD
+extrdi. FUSED_STATUS_REG, FUSED_STATUS_REG, 1, 63
+beq core_is_not_fused
 
 core_is_fused:
 #core is fused. Find physical core number from PIR bits.
@@ -334,6 +337,7 @@ jump_thread_restore:
 extrdi TEMP_REG, PIR_VAL_REG, 3, 57 # get quad bits
 sldi TEMP_REG, TEMP_REG, 2          # quad id * 4 core chiplets per quad
 add CORE_ID_REG, CORE_ID_REG, TEMP_REG # P9 core id = 4 * quad id + index within Quad
+mfspr CPMR_BASE_REG, HRMOR
 
 #************* find address where restore instructions are present**********
 
@@ -373,10 +377,6 @@ blrl                                          #branch to thread register restore
 thread_restore_return:
 cmpwi THREAD_ID_REG, 0                        # is it thread 0
 bne enter_stop_state                          # if thread not in STOP 15
-li TEMP_REG, CORE_THREAD_STATE_REG_ID_CONST   # thread 0 has more to do
-
-#Select to read the Thread State Status register in PC using SPRC & SPRD
-mtspr SPRC, TEMP_REG
 
 wait_until_single_thread:          # wait till all threads are done restoring
 mfspr TEMP_REG, SPRD
