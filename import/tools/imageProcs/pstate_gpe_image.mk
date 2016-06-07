@@ -25,7 +25,7 @@
 
 IMAGE=pstate_gpe_image
 # add dependency on the raw image.bin file completion
-PGPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
+PGPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host
 
 # dependencies for bin files needed in the pgpe xip image
 LVL1_BL_BIN_FILE=$(IMAGEPATH)/pgpe_lvl1_copier/pgpe_lvl1_copier.bin

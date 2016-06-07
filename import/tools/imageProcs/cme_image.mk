@@ -30,9 +30,9 @@ IMAGE=cme_image
 # various sub images are finished - add a dependancy on both below
 CME_BIN_FILE=$(IMAGEPATH)/cme/cme.bin
 
-# adding the build user name is the last thing done to the
+# adding the build host name is the last thing done to the
 # raw cem_image.bin file before we append sections
-CME_IMAGE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
+CME_IMAGE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host
 
 CME_IMAGE_DEPS+= $(CME_BIN_FILE)
 

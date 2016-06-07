@@ -25,7 +25,7 @@
 IMAGE=sgpe_image
 
 # add dependency on the raw image.bin file completion
-SGPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
+SGPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host
 
 # dependencies for bin files needed in the sgpe xip image
 QPMR_BIN_FILE=$(IMAGEPATH)/qpmr_header/qpmr_header.bin

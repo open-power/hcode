@@ -26,7 +26,7 @@ IMAGE=restore_image
 
 # create dependency on the restore image hcode and the final step in the
 # raw image.bin creation
-SELF_REST_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_user
+SELF_REST_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host
 
 SELF_RESTORE_BIN=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin
 CPRM_HEADER_BIN=$(IMAGEPATH)/cpmr_header/cpmr_header.bin
