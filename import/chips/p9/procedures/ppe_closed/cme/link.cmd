@@ -38,10 +38,11 @@ MEMORY
  sram : ORIGIN = SRAM_START, LENGTH = SRAM_LENGTH
 }
 
-// This symbol is only needed by external debug tools, so add this command
-// to ensure that table is pulled in by the linker even though PPE code
-// never references it.
+// The linker will discard any symbols and sections it deems are unused.
+// Declare as EXTERN any symbols only used externally to ensure the linker
+// keeps them even though PPE code never references them.
 EXTERN(pk_debug_ptrs);
+EXTERN(g_cme_magic_word);
 
 SECTIONS
 {
@@ -53,6 +54,9 @@ SECTIONS
 
     .vectors  _VECTOR_START  : { *(.vectors) } > sram
 
+    _CME_IMG_HEADER = _VECTOR_START + CME_IMAGE_OFFSET;
+    .cme_image_header _CME_IMG_HEADER : { *(.cme_image_header) } > sram
+
     ///////////////////////////////////////////////////////////////////////////
     // Debug Pointers Table
     //
@@ -63,6 +67,7 @@ SECTIONS
     _DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
 
+    CME_IMG_START = .;
     ////////////////////////////////
     // All non-vector code goes here
     ////////////////////////////////

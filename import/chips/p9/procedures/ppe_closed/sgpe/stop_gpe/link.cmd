@@ -43,10 +43,11 @@ MEMORY
  sram : ORIGIN = SRAM_START, LENGTH = SRAM_LENGTH
 }
 
-// This symbol is only needed by external debug tools, so add this command
-// to ensure that table is pulled in by the linker even though PPE code
-// never references it.
+// The linker will discard any symbols and sections it deems are unused.
+// Declare as EXTERN any symbols only used externally to ensure the linker
+// keeps them even though PPE code never references them.
 EXTERN(pk_debug_ptrs);
+EXTERN(g_sgpe_magic_word);
 
 SECTIONS
 {
