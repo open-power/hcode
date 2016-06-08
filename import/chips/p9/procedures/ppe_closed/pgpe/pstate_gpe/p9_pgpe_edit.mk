@@ -1,11 +1,11 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/topfiles.mk $
+# $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe_edit.mk $
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2016,2017
 # [+] International Business Machines Corp.
 #
 #
@@ -22,22 +22,15 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-TOP-C-SOURCES = p9_pgpe_pstate.c \
-				p9_pgpe_main.c \
-				p9_pgpe_irq.c \
-				p9_pgpe_fit.c \
-				avs_driver.c \
-				p9_pgpe_boot_temp.c \
-				p9_pgpe_gppb.c \
-				p9_pgpe_gen_pstate_info.c \
-				p9_pgpe_header.c \
-				ipc_func_tables.c \
-				p9_pgpe_thread_actuate_pstates.c \
-				p9_pgpe_thread_process_requests.c \
-				p9_pgpe_ipc_handlers.c \
-				p9_pgpe_irq_handlers.c 
+EXE=pstate_gpeImgEdit
+IMAGE_DEPS+=pstate_gpeImgEdit
+OBJS=p9_pgpe_img_edit.o
+$(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/procedures/hwp/lib)
+$(call BUILD_EXE)
 
-TOP-S-SOURCES = p9_pgpe_image_header.S \
-                p9_pgpe_ppmr.S
 
-TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)
+EXE=ppmr_headerImgEdit
+IMAGE_DEPS+=ppmr_headerImgEdit
+OBJS=p9_pgpe_img_edit.o
+$(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/procedures/hwp/lib)
+$(call BUILD_EXE)

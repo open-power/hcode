@@ -24,17 +24,16 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
         .nolist
-#include <ppe42_asm.h>
 #include <pgpe_boot_defines.H>
         .list
 
-	.section .loader_text, "ax", @progbits
+        .section .loader_text, "ax", @progbits
 
 __vectors:
 
     .org __vectors + 0x0000
 __machine_check:
-        b .
+        trap
 
     .org __vectors + 0x0040
     .global __system_reset
@@ -43,67 +42,88 @@ __system_reset:
 
     .org __vectors + 0x0060
 __data_storage:
-	b .
+        trap
 
     .org __vectors + 0x0080
 __instruction_storage:
-	b .
+        trap
 
     .org __vectors + 0x00A0
 __external_interrupt_vector:
-	b .
+        trap
 
     .org __vectors + 0x00C0
 __alignment_exception:
-	b .
+        trap
 
     .org __vectors + 0x00E0
 __program_exception:
-	b .
+        trap
 
     .org __vectors + 0x0100
 __dec_interrupt:
-	b .
+        trap
 
     .org __vectors + 0x0120
 __fit_interrupt:
-	b .
+        trap
 
     .org __vectors + 0x0140
 __watchdog_interrupt:
-	b .
+        trap
 
 __bootCopier:
-	//load r3 with BASE_
-    _liw    %r3, HOMER_BOOT_LOADER_LENGTH_ADDR
+    ## Address where the Boot loader will be loaded in SRAM (Destination address)
+    _liw   %GPR_BL_SRAM_ADDR, SRAM_PGPE_BOOT_LOADER_ADDR
 
-	_liw    %r7, HOMER_BOOT_LOADER_OFFSET_ADDR
+    ## Base address of PPMR header, also the PGPE base address
+    _liw   %GPR_PPMR_ADDR, PPMR_HEADER_ADDR
 
-	//load r4 with address where bootLoader will be loaded in SRAM e.g 0xFFFE8000 (Destination address)
-    _liw    %r4, SRAM_PGPE_BOOT_LOADER_ADDR # dest
+    ## Location in PPMR header where the offset of Boot loader is present
+    _liw   %GPR_BL_HOMER, HOMER_BOOT_LOADER_OFFSET_ADDR
 
-	//load r9 with PPMR header address
-	_liw    %r9, PPMR_HEADER_ADDR
+    ## Fetch offset of Boot loader
+    lwz    GPR_BL_HOMER_ADDR, OFFSET(GPR_BL_HOMER)
 
-	//size of image in bytes
-	lwz    r5, 0(r3)
-    li    r6, 3
-    srw   r5, r5, r6    # r5 contains number of bytes, divide by 8 will give number of double words
-    mtctr   r5          # set the counter for loop
+    ## Compute the source address of Boot loader (address in HOMER)
+    add   GPR_BL_HOMER_ADDR, GPR_BL_HOMER_ADDR, GPR_PPMR_ADDR
 
-	// calculating bootLoader image loaded address
-	lwz     r8, 0(r7)   # offset of bootLoader section  in Homer
-    adde    r8, r8, r9  # add base address to offset to get absolute bootLoader address in Homer
+    ## Location in PPMR header where the length of boot loader is present
+    _liw   %GPR_BL_HOMER, HOMER_BOOT_LOADER_LENGTH_ADDR
 
+    ## Boot Loader size(in Bytes)
+    lwz    GPR_BL_SIZE, OFFSET(GPR_BL_HOMER)
+    srwi    GPR_BL_SIZE, GPR_BL_SIZE, PGPE_DIV_8
+
+    ## If bootLoader size is 0 then failure
+    cmpwbeq    %GPR_BL_SIZE, 00, BCFAIL
+
+    ## Set the counter for copy loop
+    mtctr  GPR_BL_SIZE
+
+    ## Copy the bootLoader from HOMER to OCC SRAM
 copy_loop:
-    lvd    d28, 0(r8)  # Load Double word
-    stvd   d28, 0(r4)  # Destination address
-	addi   r8, r8, 8   # Increasing source address
-	addi   r4, r4, 8   # Increasing Dest address
-	bdnz   copy_loop   # Keep repeating the address.
+    lvd    DATA_WR, OFFSET(GPR_BL_HOMER_ADDR)   # Load Double word
+    stvd   DATA_WR, OFFSET(GPR_BL_SRAM_ADDR)    # Destination address
+    addi   GPR_BL_HOMER_ADDR, GPR_BL_HOMER_ADDR, NXT_BLK_OFF    # Increasing source address
+    addi   GPR_BL_SRAM_ADDR, GPR_BL_SRAM_ADDR, NXT_BLK_OFF    # Increasing Dest address
+    bdnz   copy_loop    # Keep repeating the address.
 
-	## Using blr command:
-    _liw  %r6,   SRAM_PGPE_BOOT_LOADER_RESET_ADDR
-    mtlr  r6
+    ##FIXME 167543  Shall be uncommented when availability of memory based system improves
+    ## Write the success status "CP" to PPMR header
+    ##_liw   %GPR_STAT_ADDR, BCPASS_STAT
+    ##stw   GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_ADDR)
+
+BRANCH:
+    ## branch to the system_reset location for bootLoader to be executed
+    _liw   %GPR_TEMP,   SRAM_PGPE_BOOT_LOADER_RESET_ADDR
+    mtlr   GPR_TEMP
     blr
+
+    ## Write the failure status "CF" to PPMR header
+BCFAIL:
+    ##FIXME 167543  Shall be uncommented when availability of memory based system improves
+    ##_liw  %GPR_STAT_ADDR, BCFAIL_STAT
+    ##stw   GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_ADDR)
+    trap
     .epilogue __bootCopier

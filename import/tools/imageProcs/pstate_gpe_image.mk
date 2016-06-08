@@ -28,11 +28,14 @@ IMAGE=pstate_gpe_image
 PGPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host
 
 # dependencies for bin files needed in the pgpe xip image
+PPMR_HDR_BIN_FILE=$(IMAGEPATH)/ppmr_header/ppmr_header.bin
 LVL1_BL_BIN_FILE=$(IMAGEPATH)/pgpe_lvl1_copier/pgpe_lvl1_copier.bin
 LVL2_BL_BIN_FILE=$(IMAGEPATH)/pgpe_lvl2_loader/pgpe_lvl2_loader.bin
 PGPE_BIN_FILE=$(IMAGEPATH)/pstate_gpe/pstate_gpe.bin
 
-$(call XIP_TOOL,append,.lvl1_bl,$(PGPE_DEPS) $(LVL1_BL_BIN_FILE), $(LVL1_BL_BIN_FILE))
+$(call XIP_TOOL,append,.ppmr_header,$(PGPE_DEPS) $(PPMR_HDR_BIN_FILE), $(PPMR_HDR_BIN_FILE))
+$(call XIP_TOOL,append,.lvl1_bl,$(PGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.ppmr_header \
+    $(LVL1_BL_BIN_FILE), $(LVL1_BL_BIN_FILE))
 $(call XIP_TOOL,append,.lvl2_bl,$(PGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl \
    	$(LVL2_BL_BIN_FILE), $(LVL2_BL_BIN_FILE))
 $(call XIP_TOOL,append,.hcode,$(PGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl \

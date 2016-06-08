@@ -80,7 +80,7 @@ $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 	| xargs -i printf "%d" 0x{})
 
 # Options for PK_TRACE
-$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=1
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=3
 $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_TIMER_OUTPUT=0
 
 
@@ -113,3 +113,31 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
 
 $(call BUILD_PPEIMAGE)
+
+# PPMR header edit:
+IMAGE=ppmr_header
+
+# Target tool chain
+$(IMAGE)_TARGET=PPE
+
+#linkscript to use
+$(IMAGE)_LINK_SCRIPT=linkppmr.cmd
+
+OBJS = p9_pgpe_ppmr.o
+
+$(call ADD_BINHEADER_INCDIR,$(IMAGE),\
+	$(PK_SRCDIR)/kernel \
+	$(PK_SRCDIR)/ppe42 \
+	$(PK_SRCDIR)/trace \
+	$(PK_SRCDIR)/$(_PPE_TYPE) \
+	$(PM_LIBDIR)/include \
+	$(PM_LIBDIR)/include/registers \
+	$(PM_LIBDIR)/common \
+	$(PM_LIBDIR)/occlib \
+	$(HCODE_LIBDIR) \
+	$(HCODE_COMMON_LIBDIR) \
+	$(HCODE_UTILS_INCDIR) \
+        $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
+	)
+
+$(call BUILD_BINHEADER,$(IMAGEPATH)/pstate_gpe/pstate_gpe.bin)

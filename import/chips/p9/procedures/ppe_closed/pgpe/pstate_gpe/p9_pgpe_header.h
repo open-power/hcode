@@ -44,7 +44,7 @@ typedef struct
     uint16_t  g_pgpe_reserve1;                // Reserve field
     uint32_t  g_pgpe_reserve2;                // Reserve field
     uint32_t* g_pgpe_gppb_sram_addr;          // Offset to Global P State Parameter Block
-    uint32_t  g_pgpe_reserve3;                // Reserve field
+    uint32_t  g_pgpe_hcode_length;            // Length of PGPE Hcode
     uint32_t* g_pgpe_gppb_mem_offset;         // Offset to start of Global PS Param Block wrt start of HOMER.
     uint32_t  g_pgpe_gppb_length;             // Length of Global P State Parameter Block
     uint32_t* g_pgpe_gen_pstables_mem_offset; // Offset to PState Table wrt start of HOMER

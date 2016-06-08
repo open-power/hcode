@@ -59,6 +59,14 @@ SECTIONS
     _strings_offset = . - _pgpe_image_origin;
     .strings . : { *(.strings) }
     _strings_size = . - _strings_origin;
+    ////////////////////////////////
+    // PPMR Header
+    ////////////////////////////////
+    . = ALIGN(8);
+    _ppmr_hdr_origin = .;
+    _ppmr_hdr_offset = . - _pgpe_image_origin;
+    .ppmr_header . : { *(.ppmr_header) }
+    _ppmr_hdr_size = . - _ppmr_hdr_origin;
 
     ////////////////////////////////
     // Level 1 Bootloader

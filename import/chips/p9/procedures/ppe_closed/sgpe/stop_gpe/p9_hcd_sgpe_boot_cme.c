@@ -208,16 +208,14 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                 l_blockCopyLength = pCpmrHdrAddr->cmeImgLength;         // CME Image length
             }
 
-            if (  pCpmrHdrAddr->cmeCommonRingLength != 0 )
-            {
-                l_blockCopyLength = (pCpmrHdrAddr->cmeCommonRingOffset - (pCpmrHdrAddr->cmeImgOffset * 32)) +
-                                    pCpmrHdrAddr->cmeCommonRingLength;     // adding common ring length
-            }
-
             if (  pCpmrHdrAddr->cmePstateLength != 0 )
             {
-                l_blockCopyLength = (pCpmrHdrAddr->cmePstateOffset - (pCpmrHdrAddr->cmeImgOffset * 32)) +
-                                    pCpmrHdrAddr->cmePstateLength;         // adding Pstate region length
+                l_blockCopyLength += pCpmrHdrAddr->cmePstateLength; // Local P-State parameter block
+            }
+
+            if (  pCpmrHdrAddr->cmeCommonRingLength != 0 )
+            {
+                l_blockCopyLength += pCpmrHdrAddr->cmeCommonRingLength; // Common Ring Length
             }
 
             PK_TRACE("Block Copy Length: 0x%08x", l_blockCopyLength);

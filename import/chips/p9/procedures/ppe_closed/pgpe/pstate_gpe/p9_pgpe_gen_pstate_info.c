@@ -46,6 +46,8 @@ void p9_pgpe_gen_occ_pstate_tbl(GeneratedPstateInfo* gpi);
 //
 void p9_pgpe_gen_pstate_info()
 {
+    PK_TRACE_DBG("> p9_pgpe_gen_pstate_info to memory 0x%X",
+                 (uint32_t)G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset);
     int p;
     //Get GlobalPstateParmBlock offset from pgpe_header
     uint32_t* pstate_tbl_memory_offset  = G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset;
@@ -83,6 +85,7 @@ void p9_pgpe_gen_pstate_info()
 
     //Generate Pstate table for OCC in SRAM
     p9_pgpe_gen_occ_pstate_tbl(&G_gpi);
+    PK_TRACE_DBG("< p9_pgpe_gen_pstate_info");
 }
 
 //
@@ -92,6 +95,7 @@ void p9_pgpe_gen_pstate_info()
 //
 void p9_pgpe_gen_raw_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi)
 {
+    PK_TRACE_DBG(">> p9_pgpe_gen_raw_pstates");
     int32_t p;
     uint32_t freq_khz_offset = 0, highest_pstate;
     highest_pstate = G_operating_points[VPD_PT_SET_SYSP][POWERSAVE].pstate;
@@ -111,6 +115,8 @@ void p9_pgpe_gen_raw_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* g
         gpi->raw_pstates[p].vdm_thresholds = 0;
         freq_khz_offset += gppb->frequency_step_khz;
     }
+
+    PK_TRACE_DBG("<< p9_pgpe_gen_raw_pstates");
 }
 
 //
@@ -120,6 +126,7 @@ void p9_pgpe_gen_raw_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* g
 //
 void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi)
 {
+    PK_TRACE_DBG(">> p9_pgpe_gen_biased_pstates");
     int32_t p;
     uint32_t freq_khz_offset = 0, highest_pstate;
     highest_pstate = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
@@ -142,6 +149,8 @@ void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo
         gpi->biased_pstates[p].vdm_thresholds = 0;
         freq_khz_offset += gppb->frequency_step_khz;
     }
+
+    PK_TRACE_DBG("<< p9_pgpe_gen_biased_pstates");
 }
 
 
@@ -152,6 +161,8 @@ void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo
 //
 void p9_pgpe_gen_occ_pstate_tbl(GeneratedPstateInfo* gpi)
 {
+    PK_TRACE_DBG(">> p9_pgpe_gen_occ_pstate_tbl to SRAM 0x%X",
+                 (uint32_t)G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr);
     int p;
     OCCPstateTable_t* opst = (OCCPstateTable_t*)G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr;
     opst->entries = (G_pgpe_header_data->g_pgpe_occ_pstables_len) / sizeof(OCCPstateTable_entry_t);
@@ -162,4 +173,6 @@ void p9_pgpe_gen_occ_pstate_tbl(GeneratedPstateInfo* gpi)
         opst->table[p].frequency_mhz = gpi->biased_pstates[p].frequency_mhz ;
         opst->table[p].internal_vdd_vid  = gpi->biased_pstates[p].internal_vid;
     }
+
+    PK_TRACE_DBG("<< p9_pgpe_gen_occ_pstate_tbl");
 }

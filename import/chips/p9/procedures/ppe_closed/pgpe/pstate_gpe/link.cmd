@@ -48,6 +48,9 @@ MEMORY
 // to ensure that table is pulled in by the linker even though PPE code
 // never references it.
 EXTERN(pk_debug_ptrs);
+EXTERN(g_pgpe_magic_number);
+EXTERN(_PK_INITIAL_STACK);
+EXTERN(_END_IMAGE);
 
 SECTIONS
 {
@@ -58,6 +61,14 @@ SECTIONS
     _VECTOR_START = .;
 
     .vectors  _VECTOR_START  : { *(.vectors) } > sram
+      
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // PGPE Image Header
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    _PGPE_IMG_HEADER = _VECTOR_START + PGPE_HEADER_OFFSET;
+    .pgpe_image_header _PGPE_IMG_HEADER : { *(.pgpe_image_header) } > sram
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -126,7 +137,6 @@ SECTIONS
 
         . = ALIGN(8);
         _PK_INITIAL_STACK_LIMIT = .;
-
         FILL(0xA55A);
         . = . + INITIAL_STACK_SIZE;
         . = ALIGN(8);
@@ -136,5 +146,6 @@ SECTIONS
 //   .iplt . : { *(.iplt) } > sram
     _PGPE_END = .;
     _PGPE_SIZE = . - SRAM_START;
+
 
 }
