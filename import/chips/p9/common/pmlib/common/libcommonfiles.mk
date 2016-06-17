@@ -44,10 +44,7 @@
 C-SOURCES = \
     memcpy.c \
 	memset.c \
-	rand32.c \
-	rand64.c \
-	string.c \
-	sync.c
+	string.c 
 
 
 S-SOURCES =  
