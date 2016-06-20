@@ -26,8 +26,12 @@
 
 
 TOP-C-SOURCES    = p9_cme_main.c \
-                   p9_cme_irq.c
-PSTATE-C-SOURCES = pstate_cme/p9_cme_pstate.c
+                   p9_cme_irq.c 
+                   
+UTILS-C-SOURCES  = utils/p9_putringutils.c \
+                   utils/plat_ring_traverse.c
+PSTATE-C-SOURCES = pstate_cme/p9_cme_pstate.c 
+
 STOP-C-SOURCES   = stop_cme/p9_cme_stop_irq_handlers.c \
                    stop_cme/p9_cme_stop_enter_thread.c \
                    stop_cme/p9_cme_stop_exit_thread.c \
@@ -52,7 +56,8 @@ TOP-S-SOURCES  =   stop_cme/p9_cme_header.S
 
 IMG-S-SOURCES  =   p9_cpmr_header.S
 
-TOP_OBJECTS    = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)
-PSTATE_OBJECTS = $(PSTATE-C-SOURCES:.c=.o)
-STOP_OBJECTS   = $(STOP-C-SOURCES:.c=.o)
+TOP_OBJECTS    = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) 
+PSTATE_OBJECTS = $(PSTATE-C-SOURCES:.c=.o) 
+STOP_OBJECTS   = $(STOP-C-SOURCES:.c=.o) 
+UTILS_OBJECTS  = $(UTILS-C-SOURCES:.c=.o)
 IMG_OBJECTS    = $(IMG-C-SOURCES:.c=.o) $(IMG-S-SOURCES:.S=.o)
