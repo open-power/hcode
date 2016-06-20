@@ -41,8 +41,8 @@ BOOT_LOADER_OBJS :=  $(addprefix $(OBJDIR)/, $(BOOT_LOADER_OBJECTS))
 # Boot Loader Objects:
 BOOT_COPIER_OBJS :=  $(addprefix $(OBJDIR)/, $(BOOT_COPIER_OBJECTS))
 
-LIB_DIRS = 
-LINK_OBJS = $(OBJS)  
+LIB_DIRS =
+LINK_OBJS = $(OBJS)
 LINK_SCRIPT_BOOTCOPIER = $(addprefix $(OBJDIR)/, linkscriptbootcopier)
 LINK_SCRIPT_BOOTLOADER = $(addprefix $(OBJDIR)/, linkscriptbootloader)
 
@@ -52,16 +52,21 @@ LIB_DIRS += -L$(OBJDIR)/p2p
 LINK_OBJS += $(P2PLIB)
 endif
 
+
+all: bootCopier bootLoader
+bootCopier: $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).bin $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).dis $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).out $(LINK_SCRIPT_BOOTCOPIER)
+bootLoader: $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).bin $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).dis $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).out $(LINK_SCRIPT_BOOTLOADER)
+
 ####################################
 #### Bootcopier Image creation:
 ####################################
   $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).bin $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).dis: $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).out
-	$(OBJCOPY) -O binary  $< $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).bin 
+	$(OBJCOPY) -O binary  $< $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).bin
 	$(OBJDUMP) -S $< > $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).dis
 
   #create a linked ELF executable
   $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).out: $(LINK_OBJS) $(LINK_SCRIPT_BOOTCOPIER)
-	$(LD) -e __system_reset -N -T$(LINK_SCRIPT_BOOTCOPIER) -Map $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).map -Bstatic -o $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).out $(LIB_DIRS) $(BOOT_COPIER_OBJS) -lp2p 
+	$(LD) -e __system_reset -N -T$(LINK_SCRIPT_BOOTCOPIER) -Map $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).map -Bstatic -o $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).out $(LIB_DIRS) $(BOOT_COPIER_OBJS) -lp2p
 
   #pass the link command file through the C preprocessor to evaluate macros and remove comments
   $(LINK_SCRIPT_BOOTCOPIER): linkcopier.cmd
@@ -76,7 +81,7 @@ $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).bin $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).dis: $
 
 #create a linked ELF executable
 $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).out: $(LINK_OBJS) $(LINK_SCRIPT_BOOTLOADER)
-	$(LD) -e __system_reset -N -T$(LINK_SCRIPT_BOOTLOADER) -Map $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).map -Bstatic -o $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).out $(LIB_DIRS) $(BOOT_LOADER_OBJS) -lp2p 
+	$(LD) -e __system_reset -N -T$(LINK_SCRIPT_BOOTLOADER) -Map $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).map -Bstatic -o $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).out $(LIB_DIRS) $(BOOT_LOADER_OBJS) -lp2p
 
 #pass the link command file through the C preprocessor to evaluate macros and remove comments
 $(LINK_SCRIPT_BOOTLOADER): linkloader.cmd
@@ -94,8 +99,9 @@ $(OBJDIR):
 
 ifdef P2P_ENABLE
 $(P2PLIB):
+	@echo 'Before BL Objdir = $(OBJDIR) $(IMAGE_SRCDIR)'
 	$(MAKE) -I $(IMAGE_SRCDIR) -C $(P2P_SRCDIR)
-endif 
+endif
 
 # collect all of the trace hash files for this image into a single trexStringFile
 .PHONY : tracehash
@@ -103,12 +109,6 @@ tracehash:
 	mkdir -p $(OBJDIR)
 	$(THASH) -c -d $(OBJDIR) -s $(OBJDIR)/trexStringFile
 
-
-bootCopier: $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).bin $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).dis $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).out $(LINK_SCRIPT_BOOTCOPIER) 
-
-bootLoader: $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).bin $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).dis $(OBJDIR)/$(IMAGE_BOOTLOADER_NAME).out $(LINK_SCRIPT_BOOTLOADER) 
-
-all: bootCopier bootLoader
 
 # load and run the gpe image in simics
 run: $(OBJDIR)/$(IMAGE_BOOTCOPIER_NAME).out
@@ -121,5 +121,5 @@ clean:
 
 #Add dependencies to header files
 ifneq ($(MAKECMDGOALS),clean)
-include $(OBJS:.o=.d) 
+include $(OBJS:.o=.d)
 endif

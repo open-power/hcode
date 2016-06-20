@@ -1,7 +1,7 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p9/procedures/ppe_closed/cme/stop_cme/p9_cme_cpmr.S $
+# $Source: import/chips/p9/procedures/ppe_closed/sgpe/topfiles.mk $
 #
 # OpenPOWER HCODE Project
 #
@@ -22,6 +22,8 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
+TOP-C-SOURCES  = 
 
-#include <p9_hcode_image_defines.H>
-.cpmr_header
+TOP-S-SOURCES += p9_sgpe_qpmr.S
+
+TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)

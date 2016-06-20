@@ -101,6 +101,9 @@ p9_cme_stop_exit()
 
 #endif
 
+    PK_TRACE("X0: Actual Stop Levels[%d %d]",
+             G_cme_stop_record.act_level_c0, G_cme_stop_record.act_level_c1);
+
     // Code Error: function should never be entered without wakeup source active
     if (!core)
     {
@@ -402,6 +405,11 @@ p9_cme_stop_exit()
             //=====================
 #if !SKIP_INITF
             PK_TRACE("X8: Core Func Scan");
+#if !ISTEP15_HACK
+            asm volatile ("nop");
+#else
+            asm volatile ("tw 31, 0, 0");
+#endif
             p9_hcd_core_initf(core);
 #endif
 #endif
@@ -536,7 +544,8 @@ p9_cme_stop_exit()
 #if EPM_P9_TUNING
             CME_PUTSCOM(SCRACTH0, CME_MASK_C0, 0x200000);
 #else
-            CME_PUTSCOM(SCRACTH0, CME_MASK_C0, in64(SELF_RESTORE_ADDR_FETCH));
+            CME_PUTSCOM(SCRACTH0, CME_MASK_C0, 0xA200000);
+            //CME_PUTSCOM(SCRACTH0, CME_MASK_C0, in64(SELF_RESTORE_ADDR_FETCH));
 #endif
         }
 
@@ -549,7 +558,8 @@ p9_cme_stop_exit()
 #if EPM_P9_TUNING
             CME_PUTSCOM(SCRACTH1, CME_MASK_C1, 0x200000);
 #else
-            CME_PUTSCOM(SCRACTH1, CME_MASK_C1, in64(SELF_RESTORE_ADDR_FETCH));
+            CME_PUTSCOM(SCRACTH1, CME_MASK_C1, 0xA200000);
+            //CME_PUTSCOM(SCRACTH1, CME_MASK_C1, in64(SELF_RESTORE_ADDR_FETCH));
 #endif
         }
 
@@ -566,6 +576,13 @@ p9_cme_stop_exit()
         CME_PUTSCOM(RAM_MODEREG, core, 0);
 #endif
 
+
+#if !ISTEP15_HACK
+        asm volatile ("nop");
+#else
+        asm volatile ("tw 31, 0, 0");
+#endif
+
         PK_TRACE("S-Reset all threads");
         CME_PUTSCOM(DIRECT_CONTROLS, core,
                     BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
@@ -574,7 +591,7 @@ p9_cme_stop_exit()
         MARK_TRAP(SX_SRESET_THREADS)
         //==========================
 
-        PK_TRACE("Allow threads to run(pm_exit=0)");
+        PK_TRACE("Allow threads to run(pm_exit=0) core: %d data:0x%08x ", core, (core << SHIFT32(5)));
         out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
 
         PK_TRACE("Poll for Core stop again(pm_active=1)");
@@ -726,11 +743,13 @@ p9_cme_stop_exit()
 
     if (spwu_stop)
     {
+        PK_TRACE("XF: setting spwu done");
         out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));
     }
 
     if ((core = (core & (~spwu_stop))))
     {
+        PK_TRACE("XF: spwu is not done");
         out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
     }
 

@@ -77,6 +77,13 @@ __bootLoader:
     ## QPMR Header Copy
     ######################
     ## cal source Address
+    _liw %r9, SRAM_SGPE_BASE_ADDR
+    nop
+    _liw %r8, SGPE_IVPR_OCI_ADDR
+    nop
+    nop
+    stw r9, 0(r8)
+
     _liw %r10, SRAM_SGPE_HCODE_LENGTH_ADDR
     _liw  %r3, QPMR_HEADER_ADDR
 

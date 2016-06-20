@@ -61,6 +61,7 @@ p9_sgpe_stop_exit()
         cexit > 0 || qspwu > 0;
         cexit = cexit << 4, qspwu = qspwu << 1, qloop++, m_l2 = 0, m_pg = 0)
     {
+
         if (!((cexit & BITS32(0, 4)) || (qspwu & BIT32(0))))
         {
             continue;
@@ -96,6 +97,18 @@ p9_sgpe_stop_exit()
             {
                 m_l2 |= SND_EX_IN_QUAD;
             }
+        }
+
+        PK_TRACE("quad[%d]m_l2[%d]m_pg[%d]", qloop, m_l2, m_pg);
+
+        if (G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop))
+        {
+            m_pg |= FST_EX_IN_QUAD;
+        }
+
+        if (G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop))
+        {
+            m_pg |= SND_EX_IN_QUAD;
         }
 
         PK_TRACE("quad[%d]m_l2[%d]m_pg[%d]", qloop, m_l2, m_pg);
@@ -175,6 +188,7 @@ p9_sgpe_stop_exit()
             //====================================
 #if !SKIP_ARRAYINIT
             PK_TRACE("Cache Arrayinit");
+
             p9_hcd_cache_arrayinit(qloop, m_pg);
 #endif
             //=====================
@@ -183,6 +197,12 @@ p9_sgpe_stop_exit()
 
             PK_TRACE("Cache Initf");
             p9_hcd_cache_initf(qloop);
+#if !ISTEP15_HACK
+            asm volatile ("nop");
+#else
+            asm volatile ("tw 31, 0, 0");
+#endif
+
 #endif
 
             //===========================================
@@ -206,6 +226,11 @@ p9_sgpe_stop_exit()
 
             PK_TRACE("Cache L2 Startclocks");
             p9_hcd_cache_l2_startclocks(qloop, m_l2, m_pg);
+#if !ISTEP15_HACK
+            asm volatile ("nop");
+#else
+            asm volatile ("tw 31, 0, 0");
+#endif
 
             // reset ex actual state if ex is exited.
             if (m_l2 & FST_EX_IN_QUAD)
@@ -217,6 +242,8 @@ p9_sgpe_stop_exit()
             {
                 G_sgpe_stop_record.state[qloop].act_state_x1 = 0;
             }
+
+
 
             // Update QSSR: drop l2_stopped,
             out32(OCB_QSSR_CLR, (m_l2 << SHIFT32((qloop << 1) + 1)));

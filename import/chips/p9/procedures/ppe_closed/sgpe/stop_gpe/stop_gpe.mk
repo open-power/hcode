@@ -23,19 +23,16 @@
 #
 # IBM_PROLOG_END_TAG
 #
-
-IMAGE=qpmr_header
-
-# Target tool chain
-$(IMAGE)_TARGET=PPE
-
-#linkscript to use
-$(IMAGE)_LINK_SCRIPT=linkqpmr.cmd
-
-OBJS = p9_sgpe_qpmr.o
-$(call BUILD_BINHEADER)
-
-
+## IMAGE=qpmr_header
+##
+## # Target tool chain
+## $(IMAGE)_TARGET=PPE
+##
+## #linkscript to use
+## $(IMAGE)_LINK_SCRIPT=linkqpmr.cmd
+##
+## OBJS = p9_sgpe_qpmr.o
+## $(call BUILD_BINHEADER)
 
 IMAGE=stop_gpe
 
@@ -112,8 +109,38 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(HCODE_LIBDIR) \
 	$(HCODE_COMMON_LIBDIR) \
 	$(HCODE_UTILS_INCDIR) \
+        $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
 	)
 
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
 
 $(call BUILD_PPEIMAGE)
+
+# QPMR header edit:
+IMAGE=qpmr_header
+
+# Target tool chain
+$(IMAGE)_TARGET=PPE
+
+#linkscript to use
+$(IMAGE)_LINK_SCRIPT=linkqpmr.cmd
+
+OBJS = p9_sgpe_qpmr.o
+
+
+$(call ADD_BINHEADER_INCDIR,$(IMAGE),\
+	$(PK_SRCDIR)/kernel \
+	$(PK_SRCDIR)/ppe42 \
+	$(PK_SRCDIR)/trace \
+	$(PK_SRCDIR)/$(_PPE_TYPE) \
+	$(PM_LIBDIR)/include \
+	$(PM_LIBDIR)/include/registers \
+	$(PM_LIBDIR)/common \
+	$(PM_LIBDIR)/occlib \
+	$(HCODE_LIBDIR) \
+	$(HCODE_COMMON_LIBDIR) \
+	$(HCODE_UTILS_INCDIR) \
+        $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
+	)
+
+$(call BUILD_BINHEADER,$(IMAGEPATH)/stop_gpe/stop_gpe.bin)

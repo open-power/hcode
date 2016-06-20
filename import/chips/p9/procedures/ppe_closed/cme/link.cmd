@@ -54,7 +54,12 @@ SECTIONS
 
     .vectors  _VECTOR_START  : { *(.vectors) } > sram
 
-    _CME_IMG_HEADER = _VECTOR_START + CME_IMAGE_OFFSET;
+     _CME_IMG_HEADER = _VECTOR_START + CME_HEADER_OFFSET;
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // CME Image Header
+    //
+    ///////////////////////////////////////////////////////////////////////////
     .cme_image_header _CME_IMG_HEADER : { *(.cme_image_header) } > sram
 
     ///////////////////////////////////////////////////////////////////////////
@@ -82,13 +87,13 @@ SECTIONS
 
     // SDA2 constant sections .sdata2 and .sbss2 must be adjacent to each
     // other.  Our SDATA sections are small so we'll use strictly positive
-    // offsets. 
+    // offsets.
 
     _SDA2_BASE_ = .;
    .sdata2 . : { *(.sdata2*) } > sram
    .sbss2  . : { *(.sbss2*) } > sram
 
-   // Other read-only data.  
+   // Other read-only data.
 
    .rodata . : { *(.rodata*) *(.got2) } > sram
 
@@ -103,7 +108,7 @@ SECTIONS
 
     // SDA sections .sdata and .sbss must be adjacent to each
     // other.  Our SDATA sections are small so we'll use strictly positive
-    // offsets. 
+    // offsets.
 
     _SDA_BASE_ = .;
     .sdata  . : { *(.sdata*)  } > sram
@@ -120,4 +125,6 @@ SECTIONS
    . = . + INITIAL_STACK_SIZE;
    _PK_INITIAL_STACK = . - 1;
 
+   _CME_END = .;
+   _CME_SIZE = . - SRAM_START;
 }

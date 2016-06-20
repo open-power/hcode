@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/sgpe/stop_gpe/p9_sgpe_img_edit.c $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/sgpe/p9_sgpe_img_edit.c $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -79,8 +79,6 @@ int main(int narg, char* argv[])
 
         // For ekb build it's desired to detect the image type w/o special
         // make rules. Better way?
-        printf("Size is: %d\n", size);
-
         if(size < 1024)
         {
             imageType = QPMR_IMAGE;
@@ -109,7 +107,6 @@ int main(int narg, char* argv[])
             temp = SGPE_RESET_ADDRESS;
             temp = htonl(temp);
             fwrite(&(temp), sizeof(uint32_t), 1, pMainImage );
-            printf("Done 1\n");
         }
 
 
@@ -127,7 +124,6 @@ int main(int narg, char* argv[])
         fseek( pMainImage,  buildVerPos, SEEK_SET );
         temp = htonl(SGPE_BUILD_VER);
         fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
-        printf("Done 2");
 
         if (imageType == QPMR_IMAGE)
         {
@@ -144,9 +140,8 @@ int main(int narg, char* argv[])
             fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
         }
 
-        printf("Done 3");
         fclose(pMainImage);
-        //fclose(pDependImage);
+        fclose(pDependImage);
     }
     while(0);
 

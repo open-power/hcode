@@ -66,8 +66,8 @@ typedef enum
 // SCOM addresses associated with a CME BCE.
 typedef enum
 {
-    SCOM_ADDR_BCEBAR0   =   0x10012010,
-    SCOM_ADDR_BCEBAR1   =   0x10012011,
+    SCOM_ADDR_BCEBAR0   =   0x10012030,
+    SCOM_ADDR_BCEBAR1   =   0x10012031,
     SCOM_ADDR_BCEBCSR   =   0x1001200F,
     SCOM_ADDR_PBABAR0   =   0x05012B00,
 } ScomAddrList_t;
@@ -81,7 +81,7 @@ enum
     CME_BASE_ADDRESS    =   0x10012000,
 };
 
-#define SGPE_SCOM_ADDR(addr, quad, ex) (addr | CME_BASE_ADDRESS | (quad << 24) | (ex << 10) )
+#define SGPE_SCOM_ADDR(addr, quad, ex) ( addr | CME_BASE_ADDRESS | (quad << 24) | (ex << 10) )
 
 #define PPE_GETSCOM(addr, data)                                        \
     rc = getscom(0, addr, &data);                                      \

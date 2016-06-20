@@ -40,19 +40,34 @@
 #define SKIP_ABORT            0
 #define SKIP_L2_PURGE_ABORT   0
 #define SKIP_ENTRY_CATCHUP    0
-#define SKIP_EXIT_CATCHUP     0
-#define SKIP_ARRAYINIT        1
-#define SKIP_SCAN0            1
-#define SKIP_INITF            0
-#define SKIP_SELF_RESTORE     0
-#define SKIP_RAM_HRMOR        0
-#define SKIP_BCE_SCAN_RING    1
-#define SKIP_BCE_SCOM_RESTORE 1
-#define SPWU_AUTO             1
+#define ISTEP15_HACK          1
+
+#if !ISTEP15_HACK
+    #define SKIP_EXIT_CATCHUP     0
+    #define EPM_P9_TUNING         1
+    #define SKIP_SCAN0            1
+    #define SKIP_INITF            0
+    #define SKIP_SELF_RESTORE     0
+    #define SKIP_RAM_HRMOR        0
+    #define SKIP_BCE_SCAN_RING    1
+    #define SKIP_BCE_SCOM_RESTORE 1
+    #define SPWU_AUTO             1
+    #define SKIP_ARRAYINIT        1
+#else
+    #define SKIP_EXIT_CATCHUP     1
+    #define EPM_P9_TUNING         0
+    #define SKIP_SCAN0            0
+    #define SKIP_INITF            0
+    #define SKIP_SELF_RESTORE     0
+    #define SKIP_RAM_HRMOR        0
+    #define SKIP_BCE_SCAN_RING    0
+    #define SKIP_BCE_SCOM_RESTORE 1
+    #define SPWU_AUTO             0
+    #define SKIP_ARRAYINIT        0
+#endif
 
 // --------------------
 
-#define EPM_P9_TUNING         1
 #define SIMICS_TUNING         0
 #define USE_SIMICS_IO         0
 #define DEV_DEBUG             1

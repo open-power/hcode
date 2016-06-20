@@ -114,9 +114,9 @@ p9chip0.cell.cpu-switch-time cycles = 1000
 ## p9chip0.gpe0.write-reg iar 0x10100240
 
 
-p9chip0.pob_space.load-file ../../../obj/bootLoader/bootCopier.bin 0x200
-p9chip0.pob_space.load-file ../../../obj/bootLoader/bootLoader.bin 0x600
-p9chip0.pob_space.load-file ../../../ppe_closed/sgpe/stop_gpe/obj/stop_gpe/stop_gpe.bin 0x1400
+p9chip0.pob_space.load-file ../obj/bootLoader/bootCopier.bin 0x200
+p9chip0.pob_space.load-file ../obj/bootLoader/bootLoader.bin 0x600
+p9chip0.pob_space.load-file ../obj/stop_gpe/stop_gpe.bin 0x1400
 
 
 p9chip0.pba->pba_bar0 = 0x0

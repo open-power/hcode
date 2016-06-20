@@ -37,7 +37,7 @@ enum
     CME_INST_ID_MASK        =   0x0000001F,
     COPY_DEF_CME_ADDR       =   0x00000000,
     CME_PAGE_RD_SIZE        =   0x20,
-    CME_IMG_HDR_ADDR        =   CME_IMAGE_OFFSET,
+    CME_IMG_HDR_ADDR        =   CME_IMAGE_BASE_ADDR + CME_HEADER_OFFSET,
 };
 
 void instance_scan_init( )
@@ -66,6 +66,7 @@ void instance_scan_init( )
 
     startCmeBlockCopy( cmeSbase, l_bcLength, l_cmePir, PLAT_CME, BAR_INDEX_1, l_bceMbase );
 
+    PK_TRACE(" Done startCmeBlockCopy(instance_scan_init).");
 }
 
 

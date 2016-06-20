@@ -1,3 +1,4 @@
+
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
@@ -25,8 +26,8 @@
 
 
 TOP-C-SOURCES    = p9_cme_main.c \
-                   p9_cme_irq.c 
-PSTATE-C-SOURCES = pstate_cme/p9_cme_pstate.c 
+                   p9_cme_irq.c
+PSTATE-C-SOURCES = pstate_cme/p9_cme_pstate.c
 STOP-C-SOURCES   = stop_cme/p9_cme_stop_irq_handlers.c \
                    stop_cme/p9_cme_stop_enter_thread.c \
                    stop_cme/p9_cme_stop_exit_thread.c \
@@ -45,9 +46,13 @@ STOP-C-SOURCES   = stop_cme/p9_cme_stop_irq_handlers.c \
                    stop_cme/p9_hcd_core_scomcust.c \
                    stop_cme/p9_hcd_core_ras_runtime_scom.c \
                    stop_cme/p9_hcd_core_occ_runtime_scom.c \
-				   stop_cme/p9_cme_copy_scan_ring.c
-TOP-S-SOURCES =    stop_cme/p9_cme_header.S
+                   stop_cme/p9_cme_copy_scan_ring.c
 
-TOP_OBJECTS    = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) 
-PSTATE_OBJECTS = $(PSTATE-C-SOURCES:.c=.o) 
-STOP_OBJECTS   = $(STOP-C-SOURCES:.c=.o) 
+TOP-S-SOURCES  =   stop_cme/p9_cme_header.S
+
+IMG-S-SOURCES  =   p9_cpmr_header.S
+
+TOP_OBJECTS    = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)
+PSTATE_OBJECTS = $(PSTATE-C-SOURCES:.c=.o)
+STOP_OBJECTS   = $(STOP-C-SOURCES:.c=.o)
+IMG_OBJECTS    = $(IMG-C-SOURCES:.c=.o) $(IMG-S-SOURCES:.S=.o)

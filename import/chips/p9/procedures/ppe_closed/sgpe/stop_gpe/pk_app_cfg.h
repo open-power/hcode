@@ -37,10 +37,19 @@
 #define STOP_PRIME           0
 #define SKIP_L3_PURGE        0
 #define SKIP_L3_PURGE_ABORT  0
-#define SKIP_CME_BOOT_STOP11 1
-#define SKIP_CME_BOOT_IPL_HB 1
-#define SKIP_ARRAYINIT       1
-#define SKIP_SCAN0           1
+#define ISTEP15_HACK         1
+
+#if !ISTEP15_HACK
+    #define SKIP_CME_BOOT_STOP11 1
+    #define SKIP_CME_BOOT_IPL_HB 1
+    #define SKIP_ARRAYINIT       1
+    #define SKIP_SCAN0           1
+#else
+    #define SKIP_CME_BOOT_STOP11 0
+    #define SKIP_CME_BOOT_IPL_HB 1
+    #define SKIP_ARRAYINIT       0
+    #define SKIP_SCAN0           0
+#endif
 #define SKIP_INITF           0
 
 // --------------------

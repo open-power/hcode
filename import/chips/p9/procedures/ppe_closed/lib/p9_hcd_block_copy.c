@@ -57,9 +57,9 @@ void initCmeBceBarAddr( uint8_t i_barIndex, uint64_t i_barRegData, uint8_t i_cme
 
     uint8_t l_quadId = i_cmePos >> 1;
 
-    l_bceBarAddr = SGPE_SCOM_ADDR( l_bceBarAddr, l_quadId, i_cmePos );
+    l_bceBarAddr = SGPE_SCOM_ADDR( l_bceBarAddr, l_quadId, (i_cmePos % 2) );
 
-    l_bceBarData = (( i_barRegData & 0x0000000FFFFFFFFF ) << BASE_SHIFT_POS);
+    l_bceBarData = ( i_barRegData & 0x00FFFFFFFFF00000); //To extract bitss 8:43 from the i_barRegData
     l_bceBarData |= (ENABLE_WR_SCOPE | ENABLE_RD_SCOPE | BLOCK_COPY_SIZE_1MB );
     PPE_PUTSCOM(l_bceBarAddr, l_bceBarData);        // set the source address for block copy
 
@@ -93,7 +93,9 @@ void startCmeBlockCopy( uint64_t i_cmeStartBlk, uint32_t i_blockLength, uint32_t
         //getting quad id by dividing cme pos with 2
         uint8_t l_quadId = i_cmePos >> 1;
 
-        uint32_t l_sgpeBceAddr = SGPE_SCOM_ADDR( SCOM_ADDR_BCEBCSR, l_quadId, i_cmePos );
+        uint32_t l_sgpeBceAddr = SGPE_SCOM_ADDR( SCOM_ADDR_BCEBCSR, l_quadId,
+                                 (i_cmePos % 2) );
+
         PPE_PUTSCOM(l_sgpeBceAddr, l_bceStatusData );
     }
 }
@@ -116,15 +118,13 @@ BceReturnCode_t checkCmeBlockCopyStatus( uint32_t i_cmePos, InitiatorPlat_t i_pl
             // for entities external to CME.
             uint32_t l_cmeBcelAddr = CME_LCL_BCECSR;
             l_bceStatusData = in64(l_cmeBcelAddr);
-            // CME reading block copy engine status
-            out64(l_cmeBcelAddr, l_bceStatusData );
         }
         else if( PLAT_SGPE == i_plat )
         {
             // getting quad id by dividing cme pos with 2
             uint8_t l_quadId = i_cmePos >> 1;
 
-            uint32_t l_sgpeBceAddr = SGPE_SCOM_ADDR( SCOM_ADDR_BCEBCSR, l_quadId, i_cmePos );
+            uint32_t l_sgpeBceAddr = SGPE_SCOM_ADDR( SCOM_ADDR_BCEBCSR, l_quadId, (i_cmePos % 2) );
             // SGPE reading block copy engine status of CME
             PPE_GETSCOM(l_sgpeBceAddr, l_bceStatusData);
         }
