@@ -68,8 +68,8 @@ int main(int narg, char* argv[])
     //cpmrHeader_t cpmrHeader;
 
     int imageType = CME_IMAGE;
-    long int buildDatePos   = CME_HEADER_OFFSET + offsetof(cmeHeader_t, g_cme_build_date);
-    long int buildVerPos    = CME_HEADER_OFFSET + offsetof(cmeHeader_t, g_cme_build_ver);
+    long int buildDatePos   = 0;
+    long int buildVerPos    = 0;
     long int hcodeLenPos    = CME_HEADER_OFFSET + offsetof(cmeHeader_t, g_cme_hcode_length);
     long int hcodeOffsetPos = CME_HEADER_OFFSET + offsetof(cmeHeader_t, g_cme_hcode_offset);
 
