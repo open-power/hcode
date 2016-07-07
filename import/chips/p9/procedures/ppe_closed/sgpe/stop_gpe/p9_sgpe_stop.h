@@ -220,7 +220,6 @@ int  p9_hcd_cache_dpll_setup(uint32_t);
 int  p9_hcd_cache_chiplet_init(uint32_t);
 int  p9_hcd_cache_repair_initf(uint32_t);
 int  p9_hcd_cache_arrayinit(uint32_t, uint32_t ex);
-int  p9_hcd_cache_initf(uint32_t);
 int  p9_hcd_cache_startclocks(uint32_t, uint32_t);
 int  p9_hcd_cache_l2_startclocks(uint32_t, uint32_t, uint32_t);
 int  p9_hcd_cache_scominit(uint32_t);
