@@ -26,6 +26,7 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 #include "p9_hcd_sgpe_boot_cme.h"
+#include "p9_hcd_cache_initf.h"
 
 extern SgpeStopRecord G_sgpe_stop_record;
 

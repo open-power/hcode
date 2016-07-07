@@ -80,9 +80,20 @@ include $(P2P_SRCDIR)/p2pfiles.mk
 OBJS += $(P2P_OBJECTS)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(P2P_SRCDIR))
 
+
+#include $(FAPI2_SRCDIR)/fapi2ppefiles.mk
+#OBJS += $(FAPI2LIB_OBJECTS)
+#$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(FAPI2_SRCDIR))
+
+include $(FAPI2_PLAT_SRCDIR)/fapi2ppeplatfiles.mk
+OBJS += $(FAPI2PLATLIB_OBJECTS)
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(FAPI2_PLAT_SRCDIR))
+
+
 # It's important that the final included *.mk is in the $(CME_SCRDIR)
 include $(SGPE_SRCDIR)/stop_gpe/topfiles.mk
 OBJS+=$(TOP_OBJECTS)
+OBJS+=$(UTILS_OBJECTS)
 
 $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 	| xargs -i printf "%d" 0x{})
@@ -95,6 +106,9 @@ $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SUPPORT=1
 $(IMAGE)_COMMONFLAGS+= -DUSE_PK_APP_CFG_H=1
 $(IMAGE)_COMMONFLAGS+= -D__PK__=1
 $(IMAGE)_COMMONFLAGS+= -D__PPE_PLAT
+$(IMAGE)_COMMONFLAGS+= -D__PPE__
+$(IMAGE)_COMMONFLAGS+= -DFAPI2_NO_FFDC=1
+$($(IMAGE)_TARGET)_CXXFLAGS += -Wno-unused-label
 
 # add include paths
 $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
@@ -110,6 +124,11 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(HCODE_COMMON_LIBDIR) \
 	$(HCODE_UTILS_INCDIR) \
         $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
+	$(FAPI2_SRCDIR) \
+	$(FAPI2_PLAT_SRCDIR) \
+	$(SGPE_FAPI2_INC) \
+	$(FAPI2_INC) \
+	$(STD_INC) \
 	)
 
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic

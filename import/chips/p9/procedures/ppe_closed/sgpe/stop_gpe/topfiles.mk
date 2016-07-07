@@ -36,7 +36,6 @@ TOP-C-SOURCES = p9_sgpe_main.c \
                 p9_hcd_cache_chiplet_init.c \
                 p9_hcd_cache_repair_initf.c \
                 p9_hcd_cache_arrayinit.c \
-                p9_hcd_cache_initf.c \
                 p9_hcd_cache_startclocks.c \
                 p9_hcd_cache_l2_startclocks.c \
                 p9_hcd_cache_scominit.c \
@@ -45,6 +44,11 @@ TOP-C-SOURCES = p9_sgpe_main.c \
                 p9_hcd_cache_ras_runtime_scom.c \
                 p9_hcd_sgpe_boot_cme.c
 
-TOP-S-SOURCES =  p9_sgpe_image_header.S
+UTILS-SRC  = utils/p9_putringutils.C \
+				   utils/plat_ring_traverse.C
 
+TOP-S-SOURCES =  p9_sgpe_image_header.S
+TOP-SRC = p9_hcd_cache_initf.C
+
+UTILS_OBJECTS  = $(UTILS-SRC:.C=.o)
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) $(TOP-SRC:.C=.o)

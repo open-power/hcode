@@ -41,6 +41,8 @@
 #include <utils.H>
 #include <plat_hw_access.H>
 #include <fapi2_hw_access.H>
+#include "p9_ringid_sgpe.H"
+#include "plat_ring_traverse.H" // for findRS4InImageAndApply
 
 namespace fapi2
 {
@@ -93,6 +95,25 @@ inline OpModes getOpMode(void)
 // HW Communication Functions
 //--------------------------------------------------------------------------
 
+/// @brief Platform-level implementation  of putRing()
+/// Hardware procedures writers will not call this function.
+/// @tparam K template parameter, passed in target.
+/// @param[in] i_target   Target to operate on.
+/// @param[in] i_ringID   Ring ID that will identify the Ring in the image.
+/// @param[in] i_ringMode Ring operation mode.
+/// @return fapi::ReturnCode. FAPI2_RC_SUCCESS if success, else error code.
+template< TargetType K >
+inline ReturnCode putRing(const Target<K>& i_target,
+                          const RingID i_ringID)
+{
+    ReturnCode l_rc;
+
+    // Find the RS4 string in the SEEPROM
+    l_rc = findRS4InImageAndApply(i_target, i_ringID);
+
+    return l_rc;
+
+}
 /// @brief Reads a SCOM register from a chip.
 /// @tparam K template parameter, passed in target.
 /// @param[in]  i_target     HW target to operate on.
@@ -103,12 +124,12 @@ template< TargetType K >
 inline void getScom(const Target<K>& i_target, const uint64_t i_address,
                     buffer<uint64_t>& o_data)
 {
-    uint64_t l_data = 0;
+    uint64_t l_scm = 0;
     PLAT_GETSCOM(current_err,
                  i_target,
                  (uint32_t)(i_address ),
-                 l_data);
-    o_data = l_data;
+                 l_scm);
+    o_data = l_scm;
 }
 
 

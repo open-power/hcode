@@ -43,10 +43,6 @@ extern "C"
     extern std::vector<fapi2::plat_target_handle_t> G_vec_targets;
 }
 
-static const uint8_t CORES_PER_QUAD = 4;
-static const uint8_t EX_PER_QUAD = 2;
-static const uint8_t CORES_PER_EX = 2;
-static const uint8_t N3_CHIPLET = 5;
 struct ScomAddr
 {
     ScomAddr(uint32_t i_addr) : iv_addr(i_addr)
@@ -79,6 +75,12 @@ struct ScomAddr
 
 namespace fapi2
 {
+
+static const uint8_t CORES_PER_QUAD = 4;
+static const uint8_t EX_PER_QUAD = 2;
+static const uint8_t CORES_PER_EX = 2;
+static const uint8_t N3_CHIPLET = 5;
+
 /// @brief Create a Target, with a value
 /// @param[in] Value the value (i.e., specific element this
 /// target represents, or pointer)
