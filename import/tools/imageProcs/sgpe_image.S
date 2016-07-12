@@ -87,12 +87,15 @@ __build_date:
         .long 0
 __build_time:
         .long 0
+__build_tag:
+        .asciz "unknown        "                         # 16 Characters
 __header_32_reserved:
-        .long 0, 0, 0, 0, 0
+        .long 0
 
         .xip_toc image_size, P9_XIP_UINT32, __image_size
         .xip_toc build_date, P9_XIP_UINT32, __build_date
         .xip_toc build_time, P9_XIP_UINT32, __build_time
+        .xip_toc build_tag,  P9_XIP_STRING, __build_tag
 
         ////////////////////////////////////////////////////////////////////
         // Other Information - 1-byte aligned; 8 entries; TOC-Indexed
@@ -118,7 +121,7 @@ __header_8_reserved:
 __build_user:
         .asciz "unknown        "                         # 16 Characters
 __build_host:
-        .asciz "unknown                                " # 24 characters
+        .asciz "unknown                                " # 40 characters
 __header_string_reserved:
         .space 8, 0
 
