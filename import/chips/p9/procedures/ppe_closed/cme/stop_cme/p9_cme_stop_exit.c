@@ -32,11 +32,12 @@ extern CmeStopRecord G_cme_stop_record;
 int
 p9_cme_stop_exit()
 {
-    int          d2u4_flag       = 0;
-    int          catchup_ongoing = 0;
+    int          d2u4_flag         = 0;
+    int          catchup_ongoing_a = 0;
+    int          catchup_ongoing_b = 0;
     uint8_t      target_level;
-    uint8_t      deeper_level    = 0;
-    uint32_t     deeper_core     = 0;
+    uint8_t      deeper_level      = 0;
+    uint32_t     deeper_core       = 0;
     uint32_t     wakeup;
     uint32_t     core;
 #if !SPWU_AUTO
@@ -48,6 +49,7 @@ p9_cme_stop_exit()
     uint32_t     core_catchup;
 #endif
     ppm_sshsrc_t hist;
+    uint64_t     data64;
 
     //--------------------------------------------------------------------------
     // BEGIN OF STOP EXIT
@@ -56,6 +58,26 @@ p9_cme_stop_exit()
     // extract wakeup signals, clear status, and mask wakeup interrupts
     wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
     core   = ((wakeup >> 4) | (wakeup >> 2) | wakeup) & CME_MASK_BC;
+
+    if (core & CME_MASK_C0)
+    {
+        CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, data64);
+
+        if (data64 & BIT64(13))
+        {
+            core = core - CME_MASK_C0;
+        }
+    }
+
+    if (core & CME_MASK_C1)
+    {
+        CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, data64);
+
+        if (data64 & BIT64(13))
+        {
+            core = core - CME_MASK_C1;
+        }
+    }
 
     // override with partial good core mask
     // also ignore wakeup to running cores
@@ -74,7 +96,7 @@ p9_cme_stop_exit()
 
     if (spwu_wake)
     {
-        out32(CME_LCL_SICR_OR,  spwu << SHIFT32(17));
+        out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(17));
     }
 
 #endif
@@ -191,18 +213,38 @@ p9_cme_stop_exit()
 #if !STOP_PRIME
 #if !SKIP_EXIT_CATCHUP
 
-            if (catchup_ongoing)
+            if (catchup_ongoing_a && (!catchup_ongoing_b))
             {
                 core = CME_MASK_BC;
-                catchup_ongoing = 0;
+                catchup_ongoing_a = 0;
             }
-            else
+            else if ((core != CME_MASK_BC) && (!deeper_core) && (!catchup_ongoing_b))
             {
                 wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
                 core_catchup = (~core) &
                                ((wakeup >> 4) | (wakeup >> 2) | wakeup);
                 core_catchup = core_catchup & G_cme_stop_record.core_enabled &
                                (~G_cme_stop_record.core_running);
+
+                if (core_catchup & CME_MASK_C0)
+                {
+                    CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, data64);
+
+                    if (data64 & BIT64(13))
+                    {
+                        core_catchup = core_catchup - CME_MASK_C0;
+                    }
+                }
+
+                if (core_catchup & CME_MASK_C1)
+                {
+                    CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, data64);
+
+                    if (data64 & BIT64(13))
+                    {
+                        core_catchup = core_catchup - CME_MASK_C1;
+                    }
+                }
 
                 if (core_catchup)
                 {
@@ -242,7 +284,7 @@ p9_cme_stop_exit()
                     else
                     {
                         core = core_catchup;
-                        catchup_ongoing = 1;
+                        catchup_ongoing_a = 1;
                         continue;
                     }
                 }
@@ -268,18 +310,38 @@ p9_cme_stop_exit()
 
 #if !SKIP_EXIT_CATCHUP
 
-            if (catchup_ongoing)
+            if (catchup_ongoing_b)
             {
                 core = CME_MASK_BC;
-                catchup_ongoing = 0;
+                catchup_ongoing_b = 0;
             }
-            else
+            else if ((core != CME_MASK_BC) && (!deeper_core))
             {
                 wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
                 core_catchup = (~core) &
                                ((wakeup >> 4) | (wakeup >> 2) | wakeup);
                 core_catchup = core_catchup & G_cme_stop_record.core_enabled &
                                (~G_cme_stop_record.core_running);
+
+                if (core_catchup & CME_MASK_C0)
+                {
+                    CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, data64);
+
+                    if (data64 & BIT64(13))
+                    {
+                        core_catchup = core_catchup - CME_MASK_C0;
+                    }
+                }
+
+                if (core_catchup & CME_MASK_C1)
+                {
+                    CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, data64);
+
+                    if (data64 & BIT64(13))
+                    {
+                        core_catchup = core_catchup - CME_MASK_C1;
+                    }
+                }
 
                 if (core_catchup)
                 {
@@ -319,7 +381,7 @@ p9_cme_stop_exit()
                     else
                     {
                         core = core_catchup;
-                        catchup_ongoing = 1;
+                        catchup_ongoing_b = 1;
                         continue;
                     }
                 }
@@ -345,7 +407,7 @@ p9_cme_stop_exit()
 #endif
 
         }
-        while(catchup_ongoing);
+        while(catchup_ongoing_a || catchup_ongoing_b);
 
         if (d2u4_flag)
         {
@@ -356,18 +418,18 @@ p9_cme_stop_exit()
     //--------------------------------------------------------------------------
     // STOP LEVEL 3
     //--------------------------------------------------------------------------
-    /*
-        if (deeper_level == STOP_LEVEL_3 || target_level == STOP_LEVEL_3)
-        {
-            //======================
-            MARK_TAG(SX_STOP3, core)
-            //======================
 
-            PK_TRACE("STOP Level 3 Sequence");
-            //Return to full voltage
-            //disable ivrm?
-        }
-    */
+    if (deeper_level == STOP_LEVEL_3 || target_level == STOP_LEVEL_3)
+    {
+        //======================
+        MARK_TAG(SX_STOP3, core)
+        //======================
+
+        PK_TRACE("STOP Level 3 Sequence");
+        //Return to full voltage
+        //disable ivrm?
+    }
+
     //--------------------------------------------------------------------------
     // STOP LEVEL 2
     //--------------------------------------------------------------------------
@@ -474,7 +536,7 @@ p9_cme_stop_exit()
 #if EPM_P9_TUNING
             CME_PUTSCOM(SCRACTH0, CME_MASK_C0, 0x200000);
 #else
-            CME_PUTSCOM(SCRACTH0, CME_MASK_C0, int64(SELF_RESTORE_ADDR_FETCH));
+            CME_PUTSCOM(SCRACTH0, CME_MASK_C0, in64(SELF_RESTORE_ADDR_FETCH));
 #endif
         }
 
@@ -487,7 +549,7 @@ p9_cme_stop_exit()
 #if EPM_P9_TUNING
             CME_PUTSCOM(SCRACTH1, CME_MASK_C1, 0x200000);
 #else
-            CME_PUTSCOM(SCRACTH1, CME_MASK_C1, int64(SELF_RESTORE_ADDR_FETCH));
+            CME_PUTSCOM(SCRACTH1, CME_MASK_C1, in64(SELF_RESTORE_ADDR_FETCH));
 #endif
         }
 
@@ -664,7 +726,7 @@ p9_cme_stop_exit()
 
     if (spwu_stop)
     {
-        out32(CME_LCL_SICR_OR,  spwu << SHIFT32(17));
+        out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));
     }
 
     if ((core = (core & (~spwu_stop))))

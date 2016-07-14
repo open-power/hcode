@@ -118,6 +118,7 @@
 
 /// Macro to update STOP History
 #define CME_STOP_UPDATE_HISTORY(core,gated,trans,req_l,act_l,req_e,act_e) \
+    hist.value                   = 0;                                     \
     hist.fields.stop_gated       = gated;                                 \
     hist.fields.stop_transition  = trans;                                 \
     hist.fields.req_stop_level   = req_l;                                 \

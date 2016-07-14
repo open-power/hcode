@@ -28,12 +28,13 @@ enum P9_HCD_COMMON_CLK_CTRL_CONSTANTS
 {
     CLK_STOP_CMD                             = BIT64(0),
     CLK_START_CMD                            = BIT64(1),
+    CLK_REGION_ANEP                          = BIT64(10),
     CLK_REGION_DPLL                          = BIT64(14),
+    CLK_REGION_EX0_L2_L3_REFR                = BIT64(6) | BIT64(8) | BIT64(12),
+    CLK_REGION_EX1_L2_L3_REFR                = BIT64(7) | BIT64(9) | BIT64(13),
     CLK_REGION_ALL_BUT_EX                    = BITS64(4, 2) | BITS64(10, 2) | BIT64(14),
     CLK_REGION_ALL_BUT_EX_DPLL               = BITS64(4, 2) | BITS64(10, 2),
     CLK_REGION_ALL_BUT_EX_ANEP_DPLL          = BITS64(4, 2) | BIT64(11),
-    CLK_REGION_EX0_L2_L3_REFR                = BIT64(6) | BIT64(8) | BIT64(12),
-    CLK_REGION_EX1_L2_L3_REFR                = BIT64(7) | BIT64(9) | BIT64(13),
     CLK_REGION_ALL_BUT_PLL                   = BITS64(4, 10),
     CLK_REGION_ALL                           = BITS64(4, 11),
     CLK_THOLD_ALL                            = BITS64(48, 3)

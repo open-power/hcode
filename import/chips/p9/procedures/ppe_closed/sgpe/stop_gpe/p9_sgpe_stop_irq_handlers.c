@@ -246,16 +246,23 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
              G_sgpe_stop_record.group.core[VECTOR_ENTRY],
              G_sgpe_stop_record.group.core[VECTOR_EXIT]);
 
-    if (G_sgpe_stop_record.group.core[VECTOR_EXIT])
+    if ((!G_sgpe_stop_record.group.core[VECTOR_EXIT]) &&
+        (!G_sgpe_stop_record.group.core[VECTOR_ENTRY]))
     {
-        PK_TRACE("unblock exit");
-        pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));
+        out32(OCB_OIMR1_CLR, (BITS32(15, 2) | BIT32(19)));
     }
-
-    if (G_sgpe_stop_record.group.core[VECTOR_ENTRY])
+    else
     {
-        PK_TRACE("unblock entry");
-        pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
-    }
+        if (G_sgpe_stop_record.group.core[VECTOR_EXIT])
+        {
+            PK_TRACE("unblock exit");
+            pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));
+        }
 
+        if (G_sgpe_stop_record.group.core[VECTOR_ENTRY])
+        {
+            PK_TRACE("unblock entry");
+            pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
+        }
+    }
 }

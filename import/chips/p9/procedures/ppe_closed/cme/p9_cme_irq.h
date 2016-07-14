@@ -132,5 +132,5 @@ pk_irq_vec_restore(PkMachineContext* context)
         pk_halt();
     }
 
-    pk_critical_section_exit(context);
+    //pk_critical_section_exit(context);
 }

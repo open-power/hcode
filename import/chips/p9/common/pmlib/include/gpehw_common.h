@@ -91,6 +91,7 @@ enum GPE_SCOM_ADDRESS_PARAMETERS
 #define GPE_GETSCOM(addr, data)   getscom(0, addr, &data);
 
 #define GPE_PUTSCOM(addr, data)   putscom(0, addr, data);
+
 #define GPE_GETSCOM_VAR(addr, cplt_base, cq_offset, ex_select, data) \
     getscom(0,GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select),&data);
 

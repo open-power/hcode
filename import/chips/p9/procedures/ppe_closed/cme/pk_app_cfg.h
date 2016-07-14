@@ -34,11 +34,13 @@
 /// \brief Application specific overrides go here.
 ///
 
+#define TEST_ONLY_BCE_IRR     0
+
 #define STOP_PRIME            0
 #define SKIP_ABORT            0
 #define SKIP_L2_PURGE_ABORT   0
 #define SKIP_ENTRY_CATCHUP    0
-#define SKIP_EXIT_CATCHUP     1
+#define SKIP_EXIT_CATCHUP     0
 #define SKIP_ARRAYINIT        1
 #define SKIP_SCAN0            1
 #define SKIP_INITF            0
@@ -58,8 +60,9 @@
 #if EPM_P9_TUNING
     #define PK_TRACE_BUFFER_WRAP_MARKER 1
 #endif
-#define PK_TRACE_TIMER_OUTPUT 0
-#define PK_TRACE_ENABLE       1
+#define PK_TRACE_TIMER_OUTPUT  0
+#define PK_TRACE_ENABLE        1
+#define PK_KERNEL_TRACE_ENABLE 1
 
 // --------------------
 

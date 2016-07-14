@@ -75,6 +75,7 @@
         _liw        r5, pk_unified_irq_prty_mask_handler
         mtlr        r5
         blrl            // On return, d5 contains task prty irq vec.
+        mfsprg      r3, 0 // In case r3 is modified by unified handler, restore to sprg0
 #else
         _lwzi       %r5, %r5, GPE_GISR0(APPCFG_OCC_INSTANCE_ID)
 #endif

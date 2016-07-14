@@ -291,25 +291,25 @@ p9_sgpe_stop_exit()
 
                 if (ccsr.value & BIT32((qloop << 2)))
                 {
-                    cme_flags |= 0x2;
+                    cme_flags |= CME_CORE0_ENABLE;
                     GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
                                                    ((qloop << 2))),     scom_data);
 
                     if (!(scom_data & BIT64(18)))
                     {
-                        cme_flags |= 0x8;
+                        cme_flags |= CME_CORE0_ENTRY_FIRST;
                     }
                 }
 
                 if (ccsr.value & BIT32((qloop << 2) + 1))
                 {
-                    cme_flags |= 0x1;
+                    cme_flags |= CME_CORE1_ENABLE;
                     GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
                                                    ((qloop << 2) + 1)), scom_data);
 
                     if (!(scom_data & BIT64(18)))
                     {
-                        cme_flags |= 0x4;
+                        cme_flags |= CME_CORE1_ENTRY_FIRST;
                     }
                 }
 
@@ -319,29 +319,29 @@ p9_sgpe_stop_exit()
 
             if (m_pg & SND_EX_IN_QUAD)
             {
-                cme_flags = 0;
+                cme_flags = CME_EX1_INDICATOR;
 
                 if (ccsr.value & BIT32(((qloop << 2) + 2)))
                 {
-                    cme_flags |= 0x2;
+                    cme_flags |= CME_CORE0_ENABLE;
                     GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
                                                    ((qloop << 2) + 2)), scom_data);
 
                     if (!(scom_data & BIT64(18)))
                     {
-                        cme_flags |= 0x8;
+                        cme_flags |= CME_CORE0_ENTRY_FIRST;
                     }
                 }
 
                 if (ccsr.value & BIT32(((qloop << 2) + 3)))
                 {
-                    cme_flags |= 0x1;
+                    cme_flags |= CME_CORE1_ENABLE;
                     GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
                                                    ((qloop << 2) + 3)), scom_data);
 
                     if (!(scom_data & BIT64(18)))
                     {
-                        cme_flags |= 0x4;
+                        cme_flags |= CME_CORE1_ENTRY_FIRST;
                     }
                 }
 

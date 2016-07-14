@@ -32,13 +32,16 @@ p9_hcd_core_startclocks(uint32_t core)
     int      rc = CME_STOP_SUCCESS;
     uint64_t scom_data, loop;
 
+    //FAPI_DBG("Set CPLT_CTRL0[AVP_MODE] for cache-contained execution");
+    //FAPI_TRY(putScom(i_target, C_CPLT_CTRL0_OR, MASK_SET(5)));
+
     /// @todo add DD1 attribute control
     PK_TRACE("DD1 only: set sdis_n(flushing LCBES condition workaround");
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
     CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, scom_data);
-    scom_data = scom_data & ~(BITS64(0, 4) & BITS64(12, 8) & BITS64(52, 12));
+    scom_data = scom_data & ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
     scom_data = scom_data | (BIT64(1) | BIT64(3) | BIT64(59));
     CME_PUTSCOM(C_OPCG_ALIGN, core, scom_data);
 
@@ -77,10 +80,11 @@ p9_hcd_core_startclocks(uint32_t core)
 
     PK_TRACE("Set then unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
     CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data);
-    scom_data = scom_data | BIT64(7);
+    scom_data = scom_data | BITS64(7, 2);
     CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
     scom_data = scom_data & ~BIT64(7);
     CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
+
     // 255 cache cycles
     PPE_WAIT_CORE_CYCLES(loop, 510);
 
