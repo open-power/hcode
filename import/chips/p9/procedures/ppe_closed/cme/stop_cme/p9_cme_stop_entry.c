@@ -505,75 +505,79 @@ p9_cme_stop_entry()
         //----------------------------------------------------------------------
         // STOP LEVEL 3
         //----------------------------------------------------------------------
-        /*
-                if (target_level == 3)
-                {
 
-                    //==========================
-                    MARK_TAG(SE_CORE_VMIN, core)
-                    //==========================
+        if (target_level == 3)
+        {
 
-                    PK_TRACE("SE3.a");
-                    // Enable IVRM if not already
+            //==========================
+            MARK_TAG(SE_CORE_VMIN, core)
+            //==========================
 
-                    PK_TRACE("SE3.b");
-                    // Drop to Vmin
+            PK_TRACE("SE3.a");
+            // Enable IVRM if not already
 
-                    if(core & CME_MASK_C0)
-                    {
-                        G_cme_stop_record.act_level_c0 = STOP_LEVEL_3;
-                    }
+            PK_TRACE("SE3.b");
 
-                    if(core & CME_MASK_C1)
-                    {
-                        G_cme_stop_record.act_level_c1 = STOP_LEVEL_3;
-                    }
+            // Drop to Vmin
+            /*
+                        if(core & CME_MASK_C0)
+                        {
+                            G_cme_stop_record.act_level_c0 = STOP_LEVEL_3;
+                        }
 
-                    //===========================
-                    MARK_TAG(SE_STOP3_DONE, core)
-                    //===========================
+                        if(core & CME_MASK_C1)
+                        {
+                            G_cme_stop_record.act_level_c1 = STOP_LEVEL_3;
+                        }
 
-                    PK_TRACE("SE3.c");
-                    // Update Stop History: In Core Stop Level 3
-                    CME_STOP_UPDATE_HISTORY(core,
-                                            STOP_CORE_IS_GATED,
-                                            STOP_TRANS_COMPLETE,
-                                            target_level,
-                                            STOP_LEVEL_3,
-                                            STOP_REQ_DISABLE,
-                                            STOP_ACT_ENABLE);
+                        //===========================
+                        MARK_TAG(SE_STOP3_DONE, core)
+                        //===========================
 
-                    // If both cores targeting different levels
-                    // deeper core should have at least deeper stop level than 3
-                    // only need to modify deeper core history if another one was done
-                    if (deeper_core)
-                    {
-                        CME_STOP_UPDATE_HISTORY(deeper_core,
+                        PK_TRACE("SE3.c");
+                        // Update Stop History: In Core Stop Level 3
+
+                        CME_STOP_UPDATE_HISTORY(core,
                                                 STOP_CORE_IS_GATED,
-                                                STOP_TRANS_ENTRY,
-                                                deeper_level,
-                                                STOP_LEVEL_2,
+                                                STOP_TRANS_COMPLETE,
+                                                target_level,
+                                                STOP_LEVEL_3,
                                                 STOP_REQ_DISABLE,
                                                 STOP_ACT_ENABLE);
-                        // from now on, proceed with only deeper core
-                        core          = deeper_core;
-                        target_level  = deeper_level;
-                        deeper_level  = 0;
-                        deeper_core   = 0;
-                        entry_ongoing = 1;
-                    }
-                    else
-                    {
-                        entry_ongoing = 0;
-                    }
+            */
+            // If both cores targeting different levels
+            // deeper core should have at least deeper stop level than 3
+            // only need to modify deeper core history if another one was done
+            if (deeper_core)
+            {
+                /*
+                                CME_STOP_UPDATE_HISTORY(deeper_core,
+                                                        STOP_CORE_IS_GATED,
+                                                        STOP_TRANS_ENTRY,
+                                                        deeper_level,
+                                                        STOP_LEVEL_2,
+                                                        STOP_REQ_DISABLE,
+                                                        STOP_ACT_ENABLE);
+                */
+                // from now on, proceed with only deeper core
+                core          = deeper_core;
+                target_level  = deeper_level;
+                deeper_level  = 0;
+                deeper_core   = 0;
+                entry_ongoing = 1;
+            }
+            else
+            {
+                entry_ongoing = 0;
+            }
 
-                    // If we are done at STOP level 3
-                    if (!entry_ongoing)
-                    {
-                        break;
-                    }
-                }
-        */
+            // If we are done at STOP level 3
+            if (!entry_ongoing)
+            {
+                break;
+            }
+        }
+
         //----------------------------------------------------------------------
         // STOP LEVEL 4
         //----------------------------------------------------------------------
@@ -748,12 +752,14 @@ p9_cme_stop_entry()
                 if (!core_aborted &&
                     (in32(CME_LCL_EINR) & BITS32(12, 6)))
                 {
-                    if (in32(CME_LCL_EINR) & IRQ_VEC_WAKE_C0)
+                    if (in32(CME_LCL_EINR) &
+                        (((core & CME_MASK_C0) ? BIT32(12) : 0) | BIT32(14) | BIT32(16)))
                     {
                         core_aborted |= CME_MASK_C0;
                     }
 
-                    if (in32(CME_LCL_EINR) & IRQ_VEC_WAKE_C1)
+                    if (in32(CME_LCL_EINR) &
+                        (((core & CME_MASK_C1) ? BIT32(13) : 0) | BIT32(15) | BIT32(17)))
                     {
                         core_aborted |= CME_MASK_C1;
                     }
@@ -780,6 +786,9 @@ p9_cme_stop_entry()
             MARK_TAG(SE_PURGE_L2_DONE, core_aborted ? core_aborted : CME_MASK_BC)
             //===============================================================
 
+            // if core = 3 aborted = 1, core = 2(sgpe handoff) aborted (cme wakeup)
+            // if core = 1 aborted = 1, core = 0(break)        aborted (cme wakeup)
+            // if core = 1 aborted = 2, core = 1(sgpe handoff) aborted (sgpe wakeup)
             if (core !=  core_aborted)
             {
                 core &= ~core_aborted;

@@ -107,6 +107,7 @@
 
 /// Macro to update STOP History
 #define SGPE_STOP_UPDATE_HISTORY(id,base,gated,trans,req_l,act_l,req_e,act_e) \
+    hist.value                   = 0;                                         \
     hist.fields.stop_gated       = gated;                                     \
     hist.fields.stop_transition  = trans;                                     \
     hist.fields.req_stop_level   = req_l;                                     \
@@ -132,13 +133,22 @@ enum SGPE_STOP_IRQ_PAYLOAD_MASKS
     TYPE2_PAYLOAD_EXIT_EVENT          = 0xC00,
     TYPE2_PAYLOAD_STOP_LEVEL          = 0xF,
     TYPE3_PAYLOAD_EXIT_EVENT          = 0xC00,
-    TYPE6_PAYLOAD_EXIT_EVENT          = 0xC00
+    TYPE6_PAYLOAD_EXIT_EVENT          = 0xF
 };
 
 enum SGPE_STOP_EVENT_LEVELS
 {
     LEVEL_EX_BASE                     = 8,
     LEVEL_EQ_BASE                     = 11
+};
+
+enum SGPE_STOP_CME_FLAGS
+{
+    CME_CORE0_ENTRY_FIRST             = BIT64(28),
+    CME_CORE1_ENTRY_FIRST             = BIT64(29),
+    CME_CORE0_ENABLE                  = BIT64(30),
+    CME_CORE1_ENABLE                  = BIT64(31),
+    CME_EX1_INDICATOR                 = BIT64(26)
 };
 
 enum SGPE_STOP_PSCOM_MASK
