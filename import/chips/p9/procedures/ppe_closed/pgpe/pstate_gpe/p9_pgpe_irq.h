@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/cme/p9_cme_irq.h $      */
+/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe_irq.h $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -23,15 +23,14 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 //-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2014
+// *! (C) Copyright International Business Machines Corp. 2015
 // *! All Rights Reserved -- Property of IBM
 // *! *** IBM Confidential ***
 //-----------------------------------------------------------------------------
 
-/// \file   p9_cme_irq_common.h
-/// \brief  Shared and global definitions for CME H-codes.
-/// \owner  Michael Olsen   Email: cmolsen@us.ibm.com
-/// \owner  David Du        Email: daviddu@us.ibm.com
+/// \file   p9_pgpe_irq.h
+/// \brief  Shared and global definitions for PGPE (GPE2) H-codes.
+///
 
 //-------------------------------------------------------------------//
 //            DO NOT modify this file unless you're the owner        //
@@ -40,11 +39,14 @@
 // Notes:
 // - The only define names that should be changed/added/removed
 //   in this file are:
-//   - IRQ_VEC_PRTY(n>0)_CME(x)
+//   - IRQ_VEC_PRTY(n>0)_GPE(x)
 //   - IDX_PRTY_LVL_(task_abbr) and reflect in relevant H-code as well
 //   - All other define names are used in H-codes
 // - The variable names and actions in this file must perfectly match associated
-//   definitions in cme_irq_common.c
+//   definitions in gpe2_irq_common.c
+
+#ifndef _P9_PGPE_IRQ_H_
+#define _P9_PGPE_IRQ_H_
 
 // We define four levels of TRACE outputs:
 // _INF:  Trace level used for main informational events.
@@ -63,82 +65,80 @@
 #define TRUE  1
 #define FALSE 0
 
-// Priority Levels
-#define IDX_PRTY_LVL_HIPRTY         0
-#define IDX_PRTY_LVL_BCE_DB3        1
-#define IDX_PRTY_LVL_WAKE_DB2       2
-#define IDX_PRTY_LVL_STOP           3
-#define IDX_PRTY_LVL_DB1            4
-#define IDX_PRTY_LVL_DB0            5
-#define IDX_PRTY_LVL_INTERCME_IN0   6
-#define IDX_PRTY_LVL_PMCR           7
-#define IDX_PRTY_LVL_DISABLED       8
-#define IDX_PRTY_VEC                0
-#define IDX_MASK_VEC                1
-#define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(9)
-extern const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2];
+#define IDX_PRTY_LVL_HIPRTY        0
+#define IDX_PRTY_LVL_OCBERR        1
+#define IDX_PRTY_LVL_IPI2HI        2
+#define IDX_PRTY_LVL_TYPE1_TYPE4   3
+#define IDX_PRTY_LVL_DISABLED      4
+#define IDX_PRTY_VEC  0
+#define IDX_MASK_VEC  1
+#define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(5)
+extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
-// Group0: Non-task hi-prty IRQs
-#define IRQ_VEC_PRTY0_CME   (uint64_t)(0xFE00000000000000)
-// Group1: DB3
-#define IRQ_VEC_PRTY1_CME   (uint64_t)(0x0030000000000000)
-// Group2: DB2
-#define IRQ_VEC_PRTY2_CME   (uint64_t)(0x0000300000000000)
-// Group3: WAKEUP + STOP
-#define IRQ_VEC_PRTY3_CME   (uint64_t)(0x000FCC0000000000)
-// Group4: DB1
-#define IRQ_VEC_PRTY4_CME   (uint64_t)(0x0000000000C00000)
-// Group5: DB0
-#define IRQ_VEC_PRTY5_CME   (uint64_t)(0x000000000C000000)
-// Group6: INTERCME_IN0
-#define IRQ_VEC_PRTY6_CME   (uint64_t)(0x0100000000000000)
-// Group7: PMCR
-#define IRQ_VEC_PRTY7_CME   (uint64_t)(0x0000000030000000)
-// Group8: We should never detect these
-#define IRQ_VEC_PRTY8_CME   (uint64_t)(0x00C003FFC33FFFFF)
+#define IRQ_VEC_PRTY0_GPE   (uint64_t)(0xFFD1690000000000) // Non-task hi-prty IRQs
+// Shared between all instances
+#define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x0020000000000000) // Task1-OCCHW_IRQ_OCB_ERROR=HB loss?
+#define IRQ_VEC_PRTY2_GPE2  (uint64_t)(0x0000001000000000) // Task2-IPC msgs from 405
+#define IRQ_VEC_PRTY3_GPE2  (uint64_t)(0x0000000000020000) // Task3-CME interrupts
+#define IRQ_VEC_PRTY4_GPE2  (uint64_t)(0x000E96EFFFFDBFFF) // Other instances' IRQs
+// Unique to each instance
+// We should never detect these
 
-// This should be 0xFFFFFFFFFFFFFFFF
-#define IRQ_VEC_PRTY_CHECK  ( IRQ_VEC_PRTY0_CME | \
-                              IRQ_VEC_PRTY1_CME | \
-                              IRQ_VEC_PRTY2_CME | \
-                              IRQ_VEC_PRTY3_CME | \
-                              IRQ_VEC_PRTY4_CME | \
-                              IRQ_VEC_PRTY5_CME | \
-                              IRQ_VEC_PRTY6_CME | \
-                              IRQ_VEC_PRTY7_CME | \
-                              IRQ_VEC_PRTY8_CME )
+#define IRQ_VEC_ALL_OUR_IRQS  ( IRQ_VEC_PRTY0_GPE  | \
+                                IRQ_VEC_PRTY1_GPE2 | \
+                                IRQ_VEC_PRTY2_GPE2 | \
+                                IRQ_VEC_PRTY3_GPE2 )      // Note, we do not incl PRTY4 here!
 
-extern uint8_t       g_current_prty_level;
-extern uint8_t       g_eimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];
-extern int           g_eimr_stack_ctr;
-extern uint64_t      g_eimr_override_stack[NUM_EXT_IRQ_PRTY_LEVELS];
-extern uint64_t      g_eimr_override;
+#define IRQ_VEC_PRTY_CHECK    ( IRQ_VEC_ALL_OUR_IRQS | \
+                                IRQ_VEC_PRTY4_GPE2 )      // This should be 0xFFFFFFFFFFFFFFFF
 
-/// Restore a vector of interrupts by overwriting EIMR.
+/*extern const uint8_t IDX_PRTY_VEC;
+extern const uint8_t IDX_MASK_VEC;
+
+extern const uint8_t IDX_PRTY_LVL_HIPRTY;
+extern const uint8_t IDX_PRTY_LVL_OCBERR;
+extern const uint8_t IDX_PRTY_LVL_IPI2HI;
+extern const uint8_t IDX_PRTY_LVL_TYPE1;
+extern const uint8_t IDX_PRTY_LVL_DISABLED;*/
+
+extern uint8_t    g_current_prty_level;
+extern uint8_t    g_oimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];
+extern int        g_oimr_stack_ctr;
+extern uint64_t   g_oimr_override_stack[NUM_EXT_IRQ_PRTY_LEVELS];
+extern uint64_t   g_oimr_override;
+
+
+/// Restore a vector of interrupts by overwriting OIMR.
 UNLESS__PPE42_IRQ_CORE_C__(extern)
 inline void
-pk_irq_vec_restore(PkMachineContext* context)
+pk_irq_vec_restore( PkMachineContext* context)
 {
     pk_critical_section_enter(context);
 
-    if (g_eimr_stack_ctr >= 0)
+    if (g_oimr_stack_ctr >= 0)
     {
-        out64(STD_LCL_EIMR,
-              ext_irq_vectors_cme[g_eimr_stack[g_eimr_stack_ctr]][IDX_MASK_VEC]);
-        out64(STD_LCL_EIMR_CLR,
-              g_eimr_override_stack[g_eimr_stack_ctr]);
-        out64(STD_LCL_EIMR_OR,
-              g_eimr_override);
+        out32( OCB_OIMR0_CLR, (uint32_t)((IRQ_VEC_ALL_OUR_IRQS |
+                                          g_oimr_override_stack[g_oimr_stack_ctr]) >> 32));
+        out32( OCB_OIMR1_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS |
+                                         g_oimr_override_stack[g_oimr_stack_ctr]));
+        out32( OCB_OIMR0_OR,
+               (uint32_t)((ext_irq_vectors_gpe[g_oimr_stack[g_oimr_stack_ctr]][IDX_MASK_VEC] |
+                           g_oimr_override) >> 32));
+        out32( OCB_OIMR1_OR,
+               (uint32_t)(ext_irq_vectors_gpe[g_oimr_stack[g_oimr_stack_ctr]][IDX_MASK_VEC] |
+                          g_oimr_override));
         // Restore the prty level tracker to the task that was interrupted, if any.
-        g_current_prty_level = g_eimr_stack[g_eimr_stack_ctr];
-        g_eimr_stack_ctr--;
+        g_current_prty_level = g_oimr_stack[g_oimr_stack_ctr];
+        g_oimr_stack_ctr--;
     }
     else
     {
-        PK_TRACE("Code bug: Messed up EIMR book keeping: g_eimr_stack_ctr=%d",
-                 g_eimr_stack_ctr);
+        PK_TRACE("ERR: Code bug: Messed up OIMR book keeping: g_oimr_stack_ctr=%d",
+                 g_oimr_stack_ctr);
         pk_halt();
     }
 
-    //pk_critical_section_exit(context);
+    pk_critical_section_exit(context);
 }
+
+#endif // _P9_PGPE_IRQ_H_

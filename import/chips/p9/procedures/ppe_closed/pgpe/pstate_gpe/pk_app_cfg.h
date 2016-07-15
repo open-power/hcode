@@ -33,8 +33,37 @@
 /// \file pk_app_cfg.h
 /// \brief Application specific overrides go here.
 ///
-#include "occ_app_cfg.h"
-#include "global_app_cfg.h"
+
+// --------------------
+#define EPM_P9_TUNING 1
+#define SIMICS_TUNING 1
+#define DEV_DEBUG     1
+#define PK_TRACE_TIMER_OUTPUT 0
+
+// Force CME and GPE tasks to use the unified interrupt handler.
+#define UNIFIED_IRQ_HANDLER_GPE
+
+// This application will use the external timebase register
+// (comment this line out to use the decrementer as timebase)
+#define APPCFG_USE_EXT_TIMEBASE
+
+
+// If we are using the external timebase then assume
+// a frequency of 37.5Mhz.  Otherwise, the default is to use
+// the decrementer as a timebase and assume a frequency of
+// 600MHz
+// In product code, this value will be IPL-time configurable.
+#ifdef APPCFG_USE_EXT_TIMEBASE
+    #define PPE_TIMEBASE_HZ 37500000
+#else
+    #define PPE_TIMEBASE_HZ 600000000
+#endif /* APPCFG_USE_EXT_TIMEBASE */
+
+// --------------------
+
+// GPE2 is the PGPE and is the route owner for now.
+// (Change this to #3 when pulling in SGPE)
+#define OCCHW_IRQ_ROUTE_OWNER  2
 
 /// The Instance ID of the OCC processor that this application is intended to run on
 ///// 0-3 -> GPE, 4 -> 405
@@ -60,6 +89,6 @@
     OCCHW_IRQ_CHECK_STOP_GPE2             OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
     OCCHW_IRQ_IPI2_HI_PRIORITY            OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
     OCCHW_IRQ_IPI2_LO_PRIORITY            OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
-    OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING  OCCHW_IRQ_TYPE_LEVEL OCCHW_IRQ_POLARITY_HI      OCCHW_IRQ_MASKED \
-    OCCHW_IRQ_PMC_PCB_INTR_TYPE4_PENDING  OCCHW_IRQ_TYPE_LEVEL OCCHW_IRQ_POLARITY_HI      OCCHW_IRQ_MASKED
+    OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING  OCCHW_IRQ_TYPE_LEVEL  OCCHW_IRQ_POLARITY_HI  OCCHW_IRQ_MASKED \
+    OCCHW_IRQ_PMC_PCB_INTR_TYPE4_PENDING  OCCHW_IRQ_TYPE_LEVEL  OCCHW_IRQ_POLARITY_HI  OCCHW_IRQ_MASKED
 #endif /*__PK_APP_CFG_H__*/

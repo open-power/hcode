@@ -25,9 +25,18 @@
 //
 // Setup and enable the O2S bridge on the AVS bus.
 //
+
+#ifndef _AVS_DRIVER_H_
+#define _AVS_DRIVER_H_
+
+#define VEXT_SLEW_RATE_MVPERUS  0x0A0A  // Trise=Tfall=10mv/us
+#define MAX_POLL_COUNT_AVS      10
+
 void
 external_voltage_control_init(uint32_t* vext_read_mv);
 
 
 void
 external_voltage_control_write(uint32_t vext_write_mv);
+
+#endif //_AVS_DRIVER_H_

@@ -25,9 +25,11 @@
 
 #include "pk.h"
 #include "p9_cme_irq.h"
+#include "p9_cme_flags.h"
 
 // CME Pstate Header and Structure
 #include "p9_cme_pstate.h"
+CmePstateRecord G_cme_pstate_record;
 
 // CME Stop Header and Structure
 #include "p9_cme_stop.h"
@@ -42,7 +44,7 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_PVREF_FAIL
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_OCC_HEARTBEAT_LOST
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_CORE_CHECKSTOP
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DROPOUT_FAIL
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_SPARE_7
+IRQ_HANDLER(p9_cme_pstate_intercme_in0_handler, (void*)NULL)                    //CMEHW_IRQ_INTERCME_DIRECT_IN0
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_BUSY_HIGH
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_TIMEOUT
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DOORBELL3_C0
@@ -77,12 +79,16 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_COMM_SEND_ACK
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_COMM_SEND_NACK
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_SPARE_32
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_SPARE_33
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_PMCR_UPDATE_C0
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_PMCR_UPDATE_C1
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DOORBELL0_C0
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DOORBELL0_C1
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_SPARE_38
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_SPARE_39
+IRQ_HANDLER(p9_cme_pstate_pmcr_handler, (void*) & (G_cme_pstate_record.sem[0]))
+//CMEHW_IRQ_PMCR_UPDATE_C0
+IRQ_HANDLER(p9_cme_pstate_pmcr_handler, (void*) & (G_cme_pstate_record.sem[0]))
+//CMEHW_IRQ_PMCR_UPDATE_C1
+IRQ_HANDLER(p9_cme_pstate_db_handler, (void*) & (G_cme_pstate_record.sem[1]))
+//CMEHW_IRQ_DOORBELL0_C0
+IRQ_HANDLER(p9_cme_pstate_db_handler, (void*) & (G_cme_pstate_record.sem[1]))
+//CMEHW_IRQ_DOORBELL0_C1
+IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_INTERCME_IN1
+IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_INTERCME_IN2
 IRQ_HANDLER(p9_cme_stop_doorbell_handler, 0) //CMEHW_IRQ_DOORBELL1_C0
 IRQ_HANDLER(p9_cme_stop_doorbell_handler, 0) //CMEHW_IRQ_DOORBELL1_C1
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_PECE_INTR_DISABLED_C0
@@ -110,21 +116,24 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_RESERVED_63
 EXTERNAL_IRQ_TABLE_END
 
 #define  KERNEL_STACK_SIZE  256
-#define  THREAD_STACK_SIZE  256
+#define  THREAD_STACK_SIZE  512
 
 #define  CME_THREAD_PRIORITY_STOP_EXIT   1
 #define  CME_THREAD_PRIORITY_STOP_ENTRY  2
-#define  CME_THREAD_PRIORITY_PSTATE_PMCR 3
+#define  CME_THREAD_PRIORITY_PSTATE_DB   3
+#define  CME_THREAD_PRIORITY_PSTATE_PMCR 4
 
 uint8_t  G_kernel_stack[KERNEL_STACK_SIZE];
 
 uint8_t  G_p9_cme_stop_enter_thread_stack[THREAD_STACK_SIZE];
 uint8_t  G_p9_cme_stop_exit_thread_stack[THREAD_STACK_SIZE];
-uint8_t  G_p9_cme_pmcr_db0_thread_stack[THREAD_STACK_SIZE];
+uint8_t  G_p9_cme_db_thread_stack[THREAD_STACK_SIZE];
+uint8_t  G_p9_cme_pmcr_thread_stack[THREAD_STACK_SIZE];
 
 PkThread G_p9_cme_stop_enter_thread;
 PkThread G_p9_cme_stop_exit_thread;
-PkThread G_p9_cme_pmcr_db0_thread;
+PkThread G_p9_cme_db_thread;
+PkThread G_p9_cme_pmcr_thread;
 
 int
 main(int argc, char** argv)
@@ -152,7 +161,14 @@ main(int argc, char** argv)
         pk_halt();
     }
 
-    //CMO-Temporary setting
+
+    //Currently, commenting this.
+    //This shouldn't really be here at all as SGPE will write this register.
+    //For verification in SIMICS, SOA, EPM currently just write the CME_LCL_FLAGS manually
+    //
+    //
+    //
+    /*   //CMO-Temporary setting
     // Setup up CME_LCL_FLAGS to indicate whether
     // this CME is QMGR master or slave.
     // Rules:
@@ -163,6 +179,7 @@ main(int argc, char** argv)
     uint32_t l_pir;
     asm volatile ("mfpir %[data] \n" : [data]"=r"(l_pir) );
 
+    #ifndef _SOA_SC_ENVIRONMENT_
     if ( l_pir & PIR_INSTANCE_EVEN_ODD_MASK )
     {
         // Odd: Set slave status
@@ -174,6 +191,28 @@ main(int argc, char** argv)
         out32(CME_LCL_FLAGS_OR, CME_FLAGS_QMGR_MASTER);
     }
 
+    #else
+
+    if ( l_pir & PIR_INSTANCE_EVEN_ODD_MASK )
+    {
+        // Odd: Set slave status
+        out32(CME_LCL_FLAGS_OR, CME_FLAGS_QMGR_MASTER);
+    }
+    else
+    {
+        // Even: Set master status
+        out32(CME_LCL_FLAGS_CLR, CME_FLAGS_QMGR_MASTER);
+    }
+
+    #endif
+
+    //\todo Fix  this
+    #ifndef _SOA_SC_ENVIRONMENT_
+    out32(CME_LCL_FLAGS_OR, CME_FLAGS_CORE0_GOOD | CME_FLAGS_CORE1_GOOD | CME_FLAGS_SIBLING_FUNCTIONAL);
+    #else
+    out32(CME_LCL_FLAGS_OR, CME_FLAGS_CORE0_GOOD | CME_FLAGS_CORE1_GOOD);
+    #endif
+    */
     // Initialize the thread control block for G_p9_cme_stop_exit_thread
     pk_thread_create(&G_p9_cme_stop_exit_thread,
                      (PkThreadRoutine)p9_cme_stop_exit_thread,
@@ -199,16 +238,28 @@ main(int argc, char** argv)
                  sizeof(G_p9_cme_stop_enter_thread));
 
     // Initialize thread control blocks for the threads
-    pk_thread_create( &G_p9_cme_pmcr_db0_thread,
-                      (PkThreadRoutine)pmcr_db0_thread,
+    pk_thread_create( &G_p9_cme_db_thread,
+                      (PkThreadRoutine)p9_cme_pstate_db_thread,
                       (void*)NULL,
-                      (PkAddress)G_p9_cme_pmcr_db0_thread_stack,
+                      (PkAddress)G_p9_cme_db_thread_stack,
                       (size_t)THREAD_STACK_SIZE,
-                      (PkThreadPriority)IDX_PRTY_LVL_PMCR_DB0);
+                      (PkThreadPriority)CME_THREAD_PRIORITY_PSTATE_DB);
 
-    PK_TRACE_BIN("G_p9_cme_pmcr_db0_thread",
-                 &G_p9_cme_pmcr_db0_thread,
-                 sizeof(G_p9_cme_pmcr_db0_thread));
+    PK_TRACE_BIN("G_p9_cme_db_thread",
+                 &G_p9_cme_db_thread,
+                 sizeof(G_p9_cme_db_thread));
+
+    // Initialize thread control blocks for the threads
+    pk_thread_create( &G_p9_cme_pmcr_thread,
+                      (PkThreadRoutine)p9_cme_pstate_pmcr_thread,
+                      (void*)NULL,
+                      (PkAddress)G_p9_cme_pmcr_thread_stack,
+                      (size_t)THREAD_STACK_SIZE,
+                      (PkThreadPriority)CME_THREAD_PRIORITY_PSTATE_PMCR);
+
+    PK_TRACE_BIN("G_p9_cme_pmcr_thread",
+                 &G_p9_cme_pmcr_thread,
+                 sizeof(G_p9_cme_pmcr_thread));
 
     // Make G_p9_cme_stop_exit_thread runnable
     pk_thread_resume(&G_p9_cme_stop_exit_thread);
@@ -217,9 +268,14 @@ main(int argc, char** argv)
     pk_thread_resume(&G_p9_cme_stop_enter_thread);
 
     // Make G_p9_cme_pstate_thread runnable
-    pk_thread_resume(&G_p9_cme_pmcr_db0_thread);
+    pk_thread_resume(&G_p9_cme_db_thread);
+
+    // Make G_p9_cme_pstate_thread runnable
+    pk_thread_resume(&G_p9_cme_pmcr_thread);
 
     PK_TRACE("Launching threads");
+
+    ppe42_app_ctx_set(0);
 
     // Start running the highest priority thread.
     // This function never returns

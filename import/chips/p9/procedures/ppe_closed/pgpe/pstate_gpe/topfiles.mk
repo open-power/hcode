@@ -22,7 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-TOP-C-SOURCES = pstate_gpe.c gpe2_irq_common.c pk_app_irq_table.c avs_driver.c
+TOP-C-SOURCES = p9_pgpe_pstate.c p9_pgpe_main.c p9_pgpe_irq.c  avs_driver.c p9_pstate_vpd.c
 TOP-S-SOURCES =
 
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)

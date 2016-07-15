@@ -30,8 +30,8 @@ ifndef BASE_SRCDIR
 BASE_SRCDIR = $(abspath ./)
 endif
 
-CME_OBJDIR = $(abspath ../cme/obj/)
-CME_SRCDIR = $(abspath ../cme/)
+#CME_OBJDIR = $(abspath ../cme/obj/)
+#CME_SRCDIR = $(abspath ../cme/)
 PGPE_OBJDIR = $(BASE_OBJDIR)
 PGPE_SRCDIR = $(BASE_SRCDIR)
 
@@ -41,32 +41,35 @@ endif
 
 THASH   = $(PPETRACEPP_DIR)/tracehash.pl
 
-CME_IMAGE_NAME = cme
+#CME_IMAGE_NAME = cme
 GPE_IMAGE_NAME = pstate_gpe
 
-NEEDED_IMAGES = \
-     $(CME_OBJDIR)/$(CME_IMAGE_NAME)/$(CME_IMAGE_NAME).out \
+#NEEDED_IMAGES = \
+ #    $(CME_OBJDIR)/$(CME_IMAGE_NAME)/$(CME_IMAGE_NAME).out \
      $(PGPE_OBJDIR)/$(GPE_IMAGE_NAME)/$(GPE_IMAGE_NAME).out
+NEEDED_IMAGES = \
+     $(PGPE_OBJDIR)/$(GPE_IMAGE_NAME)/$(GPE_IMAGE_NAME).out
+
 
 #default is to build images
 needed_images: $(NEEDED_IMAGES)
 
-run: $(NEEDED_IMAGES)
-	$(SIMICS_WS)/simics \
-	           -e '$$cme_binary_to_load=$(CME_OBJDIR)/$(CME_IMAGE_NAME)/$(CME_IMAGE_NAME).out' \
-	           -e '$$gpe_binary_to_load=$(PGPE_OBJDIR)/$(GPE_IMAGE_NAME)/$(GPE_IMAGE_NAME).out' \
-	           modelsetup.simics
+#run: $(NEEDED_IMAGES)
+#	$(SIMICS_WS)/simics \
+#	           -e '$$cme_binary_to_load=$(CME_OBJDIR)/$(CME_IMAGE_NAME)/$(CME_IMAGE_NAME).out' \
+#	           -e '$$gpe_binary_to_load=$(PGPE_OBJDIR)/$(GPE_IMAGE_NAME)/$(GPE_IMAGE_NAME).out' \
+#	           modelsetup.simics
 
 
 
 #clean the obj directory
 clean:
-	rm -fr $(CME_OBJDIR)/$(CME_IMAGE_NAME)
+#	rm -fr $(CME_OBJDIR)/$(CME_IMAGE_NAME)
 	rm -fr $(PGPE_OBJDIR)/$(GPE_IMAGE_NAME)
 
 #make binary application images
-$(CME_OBJDIR)/$(CME_IMAGE_NAME)/$(CME_IMAGE_NAME).out:
-	(cd $(CME_SRCDIR) && make && make fmode && make tracehash)
+#$(CME_OBJDIR)/$(CME_IMAGE_NAME)/$(CME_IMAGE_NAME).out:
+#	(cd $(CME_SRCDIR) && make && make fmode && make tracehash)
 
 $(PGPE_OBJDIR)/$(GPE_IMAGE_NAME)/$(GPE_IMAGE_NAME).out:
 	(cd $(PGPE_SRCDIR)/$(GPE_IMAGE_NAME) && make && make fmode && make tracehash)

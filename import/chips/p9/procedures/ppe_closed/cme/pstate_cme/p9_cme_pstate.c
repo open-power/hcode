@@ -28,68 +28,444 @@
 // *! *** IBM Confidential ***
 //-----------------------------------------------------------------------------
 
-/// \file   pstate_cme.c
+/// \file   p9_cme_pstate.c
 /// \brief  CME and QCME codes enforcing the Power protocols for Pstate, DPLL
 ///         actuation, iVRM, resonant clocking, and VDM.
-/// \owner  Michael Olsen   Email: cmolsen@us.ibm.com
-///
-
-/// Features of this H-code:
-/// - The thread works in conjunction with the pstate thread on the PGPE.
-///
-/// Assumptions:
-/// 1. PGPE is assumed up and running and ready at the time the QCME sends
-///    it registration request.
-///
+/// \owner  Rahul Batra Email: rbatra@us.ibm.com
 ///
 
 #include "pk.h"
-#include "cme_register_addresses.h"
-#include "ppm_register_addresses.h"
-#include "ppm_firmware_registers.h"
-#include "cppm_register_addresses.h"
-#include "cppm_firmware_registers.h"
-#include "qppm_register_addresses.h"
-#include "qppm_firmware_registers.h"
 #include "ppe42_scom.h"
+
+#include "cme_firmware_registers.h"
+#include "cme_register_addresses.h"
+#include "cppm_firmware_registers.h"
+#include "cppm_register_addresses.h"
+#include "ppm_firmware_registers.h"
+#include "ppm_register_addresses.h"
+#include "qppm_firmware_registers.h"
+#include "qppm_register_addresses.h"
+
+#include "ppehw_common.h"
+#include "cmehw_common.h"
+#include "cmehw_interrupts.h"
+
 #include "p9_cme_irq.h"
+#include "p9_cme_flags.h"
 #include "p9_cme_pstate.h"
+#include "p9_pstate_common.h"
+#include "p9_pstate_vpd.h"
+#include "ppe42_cache.h"
+
 
 //
-// HOMER variables updated by PGPE
+//Globals
 //
-uint32_t    ULTRA_TURBO_FREQ_STEPS_PS;
+extern CmePstateRecord G_cme_pstate_record;
+cme_pstate_db_data_t G_db_thread_data;
+cme_pstate_pmcr_data_t G_pmcr_thread_data;
 
-#define PIG_PAYLOAD_MASK            0x0fff000000000000
-#define PIG_INTR_FIELD_MASK         0x7000000000000000
-#define PIG_INTR_GRANTED_MASK       0x0000000080000000
+//\todo Use PState Parameter Block structures. RTC
+extern global_pstate_table_t G_gpst;
+extern freq_2_idx_entry_t G_freq2idx[NUM_FREQ_REGIONS];
+extern uint16_t G_cgm_table[CGM_TRANSITIONS];
+extern uint8_t G_resclkEnabled;
 
-// Type1 specific defines
-#define PIG_PAYLOAD_PSTATE_MASK     0x03ff000000000000
-#define PIG_PAYLOAD_PSTATE_SEQ_INCR 0x0400000000000000  // Seq increment value
+//
+//Function Prototypes
+//
+void freq_update(uint64_t dbData);
+void resclk_update();
+int send_pig_packet(uint64_t data, uint32_t coreMask);
 
-
-int
-register_qcme_with_pgpe(void);
-
-
-void
-unified_irq_task_handler(void* arg, PkIrqId irq)
+//
+//PMCR Interrupt Handler
+//
+void p9_cme_pstate_pmcr_handler(void* arg, PkIrqId irq)
 {
     pk_semaphore_post((PkSemaphore*)arg);
 }
 
-
-void
-unified_irq_nontask_handler(void* arg, PkIrqId irq)
+//
+//Doorbell0 interrupt handler
+//
+//Only enabled on QuadManager-CME
+void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
 {
-    MY_TRACE_ERR("Got an non-task IRQ=%d", irq);
-    pk_halt();
+    pk_semaphore_post((PkSemaphore*)arg);
 }
 
+//
+//InterCME_IN0 handler
+//
+void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
+{
+    pgpe_db0_glb_bcast_t db0C0Data, db0C1Data;
+    uint8_t localPS = 0;
+    uint32_t cme_flags = in32(CME_LCL_FLAGS);
+    uint64_t pmsrData;
+    PkMachineContext  ctx;
 
-int
-send_pig_packet(uint32_t addr, uint64_t data)
+    //read DB0 for both cores and update PMSR
+    if (cme_flags & CME_FLAGS_CORE0_GOOD)
+    {
+        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, CME_SCOM_EQ, db0C0Data.value);
+        localPS = (db0C0Data.value >>
+                   ((MAX_QUADS - G_db_thread_data.quadNum - 1) * 8)) & 0xFF;
+        pmsrData = (db0C0Data.value << 8) & 0xFF00000000000000;
+        pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
+
+        out64(CME_LCL_PMSRS0, pmsrData);
+        out32_sh(CME_LCL_EISR_CLR, BIT32(4));//Clear DB0_C0
+    }
+
+    if (cme_flags & CME_FLAGS_CORE1_GOOD)
+    {
+        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, CME_SCOM_EQ, db0C1Data.value);
+        localPS = (db0C1Data.value >>
+                   ((MAX_QUADS - G_db_thread_data.quadNum - 1) * 8)) & 0xFF;
+        pmsrData = (db0C1Data.value << 8) & 0xFF00000000000000;
+        pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
+
+        out64(CME_LCL_PMSRS1, pmsrData);
+        out32_sh(CME_LCL_EISR_CLR, BIT32(5));//Clear DB0_C1
+    }
+
+    out32(CME_LCL_ICCR_OR, BIT32(5));//Send Direct InterCME_IN0(Ack to QM-CME)
+    out32(CME_LCL_ICCR_CLR, BIT32(5));//Clear Ack
+    out32(CME_LCL_EISR_CLR, BIT32(7));//Clear InterCME_IN0
+
+    pk_irq_vec_restore(&ctx);
+}
+
+//
+//p9_cme_pmcr_thread
+//
+void p9_cme_pstate_pmcr_thread(void* arg)
+{
+    int32_t c;
+    PkMachineContext  ctx;
+    cme_scom_pmcrs0_t  pmcr[2];
+    ppm_pig_t ppmPigData;
+    uint32_t eisr;
+    uint32_t coreMask[CORES_PER_EX];
+    coreMask[0] = CME_MASK_C0;
+    coreMask[1] = CME_MASK_C1;
+
+    G_pmcr_thread_data.seqNum = 0;
+
+    G_pmcr_thread_data.coreGood[0] = 0;
+    G_pmcr_thread_data.coreGood[1] = 0;
+    G_pmcr_thread_data.cmeFlags = in32(CME_LCL_FLAGS);
+
+    if (G_pmcr_thread_data.cmeFlags & CME_FLAGS_CORE0_GOOD)
+    {
+        G_pmcr_thread_data.coreGood[0] = 1;
+        out64(CME_LCL_EIMR_CLR,  BIT64(34));//Enable PMCR0
+    }
+
+    if (G_pmcr_thread_data.cmeFlags & CME_FLAGS_CORE1_GOOD)
+    {
+        G_pmcr_thread_data.coreGood[1] = 1;
+        out64(CME_LCL_EIMR_CLR,  BIT64(35));//Enable PMCR1
+    }
+
+    pk_semaphore_create(&G_cme_pstate_record.sem[0], 0, 1);
+
+    while(1)
+    {
+        //pend on sempahore
+        pk_semaphore_pend(&G_cme_pstate_record.sem[0], PK_WAIT_FOREVER);
+        wrteei(1);
+
+        //Determine which core have pending request
+        for(c = 0; c < CORES_PER_EX; c++)
+        {
+            if (G_pmcr_thread_data.coreGood[c])
+            {
+                eisr = in32_sh(CME_LCL_EISR); //EISR
+
+                if (eisr & (BIT32(2) >> c))
+                {
+                    //Clear interrupt and read PMCR
+                    out32_sh(CME_LCL_EISR_CLR, BIT32(2) >> c);
+                    pmcr[c].value = in64(CME_LCL_PMCRS0 + (c << 5));
+
+                    //Send Phase 1
+                    ppmPigData.value = 0;
+                    ppmPigData.fields.req_intr_type = 0;
+                    ppmPigData.value |= (((pmcr[c].value & PIG_PAYLOAD_PS_PHASE1_MASK)));
+                    ppmPigData.value |= ((G_pmcr_thread_data.seqNum & 0x6) << 57);
+                    send_pig_packet(ppmPigData.value, coreMask[c]);
+                    G_pmcr_thread_data.seqNum++;
+
+                    //Send Phase 2
+                    ppmPigData.value = 0;
+                    ppmPigData.fields.req_intr_type = 1;
+                    ppmPigData.value |= ((pmcr[c].value & PIG_PAYLOAD_PS_PHASE2_MASK) << 16);
+                    ppmPigData.value |= ((G_pmcr_thread_data.seqNum & 0x6) << 57);
+                    send_pig_packet(ppmPigData.value, coreMask[c]);
+                    G_pmcr_thread_data.seqNum++;
+                }
+            }
+        }
+
+        pk_irq_vec_restore(&ctx);
+    }
+}
+
+//
+//p9_cme_db_thread
+//
+void p9_cme_pstate_db_thread(void* arg)
+{
+    uint32_t cme_flags;
+    PkMachineContext  ctx;
+    //int rc = 0;
+    cppm_cmedb0_t dbData;
+    uint8_t intercme_acked;
+    uint64_t eisr, pmsrData;
+    ppm_pig_t ppmPigData;
+    uint32_t pir;
+    uint8_t localPS;
+
+    //\todo Read the data from HOMER code. RTC
+    p9_pstate_vpd_init();
+
+    //Read CME_LCL_FLAGS
+    cme_flags = in32(CME_LCL_FLAGS);
+
+    //Determine quad number and exID for this CME
+    asm volatile ("mfpir %[data] \n" : [data]"=r"(pir) );
+
+    //We found a bug in HW late, so this is a workaround. However, in SIMICS the model
+    //is as per original spec.
+#ifndef SIMICS_ENVIRONMENT
+    G_db_thread_data.quadNum = (pir & PIR_INSTANCE_NUM_MASK);
+#else
+    G_db_thread_data.quadNum = QUAD_FROM_CME_INSTANCE_NUM((pir & PIR_INSTANCE_NUM_MASK));
+#endif
+
+    if (cme_flags & CME_FLAGS_QMGR_MASTER)
+    {
+        G_db_thread_data.qmFlag = 1;
+
+        if (cme_flags & CME_FLAGS_SIBLING_FUNCTIONAL)
+        {
+            G_db_thread_data.siblingCMEFlag = 1;
+        }
+        else
+        {
+            G_db_thread_data.siblingCMEFlag = 0;
+        }
+    }
+    else
+    {
+        G_db_thread_data.qmFlag = 0;
+        G_db_thread_data.siblingCMEFlag = 0;
+    }
+
+    //if quadManager
+    if (G_db_thread_data.qmFlag)
+    {
+        if (cme_flags & CME_FLAGS_CORE0_GOOD)
+        {
+            out32_sh(CME_LCL_EIMR_CLR, BIT32(4));//Enable DB0_0
+            out32_sh(CME_LCL_EIMR_OR, BIT32(5));//Disable DB0_1
+            g_eimr_override |= BIT64(37);
+            G_db_thread_data.cmeMaskGoodCore = CME_MASK_C0;
+        }
+        else if (cme_flags & CME_FLAGS_CORE1_GOOD)
+        {
+            out32_sh(CME_LCL_EIMR_OR, BIT32(4));//Disable DB0_0
+            out32_sh(CME_LCL_EIMR_CLR, BIT32(5));//Enable DB0_1
+            g_eimr_override |= BIT64(36);
+            G_db_thread_data.cmeMaskGoodCore = CME_MASK_C1;
+        }
+
+        out64(CME_LCL_EIMR_OR, BIT64(7));//Disable  InterCME_IN0
+        g_eimr_override |= BIT64(7);
+
+        G_db_thread_data.dpll_pstate0_value = G_gpst.pstate0_frequency_khz / G_gpst.frequency_step_khz;
+    }
+    else
+    {
+        out64(CME_LCL_EIMR_OR, BIT64(36) | BIT64(37));//Disable DB0_0 and DB0_1
+        out64(CME_LCL_EIMR_CLR, BIT64(7)); //Enable InterCME_IN0
+        g_eimr_override |= BIT64(37);
+        g_eimr_override |= BIT64(36);
+    }
+
+
+    //\todo (RTC) Set intial GlobalPS, LocalPS, resClkIdx, etc.
+    //Most likely will come from SGPE. Need to know precisely
+
+    //Only Quad Manager CME executes. The sibling CME
+    //has intercme_in0 enabled
+    if (G_db_thread_data.qmFlag)
+    {
+        pk_semaphore_create(&G_cme_pstate_record.sem[1], 0, 1);
+
+        while(1)
+        {
+            //pend on sempahore
+            pk_semaphore_pend(&G_cme_pstate_record.sem[1], PK_WAIT_FOREVER);
+            wrteei(1);
+
+            if (cme_flags & CME_FLAGS_CORE0_GOOD)
+            {
+                out32_sh(CME_LCL_EISR_CLR, BIT32(4));
+                out32_sh(CME_LCL_EISR_CLR, BIT32(5));
+                CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, CME_SCOM_EQ, dbData.value);
+            }
+            else if (cme_flags & CME_FLAGS_CORE1_GOOD)
+            {
+                out32_sh(CME_LCL_EISR_CLR, BIT32(5));
+                CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, CME_SCOM_EQ, dbData.value);
+            }
+
+            //Update analog
+            if (G_resclkEnabled)
+            {
+                resclk_update();
+            }
+
+#ifndef SIMICS_ENVIRONMENT
+            freq_update(dbData.value);
+#endif
+
+            //Notify sibling CME(if any)
+            if (G_db_thread_data.siblingCMEFlag == 1)
+            {
+                //Send interCME interrupt
+                out32(CME_LCL_ICCR_OR, BIT32(5)); //Send direct InterCME_IN0
+                out32(CME_LCL_ICCR_CLR, BIT32(5));//Clear
+
+#ifndef SIMICS_ENVIRONMENT
+                //poll on interCME interrupt
+                intercme_acked = 0;
+#else
+                intercme_acked = 1;
+#endif
+
+                while (!intercme_acked)
+                {
+                    eisr = in64(CME_LCL_EISR);
+
+                    if (eisr & 0x0100000000000000)
+                    {
+                        intercme_acked = 1;
+                    }
+                }
+
+                out32(CME_LCL_EISR_CLR, BIT32(7));//Clear InterCME_IN0
+            }
+
+            //Update PMSR
+            localPS = (dbData.value >>
+                       ((MAX_QUADS - G_db_thread_data.quadNum - 1) * 8)) & 0xFF;
+            pmsrData = (dbData.value << 8) & 0xFF00000000000000;
+            pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
+
+            if (cme_flags & CME_FLAGS_CORE0_GOOD)
+            {
+                out64(CME_LCL_PMSRS0, pmsrData);
+            }
+
+            if (cme_flags & CME_FLAGS_CORE1_GOOD)
+            {
+                out64(CME_LCL_PMSRS1, pmsrData);
+            }
+
+            //Send type4(ack doorbell)
+            ppmPigData.value = 0;
+            ppmPigData.fields.req_intr_type = 4;
+            ppmPigData.fields.req_intr_payload = 0;
+            send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
+
+            pk_irq_vec_restore(&ctx);
+        }
+    }
+}
+
+//
+//freq_update
+//
+void freq_update(uint64_t dbData)
+{
+    uint8_t localPS = (dbData >>
+                       ((MAX_QUADS - G_db_thread_data.quadNum - 1) * 8)) & 0xFF;
+
+    //Adjust DPLL
+    cppm_ippmcmd_t  cppm_ippmcmd;
+    qppm_dpll_freq_t dpllFreq;
+
+    //Write new value of DPLL using INTERPPM
+    dpllFreq.value = 0;
+    dpllFreq.fields.fmax        = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
+    dpllFreq.fields.freq_mult   = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
+    dpllFreq.fields.fmin        = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
+    CME_PUTSCOM(CPPM_IPPMWDATA, G_db_thread_data.cmeMaskGoodCore, dpllFreq.value);
+    cppm_ippmcmd.value = 0;
+    cppm_ippmcmd.fields.qppm_reg = QPPM_DPLL_FREQ & 0x000000ff;
+    cppm_ippmcmd.fields.qppm_rnw = 0;
+    CME_PUTSCOM(CPPM_IPPMCMD, G_db_thread_data.cmeMaskGoodCore, cppm_ippmcmd.value);
+}
+
+//
+//resclk_update
+//
+void resclk_update()
+{
+    uint64_t val;
+    uint8_t tidx, step;
+    int32_t i;
+
+    //get targetIndex from Table1(ControlIndex) by indexing with localPState
+    tidx = G_db_thread_data.resClkTblIdx;
+
+    for (i = NUM_FREQ_REGIONS - 1; i >= 0; i--)
+    {
+        if (G_freq2idx[i].pstate > G_db_thread_data.localPS)
+        {
+            tidx = i;
+            break;
+        }
+    }
+
+    //walk Table2[Resonant Grids Control Data)
+    if (tidx > G_db_thread_data.resClkTblIdx)
+    {
+        step = 1;
+    }
+    else
+    {
+        step = -1;
+    }
+
+    while(G_db_thread_data.resClkTblIdx != tidx)
+    {
+        G_db_thread_data.resClkTblIdx += step;
+        val = (uint64_t)(G_cgm_table[G_db_thread_data.resClkTblIdx]) << 48;
+        val |= G_db_thread_data.qaccr21_23InitVal;
+
+#ifndef SIMICS_ENVIRONMENT
+        //int rc = 0;
+        cppm_ippmcmd_t  cppm_ippmcmd;
+        //Write val to QACCR
+        CME_PUTSCOM(CPPM_IPPMWDATA, G_db_thread_data.cmeMaskGoodCore, val);
+        cppm_ippmcmd.value = 0;
+        cppm_ippmcmd.fields.qppm_reg = QPPM_QACCR & 0x000000ff;
+        cppm_ippmcmd.fields.qppm_rnw = 0;
+        CME_PUTSCOM(CPPM_IPPMCMD, G_db_thread_data.cmeMaskGoodCore, cppm_ippmcmd.value);
+#endif
+    }
+}
+
+//
+//send_pig_packet
+//
+int send_pig_packet(uint64_t data, uint32_t coreMask)
 {
     int               rc = 0;
     uint64_t          data_tmp;
@@ -98,653 +474,12 @@ send_pig_packet(uint32_t addr, uint64_t data)
     do
     {
         // Read PPMPIG status
-        rc = getscom(0, addr, &data_tmp);
-
-        if (rc)
-        {
-            MY_TRACE_ERR("getscom(addr=0x%08x) failed w/rc=0x%08x", addr, rc);
-            pk_halt();
-        }
+        CME_GETSCOM(PPM_PIG, coreMask, CME_SCOM_EQ, data_tmp);
     }
     while (((ppm_pig_t)data_tmp).fields.intr_granted);
 
     // Send PIG packet
-    rc = putscom(0, addr, data);
-
-    if (rc)
-    {
-        MY_TRACE_ERR("putscom(addr=0x%08x) failed w/rc=0x%08x", addr, rc);
-        pk_halt();
-    }
+    CME_PUTSCOM(PPM_PIG, coreMask, data);
 
     return rc;
-}
-
-
-void
-pmcr_db0_thread(void* arg)
-{
-    int               rc = 0, rc_api = API_RC_SUCCESS;
-    uint8_t           bDB0 = FALSE, bPMCR = FALSE;
-    PkMachineContext  ctx;
-    PkSemaphore       sem;
-    uint64_t          thisIrqPrtyVec;
-    uint8_t           irqPrty;
-    uint8_t           ps_local;
-    int               statusIrqDb0C0;
-    int               statusIrqDb0C1;
-    int               statusIrqPmcrC0;
-    int               statusIrqPmcrC1;
-    uint8_t           thisCoreIdx = 0xff;  // Index=0 or =1
-    uint8_t           nextCoreIdx = 0xff;  // Index=0 or =1
-    PkIrqId           IRQ_THIS = 0xff;
-    uint8_t           seqNum = 0;         // Phase message sequence (0,1,2,3,0,..)
-    uint32_t          addr_db0 = 0;
-    uint32_t          addr_db0_0, addr_db0_1;     // One for each of the two cores
-    uint32_t          addr_pmcr = 0;
-    uint32_t          addr_pmcr_0, addr_pmcr_1;     // One for each of the two cores
-    uint32_t          addr_ppm_pig;
-    uint32_t          addr_ppm_pig_0, addr_ppm_pig_1; // One for each of the two cores
-    uint64_t          data_pmcr;
-    cb_to_qcme_base_t   cb_from_pgpe_base;
-    cb_to_pgpe_ack_t  cb_to_pgpe_ack;
-    cb_to_pgpe_qcme_t cb_to_pgpe_qcme;
-    uint32_t          addr_ippmr, addr_ippmw, addr_ippmcmd;
-    qppm_dpll_freq_t  qppm_dpll_freq;
-    cppm_ippmcmd_t    cppm_ippmcmd;
-    ppm_pig_t         data_ppm_pig;
-    uint64_t          data;
-    uint32_t          data32;
-    uint8_t           fsm_unacked_qcme_registration;
-    uint32_t          l_pir;
-    uint8_t           bQcmeRegister;
-    uint8_t           thisCmeInstance;
-
-
-    PK_TRACE("PMCR_DB0 thread starting...");
-
-    // Lock this in now to avoid typing mistakes later-on. And make sure you're
-    //  using the correct PRTY level for this task.
-    thisIrqPrtyVec = ext_irq_vectors_cme[IDX_PRTY_LVL_PMCR_DB0][IDX_PRTY_VEC];
-
-
-    // Calculate anticipated SCOM addresses, or fractions of them up front
-    //
-
-    // Local PMCR0 used by cores "left" and "right"
-    addr_pmcr_0 = CME_LCL_PMCRS0;
-    addr_pmcr_1 = CME_LCL_PMCRS1;
-
-    // CPPM_DB0_0/1 regs used by cores "left" and "right"
-    addr_db0_0 = CPPM_CMEDB0 | CORE_SEL_LEFT;
-    addr_db0_1 = CPPM_CMEDB0 | CORE_SEL_RIGHT;
-
-    // PPM_PIG_0/1 belong to cores "left" and "right"
-    addr_ppm_pig_0 = PPM_PIG | CORE_SEL_LEFT;
-    addr_ppm_pig_1 = PPM_PIG | CORE_SEL_RIGHT;
-
-
-    // Create a semaphore, updated by a single interrupt handler that services
-    // two PMCR and two DB0 interrupts. Thus, max sem count set to four.
-    pk_semaphore_create(&sem, 0, 4);
-
-
-    //--------------------------------------------//
-    // Register the unified interrupt handler.    //
-    //--------------------------------------------//
-
-    // Notes:
-    // - Register the two PMCR and the two DB0 interrupts
-    // - Never consider IRQs beyond IRQ>=44 because they are reserved and
-    //   permanently firing.
-    // - Also register high-priority interrupt handlers
-    //
-    for (irqPrty = 0; irqPrty < 44; irqPrty++)
-    {
-        if ( ext_irq_vectors_cme[IDX_PRTY_LVL_PMCR_DB0][IDX_PRTY_VEC] &
-             (RIGHT_SHIFT_PTRN_0x8_64BIT >> irqPrty) )
-        {
-            rc = pk_irq_handler_set( irqPrty,
-                                     unified_irq_task_handler,
-                                     (void*)&sem );
-
-            if (rc)
-            {
-                PK_TRACE("pk_irq_handler_set(%d) failed w/rc=0x%08x", irqPrty, rc);
-                pk_halt();
-            }
-        }
-        else if ( ext_irq_vectors_cme[IDX_PRTY_LVL_HIPRTY][IDX_PRTY_VEC] &
-                  (RIGHT_SHIFT_PTRN_0x8_64BIT >> irqPrty) )
-        {
-            rc = pk_irq_handler_set( irqPrty,
-                                     unified_irq_nontask_handler,
-                                     (void*)&sem );
-
-            if (rc)
-            {
-                PK_TRACE("pk_irq_handler_set(%d) failed w/rc=0x%08x", irqPrty, rc);
-                pk_halt();
-            }
-        }
-
-    }
-
-
-    //
-    // Clear (until Simics gets fixed) and unmask the [non-task] shared HIPRTY IRQs.
-    //
-    pk_irq_vec_status_clear( ext_irq_vectors_cme[IDX_PRTY_LVL_HIPRTY][IDX_PRTY_VEC]);
-    pk_irq_vec_enable( ext_irq_vectors_cme[IDX_PRTY_LVL_HIPRTY][IDX_PRTY_VEC]);
-
-    //
-    // Clear and then unmask our interrupts.
-    // (Note, this must be done BEFORE registering QCME as otherwise race
-    //  condition between EISR clearing and PGPE sending Ack.)
-    //
-    pk_irq_vec_status_clear( thisIrqPrtyVec);
-    pk_irq_vec_enable( thisIrqPrtyVec);
-
-
-    //------------------------------------------------------------------------------//
-    //  Determine QMGR status and register as QMGR, ie QCME, if CME is QMGR master  //
-    //------------------------------------------------------------------------------//
-
-    // First determine if this CME is a QMRG master, i.e. QCME
-    //
-    bQcmeRegister = FALSE;
-
-    asm volatile ("mfpir %[data] \n" : [data]"=r"(l_pir) );
-
-    thisCmeInstance = (uint8_t)(l_pir & PIR_INSTANCE_NUM_MASK);
-
-    rc = getscom( 0, CME_LCL_FLAGS, &data );
-    data32 = (uint32_t)(data >> 32);
-
-    if ( data32 & CME_FLAGS_QMGR_MASTER )
-    {
-        bQcmeRegister = TRUE;
-        MY_TRACE_DBG("This CME#%d is the QMGR master", thisCmeInstance);
-    }
-    else  // Sanity check since this CME is NOT a QMGR mstr, that it is an odd CME. Otherwise, error.
-    {
-        if ( l_pir & PIR_INSTANCE_EVEN_ODD_MASK ) // Sanity test that bit31==1 and thus this CME is odd.
-        {
-            bQcmeRegister = FALSE;
-            MY_TRACE_DBG("This [odd] CME#%d is the QMGR slave", thisCmeInstance);
-        }
-        else
-        {
-            MY_TRACE_ERR("CME_LCL_FLAGS indicate QMGR slave status for even CME.");
-            MY_TRACE_ERR("This is not allowed. Even CMEs must be QMGR master.");
-            pk_halt();
-        }
-    }
-
-    // FSM Notes:
-    // - Register this CME with PGPE if it's the QMGR master.
-    // - Note that registration MUST be done AFTER clearing and unmasking
-    //   interrupts.
-    //
-    fsm_unacked_qcme_registration = 0;
-
-    if (bQcmeRegister)
-    {
-        // Format Type4 PIG message - Populate the CB, then the PIG payload
-        //
-        cb_to_pgpe_qcme.value = 0;
-        cb_to_pgpe_qcme.fields.msg_id = MSGID_T4_REGISTER_QCME;
-
-        data_ppm_pig.value = 0;
-        data_ppm_pig.fields.req_intr_payload = cb_to_pgpe_qcme.value;
-        data_ppm_pig.fields.req_intr_type = 4;
-
-//CMO - TBD - Determine which of the two cores are configured. Pick the smallest
-//            numbered. We'll assume idx=0 for now. Another RTC story will deal
-//            with the issue of picking the lowest registered core's PIG.
-        addr_ppm_pig = addr_ppm_pig_0;
-
-        // Assumption 1:
-        // Before sending Type4 QCME registration, make sure PGPE is running.
-        // For now, use pk_sleep.
-        // Need some kind of handshake here. Or we need to know for sure that
-        // PGPE is always running before QCME.
-        pk_sleep(PK_NANOSECONDS(1000));
-        rc = send_pig_packet(addr_ppm_pig, data_ppm_pig.value);
-
-        if (rc)
-        {
-            MY_TRACE_ERR("send_pig_packet(addr=0x%08x) failed w/rc=0x%08x", addr_ppm_pig, rc);
-            pk_halt();
-        }
-
-        // Update the unacked registration tracker
-        if (!fsm_unacked_qcme_registration)
-        {
-            fsm_unacked_qcme_registration++;
-        }
-        else
-        {
-            MY_TRACE_ERR("Code bug: fsm_unacked_qcme_registration (=%d) > 0",
-                         fsm_unacked_qcme_registration);
-            pk_halt();
-        }
-    }
-
-
-    //
-    // Reset indices and seq no
-    //
-    nextCoreIdx = 0;
-    thisCoreIdx = 0xff;
-    seqNum     = 0;
-
-#if EPM_P9_TUNING
-    asm volatile ( "tw 0, 31, 0" );
-#endif
-
-    // FSM: Indicate PMCR thread is ready.
-    out32(CME_LCL_FLAGS_OR, CME_FLAGS_PMCR_READY);
-
-
-    while(1)
-    {
-
-        // Go to sleep
-        pk_semaphore_pend(&sem, PK_WAIT_FOREVER);
-
-
-        //
-        // First we need to determine which of the four interrupts fired.
-        // This incl which of the two cores, "left" (index0) or "right" (index1),
-        // were used.
-        // - Give priority to DB0 over PMCR. (More important to wrap up ongoing
-        //   PMCR request than to start a new.)
-        // - If both of the PMCRs fired by the time we get to this point, alternate
-        //   between them using nextCoreIdx and thisCoreIdx.
-        // - If both of the DB0s fired, we have an error.
-        //
-
-        do
-        {
-            bDB0 = bPMCR = FALSE;
-
-            statusIrqDb0C0 = pk_irq_status_get(CMEHW_IRQ_DOORBELL0_C0);
-            statusIrqDb0C1 = pk_irq_status_get(CMEHW_IRQ_DOORBELL0_C1);
-
-            if (statusIrqDb0C0 && statusIrqDb0C1)
-            {
-                // Both fired (We do NOT support this.)
-                PK_TRACE("Code bug: Both DB0s fired. Probably PGPE problem.");
-                pk_halt();
-            }
-            else if (statusIrqDb0C0)
-            {
-                thisCoreIdx = 0; // "left" core idx
-                IRQ_THIS = CMEHW_IRQ_DOORBELL0_C0;
-                addr_db0 = addr_db0_0;
-                addr_ppm_pig = addr_ppm_pig_0;
-                bDB0 = TRUE;
-            }
-            else if (statusIrqDb0C1)
-            {
-                thisCoreIdx = 1;  // "right" core idx
-                IRQ_THIS = CMEHW_IRQ_DOORBELL0_C1;
-                addr_db0 = addr_db0_1;
-                addr_ppm_pig = addr_ppm_pig_1;
-                bDB0 = TRUE;
-            }
-            else
-            {
-                statusIrqPmcrC0 = pk_irq_status_get(CMEHW_IRQ_PMCR_UPDATE_C0);
-                statusIrqPmcrC1 = pk_irq_status_get(CMEHW_IRQ_PMCR_UPDATE_C1);
-
-                if (statusIrqPmcrC0 && statusIrqPmcrC1)
-                {
-                    // Both fired (We support this.)
-                    thisCoreIdx = nextCoreIdx;
-                    nextCoreIdx++;
-                    nextCoreIdx = nextCoreIdx - (nextCoreIdx >> 1) * 2;
-
-                    if (thisCoreIdx != 0 && thisCoreIdx != 1)
-                    {
-                        PK_TRACE("Code bug: Illegal value of thisCoreIdx (=%d).", thisCoreIdx);
-                        pk_halt();
-                    }
-                }
-                else if (statusIrqPmcrC0)
-                {
-                    thisCoreIdx = 0; // "left" core idx
-                }
-                else if (statusIrqPmcrC1)
-                {
-                    thisCoreIdx = 1; // "right" core idx
-                }
-                else
-                {
-                    PK_TRACE("Illegal interrupt status.");
-                    PK_TRACE("Neither of the {PMCR,DB0}_C0/1 interrupts are set.");
-                    pk_halt();
-                }
-
-                bPMCR = TRUE;
-
-                // Set the core specific values for the interrupt, pmcr addr and
-                // ppmpig addr. Note, we already did this earlier for db0.
-                if (thisCoreIdx == 0)
-                {
-                    IRQ_THIS = CMEHW_IRQ_PMCR_UPDATE_C0;
-                    addr_pmcr = addr_pmcr_0;
-                    addr_ppm_pig = addr_ppm_pig_0;
-                }
-                else
-                {
-                    IRQ_THIS = CMEHW_IRQ_PMCR_UPDATE_C1;
-                    addr_pmcr = addr_pmcr_1;
-                    addr_ppm_pig = addr_ppm_pig_1;
-                }
-            }
-        }
-        while(0);
-
-        MY_TRACE_DBG("IRQ_THIS=0x%02x, addr_ppm_pig=0x%08x",
-                     IRQ_THIS, addr_ppm_pig);
-
-        // Clear the status of the currently selected interrupt
-        pk_irq_status_clear(IRQ_THIS);
-
-
-        //------------------------------------------------------------------//
-        //                            Do the work                           //
-        //------------------------------------------------------------------//
-
-        if (bDB0)
-            //-------------------------------------------//
-            //                Process DB0                //
-            //-------------------------------------------//
-        {
-
-            MY_TRACE_DBG("IRQ_THIS=0x%02x, addr_db0=0x%08x, addr_ppm_pig=0x%08x",
-                         IRQ_THIS, addr_db0, addr_ppm_pig);
-
-            // Get the payload from DB0
-            rc = getscom(0, addr_db0, &cb_from_pgpe_base.value);
-
-            if (rc)
-            {
-                MY_TRACE_ERR("getscom(addr=0x%08x,data=0x%08x%08x) failed w/rc=0x%08x",
-                             addr_db0, cb_from_pgpe_base.value, rc);
-                pk_halt();
-            }
-
-//MY_TRACE_DBG("DB0 payload = 0x%08x%08x",
-//              (uint32_t)(cb_from_pgpe_base.value>>32),(uint32_t)(cb_from_pgpe_base.value));
-
-            //
-            // Act on msg_id and do what needs be done
-            // Note that there's only support for PS_BROADCAST and Ack so far.
-            //
-            switch (cb_from_pgpe_base.fields.msg_id)
-            {
-
-                case MSGID_DB0_PS_BROADCAST:
-
-                    if (fsm_unacked_qcme_registration)
-                    {
-                        MY_TRACE_ERR("Code bug: fsm_unacked_qcme_registration (=%d) != 0",
-                                     fsm_unacked_qcme_registration);
-                        pk_halt();
-                    }
-
-                    ps_local = ((cb_to_qcme_ps_bc_t)cb_from_pgpe_base.value).fields.ps_local;
-
-                    MY_TRACE_DBG("cb_from_pgpe_ps_bc.fields.ps_local=%d", ps_local);
-
-                    // Update the DPLL_FREQ register
-                    //
-
-                    // In the following setup,
-                    // - use the CPPM that you received the DB0 on
-                    // - use CorePPM1 for the INTERPPM (done from PGPE)
-                    //
-                    if (thisCoreIdx == 0)
-                    {
-                        addr_ippmr = CPPM_IPPMRDATA | CORE_SEL_LEFT;
-                        addr_ippmw = CPPM_IPPMWDATA | CORE_SEL_LEFT;
-                        addr_ippmcmd = CPPM_IPPMCMD | CORE_SEL_LEFT;
-                    }
-                    else
-                    {
-                        addr_ippmr = CPPM_IPPMRDATA | CORE_SEL_RIGHT;
-                        addr_ippmw = CPPM_IPPMWDATA | CORE_SEL_RIGHT;
-                        addr_ippmcmd = CPPM_IPPMCMD | CORE_SEL_RIGHT;
-                    }
-
-                    rc = getscom(0, addr_ippmr, &(qppm_dpll_freq.value));
-
-                    if (rc)
-                    {
-                        MY_TRACE_ERR("getscom(CPPM_IPPMRDATA=0x%08x) failed w/rc=0x%08x",
-                                     addr_ippmr, rc);
-                        pk_halt();
-                        //MY_PK_PANIC(SCOM_TROUBLE);
-                    }
-
-                    qppm_dpll_freq.fields.fmax      =
-                        qppm_dpll_freq.fields.freq_mult =
-                            qppm_dpll_freq.fields.fmin      = ULTRA_TURBO_FREQ_STEPS_PS - ps_local;
-                    rc = putscom(0, addr_ippmw, qppm_dpll_freq.value);
-
-                    if (rc)
-                    {
-                        MY_TRACE_ERR("putscom(CPPM_IPPMWDATA=0x%08x) failed w/rc=0x%08x",
-                                     addr_ippmw, rc);
-                        pk_halt();
-                        //MY_PK_PANIC(SCOM_TROUBLE);
-                    }
-
-                    // Now write the DPLL_FREQ reg through the inter-PPM mechanism
-                    //
-                    cppm_ippmcmd.value = 0;
-                    cppm_ippmcmd.fields.qppm_reg = QPPM_DPLL_FREQ & 0x000000ff;
-                    cppm_ippmcmd.fields.qppm_rnw = 0; // Use CorePPM1
-                    rc = putscom(0, addr_ippmcmd, cppm_ippmcmd.value);
-
-                    if (rc)
-                    {
-                        MY_TRACE_ERR("putscom(CPPM_IPPMCMD=0x%08x) failed w/rc=0x%08x",
-                                     addr_ippmcmd, rc);
-                        pk_halt();
-                        //MY_PK_PANIC(SCOM_TROUBLE);
-                    }
-
-                    //
-                    // Send an PIG Type4 ack back to PGPE
-                    //
-
-                    cb_to_pgpe_ack.value = 0;
-                    cb_to_pgpe_ack.fields.msg_id = MSGID_T4_ACK;
-                    cb_to_pgpe_ack.fields.msg_id_ref = ((cb_to_qcme_ps_bc_t)cb_from_pgpe_base.value).fields.msg_id;
-                    cb_to_pgpe_ack.fields.rc = rc_api;
-
-                    data_ppm_pig.value = 0;
-                    data_ppm_pig.fields.req_intr_payload = cb_to_pgpe_ack.value;
-                    data_ppm_pig.fields.req_intr_type = 4;
-
-                    // Send Ack back to PGPE to acknowledge receipt and processing
-                    //  of the Pstate broadcast.
-                    rc = send_pig_packet(addr_ppm_pig, data_ppm_pig.value);
-
-                    if (rc)
-                    {
-                        MY_TRACE_ERR("send_pig_packet(addr=0x%08x) failed w/rc=0x%08x", addr_ppm_pig, rc);
-                        pk_halt();
-                    }
-
-                    break;
-
-                case MSGID_DB0_ACK:
-
-                    MY_TRACE_DBG("Received an DB0 Ack");
-
-                    if (fsm_unacked_qcme_registration == 1)
-                    {
-                        fsm_unacked_qcme_registration--;
-                    }
-                    else
-                    {
-                        MY_TRACE_ERR("Code bug: fsm_unacked_qcme_registration (=%d) != 1",
-                                     fsm_unacked_qcme_registration);
-                        pk_halt();
-                    }
-
-                    // FSM: Indicate QMGR master status and QMGR ready in CME FLAGS.
-                    out32(CME_LCL_FLAGS_OR, CME_FLAGS_QMGR_READY);
-
-                    break;
-
-                default:
-
-                    MY_TRACE_ERR("Unsupported msg_id. Only MSGID_DB0_PS_BROADCAST supported.");
-                    pk_halt();
-
-                    break;
-
-            } // End of switch()
-
-        }
-        else if (bPMCR)
-            //-------------------------------------------//
-            //               Process PMCR                //
-            //-------------------------------------------//
-        {
-
-            MY_TRACE_DBG("IRQ_THIS=0x%02x, addr_pmcr=0x%08x, addr_ppm_pig=0x%08x",
-                         IRQ_THIS, addr_pmcr, addr_ppm_pig);
-
-            // Read PMCRS
-            rc = getscom(0, addr_pmcr, &data_pmcr);
-
-            if (rc)
-            {
-                PK_TRACE("getscom(addr_pmcr%d=0x%08x) failed w/rc=0x%08x",
-                         thisCoreIdx, addr_pmcr, rc);
-                pk_halt();
-            }
-
-#if DEV_DEBUG
-            PK_TRACE("data_pmcr%d=0x%08x%08x",
-                     thisCoreIdx, (uint32_t)(data_pmcr >> 32), (uint32_t)data_pmcr);
-#endif
-
-            // Bump/wrap the payload sequence number
-            seqNum++;
-            seqNum = seqNum - (seqNum / 4) * 4;
-
-            //
-            // Phase 1 PIG message
-            //
-
-            // Format Pstate phase 1 PIG message - Populate intr_type and payload fields
-            //
-            // 1) Copy the 10-bit PMCR(6:15) payload to PPMPIG(6:15).
-            // 2) Mask off all other content.
-            // 3) Indicate the sequence number in the payload field.
-            // 4) Indicate the phase 1 (Type0) in the interrupt field.
-            data_ppm_pig.value = data_pmcr & PIG_PAYLOAD_PSTATE_MASK;
-            data_ppm_pig.value = data_ppm_pig.value | PIG_PAYLOAD_PSTATE_SEQ_INCR * seqNum;
-            data_ppm_pig.fields.req_intr_type = 0;
-
-            // Send PIG phase 1 message, but only if no intr request is currently granted
-            rc = send_pig_packet(addr_ppm_pig, data_ppm_pig.value);
-
-            if (rc)
-            {
-                MY_TRACE_ERR("send_pig_packet(addr=0x%08x) failed w/rc=0x%08x", addr_ppm_pig, rc);
-                pk_halt();
-            }
-
-            //
-            // Phase 2 PIG message
-            //
-
-            // Format Pstate phase 2 PIG message - Populate intr_type and payload fields
-            //
-            // 1) Copy the 10-bit PMCR(22:31) payload to PPMPIG(6:15).
-            // 2) Mask off all other content.
-            // 3) Indicate the sequence number in the payload field.
-            // 4) Indicate the phase 2 (Type1) in the interrupt field.
-            // in data_ppm_pig.
-            data_ppm_pig.value = (data_pmcr << 16) & PIG_PAYLOAD_PSTATE_MASK;
-            data_ppm_pig.value = data_ppm_pig.value | PIG_PAYLOAD_PSTATE_SEQ_INCR * seqNum;
-            data_ppm_pig.fields.req_intr_type = 1;
-
-            // Send PIG phase 2 message, but only if no intr request is currently granted
-            rc = send_pig_packet(addr_ppm_pig, data_ppm_pig.value);
-
-            if (rc)
-            {
-                MY_TRACE_ERR("send_pig_packet(addr=0x%08x) failed w/rc=0x%08x", addr_ppm_pig, rc);
-                pk_halt();
-            }
-
-#if DEV_DEBUG
-            // Read PPMPIG status
-            rc = getscom(0, addr_ppm_pig, &data);
-
-            if (rc)
-            {
-                PK_TRACE("getscom(addr_ppm_pig%d=0x%08x) failed w/rc=0x%08x",
-                         thisCoreIdx, addr_ppm_pig, rc);
-                pk_halt();
-            }
-
-            PK_TRACE("(After PIG phase 2): data_ppm_pig%d=0x%08x%08x",
-                     thisCoreIdx, (uint32_t)(data >> 32), (uint32_t)data);
-#endif
-
-        }
-        else
-        {
-            PK_TRACE("Code bug.");
-            PK_TRACE("Neither of the {PMCR,DB0}_C0/1 interrupts were selected.");
-            pk_halt();
-        }
-
-
-        // Restore the EIMR to the value it had when the IRQ handler was entered.
-        // (Note that we've already cleared the EISR earlier.)
-        //
-        pk_irq_vec_restore(&ctx);
-        /*
-                pk_critical_section_enter(&ctx);
-                if (g_eimr_stack_ctr>=0)
-                {
-                    out64( STD_LCL_EIMR,
-                           ext_irq_vectors_cme[g_eimr_stack[g_eimr_stack_ctr]][IDX_MASK_VEC]);
-                    out64( STD_LCL_EIMR_CLR,
-                           g_eimr_override_stack[g_eimr_stack_ctr]);
-                    out64( STD_LCL_EIMR_OR,
-                           g_eimr_override);
-        //CMO-temporarily commenting following three lines which asap should replace above line.
-        //    but if i do that, then i get a machine check in the timer_bh_handler (which is
-        //    a result of pk_delay kicked of way earlier than this code here!!) right after it
-        //    executes bctrl and jumps to an illegal instruction. Yeah, no make sense!!!
-        //            out64( STD_LCL_EIMR,
-        //                   (ext_irq_vectors_cme[g_eimr_stack[g_eimr_stack_ctr]][IDX_MASK_VEC] &
-        //                    ~g_eimr_override_stack[g_eimr_stack_ctr]) | g_eimr_override);
-                    // Restore the prty level tracker to the task that was interrupted, if any.
-                    g_current_prty_level = g_eimr_stack[g_eimr_stack_ctr];
-                    g_eimr_stack_ctr--;
-                }
-                else
-                {
-                    MY_TRACE_ERR("Code bug: Messed up EIMR book keeping: g_eimr_stack_ctr=%d",
-                                  g_eimr_stack_ctr);
-                    pk_halt();
-                }
-                pk_critical_section_exit(&ctx);
-        */
-
-    }
 }
