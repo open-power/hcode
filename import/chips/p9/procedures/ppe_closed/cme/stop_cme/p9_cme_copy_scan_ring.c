@@ -34,10 +34,12 @@ enum
 {
     SPR_NUM_PIR             =   286,
     CME_IMAGE_BASE_ADDR     =   SRAM_START,
-    CME_INST_ID_MASK        =   0x0000001F,
+    CME_INST_ID_MASK        =   0x0000001E,
     COPY_DEF_CME_ADDR       =   0x00000000,
     CME_PAGE_RD_SIZE        =   0x20,
     CME_IMG_HDR_ADDR        =   CME_IMAGE_BASE_ADDR + CME_HEADER_OFFSET,
+    CME_FLAG_EX_ID_BIT      =   26,
+    EX_ID_SHIFT_POS         =   5,
 };
 
 void instance_scan_init( )
@@ -46,8 +48,16 @@ void instance_scan_init( )
 
     uint32_t l_bcLength = 0;
     uint32_t l_bceMbase = CME_INST_SPEC_RING_START;
+    uint32_t l_exId = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (l_cmePir) : "i" (SPR_NUM_PIR));
-    l_cmePir = l_cmePir & CME_INST_ID_MASK;     // get CME instance number
+
+    //CME's PIR gives only quad id. To determine the correct CME instance, follow the steps below:
+    //(1). Read CME PIR's CME instance bit field (bit 27 -bit 31)
+    //(2). Bitwise shift left by one bit position.
+    //(3). OR to LSB of CME PIR (bit 31), bit 26 of CME Flag Register
+
+    l_cmePir = ((( l_cmePir << 1 ) & CME_INST_ID_MASK) | l_exId);     // get CME instance number
+
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_IMG_HDR_ADDR);
 
     //calculate start address of block copy and length of block copy
@@ -74,8 +84,15 @@ BceReturnCode_t isScanRingCopyDone( )
 {
     BceReturnCode_t l_rc;
     uint32_t l_cmePir = 0;
+    uint32_t l_exId = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (l_cmePir) : "i" (SPR_NUM_PIR));
-    l_cmePir = l_cmePir & CME_INST_ID_MASK;     // get CME instance number
+
+    //CME's PIR gives only quad id. To determine the correct CME instance, follow the steps below:
+    //(1). Read CME PIR's CME instance bit field (bit 27 -bit 31)
+    //(2). Bitwise shift left by one bit position.
+    //(3). OR to LSB of CME PIR (bit 31), bit 26 of CME Flag Register
+
+    l_cmePir = ((( l_cmePir << 1 ) & CME_INST_ID_MASK) | l_exId);     // get CME instance number
 
     while(1)
     {
