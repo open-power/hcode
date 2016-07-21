@@ -63,7 +63,7 @@ void instance_scan_init( )
     //calculate start address of block copy and length of block copy
     l_bcLength = pCmeImgHdr->g_cme_max_spec_ring_length; // integral multiple of 32.
     //let us find out HOMER address where core specific scan rings reside.
-    l_bceMbase = l_bceMbase + ( l_cmePir * l_bcLength );
+    l_bceMbase = l_bceMbase + (( l_cmePir * l_bcLength ) << 5 );
     l_bceMbase = (l_bceMbase >> 5 );
 
     // calculate the CME SRAM destination block number(SBASE)

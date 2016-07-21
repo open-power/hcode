@@ -336,8 +336,13 @@ fapi2::ReturnCode verifyHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
         {
             FAPI_ERR("Read header(%016x) data incorrect", uint64_t(l_readHeader));
             l_rc = fapi2::FAPI2_RC_PLAT_ERR_RING_HEADER_CHECK;
+            pk_halt();
             break;
             //PK_PANIC(0xFABD);
+        }
+        else
+        {
+            PK_TRACE("CHECK word matched");
         }
     }
     while(0);

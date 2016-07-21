@@ -81,9 +81,10 @@ int putRing(
         l_chipletData.iv_num_variants = 0;
         uint8_t l_chipletID = 0;
         uint32_t* l_sectionAddr;
+        uint16_t* l_ringTorAddr;
+
 
         getRingProperties(i_ringID, &l_torOffset, &l_ringType);
-        PK_TRACE ("Inside putring ringId %d ringtype %d", i_ringID, l_ringType);
 
         CmeHcodeLayout_t* l_hcodeLayout = (CmeHcodeLayout_t*)(CME_SRAM_BASE);
 
@@ -95,19 +96,26 @@ int putRing(
 
         if(INSTANCE_RING == l_ringType)
         {
+            uint8_t l_core = 1;
+
             if (!(l_cmeHeader->g_cme_core_spec_ring_offset))
             {
                 break;
             }
 
             l_sectionAddr =
-                (uint32_t*)(CME_SRAM_BASE + l_cmeHeader->g_cme_core_spec_ring_offset);
+                (uint32_t*)(CME_SRAM_BASE + (l_cmeHeader->g_cme_core_spec_ring_offset * 32));
 
-            l_chipletID = i_core + l_chipletData.iv_base_chiplet_number;
+            if (i_core == 2)
+            {
+                l_core = 0;
+            }
+
+            l_chipletID = l_core + l_chipletData.iv_base_chiplet_number;
             uint8_t l_chipletOffset =
                 (l_chipletID - l_chipletData.iv_base_chiplet_number);
-            l_sectionAddr += (l_chipletOffset *
-                              l_chipletData.iv_num_instance_rings);
+            l_ringTorAddr =  (uint16_t*)(l_sectionAddr ) + ((l_chipletOffset *
+                             l_chipletData.iv_num_instance_rings ) + (l_torOffset));
         }
         else
         {
@@ -118,19 +126,10 @@ int putRing(
 
             l_sectionAddr =
                 (uint32_t*)(CME_SRAM_BASE + l_cmeHeader->g_cme_common_ring_offset);
+            // TOR records of Ring TOR are 2 bytes in size.
+            l_ringTorAddr = (uint16_t*)(l_sectionAddr) + (l_torOffset);
+
         }
-
-
-        // The ring variants in section TOR are expected to be in the sequence -
-        // 1. Base
-        // 2. Risk Level
-
-        PK_TRACE("l_sectionAddr %08x", (uint32_t)l_sectionAddr);
-
-        // TOR records of Ring TOR are 2 bytes in size.
-        uint16_t* l_ringTorAddr = (uint16_t*)(l_sectionAddr) +
-                                  (l_torOffset * l_chipletData.iv_num_variants);
-
 
         if(*l_ringTorAddr != 0)
         {

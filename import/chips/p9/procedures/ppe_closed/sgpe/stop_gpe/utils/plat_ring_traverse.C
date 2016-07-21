@@ -56,6 +56,8 @@ fapi2::ReturnCode findRS4InImageAndApply(
         l_chipletData.iv_num_common_rings = 0;
         l_chipletData.iv_num_instance_rings = 0;
         l_chipletData.iv_num_variants = 0;
+        uint16_t* l_ringTorAddr = NULL;
+        uint32_t* l_sectionAddr = NULL;
 
         getRingProperties(i_ringID, &l_torOffset, &l_ringType);
 
@@ -64,16 +66,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
 
         l_chipletData = g_eqData;
 
-        if( l_hcodeLayout->g_sgpe_cmn_ring_occ_offset == 0)
-        {
-            FAPI_INF("No data COMMON ring section");
-            break;
-        }
-
         uint32_t l_chipletID = i_target.getChipletNumber();
-        // Determine the section TOR address for the ring
-        uint32_t* l_sectionAddr =
-            (uint32_t*)(SGPE_SRAM_BASE + l_hcodeLayout->g_sgpe_cmn_ring_occ_offset);
 
         if(INSTANCE_RING == l_ringType)
         {
@@ -85,13 +78,35 @@ fapi2::ReturnCode findRS4InImageAndApply(
             l_sectionAddr =
                 (uint32_t*)(SGPE_SRAM_BASE + l_hcodeLayout->g_sgpe_spec_ring_occ_offset);
 
-            l_sectionAddr += ((l_chipletID -
-                               l_chipletData.iv_base_chiplet_number) * l_chipletData.iv_num_instance_rings);
-        }
+            if ( l_chipletID >= l_chipletData.iv_base_chiplet_number)
+            {
+                uint32_t l_ex_number = 0;
+                uint8_t l_chipletOffset = (l_chipletID - l_chipletData.iv_base_chiplet_number);
 
-        // TOR records of Ring TOR are 2 bytes in size.
-        uint16_t* l_ringTorAddr = (uint16_t*)(l_sectionAddr) +
-                                  (l_torOffset * l_chipletData.iv_num_variants);
+                if (fapi2::TARGET_TYPE_EX & (i_target.getTargetType()))
+                {
+                    l_ex_number = (i_target.getTargetNumber()) % 2;
+                    PK_TRACE ("l_chipletID %d l_ex_number %d", l_chipletID, l_ex_number);
+                }
+
+                //12 is considered as instance ring size
+                l_ringTorAddr =  reinterpret_cast<uint16_t*>(l_sectionAddr ) + ((l_chipletOffset *
+                                 12) + (l_torOffset + l_ex_number));
+            }
+        }
+        else
+        {
+            if (l_hcodeLayout->g_sgpe_cmn_ring_occ_offset == 0)
+            {
+                FAPI_INF("No data in common ring section");
+            }
+
+            l_sectionAddr =
+                (uint32_t*)(SGPE_SRAM_BASE + l_hcodeLayout->g_sgpe_cmn_ring_occ_offset);
+
+            l_ringTorAddr = reinterpret_cast<uint16_t*>(l_sectionAddr) + (l_torOffset);
+
+        }
 
         if(*l_ringTorAddr != 0)
         {

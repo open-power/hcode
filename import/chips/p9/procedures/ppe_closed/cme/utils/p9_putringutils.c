@@ -379,7 +379,8 @@ int rs4DecompressionSvc(
 
         if(l_readHeader != 0xa5a5a5a5a5a5a5a5)
         {
-            MY_TRACE_ERR ("Check word data mismatch");
+            PK_TRACE("Check word data mismatch");
+            pk_halt();
         }
         else
         {
