@@ -36,7 +36,7 @@
     #define __STDC_LIMIT_MACROS
 #endif
 #include <stdint.h>
-//#include <new>
+#include <new>
 #include <algorithm>
 #include <assert.h>
 

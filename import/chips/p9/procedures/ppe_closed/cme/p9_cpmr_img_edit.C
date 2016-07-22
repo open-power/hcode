@@ -28,10 +28,7 @@
 #include <time.h>
 #include <stddef.h>   /* offsetof  */
 
-
-//#include <p9_cpmr_header.H>
 #include <p9_cme_img_layout.h>
-//#include <p9_cme_header.H>
 #include <pk_debug_ptrs.h>
 #include <p9_hcode_image_defines.H>
 
@@ -69,11 +66,6 @@ int main(int narg, char* argv[])
     FILE* pCpmr = fopen( argv[2], "r+" );
     FILE* pSelfRest = fopen( argv[3], "r+");
 
-    //FILE* pImage = fopen( "./obj/cme/cme.bin", "r+" );
-    //FILE* pCpmr = fopen( "./obj/cme/cpmr_header.bin", "r+" );
-    //FILE* pSelfRest = fopen( "../../utils/stopreg/selfRest.bin", "r+");
-
-
     time_t buildTime = time(NULL);
     struct tm* headerTime = localtime(&buildTime);
 
@@ -92,26 +84,26 @@ int main(int narg, char* argv[])
             break;
         }
 
-        printf("Debug Pointers Offset   : %d (0x%X)\n", PPE_DEBUG_PTRS_OFFSET, PPE_DEBUG_PTRS_OFFSET);
-        printf("Debug Pointers size     : %d (0x%X)\n", sizeof(pk_debug_ptrs_t), sizeof(pk_debug_ptrs_t));
+        printf("                    Debug Pointers Offset   : %d (0x%X)\n", PPE_DEBUG_PTRS_OFFSET, PPE_DEBUG_PTRS_OFFSET);
+        printf("                    Debug Pointers size     : %d (0x%X)\n", sizeof(pk_debug_ptrs_t), sizeof(pk_debug_ptrs_t));
 
-        printf("CME Image Offset        : %d (0x%X)\n", PPE_DEBUG_PTRS_OFFSET + sizeof(pk_debug_ptrs_t),
+        printf("                    CME Image Offset        : %d (0x%X)\n", PPE_DEBUG_PTRS_OFFSET + sizeof(pk_debug_ptrs_t),
                PPE_DEBUG_PTRS_OFFSET + sizeof(pk_debug_ptrs_t));
 
         fseek (pCpmr, 0, SEEK_END);
         uint32_t Cpmrsize = ftell (pCpmr);
         rewind(pCpmr);
-        printf("CPMR size               : %d (0x%X)\n", Cpmrsize, Cpmrsize);
+        printf("                    CPMR size               : %d (0x%X)\n", Cpmrsize, Cpmrsize);
 
         fseek (pImage, 0, SEEK_END);
         uint32_t Imagesize = ftell (pImage);
         rewind(pImage);
-        printf("Hcode Image size        : %d (0x%X)\n", Imagesize, Imagesize);
+        printf("                    Hcode Image size        : %d (0x%X)\n", Imagesize, Imagesize);
 
         fseek (pSelfRest, 0, SEEK_END);
         uint32_t selfRestSize = ftell (pSelfRest);
         rewind(pSelfRest);
-        printf("Self Restore size       : %d (0x%X)\n", selfRestSize, selfRestSize);
+        printf("                    Self Restore size       : %d (0x%X)\n", selfRestSize, selfRestSize);
 
         // cme build date  yyyymmdd
         fseek ( pImage, CME_HEADER_OFFSET + offsetof(cmeHeader_t, g_cme_build_date) , SEEK_SET );
@@ -119,7 +111,7 @@ int main(int narg, char* argv[])
         uint32_t temp = (((headerTime->tm_year + 1900) << 16) |
                          ((headerTime->tm_mon + 1) << 8) |
                          (headerTime->tm_mday));
-        printf("Build date              : %X -> %04d/%02d/%02d (YYYY/MM/DD)\n",
+        printf("                    Build date              : %X -> %04d/%02d/%02d (YYYY/MM/DD)\n",
                temp, headerTime->tm_year + 1900, headerTime->tm_mon + 1, headerTime->tm_mday);
 
         temp = htonl(temp);
@@ -133,7 +125,7 @@ int main(int narg, char* argv[])
         fwrite(&temp, sizeof(cmeHeader.g_cme_build_ver), 1, pImage );
         fwrite(&temp, sizeof(cpmrHeader.cpmrVersion), 1, pCpmr );
 
-        printf("CME_HEADER_OFFSET        : %X\n", CME_HEADER_OFFSET);
+        printf("                    CME_HEADER_OFFSET        : %X\n", CME_HEADER_OFFSET);
 
         // cme hcode offset
         fseek ( pImage, HCODE_OFFSET_POS , SEEK_SET );
@@ -156,7 +148,8 @@ int main(int narg, char* argv[])
         temp = htonl( selfRestSize );
         fwrite(&temp, sizeof(uint32_t), 1, pCpmr );
 
-        printf("CME Hcode Offset Address: %X\n", CME_HEADER_OFFSET + offsetof(cmeHeader_t, g_cme_hcode_offset));
+        printf("                    CME Hcode Offset Address: %X\n", CME_HEADER_OFFSET + offsetof(cmeHeader_t,
+                g_cme_hcode_offset));
         fseek ( pImage, CME_HEADER_OFFSET + offsetof(cmeHeader_t, g_cme_hcode_offset) , SEEK_SET );
         temp = CME_HCODE_OFFSET;
         temp = htonl(temp);
@@ -164,7 +157,8 @@ int main(int narg, char* argv[])
         fwrite(&temp, sizeof(cpmrHeader.cmeImgOffset), 1, pCpmr );
 
         // cme hcode length
-        printf("CME HCode Length Address: %X\n", CME_HEADER_OFFSET + offsetof(cmeHeader_t, g_cme_hcode_length));
+        printf("                    CME HCode Length Address: %X\n", CME_HEADER_OFFSET + offsetof(cmeHeader_t,
+                g_cme_hcode_length));
         fseek ( pImage, CME_HEADER_OFFSET + offsetof(cmeHeader_t, g_cme_hcode_length) , SEEK_SET );
         fseek ( pCpmr, offsetof(cpmrHeader_t, cmeImgLength) , SEEK_SET );
         temp = htonl( Imagesize );

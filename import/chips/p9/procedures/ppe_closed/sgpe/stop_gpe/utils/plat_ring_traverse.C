@@ -47,6 +47,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
 
     do
     {
+        FAPI_INF("findRS4InImageAndApply i_ringID %d", i_ringID);
         // Determine the Offset ID and Ring Type for the given Ring ID.
         uint32_t l_torOffset = 0;
         RINGTYPE l_ringType = COMMON_RING;
@@ -63,20 +64,29 @@ fapi2::ReturnCode findRS4InImageAndApply(
 
         l_chipletData = g_eqData;
 
+        if( l_hcodeLayout->g_sgpe_cmn_ring_occ_offset == 0)
+        {
+            FAPI_INF("No data COMMON ring section");
+            break;
+        }
+
         uint32_t l_chipletID = i_target.getChipletNumber();
         // Determine the section TOR address for the ring
         uint32_t* l_sectionAddr =
-            (uint32_t*)(SGPE_SRAM_BASE + SGPE_IMAGE_HEADER_OFFSET +
-                        l_hcodeLayout->g_sgpe_cmn_ring_occ_offset);
+            (uint32_t*)(SGPE_SRAM_BASE + l_hcodeLayout->g_sgpe_cmn_ring_occ_offset);
 
         if(INSTANCE_RING == l_ringType)
         {
+            if (l_hcodeLayout->g_sgpe_spec_ring_occ_offset == 0)
+            {
+                FAPI_INF("No data in Instance spec ring section");
+            }
+
             l_sectionAddr =
-                (uint32_t*)(SGPE_SRAM_BASE + SGPE_IMAGE_HEADER_OFFSET +
-                            l_hcodeLayout->g_sgpe_spec_ring_occ_offset);
+                (uint32_t*)(SGPE_SRAM_BASE + l_hcodeLayout->g_sgpe_spec_ring_occ_offset);
 
             l_sectionAddr += ((l_chipletID -
-                               l_chipletData.iv_base_chiplet_number) * l_chipletData.iv_num_variants);
+                               l_chipletData.iv_base_chiplet_number) * l_chipletData.iv_num_instance_rings);
         }
 
         // TOR records of Ring TOR are 2 bytes in size.
@@ -87,7 +97,12 @@ fapi2::ReturnCode findRS4InImageAndApply(
         {
             uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
             uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
+            FAPI_INF("l_rs4Address %08x", l_rs4Address);
             l_rc = rs4DecompressionSvc(i_target, l_rs4Address);
+        }
+        else
+        {
+            FAPI_INF("No data for this ringId %d", i_ringID);
         }
     }
     while(0);

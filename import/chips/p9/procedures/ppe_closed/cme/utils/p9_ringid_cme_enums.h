@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/sgpe/stop_gpe/p9_hcd_cache_initf.C $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/cme/utils/p9_ringid_cme_enums.h $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2016,2017                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -23,43 +23,37 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include "p9_sgpe_stop.h"
-#include "p9_sgpe_stop_exit_marks.h"
-#include "hw_access.H"
-#include "p9_ringid_sgpe.H"
-#include <fapi2.H>
+#ifndef _P9_RINGID_CME_ENUM_H_
+#define _P9_RINGID_CME_ENUM_H_
+#include <stdint.h>
 
-extern "C" int p9_hcd_cache_initf(uint32_t quad)
+///
+/// @enum RingID
+/// @brief Enumeration of Ring ID values. These values are used to traverse
+///        an image having Ring Containers.
+// NOTE: Do not change the numbering, the sequence or add new constants to
+//       the below enum, unless you know the effect it has on the traversing
+//       of the image for Ring Containers.
+typedef enum
 {
-    int rc = SGPE_STOP_SUCCESS;
-    fapi2::Target<fapi2::TARGET_TYPE_EQ> l_eqTarget
-    (
-        fapi2::plat_getTargetHandleByChipletNumber((uint8_t)quad + EQ_CHIPLET_OFFSET)
-    );
+    //*****************************
+    // Rings needed for CME - Start
+    //*****************************
+    // Core Chiplet Rings
+    // Common - apply to all Core instances
+    ec_func = 0,
+    ec_gptr = 1,
+    ec_time = 2,
+    ec_mode = 3,
 
-    FAPI_DBG("Scanning Cache FUNC Rings");
-    FAPI_INF(">>p9_hcd_cache_initf");
+    // Core Chiplet Rings
+    // EC0 - EC23 instance specific Ring
+    ec_repr = 4,
+    //***************************
+    // Rings needed for SBE - End
+    //***************************
 
-    FAPI_DBG("Scan eq_fure ring");
-    FAPI_TRY(fapi2::putRing(l_eqTarget, eq_fure));
-    FAPI_DBG("Scan eq_ana_func ring");
-    FAPI_TRY(fapi2::putRing(l_eqTarget, eq_ana_func));
+    P9_NUM_RINGS // This shoud always be the last constant
+} RingID; // end of enum RingID
 
-    for (auto l_ex_target : l_eqTarget.getChildren<fapi2::TARGET_TYPE_EX>())
-    {
-        FAPI_DBG("Scan ex_l2_fure ring");
-        FAPI_TRY(fapi2::putRing(l_ex_target, ex_l2_fure));
-        FAPI_DBG("Scan ex_l2_mode ring");
-        FAPI_TRY(fapi2::putRing(l_ex_target, ex_l2_mode));
-        FAPI_DBG("Scan ex_l3_fure ring");
-        FAPI_TRY(fapi2::putRing(l_ex_target, ex_l3_fure));
-        FAPI_DBG("Scan ex_l3_refr_fure ring");
-        FAPI_TRY(fapi2::putRing(l_ex_target, ex_l3_refr_fure));
-    }
-
-    // Markers needed for cache ininf
-fapi_try_exit:
-    FAPI_INF("<<p9_hcd_cache_initf");
-
-    return rc;
-}
+#endif

@@ -104,9 +104,10 @@ inline OpModes getOpMode(void)
 /// @return fapi::ReturnCode. FAPI2_RC_SUCCESS if success, else error code.
 template< TargetType K >
 inline ReturnCode putRing(const Target<K>& i_target,
-                          const RingID i_ringID)
+                          const RingID i_ringID,
+                          const RingMode i_ringMode = fapi2::RING_MODE_HEADER_CHECK)
 {
-    ReturnCode l_rc;
+    ReturnCode l_rc = FAPI2_RC_SUCCESS;
 
     // Find the RS4 string in the SEEPROM
     l_rc = findRS4InImageAndApply(i_target, i_ringID);

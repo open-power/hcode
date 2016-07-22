@@ -405,11 +405,6 @@ p9_cme_stop_exit()
             //=====================
 #if !SKIP_INITF
             PK_TRACE("X8: Core Func Scan");
-#if !ISTEP15_HACK
-            asm volatile ("nop");
-#else
-            asm volatile ("tw 31, 0, 0");
-#endif
             p9_hcd_core_initf(core);
 #endif
 #endif
@@ -574,13 +569,6 @@ p9_cme_stop_exit()
 
         PK_TRACE("Disable RAM mode");
         CME_PUTSCOM(RAM_MODEREG, core, 0);
-#endif
-
-
-#if !ISTEP15_HACK
-        asm volatile ("nop");
-#else
-        asm volatile ("tw 31, 0, 0");
 #endif
 
         PK_TRACE("S-Reset all threads");

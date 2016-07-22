@@ -30,8 +30,10 @@
 // *HWP Team: PM
 // *HWP Level: 2
 // *HWP Consumed by: CME
+
 #include "pk.h"
 #include "ppe42_scom.h"
+#include "p9_cme_irq.h"
 #include "p9_putringutils.h"
 
 //
@@ -50,7 +52,7 @@ uint8_t rs4_get_nibble(const uint8_t* i_rs4Str, const uint32_t i_nibbleIndx)
     uint8_t l_byte;
     uint8_t l_nibble;
 
-    l_byte = i_rs4Str[i_nibbleIndx / 2];
+    l_byte = i_rs4Str[i_nibbleIndx >> 1];
 
 
     if(i_nibbleIndx % 2)
@@ -87,7 +89,7 @@ uint64_t rs4_get_verbatim(const uint8_t* i_rs4Str,
 
     for(i = 1; i <= i_nibbleCount; i++, l_index++)
     {
-        l_byte = i_rs4Str[l_index / 2];
+        l_byte = i_rs4Str[l_index >> 1];
 
         if(l_index % 2)
         {
@@ -114,12 +116,12 @@ uint64_t rs4_get_verbatim(const uint8_t* i_rs4Str,
 /// @param[out] o_numRotate No.of rotates decoded from the stop-code.
 /// @return The number of nibbles decoded.
 ///
-uint64_t stop_decode(const uint8_t* i_rs4Str,
+uint32_t stop_decode(const uint8_t* i_rs4Str,
                      uint32_t i_nibbleIndx,
-                     uint64_t* o_numRotate)
+                     uint32_t* o_numRotate)
 {
-    uint64_t l_numNibblesParsed = 0; // No.of nibbles that make up the stop-code
-    uint64_t l_numNonZeroNibbles = 0;
+    uint32_t l_numNibblesParsed = 0; // No.of nibbles that make up the stop-code
+    uint32_t l_numNonZeroNibbles = 0;
     uint8_t l_nibble;
 
     do
@@ -164,33 +166,7 @@ uint64_t rs4_revle64(const uint64_t i_x)
     return rx;
 }
 
-void getRingProperties(const RingID i_ringId,
-                       uint32_t* o_torOffset,
-                       RINGTYPE* o_ringType)
-{
-    do
-    {
-        // Determine the TOR ID
-        *o_torOffset =
-            (INSTANCE_RING_MASK & (RING_PROPERTIES[i_ringId].iv_torOffSet));
 
-        if(INVALID_RING == *o_torOffset)
-        {
-            break;
-        }
-
-        // Determine Ring Type
-        if(INSTANCE_RING_MARK & (RING_PROPERTIES[i_ringId].iv_torOffSet))
-        {
-            *o_ringType = INSTANCE_RING;
-        }
-        else
-        {
-            *o_ringType = COMMON_RING;
-        }
-    }
-    while(0);
-}
 /// @brief Function to apply the Ring data using the queue method
 //  @param[in] i_core - core select value
 //  @param[in] i_scom_op - scom control value like queue/non-queue
@@ -200,29 +176,24 @@ void getRingProperties(const RingID i_ringId,
 /// @param[in] i_scanData This value has to be scanned when i_operation is SCAN
 void queuedScan(enum CME_CORE_MASKS i_core,
                 enum CME_SCOM_CONTROLS i_scom_op,
-                const uint8_t i_chipletId,
                 enum opType_t i_operation,
-                uint64_t i_opVal,
+                uint32_t i_opVal,
                 uint64_t i_scanData)
 {
-
-    uint32_t l_chiplet = i_chipletId << 24;
-
     do
     {
+        uint32_t l_scomAddress = 0;
+
         // **************
         // Scan or Rotate
         // **************
         if(ROTATE == i_operation)
         {
             // Setup Scom Address for rotate operation
-            uint32_t l_scomAddress = 0x00008000;
+            l_scomAddress = 0x00038000;
 
-            // Add the chiplet ID in the Scom Address
-            l_scomAddress |= l_chiplet;
-
-            const uint64_t l_maxRotates = 0x100000;
-            uint64_t l_rotateCount = i_opVal;
+            const uint32_t l_maxRotates = 4095;
+            uint32_t l_rotateCount = i_opVal;
             uint32_t l_numRotateScoms = 1; // 1 - We need to do atleast one scom
 
             if(i_opVal > l_maxRotates)
@@ -231,12 +202,11 @@ void queuedScan(enum CME_CORE_MASKS i_core,
                 l_rotateCount = l_maxRotates;
             }
 
-
             // Scom Data needs to have the no.of rotates in the bits 12-31
-            l_rotateCount <<= 32;
             uint32_t i;
+            l_scomAddress |= l_rotateCount;
 
-            for(i = 0; i < (l_numRotateScoms + 1); i++)
+            for(i = 0; i < (l_numRotateScoms + 1); ++i)
             {
                 if(i == l_numRotateScoms)
                 {
@@ -246,118 +216,27 @@ void queuedScan(enum CME_CORE_MASKS i_core,
                     }
 
                     l_rotateCount = (i_opVal % l_maxRotates);
-                    l_rotateCount <<= 32;
+                    l_scomAddress = 0x00038000 | l_rotateCount;
                 }
 
-                CME_GETSCOM(l_scomAddress, i_core, i_scom_op, l_rotateCount);
+                CME_GETSCOM(l_scomAddress, i_core, i_scom_op, i_scanData);
             }// end of for loop
         }
         else if(SCAN == i_operation)
         {
             // Setting Scom Address for a 64-bit scan
-            uint32_t l_scomAddress = 0x0000E000;
-
-            // Add the chiplet ID in the Scom Address
-            l_scomAddress |= l_chiplet;
-
-            uint32_t l_scanCount = i_opVal;
-
+            l_scomAddress = 0x0003E000;
 
             // Set the scan count to the actual value
-            l_scomAddress |= l_scanCount;
+            l_scomAddress |= i_opVal;
 
             CME_PUTSCOM(l_scomAddress, i_core, i_scanData);
 
         } // end of if(SCAN == i_operation)
     }
     while(0);
-
 }
 
-
-/// @brief Function to set the Scan Region
-//  @param[in] i_core - core select value
-/// @param[in] i_scanRegion Value to be set to select a Scan Region
-//  @param[in] i_chipletId data from RS4
-void setupScanRegion(enum CME_CORE_MASKS i_core,
-                     uint64_t i_scanRegion,
-                     const uint8_t i_chipletId)
-{
-    uint32_t l_chiplet =  i_chipletId << 24;
-
-    do
-    {
-        // **************************
-        // Setup Scan-Type and Region
-        // **************************
-        uint32_t l_scomAddress = 0x00030005;
-
-        // Add the chiplet ID in the Scom Address
-        l_scomAddress |= l_chiplet;
-
-        CME_PUTSCOM(l_scomAddress, i_core, i_scanRegion);
-    }
-    while(0);
-}
-
-/// @brief Function to write the header data to the ring.
-//  @param[in] i_core - core select value
-/// @param[in] i_header The header data that is to be written.
-//  @param[in] i_chipletId data from RS4
-void writeHeader(enum CME_CORE_MASKS i_core,
-                 const uint64_t i_header,
-                 const uint8_t i_chipletId)
-{
-    do
-    {
-        uint32_t l_chiplet = i_chipletId << 24;
-
-        uint32_t l_scomAddress = 0x0000E040; // 64-bit scan
-        // Add the chiplet ID in the Scom Address
-        l_scomAddress |= l_chiplet;
-
-        CME_PUTSCOM(l_scomAddress, i_core, i_header);
-    }
-    while(0);
-
-
-}
-
-/// @brief Function to reader the header data from the ring and verify it.
-//  @param[in] i_core - core select value
-//  @param[in] i_scom_op - scom control value like queue/non-queue
-/// @param[in] i_header The header data that is expected.
-//  @param[in] i_chipletId data from RS4
-int verifyHeader(enum CME_CORE_MASKS i_core,
-                 enum CME_SCOM_CONTROLS i_scom_op,
-                 const uint64_t i_header,
-                 const uint8_t i_chipletId)
-{
-    int l_rc = 0;
-    uint64_t l_readHeader = 0;
-
-    do
-    {
-        uint32_t l_chiplet = i_chipletId << 24;
-
-        uint32_t l_scomAddress = 0x0003E000; // 64-bit scan
-        // Add the chiplet ID in the Scom Address
-        l_scomAddress |= l_chiplet;
-
-        CME_GETSCOM(l_scomAddress, i_core, i_scom_op, l_readHeader);
-
-        if(l_readHeader != i_header)
-        {
-            PK_TRACE("Check word mismatch %016llx", l_readHeader);
-            pk_halt();
-            break;
-        }
-    }
-    while(0);
-
-    return l_rc;
-
-}
 
 /// @brief Function to decompress the RS4 and apply the Ring data
 //  @param[in] i_core - core select value
@@ -366,34 +245,31 @@ int verifyHeader(enum CME_CORE_MASKS i_core,
 int rs4DecompressionSvc(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,
-    const uint8_t* i_rs4)
+    uint8_t* i_rs4)
 {
     CompressedScanData_t* l_rs4Header = (CompressedScanData_t*) i_rs4;
-    const uint8_t* l_rs4Str = (i_rs4 + sizeof(CompressedScanData_t));
+    uint8_t* l_rs4Str = (i_rs4 + sizeof(CompressedScanData_t));
 
     enum opType_t l_opType = ROTATE;
-    uint64_t l_nibbleIndx = 0;
-    uint64_t l_bitsDecoded = 0;
+    enum opType_t l_opValue = ROTATE;
+    uint32_t l_nibbleIndx = 0;
+    uint32_t l_bitsDecoded = 0;
     uint64_t l_scanRegion = rs4_revle64(l_rs4Header->iv_scanSelect);
-    uint8_t l_chipletId = l_rs4Header->iv_chipletId;
+    uint32_t l_scanData = 0;
+    PK_TRACE ("rs4DecompressionSvc");
 
     do
     {
-        if (l_rs4Header->iv_length == 0)
-        {
-            break;
-        }
-
         // Set up the scan region for the ring.
-        setupScanRegion(i_core, l_scanRegion, l_chipletId);
+        CME_PUTSCOM(0x00030005, i_core, l_scanRegion);
 
         // Write a 64 bit value for header.
-        const uint64_t l_header = 0xa5a5a5a5a5a5a5a5;
-        writeHeader(i_core, l_header, l_chipletId);
+        CME_PUTSCOM(0x0003E040, i_core, 0xa5a5a5a5a5a5a5a5);
 
         //if the ring length is not 8bit aligned, then we need to skip the
         //padding bits
         uint8_t l_padding_bits = 0;
+        uint64_t l_scomData = 0;
 
         if (l_rs4Header->iv_length % 4)
         {
@@ -408,11 +284,11 @@ int rs4DecompressionSvc(
             if (l_opType == ROTATE)
             {
                 // Determine the no.of ROTATE operations encoded in stop-code
-                uint64_t l_count = 0;
+                uint32_t l_count = 0;
                 l_nibbleIndx += stop_decode(l_rs4Str, l_nibbleIndx, &l_count);
 
                 // Determine the no.of rotates in bits
-                uint64_t l_bitRotates = (4 * l_count);
+                uint32_t l_bitRotates = (4 * l_count);
 
                 //Need to skip 64bits , because we have already written header
                 //data.
@@ -427,91 +303,46 @@ int rs4DecompressionSvc(
                 // Do the ROTATE operation
                 if (l_bitRotates != 0)
                 {
-                    queuedScan(i_core,
-                               i_scom_op,
-                               l_chipletId,
-                               ROTATE,
-                               l_bitRotates, 0);
+                    l_opValue = ROTATE;
+                    l_scanData = l_bitRotates;
+                    l_scomData = 0;
                 }
 
                 l_opType = SCAN;
             }
             else if(l_opType == SCAN)
             {
-                uint8_t l_scanCount = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
+                uint32_t l_scanCount = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
                 l_nibbleIndx++;
 
                 if (l_scanCount == 0)
                 {
+                    PK_TRACE("SCAN COUNT 0");
                     break;
                 }
 
-                if (l_scanCount != 0xF)
-                {
-                    l_bitsDecoded += (4 * l_scanCount);
-                }
+                l_bitsDecoded += (4 * l_scanCount);
 
-                if(0xF == l_scanCount) // We are parsing RS4 for override rings
-                {
-                    uint8_t l_careMask = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
-                    l_nibbleIndx++;
-                    uint8_t l_spyData = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
-                    l_nibbleIndx++;
-
-                    uint8_t l_mask = 0x08;
-                    uint8_t i;
-
-                    for(i = 0; i < 4; i++)
-                    {
-                        if((l_careMask & (l_mask >> i)))
-                        {
-                            uint64_t l_scomData = 0x0;
-
-                            if((l_spyData & (l_mask >> i)))
-                            {
-                                l_scomData = 0xFFFFFFFFFFFFFFFF;
-                            }
-
-                            l_bitsDecoded += 1;
-
-                            queuedScan(i_core,
-                                       i_scom_op,
-                                       l_chipletId,
-                                       SCAN,
-                                       1, // Insert 1 bit
-                                       l_scomData);
-                        }
-                        else
-                        {
-                            l_bitsDecoded += 1;
-
-                            queuedScan(i_core,
-                                       i_scom_op,
-                                       l_chipletId,
-                                       ROTATE,
-                                       1, 0);
-                        }
-                    } // end of looper for bit-parsing a non-zero nibble
-                }
-                else // We are parsing RS4 for base rings
-                {
-                    // Parse the non-zero nibbles of the RS4 string and
-                    // scan them into the ring
-                    uint64_t l_scomData = rs4_get_verbatim(l_rs4Str,
-                                                           l_nibbleIndx,
-                                                           l_scanCount);
-                    l_nibbleIndx += l_scanCount;
-
-                    queuedScan(i_core,
-                               i_scom_op,
-                               l_chipletId,
-                               SCAN,
-                               (l_scanCount * 4),
-                               l_scomData);
-                }
+                // Parse the non-zero nibbles of the RS4 string and
+                // scan them into the ring
+                l_scomData = rs4_get_verbatim(l_rs4Str,
+                                              l_nibbleIndx,
+                                              l_scanCount);
+                l_nibbleIndx += l_scanCount;
+                l_opValue = SCAN;
+                l_scanData = l_scanCount * 4;
 
                 l_opType = ROTATE;
             } // end of - if(l_opType == SCAN)
+
+            if (l_scanData)
+            {
+                queuedScan(i_core,
+                           i_scom_op,
+                           l_opValue,
+                           l_scanData,
+                           l_scomData);
+            }
         }
         while(1);
 
@@ -536,7 +367,6 @@ int rs4DecompressionSvc(
 
                 queuedScan(i_core,
                            i_scom_op,
-                           l_chipletId,
                            SCAN,
                            (4 - l_padding_bits) , // scan 4 bits
                            l_scomData);
@@ -544,39 +374,22 @@ int rs4DecompressionSvc(
         } // end of if(l_nibble != 0)
 
         // Verify header
-        verifyHeader(i_core, i_scom_op, l_header, l_chipletId);
+        uint64_t l_readHeader = 0;
+        CME_GETSCOM(0x0003E000, i_core, i_scom_op, l_readHeader);
+
+        if(l_readHeader != 0xa5a5a5a5a5a5a5a5)
+        {
+            MY_TRACE_ERR ("Check word data mismatch");
+        }
+        else
+        {
+            PK_TRACE("CHECK WORD DATA MATCH Hurrayy !!!!!!");
+        }
 
         // Clean scan region and type data
-        cleanScanRegionandTypeData(i_core, l_chipletId);
+        CME_PUTSCOM(0x00030005, i_core, 0);
     }
     while(0);
 
     return 1;
-}
-
-
-/// @brief Function to clean up the scan region and type
-/// @param[in] i_core - core select value
-//  @param[in] chipletId data from RS4
-void cleanScanRegionandTypeData(
-    enum CME_CORE_MASKS i_core,
-    const uint8_t i_chipletId)
-{
-    uint32_t l_chiplet = i_chipletId << 24;
-
-    do
-    {
-        //////////////////////
-        //cleanup opcg_reg0
-        //////////////////////
-        uint32_t l_scomAddress = 0x00030005;
-
-        // Add the chiplet ID in the Scom Address
-        l_scomAddress |= l_chiplet;
-
-        CME_PUTSCOM(l_scomAddress, i_core, 0);
-
-    }
-    while(0);
-
 }

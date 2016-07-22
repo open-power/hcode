@@ -25,10 +25,35 @@
 
 #include "plat_ring_traverse.h"
 #include "p9_hcode_image_defines.H"
+#include "pk.h"
+#include "p9_ringid_cme.h"
 
 
 
-#define CME_SRAM_BASE 0xFFFF8000
+const uint32_t CME_SRAM_BASE = 0xFFFF8000;
+
+void getRingProperties(const RingID i_ringId,
+                       uint32_t* o_torOffset,
+                       RINGTYPE* o_ringType)
+{
+    do
+    {
+        // Determine the TOR ID
+        *o_torOffset =
+            (INSTANCE_RING_MASK & (RING_PROPERTIES[i_ringId].iv_torOffSet));
+
+        // Determine Ring Type
+        if(INSTANCE_RING_MARK & (RING_PROPERTIES[i_ringId].iv_torOffSet))
+        {
+            *o_ringType = INSTANCE_RING;
+        }
+        else
+        {
+            *o_ringType = COMMON_RING;
+        }
+    }
+    while(0);
+}
 ///
 /// @brief This is a plat specific (CME) function that locates the
 ///        Ring Container in the image and calls the functin to decompress the
@@ -37,7 +62,7 @@
 //  @param[in] i_scom_op - scom control value like queue/non-queue
 /// @param i_ringID The Ring ID that identifies the ring to be applied.
 ///
-int findRS4InImageAndApply(
+int putRing(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,
     const RingID i_ringID)
@@ -49,21 +74,16 @@ int findRS4InImageAndApply(
         // Determine the Offset ID and Ring Type for the given Ring ID.
         uint32_t l_torOffset = 0;
         RINGTYPE l_ringType = COMMON_RING;
-        SectionTOR_t* l_sectionTOR;
         struct CHIPLET_DATA l_chipletData;
         l_chipletData.iv_base_chiplet_number = 0;
         l_chipletData.iv_num_common_rings = 0;
         l_chipletData.iv_num_instance_rings = 0;
         l_chipletData.iv_num_variants = 0;
-        uint32_t l_sectionOffset = 0;
         uint8_t l_chipletID = 0;
+        uint32_t* l_sectionAddr;
 
         getRingProperties(i_ringID, &l_torOffset, &l_ringType);
-
-        if(INVALID_RING == l_torOffset)
-        {
-            break;
-        }
+        PK_TRACE ("Inside putring ringId %d ringtype %d", i_ringID, l_ringType);
 
         CmeHcodeLayout_t* l_hcodeLayout = (CmeHcodeLayout_t*)(CME_SRAM_BASE);
 
@@ -75,54 +95,52 @@ int findRS4InImageAndApply(
 
         if(INSTANCE_RING == l_ringType)
         {
-            l_sectionTOR =
-                (SectionTOR_t*)(l_cmeHeader->g_cme_core_spec_ring_offset);
-            l_sectionOffset = l_sectionTOR->TOC_EC_INSTANCE_RING;
+            if (!(l_cmeHeader->g_cme_core_spec_ring_offset))
+            {
+                break;
+            }
+
+            l_sectionAddr =
+                (uint32_t*)(CME_SRAM_BASE + l_cmeHeader->g_cme_core_spec_ring_offset);
+
             l_chipletID = i_core + l_chipletData.iv_base_chiplet_number;
+            uint8_t l_chipletOffset =
+                (l_chipletID - l_chipletData.iv_base_chiplet_number);
+            l_sectionAddr += (l_chipletOffset *
+                              l_chipletData.iv_num_instance_rings);
         }
         else
         {
-            l_sectionTOR =
-                (SectionTOR_t*)(l_cmeHeader->g_cme_common_ring_offset);
-            l_sectionOffset = l_sectionTOR->TOC_EC_COMMON_RING;
+            if (!(l_cmeHeader->g_cme_common_ring_offset))
+            {
+                break;
+            }
+
+            l_sectionAddr =
+                (uint32_t*)(CME_SRAM_BASE + l_cmeHeader->g_cme_common_ring_offset);
         }
 
-        // Determine the section TOR address for the ring
-        uint32_t* l_sectionAddr =
-            (uint32_t*)(CME_SRAM_BASE +
-                        l_cmeHeader->g_cme_common_ring_offset + l_sectionOffset);
-
-        if(INSTANCE_RING == l_ringType)
-        {
-            if ( l_chipletID > l_chipletData.iv_base_chiplet_number)
-            {
-                uint8_t l_chipletOffset =
-                    (l_chipletID - l_chipletData.iv_base_chiplet_number);
-                l_sectionAddr += (l_chipletOffset *
-                                  (l_chipletData.iv_num_instance_rings *
-                                   l_chipletData.iv_num_variants));
-            }
-            else
-            {
-                l_sectionAddr +=
-                    (l_chipletData.iv_num_instance_rings *
-                     l_chipletData.iv_num_variants);
-            }
-        }
 
         // The ring variants in section TOR are expected to be in the sequence -
         // 1. Base
         // 2. Risk Level
 
+        PK_TRACE("l_sectionAddr %08x", (uint32_t)l_sectionAddr);
+
         // TOR records of Ring TOR are 2 bytes in size.
         uint16_t* l_ringTorAddr = (uint16_t*)(l_sectionAddr) +
                                   (l_torOffset * l_chipletData.iv_num_variants);
+
 
         if(*l_ringTorAddr != 0)
         {
             uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
             uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
             l_rc = rs4DecompressionSvc(i_core, i_scom_op, l_rs4Address);
+        }
+        else
+        {
+            PK_TRACE("No data for this ringId %d", i_ringID);
         }
     }
     while(0);

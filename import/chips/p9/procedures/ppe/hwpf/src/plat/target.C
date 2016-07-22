@@ -578,7 +578,7 @@ ReturnCode plat_ApplyGards()
 fapi_try_exit:
     return fapi2::current_err;
 }
-
+#endif
 /// @brief Function to return a platform target handle, given the chiplet
 //         number
 //  @param i_chipletNumber The chiplet number of the target
@@ -610,5 +610,5 @@ plat_target_handle_t plat_getTargetHandleByChipletNumber(
 
     return G_vec_targets[l_idx];
 }
-#endif
+
 } // fapi2

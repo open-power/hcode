@@ -76,13 +76,12 @@ int main(int narg, char* argv[])
         rewind(pMainImage);
         uint32_t QPMR_SGPE_HCODE_LEN_VAL = 0;
 
-
         // For ekb build it's desired to detect the image type w/o special
         // make rules. Better way?
-        printf("Size is: %d\n", size);
 
         if(size < 1024)
         {
+            printf("                    QPMR size: %d\n", size);
             imageType = QPMR_IMAGE;
             buildDatePos = QPMR_BUILD_DATE_POS;
             buildVerPos  = QPMR_BUILD_VER_POS;
@@ -102,18 +101,16 @@ int main(int narg, char* argv[])
 
         if(imageType == SGPE_IMAGE)
         {
-
+            printf("                    SGPE size: %d\n", size);
             //  populating SGPE Image Header
             //  populating RESET address
             fseek (pMainImage, SGPE_RESET_ADDR_POS, SEEK_SET);
             temp = SGPE_RESET_ADDRESS;
             temp = htonl(temp);
             fwrite(&(temp), sizeof(uint32_t), 1, pMainImage );
-            printf("Done 1\n");
         }
 
-
-        //build date
+        // build date
         fseek( pMainImage, buildDatePos, SEEK_SET );
         // date format same as in XIP Header YYYYMMDD
         temp = ((headerTime->tm_mday ) |
@@ -127,7 +124,6 @@ int main(int narg, char* argv[])
         fseek( pMainImage,  buildVerPos, SEEK_SET );
         temp = htonl(SGPE_BUILD_VER);
         fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
-        printf("Done 2");
 
         if (imageType == QPMR_IMAGE)
         {
@@ -144,7 +140,6 @@ int main(int narg, char* argv[])
             fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
         }
 
-        printf("Done 3");
         fclose(pMainImage);
         //fclose(pDependImage);
     }

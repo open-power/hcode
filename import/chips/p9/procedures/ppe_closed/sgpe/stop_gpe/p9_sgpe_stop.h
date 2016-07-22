@@ -27,6 +27,10 @@
 /// \brief header of p9_cme_stop_enter_thread.c and p9_cme_stop_exit.c
 ///
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pk.h"
 #include "ppe42.h"
 #include "ppe42_scom.h"
@@ -205,6 +209,7 @@ typedef struct
     PkSemaphore  sem[2];
 } SgpeStopRecord;
 
+
 /// SGPE STOP Entry and Exit Prototypes
 void p9_sgpe_stop_pig_handler(void*, PkIrqId);
 void p9_sgpe_stop_enter_thread(void*);
@@ -226,3 +231,7 @@ int  p9_hcd_cache_scominit(uint32_t);
 int  p9_hcd_cache_scomcust(uint32_t);
 int  p9_hcd_cache_ras_runtime_scom(uint32_t);
 int  p9_hcd_cache_occ_runtime_scom(uint32_t);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif

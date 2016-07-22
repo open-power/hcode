@@ -28,51 +28,6 @@
 
 #include "p9_putringutils.h" // for RS4 decompression utilities
 
-/// @brief This structure represents the layout of the Section-TOR
-///        Section-TOR has the offsets to the different chiplet's
-///        Common Ring section and Instance Ring section
-typedef struct SectionTOR
-{
-    uint32_t TOC_PERV_COMMON_RING;   // Offset of Perv Common Ring section
-    uint32_t TOC_PERV_INSTANCE_RING; // Offset of Perv Instance Ring section
-
-    uint32_t TOC_N0_COMMON_RING;   // Offset of N0 Common Ring section
-    uint32_t TOC_N0_INSTANCE_RING; // Offset of N0 Instance Ring section
-
-    uint32_t TOC_N1_COMMON_RING;   // Offset of N1 Common Ring section
-    uint32_t TOC_N1_INSTANCE_RING; // Offset of N1 Instance Ring section
-
-    uint32_t TOC_N2_COMMON_RING;   // Offset of N2 Common Ring section
-    uint32_t TOC_N2_INSTANCE_RING; // Offset of N2 Instance Ring section
-
-    uint32_t TOC_N3_COMMON_RING;   // Offset of N3 Common Ring section
-    uint32_t TOC_N3_INSTANCE_RING; // Offset of N3 Instance Ring section
-
-    uint32_t TOC_XB_COMMON_RING;   // Offset of XB Common Ring section
-    uint32_t TOC_XB_INSTANCE_RING; // Offset of XB Instance Ring section
-
-    uint32_t TOC_MC_COMMON_RING;   // Offset of MC Common Ring section
-    uint32_t TOC_MC_INSTANCE_RING; // Offset of MC Instance Ring section
-
-    uint32_t TOC_OB_COMMON_RING;   // Offset of OB Common Ring section
-    uint32_t TOC_OB_INSTANCE_RING; // Offset of OB Instance Ring section
-
-    uint32_t TOC_PCI0_COMMON_RING;   // Offset of PCI0 Common Ring section
-    uint32_t TOC_PCI0_INSTANCE_RING; // Offset of PCI0 Instance Ring section
-
-    uint32_t TOC_PCI1_COMMON_RING;   // Offset of PCI1 Common Ring section
-    uint32_t TOC_PCI1_INSTANCE_RING; // Offset of PCI1 Instance Ring section
-
-    uint32_t TOC_PCI2_COMMON_RING;   // Offset of PCI2 Common Ring section
-    uint32_t TOC_PCI2_INSTANCE_RING; // Offset of PCI2 Instance Ring section
-
-    uint32_t TOC_EQ_COMMON_RING;   // Offset of Quad Common Ring section
-    uint32_t TOC_EQ_INSTANCE_RING; // Offset of Quad Instance Ring section
-
-    uint32_t TOC_EC_COMMON_RING;   // Offset of Core Common Ring section
-    uint32_t TOC_EC_INSTANCE_RING; // Offset of Core Instance Ring section
-} SectionTOR_t;
-
 
 ///
 /// @brief This is a plat specific (CME) function that locates the
@@ -82,7 +37,7 @@ typedef struct SectionTOR
 //  @param[in] i_scom_op - scom control value like queue/non-queue
 /// @param i_ringID The Ring ID that identifies the ring to be applied.
 ///
-int findRS4InImageAndApply(
+int putRing(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,
     const RingID i_ringID);

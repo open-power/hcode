@@ -108,6 +108,7 @@ $(IMAGE)_COMMONFLAGS+= -D__PK__=1
 $(IMAGE)_COMMONFLAGS+= -D__PPE_PLAT
 $(IMAGE)_COMMONFLAGS+= -D__PPE__
 $(IMAGE)_COMMONFLAGS+= -DFAPI2_NO_FFDC=1
+##$(IMAGE)_COMMONFLAGS+= -DFAPI_TRACE_LEVEL_DEF=3
 $($(IMAGE)_TARGET)_CXXFLAGS += -Wno-unused-label
 
 # add include paths
@@ -131,7 +132,8 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(STD_INC) \
 	)
 
-$(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
+#$(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
+$(IMAGE)_LDFLAGS=-e __system_reset -N -Bstatic
 
 $(call BUILD_PPEIMAGE)
 

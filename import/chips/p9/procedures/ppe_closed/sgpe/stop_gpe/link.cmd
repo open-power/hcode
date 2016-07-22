@@ -93,12 +93,15 @@ SECTIONS
     // offsets.
 
     _SDA2_BASE_ = .;
-   .sdata2 . : { *(.sdata2) } > sram
-   .sbss2  . : { *(.sbss2) } > sram
+    .sdata2 . : { *(.sdata2) } > sram
+    .sbss2  . : { *(.sbss2) } > sram
 
-   // Other read-only data.
-
-   .rodata . : { *(.rodata*) *(.got2) } > sram
+    // Other read-only data.
+    . = ALIGN(8);
+    .rodata . : { ctor_start_address = .;
+                  *(.ctors) *(.ctors.*)
+                  ctor_end_address = .;
+                  *(rodata*) *(.got2) } > sram
 
     _RODATA_SECTION_SIZE = . - _RODATA_SECTION_BASE;
 
@@ -114,8 +117,10 @@ SECTIONS
     // offsets.
 
     _SDA_BASE_ = .;
-    .sdata  . : { *(.sdata)  } > sram
-    .sbss   . : { *(.sbss)   } > sram
+    .sdata  . : { *(.sdata*)  } > sram
+    _sbss_start = .;
+    .sbss   . : { *(.sbss*)   } > sram
+    _sbss_end = .;
 
     // Other read-write data
     // It's not clear why boot.S is generating empty .glink,.iplt

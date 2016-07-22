@@ -88,7 +88,7 @@ uint64_t rs4_get_verbatim(const uint8_t* i_rs4Str,
 
     for(uint8_t i = 1; i <= i_nibbleCount; i++, l_index++)
     {
-        l_byte = i_rs4Str[l_index >> 2];
+        l_byte = i_rs4Str[l_index >> 1];
 
         if(l_index % 2)
         {
@@ -270,7 +270,7 @@ fapi2::ReturnCode standardScan(
 
                     // @TODO: 1 micro second is a number that works now.
                     //        Need to derive the real delay number.
-                    fapi2::delay(1000, 0);
+                    fapi2::delay(1000, 1000000);
 
                 }
 
@@ -337,6 +337,7 @@ fapi2::ReturnCode verifyHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
             FAPI_ERR("Read header(%016x) data incorrect", uint64_t(l_readHeader));
             l_rc = fapi2::FAPI2_RC_PLAT_ERR_RING_HEADER_CHECK;
             break;
+            //PK_PANIC(0xFABD);
         }
     }
     while(0);

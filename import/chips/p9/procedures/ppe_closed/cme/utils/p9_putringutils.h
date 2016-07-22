@@ -26,7 +26,8 @@
 /// @brief Headers and Constants used by rs4 decompression and
 /// ring SCAN/ROTATE functionality
 ///
-// *HWP HWP Owner: Bilicon Patil <bilpatil@in.ibm.com>
+// *HWP HWP Owner: Michael Floyd <mfloyd@us.ibm.com>
+// *HWP HWP Backup Owner: Greg Still <stillgs@us.ibm.com>
 // *HWP FW Owner: Prasad Ranganath <prasadbgr@in.ibm.com>
 // *HWP Team: PM
 // *HWP Level: 2
@@ -36,7 +37,7 @@
 #define _P9_PUTRINGUTILS_H_
 
 #include <cmehw_common.h>
-#include "p9_ringid_cme.h"
+#include "p9_ringid_cme_enums.h"
 
 
 //
@@ -55,9 +56,9 @@ uint64_t rs4_revle64(const uint64_t i_x);
 /// @param[out] o_numRotate No.of rotates decoded from the stop-code.
 /// @return The number of nibbles decoded.
 ///
-uint64_t stop_decode(const uint8_t* i_rs4Str,
+uint32_t stop_decode(const uint8_t* i_rs4Str,
                      uint32_t i_nibbleIndx,
-                     uint64_t* o_numRotate);
+                     uint32_t* o_numRotate);
 
 ///
 /// @brief Return a big-endian-indexed nibble from a byte string
@@ -140,14 +141,13 @@ typedef struct CompressedScanData
 
     /// 7-bit pervasive chiplet Id + Multicast bit
     uint8_t iv_chipletId;
+
+    uint32_t iv_reserved;
 } CompressedScanData_t;
 
 //
 // Function Definitions
 //
-void getRingProperties(const RingID i_ringId,
-                       uint32_t* o_torOffset,
-                       RINGTYPE* o_ringType);
 
 /// @brief Function to apply the Ring data using the queue method
 //  @param[in] i_core - core select value
@@ -159,28 +159,10 @@ void getRingProperties(const RingID i_ringId,
 void queuedScan(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,
-    const uint8_t i_chipletId,
     enum opType_t i_operation,
-    uint64_t i_opVal,
+    uint32_t i_opVal,
     uint64_t i_scanData);
 
-
-/// @brief Function to set the Scan Region
-//  @param[in] i_core - core select value
-/// @param[in] i_scanRegion Value to be set to select a Scan Region
-//  @param[in] i_chipletId data from RS4
-void setupScanRegion(enum CME_CORE_MASKS i_core,
-                     uint64_t i_scanRegion,
-                     const uint8_t i_chipletId);
-
-
-/// @brief Function to write the header data to the ring.
-//  @param[in] i_core - core select value
-/// @param[in] i_header The header data that is to be written.
-//  @param[in] i_chipletId data from RS4
-void writeHeader(enum CME_CORE_MASKS i_core,
-                 const uint64_t i_header,
-                 const uint8_t i_chipletId);
 
 /// @brief Function to reader the header data from the ring and verify it.
 //  @param[in] i_core - core select value
@@ -189,8 +171,7 @@ void writeHeader(enum CME_CORE_MASKS i_core,
 //  @param[in] i_chipletId data from RS4
 int verifyHeader(enum CME_CORE_MASKS i_core,
                  enum CME_SCOM_CONTROLS i_scom_op,
-                 const uint64_t i_header,
-                 const uint8_t i_chipletId);
+                 const uint64_t i_header);
 
 /// @brief Function to decompress the RS4 and apply the Ring data
 //  @param[in] i_core - core select value
@@ -199,14 +180,7 @@ int verifyHeader(enum CME_CORE_MASKS i_core,
 int rs4DecompressionSvc(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,
-    const uint8_t* i_rs4);
+    uint8_t* i_rs4);
 
-
-/// @brief Function to clean up the scan region and type
-/// @param[in] i_core - core select value
-//  @param[in] chipletId data from RS4
-void cleanScanRegionandTypeData(
-    enum CME_CORE_MASKS i_core,
-    const uint8_t i_chipletId);
 
 #endif

@@ -117,6 +117,7 @@ EXTERNAL_IRQ_TABLE_END
 
 #define  KERNEL_STACK_SIZE  256
 #define  THREAD_STACK_SIZE  512
+#define  STOP_THREAD_STACK_SIZE  512
 
 #define  CME_THREAD_PRIORITY_STOP_EXIT   1
 #define  CME_THREAD_PRIORITY_STOP_ENTRY  2
@@ -126,7 +127,7 @@ EXTERNAL_IRQ_TABLE_END
 uint8_t  G_kernel_stack[KERNEL_STACK_SIZE];
 
 uint8_t  G_p9_cme_stop_enter_thread_stack[THREAD_STACK_SIZE];
-uint8_t  G_p9_cme_stop_exit_thread_stack[THREAD_STACK_SIZE];
+uint8_t  G_p9_cme_stop_exit_thread_stack[STOP_THREAD_STACK_SIZE];
 uint8_t  G_p9_cme_db_thread_stack[THREAD_STACK_SIZE];
 uint8_t  G_p9_cme_pmcr_thread_stack[THREAD_STACK_SIZE];
 

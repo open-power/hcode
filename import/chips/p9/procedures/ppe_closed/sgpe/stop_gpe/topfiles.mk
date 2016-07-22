@@ -22,8 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-TOP-C-SOURCES = p9_sgpe_main.c \
-                p9_sgpe_stop_entry.c \
+TOP-C-SOURCES = p9_sgpe_stop_entry.c \
                 p9_sgpe_stop_exit.c \
                 p9_sgpe_stop_irq_handlers.c \
                 p9_sgpe_stop_enter_thread.c \
@@ -44,11 +43,13 @@ TOP-C-SOURCES = p9_sgpe_main.c \
                 p9_hcd_cache_ras_runtime_scom.c \
                 p9_hcd_sgpe_boot_cme.c
 
-UTILS-SRC  = utils/p9_putringutils.C \
-				   utils/plat_ring_traverse.C
+UTILS-SRC   = utils/p9_putringutils.C
+UTILS-SRC  += utils/plat_ring_traverse.C
 
 TOP-S-SOURCES =  p9_sgpe_image_header.S
-TOP-SRC = p9_hcd_cache_initf.C
+
+TOP-CPP-SOURCES  = p9_sgpe_main.C
+TOP-CPP-SOURCES += p9_hcd_cache_initf.C
 
 UTILS_OBJECTS  = $(UTILS-SRC:.C=.o)
-TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) $(TOP-SRC:.C=.o)
+TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) $(TOP-CPP-SOURCES:.C=.o)

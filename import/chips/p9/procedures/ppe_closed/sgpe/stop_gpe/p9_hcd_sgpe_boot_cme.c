@@ -222,9 +222,24 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
             // It is expected to be done during Hcode Image Build
             uint32_t l_hdrToSectionOffset = pCpmrHdrAddr->cmeImgOffset;  // Hcode Offset wrt CPMR Hdr start.
 
-            l_blockCopyLength = pCpmrHdrAddr->cmeImgLength;             // CME Image length
-            l_blockCopyLength += pCpmrHdrAddr->cmeCommonRingLength;     // adding common ring length
-            l_blockCopyLength += pCpmrHdrAddr->cmePstateLength;         // adding Pstate region length
+            if ( pCpmrHdrAddr->cmeImgLength != 0 )
+            {
+                l_blockCopyLength = pCpmrHdrAddr->cmeImgLength;         // CME Image length
+            }
+
+            if (  pCpmrHdrAddr->cmeCommonRingLength != 0 )
+            {
+                l_blockCopyLength = (pCpmrHdrAddr->cmeCommonRingOffset - (pCpmrHdrAddr->cmeImgOffset * 32)) +
+                                    pCpmrHdrAddr->cmeCommonRingLength;     // adding common ring length
+            }
+
+            if (  pCpmrHdrAddr->cmePstateLength != 0 )
+            {
+                l_blockCopyLength = (pCpmrHdrAddr->cmePstateOffset - (pCpmrHdrAddr->cmeImgOffset * 32)) +
+                                    pCpmrHdrAddr->cmePstateLength;         // adding Pstate region length
+            }
+
+            PK_TRACE("Block Copy Length: 0x%08x", l_blockCopyLength);
 
             //rounding off length to CME's read block size i.e. 32 bytes
             l_blockCopyLength = ((l_blockCopyLength + (CME_BLOCK_READ_SIZE - 1 )) / CME_BLOCK_READ_SIZE);

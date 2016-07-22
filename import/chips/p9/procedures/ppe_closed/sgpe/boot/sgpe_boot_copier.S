@@ -28,9 +28,9 @@
 #include <sgpe_boot_defines.H>
         .list
 
-	.section .loader_text, "ax", @progbits
+    .section .loader_text, "ax", @progbits
 
-	.global __vectors
+    .global __vectors
 __vectors:
 
     .org __vectors + 0x0000
@@ -44,68 +44,68 @@ __system_reset:
 
     .org __vectors + 0x0060
 __data_storage:
-	b .
+    b .
 
     .org __vectors + 0x0080
 __instruction_storage:
-	b .
+    b .
 
     .org __vectors + 0x00A0
 __external_interrupt_vector:
-	b .
+    b .
 
     .org __vectors + 0x00C0
 __alignment_exception:
-	b .
+    b .
 
     .org __vectors + 0x00E0
 __program_exception:
-	b .
+    b .
 
     .org __vectors + 0x0100
 __dec_interrupt:
-	b .
+    b .
 
     .org __vectors + 0x0120
 __fit_interrupt:
-	b .
+    b .
 
     .org __vectors + 0x0140
 __watchdog_interrupt:
-	b .
+    b .
 
 __bootCopier:
-	//load r3 with BASE_
-        _liw    %r3, HOMER_BOOT_LOADER_LENGTH_ADDR
+    //load r3 with BASE_
+    _liw    %r3, HOMER_BOOT_LOADER_LENGTH_ADDR
 
-	_liw    %r7, HOMER_BOOT_LOADER_OFFSET_ADDR
+    _liw    %r7, HOMER_BOOT_LOADER_OFFSET_ADDR
 
-	//load r4 with address where bootLoader will be loaded in SRAM e.g 0xFFFE8000 (Destination address)
-        _liw    %r4, SRAM_SGPE_BOOT_LOADER_ADDR # dest
+    //load r4 with address where bootLoader will be loaded in SRAM e.g 0xFFFE8000 (Destination address)
+    _liw    %r4, SRAM_SGPE_BOOT_LOADER_ADDR # dest
 
-	//load r9 with QPMR header address
-	_liw    %r9, QPMR_HEADER_ADDR
+    //load r9 with QPMR header address
+    _liw    %r9, HOMER_QPMR_HEADER_ADDR
 
-	//size of image in bytes
-	lwz    r5, 0(r3)
-        li    r6, 3
-        srw   r5, r5, r6    # r5 contains number of bytes, divide by 8 will give number of double words
-        addi r5, r5, 1
-        mtctr   r5          # set the counter for loop
+    //size of image in bytes
+    lwz     r5, 0(r3)
+    li      r6, 3
+    srw     r5, r5, r6    # r5 contains number of bytes, divide by 8 will give number of double words
+    addi    r5, r5, 1
+    mtctr   r5          # set the counter for loop
 
-	// calculating bootLoader image loaded address
-	lwz     r8, 0(r7)   # offset of bootLoader section  in Homer
-        adde    r8, r8, r9  # add base address to offset to get absolute bootLoader address in Homer
+    // calculating bootLoader image loaded address
+    lwz     r8, 0(r7)   # offset of bootLoader section  in Homer
+    adde    r8, r8, r9  # add base address to offset to get absolute bootLoader address in Homer
 
 copy_loop:
-        lvd    d28, 0(r8)  # Load Double word
-        stvd   d28, 0(r4)  # Destination address
-	addi   r8, r8, 8   # Increasing source address
-	addi   r4, r4, 8   # Increasing Dest address
-	bdnz   copy_loop   # Keep repeating the address.
+    lvd    d28, 0(r8)  # Load Double word
+    stvd   d28, 0(r4)  # Destination address
+    addi   r8, r8, 8   # Increasing source address
+    addi   r4, r4, 8   # Increasing Dest address
+    bdnz   copy_loop   # Keep repeating the address.
 
-	## Using blr command:
-        _liw  %r6,   SRAM_SGPE_BOOT_LOADER_RESET_ADDR
-        mtlr  r6
-        blr
-        .epilogue __bootCopier
+    ## Using blr command:
+    _liw  %r6,   SRAM_SGPE_BOOT_LOADER_RESET_ADDR
+    mtlr  r6
+    blr
+    .epilogue __bootCopier

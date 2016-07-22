@@ -27,42 +27,13 @@
 #define _P9_RINGID_CME_H_
 
 #include <stdint.h>
+#include "p9_ringid_cme_enums.h"
 
 typedef enum
 {
     COMMON_RING = 0,
     INSTANCE_RING = 1
 } RINGTYPE;
-
-
-///
-/// @enum RingID
-/// @brief Enumeration of Ring ID values. These values are used to traverse
-///        an image having Ring Containers.
-// NOTE: Do not change the numbering, the sequence or add new constants to
-//       the below enum, unless you know the effect it has on the traversing
-//       of the image for Ring Containers.
-typedef enum
-{
-    //*****************************
-    // Rings needed for CME - Start
-    //*****************************
-    // Core Chiplet Rings
-    // Common - apply to all Core instances
-    ec_func = 1,
-    ec_gptr = 2,
-    ec_time = 3,
-    ec_mode = 4,
-
-    // Core Chiplet Rings
-    // EC0 - EC23 instance specific Ring
-    ec_repr = 5,
-    //***************************
-    // Rings needed for SBE - End
-    //***************************
-
-    P9_NUM_RINGS // This shoud always be the last constant
-} RingID; // end of enum RingID
 
 struct CHIPLET_DATA
 {
@@ -97,28 +68,27 @@ typedef enum RingOffset
     EC_REPR = INSTANCE_RING_MARK | 0
 } ringOffset;
 
-static const struct CHIPLET_DATA g_ecData =
+const struct CHIPLET_DATA g_ecData =
 {
     32, // Core Chiplet ID range is 32-55. The base ID is 32.
     4,  // 4 common rings for Core chiplet
     1,  // 1 instance specific ring for each Core chiplet
-    2   //base and risk level variants supported
+    3   //base,CC and risk level variants supported
 };
 
-static const uint32_t INVALID_RING = 999;
 
 struct ringProperties_t
 {
     ringOffset iv_torOffSet;
 };
 
-static const struct ringProperties_t RING_PROPERTIES[P9_NUM_RINGS] =
+const struct ringProperties_t RING_PROPERTIES[P9_NUM_RINGS] =
 {
     // Core Ring
-    {EC_FUNC}, // 1
-    {EC_GPTR}, // 2
-    {EC_TIME}, // 3
-    {EC_MODE}, // 4
-    {EC_REPR}  // 5
+    {EC_FUNC}, // 0
+    {EC_GPTR}, // 1
+    {EC_TIME}, // 2
+    {EC_MODE}, // 3
+    {EC_REPR}  // 4
 };
 #endif

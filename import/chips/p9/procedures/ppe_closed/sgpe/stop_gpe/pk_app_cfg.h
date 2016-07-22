@@ -34,12 +34,21 @@
 /// \brief Application specific overrides go here.
 ///
 
+#define SIMICS_TUNING 0
+#define USE_SIMICS_IO 0
+#define DEV_DEBUG     1
+
+#ifndef EPM_P9_TUNING
+    #define EPM_P9_TUNING 0
+#endif
+
 #define STOP_PRIME           0
 #define SKIP_L3_PURGE        0
 #define SKIP_L3_PURGE_ABORT  0
-#define ISTEP15_HACK         1
+#define ISTEP15_HACK         0
 
-#if !ISTEP15_HACK
+
+#if EPM_P9_TUNING
     #define SKIP_CME_BOOT_STOP11 1
     #define SKIP_CME_BOOT_IPL_HB 1
     #define SKIP_ARRAYINIT       1
@@ -50,14 +59,10 @@
     #define SKIP_ARRAYINIT       0
     #define SKIP_SCAN0           0
 #endif
-#define SKIP_INITF           0
+#define SKIP_INITF               0
 
 // --------------------
 
-#define EPM_P9_TUNING 1
-#define SIMICS_TUNING 0
-#define USE_SIMICS_IO 0
-#define DEV_DEBUG     1
 
 #if EPM_P9_TUNING
     #define PK_TRACE_BUFFER_WRAP_MARKER 1
