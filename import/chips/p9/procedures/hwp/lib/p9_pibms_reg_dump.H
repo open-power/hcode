@@ -28,6 +28,7 @@
 /// @brief Dump contents of various PIB Masters and Slaves internal registers.
 ///
 /// *HW Owner    : Anay K Desai
+/// *HW Owner    : Pradeep Chatnahali
 /// *FW Owner    :
 /// *Team        : Pervasive
 /// *Consumed by : TBD
