@@ -44,9 +44,10 @@
 //  Includes
 // -----------------------------------------------------------------------------
 #include <fapi2.H>
+
 #include <p9_ppe_state.H>
-// #include <p9_sbe_trace.H>
 #include <p9_ppe_common.H>
+#include <p9_hcd_common.H>
 #include <p9_sbe_localreg_dump.H>
 
 // ----------------------------------------------------------------------
@@ -57,6 +58,7 @@
 
 
 
+const static uint64_t PPE_XIRAMDBG = 0x3;
 
 
 
@@ -138,7 +140,9 @@ fapi2::ReturnCode p9_sbe_localreg_dump( const fapi2::Target<fapi2::TARGET_TYPE_P
     fapi2::buffer<uint64_t> l_data64;
 
     SCOMRegValue_t l_regVal;
+
     uint16_t address = 0 ;
+    uint32_t scom_address = 0 ;
 
     FAPI_IMP("p9_sbe_trace");
     FAPI_INF("Executing p9_sbe_trace " );
@@ -165,25 +169,57 @@ fapi2::ReturnCode p9_sbe_localreg_dump( const fapi2::Target<fapi2::TARGET_TYPE_P
 
 
 
+// If SBE is not in halt state
+    FAPI_TRY(getScom(i_target, sbe_base_address + PPE_XIRAMDBG, buf), "Error in GETSCOM");
 
-    FAPI_TRY(backup_gprs_sprs(i_target , l_gpr0_save, l_gpr1_save, l_gpr9_save, l_sprg0_save ));
-
-
-    for (auto it : v_sbe_local_regs)
+    if (!buf.getBit<0>())
     {
-        // ******************************************************************
-        address = it.number ; // defined in enums in p9_ppe_common.H files
-        FAPI_TRY(LocalRegRead(i_target , address , buf ));
+        FAPI_INF("p9_sbe_localreg_dump : Entering th unhalt state of SBE");
 
-        FAPI_INF(" %-6s : Local_reg_addr :  0xC000_%04x :  0x%016lX \n", it.name.c_str() , it.number , buf);
-        l_regVal.reg = it;
-        l_regVal.value = buf;
-        v_sbe_local_reg_value.push_back(l_regVal);
-        // ******************************************************************
+        for (auto it : v_sbe_local_regs)
+        {
+            // ******************************************************************
+            scom_address = 0xC0000000 + it.number ; // defined in enums in p9_ppe_common.H files
+            FAPI_TRY(getScom(i_target , scom_address , buf ));
+
+            //  FAPI_INF(" %-6s : Local_reg_addr :  0xC000_%04x :  0x%016lX \n",it.name.c_str() , it.number , buf);
+            l_regVal.reg = it;
+            l_regVal.value = buf;
+            v_sbe_local_reg_value.push_back(l_regVal);
+            // ******************************************************************
+        }
+
+        //  FAPI_TRY(restore_gprs_sprs(i_target , l_gpr0_save, l_gpr1_save, l_gpr9_save, l_sprg0_save ));
+        FAPI_INF("< p9_sbe_localreg_dump");
+
     }
 
-    FAPI_TRY(restore_gprs_sprs(i_target , l_gpr0_save, l_gpr1_save, l_gpr9_save, l_sprg0_save ));
-    FAPI_INF("< p9_sbe_localreg_dump");
+    // IF SBE is in halt state
+
+    else
+    {
+
+
+        FAPI_TRY(backup_gprs_sprs(i_target , l_gpr0_save, l_gpr1_save, l_gpr9_save, l_sprg0_save ));
+        FAPI_INF("p9_sbe_localreg_dump : Entering the HALT state of SBE");
+
+        for (auto it : v_sbe_local_regs)
+        {
+            // ******************************************************************
+            address = it.number ; // defined in enums in p9_ppe_common.H files
+            FAPI_TRY(LocalRegRead(i_target , address , buf ));
+
+            //  FAPI_INF(" %-6s : Local_reg_addr :  0xC000_%04x :  0x%016lX \n",it.name.c_str() , it.number , buf);
+            l_regVal.reg = it;
+            l_regVal.value = buf;
+            v_sbe_local_reg_value.push_back(l_regVal);
+            // ******************************************************************
+        }
+
+        FAPI_TRY(restore_gprs_sprs(i_target , l_gpr0_save, l_gpr1_save, l_gpr9_save, l_sprg0_save ));
+        FAPI_INF("< p9_sbe_localreg_dump");
+    }
+
 
 fapi_try_exit:
     return fapi2::current_err;
