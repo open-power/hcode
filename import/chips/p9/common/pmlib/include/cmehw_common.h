@@ -54,7 +54,7 @@ enum CME_SCOM_CONTROLS
 
 #define CME_SCOM_ADDR(addr, core, op)   (addr | (core << 22) | (op << 20))
 
-#ifdef USE_PPE_IMPRECISE_MODE
+#if defined(USE_CME_QUEUED_SCOM) && defined(USE_PPE_IMPRECISE_MODE)
 #define CME_GETSCOM(addr, core, scom_op, data)                 \
     getscom(0, CME_SCOM_ADDR(addr, core, CME_SCOM_QUEUED), &data);
 #define CME_PUTSCOM(addr, core, data)                          \
