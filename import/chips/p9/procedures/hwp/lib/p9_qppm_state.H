@@ -32,7 +32,9 @@
 /// *HWP Team            : PM
 /// *HWP Level           : 2
 /// *HWP Consumed by     : CMEs, Cronus
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
+#include <map>
+
 #ifndef __p9_qppm_state_H__
 #define __p9_qppm_state_H__
 // PPM reg addressing
@@ -123,7 +125,26 @@ enum QPPM_REGS
     QPPM_EXCGCR     = 0x165,
     EDRAM_STATUS    = 0x029,
 };
+const std::map<uint16_t, std::string> v_qppm_num_name =
+{
 
+    { QPPM_QPMMR      , "QPPM_QPMMR"     },
+    { QPPM_ERRSUM     , "QPPM_ERRSUM"    },
+    { QPPM_ERR        , "QPPM_ERR"       },
+    { QPPM_ERRMSK     , "QPPM_ERRMSK"    },
+    { QPPM_DPLL_FREQ  , "QPPM_DPLL_FREQ" },
+    { QPPM_DPLL_CTRL  , "QPPM_DPLL_CTRL" },
+    { QPPM_DPLL_STAT  , "QPPM_DPLL_STAT "},
+    { QPPM_DPLL_OCHAR , "QPPM_DPLL_OCHAR"},
+    { QPPM_DPLL_ICHAR , "QPPM_DPLL_ICHAR"},
+    { QPPM_OCCHB      , "QPPM_OCCHB"     },
+    { QPPM_QACCR      , "QPPM_QACCR"     },
+    { QPPM_QACSR      , "QPPM_QACSR"     },
+    { QPPM_EXCGCR     , "QPPM_EXCGCR"    },
+    { EDRAM_STATUS    , "EDRAM_STATUS"   },
+
+
+};
 /// @typedef p9_qppm_state_FP_t
 /// function pointer typedef definition for HWP call support
 typedef fapi2::ReturnCode (*p9_qppm_state_FP_t) (

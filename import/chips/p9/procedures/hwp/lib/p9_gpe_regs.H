@@ -32,7 +32,8 @@
 /// *HWP Team            : PM
 /// *HWP Level           : 2
 /// *HWP Consumed by     : SBE, Cronus
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
+#include <map>
 #ifndef __p9_gpe_regs_H__
 #define __p9_gpe_regs_H__
 /**
@@ -46,6 +47,14 @@ enum GPE_REGS
     GPESTR      = 0x03,
     GPEMACR     = 0x04,
 };
+const std::map<uint16_t, std::string> v_gpe_num_name =
+{
+    { GPETSEL  ,    "GPETSEL"       },
+    { GPEDBG   ,    "GPEDBG"        },
+    { GPESTR   ,    "GPESTR"        },
+    { GPEMACR  ,    "GPEMACR"       },
+};
+
 
 /// @typedef p9_gpe_regs_FP_t
 /// function pointer typedef definition for HWP call support

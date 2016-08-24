@@ -32,7 +32,9 @@
 /// *HWP Team            : PM
 /// *HWP Level           : 2
 /// *HWP Consumed by     : SBE, Cronus
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
+#include <map>
+
 #ifndef __p9_cme_regs_H__
 #define __p9_cme_regs_H__
 /**
@@ -59,6 +61,28 @@ enum CME_REGS
     FLAGS    = 0x20,
     SCRATCH0 = 0x23,
     SCRATCH1 = 0x24,
+};
+const std::map<uint16_t, std::string> v_cme_num_name =
+{
+    { LMCR    ,    "LMCR"      },
+    { SICR    ,    "SICR"      },
+    { SISR    ,    "SISR"      },
+    { PMSRS0  ,    "PMSRS0"    },
+    { PMSRS1  ,    "PMSRS1"    },
+    { PMCRS0  ,    "PMCRS0"    },
+    { PMCRC1  ,    "PMCRC1"    },
+    { PSCRS00 ,    "PSCRS00"   },
+    { PSCRS01 ,    "PSCRS01"   },
+    { PSCRS02 ,    "PSCRS02"   },
+    { PSCRS03 ,    "PSCRS03"   },
+    { PSCRS10 ,    "PSCRS10"   },
+    { PSCRS11 ,    "PSCRS11"   },
+    { PSCRS12 ,    "PSCRS12"   },
+    { PSCRS13 ,    "PSCRS13"   },
+    { FLAGS   ,    "FLAGS"     },
+    { SCRATCH0,    "SCRATCH0"  },
+    { SCRATCH1,    "SCRATCH1"  },
+
 };
 
 /// @typedef p9_cme_regs_FP_t

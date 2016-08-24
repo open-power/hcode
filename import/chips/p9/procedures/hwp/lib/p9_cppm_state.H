@@ -32,7 +32,10 @@
 /// *HWP Team            : PM
 /// *HWP Level           : 2
 /// *HWP Consumed by     : CMEs, Cronus
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
+#include <map>
+
+
 #ifndef __p9_cppm_state_H__
 #define __p9_cppm_state_H__
 // PPM reg addressing
@@ -124,6 +127,26 @@ enum CPPM_REGS
     CPPM_CACSR    = 0x16B,
     CPPM_IPPMCMD  = 0x1C0,
     CPPM_IPPMSTAT = 0x1C1,
+};
+const std::map<uint16_t, std::string> v_cppm_num_name  =
+{
+    { CPMMR     , "CPMMR"        },
+    { CPPM_ERRSUM   , "CPPM_ERRSUM"  },
+    { CPPM_ERR      , "CPPM_ERR"     },
+    { CPPM_ERRMSK   , "CPPM_ERRMSK"  },
+    { CPPM_NC0INDIR , "CPPM_NC0INDIR"},
+    { CPPM_NC1INDIR , "CPPM_NC1INDIR"},
+    { CPPM_CSAR     , "CPPM_CSAR"    },
+    { CPPM_CMEDB0   , "CPPM_CMEDB0"  },
+    { CPPM_CMEDB1   , "CPPM_CMEDB1"  },
+    { CPPM_CMEDB2   , "CPPM_CMEDB2"  },
+    { CPPM_CMEDB3   , "CPPM_CMEDB3"  },
+    { CPPM_CISR     , "CPPM_CISR"    },
+    { CPPM_PECES    , "CPPM_PECES"   },
+    { CPPM_CACCR    , "CPPM_CACCR"   },
+    { CPPM_CACSR    , "CPPM_CACSR"   },
+    { CPPM_IPPMCMD  , "CPPM_IPPMCMD" },
+    { CPPM_IPPMSTAT , "CPPM_IPPMSTAT"},
 };
 
 /// @typedef p9_cppm_state_FP_t

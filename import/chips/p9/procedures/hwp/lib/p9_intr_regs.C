@@ -44,17 +44,17 @@
 //-----------------------------------------------------------------------------
 #include <fapi2.H>
 #include <p9_intr_regs.H>
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
 #include <p9_hcd_common.H>
 
-std::vector<PPEReg_t> v_intr_regs =
+std::vector<uint16_t> v_intr_regs =
 {
-    { EISR,    "EISR" },
-    { EIMR,    "EIMR" },
-    { EIPR,    "EIPR" },
-    { EITR,    "EITR" },
-    { EISTR,   "EISTR"},
-    { EINR,    "EINR" },
+    { EISR},
+    { EIMR},
+    { EIPR},
+    { EITR},
+    { EISTR},
+    { EINR},
 };
 
 
@@ -70,19 +70,19 @@ std::vector<PPEReg_t> v_intr_regs =
  */
 fapi2::ReturnCode
 p9_intr_regs_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-                  const uint64_t i_base_address, std::string i_name,
+                  const uint64_t i_base_address, const uint8_t i_name,
                   std::vector<SCOMRegValue_t>& v_intr_regs_value)
 {
     fapi2::buffer<uint64_t> l_data64;
     SCOMRegValue_t l_scomregVal;
 
-    if(i_name == "CME")
+    if(i_name == 0x1) //CME
     {
         for (auto it : v_intr_regs)
         {
-            FAPI_DBG("%-6s: Address offset %2x\n", it.name.c_str(), it.number );
-            FAPI_TRY(getScom(i_target, i_base_address + it.number, l_data64), "Error in GETSCOM");
-            l_scomregVal.reg = it;
+            FAPI_DBG("Intr reg: Address offset %2x\n", it);
+            FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+            l_scomregVal.number = it;
             l_scomregVal.value = l_data64;
             v_intr_regs_value.push_back(l_scomregVal);
         }
@@ -95,7 +95,7 @@ fapi_try_exit:
 // Hardware procedure
 fapi2::ReturnCode
 p9_intr_regs(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-             const uint64_t i_base_address, std::string i_name,
+             const uint64_t i_base_address, const uint8_t  i_name,
              std::vector<SCOMRegValue_t>& v_intr_regs_value)
 {
 

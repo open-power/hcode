@@ -44,28 +44,28 @@
 //-----------------------------------------------------------------------------
 #include <fapi2.H>
 #include <p9_cppm_state.H>
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
 #include <p9_hcd_common.H>
 
-std::vector<PPEReg_t> v_ppm_st =
+std::vector<uint16_t> v_ppm_st =
 {
-    { CPMMR     , "CPMMR"        },
-    { CPPM_ERRSUM   , "CPPM_ERRSUM"  },
-    { CPPM_ERR      , "CPPM_ERR"     },
-    { CPPM_ERRMSK   , "CPPM_ERRMSK"  },
-    { CPPM_NC0INDIR , "CPPM_NC0INDIR"},
-    { CPPM_NC1INDIR , "CPPM_NC1INDIR"},
-    { CPPM_CSAR     , "CPPM_CSAR"    },
-    { CPPM_CMEDB0   , "CPPM_CMEDB0"  },
-    { CPPM_CMEDB1   , "CPPM_CMEDB1"  },
-    { CPPM_CMEDB2   , "CPPM_CMEDB2"  },
-    { CPPM_CMEDB3   , "CPPM_CMEDB3"  },
-    { CPPM_CISR     , "CPPM_CISR"    },
-    { CPPM_PECES    , "CPPM_PECES"   },
-    { CPPM_CACCR    , "CPPM_CACCR"   },
-    { CPPM_CACSR    , "CPPM_CACSR"   },
-    { CPPM_IPPMCMD  , "CPPM_IPPMCMD" },
-    { CPPM_IPPMSTAT , "CPPM_IPPMSTAT"},
+    { CPMMR         },
+    { CPPM_ERRSUM   },
+    { CPPM_ERR      },
+    { CPPM_ERRMSK   },
+    { CPPM_NC0INDIR },
+    { CPPM_NC1INDIR },
+    { CPPM_CSAR     },
+    { CPPM_CMEDB0   },
+    { CPPM_CMEDB1   },
+    { CPPM_CMEDB2   },
+    { CPPM_CMEDB3   },
+    { CPPM_CISR     },
+    { CPPM_PECES    },
+    { CPPM_CACCR    },
+    { CPPM_CACSR    },
+    { CPPM_IPPMCMD  },
+    { CPPM_IPPMSTAT },
 };
 
 
@@ -90,9 +90,9 @@ p9_cppm_state_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
 
     for (auto it : v_ppm_st)
     {
-        FAPI_DBG("%-6s: Address offset %2x\n", it.name.c_str(), it.number );
-        FAPI_TRY(getScom(i_target, i_base_address + it.number, l_data64), "Error in GETSCOM");
-        l_scomregVal.reg = it;
+        FAPI_DBG("cppm reg: Address offset %2x\n",  it );
+        FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+        l_scomregVal.number = it;
         l_scomregVal.value = l_data64;
         ppm_state_value.push_back(l_scomregVal);
     }

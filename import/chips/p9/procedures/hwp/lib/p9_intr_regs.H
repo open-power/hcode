@@ -34,7 +34,9 @@
 /// *HWP Level           : 2
 /// *HWP Consumed by     : SBE, Cronus
 
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
+#include <map>
+
 #ifndef __p9_intr_regs_H__
 #define __p9_intr_regs_H__
 /**
@@ -52,11 +54,21 @@ enum INTR_REGS
 
 };
 
+const std::map<uint16_t, std::string> v_intr_num_name =
+{
+    { EISR,    "EISR" },
+    { EIMR,    "EIMR" },
+    { EIPR,    "EIPR" },
+    { EITR,    "EITR" },
+    { EISTR,   "EISTR"},
+    { EINR,    "EINR" },
+};
+
 /// @typedef p9_intr_regs_FP_t
 /// function pointer typedef definition for HWP call support
 typedef fapi2::ReturnCode (*p9_intr_regs_FP_t) (
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>&,
-    const uint64_t, std::string i_name, std::vector<SCOMRegValue_t>& v_intr_regs_value );
+    const uint64_t, const uint8_t i_name, std::vector<SCOMRegValue_t>& v_intr_regs_value );
 
 extern "C"
 {
@@ -67,7 +79,7 @@ extern "C"
 /// @return FAPI2_RC_SUCCESS
     fapi2::ReturnCode
     p9_intr_regs(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-                 const uint64_t i_base_address, std::string i_name , std::vector<SCOMRegValue_t>& v_intr_regs_value);
+                 const uint64_t i_base_address, const uint8_t  i_name , std::vector<SCOMRegValue_t>& v_intr_regs_value);
 
 } // extern C
 

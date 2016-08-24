@@ -44,27 +44,27 @@
 //-----------------------------------------------------------------------------
 #include <fapi2.H>
 #include <p9_ppm_common_state.H>
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
 #include <p9_hcd_common.H>
 
-std::vector<PPEReg_t> v_ppm_st =
+std::vector<uint16_t> v_ppm_st =
 {
-    { PPM_GPMMR       , "PPM_GPMMR"      },
-    { PPM_SPWKUP_OTR  , "PPM_SPWKUP_OTR" },
-    { PPM_SPWKUP_FSP  , "PPM_SPWKUP_FSP" },
-    { PPM_SPWKUP_OCC  , "PPM_SPWKUP_OCC" },
-    { PPM_SPWKUP_HYP  , "PPM_SPWKUP_HYP" },
-    { PPM_SSHSRC      , "PPM_SSHSRC"     },
-    { PPM_SSHOTR      , "PPM_SSHOTR"     },
-    { PPM_PFCS        , "PPM_PFCS"       },
-    { PPM_CGCR        , "PPM_CGCR"       },
-    { PPM_PIG         , "PPM_PIG"        },
-    { PPM_IVRMCR      , "PPM_IVRMCR"     },
-    { PPM_IVRMST      , "PPM_IVRMST"     },
-    { PPM_VDMCR       , "PPM_VDMCR"      },
-    { PPM_SCRATCH0    , "PPM_SCRATCH0"   },
-    { PPM_SCRATCH1    , "PPM_SCRATCH1"   },
-    { ERROR_REG       , "ERROR_REG"      },
+    { PPM_GPMMR      },
+    { PPM_SPWKUP_OTR },
+    { PPM_SPWKUP_FSP },
+    { PPM_SPWKUP_OCC },
+    { PPM_SPWKUP_HYP },
+    { PPM_SSHSRC     },
+    { PPM_SSHOTR     },
+    { PPM_PFCS       },
+    { PPM_CGCR       },
+    { PPM_PIG        },
+    { PPM_IVRMCR     },
+    { PPM_IVRMST     },
+    { PPM_VDMCR      },
+    { PPM_SCRATCH0   },
+    { PPM_SCRATCH1   },
+    { ERROR_REG      },
 
 };
 
@@ -90,9 +90,9 @@ p9_ppm_common_state_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_ta
 
     for (auto it : v_ppm_st)
     {
-        FAPI_DBG("%-6s: Address offset %2x\n", it.name.c_str(), it.number );
-        FAPI_TRY(getScom(i_target, i_base_address + it.number, l_data64), "Error in GETSCOM");
-        l_scomregVal.reg = it;
+        FAPI_DBG("common ppm: Address offset %2x\n", it );
+        FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+        l_scomregVal.number = it;
         l_scomregVal.value = l_data64;
         ppm_state_value.push_back(l_scomregVal);
     }

@@ -44,15 +44,15 @@
 //-----------------------------------------------------------------------------
 #include <fapi2.H>
 #include <p9_gpe_regs.H>
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
 #include <p9_hcd_common.H>
 
-std::vector<PPEReg_t> v_gpe_regs =
+std::vector<uint16_t> v_gpe_regs =
 {
-    { GPETSEL  ,    "GPETSEL"       },
-    { GPEDBG   ,    "GPEDBG"        },
-    { GPESTR   ,    "GPESTR"        },
-    { GPEMACR  ,    "GPEMACR"       },
+    { GPETSEL     },
+    { GPEDBG      },
+    { GPESTR      },
+    { GPEMACR     },
 };
 
 
@@ -77,9 +77,9 @@ p9_gpe_regs_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
 
     for (auto it : v_gpe_regs)
     {
-        FAPI_DBG("%-6s: Address offset %2x\n", it.name.c_str(), it.number );
-        FAPI_TRY(getScom(i_target, i_base_address + it.number, l_data64), "Error in GETSCOM");
-        l_scomregVal.reg = it;
+        FAPI_DBG("gpe reg: Address offset %2x\n", it );
+        FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+        l_scomregVal.number = it;
         l_scomregVal.value = l_data64;
         v_gpe_reg_value.push_back(l_scomregVal);
     }

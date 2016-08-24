@@ -51,7 +51,7 @@
 
 
 fapi2::ReturnCode p9_sbe_dump(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target_chip,
-                              std::vector<SCOMRegValue_t>& o_sbe_local_reg_value,
+                              std::vector<SBESCOMRegValue_t>& o_sbe_local_reg_value,
                               std::vector<PIBMSRegValue_t>& o_pibms_reg_value,
                               std::vector<array_data_t>& o_pibmem_dump_value,
                               std::vector<PPERegValue_t>& o_ppe_sprs_value,

@@ -32,7 +32,9 @@
 /// *HWP Team            : PM
 /// *HWP Level           : 2
 /// *HWP Consumed by     : CMEs, Cronus
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
+#include <map>
+
 #ifndef __p9_ppm_common_state_H__
 #define __p9_ppm_common_state_H__
 // PPM reg addressing
@@ -123,6 +125,27 @@ enum COMMON_PPM_REGS
     PPM_SCRATCH0    = 0x11E,
     PPM_SCRATCH1    = 0x11F,
     ERROR_REG       = 0x01F,
+
+};
+
+const std::map<uint16_t, std::string> v_com_ppm_num_name  =
+{
+    { PPM_GPMMR       , "PPM_GPMMR"      },
+    { PPM_SPWKUP_OTR  , "PPM_SPWKUP_OTR" },
+    { PPM_SPWKUP_FSP  , "PPM_SPWKUP_FSP" },
+    { PPM_SPWKUP_OCC  , "PPM_SPWKUP_OCC" },
+    { PPM_SPWKUP_HYP  , "PPM_SPWKUP_HYP" },
+    { PPM_SSHSRC      , "PPM_SSHSRC"     },
+    { PPM_SSHOTR      , "PPM_SSHOTR"     },
+    { PPM_PFCS        , "PPM_PFCS"       },
+    { PPM_CGCR        , "PPM_CGCR"       },
+    { PPM_PIG         , "PPM_PIG"        },
+    { PPM_IVRMCR      , "PPM_IVRMCR"     },
+    { PPM_IVRMST      , "PPM_IVRMST"     },
+    { PPM_VDMCR       , "PPM_VDMCR"      },
+    { PPM_SCRATCH0    , "PPM_SCRATCH0"   },
+    { PPM_SCRATCH1    , "PPM_SCRATCH1"   },
+    { ERROR_REG       , "ERROR_REG"      },
 
 };
 

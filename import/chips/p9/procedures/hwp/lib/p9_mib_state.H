@@ -34,7 +34,9 @@
 /// *HWP Level           : 2
 /// *HWP Consumed by     : SBE, Cronus
 
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
+#include <map>
+
 #ifndef __p9_mib_state_H__
 #define __p9_mib_state_H__
 enum MIB_REGS
@@ -61,11 +63,52 @@ enum MIB_REGS
     SBE_ICACHE_INFO     = 0x09,
 
 };
+enum MIB_ID
+{
+    CMEMIB        = 0x1,
+    GPEMIB        = 0x2,
+    SBEMIB        = 0x3,
+};
+const std::map<uint16_t, std::string> v_cmemib_num_name  =
+{
+    { SIB_INFO       ,    "SIB_INFO"       },
+    { MEM_INFO       ,    "MEM_INFO"       },
+    { SGB_INFO       ,    "SGB_INFO"       },
+    { ICACHE_INFO    ,    "ICACHE_INFO"    },
+    { PCB_QUEUE0_INFO,    "PCB_QUEUE0_INFO"},
+    { PCB_QUEUE1_INFO,    "PCB_QUEUE1_INFO"},
+    { PCBMUX0_DATA   ,    "PCBMUX0_DATA"   },
+    { PCBMUX1_DATA   ,    "PCBMUX1_DATA"   },
+    { EI_PCBMUX0_INFO,    "EI_PCBMUX0_INFO"},
+    { EI_PCBMUX0_INFO,    "EI_PCBMUX0_INFO"},
+
+};
+const std::map<uint16_t, std::string> v_gpemib_num_name  =
+
+{
+    { SIB_INFO       ,    "SIB_INFO"       },
+    { MEM_INFO       ,    "MEM_INFO"       },
+    { SGB_INFO       ,    "SGB_INFO"       },
+    { ICACHE_INFO    ,    "ICACHE_INFO"    },
+    { DCACH_INFO,         "DCACH_INFO"     },
+};
+
+const std::map<uint16_t, std::string> v_sbemib_num_name  =
+{
+    { SBE_SIB_INFO       ,    "SIB_INFO"       },
+    { SBE_MEM_INFO       ,    "MEM_INFO"       },
+    { SBE_SGB_INFO       ,    "SGB_INFO"       },
+    { SBE_ICACHE_INFO    ,    "ICACHE_INFO"    },
+
+
+};
+
+
 /// @typedef p9_mib_state_FP_t
 /// function pointer typedef definition for HWP call support
 typedef fapi2::ReturnCode (*p9_mib_state_FP_t) (
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>&,
-    const uint64_t, std::string i_name, std::vector<SCOMRegValue_t>& v_mib_xirs_value);
+    const uint64_t, const uint8_t i_name, std::vector<SCOMRegValue_t>& v_mib_xirs_value);
 
 extern "C"
 {
@@ -76,7 +119,7 @@ extern "C"
 /// @return FAPI2_RC_SUCCESS
     fapi2::ReturnCode
     p9_mib_state(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-                 const uint64_t, std::string i_name, std::vector<SCOMRegValue_t>& v_mib_xirs_value);
+                 const uint64_t, const uint8_t i_name, std::vector<SCOMRegValue_t>& v_mib_xirs_value);
 
 } // extern C
 

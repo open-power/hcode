@@ -45,7 +45,7 @@
 // -----------------------------------------------------------------------------
 #include <fapi2.H>
 
-#include <p9_ppe_state.H>
+
 #include <p9_ppe_common.H>
 #include <p9_hcd_common.H>
 #include <p9_sbe_localreg_dump.H>
@@ -88,7 +88,7 @@ enum SBE_LREGS
 
 };
 
-std::vector<PPEReg_t> v_sbe_local_regs =
+std::vector<SBEReg_t> v_sbe_local_regs =
 {
     { FI2C_CFG,      "FI2C_CFG" },
     { FI2C_STAT,     "FI2C_STAT" },
@@ -133,13 +133,13 @@ std::vector<PPEReg_t> v_sbe_local_regs =
 
 fapi2::ReturnCode p9_sbe_localreg_dump( const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target ,
                                         const uint16_t force_halt,
-                                        std::vector<SCOMRegValue_t>& v_sbe_local_reg_value)
+                                        std::vector<SBESCOMRegValue_t>& v_sbe_local_reg_value)
 
 {
 
     fapi2::buffer<uint64_t> l_data64;
 
-    SCOMRegValue_t l_regVal;
+    SBESCOMRegValue_t l_regVal;
 
     uint16_t address = 0 ;
     uint32_t scom_address = 0 ;

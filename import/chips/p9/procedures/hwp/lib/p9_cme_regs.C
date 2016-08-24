@@ -44,29 +44,29 @@
 //-----------------------------------------------------------------------------
 #include <fapi2.H>
 #include <p9_cme_regs.H>
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
 #include <p9_hcd_common.H>
 
-std::vector<PPEReg_t> v_cme_stop_st_cntrl =
+std::vector<uint16_t> v_cme_stop_st_cntrl =
 {
-    { LMCR    ,    "LMCR"      },
-    { SICR    ,    "SICR"      },
-    { SISR    ,    "SISR"      },
-    { PMSRS0  ,    "PMSRS0"    },
-    { PMSRS1  ,    "PMSRS1"    },
-    { PMCRS0  ,    "PMCRS0"    },
-    { PMCRC1  ,    "PMCRC1"    },
-    { PSCRS00 ,    "PSCRS00"   },
-    { PSCRS01 ,    "PSCRS01"   },
-    { PSCRS02 ,    "PSCRS02"   },
-    { PSCRS03 ,    "PSCRS03"   },
-    { PSCRS10 ,    "PSCRS10"   },
-    { PSCRS11 ,    "PSCRS11"   },
-    { PSCRS12 ,    "PSCRS12"   },
-    { PSCRS13 ,    "PSCRS13"   },
-    { FLAGS   ,    "FLAGS"     },
-    { SCRATCH0,    "SCRATCH0"  },
-    { SCRATCH1,    "SCRATCH1"  },
+    { LMCR     },
+    { SICR     },
+    { SISR     },
+    { PMSRS0   },
+    { PMSRS1   },
+    { PMCRS0   },
+    { PMCRC1   },
+    { PSCRS00  },
+    { PSCRS01  },
+    { PSCRS02  },
+    { PSCRS03  },
+    { PSCRS10  },
+    { PSCRS11  },
+    { PSCRS12  },
+    { PSCRS13  },
+    { FLAGS    },
+    { SCRATCH0 },
+    { SCRATCH1 },
 
 };
 
@@ -92,9 +92,9 @@ p9_cme_regs_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
 
     for (auto it : v_cme_stop_st_cntrl)
     {
-        FAPI_DBG("%-6s: Address offset %2x\n", it.name.c_str(), it.number );
-        FAPI_TRY(getScom(i_target, i_base_address + it.number, l_data64), "Error in GETSCOM");
-        l_scomregVal.reg = it;
+        FAPI_DBG("cme reg: Address offset %2x\n",  it );
+        FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+        l_scomregVal.number = it;
         l_scomregVal.value = l_data64;
         v_cme_stop_st_cntrl_value.push_back(l_scomregVal);
     }

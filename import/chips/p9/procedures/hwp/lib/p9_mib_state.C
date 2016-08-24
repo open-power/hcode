@@ -45,41 +45,41 @@
 //-----------------------------------------------------------------------------
 #include <fapi2.H>
 #include <p9_mib_state.H>
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
 #include <p9_hcd_common.H>
 
 /**
  * @brief Offsets from base address for CME regs.
  */
 
-std::vector<PPEReg_t> v_cme_mib_xirs =
+std::vector<uint16_t> v_cme_mib_xirs =
 {
-    { SIB_INFO       ,    "SIB_INFO"       },
-    { MEM_INFO       ,    "MEM_INFO"       },
-    { SGB_INFO       ,    "SGB_INFO"       },
-    { ICACHE_INFO    ,    "ICACHE_INFO"    },
-    { PCB_QUEUE0_INFO,    "PCB_QUEUE0_INFO"},
-    { PCB_QUEUE1_INFO,    "PCB_QUEUE1_INFO"},
-    { PCBMUX0_DATA   ,    "PCBMUX0_DATA"   },
-    { PCBMUX1_DATA   ,    "PCBMUX1_DATA"   },
-    { EI_PCBMUX0_INFO,    "EI_PCBMUX0_INFO"},
-    { EI_PCBMUX0_INFO,    "EI_PCBMUX0_INFO"},
+    { SIB_INFO       },
+    { MEM_INFO       },
+    { SGB_INFO       },
+    { ICACHE_INFO    },
+    { PCB_QUEUE0_INFO},
+    { PCB_QUEUE1_INFO},
+    { PCBMUX0_DATA   },
+    { PCBMUX1_DATA   },
+    { EI_PCBMUX0_INFO},
+    { EI_PCBMUX0_INFO},
 
 };
-std::vector<PPEReg_t> v_gpe_mib_xirs =
+std::vector<uint16_t> v_gpe_mib_xirs =
 {
-    { SIB_INFO       ,    "SIB_INFO"       },
-    { MEM_INFO       ,    "MEM_INFO"       },
-    { SGB_INFO       ,    "SGB_INFO"       },
-    { ICACHE_INFO    ,    "ICACHE_INFO"    },
-    { DCACH_INFO,         "DCACH_INFO"     },
+    { SIB_INFO          },
+    { MEM_INFO          },
+    { SGB_INFO          },
+    { ICACHE_INFO       },
+    { DCACH_INFO    },
 };
-std::vector<PPEReg_t> v_sbe_mib_xirs =
+std::vector<uint16_t> v_sbe_mib_xirs =
 {
-    { SBE_SIB_INFO       ,    "SIB_INFO"       },
-    { SBE_MEM_INFO       ,    "MEM_INFO"       },
-    { SBE_SGB_INFO       ,    "SGB_INFO"       },
-    { SBE_ICACHE_INFO    ,    "ICACHE_INFO"    },
+    { SBE_SIB_INFO       },
+    { SBE_MEM_INFO       },
+    { SBE_SGB_INFO       },
+    { SBE_ICACHE_INFO    },
 
 
 };
@@ -98,42 +98,41 @@ std::vector<PPEReg_t> v_sbe_mib_xirs =
  */
 fapi2::ReturnCode
 p9_mib_state_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-                  const uint64_t i_base_address, std::string i_name,
+                  const uint64_t i_base_address, const uint8_t  i_name,
                   std::vector<SCOMRegValue_t>& v_mib_xirs_value)
 {
     fapi2::buffer<uint64_t> l_data64;
     SCOMRegValue_t l_scomregVal;
 
-    if((i_name.compare("CME")) == 0)
+    if(i_name == CMEMIB) //CME
     {
         for (auto it : v_cme_mib_xirs)
         {
-            FAPI_DBG("%-6s: Address offset %2x\n", it.name.c_str(), it.number );
-            FAPI_TRY(getScom(i_target, i_base_address + it.number, l_data64), "Error in GETSCOM");
-            l_scomregVal.reg = it;
+            FAPI_DBG("CME mib reg: Address offset %2x\n", it );
+            FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+            l_scomregVal.number = it;
             l_scomregVal.value = l_data64;
             v_mib_xirs_value.push_back(l_scomregVal);
         }
     }
-    else if( ((i_name.compare("GPE0")) == 0) || ((i_name.compare("GPE1")) == 0) ||
-             ((i_name.compare("GPE2")) == 0) || ((i_name.compare("GPE3")) == 0) )
+    else if( i_name == GPEMIB )//GPE
     {
         for (auto it : v_gpe_mib_xirs)
         {
-            FAPI_DBG("%-6s: Address offset %2x\n", it.name.c_str(), it.number );
-            FAPI_TRY(getScom(i_target, i_base_address + it.number, l_data64), "Error in GETSCOM");
-            l_scomregVal.reg = it;
+            FAPI_DBG("GPE mib reg: Address offset %2x\n",  it );
+            FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+            l_scomregVal.number = it;
             l_scomregVal.value = l_data64;
             v_mib_xirs_value.push_back(l_scomregVal);
         }
     }
-    else if((i_name.compare("SBE")) == 0)
+    else if(i_name == SBEMIB)//MIB
     {
         for (auto it : v_sbe_mib_xirs)
         {
-            FAPI_DBG("%-6s: Address offset %2x\n", it.name.c_str(), it.number );
-            FAPI_TRY(getScom(i_target, i_base_address + it.number, l_data64), "Error in GETSCOM");
-            l_scomregVal.reg = it;
+            FAPI_DBG("SBE mib reg: Address offset %2x\n",  it );
+            FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+            l_scomregVal.number = it;
             l_scomregVal.value = l_data64;
             v_mib_xirs_value.push_back(l_scomregVal);
         }
@@ -146,7 +145,7 @@ fapi_try_exit:
 // Hardware procedure
 fapi2::ReturnCode
 p9_mib_state(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-             const uint64_t i_base_address, std::string i_name,
+             const uint64_t i_base_address, const uint8_t  i_name,
              std::vector<SCOMRegValue_t>& v_mib_xirs_value)
 {
     //Call the function to collect the data.

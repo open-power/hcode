@@ -44,26 +44,26 @@
 //-----------------------------------------------------------------------------
 #include <fapi2.H>
 #include <p9_qppm_state.H>
-#include <p9_ppe_state.H>
+#include <p9_ppe_utils.H>
 #include <p9_hcd_common.H>
 
-std::vector<PPEReg_t> v_ppm_st =
+std::vector<uint16_t> v_ppm_st =
 {
 
-    { QPPM_QPMMR      , "QPPM_QPMMR"     },
-    { QPPM_ERRSUM     , "QPPM_ERRSUM"    },
-    { QPPM_ERR        , "QPPM_ERR"       },
-    { QPPM_ERRMSK     , "QPPM_ERRMSK"    },
-    { QPPM_DPLL_FREQ  , "QPPM_DPLL_FREQ" },
-    { QPPM_DPLL_CTRL  , "QPPM_DPLL_CTRL" },
-    { QPPM_DPLL_STAT  , "QPPM_DPLL_STAT "},
-    { QPPM_DPLL_OCHAR , "QPPM_DPLL_OCHAR"},
-    { QPPM_DPLL_ICHAR , "QPPM_DPLL_ICHAR"},
-    { QPPM_OCCHB      , "QPPM_OCCHB"     },
-    { QPPM_QACCR      , "QPPM_QACCR"     },
-    { QPPM_QACSR      , "QPPM_QACSR"     },
-    { QPPM_EXCGCR     , "QPPM_EXCGCR"    },
-    { EDRAM_STATUS    , "EDRAM_STATUS"   },
+    { QPPM_QPMMR      },
+    { QPPM_ERRSUM     },
+    { QPPM_ERR        },
+    { QPPM_ERRMSK     },
+    { QPPM_DPLL_FREQ  },
+    { QPPM_DPLL_CTRL  },
+    { QPPM_DPLL_STAT  },
+    { QPPM_DPLL_OCHAR },
+    { QPPM_DPLL_ICHAR },
+    { QPPM_OCCHB      },
+    { QPPM_QACCR      },
+    { QPPM_QACSR      },
+    { QPPM_EXCGCR     },
+    { EDRAM_STATUS    },
 
 
 };
@@ -90,9 +90,9 @@ p9_qppm_state_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
 
     for (auto it : v_ppm_st)
     {
-        FAPI_DBG("%-6s: Address offset %2x\n", it.name.c_str(), it.number );
-        FAPI_TRY(getScom(i_target, i_base_address + it.number, l_data64), "Error in GETSCOM");
-        l_scomregVal.reg = it;
+        FAPI_DBG("qppm regs: Address offset %2x\n",  it );
+        FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+        l_scomregVal.number = it;
         l_scomregVal.value = l_data64;
         ppm_state_value.push_back(l_scomregVal);
     }
