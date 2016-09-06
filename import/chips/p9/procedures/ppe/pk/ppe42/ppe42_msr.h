@@ -69,7 +69,7 @@
 /// Move From MSR
 
 #define mfmsr()                               \
-    ({uint32_t __msr;                          \
+    ({volatile uint32_t __msr;                          \
         asm volatile ("mfmsr %0" : "=r" (__msr)); \
         __msr;})
 
