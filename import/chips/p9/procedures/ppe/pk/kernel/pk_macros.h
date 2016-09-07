@@ -24,11 +24,6 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #ifndef __PK_MACROS_H__
 #define __PK_MACROS_H__
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2014
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
 
 /// \file pk_macros.h
 /// \brief Boilerplate macros for PK

@@ -25,12 +25,6 @@
 #ifndef __GPE_TIMEBASE_H__
 #define __GPE_TIMEBASE_H__
 
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file gpe_timebase.h
 /// \brief support for using the OCB 32 bit timebase register
 ///

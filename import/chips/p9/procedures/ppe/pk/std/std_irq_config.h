@@ -24,11 +24,6 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #ifndef __STD_IRQ_CONFIG_H__
 #define __STD_IRQ_CONFIG_H__
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
 
 /// \file std_irq_config.h
 /// \brief Contains data and macros pertaining to external interrupt

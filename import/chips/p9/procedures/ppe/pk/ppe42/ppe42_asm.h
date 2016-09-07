@@ -24,11 +24,6 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #ifndef __PPE42_ASM_H__
 #define __PPE42_ASM_H__
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2014
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
 
 /// \file ppe42_asm.h
 /// \brief Generic assembler macros for 32-bit PPE42
@@ -625,10 +620,10 @@
 // *INDENT-ON*
 #endif /* __ASSEMBLER__ */
 
-/// \endcond
+                            /// \endcond
 
-// Local Variables:
-// mode:asm
-// End:
+                            // Local Variables:
+                            // mode:asm
+                            // End:
 
 #endif /* __PPE42_ASM_H__ */

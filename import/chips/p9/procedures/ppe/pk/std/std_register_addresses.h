@@ -25,12 +25,6 @@
 #ifndef __STD_REGISTER_ADDRESSES_H__
 #define __STD_REGISTER_ADDRESSES_H__
 
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file std_register_addresses.h
 /// \brief Symbolic addresses for a standard PPE
 

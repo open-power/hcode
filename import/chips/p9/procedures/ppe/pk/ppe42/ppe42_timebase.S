@@ -28,7 +28,7 @@
         .nolist
 #include "pk.h"
         .list
-        
+
 /// \fn PkTimebase pk_timebase_get(void)
 /// \brief Returns a 64 bit timebase
 ///
@@ -36,12 +36,7 @@
 PkTimebase 
 pk_timebase_get(void);
 #endif
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2014
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-        
+
 /// \cond
         .global ppe42_64bit_timebase
         .global ppe42_tb_data
