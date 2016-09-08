@@ -25,14 +25,6 @@
 #ifndef __QUAD_FIRMWARE_REGISTERS_H__
 #define __QUAD_FIRMWARE_REGISTERS_H__
 
-// $Id$
-// $Source$
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file quad_firmware_registers.h
 /// \brief C register structs for the QUAD unit
 

@@ -25,14 +25,6 @@
 #ifndef __GPE_REGISTER_ADDRESSES_H__
 #define __GPE_REGISTER_ADDRESSES_H__
 
-// $Id$
-// $Source$
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file gpe_register_addresses.h
 /// \brief Symbolic addresses for the GPE unit
 

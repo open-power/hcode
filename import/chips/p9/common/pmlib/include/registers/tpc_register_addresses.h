@@ -25,14 +25,6 @@
 #ifndef __TPC_REGISTER_ADDRESSES_H__
 #define __TPC_REGISTER_ADDRESSES_H__
 
-// $Id: tpc_register_addresses.h,v 1.1.1.1 2013/12/11 21:03:24 bcbrock Exp $
-// $Source: /afs/awd/projects/eclipz/KnowledgeBase/.cvsroot/eclipz/chips/p8/working/procedures/ssx/pgp/registers/tpc_register_addresses.h,v $
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2013
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file tpc_register_addresses.h
 /// \brief Symbolic addresses for the TPC unit
 

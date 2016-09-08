@@ -402,9 +402,9 @@ void freq_update(uint64_t dbData)
 
     //Write new value of DPLL using INTERPPM
     dpllFreq.value = 0;
-    dpllFreq.fields.fmax        = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
-    dpllFreq.fields.freq_mult   = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
-    dpllFreq.fields.fmin        = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
+    dpllFreq.fields.fmax  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
+    dpllFreq.fields.fmult = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
+    dpllFreq.fields.fmin  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
     CME_PUTSCOM(CPPM_IPPMWDATA, G_db_thread_data.cmeMaskGoodCore, dpllFreq.value);
     cppm_ippmcmd.value = 0;
     cppm_ippmcmd.fields.qppm_reg = QPPM_DPLL_FREQ & 0x000000ff;

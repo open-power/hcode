@@ -25,14 +25,6 @@
 #ifndef __CPPM_REGISTER_ADDRESSES_H__
 #define __CPPM_REGISTER_ADDRESSES_H__
 
-// $Id$
-// $Source$
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file cppm_register_addresses.h
 /// \brief Symbolic addresses for the CPPM unit
 
@@ -75,6 +67,7 @@
 #define CPPM_CMEDATA_CLR 0x000f01a9
 #define CPPM_CMEDATA_OR 0x000f01aa
 #define CPPM_CMEMSG 0x000f01ab
+#define CPPM_CIIR 0x000f01ad
 #define CPPM_CISR 0x000f01ae
 #define CPPM_PECES 0x000f01af
 #define CPPM_CIVRMLCR 0x000f01b7

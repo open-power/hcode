@@ -25,14 +25,6 @@
 #ifndef __CORE_FIRMWARE_REGISTERS_H__
 #define __CORE_FIRMWARE_REGISTERS_H__
 
-// $Id$
-// $Source$
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file core_firmware_registers.h
 /// \brief C register structs for the CORE unit
 

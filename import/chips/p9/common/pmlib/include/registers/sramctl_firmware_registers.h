@@ -25,14 +25,6 @@
 #ifndef __SRAMCTL_FIRMWARE_REGISTERS_H__
 #define __SRAMCTL_FIRMWARE_REGISTERS_H__
 
-// $Id: sramctl_firmware_registers.h,v 1.1.1.1 2013/12/11 21:03:24 bcbrock Exp $
-// $Source: /afs/awd/projects/eclipz/KnowledgeBase/.cvsroot/eclipz/chips/p8/working/procedures/ssx/pgp/registers/sramctl_firmware_registers.h,v $
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2013
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file sramctl_firmware_registers.h
 /// \brief C register structs for the SRAMCTL unit
 

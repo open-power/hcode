@@ -25,14 +25,6 @@
 #ifndef __PPM_REGISTER_ADDRESSES_H__
 #define __PPM_REGISTER_ADDRESSES_H__
 
-// $Id$
-// $Source$
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file ppm_register_addresses.h
 /// \brief Symbolic addresses for the PPM unit
 
@@ -60,9 +52,7 @@
 #define PPM_PFOFF 0x000f011d
 #define PPM_SCRATCH0 0x000f011e
 #define PPM_SCRATCH1 0x000f011f
-#define PPM_CGCR 0x000f0165
-#define PPM_CGCR_CLR 0x000f0166
-#define PPM_CGCR_OR 0x000f0167
+#define PPM_CGCR 0x000f0164
 #define PPM_PIG 0x000f0180
 #define PPM_IVRMCR 0x000f01b0
 #define PPM_IVRMCR_CLR 0x000f01b1

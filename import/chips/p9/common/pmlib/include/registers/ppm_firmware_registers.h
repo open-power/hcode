@@ -25,14 +25,6 @@
 #ifndef __PPM_FIRMWARE_REGISTERS_H__
 #define __PPM_FIRMWARE_REGISTERS_H__
 
-// $Id$
-// $Source$
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file ppm_firmware_registers.h
 /// \brief C register structs for the PPM unit
 
@@ -384,23 +376,25 @@ typedef union ppm_sshfsp
     struct
     {
 #ifdef _BIG_ENDIAN
-        uint64_t stop_gated_fsp : 1;
-        uint64_t special_wkup_active_fsp : 1;
-        uint64_t stop_transition__fsp : 2;
-        uint64_t req_stop_level_fsp : 4;
-        uint64_t act_stop_level_fsp : 4;
+        uint64_t stop_gated : 1;
+        uint64_t special_wkup_done : 1;
+        uint64_t stop_transition : 2;
+        uint64_t req_stop_level : 4;
+        uint64_t act_stop_level : 4;
         uint64_t deepest_req_stop_level_fsp : 4;
         uint64_t deepest_act_stop_level_fsp : 4;
-        uint64_t reserved1 : 44;
+        uint64_t ivrm_enabled_history_fsp : 1;
+        uint64_t reserved1 : 43;
 #else
-        uint64_t reserved1 : 44;
+        uint64_t reserved1 : 43;
+        uint64_t ivrm_enabled_history_fsp : 1;
         uint64_t deepest_act_stop_level_fsp : 4;
         uint64_t deepest_req_stop_level_fsp : 4;
-        uint64_t act_stop_level_fsp : 4;
-        uint64_t req_stop_level_fsp : 4;
-        uint64_t stop_transition__fsp : 2;
-        uint64_t special_wkup_active_fsp : 1;
-        uint64_t stop_gated_fsp : 1;
+        uint64_t act_stop_level : 4;
+        uint64_t req_stop_level : 4;
+        uint64_t stop_transition : 2;
+        uint64_t special_wkup_done : 1;
+        uint64_t stop_gated : 1;
 #endif // _BIG_ENDIAN
     } fields;
 } ppm_sshfsp_t;
@@ -424,23 +418,25 @@ typedef union ppm_sshocc
     struct
     {
 #ifdef _BIG_ENDIAN
-        uint64_t run_stop_occ : 1;
-        uint64_t special_wkup_active_occ : 1;
-        uint64_t stop_transition_occ : 2;
-        uint64_t req_stop_level_occ : 4;
-        uint64_t act_stop_level_occ : 4;
+        uint64_t stop_gated : 1;
+        uint64_t special_wkup_done : 1;
+        uint64_t stop_transition : 2;
+        uint64_t req_stop_level : 4;
+        uint64_t act_stop_level : 4;
         uint64_t deepest_req_stop_level_occ : 4;
         uint64_t deepest_act_stop_level_occ : 4;
-        uint64_t reserved1 : 44;
+        uint64_t ivrm_enabled_history_occ : 1;
+        uint64_t reserved1 : 43;
 #else
-        uint64_t reserved1 : 44;
+        uint64_t reserved1 : 43;
+        uint64_t ivrm_enabled_history_occ : 1;
         uint64_t deepest_act_stop_level_occ : 4;
         uint64_t deepest_req_stop_level_occ : 4;
-        uint64_t act_stop_level_occ : 4;
-        uint64_t req_stop_level_occ : 4;
-        uint64_t stop_transition_occ : 2;
-        uint64_t special_wkup_active_occ : 1;
-        uint64_t run_stop_occ : 1;
+        uint64_t act_stop_level : 4;
+        uint64_t req_stop_level : 4;
+        uint64_t stop_transition : 2;
+        uint64_t special_wkup_done : 1;
+        uint64_t stop_gated : 1;
 #endif // _BIG_ENDIAN
     } fields;
 } ppm_sshocc_t;
@@ -464,23 +460,25 @@ typedef union ppm_sshotr
     struct
     {
 #ifdef _BIG_ENDIAN
-        uint64_t run_stop_otr : 1;
-        uint64_t special_wkup_active_otr : 1;
-        uint64_t stop_transition_otr : 2;
-        uint64_t req_stop_level_otr : 4;
-        uint64_t act_stop_level_otr : 4;
+        uint64_t stop_gated : 1;
+        uint64_t special_wkup_done : 1;
+        uint64_t stop_transition : 2;
+        uint64_t req_stop_level : 4;
+        uint64_t act_stop_level : 4;
         uint64_t deepest_req_stop_level_otr : 4;
         uint64_t deepest_act_stop_level_otr : 4;
-        uint64_t reserved1 : 44;
+        uint64_t ivrm_enabled_history_otr : 1;
+        uint64_t reserved1 : 43;
 #else
-        uint64_t reserved1 : 44;
+        uint64_t reserved1 : 43;
+        uint64_t ivrm_enabled_history_otr : 1;
         uint64_t deepest_act_stop_level_otr : 4;
         uint64_t deepest_req_stop_level_otr : 4;
-        uint64_t act_stop_level_otr : 4;
-        uint64_t req_stop_level_otr : 4;
-        uint64_t stop_transition_otr : 2;
-        uint64_t special_wkup_active_otr : 1;
-        uint64_t run_stop_otr : 1;
+        uint64_t act_stop_level : 4;
+        uint64_t req_stop_level : 4;
+        uint64_t stop_transition : 2;
+        uint64_t special_wkup_done : 1;
+        uint64_t stop_gated : 1;
 #endif // _BIG_ENDIAN
     } fields;
 } ppm_sshotr_t;
@@ -504,23 +502,25 @@ typedef union ppm_sshhyp
     struct
     {
 #ifdef _BIG_ENDIAN
-        uint64_t run_stop_hyp : 1;
-        uint64_t special_wkup_active_hyp : 1;
-        uint64_t stop_transition_hyp : 2;
-        uint64_t req_stop_level_hyp : 4;
-        uint64_t act_stop_level_hyp : 4;
+        uint64_t stop_gated : 1;
+        uint64_t special_wkup_done : 1;
+        uint64_t stop_transition : 2;
+        uint64_t req_stop_level : 4;
+        uint64_t act_stop_level : 4;
         uint64_t deepest_req_stop_level_hyp : 4;
         uint64_t deepest_act_stop_level_hyp : 4;
-        uint64_t reserved1 : 44;
+        uint64_t ivrm_enabled_history_hyp : 1;
+        uint64_t reserved1 : 43;
 #else
-        uint64_t reserved1 : 44;
+        uint64_t reserved1 : 43;
+        uint64_t ivrm_enabled_history_hyp : 1;
         uint64_t deepest_act_stop_level_hyp : 4;
         uint64_t deepest_req_stop_level_hyp : 4;
-        uint64_t act_stop_level_hyp : 4;
-        uint64_t req_stop_level_hyp : 4;
-        uint64_t stop_transition_hyp : 2;
-        uint64_t special_wkup_active_hyp : 1;
-        uint64_t run_stop_hyp : 1;
+        uint64_t act_stop_level : 4;
+        uint64_t req_stop_level : 4;
+        uint64_t stop_transition : 2;
+        uint64_t special_wkup_done : 1;
+        uint64_t stop_gated : 1;
 #endif // _BIG_ENDIAN
     } fields;
 } ppm_sshhyp_t;
@@ -552,7 +552,8 @@ typedef union ppm_pfcs
         uint64_t vcs_pfet_sel_override : 1;
         uint64_t vdd_pfet_regulation_finger_en : 1;
         uint64_t vdd_pfet_regulation_finger_value : 1;
-        uint64_t reserved1 : 2;
+        uint64_t reserved1 : 1;
+        uint64_t analog_logic_fence : 1;
         uint64_t vdd_pfet_enable_value : 8;
         uint64_t vdd_pfet_sel_value : 4;
         uint64_t vcs_pfet_enable_value : 8;
@@ -574,7 +575,8 @@ typedef union ppm_pfcs
         uint64_t vcs_pfet_enable_value : 8;
         uint64_t vdd_pfet_sel_value : 4;
         uint64_t vdd_pfet_enable_value : 8;
-        uint64_t reserved1 : 2;
+        uint64_t analog_logic_fence : 1;
+        uint64_t reserved1 : 1;
         uint64_t vdd_pfet_regulation_finger_value : 1;
         uint64_t vdd_pfet_regulation_finger_en : 1;
         uint64_t vcs_pfet_sel_override : 1;
@@ -614,7 +616,8 @@ typedef union ppm_pfcs_clr
         uint64_t vcs_pfet_sel_override : 1;
         uint64_t vdd_pfet_regulation_finger_en : 1;
         uint64_t vdd_pfet_regulation_finger_value : 1;
-        uint64_t reserved1 : 2;
+        uint64_t reserved1 : 1;
+        uint64_t analog_logic_fence : 1;
         uint64_t vdd_pfet_enable_value : 8;
         uint64_t vdd_pfet_sel_value : 4;
         uint64_t vcs_pfet_enable_value : 8;
@@ -636,7 +639,8 @@ typedef union ppm_pfcs_clr
         uint64_t vcs_pfet_enable_value : 8;
         uint64_t vdd_pfet_sel_value : 4;
         uint64_t vdd_pfet_enable_value : 8;
-        uint64_t reserved1 : 2;
+        uint64_t analog_logic_fence : 1;
+        uint64_t reserved1 : 1;
         uint64_t vdd_pfet_regulation_finger_value : 1;
         uint64_t vdd_pfet_regulation_finger_en : 1;
         uint64_t vcs_pfet_sel_override : 1;
@@ -676,7 +680,8 @@ typedef union ppm_pfcs_or
         uint64_t vcs_pfet_sel_override : 1;
         uint64_t vdd_pfet_regulation_finger_en : 1;
         uint64_t vdd_pfet_regulation_finger_value : 1;
-        uint64_t reserved1 : 2;
+        uint64_t reserved1 : 1;
+        uint64_t analog_logic_fence : 1;
         uint64_t vdd_pfet_enable_value : 8;
         uint64_t vdd_pfet_sel_value : 4;
         uint64_t vcs_pfet_enable_value : 8;
@@ -698,7 +703,8 @@ typedef union ppm_pfcs_or
         uint64_t vcs_pfet_enable_value : 8;
         uint64_t vdd_pfet_sel_value : 4;
         uint64_t vdd_pfet_enable_value : 8;
-        uint64_t reserved1 : 2;
+        uint64_t analog_logic_fence : 1;
+        uint64_t reserved1 : 1;
         uint64_t vdd_pfet_regulation_finger_value : 1;
         uint64_t vdd_pfet_regulation_finger_en : 1;
         uint64_t vcs_pfet_sel_override : 1;
@@ -767,9 +773,19 @@ typedef union ppm_pfsns
         uint64_t reserved1 : 12;
         uint64_t tp_vdd_pfet_enable_actual : 8;
         uint64_t tp_vcs_pfet_enable_actual : 8;
-        uint64_t reserved2 : 32;
+        uint64_t reserved2 : 10;
+        uint64_t vdd_pg_state : 4;
+        uint64_t vdd_pg_sel : 4;
+        uint64_t vcs_pg_state : 4;
+        uint64_t vcs_pg_sel : 4;
+        uint64_t reserved3 : 6;
 #else
-        uint64_t reserved2 : 32;
+        uint64_t reserved3 : 6;
+        uint64_t vcs_pg_sel : 4;
+        uint64_t vcs_pg_state : 4;
+        uint64_t vdd_pg_sel : 4;
+        uint64_t vdd_pg_state : 4;
+        uint64_t reserved2 : 10;
         uint64_t tp_vcs_pfet_enable_actual : 8;
         uint64_t tp_vdd_pfet_enable_actual : 8;
         uint64_t reserved1 : 12;
@@ -897,70 +913,6 @@ typedef union ppm_cgcr
 
 
 
-typedef union ppm_cgcr_clr
-{
-
-    uint64_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t high_order;
-        uint32_t low_order;
-#else
-        uint32_t low_order;
-        uint32_t high_order;
-#endif // _BIG_ENDIAN
-    } words;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint64_t clkglm_async_reset : 1;
-        uint64_t reserved_1_21 : 2;
-        uint64_t clkglm_sel : 1;
-        uint64_t reserved2 : 60;
-#else
-        uint64_t reserved2 : 60;
-        uint64_t clkglm_sel : 1;
-        uint64_t reserved_1_21 : 2;
-        uint64_t clkglm_async_reset : 1;
-#endif // _BIG_ENDIAN
-    } fields;
-} ppm_cgcr_clr_t;
-
-
-
-typedef union ppm_cgcr_or
-{
-
-    uint64_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t high_order;
-        uint32_t low_order;
-#else
-        uint32_t low_order;
-        uint32_t high_order;
-#endif // _BIG_ENDIAN
-    } words;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint64_t clkglm_async_reset : 1;
-        uint64_t reserved_1_21 : 2;
-        uint64_t clkglm_sel : 1;
-        uint64_t reserved2 : 60;
-#else
-        uint64_t reserved2 : 60;
-        uint64_t clkglm_sel : 1;
-        uint64_t reserved_1_21 : 2;
-        uint64_t clkglm_async_reset : 1;
-#endif // _BIG_ENDIAN
-    } fields;
-} ppm_cgcr_or_t;
-
-
-
 typedef union ppm_pig
 {
 
@@ -987,9 +939,11 @@ typedef union ppm_pig
         uint64_t granted__source : 2;
         uint64_t reserved3 : 1;
         uint64_t pending_source : 3;
-        uint64_t reserved4 : 24;
+        uint64_t network_reset__occurred : 1;
+        uint64_t reserved4 : 23;
 #else
-        uint64_t reserved4 : 24;
+        uint64_t reserved4 : 23;
+        uint64_t network_reset__occurred : 1;
         uint64_t pending_source : 3;
         uint64_t reserved3 : 1;
         uint64_t granted__source : 2;
@@ -1195,27 +1149,25 @@ typedef union ppm_ivrmavr
     {
 #ifdef _BIG_ENDIAN
         uint64_t ivrm_ivid : 8;
-        uint64_t reserved1 : 3;
+        uint64_t ivrm_protect_active : 1;
+        uint64_t reserved1 : 2;
         uint64_t ivrm_pfet_strength : 5;
-        uint64_t reserved2 : 3;
-        uint64_t ivrm_enabled_history : 1;
-        uint64_t reserved3 : 4;
+        uint64_t reserved2 : 8;
         uint64_t ivrm_vid_valid : 1;
         uint64_t ivrm_bypass_b : 1;
         uint64_t ivrm_poweron : 1;
         uint64_t ivrm_vreg_slow_dc : 1;
-        uint64_t reserved4 : 36;
+        uint64_t reserved3 : 36;
 #else
-        uint64_t reserved4 : 36;
+        uint64_t reserved3 : 36;
         uint64_t ivrm_vreg_slow_dc : 1;
         uint64_t ivrm_poweron : 1;
         uint64_t ivrm_bypass_b : 1;
         uint64_t ivrm_vid_valid : 1;
-        uint64_t reserved3 : 4;
-        uint64_t ivrm_enabled_history : 1;
-        uint64_t reserved2 : 3;
+        uint64_t reserved2 : 8;
         uint64_t ivrm_pfet_strength : 5;
-        uint64_t reserved1 : 3;
+        uint64_t reserved1 : 2;
+        uint64_t ivrm_protect_active : 1;
         uint64_t ivrm_ivid : 8;
 #endif // _BIG_ENDIAN
     } fields;

@@ -25,14 +25,6 @@
 #ifndef __OCB_FIRMWARE_REGISTERS_H__
 #define __OCB_FIRMWARE_REGISTERS_H__
 
-// $Id$
-// $Source$
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file ocb_firmware_registers.h
 /// \brief C register structs for the OCB unit
 
@@ -71,7 +63,7 @@ typedef union ocb_oisr0
         uint32_t gpe3_error : 1;
         uint32_t ppc405_halt : 1;
         uint32_t ocb_error : 1;
-        uint32_t spipss_error : 1;
+        uint32_t spare_11 : 1;
         uint32_t check_stop_ppc405 : 1;
         uint32_t check_stop_gpe0 : 1;
         uint32_t check_stop_gpe1 : 1;
@@ -80,7 +72,7 @@ typedef union ocb_oisr0
         uint32_t occ_malf_alert : 1;
         uint32_t adu_malf_alert : 1;
         uint32_t external_trap : 1;
-        uint32_t ivrm_pvref_error : 1;
+        uint32_t pvref_fail : 1;
         uint32_t occ_timer0 : 1;
         uint32_t occ_timer1 : 1;
         uint32_t avs_slave0 : 1;
@@ -91,9 +83,9 @@ typedef union ocb_oisr0
         uint32_t ipi3_hi_priority : 1;
         uint32_t ipi4_hi_priority : 1;
         uint32_t adcfsm_ongoing : 1;
-        uint32_t spare_31 : 1;
+        uint32_t i2cm_intr : 1;
 #else
-        uint32_t spare_31 : 1;
+        uint32_t i2cm_intr : 1;
         uint32_t adcfsm_ongoing : 1;
         uint32_t ipi4_hi_priority : 1;
         uint32_t ipi3_hi_priority : 1;
@@ -104,7 +96,7 @@ typedef union ocb_oisr0
         uint32_t avs_slave0 : 1;
         uint32_t occ_timer1 : 1;
         uint32_t occ_timer0 : 1;
-        uint32_t ivrm_pvref_error : 1;
+        uint32_t pvref_fail : 1;
         uint32_t external_trap : 1;
         uint32_t adu_malf_alert : 1;
         uint32_t occ_malf_alert : 1;
@@ -113,7 +105,7 @@ typedef union ocb_oisr0
         uint32_t check_stop_gpe1 : 1;
         uint32_t check_stop_gpe0 : 1;
         uint32_t check_stop_ppc405 : 1;
-        uint32_t spipss_error : 1;
+        uint32_t spare_11 : 1;
         uint32_t ocb_error : 1;
         uint32_t ppc405_halt : 1;
         uint32_t gpe3_error : 1;
@@ -149,7 +141,7 @@ typedef union ocb_oisr0_clr
         uint32_t gpe3_error : 1;
         uint32_t ppc405_halt : 1;
         uint32_t ocb_error : 1;
-        uint32_t spipss_error : 1;
+        uint32_t spare_11 : 1;
         uint32_t check_stop_ppc405 : 1;
         uint32_t check_stop_gpe0 : 1;
         uint32_t check_stop_gpe1 : 1;
@@ -158,7 +150,7 @@ typedef union ocb_oisr0_clr
         uint32_t occ_malf_alert : 1;
         uint32_t adu_malf_alert : 1;
         uint32_t external_trap : 1;
-        uint32_t ivrm_pvref_error : 1;
+        uint32_t pvref_fail : 1;
         uint32_t occ_timer0 : 1;
         uint32_t occ_timer1 : 1;
         uint32_t avs_slave0 : 1;
@@ -169,9 +161,9 @@ typedef union ocb_oisr0_clr
         uint32_t ipi3_hi_priority : 1;
         uint32_t ipi4_hi_priority : 1;
         uint32_t adcfsm_ongoing : 1;
-        uint32_t spare_31 : 1;
+        uint32_t i2cm_intr : 1;
 #else
-        uint32_t spare_31 : 1;
+        uint32_t i2cm_intr : 1;
         uint32_t adcfsm_ongoing : 1;
         uint32_t ipi4_hi_priority : 1;
         uint32_t ipi3_hi_priority : 1;
@@ -182,7 +174,7 @@ typedef union ocb_oisr0_clr
         uint32_t avs_slave0 : 1;
         uint32_t occ_timer1 : 1;
         uint32_t occ_timer0 : 1;
-        uint32_t ivrm_pvref_error : 1;
+        uint32_t pvref_fail : 1;
         uint32_t external_trap : 1;
         uint32_t adu_malf_alert : 1;
         uint32_t occ_malf_alert : 1;
@@ -191,7 +183,7 @@ typedef union ocb_oisr0_clr
         uint32_t check_stop_gpe1 : 1;
         uint32_t check_stop_gpe0 : 1;
         uint32_t check_stop_ppc405 : 1;
-        uint32_t spipss_error : 1;
+        uint32_t spare_11 : 1;
         uint32_t ocb_error : 1;
         uint32_t ppc405_halt : 1;
         uint32_t gpe3_error : 1;
@@ -227,7 +219,7 @@ typedef union ocb_oisr0_or
         uint32_t gpe3_error : 1;
         uint32_t ppc405_halt : 1;
         uint32_t ocb_error : 1;
-        uint32_t spipss_error : 1;
+        uint32_t spare_11 : 1;
         uint32_t check_stop_ppc405 : 1;
         uint32_t check_stop_gpe0 : 1;
         uint32_t check_stop_gpe1 : 1;
@@ -236,7 +228,7 @@ typedef union ocb_oisr0_or
         uint32_t occ_malf_alert : 1;
         uint32_t adu_malf_alert : 1;
         uint32_t external_trap : 1;
-        uint32_t ivrm_pvref_error : 1;
+        uint32_t pvref_fail : 1;
         uint32_t occ_timer0 : 1;
         uint32_t occ_timer1 : 1;
         uint32_t avs_slave0 : 1;
@@ -247,9 +239,9 @@ typedef union ocb_oisr0_or
         uint32_t ipi3_hi_priority : 1;
         uint32_t ipi4_hi_priority : 1;
         uint32_t adcfsm_ongoing : 1;
-        uint32_t spare_31 : 1;
+        uint32_t i2cm_intr : 1;
 #else
-        uint32_t spare_31 : 1;
+        uint32_t i2cm_intr : 1;
         uint32_t adcfsm_ongoing : 1;
         uint32_t ipi4_hi_priority : 1;
         uint32_t ipi3_hi_priority : 1;
@@ -260,7 +252,7 @@ typedef union ocb_oisr0_or
         uint32_t avs_slave0 : 1;
         uint32_t occ_timer1 : 1;
         uint32_t occ_timer0 : 1;
-        uint32_t ivrm_pvref_error : 1;
+        uint32_t pvref_fail : 1;
         uint32_t external_trap : 1;
         uint32_t adu_malf_alert : 1;
         uint32_t occ_malf_alert : 1;
@@ -269,7 +261,7 @@ typedef union ocb_oisr0_or
         uint32_t check_stop_gpe1 : 1;
         uint32_t check_stop_gpe0 : 1;
         uint32_t check_stop_ppc405 : 1;
-        uint32_t spipss_error : 1;
+        uint32_t spare_11 : 1;
         uint32_t ocb_error : 1;
         uint32_t ppc405_halt : 1;
         uint32_t gpe3_error : 1;
@@ -428,6 +420,22 @@ typedef union ocb_oiepr0_or
 #endif // _BIG_ENDIAN
     } fields;
 } ocb_oiepr0_or_t;
+
+
+
+typedef union ocb_oinkr0
+{
+
+    uint32_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint32_t interrupt_input_n : 32;
+#else
+        uint32_t interrupt_input_n : 32;
+#endif // _BIG_ENDIAN
+    } fields;
+} ocb_oinkr0_t;
 
 
 
@@ -806,6 +814,22 @@ typedef union ocb_oiepr1_or
 #endif // _BIG_ENDIAN
     } fields;
 } ocb_oiepr1_or_t;
+
+
+
+typedef union ocb_oinkr1
+{
+
+    uint32_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint32_t interrupt_input_n : 32;
+#else
+        uint32_t interrupt_input_n : 32;
+#endif // _BIG_ENDIAN
+    } fields;
+} ocb_oinkr1_t;
 
 
 
@@ -1361,11 +1385,25 @@ typedef union ocb_occmisc
     {
 #ifdef _BIG_ENDIAN
         uint32_t core_ext_intr : 1;
-        uint32_t spare : 15;
-        uint32_t reserved1 : 16;
+        uint32_t ext_intr_reason : 3;
+        uint32_t pvref_error_en : 2;
+        uint32_t pvref_error_gross : 1;
+        uint32_t pvref_error_fine : 1;
+        uint32_t firmware_fault : 1;
+        uint32_t firmware_notify : 1;
+        uint32_t spare : 6;
+        uint32_t i2cm_intr_status : 3;
+        uint32_t reserved1 : 13;
 #else
-        uint32_t reserved1 : 16;
-        uint32_t spare : 15;
+        uint32_t reserved1 : 13;
+        uint32_t i2cm_intr_status : 3;
+        uint32_t spare : 6;
+        uint32_t firmware_notify : 1;
+        uint32_t firmware_fault : 1;
+        uint32_t pvref_error_fine : 1;
+        uint32_t pvref_error_gross : 1;
+        uint32_t pvref_error_en : 2;
+        uint32_t ext_intr_reason : 3;
         uint32_t core_ext_intr : 1;
 #endif // _BIG_ENDIAN
     } fields;
@@ -1381,11 +1419,25 @@ typedef union ocb_occmisc_clr
     {
 #ifdef _BIG_ENDIAN
         uint32_t core_ext_intr : 1;
-        uint32_t spare : 15;
-        uint32_t reserved1 : 16;
+        uint32_t ext_intr_reason : 3;
+        uint32_t pvref_error_en : 2;
+        uint32_t pvref_error_gross : 1;
+        uint32_t pvref_error_fine : 1;
+        uint32_t firmware_fault : 1;
+        uint32_t firmware_notify : 1;
+        uint32_t spare : 6;
+        uint32_t i2cm_intr_status : 3;
+        uint32_t reserved1 : 13;
 #else
-        uint32_t reserved1 : 16;
-        uint32_t spare : 15;
+        uint32_t reserved1 : 13;
+        uint32_t i2cm_intr_status : 3;
+        uint32_t spare : 6;
+        uint32_t firmware_notify : 1;
+        uint32_t firmware_fault : 1;
+        uint32_t pvref_error_fine : 1;
+        uint32_t pvref_error_gross : 1;
+        uint32_t pvref_error_en : 2;
+        uint32_t ext_intr_reason : 3;
         uint32_t core_ext_intr : 1;
 #endif // _BIG_ENDIAN
     } fields;
@@ -1401,11 +1453,25 @@ typedef union ocb_occmisc_or
     {
 #ifdef _BIG_ENDIAN
         uint32_t core_ext_intr : 1;
-        uint32_t spare : 15;
-        uint32_t reserved1 : 16;
+        uint32_t ext_intr_reason : 3;
+        uint32_t pvref_error_en : 2;
+        uint32_t pvref_error_gross : 1;
+        uint32_t pvref_error_fine : 1;
+        uint32_t firmware_fault : 1;
+        uint32_t firmware_notify : 1;
+        uint32_t spare : 6;
+        uint32_t i2cm_intr_status : 3;
+        uint32_t reserved1 : 13;
 #else
-        uint32_t reserved1 : 16;
-        uint32_t spare : 15;
+        uint32_t reserved1 : 13;
+        uint32_t i2cm_intr_status : 3;
+        uint32_t spare : 6;
+        uint32_t firmware_notify : 1;
+        uint32_t firmware_fault : 1;
+        uint32_t pvref_error_fine : 1;
+        uint32_t pvref_error_gross : 1;
+        uint32_t pvref_error_en : 2;
+        uint32_t ext_intr_reason : 3;
         uint32_t core_ext_intr : 1;
 #endif // _BIG_ENDIAN
     } fields;
@@ -1425,23 +1491,27 @@ typedef union ocb_ohtmcr
         uint32_t htm_marker_slave_adrs : 3;
         uint32_t event2halt_mode : 2;
         uint32_t event2halt_en : 11;
-        uint32_t reserved1 : 4;
+        uint32_t reserved1 : 1;
+        uint32_t htm_gpe_src_sel : 2;
+        uint32_t reserved2 : 1;
         uint32_t event2halt_occ : 1;
         uint32_t event2halt_gpe0 : 1;
         uint32_t event2halt_gpe1 : 1;
         uint32_t event2halt_gpe2 : 1;
         uint32_t event2halt_gpe3 : 1;
-        uint32_t reserved2 : 3;
+        uint32_t reserved3 : 3;
         uint32_t event2halt_halt_state : 1;
 #else
         uint32_t event2halt_halt_state : 1;
-        uint32_t reserved2 : 3;
+        uint32_t reserved3 : 3;
         uint32_t event2halt_gpe3 : 1;
         uint32_t event2halt_gpe2 : 1;
         uint32_t event2halt_gpe1 : 1;
         uint32_t event2halt_gpe0 : 1;
         uint32_t event2halt_occ : 1;
-        uint32_t reserved1 : 4;
+        uint32_t reserved2 : 1;
+        uint32_t htm_gpe_src_sel : 2;
+        uint32_t reserved1 : 1;
         uint32_t event2halt_en : 11;
         uint32_t event2halt_mode : 2;
         uint32_t htm_marker_slave_adrs : 3;
@@ -1645,11 +1715,11 @@ typedef union ocb_ccsr
     {
 #ifdef _BIG_ENDIAN
         uint32_t core_config : 24;
-        uint32_t reserved_24_1 : 7;
+        uint32_t reserved_24_301 : 7;
         uint32_t change_in_progress : 1;
 #else
         uint32_t change_in_progress : 1;
-        uint32_t reserved_24_1 : 7;
+        uint32_t reserved_24_301 : 7;
         uint32_t core_config : 24;
 #endif // _BIG_ENDIAN
     } fields;
@@ -1665,11 +1735,11 @@ typedef union ocb_ccsr_clr
     {
 #ifdef _BIG_ENDIAN
         uint32_t core_config : 24;
-        uint32_t reserved_24_1 : 7;
+        uint32_t reserved_24_301 : 7;
         uint32_t change_in_progress : 1;
 #else
         uint32_t change_in_progress : 1;
-        uint32_t reserved_24_1 : 7;
+        uint32_t reserved_24_301 : 7;
         uint32_t core_config : 24;
 #endif // _BIG_ENDIAN
     } fields;
@@ -1685,11 +1755,11 @@ typedef union ocb_ccsr_or
     {
 #ifdef _BIG_ENDIAN
         uint32_t core_config : 24;
-        uint32_t reserved_24_1 : 7;
+        uint32_t reserved_24_301 : 7;
         uint32_t change_in_progress : 1;
 #else
         uint32_t change_in_progress : 1;
-        uint32_t reserved_24_1 : 7;
+        uint32_t reserved_24_301 : 7;
         uint32_t core_config : 24;
 #endif // _BIG_ENDIAN
     } fields;
@@ -1765,15 +1835,15 @@ typedef union ocb_qssr
     {
 #ifdef _BIG_ENDIAN
         uint32_t l2_stopped : 12;
-        uint32_t l3_stopped : 12;
+        uint32_t reserved1 : 2;
         uint32_t quad_stopped : 6;
-        uint32_t reserved1 : 1;
-        uint32_t stop_in_progress : 1;
+        uint32_t stop_entry_ongoing : 6;
+        uint32_t stop_exit_ongoing : 6;
 #else
-        uint32_t stop_in_progress : 1;
-        uint32_t reserved1 : 1;
+        uint32_t stop_exit_ongoing : 6;
+        uint32_t stop_entry_ongoing : 6;
         uint32_t quad_stopped : 6;
-        uint32_t l3_stopped : 12;
+        uint32_t reserved1 : 2;
         uint32_t l2_stopped : 12;
 #endif // _BIG_ENDIAN
     } fields;
@@ -1789,15 +1859,15 @@ typedef union ocb_qssr_clr
     {
 #ifdef _BIG_ENDIAN
         uint32_t l2_stopped : 12;
-        uint32_t l3_stopped : 12;
+        uint32_t reserved1 : 2;
         uint32_t quad_stopped : 6;
-        uint32_t reserved1 : 1;
-        uint32_t stop_in_progress : 1;
+        uint32_t stop_entry_ongoing : 6;
+        uint32_t stop_exit_ongoing : 6;
 #else
-        uint32_t stop_in_progress : 1;
-        uint32_t reserved1 : 1;
+        uint32_t stop_exit_ongoing : 6;
+        uint32_t stop_entry_ongoing : 6;
         uint32_t quad_stopped : 6;
-        uint32_t l3_stopped : 12;
+        uint32_t reserved1 : 2;
         uint32_t l2_stopped : 12;
 #endif // _BIG_ENDIAN
     } fields;
@@ -1813,15 +1883,15 @@ typedef union ocb_qssr_or
     {
 #ifdef _BIG_ENDIAN
         uint32_t l2_stopped : 12;
-        uint32_t l3_stopped : 12;
+        uint32_t reserved1 : 2;
         uint32_t quad_stopped : 6;
-        uint32_t reserved1 : 1;
-        uint32_t stop_in_progress : 1;
+        uint32_t stop_entry_ongoing : 6;
+        uint32_t stop_exit_ongoing : 6;
 #else
-        uint32_t stop_in_progress : 1;
-        uint32_t reserved1 : 1;
+        uint32_t stop_exit_ongoing : 6;
+        uint32_t stop_entry_ongoing : 6;
         uint32_t quad_stopped : 6;
-        uint32_t l3_stopped : 12;
+        uint32_t reserved1 : 2;
         uint32_t l2_stopped : 12;
 #endif // _BIG_ENDIAN
     } fields;
@@ -2103,9 +2173,9 @@ typedef union ocb_opit0cn
     {
 #ifdef _BIG_ENDIAN
         uint32_t reserved1 : 20;
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
 #else
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
         uint32_t reserved1 : 20;
 #endif // _BIG_ENDIAN
     } fields;
@@ -2121,9 +2191,9 @@ typedef union ocb_opit1cn
     {
 #ifdef _BIG_ENDIAN
         uint32_t reserved1 : 20;
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
 #else
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
         uint32_t reserved1 : 20;
 #endif // _BIG_ENDIAN
     } fields;
@@ -2139,9 +2209,9 @@ typedef union ocb_opit2cn
     {
 #ifdef _BIG_ENDIAN
         uint32_t reserved1 : 20;
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
 #else
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
         uint32_t reserved1 : 20;
 #endif // _BIG_ENDIAN
     } fields;
@@ -2157,9 +2227,9 @@ typedef union ocb_opit3cn
     {
 #ifdef _BIG_ENDIAN
         uint32_t reserved1 : 20;
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
 #else
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
         uint32_t reserved1 : 20;
 #endif // _BIG_ENDIAN
     } fields;
@@ -2175,9 +2245,9 @@ typedef union ocb_opit4cn
     {
 #ifdef _BIG_ENDIAN
         uint32_t reserved1 : 20;
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
 #else
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
         uint32_t reserved1 : 20;
 #endif // _BIG_ENDIAN
     } fields;
@@ -2193,9 +2263,9 @@ typedef union ocb_opit5cn
     {
 #ifdef _BIG_ENDIAN
         uint32_t reserved1 : 20;
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
 #else
-        uint32_t pcb_intr_type_a_core_n : 12;
+        uint32_t pcb_intr_payload : 12;
         uint32_t reserved1 : 20;
 #endif // _BIG_ENDIAN
     } fields;
@@ -2211,9 +2281,9 @@ typedef union ocb_opit6qn
     {
 #ifdef _BIG_ENDIAN
         uint32_t reserved1 : 28;
-        uint32_t pcb_intr_type_a_quad_n : 4;
+        uint32_t pcb_intr_payload : 4;
 #else
-        uint32_t pcb_intr_type_a_quad_n : 4;
+        uint32_t pcb_intr_payload : 4;
         uint32_t reserved1 : 28;
 #endif // _BIG_ENDIAN
     } fields;
@@ -2228,162 +2298,14 @@ typedef union ocb_opit7qn
     struct
     {
 #ifdef _BIG_ENDIAN
-        uint32_t reserved1 : 31;
-        uint32_t pcb_intr_type_a_quad_n : 1;
+        uint32_t reserved1 : 28;
+        uint32_t pcb_intr_payload : 4;
 #else
-        uint32_t pcb_intr_type_a_quad_n : 1;
-        uint32_t reserved1 : 31;
+        uint32_t pcb_intr_payload : 4;
+        uint32_t reserved1 : 28;
 #endif // _BIG_ENDIAN
     } fields;
 } ocb_opit7qn_t;
-
-
-
-typedef union ocb_opit0cnrp
-{
-
-    uint32_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t reserved1 : 22;
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-#else
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-        uint32_t reserved1 : 22;
-#endif // _BIG_ENDIAN
-    } fields;
-} ocb_opit0cnrp_t;
-
-
-
-typedef union ocb_opit1cnrp
-{
-
-    uint32_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t reserved1 : 22;
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-#else
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-        uint32_t reserved1 : 22;
-#endif // _BIG_ENDIAN
-    } fields;
-} ocb_opit1cnrp_t;
-
-
-
-typedef union ocb_opit2cnrp
-{
-
-    uint32_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t reserved1 : 22;
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-#else
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-        uint32_t reserved1 : 22;
-#endif // _BIG_ENDIAN
-    } fields;
-} ocb_opit2cnrp_t;
-
-
-
-typedef union ocb_opit3cnrp
-{
-
-    uint32_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t reserved1 : 22;
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-#else
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-        uint32_t reserved1 : 22;
-#endif // _BIG_ENDIAN
-    } fields;
-} ocb_opit3cnrp_t;
-
-
-
-typedef union ocb_opit4cnrp
-{
-
-    uint32_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t reserved1 : 22;
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-#else
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-        uint32_t reserved1 : 22;
-#endif // _BIG_ENDIAN
-    } fields;
-} ocb_opit4cnrp_t;
-
-
-
-typedef union ocb_opit5cnrp
-{
-
-    uint32_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t reserved1 : 22;
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-#else
-        uint32_t pcb_intr_type_a_reset_core_n : 10;
-        uint32_t reserved1 : 22;
-#endif // _BIG_ENDIAN
-    } fields;
-} ocb_opit5cnrp_t;
-
-
-
-typedef union ocb_opit6qnrp
-{
-
-    uint32_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t reserved1 : 22;
-        uint32_t pcb_intr_type_a_reset_quad_n : 1;
-        uint32_t reserved2 : 9;
-#else
-        uint32_t reserved2 : 9;
-        uint32_t pcb_intr_type_a_reset_quad_n : 1;
-        uint32_t reserved1 : 22;
-#endif // _BIG_ENDIAN
-    } fields;
-} ocb_opit6qnrp_t;
-
-
-
-typedef union ocb_opit7qnrp
-{
-
-    uint32_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t reserved1 : 22;
-        uint32_t pcb_intr_type_a_reset_quad_n : 1;
-        uint32_t reserved2 : 9;
-#else
-        uint32_t reserved2 : 9;
-        uint32_t pcb_intr_type_a_reset_quad_n : 1;
-        uint32_t reserved1 : 22;
-#endif // _BIG_ENDIAN
-    } fields;
-} ocb_opit7qnrp_t;
 
 
 
@@ -4392,15 +4314,17 @@ typedef union ocb_ostoesr
 #ifdef _BIG_ENDIAN
         uint64_t icu_timeout_error : 1;
         uint64_t icu_rnw : 1;
-        uint64_t reserved1 : 2;
+        uint64_t reserved_2_31 : 2;
         uint64_t dcu_timeout_error : 1;
         uint64_t dcu_rnw : 1;
-        uint64_t reserved2 : 58;
+        uint64_t reserved_6_72 : 2;
+        uint64_t reserved3 : 56;
 #else
-        uint64_t reserved2 : 58;
+        uint64_t reserved3 : 56;
+        uint64_t reserved_6_72 : 2;
         uint64_t dcu_rnw : 1;
         uint64_t dcu_timeout_error : 1;
-        uint64_t reserved1 : 2;
+        uint64_t reserved_2_31 : 2;
         uint64_t icu_rnw : 1;
         uint64_t icu_timeout_error : 1;
 #endif // _BIG_ENDIAN
@@ -4609,7 +4533,7 @@ typedef union ocb_ocbear
     {
 #ifdef _BIG_ENDIAN
         uint64_t ocb_error_address : 32;
-        uint64_t reserved1 : 3;
+        uint64_t reserved_32_341 : 3;
         uint64_t direct_bridge_source : 1;
         uint64_t indirect_bridge_0_source : 1;
         uint64_t indirect_bridge_1_source : 1;
@@ -4623,7 +4547,7 @@ typedef union ocb_ocbear
         uint64_t indirect_bridge_1_source : 1;
         uint64_t indirect_bridge_0_source : 1;
         uint64_t direct_bridge_source : 1;
-        uint64_t reserved1 : 3;
+        uint64_t reserved_32_341 : 3;
         uint64_t ocb_error_address : 32;
 #endif // _BIG_ENDIAN
     } fields;
@@ -4705,15 +4629,17 @@ typedef union ocb_occlfir
         uint64_t gpe3_ocislv_err : 1;
         uint64_t c405icu_m_timeout : 1;
         uint64_t c405dcu_m_timeout : 1;
-        uint64_t occ_complex_fault_safe : 1;
-        uint64_t spare_58_61 : 4;
+        uint64_t occ_complex_fault : 1;
+        uint64_t occ_complex_notify : 1;
+        uint64_t spare_59_61 : 3;
         uint64_t fir_parity_err_dup : 1;
         uint64_t fir_parity_err : 1;
 #else
         uint64_t fir_parity_err : 1;
         uint64_t fir_parity_err_dup : 1;
-        uint64_t spare_58_61 : 4;
-        uint64_t occ_complex_fault_safe : 1;
+        uint64_t spare_59_61 : 3;
+        uint64_t occ_complex_notify : 1;
+        uint64_t occ_complex_fault : 1;
         uint64_t c405dcu_m_timeout : 1;
         uint64_t c405icu_m_timeout : 1;
         uint64_t gpe3_ocislv_err : 1;
@@ -4851,15 +4777,17 @@ typedef union ocb_occlfir_and
         uint64_t gpe3_ocislv_err : 1;
         uint64_t c405icu_m_timeout : 1;
         uint64_t c405dcu_m_timeout : 1;
-        uint64_t occ_complex_fault_safe : 1;
-        uint64_t spare_58_61 : 4;
+        uint64_t occ_complex_fault : 1;
+        uint64_t occ_complex_notify : 1;
+        uint64_t spare_59_61 : 3;
         uint64_t fir_parity_err_dup : 1;
         uint64_t fir_parity_err : 1;
 #else
         uint64_t fir_parity_err : 1;
         uint64_t fir_parity_err_dup : 1;
-        uint64_t spare_58_61 : 4;
-        uint64_t occ_complex_fault_safe : 1;
+        uint64_t spare_59_61 : 3;
+        uint64_t occ_complex_notify : 1;
+        uint64_t occ_complex_fault : 1;
         uint64_t c405dcu_m_timeout : 1;
         uint64_t c405icu_m_timeout : 1;
         uint64_t gpe3_ocislv_err : 1;
@@ -4997,15 +4925,17 @@ typedef union ocb_occlfir_or
         uint64_t gpe3_ocislv_err : 1;
         uint64_t c405icu_m_timeout : 1;
         uint64_t c405dcu_m_timeout : 1;
-        uint64_t occ_complex_fault_safe : 1;
-        uint64_t spare_58_61 : 4;
+        uint64_t occ_complex_fault : 1;
+        uint64_t occ_complex_notify : 1;
+        uint64_t spare_59_61 : 3;
         uint64_t fir_parity_err_dup : 1;
         uint64_t fir_parity_err : 1;
 #else
         uint64_t fir_parity_err : 1;
         uint64_t fir_parity_err_dup : 1;
-        uint64_t spare_58_61 : 4;
-        uint64_t occ_complex_fault_safe : 1;
+        uint64_t spare_59_61 : 3;
+        uint64_t occ_complex_notify : 1;
+        uint64_t occ_complex_fault : 1;
         uint64_t c405dcu_m_timeout : 1;
         uint64_t c405icu_m_timeout : 1;
         uint64_t gpe3_ocislv_err : 1;
@@ -5143,15 +5073,17 @@ typedef union ocb_occlfirmask
         uint64_t gpe3_ocislv_err_mask : 1;
         uint64_t c405icu_m_timeout_mask : 1;
         uint64_t c405dcu_m_timeout_mask : 1;
-        uint64_t occ_complex_fault_safe_mask : 1;
-        uint64_t spare_58_61_mask : 4;
+        uint64_t occ_complex_fault_mask : 1;
+        uint64_t occ_complex_notify_mask : 1;
+        uint64_t spare_59_61_mask : 3;
         uint64_t fir_parity_err_dup_mask : 1;
         uint64_t fir_parity_err_mask : 1;
 #else
         uint64_t fir_parity_err_mask : 1;
         uint64_t fir_parity_err_dup_mask : 1;
-        uint64_t spare_58_61_mask : 4;
-        uint64_t occ_complex_fault_safe_mask : 1;
+        uint64_t spare_59_61_mask : 3;
+        uint64_t occ_complex_notify_mask : 1;
+        uint64_t occ_complex_fault_mask : 1;
         uint64_t c405dcu_m_timeout_mask : 1;
         uint64_t c405icu_m_timeout_mask : 1;
         uint64_t gpe3_ocislv_err_mask : 1;
@@ -5289,15 +5221,17 @@ typedef union ocb_occlfirmask_and
         uint64_t gpe3_ocislv_err_mask : 1;
         uint64_t c405icu_m_timeout_mask : 1;
         uint64_t c405dcu_m_timeout_mask : 1;
-        uint64_t occ_complex_fault_safe_mask : 1;
-        uint64_t spare_58_61_mask : 4;
+        uint64_t occ_complex_fault_mask : 1;
+        uint64_t occ_complex_notify_mask : 1;
+        uint64_t spare_59_61_mask : 3;
         uint64_t fir_parity_err_dup_mask : 1;
         uint64_t fir_parity_err_mask : 1;
 #else
         uint64_t fir_parity_err_mask : 1;
         uint64_t fir_parity_err_dup_mask : 1;
-        uint64_t spare_58_61_mask : 4;
-        uint64_t occ_complex_fault_safe_mask : 1;
+        uint64_t spare_59_61_mask : 3;
+        uint64_t occ_complex_notify_mask : 1;
+        uint64_t occ_complex_fault_mask : 1;
         uint64_t c405dcu_m_timeout_mask : 1;
         uint64_t c405icu_m_timeout_mask : 1;
         uint64_t gpe3_ocislv_err_mask : 1;
@@ -5435,15 +5369,17 @@ typedef union ocb_occlfirmask_or
         uint64_t gpe3_ocislv_err_mask : 1;
         uint64_t c405icu_m_timeout_mask : 1;
         uint64_t c405dcu_m_timeout_mask : 1;
-        uint64_t occ_complex_fault_safe_mask : 1;
-        uint64_t spare_58_61_mask : 4;
+        uint64_t occ_complex_fault_mask : 1;
+        uint64_t occ_complex_notify_mask : 1;
+        uint64_t spare_59_61_mask : 3;
         uint64_t fir_parity_err_dup_mask : 1;
         uint64_t fir_parity_err_mask : 1;
 #else
         uint64_t fir_parity_err_mask : 1;
         uint64_t fir_parity_err_dup_mask : 1;
-        uint64_t spare_58_61_mask : 4;
-        uint64_t occ_complex_fault_safe_mask : 1;
+        uint64_t spare_59_61_mask : 3;
+        uint64_t occ_complex_notify_mask : 1;
+        uint64_t occ_complex_fault_mask : 1;
         uint64_t c405dcu_m_timeout_mask : 1;
         uint64_t c405icu_m_timeout_mask : 1;
         uint64_t gpe3_ocislv_err_mask : 1;
@@ -5616,11 +5552,11 @@ typedef union ocb_occerrrpt
         uint64_t reserved3 : 1;
         uint64_t gpe3_ocislv_err : 7;
         uint64_t reserved4 : 1;
-        uint64_t ocb_ocislv_err : 7;
-        uint64_t reserved5 : 5;
+        uint64_t ocb_ocislv_err : 6;
+        uint64_t reserved5 : 6;
 #else
-        uint64_t reserved5 : 5;
-        uint64_t ocb_ocislv_err : 7;
+        uint64_t reserved5 : 6;
+        uint64_t ocb_ocislv_err : 6;
         uint64_t reserved4 : 1;
         uint64_t gpe3_ocislv_err : 7;
         uint64_t reserved3 : 1;

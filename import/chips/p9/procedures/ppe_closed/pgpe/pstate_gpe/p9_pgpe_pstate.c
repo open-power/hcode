@@ -179,8 +179,8 @@ void p9_pgpe_pstate_thread(void* arg)
                     opit0cn.value = in32(OCB_OPIT0CN(c));
                     opit1cn.value = in32(OCB_OPIT1CN(c));
 
-                    uint16_t op0 = opit0cn.fields.pcb_intr_type_a_core_n;
-                    uint16_t op1 = opit1cn.fields.pcb_intr_type_a_core_n;
+                    uint16_t op0 = opit0cn.fields.pcb_intr_payload;
+                    uint16_t op1 = opit1cn.fields.pcb_intr_payload;
 
                     //make sure seq number matches for both phases
                     //otherwise, ignore the request
