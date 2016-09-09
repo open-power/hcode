@@ -107,6 +107,9 @@ extern "C" {
 #define PERV_SCAN_REGION_TYPE    0x10030005
 #define PERV_CLK_REGION          0x10030006
 #define PERV_BIST                0x1003000B
+#define PERV_OPCG_CAPT0          0x10030010
+#define PERV_OPCG_CAPT1          0x10030011
+#define PERV_OPCG_CAPT2          0x10030012
 #define PERV_CPLT_STAT0          0x10000100
 
 /// Macro to update STOP History
@@ -172,6 +175,11 @@ enum SGPE_STOP_VECTOR_INDEX
     VECTOR_CONFIG                     = 2
 };
 
+#if HW386311_PBIE_RW_PTR_STOP11_FIX
+#define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);
+#define RESTORE_RING_BITS(mask, ring, save) ring = (((ring) & (~mask)) | (save));
+#endif
+
 typedef struct
 {
     // requested stop state calculated from core stop levels
@@ -193,7 +201,7 @@ typedef struct
     uint32_t ex_r[3];
     uint32_t ex_b[3];
     uint32_t quad[3];
-    uint32_t qswu[2];
+    uint32_t qswu[3];
 } sgpe_group_t;
 
 /// SGPE Stop Score Board Structure
