@@ -31,6 +31,13 @@
 #define in32_sh(addr)                   in32(addr+4)
 #define out32_sh(addr, data)            out32(addr+4, data)
 
+/// CME Core Related Configuration
+
+enum CME_CORE_CONFIGS
+{
+    MAX_THREADS_PER_CORE            = 4,
+    MAX_CORES_PER_CME               = 2
+};
 
 /// Core Masks
 

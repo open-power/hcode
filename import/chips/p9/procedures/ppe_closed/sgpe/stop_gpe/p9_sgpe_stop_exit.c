@@ -29,6 +29,14 @@
 #include "p9_hcd_cache_initf.h"
 
 extern SgpeStopRecord G_sgpe_stop_record;
+#if HW386311_PBIE_RW_PTR_STOP11_FIX
+    extern uint64_t G_ring_save[MAX_QUADS][8];
+    extern uint64_t G_ring_spin[10][2];
+#endif
+
+#if FUSED_CORE_MODE_SCAN_FIX
+uint32_t G_fcm_spin[4] = {0, 435, 1402, 2411};
+#endif
 
 int
 p9_sgpe_stop_exit()
@@ -45,7 +53,9 @@ p9_sgpe_stop_exit()
     uint64_t     cme_flags;
     ppm_sshsrc_t hist;
     ocb_ccsr_t   ccsr;
-
+#if HW386311_PBIE_RW_PTR_STOP11_FIX
+    int          spin;
+#endif
     //===============================
     MARK_TAG(BEGINSCOPE_STOP_EXIT, 0)
     //===============================
@@ -68,49 +78,29 @@ p9_sgpe_stop_exit()
             continue;
         }
 
-        if (((cexit & BITS32(0, 2)) &&
+        if (G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop))
+        {
+            m_pg |= FST_EX_IN_QUAD;
+        }
+
+        if (G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop))
+        {
+            m_pg |= SND_EX_IN_QUAD;
+        }
+
+        if ((((cexit & BITS32(0, 2)) || (qspwu & BIT32(0))) &&
              (G_sgpe_stop_record.state[qloop].act_state_x0 >= STOP_LEVEL_8)))
         {
             m_l2 |= FST_EX_IN_QUAD;
         }
 
-        if (((cexit & BITS32(2, 2)) &&
+        if ((((cexit & BITS32(2, 2)) || (qspwu & BIT32(0))) &&
              (G_sgpe_stop_record.state[qloop].act_state_x1 >= STOP_LEVEL_8)))
         {
             m_l2 |= SND_EX_IN_QUAD;
         }
 
-        if (G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop))
-        {
-            m_pg |= FST_EX_IN_QUAD;
-
-            if (qspwu & BIT32(0))
-            {
-                m_l2 |= FST_EX_IN_QUAD;
-            }
-        }
-
-        if (G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop))
-        {
-            m_pg |= SND_EX_IN_QUAD;
-
-            if (qspwu & BIT32(0))
-            {
-                m_l2 |= SND_EX_IN_QUAD;
-            }
-        }
-
-        PK_TRACE("quad[%d]m_l2[%d]m_pg[%d]", qloop, m_l2, m_pg);
-
-        if (G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop))
-        {
-            m_pg |= FST_EX_IN_QUAD;
-        }
-
-        if (G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop))
-        {
-            m_pg |= SND_EX_IN_QUAD;
-        }
+        m_l2 = m_l2 & m_pg;
 
         PK_TRACE("quad[%d]m_l2[%d]m_pg[%d]", qloop, m_l2, m_pg);
 
@@ -138,7 +128,7 @@ p9_sgpe_stop_exit()
         {
             SGPE_STOP_UPDATE_HISTORY(qloop,
                                      QUAD_ADDR_BASE,
-                                     STOP_CORE_IS_GATED,
+                                     STOP_CACHE_IS_GATED,
                                      STOP_TRANS_EXIT,
                                      STOP_LEVEL_0,
                                      STOP_LEVEL_0,
@@ -192,6 +182,118 @@ p9_sgpe_stop_exit()
 
             p9_hcd_cache_arrayinit(qloop, m_pg);
 #endif
+
+#if FUSED_CORE_MODE_SCAN_FIX
+            // bit8/9 = l2-0/1, bit49 = cfg
+            PK_TRACE("FC: Setup scan register to select the ring");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), BITS64(8, 2) | BIT64(49));
+
+            PK_TRACE("FC: checkword set");
+            scom_data = 0xa5a5a5a5a5a5a5a5;
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+
+            for(spin = 1;; spin++)
+            {
+                PK_TRACE("FC: spin ring loop%d", spin);
+                scom_data = (G_fcm_spin[spin] - G_fcm_spin[spin - 1]) << 32;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data);
+
+                PK_TRACE("FC: Poll OPCG done for ring spin");
+
+                do
+                {
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x10000100, qloop), scom_data);
+                }
+                while(~scom_data & BIT64(8));
+
+                if (spin == 3)
+                {
+                    PK_TRACE("FC: checkword check");
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+
+                    if (scom_data != 0xa5a5a5a5a5a5a5a5)
+                    {
+                        PK_TRACE("FC: checkword[%x%x] failed", UPPER32(scom_data), LOWER32(scom_data));
+                        pk_halt();
+                    }
+
+                    break;
+                }
+
+                PK_TRACE("FC: restore fused core mode bit");
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                RESTORE_RING_BITS(BIT64(0), scom_data, BIT64(0));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+            }
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), 0);
+#endif
+
+#if HW386311_PBIE_RW_PTR_STOP11_FIX
+            // bit4,5,11 = perv/eqpb/pbieq, bit59 = inex
+            PK_TRACE("SX: Setup scan register to select the ring");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), BITS64(4, 2) | BIT64(11) | BIT64(59));
+
+            PK_TRACE("SX: checkword set");
+            scom_data = 0xa5a5a5a5a5a5a5a5;
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+
+            for(spin = 1;; spin++)
+            {
+                PK_TRACE("SX: spin ring loop%d", spin);
+                scom_data = (G_ring_spin[spin][0] - G_ring_spin[spin - 1][0]) << 32;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data);
+
+                PK_TRACE("SX: Poll OPCG done for ring spin");
+
+                do
+                {
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x10000100, qloop), scom_data);
+                }
+                while(~scom_data & BIT64(8));
+
+                if (spin == 9)
+                {
+                    PK_TRACE("SX: checkword check");
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+
+                    if (scom_data != 0xa5a5a5a5a5a5a5a5)
+                    {
+                        PK_TRACE("checkword[%x%x] failed", UPPER32(scom_data), LOWER32(scom_data));
+                        pk_halt();
+                    }
+
+                    break;
+                }
+
+                PK_TRACE("SX: restore pbie read ptr");
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                PK_TRACE("SE: mask: %8x %8x",
+                         UPPER32(G_ring_spin[spin][1]),
+                         LOWER32(G_ring_spin[spin][1]));
+                PK_TRACE("SE: ring: %8x %8x",
+                         UPPER32(scom_data),
+                         LOWER32(scom_data));
+                PK_TRACE("SE: save: %8x %8x",
+                         UPPER32(G_ring_save[qloop][spin - 1]),
+                         LOWER32(G_ring_save[qloop][spin - 1]));
+                RESTORE_RING_BITS(G_ring_spin[spin][1], scom_data, G_ring_save[qloop][spin - 1]);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                PK_TRACE("SE: mask: %8x %8x",
+                         UPPER32(G_ring_spin[spin][1]),
+                         LOWER32(G_ring_spin[spin][1]));
+                PK_TRACE("SE: ring: %8x %8x",
+                         UPPER32(scom_data),
+                         LOWER32(scom_data));
+                PK_TRACE("SE: save: %8x %8x",
+                         UPPER32(G_ring_save[qloop][spin - 1]),
+                         LOWER32(G_ring_save[qloop][spin - 1]));
+
+            }
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), 0);
+#endif
+
             //=====================
             MARK_TRAP(SX_FUNC_INIT)
             //=====================
@@ -301,7 +403,7 @@ p9_sgpe_stop_exit()
 
                 PK_TRACE("Doorbell1 the CME %d", ((qloop << 2) + cloop));
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG,
-                                               ((qloop << 2) + cloop)), (BIT64(0)));
+                                               ((qloop << 2) + cloop)), BIT64(0));
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1_OR,
                                                ((qloop << 2) + cloop)), BIT64(7));
             }
@@ -377,6 +479,11 @@ p9_sgpe_stop_exit()
                             cme_flags);
             }
 
+            if (in32(OCB_OCCFLG) & BIT32(13))
+            {
+                asm volatile ("trap");
+            }
+
 #if !SKIP_CME_BOOT_STOP11
             uint16_t cmeBootList = (m_pg << SHIFT16(((qloop << 1) + 1)));
             PK_TRACE("Boot CME [%x]", cmeBootList);
@@ -401,7 +508,7 @@ p9_sgpe_stop_exit()
 
             SGPE_STOP_UPDATE_HISTORY(qloop,
                                      QUAD_ADDR_BASE,
-                                     STOP_CORE_IS_GATED,
+                                     STOP_CACHE_READY_RUN,
                                      STOP_TRANS_COMPLETE,
                                      STOP_LEVEL_0,
                                      STOP_LEVEL_0,
@@ -416,6 +523,8 @@ p9_sgpe_stop_exit()
         if (qspwu & BIT32(0))
         {
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_OR, qloop), BIT64(0));
+            G_sgpe_stop_record.group.qswu[VECTOR_CONFIG] |= BIT32(qloop);
+            G_sgpe_stop_record.group.qswu[VECTOR_EXIT]   &= ~BIT32(qloop);
         }
 
         // process core portion of core request

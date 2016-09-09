@@ -35,6 +35,11 @@ CmePstateRecord G_cme_pstate_record;
 #include "p9_cme_stop.h"
 CmeStopRecord G_cme_stop_record = {0};
 
+#if TEST_ONLY_BCE_IRR
+#include "p9_cme_copy_scan_ring.h"
+BceIrritator G_bce_irr = {0};
+#endif
+
 // CME Interrupt Handler Table
 EXTERNAL_IRQ_TABLE_START
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DEBUGGER
@@ -44,7 +49,8 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_PVREF_FAIL
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_OCC_HEARTBEAT_LOST
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_CORE_CHECKSTOP
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DROPOUT_FAIL
-IRQ_HANDLER(p9_cme_pstate_intercme_in0_handler, (void*)NULL)                    //CMEHW_IRQ_INTERCME_DIRECT_IN0
+IRQ_HANDLER(p9_cme_pstate_intercme_in0_handler, (void*)NULL)
+//CMEHW_IRQ_INTERCME_DIRECT_IN0
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_BUSY_HIGH
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_TIMEOUT
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DOORBELL3_C0
@@ -61,8 +67,8 @@ IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_SPECIAL_WAKEUP_C0
 IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_SPECIAL_WAKEUP_C1
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DOORBELL2_C0
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DOORBELL2_C1
+IRQ_HANDLER(p9_cme_stop_db2_handler, 0)     //CMEHW_IRQ_DOORBELL2_C0
+IRQ_HANDLER(p9_cme_stop_db2_handler, 0)     //CMEHW_IRQ_DOORBELL2_C1
 IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[0]))
 //CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0
 IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[0]))
@@ -89,8 +95,8 @@ IRQ_HANDLER(p9_cme_pstate_db_handler, (void*) & (G_cme_pstate_record.sem[1]))
 //CMEHW_IRQ_DOORBELL0_C1
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_INTERCME_IN1
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_INTERCME_IN2
-IRQ_HANDLER(p9_cme_stop_doorbell_handler, 0) //CMEHW_IRQ_DOORBELL1_C0
-IRQ_HANDLER(p9_cme_stop_doorbell_handler, 0) //CMEHW_IRQ_DOORBELL1_C1
+IRQ_HANDLER(p9_cme_stop_db1_handler, 0)     //CMEHW_IRQ_DOORBELL1_C0
+IRQ_HANDLER(p9_cme_stop_db1_handler, 0)     //CMEHW_IRQ_DOORBELL1_C1
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_PECE_INTR_DISABLED_C0
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_PECE_INTR_DISABLED_C1
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_RESERVED_44
@@ -115,26 +121,41 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_RESERVED_62
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_RESERVED_63
 EXTERNAL_IRQ_TABLE_END
 
-#define  KERNEL_STACK_SIZE  256
-#define  THREAD_STACK_SIZE  512
-#define  STOP_THREAD_STACK_SIZE  512
+#define  KERNEL_STACK_SIZE                 256
 
-#define  CME_THREAD_PRIORITY_STOP_EXIT   1
-#define  CME_THREAD_PRIORITY_STOP_ENTRY  2
-#define  CME_THREAD_PRIORITY_PSTATE_DB   3
-#define  CME_THREAD_PRIORITY_PSTATE_PMCR 4
+#define  CME_THREAD_STACK_SIZE_STOP_EXIT   512
+#define  CME_THREAD_STACK_SIZE_STOP_ENTRY  256
+#define  CME_THREAD_STACK_SIZE_PSTATE_DB   256
+#define  CME_THREAD_STACK_SIZE_PSTATE_PMCR 256
+#if TEST_ONLY_BCE_IRR
+    #define  CME_THREAD_STACK_SIZE_BCE_IRR     256
+#endif
+
+#define  CME_THREAD_PRIORITY_STOP_EXIT     1
+#define  CME_THREAD_PRIORITY_STOP_ENTRY    2
+#define  CME_THREAD_PRIORITY_PSTATE_DB     3
+#define  CME_THREAD_PRIORITY_PSTATE_PMCR   4
+#if TEST_ONLY_BCE_IRR
+    #define  CME_THREAD_PRIORITY_BCE_IRR       30
+#endif
 
 uint8_t  G_kernel_stack[KERNEL_STACK_SIZE];
 
-uint8_t  G_p9_cme_stop_enter_thread_stack[THREAD_STACK_SIZE];
-uint8_t  G_p9_cme_stop_exit_thread_stack[STOP_THREAD_STACK_SIZE];
-uint8_t  G_p9_cme_db_thread_stack[THREAD_STACK_SIZE];
-uint8_t  G_p9_cme_pmcr_thread_stack[THREAD_STACK_SIZE];
+uint8_t  G_p9_cme_stop_exit_thread_stack[CME_THREAD_STACK_SIZE_STOP_EXIT];
+uint8_t  G_p9_cme_stop_enter_thread_stack[CME_THREAD_STACK_SIZE_STOP_ENTRY];
+uint8_t  G_p9_cme_db_thread_stack[CME_THREAD_STACK_SIZE_PSTATE_DB];
+uint8_t  G_p9_cme_pmcr_thread_stack[CME_THREAD_STACK_SIZE_PSTATE_PMCR];
+#if TEST_ONLY_BCE_IRR
+    uint8_t  G_p9_cme_bce_irr_thread_stack[CME_THREAD_STACK_SIZE_BCE_IRR];
+#endif
 
-PkThread G_p9_cme_stop_enter_thread;
 PkThread G_p9_cme_stop_exit_thread;
+PkThread G_p9_cme_stop_enter_thread;
 PkThread G_p9_cme_db_thread;
 PkThread G_p9_cme_pmcr_thread;
+#if TEST_ONLY_BCE_IRR
+    PkThread G_p9_cme_bce_irr_thread;
+#endif
 
 int
 main(int argc, char** argv)
@@ -219,7 +240,7 @@ main(int argc, char** argv)
                      (PkThreadRoutine)p9_cme_stop_exit_thread,
                      (void*)NULL,
                      (PkAddress)G_p9_cme_stop_exit_thread_stack,
-                     (size_t)THREAD_STACK_SIZE,
+                     (size_t)CME_THREAD_STACK_SIZE_STOP_EXIT,
                      (PkThreadPriority)CME_THREAD_PRIORITY_STOP_EXIT);
 
     PK_TRACE_BIN("G_p9_cme_stop_exit_thread",
@@ -231,7 +252,7 @@ main(int argc, char** argv)
                      (PkThreadRoutine)p9_cme_stop_enter_thread,
                      (void*)NULL,
                      (PkAddress)G_p9_cme_stop_enter_thread_stack,
-                     (size_t)THREAD_STACK_SIZE,
+                     (size_t)CME_THREAD_STACK_SIZE_STOP_ENTRY,
                      (PkThreadPriority)CME_THREAD_PRIORITY_STOP_ENTRY);
 
     PK_TRACE_BIN("G_p9_cme_stop_enter_thread",
@@ -243,7 +264,7 @@ main(int argc, char** argv)
                       (PkThreadRoutine)p9_cme_pstate_db_thread,
                       (void*)NULL,
                       (PkAddress)G_p9_cme_db_thread_stack,
-                      (size_t)THREAD_STACK_SIZE,
+                      (size_t)CME_THREAD_STACK_SIZE_PSTATE_DB,
                       (PkThreadPriority)CME_THREAD_PRIORITY_PSTATE_DB);
 
     PK_TRACE_BIN("G_p9_cme_db_thread",
@@ -255,12 +276,31 @@ main(int argc, char** argv)
                       (PkThreadRoutine)p9_cme_pstate_pmcr_thread,
                       (void*)NULL,
                       (PkAddress)G_p9_cme_pmcr_thread_stack,
-                      (size_t)THREAD_STACK_SIZE,
+                      (size_t)CME_THREAD_STACK_SIZE_PSTATE_PMCR,
                       (PkThreadPriority)CME_THREAD_PRIORITY_PSTATE_PMCR);
 
     PK_TRACE_BIN("G_p9_cme_pmcr_thread",
                  &G_p9_cme_pmcr_thread,
                  sizeof(G_p9_cme_pmcr_thread));
+
+#if TEST_ONLY_BCE_IRR
+
+    if ((G_bce_irr.enable = in32(CME_LCL_FLAGS) & FLAG_BCE_IRR_ENABLE))
+    {
+        // Initialize thread control blocks for the threads
+        pk_thread_create( &G_p9_cme_bce_irr_thread,
+                          (PkThreadRoutine)bce_irr_run,
+                          (void*)NULL,
+                          (PkAddress)G_p9_cme_bce_irr_thread_stack,
+                          (size_t)CME_THREAD_STACK_SIZE_BCE_IRR,
+                          (PkThreadPriority)CME_THREAD_PRIORITY_BCE_IRR);
+
+        PK_TRACE_BIN("G_p9_cme_bce_irr_thread",
+                     &G_p9_cme_bce_irr_thread,
+                     sizeof(G_p9_cme_bce_irr_thread));
+    }
+
+#endif
 
     // Make G_p9_cme_stop_exit_thread runnable
     pk_thread_resume(&G_p9_cme_stop_exit_thread);
@@ -273,6 +313,16 @@ main(int argc, char** argv)
 
     // Make G_p9_cme_pstate_thread runnable
     pk_thread_resume(&G_p9_cme_pmcr_thread);
+
+#if TEST_ONLY_BCE_IRR
+
+    if (G_bce_irr.enable)
+    {
+        // Make G_p9_cme_bce_irr_thread runnable
+        pk_thread_resume(&G_p9_cme_bce_irr_thread);
+    }
+
+#endif
 
     PK_TRACE("Launching threads");
 

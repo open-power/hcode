@@ -28,6 +28,9 @@
 #include "p9_cme_copy_scan_ring.h"
 
 extern CmeStopRecord G_cme_stop_record;
+#if HW386841_PLS_SRR1_DLS_STOP1_FIX
+CoreThreadsInfo G_dsl[MAX_CORES_PER_CME] = {0, 0};
+#endif
 
 int
 p9_cme_stop_exit()
@@ -47,6 +50,13 @@ p9_cme_stop_exit()
 #if !SKIP_EXIT_CATCHUP
     uint8_t      catchup_level;
     uint32_t     core_catchup;
+#endif
+#if HW386841_PLS_SRR1_DLS_STOP1_FIX
+    uint32_t     core_stop1        = 0;
+    uint8_t      dsl;
+    uint8_t      thread;
+    uint8_t      G_srr1[MAX_CORES_PER_CME][MAX_THREADS_PER_CORE] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
+    cme_scom_pscrs00_t pscrs;
 #endif
     ppm_sshsrc_t hist;
     uint64_t     data64;
@@ -96,13 +106,11 @@ p9_cme_stop_exit()
 
     if (spwu_wake)
     {
+        PK_TRACE("X0: setting spwu done");
         out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(17));
     }
 
 #endif
-
-    PK_TRACE("X0: Actual Stop Levels[%d %d]",
-             G_cme_stop_record.act_level_c0, G_cme_stop_record.act_level_c1);
 
     // Code Error: function should never be entered without wakeup source active
     if (!core)
@@ -128,11 +136,28 @@ p9_cme_stop_exit()
     MARK_TAG(BEGINSCOPE_STOP_EXIT, core)
     //==================================
 
-    // set target_level to STOP level for c0
-    // unless c1(also or only) wants to wakeup
-    target_level = deeper_level =
-                       (core == CME_MASK_C0) ? G_cme_stop_record.act_level_c0 :
-                       G_cme_stop_record.act_level_c1;
+#if HW386841_PLS_SRR1_DLS_STOP1_FIX
+
+    if ((core & CME_MASK_C0) && G_cme_stop_record.act_level_c0 == STOP_LEVEL_1)
+    {
+        core_stop1 |= CME_MASK_C0;
+    }
+
+    if ((core & CME_MASK_C1) && G_cme_stop_record.act_level_c1 == STOP_LEVEL_1)
+    {
+        core_stop1 |= CME_MASK_C1;
+    }
+
+    core = core & ~core_stop1;
+
+if (!core) goto STOP1_EXIT:
+#endif
+
+        // set target_level to STOP level for c0
+        // unless c1(also or only) wants to wakeup
+        target_level = deeper_level =
+                           (core == CME_MASK_C0) ? G_cme_stop_record.act_level_c0 :
+                           G_cme_stop_record.act_level_c1;
 
     // If both cores want to wakeup but are in different STOP levels,
     // set deeper_level to the deeper level targeted by deeper core
@@ -174,6 +199,33 @@ p9_cme_stop_exit()
     PK_TRACE("X0: Check and Request PCB Mux");
 
     while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+
+    //--------------------------------------------------------------------------
+    // STOP LEVEL 2 - single core express
+    //--------------------------------------------------------------------------
+
+    if (deeper_core)
+    {
+        core = CME_MASK_BC - deeper_core;
+
+        //============================
+        MARK_TAG(SX_STARTCLOCKS, core)
+        //============================
+
+        // do this again here for stop2 in addition to chiplet_reset
+        // Note IPL doesnt need to do this twice
+        PK_TRACE("4S2: Set Core Glitchless Mux to DPLL");
+        CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
+
+        PK_TRACE("X9: Start Core Clock");
+        p9_hcd_core_startclocks(core);
+
+        // Clear CPPM PECE Shadow
+        CME_PUTSCOM(CPPM_PECES, core, 0);
+
+        core = deeper_core;
+        deeper_core = 0;
+    }
 
     //--------------------------------------------------------------------------
     // STOP LEVEL 4
@@ -611,7 +663,93 @@ p9_cme_stop_exit()
     // END OF STOP EXIT
     //--------------------------------------------------------------------------
 
+#if HW386841_PLS_SRR1_CME_DLS_FIX
+STOP1_EXIT:
+    core = core | core_stop1;
+#endif
+
     PK_TRACE("Restore PSSCR.PLS+SRR1 back to actual level");
+
+#if HW386841_PLS_SRR1_CME_DLS_FIX
+    core = core | core_stop1;
+
+    if (core & CME_MASK_C0)
+    {
+        CME_GETSCOM(PPM_SSHSRC, CME_MASK_C0, CME_SCOM_AND, hist.value);
+
+        for (thread = 0; thread < MAX_THREADS_PER_CORE; thread++)
+        {
+            pscrs.value = in32((CME_LCL_PSCRS00 + (thread << 2)));
+            dsl = (G_dsl[0].vector & BITS16((thread << 2), 4)) >>
+                  SHIFT16((thread << 2) + 3);
+            PK_TRACE("PSCRS1%d %x, old dsl %d", thread, pscrs.value, dsl);
+
+            dsl = MIN(pscrs.field.esl_a_n ? pscrs.fields.rl_a_n : 0,
+                      MAX(hist.fields.act_stop_level, dsl));
+            G_dsl[0].vector = ((G_dsl[0].vector & ~BITS16((thread << 2), 4)) |
+                               (dsl << SHIFT16((thread << 2) + 3)));
+            PK_TRACE("new dsl %d", dsl);
+
+            if (dsl >= STOP_LEVEL_8)
+            {
+                G_srr1[0][thread] = MOST_STATE_LOSS;
+            }
+            else if (dsl >= STOP_LEVEL_4)
+            {
+                G_srr1[0][thread] = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
+            }
+            else
+                G_srr1[0][thread] =
+                    pscrs.field.esl_a_n ? SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS;
+        }
+
+        CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0, CME_STOP_UPDATE_DLS(G_dsl[0], G_srr1[0]));
+        PK_TRACE("DLS   C0: %x %x %x %x",
+                 G_dsl[0].threads.t0, G_dsl[0].threads.t1,
+                 G_dsl[0].threads.t2, G_dsl[0].threads.t3);
+        PK_TRACE("SRR1  C0: %x %x %x %x",
+                 G_srr1[0][0], G_srr1[0][1], G_srr1[0][2], G_srr1[0][3]);
+    }
+
+    if (core & CME_MASK_C1)
+    {
+        CME_GETSCOM(PPM_SSHSRC, CME_MASK_C1, CME_SCOM_AND, hist.value);
+
+        for (thread = 0; thread < MAX_THREADS_PER_CORE; thread++)
+        {
+            pscrs.value = in32((CME_LCL_PSCRS10 + (thread << 2)));
+            dsl = (G_dsl[1].vector & BITS16((thread << 2), 4)) >>
+                  SHIFT16((thread << 2) + 3);
+            PK_TRACE("PSCRS1%d %x, old dsl %d", thread, pscrs.value, dsl);
+
+            dsl = MIN(pscrs.field.esl_a_n ? pscrs.fields.rl_a_n : 0,
+                      MAX(hist.fields.act_stop_level, dsl));
+            G_dsl[1].vector = ((G_dsl[1].vector & ~BITS16((thread << 2), 4)) |
+                               (dsl << SHIFT16((thread << 2) + 3)));
+            PK_TRACE("new dsl %d", dsl);
+
+            if (G_dsl[1][thread] >= STOP_LEVEL_8)
+            {
+                G_srr1[1][thread] = MOST_STATE_LOSS;
+            }
+            else if (G_dsl[1][thread] >= STOP_LEVEL_4)
+            {
+                G_srr1[1][thread] = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
+            }
+            else
+                G_srr1[1][thread] =
+                    pscrs.field.esl_a_n ? SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS;
+        }
+
+        CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1, CME_STOP_UPDATE_DLS(G_dsl[1], G_srr1[1]));
+        PK_TRACE("DLS   C1: %x %x %x %x",
+                 G_dsl[1].threads.t0, G_dsl[1].threads.t1,
+                 G_dsl[1].threads.t2, G_dsl[1].threads.t3);
+        PK_TRACE("SRR1  C0: %x %x %x %x",
+                 G_srr1[1][0], G_srr1[1][1], G_srr1[1][2], G_srr1[1][3]);
+    }
+
+#else
 
     if (core & CME_MASK_C0)
     {
@@ -683,6 +821,8 @@ p9_cme_stop_exit()
         }
     }
 
+#endif
+
     PK_TRACE("XF: Now Wakeup the Core(pm_exit=1)");
     out32(CME_LCL_SICR_OR, core << SHIFT32(5));
 
@@ -704,13 +844,6 @@ p9_cme_stop_exit()
                             STOP_REQ_DISABLE,
                             STOP_ACT_DISABLE)
 
-    G_cme_stop_record.core_running |=  core;
-    G_cme_stop_record.core_stopgpe &= ~core;
-#if SPWU_AUTO
-    out32(CME_LCL_LMCR_CLR, (core << SHIFT32(13)));
-#endif
-    out32(CME_LCL_LMCR_CLR, (core << SHIFT32(15)));
-
     if (core & CME_MASK_C0)
     {
         G_cme_stop_record.req_level_c0 = 0;
@@ -723,21 +856,34 @@ p9_cme_stop_exit()
         G_cme_stop_record.act_level_c1 = 0;
     }
 
-    PK_TRACE("XF: Drop pm_exit to allow core to run if spwu is not present");
+    G_cme_stop_record.core_running |=  core;
+    G_cme_stop_record.core_stopgpe &= ~core;
 
+    // HALTED_STOP_OVERRIDE_DISABLE = 0
+    out32(CME_LCL_LMCR_CLR, (core << SHIFT32(15)));
+
+    PK_TRACE("XF: Drop pm_exit to allow core to run if spwu is not present");
 #if SPWU_AUTO
+
+    // clear auto spwu disable, enable auto spwu
+    out32(CME_LCL_LMCR_CLR, core << SHIFT32(13));
+
+    //clear pm_exit
     out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
+
 #else
 
     if (spwu_stop)
     {
+        // done = spwu + !pm_active + !core_chiplet_fence + !pcbmux_req + !pcbmux_grant
+        // chiplet fence forces pm_active to zero
         PK_TRACE("XF: setting spwu done");
         out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));
     }
 
     if ((core = (core & (~spwu_stop))))
     {
-        PK_TRACE("XF: spwu is not done");
+        PK_TRACE("XF: drop pm_exit for not spwu core");
         out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
     }
 

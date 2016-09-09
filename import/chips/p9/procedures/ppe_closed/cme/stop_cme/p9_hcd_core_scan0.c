@@ -30,8 +30,25 @@ int
 p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
 {
     int rc = CME_STOP_SUCCESS;
-    uint64_t scom_data;
+#if BROADSIDE_SCAN0
+    // clean up the scan region
+    CME_PUTSCOM(PERV_SCAN_REGION_TYPE, core, 0);
 
+    // clean up OPCG capture reg0
+    CME_PUTSCOM(PERV_OPCG_CAPT0, core, 0);
+    // clean up OPCG capture reg1
+    CME_PUTSCOM(PERV_OPCG_CAPT1, core, 0);
+    // clean up OPCG capture reg2
+    CME_PUTSCOM(PERV_OPCG_CAPT2, core, 0);
+
+    // all regions    + ARY/NSL
+    CME_PUTSCOM(PERV_CLK_REGION, core, (BITS64(4, 11) | BITS64(49, 2)));
+    // NSL fill for 16 cycles, scan_count=0
+    CME_PUTSCOM(PERV_OPCG_REG1,  core, BIT64(59));
+    // OPCG GO, LBIST mode
+    CME_PUTSCOM(PERV_OPCG_REG0,  core, BIT64(1));
+#else
+    uint64_t scom_data;
     PK_TRACE("raise Vital clock region fence");
     CME_PUTSCOM(PERV_CPLT_CTRL1_OR, core, BIT64(3));
 
@@ -70,6 +87,6 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
 
     PK_TRACE("Clear Scan Select Register");
     CME_PUTSCOM(PERV_SCAN_REGION_TYPE, core, 0);
-
+#endif
     return rc;
 }

@@ -96,19 +96,21 @@ IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_IPI4_LO_PRIORITY
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_RESERVED_63
 EXTERNAL_IRQ_TABLE_END
 
-#define  KERNEL_STACK_SIZE  512
-#define  THREAD_STACK_SIZE  512
+#define  KERNEL_STACK_SIZE                  512
 
-#define  SGPE_THREAD_PRIORITY_STOP_EXIT   1
-#define  SGPE_THREAD_PRIORITY_STOP_ENTRY  2
+#define  SGPE_THREAD_STACK_SIZE_STOP_EXIT   512
+#define  SGPE_THREAD_STACK_SIZE_STOP_ENTRY  256
+
+#define  SGPE_THREAD_PRIORITY_STOP_EXIT     1
+#define  SGPE_THREAD_PRIORITY_STOP_ENTRY    2
 
 uint8_t  G_kernel_stack[KERNEL_STACK_SIZE];
 
-uint8_t  G_p9_sgpe_stop_enter_thread_stack[THREAD_STACK_SIZE];
-uint8_t  G_p9_sgpe_stop_exit_thread_stack[THREAD_STACK_SIZE];
+uint8_t  G_p9_sgpe_stop_exit_thread_stack[SGPE_THREAD_STACK_SIZE_STOP_EXIT];
+uint8_t  G_p9_sgpe_stop_enter_thread_stack[SGPE_THREAD_STACK_SIZE_STOP_ENTRY];
 
-PkThread G_p9_sgpe_stop_enter_thread;
 PkThread G_p9_sgpe_stop_exit_thread;
+PkThread G_p9_sgpe_stop_enter_thread;
 
 extern void (*ctor_start_address)() __attribute__ ((section (".rodata")));
 extern void (*ctor_end_address)() __attribute__ ((section (".rodata")));
@@ -134,6 +136,11 @@ extern "C" {
 int
 main(int argc, char** argv)
 {
+    if (in32(OCB_OCCFLG) & BIT32(12))
+    {
+        asm volatile ("trap");
+    }
+
     // Initializes kernel data (stack, threads, timebase, timers, etc.)
     pk_initialize((PkAddress)G_kernel_stack,
                   KERNEL_STACK_SIZE,
@@ -152,7 +159,7 @@ main(int argc, char** argv)
                      (PkThreadRoutine)p9_sgpe_stop_enter_thread,
                      (void*)NULL,
                      (PkAddress)G_p9_sgpe_stop_enter_thread_stack,
-                     (size_t)THREAD_STACK_SIZE,
+                     (size_t)SGPE_THREAD_STACK_SIZE_STOP_ENTRY,
                      (PkThreadPriority)SGPE_THREAD_PRIORITY_STOP_ENTRY);
 
     PK_TRACE_BIN("G_p9_sgpe_stop_enter_thread",
@@ -164,7 +171,7 @@ main(int argc, char** argv)
                      (PkThreadRoutine)p9_sgpe_stop_exit_thread,
                      (void*)NULL,
                      (PkAddress)G_p9_sgpe_stop_exit_thread_stack,
-                     (size_t)THREAD_STACK_SIZE,
+                     (size_t)SGPE_THREAD_STACK_SIZE_STOP_EXIT,
                      (PkThreadPriority)SGPE_THREAD_PRIORITY_STOP_EXIT);
 
     PK_TRACE_BIN("G_p9_sgpe_stop_exit_thread",

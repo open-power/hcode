@@ -46,8 +46,5 @@ p9_hcd_core_scominit(uint32_t core)
     scom_data = scom_data | BIT64(5);
     CME_PUTSCOM(C_THERM_MODE_REG, core, scom_data);
 
-    PK_TRACE("Set core as ready to run in STOP history register");
-    CME_PUTSCOM(PPM_SSHSRC, core, 0);
-
     return rc;
 }

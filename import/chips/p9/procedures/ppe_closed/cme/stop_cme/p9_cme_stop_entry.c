@@ -60,6 +60,7 @@ p9_cme_stop_entry()
     uint32_t        deeper_core         = 0;
     uint32_t        core_aborted        = 0;
     uint32_t        core_catchup        = 0;
+    uint32_t        core_stop1          = 0;
     uint32_t        core;
     uint32_t        loop;
     uint32_t        pm_states;
@@ -129,12 +130,24 @@ p9_cme_stop_entry()
         {
             G_cme_stop_record.req_level_c0 =
                 (pm_states & BITS32(4, 4)) >> SHIFT32(7);
+
+            if (G_cme_stop_record.req_level_c0 == STOP_LEVEL_1)
+            {
+                G_cme_stop_record.act_level_c0 = STOP_LEVEL_1;
+                core_stop1 |= CME_MASK_C0;
+            }
         }
 
         if (core & CME_MASK_C1)
         {
             G_cme_stop_record.req_level_c1 =
                 (pm_states & BITS32(8, 4)) >> SHIFT32(11);
+
+            if (G_cme_stop_record.req_level_c1 == STOP_LEVEL_1)
+            {
+                G_cme_stop_record.act_level_c1 = STOP_LEVEL_1;
+                core_stop1 |= CME_MASK_C1;
+            }
         }
 
         G_cme_stop_record.core_running &= ~core;
@@ -146,16 +159,32 @@ p9_cme_stop_entry()
                  G_cme_stop_record.act_level_c1);
 
         // Return error if target STOP level == 1(Nap)
-        if((core == CME_MASK_C0 &&
-            G_cme_stop_record.req_level_c0 <= STOP_LEVEL_1) ||
-           (core == CME_MASK_C1 &&
-            G_cme_stop_record.req_level_c1 <= STOP_LEVEL_1) ||
-           (core == CME_MASK_BC &&
-            (G_cme_stop_record.req_level_c0 <= STOP_LEVEL_1 ||
-             G_cme_stop_record.req_level_c1 <= STOP_LEVEL_1)))
+        if(core_stop1)
         {
+#if HW386841_PLS_SRR1_DLS_STOP1_FIX
+            // Acknowledge the STOP Entry to PC with a pulse
+            out32(CME_LCL_SICR_OR,  core_stop1 << SHIFT32(1));
+            out32(CME_LCL_SICR_CLR, core_stop1 << SHIFT32(1));
+
+            CME_STOP_UPDATE_HISTORY(core_stop1,
+                                    STOP_CORE_IS_GATED,
+                                    STOP_TRANS_COMPLETE,
+                                    STOP_LEVEL_1,
+                                    STOP_LEVEL_1,
+                                    STOP_REQ_ENABLE,
+                                    STOP_ACT_ENABLE);
+
+            core = core & ~core_stop1;
+
+            if (!core)
+            {
+                break;
+            }
+
+#else
             PK_TRACE("Error: stop 1 requested to hcode");
             pk_halt();
+#endif
         }
 
         //----------------------------------------------------------------------
@@ -233,10 +262,11 @@ p9_cme_stop_entry()
         //=============================
 
         /// Set LMCR bits 12/13, 14/15 (override disables)
+        out32(CME_LCL_LMCR_OR, (core << SHIFT32(15)));
 #if SPWU_AUTO
         out32(CME_LCL_LMCR_OR, (core << SHIFT32(13)));
 #endif
-        out32(CME_LCL_LMCR_OR, (core << SHIFT32(15)));
+
         PK_TRACE("SE2.h");
         // Raise Core-L2 + Core-CC Quiesces
         out32(CME_LCL_SICR_OR, (core << SHIFT32(7)) | (core << SHIFT32(9)));
@@ -508,18 +538,17 @@ p9_cme_stop_entry()
 
         if (target_level == 3)
         {
-
-            //==========================
-            MARK_TAG(SE_CORE_VMIN, core)
-            //==========================
-
-            PK_TRACE("SE3.a");
-            // Enable IVRM if not already
-
-            PK_TRACE("SE3.b");
-
-            // Drop to Vmin
             /*
+                        //==========================
+                        MARK_TAG(SE_CORE_VMIN, core)
+                        //==========================
+
+                        PK_TRACE("SE3.a");
+                        // Enable IVRM if not already
+
+                        PK_TRACE("SE3.b");
+
+                        // Drop to Vmin
                         if(core & CME_MASK_C0)
                         {
                             G_cme_stop_record.act_level_c0 = STOP_LEVEL_3;
@@ -868,7 +897,7 @@ p9_cme_stop_entry()
     //--------------------------------------------------------------------------
 
     // Release PPM Write Protection
-    CME_PUTSCOM(CPPM_CPMMR_CLR, core, BIT64(0));
+    CME_PUTSCOM(CPPM_CPMMR_CLR, CME_MASK_BC, BIT64(0));
 
     //============================
     MARK_TRAP(ENDSCOPE_STOP_ENTRY)

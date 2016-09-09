@@ -27,6 +27,30 @@
 #include "p9_sgpe_stop_enter_marks.h"
 
 extern SgpeStopRecord G_sgpe_stop_record;
+#if HW386311_PBIE_RW_PTR_STOP11_FIX
+uint64_t G_ring_save[MAX_QUADS][8] =
+{
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}
+};
+uint64_t G_ring_spin[10][2] =
+{
+    {0,    0},
+    {5039, 0xE000000000000000}, //3
+    {5100, 0xC1E061FFED5F0000}, //29
+    {5664, 0xE000000000000000}, //3
+    {5725, 0xC1E061FFED5F0000}, //29
+    {5973, 0xE000000000000000}, //3
+    {6034, 0xC1E061FFED5F0000}, //29
+    {6282, 0xE000000000000000}, //3
+    {6343, 0xC1E061FFED5F0000}, //29
+    {17871, 0}                  //128
+};
+#endif
 
 int
 p9_sgpe_stop_entry()
@@ -43,6 +67,9 @@ p9_sgpe_stop_entry()
     uint64_t     scom_data;
     uint64_t     temp_data;
     ppm_sshsrc_t hist;
+#if HW386311_PBIE_RW_PTR_STOP11_FIX
+    int          spin;
+#endif
 
     //================================
     MARK_TAG(BEGINSCOPE_STOP_ENTRY, 0)
@@ -56,7 +83,7 @@ p9_sgpe_stop_entry()
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
 
-        if (G_sgpe_stop_record.group.qswu[VECTOR_EXIT] & BIT32(qloop))
+        if (G_sgpe_stop_record.group.qswu[VECTOR_CONFIG] & BIT32(qloop))
         {
             continue;
         }
@@ -127,6 +154,8 @@ p9_sgpe_stop_entry()
         G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG];
     G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] &=
         G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG];
+    G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &=
+        G_sgpe_stop_record.group.quad[VECTOR_CONFIG];
 
     PK_TRACE("Core Entry Vectors:   X[%x] X0[%x] X1[%x] Q[%x]",
              G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY],
@@ -301,7 +330,7 @@ p9_sgpe_stop_entry()
             climit = CORES_PER_QUAD;
             G_sgpe_stop_record.state[qloop].act_state_x1 = STOP_LEVEL_8;
             entry_ongoing[1] =
-                G_sgpe_stop_record.state[qloop].req_state_x0 == STOP_LEVEL_8 ?
+                G_sgpe_stop_record.state[qloop].req_state_x1 == STOP_LEVEL_8 ?
                 STOP_TRANS_COMPLETE : STOP_TRANS_ENTRY;
         }
         else
@@ -365,7 +394,7 @@ p9_sgpe_stop_entry()
         // Update Quad STOP History
         SGPE_STOP_UPDATE_HISTORY(qloop,
                                  QUAD_ADDR_BASE,
-                                 STOP_CORE_IS_GATED,
+                                 STOP_CACHE_IS_GATED,
                                  STOP_TRANS_ENTRY,
                                  G_sgpe_stop_record.state[qloop].req_state_q,
                                  STOP_LEVEL_11,
@@ -414,11 +443,15 @@ p9_sgpe_stop_entry()
         {
 #if !SKIP_L3_PURGE_ABORT
 
-            if (in32(OCB_OISR1) & (BITS32(15, 2) & BIT32(19)))
+            if (in32(OCB_OISR1) & (BITS32(15, 2) | BIT32(19)))
             {
+                PK_TRACE("SE: interrupt detected");
+
                 if ((in32(OCB_OPITNPRA(2)) & BITS32((qloop << 2), 4)) ||
                     (in32(OCB_OPITNPRA(3)) & BITS32((qloop << 2), 4)))
                 {
+                    PK_TRACE("SE: core interrupt detected");
+
                     for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
                     {
                         if ((in32(OCB_OPIT2CN(((qloop << 2) + cloop))) &
@@ -426,6 +459,7 @@ p9_sgpe_stop_entry()
                             (in32(OCB_OPIT3CN(((qloop << 2) + cloop))) &
                              TYPE3_PAYLOAD_EXIT_EVENT))
                         {
+                            PK_TRACE("SE: core wakeup detected");
                             l3_purge_aborted = 1;
                             break;
                         }
@@ -435,6 +469,7 @@ p9_sgpe_stop_entry()
                 if ((in32(OCB_OPIT6PRB) & BIT32(qloop)) &&
                     (in32(OCB_OPIT6QN(qloop)) & TYPE6_PAYLOAD_EXIT_EVENT))
                 {
+                    PK_TRACE("SE: quad wakeup detected");
                     l3_purge_aborted = 1;
                 }
 
@@ -654,6 +689,60 @@ p9_sgpe_stop_entry()
         MARK_TAG(SE_POWER_OFF_CACHE, (32 >> qloop))
         //=========================================
 
+#if HW386311_PBIE_RW_PTR_STOP11_FIX
+        // bit4,5,11 = perv/eqpb/pbieq, bit59 = inex
+        PK_TRACE("SE: Setup scan register to select the ring");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), BITS64(4, 2) | BIT64(11) | BIT64(59));
+
+        PK_TRACE("SE: checkword set");
+        scom_data = 0xa5a5a5a5a5a5a5a5;
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+
+        for(spin = 1;; spin++)
+        {
+            PK_TRACE("SE: spin ring loop%d", spin);
+            scom_data = (G_ring_spin[spin][0] - G_ring_spin[spin - 1][0]) << 32;
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data);
+
+            PK_TRACE("SE: Poll OPCG done for ring spin");
+
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x10000100, qloop), scom_data);
+            }
+            while(~scom_data & BIT64(8));
+
+            if (spin == 9)
+            {
+                PK_TRACE("SE: checkword check");
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+
+                if (scom_data != 0xa5a5a5a5a5a5a5a5)
+                {
+                    PK_TRACE("checkword[%x%x] failed", UPPER32(scom_data), LOWER32(scom_data));
+                    pk_halt();
+                }
+
+                break;
+            }
+
+            PK_TRACE("SE: save pbie read ptr");
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+            EXTRACT_RING_BITS(G_ring_spin[spin][1], scom_data, G_ring_save[qloop][spin - 1]);
+            PK_TRACE("SE: mask: %8x %8x",
+                     UPPER32(G_ring_spin[spin][1]),
+                     LOWER32(G_ring_spin[spin][1]));
+            PK_TRACE("SE: ring: %8x %8x",
+                     UPPER32(scom_data),
+                     LOWER32(scom_data));
+            PK_TRACE("SE: save: %8x %8x",
+                     UPPER32(G_ring_save[qloop][spin - 1]),
+                     LOWER32(G_ring_save[qloop][spin - 1]));
+        }
+
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), 0);
+#endif
+
         // DD: Assert Cache Vital Thold/PCB Fence/Electrical Fence
         PK_TRACE("SE11.q");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(25));
@@ -755,7 +844,7 @@ p9_sgpe_stop_entry()
 
         SGPE_STOP_UPDATE_HISTORY(qloop,
                                  QUAD_ADDR_BASE,
-                                 STOP_CORE_IS_GATED,
+                                 STOP_CACHE_IS_GATED,
                                  STOP_TRANS_COMPLETE,
                                  STOP_LEVEL_11,
                                  STOP_LEVEL_11,
@@ -778,7 +867,6 @@ p9_sgpe_stop_entry()
     {
         if (G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] & BIT32(qloop))
         {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_CLR, qloop), BIT64(0));
             G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] &= ~BIT32(qloop);
         }
     }

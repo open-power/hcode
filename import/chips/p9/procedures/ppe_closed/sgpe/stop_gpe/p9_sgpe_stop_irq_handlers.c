@@ -101,7 +101,9 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
     }
 
     // clear group before analyzing input
+    G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] = 0;
     G_sgpe_stop_record.group.core[VECTOR_ENTRY] = 0;
+    G_sgpe_stop_record.group.qswu[VECTOR_EXIT]  = 0;
     G_sgpe_stop_record.group.core[VECTOR_EXIT]  = 0;
     G_sgpe_stop_record.group.ex_l[VECTOR_EXIT]  = 0;
     G_sgpe_stop_record.group.ex_r[VECTOR_EXIT]  = 0;
@@ -124,18 +126,27 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             if (payload & TYPE6_PAYLOAD_EXIT_EVENT)
             {
                 PK_TRACE("q[%d] request special wakeup", qloop);
-                G_sgpe_stop_record.group.qswu[VECTOR_EXIT] |= BIT32(qloop);
-                G_sgpe_stop_record.group.quad[VECTOR_EXIT] |= BIT32(qloop);
-                G_sgpe_stop_record.group.ex_l[VECTOR_EXIT] |= BIT32(qloop);
-                G_sgpe_stop_record.group.ex_r[VECTOR_EXIT] |= BIT32(qloop);
-                G_sgpe_stop_record.group.ex_b[VECTOR_EXIT] |=
-                    BITS32((qloop << 1), 2);
+
+                if (G_sgpe_stop_record.group.qswu[VECTOR_CONFIG] & BIT32(qloop))
+                {
+                    PK_TRACE("q[%d] already in special wakeup", qloop);
+                }
+                else
+                {
+                    G_sgpe_stop_record.group.qswu[VECTOR_EXIT] |= BIT32(qloop);
+                    G_sgpe_stop_record.group.quad[VECTOR_EXIT] |= BIT32(qloop);
+                    G_sgpe_stop_record.group.ex_l[VECTOR_EXIT] |= BIT32(qloop);
+                    G_sgpe_stop_record.group.ex_r[VECTOR_EXIT] |= BIT32(qloop);
+                    G_sgpe_stop_record.group.ex_b[VECTOR_EXIT] |=
+                        BITS32((qloop << 1), 2);
+                }
             }
             else
             {
-                PK_TRACE("q[%d] drop special wakeup", qloop);
-                G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] |= BIT32(qloop);
-                G_sgpe_stop_record.group.qswu[VECTOR_EXIT]  &= ~BIT32(qloop);
+                PK_TRACE("q[%d] drop special wakeup, clearing done", qloop);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_CLR, qloop), BIT64(0));
+                G_sgpe_stop_record.group.qswu[VECTOR_ENTRY]  |=  BIT32(qloop);
+                G_sgpe_stop_record.group.qswu[VECTOR_CONFIG] &= ~BIT32(qloop);
             }
         }
 
@@ -246,23 +257,30 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
              G_sgpe_stop_record.group.core[VECTOR_ENTRY],
              G_sgpe_stop_record.group.core[VECTOR_EXIT]);
 
-    if ((!G_sgpe_stop_record.group.core[VECTOR_EXIT]) &&
-        (!G_sgpe_stop_record.group.core[VECTOR_ENTRY]))
+    if ((!G_sgpe_stop_record.group.core[VECTOR_EXIT])  &&
+        (!G_sgpe_stop_record.group.core[VECTOR_ENTRY]) &&
+        (!G_sgpe_stop_record.group.qswu[VECTOR_EXIT])  &&
+        (!G_sgpe_stop_record.group.qswu[VECTOR_ENTRY]))
     {
+        PK_TRACE("Nothing to do, clear masks");
         out32(OCB_OIMR1_CLR, (BITS32(15, 2) | BIT32(19)));
     }
     else
     {
-        if (G_sgpe_stop_record.group.core[VECTOR_EXIT])
+        if (G_sgpe_stop_record.group.core[VECTOR_EXIT] ||
+            G_sgpe_stop_record.group.qswu[VECTOR_EXIT])
         {
             PK_TRACE("unblock exit");
             pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));
         }
 
-        if (G_sgpe_stop_record.group.core[VECTOR_ENTRY])
+        if (G_sgpe_stop_record.group.core[VECTOR_ENTRY] ||
+            G_sgpe_stop_record.group.qswu[VECTOR_ENTRY])
         {
             PK_TRACE("unblock entry");
             pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
         }
+
+        PK_TRACE("RFI");
     }
 }

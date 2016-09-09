@@ -34,6 +34,11 @@
 /// \brief Application specific overrides go here.
 ///
 
+// @todo RTC 161182
+#define HW386311_PBIE_RW_PTR_STOP11_FIX 1
+#define BROADSIDE_SCAN0                 0
+#define FUSED_CORE_MODE_SCAN_FIX        0
+
 #define SIMICS_TUNING 0
 #define USE_SIMICS_IO 0
 #define DEV_DEBUG     1
@@ -47,12 +52,11 @@
 #define SKIP_L3_PURGE_ABORT  0
 #define ISTEP15_HACK         0
 
-
 #if EPM_P9_TUNING
     #define SKIP_CME_BOOT_STOP11 1
     #define SKIP_CME_BOOT_IPL_HB 1
-    #define SKIP_ARRAYINIT       1
-    #define SKIP_SCAN0           1
+    #define SKIP_ARRAYINIT       0
+    #define SKIP_SCAN0           0
 #else
     #define SKIP_CME_BOOT_STOP11 0
     #define SKIP_CME_BOOT_IPL_HB 1
@@ -62,7 +66,6 @@
 #define SKIP_INITF               0
 
 // --------------------
-
 
 #if EPM_P9_TUNING
     #define PK_TRACE_BUFFER_WRAP_MARKER 1

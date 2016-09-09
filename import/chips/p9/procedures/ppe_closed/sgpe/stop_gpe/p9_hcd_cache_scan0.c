@@ -30,8 +30,25 @@ int
 p9_hcd_cache_scan0(uint32_t quad, uint64_t regions, uint64_t scan_type)
 {
     int rc = SGPE_STOP_SUCCESS;
-    uint64_t scom_data;
+#if BROADSIDE_SCAN0
+    // clean up the scan region
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_SCAN_REGION_TYPE, quad), 0);
 
+    // clean up OPCG capture reg0
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_OPCG_CAPT0, quad), 0);
+    // clean up OPCG capture reg1
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_OPCG_CAPT1, quad), 0);
+    // clean up OPCG capture reg2
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_OPCG_CAPT2, quad), 0);
+
+    // all regions    + ARY/NSL
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_CLK_REGION, quad), (BITS64(4, 11) | BITS64(49, 2)));
+    // NSL fill for 16 cycles, scan_count=0
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_OPCG_REG1,  quad), BIT64(59));
+    // OPCG GO, LBIST mode
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_OPCG_REG0,  quad), BIT64(1));
+#else
+    uint64_t scom_data;
     PK_TRACE("raise Vital clock region fence");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_CPLT_CTRL1_OR, quad), BIT64(3));
 
@@ -70,6 +87,6 @@ p9_hcd_cache_scan0(uint32_t quad, uint64_t regions, uint64_t scan_type)
 
     PK_TRACE("Clear Scan Select Register");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_SCAN_REGION_TYPE, quad), 0);
-
+#endif
     return rc;
 }

@@ -53,14 +53,71 @@ p9_cme_stop_event_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_EVENT_HANDLER)
     PK_TRACE("STOP-IRQ: %d", irq);
-    pk_semaphore_post((PkSemaphore*)arg);
+
+    if (in32(CME_LCL_EISR) & BITS32(12, 6))
+    {
+        PK_TRACE("lanuch exit");
+        pk_semaphore_post((PkSemaphore*)(&(G_cme_stop_record.sem[1])));
+    }
+    else if (in32(CME_LCL_EISR) & BITS32(20, 2))
+    {
+        PK_TRACE("lanuch entry");
+        pk_semaphore_post((PkSemaphore*)(&(G_cme_stop_record.sem[0])));
+    }
 }
 
 void
-p9_cme_stop_doorbell_handler(void* arg, PkIrqId irq)
+p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
 {
-    PkMachineContext  ctx;
-    MARK_TRAP(STOP_DOORBELL_HANDLER)
-    PK_TRACE("DB-IRQ: %d", irq);
+    PkMachineContext ctx;
+    MARK_TRAP(STOP_DB1_HANDLER)
+    PK_TRACE("DB1-IRQ: %d", irq);
+    pk_irq_vec_restore(&ctx);
+}
+
+void
+p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
+{
+    PkMachineContext ctx;
+    cppm_cmedb2_t    db2c0, db2c1;
+
+    MARK_TRAP(STOP_DB2_HANDLER)
+    PK_TRACE("DB2-IRQ: %d", irq);
+
+    CME_GETSCOM(CPPM_CMEDB2, CME_MASK_C0, CME_SCOM_AND, db2c0.value);
+    CME_GETSCOM(CPPM_CMEDB2, CME_MASK_C1, CME_SCOM_AND, db2c1.value);
+    CME_PUTSCOM(CPPM_CMEDB2, CME_MASK_BC, 0);
+    out32(CME_LCL_EISR_CLR,  BITS32(18, 2));
+
+    if (db2c0.fields.cme_message_numbern == DB2_BLOCK_WKUP_ENTRY)
+    {
+        G_cme_stop_record.core_blockwu |= CME_MASK_C0;
+        g_eimr_override                |= IRQ_VEC_PCWU_C0;
+    }
+    else if (db2c0.fields.cme_message_numbern == DB2_BLOCK_WKUP_EXIT)
+    {
+        G_cme_stop_record.core_blockwu &= ~CME_MASK_C0;
+        g_eimr_override                &= ~IRQ_VEC_PCWU_C0;
+    }
+
+    if (db2c1.fields.cme_message_numbern == DB2_BLOCK_WKUP_ENTRY)
+    {
+        G_cme_stop_record.core_blockwu |= CME_MASK_C1;
+        g_eimr_override                |= IRQ_VEC_PCWU_C1;
+    }
+    else if (db2c1.fields.cme_message_numbern == DB2_BLOCK_WKUP_EXIT)
+    {
+        G_cme_stop_record.core_blockwu &= ~CME_MASK_C1;
+        g_eimr_override                &= ~IRQ_VEC_PCWU_C1;
+    }
+
+    out32(CME_LCL_SICR_OR,  G_cme_stop_record.core_blockwu << SHIFT32(3));
+    out32(CME_LCL_SICR_CLR,
+          (~G_cme_stop_record.core_blockwu & CME_MASK_BC) << SHIFT32(3));
+
+    out32(CME_LCL_FLAGS_OR, G_cme_stop_record.core_blockwu << SHIFT32(9));
+    out32(CME_LCL_FLAGS_CLR,
+          (~G_cme_stop_record.core_blockwu & CME_MASK_BC) << SHIFT32(9));
+
     pk_irq_vec_restore(&ctx);
 }

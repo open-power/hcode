@@ -114,6 +114,9 @@
 #define PERV_SCAN_REGION_TYPE  0x20030005
 #define PERV_CLK_REGION        0x20030006
 #define PERV_BIST              0x2003000B
+#define PERV_OPCG_CAPT0        0x20030010
+#define PERV_OPCG_CAPT1        0x20030011
+#define PERV_OPCG_CAPT2        0x20030012
 #define PERV_CPLT_STAT0        0x20000100
 
 /// Macro to update STOP History
@@ -135,6 +138,15 @@
      (((uint64_t)pls) << SHIFT64(60)) |  ((uint64_t)srr1_t3)                 | \
      (BIT64(32) | BIT64(40) | BIT64(48) | BIT64(56)))
 
+#if HW386841_PLS_SRR1_DLS_STOP1_FIX
+#define CME_STOP_UPDATE_DLS(dls, srr1)                                         \
+    ((((uint64_t)dls.threads.t0) << SHIFT64(36)) | (((uint64_t)srr1[0]) << SHIFT64(39)) | \
+     (((uint64_t)dls.threads.t1) << SHIFT64(44)) | (((uint64_t)srr1[1]) << SHIFT64(47)) | \
+     (((uint64_t)dls.threads.t2) << SHIFT64(52)) | (((uint64_t)srr1[2]) << SHIFT64(55)) | \
+     (((uint64_t)dls.threads.t3) << SHIFT64(60)) |  ((uint64_t)srr1[3])                 | \
+     (BIT64(32) | BIT64(40) | BIT64(48) | BIT64(56)))
+#endif
+
 /// CME STOP Return Codes
 enum CME_STOP_RETURN_CODE
 {
@@ -146,6 +158,8 @@ enum CME_STOP_IRQ_SHORT_NAME
 {
     IRQ_DB1_C0                       = CMEHW_IRQ_DOORBELL1_C0,
     IRQ_DB1_C1                       = CMEHW_IRQ_DOORBELL1_C1,
+    IRQ_DB2_C0                       = CMEHW_IRQ_DOORBELL2_C0,
+    IRQ_DB2_C1                       = CMEHW_IRQ_DOORBELL2_C1,
     IRQ_STOP_C0                      = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0,
     IRQ_STOP_C1                      = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C1,
     IRQ_PC_C0                        = CMEHW_IRQ_PC_INTR_PENDING_C0,
@@ -162,6 +176,8 @@ enum CME_IRQ_VECTORS
     IRQ_VEC_WAKE_C1 = BIT64(13) | BIT64(15) | BIT64(17),
     IRQ_VEC_SGPE_C0 = BIT64(12) | BIT64(20),
     IRQ_VEC_SGPE_C1 = BIT64(13) | BIT64(21),
+    IRQ_VEC_PCWU_C0 = BIT64(12),
+    IRQ_VEC_PCWU_C1 = BIT64(13),
     IRQ_VEC_STOP_C0 = BIT64(20),
     IRQ_VEC_STOP_C1 = BIT64(21)
 };
@@ -169,6 +185,10 @@ enum CME_IRQ_VECTORS
 enum CME_STOP_FLAGS
 {
     FLAG_STOP_READY                  = BIT32(0),
+    FLAG_BLOCK_WKUP_C0               = BIT32(8),
+    FLAG_BLOCK_WKUP_C1               = BIT32(9),
+    FLAG_BCE_IRR_ENABLE              = BIT32(25),
+    FLAG_EX1_INDICATOR               = BIT32(26),
     FLAG_ENTRY_FIRST_C0              = BIT32(28),
     FLAG_ENTRY_FIRST_C1              = BIT32(29),
     FLAG_PARTIAL_GOOD_C0             = BIT32(30),
@@ -181,6 +201,13 @@ enum CME_STOP_PIG_TYPES
     PIG_TYPE3                        = 3
 };
 
+enum CME_DOORBELL_MESSAGE_ID
+{
+    DB1_WKUP_GRANTED                 = 0x01,
+    DB2_BLOCK_WKUP_ENTRY             = 0x01,
+    DB2_BLOCK_WKUP_EXIT              = 0x02
+};
+
 enum CME_STOP_SRR1
 {
     MOST_STATE_LOSS                  = 3,
@@ -188,6 +215,36 @@ enum CME_STOP_SRR1
     NO_STATE_LOSS                    = 1
 };
 
+#if HW386841_PLS_SRR1_DLS_STOP1_FIX
+typedef union
+{
+    uint16_t vector;
+    struct
+    {
+        uint8_t t0 : 4;
+        uint8_t t1 : 4;
+        uint8_t t2 : 4;
+        uint8_t t3 : 4;
+    } threads;
+} CoreThreadsInfo;
+#endif
+
+#if TEST_ONLY_BCE_IRR
+typedef struct
+{
+    uint32_t cmeid;
+    uint32_t sbase;
+    uint32_t mbase;
+    union
+    {
+        uint32_t word;
+        uint8_t  byte[4];
+    } data;
+    uint8_t enable;
+} BceIrritator;
+#endif
+
+/// Scom restore block
 typedef struct
 {
     uint32_t pad;
@@ -206,15 +263,17 @@ typedef struct
     // need to be a global state for aborting entry
     uint8_t       act_level_c0;
     uint8_t       act_level_c1;
+    // partial good configuration,
+    // todo: consider partial good changed during stop,
+    uint32_t      core_enabled;
     // whether core is in running state,
     // need to be a global state for aborted entry detection and wakeup masking
     uint32_t      core_running;
     // core stop handoff to sgpe from cme
     // need to be a global state for wakeup and pm_active masking
     uint32_t      core_stopgpe;
-    // partial good configuration,
-    // todo: consider partial good changed during stop,
-    uint32_t      core_enabled;
+    // core in block wakeup mode
+    uint32_t      core_blockwu;
     PkSemaphore   sem[2];
 } CmeStopRecord;
 
@@ -225,10 +284,9 @@ void p9_cme_stop_exit_thread(void*);
 int  p9_cme_stop_entry();
 int  p9_cme_stop_exit();
 
-void p9_cme_stop_enter_semaphore_callback(void*);
-void p9_cme_stop_exit_semaphore_callback(void*);
 void p9_cme_stop_event_handler(void*, PkIrqId);
-void p9_cme_stop_doorbell_handler(void*, PkIrqId);
+void p9_cme_stop_db1_handler(void*, PkIrqId);
+void p9_cme_stop_db2_handler(void*, PkIrqId);
 
 int  p9_hcd_core_scan0(uint32_t, uint64_t, uint64_t);
 int  p9_hcd_core_pcb_arb(uint32_t, uint8_t);

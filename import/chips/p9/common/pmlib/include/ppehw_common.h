@@ -25,6 +25,12 @@
 #ifndef __PPEHW_COMMON_H__
 #define __PPEHW_COMMON_H__
 
+
+/// 64bit variable breaking into two 32bits macro
+#define UPPER32(variable) (uint32_t)((variable >> 32) & 0xFFFFFFFF)
+#define LOWER32(variable) (uint32_t)(variable & 0xFFFFFFFF)
+
+
 /// \defgroup be64_bits Bit manipulation for 64-bit Big-Endian values
 ///
 /// \note These macros only work in the assembler context because we build our
