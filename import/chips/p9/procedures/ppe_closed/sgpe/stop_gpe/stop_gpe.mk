@@ -130,6 +130,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(SGPE_FAPI2_INC) \
 	$(FAPI2_INC) \
 	$(STD_INC) \
+	$(COMMON_INCDIR) \
 	)
 
 #$(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic

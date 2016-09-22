@@ -28,6 +28,9 @@
 //#include <plat_target_pg_attributes.H>
 #include <assert.h>
 #include <fapi2_target.H>
+#include <p9_misc_scom_addresses.H>
+
+using namespace fapi2;
 
 #if 0
 
@@ -35,9 +38,9 @@
     sizeof(chiplet_pg_entry_t);
 #endif
 // Global Vector containing ALL targets.  This structure is referenced by
-// fapi2::getChildren to produce the resultant returned vector from that
+// getChildren to produce the resultant returned vector from that
 // call.
-std::vector<fapi2::plat_target_handle_t> G_vec_targets;
+std::vector<plat_target_handle_t> G_vec_targets;
 
 #if 0
     // Global variable for fixed section in pibmem
@@ -62,9 +65,9 @@ namespace fapi2
 // Not a fan of the switch technique;  I would prefer an array lookup
 // but the attritute lookup is done via compile time macros that are
 // resolved to attribute Ids (hashes).
-fapi2::ReturnCode plat_PervPGTargets(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-                                     const fapi2::TargetTypes_t i_chiplet_num,
-                                     bool& o_present)
+ReturnCode plat_PervPGTargets(const Target<TARGET_TYPE_PROC_CHIP>& i_target,
+                              const TargetTypes_t i_chiplet_num,
+                              bool& o_present)
 {
 
     o_present = true;
@@ -312,22 +315,22 @@ fapi2::ReturnCode plat_PervPGTargets(const fapi2::Target<fapi2::TARGET_TYPE_PROC
     }
 
 #endif
-    return fapi2::FAPI2_RC_SUCCESS;
+    return FAPI2_RC_SUCCESS;
 
 }
 
 /// @brief Function to determine if pervsaive target within a chip is
 ///     present and, thus, considered functional per PG attributes
-template<fapi2::TargetType K>
-fapi2::ReturnCode
-plat_TargetPresent( fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_chip_target,
-                    fapi2::Target<K>& i_chiplet_target,
+template<TargetType K>
+ReturnCode
+plat_TargetPresent( Target<TARGET_TYPE_PROC_CHIP>& i_chip_target,
+                    Target<K>& i_chiplet_target,
                     bool& b_present)
 {
-
+    // TODO: Needs to be revisited for the SGPE, no ATTR_PG
     // Find the PERV target number in the partial good initialization
     // array
-    fapi2::ChipletNumber_t chiplet_number = i_chiplet_target.getChipletNumber();
+    ChipletNumber_t chiplet_number = i_chiplet_target.getChipletNumber();
 
     FAPI_TRY(plat_PervPGTargets(i_chip_target, chiplet_number, b_present));
 
@@ -347,13 +350,13 @@ plat_TargetPresent( fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_chip_target,
              i_chiplet_target.getFunctional());
 
 fapi_try_exit:
-    return fapi2::current_err;
+    return current_err;
 }
 
 
 /// @brief Function to initialize the G_targets vector based on partial good
 ///      attributes ///  this will move to plat_target.H formally
-fapi2::ReturnCode plat_TargetsInit()
+ReturnCode plat_TargetsInit()
 {
     bool b_present = false;
 
@@ -375,17 +378,26 @@ fapi2::ReturnCode plat_TargetsInit()
     G_ex_attributes_ptr = &(G_sbe_attrs.G_ex_attrs);
 
 #endif
-    std::vector<fapi2::plat_target_handle_t>::iterator tgt_iter;
+    std::vector<plat_target_handle_t>::iterator tgt_iter;
     uint32_t l_beginning_offset;
+    uint64_t l_qcsr = 0;
+    uint64_t l_ccsr = 0;
 
     FAPI_DBG("Platform target initialization.  Target Count = %u", TARGET_COUNT);
+
+    // Read the QCSR and QSSR registers to set the functional state of EC, EQ
+    // and EX targets
+
+    // Not checking of return code as SGPE has a stop-on-error policy
+    getscom_abs(PU_OCB_OCI_QCSR_SCOM, &l_qcsr);
+    getscom_abs(PU_OCB_OCI_CCSR_SCOM, &l_ccsr);
 
     /*
      * Initialize all entries to NULL
      */
     for (uint32_t i = 0; i < TARGET_COUNT; ++i)
     {
-        G_vec_targets.push_back((fapi2::plat_target_handle_t)0x0);
+        G_vec_targets.push_back((plat_target_handle_t)0x0);
     }
 
     /*
@@ -393,8 +405,8 @@ fapi2::ReturnCode plat_TargetsInit()
      */
     l_beginning_offset = CHIP_TARGET_OFFSET;
 
-    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> chip_target((fapi2::plat_target_handle_t)0);
-    G_vec_targets.at(l_beginning_offset) = revle32((fapi2::plat_target_handle_t)(chip_target.get()));
+    Target<TARGET_TYPE_PROC_CHIP> chip_target((plat_target_handle_t)0);
+    G_vec_targets.at(l_beginning_offset) = revle32((plat_target_handle_t)(chip_target.get()));
 
     /*
      * Nest Targets - group 1
@@ -403,13 +415,13 @@ fapi2::ReturnCode plat_TargetsInit()
 
     for (uint32_t i = 0; i < NEST_GROUP1_TARGET_COUNT; ++i)
     {
-        fapi2::Target<fapi2::TARGET_TYPE_PERV> target_name((fapi2::plat_target_handle_t)i);
+        Target<TARGET_TYPE_PERV> target_name((plat_target_handle_t)i);
 
         // Determine if the chiplet is present and, thus, functional
         // via partial good attributes
         FAPI_TRY(plat_TargetPresent(chip_target, target_name, b_present));
 
-        G_vec_targets.at(l_beginning_offset + i) = revle32((fapi2::plat_target_handle_t)(target_name.get()));
+        G_vec_targets.at(l_beginning_offset + i) = revle32((plat_target_handle_t)(target_name.get()));
     }
 
     /*
@@ -420,13 +432,13 @@ fapi2::ReturnCode plat_TargetsInit()
 
     for (uint32_t i = 0; i < MCS_TARGET_COUNT; ++i)
     {
-        fapi2::Target<fapi2::TARGET_TYPE_MCS> target_name((fapi2::plat_target_handle_t)i);
+        Target<TARGET_TYPE_MCS> target_name((plat_target_handle_t)i);
 
         // Determine if the chiplet is present and, thus, functional
         // via partial good attributes
         FAPI_TRY(plat_TargetPresent(chip_target, target_name, b_present));
 
-        G_vec_targets.at(l_beginning_offset + i) = revle32((fapi2::plat_target_handle_t)(target_name.get()));
+        G_vec_targets.at(l_beginning_offset + i) = revle32((plat_target_handle_t)(target_name.get()));
 
     }
 
@@ -438,13 +450,13 @@ fapi2::ReturnCode plat_TargetsInit()
     for (uint32_t i = NEST_GROUP2_TARGET_OFFSET;
          i < (NEST_GROUP2_TARGET_OFFSET + NEST_GROUP2_TARGET_COUNT); ++i)
     {
-        fapi2::Target<fapi2::TARGET_TYPE_PERV> target_name((fapi2::plat_target_handle_t)(i - 1));
+        Target<TARGET_TYPE_PERV> target_name((plat_target_handle_t)(i - 1));
 
         // Determine if the chiplet is present and, thus, functional
         // via partial good attributes
         FAPI_TRY(plat_TargetPresent(chip_target, target_name, b_present));
 
-        G_vec_targets.at(i) = revle32((fapi2::plat_target_handle_t)(target_name.get()));
+        G_vec_targets.at(i) = revle32((plat_target_handle_t)(target_name.get()));
     }
 
     /*
@@ -454,13 +466,17 @@ fapi2::ReturnCode plat_TargetsInit()
 
     for (uint32_t i = 0; i < EQ_TARGET_COUNT; ++i)
     {
-        fapi2::Target<fapi2::TARGET_TYPE_EQ> target_name((fapi2::plat_target_handle_t)i);
+        Target<TARGET_TYPE_EQ> target_name((plat_target_handle_t)i);
+        plat_target_handle_t l_hndl = target_name.get();
 
-        // Determine if the chiplet is present and, thus, functional
-        // via partial good attributes
-        FAPI_TRY(plat_TargetPresent(chip_target, target_name, b_present));
+        // EQ is good if at lest one of it's EX is good
+        if(l_qcsr & BITS(i, 2))
+        {
+            target_name.setPresent();
+            target_name.setFunctional(true);
+        }
 
-        G_vec_targets.at(l_beginning_offset + i) = revle32((fapi2::plat_target_handle_t)(target_name.get()));
+        G_vec_targets.at(l_beginning_offset + i) = revle32(l_hndl);
     }
 
     /*
@@ -471,13 +487,16 @@ fapi2::ReturnCode plat_TargetsInit()
 
     for (uint32_t i = 0; i < CORE_TARGET_COUNT; ++i)
     {
-        fapi2::Target<fapi2::TARGET_TYPE_CORE> target_name((fapi2::plat_target_handle_t)i);
+        Target<TARGET_TYPE_CORE> target_name((plat_target_handle_t)i);
 
-        // Determine if the chiplet is present and, thus, functional
-        // via partial good attributes
-        FAPI_TRY(plat_TargetPresent(chip_target, target_name, b_present));
+        // Check goodness from CCSR
+        if(l_ccsr & BITS(i, 1))
+        {
+            target_name.setPresent();
+            target_name.setFunctional(true);
+        }
 
-        G_vec_targets.at(l_beginning_offset + i) = revle32((fapi2::plat_target_handle_t)(target_name.get()));
+        G_vec_targets.at(l_beginning_offset + i) = revle32((plat_target_handle_t)(target_name.get()));
     }
 
     /*
@@ -488,104 +507,38 @@ fapi2::ReturnCode plat_TargetsInit()
 
     for (uint32_t i = 0; i < EX_TARGET_COUNT; ++i)
     {
-        fapi2::Target<fapi2::TARGET_TYPE_EX> target_name((fapi2::plat_target_handle_t)i);
+        Target<TARGET_TYPE_EX> target_name((plat_target_handle_t)i);
 
-        // Check if at least one of the cores in the EX are good, if they
-        // are, set the EX present and functional
-        if((G_vec_targets.at(CORE_TARGET_OFFSET + (CORES_PER_EX * i))).fields.present ||
-           (G_vec_targets.at(CORE_TARGET_OFFSET + (CORES_PER_EX * i) + 1)).fields.present)
+        // Check goodness from QCSR
+        if(l_qcsr & BITS(i, 1))
         {
             target_name.setPresent();
             target_name.setFunctional(true);
         }
 
-        G_vec_targets.at(l_beginning_offset + i) = revle32((fapi2::plat_target_handle_t)(target_name.get()));
+        G_vec_targets.at(l_beginning_offset + i) = revle32((plat_target_handle_t)(target_name.get()));
     }
 
 fapi_try_exit:
-    return fapi2::current_err;
+    return current_err;
 }
 
 /// @brief Function to initialize the G_targets vector based on partial good
 ///        attributes
-fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> plat_getChipTarget()
+Target<TARGET_TYPE_PROC_CHIP> plat_getChipTarget()
 {
 
     // Get the chip specific target
-    return ((fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>)G_vec_targets.at(0));
+    return ((Target<TARGET_TYPE_PROC_CHIP>)G_vec_targets.at(0));
 }
-#if 0
-/// @brief Function to apply any gard records set (via
-//  ATTR_EQ_GARD/ATTR_EC_GARD) to mark corresponding targets non functional
-ReturnCode plat_ApplyGards()
-{
-    uint8_t l_eqGards = 0;
-    uint32_t l_ecGards = 0;
-    static const uint32_t l_mask = 0x80000000;
-    bool l_coreGroupNonFunctional = true;
-    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_chip = plat_getChipTarget();
 
-    // Read the EQ and EC gard attributes from the chip target
-    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_EQ_GARD, l_chip, l_eqGards));
-    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_EC_GARD, l_chip, l_ecGards));
-
-    FAPI_DBG("ATTR_EQ_GARD:: 0x%08x", l_eqGards);
-    FAPI_DBG("ATTR_EC_GARD:: 0x%08x", l_ecGards);
-
-    // Iterate over the bits in EQ and EC gards, if set, mark the
-    // corresponding target non-functional
-    for(uint32_t l_idx = 0; l_idx < EQ_TARGET_COUNT; ++l_idx)
-    {
-        if((l_mask >> l_idx) & (((uint32_t)(l_eqGards)) << 24))
-        {
-            FAPI_DBG("Making %d'th EQ non-functional", l_idx);
-            // EQ chiplet l_idx is to be marked non-functional
-            fapi2::Target<fapi2::TARGET_TYPE_EQ> l_target = G_vec_targets.at(l_idx + EQ_TARGET_OFFSET);
-            l_target.setFunctional(false);
-            G_vec_targets.at(l_idx + EQ_TARGET_OFFSET) = l_target.get();
-        }
-    }
-
-    for(uint32_t l_idx = 0; l_idx < CORE_TARGET_COUNT; ++l_idx)
-    {
-        if((l_mask >> l_idx) & (l_ecGards))
-        {
-            FAPI_DBG("Making %d'th EC non-functional", l_idx);
-            // EC chiplet l_idx is to be marked non-functional
-            fapi2::Target<fapi2::TARGET_TYPE_CORE> l_target = G_vec_targets.at(l_idx + CORE_TARGET_OFFSET);
-            l_target.setFunctional(false);
-            G_vec_targets.at(l_idx + CORE_TARGET_OFFSET) = l_target.get();
-        }
-        else
-        {
-            l_coreGroupNonFunctional = false;
-        }
-
-        if(0 == ((l_idx + 1) % CORES_PER_EX))
-        {
-            if(true == l_coreGroupNonFunctional)
-            {
-                // All cores of this group are non-functional. Mark the EX
-                // non-functional too.
-                G_vec_targets.at((l_idx / CORES_PER_EX) + EX_TARGET_OFFSET).fields.functional = false;
-            }
-
-            // Reset ex non-functional flag for the next group
-            l_coreGroupNonFunctional = true;
-        }
-    }
-
-fapi_try_exit:
-    return fapi2::current_err;
-}
-#endif
 /// @brief Function to return a platform target handle, given the chiplet
 //         number
 //  @param i_chipletNumber The chiplet number of the target
 //  @return Platform target handle
 //  @note The caller can use the platform target handle to construct a
 //        Target of it's choice. Ex:
-//  fapi2::Target<fapi2::TARGET_TYPE_CORE>
+//  Target<TARGET_TYPE_CORE>
 //  l_core(plat_getTargetHandleByChipletNumber(0x20);
 plat_target_handle_t plat_getTargetHandleByChipletNumber(
     const uint8_t i_chipletNumber)
