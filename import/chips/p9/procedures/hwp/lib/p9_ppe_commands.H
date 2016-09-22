@@ -55,6 +55,7 @@ typedef struct
     bool  cmnd_ram;
     uint64_t brkpt_address;
     uint64_t ram_instr;
+    uint64_t step_count;
 
 } PPE_Cmnds;
 
@@ -65,7 +66,7 @@ typedef struct
 typedef fapi2::ReturnCode (*p9_ppe_commands_FP_t) (
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>&,
     const uint64_t, const PPE_Cmnds,
-    std::vector<PPERegValue_t>& v_ppe_xirs_value, bool& v_ppe_halt_state
+    std::vector<PPERegValue_t>& v_ppe_xirs_value, uint8_t& v_ppe_halt_state
 );
 
 extern "C"
@@ -78,7 +79,7 @@ extern "C"
     fapi2::ReturnCode
     p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
                     const uint64_t i_base_address, const PPE_Cmnds i_cmnds,
-                    std::vector<PPERegValue_t>& v_ppe_xirs_value, bool& v_ppe_halt_state
+                    std::vector<PPERegValue_t>& v_ppe_xirs_value, uint8_t& v_ppe_halt_state
                    );
 
 } // extern C

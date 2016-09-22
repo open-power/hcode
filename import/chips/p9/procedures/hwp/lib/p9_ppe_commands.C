@@ -66,7 +66,7 @@ fapi2::ReturnCode
 ppe_check_status_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
                       const uint64_t i_base_address,
                       std::vector<PPERegValue_t>& v_ppe_xirs_value,
-                      bool& l_ppe_halt_state)
+                      uint8_t& l_ppe_halt_state)
 {
 
 
@@ -82,16 +82,14 @@ ppe_check_status_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_targe
     l_data64.extractToRight(l_data32, 0, 32);
     sprintf(outstr, "XSR");
     FAPI_INF("%-9s = 0x%08llX", outstr, l_data32);
-    l_regVal.reg.number = 1;
-    l_regVal.reg.name = "XSR";
+    l_regVal.number = XSR;
     l_regVal.value = l_data32;
     v_ppe_xirs_value.push_back(l_regVal);
 
     l_data64.extractToRight(l_data32, 32, 32);
     sprintf(outstr, "IAR");
     FAPI_INF("%-9s = 0x%08llX", outstr, l_data32);
-    l_regVal.reg.number = 2;
-    l_regVal.reg.name = "IAR";
+    l_regVal.number = IAR;
     l_regVal.value = l_data32;
     v_ppe_xirs_value.push_back(l_regVal);
 
@@ -100,8 +98,7 @@ ppe_check_status_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_targe
     l_data64.extractToRight(l_data32, 0, 32);
     sprintf(outstr, "IR");
     FAPI_INF("%-9s = 0x%08llX", outstr, l_data32);
-    l_regVal.reg.number = 3;
-    l_regVal.reg.name = "IR";
+    l_regVal.number = IR;
     l_regVal.value = l_data32;
     v_ppe_xirs_value.push_back(l_regVal);
 
@@ -109,8 +106,7 @@ ppe_check_status_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_targe
     l_data64.extractToRight(l_data32, 32, 32);
     sprintf(outstr, "EDR");
     FAPI_INF("%-9s = 0x%08llX", outstr, l_data32);
-    l_regVal.reg.number = 4;
-    l_regVal.reg.name = "EDR";
+    l_regVal.number = EDR;
     l_regVal.value = l_data32;
     v_ppe_xirs_value.push_back(l_regVal);
 
@@ -120,8 +116,7 @@ ppe_check_status_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_targe
     l_data64.extractToRight(l_data32, 32, 32);
     sprintf(outstr, "SPRG0");
     FAPI_INF("%-9s = 0x%08llX", outstr, l_data32);
-    l_regVal.reg.number = 5;
-    l_regVal.reg.name = "SPRG0";
+    l_regVal.number = SPRG0;
     l_regVal.value = l_data32;
     v_ppe_xirs_value.push_back(l_regVal);
 
@@ -131,12 +126,12 @@ ppe_check_status_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_targe
 
     if (l_data64.getBit(0, 1))
     {
-        l_ppe_halt_state  = true;
+        l_ppe_halt_state  = 1;
 
     }
     else
     {
-        l_ppe_halt_state  = false;
+        l_ppe_halt_state  = 0;
     }
 
 
@@ -144,13 +139,13 @@ fapi_try_exit:
     return fapi2::current_err;
 }
 
-// Hardware procedure
+// Main Hardware procedure
 fapi2::ReturnCode
 p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
                 const uint64_t i_base_address,
                 const PPE_Cmnds i_cmnds,
                 std::vector<PPERegValue_t>& v_ppe_xirs_value,
-                bool& v_ppe_halt_state
+                uint8_t& v_ppe_halt_state
                )
 {
     fapi2::buffer<uint32_t> l_gpr31_save;
@@ -181,17 +176,11 @@ p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     }
 
 
-    if(i_cmnds.cmnd_resume)
-    {
-        FAPI_DBG("Resume PPE");
-        FAPI_TRY(ppe_resume(i_target, i_base_address));
-    }
-
 
     if(i_cmnds.cmnd_resume_brkpt || i_cmnds.cmnd_resume_with_ram ||
        i_cmnds.cmnd_set_instr_addr_brkpt || i_cmnds.cmnd_set_load_addr_brkpt ||
        i_cmnds.cmnd_set_store_addr_brkpt || i_cmnds.cmnd_set_store_load_addr_brkpt || i_cmnds.cmnd_set_trap ||
-       i_cmnds.cmnd_reset_trap)
+       i_cmnds.cmnd_reset_trap || i_cmnds.cmnd_single_step)
     {
         // Save SPRG0
         FAPI_DBG("Save SPRG0");
@@ -310,26 +299,33 @@ p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
             FAPI_TRY(ppe_update_dbcr(i_target, i_base_address, ANDIS_CONST, 0x0EFF, R31));
         }
 
-        FAPI_DBG("Restore GPR31");
-        l_gpr31_save.extractToRight(l_data64, 0, 32);  // Put 32b save value into 64b buffer
-        FAPI_TRY(fapi2::putScom(i_target, i_base_address + PPE_XIRAMDBG, l_data64));
-        l_data64.flush<0>().insertFromRight(ppe_getMfsprInstruction(R31, SPRG0), 0, 32);
-        FAPI_DBG("getMfsprInstruction(%d, SPRG0): 0x%16llX", 0, l_data64 );
-        FAPI_TRY(ppe_pollHaltState(i_target, i_base_address));
-        FAPI_TRY(fapi2::putScom(i_target, i_base_address + PPE_XIRAMEDR, l_data64));
 
-        //Restore GPR31 and SPRG0
+        if(i_cmnds.cmnd_single_step)
+        {
+            FAPI_DBG("Single step PPE");
+            FAPI_TRY(ppe_single_step(i_target, i_base_address, R31, i_cmnds.step_count));
+
+        }
+
+        FAPI_DBG("Restore GPR31");
+        l_data64.flush<0>().insertFromRight(ppe_getMfsprInstruction(R31, SPRG0), 0, 32);
+        FAPI_DBG("getMfsprInstruction(R31, SPRG0): 0x%16llX",  l_data64 );
+        l_data64.insertFromRight(l_gpr31_save, 32, 32);
+        FAPI_DBG("Final Instr + SPRG0: 0x%16llX", l_data64 );
+        //write sprg0 with address and ram mfsprg0 to i_Rs
+        FAPI_TRY(fapi2::putScom(i_target, i_base_address + PPE_XIRAMGA, l_data64 ));
+
         FAPI_DBG("Restore SPRG0");
         FAPI_TRY(ppe_pollHaltState(i_target, i_base_address));
         FAPI_TRY(putScom(i_target, i_base_address + PPE_XIRAMDBG , l_sprg0_save), "Error in GETSCOM");
 
     }
 
-    if(i_cmnds.cmnd_single_step)
+    //consider Resume after setting breakpoint
+    if(i_cmnds.cmnd_resume)
     {
-        FAPI_DBG("Single step PPE");
-        FAPI_TRY(ppe_single_step(i_target, i_base_address));
-
+        FAPI_DBG("Resume PPE");
+        FAPI_TRY(ppe_resume(i_target, i_base_address));
     }
 
     if(i_cmnds.cmnd_ram)
