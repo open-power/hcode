@@ -240,7 +240,7 @@ void p9_cme_pstate_db_thread(void* arg)
 
     //We found a bug in HW late, so this is a workaround. However, in SIMICS the model
     //is as per original spec.
-#ifndef SIMICS_ENVIRONMENT
+#if !SIMICS_TUNING
     G_db_thread_data.quadNum = (pir & PIR_INSTANCE_NUM_MASK);
 #else
     G_db_thread_data.quadNum = QUAD_FROM_CME_INSTANCE_NUM((pir & PIR_INSTANCE_NUM_MASK));
@@ -330,7 +330,7 @@ void p9_cme_pstate_db_thread(void* arg)
                 resclk_update();
             }
 
-#ifndef SIMICS_ENVIRONMENT
+#if !SIMICS_TUNING
             freq_update(dbData.value);
 #endif
 
@@ -341,7 +341,7 @@ void p9_cme_pstate_db_thread(void* arg)
                 out32(CME_LCL_ICCR_OR, BIT32(5)); //Send direct InterCME_IN0
                 out32(CME_LCL_ICCR_CLR, BIT32(5));//Clear
 
-#ifndef SIMICS_ENVIRONMENT
+#if !SIMICS_TUNING
                 //poll on interCME interrupt
                 intercme_acked = 0;
 #else
@@ -449,7 +449,7 @@ void resclk_update()
         val = (uint64_t)(G_cgm_table[G_db_thread_data.resClkTblIdx]) << 48;
         val |= G_db_thread_data.qaccr21_23InitVal;
 
-#ifndef SIMICS_ENVIRONMENT
+#if !SIMICS_TUNING
         //int rc = 0;
         cppm_ippmcmd_t  cppm_ippmcmd;
         //Write val to QACCR

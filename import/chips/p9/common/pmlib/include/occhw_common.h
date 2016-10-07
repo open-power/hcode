@@ -237,7 +237,7 @@
 ////////////////////////////////////////////////////////////////////////////
 // PMC
 ////////////////////////////////////////////////////////////////////////////
-
+/*
 #ifndef __ASSEMBLER__
 
     /// A Pstate type
@@ -256,7 +256,7 @@
     /// A VRM11 VID code
     typedef uint8_t Vid11;
 
-#endif  /* __ASSEMBLER__ */
+#endif  // __ASSEMBLER__
 
 /// The minimum Pstate
 #define PSTATE_MIN -128
@@ -277,7 +277,7 @@
 
 /// The maximum \a legal (non-power-off) VRM11 VID code
 #define VID11_MAX 0xfd
-
+*/
 
 ////////////////////////////////////////////////////////////////////////////
 // PCB

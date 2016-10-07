@@ -35,7 +35,7 @@ OUTPUT_FORMAT(elf32-powerpc);
 // GPE2 is loaded at 0xfff20000
 #define SRAM_START 0xfff20000
 #define SRAM_LENGTH 0x10000
-#define PPE_DEBUG_PTRS_OFFSET 0x180
+#define PPE_DEBUG_PTRS_OFFSET 0x1E0
 
 MEMORY
 {

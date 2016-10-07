@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe.h $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe_header.h $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2016,2017                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -22,52 +22,41 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-///
-/// \file p9_pgpe.h
-/// \brief header of p9_cme_stop_enter_thread.c and p9_cme_stop_exit.c
-///
-
-#ifndef _P9_PGPE_H_
-#define _P9_PGPE_H_
+#ifndef _P9_PGPE_HEADER_H_
+#define _P9_PGPE_HEADER_H_
 
 #include "pk.h"
-#include "ppe42.h"
-#include "ppe42_scom.h"
-
-#include "ppehw_common.h"
-#include "gpehw_common.h"
-#include "occhw_interrupts.h"
-
-#include "ocb_register_addresses.h"
-#include "cme_register_addresses.h"
-#include "ppm_register_addresses.h"
-#include "cppm_register_addresses.h"
-#include "qppm_register_addresses.h"
-
-#include "ocb_firmware_registers.h"
-#include "cme_firmware_registers.h"
-#include "ppm_firmware_registers.h"
-#include "cppm_firmware_registers.h"
-#include "qppm_firmware_registers.h"
-
-#include "p9_pgpe_irq.h"
-#include "p9_pstate_common.h"
 
 
-/// PGPE PState
-typedef struct
+//
+//\todo RTC: 164335 Use the structure from p9_hcode_image_defines.H
+//when it's updated
+//
+typedef struct pgpe_header_data
 {
-    PkSemaphore  sem[1];
-} PgpePstateRecord;
+    uint32_t magic_number[2];
+    uint32_t* _system_reset_addr;
+    uint32_t* shared_sram_addr;
+    uint32_t* IVPR_address;
+    uint32_t shared_sram_length;
+    uint32_t build_date;
+    uint32_t version;
+    uint16_t qmflags;
+    uint16_t reserved0[3];
+    uint32_t* gppb_sram_addr;
+    uint32_t reserved1;
+    uint32_t* gppb_memory_offset;
+    uint32_t gppb_block_length;
+    uint32_t* pstate_tbl_mem_offset;
+    uint32_t pstate_tbl_length;
+    uint32_t* occ_pstate_tbl_addr;
+    uint32_t occ_pstate_tbl_length;
+    uint32_t* pgpe_beacon;
+    uint32_t* actual_quad_status_addr;
+    uint32_t* wof_tbl_addr;
+    uint32_t wof_tbl_lengh;
+} pgpe_header_data_t;
 
-/// PGPE PState
-void p9_pgpe_pstate_pig_handler(void* arg, PkIrqId irq);
-void p9_pgpe_pstate_thread(void* arg);
+void p9_pgpe_header_init();
 
-///PGPE PState Info
-void p9_pgpe_gen_pstate_info();
-
-///PGPE FIT
-void p9_pgpe_fit_init();
-
-#endif //_P9_PGPE_H_
+#endif //_P9_PGPE_HEADER_H_

@@ -24,6 +24,9 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include "pk.h"
 #include "p9_pgpe.h"
+#include "p9_pgpe_header.h"
+#include "p9_pgpe_gppb.h"
+#include "p9_pgpe_boot_temp.h"
 
 PgpePstateRecord G_pgpe_pstate_record;
 
@@ -113,6 +116,15 @@ void __eabi()
 int
 main(int argc, char** argv)
 {
+    //Read OCC_FLAG[PGPE_DEBUG_TRAP_ENABLE]]
+    uint32_t occFlag = in32(OCB_OCCFLG);
+
+    if (occFlag & BIT32(14))
+    {
+        asm volatile ("tw 0, 31, 0");
+    }
+
+
     // Initializes kernel data (stack, threads, timebase, timers, etc.)
     pk_initialize((PkAddress)G_kernel_stack,
                   KERNEL_STACK_SIZE,
@@ -133,6 +145,27 @@ main(int argc, char** argv)
 
     // Make G_p9_sgpe_stop_exit_thread runnable
     pk_thread_resume(&G_p9_pgpe_pstate_thread);
+
+    //Do initialization
+    p9_pgpe_header_init();
+#if MIMIC_BOOT_TEMP
+    //This is to be used for development and testing/verif
+    //if Global Pstate Parameter Block is not initialized through other means.
+    //
+    //In real system this all will be done before PGPE HCode is given control. Then
+    //subsequent p9_pgpe_gppb_init call reads data out of Global Pstate Parameter Block
+    //
+    p9_pgpe_boot_temp(); //This is just temporary
+#endif
+
+    p9_pgpe_gppb_init();
+
+#if GEN_PSTATE_TBL
+    p9_pgpe_gen_pstate_info();
+#endif
+
+    //Setup FIT(Fixed-Interval Timer)
+    p9_pgpe_fit_init();
 
     // Start running the highest priority thread.
     // This function never returns

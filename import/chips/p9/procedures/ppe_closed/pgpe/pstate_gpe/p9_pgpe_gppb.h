@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe.h $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe_gppb.h $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2016,2017                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -22,52 +22,26 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-///
-/// \file p9_pgpe.h
-/// \brief header of p9_cme_stop_enter_thread.c and p9_cme_stop_exit.c
-///
-
-#ifndef _P9_PGPE_H_
-#define _P9_PGPE_H_
+#ifndef _P9_PGPE_GPPB_H_
+#define _P9_PGPE_GPPB_H_
 
 #include "pk.h"
-#include "ppe42.h"
-#include "ppe42_scom.h"
+#include "p9_pstates_pgpe.h"
 
-#include "ppehw_common.h"
-#include "gpehw_common.h"
-#include "occhw_interrupts.h"
+//#define REGION_POWERSAVE_NOMINAL    1
+//#define REGION_NOMINAL_TURBO        0
+//#define REGION_TURBO_ULTRA          2
 
-#include "ocb_register_addresses.h"
-#include "cme_register_addresses.h"
-#include "ppm_register_addresses.h"
-#include "cppm_register_addresses.h"
-#include "qppm_register_addresses.h"
+#define EVID_SLOPE_FP_SHIFT         13
 
-#include "ocb_firmware_registers.h"
-#include "cme_firmware_registers.h"
-#include "ppm_firmware_registers.h"
-#include "cppm_firmware_registers.h"
-#include "qppm_firmware_registers.h"
-
-#include "p9_pgpe_irq.h"
-#include "p9_pstate_common.h"
+#define NUM_VPD_PTS_SET             4
+#define VPD_PT_SET_RAW              0
+#define VPD_PT_SET_SYSP             1
+#define VPD_PT_SET_BIASED           2
+#define VPD_PT_SET_BIASED_SYSP      3
 
 
-/// PGPE PState
-typedef struct
-{
-    PkSemaphore  sem[1];
-} PgpePstateRecord;
-
-/// PGPE PState
-void p9_pgpe_pstate_pig_handler(void* arg, PkIrqId irq);
-void p9_pgpe_pstate_thread(void* arg);
-
-///PGPE PState Info
-void p9_pgpe_gen_pstate_info();
-
-///PGPE FIT
-void p9_pgpe_fit_init();
-
-#endif //_P9_PGPE_H_
+void p9_pgpe_gppb_init();
+uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set, uint8_t vpd_slope_set);
+uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd);
+#endif //_P9_PGPE_GPPB_H_

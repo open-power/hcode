@@ -36,7 +36,9 @@
 
 // --------------------
 #define EPM_P9_TUNING 1
-#define SIMICS_TUNING 1
+#define SIMICS_TUNING 0
+#define GEN_PSTATE_TBL 1
+#define MIMIC_BOOT_TEMP 1
 #define DEV_DEBUG     1
 #define PK_TRACE_TIMER_OUTPUT 0
 

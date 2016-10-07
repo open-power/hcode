@@ -22,12 +22,14 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-#include "p9_pstate_vpd.h" //\todo Temporary
-#include "p9_pstate_common.h"
 #include "p9_pgpe.h"
+#include "p9_pstate_common.h"
+#include "p9_pstates_common.h"
+#include "p9_pgpe_gppb.h"
+#include "p9_pgpe_boot_temp.h"
 #include "avs_driver.h"
+#include "p9_dd1_doorbell_wr.h"
 
-#define EVID_SLOPE_FP_SHIFT      13
 #define CCSR_CORE_CONFIG_MASK    0xC0000000
 
 enum quadManager
@@ -37,9 +39,6 @@ enum quadManager
     QUAD_MANAGER_CME1 =     1
 };
 
-//Data derived from VPD(PPB)
-uint16_t G_FVSlopes[VPD_PV_POINTS - 1];
-uint16_t G_invFVSlopes[VPD_PV_POINTS - 1];
 
 //External Voltage, GlobalPState, Local PStates
 uint32_t G_eVidCurr, G_eVidNext;
@@ -52,17 +51,16 @@ uint32_t G_tgtEVid;
 int8_t  G_quadManagerCME[MAX_QUADS]; //0->CME0, 1->CME1, -1->Quad not configured
 uint8_t G_quadPendPSReq[MAX_QUADS];
 uint8_t G_coresPendPSReqData[MAX_CORES];
-uint8_t G_coreConf[MAX_CORES];
+uint32_t G_ccsr;
 extern PgpePstateRecord G_pgpe_pstate_record;
-extern global_pstate_table_t G_gpst;
+extern GlobalPstateParmBlock* G_gppb;
+extern VpdOperatingPoint G_operating_points[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 
 //
 //Function Prototypes
 //
-void p9_pgpe_pstate_init_derived_data();
+//void p9_pgpe_pstate_init_derived_data();
 void p9_pgpe_pstate_get_config();
-uint32_t p9_pgpe_pstate_get_evid_from_pstate(uint8_t pstate);
-uint8_t p9_pgpe_pstate_get_pstate_from_evid(uint16_t evid);
 void p9_pgpe_pstate_update_ext_volt();
 void p9_pgpe_pstate_freq_update();
 
@@ -95,36 +93,30 @@ void p9_pgpe_pstate_thread(void* arg)
     uint8_t effPSClipMin, effPSClipMax;
     uint8_t done;
 
-    //Initialization
-
-    //todo Read this data from HOMER/PPMR. RTC 159902
-    p9_pstate_vpd_init();
-
     //\todo Set initial eVid, Global PState, Local PState, Max/Mins PStateClip for PGPE. RTC. 159900
     psClipMax = 0;
     psClipMin = 140;
     coresPendPSReq = 0;
-    G_eVidCurr = G_gpst.infPT[POWERSAVE].evid;
-    G_eVidNext = G_gpst.infPT[POWERSAVE].evid;
-    G_globalCurrPS = G_globalNextPS = G_gpst.infPT[POWERSAVE].pstate;
+    G_eVidCurr = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].vdd_mv;
+    G_eVidNext = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].vdd_mv;
+    G_globalCurrPS = G_globalNextPS = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        G_localPSCurr[q] = G_gpst.infPT[POWERSAVE].pstate;
-        G_localPSNext[q] = G_gpst.infPT[POWERSAVE].pstate;
-        G_localPSTgt[q] = G_gpst.infPT[POWERSAVE].pstate;
+        G_localPSCurr[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_localPSNext[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_localPSTgt[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
         G_quadPendPSReq[q] = 0;
     }
 
     for (c = 0; c < MAX_CORES; c++)
     {
-        G_coresPendPSReqData[c] = G_gpst.infPT[POWERSAVE].pstate;
+        G_coresPendPSReqData[c] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
     }
 
     //Initialization
     external_voltage_control_init(&G_eVidCurr);
-    G_eVidCurr = G_gpst.infPT[POWERSAVE].evid; //\todo RTC 159900. Remove this
-    p9_pgpe_pstate_init_derived_data();
+    G_eVidCurr = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].vdd_mv; //\todo RTC 159900. Remove this
     p9_pgpe_pstate_get_config();
 
     out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
@@ -151,24 +143,25 @@ void p9_pgpe_pstate_thread(void* arg)
             coresPendPSReq = in32(OCB_OPIT1PRA);
 
             //Make sure clips aren't below or above VPD points
-            if (psClipMax < G_gpst.infPT[ULTRA].pstate)
+            if (psClipMax < G_operating_points[VPD_PT_SET_BIASED_SYSP][ULTRA].pstate)
             {
-                effPSClipMax = G_gpst.infPT[ULTRA].pstate;
+                effPSClipMax = G_operating_points[VPD_PT_SET_BIASED_SYSP][ULTRA].pstate;
             }
             else
             {
                 effPSClipMax = psClipMax;
             }
 
-            if (psClipMin > G_gpst.infPT[POWERSAVE].pstate)
+            if (psClipMin > G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate)
             {
-                effPSClipMin = G_gpst.infPT[POWERSAVE].pstate;
+                effPSClipMin = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
             }
             else
             {
                 effPSClipMin = psClipMin;
             }
 
+            //Process pending requests
             for (c = 0; c < MAX_CORES; c++)
             {
                 //For each pending bit OPIT1PR[c] (OPIT1PR is 24 bits)
@@ -195,7 +188,7 @@ void p9_pgpe_pstate_thread(void* arg)
                 }
             }
 
-            //Local PStates
+            //Local PStates Auction
             for (q = 0; q < MAX_QUADS; q++)
             {
                 //Make sure quad is configured and there is a pending request
@@ -203,11 +196,11 @@ void p9_pgpe_pstate_thread(void* arg)
                 {
                     //Go through all the cores in this quad with pending request
                     //and find the lowest numbered PState
-                    G_localPSTgt[q] = G_gpst.infPT[POWERSAVE].pstate;
+                    G_localPSTgt[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
                     for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
                     {
-                        if (G_coreConf[c])
+                        if (G_ccsr & (0x80000000 >> c))
                         {
                             if (G_localPSTgt[q] > G_coresPendPSReqData[c])
                             {
@@ -230,8 +223,8 @@ void p9_pgpe_pstate_thread(void* arg)
                 }
             }
 
-            //Global PState
-            G_globalPSTgt = G_gpst.infPT[POWERSAVE].pstate;
+            //Global PState Auction
+            G_globalPSTgt = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
             for (q = 0; q < MAX_QUADS; q++)
             {
@@ -250,12 +243,12 @@ void p9_pgpe_pstate_thread(void* arg)
 #endif
 
             //Determine targetVoltage
-            G_tgtEVid = p9_pgpe_pstate_get_evid_from_pstate(G_globalPSTgt);
+            G_tgtEVid = p9_pgpe_gppb_intp_vdd_from_ps(G_globalPSTgt, VPD_PT_SET_BIASED_SYSP, VPD_SLOPES_BIASED);
 
             //Higher number PState
             if (((int16_t)(G_globalPSTgt) - (int16_t)(G_globalCurrPS)) > 0)
             {
-                if ((G_eVidCurr - G_tgtEVid) <= G_gpst.evid_step_size)
+                if ((G_eVidCurr - G_tgtEVid) <= G_gppb->ext_vdd_step_size_mv)
                 {
                     G_eVidNext = G_tgtEVid;
                     G_globalNextPS = G_globalPSTgt;
@@ -269,8 +262,8 @@ void p9_pgpe_pstate_thread(void* arg)
                 }
                 else
                 {
-                    G_eVidNext = G_eVidCurr - G_gpst.evid_step_size;
-                    G_globalNextPS = p9_pgpe_pstate_get_pstate_from_evid(G_eVidNext);
+                    G_eVidNext = G_eVidCurr - G_gppb->ext_vdd_step_size_mv;
+                    G_globalNextPS = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_eVidNext);
 
                     for (q = 0; q < MAX_QUADS; q++)
                     {
@@ -291,7 +284,7 @@ void p9_pgpe_pstate_thread(void* arg)
             //Lower number PState
             else if (((int16_t)(G_globalPSTgt) - (int16_t)(G_globalCurrPS)) < 0)
             {
-                if ((G_tgtEVid - G_eVidCurr) <= G_gpst.evid_step_size)
+                if ((G_tgtEVid - G_eVidCurr) <= G_gppb->ext_vdd_step_size_mv)
                 {
                     G_eVidNext = G_tgtEVid;
                     G_globalNextPS = G_globalPSTgt;
@@ -305,8 +298,8 @@ void p9_pgpe_pstate_thread(void* arg)
                 }
                 else
                 {
-                    G_eVidNext = G_eVidCurr + G_gpst.evid_step_size;
-                    G_globalNextPS = p9_pgpe_pstate_get_pstate_from_evid(G_eVidNext);
+                    G_eVidNext = G_eVidCurr + G_gppb->ext_vdd_step_size_mv;
+                    G_globalNextPS = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_eVidNext);
 
                     for (q = 0; q < MAX_QUADS; q++)
                     {
@@ -334,181 +327,12 @@ void p9_pgpe_pstate_thread(void* arg)
                 p9_pgpe_pstate_freq_update();
                 done = 1;
             }
-        }
+        }//Step-Loop
 
         pk_irq_vec_restore(&ctx);//Restore interrupts
     }//Thread Loop
 }
 
-//
-//init_vpd_derived_data
-//
-void p9_pgpe_pstate_init_derived_data()
-{
-    int32_t i;
-    uint32_t eVidFP[VPD_PV_POINTS];
-
-    //convert to fixed-point number
-    for (i = 0; i < VPD_PV_POINTS; i++)
-    {
-        eVidFP[i] = (G_gpst.infPT[i].evid << EVID_SLOPE_FP_SHIFT);
-    }
-
-    //PState(Frequency) on y-axis, Voltage is on x-axis for VF curve
-    //Interpolation formula: (y-y0)/(x-x0) = (y1-y0)/(x1-x0)
-    //m   = (x1-x0)/(y1-y0), then use this to calculate voltage, x = (y-y0)*m + x0
-    //1/m = (y1-y0)/(x1-x0) here, then use this to calculate pstate(frequency), y = (x-x0)*m + y0
-    //Region 0 is b/w POWERSAVE and NOMINAL
-    //Region 1 is b/w NOMINAL and TURBO
-    //Region 2 is between TURBO and ULTRA_TURBO
-    //
-    //Inflection Point 3 is ULTRA_TURBO
-    //Inflection Point 2 is TURBO
-    //Inflection Point 1 is NOMINAL
-    //Inflection Point 0 is POWERSAVE
-    //
-    for (i = 0; i < VPD_PV_POINTS - 1; i++)
-    {
-        //Note: Since PState number decrease with frequency,
-        //we flip the sign(add a minus)
-        uint32_t tmp = (uint32_t)(eVidFP[i + 1] - eVidFP[i]) /
-                       (uint32_t)(-G_gpst.infPT[i + 1].pstate + G_gpst.infPT[i].pstate);
-        G_FVSlopes[i] = tmp;
-
-        tmp =  (uint32_t)((-G_gpst.infPT[i + 1].pstate + G_gpst.infPT[i].pstate) << EVID_SLOPE_FP_SHIFT)
-               / (uint32_t) (G_gpst.infPT[i + 1].evid - G_gpst.infPT[i].evid);
-        G_invFVSlopes[i] = tmp;
-    }
-}
-
-//
-//p9_pgpe_pstate_get_evid_from_pstate
-//
-uint32_t p9_pgpe_pstate_get_evid_from_pstate(uint8_t pstate)
-{
-    uint32_t ret_evid;
-
-    //Interpolate voltage based on the region PState falls under
-    if (pstate > G_gpst.infPT[ULTRA].pstate
-        && pstate < G_gpst.infPT[TURBO].pstate)
-    {
-        ret_evid = (((G_FVSlopes[REGION_TURBO_ULTRA]) *
-                     (-pstate + G_gpst.infPT[TURBO].pstate)) >> EVID_SLOPE_FP_SHIFT)
-                   + G_gpst.infPT[TURBO].evid;
-    }
-    else if (pstate > G_gpst.infPT[TURBO].pstate
-             && pstate < G_gpst.infPT[NOMINAL].pstate)
-    {
-        ret_evid = (((G_FVSlopes[REGION_NOMINAL_TURBO]) *
-                     (-pstate + G_gpst.infPT[NOMINAL].pstate)) >> EVID_SLOPE_FP_SHIFT)
-                   + G_gpst.infPT[NOMINAL].evid;
-    }
-    else if (pstate > G_gpst.infPT[NOMINAL].pstate
-             && pstate < G_gpst.infPT[POWERSAVE].pstate)
-    {
-        ret_evid = (((G_FVSlopes[REGION_POWERSAVE_NOMINAL]) *
-                     (- pstate + G_gpst.infPT[POWERSAVE].pstate)) >> EVID_SLOPE_FP_SHIFT)
-                   + G_gpst.infPT[POWERSAVE].evid;
-    }
-    else
-    {
-        if (pstate == G_gpst.infPT[ULTRA].pstate)
-        {
-            ret_evid = G_gpst.infPT[ULTRA].evid;
-        }
-        else if (pstate == G_gpst.infPT[TURBO].pstate)
-        {
-            ret_evid = G_gpst.infPT[TURBO].evid;
-        }
-        else if (pstate == G_gpst.infPT[NOMINAL].pstate)
-        {
-            ret_evid = G_gpst.infPT[NOMINAL].evid;
-        }
-        else if (pstate == G_gpst.infPT[POWERSAVE].pstate)
-        {
-            ret_evid = G_gpst.infPT[POWERSAVE].evid;
-        }
-        else
-        {
-            pk_halt();
-        }
-    }
-
-    return (ret_evid);
-}
-
-
-//
-//p9_pgpe_pstate_get_pstate_from_evid
-//
-uint8_t p9_pgpe_pstate_get_pstate_from_evid(uint16_t evid)
-{
-    uint32_t ret_ps;
-
-    //Interpolate pstate based on the region voltage falls under
-    if (evid < G_gpst.infPT[ULTRA].evid
-        && evid > G_gpst.infPT[TURBO].evid)
-    {
-        ret_ps = -(((G_invFVSlopes[REGION_TURBO_ULTRA]) *
-                    (evid - G_gpst.infPT[TURBO].evid)) >> EVID_SLOPE_FP_SHIFT)
-                 + G_gpst.infPT[TURBO].pstate;
-    }
-    else if (evid < G_gpst.infPT[TURBO].evid
-             && evid > G_gpst.infPT[NOMINAL].evid)
-    {
-        ret_ps = -(((G_invFVSlopes[REGION_NOMINAL_TURBO]) *
-                    (evid - G_gpst.infPT[NOMINAL].evid)) >> EVID_SLOPE_FP_SHIFT)
-                 + G_gpst.infPT[NOMINAL].pstate;
-    }
-    else if (evid < G_gpst.infPT[NOMINAL].evid
-             && evid > G_gpst.infPT[POWERSAVE].evid)
-    {
-        ret_ps = -(((G_invFVSlopes[REGION_POWERSAVE_NOMINAL]) *
-                    (evid - G_gpst.infPT[POWERSAVE].evid)) >> EVID_SLOPE_FP_SHIFT)
-                 + G_gpst.infPT[POWERSAVE].pstate;
-    }
-    else
-    {
-        if (evid == G_gpst.infPT[ULTRA].evid)
-        {
-            ret_ps = G_gpst.infPT[ULTRA].pstate;
-        }
-        else if (evid == G_gpst.infPT[TURBO].evid)
-        {
-            ret_ps = G_gpst.infPT[TURBO].pstate;
-        }
-        else if (evid == G_gpst.infPT[NOMINAL].evid)
-        {
-            ret_ps = G_gpst.infPT[NOMINAL].pstate;
-        }
-        else if (evid == G_gpst.infPT[POWERSAVE].evid)
-        {
-            ret_ps = G_gpst.infPT[POWERSAVE].pstate;
-        }
-        else
-        {
-            pk_halt();
-        }
-    }
-
-    return ret_ps;
-}
-
-uint8_t p9_pgpe_pstate_get_evid_region(uint32_t evid)
-{
-    if (evid > G_gpst.infPT[TURBO].evid)
-    {
-        return REGION_TURBO_ULTRA;
-    }
-    else if (evid < G_gpst.infPT[NOMINAL].evid)
-    {
-        return REGION_POWERSAVE_NOMINAL;
-    }
-    else
-    {
-        return REGION_NOMINAL_TURBO;
-    }
-}
 
 //
 //p9_pgpe_pstate_update_ext_volt
@@ -564,7 +388,8 @@ void p9_pgpe_pstate_freq_update()
     db0.fields.quad3_ps = G_localPSNext[3];
     db0.fields.quad4_ps = G_localPSNext[4];
     db0.fields.quad5_ps = G_localPSNext[5];
-    GPE_PUTSCOM(PCB_MUTLICAST_GRP1 | CPPM_CMEDB0, db0.value);
+    p9_dd1_db_multicast_wr(PCB_MUTLICAST_GRP1 | CPPM_CMEDB0, db0.value, G_ccsr);
+    //GPE_PUTSCOM(PCB_MUTLICAST_GRP1 | CPPM_CMEDB0, db0.value);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -628,21 +453,10 @@ void p9_pgpe_pstate_freq_update()
 //
 void p9_pgpe_pstate_get_config()
 {
-    int32_t q, c;
+    int32_t q;
     ocb_ccsr_t ccsr;
     ccsr.value = in32(OCB_CCSR);
-
-    for (c = 0; c < MAX_CORES; c++)
-    {
-        if (ccsr.value & (0x80000000 >> c))
-        {
-            G_coreConf[c] = 1;
-        }
-        else
-        {
-            G_coreConf[c] = 0;
-        }
-    }
+    G_ccsr = ccsr.value;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
