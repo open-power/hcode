@@ -60,7 +60,7 @@ p9_hcd_cache_poweron(uint32_t quad)
                 BITS64(4, 4) | BIT64(8));
 
     // vdd_pfet_force_state = 11 (Force Von)
-    PK_TRACE("Power Off Cache VDD");
+    PK_TRACE("Power On Cache VDD");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, quad), BITS64(0, 2));
 
     PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle)");
@@ -71,8 +71,9 @@ p9_hcd_cache_poweron(uint32_t quad)
     }
     while(!(scom_data & BIT64(42)));
 
+#if !HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     // vcs_pfet_force_state = 11 (Force Von)
-    PK_TRACE("Power Off Cache VCS");
+    PK_TRACE("Power On Cache VCS");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, quad), BITS64(2, 2));
 
     PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle)");
@@ -87,7 +88,7 @@ p9_hcd_cache_poweron(uint32_t quad)
     // vcs_pfet_force_state = 00 (Nop)
     PK_TRACE("Turn Off Force Von");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, quad), BITS64(0, 4));
-
+#endif
 #endif
 
     return rc;

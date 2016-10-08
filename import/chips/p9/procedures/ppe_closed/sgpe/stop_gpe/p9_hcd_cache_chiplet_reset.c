@@ -82,7 +82,11 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), (BIT64(0) | BIT64(3)));
 
     PK_TRACE("Flip L2 glsmux to DPLL via QPPM_EXCGCR[34:35]");
+#if !HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), BITS64(34, 2));
+#else
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), ((uint64_t)ex << SHIFT64(35)));
+#endif
 
     PK_TRACE("Assert DPLL ff_bypass via QPPM_DPLL_CTRL[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_OR, quad), BIT64(2));
@@ -94,7 +98,11 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), BIT64(3));
 
     PK_TRACE("Drop L2 glsmux reset via QPPM_EXCGCR[32:33]");
+#if !HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, quad), BITS64(32, 2));
+#else
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, quad), ((uint64_t)ex << SHIFT64(33)));
+#endif
 
     // 40 ref cycles
     PPE_WAIT_CORE_CYCLES(loop, 1600);
@@ -119,6 +127,7 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     // Marker for scan0
     MARK_TRAP(SX_CHIPLET_RESET_SCAN0)
 #if !SKIP_SCAN0
+#if !HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     uint64_t regions = SCAN0_REGION_ALL_BUT_EX;
 
     if (ex & FST_EX_IN_QUAD)
@@ -132,16 +141,145 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     }
 
     p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_GPTR_REPR_TIME);
+#else
+    PK_TRACE_INF("DD1 VCS workaround:");
+    uint32_t l_loop  = 0;
+    uint64_t regions = SCAN0_REGION_ALL;
+    p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_GPTR_REPR_TIME);
+
+    //Eq_fure + Ex_l2_fure(ex0) + Ex_l2_fure(ex1)
+#define DD1_EQ_FURE_RING_LENGTH (46532+119192+119192)
+    uint64_t l_regions = CLK_REGION_PERV | CLK_REGION_EX0_L2 | CLK_REGION_EX1_L2;
+
+    // ----------------------------------------------------
+    // Scan1 initialize region:Perv/L20/L21 type:Fure rings
+    // Note: must also scan partial good "bad" L2 rings,
+    // and clock start&stop their latches, as well
+    // ----------------------------------------------------
+
+    PK_TRACE("Assert Vital clock regional fence via CPLT_CTRL1[3]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, quad), BIT64(3));
+
+    PK_TRACE("Assert regional fences of scanned regions via CPLT_CTRL1[4,8,9]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, quad), l_regions);
+
+    PK_TRACE("Clear clock region register via CLK_REGION");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), 0);
+
+    PK_TRACE("Setup scan select register via SCAN_REGION_TYPE[4,8,9,48,51]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad),
+                (l_regions | SCAN_TYPE_FUNC | SCAN_TYPE_REGF));
+
+    PK_TRACE("Write scan data register via 0x1003E040");
+
+    for (l_loop = 0; l_loop <= DD1_EQ_FURE_RING_LENGTH / 64; l_loop++)
+    {
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E040, quad), BITS64(0, 64));
+    }
+
+    PK_TRACE("Final Scan Loop Count: %d", l_loop);
+
+    // -------------------------------
+    // Start Perv/L20/L21 clocks
+    // -------------------------------
+
+    PK_TRACE("Clear all SCAN_REGION_TYPE bits");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
+
+    PK_TRACE("Start cache clocks(perv/l20/l21) via CLK_REGION");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad),
+                (CLK_START_CMD | CLK_THOLD_ARY | l_regions));
+
+    PK_TRACE("Poll for perv/l20/l21 clocks running via CPLT_STAT0[8]");
+
+    do
+    {
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
+    }
+    while((~scom_data) & BIT64(8));
+
+    PK_TRACE("Check perv/l20/l21 clocks running");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_ARY, quad), scom_data);
+
+    if (scom_data & l_regions)
+    {
+        PK_TRACE("Perv/l20/l21 clock start failed");
+        pk_halt();
+    }
+
+    PK_TRACE("Perv/l20/l21 clocks running now");
+
+    // -------------------------------
+    // Turn on power headers for VCS
+    // -------------------------------
+
+    // vcs_pfet_force_state = 11 (Force Von)
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, quad), BITS64(2, 2));
+
+    do
+    {
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, quad), scom_data);
+    }
+    while(!(scom_data & BIT64(50)));
+
+    // vdd_pfet_force_state = 00 (Nop)
+    // vcs_pfet_force_state = 00 (Nop)
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, quad), BITS64(0, 4));
+
+    PK_TRACE("Powered On VCS");
+
+    // -------------------------------
+    // Stop Perv/L20/L21 clocks
+    // -------------------------------
+
+    PK_TRACE("Clear all SCAN_REGION_TYPE bits");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
+
+    PK_TRACE("Stop perv/l20/l21 clocks via CLK_REGION");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad),
+                (CLK_STOP_CMD | CLK_THOLD_ARY | l_regions));
+
+    PK_TRACE("Poll for perv/l20/l21 clocks stopped via CPLT_STAT0[8]");
+
+    do
+    {
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
+    }
+    while((~scom_data) & BIT64(8));
+
+    PK_TRACE("Check perv/l20/l21 clocks stopped");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_ARY, quad), scom_data);
+
+    if (((~scom_data) & l_regions) != 0)
+    {
+        PK_TRACE("Perv/l20/l21 clock stop failed");
+        pk_halt();
+    }
+
+    PK_TRACE("Perv/l20/l21 Clock Stopped");
+
+    // -------------------------------
+    // Clean up
+    // -------------------------------
+
+    PK_TRACE("Drop Vital clock regional fence via CPLT_CTRL1[3]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), BIT64(3));
+
+    PK_TRACE("Drop Perv/L20/L21 regional fences via CPLT_CTRL1[4,8,9]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), l_regions);
+
+#endif
+
     p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
 #endif
 
-    /// content below from p9_hcd_cache_chiplet_l3_dcc_setup
+    /// content of p9_hcd_cache_chiplet_l3_dcc_setup below:
     /// @todo scan_with_setpulse_module(l3 dcc)
-    PK_TRACE("Drop L3 DCC bypass via NET_CTRL1[1]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WAND, quad), ~BIT64(1));
+    //PK_TRACE("Drop L3 DCC bypass via NET_CTRL1[1]");
+    //GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WAND, quad), ~BIT64(1));
     /// @todo add VDM_ENABLE attribute control
-    PK_TRACE("Assert vdm enable via CPPM_VDMCR[0]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_OR, quad), BIT64(0));
+    //PK_TRACE("Assert vdm enable via CPPM_VDMCR[0]");
+    //GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_OR, quad), BIT64(0));
 
     return rc;
 }

@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/sgpe/stop_gpe/p9_hcd_cache_scominit.c $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/sgpe/stop_gpe/p9_hcd_cache_chiplet_l3_dcc_setup.C $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2016,2017                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -22,50 +22,49 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
+//------------------------------------------------------------------------------
+/// @file  p9_hcd_cache_chiplet_l3_dcc_setup.C
+///
+/// @brief Setup L3 DCC, Drop L3 DCC bypass
+//------------------------------------------------------------------------------
+// *HWP HW Owner        : Anusha Reddy Rangareddygari <anusrang@in.ibm.com>
+// *HWP HW Backup Owner : Srinivas V Naga <srinivan@in.ibm.com>
+// *HWP FW Owner        : Sunil Kumar <skumar8j@in.ibm.com>
+// *HWP Team            : Perv
+// *HWP Level           : 2
+// *HWP Consumed by     : SBE
+//------------------------------------------------------------------------------
+
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
+#include "hw_access.H"
+#include "p9_ringid_sgpe.H"
+#include <fapi2.H>
 
-extern SgpeStopRecord G_sgpe_stop_record;
 
-int
-p9_hcd_cache_scominit(uint32_t quad, uint32_t ex)
+extern "C" int p9_hcd_cache_chiplet_l3_dcc_setup(uint32_t quad)
 {
     int rc = SGPE_STOP_SUCCESS;
-    uint64_t   scom_data;
-    ocb_qcsr_t qcsr;
+    fapi2::Target<fapi2::TARGET_TYPE_EQ>           l_eqTarget
+    (
+        fapi2::plat_getTargetHandleByChipletNumber((uint8_t)quad + EQ_CHIPLET_OFFSET)
+    );
 
-    PK_TRACE("Set L3_LCO_TARGET_ID/VICTIMS via EX_L3_MODE_REG1[2-5,6-21]");
+    FAPI_DBG(">>p9_hcd_cache_chiplet_l3_dcc_setup");
 
-    // read partial good exes
-    do
-    {
-        qcsr.value = in32(OCB_QCSR);
-    }
-    while (qcsr.fields.change_in_progress);
+    FAPI_DBG("Scan eq_ana_bndy_l3dcc_bucket_26 ring");
+    FAPI_TRY(fapi2::putRing(l_eqTarget,
+                            eq_ana_bndy_l3dcc_bucket_26, fapi2::RING_MODE_SET_PULSE_NSL));
 
-    if (ex & FST_EX_IN_QUAD)
-    {
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data);
-        scom_data |= (quad << SHIFT32((5 - 1)));
-        scom_data |= ((qcsr.value & BITS32(0, 12)) >> 6);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data);
-    }
+    FAPI_DBG("Drop L3 DCC bypass");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WAND, quad), ~BIT64(1));
 
-    if (ex & SND_EX_IN_QUAD)
-    {
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data);
-        scom_data |= ((quad << SHIFT32((5 - 1))) + 1);
-        scom_data |= ((qcsr.value & BITS32(0, 12)) >> 6);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data);
-    }
+    FAPI_DBG("Check if VDMs are to be enabled. If so, power them on");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_OR, quad), BIT64(0));
 
-    PK_TRACE("Enable DTS sampling via THERM_MODE_REG[5]");
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_THERM_MODE_REG, quad), scom_data);
-    scom_data |= BIT64(5);
-    /// @todo set the sample pulse count (bit 6:9)
-    /// enable the appropriate loops (needs investigation with the Perv team on the EC wiring).
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_THERM_MODE_REG, quad), scom_data);
+fapi_try_exit:
 
+    FAPI_DBG("<<p9_hcd_cache_chiplet_l3_dcc_setup");
     return rc;
 }

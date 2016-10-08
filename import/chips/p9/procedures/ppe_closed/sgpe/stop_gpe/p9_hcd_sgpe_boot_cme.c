@@ -114,7 +114,6 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
         uint8_t l_cmeIndex = 0;
         uint8_t activeCmeList[MAX_CME_PER_CHIP] = {ZERO};
         uint8_t activeCmeCnt = 0;
-        uint8_t cmeInitSuccessCnt = 0;
         uint8_t quadId = 0;
         uint32_t l_scomAddr = 0;
 
@@ -280,6 +279,10 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
             break;
         }
 
+        uint32_t cmeBootedList = 0;
+
+        uint8_t  cmeInitSuccessCnt = 0;
+
         uint32_t l_copyStatus = 0;
 
         while(cmeInitSuccessCnt != activeCmeCnt)
@@ -291,6 +294,14 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                 if( INACTIVE_CORE == activeCmeList[l_cmeIndex] )
                 {
                     // block copy was not initiated on this. so skip this CME
+                    continue;
+                }
+
+                uint32_t l_cmeBootedBit = CHECK_BIT >> l_cmeIndex;
+
+                if( cmeBootedList & l_cmeBootedBit )
+                {
+                    // CME Boot successful already
                     continue;
                 }
 
@@ -347,6 +358,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                 // Writing to XCR to resume PPE operation
                 PPE_PUTSCOM( l_scomAddr, RESUME_PPE_OPERATION );
                 cmeInitSuccessCnt++;
+                cmeBootedList = cmeBootedList | l_cmeBootedBit;
 
             } //for ( l_cmeIndex = 0 ....)
 

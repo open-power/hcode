@@ -32,8 +32,7 @@ p9_hcd_core_arrayinit(uint32_t core)
     int rc = CME_STOP_SUCCESS;
     uint64_t scom_data;
 
-    /// @todo add DD1 attribute control
-    PK_TRACE("DD1 only: set sdis_n(flushing LCBES condition workaround");
+    PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
 
     PK_TRACE("Drop vital fence (moved to arrayinit from sacn0 module)");
@@ -99,8 +98,7 @@ p9_hcd_core_arrayinit(uint32_t core)
     p9_hcd_core_scan0(core, SCAN0_REGION_ALL_BUT_PLL, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
 #endif
 
-    /// @todo add DD1 attribute control
-    PK_TRACE("DD1 only: reset sdis_n(flushing LCBES condition workaround");
+    PK_TRACE("Drop sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     CME_PUTSCOM(C_CPLT_CONF0_CLEAR, core, BIT64(34));
 
     return rc;

@@ -35,8 +35,7 @@ p9_hcd_core_startclocks(uint32_t core)
     //FAPI_DBG("Set CPLT_CTRL0[AVP_MODE] for cache-contained execution");
     //FAPI_TRY(putScom(i_target, C_CPLT_CTRL0_OR, MASK_SET(5)));
 
-    /// @todo add DD1 attribute control
-    PK_TRACE("DD1 only: set sdis_n(flushing LCBES condition workaround");
+    PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");

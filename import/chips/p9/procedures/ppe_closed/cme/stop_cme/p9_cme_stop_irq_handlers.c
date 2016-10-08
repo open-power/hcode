@@ -29,41 +29,22 @@
 
 extern CmeStopRecord G_cme_stop_record;
 
-// Important: g_eimr_override at any time should mask wakeup interrupts of
-//            running core(s), the override vector should change after each
-//            entry and exit as core state is changed.
-// For Entry, mask the following interrupts via unified interrupt handler:
-//   lower priority interrupts than pm_active, and both pm_active (catchup)
-//   wakeup interrupts of the entering core(s) should still be masked
-//   via g_eimr_override (abortion), stopped core can still exit any time
-//   as their wakeup interrupts should be unmasked
-// After Entry, unmask the following interrupts via pk_irq_vec_restore:
-//   priority group on stack, likely at least both pm_active unmasked
-//   (stopped core cannot get extra pm_active, untouched core can enter)
-//   here needs to use g_eimr_override to mask wakeup of running core(s)
-//   wakeup of the stopped core(s) should be already unmasked by default
-//   (when restored, previous masked wakeups are being unmasked as well)
-// For Exit, mask the following interrupts via unified interrupt handler:
-//   lower priority interrupts than wakeup, including DB2+pm_active(catchup)
-// After Exit, unmask the following interrupts via pk_irq_vec_restore:
-//   priority group on stack, likely at least wakeup and DB2 unmasked
-//   here needs to use g_eimr_override to mask wakeup of exited core(s)
 void
-p9_cme_stop_event_handler(void* arg, PkIrqId irq)
+p9_cme_stop_exit_handler(void* arg, PkIrqId irq)
 {
-    MARK_TRAP(STOP_EVENT_HANDLER)
-    PK_TRACE("STOP-IRQ: %d", irq);
+    MARK_TRAP(STOP_EXIT_HANDLER)
+    PK_TRACE_INF("SX-IRQ: %d", irq);
+    out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+    pk_semaphore_post((PkSemaphore*)arg);
+}
 
-    if (in32(CME_LCL_EISR) & BITS32(12, 6))
-    {
-        PK_TRACE("lanuch exit");
-        pk_semaphore_post((PkSemaphore*)(&(G_cme_stop_record.sem[1])));
-    }
-    else if (in32(CME_LCL_EISR) & BITS32(20, 2))
-    {
-        PK_TRACE("lanuch entry");
-        pk_semaphore_post((PkSemaphore*)(&(G_cme_stop_record.sem[0])));
-    }
+void
+p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
+{
+    MARK_TRAP(STOP_ENTER_HANDLER)
+    PK_TRACE_INF("SE-IRQ: %d", irq);
+    out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+    pk_semaphore_post((PkSemaphore*)arg);
 }
 
 void
@@ -71,7 +52,7 @@ p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
     MARK_TRAP(STOP_DB1_HANDLER)
-    PK_TRACE("DB1-IRQ: %d", irq);
+    PK_TRACE_INF("DB1-IRQ: %d", irq);
     pk_irq_vec_restore(&ctx);
 }
 

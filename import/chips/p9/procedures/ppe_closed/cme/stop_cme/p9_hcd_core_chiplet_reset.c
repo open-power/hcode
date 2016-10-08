@@ -97,5 +97,12 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     PK_TRACE("Assert vdm enable via CPPM_VDMCR[0]");
     CME_PUTSCOM(PPM_VDMCR_OR, core, BIT64(0));
 
+    /// content of p9_hcd_core_dcc_skewadjust below:
+    PK_TRACE("Drop core DCC bypass via NET_CTRL[1]");
+    CME_PUTSCOM(CPPM_NC1INDIR_CLR, core, BIT64(1));
+
+    PK_TRACE("Drop core progdly bypass(skewadjust) via NET_CTRL1[2]");
+    CME_PUTSCOM(CPPM_NC1INDIR_CLR, core, BIT64(2));
+
     return rc;
 }

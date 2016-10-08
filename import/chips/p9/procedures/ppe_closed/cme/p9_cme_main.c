@@ -26,6 +26,7 @@
 #include "pk.h"
 #include "p9_cme_irq.h"
 #include "p9_cme_flags.h"
+#include "p9_hcode_image_defines.H"
 
 // CME Pstate Header and Structure
 #include "p9_cme_pstate.h"
@@ -55,23 +56,23 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_BUSY_HIGH
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_TIMEOUT
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DOORBELL3_C0
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DOORBELL3_C1
-IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[1]))
+IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_PC_INTR_PENDING_C0
-IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[1]))
+IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_PC_INTR_PENDING_C1
-IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[1]))
+IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_REG_WAKEUP_C0
-IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[1]))
+IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_REG_WAKEUP_C1
-IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[1]))
+IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_SPECIAL_WAKEUP_C0
-IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[1]))
+IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_SPECIAL_WAKEUP_C1
 IRQ_HANDLER(p9_cme_stop_db2_handler, 0)     //CMEHW_IRQ_DOORBELL2_C0
 IRQ_HANDLER(p9_cme_stop_db2_handler, 0)     //CMEHW_IRQ_DOORBELL2_C1
-IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[0]))
+IRQ_HANDLER(p9_cme_stop_enter_handler, (void*) & (G_cme_stop_record.sem[0]))
 //CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0
-IRQ_HANDLER(p9_cme_stop_event_handler, (void*) & (G_cme_stop_record.sem[0]))
+IRQ_HANDLER(p9_cme_stop_enter_handler, (void*) & (G_cme_stop_record.sem[0]))
 //CMEHW_IRQ_PC_PM_STATE_ACTIVE_C1
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_L2_PURGE_DONE
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_NCU_PURGE_DONE
@@ -167,6 +168,19 @@ main(int argc, char** argv)
                   PPE_TIMEBASE_HZ);
 
     PK_TRACE("Kernel init completed");
+
+    // reading header attributes and initialize the queued scom mode
+    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET);
+    G_cme_stop_record.header_flags = pCmeImgHdr->g_cme_mode_flags;
+
+    if (G_cme_stop_record.header_flags & QUEUED_SCAN_DISABLE)
+    {
+        out32(CME_LCL_LMCR_CLR, BITS32(8, 2));
+    }
+    else
+    {
+        out32(CME_LCL_LMCR_OR, BITS32(8, 2));
+    }
 
     // Unified interrupt handler checks
     if (IDX_PRTY_LVL_DISABLED != (NUM_EXT_IRQ_PRTY_LEVELS - 1))

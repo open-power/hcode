@@ -30,7 +30,7 @@ int
 p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
 {
     int rc = CME_STOP_SUCCESS;
-#if BROADSIDE_SCAN0
+#if EPM_BROADSIDE_SCAN0
     // clean up the scan region
     CME_PUTSCOM(PERV_SCAN_REGION_TYPE, core, 0);
 

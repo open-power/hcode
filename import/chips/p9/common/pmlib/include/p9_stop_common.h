@@ -28,8 +28,11 @@ enum P9_HCD_COMMON_CLK_CTRL_CONSTANTS
 {
     CLK_STOP_CMD                             = BIT64(0),
     CLK_START_CMD                            = BIT64(1),
+    CLK_REGION_PERV                          = BIT64(4),
     CLK_REGION_ANEP                          = BIT64(10),
     CLK_REGION_DPLL                          = BIT64(14),
+    CLK_REGION_EX0_L2                        = BIT64(8),
+    CLK_REGION_EX1_L2                        = BIT64(9),
     CLK_REGION_EX0_L2_L3_REFR                = BIT64(6) | BIT64(8) | BIT64(12),
     CLK_REGION_EX1_L2_L3_REFR                = BIT64(7) | BIT64(9) | BIT64(13),
     CLK_REGION_ALL_BUT_EX                    = BITS64(4, 2) | BITS64(10, 2) | BIT64(14),
@@ -37,7 +40,27 @@ enum P9_HCD_COMMON_CLK_CTRL_CONSTANTS
     CLK_REGION_ALL_BUT_EX_ANEP_DPLL          = BITS64(4, 2) | BIT64(11),
     CLK_REGION_ALL_BUT_PLL                   = BITS64(4, 10),
     CLK_REGION_ALL                           = BITS64(4, 11),
+    CLK_THOLD_SL                             = BIT64(48),
+    CLK_THOLD_NSL                            = BIT64(49),
+    CLK_THOLD_ARY                            = BIT64(50),
     CLK_THOLD_ALL                            = BITS64(48, 3)
+};
+
+// Scan Type Constants
+enum P9_HCD_COMMON_SCAN_TYPE_CONSTANTS
+{
+    SCAN_TYPE_FUNC                          = BIT64(48),
+    SCAN_TYPE_CFG                           = BIT64(49),
+    SCAN_TYPE_CCFG_GPTR                     = BIT64(50),
+    SCAN_TYPE_REGF                          = BIT64(51),
+    SCAN_TYPE_LBIST                         = BIT64(52),
+    SCAN_TYPE_ABIST                         = BIT64(53),
+    SCAN_TYPE_REPR                          = BIT64(54),
+    SCAN_TYPE_TIME                          = BIT64(55),
+    SCAN_TYPE_BNDY                          = BIT64(56),
+    SCAN_TYPE_FARR                          = BIT64(57),
+    SCAN_TYPE_CMSK                          = BIT64(58),
+    SCAN_TYPE_INEX                          = BIT64(59)
 };
 
 // SCAN0 Constants

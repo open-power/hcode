@@ -32,8 +32,7 @@ p9_hcd_cache_arrayinit(uint32_t quad, uint32_t ex)
     int rc = SGPE_STOP_SUCCESS;
     uint64_t scom_data;
 
-    /// @todo add DD1 attribute control
-    PK_TRACE("DD1 only: set sdis_n(flushing LCBES condition workaround");
+    PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CONF0_OR, quad), BIT64(34));
 
     PK_TRACE("Drop vital fence (moved to arrayinit from sacn0 module)");
@@ -114,8 +113,7 @@ p9_hcd_cache_arrayinit(uint32_t quad, uint32_t ex)
     // all but anep dpll all but gptr repr time
 #endif
 
-    /// @todo add DD1 attribute control
-    PK_TRACE("DD1 only: reset sdis_n(flushing LCBES condition workaround");
+    PK_TRACE("Drop sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CONF0_CLEAR, quad), BIT64(34));
 
     return rc;

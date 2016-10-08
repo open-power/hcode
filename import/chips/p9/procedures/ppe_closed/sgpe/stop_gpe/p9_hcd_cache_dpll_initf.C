@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/sgpe/stop_gpe/p9_hcd_cache_scominit.c $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/sgpe/stop_gpe/p9_hcd_cache_dpll_initf.C $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -25,47 +25,26 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
+#include "hw_access.H"
+#include "p9_ringid_sgpe.H"
+#include <fapi2.H>
 
-extern SgpeStopRecord G_sgpe_stop_record;
-
-int
-p9_hcd_cache_scominit(uint32_t quad, uint32_t ex)
+extern "C" int p9_hcd_cache_dpll_initf(uint32_t quad)
 {
     int rc = SGPE_STOP_SUCCESS;
-    uint64_t   scom_data;
-    ocb_qcsr_t qcsr;
+    fapi2::Target<fapi2::TARGET_TYPE_EQ> l_eqTarget
+    (
+        fapi2::plat_getTargetHandleByChipletNumber((uint8_t)quad + EQ_CHIPLET_OFFSET)
+    );
 
-    PK_TRACE("Set L3_LCO_TARGET_ID/VICTIMS via EX_L3_MODE_REG1[2-5,6-21]");
+    FAPI_INF(">>p9_hcd_cache_dpll_initf");
 
-    // read partial good exes
-    do
-    {
-        qcsr.value = in32(OCB_QCSR);
-    }
-    while (qcsr.fields.change_in_progress);
+    FAPI_DBG("Scan eq_dpll_func ring");
+    FAPI_TRY(fapi2::putRing(l_eqTarget, eq_dpll_func));
 
-    if (ex & FST_EX_IN_QUAD)
-    {
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data);
-        scom_data |= (quad << SHIFT32((5 - 1)));
-        scom_data |= ((qcsr.value & BITS32(0, 12)) >> 6);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data);
-    }
-
-    if (ex & SND_EX_IN_QUAD)
-    {
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data);
-        scom_data |= ((quad << SHIFT32((5 - 1))) + 1);
-        scom_data |= ((qcsr.value & BITS32(0, 12)) >> 6);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data);
-    }
-
-    PK_TRACE("Enable DTS sampling via THERM_MODE_REG[5]");
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_THERM_MODE_REG, quad), scom_data);
-    scom_data |= BIT64(5);
-    /// @todo set the sample pulse count (bit 6:9)
-    /// enable the appropriate loops (needs investigation with the Perv team on the EC wiring).
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_THERM_MODE_REG, quad), scom_data);
+    // Markers needed for cache ininf
+fapi_try_exit:
+    FAPI_INF("<<p9_hcd_cache_dpll_initf");
 
     return rc;
 }

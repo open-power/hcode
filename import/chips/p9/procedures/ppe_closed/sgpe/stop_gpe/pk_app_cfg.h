@@ -34,14 +34,7 @@
 /// \brief Application specific overrides go here.
 ///
 
-// @todo RTC 161182
-#define HW386311_PBIE_RW_PTR_STOP11_FIX 1
-#define BROADSIDE_SCAN0                 0
-#define FUSED_CORE_MODE_SCAN_FIX        0
-
-#define SIMICS_TUNING 0
-#define USE_SIMICS_IO 0
-#define DEV_DEBUG     1
+// --------------------
 
 #ifndef EPM_P9_TUNING
     #define EPM_P9_TUNING 0
@@ -50,28 +43,58 @@
 #define STOP_PRIME           0
 #define SKIP_L3_PURGE        0
 #define SKIP_L3_PURGE_ABORT  0
-#define ISTEP15_HACK         0
+#define SKIP_ARRAYINIT       0
+#define SKIP_SCAN0           0
+#define SKIP_INITF           0
 
 #if EPM_P9_TUNING
+    // @todo RTC 161182
+    #define HW386311_DD1_PBIE_RW_PTR_STOP11_FIX            0
+    #define HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 0
+    #define FUSED_CORE_MODE_SCAN_FIX                       0
+
     #define SKIP_CME_BOOT_STOP11 1
     #define SKIP_CME_BOOT_IPL_HB 1
-    #define SKIP_ARRAYINIT       0
-    #define SKIP_SCAN0           0
+    #define EPM_BROADSIDE_SCAN0  0
 #else
+    #define HW386311_DD1_PBIE_RW_PTR_STOP11_FIX            1
+    #define HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 1
+    #define FUSED_CORE_MODE_SCAN_FIX                       0
+
     #define SKIP_CME_BOOT_STOP11 0
     #define SKIP_CME_BOOT_IPL_HB 1
-    #define SKIP_ARRAYINIT       0
-    #define SKIP_SCAN0           0
+    #define EPM_BROADSIDE_SCAN0  0
 #endif
-#define SKIP_INITF               0
 
 // --------------------
+
+#define PK_TRACE_LEVEL 2
+
+#if PK_TRACE_LEVEL == 0   /*No TRACEs*/
+    #define PK_TRACE_ENABLE        0
+    #define PK_KERNEL_TRACE_ENABLE 0
+#elif PK_TRACE_LEVEL == 1 /*only PK_TRACE_INF*/
+    #define PK_TRACE_ENABLE        1
+    #define PK_TRACE_CRIT_ENABLE   1
+    #define PK_TRACE_DBG_SUPPRESS  1
+    #define PK_KERNEL_TRACE_ENABLE 0
+#else                    /*All TRACEs*/
+    #define PK_TRACE_ENABLE        1
+    #define PK_TRACE_CRIT_ENABLE   1
+    #define PK_TRACE_DBG_SUPPRESS  0
+    #define PK_KERNEL_TRACE_ENABLE 1
+#endif
 
 #if EPM_P9_TUNING
     #define PK_TRACE_BUFFER_WRAP_MARKER 1
 #endif
-#define PK_TRACE_TIMER_OUTPUT 0
-#define PK_TRACE_ENABLE       1
+#define PK_TRACE_TIMER_OUTPUT  0
+
+// --------------------
+
+#define SIMICS_TUNING 0
+#define USE_SIMICS_IO 0
+#define DEV_DEBUG     1
 
 // --------------------
 

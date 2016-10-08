@@ -34,53 +34,68 @@
 /// \brief Application specific overrides go here.
 ///
 
-#define HW386841_PLS_SRR1_DSL_STOP1_FIX 0
-#define BROADSIDE_SCAN0                 0
-#define TEST_ONLY_BCE_IRR               0
+// @todo RTC 161182
+#define HW386841_DD1_PLS_SRR1_DSL_STOP1_FIX 0
+#define TEST_ONLY_BCE_IRR                   0
+
+// --------------------
+
+#ifndef EPM_P9_TUNING
+    #define EPM_P9_TUNING 0
+#endif
 
 #define STOP_PRIME            0
 #define SKIP_ABORT            0
 #define SKIP_L2_PURGE_ABORT   0
 #define SKIP_ENTRY_CATCHUP    0
-#define ISTEP15_HACK          1
+#define SKIP_EXIT_CATCHUP     0
+#define SKIP_ARRAYINIT        0
+#define SKIP_SCAN0            0
+#define SKIP_INITF            0
+#define SKIP_SELF_RESTORE     0
+#define SKIP_RAM_HRMOR        0
 
-#if !ISTEP15_HACK
-    #define SKIP_EXIT_CATCHUP     0
-    #define EPM_P9_TUNING         1
-    #define SKIP_SCAN0            0
-    #define SKIP_INITF            0
-    #define SKIP_SELF_RESTORE     0
-    #define SKIP_RAM_HRMOR        0
+#if EPM_P9_TUNING
+    #define SPWU_AUTO             1
     #define SKIP_BCE_SCAN_RING    1
     #define SKIP_BCE_SCOM_RESTORE 1
-    #define SPWU_AUTO             1
-    #define SKIP_ARRAYINIT        0
+    #define EPM_BROADSIDE_SCAN0   0
 #else
-    #define SKIP_EXIT_CATCHUP     1
-    #define EPM_P9_TUNING         0
-    #define SKIP_SCAN0            0
-    #define SKIP_INITF            0
-    #define SKIP_SELF_RESTORE     0
-    #define SKIP_RAM_HRMOR        0
+    #define SPWU_AUTO             0
     #define SKIP_BCE_SCAN_RING    0
     #define SKIP_BCE_SCOM_RESTORE 1
-    #define SPWU_AUTO             0
-    #define SKIP_ARRAYINIT        0
+    #define EPM_BROADSIDE_SCAN0   0
 #endif
-
 
 // --------------------
 
-#define SIMICS_TUNING         0
-#define USE_SIMICS_IO         0
-#define DEV_DEBUG             1
+#define PK_TRACE_LEVEL 2
+
+#if PK_TRACE_LEVEL == 0   /*No TRACEs*/
+    #define PK_TRACE_ENABLE        0
+    #define PK_KERNEL_TRACE_ENABLE 0
+#elif PK_TRACE_LEVEL == 1 /*only PK_TRACE_INF*/
+    #define PK_TRACE_ENABLE        1
+    #define PK_TRACE_CRIT_ENABLE   1
+    #define PK_TRACE_DBG_SUPPRESS  1
+    #define PK_KERNEL_TRACE_ENABLE 0
+#else                    /*All TRACEs*/
+    #define PK_TRACE_ENABLE        1
+    #define PK_TRACE_CRIT_ENABLE   1
+    #define PK_TRACE_DBG_SUPPRESS  0
+    #define PK_KERNEL_TRACE_ENABLE 1
+#endif
 
 #if EPM_P9_TUNING
     #define PK_TRACE_BUFFER_WRAP_MARKER 1
 #endif
-#define PK_TRACE_TIMER_OUTPUT  0
-#define PK_TRACE_ENABLE        1
-#define PK_KERNEL_TRACE_ENABLE 1
+#define PK_TRACE_TIMER_OUTPUT 0
+
+// --------------------
+
+#define SIMICS_TUNING 0
+#define USE_SIMICS_IO 0
+#define DEV_DEBUG     1
 
 // --------------------
 

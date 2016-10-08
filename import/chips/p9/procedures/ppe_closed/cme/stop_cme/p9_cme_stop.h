@@ -138,7 +138,7 @@
      (((uint64_t)pls) << SHIFT64(60)) |  ((uint64_t)srr1_t3)                 | \
      (BIT64(32) | BIT64(40) | BIT64(48) | BIT64(56)))
 
-#if HW386841_PLS_SRR1_DLS_STOP1_FIX
+#if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
 #define CME_STOP_UPDATE_DLS(dls, srr1)                                         \
     ((((uint64_t)dls.threads.t0) << SHIFT64(36)) | (((uint64_t)srr1[0]) << SHIFT64(39)) | \
      (((uint64_t)dls.threads.t1) << SHIFT64(44)) | (((uint64_t)srr1[1]) << SHIFT64(47)) | \
@@ -172,12 +172,22 @@ enum CME_STOP_IRQ_SHORT_NAME
 
 enum CME_IRQ_VECTORS
 {
+// if auto mask eimr.spwu else never mask eimr.spwu
+#if SPWU_AUTO
     IRQ_VEC_WAKE_C0 = BIT64(12) | BIT64(14) | BIT64(16),
     IRQ_VEC_WAKE_C1 = BIT64(13) | BIT64(15) | BIT64(17),
+#else
+    IRQ_VEC_WAKE_C0 = BIT64(12) | BIT64(16),
+    IRQ_VEC_WAKE_C1 = BIT64(13) | BIT64(17),
+#endif
     IRQ_VEC_SGPE_C0 = BIT64(12) | BIT64(20),
     IRQ_VEC_SGPE_C1 = BIT64(13) | BIT64(21),
     IRQ_VEC_PCWU_C0 = BIT64(12),
     IRQ_VEC_PCWU_C1 = BIT64(13),
+    IRQ_VEC_SPWU_C0 = BIT64(14),
+    IRQ_VEC_SPWU_C1 = BIT64(15),
+    IRQ_VEC_RGWU_C0 = BIT64(16),
+    IRQ_VEC_RGWU_C1 = BIT64(17),
     IRQ_VEC_STOP_C0 = BIT64(20),
     IRQ_VEC_STOP_C1 = BIT64(21)
 };
@@ -193,6 +203,17 @@ enum CME_STOP_FLAGS
     FLAG_ENTRY_FIRST_C1              = BIT32(29),
     FLAG_PARTIAL_GOOD_C0             = BIT32(30),
     FLAG_PARTIAL_GOOD_C1             = BIT32(31)
+};
+
+enum ATTR_CME_MODE_FLAGS
+{
+    MAP_3_TO_2                       = BIT32(0),
+    MAP_4_TO_2                       = BIT32(1),
+    MAP_5_TO_4                       = BIT32(2),
+    MAP_8_TO_5                       = BIT32(3),
+    MAP_11_TO_8                      = BIT32(4),
+    QUEUED_SCAN_DISABLE              = BIT32(30),
+    SKIP_CORE_POWEROFF               = BIT32(31)
 };
 
 enum CME_STOP_PIG_TYPES
@@ -215,7 +236,7 @@ enum CME_STOP_SRR1
     NO_STATE_LOSS                    = 1
 };
 
-#if HW386841_PLS_SRR1_DLS_STOP1_FIX
+#if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
 typedef union
 {
     uint16_t vector;
@@ -274,6 +295,10 @@ typedef struct
     uint32_t      core_stopgpe;
     // core in block wakeup mode
     uint32_t      core_blockwu;
+    // core in special wakeup
+    uint32_t      core_in_spwu;
+    // cme header attributes
+    uint32_t      header_flags;
     PkSemaphore   sem[2];
 } CmeStopRecord;
 
@@ -284,7 +309,9 @@ void p9_cme_stop_exit_thread(void*);
 int  p9_cme_stop_entry();
 int  p9_cme_stop_exit();
 
-void p9_cme_stop_event_handler(void*, PkIrqId);
+void p9_cme_stop_enter_handler(void*, PkIrqId);
+void p9_cme_stop_exit_handler(void*, PkIrqId);
+void p9_cme_stop_spwu_handler(void*, PkIrqId);
 void p9_cme_stop_db1_handler(void*, PkIrqId);
 void p9_cme_stop_db2_handler(void*, PkIrqId);
 

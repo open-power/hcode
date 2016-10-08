@@ -98,7 +98,7 @@ EXTERNAL_IRQ_TABLE_END
 
 #define  KERNEL_STACK_SIZE                  512
 
-#define  SGPE_THREAD_STACK_SIZE_STOP_EXIT   512
+#define  SGPE_THREAD_STACK_SIZE_STOP_EXIT   1024
 #define  SGPE_THREAD_STACK_SIZE_STOP_ENTRY  256
 
 #define  SGPE_THREAD_PRIORITY_STOP_EXIT     1
@@ -138,6 +138,7 @@ main(int argc, char** argv)
 {
     if (in32(OCB_OCCFLG) & BIT32(12))
     {
+        PK_TRACE_INF("BREAK: Trap at SGPE Booted");
         asm volatile ("trap");
     }
 

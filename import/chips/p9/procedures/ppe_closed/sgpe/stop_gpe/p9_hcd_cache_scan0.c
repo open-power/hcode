@@ -30,7 +30,7 @@ int
 p9_hcd_cache_scan0(uint32_t quad, uint64_t regions, uint64_t scan_type)
 {
     int rc = SGPE_STOP_SUCCESS;
-#if BROADSIDE_SCAN0
+#if EPM_BROADSIDE_SCAN0
     // clean up the scan region
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_SCAN_REGION_TYPE, quad), 0);
 

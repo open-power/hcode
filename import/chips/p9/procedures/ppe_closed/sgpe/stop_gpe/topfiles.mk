@@ -50,6 +50,9 @@ TOP-S-SOURCES =  p9_sgpe_image_header.S
 
 TOP-CPP-SOURCES  = p9_sgpe_main.C
 TOP-CPP-SOURCES += p9_hcd_cache_initf.C
+TOP-CPP-SOURCES += p9_hcd_cache_dpll_initf.C
+TOP-CPP-SOURCES += p9_hcd_cache_chiplet_l3_dcc_setup.C
+TOP-CPP-SOURCES += p9_hcd_cache_dcc_skewadjust_setup.C
 
 UTILS_OBJECTS  = $(UTILS-SRC:.C=.o)
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) $(TOP-CPP-SOURCES:.C=.o)
