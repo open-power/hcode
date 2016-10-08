@@ -59,6 +59,7 @@ extern "C" {
 #define EQ_SCAN_REGION_TYPE      0x10030005
 #define EQ_CLK_REGION            0x10030006
 #define EQ_CLOCK_STAT_SL         0x10030008
+#define EQ_CLOCK_STAT_ARY        0x1003000A
 #define EQ_THERM_MODE_REG        0x1005000F
 
 #define EQ_BIST                  0x100F000B
@@ -66,6 +67,7 @@ extern "C" {
 #define EQ_NET_CTRL0_WAND        0x100F0041
 #define EQ_NET_CTRL0_WOR         0x100F0042
 #define C_NET_CTRL0              0x200F0040
+#define C_NET_CTRL0_WAND         0x200F0041
 #define C_NET_CTRL0_WOR          0x200F0042
 #define EQ_NET_CTRL1_WAND        0x100F0045
 #define EQ_NET_CTRL1_WOR         0x100F0046
@@ -93,6 +95,7 @@ extern "C" {
 #define EQ_QPPM_QCCR_WOR         0x100F01BF
 
 #define EX_NCU_STATUS_REG        0x1001100F
+#define EX_L3_MODE_REG1          0x1001180A
 #define EX_DRAM_REF_REG          0x1001180F
 #define EX_PM_PURGE_REG          0x10011813
 #define EX_PM_LCO_DIS_REG        0x10011816
@@ -111,6 +114,7 @@ extern "C" {
 #define PERV_OPCG_CAPT1          0x10030011
 #define PERV_OPCG_CAPT2          0x10030012
 #define PERV_CPLT_STAT0          0x10000100
+#define PERV_NET_CTRL1_WAND      0x000F0045
 
 /// Macro to update STOP History
 #define SGPE_STOP_UPDATE_HISTORY(id,base,gated,trans,req_l,act_l,req_e,act_e) \
@@ -175,7 +179,7 @@ enum SGPE_STOP_VECTOR_INDEX
     VECTOR_CONFIG                     = 2
 };
 
-#if HW386311_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
 #define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);
 #define RESTORE_RING_BITS(mask, ring, save) ring = (((ring) & (~mask)) | (save));
 #endif
@@ -196,12 +200,12 @@ typedef struct
 
 typedef struct
 {
-    uint32_t core[3];
-    uint32_t ex_l[3];
-    uint32_t ex_r[3];
-    uint32_t ex_b[3];
-    uint32_t quad[3];
-    uint32_t qswu[3];
+    uint32_t core[3]; // 24 bits
+    uint32_t ex_l[3]; // 6 bits
+    uint32_t ex_r[3]; // 6 bits
+    uint32_t ex_b[3]; // 12 bits
+    uint32_t quad[3]; // 6 bits
+    uint32_t qswu[3]; // 6 bits
 } sgpe_group_t;
 
 /// SGPE Stop Score Board Structure
@@ -228,14 +232,18 @@ int  p9_sgpe_stop_exit();
 int  p9_hcd_cache_scan0(uint32_t, uint64_t, uint64_t);
 int  p9_hcd_cache_poweron(uint32_t);
 int  p9_hcd_cache_chiplet_reset(uint32_t, uint32_t);
+int  p9_hcd_cache_chiplet_l3_dcc_setup(uint32_t);
 int  p9_hcd_cache_gptr_time_initf(uint32_t);
+int  p9_hcd_cache_dpll_initf(uint32_t);
 int  p9_hcd_cache_dpll_setup(uint32_t);
+int  p9_hcd_cache_dcc_skewadjust_setup(uint32_t);
 int  p9_hcd_cache_chiplet_init(uint32_t);
 int  p9_hcd_cache_repair_initf(uint32_t);
 int  p9_hcd_cache_arrayinit(uint32_t, uint32_t ex);
+int  p9_hcd_cache_initf(uint32_t);
 int  p9_hcd_cache_startclocks(uint32_t, uint32_t);
 int  p9_hcd_cache_l2_startclocks(uint32_t, uint32_t, uint32_t);
-int  p9_hcd_cache_scominit(uint32_t);
+int  p9_hcd_cache_scominit(uint32_t, uint32_t);
 int  p9_hcd_cache_scomcust(uint32_t);
 int  p9_hcd_cache_ras_runtime_scom(uint32_t);
 int  p9_hcd_cache_occ_runtime_scom(uint32_t);
