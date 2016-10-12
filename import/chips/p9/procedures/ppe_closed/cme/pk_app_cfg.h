@@ -42,7 +42,7 @@
 #define SKIP_ABORT            0
 #define SKIP_L2_PURGE_ABORT   0
 #define SKIP_ENTRY_CATCHUP    0
-#define ISTEP15_HACK          0
+#define ISTEP15_HACK          1
 
 #if !ISTEP15_HACK
     #define SKIP_EXIT_CATCHUP     0
