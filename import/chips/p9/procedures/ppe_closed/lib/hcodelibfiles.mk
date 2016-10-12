@@ -42,8 +42,8 @@
 ##########################################################################
 
 HCODE_C_SOURCES = \
-	p9_hcd_block_copy.c
-
+	p9_hcd_block_copy.c \
+	p9_dd1_doorbell_wr.c
 
 HCODE_S_SOURCES =
 
