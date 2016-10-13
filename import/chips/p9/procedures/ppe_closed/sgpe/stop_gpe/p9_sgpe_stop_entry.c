@@ -665,6 +665,9 @@ p9_sgpe_stop_entry()
         PK_TRACE("Assert cache chiplet fence via NET_CTRL0[18]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(18));
 
+        PK_TRACE("Switch glsmux to refclk to save clock grid power via CGCR[3]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, qloop), 0);
+
         PK_TRACE("Clear SCAN_REGION prior to stop cache clocks");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, qloop), 0);
 
@@ -694,12 +697,6 @@ p9_sgpe_stop_entry()
             pk_halt();
         }
 
-        // MF: verify compiler generate single rlwmni
-        // MF: delay may be needed for stage latch to propagate thold
-
-        PK_TRACE("Switch glsmux to refclk to save clock grid power via CGCR[3]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, qloop), 0);
-
         PK_TRACE("Assert vital fence via CPLT_CTRL1[3]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop), BIT64(3));
 
@@ -711,6 +708,9 @@ p9_sgpe_stop_entry()
                      ((uint64_t)ex << SHIFT64(7)) |
                      ((uint64_t)ex << SHIFT64(9)) |
                      ((uint64_t)ex << SHIFT64(13))));
+
+        PK_TRACE("Drop CME_INTERPPM_DPLL_ENABLE after DPLL is stopped via QPMMR[26]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26));
 
         /// @todo add VDM_ENABLE attribute control
         PK_TRACE("Drop vdm enable via CPPM_VDMCR[0]");
@@ -786,6 +786,9 @@ p9_sgpe_stop_entry()
 
         PK_TRACE("Assert electrical fence via NET_CTRL0[26]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(26));
+
+        PK_TRACE("Drop sram_enable via NET_CTRL0[23]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, qloop), ~BIT64(23));
 
         PK_TRACE("Assert vital thold via NET_CTRL0[16]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(16));
@@ -863,9 +866,6 @@ p9_sgpe_stop_entry()
         PK_TRACE_INF("SE11.E: Cache Powered Off");
 
 #endif
-
-        PK_TRACE("Drop CME_INTERPPM_DPLL_ENABLE after DPLL is stopped via QPMMR[26]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26));
 
         G_sgpe_stop_record.state[qloop].act_state_q = STOP_LEVEL_11;
 
