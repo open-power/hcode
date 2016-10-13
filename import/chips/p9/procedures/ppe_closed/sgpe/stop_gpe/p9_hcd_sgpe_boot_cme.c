@@ -50,8 +50,8 @@ enum
     HARD_RESET_PPE              =   0x6000000000000000ll,   // Hard Reset PPE
     SBASE_FIRST_BLOCK_COPY      =   0,  // corresponds to address 0xFFFF8000
     INACTIVE_CORE               =   0x00,
-    EVEN_CORE_ACTIVE            =   0x01,
-    ODD_CORE_ACTIVE             =   0x02,
+    EVEN_CORE_ACTIVE            =   0x02,
+    ODD_CORE_ACTIVE             =   0x01,
     BOTH_CORE_ACTIVE            =   0x03,
     BCEBAR0                     =   0,
     BCEBAR1                     =   1,
@@ -157,22 +157,8 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                 continue;
             }
 
-            // Update CME state to Flag register
             quadId = l_cmeIndex >> 1;
             activeCmeList[l_cmeIndex] = coreCnt;
-            l_scomAddr = SGPE_SCOM_ADDR( SCOM_ADDR_CME_FLAGS_CLR,  // @bug:  was SCOM_ADDR_CME_FLAGS
-                                         quadId,
-                                         (l_cmeIndex % 2) ); // @bug: was l_cmeIndex which goes from 0 to 11 (0xE)
-            //    and this should be giving a 0 or 1 value within
-            //    a quad.
-            PPE_PUTSCOM( l_scomAddr, WRITE_CLR_ALL ); // clear all bits first.
-
-            //Writing core status as found in CCSR
-            l_dataReg = activeCmeList[l_cmeIndex];
-            l_scomAddr = SGPE_SCOM_ADDR( SCOM_ADDR_CME_FLAGS,
-                                         quadId,
-                                         (l_cmeIndex % 2) );
-            PPE_PUTSCOM( l_scomAddr, (l_dataReg << CME_FLAG_SHIFT_POS) )
 
             // core is available and CME can attempt to boot it.
             // From SGPE platform, let us first get control of Block copy engine.
@@ -416,27 +402,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                     }
 
                     l_cmeRdyCnt++;
-
-                    if( l_dataReg & CME_STOP_READY )
-                    {
-                        if( EVEN_CORE_ACTIVE == activeCmeList[l_cmeIndex] ||
-                            BOTH_CORE_ACTIVE == activeCmeList[l_cmeIndex] )
-                        {
-                            l_scomAddr = GPE_SCOM_ADDR_CORE( SCOM_ADDR_CORE_CPMMR_CLR, (l_cmeIndex << 1 ));
-                            l_dataReg = WKUP_NOTIFY_SELECT;
-                            PPE_PUTSCOM( l_scomAddr, l_dataReg );
-                        }
-
-                        if( ODD_CORE_ACTIVE == activeCmeList[l_cmeIndex] ||
-                            BOTH_CORE_ACTIVE == activeCmeList[l_cmeIndex] )
-                        {
-                            l_scomAddr = GPE_SCOM_ADDR_CORE( SCOM_ADDR_CORE_CPMMR_CLR, ((l_cmeIndex << 1) + 1 ));
-                            l_dataReg = WKUP_NOTIFY_SELECT;
-                            PPE_PUTSCOM( l_scomAddr, l_dataReg );
-                        }
-
-                        cmeReadyList = cmeReadyList | l_cmeActiveBit;
-                    }
+                    cmeReadyList = cmeReadyList | l_cmeActiveBit;
                 }//end for
 
                 PPE_WAIT_CORE_CYCLES(cme_rdy_loop, 256);

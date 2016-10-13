@@ -95,6 +95,7 @@ extern "C" {
 #define EQ_QPPM_QCCR_WOR         0x100F01BF
 
 #define EX_NCU_STATUS_REG        0x1001100F
+#define EX_L3_MODE_REG0          0x1001182B
 #define EX_L3_MODE_REG1          0x1001180A
 #define EX_DRAM_REF_REG          0x1001180F
 #define EX_PM_PURGE_REG          0x10011813
@@ -155,11 +156,12 @@ enum SGPE_STOP_EVENT_LEVELS
 
 enum SGPE_STOP_CME_FLAGS
 {
+    CME_EX1_INDICATOR                 = BIT64(26),
+    CME_SIBLING_FUNCTIONAL            = BIT64(27),
     CME_CORE0_ENTRY_FIRST             = BIT64(28),
     CME_CORE1_ENTRY_FIRST             = BIT64(29),
     CME_CORE0_ENABLE                  = BIT64(30),
-    CME_CORE1_ENABLE                  = BIT64(31),
-    CME_EX1_INDICATOR                 = BIT64(26)
+    CME_CORE1_ENABLE                  = BIT64(31)
 };
 
 enum SGPE_STOP_PSCOM_MASK
@@ -183,6 +185,17 @@ enum SGPE_STOP_VECTOR_INDEX
 #define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);
 #define RESTORE_RING_BITS(mask, ring, save) ring = (((ring) & (~mask)) | (save));
 #endif
+
+/// 64bits data
+typedef union
+{
+    uint64_t value;
+    struct
+    {
+        uint32_t upper;
+        uint32_t lower;
+    } words;
+} data64_t;
 
 typedef struct
 {

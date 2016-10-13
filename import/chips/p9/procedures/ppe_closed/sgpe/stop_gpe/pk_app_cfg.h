@@ -34,41 +34,36 @@
 /// \brief Application specific overrides go here.
 ///
 
-// --------------------
+// @todo RTC 161182
 
-#ifndef EPM_P9_TUNING
-    #define EPM_P9_TUNING 0
-#endif
-
-#define STOP_PRIME           0
-#define SKIP_L3_PURGE        0
-#define SKIP_L3_PURGE_ABORT  0
-#define SKIP_ARRAYINIT       0
-#define SKIP_SCAN0           0
-#define SKIP_INITF           0
-
-#if EPM_P9_TUNING
-    // @todo RTC 161182
-    #define HW386311_DD1_PBIE_RW_PTR_STOP11_FIX            0
-    #define HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 0
-    #define FUSED_CORE_MODE_SCAN_FIX                       0
-
-    #define SKIP_CME_BOOT_STOP11 1
-    #define SKIP_CME_BOOT_IPL_HB 1
-    #define EPM_BROADSIDE_SCAN0  0
-#else
+#if NIMBUS_DD_LEVEL == 1
     #define HW386311_DD1_PBIE_RW_PTR_STOP11_FIX            1
     #define HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 1
     #define FUSED_CORE_MODE_SCAN_FIX                       0
-
-    #define SKIP_CME_BOOT_STOP11 0
-    #define SKIP_CME_BOOT_IPL_HB 1
-    #define EPM_BROADSIDE_SCAN0  0
 #endif
 
 // --------------------
 
-#define PK_TRACE_LEVEL 2
+#if EPM_P9_TUNING
+    // EPM already consumed hardware fix
+    #undef  HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+    #define HW386311_DD1_PBIE_RW_PTR_STOP11_FIX            0
+
+    // EPM doesnt have this problem
+    #undef  HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
+    #define HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 0
+
+    // EPM uses broadside RTX instead of BCE
+    #undef  SKIP_CME_BOOT_STOP11
+    #define SKIP_CME_BOOT_STOP11 1
+
+    #undef  SKIP_CME_BOOT_IPL_HB
+    #define SKIP_CME_BOOT_IPL_HB 1
+
+    #define PK_TRACE_BUFFER_WRAP_MARKER 1
+#endif
+
+// --------------------
 
 #if PK_TRACE_LEVEL == 0   /*No TRACEs*/
     #define PK_TRACE_ENABLE        0
@@ -85,48 +80,19 @@
     #define PK_KERNEL_TRACE_ENABLE 1
 #endif
 
-#if EPM_P9_TUNING
-    #define PK_TRACE_BUFFER_WRAP_MARKER 1
-#endif
-#define PK_TRACE_TIMER_OUTPUT  0
-
 // --------------------
-
-#define SIMICS_TUNING 0
-#define USE_SIMICS_IO 0
-#define DEV_DEBUG     1
-
-// --------------------
-
-// This application will use the external timebase register
-// (comment this line out to use the decrementer as timebase)
-#define APPCFG_USE_EXT_TIMEBASE
-
 
 // If we are using the external timebase then assume
 // a frequency of 37.5Mhz.  Otherwise, the default is to use
-// the decrementer as a timebase and assume a frequency of
-// 600MHz
+// the decrementer as a timebase and assume a frequency of 600MHz
 // In product code, this value will be IPL-time configurable.
 #ifdef APPCFG_USE_EXT_TIMEBASE
     #define PPE_TIMEBASE_HZ 37500000
 #else
     #define PPE_TIMEBASE_HZ 600000000
-#endif /* APPCFG_USE_EXT_TIMEBASE */
+#endif
 
 // --------------------
-
-// GPE3 is the SGPE and is the route owner for now.
-// (Change this to #4 for the 405 when we pull that in.)
-#define OCCHW_IRQ_ROUTE_OWNER  3
-
-/// The Instance ID of the OCC processor that this application is intended to run on
-///// 0-3 -> GPE, 4 -> 405
-#define APPCFG_OCC_INSTANCE_ID 3
-
-/// This application will statically initialize it's external interrupt table
-/// using the table defined in pk_app_irq_table.c.
-#define STATIC_IRQ_TABLE
 
 /// About OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING :
 /// This interrupt is used by the PGPE (GPE2) exclusively. Thus, rather than
@@ -147,4 +113,5 @@
     OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING  OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE3_PENDING  OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE6_PENDING  OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED
+
 #endif /*__PK_APP_CFG_H__*/

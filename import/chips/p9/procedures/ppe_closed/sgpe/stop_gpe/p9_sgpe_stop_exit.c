@@ -26,7 +26,7 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 #include "p9_hcd_sgpe_boot_cme.h"
-//#include "p9_dd1_doorbell_wr.h"
+#include "p9_dd1_doorbell_wr.h"
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
@@ -482,16 +482,10 @@ p9_sgpe_stop_exit()
                 }
 
                 PK_TRACE_INF("SX11.O: Core[%d] DB1 to CME", ((qloop << 2) + cloop));
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG,
-                                               ((qloop << 2) + cloop)), BIT64(0));
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1_OR,
-                                               ((qloop << 2) + cloop)), BIT64(7));
-                /*
                 p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG,
-                                               ((qloop << 2) + cloop)), BIT64(0));
+                                                        ((qloop << 2) + cloop)), BIT64(0));
                 p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1_OR,
-                                               ((qloop << 2) + cloop)), BIT64(7));
-                */
+                                                        ((qloop << 2) + cloop)), BIT64(7));
             }
 
             // Setting up cme_flags
@@ -504,6 +498,11 @@ p9_sgpe_stop_exit()
             if (m_pg & FST_EX_IN_QUAD)
             {
                 cme_flags = 0;
+
+                if (m_pg & SND_EX_IN_QUAD)
+                {
+                    cme_flags |= CME_SIBLING_FUNCTIONAL;
+                }
 
                 if (ccsr.value & BIT32((qloop << 2)))
                 {
@@ -536,6 +535,11 @@ p9_sgpe_stop_exit()
             if (m_pg & SND_EX_IN_QUAD)
             {
                 cme_flags = CME_EX1_INDICATOR;
+
+                if (m_pg & FST_EX_IN_QUAD)
+                {
+                    cme_flags |= CME_SIBLING_FUNCTIONAL;
+                }
 
                 if (ccsr.value & BIT32(((qloop << 2) + 2)))
                 {

@@ -119,6 +119,9 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     PK_TRACE("Drop PCB fence via NET_CTRL0[25]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(25));
 
+    PK_TRACE("Assert sram_enable via NET_CTRL0[23]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(23));
+
     PK_TRACE("Set scan ratio to 1:1 in bypass mode via OPCG_ALIGN[47-51]");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
     scom_data &= ~BITS64(47, 5);

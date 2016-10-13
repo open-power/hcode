@@ -98,8 +98,60 @@ OBJS+=$(UTILS_OBJECTS)
 $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 	| xargs -i printf "%d" 0x{})
 
-#Note: Flags are resolved very late - so local variables can't be
-# used to build them
+# Note: Flags are resolved very late - 
+# so local variables can't be used to build them
+
+# Options for PK_TRACE
+
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=2
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_TIMER_OUTPUT=0
+$(IMAGE)_COMMONFLAGS+= -DDEV_DEBUG=0
+
+# Options for Platforms specific tuning
+
+$(IMAGE)_COMMONFLAGS+= -DNIMBUS_DD_LEVEL=1
+$(IMAGE)_COMMONFLAGS+= -DCUMULUS_DD_LEVEL=0
+
+$(IMAGE)_COMMONFLAGS+= -DEPM_P9_TUNING=0
+$(IMAGE)_COMMONFLAGS+= -DEPM_BROADSIDE_SCAN0=0
+
+$(IMAGE)_COMMONFLAGS+= -DSIMICS_TUNING=0
+$(IMAGE)_COMMONFLAGS+= -DUSE_SIMICS_IO=0
+
+# Options for Functions being skipped
+
+$(IMAGE)_COMMONFLAGS+= -DSTOP_PRIME=0
+
+$(IMAGE)_COMMONFLAGS+= -DSKIP_L3_PURGE=0
+$(IMAGE)_COMMONFLAGS+= -DSKIP_L3_PURGE_ABORT=0
+
+$(IMAGE)_COMMONFLAGS+= -DSKIP_ARRAYINIT=0
+$(IMAGE)_COMMONFLAGS+= -DSKIP_SCAN0=0
+$(IMAGE)_COMMONFLAGS+= -DSKIP_INITF=0
+
+$(IMAGE)_COMMONFLAGS+= -DSKIP_CME_BOOT_STOP11=0
+$(IMAGE)_COMMONFLAGS+= -DSKIP_CME_BOOT_IPL_HB=0
+
+# Options for Kernel support
+
+# The Instance ID of the OCC processor 
+# that this application is intended to run on
+# 0-3 -> GPE, 4 -> 405
+$(IMAGE)_COMMONFLAGS+= -DAPPCFG_OCC_INSTANCE_ID=3
+
+# GPE3 is the SGPE and is the route owner for now.
+# (Change this to #4 for the 405 when we pull that in.)
+$(IMAGE)_COMMONFLAGS+= -DOCCHW_IRQ_ROUTE_OWNER=3
+
+# This application will statically initialize 
+# it's external interrupt table using 
+# the table defined in p9_sgpe_main.c.
+$(IMAGE)_COMMONFLAGS+= -DSTATIC_IRQ_TABLE
+
+# This application will use the external timebase register
+# (comment this line out to use the decrementer as timebase)
+$(IMAGE)_COMMONFLAGS+= -DAPPCFG_USE_EXT_TIMEBASE
+
 $(IMAGE)_COMMONFLAGS+= -DPK_TIMER_SUPPORT=1
 $(IMAGE)_COMMONFLAGS+= -DPK_THREAD_SUPPORT=1
 $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SUPPORT=1
@@ -107,6 +159,8 @@ $(IMAGE)_COMMONFLAGS+= -DUSE_PK_APP_CFG_H=1
 $(IMAGE)_COMMONFLAGS+= -D__PK__=1
 $(IMAGE)_COMMONFLAGS+= -D__PPE_PLAT
 $(IMAGE)_COMMONFLAGS+= -D__PPE__
+
+# Options for FAPI2
 $(IMAGE)_COMMONFLAGS+= -DFAPI2_NO_FFDC=1
 ##$(IMAGE)_COMMONFLAGS+= -DFAPI_TRACE_LEVEL_DEF=3
 $($(IMAGE)_TARGET)_CXXFLAGS += -Wno-unused-label
