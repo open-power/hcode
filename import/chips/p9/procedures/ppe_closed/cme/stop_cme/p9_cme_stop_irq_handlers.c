@@ -29,32 +29,158 @@
 
 extern CmeStopRecord G_cme_stop_record;
 
+// When take an Interrupt on falling edge of SPWU from a CPPM.
+// 1) Read EINR to check if another one has been set
+//    in the meantime from the same core.  If so abort.
+// 2) Clear Special Wakeup Done to that CPPM.
+// 3) Read GPMMR[1] to see if any Special Wakeup has been sent to active
+//    in the meantime.  If so, set Special Wakeup Done again and abort.
+// 4) Otherwise flip polarity of Special Wakeup in EISR and clear PM_EXIT
+//    (note for abort cases do not Do not flip polarity of Special Wakeup in EISR.)
+void
+p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
+{
+    MARK_TRAP(STOP_SPWU_HANDLER)
+    PK_TRACE_INF("SPWU Handler: %d", irq);
+
+    PkMachineContext ctx;
+    int      sem_post = 0;
+    uint32_t raw_spwu = (in32(CME_LCL_EISR) & BITS32(14, 2)) >> SHIFT32(15);
+    uint64_t scom_data;
+
+    if (raw_spwu & CME_MASK_C0)
+    {
+        // if failing edge == spwu drop:
+        if (G_cme_stop_record.core_in_spwu & CME_MASK_C0)
+        {
+            PK_TRACE("Falling edge of spwu_c0, first clearing EISR");
+            out32(CME_LCL_EISR_CLR, BIT32(14));
+
+            // if spwu asserts again before we drop spwu_done, do nothing, else:
+            if ((~(in32(CME_LCL_EINR))) & BIT32(14))
+            {
+                PK_TRACE("SPWU drop confirmed, now dropping spwu_done");
+                out32(CME_LCL_SICR_CLR, BIT32(16));
+
+                CME_GETSCOM(PPM_GPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data);
+
+                // if spwu has been re-asserted after spwu_done is dropped:
+                if (scom_data & BIT64(1))
+                {
+                    PK_TRACE("SPWU asserts again, re-asserting spwu_done");
+                    out32(CME_LCL_SICR_OR, BIT32(16));
+                }
+                // if spwu truly dropped:
+                else
+                {
+                    PK_TRACE("Flip EIPR to raising edge and drop pm_exit");
+                    out32(CME_LCL_EIPR_OR,  BIT32(14));
+                    out32(CME_LCL_SICR_CLR, BIT32(4));
+
+                    // Core0 is now out of spwu, allow pm_active
+                    G_cme_stop_record.core_in_spwu &= ~CME_MASK_C0;
+                    g_eimr_override                &= ~IRQ_VEC_STOP_C0;
+                }
+            }
+        }
+        // raising edge, Note do not clear EISR as thread will read and clear:
+        else
+        {
+            PK_TRACE("Raising edge of spwu_c0, clear EISR later in exit thread");
+            sem_post = 1;
+        }
+    }
+
+    if (raw_spwu & CME_MASK_C1)
+    {
+        // if failing edge == spwu drop:
+        if (G_cme_stop_record.core_in_spwu & CME_MASK_C1)
+        {
+            PK_TRACE("Falling edge of spwu_c1, first clearing EISR");
+            out32(CME_LCL_EISR_CLR, BIT32(15));
+
+            // if spwu asserts again before we drop spwu_done, do nothing, else:
+            if ((~(in32(CME_LCL_EINR))) & BIT32(15))
+            {
+                PK_TRACE("SPWU drop confirmed, now dropping spwu_done");
+                out32(CME_LCL_SICR_CLR, BIT32(17));
+
+                CME_GETSCOM(PPM_GPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data);
+
+                // if spwu has been re-asserted after spwu_done is dropped:
+                if (scom_data & BIT64(1))
+                {
+                    PK_TRACE("SPWU asserts again, re-asserting spwu_done");
+                    out32(CME_LCL_SICR_OR, BIT32(17));
+                }
+                // if spwu truly dropped:
+                else
+                {
+                    PK_TRACE("Flip EIPR to raising edge and drop pm_exit");
+                    out32(CME_LCL_EIPR_OR,  BIT32(15));
+                    out32(CME_LCL_SICR_CLR, BIT32(5));
+
+                    // Core1 is now out of spwu, allow pm_active
+                    G_cme_stop_record.core_in_spwu &= ~CME_MASK_C1;
+                    g_eimr_override                &= ~IRQ_VEC_STOP_C1;
+                }
+            }
+
+        }
+        // raising edge, Note do not clear EISR as thread will read and clear:
+        else
+        {
+            PK_TRACE("Raising edge of spwu_c1, clear EISR later in exit thread");
+            sem_post = 1;
+        }
+    }
+
+    if (sem_post)
+    {
+        out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+        PK_TRACE_INF("Launching exit thread");
+        pk_semaphore_post((PkSemaphore*)arg);
+    }
+    else
+    {
+        pk_irq_vec_restore(&ctx);
+    }
+}
+
+
+
 void
 p9_cme_stop_exit_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_EXIT_HANDLER)
-    PK_TRACE_INF("SX-IRQ: %d", irq);
+    PK_TRACE_INF("SX Handler: %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
     pk_semaphore_post((PkSemaphore*)arg);
 }
+
+
 
 void
 p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_ENTER_HANDLER)
-    PK_TRACE_INF("SE-IRQ: %d", irq);
+    PK_TRACE_INF("SE Handler: %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
     pk_semaphore_post((PkSemaphore*)arg);
 }
+
+
 
 void
 p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
     MARK_TRAP(STOP_DB1_HANDLER)
-    PK_TRACE_INF("DB1-IRQ: %d", irq);
+    PK_TRACE_INF("DB1 Handler: %d", irq);
     pk_irq_vec_restore(&ctx);
 }
+
+
 
 void
 p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
@@ -63,7 +189,7 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
     cppm_cmedb2_t    db2c0, db2c1;
 
     MARK_TRAP(STOP_DB2_HANDLER)
-    PK_TRACE("DB2-IRQ: %d", irq);
+    PK_TRACE_INF("DB2 Handler: %d", irq);
 
     CME_GETSCOM(CPPM_CMEDB2, CME_MASK_C0, CME_SCOM_AND, db2c0.value);
     CME_GETSCOM(CPPM_CMEDB2, CME_MASK_C1, CME_SCOM_AND, db2c1.value);

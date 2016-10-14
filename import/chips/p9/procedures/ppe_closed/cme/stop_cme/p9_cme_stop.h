@@ -119,6 +119,40 @@
 #define PERV_OPCG_CAPT2        0x20030012
 #define PERV_CPLT_STAT0        0x20000100
 
+
+/// Macro to evaluate g_eimr_override
+#if SPWU_AUTO
+#define EVAL_EIMR_OVERRIDE(mask_irqs)                                             \
+    g_eimr_override &= ~(BITS64(12, 6) | BITS64(20, 2));                          \
+    mask_irqs.words.lower = 0;                                                    \
+    mask_irqs.words.upper =                                                       \
+            ((((~G_cme_stop_record.core_enabled) |                                \
+               G_cme_stop_record.core_running  |                                \
+               G_cme_stop_record.core_stopgpe  |                                \
+               G_cme_stop_record.core_blockwu) & CME_MASK_BC) << SHIFT32(13)) | \
+            ((((~G_cme_stop_record.core_enabled) |                                \
+               G_cme_stop_record.core_running) & CME_MASK_BC) << SHIFT32(15)) | \
+            ((((~G_cme_stop_record.core_enabled) |                                \
+               G_cme_stop_record.core_running) & CME_MASK_BC) << SHIFT32(17)) | \
+            (((~(G_cme_stop_record.core_enabled  &                                \
+                 G_cme_stop_record.core_running)) & CME_MASK_BC) << SHIFT32(21)); \
+    g_eimr_override |= mask_irqs.value;
+#else
+#define EVAL_EIMR_OVERRIDE(mask_irqs)                                             \
+    g_eimr_override &= ~(BITS64(12, 6) | BITS64(20, 2));                          \
+    mask_irqs.words.lower = 0;                                                    \
+    mask_irqs.words.upper =                                                       \
+            ((((~G_cme_stop_record.core_enabled) |                                \
+               G_cme_stop_record.core_running  |                                \
+               G_cme_stop_record.core_stopgpe  |                                \
+               G_cme_stop_record.core_blockwu) & CME_MASK_BC) << SHIFT32(13)) | \
+            ((((~G_cme_stop_record.core_enabled) |                                \
+               G_cme_stop_record.core_running) & CME_MASK_BC) << SHIFT32(17)) | \
+            (((~(G_cme_stop_record.core_enabled  &                                \
+                 G_cme_stop_record.core_running)) & CME_MASK_BC) << SHIFT32(21)); \
+    g_eimr_override |= mask_irqs.value;
+#endif
+
 /// Macro to update STOP History
 #define CME_STOP_UPDATE_HISTORY(core,gated,trans,req_l,act_l,req_e,act_e) \
     hist.value                   = 0;                                     \
@@ -273,6 +307,17 @@ typedef struct
     uint64_t data;
 } CmeScomRestore;
 
+/// 64bits data
+typedef union
+{
+    uint64_t value;
+    struct
+    {
+        uint32_t upper;
+        uint32_t lower;
+    } words;
+} data64_t;
+
 /// Stop Score Board Structure
 typedef struct
 {
@@ -284,18 +329,16 @@ typedef struct
     // need to be a global state for aborting entry
     uint8_t       act_level_c0;
     uint8_t       act_level_c1;
-    // partial good configuration,
-    // todo: consider partial good changed during stop,
+    // target mask of enabled cores, used to filter 2bit core select in scom address
     uint32_t      core_enabled;
     // whether core is in running state,
-    // need to be a global state for aborted entry detection and wakeup masking
+    // used for aborted entry detection or filter wakeup core select in scom address
     uint32_t      core_running;
-    // core stop handoff to sgpe from cme
-    // need to be a global state for wakeup and pm_active masking
+    // core stop process handoff to sgpe from cme, used to mask pc_intr_pending
     uint32_t      core_stopgpe;
-    // core in block wakeup mode
+    // core in block wakeup mode, can be used as core select in scom address or data
     uint32_t      core_blockwu;
-    // core in special wakeup
+    // core in special wakeup, can be used as core select in scom address or data
     uint32_t      core_in_spwu;
     // cme header attributes
     uint32_t      header_flags;

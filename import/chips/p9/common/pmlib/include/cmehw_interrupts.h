@@ -58,10 +58,10 @@
 #define CMEHW_IRQ_DOORBELL3_C1                    11 /* 0x0b */
 #define CMEHW_IRQ_PC_INTR_PENDING_C0              12 /* 0x0c */
 #define CMEHW_IRQ_PC_INTR_PENDING_C1              13 /* 0x0d */
-#define CMEHW_IRQ_REG_WAKEUP_C0                   14 /* 0x0e */
-#define CMEHW_IRQ_REG_WAKEUP_C1                   15 /* 0x0f */
-#define CMEHW_IRQ_SPECIAL_WAKEUP_C0               16 /* 0x10 */
-#define CMEHW_IRQ_SPECIAL_WAKEUP_C1               17 /* 0x11 */
+#define CMEHW_IRQ_SPECIAL_WAKEUP_C0               14 /* 0x0e */
+#define CMEHW_IRQ_SPECIAL_WAKEUP_C1               15 /* 0x0f */
+#define CMEHW_IRQ_REG_WAKEUP_C0                   16 /* 0x10 */
+#define CMEHW_IRQ_REG_WAKEUP_C1                   17 /* 0x11 */
 #define CMEHW_IRQ_DOORBELL2_C0                    18 /* 0x12 */
 #define CMEHW_IRQ_DOORBELL2_C1                    19 /* 0x13 */
 #define CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0           20 /* 0x14 */
@@ -129,10 +129,10 @@
                                                     "CMEHW_IRQ_DOORBELL3_C1",             \
                                                     "CMEHW_IRQ_PC_INTR_PENDING_C0",       \
                                                     "CMEHW_IRQ_PC_INTR_PENDING_C1",       \
-                                                    "CMEHW_IRQ_REG_WAKEUP_C0",            \
-                                                    "CMEHW_IRQ_REG_WAKEUP_C1",            \
                                                     "CMEHW_IRQ_SPECIAL_WAKEUP_C0",        \
                                                     "CMEHW_IRQ_SPECIAL_WAKEUP_C1",        \
+                                                    "CMEHW_IRQ_REG_WAKEUP_C0",            \
+                                                    "CMEHW_IRQ_REG_WAKEUP_C1",            \
                                                     "CMEHW_IRQ_DOORBELL2_C0",             \
                                                     "CMEHW_IRQ_DOORBELL2_C1",             \
                                                     "CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0",    \
@@ -205,14 +205,14 @@
     CMEHW_IRQ_DOORBELL3_C1          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_PC_INTR_PENDING_C0    STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_PC_INTR_PENDING_C1    STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_SPECIAL_WAKEUP_C0     STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_SPECIAL_WAKEUP_C1     STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_REG_WAKEUP_C0         STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_REG_WAKEUP_C1         STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    CMEHW_IRQ_SPECIAL_WAKEUP_C0     STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    CMEHW_IRQ_SPECIAL_WAKEUP_C1     STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_DOORBELL2_C0          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_DOORBELL2_C1          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0 STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    CMEHW_IRQ_PC_PM_STATE_ACTIVE_C1 STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0 STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PC_PM_STATE_ACTIVE_C1 STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_L2_PURGE_DONE         STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_NCU_PURGE_DONE        STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_CHTM_PURGE_DONE_C0    STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \

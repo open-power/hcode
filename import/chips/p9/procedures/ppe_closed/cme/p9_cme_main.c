@@ -60,14 +60,14 @@ IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_PC_INTR_PENDING_C0
 IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_PC_INTR_PENDING_C1
+IRQ_HANDLER(p9_cme_stop_spwu_handler, (void*) & (G_cme_stop_record.sem[1]))
+//CMEHW_IRQ_SPECIAL_WAKEUP_C0
+IRQ_HANDLER(p9_cme_stop_spwu_handler, (void*) & (G_cme_stop_record.sem[1]))
+//CMEHW_IRQ_SPECIAL_WAKEUP_C1
 IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_REG_WAKEUP_C0
 IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
 //CMEHW_IRQ_REG_WAKEUP_C1
-IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
-//CMEHW_IRQ_SPECIAL_WAKEUP_C0
-IRQ_HANDLER(p9_cme_stop_exit_handler, (void*) & (G_cme_stop_record.sem[1]))
-//CMEHW_IRQ_SPECIAL_WAKEUP_C1
 IRQ_HANDLER(p9_cme_stop_db2_handler, 0)     //CMEHW_IRQ_DOORBELL2_C0
 IRQ_HANDLER(p9_cme_stop_db2_handler, 0)     //CMEHW_IRQ_DOORBELL2_C1
 IRQ_HANDLER(p9_cme_stop_enter_handler, (void*) & (G_cme_stop_record.sem[0]))

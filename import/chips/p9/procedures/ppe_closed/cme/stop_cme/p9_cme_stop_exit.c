@@ -113,35 +113,26 @@ p9_cme_stop_exit()
 
     if (spwu_wake)
     {
-        PK_TRACE_INF("SX0.A: Assert Core[%d] Special Wakeup Done via SICR[16/17]", spwu_wake);
-        out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(17));
+        // Process special wakeup on a core that is already running
+        PK_TRACE_INF("SX0.A: Core[%d] pm_exit=1/EISR=0/EIPR=0/spwu_done=1", spwu_wake);
+        out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(5));  // assert pm_exit
+        out32(CME_LCL_EISR_CLR, spwu_wake << SHIFT32(15)); // clear spwu in EISR
+        out32(CME_LCL_EIPR_CLR, spwu_wake << SHIFT32(15)); // flip EIPR to falling edge
+        out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(17)); // assert spwu_done now
+        G_cme_stop_record.core_in_spwu |= spwu_wake;
+
+        if (!core)
+        {
+            return CME_STOP_SUCCESS;
+        }
     }
 
 #endif
 
     if (!core)
     {
-
-#if !SPWU_AUTO
-
-        if (!spwu_wake)
-        {
-
-#endif
-
-            PK_TRACE_INF("ERROR: No Wakeup Fired to a Stopped and Enabled Core. HALT CME!");
-            pk_halt();
-
-#if !SPWU_AUTO
-
-        }
-        else
-        {
-            return CME_STOP_SUCCESS;
-        }
-
-#endif
-
+        PK_TRACE_INF("ERROR: No Wakeup Fired to a Stopped and Enabled Core. HALT CME!");
+        pk_halt();
     }
 
 
@@ -359,6 +350,8 @@ p9_cme_stop_exit()
                                     G_cme_stop_record.act_level_c0 :
                                     G_cme_stop_record.act_level_c1 ;
 
+                    spwu_stop |= (core_catchup) & (wakeup >> 2);
+
                     PK_TRACE_INF("Catch: core[%d] running[%d] \
                                          core_catchup[%d] catchup_level[%d]",
                                  core, G_cme_stop_record.core_running,
@@ -461,6 +454,8 @@ p9_cme_stop_exit()
                     catchup_level = (core_catchup & CME_MASK_C0) ?
                                     G_cme_stop_record.act_level_c0 :
                                     G_cme_stop_record.act_level_c1 ;
+
+                    spwu_stop |= (core_catchup) & (wakeup >> 2);
 
                     PK_TRACE_INF("Catch: core[%d] running[%d] \
                                          core_catchup[%d] catchup_level[%d]",
@@ -953,10 +948,14 @@ STOP1_EXIT:
 
     if (spwu_stop)
     {
-        PK_TRACE_INF("SX0.K: Assert SPWU Done on Core[%d] via SICR[16/17]", spwu_stop);
         // done = spwu + !pm_active + !core_chiplet_fence + !pcbmux_req + !pcbmux_grant
         // chiplet fence forces pm_active to zero
-        out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));
+        // Note: pm_exit is asserted above for every core waking up including spwu
+        PK_TRACE_INF("SX0.K: Core[%d] EISR=0/EIPR=0/spwu_done=1", spwu_stop);
+        out32(CME_LCL_EISR_CLR, spwu_stop << SHIFT32(15));  // clear spwu in EISR
+        out32(CME_LCL_EIPR_CLR, spwu_stop << SHIFT32(15));  // flip EIPR to falling edge
+        out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));  // assert spwu_done now
+        G_cme_stop_record.core_in_spwu |= spwu_stop;
     }
 
     if ((core = (core & (~spwu_stop))))

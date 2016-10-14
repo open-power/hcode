@@ -34,42 +34,26 @@
 /// \brief Application specific overrides go here.
 ///
 
-// @todo RTC 161182
-#define HW386841_DD1_PLS_SRR1_DSL_STOP1_FIX 0
-#define TEST_ONLY_BCE_IRR                   0
+/// @todo RTC 161182
 
-// --------------------
-
-#ifndef EPM_P9_TUNING
-    #define EPM_P9_TUNING 0
+#if NIMBUS_DD_LEVEL == 1
+    #define HW386841_DD1_PLS_SRR1_DSL_STOP1_FIX 0
 #endif
 
-#define STOP_PRIME            0
-#define SKIP_ABORT            0
-#define SKIP_L2_PURGE_ABORT   0
-#define SKIP_ENTRY_CATCHUP    0
-#define SKIP_EXIT_CATCHUP     0
-#define SKIP_ARRAYINIT        0
-#define SKIP_SCAN0            0
-#define SKIP_INITF            0
-#define SKIP_SELF_RESTORE     0
-#define SKIP_RAM_HRMOR        0
+// --------------------
 
 #if EPM_P9_TUNING
-    #define SPWU_AUTO             1
-    #define SKIP_BCE_SCAN_RING    1
+    // EPM use broadside RTX instead of BCE
+    #undef  SKIP_BCE_SCAN_RING
+    #define SKIP_BCE_SCAN_RING 1
+
+    #undef  SKIP_BCE_SCOM_RESTORE
     #define SKIP_BCE_SCOM_RESTORE 1
-    #define EPM_BROADSIDE_SCAN0   0
-#else
-    #define SPWU_AUTO             0
-    #define SKIP_BCE_SCAN_RING    0
-    #define SKIP_BCE_SCOM_RESTORE 1
-    #define EPM_BROADSIDE_SCAN0   0
+
+    #define PK_TRACE_BUFFER_WRAP_MARKER 1
 #endif
 
 // --------------------
-
-#define PK_TRACE_LEVEL 2
 
 #if PK_TRACE_LEVEL == 0   /*No TRACEs*/
     #define PK_TRACE_ENABLE        0
@@ -86,44 +70,22 @@
     #define PK_KERNEL_TRACE_ENABLE 1
 #endif
 
-#if EPM_P9_TUNING
-    #define PK_TRACE_BUFFER_WRAP_MARKER 1
-#endif
-#define PK_TRACE_TIMER_OUTPUT 0
-
 // --------------------
-
-#define SIMICS_TUNING 0
-#define USE_SIMICS_IO 0
-#define DEV_DEBUG     1
-
-// --------------------
-
-// Force CME and GPE tasks to use the unified interrupt handler.
-#define UNIFIED_IRQ_HANDLER_CME
-
-// This application will use the external timebase register
-// (comment this line out to use the decrementer as timebase)
-#define APPCFG_USE_EXT_TIMEBASE
 
 // If we are using the external timebase then assume
 // a frequency of 37.5Mhz.  Otherwise, the default is to use
-// the decrementer as a timebase and assume a frequency of
-// 600MHz
+// the decrementer as a timebase and assume a frequency of 600MHz
 // In product code, this value will be IPL-time configurable.
+
 #ifdef APPCFG_USE_EXT_TIMEBASE
     #define PPE_TIMEBASE_HZ 37500000
 #else
     #define PPE_TIMEBASE_HZ 600000000
-#endif /* APPCFG_USE_EXT_TIMEBASE */
+#endif
 
 // --------------------
 
 /// This file provides architecture-specific symbol names for each interrupt
 #include "cmehw_interrupts.h"
-
-/// This application will statically initialize it's external interrupt table
-/// using the table defined in pk_app_irq_table.c.
-#define STATIC_IRQ_TABLE
 
 #endif /*__PK_APP_CFG_H__*/
