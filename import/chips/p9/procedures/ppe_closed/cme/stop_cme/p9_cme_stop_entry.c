@@ -61,6 +61,7 @@ p9_cme_stop_entry()
     uint32_t        core_aborted        = 0;
     uint32_t        core_catchup        = 0;
     uint32_t        core_stop1          = 0;
+    uint32_t        core_raw            = 0;
     uint32_t        core;
     uint32_t        loop;
     uint32_t        pm_states;
@@ -77,7 +78,14 @@ p9_cme_stop_entry()
     // Iow, which of the two cores, "left-0" or "right-1", updated their
     // STOP PM_STATE. If both have fired by the time we get to this point,
     // CME will do Daul-cast to both cores at the same time in entry flow.
-    core = (in32(CME_LCL_EISR) & BITS32(20, 2)) >> SHIFT32(21);
+
+    // pm_active is edge trigger because its level can be phantom
+    // due to common-core constantly gives pm_active when core is stopped,
+    // reading from EINR for raw signal, ignore EISR if EINR signal is gone
+    core     = (in32(CME_LCL_EISR) & BITS32(20, 2));
+    core_raw = (in32(CME_LCL_EINR) & BITS32(20, 2));
+    out32(CME_LCL_EISR_CLR, core);
+    core     = (core & core_raw) >> SHIFT32(21);
 
     // filter with partial good and running core mask
     // core cannot enter stop if core is already stopped
@@ -90,8 +98,9 @@ p9_cme_stop_entry()
 
     if (!core)
     {
-        PK_TRACE_INF("ERROR: No PM_ACTIVE Fired From a Running and Enabled Core. HALT CME!");
-        pk_halt();
+        // PM_ACTIVE can be phantom, only gives warning
+        PK_TRACE_INF("WARNING: No Valid PM_ACTIVE Signal Found. Return");
+        return CME_STOP_SUCCESS;
     }
 
     //===================================
