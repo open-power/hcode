@@ -151,8 +151,8 @@ p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     fapi2::buffer<uint32_t> l_gpr31_save;
     fapi2::buffer<uint64_t> l_sprg0_save;
     fapi2::buffer<uint64_t> l_data64;
-    uint32_t l1_data32;
-    uint32_t l2_data32;
+    uint32_t l1_data32 = 0;
+    uint32_t l2_data32 = 0;
     char outstr[32];
 
     if(i_cmnds.cmnd_check_status)
@@ -175,12 +175,35 @@ p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
         FAPI_TRY(ppe_halt(i_target, i_base_address));
     }
 
+    if(i_cmnds.xcr_cmnd_clear_dbg_status)
+    {
+        FAPI_DBG("XCR command to clear debug status");
+        FAPI_TRY(ppe_clear_dbg(i_target, i_base_address));
+    }
+
+    if(i_cmnds.xcr_cmnd_toggle_xsr_trh)
+    {
+        FAPI_DBG("XCR command to toggle XSR TRH");
+        FAPI_TRY(ppe_toggle_trh(i_target, i_base_address));
+    }
+
+    if(i_cmnds.xcr_cmnd_soft_reset)
+    {
+        FAPI_DBG("XCR command soft reset");
+        FAPI_TRY(ppe_soft_reset(i_target, i_base_address));
+    }
+
+    if(i_cmnds.xcr_cmnd_hard_reset)
+    {
+        FAPI_DBG("XCR command hard reset");
+        FAPI_TRY(ppe_hard_reset(i_target, i_base_address));
+    }
 
 
-    if(i_cmnds.cmnd_resume_brkpt || i_cmnds.cmnd_resume_with_ram ||
+    if(i_cmnds.cmnd_resume_brkpt || i_cmnds.cmnd_clear_brkpt ||
        i_cmnds.cmnd_set_instr_addr_brkpt || i_cmnds.cmnd_set_load_addr_brkpt ||
        i_cmnds.cmnd_set_store_addr_brkpt || i_cmnds.cmnd_set_store_load_addr_brkpt || i_cmnds.cmnd_set_trap ||
-       i_cmnds.cmnd_reset_trap || i_cmnds.cmnd_single_step)
+       i_cmnds.cmnd_reset_trap  )
     {
         // Save SPRG0
         FAPI_DBG("Save SPRG0");
@@ -195,50 +218,16 @@ p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
         FAPI_TRY(ppe_RAMRead(i_target, i_base_address, l_data64, l_gpr31_save));
         FAPI_DBG("Saved GPR31 value : 0x%08llX", l_gpr31_save );
 
-        if(i_cmnds.cmnd_resume_brkpt )
+        if(i_cmnds.cmnd_resume_brkpt || i_cmnds.cmnd_clear_brkpt )
         {
-            FAPI_DBG("Resume Breakpoint");
+            FAPI_DBG("Resume/clear Breakpoint");
             //Modify DBCR
             //clear DBCR[8] IACE and DBCR[12:13] DACE
             FAPI_TRY(ppe_update_dbcr(i_target, i_base_address, ANDIS_CONST, 0x0F73, R31));
-            //then resume
-            FAPI_TRY(ppe_resume(i_target, i_base_address));
-        }
-
-        if(i_cmnds.cmnd_resume_with_ram )
-        {
-            //Get IAR
-            FAPI_DBG("Resume With Ram");
-            FAPI_TRY(fapi2::getScom(i_target, i_base_address + PPE_XIDBGPRO, l_data64), "Error in GETSCOM");
-            l_data64.extractToRight(l1_data32, 32, 32);
-            sprintf(outstr, "IAR before ramming instruction");
-            FAPI_INF("%-9s = 0x%08llX", outstr, l1_data32);
-
-            FAPI_INF("Ram the instruction 0x%08llX ", i_cmnds.ram_instr);
-            FAPI_TRY(ppe_RAM(i_target, i_base_address, i_cmnds.ram_instr));
-
-            //Get IAR again
-            FAPI_TRY(fapi2::getScom(i_target, i_base_address + PPE_XIDBGPRO, l_data64), "Error in GETSCOM");
-            l_data64.extractToRight(l2_data32, 32, 32);
-            sprintf(outstr, "IAR after ramming the instruction");
-            FAPI_INF("%-9s = 0x%08llX", outstr, l2_data32);
-
-            //If IAR is same after Ramming, increment IAR + 4
-            if(l1_data32 == l2_data32)
-            {
-                FAPI_DBG("IAR matches, increment IAR + 4");
-                l1_data32 = l1_data32 + 4 ;
-                FAPI_INF("new iar = 0x%08llX",  l1_data32);
-                l_data64.flush<0>().insertFromRight(l1_data32, 32, 32);
-                FAPI_INF("New IAR = 0x%08llX",  l_data64);
-                FAPI_TRY(putScom(i_target, i_base_address + PPE_XIDBGPRO, l_data64),
-                         "Error in PUTSCOM in XIDBGPRO to change IAR + 4 ");
-            }
-
-            //Then resume
-            FAPI_TRY(ppe_resume(i_target, i_base_address));
+            //then resume at the end if resume_brkpt
 
         }
+
 
         if(i_cmnds.cmnd_set_instr_addr_brkpt | i_cmnds.cmnd_set_load_addr_brkpt |
            i_cmnds.cmnd_set_store_addr_brkpt | i_cmnds.cmnd_set_store_load_addr_brkpt)
@@ -300,13 +289,6 @@ p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
         }
 
 
-        if(i_cmnds.cmnd_single_step)
-        {
-            FAPI_DBG("Single step PPE");
-            FAPI_TRY(ppe_single_step(i_target, i_base_address, R31, i_cmnds.step_count));
-
-        }
-
         FAPI_DBG("Restore GPR31");
         l_data64.flush<0>().insertFromRight(ppe_getMfsprInstruction(R31, SPRG0), 0, 32);
         FAPI_DBG("getMfsprInstruction(R31, SPRG0): 0x%16llX",  l_data64 );
@@ -321,8 +303,67 @@ p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
 
     }
 
+    if(i_cmnds.cmnd_single_step)
+    {
+        FAPI_DBG("Single step PPE");
+        FAPI_TRY(ppe_single_step(i_target, i_base_address, R31, i_cmnds.step_count));
+
+    }
+
+    if(i_cmnds.cmnd_resume_with_ram )
+    {
+        //Get IAR
+        FAPI_DBG("Resume With Ram");
+        FAPI_TRY(fapi2::getScom(i_target, i_base_address + PPE_XIDBGPRO, l_data64), "Error in GETSCOM");
+        l_data64.extractToRight(l1_data32, 32, 32);
+        sprintf(outstr, "IAR before ramming instruction");
+        FAPI_INF("%-9s = 0x%08llX", outstr, l1_data32);
+
+        FAPI_INF("Ram the instruction 0x%08llX ", i_cmnds.ram_instr);
+        FAPI_TRY(ppe_RAM(i_target, i_base_address, i_cmnds.ram_instr));
+
+        //Get IAR again
+        FAPI_TRY(fapi2::getScom(i_target, i_base_address + PPE_XIDBGPRO, l_data64), "Error in GETSCOM");
+        l_data64.extractToRight(l2_data32, 32, 32);
+        sprintf(outstr, "IAR after ramming the instruction");
+        FAPI_INF("%-9s = 0x%08llX", outstr, l2_data32);
+
+        //If IAR is same after Ramming, increment IAR + 4
+        if(l1_data32 == l2_data32)
+        {
+            FAPI_DBG("IAR matches, increment IAR + 4");
+            l1_data32 = l1_data32 + 4 ;
+            FAPI_INF("new iar = 0x%08llX",  l1_data32);
+            l_data64.flush<0>().insertFromRight(l1_data32, 32, 32);
+            FAPI_INF("New IAR = 0x%08llX",  l_data64);
+            FAPI_TRY(putScom(i_target, i_base_address + PPE_XIDBGPRO, l_data64),
+                     "Error in PUTSCOM in XIDBGPRO to change IAR + 4 ");
+        }
+
+        //Then resume
+        //FAPI_TRY(ppe_resume(i_target, i_base_address));
+
+    }
+
+
+    if(i_cmnds.cmnd_step_trap)   // Advance past a trap instruction
+    {
+        //Get IAR
+        FAPI_TRY(fapi2::getScom(i_target, i_base_address + PPE_XIDBGPRO, l_data64), "Error in GETSCOM");
+        l_data64.extractToRight(l1_data32, 32, 32);
+        sprintf(outstr, "IAR of the Trap instruction");
+        FAPI_INF("%-9s = 0x%08llX", outstr, l1_data32);
+
+        l1_data32 = l1_data32 + 4 ;
+        FAPI_DBG("new iar = 0x%08llX",  l1_data32);
+        l_data64.flush<0>().insertFromRight(l1_data32, 32, 32);
+        FAPI_INF("New IAR = 0x%08llX",  l_data64);
+        FAPI_TRY(putScom(i_target, i_base_address + PPE_XIDBGPRO, l_data64),
+                 "Error in PUTSCOM in XIDBGPRO to change IAR + 4 ");
+    }
+
     //consider Resume after setting breakpoint
-    if(i_cmnds.cmnd_resume)
+    if(i_cmnds.cmnd_resume || i_cmnds.cmnd_resume_brkpt || i_cmnds.cmnd_resume_with_ram )
     {
         FAPI_DBG("Resume PPE");
         FAPI_TRY(ppe_resume(i_target, i_base_address));
@@ -335,8 +376,26 @@ p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
 
     }
 
+    if(i_cmnds.xcr_cmnd_resume_only)
+    {
+        FAPI_DBG("Only Resume PPE");
+        FAPI_TRY(ppe_resume_only(i_target, i_base_address));
 
+    }
 
+    if(i_cmnds.xcr_cmnd_ss_only)
+    {
+        FAPI_DBG("Only Single step PPE");
+        FAPI_TRY(ppe_ss_only(i_target, i_base_address,  i_cmnds.step_count));
+
+    }
+
+    if(i_cmnds.write_iar)
+    {
+        FAPI_DBG("change PPE's IAR");
+        FAPI_TRY(ppe_write_iar(i_target, i_base_address, i_cmnds.brkpt_address));
+
+    }
 
 
 fapi_try_exit:

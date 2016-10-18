@@ -44,15 +44,25 @@ typedef struct
     bool  cmnd_check_status;
     bool  cmnd_resume;
     bool  cmnd_resume_brkpt;
+    bool  cmnd_clear_brkpt;
     bool  cmnd_resume_with_ram;
     bool  cmnd_set_instr_addr_brkpt;
     bool  cmnd_set_load_addr_brkpt;
     bool  cmnd_set_store_addr_brkpt;
     bool  cmnd_set_store_load_addr_brkpt;
     bool  cmnd_set_trap;
+    bool  cmnd_step_trap;
     bool  cmnd_reset_trap;
     bool  cmnd_single_step;
     bool  cmnd_ram;
+    bool  xcr_cmnd_clear_dbg_status;
+    bool  xcr_cmnd_toggle_xsr_trh;
+    bool  xcr_cmnd_soft_reset;
+    bool  xcr_cmnd_hard_reset;
+    bool  xcr_cmnd_resume_only;
+    bool  xcr_cmnd_ss_only;
+    bool  write_iar;
+
     uint64_t brkpt_address;
     uint64_t ram_instr;
     uint64_t step_count;
