@@ -125,13 +125,21 @@ SECTIONS
     // Other read-write data
     // It's not clear why boot.S is generating empty .glink,.iplt
 
-   .rela   . : { *(.rela*) } > sram
-   .rwdata . : { *(.data) *(.bss) } > sram
+    .rela   . : { *(.rela*) } > sram
+    .rwdata . : { *(.data) *(.bss)
+
+        . = ALIGN(8);
+        _PK_INITIAL_STACK_LIMIT = .;
+
+        FILL(0xA55A);
+        . = . + INITIAL_STACK_SIZE;
+        . = ALIGN(8);
+        _PK_INITIAL_STACK = . - 8;
+
+    } > sram
 //   .iplt . : { *(.iplt) } > sram
 
-   _PK_INITIAL_STACK_LIMIT = .;
-   . = . + INITIAL_STACK_SIZE;
-   _PK_INITIAL_STACK = . - 1;
-
+    _SGPE_END = .;
+    _SGPE_SIZE = . - SRAM_START;
 
 }

@@ -90,12 +90,12 @@ SECTIONS
     // offsets.
 
     _SDA2_BASE_ = .;
-   .sdata2 . : { *(.sdata2*) } > sram
-   .sbss2  . : { *(.sbss2*) } > sram
+    .sdata2 . : { *(.sdata2*) } > sram
+    .sbss2  . : { *(.sbss2*) } > sram
 
-   // Other read-only data.
+    // Other read-only data.
 
-   .rodata . : { *(.rodata*) *(.got2) } > sram
+    .rodata . : { *(.rodata*) *(.got2) } > sram
 
     _RODATA_SECTION_SIZE = . - _RODATA_SECTION_BASE;
 
@@ -117,13 +117,18 @@ SECTIONS
     // Other read-write data
     // It's not clear why boot.S is generating empty .glink,.iplt
 
-   .rela   . : { *(.rela*) } > sram
-   .rwdata . : { *(.data*) *(.bss*) } > sram
-//   .iplt . : { *(.iplt) } > sram
+    .rela   . : { *(.rela*) } > sram
+    .rwdata . : { *(.data*) *(.bss*)
+        . = ALIGN(8);
+        _PK_INITIAL_STACK_LIMIT = .;
 
-   _PK_INITIAL_STACK_LIMIT = .;
-   . = . + INITIAL_STACK_SIZE;
-   _PK_INITIAL_STACK = . - 1;
+        FILL(0xA55A);
+        . = . + INITIAL_STACK_SIZE;
+        . = ALIGN(8);
+        _PK_INITIAL_STACK = . - 8;
+    } > sram
+
+//   .iplt . : { *(.iplt) } > sram
 
    _CME_END = .;
    _CME_SIZE = . - SRAM_START;
