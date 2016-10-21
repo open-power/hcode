@@ -177,10 +177,12 @@ int verifyHeader(enum CME_CORE_MASKS i_core,
 //  @param[in] i_core - core select value
 //  @param[in] i_scom_op - scom control value like queue/non-queue
 /// @param[in] i_rs4 The RS4 compressed string
+//  @param[in] i_applyOverride- 0 (no override) 1 (override mode)
 int rs4DecompressionSvc(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,
-    uint8_t* i_rs4);
+    uint8_t* i_rs4,
+    uint8_t i_applyOverride);
 
 
 #endif

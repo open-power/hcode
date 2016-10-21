@@ -191,12 +191,12 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
             //1. start of CME Image
             //2. Length of first block copy
             HomerImgDesc_t* pCpmrHdrAddr = (HomerImgDesc_t*)(CPMR_POSITION | SET_ADDR_MSB);   // Set MSB to point OCI to PBA
-            PK_TRACE("Magic Number [ 0:31]: 0x%08x", ((pCpmrHdrAddr->homerMagicNumber & 0xffffffff00000000) >> 32));
-            PK_TRACE("Magic Number [32:63]: 0x%08x", ((pCpmrHdrAddr->homerMagicNumber & 0x00000000ffffffff)));
+            PK_TRACE("Magic Number [ 0:31]: 0x%08x", ((pCpmrHdrAddr->cpmrMagicWord & 0xffffffff00000000) >> 32));
+            PK_TRACE("Magic Number [32:63]: 0x%08x", ((pCpmrHdrAddr->cpmrMagicWord & 0x00000000ffffffff)));
 
             PK_TRACE("Build Date: 0x%08x", (pCpmrHdrAddr->buildDate));
             PK_TRACE("Version   : 0x%08x", (pCpmrHdrAddr->version));
-            PK_TRACE("Fused Flag: 0x%08x", (pCpmrHdrAddr->fuseModeStatus));
+            PK_TRACE("Fused Flag: 0x%08x", (pCpmrHdrAddr->fusedModeStatus));
 
             PK_TRACE("Cme Hcode Offset: 0x%08x", (pCpmrHdrAddr->cmeImgOffset));
             PK_TRACE("Cme Hcode Length: 0x%08x", (pCpmrHdrAddr->cmeImgLength));

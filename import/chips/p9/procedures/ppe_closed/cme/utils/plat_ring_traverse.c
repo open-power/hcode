@@ -80,17 +80,14 @@ int putRing(
         l_chipletData.iv_num_instance_rings = 0;
         l_chipletData.iv_num_variants = 0;
         uint8_t l_chipletID = 0;
-        uint32_t* l_sectionAddr;
-        uint16_t* l_ringTorAddr;
-
+        uint32_t* l_sectionAddr = 0;
+        uint16_t* l_ringTorAddr = 0;
 
         getRingProperties(i_ringID, &l_torOffset, &l_ringType);
 
-        CmeHcodeLayout_t* l_hcodeLayout = (CmeHcodeLayout_t*)(CME_SRAM_BASE);
+        uint8_t* pCmeImage = (uint8_t*)(CME_SRAM_BASE);
 
-        cmeHeader_t* l_cmeHeader =
-            (cmeHeader_t*) & l_hcodeLayout->elements.imgHeader;
-
+        cmeHeader_t* l_cmeHeader = (cmeHeader_t*) ( pCmeImage + CME_INT_VECTOR_SIZE );
 
         l_chipletData = g_ecData;
 
@@ -131,16 +128,44 @@ int putRing(
 
         }
 
-        if(*l_ringTorAddr != 0)
+        if((l_ringTorAddr) && (*l_ringTorAddr != 0))
         {
             uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
             uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
-            l_rc = rs4DecompressionSvc(i_core, i_scom_op, l_rs4Address);
+            l_rc = rs4DecompressionSvc(i_core, i_scom_op, l_rs4Address, 0);
         }
         else
         {
-            PK_TRACE("No data for this ringId %d", i_ringID);
+            PK_TRACE_DBG("No data for this ringId %d in .RING section", i_ringID);
         }
+
+        if(INSTANCE_RING != l_ringType)
+        {
+            if (!(l_cmeHeader->g_cme_cmn_ring_ovrd_offset))
+            {
+                break;
+            }
+
+            l_sectionAddr =
+                (uint32_t*)(CME_SRAM_BASE + l_cmeHeader->g_cme_cmn_ring_ovrd_offset);
+            // TOR records of Ring TOR are 2 bytes in size.
+            l_ringTorAddr = (uint16_t*)(l_sectionAddr) + (l_torOffset);
+
+            if((l_ringTorAddr) && (*l_ringTorAddr != 0))
+            {
+                uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
+                uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
+                l_rc = rs4DecompressionSvc(i_core, i_scom_op, l_rs4Address, 1);
+            }
+            else
+            {
+                PK_TRACE_DBG("No data for this ringId %d in .OVERRIDE section", i_ringID);
+            }
+
+        }
+
+
+
     }
     while(0);
 

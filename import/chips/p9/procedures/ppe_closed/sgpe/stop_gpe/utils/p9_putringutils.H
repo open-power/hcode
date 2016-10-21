@@ -194,10 +194,14 @@ fapi2::ReturnCode verifyHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
 /// @brief Function to decompress the RS4 and apply the Ring data
 /// @param[in] i_target Chiplet Target of Scan
 /// @param[in] i_rs4 The RS4 compressed string
+/// @param[in] i_applyOverride 0 - no override 1- override mode
+/// @param[in] i_ringType Common or Instance ring
 /// @return FAPI2_RC_SUCCESS if success, else error code.
 fapi2::ReturnCode rs4DecompressionSvc(
     const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
-    const uint8_t* i_rs4);
+    const uint8_t* i_rs4,
+    bool i_applyOverride,
+    RINGTYPE i_ringType);
 
 
 /// @brief Function to clean up the scan region and type

@@ -82,7 +82,7 @@ __bootLoader:
     _liw    %r9, SRAM_SGPE_BOOT_LOADER_ADDR
     _liw    %r8, SGPE_IVPR_OCI_ADDR
     stw     r9, 0(r8)
-    
+
     ## Enable halt on trap
     lis     %r3, 0x0100
     li      %r3, 0
@@ -194,7 +194,7 @@ end_specific_rings:
     ## start copying
     mtctr   r5
     nop
-    
+
 payload_copy_loop:
     lvd     d28, 0(r8)
     stvd    d28, 0(r4)
@@ -217,7 +217,7 @@ payload_copy_loop:
     _liw    %r9, SRAM_SGPE_BASE_ADDR
     _liw    %r8, SGPE_IVPR_OCI_ADDR
     stw     r9, 0(r8)
-    
+
     blr
 
     .epilogue __bootLoader

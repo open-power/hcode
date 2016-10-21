@@ -47,7 +47,6 @@ fapi2::ReturnCode findRS4InImageAndApply(
 
     do
     {
-        FAPI_INF("findRS4InImageAndApply i_ringID %d", i_ringID);
         // Determine the Offset ID and Ring Type for the given Ring ID.
         uint32_t l_torOffset = 0;
         RINGTYPE l_ringType = COMMON_RING;
@@ -72,7 +71,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
         {
             if (l_hcodeLayout->g_sgpe_spec_ring_occ_offset == 0)
             {
-                FAPI_INF("No data in Instance spec ring section");
+                break;
             }
 
             l_sectionAddr =
@@ -86,10 +85,9 @@ fapi2::ReturnCode findRS4InImageAndApply(
                 if (fapi2::TARGET_TYPE_EX & (i_target.getTargetType()))
                 {
                     l_ex_number = (i_target.getTargetNumber()) % 2;
-                    PK_TRACE ("l_chipletID %d l_ex_number %d", l_chipletID, l_ex_number);
+                    PK_TRACE_DBG ("l_chipletID %d l_ex_number %d", l_chipletID, l_ex_number);
                 }
 
-                //12 is considered as instance ring size
                 l_ringTorAddr =  reinterpret_cast<uint16_t*>(l_sectionAddr ) + ((l_chipletOffset *
                                  12) + (l_torOffset + l_ex_number));
             }
@@ -98,7 +96,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
         {
             if (l_hcodeLayout->g_sgpe_cmn_ring_occ_offset == 0)
             {
-                FAPI_INF("No data in common ring section");
+                break;
             }
 
             l_sectionAddr =
@@ -108,17 +106,43 @@ fapi2::ReturnCode findRS4InImageAndApply(
 
         }
 
-        if(*l_ringTorAddr != 0)
+        if((l_ringTorAddr) && (*l_ringTorAddr != 0))
         {
             uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
             uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
-            FAPI_INF("l_rs4Address %08x", l_rs4Address);
-            l_rc = rs4DecompressionSvc(i_target, l_rs4Address);
+            l_rc = rs4DecompressionSvc(i_target, l_rs4Address, false, l_ringType);
         }
         else
         {
-            FAPI_INF("No data for this ringId %d", i_ringID);
+            PK_TRACE_DBG("No data for this ringId %d in .RING section", i_ringID);
         }
+
+        if(INSTANCE_RING != l_ringType)
+        {
+            if (l_hcodeLayout->g_sgpe_cmn_ring_ovrd_occ_offset == 0)
+            {
+                PK_TRACE_DBG("No data in common ring section");
+                break;
+            }
+
+            l_sectionAddr =
+                (uint32_t*)(SGPE_SRAM_BASE + l_hcodeLayout->g_sgpe_cmn_ring_ovrd_occ_offset);
+
+            l_ringTorAddr = reinterpret_cast<uint16_t*>(l_sectionAddr) + (l_torOffset);
+
+
+            if((l_ringTorAddr) && (*l_ringTorAddr != 0))
+            {
+                uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
+                uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
+                l_rc = rs4DecompressionSvc(i_target, l_rs4Address, true, l_ringType);
+            }
+            else
+            {
+                PK_TRACE_DBG("No data for this ringId %d in .OVERRIDE section", i_ringID);
+            }
+        }
+
     }
     while(0);
 

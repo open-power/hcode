@@ -30,7 +30,6 @@ TOP-C-SOURCES = p9_sgpe_stop_entry.c \
                 p9_hcd_cache_scan0.c \
                 p9_hcd_cache_poweron.c \
                 p9_hcd_cache_chiplet_reset.c \
-                p9_hcd_cache_gptr_time_initf.c \
                 p9_hcd_cache_dpll_setup.c \
                 p9_hcd_cache_chiplet_init.c \
                 p9_hcd_cache_arrayinit.c \
@@ -53,6 +52,7 @@ TOP-CPP-SOURCES += p9_hcd_cache_dpll_initf.C
 TOP-CPP-SOURCES += p9_hcd_cache_chiplet_l3_dcc_setup.C
 TOP-CPP-SOURCES += p9_hcd_cache_dcc_skewadjust_setup.C
 TOP-CPP-SOURCES += p9_hcd_cache_repair_initf.C
+TOP-CPP-SOURCES += p9_hcd_cache_gptr_time_initf.C
 
 UTILS_OBJECTS  = $(UTILS-SRC:.C=.o)
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) $(TOP-CPP-SOURCES:.C=.o)

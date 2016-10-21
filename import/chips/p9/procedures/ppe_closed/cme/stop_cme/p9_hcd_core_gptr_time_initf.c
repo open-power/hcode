@@ -23,13 +23,22 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
+#include "plat_ring_traverse.h"
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
+#include "p9_ringid_cme_enums.h"
 
 int
 p9_hcd_core_gptr_time_initf(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
     // Markers needed for gptr time initf
+
+    PK_TRACE_DBG("Scan ec_gptr ring core value %d", core);
+    putRing(core, CME_SCOM_EQ, ec_gptr);
+
+    PK_TRACE_DBG("Scan ec_time ring core value %d", core);
+    putRing(core, CME_SCOM_EQ, ec_time);
+
     return rc;
 }
