@@ -326,7 +326,7 @@ linear_swrite(FILE* stream, const void* buf, size_t size, size_t* written)
 
 
     //if (wrote != size) {
-    // register_contents = in32(PMC_PORE_SCRATCH_REG1);
+    // register_contents = in32(OCB_OCCS1);
     // register_contents = register_contents & bit_0_mask;
 
     //if (!register_contents) {
@@ -350,7 +350,7 @@ linear_swrite(FILE* stream, const void* buf, size_t size, size_t* written)
     // Set bit 0 to 1
     // out32(addr, data)
     num_bytes_written = (uint32_t)wrote | bit_0_mask;
-    out32( PMC_PORE_SCRATCH_REG1 , num_bytes_written );
+    out32(OCB_OCCS1 , num_bytes_written );
 
     // Sync
     eieio();
@@ -430,7 +430,7 @@ linear_stream_create(CircularStream* stream,
 
         file->sread = NULL;
         // Write to register where location of buffer is
-        out32( PMC_PORE_SCRATCH_REG1, (uint32_t)buf);
+        out32(OCB_OCCS1, (uint32_t)buf);
     }
 
     return rc;
