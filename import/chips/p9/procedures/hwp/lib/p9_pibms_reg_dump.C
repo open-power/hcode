@@ -46,7 +46,10 @@
 #include <fapi2.H>
 //#include <p9_hcd_common.H>
 #include <p9_pibms_reg_dump.H>
-
+#include <p9_perv_scom_addresses.H>
+#include <p9_perv_scom_addresses_fld.H>
+#include <p9_perv_scom_addresses_fixes.H>
+#include <p9_perv_scom_addresses_fld_fixes.H>
 // ----------------------------------------------------------------------
 // Constants
 // ----------------------------------------------------------------------
@@ -127,6 +130,30 @@ enum PIBMS_REGS
     PCBM_ERR_REG                     = 0x000F001F,
 };
 
+// registers that can be accessed in SDB mode
+std::vector<PIBMSReg_t> v_pibms_regs_secure_mode =
+{
+    {PIBMEM_CTRL,       "PIBMEM_CTRL"  },
+    {PIBMEM_ADDR_PIB,   "PIBMEM_ADDR_PIB" },
+    {PIBMEM_STATUS,     "PIBMEM_STATUS" },
+    {PIBMEM_RESET,      "PIBMEM_RESET" },
+    {PIBMEM_ADDR_FACES, "PIBMEM_ADDR_FACES"   },
+    {PIBMEM_FIR_MASK,   "PIBMEM_FIR_MASK"  },
+    {PIBMEM_REPR_0,     "PIBMEM_REPR_0"  },
+    {PIBMEM_REPR_1,     "PIBMEM_REPR_1"  },
+    {PIBMEM_REPR_2,     "PIBMEM_REPR_2"  },
+    {PIBMEM_REPR_3,     "PIBMEM_REPR_3"  },
+    {PSU_PIBHST_CTRL_STATUS,           "PSU_PIBHST_CTRL_STATUS"},
+    {PSU_PIBHST_FILTER,                "PSU_PIBHST_FILTER"},
+    {PSU_PIBHST_LAST_ADDR_TRACE,       "PSU_PIBHST_LAST_ADDR_TRACE"},
+    {PSU_PIBHST_LAST_REQDATA_TRACE,    "PSU_PIBHST_LAST_REQDATA_TRACE"},
+    {PSU_PIBHST_LAST_RSPDATA_TRACE,    "PSU_PIBHST_LAST_RSPDATA_TRACE"},
+    {PSU_PIBHST_2NDLAST_ADDR_TRACE,    "PSU_PIBHST_2NDLAST_ADDR_TRACE"},
+    {PSU_PIBHST_2NDLAST_REQDATA_TRACE, "PSU_PIBHST_2NDLAST_REQDATA_TRACE"},
+    {PSU_PIBHST_2NDLAST_RSPDATA_TRACE, "PSU_PIBHST_2NDLAST_RSPDATA_TRACE"},
+    {PSU_INSTR_CTRL_STATUS,            "PSU_INSTR_CTRL_STATUS"},
+};
+
 std::vector<PIBMSReg_t> v_pibms_regs =
 {
     {OTP_STATUS, "OTP_STATUS"},
@@ -155,16 +182,6 @@ std::vector<PIBMSReg_t> v_pibms_regs =
     {MAILBOX_SCRATCH_REG_6, "MAILBOX_SCRATCH_REG_6"},
     {MAILBOX_SCRATCH_REG_7, "MAILBOX_SCRATCH_REG_7"},
     {MAILBOX_SCRATCH_REG_8, "MAILBOX_SCRATCH_REG_8"},
-    {PIBMEM_CTRL,       "PIBMEM_CTRL"  },
-    {PIBMEM_ADDR_PIB,   "PIBMEM_ADDR_PIB" },
-    {PIBMEM_STATUS,     "PIBMEM_STATUS" },
-    {PIBMEM_RESET,      "PIBMEM_RESET" },
-    {PIBMEM_ADDR_FACES, "PIBMEM_ADDR_FACES"   },
-    {PIBMEM_FIR_MASK,   "PIBMEM_FIR_MASK"  },
-    {PIBMEM_REPR_0,     "PIBMEM_REPR_0"  },
-    {PIBMEM_REPR_1,     "PIBMEM_REPR_1"  },
-    {PIBMEM_REPR_2,     "PIBMEM_REPR_2"  },
-    {PIBMEM_REPR_3,     "PIBMEM_REPR_3"  },
     {I2CM0_CTRL,    "I2CM0_CTRL"  },
     {I2CM0_D8t15,   "I2CM0_D8t15" },
     {I2CM0_FSTAT,   "I2CM0_FSTAT" },
@@ -181,15 +198,6 @@ std::vector<PIBMSReg_t> v_pibms_regs =
     {I2CM0_PBUSY,   "I2CM0_PBUSY" },
     {SBEFIFO_UPSTREAM_STATUS, "SBEFIFO_UPSTREAM_STATUS"},
     {SBEFIFO_DOWNSTREAM_STATUS, "SBEFIFO_DOWNSTREAM_STATUS"},
-    {PSU_PIBHST_CTRL_STATUS,           "PSU_PIBHST_CTRL_STATUS"},
-    {PSU_PIBHST_FILTER,                "PSU_PIBHST_FILTER"},
-    {PSU_PIBHST_LAST_ADDR_TRACE,       "PSU_PIBHST_LAST_ADDR_TRACE"},
-    {PSU_PIBHST_LAST_REQDATA_TRACE,    "PSU_PIBHST_LAST_REQDATA_TRACE"},
-    {PSU_PIBHST_LAST_RSPDATA_TRACE,    "PSU_PIBHST_LAST_RSPDATA_TRACE"},
-    {PSU_PIBHST_2NDLAST_ADDR_TRACE,    "PSU_PIBHST_2NDLAST_ADDR_TRACE"},
-    {PSU_PIBHST_2NDLAST_REQDATA_TRACE, "PSU_PIBHST_2NDLAST_REQDATA_TRACE"},
-    {PSU_PIBHST_2NDLAST_RSPDATA_TRACE, "PSU_PIBHST_2NDLAST_RSPDATA_TRACE"},
-    {PSU_INSTR_CTRL_STATUS,            "PSU_INSTR_CTRL_STATUS"},
     {PCBM_REC_ERR_REG0,                "PCBM_REC_ERR_REG0"},
     {PCBM_REC_ERR_REG1,                "PCBM_REC_ERR_REG1"},
     {PCBM_REC_ERR_REG2,                "PCBM_REC_ERR_REG2"},
@@ -197,8 +205,6 @@ std::vector<PIBMSReg_t> v_pibms_regs =
     {PCBM_FIRST_ERR,                   "PCBM_FIRST_ERR"},
     {PCBM_ERR_REG,                     "PCBM_ERR_REG"},
 };
-
-
 
 
 
@@ -221,31 +227,69 @@ std::vector<PIBMSReg_t> v_pibms_regs =
 /// @retval ERROR defined in xml
 
 fapi2::ReturnCode p9_pibms_reg_dump( const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
-                                     std::vector<PIBMSRegValue_t>& temp_data)
+                                     std::vector<PIBMSRegValue_t>& pibms_reg_set)
 
 
 {
+    fapi2::buffer<uint32_t> l_data32_cbs_cs;
+    fapi2::buffer<uint32_t> l_data32_sb_cs;
     std::vector<PIBMSRegValue_t> v_pibms_reg_value;
     fapi2::buffer<uint64_t> l_data64;
 
     PIBMSRegValue_t l_regVal;
     uint32_t address ;
 
+
     FAPI_IMP("p9_pibms_reg_dump");
     FAPI_INF("Executing p9_pibms_reg_dump " );
 
 
     fapi2::buffer<uint64_t> buf;
+    FAPI_TRY(fapi2::getCfamRegister(i_target, PERV_CBS_CS_FSI, l_data32_cbs_cs));
+    FAPI_TRY(fapi2::getCfamRegister(i_target, PERV_SB_CS_FSI, l_data32_sb_cs));
 
-    for (auto it : v_pibms_regs)
+    // check if in secure debug mode
+    if (l_data32_cbs_cs.getBit<PERV_CBS_CS_SECURE_ACCESS_BIT>() &&
+        l_data32_sb_cs.getBit<PERV_SB_CS_SECURE_DEBUG_MODE>() )
     {
-        // ******************************************************************
-        address = it.number ;
-        FAPI_TRY((getScom(i_target , address , buf )));
-        l_regVal.reg = it;
-        l_regVal.value = buf;
-        temp_data.push_back(l_regVal);
-        // ******************************************************************
+        FAPI_DBG("In secure debug mode");
+
+        for (auto it : v_pibms_regs_secure_mode)
+        {
+            // ******************************************************************
+            address = it.number ;
+            FAPI_TRY((getScom(i_target , address , buf )));
+            l_regVal.reg = it;
+            l_regVal.value = buf;
+            pibms_reg_set.push_back(l_regVal);
+            // ******************************************************************
+        }
+    }
+
+    else
+    {
+        // secure registers collection
+        for (auto it : v_pibms_regs_secure_mode)
+        {
+            // ******************************************************************
+            address = it.number ;
+            FAPI_TRY((getScom(i_target , address , buf )));
+            l_regVal.reg = it;
+            l_regVal.value = buf;
+            pibms_reg_set.push_back(l_regVal);
+            // ******************************************************************
+        }
+
+        for (auto it : v_pibms_regs)
+        {
+            // ******************************************************************
+            address = it.number ;
+            FAPI_TRY((getScom(i_target , address , buf )));
+            l_regVal.reg = it;
+            l_regVal.value = buf;
+            pibms_reg_set.push_back(l_regVal);
+            // ******************************************************************
+        }
     }
 
 fapi_try_exit:
