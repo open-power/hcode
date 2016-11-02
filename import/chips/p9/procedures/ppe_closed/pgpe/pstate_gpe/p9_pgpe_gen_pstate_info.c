@@ -27,6 +27,7 @@
 #include "p9_pstates_table.h"
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_header.h"
+#include "pstate_pgpe_occ_api.h"
 
 //Generated PState Table in SRAM
 GeneratedPstateInfo G_gpi;
@@ -38,6 +39,7 @@ extern VpdOperatingPoint G_operating_points[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 //
 void p9_pgpe_gen_raw_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi);
 void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi);
+void p9_pgpe_gen_occ_pstate_tbl(GeneratedPstateInfo* gpi);
 
 //
 //p9_pgpe_gen_pstate_info
@@ -78,10 +80,15 @@ void p9_pgpe_gen_pstate_info()
     {
         pstate_tbl_memory_offset[w] = gpi[w];
     }
+
+    //Generate Pstate table for OCC in SRAM
+    p9_pgpe_gen_occ_pstate_tbl(&G_gpi);
 }
 
 //
 //p9_pgpe_gen_raw_pstates
+//
+//Generates pstate table without biasing
 //
 void p9_pgpe_gen_raw_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi)
 {
@@ -109,6 +116,8 @@ void p9_pgpe_gen_raw_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* g
 //
 //p9_pgpe_gen_biased_pstates
 //
+//Generates pstate table with biasing
+//
 void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi)
 {
     int32_t p;
@@ -132,5 +141,25 @@ void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo
         gpi->biased_pstates[p].vdm_vid = 0;
         gpi->biased_pstates[p].vdm_thresholds = 0;
         freq_khz_offset += gppb->frequency_step_khz;
+    }
+}
+
+
+//
+//p9_pgpe_gen_occ_pstate_tbl
+//
+//Generates pstate table for OCC consumption
+//
+void p9_pgpe_gen_occ_pstate_tbl(GeneratedPstateInfo* gpi)
+{
+    int p;
+    OCCPstateTable_t* opst = (OCCPstateTable_t*)G_pgpe_header_data->occ_pstate_tbl_addr;
+    opst->entries = (G_pgpe_header_data->occ_pstate_tbl_length) / sizeof(OCCPstateTable_entry_t);
+
+    for (p = 0; p <= opst->entries; p++)
+    {
+        opst->table[p].pstate = gpi->biased_pstates[p].pstate;
+        opst->table[p].frequency_mhz = gpi->biased_pstates[p].frequency_mhz ;
+        opst->table[p].internal_vdd_vid  = gpi->biased_pstates[p].internal_vid;
     }
 }

@@ -70,4 +70,7 @@ void p9_pgpe_gen_pstate_info();
 ///PGPE FIT
 void p9_pgpe_fit_init();
 
+///PGPE IPC
+void p9_pgpe_ipc_init();
+
 #endif //_P9_PGPE_H_

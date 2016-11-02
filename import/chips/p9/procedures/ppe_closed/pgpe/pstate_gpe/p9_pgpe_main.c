@@ -131,7 +131,7 @@ main(int argc, char** argv)
                   0,
                   PPE_TIMEBASE_HZ);
 
-    // Initialize the thread control block for G_p9_pgpe_stop_enter_thread
+    // Initialize the thread control block for G_p9_pgpe_pstate_thread
     pk_thread_create(&G_p9_pgpe_pstate_thread,
                      (PkThreadRoutine)p9_pgpe_pstate_thread,
                      (void*)NULL,
@@ -143,7 +143,7 @@ main(int argc, char** argv)
                  &G_p9_pgpe_pstate_thread,
                  sizeof(G_p9_pgpe_pstate_thread));
 
-    // Make G_p9_sgpe_stop_exit_thread runnable
+    // Make G_p9_pgpe_pstate_thread runnable
     pk_thread_resume(&G_p9_pgpe_pstate_thread);
 
     //Do initialization

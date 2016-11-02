@@ -30,6 +30,7 @@
 #include "avs_driver.h"
 #include "p9_dd1_doorbell_wr.h"
 
+
 #define CCSR_CORE_CONFIG_MASK    0xC0000000
 
 enum quadManager
@@ -59,10 +60,13 @@ extern VpdOperatingPoint G_operating_points[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 //
 //Function Prototypes
 //
-//void p9_pgpe_pstate_init_derived_data();
 void p9_pgpe_pstate_get_config();
 void p9_pgpe_pstate_update_ext_volt();
 void p9_pgpe_pstate_freq_update();
+
+//
+//
+//
 
 //
 //PIG Interrupt Handler
@@ -123,8 +127,13 @@ void p9_pgpe_pstate_thread(void* arg)
 
     pk_semaphore_create(&(G_pgpe_pstate_record.sem[0]), 0, 1);
 
+    //Initialize IPC
+    p9_pgpe_ipc_init();
+
+
     //Set OCC_FLAG[PGPE_ACTIVE]
     out32(OCB_OCCFLG_OR, BIT32(4));
+    out32(OCB_OCCS0, 0x2);
 #if EPM_P9_TUNING
     asm volatile ("tw 0, 31, 0");
 #endif

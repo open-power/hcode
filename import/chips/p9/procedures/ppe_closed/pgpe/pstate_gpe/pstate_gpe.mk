@@ -60,6 +60,10 @@ include $(PM_LIBDIR)/common/libcommonfiles.mk
 OBJS += $(LIBCOMMON_OBJECTS)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PM_LIBDIR)/common)
 
+include $(PM_LIBDIR)/occlib/liboccfiles.mk
+OBJS += $(LIBOCC_OBJECTS)
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PM_LIBDIR)/occlib)
+
 include $(HCODE_LIBDIR)/hcodelibfiles.mk
 OBJS += $(HCODE_OBJECTS)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(HCODE_LIBDIR))

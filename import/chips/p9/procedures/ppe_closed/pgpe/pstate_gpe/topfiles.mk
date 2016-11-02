@@ -30,7 +30,9 @@ TOP-C-SOURCES = p9_pgpe_pstate.c \
 				p9_pgpe_boot_temp.c \
 				p9_pgpe_gppb.c \
 				p9_pgpe_gen_pstate_info.c \
-				p9_pgpe_header.c
+				p9_pgpe_header.c \
+				p9_pgpe_ipc.c \
+				ipc_func_tables.c
 TOP-S-SOURCES =
 
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)

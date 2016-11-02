@@ -37,10 +37,14 @@
 // --------------------
 #define EPM_P9_TUNING 1
 #define SIMICS_TUNING 0
-#define GEN_PSTATE_TBL 1
+#define GEN_PSTATE_TBL 0
 #define MIMIC_BOOT_TEMP 1
 #define DEV_DEBUG     1
 #define PK_TRACE_TIMER_OUTPUT 0
+
+///This application uses IPC code
+#define GLOBAL_CFG_USE_IPC
+#define STATIC_IPC_TABLES
 
 // Force CME and GPE tasks to use the unified interrupt handler.
 #define UNIFIED_IRQ_HANDLER_GPE
@@ -74,6 +78,7 @@
 /// This application will statically initialize it's external interrupt table
 /// using the table defined in pk_app_irq_table.c.
 #define STATIC_IRQ_TABLE
+
 
 /// About OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING :
 /// This interrupt is used by the PGPE (GPE2) exclusively. Thus, rather than

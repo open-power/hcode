@@ -75,12 +75,12 @@
 #define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(5)
 extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
-#define IRQ_VEC_PRTY0_GPE   (uint64_t)(0xFFD1690000000000) // Non-task hi-prty IRQs
+#define IRQ_VEC_PRTY0_GPE   (uint64_t)(0x0001000000000000) // Non-task hi-prty IRQs
 // Shared between all instances
-#define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x0020000000000000) // Task1-OCCHW_IRQ_OCB_ERROR=HB loss?
+#define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x0000000000000000) // Task1-OCCHW_IRQ_OCB_ERROR=HB loss?
 #define IRQ_VEC_PRTY2_GPE2  (uint64_t)(0x0000001000000000) // Task2-IPC msgs from 405
 #define IRQ_VEC_PRTY3_GPE2  (uint64_t)(0x0000000000020000) // Task3-CME interrupts
-#define IRQ_VEC_PRTY4_GPE2  (uint64_t)(0x000E96EFFFFDBFFF) // Other instances' IRQs
+#define IRQ_VEC_PRTY4_GPE2  (uint64_t)(0xFFFEFFEFFFFDFFFF) // Other instances' IRQs
 // Unique to each instance
 // We should never detect these
 
