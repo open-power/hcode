@@ -92,14 +92,14 @@ p9_cme_stop_entry()
     core = core & G_cme_stop_record.core_enabled &
            G_cme_stop_record.core_running;
 
-    PK_TRACE_INF("Check: Core Select[%d] Enabled[%d] Running[%d]",
+    PK_TRACE_DBG("Check: Core Select[%d] Enabled[%d] Running[%d]",
                  core, G_cme_stop_record.core_enabled,
                  G_cme_stop_record.core_running);
 
     if (!core)
     {
         // PM_ACTIVE can be phantom, only gives warning
-        PK_TRACE_INF("WARNING: No Valid PM_ACTIVE Signal Found. Return");
+        PK_TRACE_INF("WARNING: Only Phantom PM_ACTIVE to be Ignored. Return");
         return CME_STOP_SUCCESS;
     }
 
@@ -203,7 +203,7 @@ p9_cme_stop_entry()
             }
         }
 
-        PK_TRACE_INF("Check: Stop Levels Request[%d %d] Actual[%d, %d]",
+        PK_TRACE_DBG("Check: Stop Levels Request[%d %d] Actual[%d, %d]",
                      G_cme_stop_record.req_level_c0,
                      G_cme_stop_record.req_level_c1,
                      G_cme_stop_record.act_level_c0,
@@ -214,7 +214,7 @@ p9_cme_stop_entry()
 
         if(core_stop1)
         {
-            PK_TRACE_INF("Check: core[%d] core_stop1[%d]", core, core_stop1);
+            PK_TRACE_DBG("Check: core[%d] core_stop1[%d]", core, core_stop1);
 
 #if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
 
@@ -307,7 +307,7 @@ p9_cme_stop_entry()
                                     STOP_ACT_DISABLE);
         }
 
-        PK_TRACE_INF("Check: core[%d] target_lv[%d] deeper_lv[%d] deeper_core[%d]",
+        PK_TRACE_DBG("Check: core[%d] target_lv[%d] deeper_lv[%d] deeper_core[%d]",
                      core, target_level, deeper_level, deeper_core);
 
         // Poll Infinitely for PCB Mux Grant
@@ -531,7 +531,7 @@ p9_cme_stop_entry()
             //========================
         }
 
-        PK_TRACE_INF("Catch: core[%d] running[%d] core_catchup[%d] origin_core[%d]",
+        PK_TRACE_DBG("Catch: core[%d] running[%d] core_catchup[%d] origin_core[%d]",
                      core, G_cme_stop_record.core_running, core_catchup, origin_core);
 
 #endif
@@ -569,7 +569,7 @@ p9_cme_stop_entry()
         core_aborted = core &  G_cme_stop_record.core_running;
         core         = core & ~G_cme_stop_record.core_running;
 
-        PK_TRACE_INF("Abort: core[%d] running[%d] core_aborted[%d]",
+        PK_TRACE_DBG("Abort: core[%d] running[%d] core_aborted[%d]",
                      core, G_cme_stop_record.core_running, core_aborted);
 
         if (!core)
@@ -589,7 +589,7 @@ p9_cme_stop_entry()
             deeper_core  = 0;
         }
 
-        PK_TRACE_INF("Check: core[%d] deeper_core[%d] target_level[%d] deeper_level[%d]",
+        PK_TRACE_DBG("Check: core[%d] deeper_core[%d] target_level[%d] deeper_level[%d]",
                      core, deeper_core, target_level, deeper_level);
 
         //----------------------------------------------------------------------
@@ -785,7 +785,7 @@ p9_cme_stop_entry()
         core_aborted = core &  G_cme_stop_record.core_running;
         core         = core & ~G_cme_stop_record.core_running;
 
-        PK_TRACE_INF("Abort: core[%d] running[%d] core_aborted[%d]",
+        PK_TRACE_DBG("Abort: core[%d] running[%d] core_aborted[%d]",
                      core, G_cme_stop_record.core_running, core_aborted);
 
         if (!core)
@@ -805,7 +805,7 @@ p9_cme_stop_entry()
             deeper_core = 0;
         }
 
-        PK_TRACE_INF("Check: core[%d] deeper_core[%d] target_level[%d] deeper_level[%d]",
+        PK_TRACE_DBG("Check: core[%d] deeper_core[%d] target_level[%d] deeper_level[%d]",
                      core, deeper_core, target_level, deeper_level);
 
         //----------------------------------------------------------------------
@@ -855,7 +855,7 @@ p9_cme_stop_entry()
                     MARK_TAG(SE_PURGE_L2_ABORT, core_aborted)
                     //=======================================
 
-                    PK_TRACE_INF("Abort: L2+NCU purge aborted by core[%d]", core_aborted);
+                    PK_TRACE_DBG("Abort: L2+NCU purge aborted by core[%d]", core_aborted);
                     out32(CME_LCL_SICR_OR, BIT32(19) | BIT32(23));
                 }
 
@@ -942,7 +942,7 @@ p9_cme_stop_entry()
         PK_TRACE("Switch PPM wakeup to STOP-GPE via CPMMR[13]");
         CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(13));
 
-        PK_TRACE_INF("SE5.2B: Handed off to SGPE");
+        PK_TRACE_INF("SE5.B: Handed off to SGPE");
 
     }
     while(0);
