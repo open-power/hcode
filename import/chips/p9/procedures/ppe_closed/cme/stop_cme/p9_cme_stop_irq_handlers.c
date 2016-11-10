@@ -41,7 +41,8 @@ void
 p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_SPWU_HANDLER)
-    PK_TRACE_INF("SPWU Handler: %d", irq);
+    PK_TRACE_INF("SPWU Handler");
+    PK_TRACE_DBG("SPWU Trigger %d", irq);
 
     PkMachineContext ctx;
     int      sem_post = 0;
@@ -153,7 +154,8 @@ void
 p9_cme_stop_exit_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_EXIT_HANDLER)
-    PK_TRACE_INF("SX Handler: %d", irq);
+    PK_TRACE_INF("SX Handler");
+    PK_TRACE_DBG("SX Trigger %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
     pk_semaphore_post((PkSemaphore*)arg);
 }
@@ -164,7 +166,8 @@ void
 p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_ENTER_HANDLER)
-    PK_TRACE_INF("SE Handler: %d", irq);
+    PK_TRACE_INF("SE Handler");
+    PK_TRACE_DBG("SE Trigger %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
     pk_semaphore_post((PkSemaphore*)arg);
 }
@@ -176,7 +179,8 @@ p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
     MARK_TRAP(STOP_DB1_HANDLER)
-    PK_TRACE_INF("DB1 Handler: %d", irq);
+    PK_TRACE_INF("DB1 Handler");
+    PK_TRACE_DBG("DB1 Trigger %d", irq);
     pk_irq_vec_restore(&ctx);
 }
 
@@ -189,7 +193,8 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
     cppm_cmedb2_t    db2c0, db2c1;
 
     MARK_TRAP(STOP_DB2_HANDLER)
-    PK_TRACE_INF("DB2 Handler: %d", irq);
+    PK_TRACE_INF("DB2 Handler");
+    PK_TRACE_DBG("DB2 Trigger %d", irq);
 
     CME_GETSCOM(CPPM_CMEDB2, CME_MASK_C0, CME_SCOM_AND, db2c0.value);
     CME_GETSCOM(CPPM_CMEDB2, CME_MASK_C1, CME_SCOM_AND, db2c1.value);

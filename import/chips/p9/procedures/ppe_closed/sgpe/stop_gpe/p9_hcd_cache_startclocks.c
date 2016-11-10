@@ -29,8 +29,11 @@
 int
 p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 {
-    int      rc = SGPE_STOP_SUCCESS;
-    uint64_t scom_data, loop;
+    int        rc = SGPE_STOP_SUCCESS;
+    int        loop, exloop, excount = 0;
+    data64_t   scom_data;
+    ocb_qcsr_t qcsr;
+
 
     // -------------------------------
     // Prepare to cache startclocks
@@ -88,10 +91,10 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(6));
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
-    scom_data = scom_data & ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
-    scom_data = scom_data | (BIT64(1) | BIT64(3) | BIT64(59));
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data.value);
+    scom_data.value = scom_data.value & ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
+    scom_data.value = scom_data.value | (BIT64(1) | BIT64(3) | BIT64(59));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data.value);
 
     PK_TRACE("Drop partial good fences via CPLT_CTRL1[4,5,6/7,11,12/13]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad),
@@ -116,11 +119,11 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(3));
 
     PK_TRACE("Set then unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
-    scom_data = scom_data | BIT64(7);
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
-    scom_data = scom_data & ~BIT64(7);
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
+    scom_data.words.upper = scom_data.words.upper | BIT32(7);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
+    scom_data.words.upper = scom_data.words.upper & ~BIT32(7);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
 
     // 255 cache cycles
     PPE_WAIT_CORE_CYCLES(loop, 510);
@@ -129,9 +132,9 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     do
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data.value);
     }
-    while((~scom_data) & BIT64(9));
+    while((~scom_data.words.upper) & BIT32(9));
 
     MARK_TRAP(SX_CACHE_STARTCLOCKS_REGION)
 
@@ -146,11 +149,11 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
 
     PK_TRACE("Start cache clocks via CLK_REGION");
-    scom_data = (CLK_START_CMD | CLK_THOLD_ALL   |
-                 CLK_REGION_ALL_BUT_EX_ANEP_DPLL |
-                 ((uint64_t)ex << SHIFT64(7))    |
-                 ((uint64_t)ex << SHIFT64(13)));
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
+    scom_data.value = (CLK_START_CMD | CLK_THOLD_ALL   |
+                       CLK_REGION_ALL_BUT_EX_DPLL      |
+                       ((uint64_t)ex << SHIFT64(7))    |
+                       ((uint64_t)ex << SHIFT64(13)));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data.value);
 
     // Read Clock Status Register (Cache chiplet)
     // check for bits 4:14 eq. zero, no tholds on
@@ -158,16 +161,16 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     do
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data.value);
     }
-    while((~scom_data) & BIT64(8));
+    while((~scom_data.words.upper) & BIT32(8));
 
     PK_TRACE("Check cache clock running via CLOCK_STAT_SL[4-14]");
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data);
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data.value);
 
-    if (scom_data & (CLK_REGION_ALL_BUT_EX_ANEP_DPLL |
-                     ((uint64_t)ex << SHIFT64(7))    |
-                     ((uint64_t)ex << SHIFT64(13))))
+    if (scom_data.value & (CLK_REGION_ALL_BUT_EX_ANEP_DPLL |
+                           ((uint64_t)ex << SHIFT64(7))    |
+                           ((uint64_t)ex << SHIFT64(13))))
     {
         PK_TRACE("Cache clock start failed");
         pk_halt();
@@ -181,6 +184,84 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     // Cleaning up
     // -------------------------------
 
+    // The LCO programming for the istep 16 use-case needs to be done
+    // before the chiplet fence is dropped.
+
+    PK_TRACE("Set L3_LCO_TARGET_ID/VICTIMS via EX_L3_MODE_REG1[2-5,6-21]");
+
+    // read partial good exes
+    do
+    {
+        qcsr.value = in32(OCB_QCSR);
+    }
+    while (qcsr.fields.change_in_progress);
+
+    for (exloop = 0; exloop < 12; exloop++)
+    {
+        if (qcsr.value & BIT32(exloop))
+        {
+            excount++;
+        }
+    }
+
+    if (ex & FST_EX_IN_QUAD)
+    {
+        PK_TRACE("Setup L3-LCO on ex0 via EX_L3_MODE_REG1[0,2-5,6-21]");
+        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data.value);
+        scom_data.words.upper |= (quad << SHIFT32((5 - 1)));
+        scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
+
+        if (excount > 1)
+        {
+            scom_data.words.upper |= BIT32(0);
+        }
+
+        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data.value);
+        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 0), scom_data.value);
+
+        if (excount == 2)
+        {
+            PK_TRACE("Assert L3_DYN_LCO_BLK_DIS_CFG on ex0 via EX_L3_MODE_REG0[9]");
+            scom_data.words.upper |= BIT32(9);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 0), scom_data.value);
+        }
+        else
+        {
+            PK_TRACE("Drop L3_DYN_LCO_BLK_DIS_CFG on ex0 via EX_L3_MODE_REG0[9]");
+            scom_data.words.upper &= ~BIT32(9);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 0), scom_data.value);
+        }
+    }
+
+    if (ex & SND_EX_IN_QUAD)
+    {
+        PK_TRACE("Setup L3-LCO on ex1 via EX_L3_MODE_REG1[0,2-5,6-21]");
+        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data.value);
+        scom_data.words.upper |= ((quad << SHIFT32((5 - 1))) + 1);
+        scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
+
+        if (excount > 1)
+        {
+            scom_data.words.upper |= BIT32(0);
+        }
+
+        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data.value);
+        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 1), scom_data.value);
+
+        if (excount == 2)
+        {
+            PK_TRACE("Assert L3_DYN_LCO_BLK_DIS_CFG on ex1 via EX_L3_MODE_REG0[9]");
+            scom_data.words.upper |= BIT32(9);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 1), scom_data.value);
+        }
+        else
+        {
+            PK_TRACE("Drop L3_DYN_LCO_BLK_DIS_CFG on ex1 via EX_L3_MODE_REG0[9]");
+            scom_data.words.upper &= ~BIT32(9);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 1), scom_data.value);
+        }
+    }
+
     /// @todo add ipl mode attr control
     PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(18));
@@ -191,34 +272,34 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
 
     PK_TRACE("Set all l2s and partial bad l3 pscom mask");
-    scom_data = PSCOM_MASK_ALL_L2;
+    scom_data.value = PSCOM_MASK_ALL_L2;
 
     if ((~ex) & FST_EX_IN_QUAD)
     {
-        scom_data |= PSCOM_MASK_EX0_L3;
+        scom_data.value |= PSCOM_MASK_EX0_L3;
     }
 
     if ((~ex) & SND_EX_IN_QUAD)
     {
-        scom_data |= PSCOM_MASK_EX1_L3;
+        scom_data.value |= PSCOM_MASK_EX1_L3;
     }
 
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data.value);
 
     PK_TRACE("Drop refresh quiesce");
 
     if (ex & FST_EX_IN_QUAD)
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data);
-        scom_data &= ~BIT64(7);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data.value);
+        scom_data.words.upper &= ~BIT32(7);
+        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data.value);
     }
 
     if (ex & SND_EX_IN_QUAD)
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data);
-        scom_data &= ~BIT64(7);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data.value);
+        scom_data.words.upper &= ~BIT32(7);
+        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data.value);
     }
 
     PK_TRACE("Drop LCO Disable");

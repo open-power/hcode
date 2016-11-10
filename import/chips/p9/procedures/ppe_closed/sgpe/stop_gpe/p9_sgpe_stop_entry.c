@@ -70,6 +70,8 @@ p9_sgpe_stop_entry()
     uint32_t     loop;
     uint64_t     scom_data;
     uint64_t     temp_data;
+    uint64_t     host_attn;
+    uint64_t     local_xstop;
     ppm_sshsrc_t hist;
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
     int          spin;
@@ -138,18 +140,18 @@ p9_sgpe_stop_entry()
         if (G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] ||
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
         {
-            PK_TRACE_INF("Actual:  clv[%d][%d][%d][%d]",
+            PK_TRACE_DBG("Actual:  clv[%d][%d][%d][%d]",
                          G_sgpe_stop_record.level[qloop][0],
                          G_sgpe_stop_record.level[qloop][1],
                          G_sgpe_stop_record.level[qloop][2],
                          G_sgpe_stop_record.level[qloop][3]);
 
-            PK_TRACE_INF("Actual:  qlv:[%d]x0lv[%d]x1lv[%d]",
+            PK_TRACE_DBG("Actual:  qlv:[%d]x0lv[%d]x1lv[%d]",
                          G_sgpe_stop_record.state[qloop].act_state_q,
                          G_sgpe_stop_record.state[qloop].act_state_x0,
                          G_sgpe_stop_record.state[qloop].act_state_x1);
 
-            PK_TRACE_INF("Request: qlv[%d]x0lv[%d]x1lv[%d]",
+            PK_TRACE_DBG("Request: qlv[%d]x0lv[%d]x1lv[%d]",
                          G_sgpe_stop_record.state[qloop].req_state_q,
                          G_sgpe_stop_record.state[qloop].req_state_x0,
                          G_sgpe_stop_record.state[qloop].req_state_x1);
@@ -165,7 +167,7 @@ p9_sgpe_stop_entry()
     G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &=
         G_sgpe_stop_record.group.quad[VECTOR_CONFIG];
 
-    PK_TRACE_INF("Core Entry Vectors:   X[%x] X0[%x] X1[%x] Q[%x]",
+    PK_TRACE_DBG("Core Entry Vectors:   X[%x] X0[%x] X1[%x] Q[%x]",
                  G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY],
                  G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY],
                  G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY],
@@ -202,7 +204,7 @@ p9_sgpe_stop_entry()
         PK_TRACE_INF("+++++ +++++ EX STOP ENTRY [LEVEL 8-10] +++++ +++++");
         // ------------------------------------------------------------------------
 
-        PK_TRACE_INF("Check: q[%d]ex[%d] start ex entry", qloop, ex);
+        PK_TRACE_DBG("Check: q[%d]ex[%d] start ex entry", qloop, ex);
 
         PK_TRACE("Update QSSR: stop_entry_ongoing");
         out32(OCB_QSSR_OR, BIT32(qloop + 20));
@@ -411,7 +413,7 @@ p9_sgpe_stop_entry()
             ex |= SND_EX_IN_QUAD;
         }
 
-        PK_TRACE_INF("Check: q[%d]ex[%d] starts quad entry", qloop, ex);
+        PK_TRACE_DBG("Check: q[%d]ex[%d] starts quad entry", qloop, ex);
 
         PK_TRACE("Update QSSR: stop_entry_ongoing");
         out32(OCB_QSSR_OR, BIT32(qloop + 20));
@@ -470,12 +472,12 @@ p9_sgpe_stop_entry()
 
             if (in32(OCB_OISR1) & (BITS32(15, 2) | BIT32(19)))
             {
-                PK_TRACE_INF("Abort: interrupt detected");
+                PK_TRACE("Abort: interrupt detected");
 
                 if ((in32(OCB_OPITNPRA(2)) & BITS32((qloop << 2), 4)) ||
                     (in32(OCB_OPITNPRA(3)) & BITS32((qloop << 2), 4)))
                 {
-                    PK_TRACE_INF("Abort: core interrupt detected");
+                    PK_TRACE("Abort: core interrupt detected");
 
                     for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
                     {
@@ -658,6 +660,16 @@ p9_sgpe_stop_entry()
 
         PK_TRACE_INF("SE11.C: NCU Status Clean");
 
+        // In order to preserve state for PRD,
+        // skip power off if host attn or local xstop present
+        // Need to read status before stopclocks
+        // while these registers are still accessible
+        PK_TRACE("Checking status of Host Attention");
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_HOST_ATTN, qloop), host_attn);
+
+        PK_TRACE("Checking status of Local Checkstop");
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_LOCAL_XSTOP_ERR, qloop), local_xstop);
+
         //===========================
         MARK_TRAP(SE_STOP_CACHE_CLKS)
         //===========================
@@ -793,7 +805,7 @@ p9_sgpe_stop_entry()
         PK_TRACE("Assert vital thold via NET_CTRL0[16]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(16));
 
-        PK_TRACE("Shutdown L3[%d] EDRAM via QCCR[0-3/4-7]", ex);
+        PK_TRACE("Shutdown L3 EDRAM via QCCR[0-3/4-7]");
         // QCCR[0/4] EDRAM_ENABLE_DC
         // QCCR[1/5] EDRAM_VWL_ENABLE_DC
         // QCCR[2/6] L3_EX0/1_EDRAM_VROW_VBLH_ENABLE_DC
@@ -825,45 +837,52 @@ p9_sgpe_stop_entry()
 
 #if !STOP_PRIME
 
-        PK_TRACE("Drop vdd/vcs_pfet_val/sel_override/regulation_finger_en via PFCS[4-7,8]");
-        // vdd_pfet_val/sel_override     = 0 (disbaled)
-        // vcs_pfet_val/sel_override     = 0 (disbaled)
-        // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop),
-                    BITS64(4, 4) | BIT64(8));
-
-        PK_TRACE("Power off VCS via PFCS[2-3]");
-        // vcs_pfet_force_state = 01 (Force Voff)
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(3));
-
-        PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle) via PFCS[50]");
-        // todo: poll the sense line instead
-
-        do
+        if ((host_attn | local_xstop) & BIT64(0))
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, qloop), scom_data);
+            PK_TRACE_INF("WARNING: HostAttn or LocalXstop Present, Skip Cache Power Off");
         }
-        while(!(scom_data & BIT64(50)));
-
-        PK_TRACE("Power off VDD via PFCS[0-1]");
-        // vdd_pfet_force_state = 01 (Force Voff)
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(1));
-
-        PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle) via PFCS[42]");
-        // todo: poll the sense line instead
-
-        do
+        else
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, qloop), scom_data);
+            PK_TRACE("Drop vdd/vcs_pfet_val/sel_override/regulation_finger_en via PFCS[4-7,8]");
+            // vdd_pfet_val/sel_override     = 0 (disbaled)
+            // vcs_pfet_val/sel_override     = 0 (disbaled)
+            // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop),
+                        BITS64(4, 4) | BIT64(8));
+
+            PK_TRACE("Power off VCS via PFCS[2-3]");
+            // vcs_pfet_force_state = 01 (Force Voff)
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(3));
+
+            PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle) via PFCS[50]");
+            // todo: poll the sense line instead
+
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, qloop), scom_data);
+            }
+            while(!(scom_data & BIT64(50)));
+
+            PK_TRACE("Power off VDD via PFCS[0-1]");
+            // vdd_pfet_force_state = 01 (Force Voff)
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(1));
+
+            PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle) via PFCS[42]");
+            // todo: poll the sense line instead
+
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, qloop), scom_data);
+            }
+            while(!(scom_data & BIT64(42)));
+
+            PK_TRACE("Turn off force voff via PFCS[0-3]");
+            // vdd_pfet_force_state = 00 (Nop)
+            // vcs_pfet_force_state = 00 (Nop)
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop), BITS64(0, 4));
+
+            PK_TRACE_INF("SE11.E: Cache Powered Off");
         }
-        while(!(scom_data & BIT64(42)));
-
-        PK_TRACE("Turn off force voff via PFCS[0-3]");
-        // vdd_pfet_force_state = 00 (Nop)
-        // vcs_pfet_force_state = 00 (Nop)
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop), BITS64(0, 4));
-
-        PK_TRACE_INF("SE11.E: Cache Powered Off");
 
 #endif
 

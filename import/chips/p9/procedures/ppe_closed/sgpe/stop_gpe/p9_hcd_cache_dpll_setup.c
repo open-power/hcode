@@ -40,8 +40,8 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     PK_TRACE("Drop DPLL test mode and reset via NET_CTRL0[3,4]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BITS64(3, 2));
 
-    PK_TRACE("Drop DPLL clock region fence via NET_CTRL1[14]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), BIT64(14));
+    PK_TRACE("Drop ANEP+DPLL clock region fence via NET_CTRL1[10,14]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), (BIT64(10) | BIT64(14)));
 
     // start_clock()
 
@@ -77,7 +77,9 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     do
     {
         GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_STAT, quad), scom_data);
-        break; /// @todo Skipping the lock checking until model is ready
+#if !LAB_P9_TUNING
+        break; // only skiping DPLL lock check when in Sim
+#endif
     }
     while (!(scom_data & BIT64(63)));
 
@@ -95,14 +97,8 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     scom_data |=  BITS64(50, 2);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
 
-    PK_TRACE("Drop ANEP clock region fence via CPLT_CTRL1[10]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), BIT64(10));
-
     PK_TRACE("Drop skew/duty cycle adjust func_clksel via NET_CTRL0[22]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(22));
-
-    PK_TRACE("Drop skew adjust reset via NET_CTRL0[2]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(2));
 
     return rc;
 }

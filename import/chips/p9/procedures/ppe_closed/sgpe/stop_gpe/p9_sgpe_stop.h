@@ -53,6 +53,11 @@ extern "C" {
 
 #include "p9_stop_common.h"
 
+#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);
+#define RESTORE_RING_BITS(mask, ring, save) ring = (((ring) & (~mask)) | (save));
+#endif
+
 #define EQ_RING_FENCE_MASK_LATCH 0x10010008
 #define EQ_SYNC_CONFIG           0x10030000
 #define EQ_OPCG_ALIGN            0x10030001
@@ -60,6 +65,8 @@ extern "C" {
 #define EQ_CLK_REGION            0x10030006
 #define EQ_CLOCK_STAT_SL         0x10030008
 #define EQ_CLOCK_STAT_ARY        0x1003000A
+#define EQ_HOST_ATTN             0x10040009
+#define EQ_LOCAL_XSTOP_ERR       0x10040018
 #define EQ_THERM_MODE_REG        0x1005000F
 
 #define EQ_BIST                  0x100F000B
@@ -180,22 +187,6 @@ enum SGPE_STOP_VECTOR_INDEX
     VECTOR_ENTRY                      = 1,
     VECTOR_CONFIG                     = 2
 };
-
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
-#define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);
-#define RESTORE_RING_BITS(mask, ring, save) ring = (((ring) & (~mask)) | (save));
-#endif
-
-/// 64bits data
-typedef union
-{
-    uint64_t value;
-    struct
-    {
-        uint32_t upper;
-        uint32_t lower;
-    } words;
-} data64_t;
 
 typedef struct
 {

@@ -53,6 +53,9 @@ extern "C" int p9_hcd_cache_dcc_skewadjust_setup(uint32_t quad)
 
     FAPI_DBG(">>p9_hcd_cache_dcc_skewadjust_setup");
 
+    PK_TRACE("Release skew adjust reset via NET_CTRL0[2]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(2));
+
     FAPI_DBG("Release L2-0, L2-1 DC Adjust reset");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_NET_CTRL1_WAND, quad), ~BITS64(23, 2));
 

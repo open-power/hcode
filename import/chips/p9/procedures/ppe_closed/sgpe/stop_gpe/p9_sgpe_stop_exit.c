@@ -66,7 +66,7 @@ p9_sgpe_stop_exit()
     MARK_TAG(BEGINSCOPE_STOP_EXIT, 0)
     //===============================
 
-    PK_TRACE_INF("Core Exit Vectors:    X[%x] X0[%x] X1[%x] Q[%x]",
+    PK_TRACE_DBG("Core Exit Vectors:    X[%x] X0[%x] X1[%x] Q[%x]",
                  G_sgpe_stop_record.group.ex_b[VECTOR_EXIT],
                  G_sgpe_stop_record.group.ex_l[VECTOR_EXIT],
                  G_sgpe_stop_record.group.ex_r[VECTOR_EXIT],
@@ -114,10 +114,6 @@ p9_sgpe_stop_exit()
 
         m_l2 = m_l2 & m_pg;
 
-        PK_TRACE_INF("Check: quad[%d] m_l2[%d] m_pg[%d]", qloop, m_l2, m_pg);
-
-
-
         PK_TRACE("Update QSSR: stop_exit_ongoing");
         out32(OCB_QSSR_OR, BIT32(qloop + 26));
 
@@ -149,6 +145,9 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("+++++ +++++ QUAD STOP EXIT [LEVEL 11-15] +++++ +++++");
             //--------------------------------------------------------------------------
 
+            PK_TRACE_DBG("Check: quad[%d] m_l2[%d] m_pg[%d] Serviced by SX11FH",
+                         qloop, m_l2, m_pg);
+
             PK_TRACE("Update STOP history on quad[%d]: in transition of exit",
                      qloop);
             SGPE_STOP_UPDATE_HISTORY(qloop,
@@ -165,19 +164,19 @@ p9_sgpe_stop_exit()
             //=================================
 
             // NOTE: it is required to serialize power on quad PFETs to prevent droop
-            PK_TRACE_INF("SX11.A: Cache[%d] Poweron", qloop);
+            PK_TRACE_INF("SX11.A: Cache Poweron");
             p9_hcd_cache_poweron(qloop);
 
             //=========================
             MARK_TRAP(SX_CHIPLET_RESET)
             //=========================
 
-            PK_TRACE_INF("SX11.B: Cache[%d] Chiplet Reset with PG[%d]", qloop, m_pg);
+            PK_TRACE_INF("SX11.B: Cache Chiplet Reset");
             p9_hcd_cache_chiplet_reset(qloop, m_pg);
 
 #if !STOP_INITF
 
-            PK_TRACE_INF("SX11.C: Cache[%d] Chiplet L3 DCC Setup", qloop);
+            PK_TRACE_INF("SX11.C: Cache Chiplet L3 DCC Setup");
             p9_hcd_cache_chiplet_l3_dcc_setup(qloop);
 
 #endif
@@ -186,7 +185,7 @@ p9_sgpe_stop_exit()
 #if !STOP_PRIME
 #if !STOP_INITF
 
-            PK_TRACE_INF("SX11.D: Cache[%d] Gptr Time Initf", qloop);
+            PK_TRACE_INF("SX11.D: Cache Gptr Time Initf");
             p9_hcd_cache_gptr_time_initf(qloop);
 
 #endif
@@ -197,17 +196,17 @@ p9_sgpe_stop_exit()
 
 #if !STOP_INITF
 
-            PK_TRACE_INF("SX11.E: Cache[%d] Dpll Initf", qloop);
+            PK_TRACE_INF("SX11.E: Cache Dpll Initf");
             p9_hcd_cache_dpll_initf(qloop);
 
 #endif
 
-            PK_TRACE_INF("SX11.F: Cache[%d] Dpll Setup", qloop);
+            PK_TRACE_INF("SX11.F: Cache Dpll Setup");
             p9_hcd_cache_dpll_setup(qloop);
 
 #if !STOP_INITF
 
-            PK_TRACE_INF("SX11.G: Cache[%d] DCC Skewadjust Setup", qloop);
+            PK_TRACE_INF("SX11.G: Cache DCC Skewadjust Setup");
             p9_hcd_cache_dcc_skewadjust_setup(qloop);
 
 #endif
@@ -228,12 +227,12 @@ p9_sgpe_stop_exit()
             MARK_TAG(SX_CHIPLET_INITS, (32 >> qloop))
             //=======================================
 
-            PK_TRACE_INF("SX11.H: Cache[%d] Chiplet Init", qloop);
+            PK_TRACE_INF("SX11.H: Cache Chiplet Init");
             p9_hcd_cache_chiplet_init(qloop);
 
 #if !STOP_INITF
 
-            PK_TRACE_INF("SX11.I: Cache[%d] Repair Initf", qloop);
+            PK_TRACE_INF("SX11.I: Cache Repair Initf");
             p9_hcd_cache_repair_initf(qloop);
 
 #endif
@@ -244,7 +243,7 @@ p9_sgpe_stop_exit()
 
 #if !SKIP_ARRAYINIT
 
-            PK_TRACE_INF("SX11.J: Cache[%d] Arrayinit", qloop);
+            PK_TRACE_INF("SX11.J: Cache Arrayinit");
             p9_hcd_cache_arrayinit(qloop, m_pg);
 
 #endif
@@ -375,7 +374,7 @@ p9_sgpe_stop_exit()
 
 #if !SKIP_INITF
 
-            PK_TRACE_INF("SX11.K: Cache[%d] Func Scan", qloop);
+            PK_TRACE_INF("SX11.K: Cache Func Scan");
             p9_hcd_cache_initf(qloop);
 
 #endif
@@ -385,7 +384,7 @@ p9_sgpe_stop_exit()
             MARK_TAG(SX_CACHE_STARTCLOCKS, (32 >> qloop))
             //===========================================
 
-            PK_TRACE_INF("SX11.L: Cache[%d] Startclocks with PG[%d]", qloop, m_pg);
+            PK_TRACE_INF("SX11.L: Cache Startclocks");
             p9_hcd_cache_startclocks(qloop, m_pg);
 
         }
@@ -397,6 +396,9 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("+++++ +++++ EX STOP EXIT [LEVEL 8-10] +++++ +++++");
             //--------------------------------------------------------------------------
 
+            PK_TRACE_DBG("Check: quad[%d] m_l2[%d] m_pg[%d] Serviced by SX8",
+                         qloop, m_l2, m_pg);
+
             //========================================================
             MARK_TAG(SX_L2_STARTCLOCKS, ((m_l2 << 6) | (32 >> qloop)))
             //========================================================
@@ -405,8 +407,7 @@ p9_sgpe_stop_exit()
             PK_TRACE("Switch L2 glsmux select to DPLL output via EXCGCR[34,35]");
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, qloop), BITS64(34, 2));
 
-            PK_TRACE_INF("SX8.A: Cache[%d] L2[%d] Startclocks with PG[%d]",
-                         qloop, m_l2, m_pg);
+            PK_TRACE_INF("SX8.A: Cache L2 Startclocks");
             p9_hcd_cache_l2_startclocks(qloop, m_l2, m_pg);
 
             // reset ex actual state if ex is exited.
@@ -430,6 +431,9 @@ p9_sgpe_stop_exit()
             //--------------------------------------------------------------------------
             PK_TRACE_INF("+++++ +++++ QUAD STOP EXIT CONTINUE +++++ +++++");
             //--------------------------------------------------------------------------
+
+            PK_TRACE_DBG("Check: quad[%d] m_l2[%d] m_pg[%d] Serviced by SX11SH",
+                         qloop, m_l2, m_pg);
 
             for(cme = 0; cme < EXES_PER_QUAD; cme += 2)
             {
@@ -463,10 +467,10 @@ p9_sgpe_stop_exit()
             MARK_TAG(SX_SCOM_INITS, (32 >> qloop))
             //====================================
 
-            PK_TRACE_INF("SX11.M: Cache[%d] Scom Init with PG[%d]", qloop, m_pg);
+            PK_TRACE_INF("SX11.M: Cache Scom Init");
             p9_hcd_cache_scominit(qloop, m_pg);
 
-            PK_TRACE_INF("SX11.N: Cache[%d] Scom Cust", qloop);
+            PK_TRACE_INF("SX11.N: Cache Scom Cust");
             p9_hcd_cache_scomcust(qloop);
 
             //==================================
@@ -481,11 +485,13 @@ p9_sgpe_stop_exit()
                     continue;
                 }
 
-                PK_TRACE_INF("SX11.O: Core[%d] DB1 to CME", ((qloop << 2) + cloop));
+                PK_TRACE_DBG("Check: Core[%d] will send Doorbell1", ((qloop << 2) + cloop));
                 p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG,
                                                         ((qloop << 2) + cloop)), BIT64(0));
-                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1_OR,
+                // workaround has to use base address as read on OR/CLR leads to error
+                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1,
                                                         ((qloop << 2) + cloop)), BIT64(7));
+                PK_TRACE_INF("SX11.O: Core DB1 to CME");
             }
 
             // Setting up cme_flags
@@ -578,8 +584,9 @@ p9_sgpe_stop_exit()
 #if !SKIP_CME_BOOT_STOP11
 
             uint16_t cmeBootList = (m_pg << SHIFT16(((qloop << 1) + 1)));
-            PK_TRACE_INF("SX11.P: Boot CME[%x]", cmeBootList);
+            PK_TRACE_DBG("Check: CmeBootList[%x]", cmeBootList);
             boot_cme( cmeBootList );
+            PK_TRACE_INF("SX11.P: Cmes booted");
 
 #endif
 
@@ -587,10 +594,10 @@ p9_sgpe_stop_exit()
             MARK_TAG(SX_RUNTIME_INITS, (32 >> qloop))
             //=======================================
 
-            PK_TRACE_INF("SX11.Q: Cache[%d] RAS Runtime Scom", qloop);
+            PK_TRACE_INF("SX11.Q: Cache RAS Runtime Scom");
             p9_hcd_cache_ras_runtime_scom(qloop);
 
-            PK_TRACE_INF("SX11.R: Cache[%d] OCC Runtime Scom", qloop);
+            PK_TRACE_INF("SX11.R: Cache OCC Runtime Scom");
             p9_hcd_cache_occ_runtime_scom(qloop);
 
             //=========================
@@ -622,11 +629,12 @@ p9_sgpe_stop_exit()
 
         if (qspwu & BIT32(0))
         {
-            PK_TRACE_INF("SX0.A: Assert Quad[%d] SPWU Done", qloop);
+            PK_TRACE_DBG("Check: Quad[%d] will assert SPWU Done", qloop);
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_OR, qloop), BIT64(0));
 
             G_sgpe_stop_record.group.qswu[VECTOR_CONFIG] |= BIT32(qloop);
             G_sgpe_stop_record.group.qswu[VECTOR_EXIT]   &= ~BIT32(qloop);
+            PK_TRACE_INF("SX0.A: Assert Quad SPWU Done");
         }
 
         // process core portion of core request
@@ -640,10 +648,11 @@ p9_sgpe_stop_exit()
             // reset clevel to 0 if core is going to wake up
             G_sgpe_stop_record.level[qloop][cloop] = 0;
 
-            PK_TRACE_INF("SX0.B: Switch Core[%d]PPM Wakeup back to CME via CPMMR[13]",
+            PK_TRACE_DBG("Check: Core[%d] will clear wakeup_notify_select",
                          ((qloop << 2) + cloop));
             GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR,
                                            ((qloop << 2) + cloop)), BIT64(13));
+            PK_TRACE_INF("SX0.B: Switch CorePPM Wakeup back to CME via CPMMR[13]");
         }
 
         PK_TRACE("Update QSSR: drop stop_exit_ongoing");

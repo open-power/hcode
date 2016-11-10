@@ -307,17 +307,6 @@ typedef struct
     uint64_t data;
 } CmeScomRestore;
 
-/// 64bits data
-typedef union
-{
-    uint64_t value;
-    struct
-    {
-        uint32_t upper;
-        uint32_t lower;
-    } words;
-} data64_t;
-
 /// Stop Score Board Structure
 typedef struct
 {

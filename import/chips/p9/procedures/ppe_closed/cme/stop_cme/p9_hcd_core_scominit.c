@@ -30,21 +30,20 @@ int
 p9_hcd_core_scominit(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
-    uint64_t scom_data;
+    data64_t scom_data;
 
     // how about bit 6?
     PK_TRACE("Restore SYNC_CONFIG[8] for stop1");
-    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data);
-    scom_data = scom_data | BIT64(8);
-    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
+    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data.value);
+    scom_data.words.upper |= BIT32(8);
+    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data.value);
 
-    /// @todo set the sample pulse count (bit 6:9)
-    /// enable the appropriate loops
-    /// (needs investigation with the Perv team on the EC wiring).
-    PK_TRACE("Enable DTS sampling via THERM_MODE_REG[5]");
-    CME_GETSCOM(C_THERM_MODE_REG, core, CME_SCOM_AND, scom_data);
-    scom_data = scom_data | BIT64(5);
-    CME_PUTSCOM(C_THERM_MODE_REG, core, scom_data);
+    PK_TRACE("Enable DTS via THERM_MODE_REG[5,6-9,20-21]");
+    CME_GETSCOM(C_THERM_MODE_REG, core, CME_SCOM_AND, scom_data.value);
+    scom_data.words.upper |= BIT32(5);     // DTS sampling enable
+    scom_data.words.upper |= BITS32(6, 4); // sample pulse count
+    scom_data.words.upper |= BITS32(20, 2);// DTS loop1 enable
+    CME_PUTSCOM(C_THERM_MODE_REG, core, scom_data.value);
 
     return rc;
 }

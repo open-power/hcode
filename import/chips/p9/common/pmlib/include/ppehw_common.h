@@ -25,6 +25,16 @@
 #ifndef __PPEHW_COMMON_H__
 #define __PPEHW_COMMON_H__
 
+/// 64bits data
+typedef union
+{
+    uint64_t value;
+    struct
+    {
+        uint32_t upper;
+        uint32_t lower;
+    } words;
+} data64_t;
 
 /// 64bit variable breaking into two 32bits macro
 #define UPPER32(variable) (uint32_t)((variable >> 32) & 0xFFFFFFFF)

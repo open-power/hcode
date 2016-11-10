@@ -50,7 +50,11 @@
     #undef  SKIP_BCE_SCOM_RESTORE
     #define SKIP_BCE_SCOM_RESTORE 1
 
+    #undef  LAB_P9_TUNING
+    #define LAB_P9_TUNING 0
+
     #define PK_TRACE_BUFFER_WRAP_MARKER 1
+    #define __FAPI_DELAY_SIM__
 #endif
 
 // --------------------
@@ -60,13 +64,21 @@
     #define PK_KERNEL_TRACE_ENABLE 0
 #elif PK_TRACE_LEVEL == 1 /*only PK_TRACE_INF*/
     #define PK_TRACE_ENABLE        1
-    #define PK_TRACE_CRIT_ENABLE   1
     #define PK_TRACE_DBG_SUPPRESS  1
+    #define PK_TRACE_CRIT_ENABLE   1
+    #define PK_TRACE_CKPT_ENABLE   0
     #define PK_KERNEL_TRACE_ENABLE 0
+#elif PK_TRACE_LEVEL == 2 /*only PK_TRACE_INF+DBG+KERNEL*/
+    #define PK_TRACE_ENABLE        1
+    #define PK_TRACE_DBG_SUPPRESS  1
+    #define PK_TRACE_CRIT_ENABLE   1
+    #define PK_TRACE_CKPT_ENABLE   1
+    #define PK_KERNEL_TRACE_ENABLE 1
 #else                    /*All TRACEs*/
     #define PK_TRACE_ENABLE        1
-    #define PK_TRACE_CRIT_ENABLE   1
     #define PK_TRACE_DBG_SUPPRESS  0
+    #define PK_TRACE_CRIT_ENABLE   1
+    #define PK_TRACE_CKPT_ENABLE   1
     #define PK_KERNEL_TRACE_ENABLE 1
 #endif
 
