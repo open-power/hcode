@@ -42,6 +42,7 @@ enum CME_SE_MARKS
     STOP_EXIT_HANDLER      =   0x18,
     STOP_DB1_HANDLER       =   0x20,
     STOP_DB2_HANDLER       =   0x28,
+    STOP_SPWU_HANDLER       =   0x30,
     SE_QUIESCE_CORE_INTF        =   0x68,
     SE_STOP_CORE_CLKS       =   0xe0,
     SE_STOP_CORE_GRID       =   0xe8,
@@ -72,6 +73,7 @@ const std::vector<CME_SE_MARKS> MARKS =
     STOP_EXIT_HANDLER,
     STOP_DB1_HANDLER,
     STOP_DB2_HANDLER,
+    STOP_SPWU_HANDLER,
     SE_QUIESCE_CORE_INTF,
     SE_STOP_CORE_CLKS,
     SE_STOP_CORE_GRID,
@@ -98,6 +100,7 @@ const std::map<CME_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
         (STOP_EXIT_HANDLER, "STOP_EXIT_HANDLER")
         (STOP_DB1_HANDLER, "STOP_DB1_HANDLER")
         (STOP_DB2_HANDLER, "STOP_DB2_HANDLER")
+        (STOP_SPWU_HANDLER, "STOP_SPWU_HANDLER")
         (SE_QUIESCE_CORE_INTF, "SE_QUIESCE_CORE_INTF")
         (SE_STOP_CORE_CLKS, "SE_STOP_CORE_CLKS")
         (SE_STOP_CORE_GRID, "SE_STOP_CORE_GRID")
