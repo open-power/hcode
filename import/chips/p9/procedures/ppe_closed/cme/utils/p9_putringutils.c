@@ -219,7 +219,7 @@ void queuedScan(enum CME_CORE_MASKS i_core,
                     l_scomAddress = 0x00038000 | l_rotateCount;
                 }
 
-                CME_GETSCOM(l_scomAddress, i_core, i_scom_op, i_scanData);
+                getscom(0, CME_SCOM_ADDR(l_scomAddress, i_core, i_scom_op), &i_scanData);
             }// end of for loop
         }
         else if(SCAN == i_operation)
@@ -230,8 +230,7 @@ void queuedScan(enum CME_CORE_MASKS i_core,
             // Set the scan count to the actual value
             l_scomAddress |= i_opVal;
 
-            CME_PUTSCOM(l_scomAddress, i_core, i_scanData);
-
+            putscom(0, CME_SCOM_ADDR(l_scomAddress, i_core, i_scom_op), i_scanData);
         } // end of if(SCAN == i_operation)
     }
     while(0);
@@ -268,10 +267,10 @@ int rs4DecompressionSvc(
         }
 
         // Set up the scan region for the ring.
-        CME_PUTSCOM(0x00030005, i_core, l_scanRegion);
+        putscom(0, CME_SCOM_ADDR(0x00030005, i_core, i_scom_op), l_scanRegion);
 
         // Write a 64 bit value for header.
-        CME_PUTSCOM(0x0003E040, i_core, 0xa5a5a5a5a5a5a5a5);
+        putscom(0, CME_SCOM_ADDR(0x0003E040, i_core, i_scom_op), 0xa5a5a5a5a5a5a5a5);
 
         //if the ring length is not 8bit aligned, then we need to skip the
         //padding bits
@@ -535,7 +534,15 @@ int rs4DecompressionSvc(
 
         // Verify header
         uint64_t l_readHeader = 0;
-        CME_GETSCOM(0x0003E000, i_core, i_scom_op, l_readHeader);
+        enum CME_SCOM_CONTROLS l_scomOp = i_scom_op;
+
+        // when both cores are enabled.. scom op cant be queued
+        if (i_scom_op == CME_SCOM_QUEUED)
+        {
+            l_scomOp = CME_SCOM_NOP;
+        }
+
+        getscom(0, CME_SCOM_ADDR(0x0003E000, i_core, l_scomOp), &l_readHeader);
 
         PK_TRACE_DBG ("l_readHeader %08X %08X", l_readHeader >> 32, l_readHeader);
 
@@ -545,7 +552,7 @@ int rs4DecompressionSvc(
         }
 
         // Clean scan region and type data
-        CME_PUTSCOM(0x00030005, i_core, 0);
+        putscom(0, CME_SCOM_ADDR(0x00030005, i_core, l_scomOp), 0);
     }
     while(0);
 

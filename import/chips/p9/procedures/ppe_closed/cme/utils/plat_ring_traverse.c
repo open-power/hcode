@@ -27,10 +27,10 @@
 #include "p9_hcode_image_defines.H"
 #include "pk.h"
 #include "p9_ringid_cme.h"
+#include "p9_cme_stop.h"
 
 
 
-const uint32_t CME_SRAM_BASE = 0xFFFF8000;
 
 void getRingProperties(const RingID i_ringId,
                        uint32_t* o_torOffset,
@@ -82,12 +82,15 @@ int putRing(
         uint8_t l_chipletID = 0;
         uint32_t* l_sectionAddr = 0;
         uint16_t* l_ringTorAddr = 0;
+        enum CME_SCOM_CONTROLS l_scomOp;
 
         getRingProperties(i_ringID, &l_torOffset, &l_ringType);
 
         uint8_t* pCmeImage = (uint8_t*)(CME_SRAM_BASE);
 
         cmeHeader_t* l_cmeHeader = (cmeHeader_t*) ( pCmeImage + CME_INT_VECTOR_SIZE );
+
+        l_scomOp = (l_cmeHeader->g_cme_mode_flags & QUEUED_SCAN_DISABLE) ? i_scom_op : CME_SCOM_QUEUED;
 
         l_chipletData = g_ecData;
 
@@ -132,7 +135,7 @@ int putRing(
         {
             uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
             uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
-            l_rc = rs4DecompressionSvc(i_core, i_scom_op, l_rs4Address, 0);
+            l_rc = rs4DecompressionSvc(i_core, l_scomOp, l_rs4Address, 0);
         }
         else
         {
@@ -155,7 +158,7 @@ int putRing(
             {
                 uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
                 uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
-                l_rc = rs4DecompressionSvc(i_core, i_scom_op, l_rs4Address, 1);
+                l_rc = rs4DecompressionSvc(i_core, l_scomOp, l_rs4Address, 1);
             }
             else
             {
