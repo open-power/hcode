@@ -52,7 +52,7 @@
 
 #include "p9_pgpe_irq.h"
 #include "p9_pstate_common.h"
-
+#include "p9_pm_hcd_flags.h"
 
 /// PGPE PState
 typedef struct

@@ -116,10 +116,10 @@ void __eabi()
 int
 main(int argc, char** argv)
 {
-    //Read OCC_FLAG[PGPE_DEBUG_TRAP_ENABLE]]
-    uint32_t occFlag = in32(OCB_OCCFLG);
+    //Read OCC_SCRATCH[PGPE_DEBUG_TRAP_ENABLE]]
+    uint32_t occScr2 = in32(OCB_OCCS2);
 
-    if (occFlag & BIT32(14))
+    if (occScr2 & BIT32(PGPE_DEBUG_TRAP_ENABLE))
     {
         asm volatile ("tw 0, 31, 0");
     }

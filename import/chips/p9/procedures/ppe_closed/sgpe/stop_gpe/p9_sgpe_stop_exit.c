@@ -575,7 +575,7 @@ p9_sgpe_stop_exit()
                             cme_flags);
             }
 
-            if (in32(OCB_OCCFLG) & BIT32(13))
+            if (in32(OCB_OCCS2) & BIT32(CME_DEBUG_TRAP_ENABLE))
             {
                 PK_TRACE_INF("BREAK: Trap Before CME Boot");
                 asm volatile ("trap");

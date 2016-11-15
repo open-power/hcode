@@ -76,7 +76,7 @@ void p9_pgpe_pstate_pig_handler(void* arg, PkIrqId irq)
     //Read OCC_FLAG[PGPE_STARTNOTSTOP]]
     uint32_t occFlag = in32(OCB_OCCFLG);
 
-    if (occFlag & BIT32(0))
+    if (occFlag & BIT32(PGPE_START_NOT_STOP))
     {
         pk_semaphore_post((PkSemaphore*)arg);
     }
@@ -131,9 +131,8 @@ void p9_pgpe_pstate_thread(void* arg)
     p9_pgpe_ipc_init();
 
 
-    //Set OCC_FLAG[PGPE_ACTIVE]
-    out32(OCB_OCCFLG_OR, BIT32(4));
-    out32(OCB_OCCS0, 0x2);
+    //Set OCC_SCRATCH2[PGPE_ACTIVE]
+    out32(OCB_OCCS2, BIT32(PGPE_ACTIVE));
 #if EPM_P9_TUNING
     asm volatile ("tw 0, 31, 0");
 #endif

@@ -52,6 +52,7 @@ extern "C" {
 #include "qppm_firmware_registers.h"
 
 #include "p9_stop_common.h"
+#include "p9_pm_hcd_flags.h"
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
 #define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);

@@ -136,7 +136,7 @@ extern "C" {
 int
 main(int argc, char** argv)
 {
-    if (in32(OCB_OCCFLG) & BIT32(12))
+    if (in32(OCB_OCCS2) & BIT32(SPGE_DEBUG_TRAP_ENABLE))
     {
         PK_TRACE_INF("BREAK: Trap at SGPE Booted");
         asm volatile ("trap");
