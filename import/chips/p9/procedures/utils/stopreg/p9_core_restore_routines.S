@@ -147,11 +147,10 @@
                 .set THREAD_ID_REG,                 r6
                 .set CORE_RESTORE_BASE_ADDR_REG,    r7
                 .set TEMP_REG,                      r8
-                .set HRMOR_REST_REG,                r9
                 .set FUSED_MODE_CONST,              0xBB #Chose this flag to be an arbitrary unique value
-                .set NEXT_INST_ADDRESS_REG,         r10
+                .set HRMOR_RESTORE_REG,             r10
                 .set THREAD_ACTIVE_STATE_REG,       r11
-                .set CORE_SCOPE_RESTORE_ADDR_REG,               r12
+                .set CORE_SCOPE_RESTORE_ADDR_REG,   r12
                 .set STOP,                          0x4C0002E4
                 .set ATTN,                          0x00000200
 #--------------------------------------------------------------------#
@@ -297,7 +296,7 @@ thread_launcher_start:
 mfspr PIR_VAL_REG, PIR       #Processor Identification Register
 
 #Select to read the Thread State Status register in PC using SPRC & SPRD
-li TEMP_REG, CORE_THREAD_STATE_REG_ID_CONST   
+li TEMP_REG, CORE_THREAD_STATE_REG_ID_CONST
 mtspr SPRC, TEMP_REG
 mfspr FUSED_STATUS_REG, SPRD
 extrdi. FUSED_STATUS_REG, FUSED_STATUS_REG, 1, 63
@@ -397,7 +396,7 @@ blrl                                # branch to core register restore area
 .align 4
 
 core_reg_restore_return:        #so far core reg restored except HRMOR
-mtspr HRMOR, HRMOR_REST_REG
+mtspr HRMOR, HRMOR_RESTORE_REG
 
 enter_stop_state:
 
