@@ -27,6 +27,7 @@
 #include "p9_sgpe_stop_exit_marks.h"
 #include "p9_hcd_sgpe_boot_cme.h"
 #include "p9_dd1_doorbell_wr.h"
+#include "p9_stop_util.H"
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
@@ -248,56 +249,79 @@ p9_sgpe_stop_exit()
 
 #endif
 
+            // Reading fused core mode flag in cpmr header
+            // To access memory, need to set MSB of homer address
+            HomerImgDesc_t* pCpmrHdrAddr = (HomerImgDesc_t*)(CPMR_BASE_HOMER_OFFSET | BIT32(0));
+
+            if (pCpmrHdrAddr->fusedModeStatus == 0xBB)
+            {
+                PK_TRACE_INF("FUSED_CORE_MODE Flag is set in CPMR Header");
+
+                for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
+                {
+                    if (cexit & BIT32(cloop))
+                    {
+                        PK_TRACE_DBG("Check: Assert Core[%d] FUSED_CORE_MODE via CPMMR[9]",
+                                     ((qloop << 2) + cloop));
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
+                                                       ((qloop << 2) + cloop)), BIT64(9));
+                    }
+                }
+
 #if FUSED_CORE_MODE_SCAN_FIX
 
-            PK_TRACE_INF("FCMS: Engage with Fused Mode Scan Workaround");
+                PK_TRACE_INF("FCMS: Engage with Fused Mode Scan Workaround");
 
-            // bit8/9 = l2-0/1, bit49 = cfg
-            PK_TRACE("FCMS: Setup scan register to select the ring");
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), BITS64(8, 2) | BIT64(49));
+                // bit8/9 = l2-0/1, bit49 = cfg
+                PK_TRACE("FCMS: Setup scan register to select the ring");
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop),
+                            (((uint64_t)m_l2 << SHIFT64(9)) | BIT64(49)));
 
-            PK_TRACE("FCMS: checkword set");
-            scom_data = 0xa5a5a5a5a5a5a5a5;
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                PK_TRACE("FCMS: checkword set");
+                scom_data = 0xa5a5a5a5a5a5a5a5;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
 
-            for(spin = 1;; spin++)
-            {
-                PK_TRACE("FCMS: spin ring loop%d", spin);
-                scom_data = (G_fcm_spin[spin] - G_fcm_spin[spin - 1]) << 32;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data);
-
-                PK_TRACE("FCMS: Poll OPCG done for ring spin");
-
-                do
+                for(spin = 1;; spin++)
                 {
-                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x10000100, qloop), scom_data);
-                }
-                while(~scom_data & BIT64(8));
+                    PK_TRACE("FCMS: spin ring loop%d", spin);
+                    scom_data = (G_fcm_spin[spin] - G_fcm_spin[spin - 1]);
+                    scom_data = scom_data << 32;
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data);
 
-                if (spin == 3)
-                {
-                    PK_TRACE("FCMS: checkword check");
-                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                    PK_TRACE("FCMS: Poll OPCG done for ring spin");
 
-                    if (scom_data != 0xa5a5a5a5a5a5a5a5)
+                    do
                     {
-                        PK_TRACE("ERROR: checkword[%x%x] failed. HALT SGPE!",
-                                 UPPER32(scom_data), LOWER32(scom_data));
-                        pk_halt();
+                        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x10000100, qloop), scom_data);
+                    }
+                    while(~scom_data & BIT64(8));
+
+                    if (spin == 3)
+                    {
+                        PK_TRACE("FCMS: checkword check");
+                        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+
+                        if (scom_data != 0xa5a5a5a5a5a5a5a5)
+                        {
+                            PK_TRACE("ERROR: checkword[%x%x] failed. HALT SGPE!",
+                                     UPPER32(scom_data), LOWER32(scom_data));
+                            pk_halt();
+                        }
+
+                        break;
                     }
 
-                    break;
+                    PK_TRACE("FCMS: restore fused core mode bit");
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                    RESTORE_RING_BITS(BIT64(0), scom_data, BIT64(0));
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
                 }
 
-                PK_TRACE("FCMS: restore fused core mode bit");
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
-                RESTORE_RING_BITS(BIT64(0), scom_data, BIT64(0));
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
-            }
-
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), 0);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), 0);
 
 #endif
+
+            }
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
 

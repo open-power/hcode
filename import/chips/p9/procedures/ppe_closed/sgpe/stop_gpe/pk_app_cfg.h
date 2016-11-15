@@ -39,7 +39,7 @@
 #if NIMBUS_DD_LEVEL == 1
     #define HW386311_DD1_PBIE_RW_PTR_STOP11_FIX            1
     #define HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 1
-    #define FUSED_CORE_MODE_SCAN_FIX                       0
+    #define FUSED_CORE_MODE_SCAN_FIX                       1
 #endif
 
 // --------------------
