@@ -27,7 +27,7 @@
 #include "p9_sgpe_stop_exit_marks.h"
 #include "p9_hcd_sgpe_boot_cme.h"
 #include "p9_dd1_doorbell_wr.h"
-#include "p9_stop_util.H"
+#include "p9_hcode_image_defines.H"
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
@@ -251,7 +251,7 @@ p9_sgpe_stop_exit()
 
             // Reading fused core mode flag in cpmr header
             // To access memory, need to set MSB of homer address
-            HomerImgDesc_t* pCpmrHdrAddr = (HomerImgDesc_t*)(CPMR_BASE_HOMER_OFFSET | BIT32(0));
+            cpmrHeader_t* pCpmrHdrAddr = (cpmrHeader_t*)(CPMR_BASE_HOMER_OFFSET | BIT32(0));
 
             if (pCpmrHdrAddr->fusedModeStatus == 0xBB)
             {
@@ -597,6 +597,87 @@ p9_sgpe_stop_exit()
 
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR, qloop, 1),
                             cme_flags);
+            }
+
+            // enable cme trace array
+            sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
+
+            if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(4))
+            {
+                // Trace configuration
+                // CME_LCL_DBG
+                // 0: LCL_EN_DBG
+                // 4: LCL_EN_INTR_ADDR
+                // 5: LCL_EN_TRACE_EXTRA
+                // 6: LCL_EN_TRACE_STALL
+                // 7: LCL_EN_WAIT_CYCLES
+                // 8: LCL_EN_FULL_SPEED
+                // inst: 3D20C000 | addis r9, 0, 0xC000 | R9 = 0xC0000000
+                // inst: 3C208F80 | addis r1, 0, 0x8F80 | R1 = 0x8F800000
+                // inst: 90290120 | stw   r1, 0x120(r9) | 0xC0000120 = R1
+
+                // 1. The trace array has to be stopped to configure it
+                // 2. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRCTRL_CONFIG
+                //    bit0: store_trig_mode_lt = 1
+                //    bit 11 enh_trace_mode = 1
+                //    bit 14:15 = trace_select_lt = 10 for CME0
+                // 3. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_0
+                //    Set trace data compare mask to 0  (0:63)
+                // 4. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_1
+                //    Set trace data compare mask to 0  (64:87)
+                // 5. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_4
+                //    Clear MSKa, MSKb
+                // 6. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_5
+                //    Clear MSKc, MSKd
+                // 7. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_9
+                //     bit 0 = disable compression:
+                //     bit 1 = error_bit_compresion_care_mask
+                //             (default is zero so should be enabled)
+                //     32  msk_err_q                <= error_mode_lt(0);
+                //     33  pat_err_q                <= error_mode_lt(1);
+                //     34  trig0_err_msk            <= error_mode_lt(2);
+                //     35  trig1_err_msk            <= error_mode_lt(3);
+                //     match_err                    <= (msk_err_q or not pat_err_q)
+                //                                     xor error_stage_lt(0);
+                //     mask = 0 and pattern = 1 and may be trigger 0
+
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(1));
+
+                if (m_pg & FST_EX_IN_QUAD)
+                {
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 0), 0x3D20C00000000000);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 0), 0x3C208F8000000000);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 0), 0x9029012000000000);
+
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRCTRL_CONFIG, qloop),
+                                (BIT64(0) | BIT64(11) | BIT64(14)));
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_0, qloop), 0);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_1, qloop), 0);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_4, qloop), 0);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_5, qloop), 0);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_9, qloop),
+                                BITS64(33, 2));
+                }
+
+                if (m_pg & SND_EX_IN_QUAD)
+                {
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 1), 0x3D20C00000000000);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 1), 0x3C208F8000000000);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 1), 0x9029012000000000);
+
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRCTRL_CONFIG | 0x80),
+                                                   qloop), (BIT64(0) | BIT64(11) | BIT64(14)));
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_0 | 0x80),
+                                                   qloop), 0);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_1 | 0x80),
+                                                   qloop), 0);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_4 | 0x80),
+                                                   qloop), 0);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_5 | 0x80),
+                                                   qloop), 0);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_9 | 0x80),
+                                                   qloop), BITS64(33, 2));
+                }
             }
 
             if (in32(OCB_OCCS2) & BIT32(CME_DEBUG_TRAP_ENABLE))
