@@ -26,6 +26,9 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
+#define CORE_HANG_DIVIDER_4X  0x9F
+#define CORE_HANG_DIVIDER_64X 0x7B
+
 int
 p9_hcd_core_scominit(uint32_t core)
 {
@@ -44,6 +47,19 @@ p9_hcd_core_scominit(uint32_t core)
     scom_data.words.upper |= BITS32(6, 4); // sample pulse count
     scom_data.words.upper |= BITS32(20, 2);// DTS loop1 enable
     CME_PUTSCOM(C_THERM_MODE_REG, core, scom_data.value);
+
+    // content of p9_core_scom
+    PK_TRACE("Initialize FIR MASK/ACT0/ACT1");
+    CME_PUTSCOM(CORE_FIRMASK, core, 0x4301D70000AB7696);
+    CME_PUTSCOM(CORE_ACTION0, core, 0x0000000000000000);
+    CME_PUTSCOM(CORE_ACTION1, core, 0xA858009775100008);
+
+    // update core hang pulse dividers
+    CME_GETSCOM(C_HANG_CONTROL, core, CME_SCOM_AND, scom_data.value);
+    scom_data.words.upper &= ~BITS32(0, 16);
+    scom_data.words.upper |= (CORE_HANG_DIVIDER_4X << SHIFT32(7));
+    scom_data.words.upper |= (CORE_HANG_DIVIDER_4X << SHIFT32(15));
+    CME_PUTSCOM(C_HANG_CONTROL, core, scom_data.value);
 
     return rc;
 }

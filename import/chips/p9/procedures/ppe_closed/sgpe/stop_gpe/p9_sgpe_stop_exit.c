@@ -464,10 +464,16 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SX8.A: Cache L2 Startclocks");
             p9_hcd_cache_l2_startclocks(qloop, m_l2, m_pg);
 
+            // for l2 scom init and restore that cannot be done via stop11
+            // as if that certain l2 wasnt exiting(thus lack of clock for scom)
+
+            PK_TRACE_INF("SX8.B: Cache L2 Scominit");
+            p9_hcd_cache_scominit(qloop, m_l2, 1);
+
 #if !SKIP_HOMER_ACCESS
 
-            // for l2 scom restore that cannot be done via stop11 as l2 wasnt exiting
-            p9_hcd_cache_scomcust(qloop, m_l2, m_pg, 1);
+            PK_TRACE_INF("SX8.C: Cache L2 Scomcust");
+            p9_hcd_cache_scomcust(qloop, m_l2, 1);
 
 #endif
 
@@ -529,12 +535,12 @@ p9_sgpe_stop_exit()
             //====================================
 
             PK_TRACE_INF("SX11.M: Cache Scom Init");
-            p9_hcd_cache_scominit(qloop, m_pg);
+            p9_hcd_cache_scominit(qloop, m_pg, 0);
 
 #if !SKIP_HOMER_ACCESS
 
             PK_TRACE_INF("SX11.N: Cache Scom Cust");
-            p9_hcd_cache_scomcust(qloop, m_l2, m_pg, 0);
+            p9_hcd_cache_scomcust(qloop, m_pg, 0);
 
 #endif
 

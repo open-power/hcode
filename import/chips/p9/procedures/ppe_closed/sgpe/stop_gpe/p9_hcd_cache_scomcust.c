@@ -28,12 +28,13 @@
 #include "p9_hcode_image_defines.H"
 
 int
-p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_l2, uint32_t m_pg, int is_stop8)
+p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
     int rc = SGPE_STOP_SUCCESS;
     int i;
     uint32_t qoffset = 0;
     uint32_t qaddr   = 0;
+    uint64_t qdata   = 0;
     uint32_t rid     = 0;
 
     // doing this instead of multiply since there is no multiply instruction with ppe.
@@ -61,17 +62,15 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_l2, uint32_t m_pg, int is_stop8)
         // L2_TRA(0,1) 001010 001011
         rid   = (qaddr & BITS32(18, 4)) >> SHIFT32(21);
 
-        // STOP11: Partial bad ex and non exiting l2 address detection
+        // STOP11: Partial bad ex and l2 address detection
         // First had to be an EX address not quad address to check for partial bad
+        // then skip all l2 addresses for stop11, leave it stop8 portion
         // if ex0 is partial bad and bit21 is 0, skip this address
         // if ex1 is partial bad and bit21 is 1, skip this address
-        // if l20 is not exiting and bit18:21 is 0010 or 1010, skip this address
-        // if l21 is not exiting and bit18:21 is 0011 or 1011, skip this address
         if ((!is_stop8) && (rid & 0xE) &&
-            ((((~m_pg) & FST_EX_IN_QUAD) && ((~rid) & 0x1)) ||
-             (((~m_pg) & SND_EX_IN_QUAD) && (( rid) & 0x1)) ||
-             (((~m_l2) & FST_EX_IN_QUAD) && ((rid == 0x2) || (rid == 0xA))) ||
-             (((~m_l2) & SND_EX_IN_QUAD) && ((rid == 0x3) || (rid == 0xB)))))
+            ((rid <= 0x3) || (rid >= 0xA) ||
+             (((~m_ex) & FST_EX_IN_QUAD) && ((~rid) & 0x1)) ||
+             (((~m_ex) & SND_EX_IN_QUAD) && (( rid) & 0x1))))
         {
             continue;
         }
@@ -80,14 +79,15 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_l2, uint32_t m_pg, int is_stop8)
         // if l20 exiting and rid != l20, skip this address
         // if l21 exiting and rid != l21, skip this address
         if (is_stop8 &&
-            (!((m_l2 & FST_EX_IN_QUAD) && ((rid == 0x2) || (rid == 0xA)))) &&
-            (!((m_l2 & SND_EX_IN_QUAD) && ((rid == 0x3) || (rid == 0xB)))))
+            (!((m_ex & FST_EX_IN_QUAD) && ((rid == 0x2) || (rid == 0xA)))) &&
+            (!((m_ex & SND_EX_IN_QUAD) && ((rid == 0x3) || (rid == 0xB)))))
         {
             continue;
         }
 
-        PK_TRACE("scom[%d] addr[%x] data[%016llx]", i, qaddr, pSgpeScomRes->data);
-        GPE_PUTSCOM(qaddr, pSgpeScomRes->data);
+        qdata = pSgpeScomRes->data;
+        PK_TRACE("scom[%d] addr[%x] data[%016llx]", i, qaddr, qdata);
+        GPE_PUTSCOM(qaddr, qdata);
     }
 
     return rc;

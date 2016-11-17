@@ -70,7 +70,11 @@
 #define RAM_MTSPR_PSSCR_GPR0   0x7C17D3A6000000
 
 /// handcoded addresses TO BE REMOVED
+#define CORE_FIRMASK           0x20010A43
+#define CORE_ACTION0           0x20010A46
+#define CORE_ACTION1           0x20010A47
 
+#define C_HANG_CONTROL         0x20010A00
 #define RAS_STATUS             0x20010A02
 #define RAM_MODEREG            0x20010A4E
 #define RAM_CTRL               0x20010A4F

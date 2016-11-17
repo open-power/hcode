@@ -63,9 +63,13 @@ enum GPE_SCOM_ADDRESS_PARAMETERS
     CORE_ADDR_OFFSET            = 0x01000000,
     QUAD_ADDR_BASE              = 0x10000000,
     QUAD_ADDR_OFFSET            = 0x01000000,
-    EX_ADDR_BASE                = 0x10011000,
+    EX_ADDR_BASE                = 0x10010000,
     EX0_ADDR_OFFSET             = 0x00000000,
     EX1_ADDR_OFFSET             = 0x00000400,
+    L2_ADDR_BASE                = 0x10010800,
+    NCU_ADDR_BASE               = 0x10011000,
+    L3_ADDR_BASE                = 0x10011800,
+    L2_TRA_ADDR_BASE            = 0x10012800,
     CME_ADDR_BASE               = 0x10012000,
     CME0_ADDR_OFFSET            = 0x00000000,
     CME1_ADDR_OFFSET            = 0x00000400
@@ -80,13 +84,13 @@ enum GPE_SCOM_ADDRESS_PARAMETERS
     GPE_SCOM_ADDR(addr, CORE_ADDR_BASE, core, 0)
 
 #define GPE_SCOM_ADDR_EX(addr, quad, ex) \
-    GPE_SCOM_ADDR(addr, QUAD_ADDR_BASE|EX_ADDR_BASE, quad, ex)
+    GPE_SCOM_ADDR(addr, EX_ADDR_BASE, quad, ex)
 
 #define GPE_SCOM_ADDR_QUAD(addr, quad) \
     GPE_SCOM_ADDR(addr, QUAD_ADDR_BASE, quad, 0)
 
 #define GPE_SCOM_ADDR_CME(addr, quad, cme) \
-    GPE_SCOM_ADDR(addr, QUAD_ADDR_BASE|CME_ADDR_BASE, quad, cme)
+    GPE_SCOM_ADDR(addr, CME_ADDR_BASE, quad, cme)
 
 #define GPE_GETSCOM(addr, data)   getscom(0, addr, &data);
 
