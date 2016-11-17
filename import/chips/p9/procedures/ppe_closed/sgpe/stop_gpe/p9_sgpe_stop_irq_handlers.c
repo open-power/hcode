@@ -25,6 +25,7 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_enter_marks.h"
+#include "p9_sgpe_irq.h"
 
 SgpeStopRecord G_sgpe_stop_record =
 {
@@ -82,15 +83,16 @@ SgpeStopRecord G_sgpe_stop_record =
 void
 p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
 {
-    uint32_t cirq;
-    uint32_t qirq;
-    uint32_t cloop;
-    uint32_t qloop;
-    uint32_t cpending_t2 = 0;
-    uint32_t cpending_t3 = 0;
-    uint32_t qpending_t6 = 0;
-    uint32_t payload     = 0;
-    uint64_t scom_data;
+    PkMachineContext  ctx;
+    uint32_t          cirq;
+    uint32_t          qirq;
+    uint32_t          cloop;
+    uint32_t          qloop;
+    uint32_t          cpending_t2 = 0;
+    uint32_t          cpending_t3 = 0;
+    uint32_t          qpending_t6 = 0;
+    uint32_t          payload     = 0;
+    uint64_t          scom_data;
 
     //=========================
     MARK_TRAP(STOP_PIG_HANDLER)
@@ -297,6 +299,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
     {
         PK_TRACE_INF("Nothing to do, Clear Masks");
         out32(OCB_OIMR1_CLR, (BITS32(15, 2) | BIT32(19)));
+        pk_irq_vec_restore(&ctx);
     }
     else
     {

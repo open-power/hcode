@@ -145,6 +145,9 @@ $(IMAGE)_COMMONFLAGS+= -DAPPCFG_OCC_INSTANCE_ID=3
 # (Change this to #4 for the 405 when we pull that in.)
 $(IMAGE)_COMMONFLAGS+= -DOCCHW_IRQ_ROUTE_OWNER=3
 
+# Force SGPE tasks to use the unified interrupt handler.
+$(IMAGE)_COMMONFLAGS+= -DUNIFIED_IRQ_HANDLER_GPE
+
 # This application will statically initialize 
 # it's external interrupt table using 
 # the table defined in p9_sgpe_main.c.

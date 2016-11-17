@@ -39,7 +39,8 @@ TOP-C-SOURCES = p9_sgpe_stop_entry.c \
                 p9_hcd_cache_scomcust.c \
                 p9_hcd_cache_occ_runtime_scom.c \
                 p9_hcd_cache_ras_runtime_scom.c \
-                p9_hcd_sgpe_boot_cme.c
+                p9_hcd_sgpe_boot_cme.c \
+                p9_sgpe_irq.c
 
 UTILS-SRC   = utils/p9_putringutils.C
 UTILS-SRC  += utils/plat_ring_traverse.C
