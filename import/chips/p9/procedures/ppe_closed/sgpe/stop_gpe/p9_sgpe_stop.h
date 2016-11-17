@@ -110,9 +110,20 @@ extern "C" {
 #define EQ_QPPM_QCCR_WCLEAR      0x100F01BE
 #define EQ_QPPM_QCCR_WOR         0x100F01BF
 
-#define EX_NCU_STATUS_REG        0x1001100F
+#define EX_L2_MODE_REG0          0x1001080A
+#define EX_L2_MODE_REG1          0x1001080B
+#define EX_L2_RD_EPS_REG         0x10010810
+#define EX_L2_WR_EPS_REG         0x10010811
+
+#define EX_L3_RD_EPSILON_CFG_REG 0x10011829
+#define EX_L3_WR_EPSILON_CFG_REG 0x1001182A
 #define EX_L3_MODE_REG0          0x1001182B
 #define EX_L3_MODE_REG1          0x1001180A
+
+#define EX_NCU_MODE_REG          0x1001100A
+#define EX_NCU_MODE_REG2         0x1001100B
+#define EX_NCU_STATUS_REG        0x1001100F
+
 #define EX_DRAM_REF_REG          0x1001180F
 #define EX_PM_PURGE_REG          0x10011813
 #define EX_PM_LCO_DIS_REG        0x10011816
@@ -264,8 +275,8 @@ int  p9_hcd_cache_arrayinit(uint32_t, uint32_t ex);
 int  p9_hcd_cache_initf(uint32_t);
 int  p9_hcd_cache_startclocks(uint32_t, uint32_t);
 int  p9_hcd_cache_l2_startclocks(uint32_t, uint32_t, uint32_t);
-int  p9_hcd_cache_scominit(uint32_t, uint32_t);
-int  p9_hcd_cache_scomcust(uint32_t, uint32_t, uint32_t, int);
+int  p9_hcd_cache_scominit(uint32_t, uint32_t, int);
+int  p9_hcd_cache_scomcust(uint32_t, uint32_t, int);
 int  p9_hcd_cache_ras_runtime_scom(uint32_t);
 int  p9_hcd_cache_occ_runtime_scom(uint32_t);
 
