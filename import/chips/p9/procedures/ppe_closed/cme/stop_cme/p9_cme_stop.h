@@ -81,6 +81,7 @@
 #define SCRACTH1               0x20010A87
 #define THREAD_INFO            0x20010A9B
 #define DIRECT_CONTROLS        0x20010A9C
+#define HRMOR                  0x20010AB9
 
 #define C_SYNC_CONFIG          0x20030000
 #define C_OPCG_ALIGN           0x20030001

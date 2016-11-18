@@ -636,9 +636,13 @@ p9_cme_stop_exit()
 
         while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
-        PK_TRACE_INF("SX4.O: Core Wakes Up, Ramming HRMOR with HOMER address");
+        cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET);
+        scom_data.value = pCmeImgHdr->g_cme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
 
+#if NIMBUS_DD_LEVEL == 1
 #if !SKIP_RAM_HRMOR
+
+        PK_TRACE_INF("SX4.O: Core Wakes Up, Ramming HRMOR with HOMER address");
 
         PK_TRACE("Activate thread0 for RAM via THREAD_INFO[18]");
         CME_PUTSCOM(THREAD_INFO, core, BIT64(18));
@@ -648,9 +652,6 @@ p9_cme_stop_exit()
 
         PK_TRACE("Set SPR mode to LT0-7 via SPR_MODE[20-27]");
         CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
-
-        cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET);
-        scom_data.value = pCmeImgHdr->g_cme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
 
         if (core & CME_MASK_C0)
         {
@@ -701,6 +702,22 @@ p9_cme_stop_exit()
 
         PK_TRACE("Disable RAM mode via RAM_MODEREG");
         CME_PUTSCOM(RAM_MODEREG, core, 0);
+
+#endif
+// Nimbus DD2+
+#else
+
+        PK_TRACE_INF("SX4.O: Core Wakes Up, Write HRMOR with HOMER address");
+
+#if EPM_P9_TUNING
+
+        CME_PUTSCOM(HRMOR, core, 0x200000);
+
+#else
+
+        CME_PUTSCOM(HRMOR, core, scom_data.value);
+
+#endif
 
 #endif
 
