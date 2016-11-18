@@ -1,4 +1,3 @@
-
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
@@ -25,14 +24,19 @@
 # IBM_PROLOG_END_TAG
 
 
+
 TOP-C-SOURCES    = p9_cme_main.c \
                    p9_cme_irq.c 
                    
 UTILS-C-SOURCES  = utils/p9_putringutils.c \
 		   utils/plat_ring_traverse.c				   
 
-PSTATE-C-SOURCES = pstate_cme/p9_cme_pstate.c \
-		   pstate_cme/p9_pstate_vpd.c
+PSTATE-C-SOURCES = 	pstate_cme/p9_cme_pstate.c \
+					pstate_cme/p9_cme_thread_db.c \
+					pstate_cme/p9_cme_thread_pmcr.c \
+					pstate_cme/p9_cme_header.c \
+					pstate_cme/p9_cme_intercme.c \
+		   			pstate_cme/p9_pstate_vpd.c
 
 STOP-C-SOURCES   = stop_cme/p9_cme_stop_irq_handlers.c \
                    stop_cme/p9_cme_stop_enter_thread.c \

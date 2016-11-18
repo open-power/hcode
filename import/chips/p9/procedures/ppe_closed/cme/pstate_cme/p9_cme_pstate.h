@@ -32,38 +32,51 @@
 /// \brief Shared and global definitions for pstate H codes.
 /// \owner  Rahul Batra Email: rbatra@us.ibm.com
 ///
+#ifndef _P9_CME_PSTATE_H_
+#define _P9_CME_PSTATE_H_
 
 #include "pk.h"
-#include "p9_pstate_common.h"
+#include "pstate_pgpe_cme_api.h"
 #include "gpehw_common.h"
+
+enum  PMCR_CONTROL
+{
+    PMCR0_DISABLE  =    0x1,
+    PMCR1_DISABLE  =    0x2,
+    PMCR0_ENABLE   =    0x4,
+    PMCR1_ENABLE   =    0x8
+};
 
 void p9_cme_pstate_pmcr_thread(void*);
 void p9_cme_pstate_db_thread(void*);
 void p9_cme_pstate_pmcr_handler(void*, PkIrqId);
 void p9_cme_pstate_db_handler(void*, PkIrqId);
 void p9_cme_pstate_intercme_in0_handler(void*, PkIrqId);
+int send_pig_packet(uint64_t data, uint32_t coreMask);
+
 
 typedef struct
 {
     PkSemaphore sem[2];
+    uint32_t quadNum;
+    uint32_t pstatesEnabled;
 } CmePstateRecord;
 
 typedef struct
 {
     uint64_t seqNum;
-    uint32_t cmeFlags;
-    uint8_t coreGood[CORES_PER_EX];
 } cme_pstate_pmcr_data_t;
 
 typedef struct
 {
-    uint8_t qmFlag;
-    uint8_t siblingCMEFlag;
+    uint32_t qmFlag;
+    uint32_t siblingCMEFlag;
     uint32_t cmeMaskGoodCore;
-    uint8_t globalPS; //\todo use PState as type
-    uint8_t localPS; //\todo use PState as type
-    uint8_t resClkTblIdx;
-    uint8_t qaccr21_23InitVal;
-    uint8_t quadNum;
-    uint8_t dpll_pstate0_value;
+    uint32_t globalPS;
+    uint32_t localPS;
+    uint32_t resClkTblIdx;
+    uint32_t qaccr21_23InitVal;
+    uint32_t dpll_pstate0_value;
 } cme_pstate_db_data_t;
+
+#endif //_P9_CME_PSTATE_H_

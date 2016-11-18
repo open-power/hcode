@@ -57,6 +57,11 @@ void p9_pgpe_boot_pgpe_header_init()
     G_pgpe_header_data->magic_number[0] =  0x32323232;//magic
     G_pgpe_header_data->_system_reset_addr  = (uint32_t*)0xffff2040;//system_reset_address
     G_pgpe_header_data->IVPR_address = (uint32_t*)0xffff2000;//IVPR address
+#if !BOOT_TEMP_SET_FULL_OCC_IPC_FUNC
+    G_pgpe_header_data->pgpeflags = (uint16_t)(0x0080); //OCC IPC Immediate Response
+#else
+    G_pgpe_header_data->pgpeflags = (uint16_t)(0x0000); //OCC IPC Full Functionality
+#endif //BOOT_TEMP_SET_FULL_OCC_IPC_FUNC
     G_pgpe_header_data->gppb_sram_addr  = (uint32_t*)0xfff27000;//GPPB Sram Offset
     G_pgpe_header_data->gppb_memory_offset = 0;//GPPB Memory Offset
     G_pgpe_header_data->gppb_block_length  = 0x2000;//GPPB Block Length
@@ -64,7 +69,8 @@ void p9_pgpe_boot_pgpe_header_init()
     G_pgpe_header_data->pstate_tbl_length  = 0x6000;//Pstate Tables Length
     G_pgpe_header_data->occ_pstate_tbl_addr  = (uint32_t*)0xfff29000;//OCC Pstate table address
     G_pgpe_header_data->occ_pstate_tbl_length  = 0x100;//OCC Pstate table length
-    G_pgpe_header_data->pgpe_beacon = (uint32_t*)0xfff26ff0;
+    G_pgpe_header_data->pgpe_beacon = (uint32_t*)(0xfff26fe0 + 4);
+    G_pgpe_header_data->actual_quad_status_addr = (uint32_t*)(0xfff26fe0 + 8);
 }
 
 //
@@ -84,7 +90,11 @@ void p9_pgpe_boot_gppb_init()
     gppb->options.options = 0;
     gppb->reference_frequency_khz = 4150000;
     gppb->frequency_step_khz = 16667;
-    gppb->ext_vdd_step_size_mv = 50;
+    gppb->ext_vrm_transition_start_ns = 50;
+    gppb->ext_vrm_transition_rate_inc_uv_per_us = 10000;
+    gppb->ext_vrm_transition_rate_dec_uv_per_us = 10000;
+    gppb->ext_vrm_stabilization_time_us = 500;
+    gppb->ext_vrm_step_size_mv = 50;
     gppb->nest_frequency_mhz = 2000;
 
     gppb->operating_points[ULTRA].frequency_mhz = 4150;

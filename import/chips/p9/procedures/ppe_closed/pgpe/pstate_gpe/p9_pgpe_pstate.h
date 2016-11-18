@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe.h $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe_pstate.h $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2016,2017                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -22,65 +22,53 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-///
-/// \file p9_pgpe.h
-/// \brief header of p9_cme_stop_enter_thread.c and p9_cme_stop_exit.c
-///
-
-#ifndef _P9_PGPE_H_
-#define _P9_PGPE_H_
+#ifndef _P9_PGPE_PSTATE_HEADER_
+#define _P9_PGPE_PSTATE_HEADER_
 
 #include "pk.h"
-#include "ppe42.h"
-#include "ppe42_scom.h"
-
-#include "ppehw_common.h"
-#include "gpehw_common.h"
-#include "occhw_interrupts.h"
-
-#include "ocb_register_addresses.h"
-#include "cme_register_addresses.h"
-#include "ppm_register_addresses.h"
-#include "cppm_register_addresses.h"
-#include "qppm_register_addresses.h"
-
-#include "ocb_firmware_registers.h"
-#include "cme_firmware_registers.h"
-#include "ppm_firmware_registers.h"
-#include "cppm_firmware_registers.h"
-#include "qppm_firmware_registers.h"
-
-#include "p9_pgpe_irq.h"
-#include "pstate_pgpe_cme_api.h"
-#include "p9_pm_hcd_flags.h"
 #include "ipc_api.h"
 #include "ipc_async_cmd.h"
 
-//
-//#Defines
-//
-#define OCC_IPC_IMMEDIATE_RESP      0x0080
+#define MAX_IPC_PEND_TBL_ENTRIES                9
+#define IPC_PEND_PSTATE_START                   0
+#define IPC_PEND_PSTATE_STOP                    1
+#define IPC_PEND_SGPE_ACTIVE_CORES_UPDT         2
+#define IPC_PEND_SGPE_ACTIVE_QUADS_UPDT         3
+#define IPC_PEND_CLIP_UPDT                      4
+#define IPC_PEND_WOF_CTRL                       5
+#define IPC_PEND_WOF_VFRT                       6
+#define IPC_PEND_SET_PMCR_REQ                   7
+#define IPC_PEND_SGPE_SUSPEND_PSTATES           8
 
-/// PGPE PState
-typedef struct
+
+#define ALL_QUADS_BIT_MASK      QUAD0_BIT_MASK | QUAD1_BIT_MASK | \
+    QUAD2_BIT_MASK | QUAD3_BIT_MASK | \
+    QUAD4_BIT_MASK | QUAD5_BIT_MASK
+#define QUAD0_BIT_MASK          0x80
+#define QUAD1_BIT_MASK          0x40
+#define QUAD2_BIT_MASK          0x20
+#define QUAD3_BIT_MASK          0x10
+#define QUAD4_BIT_MASK          0x8
+#define QUAD5_BIT_MASK          0x4
+
+//
+//Task list entry
+//
+typedef struct ipc_req
 {
-    PkSemaphore sem_process_req;
-    PkSemaphore sem_actuate;
-    PkSemaphore sem_sgpe_wait;
-} PgpePstateRecord;
+    ipc_msg_t* cmd;
+    uint8_t pending_ack;
+    uint8_t pending_processing;
+} ipc_req_t;
 
-/// PGPE PState
-void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq);
-void p9_pgpe_thread_process_requests(void* arg);
-void p9_pgpe_thread_actuate_pstates(void* arg);
+//
+//Functions called by threads
+//
+void p9_pgpe_pstate_init();
+void p9_pgpe_pstate_update(uint8_t* quadPstates);
+void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest);
+void p9_pgpe_pstate_calc_wof();
+void p9_pgpe_pstate_apply_clips();
+void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg);
 
-///PGPE PState Info
-void p9_pgpe_gen_pstate_info();
-
-///PGPE FIT
-void p9_pgpe_fit_init();
-
-///PGPE IPC
-void p9_pgpe_ipc_init();
-
-#endif //_P9_PGPE_H_
+#endif //

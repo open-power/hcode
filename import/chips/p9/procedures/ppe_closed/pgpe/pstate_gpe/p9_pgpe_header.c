@@ -29,7 +29,8 @@ pgpe_header_data_t* G_pgpe_header_data;
 //
 //Set the pgpe_header_data struct to point to PGPE HEADER in SRAM
 //
-//\todo: RTC 164339 Get this address passed from linker script.
+//\TODO: RTC 164339
+//Get this address passed from linker script.
 //
 void p9_pgpe_header_init()
 {

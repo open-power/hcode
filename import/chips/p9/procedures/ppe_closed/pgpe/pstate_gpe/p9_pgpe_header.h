@@ -41,7 +41,7 @@ typedef struct pgpe_header_data
     uint32_t shared_sram_length;
     uint32_t build_date;
     uint32_t version;
-    uint16_t qmflags;
+    uint16_t pgpeflags;
     uint16_t reserved0[3];
     uint32_t* gppb_sram_addr;
     uint32_t reserved1;

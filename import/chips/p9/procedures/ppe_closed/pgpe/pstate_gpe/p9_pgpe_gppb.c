@@ -30,6 +30,9 @@ GlobalPstateParmBlock* G_gppb;
 
 //Global array to store calculated slopes
 VpdOperatingPoint G_operating_points[NUM_VPD_PTS_SET][VPD_PV_POINTS];
+uint8_t G_pstate0_dpll_value;
+uint32_t G_ext_vrm_inc_rate_mult_usperus;
+uint32_t G_ext_vrm_dec_rate_mult_usperus;
 extern pgpe_header_data_t* G_pgpe_header_data;
 
 //
@@ -57,6 +60,16 @@ void p9_pgpe_gppb_init()
 
     //Calculate slope co-efficents.
     p9_pgpe_gppb_compute_PsV_slopes();
+
+    //Dpll value corresponding to Pstate 0
+    G_pstate0_dpll_value = ((G_gppb->reference_frequency_khz + (G_gppb->frequency_step_khz - 1)) /
+                            G_gppb->frequency_step_khz);
+
+    //External VRM increasing rate in us/uv
+    G_ext_vrm_inc_rate_mult_usperus = 1 / G_gppb->ext_vrm_transition_rate_inc_uv_per_us;
+
+    //External VRM decreasing rate in us/uv
+    G_ext_vrm_dec_rate_mult_usperus = 1 / G_gppb->ext_vrm_transition_rate_dec_uv_per_us;
 }
 
 //

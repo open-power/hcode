@@ -27,6 +27,7 @@
 #include "p9_pgpe_header.h"
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_boot_temp.h"
+#include "p9_pgpe_pstate.h"
 
 PgpePstateRecord G_pgpe_pstate_record;
 
@@ -77,7 +78,7 @@ IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_STRM2_PUSH
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_STRM3_PULL
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_STRM3_PUSH
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE0_PENDING
-IRQ_HANDLER(p9_pgpe_pstate_pig_handler, (void*) & G_pgpe_pstate_record.sem[0])
+IRQ_HANDLER(p9_pgpe_irq_handler_pcb_type1, (void*) & G_pgpe_pstate_record.sem_process_req)
 //OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE3_PENDING
@@ -101,13 +102,18 @@ EXTERNAL_IRQ_TABLE_END
 #define  KERNEL_STACK_SIZE  512
 #define  THREAD_STACK_SIZE  512
 
-#define  PGPE_THREAD_PRIORITY_PSTATE  1
+#define  PGPE_THREAD_PRIORITY_PROCESS_REQUESTS  1
+#define  PGPE_THREAD_PRIORITY_ACTUATE_PSTATES   2
 
 uint8_t  G_kernel_stack[KERNEL_STACK_SIZE];
 
-uint8_t  G_p9_pgpe_pstate_thread_stack[THREAD_STACK_SIZE];
+//Thread Stacks
+uint8_t  G_p9_pgpe_thread_process_requests_stack[THREAD_STACK_SIZE];
+uint8_t  G_p9_pgpe_thread_actuate_pstates_stack[THREAD_STACK_SIZE];
 
-PkThread G_p9_pgpe_pstate_thread;
+//Thread Control Block
+PkThread G_p9_pgpe_thread_process_requests;
+PkThread G_p9_pgpe_thread_actuate_pstates;
 
 void __eabi()
 {
@@ -124,31 +130,43 @@ main(int argc, char** argv)
         asm volatile ("tw 0, 31, 0");
     }
 
-
     // Initializes kernel data (stack, threads, timebase, timers, etc.)
     pk_initialize((PkAddress)G_kernel_stack,
                   KERNEL_STACK_SIZE,
                   0,
                   PPE_TIMEBASE_HZ);
 
-    // Initialize the thread control block for G_p9_pgpe_pstate_thread
-    pk_thread_create(&G_p9_pgpe_pstate_thread,
-                     (PkThreadRoutine)p9_pgpe_pstate_thread,
+    // Initialize the thread control block for G_p9_pgpe_thread_process_requests
+    pk_thread_create(&G_p9_pgpe_thread_process_requests,
+                     (PkThreadRoutine)p9_pgpe_thread_process_requests,
                      (void*)NULL,
-                     (PkAddress)G_p9_pgpe_pstate_thread_stack,
+                     (PkAddress)G_p9_pgpe_thread_process_requests_stack,
                      (size_t)THREAD_STACK_SIZE,
-                     (PkThreadPriority)PGPE_THREAD_PRIORITY_PSTATE);
+                     (PkThreadPriority)PGPE_THREAD_PRIORITY_PROCESS_REQUESTS);
 
-    PK_TRACE_BIN("G_p9_pgpe_pstate_thread",
-                 &G_p9_pgpe_pstate_thread,
-                 sizeof(G_p9_pgpe_pstate_thread));
+    PK_TRACE_BIN("G_p9_pgpe_thread_process_requests",
+                 &G_p9_pgpe_thread_process_requests,
+                 sizeof(G_p9_pgpe_thread_process_requests));
 
-    // Make G_p9_pgpe_pstate_thread runnable
-    pk_thread_resume(&G_p9_pgpe_pstate_thread);
+    // Initialize the thread control block for G_p9_pgpe_thread_actuate_pstates
+    pk_thread_create(&G_p9_pgpe_thread_actuate_pstates,
+                     (PkThreadRoutine)p9_pgpe_thread_actuate_pstates,
+                     (void*)NULL,
+                     (PkAddress)G_p9_pgpe_thread_actuate_pstates_stack,
+                     (size_t)THREAD_STACK_SIZE,
+                     (PkThreadPriority)PGPE_THREAD_PRIORITY_ACTUATE_PSTATES);
+
+    PK_TRACE_BIN("G_p9_pgpe_thread_actuate_pstates",
+                 &G_p9_pgpe_thread_actuate_pstates,
+                 sizeof(G_p9_pgpe_thread_actuate_pstates));
+
+    // Make G_p9_pgpe_thread pstates_update runnable
+    pk_thread_resume(&G_p9_pgpe_thread_process_requests);
+    pk_thread_resume(&G_p9_pgpe_thread_actuate_pstates);
 
     //Do initialization
     p9_pgpe_header_init();
-#if MIMIC_BOOT_TEMP
+#if USE_BOOT_TEMP
     //This is to be used for development and testing/verif
     //if Global Pstate Parameter Block is not initialized through other means.
     //
@@ -166,6 +184,11 @@ main(int argc, char** argv)
 
     //Setup FIT(Fixed-Interval Timer)
     p9_pgpe_fit_init();
+
+    //Initialize all pstate related data to some default values
+    p9_pgpe_pstate_init();
+
+    PK_TRACE_DBG("Starting PK Threads\n");
 
     // Start running the highest priority thread.
     // This function never returns

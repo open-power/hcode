@@ -23,463 +23,253 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "p9_pgpe.h"
-#include "p9_pstate_common.h"
+#include "pstate_pgpe_cme_api.h"
 #include "p9_pstates_common.h"
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_boot_temp.h"
 #include "avs_driver.h"
 #include "p9_dd1_doorbell_wr.h"
+#include "p9_pgpe_pstate.h"
+#include "pstate_pgpe_occ_api.h"
+//#include "pstate_pgpe_sgpe_api.h"
+#include "ipc_messages.h"
+#include "p9_pgpe_header.h"
 
+//
+//Global External Data
+//
+extern pgpe_header_data_t* G_pgpe_header_data;
 
-#define CCSR_CORE_CONFIG_MASK    0xC0000000
-
-enum quadManager
-{
-    QUAD_MANAGER_NONE =     -1,
-    QUAD_MANAGER_CME0 =     0,
-    QUAD_MANAGER_CME1 =     1
-};
-
-
-//External Voltage, GlobalPState, Local PStates
+//
+//Global Data
+//
+uint8_t G_safeModeEnabled;              //safe mode enabled/disabled
+uint8_t G_pstatesEnabled;               //pstates_enabled/disable
+uint8_t G_pmcrOwner;
+uint8_t G_wofEnabled;                   //wof enable/disable
+uint8_t G_wofPending;                   //wof enable pending
+uint8_t G_psClipMax[MAX_QUADS],
+        G_psClipMin[MAX_QUADS];         //pmin and pmax clips
+uint8_t G_wofClip;                      //wof clip
+uint8_t G_coresPSRequest[MAX_CORES];    //per core requested pstate
+uint8_t G_quadPSComputed[MAX_QUADS];    //computed Pstate per quad
+uint8_t G_globalPSComputed;             //computed global Pstate
+uint8_t G_quadPSTarget[MAX_QUADS];      //target Pstate per quad
+uint8_t G_globalPSTarget;               //target global Pstate
+uint8_t G_quadPSCurr[MAX_QUADS];      //target Pstate per quad
+uint8_t G_globalPSCurr;               //target global Pstate
+uint8_t G_quadPSNext[MAX_QUADS];      //target Pstate per quad
+uint8_t G_globalPSNext;
 uint32_t G_eVidCurr, G_eVidNext;
-uint8_t G_globalCurrPS, G_globalNextPS;
-uint8_t G_localPSCurr[MAX_QUADS];
-uint8_t G_localPSNext[MAX_QUADS];
-uint8_t G_globalPSTgt;
-uint8_t G_localPSTgt[MAX_QUADS];
-uint32_t G_tgtEVid;
-int8_t  G_quadManagerCME[MAX_QUADS]; //0->CME0, 1->CME1, -1->Quad not configured
-uint8_t G_quadPendPSReq[MAX_QUADS];
-uint8_t G_coresPendPSReqData[MAX_CORES];
-uint32_t G_ccsr;
-extern PgpePstateRecord G_pgpe_pstate_record;
-extern GlobalPstateParmBlock* G_gppb;
+VFRT_Hcode_t* G_vfrt_ptr;
+quad_state0_t* G_quadState0;
+quad_state1_t* G_quadState1;
+
+#define GPE_BUFFER(declaration) \
+    declaration __attribute__ ((__aligned__(8))) __attribute__ ((section (".noncacheable")))
+
+GPE_BUFFER(ipc_async_cmd_t G_ipc_msg_pgpe_sgpe);
+GPE_BUFFER(ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
+
+
+//
+//Data passing between IPC interrupt and threads
+//
+ipc_req_t G_ipc_pend_tbl[MAX_IPC_PEND_TBL_ENTRIES];
+uint32_t G_already_sem_posted;
+
 extern VpdOperatingPoint G_operating_points[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 
 //
-//Function Prototypes
+//p9_pgpe_pstate_init
 //
-void p9_pgpe_pstate_get_config();
-void p9_pgpe_pstate_update_ext_volt();
-void p9_pgpe_pstate_freq_update();
-
-//
-//
-//
-
-//
-//PIG Interrupt Handler
-//
-void p9_pgpe_pstate_pig_handler(void* arg, PkIrqId irq)
+void p9_pgpe_pstate_init()
 {
-    //Read OCC_FLAG[PGPE_STARTNOTSTOP]]
-    uint32_t occFlag = in32(OCB_OCCFLG);
+    uint32_t q;
 
-    if (occFlag & BIT32(PGPE_START_NOT_STOP))
-    {
-        pk_semaphore_post((PkSemaphore*)arg);
-    }
-
-}
-
-//
-//PState Thread
-//
-void p9_pgpe_pstate_thread(void* arg)
-{
-    int32_t q, c;
-    uint8_t psClipMax, psClipMin;
-    uint32_t coresPendPSReq;
-    ocb_opit0cn_t opit0cn;
-    ocb_opit1cn_t opit1cn;
-    PkMachineContext  ctx;
-    uint8_t effPSClipMin, effPSClipMax;
-    uint8_t done;
-
-    //\todo Set initial eVid, Global PState, Local PState, Max/Mins PStateClip for PGPE. RTC. 159900
-    psClipMax = 0;
-    psClipMin = 140;
-    coresPendPSReq = 0;
-    G_eVidCurr = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].vdd_mv;
-    G_eVidNext = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].vdd_mv;
-    G_globalCurrPS = G_globalNextPS = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+    G_safeModeEnabled = 0;
+    G_pstatesEnabled = 0;
+    G_wofEnabled = 0;
+    G_wofPending = 0;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        G_localPSCurr[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_localPSNext[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_localPSTgt[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_quadPendPSReq[q] = 0;
+        G_psClipMax[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_psClipMin[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_quadPSComputed[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_globalPSComputed = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_quadPSTarget[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_globalPSTarget = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_quadPSCurr[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_globalPSCurr  = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_quadPSNext[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_globalPSNext  = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
     }
 
-    for (c = 0; c < MAX_CORES; c++)
-    {
-        G_coresPendPSReqData[c] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-    }
-
-    //Initialization
-    external_voltage_control_init(&G_eVidCurr);
-    G_eVidCurr = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].vdd_mv; //\todo RTC 159900. Remove this
-    p9_pgpe_pstate_get_config();
-
-    out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
-
-    pk_semaphore_create(&(G_pgpe_pstate_record.sem[0]), 0, 1);
-
-    //Initialize IPC
-    p9_pgpe_ipc_init();
-
-
-    //Set OCC_SCRATCH2[PGPE_ACTIVE]
-    out32(OCB_OCCS2, BIT32(PGPE_ACTIVE));
-#if EPM_P9_TUNING
-    asm volatile ("tw 0, 31, 0");
-#endif
-
-    //Thread Loop
-    while (1)
-    {
-        //pend on semaphore
-        pk_semaphore_pend(&(G_pgpe_pstate_record.sem[0]), PK_WAIT_FOREVER);
-
-        done = 0;
-
-        while (done == 0)
-        {
-            //Snapshot
-            coresPendPSReq = in32(OCB_OPIT1PRA);
-
-            //Make sure clips aren't below or above VPD points
-            if (psClipMax < G_operating_points[VPD_PT_SET_BIASED_SYSP][ULTRA].pstate)
-            {
-                effPSClipMax = G_operating_points[VPD_PT_SET_BIASED_SYSP][ULTRA].pstate;
-            }
-            else
-            {
-                effPSClipMax = psClipMax;
-            }
-
-            if (psClipMin > G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate)
-            {
-                effPSClipMin = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-            }
-            else
-            {
-                effPSClipMin = psClipMin;
-            }
-
-            //Process pending requests
-            for (c = 0; c < MAX_CORES; c++)
-            {
-                //For each pending bit OPIT1PR[c] (OPIT1PR is 24 bits)
-                if (coresPendPSReq & (0x80000000 >> c))
-                {
-                    //Read payload from OPIT0C[c] and OPIT1C[c] register corresponding to the core 'c'
-                    //Bits 20:31 OPIT0C - Phase 1 OPIT1C - Phase 2
-                    opit0cn.value = in32(OCB_OPIT0CN(c));
-                    opit1cn.value = in32(OCB_OPIT1CN(c));
-
-                    uint16_t op0 = opit0cn.fields.pcb_intr_payload;
-                    uint16_t op1 = opit1cn.fields.pcb_intr_payload;
-
-                    //make sure seq number matches for both phases
-                    //otherwise, ignore the request
-                    if (((op0 >> 10) && 0x3) ==
-                        ((op1 >> 10) && 0x3))
-                    {
-                        //Extract the LowerPState field
-                        G_coresPendPSReqData[c] = op1 & 0xff;
-                        G_quadPendPSReq[QUAD_FROM_CORE(c)] = 1;
-                        out32(OCB_OPIT1PRA_CLR, 0x80000000 >> c); //Clear out pending bits
-                    }
-                }
-            }
-
-            //Local PStates Auction
-            for (q = 0; q < MAX_QUADS; q++)
-            {
-                //Make sure quad is configured and there is a pending request
-                if ((G_quadManagerCME[q] != QUAD_MANAGER_NONE) && (G_quadPendPSReq[q] == 1))
-                {
-                    //Go through all the cores in this quad with pending request
-                    //and find the lowest numbered PState
-                    G_localPSTgt[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-
-                    for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
-                    {
-                        if (G_ccsr & (0x80000000 >> c))
-                        {
-                            if (G_localPSTgt[q] > G_coresPendPSReqData[c])
-                            {
-                                G_localPSTgt[q] = G_coresPendPSReqData[c];
-                            }
-                        }
-                    }
-
-                    //Apply Clip
-                    if (G_localPSTgt[q] < effPSClipMax)
-                    {
-                        G_localPSTgt[q] = effPSClipMax;
-                    }
-                    else if (G_localPSTgt[q] > effPSClipMin)
-                    {
-                        G_localPSTgt[q] = effPSClipMin;
-                    }
-
-                    G_quadPendPSReq[q] = 0;
-                }
-            }
-
-            //Global PState Auction
-            G_globalPSTgt = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-
-            for (q = 0; q < MAX_QUADS; q++)
-            {
-                if ((G_quadManagerCME[q] != QUAD_MANAGER_NONE))
-                {
-                    if (G_globalPSTgt  > G_localPSTgt[q])
-                    {
-                        G_globalPSTgt  = G_localPSTgt[q];
-                    }
-                }
-            }
-
-
-#if EPM_P9_TUNING
-            asm volatile ("tw 0, 31, 0");
-#endif
-
-            //Determine targetVoltage
-            G_tgtEVid = p9_pgpe_gppb_intp_vdd_from_ps(G_globalPSTgt, VPD_PT_SET_BIASED_SYSP, VPD_SLOPES_BIASED);
-
-            //Higher number PState
-            if (((int16_t)(G_globalPSTgt) - (int16_t)(G_globalCurrPS)) > 0)
-            {
-                if ((G_eVidCurr - G_tgtEVid) <= G_gppb->ext_vdd_step_size_mv)
-                {
-                    G_eVidNext = G_tgtEVid;
-                    G_globalNextPS = G_globalPSTgt;
-
-                    for (q = 0; q < MAX_QUADS; q++)
-                    {
-                        G_localPSNext[q] = G_localPSTgt[q];
-                    }
-
-                    done = 1;
-                }
-                else
-                {
-                    G_eVidNext = G_eVidCurr - G_gppb->ext_vdd_step_size_mv;
-                    G_globalNextPS = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_eVidNext);
-
-                    for (q = 0; q < MAX_QUADS; q++)
-                    {
-                        if (G_localPSTgt[q] < G_globalNextPS)   //Keep localPS under GlobalPS
-                        {
-                            G_localPSNext[q] = G_globalNextPS;
-                        }
-                        else
-                        {
-                            G_localPSNext[q] = G_localPSTgt[q];
-                        }
-                    }
-                }
-
-                p9_pgpe_pstate_freq_update();
-                p9_pgpe_pstate_update_ext_volt();
-            }
-            //Lower number PState
-            else if (((int16_t)(G_globalPSTgt) - (int16_t)(G_globalCurrPS)) < 0)
-            {
-                if ((G_tgtEVid - G_eVidCurr) <= G_gppb->ext_vdd_step_size_mv)
-                {
-                    G_eVidNext = G_tgtEVid;
-                    G_globalNextPS = G_globalPSTgt;
-
-                    for (q = 0; q < MAX_QUADS; q++)
-                    {
-                        G_localPSNext[q] = G_localPSTgt[q];
-                    }
-
-                    done = 1;
-                }
-                else
-                {
-                    G_eVidNext = G_eVidCurr + G_gppb->ext_vdd_step_size_mv;
-                    G_globalNextPS = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_eVidNext);
-
-                    for (q = 0; q < MAX_QUADS; q++)
-                    {
-                        if (G_localPSTgt[q] < G_globalNextPS)   //Keep localPS under GlobalPS
-                        {
-                            G_localPSNext[q] = G_globalNextPS;
-                        }
-                        else
-                        {
-                            G_localPSNext[q] = G_localPSTgt[q];
-                        }
-                    }
-                }
-
-                p9_pgpe_pstate_update_ext_volt();
-                p9_pgpe_pstate_freq_update();
-            }
-            else
-            {
-                for (q = 0; q < MAX_QUADS; q++)
-                {
-                    G_localPSNext[q] = G_localPSTgt[q];
-                }
-
-                p9_pgpe_pstate_freq_update();
-                done = 1;
-            }
-        }//Step-Loop
-
-        pk_irq_vec_restore(&ctx);//Restore interrupts
-    }//Thread Loop
-}
-
-
-//
-//p9_pgpe_pstate_update_ext_volt
-//
-void p9_pgpe_pstate_update_ext_volt()
-{
-    //Update external voltage
-    external_voltage_control_write(G_eVidNext);
-
-#if !EPM_P9_TUNING
-    //Do we need the pk_sleep call here now that we only increase voltage
-    //by small step-size?
-    uint32_t vddDelta;
-
-    if (G_eVidCurr > G_eVidNext)
-    {
-        vddDelta = G_eVidCurr - G_eVidNext;
-    }
-    else if(G_eVidCurr < G_eVidNext)
-    {
-        vddDelta = G_eVidNext - G_eVidCurr;
-    }
-    else
-    {
-        vddDelta = 1;
-    }
-
-    pk_sleep(PK_NANOSECONDS((vddDelta)));
-#endif
-
-    G_eVidCurr = G_eVidNext;
+    G_quadState0 = (quad_state0_t*)G_pgpe_header_data->actual_quad_status_addr;
+    G_quadState1 = (quad_state1_t*)(G_pgpe_header_data->actual_quad_status_addr + 2);
 }
 
 //
-//frequency_update
+//p9_pgpe_pstate_update_
 //
-void p9_pgpe_pstate_freq_update()
+void p9_pgpe_pstate_update(uint8_t* s)
 {
-    int32_t c, q;
-    //int rc;
-    uint32_t opit4pr;
-    uint8_t pendingAcks = 0;
-    uint8_t quadPendDBAck[MAX_QUADS];
-    pgpe_db0_glb_bcast_t  db0;
-
-    //Send Doorbell0 to every core by doing a multicast operation
-    db0.value = 0;
-    db0.fields.msg_id = MSGID_DB0_GLOBAL_ACTUAL_BROADCAST;
-    db0.fields.global_actual = G_globalNextPS;
-    db0.fields.quad0_ps = G_localPSNext[0];
-    db0.fields.quad1_ps = G_localPSNext[1];
-    db0.fields.quad2_ps = G_localPSNext[2];
-    db0.fields.quad3_ps = G_localPSNext[3];
-    db0.fields.quad4_ps = G_localPSNext[4];
-    db0.fields.quad5_ps = G_localPSNext[5];
-    p9_dd1_db_multicast_wr(PCB_MUTLICAST_GRP1 | CPPM_CMEDB0, db0.value, G_ccsr);
-    //GPE_PUTSCOM(PCB_MUTLICAST_GRP1 | CPPM_CMEDB0, db0.value);
+    uint32_t q, c;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if (G_quadManagerCME[q] != QUAD_MANAGER_NONE)
+        for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
         {
-            quadPendDBAck[q] = 1;
+            G_coresPSRequest[c] = s[q];
+        }
+
+        G_quadPSCurr[q] = s[q];
+        G_quadPSNext[q] = s[q];
+    }
+
+    p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
+    p9_pgpe_pstate_apply_clips(NULL);
+}
+
+//
+//p9_pgpe_pstate_do_auction
+//
+void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest)
+{
+    PK_TRACE_DBG("AUCT: Enter\n");
+    //Get active cores and quads
+    uint32_t q, c;
+    uint32_t activeCores = G_quadState0->fields.core_poweron_state ;
+    activeCores = (activeCores << 16) | (G_quadState1->fields.core_poweron_state);
+    uint32_t activeQuads = G_quadState1->fields.requested_active_quad;
+
+    //Local PStates Auction
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        //Make sure quad is active
+        if ((activeQuads & (QUAD0_BIT_MASK >> q)) &
+            (quadAuctionRequest & (QUAD0_BIT_MASK >> q)))
+        {
+            //Go through all the cores in this quad with pending request
+            //and find the lowest numbered PState
+            G_quadPSComputed[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+
+            for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
+            {
+                if (activeCores & (0x80000000 >> c))
+                {
+                    if (G_quadPSComputed[q] > G_coresPSRequest[c])
+                    {
+                        G_quadPSComputed[q] = G_coresPSRequest[c];
+                    }
+                }
+            }
         }
         else
         {
-            quadPendDBAck[q] = 0;
+            G_quadPSComputed[q] = 0xFF;
         }
+
+        //   PK_TRACE_DBG("AUCTION: G_quadPSComputed: 0x%x\n", G_quadPSComputed[q]);
     }
 
-    //Wait for all the acks to come
-    pendingAcks = 1;
-
-    while (pendingAcks)
-    {
-        //Process acks
-        opit4pr = in32(OCB_OPIT4PRA);
-
-        for (c = 0; c < MAX_CORES; c++)
-        {
-            if (opit4pr & (0x80000000 >> c))
-            {
-                if (quadPendDBAck[QUAD_FROM_CORE(c)])
-                {
-                    quadPendDBAck[QUAD_FROM_CORE(c)] = 0;
-                    out32(OCB_OPIT4PRA_CLR, 0x80000000 >> c); //Clear out pending bits
-                }
-                else
-                {
-                    pk_halt();
-                }
-            }
-        }
-
-        //Check if any pending left
-        pendingAcks = 0;
-
-        for (q = 0; q < MAX_QUADS; q++)
-        {
-            if (quadPendDBAck[q])
-            {
-                pendingAcks = 1;
-            }
-        }
-    }
-
-    //Update Current Global and Local PState
-    G_globalCurrPS = G_globalNextPS;
+    //Global PState Auction
+    G_globalPSComputed = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        G_localPSCurr[q] = G_localPSNext[q];
+        if (activeQuads & (QUAD0_BIT_MASK >> q))
+        {
+            if (G_globalPSComputed  > G_quadPSComputed[q])
+            {
+                G_globalPSComputed  = G_quadPSComputed[q];
+            }
+        }
     }
+
+    PK_TRACE_DBG("AUCT glbPSCmpted: 0x%x\n", G_globalPSComputed);
+    PK_TRACE_DBG("AUCT: Exit\n");
 }
 
 //
-//Determine which CMEs are quad manager
+//p9_pgpe_pstate_apply_clips
 //
-void p9_pgpe_pstate_get_config()
+void p9_pgpe_pstate_apply_clips()
 {
-    int32_t q;
-    ocb_ccsr_t ccsr;
-    ccsr.value = in32(OCB_CCSR);
-    G_ccsr = ccsr.value;
+    PK_TRACE_DBG("APCLP: Enter\n");
+    uint32_t q;
+    uint32_t activeQuads = G_quadState1->fields.requested_active_quad;
+
+    //Apply clips to quad computed
+    PK_TRACE_DBG("APCLP: 0x%x\n", activeQuads);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        //CME0 is quad manager
-        if (ccsr.value & (CCSR_CORE_CONFIG_MASK >> (q * CORES_PER_QUAD)))
+        if (activeQuads & (QUAD0_BIT_MASK >> q))
         {
-            G_quadManagerCME[q] = QUAD_MANAGER_CME0;
-        }
-        else if (ccsr.value & (CCSR_CORE_CONFIG_MASK >> (q * CORES_PER_QUAD + 2)))
-        {
-            G_quadManagerCME[q] = QUAD_MANAGER_CME1;
+            uint8_t maxPS = G_psClipMax[q];
+
+            if (G_wofEnabled == 1)
+            {
+                if (G_wofClip <= G_psClipMax[q])
+                {
+                    maxPS = G_wofClip;
+                }
+            }
+
+            if (G_quadPSComputed[q] > maxPS)
+            {
+                G_quadPSTarget[q] = maxPS;
+            }
+            else if(G_quadPSComputed[q] < G_psClipMin[q])
+            {
+                G_quadPSTarget[q] = G_psClipMin[q];
+            }
+            else
+            {
+                G_quadPSTarget[q] = G_quadPSComputed[q];
+            }
         }
         else
         {
-            G_quadManagerCME[q] = QUAD_MANAGER_NONE;
+            G_quadPSTarget[q] = 0xFF;
+        }
+
+        //    PK_TRACE_DBG("APP_CLIP: G_quadPSTarget: 0x%x\n", G_quadPSTarget[q]);
+    }
+
+    //Global PState Auction
+    G_globalPSTarget = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if (activeQuads & (QUAD0_BIT_MASK >> q))
+        {
+            if (G_globalPSTarget  > G_quadPSTarget[q])
+            {
+                G_globalPSTarget  = G_quadPSTarget[q];
+            }
         }
     }
+
+    PK_TRACE_DBG("APCLP: glbPSTgt: 0x%x\n", G_globalPSTarget);
+    PK_TRACE_DBG("APCLP: Exit\n");
+}
+
+//
+//p9_pgpe_pstate_calc_wof
+//
+void p9_pgpe_pstate_calc_wof()
+{
+    //\TODO RTC 162896
+    //Figure out how to calculate WOF Clip
+    G_wofClip = 150;
+
+    p9_pgpe_pstate_apply_clips();
+}
+
+void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg)
+{
+    pk_semaphore_post((PkSemaphore*)arg);
 }

@@ -33,6 +33,7 @@
 //#define REGION_TURBO_ULTRA          2
 
 #define EVID_SLOPE_FP_SHIFT         13
+#define MAX_DPLL_VALUE              255
 
 #define NUM_VPD_PTS_SET             4
 #define VPD_PT_SET_RAW              0

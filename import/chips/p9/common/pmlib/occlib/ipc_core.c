@@ -355,8 +355,10 @@ void ipc_process_cbuf(uint32_t sender_id)
         ipc_process_cbuf(sender_id);
     }
 
+#ifndef UNIFIED_IRQ_HANDLER_GPE
     // Unmask the irq before returning
     KERN_IRQ_ENABLE(IPC_GET_IRQ(OCCHW_INST_ID_SELF));
+#endif
 }
 
 

@@ -32,9 +32,6 @@
 /// \brief  Shared and global definitions for PGPE (GPE2) H-codes.
 ///
 
-//-------------------------------------------------------------------//
-//            DO NOT modify this file unless you're the owner        //
-//-------------------------------------------------------------------//
 
 // Notes:
 // - The only define names that should be changed/added/removed
@@ -43,7 +40,6 @@
 //   - IDX_PRTY_LVL_(task_abbr) and reflect in relevant H-code as well
 //   - All other define names are used in H-codes
 // - The variable names and actions in this file must perfectly match associated
-//   definitions in gpe2_irq_common.c
 
 #ifndef _P9_PGPE_IRQ_H_
 #define _P9_PGPE_IRQ_H_
@@ -68,38 +64,33 @@
 #define IDX_PRTY_LVL_HIPRTY        0
 #define IDX_PRTY_LVL_OCBERR        1
 #define IDX_PRTY_LVL_IPI2HI        2
-#define IDX_PRTY_LVL_TYPE1_TYPE4   3
+#define IDX_PRTY_LVL_TYPE1         3
 #define IDX_PRTY_LVL_DISABLED      4
 #define IDX_PRTY_VEC  0
 #define IDX_MASK_VEC  1
-#define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(5)
+#define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(7)
 extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
-#define IRQ_VEC_PRTY0_GPE   (uint64_t)(0x0001000000000000) // Non-task hi-prty IRQs
+#define IRQ_VEC_PRTY0_GPE   (uint64_t)(0x0000000000000000) // Non-task hi-prty IRQs
 // Shared between all instances
-#define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x0000000000000000) // Task1-OCCHW_IRQ_OCB_ERROR=HB loss?
-#define IRQ_VEC_PRTY2_GPE2  (uint64_t)(0x0000001000000000) // Task2-IPC msgs from 405
-#define IRQ_VEC_PRTY3_GPE2  (uint64_t)(0x0000000000020000) // Task3-CME interrupts
-#define IRQ_VEC_PRTY4_GPE2  (uint64_t)(0xFFFEFFEFFFFDFFFF) // Other instances' IRQs
+#define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x0080000000000000) // Task1-OCB_ERROR(HeartBeat Loss)/GPE3_HALT
+#define IRQ_VEC_PRTY2_GPE2  (uint64_t)(0x0001000000000000) // Task2-CHECK_STOP_GPE2
+#define IRQ_VEC_PRTY3_GPE2  (uint64_t)(0x0000000000000008) // Task3-IPI2-LO(Process Flags)
+#define IRQ_VEC_PRTY4_GPE2  (uint64_t)(0x0000001000000000) // Task4-IPI2-HI(IPC from OCC/SGPE)
+#define IRQ_VEC_PRTY5_GPE2  (uint64_t)(0x0000000000020000) // Task5-PCB_INTR_TYPE1(PCB Type1 from CME)
+#define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0xFF7EFFE3FFFDFFF5) // Other instances' IRQs
 // Unique to each instance
 // We should never detect these
 
 #define IRQ_VEC_ALL_OUR_IRQS  ( IRQ_VEC_PRTY0_GPE  | \
                                 IRQ_VEC_PRTY1_GPE2 | \
                                 IRQ_VEC_PRTY2_GPE2 | \
-                                IRQ_VEC_PRTY3_GPE2 )      // Note, we do not incl PRTY4 here!
+                                IRQ_VEC_PRTY3_GPE2 | \
+                                IRQ_VEC_PRTY4_GPE2 | \
+                                IRQ_VEC_PRTY5_GPE2 )      // Note, we do not incl PRTY6 here!
 
 #define IRQ_VEC_PRTY_CHECK    ( IRQ_VEC_ALL_OUR_IRQS | \
-                                IRQ_VEC_PRTY4_GPE2 )      // This should be 0xFFFFFFFFFFFFFFFF
-
-/*extern const uint8_t IDX_PRTY_VEC;
-extern const uint8_t IDX_MASK_VEC;
-
-extern const uint8_t IDX_PRTY_LVL_HIPRTY;
-extern const uint8_t IDX_PRTY_LVL_OCBERR;
-extern const uint8_t IDX_PRTY_LVL_IPI2HI;
-extern const uint8_t IDX_PRTY_LVL_TYPE1;
-extern const uint8_t IDX_PRTY_LVL_DISABLED;*/
+                                IRQ_VEC_PRTY6_GPE2 )      // This should be 0xFFFFFFFFFFFFFFFF
 
 extern uint8_t    g_current_prty_level;
 extern uint8_t    g_oimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];
@@ -107,6 +98,7 @@ extern int        g_oimr_stack_ctr;
 extern uint64_t   g_oimr_override_stack[NUM_EXT_IRQ_PRTY_LEVELS];
 extern uint64_t   g_oimr_override;
 
+void pk_irq_save_and_set_mask(uint32_t iPrtyLvl);
 
 /// Restore a vector of interrupts by overwriting OIMR.
 UNLESS__PPE42_IRQ_CORE_C__(extern)
