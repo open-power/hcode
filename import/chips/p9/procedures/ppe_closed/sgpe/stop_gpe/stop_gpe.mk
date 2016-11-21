@@ -189,8 +189,8 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(COMMON_INCDIR) \
 	)
 
-#$(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
-$(IMAGE)_LDFLAGS=-e __system_reset -N -Bstatic
+$(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
+#$(IMAGE)_LDFLAGS=-e __system_reset -N -Bstatic
 
 $(call BUILD_PPEIMAGE)
 

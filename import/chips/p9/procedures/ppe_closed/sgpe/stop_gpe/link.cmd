@@ -79,7 +79,8 @@ SECTIONS
     ////////////////////////////////
     // All non-vector code goes here
     ////////////////////////////////
-    .text       : { *(.text) } > sram
+    .text       : { *(.text*)
+                   KEEP(*(.text.startup*)) } > sram
 
     ////////////////////////////////
     // Read-only Data
@@ -93,13 +94,13 @@ SECTIONS
     // offsets.
 
     _SDA2_BASE_ = .;
-    .sdata2 . : { *(.sdata2) } > sram
-    .sbss2  . : { *(.sbss2) } > sram
+    .sdata2 . : { *(.sdata2*) } > sram
+    .sbss2  . : { *(.sbss2*) } > sram
 
     // Other read-only data.
     . = ALIGN(8);
     .rodata . : { ctor_start_address = .;
-                  *(.ctors) *(.ctors.*)
+                  KEEP(*(.ctors)) KEEP(*(.ctors.*))
                   ctor_end_address = .;
                   *(rodata*) *(.got2) } > sram
 
@@ -126,7 +127,7 @@ SECTIONS
     // It's not clear why boot.S is generating empty .glink,.iplt
 
     .rela   . : { *(.rela*) } > sram
-    .rwdata . : { *(.data) *(.bss)
+    .rwdata . : { *(.data*) *(.bss*)
 
         . = ALIGN(8);
         _PK_INITIAL_STACK_LIMIT = .;
