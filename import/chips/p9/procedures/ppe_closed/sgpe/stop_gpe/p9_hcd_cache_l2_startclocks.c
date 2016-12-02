@@ -119,9 +119,10 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
     // -------------------------------
 
     /// @todo Check the Global Checkstop FIR of dedicated EX chiplet
-
+#if NIMBUS_DD_LEVEL != 1
     PK_TRACE("Clear flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
+#endif
 
     PK_TRACE("Set parital bad l2/l3 and stopped l2 pscom mask");
     scom_data = 0;
