@@ -251,25 +251,29 @@ fapi2::ReturnCode standardScan(
                 // Add the chiplet ID in the Scom Address
                 l_scomAddress |= i_chipletId;
 
-                // @TODO: Value 200 is a random number to start with.
-                uint8_t l_attempts = 200;
+                // RTC 165831: Need to be revisited
+                uint16_t l_attempts = 300;
+                fapi2::buffer<uint64_t> l_opcgStatus;
 
                 while(l_attempts > 0)
                 {
                     l_attempts--;
 
-                    fapi2::buffer<uint64_t> l_opcgStatus;
+                    fapi2::getScom(i_target, l_scomAddress, l_opcgStatus);
+
+                    if(l_opcgStatus.getBit<8>())
+                    {
+                        break;
+                    }
 
                     fapi2::getScom(i_target, l_scomAddress, l_opcgStatus);
 
                     if(l_opcgStatus.getBit<8>())
                     {
-                        FAPI_INF("OPCG_DONE set");
                         break;
                     }
 
-                    // @TODO: 1 micro second is a number that works now.
-                    //        Need to derive the real delay number.
+                    // RTC 165831: Need to be revisited
                     fapi2::delay(1000, 1000000);
 
                 }
@@ -277,7 +281,8 @@ fapi2::ReturnCode standardScan(
                 if(l_attempts == 0 )
                 {
                     l_rc = fapi2::FAPI2_RC_PLAT_ERR_SEE_DATA;
-                    FAPI_ERR("Max attempts exceeded checking OPCG_DONE");
+                    PK_TRACE_INF("OPCG time out");
+                    pk_halt (); // we shouldn't move on because the next ring will fail.
                     break;
                 }
             }// end of for loop
