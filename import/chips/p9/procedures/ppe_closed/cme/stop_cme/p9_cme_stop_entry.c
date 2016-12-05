@@ -521,6 +521,7 @@ p9_cme_stop_entry()
 
         if (core_catchup)
         {
+            out32(CME_LCL_EISR_CLR, core_catchup << SHIFT32(21));
             origin_core  = core;
             origin_level = target_level;
             core = core_catchup;
