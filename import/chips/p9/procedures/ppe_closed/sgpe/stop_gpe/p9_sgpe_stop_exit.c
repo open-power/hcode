@@ -107,8 +107,11 @@ p9_sgpe_stop_exit()
     uint32_t     qloop;
     uint32_t     cexit;
     uint32_t     qspwu;
-    int          cme;
     uint32_t     core;
+    int          cme;
+#if NIMBUS_DD_LEVEL != 1
+    int          fused_core_mode = 0;
+#endif
     uint64_t     scom_data = 0;
     uint64_t     cme_flags;
     ppm_sshsrc_t hist;
@@ -303,6 +306,7 @@ p9_sgpe_stop_exit()
 
 #endif
 
+#if NIMBUS_DD_LEVEL == 1
 
 // EPM only:
 // EPM doesnt have real homer images and pba setup to access homer
@@ -346,6 +350,7 @@ p9_sgpe_stop_exit()
 
             }
 
+#endif
 #endif
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
@@ -570,6 +575,21 @@ p9_sgpe_stop_exit()
                     cme_flags |= CME_SIBLING_FUNCTIONAL;
                 }
 
+#if NIMBUS_DD_LEVEL != 1
+
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SISR, qloop, 0), scom_data);
+
+                if (scom_data & BIT64(9))
+                {
+                    fused_core_mode = 1;
+                }
+                else
+                {
+                    fused_core_mode = 0;
+                }
+
+#endif
+
                 if (ccsr.value & BIT32((qloop << 2)))
                 {
                     cme_flags |= CME_CORE0_ENABLE;
@@ -580,6 +600,17 @@ p9_sgpe_stop_exit()
                     {
                         cme_flags |= CME_CORE0_ENTRY_FIRST;
                     }
+
+#if NIMBUS_DD_LEVEL != 1
+
+                    if (fused_core_mode)
+                    {
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
+                                                       ((qloop << 2))),     BIT64(9));
+                    }
+
+#endif
+
                 }
 
                 if (ccsr.value & BIT32((qloop << 2) + 1))
@@ -592,6 +623,17 @@ p9_sgpe_stop_exit()
                     {
                         cme_flags |= CME_CORE1_ENTRY_FIRST;
                     }
+
+#if NIMBUS_DD_LEVEL != 1
+
+                    if (fused_core_mode)
+                    {
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
+                                                       ((qloop << 2) + 1)), BIT64(9));
+                    }
+
+#endif
+
                 }
 
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR, qloop, 0),
@@ -607,6 +649,21 @@ p9_sgpe_stop_exit()
                     cme_flags |= CME_SIBLING_FUNCTIONAL;
                 }
 
+#if NIMBUS_DD_LEVEL != 1
+
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SISR, qloop, 1), scom_data);
+
+                if (scom_data & BIT64(9))
+                {
+                    fused_core_mode = 1;
+                }
+                else
+                {
+                    fused_core_mode = 0;
+                }
+
+#endif
+
                 if (ccsr.value & BIT32(((qloop << 2) + 2)))
                 {
                     cme_flags |= CME_CORE0_ENABLE;
@@ -617,6 +674,17 @@ p9_sgpe_stop_exit()
                     {
                         cme_flags |= CME_CORE0_ENTRY_FIRST;
                     }
+
+#if NIMBUS_DD_LEVEL != 1
+
+                    if (fused_core_mode)
+                    {
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
+                                                       ((qloop << 2) + 2)), BIT64(9));
+                    }
+
+#endif
+
                 }
 
                 if (ccsr.value & BIT32(((qloop << 2) + 3)))
@@ -629,6 +697,17 @@ p9_sgpe_stop_exit()
                     {
                         cme_flags |= CME_CORE1_ENTRY_FIRST;
                     }
+
+#if NIMBUS_DD_LEVEL != 1
+
+                    if (fused_core_mode)
+                    {
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
+                                                       ((qloop << 2) + 3)), BIT64(9));
+                    }
+
+#endif
+
                 }
 
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR, qloop, 1),
