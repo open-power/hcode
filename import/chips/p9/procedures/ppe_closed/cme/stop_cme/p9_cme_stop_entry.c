@@ -103,6 +103,17 @@ p9_cme_stop_entry()
         return CME_STOP_SUCCESS;
     }
 
+    // NDD2: OOB bits wired to SISR
+    //       not implemented in DD1
+    // bit1 is Recoverable Error
+    // bit2 is Special Attention
+    if (((core & CME_MASK_C0) && (in32(CME_LCL_SISR)    & BITS32(13, 2))) ||
+        ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS32(29, 2))))
+    {
+        PK_TRACE_INF("WARNING: Attn/Recov Present, Abort Entry and Return");
+        return CME_STOP_SUCCESS;
+    }
+
     //===================================
     MARK_TAG(BEGINSCOPE_STOP_ENTRY, core)
     //===================================
@@ -687,26 +698,42 @@ p9_cme_stop_entry()
 
 #if !STOP_PRIME
 
-        PK_TRACE("Drop vdd_pfet_val/sel_override/regulation_finger_en via PFCS[4,5,8]");
-        // vdd_pfet_val/sel_override     = 0 (disbaled)
-        // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
-        CME_PUTSCOM(PPM_PFCS_CLR, core, BIT64(4) | BIT64(5) | BIT64(8));
-
-        PK_TRACE("Power off core VDD via PFCS[0-1]");
-        // vdd_pfet_force_state = 01 (Force Voff)
-        CME_PUTSCOM(PPM_PFCS_OR, core, BIT64(1));
-
-        PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle) via PFCS[42]");
-
-        do
+        // NDD2: OOB bits wired to SISR
+        //       not implemented in DD1
+        // bit0 is System checkstop
+        // bit1 is Recoverable Error
+        // bit2 is Special Attention
+        // bit3 is Core Checkstop
+        if (((core & CME_MASK_C0) && (in32(CME_LCL_SISR)    & BITS32(12, 4))) ||
+            ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS32(28, 4))))
         {
-            CME_GETSCOM(PPM_PFCS, core, CME_SCOM_AND, scom_data);
+            PK_TRACE_INF("WARNING: Xstop/Attn/Recov Present, Skip Core Power Off");
         }
-        while(!(scom_data & BIT64(42)));
+        else
+        {
+            PK_TRACE("Drop vdd_pfet_val/sel_override/regulation_finger_en via PFCS[4,5,8]");
+            // vdd_pfet_val/sel_override     = 0 (disbaled)
+            // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
+            CME_PUTSCOM(PPM_PFCS_CLR, core, BIT64(4) | BIT64(5) | BIT64(8));
 
-        PK_TRACE("Turn off force voff via PFCS[0-1]");
-        // vdd_pfet_force_state = 00 (Nop)
-        CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));
+            PK_TRACE("Power off core VDD via PFCS[0-1]");
+            // vdd_pfet_force_state = 01 (Force Voff)
+            CME_PUTSCOM(PPM_PFCS_OR, core, BIT64(1));
+
+            PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle) via PFCS[42]");
+
+            do
+            {
+                CME_GETSCOM(PPM_PFCS, core, CME_SCOM_AND, scom_data);
+            }
+            while(!(scom_data & BIT64(42)));
+
+            PK_TRACE("Turn off force voff via PFCS[0-1]");
+            // vdd_pfet_force_state = 00 (Nop)
+            CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));
+
+            PK_TRACE_INF("SE4.A: Core Powered Off");
+        }
 
 #endif
 
@@ -719,8 +746,6 @@ p9_cme_stop_entry()
         {
             G_cme_stop_record.act_level_c1 = STOP_LEVEL_4;
         }
-
-        PK_TRACE_INF("SE4.A: Core Powered Off");
 
         //===========================
         MARK_TAG(SE_STOP4_DONE, core)
