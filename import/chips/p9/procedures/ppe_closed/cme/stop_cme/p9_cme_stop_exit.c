@@ -731,6 +731,9 @@ p9_cme_stop_exit()
         PK_TRACE("Drop block interrupt to PC via SICR[2/3]");
         out32(CME_LCL_SICR_CLR, core << SHIFT32(3));
 
+        PK_TRACE("Clear pm_active status via EISR[20/21]");
+        out32(CME_LCL_EISR_CLR, core << SHIFT32(21));
+
 #endif
 
         if (d2u4_flag)
