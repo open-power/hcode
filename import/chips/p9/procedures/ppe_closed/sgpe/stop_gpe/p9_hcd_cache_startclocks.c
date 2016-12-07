@@ -187,8 +187,6 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     // The LCO programming for the istep 16 use-case needs to be done
     // before the chiplet fence is dropped.
 
-    PK_TRACE("Set L3_LCO_TARGET_ID/VICTIMS via EX_L3_MODE_REG1[2-5,6-21]");
-
     // read partial good exes
     do
     {
@@ -204,16 +202,25 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
         }
     }
 
+    PK_TRACE_DBG("Reading QCSR: %x, excount: %x", qcsr.value, excount);
+
     if (ex & FST_EX_IN_QUAD)
     {
-        PK_TRACE("Setup L3-LCO on ex0 via EX_L3_MODE_REG1[0,2-5,6-21]");
+        PK_TRACE("Setup L3_LCO_TARGET_ID/VICTIMS on ex0 via EX_L3_MODE_REG1[2-5,6-21]");
         GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data.value);
+        scom_data.words.upper &= ~BITS32(2, 20);
         scom_data.words.upper |= (quad << SHIFT32((5 - 1)));
         scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
 
         if (excount > 1)
         {
+            PK_TRACE("Assert L3_LCO_ENABLE_CFG on ex0 via EX_L3_MODE_REG1[0]");
             scom_data.words.upper |= BIT32(0);
+        }
+        else
+        {
+            PK_TRACE("Drop L3_LCO_ENABLE_CFG on ex0 via EX_L3_MODE_REG1[0]");
+            scom_data.words.upper &= ~BIT32(0);
         }
 
         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data.value);
@@ -235,14 +242,21 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     if (ex & SND_EX_IN_QUAD)
     {
-        PK_TRACE("Setup L3-LCO on ex1 via EX_L3_MODE_REG1[0,2-5,6-21]");
+        PK_TRACE("Setup L3_LCO_TARGET_ID/VICTIMS on ex1 via EX_L3_MODE_REG1[2-5,6-21]");
         GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data.value);
-        scom_data.words.upper |= ((quad << SHIFT32((5 - 1))) + 1);
+        scom_data.words.upper &= ~BITS32(2, 20);
+        scom_data.words.upper |= ((quad << SHIFT32((5 - 1))) | BIT32(5));
         scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
 
         if (excount > 1)
         {
+            PK_TRACE("Assert L3_LCO_ENABLE_CFG on ex1 via EX_L3_MODE_REG1[0]");
             scom_data.words.upper |= BIT32(0);
+        }
+        else
+        {
+            PK_TRACE("Drop L3_LCO_ENABLE_CFG on ex1 via EX_L3_MODE_REG1[0]");
+            scom_data.words.upper &= ~BIT32(0);
         }
 
         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data.value);
