@@ -111,3 +111,15 @@ __pk_stack_init(PkAddress* stack,
 
     return PK_OK;
 }
+
+
+void __pk_stack_check(uint32_t stack_base, uint32_t stack_limit)
+{
+    uint32_t stack_addr;
+    asm volatile ("mr %0, 1" : "=r" (stack_addr) : :);
+
+    if(stack_addr > stack_base || stack_addr < stack_limit)
+    {
+        PK_PANIC(PK_STACK_OVERFLOW);
+    }
+}

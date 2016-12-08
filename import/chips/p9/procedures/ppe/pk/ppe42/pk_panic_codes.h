@@ -333,7 +333,7 @@ typedef enum
 
 #define PK_BOOT_VECTORS_NOT_ALIGNED         0x0005
 #define PPE42_ILLEGAL_INSTRUCTION           0x001c
-
+#define PK_STACK_OVERFLOW                   0x0305
 
 
 #endif  // __ASSEMBLER__

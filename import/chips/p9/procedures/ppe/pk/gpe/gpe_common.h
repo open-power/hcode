@@ -70,7 +70,7 @@
         _liw        r5, pk_unified_irq_prty_mask_handler
         mtlr        r5
         blrl            // On return, d5 contains task prty irq vec.
-	mfsprg      r3, 0 // In case r3 is modified by unified handler, restore to sprg0
+        mfsprg      r3, 0 // In case r3 is modified by unified handler, restore to sprg0
 #else
         _lwzi       %r5, %r5, GPE_GISR0(APPCFG_OCC_INSTANCE_ID)
 #endif
@@ -80,7 +80,7 @@
         ## No IRQ pending in interrupt set 0.  Try set 1.
         ## Note: irq # will be 64 (EXTERNAL_IRQS) if no bits were set in either register
 
-#ifndef UNIFIED_IRQ_HANDLER_GPE        
+#ifndef UNIFIED_IRQ_HANDLER_GPE
         _lwzi       %r6, %r6, GPE_GISR1(APPCFG_OCC_INSTANCE_ID)
 #endif
         cntlzw      %r4, %r6
