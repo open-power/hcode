@@ -875,9 +875,10 @@ p9_cme_stop_entry()
             //===================================================================
 
             // if core = 3 aborted = 1, core = 2(sgpe handoff) aborted (cme wakeup)
-            // if core = 1 aborted = 1, core = 0(break)        aborted (cme wakeup)
             // if core = 1 aborted = 2, core = 1(sgpe handoff) aborted (sgpe wakeup)
-            if (core !=  core_aborted)
+            // if core = 1 aborted = 1, core = 0(break)        aborted (cme wakeup)
+            // if core = 2 aborted = 3, core = 0(break)        aborted (cme wakeup)
+            if (core != (core_aborted & core))
             {
                 core &= ~core_aborted;
             }
