@@ -54,7 +54,7 @@ extern "C" {
 #include "p9_stop_common.h"
 #include "p9_pm_hcd_flags.h"
 
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX || FUSED_CORE_MODE_SCAN_FIX
 #define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);
 #define RESTORE_RING_BITS(mask, ring, save) ring = (((ring) & (~mask)) | (save));
 #endif
