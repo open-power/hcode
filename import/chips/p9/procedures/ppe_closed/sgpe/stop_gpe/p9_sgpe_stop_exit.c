@@ -59,7 +59,7 @@ p9_sgpe_stop_exit()
     uint64_t     cme_flags;
     ppm_sshsrc_t hist;
     ocb_ccsr_t   ccsr;
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX || FUSED_CORE_MODE_SCAN_FIX
     int          spin;
 #endif
 
