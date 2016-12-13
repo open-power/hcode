@@ -234,6 +234,14 @@ typedef struct
     PkSemaphore  sem[2];
 } SgpeStopRecord;
 
+/// Scom restore block
+typedef struct
+{
+    uint32_t pad;
+    uint32_t addr;
+    uint64_t data;
+} SgpeScomRestore;
+
 
 /// SGPE STOP Entry and Exit Prototypes
 void p9_sgpe_stop_pig_handler(void*, PkIrqId);
@@ -257,7 +265,7 @@ int  p9_hcd_cache_initf(uint32_t);
 int  p9_hcd_cache_startclocks(uint32_t, uint32_t);
 int  p9_hcd_cache_l2_startclocks(uint32_t, uint32_t, uint32_t);
 int  p9_hcd_cache_scominit(uint32_t, uint32_t);
-int  p9_hcd_cache_scomcust(uint32_t);
+int  p9_hcd_cache_scomcust(uint32_t, uint32_t, uint32_t, int);
 int  p9_hcd_cache_ras_runtime_scom(uint32_t);
 int  p9_hcd_cache_occ_runtime_scom(uint32_t);
 
