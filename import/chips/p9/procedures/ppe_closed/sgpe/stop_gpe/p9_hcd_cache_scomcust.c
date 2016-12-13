@@ -25,11 +25,70 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
+#include "p9_hcode_image_defines.H"
 
 int
-p9_hcd_cache_scomcust(uint32_t quad)
+p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_l2, uint32_t m_pg, int is_stop8)
 {
     int rc = SGPE_STOP_SUCCESS;
+    int i;
+    uint32_t qoffset = 0;
+    uint32_t qaddr   = 0;
+    uint32_t rid     = 0;
+
+    // doing this instead of multiply since there is no multiply instruction with ppe.
+    for(i = 0; i < quad; i++)
+    {
+        qoffset += 0x300;
+    }
+
+    // To access memory, need to set MSB of homer address
+    QpmrHeaderLayout_t* pQpmrHdrAddr = (QpmrHeaderLayout_t*)(QPMR_BASE_HOMER_OFFSET | BIT32(0));
+    SgpeScomRestore*    pSgpeScomRes = (SgpeScomRestore*)(pQpmrHdrAddr->quadScomOffset +
+                                       (uint32_t)pQpmrHdrAddr + qoffset);
+
+    for(i = 0; pSgpeScomRes->pad; i++, pSgpeScomRes++)
+    {
+        qaddr = pSgpeScomRes->addr;
+
+        // Ring ID:    scom_addr[16:21]
+        // PSCOM       000000
+        // PERV        000001
+        // L2    (0,1) 000010 000011
+        // NCU   (0,1) 000100 000101
+        // L3    (0,1) 000110 000111
+        // CME   (0,1) 001000 001001
+        // L2_TRA(0,1) 001010 001011
+        rid   = (qaddr & BITS32(18, 4)) >> SHIFT32(21);
+
+        // STOP11: Partial bad ex and non exiting l2 address detection
+        // First had to be an EX address not quad address to check for partial bad
+        // if ex0 is partial bad and bit21 is 0, skip this address
+        // if ex1 is partial bad and bit21 is 1, skip this address
+        // if l20 is not exiting and bit18:21 is 0010 or 1010, skip this address
+        // if l21 is not exiting and bit18:21 is 0011 or 1011, skip this address
+        if ((!is_stop8) && (rid & 0xE) &&
+            ((((~m_pg) & FST_EX_IN_QUAD) && ((~rid) & 0x1)) ||
+             (((~m_pg) & SND_EX_IN_QUAD) && (( rid) & 0x1)) ||
+             (((~m_l2) & FST_EX_IN_QUAD) && ((rid == 0x2) || (rid == 0xA))) ||
+             (((~m_l2) & SND_EX_IN_QUAD) && ((rid == 0x3) || (rid == 0xB)))))
+        {
+            continue;
+        }
+
+        // STOP8: exiting l2 address detection
+        // if l20 exiting and rid != l20, skip this address
+        // if l21 exiting and rid != l21, skip this address
+        if (is_stop8 &&
+            (!((m_l2 & FST_EX_IN_QUAD) && ((rid == 0x2) || (rid == 0xA)))) &&
+            (!((m_l2 & SND_EX_IN_QUAD) && ((rid == 0x3) || (rid == 0xB)))))
+        {
+            continue;
+        }
+
+        PK_TRACE("scom[%d] addr[%x] data[%016llx]", i, qaddr, pSgpeScomRes->data);
+        GPE_PUTSCOM(qaddr, pSgpeScomRes->data);
+    }
 
     return rc;
 }
