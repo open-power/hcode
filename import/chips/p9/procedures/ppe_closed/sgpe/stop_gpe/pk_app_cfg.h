@@ -53,6 +53,10 @@
     #undef  HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     #define HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 0
 
+    // EPM doesnt have real homer images and pba setup to access homer
+    #undef  SKIP_HOMER_ACCESS
+    #define SKIP_HOMER_ACCESS 1
+
     // EPM uses broadside RTX instead of BCE
     #undef  SKIP_CME_BOOT_STOP11
     #define SKIP_CME_BOOT_STOP11 1

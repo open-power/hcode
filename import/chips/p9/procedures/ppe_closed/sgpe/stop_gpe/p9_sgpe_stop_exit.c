@@ -303,6 +303,12 @@ p9_sgpe_stop_exit()
 
 #endif
 
+
+// EPM only:
+// EPM doesnt have real homer images and pba setup to access homer
+// EPM needs to figure out a fused core mode hack to replace these
+#if !SKIP_HOMER_ACCESS
+
             // Reading fused core mode flag in cpmr header
             // To access memory, need to set MSB of homer address
             cpmrHeader_t* pCpmrHdrAddr = (cpmrHeader_t*)(CPMR_BASE_HOMER_OFFSET | BIT32(0));
@@ -339,6 +345,8 @@ p9_sgpe_stop_exit()
 #endif
 
             }
+
+#endif
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
 
@@ -451,8 +459,12 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SX8.A: Cache L2 Startclocks");
             p9_hcd_cache_l2_startclocks(qloop, m_l2, m_pg);
 
+#if !SKIP_HOMER_ACCESS
+
             // for l2 scom restore that cannot be done via stop11 as l2 wasnt exiting
             p9_hcd_cache_scomcust(qloop, m_l2, m_pg, 1);
+
+#endif
 
             // reset ex actual state if ex is exited.
             if (m_l2 & FST_EX_IN_QUAD)
@@ -514,8 +526,12 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SX11.M: Cache Scom Init");
             p9_hcd_cache_scominit(qloop, m_pg);
 
+#if !SKIP_HOMER_ACCESS
+
             PK_TRACE_INF("SX11.N: Cache Scom Cust");
             p9_hcd_cache_scomcust(qloop, m_l2, m_pg, 0);
+
+#endif
 
             //==================================
             MARK_TAG(SX_CME_BOOT, (32 >> qloop))
