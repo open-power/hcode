@@ -35,7 +35,6 @@
 #include "ppe42_scom.h"
 #include "p9_cme_irq.h"
 #include "p9_putringutils.h"
-#include "p9_scan_compression.H"
 
 //
 // Function Definitions
@@ -141,21 +140,25 @@ uint32_t stop_decode(const uint8_t* i_rs4Str,
     return l_numNibblesParsed;
 }
 
-/// @brief Byte-reverse a 32-bit integer
-///// @param[in] i_x 32-bit word that need to be byte reversed
-///// @return Byte reversed 32-bit word
-uint32_t rs4_revle32(const uint32_t i_x)
+/// @brief Byte-reverse a 64-bit integer
+/// @param[in] i_x 64-bit word that need to be byte reversed
+/// @return Byte reversed 64-bit word
+uint64_t rs4_revle64(const uint64_t i_x)
 {
-    uint32_t rx;
+    uint64_t rx;
 
 #ifndef _BIG_ENDIAN
     uint8_t* pix = (uint8_t*)(&i_x);
     uint8_t* prx = (uint8_t*)(&rx);
 
-    prx[0] = pix[3];
-    prx[1] = pix[2];
-    prx[2] = pix[1];
-    prx[3] = pix[0];
+    prx[0] = pix[7];
+    prx[1] = pix[6];
+    prx[2] = pix[5];
+    prx[3] = pix[4];
+    prx[4] = pix[3];
+    prx[5] = pix[2];
+    prx[6] = pix[1];
+    prx[7] = pix[0];
 #else
     rx = i_x;
 #endif
@@ -163,23 +166,6 @@ uint32_t rs4_revle32(const uint32_t i_x)
     return rx;
 }
 
-uint64_t decodeScanRegionData(const uint32_t i_ringAddress)
-{
-    uint32_t l_scan_region = (i_ringAddress & 0x0000FFF0) << 13;
-
-    uint32_t l_scan_type = 0x00008000 >> (i_ringAddress & 0x0000000F);
-
-    // This is special case if encoded type is 0xF
-    if ( (i_ringAddress & 0x0000000F) == 0xF)
-    {
-        l_scan_type = 0x00008000 | (l_scan_type << 12);
-    }
-
-    uint64_t l_value = l_scan_region;
-    l_value = (l_value << 32) | l_scan_type;
-
-    return l_value;
-}
 
 /// @brief Function to apply the Ring data using the queue method
 //  @param[in] i_core - core select value
@@ -262,19 +248,16 @@ int rs4DecompressionSvc(
     uint8_t* i_rs4,
     uint8_t i_applyOverride)
 {
-    CompressedScanData* l_rs4Header = (CompressedScanData*) i_rs4;
-    uint8_t* l_rs4Str = (i_rs4 + sizeof(CompressedScanData));
+    CompressedScanData_t* l_rs4Header = (CompressedScanData_t*) i_rs4;
+    uint8_t* l_rs4Str = (i_rs4 + sizeof(CompressedScanData_t));
 
     enum opType_t l_opType = ROTATE;
     enum opType_t l_opValue = ROTATE;
     uint32_t l_nibbleIndx = 0;
     uint32_t l_bitsDecoded = 0;
-    uint32_t l_scanAddr = rs4_revle32(l_rs4Header->iv_scanAddr);
-    uint64_t l_scanRegion = decodeScanRegionData(l_scanAddr);
+    uint64_t l_scanRegion = rs4_revle64(l_rs4Header->iv_scanSelect);
     uint32_t l_scanData = 0;
     uint8_t l_mask = 0x08;
-    uint64_t l_scomData = 0;
-    uint8_t l_skip_64bits = 1;
 
     do
     {
@@ -290,6 +273,17 @@ int rs4DecompressionSvc(
         // Write a 64 bit value for header.
         CME_PUTSCOM(0x0003E040, i_core, 0xa5a5a5a5a5a5a5a5);
 
+        //if the ring length is not 8bit aligned, then we need to skip the
+        //padding bits
+        uint8_t l_padding_bits = 0;
+        uint64_t l_scomData = 0;
+
+        if (l_rs4Header->iv_length % 4)
+        {
+            l_padding_bits = (4 - (l_rs4Header->iv_length % 4));
+        }
+
+        uint8_t l_skip_64bits = 1;
 
         // Decompress the RS4 string and scan
         do
@@ -445,86 +439,96 @@ int rs4DecompressionSvc(
 
         if (l_nibble != 0)
         {
-            if (!i_applyOverride)
+            // Parse the non-zero nibbles of the RS4 string and
+            // scan them into the ring
+            if((l_bitsDecoded + l_nibble) > l_rs4Header->iv_length)
             {
-                l_bitsDecoded += l_nibble;
-                uint64_t l_scomData = rs4_get_verbatim(l_rs4Str,
-                                                       l_nibbleIndx,
-                                                       1); // return 1 nibble
-                queuedScan(i_core,
-                           i_scom_op,
-                           SCAN,
-                           l_nibble & 0x3,
-                           l_scomData);
+                break;
             }
             else
             {
-                PK_TRACE_INF("OVERRIDE !!!!!!");
-
-                if(0x8 & l_nibble) // We are parsing RS4 for override rings
+                if (!i_applyOverride)
                 {
-                    uint8_t l_careMask = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
-                    l_nibbleIndx++;
-                    uint8_t l_spyData = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
-                    l_nibbleIndx++;
-                    uint8_t i = 0;
+                    l_bitsDecoded += l_nibble;
+                    uint64_t l_scomData = rs4_get_verbatim(l_rs4Str,
+                                                           l_nibbleIndx,
+                                                           1); // return 1 nibble
+                    queuedScan(i_core,
+                               i_scom_op,
+                               SCAN,
+                               (4 - l_padding_bits) , // scan 4 bits
+                               l_scomData);
+                }
+                else
+                {
+                    PK_TRACE_INF("OVERRIDE !!!!!!");
 
-                    for(i = 0; i < 4; i++)
+                    if(0x8 & l_nibble) // We are parsing RS4 for override rings
                     {
-                        l_bitsDecoded += 1;
-                        l_scomData = 0x0;
+                        uint8_t l_careMask = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
+                        l_nibbleIndx++;
+                        uint8_t l_spyData = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
+                        l_nibbleIndx++;
+                        uint8_t i = 0;
 
-                        if((l_careMask & (l_mask >> i)))
+                        for(i = 0; i < 4; i++)
                         {
-                            if((l_spyData & (l_mask >> i)))
+                            l_bitsDecoded += 1;
+                            l_scomData = 0x0;
+
+                            if((l_careMask & (l_mask >> i)))
                             {
-                                l_scomData = 0xFFFFFFFFFFFFFFFF;
+                                if((l_spyData & (l_mask >> i)))
+                                {
+                                    l_scomData = 0xFFFFFFFFFFFFFFFF;
+                                }
+
+                                l_opValue = SCAN;
+                            }
+                            else
+                            {
+                                l_opValue = ROTATE;
                             }
 
-                            l_opValue = SCAN;
-                        }
-                        else
-                        {
-                            l_opValue = ROTATE;
-                        }
-
-                        queuedScan(i_core,
-                                   i_scom_op,
-                                   l_opValue,
-                                   1,
-                                   l_scomData);
-                    } // end of looper for bit-parsing a non-zero nibble
-                }
-                else // We are parsing RS4 for base rings
-                {
-                    // scan them into the ring
-                    uint8_t l_data = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
-                    uint8_t i = 0;
-
-                    l_nibbleIndx += 1;
-
-                    for(i = 0; i < l_nibble; i++)
+                            queuedScan(i_core,
+                                       i_scom_op,
+                                       l_opValue,
+                                       1,
+                                       l_scomData);
+                        } // end of looper for bit-parsing a non-zero nibble
+                    }
+                    else // We are parsing RS4 for base rings
                     {
-                        l_scomData = 0x0;
-                        l_bitsDecoded += 1;
+                        // scan them into the ring
+                        uint8_t l_data = rs4_get_nibble(l_rs4Str, l_nibbleIndx);
+                        uint8_t i = 0;
 
-                        if((l_data & (l_mask >> i)))
+                        l_nibbleIndx += 1;
+
+                        for(i = 0; i < l_nibble; i++)
                         {
-                            l_opValue = SCAN;
-                            l_scomData = 0xFFFFFFFFFFFFFFFF;
+                            l_scomData = 0x0;
+                            l_bitsDecoded += 1;
 
-                        }
-                        else
-                        {
-                            l_opValue = ROTATE;
-                        }
+                            if((l_data & (l_mask >> i)))
+                            {
+                                l_opValue = SCAN;
+                                l_scomData = 0xFFFFFFFFFFFFFFFF;
 
-                        queuedScan(i_core,
-                                   i_scom_op,
-                                   l_opValue,
-                                   1,
-                                   l_scomData);
-                    } //end of for
+                            }
+                            else
+                            {
+                                l_opValue = ROTATE;
+
+                            }
+
+                            queuedScan(i_core,
+                                       i_scom_op,
+                                       l_opValue,
+                                       1,
+                                       l_scomData);
+                        } //end of for
+                    }
                 }
             }
         } // end of if(l_nibble != 0)
