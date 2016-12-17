@@ -139,8 +139,8 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(2));
 
     /// @todo add ipl mode attr control
-    PK_TRACE("Drop Core-L2 + Core-CC Quiesces via CME_LCL_SICR[6,8]/[7,9]");
-    out32(CME_LCL_SICR_CLR, (core << SHIFT32(7)) | (core << SHIFT32(9)));
+    PK_TRACE("Drop Core-L2/CC/TLBIE Quiesces via CME_LCL_SICR[6,8]/[7,9][21]");
+    out32(CME_LCL_SICR_CLR, ((core << SHIFT32(7)) | (core << SHIFT32(9)) | BIT32(21)));
 
     return rc;
 }
