@@ -29,197 +29,167 @@
 #include <gpe_register_addresses.h>
     .list
 
+//Boot loader GPR usage
+#define BL_SRAM_ADDR_REG            r3
+#define SGPE_IMG_SRAM_ADR_REG       r4
+#define SGPE_IMG_LEN_VAL_REG        r5
+#define TEMP_REG                    r6
+#define SGPE_IMG_OFFSET_VAL_REG     r7
+#define SGPE_IMG_HOMER_ADR_REG      r8
+#define QPMR_HDR_HOMER_ADR_REG      r9
+#define SGPE_IMG_LEN_VAL_ADR_REG    r10
+#define HCODE_DOUBLE_WORD_REG       r28
+#define SGPE_SRAM_BASE_ADR_REG      r30
+#define DEBUG_CODE_REG              r31
+
+############################################################################
+##
+##                          Interrupt vectors
+##
+############################################################################
+
     .global __vectors
 __vectors:
 
     .org __vectors + 0x0000
 __machine_check:
-    b .
+    trap
 
     .org __vectors + 0x0040
     .global __system_reset
 __system_reset:
-    b   __bootLoader
+    b __bootLoader
 
     .org __vectors + 0x0060
 __data_storage:
-    b .
+    trap
 
     .org __vectors + 0x0080
 __instruction_storage:
-    b .
+    trap
 
     .org __vectors + 0x00A0
 __external_interrupt_vector:
-    b .
+    trap
 
     .org __vectors + 0x00C0
 __alignment_exception:
-    b .
+    trap
 
     .org __vectors + 0x00E0
 __program_exception:
-    b .
+    trap
 
     .org __vectors + 0x0100
 __dec_interrupt:
-    b .
+    trap
 
     .org __vectors + 0x0120
 __fit_interrupt:
-    b .
+    trap
 
     .org __vectors + 0x0140
 __watchdog_interrupt:
-    b .
+    trap
+
+###############################################################################
+##
+##                                  Interrupt Ends
+##
+###############################################################################
 
 __bootLoader:
 
-    ######################
-    ## QPMR Header Copy
-    ######################
+###############################################################################
+##
+##                      Preparing for copy of SGPE SRAM Image
+##
+###############################################################################
 
     ## Setup the IVPR for the loader context
-
-    _liw    %r9, OCC_SRAM_SGPE_BOOT_LOADER_ADDR
-    _liw    %r8, GPE_GPE3IVPR
-    stw     r9, 0(r8)
+    _liw    BL_SRAM_ADDR_REG, OCC_SRAM_SGPE_BOOT_LOADER_ADDR
+    _liw    TEMP_REG, GPE_GPE3IVPR
+    stw     BL_SRAM_ADDR_REG, 0(TEMP_REG)
 
     ## Enable halt on trap
-    lis     %r3, 0x0100
-    li      %r3, 0
-    mtdbcr  %r3
 
-    ## cal source Address
-    _liw    %r3, HOMER_QPMR_HEADER_ADDR
+    lis     TEMP_REG, ENABLE_TRAP
+    mtdbcr  TEMP_REG
 
-    ## Calculate Destination Address(in r4)
-    _liw    %r4, OCC_SRAM_SGPE_QPMR_HEADER_ADDR
+    ## calculate source Address in HOMER
 
-    ## Find double words(in r5).
-    _liw    %r5, QPMR_HEADER_SIZE
-    li      r6, 3
-    srw     r5, r5, r6
+    _liw    QPMR_HDR_HOMER_ADR_REG, HOMER_QPMR_HEADER_ADDR
+    lwz SGPE_IMG_OFFSET_VAL_REG, SGPE_IMG_OFFSET_POS( QPMR_HDR_HOMER_ADR_REG )
+    add SGPE_IMG_HOMER_ADR_REG, QPMR_HDR_HOMER_ADR_REG, SGPE_IMG_OFFSET_VAL_REG
 
-    ## start copying
-    mtctr   r5
+    ## Calculate Destination Address in OCC SRAM
 
-qpmr_header_copy_loop:
-    lvd     d28, 0(r3)
-    stvd    d28, 0(r4)
-    addi    r3, r3, 8
-    addi    r4, r4, 8
-    bdnz    qpmr_header_copy_loop
+    _liw    SGPE_IMG_SRAM_ADR_REG, OCC_SRAM_SGPE_BASE_ADDR
 
-    #########################
-    ## Copy SGPE Header/Exe
-    #########################
-    ## Calculate Source address(in r8)
-    _liw    %r6, OCC_SRAM_SGPE_HCODE_OFFSET_ADDR
-    lwz     r7, 0(r6)
-    _liw    %r9, HOMER_QPMR_HEADER_ADDR
-    add     r8,r9,r7
+    ## Find double words(in SGPE_IMG_LEN_VAL_REG).
 
-    ## Calculate Destination address
-    _liw    %r4, OCC_SRAM_SGPE_BASE_ADDR
+    lwz   SGPE_IMG_LEN_VAL_REG, SGPE_SRAM_IMG_SIZE_POS ( QPMR_HDR_HOMER_ADR_REG )
+    bwz   SGPE_IMG_LEN_VAL_REG, sgpe_sram_img_size_bad
+    srwi  SGPE_IMG_LEN_VAL_REG, SGPE_IMG_LEN_VAL_REG, DIVDE_BY_8
+    mtctr SGPE_IMG_LEN_VAL_REG
 
-    ## Calculate the double word count to copy and place in R5
-    ##
-    ## The copy is from the beginning of the SGPE Hcode until the last scan ring
-    ## section found that is found.  For each section, the copy amount will be
-    ## updated to the offset + length (eg the end) of that section.  Once the
-    ## Hcode, Common Rings, and Instance Rings entries in the QPMR are looked
-    ## at, then subtract the QPMR header size as all offsets are based on the
-    ## beginning of the QPMR
-    ##
-    ## R3 : ending QPMR offset to to determine count
-    ## R4 : destination SRAM address
-    ## R5 : final doubleword count
-    ## R6 : scratch
-    ## R7 : offset of the start of the HCode
-    ## R10: address for accessing the QPMR Header entries
-    ## R28: offset of the begining of a section
-    ## R29: length of a section
-    ## R31: scratch
-
-    ## Separate registers are used for debug as they will be blown away upon
-    ## branching to the HCODE anyway
-
-    ## Compute the ending offset of the Hcode section.  Note: the beginning is
-    ## R7
-    _liw    %r10, OCC_SRAM_SGPE_HCODE_LENGTH_ADDR
-    lwz     r29, 0(r10)
-    add     r3, r7, r29
-    lis     r31, 0xB00F
-    ori     r31, r31, 0x0001
-    mtsprg0 r31
-
-    ## Compute the end of the common rings section.
-    ## If not present (eg Offset or length = 0), use the end of the Hcode section
-    _liw    %r10, OCC_SRAM_QUAD_COMMON_RINGS_OFFSET_ADDR
-    lwz     r28, 0(r10)
-    bwz     r28, end_common_rings
-
-    _liw    %r10, OCC_SRAM_QUAD_COMMON_RINGS_LENGTH_ADDR
-    lwz     r29, 0(r10)
-    bwz     r29, end_common_rings
-
-    add     r3, r28, r29
-    lis     r31, 0xB00F
-    ori     r31, r31, 0x0002
-    mtsprg0 r31
-
-end_common_rings:
-
-    ## Compute the end of the specific rings section.
-    ## If not present (eg Offset or length = 0), use the end of the common section
-    _liw    %r10, OCC_SRAM_QUAD_SPECIFIC_RINGS_OFFSET_ADDR
-    lwz     r28, 0(r10)
-    bwz     r28, end_specific_rings
-
-    _liw    %r10, OCC_SRAM_QUAD_SPECIFIC_RINGS_LENGTH_ADDR
-    lwz     r29, 0(r10)
-    bwz     r29, end_specific_rings
-
-    add     r3, r28, r29
-    lis     r31, 0xB00F
-    ori     r31, r31, 0x0003
-    mtsprg0 r31
-
-end_specific_rings:
-
-    ## Subtract the offset of the beginning of the Hcode
-    sub     r31, r3, r7
-    nop
-    srwi    r5,r31,3  ## Divide by 8 for doublewords
-
-    ## start copying
-    mtctr   r5
-    nop
-
+############################################################################
+##
+##          Copying SGPE's Hcode to OCC SRAM
+##
+############################################################################
 payload_copy_loop:
-    lvd     d28, 0(r8)
-    stvd    d28, 0(r4)
-    addi    r8, r8, 8
-    addi    r4, r4, 8
+
+    lvd     HCODE_DOUBLE_WORD_REG, 0( SGPE_IMG_HOMER_ADR_REG )
+    stvd    HCODE_DOUBLE_WORD_REG, 0( SGPE_IMG_SRAM_ADR_REG )
+    addi    SGPE_IMG_HOMER_ADR_REG, SGPE_IMG_HOMER_ADR_REG, DOUBLE_WORD_SIZE
+    addi    SGPE_IMG_SRAM_ADR_REG, SGPE_IMG_SRAM_ADR_REG, DOUBLE_WORD_SIZE
     bdnz    payload_copy_loop
 
-    ########################
-    ## branch to hcode
-    ########################
-    lis     r31, 0xB00F
-    ori     r31, r31, 0x0004
-    mtsprg0 r31
+############################################################################
+##
+##          Copy is complete. Branching to hcode
+##
+############################################################################
+
+    lis     DEBUG_CODE_REG, 0xB00F
+    ori     DEBUG_CODE_REG, DEBUG_CODE_REG, 0x0002
+    mtsprg0 DEBUG_CODE_REG
 
     ## Load the branch address
-    _liw    %r6, OCC_SRAM_SGPE_HCODE_RESET_ADDR
-    mtlr    r6
+    _liw    TEMP_REG, OCC_SRAM_SGPE_HCODE_RESET_ADDR
+    mtlr    TEMP_REG
 
     ## Setup the IVPR for the Hcode
-    _liw    %r9, OCC_SRAM_SGPE_BASE_ADDR
-    _liw    %r8, GPE_GPE3IVPR
-    stw     r9, 0(r8)
+    _liw    SGPE_SRAM_BASE_ADR_REG, OCC_SRAM_SGPE_BASE_ADDR
+    _liw    TEMP_REG, GPE_GPE3IVPR
+    stw     SGPE_SRAM_BASE_ADR_REG, 0( TEMP_REG )
+
+    _liw TEMP_REG, SGPE_BOOT_LOADER_SUCCESS
+    stw TEMP_REG, SGPE_BOOT_PROG_CODE_POS( QPMR_HDR_HOMER_ADR_REG )
+
+############################################################################
+##
+## Jumping to SGPE's Reset address. Updating Progress Code in QPMR to SUCCESS
+##
+############################################################################
 
     blr
 
-    .epilogue __bootLoader
+############################################################################
+##
+## SGPE Image Size Error. Updating Progress Code in QPMR to FAIL
+##
+############################################################################
+
+sgpe_sram_img_size_bad:
+
+   _liw TEMP_REG, SGPE_BOOT_LOADER_FAIL
+   stw TEMP_REG, SGPE_BOOT_PROG_CODE_POS( QPMR_HDR_HOMER_ADR_REG )
+
+   ## Halting SGPE when Boot Loader fails
+   trap
+
+   .epilogue __bootLoader
+
+######################### SGPE Boot Loaders Ends  #########################

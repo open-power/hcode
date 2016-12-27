@@ -27,16 +27,33 @@
 #include <ppe42_asm.h>
 #include <p9_hcd_memmap_homer.H>
 #include <p9_hcd_memmap_occ_sram.H>
+#include <gpe_register_addresses.h>
         .list
 
-    .section .loader_text, "ax", @progbits
+//Boot copier GPR usage
+#define   BL_LEN_HOMER_ADR_REG              r3
+#define   BL_SRAM_ADR_REG                   r4
+#define   BL_LEN_REG                        r5
+#define   TEMP_REG                          r6
+#define   BL_OFFSET_HOMER_ADR_REG           r7
+#define   BL_HOMER_ADR_REG                  r8
+#define   QPMR_HDR_HOMER_ADR_REG            r9
+#define   PROG_CODE_REG                     r10
+#define   HCODE_DOUBLE_WORD_REG             r28
+
+
+###############################################################################
+##
+##                          Interrupts
+##
+###############################################################################
 
     .global __vectors
 __vectors:
 
     .org __vectors + 0x0000
 __machine_check:
-        b .
+        trap
 
     .org __vectors + 0x0040
     .global __system_reset
@@ -45,68 +62,104 @@ __system_reset:
 
     .org __vectors + 0x0060
 __data_storage:
-    b .
+    trap
 
     .org __vectors + 0x0080
 __instruction_storage:
-    b .
+    trap
 
     .org __vectors + 0x00A0
 __external_interrupt_vector:
-    b .
+    trap
 
     .org __vectors + 0x00C0
 __alignment_exception:
-    b .
+    trap
 
     .org __vectors + 0x00E0
 __program_exception:
-    b .
+    trap
 
     .org __vectors + 0x0100
 __dec_interrupt:
-    b .
+    trap
 
     .org __vectors + 0x0120
 __fit_interrupt:
-    b .
+    trap
 
     .org __vectors + 0x0140
 __watchdog_interrupt:
-    b .
+    trap
+
+###############################################################################
+##
+##                                  Interrupt Ends
+##
+###############################################################################
+
+//*****************************************************************************
+//
+//      Reading QPMR Header and preparing for copying boot loader to OCC SRAM
+//
+//*****************************************************************************
 
 __bootCopier:
-    //load r3 with BASE_
-    _liw    %r3, HOMER_SGPE_BOOT_LOADER_LENGTH_ADDR
+    ##load BL_LEN_HOMER_ADR_REG with BASE_
+    _liw    BL_LEN_HOMER_ADR_REG, HOMER_SGPE_BOOT_LOADER_LENGTH_ADDR
 
-    _liw    %r7, HOMER_SGPE_BOOT_LOADER_OFFSET_ADDR
+    _liw    BL_OFFSET_HOMER_ADR_REG, HOMER_SGPE_BOOT_LOADER_OFFSET_ADDR
 
-    //load r4 with address where bootLoader will be loaded in SRAM e.g 0xFFFE8000 (Destination address)
-    _liw    %r4, OCC_SRAM_SGPE_BOOT_LOADER_ADDR # dest
+    //load BL_SRAM_ADR_REG with address where bootLoader will be loaded in SRAM e.g 0xFFFE8000 (Destination address)
+    _liw    BL_SRAM_ADR_REG, OCC_SRAM_SGPE_BOOT_LOADER_ADDR
 
-    //load r9 with QPMR header address
-    _liw    %r9, HOMER_QPMR_HEADER_ADDR
+    //load QPMR_HDR_HOMER_ADR_REG with QPMR header address
+    _liw    QPMR_HDR_HOMER_ADR_REG, HOMER_QPMR_HEADER_ADDR
 
     //size of image in bytes
-    lwz     r5, 0(r3)
-    li      r6, 3
-    srw     r5, r5, r6    # r5 contains number of bytes, divide by 8 will give number of double words
-    addi    r5, r5, 1
-    mtctr   r5          # set the counter for loop
+    lwz     BL_LEN_REG, 0(BL_LEN_HOMER_ADR_REG)
+
+    bwz   BL_LEN_REG,  boot_copier_len_err
+
+    # BL_LEN_REG contains number of bytes, divide by 8 will give number of double words
+    srwi     BL_LEN_REG, BL_LEN_REG, DIVDE_BY_8
+    addi    BL_LEN_REG, BL_LEN_REG, 1
+    mtctr   BL_LEN_REG          # set the counter for loop
 
     // calculating bootLoader image loaded address
-    lwz     r8, 0(r7)   # offset of bootLoader section  in Homer
-    add     r8, r8, r9  # add base address to offset to get absolute bootLoader address in Homer
+    lwz     BL_HOMER_ADR_REG, 0(BL_OFFSET_HOMER_ADR_REG)   # offset of bootLoader section  in Homer
+    add    BL_HOMER_ADR_REG, BL_HOMER_ADR_REG, QPMR_HDR_HOMER_ADR_REG  # add base address to offset to get absolute bootLoader address in Homer
+
+//***************************************************Boot copier copying Boot Loader **********************************
 
 copy_loop:
-    lvd    d28, 0(r8)  # Load Double word
-    stvd   d28, 0(r4)  # Destination address
-    addi   r8, r8, 8   # Increasing source address
-    addi   r4, r4, 8   # Increasing Dest address
+    lvd    HCODE_DOUBLE_WORD_REG, 0(BL_HOMER_ADR_REG)  # Load Double word
+    stvd   HCODE_DOUBLE_WORD_REG, 0(BL_SRAM_ADR_REG)  # Destination address
+    addi   BL_HOMER_ADR_REG, BL_HOMER_ADR_REG, DOUBLE_WORD_SIZE   # Increasing source address
+    addi   BL_SRAM_ADR_REG, BL_SRAM_ADR_REG, DOUBLE_WORD_SIZE   # Increasing Dest address
     bdnz   copy_loop   # Keep repeating the address.
 
+//***************************************** SGPE Boot Loader Copied ***************************************************
+    // boot loader has been copied. Let us update the Progress code in QPMR Header
+    _liw PROG_CODE_REG, SGPE_BOOT_COPY_SUCCESS
+    stw PROG_CODE_REG, SGPE_BOOT_PROG_CODE_POS(QPMR_HDR_HOMER_ADR_REG)
+
+//******************************************* Branching to SGPE Bootloader ********************************************
     ## Using blr command:
-    _liw  %r6,   OCC_SRAM_SGPE_BOOT_LOADER_RESET_ADDR
-    mtlr  r6
+    _liw  TEMP_REG, OCC_SRAM_SGPE_BOOT_LOADER_RESET_ADDR
+    mtlr  TEMP_REG
     blr
+
+// If we are here it means an Hcode Image Build Error.
+// Let us save failure code in QPMR Header of HOMER and
+// halt the PPE to save the failed state
+
+// ******************************************** Boot Copier Error Scenario *******************************************
+
+boot_copier_len_err:
+    _liw PROG_CODE_REG, SGPE_BOOT_COPIER_FAIL
+    stw  PROG_CODE_REG, SGPE_BOOT_PROG_CODE_POS(QPMR_HDR_HOMER_ADR_REG)
+
+    trap
+
     .epilogue __bootCopier
