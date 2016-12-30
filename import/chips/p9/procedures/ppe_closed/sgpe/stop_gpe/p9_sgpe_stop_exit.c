@@ -25,11 +25,20 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
+#include "p9_hcode_image_defines.H"
 #include "p9_hcd_sgpe_boot_cme.h"
 #include "p9_dd1_doorbell_wr.h"
-#include "p9_hcode_image_defines.H"
 
-extern SgpeStopRecord G_sgpe_stop_record;
+extern SgpeStopRecord                       G_sgpe_stop_record;
+
+#if !SKIP_IPC
+
+    extern ipc_async_cmd_t                  G_sgpe_ipccmd_to_pgpe;
+    extern ipcmsg_s2p_suspend_pstate_t      G_sgpe_ipcmsg_suspend_pstate;
+    extern ipcmsg_s2p_update_active_cores_t G_sgpe_ipcmsg_update_cores;
+    extern ipcmsg_s2p_update_active_quads_t G_sgpe_ipcmsg_update_quads;
+
+#endif
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
 
@@ -119,6 +128,9 @@ p9_sgpe_stop_exit()
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
     int          spin;
 #endif
+#if !SKIP_IPC
+    int          rc;
+#endif
 
     //===============================
     MARK_TAG(BEGINSCOPE_STOP_EXIT, 0)
@@ -129,6 +141,113 @@ p9_sgpe_stop_exit()
                  G_sgpe_stop_record.group.ex_l[VECTOR_EXIT],
                  G_sgpe_stop_record.group.ex_r[VECTOR_EXIT],
                  G_sgpe_stop_record.group.quad[VECTOR_EXIT]);
+
+#if !SKIP_IPC
+
+    // If any core exits, including waking up from stop5 to stop15
+    //   sends Update Active Cores IPC to the PGPE
+    //   with Update Type being Exit and the ActiveCores field
+    //   indicating the resultant cores that will be powered and clocking
+    //   after the response is received.
+    // PGPE will perform the necessary adjustments to the Pstates to allow the cores to exit.
+    // Upon a good response from the PGPE,
+    //   the SGPE will communicate to the CMEs for the requested cores to proceed
+    //   with powering them on and completing the exit process.
+    // Upon a bad response from the PGPE,
+    //   the SGPE will halt as this is an unrecoverable error condition.
+    //   [Exits cannot be allowed as the machine may then be in an unsafe frequency/voltage
+    //    combination that could violate the current or thermal parameters
+    //    which could lead to system checkstop]
+
+    if((G_sgpe_stop_record.wof.update_pgpe & SGPE_IPC_UPDATE_CORE_ENABLED) &&
+       G_sgpe_stop_record.group.core[VECTOR_EXIT])
+    {
+        PK_TRACE_INF("SXIPC: Update PGPE with Active Cores");
+        G_sgpe_ipcmsg_update_cores.fields.update_type = SGPE_IPC_UPDATE_TYPE_EXIT;
+        G_sgpe_ipcmsg_update_cores.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
+        G_sgpe_ipcmsg_update_cores.fields.active_cores =
+            (G_sgpe_stop_record.group.core[VECTOR_EXIT] >> SHIFT32(5));
+
+        G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_cores;
+        ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
+                     IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_CORES,
+                     0, 0);
+
+        rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
+
+        if(rc)
+        {
+            PK_TRACE_INF("ERROR: Exit Updates PGPE with Active Cores Failed. HALT SGPE!");
+            pk_halt();
+        }
+
+        /// @todo RTC166577
+        /// move the poll below to before switch exit to cme when sgpe supports multicast
+        PK_TRACE_INF("SXIPC: Poll PGPE Update Active Cores Ack");
+
+        while (G_sgpe_ipcmsg_update_cores.fields.return_code == SGPE_IPC_RETURN_CODE_NULL);
+
+        if (G_sgpe_ipcmsg_update_cores.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
+        {
+            PK_TRACE_INF("ERROR: Exit Updates PGPE with Active Cores Bad RC. HALT SGPE!");
+            pk_halt();
+        }
+
+        G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |=
+            G_sgpe_stop_record.group.core[VECTOR_EXIT];
+    }
+
+    // Upon the exit from STOP 11
+    //   the SGPE must enable the DPLL at some frequency to boot the cache and the cores.
+    //   The frequency is established by the PGPE based on the enablement of Pstates and WOF.
+    // If Pstates are disabled, the SGPE will do nothing
+    //   since the frequency is already in QPPM_DPLL_FREQ (either the IPL boot value or
+    //   that established by other external means e.g. characterization setups) will be used.
+    // If Pstates are enabled, SGPE sends Update Active Quads IPC
+    //   with Update Type set to Exit to PGPE and waits for the response IPC.
+    //   PGPE, as part of its processing this IPC,
+    //   will write the QPPM_DPLL_FREQ register before responding.
+
+    if((G_sgpe_stop_record.wof.update_pgpe & SGPE_IPC_UPDATE_QUAD_ENABLED) &&
+       (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)) &&
+       G_sgpe_stop_record.group.quad[VECTOR_EXIT])   // exit from STOP11
+    {
+        PK_TRACE_INF("SXIPC: Update PGPE with Active Quads(stop11 and pstate enabled)");
+        G_sgpe_ipcmsg_update_quads.fields.update_type = SGPE_IPC_UPDATE_TYPE_EXIT;
+        G_sgpe_ipcmsg_update_quads.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
+        G_sgpe_ipcmsg_update_quads.fields.requested_quads =
+            (G_sgpe_stop_record.group.quad[VECTOR_EXIT] >> SHIFT32(5));
+
+        G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
+        ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
+                     IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
+                     0, 0);
+
+        rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
+
+        if(rc)
+        {
+            PK_TRACE_INF("ERROR: Exit Updates PGPE with Active Quads Failed. HALT SGPE!");
+            pk_halt();
+        }
+
+        /// @todo RTC166577
+        /// move the poll below to before dpll setup when sgpe supports multicast
+        PK_TRACE_INF("SXIPC: Poll PGPE Update Active Quads Ack");
+
+        while (G_sgpe_ipcmsg_update_quads.fields.return_code == SGPE_IPC_RETURN_CODE_NULL);
+
+        if (G_sgpe_ipcmsg_update_quads.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
+        {
+            PK_TRACE_INF("ERROR: Exit Updates PGPE with Active Quads Bad RC. HALT SGPE!");
+            pk_halt();
+        }
+
+        G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |=
+            G_sgpe_stop_record.group.quad[VECTOR_EXIT];
+    }
+
+#endif
 
 
 

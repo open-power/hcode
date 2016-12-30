@@ -51,6 +51,10 @@ extern "C" {
 #include "cppm_firmware_registers.h"
 #include "qppm_firmware_registers.h"
 
+#include "ipc_api.h"
+#include "ipc_async_cmd.h"
+#include "ipc_messages.h"
+
 #include "p9_stop_common.h"
 #include "p9_pm_hcd_flags.h"
 
@@ -156,6 +160,22 @@ extern "C" {
     hist.fields.act_write_enable = act_e;                                     \
     GPE_PUTSCOM_VAR(PPM_SSHSRC, base, id, 0, hist.value);
 
+enum SGPE_IPC_CONSTANTS
+{
+    ENABLE_CORE_STOP_UPDATES          = 1,
+    ENABLE_QUAD_STOP_UPDATES          = 2,
+    ENABLE_BOTH_STOP_UPDATES          = 3,
+    DISABLE_CORE_STOP_UPDATES         = 5,
+    DISABLE_QUAD_STOP_UPDATES         = 6,
+    DISABLE_BOTH_STOP_UPDATES         = 7,
+    SGPE_IPC_UPDATE_CORE_ENABLED      = 1,
+    SGPE_IPC_UPDATE_QUAD_ENABLED      = 2,
+    SGPE_IPC_UPDATE_TYPE_ENTRY        = 0,
+    SGPE_IPC_UPDATE_TYPE_EXIT         = 1,
+    SGPE_IPC_RETURN_CODE_NULL         = 0,
+    SGPE_IPC_RETURN_CODE_ACK          = 1
+};
+
 enum SGPE_STOP_RETURN_CODES
 {
     SGPE_STOP_SUCCESS                 = 0
@@ -201,12 +221,20 @@ enum SGPE_STOP_PSCOM_MASK
     PSCOM_MASK_EX1_L3                 = BIT64(5) | BIT64(7) | BIT64(9)
 };
 
+enum SGPE_FUNCTION_STATUS
+{
+    STATUS_RESUMING                  = 0,
+    STATUS_FUNCTIONAL                = 1,
+    STATUS_SUSPENDING                = 2,
+    STATUS_SUSPENDED                 = 3
+};
 
 enum SGPE_STOP_VECTOR_INDEX
 {
     VECTOR_EXIT                       = 0,
     VECTOR_ENTRY                      = 1,
-    VECTOR_CONFIG                     = 2
+    VECTOR_CONFIG                     = 2,
+    VECTOR_ACTIVE                     = 3
 };
 
 typedef struct
@@ -225,13 +253,23 @@ typedef struct
 
 typedef struct
 {
-    uint32_t core[3]; // 24 bits
+    uint32_t core[4]; // 24 bits
+    uint32_t quad[4]; // 6 bits
     uint32_t ex_l[3]; // 6 bits
     uint32_t ex_r[3]; // 6 bits
     uint32_t ex_b[3]; // 12 bits
-    uint32_t quad[3]; // 6 bits
     uint32_t qswu[3]; // 6 bits
 } sgpe_group_t;
+
+typedef struct
+{
+    // function status(functional, suspending, suspended, resuming)
+    uint8_t      status_pstate;
+    uint8_t      status_stop;
+    // sgpe-pgpe interlock status(quad/core updates enable/disable)
+    uint8_t      update_pgpe;
+    ipc_msg_t*   suspend_cmd;
+} sgpe_wof_t;
 
 /// SGPE Stop Score Board Structure
 typedef struct
@@ -243,6 +281,7 @@ typedef struct
     sgpe_state_t state[MAX_QUADS];
     // group of ex and quad entering or exiting the stop
     sgpe_group_t group;
+    sgpe_wof_t   wof;
     PkSemaphore  sem[2];
 } SgpeStopRecord;
 
@@ -254,6 +293,9 @@ typedef struct
     uint64_t data;
 } SgpeScomRestore;
 
+/// SGPE to PGPE IPC handlers
+void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg);
+void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg);
 
 /// SGPE STOP Entry and Exit Prototypes
 void p9_sgpe_stop_pig_handler(void*, PkIrqId);
@@ -262,6 +304,7 @@ void p9_sgpe_stop_exit_thread(void*);
 int  p9_sgpe_stop_entry();
 int  p9_sgpe_stop_exit();
 
+/// Procedures shared between Istep4 and SGPE Stop
 int  p9_hcd_cache_scan0(uint32_t, uint64_t, uint64_t);
 int  p9_hcd_cache_poweron(uint32_t);
 int  p9_hcd_cache_chiplet_reset(uint32_t, uint32_t);

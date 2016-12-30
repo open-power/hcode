@@ -53,6 +53,8 @@ SgpeStopRecord G_sgpe_stop_record =
         {0, 0, 0},
         {0, 0, 0}
     },
+    // wof status
+    {0, 0, 0, 0},
     // semaphores
     {{0, 0}}
 };

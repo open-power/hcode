@@ -102,5 +102,9 @@ enum GPE_SCOM_ADDRESS_PARAMETERS
 #define GPE_PUTSCOM_VAR(addr, cplt_base, cq_offset, ex_select, data) \
     putscom(0,GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select), data);
 
+/// GPE data buffer in SRAM(mostly for IPC)
+#define GPE_BUFFER(declaration) \
+    declaration __attribute__ ((__aligned__(8))) __attribute__ ((section (".noncacheable")))
+
 
 #endif  /* __GPEHW_COMMON_H__ */

@@ -44,6 +44,13 @@
 
 // --------------------
 
+#if !SKIP_IPC
+    #define GLOBAL_CFG_USE_IPC
+    #define STATIC_IPC_TABLES
+#endif
+
+// --------------------
+
 #if EPM_P9_TUNING
     // EPM already consumed hardware fix
     #undef  HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
