@@ -332,7 +332,6 @@ void external_voltage_control_write(uint32_t vext_write_mv)
 {
     uint8_t   rc = 0;
     uint32_t  CmdDataType = 0; // 0b0000=Target rail voltage
-    uint32_t  CmdDataRead = 0;
 
     // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
     rc = driveWrite(CmdDataType, vext_write_mv);
@@ -342,6 +341,8 @@ void external_voltage_control_write(uint32_t vext_write_mv)
         pk_halt();
     }
 
+#if !EPM_P9_TUNING
+    uint32_t  CmdDataRead = 0;
     // Drive read transaction to return the voltage on the same rail and wait on o2s_ongoing=0
     rc = driveRead(CmdDataType, &CmdDataRead);
 
@@ -350,7 +351,6 @@ void external_voltage_control_write(uint32_t vext_write_mv)
         pk_halt();
     }
 
-#if !EPM_P9_TUNING
 
     if (CmdDataRead != vext_write_mv)
     {
