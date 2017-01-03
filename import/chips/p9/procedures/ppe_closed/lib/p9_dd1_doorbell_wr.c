@@ -34,6 +34,28 @@
 #define PCB_MC_READ_AND 0x48000000ul
 #define PCB_MC_WRITE    0x68000000ul
 
+void p9_dd1_cppm_unicast_wr(uint32_t baddr, uint32_t laddr, uint64_t wdata, int op)
+{
+    uint64_t rdata;
+
+    wrteei(0);
+
+    do
+    {
+        GPE_PUTSCOM(laddr, wdata);
+        GPE_GETSCOM(baddr, rdata);
+    }
+    while(((op == NO_OP)  && (  rdata != wdata)) ||
+          // Basic Write and data was not updated
+          ((op == OR_OP)  && ((~rdata) & wdata)) ||
+          //Write-OR and the requested bits were not set
+          ((op == CLR_OP) && ( (rdata) & wdata)));
+
+    //Write-CLR and the requested bit were not cleared
+
+    wrteei(1);
+}
+
 /// Note: External and timer interrupts are disabled during the "polling"
 //        portions of the code to allow for timeouts using the WDT.
 //        MSR[EE] == 0 will disable the WDT callback and therefore cause

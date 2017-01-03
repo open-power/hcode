@@ -876,8 +876,10 @@ p9_sgpe_stop_exit()
 
             PK_TRACE_DBG("Check: Core[%d] will clear wakeup_notify_select",
                          ((qloop << 2) + cloop));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR,
-                                           ((qloop << 2) + cloop)), BIT64(13));
+            p9_dd1_cppm_unicast_wr(
+                GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
+                GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR, ((qloop << 2) + cloop)),
+                BIT64(13), CLR_OP);
             PK_TRACE_INF("SX0.B: Switch CorePPM Wakeup back to CME via CPMMR[13]");
         }
 

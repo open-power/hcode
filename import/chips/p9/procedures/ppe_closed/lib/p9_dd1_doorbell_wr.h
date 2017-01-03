@@ -27,6 +27,15 @@
 
 #include "stdint.h"
 
+enum LOGIC_INTERFACES
+{
+    NO_OP  = 0,
+    OR_OP  = 1,
+    CLR_OP = 2
+};
+
+void p9_dd1_cppm_unicast_wr(uint32_t baddr, uint32_t laddr, uint64_t wdata, int is_or);
+
 void p9_dd1_db_unicast_wr  (uint32_t addr, uint64_t data);
 
 //
