@@ -184,9 +184,9 @@ typedef enum RingOffset
     // Instance Rings
     EQ_REPR         = (0 | INSTANCE_RING_MARK),
     EX_L3_REPR      = (1 | INSTANCE_RING_MARK),
-    EX_L2_REPR      = (2 | INSTANCE_RING_MARK),
-    EX_L3_REFR_REPR = (3 | INSTANCE_RING_MARK),
-    EX_L3_REFR_TIME = (4 | INSTANCE_RING_MARK)
+    EX_L2_REPR      = (3 | INSTANCE_RING_MARK),
+    EX_L3_REFR_REPR = (5 | INSTANCE_RING_MARK),
+    EX_L3_REFR_TIME = (7 | INSTANCE_RING_MARK)
 } ringOffset;
 
 static const struct CHIPLET_DATA g_eqData =
