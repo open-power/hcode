@@ -74,8 +74,9 @@
 #define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(5)
 extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
-// Group0: Non-task hi-prty IRQs (gpe3_error/checkstop)
-#define IRQ_VEC_PRTY0_SGPE   (uint64_t)(0x0080800000000000)
+// Group0: Non-task hi-prty IRQs
+// (@todo RTC166767 reenable gpe2_halt/checkstop_gpe3 when ready)
+#define IRQ_VEC_PRTY0_SGPE   (uint64_t)(0x0000000000000000)
 // Group1: ipi3_high
 #define IRQ_VEC_PRTY1_SGPE   (uint64_t)(0x0000000800000000)
 // Group2: pig_type
@@ -83,8 +84,8 @@ extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 // Group3: ipi3_low
 #define IRQ_VEC_PRTY3_SGPE   (uint64_t)(0x0000000000000004)
 // Group4: We should never detect these
-#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0x0000000000000000)
-//#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0xFF7F7FF7FFFE6FFB)
+#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0x0100800000000000)
+//#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0xFEFF7FF7FFFE6FFB)
 
 #define IRQ_VEC_ALL_OUR_IRQS  ( IRQ_VEC_PRTY0_SGPE | \
                                 IRQ_VEC_PRTY1_SGPE | \
