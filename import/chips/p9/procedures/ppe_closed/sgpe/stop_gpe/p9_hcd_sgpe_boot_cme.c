@@ -99,10 +99,6 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
 {
     BootErrorCode_t l_retCode = CME_BOOT_SUCCESS;
 
-    //uint32_t cme_boot_loop;
-    uint32_t cme_bce_loop;
-    uint32_t cme_rdy_loop;
-
     do
     {
         int rc = 0;
@@ -348,7 +344,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
 
             } //for ( l_cmeIndex = 0 ....)
 
-            PPE_WAIT_CORE_CYCLES(cme_bce_loop, 256);
+            PPE_WAIT_CORE_CYCLES(256);
         } //while(l_bceCnt != activeCmeCnt)
 
         PK_TRACE("BCE done and resume scom_addr: 0x%08x", l_scomAddr);
@@ -405,7 +401,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                     cmeReadyList = cmeReadyList | l_cmeActiveBit;
                 }//end for
 
-                PPE_WAIT_CORE_CYCLES(cme_rdy_loop, 256);
+                PPE_WAIT_CORE_CYCLES(256);
             } // while l_cmeRdyCnt != activeCmeCnt
         } //if all CME kicked off
     }

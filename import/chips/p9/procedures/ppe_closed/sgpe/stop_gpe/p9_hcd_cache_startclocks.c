@@ -31,7 +31,7 @@ int
 p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 {
     int        rc = SGPE_STOP_SUCCESS;
-    int        loop, exloop, excount = 0;
+    int        exloop, excount = 0;
     uint32_t   id_vector;
     data64_t   scom_data;
     ocb_qcsr_t qcsr;
@@ -55,19 +55,19 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     {
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(0));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(loop, 48000);
+        PPE_WAIT_CORE_CYCLES(48000);
 #endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(1));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(loop, 4000);
+        PPE_WAIT_CORE_CYCLES(4000);
 #endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(2));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(loop, 16000);
+        PPE_WAIT_CORE_CYCLES(16000);
 #endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(3));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(loop, 4000);
+        PPE_WAIT_CORE_CYCLES(4000);
 #endif
     }
 
@@ -75,19 +75,19 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     {
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(4));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(loop, 48000);
+        PPE_WAIT_CORE_CYCLES(48000);
 #endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(5));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(loop, 4000);
+        PPE_WAIT_CORE_CYCLES(4000);
 #endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(6));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(loop, 16000);
+        PPE_WAIT_CORE_CYCLES(16000);
 #endif
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(7));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(loop, 4000);
+        PPE_WAIT_CORE_CYCLES(4000);
 #endif
     }
 
@@ -134,7 +134,7 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
 
     // 255 cache cycles
-    PPE_WAIT_CORE_CYCLES(loop, 510);
+    PPE_WAIT_CORE_CYCLES(510);
 
     PK_TRACE("Check chiplet_is_aligned");
 
@@ -290,8 +290,12 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     /// @todo Check the Global Checkstop FIR of dedicated EX chiplet
 
+#if NIMBUS_DD_LEVEL != 1
+
     PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
+
+#endif
 
     PK_TRACE("Set all l2s and partial bad l3 pscom mask");
     scom_data.value = PSCOM_MASK_ALL_L2;

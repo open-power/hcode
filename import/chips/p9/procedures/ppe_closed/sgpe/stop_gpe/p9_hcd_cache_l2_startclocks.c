@@ -32,7 +32,6 @@ int
 p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
 {
     int      rc = SGPE_STOP_SUCCESS;
-    uint32_t loop;
     uint64_t scom_data;
 
     PK_TRACE("Drop L2 Regional Fences via CPLT_CTRL1[8/9]");
@@ -69,7 +68,7 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
 
     // 255 cache cycles
-    PPE_WAIT_CORE_CYCLES(loop, 510);
+    PPE_WAIT_CORE_CYCLES(510);
 
     PK_TRACE("Check chiplet_is_aligned");
 
@@ -119,9 +118,12 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
     // -------------------------------
 
     /// @todo Check the Global Checkstop FIR of dedicated EX chiplet
+
 #if NIMBUS_DD_LEVEL != 1
-    PK_TRACE("Clear flushmode_inhibit via CPLT_CTRL0[2]");
+
+    PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
+
 #endif
 
     PK_TRACE("Set parital bad l2/l3 and stopped l2 pscom mask");

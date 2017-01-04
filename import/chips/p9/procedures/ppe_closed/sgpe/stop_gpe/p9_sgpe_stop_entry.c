@@ -77,7 +77,6 @@ p9_sgpe_stop_entry()
     uint32_t     climit;
     uint32_t     xentry;
     uint32_t     qentry;
-    uint32_t     loop;
     uint64_t     scom_data;
     uint64_t     temp_data;
     uint64_t     host_attn;
@@ -364,7 +363,7 @@ p9_sgpe_stop_entry()
             GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, qloop, 1),
                         BIT64(0));
 
-        PPE_WAIT_CORE_CYCLES(loop, 256)
+        PPE_WAIT_CORE_CYCLES(256)
 
         PK_TRACE("Assert partial bad L2/L3 and stopping/stoped l2 pscom masks via RING_FENCE_MASK_LATCH");
         scom_data = 0;

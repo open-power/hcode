@@ -63,7 +63,6 @@ p9_cme_stop_entry()
     uint32_t        core_stop1          = 0;
     uint32_t        core_raw            = 0;
     uint32_t        core;
-    uint32_t        loop;
     uint32_t        pm_states;
     uint32_t        lclr_data;
     uint64_t        scom_data;
@@ -352,7 +351,7 @@ p9_cme_stop_entry()
 
         // Waits quiesce done for at least 512 core cycles
         // MF: verify generate FCB otherwise math is wrong.
-        PPE_WAIT_CORE_CYCLES(loop, 512)
+        PPE_WAIT_CORE_CYCLES(512)
 
         PK_TRACE_INF("SE2.B: Interfaces Quiesced");
 

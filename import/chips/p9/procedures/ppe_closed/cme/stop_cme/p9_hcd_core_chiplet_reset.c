@@ -50,7 +50,6 @@ int
 p9_hcd_core_chiplet_reset(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
-    uint32_t loop;
     data64_t scom_data;
 
     PK_TRACE("Init NET_CTRL0[1,3-5,11-14,16,18,22,25,26],step needed for hotplug");
@@ -72,7 +71,7 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     PK_TRACE("Flip core glsmux to DPLL via PPM_CGCR[3]");
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
     // 200 core clocks
-    PPE_WAIT_CORE_CYCLES(loop, 200);
+    PPE_WAIT_CORE_CYCLES(200);
 
     PK_TRACE("Assert chiplet enable via NET_CTRL0[0]");
     CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(0));

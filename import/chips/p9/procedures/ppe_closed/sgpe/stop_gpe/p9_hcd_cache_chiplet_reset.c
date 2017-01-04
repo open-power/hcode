@@ -54,7 +54,6 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     int rc = SGPE_STOP_SUCCESS;
     uint64_t scom_data;
     uint32_t core, cbit;
-    uint32_t loop;
 
     for(core = 0, cbit = BIT32((quad << 2));
         core < CORES_PER_QUAD;
@@ -105,7 +104,7 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 #endif
 
     // 40 ref cycles
-    PPE_WAIT_CORE_CYCLES(loop, 1600);
+    PPE_WAIT_CORE_CYCLES(1600);
 
     PK_TRACE("Assert chiplet enable via NET_CTRL0[0]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, quad), BIT64(0));

@@ -31,7 +31,6 @@ int
 p9_hcd_core_startclocks(uint32_t core)
 {
     int      rc = CME_STOP_SUCCESS;
-    int      loop;
     uint32_t id_vector;
     data64_t scom_data;
 
@@ -97,7 +96,7 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data.value);
 
     // 255 cache cycles
-    PPE_WAIT_CORE_CYCLES(loop, 510);
+    PPE_WAIT_CORE_CYCLES(510);
 
     PK_TRACE("Check chiplet_is_aligned");
 
