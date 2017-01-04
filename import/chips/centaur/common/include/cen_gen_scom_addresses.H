@@ -26,7 +26,6 @@
 #define CEN_GEN_SCOM_ADDRESSES_H
 #include "cen_const_common.H"
 #include "cen_gen_scom_template.H"
-#include "cen_gen_scom_addresses_fixes.H"
 CEN_REG32 (CEN_ADDR_TRAP_REG_PCB, RULL(0x01010003));
 CEN_REG32 (CEN_ATOMIC_LOCK_REG_PCB, RULL(0x010103FF));
 CEN_REG32 (CEN_BIT_SEL_REG_2, RULL(0x000F0008));
