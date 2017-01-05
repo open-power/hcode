@@ -134,7 +134,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 
             GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L2_MODE_REG0, quad, 0), scom_data.value);
             scom_data.words.lower |= BIT32(6); // bit38
-            scom_data.words.upper |= (BIT32(15) | BIT32(21));
+            scom_data.words.upper |= BIT32(21);
             scom_data.words.upper &= ~BIT32(23);
 
             if (attr_proc_fabric_addr_bar_mode_small_system)
@@ -167,7 +167,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 
             GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L2_MODE_REG0, quad, 1), scom_data.value);
             scom_data.words.lower |= BIT32(6); // bit38
-            scom_data.words.upper |= (BIT32(15) | BIT32(21));
+            scom_data.words.upper |= BIT32(21);
             scom_data.words.upper &= ~BIT32(23);
 
             if (attr_proc_fabric_addr_bar_mode_small_system)
