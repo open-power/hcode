@@ -623,6 +623,10 @@ p9_sgpe_stop_exit()
                     continue;
                 }
 
+                PK_TRACE("Enable CME SRAM scrub engine via CSCR[1]");
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_CSCR_OR,
+                                              qloop, (ec_index >> 1)), BIT64(1));
+
                 PK_TRACE("Assert core[%d]-L2/CC quiesces via SICR[6/7,8/9]", ec_mask);
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, (ec_index >> 1)),
                             ((uint64_t)ec_mask << SHIFT64(7) |
