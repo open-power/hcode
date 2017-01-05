@@ -106,6 +106,7 @@
 #define C_CPLT_CTRL0_CLEAR     0x20000020
 #define C_CPLT_CTRL1_OR        0x20000011
 #define C_CPLT_CTRL1_CLEAR     0x20000021
+#define C_CPLT_CONF0           0x20000008
 #define C_CPLT_CONF0_OR        0x20000018
 #define C_CPLT_CONF0_CLEAR     0x20000028
 #define C_CPLT_STAT0           0x20000100

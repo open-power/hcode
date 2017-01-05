@@ -25,12 +25,18 @@
 
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
+#include "p9_hcode_image_defines.H"
 
 int
 p9_hcd_core_startclocks(uint32_t core)
 {
     int      rc = CME_STOP_SUCCESS;
-    uint64_t scom_data, loop;
+    int      loop;
+    uint32_t id_vector;
+    data64_t scom_data;
+
+    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET);
+    id_vector = pCmeImgHdr->g_cme_location_id;
 
     //FAPI_DBG("Set CPLT_CTRL0[AVP_MODE] for cache-contained execution");
     //FAPI_TRY(putScom(i_target, C_CPLT_CTRL0_OR, MASK_SET(5)));
@@ -39,10 +45,10 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
-    CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, scom_data);
-    scom_data = scom_data & ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
-    scom_data = scom_data | (BIT64(1) | BIT64(3) | BIT64(59));
-    CME_PUTSCOM(C_OPCG_ALIGN, core, scom_data);
+    CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, scom_data.value);
+    scom_data.value &= ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
+    scom_data.value |=  (BIT64(1) | BIT64(3) | BIT64(59));
+    CME_PUTSCOM(C_OPCG_ALIGN, core, scom_data.value);
 
     PK_TRACE("Drop partial good fences via CPLT_CTRL1[4-14]");
     CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, BITS64(4, 11));
@@ -60,14 +66,20 @@ p9_hcd_core_startclocks(uint32_t core)
 
     do
     {
-        CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_AND, scom_data);
+        CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_AND, scom_data.value);
     }
-    while(~scom_data & BIT64(13));
+    while((~(scom_data.words.upper)) & BIT32(13));
 
     MARK_TRAP(SX_STARTCLOCKS_ALIGN)
 
     PK_TRACE("Reset abstclk & syncclk muxsel(io_clk_sel) via CPLT_CTRL0[0:1]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BITS64(0, 2));
+
+    PK_TRACE("Set fabric chiplet ID values via EQ_CPLT_CONF0[48-51,52-54,56-60]");
+    CME_GETSCOM(C_CPLT_CONF0, core, CME_SCOM_AND, scom_data.value);
+    scom_data.words.lower &= ~(BITS32(16, 7) | BITS32(24, 5));
+    scom_data.words.lower |= id_vector;
+    CME_PUTSCOM(C_CPLT_CONF0, core, scom_data.value);
 
     // align_chiplets()
 
@@ -78,11 +90,11 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_CPLT_CTRL0_OR, core, BIT64(3));
 
     PK_TRACE("Set then unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
-    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data);
-    scom_data = scom_data | BITS64(7, 2);
-    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
-    scom_data = scom_data & ~BIT64(7);
-    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data);
+    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data.value);
+    scom_data.words.upper |=  BITS32(7, 2);
+    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data.value);
+    scom_data.words.upper &= ~BIT32(7);
+    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data.value);
 
     // 255 cache cycles
     PPE_WAIT_CORE_CYCLES(loop, 510);
@@ -91,9 +103,9 @@ p9_hcd_core_startclocks(uint32_t core)
 
     do
     {
-        CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
+        CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data.value);
     }
-    while((~scom_data) & BIT64(9));
+    while((~(scom_data.words.upper)) & BIT32(9));
 
     MARK_TRAP(SX_STARTCLOCKS_REGION)
 
@@ -106,21 +118,21 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_SCAN_REGION_TYPE, core, 0);
 
     PK_TRACE("Start core clocks(all but pll) via CLK_REGION");
-    scom_data = (CLK_START_CMD | CLK_REGION_ALL_BUT_PLL | CLK_THOLD_ALL);
-    CME_PUTSCOM(C_CLK_REGION, core, scom_data);
+    scom_data.value = (CLK_START_CMD | CLK_REGION_ALL_BUT_PLL | CLK_THOLD_ALL);
+    CME_PUTSCOM(C_CLK_REGION, core, scom_data.value);
 
     PK_TRACE("Polling for core clocks running via CPLT_STAT0[8]");
 
     do
     {
-        CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
+        CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data.value);
     }
-    while((~scom_data) & BIT64(8));
+    while((~(scom_data.words.upper)) & BIT32(8));
 
     PK_TRACE("Check core clock is running via CLOCK_STAT_SL[4-13]");
-    CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data);
+    CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data.value);
 
-    if(scom_data & CLK_REGION_ALL_BUT_PLL)
+    if(scom_data.value & CLK_REGION_ALL_BUT_PLL)
     {
         PK_TRACE("Core clock start failed");
         pk_halt();

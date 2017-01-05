@@ -25,15 +25,19 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
+#include "p9_hcode_image_defines.H"
 
 int
 p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 {
     int        rc = SGPE_STOP_SUCCESS;
     int        loop, exloop, excount = 0;
+    uint32_t   id_vector;
     data64_t   scom_data;
     ocb_qcsr_t qcsr;
 
+    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
+    id_vector = pSgpeImgHdr->g_sgpe_location_id;
 
     // -------------------------------
     // Prepare to cache startclocks
@@ -92,8 +96,8 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data.value);
-    scom_data.value = scom_data.value & ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
-    scom_data.value = scom_data.value | (BIT64(1) | BIT64(3) | BIT64(59));
+    scom_data.value &= ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
+    scom_data.value |=  (BIT64(1) | BIT64(3) | BIT64(59));
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data.value);
 
     PK_TRACE("Drop partial good fences via CPLT_CTRL1[4,5,6/7,11,12/13]");
@@ -108,7 +112,11 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     PK_TRACE("Reset abstclk & syncclk muxsel(io_clk_sel) via CPLT_CTRL0[0:1]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(0) | BIT64(1));
 
-    /// @todo set fabric node/chip ID values(read from nest chiplet)
+    PK_TRACE("Set fabric chiplet ID values via EQ_CPLT_CONF0[48-51,52-54,56-60]");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CONF0, quad), scom_data.value);
+    scom_data.words.lower &= ~(BITS32(16, 7) | BITS32(24, 5));
+    scom_data.words.lower |= id_vector;
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CONF0, quad), scom_data.value);
 
     // align_chiplets()
 
@@ -120,9 +128,9 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     PK_TRACE("Set then unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
-    scom_data.words.upper = scom_data.words.upper | BIT32(7);
+    scom_data.words.upper |=  BIT32(7);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
-    scom_data.words.upper = scom_data.words.upper & ~BIT32(7);
+    scom_data.words.upper &= ~BIT32(7);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
 
     // 255 cache cycles
