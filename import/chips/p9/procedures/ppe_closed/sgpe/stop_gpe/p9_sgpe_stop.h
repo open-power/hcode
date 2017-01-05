@@ -92,6 +92,7 @@ extern "C" {
 #define EQ_CPLT_CTRL0_CLEAR      0x10000020
 #define EQ_CPLT_CTRL1_OR         0x10000011
 #define EQ_CPLT_CTRL1_CLEAR      0x10000021
+#define EQ_CPLT_CONF0            0x10000008
 #define EQ_CPLT_CONF0_OR         0x10000018
 #define EQ_CPLT_CONF0_CLEAR      0x10000028
 #define EQ_CPLT_STAT0            0x10000100
