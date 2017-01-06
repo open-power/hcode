@@ -33,10 +33,11 @@
 OUTPUT_FORMAT(elf32-powerpc);
 
 // GPE3 is loaded at 0xfff30000
-#define SRAM_START 0xfff30000
-#define SRAM_LENGTH 0x10000
-#define PPE_DEBUG_PTRS_OFFSET 0x200
+#define SRAM_START            0xfff30000
+#define SRAM_LENGTH           0x10000
 #define SGPE_IMAGE_OFFSET     0x180
+#define PPE_DEBUG_PTRS_OFFSET 0x200
+#define PPE_DEBUG_PTRS_SIZE   0x24
 
 MEMORY
 {
@@ -75,6 +76,9 @@ SECTIONS
 
     _DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
+
+    _DUMP_PTRS_START = _DEBUG_PTRS_START + PPE_DEBUG_PTRS_SIZE;
+    .dump_ptrs _DUMP_PTRS_START : { *(.dump_ptrs) } > sram
 
     ////////////////////////////////
     // All non-vector code goes here
@@ -138,6 +142,7 @@ SECTIONS
         _PK_INITIAL_STACK = . - 8;
 
     } > sram
+
 //   .iplt . : { *(.iplt) } > sram
 
     _SGPE_END = .;

@@ -72,6 +72,9 @@ SECTIONS
     _DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
 
+    _DUMP_PTRS_START = _DEBUG_PTRS_START + PPE_DEBUG_PTRS_SIZE;
+    .dump_ptrs _DUMP_PTRS_START : { *(.dump_ptrs) } > sram
+
     CME_IMG_START = .;
     ////////////////////////////////
     // All non-vector code goes here
@@ -130,6 +133,6 @@ SECTIONS
 
 //   .iplt . : { *(.iplt) } > sram
 
-   _CME_END = .;
-   _CME_SIZE = . - SRAM_START;
+    _CME_END = .;
+    _CME_SIZE = . - SRAM_START;
 }

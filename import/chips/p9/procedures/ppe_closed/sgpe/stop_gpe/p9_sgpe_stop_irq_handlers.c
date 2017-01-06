@@ -27,7 +27,7 @@
 #include "p9_sgpe_stop_enter_marks.h"
 #include "p9_sgpe_irq.h"
 
-SgpeStopRecord G_sgpe_stop_record =
+SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
 {
     // core levels
     {   {0, 0, 0, 0},
