@@ -34,6 +34,8 @@
 /// \brief Application specific overrides go here.
 ///
 
+#define USE_PPE_IMPRECISE_MODE
+
 /// @todo RTC 161182
 
 #if NIMBUS_DD_LEVEL == 1
