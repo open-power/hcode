@@ -703,6 +703,20 @@ p9_cme_stop_exit()
         PK_TRACE("Disable RAM mode via RAM_MODEREG");
         CME_PUTSCOM(RAM_MODEREG, core, 0);
 
+        PK_TRACE("Clear scratch/spr used in RAM");
+        CME_PUTSCOM(SPR_MODE,  core, 0);
+        CME_PUTSCOM(SCOM_SPRC, core, 0);
+
+        if (core & CME_MASK_C0)
+        {
+            CME_PUTSCOM(SCRACTH0,  CME_MASK_C0, 0);
+        }
+
+        if (core & CME_MASK_C1)
+        {
+            CME_PUTSCOM(SCRACTH1,  CME_MASK_C1, 0);
+        }
+
 #endif
 // Nimbus DD2+
 #else
