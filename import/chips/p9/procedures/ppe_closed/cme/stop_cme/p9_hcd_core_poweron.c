@@ -58,10 +58,10 @@ p9_hcd_core_poweron(uint32_t core)
     if (core & CME_MASK_C0)
     {
         // vdd_pfet_force_state = 11 (Force Von)
-        PK_TRACE("Power Off Core VDD");
+        PK_TRACE("Power On Core VDD");
         CME_PUTSCOM(PPM_PFCS_OR, CME_MASK_C0, BITS64(0, 2));
 
-        PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle)");
+        PK_TRACE("Poll for vdd_pfets_enabled_sense");
 
         do
         {
@@ -73,16 +73,16 @@ p9_hcd_core_poweron(uint32_t core)
     if (core & CME_MASK_C1)
     {
         // vdd_pfet_force_state = 11 (Force Von)
-        PK_TRACE("Power Off Core VDD");
+        PK_TRACE("Power On Core VDD");
         CME_PUTSCOM(PPM_PFCS_OR, CME_MASK_C1, BITS64(0, 2));
 
-        PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle)");
+        PK_TRACE("Poll for vdd_pfets_enabled_sense");
 
         do
         {
-            CME_GETSCOM(PPM_PFCS, CME_MASK_C1, CME_SCOM_AND, scom_data);
+            CME_GETSCOM(PPM_PFSNS, CME_MASK_C1, CME_SCOM_AND, scom_data);
         }
-        while(!(scom_data & BIT64(42)));
+        while(!(scom_data & BIT64(0)));
     }
 
     // vdd_pfet_force_state = 00 (Nop)

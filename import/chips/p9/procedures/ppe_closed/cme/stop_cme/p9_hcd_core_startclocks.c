@@ -140,16 +140,14 @@ p9_hcd_core_startclocks(uint32_t core)
     PK_TRACE("Core clock is now running");
     MARK_TRAP(SX_STARTCLOCKS_DONE)
 
-    /// @todo add attr_pg control
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
 
-    /// @todo xstop check
+    /// @todo RTC166917 Check the Global Checkstop FIR
 
     PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(2));
 
-    /// @todo add ipl mode attr control
     PK_TRACE("Drop Core-L2/CC/TLBIE Quiesces via CME_LCL_SICR[6,8]/[7,9][21]");
     out32(CME_LCL_SICR_CLR, ((core << SHIFT32(7)) | (core << SHIFT32(9)) | BIT32(21)));
 

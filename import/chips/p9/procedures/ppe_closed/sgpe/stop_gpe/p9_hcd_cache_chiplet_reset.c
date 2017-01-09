@@ -220,9 +220,9 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 
     do
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, quad), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, quad), scom_data);
     }
-    while(!(scom_data & BIT64(50)));
+    while(!(scom_data & BIT64(2)));
 
     // vdd_pfet_force_state = 00 (Nop)
     // vcs_pfet_force_state = 00 (Nop)
@@ -274,14 +274,6 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 
     p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
 #endif
-
-    /// content of p9_hcd_cache_chiplet_l3_dcc_setup below:
-    /// @todo scan_with_setpulse_module(l3 dcc)
-    //PK_TRACE("Drop L3 DCC bypass via NET_CTRL1[1]");
-    //GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WAND, quad), ~BIT64(1));
-    /// @todo add VDM_ENABLE attribute control
-    //PK_TRACE("Assert vdm enable via CPPM_VDMCR[0]");
-    //GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_OR, quad), BIT64(0));
 
     return rc;
 }

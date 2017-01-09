@@ -152,7 +152,8 @@ main(int argc, char** argv)
 
     if( fapiRc != fapi2::FAPI2_RC_SUCCESS )
     {
-        PK_PANIC(PK_UNUSED_0d1f);  // @todo RTC XXXXXX for correct panic codes
+        PK_TRACE_INF("ERROR: FAPI2 Init Failed. HALT SGPE!");
+        pk_halt();
     }
 
     // Initialize the thread control block for G_p9_sgpe_stop_enter_thread

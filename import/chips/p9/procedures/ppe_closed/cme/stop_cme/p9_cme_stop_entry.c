@@ -421,7 +421,7 @@ p9_cme_stop_entry()
         PK_TRACE("Drop sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
         CME_PUTSCOM(C_CPLT_CONF0_CLEAR, core, BIT64(34));
 
-        /// @todo add VDM_ENABLE attribute control
+        /// @todo RTC166918 add VDM_ENABLE attribute control
         PK_TRACE("Drop vdm enable via CPPM_VDMCR[0]");
         CME_PUTSCOM(PPM_VDMCR_CLR, core, BIT64(0));
 
@@ -719,13 +719,13 @@ p9_cme_stop_entry()
             // vdd_pfet_force_state = 01 (Force Voff)
             CME_PUTSCOM(PPM_PFCS_OR, core, BIT64(1));
 
-            PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle) via PFCS[42]");
+            PK_TRACE("Poll for vdd_pfets_disabled_sense via PFSNS[1]");
 
             do
             {
-                CME_GETSCOM(PPM_PFCS, core, CME_SCOM_AND, scom_data);
+                CME_GETSCOM(PPM_PFSNS, core, CME_SCOM_AND, scom_data);
             }
-            while(!(scom_data & BIT64(42)));
+            while(!(scom_data & BIT64(1)));
 
             PK_TRACE("Turn off force voff via PFCS[0-1]");
             // vdd_pfet_force_state = 00 (Nop)
@@ -851,8 +851,6 @@ p9_cme_stop_entry()
             // Note: chtm purge will be done in SGPE
             out32(CME_LCL_SICR_OR, BIT32(18) | BIT32(21));
             out32(CME_LCL_SICR_OR, BIT32(22));
-
-            // todo: poll for tlbie quiesce done?
 
             PK_TRACE("Poll for purged done via EISR[22,23]");
 

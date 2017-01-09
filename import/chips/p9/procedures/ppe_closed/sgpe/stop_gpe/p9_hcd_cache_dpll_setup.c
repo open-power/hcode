@@ -94,7 +94,9 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     PK_TRACE("Set scan ratio to 4:1 in bypass mode via OPCG_ALIGN[47-51]");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
     scom_data &= ~BITS64(47, 5);
+#if !EPM_P9_TUNING
     scom_data |=  BITS64(50, 2);
+#endif
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
 
     PK_TRACE("Drop skew/duty cycle adjust func_clksel via NET_CTRL0[22]");

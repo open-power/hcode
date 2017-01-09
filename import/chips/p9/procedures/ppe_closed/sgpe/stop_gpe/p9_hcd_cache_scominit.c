@@ -33,8 +33,7 @@ int
 p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
     int rc = SGPE_STOP_SUCCESS;
-    /// @todo change this back to 0, when flag bit is ready via image build
-    int attr_proc_fabric_addr_bar_mode_small_system = 1; // default small
+    int attr_proc_fabric_addr_bar_mode_small_system = 0; // default large
     int attr_proc_fabric_dump_mode_chip_is_node     = 0; // default group
     data64_t scom_data;
     sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);

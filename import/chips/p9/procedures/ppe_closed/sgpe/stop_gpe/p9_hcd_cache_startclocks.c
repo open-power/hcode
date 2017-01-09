@@ -176,7 +176,7 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     PK_TRACE("Check cache clock running via CLOCK_STAT_SL[4-14]");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data.value);
 
-    if (scom_data.value & (CLK_REGION_ALL_BUT_EX_ANEP_DPLL |
+    if (scom_data.value & (CLK_REGION_ALL_BUT_EX_DPLL      |
                            ((uint64_t)ex << SHIFT64(7))    |
                            ((uint64_t)ex << SHIFT64(13))))
     {
@@ -284,11 +284,10 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
         }
     }
 
-    /// @todo add ipl mode attr control
     PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(18));
 
-    /// @todo Check the Global Checkstop FIR of dedicated EX chiplet
+    /// @todo RTC166917 Check the Global Checkstop FIR
 
 #if NIMBUS_DD_LEVEL != 1
 

@@ -60,6 +60,7 @@ extern "C" int p9_hcd_cache_chiplet_l3_dcc_setup(uint32_t quad)
     FAPI_DBG("Drop L3 DCC bypass");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WAND, quad), ~BIT64(1));
 
+    /// @todo RTC166918 add VDM_ENABLE attribute control
     FAPI_DBG("Check if VDMs are to be enabled. If so, power them on");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_OR, quad), BIT64(0));
 

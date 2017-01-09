@@ -91,7 +91,9 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     PK_TRACE("Set scan ratio to 2:1 in non-bypass mode via OPCG_ALIGN[47-51]");
     CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, scom_data.value);
     scom_data.words.lower &= ~BITS32(15, 5);
+#if !EPM_P9_TUNING
     scom_data.words.lower |= BIT32(19);
+#endif
     CME_PUTSCOM(C_OPCG_ALIGN, core, scom_data.value);
 
     // Marker for scan0
@@ -101,7 +103,7 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     p9_hcd_core_scan0(core, SCAN0_REGION_ALL, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
 #endif
 
-    /// @todo add VDM_ENABLE attribute control
+    /// @todo RTC166918 add VDM_ENABLE attribute control
     PK_TRACE("Assert vdm enable via CPPM_VDMCR[0]");
     CME_PUTSCOM(PPM_VDMCR_OR, core, BIT64(0));
 

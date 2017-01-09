@@ -117,7 +117,7 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
     // Cleaning up
     // -------------------------------
 
-    /// @todo Check the Global Checkstop FIR of dedicated EX chiplet
+    /// @todo RTC166917 Check the Global Checkstop FIR
 
 #if NIMBUS_DD_LEVEL != 1
 
