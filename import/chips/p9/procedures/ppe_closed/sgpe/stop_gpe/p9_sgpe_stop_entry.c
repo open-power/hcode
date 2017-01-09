@@ -864,7 +864,7 @@ p9_sgpe_stop_entry()
         PK_TRACE("Drop CME_INTERPPM_DPLL_ENABLE after DPLL is stopped via QPMMR[26]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26));
 
-        /// @todo add VDM_ENABLE attribute control
+        /// @todo RTC166918 add VDM_ENABLE attribute control
         PK_TRACE("Drop vdm enable via CPPM_VDMCR[0]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_CLR, qloop), BIT64(0));
 
@@ -994,27 +994,25 @@ p9_sgpe_stop_entry()
             // vcs_pfet_force_state = 01 (Force Voff)
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(3));
 
-            PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle) via PFCS[50]");
-            // todo: poll the sense line instead
+            PK_TRACE("Poll for vcs_pfets_disabled_sense via PFSNS[3]");
 
             do
             {
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, qloop), scom_data);
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data);
             }
-            while(!(scom_data & BIT64(50)));
+            while(!(scom_data & BIT64(3)));
 
             PK_TRACE("Power off VDD via PFCS[0-1]");
             // vdd_pfet_force_state = 01 (Force Voff)
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(1));
 
-            PK_TRACE("Poll for power gate sequencer state: 0x8 (FSM Idle) via PFCS[42]");
-            // todo: poll the sense line instead
+            PK_TRACE("Poll for vdd_pfets_disabled_sense via PFSNS[1]");
 
             do
             {
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS, qloop), scom_data);
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data);
             }
-            while(!(scom_data & BIT64(42)));
+            while(!(scom_data & BIT64(1)));
 
             PK_TRACE("Turn off force voff via PFCS[0-3]");
             // vdd_pfet_force_state = 00 (Nop)
