@@ -25,6 +25,7 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_enter_marks.h"
+#include "p9_hcode_image_defines.H"
 
 extern SgpeStopRecord                           G_sgpe_stop_record;
 
@@ -576,7 +577,13 @@ p9_sgpe_stop_entry()
             GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 1), BIT64(0));
         }
 
-        // todo: stop debug trace, attribute may be needed
+        // disable cme trace array
+        sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
+
+        if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(4))
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(1));
+        }
 
         PK_TRACE("Poll for L3 purge done via EX_PM_PURGE_REG[0]");
 
@@ -717,7 +724,6 @@ p9_sgpe_stop_entry()
         while(!(scom_data & BIT64(31)));
 
         PK_TRACE("Drop powerbus purge via QCCR[30]");
-        // todo may need to move this to wakeup
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(30));
 
         PK_TRACE_INF("SE11.B: PowerBus Purged");
@@ -733,7 +739,25 @@ p9_sgpe_stop_entry()
         MARK_TAG(SE_QUIESCE_QUAD, (32 >> qloop))
         //======================================
 
-        /// @todo halt cme here
+        PK_TRACE("Halting CMEs");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR, qloop, 0), BIT64(3));
+        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR, qloop, 1), BIT64(3));
+
+        do
+        {
+            GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 0), scom_data);
+        }
+        while(!(scom_data & BIT64(0)));
+
+        PK_TRACE("CME0 Halted");
+
+        do
+        {
+            GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 1), scom_data);
+        }
+        while(!(scom_data & BIT64(0)));
+
+        PK_TRACE("CME1 Halted");
 
         PK_TRACE("Assert refresh quiesce prior to L3 (refresh domain) stop clk via EX_DRAM_REF_REG[7]");
 
