@@ -990,6 +990,15 @@ p9_sgpe_stop_exit()
             // reset clevel to 0 if core is going to wake up
             G_sgpe_stop_record.level[qloop][cloop] = 0;
 
+#if NIMBUS_DD_LEVEL != 1
+
+            p9_dd1_cppm_unicast_wr(
+                GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
+                GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,  ((qloop << 2) + cloop)),
+                BIT64(0), OR_OP);
+
+#endif
+
             PK_TRACE_DBG("Check: Core[%d] will clear wakeup_notify_select",
                          ((qloop << 2) + cloop));
             p9_dd1_cppm_unicast_wr(

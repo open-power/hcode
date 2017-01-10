@@ -1265,8 +1265,12 @@ p9_cme_stop_entry()
             }
         }
 
-        PK_TRACE("Switch Core%d PPM wakeup to STOP-GPE via CPMMR[13]", core);
-        CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(13));
+#if NIMBUS_DD_LEVEL != 1
+
+        PK_TRACE("Drop PPM_WRITE_DISABLE via CPMMR[0]");
+        CME_PUTSCOM(CPPM_CPMMR_CLR, core, BIT64(0));
+
+#endif
 
 #if DEBUG_RUNTIME_STATE_CHECK
 
@@ -1294,6 +1298,9 @@ p9_cme_stop_entry()
         }
 
 #endif
+
+        PKTRACE("Switch Core%d PPM wakeup to STOP-GPE via CPMMR[13]", core);
+        CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(13));
 
         PK_TRACE_INF("SE5.B: Handed off to SGPE");
 
