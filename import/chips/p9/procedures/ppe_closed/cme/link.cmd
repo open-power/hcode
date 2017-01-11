@@ -127,10 +127,9 @@ SECTIONS
     // It's not clear why boot.S is generating empty .glink,.iplt
 
     .rela   . : { *(.rela*) } > sram
-    .rwdata . : { *(.data*) *(.bss*)
+    .rwdata . : { KEEP(*(.data*)) *(.bss*)
         . = ALIGN(8);
         _PK_INITIAL_STACK_LIMIT = .;
-
         FILL(0xA55A);
         . = . + INITIAL_STACK_SIZE;
         . = ALIGN(8);

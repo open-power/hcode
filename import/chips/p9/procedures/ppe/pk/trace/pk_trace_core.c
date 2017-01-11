@@ -39,9 +39,10 @@
 void pk_trace_timer_callback(void* arg);
 
 #if (PK_TRACE_SUPPORT && PK_TIMER_SUPPORT)
+extern PkTimer       g_pk_trace_timer __attribute__((section (".sdata")));
 
 //Static initialization of the trace timer
-PkTimer g_pk_trace_timer =
+PkTimer g_pk_trace_timer __attribute__ ((section (".sdata"))) =
 {
     .deque = PK_DEQUE_ELEMENT_INIT(),
     .timeout = 0,
@@ -50,7 +51,7 @@ PkTimer g_pk_trace_timer =
 };
 
 //Static initialization of the pk trace buffer
-PkTraceBuffer g_pk_trace_buf =
+PkTraceBuffer g_pk_trace_buf __attribute__ ((section (".sdata"))) =
 {
     .version            = PK_TRACE_VERSION,
     .image_str          = PPE_IMG_STRING,
