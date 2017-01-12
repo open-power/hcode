@@ -32,7 +32,6 @@ int
 p9_hcd_core_gptr_time_initf(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
-    // Markers needed for gptr time initf
 
     PK_TRACE_DBG("Scan ec_gptr ring core value %d", core);
     putRing(core, CME_SCOM_EQ, ec_gptr);

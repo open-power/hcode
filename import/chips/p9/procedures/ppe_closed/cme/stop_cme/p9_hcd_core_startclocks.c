@@ -30,9 +30,9 @@
 int
 p9_hcd_core_startclocks(uint32_t core)
 {
-    int      rc = CME_STOP_SUCCESS;
-    uint32_t id_vector;
-    data64_t scom_data;
+    int      rc        = CME_STOP_SUCCESS;
+    uint32_t id_vector = 0;
+    data64_t scom_data = {0};
 
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET);
     id_vector = pCmeImgHdr->g_cme_location_id;
@@ -73,7 +73,7 @@ p9_hcd_core_startclocks(uint32_t core)
 
     PK_TRACE("Set fabric chiplet ID values via EQ_CPLT_CONF0[48-51,52-54,56-60]");
     CME_GETSCOM(C_CPLT_CONF0, core, CME_SCOM_AND, scom_data.value);
-    scom_data.words.lower &= ~(BITS32(16, 7) | BITS32(24, 5));
+    scom_data.words.lower &= ~(BITS64SH(48, 7) | BITS64SH(56, 5));
     scom_data.words.lower |= id_vector;
     CME_PUTSCOM(C_CPLT_CONF0, core, scom_data.value);
 

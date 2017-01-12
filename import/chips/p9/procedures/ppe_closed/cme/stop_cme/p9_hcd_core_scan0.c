@@ -48,7 +48,7 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
     // OPCG GO, LBIST mode
     CME_PUTSCOM(PERV_OPCG_REG0,  core, BIT64(1));
 #else
-    uint64_t scom_data;
+    uint64_t scom_data = 0;
     PK_TRACE("raise Vital clock region fence");
     CME_PUTSCOM(PERV_CPLT_CTRL1_OR, core, BIT64(3));
 

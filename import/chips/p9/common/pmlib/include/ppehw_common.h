@@ -66,6 +66,10 @@ typedef union
 #define SHIFT16(b) (15-(b))
 #define SHIFT8(b)  (7-(b))
 
+/// Macro used for second word operation
+#define BIT64SH(bit64)          BIT32((bit64-32))
+#define BITS64SH(bit64, size)   BITS32((bit64-32), size)
+#define SHIFT64SH(bit64)        SHIFT32((bit64-32))
 
 /// Mark and Tag
 

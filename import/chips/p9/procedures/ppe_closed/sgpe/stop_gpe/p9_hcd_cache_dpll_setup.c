@@ -29,8 +29,8 @@
 int
 p9_hcd_cache_dpll_setup(uint32_t quad)
 {
-    int      rc = SGPE_STOP_SUCCESS;
-    uint64_t scom_data;
+    int      rc        = SGPE_STOP_SUCCESS;
+    uint64_t scom_data = 0;
 
     // This is necessary to ensure that the DPLL is in Mode 1.
     // If not, the lock times will go from ~30us to 3-5ms

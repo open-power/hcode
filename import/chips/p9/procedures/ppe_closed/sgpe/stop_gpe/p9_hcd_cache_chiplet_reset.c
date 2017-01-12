@@ -51,9 +51,10 @@ enum P9_HCD_CACHE_CHIPLET_RESET_CONSTANTS
 int
 p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 {
-    int rc = SGPE_STOP_SUCCESS;
-    uint64_t scom_data;
-    uint32_t core, cbit;
+    int rc              = SGPE_STOP_SUCCESS;
+    uint64_t scom_data  = 0;
+    uint32_t core       = 0;
+    uint32_t cbit       = 0;
 
     for(core = 0, cbit = BIT32((quad << 2));
         core < CORES_PER_QUAD;

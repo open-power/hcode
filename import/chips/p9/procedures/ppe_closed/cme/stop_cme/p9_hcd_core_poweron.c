@@ -47,7 +47,7 @@ p9_hcd_core_poweron(uint32_t core)
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(0));
 
 #if !STOP_PRIME
-    uint64_t scom_data;
+    uint64_t scom_data = 0;
 
     // vdd_pfet_val/sel_override     = 0 (disbaled)
     // vdd_pfet_regulation_finger_en = 0 (controled by FSM)

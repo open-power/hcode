@@ -30,9 +30,11 @@
 int
 p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 {
-    int        rc = SGPE_STOP_SUCCESS;
-    uint32_t   id_vector;
-    data64_t   scom_data;
+    uint32_t   rc        = SGPE_STOP_SUCCESS;
+    uint32_t   id_vector = 0;
+    uint32_t   ex_mask   = 0;
+    uint32_t   bitloc    = 0;
+    data64_t   scom_data = {0};
 
     sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
     id_vector = pSgpeImgHdr->g_sgpe_location_id;
@@ -49,44 +51,29 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     // QCCR[3/7] EDRAM_VPP_ENABLE_DC
     // 0x0 -> 0x8 -> 0xC -> 0xE -> 0xF to turn on edram
     // stagger EDRAM turn-on per EX (not both at same time)
-    if (ex & FST_EX_IN_QUAD)
+    for (ex_mask = 2; ex_mask; ex_mask--)
     {
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(0));
-#if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(48000);
-#endif
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(1));
-#if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(4000);
-#endif
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(2));
-#if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(16000);
-#endif
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(3));
-#if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(4000);
-#endif
-    }
+        if (ex & ex_mask)
+        {
+            bitloc = (ex_mask & 1) << 2;
 
-    if (ex & SND_EX_IN_QUAD)
-    {
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(4));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(bitloc));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(48000);
+            PPE_WAIT_CORE_CYCLES(48000);
 #endif
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(5));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64((bitloc + 1)));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(4000);
+            PPE_WAIT_CORE_CYCLES(4000);
 #endif
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(6));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64((bitloc + 2)));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(16000);
+            PPE_WAIT_CORE_CYCLES(16000);
 #endif
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64(7));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, quad), BIT64((bitloc + 3)));
 #if !EPM_P9_TUNING
-        PPE_WAIT_CORE_CYCLES(4000);
+            PPE_WAIT_CORE_CYCLES(4000);
 #endif
+        }
     }
 
     PK_TRACE("Assert cache EX1 ID bit2");
@@ -112,7 +99,7 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     PK_TRACE("Set fabric chiplet ID values via EQ_CPLT_CONF0[48-51,52-54,56-60]");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CONF0, quad), scom_data.value);
-    scom_data.words.lower &= ~(BITS32(16, 7) | BITS32(24, 5));
+    scom_data.words.lower &= ~(BITS64SH(48, 7) | BITS64SH(56, 5));
     scom_data.words.lower |= id_vector;
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CONF0, quad), scom_data.value);
 
@@ -184,8 +171,6 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     PK_TRACE("Cache clocks running now");
 
-    /// @todo deskew_init()
-
     // -------------------------------
     // Cleaning up
     // -------------------------------
@@ -214,13 +199,14 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data.value);
 
-    PK_TRACE("Drop refresh quiesce");
+    PK_TRACE("Drop refresh quiesce and LCO Disable");
 
     if (ex & FST_EX_IN_QUAD)
     {
         GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data.value);
         scom_data.words.upper &= ~BIT32(7);
         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data.value);
+        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG, quad, 0), 0);
     }
 
     if (ex & SND_EX_IN_QUAD)
@@ -228,17 +214,6 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
         GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data.value);
         scom_data.words.upper &= ~BIT32(7);
         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data.value);
-    }
-
-    PK_TRACE("Drop LCO Disable");
-
-    if (ex & FST_EX_IN_QUAD)
-    {
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG, quad, 0), 0);
-    }
-
-    if (ex & SND_EX_IN_QUAD)
-    {
         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG, quad, 1), 0);
     }
 

@@ -30,9 +30,89 @@
 
 extern CmeStopRecord G_cme_stop_record;
 
-#if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
+#if HW386841_DD1_DSL_STOP1_FIX
 
-CoreThreadsInfo G_dsl[MAX_CORES_PER_CME] = {{0}, {0}};
+uint8_t G_dsl[MAX_CORES_PER_CME][MAX_THREADS_PER_CORE] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
+
+#endif
+
+#if !SKIP_EXIT_CATCHUP
+
+int
+p9_cme_stop_exit_catchup(uint32_t* core, uint32_t* deeper_core,
+                         int* d2u4_flag, uint32_t* spwu_stop)
+{
+    int      rc            = 0;
+    uint8_t  catchup_level = 0;
+    uint32_t core_catchup  = 0;
+    uint32_t wakeup        = 0;
+    data64_t scom_data     = {0};
+
+    wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
+    core_catchup = (~(*core)) &
+                   ((wakeup >> 4) | (wakeup >> 2) | wakeup);
+    core_catchup = core_catchup & G_cme_stop_record.core_enabled &
+                   (~G_cme_stop_record.core_running);
+
+    if (core_catchup & CME_MASK_C0)
+    {
+        CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
+
+        if (scom_data.words.upper & BIT32(13))
+        {
+            core_catchup = core_catchup - CME_MASK_C0;
+        }
+    }
+
+    if (core_catchup & CME_MASK_C1)
+    {
+        CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
+
+        if (scom_data.words.upper & BIT32(13))
+        {
+            core_catchup = core_catchup - CME_MASK_C1;
+        }
+    }
+
+    if (core_catchup)
+    {
+        // pcbmux grant
+        out32(CME_LCL_SICR_OR,  (core_catchup << SHIFT32(11)));
+        // chtm purge done
+        out32(CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
+
+        scom_data.words.lower = 0;
+        scom_data.words.upper = SSH_EXIT_IN_SESSION;
+        CME_PUTSCOM(PPM_SSHSRC, core_catchup, scom_data.value);
+
+        catchup_level = (core_catchup & CME_MASK_C0)   ?
+                        G_cme_stop_record.act_level[0] :
+                        G_cme_stop_record.act_level[1] ;
+
+        *spwu_stop |= (core_catchup) & (wakeup >> 2);
+
+        PK_TRACE_DBG("Catch: core[%d] running[%d] \
+                             core_catchup[%d] catchup_level[%d]",
+                     *core, G_cme_stop_record.core_running,
+                     core_catchup, catchup_level);
+
+        while((core_catchup & (in32(CME_LCL_SISR) >>
+                               SHIFT32(11))) != core_catchup);
+
+        if (catchup_level < STOP_LEVEL_4)
+        {
+            *deeper_core  = *core;
+            *d2u4_flag    = 1;
+        }
+        else
+        {
+            *core = core_catchup;
+            rc    = 1;
+        }
+    }
+
+    return rc;
+}
 
 #endif
 
@@ -42,32 +122,28 @@ p9_cme_stop_exit()
     int          d2u4_flag         = 0;
     int          catchup_ongoing_a = 0;
     int          catchup_ongoing_b = 0;
-    uint8_t      target_level;
+    uint8_t      target_level      = 0;
     uint8_t      deeper_level      = 0;
     uint32_t     deeper_core       = 0;
-    uint32_t     wakeup;
-    uint32_t     core;
+    uint32_t     wakeup            = 0;
+    uint32_t     core              = 0;
+    uint32_t     core_mask         = 0;
+    uint32_t     act_stop_level    = 0;
+    data64_t     scom_data         = {0};
 #if !SPWU_AUTO
-    uint32_t     spwu_stop;
-    uint32_t     spwu_wake;
+    uint32_t     spwu_stop         = 0;
+    uint32_t     spwu_wake         = 0;
 #endif
-#if !STOP_PRIME
-#if !SKIP_EXIT_CATCHUP
-    uint8_t      catchup_level;
-    uint32_t     core_catchup;
-#endif
-#endif
-#if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
-    uint8_t      dsl;
-    uint8_t      thread;
-    uint8_t      G_srr1[MAX_CORES_PER_CME][MAX_THREADS_PER_CORE] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
-    uint32_t     temp0             = 0;
-    uint32_t     temp1             = 0;
+#if HW386841_DD1_DSL_STOP1_FIX
+    uint8_t      srr1[MAX_THREADS_PER_CORE] = {0, 0, 0, 0};
+    uint32_t     pscrs             = 0;
+    uint32_t     bitloc            = 0;
+    uint32_t     thread            = 0;
+    uint32_t     temp_dsl          = 0;
+    uint32_t     temp_srr1         = 0;
+    uint32_t     core_index        = 0;
     uint32_t     core_stop1        = 0;
-    cme_scom_pscrs00_t pscrs;
 #endif
-    ppm_sshsrc_t hist;
-    data64_t     scom_data;
 
     //--------------------------------------------------------------------------
     PK_TRACE_INF("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");
@@ -78,23 +154,16 @@ p9_cme_stop_exit()
     core   = ((wakeup >> 4) | (wakeup >> 2) | wakeup) & CME_MASK_BC;
 
     // ignore wakeup when it suppose to be handled by sgpe
-    if (core & CME_MASK_C0)
+    for (core_mask = 2; core_mask; core_mask--)
     {
-        CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
-
-        if (scom_data.words.upper & BIT32(13))
+        if (core & core_mask)
         {
-            core = core - CME_MASK_C0;
-        }
-    }
+            CME_GETSCOM(CPPM_CPMMR, core_mask, CME_SCOM_AND, scom_data.value);
 
-    if (core & CME_MASK_C1)
-    {
-        CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
-
-        if (scom_data.words.upper & BIT32(13))
-        {
-            core = core - CME_MASK_C1;
+            if (scom_data.words.upper & BIT32(13))
+            {
+                core = core - core_mask;
+            }
         }
     }
 
@@ -104,8 +173,8 @@ p9_cme_stop_exit()
 
     PK_TRACE_DBG("Check: Core Select[%d] Wakeup[%x] Actual Stop Levels[%d %d]",
                  core, wakeup,
-                 G_cme_stop_record.act_level_c0,
-                 G_cme_stop_record.act_level_c1);
+                 G_cme_stop_record.act_level[0],
+                 G_cme_stop_record.act_level[1]);
 
 
 
@@ -149,17 +218,16 @@ p9_cme_stop_exit()
     MARK_TAG(BEGINSCOPE_STOP_EXIT, core)
     //==================================
 
-#if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
+#if HW386841_DD1_DSL_STOP1_FIX
 
     // figure out who needs stop1 exit
-    if ((core & CME_MASK_C0) && G_cme_stop_record.act_level_c0 == STOP_LEVEL_1)
+    for (core_mask = 2; core_mask; core_mask--)
     {
-        core_stop1 |= CME_MASK_C0;
-    }
-
-    if ((core & CME_MASK_C1) && G_cme_stop_record.act_level_c1 == STOP_LEVEL_1)
-    {
-        core_stop1 |= CME_MASK_C1;
+        if((core & core_mask) &&
+           G_cme_stop_record.act_level[core_mask & 1] == STOP_LEVEL_1)
+        {
+            core_stop1 |= core_mask;
+        }
     }
 
     PK_TRACE_DBG("SX0.B: Core[%d] Requested Stop1 Exit", core_stop1);
@@ -178,23 +246,23 @@ p9_cme_stop_exit()
     // set target_level to STOP level for c0
     // unless c1(also or only) wants to wakeup
     target_level = deeper_level =
-                       (core == CME_MASK_C0) ? G_cme_stop_record.act_level_c0 :
-                       G_cme_stop_record.act_level_c1;
+                       (core == CME_MASK_C0) ? G_cme_stop_record.act_level[0] :
+                       G_cme_stop_record.act_level[1];
 
     // If both cores want to wakeup but are in different STOP levels,
     // set deeper_level to the deeper level targeted by deeper core
     if ((core == CME_MASK_BC) &&
-        (G_cme_stop_record.act_level_c0 != G_cme_stop_record.act_level_c1))
+        (G_cme_stop_record.act_level[0] != G_cme_stop_record.act_level[1]))
     {
         // Assume C0 is deeper, target_level is already set to C1
-        deeper_level = G_cme_stop_record.act_level_c0;
+        deeper_level = G_cme_stop_record.act_level[0];
         deeper_core  = CME_MASK_C0;
 
         // Otherwise correct assumption on which one is in lighter level
-        if (G_cme_stop_record.act_level_c0 < G_cme_stop_record.act_level_c1)
+        if (G_cme_stop_record.act_level[0] < G_cme_stop_record.act_level[1])
         {
-            target_level = G_cme_stop_record.act_level_c0;
-            deeper_level = G_cme_stop_record.act_level_c1;
+            target_level = G_cme_stop_record.act_level[0];
+            deeper_level = G_cme_stop_record.act_level[1];
             deeper_core  = CME_MASK_C1;
         }
     }
@@ -213,13 +281,9 @@ p9_cme_stop_exit()
     out32(CME_LCL_EISR_CLR, (core << SHIFT32(25)));
 
     PK_TRACE("Update STOP history: in transition of exit");
-    CME_STOP_UPDATE_HISTORY(core,
-                            STOP_CORE_IS_GATED,
-                            STOP_TRANS_EXIT,
-                            STOP_LEVEL_0,
-                            STOP_LEVEL_0,
-                            STOP_REQ_DISABLE,
-                            STOP_ACT_DISABLE);
+    scom_data.words.lower = 0;
+    scom_data.words.upper = SSH_EXIT_IN_SESSION;
+    CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
     PK_TRACE("Check for PCB mux granted via SISR[10/11]");
 
@@ -279,76 +343,13 @@ p9_cme_stop_exit()
             }
             else if ((core != CME_MASK_BC) && (!deeper_core) && (!catchup_ongoing_b))
             {
-                wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
-                core_catchup = (~core) &
-                               ((wakeup >> 4) | (wakeup >> 2) | wakeup);
-                core_catchup = core_catchup & G_cme_stop_record.core_enabled &
-                               (~G_cme_stop_record.core_running);
-
-                if (core_catchup & CME_MASK_C0)
+                if (p9_cme_stop_exit_catchup(&core, &deeper_core, &d2u4_flag, &spwu_stop))
                 {
-                    CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
-
-                    if (scom_data.words.upper & BIT32(13))
-                    {
-                        core_catchup = core_catchup - CME_MASK_C0;
-                    }
-                }
-
-                if (core_catchup & CME_MASK_C1)
-                {
-                    CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
-
-                    if (scom_data.words.upper & BIT32(13))
-                    {
-                        core_catchup = core_catchup - CME_MASK_C1;
-                    }
-                }
-
-                if (core_catchup)
-                {
-                    //==================================
-                    MARK_TAG(SX_CATCHUP_B, core_catchup)
-                    //==================================
-
-                    // pcbmux grant
-                    out32(CME_LCL_SICR_OR,  (core_catchup << SHIFT32(11)));
-                    // chtm purge done
-                    out32(CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
-
-                    CME_STOP_UPDATE_HISTORY(core_catchup,
-                                            STOP_CORE_IS_GATED,
-                                            STOP_TRANS_EXIT,
-                                            STOP_LEVEL_0,
-                                            STOP_LEVEL_0,
-                                            STOP_REQ_DISABLE,
-                                            STOP_ACT_DISABLE);
-
-                    catchup_level = (core_catchup & CME_MASK_C0) ?
-                                    G_cme_stop_record.act_level_c0 :
-                                    G_cme_stop_record.act_level_c1 ;
-
-                    spwu_stop |= (core_catchup) & (wakeup >> 2);
-
-                    PK_TRACE_DBG("Catch: core[%d] running[%d] \
-                                         core_catchup[%d] catchup_level[%d]",
-                                 core, G_cme_stop_record.core_running,
-                                 core_catchup, catchup_level);
-
-                    while((core_catchup & (in32(CME_LCL_SISR) >>
-                                           SHIFT32(11))) != core_catchup);
-
-                    if (catchup_level < STOP_LEVEL_4)
-                    {
-                        deeper_core  = core;
-                        d2u4_flag    = 1;
-                    }
-                    else
-                    {
-                        core = core_catchup;
-                        catchup_ongoing_a = 1;
-                        continue;
-                    }
+                    //==========================
+                    MARK_TAG(SX_CATCHUP_A, core)
+                    //==========================
+                    catchup_ongoing_a = 1;
+                    continue;
                 }
             }
 
@@ -384,76 +385,13 @@ p9_cme_stop_exit()
             }
             else if ((core != CME_MASK_BC) && (!deeper_core))
             {
-                wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
-                core_catchup = (~core) &
-                               ((wakeup >> 4) | (wakeup >> 2) | wakeup);
-                core_catchup = core_catchup & G_cme_stop_record.core_enabled &
-                               (~G_cme_stop_record.core_running);
-
-                if (core_catchup & CME_MASK_C0)
+                if (p9_cme_stop_exit_catchup(&core, &deeper_core, &d2u4_flag, &spwu_stop))
                 {
-                    CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
-
-                    if (scom_data.words.upper & BIT32(13))
-                    {
-                        core_catchup = core_catchup - CME_MASK_C0;
-                    }
-                }
-
-                if (core_catchup & CME_MASK_C1)
-                {
-                    CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
-
-                    if (scom_data.words.upper & BIT32(13))
-                    {
-                        core_catchup = core_catchup - CME_MASK_C1;
-                    }
-                }
-
-                if (core_catchup)
-                {
-                    //==================================
-                    MARK_TAG(SX_CATCHUP_B, core_catchup)
-                    //==================================
-
-                    // pcbmux grant
-                    out32(CME_LCL_SICR_OR,  (core_catchup << SHIFT32(11)));
-                    // chtm purge done
-                    out32(CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
-
-                    CME_STOP_UPDATE_HISTORY(core_catchup,
-                                            STOP_CORE_IS_GATED,
-                                            STOP_TRANS_EXIT,
-                                            STOP_LEVEL_0,
-                                            STOP_LEVEL_0,
-                                            STOP_REQ_DISABLE,
-                                            STOP_ACT_DISABLE);
-
-                    catchup_level = (core_catchup & CME_MASK_C0) ?
-                                    G_cme_stop_record.act_level_c0 :
-                                    G_cme_stop_record.act_level_c1 ;
-
-                    spwu_stop |= (core_catchup) & (wakeup >> 2);
-
-                    PK_TRACE_DBG("Catch: core[%d] running[%d] \
-                                         core_catchup[%d] catchup_level[%d]",
-                                 core, G_cme_stop_record.core_running,
-                                 core_catchup, catchup_level);
-
-                    while((core_catchup & (in32(CME_LCL_SISR) >>
-                                           SHIFT32(11))) != core_catchup);
-
-                    if (catchup_level < STOP_LEVEL_4)
-                    {
-                        deeper_core  = core;
-                        d2u4_flag    = 1;
-                    }
-                    else
-                    {
-                        core = core_catchup;
-                        catchup_ongoing_b = 1;
-                        continue;
-                    }
+                    //==========================
+                    MARK_TAG(SX_CATCHUP_B, core)
+                    //==========================
+                    catchup_ongoing_b = 1;
+                    continue;
                 }
             }
 
@@ -638,42 +576,25 @@ p9_cme_stop_exit()
         PK_TRACE("Set SPR mode to LT0-7 via SPR_MODE[20-27]");
         CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
 
-        if (core & CME_MASK_C0)
+        for (core_mask = 2; core_mask; core_mask--)
         {
-            PK_TRACE("Set SPRC to scratch0 for core0 via SCOM_SPRC");
-            CME_PUTSCOM(SCOM_SPRC, CME_MASK_C0, 0);
+            if (core & core_mask)
+            {
+                PK_TRACE_DBG("Set SPRC to scratch for core[%d] via SCOM_SPRC", core_mask);
+                CME_PUTSCOM(SCOM_SPRC, core_mask, ((core_mask & 1) ? BIT64(60) : 0));
 
-            PK_TRACE("Load SCRACTH0 with HOMER+2MB");
+                PK_TRACE_DBG("Load SCRACTH with HOMER+2MB for core[%d]", core_mask);
 
 #if EPM_P9_TUNING
 
-            CME_PUTSCOM(SCRACTH0, CME_MASK_C0, 0x200000);
+                CME_PUTSCOM((SCRACTH0 + (core_mask & 1)), core_mask, 0x200000);
 
 #else
 
-            CME_PUTSCOM(SCRACTH0, CME_MASK_C0, scom_data.value);
+                CME_PUTSCOM((SCRACTH0 + (core_mask & 1)), core_mask, scom_data.value);
 
 #endif
-
-        }
-
-        if (core & CME_MASK_C1)
-        {
-            PK_TRACE("Set SPRC to scratch1 for core1 via SCOM_SPRC");
-            CME_PUTSCOM(SCOM_SPRC, CME_MASK_C1, BIT64(60));
-
-            PK_TRACE("Load SCRACTH1 with HOMER+2MB");
-
-#if EPM_P9_TUNING
-
-            CME_PUTSCOM(SCRACTH1, CME_MASK_C1, 0x200000);
-
-#else
-
-            CME_PUTSCOM(SCRACTH1, CME_MASK_C1, scom_data.value);
-
-#endif
-
+            }
         }
 
         PK_TRACE("RAM: mfspr sprd , gpr0 via RAM_CTRL");
@@ -739,7 +660,7 @@ p9_cme_stop_exit()
 
         while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)))
         {
-            if (in32_sh(CME_LCL_SISR) & (core << SHIFT32(1)))
+            if (in32_sh(CME_LCL_SISR) & (core << SHIFT64SH(33)))
             {
                 PK_TRACE("ERROR: Core Special Attention Detected. HALT CME!");
                 pk_halt();
@@ -773,7 +694,7 @@ p9_cme_stop_exit()
     PK_TRACE_INF("+++++ +++++ END OF STOP EXIT +++++ +++++");
     //--------------------------------------------------------------------------
 
-#if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
+#if HW386841_DD1_DSL_STOP1_FIX
 
 STOP1_EXIT:
 
@@ -781,161 +702,127 @@ STOP1_EXIT:
 
     PK_TRACE_INF("SX0.D: Restore PSSCR.PLS+SRR1 back to actual level");
 
-    if (core & CME_MASK_C0)
+    for (core_mask = 2; core_mask; core_mask--)
     {
-        CME_GETSCOM(PPM_SSHSRC, CME_MASK_C0, CME_SCOM_AND, hist.value);
-
-        for (thread = 0; thread < MAX_THREADS_PER_CORE; thread++)
+        if (core & core_mask)
         {
-            pscrs.value = in32((CME_LCL_PSCRS00 + (thread << 5)));
-            dsl = (G_dsl[0].vector & BITS16((thread << 2), 4)) >>
-                  SHIFT16((thread << 2) + 3);
-            PK_TRACE("C0: PSCRS1%d %x, old dsl %d", thread, pscrs.value, dsl);
+            PK_TRACE_DBG("Set PLS+SRR1 for Core[%d]", core_mask);
+            CME_GETSCOM(PPM_SSHSRC, core_mask, CME_SCOM_AND, scom_data.value);
 
-            temp0 = pscrs.fields.esl_a_n ? pscrs.fields.rl_a_n : 0 ;
-            temp1 = hist.fields.act_stop_level;
+            act_stop_level        = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
+            scom_data.words.upper = (BIT64SH(32) | BIT64SH(40) | BIT64SH(48) | BIT64SH(56));
+            core_index            = core_mask & 1;
 
-            dsl = MIN(temp0, MAX(temp1, dsl));
-            G_dsl[0].vector = ((G_dsl[0].vector & ~BITS16((thread << 2), 4)) |
-                               (dsl << SHIFT16((thread << 2) + 3)));
-            PK_TRACE("C0: new dsl %d", dsl);
-
-            if (dsl >= STOP_LEVEL_8)
+            for (thread = 0, bitloc = 36;
+                 thread < MAX_THREADS_PER_CORE;
+                 thread++,   bitloc += 8)
             {
-                G_srr1[0][thread] = MOST_STATE_LOSS;
+                // address are 0x20 apart between threads and 0x80 apart between cores
+                pscrs = in32((CME_LCL_PSCRS00 + (core_index << 7) + (thread << 5)));
+
+                PK_TRACE_DBG("Old dsl%d of Core%d Thread%d, current PSCRS%x",
+                             G_dsl[core_index][thread], core_index, thread, pscrs);
+
+                // Calculate new DSL
+                if (pscrs & BIT32(2))
+                {
+                    temp_dsl  = ((pscrs & BITS32(20, 4)) >> SHIFT32(23));
+                    temp_srr1 = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
+                }
+                else
+                {
+                    temp_dsl  = 0;
+                    temp_srr1 = NO_STATE_LOSS;
+                }
+
+                G_dsl[core_index][thread] =
+                    MIN(temp_dsl, MAX(act_stop_level, G_dsl[core_index][thread]));
+
+                PK_TRACE_DBG("New dsl%d", G_dsl[core_index][thread]);
+
+                // Calculate new SRR1
+                if (G_dsl[core_index][thread] >= STOP_LEVEL_8)
+                {
+                    srr1[thread] = MOST_STATE_LOSS;
+                }
+                else if (G_dsl[core_index][thread] >= STOP_LEVEL_4)
+                {
+                    srr1[thread] = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
+                }
+                else
+                {
+                    srr1[thread] = temp_srr1;
+                }
+
+                PK_TRACE_DBG("Srr1%d", srr1[thread]);
+
+                // 36-39|44-47|52-55|60-63
+                scom_data.words.lower |=
+                    ((((uint32_t)G_dsl[core_index][thread]) << SHIFT64SH(bitloc)) |
+                     (((uint32_t)srr1[thread]) << SHIFT64SH((bitloc + 3))));
             }
-            else if (dsl >= STOP_LEVEL_4)
-            {
-                G_srr1[0][thread] = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
-            }
-            else
-                G_srr1[0][thread] =
-                    pscrs.fields.esl_a_n ? SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS;
+
+            // Report PLS+SRR1
+            CME_PUTSCOM(DIRECT_CONTROLS, core_mask, scom_data.value);
         }
-
-        CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0, CME_STOP_UPDATE_DLS(G_dsl[0], G_srr1[0]));
-        PK_TRACE("C0 DLS   : %x %x %x %x",
-                 G_dsl[0].threads.t0, G_dsl[0].threads.t1,
-                 G_dsl[0].threads.t2, G_dsl[0].threads.t3);
-        PK_TRACE("C0 SRR1  : %x %x %x %x",
-                 G_srr1[0][0], G_srr1[0][1], G_srr1[0][2], G_srr1[0][3]);
-    }
-
-    if (core & CME_MASK_C1)
-    {
-        CME_GETSCOM(PPM_SSHSRC, CME_MASK_C1, CME_SCOM_AND, hist.value);
-
-        for (thread = 0; thread < MAX_THREADS_PER_CORE; thread++)
-        {
-            pscrs.value = in32((CME_LCL_PSCRS01 + (thread << 5)));
-            dsl = (G_dsl[1].vector & BITS16((thread << 2), 4)) >>
-                  SHIFT16((thread << 2) + 3);
-            PK_TRACE("C1 PSCRS1%d %x, old dsl %d", thread, pscrs.value, dsl);
-
-            temp0 = pscrs.fields.esl_a_n ? pscrs.fields.rl_a_n : 0 ;
-            temp1 = hist.fields.act_stop_level;
-
-            dsl = MIN(temp0, MAX(temp1, dsl));
-            G_dsl[1].vector = ((G_dsl[1].vector & ~BITS16((thread << 2), 4)) |
-                               (dsl << SHIFT16((thread << 2) + 3)));
-            PK_TRACE("C1 new dsl %d", dsl);
-
-            if (dsl >= STOP_LEVEL_8)
-            {
-                G_srr1[1][thread] = MOST_STATE_LOSS;
-            }
-            else if (dsl >= STOP_LEVEL_4)
-            {
-                G_srr1[1][thread] = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
-            }
-            else
-                G_srr1[1][thread] =
-                    pscrs.fields.esl_a_n ? SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS;
-        }
-
-        CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1, CME_STOP_UPDATE_DLS(G_dsl[1], G_srr1[1]));
-        PK_TRACE("C1 DLS   : %x %x %x %x",
-                 G_dsl[1].threads.t0, G_dsl[1].threads.t1,
-                 G_dsl[1].threads.t2, G_dsl[1].threads.t3);
-        PK_TRACE("C1 SRR1  : %x %x %x %x",
-                 G_srr1[1][0], G_srr1[1][1], G_srr1[1][2], G_srr1[1][3]);
     }
 
 #else
 
     PK_TRACE_INF("SX0.E: Restore PSSCR.PLS+SRR1 back to actual level");
 
-    if (core & CME_MASK_C0)
+    for (core_mask = 2; core_mask; core_mask--)
     {
-        CME_GETSCOM(PPM_SSHSRC, CME_MASK_C0, CME_SCOM_AND, hist.value);
+        if (core & core_mask)
+        {
+            PK_TRACE_DBG("Set PLS+SRR1 for Core[%d]", core_mask);
+            CME_GETSCOM(PPM_SSHSRC, core_mask, CME_SCOM_AND, scom_data.value);
 
-        PK_TRACE("Set PLS+SRR1 for Core0");
+            act_stop_level = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
+            scom_data.words.upper = 0;
 
-        if (hist.fields.act_stop_level >= STOP_LEVEL_8)
-        {
-            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0, CME_STOP_UPDATE_PLS_SRR1(
-                            hist.fields.act_stop_level,
-                            MOST_STATE_LOSS, MOST_STATE_LOSS,
-                            MOST_STATE_LOSS, MOST_STATE_LOSS));
-        }
-        else if (hist.fields.act_stop_level >= STOP_LEVEL_4)
-        {
-            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0, CME_STOP_UPDATE_PLS_SRR1(
-                            hist.fields.act_stop_level,
-                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
-                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
-                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
-                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE));
-        }
-        else
-        {
-            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0, CME_STOP_UPDATE_PLS_SRR1(
-                            hist.fields.act_stop_level,
-                            ((in32(CME_LCL_PSCRS00) & BIT32(2)) ?
-                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
-                            ((in32(CME_LCL_PSCRS10) & BIT32(2)) ?
-                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
-                            ((in32(CME_LCL_PSCRS20) & BIT32(2)) ?
-                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
-                            ((in32(CME_LCL_PSCRS30) & BIT32(2)) ?
-                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS)));
-        }
-    }
+            if (act_stop_level >= STOP_LEVEL_8)
+            {
+                // MOST_STATE_LOSS(3) + b32/40/48/56
+                scom_data.words.lower =
+                    ((BIT64SH(32) | BITS64SH(38, 3) | BITS64SH(46, 3)  |
+                      BITS64SH(54, 3) | BITS64SH(62, 2)) |
+                     (act_stop_level << SHIFT64SH(36)) |
+                     (act_stop_level << SHIFT64SH(44)) |
+                     (act_stop_level << SHIFT64SH(52)) |
+                     (act_stop_level << SHIFT64SH(60)));
+            }
+            else if (act_stop_level >= STOP_LEVEL_4)
+            {
+                // SOME_STATE_LOSS_BUT_NOT_TIMEBASE(2)
+                scom_data.words.lower =
+                    ((BIT64SH(32) | BIT64SH(40) | BIT64SH(48) | BIT64SH(56)) |
+                     (BIT64SH(38) | BIT64SH(46) | BIT64SH(54) | BIT64SH(62)) |
+                     (act_stop_level << SHIFT64SH(36)) |
+                     (act_stop_level << SHIFT64SH(44)) |
+                     (act_stop_level << SHIFT64SH(52)) |
+                     (act_stop_level << SHIFT64SH(60)));
+            }
+            else
+            {
+                // SOME_STATE_LOSS_BUT_NOT_TIMEBASE(2) vs NO_STATE_LOSS(1)
+                scom_data.words.lower =
+                    ((BIT64SH(32) | BIT64SH(40) | BIT64SH(48) | BIT64SH(56)) |
+                     (act_stop_level << SHIFT64SH(36)) |
+                     (act_stop_level << SHIFT64SH(44)) |
+                     (act_stop_level << SHIFT64SH(52)) |
+                     (act_stop_level << SHIFT64SH(60)) |
+                     (((in32(CME_LCL_PSCRS00) & BIT32(2)) ?
+                       SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH(39)) |
+                     (((in32(CME_LCL_PSCRS10) & BIT32(2)) ?
+                       SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH(47)) |
+                     (((in32(CME_LCL_PSCRS20) & BIT32(2)) ?
+                       SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH(55)) |
+                     (((in32(CME_LCL_PSCRS30) & BIT32(2)) ?
+                       SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS)));
+            }
 
-    if (core & CME_MASK_C1)
-    {
-        CME_GETSCOM(PPM_SSHSRC, CME_MASK_C1, CME_SCOM_AND, hist.value);
-
-        PK_TRACE("Set PLS+SRR1 for Core1");
-
-        if (hist.fields.act_stop_level >= STOP_LEVEL_8)
-        {
-            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1, CME_STOP_UPDATE_PLS_SRR1(
-                            hist.fields.act_stop_level,
-                            MOST_STATE_LOSS, MOST_STATE_LOSS,
-                            MOST_STATE_LOSS, MOST_STATE_LOSS));
-        }
-        else if(hist.fields.act_stop_level >= STOP_LEVEL_4)
-        {
-            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1, CME_STOP_UPDATE_PLS_SRR1(
-                            hist.fields.act_stop_level,
-                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
-                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
-                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE,
-                            SOME_STATE_LOSS_BUT_NOT_TIMEBASE));
-        }
-        else
-        {
-            CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1, CME_STOP_UPDATE_PLS_SRR1(
-                            hist.fields.act_stop_level,
-                            ((in32(CME_LCL_PSCRS01) & BIT32(2)) ?
-                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
-                            ((in32(CME_LCL_PSCRS11) & BIT32(2)) ?
-                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
-                            ((in32(CME_LCL_PSCRS21) & BIT32(2)) ?
-                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS),
-                            ((in32(CME_LCL_PSCRS31) & BIT32(2)) ?
-                             SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS)));
+            CME_PUTSCOM(DIRECT_CONTROLS, core_mask, scom_data.value);
         }
     }
 
@@ -956,24 +843,17 @@ STOP1_EXIT:
     while((core & ~(in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
 
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
-    CME_STOP_UPDATE_HISTORY(core,
-                            STOP_CORE_READY_RUN,
-                            STOP_TRANS_COMPLETE,
-                            STOP_LEVEL_0,
-                            STOP_LEVEL_0,
-                            STOP_REQ_DISABLE,
-                            STOP_ACT_DISABLE)
+    scom_data.words.lower = 0;
+    scom_data.words.upper = SSH_EXIT_COMPLETE;
+    CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
-    if (core & CME_MASK_C0)
+    for (core_mask = 2; core_mask; core_mask--)
     {
-        G_cme_stop_record.req_level_c0 = 0;
-        G_cme_stop_record.act_level_c0 = 0;
-    }
-
-    if (core & CME_MASK_C1)
-    {
-        G_cme_stop_record.req_level_c1 = 0;
-        G_cme_stop_record.act_level_c1 = 0;
+        if (core & core_mask)
+        {
+            G_cme_stop_record.req_level[core_mask & 1] = 0;
+            G_cme_stop_record.act_level[core_mask & 1] = 0;
+        }
     }
 
     G_cme_stop_record.core_running |=  core;

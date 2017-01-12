@@ -59,18 +59,20 @@ enum CME_SCOM_CONTROLS
     CME_SCOM_QUEUED                 = 3
 };
 
+
+
 #define CME_SCOM_ADDR(addr, core, op)   (addr | (core << 22) | (op << 20))
 
 #if defined(USE_CME_QUEUED_SCOM) && defined(USE_PPE_IMPRECISE_MODE)
 #define CME_GETSCOM(addr, core, scom_op, data)                 \
-    getscom(0, CME_SCOM_ADDR(addr, core, CME_SCOM_QUEUED), &data);
+    PPE_LVD(CME_SCOM_ADDR(addr, core, CME_SCOM_QUEUED), data);
 #define CME_PUTSCOM(addr, core, data)                          \
-    putscom(0, CME_SCOM_ADDR(addr, core, CME_SCOM_QUEUED), data);
+    putscom_norc(CME_SCOM_ADDR(addr, core, CME_SCOM_QUEUED), data);
 #else
 #define CME_GETSCOM(addr, core, scom_op, data)                 \
-    getscom(0, CME_SCOM_ADDR(addr, core, scom_op), &data);
+    PPE_LVD(CME_SCOM_ADDR(addr, core, scom_op), data);
 #define CME_PUTSCOM(addr, core, data)                          \
-    putscom(0, CME_SCOM_ADDR(addr, core, CME_SCOM_NOP), data);
+    putscom_norc(CME_SCOM_ADDR(addr, core, CME_SCOM_NOP), data);
 #endif
 
 #endif  /* __CMEHW_COMMON_H__ */

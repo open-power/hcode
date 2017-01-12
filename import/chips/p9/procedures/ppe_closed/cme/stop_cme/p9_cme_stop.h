@@ -127,67 +127,6 @@
 #define PERV_CPLT_STAT0        0x20000100
 
 
-/// Macro to evaluate g_eimr_override
-#if SPWU_AUTO
-#define EVAL_EIMR_OVERRIDE(mask_irqs)                                             \
-    g_eimr_override &= ~(BITS64(12, 6) | BITS64(20, 2));                          \
-    mask_irqs.words.lower = 0;                                                    \
-    mask_irqs.words.upper =                                                       \
-            ((((~G_cme_stop_record.core_enabled) |                                \
-               G_cme_stop_record.core_running  |                                \
-               G_cme_stop_record.core_stopgpe  |                                \
-               G_cme_stop_record.core_blockwu) & CME_MASK_BC) << SHIFT32(13)) | \
-            ((((~G_cme_stop_record.core_enabled) |                                \
-               G_cme_stop_record.core_running) & CME_MASK_BC) << SHIFT32(15)) | \
-            ((((~G_cme_stop_record.core_enabled) |                                \
-               G_cme_stop_record.core_running) & CME_MASK_BC) << SHIFT32(17)) | \
-            (((~(G_cme_stop_record.core_enabled  &                                \
-                 G_cme_stop_record.core_running)) & CME_MASK_BC) << SHIFT32(21)); \
-    g_eimr_override |= mask_irqs.value;
-#else
-#define EVAL_EIMR_OVERRIDE(mask_irqs)                                             \
-    g_eimr_override &= ~(BITS64(12, 6) | BITS64(20, 2));                          \
-    mask_irqs.words.lower = 0;                                                    \
-    mask_irqs.words.upper =                                                       \
-            ((((~G_cme_stop_record.core_enabled) |                                \
-               G_cme_stop_record.core_running  |                                \
-               G_cme_stop_record.core_stopgpe  |                                \
-               G_cme_stop_record.core_blockwu) & CME_MASK_BC) << SHIFT32(13)) | \
-            ((((~G_cme_stop_record.core_enabled) |                                \
-               G_cme_stop_record.core_running) & CME_MASK_BC) << SHIFT32(17)) | \
-            (((~(G_cme_stop_record.core_enabled  &                                \
-                 G_cme_stop_record.core_running)) & CME_MASK_BC) << SHIFT32(21)); \
-    g_eimr_override |= mask_irqs.value;
-#endif
-
-/// Macro to update STOP History
-#define CME_STOP_UPDATE_HISTORY(core,gated,trans,req_l,act_l,req_e,act_e) \
-    hist.value                   = 0;                                     \
-    hist.fields.stop_gated       = gated;                                 \
-    hist.fields.stop_transition  = trans;                                 \
-    hist.fields.req_stop_level   = req_l;                                 \
-    hist.fields.act_stop_level   = act_l;                                 \
-    hist.fields.req_write_enable = req_e;                                 \
-    hist.fields.act_write_enable = act_e;                                 \
-    CME_PUTSCOM(PPM_SSHSRC, core, hist.value);
-
-/// Macro to update PSSCR.PLS
-#define CME_STOP_UPDATE_PLS_SRR1(pls, srr1_t0, srr1_t1, srr1_t2, srr1_t3)      \
-    ((((uint64_t)pls) << SHIFT64(36)) | (((uint64_t)srr1_t0) << SHIFT64(39)) | \
-     (((uint64_t)pls) << SHIFT64(44)) | (((uint64_t)srr1_t1) << SHIFT64(47)) | \
-     (((uint64_t)pls) << SHIFT64(52)) | (((uint64_t)srr1_t2) << SHIFT64(55)) | \
-     (((uint64_t)pls) << SHIFT64(60)) |  ((uint64_t)srr1_t3)                 | \
-     (BIT64(32) | BIT64(40) | BIT64(48) | BIT64(56)))
-
-#if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
-#define CME_STOP_UPDATE_DLS(dls, srr1)                                         \
-    ((((uint64_t)dls.threads.t0) << SHIFT64(36)) | (((uint64_t)srr1[0]) << SHIFT64(39)) | \
-     (((uint64_t)dls.threads.t1) << SHIFT64(44)) | (((uint64_t)srr1[1]) << SHIFT64(47)) | \
-     (((uint64_t)dls.threads.t2) << SHIFT64(52)) | (((uint64_t)srr1[2]) << SHIFT64(55)) | \
-     (((uint64_t)dls.threads.t3) << SHIFT64(60)) |  ((uint64_t)srr1[3])                 | \
-     (BIT64(32) | BIT64(40) | BIT64(48) | BIT64(56)))
-#endif
-
 /// CME STOP Return Codes
 enum CME_STOP_RETURN_CODE
 {
@@ -197,18 +136,18 @@ enum CME_STOP_RETURN_CODE
 /// CME STOP IRQs with shorter names
 enum CME_STOP_IRQ_SHORT_NAME
 {
-    IRQ_DB1_C0                       = CMEHW_IRQ_DOORBELL1_C0,
-    IRQ_DB1_C1                       = CMEHW_IRQ_DOORBELL1_C1,
-    IRQ_DB2_C0                       = CMEHW_IRQ_DOORBELL2_C0,
-    IRQ_DB2_C1                       = CMEHW_IRQ_DOORBELL2_C1,
-    IRQ_STOP_C0                      = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0,
-    IRQ_STOP_C1                      = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C1,
-    IRQ_PC_C0                        = CMEHW_IRQ_PC_INTR_PENDING_C0,
-    IRQ_PC_C1                        = CMEHW_IRQ_PC_INTR_PENDING_C1,
-    IRQ_RWU_C0                       = CMEHW_IRQ_REG_WAKEUP_C0,
-    IRQ_RWU_C1                       = CMEHW_IRQ_REG_WAKEUP_C1,
-    IRQ_SWU_C0                       = CMEHW_IRQ_SPECIAL_WAKEUP_C0,
-    IRQ_SWU_C1                       = CMEHW_IRQ_SPECIAL_WAKEUP_C1
+    IRQ_DB1_C0      = CMEHW_IRQ_DOORBELL1_C0,
+    IRQ_DB1_C1      = CMEHW_IRQ_DOORBELL1_C1,
+    IRQ_DB2_C0      = CMEHW_IRQ_DOORBELL2_C0,
+    IRQ_DB2_C1      = CMEHW_IRQ_DOORBELL2_C1,
+    IRQ_STOP_C0     = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0,
+    IRQ_STOP_C1     = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C1,
+    IRQ_PC_C0       = CMEHW_IRQ_PC_INTR_PENDING_C0,
+    IRQ_PC_C1       = CMEHW_IRQ_PC_INTR_PENDING_C1,
+    IRQ_RWU_C0      = CMEHW_IRQ_REG_WAKEUP_C0,
+    IRQ_RWU_C1      = CMEHW_IRQ_REG_WAKEUP_C1,
+    IRQ_SWU_C0      = CMEHW_IRQ_SPECIAL_WAKEUP_C0,
+    IRQ_SWU_C1      = CMEHW_IRQ_SPECIAL_WAKEUP_C1
 };
 
 enum CME_IRQ_VECTORS
@@ -231,6 +170,22 @@ enum CME_IRQ_VECTORS
     IRQ_VEC_RGWU_C1 = BIT64(17),
     IRQ_VEC_STOP_C0 = BIT64(20),
     IRQ_VEC_STOP_C1 = BIT64(21)
+};
+
+enum CME_STOP_STATE_HISTORY_VECTORS
+{
+    SSH_EXIT_COMPLETE    = 0,
+    SSH_EXIT_IN_SESSION  = (SSH_STOP_GATED  | SSH_TRANS_EXIT),
+    SSH_REQ_LEVEL_UPDATE = (SSH_TRANS_ENTRY | SSH_REQ_ENABLE),
+    SSH_ACT_LEVEL_UPDATE = (SSH_STOP_GATED  | SSH_ACT_ENABLE),
+    SSH_ACT_LV1_COMPLETE = (SSH_STOP_GATED  | BIT32(7) | BITS32(11, 3)),
+    SSH_ACT_LV2_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(10)),
+    SSH_ACT_LV2_CONTINUE = (SSH_ACT_LV2_COMPLETE | SSH_TRANS_ENTRY),
+    SSH_ACT_LV3_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BITS32(10, 2)),
+    SSH_ACT_LV3_CONTINUE = (SSH_ACT_LV3_COMPLETE | SSH_TRANS_ENTRY),
+    SSH_ACT_LV4_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(9)),
+    SSH_ACT_LV4_CONTINUE = (SSH_ACT_LV4_COMPLETE | SSH_TRANS_ENTRY),
+    SSH_ACT_LV5_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(9) | BIT32(11) | SSH_TRANS_SGPE)
 };
 
 enum CME_STOP_FLAGS
@@ -277,20 +232,6 @@ enum CME_STOP_SRR1
     NO_STATE_LOSS                    = 1
 };
 
-#if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
-typedef union
-{
-    uint16_t vector;
-    struct
-    {
-        uint8_t t0 : 4;
-        uint8_t t1 : 4;
-        uint8_t t2 : 4;
-        uint8_t t3 : 4;
-    } threads;
-} CoreThreadsInfo;
-#endif
-
 #if TEST_ONLY_BCE_IRR
 typedef struct
 {
@@ -319,12 +260,12 @@ typedef struct
 {
     // requested stop levels are read from pm_state,
     // need to be a global state for stop8 detection
-    uint8_t       req_level_c0;
-    uint8_t       req_level_c1;
+    uint8_t       req_level[MAX_CORES_PER_CME];
     // actual stop levels are changed through entry,
     // need to be a global state for aborting entry
-    uint8_t       act_level_c0;
-    uint8_t       act_level_c1;
+    uint8_t       act_level[MAX_CORES_PER_CME];
+    // uint8_t above is processed by stb/lbz in asm, no additional shifting
+
     // target mask of enabled cores, used to filter 2bit core select in scom address
     uint32_t      core_enabled;
     // whether core is in running state,
@@ -345,8 +286,10 @@ typedef struct
 /// CME STOP Entry and Exit Prototypes
 void p9_cme_stop_enter_thread(void*);
 void p9_cme_stop_exit_thread(void*);
+void p9_cme_stop_eval_eimr_override();
 int  p9_cme_stop_entry();
 int  p9_cme_stop_exit();
+int  p9_cme_stop_exit_catchup();
 
 void p9_cme_stop_enter_handler(void*, PkIrqId);
 void p9_cme_stop_exit_handler(void*, PkIrqId);

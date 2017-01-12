@@ -54,8 +54,8 @@ uint32_t G_fcm_spin[4] = {0, 435, 1402, 2411};
 void
 fused_core_mode_scan_fix(uint32_t qloop, int l2bit)
 {
-    int      spin;
-    uint64_t scom_data;
+    uint32_t spin      = 0;
+    uint64_t scom_data = 0;
 
     // bit8/9 = l2-0/1, bit49 = cfg
     PK_TRACE("FCMS: Setup scan register to select the ring");
@@ -110,28 +110,29 @@ fused_core_mode_scan_fix(uint32_t qloop, int l2bit)
 int
 p9_sgpe_stop_exit()
 {
-    uint32_t     m_l2;
-    uint32_t     m_pg;
-    uint32_t     cloop;
-    uint32_t     qloop;
-    uint32_t     cexit;
-    uint32_t     qspwu;
-    uint32_t     core;
-    int          cme;
-#if NIMBUS_DD_LEVEL != 1
-    int          fused_core_mode = 0;
-#endif
-    uint64_t     scom_data = 0;
-    ppm_sshsrc_t hist;
+    uint32_t     m_l2            = 0;
+    uint32_t     m_pg            = 0;
+    uint32_t     cloop           = 0;
+    uint32_t     qloop           = 0;
+    uint32_t     cexit           = 0;
+    uint32_t     qspwu           = 0;
+    uint32_t     ex_mask         = 0;
+    uint32_t     ec_mask         = 0;
+    uint32_t     ex_index        = 0;
+    uint32_t     ec_index        = 0;
+    data64_t     scom_data       = {0};
 #if !STOP_PRIME
-    ocb_ccsr_t   ccsr;
-    uint64_t     cme_flags;
+    ocb_ccsr_t   ccsr            = {0};
+    uint32_t     cme_flags       = 0;
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
-    int          spin;
+    uint32_t     spin            = 0;
 #endif
+#endif
+#if NIMBUS_DD_LEVEL != 1
+    uint32_t     fused_core_mode = 0;
 #endif
 #if !SKIP_IPC
-    int          rc;
+    uint32_t     rc              = 0;
 #endif
 
     //===============================
@@ -305,14 +306,10 @@ p9_sgpe_stop_exit()
 
             PK_TRACE("Update STOP history on core[%d]: in transition of exit",
                      ((qloop << 2) + cloop));
-            SGPE_STOP_UPDATE_HISTORY(((qloop << 2) + cloop),
-                                     CORE_ADDR_BASE,
-                                     STOP_CORE_IS_GATED,
-                                     STOP_TRANS_EXIT,
-                                     STOP_LEVEL_0,
-                                     STOP_LEVEL_0,
-                                     STOP_REQ_DISABLE,
-                                     STOP_ACT_DISABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_EXIT_IN_SESSION;
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
+                            scom_data.value);
         }
 
 
@@ -329,14 +326,9 @@ p9_sgpe_stop_exit()
 
             PK_TRACE("Update STOP history on quad[%d]: in transition of exit",
                      qloop);
-            SGPE_STOP_UPDATE_HISTORY(qloop,
-                                     QUAD_ADDR_BASE,
-                                     STOP_CACHE_IS_GATED,
-                                     STOP_TRANS_EXIT,
-                                     STOP_LEVEL_0,
-                                     STOP_LEVEL_0,
-                                     STOP_REQ_DISABLE,
-                                     STOP_ACT_DISABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_EXIT_IN_SESSION;
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
 
             //=================================
             MARK_TAG(SX_POWERON, (32 >> qloop))
@@ -391,16 +383,17 @@ p9_sgpe_stop_exit()
 #endif
 
             // set 20, 22, 24 and 26 during Stop11 Exit after setting up the DPLL
-            scom_data = BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = BIT32(20) | BIT32(22) | BIT32(24) | BIT32(26);
 
             // set 21, 23, 25, and 27 if EX0 is bad (not partial good)
             if ((~m_pg) & FST_EX_IN_QUAD)
             {
-                scom_data |= BIT64(21) | BIT64(23) | BIT64(25) | BIT64(27);
+                scom_data.words.upper |= BIT32(21) | BIT32(23) | BIT32(25) | BIT32(27);
             }
 
             PK_TRACE("Assert inter-ppm settings via QPMMR[22,24,26,EX0PB:21,23,25]");
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, qloop), scom_data);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, qloop), scom_data.value);
 
             //=======================================
             MARK_TAG(SX_CHIPLET_INITS, (32 >> qloop))
@@ -483,32 +476,32 @@ p9_sgpe_stop_exit()
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), BITS64(4, 2) | BIT64(11) | BIT64(59));
 
             PK_TRACE("PBRW: checkword set");
-            scom_data = 0xa5a5a5a5a5a5a5a5;
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+            scom_data.value = 0xa5a5a5a5a5a5a5a5;
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
 
             for(spin = 1;; spin++)
             {
                 PK_TRACE("PBRW: spin ring loop%d", spin);
-                scom_data = (G_ring_spin[spin][0] - G_ring_spin[spin - 1][0]) << 32;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data);
+                scom_data.value = (G_ring_spin[spin][0] - G_ring_spin[spin - 1][0]) << 32;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data.value);
 
                 PK_TRACE("PBRW: Poll OPCG done for ring spin");
 
                 do
                 {
-                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x10000100, qloop), scom_data);
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x10000100, qloop), scom_data.value);
                 }
-                while(~scom_data & BIT64(8));
+                while(!(scom_data.words.upper & BIT32(8)));
 
                 if (spin == 9)
                 {
                     PK_TRACE("PBRW: checkword check");
-                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
 
-                    if (scom_data != 0xa5a5a5a5a5a5a5a5)
+                    if (scom_data.value != 0xa5a5a5a5a5a5a5a5)
                     {
                         PK_TRACE_INF("ERROR: checkword[%x%x] failed. HALT SGPE!",
-                                     UPPER32(scom_data), LOWER32(scom_data));
+                                     scom_data.words.upper, scom_data.words.lower);
                         pk_halt();
                     }
 
@@ -516,24 +509,25 @@ p9_sgpe_stop_exit()
                 }
 
                 PK_TRACE("PBRW: restore pbie read ptr");
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
                 PK_TRACE("PBRW: mask: %8x %8x",
                          UPPER32(G_ring_spin[spin][1]),
                          LOWER32(G_ring_spin[spin][1]));
                 PK_TRACE("PBRW: ring: %8x %8x",
-                         UPPER32(scom_data),
-                         LOWER32(scom_data));
+                         scom_data.words.upper,
+                         scom_data.words.lower);
                 PK_TRACE("PBRW: save: %8x %8x",
                          UPPER32(G_ring_save[qloop][spin - 1]),
                          LOWER32(G_ring_save[qloop][spin - 1]));
-                RESTORE_RING_BITS(G_ring_spin[spin][1], scom_data, G_ring_save[qloop][spin - 1]);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                RESTORE_RING_BITS(G_ring_spin[spin][1], scom_data.value,
+                                  G_ring_save[qloop][spin - 1]);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
                 PK_TRACE("PBRW: mask: %8x %8x",
                          UPPER32(G_ring_spin[spin][1]),
                          LOWER32(G_ring_spin[spin][1]));
                 PK_TRACE("PBRW: ring: %8x %8x",
-                         UPPER32(scom_data),
-                         LOWER32(scom_data));
+                         scom_data.words.upper,
+                         scom_data.words.lower);
                 PK_TRACE("PBRW: save: %8x %8x",
                          UPPER32(G_ring_save[qloop][spin - 1]),
                          LOWER32(G_ring_save[qloop][spin - 1]));
@@ -619,30 +613,29 @@ p9_sgpe_stop_exit()
             PK_TRACE_DBG("Check: quad[%d] m_l2[%d] m_pg[%d] Serviced by SX11SH",
                          qloop, m_l2, m_pg);
 
-            for(cme = 0; cme < EXES_PER_QUAD; cme += 2)
+            for (ec_index = 0; ec_index < CORES_PER_QUAD; ec_index += 2)
             {
 
-                core = ((cexit & BITS32(cme, 2)) >> SHIFT32((cme + 1)));
+                ec_mask = ((cexit & BITS32(ec_index, 2)) >> SHIFT32((ec_index + 1)));
 
-                if(!core)
+                if(!ec_mask)
                 {
                     continue;
                 }
 
-                PK_TRACE("Assert core[%d]-L2/CC quiesces via SICR[6/7,8/9]", core);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR,
-                                              qloop, (cme >> 1)),
-                            ((uint64_t)core << SHIFT64(7) |
-                             (uint64_t)core << SHIFT64(9)));
+                PK_TRACE("Assert core[%d]-L2/CC quiesces via SICR[6/7,8/9]", ec_mask);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, (ec_index >> 1)),
+                            ((uint64_t)ec_mask << SHIFT64(7) |
+                             (uint64_t)ec_mask << SHIFT64(9)));
 
-                PK_TRACE("Poll for interface quiesced via CME[%d] SISR[30,31]", cme);
+                PK_TRACE("Poll for interface quiesced via CME[%d] SISR[30,31]", ec_index);
 
                 do
                 {
-                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SISR,
-                                                  qloop, (cme >> 1)), scom_data);
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SISR, qloop, (ec_index >> 1)),
+                                scom_data.value);
                 }
-                while(((scom_data >> 32) & core) != core);
+                while(((scom_data.words.upper) & ec_mask) != ec_mask);
             }
 
 #if !STOP_PRIME
@@ -685,232 +678,147 @@ p9_sgpe_stop_exit()
             }
             while (ccsr.fields.change_in_progress);
 
-            if (m_pg & FST_EX_IN_QUAD)
+            for (ex_mask = 2; ex_mask; ex_mask--)
             {
-                cme_flags = 0;
-
-                if (m_pg & SND_EX_IN_QUAD)
+                if (m_pg & ex_mask)
                 {
-                    cme_flags |= CME_SIBLING_FUNCTIONAL;
-                }
+                    cme_flags       = 0;
+                    ex_index        = ex_mask & 1;
+                    ec_index        = ((qloop << 2) + (ex_index << 1));
+
+                    if (ex_index == 1)
+                    {
+                        cme_flags |= CME_EX1_INDICATOR;
+                    }
+
+                    if (m_pg & (~ex_mask))
+                    {
+                        cme_flags |= CME_SIBLING_FUNCTIONAL;
+                    }
 
 #if NIMBUS_DD_LEVEL != 1
 
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SISR, qloop, 0), scom_data);
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SISR, qloop, ex_index),
+                                scom_data.value);
 
-                if (scom_data & BIT64(9))
-                {
-                    fused_core_mode = 1;
-                }
-                else
-                {
                     fused_core_mode = 0;
-                }
+
+                    if (scom_data.words.upper & BIT32(9))
+                    {
+                        fused_core_mode = 1;
+                    }
 
 #endif
 
-                if (ccsr.value & BIT32((qloop << 2)))
-                {
-                    cme_flags |= CME_CORE0_ENABLE;
-                    GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
-                                                   ((qloop << 2))),     scom_data);
-
-                    if (!(scom_data & BIT64(18)))
+                    for (cloop = 0; cloop < CORES_PER_EX; cloop++)
                     {
-                        cme_flags |= CME_CORE0_ENTRY_FIRST;
-                    }
+                        if (ccsr.value & BIT32((ec_index + cloop)))
+                        {
+                            cme_flags |= (CME_CORE0_ENABLE >> cloop);
+                            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
+                                                           (ec_index + cloop)), scom_data.value);
+
+                            if (!(scom_data.words.upper & BIT32(18)))
+                            {
+                                cme_flags |= (CME_CORE0_ENTRY_FIRST >> cloop);
+                            }
 
 #if NIMBUS_DD_LEVEL != 1
 
-                    if (fused_core_mode)
-                    {
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
-                                                       ((qloop << 2))),     BIT64(9));
-                    }
+                            if (fused_core_mode)
+                            {
+                                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
+                                                               (ec_index + cloop)), BIT64(9));
+                            }
 
 #endif
 
-                }
-
-                if (ccsr.value & BIT32((qloop << 2) + 1))
-                {
-                    cme_flags |= CME_CORE1_ENABLE;
-                    GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
-                                                   ((qloop << 2) + 1)), scom_data);
-
-                    if (!(scom_data & BIT64(18)))
-                    {
-                        cme_flags |= CME_CORE1_ENTRY_FIRST;
+                        }
                     }
 
-#if NIMBUS_DD_LEVEL != 1
-
-                    if (fused_core_mode)
-                    {
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
-                                                       ((qloop << 2) + 1)), BIT64(9));
-                    }
-
-#endif
-
+                    scom_data.words.lower = 0;
+                    scom_data.words.upper = cme_flags;
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR, qloop, ex_index),
+                                scom_data.value);
                 }
-
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR, qloop, 0),
-                            cme_flags);
-            }
-
-            if (m_pg & SND_EX_IN_QUAD)
-            {
-                cme_flags = CME_EX1_INDICATOR;
-
-                if (m_pg & FST_EX_IN_QUAD)
-                {
-                    cme_flags |= CME_SIBLING_FUNCTIONAL;
-                }
-
-#if NIMBUS_DD_LEVEL != 1
-
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SISR, qloop, 1), scom_data);
-
-                if (scom_data & BIT64(9))
-                {
-                    fused_core_mode = 1;
-                }
-                else
-                {
-                    fused_core_mode = 0;
-                }
-
-#endif
-
-                if (ccsr.value & BIT32(((qloop << 2) + 2)))
-                {
-                    cme_flags |= CME_CORE0_ENABLE;
-                    GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
-                                                   ((qloop << 2) + 2)), scom_data);
-
-                    if (!(scom_data & BIT64(18)))
-                    {
-                        cme_flags |= CME_CORE0_ENTRY_FIRST;
-                    }
-
-#if NIMBUS_DD_LEVEL != 1
-
-                    if (fused_core_mode)
-                    {
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
-                                                       ((qloop << 2) + 2)), BIT64(9));
-                    }
-
-#endif
-
-                }
-
-                if (ccsr.value & BIT32(((qloop << 2) + 3)))
-                {
-                    cme_flags |= CME_CORE1_ENABLE;
-                    GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
-                                                   ((qloop << 2) + 3)), scom_data);
-
-                    if (!(scom_data & BIT64(18)))
-                    {
-                        cme_flags |= CME_CORE1_ENTRY_FIRST;
-                    }
-
-#if NIMBUS_DD_LEVEL != 1
-
-                    if (fused_core_mode)
-                    {
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
-                                                       ((qloop << 2) + 3)), BIT64(9));
-                    }
-
-#endif
-
-                }
-
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR, qloop, 1),
-                            cme_flags);
             }
 
             // enable cme trace array
+            //
+            // Trace configuration
+            // CME_LCL_DBG
+            // 0: LCL_EN_DBG
+            // 4: LCL_EN_INTR_ADDR
+            // 5: LCL_EN_TRACE_EXTRA
+            // 6: LCL_EN_TRACE_STALL
+            // 7: LCL_EN_WAIT_CYCLES
+            // 8: LCL_EN_FULL_SPEED
+            // inst: 3D20C000 | addis r9, 0, 0xC000 | R9 = 0xC0000000
+            // inst: 3C208F80 | addis r1, 0, 0x8F80 | R1 = 0x8F800000
+            // inst: 90290120 | stw   r1, 0x120(r9) | 0xC0000120 = R1
+            //
+            // 1. The trace array has to be stopped to configure it
+            // 2. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRCTRL_CONFIG
+            //    bit0: store_trig_mode_lt = 1
+            //    bit 11 enh_trace_mode = 1
+            //    bit 14:15 = trace_select_lt = 10 for CME0
+            // 3. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_0
+            //    Set trace data compare mask to 0  (0:63)
+            // 4. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_1
+            //    Set trace data compare mask to 0  (64:87)
+            // 5. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_4
+            //    Clear MSKa, MSKb
+            // 6. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_5
+            //    Clear MSKc, MSKd
+            // 7. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_9
+            //     bit 0 = disable compression:
+            //     bit 1 = error_bit_compresion_care_mask
+            //             (default is zero so should be enabled)
+            //     32  msk_err_q                <= error_mode_lt(0);
+            //     33  pat_err_q                <= error_mode_lt(1);
+            //     34  trig0_err_msk            <= error_mode_lt(2);
+            //     35  trig1_err_msk            <= error_mode_lt(3);
+            //     match_err                    <= (msk_err_q or not pat_err_q)
+            //                                     xor error_stage_lt(0);
+            //     mask = 0 and pattern = 1 and may be trigger 0
+
             sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
 
             if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(4))
             {
-                // Trace configuration
-                // CME_LCL_DBG
-                // 0: LCL_EN_DBG
-                // 4: LCL_EN_INTR_ADDR
-                // 5: LCL_EN_TRACE_EXTRA
-                // 6: LCL_EN_TRACE_STALL
-                // 7: LCL_EN_WAIT_CYCLES
-                // 8: LCL_EN_FULL_SPEED
-                // inst: 3D20C000 | addis r9, 0, 0xC000 | R9 = 0xC0000000
-                // inst: 3C208F80 | addis r1, 0, 0x8F80 | R1 = 0x8F800000
-                // inst: 90290120 | stw   r1, 0x120(r9) | 0xC0000120 = R1
-
-                // 1. The trace array has to be stopped to configure it
-                // 2. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRCTRL_CONFIG
-                //    bit0: store_trig_mode_lt = 1
-                //    bit 11 enh_trace_mode = 1
-                //    bit 14:15 = trace_select_lt = 10 for CME0
-                // 3. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_0
-                //    Set trace data compare mask to 0  (0:63)
-                // 4. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_1
-                //    Set trace data compare mask to 0  (64:87)
-                // 5. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_4
-                //    Clear MSKa, MSKb
-                // 6. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_5
-                //    Clear MSKc, MSKd
-                // 7. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_9
-                //     bit 0 = disable compression:
-                //     bit 1 = error_bit_compresion_care_mask
-                //             (default is zero so should be enabled)
-                //     32  msk_err_q                <= error_mode_lt(0);
-                //     33  pat_err_q                <= error_mode_lt(1);
-                //     34  trig0_err_msk            <= error_mode_lt(2);
-                //     35  trig1_err_msk            <= error_mode_lt(3);
-                //     match_err                    <= (msk_err_q or not pat_err_q)
-                //                                     xor error_stage_lt(0);
-                //     mask = 0 and pattern = 1 and may be trigger 0
-
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(1));
 
-                if (m_pg & FST_EX_IN_QUAD)
+                for (ex_mask = 2; ex_mask; ex_mask--)
                 {
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 0), 0x3D20C00000000000);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 0), 0x3C208F8000000000);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 0), 0x9029012000000000);
+                    if (m_pg & ex_mask)
+                    {
 
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRCTRL_CONFIG, qloop),
-                                (BIT64(0) | BIT64(11) | BIT64(14)));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_0, qloop), 0);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_1, qloop), 0);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_4, qloop), 0);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_5, qloop), 0);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(L3TRA_TRACE_TRDATA_CONFIG_9, qloop),
-                                BITS64(33, 2));
-                }
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
+                                    0x3D20C00000000000);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
+                                    0x3C208F8000000000);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
+                                    0x9029012000000000);
 
-                if (m_pg & SND_EX_IN_QUAD)
-                {
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 1), 0x3D20C00000000000);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 1), 0x3C208F8000000000);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, 1), 0x9029012000000000);
-
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRCTRL_CONFIG | 0x80),
-                                                   qloop), (BIT64(0) | BIT64(11) | BIT64(14)));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_0 | 0x80),
-                                                   qloop), 0);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_1 | 0x80),
-                                                   qloop), 0);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_4 | 0x80),
-                                                   qloop), 0);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_5 | 0x80),
-                                                   qloop), 0);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD((L3TRA_TRACE_TRDATA_CONFIG_9 | 0x80),
-                                                   qloop), BITS64(33, 2));
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
+                                        (L3TRA_TRACE_TRCTRL_CONFIG   | (ex_index << 7)),
+                                        qloop), (BIT64(0) | BIT64(11) | BIT64(14)));
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
+                                        (L3TRA_TRACE_TRDATA_CONFIG_0 | (ex_index << 7)),
+                                        qloop), 0);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
+                                        (L3TRA_TRACE_TRDATA_CONFIG_1 | (ex_index << 7)),
+                                        qloop), 0);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
+                                        (L3TRA_TRACE_TRDATA_CONFIG_4 | (ex_index << 7)),
+                                        qloop), 0);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
+                                        (L3TRA_TRACE_TRDATA_CONFIG_5 | (ex_index << 7)),
+                                        qloop), 0);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
+                                        (L3TRA_TRACE_TRDATA_CONFIG_9 | (ex_index << 7)),
+                                        qloop), BITS64(33, 2));
+                    }
                 }
             }
 
@@ -949,14 +857,9 @@ p9_sgpe_stop_exit()
 
             PK_TRACE("Update STOP history on quad[%d]: \
                      STOP exit completed, cache ready", qloop);
-            SGPE_STOP_UPDATE_HISTORY(qloop,
-                                     QUAD_ADDR_BASE,
-                                     STOP_CACHE_READY_RUN,
-                                     STOP_TRANS_COMPLETE,
-                                     STOP_LEVEL_0,
-                                     STOP_LEVEL_0,
-                                     STOP_REQ_DISABLE,
-                                     STOP_ACT_DISABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_EXIT_COMPLETE;
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
 
             PK_TRACE("Update QSSR: drop quad_stopped");
             out32(OCB_QSSR_CLR, BIT32(qloop + 14));

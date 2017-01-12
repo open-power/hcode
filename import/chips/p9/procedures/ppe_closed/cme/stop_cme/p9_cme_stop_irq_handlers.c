@@ -47,7 +47,7 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
     PkMachineContext ctx;
     int      sem_post = 0;
     uint32_t raw_spwu = (in32(CME_LCL_EISR) & BITS32(14, 2)) >> SHIFT32(15);
-    uint64_t scom_data;
+    uint64_t scom_data = 0;
 
     if (raw_spwu & CME_MASK_C0)
     {
@@ -190,7 +190,8 @@ void
 p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
-    cppm_cmedb2_t    db2c0, db2c1;
+    cppm_cmedb2_t    db2c0 = {0};
+    cppm_cmedb2_t    db2c1 = {0};
 
     MARK_TRAP(STOP_DB2_HANDLER)
     PK_TRACE_INF("DB2 Handler");

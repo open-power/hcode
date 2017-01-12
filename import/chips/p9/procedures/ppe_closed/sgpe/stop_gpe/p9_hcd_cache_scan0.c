@@ -48,7 +48,7 @@ p9_hcd_cache_scan0(uint32_t quad, uint64_t regions, uint64_t scan_type)
     // OPCG GO, LBIST mode
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_OPCG_REG0,  quad), BIT64(1));
 #else
-    uint64_t scom_data;
+    uint64_t scom_data = 0;
     PK_TRACE("raise Vital clock region fence");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_CPLT_CTRL1_OR, quad), BIT64(3));
 

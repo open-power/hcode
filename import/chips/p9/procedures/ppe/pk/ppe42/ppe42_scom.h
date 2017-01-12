@@ -146,6 +146,11 @@ extern inline uint32_t getscom(const uint32_t i_chiplet, const uint32_t i_addres
     return _getscom(i_chiplet, i_address, o_data);
 }
 
+extern inline void putscom_norc(const uint32_t i_address, uint64_t i_data)
+{
+    PPE_STVD(i_address, i_data);
+}
+
 #ifdef __cplusplus
 } // extern C
 #endif

@@ -29,7 +29,7 @@
 int
 p9_hcd_core_pcb_arb(uint32_t core, uint8_t req_rel)
 {
-    uint32_t sisr;
+    uint32_t sisr = 0;
     out32(req_rel ? CME_LCL_SICR_OR : CME_LCL_SICR_CLR, core << SHIFT32(11));
 
     do

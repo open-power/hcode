@@ -71,22 +71,23 @@ p9_sgpe_stop_entry()
 {
     int          entry_ongoing[2] = {0, 0};
     int          l3_purge_aborted = 0;
-    uint32_t     ex = 0;
-    uint32_t     qloop;
-    uint32_t     cloop;
-    uint32_t     climit;
-    uint32_t     xentry;
-    uint32_t     qentry;
-    uint64_t     scom_data;
-    uint64_t     temp_data;
-    uint64_t     host_attn;
-    uint64_t     local_xstop;
-    ppm_sshsrc_t hist;
+    uint32_t     ex               = 0;
+    uint32_t     ex_mask          = 0;
+    uint32_t     bitloc           = 0;
+    uint32_t     qloop            = 0;
+    uint32_t     cloop            = 0;
+    uint32_t     climit           = 0;
+    uint32_t     xentry           = 0;
+    uint32_t     qentry           = 0;
+    uint64_t     host_attn        = 0;
+    uint64_t     local_xstop      = 0;
+    data64_t     scom_data        = {0};
+    data64_t     temp_data        = {0};
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
-    int          spin;
+    uint32_t     spin             = 0;
 #endif
 #if !SKIP_IPC
-    int          rc;
+    uint32_t     rc               = 0;
 #endif
 
     //--------------------------------------------------------------------------
@@ -339,14 +340,10 @@ p9_sgpe_stop_entry()
 
             PK_TRACE("Update STOP history on core[%d]: in transition of entry",
                      ((qloop << 2) + cloop));
-            SGPE_STOP_UPDATE_HISTORY(((qloop << 2) + cloop),
-                                     CORE_ADDR_BASE,
-                                     STOP_CORE_IS_GATED,
-                                     STOP_TRANS_ENTRY,
-                                     STOP_LEVEL_8,
-                                     STOP_LEVEL_8,
-                                     STOP_REQ_DISABLE,
-                                     STOP_ACT_DISABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_ENTRY_IN_SESSION;
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
+                            scom_data.value);
         }
 
         //====================================================
@@ -366,29 +363,29 @@ p9_sgpe_stop_entry()
         PPE_WAIT_CORE_CYCLES(256)
 
         PK_TRACE("Assert partial bad L2/L3 and stopping/stoped l2 pscom masks via RING_FENCE_MASK_LATCH");
-        scom_data = 0;
+        scom_data.words.lower = 0;
 
         if (!(G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop)))
         {
-            scom_data |= (PSCOM_MASK_EX0_L2 | PSCOM_MASK_EX0_L3);
+            scom_data.words.upper |= (PSCOM_MASK_EX0_L2 | PSCOM_MASK_EX0_L3);
         }
         else if ((ex & FST_EX_IN_QUAD) ||
                  (G_sgpe_stop_record.state[qloop].act_state_x0 >= LEVEL_EX_BASE))
         {
-            scom_data |= PSCOM_MASK_EX0_L2;
+            scom_data.words.upper |= PSCOM_MASK_EX0_L2;
         }
 
         if (!(G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop)))
         {
-            scom_data |= (PSCOM_MASK_EX1_L2 | PSCOM_MASK_EX1_L3);
+            scom_data.words.upper |= (PSCOM_MASK_EX1_L2 | PSCOM_MASK_EX1_L3);
         }
         else if ((ex & SND_EX_IN_QUAD) ||
                  (G_sgpe_stop_record.state[qloop].act_state_x1 >= LEVEL_EX_BASE))
         {
-            scom_data |= PSCOM_MASK_EX1_L2;
+            scom_data.words.upper |= PSCOM_MASK_EX1_L2;
         }
 
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, qloop), scom_data);
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, qloop), scom_data.value);
 
 
 
@@ -404,14 +401,14 @@ p9_sgpe_stop_entry()
 
         do
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, qloop), scom_data);
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, qloop), scom_data.value);
         }
-        while((~scom_data) & BIT64(8));
+        while(!(scom_data.words.upper & BIT32(8)));
 
         PK_TRACE("Check L2 clock is stopped via CLOCK_STAT_SL[4-13]");
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data.value);
 
-        if (((~scom_data) & ((uint64_t)ex << SHIFT64(9))) != 0)
+        if (((~(scom_data.words.upper)) & (ex << SHIFT32(9))) != 0)
         {
             PK_TRACE("ERROR: L2 clock stop failed. HALT SGPE!");
             pk_halt();
@@ -434,9 +431,9 @@ p9_sgpe_stop_entry()
 
         do
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QACSR, qloop), scom_data);
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QACSR, qloop), scom_data.value);
         }
-        while(((~scom_data >> SHIFT64(37)) & ex) != ex);
+        while((((~(scom_data.words.lower)) >> SHIFT64SH(37)) & ex) != ex);
 
         PK_TRACE("Switch glsmux to refclk to save clock grid power via EXCGCR[34/35]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, qloop),
@@ -481,14 +478,11 @@ p9_sgpe_stop_entry()
             // shift by 2 == times 4, which is cores per quad
             PK_TRACE("Update STOP history on core[%d]: in stop level 8",
                      ((qloop << 2) + cloop));
-            SGPE_STOP_UPDATE_HISTORY(((qloop << 2) + cloop),
-                                     CORE_ADDR_BASE,
-                                     STOP_CORE_IS_GATED,
-                                     entry_ongoing[cloop >> 1],
-                                     STOP_LEVEL_8,
-                                     STOP_LEVEL_8,
-                                     STOP_REQ_DISABLE,
-                                     STOP_ACT_ENABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = (SSH_ACT_LV8_COMPLETE |
+                                     ((entry_ongoing[cloop >> 1]) << SHIFT32(3)));
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
+                            scom_data.value);
         }
 
         PK_TRACE("Update QSSR: l2_stopped, drop stop_entry_ongoing");
@@ -535,14 +529,10 @@ p9_sgpe_stop_entry()
         out32(OCB_QSSR_OR, BIT32(qloop + 20));
 
         PK_TRACE("Update STOP history on quad[%d]: update request stop level", qloop);
-        SGPE_STOP_UPDATE_HISTORY(qloop,
-                                 QUAD_ADDR_BASE,
-                                 STOP_CACHE_IS_GATED,
-                                 STOP_TRANS_ENTRY,
-                                 G_sgpe_stop_record.state[qloop].req_state_q,
-                                 STOP_LEVEL_11,
-                                 STOP_REQ_ENABLE,
-                                 STOP_ACT_DISABLE);
+        scom_data.words.lower = 0;
+        scom_data.words.upper = (SSH_REQ_LEVEL_UPDATE |
+                                 (G_sgpe_stop_record.state[qloop].req_state_q << SHIFT32(7)));
+        GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
 
         //==================================
         MARK_TAG(SE_PURGE_L3, (32 >> qloop))
@@ -646,9 +636,9 @@ p9_sgpe_stop_entry()
                         do
                         {
                             GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG,
-                                                         qloop, 0), scom_data);
+                                                         qloop, 0), scom_data.value);
                         }
-                        while(scom_data & (BIT64(0) | BIT64(2)));
+                        while(scom_data.words.upper & (BIT32(0) | BIT32(2)));
                     }
 
                     if(ex & SND_EX_IN_QUAD)
@@ -656,9 +646,9 @@ p9_sgpe_stop_entry()
                         do
                         {
                             GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG,
-                                                         qloop, 1), scom_data);
+                                                         qloop, 1), scom_data.value);
                         }
-                        while(scom_data & (BIT64(0) | BIT64(2)));
+                        while(scom_data.words.upper & (BIT32(0) | BIT32(2)));
                     }
 
                     //=============================================
@@ -678,22 +668,22 @@ p9_sgpe_stop_entry()
             }
 
 #endif
-            scom_data = 0;
-            temp_data = 0;
+            scom_data.value = 0;
+            temp_data.value = 0;
 
             if (ex & FST_EX_IN_QUAD)
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 0),
-                            scom_data);
+                            scom_data.value);
             }
 
             if (ex & SND_EX_IN_QUAD)
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 1),
-                            temp_data);
+                            temp_data.value);
             }
         }
-        while((scom_data | temp_data) & BIT64(0));
+        while((scom_data.words.upper | temp_data.words.upper) & BIT32(0));
 
         if (l3_purge_aborted)
         {
@@ -718,9 +708,9 @@ p9_sgpe_stop_entry()
 
         do
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR, qloop), scom_data);
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR, qloop), scom_data.value);
         }
-        while(!(scom_data & BIT64(31)));
+        while(!(scom_data.words.upper & BIT32(31)));
 
         PK_TRACE("Drop powerbus purge via QCCR[30]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(30));
@@ -754,9 +744,10 @@ p9_sgpe_stop_entry()
         {
             do
             {
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 0), scom_data);
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 0),
+                            scom_data.value);
             }
-            while(!(scom_data & BIT64(0)));
+            while(!(scom_data.words.upper & BIT32(0)));
 
             PK_TRACE("CME0 Halted");
         }
@@ -765,9 +756,10 @@ p9_sgpe_stop_entry()
         {
             do
             {
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 1), scom_data);
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 1),
+                            scom_data.value);
             }
-            while(!(scom_data & BIT64(0)));
+            while(!(scom_data.words.upper & BIT32(0)));
 
             PK_TRACE("CME1 Halted");
         }
@@ -778,16 +770,16 @@ p9_sgpe_stop_entry()
         // Edram quiesce is asserted by hardware when l3 thold is asserted in cc
         if (ex & FST_EX_IN_QUAD)
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, qloop, 0), scom_data);
-            scom_data |= BIT64(7);
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, qloop, 0), scom_data);
+            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, qloop, 0), scom_data.value);
+            scom_data.words.upper |= BIT32(7);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, qloop, 0), scom_data.value);
         }
 
         if (ex & SND_EX_IN_QUAD)
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, qloop, 1), scom_data);
-            scom_data |= BIT64(7);
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, qloop, 1), scom_data);
+            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, qloop, 1), scom_data.value);
+            scom_data.words.upper |= BIT32(7);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, qloop, 1), scom_data.value);
         }
 
         PK_TRACE("Check NCU_SATUS_REG[0:3] for all zeros");
@@ -797,9 +789,9 @@ p9_sgpe_stop_entry()
             do
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_STATUS_REG, qloop, 0),
-                            scom_data);
+                            scom_data.value);
             }
-            while((~scom_data & BITS64(0, 4)) != BITS64(0 , 4));
+            while(((~(scom_data.words.upper)) & BITS32(0, 4)) != BITS32(0, 4));
         }
 
         if (ex & SND_EX_IN_QUAD)
@@ -807,9 +799,9 @@ p9_sgpe_stop_entry()
             do
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_STATUS_REG, qloop, 1),
-                            scom_data);
+                            scom_data.value);
             }
-            while((~scom_data & BITS64(0, 4)) != BITS64(0 , 4));
+            while(((~(scom_data.words.upper)) & BITS32(0, 4)) != BITS32(0, 4));
         }
 
         PK_TRACE_INF("SE11.C: NCU Status Clean");
@@ -848,16 +840,16 @@ p9_sgpe_stop_entry()
 
         do
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, qloop), scom_data);
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, qloop), scom_data.value);
         }
-        while((~scom_data) & BIT64(8));
+        while(!(scom_data.words.upper & BIT32(8)));
 
         PK_TRACE("Check core clock is stopped via CLOCK_STAT_SL[4-13]");
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data.value);
 
-        if (((~scom_data) & (CLK_REGION_ALL_BUT_EX        |
-                             ((uint64_t)ex << SHIFT64(7)) |
-                             ((uint64_t)ex << SHIFT64(13)))) != 0)
+        if (((~scom_data.value) & (CLK_REGION_ALL_BUT_EX        |
+                                   ((uint64_t)ex << SHIFT64(7)) |
+                                   ((uint64_t)ex << SHIFT64(13)))) != 0)
         {
             PK_TRACE("ERROR: Cache clock stop failed. HALT SGPE!");
             pk_halt();
@@ -897,32 +889,33 @@ p9_sgpe_stop_entry()
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), BITS64(4, 2) | BIT64(11) | BIT64(59));
 
         PK_TRACE("FCMS: checkword set");
-        scom_data = 0xa5a5a5a5a5a5a5a5;
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+        scom_data.value = 0xa5a5a5a5a5a5a5a5;
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
 
         for(spin = 1;; spin++)
         {
             PK_TRACE("FCMS: spin ring loop%d", spin);
-            scom_data = (G_ring_spin[spin][0] - G_ring_spin[spin - 1][0]) << 32;
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data);
+            scom_data.words.upper = (G_ring_spin[spin][0] - G_ring_spin[spin - 1][0]);
+            scom_data.words.lower = 0;
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data.value);
 
             PK_TRACE("FCMS: Poll OPCG done for ring spin");
 
             do
             {
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x10000100, qloop), scom_data);
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x10000100, qloop), scom_data.value);
             }
-            while(~scom_data & BIT64(8));
+            while(!(scom_data.words.upper & BIT32(8)));
 
             if (spin == 9)
             {
                 PK_TRACE("FCMS: checkword check");
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
 
-                if (scom_data != 0xa5a5a5a5a5a5a5a5)
+                if (scom_data.value != 0xa5a5a5a5a5a5a5a5)
                 {
                     PK_TRACE("ERROR: checkword[%x%x] failed. HALT SGPE!",
-                             UPPER32(scom_data), LOWER32(scom_data));
+                             scom_data.words.upper, scom_data.words.lower);
                     pk_halt();
                 }
 
@@ -930,14 +923,15 @@ p9_sgpe_stop_entry()
             }
 
             PK_TRACE("FCMS: save pbie read ptr");
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data);
-            EXTRACT_RING_BITS(G_ring_spin[spin][1], scom_data, G_ring_save[qloop][spin - 1]);
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
+            EXTRACT_RING_BITS(G_ring_spin[spin][1], scom_data.value,
+                              G_ring_save[qloop][spin - 1]);
             PK_TRACE("FCMS: mask: %8x %8x",
                      UPPER32(G_ring_spin[spin][1]),
                      LOWER32(G_ring_spin[spin][1]));
             PK_TRACE("FCMS: ring: %8x %8x",
-                     UPPER32(scom_data),
-                     LOWER32(scom_data));
+                     scom_data.words.upper,
+                     scom_data.words.lower);
             PK_TRACE("FCMS: save: %8x %8x",
                      UPPER32(G_ring_save[qloop][spin - 1]),
                      LOWER32(G_ring_save[qloop][spin - 1]));
@@ -960,33 +954,26 @@ p9_sgpe_stop_entry()
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WOR, qloop), BIT64(16));
 
         PK_TRACE("Shutdown L3 EDRAM via QCCR[0-3/4-7]");
+
         // QCCR[0/4] EDRAM_ENABLE_DC
         // QCCR[1/5] EDRAM_VWL_ENABLE_DC
         // QCCR[2/6] L3_EX0/1_EDRAM_VROW_VBLH_ENABLE_DC
         // QCCR[3/7] EDRAM_VPP_ENABLE_DC
-
-        if (ex & SND_EX_IN_QUAD)
+        for (ex_mask = 2; ex_mask; ex_mask--)
         {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
-                        BIT64(7));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
-                        BIT64(6));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
-                        BIT64(5));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
-                        BIT64(4));
-        }
+            if (ex & ex_mask)
+            {
+                bitloc = (ex_mask & 1) << 2;
 
-        if (ex & FST_EX_IN_QUAD)
-        {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
-                        BIT64(3));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
-                        BIT64(2));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
-                        BIT64(1));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
-                        BIT64(0));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
+                            BIT64((bitloc + 3)));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
+                            BIT64((bitloc + 2)));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
+                            BIT64((bitloc + 1)));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop),
+                            BIT64(bitloc));
+            }
         }
 
 #if !STOP_PRIME
@@ -1012,9 +999,9 @@ p9_sgpe_stop_entry()
 
             do
             {
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data);
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data.value);
             }
-            while(!(scom_data & BIT64(3)));
+            while(!(scom_data.words.upper & BIT32(3)));
 
             PK_TRACE("Power off VDD via PFCS[0-1]");
             // vdd_pfet_force_state = 01 (Force Voff)
@@ -1024,9 +1011,9 @@ p9_sgpe_stop_entry()
 
             do
             {
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data);
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data.value);
             }
-            while(!(scom_data & BIT64(1)));
+            while(!(scom_data.words.upper & BIT32(1)));
 
             PK_TRACE("Turn off force voff via PFCS[0-3]");
             // vdd_pfet_force_state = 00 (Nop)
@@ -1051,25 +1038,16 @@ p9_sgpe_stop_entry()
 
             PK_TRACE("Update STOP history on core[%d]: in stop level 11",
                      ((qloop << 2) + cloop));
-            SGPE_STOP_UPDATE_HISTORY(((qloop << 2) + cloop),
-                                     CORE_ADDR_BASE,
-                                     STOP_CORE_IS_GATED,
-                                     STOP_TRANS_COMPLETE,
-                                     STOP_LEVEL_11,
-                                     STOP_LEVEL_11,
-                                     STOP_REQ_DISABLE,
-                                     STOP_ACT_ENABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_ACT_LV11_COMPLETE ;
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
+                            scom_data.value);
         }
 
         PK_TRACE("Update STOP history on quad[%d]: in stop level 11", qloop);
-        SGPE_STOP_UPDATE_HISTORY(qloop,
-                                 QUAD_ADDR_BASE,
-                                 STOP_CACHE_IS_GATED,
-                                 STOP_TRANS_COMPLETE,
-                                 STOP_LEVEL_11,
-                                 STOP_LEVEL_11,
-                                 STOP_REQ_DISABLE,
-                                 STOP_ACT_ENABLE);
+        scom_data.words.lower = 0;
+        scom_data.words.upper = SSH_ACT_LV11_COMPLETE;
+        GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
 
         PK_TRACE("Update QSSR: quad_stopped");
         out32(OCB_QSSR_OR, BIT32(qloop + 14));

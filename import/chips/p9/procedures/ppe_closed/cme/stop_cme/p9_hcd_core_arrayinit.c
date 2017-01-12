@@ -30,7 +30,7 @@ int
 p9_hcd_core_arrayinit(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
-    uint64_t scom_data;
+    uint64_t scom_data = 0;
 
     PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));

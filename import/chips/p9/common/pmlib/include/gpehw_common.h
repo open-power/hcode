@@ -92,15 +92,15 @@ enum GPE_SCOM_ADDRESS_PARAMETERS
 #define GPE_SCOM_ADDR_CME(addr, quad, cme) \
     GPE_SCOM_ADDR(addr, CME_ADDR_BASE, quad, cme)
 
-#define GPE_GETSCOM(addr, data)   getscom(0, addr, &data);
+#define GPE_GETSCOM(addr, data)   PPE_LVD(addr, data);
 
-#define GPE_PUTSCOM(addr, data)   putscom(0, addr, data);
+#define GPE_PUTSCOM(addr, data)   putscom_norc(addr, data);
 
 #define GPE_GETSCOM_VAR(addr, cplt_base, cq_offset, ex_select, data) \
-    getscom(0,GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select),&data);
+    PPE_LVD(GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select), data);
 
 #define GPE_PUTSCOM_VAR(addr, cplt_base, cq_offset, ex_select, data) \
-    putscom(0,GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select), data);
+    putscom_norc(GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select), data);
 
 /// GPE data buffer in SRAM(mostly for IPC)
 #define GPE_BUFFER(declaration) \

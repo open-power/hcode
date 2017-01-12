@@ -99,7 +99,7 @@ enum P9_STOP_LEVELS
 };
 
 /// STOP History Ctrl and Status constants
-enum P9_STOP_HISTORY_CTRL_STATUS
+enum P9_STOP_STATE_HISTORY_CTRL_STATUS
 {
     STOP_CORE_READY_RUN          = 0,
     STOP_CACHE_READY_RUN         = 0,
@@ -113,6 +113,22 @@ enum P9_STOP_HISTORY_CTRL_STATUS
     STOP_ACT_ENABLE              = 1,
     STOP_REQ_DISABLE             = 0,
     STOP_ACT_DISABLE             = 0
+};
+
+// stop_gated       : 0
+// stop_transition  : 2:3 (00 complete, 01 cme completed, 10 entry, 11 exit)
+// req_stop_level   : 4:7
+// act_stop_level   : 8:11
+// req_write_enable : 12
+// act_write_enable : 13
+enum P9_STOP_STATE_HISTORY_BIT_MASK
+{
+    SSH_STOP_GATED               = BIT32(0),
+    SSH_TRANS_SGPE               = BIT32(3),
+    SSH_TRANS_ENTRY              = BIT32(2),
+    SSH_TRANS_EXIT               = BITS32(2, 2),
+    SSH_REQ_ENABLE               = BIT32(12),
+    SSH_ACT_ENABLE               = BIT32(13)
 };
 
 /// Homer Layout

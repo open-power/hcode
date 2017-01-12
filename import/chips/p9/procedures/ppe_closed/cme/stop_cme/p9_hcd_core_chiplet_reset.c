@@ -49,8 +49,8 @@ enum P9_HCD_CORE_CHIPLET_RESET_CONSTANTS
 int
 p9_hcd_core_chiplet_reset(uint32_t core)
 {
-    int rc = CME_STOP_SUCCESS;
-    data64_t scom_data;
+    int rc             = CME_STOP_SUCCESS;
+    data64_t scom_data = {0};
 
     PK_TRACE("Init NET_CTRL0[1,3-5,11-14,16,18,22,25,26],step needed for hotplug");
     CME_PUTSCOM(CPPM_NC0INDIR_OR,  core, C_NET_CTRL0_INIT_VECTOR);
@@ -90,7 +90,7 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     // to get the core to scan at 4:1, need to put a scan ratio of 2:1 if run at pll speed.
     PK_TRACE("Set scan ratio to 2:1 in non-bypass mode via OPCG_ALIGN[47-51]");
     CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, scom_data.value);
-    scom_data.words.lower &= ~BITS32(15, 5);
+    scom_data.words.lower &= ~BITS64SH(47, 5);
 #if !EPM_P9_TUNING
     scom_data.words.lower |= BIT32(19);
 #endif

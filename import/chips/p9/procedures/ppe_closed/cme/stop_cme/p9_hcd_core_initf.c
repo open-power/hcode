@@ -39,6 +39,5 @@ p9_hcd_core_initf(uint32_t core)
     PK_TRACE("Scan ec_mode ring core value %d", core);
     putRing(core, CME_SCOM_EQ, ec_mode);
 
-    // Markers needed for core ininf
     return rc;
 }

@@ -61,13 +61,14 @@ p9_cme_stop_entry()
     uint32_t        core_aborted        = 0;
     uint32_t        core_catchup        = 0;
     uint32_t        core_stop1          = 0;
+    uint32_t        core_index          = 0;
+    uint32_t        core_mask           = 0;
     uint32_t        core_raw            = 0;
-    uint32_t        core;
-    uint32_t        pm_states;
-    uint32_t        lclr_data;
-    uint64_t        scom_data;
-    ppm_sshsrc_t    hist;
-    ppm_pig_t       pig;
+    uint32_t        core                = 0;
+    uint32_t        pm_states           = 0;
+    uint32_t        lclr_data           = 0;
+    data64_t        scom_data           = {0};
+    ppm_pig_t       pig                 = {0};
 
     //--------------------------------------------------------------------------
     PK_TRACE_INF("+++++ +++++ BEGIN OF STOP ENTRY +++++ +++++");
@@ -107,7 +108,7 @@ p9_cme_stop_entry()
     // bit1 is Recoverable Error
     // bit2 is Special Attention
     if (((core & CME_MASK_C0) && (in32(CME_LCL_SISR)    & BITS32(13, 2))) ||
-        ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS32(29, 2))))
+        ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS64SH(61, 2))))
     {
         PK_TRACE_INF("WARNING: Attn/Recov Present, Abort Entry and Return");
         return CME_STOP_SUCCESS;
@@ -140,84 +141,53 @@ p9_cme_stop_entry()
         // !pm_active AND running  : req_level = 0 by exit,
         //                                       not changing req_level
         // !pm_active AND !running : req_level = Current req_level
-        if (core & CME_MASK_C0)
+
+        for (core_mask = 2; core_mask; core_mask--)
         {
-            G_cme_stop_record.req_level_c0 =
-                (pm_states & BITS32(4, 4)) >> SHIFT32(7);
-
-            if (G_cme_stop_record.req_level_c0 == STOP_LEVEL_1)
+            if (core & core_mask)
             {
-                G_cme_stop_record.act_level_c0 = STOP_LEVEL_1;
-                core_stop1 |= CME_MASK_C0;
-            }
+                core_index = core_mask & 1;
+                G_cme_stop_record.req_level[core_index] =
+                    (pm_states & BITS64SH(36, 4)) >> SHIFT64SH(39);
 
-            if ((G_cme_stop_record.header_flags & MAP_11_TO_8) &&
-                (G_cme_stop_record.req_level_c0 == STOP_LEVEL_11))
-            {
+                if (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_1)
+                {
+                    G_cme_stop_record.act_level[core_index] = STOP_LEVEL_1;
+                    core_stop1 |= core_mask;
+                }
 
-                G_cme_stop_record.req_level_c0 = STOP_LEVEL_8;
-            }
+                if ((G_cme_stop_record.header_flags & MAP_11_TO_8) &&
+                    (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_11))
+                {
 
-            if ((G_cme_stop_record.header_flags & MAP_8_TO_5) &&
-                (G_cme_stop_record.req_level_c0 == STOP_LEVEL_8))
-            {
-                G_cme_stop_record.req_level_c0 = STOP_LEVEL_5;
-            }
+                    G_cme_stop_record.req_level[core_index] = STOP_LEVEL_8;
+                }
 
-            if ((G_cme_stop_record.header_flags & MAP_5_TO_4) &&
-                (G_cme_stop_record.req_level_c0 == STOP_LEVEL_5))
-            {
-                G_cme_stop_record.req_level_c0 = STOP_LEVEL_4;
-            }
+                if ((G_cme_stop_record.header_flags & MAP_8_TO_5) &&
+                    (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_8))
+                {
+                    G_cme_stop_record.req_level[core_index] = STOP_LEVEL_5;
+                }
 
-            if ((G_cme_stop_record.header_flags & MAP_4_TO_2) &&
-                (G_cme_stop_record.req_level_c0 == STOP_LEVEL_4))
-            {
-                G_cme_stop_record.req_level_c0 = STOP_LEVEL_2;
-            }
-        }
+                if ((G_cme_stop_record.header_flags & MAP_5_TO_4) &&
+                    (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_5))
+                {
+                    G_cme_stop_record.req_level[core_index] = STOP_LEVEL_4;
+                }
 
-        if (core & CME_MASK_C1)
-        {
-            G_cme_stop_record.req_level_c1 =
-                (pm_states & BITS32(8, 4)) >> SHIFT32(11);
-
-            if (G_cme_stop_record.req_level_c1 == STOP_LEVEL_1)
-            {
-                G_cme_stop_record.act_level_c1 = STOP_LEVEL_1;
-                core_stop1 |= CME_MASK_C1;
-            }
-
-            if ((G_cme_stop_record.header_flags & MAP_11_TO_8) &&
-                (G_cme_stop_record.req_level_c1 == STOP_LEVEL_11))
-            {
-                G_cme_stop_record.req_level_c1 = STOP_LEVEL_8;
-            }
-
-            if ((G_cme_stop_record.header_flags & MAP_8_TO_5) &&
-                (G_cme_stop_record.req_level_c1 == STOP_LEVEL_8))
-            {
-                G_cme_stop_record.req_level_c1 = STOP_LEVEL_5;
-            }
-
-            if ((G_cme_stop_record.header_flags & MAP_5_TO_4) &&
-                (G_cme_stop_record.req_level_c1 == STOP_LEVEL_5))
-            {
-                G_cme_stop_record.req_level_c1 = STOP_LEVEL_4;
-            }
-
-            if ((G_cme_stop_record.header_flags & MAP_4_TO_2) &&
-                (G_cme_stop_record.req_level_c1 == STOP_LEVEL_4))
-            {
-                G_cme_stop_record.req_level_c1 = STOP_LEVEL_2;
+                if ((G_cme_stop_record.header_flags & MAP_4_TO_2) &&
+                    (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_4))
+                {
+                    G_cme_stop_record.req_level[core_index] = STOP_LEVEL_2;
+                }
             }
         }
 
         PK_TRACE_DBG("Check: Stop Levels Request[%d %d] Actual[%d, %d]",
-                     G_cme_stop_record.req_level_c0,
-                     G_cme_stop_record.req_level_c1,
-                     G_cme_stop_record.act_level_c0,
-                     G_cme_stop_record.act_level_c1);
+                     G_cme_stop_record.req_level[0],
+                     G_cme_stop_record.req_level[1],
+                     G_cme_stop_record.act_level[0],
+                     G_cme_stop_record.act_level[1]);
 
         // Mark core as to be stopped
         G_cme_stop_record.core_running &= ~core;
@@ -226,7 +196,7 @@ p9_cme_stop_entry()
         {
             PK_TRACE_DBG("Check: core[%d] core_stop1[%d]", core, core_stop1);
 
-#if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
+#if HW386841_DD1_DSL_STOP1_FIX
 
             //----------------------------------------------------------------------
             PK_TRACE_INF("+++++ +++++ STOP LEVEL 1 ENTRY +++++ +++++");
@@ -237,13 +207,9 @@ p9_cme_stop_entry()
             out32(CME_LCL_SICR_CLR, core_stop1 << SHIFT32(1));
 
             PK_TRACE("Update STOP history: in core stop level 1");
-            CME_STOP_UPDATE_HISTORY(core_stop1,
-                                    STOP_CORE_IS_GATED,
-                                    STOP_TRANS_COMPLETE,
-                                    STOP_LEVEL_1,
-                                    STOP_LEVEL_1,
-                                    STOP_REQ_ENABLE,
-                                    STOP_ACT_ENABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_ACT_LV1_COMPLETE;
+            CME_PUTSCOM(PPM_SSHSRC, core_stop1, scom_data.value);
 
             core = core & ~core_stop1;
 
@@ -275,46 +241,38 @@ p9_cme_stop_entry()
         out32(CME_LCL_SICR_CLR, core << SHIFT32(1));
 
         // set target_level from pm_state for both cores or just one core
-        target_level = (core == CME_MASK_C0) ? G_cme_stop_record.req_level_c0 :
-                       G_cme_stop_record.req_level_c1;
+        target_level = (core == CME_MASK_C0) ? G_cme_stop_record.req_level[0] :
+                       G_cme_stop_record.req_level[1];
 
         // If both cores are going into STOP but targeting different levels,
         if ((core == CME_MASK_BC) &&
-            (G_cme_stop_record.req_level_c0 != G_cme_stop_record.req_level_c1))
+            (G_cme_stop_record.req_level[0] != G_cme_stop_record.req_level[1]))
         {
             // set target_level to the lighter level targeted by one core
             // set deeper_level to the deeper level targeted by deeper core
-            deeper_level = G_cme_stop_record.req_level_c0;
+            deeper_level = G_cme_stop_record.req_level[0];
             deeper_core  = CME_MASK_C0;
 
-            if (G_cme_stop_record.req_level_c0 < G_cme_stop_record.req_level_c1)
+            if (G_cme_stop_record.req_level[0] < G_cme_stop_record.req_level[1])
             {
-                target_level = G_cme_stop_record.req_level_c0;
-                deeper_level = G_cme_stop_record.req_level_c1;
+                target_level = G_cme_stop_record.req_level[0];
+                deeper_level = G_cme_stop_record.req_level[1];
                 deeper_core  = CME_MASK_C1;
             }
         }
 
         PK_TRACE("Update STOP history: in transition of entry");
         // Set req_level_level to target_level of either both or just one core
-        CME_STOP_UPDATE_HISTORY(core,
-                                STOP_CORE_READY_RUN,
-                                STOP_TRANS_ENTRY,
-                                target_level,
-                                STOP_LEVEL_0,
-                                STOP_REQ_ENABLE,
-                                STOP_ACT_DISABLE);
+        scom_data.words.lower = 0;
+        scom_data.words.upper = (SSH_REQ_LEVEL_UPDATE | (target_level << SHIFT32(7)));
+        CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
         // Set req_level_level to deeper_level for deeper core
         if (deeper_core)
         {
-            CME_STOP_UPDATE_HISTORY(deeper_core,
-                                    STOP_CORE_READY_RUN,
-                                    STOP_TRANS_ENTRY,
-                                    deeper_level,
-                                    STOP_LEVEL_0,
-                                    STOP_REQ_ENABLE,
-                                    STOP_ACT_DISABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = (SSH_REQ_LEVEL_UPDATE | (deeper_level << SHIFT32(7)));
+            CME_PUTSCOM(PPM_SSHSRC, deeper_core, scom_data.value);
         }
 
         PK_TRACE_DBG("Check: core[%d] target_lv[%d] deeper_lv[%d] deeper_core[%d]",
@@ -373,14 +331,14 @@ p9_cme_stop_entry()
 
         do
         {
-            CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
+            CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data.value);
         }
-        while((~scom_data) & BIT64(8));
+        while(!(scom_data.words.upper & BIT32(8)));
 
         PK_TRACE("Check core clock is stopped via CLOCK_STAT_SL[4-13]");
-        CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data);
+        CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data.value);
 
-        if (((~scom_data) & CLK_REGION_ALL_BUT_PLL) != 0)
+        if (((~scom_data.value) & CLK_REGION_ALL_BUT_PLL) != 0)
         {
             PK_TRACE_INF("ERROR: Core Clock Stop Failed. HALT CME!");
             pk_halt();
@@ -402,9 +360,9 @@ p9_cme_stop_entry()
 
         do
         {
-            CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_OR, scom_data);
+            CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_OR, scom_data.value);
         }
-        while(scom_data & BIT64(13));
+        while(scom_data.words.upper & BIT32(13));
 
         PK_TRACE("Switch glsmux to refclk to save clock grid power via CGCR[3]");
         CME_PUTSCOM(C_PPM_CGCR, core, 0);
@@ -429,16 +387,16 @@ p9_cme_stop_entry()
 
         if (core & CME_MASK_C0)
         {
-            scom_data = in64(CME_LCL_PECESR0);
-            CME_PUTSCOM(CPPM_PECES, core, scom_data);
-            G_cme_stop_record.act_level_c0 = STOP_LEVEL_2;
+            scom_data.value = in64(CME_LCL_PECESR0);
+            CME_PUTSCOM(CPPM_PECES, CME_MASK_C0, scom_data.value);
+            G_cme_stop_record.act_level[0] = STOP_LEVEL_2;
         }
 
         if (core & CME_MASK_C1)
         {
-            scom_data = in64(CME_LCL_PECESR1);
-            CME_PUTSCOM(CPPM_PECES, core, scom_data);
-            G_cme_stop_record.act_level_c1 = STOP_LEVEL_2;
+            scom_data.value = in64(CME_LCL_PECESR1);
+            CME_PUTSCOM(CPPM_PECES, CME_MASK_C1, scom_data.value);
+            G_cme_stop_record.act_level[1] = STOP_LEVEL_2;
         }
 
         PK_TRACE_INF("SE2.D: Clock Sync Dropped");
@@ -453,26 +411,19 @@ p9_cme_stop_entry()
             target_level == STOP_LEVEL_2 ?
             STOP_TRANS_COMPLETE : STOP_TRANS_ENTRY;
 
-        CME_STOP_UPDATE_HISTORY(core,
-                                STOP_CORE_IS_GATED,
-                                entry_ongoing,
-                                target_level,
-                                STOP_LEVEL_2,
-                                STOP_REQ_DISABLE,
-                                STOP_ACT_ENABLE);
+        scom_data.words.lower = 0;
+        scom_data.words.upper = (SSH_ACT_LV2_COMPLETE | (entry_ongoing << SHIFT32(3)));
+        CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
         // If both cores targeting different levels
         // deeper core should have at least deeper stop level than 2
         // but only need to modify deeper core history if another one was done
         if (deeper_core && !entry_ongoing)
         {
-            CME_STOP_UPDATE_HISTORY(deeper_core,
-                                    STOP_CORE_IS_GATED,
-                                    STOP_TRANS_ENTRY,
-                                    deeper_level,
-                                    STOP_LEVEL_2,
-                                    STOP_REQ_DISABLE,
-                                    STOP_ACT_DISABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_ACT_LV2_CONTINUE;
+            CME_PUTSCOM(PPM_SSHSRC, deeper_core, scom_data.value);
+
             // from now on, proceed with only deeper core
             core          = deeper_core;
             target_level  = deeper_level;
@@ -620,12 +571,12 @@ p9_cme_stop_entry()
                         // Drop to Vmin
                         if(core & CME_MASK_C0)
                         {
-                            G_cme_stop_record.act_level_c0 = STOP_LEVEL_3;
+                            G_cme_stop_record.act_level[0] = STOP_LEVEL_3;
                         }
 
                         if(core & CME_MASK_C1)
                         {
-                            G_cme_stop_record.act_level_c1 = STOP_LEVEL_3;
+                            G_cme_stop_record.act_level[1] = STOP_LEVEL_3;
                         }
 
                         //===========================
@@ -634,14 +585,9 @@ p9_cme_stop_entry()
 
                         PK_TRACE("SE3.c");
                         // Update Stop History: In Core Stop Level 3
-
-                        CME_STOP_UPDATE_HISTORY(core,
-                                                STOP_CORE_IS_GATED,
-                                                STOP_TRANS_COMPLETE,
-                                                target_level,
-                                                STOP_LEVEL_3,
-                                                STOP_REQ_DISABLE,
-                                                STOP_ACT_ENABLE);
+                        scom_data.words.lower = 0;
+                        scom_data.words.upper = SSH_ACT_LV3_COMPLETE;
+                        CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
             */
             // If both cores targeting different levels
             // deeper core should have at least deeper stop level than 3
@@ -649,13 +595,9 @@ p9_cme_stop_entry()
             if (deeper_core)
             {
                 /*
-                                CME_STOP_UPDATE_HISTORY(deeper_core,
-                                                        STOP_CORE_IS_GATED,
-                                                        STOP_TRANS_ENTRY,
-                                                        deeper_level,
-                                                        STOP_LEVEL_2,
-                                                        STOP_REQ_DISABLE,
-                                                        STOP_ACT_ENABLE);
+                scom_data.words.lower = 0;
+                scom_data.words.upper = SSH_ACT_LV3_CONTINUE;
+                CME_PUTSCOM(PPM_SSHSRC, deeper_core, scom_data.value);
                 */
                 // from now on, proceed with only deeper core
                 core          = deeper_core;
@@ -702,7 +644,7 @@ p9_cme_stop_entry()
         // bit2 is Special Attention
         // bit3 is Core Checkstop
         if (((core & CME_MASK_C0) && (in32(CME_LCL_SISR)    & BITS32(12, 4))) ||
-            ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS32(28, 4))))
+            ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS64SH(60, 4))))
         {
             PK_TRACE_INF("WARNING: Xstop/Attn/Recov Present, Skip Core Power Off");
         }
@@ -721,9 +663,9 @@ p9_cme_stop_entry()
 
             do
             {
-                CME_GETSCOM(PPM_PFSNS, core, CME_SCOM_AND, scom_data);
+                CME_GETSCOM(PPM_PFSNS, core, CME_SCOM_AND, scom_data.value);
             }
-            while(!(scom_data & BIT64(1)));
+            while(!(scom_data.words.upper & BIT32(1)));
 
             PK_TRACE("Turn off force voff via PFCS[0-1]");
             // vdd_pfet_force_state = 00 (Nop)
@@ -736,12 +678,12 @@ p9_cme_stop_entry()
 
         if (core & CME_MASK_C0)
         {
-            G_cme_stop_record.act_level_c0 = STOP_LEVEL_4;
+            G_cme_stop_record.act_level[0] = STOP_LEVEL_4;
         }
 
         if (core & CME_MASK_C1)
         {
-            G_cme_stop_record.act_level_c1 = STOP_LEVEL_4;
+            G_cme_stop_record.act_level[1] = STOP_LEVEL_4;
         }
 
         //===========================
@@ -753,26 +695,20 @@ p9_cme_stop_entry()
         entry_ongoing =
             target_level == STOP_LEVEL_4 ? STOP_TRANS_COMPLETE :
             STOP_TRANS_ENTRY;
-        CME_STOP_UPDATE_HISTORY(core,
-                                STOP_CORE_IS_GATED,
-                                entry_ongoing,
-                                target_level,
-                                STOP_LEVEL_4,
-                                STOP_REQ_DISABLE,
-                                STOP_ACT_ENABLE);
+
+        scom_data.words.lower = 0;
+        scom_data.words.upper = (SSH_ACT_LV4_COMPLETE | (entry_ongoing << SHIFT32(3)));
+        CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
         // If both cores targeting different levels
         // deeper core should have at least deeper stop level than 4
         // only need to modify deeper core history if another one was done
         if (deeper_core && !entry_ongoing)
         {
-            CME_STOP_UPDATE_HISTORY(deeper_core,
-                                    STOP_CORE_IS_GATED,
-                                    STOP_TRANS_ENTRY,
-                                    deeper_level,
-                                    STOP_LEVEL_4,
-                                    STOP_REQ_DISABLE,
-                                    STOP_ACT_DISABLE);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_ACT_LV4_CONTINUE;
+            CME_PUTSCOM(PPM_SSHSRC, deeper_core, scom_data.value);
+
             // from now on, proceed with only deeper core
             core          = deeper_core;
             target_level  = deeper_level;
@@ -833,8 +769,8 @@ p9_cme_stop_entry()
         PK_TRACE_INF("+++++ +++++ STOP LEVEL 5-7 ENTRY +++++ +++++");
         //----------------------------------------------------------------------
 
-        if ((G_cme_stop_record.req_level_c0 >= STOP_LEVEL_8) &&
-            (G_cme_stop_record.req_level_c1 >= STOP_LEVEL_8))
+        if ((G_cme_stop_record.req_level[0] >= STOP_LEVEL_8) &&
+            (G_cme_stop_record.req_level[1] >= STOP_LEVEL_8))
         {
 
             //================================
@@ -911,52 +847,34 @@ p9_cme_stop_entry()
         //=============================
 
         PK_TRACE("Update STOP history: in core stop level 5");
-        CME_STOP_UPDATE_HISTORY(core,
-                                STOP_CORE_IS_GATED,
-                                STOP_TRANS_CORE_PORTION,
-                                target_level,
-                                STOP_LEVEL_5,
-                                STOP_REQ_DISABLE,
-                                STOP_ACT_ENABLE);
+        scom_data.words.lower = 0;
+        scom_data.words.upper = SSH_ACT_LV5_COMPLETE;
+        CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
         PK_TRACE("Send PCB interrupt per core via PIG, select irq type via CPMMR[10]");
 
-        if (core & CME_MASK_C0)
+        for (core_mask = 2; core_mask; core_mask--)
         {
-            if (G_cme_stop_record.req_level_c0 < STOP_LEVEL_11)
+            if (core & core_mask)
             {
-                CME_PUTSCOM(CPPM_CPMMR_OR, CME_MASK_C0, BIT64(10));
-                pig.fields.req_intr_type = PIG_TYPE3;
-            }
-            else
-            {
-                CME_PUTSCOM(CPPM_CPMMR_CLR, CME_MASK_C0, BIT64(10));
-                pig.fields.req_intr_type = PIG_TYPE2;
-            }
+                core_index = core_mask & 1;
 
-            pig.fields.req_intr_payload = G_cme_stop_record.req_level_c0;
-            CME_PUTSCOM(PPM_PIG, CME_MASK_C0, pig.value);
-            G_cme_stop_record.core_stopgpe |= core;
-            G_cme_stop_record.act_level_c0 = STOP_LEVEL_5;
-        }
+                if (G_cme_stop_record.req_level[core_index] < STOP_LEVEL_11)
+                {
+                    CME_PUTSCOM(CPPM_CPMMR_OR, core_mask, BIT64(10));
+                    pig.fields.req_intr_type = PIG_TYPE3;
+                }
+                else
+                {
+                    CME_PUTSCOM(CPPM_CPMMR_CLR, core_mask, BIT64(10));
+                    pig.fields.req_intr_type = PIG_TYPE2;
+                }
 
-        if (core & CME_MASK_C1)
-        {
-            if (G_cme_stop_record.req_level_c1 < STOP_LEVEL_11)
-            {
-                CME_PUTSCOM(CPPM_CPMMR_OR, CME_MASK_C1, BIT64(10));
-                pig.fields.req_intr_type = PIG_TYPE3;
+                pig.fields.req_intr_payload = G_cme_stop_record.req_level[core_index];
+                CME_PUTSCOM(PPM_PIG, core_mask, pig.value);
+                G_cme_stop_record.core_stopgpe |= core;
+                G_cme_stop_record.act_level[core_index] = STOP_LEVEL_5;
             }
-            else
-            {
-                CME_PUTSCOM(CPPM_CPMMR_CLR, CME_MASK_C1, BIT64(10));
-                pig.fields.req_intr_type = PIG_TYPE2;
-            }
-
-            pig.fields.req_intr_payload = G_cme_stop_record.req_level_c1;
-            CME_PUTSCOM(PPM_PIG, CME_MASK_C1, pig.value);
-            G_cme_stop_record.core_stopgpe |= core;
-            G_cme_stop_record.act_level_c1 = STOP_LEVEL_5;
         }
 
         PK_TRACE("Switch PPM wakeup to STOP-GPE via CPMMR[13]");

@@ -30,11 +30,12 @@
 int
 p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
-    int rc = SGPE_STOP_SUCCESS;
+
+    int rc           = SGPE_STOP_SUCCESS;
 
 #if !SKIP_HOMER_ACCESS
 
-    int i;
+    int      i       = 0;
     uint32_t qoffset = 0;
     uint32_t qaddr   = 0;
     uint64_t qdata   = 0;

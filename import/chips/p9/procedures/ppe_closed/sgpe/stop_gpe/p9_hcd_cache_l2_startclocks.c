@@ -31,8 +31,8 @@ extern SgpeStopRecord G_sgpe_stop_record;
 int
 p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
 {
-    int      rc = SGPE_STOP_SUCCESS;
-    uint64_t scom_data;
+    int      rc        = SGPE_STOP_SUCCESS;
+    uint64_t scom_data = 0;
 
     PK_TRACE("Drop L2 Regional Fences via CPLT_CTRL1[8/9]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad),
@@ -151,27 +151,17 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
 
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data);
 
-    PK_TRACE("Drop TLBIE Quiesce");
+    PK_TRACE("Drop TLBIE Quiesce and L2 Snoop disable");
 
     if (ex & FST_EX_IN_QUAD)
     {
         GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 0), BIT64(21));
-    }
-
-    if (ex & SND_EX_IN_QUAD)
-    {
-        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 1), BIT64(21));
-    }
-
-    PK_TRACE("Drop L2 Snoop Disable");
-
-    if (ex & FST_EX_IN_QUAD)
-    {
         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, quad, 0), 0);
     }
 
     if (ex & SND_EX_IN_QUAD)
     {
+        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 1), BIT64(21));
         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, quad, 1), 0);
     }
 

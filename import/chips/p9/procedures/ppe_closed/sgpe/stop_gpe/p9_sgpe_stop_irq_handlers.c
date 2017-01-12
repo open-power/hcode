@@ -86,15 +86,15 @@ void
 p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext  ctx;
-    uint32_t          cirq;
-    uint32_t          qirq;
-    uint32_t          cloop;
-    uint32_t          qloop;
+    uint32_t          cirq        = 0;
+    uint32_t          qirq        = 0;
+    uint32_t          cloop       = 0;
+    uint32_t          qloop       = 0;
     uint32_t          cpending_t2 = 0;
     uint32_t          cpending_t3 = 0;
     uint32_t          qpending_t6 = 0;
     uint32_t          payload     = 0;
-    uint64_t          scom_data;
+    uint64_t          scom_data   = 0;
 
     //=========================
     MARK_TRAP(STOP_PIG_HANDLER)
