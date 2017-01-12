@@ -149,17 +149,6 @@ extern "C" {
 #define PERV_CPLT_STAT0          0x10000100
 #define PERV_NET_CTRL1_WAND      0x000F0045
 
-/// Macro to update STOP History
-#define SGPE_STOP_UPDATE_HISTORY(id,base,gated,trans,req_l,act_l,req_e,act_e) \
-    hist.value                   = 0;                                         \
-    hist.fields.stop_gated       = gated;                                     \
-    hist.fields.stop_transition  = trans;                                     \
-    hist.fields.req_stop_level   = req_l;                                     \
-    hist.fields.act_stop_level   = act_l;                                     \
-    hist.fields.req_write_enable = req_e;                                     \
-    hist.fields.act_write_enable = act_e;                                     \
-    GPE_PUTSCOM_VAR(PPM_SSHSRC, base, id, 0, hist.value);
-
 enum SGPE_IPC_CONSTANTS
 {
     ENABLE_CORE_STOP_UPDATES          = 1,
@@ -196,6 +185,17 @@ enum SGPE_STOP_IRQ_PAYLOAD_MASKS
     TYPE6_PAYLOAD_EXIT_EVENT          = 0xF
 };
 
+enum SGPE_STOP_STATE_HISTORY_VECTORS
+{
+    SSH_EXIT_COMPLETE     = 0,
+    SSH_EXIT_IN_SESSION   = (SSH_STOP_GATED  | SSH_TRANS_EXIT),
+    SSH_ENTRY_IN_SESSION  = (SSH_STOP_GATED  | SSH_TRANS_ENTRY),
+    SSH_REQ_LEVEL_UPDATE  = (SSH_STOP_GATED  | SSH_TRANS_ENTRY | SSH_REQ_ENABLE),
+    SSH_ACT_LEVEL_UPDATE  = (SSH_STOP_GATED  | SSH_ACT_ENABLE),
+    SSH_ACT_LV8_COMPLETE  = (SSH_ACT_LEVEL_UPDATE | BIT32(8)),
+    SSH_ACT_LV11_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(8) | BITS32(10, 2))
+};
+
 enum SGPE_STOP_EVENT_LEVELS
 {
     LEVEL_EX_BASE                     = 8,
@@ -204,21 +204,21 @@ enum SGPE_STOP_EVENT_LEVELS
 
 enum SGPE_STOP_CME_FLAGS
 {
-    CME_EX1_INDICATOR                 = BIT64(26),
-    CME_SIBLING_FUNCTIONAL            = BIT64(27),
-    CME_CORE0_ENTRY_FIRST             = BIT64(28),
-    CME_CORE1_ENTRY_FIRST             = BIT64(29),
-    CME_CORE0_ENABLE                  = BIT64(30),
-    CME_CORE1_ENABLE                  = BIT64(31)
+    CME_EX1_INDICATOR                 = BIT32(26),
+    CME_SIBLING_FUNCTIONAL            = BIT32(27),
+    CME_CORE0_ENTRY_FIRST             = BIT32(28),
+    CME_CORE1_ENTRY_FIRST             = BIT32(29),
+    CME_CORE0_ENABLE                  = BIT32(30),
+    CME_CORE1_ENABLE                  = BIT32(31)
 };
 
 enum SGPE_STOP_PSCOM_MASK
 {
-    PSCOM_MASK_ALL_L2                 = BITS64(2, 2) | BITS64(10, 2),
-    PSCOM_MASK_EX0_L2                 = BIT64(2) | BIT64(10),
-    PSCOM_MASK_EX1_L2                 = BIT64(3) | BIT64(11),
-    PSCOM_MASK_EX0_L3                 = BIT64(4) | BIT64(6) | BIT64(8),
-    PSCOM_MASK_EX1_L3                 = BIT64(5) | BIT64(7) | BIT64(9)
+    PSCOM_MASK_ALL_L2                 = BITS32(2, 2) | BITS32(10, 2),
+    PSCOM_MASK_EX0_L2                 = BIT32(2) | BIT32(10),
+    PSCOM_MASK_EX1_L2                 = BIT32(3) | BIT32(11),
+    PSCOM_MASK_EX0_L3                 = BIT32(4) | BIT32(6) | BIT32(8),
+    PSCOM_MASK_EX1_L3                 = BIT32(5) | BIT32(7) | BIT32(9)
 };
 
 enum SGPE_FUNCTION_STATUS
