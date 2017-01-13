@@ -32,7 +32,7 @@ extern CmeStopRecord G_cme_stop_record;
 
 #if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
 
-CoreThreadsInfo G_dsl[MAX_CORES_PER_CME] = {0, 0};
+CoreThreadsInfo G_dsl[MAX_CORES_PER_CME] = {{0}, {0}};
 
 #endif
 
@@ -59,6 +59,8 @@ p9_cme_stop_exit()
     uint8_t      dsl;
     uint8_t      thread;
     uint8_t      G_srr1[MAX_CORES_PER_CME][MAX_THREADS_PER_CORE] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
+    uint32_t     temp0             = 0;
+    uint32_t     temp1             = 0;
     uint32_t     core_stop1        = 0;
     cme_scom_pscrs00_t pscrs;
 #endif
@@ -795,13 +797,15 @@ STOP1_EXIT:
 
         for (thread = 0; thread < MAX_THREADS_PER_CORE; thread++)
         {
-            pscrs.value = in32((CME_LCL_PSCRS00 + (thread << 2)));
+            pscrs.value = in32((CME_LCL_PSCRS00 + (thread << 5)));
             dsl = (G_dsl[0].vector & BITS16((thread << 2), 4)) >>
                   SHIFT16((thread << 2) + 3);
             PK_TRACE("C0: PSCRS1%d %x, old dsl %d", thread, pscrs.value, dsl);
 
-            dsl = MIN(pscrs.field.esl_a_n ? pscrs.fields.rl_a_n : 0,
-                      MAX(hist.fields.act_stop_level, dsl));
+            temp0 = pscrs.fields.esl_a_n ? pscrs.fields.rl_a_n : 0 ;
+            temp1 = hist.fields.act_stop_level;
+
+            dsl = MIN(temp0, MAX(temp1, dsl));
             G_dsl[0].vector = ((G_dsl[0].vector & ~BITS16((thread << 2), 4)) |
                                (dsl << SHIFT16((thread << 2) + 3)));
             PK_TRACE("C0: new dsl %d", dsl);
@@ -816,7 +820,7 @@ STOP1_EXIT:
             }
             else
                 G_srr1[0][thread] =
-                    pscrs.field.esl_a_n ? SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS;
+                    pscrs.fields.esl_a_n ? SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS;
         }
 
         CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C0, CME_STOP_UPDATE_DLS(G_dsl[0], G_srr1[0]));
@@ -833,28 +837,30 @@ STOP1_EXIT:
 
         for (thread = 0; thread < MAX_THREADS_PER_CORE; thread++)
         {
-            pscrs.value = in32((CME_LCL_PSCRS10 + (thread << 2)));
+            pscrs.value = in32((CME_LCL_PSCRS01 + (thread << 5)));
             dsl = (G_dsl[1].vector & BITS16((thread << 2), 4)) >>
                   SHIFT16((thread << 2) + 3);
             PK_TRACE("C1 PSCRS1%d %x, old dsl %d", thread, pscrs.value, dsl);
 
-            dsl = MIN(pscrs.field.esl_a_n ? pscrs.fields.rl_a_n : 0,
-                      MAX(hist.fields.act_stop_level, dsl));
+            temp0 = pscrs.fields.esl_a_n ? pscrs.fields.rl_a_n : 0 ;
+            temp1 = hist.fields.act_stop_level;
+
+            dsl = MIN(temp0, MAX(temp1, dsl));
             G_dsl[1].vector = ((G_dsl[1].vector & ~BITS16((thread << 2), 4)) |
                                (dsl << SHIFT16((thread << 2) + 3)));
             PK_TRACE("C1 new dsl %d", dsl);
 
-            if (G_dsl[1][thread] >= STOP_LEVEL_8)
+            if (dsl >= STOP_LEVEL_8)
             {
                 G_srr1[1][thread] = MOST_STATE_LOSS;
             }
-            else if (G_dsl[1][thread] >= STOP_LEVEL_4)
+            else if (dsl >= STOP_LEVEL_4)
             {
                 G_srr1[1][thread] = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
             }
             else
                 G_srr1[1][thread] =
-                    pscrs.field.esl_a_n ? SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS;
+                    pscrs.fields.esl_a_n ? SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS;
         }
 
         CME_PUTSCOM(DIRECT_CONTROLS, CME_MASK_C1, CME_STOP_UPDATE_DLS(G_dsl[1], G_srr1[1]));
