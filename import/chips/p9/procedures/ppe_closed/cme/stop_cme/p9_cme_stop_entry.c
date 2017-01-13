@@ -53,7 +53,7 @@ p9_cme_stop_entry()
 {
     int             catchup_ongoing     = 0;
     int             entry_ongoing       = 1;
-    uint8_t         target_level;
+    uint8_t         target_level        = 0;
     uint8_t         deeper_level        = 0;
     uint8_t         origin_level        = 0;
     uint32_t        origin_core         = 0;
