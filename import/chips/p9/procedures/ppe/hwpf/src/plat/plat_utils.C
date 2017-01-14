@@ -175,6 +175,8 @@ ReturnCode delay(uint64_t i_nanoSeconds, uint64_t i_simCycles, bool i_fixed = fa
         do
         {
             current_time = pk_timebase32_get();
+            // if target time > 0xFFFFFFFF
+            current_time += (target_time & 0xFFFFFFFF00000000ull);
         }
         while (target_time > current_time);
 
