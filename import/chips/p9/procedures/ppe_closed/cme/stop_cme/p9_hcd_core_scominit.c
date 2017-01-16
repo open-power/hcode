@@ -32,8 +32,8 @@
 int
 p9_hcd_core_scominit(uint32_t core)
 {
-    int rc = CME_STOP_SUCCESS;
-    data64_t scom_data;
+    int      rc        = CME_STOP_SUCCESS;
+    data64_t scom_data = {0};
 
     // how about bit 6?
     PK_TRACE("Restore SYNC_CONFIG[8] for stop1");
@@ -57,8 +57,8 @@ p9_hcd_core_scominit(uint32_t core)
     // update core hang pulse dividers
     CME_GETSCOM(C_HANG_CONTROL, core, CME_SCOM_AND, scom_data.value);
     scom_data.words.upper &= ~BITS32(0, 16);
-    scom_data.words.upper |= (CORE_HANG_DIVIDER_4X << SHIFT32(7));
-    scom_data.words.upper |= (CORE_HANG_DIVIDER_4X << SHIFT32(15));
+    scom_data.words.upper |= (CORE_HANG_DIVIDER_4X  << SHIFT32(7));
+    scom_data.words.upper |= (CORE_HANG_DIVIDER_64X << SHIFT32(15));
     CME_PUTSCOM(C_HANG_CONTROL, core, scom_data.value);
 
     return rc;
