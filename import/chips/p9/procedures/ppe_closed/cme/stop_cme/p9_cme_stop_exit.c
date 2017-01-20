@@ -724,9 +724,10 @@ STOP1_EXIT:
             PK_TRACE_DBG("Set PLS+SRR1 for Core[%d]", core_mask);
             CME_GETSCOM(PPM_SSHSRC, core_mask, CME_SCOM_AND, scom_data.value);
 
-            act_stop_level        = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
-            scom_data.words.upper = (BIT64SH(32) | BIT64SH(40) | BIT64SH(48) | BIT64SH(56));
             core_index            = core_mask & 1;
+            act_stop_level        = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
+            scom_data.words.lower = (BIT64SH(32) | BIT64SH(40) | BIT64SH(48) | BIT64SH(56));
+            scom_data.words.upper = 0;
 
             for (thread = 0, bitloc = 36;
                  thread < MAX_THREADS_PER_CORE;
@@ -739,15 +740,30 @@ STOP1_EXIT:
                              G_dsl[core_index][thread], core_index, thread, pscrs);
 
                 // Calculate new DSL
+                temp_dsl  = 0;
+                temp_srr1 = NO_STATE_LOSS;
+
                 if (pscrs & BIT32(2))
                 {
-                    temp_dsl  = ((pscrs & BITS32(20, 4)) >> SHIFT32(23));
                     temp_srr1 = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
-                }
-                else
-                {
-                    temp_dsl  = 0;
-                    temp_srr1 = NO_STATE_LOSS;
+                    temp_dsl  = ((pscrs & BITS32(20, 4)) >> SHIFT32(23));
+
+                    if (temp_dsl >= STOP_LEVEL_11)
+                    {
+                        temp_dsl = STOP_LEVEL_11;
+                    }
+                    else if (temp_dsl >= STOP_LEVEL_8)
+                    {
+                        temp_dsl = STOP_LEVEL_8;
+                    }
+                    else if (temp_dsl >= STOP_LEVEL_4)
+                    {
+                        temp_dsl = STOP_LEVEL_4;
+                    }
+                    else if (temp_dsl >= STOP_LEVEL_2)
+                    {
+                        temp_dsl = STOP_LEVEL_2;
+                    }
                 }
 
                 G_dsl[core_index][thread] =
