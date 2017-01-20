@@ -41,9 +41,9 @@
 #define USE_BOOT_TEMP 0
 #define BOOT_TEMP_SET_FULL_OCC_IPC_FUNC 1
 #define DEV_DEBUG     1
-#define PGPE_UNIT_TEST 1
 #define PK_TRACE_TIMER_OUTPUT 0
 #define SGPE_IPC_ENABLED 0
+#define OVERRIDE_OTHER_ENGINES_IRQS 1
 
 ///This application uses IPC code
 #define GLOBAL_CFG_USE_IPC
@@ -95,7 +95,7 @@
 
 // GPE2 is the PGPE and is the route owner for now.
 // (Change this to #3 when pulling in SGPE)
-#define OCCHW_IRQ_ROUTE_OWNER  2
+#define OCCHW_IRQ_ROUTE_OWNER  3
 
 /// The Instance ID of the OCC processor that this application is intended to run on
 ///// 0-3 -> GPE, 4 -> 405

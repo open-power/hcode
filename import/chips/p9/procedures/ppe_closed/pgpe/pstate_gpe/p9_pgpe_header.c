@@ -26,7 +26,8 @@
 #include "pstate_pgpe_occ_api.h"
 
 //OCC Shared SRAM starts at bottom 2K of PGPE OCC SRAM space
-#define OCC_SHARED_SRAM_ADDR_START (0xfff20000 + 0x10000 - 0x800)
+#define OCC_PGPE_SRAM_ADDR_START (0xfff20000)
+#define OCC_SHARED_SRAM_ADDR_START (OCC_PGPE_SRAM_ADDR_START + 0x10000 - 0x800)
 
 PgpeHeader_t* G_pgpe_header_data;
 extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
@@ -34,8 +35,6 @@ extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_head
 //
 //Set the pgpe_header_data struct to point to PGPE HEADER in SRAM
 //
-//\TODO: RTC 164339
-//Get this address passed from linker script.
 //
 void p9_pgpe_header_init()
 {
@@ -44,6 +43,7 @@ void p9_pgpe_header_init()
 
 void p9_pgpe_header_fill()
 {
+    PK_TRACE_DBG("> p9_pgpe_header_fill");
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)
                                             OCC_SHARED_SRAM_ADDR_START; //Bottom 2K of PGPE OCC Sram Space
     G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr = (uint32_t*)&occ_shared_data->pstate_table;//OCC Pstate table address
@@ -51,5 +51,18 @@ void p9_pgpe_header_fill()
     G_pgpe_header_data->g_pgpe_beacon_addr = (uint32_t*)&occ_shared_data->pgpe_beacon;
     G_pgpe_header_data->g_quad_status_addr = (uint32_t*)&occ_shared_data->quad_pstate_0;
 
+    // @todo: change to value from header
     G_pgpe_header_data->g_pgpe_gppb_sram_addr  = (uint32_t*)0xfff27000;//GPPB Sram Offset
+    /*
+     *
+     *     //GPPB Sram Offset
+     *     G_pgpe_header_data->g_pgpe_gppb_sram_addr = (uint32_t*)(OCC_PGPE_SRAM_ADDR_START +
+     *             G_pgpe_header_data->g_pgpe_hcode_length)
+     */
+
+
+    G_pgpe_header_data->g_pgpe_wof_state_addr = (uint32_t*)&occ_shared_data->pgpe_wof_state;
+    G_pgpe_header_data->g_req_active_quad_addr = (uint32_t*)&occ_shared_data->req_active_quads;
+
+    PK_TRACE_DBG("< p9_pgpe_header_fill");
 }

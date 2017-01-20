@@ -26,7 +26,6 @@
 #include "gpehw_common.h"
 #include "p9_pgpe_pstate.h"
 #include "pstate_pgpe_occ_api.h"
-//#include "pstate_pgpe_sgpe_api.h"
 #include "ipc_messages.h"
 #include "ipc_api.h"
 #include "ipc_async_cmd.h"
@@ -36,8 +35,8 @@
 //External Global Data
 //
 extern PgpePstateRecord G_pgpe_pstate_record;
-extern uint8_t G_pstatesEnabled;               //pstates_enabled/disable
 extern PgpeHeader_t* G_pgpe_header_data;
+extern uint32_t G_pstatesStatus;               //pstates_enabled/disable
 extern uint8_t G_wofEnabled;               //pstates_enabled/disable
 extern uint8_t G_wofPending;                   //wof enable pending
 extern VFRT_Hcode_t* G_vfrt_ptr;
@@ -48,7 +47,9 @@ extern uint8_t G_coresPSRequest[MAX_CORES];    //per core requested pstate
 extern uint32_t G_already_sem_posted;
 extern quad_state0_t* G_quadState0;
 extern quad_state1_t* G_quadState1;
+extern requested_active_quads_t* G_reqActQuads;
 extern ipc_async_cmd_t G_ipc_msg_pgpe_sgpe;
+extern uint8_t G_pmcrOwner;
 GPE_BUFFER(extern ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 
 //
@@ -56,6 +57,7 @@ GPE_BUFFER(extern ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 //
 void p9_pgpe_process_sgpe_updt_active_cores();
 void p9_pgpe_process_sgpe_updt_active_quads();
+void p9_pgpe_process_sgpe_suspend_pstates();
 void p9_pgpe_process_clip_updt();
 void p9_pgpe_process_wof_ctrl();
 void p9_pgpe_process_wof_vfrt();
@@ -115,6 +117,16 @@ void p9_pgpe_thread_process_requests(void* arg)
             }
         }
 
+        if (G_ipc_pend_tbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_processing)
+        {
+            p9_pgpe_process_sgpe_suspend_pstates();
+
+            if(G_ipc_pend_tbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack == 1)
+            {
+                restore_irq = 0;
+            }
+        }
+
         if (G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_processing)
         {
             p9_pgpe_process_clip_updt();
@@ -157,14 +169,14 @@ void p9_pgpe_thread_process_requests(void* arg)
 
         //Pstate START/STOP IPCs are processed and acked in actuate thread,
         //so don't call pk_irq_vec_restore if they are pending.
-        if(G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack == 1 ||
+        if(G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack == 1 ||
            G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack == 1 )
         {
             restore_irq = 0;
         }
 
         //Restore IPC if no pending acks. Otherwise, actuate thread will
-        //eventuall restore IPC interrupt
+        //eventually restore IPC interrupt
         if (restore_irq == 1)
         {
             PK_TRACE_DBG("PROCTH: IRQ Restore\n");
@@ -183,44 +195,51 @@ void p9_pgpe_process_sgpe_updt_active_cores()
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
     ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
 
-    G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing = 0;
 
-    //Active core updates should only be received if both
-    //Pstate and WOF are enabled
-    if(G_pstatesEnabled == 0 || G_wofEnabled == 0)
+    //Active quad updates should only be received if Pstates and WOF are enabled.
+    //However, if we have start pending, then we should not process is here. Once,
+    //actuate thread completes actuate_start, it checks for any pending_processing tasks,
+    //if there are any it post to process thread(this thread). This cmd will get processed
+    //then
+    if(G_pstatesStatus != PSTATE_START_PENDING)
     {
-        if(G_pstatesEnabled == 0)
+        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing = 0;
+
+        if(G_pstatesStatus == PSTATE_DISABLE || G_wofEnabled == 0)
         {
-            args->fields.return_code = PGPE_RC_PSTATES_DISABLED;
-        }
-        else
-        {
-            args->fields.return_code = PGPE_WOF_RC_NOT_ENABLED;
-        }
+            if(G_pstatesStatus == PSTATE_DISABLE)
+            {
+                PK_TRACE_DBG("PROCTH: C Updt(Pstate Disabled)\n");
+                args->fields.return_code = PGPE_RC_PSTATES_DISABLED;
+            }
+            else
+            {
+                PK_TRACE_DBG("PROCTH: C Updt(WOF_Disabled)\n");
+                args->fields.return_code = PGPE_WOF_RC_NOT_ENABLED;
+            }
 
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
-        ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
-    }
-    else
-    {
-
-        //Update Shared Memory Region
-        G_quadState0->fields.core_poweron_state = (args->fields.active_cores >> 8);
-        G_quadState1->fields.core_poweron_state = (args->fields.active_cores & 0xFF) << 8;
-
-        //Do auction
-        p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
-
-        //If entry type then send ACK to SGPE immediately
-        //Otherwise, wait to ACK until WOF Clip has been applied(from actuate_pstate thread)
-        if (args->fields.update_type == UPDATE_ACTIVE_TYPE_ENTRY)
-        {
-            args->fields.return_code = PGPE_RC_SUCCESS;
             G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
             ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
         }
+        else
+        {
+            //Update Shared Memory Region
+            G_quadState0->fields.active_cores = (args->fields.active_cores >> 8);
+            G_quadState1->fields.active_cores = (args->fields.active_cores & 0xFF) << 8;
 
-        p9_pgpe_pstate_calc_wof();
+            //Do auction and wof calculation
+            p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
+            p9_pgpe_pstate_calc_wof();
+
+            //If ENTRY type then send ACK to SGPE immediately
+            //Otherwise, wait to ACK until WOF Clip has been applied(from actuate_pstate thread)
+            if (args->fields.update_type == UPDATE_ACTIVE_TYPE_ENTRY)
+            {
+                args->fields.return_code = SGPE_PGPE_IPC_RC_SUCCESS;
+                G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
+                ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
+            }
+        }
     }
 
     PK_TRACE_DBG("PROCTH: Core Updt Exit\n");
@@ -236,44 +255,88 @@ void p9_pgpe_process_sgpe_updt_active_quads()
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
     ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
 
-    G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing = 0;
 
-    //Active quad updates should only be received if Pstates are enabled
-    if(G_pstatesEnabled == 0)
+    //Active quad updates should only be received if Pstates are enabled.
+    //However, if we have start pending, then we should not process it here. Once,
+    //actuate thread completes actuate_start, it checks for any pending_processing tasks,
+    //if there are any it post to process thread(this thread). This cmd will get processed
+    //then
+    //
+    if(G_pstatesStatus != PSTATE_START_PENDING)
     {
-        args->fields.return_code = PGPE_RC_PSTATES_DISABLED;
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-        ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-    }
-    else
-    {
-        //Update Shared Memory Region
-        G_quadState1->fields.requested_active_quad = args->fields.requested_quads;
+        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing = 0;
 
-        //Do auction
-        p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
-
-        if(G_wofEnabled == 1)
+        if(G_pstatesStatus == PSTATE_DISABLE)
         {
-            //Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
-            GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(30));
-
-            //If entry type then send ACK to SGPE immediately
-            //Otherwise, wait to ACK until WOF-VFRT updated is received from OCC
-            if (args->fields.update_type == UPDATE_ACTIVE_TYPE_ENTRY)
-            {
-                args->fields.return_code = PGPE_RC_SUCCESS;
-                G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-                ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-            }
+            PK_TRACE_DBG("PROCTH: Q Updt(Pstate Disabled)\n");
+            args->fields.return_code = PGPE_RC_PSTATES_DISABLED;
+            G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+            ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
         }
         else
         {
-            p9_pgpe_pstate_apply_clips();
+            //Update Shared Memory Region
+            PK_TRACE_DBG("PROCTH: Q Updt, Req_Q: 0x%x\n", (uint32_t)(args->fields.requested_quads));
+
+            //If ENTRY then ACK to SGPE immediately
+            if (args->fields.update_type == UPDATE_ACTIVE_TYPE_ENTRY)
+            {
+                G_reqActQuads->fields.requested_active_quads &= (~(args->fields.requested_quads << 2));
+                args->fields.return_code = SGPE_PGPE_IPC_RC_SUCCESS;
+                G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+                ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+            }
+            else
+            {
+                G_reqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
+            }
+
+            if(G_wofEnabled == 1)
+            {
+                //Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
+                GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(30));
+            }
+            else
+            {
+                //Do auction
+                p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
+                p9_pgpe_pstate_apply_clips();
+            }
         }
     }
 
     PK_TRACE_DBG("PROCTH: Quad Updt Exit\n");
+}
+
+void p9_pgpe_process_sgpe_suspend_pstates()
+{
+    PK_TRACE_DBG("PROCTH: Susp Pst Entry\n");
+    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_ipc_pend_tbl[IPC_PEND_SGPE_SUSPEND_PSTATES].cmd;
+    ipcmsg_s2p_suspend_pstate_t* args = (ipcmsg_s2p_suspend_pstate_t*)async_cmd->cmd_data;
+
+    //Active quad updates should only be received if Pstates are enabled.
+    //However, if we have start pending, then we should not process is here. Once,
+    //actuate thread completes actuate_start, it checks for any pending_processing tasks,
+    //if there are any it post to process thread(this thread). This cmd will get processed
+    //then
+    if(G_pstatesStatus != PSTATE_START_PENDING)
+    {
+        G_ipc_pend_tbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_processing = 0;
+
+        if(G_pstatesStatus == PSTATE_DISABLE)
+        {
+            PK_TRACE_DBG("PROCTH: Susp Pst(Pstate Disabled)\n");
+            args->fields.return_code = PGPE_RC_PSTATES_DISABLED;
+            G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+            ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+        }
+        else
+        {
+            G_pstatesStatus = PSTATE_SUSPENDED;
+        }
+    }
+
+    PK_TRACE_DBG("PROCTH: Susp Pst Exit\n");
 }
 
 //
@@ -308,7 +371,7 @@ void p9_pgpe_process_clip_updt()
 
         p9_pgpe_pstate_apply_clips(&G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT]);
 
-        if (G_pstatesEnabled == 0)
+        if (G_pstatesStatus == PSTATE_DISABLE)
         {
             args->msg_cb.rc = PGPE_RC_SUCCESS;
             G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
@@ -342,13 +405,14 @@ void p9_pgpe_process_wof_ctrl()
 
     if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
     {
+        PK_TRACE_DBG("PROCTH: WOF Ctrl Updt Imme\n");
         G_ipc_pend_tbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
         args->msg_cb.rc = PGPE_RC_SUCCESS;
         ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_WOF_CTRL].cmd, IPC_RC_SUCCESS);
     }
     else
     {
-        if(G_pstatesEnabled == 0 )
+        if(G_pstatesStatus == PSTATE_DISABLE)
         {
             args->msg_cb.rc = PGPE_RC_PSTATES_DISABLED;
             G_ipc_pend_tbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
@@ -405,9 +469,9 @@ void p9_pgpe_process_wof_ctrl()
                     if (G_sgpe_control_updt.fields.return_code == SGPE_PGPE_IPC_RC_SUCCESS)
                     {
                         //Update Shared Memory Region
-                        G_quadState0->fields.core_poweron_state = G_sgpe_control_updt.fields.active_cores >> 8;
-                        G_quadState1->fields.core_poweron_state = G_sgpe_control_updt.fields.active_cores & 0xFF;
-                        G_quadState1->fields.requested_active_quad = G_sgpe_control_updt.fields.active_quads;
+                        G_quadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
+                        G_quadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
+                        G_reqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
                     }
                     else
                     {
@@ -437,13 +501,14 @@ void p9_pgpe_process_wof_vfrt()
 
     if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
     {
+        PK_TRACE_DBG("PROCTH: WOF VFRT Imme\n");
         G_ipc_pend_tbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
         args->msg_cb.rc = PGPE_RC_SUCCESS;
         ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
     }
     else
     {
-        if(G_pstatesEnabled == 0 || (G_wofEnabled == 0 && G_wofPending == 0))
+        if(G_pstatesStatus == PSTATE_DISABLE || (G_wofEnabled == 0 && G_wofPending == 0))
         {
             G_ipc_pend_tbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
             args->msg_cb.rc = PGPE_RC_PSTATES_DISABLED;
@@ -456,7 +521,7 @@ void p9_pgpe_process_wof_vfrt()
 
             //If active_quads field of this IPC matches requested active quads
             //in Shared SRAM, then clear OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
-            if (args->active_quads == G_quadState1->fields.requested_active_quad)
+            if (args->active_quads == G_reqActQuads->fields.requested_active_quads)
             {
                 GPE_PUTSCOM(OCB_OCCFLG_CLR, BIT32(30));
                 p9_pgpe_pstate_calc_wof();
@@ -494,9 +559,9 @@ void p9_pgpe_process_wof_vfrt()
                 if (G_sgpe_control_updt.fields.return_code == SGPE_PGPE_IPC_RC_SUCCESS)
                 {
                     //Update Shared Memory Region
-                    G_quadState0->fields.core_poweron_state = G_sgpe_control_updt.fields.active_cores >> 8;
-                    G_quadState1->fields.core_poweron_state = G_sgpe_control_updt.fields.active_cores & 0xFF;
-                    G_quadState1->fields.requested_active_quad = G_sgpe_control_updt.fields.active_quads;
+                    G_quadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
+                    G_quadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
+                    G_reqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
                 }
                 else
                 {
@@ -530,13 +595,20 @@ void p9_pgpe_process_set_pmcr_req()
 
     if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
     {
+        PK_TRACE_DBG("PROCTH: Set PMCR Imme\n");
         G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_ack = 0;
         args->msg_cb.rc = PGPE_RC_SUCCESS;
         ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].cmd, IPC_RC_SUCCESS);
     }
     else
     {
-        if (G_pstatesEnabled == 0 )
+        if(G_pmcrOwner != PMCR_OWNER_OCC)
+        {
+            args->msg_cb.rc = PGPE_RC_OCC_NOT_PMCR_OWNER;
+            G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_ack = 0;
+            ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].cmd, IPC_RC_SUCCESS);
+        }
+        else if (G_pstatesStatus == PSTATE_DISABLE)
         {
             PK_TRACE_DBG("PROCTH: Pstates Disabled\n");
             args->msg_cb.rc = PGPE_RC_PSTATES_DISABLED;

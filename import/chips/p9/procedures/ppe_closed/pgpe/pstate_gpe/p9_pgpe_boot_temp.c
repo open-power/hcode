@@ -66,13 +66,7 @@ void p9_pgpe_boot_pgpe_header_init()
     G_pgpe_header_data->g_pgpe_gppb_length  = 0x2000;//GPPB Block Length
     G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset  = (uint32_t*)0x80308000;//Pstate Tables Memory Offset
     G_pgpe_header_data->g_pgpe_gen_pstables_length  = 0x6000;//Pstate Tables Length
-
-    /*
-    G_pgpe_header_data->g_pgpe_gppb_sram_addr  = (uint32_t*)0xfff27000;//GPPB Sram Offset
-    G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr = (uint32_t*)0xfff29000;//OCC Pstate table address
-    G_pgpe_header_data->g_pgpe_occ_pstables_len  = 0x100;//OCC Pstate table length
-    G_pgpe_header_data->g_pgpe_beacon_addr = (uint32_t*)(0xfff26fe0 + 4);
-    G_pgpe_header_data->g_quad_status_addr = (uint32_t*)(0xfff26fe0 + 8);*/
+    G_pgpe_header_data->g_pgpe_gppb_sram_addr  = (uint32_t*)0xfff2c000;//GPPB Sram Offset
 }
 
 //

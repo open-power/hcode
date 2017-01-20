@@ -31,35 +31,9 @@
 //
 //\todo RTC: 164335 Use the structure from p9_hcode_image_defines.H
 //when it's updated
-//
-/*typedef struct pgpe_header_data
-{
-    uint32_t magic_number[2];
-    uint32_t* _system_reset_addr;
-    uint32_t* shared_sram_addr;
-    uint32_t* IVPR_address;
-    uint32_t shared_sram_length;
-    uint32_t build_date;
-    uint32_t version;
-    uint16_t pgpeflags;
-    uint16_t reserved0[3];
-    uint32_t* gppb_sram_addr;
-    uint32_t reserved1;
-    uint32_t* gppb_memory_offset;
-    uint32_t gppb_block_length;
-    uint32_t* pstate_tbl_mem_offset;
-    uint32_t pstate_tbl_length;
-    uint32_t* occ_pstate_tbl_addr;
-    uint32_t occ_pstate_tbl_length;
-    uint32_t* pgpe_beacon;
-    uint32_t* actual_quad_status_addr;
-    uint32_t* wof_tbl_addr;
-    uint32_t wof_tbl_lengh;
-} PgpeHeader_t;*/
-
 typedef struct
 {
-    uint32_t  g_pgpe_magic_number[2];            // PGPE_1.0
+    uint32_t  g_pgpe_magic_number[2];         // PGPE_1.0
     uint32_t* g_pgpe_sys_reset_addr;          // Fully qualified OCC address where pk_init resides
     uint32_t* g_pgpe_shared_sram_addr;        // SRAM address where shared SRAM begins
     uint32_t* g_pgpe_ivpr_addr;               // Beginning of PGPE region in OCC SRAM
@@ -79,6 +53,8 @@ typedef struct
     uint32_t  g_pgpe_occ_pstables_len;        // Length of OCC P-State table
     uint32_t* g_pgpe_beacon_addr;             // SRAM addr where PGPE beacon is located
     uint32_t* g_quad_status_addr;             // Actual Quad address
+    uint32_t* g_pgpe_wof_state_addr;          //
+    uint32_t* g_req_active_quad_addr;         //Requested Active Quads Address
     uint32_t* g_wof_table_addr;               // WOF Table Address
     uint32_t  g_wof_table_length;             // WOF Table Length
 } PgpeHeader_t;

@@ -69,6 +69,7 @@ inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData, uint32_t cme_flags
 inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags);
 inline void p9_cme_pstate_freq_update(uint64_t dbData);
 inline void p9_cme_pstate_resclk_update();
+inline void p9_cme_pstate_pmsr_updt(uint64_t dbData, uint32_t cme_flags);
 
 //
 //Doorbell0 interrupt handler
@@ -84,7 +85,7 @@ void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
 //
 void p9_cme_pstate_db_thread(void* arg)
 {
-    PK_TRACE("DB_TH: Started\n");
+    PK_TRACE_INF("DB_TH: Started\n");
     uint32_t cme_flags;
     PkMachineContext  ctx;
     uint32_t pir;
@@ -106,8 +107,27 @@ void p9_cme_pstate_db_thread(void* arg)
     G_cme_pstate_record.quadNum = QUAD_FROM_CME_INSTANCE_NUM((pir & PIR_INSTANCE_NUM_MASK));
 #endif
 
-    if (cme_flags & CME_FLAGS_QMGR_MASTER)
+    //Determine if this CME is quadManager
+    //CME 1, check if CME0 is functional
+    if (cme_flags & CME_FLAGS_EX_ID)
     {
+        //CME0 is functional
+        if (cme_flags & CME_FLAGS_SIBLING_FUNCTIONAL)
+        {
+            G_db_thread_data.qmFlag = 0;
+            G_db_thread_data.siblingCMEFlag = 1;
+            //CME0 is not functional, CME1 is quadMgr
+        }
+        else
+        {
+            G_db_thread_data.qmFlag = 1;
+            G_db_thread_data.siblingCMEFlag = 0;
+        }
+    }
+    //CME 0 is always the quad manager
+    else
+    {
+        //CME 0 is always the quad manager
         G_db_thread_data.qmFlag = 1;
 
         if (cme_flags & CME_FLAGS_SIBLING_FUNCTIONAL)
@@ -119,12 +139,12 @@ void p9_cme_pstate_db_thread(void* arg)
             G_db_thread_data.siblingCMEFlag = 0;
         }
     }
-    else
-    {
-        G_db_thread_data.qmFlag = 0;
-        G_db_thread_data.siblingCMEFlag = 0;
-    }
 
+    //Enable Interrupts depending on whether this CME is
+    //a quadManager or siblingCME. DB0 is enabled only
+    //on quadManager. Whereas, InterCME_IN0 only on
+    //siblingCME.
+    //
     //if quadManager
     if (G_db_thread_data.qmFlag)
     {
@@ -154,15 +174,18 @@ void p9_cme_pstate_db_thread(void* arg)
         out64(CME_LCL_EIMR_CLR, BIT64(7)); //Enable InterCME_IN0
         g_eimr_override |= BIT64(37);
         g_eimr_override |= BIT64(36);
+
+        while(1) {}
     }
 
-    //Only Quad Manager CME executes this. The sibling CME
-    //has intercme_in0 enabled
+    //Doorbell Thread(this thread) will continue to run on
+    //Quad Manager CME. The sibling CME has intercme_in0 enabled
+    //and won't run this thread past this point.
     if (G_db_thread_data.qmFlag)
     {
         pk_semaphore_create(&G_cme_pstate_record.sem[1], 0, 1);
 
-        PK_TRACE("DB_TH: Inited\n");
+        PK_TRACE_INF("DB_TH: Inited\n");
 
         while(1)
         {
@@ -176,7 +199,7 @@ void p9_cme_pstate_db_thread(void* arg)
         }
     }
 
-    PK_TRACE("DB_TH: Exit\n");
+    PK_TRACE_INF("DB_TH: Exit\n");
 }
 
 //
@@ -187,7 +210,7 @@ inline void p9_cme_pstate_process_db0()
     cppm_cmedb0_t dbData;
     uint32_t cme_flags = in32(CME_LCL_FLAGS);
 
-    PK_TRACE("DB_TH: Process DB0 Enter\n");
+    PK_TRACE_INF("DB_TH: Process DB0 Enter\n");
 
     //Read DB0 value
     if (cme_flags & CME_FLAGS_CORE0_GOOD)
@@ -202,8 +225,9 @@ inline void p9_cme_pstate_process_db0()
         CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, CME_SCOM_EQ, dbData.value);
     }
 
-    PK_TRACE("DB_TH: DB0 0x%x\n"dbData.value);
+    PK_TRACE_INF("DB_TH: DB0 0x%x\n"dbData.value);
 
+    //Process DB0
     if(dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST)
     {
         p9_cme_pstate_db0_start(dbData, cme_flags);
@@ -221,7 +245,7 @@ inline void p9_cme_pstate_process_db0()
         pk_halt();
     }
 
-    PK_TRACE("DB_TH: Process DB0 Exit\n");
+    PK_TRACE_INF("DB_TH: Process DB0 Exit\n");
 }
 
 //
@@ -229,12 +253,10 @@ inline void p9_cme_pstate_process_db0()
 //
 inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
 {
-    PK_TRACE("DB_TH: DB0 Start Enter\n");
-    uint32_t intercme_acked;
-    uint64_t eisr, pmsrData;
-    uint8_t localPS;
+    PK_TRACE_INF("DB_TH: DB0 Start Enter\n");
     ppm_pig_t ppmPigData;
 
+    //Respond with error if already started
     if (G_cme_pstate_record.pstatesEnabled == 1)
     {
         //Send type4(ack doorbell)
@@ -242,7 +264,7 @@ inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
         ppmPigData.fields.req_intr_type = 4;
         ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
         send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
-        PK_TRACE("DB_TH: DB0  Start while already started\n");
+        PK_TRACE_INF("DB_TH: DB0  Start while already started\n");
         pk_halt();
     }
 
@@ -257,48 +279,7 @@ inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
     p9_cme_pstate_freq_update(dbData.value);
 #endif
 
-    //Notify sibling CME(if any)
-    if (G_db_thread_data.siblingCMEFlag == 1)
-    {
-        //Send interCME interrupt
-        out32(CME_LCL_ICCR_OR, BIT32(5)); //Send direct InterCME_IN0
-        out32(CME_LCL_ICCR_CLR, BIT32(5));//Clear
-
-#if !SIMICS_TUNING
-        //poll on interCME interrupt
-        intercme_acked = 0;
-#else
-        intercme_acked = 1;
-#endif
-
-        while (!intercme_acked)
-        {
-            eisr = in64(CME_LCL_EISR);
-
-            if (eisr & 0x0100000000000000)
-            {
-                intercme_acked = 1;
-            }
-        }
-
-        out32(CME_LCL_EISR_CLR, BIT32(7));//Clear InterCME_IN0
-    }
-
-    //Update PMSR
-    localPS = (dbData.value >>
-               ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) * 8)) & 0xFF;
-    pmsrData = (dbData.value << 8) & 0xFF00000000000000;
-    pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
-
-    if (cme_flags & CME_FLAGS_CORE0_GOOD)
-    {
-        out64(CME_LCL_PMSRS0, pmsrData);
-    }
-
-    if (cme_flags & CME_FLAGS_CORE1_GOOD)
-    {
-        out64(CME_LCL_PMSRS1, pmsrData);
-    }
+    p9_cme_pstate_pmsr_updt(dbData.value, cme_flags);
 
     //\TODO RTC: 152965
     //Enable Resonant Clks if flag
@@ -326,7 +307,7 @@ inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
         out64(CME_LCL_EIMR_CLR,  BIT64(35));//Enable PMCR1
     }
 
-    PK_TRACE("DB_TH: DB0 Start Exit\n");
+    PK_TRACE_INF("DB_TH: DB0 Start Exit\n");
 }
 
 //
@@ -334,10 +315,7 @@ inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
 //
 inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData, uint32_t cme_flags)
 {
-    PK_TRACE("DB_TH: DB0 GlbBcast Enter\n");
-    uint32_t intercme_acked;
-    uint64_t eisr, pmsrData;
-    uint8_t localPS;
+    PK_TRACE_INF("DB_TH: DB0 GlbBcast Enter\n");
     ppm_pig_t ppmPigData;
 
     if (G_cme_pstate_record.pstatesEnabled == 0)
@@ -347,7 +325,7 @@ inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData, uint32_t cme_flags
         ppmPigData.fields.req_intr_type = 4;
         ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
         send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
-        PK_TRACE("DB_TH: DB0Bcast while PS disabled\n");
+        PK_TRACE_INF("DB_TH: DB0Bcast while PS disabled\n");
         pk_halt();
     }
 
@@ -360,56 +338,14 @@ inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData, uint32_t cme_flags
 #if !SIMICS_TUNING
     p9_cme_pstate_freq_update(dbData.value);
 #endif
-
-    //Notify sibling CME(if any)
-    if (G_db_thread_data.siblingCMEFlag == 1)
-    {
-        //Send interCME interrupt
-        out32(CME_LCL_ICCR_OR, BIT32(5)); //Send direct InterCME_IN0
-        out32(CME_LCL_ICCR_CLR, BIT32(5));//Clear
-
-#if !SIMICS_TUNING
-        //poll on interCME interrupt
-        intercme_acked = 0;
-#else
-        intercme_acked = 1;
-#endif
-
-        while (!intercme_acked)
-        {
-            eisr = in64(CME_LCL_EISR);
-
-            if (eisr & 0x0100000000000000)
-            {
-                intercme_acked = 1;
-            }
-        }
-
-        out32(CME_LCL_EISR_CLR, BIT32(7));//Clear InterCME_IN0
-    }
-
-    //Update PMSR
-    localPS = (dbData.value >>
-               ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) * 8)) & 0xFF;
-    pmsrData = (dbData.value << 8) & 0xFF00000000000000;
-    pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
-
-    if (cme_flags & CME_FLAGS_CORE0_GOOD)
-    {
-        out64(CME_LCL_PMSRS0, pmsrData);
-    }
-
-    if (cme_flags & CME_FLAGS_CORE1_GOOD)
-    {
-        out64(CME_LCL_PMSRS1, pmsrData);
-    }
+    p9_cme_pstate_pmsr_updt(dbData.value, cme_flags);
 
     //Send type4(ack doorbell)
     ppmPigData.value = 0;
     ppmPigData.fields.req_intr_type = 4;
     ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
     send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
-    PK_TRACE("DB_TH: DB0 GlbBcast Exit\n");
+    PK_TRACE_INF("DB_TH: DB0 GlbBcast Exit\n");
 }
 
 //
@@ -417,7 +353,7 @@ inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData, uint32_t cme_flags
 //
 inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags)
 {
-    PK_TRACE("DB_TH: DB0 Suspend Enter\n");
+    PK_TRACE_INF("DB_TH: DB0 Suspend Enter\n");
     ppm_pig_t ppmPigData;
 
     if (G_cme_pstate_record.pstatesEnabled == 0)
@@ -451,7 +387,62 @@ inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags)
     ppmPigData.fields.req_intr_type = 4;
     ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_SUSPENDED;
     send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
-    PK_TRACE("DB_TH: DB0 Suspend Exit\n");
+    PK_TRACE_INF("DB_TH: DB0 Suspend Exit\n");
+}
+
+//
+//p9_cme_pstate_pmsr_updt
+//
+inline void p9_cme_pstate_pmsr_updt(uint64_t dbData, uint32_t cme_flags)
+{
+    uint32_t intercme_acked;
+    uint64_t eisr, pmsrData;
+    uint8_t localPS;
+
+    //Notify sibling CME(if any)
+    if (G_db_thread_data.siblingCMEFlag == 1)
+    {
+        //Send interCME interrupt
+        out32(CME_LCL_ICCR_OR, BIT32(5)); //Send direct InterCME_IN0
+        out32(CME_LCL_ICCR_CLR, BIT32(5));//Clear
+
+#if !SIMICS_TUNING
+        //poll on interCME interrupt
+        intercme_acked = 0;
+#else
+        intercme_acked = 1;
+#endif
+
+        while (!intercme_acked)
+        {
+            eisr = in64(CME_LCL_EISR);
+
+            if (eisr & 0x0100000000000000)
+            {
+                intercme_acked = 1;
+            }
+        }
+
+        out32(CME_LCL_EISR_CLR, BIT32(7));//Clear InterCME_IN0
+    }
+
+    //Update PMSR
+    localPS = (dbData >>
+               ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0xFF;
+    pmsrData = (dbData << 8) & 0xFF00000000000000;
+    pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
+
+    if (cme_flags & CME_FLAGS_CORE0_GOOD)
+    {
+        PK_TRACE_INF("DB_TH: PMSR=0x%08x%08x\n", pmsrData >> 32, pmsrData);
+        out64(CME_LCL_PMSRS0, pmsrData);
+    }
+
+    if (cme_flags & CME_FLAGS_CORE1_GOOD)
+    {
+        PK_TRACE_INF("DB_TH: PMSR=0x%08x%08x\n", pmsrData >> 32, pmsrData);
+        out64(CME_LCL_PMSRS1, pmsrData);
+    }
 }
 
 //
@@ -459,9 +450,12 @@ inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags)
 //
 inline void p9_cme_pstate_freq_update(uint64_t dbData)
 {
+    PK_TRACE_INF("DB_TH: Freq Updt Enter\n");
     uint8_t localPS = (dbData >>
                        ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) * 8)) & 0xFF;
 
+    PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", dbData >> 32, dbData);
+    PK_TRACE_INF("DB_TH: Dpll0=0x%x\n", G_db_thread_data.dpll_pstate0_value);
     //Adjust DPLL
     cppm_ippmcmd_t  cppm_ippmcmd;
     qppm_dpll_freq_t dpllFreq;
@@ -476,6 +470,7 @@ inline void p9_cme_pstate_freq_update(uint64_t dbData)
     cppm_ippmcmd.fields.qppm_reg = QPPM_DPLL_FREQ & 0x000000ff;
     cppm_ippmcmd.fields.qppm_rnw = 0;
     CME_PUTSCOM(CPPM_IPPMCMD, G_db_thread_data.cmeMaskGoodCore, cppm_ippmcmd.value);
+    PK_TRACE_INF("DB_TH: Freq Updt Exit\n");
 }
 
 //

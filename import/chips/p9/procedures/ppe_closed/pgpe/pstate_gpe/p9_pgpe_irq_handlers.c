@@ -32,7 +32,7 @@
 //
 extern uint8_t G_coresPSRequest[MAX_CORES];    //per core requested pstate
 extern uint8_t G_pmcrOwner;
-extern uint8_t G_pstatesEnabled;               //pstates_enabled/disable
+extern uint32_t G_pstatesStatus;
 
 //
 //OCB Error Interrupt Handler
@@ -104,8 +104,8 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
     uint32_t coresPendPSReq = in32(OCB_OPIT1PRA);
     uint32_t c;
 
-    if (G_pstatesEnabled && (G_pmcrOwner == PMCR_OWNER_HOST ||
-                             G_pmcrOwner == PMCR_OWNER_CHAR))
+    if (G_pstatesStatus == PSTATE_ENABLE && (G_pmcrOwner == PMCR_OWNER_HOST ||
+            G_pmcrOwner == PMCR_OWNER_CHAR))
     {
 
         //Process pending requests

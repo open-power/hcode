@@ -30,7 +30,6 @@
 #include "ipc_async_cmd.h"
 #include "p9_pgpe_gppb.h"
 #include "pstate_pgpe_occ_api.h"
-//#include "pstate_pgpe_sgpe_api.h"
 #include "ipc_messages.h"
 #include "p9_dd1_doorbell_wr.h"
 #include "avs_driver.h"
@@ -51,7 +50,7 @@ void p9_pgpe_thread_actuate_init_actual_quad();
 //External Global Data
 //
 extern PgpePstateRecord G_pgpe_pstate_record;
-extern uint8_t G_pstatesEnabled;               //pstates_enabled/disable
+extern uint32_t G_pstatesStatus;
 extern uint8_t G_wofEnabled;                   //wof enable/disable
 extern uint8_t G_quadPSTarget[MAX_QUADS];      //target Pstate per quad
 extern volatile uint8_t G_globalPSTarget;               //target global Pstate
@@ -71,6 +70,7 @@ extern uint32_t G_ext_vrm_dec_rate_mult_usperus;
 extern VpdOperatingPoint G_operating_points[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 extern quad_state0_t* G_quadState0;
 extern quad_state1_t* G_quadState1;
+extern requested_active_quads_t* G_reqActQuads;
 extern ipc_async_cmd_t G_ipc_msg_pgpe_sgpe;
 GPE_BUFFER(extern ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 
@@ -84,6 +84,8 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
     uint32_t inRange, q  = 0;
     PkMachineContext  ctx;
     uint32_t restore_irq = 0;
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(OCB_QCSR);
 
     pk_semaphore_create(&(G_pgpe_pstate_record.sem_actuate), 0, 1);
     pk_semaphore_create(&(G_pgpe_pstate_record.sem_sgpe_wait), 0, 1);
@@ -113,70 +115,79 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         p9_pgpe_thread_actuate_start();
 
         //Loop while Pstate is enabled
-        while(G_pstatesEnabled)
+        PK_TRACE_DBG("ACT_TH: Status=%d\n", G_pstatesStatus);
+
+        while(G_pstatesStatus == PSTATE_ENABLE || G_pstatesStatus == PSTATE_SUSPENDED)
         {
-            asm volatile ("tw 0, 31, 0");
 
-            if( G_globalPSCurr != G_globalPSTarget ||
-                G_quadPSCurr[0] ^ G_quadPSTarget[0] ||
-                G_quadPSCurr[1] ^ G_quadPSTarget[1] ||
-                G_quadPSCurr[2] ^ G_quadPSTarget[2] ||
-                G_quadPSCurr[3] ^ G_quadPSTarget[3] ||
-                G_quadPSCurr[4] ^ G_quadPSTarget[4] ||
-                G_quadPSCurr[5] ^ G_quadPSTarget[5] )
+            if(G_pstatesStatus != PSTATE_SUSPENDED)
             {
-                //We don't want actuate_step to interrupted by any external interrupt.
-                //However, we still want FIT Timer to be active, so we mask of all interrupts
-                //in the OIMR through UIH(by setting UIH priority lvl = 0)
-                pk_critical_section_enter(&ctx);
-                pk_irq_save_and_set_mask(0);
-                pk_critical_section_exit(&ctx);
-
-                restore_irq = 0;
-
-                //Do one actuate step
-                PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x\n", G_globalPSTarget, G_globalPSCurr);
-                p9_pgpe_thread_actuate_do_step();
-
-                //evaluate conditions for pending ACKs
-                inRange = 1;
-
-                for (q = 0; q < MAX_QUADS; q++)
+                if( G_globalPSCurr != G_globalPSTarget ||
+                    G_quadPSCurr[0] ^ G_quadPSTarget[0] ||
+                    G_quadPSCurr[1] ^ G_quadPSTarget[1] ||
+                    G_quadPSCurr[2] ^ G_quadPSTarget[2] ||
+                    G_quadPSCurr[3] ^ G_quadPSTarget[3] ||
+                    G_quadPSCurr[4] ^ G_quadPSTarget[4] ||
+                    G_quadPSCurr[5] ^ G_quadPSTarget[5] )
                 {
-                    if (G_psClipMax[q] <  G_quadPSCurr[q] ||
-                        G_quadPSCurr[q] >  G_psClipMin[q])
+                    //We don't want actuate_step to interrupted by any external interrupt.
+                    //However, we still want FIT Timer to be active, so we mask of all interrupts
+                    //in the OIMR through UIH(by setting UIH priority lvl = 0)
+                    pk_critical_section_enter(&ctx);
+                    pk_irq_save_and_set_mask(0);
+                    pk_critical_section_exit(&ctx);
+
+                    restore_irq = 0;
+
+                    //Do one actuate step
+                    PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x\n", G_globalPSTarget, G_globalPSCurr);
+                    p9_pgpe_thread_actuate_do_step();
+
+                    //evaluate conditions for pending ACKs
+                    inRange = 1;
+
+                    for (q = 0; q < MAX_QUADS; q++)
                     {
-                        inRange = 0;
+                        if((G_reqActQuads->fields.requested_active_quads & (0x80 >> q)) &&
+                           (qcsr.fields.ex_config & (0xC00 >> (2 * q))))
+                        {
+                            if (G_quadPSCurr[q] > G_psClipMax[q] ||
+                                G_quadPSCurr[q] <  G_psClipMin[q])
+                            {
+                                PK_TRACE_DBG("ACT_TH:!Clipped[%d) qPSCur: 0x%x\n", q, G_quadPSCurr[q]);
+                                inRange = 0;
+                            }
+                        }
                     }
+
+                    //ACK any pending and unmask IPC interrupt
+                    if (inRange == 1)
+                    {
+                        if (G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
+                        {
+                            ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].cmd;
+                            ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
+                            args->msg_cb.rc = PGPE_RC_SUCCESS;
+                            G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
+                            ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
+                            restore_irq = 1;
+                        }
+                    }
+
+                    //Now, PGPE is done with actuate step, let's
+                    //restore the interrupts in OIMR through UIH
+                    pk_irq_vec_restore(&ctx);
                 }
 
-                //ACK any pending and unmask IPC interrupt
-                if (inRange == 1)
+                //Check if IPC should be opened again
+                if (restore_irq == 1)
                 {
-                    if (G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
-                    {
-                        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].cmd;
-                        ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
-                        args->msg_cb.rc = PGPE_RC_SUCCESS;
-                        G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
-                        ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
-                        restore_irq = 1;
-                    }
+                    PK_TRACE_DBG("ACT_TH: IRQ Restore\n");
+                    restore_irq = 0;
+                    pk_irq_vec_restore(&ctx);
                 }
-
-                //Now, PGPE is done with actuate step, let's
-                //restore the interrupts in OIMR through UIH
-                pk_irq_vec_restore(&ctx);
             }
-
-            //Check if IPC should be opened again
-            if (restore_irq == 1)
-            {
-                PK_TRACE_DBG("ACT_TH: IRQ Restore\n");
-                restore_irq = 0;
-                pk_irq_vec_restore(&ctx);
-            }
-        }
+        } //while loop
 
         //Pstates Stop
         //This call will unmask IPC and block on SGPE ACK
@@ -192,16 +203,16 @@ void p9_pgpe_thread_actuate_start()
     PK_TRACE_DBG("ACT_TH: Start Enter\n");
     ocb_ccsr_t ccsr;
     ccsr.value = in32(OCB_CCSR);
-//    PK_TRACE_DBG("ACT_TH: Read CCSR\n");
     ocb_qcsr_t qcsr;
     qcsr.value = in32(OCB_QCSR);
-//    PK_TRACE_DBG("ACT_TH: Read QCSR\n");
     uint8_t quadPstates[MAX_QUADS];
     uint8_t lowestDpll, syncPstate;
     qppm_dpll_freq_t dpll;
     PkMachineContext  ctx;
     uint32_t active_conf_cores = 0;
     uint32_t q;
+
+    G_pstatesStatus = PSTATE_START_PENDING;
 
     //1. Send 'Control Stop Updates' IPC to SGPE
 #if SGPE_IPC_ENABLED == 1
@@ -233,9 +244,12 @@ void p9_pgpe_thread_actuate_start()
     if (G_sgpe_control_updt.fields.return_code == SGPE_PGPE_IPC_RC_SUCCESS)
     {
         //Update Shared Memory Region
-        G_quadState0->fields.core_poweron_state = (ccsr.value >> 8);
-        G_quadState1->fields.core_poweron_state = (ccsr.value & 0xFF) << 8;
-        G_quadState1->fields.requested_active_quad = G_sgpe_control_updt.fields.active_quads;
+        G_quadState0->fields.active_cores = (ccsr.value >> 16);
+        G_quadState1->fields.active_cores = ccsr.value & 0xFF00 ;
+        G_reqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads << 2;
+        PK_TRACE_DBG("ACT_TH: core_pwr_st0=0x%x\n", (uint32_t)G_quadState0->fields.active_cores);
+        PK_TRACE_DBG("ACT_TH: core_pwr_st1=0x%x\n", (uint32_t)G_quadState1->fields.active_cores);
+        PK_TRACE_DBG("ACT_TH: req_active_quad=0x%x\n", (uint32_t)G_reqActQuads->fields.requested_active_quads);
     }
     else
     {
@@ -243,20 +257,21 @@ void p9_pgpe_thread_actuate_start()
     }
 
 #else
-    G_quadState0->fields.core_poweron_state = (ccsr.value >> 16);
-    G_quadState1->fields.core_poweron_state = (ccsr.value & 0xFF00);
+    G_quadState0->fields.active_cores = (ccsr.value >> 16);
+    G_quadState1->fields.active_cores = (ccsr.value & 0xFF00);
 
     for (q = 0; q < MAX_QUADS; q++ )
     {
         if ((qcsr.fields.ex_config & (0x800 >> (2 * q))) ||
             (qcsr.fields.ex_config & (0x400 >> (2 * q))))
         {
-            G_quadState1->fields.requested_active_quad |= (0x80 >> q) ;
+            G_reqActQuads->fields.requested_active_quads |= (0x80 >> q) ;
         }
     }
 
-    PK_TRACE_DBG("ACT_TH: Shr Mem Updt\n");
 #endif //_SGPE_IPC_ENABLED_
+
+    PK_TRACE_DBG("ACT_TH: Shr Mem Updt\n");
 
     //2. Read DPLLs
     lowestDpll = 255;
@@ -265,7 +280,7 @@ void p9_pgpe_thread_actuate_start()
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if((G_quadState1->fields.requested_active_quad & (0x80 >> q)) &&
+        if((G_reqActQuads->fields.requested_active_quads & (0x80 >> q)) &&
            (qcsr.fields.ex_config & (0xC00 >> 2 * q)))
         {
 #if SIMICS_TUNING == 0
@@ -318,7 +333,7 @@ void p9_pgpe_thread_actuate_start()
     //Why does spec says to read external VDD. Is there
     //any other reason besides PGPE storing it
     external_voltage_control_init(&G_eVidCurr);
-#if SIMICS_TUNING
+#if SIMICS_TUNING == 1
     G_eVidCurr = p9_pgpe_gppb_intp_vdd_from_ps(G_globalPSTarget, VPD_PT_SET_BIASED_SYSP, VPD_SLOPES_BIASED);
 #endif
     G_eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(G_globalPSTarget, VPD_PT_SET_BIASED_SYSP, VPD_SLOPES_BIASED);
@@ -338,18 +353,21 @@ void p9_pgpe_thread_actuate_start()
 
     if (args->pmcr_owner == PMCR_OWNER_HOST)
     {
+        PK_TRACE_DBG("ACT_TH: OWNER_HOST\n");
         G_pmcrOwner = PMCR_OWNER_HOST;
         g_oimr_override &= ~(BIT64(46));
         out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
     }
     else if (args->pmcr_owner == PMCR_OWNER_OCC)
     {
+        PK_TRACE_DBG("ACT_TH: OWNER_OCC\n");
         G_pmcrOwner = PMCR_OWNER_OCC;
         g_oimr_override |= BIT64(46);
         out32(OCB_OIMR1_OR, BIT32(14)); //Disable PCB_INTR_TYPE1
     }
     else if (args->pmcr_owner == PMCR_OWNER_CHAR)
     {
+        PK_TRACE_DBG("ACT_TH: OWNER_CHAR\n");
         G_pmcrOwner = PMCR_OWNER_CHAR;
         g_oimr_override &= ~(BIT64(46));
         out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
@@ -367,7 +385,7 @@ void p9_pgpe_thread_actuate_start()
     //So, adding a build flag for SIMICS this out. Instead, in SIMICS set this through command line
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_quadState1->fields.requested_active_quad & (0x80 >> q))
+        if(G_reqActQuads->fields.requested_active_quads & (0x80 >> q))
         {
             //CME0 within this quad
             if (qcsr.fields.ex_config & (0x800 >> 2 * q))
@@ -422,15 +440,41 @@ void p9_pgpe_thread_actuate_start()
     p9_pgpe_wait_cme_db_ack(MSGID_DB0_START_PSTATE_BROADCAST, active_conf_cores);//Wait for ACKs from all QuadManagers
     PK_TRACE_DBG("ACT_TH: DB0 ACKed\n");
 
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        G_quadPSCurr[q] = G_quadPSTarget[q];
+    }
+
+    //Update Shared SRAM
+    G_quadState0->fields.quad0_pstate = G_quadPSCurr[0];
+    G_quadState0->fields.quad1_pstate = G_quadPSCurr[1];
+    G_quadState0->fields.quad2_pstate = G_quadPSCurr[2];
+    G_quadState0->fields.quad3_pstate = G_quadPSCurr[3];
+    G_quadState1->fields.quad4_pstate = G_quadPSCurr[4];
+    G_quadState1->fields.quad5_pstate = G_quadPSCurr[5];
+
+
     //7. Enable PStates
-    G_pstatesEnabled = 1;
+    G_pstatesStatus = PSTATE_ENABLE;
+    PK_TRACE_DBG("ACT_TH: PSTATE_ENABLE\n");
 
     //8. Send Pstate Start ACK to OCC
     args->msg_cb.rc = PGPE_RC_SUCCESS;
     G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack = 0;
     ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_PSTATE_START].cmd, IPC_RC_SUCCESS);
 
-    pk_irq_vec_restore(&ctx);
+    if ((G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing == 1) ||
+        (G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing == 1))
+    {
+        PK_TRACE_DBG("ACT_TH: Post PROC_TH\n");
+        pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
+    }
+    else
+    {
+        PK_TRACE_DBG("ACT_TH: Restoring IRQs\n");
+        pk_irq_vec_restore(&ctx);
+    }
+
     PK_TRACE_DBG("ACT_TH: Start Exit\n");
 }
 
@@ -440,6 +484,8 @@ void p9_pgpe_thread_actuate_start()
 void p9_pgpe_thread_actuate_stop()
 {
     PK_TRACE_DBG("ACT_TH: Stop Enter\n");
+    PK_TRACE_DBG("ACT_TH: GlbPSCurr:0x%x\n", G_globalPSCurr );
+    PK_TRACE_DBG("ACT_TH: GlblPsTgt:0x%x\n", G_globalPSTarget);
     uint32_t q;
     PkMachineContext  ctx;
     uint32_t active_conf_cores = 0;
@@ -449,7 +495,7 @@ void p9_pgpe_thread_actuate_stop()
     //Determine active and configured cores
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_quadState1->fields.requested_active_quad & (0x80 >> q))
+        if(G_reqActQuads->fields.requested_active_quads & (0x80 >> q))
         {
             if (qcsr.fields.ex_config & (0x800 >> 2 * q))
             {
@@ -483,6 +529,7 @@ void p9_pgpe_thread_actuate_stop()
                  (void*)&G_pgpe_pstate_record.sem_sgpe_wait);
 
     //send the command
+    PK_TRACE_DBG("ACT_TH: CtrlStopUpdt Sent\n");
     rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
 
     if(rc)
@@ -492,7 +539,9 @@ void p9_pgpe_thread_actuate_stop()
 
     //Wait for SGPE ACK with alive Quads
     pk_irq_vec_restore(&ctx);
-    pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
+    pk_semaphore_pend(&(G_pgpe_pstate_record.sem_sgpe_wait), PK_WAIT_FOREVER);
+
+    PK_TRACE_DBG("ACT_TH: CtrlStopUpdt Rcvd\n");
 
     if (G_sgpe_control_updt.fields.return_code != SGPE_PGPE_IPC_RC_SUCCESS)
     {
@@ -508,6 +557,8 @@ void p9_pgpe_thread_actuate_stop()
     G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack = 0;
     ipc_send_rsp(G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].cmd, IPC_RC_SUCCESS);
 
+    PK_TRACE_DBG("ACT_TH: GlbPSCurr:0x%x\n", G_globalPSCurr );
+    PK_TRACE_DBG("ACT_TH: GlblPsTgt:0x%x\n", G_globalPSTarget);
     pk_irq_vec_restore(&ctx);
     PK_TRACE_DBG("ACT_TH: Stop Exit\n");
 }
@@ -518,6 +569,13 @@ void p9_pgpe_thread_actuate_stop()
 void p9_pgpe_thread_actuate_do_step()
 {
     PK_TRACE_DBG("ACT_TH: Step Entry\n");
+    PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x\n", G_globalPSTarget, G_globalPSCurr);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[0], G_quadPSCurr[0]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[1], G_quadPSCurr[1]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[2], G_quadPSCurr[2]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[3], G_quadPSCurr[3]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[4], G_quadPSCurr[4]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[5], G_quadPSCurr[5]);
     uint32_t q;
     ocb_qcsr_t qcsr;
     qcsr.value = in32(OCB_QCSR);
@@ -527,18 +585,20 @@ void p9_pgpe_thread_actuate_do_step()
     //Determine active and configured cores
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_quadState1->fields.requested_active_quad & (0x80 >> q))
+        if(G_reqActQuads->fields.requested_active_quads & (0x80 >> q))
         {
-            if (qcsr.fields.ex_config & (0x800 >> 2 * q))
+            if (qcsr.fields.ex_config & (0x800 >> (q << 1)))
             {
-                active_conf_cores |= (0xC0000000 >> q * 4);
+                active_conf_cores |= (0xC0000000 >> (q << 2));
             }
 
-            if (qcsr.fields.ex_config & (0x400 >> 2 * q))
+            if (qcsr.fields.ex_config & (0x400 >> (q << 1)))
             {
-                active_conf_cores |= (0x30000000 >> q * 4);
+                active_conf_cores |= (0x30000000 >> (q << 2));
             }
         }
+
+        PK_TRACE_DBG("ACT_TH: act_c=0x%x\n", active_conf_cores);
     }
 
     //Higher number PState
@@ -624,7 +684,7 @@ void p9_pgpe_thread_actuate_do_step()
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_quadState1->fields.requested_active_quad & (0x80 >> q) &&
+        if(G_reqActQuads->fields.requested_active_quads & (0x80 >> q) &&
            (qcsr.fields.ex_config & (0xC00 >> 2 * q)))
         {
             G_quadPSCurr[q] = G_quadPSNext[q];
@@ -639,6 +699,12 @@ void p9_pgpe_thread_actuate_do_step()
     G_quadState1->fields.quad4_pstate = G_quadPSCurr[4];
     G_quadState1->fields.quad5_pstate = G_quadPSCurr[5];
 
+    PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x\n", G_globalPSTarget, G_globalPSCurr);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[0], G_quadPSCurr[0]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[1], G_quadPSCurr[1]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[2], G_quadPSCurr[2]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[3], G_quadPSCurr[3]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x\n", G_quadPSTarget[4], G_quadPSCurr[4]);
     PK_TRACE_DBG("ACT_TH: Step Exit\n");
 }
 
@@ -694,6 +760,7 @@ void p9_pgpe_thread_actuate_updt_ext_volt(uint32_t tgtEVid)
 void p9_pgpe_thread_actuate_freq_updt(uint32_t activeCores)
 {
     PK_TRACE_DBG("ACT_TH: Freq Updt Enter\n");
+    PK_TRACE_DBG("ACT_TH: act_cores=0x%x\n", activeCores);
     pgpe_db0_glb_bcast_t db0;
     db0.value = 0;
     db0.fields.msg_id = MSGID_DB0_GLOBAL_ACTUAL_BROADCAST;
@@ -705,6 +772,7 @@ void p9_pgpe_thread_actuate_freq_updt(uint32_t activeCores)
     db0.fields.quad4_ps = G_quadPSNext[4];
     db0.fields.quad5_ps = G_quadPSNext[5];
     p9_dd1_db_multicast_wr(PCB_MUTLICAST_GRP1 | CPPM_CMEDB0, db0.value, activeCores);
+    PK_TRACE_DBG("ACT_TH: MCAST DB0\n");
     p9_pgpe_wait_cme_db_ack(MSGID_DB0_GLOBAL_ACTUAL_BROADCAST, activeCores);//Wait for ACKs from all CMEs
     PK_TRACE_DBG("ACT_TH: Freq Updt Exit\n");
 }
@@ -722,7 +790,7 @@ void p9_pgpe_wait_cme_db_ack(uint8_t msg_id, uint32_t active_conf_cores)
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if (active_conf_cores & (0xF0000000 >> (q * 4)))
+        if (active_conf_cores & (0xF0000000 >> (q << 2)))
         {
             quadPendDBAck[q] = 1;
         }
@@ -747,10 +815,18 @@ void p9_pgpe_wait_cme_db_ack(uint8_t msg_id, uint32_t active_conf_cores)
                 if (quadPendDBAck[QUAD_FROM_CORE(c)])
                 {
                     quadPendDBAck[QUAD_FROM_CORE(c)] = 0;
+                    /*#if SIMICS_TUNING == 1
+                                        uint32_t opit4prCurr;
+                                        opit4prCurr = in32(OCB_OPIT4PRA);
+                                        PK_TRACE_DBG("ACT_TH: temp=0x%x\n", opit4prCurr);
+                                        out32(OCB_OPIT4PRA, (~(CCSR_CORE_CONFIG_MASK >> c)) & opit4prCurr);
+                    #endif*/
                     out32(OCB_OPIT4PRA_CLR, CCSR_CORE_CONFIG_MASK >> c); //Clear out pending bits
+                    PK_TRACE_DBG("ACT_TH: Got Ack. Core=0x%x\n", c);
                 }
                 else
                 {
+                    PK_TRACE_DBG("ACT_TH: Ack Mismatch. Core=0x%x\n", c);
                     pk_halt();
                 }
             }
@@ -770,18 +846,16 @@ void p9_pgpe_wait_cme_db_ack(uint8_t msg_id, uint32_t active_conf_cores)
 }
 
 
-
-
 void p9_pgpe_thread_actuate_init_actual_quad()
 {
     G_quadState0->fields.quad0_pstate = 0xff;
     G_quadState0->fields.quad1_pstate = 0xff;
     G_quadState0->fields.quad2_pstate = 0xff;
     G_quadState0->fields.quad3_pstate = 0xff;
-    G_quadState0->fields.core_poweron_state = 0;
+    G_quadState0->fields.active_cores = 0;
 
     G_quadState1->fields.quad4_pstate = 0xff;
     G_quadState1->fields.quad5_pstate = 0xff;
-    G_quadState1->fields.core_poweron_state = 0x0;
-    G_quadState1->fields.requested_active_quad = 0x0;
+    G_quadState1->fields.active_cores = 0x0;
+    G_reqActQuads->fields.requested_active_quads = 0x0;
 }

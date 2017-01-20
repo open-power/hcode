@@ -51,6 +51,14 @@
 #define QUAD4_BIT_MASK          0x8
 #define QUAD5_BIT_MASK          0x4
 
+enum PSTATE_STATUS
+{
+    PSTATE_DISABLE       =    0,
+    PSTATE_START_PENDING =    1,
+    PSTATE_SUSPENDED     =    3,
+    PSTATE_ENABLE        =    4
+};
+
 //
 //Task list entry
 //

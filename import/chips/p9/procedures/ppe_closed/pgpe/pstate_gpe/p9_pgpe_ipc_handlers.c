@@ -29,7 +29,6 @@
 #include "ipc_async_cmd.h"
 #include "p9_pgpe_header.h"
 #include "pstate_pgpe_occ_api.h"
-//#include "pstate_pgpe_sgpe_api.h"
 #include "ipc_messages.h"
 #include "occhw_shared_data.h"
 #include "p9_pgpe_ipc_handlers.h"
@@ -45,10 +44,10 @@
 //External Global Data
 //
 extern ipc_req_t G_ipc_pend_tbl[MAX_IPC_PEND_TBL_ENTRIES];
-extern uint8_t G_pstatesEnabled;
+extern uint32_t G_pstatesStatus;
 extern PgpePstateRecord G_pgpe_pstate_record;
 extern uint32_t G_already_sem_posted;
-extern uint8_t G_pmcrOwner;
+//extern uint8_t G_pmcrOwner;
 extern PgpeHeader_t* G_pgpe_header_data;
 
 //
@@ -88,6 +87,7 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 
     if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
     {
+        PK_TRACE_DBG("START_STOP: Imm\n");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
         G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack = 0;
@@ -111,7 +111,7 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
         {
             if (G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack == 0)
             {
-                if(G_pstatesEnabled == 0)
+                if(G_pstatesStatus == PSTATE_DISABLE)
                 {
                     PK_TRACE_DBG("START_STOP: Start Rcvd\n");
 
@@ -144,18 +144,19 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 
             if (G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack == 0)
             {
-                if(G_pstatesEnabled == 1)
-                {
-                    G_pstatesEnabled = 0;
-                    G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].cmd = cmd;
-                    G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack = 1;
-                    G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_processing = 0;
-                }
-                else
+                if(G_pstatesStatus == PSTATE_DISABLE)
                 {
                     PK_TRACE_DBG("START_STOP: Pstate Already Stopped\n");
                     args->msg_cb.rc = PGPE_RC_REQ_PSTATE_ALREADY_SUSPENDED;
                     ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+                }
+                else
+                {
+                    G_pstatesStatus = PSTATE_DISABLE;
+                    G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].cmd = cmd;
+                    G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack = 1;
+                    G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_processing = 0;
+
                 }
             }
             else
@@ -215,17 +216,9 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 
     if (G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_ack == 0)
     {
-        if(G_pmcrOwner != PMCR_OWNER_OCC)
-        {
-            args->msg_cb.rc = PGPE_RC_OCC_NOT_PMCR_OWNER;
-            ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        }
-        else
-        {
-            G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].cmd = cmd;
-            G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_processing = 1;
-            G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_ack = 1;
-        }
+        G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].cmd = cmd;
+        G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_processing = 1;
+        G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_ack = 1;
     }
     else
     {

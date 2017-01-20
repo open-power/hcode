@@ -65,7 +65,7 @@ void p9_cme_pstate_pmcr_handler(void* arg, PkIrqId irq)
 //
 void p9_cme_pstate_pmcr_thread(void* arg)
 {
-    PK_TRACE("PMCR_TH: Enter\n");
+    PK_TRACE_INF("PMCR_TH: Enter\n");
     int32_t c;
     PkMachineContext  ctx;
     cme_scom_pmcrs0_t  pmcr[2];
@@ -82,7 +82,7 @@ void p9_cme_pstate_pmcr_thread(void* arg)
 
     pk_semaphore_create(&G_cme_pstate_record.sem[0], 0, 1);
 
-    PK_TRACE("PMCR_TH: Inited\n");
+    PK_TRACE_INF("PMCR_TH: Inited\n");
 
     while(1)
     {
@@ -119,7 +119,7 @@ void p9_cme_pstate_pmcr_thread(void* arg)
                     ppmPigData.value |= ((G_pmcr_thread_data.seqNum & 0x6) << 57);
                     send_pig_packet(ppmPigData.value, coreMask[c]);
                     G_pmcr_thread_data.seqNum++;
-                    PK_TRACE("PMCR_TH: Fwd PMCR %d\n", c);
+                    PK_TRACE_INF("PMCR_TH: Fwd PMCR %d\n", c);
                 }
             }
         }
@@ -127,5 +127,5 @@ void p9_cme_pstate_pmcr_thread(void* arg)
         pk_irq_vec_restore(&ctx);
     }
 
-    PK_TRACE("PMCR_TH: Exit\n");
+    PK_TRACE_INF("PMCR_TH: Exit\n");
 }

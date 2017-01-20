@@ -78,7 +78,11 @@ extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 #define IRQ_VEC_PRTY3_GPE2  (uint64_t)(0x0000000000000008) // Task3-IPI2-LO(Process Flags)
 #define IRQ_VEC_PRTY4_GPE2  (uint64_t)(0x0000001000000000) // Task4-IPI2-HI(IPC from OCC/SGPE)
 #define IRQ_VEC_PRTY5_GPE2  (uint64_t)(0x0000000000020000) // Task5-PCB_INTR_TYPE1(PCB Type1 from CME)
-#define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0xFF7EFFE3FFFDFFF5) // Other instances' IRQs
+#if OVERRIDE_OTHER_ENGINES_IRQS == 1
+    #define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0xFF7EFF03FFFDFFF5) // Other instances' IRQs
+#else
+    #define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0x0000000000000000) // Other instances' IRQs
+#endif
 // Unique to each instance
 // We should never detect these
 

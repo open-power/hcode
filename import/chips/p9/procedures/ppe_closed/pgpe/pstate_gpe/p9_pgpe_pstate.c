@@ -31,7 +31,6 @@
 #include "p9_dd1_doorbell_wr.h"
 #include "p9_pgpe_pstate.h"
 #include "pstate_pgpe_occ_api.h"
-//#include "pstate_pgpe_sgpe_api.h"
 #include "ipc_messages.h"
 #include "p9_pgpe_header.h"
 
@@ -44,7 +43,7 @@ extern PgpeHeader_t* G_pgpe_header_data;
 //Global Data
 //
 uint8_t G_safeModeEnabled;              //safe mode enabled/disabled
-uint8_t G_pstatesEnabled;               //pstates_enabled/disable
+uint32_t G_pstatesStatus;
 uint8_t G_pmcrOwner;
 uint8_t G_wofEnabled;                   //wof enable/disable
 uint8_t G_wofPending;                   //wof enable pending
@@ -64,6 +63,7 @@ uint32_t G_eVidCurr, G_eVidNext;
 VFRT_Hcode_t* G_vfrt_ptr;
 quad_state0_t* G_quadState0;
 quad_state1_t* G_quadState1;
+requested_active_quads_t* G_reqActQuads;
 
 #define GPE_BUFFER(declaration) \
     declaration __attribute__ ((__aligned__(8))) __attribute__ ((section (".noncacheable")))
@@ -88,7 +88,7 @@ void p9_pgpe_pstate_init()
     uint32_t q;
 
     G_safeModeEnabled = 0;
-    G_pstatesEnabled = 0;
+    G_pstatesStatus = PSTATE_DISABLE;
     G_wofEnabled = 0;
     G_wofPending = 0;
 
@@ -108,6 +108,7 @@ void p9_pgpe_pstate_init()
 
     G_quadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
     G_quadState1 = (quad_state1_t*)(G_pgpe_header_data->g_quad_status_addr + 2);
+    G_reqActQuads = (requested_active_quads_t*)(G_pgpe_header_data->g_req_active_quad_addr);
 }
 
 //
@@ -123,9 +124,6 @@ void p9_pgpe_pstate_update(uint8_t* s)
         {
             G_coresPSRequest[c] = s[q];
         }
-
-        G_quadPSCurr[q] = s[q];
-        G_quadPSNext[q] = s[q];
     }
 
     p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
@@ -140,9 +138,9 @@ void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest)
     PK_TRACE_DBG("AUCT: Enter\n");
     //Get active cores and quads
     uint32_t q, c;
-    uint32_t activeCores = G_quadState0->fields.core_poweron_state ;
-    activeCores = (activeCores << 16) | (G_quadState1->fields.core_poweron_state);
-    uint32_t activeQuads = G_quadState1->fields.requested_active_quad;
+    uint32_t activeCores = G_quadState0->fields.active_cores;
+    activeCores = (activeCores << 16) | (G_quadState1->fields.active_cores);
+    uint32_t activeQuads = G_reqActQuads->fields.requested_active_quads;
 
     //Local PStates Auction
     for (q = 0; q < MAX_QUADS; q++)
@@ -199,16 +197,17 @@ void p9_pgpe_pstate_apply_clips()
 {
     PK_TRACE_DBG("APCLP: Enter\n");
     uint32_t q;
-    uint32_t activeQuads = G_quadState1->fields.requested_active_quad;
+    uint32_t activeQuads = G_reqActQuads->fields.requested_active_quads;
 
     //Apply clips to quad computed
     PK_TRACE_DBG("APCLP: 0x%x\n", activeQuads);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
+        uint8_t maxPS = G_psClipMax[q];
+
         if (activeQuads & (QUAD0_BIT_MASK >> q))
         {
-            uint8_t maxPS = G_psClipMax[q];
 
             if (G_wofEnabled == 1)
             {
@@ -236,7 +235,7 @@ void p9_pgpe_pstate_apply_clips()
             G_quadPSTarget[q] = 0xFF;
         }
 
-        //    PK_TRACE_DBG("APP_CLIP: G_quadPSTarget: 0x%x\n", G_quadPSTarget[q]);
+        PK_TRACE_DBG("APP_CLIP: G_qPSTgt: 0x%x,cl=0x%x,0x%x\n", G_quadPSTarget[q], maxPS, G_psClipMin[q]);
     }
 
     //Global PState Auction
