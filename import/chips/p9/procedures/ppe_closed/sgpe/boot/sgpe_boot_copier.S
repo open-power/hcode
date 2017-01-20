@@ -95,7 +95,7 @@ __bootCopier:
 
     // calculating bootLoader image loaded address
     lwz     r8, 0(r7)   # offset of bootLoader section  in Homer
-    adde    r8, r8, r9  # add base address to offset to get absolute bootLoader address in Homer
+    add     r8, r8, r9  # add base address to offset to get absolute bootLoader address in Homer
 
 copy_loop:
     lvd    d28, 0(r8)  # Load Double word
