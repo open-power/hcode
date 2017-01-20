@@ -78,8 +78,7 @@ IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_STRM2_PUSH
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_STRM3_PULL
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_STRM3_PUSH
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE0_PENDING
-IRQ_HANDLER(p9_pgpe_irq_handler_pcb_type1, (void*) & G_pgpe_pstate_record.sem_process_req)
-//OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING
+IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE3_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE4_PENDING
@@ -122,19 +121,21 @@ void __eabi()
 int
 main(int argc, char** argv)
 {
-    //Read OCC_SCRATCH[PGPE_DEBUG_TRAP_ENABLE]]
-    uint32_t occScr2 = in32(OCB_OCCS2);
-
-    if (occScr2 & BIT32(PGPE_DEBUG_TRAP_ENABLE))
-    {
-        asm volatile ("tw 0, 31, 0");
-    }
 
     // Initializes kernel data (stack, threads, timebase, timers, etc.)
     pk_initialize((PkAddress)G_kernel_stack,
                   KERNEL_STACK_SIZE,
                   0,
                   PPE_TIMEBASE_HZ);
+
+    // Read OCC_SCRATCH[PGPE_DEBUG_TRAP_ENABLE]
+    uint32_t occScr2 = in32(OCB_OCCS2);
+
+    if (occScr2 & BIT32(PGPE_DEBUG_TRAP_ENABLE))
+    {
+        PK_TRACE_DBG("MAIN: Debug trap detected");
+        asm volatile ("trap");
+    }
 
     // Initialize the thread control block for G_p9_pgpe_thread_process_requests
     pk_thread_create(&G_p9_pgpe_thread_process_requests,
@@ -166,6 +167,10 @@ main(int argc, char** argv)
 
     //Do initialization
     p9_pgpe_header_init();
+
+    PK_TRACE_DBG("Update PGPE Header with pertinent OCC SRAM information");
+    p9_pgpe_header_fill();
+
 #if USE_BOOT_TEMP
     //This is to be used for development and testing/verif
     //if Global Pstate Parameter Block is not initialized through other means.
@@ -176,19 +181,21 @@ main(int argc, char** argv)
     p9_pgpe_boot_temp(); //This is just temporary
 #endif
 
+    PK_TRACE_DBG("Initializing from Global Pstate Parameter Block");
     p9_pgpe_gppb_init();
 
 #if GEN_PSTATE_TBL
+    PK_TRACE_DBG("Generating Pstate Tables to memory");
     p9_pgpe_gen_pstate_info();
 #endif
 
-    //Setup FIT(Fixed-Interval Timer)
+    PK_TRACE_DBG("Setup FIT(Fixed-Interval Timer)");
     p9_pgpe_fit_init();
 
-    //Initialize all pstate related data to some default values
+    PK_TRACE_DBG("Initialize all pstate related data to some default values");
     p9_pgpe_pstate_init();
 
-    PK_TRACE_DBG("Starting PK Threads\n");
+    PK_TRACE_DBG("Starting PK Threads");
 
     // Start running the highest priority thread.
     // This function never returns

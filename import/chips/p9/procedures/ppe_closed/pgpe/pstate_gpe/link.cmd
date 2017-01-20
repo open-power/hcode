@@ -35,7 +35,9 @@ OUTPUT_FORMAT(elf32-powerpc);
 // GPE2 is loaded at 0xfff20000
 #define SRAM_START 0xfff20000
 #define SRAM_LENGTH 0x10000
-#define PPE_DEBUG_PTRS_OFFSET 0x1E0
+#define PGPE_HEADER_OFFSET    0x180
+//debug pointer offset at an offset of 0x200
+#define PPE_DEBUG_PTRS_OFFSET PGPE_HEADER_OFFSET + 0x80
 
 MEMORY
 {
@@ -56,6 +58,14 @@ SECTIONS
     _VECTOR_START = .;
 
     .vectors  _VECTOR_START  : { *(.vectors) } > sram
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // PGPE Image Header
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    _PGPE_IMG_HEADER = _VECTOR_START + PGPE_HEADER_OFFSET;
+    .pgpe_image_header _PGPE_IMG_HEADER : { *(.pgpe_image_header) } > sram
 
     ///////////////////////////////////////////////////////////////////////////
     // Debug Pointers Table

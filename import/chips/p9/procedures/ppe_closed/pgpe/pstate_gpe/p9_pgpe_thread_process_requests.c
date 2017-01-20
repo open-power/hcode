@@ -36,8 +36,8 @@
 //External Global Data
 //
 extern PgpePstateRecord G_pgpe_pstate_record;
-extern pgpe_header_data_t* G_pgpe_header_data;
 extern uint8_t G_pstatesEnabled;               //pstates_enabled/disable
+extern PgpeHeader_t* G_pgpe_header_data;
 extern uint8_t G_wofEnabled;               //pstates_enabled/disable
 extern uint8_t G_wofPending;                   //wof enable pending
 extern VFRT_Hcode_t* G_vfrt_ptr;
@@ -48,7 +48,6 @@ extern uint8_t G_coresPSRequest[MAX_CORES];    //per core requested pstate
 extern uint32_t G_already_sem_posted;
 extern quad_state0_t* G_quadState0;
 extern quad_state1_t* G_quadState1;
-extern pgpe_header_data_t* G_pgpe_header_data;
 extern ipc_async_cmd_t G_ipc_msg_pgpe_sgpe;
 GPE_BUFFER(extern ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 
@@ -78,13 +77,11 @@ void p9_pgpe_thread_process_requests(void* arg)
     //IPC Init
     p9_pgpe_ipc_init();
 
-    //Set OCC_FLAG[PGPE_ACTIVE]
-    out32(OCB_OCCFLG_OR, BIT32(4));
 #if EPM_P9_TUNING
     asm volatile ("tw 0, 31, 0");
 #endif
 
-    PK_TRACE_DBG("PROCTH:Inited\n");
+    PK_TRACE_DBG("PROCTH:Inited; PGPE_ACTIVE set\n");
 
     while(1)
     {
@@ -293,7 +290,7 @@ void p9_pgpe_process_clip_updt()
 
     G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_processing = 0;
 
-    if(G_pgpe_header_data->pgpeflags & OCC_IPC_IMMEDIATE_RESP)
+    if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
     {
         PK_TRACE_DBG("PROCTH: Clip Updt Imme\n");
         G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
@@ -343,7 +340,7 @@ void p9_pgpe_process_wof_ctrl()
 
     G_ipc_pend_tbl[IPC_PEND_WOF_CTRL].pending_processing = 0;
 
-    if(G_pgpe_header_data->pgpeflags & OCC_IPC_IMMEDIATE_RESP)
+    if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
     {
         G_ipc_pend_tbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
         args->msg_cb.rc = PGPE_RC_SUCCESS;
@@ -438,7 +435,7 @@ void p9_pgpe_process_wof_vfrt()
 
     G_ipc_pend_tbl[IPC_PEND_WOF_VFRT].pending_processing = 0;
 
-    if(G_pgpe_header_data->pgpeflags & OCC_IPC_IMMEDIATE_RESP)
+    if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
     {
         G_ipc_pend_tbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
         args->msg_cb.rc = PGPE_RC_SUCCESS;
@@ -531,7 +528,7 @@ void p9_pgpe_process_set_pmcr_req()
 
     G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_processing = 0;
 
-    if(G_pgpe_header_data->pgpeflags & OCC_IPC_IMMEDIATE_RESP)
+    if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
     {
         G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_ack = 0;
         args->msg_cb.rc = PGPE_RC_SUCCESS;

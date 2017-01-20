@@ -38,7 +38,7 @@
 #define EPM_P9_TUNING 1
 #define SIMICS_TUNING 0
 #define GEN_PSTATE_TBL 0
-#define USE_BOOT_TEMP 1
+#define USE_BOOT_TEMP 0
 #define BOOT_TEMP_SET_FULL_OCC_IPC_FUNC 1
 #define DEV_DEBUG     1
 #define PGPE_UNIT_TEST 1

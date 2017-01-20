@@ -49,7 +49,7 @@ extern uint8_t G_pstatesEnabled;
 extern PgpePstateRecord G_pgpe_pstate_record;
 extern uint32_t G_already_sem_posted;
 extern uint8_t G_pmcrOwner;
-extern pgpe_header_data_t* G_pgpe_header_data;
+extern PgpeHeader_t* G_pgpe_header_data;
 
 //
 //p9_pgpe_ipc_init
@@ -86,7 +86,7 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
 
-    if(G_pgpe_header_data->pgpeflags & OCC_IPC_IMMEDIATE_RESP)
+    if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
     {
         args->msg_cb.rc = PGPE_RC_SUCCESS;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);

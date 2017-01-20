@@ -80,7 +80,7 @@ $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 	| xargs -i printf "%d" 0x{})
 
 # Options for PK_TRACE
-$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=0
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=3
 $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_TIMER_OUTPUT=0
 
 

@@ -29,7 +29,7 @@
 uint8_t G_fit_count_threshold;
 uint8_t G_fit_count;
 extern GlobalPstateParmBlock* G_gppb;
-extern pgpe_header_data_t* G_pgpe_header_data;
+extern PgpeHeader_t* G_pgpe_header_data;
 
 //
 //Local function declarations
@@ -84,7 +84,7 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
     if (G_fit_count == G_fit_count_threshold)
     {
         //write to SRAM
-        *(G_pgpe_header_data->pgpe_beacon) = *(G_pgpe_header_data->pgpe_beacon) + 1;
+        *(G_pgpe_header_data->g_pgpe_beacon_addr) = *(G_pgpe_header_data->g_pgpe_beacon_addr) + 1;
         G_fit_count = 0;
     }
     else

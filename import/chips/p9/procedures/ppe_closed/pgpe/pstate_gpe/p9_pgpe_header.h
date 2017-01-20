@@ -32,7 +32,7 @@
 //\todo RTC: 164335 Use the structure from p9_hcode_image_defines.H
 //when it's updated
 //
-typedef struct pgpe_header_data
+/*typedef struct pgpe_header_data
 {
     uint32_t magic_number[2];
     uint32_t* _system_reset_addr;
@@ -55,8 +55,35 @@ typedef struct pgpe_header_data
     uint32_t* actual_quad_status_addr;
     uint32_t* wof_tbl_addr;
     uint32_t wof_tbl_lengh;
-} pgpe_header_data_t;
+} PgpeHeader_t;*/
+
+typedef struct
+{
+    uint32_t  g_pgpe_magic_number[2];            // PGPE_1.0
+    uint32_t* g_pgpe_sys_reset_addr;          // Fully qualified OCC address where pk_init resides
+    uint32_t* g_pgpe_shared_sram_addr;        // SRAM address where shared SRAM begins
+    uint32_t* g_pgpe_ivpr_addr;               // Beginning of PGPE region in OCC SRAM
+    uint32_t  g_pgpe_shared_sram_len;         // Length of shared SRAM area
+    uint32_t  g_pgpe_build_date;              // Build date for PGPE Image
+    uint32_t  g_pgpe_build_ver;               // Build Version
+    uint16_t  g_pgpe_qm_flags;                // QM Flags
+    uint16_t  g_pgpe_reserve1;                // Reserve field
+    uint32_t  g_pgpe_reserve2;                // Reserve field
+    uint32_t* g_pgpe_gppb_sram_addr;          // Offset to Global P State Parameter Block
+    uint32_t  g_pgpe_reserve3;                // Reserve field
+    uint32_t* g_pgpe_gppb_mem_offset;         // Offset to start of Global PS Param Block wrt start of HOMER.
+    uint32_t  g_pgpe_gppb_length;             // Length of Global P State Parameter Block
+    uint32_t* g_pgpe_gen_pstables_mem_offset; // Offset to PState Table wrt start of HOMER
+    uint32_t  g_pgpe_gen_pstables_length;     // Length of P State table
+    uint32_t* g_pgpe_occ_pstables_sram_addr;  // Offset to start of OCC P-State table
+    uint32_t  g_pgpe_occ_pstables_len;        // Length of OCC P-State table
+    uint32_t* g_pgpe_beacon_addr;             // SRAM addr where PGPE beacon is located
+    uint32_t* g_quad_status_addr;             // Actual Quad address
+    uint32_t* g_wof_table_addr;               // WOF Table Address
+    uint32_t  g_wof_table_length;             // WOF Table Length
+} PgpeHeader_t;
 
 void p9_pgpe_header_init();
+void p9_pgpe_header_fill();
 
 #endif //_P9_PGPE_HEADER_H_

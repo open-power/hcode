@@ -31,7 +31,7 @@
 
 //Generated PState Table in SRAM
 GeneratedPstateInfo G_gpi;
-extern pgpe_header_data_t* G_pgpe_header_data;
+extern PgpeHeader_t* G_pgpe_header_data;
 extern VpdOperatingPoint G_operating_points[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 
 //
@@ -48,9 +48,9 @@ void p9_pgpe_gen_pstate_info()
 {
     int p;
     //Get GlobalPstateParmBlock offset from pgpe_header
-    uint32_t* pstate_tbl_memory_offset  = G_pgpe_header_data->pstate_tbl_mem_offset;
-    uint32_t pstate_tbl_length = G_pgpe_header_data->pstate_tbl_length;
-    void* gppb_sram_offset = G_pgpe_header_data->gppb_sram_addr;//GPPB Sram Offset
+    uint32_t* pstate_tbl_memory_offset  = G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset;
+    uint32_t pstate_tbl_length = G_pgpe_header_data->g_pgpe_gen_pstables_length;
+    void* gppb_sram_offset = G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
     GlobalPstateParmBlock* gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
 
     //Fill out GeneratedPstateInfo structure
@@ -153,8 +153,8 @@ void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo
 void p9_pgpe_gen_occ_pstate_tbl(GeneratedPstateInfo* gpi)
 {
     int p;
-    OCCPstateTable_t* opst = (OCCPstateTable_t*)G_pgpe_header_data->occ_pstate_tbl_addr;
-    opst->entries = (G_pgpe_header_data->occ_pstate_tbl_length) / sizeof(OCCPstateTable_entry_t);
+    OCCPstateTable_t* opst = (OCCPstateTable_t*)G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr;
+    opst->entries = (G_pgpe_header_data->g_pgpe_occ_pstables_len) / sizeof(OCCPstateTable_entry_t);
 
     for (p = 0; p <= opst->entries; p++)
     {

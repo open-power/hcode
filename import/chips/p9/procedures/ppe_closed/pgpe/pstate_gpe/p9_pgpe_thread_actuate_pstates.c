@@ -61,7 +61,6 @@ extern uint8_t G_quadPSNext[MAX_QUADS];      //target Pstate per quad
 extern uint8_t G_globalPSNext;
 extern uint32_t G_eVidCurr, G_eVidNext;
 extern GlobalPstateParmBlock* G_gppb;
-extern pgpe_header_data_t* G_pgpe_header_data;
 extern uint8_t G_psClipMax[MAX_QUADS],
        G_psClipMin[MAX_QUADS];         //pmin and pmax clips
 extern uint8_t G_pmcrOwner;
@@ -94,9 +93,14 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
     //Initialize Shared SRAM to a known state
     p9_pgpe_thread_actuate_init_actual_quad();
 
+    // Set OCC Scratch2[PGPE_ACTIVE]
+    uint32_t occScr2 = in32(OCB_OCCS2);
+    occScr2 |= BIT32(PGPE_ACTIVE);
 #if PGPE_UNIT_TEST
-    out32(OCB_OCCS2, BIT32(30));
+    occScr2 |= BIT32(30);
 #endif
+    PK_TRACE_DBG("Setting PGPE_ACTIVE in OCC SCRATCH2 addr %X = %X\n", OCB_OCCS2, occScr2);
+    out32(OCB_OCCS2, occScr2);
 
     //Thread Loop
     while(1)

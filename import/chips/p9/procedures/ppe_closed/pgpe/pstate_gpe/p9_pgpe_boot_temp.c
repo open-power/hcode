@@ -26,7 +26,7 @@
 #include "p9_pstates_pgpe.h"
 #include "p9_pgpe_header.h"
 
-extern pgpe_header_data_t* G_pgpe_header_data;
+extern PgpeHeader_t* G_pgpe_header_data;
 
 //
 //Local function prototypes
@@ -54,23 +54,25 @@ void p9_pgpe_boot_temp()
 void p9_pgpe_boot_pgpe_header_init()
 {
     //fill it in
-    G_pgpe_header_data->magic_number[0] =  0x32323232;//magic
-    G_pgpe_header_data->_system_reset_addr  = (uint32_t*)0xffff2040;//system_reset_address
-    G_pgpe_header_data->IVPR_address = (uint32_t*)0xffff2000;//IVPR address
+    G_pgpe_header_data->g_pgpe_magic_number[0] =  0x32323232;//magic
+    G_pgpe_header_data->g_pgpe_sys_reset_addr  = (uint32_t*)0xffff2040;//system_reset_address
+    G_pgpe_header_data->g_pgpe_ivpr_addr = (uint32_t*)0xffff2000;//IVPR address
 #if !BOOT_TEMP_SET_FULL_OCC_IPC_FUNC
-    G_pgpe_header_data->pgpeflags = (uint16_t)(0x0080); //OCC IPC Immediate Response
+    G_pgpe_header_data->g_pgpe_qm_flags = (uint16_t)(0x0080); //OCC IPC Immediate Response
 #else
-    G_pgpe_header_data->pgpeflags = (uint16_t)(0x0000); //OCC IPC Full Functionality
+    G_pgpe_header_data->g_pgpe_qm_flags = (uint16_t)(0x0000); //OCC IPC Full Functionality
 #endif //BOOT_TEMP_SET_FULL_OCC_IPC_FUNC
-    G_pgpe_header_data->gppb_sram_addr  = (uint32_t*)0xfff27000;//GPPB Sram Offset
-    G_pgpe_header_data->gppb_memory_offset = 0;//GPPB Memory Offset
-    G_pgpe_header_data->gppb_block_length  = 0x2000;//GPPB Block Length
-    G_pgpe_header_data->pstate_tbl_mem_offset  = (uint32_t*)0x80308000;//Pstate Tables Memory Offset
-    G_pgpe_header_data->pstate_tbl_length  = 0x6000;//Pstate Tables Length
-    G_pgpe_header_data->occ_pstate_tbl_addr  = (uint32_t*)0xfff29000;//OCC Pstate table address
-    G_pgpe_header_data->occ_pstate_tbl_length  = 0x100;//OCC Pstate table length
-    G_pgpe_header_data->pgpe_beacon = (uint32_t*)(0xfff26fe0 + 4);
-    G_pgpe_header_data->actual_quad_status_addr = (uint32_t*)(0xfff26fe0 + 8);
+    G_pgpe_header_data->g_pgpe_gppb_mem_offset = 0;//GPPB Memory Offset
+    G_pgpe_header_data->g_pgpe_gppb_length  = 0x2000;//GPPB Block Length
+    G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset  = (uint32_t*)0x80308000;//Pstate Tables Memory Offset
+    G_pgpe_header_data->g_pgpe_gen_pstables_length  = 0x6000;//Pstate Tables Length
+
+    /*
+    G_pgpe_header_data->g_pgpe_gppb_sram_addr  = (uint32_t*)0xfff27000;//GPPB Sram Offset
+    G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr = (uint32_t*)0xfff29000;//OCC Pstate table address
+    G_pgpe_header_data->g_pgpe_occ_pstables_len  = 0x100;//OCC Pstate table length
+    G_pgpe_header_data->g_pgpe_beacon_addr = (uint32_t*)(0xfff26fe0 + 4);
+    G_pgpe_header_data->g_quad_status_addr = (uint32_t*)(0xfff26fe0 + 8);*/
 }
 
 //
@@ -83,7 +85,7 @@ void p9_pgpe_boot_gppb_init()
     int32_t i;
 
     //read value of symbol pstate_parameter_block
-    void* gppb_sram_offset = G_pgpe_header_data->gppb_sram_addr;//GPPB Sram Offset
+    void* gppb_sram_offset = G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
 
     GlobalPstateParmBlock* gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
     gppb->magic = PSTATE_PARMSBLOCK_MAGIC;

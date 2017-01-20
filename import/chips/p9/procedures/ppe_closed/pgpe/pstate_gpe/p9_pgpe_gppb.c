@@ -33,7 +33,7 @@ VpdOperatingPoint G_operating_points[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 uint8_t G_pstate0_dpll_value;
 uint32_t G_ext_vrm_inc_rate_mult_usperus;
 uint32_t G_ext_vrm_dec_rate_mult_usperus;
-extern pgpe_header_data_t* G_pgpe_header_data;
+extern PgpeHeader_t* G_pgpe_header_data;
 
 //
 //Private function prototypes
@@ -52,7 +52,7 @@ uint8_t p9_pgpe_gppb_get_ps_region(Pstate ps, uint8_t vpt_pt_set);
 //Note: In future, the slope calculation might be done offline
 void p9_pgpe_gppb_init()
 {
-    void* gppb_sram_offset = G_pgpe_header_data->gppb_sram_addr;//GPPB Sram Offset
+    void* gppb_sram_offset = G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
     G_gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
 
     //Apply Biases and System Parameters

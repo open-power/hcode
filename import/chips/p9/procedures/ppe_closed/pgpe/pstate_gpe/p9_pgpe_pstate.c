@@ -38,7 +38,7 @@
 //
 //Global External Data
 //
-extern pgpe_header_data_t* G_pgpe_header_data;
+extern PgpeHeader_t* G_pgpe_header_data;
 
 //
 //Global Data
@@ -106,8 +106,8 @@ void p9_pgpe_pstate_init()
         G_globalPSNext  = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
     }
 
-    G_quadState0 = (quad_state0_t*)G_pgpe_header_data->actual_quad_status_addr;
-    G_quadState1 = (quad_state1_t*)(G_pgpe_header_data->actual_quad_status_addr + 2);
+    G_quadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
+    G_quadState1 = (quad_state1_t*)(G_pgpe_header_data->g_quad_status_addr + 2);
 }
 
 //
