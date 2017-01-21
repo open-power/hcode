@@ -116,7 +116,7 @@ qpmr_header_copy_loop:
     _liw    %r6, SRAM_SGPE_HCODE_OFFSET_ADDR
     lwz     r7, 0(r6)
     _liw    %r9, HOMER_QPMR_HEADER_ADDR
-    adde    r8,r9,r7
+    add    r8,r9,r7
 
     ## Calculate Destination address
     _liw    %r4, SRAM_SGPE_BASE_ADDR
@@ -147,7 +147,7 @@ qpmr_header_copy_loop:
     ## R7
     _liw    %r10, SRAM_SGPE_HCODE_LENGTH_ADDR
     lwz     r29, 0(r10)
-    adde    r3, r7, r29
+    add    r3, r7, r29
     lis     r31, 0xB00F
     ori     r31, r31, 0x0001
     mtsprg0 r31
@@ -162,7 +162,7 @@ qpmr_header_copy_loop:
     lwz     r29, 0(r10)
     bwz     r29, end_common_rings
 
-    adde    r3, r28, r29
+    add    r3, r28, r29
     lis     r31, 0xB00F
     ori     r31, r31, 0x0002
     mtsprg0 r31
@@ -179,7 +179,7 @@ end_common_rings:
     lwz     r29, 0(r10)
     bwz     r29, end_specific_rings
 
-    adde    r3, r28, r29
+    add    r3, r28, r29
     lis     r31, 0xB00F
     ori     r31, r31, 0x0003
     mtsprg0 r31
