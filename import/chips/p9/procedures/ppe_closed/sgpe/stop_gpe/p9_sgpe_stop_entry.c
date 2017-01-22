@@ -56,8 +56,6 @@ p9_sgpe_stop_entry()
     uint32_t     qloop             = 0;
     uint32_t     cloop             = 0;
     uint32_t     climit            = 0;
-    uint32_t     xentry            = 0;
-    uint32_t     qentry            = 0;
     uint64_t     host_attn         = 0;
     uint64_t     local_xstop       = 0;
     data64_t     scom_data         = {0};
@@ -79,7 +77,6 @@ p9_sgpe_stop_entry()
 
     G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] = 0;
     G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] = 0;
-    G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] = 0;
     G_sgpe_stop_record.group.quad[VECTOR_ENTRY] = 0;
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
@@ -112,15 +109,12 @@ p9_sgpe_stop_entry()
             G_sgpe_stop_record.state[qloop].req_state_x0 >= LEVEL_EX_BASE)
         {
             G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] |= BIT32(qloop);
-            G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] |= BIT32(qloop << 1);
         }
 
         if (G_sgpe_stop_record.state[qloop].act_state_x1 <  LEVEL_EX_BASE &&
             G_sgpe_stop_record.state[qloop].req_state_x1 >= LEVEL_EX_BASE)
         {
             G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] |= BIT32(qloop);
-            G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] |=
-                BIT32((qloop << 1) + 1);
         }
 
         if (G_sgpe_stop_record.state[qloop].act_state_q <  LEVEL_EQ_BASE &&
@@ -129,7 +123,8 @@ p9_sgpe_stop_entry()
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
         }
 
-        if (G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] ||
+        if (G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] ||
+            G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] ||
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
         {
             PK_TRACE_DBG("Actual:  clv[%d][%d][%d][%d]",
@@ -150,8 +145,6 @@ p9_sgpe_stop_entry()
         }
     }
 
-    G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY] &=
-        G_sgpe_stop_record.group.ex_b[VECTOR_CONFIG];
     G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] &=
         G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG];
     G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] &=
@@ -159,8 +152,7 @@ p9_sgpe_stop_entry()
     G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &=
         G_sgpe_stop_record.group.quad[VECTOR_CONFIG];
 
-    PK_TRACE_DBG("Core Entry Vectors:   X[%x] X0[%x] X1[%x] Q[%x]",
-                 G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY],
+    PK_TRACE_DBG("Core Entry Vectors:   X0[%x] X1[%x] Q[%x]",
                  G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY],
                  G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY],
                  G_sgpe_stop_record.group.quad[VECTOR_ENTRY]);
@@ -181,12 +173,12 @@ p9_sgpe_stop_entry()
     //   the SGPE will halt as the SGPE and PGPE are now out of synchronization.
     //   [This is not a likely error.]
 
-    if((G_sgpe_stop_record.wof.update_pgpe & SGPE_IPC_UPDATE_CORE_ENABLED) &&
+    if((G_sgpe_stop_record.wof.update_pgpe & IPC_SGPE_PGPE_UPDATE_CORE_ENABLED) &&
        G_sgpe_stop_record.group.core[VECTOR_ENTRY])
     {
         PK_TRACE_INF("SEIPC: Update PGPE with Active Cores");
-        G_sgpe_ipcmsg_update_cores.fields.update_type = SGPE_IPC_UPDATE_TYPE_ENTRY;
-        G_sgpe_ipcmsg_update_cores.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
+        G_sgpe_ipcmsg_update_cores.fields.update_type = UPDATE_ACTIVE_TYPE_ENTRY;
+        G_sgpe_ipcmsg_update_cores.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
         G_sgpe_ipcmsg_update_cores.fields.active_cores =
             (G_sgpe_stop_record.group.core[VECTOR_ENTRY] >> SHIFT32(5));
 
@@ -206,9 +198,9 @@ p9_sgpe_stop_entry()
         // can poll right away since pgpe should ack right back
         PK_TRACE_INF("SEIPC: Poll PGPE Update Active Cores Ack");
 
-        while (G_sgpe_ipcmsg_update_cores.fields.return_code == SGPE_IPC_RETURN_CODE_NULL);
+        while (G_sgpe_ipcmsg_update_cores.fields.return_code == IPC_SGPE_PGPE_RC_NULL);
 
-        if (G_sgpe_ipcmsg_update_cores.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
+        if (G_sgpe_ipcmsg_update_cores.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
         {
             PK_TRACE_ERR("ERROR: Entry Updates PGPE with Active Cores Bad RC. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_IPC_CORE_BAD_RC);
@@ -238,8 +230,8 @@ p9_sgpe_stop_entry()
         //===============================
 
         PK_TRACE_INF("SEIPC: Message PGPE to Suspend Pstate(stop11 and pstate enabled)");
-        G_sgpe_ipcmsg_suspend_pstate.fields.update_type = SGPE_IPC_UPDATE_TYPE_ENTRY;
-        G_sgpe_ipcmsg_suspend_pstate.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
+        G_sgpe_ipcmsg_suspend_pstate.fields.update_type = UPDATE_ACTIVE_TYPE_ENTRY;
+        G_sgpe_ipcmsg_suspend_pstate.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
         G_sgpe_ipcmsg_suspend_pstate.fields.requested_quads =
             (G_sgpe_stop_record.group.quad[VECTOR_ENTRY] >> SHIFT32(5));
 
@@ -261,13 +253,14 @@ p9_sgpe_stop_entry()
         PK_TRACE_INF("SEIPC: Pend PGPE Suspend Pstate Ack");
         pk_semaphore_pend(&(G_sgpe_stop_record.sem[2]), PK_WAIT_FOREVER);
 
-        if (G_sgpe_ipcmsg_suspend_pstate.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
+        if (G_sgpe_ipcmsg_suspend_pstate.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
         {
             PK_TRACE_ERR("ERROR: Entry Suspend PGPE Pstate Function Bad RC. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_IPC_PSTATE_BAD_RC);
         }
     }
-    else if (!G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY])
+    else if ((!G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY]) &&
+             (!G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY]))
     {
         //============================
         MARK_TAG(SE_LESSTHAN8_DONE, 0)
@@ -279,12 +272,22 @@ p9_sgpe_stop_entry()
 
 
     // only stop 8 sets x_in
-    for(xentry = G_sgpe_stop_record.group.ex_b[VECTOR_ENTRY], qloop = 0;
-        xentry > 0;
-        xentry = xentry << 2, qloop++)
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
         // if this ex is not up to entry, skip
-        if (!(ex = ((xentry & BITS32(0, 2)) >> SHIFT32(1))))
+        ex = 0;
+
+        if (G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] & BIT32(qloop))
+        {
+            ex |= FST_EX_IN_QUAD;
+        }
+
+        if (G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] & BIT32(qloop))
+        {
+            ex |= SND_EX_IN_QUAD;
+        }
+
+        if (!ex)
         {
             continue;
         }
@@ -556,12 +559,10 @@ p9_sgpe_stop_entry()
 
 
 
-    for(qentry = G_sgpe_stop_record.group.quad[VECTOR_ENTRY], qloop = 0, ex = 0;
-        qentry > 0;
-        qentry = qentry << 1, qloop++, ex = 0)
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
         // if this quad is not up to entry, skip
-        if (!(qentry & BIT32(0)))
+        if (!(G_sgpe_stop_record.group.quad[VECTOR_ENTRY] & BIT32(qloop)))
         {
             continue;
         }
@@ -569,6 +570,8 @@ p9_sgpe_stop_entry()
         // ------------------------------------------------------------------------
         PK_TRACE("+++++ +++++ QUAD STOP ENTRY [LEVEL 11-15] +++++ +++++");
         // ------------------------------------------------------------------------
+
+        ex = 0;
 
         if (G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop))
         {
@@ -1186,8 +1189,8 @@ p9_sgpe_stop_entry()
         G_sgpe_ipcmsg_update_quads.fields.requested_quads =
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] >> SHIFT32(5);
 
-        G_sgpe_ipcmsg_update_quads.fields.update_type = SGPE_IPC_UPDATE_TYPE_ENTRY;
-        G_sgpe_ipcmsg_update_quads.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
+        G_sgpe_ipcmsg_update_quads.fields.update_type = UPDATE_ACTIVE_TYPE_ENTRY;
+        G_sgpe_ipcmsg_update_quads.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
 
         G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
         ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
@@ -1205,7 +1208,7 @@ p9_sgpe_stop_entry()
         PK_TRACE_INF("SEIPC: Pend PGPE Update Active Quads Ack");
         pk_semaphore_pend(&(G_sgpe_stop_record.sem[2]), PK_WAIT_FOREVER);
 
-        if (G_sgpe_ipcmsg_update_quads.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
+        if (G_sgpe_ipcmsg_update_quads.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
         {
             PK_TRACE_INF("ERROR: Entry Updates PGPE with Active Quads Bad RC. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_IPC_QUAD_BAD_RC);
