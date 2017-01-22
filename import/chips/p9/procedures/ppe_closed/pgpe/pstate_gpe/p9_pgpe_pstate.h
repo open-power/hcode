@@ -29,7 +29,7 @@
 #include "ipc_api.h"
 #include "ipc_async_cmd.h"
 #include "pstate_pgpe_occ_api.h"
-#include "ipc_messages.h"
+#include "wof_sgpe_pgpe_api.h"
 #include "p9_pgpe_header.h"
 
 

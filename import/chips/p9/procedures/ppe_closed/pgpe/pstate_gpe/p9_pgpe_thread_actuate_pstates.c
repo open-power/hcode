@@ -30,7 +30,7 @@
 #include "ipc_async_cmd.h"
 #include "p9_pgpe_gppb.h"
 #include "pstate_pgpe_occ_api.h"
-#include "ipc_messages.h"
+#include "wof_sgpe_pgpe_api.h"
 #include "p9_dd1_doorbell_wr.h"
 #include "avs_driver.h"
 

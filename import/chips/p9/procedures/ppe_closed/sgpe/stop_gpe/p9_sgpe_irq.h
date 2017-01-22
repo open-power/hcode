@@ -49,8 +49,8 @@
 // Priority Levels
 #define IDX_PRTY_LVL_HIPRTY         0
 #define IDX_PRTY_LVL_IPI3_HIGH      1
-#define IDX_PRTY_LVL_PIG_TYPE       2
-#define IDX_PRTY_LVL_IPI3_LOW       3
+#define IDX_PRTY_LVL_IPI3_LOW       2
+#define IDX_PRTY_LVL_PIG_TYPE       3
 #define IDX_PRTY_LVL_DISABLED       4
 #define IDX_PRTY_VEC                0
 #define IDX_MASK_VEC                1
@@ -62,10 +62,10 @@ extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 #define IRQ_VEC_PRTY0_SGPE   (uint64_t)(0x0000000000000000)
 // Group1: ipi3_high
 #define IRQ_VEC_PRTY1_SGPE   (uint64_t)(0x0000000800000000)
-// Group2: pig_type
-#define IRQ_VEC_PRTY2_SGPE   (uint64_t)(0x0000000000019000)
 // Group3: ipi3_low
-#define IRQ_VEC_PRTY3_SGPE   (uint64_t)(0x0000000000000004)
+#define IRQ_VEC_PRTY2_SGPE   (uint64_t)(0x0000000000000004)
+// Group2: pig_type
+#define IRQ_VEC_PRTY3_SGPE   (uint64_t)(0x0000000000019000)
 // Group4: We should never detect these
 #define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0x0100800000000000)
 //#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0xFEFF7FF7FFFE6FFB)

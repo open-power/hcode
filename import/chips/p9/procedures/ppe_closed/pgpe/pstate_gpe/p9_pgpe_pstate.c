@@ -31,7 +31,7 @@
 #include "p9_dd1_doorbell_wr.h"
 #include "p9_pgpe_pstate.h"
 #include "pstate_pgpe_occ_api.h"
-#include "ipc_messages.h"
+#include "wof_sgpe_pgpe_api.h"
 #include "p9_pgpe_header.h"
 
 //
@@ -401,7 +401,7 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected)
     //ACK back to SGPE
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
     ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-    args->fields.return_code = SGPE_PGPE_IPC_RC_SUCCESS;
+    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
     ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
 

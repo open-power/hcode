@@ -39,6 +39,9 @@ extern "C" {
 #include "gpehw_common.h"
 #include "occhw_interrupts.h"
 
+#include "stop_sgpe_cme_api.h"
+#include "wof_sgpe_pgpe_api.h"
+
 #include "ocb_register_addresses.h"
 #include "cme_register_addresses.h"
 #include "ppm_register_addresses.h"
@@ -53,15 +56,17 @@ extern "C" {
 
 #include "ipc_api.h"
 #include "ipc_async_cmd.h"
-#include "ipc_messages.h"
 
 #include "p9_hcode_image_defines.H"
 #include "p9_pm_hcd_flags.h"
 #include "p9_stop_common.h"
+#include "p9_dd1_doorbell_wr.h"
 
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX || NDD1_FUSED_CORE_MODE_SCAN_FIX
+
 #define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);
 #define RESTORE_RING_BITS(mask, ring, save) ring = (((ring) & (~mask)) | (save));
+
 #endif
 
 
@@ -169,36 +174,7 @@ extern "C" {
 #define PERV_CPLT_STAT0          0x10000100
 #define PERV_NET_CTRL1_WAND      0x000F0045
 
-enum SGPE_IPC_CONSTANTS
-{
-    ENABLE_CORE_STOP_UPDATES          = 1,
-    ENABLE_QUAD_STOP_UPDATES          = 2,
-    ENABLE_BOTH_STOP_UPDATES          = 3,
-    DISABLE_CORE_STOP_UPDATES         = 5,
-    DISABLE_QUAD_STOP_UPDATES         = 6,
-    DISABLE_BOTH_STOP_UPDATES         = 7,
-    SGPE_IPC_UPDATE_CORE_ENABLED      = 1,
-    SGPE_IPC_UPDATE_QUAD_ENABLED      = 2,
-    SGPE_IPC_UPDATE_TYPE_ENTRY        = 0,
-    SGPE_IPC_UPDATE_TYPE_EXIT         = 1,
-    SGPE_IPC_RETURN_CODE_NULL         = 0,
-    SGPE_IPC_RETURN_CODE_ACK          = 1
-};
 
-enum SGPE_STOP_IRQ_SHORT_NAMES
-{
-    IRQ_STOP_TYPE2                    = OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING,
-    IRQ_STOP_TYPE3                    = OCCHW_IRQ_PMC_PCB_INTR_TYPE3_PENDING,
-    IRQ_STOP_TYPE6                    = OCCHW_IRQ_PMC_PCB_INTR_TYPE6_PENDING
-};
-
-enum SGPE_STOP_IRQ_PAYLOAD_MASKS
-{
-    TYPE2_PAYLOAD_EXIT_EVENT          = 0xC00,
-    TYPE2_PAYLOAD_STOP_LEVEL          = 0xF,
-    TYPE3_PAYLOAD_EXIT_EVENT          = 0xC00,
-    TYPE6_PAYLOAD_EXIT_EVENT          = 0xF
-};
 
 enum SGPE_STOP_STATE_HISTORY_VECTORS
 {
@@ -217,17 +193,6 @@ enum SGPE_STOP_EVENT_LEVELS
     LEVEL_EQ_BASE                     = 11
 };
 
-enum SGPE_STOP_CME_FLAGS
-{
-    CME_QUAD_MGR_INDICATOR            = BIT32(3),
-    CME_EX1_INDICATOR                 = BIT32(26),
-    CME_SIBLING_FUNCTIONAL            = BIT32(27),
-    CME_CORE0_ENTRY_FIRST             = BIT32(28),
-    CME_CORE1_ENTRY_FIRST             = BIT32(29),
-    CME_CORE0_ENABLE                  = BIT32(30),
-    CME_CORE1_ENABLE                  = BIT32(31)
-};
-
 enum SGPE_STOP_PSCOM_MASK
 {
     PSCOM_MASK_ALL_L2                 = BITS32(2, 2) | BITS32(10, 2),
@@ -237,7 +202,13 @@ enum SGPE_STOP_PSCOM_MASK
     PSCOM_MASK_EX1_L3                 = BIT32(5) | BIT32(7) | BIT32(9)
 };
 
-enum SGPE_FUNCTION_STATUS
+enum SGPE_WOF_ACTIVE_UPDATE_STATUS
+{
+    IPC_SGPE_PGPE_UPDATE_CORE_ENABLED = 1,
+    IPC_SGPE_PGPE_UPDATE_QUAD_ENABLED = 2
+};
+
+enum SGPE_SUSPEND_FUNCTION_STATUS
 {
     STATUS_IDLE                       = 0,
     STATUS_PROCESSING                 = 1,
@@ -247,11 +218,13 @@ enum SGPE_FUNCTION_STATUS
 
 enum SGPE_STOP_VECTOR_INDEX
 {
-    VECTOR_EXIT                       = 0,
-    VECTOR_ENTRY                      = 1,
-    VECTOR_CONFIG                     = 2,
-    VECTOR_ACTIVE                     = 3,
-    VECTOR_PCWU                       = 4
+    VECTOR_CONFIG                     = 0, //(core,      quad,     qswu_ongoing, exlr)
+    VECTOR_BLOCKE                     = 1, //(core_save, quad_req, qswu_save, exlr_ack)
+    VECTOR_BLOCKX                     = 2, //(core_save, quad_req, qswu_save, exlr_ack)
+    VECTOR_ENTRY                      = 3, //(core_ipc,  quad,     qswu,         exlr)
+    VECTOR_EXIT                       = 4, //(core,      quad_ipc  qswu)
+    VECTOR_ACTIVE                     = 5, //(core_ipc,  quad_ipc)
+    VECTOR_PCWU                       = 6  //(core)
 };
 
 typedef struct
@@ -270,22 +243,21 @@ typedef struct
 
 typedef struct
 {
-    uint32_t core[5]; // 24 bits
-    uint32_t quad[4]; // 6 bits
-    uint32_t ex_l[3]; // 6 bits
-    uint32_t ex_r[3]; // 6 bits
-    uint32_t ex_b[3]; // 12 bits
-    uint32_t qswu[3]; // 6 bits
+    uint32_t ex_l[4]; // 6 bits
+    uint32_t ex_r[4]; // 6 bits
+    uint32_t qswu[5]; // 6 bits
+    uint32_t quad[6]; // 6 bits
+    uint32_t core[7]; // 24 bits
 } sgpe_group_t;
 
 typedef struct
 {
     // function status(functional, suspending, suspended, resuming)
-    uint8_t      status_pstate;
-    uint8_t      status_stop;
+    uint8_t    status_pstate;
+    uint8_t    status_stop;
     // sgpe-pgpe interlock status(quad/core updates enable/disable)
-    uint8_t      update_pgpe;
-    ipc_msg_t*   suspend_cmd;
+    uint8_t    update_pgpe;
+    ipc_msg_t* suspend_cmd;
 } sgpe_wof_t;
 
 /// SGPE Stop Score Board Structure
@@ -299,7 +271,7 @@ typedef struct
     // group of ex and quad entering or exiting the stop
     sgpe_group_t group;
     sgpe_wof_t   wof;
-    PkSemaphore  sem[3];
+    PkSemaphore  sem[4];
 } SgpeStopRecord;
 
 typedef struct
@@ -327,6 +299,8 @@ void p9_sgpe_ipc_pgpe_rsp_callback(ipc_msg_t* cmd, void* arg);
 
 
 /// SGPE STOP Entry and Exit Prototypes
+void p9_sgpe_stop_suspend_msg_db1(uint32_t, uint32_t);
+void p9_sgpe_stop_ipi_handler(void*, PkIrqId);
 void p9_sgpe_stop_pig_handler(void*, PkIrqId);
 void p9_sgpe_stop_enter_thread(void*);
 void p9_sgpe_stop_exit_thread(void*);

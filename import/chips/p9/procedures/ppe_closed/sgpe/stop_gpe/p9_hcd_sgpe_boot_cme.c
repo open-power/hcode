@@ -52,8 +52,6 @@ enum
     SCOM_ADDR_CCSR              =   0x0006C090,
     CHECK_BIT_DWORD             =   0x8000000000000000ll,
     SET_ADDR_MSB                =   0x80000000,
-    CME_STOP_READY              =   0x8000000000000000ll,
-    CME_PMCR_READY              =   0x4000000000000000ll,
     WKUP_NOTIFY_SELECT          =   0x0004000000000000,
     CME_BOOT_TIMEOUT            =   0x32,
     CME_BCE_TIMEOUT             =   0xB0,
@@ -382,7 +380,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS,
                                                   (l_cmeIndex >> 1), (l_cmeIndex % 2)), l_dataReg);
 
-                    if (!(l_dataReg & CME_PMCR_READY))
+                    if (!(l_dataReg & BIT64(CME_PMCR_READY)))
                     {
                         continue;
                     }

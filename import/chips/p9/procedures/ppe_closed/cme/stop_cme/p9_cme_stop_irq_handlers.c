@@ -28,6 +28,8 @@
 #include "p9_cme_irq.h"
 
 extern CmeStopRecord G_cme_stop_record;
+extern CmeRecord     G_cme_record;
+
 
 
 void
@@ -142,7 +144,12 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
 
                         // Core is now out of spwu, allow pm_active
                         G_cme_stop_record.core_in_spwu &= ~core_mask;
-                        g_eimr_override                &= ~(IRQ_VEC_STOP_C0 >> core_index);
+
+                        // if in block entry mode, do not release the mask
+                        if (!(G_cme_stop_record.core_blockey & core_mask))
+                        {
+                            g_eimr_override &= ~(IRQ_VEC_STOP_C0 >> core_index);
+                        }
                     }
                 }
             }
@@ -190,29 +197,109 @@ p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
 }
 
 void
-p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
-{
-    PkMachineContext ctx;
-    MARK_TRAP(STOP_DB1_HANDLER)
-    PK_TRACE_DBG("DB1 Handler Trigger %d", irq);
-    pk_irq_vec_restore(&ctx);
-}
-
-void
 p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
+
     MARK_TRAP(STOP_DB2_HANDLER)
     PK_TRACE_DBG("DB2 Handler Trigger %d", irq);
 
     // read and clear doorbell
     uint32_t core = (in32(CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
     CME_PUTSCOM_NOP(CPPM_CMEDB2, core, 0);
+    out32(CME_LCL_EISR_CLR, BITS32(18, 2));
 
     // unmask pc interrupt pending to wakeup that is still pending
     core &= (~(G_cme_stop_record.core_running));
     g_eimr_override &= ~(((uint64_t)core) << SHIFT64(13));
     G_cme_stop_record.core_blockpc &= ~core;
+
+    pk_irq_vec_restore(&ctx);
+}
+
+void
+p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
+{
+    PkMachineContext ctx;
+    cppm_cmedb1_t    db1         = {0};
+    ppm_pig_t        pig         = {0};
+    uint32_t         core        = 0;
+    uint32_t         suspend_ack = 0;
+
+    MARK_TRAP(STOP_DB1_HANDLER)
+    PK_TRACE_DBG("DB1 Handler Trigger %d", irq);
+
+    // Suspend DB should only come from the first good core
+    if (G_cme_record.core_enabled & CME_MASK_C0)
+    {
+        CME_GETSCOM(CPPM_CMEDB1, CME_MASK_C0, db1.value);
+        CME_PUTSCOM_NOP(CPPM_CMEDB1, CME_MASK_C0, 0);
+        out32_sh(CME_LCL_EISR_CLR, BIT64SH(40));
+        core = CME_MASK_C0;
+    }
+    else if (G_cme_record.core_enabled & CME_MASK_C1)
+    {
+        CME_GETSCOM(CPPM_CMEDB1, CME_MASK_C1, db1.value);
+        CME_PUTSCOM_NOP(CPPM_CMEDB1, CME_MASK_C1, 0);
+        out32_sh(CME_LCL_EISR_CLR, BIT64SH(41));
+        core = CME_MASK_C1;
+    }
+
+    // block msgs
+    if ((db1.fields.cme_message_numbern > 0x4) &&
+        (db1.fields.cme_message_numbern < 0x8))
+    {
+        suspend_ack = 1;
+
+        // exit
+        if (db1.fields.cme_message_numbern & 0x2)
+        {
+            G_cme_stop_record.core_blockwu |= CME_MASK_BC;
+            g_eimr_override                |= IRQ_VEC_WAKE_C0 | IRQ_VEC_WAKE_C1;
+            out32(CME_LCL_SICR_OR,  BITS32(2, 2));
+            out32(CME_LCL_FLAGS_OR, BITS32(8, 2));
+        }
+
+        // entry
+        if (db1.fields.cme_message_numbern & 0x1)
+        {
+            G_cme_stop_record.core_blockey |= CME_MASK_BC;
+            g_eimr_override                |= IRQ_VEC_STOP_C0 | IRQ_VEC_STOP_C1;
+            out32(CME_LCL_FLAGS_OR, BITS32(10, 2));
+        }
+    }
+    // unblock msgs
+    else if ((db1.fields.cme_message_numbern < 0x4) &&
+             (db1.fields.cme_message_numbern > 0))
+    {
+        suspend_ack = 1;
+
+        // exit
+        if (db1.fields.cme_message_numbern & 0x2)
+        {
+            G_cme_stop_record.core_blockwu &= ~CME_MASK_BC;
+            g_eimr_override                &= ~(IRQ_VEC_WAKE_C0 | IRQ_VEC_WAKE_C1);
+            out32(CME_LCL_SICR_CLR,  BITS32(2, 2));
+            out32(CME_LCL_FLAGS_CLR, BITS32(8, 2));
+        }
+
+        // entry
+        if (db1.fields.cme_message_numbern & 0x1)
+        {
+            G_cme_stop_record.core_blockey &= ~CME_MASK_BC;
+            g_eimr_override                &= ~(IRQ_VEC_STOP_C0 | IRQ_VEC_STOP_C1);
+            out32(CME_LCL_FLAGS_CLR, BITS32(10, 2));
+        }
+    }
+
+    if (suspend_ack)
+    {
+        pig.fields.req_intr_payload = db1.fields.cme_message_numbern;
+        pig.fields.req_intr_payload = pig.fields.req_intr_payload << 8;
+        pig.fields.req_intr_payload |= 0x080; // set bit 4 for ack package
+        pig.fields.req_intr_type    = PIG_TYPE2;
+        CME_PUTSCOM_NOP(PPM_PIG, core, pig.value);
+    }
 
     pk_irq_vec_restore(&ctx);
 }

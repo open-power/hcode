@@ -37,7 +37,7 @@ void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg)
     ipcmsg_p2s_ctrl_stop_updates_t* msg =
         (ipcmsg_p2s_ctrl_stop_updates_t*)async_cmd->cmd_data;
 
-    msg->fields.return_code  = SGPE_IPC_RETURN_CODE_ACK;
+    msg->fields.return_code  = IPC_SGPE_PGPE_RC_SUCCESS;
     msg->fields.active_quads = G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] >> SHIFT32(5);
     msg->fields.active_cores = G_sgpe_stop_record.group.core[VECTOR_ACTIVE] >> SHIFT32(23);
 
@@ -74,7 +74,7 @@ void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
         ipcmsg_p2s_suspend_stop_t* msg =
             (ipcmsg_p2s_suspend_stop_t*)async_cmd->cmd_data;
-        msg->fields.return_code = SGPE_IPC_RETURN_CODE_ACK;
+        msg->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
 
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
 

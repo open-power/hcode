@@ -26,7 +26,6 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 #include "p9_hcd_sgpe_boot_cme.h"
-#include "p9_dd1_doorbell_wr.h"
 
 extern SgpeStopRecord                       G_sgpe_stop_record;
 
@@ -330,11 +329,10 @@ p9_sgpe_stop_exit()
     MARK_TAG(BEGINSCOPE_STOP_EXIT, 0)
     //===============================
 
-    PK_TRACE_DBG("Core Exit Vectors:    X[%x] X0[%x] X1[%x] Q[%x]",
-                 G_sgpe_stop_record.group.ex_b[VECTOR_EXIT],
-                 G_sgpe_stop_record.group.ex_l[VECTOR_EXIT],
-                 G_sgpe_stop_record.group.ex_r[VECTOR_EXIT],
-                 G_sgpe_stop_record.group.quad[VECTOR_EXIT]);
+    PK_TRACE_DBG("Core Exit Vectors:    C[%x] Q[%x] S[%x]",
+                 G_sgpe_stop_record.group.core[VECTOR_EXIT],
+                 G_sgpe_stop_record.group.quad[VECTOR_EXIT],
+                 G_sgpe_stop_record.group.qswu[VECTOR_EXIT]);
 
 
 #if !SKIP_IPC
@@ -354,12 +352,12 @@ p9_sgpe_stop_exit()
     //    combination that could violate the current or thermal parameters
     //    which could lead to system checkstop]
 
-    if((G_sgpe_stop_record.wof.update_pgpe & SGPE_IPC_UPDATE_CORE_ENABLED) &&
+    if((G_sgpe_stop_record.wof.update_pgpe & IPC_SGPE_PGPE_UPDATE_CORE_ENABLED) &&
        G_sgpe_stop_record.group.core[VECTOR_EXIT])
     {
         PK_TRACE_INF("SXIPC: Update PGPE with Active Cores");
-        G_sgpe_ipcmsg_update_cores.fields.update_type = SGPE_IPC_UPDATE_TYPE_EXIT;
-        G_sgpe_ipcmsg_update_cores.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
+        G_sgpe_ipcmsg_update_cores.fields.update_type = UPDATE_ACTIVE_TYPE_EXIT;
+        G_sgpe_ipcmsg_update_cores.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
         G_sgpe_ipcmsg_update_cores.fields.active_cores =
             (G_sgpe_stop_record.group.core[VECTOR_EXIT] >> SHIFT32(5));
 
@@ -380,9 +378,9 @@ p9_sgpe_stop_exit()
         /// move the poll below to before switch exit to cme when sgpe supports multicast
         PK_TRACE_INF("SXIPC: Poll PGPE Update Active Cores Ack");
 
-        while (G_sgpe_ipcmsg_update_cores.fields.return_code == SGPE_IPC_RETURN_CODE_NULL);
+        while (G_sgpe_ipcmsg_update_cores.fields.return_code == IPC_SGPE_PGPE_RC_NULL);
 
-        if (G_sgpe_ipcmsg_update_cores.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
+        if (G_sgpe_ipcmsg_update_cores.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
         {
             PK_TRACE_ERR("ERROR: Exit Updates PGPE with Active Cores Bad RC. HALT SGPE!");
             PK_PANIC(SGPE_STOP_EXIT_IPC_CORE_BAD_RC);
@@ -400,7 +398,6 @@ p9_sgpe_stop_exit()
     //   with Update Type set to Exit to PGPE and waits for the response IPC.
     //   PGPE, as part of its processing this IPC,
     //   will write the QPPM_DPLL_FREQ register before responding.
-
 
     if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
         G_sgpe_stop_record.group.quad[VECTOR_EXIT])   // exit from STOP11
@@ -429,8 +426,8 @@ p9_sgpe_stop_exit()
         if (G_sgpe_ipcmsg_update_quads.fields.requested_quads)
         {
             PK_TRACE_INF("SXIPC: Update PGPE with Active Quads(stop11 and pstate enabled)");
-            G_sgpe_ipcmsg_update_quads.fields.update_type = SGPE_IPC_UPDATE_TYPE_EXIT;
-            G_sgpe_ipcmsg_update_quads.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
+            G_sgpe_ipcmsg_update_quads.fields.update_type = UPDATE_ACTIVE_TYPE_EXIT;
+            G_sgpe_ipcmsg_update_quads.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
 
             G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
             ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
@@ -450,7 +447,7 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SXIPC: Pend PGPE Update Active Quads Ack");
             pk_semaphore_pend(&(G_sgpe_stop_record.sem[3]), PK_WAIT_FOREVER);
 
-            if (G_sgpe_ipcmsg_update_quads.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
+            if (G_sgpe_ipcmsg_update_quads.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
             {
                 PK_TRACE_ERR("ERROR: Exit Updates PGPE with Active Quads Bad RC. HALT SGPE!");
                 PK_PANIC(SGPE_STOP_EXIT_IPC_QUAD_BAD_RC);
@@ -828,8 +825,6 @@ p9_sgpe_stop_exit()
                 }
 
                 PK_TRACE_DBG("Check: Core[%d] will send Doorbell1", ((qloop << 2) + cloop));
-                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG,
-                                                        ((qloop << 2) + cloop)), BIT64(0));
                 // workaround has to use base address as read on OR/CLR leads to error
                 p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1,
                                                         ((qloop << 2) + cloop)), BIT64(7));
@@ -852,21 +847,21 @@ p9_sgpe_stop_exit()
 
                     if (m_pg & (~ex_mask))
                     {
-                        cme_flags |= CME_SIBLING_FUNCTIONAL;
+                        cme_flags |= BIT32(CME_SIBLING_FUNCTIONAL);
                     }
 
                     if (ex_index == 1)
                     {
-                        cme_flags |= CME_EX1_INDICATOR;
+                        cme_flags |= BIT32(CME_EX_ID);
 
-                        if (!(cme_flags & CME_SIBLING_FUNCTIONAL))
+                        if (!(cme_flags & BIT32(CME_SIBLING_FUNCTIONAL)))
                         {
-                            cme_flags |= CME_QUAD_MGR_INDICATOR;
+                            cme_flags |= BIT32(CME_QMGR_MASTER);
                         }
                     }
                     else
                     {
-                        cme_flags |= CME_QUAD_MGR_INDICATOR;
+                        cme_flags |= BIT32(CME_QMGR_MASTER);
                     }
 
 
@@ -888,13 +883,13 @@ p9_sgpe_stop_exit()
                     {
                         if (ccsr.value & BIT32((ec_index + cloop)))
                         {
-                            cme_flags |= (CME_CORE0_ENABLE >> cloop);
+                            cme_flags |= (BIT32(CME_CORE0_GOOD) >> cloop);
                             GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
                                                            (ec_index + cloop)), scom_data.value);
 
                             if (!(scom_data.words.upper & BIT32(18)))
                             {
-                                cme_flags |= (CME_CORE0_ENTRY_FIRST >> cloop);
+                                cme_flags |= (BIT32(CME_STOP_ENTRY_FIRST_C0) >> cloop);
                             }
 
 #if NIMBUS_DD_LEVEL != 1

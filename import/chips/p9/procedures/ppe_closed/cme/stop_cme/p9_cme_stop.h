@@ -34,6 +34,7 @@
 #include "ppehw_common.h"
 #include "cmehw_common.h"
 #include "cmehw_interrupts.h"
+#include "stop_sgpe_cme_api.h"
 
 #include "cme_register_addresses.h"
 #include "ppm_register_addresses.h"
@@ -44,6 +45,7 @@
 #include "cppm_firmware_registers.h"
 
 #include "p9_hcode_image_defines.H"
+#include "p9_pm_hcd_flags.h"
 #include "p9_stop_common.h"
 #include "p9_cme.h"
 
@@ -142,43 +144,26 @@
 
 
 
-/// CME STOP IRQs with shorter names
-enum CME_STOP_IRQ_SHORT_NAME
-{
-    IRQ_DB1_C0      = CMEHW_IRQ_DOORBELL1_C0,
-    IRQ_DB1_C1      = CMEHW_IRQ_DOORBELL1_C1,
-    IRQ_DB2_C0      = CMEHW_IRQ_DOORBELL2_C0,
-    IRQ_DB2_C1      = CMEHW_IRQ_DOORBELL2_C1,
-    IRQ_STOP_C0     = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0,
-    IRQ_STOP_C1     = CMEHW_IRQ_PC_PM_STATE_ACTIVE_C1,
-    IRQ_PC_C0       = CMEHW_IRQ_PC_INTR_PENDING_C0,
-    IRQ_PC_C1       = CMEHW_IRQ_PC_INTR_PENDING_C1,
-    IRQ_RWU_C0      = CMEHW_IRQ_REG_WAKEUP_C0,
-    IRQ_RWU_C1      = CMEHW_IRQ_REG_WAKEUP_C1,
-    IRQ_SWU_C0      = CMEHW_IRQ_SPECIAL_WAKEUP_C0,
-    IRQ_SWU_C1      = CMEHW_IRQ_SPECIAL_WAKEUP_C1
-};
-
 enum CME_IRQ_VECTORS
 {
 // if auto mask eimr.spwu else never mask eimr.spwu
 #if SPWU_AUTO
-    IRQ_VEC_WAKE_C0 = BIT64(12) | BIT64(14) | BIT64(16),
-    IRQ_VEC_WAKE_C1 = BIT64(13) | BIT64(15) | BIT64(17),
+    IRQ_VEC_WAKE_C0                  = BIT64(12) | BIT64(14) | BIT64(16),
+    IRQ_VEC_WAKE_C1                  = BIT64(13) | BIT64(15) | BIT64(17),
 #else
-    IRQ_VEC_WAKE_C0 = BIT64(12) | BIT64(16),
-    IRQ_VEC_WAKE_C1 = BIT64(13) | BIT64(17),
+    IRQ_VEC_WAKE_C0                  = BIT64(12) | BIT64(16),
+    IRQ_VEC_WAKE_C1                  = BIT64(13) | BIT64(17),
 #endif
-    IRQ_VEC_SGPE_C0 = BIT64(12) | BIT64(20),
-    IRQ_VEC_SGPE_C1 = BIT64(13) | BIT64(21),
-    IRQ_VEC_PCWU_C0 = BIT64(12),
-    IRQ_VEC_PCWU_C1 = BIT64(13),
-    IRQ_VEC_SPWU_C0 = BIT64(14),
-    IRQ_VEC_SPWU_C1 = BIT64(15),
-    IRQ_VEC_RGWU_C0 = BIT64(16),
-    IRQ_VEC_RGWU_C1 = BIT64(17),
-    IRQ_VEC_STOP_C0 = BIT64(20),
-    IRQ_VEC_STOP_C1 = BIT64(21)
+    IRQ_VEC_SGPE_C0                  = BIT64(12) | BIT64(20),
+    IRQ_VEC_SGPE_C1                  = BIT64(13) | BIT64(21),
+    IRQ_VEC_PCWU_C0                  = BIT64(12),
+    IRQ_VEC_PCWU_C1                  = BIT64(13),
+    IRQ_VEC_SPWU_C0                  = BIT64(14),
+    IRQ_VEC_SPWU_C1                  = BIT64(15),
+    IRQ_VEC_RGWU_C0                  = BIT64(16),
+    IRQ_VEC_RGWU_C1                  = BIT64(17),
+    IRQ_VEC_STOP_C0                  = BIT64(20),
+    IRQ_VEC_STOP_C1                  = BIT64(21)
 };
 
 enum CME_STOP_STATE_HISTORY_VECTORS
@@ -197,41 +182,6 @@ enum CME_STOP_STATE_HISTORY_VECTORS
     SSH_ACT_LV5_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(9) | BIT32(11) | SSH_TRANS_SGPE)
 };
 
-enum CME_STOP_FLAGS
-{
-    FLAG_STOP_READY                  = BIT32(0),
-    FLAG_BLOCK_WKUP_C0               = BIT32(8),
-    FLAG_BLOCK_WKUP_C1               = BIT32(9),
-    FLAG_EX1_INDICATOR               = BIT32(26),
-    FLAG_ENTRY_FIRST_C0              = BIT32(28),
-    FLAG_ENTRY_FIRST_C1              = BIT32(29),
-    FLAG_PARTIAL_GOOD_C0             = BIT32(30),
-    FLAG_PARTIAL_GOOD_C1             = BIT32(31)
-};
-
-enum ATTR_CME_MODE_FLAGS
-{
-    MAP_3_TO_2                       = BIT32(0),
-    MAP_4_TO_2                       = BIT32(1),
-    MAP_5_TO_4                       = BIT32(2),
-    MAP_8_TO_5                       = BIT32(3),
-    MAP_11_TO_8                      = BIT32(4),
-    SKIP_CORE_POWEROFF               = BIT32(31)
-};
-
-enum CME_STOP_PIG_TYPES
-{
-    PIG_TYPE2                        = 2,
-    PIG_TYPE3                        = 3
-};
-
-enum CME_DOORBELL_MESSAGE_ID
-{
-    DB1_WKUP_GRANTED                 = 0x01,
-    DB2_BLOCK_WKUP_ENTRY             = 0x01,
-    DB2_BLOCK_WKUP_EXIT              = 0x02
-};
-
 enum CME_STOP_SRR1
 {
     MOST_STATE_LOSS                  = 3,
@@ -240,6 +190,8 @@ enum CME_STOP_SRR1
 };
 
 #if TEST_ONLY_BCE_IRR
+#define FLAG_BCE_IRR_ENABLE BIT32(18)
+
 typedef struct
 {
     uint32_t cmeid;
@@ -280,6 +232,8 @@ typedef struct
     uint32_t      core_blockpc;
     // core in block wakeup mode, can be used as core select in scom address or data
     uint32_t      core_blockwu;
+    // core in block entry mode, can be used as core select in scom address or data
+    uint32_t      core_blockey;
     // core in special wakeup, can be used as core select in scom address or data
     uint32_t      core_in_spwu;
     PkSemaphore   sem[2];

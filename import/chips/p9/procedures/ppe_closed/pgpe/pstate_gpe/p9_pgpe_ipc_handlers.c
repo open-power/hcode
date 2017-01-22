@@ -29,7 +29,7 @@
 #include "ipc_async_cmd.h"
 #include "p9_pgpe_header.h"
 #include "pstate_pgpe_occ_api.h"
-#include "ipc_messages.h"
+#include "wof_sgpe_pgpe_api.h"
 #include "occhw_shared_data.h"
 #include "p9_pgpe_ipc_handlers.h"
 #include "p9_pgpe_pstate.h"
@@ -354,7 +354,7 @@ void p9_pgpe_ipc_sgpe_suspend_pstates(ipc_msg_t* cmd, void* arg)
         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
         ipcmsg_s2p_suspend_pstate_t* args =
             (ipcmsg_s2p_suspend_pstate_t*)async_cmd->cmd_data;
-        args->fields.return_code = SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
 
@@ -388,7 +388,7 @@ void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
         ipcmsg_s2p_update_active_cores_t* args =
             (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
-        args->fields.return_code  = SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
+        args->fields.return_code  = IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
 
@@ -425,7 +425,7 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
         ipcmsg_s2p_update_active_quads_t* args =
             (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-        args->fields.return_code = SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
         PK_TRACE_INF("SGPE_UPDT_QUADS: %d %d\n",
                      G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing,

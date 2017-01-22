@@ -26,7 +26,7 @@
 #include "gpehw_common.h"
 #include "p9_pgpe_pstate.h"
 #include "pstate_pgpe_occ_api.h"
-#include "ipc_messages.h"
+#include "wof_sgpe_pgpe_api.h"
 #include "ipc_api.h"
 #include "ipc_async_cmd.h"
 #include "p9_pgpe_header.h"
@@ -198,7 +198,7 @@ void p9_pgpe_process_sgpe_updt_active_cores()
     if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED)
     {
         PK_TRACE_DBG("PROCTH: PM Suspended\n");
-        args->fields.return_code = SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
     }
@@ -228,7 +228,7 @@ void p9_pgpe_process_sgpe_updt_active_cores()
             if (args->fields.update_type == UPDATE_ACTIVE_TYPE_ENTRY)
             {
                 PK_TRACE_DBG("PROCTH: Core Entry ACK back to SGPE\n");
-                args->fields.return_code = SGPE_PGPE_IPC_RC_SUCCESS;
+                args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
                 G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
                 ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
             }
@@ -254,7 +254,7 @@ void p9_pgpe_process_sgpe_updt_active_quads()
         G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
         G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
-        args->fields.return_code = SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
     }
@@ -269,7 +269,7 @@ void p9_pgpe_process_sgpe_updt_active_quads()
             G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads &= (~(args->fields.requested_quads << 2));
 
             //For Entry ACK back to SGPE right away
-            args->fields.return_code = SGPE_PGPE_IPC_RC_SUCCESS;
+            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
             G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
             ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
             PK_TRACE_DBG("PROCTH: Q Updt Entry, ACK sent to SGPE\n");
@@ -396,7 +396,7 @@ void p9_pgpe_process_sgpe_suspend_pstates()
         G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE )
     {
         PK_TRACE_DBG("PROCTH: Susp Pst while SUSPEND/SAFE\n");
-        args->fields.return_code = SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].cmd, IPC_RC_SUCCESS);
     }
@@ -404,7 +404,7 @@ void p9_pgpe_process_sgpe_suspend_pstates()
             G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED ||
             G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
     {
-        args->fields.return_code = SGPE_PGPE_IPC_RC_SUCCESS;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].cmd, IPC_RC_SUCCESS);
 
@@ -544,7 +544,7 @@ void p9_pgpe_process_wof_ctrl()
                 pk_irq_vec_restore(&ctx);
                 pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
 
-                if (G_sgpe_control_updt.fields.return_code == SGPE_PGPE_IPC_RC_SUCCESS)
+                if (G_sgpe_control_updt.fields.return_code == IPC_SGPE_PGPE_RC_SUCCESS)
                 {
                     //Update Shared Memory Region
                     G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
