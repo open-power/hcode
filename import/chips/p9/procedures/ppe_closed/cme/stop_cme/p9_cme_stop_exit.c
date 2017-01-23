@@ -719,6 +719,10 @@ p9_cme_stop_exit()
 
 #endif
 
+        PK_TRACE("Save off and mask SPATTN before self-restore");
+        CME_GETSCOM(SPATTN_MASK, core, CME_SCOM_AND, scom_data.value);
+        CME_PUTSCOM(SPATTN_MASK, core, BITS64(0, 64));
+
         PK_TRACE_INF("SX4.P: S-Reset All Core Threads to Run Self Restore Image");
         CME_PUTSCOM(DIRECT_CONTROLS, core,
                     BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
@@ -742,6 +746,9 @@ p9_cme_stop_exit()
         }
 
         PK_TRACE_INF("SX4.Q: Self Restore Completed, Core is Stopped Again");
+
+        PK_TRACE("Restore SPATTN after self-restore");
+        CME_PUTSCOM(SPATTN_MASK, core, scom_data.value);
 
         PK_TRACE("Drop block interrupt to PC via SICR[2/3]");
         out32(CME_LCL_SICR_CLR, core << SHIFT32(3));

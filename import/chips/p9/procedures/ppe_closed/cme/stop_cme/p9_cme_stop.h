@@ -73,6 +73,7 @@
 #define CORE_FIRMASK           0x20010A43
 #define CORE_ACTION0           0x20010A46
 #define CORE_ACTION1           0x20010A47
+#define SPATTN_MASK            0x20010A9A
 
 #define C_HANG_CONTROL         0x20010A00
 #define RAS_STATUS             0x20010A02
