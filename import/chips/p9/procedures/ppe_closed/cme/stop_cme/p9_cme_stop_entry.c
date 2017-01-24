@@ -568,9 +568,7 @@ p9_cme_stop_entry()
               (core << SHIFT32(15)) |
               (core << SHIFT32(17)));
         sync();
-        out32(CME_LCL_EIMR_OR,  (core << SHIFT32(13)) |
-              (core << SHIFT32(15)) |
-              (core << SHIFT32(17)));
+        out32(CME_LCL_EIMR_OR,  (BITS32(12, 6) | BITS32(20, 2)));
 #endif
 
         //===================
@@ -798,9 +796,7 @@ p9_cme_stop_entry()
               (core << SHIFT32(15)) |
               (core << SHIFT32(17)));
         sync();
-        out32(CME_LCL_EIMR_OR,  (core << SHIFT32(13)) |
-              (core << SHIFT32(15)) |
-              (core << SHIFT32(17)));
+        out32(CME_LCL_EIMR_OR,  (BITS32(12, 6) | BITS32(20, 2)));
 #endif
 
         //===================
