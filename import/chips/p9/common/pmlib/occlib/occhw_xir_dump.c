@@ -22,11 +22,6 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
 
 /// \file occhw_xir_dump.c
 /// \brief Implementation of the occhw_xir_dump function

@@ -25,14 +25,6 @@
 #ifndef __SSX_IO_H__
 #define __SSX_IO_H__
 
-// $Id: ssx_io.h,v 1.2 2014/02/03 01:30:25 daviddu Exp $
-// $Source: /afs/awd/projects/eclipz/KnowledgeBase/.cvsroot/eclipz/chips/p8/working/procedures/lib/ssx_io.h,v $
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2013
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file ssx_io.h
 /// \brief SSX analog-replacement for C <stdio.h> and <unistd.h> functions
 

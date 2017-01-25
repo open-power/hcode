@@ -25,14 +25,6 @@
 #ifndef __POLLING_H__
 #define __POLLING_H__
 
-// $Id: polling.h,v 1.1.1.1 2013/12/11 20:49:20 bcbrock Exp $
-// $Source: /afs/awd/projects/eclipz/KnowledgeBase/.cvsroot/eclipz/chips/p8/working/procedures/lib/polling.h,v $
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2013
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file polling.c
 /// \brief Library APIs for polling and busy-waiting
 

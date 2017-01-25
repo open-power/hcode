@@ -25,14 +25,6 @@
 #ifndef __SIMICS_STDIO_H__
 #define __SIMICS_STDIO_H__
 
-// $Id: simics_stdio.h,v 1.1.1.1 2013/12/11 20:49:20 bcbrock Exp $
-// $Source: /afs/awd/projects/eclipz/KnowledgeBase/.cvsroot/eclipz/chips/p8/working/procedures/lib/simics_stdio.h,v $
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2013
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file simics_stdio.h
 /// \brief SSX I/O implementations for Simics stdio streams
 

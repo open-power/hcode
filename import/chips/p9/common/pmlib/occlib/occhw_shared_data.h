@@ -24,11 +24,6 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #ifndef __OCCHW_OSD_H__
 #define __OCCHW_OSD_H__
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
 
 /// \file occhw_osd.h
 /// \brief Common header for shared data within the OCC complex

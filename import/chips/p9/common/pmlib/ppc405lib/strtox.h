@@ -25,14 +25,6 @@
 #ifndef __STRTOX_H__
 #define __STRTOX_H__
 
-// $Id: strtox.h,v 1.2 2014/02/03 01:30:25 daviddu Exp $
-// $Source: /afs/awd/projects/eclipz/KnowledgeBase/.cvsroot/eclipz/chips/p8/working/procedures/lib/strtox.h,v $
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2013
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file strtox.h
 /// \brief Underlying and extended APIs that support strtoX macros
 ///

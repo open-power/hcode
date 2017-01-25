@@ -22,13 +22,6 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-// $Id: ssx_io.c,v 1.2 2014/02/03 01:30:25 daviddu Exp $
-// $Source: /afs/awd/projects/eclipz/KnowledgeBase/.cvsroot/eclipz/chips/p8/working/procedures/lib/ssx_io.c,v $
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2013
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
 
 /// \file ssx_io.c
 /// \brief SSX analog-replacement for C \<stdio.h\> and \<unistd.h\> functions

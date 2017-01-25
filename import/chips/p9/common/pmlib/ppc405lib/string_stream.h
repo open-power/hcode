@@ -25,14 +25,6 @@
 #ifndef __STRING_STREAM_H__
 #define __STRING_STREAM_H__
 
-// $Id: string_stream.h,v 1.2 2014/02/03 01:30:25 daviddu Exp $
-// $Source: /afs/awd/projects/eclipz/KnowledgeBase/.cvsroot/eclipz/chips/p8/working/procedures/lib/string_stream.h,v $
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2013
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
-
 /// \file string_stream.h
 /// \brief Implementations of string streams.
 

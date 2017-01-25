@@ -24,11 +24,6 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #ifndef __OCCHW_SCOM_CMD_H__
 #define __OCCHW_SCOM_CMD_H__
-//-----------------------------------------------------------------------------
-// *! (C) Copyright International Business Machines Corp. 2015
-// *! All Rights Reserved -- Property of IBM
-// *! *** IBM Confidential ***
-//-----------------------------------------------------------------------------
 
 /// \file occhw_scom_cmd.h
 /// \brief Defines the shared scom command control block
