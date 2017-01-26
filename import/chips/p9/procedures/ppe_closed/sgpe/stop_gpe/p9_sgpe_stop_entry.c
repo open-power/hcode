@@ -738,25 +738,39 @@ p9_sgpe_stop_entry()
         MARK_TAG(SE_QUIESCE_QUAD, (32 >> qloop))
         //======================================
 
-        PK_TRACE("Halting CMEs");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR, qloop, 0), BIT64(3));
-        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR, qloop, 1), BIT64(3));
-
-        do
+        if (ex & FST_EX_IN_QUAD)
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 0), scom_data);
+            PK_TRACE("Halting CME0");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR, qloop, 0), BIT64(3));
         }
-        while(!(scom_data & BIT64(0)));
 
-        PK_TRACE("CME0 Halted");
-
-        do
+        if (ex & SND_EX_IN_QUAD)
         {
-            GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 1), scom_data);
+            PK_TRACE("Halting CME1");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR, qloop, 1), BIT64(3));
         }
-        while(!(scom_data & BIT64(0)));
 
-        PK_TRACE("CME1 Halted");
+        if (ex & FST_EX_IN_QUAD)
+        {
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 0), scom_data);
+            }
+            while(!(scom_data & BIT64(0)));
+
+            PK_TRACE("CME0 Halted");
+        }
+
+        if (ex & SND_EX_IN_QUAD)
+        {
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMDBG, qloop, 1), scom_data);
+            }
+            while(!(scom_data & BIT64(0)));
+
+            PK_TRACE("CME1 Halted");
+        }
 
         PK_TRACE("Assert refresh quiesce prior to L3 (refresh domain) stop clk via EX_DRAM_REF_REG[7]");
 
