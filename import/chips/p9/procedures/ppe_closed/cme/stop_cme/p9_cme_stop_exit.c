@@ -414,7 +414,7 @@ p9_cme_stop_exit()
 #if HW386841_NDD1_DSL_STOP1_FIX
     uint32_t     core_stop1        = 0;
 #endif
-    cmeHeader_t*      pCmeImgHdr  = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
+    cmeHeader_t* pCmeImgHdr        = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
 
     //--------------------------------------------------------------------------
     PK_TRACE("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");

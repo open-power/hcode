@@ -171,9 +171,8 @@ main(int argc, char** argv)
 
     // reading header attributes and initialize the queued scom mode
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
-    G_cme_stop_record.header_flags = pCmeImgHdr->g_cme_mode_flags;
 
-    if (G_cme_stop_record.header_flags & QUEUED_SCAN_DISABLE)
+    if (pCmeImgHdr->g_cme_mode_flags & CME_QUEUED_SCAN_DISABLE_BIT_POS)
     {
         out32(CME_LCL_LMCR_CLR, BITS32(8, 2));
     }

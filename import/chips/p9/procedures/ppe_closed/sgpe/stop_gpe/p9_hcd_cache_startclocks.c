@@ -29,13 +29,11 @@
 void
 p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 {
-    uint32_t   id_vector = 0;
-    uint32_t   ex_mask   = 0;
-    uint32_t   bitloc    = 0;
-    data64_t   scom_data = {0};
-
+    uint32_t      bitloc      = 0;
+    uint32_t      ex_mask     = 0;
+    data64_t      scom_data   = {0};
     sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
-    id_vector = pSgpeImgHdr->g_sgpe_location_id;
+    uint32_t      id_vector   = pSgpeImgHdr->g_sgpe_location_id;
 
     // -------------------------------
     // Prepare to cache startclocks

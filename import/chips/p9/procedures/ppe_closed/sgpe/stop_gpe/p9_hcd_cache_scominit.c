@@ -31,16 +31,16 @@ extern SgpeStopRecord G_sgpe_stop_record;
 void
 p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
-    uint32_t   attr_proc_fabric_pump_mode_chip_is_node     = 0; // default chip_is_group
-    uint32_t   ex_loop                                     = 0;
-    uint32_t   ex_count                                    = 0;
-    uint32_t   ex_mask                                     = 0;
-    uint32_t   ex_index                                    = 0;
-    data64_t   scom_data                                   = {0};
-    ocb_qcsr_t qcsr                                        = {0};
+    uint32_t      attr_proc_fabric_pump_mode_chip_is_node = 0; // default chip_is_group
+    uint32_t      ex_loop                                 = 0;
+    uint32_t      ex_count                                = 0;
+    uint32_t      ex_mask                                 = 0;
+    uint32_t      ex_index                                = 0;
+    data64_t      scom_data                               = {0};
+    ocb_qcsr_t    qcsr                                    = {0};
     sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
-    if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT64(17))
+    if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_PROC_FAB_PUMP_MODE_BIT_POS)
     {
         attr_proc_fabric_pump_mode_chip_is_node = 1;
     }

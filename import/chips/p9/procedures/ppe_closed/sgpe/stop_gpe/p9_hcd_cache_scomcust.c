@@ -29,15 +29,15 @@
 void
 p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
-    data64_t scom_data = {0};
+    data64_t            scom_data    = {0};
 
 #if !SKIP_HOMER_ACCESS
 
-    int      i       = 0;
-    uint32_t qoffset = 0;
-    uint32_t qaddr   = 0;
-    uint64_t qdata   = 0;
-    uint32_t rid     = 0;
+    int                 i            = 0;
+    uint32_t            qoffset      = 0;
+    uint32_t            qaddr        = 0;
+    uint64_t            qdata        = 0;
+    uint32_t            rid          = 0;
 
     // doing this instead of multiply since there is no multiply instruction with ppe.
     for(i = 0; i < quad; i++)
@@ -47,8 +47,8 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 
     // To access memory, need to set MSB of homer address
     QpmrHeaderLayout_t* pQpmrHdrAddr = (QpmrHeaderLayout_t*)(HOMER_QPMR_HEADER_ADDR);
-    ScomEntry_t*    pSgpeScomRes = (ScomEntry_t*)(pQpmrHdrAddr->quadScomOffset +
-                                   (uint32_t)pQpmrHdrAddr + qoffset);
+    ScomEntry_t*        pSgpeScomRes = (ScomEntry_t*)(pQpmrHdrAddr->quadScomOffset +
+                                       (uint32_t)pQpmrHdrAddr + qoffset);
 
     for(i = 0; pSgpeScomRes->scomEntryAddress; i++, pSgpeScomRes++)
     {

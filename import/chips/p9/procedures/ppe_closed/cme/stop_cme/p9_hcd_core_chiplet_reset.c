@@ -25,6 +25,7 @@
 
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
+#include "p9_hcode_image_defines.H"
 
 enum P9_HCD_CORE_CHIPLET_RESET_CONSTANTS
 {
@@ -49,7 +50,7 @@ enum P9_HCD_CORE_CHIPLET_RESET_CONSTANTS
 void
 p9_hcd_core_chiplet_reset(uint32_t core)
 {
-    data64_t scom_data = {0};
+    data64_t     scom_data  = {0};
 
     PK_TRACE("Init NET_CTRL0[1,3-5,11-14,16,18,22,25,26],step needed for hotplug");
     CME_PUTSCOM(CPPM_NC0INDIR_OR,  core, C_NET_CTRL0_INIT_VECTOR);

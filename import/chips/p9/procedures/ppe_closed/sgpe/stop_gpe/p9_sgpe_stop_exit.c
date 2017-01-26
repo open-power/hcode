@@ -301,32 +301,34 @@ void p9_sgpe_stop_exit_end(uint32_t cexit, uint32_t qspwu, uint32_t qloop)
 void
 p9_sgpe_stop_exit()
 {
-    uint32_t     m_l2            = 0;
-    uint32_t     m_pg            = 0;
-    uint32_t     cloop           = 0;
-    uint32_t     qloop           = 0;
-    uint32_t     cexit           = 0;
-    uint32_t     qspwu           = 0;
-    uint32_t     ex_mask         = 0;
-    uint32_t     ec_mask         = 0;
-    uint32_t     ex_index        = 0;
-    uint32_t     ec_index        = 0;
-    uint32_t     chtm_mask       = 0;
-    uint64_t     chtm_size       = 0;
-    data64_t     scom_data       = {0};
+    uint32_t      m_l2            = 0;
+    uint32_t      m_pg            = 0;
+    uint32_t      cloop           = 0;
+    uint32_t      qloop           = 0;
+    uint32_t      cexit           = 0;
+    uint32_t      qspwu           = 0;
+    uint32_t      ex_mask         = 0;
+    uint32_t      ec_mask         = 0;
+    uint32_t      ex_index        = 0;
+    uint32_t      ec_index        = 0;
+    uint32_t      chtm_mask       = 0;
+    uint64_t      chtm_size       = 0;
+    data64_t      scom_data       = {0};
 #if !STOP_PRIME
-    ocb_ccsr_t   ccsr            = {0};
-    uint32_t     cme_flags       = 0;
+    ocb_ccsr_t    ccsr            = {0};
+    uint32_t      cme_flags       = 0;
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
-    uint32_t     spin            = 0;
+    uint32_t      spin            = 0;
 #endif
 #endif
 #if NIMBUS_DD_LEVEL != 1
-    uint32_t     fused_core_mode = 0;
+    uint32_t      fused_core_mode = 0;
 #endif
 #if !SKIP_IPC
-    uint32_t     rc              = 0;
+    uint32_t      rc              = 0;
 #endif
+    sgpeHeader_t* pSgpeImgHdr     = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
+    cpmrHeader_t* pCpmrHdrAddr    = (cpmrHeader_t*)(HOMER_CPMR_HEADER_ADDR);
 
     //===============================
     MARK_TAG(BEGINSCOPE_STOP_EXIT, 0)
@@ -638,7 +640,6 @@ p9_sgpe_stop_exit()
 
             // Reading fused core mode flag in cpmr header
             // To access memory, need to set MSB of homer address
-            cpmrHeader_t* pCpmrHdrAddr = (cpmrHeader_t*)(HOMER_CPMR_HEADER_ADDR);
 
             if (pCpmrHdrAddr->fusedModeStatus == 0xBB)
             {
@@ -971,8 +972,6 @@ p9_sgpe_stop_exit()
             //     match_err                    <= (msk_err_q or not pat_err_q)
             //                                     xor error_stage_lt(0);
             //     mask = 0 and pattern = 1 and may be trigger 0
-
-            sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
             if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_ENABLE_CME_TRACE_ARRAY_BIT_POS)
             {

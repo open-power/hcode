@@ -29,11 +29,9 @@
 void
 p9_hcd_core_startclocks(uint32_t core)
 {
-    uint32_t id_vector = 0;
-    data64_t scom_data = {0};
-
+    data64_t     scom_data  = {0};
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
-    id_vector = pCmeImgHdr->g_cme_location_id;
+    uint32_t     id_vector  = pCmeImgHdr->g_cme_location_id;
 
     PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));

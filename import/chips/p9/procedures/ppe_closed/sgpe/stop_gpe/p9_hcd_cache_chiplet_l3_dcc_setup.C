@@ -38,6 +38,7 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
+#include "p9_hcode_image_defines.H"
 #include "hw_access.H"
 #include "p9_ringid_sgpe.H"
 #include <fapi2.H>
@@ -45,6 +46,7 @@
 
 extern "C" void p9_hcd_cache_chiplet_l3_dcc_setup(uint32_t quad)
 {
+    fapi2::buffer<uint64_t> l_data64;
     fapi2::Target<fapi2::TARGET_TYPE_EQ>           l_eqTarget
     (
         fapi2::plat_getTargetHandleByChipletNumber((uint8_t)quad + EQ_CHIPLET_OFFSET)
@@ -57,7 +59,9 @@ extern "C" void p9_hcd_cache_chiplet_l3_dcc_setup(uint32_t quad)
                             eq_ana_bndy_bucket_l3dcc, fapi2::RING_MODE_SET_PULSE_NSL));
 
     FAPI_DBG("Drop L3 DCC bypass");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WAND, quad), ~BIT64(1));
+    l_data64.flush<1>();
+    l_data64.clearBit<1>();
+    FAPI_TRY(fapi2::putScom(l_eqTarget, EQ_NET_CTRL1_WAND, l_data64));
 
 fapi_try_exit:
 

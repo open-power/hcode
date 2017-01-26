@@ -47,26 +47,26 @@ extern SgpeStopRecord                           G_sgpe_stop_record;
 void
 p9_sgpe_stop_entry()
 {
-    int          entry_ongoing[2] = {0, 0};
-    int          l3_purge_aborted = 0;
-    uint32_t     ex               = 0;
-    uint32_t     ex_mask          = 0;
-    uint32_t     ex_index         = 0;
-    uint32_t     bitloc           = 0;
-    uint32_t     qloop            = 0;
-    uint32_t     cloop            = 0;
-    uint32_t     climit           = 0;
-    uint32_t     xentry           = 0;
-    uint32_t     qentry           = 0;
-    uint64_t     host_attn        = 0;
-    uint64_t     local_xstop      = 0;
-    data64_t     scom_data        = {0};
-    data64_t     temp_data        = {0};
+    int          entry_ongoing[2]  = {0, 0};
+    int          l3_purge_aborted  = 0;
+    uint32_t     ex                = 0;
+    uint32_t     ex_mask           = 0;
+    uint32_t     ex_index          = 0;
+    uint32_t     bitloc            = 0;
+    uint32_t     qloop             = 0;
+    uint32_t     cloop             = 0;
+    uint32_t     climit            = 0;
+    uint32_t     xentry            = 0;
+    uint32_t     qentry            = 0;
+    uint64_t     host_attn         = 0;
+    uint64_t     local_xstop       = 0;
+    data64_t     scom_data         = {0};
+    data64_t     temp_data         = {0};
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
-    uint32_t     spin             = 0;
+    uint32_t      spin             = 0;
 #endif
 #if !SKIP_IPC
-    uint32_t     rc               = 0;
+    uint32_t      rc               = 0;
 #endif
 
     //--------------------------------------------------------------------------

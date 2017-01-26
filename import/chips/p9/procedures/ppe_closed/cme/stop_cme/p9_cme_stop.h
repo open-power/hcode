@@ -208,17 +208,6 @@ enum CME_STOP_FLAGS
     FLAG_PARTIAL_GOOD_C1             = BIT32(31)
 };
 
-enum ATTR_CME_MODE_FLAGS
-{
-    MAP_3_TO_2                       = BIT32(0),
-    MAP_4_TO_2                       = BIT32(1),
-    MAP_5_TO_4                       = BIT32(2),
-    MAP_8_TO_5                       = BIT32(3),
-    MAP_11_TO_8                      = BIT32(4),
-    QUEUED_SCAN_DISABLE              = BIT32(30),
-    SKIP_CORE_POWEROFF               = BIT32(31)
-};
-
 enum CME_STOP_PIG_TYPES
 {
     PIG_TYPE2                        = 2,
@@ -284,8 +273,6 @@ typedef struct
     uint32_t      core_blockwu;
     // core in special wakeup, can be used as core select in scom address or data
     uint32_t      core_in_spwu;
-    // cme header attributes
-    uint32_t      header_flags;
     PkSemaphore   sem[2];
 } CmeStopRecord;
 
