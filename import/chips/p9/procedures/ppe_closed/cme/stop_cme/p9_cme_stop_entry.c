@@ -46,6 +46,7 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_enter_marks.h"
 #include "p9_cme_pstate.h"
+#include "p9_hcode_image_defines.H"
 
 extern CmeStopRecord G_cme_stop_record;
 
@@ -213,30 +214,31 @@ void p9_cme_pcbmux_savior_epilogue(uint32_t core)
 void
 p9_cme_stop_entry()
 {
-    int             catchup_ongoing     = 0;
-    int             entry_ongoing       = 1;
-    uint8_t         target_level        = 0;
-    uint8_t         deeper_level        = 0;
-    uint8_t         origin_level        = 0;
-    uint32_t        origin_core         = 0;
-    uint32_t        deeper_core         = 0;
-    uint32_t        core_aborted        = 0;
-    uint32_t        core_catchup        = 0;
-    uint32_t        core_stop1          = 0;
-    uint32_t        core_index          = 0;
-    uint32_t        core_mask           = 0;
-    uint32_t        core_raw            = 0;
-    uint32_t        core                = 0;
-    uint32_t        pm_states           = 0;
-    uint32_t        lclr_data           = 0;
-    data64_t        scom_data           = {0};
-    ppm_pig_t       pig                 = {0};
+    int          catchup_ongoing     = 0;
+    int          entry_ongoing       = 1;
+    uint8_t      target_level        = 0;
+    uint8_t      deeper_level        = 0;
+    uint8_t      origin_level        = 0;
+    uint32_t     origin_core         = 0;
+    uint32_t     deeper_core         = 0;
+    uint32_t     core_aborted        = 0;
+    uint32_t     core_catchup        = 0;
+    uint32_t     core_stop1          = 0;
+    uint32_t     core_index          = 0;
+    uint32_t     core_mask           = 0;
+    uint32_t     core_raw            = 0;
+    uint32_t     core                = 0;
+    uint32_t     pm_states           = 0;
+    uint32_t     lclr_data           = 0;
+    data64_t     scom_data           = {0};
+    ppm_pig_t    pig                 = {0};
+    cmeHeader_t* pCmeImgHdr          = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
 
 #if HW402407_NDD1_TLBIE_STOP_WORKAROUND
 
-    uint32_t thread = 0;
-    uint16_t        lpid_c0[4] = {0, 0, 0, 0};
-    uint16_t        lpid_c1[4] = {0, 0, 0, 0};
+    uint32_t     thread              = 0;
+    uint16_t     lpid_c0[4]          = {0, 0, 0, 0};
+    uint16_t     lpid_c1[4]          = {0, 0, 0, 0};
 
 #endif  // tlbie stop workaround
 
@@ -327,26 +329,26 @@ p9_cme_stop_entry()
                     core_stop1 |= core_mask;
                 }
 
-                if ((G_cme_stop_record.header_flags & MAP_11_TO_8) &&
-                    (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_11))
+                if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_11_TO_8_BIT_POS) &&
+                    (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_11))
                 {
                     G_cme_stop_record.req_level[core_index] = STOP_LEVEL_8;
                 }
 
-                if ((G_cme_stop_record.header_flags & MAP_8_TO_5) &&
-                    (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_8))
+                if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_8_TO_5_BIT_POS) &&
+                    (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_8))
                 {
                     G_cme_stop_record.req_level[core_index] = STOP_LEVEL_5;
                 }
 
-                if ((G_cme_stop_record.header_flags & MAP_5_TO_4) &&
-                    (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_5))
+                if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_5_TO_4_BIT_POS) &&
+                    (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_5))
                 {
                     G_cme_stop_record.req_level[core_index] = STOP_LEVEL_4;
                 }
 
-                if ((G_cme_stop_record.header_flags & MAP_4_TO_2) &&
-                    (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_4))
+                if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_4_TO_2_BIT_POS) &&
+                    (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_4))
                 {
                     G_cme_stop_record.req_level[core_index] = STOP_LEVEL_2;
                 }
