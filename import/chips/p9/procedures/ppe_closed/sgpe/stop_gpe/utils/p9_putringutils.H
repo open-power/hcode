@@ -139,11 +139,15 @@ fapi2::ReturnCode standardScan(
 /// @param[in] i_target Chiplet Target of Scan
 /// @param[in] i_header The header data that is expected.
 //  @param[in] i_chipletId data from RS4
+//  @param[in] i_bitsDecoded number of bits rotated and scanned
+//  @param[in] i_ringId ringId
 /// @return FAPI2_RC_SUCCESS if success, else error code.
 fapi2::ReturnCode verifyHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
                                i_target,
                                const uint64_t i_header,
-                               const uint32_t i_chipletId);
+                               const uint32_t i_chipletId,
+                               const uint32_t i_bitsDecoded,
+                               const uint16_t i_ringId);
 
 
 /// @brief Function to decompress the RS4 and apply the Ring data

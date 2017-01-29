@@ -126,10 +126,11 @@ int verifyHeader(enum CME_CORE_MASKS i_core,
                  const uint64_t i_header);
 
 /// @brief Function to decompress the RS4 and apply the Ring data
-//  @param[in] i_core - core select value
-//  @param[in] i_scom_op - scom control value like queue/non-queue
+/// @param[in] i_core - core select value
+/// @param[in] i_scom_op - scom control value like queue/non-queue
 /// @param[in] i_rs4 The RS4 compressed string
-//  @param[in] i_applyOverride- 0 (no override) 1 (override mode)
+/// @param[in] i_applyOverride- 0 (no override) 1 (override mode)
+/// @param[in] i_ringID - for debug if the header check fails
 int rs4DecompressionSvc(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,

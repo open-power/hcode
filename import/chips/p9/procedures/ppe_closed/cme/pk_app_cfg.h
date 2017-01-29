@@ -103,4 +103,8 @@
 /// This file provides architecture-specific symbol names for each interrupt
 #include "cmehw_interrupts.h"
 
+/// This file provides platform specific panic codes
+#define PLATFORM_PANIC_CODES_H "cme_panic_codes.h"
+
+
 #endif /*__PK_APP_CFG_H__*/

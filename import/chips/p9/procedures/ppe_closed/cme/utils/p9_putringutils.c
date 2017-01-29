@@ -269,11 +269,11 @@ int rs4DecompressionSvc(
     uint32_t l_nibbleIndx = 0;
     uint32_t l_bitsDecoded = 0;
     uint32_t l_scanAddr = rs4_revle32(l_rs4Header->iv_scanAddr);
+    uint16_t l_ringId = l_rs4Header->iv_ringId;
     uint64_t l_scanRegion = decodeScanRegionData(l_scanAddr);
     uint32_t l_scanData = 0;
     uint8_t l_mask = 0x08;
     uint64_t l_scomData = 0;
-    uint8_t l_skip_64bits = 1;
 
     do
     {
@@ -287,7 +287,7 @@ int rs4DecompressionSvc(
         putscom(0, CME_SCOM_ADDR(0x00030005, i_core, i_scom_op), l_scanRegion);
 
         // Write a 64 bit value for header.
-        putscom(0, CME_SCOM_ADDR(0x0003E040, i_core, i_scom_op), 0xa5a5a5a5a5a5a5a5);
+        putscom(0, CME_SCOM_ADDR(0x0003E000, i_core, i_scom_op), 0xa5a5a5a5a5a5a5a5);
 
 
         // Decompress the RS4 string and scan
@@ -302,14 +302,6 @@ int rs4DecompressionSvc(
 
                 // Determine the no.of rotates in bits
                 uint32_t l_bitRotates = (4 * l_count);
-
-                //Need to skip 64bits , because we have already written header
-                //data.
-                if (l_skip_64bits)
-                {
-                    l_bitRotates -= SIXTYFOUR_BIT_HEADER;
-                    l_skip_64bits = 0;
-                }
 
                 l_bitsDecoded += l_bitRotates;
 
@@ -402,6 +394,7 @@ int rs4DecompressionSvc(
                             for(i = 0; i < 4; i++)
                             {
                                 l_scomData = 0x0;
+                                l_bitsDecoded += 1;
 
                                 if((l_data & (l_mask >> i)))
                                 {
@@ -544,7 +537,14 @@ int rs4DecompressionSvc(
 
         if(l_readHeader != 0xa5a5a5a5a5a5a5a5)
         {
-            pk_halt();
+            //In EDR: ring Id (8b),core value(4b) and number of latches that went thru rotate
+            //and scan.
+            // In SPRG0: First 32 bits of header data read from the hw
+            uint32_t debug_data_0 = ((uint32_t)l_ringId << 24) | ((uint32_t)i_core << 20) | (l_bitsDecoded & 0x000FFFFF);
+            uint32_t debug_data_1 = (uint32_t)(l_readHeader >> 32);
+            asm volatile ("mtedr %0" : : "r" (debug_data_0) : "memory");
+            asm volatile ("mtsprg0 %0" : : "r" (debug_data_1) : "memory");
+            PK_PANIC(PUTRING_HEADER_ERROR);
         }
 
         // Clean scan region and type data

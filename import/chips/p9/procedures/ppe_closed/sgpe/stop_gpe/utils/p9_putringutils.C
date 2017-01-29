@@ -296,8 +296,6 @@ fapi2::ReturnCode standardScan(
                 if(l_attempts == 0 )
                 {
                     l_rc = fapi2::FAPI2_RC_PLAT_ERR_SEE_DATA;
-                    PK_TRACE_INF("OPCG time out");
-                    pk_halt (); // we shouldn't move on because the next ring will fail.
                     break;
                 }
             }// end of for loop
@@ -332,17 +330,22 @@ fapi2::ReturnCode standardScan(
 /// @param[in] i_target Chiplet Target of Scan
 /// @param[in] i_header The header data that is expected.
 //  @param[in] i_chipletId data from RS4
+//  @param[in] i_bitsDecoded  number of bits rotated and scanned
+//  @param[in] i_ringId    ring Id that we scanned
 /// @return FAPI2_RC_SUCCESS if success, else error code.
 fapi2::ReturnCode verifyHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
                                i_target,
                                const uint64_t i_header,
-                               const uint32_t i_chipletId)
+                               const uint32_t i_chipletId,
+                               const uint32_t i_bitsDecoded,
+                               const uint16_t i_ringId)
 {
     fapi2::ReturnCode l_rc = fapi2::FAPI2_RC_SUCCESS;
 
     do
     {
         uint32_t l_scomAddress = SCAN_REG_0x0003E000; // 64-bit scan
+        uint8_t l_quadId = (i_chipletId >> 24) & 0x0F;
         // Add the chiplet ID in the Scom Address
         l_scomAddress |= i_chipletId;
 
@@ -355,7 +358,15 @@ fapi2::ReturnCode verifyHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
         if(l_readHeader != i_header)
         {
             l_rc = fapi2::FAPI2_RC_PLAT_ERR_RING_HEADER_CHECK;
-            pk_halt();
+            //In EDR: ring Id, quad id and number of latches that went thru rotate
+            //and scan.
+            // In SPRG0: First 32 bits of header data read from the hw
+            uint32_t debug_data_0 = ((uint32_t)i_ringId << 24) | ((uint32_t) l_quadId << 20) | (i_bitsDecoded & 0x000FFFFF);
+            uint32_t debug_data_1 = (uint32_t)(l_readHeader >> 32);
+            asm volatile ("mtedr %0" : : "r" (debug_data_0) : "memory");
+            asm volatile ("mtsprg0 %0" : : "r" (debug_data_1) : "memory");
+            PK_PANIC(PUTRING_HEADER_ERROR);
+
         }
     }
     while(0);
@@ -385,6 +396,7 @@ fapi2::ReturnCode rs4DecompressionSvc(
     uint64_t l_bitsDecoded = 0;
     bool l_decompressionDone = false;
     uint32_t l_scanAddr = rs4_revle32(l_rs4Header->iv_scanAddr);
+    uint16_t l_ringId = l_rs4Header->iv_ringId;
     uint64_t l_scanRegion = decodeScanRegionData(l_scanAddr);
     fapi2::ReturnCode l_rc;
     uint32_t l_chiplet = (l_scanAddr & 0xFF000000UL);
@@ -453,6 +465,8 @@ fapi2::ReturnCode rs4DecompressionSvc(
                 // Determine the no.of rotates in bits
                 uint64_t l_bitRotates = (4 * l_count);
 
+                l_bitsDecoded += l_bitRotates;
+
                 //Need to skip 64bits , because we have already written header
                 //data.
                 if (l_skip_64bits)
@@ -461,7 +475,6 @@ fapi2::ReturnCode rs4DecompressionSvc(
                     l_skip_64bits = 0;
                 }
 
-                l_bitsDecoded += l_bitRotates;
 
                 // Do the ROTATE operation
                 if (l_bitRotates != 0)
@@ -474,7 +487,13 @@ fapi2::ReturnCode rs4DecompressionSvc(
 
                     if(l_rc != fapi2::FAPI2_RC_SUCCESS)
                     {
-                        break;
+                        PK_TRACE_INF("OPCG time out");
+                        //In EDR: ring Id , quad Id and number of latches that went thru rotate
+                        //and scan.
+                        uint32_t debug_data_0 = ((uint32_t)l_ringId << 24) |
+                                                ((uint32_t) ((l_chiplet >> 24) & 0x0F) << 20) | (l_bitRotates & 0x000FFFFF);
+                        asm volatile ("mtedr %0" : : "r" (debug_data_0) : "memory");
+                        PK_PANIC(PUTRING_OPCG_TIMEOUT);
                     }
                 }
 
@@ -571,6 +590,7 @@ fapi2::ReturnCode rs4DecompressionSvc(
 
                             for(uint8_t i = 0; i < 4; i++)
                             {
+                                l_bitsDecoded += 1;
                                 l_scomData = 0x0;
 
                                 if((l_data & (l_mask >> i)))
@@ -717,7 +737,7 @@ fapi2::ReturnCode rs4DecompressionSvc(
         } // end of if(l_nibble != 0)
 
         // Verify header
-        l_rc = verifyHeader(i_target, l_header, l_chiplet);
+        l_rc = verifyHeader(i_target, l_header, l_chiplet, l_bitsDecoded, l_ringId);
 
         if(l_rc)
         {

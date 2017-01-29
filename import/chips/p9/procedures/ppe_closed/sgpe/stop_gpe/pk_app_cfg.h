@@ -34,6 +34,7 @@
 /// \brief Application specific overrides go here.
 ///
 
+#define PLATFORM_PANIC_CODES_H "sgpe_panic_codes.h"
 // @todo RTC 161182
 
 #if NIMBUS_DD_LEVEL == 1
