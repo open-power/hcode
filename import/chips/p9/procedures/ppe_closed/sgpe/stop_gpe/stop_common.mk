@@ -170,6 +170,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(STD_INC) \
 	$(COMMON_INCDIR) \
         $(ROOTPATH)/chips/p9/utils/imageProcs/ \
+        $(ROOTPATH)/chips/common/utils/imageProcs/ \
 	)
 
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic

@@ -107,8 +107,11 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(PM_LIBDIR)/common \
 	$(PM_LIBDIR)/occlib \
 	$(HCODE_LIBDIR) \
-	$(HCODE_COMMON_LIBDIR) \
 	$(PGPE_SRCDIR) \
+	$(HCODE_COMMON_LIBDIR) \
+        $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
+		$(ROOTPATH)/chips/p9/utils/imageProcs/ \
+		$(ROOTPATH)/chips/common/utils/imageProcs/ \
 	)
 
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
@@ -140,6 +143,8 @@ $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
 	$(HCODE_COMMON_LIBDIR) \
 	$(HCODE_UTILS_INCDIR) \
         $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
+        $(ROOTPATH)/chips/p9/utils/imageProcs/ \
+		$(ROOTPATH)/chips/common/utils/imageProcs/ \
 	)
 
 $(call BUILD_BINHEADER,$(IMAGEPATH)/pstate_gpe/pstate_gpe.bin)

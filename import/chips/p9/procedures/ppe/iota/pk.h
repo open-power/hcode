@@ -40,9 +40,9 @@
 
 #ifndef __ASSEMBLER__
 #include <stdint.h>
+#include <stddef.h>
 #include "iota_trace.h"
 
-typedef uint32_t size_t;
 
 typedef uint64_t PkTimebase;
 extern uint64_t pk_timebase_get();

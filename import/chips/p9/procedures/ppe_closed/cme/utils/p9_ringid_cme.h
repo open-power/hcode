@@ -28,33 +28,7 @@
 
 #include <stdint.h>
 #include "p9_ringid_cme_enums.h"
-
-typedef enum
-{
-    COMMON_RING = 0,
-    INSTANCE_RING = 1
-} RINGTYPE;
-
-struct CHIPLET_DATA
-{
-    // This is the chiplet-ID of the first instance of the Chiplet
-    uint8_t iv_base_chiplet_number;
-
-    // The no.of common rings for the Chiplet
-    uint8_t iv_num_common_rings;
-
-    // The no.of instance rings for the Chiplet
-    uint8_t iv_num_instance_rings;
-
-    // Number of variants support
-    uint8_t iv_num_variants;
-};
-
-// This is used to Set (Mark) the left-most bit
-#define INSTANCE_RING_MARK 0x80
-//
-// This is used to Set (Mark) the left-most bit
-#define INSTANCE_RING_MASK 0x7F
+#include <common_ringId.H>
 
 
 typedef enum RingOffset
@@ -66,10 +40,10 @@ typedef enum RingOffset
     EC_MODE = 3,
     EC_ABST = 4,
     // Instance Rings
-    EC_REPR = INSTANCE_RING_MARK | 0
+    EC_REPR = (INSTANCE_RING_MARK | 0)
 } ringOffset;
 
-const struct CHIPLET_DATA g_ecData =
+static const struct CHIPLET_DATA g_ecData =
 {
     32, // Core Chiplet ID range is 32-55. The base ID is 32.
     5,  // 4 common rings for Core chiplet
@@ -78,12 +52,12 @@ const struct CHIPLET_DATA g_ecData =
 };
 
 
-struct ringProperties_t
+struct ringPropertiesCme_t
 {
     ringOffset iv_torOffSet;
 };
 
-const struct ringProperties_t RING_PROPERTIES[P9_NUM_RINGS] =
+static const struct ringPropertiesCme_t RING_PROPERTIES[P9_NUM_RINGS] =
 {
     // Core Ring
     {EC_FUNC}, // 0

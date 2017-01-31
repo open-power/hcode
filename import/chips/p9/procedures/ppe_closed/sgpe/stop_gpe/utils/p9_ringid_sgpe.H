@@ -28,12 +28,7 @@
 #define _P9_RINGID_SGPE_H_
 
 #include <stdint.h>
-
-typedef enum
-{
-    COMMON_RING = 0,
-    INSTANCE_RING = 1
-} RINGTYPE;
+#include <common_ringId.H>
 
 
 ///
@@ -123,28 +118,6 @@ typedef enum
     P9_NUM_RINGS // This shoud always be the last constant
 } RingID; // end of enum RingID
 
-struct CHIPLET_DATA
-{
-    // This is the chiplet-ID of the first instance of the Chiplet
-    uint8_t iv_base_chiplet_number;
-
-    // The no.of common rings for the Chiplet
-    uint8_t iv_num_common_rings;
-
-    // The no.of instance rings for the Chiplet
-    uint8_t iv_num_instance_rings;
-
-    // Number of variants support
-    uint8_t iv_num_variants;
-};
-
-// This is used to Set (Mark) the left-most bit
-#define INSTANCE_RING_MARK 0x80
-//
-// This is used to Set (Mark) the left-most bit
-#define INSTANCE_RING_MASK 0x7F
-
-
 typedef enum RingOffset
 {
     // Common Rings
@@ -229,12 +202,12 @@ static const struct CHIPLET_DATA g_eqData =
 };
 
 
-struct ringProperties_t
+struct ringPropertiesSgpe_t
 {
     ringOffset iv_torOffSet;
 };
 
-static const struct ringProperties_t RING_PROPERTIES[P9_NUM_RINGS] =
+static const struct ringPropertiesSgpe_t RING_PROPERTIES[P9_NUM_RINGS] =
 {
     // EQ Ring
     {EQ_FURE},              //0

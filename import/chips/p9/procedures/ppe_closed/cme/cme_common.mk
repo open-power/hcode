@@ -143,6 +143,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(HCODE_COMMON_LIBDIR) \
         $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
         $(ROOTPATH)/chips/p9/utils/imageProcs/ \
+        $(ROOTPATH)/chips/common/utils/imageProcs/ \
 	)
 else
 # __IOTA__
@@ -161,6 +162,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(HCODE_LIBDIR) \
 	$(HCODE_COMMON_LIBDIR) \
 	$(ROOTPATH)/chips/p9/utils/imageProcs/ \
+    $(ROOTPATH)/chips/common/utils/imageProcs/ \
 	)
 endif
 

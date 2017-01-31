@@ -385,7 +385,7 @@ fapi2::ReturnCode rs4DecompressionSvc(
     const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
     const uint8_t* i_rs4,
     bool i_applyOverride,
-    RINGTYPE i_ringType,
+    RingType_t i_ringType,
     const fapi2::RingMode i_ringMode)
 {
     CompressedScanData* l_rs4Header = (CompressedScanData*) i_rs4;

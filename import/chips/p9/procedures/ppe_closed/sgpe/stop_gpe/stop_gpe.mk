@@ -199,7 +199,8 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
 	$(FAPI2_INC) \
 	$(STD_INC) \
 	$(COMMON_INCDIR) \
-        $(ROOTPATH)/chips/p9/utils/imageProcs/ \
+	    $(ROOTPATH)/chips/p9/utils/imageProcs/ \
+		$(ROOTPATH)/chips/common/utils/imageProcs/ \
 	)
 
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
@@ -233,7 +234,8 @@ $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
 	$(HCODE_COMMON_LIBDIR) \
 	$(HCODE_UTILS_INCDIR) \
         $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
-        $(ROOTPATH)/chips/p9/utils/imageProcs/ \
+		$(ROOTPATH)/chips/p9/utils/imageProcs/ \
+		$(ROOTPATH)/chips/common/utils/imageProcs/ \
 	)
 
 $(call BUILD_BINHEADER,$(IMAGEPATH)/stop_gpe/stop_gpe.bin)

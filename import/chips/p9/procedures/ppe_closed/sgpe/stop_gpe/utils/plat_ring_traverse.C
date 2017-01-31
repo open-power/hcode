@@ -47,12 +47,12 @@ fapi2::ReturnCode findRS4InImageAndApply(
     {
         // Determine the Offset ID and Ring Type for the given Ring ID.
         uint32_t l_torOffset = 0;
-        RINGTYPE l_ringType = COMMON_RING;
+        RingType_t l_ringType = COMMON_RING;
         struct CHIPLET_DATA l_chipletData;
         l_chipletData.iv_base_chiplet_number = 0;
         l_chipletData.iv_num_common_rings = 0;
         l_chipletData.iv_num_instance_rings = 0;
-        l_chipletData.iv_num_variants = 0;
+        l_chipletData.iv_num_instance_rings_scan_addrs = 0;
         uint16_t* l_ringTorAddr = NULL;
         uint32_t* l_sectionAddr = NULL;
         bool l_override = false;
