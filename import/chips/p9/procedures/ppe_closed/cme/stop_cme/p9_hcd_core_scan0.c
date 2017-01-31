@@ -68,9 +68,28 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
     scom_data &= ~BIT64(0);
     CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
 
-    PK_TRACE("trigger Scan0");
+    PK_TRACE("Setting SCAN0 Mode");
     CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
-    scom_data |= BIT64(2);
+    scom_data |= BIT64(3);
+    CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
+
+    // Setting Scan length count
+    // Longest (lbisted) stump in the core for DD1:    2410 latches
+    // Longest (lbisted) stump in the core for DD2:    1020 latches
+
+    PK_TRACE("Setting scan length count");
+
+    // Set bits 59:63 to 24 for the NSL_FILL_COUNT
+#if NIMBUS_DD_LEVEL == 1
+    scom_data =  ((uint64_t)2410 << SHIFT64(11)) | 24;
+#else
+    scom_data =  ((uint64_t)1024 << SHIFT64(11)) | 24;
+#endif
+    CME_PUTSCOM(PERV_OPCG_REG1, core, scom_data);
+
+    PK_TRACE("Trigger OPCG GO");
+    CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
+    scom_data |= BIT64(1);
     CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
 
     PK_TRACE("Poll OPCG done bit to check for run-N completeness");
@@ -80,6 +99,16 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
         CME_GETSCOM(PERV_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
     }
     while(!(scom_data & BIT64(8)));
+
+    PK_TRACE("Clearing SCAN0 Mode");
+    CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
+    scom_data &= ~BIT64(3);
+    CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
+
+    PK_TRACE("Clearing scan length count");
+    CME_GETSCOM(PERV_OPCG_REG1, core, CME_SCOM_AND, scom_data);
+    scom_data &=  ~BITS64(0, 12);
+    CME_PUTSCOM(PERV_OPCG_REG1, core, scom_data);
 
     PK_TRACE("clear all clock REGIONS and type");
     CME_PUTSCOM(PERV_CLK_REGION, core, 0);
