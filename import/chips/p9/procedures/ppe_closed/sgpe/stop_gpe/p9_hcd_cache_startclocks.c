@@ -31,10 +31,8 @@ int
 p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 {
     int        rc = SGPE_STOP_SUCCESS;
-    int        exloop, excount = 0;
     uint32_t   id_vector;
     data64_t   scom_data;
-    ocb_qcsr_t qcsr;
 
     sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
     id_vector = pSgpeImgHdr->g_sgpe_location_id;
@@ -191,101 +189,6 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     // -------------------------------
     // Cleaning up
     // -------------------------------
-
-    // The LCO programming for the istep 16 use-case needs to be done
-    // before the chiplet fence is dropped.
-
-    // read partial good exes
-    do
-    {
-        qcsr.value = in32(OCB_QCSR);
-    }
-    while (qcsr.fields.change_in_progress);
-
-    for (exloop = 0; exloop < 12; exloop++)
-    {
-        if (qcsr.value & BIT32(exloop))
-        {
-            excount++;
-        }
-    }
-
-    PK_TRACE_DBG("Reading QCSR: %x, excount: %x", qcsr.value, excount);
-
-    if (ex & FST_EX_IN_QUAD)
-    {
-        PK_TRACE("Setup L3_LCO_TARGET_ID/VICTIMS on ex0 via EX_L3_MODE_REG1[2-5,6-21]");
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data.value);
-        scom_data.words.upper &= ~BITS32(2, 20);
-        scom_data.words.upper |= (quad << SHIFT32((5 - 1)));
-        scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
-
-        if (excount > 1)
-        {
-            PK_TRACE("Assert L3_LCO_ENABLE_CFG on ex0 via EX_L3_MODE_REG1[0]");
-            scom_data.words.upper |= BIT32(0);
-        }
-        else
-        {
-            PK_TRACE("Drop L3_LCO_ENABLE_CFG on ex0 via EX_L3_MODE_REG1[0]");
-            scom_data.words.upper &= ~BIT32(0);
-        }
-
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data.value);
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 0), scom_data.value);
-
-        if (excount == 2)
-        {
-            PK_TRACE("Assert L3_DYN_LCO_BLK_DIS_CFG on ex0 via EX_L3_MODE_REG0[9]");
-            scom_data.words.upper |= BIT32(9);
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 0), scom_data.value);
-        }
-        else
-        {
-            PK_TRACE("Drop L3_DYN_LCO_BLK_DIS_CFG on ex0 via EX_L3_MODE_REG0[9]");
-            scom_data.words.upper &= ~BIT32(9);
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 0), scom_data.value);
-        }
-    }
-
-    if (ex & SND_EX_IN_QUAD)
-    {
-        PK_TRACE("Setup L3_LCO_TARGET_ID/VICTIMS on ex1 via EX_L3_MODE_REG1[2-5,6-21]");
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data.value);
-        scom_data.words.upper &= ~BITS32(2, 20);
-        scom_data.words.upper |= ((quad << SHIFT32((5 - 1))) | BIT32(5));
-        scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
-
-        if (excount > 1)
-        {
-            PK_TRACE("Assert L3_LCO_ENABLE_CFG on ex1 via EX_L3_MODE_REG1[0]");
-            scom_data.words.upper |= BIT32(0);
-        }
-        else
-        {
-            PK_TRACE("Drop L3_LCO_ENABLE_CFG on ex1 via EX_L3_MODE_REG1[0]");
-            scom_data.words.upper &= ~BIT32(0);
-        }
-
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data.value);
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 1), scom_data.value);
-
-        if (excount == 2)
-        {
-            PK_TRACE("Assert L3_DYN_LCO_BLK_DIS_CFG on ex1 via EX_L3_MODE_REG0[9]");
-            scom_data.words.upper |= BIT32(9);
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 1), scom_data.value);
-        }
-        else
-        {
-            PK_TRACE("Drop L3_DYN_LCO_BLK_DIS_CFG on ex1 via EX_L3_MODE_REG0[9]");
-            scom_data.words.upper &= ~BIT32(9);
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 1), scom_data.value);
-        }
-    }
-
-    PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(18));
 
     /// @todo RTC166917 Check the Global Checkstop FIR
 
