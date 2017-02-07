@@ -345,7 +345,7 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SX11.B: Cache Chiplet Reset");
             p9_hcd_cache_chiplet_reset(qloop, m_pg);
 
-#if !STOP_INITF
+#if !SKIP_INITF
 
             PK_TRACE_INF("SX11.C: Cache Chiplet L3 DCC Setup");
             p9_hcd_cache_chiplet_l3_dcc_setup(qloop);
@@ -354,7 +354,7 @@ p9_sgpe_stop_exit()
 
 
 #if !STOP_PRIME
-#if !STOP_INITF
+#if !SKIP_INITF
 
             PK_TRACE_INF("SX11.D: Cache Gptr Time Initf");
             p9_hcd_cache_gptr_time_initf(qloop);
@@ -365,7 +365,7 @@ p9_sgpe_stop_exit()
             MARK_TAG(SX_DPLL_SETUP, (32 >> qloop))
             //====================================
 
-#if !STOP_INITF
+#if !SKIP_INITF
 
             PK_TRACE_INF("SX11.E: Cache Dpll Initf");
             p9_hcd_cache_dpll_initf(qloop);
@@ -375,7 +375,7 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SX11.F: Cache Dpll Setup");
             p9_hcd_cache_dpll_setup(qloop);
 
-#if !STOP_INITF
+#if !SKIP_INITF
 
             PK_TRACE_INF("SX11.G: Cache DCC Skewadjust Setup");
             p9_hcd_cache_dcc_skewadjust_setup(qloop);
@@ -402,7 +402,7 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SX11.H: Cache Chiplet Init");
             p9_hcd_cache_chiplet_init(qloop);
 
-#if !STOP_INITF
+#if !SKIP_INITF
 
             PK_TRACE_INF("SX11.I: Cache Repair Initf");
             p9_hcd_cache_repair_initf(qloop);
