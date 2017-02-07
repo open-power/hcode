@@ -30,8 +30,17 @@
 int
 p9_hcd_core_scomcust(uint32_t core)
 {
-    PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
-    CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
+    /*
+        CmeImageHeader_t* pCmeImgHdr  = (CmeImageHeader_t*)(CME_HEADER_IMAGE_OFFSET);
+        CmeScomRestore*   pCmeScomRes = (CmeScomRestore*)(pCmeImgHdr->coreScomRestoreOffset);
+        int i;
 
+        for(i=0; pCmeScomRes->pad; i++, pCmeScomRes += sizeof(CmeScomRestore))
+        {
+            PK_TRACE("scom[%d] addr[%x] data[%016llx]",
+                     i, pCmeScomRes->addr, pCmeScomRes->data);
+            CME_PUTSCOM(pCmeScomRes->addr, core, pCmeScomRes->data);
+        }
+    */
     return 0;
 }

@@ -32,13 +32,10 @@ extern SgpeStopRecord G_sgpe_stop_record;
 int
 p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
-    int           rc = SGPE_STOP_SUCCESS;
-    int           attr_proc_fabric_addr_bar_mode_small_system = 0; // default large
-    int           attr_proc_fabric_dump_mode_chip_is_node     = 0; // default group
-    int           exloop                                      = 0;
-    int           excount                                     = 0;
-    data64_t      scom_data                                   = {0};
-    ocb_qcsr_t    qcsr                                        = {0};
+    int rc = SGPE_STOP_SUCCESS;
+    int attr_proc_fabric_addr_bar_mode_small_system = 0; // default large
+    int attr_proc_fabric_dump_mode_chip_is_node     = 0; // default group
+    data64_t scom_data;
     sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
 
     if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(16))
@@ -62,45 +59,9 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
         scom_data.words.upper |= BITS32(20, 2);// DTS loop1 enable
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_THERM_MODE_REG, quad), scom_data.value);
 
-        // read partial good exes for LCO setup below
-        do
-        {
-            qcsr.value = in32(OCB_QCSR);
-        }
-        while (qcsr.fields.change_in_progress);
-
-        for (exloop = 0; exloop < 12; exloop++)
-        {
-            if (qcsr.value & BIT32(exloop))
-            {
-                excount++;
-            }
-        }
-
-        PK_TRACE_DBG("Reading QCSR: %x, excount: %x", qcsr.value, excount);
-
         if (m_ex & FST_EX_IN_QUAD)
         {
             // p9_l3_scom
-
-            PK_TRACE("Setup L3_LCO_TARGET_ID/VICTIMS on ex0 via EX_L3_MODE_REG1[2-5,6-21]");
-            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data.value);
-            scom_data.words.upper &= ~BITS32(2, 20);
-            scom_data.words.upper |= (quad << SHIFT32((5 - 1)));
-            scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
-
-            if (excount > 1)
-            {
-                PK_TRACE("Assert L3_LCO_ENABLE_CFG on ex0 via EX_L3_MODE_REG1[0]");
-                scom_data.words.upper |= BIT32(0);
-            }
-            else
-            {
-                PK_TRACE("Drop L3_LCO_ENABLE_CFG on ex0 via EX_L3_MODE_REG1[0]");
-                scom_data.words.upper &= ~BIT32(0);
-            }
-
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 0), scom_data.value);
 
             GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 0), scom_data.value);
             scom_data.words.upper &= ~(BIT32(1) | BITS32(14, 8) | BIT32(22));
@@ -109,17 +70,6 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
             if (attr_proc_fabric_addr_bar_mode_small_system)
             {
                 scom_data.words.upper |= BIT32(22);
-            }
-
-            if (excount == 2)
-            {
-                PK_TRACE("Assert L3_DYN_LCO_BLK_DIS_CFG on ex0 via EX_L3_MODE_REG0[9]");
-                scom_data.words.upper |= BIT32(9);
-            }
-            else
-            {
-                PK_TRACE("Drop L3_DYN_LCO_BLK_DIS_CFG on ex0 via EX_L3_MODE_REG0[9]");
-                scom_data.words.upper &= ~BIT32(9);
             }
 
             GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 0), scom_data.value);
@@ -143,25 +93,6 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
         {
             // p9_l3_scom
 
-            PK_TRACE("Setup L3_LCO_TARGET_ID/VICTIMS on ex1 via EX_L3_MODE_REG1[2-5,6-21]");
-            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data.value);
-            scom_data.words.upper &= ~BITS32(2, 20);
-            scom_data.words.upper |= ((quad << SHIFT32((5 - 1))) | BIT32(5));
-            scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
-
-            if (excount > 1)
-            {
-                PK_TRACE("Assert L3_LCO_ENABLE_CFG on ex1 via EX_L3_MODE_REG1[0]");
-                scom_data.words.upper |= BIT32(0);
-            }
-            else
-            {
-                PK_TRACE("Drop L3_LCO_ENABLE_CFG on ex1 via EX_L3_MODE_REG1[0]");
-                scom_data.words.upper &= ~BIT32(0);
-            }
-
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, 1), scom_data.value);
-
             GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 1), scom_data.value);
             scom_data.words.upper &= ~(BIT32(1) | BITS32(14, 8) | BIT32(22));
             scom_data.words.upper |= (BIT32(2) | BIT32(17) | BIT32(19)); // set b11 with L2
@@ -169,17 +100,6 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
             if (attr_proc_fabric_addr_bar_mode_small_system)
             {
                 scom_data.words.upper |= BIT32(22);
-            }
-
-            if (excount == 2)
-            {
-                PK_TRACE("Assert L3_DYN_LCO_BLK_DIS_CFG on ex1 via EX_L3_MODE_REG0[9]");
-                scom_data.words.upper |= BIT32(9);
-            }
-            else
-            {
-                PK_TRACE("Drop L3_DYN_LCO_BLK_DIS_CFG on ex1 via EX_L3_MODE_REG0[9]");
-                scom_data.words.upper &= ~BIT32(9);
             }
 
             GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, 1), scom_data.value);

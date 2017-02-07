@@ -31,9 +31,6 @@ int
 p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
     int rc = SGPE_STOP_SUCCESS;
-
-#if !SKIP_HOMER_ACCESS
-
     int i;
     uint32_t qoffset = 0;
     uint32_t qaddr   = 0;
@@ -91,14 +88,6 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
         qdata = pSgpeScomRes->data;
         PK_TRACE("scom[%d] addr[%x] data[%016llx]", i, qaddr, qdata);
         GPE_PUTSCOM(qaddr, qdata);
-    }
-
-#endif
-
-    if (!is_stop8)
-    {
-        PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(18));
     }
 
     return rc;

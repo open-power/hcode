@@ -122,13 +122,11 @@ p9_sgpe_stop_exit()
     int          fused_core_mode = 0;
 #endif
     uint64_t     scom_data = 0;
-    ppm_sshsrc_t hist;
-#if !STOP_PRIME
-    ocb_ccsr_t   ccsr;
     uint64_t     cme_flags;
+    ppm_sshsrc_t hist;
+    ocb_ccsr_t   ccsr;
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
     int          spin;
-#endif
 #endif
 #if !SKIP_IPC
     int          rc;
@@ -591,8 +589,12 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SX8.B: Cache L2 Scominit");
             p9_hcd_cache_scominit(qloop, m_l2, 1);
 
+#if !SKIP_HOMER_ACCESS
+
             PK_TRACE_INF("SX8.C: Cache L2 Scomcust");
             p9_hcd_cache_scomcust(qloop, m_l2, 1);
+
+#endif
 
             // reset ex actual state if ex is exited.
             if (m_l2 & FST_EX_IN_QUAD)
@@ -654,8 +656,12 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SX11.M: Cache Scom Init");
             p9_hcd_cache_scominit(qloop, m_pg, 0);
 
+#if !SKIP_HOMER_ACCESS
+
             PK_TRACE_INF("SX11.N: Cache Scom Cust");
             p9_hcd_cache_scomcust(qloop, m_pg, 0);
+
+#endif
 
             //==================================
             MARK_TAG(SX_CME_BOOT, (32 >> qloop))

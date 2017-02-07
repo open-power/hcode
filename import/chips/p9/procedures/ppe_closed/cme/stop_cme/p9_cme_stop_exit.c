@@ -51,11 +51,9 @@ p9_cme_stop_exit()
     uint32_t     spwu_stop;
     uint32_t     spwu_wake;
 #endif
-#if !STOP_PRIME
 #if !SKIP_EXIT_CATCHUP
     uint8_t      catchup_level;
     uint32_t     core_catchup;
-#endif
 #endif
 #if HW386841_DD1_PLS_SRR1_DLS_STOP1_FIX
     uint8_t      dsl;
@@ -226,6 +224,39 @@ p9_cme_stop_exit()
     while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
 
     PK_TRACE_INF("SX0.C: PCB Mux Granted");
+
+
+
+    if (deeper_core && target_level == 2)
+    {
+
+        //--------------------------------------------------------------------------
+        PK_TRACE_INF("+++++ +++++ STOP LEVEL 2 EXIT EXPRESS +++++ +++++");
+        //--------------------------------------------------------------------------
+
+        core = CME_MASK_BC - deeper_core;
+
+        PK_TRACE_DBG("Check: Core[%d] Serviced by SX2EX", core);
+
+        //============================
+        MARK_TAG(SX_STARTCLOCKS, core)
+        //============================
+
+        // do this again here for stop2 in addition to chiplet_reset
+        // Note IPL doesnt need to do this twice
+        PK_TRACE("Assert core glitchless mux to DPLL via CGCR[3]");
+        CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
+
+        PK_TRACE_INF("SX2.X: Start Core Clock on Core");
+        p9_hcd_core_startclocks(core);
+
+        PK_TRACE("Clear CPPM PECE shadow via PECES");
+        CME_PUTSCOM(CPPM_PECES, core, 0);
+
+        core = deeper_core;
+        deeper_core = 0;
+
+    }
 
 
 
@@ -533,19 +564,7 @@ p9_cme_stop_exit()
     PK_TRACE("Clear CPPM PECE shadow via PECES");
     CME_PUTSCOM(CPPM_PECES, core, 0);
 
-    if (target_level == 2)
-    {
-        PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
 
-        if (deeper_core)
-        {
-            CME_PUTSCOM(CPPM_NC0INDIR_CLR, (CME_MASK_BC - deeper_core), BIT64(18));
-        }
-        else
-        {
-            CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
-        }
-    }
 
     if (deeper_level >= STOP_LEVEL_4)
     {
@@ -584,11 +603,10 @@ p9_cme_stop_exit()
             pk_halt();
         }
 
-
-#endif
-
         PK_TRACE_INF("SX4.K: XIP Customized Scoms on Core", core);
         p9_hcd_core_scomcust(core);
+
+#endif
 
         //==============================
         MARK_TAG(SX_RUNTIME_INITS, core)
