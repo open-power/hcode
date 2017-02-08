@@ -25,6 +25,6 @@
 EXE = p9_xip_tool
 $(EXE)_COMMONFLAGS += -DXIP_TOOL_ENABLE_DISSECT
 OBJS += $(EXE).o
-$(EXE)_DEPLIBS += p9_xip_image p9_tor p9_ringId
+$(EXE)_DEPLIBS += p9_xip_image p9_tor p9_ringId p9_scan_compression
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/utils/imageProcs)
 $(call BUILD_EXE)
