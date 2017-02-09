@@ -23,21 +23,21 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-// Need to do this so that elf32-powerpc is not modified!
-#undef powerpc
-
 #ifndef INITIAL_STACK_SIZE
 #define INITIAL_STACK_SIZE 256
 #endif
 
 OUTPUT_FORMAT(elf32-powerpc);
 
-// GPE3 is loaded at 0xfff30000
-#define SRAM_START            0xfff30000
-#define SRAM_LENGTH           0x10000
-#define SGPE_IMAGE_OFFSET     0x180
-#define PPE_DEBUG_PTRS_OFFSET 0x200
-#define PPE_DEBUG_PTRS_SIZE   0x24
+// Need to do this so that memmap header uses defines for linkerscript
+#define  __LINKERSCRIPT__
+#include "p9_hcd_memmap_occ_sram.H"
+
+#define SRAM_START              OCC_SRAM_SGPE_BASE_ADDR
+#define SRAM_LENGTH             OCC_SRAM_SGPE_REGION_SIZE
+#define PPE_HEADER_IMAGE_OFFSET SGPE_HEADER_IMAGE_OFFSET
+#define PPE_DEBUG_PTRS_OFFSET   SGPE_DEBUG_PTRS_OFFSET
+#define PPE_DEBUG_PTRS_SIZE     SGPE_DEBUG_PTRS_SIZE
 
 MEMORY
 {
@@ -59,7 +59,7 @@ SECTIONS
     _VECTOR_START = .;
 
     .vectors  _VECTOR_START  : { *(.vectors) } > sram
-    _SGPE_IMG_HEADER = _VECTOR_START + SGPE_IMAGE_OFFSET;
+    _SGPE_IMG_HEADER = _VECTOR_START + PPE_HEADER_IMAGE_OFFSET;
     ///////////////////////////////////////////////////////////////////////////
     //
     // SGPE Image Header

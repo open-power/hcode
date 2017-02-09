@@ -25,7 +25,6 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
-#include "p9_hcode_image_defines.H"
 
 int
 p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
@@ -36,7 +35,7 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     uint32_t   bitloc    = 0;
     data64_t   scom_data = {0};
 
-    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
+    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
     id_vector = pSgpeImgHdr->g_sgpe_location_id;
 
     // -------------------------------

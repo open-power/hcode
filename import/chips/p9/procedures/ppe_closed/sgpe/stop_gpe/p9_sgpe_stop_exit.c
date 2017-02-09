@@ -25,7 +25,6 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
-#include "p9_hcode_image_defines.H"
 #include "p9_hcd_sgpe_boot_cme.h"
 #include "p9_dd1_doorbell_wr.h"
 
@@ -429,7 +428,7 @@ p9_sgpe_stop_exit()
 
             // Reading fused core mode flag in cpmr header
             // To access memory, need to set MSB of homer address
-            cpmrHeader_t* pCpmrHdrAddr = (cpmrHeader_t*)(CPMR_BASE_HOMER_OFFSET | BIT32(0));
+            cpmrHeader_t* pCpmrHdrAddr = (cpmrHeader_t*)(HOMER_CPMR_HEADER_ADDR);
 
             if (pCpmrHdrAddr->fusedModeStatus == 0xBB)
             {
@@ -786,7 +785,7 @@ p9_sgpe_stop_exit()
             //                                     xor error_stage_lt(0);
             //     mask = 0 and pattern = 1 and may be trigger 0
 
-            sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
+            sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
             if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(4))
             {

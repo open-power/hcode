@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/cme/stop_cme/p9_hcd_core_scomcust.c $ */
+/* $Source: import/chips/p9/procedures/hwp/lib/p9_hcd_memmap_cme_sram.H $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -22,15 +22,31 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
+///
+/// @file  p9_hcd_memmap_cme_sram.H
+/// @brief defines region constants of cme sram.
+///
 
-#include "p9_cme_stop.h"
-#include "p9_cme_stop_exit_marks.h"
+// *HWP HWP Owner:        David Du   <daviddu@us.ibm.com>
+// *HWP Backup HWP Owner: Greg Still <stillgs@us.ibm.com>
+// *HWP FW Owner:         Prem S Jha <premjha2@in.ibm.com>
+// *HWP Team:             PM
+// *HWP Level:            2
+// *HWP Consumed by:      PM:Hostboot: Phyp
 
-int
-p9_hcd_core_scomcust(uint32_t core)
-{
-    PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
-    CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
+#ifndef __P9_HCD_MEMMAP_CME_SRAM_H__
+#define __P9_HCD_MEMMAP_CME_SRAM_H__
 
-    return 0;
-}
+#include <p9_hcd_header_defs.H>
+#include <p9_hcd_memmap_base.H>
+
+// -------------------------------------------------------------------
+// Note: There can be NO semicolons(";") at end of macros in this file
+//       There can ONLY have HCD_CONST/HCD_CONST64 macros in this file
+// -------------------------------------------------------------------
+
+HCD_CONST(CME_SRAM_BASE_ADDR,                   0xFFFF8000)
+HCD_CONST(CME_SRAM_HEADER_ADDR,
+          (CME_SRAM_BASE_ADDR + CME_INT_VECTOR_SIZE))
+
+#endif /* __P9_HCD_MEMMAP_CME_SRAM_H__ */

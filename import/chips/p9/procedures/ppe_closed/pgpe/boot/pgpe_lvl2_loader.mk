@@ -56,11 +56,19 @@ $(call ADD_PPEIMAGE_SRCDIR,$(PGPE_SRCDIR)/boot \
         )
 
 # add include paths
-$(call ADD_PPEIMAGE_INCDIR, $(IMAGE), $(PGPE_SRCDIR)/boot \
-	$(PK_SRCDIR)/ppe42 \
-	$(HCODE_LIBDIR) \
-	$(HCODE_COMMON_LIBDIR) \
-	)
+$(call ADD_PPEIMAGE_INCDIR,$(IMAGE),$(PGPE_SRCDIR)/boot \
+        $(PK_SRCDIR)/kernel \
+        $(PK_SRCDIR)/ppe42 \
+        $(PK_SRCDIR)/trace \
+        $(PK_SRCDIR)/$(_PPE_TYPE) \
+        $(PM_LIBDIR)/include \
+        $(PM_LIBDIR)/include/registers \
+        $(PM_LIBDIR)/common \
+        $(PM_LIBDIR)/occlib \
+        $(HCODE_LIBDIR) \
+        $(HCODE_COMMON_LIBDIR) \
+        $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
+        )
 
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
 

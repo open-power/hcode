@@ -24,6 +24,9 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
         .nolist
+#include <ppe42_asm.h>
+#include <p9_hcd_memmap_homer.H>
+#include <p9_hcd_memmap_occ_sram.H>
 #include <pgpe_boot_defines.H>
         .list
 
@@ -74,13 +77,13 @@ __watchdog_interrupt:
 
 __bootCopier:
     ## Address where the Boot loader will be loaded in SRAM (Destination address)
-    _liw   %GPR_BL_SRAM_ADDR, SRAM_PGPE_BOOT_LOADER_ADDR
+    _liw   %GPR_BL_SRAM_ADDR, OCC_SRAM_PGPE_BOOT_LOADER_ADDR
 
     ## Base address of PPMR header, also the PGPE base address
-    _liw   %GPR_PPMR_ADDR, PPMR_HEADER_ADDR
+    _liw   %GPR_PPMR_ADDR, HOMER_PPMR_HEADER_ADDR
 
     ## Location in PPMR header where the offset of Boot loader is present
-    _liw   %GPR_BL_HOMER, HOMER_BOOT_LOADER_OFFSET_ADDR
+    _liw   %GPR_BL_HOMER, HOMER_PGPE_BOOT_LOADER_OFFSET_ADDR
 
     ## Fetch offset of Boot loader
     lwz    GPR_BL_HOMER_ADDR, OFFSET(GPR_BL_HOMER)
@@ -89,7 +92,7 @@ __bootCopier:
     add   GPR_BL_HOMER_ADDR, GPR_BL_HOMER_ADDR, GPR_PPMR_ADDR
 
     ## Location in PPMR header where the length of boot loader is present
-    _liw   %GPR_BL_HOMER, HOMER_BOOT_LOADER_LENGTH_ADDR
+    _liw   %GPR_BL_HOMER, HOMER_PGPE_BOOT_LOADER_LENGTH_ADDR
 
     ## Boot Loader size(in Bytes)
     lwz    GPR_BL_SIZE, OFFSET(GPR_BL_HOMER)
@@ -116,7 +119,7 @@ copy_loop:
 
 BRANCH:
     ## branch to the system_reset location for bootLoader to be executed
-    _liw   %GPR_TEMP,   SRAM_PGPE_BOOT_LOADER_RESET_ADDR
+    _liw   %GPR_TEMP,   OCC_SRAM_PGPE_BOOT_LOADER_RESET_ADDR
     mtlr   GPR_TEMP
     blr
 

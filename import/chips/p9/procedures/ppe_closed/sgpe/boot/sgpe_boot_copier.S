@@ -25,7 +25,8 @@
 
         .nolist
 #include <ppe42_asm.h>
-#include <sgpe_boot_defines.H>
+#include <p9_hcd_memmap_homer.H>
+#include <p9_hcd_memmap_occ_sram.H>
         .list
 
     .section .loader_text, "ax", @progbits
@@ -76,12 +77,12 @@ __watchdog_interrupt:
 
 __bootCopier:
     //load r3 with BASE_
-    _liw    %r3, HOMER_BOOT_LOADER_LENGTH_ADDR
+    _liw    %r3, HOMER_SGPE_BOOT_LOADER_LENGTH_ADDR
 
-    _liw    %r7, HOMER_BOOT_LOADER_OFFSET_ADDR
+    _liw    %r7, HOMER_SGPE_BOOT_LOADER_OFFSET_ADDR
 
     //load r4 with address where bootLoader will be loaded in SRAM e.g 0xFFFE8000 (Destination address)
-    _liw    %r4, SRAM_SGPE_BOOT_LOADER_ADDR # dest
+    _liw    %r4, OCC_SRAM_SGPE_BOOT_LOADER_ADDR # dest
 
     //load r9 with QPMR header address
     _liw    %r9, HOMER_QPMR_HEADER_ADDR
@@ -105,7 +106,7 @@ copy_loop:
     bdnz   copy_loop   # Keep repeating the address.
 
     ## Using blr command:
-    _liw  %r6,   SRAM_SGPE_BOOT_LOADER_RESET_ADDR
+    _liw  %r6,   OCC_SRAM_SGPE_BOOT_LOADER_RESET_ADDR
     mtlr  r6
     blr
     .epilogue __bootCopier

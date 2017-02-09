@@ -23,8 +23,12 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
        .nolist
+#include <ppe42_asm.h>
+#include <p9_hcd_memmap_homer.H>
+#include <p9_hcd_memmap_occ_sram.H>
+#include <gpe_register_addresses.h>
 #include <pgpe_boot_defines.H>
-        .list
+	.list
 
         .global __vectors
 __vectors:
@@ -78,8 +82,8 @@ __bootLoader:
 
         ## update IVPR to Boot Loader Base Addr in OCC SRAM
 
-        _liw    %BL_START_SRAM_ADDRESS_REG, SRAM_PGPE_BOOT_LOADER_ADDR
-        _liw    %GPR_TEMP, PGPE_IVPR_OCI_ADDR
+        _liw    %BL_START_SRAM_ADDRESS_REG, OCC_SRAM_PGPE_BOOT_LOADER_ADDR
+        _liw    %GPR_TEMP, GPE_GPE2IVPR
          stw     BL_START_SRAM_ADDRESS_REG, OFFSET (GPR_TEMP)
 
         ## Enable Trap
@@ -87,10 +91,10 @@ __bootLoader:
          mtdbcr  GPR_TEMP
 
         ## Address of PPMR in HOMER(source address)
-        _liw  %GPR_PPMR_HOMER_ADDR, PPMR_HEADER_ADDR
+        _liw  %GPR_PPMR_HOMER_ADDR, HOMER_PPMR_HEADER_ADDR
 
         ## Address of PPMR in SRAM(destination Address)
-        _liw %GPR_PPMR_SRAM_ADDR, SRAM_PGPE_PPMR_ADDR
+        _liw %GPR_PPMR_SRAM_ADDR, OCC_SRAM_PGPE_PPMR_HEADER_ADDR
 
         ## Load the size of PPMR header (in double words)
         _liw %GPR_SIZE, PPMR_HEADER_SIZE
@@ -112,13 +116,13 @@ PPMR_header_copy_loop:
         #########################
 
         ## Address in SRAM where the payload will have to be copied (Destination address)
-        _liw %GPR_SRAM_PGPE_ADDR, SRAM_PGPE_BASE_ADDR
+        _liw %GPR_SRAM_PGPE_ADDR, OCC_SRAM_PGPE_BASE_ADDR
 
         ## Address in SRAM where the offset of payload will be found
-        _liw %GPR_SRAM_HCODE_OFF_ADDR, SRAM_PGPE_HCODE_OFFSET_ADDR
+        _liw %GPR_SRAM_HCODE_OFF_ADDR, OCC_SRAM_PGPE_HCODE_OFFSET_ADDR
 
         ## Base address of PPMR header in HOMER
-        _liw %GPR_PPMR_HOMER_ADDR, PPMR_HEADER_ADDR
+        _liw %GPR_PPMR_HOMER_ADDR, HOMER_PPMR_HEADER_ADDR
 
         ## Offset of HCODE from PPMR header
         lwz  GPR_HOMER_PAYLOAD_OFF, OFFSET(GPR_SRAM_HCODE_OFF_ADDR)
@@ -127,7 +131,7 @@ PPMR_header_copy_loop:
         add GPR_ADDR_PAYLOAD_HOMER, GPR_PPMR_HOMER_ADDR, GPR_HOMER_PAYLOAD_OFF
 
         ## Address in SRAM where the length of payload will be found
-        _liw %GPR_SRAM_IMG_LEN_ADDR, SRAM_PGPE_IMAGE_LENGTH_ADDR
+        _liw %GPR_SRAM_IMG_LEN_ADDR, OCC_SRAM_PGPE_HCODE_LENGTH_ADDR
 
         ## Size of payload (in double words)
         lwz GPR_SIZE, OFFSET(GPR_SRAM_IMG_LEN_ADDR)
@@ -157,12 +161,12 @@ payload_copy_loop:
         ########################
 branch:
         ## Reset address to which branch must take place
-        _liw %GPR_TEMP, SRAM_PGPE_HCODE_RESET_ADDR
+        _liw %GPR_TEMP, OCC_SRAM_PGPE_HCODE_RESET_ADDR
         mtlr GPR_TEMP
 
         ## Setup the IVPR for the Hcode
-        _liw    %GPR_PPMR_HOMER_ADDR, SRAM_PGPE_BASE_ADDR
-        _liw    %GPR_ADDR_PAYLOAD_HOMER, PGPE_IVPR_OCI_ADDR
+        _liw    %GPR_PPMR_HOMER_ADDR, OCC_SRAM_PGPE_BASE_ADDR
+        _liw    %GPR_ADDR_PAYLOAD_HOMER, GPE_GPE2IVPR
         stw     GPR_PPMR_HOMER_ADDR, OFFSET(GPR_ADDR_PAYLOAD_HOMER)
         blr
 

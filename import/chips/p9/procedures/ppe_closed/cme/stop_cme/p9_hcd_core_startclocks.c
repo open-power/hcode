@@ -25,7 +25,6 @@
 
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
-#include "p9_hcode_image_defines.H"
 
 int
 p9_hcd_core_startclocks(uint32_t core)
@@ -34,7 +33,7 @@ p9_hcd_core_startclocks(uint32_t core)
     uint32_t id_vector = 0;
     data64_t scom_data = {0};
 
-    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET);
+    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     id_vector = pCmeImgHdr->g_cme_location_id;
 
     PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");

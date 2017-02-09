@@ -31,17 +31,8 @@
 
 enum
 {
-    PGPE_RESET_ADDR_POS  =   0x0188,
-    PGPE_RESET_ADDRESS   =   0x40,
-    PGPE_BUILD_DATE_POS  =   0x0198,
-    PGPE_BUILD_VER_POS   =   0x019C,
-    PGPE_BUILD_VER       =   0x01,
-    PPMR_BUILD_DATE_POS  =   0x18,
-    PPMR_BUILD_VER_POS   =   0x1C,
     PGPE_IMAGE           =   1,
     PPMR_IMAGE           =   2,
-    PPMR_PGPE_HCODE_OFF_POS  = 0x28,
-    PPMR_PGPE_HCODE_OFF_VAL  = 0xA00, //512B + 1KB + 1kB
 };
 
 int main(int narg, char* argv[])
@@ -110,7 +101,7 @@ int main(int narg, char* argv[])
             //  populating RESET address
             uint32_t l_reset_addr_pos = offsetof(PgpeHeader_t, g_pgpe_sys_reset_addr);
             fseek (pMainImage, l_reset_addr_pos, SEEK_SET);
-            temp = PGPE_RESET_ADDRESS;
+            temp = PGPE_HCODE_RESET_ADDR_VAL;
             temp = htonl(temp);
             fwrite(&(temp), sizeof(uint32_t), 1, pMainImage );
 
@@ -133,7 +124,7 @@ int main(int narg, char* argv[])
         // build ver
         printf("                    Build version: %X pos %X\n", temp, buildVerPos);
         fseek( pMainImage,  buildVerPos, SEEK_SET );
-        temp = htonl(PGPE_BUILD_VER);
+        temp = htonl(PGPE_BUILD_VERSION);
         fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
 
         if (imageType == PPMR_IMAGE)
@@ -142,8 +133,8 @@ int main(int narg, char* argv[])
             uint32_t l_hcode_offset_pos = offsetof(PpmrHeader_t, g_ppmr_hcode_offset);
             fseek ( pMainImage , l_hcode_offset_pos, SEEK_SET );
             temp =  sizeof(PpmrHeader_t) +
-                    PGPE_LVL_1_BOOT_LOAD_SIZE +
-                    PGPE_LVL_2_BOOT_LOAD_SIZE;
+                    PGPE_BOOT_COPIER_SIZE +
+                    PGPE_BOOT_LOADER_SIZE;
             printf("                    PPMR Hcode offset: 0x%X\n", temp);
             temp = htonl(temp);
             fwrite(&temp, sizeof(uint32_t), 1, pMainImage );

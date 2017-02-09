@@ -170,7 +170,7 @@ main(int argc, char** argv)
     PK_TRACE("Kernel init completed");
 
     // reading header attributes and initialize the queued scom mode
-    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET);
+    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     G_cme_stop_record.header_flags = pCmeImgHdr->g_cme_mode_flags;
 
     if (G_cme_stop_record.header_flags & QUEUED_SCAN_DISABLE)

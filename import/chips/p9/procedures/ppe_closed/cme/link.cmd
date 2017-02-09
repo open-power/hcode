@@ -23,15 +23,21 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-// Need to do this so that elf32-powerpc is not modified!
-#undef powerpc
-
 #ifndef INITIAL_STACK_SIZE
 #define INITIAL_STACK_SIZE 256
 #endif
 
 OUTPUT_FORMAT(elf32-powerpc);
-#include "p9_cme_img_layout.h"
+
+// Need to do this so that memmap header uses defines for linkerscript
+#define  __LINKERSCRIPT__
+#include "p9_hcd_memmap_cme_sram.H"
+
+#define SRAM_START              CME_SRAM_BASE_ADDR
+#define SRAM_LENGTH             CME_SRAM_SIZE
+#define PPE_HEADER_IMAGE_OFFSET CME_HEADER_IMAGE_OFFSET 
+#define PPE_DEBUG_PTRS_OFFSET   CME_DEBUG_PTRS_OFFSET
+#define PPE_DEBUG_PTRS_SIZE     CME_DEBUG_PTRS_SIZE
 
 MEMORY
 {
@@ -54,7 +60,7 @@ SECTIONS
 
     .vectors  _VECTOR_START  : { *(.vectors) } > sram
 
-     _CME_IMG_HEADER = _VECTOR_START + CME_HEADER_OFFSET;
+     _CME_IMG_HEADER = _VECTOR_START + PPE_HEADER_IMAGE_OFFSET;
     ///////////////////////////////////////////////////////////////////////////
     //
     // CME Image Header

@@ -28,9 +28,6 @@
 #include "p9_hcode_image_defines.H"
 
 
-
-const uint32_t SGPE_SRAM_BASE = 0xFFF30000;
-const uint32_t SGPE_IMAGE_HEADER_OFFSET = 0x180;
 ///
 /// @brief This is a plat specific (SGPE Plat) function that locates the
 ///        Ring Container in the image and calls the functin to decompress the
@@ -62,8 +59,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
 
         getRingProperties(i_ringID, &l_torOffset, &l_ringType);
 
-        sgpeHeader_t* l_hcodeLayout = (sgpeHeader_t*)(SGPE_SRAM_BASE +
-                                      SGPE_IMAGE_HEADER_OFFSET);
+        sgpeHeader_t* l_hcodeLayout = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
         l_chipletData = g_eqData;
 
@@ -77,7 +73,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
             }
 
             l_sectionAddr =
-                (uint32_t*)(SGPE_SRAM_BASE + l_hcodeLayout->g_sgpe_spec_ring_occ_offset);
+                (uint32_t*)(OCC_SRAM_SGPE_BASE_ADDR + l_hcodeLayout->g_sgpe_spec_ring_occ_offset);
 
             if ( l_chipletID >= l_chipletData.iv_base_chiplet_number)
             {
@@ -102,7 +98,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
             }
 
             l_sectionAddr =
-                (uint32_t*)(SGPE_SRAM_BASE + l_hcodeLayout->g_sgpe_cmn_ring_occ_offset);
+                (uint32_t*)(OCC_SRAM_SGPE_BASE_ADDR + l_hcodeLayout->g_sgpe_cmn_ring_occ_offset);
 
             l_ringTorAddr = reinterpret_cast<uint16_t*>(l_sectionAddr) + (l_torOffset);
 
@@ -134,7 +130,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
             }
 
             l_sectionAddr =
-                (uint32_t*)(SGPE_SRAM_BASE + l_hcodeLayout->g_sgpe_cmn_ring_ovrd_occ_offset);
+                (uint32_t*)(OCC_SRAM_SGPE_BASE_ADDR + l_hcodeLayout->g_sgpe_cmn_ring_ovrd_occ_offset);
 
             l_ringTorAddr = reinterpret_cast<uint16_t*>(l_sectionAddr) + (l_torOffset);
 

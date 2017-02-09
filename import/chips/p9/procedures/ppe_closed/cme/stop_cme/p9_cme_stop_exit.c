@@ -26,7 +26,6 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 #include "p9_cme_copy_scan_ring.h"
-#include "p9_hcode_image_defines.H"
 
 extern CmeStopRecord G_cme_stop_record;
 
@@ -570,7 +569,7 @@ p9_cme_stop_exit()
 
         while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
-        cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET);
+        cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
         scom_data.value = pCmeImgHdr->g_cme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
 
 #if NIMBUS_DD_LEVEL == 1

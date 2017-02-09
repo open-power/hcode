@@ -24,7 +24,9 @@
 /* IBM_PROLOG_END_TAG                                                     */
        .nolist
 #include <ppe42_asm.h>
-#include <sgpe_boot_defines.H>
+#include <p9_hcd_memmap_homer.H>
+#include <p9_hcd_memmap_occ_sram.H>
+#include <gpe_register_addresses.h>
     .list
 
     .global __vectors
@@ -79,8 +81,8 @@ __bootLoader:
 
     ## Setup the IVPR for the loader context
 
-    _liw    %r9, SRAM_SGPE_BOOT_LOADER_ADDR
-    _liw    %r8, SGPE_IVPR_OCI_ADDR
+    _liw    %r9, OCC_SRAM_SGPE_BOOT_LOADER_ADDR
+    _liw    %r8, GPE_GPE3IVPR
     stw     r9, 0(r8)
 
     ## Enable halt on trap
@@ -92,7 +94,7 @@ __bootLoader:
     _liw    %r3, HOMER_QPMR_HEADER_ADDR
 
     ## Calculate Destination Address(in r4)
-    _liw    %r4, SRAM_QPMR_ADDR
+    _liw    %r4, OCC_SRAM_SGPE_QPMR_HEADER_ADDR
 
     ## Find double words(in r5).
     _liw    %r5, QPMR_HEADER_SIZE
@@ -113,13 +115,13 @@ qpmr_header_copy_loop:
     ## Copy SGPE Header/Exe
     #########################
     ## Calculate Source address(in r8)
-    _liw    %r6, SRAM_SGPE_HCODE_OFFSET_ADDR
+    _liw    %r6, OCC_SRAM_SGPE_HCODE_OFFSET_ADDR
     lwz     r7, 0(r6)
     _liw    %r9, HOMER_QPMR_HEADER_ADDR
-    add    r8,r9,r7
+    add     r8,r9,r7
 
     ## Calculate Destination address
-    _liw    %r4, SRAM_SGPE_BASE_ADDR
+    _liw    %r4, OCC_SRAM_SGPE_BASE_ADDR
 
     ## Calculate the double word count to copy and place in R5
     ##
@@ -145,24 +147,24 @@ qpmr_header_copy_loop:
 
     ## Compute the ending offset of the Hcode section.  Note: the beginning is
     ## R7
-    _liw    %r10, SRAM_SGPE_HCODE_LENGTH_ADDR
+    _liw    %r10, OCC_SRAM_SGPE_HCODE_LENGTH_ADDR
     lwz     r29, 0(r10)
-    add    r3, r7, r29
+    add     r3, r7, r29
     lis     r31, 0xB00F
     ori     r31, r31, 0x0001
     mtsprg0 r31
 
     ## Compute the end of the common rings section.
     ## If not present (eg Offset or length = 0), use the end of the Hcode section
-    _liw    %r10, SRAM_COMMON_RINGS_OFFSET_ADDR
+    _liw    %r10, OCC_SRAM_QUAD_COMMON_RINGS_OFFSET_ADDR
     lwz     r28, 0(r10)
     bwz     r28, end_common_rings
 
-    _liw    %r10, SRAM_COMMON_RINGS_LENGTH_ADDR
+    _liw    %r10, OCC_SRAM_QUAD_COMMON_RINGS_LENGTH_ADDR
     lwz     r29, 0(r10)
     bwz     r29, end_common_rings
 
-    add    r3, r28, r29
+    add     r3, r28, r29
     lis     r31, 0xB00F
     ori     r31, r31, 0x0002
     mtsprg0 r31
@@ -171,15 +173,15 @@ end_common_rings:
 
     ## Compute the end of the specific rings section.
     ## If not present (eg Offset or length = 0), use the end of the common section
-    _liw    %r10, SRAM_SPECIFIC_RINGS_OFFSET_ADDR
+    _liw    %r10, OCC_SRAM_QUAD_SPECIFIC_RINGS_OFFSET_ADDR
     lwz     r28, 0(r10)
     bwz     r28, end_specific_rings
 
-    _liw    %r10, SRAM_SPECIFIC_RINGS_LENGTH_ADDR
+    _liw    %r10, OCC_SRAM_QUAD_SPECIFIC_RINGS_LENGTH_ADDR
     lwz     r29, 0(r10)
     bwz     r29, end_specific_rings
 
-    add    r3, r28, r29
+    add     r3, r28, r29
     lis     r31, 0xB00F
     ori     r31, r31, 0x0003
     mtsprg0 r31
@@ -210,12 +212,12 @@ payload_copy_loop:
     mtsprg0 r31
 
     ## Load the branch address
-    _liw    %r6, SRAM_GPE_HCODE_RESET_ADDR
+    _liw    %r6, OCC_SRAM_SGPE_HCODE_RESET_ADDR
     mtlr    r6
 
     ## Setup the IVPR for the Hcode
-    _liw    %r9, SRAM_SGPE_BASE_ADDR
-    _liw    %r8, SGPE_IVPR_OCI_ADDR
+    _liw    %r9, OCC_SRAM_SGPE_BASE_ADDR
+    _liw    %r8, GPE_GPE3IVPR
     stw     r9, 0(r8)
 
     blr

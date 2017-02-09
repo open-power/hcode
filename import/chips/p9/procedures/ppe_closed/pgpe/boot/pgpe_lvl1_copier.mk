@@ -67,6 +67,7 @@ $(call ADD_PPEIMAGE_INCDIR, $(IMAGE), $(PGPE_SRCDIR)/boot \
 	$(PM_LIBDIR)/occlib \
 	$(HCODE_LIBDIR) \
 	$(HCODE_COMMON_LIBDIR) \
+        $(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
 	)
 
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic

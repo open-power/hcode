@@ -25,7 +25,6 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
-#include "p9_hcode_image_defines.H"
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
@@ -40,7 +39,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
     uint32_t   ex_index                                    = 0;
     data64_t   scom_data                                   = {0};
     ocb_qcsr_t qcsr                                        = {0};
-    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
+    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
     if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT64(17))
     {

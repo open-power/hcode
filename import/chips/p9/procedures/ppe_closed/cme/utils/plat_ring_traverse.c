@@ -24,12 +24,8 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "plat_ring_traverse.h"
-#include "p9_hcode_image_defines.H"
-#include "pk.h"
 #include "p9_ringid_cme.h"
 #include "p9_cme_stop.h"
-
-
 
 
 void getRingProperties(const RingID i_ringId,
@@ -86,7 +82,7 @@ int putRing(
 
         getRingProperties(i_ringID, &l_torOffset, &l_ringType);
 
-        uint8_t* pCmeImage = (uint8_t*)(CME_SRAM_BASE);
+        uint8_t* pCmeImage = (uint8_t*)(CME_SRAM_BASE_ADDR);
 
         cmeHeader_t* l_cmeHeader = (cmeHeader_t*) ( pCmeImage + CME_INT_VECTOR_SIZE );
 
@@ -104,7 +100,7 @@ int putRing(
             }
 
             l_sectionAddr =
-                (uint32_t*)(CME_SRAM_BASE + (l_cmeHeader->g_cme_core_spec_ring_offset * 32));
+                (uint32_t*)(CME_SRAM_BASE_ADDR + (l_cmeHeader->g_cme_core_spec_ring_offset * 32));
 
             if (i_core == 2)
             {
@@ -125,7 +121,7 @@ int putRing(
             }
 
             l_sectionAddr =
-                (uint32_t*)(CME_SRAM_BASE + l_cmeHeader->g_cme_common_ring_offset);
+                (uint32_t*)(CME_SRAM_BASE_ADDR + l_cmeHeader->g_cme_common_ring_offset);
             // TOR records of Ring TOR are 2 bytes in size.
             l_ringTorAddr = (uint16_t*)(l_sectionAddr) + (l_torOffset);
 
@@ -150,7 +146,7 @@ int putRing(
             }
 
             l_sectionAddr =
-                (uint32_t*)(CME_SRAM_BASE + l_cmeHeader->g_cme_cmn_ring_ovrd_offset);
+                (uint32_t*)(CME_SRAM_BASE_ADDR + l_cmeHeader->g_cme_cmn_ring_ovrd_offset);
             // TOR records of Ring TOR are 2 bytes in size.
             l_ringTorAddr = (uint16_t*)(l_sectionAddr) + (l_torOffset);
 

@@ -23,28 +23,23 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-// Need to do this so that elf32-powerpc is not modified!
-#undef powerpc
-
 #ifndef INITIAL_STACK_SIZE
 #define INITIAL_STACK_SIZE 256
 #endif
 
 OUTPUT_FORMAT(elf32-powerpc);
 
-// @todo 155077 The following value shouldn't be hardcoded here.
-#define MEM_START 0x80300200
-#define MEM_LENGTH 1024
+// Need to do this so that memmap header uses defines for linkerscript
+#define __LINKERSCRIPT__
+#include <p9_hcd_memmap_homer.H>
+
+#define MEM_START  HOMER_PGPE_BOOT_COPIER_ADDR
+#define MEM_LENGTH PGPE_BOOT_COPIER_SIZE
 
 MEMORY
 {
   mem : ORIGIN = MEM_START, LENGTH = MEM_LENGTH
 }
-
-// This symbol is only needed by external debug tools, so add this command
-// to ensure that table is pulled in by the linker even though PPE code
-// never references it.
-EXTERN(pk_debug_ptrs);
 
 SECTIONS
 {
@@ -55,16 +50,6 @@ SECTIONS
     _VECTOR_START = .;
 
     .vectors  _VECTOR_START  : { *(.vectors) } > mem
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Debug Pointers Table
-    //
-    // We want the debug pointers table to alway appear at
-    // PPE_DEBUG_PTRS_OFFSET from the IVPR address.
-    ///////////////////////////////////////////////////////////////////////////
-
-    //_DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
-    //.debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > mem
 
     ////////////////////////////////
     // All non-vector code goes here

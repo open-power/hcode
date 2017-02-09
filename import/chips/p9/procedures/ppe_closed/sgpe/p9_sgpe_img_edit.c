@@ -27,20 +27,12 @@
 #include <netinet/in.h>
 #include <time.h>
 
+#include <p9_hcd_memmap_base.H>
+
 enum
 {
-    SGPE_RESET_ADDR_POS  =   0x0188,
-    SGPE_RESET_ADDRESS   =   0x40,
-    SGPE_BUILD_DATE_POS  =   0x0198,
-    SGPE_BUILD_VER_POS   =   0x019C,
-    SGPE_BUILD_VER       =   0x01,
-    QPMR_BUILD_DATE_POS  =   0x18,
-    QPMR_BUILD_VER_POS   =   0x1C,
     SGPE_IMAGE           =   1,
     QPMR_IMAGE           =   2,
-    QPMR_SGPE_HCODE_OFF_POS  = 0x28,
-    QPMR_SGPE_HCODE_OFF_VAL  = 0xA00, //512B + 1KB + 1kB
-    QPMR_SGPE_HCODE_LEN_POS  = 0x28,
 };
 
 int main(int narg, char* argv[])
@@ -54,8 +46,8 @@ int main(int narg, char* argv[])
     }
 
     int imageType = SGPE_IMAGE;
-    long int buildDatePos = SGPE_BUILD_DATE_POS;
-    long int buildVerPos  = SGPE_BUILD_VER_POS;
+    long int buildDatePos = SGPE_BUILD_DATE_IMAGE_OFFSET;
+    long int buildVerPos  = SGPE_BUILD_VER_IMAGE_OFFSET;
 
     FILE* pMainImage = fopen( argv[1], "r+");
     FILE* pDependImage = fopen(argv[2], "r+");
@@ -82,8 +74,8 @@ int main(int narg, char* argv[])
         if(size < 1024)
         {
             imageType = QPMR_IMAGE;
-            buildDatePos = QPMR_BUILD_DATE_POS;
-            buildVerPos  = QPMR_BUILD_VER_POS;
+            buildDatePos = QPMR_BUILD_DATE_BYTE;
+            buildVerPos  = QPMR_BUILD_VER_BYTE;
 
             if( !pDependImage )
             {
@@ -103,8 +95,8 @@ int main(int narg, char* argv[])
 
             //  populating SGPE Image Header
             //  populating RESET address
-            fseek (pMainImage, SGPE_RESET_ADDR_POS, SEEK_SET);
-            temp = SGPE_RESET_ADDRESS;
+            fseek (pMainImage, SGPE_RESET_ADDR_IMAGE_OFFSET, SEEK_SET);
+            temp = SGPE_HCODE_RESET_ADDR_VAL;
             temp = htonl(temp);
             fwrite(&(temp), sizeof(uint32_t), 1, pMainImage );
         }
@@ -122,19 +114,19 @@ int main(int narg, char* argv[])
 
         // build ver
         fseek( pMainImage,  buildVerPos, SEEK_SET );
-        temp = htonl(SGPE_BUILD_VER);
+        temp = htonl(SGPE_BUILD_VERSION);
         fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
 
         if (imageType == QPMR_IMAGE)
         {
             //SGPE HCODE offset in QPMR header
-            fseek ( pMainImage , QPMR_SGPE_HCODE_OFF_POS, SEEK_SET );
-            temp = QPMR_SGPE_HCODE_OFF_VAL;
+            fseek ( pMainImage , QPMR_SGPE_HCODE_OFFSET_BYTE, SEEK_SET );
+            temp = SGPE_IMAGE_QPMR_OFFSET;
             temp = htonl(temp);
             fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
 
             //SGPE Hcode length in QPMR header
-            fseek ( pMainImage , QPMR_SGPE_HCODE_LEN_POS, SEEK_SET );
+            fseek ( pMainImage , QPMR_SGPE_HCODE_LENGTH_BYTE, SEEK_SET );
             temp = QPMR_SGPE_HCODE_LEN_VAL;
             temp = htonl(temp);
             fwrite(&temp, sizeof(uint32_t), 1, pMainImage );

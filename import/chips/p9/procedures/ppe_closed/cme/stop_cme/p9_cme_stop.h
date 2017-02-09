@@ -43,6 +43,7 @@
 #include "ppm_firmware_registers.h"
 #include "cppm_firmware_registers.h"
 
+#include "p9_hcode_image_defines.H"
 #include "p9_stop_common.h"
 
 // ram_vtid    [0:1]   00

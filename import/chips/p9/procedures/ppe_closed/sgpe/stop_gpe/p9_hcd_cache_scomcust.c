@@ -25,7 +25,6 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
-#include "p9_hcode_image_defines.H"
 
 int
 p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
@@ -49,7 +48,7 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
     }
 
     // To access memory, need to set MSB of homer address
-    QpmrHeaderLayout_t* pQpmrHdrAddr = (QpmrHeaderLayout_t*)(QPMR_BASE_HOMER_OFFSET | BIT32(0));
+    QpmrHeaderLayout_t* pQpmrHdrAddr = (QpmrHeaderLayout_t*)(HOMER_QPMR_HEADER_ADDR);
     SgpeScomRestore*    pSgpeScomRes = (SgpeScomRestore*)(pQpmrHdrAddr->quadScomOffset +
                                        (uint32_t)pQpmrHdrAddr + qoffset);
 
