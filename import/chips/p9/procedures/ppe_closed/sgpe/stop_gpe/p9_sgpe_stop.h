@@ -55,8 +55,9 @@ extern "C" {
 #include "ipc_async_cmd.h"
 #include "ipc_messages.h"
 
-#include "p9_stop_common.h"
+#include "p9_hcode_image_defines.H"
 #include "p9_pm_hcd_flags.h"
+#include "p9_stop_common.h"
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX || FUSED_CORE_MODE_SCAN_FIX
 #define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);
