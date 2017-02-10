@@ -37,9 +37,6 @@ p9_hcd_core_startclocks(uint32_t core)
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_BASE + CME_HEADER_IMAGE_OFFSET);
     id_vector = pCmeImgHdr->g_cme_location_id;
 
-    //FAPI_DBG("Set CPLT_CTRL0[AVP_MODE] for cache-contained execution");
-    //FAPI_TRY(putScom(i_target, C_CPLT_CTRL0_OR, MASK_SET(5)));
-
     PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
 
