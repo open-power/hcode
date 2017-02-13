@@ -26,8 +26,22 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
-#define CORE_HANG_DIVIDER_4X  0x9F
-#define CORE_HANG_DIVIDER_64X 0x7B
+enum P9_HCD_CORE_SCOMINIT_CONSTANTS
+{
+    CORE_HANG_LIMIT_3_HANG_PULSES   = 0x9F,
+    CORE_HANG_LIMIT_5_HANG_PULSES   = 0x27,
+    CORE_HANG_LIMIT_10_HANG_PULSES  = 0xA1,
+    CORE_HANG_LIMIT_50_HANG_PULSES  = 0x99,
+    CORE_HANG_LIMIT_100_HANG_PULSES = 0x2D,
+    CORE_HANG_LIMIT_150_HANG_PULSES = 0xF6,
+    CORE_HANG_LIMIT_200_HANG_PULSES = 0x64,
+
+    NEST_HANG_LIMIT_20_HANG_PULSES  = 0x5F,
+    NEST_HANG_LIMIT_50_HANG_PULSES  = 0x99,
+    NEST_HANG_LIMIT_100_HANG_PULSES = 0x2D,
+    NEST_HANG_LIMIT_150_HANG_PULSES = 0xF6,
+    NEST_HANG_LIMIT_200_HANG_PULSES = 0x64
+};
 
 int
 p9_hcd_core_scominit(uint32_t core)
@@ -54,11 +68,15 @@ p9_hcd_core_scominit(uint32_t core)
     CME_PUTSCOM(CORE_ACTION1, core, 0xA854009775100008);
     CME_PUTSCOM(CORE_FIRMASK, core, 0x0301D70000AB7696);
 
-    // update core hang pulse dividers
+    PK_TRACE("Update Core Hang Pulse Dividers via C_HANG_CONTROL[0-15]");
     CME_GETSCOM(C_HANG_CONTROL, core, CME_SCOM_AND, scom_data.value);
     scom_data.words.upper &= ~BITS32(0, 16);
-    scom_data.words.upper |= (CORE_HANG_DIVIDER_4X  << SHIFT32(7));
-    scom_data.words.upper |= (CORE_HANG_DIVIDER_64X << SHIFT32(15));
+#if NIMBUS_DD_LEVEL == 1
+    scom_data.words.upper |= (CORE_HANG_LIMIT_100_HANG_PULSES << SHIFT32(7));
+#else
+    scom_data.words.upper |= (CORE_HANG_LIMIT_3_HANG_PULSES   << SHIFT32(7));
+#endif
+    scom_data.words.upper |= (NEST_HANG_LIMIT_100_HANG_PULSES << SHIFT32(15));
     CME_PUTSCOM(C_HANG_CONTROL, core, scom_data.value);
 
     return rc;
