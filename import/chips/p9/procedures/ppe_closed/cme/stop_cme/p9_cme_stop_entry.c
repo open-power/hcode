@@ -806,12 +806,15 @@ p9_cme_stop_entry()
                         core_aborted |= CME_MASK_C1;
                     }
 
-                    //=======================================
-                    MARK_TAG(SE_PURGE_L2_ABORT, core_aborted)
-                    //=======================================
+                    if (core_aborted)
+                    {
+                        //=======================================
+                        MARK_TAG(SE_PURGE_L2_ABORT, core_aborted)
+                        //=======================================
 
-                    PK_TRACE_DBG("Abort: L2+NCU purge aborted by core[%d]", core_aborted);
-                    out32(CME_LCL_SICR_OR, BIT32(19) | BIT32(23));
+                        PK_TRACE_DBG("Abort: L2+NCU purge aborted by core[%d]", core_aborted);
+                        out32(CME_LCL_SICR_OR, BIT32(19) | BIT32(23));
+                    }
                 }
 
 #endif
@@ -828,10 +831,17 @@ p9_cme_stop_entry()
             MARK_TAG(SE_PURGE_L2_DONE, core_aborted ? core_aborted : CME_MASK_BC)
             //===================================================================
 
-            // if core = 3 aborted = 1, core = 2(sgpe handoff) aborted (cme wakeup)
-            // if core = 1 aborted = 2, core = 1(sgpe handoff) aborted (sgpe wakeup)
-            // if core = 1 aborted = 1, core = 0(break)        aborted (cme wakeup)
-            // if core = 2 aborted = 3, core = 0(break)        aborted (cme wakeup)
+            // 1) if core = 3 aborted = 1, core = 2(sgpe handoff) aborted (cme wakeup)
+            // 2) if core = 1 aborted = 1, core = 0(break)        aborted (cme wakeup)
+            // 3) if core = 2 aborted = 3, core = 0(break)        aborted (cme/sgpe wakeup)
+            // 4) if core = 1 aborted = 2, core = 1(sgpe handoff) aborted (sgpe wakeup)
+            // for case 3) and 4) on the other core already handoff to sgpe
+            //    if rgwu or spwu, fine because it will be sgpe wakeup
+            //    if pc, there wont be sgpe wakeup due to notify bug,
+            //      so ignore this case for abortion. otherwise,
+            //      for case 3) core is waking up by tag along with another core
+            //                  but leave stop8 record at sgpe
+            //      for case 4) l2 is not purged and sgpe will do stop8
             if (core != (core_aborted & core))
             {
                 core &= ~core_aborted;
