@@ -139,6 +139,7 @@ fapi2::ReturnCode standardScan(
 /// @param[in] i_target Chiplet Target of Scan
 /// @param[in] i_header The header data that is expected.
 //  @param[in] i_chipletId data from RS4
+/// @param[in] i_ringMode Ring operation mode.
 //  @param[in] i_bitsDecoded number of bits rotated and scanned
 //  @param[in] i_ringId ringId
 /// @return FAPI2_RC_SUCCESS if success, else error code.
@@ -146,21 +147,23 @@ fapi2::ReturnCode verifyHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
                                i_target,
                                const uint64_t i_header,
                                const uint32_t i_chipletId,
+                               const fapi2::RingMode i_ringMode,
                                const uint32_t i_bitsDecoded,
                                const uint16_t i_ringId);
-
 
 /// @brief Function to decompress the RS4 and apply the Ring data
 /// @param[in] i_target Chiplet Target of Scan
 /// @param[in] i_rs4 The RS4 compressed string
 /// @param[in] i_applyOverride 0 - no override 1- override mode
 /// @param[in] i_ringType Common or Instance ring
+/// @param[in] i_ringMode Ring operation mode.
 /// @return FAPI2_RC_SUCCESS if success, else error code.
 fapi2::ReturnCode rs4DecompressionSvc(
     const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
     const uint8_t* i_rs4,
     bool i_applyOverride,
-    RINGTYPE i_ringType);
+    RINGTYPE i_ringType,
+    const fapi2::RingMode i_ringMode);
 
 
 /// @brief Function to clean up the scan region and type
@@ -213,4 +216,47 @@ inline void writeHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
 {
     fapi2::putScom(i_target, (SCAN_REG_0x0003E040 | i_chipletId), i_header);
 }
+/// @brief Function to restore the opcg registers
+/// @param[in] i_target Chiplet Target of Scan
+/// @param[out]o_OPCGData Structure that contains opcg data
+//  @param[in] i_chipletId target chiplet ID
+/// @return FAPI2_RC_SUCCESS if success, else error code.
+void storeOPCGRegData(
+    const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
+    uint64_t& i_opcgReg0,
+    uint64_t& i_opcgReg1,
+    uint64_t& i_opcgReg2,
+    uint64_t& i_opcgCapt1,
+    uint64_t& i_opcgCapt2,
+    uint64_t& i_opcgCapt3,
+    const uint32_t i_chipletId);
+
+/// @brief Function to restore the opcg registers
+/// @param[in] i_target Chiplet Target of Scan
+/// @param[in] i_OPCGData opcg register data to restore original values
+//  @param[in] i_chipletId target chiplet ID
+/// @return FAPI2_RC_SUCCESS if success, else error code.
+void restoreOPCGRegData(
+    const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
+    uint64_t& i_opcgReg0,
+    uint64_t& i_opcgReg1,
+    uint64_t& i_opcgReg2,
+    uint64_t& i_opcgCapt1,
+    uint64_t& i_opcgCapt2,
+    uint64_t& i_opcgCapt3,
+    const uint32_t i_chipletId);
+
+/// @brief Function to set the Scan Region for set pulse mode
+/// @param[in] i_target Chiplet Target of Scan
+/// @param[in] i_scanRegion Value to be set to select a Scan Region
+/// @param[in] i_ringMode Ring operation mode.
+//  @param[in] i_chipletId target chiplet ID
+/// @return FAPI2_RC_SUCCESS if success, else error code.
+void setupScanRegionForSetPulse(
+    const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
+    uint64_t i_scanRegion,
+    const fapi2::RingMode i_ringMode,
+    const uint32_t i_chipletId);
+
+
 #endif

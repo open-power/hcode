@@ -41,7 +41,8 @@ const uint32_t SGPE_IMAGE_HEADER_OFFSET = 0x180;
 ///
 fapi2::ReturnCode findRS4InImageAndApply(
     const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
-    const RingID i_ringID)
+    const RingID i_ringID,
+    const fapi2::RingMode i_ringMode)
 {
     fapi2::ReturnCode l_rc;
 
@@ -110,7 +111,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
         {
             uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
             uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
-            l_rc = rs4DecompressionSvc(i_target, l_rs4Address, false, l_ringType);
+            l_rc = rs4DecompressionSvc(i_target, l_rs4Address, false, l_ringType, i_ringMode);
         }
         else
         {
@@ -135,7 +136,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
             {
                 uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
                 uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
-                l_rc = rs4DecompressionSvc(i_target, l_rs4Address, true, l_ringType);
+                l_rc = rs4DecompressionSvc(i_target, l_rs4Address, true, l_ringType, i_ringMode);
             }
             else
             {

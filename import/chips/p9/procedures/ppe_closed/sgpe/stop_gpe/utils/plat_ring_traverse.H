@@ -34,12 +34,14 @@
 /// @brief This is a plat pecific (SBE Plat) function that locates the
 ///        Ring Container in the image and calls the functin to decompress the
 ///        RS4 string and apply it to the hardware.
-/// @param i_target The target of Ring apply.
-/// @param i_ringID The Ring ID that identifies the ring to be applied.
+/// @param[in] i_target The target of Ring apply.
+/// @param[in] i_ringID The Ring ID that identifies the ring to be applied.
+/// @param[in] i_ringMode Ring operation mode.
 /// @return FAPI2_RC_SUCCESS on success, else error code.
 ///
 fapi2::ReturnCode findRS4InImageAndApply(
     const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
-    const RingID i_ringID);
+    const RingID i_ringID,
+    const fapi2::RingMode i_ringMode);
 
 #endif

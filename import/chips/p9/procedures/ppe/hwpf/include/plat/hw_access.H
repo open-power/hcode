@@ -110,7 +110,7 @@ inline ReturnCode putRing(const Target<K>& i_target,
     ReturnCode l_rc = FAPI2_RC_SUCCESS;
 
     // Find the RS4 string in the SEEPROM
-    l_rc = findRS4InImageAndApply(i_target, i_ringID);
+    l_rc = findRS4InImageAndApply(i_target, i_ringID, i_ringMode);
 
     return l_rc;
 
