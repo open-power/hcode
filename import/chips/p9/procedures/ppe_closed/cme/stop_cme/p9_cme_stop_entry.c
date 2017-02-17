@@ -780,7 +780,7 @@ p9_cme_stop_entry()
             PK_TRACE("Assert L2+NCU purge and NCU tlbie quiesce via SICR[18,21,22]");
             // insert tlbie quiesce before ncu purge to avoid window condition
             // of ncu traffic still happening when purging starts
-            // Note: chtm purge will be done in SGPE
+            // Note: chtm purge and drop tlbie quiesce will be done in SGPE
             out32(CME_LCL_SICR_OR, BIT32(18) | BIT32(21));
             out32(CME_LCL_SICR_OR, BIT32(22));
 
