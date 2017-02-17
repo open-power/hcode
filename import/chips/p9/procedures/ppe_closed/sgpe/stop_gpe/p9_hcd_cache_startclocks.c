@@ -199,23 +199,5 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data.value);
 
-    PK_TRACE("Drop refresh quiesce and LCO Disable");
-
-    if (ex & FST_EX_IN_QUAD)
-    {
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data.value);
-        scom_data.words.upper &= ~BIT32(7);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data.value);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG, quad, 0), 0);
-    }
-
-    if (ex & SND_EX_IN_QUAD)
-    {
-        GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data.value);
-        scom_data.words.upper &= ~BIT32(7);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data.value);
-        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG, quad, 1), 0);
-    }
-
     return rc;
 }

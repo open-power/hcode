@@ -33,7 +33,6 @@ int
 p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
     uint32_t   rc                                          = SGPE_STOP_SUCCESS;
-    uint32_t   attr_proc_fabric_addr_bar_mode_small_system = 0; // default large
     uint32_t   attr_proc_fabric_pump_mode_chip_is_node     = 0; // default group
     uint32_t   ex_loop                                     = 0;
     uint32_t   ex_count                                    = 0;
@@ -42,11 +41,6 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
     data64_t   scom_data                                   = {0};
     ocb_qcsr_t qcsr                                        = {0};
     sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(SGPE_IMAGE_SRAM_BASE + SGPE_HEADER_IMAGE_OFFSET);
-
-    if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(16))
-    {
-        attr_proc_fabric_addr_bar_mode_small_system = 1;
-    }
 
     if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT64(17))
     {
@@ -114,11 +108,6 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 scom_data.words.upper &= ~(BIT32(1) | BITS32(14, 8) | BIT32(22));
                 scom_data.words.upper |= (BIT32(2) | BIT32(11) | BIT32(17) | BIT32(19));
 
-                if (attr_proc_fabric_addr_bar_mode_small_system)
-                {
-                    scom_data.words.upper |= BIT32(22);
-                }
-
                 if (ex_count == 2)
                 {
                     PK_TRACE("Assert L3_DYN_LCO_BLK_DIS_CFG via EX_L3_MODE_REG0[9]");
@@ -138,12 +127,6 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG, quad, ex_index),
                             scom_data.value);
                 scom_data.words.upper &= ~BIT32(9);
-
-                if (attr_proc_fabric_addr_bar_mode_small_system)
-                {
-                    scom_data.words.upper |= BIT32(9);
-                }
-
                 GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG, quad, ex_index),
                             scom_data.value);
 
@@ -173,11 +156,6 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 scom_data.words.lower |= BIT64SH(38);
                 scom_data.words.upper |= BIT32(21);
                 scom_data.words.upper &= ~BIT32(23);
-
-                if (attr_proc_fabric_addr_bar_mode_small_system)
-                {
-                    scom_data.words.upper |= BIT32(23);
-                }
 
                 if (attr_proc_fabric_pump_mode_chip_is_node)
                 {

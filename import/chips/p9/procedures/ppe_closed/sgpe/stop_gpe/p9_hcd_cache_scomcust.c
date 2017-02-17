@@ -40,6 +40,7 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
     uint32_t qaddr   = 0;
     uint64_t qdata   = 0;
     uint32_t rid     = 0;
+    data64_t scom_data = {0};
 
     // doing this instead of multiply since there is no multiply instruction with ppe.
     for(i = 0; i < quad; i++)
@@ -96,8 +97,42 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 
 #endif
 
-    if (!is_stop8)
+    if (is_stop8)
     {
+        PK_TRACE("Drop L2 snoop disable and TLBIE quiesce");
+
+        if (m_ex & FST_EX_IN_QUAD)
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, quad, 0), 0);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 0), BIT64(21));
+        }
+
+        if (m_ex & SND_EX_IN_QUAD)
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_L2_RCMD_DIS_REG, quad, 1), 0);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, quad, 1), BIT64(21));
+        }
+    }
+    else
+    {
+        PK_TRACE("Drop refresh quiesce and LCO disable");
+
+        if (m_ex & FST_EX_IN_QUAD)
+        {
+            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data.value);
+            scom_data.words.upper &= ~BIT32(7);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 0), scom_data.value);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG, quad, 0), 0);
+        }
+
+        if (m_ex & SND_EX_IN_QUAD)
+        {
+            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data.value);
+            scom_data.words.upper &= ~BIT32(7);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, quad, 1), scom_data.value);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG, quad, 1), 0);
+        }
+
         PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(18));
     }

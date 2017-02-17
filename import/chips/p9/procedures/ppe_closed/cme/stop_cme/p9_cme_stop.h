@@ -289,7 +289,7 @@ void p9_cme_stop_exit_thread(void*);
 void p9_cme_stop_eval_eimr_override();
 int  p9_cme_stop_entry();
 int  p9_cme_stop_exit();
-int  p9_cme_stop_exit_catchup();
+int  p9_cme_stop_exit_catchup(uint32_t*, uint32_t*, uint32_t*, uint8_t*, int*);
 
 void p9_cme_stop_enter_handler(void*, PkIrqId);
 void p9_cme_stop_exit_handler(void*, PkIrqId);

@@ -39,8 +39,11 @@ uint8_t G_dsl[MAX_CORES_PER_CME][MAX_THREADS_PER_CORE] = {{0, 0, 0, 0}, {0, 0, 0
 #if !SKIP_EXIT_CATCHUP
 
 int
-p9_cme_stop_exit_catchup(uint32_t* core, uint32_t* deeper_core,
-                         int* d2u4_flag, uint32_t* spwu_stop)
+p9_cme_stop_exit_catchup(uint32_t* core,
+                         uint32_t* deeper_core,
+                         uint32_t* spwu_stop,
+                         uint8_t*  target_level,
+                         int*      d2u4_flag)
 {
     int      rc            = 0;
     uint8_t  catchup_level = 0;
@@ -101,6 +104,7 @@ p9_cme_stop_exit_catchup(uint32_t* core, uint32_t* deeper_core,
 
         if (catchup_level < STOP_LEVEL_4)
         {
+            *target_level = catchup_level;
             *deeper_core  = *core;
             *d2u4_flag    = 1;
         }
@@ -343,7 +347,11 @@ p9_cme_stop_exit()
             }
             else if ((core != CME_MASK_BC) && (!deeper_core) && (!catchup_ongoing_b))
             {
-                if (p9_cme_stop_exit_catchup(&core, &deeper_core, &d2u4_flag, &spwu_stop))
+                if (p9_cme_stop_exit_catchup(&core,
+                                             &deeper_core,
+                                             &spwu_stop,
+                                             &target_level,
+                                             &d2u4_flag))
                 {
                     //==========================
                     MARK_TAG(SX_CATCHUP_A, core)
@@ -385,7 +393,11 @@ p9_cme_stop_exit()
             }
             else if ((core != CME_MASK_BC) && (!deeper_core))
             {
-                if (p9_cme_stop_exit_catchup(&core, &deeper_core, &d2u4_flag, &spwu_stop))
+                if (p9_cme_stop_exit_catchup(&core,
+                                             &deeper_core,
+                                             &spwu_stop,
+                                             &target_level,
+                                             &d2u4_flag))
                 {
                     //==========================
                     MARK_TAG(SX_CATCHUP_B, core)
@@ -471,16 +483,19 @@ p9_cme_stop_exit()
     PK_TRACE("Clear CPPM PECE shadow via PECES");
     CME_PUTSCOM(CPPM_PECES, core, 0);
 
-    if (target_level == 2)
+    if (target_level < STOP_LEVEL_4)
     {
         PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
 
-        if (deeper_core)
+        if (deeper_core && deeper_level == STOP_LEVEL_4)
         {
+            PK_TRACE_DBG("Dropping fence in core%d with deeper_core%d",
+                         (CME_MASK_BC - deeper_core), deeper_core);
             CME_PUTSCOM(CPPM_NC0INDIR_CLR, (CME_MASK_BC - deeper_core), BIT64(18));
         }
         else
         {
+            PK_TRACE_DBG("Dropping fence in core%d", core);
             CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
         }
     }
