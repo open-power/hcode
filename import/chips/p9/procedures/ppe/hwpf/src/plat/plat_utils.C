@@ -150,10 +150,11 @@ ReturnCode delay(uint64_t i_nanoSeconds, uint64_t i_simCycles, bool i_fixed = fa
 
 #define PK_NANOSECONDS_SBE(n) ((PkInterval)((PK_BASE_FREQ_HZ * (PkInterval)(n)) / (1024*1024*1024)))
 
-    PkTimebase  target_time;
-    PkTimebase  current_time;
     PkMachineContext  ctx;
-
+    PkTimebase  stamp_time        = 0;
+    PkTimebase  target_time       = 0;
+    PkTimebase  current_time_high = 0;
+    PkTimebase  current_time_low  = 0;
 
     // Only execute if nanoSeconds is non-zero (eg a real wait)
     if (i_nanoSeconds)
@@ -170,19 +171,29 @@ ReturnCode delay(uint64_t i_nanoSeconds, uint64_t i_simCycles, bool i_fixed = fa
         // The "accurate" version is the next line.
         // target_time = pk_timebase32_get() + PK_INTERVAL_SCALE(PK_NANOSECONDS(i_nanoSeconds));
 
-        target_time = pk_timebase32_get() + PK_INTERVAL_SCALE(PK_NANOSECONDS_SBE(i_nanoSeconds));
+        stamp_time  = pk_timebase32_get();
+        target_time = stamp_time + PK_INTERVAL_SCALE(PK_NANOSECONDS_SBE(i_nanoSeconds));
 
         do
         {
-            current_time = pk_timebase32_get();
-            // if target time > 0xFFFFFFFF
-            current_time += (target_time & 0xFFFFFFFF00000000ull);
+            current_time_low = pk_timebase32_get();
+
+            // Lower 32-bit HW timebase wraps if the old sample is bigger than new one
+            // If this occurs, increment the local upper 32-bit timebase bits
+            // This assumes the timebase is sampled faster than it can rollover
+            if (stamp_time >= current_time_low)
+            {
+                current_time_high += 0x100000000ull;
+            }
+
+            // remember the current time to compare against for the next loop
+            stamp_time = current_time_low;
         }
-        while (target_time > current_time);
+
+        // form a new 64-bit number to compare against using the high and low halves
+        while (target_time > (current_time_low | current_time_high));
 
         pk_critical_section_exit(&ctx);
-
-
     }
 
 #else
