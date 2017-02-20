@@ -370,6 +370,11 @@ p9_cme_stop_entry()
         PK_TRACE("Assert skew sense to skewadjust fence via NET_CTRL0[22]");
         CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(22));
 
+        PK_TRACE("Drop ABIST_SRAM_MODE_DC to support ABIST Recovery via BIST[1]");
+        CME_GETSCOM(C_BIST, core, CME_SCOM_AND, scom_data.value);
+        scom_data.words.upper &= ~BIT32(1);
+        CME_PUTSCOM(C_BIST, core, scom_data.value);
+
         PK_TRACE("Assert vital fence via CPLT_CTRL1[3]");
         CME_PUTSCOM(C_CPLT_CTRL1_OR, core, BIT64(3));
 

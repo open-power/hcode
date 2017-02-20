@@ -68,6 +68,11 @@ p9_hcd_core_startclocks(uint32_t core)
 
     MARK_TRAP(SX_STARTCLOCKS_ALIGN)
 
+    PK_TRACE("Assert ABIST_SRAM_MODE_DC to support ABIST Recovery via BIST[1]");
+    CME_GETSCOM(C_BIST, core, CME_SCOM_AND, scom_data.value);
+    scom_data.words.upper |= BIT32(1);
+    CME_PUTSCOM(C_BIST, core, scom_data.value);
+
     PK_TRACE("Reset abstclk & syncclk muxsel(io_clk_sel) via CPLT_CTRL0[0:1]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BITS64(0, 2));
 
