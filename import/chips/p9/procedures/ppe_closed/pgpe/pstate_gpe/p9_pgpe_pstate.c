@@ -34,10 +34,18 @@
 #include "ipc_messages.h"
 #include "p9_pgpe_header.h"
 
+#if PK_TRACE_PSTATE_ENABLE_
+    #define PK_TRACE_PSTATE(...) PKTRACE(__VA_ARGS__)
+#else
+    #define PK_TRACE_PSTATE(...)
+#endif
+
+
 //
 //Global External Data
 //
 extern PgpeHeader_t* G_pgpe_header_data;
+extern GlobalPstateParmBlock* G_gppb;
 
 //
 //Global Data
@@ -47,8 +55,8 @@ uint32_t G_pstatesStatus;
 uint8_t G_pmcrOwner;
 uint8_t G_wofEnabled;                   //wof enable/disable
 uint8_t G_wofPending;                   //wof enable pending
-uint8_t G_psClipMax[MAX_QUADS],
-        G_psClipMin[MAX_QUADS];         //pmin and pmax clips
+uint8_t G_psClipMax[MAX_QUADS],         //higher numbered(min freq and volt)
+        G_psClipMin[MAX_QUADS];         //lower numbered(max freq and volt)
 uint8_t G_wofClip;                      //wof clip
 uint8_t G_coresPSRequest[MAX_CORES];    //per core requested pstate
 uint8_t G_quadPSComputed[MAX_QUADS];    //computed Pstate per quad
@@ -78,7 +86,6 @@ GPE_BUFFER(ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 ipc_req_t G_ipc_pend_tbl[MAX_IPC_PEND_TBL_ENTRIES];
 uint32_t G_already_sem_posted;
 
-extern VpdOperatingPoint G_operating_points[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 
 //
 //p9_pgpe_pstate_init
@@ -94,16 +101,16 @@ void p9_pgpe_pstate_init()
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        G_psClipMax[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_psClipMin[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_quadPSComputed[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_globalPSComputed = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_quadPSTarget[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_globalPSTarget = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_quadPSCurr[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_globalPSCurr  = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_quadPSNext[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_globalPSNext  = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_psClipMax[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_psClipMin[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_quadPSComputed[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_globalPSComputed = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_quadPSTarget[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_globalPSTarget = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_quadPSCurr[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_globalPSCurr  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_quadPSNext[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_globalPSNext  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
     }
 
     G_quadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
@@ -135,7 +142,7 @@ void p9_pgpe_pstate_update(uint8_t* s)
 //
 void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest)
 {
-    PK_TRACE_DBG("AUCT: Enter\n");
+    PK_TRACE_PSTATE("AUCT: Enter");
     //Get active cores and quads
     uint32_t q, c;
     uint32_t activeCores = G_quadState0->fields.active_cores;
@@ -151,7 +158,7 @@ void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest)
         {
             //Go through all the cores in this quad with pending request
             //and find the lowest numbered PState
-            G_quadPSComputed[q] = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+            G_quadPSComputed[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
             for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
             {
@@ -169,11 +176,11 @@ void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest)
             G_quadPSComputed[q] = 0xFF;
         }
 
-        //   PK_TRACE_DBG("AUCTION: G_quadPSComputed: 0x%x\n", G_quadPSComputed[q]);
+        PK_TRACE_PSTATE("AUCTION: G_quadPSComputed: 0x%x", G_quadPSComputed[q]);
     }
 
     //Global PState Auction
-    G_globalPSComputed = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+    G_globalPSComputed = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -186,8 +193,8 @@ void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest)
         }
     }
 
-    PK_TRACE_DBG("AUCT glbPSCmpted: 0x%x\n", G_globalPSComputed);
-    PK_TRACE_DBG("AUCT: Exit\n");
+    PK_TRACE_INF("AUCT glbPSCmpted: 0x%x", G_globalPSComputed);
+    PK_TRACE_PSTATE("AUCT: Exit");
 }
 
 //
@@ -195,12 +202,12 @@ void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest)
 //
 void p9_pgpe_pstate_apply_clips()
 {
-    PK_TRACE_DBG("APCLP: Enter\n");
+    PK_TRACE_PSTATE("APCLP: Enter");
     uint32_t q;
     uint32_t activeQuads = G_reqActQuads->fields.requested_active_quads;
 
     //Apply clips to quad computed
-    PK_TRACE_DBG("APCLP: 0x%x\n", activeQuads);
+    PK_TRACE_PSTATE("APCLP: 0x%x", activeQuads);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -235,11 +242,11 @@ void p9_pgpe_pstate_apply_clips()
             G_quadPSTarget[q] = 0xFF;
         }
 
-        PK_TRACE_DBG("APP_CLIP: G_qPSTgt: 0x%x,cl=0x%x,0x%x\n", G_quadPSTarget[q], maxPS, G_psClipMin[q]);
+        PK_TRACE_INF("APCLP: qPSTgt: 0x%x,cl=0x%x,0x%x", G_quadPSTarget[q], maxPS, G_psClipMin[q]);
     }
 
     //Global PState Auction
-    G_globalPSTarget = G_operating_points[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+    G_globalPSTarget = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -252,8 +259,8 @@ void p9_pgpe_pstate_apply_clips()
         }
     }
 
-    PK_TRACE_DBG("APCLP: glbPSTgt: 0x%x\n", G_globalPSTarget);
-    PK_TRACE_DBG("APCLP: Exit\n");
+    PK_TRACE_INF("APCLP: glbPSTgt: 0x%x", G_globalPSTarget);
+    PK_TRACE_PSTATE("APCLP: Exit");
 }
 
 //

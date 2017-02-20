@@ -32,13 +32,14 @@
 /// \brief OCC level voltage change driver
 ///
 ///
-/// Creator: Chris Jones & Michael Olsen
-///
 
 #include "pk.h"
 #include "avs_driver.h"
-//#include "pstate.h"
+#include "p9_pgpe_gppb.h"
 
+#define CLOCK_SPIVID_MHZ        10 //\todo determine if this should come from attribute
+
+extern GlobalPstateParmBlock* G_gppb;
 
 //#################################################################################################
 // Function which generates a 3 bit CRC value for 29 bit data
@@ -137,7 +138,7 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
     uint8_t  rc = 0;
     uint32_t ocbRegWriteData = 0;
 
-    uint32_t RailSelect  = 0xF;
+    uint32_t RailSelect  = 0;
     uint32_t StartCode   = 1;
     uint32_t CmdType     = 0; // 0:write+commit, 1:write+hold, 2: d/c, 3:read
     uint32_t CmdGroup    = 0;
@@ -157,6 +158,7 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
     ocbRegWriteData = ocbRegWriteData | CRC;
 
     // Send frame
+    //PK_TRACE_DBG("RegWrite=0x%x", ocbRegWriteData);
     out32(OCB_O2SWD0A, ocbRegWriteData);
 
     // Wait on o2s_ongoing = 0
@@ -175,7 +177,7 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
     uint32_t ocbRegReadData = 0;
     uint32_t ocbRegWriteData = 0;
 
-    uint32_t RailSelect  = 0xF;
+    uint32_t RailSelect  = 0;
     uint32_t StartCode   = 1;
     uint32_t CmdType     = 3; // 0:write+commit, 1:write+hold, 2: d/c, 3:read
     uint32_t CmdGroup    = 0;
@@ -208,6 +210,7 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
 
     // Read returned voltage value from Read frame
     ocbRegReadData = in32(OCB_O2SRD0A);
+    PK_TRACE_DBG("RegRead=0x%x", ocbRegReadData);
     *CmdData = (ocbRegReadData >> 8) & 0x0000FFFF;
 
     return rc;
@@ -220,20 +223,21 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
 void external_voltage_control_init(uint32_t* vext_read_mv)
 {
     uint8_t   rc = 0;
-    uint32_t  ocbRegReadData = 0;
-    uint32_t  ocbRegWriteData = 0;
     uint32_t  CmdDataRead = 0;
 
-#if EPM_P9_TUNING
+//#if EPM_P9_TUNING
 // We do not need to initialize O2S and AVS slave in product
 //   because this is done in istep 6. But for EPM, we need to do it.
-#define CLOCK_NEST_MHZ          2400
+//\todo Read from Parameter Block. These are attributes
 #define CLOCK_SPIVID_MHZ        10
-    uint32_t  O2SCTRLF_value = 0b10000010000011111100000000000000;
-    uint32_t  O2SCTRLS_value = 0b00000000000010000000000000000000;
-    uint32_t  O2SCTRL2_value = 0b00000000000000000000000000000000;
-    uint32_t  O2SCTRL1_value = 0b10000000000000000100000000000000 |
-                               (CLOCK_NEST_MHZ / (8 * CLOCK_SPIVID_MHZ) - 1) << 18; // Divider=0b11101
+    PK_TRACE_DBG("NestFreq=0x%x", G_gppb->nest_frequency_mhz);
+    uint32_t  ocbRegReadData = 0;
+    uint32_t  ocbRegWriteData = 0;
+    uint32_t  O2SCTRLF_value = 0b10000010000011111100000000000000; //0x820FC000
+    uint32_t  O2SCTRLS_value = 0b00000000000010000000000000000000; //0x00080000
+    uint32_t  O2SCTRL2_value = 0b00000000000000000000000000000000; //0x00000000
+    uint32_t  O2SCTRL1_value = 0b10010000000000000100000000000000 |
+                               (G_gppb->nest_frequency_mhz / (8 * CLOCK_SPIVID_MHZ) - 1) << 18;
 
     //
     // OCI to SPIPMBus (O2S) bridge initialization
@@ -275,40 +279,42 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
         pk_halt();
     }
 
-#endif
+//#endif
 
     //
     // Set rail Vout transition rate (slew-rate)
     //
+    /*
+        // Drive write transaction with a target slew-rate on specific rail and wait on o2s_ongoing=0
+        rc = driveWrite(1, VEXT_SLEW_RATE_MVPERUS);
 
-    // Drive write transaction with a target slew-rate on specific rail and wait on o2s_ongoing=0
-    rc = driveWrite(1, VEXT_SLEW_RATE_MVPERUS);
+        if (rc)
+        {
+            PK_TRACE_DBG("Slew-rate driveWrite FAIL");
+            pk_halt();
+        }
 
-    if (rc)
-    {
-        pk_halt();
-    }
+        // Drive read transaction to return slew-rate on the same rail and wait on o2s_ongoing=0
+        rc = driveRead(1, &CmdDataRead);
 
-    // Drive read transaction to return slew-rate on the same rail and wait on o2s_ongoing=0
-    rc = driveRead(1, &CmdDataRead);
-
-    if (rc)
-    {
-        pk_halt();
-    }
-
+        if (rc)
+        {
+            PK_TRACE_DBG("Slew-rate driveRead FAIL");
+            pk_halt();
+        }
+    */
 #if !EPM_P9_TUNING
-
-    if (CmdDataRead == VEXT_SLEW_RATE_MVPERUS)
-    {
-        MY_TRACE_DBG("Slew-rate write PASS");
-    }
-    else
-    {
-        MY_TRACE_ERR("Slew-rate write FAIL");
-        pk_halt();
-    }
-
+    /*
+        if (CmdDataRead == VEXT_SLEW_RATE_MVPERUS)
+        {
+            PK_TRACE_DBG("Slew-rate write PASS");
+        }
+        else
+        {
+            PK_TRACE_DBG("Slew-rate write FAIL %d",CmdDataRead);
+            pk_halt();
+        }
+    */
 #endif
 
     // Drive read transaction to return initial setting of rail voltage and wait on o2s_ongoing=0
@@ -316,6 +322,7 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
 
     if (rc)
     {
+        PK_TRACE_DBG("Slew-rate driveRead Init FAIL");
         pk_halt();
     }
 
@@ -348,13 +355,14 @@ void external_voltage_control_write(uint32_t vext_write_mv)
 
     if (rc)
     {
+        PK_TRACE_DBG("Drive Read  driveRead FAIL");
         pk_halt();
     }
 
 
     if (CmdDataRead != vext_write_mv)
     {
-        MY_TRACE_ERR("Vext write FAIL: Read=%d != Write=%d", CmdDataRead, vext_write_mv);
+        PK_TRACE_DBG("Vext write FAIL: Read=%d != Write=%d", CmdDataRead, vext_write_mv);
         pk_halt();
     }
 

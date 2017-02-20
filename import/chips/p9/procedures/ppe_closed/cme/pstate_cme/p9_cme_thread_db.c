@@ -55,8 +55,8 @@ cme_pstate_db_data_t G_db_thread_data;
 
 //\todo Use PState Parameter Block structures. RTC
 extern global_pstate_table_t G_gpst;
-extern freq_2_idx_entry_t G_freq2idx[NUM_FREQ_REGIONS];
-extern uint16_t G_cgm_table[CGM_TRANSITIONS];
+//extern freq_2_idx_entry_t G_freq2idx[NUM_FREQ_REGIONS];
+//extern uint16_t G_cgm_table[CGM_TRANSITIONS];
 extern uint8_t G_resclkEnabled;
 extern cme_header_t* G_cme_header;
 
@@ -70,6 +70,7 @@ inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags);
 inline void p9_cme_pstate_freq_update(uint64_t dbData);
 inline void p9_cme_pstate_resclk_update();
 inline void p9_cme_pstate_pmsr_updt(uint64_t dbData, uint32_t cme_flags);
+inline void p9_cme_pstate_notify_sib();
 
 //
 //Doorbell0 interrupt handler
@@ -77,7 +78,9 @@ inline void p9_cme_pstate_pmsr_updt(uint64_t dbData, uint32_t cme_flags);
 //Only enabled on QuadManager-CME
 void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
 {
+    PK_TRACE_INF("DB_HDL: Entered\n");
     pk_semaphore_post((PkSemaphore*)arg);
+    PK_TRACE_INF("DB_HDL: Exited\n");
 }
 
 //
@@ -85,7 +88,7 @@ void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
 //
 void p9_cme_pstate_db_thread(void* arg)
 {
-    PK_TRACE_INF("DB_TH: Started\n");
+    PK_TRACE("DB_TH: Started\n");
     uint32_t cme_flags;
     PkMachineContext  ctx;
     uint32_t pir;
@@ -175,7 +178,6 @@ void p9_cme_pstate_db_thread(void* arg)
         g_eimr_override |= BIT64(37);
         g_eimr_override |= BIT64(36);
 
-        while(1) {}
     }
 
     //Doorbell Thread(this thread) will continue to run on
@@ -185,7 +187,7 @@ void p9_cme_pstate_db_thread(void* arg)
     {
         pk_semaphore_create(&G_cme_pstate_record.sem[1], 0, 1);
 
-        PK_TRACE_INF("DB_TH: Inited\n");
+        PK_TRACE("DB_TH: Inited\n");
 
         while(1)
         {
@@ -277,6 +279,7 @@ inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
     //Pstate Update
 #if !SIMICS_TUNING
     p9_cme_pstate_freq_update(dbData.value);
+    p9_cme_pstate_notify_sib(); //Notify sibling
 #endif
 
     p9_cme_pstate_pmsr_updt(dbData.value, cme_flags);
@@ -330,13 +333,16 @@ inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData, uint32_t cme_flags
     }
 
     //Update analog
+    /*
     if (G_resclkEnabled)
     {
         p9_cme_pstate_resclk_update();
     }
+    */
 
 #if !SIMICS_TUNING
     p9_cme_pstate_freq_update(dbData.value);
+    p9_cme_pstate_notify_sib(); //Notify sibling
 #endif
     p9_cme_pstate_pmsr_updt(dbData.value, cme_flags);
 
@@ -378,6 +384,8 @@ inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags)
         out64(CME_LCL_EIMR_OR,  BIT64(35));//Disable PMCR1
     }
 
+    p9_cme_pstate_notify_sib(); //Notify sibling
+
     //\TODO RTC: 152965
     //Disable iVRM, move into bypass
     //Disable resonant clocking, move to non-resonant value
@@ -395,9 +403,37 @@ inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags)
 //
 inline void p9_cme_pstate_pmsr_updt(uint64_t dbData, uint32_t cme_flags)
 {
-    uint32_t intercme_acked;
-    uint64_t eisr, pmsrData;
+    PK_TRACE_INF("DB_TH: PMSR Enter\n");
+    uint64_t pmsrData;
     uint8_t localPS;
+
+    //Update PMSR
+    localPS = (dbData >>
+               ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0xFF;
+    pmsrData = (dbData << 8) & 0xFF00000000000000;
+    pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
+
+    if (cme_flags & CME_FLAGS_CORE0_GOOD)
+    {
+        PK_TRACE_INF("DB_TH: PMSR=0x%08x%08x\n", pmsrData >> 32, pmsrData);
+        out64(CME_LCL_PMSRS0, pmsrData);
+    }
+
+    if (cme_flags & CME_FLAGS_CORE1_GOOD)
+    {
+        PK_TRACE_INF("DB_TH: PMSR=0x%08x%08x\n", pmsrData >> 32, pmsrData);
+        out64(CME_LCL_PMSRS1, pmsrData);
+    }
+
+    PK_TRACE_INF("DB_TH: PMSR Exit\n");
+}
+
+inline void p9_cme_pstate_notify_sib()
+{
+    uint32_t intercme_acked;
+    uint64_t eisr;
+
+    PK_TRACE_INF("DB_TH: Notify Enter\n");
 
     //Notify sibling CME(if any)
     if (G_db_thread_data.siblingCMEFlag == 1)
@@ -426,23 +462,7 @@ inline void p9_cme_pstate_pmsr_updt(uint64_t dbData, uint32_t cme_flags)
         out32(CME_LCL_EISR_CLR, BIT32(7));//Clear InterCME_IN0
     }
 
-    //Update PMSR
-    localPS = (dbData >>
-               ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0xFF;
-    pmsrData = (dbData << 8) & 0xFF00000000000000;
-    pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
-
-    if (cme_flags & CME_FLAGS_CORE0_GOOD)
-    {
-        PK_TRACE_INF("DB_TH: PMSR=0x%08x%08x\n", pmsrData >> 32, pmsrData);
-        out64(CME_LCL_PMSRS0, pmsrData);
-    }
-
-    if (cme_flags & CME_FLAGS_CORE1_GOOD)
-    {
-        PK_TRACE_INF("DB_TH: PMSR=0x%08x%08x\n", pmsrData >> 32, pmsrData);
-        out64(CME_LCL_PMSRS1, pmsrData);
-    }
+    PK_TRACE_INF("DB_TH: Notify Exit\n");
 }
 
 //
@@ -452,19 +472,20 @@ inline void p9_cme_pstate_freq_update(uint64_t dbData)
 {
     PK_TRACE_INF("DB_TH: Freq Updt Enter\n");
     uint8_t localPS = (dbData >>
-                       ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) * 8)) & 0xFF;
+                       ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0xFF;
 
     PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", dbData >> 32, dbData);
     PK_TRACE_INF("DB_TH: Dpll0=0x%x\n", G_db_thread_data.dpll_pstate0_value);
     //Adjust DPLL
+
     cppm_ippmcmd_t  cppm_ippmcmd;
     qppm_dpll_freq_t dpllFreq;
 
     //Write new value of DPLL using INTERPPM
     dpllFreq.value = 0;
-    dpllFreq.fields.fmax  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
-    dpllFreq.fields.fmult = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
-    dpllFreq.fields.fmin  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS) << 3;
+    dpllFreq.fields.fmax  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS);
+    dpllFreq.fields.fmult = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS);
+    dpllFreq.fields.fmin  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS);
     CME_PUTSCOM(CPPM_IPPMWDATA, G_db_thread_data.cmeMaskGoodCore, dpllFreq.value);
     cppm_ippmcmd.value = 0;
     cppm_ippmcmd.fields.qppm_reg = QPPM_DPLL_FREQ & 0x000000ff;
@@ -476,6 +497,7 @@ inline void p9_cme_pstate_freq_update(uint64_t dbData)
 //
 //p9_cme_pstate_resclk_update
 //
+/*
 inline void p9_cme_pstate_resclk_update()
 {
     uint64_t val;
@@ -521,3 +543,5 @@ inline void p9_cme_pstate_resclk_update()
 #endif
     }
 }
+
+*/

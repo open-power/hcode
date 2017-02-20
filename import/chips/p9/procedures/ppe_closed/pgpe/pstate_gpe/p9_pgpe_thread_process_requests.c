@@ -83,7 +83,7 @@ void p9_pgpe_thread_process_requests(void* arg)
     asm volatile ("tw 0, 31, 0");
 #endif
 
-    PK_TRACE_DBG("PROCTH:Inited; PGPE_ACTIVE set\n");
+    PK_TRACE_INF("PROCTH:Inited; PGPE_ACTIVE set\n");
 
     while(1)
     {
@@ -363,10 +363,13 @@ void p9_pgpe_process_clip_updt()
     else
     {
 
+        //IPC from 405 treats clip_min as Pstate for min frequency(higher numbered)
+        //and clip_max as Pstate for max frequency(lower numbered). However, PGPE
+        //Hcode stores them with reverse interpretation.
         for (q = 0; q < MAX_QUADS; q++)
         {
-            G_psClipMax[q] = args->ps_val_clip_max[q];
-            G_psClipMin[q] = args->ps_val_clip_min[q];
+            G_psClipMax[q] = args->ps_val_clip_min[q];
+            G_psClipMin[q] = args->ps_val_clip_max[q];
         }
 
         p9_pgpe_pstate_apply_clips(&G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT]);

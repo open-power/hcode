@@ -55,38 +55,55 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     int32_t c = 0;
     PkMachineContext  ctx;
 
-    PK_TRACE("INTERCME_IN0: Enter\n");
+    PK_TRACE("INTER0: Enter\n");
 
     for (c = 0; c < CORES_PER_EX; c++ )
     {
         if (cme_flags & (CME_FLAGS_CORE0_GOOD >> c))
         {
+            if (c == 0)
+            {
+                CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, CME_SCOM_EQ, dbData.value);
+
+            }
+            else
+            {
+                CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, CME_SCOM_EQ, dbData.value);
+            }
+
+            //Determine PMSR
+            localPS = (dbData.value >>
+                       ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0xFF;
+            pmsrData = (dbData.value << 8) & 0xFF00000000000000;
+            pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
+            PK_TRACE_INF("INTER0:C%d PMSR=0x%08x%08x\n", c, pmsrData >> 32, pmsrData);
+
             if(dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST)
             {
-                PK_TRACE("INTERCME_IN0: DB0 Start\n");
+                PK_TRACE("INTER0:C%d DB0 Start\n", c);
+                out64((CME_LCL_PMSRS0 + (c << 5)), pmsrData);
+
                 //Clear any pending PMCR interrupts
                 out32_sh(CME_LCL_EISR_CLR, BIT32(2) >> c);
                 out32_sh(CME_LCL_EIMR_CLR, BIT32(2) >> c);//Enable PMCR0/1
+
             }
             else if(dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST)
             {
-                PK_TRACE("INTERCME_IN0: DB0 GlbBcast\n");
-                localPS = (dbData.value >>
-                           ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 8)) & 0xFF;
-                pmsrData = (dbData.value << 8) & 0xFF00000000000000;
-                pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
+                PK_TRACE("INTER0:C%d DB0 GlbBcast\n", c);
                 out64((CME_LCL_PMSRS0 + (c << 5)), pmsrData);
-                out32_sh(CME_LCL_EISR_CLR, BIT32(4) >> c);//Clear DB0_C0
             }
             else if(dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST)
             {
-                PK_TRACE("INTERCME_IN0: DB0 Stop\n");
-                out32_sh(CME_LCL_EIMR_OR,  BIT32(2) >> c);//Enable PMCR0/1
+                PK_TRACE("INTER0:C%d DB0 Stop\n");
+                out32_sh(CME_LCL_EIMR_OR,  BIT32(2) >> c);//Disable PMCR0/1
             }
             else
             {
                 pk_halt();
             }
+
+            out32_sh(CME_LCL_EISR_CLR, BIT32(4) >> c);//Clear DB0_C0/C1
         }
     }
 
@@ -95,5 +112,6 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     out32(CME_LCL_EISR_CLR, BIT32(7));//Clear InterCME_IN0
 
     pk_irq_vec_restore(&ctx);
-    PK_TRACE("INTERCME_IN0: Exit\n");
+
+    PK_TRACE("INTER0: Exit\n");
 }

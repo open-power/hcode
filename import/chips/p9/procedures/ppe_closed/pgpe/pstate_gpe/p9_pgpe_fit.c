@@ -46,6 +46,7 @@ void p9_pgpe_fit_init()
 {
     uint16_t freq = G_gppb->nest_frequency_mhz;
 
+    PK_TRACE_DBG("Fit NestFreq=0x%x", G_gppb->nest_frequency_mhz);
     //Set fit count threshold
     G_fit_count_threshold = (freq < 1049) ? 7 :
                             (freq < 1180) ? 8 :

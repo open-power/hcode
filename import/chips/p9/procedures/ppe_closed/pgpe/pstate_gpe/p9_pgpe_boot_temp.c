@@ -84,7 +84,7 @@ void p9_pgpe_boot_gppb_init()
     GlobalPstateParmBlock* gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
     gppb->magic = PSTATE_PARMSBLOCK_MAGIC;
     gppb->options.options = 0;
-    gppb->reference_frequency_khz = 4150000;
+    gppb->reference_frequency_khz = 2800000;
     gppb->frequency_step_khz = 16667;
     gppb->ext_vrm_transition_start_ns = 50;
     gppb->ext_vrm_transition_rate_inc_uv_per_us = 10000;
@@ -93,24 +93,24 @@ void p9_pgpe_boot_gppb_init()
     gppb->ext_vrm_step_size_mv = 50;
     gppb->nest_frequency_mhz = 2000;
 
-    gppb->operating_points[ULTRA].frequency_mhz = 4150;
-    gppb->operating_points[ULTRA].vdd_mv = 1100;
+    gppb->operating_points[ULTRA].frequency_mhz = 2800;
+    gppb->operating_points[ULTRA].vdd_mv = 1000;
     gppb->operating_points[ULTRA].pstate = 0;
     gppb->operating_points[ULTRA].idd_100ma = 2;
     gppb->operating_points[ULTRA].ics_100ma = 1;
-    gppb->operating_points[TURBO].frequency_mhz = 3816;
-    gppb->operating_points[TURBO].vdd_mv = 1000;
-    gppb->operating_points[TURBO].pstate = 20;
+    gppb->operating_points[TURBO].frequency_mhz = 2600;
+    gppb->operating_points[TURBO].vdd_mv = 900;
+    gppb->operating_points[TURBO].pstate = 12;
     gppb->operating_points[TURBO].idd_100ma = 2;
     gppb->operating_points[TURBO].ics_100ma = 1;
-    gppb->operating_points[NOMINAL].frequency_mhz = 3400;
-    gppb->operating_points[NOMINAL].vdd_mv = 875;
-    gppb->operating_points[NOMINAL].pstate = 45;
+    gppb->operating_points[NOMINAL].frequency_mhz = 2400;
+    gppb->operating_points[NOMINAL].vdd_mv = 825;
+    gppb->operating_points[NOMINAL].pstate = 24;
     gppb->operating_points[NOMINAL].idd_100ma = 2;
     gppb->operating_points[NOMINAL].ics_100ma = 1;
-    gppb->operating_points[POWERSAVE].frequency_mhz = 2067;
-    gppb->operating_points[POWERSAVE].vdd_mv = 675;
-    gppb->operating_points[POWERSAVE].pstate = 125;
+    gppb->operating_points[POWERSAVE].frequency_mhz = 2000;
+    gppb->operating_points[POWERSAVE].vdd_mv = 750;
+    gppb->operating_points[POWERSAVE].pstate = 48;
     gppb->operating_points[POWERSAVE].idd_100ma = 2;
     gppb->operating_points[POWERSAVE].ics_100ma = 1;
 
@@ -151,8 +151,8 @@ void p9_pgpe_boot_gppb_init()
     gppb->vdn_sysparm.distloss_uohm = 10;
     gppb->vdn_sysparm.distoffset_uv = 10;
 
-    gppb->safe_voltage_mv = 875;
-    gppb->safe_frequency_khz = 3400;
+    gppb->safe_voltage_mv = 825;
+    gppb->safe_frequency_khz = 2400;
     gppb->vrm_stepdelay_range = 1;
     gppb->vrm_stepdelay_value = 12;
 
