@@ -41,8 +41,8 @@ extern SgpeStopRecord                       G_sgpe_stop_record;
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
 
-    extern uint64_t G_ring_save[MAX_QUADS][8];
-    extern uint64_t G_ring_spin[10][2];
+    extern struct ring_save* G_ring_save;
+    extern uint64_t   G_ring_spin[10][2];
 
 #endif
 
@@ -559,10 +559,10 @@ p9_sgpe_stop_exit()
                          scom_data.words.upper,
                          scom_data.words.lower);
                 PK_TRACE("PBRW: save: %8x %8x",
-                         UPPER32(G_ring_save[qloop][spin - 1]),
-                         LOWER32(G_ring_save[qloop][spin - 1]));
+                         UPPER32(G_ring_save->element[qloop][spin - 1]),
+                         LOWER32(G_ring_save->element[qloop][spin - 1]));
                 RESTORE_RING_BITS(G_ring_spin[spin][1], scom_data.value,
-                                  G_ring_save[qloop][spin - 1]);
+                                  G_ring_save->element[qloop][spin - 1]);
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
                 PK_TRACE("PBRW: mask: %8x %8x",
                          UPPER32(G_ring_spin[spin][1]),
@@ -571,8 +571,8 @@ p9_sgpe_stop_exit()
                          scom_data.words.upper,
                          scom_data.words.lower);
                 PK_TRACE("PBRW: save: %8x %8x",
-                         UPPER32(G_ring_save[qloop][spin - 1]),
-                         LOWER32(G_ring_save[qloop][spin - 1]));
+                         UPPER32(G_ring_save->element[qloop][spin - 1]),
+                         LOWER32(G_ring_save->element[qloop][spin - 1]));
 
             }
 

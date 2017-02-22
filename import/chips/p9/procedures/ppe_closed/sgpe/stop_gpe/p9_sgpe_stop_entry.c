@@ -39,29 +39,8 @@ extern SgpeStopRecord                           G_sgpe_stop_record;
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
 
-uint64_t G_ring_save[MAX_QUADS][8] =
-{
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0}
-};
-
-uint64_t G_ring_spin[10][2] =
-{
-    {0,    0},
-    {5039, 0xE000000000000000}, //3
-    {5100, 0xC1E061FFED5F0000}, //29
-    {5664, 0xE000000000000000}, //3
-    {5725, 0xC1E061FFED5F0000}, //29
-    {5973, 0xE000000000000000}, //3
-    {6034, 0xC1E061FFED5F0000}, //29
-    {6282, 0xE000000000000000}, //3
-    {6343, 0xC1E061FFED5F0000}, //29
-    {17871, 0}                  //128
-};
+    extern struct ring_save* G_ring_save;
+    extern uint64_t   G_ring_spin[10][2];
 
 #endif
 
@@ -929,7 +908,7 @@ p9_sgpe_stop_entry()
             PK_TRACE("FCMS: save pbie read ptr");
             GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
             EXTRACT_RING_BITS(G_ring_spin[spin][1], scom_data.value,
-                              G_ring_save[qloop][spin - 1]);
+                              G_ring_save->element[qloop][spin - 1]);
             PK_TRACE("FCMS: mask: %8x %8x",
                      UPPER32(G_ring_spin[spin][1]),
                      LOWER32(G_ring_spin[spin][1]));
@@ -937,8 +916,8 @@ p9_sgpe_stop_entry()
                      scom_data.words.upper,
                      scom_data.words.lower);
             PK_TRACE("FCMS: save: %8x %8x",
-                     UPPER32(G_ring_save[qloop][spin - 1]),
-                     LOWER32(G_ring_save[qloop][spin - 1]));
+                     UPPER32(G_ring_save->element[qloop][spin - 1]),
+                     LOWER32(G_ring_save->element[qloop][spin - 1]));
         }
 
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), 0);
