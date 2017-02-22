@@ -303,6 +303,14 @@ typedef struct
     uint64_t data;
 } SgpeScomRestore;
 
+#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+// Types for PB EQ asynch work-around
+struct ring_save
+{
+    uint64_t element[MAX_QUADS][8];
+};
+#endif
+
 #if HW405292_NDD1_PCBMUX_FENCE_FIX
 void p9_sgpe_set_slvcfg_pm_disable(uint32_t);
 void p9_sgpe_clear_slvcfg_pm_disable(uint32_t);
