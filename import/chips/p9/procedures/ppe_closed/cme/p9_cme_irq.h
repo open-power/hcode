@@ -46,23 +46,6 @@
 // - The variable names and actions in this file must perfectly match associated
 //   definitions in cme_irq_common.c
 
-// We define four levels of TRACE outputs:
-// _INF:  Trace level used for main informational events.
-// _DBG:  Trace level used for expanded debugging.
-// _WARN: Trace level used when suspecious event happens.
-// _ERR:  Trace level at time of an error that leads to a halt.
-#define MY_TRACE_INF(...)   PK_TRACE("INF: "__VA_ARGS__);
-#ifdef DEV_DEBUG
-    #define MY_TRACE_DBG(...)   PK_TRACE("DBG: "__VA_ARGS__);
-#else
-    #define MY_TRACE_DBG(...)
-#endif
-#define MY_TRACE_WARN(...)  PK_TRACE("WARN: "__VA_ARGS__);
-#define MY_TRACE_ERR(...)   PK_TRACE("ERR: "__VA_ARGS__);
-
-#define TRUE  1
-#define FALSE 0
-
 // Priority Levels
 #define IDX_PRTY_LVL_HIPRTY         0
 #define IDX_PRTY_LVL_DB3            1
@@ -143,8 +126,8 @@ pk_irq_vec_restore(PkMachineContext* context)
     }
     else
     {
-        PK_TRACE("Code bug: Messed up EIMR book keeping: g_eimr_stack_ctr=%d",
-                 g_eimr_stack_ctr);
+        PK_TRACE_ERR("ERROR: Messed up EIMR book keeping: g_eimr_stack_ctr=%d. HALT CME!",
+                     g_eimr_stack_ctr);
         PK_PANIC(CME_UIH_EIMR_STACK_UNDERFLOW);
     }
 

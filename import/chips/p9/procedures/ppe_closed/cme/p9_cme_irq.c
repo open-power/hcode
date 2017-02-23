@@ -36,6 +36,7 @@
 
 #include "pk.h"
 #include "p9_cme_irq.h"
+#include "ppehw_common.h"
 
 //-------------------------------------------------------------------//
 //            DO NOT modify this file unless you're the owner        //
@@ -170,14 +171,14 @@ void pk_unified_irq_prty_mask_handler(void)
 
     // 1. Identify the priority level of the interrupt.
     ext_irq_vector_pk = in64(STD_LCL_EISTR);
-    bFound = FALSE;
+    bFound   = 0;
     iPrtyLvl = 0;
 
     do
     {
         if (ext_irq_vectors_cme[iPrtyLvl][IDX_PRTY_VEC] & ext_irq_vector_pk)
         {
-            bFound = TRUE;
+            bFound = 1;
             break;
         }
     }
@@ -202,7 +203,7 @@ void pk_unified_irq_prty_mask_handler(void)
         }
         else
         {
-            MY_TRACE_ERR("Code bug: EIMR S/R stack counter=%d  >=  max=%d.",
+            PK_TRACE_ERR("ERROR: EIMR S/R stack counter=%d  >=  max=%d. HALT CME!",
                          g_eimr_stack_ctr, NUM_EXT_IRQ_PRTY_LEVELS);
             PK_PANIC(CME_UIH_EIMR_STACK_OVERFLOW);
         }
@@ -214,8 +215,8 @@ void pk_unified_irq_prty_mask_handler(void)
     }
     else
     {
-        MY_TRACE_ERR("A disabled IRQ fired");
-        MY_TRACE_ERR("ext_irq_vector_pk=0x%08x%08x", ext_irq_vector_pk);
+        PK_TRACE_ERR("ERROR: Phantom IRQ Fired, EISTR=%x %x. HALT CME!",
+                     UPPER32(ext_irq_vector_pk), LOWER32(ext_irq_vector_pk));
 #if !EPM_P9_TUNING
         PK_PANIC(CME_UIH_PHANTOM_INTERRUPT);
 #endif

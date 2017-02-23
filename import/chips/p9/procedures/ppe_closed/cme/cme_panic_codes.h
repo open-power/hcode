@@ -54,9 +54,9 @@ CME_STOP_EXIT_BCE_SCOM_FAILED       = 0x1c08,
 CME_STOP_EXIT_SELF_RES_SPATTN       = 0x1c09,
 CME_STOP_EXIT_STARTCLK_FAILED       = 0x1c0a,
 CME_STOP_ENTRY_STOPCLK_FAILED       = 0x1c0d,
-CME_STOP_ENTRY_WITH_AUTO_NAP        = 0x1c1c, // NDD1
-CME_STOP_ENTRY_BAD_LPID_ERROR       = 0x1c1d, // NDD1
-//_UNUSED_1c1e                      = 0x1c1e,
+CME_STOP_ENTRY_XSTOP_ERROR          = 0x1c1c,
+CME_STOP_ENTRY_WITH_AUTO_NAP        = 0x1c1d, // NDD1
+CME_STOP_ENTRY_BAD_LPID_ERROR       = 0x1c1e, // NDD1
 //_UNUSED_1c1f                      = 0x1c1f,
 //
 //_UNUSED_1d00                      = 0x1d00,

@@ -163,7 +163,7 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
                            ((uint64_t)ex << SHIFT64(7))    |
                            ((uint64_t)ex << SHIFT64(13))))
     {
-        PK_TRACE("Cache clock start failed");
+        PK_TRACE_ERR("ERROR: Cache Clock Start Failed. HALT SGPE!");
         PK_PANIC(SGPE_STOP_EXIT_EQ_STARTCLK_FAILED);
     }
 

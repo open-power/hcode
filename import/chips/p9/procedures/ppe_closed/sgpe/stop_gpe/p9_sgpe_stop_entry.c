@@ -198,7 +198,7 @@ p9_sgpe_stop_entry()
 
         if (rc)
         {
-            PK_TRACE_INF("ERROR: Entry Updates PGPE with Active Cores Failed. HALT SGPE!");
+            PK_TRACE_ERR("ERROR: Entry Updates PGPE with Active Cores Failed. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_IPC_CORE_FAILED);
         }
 
@@ -209,7 +209,7 @@ p9_sgpe_stop_entry()
 
         if (G_sgpe_ipcmsg_update_cores.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
         {
-            PK_TRACE_INF("ERROR: Entry Updates PGPE with Active Cores Bad RC. HALT SGPE!");
+            PK_TRACE_ERR("ERROR: Entry Updates PGPE with Active Cores Bad RC. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_IPC_CORE_BAD_RC);
         }
     }
@@ -251,7 +251,7 @@ p9_sgpe_stop_entry()
 
         if(rc)
         {
-            PK_TRACE_INF("ERROR: Entry Suspend PGPE Pstate Function Failed. HALT SGPE!");
+            PK_TRACE_ERR("ERROR: Entry Suspend PGPE Pstate Function Failed. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_IPC_PSTATE_FAILED);
         }
 
@@ -263,7 +263,7 @@ p9_sgpe_stop_entry()
 
         if (G_sgpe_ipcmsg_suspend_pstate.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
         {
-            PK_TRACE_INF("ERROR: Entry Suspend PGPE Pstate Function Bad RC. HALT SGPE!");
+            PK_TRACE_ERR("ERROR: Entry Suspend PGPE Pstate Function Bad RC. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_IPC_PSTATE_BAD_RC);
         }
     }
@@ -301,7 +301,7 @@ p9_sgpe_stop_entry()
 
         if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
         {
-            PK_TRACE_INF("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
+            PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
                          qloop, scom_data.words.upper);
             PK_PANIC(SGPE_STOP_ENTRY_GET_CLK_LOCK_FAILED);
         }
@@ -406,7 +406,7 @@ p9_sgpe_stop_entry()
 
         if (((~(scom_data.words.upper)) & (ex << SHIFT32(9))) != 0)
         {
-            PK_TRACE("ERROR: L2 clock stop failed. HALT SGPE!");
+            PK_TRACE_ERR("ERROR: L2 clock stop failed. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_L2_STOPCLK_FAILED);
         }
 
@@ -540,7 +540,7 @@ p9_sgpe_stop_entry()
 
         if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
         {
-            PK_TRACE_INF("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
+            PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
                          qloop, scom_data.words.upper);
             PK_PANIC(SGPE_STOP_ENTRY_GET_SLV_LOCK_FAILED);
         }
@@ -871,7 +871,7 @@ p9_sgpe_stop_entry()
 
         if (((~scom_data.value) & CLK_REGION_ALL) != 0)
         {
-            PK_TRACE("ERROR: Cache clock stop failed. HALT SGPE!");
+            PK_TRACE_ERR("ERROR: Cache clock stop failed. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_EQ_STOPCLK_FAILED);
         }
 
@@ -935,8 +935,8 @@ p9_sgpe_stop_entry()
 
                 if (scom_data.value != 0xa5a5a5a5a5a5a5a5)
                 {
-                    PK_TRACE("ERROR: checkword[%x%x] failed. HALT SGPE!",
-                             scom_data.words.upper, scom_data.words.lower);
+                    PK_TRACE_ERR("ERROR: Checkword[%x%x] Failed. HALT SGPE!",
+                                 scom_data.words.upper, scom_data.words.lower);
                     PK_PANIC(SGPE_STOP_ENTRY_PBRW_SCAN_HEADER_ERR);
                 }
 

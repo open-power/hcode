@@ -152,7 +152,7 @@ main(int argc, char** argv)
 
     if( fapiRc != fapi2::FAPI2_RC_SUCCESS )
     {
-        PK_TRACE_INF("ERROR: FAPI2 Init Failed. HALT SGPE!");
+        PK_TRACE_ERR("ERROR: FAPI2 Init Failed. HALT SGPE!");
         PK_PANIC(SGPE_MAIN_FAPI2_INIT_FAILED);
     }
 

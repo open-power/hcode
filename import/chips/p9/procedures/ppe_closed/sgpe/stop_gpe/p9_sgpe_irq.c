@@ -36,6 +36,7 @@
 
 #include "pk.h"
 #include "p9_sgpe_irq.h"
+#include "ppehw_common.h"
 
 //-------------------------------------------------------------------//
 //            DO NOT modify this file unless you're the owner        //
@@ -99,14 +100,14 @@ void pk_unified_irq_prty_mask_handler(void)
     // 1. Identify the priority level of the interrupt.
     ext_irq_vector_pk = ((uint64_t)in32(OCB_G0ISR0 + APPCFG_OCC_INSTANCE_ID * 8)) << 32 |
                         (uint64_t)in32(OCB_G0ISR1 + APPCFG_OCC_INSTANCE_ID * 8);
-    bFound = FALSE;
+    bFound   = 0;
     iPrtyLvl = 0;
 
     do
     {
         if (ext_irq_vectors_sgpe[iPrtyLvl][IDX_PRTY_VEC] & ext_irq_vector_pk)
         {
-            bFound = TRUE;
+            bFound = 1;
             break;
         }
     }
@@ -131,7 +132,7 @@ void pk_unified_irq_prty_mask_handler(void)
         }
         else
         {
-            MY_TRACE_ERR("Code bug: EIMR S/R stack counter=%d  >=  max=%d.",
+            PK_TRACE_ERR("ERROR: EIMR S/R stack counter=%d  >=  max=%d. HALT SGPE!",
                          g_oimr_stack_ctr, NUM_EXT_IRQ_PRTY_LEVELS);
             PK_PANIC(SGPE_UIH_EIMR_STACK_OVERFLOW);
         }
@@ -156,8 +157,8 @@ void pk_unified_irq_prty_mask_handler(void)
     }
     else
     {
-        MY_TRACE_ERR("A disabled IRQ fired");
-        MY_TRACE_ERR("ext_irq_vector_pk=0x%08x%08x", ext_irq_vector_pk);
+        PK_TRACE_ERR("ERROR: Phantom IRQ Fired, EISTR=%x %x. HALT SGPE!",
+                     UPPER32(ext_irq_vector_pk), LOWER32(ext_irq_vector_pk));
 #if !EPM_P9_TUNING
         PK_PANIC(SGPE_UIH_PHANTOM_INTERRUPT);
 #endif

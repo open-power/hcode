@@ -87,21 +87,24 @@
 #if PK_TRACE_LEVEL == 0   /*No TRACEs*/
     #define PK_TRACE_ENABLE        0
     #define PK_KERNEL_TRACE_ENABLE 0
-#elif PK_TRACE_LEVEL == 1 /*only PK_TRACE_INF*/
+#elif PK_TRACE_LEVEL == 1 /*only PK_TRACE_ERR+INF*/
     #define PK_TRACE_ENABLE        1
     #define PK_TRACE_DBG_SUPPRESS  1
+    #define PK_TRACE_CTRL_ENABLE   1
     #define PK_TRACE_CRIT_ENABLE   1
     #define PK_TRACE_CKPT_ENABLE   0
     #define PK_KERNEL_TRACE_ENABLE 0
-#elif PK_TRACE_LEVEL == 2 /*only PK_TRACE_INF+DBG+KERNEL*/
+#elif PK_TRACE_LEVEL == 2 /*only PK_TRACE_ERR+INF+DBG+KERNEL*/
     #define PK_TRACE_ENABLE        1
     #define PK_TRACE_DBG_SUPPRESS  1
+    #define PK_TRACE_CTRL_ENABLE   1
     #define PK_TRACE_CRIT_ENABLE   1
     #define PK_TRACE_CKPT_ENABLE   1
     #define PK_KERNEL_TRACE_ENABLE 1
 #else                    /*All TRACEs*/
     #define PK_TRACE_ENABLE        1
     #define PK_TRACE_DBG_SUPPRESS  0
+    #define PK_TRACE_CTRL_ENABLE   1
     #define PK_TRACE_CRIT_ENABLE   1
     #define PK_TRACE_CKPT_ENABLE   1
     #define PK_KERNEL_TRACE_ENABLE 1
