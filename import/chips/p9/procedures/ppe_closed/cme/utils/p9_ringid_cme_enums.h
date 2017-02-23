@@ -49,6 +49,7 @@ typedef enum
     // Core Chiplet Rings
     // EC0 - EC23 instance specific Ring
     ec_repr = 4,
+    ec_abst = 5,
     //***************************
     // Rings needed for SBE - End
     //***************************

@@ -43,6 +43,7 @@
     #define HW402407_NDD1_TLBIE_STOP_WORKAROUND 1
     #define HW405292_NDD1_PCBMUX_SAVIOR         1
     #define MASK_MSR_SEM6
+    #define RUN_NDD1_ABIST_IN_PARALLEL_MODE 1
 #endif
 
 // --------------------

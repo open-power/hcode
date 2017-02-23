@@ -23,14 +23,22 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
+#include "plat_ring_traverse.h"
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
+#include "p9_ringid_cme_enums.h"
 
 int
 p9_hcd_core_arrayinit(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
     uint64_t scom_data = 0;
+
+#if RUN_NDD1_ABIST_IN_PARALLEL_MODE
+    // Nimbus DD1 workaround to run ABIST engine in parallel mode
+    PK_TRACE("Scan ec_abst ring core value %d", core);
+    putRing(core, CME_SCOM_EQ, ec_abst);
+#endif
 
     PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
@@ -59,7 +67,8 @@ p9_hcd_core_arrayinit(uint32_t core)
 
     PK_TRACE("Setup: loopcount , OPCG engine start ABIST, run-N mode");
     CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
-    scom_data |=  0x8002000000042FFF; // b0 = 1 b14 = 1 loop_counter = 0x42FFF
+    scom_data |=  0x80020000000012B8;
+    // b0 = 1 b14 = 1 loop_counter = 0x12B8(Parallel mode)
     CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
 
     PK_TRACE("Setup IDLE count");

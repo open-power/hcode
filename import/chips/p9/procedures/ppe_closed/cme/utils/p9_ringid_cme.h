@@ -64,6 +64,7 @@ typedef enum RingOffset
     EC_GPTR = 1,
     EC_TIME = 2,
     EC_MODE = 3,
+    EC_ABST = 4,
     // Instance Rings
     EC_REPR = INSTANCE_RING_MARK | 0
 } ringOffset;
@@ -71,7 +72,7 @@ typedef enum RingOffset
 const struct CHIPLET_DATA g_ecData =
 {
     32, // Core Chiplet ID range is 32-55. The base ID is 32.
-    4,  // 4 common rings for Core chiplet
+    5,  // 4 common rings for Core chiplet
     1,  // 1 instance specific ring for each Core chiplet
     3   //base,CC and risk level variants supported
 };
@@ -89,6 +90,7 @@ const struct ringProperties_t RING_PROPERTIES[P9_NUM_RINGS] =
     {EC_GPTR}, // 1
     {EC_TIME}, // 2
     {EC_MODE}, // 3
-    {EC_REPR}  // 4
+    {EC_REPR}, // 4
+    {EC_ABST}  // 5
 };
 #endif
