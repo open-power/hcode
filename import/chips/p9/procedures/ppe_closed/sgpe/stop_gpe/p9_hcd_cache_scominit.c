@@ -93,7 +93,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 PK_TRACE("Setup L3_LCO_TARGET_ID/VICTIMS via EX_L3_MODE_REG1[2-5,6-21]");
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, ex_index), scom_data.value);
                 scom_data.words.upper &= ~BITS32(2, 20);
-                scom_data.words.upper |= (quad << SHIFT32((5 - 1)));
+                scom_data.words.upper |= ((quad << SHIFT32(4)) | (ex_index << SHIFT32(5)));
                 scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
 
                 if (ex_count > 1)
