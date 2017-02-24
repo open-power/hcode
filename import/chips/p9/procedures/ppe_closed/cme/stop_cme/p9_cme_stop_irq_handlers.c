@@ -45,94 +45,58 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
     PK_TRACE_DBG("SPWU Trigger %d", irq);
 
     PkMachineContext ctx;
-    int      sem_post = 0;
-    uint32_t raw_spwu = (in32(CME_LCL_EISR) & BITS32(14, 2)) >> SHIFT32(15);
-    uint64_t scom_data = 0;
+    int      sem_post   = 0;
+    uint32_t core_mask  = 0;
+    uint32_t core_index = 0;
+    uint32_t raw_spwu   = (in32(CME_LCL_EISR) & BITS32(14, 2)) >> SHIFT32(15);
+    uint64_t scom_data  = 0;
 
-    if (raw_spwu & CME_MASK_C0)
+    for(core_mask = 2; core_mask; core_mask--)
     {
-        // if failing edge == spwu drop:
-        if (G_cme_stop_record.core_in_spwu & CME_MASK_C0)
+        if (raw_spwu & core_mask)
         {
-            PK_TRACE("Falling edge of spwu_c0, first clearing EISR");
-            out32(CME_LCL_EISR_CLR, BIT32(14));
+            core_index = core_mask & 1;
+            PK_TRACE("Detect SPWU signal level change on core%d", core_index);
 
-            // if spwu asserts again before we drop spwu_done, do nothing, else:
-            if ((~(in32(CME_LCL_EINR))) & BIT32(14))
+            // if failing edge == spwu drop:
+            if (G_cme_stop_record.core_in_spwu & core_mask)
             {
-                PK_TRACE("SPWU drop confirmed, now dropping spwu_done");
-                out32(CME_LCL_SICR_CLR, BIT32(16));
+                PK_TRACE("Falling edge of spwu, first clearing EISR");
+                out32(CME_LCL_EISR_CLR, BIT32((14 + core_index)));
 
-                CME_GETSCOM(PPM_GPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data);
-
-                // if spwu has been re-asserted after spwu_done is dropped:
-                if (scom_data & BIT64(1))
+                // if spwu asserts again before we drop spwu_done, do nothing, else:
+                if ((~(in32(CME_LCL_EINR))) & BIT32((14 + core_index)))
                 {
-                    PK_TRACE("SPWU asserts again, re-asserting spwu_done");
-                    out32(CME_LCL_SICR_OR, BIT32(16));
-                }
-                // if spwu truly dropped:
-                else
-                {
-                    PK_TRACE("Flip EIPR to raising edge and drop pm_exit");
-                    out32(CME_LCL_EIPR_OR,  BIT32(14));
-                    out32(CME_LCL_SICR_CLR, BIT32(4));
+                    PK_TRACE("SPWU drop confirmed, now dropping spwu_done");
+                    out32(CME_LCL_SICR_CLR, BIT32((16 + core_index)));
 
-                    // Core0 is now out of spwu, allow pm_active
-                    G_cme_stop_record.core_in_spwu &= ~CME_MASK_C0;
-                    g_eimr_override                &= ~IRQ_VEC_STOP_C0;
+                    CME_GETSCOM(PPM_GPMMR, core_mask, CME_SCOM_AND, scom_data);
+
+                    // if spwu has been re-asserted after spwu_done is dropped:
+                    if (scom_data & BIT64(1))
+                    {
+                        PK_TRACE("SPWU asserts again, re-asserting spwu_done");
+                        out32(CME_LCL_SICR_OR, BIT32((16 + core_index)));
+                    }
+                    // if spwu truly dropped:
+                    else
+                    {
+                        PK_TRACE("Flip EIPR to raising edge and drop pm_exit");
+                        out32(CME_LCL_EIPR_OR,  BIT32((14 + core_index)));
+                        out32(CME_LCL_SICR_CLR, BIT32((4  + core_index)));
+
+                        // Core is now out of spwu, allow pm_active
+                        G_cme_stop_record.core_in_spwu &= ~core_mask;
+                        g_eimr_override                &= ~(IRQ_VEC_STOP_C0 >> core_index);
+                    }
                 }
             }
-        }
-        // raising edge, Note do not clear EISR as thread will read and clear:
-        else
-        {
-            PK_TRACE("Raising edge of spwu_c0, clear EISR later in exit thread");
-            sem_post = 1;
-        }
-    }
-
-    if (raw_spwu & CME_MASK_C1)
-    {
-        // if failing edge == spwu drop:
-        if (G_cme_stop_record.core_in_spwu & CME_MASK_C1)
-        {
-            PK_TRACE("Falling edge of spwu_c1, first clearing EISR");
-            out32(CME_LCL_EISR_CLR, BIT32(15));
-
-            // if spwu asserts again before we drop spwu_done, do nothing, else:
-            if ((~(in32(CME_LCL_EINR))) & BIT32(15))
+            // raising edge, Note do not clear EISR as thread will read and clear:
+            else
             {
-                PK_TRACE("SPWU drop confirmed, now dropping spwu_done");
-                out32(CME_LCL_SICR_CLR, BIT32(17));
-
-                CME_GETSCOM(PPM_GPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data);
-
-                // if spwu has been re-asserted after spwu_done is dropped:
-                if (scom_data & BIT64(1))
-                {
-                    PK_TRACE("SPWU asserts again, re-asserting spwu_done");
-                    out32(CME_LCL_SICR_OR, BIT32(17));
-                }
-                // if spwu truly dropped:
-                else
-                {
-                    PK_TRACE("Flip EIPR to raising edge and drop pm_exit");
-                    out32(CME_LCL_EIPR_OR,  BIT32(15));
-                    out32(CME_LCL_SICR_CLR, BIT32(5));
-
-                    // Core1 is now out of spwu, allow pm_active
-                    G_cme_stop_record.core_in_spwu &= ~CME_MASK_C1;
-                    g_eimr_override                &= ~IRQ_VEC_STOP_C1;
-                }
+                PK_TRACE("Raising edge of spwu, clear EISR later in exit thread");
+                sem_post = 1;
             }
-
-        }
-        // raising edge, Note do not clear EISR as thread will read and clear:
-        else
-        {
-            PK_TRACE("Raising edge of spwu_c1, clear EISR later in exit thread");
-            sem_post = 1;
         }
     }
 

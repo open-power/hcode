@@ -47,6 +47,7 @@ p9_cme_stop_exit_catchup(uint32_t* core,
 {
     int      rc            = 0;
     uint8_t  catchup_level = 0;
+    uint32_t core_mask     = 0;
     uint32_t core_catchup  = 0;
     uint32_t wakeup        = 0;
     data64_t scom_data     = {0};
@@ -57,23 +58,16 @@ p9_cme_stop_exit_catchup(uint32_t* core,
     core_catchup = core_catchup & G_cme_stop_record.core_enabled &
                    (~G_cme_stop_record.core_running);
 
-    if (core_catchup & CME_MASK_C0)
+    for(core_mask = 2; core_mask; core_mask--)
     {
-        CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
-
-        if (scom_data.words.upper & BIT32(13))
+        if (core_catchup & core_mask)
         {
-            core_catchup = core_catchup - CME_MASK_C0;
-        }
-    }
+            CME_GETSCOM(CPPM_CPMMR, core_mask, CME_SCOM_AND, scom_data.value);
 
-    if (core_catchup & CME_MASK_C1)
-    {
-        CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
-
-        if (scom_data.words.upper & BIT32(13))
-        {
-            core_catchup = core_catchup - CME_MASK_C1;
+            if (scom_data.words.upper & BIT32(13))
+            {
+                core_catchup = core_catchup - core_mask;
+            }
         }
     }
 
@@ -184,8 +178,10 @@ p9_cme_stop_exit()
 
 #if !SPWU_AUTO
 
-    // figure out who is already awake and who needs to exit
-    spwu_stop = (wakeup >> 2) & G_cme_stop_record.core_enabled;
+    // for spwu assert, figure out who is already awake and who needs to exit
+    // leaving spwu drop to the handler to process
+    spwu_stop = (wakeup >> 2) & G_cme_stop_record.core_enabled &
+                (~G_cme_stop_record.core_in_spwu);
     spwu_wake = spwu_stop &   G_cme_stop_record.core_running;
     spwu_stop = spwu_stop & (~G_cme_stop_record.core_running);
 
