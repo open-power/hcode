@@ -179,6 +179,7 @@ typedef union
     uint32_t    word32;
 } ipc_func_id_t;
 
+
 #define IPC_MSG_DEQUEUE_SZ 8 //expected size of a deque structure
 struct ipc_msg
 {
@@ -201,6 +202,9 @@ struct ipc_msg
 
     //Argument passed into the callback function
     void*                    callback_arg;
+
+    uint32_t begin_time;    //!< Send start time
+    uint32_t end_time;      //!< Response received time
 };
 
 //Do a static check on the size of KERN_DEQUE.  IPC_MSG_DEQUE_SZ must be <= sizeof(KERN_DEQUE).

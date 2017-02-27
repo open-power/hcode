@@ -104,6 +104,10 @@ void ipc_init_msg(ipc_msg_t* msg,
     msg->ipc_rc = IPC_RC_SUCCESS;
     msg->resp_callback = resp_callback;
     msg->callback_arg = callback_arg;
+#ifdef GPE_IPC_TIMERS
+    msg->begin_time = 0;
+    msg->end_time = 0;
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -80,7 +80,9 @@ int ipc_send_msg(ipc_msg_t* msg, uint32_t target_id)
 
             msgs[*write_count % IPC_CBUF_SIZE] = msg;
             (*write_count)++;
-
+#ifdef GPE_IPC_TIMERS
+            msg->begin_time = in32(OCB_OTBR);
+#endif
             //raise the IPC interrupt on the target
             KERN_IRQ_STATUS_SET(IPC_GET_IRQ(target_id), 1);
         }
@@ -227,6 +229,10 @@ void ipc_process_msg(ipc_msg_t* msg)
         {
             if(msg->resp_callback)
             {
+#ifdef GPE_IPC_TIMERS
+                msg->end_time = in32(OCB_OTBR);
+#endif
+
                 msg->resp_callback(msg, msg->callback_arg);
             }
             else
