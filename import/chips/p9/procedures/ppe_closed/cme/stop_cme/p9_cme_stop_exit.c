@@ -73,7 +73,7 @@ p9_cme_stop_exit_catchup(uint32_t* core,
 
     if (core_catchup)
     {
-        // pcbmux grant
+        // request pcbmux grant
         out32(CME_LCL_SICR_OR,  (core_catchup << SHIFT32(11)));
         // chtm purge done
         out32(CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
@@ -847,6 +847,13 @@ STOP1_EXIT:
     PK_TRACE_INF("SX0.G: Polling for Core Waking up(pm_active=0) via EINR[20/21]");
 
     while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
+
+#ifdef USE_PPE_IMPRECISE_MODE
+
+    // execute sync before change pcbmux to prevent queued scom issues
+    sync();
+
+#endif
 
     PK_TRACE_INF("SX0.H: Release PCB Mux back to Core via SICR[10/11]");
     out32(CME_LCL_SICR_CLR, core << SHIFT32(11));
