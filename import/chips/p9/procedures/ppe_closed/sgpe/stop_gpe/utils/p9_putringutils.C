@@ -692,8 +692,6 @@ fapi2::ReturnCode rs4DecompressionSvc(
             }
             else
             {
-                PK_TRACE_INF("OVERRIDE |||||||||||");
-
                 if(0x8 & l_nibble) // We are parsing RS4 for override rings
                 {
                     uint8_t l_careMask = rs4_get_nibble(l_rs4Str, l_nibbleIndx);

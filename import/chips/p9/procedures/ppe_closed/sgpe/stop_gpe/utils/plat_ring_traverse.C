@@ -58,6 +58,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
         l_chipletData.iv_num_variants = 0;
         uint16_t* l_ringTorAddr = NULL;
         uint32_t* l_sectionAddr = NULL;
+        bool l_override = false;
 
         getRingProperties(i_ringID, &l_torOffset, &l_ringType);
 
@@ -109,9 +110,15 @@ fapi2::ReturnCode findRS4InImageAndApply(
 
         if((l_ringTorAddr) && (*l_ringTorAddr != 0))
         {
+            if ((i_ringID >= eq_ana_bndy_bucket_0) &&
+                (i_ringID <= eq_ana_bndy_l3dcc_bucket_26))
+            {
+                l_override = true;
+            }
+
             uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
             uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
-            l_rc = rs4DecompressionSvc(i_target, l_rs4Address, false, l_ringType, i_ringMode);
+            l_rc = rs4DecompressionSvc(i_target, l_rs4Address, l_override, l_ringType, i_ringMode);
         }
         else
         {
@@ -122,7 +129,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
         {
             if (l_hcodeLayout->g_sgpe_cmn_ring_ovrd_occ_offset == 0)
             {
-                PK_TRACE_DBG("No data in common ring section");
+                PK_TRACE_DBG("No data in override ring section");
                 break;
             }
 
