@@ -148,7 +148,8 @@ p9_cme_stop_entry()
             {
                 core_index = core_mask & 1;
                 G_cme_stop_record.req_level[core_index] =
-                    (pm_states & BITS64SH(36, 4)) >> SHIFT64SH(39);
+                    (pm_states & BITS64SH((36 + (core_index << 2)), 4)) >>
+                    SHIFT64SH((39 + (core_index << 2)));
 
                 if (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_1)
                 {
@@ -159,7 +160,6 @@ p9_cme_stop_entry()
                 if ((G_cme_stop_record.header_flags & MAP_11_TO_8) &&
                     (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_11))
                 {
-
                     G_cme_stop_record.req_level[core_index] = STOP_LEVEL_8;
                 }
 
