@@ -32,10 +32,16 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     int      rc        = SGPE_STOP_SUCCESS;
     uint64_t scom_data = 0;
 
+    PK_TRACE("Drop analog logic fence via QPPM_PFCS[11]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, quad), BIT64(11));
+
     // This is necessary to ensure that the DPLL is in Mode 1.
     // If not, the lock times will go from ~30us to 3-5ms
     PK_TRACE("Assert DPLL in mode 1,set slew rate via QPPM_DPLL_CTRL[2,6-15]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_OR, quad), BIT64(2) | BIT64(9));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_OR, quad), BIT64(2) | BIT64(15));
+
+    PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
 
     PK_TRACE("Drop DPLL test mode and reset via NET_CTRL0[3,4]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BITS64(3, 2));
@@ -90,6 +96,9 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
 
     PK_TRACE("Drop DPLL ff_bypass via QPPM_DPLL_CTRL[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_CLEAR, quad), BIT64(2));
+
+    PK_TRACE("Assert flushmode_inhibit via CPLT_CTRL0[2]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(2));
 
     PK_TRACE("Set scan ratio to 4:1 in bypass mode via OPCG_ALIGN[47-51]");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
