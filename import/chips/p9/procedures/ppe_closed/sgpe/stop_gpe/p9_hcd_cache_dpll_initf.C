@@ -42,6 +42,9 @@ extern "C" int p9_hcd_cache_dpll_initf(uint32_t quad)
     FAPI_DBG("Scan eq_dpll_func ring");
     FAPI_TRY(fapi2::putRing(l_eqTarget, eq_dpll_func));
 
+    FAPI_DBG("Scan eq_ana_func ring");
+    FAPI_TRY(fapi2::putRing(l_eqTarget, eq_ana_func));
+
     // Markers needed for cache ininf
 fapi_try_exit:
     FAPI_INF("<<p9_hcd_cache_dpll_initf");
