@@ -205,6 +205,7 @@ enum SGPE_STOP_EVENT_LEVELS
 
 enum SGPE_STOP_CME_FLAGS
 {
+    CME_TRACE_ENABLE                  = BIT32(4),
     CME_EX1_INDICATOR                 = BIT32(26),
     CME_SIBLING_FUNCTIONAL            = BIT32(27),
     CME_CORE0_ENTRY_FIRST             = BIT32(28),
