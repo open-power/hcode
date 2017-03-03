@@ -86,7 +86,11 @@ int putRing(
 
         cmeHeader_t* l_cmeHeader = (cmeHeader_t*) ( pCmeImage + CME_INT_VECTOR_SIZE );
 
+#ifdef USE_PPE_IMPRECISE_MODE
         l_scomOp = (l_cmeHeader->g_cme_mode_flags & QUEUED_SCAN_DISABLE) ? i_scom_op : CME_SCOM_QUEUED;
+#else
+        l_scomOp = i_scom_op;
+#endif
 
         l_chipletData = g_ecData;
 
