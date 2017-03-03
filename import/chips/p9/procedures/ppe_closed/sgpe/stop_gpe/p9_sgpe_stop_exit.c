@@ -757,7 +757,7 @@ p9_sgpe_stop_exit()
             // 7: LCL_EN_WAIT_CYCLES
             // 8: LCL_EN_FULL_SPEED
             // inst: 3D20C000 | addis r9, 0, 0xC000 | R9 = 0xC0000000
-            // inst: 3C208F80 | addis r1, 0, 0x8F80 | R1 = 0x8F800000
+            // inst: 3C208F80 | addis r1, 0, 0x8F80 | R1 = 0x88800000
             // inst: 90290120 | stw   r1, 0x120(r9) | 0xC0000120 = R1
             //
             // 1. The trace array has to be stopped to configure it
@@ -787,8 +787,9 @@ p9_sgpe_stop_exit()
 
             sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
-            if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(4))
+            if (pSgpeImgHdr->g_sgpe_reserve_flags & CME_TRACE_ENABLE)
             {
+                // Stop the trace to configure it
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(1));
 
                 for (ex_mask = 2; ex_mask; ex_mask--)
@@ -799,7 +800,7 @@ p9_sgpe_stop_exit()
                         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
                                     0x3D20C00000000000);
                         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
-                                    0x3C208F8000000000);
+                                    0x3C20888000000000);
                         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
                                     0x9029012000000000);
 
@@ -823,6 +824,9 @@ p9_sgpe_stop_exit()
                                         qloop), BITS64(33, 2));
                     }
                 }
+
+                // Start the trace
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(0));
             }
 
             if (in32(OCB_OCCS2) & BIT32(CME_DEBUG_TRAP_ENABLE))
