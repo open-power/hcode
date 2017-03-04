@@ -87,6 +87,8 @@ extern "C" {
 #define EQ_HANG_PULSE_6_REG      0x100F0026
 #define EQ_NET_CTRL0_WAND        0x100F0041
 #define EQ_NET_CTRL0_WOR         0x100F0042
+
+#define C_SLAVE_CONFIG           0x200F001E
 #define C_NET_CTRL0              0x200F0040
 #define C_NET_CTRL0_WAND         0x200F0041
 #define C_NET_CTRL0_WOR          0x200F0042
@@ -203,6 +205,12 @@ enum SGPE_STOP_EVENT_LEVELS
     LEVEL_EQ_BASE                     = 11
 };
 
+enum SGPE_SLAVE_CONFIG_BITS
+{
+    SLAVE_CONFIG_PM_DISABLE           = BIT64(6),
+    SLAVE_CONFIG_PM_MUX_DISABLE       = BIT64(7)
+};
+
 enum SGPE_STOP_CME_FLAGS
 {
     CME_TRACE_ENABLE                  = BIT32(4),
@@ -294,6 +302,11 @@ typedef struct
     uint32_t addr;
     uint64_t data;
 } SgpeScomRestore;
+
+#if HW405292_NDD1_PCBMUX_FENCE_FIX
+void p9_sgpe_set_slvcfg_pm_disable(uint32_t);
+void p9_sgpe_clear_slvcfg_pm_disable(uint32_t);
+#endif
 
 /// SGPE to PGPE IPC handlers
 void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg);

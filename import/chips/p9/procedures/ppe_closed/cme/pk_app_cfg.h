@@ -39,7 +39,9 @@
 /// @todo RTC 161182
 
 #if NIMBUS_DD_LEVEL == 1
-    #define HW386841_DD1_DSL_STOP1_FIX 0
+    #define HW386841_DD1_DSL_STOP1_FIX          0
+    #define HW402407_NDD1_TLBIE_STOP_WORKAROUND 1
+    #define HW405292_NDD1_PCBMUX_SAVIOR         1
     #define MASK_MSR_SEM6
 #endif
 

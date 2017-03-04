@@ -52,7 +52,9 @@
 // instruction [8:39]  0111 11,00 000,1 0101 0100 0,010 1010 011,0
 //                     31 | GPR0(0) | SPRD(10101 01000) | MFSPR(339)
 // constant    [40:63] 0000 0000 0000 0000 0000 0000
-#define RAM_MFSPR_SPRD_GPR0    0x7C1542A6000000
+#define RAM_MFSPR_SPRD_GPR0    0x007C1542A6000000
+
+#define RAM_MTSPR_SPRD_GPR0    0x007C1543A6000000
 
 // ram_vtid    [0:1]   00
 // pre_decode  [2:5]   0000
@@ -60,7 +62,11 @@
 // instruction [8:39]  0111 11,00 000,1 1001 0100 1,011 1010 011,0
 //                     31 | GPR0(0) | HRMOR(11001 01001) | MTSPR(467)
 // constant    [40:63] 0000 0000 0000 0000 0000 0000
-#define RAM_MTSPR_HRMOR_GPR0   0x7C194BA6000000
+#define RAM_MTSPR_HRMOR_GPR0   0x007C194BA6000000
+
+#define RAM_MTSPR_LPIDR_GPR0   0x107C1F4BA6000000
+
+#define RAM_MFSPR_LPIDR_GPR0   0x007C1F4AA6000000
 
 // ram_vtid    [0:1]   00
 // pre_decode  [2:5]   0000
@@ -69,6 +75,10 @@
 //                     31 | GPR0(0) | PSSCR(10111 11010) | MTSPR(467)
 // constant    [40:63] 0000 0000 0000 0000 0000 0000
 #define RAM_MTSPR_PSSCR_GPR0   0x7C17D3A6000000
+
+#if HW402407_NDD1_TLBIE_STOP_WORKAROUND
+    #define POWMAN_RESERVED_LPID 0xFFE
+#endif
 
 /// handcoded addresses TO BE REMOVED
 #define CORE_FIRMASK           0x20010A43
@@ -285,6 +295,12 @@ typedef struct
 
 
 /// CME STOP Entry and Exit Prototypes
+void p9_cme_pcbmux_savior_prologue(uint32_t);
+void p9_cme_pcbmux_savior_epilogue(uint32_t);
+
+void p9_cme_acquire_pcbmux(uint32_t, uint32_t);
+void p9_cme_release_pcbmux(uint32_t);
+
 void p9_cme_stop_enter_thread(void*);
 void p9_cme_stop_exit_thread(void*);
 void p9_cme_stop_eval_eimr_override();

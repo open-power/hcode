@@ -72,8 +72,7 @@ p9_cme_stop_exit_catchup(uint32_t* core,
 
     if (core_catchup)
     {
-        // request pcbmux grant
-        out32(CME_LCL_SICR_OR,  (core_catchup << SHIFT32(11)));
+
         // chtm purge done
         out32(CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
 
@@ -87,13 +86,21 @@ p9_cme_stop_exit_catchup(uint32_t* core,
 
         *spwu_stop |= (core_catchup) & (wakeup >> 2);
 
-        PK_TRACE_DBG("Catch: core[%d] running[%d] \
+        PK_TRACE_INF("Catch: core[%d] running[%d] \
                              core_catchup[%d] catchup_level[%d]",
                      *core, G_cme_stop_record.core_running,
                      core_catchup, catchup_level);
 
-        while((core_catchup & (in32(CME_LCL_SISR) >>
-                               SHIFT32(11))) != core_catchup);
+
+        if (catchup_level >= STOP_LEVEL_4)
+        {
+            p9_cme_acquire_pcbmux(core_catchup, 0);
+        }
+        else
+        {
+            p9_cme_acquire_pcbmux(core_catchup, 1);
+        }
+
 
         if (catchup_level < STOP_LEVEL_4)
         {
@@ -271,10 +278,6 @@ p9_cme_stop_exit()
 
 
 
-    PK_TRACE("Ensure PCB mux by request anyway via SICR[10/11]");
-    // ensure PCB Mux grant is present for all cores that wants to wakeup
-    // should only stop 11 need to request for new grant
-    out32(CME_LCL_SICR_OR,  (core << SHIFT32(11)));
 
     PK_TRACE("Clear chtm purge done via ESIR[24/25]");
     out32(CME_LCL_EISR_CLR, (core << SHIFT32(25)));
@@ -284,11 +287,6 @@ p9_cme_stop_exit()
     scom_data.words.upper = SSH_EXIT_IN_SESSION;
     CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
-    PK_TRACE("Check for PCB mux granted via SISR[10/11]");
-
-    while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
-
-    PK_TRACE_INF("SX0.C: PCB Mux Granted");
 
 
 
@@ -317,6 +315,10 @@ p9_cme_stop_exit()
 
 #endif
             PK_TRACE_DBG("Check: Core[%d] in Progress of SX4FH", core);
+
+            // Can't do the read of cplt_stat after flipping the mux before the core is powered on
+            p9_cme_acquire_pcbmux(core, 0);
+
 
             //========================
             MARK_TAG(SX_POWERON, core)
@@ -461,11 +463,14 @@ p9_cme_stop_exit()
     PK_TRACE_INF("+++++ +++++ STOP LEVEL 2 EXIT +++++ +++++");
     //--------------------------------------------------------------------------
 
-    PK_TRACE_DBG("Check: Core[%d] Serviced by SX2", core);
+    PK_TRACE_INF("Check: Core[%d] Serviced by SX2", core);
 
     //============================
     MARK_TAG(SX_STARTCLOCKS, core)
     //============================
+
+    //
+    p9_cme_acquire_pcbmux(core, 1);
 
     // do this again here for stop2 in addition to chiplet_reset
     // Note IPL doesnt need to do this twice
@@ -855,10 +860,7 @@ STOP1_EXIT:
 #endif
 
     PK_TRACE_INF("SX0.H: Release PCB Mux back to Core via SICR[10/11]");
-    out32(CME_LCL_SICR_CLR, core << SHIFT32(11));
-
-    while((core & ~(in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
-
+    p9_cme_release_pcbmux(core);
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
     scom_data.words.lower = 0;
     scom_data.words.upper = SSH_EXIT_COMPLETE;

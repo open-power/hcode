@@ -48,6 +48,223 @@
 
 extern CmeStopRecord G_cme_stop_record;
 
+
+void prepare_for_ramming (uint32_t core)
+{
+    uint64_t        scom_data;
+    PK_TRACE("LPID Assert block interrupt to PC via SICR[2/3]");
+    out32(CME_LCL_SICR_OR, core << SHIFT32(3));
+
+    PK_TRACE("LPID Waking up the core(pm_exit=1) via SICR[4/5]");
+    out32(CME_LCL_SICR_OR, core << SHIFT32(5));
+
+    PKTRACE("LPID Polling for core wakeup(pm_active=0) via EINR[20/21]");
+
+    while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
+
+    // Now core thinks its awake and ramming is allowed
+    scom_data = (BIT64(7) | BIT64(15) | BIT64(23) | BIT64(31));
+    PKTRACE ("writing %X to direct controls", (uint32_t) (scom_data >> 32));
+    PK_TRACE("RAMMING Put in core maintenance mode via direct controls");
+    CME_PUTSCOM(DIRECT_CONTROLS, core, scom_data);
+    //CME_PUTSCOM(DIRECT_CONTROLS, core, BIT64(7) | BIT64(15) | BIT64(23) | BIT64(31));
+
+    PK_TRACE("RAMMING Activate thread0-3 for RAM via THREAD_INFO 18-21");
+    CME_PUTSCOM(THREAD_INFO, core, BITS64(18, 4));
+
+    CME_GETSCOM(THREAD_INFO, core, CME_SCOM_AND, scom_data);
+    PKTRACE("THREAD_INFO core 0x%X 0x%X", core, (uint32_t) (scom_data & 0xFFFFFFFF));
+
+
+    PK_TRACE("LPID Enable RAM mode via RAM_MODEREG[0]");
+    CME_PUTSCOM(RAM_MODEREG, core, BIT64(0));
+
+    PKTRACE("LPID Set SPR mode to LT0-7 via SPR_MODE[20-27]");
+    CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
+
+    if (core & CME_MASK_C0)
+    {
+        PKTRACE("LPID Set SPRC to scratch0 for core0 via SCOM_SPRC");
+        CME_PUTSCOM(SCOM_SPRC, CME_MASK_C0, 0);
+    }
+
+    if (core & CME_MASK_C1)
+    {
+        PKTRACE("LPID Set SPRC to scratch1 for core1 via SCOM_SPRC");
+        CME_PUTSCOM(SCOM_SPRC, CME_MASK_C1, BIT64(60));
+    }
+}
+
+uint16_t ram_read_lpid( uint32_t core, uint32_t thread )
+{
+    uint64_t        scom_data = 0;
+    PK_TRACE_INF("RAM: mfspr lpidr, gpr0 via RAM_CTRL");
+    CME_PUTSCOM(RAM_CTRL, core, RAM_MFSPR_LPIDR_GPR0 | (((uint64_t) thread) << 62));
+
+    PKTRACE("LPID RAM: mtspr sprd , gpr0 via RAM_CTRL");
+    CME_PUTSCOM(RAM_CTRL, core, RAM_MTSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
+
+    if (core & CME_MASK_C0)
+    {
+        CME_GETSCOM(SCRACTH0, CME_MASK_C0, CME_SCOM_AND, scom_data);
+    }
+
+    if (core & CME_MASK_C1)
+    {
+        CME_GETSCOM(SCRACTH1, CME_MASK_C1, CME_SCOM_AND, scom_data);
+    }
+
+    PKTRACE("RAMMING LPID read for core 0x%X 0x%X", core, (uint32_t) (scom_data & 0xFFFFFFFF));
+
+    if (scom_data > 0xFFF )
+    {
+        PKTRACE("RAMMING ERROR Unexpected LPID core %d : 0x%lX 0xFFF", core, scom_data);
+        pk_halt();
+    }
+
+    return ((uint16_t) scom_data);
+}
+
+
+void ram_write_lpid( uint32_t core, uint32_t thread, uint16_t lpid )
+{
+
+    PKTRACE("LPID2 Writing LPID to 0x%X for core 0x%X thread %d", lpid, core, thread);
+
+    if (core & CME_MASK_C0)
+    {
+        PK_TRACE("LPID Set SPRC to scratch0 for core0 via SCOM_SPRC");
+        CME_PUTSCOM(SCOM_SPRC, CME_MASK_C0, 0);
+        CME_PUTSCOM(SCRACTH0, CME_MASK_C0, (uint64_t) lpid);
+    }
+
+    if (core & CME_MASK_C1)
+    {
+        PK_TRACE("LPID Set SPRC to scratch1 for core1 via SCOM_SPRC");
+        CME_PUTSCOM(SCOM_SPRC, CME_MASK_C1, BIT64(60));
+        CME_PUTSCOM(SCRACTH1, CME_MASK_C1, (uint64_t) lpid);
+    }
+
+    PK_TRACE("LPID RAM: mfspr sprd , gpr0 via RAM_CTRL");
+    CME_PUTSCOM(RAM_CTRL, core, RAM_MFSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
+
+    PK_TRACE("RAM: mtspr lpidr, gpr0 via RAM_CTRL");
+    CME_PUTSCOM(RAM_CTRL, core, RAM_MTSPR_LPIDR_GPR0 | (((uint64_t) thread) << 62));
+}
+
+
+void turn_off_ram_mode (uint32_t core)
+{
+    uint64_t scom_data;
+
+    PK_TRACE("LPID Disable thread0-3 for RAM via THREAD_INFO");
+    CME_PUTSCOM(THREAD_INFO, core, 0);
+
+    PK_TRACE("LPID Disable RAM mode via RAM_MODEREG");
+    CME_PUTSCOM(RAM_MODEREG, core, 0);
+
+    PK_TRACE("LPID Clear scratch/spr used in RAM");
+    CME_PUTSCOM(SPR_MODE,  core, 0);
+    CME_PUTSCOM(SCOM_SPRC, core, 0);
+
+    if (core & CME_MASK_C0)
+    {
+        CME_PUTSCOM(SCRACTH0,  CME_MASK_C0, 0);
+    }
+
+    if (core & CME_MASK_C1)
+    {
+        CME_PUTSCOM(SCRACTH1,  CME_MASK_C1, 0);
+    }
+
+    PK_TRACE("LPID Clear core maintenance mode via direct controls");
+    scom_data = (BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27));
+    PKTRACE("LPID Clear core maintenance mode via direct controls %X", (uint32_t) (scom_data >> 32));
+    CME_PUTSCOM(DIRECT_CONTROLS, core, scom_data);
+    //CME_PUTSCOM(DIRECT_CONTROLS, core, BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27));
+
+    PK_TRACE("LPID Drop pm_exit via SICR[4/5]");
+    out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
+
+    PKTRACE("LPID Polling for core to stop(pm_active=1) via EINR[20/21]");
+
+    while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)));
+
+    PKTRACE("LPID Clear pm_active status via EISR[20/21]");
+    out32(CME_LCL_EISR_CLR, core << SHIFT32(21));
+
+    PK_TRACE("LPID Drop block interrupt to PC via SICR[2/3]");
+    out32(CME_LCL_SICR_CLR, core << SHIFT32(3));
+
+}
+
+
+void p9_cme_acquire_pcbmux(uint32_t core, uint32_t check)
+{
+
+    PK_TRACE("Request PCB mux via SICR[10/11]");
+
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+    p9_cme_pcbmux_savior_prologue(core);
+#endif
+    out32(CME_LCL_SICR_OR, core << SHIFT32(11));
+
+    // Poll Infinitely for PCB Mux Grant
+    // MF: change watchdog timer in pk to ensure forward progress
+    while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+
+    if (check != 0)
+    {
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+        p9_cme_pcbmux_savior_epilogue(core);
+#endif
+    }
+
+    PK_TRACE_INF("S: PCB Mux Granted C[%d]", core);
+
+}
+
+void p9_cme_release_pcbmux(uint32_t core)
+{
+
+    out32(CME_LCL_SICR_CLR, core << SHIFT32(11));
+
+    while((core & ~(in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+
+}
+
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+
+void p9_cme_pcbmux_savior_prologue(uint32_t core)
+{
+    uint32_t old_msr   = 0;
+    uint32_t new_msr   = 0;
+    uint64_t scom_data = 0;
+
+    old_msr = mfmsr();
+    new_msr = old_msr | 0x7F000000;
+    mtmsr(new_msr);
+    CME_GETSCOM(0x8F0002, core, CME_SCOM_AND, scom_data);
+    mtmsr(old_msr);
+}
+
+void p9_cme_pcbmux_savior_epilogue(uint32_t core)
+{
+    uint64_t scom_data  = 0;
+    uint32_t old_msr   = 0;
+    uint32_t new_msr   = 0;
+
+    // Read the value from core CPLT_STAT0.  Ignore the data
+    old_msr = mfmsr();
+    new_msr = old_msr | 0x7F000000;
+    mtmsr(new_msr);
+    CME_GETSCOM(0x00000100, core, CME_SCOM_EQ, scom_data);
+    mtmsr(old_msr);
+
+}
+
+#endif
+
 int
 p9_cme_stop_entry()
 {
@@ -69,6 +286,14 @@ p9_cme_stop_entry()
     uint32_t        lclr_data           = 0;
     data64_t        scom_data           = {0};
     ppm_pig_t       pig                 = {0};
+
+#if HW402407_NDD1_TLBIE_STOP_WORKAROUND
+
+    uint32_t thread = 0;
+    uint16_t        lpid_c0[4] = {0, 0, 0, 0};
+    uint16_t        lpid_c1[4] = {0, 0, 0, 0};
+
+#endif  // tlbie stop workaround
 
     //--------------------------------------------------------------------------
     PK_TRACE_INF("+++++ +++++ BEGIN OF STOP ENTRY +++++ +++++");
@@ -233,8 +458,7 @@ p9_cme_stop_entry()
         PK_TRACE_INF("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
         //----------------------------------------------------------------------
 
-        PK_TRACE("Request PCB mux via SICR[10/11]");
-        out32(CME_LCL_SICR_OR, core << SHIFT32(11));
+        p9_cme_acquire_pcbmux(core, 1);
 
         PK_TRACE("Pulse STOP entry acknowledgement to PC via SICR[0/1]");
         out32(CME_LCL_SICR_OR,  core << SHIFT32(1));
@@ -278,11 +502,42 @@ p9_cme_stop_entry()
         PK_TRACE_DBG("Check: core[%d] target_lv[%d] deeper_lv[%d] deeper_core[%d]",
                      core, target_level, deeper_level, deeper_core);
 
-        // Poll Infinitely for PCB Mux Grant
-        // MF: change watchdog timer in pk to ensure forward progress
-        while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+#if HW402407_NDD1_TLBIE_STOP_WORKAROUND
 
-        PK_TRACE_INF("SE2.A: PCB Mux Granted");
+// Save thread's LPIDs and overwrite with POWMAN_RESERVED_LPID
+        prepare_for_ramming(core);
+
+        for (thread = 0; thread < 4; thread++ )
+        {
+            if (core & CME_MASK_C0)
+            {
+                lpid_c0[thread] = ram_read_lpid(CME_MASK_C0, thread);
+                PKTRACE("c0lpid %X thread %X", (uint32_t) lpid_c0[thread], thread);
+                ram_write_lpid(CME_MASK_C0, thread, POWMAN_RESERVED_LPID);
+
+                if (ram_read_lpid(CME_MASK_C0, thread) != POWMAN_RESERVED_LPID)
+                {
+                    asm("trap");
+                }
+            }
+
+            if (core & CME_MASK_C1)
+            {
+                lpid_c1[thread] = ram_read_lpid(CME_MASK_C1, thread);
+                PKTRACE("c1lpid %X thread %X", (uint32_t) lpid_c1[thread], thread);
+                ram_write_lpid(CME_MASK_C1, thread, POWMAN_RESERVED_LPID);
+
+                if (ram_read_lpid(CME_MASK_C1, thread) != POWMAN_RESERVED_LPID)
+                {
+                    asm("trap");
+                }
+            }
+        }
+
+//        turn_off_ram_mode (core);
+
+
+#endif // tlbie stop workaround
 
         //=============================
         MARK_TRAP(SE_QUIESCE_CORE_INTF)
@@ -312,6 +567,51 @@ p9_cme_stop_entry()
         PPE_WAIT_CORE_CYCLES(512)
 
         PK_TRACE_INF("SE2.B: Interfaces Quiesced");
+
+#if HW402407_NDD1_TLBIE_STOP_WORKAROUND
+
+// Restore thread's LPIDs
+
+//       prepare_for_ramming(core);
+
+        for (thread = 0; thread < 4; thread++ )
+        {
+            if (core & CME_MASK_C0)
+            {
+                ram_write_lpid(CME_MASK_C0, thread, lpid_c0[thread]);
+            }
+
+            if (core & CME_MASK_C1)
+            {
+                ram_write_lpid(CME_MASK_C1, thread, lpid_c1[thread]);
+            }
+        }
+
+
+        // Read back and check
+        for (thread = 0; thread < 4; thread++ )
+        {
+            if (core & CME_MASK_C0)
+            {
+                if (ram_read_lpid(CME_MASK_C0, thread) != lpid_c0[thread])
+                {
+                    asm("trap");
+                }
+            }
+
+            if (core & CME_MASK_C1)
+            {
+                if (ram_read_lpid(CME_MASK_C1, thread) != lpid_c1[thread])
+                {
+                    asm("trap");
+                }
+            }
+        }
+
+        turn_off_ram_mode (core);
+
+
+#endif // tlbie stop workaround
 
         //==========================
         MARK_TRAP(SE_STOP_CORE_CLKS)

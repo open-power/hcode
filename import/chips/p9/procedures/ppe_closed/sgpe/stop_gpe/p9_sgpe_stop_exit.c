@@ -46,6 +46,43 @@ extern SgpeStopRecord                       G_sgpe_stop_record;
 
 #endif
 
+#if HW405292_NDD1_PCBMUX_FENCE_FIX
+
+void p9_sgpe_set_slvcfg_pm_disable(uint32_t qloop)
+{
+
+    uint64_t l_scomData = 0;
+    uint32_t l_scomAddr = 0;
+    uint32_t c = 0;
+
+    for (c = 0; c < 4; c++)
+    {
+        l_scomAddr = GPE_SCOM_ADDR_CORE( C_SLAVE_CONFIG, (qloop * 4 + c));
+        GPE_GETSCOM(l_scomAddr, l_scomData);
+        l_scomData |= SLAVE_CONFIG_PM_DISABLE | SLAVE_CONFIG_PM_MUX_DISABLE;
+        GPE_PUTSCOM(l_scomAddr, l_scomData);
+    }
+
+}
+void p9_sgpe_clear_slvcfg_pm_disable(uint32_t qloop)
+{
+
+    uint64_t l_scomData = 0;
+    uint32_t l_scomAddr = 0;
+    uint32_t c = 0;
+
+    for (c = 0; c < 4; c++)
+    {
+        l_scomAddr = GPE_SCOM_ADDR_CORE( C_SLAVE_CONFIG, (qloop * 4 + c));
+        GPE_GETSCOM(l_scomAddr, l_scomData);
+        l_scomData &= ~SLAVE_CONFIG_PM_DISABLE & ~SLAVE_CONFIG_PM_MUX_DISABLE;
+        GPE_PUTSCOM(l_scomAddr, l_scomData);
+    }
+
+}
+
+#endif
+
 #if FUSED_CORE_MODE_SCAN_FIX
 
 uint32_t G_fcm_spin[4] = {0, 435, 1402, 2411};
@@ -328,6 +365,12 @@ p9_sgpe_stop_exit()
             scom_data.words.lower = 0;
             scom_data.words.upper = SSH_EXIT_IN_SESSION;
             GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
+
+#if HW405292_NDD1_PCBMUX_FENCE_FIX
+            PK_TRACE_INF("Setting slvcfg %d", qloop);
+            // Gate the PCBMux request so scanning doesn't cause random requests
+            p9_sgpe_set_slvcfg_pm_disable(qloop);
+#endif
 
             //=================================
             MARK_TAG(SX_POWERON, (32 >> qloop))
@@ -652,6 +695,13 @@ p9_sgpe_stop_exit()
 
             PK_TRACE_INF("SX11.N: Cache Scom Cust");
             p9_hcd_cache_scomcust(qloop, m_pg, 0);
+
+
+#if HW405292_NDD1_PCBMUX_FENCE_FIX
+            PK_TRACE_INF("Clearing SLVCNFG %d", qloop);
+            // Allow the CME to access the PCB Slave NET_CTRL registers
+            p9_sgpe_clear_slvcfg_pm_disable(qloop);
+#endif
 
             //==================================
             MARK_TAG(SX_CME_BOOT, (32 >> qloop))
