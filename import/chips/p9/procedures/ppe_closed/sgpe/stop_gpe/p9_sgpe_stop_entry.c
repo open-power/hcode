@@ -875,6 +875,11 @@ p9_sgpe_stop_entry()
 
         PK_TRACE_INF("SE11.D: Cache Clock Stopped");
 
+#if HW405292_NDD1_PCBMUX_FENCE_FIX
+        // Gate the PCBMux request so scanning doesn't cause random requests
+        p9_sgpe_set_slvcfg_pm_disable(qloop);
+#endif
+
         //=========================================
         MARK_TAG(SE_POWER_OFF_CACHE, (32 >> qloop))
         //=========================================
