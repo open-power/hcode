@@ -131,7 +131,7 @@ PPMR_header_copy_loop:
         add GPR_ADDR_PAYLOAD_HOMER, GPR_PPMR_HOMER_ADDR, GPR_HOMER_PAYLOAD_OFF
 
         ## Address in SRAM where the length of payload will be found
-        _liw %GPR_SRAM_IMG_LEN_ADDR, OCC_SRAM_PGPE_HCODE_LENGTH_ADDR
+        _liw %GPR_SRAM_IMG_LEN_ADDR, OCC_SRAM_PGPE_IMAGE_LENGTH_ADDR
 
         ## Size of payload (in double words)
         lwz GPR_SIZE, OFFSET(GPR_SRAM_IMG_LEN_ADDR)
