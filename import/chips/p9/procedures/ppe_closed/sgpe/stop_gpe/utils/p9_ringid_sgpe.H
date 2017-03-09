@@ -93,17 +93,32 @@ typedef enum
     eq_ana_bndy_bucket_23 = 42,
     eq_ana_bndy_bucket_24 = 43,
     eq_ana_bndy_bucket_25 = 44,
-    eq_ana_bndy_l3dcc_bucket_26 = 45,
+    eq_ana_bndy_bucket_l3dcc = 45,
     eq_ana_mode = 46,
+    eq_ana_bndy_bucket_26 = 47,
+    eq_ana_bndy_bucket_27 = 48,
+    eq_ana_bndy_bucket_28 = 49,
+    eq_ana_bndy_bucket_29 = 50,
+    eq_ana_bndy_bucket_30 = 51,
+    eq_ana_bndy_bucket_31 = 52,
+    eq_ana_bndy_bucket_32 = 53,
+    eq_ana_bndy_bucket_33 = 54,
+    eq_ana_bndy_bucket_34 = 55,
+    eq_ana_bndy_bucket_35 = 56,
+    eq_ana_bndy_bucket_36 = 57,
+    eq_ana_bndy_bucket_37 = 68,
+    eq_ana_bndy_bucket_38 = 69,
+    eq_ana_bndy_bucket_39 = 60,
+    eq_ana_bndy_bucket_40 = 61,
+    eq_ana_bndy_bucket_41 = 62,
 
     // Quad Chiplet Rings
     // EQ0 - EQ5 instance specific Rings
-    eq_repr = 47,
-    ex_l3_repr = 48,
-    ex_l2_repr = 49,
-    ex_l3_refr_repr = 50,
-    ex_l3_refr_time = 51,
-
+    eq_repr = 63,
+    ex_l3_repr = 64,
+    ex_l2_repr = 65,
+    ex_l3_refr_repr = 66,
+    ex_l3_refr_time = 67,
 
     P9_NUM_RINGS // This shoud always be the last constant
 } RingID; // end of enum RingID
@@ -178,8 +193,24 @@ typedef enum RingOffset
     EQ_ANA_BNDY_BUCKET_23 = 41,
     EQ_ANA_BNDY_BUCKET_24 = 42,
     EQ_ANA_BNDY_BUCKET_25 = 43,
-    EQ_ANA_BNDY_L3DCC_BUCKET_26 = 44,
+    EQ_ANA_BNDY_L3DCC_BUCKET = 44,
     EQ_ANA_MODE = 45,
+    EQ_ANA_BNDY_BUCKET_26 = 46,
+    EQ_ANA_BNDY_BUCKET_27 = 47,
+    EQ_ANA_BNDY_BUCKET_28 = 48,
+    EQ_ANA_BNDY_BUCKET_29 = 49,
+    EQ_ANA_BNDY_BUCKET_30 = 50,
+    EQ_ANA_BNDY_BUCKET_31 = 51,
+    EQ_ANA_BNDY_BUCKET_32 = 52,
+    EQ_ANA_BNDY_BUCKET_33 = 53,
+    EQ_ANA_BNDY_BUCKET_34 = 54,
+    EQ_ANA_BNDY_BUCKET_35 = 55,
+    EQ_ANA_BNDY_BUCKET_36 = 56,
+    EQ_ANA_BNDY_BUCKET_37 = 57,
+    EQ_ANA_BNDY_BUCKET_38 = 58,
+    EQ_ANA_BNDY_BUCKET_39 = 59,
+    EQ_ANA_BNDY_BUCKET_40 = 60,
+    EQ_ANA_BNDY_BUCKET_41 = 61,
 
     // Instance Rings
     EQ_REPR         = (0 | INSTANCE_RING_MARK),
@@ -192,7 +223,7 @@ typedef enum RingOffset
 static const struct CHIPLET_DATA g_eqData =
 {
     16, // Core Chiplet ID range is 32-55. The base ID is 32.
-    46,  // 46 common rings for Core chiplet
+    62, // 62 common rings for Core chiplet
     5,  // 5 instance specific ring for each Core chiplet
     3   //base CC and risk level variants supported
 };
@@ -251,12 +282,28 @@ static const struct ringProperties_t RING_PROPERTIES[P9_NUM_RINGS] =
     {EQ_ANA_BNDY_BUCKET_23},//42
     {EQ_ANA_BNDY_BUCKET_24},//43
     {EQ_ANA_BNDY_BUCKET_25},//44
-    {EQ_ANA_BNDY_L3DCC_BUCKET_26},//45
+    {EQ_ANA_BNDY_L3DCC_BUCKET},//45
     {EQ_ANA_MODE},//46
-    {EQ_REPR},//47
-    {EX_L3_REPR},//48
-    {EX_L2_REPR},//49
-    {EX_L3_REFR_REPR},//50
-    {EX_L3_REFR_TIME},//51
+    {EQ_ANA_BNDY_BUCKET_26},//47
+    {EQ_ANA_BNDY_BUCKET_27},//48
+    {EQ_ANA_BNDY_BUCKET_28},//49
+    {EQ_ANA_BNDY_BUCKET_29},//50
+    {EQ_ANA_BNDY_BUCKET_30},//51
+    {EQ_ANA_BNDY_BUCKET_31},//52
+    {EQ_ANA_BNDY_BUCKET_32},//53
+    {EQ_ANA_BNDY_BUCKET_33},//54
+    {EQ_ANA_BNDY_BUCKET_34},//55
+    {EQ_ANA_BNDY_BUCKET_35},//56
+    {EQ_ANA_BNDY_BUCKET_36},//57
+    {EQ_ANA_BNDY_BUCKET_37},//58
+    {EQ_ANA_BNDY_BUCKET_38},//59
+    {EQ_ANA_BNDY_BUCKET_39},//60
+    {EQ_ANA_BNDY_BUCKET_40},//61
+    {EQ_ANA_BNDY_BUCKET_41},//62
+    {EQ_REPR},//63
+    {EX_L3_REPR},//64
+    {EX_L2_REPR},//65
+    {EX_L3_REFR_REPR},//66
+    {EX_L3_REFR_TIME},//67
 };
 #endif

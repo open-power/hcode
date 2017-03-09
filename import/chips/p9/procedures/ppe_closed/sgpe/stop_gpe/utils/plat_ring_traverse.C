@@ -106,8 +106,9 @@ fapi2::ReturnCode findRS4InImageAndApply(
 
         if((l_ringTorAddr) && (*l_ringTorAddr != 0))
         {
-            if ((i_ringID >= eq_ana_bndy_bucket_0) &&
-                (i_ringID <= eq_ana_bndy_l3dcc_bucket_26))
+            if ( ( (i_ringID >= eq_ana_bndy_bucket_0) && (i_ringID <= eq_ana_bndy_bucket_25) ) ||
+                 ( i_ringID == eq_ana_bndy_bucket_l3dcc ) ||
+                 ( (i_ringID >= eq_ana_bndy_bucket_26) && (i_ringID <= eq_ana_bndy_bucket_41) ) )
             {
                 l_override = true;
             }

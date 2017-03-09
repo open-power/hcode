@@ -53,9 +53,9 @@ extern "C" int p9_hcd_cache_chiplet_l3_dcc_setup(uint32_t quad)
 
     FAPI_DBG(">>p9_hcd_cache_chiplet_l3_dcc_setup");
 
-    FAPI_DBG("Scan eq_ana_bndy_l3dcc_bucket_26 ring");
+    FAPI_DBG("Scan eq_ana_bndy_bucket_l3dcc ring");
     FAPI_TRY(fapi2::putRing(l_eqTarget,
-                            eq_ana_bndy_l3dcc_bucket_26, fapi2::RING_MODE_SET_PULSE_NSL));
+                            eq_ana_bndy_bucket_l3dcc, fapi2::RING_MODE_SET_PULSE_NSL));
 
     FAPI_DBG("Drop L3 DCC bypass");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL1_WAND, quad), ~BIT64(1));
