@@ -34,20 +34,20 @@ PgpePstateRecord G_pgpe_pstate_record;
 EXTERNAL_IRQ_TABLE_START
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_DEBUGGER
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_TRACE_TRIGGER
-IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_OCC_ERROR
+IRQ_HANDLER(p9_pgpe_irq_handler_occ_error, NULL) //OCCHW_IRQ_OCC_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PBA_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_SRT_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_GPE0_HALT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_GPE1_HALT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_GPE2_HALT
-IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_GPE3_HALT
+IRQ_HANDLER(p9_pgpe_irq_handler_sgpe_halt, NULL) //OCCHW_IRQ_GPE3_HALT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PPC405_HALT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_OCB_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_SPIPSS_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_CHECK_STOP_PPC405
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_CHECK_STOP_GPE0
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_CHECK_STOP_GPE1
-IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_CHECK_STOP_GPE2
+IRQ_HANDLER(p9_pgpe_irq_handler_xstop_gpe2, NULL) //OCCHW_IRQ_CHECK_STOP_GPE2
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_CHECK_STOP_GPE3
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_OCC_MALF_ALERT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_ADU_MALF_ALERT
@@ -92,7 +92,7 @@ IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_O2S_1B_ONGOING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PSSBRIDGE_ONGOING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_IPI0_LO_PRIORITY
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_IPI1_LO_PRIORITY
-IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_IPI2_LO_PRIORITY
+IRQ_HANDLER(p9_pgpe_irq_handler_ipi2_lo, NULL) //OCCHW_IRQ_IPI2_LO_PRIORITY
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_IPI3_LO_PRIORITY
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_IPI4_LO_PRIORITY
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_RESERVED_63
@@ -101,16 +101,19 @@ EXTERNAL_IRQ_TABLE_END
 #define  KERNEL_STACK_SIZE  512
 #define  THREAD_STACK_SIZE  512
 
+//#define  PGPE_THREAD_PRIORITY_SAFE_MODE_AND_PM_SUSPEND  1
 #define  PGPE_THREAD_PRIORITY_PROCESS_REQUESTS  1
 #define  PGPE_THREAD_PRIORITY_ACTUATE_PSTATES   2
 
 uint8_t  G_kernel_stack[KERNEL_STACK_SIZE];
 
 //Thread Stacks
+//uint8_t  G_p9_pgpe_thread_safe_mode_and_pm_suspend_stack[THREAD_STACK_SIZE];
 uint8_t  G_p9_pgpe_thread_process_requests_stack[THREAD_STACK_SIZE];
 uint8_t  G_p9_pgpe_thread_actuate_pstates_stack[THREAD_STACK_SIZE];
 
 //Thread Control Block
+//PkThread G_p9_pgpe_thread_safe_mode_and_pm_suspend;
 PkThread G_p9_pgpe_thread_process_requests;
 PkThread G_p9_pgpe_thread_actuate_pstates;
 
@@ -137,6 +140,20 @@ main(int argc, char** argv)
         asm volatile ("trap");
     }
 
+    /*
+    // Initialize the thread control block for G_p9_pgpe_thread_safe_mode_and_pm_suspend
+    pk_thread_create(&G_p9_pgpe_thread_safe_mode_and_pm_suspend,
+                     (PkThreadRoutine)p9_pgpe_thread_safe_mode_and_pm_suspend,
+                     (void*)NULL,
+                     (PkAddress)G_p9_pgpe_thread_safe_mode_and_pm_suspend_stack,
+                     (size_t)THREAD_STACK_SIZE,
+                     (PkThreadPriority)PGPE_THREAD_PRIORITY_SAFE_MODE_AND_PM_SUSPEND);
+
+    PK_TRACE_BIN("G_p9_pgpe_thread_safe_mode_and_pm_suspend",
+                 &G_p9_pgpe_thread_safe_mode_and_pm_suspend,
+                 sizeof(G_p9_pgpe_thread_safe_mode_and_pm_suspend));
+    */
+
     // Initialize the thread control block for G_p9_pgpe_thread_process_requests
     pk_thread_create(&G_p9_pgpe_thread_process_requests,
                      (PkThreadRoutine)p9_pgpe_thread_process_requests,
@@ -162,13 +179,14 @@ main(int argc, char** argv)
                  sizeof(G_p9_pgpe_thread_actuate_pstates));
 
     // Make G_p9_pgpe_thread pstates_update runnable
+//    pk_thread_resume(&G_p9_pgpe_thread_safe_mode_and_pm_suspend);
     pk_thread_resume(&G_p9_pgpe_thread_process_requests);
     pk_thread_resume(&G_p9_pgpe_thread_actuate_pstates);
 
     //Do initialization
     p9_pgpe_header_init();
 
-    PK_TRACE_DBG("Update PGPE Header with pertinent OCC SRAM information");
+    PK_TRACE_DBG("Update PGPE Header with OCC SRAM info");
     p9_pgpe_header_fill();
 
 #if USE_BOOT_TEMP
@@ -181,7 +199,7 @@ main(int argc, char** argv)
     p9_pgpe_boot_temp(); //This is just temporary
 #endif
 
-    PK_TRACE_DBG("Initializing from Global Pstate Parameter Block");
+    PK_TRACE_DBG("Init from Global Pstate Parameter Block");
     p9_pgpe_gppb_init();
 
 #if GEN_PSTATE_TBL
@@ -192,10 +210,13 @@ main(int argc, char** argv)
     PK_TRACE_DBG("Setup FIT(Fixed-Interval Timer)");
     p9_pgpe_fit_init();
 
-    PK_TRACE_DBG("Initialize all pstate related data to some default values");
+    PK_TRACE_DBG("Init all pstate data to default values");
     p9_pgpe_pstate_init();
 
-    PK_TRACE_DBG("Starting PK Threads");
+    PK_TRACE_DBG("Setup OCCFIR[OCC_HB Error]");
+    p9_pgpe_ocb_hb_error_init();
+
+    PK_TRACE_DBG("Start PK Threads");
 
     // Start running the highest priority thread.
     // This function never returns

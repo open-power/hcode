@@ -104,6 +104,22 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
             G_already_sem_posted  = 1;
         }
     }
+    else if(G_pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
+            G_pstatesStatus == PSTATE_PM_SUSPENDED ||
+            G_pstatesStatus == PSTATE_SAFE_MODE)
+    {
+        PK_TRACE_DBG("START_STOP: PM_SUSP/Safe\n");
+        args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
+        ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack = 0;
+        G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_processing = 0;
+
+        if (G_already_sem_posted == 0)
+        {
+            pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
+            G_already_sem_posted  = 1;
+        }
+    }
     else
     {
         //START
@@ -111,7 +127,7 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
         {
             if (G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack == 0)
             {
-                if(G_pstatesStatus == PSTATE_DISABLE)
+                if(G_pstatesStatus == PSTATE_INIT || G_pstatesStatus == PSTATE_STOPPED)
                 {
                     PK_TRACE_DBG("START_STOP: Start Rcvd\n");
 
@@ -123,11 +139,9 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
                     //Post to Actuate Thread
                     pk_semaphore_post(&G_pgpe_pstate_record.sem_actuate);
                 }
-                else
+                else if (G_pstatesStatus == PSTATE_ACTIVE)
                 {
-                    PK_TRACE_DBG("START_STOP: Pstate Already Started\n");
-                    args->msg_cb.rc = PGPE_RC_REQ_PSTATE_ALREADY_STARTED;
-                    ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+                    //\todo
                 }
             }
             else
@@ -144,15 +158,15 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 
             if (G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack == 0)
             {
-                if(G_pstatesStatus == PSTATE_DISABLE)
+                if(G_pstatesStatus != PSTATE_ACTIVE)
                 {
                     PK_TRACE_DBG("START_STOP: Pstate Already Stopped\n");
-                    args->msg_cb.rc = PGPE_RC_REQ_PSTATE_ALREADY_SUSPENDED;
+                    args->msg_cb.rc = PGPE_RC_REQ_PSTATE_ALREADY_STOPPED;
                     ipc_send_rsp(cmd, IPC_RC_SUCCESS);
                 }
                 else
                 {
-                    G_pstatesStatus = PSTATE_DISABLE;
+                    G_pstatesStatus = PSTATE_STOPPED;
                     G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].cmd = cmd;
                     G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack = 1;
                     G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_processing = 0;

@@ -60,6 +60,8 @@
 //#Defines
 //
 #define OCC_IPC_IMMEDIATE_RESP      0x0080
+#define CCSR_CORE_CONFIG_MASK    0x80000000
+
 
 /// PGPE PState
 typedef struct
@@ -67,12 +69,18 @@ typedef struct
     PkSemaphore sem_process_req;
     PkSemaphore sem_actuate;
     PkSemaphore sem_sgpe_wait;
+    PkSemaphore sem_safe_mode_and_pm_suspend_req;
 } PgpePstateRecord;
 
 /// PGPE PState
+void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq);
+void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq);
+void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq);
+void p9_pgpe_irq_handler_ipi2_lo(void* arg, PkIrqId irq);
 void p9_pgpe_thread_process_requests(void* arg);
 void p9_pgpe_thread_actuate_pstates(void* arg);
+void p9_pgpe_thread_safe_mode_and_pm_suspend(void* arg);
 
 ///PGPE PState Info
 void p9_pgpe_gen_pstate_info();
@@ -82,5 +90,8 @@ void p9_pgpe_fit_init();
 
 ///PGPE IPC
 void p9_pgpe_ipc_init();
+
+//OCB Heartbeat Error
+void p9_pgpe_ocb_hb_error_init();
 
 #endif //_P9_PGPE_H_

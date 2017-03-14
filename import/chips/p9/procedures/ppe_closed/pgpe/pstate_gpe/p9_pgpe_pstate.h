@@ -53,10 +53,14 @@
 
 enum PSTATE_STATUS
 {
-    PSTATE_DISABLE       =    0,
-    PSTATE_START_PENDING =    1,
-    PSTATE_SUSPENDED     =    3,
-    PSTATE_ENABLE        =    4
+    PSTATE_INIT                                 =    0,
+    PSTATE_START_PENDING                        =    1,
+    PSTATE_ACTIVE                               =    2,
+    PSTATE_STOPPED                              =    3,
+    PSTATE_SUSPENDED                            =    4,
+    PSTATE_PM_SUSPEND_PENDING                   =    5,
+    PSTATE_PM_SUSPENDED                         =    6,
+    PSTATE_SAFE_MODE                            =    7
 };
 
 //
@@ -78,5 +82,14 @@ void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest);
 void p9_pgpe_pstate_calc_wof();
 void p9_pgpe_pstate_apply_clips();
 void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg);
+void p9_pgpe_pstate_pm_complex_suspend();
+void p9_pgpe_pstate_send_suspend_stop();
+void p9_pgpe_pstate_safe_mode();
+void p9_pgpe_pstate_apply_safe_clips();
+int32_t p9_pgpe_pstate_at_target();
+void p9_pgpe_pstate_do_step();
+void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner);
+void p9_pgpe_wait_cme_db_ack(uint8_t msg_id, uint32_t activeCores);
+void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid);
 
 #endif //

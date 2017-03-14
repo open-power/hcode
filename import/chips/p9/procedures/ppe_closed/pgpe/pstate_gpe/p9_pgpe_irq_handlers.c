@@ -33,19 +33,62 @@
 extern uint8_t G_coresPSRequest[MAX_CORES];    //per core requested pstate
 extern uint8_t G_pmcrOwner;
 extern uint32_t G_pstatesStatus;
+//extern uint32_t G_process_occ_hb_error;
+//extern uint32_t G_process_safe_mode;
+//extern uint32_t G_process_pm_suspend;
 
 //
 //OCB Error Interrupt Handler
 //
-//\TODO:
-//Implement this handler. Implement Safe Mode
-void p9_pgpe_irq_handler_ocb_error(void* arg, PkIrqId irq)
+#define OCC_HB_ERROR 4
+void p9_pgpe_ocb_hb_error_init()
 {
-    PK_TRACE_DBG("OCB Error: Enter\n");
+    PK_TRACE_DBG("OCC HB: Enter\n");
+
+    uint64_t firact;
+
+    GPE_GETSCOM(OCB_OCCLFIRACT0, firact);
+    firact |= BIT64(OCC_HB_ERROR);
+    GPE_PUTSCOM(OCB_OCCLFIRACT0, firact);
+
+    GPE_GETSCOM(OCB_OCCLFIRACT1, firact);
+    firact &= ~BIT64(OCC_HB_ERROR);
+    GPE_PUTSCOM(OCB_OCCLFIRACT1, firact);
+
+    GPE_PUTSCOM(OCB_OCCLFIRMASK_AND, ~BIT64(OCC_HB_ERROR));
+
+    out32(OCB_OIMR0_CLR, BIT32(OCC_HB_ERROR));
+
+    PK_TRACE_DBG("OCC HB: Exit\n");
+}
+
+void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
+{
+    PK_TRACE_DBG("OCC Error: Enter\n");
     PkMachineContext  ctx;
 
-    pk_irq_vec_restore(&ctx);//Restore interrupts
-    PK_TRACE_DBG("OCB Error: Exit\n");
+    ocb_occlfir_t fir;
+    fir.value = 0;
+
+    out32(OCB_OISR0_CLR, BIT32(2));
+
+    //Read OCB_LFIR
+    GPE_GETSCOM(OCB_OCCLFIR, fir.value);
+
+    //If OCB_LFIR[occ_hb_error]
+    if (fir.fields.occ_hb_error == 1)
+    {
+        p9_pgpe_pstate_pm_complex_suspend();
+    }
+    else
+    {
+        //\todo handle other FIR Bits
+        PK_TRACE_INF("OCC Error: can't handle OCC_FIR[0x%08x%08x] \n", fir.value);
+        pk_halt();
+    }
+
+    pk_irq_vec_restore(&ctx);
+    PK_TRACE_DBG("OCC Error: Exit\n");
 }
 
 //
@@ -85,8 +128,30 @@ void p9_pgpe_irq_handler_ipi2_lo(void* arg, PkIrqId irq)
 {
     PK_TRACE_DBG("IPI2 Lo: Enter\n");
     PkMachineContext  ctx;
+    ocb_occflg_t occFlag;
 
-    pk_irq_vec_restore(&ctx);//Restore interrupts
+    out32(OCB_OISR1_CLR, BIT32(28));
+
+    //Read OCC_FLAGS
+    occFlag.value = 0;
+    occFlag.value = in32(OCB_OCCFLG);
+
+    //If OCC_FLAGS[PM_SUSPEND
+    if (occFlag.value & BIT32(PM_COMPLEX_SUSPEND))
+    {
+        p9_pgpe_pstate_pm_complex_suspend();
+    }
+    else if (occFlag.value & BIT32(PGPE_SAFE_MODE))
+    {
+        p9_pgpe_pstate_safe_mode();
+    }
+    else
+    {
+        PK_TRACE_DBG("IPI2 Lo: !Suspend and !SafeMode\n");
+    }
+
+
+    pk_irq_vec_restore(&ctx);
     PK_TRACE_DBG("IPI2 Lo: Exit\n");
 }
 
@@ -104,7 +169,7 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
     uint32_t coresPendPSReq = in32(OCB_OPIT1PRA);
     uint32_t c;
 
-    if (G_pstatesStatus == PSTATE_ENABLE && (G_pmcrOwner == PMCR_OWNER_HOST ||
+    if (G_pstatesStatus == PSTATE_ACTIVE && (G_pmcrOwner == PMCR_OWNER_HOST ||
             G_pmcrOwner == PMCR_OWNER_CHAR))
     {
 

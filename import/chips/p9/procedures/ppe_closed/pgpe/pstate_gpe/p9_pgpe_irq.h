@@ -73,13 +73,13 @@ extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
 #define IRQ_VEC_PRTY0_GPE   (uint64_t)(0x0000000000000000) // Non-task hi-prty IRQs
 // Shared between all instances
-#define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x0080000000000000) // Task1-OCB_ERROR(HeartBeat Loss)/GPE3_HALT
+#define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x2080000000000000) // Task1-OCB_ERROR(HeartBeat Loss)/GPE3_HALT
 #define IRQ_VEC_PRTY2_GPE2  (uint64_t)(0x0001000000000000) // Task2-CHECK_STOP_GPE2
 #define IRQ_VEC_PRTY3_GPE2  (uint64_t)(0x0000000000000008) // Task3-IPI2-LO(Process Flags)
 #define IRQ_VEC_PRTY4_GPE2  (uint64_t)(0x0000001000000000) // Task4-IPI2-HI(IPC from OCC/SGPE)
 #define IRQ_VEC_PRTY5_GPE2  (uint64_t)(0x0000000000020000) // Task5-PCB_INTR_TYPE1(PCB Type1 from CME)
 #if OVERRIDE_OTHER_ENGINES_IRQS == 1
-    #define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0xFF7EFF03FFFDFFF5) // Other instances' IRQs
+    #define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0xDF7EFF03FFFDFFF5) // Other instances' IRQs
 #else
     #define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0x0000000000000000) // Other instances' IRQs
 #endif

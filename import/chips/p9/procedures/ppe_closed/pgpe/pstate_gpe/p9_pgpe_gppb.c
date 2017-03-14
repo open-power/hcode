@@ -73,7 +73,6 @@ void p9_pgpe_gppb_init()
     //External VRM decreasing rate in us/uv
     G_ext_vrm_dec_rate_mult_usperus = 1 / G_gppb->ext_vrm_transition_rate_dec_uv_per_us;
 
-    //G_gppb->nest_frequency_mhz = 1866;
 }
 
 //
