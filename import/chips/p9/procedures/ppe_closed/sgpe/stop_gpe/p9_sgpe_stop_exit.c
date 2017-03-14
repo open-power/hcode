@@ -641,6 +641,21 @@ p9_sgpe_stop_exit()
                 G_sgpe_stop_record.state[qloop].act_state_x1 = 0;
             }
 
+            if (G_sgpe_stop_record.state[qloop].act_state_x0 == 0 &&
+                G_sgpe_stop_record.state[qloop].act_state_x1 == 0)
+            {
+                PK_TRACE("Release cache clock controller atomic lock");
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), 0);
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), scom_data.value);
+
+                if (scom_data.words.upper & BIT32(0))
+                {
+                    PKTRACE("ERROR: Failed to Release Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
+                            qloop, scom_data.words.upper);
+                    pk_halt();
+                }
+            }
+
             PK_TRACE("Update QSSR: drop l2_stopped");
             out32(OCB_QSSR_CLR, (m_l2 << SHIFT32((qloop << 1) + 1)));
         }
@@ -909,6 +924,17 @@ p9_sgpe_stop_exit()
             //=========================
 
 #endif
+
+            PK_TRACE("Release cache PCB slave atomic lock");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), 0);
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
+
+            if (scom_data.words.upper & BIT32(0))
+            {
+                PKTRACE("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
+                        qloop, scom_data.words.upper);
+                pk_halt();
+            }
 
             G_sgpe_stop_record.state[qloop].act_state_q = 0;
 

@@ -301,6 +301,17 @@ p9_sgpe_stop_entry()
 
         PK_TRACE_DBG("Check: q[%d]ex[%d] start ex entry", qloop, ex);
 
+        PK_TRACE("Acquire cache clock controller atomic lock");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), BITS64(0, 5));
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), scom_data.value);
+
+        if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
+        {
+            PKTRACE("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
+                    qloop, scom_data.words.upper);
+            pk_halt();
+        }
+
         PK_TRACE("Update QSSR: stop_entry_ongoing");
         out32(OCB_QSSR_OR, BIT32(qloop + 20));
 
@@ -502,6 +513,17 @@ p9_sgpe_stop_entry()
         }
 
         PK_TRACE_DBG("Check: q[%d]ex[%d] starts quad entry", qloop, ex);
+
+        PK_TRACE("Acquire cache PCB slave atomic lock");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), BITS64(0, 5));
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
+
+        if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
+        {
+            PKTRACE("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
+                    qloop, scom_data.words.upper);
+            pk_halt();
+        }
 
         PK_TRACE("Update QSSR: stop_entry_ongoing");
         out32(OCB_QSSR_OR, BIT32(qloop + 20));
