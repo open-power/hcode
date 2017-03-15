@@ -50,11 +50,14 @@
 #include "cmehw_common.h"
 #include "cmehw_interrupts.h"
 #include "p9_cme_pstate.h"
-
+#include "p9_hcode_image_defines.H"
 
 //
 //Globals
 //
+cmeHeader_t* G_cmeHeader;
+LocalPstateParmBlock* G_lppb;
+
 
 //
 //send_pig_packet

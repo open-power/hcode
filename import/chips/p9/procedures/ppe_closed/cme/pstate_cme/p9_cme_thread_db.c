@@ -41,24 +41,20 @@
 #include "p9_cme_irq.h"
 #include "p9_cme_flags.h"
 #include "p9_cme_pstate.h"
-#include "p9_cme_header.h"
+//#include "p9_cme_header.h"
 #include "pstate_pgpe_cme_api.h"
-#include "p9_pstate_vpd.h"
+//#include "p9_pstate_vpd.h"
 #include "ppe42_cache.h"
+#include "p9_hcode_image_defines.H"
 
 
 //
-//Globals
+//External Globals and globals
 //
 extern CmePstateRecord G_cme_pstate_record;
+extern cmeHeader_t* G_cmeHeader;
+extern LocalPstateParmBlock* G_lppb;
 cme_pstate_db_data_t G_db_thread_data;
-
-//\todo Use PState Parameter Block structures. RTC
-extern global_pstate_table_t G_gpst;
-//extern freq_2_idx_entry_t G_freq2idx[NUM_FREQ_REGIONS];
-//extern uint16_t G_cgm_table[CGM_TRANSITIONS];
-extern uint8_t G_resclkEnabled;
-extern cme_header_t* G_cme_header;
 
 //
 //Function Prototypes
@@ -88,13 +84,14 @@ void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
 //
 void p9_cme_pstate_db_thread(void* arg)
 {
-    PK_TRACE("DB_TH: Started\n");
+    PK_TRACE_INF("DB_TH: Started\n");
     uint32_t cme_flags;
     PkMachineContext  ctx;
     uint32_t pir;
 
-    //\todo Read the data from HOMER code. RTC
-    p9_pstate_vpd_init();
+    G_cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
+    G_lppb = (LocalPstateParmBlock*)(G_cmeHeader->g_cme_pstate_region_offset + CME_SRAM_BASE_ADDR);
+    PK_TRACE_INF("DB_TH: Hdr=0x%x, LPPB=0x%x\n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb);
 
     //Read CME_LCL_FLAGS
     cme_flags = in32(CME_LCL_FLAGS);
@@ -168,8 +165,7 @@ void p9_cme_pstate_db_thread(void* arg)
 
         out64(CME_LCL_EIMR_OR, BIT64(7));//Disable  InterCME_IN0
         g_eimr_override |= BIT64(7);
-
-        G_db_thread_data.dpll_pstate0_value = G_gpst.pstate0_frequency_khz / G_gpst.frequency_step_khz;
+        G_db_thread_data.dpll_pstate0_value   = G_lppb->dpll_pstate0_value;
     }
     else
     {
@@ -476,6 +472,7 @@ inline void p9_cme_pstate_freq_update(uint64_t dbData)
 
     PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", dbData >> 32, dbData);
     PK_TRACE_INF("DB_TH: Dpll0=0x%x\n", G_db_thread_data.dpll_pstate0_value);
+    PK_TRACE_INF("DB_TH: Hdr=0x%x, LPPB=0x%x\n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb);
     //Adjust DPLL
 
     cppm_ippmcmd_t  cppm_ippmcmd;

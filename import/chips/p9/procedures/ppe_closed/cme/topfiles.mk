@@ -34,9 +34,7 @@ UTILS-C-SOURCES  = utils/p9_putringutils.c \
 PSTATE-C-SOURCES = 	pstate_cme/p9_cme_pstate.c \
 					pstate_cme/p9_cme_thread_db.c \
 					pstate_cme/p9_cme_thread_pmcr.c \
-					pstate_cme/p9_cme_header.c \
-					pstate_cme/p9_cme_intercme.c \
-		   			pstate_cme/p9_pstate_vpd.c
+					pstate_cme/p9_cme_intercme.c 
 
 STOP-C-SOURCES   = stop_cme/p9_cme_stop_irq_handlers.c \
                    stop_cme/p9_cme_stop_enter_thread.c \

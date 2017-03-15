@@ -41,9 +41,9 @@
 #include "p9_cme_irq.h"
 #include "p9_cme_flags.h"
 #include "p9_cme_pstate.h"
-#include "p9_cme_header.h"
+//#include "p9_cme_header.h"
 #include "pstate_pgpe_cme_api.h"
-#include "p9_pstate_vpd.h"
+//#include "p9_pstate_vpd.h"
 #include "ppe42_cache.h"
 
 //

@@ -38,6 +38,8 @@
 #include "pk.h"
 #include "pstate_pgpe_cme_api.h"
 #include "gpehw_common.h"
+#include "p9_hcode_image_defines.H"
+#include "p9_pstates_cmeqm.h"
 
 enum  PMCR_CONTROL
 {

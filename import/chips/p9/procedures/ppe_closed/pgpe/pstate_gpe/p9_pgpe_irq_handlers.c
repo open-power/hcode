@@ -65,12 +65,12 @@ void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq)
 //
 //Checkstop GPE2 Interrupt Handler
 //
-//\TODO
-//Implement this handler. Should call code same as "Pstart STOP" IPC from OCC
 void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq)
 {
     PK_TRACE_DBG("XSTOP GPE2: Enter\n");
     PkMachineContext  ctx;
+
+    pk_halt();
 
     pk_irq_vec_restore(&ctx);//Restore interrupts
     PK_TRACE_DBG("XSTOP GPE2: Exit\n");
