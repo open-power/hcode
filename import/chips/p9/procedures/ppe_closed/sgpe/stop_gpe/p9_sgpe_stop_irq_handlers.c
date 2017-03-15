@@ -93,7 +93,9 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
     uint32_t          cpending_t2 = 0;
     uint32_t          cpending_t3 = 0;
     uint32_t          qpending_t6 = 0;
-    uint32_t          payload     = 0;
+    uint32_t          cpayload_t2 = 0;
+    uint32_t          cpayload_t3 = 0;
+    uint32_t          qpayload_t6 = 0;
     uint64_t          scom_data   = 0;
 
     //=========================
@@ -115,14 +117,14 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
     {
         cpending_t2 = in32(OCB_OPITNPRA(2));
         out32(OCB_OPITNPRA_CLR(2), cpending_t2);
-        PK_TRACE_DBG("Type2: %x", cpending_t2);
+        PKTRACE("Type2: %x", cpending_t2);
     }
 
     if (cirq & BIT32(16))
     {
         cpending_t3 = in32(OCB_OPITNPRA(3));
         out32(OCB_OPITNPRA_CLR(3), cpending_t3);
-        PK_TRACE_DBG("Type3: %x", cpending_t3);
+        PKTRACE("Type3: %x", cpending_t3);
     }
 
     if (qirq)
@@ -152,10 +154,10 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
         {
 
             // read payload on quad has interrupt pending
-            payload = in32(OCB_OPIT6QN(qloop));
-            PK_TRACE_DBG("Q[%d] Payload [%x]", qloop, payload);
+            qpayload_t6 = in32(OCB_OPIT6QN(qloop));
+            PK_TRACE_DBG("Q[%d] Payload [%x]", qloop, qpayload_t6);
 
-            if (payload & TYPE6_PAYLOAD_EXIT_EVENT)
+            if (qpayload_t6 & TYPE6_PAYLOAD_EXIT_EVENT)
             {
                 PK_TRACE_DBG("Q[%d] Request Special Wakeup", qloop);
 
@@ -205,34 +207,111 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             {
                 continue;
             }
-            // read payload on core has interrupt cpending
-            else if (cpending_t2 & BIT32((qloop << 2) + cloop))
+
+            // read payload on core has interrupt2 cpending
+            cpayload_t2 = 0;
+            cpayload_t3 = 0;
+
+            if (cpending_t2 & BIT32((qloop << 2) + cloop))
             {
-                payload = in32(OCB_OPIT2CN(((qloop << 2) + cloop)));
+                cpayload_t2 = in32(OCB_OPIT2CN(((qloop << 2) + cloop)));
             }
-            else if (cpending_t3 & BIT32((qloop << 2) + cloop))
+
+            // read payload on core has interrupt3 cpending
+            if (cpending_t3 & BIT32((qloop << 2) + cloop))
             {
-                payload = in32(OCB_OPIT3CN(((qloop << 2) + cloop)));
+                cpayload_t3 = in32(OCB_OPIT3CN(((qloop << 2) + cloop)));
             }
 
-            PK_TRACE_DBG("C[%d] Payload [%x]", cloop, payload);
+            PK_TRACE_INF("C[%d] Type2 Payload [%x] Type3 Payload [%x]",
+                         cloop, cpayload_t2, cpayload_t3);
 
-            // check if exit request
-            if (payload & TYPE2_PAYLOAD_EXIT_EVENT)
+            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
+                                           ((qloop << 2) + cloop)), scom_data);
+
+            // T2       T3     NS         given point to SGPE
+            // exit     exit   SGPE  ---- proceed with exit
+            // entry    exit   SGPE  ---- discard exit, proceed with entry
+            // exit     entry  SGPE  ---- discard exit, proceed with entry
+            // entry    entry  SGPE  ---- error
+            //
+            // exit     exit   CME   ---- error (hardware phantom exit can only send one type)
+            // entry    exit   CME   ---- error (entry dominiant error)
+            // exit     entry  CME   ---- error (entry dominiant error)
+            // entry    entry  CME   ---- error (entry dominiant error)
+
+            // T2 T3
+            // 0  0  Error
+            // E  E  Error
+            // E  0  Entry
+            // 0  E  Entry
+            // X  E  Entry
+            // E  X  Entry
+            // X  0  Exit
+            // 0  X  Exit
+            // X  X  Exit
+            // exit  = both exit or one exit + one empty
+            // entry = one entry + one exit/empty
+
+            // both empty
+            if ((!cpayload_t2) && (!cpayload_t3))
             {
-                PK_TRACE_DBG("C[%d] Request Exit", cloop);
+                PK_TRACE_INF("ERROR: Empty Requests on Both Type2 and Type3");
+                pk_halt();
+            }
+            // both entry
+            else if ((cpayload_t2 && (!(cpayload_t2 & TYPE2_PAYLOAD_EXIT_EVENT))) &&
+                     (cpayload_t3 && (!(cpayload_t3 & TYPE2_PAYLOAD_EXIT_EVENT))))
+            {
+                PK_TRACE_INF("ERROR: Entry Requests on Both Type2 and Type3");
+                pk_halt();
+            }
+            // if t2 entry (t3 exit or empty)
+            else if (cpayload_t2 && (!(cpayload_t2 & TYPE2_PAYLOAD_EXIT_EVENT)))
+            {
 
-                // Due to some wakeup signal sources can be "fake"
-                // as they are triggered regardless of the state of the core,
-                // check if the core is running, skip exit if so as fail safe.
-                // Using chiplet fence in NET_CTRL0[18] for this purpose;
-                // if chiplet fenced, core is stopped; otherwise running.
-                GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
-                                               ((qloop << 2) + cloop)), scom_data);
-
-                if (scom_data & BIT64(18))
+                if (!(scom_data & BIT64(13)))
                 {
-                    PK_TRACE_DBG("C[%d] Considered Stopped, Will Wakeup", cloop);
+                    PK_TRACE_INF("ERROR: Received Type2 Entry PIG When Wakeup_notify_select = 0");
+                    pk_halt();
+                }
+
+                PK_TRACE_INF("C[%d] Request Entry via Type2", cloop);
+                G_sgpe_stop_record.level[qloop][cloop] =
+                    (cpayload_t2 & TYPE2_PAYLOAD_STOP_LEVEL);
+                G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
+                    BIT32(((qloop << 2) + cloop));
+            }
+            // if t3 entry (t2 exit or empty)
+            else if (cpayload_t3 && (!(cpayload_t3 & TYPE2_PAYLOAD_EXIT_EVENT)))
+            {
+                if (!(scom_data & BIT64(13)))
+                {
+                    PK_TRACE_INF("ERROR: Received Type3 Entry PIG When Wakeup_notify_select = 0");
+                    pk_halt();
+                }
+
+                PK_TRACE_INF("C[%d] Request Entry via Type3", cloop);
+                G_sgpe_stop_record.level[qloop][cloop] =
+                    (cpayload_t3 & TYPE2_PAYLOAD_STOP_LEVEL);
+                G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
+                    BIT32(((qloop << 2) + cloop));
+            }
+            // both exit or one exit + one empty
+            else
+            {
+                if (!(scom_data & BIT64(13)))
+                {
+                    if ((cpayload_t2 & TYPE2_PAYLOAD_EXIT_EVENT) &&
+                        (cpayload_t3 & TYPE2_PAYLOAD_EXIT_EVENT))
+                    {
+                        PK_TRACE_INF("ERROR: Received Both Types of Exit PIG When Wakeup_notify_select = 0");
+                        pk_halt();
+                    }
+                }
+                else
+                {
+                    PK_TRACE_INF("C[%d] Request Exit", cloop);
 
                     if (cloop < CORES_PER_EX)
                     {
@@ -254,22 +333,6 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                     G_sgpe_stop_record.group.core[VECTOR_EXIT] |=
                         BIT32(((qloop << 2) + cloop));
                 }
-                else
-                {
-                    PK_TRACE_DBG("C[%d] is Considered Running, Ignore Wakeup", cloop);
-                }
-            }
-            // otherwise it is entry request with stop level in payload
-            else
-            {
-                PK_TRACE_DBG("C[%d] Request Enter to lv[%d]", cloop,
-                             (payload & TYPE2_PAYLOAD_STOP_LEVEL));
-
-                // read stop level on core asking to enter
-                G_sgpe_stop_record.level[qloop][cloop] =
-                    (payload & TYPE2_PAYLOAD_STOP_LEVEL);
-                G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
-                    BIT32(((qloop << 2) + cloop));
             }
         }
 

@@ -327,6 +327,15 @@ p9_sgpe_stop_entry()
                 continue;
             }
 
+            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
+                                           ((qloop << 2) + cloop)), scom_data.value);
+
+            if (!(scom_data.words.upper & BIT32(13)))
+            {
+                PKTRACE("ERROR.B: core[%d] notify fail to set", ((qloop << 2) + cloop));
+                pk_halt();
+            }
+
             PK_TRACE("Update STOP history on core[%d]: in transition of entry",
                      ((qloop << 2) + cloop));
             scom_data.words.lower = 0;
@@ -461,6 +470,15 @@ p9_sgpe_stop_entry()
                   BIT32(((qloop << 2) + cloop))))
             {
                 continue;
+            }
+
+            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
+                                           ((qloop << 2) + cloop)), scom_data.value);
+
+            if (!(scom_data.words.upper & BIT32(13)))
+            {
+                PKTRACE("ERROR.C: core[%d] notify fail to set", ((qloop << 2) + cloop));
+                pk_halt();
             }
 
             // request levle already set by CME

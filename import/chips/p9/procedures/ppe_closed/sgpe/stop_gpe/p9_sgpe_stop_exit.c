@@ -970,6 +970,19 @@ p9_sgpe_stop_exit()
                 continue;
             }
 
+            if(G_sgpe_stop_record.level[qloop][cloop] != 0)
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
+                                               ((qloop << 2) + cloop)), scom_data.value);
+
+                if (!(scom_data.value & BIT64(13)))
+                {
+                    PKTRACE("ERROR.Q: core[%d] was not set before release",
+                            ((qloop << 2) + cloop));
+                    pk_halt();
+                }
+            }
+
             // reset clevel to 0 if core is going to wake up
             G_sgpe_stop_record.level[qloop][cloop] = 0;
 
@@ -979,7 +992,7 @@ p9_sgpe_stop_exit()
                 GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
                 GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR, ((qloop << 2) + cloop)),
                 BIT64(13), CLR_OP);
-            PK_TRACE_INF("SX0.B: Switch CorePPM Wakeup back to CME via CPMMR[13]");
+            PK_TRACE_INF("SX0.B: Switch CorePPM Wakeup back to CME via CPMMR[13] qloop[%d] cloop[%d]", qloop, cloop);
         }
 
         PK_TRACE("Update QSSR: drop stop_exit_ongoing");

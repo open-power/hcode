@@ -48,7 +48,6 @@
 
 extern CmeStopRecord G_cme_stop_record;
 
-
 void prepare_for_ramming (uint32_t core)
 {
     uint64_t        scom_data;
@@ -1166,6 +1165,29 @@ p9_cme_stop_entry()
         scom_data.words.upper = SSH_ACT_LV5_COMPLETE;
         CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
+        if (core & CME_MASK_C0)
+        {
+            CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
+
+            if ((scom_data.words.upper & BIT32(13)))
+            {
+                PKTRACE("ERROR: C0 notify was already set?");
+                pk_halt();
+
+            }
+        }
+
+        if (core & CME_MASK_C1)
+        {
+            CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
+
+            if ((scom_data.words.upper & BIT32(13)))
+            {
+                PKTRACE("ERROR: C1 notify was already set?");
+                pk_halt();
+            }
+        }
+
         PK_TRACE("Send PCB interrupt per core via PIG, select irq type via CPMMR[10]");
 
         for (core_mask = 2; core_mask; core_mask--)
@@ -1186,14 +1208,38 @@ p9_cme_stop_entry()
                 }
 
                 pig.fields.req_intr_payload = G_cme_stop_record.req_level[core_index];
+                PKTRACE("PIG PUTSCOM core_mask[%d] value %08X", core_mask, (pig.value >> 32));
                 CME_PUTSCOM(PPM_PIG, core_mask, pig.value);
                 G_cme_stop_record.core_stopgpe |= core;
                 G_cme_stop_record.act_level[core_index] = STOP_LEVEL_5;
             }
         }
 
-        PK_TRACE("Switch PPM wakeup to STOP-GPE via CPMMR[13]");
+        PKTRACE("Switch Core%d PPM wakeup to STOP-GPE via CPMMR[13]", core);
         CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(13));
+
+        if (core & CME_MASK_C0)
+        {
+            CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
+
+            if (!(scom_data.words.upper & BIT32(13)))
+            {
+                PKTRACE("ERROR: C0 notify fail to set");
+                pk_halt();
+
+            }
+        }
+
+        if (core & CME_MASK_C1)
+        {
+            CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
+
+            if (!(scom_data.words.upper & BIT32(13)))
+            {
+                PKTRACE("ERROR: C1 notify fail to set");
+                pk_halt();
+            }
+        }
 
         PK_TRACE_INF("SE5.B: Handed off to SGPE");
 
