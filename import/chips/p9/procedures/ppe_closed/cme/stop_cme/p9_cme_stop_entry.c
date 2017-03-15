@@ -115,7 +115,7 @@ uint16_t ram_read_lpid( uint32_t core, uint32_t thread )
 
     if (scom_data > 0xFFF )
     {
-        PKTRACE("RAMMING ERROR Unexpected LPID core %d : 0x%lX 0xFFF", core, scom_data);
+        PK_TRACE("RAMMING ERROR Unexpected LPID core %d : 0x%lX 0xFFF", core, scom_data);
         PK_PANIC(CME_STOP_ENTRY_BAD_LPID_ERROR);
     }
 
@@ -288,7 +288,7 @@ p9_cme_stop_entry()
 #endif  // tlbie stop workaround
 
     //--------------------------------------------------------------------------
-    PK_TRACE_INF("+++++ +++++ BEGIN OF STOP ENTRY +++++ +++++");
+    PK_TRACE("+++++ +++++ BEGIN OF STOP ENTRY +++++ +++++");
     //--------------------------------------------------------------------------
 
     // First we need to determine which of the two STOP interrupts fired.
@@ -416,7 +416,7 @@ p9_cme_stop_entry()
 #if HW386841_DD1_DSL_STOP1_FIX
 
             //----------------------------------------------------------------------
-            PK_TRACE_INF("+++++ +++++ STOP LEVEL 1 ENTRY +++++ +++++");
+            PK_TRACE("+++++ +++++ STOP LEVEL 1 ENTRY +++++ +++++");
             //----------------------------------------------------------------------
 
             PK_TRACE("Pulse STOP entry acknowledgement to PC via SICR[0/1]");
@@ -447,7 +447,7 @@ p9_cme_stop_entry()
         }
 
         //----------------------------------------------------------------------
-        PK_TRACE_INF("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
+        PK_TRACE("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
         //----------------------------------------------------------------------
 
         p9_cme_acquire_pcbmux(core, 1);
@@ -480,14 +480,16 @@ p9_cme_stop_entry()
         PK_TRACE("Update STOP history: in transition of entry");
         // Set req_level_level to target_level of either both or just one core
         scom_data.words.lower = 0;
-        scom_data.words.upper = (SSH_REQ_LEVEL_UPDATE | (target_level << SHIFT32(7)));
+        scom_data.words.upper = (SSH_REQ_LEVEL_UPDATE |
+                                 (((uint32_t)target_level) << SHIFT32(7)));
         CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
         // Set req_level_level to deeper_level for deeper core
         if (deeper_core)
         {
             scom_data.words.lower = 0;
-            scom_data.words.upper = (SSH_REQ_LEVEL_UPDATE | (deeper_level << SHIFT32(7)));
+            scom_data.words.upper = (SSH_REQ_LEVEL_UPDATE |
+                                     (((uint32_t)deeper_level) << SHIFT32(7)));
             CME_PUTSCOM(PPM_SSHSRC, deeper_core, scom_data.value);
         }
 
@@ -504,13 +506,13 @@ p9_cme_stop_entry()
             if (core & CME_MASK_C0)
             {
                 lpid_c0[thread] = ram_read_lpid(CME_MASK_C0, thread);
-                PKTRACE("c0lpid %X thread %X", (uint32_t) lpid_c0[thread], thread);
+                PK_TRACE("c0lpid %X thread %X", (uint32_t) lpid_c0[thread], thread);
             }
 
             if (core & CME_MASK_C1)
             {
                 lpid_c1[thread] = ram_read_lpid(CME_MASK_C1, thread);
-                PKTRACE("c1lpid %X thread %X", (uint32_t) lpid_c1[thread], thread);
+                PK_TRACE("c1lpid %X thread %X", (uint32_t) lpid_c1[thread], thread);
             }
         }
 
@@ -524,8 +526,8 @@ p9_cme_stop_entry()
 
                 if (ram_read_lpid(CME_MASK_C0, thread) != POWMAN_RESERVED_LPID)
                 {
-                    PKTRACE("READ LPID not equal to expected value");
-                    asm("trap");
+                    PK_TRACE("READ LPID not equal to expected value");
+                    PK_PANIC(CME_STOP_ENTRY_BAD_LPID_ERROR);
                 }
 
 #endif
@@ -539,8 +541,8 @@ p9_cme_stop_entry()
 
                 if (ram_read_lpid(CME_MASK_C1, thread) != POWMAN_RESERVED_LPID)
                 {
-                    PKTRACE("READ LPID not equal to expected value");
-                    asm("trap");
+                    PK_TRACE("READ LPID not equal to expected value");
+                    PK_PANIC(CME_STOP_ENTRY_BAD_LPID_ERROR);
                 }
 
 #endif
@@ -551,6 +553,8 @@ p9_cme_stop_entry()
 
 
 #endif // tlbie stop workaround
+
+        PK_TRACE_INF("SE.2A: Core[%d] PCB Mux Granted", core);
 
         //=============================
         MARK_TRAP(SE_QUIESCE_CORE_INTF)
@@ -579,7 +583,7 @@ p9_cme_stop_entry()
         // MF: verify generate FCB otherwise math is wrong.
         PPE_WAIT_CORE_CYCLES(512)
 
-        PK_TRACE_INF("SE2.B: Interfaces Quiesced");
+        PK_TRACE_INF("SE.2B: Interfaces Quiesced");
 
 #if HW402407_NDD1_TLBIE_STOP_WORKAROUND
 
@@ -609,8 +613,8 @@ p9_cme_stop_entry()
             {
                 if (ram_read_lpid(CME_MASK_C0, thread) != lpid_c0[thread])
                 {
-                    PKTRACE("READ LPID not equal to expected value");
-                    asm("trap");
+                    PK_TRACE("READ LPID not equal to expected value");
+                    PK_PANIC(CME_STOP_ENTRY_BAD_LPID_ERROR);
                 }
             }
 
@@ -618,8 +622,8 @@ p9_cme_stop_entry()
             {
                 if (ram_read_lpid(CME_MASK_C1, thread) != lpid_c1[thread])
                 {
-                    PKTRACE("READ LPID not equal to expected value");
-                    asm("trap");
+                    PK_TRACE("READ LPID not equal to expected value");
+                    PK_PANIC(CME_STOP_ENTRY_BAD_LPID_ERROR);
                 }
             }
         }
@@ -693,7 +697,7 @@ p9_cme_stop_entry()
         // MF: verify compiler generate single rlwmni
         // MF: delay may be needed for stage latch to propagate thold
 
-        PK_TRACE_INF("SE2.C: Core Clock Stopped");
+        PK_TRACE_INF("SE.2C: Core Clock Stopped");
 
         //==============================
         MARK_TRAP(SE_STOP_CORE_GRID)
@@ -750,7 +754,7 @@ p9_cme_stop_entry()
             G_cme_stop_record.act_level[1] = STOP_LEVEL_2;
         }
 
-        PK_TRACE_INF("SE2.D: Clock Sync Dropped");
+        PK_TRACE_INF("SE.2D: Clock Sync Dropped");
 
         //===========================
         MARK_TAG(SE_STOP2_DONE, core)
@@ -763,7 +767,8 @@ p9_cme_stop_entry()
             STOP_TRANS_COMPLETE : STOP_TRANS_ENTRY;
 
         scom_data.words.lower = 0;
-        scom_data.words.upper = (SSH_ACT_LV2_COMPLETE | (entry_ongoing << SHIFT32(3)));
+        scom_data.words.upper = (SSH_ACT_LV2_COMPLETE |
+                                 (((uint32_t)entry_ongoing) << SHIFT32(3)));
         CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
         // If both cores targeting different levels
@@ -904,7 +909,7 @@ p9_cme_stop_entry()
                      core, deeper_core, target_level, deeper_level);
 
         //----------------------------------------------------------------------
-        PK_TRACE_INF("+++++ +++++ STOP LEVEL 3 ENTRY +++++ +++++");
+        PK_TRACE("+++++ +++++ STOP LEVEL 3 ENTRY +++++ +++++");
         //----------------------------------------------------------------------
 
         if (target_level == 3)
@@ -970,7 +975,7 @@ p9_cme_stop_entry()
         }
 
         //----------------------------------------------------------------------
-        PK_TRACE_INF("+++++ +++++ STOP LEVEL 4 ENTRY +++++ +++++");
+        PK_TRACE("+++++ +++++ STOP LEVEL 4 ENTRY +++++ +++++");
         //----------------------------------------------------------------------
 
         //===============================
@@ -1022,7 +1027,7 @@ p9_cme_stop_entry()
             // vdd_pfet_force_state = 00 (Nop)
             CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));
 
-            PK_TRACE_INF("SE4.A: Core Powered Off");
+            PK_TRACE_INF("SE.4A: Core[%d] Powered Off", core);
         }
 
 #endif
@@ -1048,7 +1053,8 @@ p9_cme_stop_entry()
             STOP_TRANS_ENTRY;
 
         scom_data.words.lower = 0;
-        scom_data.words.upper = (SSH_ACT_LV4_COMPLETE | (entry_ongoing << SHIFT32(3)));
+        scom_data.words.upper = (SSH_ACT_LV4_COMPLETE |
+                                 (((uint32_t)entry_ongoing) << SHIFT32(3)));
         CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
         // If both cores targeting different levels
@@ -1117,7 +1123,7 @@ p9_cme_stop_entry()
                      core, deeper_core, target_level, deeper_level);
 
         //----------------------------------------------------------------------
-        PK_TRACE_INF("+++++ +++++ STOP LEVEL 5-7 ENTRY +++++ +++++");
+        PK_TRACE("+++++ +++++ STOP LEVEL 5-7 ENTRY +++++ +++++");
         //----------------------------------------------------------------------
 
         if ((G_cme_stop_record.req_level[0] >= STOP_LEVEL_8) &&
@@ -1163,7 +1169,7 @@ p9_cme_stop_entry()
                         MARK_TAG(SE_PURGE_L2_ABORT, core_aborted)
                         //=======================================
 
-                        PK_TRACE_DBG("Abort: L2+NCU purge aborted by core[%d]", core_aborted);
+                        PK_TRACE_INF("Abort: L2+NCU purge aborted by core[%d]", core_aborted);
                         out32(CME_LCL_SICR_OR, BIT32(19) | BIT32(23));
                     }
                 }
@@ -1176,7 +1182,7 @@ p9_cme_stop_entry()
             PK_TRACE("Drop L2+NCU purges and their possible aborts via SICR[18,19,22,23]");
             out32(CME_LCL_SICR_CLR, (BITS32(18, 2) | BITS32(22, 2)));
 
-            PK_TRACE_INF("SE5.A: L2 and NCU Purged");
+            PK_TRACE_INF("SE.5A: L2 and NCU Purged");
 
             //===================================================================
             MARK_TAG(SE_PURGE_L2_DONE, core_aborted ? core_aborted : CME_MASK_BC)
@@ -1220,7 +1226,7 @@ p9_cme_stop_entry()
 
             if ((scom_data.words.upper & BIT32(13)))
             {
-                PKTRACE("ERROR: C0 notify was already set?");
+                PKTRACE("ERROR.A0: C0 notify was already set?");
                 pk_halt();
 
             }
@@ -1232,7 +1238,7 @@ p9_cme_stop_entry()
 
             if ((scom_data.words.upper & BIT32(13)))
             {
-                PKTRACE("ERROR: C1 notify was already set?");
+                PKTRACE("ERROR.A1: C1 notify was already set?");
                 pk_halt();
             }
         }
@@ -1247,7 +1253,7 @@ p9_cme_stop_entry()
             {
                 core_index = core_mask & 1;
 
-                if (G_cme_stop_record.req_level[core_index] < STOP_LEVEL_11)
+                if (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_8)
                 {
                     CME_PUTSCOM(CPPM_CPMMR_OR, core_mask, BIT64(10));
                     pig.fields.req_intr_type = PIG_TYPE3;
@@ -1272,6 +1278,9 @@ p9_cme_stop_entry()
 
 #endif
 
+        PK_TRACE_DBG("Switch Core PPM wakeup to STOP-GPE via CPMMR[13]");
+        CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(13));
+
 #if DEBUG_RUNTIME_STATE_CHECK
 
         if (core & CME_MASK_C0)
@@ -1280,7 +1289,7 @@ p9_cme_stop_entry()
 
             if (!(scom_data.words.upper & BIT32(13)))
             {
-                PKTRACE("ERROR: C0 notify fail to set");
+                PKTRACE("ERROR.B0: C0 notify fail to set");
                 pk_halt();
 
             }
@@ -1292,23 +1301,23 @@ p9_cme_stop_entry()
 
             if (!(scom_data.words.upper & BIT32(13)))
             {
-                PKTRACE("ERROR: C1 notify fail to set");
+                PKTRACE("ERROR.B1: C1 notify fail to set");
                 pk_halt();
             }
         }
 
 #endif
 
-        PKTRACE("Switch Core%d PPM wakeup to STOP-GPE via CPMMR[13]", core);
-        CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(13));
+        PK_TRACE("Clear special wakeup after wakeup_notify = 1 since it is edge triggered");
+        out32(CME_LCL_EISR_CLR, core << SHIFT32(15));
 
-        PK_TRACE_INF("SE5.B: Handed off to SGPE");
+        PK_TRACE_INF("SE.5B: Core[%d] Handed off to SGPE", core);
 
     }
     while(0);
 
     //--------------------------------------------------------------------------
-    PK_TRACE_INF("+++++ +++++ END OF STOP ENTRY +++++ +++++");
+    PK_TRACE("+++++ +++++ END OF STOP ENTRY +++++ +++++");
     //--------------------------------------------------------------------------
 
     //============================

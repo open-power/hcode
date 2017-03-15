@@ -69,7 +69,7 @@ p9_sgpe_stop_entry()
 #endif
 
     //--------------------------------------------------------------------------
-    PK_TRACE_INF("+++++ +++++ BEGIN OF STOP ENTRY +++++ +++++");
+    PK_TRACE("+++++ +++++ BEGIN OF STOP ENTRY +++++ +++++");
     //--------------------------------------------------------------------------
 
     //================================
@@ -290,10 +290,10 @@ p9_sgpe_stop_entry()
         }
 
         // ------------------------------------------------------------------------
-        PK_TRACE_INF("+++++ +++++ EX STOP ENTRY [LEVEL 8-10] +++++ +++++");
+        PK_TRACE("+++++ +++++ EX STOP ENTRY [LEVEL 8-10] +++++ +++++");
         // ------------------------------------------------------------------------
 
-        PK_TRACE_DBG("Check: q[%d]ex[%d] start ex entry", qloop, ex);
+        PK_TRACE_INF("SX.8A: Quad[%d] EX_L2[%d] Stopping L2 Clocks", qloop, ex);
 
         PK_TRACE("Acquire cache clock controller atomic lock");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), BITS64(0, 5));
@@ -301,8 +301,8 @@ p9_sgpe_stop_entry()
 
         if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
         {
-            PKTRACE("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
-                    qloop, scom_data.words.upper);
+            PK_TRACE_INF("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
+                         qloop, scom_data.words.upper);
             PK_PANIC(SGPE_STOP_ENTRY_GET_CLK_LOCK_FAILED);
         }
 
@@ -413,7 +413,7 @@ p9_sgpe_stop_entry()
         // MF: verify compiler generate single rlwmni
         // MF: delay may be needed for stage latch to propagate thold
 
-        PK_TRACE_INF("SE8.A: L2 Clock Stopped");
+        PK_TRACE_INF("SE.8B: L2 Clock Stopped");
 
         //========================
         MARK_TRAP(SE_STOP_L2_GRID)
@@ -489,7 +489,7 @@ p9_sgpe_stop_entry()
                      ((qloop << 2) + cloop));
             scom_data.words.lower = 0;
             scom_data.words.upper = (SSH_ACT_LV8_COMPLETE |
-                                     ((entry_ongoing[cloop >> 1]) << SHIFT32(3)));
+                                     (((uint32_t)entry_ongoing[cloop >> 1]) << SHIFT32(3)));
             GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
                             scom_data.value);
         }
@@ -498,7 +498,7 @@ p9_sgpe_stop_entry()
         out32(OCB_QSSR_CLR, BIT32(qloop + 20));
         out32(OCB_QSSR_OR, (ex << SHIFT32((qloop << 1) + 1)));
 
-        PK_TRACE_INF("SE8.B: L2 Clock Sync Dropped");
+        PK_TRACE_INF("SE.8C: L2 Clock Sync Dropped");
 
         //==================================================
         MARK_TAG(SE_STOP8_DONE, ((ex << 6) | (32 >> qloop)))
@@ -532,7 +532,7 @@ p9_sgpe_stop_entry()
             ex |= SND_EX_IN_QUAD;
         }
 
-        PK_TRACE_DBG("Check: q[%d]ex[%d] starts quad entry", qloop, ex);
+        PK_TRACE_INF("SX.11A: Quad[%d] EX_PG[%d] Shutting Cache Down", qloop, ex);
 
         PK_TRACE("Acquire cache PCB slave atomic lock");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), BITS64(0, 5));
@@ -540,8 +540,8 @@ p9_sgpe_stop_entry()
 
         if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
         {
-            PKTRACE("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
-                    qloop, scom_data.words.upper);
+            PK_TRACE_INF("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
+                         qloop, scom_data.words.upper);
             PK_PANIC(SGPE_STOP_ENTRY_GET_SLV_LOCK_FAILED);
         }
 
@@ -551,7 +551,7 @@ p9_sgpe_stop_entry()
         PK_TRACE("Update STOP history on quad[%d]: update request stop level", qloop);
         scom_data.words.lower = 0;
         scom_data.words.upper = (SSH_REQ_LEVEL_UPDATE |
-                                 (G_sgpe_stop_record.state[qloop].req_state_q << SHIFT32(7)));
+                                 ((uint32_t)G_sgpe_stop_record.state[qloop].req_state_q << SHIFT32(7)));
         GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
 
         //==================================
@@ -618,7 +618,7 @@ p9_sgpe_stop_entry()
                             (in32(OCB_OPIT3CN(((qloop << 2) + cloop))) &
                              TYPE3_PAYLOAD_EXIT_EVENT))
                         {
-                            PK_TRACE_INF("Abort: core wakeup detected");
+                            PK_TRACE_DBG("Abort: core wakeup detected");
                             l3_purge_aborted = 1;
                             break;
                         }
@@ -628,7 +628,7 @@ p9_sgpe_stop_entry()
                 if ((in32(OCB_OPIT6PRB) & BIT32(qloop)) &&
                     (in32(OCB_OPIT6QN(qloop)) & TYPE6_PAYLOAD_EXIT_EVENT))
                 {
-                    PK_TRACE_INF("Abort: quad wakeup detected");
+                    PK_TRACE_DBG("Abort: quad wakeup detected");
                     l3_purge_aborted = 1;
                 }
 
@@ -639,7 +639,7 @@ p9_sgpe_stop_entry()
                     MARK_TAG(SE_PURGE_L3_ABORT, (32 >> qloop))
                     //========================================
 
-                    PK_TRACE_INF("Abort: assert purge L3 abort");
+                    PK_TRACE_DBG("Abort: assert purge L3 abort");
 
                     if (ex & FST_EX_IN_QUAD)
                         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 0),
@@ -649,7 +649,7 @@ p9_sgpe_stop_entry()
                         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 1),
                                     BIT64(2));
 
-                    PK_TRACE_INF("Abort: poll for abort done");
+                    PK_TRACE_DBG("Abort: poll for abort done");
 
                     if(ex & FST_EX_IN_QUAD)
                     {
@@ -675,7 +675,7 @@ p9_sgpe_stop_entry()
                     MARK_TAG(SE_PURGE_L3_ABORT_DONE, (32 >> qloop))
                     //=============================================
 
-                    PK_TRACE_INF("Abort: Drop LCO Disable");
+                    PK_TRACE("Abort: Drop LCO Disable");
 
                     if (ex & FST_EX_IN_QUAD)
                         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG,
@@ -713,7 +713,7 @@ p9_sgpe_stop_entry()
             continue;
         }
 
-        PK_TRACE_INF("SE11.A: L3 Purged");
+        PK_TRACE_INF("SE.11B: L3 Purged");
 
 #endif
 
@@ -721,32 +721,7 @@ p9_sgpe_stop_entry()
         MARK_TAG(SE_PURGE_PB, (32 >> qloop))
         //==================================
 
-        PK_TRACE("Assert powerbus purge via QCCR[30]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, qloop), BIT64(30));
-
-        PK_TRACE("Poll PowerBus purge done via QCCR[31]");
-
-        do
-        {
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR, qloop), scom_data.value);
-        }
-        while(!(scom_data.words.upper & BIT32(31)));
-
-        PK_TRACE("Drop powerbus purge via QCCR[30]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(30));
-
-        PK_TRACE_INF("SE11.B: PowerBus Purged");
-
-        //===========================================
-        MARK_TAG(SE_WAIT_PGPE_SUSPEND, (32 >> qloop))
-        //===========================================
-
-        /// @todo RTC166577
-        /// IPC poll will move to here when multicast
-
-        //======================================
-        MARK_TAG(SE_QUIESCE_QUAD, (32 >> qloop))
-        //======================================
+        // Stopping CME first in case CME initiates Powerbus Traffic
 
         if (ex & FST_EX_IN_QUAD)
         {
@@ -783,6 +758,36 @@ p9_sgpe_stop_entry()
 
             PK_TRACE("CME1 Halted");
         }
+
+        PK_TRACE_DBG("CME Halted");
+
+
+        PK_TRACE("Assert powerbus purge via QCCR[30]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, qloop), BIT64(30));
+
+        PK_TRACE("Poll PowerBus purge done via QCCR[31]");
+
+        do
+        {
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR, qloop), scom_data.value);
+        }
+        while(!(scom_data.words.upper & BIT32(31)));
+
+        PK_TRACE("Drop powerbus purge via QCCR[30]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(30));
+
+        PK_TRACE_INF("SE.11C: PowerBus Purged");
+
+        //===========================================
+        MARK_TAG(SE_WAIT_PGPE_SUSPEND, (32 >> qloop))
+        //===========================================
+
+        /// @todo RTC166577
+        /// IPC poll will move to here when multicast
+
+        //======================================
+        MARK_TAG(SE_QUIESCE_QUAD, (32 >> qloop))
+        //======================================
 
         PK_TRACE("Assert refresh quiesce prior to L3 (refresh domain) stop clk via EX_DRAM_REF_REG[7]");
 
@@ -824,7 +829,7 @@ p9_sgpe_stop_entry()
             while(((~(scom_data.words.upper)) & BITS32(0, 4)) != BITS32(0, 4));
         }
 
-        PK_TRACE_INF("SE11.C: NCU Status Clean");
+        PK_TRACE_DBG("NCU Status Clean");
 
         // In order to preserve state for PRD,
         // skip power off if host attn or local xstop present
@@ -851,10 +856,7 @@ p9_sgpe_stop_entry()
 
         PK_TRACE("Stop cache clocks via CLK_REGION");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, qloop),
-                    (CLK_STOP_CMD | CLK_THOLD_ALL |
-                     CLK_REGION_ALL_BUT_EX        |
-                     ((uint64_t)ex << SHIFT64(7)) |
-                     ((uint64_t)ex << SHIFT64(13))));
+                    (CLK_STOP_CMD | CLK_THOLD_ALL | CLK_REGION_ALL));
 
         PK_TRACE("Poll for cache clocks stopped via CPLT_STAT0[8]");
 
@@ -864,12 +866,10 @@ p9_sgpe_stop_entry()
         }
         while(!(scom_data.words.upper & BIT32(8)));
 
-        PK_TRACE("Check core clock is stopped via CLOCK_STAT_SL[4-13]");
+        PK_TRACE("Check cache clock is stopped via CLOCK_STAT_SL[4-13]");
         GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, qloop), scom_data.value);
 
-        if (((~scom_data.value) & (CLK_REGION_ALL_BUT_EX        |
-                                   ((uint64_t)ex << SHIFT64(7)) |
-                                   ((uint64_t)ex << SHIFT64(13)))) != 0)
+        if (((~scom_data.value) & CLK_REGION_ALL) != 0)
         {
             PK_TRACE("ERROR: Cache clock stop failed. HALT SGPE!");
             PK_PANIC(SGPE_STOP_ENTRY_EQ_STOPCLK_FAILED);
@@ -881,11 +881,7 @@ p9_sgpe_stop_entry()
         PK_TRACE("Assert partial good regional fences via CPLT_CTRL1[4-14]");
         // Must cover partial bad fences as well or powerbus error will raise
         // Note: Stop11 will lose all the fences so here needs to assert them
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop),
-                    (CLK_REGION_ALL_BUT_EX        |
-                     ((uint64_t)ex << SHIFT64(7)) |
-                     ((uint64_t)ex << SHIFT64(9)) |
-                     ((uint64_t)ex << SHIFT64(13))));
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop), CLK_REGION_ALL);
 
         PK_TRACE("Drop CME_INTERPPM_DPLL_ENABLE after DPLL is stopped via QPMMR[26]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26));
@@ -894,7 +890,7 @@ p9_sgpe_stop_entry()
         PK_TRACE("Drop vdm enable via CPPM_VDMCR[0]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_CLR, qloop), BIT64(0));
 
-        PK_TRACE_INF("SE11.D: Cache Clock Stopped");
+        PK_TRACE_INF("SE.11D: Cache Clock Stopped");
 
 #if HW405292_NDD1_PCBMUX_FENCE_FIX
         // Gate the PCBMux request so scanning doesn't cause random requests
@@ -907,7 +903,7 @@ p9_sgpe_stop_entry()
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
 
-        PK_TRACE_INF("PBRW: Engage with PBIE Read/Write Pointer Scan Workaround");
+        PK_TRACE_DBG("PBRW: Engage with PBIE Read/Write Pointer Scan Workaround");
 
         // bit4,5,11 = perv/eqpb/pbieq, bit59 = inex
         PK_TRACE("PBRW: Setup scan register to select the ring");
@@ -1045,7 +1041,7 @@ p9_sgpe_stop_entry()
             // vcs_pfet_force_state = 00 (Nop)
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop), BITS64(0, 4));
 
-            PK_TRACE_INF("SE11.E: Cache Powered Off");
+            PK_TRACE_INF("SE.11E: Cache Powered Off");
         }
 
 #endif
@@ -1086,7 +1082,7 @@ p9_sgpe_stop_entry()
     }
 
     //--------------------------------------------------------------------------
-    PK_TRACE_INF("+++++ +++++ END OF STOP ENTRY +++++ +++++");
+    PK_TRACE("+++++ +++++ END OF STOP ENTRY +++++ +++++");
     //--------------------------------------------------------------------------
 
     //loop quad to clear qswu record
