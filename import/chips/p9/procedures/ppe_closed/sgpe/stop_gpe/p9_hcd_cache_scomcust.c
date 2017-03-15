@@ -30,7 +30,8 @@ int
 p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
 
-    int rc           = SGPE_STOP_SUCCESS;
+    int      rc        = SGPE_STOP_SUCCESS;
+    data64_t scom_data = {0};
 
 #if !SKIP_HOMER_ACCESS
 
@@ -39,7 +40,6 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
     uint32_t qaddr   = 0;
     uint64_t qdata   = 0;
     uint32_t rid     = 0;
-    data64_t scom_data = {0};
 
     // doing this instead of multiply since there is no multiply instruction with ppe.
     for(i = 0; i < quad; i++)

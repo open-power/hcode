@@ -451,7 +451,7 @@ int rs4DecompressionSvc(
             }
             else
             {
-                PK_TRACE_INF("OVERRIDE !!!!!!");
+                PK_TRACE_DBG("OVERRIDE !!!!!!");
 
                 if(0x8 & l_nibble) // We are parsing RS4 for override rings
                 {
@@ -533,10 +533,9 @@ int rs4DecompressionSvc(
 
         getscom(0, CME_SCOM_ADDR(0x0003E000, i_core, l_scomOp), &l_readHeader);
 
-        PK_TRACE_DBG ("l_readHeader %08X %08X", l_readHeader >> 32, l_readHeader);
-
         if(l_readHeader != 0xa5a5a5a5a5a5a5a5)
         {
+            PK_TRACE_INF("l_readHeader %08X %08X", l_readHeader >> 32, l_readHeader);
             //In EDR: ring Id (8b),core value(4b) and number of latches that went thru rotate
             //and scan.
             // In SPRG0: First 32 bits of header data read from the hw

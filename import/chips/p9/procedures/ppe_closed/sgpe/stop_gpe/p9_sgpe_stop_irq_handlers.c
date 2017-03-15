@@ -106,8 +106,9 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
     // Disable type2/3/6 interrupt
     out32(OCB_OIMR1_OR, (BITS32(15, 2) | BIT32(19)));
     // Read type2/3/6 interrupt status
-    cirq = (in32(OCB_OISR1) & BITS32(15, 2));
-    qirq = (in32(OCB_OISR1) & BIT32(19));
+    qirq = in32(OCB_OISR1);
+    cirq = qirq & BITS32(15, 2);
+    qirq = qirq & BIT32(19);
     // Clear type2/3/6 interrupt status
     out32(OCB_OISR1_CLR, (cirq | qirq));
 
@@ -117,14 +118,14 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
     {
         cpending_t2 = in32(OCB_OPITNPRA(2));
         out32(OCB_OPITNPRA_CLR(2), cpending_t2);
-        PKTRACE("Type2: %x", cpending_t2);
+        PK_TRACE("Type2: %x", cpending_t2);
     }
 
     if (cirq & BIT32(16))
     {
         cpending_t3 = in32(OCB_OPITNPRA(3));
         out32(OCB_OPITNPRA_CLR(3), cpending_t3);
-        PKTRACE("Type3: %x", cpending_t3);
+        PK_TRACE("Type3: %x", cpending_t3);
     }
 
     if (qirq)
@@ -155,15 +156,15 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
 
             // read payload on quad has interrupt pending
             qpayload_t6 = in32(OCB_OPIT6QN(qloop));
-            PK_TRACE_DBG("Q[%d] Payload [%x]", qloop, qpayload_t6);
+            PK_TRACE_DBG("Quad[%d] Payload [%x]", qloop, qpayload_t6);
 
             if (qpayload_t6 & TYPE6_PAYLOAD_EXIT_EVENT)
             {
-                PK_TRACE_DBG("Q[%d] Request Special Wakeup", qloop);
+                PK_TRACE_DBG("Quad Request Special Wakeup");
 
                 if (G_sgpe_stop_record.group.qswu[VECTOR_CONFIG] & BIT32(qloop))
                 {
-                    PK_TRACE_DBG("Q[%d] Already in Special Wakeup", qloop);
+                    PK_TRACE_DBG("Quad Already in Special Wakeup");
                 }
                 else
                 {
@@ -177,7 +178,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             }
             else
             {
-                PK_TRACE_DBG("Q[%d] Drop Special Wakeup, Clearing Done", qloop);
+                PK_TRACE_DBG("Quad Drop Special Wakeup, Clearing Done");
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_CLR, qloop), BIT64(0));
 
                 G_sgpe_stop_record.group.qswu[VECTOR_ENTRY]  |=  BIT32(qloop);
@@ -192,7 +193,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             continue;
         }
 
-        PK_TRACE_DBG("Q[%d] Has Core Request:", qloop);
+        PK_TRACE_DBG("Quad[%d] Has Core Request:", qloop);
         PK_TRACE_DBG("Now clv[%d][%d][%d][%d]",
                      G_sgpe_stop_record.level[qloop][0],
                      G_sgpe_stop_record.level[qloop][1],
@@ -223,7 +224,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                 cpayload_t3 = in32(OCB_OPIT3CN(((qloop << 2) + cloop)));
             }
 
-            PK_TRACE_INF("C[%d] Type2 Payload [%x] Type3 Payload [%x]",
+            PK_TRACE_INF("Core[%d] Type2 Payload [%x] Type3 Payload [%x]",
                          cloop, cpayload_t2, cpayload_t3);
 
             GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
@@ -269,14 +270,13 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             // if t2 entry (t3 exit or empty)
             else if (cpayload_t2 && (!(cpayload_t2 & TYPE2_PAYLOAD_EXIT_EVENT)))
             {
-
                 if (!(scom_data & BIT64(13)))
                 {
                     PK_TRACE_INF("ERROR: Received Type2 Entry PIG When Wakeup_notify_select = 0");
                     PK_PANIC(SGPE_PIG_TYPE2_ENTRY_WNS_CME);
                 }
 
-                PK_TRACE_INF("C[%d] Request Entry via Type2", cloop);
+                PK_TRACE_INF("Core[%d] Request Entry via Type2", cloop);
                 G_sgpe_stop_record.level[qloop][cloop] =
                     (cpayload_t2 & TYPE2_PAYLOAD_STOP_LEVEL);
                 G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
@@ -291,7 +291,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                     PK_PANIC(SGPE_PIG_TYPE3_ENTRY_WNS_CME);
                 }
 
-                PK_TRACE_INF("C[%d] Request Entry via Type3", cloop);
+                PK_TRACE_INF("Core[%d] Request Entry via Type3", cloop);
                 G_sgpe_stop_record.level[qloop][cloop] =
                     (cpayload_t3 & TYPE2_PAYLOAD_STOP_LEVEL);
                 G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
@@ -308,10 +308,14 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                         PK_TRACE_INF("ERROR: Received Both Types of Exit PIG When Wakeup_notify_select = 0");
                         PK_PANIC(SGPE_PIG_TYPE23_EXIT_WNS_CME);
                     }
+                    else
+                    {
+                        PK_TRACE_INF("WARNING: Received Phantom Exit PIG When Wakeup_notify_select = 0");
+                    }
                 }
                 else
                 {
-                    PK_TRACE_INF("C[%d] Request Exit", cloop);
+                    PK_TRACE_INF("Core[%d] Request Exit", cloop);
 
                     if (cloop < CORES_PER_EX)
                     {
@@ -336,7 +340,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             }
         }
 
-        PK_TRACE_DBG("New clv[%d][%d][%d][%d]",
+        PK_TRACE_DBG("New Core Levels[%d][%d][%d][%d]",
                      G_sgpe_stop_record.level[qloop][0],
                      G_sgpe_stop_record.level[qloop][1],
                      G_sgpe_stop_record.level[qloop][2],
@@ -381,7 +385,5 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             PK_TRACE_INF("Unblock Entry");
             pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
         }
-
-        PK_TRACE_INF("RFI");
     }
 }

@@ -85,7 +85,7 @@ p9_cme_stop_exit_catchup(uint32_t* core,
 
         *spwu_stop |= (core_catchup) & (wakeup >> 2);
 
-        PK_TRACE_INF("Catch: core[%d] running[%d] \
+        PK_TRACE_DBG("Catch: core[%d] running[%d] \
                              core_catchup[%d] catchup_level[%d]",
                      *core, G_cme_stop_record.core_running,
                      core_catchup, catchup_level);
@@ -138,7 +138,7 @@ p9_cme_stop_exit()
 #endif
 
     //--------------------------------------------------------------------------
-    PK_TRACE_INF("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");
+    PK_TRACE("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");
     //--------------------------------------------------------------------------
 
     // extract wakeup signals, clear status, and mask wakeup interrupts
@@ -182,12 +182,10 @@ p9_cme_stop_exit()
     if (spwu_wake)
     {
         // Process special wakeup on a core that is already running
-        PK_TRACE_DBG("Check: Core[%d] pm_exit=1/EISR=0/EIPR=0/spwu_done=1", spwu_wake);
+        PK_TRACE_INF("SP.WU: Core[%d] Assert PM_EXIT and SPWU_DONE via SICR[4/5, 16/17]", spwu_wake);
         out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(5));  // assert pm_exit
         out32(CME_LCL_EISR_CLR, spwu_wake << SHIFT32(15)); // clear spwu in EISR
         out32(CME_LCL_EIPR_CLR, spwu_wake << SHIFT32(15)); // flip EIPR to falling edge
-
-        PK_TRACE_INF("SX0.A: Assert SPWU Done on Core via SICR[16/17]");
         out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(17)); // assert spwu_done now
         G_cme_stop_record.core_in_spwu |= spwu_wake;
 
@@ -224,7 +222,7 @@ p9_cme_stop_exit()
         }
     }
 
-    PK_TRACE_DBG("SX0.B: Core[%d] Requested Stop1 Exit", core_stop1);
+    PK_TRACE_INF("SX.1A: Core[%d] Requested Stop1 Exit", core_stop1);
 
     core = core & ~core_stop1;
 
@@ -264,9 +262,6 @@ p9_cme_stop_exit()
     PK_TRACE_DBG("Check: core[%d] target_lv[%d], deeper_lv[%d], deeper_c[%d]",
                  core, target_level, deeper_level, deeper_core);
 
-
-
-
     PK_TRACE("Clear chtm purge done via ESIR[24/25]");
     out32(CME_LCL_EISR_CLR, (core << SHIFT32(25)));
 
@@ -282,7 +277,7 @@ p9_cme_stop_exit()
     {
 
         //--------------------------------------------------------------------------
-        PK_TRACE_INF("+++++ +++++ STOP LEVEL 4 EXIT +++++ +++++");
+        PK_TRACE("+++++ +++++ STOP LEVEL 4 EXIT +++++ +++++");
         //--------------------------------------------------------------------------
 
         // if deeper_core is set, then core must be 0b11
@@ -297,29 +292,29 @@ p9_cme_stop_exit()
 
 #if !SKIP_BCE_SCOM_RESTORE
 
-            PK_TRACE_INF("SX4.A: BCE Runtime Kickoff to Copy Scom Restore");
+            PK_TRACE_DBG("BCE Runtime Kickoff to Copy Scom Restore");
             //right now a blocking call. Need to confirm this.
             instance_scom_restore();
 
 #endif
-            PK_TRACE_DBG("Check: Core[%d] in Progress of SX4FH", core);
 
             // Can't do the read of cplt_stat after flipping the mux before the core is powered on
             // catchup to stop4 exit will acquire here
+            PK_TRACE_DBG("Core Acquire Pcb Mux");
             p9_cme_acquire_pcbmux(core, 0);
 
             //========================
             MARK_TAG(SX_POWERON, core)
             //========================
 
-            PK_TRACE_INF("SX4.B: Core Poweron");
+            PK_TRACE_INF("SX.4A: Core[%d] Poweron", core);
             p9_hcd_core_poweron(core);
 
             //=========================
             MARK_TRAP(SX_CHIPLET_RESET)
             //=========================
 
-            PK_TRACE_INF("SX4.C: Core Chiplet Reset");
+            PK_TRACE_INF("SX.4B: Core Chiplet Reset");
             p9_hcd_core_chiplet_reset(core);
 
 #if !STOP_PRIME
@@ -352,19 +347,20 @@ p9_cme_stop_exit()
             MARK_TAG(SX_CHIPLET_INITS, core)
             //==============================
 
+
 #if !SKIP_INITF
 
-            PK_TRACE_INF("SX4.D: Core GPTR Time Initf");
+            PK_TRACE_INF("SX.4C: Core[%d] Gptr/Time Initf after catchup A", core);
             p9_hcd_core_gptr_time_initf(core);
 
 #endif
 
-            PK_TRACE_INF("SX4.E: Core Chiplet Init");
+            PK_TRACE_DBG("Core Chiplet Inits");
             p9_hcd_core_chiplet_init(core);
 
 #if !SKIP_INITF
 
-            PK_TRACE_INF("SX4.F: Core Repair Initf");
+            PK_TRACE_INF("SX.4D: Core Repair Initf");
             p9_hcd_core_repair_initf(core);
 
 #endif
@@ -400,7 +396,7 @@ p9_cme_stop_exit()
 
 #if !SKIP_ARRAYINIT
 
-            PK_TRACE_INF("SX4.G: Core Array Init");
+            PK_TRACE_INF("SX.4E: Core[%d] Array Init after catchup B", core);
             p9_hcd_core_arrayinit(core);
 
 #endif
@@ -411,7 +407,7 @@ p9_cme_stop_exit()
 
 #if !SKIP_INITF
 
-            PK_TRACE_INF("SX4.H: Core Func Scan");
+            PK_TRACE_INF("SX.4F: Core Func Scan");
             p9_hcd_core_initf(core);
 
 #endif
@@ -430,28 +426,23 @@ p9_cme_stop_exit()
 
     if (deeper_level == STOP_LEVEL_3 || target_level == STOP_LEVEL_3)
     {
-
         //--------------------------------------------------------------------------
-        PK_TRACE_INF("+++++ +++++ STOP LEVEL 3 EXIT +++++ +++++");
+        PK_TRACE("+++++ +++++ STOP LEVEL 3 EXIT +++++ +++++");
         //--------------------------------------------------------------------------
-
-        PK_TRACE_DBG("Check: Core[%d] Serviced by SX3", core);
 
         //======================
         MARK_TAG(SX_STOP3, core)
         //======================
 
-        //Return to full voltage
+        PK_TRACE_DBG("SX.3A: Core[%d] Return to Full Voltage", core);
         //disable ivrm?
     }
 
 
 
     //--------------------------------------------------------------------------
-    PK_TRACE_INF("+++++ +++++ STOP LEVEL 2 EXIT +++++ +++++");
+    PK_TRACE("+++++ +++++ STOP LEVEL 2 EXIT +++++ +++++");
     //--------------------------------------------------------------------------
-
-    PK_TRACE_INF("Check: Core[%d] Serviced by SX2", core);
 
     //============================
     MARK_TAG(SX_STARTCLOCKS, core)
@@ -464,6 +455,7 @@ p9_cme_stop_exit()
 
     // do this after assert glsmux so glitch can have time to resolve
     // catchup to stop2 exit will acquire here
+    PK_TRACE_DBG("Core Ensure Pcb Mux");
     p9_cme_acquire_pcbmux(core, 1);
 
     PK_TRACE_INF("SX2.A: Start Core Clock");
@@ -474,17 +466,15 @@ p9_cme_stop_exit()
 
     if (target_level < STOP_LEVEL_4)
     {
-        PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
-
         if (deeper_core && deeper_level == STOP_LEVEL_4)
         {
-            PK_TRACE_DBG("Dropping fence in core%d with deeper_core%d",
+            PK_TRACE_DBG("Core[%d] Dropping Chiplet Fence via NC0INDIR[18] with deeper_core[%d]",
                          (CME_MASK_BC - deeper_core), deeper_core);
             CME_PUTSCOM(CPPM_NC0INDIR_CLR, (CME_MASK_BC - deeper_core), BIT64(18));
         }
         else
         {
-            PK_TRACE_DBG("Dropping fence in core%d", core);
+            PK_TRACE_DBG("Core[%d] Dropping Chiplet Fence via NC0INDIR[18]", core);
             CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
         }
     }
@@ -495,7 +485,7 @@ p9_cme_stop_exit()
     {
 
         //--------------------------------------------------------------------------
-        PK_TRACE_INF("+++++ +++++ STOP LEVEL 4 EXIT CONTINUE +++++ +++++");
+        PK_TRACE("+++++ +++++ STOP LEVEL 4 EXIT CONTINUE +++++ +++++");
         //--------------------------------------------------------------------------
 
         if (d2u4_flag)
@@ -503,15 +493,13 @@ p9_cme_stop_exit()
             core = deeper_core;
         }
 
-        PK_TRACE_DBG("Check: Core[%d] Serviced by SX4SH", core);
-
 #if !STOP_PRIME
 
         //===========================
         MARK_TAG(SX_SCOM_INITS, core)
         //===========================
 
-        PK_TRACE_INF("SX4.I: Image Hardcoded Scoms on Core", core);
+        PK_TRACE_INF("SX4.G: Core[%d] Scom Inits", core);
         p9_hcd_core_scominit(core);
 
         //==========================
@@ -520,7 +508,7 @@ p9_cme_stop_exit()
 
 #if !SKIP_BCE_SCOM_RESTORE
 
-        PK_TRACE_INF("SX4.J: BCE Runtime Check Scom Restore Copy Completed");
+        PK_TRACE_DBG("BCE Runtime Check Scom Restore Copy Completed");
 
         if( BLOCK_COPY_SUCCESS != isScanRingCopyDone() )
         {
@@ -530,17 +518,17 @@ p9_cme_stop_exit()
 
 #endif
 
-        PK_TRACE_INF("SX4.K: XIP Customized Scoms on Core", core);
+        PK_TRACE("Core XIP Customized Scoms");
         p9_hcd_core_scomcust(core);
 
         //==============================
         MARK_TAG(SX_RUNTIME_INITS, core)
         //==============================
 
-        PK_TRACE_INF("SX4.L: RAS Runtime Scom on Core", core);
+        PK_TRACE("RAS Runtime Scom on Core", core);
         p9_hcd_core_ras_runtime_scom(core);
 
-        PK_TRACE_INF("SX4.M: OCC Runtime Scom on Core", core);
+        PK_TRACE("OCC Runtime Scom on Core", core);
         p9_hcd_core_occ_runtime_scom(core);
 
 #endif
@@ -549,14 +537,12 @@ p9_cme_stop_exit()
         MARK_TAG(SX_SELF_RESTORE, core)
         //=============================
 
-        PK_TRACE_INF("SX4.N: Core Self Restore");
-
 #if !SKIP_SELF_RESTORE
 
         PK_TRACE("Assert block interrupt to PC via SICR[2/3]");
         out32(CME_LCL_SICR_OR, core << SHIFT32(3));
 
-        PK_TRACE("Waking up the core(pm_exit=1) via SICR[4/5]");
+        PK_TRACE_INF("SF.RS: Self Restore Prepare, Core Waking up(pm_exit=1) via SICR[4/5]");
         out32(CME_LCL_SICR_OR, core << SHIFT32(5));
 
         PK_TRACE("Polling for core wakeup(pm_active=0) via EINR[20/21]");
@@ -568,8 +554,6 @@ p9_cme_stop_exit()
 
 #if NIMBUS_DD_LEVEL == 1
 #if !SKIP_RAM_HRMOR
-
-        PK_TRACE_INF("SX4.O: Core Wakes Up, Ramming HRMOR with HOMER address");
 
         PK_TRACE("Activate thread0 for RAM via THREAD_INFO[18]");
         CME_PUTSCOM(THREAD_INFO, core, BIT64(18));
@@ -587,11 +571,11 @@ p9_cme_stop_exit()
                 PK_TRACE_DBG("Set SPRC to scratch for core[%d] via SCOM_SPRC", core_mask);
                 CME_PUTSCOM(SCOM_SPRC, core_mask, ((core_mask & 1) ? BIT64(60) : 0));
 
-                PK_TRACE_DBG("Load SCRACTH with HOMER+2MB for core[%d]", core_mask);
+                PK_TRACE_DBG("Load SCRACTH with HOMER+2MB address %x", scom_data.value);
 
 #if EPM_P9_TUNING
 
-                CME_PUTSCOM((SCRACTH0 + (core_mask & 1)), core_mask, 0x200000);
+                CME_PUTSCOM((SCRACTH0 + (core_mask & 1)), core_mask, 0xA200000);
 
 #else
 
@@ -631,14 +615,14 @@ p9_cme_stop_exit()
 // Nimbus DD2+
 #else
 
-        PK_TRACE_INF("SX4.O: Core Wakes Up, Write HRMOR with HOMER address");
 
 #if EPM_P9_TUNING
 
-        CME_PUTSCOM(HRMOR, core, 0x200000);
+        CME_PUTSCOM(HRMOR, core, 0xA200000);
 
 #else
 
+        PK_TRACE_DBG("Core Wakes Up, Write HRMOR with HOMER address %x", scom_data.value);
         CME_PUTSCOM(HRMOR, core, scom_data.value);
 
 #endif
@@ -649,7 +633,7 @@ p9_cme_stop_exit()
         CME_GETSCOM(SPATTN_MASK, core, CME_SCOM_AND, scom_data.value);
         CME_PUTSCOM(SPATTN_MASK, core, BITS64(0, 64));
 
-        PK_TRACE_INF("SX4.P: S-Reset All Core Threads to Run Self Restore Image");
+        PK_TRACE_INF("SF.RS: Self Restore Kickoff, S-Reset All Core Threads");
         CME_PUTSCOM(DIRECT_CONTROLS, core,
                     BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
         sync();
@@ -677,7 +661,7 @@ p9_cme_stop_exit()
             }
         }
 
-        PK_TRACE_INF("SX4.Q: Self Restore Completed, Core is Stopped Again");
+        PK_TRACE_INF("SF.RS: Self Restore Completed, Core Stopped Again(pm_exit=0/pm_active=1)");
 
         PK_TRACE("Restore SPATTN after self-restore");
         CME_PUTSCOM(SPATTN_MASK, core, scom_data.value);
@@ -701,8 +685,10 @@ p9_cme_stop_exit()
     //=========================
 
     //--------------------------------------------------------------------------
-    PK_TRACE_INF("+++++ +++++ END OF STOP EXIT +++++ +++++");
+    PK_TRACE("+++++ +++++ END OF STOP EXIT +++++ +++++");
     //--------------------------------------------------------------------------
+
+    PK_TRACE_DBG("Restore PSSCR.PLS+SRR1 back to actual level");
 
 #if HW386841_DD1_DSL_STOP1_FIX
 
@@ -710,13 +696,10 @@ STOP1_EXIT:
 
     core = core | core_stop1;
 
-    PK_TRACE_INF("SX0.D: Restore PSSCR.PLS+SRR1 back to actual level");
-
     for (core_mask = 2; core_mask; core_mask--)
     {
         if (core & core_mask)
         {
-            PK_TRACE_DBG("Set PLS+SRR1 for Core[%d]", core_mask);
             CME_GETSCOM(PPM_SSHSRC, core_mask, CME_SCOM_AND, scom_data.value);
 
             core_index            = core_mask & 1;
@@ -731,7 +714,7 @@ STOP1_EXIT:
                 // address are 0x20 apart between threads and 0x80 apart between cores
                 pscrs = in32((CME_LCL_PSCRS00 + (core_index << 7) + (thread << 5)));
 
-                PK_TRACE_DBG("Old dsl%d of Core%d Thread%d, current PSCRS%x",
+                PK_TRACE_DBG("Old DSL[%d] of Core[%d] Thread[%d], current PSCRS[%x]",
                              G_dsl[core_index][thread], core_index, thread, pscrs);
 
                 // Calculate new DSL
@@ -764,7 +747,7 @@ STOP1_EXIT:
                 G_dsl[core_index][thread] =
                     MIN(temp_dsl, MAX(act_stop_level, G_dsl[core_index][thread]));
 
-                PK_TRACE_DBG("New dsl%d", G_dsl[core_index][thread]);
+                PK_TRACE_DBG("New DSL[%d]", G_dsl[core_index][thread]);
 
                 // Calculate new SRR1
                 if (G_dsl[core_index][thread] >= STOP_LEVEL_8)
@@ -780,7 +763,7 @@ STOP1_EXIT:
                     srr1[thread] = temp_srr1;
                 }
 
-                PK_TRACE_DBG("Srr1%d", srr1[thread]);
+                PK_TRACE_DBG("Srr1[%d]", srr1[thread]);
 
                 // 36-39|44-47|52-55|60-63
                 scom_data.words.lower |=
@@ -795,13 +778,10 @@ STOP1_EXIT:
 
 #else
 
-    PK_TRACE_INF("SX0.E: Restore PSSCR.PLS+SRR1 back to actual level");
-
     for (core_mask = 2; core_mask; core_mask--)
     {
         if (core & core_mask)
         {
-            PK_TRACE_DBG("Set PLS+SRR1 for Core[%d]", core_mask);
             CME_GETSCOM(PPM_SSHSRC, core_mask, CME_SCOM_AND, scom_data.value);
 
             act_stop_level = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
@@ -854,12 +834,10 @@ STOP1_EXIT:
 
 #endif
 
-    PK_TRACE_DBG("Check: Core[%d] Serviced by SX0", core);
-
-    PK_TRACE_INF("SX0.F: Now Wakeup the Core (pm_exit=1) via SICR[4/5]");
+    PK_TRACE_INF("SX.0A: Core[%d] Waking up(pm_exit=1) via SICR[4/5]", core);
     out32(CME_LCL_SICR_OR, core << SHIFT32(5));
 
-    PK_TRACE_INF("SX0.G: Polling for Core Waking up(pm_active=0) via EINR[20/21]");
+    PK_TRACE_DBG("Polling for Core Waking up(pm_active=0) via EINR[20/21]");
 
     while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
@@ -870,8 +848,9 @@ STOP1_EXIT:
 
 #endif
 
-    PK_TRACE_INF("SX0.H: Release PCB Mux back to Core via SICR[10/11]");
+    PK_TRACE_INF("Core Release PCB Mux via SICR[10/11]");
     p9_cme_release_pcbmux(core);
+
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
     scom_data.words.lower = 0;
     scom_data.words.upper = SSH_EXIT_COMPLETE;
@@ -889,15 +868,15 @@ STOP1_EXIT:
     G_cme_stop_record.core_running |=  core;
     G_cme_stop_record.core_stopgpe &= ~core;
 
-    PK_TRACE("Drop halt STOP override disable via LMCR[14/15]");
+    PK_TRACE_DBG("Drop halt STOP override disable via LMCR[14/15]");
     out32(CME_LCL_LMCR_CLR, (core << SHIFT32(15)));
 
 #if SPWU_AUTO
 
-    PK_TRACE_INF("SX0.I: Drop auto spwu disable, enable auto spwu via LMCR[12/13]");
+    PK_TRACE_DBG("Drop auto spwu disable, enable auto spwu via LMCR[12/13]");
     out32(CME_LCL_LMCR_CLR, core << SHIFT32(13));
 
-    PK_TRACE_INF("SX0.J: Drop pm_exit via SICR[4/5]");
+    PK_TRACE_INF("SX.0B: Core Drop PM_EXIT via SICR[4/5]");
     out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
 
 #else
@@ -907,19 +886,16 @@ STOP1_EXIT:
         // done = spwu + !pm_active + !core_chiplet_fence + !pcbmux_req + !pcbmux_grant
         // chiplet fence forces pm_active to zero
         // Note: pm_exit is asserted above for every core waking up including spwu
-        PK_TRACE_DBG("Check: Core[%d] EISR=0/EIPR=0/spwu_done=1", spwu_stop);
+        PK_TRACE_INF("SX.0B: Core[%d] Assert SPWU_DONE via SICR[16/17]", spwu_stop);
         out32(CME_LCL_EISR_CLR, spwu_stop << SHIFT32(15));  // clear spwu in EISR
         out32(CME_LCL_EIPR_CLR, spwu_stop << SHIFT32(15));  // flip EIPR to falling edge
-
-        PK_TRACE_INF("SX0.K: Assert SPWU Done on Core via SICR[16/17]");
         out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));  // assert spwu_done now
         G_cme_stop_record.core_in_spwu |= spwu_stop;
     }
 
     if ((core = (core & (~spwu_stop))))
     {
-        PK_TRACE_DBG("Check: Core[%d] isnt SPWUed, Drop PM_EXIT", core);
-        PK_TRACE_INF("SX0.L: Drop PM_EXIT for NOT SPWU Core via SICR[4/5]");
+        PK_TRACE_INF("SX.0C: Core[%d] isnt SPWUed, Drop PM_EXIT via SICR[4/5]", core);
         out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
     }
 

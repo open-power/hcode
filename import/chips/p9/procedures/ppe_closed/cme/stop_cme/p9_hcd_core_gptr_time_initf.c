@@ -33,10 +33,10 @@ p9_hcd_core_gptr_time_initf(uint32_t core)
 {
     int rc = CME_STOP_SUCCESS;
 
-    PK_TRACE_DBG("Scan ec_gptr ring core value %d", core);
+    PK_TRACE("Scan ec_gptr ring core value %d", core);
     putRing(core, CME_SCOM_EQ, ec_gptr);
 
-    PK_TRACE_DBG("Scan ec_time ring core value %d", core);
+    PK_TRACE("Scan ec_time ring core value %d", core);
     putRing(core, CME_SCOM_EQ, ec_time);
 
     return rc;
