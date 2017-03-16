@@ -22,6 +22,6 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-PROCEDURE = cen_ringId
+PROCEDURE=cen_ringId
 $(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/common/utils/imageProcs)
 $(call BUILD_PROCEDURE)
