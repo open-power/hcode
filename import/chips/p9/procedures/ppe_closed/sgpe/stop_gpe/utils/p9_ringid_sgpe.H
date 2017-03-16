@@ -193,7 +193,7 @@ typedef enum RingOffset
     EX_L3_REFR_TIME = (7 | INSTANCE_RING_MARK)
 } ringOffset;
 
-static const struct CHIPLET_DATA g_eqData =
+static const ChipletData_t g_eqData =
 {
     16, // Core Chiplet ID range is 32-55. The base ID is 32.
     62, // 62 common rings for Core chiplet

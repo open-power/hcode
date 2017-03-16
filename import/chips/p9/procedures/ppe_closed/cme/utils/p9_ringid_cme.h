@@ -43,11 +43,12 @@ typedef enum RingOffset
     EC_REPR = (INSTANCE_RING_MARK | 0)
 } ringOffset;
 
-static const struct CHIPLET_DATA g_ecData =
+static const ChipletData_t g_ecData =
 {
     32, // Core Chiplet ID range is 32-55. The base ID is 32.
     5,  // 4 common rings for Core chiplet
     1,  // 1 instance specific ring for each Core chiplet
+    1,  // 1 different instance rings
     3   //base,CC and risk level variants supported
 };
 
