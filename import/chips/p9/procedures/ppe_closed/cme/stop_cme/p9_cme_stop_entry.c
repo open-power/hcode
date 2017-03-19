@@ -257,7 +257,7 @@ void p9_cme_pcbmux_savior_epilogue(uint32_t core)
 
 #endif
 
-int
+void
 p9_cme_stop_entry()
 {
     int             catchup_ongoing     = 0;
@@ -317,7 +317,7 @@ p9_cme_stop_entry()
     {
         // PM_ACTIVE can be phantom, only gives warning
         PK_TRACE_INF("WARNING: Only Phantom PM_ACTIVE to be Ignored. Return");
-        return CME_STOP_SUCCESS;
+        return;
     }
 
     // NDD2: OOB bits wired to SISR
@@ -328,7 +328,7 @@ p9_cme_stop_entry()
         ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS64SH(61, 2))))
     {
         PK_TRACE_INF("WARNING: Attn/Recov Present, Abort Entry and Return");
-        return CME_STOP_SUCCESS;
+        return;
     }
 
     //===================================
@@ -1324,5 +1324,5 @@ p9_cme_stop_entry()
     MARK_TRAP(ENDSCOPE_STOP_ENTRY)
     //============================
 
-    return CME_STOP_SUCCESS;
+    return;
 }
