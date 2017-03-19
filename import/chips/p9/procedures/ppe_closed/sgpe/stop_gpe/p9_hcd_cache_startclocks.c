@@ -26,10 +26,9 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
-int
+void
 p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 {
-    uint32_t   rc        = SGPE_STOP_SUCCESS;
     uint32_t   id_vector = 0;
     uint32_t   ex_mask   = 0;
     uint32_t   bitloc    = 0;
@@ -197,6 +196,4 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     }
 
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data.value);
-
-    return rc;
 }

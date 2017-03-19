@@ -26,8 +26,8 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
-int
+void
 p9_hcd_core_ras_runtime_scom(uint32_t core)
 {
-    return 0;
+    return;
 }

@@ -26,11 +26,9 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
-int
+void
 p9_hcd_cache_poweron(uint32_t quad)
 {
-    int rc = SGPE_STOP_SUCCESS;
-
     PK_TRACE("Drop chiplet enable via NET_CTRL0[0]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(0));
 
@@ -93,6 +91,4 @@ p9_hcd_cache_poweron(uint32_t quad)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, quad), BITS64(0, 4));
 #endif
 #endif
-
-    return rc;
 }

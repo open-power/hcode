@@ -44,7 +44,7 @@ extern SgpeStopRecord                           G_sgpe_stop_record;
 
 #endif
 
-int
+void
 p9_sgpe_stop_entry()
 {
     int          entry_ongoing[2] = {0, 0};
@@ -1145,5 +1145,5 @@ p9_sgpe_stop_entry()
     MARK_TRAP(ENDSCOPE_STOP_ENTRY)
     //============================
 
-    return SGPE_STOP_SUCCESS;
+    return;
 }

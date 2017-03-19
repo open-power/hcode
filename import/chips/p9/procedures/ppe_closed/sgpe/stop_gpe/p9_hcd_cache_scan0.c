@@ -26,10 +26,9 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
-int
+void
 p9_hcd_cache_scan0(uint32_t quad, uint64_t regions, uint64_t scan_type)
 {
-    int rc = SGPE_STOP_SUCCESS;
 #if EPM_BROADSIDE_SCAN0
     // clean up the scan region
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_SCAN_REGION_TYPE, quad), 0);
@@ -88,5 +87,4 @@ p9_hcd_cache_scan0(uint32_t quad, uint64_t regions, uint64_t scan_type)
     PK_TRACE("Clear Scan Select Register");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_SCAN_REGION_TYPE, quad), 0);
 #endif
-    return rc;
 }

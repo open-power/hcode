@@ -26,10 +26,9 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
-int
+void
 p9_hcd_cache_dpll_setup(uint32_t quad)
 {
-    int      rc        = SGPE_STOP_SUCCESS;
     uint64_t scom_data = 0;
 
     PK_TRACE("Drop analog logic fence via QPPM_PFCS[11]");
@@ -110,6 +109,4 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
 
     PK_TRACE("Drop skew/duty cycle adjust func_clksel via NET_CTRL0[22]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(22));
-
-    return rc;
 }

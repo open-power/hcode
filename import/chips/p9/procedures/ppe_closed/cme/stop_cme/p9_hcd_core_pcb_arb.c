@@ -26,7 +26,7 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
-int
+void
 p9_hcd_core_pcb_arb(uint32_t core, uint8_t req_rel)
 {
     uint32_t sisr = 0;
@@ -42,6 +42,4 @@ p9_hcd_core_pcb_arb(uint32_t core, uint8_t req_rel)
         }
     }
     while(1);
-
-    return CME_STOP_SUCCESS;
 }

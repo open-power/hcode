@@ -28,10 +28,9 @@
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
-int
+void
 p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
-    uint32_t   rc                                          = SGPE_STOP_SUCCESS;
     uint32_t   attr_proc_fabric_pump_mode_chip_is_node     = 0; // default group
     uint32_t   ex_loop                                     = 0;
     uint32_t   ex_count                                    = 0;
@@ -175,6 +174,4 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
             }
         }
     }
-
-    return rc;
 }

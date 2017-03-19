@@ -48,10 +48,9 @@ enum P9_HCD_CACHE_CHIPLET_RESET_CONSTANTS
                                BIT64(18) | BIT64(22) | BITS64(25, 2))
 };
 
-int
+void
 p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 {
-    int rc              = SGPE_STOP_SUCCESS;
     uint64_t scom_data  = 0;
     uint32_t core       = 0;
     uint32_t cbit       = 0;
@@ -275,6 +274,4 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 
     p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
 #endif
-
-    return rc;
 }

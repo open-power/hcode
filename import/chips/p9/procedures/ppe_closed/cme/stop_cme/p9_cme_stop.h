@@ -138,11 +138,6 @@
 #define PERV_CPLT_STAT0        0x20000100
 
 
-/// CME STOP Return Codes
-enum CME_STOP_RETURN_CODE
-{
-    CME_STOP_SUCCESS                 = 0
-};
 
 /// CME STOP IRQs with shorter names
 enum CME_STOP_IRQ_SHORT_NAME
@@ -297,15 +292,14 @@ typedef struct
 /// CME STOP Entry and Exit Prototypes
 void p9_cme_pcbmux_savior_prologue(uint32_t);
 void p9_cme_pcbmux_savior_epilogue(uint32_t);
-
 void p9_cme_acquire_pcbmux(uint32_t, uint32_t);
 void p9_cme_release_pcbmux(uint32_t);
 
 void p9_cme_stop_enter_thread(void*);
 void p9_cme_stop_exit_thread(void*);
 void p9_cme_stop_eval_eimr_override();
-int  p9_cme_stop_entry();
-int  p9_cme_stop_exit();
+void p9_cme_stop_entry();
+void p9_cme_stop_exit();
 int  p9_cme_stop_exit_catchup(uint32_t*, uint32_t*, uint32_t*, uint8_t*, int*);
 
 void p9_cme_stop_enter_handler(void*, PkIrqId);
@@ -314,17 +308,17 @@ void p9_cme_stop_spwu_handler(void*, PkIrqId);
 void p9_cme_stop_db1_handler(void*, PkIrqId);
 void p9_cme_stop_db2_handler(void*, PkIrqId);
 
-int  p9_hcd_core_scan0(uint32_t, uint64_t, uint64_t);
-int  p9_hcd_core_pcb_arb(uint32_t, uint8_t);
-int  p9_hcd_core_poweron(uint32_t);
-int  p9_hcd_core_chiplet_reset(uint32_t);
-int  p9_hcd_core_gptr_time_initf(uint32_t);
-int  p9_hcd_core_chiplet_init(uint32_t);
-int  p9_hcd_core_repair_initf(uint32_t);
-int  p9_hcd_core_arrayinit(uint32_t);
-int  p9_hcd_core_initf(uint32_t);
-int  p9_hcd_core_startclocks(uint32_t);
-int  p9_hcd_core_scominit(uint32_t);
-int  p9_hcd_core_scomcust(uint32_t);
-int  p9_hcd_core_ras_runtime_scom(uint32_t);
-int  p9_hcd_core_occ_runtime_scom(uint32_t);
+void p9_hcd_core_scan0(uint32_t, uint64_t, uint64_t);
+void p9_hcd_core_pcb_arb(uint32_t, uint8_t);
+void p9_hcd_core_poweron(uint32_t);
+void p9_hcd_core_chiplet_reset(uint32_t);
+void p9_hcd_core_gptr_time_initf(uint32_t);
+void p9_hcd_core_chiplet_init(uint32_t);
+void p9_hcd_core_repair_initf(uint32_t);
+void p9_hcd_core_arrayinit(uint32_t);
+void p9_hcd_core_initf(uint32_t);
+void p9_hcd_core_startclocks(uint32_t);
+void p9_hcd_core_scominit(uint32_t);
+void p9_hcd_core_scomcust(uint32_t);
+void p9_hcd_core_ras_runtime_scom(uint32_t);
+void p9_hcd_core_occ_runtime_scom(uint32_t);

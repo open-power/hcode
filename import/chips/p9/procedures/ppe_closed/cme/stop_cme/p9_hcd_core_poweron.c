@@ -26,11 +26,9 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
-int
+void
 p9_hcd_core_poweron(uint32_t core)
 {
-    int rc = CME_STOP_SUCCESS;
-
     PK_TRACE("Drop chiplet enable via NET_CTRL0[0]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(0));
 
@@ -89,6 +87,4 @@ p9_hcd_core_poweron(uint32_t core)
     PK_TRACE("Turn Off Force Von");
     CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));
 #endif
-
-    return rc;
 }

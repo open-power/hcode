@@ -28,10 +28,9 @@
 #include "p9_cme_stop_exit_marks.h"
 #include "p9_ringid_cme_enums.h"
 
-int
+void
 p9_hcd_core_arrayinit(uint32_t core)
 {
-    int rc = CME_STOP_SUCCESS;
     uint64_t scom_data = 0;
 
 #if RUN_NDD1_ABIST_IN_PARALLEL_MODE
@@ -109,6 +108,4 @@ p9_hcd_core_arrayinit(uint32_t core)
 
     PK_TRACE("Drop sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     CME_PUTSCOM(C_CPLT_CONF0_CLEAR, core, BIT64(34));
-
-    return rc;
 }

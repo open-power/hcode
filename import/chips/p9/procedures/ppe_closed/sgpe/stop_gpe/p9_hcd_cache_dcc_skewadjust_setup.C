@@ -43,9 +43,8 @@
 
 
 
-extern "C" int p9_hcd_cache_dcc_skewadjust_setup(uint32_t quad)
+extern "C" void p9_hcd_cache_dcc_skewadjust_setup(uint32_t quad)
 {
-    int rc = SGPE_STOP_SUCCESS;
     fapi2::Target<fapi2::TARGET_TYPE_EQ>        l_eqTarget
     (
         fapi2::plat_getTargetHandleByChipletNumber((uint8_t)quad + EQ_CHIPLET_OFFSET)
@@ -140,5 +139,4 @@ extern "C" int p9_hcd_cache_dcc_skewadjust_setup(uint32_t quad)
 fapi_try_exit:
 
     FAPI_DBG("<<p9_hcd_cache_dcc_skewadjust_setup");
-    return rc;
 }

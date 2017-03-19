@@ -46,10 +46,9 @@ enum P9_HCD_CORE_CHIPLET_RESET_CONSTANTS
                                BIT64(16) | BIT64(18) | BIT64(22) | BITS64(25, 2))
 };
 
-int
+void
 p9_hcd_core_chiplet_reset(uint32_t core)
 {
-    int rc             = CME_STOP_SUCCESS;
     data64_t scom_data = {0};
 
     PK_TRACE("Init NET_CTRL0[1,3-5,11-14,16,18,22,25,26],step needed for hotplug");
@@ -113,6 +112,4 @@ p9_hcd_core_chiplet_reset(uint32_t core)
 
     PK_TRACE("Drop core progdly bypass(skewadjust) via NET_CTRL1[2]");
     CME_PUTSCOM(CPPM_NC1INDIR_CLR, core, BIT64(2));
-
-    return rc;
 }

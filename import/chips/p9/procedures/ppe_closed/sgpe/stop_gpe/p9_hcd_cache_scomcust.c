@@ -26,11 +26,9 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
-int
+void
 p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
-
-    int      rc        = SGPE_STOP_SUCCESS;
     data64_t scom_data = {0};
 
 #if !SKIP_HOMER_ACCESS
@@ -135,6 +133,4 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
         PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(18));
     }
-
-    return rc;
 }

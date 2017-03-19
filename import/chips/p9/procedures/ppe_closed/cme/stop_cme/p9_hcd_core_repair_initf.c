@@ -28,10 +28,10 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 #include "p9_ringid_cme_enums.h"
-int
+
+void
 p9_hcd_core_repair_initf(uint32_t core)
 {
-    int rc = CME_STOP_SUCCESS;
     int i = 0;
 
     // Markers needed for repair ininf
@@ -55,6 +55,4 @@ p9_hcd_core_repair_initf(uint32_t core)
         PK_TRACE("Scan ec_repr ring core value %d", core);
         putRing(core, CME_SCOM_EQ, ec_repr);
     }
-
-    return rc;
 }

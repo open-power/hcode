@@ -26,11 +26,9 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
-int
+void
 p9_hcd_core_scomcust(uint32_t core)
 {
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
-
-    return 0;
 }

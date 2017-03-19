@@ -43,10 +43,9 @@ enum P9_HCD_CORE_SCOMINIT_CONSTANTS
     NEST_HANG_LIMIT_200_HANG_PULSES = 0x64
 };
 
-int
+void
 p9_hcd_core_scominit(uint32_t core)
 {
-    int      rc        = CME_STOP_SUCCESS;
     data64_t scom_data = {0};
 
     // how about bit 6?
@@ -78,6 +77,4 @@ p9_hcd_core_scominit(uint32_t core)
 #endif
     scom_data.words.upper |= (NEST_HANG_LIMIT_100_HANG_PULSES << SHIFT32(15));
     CME_PUTSCOM(C_HANG_CONTROL, core, scom_data.value);
-
-    return rc;
 }

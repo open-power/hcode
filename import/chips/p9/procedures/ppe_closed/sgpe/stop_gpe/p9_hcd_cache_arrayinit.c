@@ -26,10 +26,9 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
-int
+void
 p9_hcd_cache_arrayinit(uint32_t quad, uint32_t ex)
 {
-    int rc             = SGPE_STOP_SUCCESS;
     uint64_t scom_data = 0;
 
     PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
@@ -115,6 +114,4 @@ p9_hcd_cache_arrayinit(uint32_t quad, uint32_t ex)
 
     PK_TRACE("Drop sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CONF0_CLEAR, quad), BIT64(34));
-
-    return rc;
 }

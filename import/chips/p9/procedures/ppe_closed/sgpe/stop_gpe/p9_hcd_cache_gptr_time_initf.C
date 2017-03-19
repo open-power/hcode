@@ -60,11 +60,9 @@
 //------------------------------------------------------------------------------
 
 
-extern "C" int p9_hcd_cache_gptr_time_initf(uint32_t quad)
+extern "C" void p9_hcd_cache_gptr_time_initf(uint32_t quad)
 {
     FAPI_INF(">>p9_hcd_cache_gptr_time_initf");
-
-    int rc = SGPE_STOP_SUCCESS;
     fapi2::Target<fapi2::TARGET_TYPE_EQ> l_eqTarget
     (
         fapi2::plat_getTargetHandleByChipletNumber((uint8_t)quad + EQ_CHIPLET_OFFSET)
@@ -108,5 +106,4 @@ extern "C" int p9_hcd_cache_gptr_time_initf(uint32_t quad)
 fapi_try_exit:
 
     FAPI_INF("<<9_hcd_cache_gptr_time_init");
-    return rc;
 }

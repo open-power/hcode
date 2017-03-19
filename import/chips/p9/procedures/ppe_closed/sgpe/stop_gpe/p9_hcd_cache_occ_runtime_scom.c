@@ -26,8 +26,8 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
-int
+void
 p9_hcd_cache_occ_runtime_scom(uint32_t quad)
 {
-    return 0;
+    return;
 }

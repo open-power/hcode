@@ -26,10 +26,8 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
-int
+void
 p9_hcd_cache_chiplet_init(uint32_t quad)
 {
-    int rc = SGPE_STOP_SUCCESS;
-
-    return rc;
+    return;
 }

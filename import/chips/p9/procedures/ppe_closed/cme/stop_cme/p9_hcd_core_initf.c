@@ -28,16 +28,12 @@
 #include "p9_cme_stop_exit_marks.h"
 #include "p9_ringid_cme_enums.h"
 
-int
+void
 p9_hcd_core_initf(uint32_t core)
 {
-    int rc = CME_STOP_SUCCESS;
-
     PK_TRACE("Scan ec_func ring core value %d", core);
     putRing(core, CME_SCOM_EQ, ec_func);
 
     PK_TRACE("Scan ec_mode ring core value %d", core);
     putRing(core, CME_SCOM_EQ, ec_mode);
-
-    return rc;
 }

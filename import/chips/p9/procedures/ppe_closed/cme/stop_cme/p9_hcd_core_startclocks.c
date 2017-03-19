@@ -26,10 +26,9 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
-int
+void
 p9_hcd_core_startclocks(uint32_t core)
 {
-    int      rc        = CME_STOP_SUCCESS;
     uint32_t id_vector = 0;
     data64_t scom_data = {0};
 
@@ -151,6 +150,4 @@ p9_hcd_core_startclocks(uint32_t core)
 
     PK_TRACE("Drop Core-L2/CC/TLBIE Quiesces via CME_LCL_SICR[6,8]/[7,9][21]");
     out32(CME_LCL_SICR_CLR, ((core << SHIFT32(7)) | (core << SHIFT32(9)) | BIT32(21)));
-
-    return rc;
 }

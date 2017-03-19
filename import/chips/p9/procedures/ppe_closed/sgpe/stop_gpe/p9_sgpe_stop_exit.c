@@ -144,7 +144,190 @@ fused_core_mode_scan_fix(uint32_t qloop, int l2bit)
 
 #endif
 
-int
+void p9_sgpe_stop_exit_pre(uint32_t cexit, uint32_t qspwu,
+                           uint32_t qloop, uint32_t* m_l2, uint32_t* m_pg)
+{
+    uint32_t cloop     = 0;
+    data64_t scom_data = {0};
+
+    //--------------------------------------------------------------------------
+    PK_TRACE_INF("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");
+    //--------------------------------------------------------------------------
+
+    if (G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop))
+    {
+        *m_pg |= FST_EX_IN_QUAD;
+    }
+
+    if (G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop))
+    {
+        *m_pg |= SND_EX_IN_QUAD;
+    }
+
+    if ((((cexit & BITS32(0, 2)) || (qspwu & BIT32(0))) &&
+         (G_sgpe_stop_record.state[qloop].act_state_x0 >= STOP_LEVEL_8)))
+    {
+        *m_l2 |= FST_EX_IN_QUAD;
+    }
+
+    if ((((cexit & BITS32(2, 2)) || (qspwu & BIT32(0))) &&
+         (G_sgpe_stop_record.state[qloop].act_state_x1 >= STOP_LEVEL_8)))
+    {
+        *m_l2 |= SND_EX_IN_QUAD;
+    }
+
+    *m_l2 = *m_l2 & *m_pg;
+
+    PK_TRACE("Update QSSR: stop_exit_ongoing");
+    out32(OCB_QSSR_OR, BIT32(qloop + 26));
+
+    for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
+    {
+        if(!(cexit & BIT32(cloop)))
+        {
+            continue;
+        }
+
+        PK_TRACE("Update STOP history on core[%d]: in transition of exit",
+                 ((qloop << 2) + cloop));
+        scom_data.words.lower = 0;
+        scom_data.words.upper = SSH_EXIT_IN_SESSION;
+        GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
+                        scom_data.value);
+    }
+}
+
+
+
+void p9_sgpe_stop_exit_lv8(uint32_t qloop, uint32_t m_l2, uint32_t m_pg)
+{
+    data64_t scom_data = {0};
+
+    //--------------------------------------------------------------------------
+    PK_TRACE("+++++ +++++ EX STOP EXIT [LEVEL 8-10] +++++ +++++");
+    //--------------------------------------------------------------------------
+
+    //========================================================
+    MARK_TAG(SX_L2_STARTCLOCKS, ((m_l2 << 6) | (32 >> qloop)))
+    //========================================================
+
+    // do this again here for stop8 in addition to dpll_setup
+    PK_TRACE("Switch L2 glsmux select to DPLL output via EXCGCR[34,35]");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, qloop), BITS64(34, 2));
+
+    PK_TRACE_INF("SX.8A: Cache[%d] EX_PG[%d] Start L2[%d] Clocks",
+                 qloop, m_pg, m_l2);
+    p9_hcd_cache_l2_startclocks(qloop, m_l2, m_pg);
+
+    // for l2 scom init and restore that cannot be done via stop11
+    // as if that certain l2 wasnt exiting(thus lack of clock for scom)
+
+    PK_TRACE_INF("SX.8B: Cache L2 Scominit");
+    p9_hcd_cache_scominit(qloop, m_l2, 1);
+
+    PK_TRACE_DBG("Cache L2 Scomcust");
+    p9_hcd_cache_scomcust(qloop, m_l2, 1);
+
+    // reset ex actual state if ex is exited.
+    if (m_l2 & FST_EX_IN_QUAD)
+    {
+        G_sgpe_stop_record.state[qloop].act_state_x0 = 0;
+    }
+
+    if (m_l2 & SND_EX_IN_QUAD)
+    {
+        G_sgpe_stop_record.state[qloop].act_state_x1 = 0;
+    }
+
+    if (G_sgpe_stop_record.state[qloop].act_state_x0 == 0 &&
+        G_sgpe_stop_record.state[qloop].act_state_x1 == 0)
+    {
+        PK_TRACE("Release cache clock controller atomic lock");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), 0);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), scom_data.value);
+
+        if (scom_data.words.upper & BIT32(0))
+        {
+            PK_TRACE_INF("ERROR: Failed to Release Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
+                         qloop, scom_data.words.upper);
+            PK_PANIC(SGPE_STOP_EXIT_DROP_CLK_LOCK_FAILED);
+        }
+    }
+
+    PK_TRACE("Update QSSR: drop l2_stopped");
+    out32(OCB_QSSR_CLR, (m_l2 << SHIFT32((qloop << 1) + 1)));
+}
+
+
+void p9_sgpe_stop_exit_end(uint32_t cexit, uint32_t qspwu, uint32_t qloop)
+{
+    uint32_t cloop = 0;
+    data64_t scom_data = {0};
+
+    //--------------------------------------------------------------------------
+    PK_TRACE("+++++ +++++ END OF STOP EXIT +++++ +++++");
+    //--------------------------------------------------------------------------
+
+    if (qspwu & BIT32(0))
+    {
+        PK_TRACE_INF("SP.WU: Quad[%d] Assert SPWU_DONE", qloop);
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_OR, qloop), BIT64(0));
+        G_sgpe_stop_record.group.qswu[VECTOR_CONFIG] |= BIT32(qloop);
+        G_sgpe_stop_record.group.qswu[VECTOR_EXIT]   &= ~BIT32(qloop);
+    }
+
+    // process core portion of core request
+    for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
+    {
+        if(!(cexit & BIT32(cloop)))
+        {
+            continue;
+        }
+
+#if DEBUG_RUNTIME_STATE_CHECK
+
+        if(G_sgpe_stop_record.level[qloop][cloop] != 0)
+        {
+            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
+                                           ((qloop << 2) + cloop)), scom_data.value);
+
+            if (!(scom_data.value & BIT64(13)))
+            {
+                PKTRACE("ERROR.A: core[%d] was not set before release",
+                        ((qloop << 2) + cloop));
+                pk_halt();
+            }
+        }
+
+#endif
+
+        // reset clevel to 0 if core is going to wake up
+        G_sgpe_stop_record.level[qloop][cloop] = 0;
+
+#if NIMBUS_DD_LEVEL != 1
+
+        p9_dd1_cppm_unicast_wr(
+            GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
+            GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,  ((qloop << 2) + cloop)),
+            BIT64(0), OR_OP);
+
+#endif
+
+        PK_TRACE_INF("SX.CME: Core[%d] Switch CorePPM Wakeup Back to CME via CPMMR[13]",
+                     ((qloop << 2) + cloop));
+        p9_dd1_cppm_unicast_wr(
+            GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
+            GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR, ((qloop << 2) + cloop)),
+            BIT64(13), CLR_OP);
+    }
+
+    PK_TRACE("Update QSSR: drop stop_exit_ongoing");
+    out32(OCB_QSSR_CLR, BIT32(qloop + 26));
+}
+
+
+
+void
 p9_sgpe_stop_exit()
 {
     uint32_t     m_l2            = 0;
@@ -181,6 +364,7 @@ p9_sgpe_stop_exit()
                  G_sgpe_stop_record.group.ex_l[VECTOR_EXIT],
                  G_sgpe_stop_record.group.ex_r[VECTOR_EXIT],
                  G_sgpe_stop_record.group.quad[VECTOR_EXIT]);
+
 
 #if !SKIP_IPC
 
@@ -285,6 +469,35 @@ p9_sgpe_stop_exit()
 
 #endif
 
+    for(cexit = G_sgpe_stop_record.group.core[VECTOR_EXIT],
+        qspwu = G_sgpe_stop_record.group.qswu[VECTOR_EXIT],
+        qloop = 0, m_l2 = 0, m_pg = 0;
+        (cexit > 0 || qspwu > 0) && (qloop < MAX_QUADS);
+        cexit = cexit << 4, qspwu = qspwu << 1, qloop++, m_l2 = 0, m_pg = 0)
+    {
+
+        if (!((cexit & BITS32(0, 4)) || (qspwu & BIT32(0))))
+        {
+            continue;
+        }
+        else if (G_sgpe_stop_record.state[qloop].act_state_q >= STOP_LEVEL_11)
+        {
+            continue;
+        }
+
+        p9_sgpe_stop_exit_pre(cexit, qspwu, qloop, &m_l2, &m_pg);
+
+        if (m_l2)
+        {
+            p9_sgpe_stop_exit_lv8(qloop, m_l2, m_pg);
+        }
+
+        p9_sgpe_stop_exit_end(cexit, qspwu, qloop);
+
+        G_sgpe_stop_record.group.core[VECTOR_EXIT] &=
+            ~((cexit & BITS32(0, 4)) >> (qloop << 2));
+    }
+
 
 
     for(cexit = G_sgpe_stop_record.group.core[VECTOR_EXIT],
@@ -299,53 +512,7 @@ p9_sgpe_stop_exit()
             continue;
         }
 
-        //--------------------------------------------------------------------------
-        PK_TRACE("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");
-        //--------------------------------------------------------------------------
-
-        if (G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop))
-        {
-            m_pg |= FST_EX_IN_QUAD;
-        }
-
-        if (G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop))
-        {
-            m_pg |= SND_EX_IN_QUAD;
-        }
-
-        if ((((cexit & BITS32(0, 2)) || (qspwu & BIT32(0))) &&
-             (G_sgpe_stop_record.state[qloop].act_state_x0 >= STOP_LEVEL_8)))
-        {
-            m_l2 |= FST_EX_IN_QUAD;
-        }
-
-        if ((((cexit & BITS32(2, 2)) || (qspwu & BIT32(0))) &&
-             (G_sgpe_stop_record.state[qloop].act_state_x1 >= STOP_LEVEL_8)))
-        {
-            m_l2 |= SND_EX_IN_QUAD;
-        }
-
-        m_l2 = m_l2 & m_pg;
-
-        PK_TRACE("Update QSSR: stop_exit_ongoing");
-        out32(OCB_QSSR_OR, BIT32(qloop + 26));
-
-        for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
-        {
-            if(!(cexit & BIT32(cloop)))
-            {
-                continue;
-            }
-
-            PK_TRACE("Update STOP history on core[%d]: in transition of exit",
-                     ((qloop << 2) + cloop));
-            scom_data.words.lower = 0;
-            scom_data.words.upper = SSH_EXIT_IN_SESSION;
-            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
-                            scom_data.value);
-        }
-
-
+        p9_sgpe_stop_exit_pre(cexit, qspwu, qloop, &m_l2, &m_pg);
 
         if(m_l2 && G_sgpe_stop_record.state[qloop].act_state_q >= STOP_LEVEL_11)
         {
@@ -595,60 +762,7 @@ p9_sgpe_stop_exit()
 
         if (m_l2)
         {
-
-            //--------------------------------------------------------------------------
-            PK_TRACE("+++++ +++++ EX STOP EXIT [LEVEL 8-10] +++++ +++++");
-            //--------------------------------------------------------------------------
-
-            //========================================================
-            MARK_TAG(SX_L2_STARTCLOCKS, ((m_l2 << 6) | (32 >> qloop)))
-            //========================================================
-
-            // do this again here for stop8 in addition to dpll_setup
-            PK_TRACE("Switch L2 glsmux select to DPLL output via EXCGCR[34,35]");
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, qloop), BITS64(34, 2));
-
-            PK_TRACE_INF("SX.8A: Cache[%d] EX_PG[%d] Start L2[%d] Clocks",
-                         qloop, m_pg, m_l2);
-            p9_hcd_cache_l2_startclocks(qloop, m_l2, m_pg);
-
-            // for l2 scom init and restore that cannot be done via stop11
-            // as if that certain l2 wasnt exiting(thus lack of clock for scom)
-
-            PK_TRACE_INF("SX.8B: Cache L2 Scominit");
-            p9_hcd_cache_scominit(qloop, m_l2, 1);
-
-            PK_TRACE_DBG("Cache L2 Scomcust");
-            p9_hcd_cache_scomcust(qloop, m_l2, 1);
-
-            // reset ex actual state if ex is exited.
-            if (m_l2 & FST_EX_IN_QUAD)
-            {
-                G_sgpe_stop_record.state[qloop].act_state_x0 = 0;
-            }
-
-            if (m_l2 & SND_EX_IN_QUAD)
-            {
-                G_sgpe_stop_record.state[qloop].act_state_x1 = 0;
-            }
-
-            if (G_sgpe_stop_record.state[qloop].act_state_x0 == 0 &&
-                G_sgpe_stop_record.state[qloop].act_state_x1 == 0)
-            {
-                PK_TRACE("Release cache clock controller atomic lock");
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), 0);
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), scom_data.value);
-
-                if (scom_data.words.upper & BIT32(0))
-                {
-                    PK_TRACE_INF("ERROR: Failed to Release Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
-                                 qloop, scom_data.words.upper);
-                    PK_PANIC(SGPE_STOP_EXIT_DROP_CLK_LOCK_FAILED);
-                }
-            }
-
-            PK_TRACE("Update QSSR: drop l2_stopped");
-            out32(OCB_QSSR_CLR, (m_l2 << SHIFT32((qloop << 1) + 1)));
+            p9_sgpe_stop_exit_lv8(qloop, m_l2, m_pg);
         }
 
         if(m_l2 && G_sgpe_stop_record.state[qloop].act_state_q >= STOP_LEVEL_11)
@@ -933,65 +1047,7 @@ p9_sgpe_stop_exit()
             out32(OCB_QSSR_CLR, BIT32(qloop + 14));
         }
 
-        //--------------------------------------------------------------------------
-        PK_TRACE("+++++ +++++ END OF STOP EXIT +++++ +++++");
-        //--------------------------------------------------------------------------
-
-        if (qspwu & BIT32(0))
-        {
-            PK_TRACE_INF("SP.WU: Quad[%d] Assert SPWU_DONE", qloop);
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_OR, qloop), BIT64(0));
-            G_sgpe_stop_record.group.qswu[VECTOR_CONFIG] |= BIT32(qloop);
-            G_sgpe_stop_record.group.qswu[VECTOR_EXIT]   &= ~BIT32(qloop);
-        }
-
-        // process core portion of core request
-        for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
-        {
-            if(!(cexit & BIT32(cloop)))
-            {
-                continue;
-            }
-
-#if DEBUG_RUNTIME_STATE_CHECK
-
-            if(G_sgpe_stop_record.level[qloop][cloop] != 0)
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
-                                               ((qloop << 2) + cloop)), scom_data.value);
-
-                if (!(scom_data.value & BIT64(13)))
-                {
-                    PKTRACE("ERROR.A: core[%d] was not set before release",
-                            ((qloop << 2) + cloop));
-                    pk_halt();
-                }
-            }
-
-#endif
-
-            // reset clevel to 0 if core is going to wake up
-            G_sgpe_stop_record.level[qloop][cloop] = 0;
-
-#if NIMBUS_DD_LEVEL != 1
-
-            p9_dd1_cppm_unicast_wr(
-                GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
-                GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,  ((qloop << 2) + cloop)),
-                BIT64(0), OR_OP);
-
-#endif
-
-            PK_TRACE_INF("SX.CME: Core[%d] Switch CorePPM Wakeup Back to CME via CPMMR[13]",
-                         ((qloop << 2) + cloop));
-            p9_dd1_cppm_unicast_wr(
-                GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
-                GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR, ((qloop << 2) + cloop)),
-                BIT64(13), CLR_OP);
-        }
-
-        PK_TRACE("Update QSSR: drop stop_exit_ongoing");
-        out32(OCB_QSSR_CLR, BIT32(qloop + 26));
+        p9_sgpe_stop_exit_end(cexit, qspwu, qloop);
     }
 
     G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |=
@@ -1003,5 +1059,5 @@ p9_sgpe_stop_exit()
     MARK_TRAP(ENDSCOPE_STOP_EXIT)
     //===========================
 
-    return SGPE_STOP_SUCCESS;
+    return;
 }

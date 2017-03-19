@@ -26,10 +26,9 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
-int
+void
 p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
 {
-    int rc = CME_STOP_SUCCESS;
 #if EPM_BROADSIDE_SCAN0
     // clean up the scan region
     CME_PUTSCOM(PERV_SCAN_REGION_TYPE, core, 0);
@@ -88,5 +87,4 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
     PK_TRACE("Clear Scan Select Register");
     CME_PUTSCOM(PERV_SCAN_REGION_TYPE, core, 0);
 #endif
-    return rc;
 }

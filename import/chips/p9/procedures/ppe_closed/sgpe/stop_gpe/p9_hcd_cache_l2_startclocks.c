@@ -28,10 +28,9 @@
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
-int
+void
 p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
 {
-    int      rc        = SGPE_STOP_SUCCESS;
     uint64_t scom_data = 0;
 
     PK_TRACE("Drop L2 Regional Fences via CPLT_CTRL1[8/9]");
@@ -150,6 +149,4 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
     }
 
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data);
-
-    return rc;
 }
