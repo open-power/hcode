@@ -51,7 +51,7 @@ typedef enum
     eq_fure = 0,
     eq_gptr = 1,
     eq_time = 2,
-    eq_mode = 3,
+    eq_inex = 3,
     ex_l3_fure = 4,
     ex_l3_gptr = 5,
     ex_l3_time = 6,
@@ -151,7 +151,7 @@ typedef enum RingOffset
     EQ_FURE         = 0,
     EQ_GPTR         = 1,
     EQ_TIME         = 2,
-    EQ_MODE         = 3,
+    EQ_INEX         = 3,
     EX_L3_FURE      = 4,
     EX_L3_GPTR      = 5,
     EX_L3_TIME      = 6,
@@ -240,7 +240,7 @@ static const struct ringProperties_t RING_PROPERTIES[P9_NUM_RINGS] =
     {EQ_FURE},              //0
     {EQ_GPTR},              //1
     {EQ_TIME},              //2
-    {EQ_MODE},              //3
+    {EQ_INEX},              //3
     {EX_L3_FURE},           //4
     {EX_L3_GPTR},           //5
     {EX_L3_TIME},           //6
