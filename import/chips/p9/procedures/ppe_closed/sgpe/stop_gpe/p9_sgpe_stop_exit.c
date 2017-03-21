@@ -32,10 +32,10 @@ extern SgpeStopRecord                       G_sgpe_stop_record;
 
 #if !SKIP_IPC
 
-    extern ipc_async_cmd_t                  G_sgpe_ipccmd_to_pgpe;
-    extern ipcmsg_s2p_suspend_pstate_t      G_sgpe_ipcmsg_suspend_pstate;
-    extern ipcmsg_s2p_update_active_cores_t G_sgpe_ipcmsg_update_cores;
-    extern ipcmsg_s2p_update_active_quads_t G_sgpe_ipcmsg_update_quads;
+    GPE_BUFFER(extern ipc_async_cmd_t                  G_sgpe_ipccmd_to_pgpe);
+    GPE_BUFFER(extern ipcmsg_s2p_suspend_pstate_t      G_sgpe_ipcmsg_suspend_pstate);
+    GPE_BUFFER(extern ipcmsg_s2p_update_active_cores_t G_sgpe_ipcmsg_update_cores);
+    GPE_BUFFER(extern ipcmsg_s2p_update_active_quads_t G_sgpe_ipcmsg_update_quads);
 
 #endif
 
@@ -232,8 +232,6 @@ p9_sgpe_stop_exit()
             PK_PANIC(SGPE_STOP_EXIT_IPC_CORE_BAD_RC);
         }
 
-        G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |=
-            G_sgpe_stop_record.group.core[VECTOR_EXIT];
     }
 
     // Upon the exit from STOP 11
@@ -282,8 +280,6 @@ p9_sgpe_stop_exit()
             PK_PANIC(SGPE_STOP_EXIT_IPC_QUAD_BAD_RC);
         }
 
-        G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |=
-            G_sgpe_stop_record.group.quad[VECTOR_EXIT];
     }
 
 #endif
@@ -1011,6 +1007,11 @@ p9_sgpe_stop_exit()
         PK_TRACE("Update QSSR: drop stop_exit_ongoing");
         out32(OCB_QSSR_CLR, BIT32(qloop + 26));
     }
+
+    G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |=
+        G_sgpe_stop_record.group.core[VECTOR_EXIT];
+    G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |=
+        G_sgpe_stop_record.group.quad[VECTOR_EXIT];
 
     //===========================
     MARK_TRAP(ENDSCOPE_STOP_EXIT)
