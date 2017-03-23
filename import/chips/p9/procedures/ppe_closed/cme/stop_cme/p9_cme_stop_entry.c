@@ -116,7 +116,7 @@ uint16_t ram_read_lpid( uint32_t core, uint32_t thread )
     if (scom_data > 0xFFF )
     {
         PKTRACE("RAMMING ERROR Unexpected LPID core %d : 0x%lX 0xFFF", core, scom_data);
-        pk_halt();
+        PK_PANIC(CME_STOP_ENTRY_BAD_LPID_ERROR);
     }
 
     return ((uint16_t) scom_data);
@@ -440,7 +440,7 @@ p9_cme_stop_entry()
             // Nap should be done by hardware when auto_stop1 is enabled
             // Halt on error if target STOP level == 1(Nap)
             PK_TRACE_INF("ERROR: Stop 1 Requested to CME When AUTO_STOP1 Enabled, HALT CME!");
-            pk_halt();
+            PK_PANIC(CME_STOP_ENTRY_WITH_AUTO_NAP);
 
 #endif
 
@@ -687,7 +687,7 @@ p9_cme_stop_entry()
         if (((~scom_data.value) & CLK_REGION_ALL_BUT_PLL) != 0)
         {
             PK_TRACE_INF("ERROR: Core Clock Stop Failed. HALT CME!");
-            pk_halt();
+            PK_PANIC(CME_STOP_ENTRY_STOPCLK_FAILED);
         }
 
         // MF: verify compiler generate single rlwmni
