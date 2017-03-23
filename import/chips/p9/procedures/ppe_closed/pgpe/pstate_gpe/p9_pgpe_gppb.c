@@ -28,7 +28,6 @@
 //Global pointer to GlobalPstateParmBlock
 GlobalPstateParmBlock* G_gppb;
 
-//VpdOperatingPoint *G_gppb->operating_points_set[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 uint32_t G_pstate0_dpll_value;
 uint32_t G_ext_vrm_inc_rate_mult_usperus;
 uint32_t G_ext_vrm_dec_rate_mult_usperus;

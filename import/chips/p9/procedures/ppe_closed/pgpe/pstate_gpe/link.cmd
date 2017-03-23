@@ -38,6 +38,7 @@ OUTPUT_FORMAT(elf32-powerpc);
 #define PGPE_HEADER_OFFSET    0x180
 //debug pointer offset at an offset of 0x200
 #define PPE_DEBUG_PTRS_OFFSET PGPE_HEADER_OFFSET + 0x80
+#define PPE_DEBUG_PTRS_SIZE     0x24
 
 MEMORY
 {
@@ -87,6 +88,9 @@ SECTIONS
 
     _DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
+
+    _DUMP_PTRS_START = _DEBUG_PTRS_START + PPE_DEBUG_PTRS_SIZE;
+    .dump_ptrs _DUMP_PTRS_START : { *(.dump_ptrs) } > sram
 
     ////////////////////////////////
     // All non-vector code goes here

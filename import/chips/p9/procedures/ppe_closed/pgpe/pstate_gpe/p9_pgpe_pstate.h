@@ -28,6 +28,10 @@
 #include "pk.h"
 #include "ipc_api.h"
 #include "ipc_async_cmd.h"
+#include "pstate_pgpe_occ_api.h"
+#include "ipc_messages.h"
+#include "p9_pgpe_header.h"
+
 
 #define MAX_IPC_PEND_TBL_ENTRIES                9
 #define IPC_PEND_PSTATE_START                   0
@@ -40,7 +44,6 @@
 #define IPC_PEND_SET_PMCR_REQ                   7
 #define IPC_PEND_SGPE_SUSPEND_PSTATES           8
 
-
 #define ALL_QUADS_BIT_MASK      QUAD0_BIT_MASK | QUAD1_BIT_MASK | \
     QUAD2_BIT_MASK | QUAD3_BIT_MASK | \
     QUAD4_BIT_MASK | QUAD5_BIT_MASK
@@ -50,6 +53,7 @@
 #define QUAD3_BIT_MASK          0x10
 #define QUAD4_BIT_MASK          0x8
 #define QUAD5_BIT_MASK          0x4
+
 
 enum PSTATE_STATUS
 {
@@ -63,15 +67,51 @@ enum PSTATE_STATUS
     PSTATE_SAFE_MODE                            =    7
 };
 
-//
 //Task list entry
-//
 typedef struct ipc_req
 {
     ipc_msg_t* cmd;
     uint8_t pending_ack;
     uint8_t pending_processing;
+    uint8_t pad[2];
 } ipc_req_t;
+
+/// PGPE PState
+typedef struct
+{
+    uint8_t pstatesStatus;
+    uint8_t safePstate;
+    uint8_t pmcrOwner;
+    uint8_t wofEnabled;                   //wof enable/disable
+    uint8_t wofPending;                   //wof enable pending
+    uint8_t wofClip;                      //wof clip
+    uint8_t psClipMax[MAX_QUADS],         //higher numbered(min freq and volt)
+            psClipMin[MAX_QUADS];         //lower numbered(max freq and volt)
+    uint8_t coresPSRequest[MAX_CORES];    //per core requested pstate
+    uint8_t quadPSComputed[MAX_QUADS];    //computed Pstate per quad
+    uint8_t globalPSComputed;             //computed global Pstate
+    uint8_t pad0;
+    uint8_t quadPSTarget[MAX_QUADS];      //target Pstate per quad
+    uint8_t globalPSTarget;               //target global Pstate
+    uint8_t pad1;
+    uint8_t quadPSCurr[MAX_QUADS];      //target Pstate per quad
+    uint8_t globalPSCurr;               //target global Pstate
+    uint8_t pad2;
+    uint8_t quadPSNext[MAX_QUADS];      //target Pstate per quad
+    uint8_t globalPSNext;
+    uint8_t pad3;
+    uint16_t alreadySemPosted;
+    uint32_t eVidCurr, eVidNext;
+    ipc_req_t ipcPendTbl[MAX_IPC_PEND_TBL_ENTRIES];
+    VFRT_Hcode_t* pVFRT;
+    quad_state0_t* pQuadState0;
+    quad_state1_t* pQuadState1;
+    requested_active_quads_t* pReqActQuads;
+    PkSemaphore sem_process_req;
+    PkSemaphore sem_actuate;
+    PkSemaphore sem_sgpe_wait;
+} PgpePstateRecord;
+
 
 //
 //Functions called by threads

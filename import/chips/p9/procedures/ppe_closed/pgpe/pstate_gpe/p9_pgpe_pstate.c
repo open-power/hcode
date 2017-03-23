@@ -47,33 +47,11 @@ extern PgpeHeader_t* G_pgpe_header_data;
 extern GlobalPstateParmBlock* G_gppb;
 extern uint32_t G_ext_vrm_inc_rate_mult_usperus;
 extern uint32_t G_ext_vrm_dec_rate_mult_usperus;
+extern PgpePstateRecord G_pgpe_pstate_record;
 
 //
 //Global Data
 //
-//uint8_t G_safeModeEnabled;              //safe mode enabled/disabled
-uint32_t G_pstatesStatus;
-uint8_t G_pmcrOwner;
-uint8_t G_wofEnabled;                   //wof enable/disable
-uint8_t G_wofPending;                   //wof enable pending
-uint8_t G_psClipMax[MAX_QUADS],         //higher numbered(min freq and volt)
-        G_psClipMin[MAX_QUADS];         //lower numbered(max freq and volt)
-uint8_t G_wofClip;                      //wof clip
-uint8_t G_coresPSRequest[MAX_CORES];    //per core requested pstate
-uint8_t G_quadPSComputed[MAX_QUADS];    //computed Pstate per quad
-uint8_t G_globalPSComputed;             //computed global Pstate
-uint8_t G_quadPSTarget[MAX_QUADS];      //target Pstate per quad
-uint8_t G_globalPSTarget;               //target global Pstate
-uint8_t G_quadPSCurr[MAX_QUADS];      //target Pstate per quad
-uint8_t G_globalPSCurr;               //target global Pstate
-uint8_t G_quadPSNext[MAX_QUADS];      //target Pstate per quad
-uint8_t G_globalPSNext;
-uint8_t G_safe_pstate;
-uint32_t G_eVidCurr, G_eVidNext;
-VFRT_Hcode_t* G_vfrt_ptr;
-quad_state0_t* G_quadState0;
-quad_state1_t* G_quadState1;
-requested_active_quads_t* G_reqActQuads;
 GPE_BUFFER(ipc_async_cmd_t G_ipc_msg_pgpe_sgpe);
 GPE_BUFFER(ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 GPE_BUFFER(ipcmsg_s2p_suspend_pstate_t G_sgpe_suspend_stop);
@@ -84,50 +62,40 @@ void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg);
 void p9_pgpe_wait_cme_db_ack(uint8_t msg_id, uint32_t activeCores);
 
 //
-//Data passing between IPC interrupt and threads
-//
-ipc_req_t G_ipc_pend_tbl[MAX_IPC_PEND_TBL_ENTRIES];
-uint32_t G_already_sem_posted;
-uint32_t G_process_pm_suspend;
-
-
-//
 //p9_pgpe_pstate_init
 //
 void p9_pgpe_pstate_init()
 {
     uint32_t q;
 
-    G_process_pm_suspend = 0;
-//    G_safeModeEnabled = 0;
-    G_pstatesStatus = PSTATE_INIT;
-    G_wofEnabled = 0;
-    G_wofPending = 0;
+    G_pgpe_pstate_record.pstatesStatus = PSTATE_INIT;
+    G_pgpe_pstate_record.wofEnabled = 0;
+    G_pgpe_pstate_record.wofPending = 0;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        G_psClipMax[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_psClipMin[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_quadPSComputed[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_globalPSComputed = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_quadPSTarget[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_globalPSTarget = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_quadPSCurr[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_globalPSCurr  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_quadPSNext[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_globalPSNext  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.psClipMax[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.psClipMin[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.quadPSComputed[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.globalPSComputed = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.quadPSTarget[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][NOMINAL].pstate;
+        G_pgpe_pstate_record.globalPSTarget = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.quadPSCurr[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.globalPSCurr  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.quadPSNext[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.globalPSNext  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
     }
 
-    G_quadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
-    G_quadState1 = (quad_state1_t*)(G_pgpe_header_data->g_quad_status_addr + 2);
-    G_reqActQuads = (requested_active_quads_t*)(G_pgpe_header_data->g_req_active_quad_addr);
-    G_safe_pstate = (G_gppb->reference_frequency_khz - G_gppb->safe_frequency_khz +
-                     (G_gppb->frequency_step_khz - 1)) / G_gppb->frequency_step_khz;
+    G_pgpe_pstate_record.pQuadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
+    G_pgpe_pstate_record.pQuadState1 = (quad_state1_t*)(G_pgpe_header_data->g_quad_status_addr + 2);
+    G_pgpe_pstate_record.pReqActQuads = (requested_active_quads_t*)(G_pgpe_header_data->g_req_active_quad_addr);
+    G_pgpe_pstate_record.safePstate = (G_gppb->reference_frequency_khz - G_gppb->safe_frequency_khz +
+                                       (G_gppb->frequency_step_khz - 1)) / G_gppb->frequency_step_khz;
 #if OVERRIDE_PSAFE_PSTATE == 1
-    G_safe_pstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][NOMINAL].pstate;
+    G_pgpe_pstate_record.safePstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][NOMINAL].pstate;
 #endif
 
-    PK_TRACE_INF("PS: G_safe_pstate=0x%x", G_safe_pstate);
+    PK_TRACE_INF("PS: G_pgpe_pstate_record.safePstate=0x%x", G_pgpe_pstate_record.safePstate);
 }
 
 //
@@ -141,7 +109,7 @@ void p9_pgpe_pstate_update(uint8_t* s)
     {
         for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
         {
-            G_coresPSRequest[c] = s[q];
+            G_pgpe_pstate_record.coresPSRequest[c] = s[q];
         }
     }
 
@@ -157,9 +125,9 @@ void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest)
     PK_TRACE_INF("AUCT: Enter");
     //Get active cores and quads
     uint32_t q, c;
-    uint32_t activeCores = G_quadState0->fields.active_cores;
-    activeCores = (activeCores << 16) | (G_quadState1->fields.active_cores);
-    uint32_t activeQuads = G_reqActQuads->fields.requested_active_quads;
+    uint32_t activeCores = G_pgpe_pstate_record.pQuadState0->fields.active_cores;
+    activeCores = (activeCores << 16) | (G_pgpe_pstate_record.pQuadState1->fields.active_cores);
+    uint32_t activeQuads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads;
 
     //Local PStates Auction
     for (q = 0; q < MAX_QUADS; q++)
@@ -170,42 +138,42 @@ void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest)
         {
             //Go through all the cores in this quad with pending request
             //and find the lowest numbered PState
-            G_quadPSComputed[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+            G_pgpe_pstate_record.quadPSComputed[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
             for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
             {
                 if (activeCores & (0x80000000 >> c))
                 {
-                    if (G_quadPSComputed[q] > G_coresPSRequest[c])
+                    if (G_pgpe_pstate_record.quadPSComputed[q] > G_pgpe_pstate_record.coresPSRequest[c])
                     {
-                        G_quadPSComputed[q] = G_coresPSRequest[c];
+                        G_pgpe_pstate_record.quadPSComputed[q] = G_pgpe_pstate_record.coresPSRequest[c];
                     }
                 }
             }
         }
         else
         {
-            G_quadPSComputed[q] = 0xFF;
+            G_pgpe_pstate_record.quadPSComputed[q] = 0xFF;
         }
 
-        PK_TRACE_INF("AUCTION: G_quadPSComputed: 0x%x", G_quadPSComputed[q]);
+        PK_TRACE_INF("AUCTION: G_quadPSComputed: 0x%x", G_pgpe_pstate_record.quadPSComputed[q]);
     }
 
     //Global PState Auction
-    G_globalPSComputed = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+    G_pgpe_pstate_record.globalPSComputed = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
         if (activeQuads & (QUAD0_BIT_MASK >> q))
         {
-            if (G_globalPSComputed  > G_quadPSComputed[q])
+            if (G_pgpe_pstate_record.globalPSComputed  > G_pgpe_pstate_record.quadPSComputed[q])
             {
-                G_globalPSComputed  = G_quadPSComputed[q];
+                G_pgpe_pstate_record.globalPSComputed  = G_pgpe_pstate_record.quadPSComputed[q];
             }
         }
     }
 
-    PK_TRACE_INF("AUCT glbPSCmpted: 0x%x", G_globalPSComputed);
+    PK_TRACE_INF("AUCT glbPSCmpted: 0x%x", G_pgpe_pstate_record.globalPSComputed);
     PK_TRACE_INF("AUCT: Exit");
 }
 
@@ -216,64 +184,65 @@ void p9_pgpe_pstate_apply_clips()
 {
     PK_TRACE_INF("APCLP: Enter");
     uint32_t q;
-    uint32_t activeQuads = G_reqActQuads->fields.requested_active_quads;
+    uint32_t activeQuads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads;
 
     //Apply clips to quad computed
     PK_TRACE_INF("APCLP: 0x%x", activeQuads);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        uint8_t maxPS = G_psClipMax[q];
+        uint8_t maxPS = G_pgpe_pstate_record.psClipMax[q];
 
-        G_quadPSTarget[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.quadPSTarget[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
         if (activeQuads & (QUAD0_BIT_MASK >> q))
         {
 
-            if (G_wofEnabled == 1)
+            if (G_pgpe_pstate_record.wofEnabled == 1)
             {
-                if (G_wofClip <= G_psClipMax[q])
+                if (G_pgpe_pstate_record.wofClip <= G_pgpe_pstate_record.psClipMax[q])
                 {
-                    maxPS = G_wofClip;
+                    maxPS = G_pgpe_pstate_record.wofClip;
                 }
             }
 
-            if (G_quadPSComputed[q] > maxPS)
+            if (G_pgpe_pstate_record.quadPSComputed[q] > maxPS)
             {
-                G_quadPSTarget[q] = maxPS;
+                G_pgpe_pstate_record.quadPSTarget[q] = maxPS;
             }
-            else if(G_quadPSComputed[q] < G_psClipMin[q])
+            else if(G_pgpe_pstate_record.quadPSComputed[q] < G_pgpe_pstate_record.psClipMin[q])
             {
-                G_quadPSTarget[q] = G_psClipMin[q];
+                G_pgpe_pstate_record.quadPSTarget[q] = G_pgpe_pstate_record.psClipMin[q];
             }
             else
             {
-                G_quadPSTarget[q] = G_quadPSComputed[q];
+                G_pgpe_pstate_record.quadPSTarget[q] = G_pgpe_pstate_record.quadPSComputed[q];
             }
         }
         else
         {
-            G_quadPSTarget[q] = 0xFF;
+            G_pgpe_pstate_record.quadPSTarget[q] = 0xFF;
         }
 
-        PK_TRACE_INF("APCLP: qPSTgt: 0x%x,cl=0x%x,0x%x", G_quadPSTarget[q], maxPS, G_psClipMin[q]);
+        PK_TRACE_INF("APCLP: qPSTgt: 0x%x,cl=0x%x,0x%x", G_pgpe_pstate_record.quadPSTarget[q], maxPS,
+                     G_pgpe_pstate_record.psClipMin[q]);
     }
 
     //Global PState Auction
-    G_globalPSTarget = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+    G_pgpe_pstate_record.globalPSTarget = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
         if (activeQuads & (QUAD0_BIT_MASK >> q))
         {
-            if (G_globalPSTarget  > G_quadPSTarget[q])
+            if (G_pgpe_pstate_record.globalPSTarget  > G_pgpe_pstate_record.quadPSTarget[q])
             {
-                G_globalPSTarget  = G_quadPSTarget[q];
+                G_pgpe_pstate_record.globalPSTarget  = G_pgpe_pstate_record.quadPSTarget[q];
             }
         }
     }
 
-    PK_TRACE_INF("APCLP: glbPSTgt: 0x%x", G_globalPSTarget);
+    PK_TRACE_INF("APCLP: glbPSTgt: 0x%x", G_pgpe_pstate_record.globalPSTarget);
     PK_TRACE_INF("APCLP: Exit");
 }
 
@@ -284,7 +253,7 @@ void p9_pgpe_pstate_calc_wof()
 {
     //\TODO RTC 162896
     //Figure out how to calculate WOF Clip
-    G_wofClip = 150;
+    G_pgpe_pstate_record.wofClip = 150;
 
     p9_pgpe_pstate_apply_clips();
 }
@@ -301,20 +270,20 @@ void p9_pgpe_pstate_pm_complex_suspend()
 {
     PK_TRACE_INF("PS:PM Susp Enter");
 
-    if (G_pstatesStatus == PSTATE_ACTIVE)
+    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
     {
-        G_pstatesStatus = PSTATE_PM_SUSPEND_PENDING;
+        G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPEND_PENDING;
         p9_pgpe_pstate_apply_safe_clips();
     }
-    else if (G_pstatesStatus == PSTATE_STOPPED)
+    else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
     {
         //todo Set FIR[Bit] need to determine which one
         PK_TRACE_INF("PS:PM Susp in PSTATE_STOPPED(Halting)");
         pk_halt();
     }
-    else if (G_pstatesStatus == PSTATE_INIT)
+    else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT)
     {
-        G_pstatesStatus = PSTATE_PM_SUSPEND_PENDING;
+        G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPEND_PENDING;
         p9_pgpe_pstate_send_suspend_stop();
     }
 
@@ -358,7 +327,7 @@ void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg)
     PK_TRACE_INF("PS: Susp Stop Cb");
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
-    G_pstatesStatus = PSTATE_PM_SUSPENDED;
+    G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
     out32(OCB_OCCS2, occScr2);
 }
 
@@ -371,20 +340,20 @@ void p9_pgpe_pstate_safe_mode()
 {
     PK_TRACE_INF("PS:Safe Mode Enter");
 
-    if (G_pstatesStatus == PSTATE_ACTIVE)
+    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
     {
-        G_pstatesStatus = PSTATE_SAFE_MODE;
+        G_pgpe_pstate_record.pstatesStatus = PSTATE_SAFE_MODE;
         p9_pgpe_pstate_apply_safe_clips();
     }
-    else if (G_pstatesStatus == PSTATE_STOPPED)
+    else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
     {
         //todo Set FIR[Bit] need to determine which one
         PK_TRACE_INF("PS:PM Susp in PSTATE_STOPPED(Halting)");
         pk_halt();
     }
-    else if (G_pstatesStatus == PSTATE_INIT)
+    else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT)
     {
-        G_pstatesStatus = PSTATE_SAFE_MODE;
+        G_pgpe_pstate_record.pstatesStatus = PSTATE_SAFE_MODE;
     }
 
     PK_TRACE_INF("PS:Safe Mode Exit");
@@ -401,8 +370,8 @@ void p9_pgpe_pstate_apply_safe_clips()
     //Set clips to safe pstate
     for (q = 0; q < MAX_QUADS; q++)
     {
-        G_psClipMax[q] = G_safe_pstate;
-        G_psClipMin[q] = G_safe_pstate;
+        G_pgpe_pstate_record.psClipMax[q] = G_pgpe_pstate_record.safePstate;
+        G_pgpe_pstate_record.psClipMin[q] = G_pgpe_pstate_record.safePstate;
     }
 
     //Update clips
@@ -416,13 +385,13 @@ void p9_pgpe_pstate_apply_safe_clips()
 //
 int32_t p9_pgpe_pstate_at_target()
 {
-    if( G_globalPSCurr != G_globalPSTarget ||
-        G_quadPSCurr[0] ^ G_quadPSTarget[0] ||
-        G_quadPSCurr[1] ^ G_quadPSTarget[1] ||
-        G_quadPSCurr[2] ^ G_quadPSTarget[2] ||
-        G_quadPSCurr[3] ^ G_quadPSTarget[3] ||
-        G_quadPSCurr[4] ^ G_quadPSTarget[4] ||
-        G_quadPSCurr[5] ^ G_quadPSTarget[5] )
+    if( G_pgpe_pstate_record.globalPSCurr != G_pgpe_pstate_record.globalPSTarget ||
+        G_pgpe_pstate_record.quadPSCurr[0] ^ G_pgpe_pstate_record.quadPSTarget[0] ||
+        G_pgpe_pstate_record.quadPSCurr[1] ^ G_pgpe_pstate_record.quadPSTarget[1] ||
+        G_pgpe_pstate_record.quadPSCurr[2] ^ G_pgpe_pstate_record.quadPSTarget[2] ||
+        G_pgpe_pstate_record.quadPSCurr[3] ^ G_pgpe_pstate_record.quadPSTarget[3] ||
+        G_pgpe_pstate_record.quadPSCurr[4] ^ G_pgpe_pstate_record.quadPSTarget[4] ||
+        G_pgpe_pstate_record.quadPSCurr[5] ^ G_pgpe_pstate_record.quadPSTarget[5] )
     {
         return 0;
     }
@@ -446,26 +415,35 @@ void p9_pgpe_pstate_do_step()
     pk_critical_section_exit(&ctx);
 
     //Do one actuate step
-    PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x", G_globalPSTarget, G_globalPSCurr);
+    PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x", G_pgpe_pstate_record.globalPSTarget,
+                 G_pgpe_pstate_record.globalPSCurr);
 
     PK_TRACE_DBG("ACT_TH: Step Entry");
-    PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x", G_globalPSTarget, G_globalPSCurr);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[0], G_quadPSCurr[0]);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[1], G_quadPSCurr[1]);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[2], G_quadPSCurr[2]);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[3], G_quadPSCurr[3]);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[4], G_quadPSCurr[4]);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[5], G_quadPSCurr[5]);
+    PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x", G_pgpe_pstate_record.globalPSTarget,
+                 G_pgpe_pstate_record.globalPSCurr);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_pgpe_pstate_record.quadPSTarget[0],
+                 G_pgpe_pstate_record.quadPSCurr[0]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_pgpe_pstate_record.quadPSTarget[1],
+                 G_pgpe_pstate_record.quadPSCurr[1]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_pgpe_pstate_record.quadPSTarget[2],
+                 G_pgpe_pstate_record.quadPSCurr[2]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_pgpe_pstate_record.quadPSTarget[3],
+                 G_pgpe_pstate_record.quadPSCurr[3]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_pgpe_pstate_record.quadPSTarget[4],
+                 G_pgpe_pstate_record.quadPSCurr[4]);
+    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_pgpe_pstate_record.quadPSTarget[5],
+                 G_pgpe_pstate_record.quadPSCurr[5]);
     uint32_t q;
     ocb_qcsr_t qcsr;
     qcsr.value = in32(OCB_QCSR);
     uint32_t active_conf_cores = 0;
-    uint32_t targetEVid = p9_pgpe_gppb_intp_vdd_from_ps(G_globalPSTarget, VPD_PT_SET_BIASED_SYSP, VPD_SLOPES_BIASED);
+    uint32_t targetEVid = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget, VPD_PT_SET_BIASED_SYSP,
+                          VPD_SLOPES_BIASED);
 
     //Determine active and configured cores
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_reqActQuads->fields.requested_active_quads & (0x80 >> q))
+        if(G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q))
         {
             if (qcsr.fields.ex_config & (0x800 >> (q << 1)))
             {
@@ -482,32 +460,32 @@ void p9_pgpe_pstate_do_step()
     }
 
     //Higher number PState
-    if (((int16_t)(G_globalPSTarget) - (int16_t)(G_globalPSCurr)) > 0)
+    if (((int16_t)(G_pgpe_pstate_record.globalPSTarget) - (int16_t)(G_pgpe_pstate_record.globalPSCurr)) > 0)
     {
-        if ((G_eVidCurr - targetEVid ) <= G_gppb->ext_vrm_step_size_mv)
+        if ((G_pgpe_pstate_record.eVidCurr - targetEVid ) <= G_gppb->ext_vrm_step_size_mv)
         {
-            G_eVidNext = targetEVid;
-            G_globalPSNext = G_globalPSTarget;
+            G_pgpe_pstate_record.eVidNext = targetEVid;
+            G_pgpe_pstate_record.globalPSNext = G_pgpe_pstate_record.globalPSTarget;
 
             for (q = 0; q < MAX_QUADS; q++)
             {
-                G_quadPSNext[q] = G_quadPSTarget[q];
+                G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
             }
         }
         else
         {
-            G_eVidNext = G_eVidCurr - G_gppb->ext_vrm_step_size_mv;
-            G_globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_eVidNext);
+            G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr - G_gppb->ext_vrm_step_size_mv;
+            G_pgpe_pstate_record.globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
 
             for (q = 0; q < MAX_QUADS; q++)
             {
-                if (G_quadPSTarget[q] > G_globalPSNext)   //Keep localPS under GlobalPS
+                if (G_pgpe_pstate_record.quadPSTarget[q] > G_pgpe_pstate_record.globalPSNext)   //Keep localPS under GlobalPS
                 {
-                    G_quadPSNext[q] = G_globalPSNext;
+                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.globalPSNext;
                 }
                 else
                 {
-                    G_quadPSNext[q] = G_quadPSTarget[q];
+                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
                 }
             }
         }
@@ -516,32 +494,32 @@ void p9_pgpe_pstate_do_step()
         p9_pgpe_pstate_updt_ext_volt(targetEVid);
     }
     //Lower number PState
-    else if (((int16_t)(G_globalPSTarget) - (int16_t)(G_globalPSCurr)) < 0)
+    else if (((int16_t)(G_pgpe_pstate_record.globalPSTarget) - (int16_t)(G_pgpe_pstate_record.globalPSCurr)) < 0)
     {
-        if ((targetEVid - G_eVidCurr) <= G_gppb->ext_vrm_step_size_mv)
+        if ((targetEVid - G_pgpe_pstate_record.eVidCurr) <= G_gppb->ext_vrm_step_size_mv)
         {
-            G_eVidNext = targetEVid;
-            G_globalPSNext = G_globalPSTarget;
+            G_pgpe_pstate_record.eVidNext = targetEVid;
+            G_pgpe_pstate_record.globalPSNext = G_pgpe_pstate_record.globalPSTarget;
 
             for (q = 0; q < MAX_QUADS; q++)
             {
-                G_quadPSNext[q] = G_quadPSTarget[q];
+                G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
             }
         }
         else
         {
-            G_eVidNext = G_eVidCurr + G_gppb->ext_vrm_step_size_mv;
-            G_globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_eVidNext);
+            G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr + G_gppb->ext_vrm_step_size_mv;
+            G_pgpe_pstate_record.globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
 
             for (q = 0; q < MAX_QUADS; q++)
             {
-                if (G_quadPSTarget[q] < G_globalPSNext)   //Keep localPS under GlobalPS
+                if (G_pgpe_pstate_record.quadPSTarget[q] < G_pgpe_pstate_record.globalPSNext)   //Keep localPS under GlobalPS
                 {
-                    G_quadPSNext[q] = G_globalPSNext;
+                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.globalPSNext;
                 }
                 else
                 {
-                    G_quadPSNext[q] = G_quadPSTarget[q];
+                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
                 }
             }
         }
@@ -553,38 +531,38 @@ void p9_pgpe_pstate_do_step()
     {
         for (q = 0; q < MAX_QUADS; q++)
         {
-            G_quadPSNext[q] = G_quadPSTarget[q];
+            G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
         }
 
         p9_pgpe_pstate_freq_updt(active_conf_cores);
     }
 
     //Update current
-    G_globalPSCurr = G_globalPSNext;
+    G_pgpe_pstate_record.globalPSCurr = G_pgpe_pstate_record.globalPSNext;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_reqActQuads->fields.requested_active_quads & (0x80 >> q) &&
+        if(G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q) &&
            (qcsr.fields.ex_config & (0xC00 >> 2 * q)))
         {
-            G_quadPSCurr[q] = G_quadPSNext[q];
+            G_pgpe_pstate_record.quadPSCurr[q] = G_pgpe_pstate_record.quadPSNext[q];
         }
     }
 
     //Update Shared SRAM
-    G_quadState0->fields.quad0_pstate = G_quadPSCurr[0];
-    G_quadState0->fields.quad1_pstate = G_quadPSCurr[1];
-    G_quadState0->fields.quad2_pstate = G_quadPSCurr[2];
-    G_quadState0->fields.quad3_pstate = G_quadPSCurr[3];
-    G_quadState1->fields.quad4_pstate = G_quadPSCurr[4];
-    G_quadState1->fields.quad5_pstate = G_quadPSCurr[5];
+    G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = G_pgpe_pstate_record.quadPSCurr[0];
+    G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = G_pgpe_pstate_record.quadPSCurr[1];
+    G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = G_pgpe_pstate_record.quadPSCurr[2];
+    G_pgpe_pstate_record.pQuadState0->fields.quad3_pstate = G_pgpe_pstate_record.quadPSCurr[3];
+    G_pgpe_pstate_record.pQuadState1->fields.quad4_pstate = G_pgpe_pstate_record.quadPSCurr[4];
+    G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = G_pgpe_pstate_record.quadPSCurr[5];
 
-    PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x", G_globalPSTarget, G_globalPSCurr);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[0], G_quadPSCurr[0]);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[1], G_quadPSCurr[1]);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[2], G_quadPSCurr[2]);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[3], G_quadPSCurr[3]);
-    PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", G_quadPSTarget[4], G_quadPSCurr[4]);
+    /*    PK_TRACE_DBG("ACT_TH: PSTgt: 0x%x PSCurr: 0x%x", globalPSTarget, globalPSCurr);
+        PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", quadPSTarget[0], quadPSCurr[0]);
+        PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", quadPSTarget[1], quadPSCurr[1]);
+        PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", quadPSTarget[2], quadPSCurr[2]);
+        PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", quadPSTarget[3], quadPSCurr[3]);
+        PK_TRACE_DBG("ACT_TH: QTgt: 0x%x QCurr: 0x%x", quadPSTarget[4], quadPSCurr[4]);*/
     PK_TRACE_DBG("ACT_TH: Step Exit");
 
 
@@ -603,22 +581,22 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
     uint32_t delay_us = 0;
 
     //Decreasing
-    if (G_eVidNext < G_eVidCurr)
+    if (G_pgpe_pstate_record.eVidNext < G_pgpe_pstate_record.eVidCurr)
     {
-        delay_us = (G_eVidCurr - G_eVidNext) *
+        delay_us = (G_pgpe_pstate_record.eVidCurr - G_pgpe_pstate_record.eVidNext) *
                    G_ext_vrm_dec_rate_mult_usperus;
     }
     //Increasing
-    else if(G_eVidNext > G_eVidCurr)
+    else if(G_pgpe_pstate_record.eVidNext > G_pgpe_pstate_record.eVidCurr)
     {
-        delay_us  = (G_eVidNext - G_eVidCurr) *
+        delay_us  = (G_pgpe_pstate_record.eVidNext - G_pgpe_pstate_record.eVidCurr) *
                     G_ext_vrm_inc_rate_mult_usperus;
     }
 
 #endif
 
     //Update external voltage
-    external_voltage_control_write(G_eVidNext);
+    external_voltage_control_write(G_pgpe_pstate_record.eVidNext);
 
 #if !EPM_P9_TUNING
 
@@ -628,14 +606,14 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
         pk_sleep(PK_MICROSECONDS((delay_us)));
     }
 
-    if(G_eVidNext == tgtEVid)
+    if(G_pgpe_pstate_record.eVidNext == tgtEVid)
     {
         pk_sleep(PK_MICROSECONDS((G_gppb->ext_vrm_stabilization_time_us)));
     }
 
 #endif
 
-    G_eVidCurr = G_eVidNext;
+    G_pgpe_pstate_record.eVidCurr = G_pgpe_pstate_record.eVidNext;
 }
 
 //
@@ -649,13 +627,13 @@ inline void p9_pgpe_pstate_freq_updt(uint32_t activeCores)
     pgpe_db0_glb_bcast_t db0;
     db0.value = 0;
     db0.fields.msg_id = MSGID_DB0_GLOBAL_ACTUAL_BROADCAST;
-    db0.fields.global_actual = G_globalPSNext;
-    db0.fields.quad0_ps = G_quadPSNext[0];
-    db0.fields.quad1_ps = G_quadPSNext[1];
-    db0.fields.quad2_ps = G_quadPSNext[2];
-    db0.fields.quad3_ps = G_quadPSNext[3];
-    db0.fields.quad4_ps = G_quadPSNext[4];
-    db0.fields.quad5_ps = G_quadPSNext[5];
+    db0.fields.global_actual = G_pgpe_pstate_record.globalPSNext;
+    db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSNext[0];
+    db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSNext[1];
+    db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSNext[2];
+    db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSNext[3];
+    db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSNext[4];
+    db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSNext[5];
     p9_dd1_db_multicast_wr(PCB_MUTLICAST_GRP1 | CPPM_CMEDB0, db0.value, activeCores);
     PK_TRACE_INF("ACT_TH: MCAST DB0");
     p9_pgpe_wait_cme_db_ack(MSGID_DB0_GLOBAL_ACTUAL_BROADCAST, activeCores);//Wait for ACKs from all CMEs
@@ -737,7 +715,7 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_reqActQuads->fields.requested_active_quads & (0x80 >> q))
+        if(G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q))
         {
             //CME0 within this quad
             if (qcsr.fields.ex_config & (0x800 >> 2 * q))

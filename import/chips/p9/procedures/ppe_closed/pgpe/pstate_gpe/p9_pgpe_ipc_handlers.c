@@ -43,12 +43,8 @@
 //
 //External Global Data
 //
-extern ipc_req_t G_ipc_pend_tbl[MAX_IPC_PEND_TBL_ENTRIES];
-extern uint32_t G_pstatesStatus;
-extern PgpePstateRecord G_pgpe_pstate_record;
-extern uint32_t G_already_sem_posted;
-//extern uint8_t G_pmcrOwner;
 extern PgpeHeader_t* G_pgpe_header_data;
+extern PgpePstateRecord G_pgpe_pstate_record;
 
 //
 //p9_pgpe_ipc_init
@@ -65,12 +61,12 @@ void p9_pgpe_ipc_init()
 
     for (i = 0; i < MAX_IPC_PEND_TBL_ENTRIES; i++)
     {
-        G_ipc_pend_tbl[i].cmd = NULL;
-        G_ipc_pend_tbl[i].pending_ack = 0;
-        G_ipc_pend_tbl[i].pending_processing = 0;
+        G_pgpe_pstate_record.ipcPendTbl[i].cmd = NULL;
+        G_pgpe_pstate_record.ipcPendTbl[i].pending_ack = 0;
+        G_pgpe_pstate_record.ipcPendTbl[i].pending_processing = 0;
     }
 
-    G_already_sem_posted = 0;
+    G_pgpe_pstate_record.alreadySemPosted = 0;
 }
 
 //
@@ -90,34 +86,34 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
         PK_TRACE_DBG("START_STOP: Imm\n");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack = 0;
-        G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_processing = 0;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].pending_ack = 0;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].pending_processing = 0;
 
         //Yes, here we post to process thread when START/STOP is rcv.
         //This is done to ensure that pk_irq_vec_restore is called correctly
         //We can call it here, but other IPCs could be processed in this invocation
         //of IPC interrupt handler and pk_irq_vec_restore can get called twice.
         //Much cleaner to call it always from process thread.
-        if (G_already_sem_posted == 0)
+        if (G_pgpe_pstate_record.alreadySemPosted == 0)
         {
             pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-            G_already_sem_posted  = 1;
+            G_pgpe_pstate_record.alreadySemPosted  = 1;
         }
     }
-    else if(G_pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
-            G_pstatesStatus == PSTATE_PM_SUSPENDED ||
-            G_pstatesStatus == PSTATE_SAFE_MODE)
+    else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
+            G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
+            G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
         PK_TRACE_DBG("START_STOP: PM_SUSP/Safe\n");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack = 0;
-        G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_processing = 0;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].pending_ack = 0;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].pending_processing = 0;
 
-        if (G_already_sem_posted == 0)
+        if (G_pgpe_pstate_record.alreadySemPosted == 0)
         {
             pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-            G_already_sem_posted  = 1;
+            G_pgpe_pstate_record.alreadySemPosted  = 1;
         }
     }
     else
@@ -125,21 +121,21 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
         //START
         if (args->action == PGPE_ACTION_PSTATE_START)
         {
-            if (G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack == 0)
+            if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].pending_ack == 0)
             {
-                if(G_pstatesStatus == PSTATE_INIT || G_pstatesStatus == PSTATE_STOPPED)
+                if(G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT || G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
                 {
                     PK_TRACE_DBG("START_STOP: Start Rcvd\n");
 
                     //Add task
-                    G_ipc_pend_tbl[IPC_PEND_PSTATE_START].cmd = cmd;
-                    G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_ack = 1;
-                    G_ipc_pend_tbl[IPC_PEND_PSTATE_START].pending_processing = 0;
+                    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].cmd = cmd;
+                    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].pending_ack = 1;
+                    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].pending_processing = 0;
 
                     //Post to Actuate Thread
                     pk_semaphore_post(&G_pgpe_pstate_record.sem_actuate);
                 }
-                else if (G_pstatesStatus == PSTATE_ACTIVE)
+                else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
                 {
                     //\todo
                 }
@@ -156,9 +152,9 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
         {
             PK_TRACE_DBG("START_STOP: Stop Rcvd\n");
 
-            if (G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack == 0)
+            if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_STOP].pending_ack == 0)
             {
-                if(G_pstatesStatus != PSTATE_ACTIVE)
+                if(G_pgpe_pstate_record.pstatesStatus != PSTATE_ACTIVE)
                 {
                     PK_TRACE_DBG("START_STOP: Pstate Already Stopped\n");
                     args->msg_cb.rc = PGPE_RC_REQ_PSTATE_ALREADY_STOPPED;
@@ -166,10 +162,10 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
                 }
                 else
                 {
-                    G_pstatesStatus = PSTATE_STOPPED;
-                    G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].cmd = cmd;
-                    G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_ack = 1;
-                    G_ipc_pend_tbl[IPC_PEND_PSTATE_STOP].pending_processing = 0;
+                    G_pgpe_pstate_record.pstatesStatus = PSTATE_STOPPED;
+                    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_STOP].cmd = cmd;
+                    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_STOP].pending_ack = 1;
+                    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_STOP].pending_processing = 0;
 
                 }
             }
@@ -196,11 +192,11 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_set_pmcr_t* args = (ipcmsg_set_pmcr_t*)async_cmd->cmd_data;
 
-    if (G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_ack == 0)
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 0)
     {
-        G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].cmd = cmd;
-        G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_processing = 1;
-        G_ipc_pend_tbl[IPC_PEND_CLIP_UPDT].pending_ack = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd = cmd;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_processing = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 1;
     }
     else
     {
@@ -208,10 +204,10 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
 
-    if (G_already_sem_posted == 0)
+    if (G_pgpe_pstate_record.alreadySemPosted == 0)
     {
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-        G_already_sem_posted  = 1;
+        G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
 
     PK_TRACE_DBG("405_CLIPS: Exit\n");
@@ -228,11 +224,11 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_set_pmcr_t* args = (ipcmsg_set_pmcr_t*)async_cmd->cmd_data;
 
-    if (G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_ack == 0)
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SET_PMCR_REQ].pending_ack == 0)
     {
-        G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].cmd = cmd;
-        G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_processing = 1;
-        G_ipc_pend_tbl[IPC_PEND_SET_PMCR_REQ].pending_ack = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SET_PMCR_REQ].cmd = cmd;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SET_PMCR_REQ].pending_processing = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SET_PMCR_REQ].pending_ack = 1;
     }
     else
     {
@@ -241,10 +237,10 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
 
-    if (G_already_sem_posted == 0)
+    if (G_pgpe_pstate_record.alreadySemPosted == 0)
     {
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-        G_already_sem_posted  = 1;
+        G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
 
     PK_TRACE_DBG("405_SET_PMCR: Exit\n");
@@ -261,11 +257,11 @@ void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_wof_control_t* args = (ipcmsg_wof_control_t*)async_cmd->cmd_data;
 
-    if (G_ipc_pend_tbl[IPC_PEND_WOF_CTRL].pending_ack == 0)
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 0)
     {
-        G_ipc_pend_tbl[IPC_PEND_WOF_CTRL].cmd = cmd;
-        G_ipc_pend_tbl[IPC_PEND_WOF_CTRL].pending_processing = 1;
-        G_ipc_pend_tbl[IPC_PEND_WOF_CTRL].pending_ack = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd = cmd;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_processing = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack = 1;
     }
     else
     {
@@ -273,10 +269,10 @@ void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
 
-    if (G_already_sem_posted == 0)
+    if (G_pgpe_pstate_record.alreadySemPosted == 0)
     {
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-        G_already_sem_posted  = 1;
+        G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
 
     PK_TRACE_DBG("405_WOF_CTRL: Exit\n");
@@ -293,11 +289,11 @@ void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_wof_vfrt_t* args = (ipcmsg_wof_vfrt_t*)async_cmd->cmd_data;
 
-    if (G_ipc_pend_tbl[IPC_PEND_WOF_VFRT].pending_ack == 0)
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 0)
     {
-        G_ipc_pend_tbl[IPC_PEND_WOF_VFRT].cmd = cmd;
-        G_ipc_pend_tbl[IPC_PEND_WOF_VFRT].pending_processing = 1;
-        G_ipc_pend_tbl[IPC_PEND_WOF_VFRT].pending_ack = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd = cmd;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_processing = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 1;
     }
     else
     {
@@ -305,10 +301,10 @@ void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
 
-    if (G_already_sem_posted == 0)
+    if (G_pgpe_pstate_record.alreadySemPosted == 0)
     {
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-        G_already_sem_posted  = 1;
+        G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
 
     PK_TRACE_DBG("405_WOF_VFRT: Exit\n");
@@ -323,12 +319,12 @@ void p9_pgpe_ipc_sgpe_suspend_pstates(ipc_msg_t* cmd, void* arg)
 {
     PK_TRACE_DBG("SGPE_SUSPEND_PSTATES: Entry\n");
 
-    if (G_ipc_pend_tbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack == 0 &&
-        G_ipc_pend_tbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_processing == 0)
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack == 0 &&
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_processing == 0)
     {
-        G_ipc_pend_tbl[IPC_PEND_SGPE_SUSPEND_PSTATES].cmd = cmd;
-        G_ipc_pend_tbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_processing = 1;
-        G_ipc_pend_tbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].cmd = cmd;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_processing = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack = 1;
     }
     else
     {
@@ -339,10 +335,10 @@ void p9_pgpe_ipc_sgpe_suspend_pstates(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
 
-    if (G_already_sem_posted == 0)
+    if (G_pgpe_pstate_record.alreadySemPosted == 0)
     {
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-        G_already_sem_posted  = 1;
+        G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
 
     PK_TRACE_DBG("SGPE_SUSPEND_PSTATES: Exit\n");
@@ -357,12 +353,12 @@ void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
 {
     PK_TRACE_DBG("SGPE_UPDT_CORES: Entry\n");
 
-    if (G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 0 &&
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing == 0)
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 0 &&
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing == 0)
     {
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd = cmd;
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing = 1;
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd = cmd;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 1;
     }
     else
     {
@@ -373,10 +369,10 @@ void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
 
-    if (G_already_sem_posted == 0)
+    if (G_pgpe_pstate_record.alreadySemPosted == 0)
     {
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-        G_already_sem_posted  = 1;
+        G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
 
     PK_TRACE_DBG("SGPE_UPDT_CORES: Exit\n");
@@ -391,14 +387,14 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
 {
     PK_TRACE_DBG("SGPE_UPDT_QUADS: Entry\n");
 
-    if (G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 0 &&
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing == 0 &&
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 0 &&
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing == 0)
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 0 &&
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing == 0 &&
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 0 &&
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing == 0)
     {
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd = cmd;
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing = 1;
-        G_ipc_pend_tbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd = cmd;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing = 1;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 1;
 
     }
     else
@@ -410,10 +406,10 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
 
-    if (G_already_sem_posted == 0)
+    if (G_pgpe_pstate_record.alreadySemPosted == 0)
     {
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-        G_already_sem_posted  = 1;
+        G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
 
     PK_TRACE_DBG("SGPE_UPDT_QUADS: Exit\n");

@@ -30,12 +30,7 @@
 //
 //External Global Data
 //
-extern uint8_t G_coresPSRequest[MAX_CORES];    //per core requested pstate
-extern uint8_t G_pmcrOwner;
-extern uint32_t G_pstatesStatus;
-//extern uint32_t G_process_occ_hb_error;
-//extern uint32_t G_process_safe_mode;
-//extern uint32_t G_process_pm_suspend;
+extern PgpePstateRecord G_pgpe_pstate_record;
 
 //
 //OCB Error Interrupt Handler
@@ -169,8 +164,8 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
     uint32_t coresPendPSReq = in32(OCB_OPIT1PRA);
     uint32_t c;
 
-    if (G_pstatesStatus == PSTATE_ACTIVE && (G_pmcrOwner == PMCR_OWNER_HOST ||
-            G_pmcrOwner == PMCR_OWNER_CHAR))
+    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE && (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_HOST ||
+            G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_CHAR))
     {
 
         //Process pending requests
@@ -193,7 +188,7 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
                     ((op1 >> 10) && 0x3))
                 {
                     //Extract the LowerPState field
-                    G_coresPSRequest[c] = op1 & 0xff;
+                    G_pgpe_pstate_record.coresPSRequest[c] = op1 & 0xff;
                     out32(OCB_OPIT1PRA_CLR, 0x80000000 >> c); //Clear out pending bits
                 }
             }

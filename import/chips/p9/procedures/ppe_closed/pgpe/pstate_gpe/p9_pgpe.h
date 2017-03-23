@@ -64,15 +64,6 @@
 
 
 /// PGPE PState
-typedef struct
-{
-    PkSemaphore sem_process_req;
-    PkSemaphore sem_actuate;
-    PkSemaphore sem_sgpe_wait;
-    PkSemaphore sem_safe_mode_and_pm_suspend_req;
-} PgpePstateRecord;
-
-/// PGPE PState
 void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq);

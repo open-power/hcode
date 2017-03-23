@@ -29,7 +29,42 @@
 #include "p9_pgpe_boot_temp.h"
 #include "p9_pgpe_pstate.h"
 
-PgpePstateRecord G_pgpe_pstate_record;
+PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
+{
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    0,
+    0,
+    {0, 0, 0, 0, 0, 0},
+    0,
+    0,
+    {0, 0, 0, 0, 0, 0},
+    0,
+    0,
+    {0, 0, 0, 0, 0, 0},
+    0,
+    0,
+    0,
+    0,
+    0,
+    {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+    0,
+    0,
+    0,
+    0,
+    {0},
+    {0},
+    {0}
+};
+
 
 EXTERNAL_IRQ_TABLE_START
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_DEBUGGER
@@ -101,19 +136,16 @@ EXTERNAL_IRQ_TABLE_END
 #define  KERNEL_STACK_SIZE  512
 #define  THREAD_STACK_SIZE  512
 
-//#define  PGPE_THREAD_PRIORITY_SAFE_MODE_AND_PM_SUSPEND  1
 #define  PGPE_THREAD_PRIORITY_PROCESS_REQUESTS  1
 #define  PGPE_THREAD_PRIORITY_ACTUATE_PSTATES   2
 
 uint8_t  G_kernel_stack[KERNEL_STACK_SIZE];
 
 //Thread Stacks
-//uint8_t  G_p9_pgpe_thread_safe_mode_and_pm_suspend_stack[THREAD_STACK_SIZE];
 uint8_t  G_p9_pgpe_thread_process_requests_stack[THREAD_STACK_SIZE];
 uint8_t  G_p9_pgpe_thread_actuate_pstates_stack[THREAD_STACK_SIZE];
 
 //Thread Control Block
-//PkThread G_p9_pgpe_thread_safe_mode_and_pm_suspend;
 PkThread G_p9_pgpe_thread_process_requests;
 PkThread G_p9_pgpe_thread_actuate_pstates;
 
@@ -140,20 +172,6 @@ main(int argc, char** argv)
         asm volatile ("trap");
     }
 
-    /*
-    // Initialize the thread control block for G_p9_pgpe_thread_safe_mode_and_pm_suspend
-    pk_thread_create(&G_p9_pgpe_thread_safe_mode_and_pm_suspend,
-                     (PkThreadRoutine)p9_pgpe_thread_safe_mode_and_pm_suspend,
-                     (void*)NULL,
-                     (PkAddress)G_p9_pgpe_thread_safe_mode_and_pm_suspend_stack,
-                     (size_t)THREAD_STACK_SIZE,
-                     (PkThreadPriority)PGPE_THREAD_PRIORITY_SAFE_MODE_AND_PM_SUSPEND);
-
-    PK_TRACE_BIN("G_p9_pgpe_thread_safe_mode_and_pm_suspend",
-                 &G_p9_pgpe_thread_safe_mode_and_pm_suspend,
-                 sizeof(G_p9_pgpe_thread_safe_mode_and_pm_suspend));
-    */
-
     // Initialize the thread control block for G_p9_pgpe_thread_process_requests
     pk_thread_create(&G_p9_pgpe_thread_process_requests,
                      (PkThreadRoutine)p9_pgpe_thread_process_requests,
@@ -179,7 +197,6 @@ main(int argc, char** argv)
                  sizeof(G_p9_pgpe_thread_actuate_pstates));
 
     // Make G_p9_pgpe_thread pstates_update runnable
-//    pk_thread_resume(&G_p9_pgpe_thread_safe_mode_and_pm_suspend);
     pk_thread_resume(&G_p9_pgpe_thread_process_requests);
     pk_thread_resume(&G_p9_pgpe_thread_actuate_pstates);
 
