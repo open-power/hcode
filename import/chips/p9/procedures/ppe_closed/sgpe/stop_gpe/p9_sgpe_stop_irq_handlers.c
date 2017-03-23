@@ -257,14 +257,14 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             if ((!cpayload_t2) && (!cpayload_t3))
             {
                 PK_TRACE_INF("ERROR: Empty Requests on Both Type2 and Type3");
-                pk_halt();
+                PK_PANIC(SGPE_PIG_TYPE23_BOTH_EMPTY);
             }
             // both entry
             else if ((cpayload_t2 && (!(cpayload_t2 & TYPE2_PAYLOAD_EXIT_EVENT))) &&
                      (cpayload_t3 && (!(cpayload_t3 & TYPE2_PAYLOAD_EXIT_EVENT))))
             {
                 PK_TRACE_INF("ERROR: Entry Requests on Both Type2 and Type3");
-                pk_halt();
+                PK_PANIC(SGPE_PIG_TYPE23_BOTH_ENTRY);
             }
             // if t2 entry (t3 exit or empty)
             else if (cpayload_t2 && (!(cpayload_t2 & TYPE2_PAYLOAD_EXIT_EVENT)))
@@ -273,7 +273,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                 if (!(scom_data & BIT64(13)))
                 {
                     PK_TRACE_INF("ERROR: Received Type2 Entry PIG When Wakeup_notify_select = 0");
-                    pk_halt();
+                    PK_PANIC(SGPE_PIG_TYPE2_ENTRY_WNS_CME);
                 }
 
                 PK_TRACE_INF("C[%d] Request Entry via Type2", cloop);
@@ -288,7 +288,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                 if (!(scom_data & BIT64(13)))
                 {
                     PK_TRACE_INF("ERROR: Received Type3 Entry PIG When Wakeup_notify_select = 0");
-                    pk_halt();
+                    PK_PANIC(SGPE_PIG_TYPE3_ENTRY_WNS_CME);
                 }
 
                 PK_TRACE_INF("C[%d] Request Entry via Type3", cloop);
@@ -306,7 +306,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                         (cpayload_t3 & TYPE2_PAYLOAD_EXIT_EVENT))
                     {
                         PK_TRACE_INF("ERROR: Received Both Types of Exit PIG When Wakeup_notify_select = 0");
-                        pk_halt();
+                        PK_PANIC(SGPE_PIG_TYPE23_EXIT_WNS_CME);
                     }
                 }
                 else

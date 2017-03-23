@@ -108,7 +108,7 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
     if (scom_data & ((uint64_t)ex << SHIFT64(9)))
     {
         PK_TRACE("L2 clock start failed");
-        pk_halt();
+        PK_PANIC(SGPE_STOP_EXIT_L2_STARTCLK_FAILED);
     }
 
     PK_TRACE("L2 clock is now running");

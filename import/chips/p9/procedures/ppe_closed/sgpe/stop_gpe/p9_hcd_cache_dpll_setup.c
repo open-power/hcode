@@ -72,7 +72,7 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     if (scom_data & BIT64(14))
     {
         PK_TRACE("Start DPLL clock failed");
-        pk_halt();
+        PK_PANIC(SGPE_STOP_EXIT_DPLL_STARTCLK_FAILED);
     }
 
     PK_TRACE("DPLL clock is now running");

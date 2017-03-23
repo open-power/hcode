@@ -134,7 +134,7 @@ pk_irq_vec_restore(PkMachineContext* context)
     {
         PK_TRACE("Code bug: Messed up EIMR book keeping: g_oimr_stack_ctr=%d",
                  g_oimr_stack_ctr);
-        pk_halt();
+        PK_PANIC(SGPE_UIH_EIMR_STACK_UNDERFLOW);
     }
 
     //pk_critical_section_exit(context);

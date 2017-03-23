@@ -187,14 +187,14 @@ main(int argc, char** argv)
     {
         MY_TRACE_ERR("Code bug: IDX_PRTY_LVL_DISABLED(=%d)!=NUM_EXT_IRQ_PRTY_LEVELS(=%d)-1",
                      IDX_PRTY_LVL_DISABLED, NUM_EXT_IRQ_PRTY_LEVELS);
-        pk_halt();
+        PK_PANIC(CME_UIH_DISABLED_NOT_LAST_LVL);
     }
 
     if (IRQ_VEC_PRTY_CHECK != 0xFFFFFFFFFFFFFFFF)
     {
         MY_TRACE_ERR("Code bug: IRQ_VEC_PRTY_CHECK=0x%08x%08x should be all ones",
                      IRQ_VEC_PRTY_CHECK);
-        pk_halt();
+        PK_PANIC(CME_UIH_NOT_ALL_IN_PRTY_GROUP);
     }
 
 

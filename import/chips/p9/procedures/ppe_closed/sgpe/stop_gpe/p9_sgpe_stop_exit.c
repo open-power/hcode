@@ -126,7 +126,7 @@ fused_core_mode_scan_fix(uint32_t qloop, int l2bit)
             {
                 PK_TRACE_INF("ERROR: checkword[%x%x] failed. HALT SGPE!",
                              UPPER32(scom_data), LOWER32(scom_data));
-                pk_halt();
+                PK_PANIC(SGPE_STOP_EXIT_FUSE_SCAN_HEADER_ERR);
             }
 
             break;
@@ -217,7 +217,7 @@ p9_sgpe_stop_exit()
         if(rc)
         {
             PK_TRACE_INF("ERROR: Exit Updates PGPE with Active Cores Failed. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_EXIT_IPC_CORE_FAILED);
         }
 
         /// @todo RTC166577
@@ -229,7 +229,7 @@ p9_sgpe_stop_exit()
         if (G_sgpe_ipcmsg_update_cores.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
         {
             PK_TRACE_INF("ERROR: Exit Updates PGPE with Active Cores Bad RC. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_EXIT_IPC_CORE_BAD_RC);
         }
 
         G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |=
@@ -267,7 +267,7 @@ p9_sgpe_stop_exit()
         if(rc)
         {
             PK_TRACE_INF("ERROR: Exit Updates PGPE with Active Quads Failed. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_EXIT_IPC_QUAD_FAILED);
         }
 
         /// @todo RTC166577
@@ -279,7 +279,7 @@ p9_sgpe_stop_exit()
         if (G_sgpe_ipcmsg_update_quads.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
         {
             PK_TRACE_INF("ERROR: Exit Updates PGPE with Active Quads Bad RC. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_EXIT_IPC_QUAD_BAD_RC);
         }
 
         G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |=
@@ -544,7 +544,7 @@ p9_sgpe_stop_exit()
                     {
                         PK_TRACE_INF("ERROR: checkword[%x%x] failed. HALT SGPE!",
                                      scom_data.words.upper, scom_data.words.lower);
-                        pk_halt();
+                        PK_PANIC(SGPE_STOP_EXIT_PBRW_SCAN_HEADER_ERR);
                     }
 
                     break;
@@ -652,7 +652,7 @@ p9_sgpe_stop_exit()
                 {
                     PKTRACE("ERROR: Failed to Release Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
                             qloop, scom_data.words.upper);
-                    pk_halt();
+                    PK_PANIC(SGPE_STOP_EXIT_DROP_CLK_LOCK_FAILED);
                 }
             }
 
@@ -933,7 +933,7 @@ p9_sgpe_stop_exit()
             {
                 PKTRACE("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
                         qloop, scom_data.words.upper);
-                pk_halt();
+                PK_PANIC(SGPE_STOP_EXIT_DROP_SLV_LOCK_FAILED);
             }
 
             G_sgpe_stop_record.state[qloop].act_state_q = 0;

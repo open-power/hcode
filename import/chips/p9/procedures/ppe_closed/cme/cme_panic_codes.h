@@ -42,23 +42,23 @@
 
 // The following are reserved for instance specific use.
 
-PUTRING_HEADER_ERROR                = 0x1c00,
-//_UNUSED_1c01                      = 0x1c01,
-//_UNUSED_1c02                      = 0x1c02,
-//_UNUSED_1c03                      = 0x1c03,
-//_UNUSED_1c04                      = 0x1c04,
-//_UNUSED_1c05                      = 0x1c05,
-//_UNUSED_1c06                      = 0x1c06,
-//_UNUSED_1c07                      = 0x1c07,
-//_UNUSED_1c08                      = 0x1c08,
-//_UNUSED_1c09                      = 0x1c09,
-//_UNUSED_1c0a                      = 0x1c0a,
-//_UNUSED_1c0d                      = 0x1c0d,
-//_UNUSED_1c1c                      = 0x1c1c,
-//_UNUSED_1c1d                      = 0x1c1d,
+CME_UIH_DISABLED_NOT_LAST_LVL       = 0x1c00,
+CME_UIH_NOT_ALL_IN_PRTY_GROUP       = 0x1c01,
+CME_UIH_EIMR_STACK_UNDERFLOW        = 0x1c02,
+CME_UIH_EIMR_STACK_OVERFLOW         = 0x1c03,
+CME_UIH_PHANTOM_INTERRUPT           = 0x1c04,
+CME_STOP_PUTRING_HEADER_ERROR       = 0x1c05,
+CME_STOP_BCE_CORE_RING_FAILED       = 0x1c06,
+CME_STOP_EXIT_PHANTOM_WAKEUP        = 0x1c07,
+CME_STOP_EXIT_BCE_SCOM_FAILED       = 0x1c08,
+CME_STOP_EXIT_SELF_RES_SPATTN       = 0x1c09,
+CME_STOP_EXIT_STARTCLK_FAILED       = 0x1c0a,
+CME_STOP_ENTRY_STOPCLK_FAILED       = 0x1c0d,
+CME_STOP_ENTRY_WITH_AUTO_NAP        = 0x1c1c, // NDD1
+CME_STOP_ENTRY_BAD_LPID_ERROR       = 0x1c1d, // NDD1
 //_UNUSED_1c1e                      = 0x1c1e,
 //_UNUSED_1c1f                      = 0x1c1f,
-
+//
 //_UNUSED_1d00                      = 0x1d00,
 //_UNUSED_1d01                      = 0x1d01,
 //_UNUSED_1d02                      = 0x1d02,

@@ -203,7 +203,7 @@ p9_cme_stop_exit()
     if (!core)
     {
         PK_TRACE_INF("ERROR: No Wakeup Fired to a Stopped and Enabled Core. HALT CME!");
-        pk_halt();
+        PK_PANIC(CME_STOP_EXIT_PHANTOM_WAKEUP);
     }
 
 
@@ -525,7 +525,7 @@ p9_cme_stop_exit()
         if( BLOCK_COPY_SUCCESS != isScanRingCopyDone() )
         {
             PK_TRACE_INF("ERROR: BCE Scom Restore Copy Failed. HALT CME!");
-            pk_halt();
+            PK_PANIC(CME_STOP_EXIT_BCE_SCOM_FAILED);
         }
 
 #endif
@@ -667,7 +667,7 @@ p9_cme_stop_exit()
             if (in32_sh(CME_LCL_SISR) & (core << SHIFT64SH(33)))
             {
                 PK_TRACE("ERROR: Core Special Attention Detected. HALT CME!");
-                pk_halt();
+                PK_PANIC(CME_STOP_EXIT_SELF_RES_SPATTN);
             }
         }
 

@@ -135,7 +135,7 @@ p9_hcd_core_startclocks(uint32_t core)
     if(scom_data.value & CLK_REGION_ALL_BUT_PLL)
     {
         PK_TRACE("Core clock start failed");
-        pk_halt();
+        PK_PANIC(CME_STOP_EXIT_STARTCLK_FAILED);
     }
 
     PK_TRACE("Core clock is now running");

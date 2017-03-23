@@ -199,7 +199,7 @@ p9_sgpe_stop_entry()
         if (rc)
         {
             PK_TRACE_INF("ERROR: Entry Updates PGPE with Active Cores Failed. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_ENTRY_IPC_CORE_FAILED);
         }
 
         // can poll right away since pgpe should ack right back
@@ -210,7 +210,7 @@ p9_sgpe_stop_entry()
         if (G_sgpe_ipcmsg_update_cores.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
         {
             PK_TRACE_INF("ERROR: Entry Updates PGPE with Active Cores Bad RC. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_ENTRY_IPC_CORE_BAD_RC);
         }
 
         G_sgpe_stop_record.group.core[VECTOR_ACTIVE] &=
@@ -255,7 +255,7 @@ p9_sgpe_stop_entry()
         if(rc)
         {
             PK_TRACE_INF("ERROR: Entry Suspend PGPE Pstate Function Failed. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_ENTRY_IPC_PSTATE_FAILED);
         }
 
         /// @todo RTC166577
@@ -267,7 +267,7 @@ p9_sgpe_stop_entry()
         if (G_sgpe_ipcmsg_suspend_pstate.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
         {
             PK_TRACE_INF("ERROR: Entry Suspend PGPE Pstate Function Bad RC. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_ENTRY_IPC_PSTATE_BAD_RC);
         }
 
         G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] &=
@@ -309,7 +309,7 @@ p9_sgpe_stop_entry()
         {
             PKTRACE("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
                     qloop, scom_data.words.upper);
-            pk_halt();
+            PK_PANIC(SGPE_STOP_ENTRY_GET_CLK_LOCK_FAILED);
         }
 
         PK_TRACE("Update QSSR: stop_entry_ongoing");
@@ -413,7 +413,7 @@ p9_sgpe_stop_entry()
         if (((~(scom_data.words.upper)) & (ex << SHIFT32(9))) != 0)
         {
             PK_TRACE("ERROR: L2 clock stop failed. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_ENTRY_L2_STOPCLK_FAILED);
         }
 
         // MF: verify compiler generate single rlwmni
@@ -548,7 +548,7 @@ p9_sgpe_stop_entry()
         {
             PKTRACE("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
                     qloop, scom_data.words.upper);
-            pk_halt();
+            PK_PANIC(SGPE_STOP_ENTRY_GET_SLV_LOCK_FAILED);
         }
 
         PK_TRACE("Update QSSR: stop_entry_ongoing");
@@ -878,7 +878,7 @@ p9_sgpe_stop_entry()
                                    ((uint64_t)ex << SHIFT64(13)))) != 0)
         {
             PK_TRACE("ERROR: Cache clock stop failed. HALT SGPE!");
-            pk_halt();
+            PK_PANIC(SGPE_STOP_ENTRY_EQ_STOPCLK_FAILED);
         }
 
         PK_TRACE("Assert vital fence via CPLT_CTRL1[3]");
@@ -913,24 +913,24 @@ p9_sgpe_stop_entry()
 
 #if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
 
-        PK_TRACE_INF("FCMS: Engage with PBIE Read/Write Pointer Scan Workaround");
+        PK_TRACE_INF("PBRW: Engage with PBIE Read/Write Pointer Scan Workaround");
 
         // bit4,5,11 = perv/eqpb/pbieq, bit59 = inex
-        PK_TRACE("FCMS: Setup scan register to select the ring");
+        PK_TRACE("PBRW: Setup scan register to select the ring");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10030005, qloop), BITS64(4, 2) | BIT64(11) | BIT64(59));
 
-        PK_TRACE("FCMS: checkword set");
+        PK_TRACE("PBRW: checkword set");
         scom_data.value = 0xa5a5a5a5a5a5a5a5;
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
 
         for(spin = 1;; spin++)
         {
-            PK_TRACE("FCMS: spin ring loop%d", spin);
+            PK_TRACE("PBRW: spin ring loop%d", spin);
             scom_data.words.upper = (G_ring_spin[spin][0] - G_ring_spin[spin - 1][0]);
             scom_data.words.lower = 0;
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x10039000, qloop), scom_data.value);
 
-            PK_TRACE("FCMS: Poll OPCG done for ring spin");
+            PK_TRACE("PBRW: Poll OPCG done for ring spin");
 
             do
             {
@@ -940,30 +940,30 @@ p9_sgpe_stop_entry()
 
             if (spin == 9)
             {
-                PK_TRACE("FCMS: checkword check");
+                PK_TRACE("PBRW: checkword check");
                 GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
 
                 if (scom_data.value != 0xa5a5a5a5a5a5a5a5)
                 {
                     PK_TRACE("ERROR: checkword[%x%x] failed. HALT SGPE!",
                              scom_data.words.upper, scom_data.words.lower);
-                    pk_halt();
+                    PK_PANIC(SGPE_STOP_ENTRY_PBRW_SCAN_HEADER_ERR);
                 }
 
                 break;
             }
 
-            PK_TRACE("FCMS: save pbie read ptr");
+            PK_TRACE("PBRW: save pbie read ptr");
             GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(0x1003E000, qloop), scom_data.value);
             EXTRACT_RING_BITS(G_ring_spin[spin][1], scom_data.value,
                               G_ring_save->element[qloop][spin - 1]);
-            PK_TRACE("FCMS: mask: %8x %8x",
+            PK_TRACE("PBRW: mask: %8x %8x",
                      UPPER32(G_ring_spin[spin][1]),
                      LOWER32(G_ring_spin[spin][1]));
-            PK_TRACE("FCMS: ring: %8x %8x",
+            PK_TRACE("PBRW: ring: %8x %8x",
                      scom_data.words.upper,
                      scom_data.words.lower);
-            PK_TRACE("FCMS: save: %8x %8x",
+            PK_TRACE("PBRW: save: %8x %8x",
                      UPPER32(G_ring_save->element[qloop][spin - 1]),
                      LOWER32(G_ring_save->element[qloop][spin - 1]));
         }
@@ -1130,7 +1130,8 @@ p9_sgpe_stop_entry()
 
     if(rc)
     {
-        pk_halt();
+        PK_TRACE_INF("ERROR: Entry Updates PGPE with Active Quads FAILED. HALT SGPE!");
+        PK_PANIC(SGPE_STOP_ENTRY_IPC_QUAD_FAILED);
     }
 
     PK_TRACE_INF("SEIPC: Poll PGPE Update Active Quads Ack");
@@ -1140,7 +1141,7 @@ p9_sgpe_stop_entry()
     if (G_sgpe_ipcmsg_update_quads.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
     {
         PK_TRACE_INF("ERROR: Entry Updates PGPE with Active Quads Bad RC. HALT SGPE!");
-        pk_halt();
+        PK_PANIC(SGPE_STOP_ENTRY_IPC_QUAD_BAD_RC);
     }
 
     G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] &=

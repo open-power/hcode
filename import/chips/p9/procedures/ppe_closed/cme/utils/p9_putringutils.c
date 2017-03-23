@@ -544,7 +544,7 @@ int rs4DecompressionSvc(
             uint32_t debug_data_1 = (uint32_t)(l_readHeader >> 32);
             asm volatile ("mtedr %0" : : "r" (debug_data_0) : "memory");
             asm volatile ("mtsprg0 %0" : : "r" (debug_data_1) : "memory");
-            PK_PANIC(PUTRING_HEADER_ERROR);
+            PK_PANIC(CME_STOP_PUTRING_HEADER_ERROR);
         }
 
         // Clean scan region and type data

@@ -367,7 +367,7 @@ fapi2::ReturnCode verifyHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
             uint32_t debug_data_1 = (uint32_t)(l_readHeader >> 32);
             asm volatile ("mtedr %0" : : "r" (debug_data_0) : "memory");
             asm volatile ("mtsprg0 %0" : : "r" (debug_data_1) : "memory");
-            PK_PANIC(PUTRING_HEADER_ERROR);
+            PK_PANIC(SGPE_STOP_PUTRING_HEADER_ERROR);
 
         }
 
@@ -526,7 +526,7 @@ fapi2::ReturnCode rs4DecompressionSvc(
                         uint32_t debug_data_0 = ((uint32_t)l_ringId << 24) |
                                                 ((uint32_t) ((l_chiplet >> 24) & 0x0F) << 20) | (l_bitRotates & 0x000FFFFF);
                         asm volatile ("mtedr %0" : : "r" (debug_data_0) : "memory");
-                        PK_PANIC(PUTRING_OPCG_TIMEOUT);
+                        PK_PANIC(SGPE_STOP_PUTRING_OPCG_TIMEOUT);
                     }
                 }
 

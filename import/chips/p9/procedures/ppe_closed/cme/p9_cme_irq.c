@@ -204,7 +204,7 @@ void pk_unified_irq_prty_mask_handler(void)
         {
             MY_TRACE_ERR("Code bug: EIMR S/R stack counter=%d  >=  max=%d.",
                          g_eimr_stack_ctr, NUM_EXT_IRQ_PRTY_LEVELS);
-            pk_halt();
+            PK_PANIC(CME_UIH_EIMR_STACK_OVERFLOW);
         }
 
         // 3. Write the new mask for this priority level.
@@ -217,7 +217,7 @@ void pk_unified_irq_prty_mask_handler(void)
         MY_TRACE_ERR("A disabled IRQ fired");
         MY_TRACE_ERR("ext_irq_vector_pk=0x%08x%08x", ext_irq_vector_pk);
 #if !EPM_P9_TUNING
-        pk_halt();
+        PK_PANIC(CME_UIH_PHANTOM_INTERRUPT);
 #endif
     }
 

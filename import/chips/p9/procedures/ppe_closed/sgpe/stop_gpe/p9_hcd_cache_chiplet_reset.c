@@ -207,7 +207,7 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     if (scom_data & l_regions)
     {
         PK_TRACE("Perv/l20/l21 clock start failed");
-        pk_halt();
+        PK_PANIC(SGPE_STOP_EXIT_VCS_STARTCLK_FAILED);
     }
 
     PK_TRACE("Perv/l20/l21 clocks running now");
@@ -256,7 +256,7 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     if (((~scom_data) & l_regions) != 0)
     {
         PK_TRACE("Perv/l20/l21 clock stop failed");
-        pk_halt();
+        PK_PANIC(SGPE_STOP_EXIT_VCS_STOPCLK_FAILED);
     }
 
     PK_TRACE("Perv/l20/l21 Clock Stopped");
