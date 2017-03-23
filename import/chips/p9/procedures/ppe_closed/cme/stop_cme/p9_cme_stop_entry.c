@@ -57,39 +57,36 @@ void prepare_for_ramming (uint32_t core)
     PK_TRACE("LPID Waking up the core(pm_exit=1) via SICR[4/5]");
     out32(CME_LCL_SICR_OR, core << SHIFT32(5));
 
-    PKTRACE("LPID Polling for core wakeup(pm_active=0) via EINR[20/21]");
+    PK_TRACE("LPID Polling for core wakeup(pm_active=0) via EINR[20/21]");
 
     while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
     // Now core thinks its awake and ramming is allowed
-    scom_data = (BIT64(7) | BIT64(15) | BIT64(23) | BIT64(31));
-    PKTRACE ("writing %X to direct controls", (uint32_t) (scom_data >> 32));
     PK_TRACE("RAMMING Put in core maintenance mode via direct controls");
-    CME_PUTSCOM(DIRECT_CONTROLS, core, scom_data);
-    //CME_PUTSCOM(DIRECT_CONTROLS, core, BIT64(7) | BIT64(15) | BIT64(23) | BIT64(31));
+    CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(7) | BIT64(15) | BIT64(23) | BIT64(31)));
 
     PK_TRACE("RAMMING Activate thread0-3 for RAM via THREAD_INFO 18-21");
     CME_PUTSCOM(THREAD_INFO, core, BITS64(18, 4));
 
     CME_GETSCOM(THREAD_INFO, core, CME_SCOM_AND, scom_data);
-    PKTRACE("THREAD_INFO core 0x%X 0x%X", core, (uint32_t) (scom_data & 0xFFFFFFFF));
+    PK_TRACE("THREAD_INFO core 0x%X 0x%X", core, (uint32_t) (scom_data & 0xFFFFFFFF));
 
 
     PK_TRACE("LPID Enable RAM mode via RAM_MODEREG[0]");
     CME_PUTSCOM(RAM_MODEREG, core, BIT64(0));
 
-    PKTRACE("LPID Set SPR mode to LT0-7 via SPR_MODE[20-27]");
+    PK_TRACE("LPID Set SPR mode to LT0-7 via SPR_MODE[20-27]");
     CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
 
     if (core & CME_MASK_C0)
     {
-        PKTRACE("LPID Set SPRC to scratch0 for core0 via SCOM_SPRC");
+        PK_TRACE("LPID Set SPRC to scratch0 for core0 via SCOM_SPRC");
         CME_PUTSCOM(SCOM_SPRC, CME_MASK_C0, 0);
     }
 
     if (core & CME_MASK_C1)
     {
-        PKTRACE("LPID Set SPRC to scratch1 for core1 via SCOM_SPRC");
+        PK_TRACE("LPID Set SPRC to scratch1 for core1 via SCOM_SPRC");
         CME_PUTSCOM(SCOM_SPRC, CME_MASK_C1, BIT64(60));
     }
 }
@@ -97,10 +94,11 @@ void prepare_for_ramming (uint32_t core)
 uint16_t ram_read_lpid( uint32_t core, uint32_t thread )
 {
     uint64_t        scom_data = 0;
-    PK_TRACE_INF("RAM: mfspr lpidr, gpr0 via RAM_CTRL");
+
+    PK_TRACE("RAM: mfspr lpidr, gpr0 via RAM_CTRL");
     CME_PUTSCOM(RAM_CTRL, core, RAM_MFSPR_LPIDR_GPR0 | (((uint64_t) thread) << 62));
 
-    PKTRACE("LPID RAM: mtspr sprd , gpr0 via RAM_CTRL");
+    PK_TRACE("LPID RAM: mtspr sprd , gpr0 via RAM_CTRL");
     CME_PUTSCOM(RAM_CTRL, core, RAM_MTSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
 
     if (core & CME_MASK_C0)
@@ -113,7 +111,7 @@ uint16_t ram_read_lpid( uint32_t core, uint32_t thread )
         CME_GETSCOM(SCRACTH1, CME_MASK_C1, CME_SCOM_AND, scom_data);
     }
 
-    PKTRACE("RAMMING LPID read for core 0x%X 0x%X", core, (uint32_t) (scom_data & 0xFFFFFFFF));
+    PK_TRACE("RAMMING LPID read for core 0x%X 0x%X", core, (uint32_t) (scom_data & 0xFFFFFFFF));
 
     if (scom_data > 0xFFF )
     {
@@ -128,7 +126,7 @@ uint16_t ram_read_lpid( uint32_t core, uint32_t thread )
 void ram_write_lpid( uint32_t core, uint32_t thread, uint16_t lpid )
 {
 
-    PKTRACE("LPID2 Writing LPID to 0x%X for core 0x%X thread %d", lpid, core, thread);
+    PK_TRACE("LPID2 Writing LPID to 0x%X for core 0x%X thread %d", lpid, core, thread);
 
     if (core & CME_MASK_C0)
     {
@@ -154,8 +152,6 @@ void ram_write_lpid( uint32_t core, uint32_t thread, uint16_t lpid )
 
 void turn_off_ram_mode (uint32_t core)
 {
-    uint64_t scom_data;
-
     PK_TRACE("LPID Disable thread0-3 for RAM via THREAD_INFO");
     CME_PUTSCOM(THREAD_INFO, core, 0);
 
@@ -177,19 +173,16 @@ void turn_off_ram_mode (uint32_t core)
     }
 
     PK_TRACE("LPID Clear core maintenance mode via direct controls");
-    scom_data = (BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27));
-    PKTRACE("LPID Clear core maintenance mode via direct controls %X", (uint32_t) (scom_data >> 32));
-    CME_PUTSCOM(DIRECT_CONTROLS, core, scom_data);
-    //CME_PUTSCOM(DIRECT_CONTROLS, core, BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27));
+    CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27)));
 
     PK_TRACE("LPID Drop pm_exit via SICR[4/5]");
     out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
 
-    PKTRACE("LPID Polling for core to stop(pm_active=1) via EINR[20/21]");
+    PK_TRACE("LPID Polling for core to stop(pm_active=1) via EINR[20/21]");
 
     while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)));
 
-    PKTRACE("LPID Clear pm_active status via EISR[20/21]");
+    PK_TRACE("LPID Clear pm_active status via EISR[20/21]");
     out32(CME_LCL_EISR_CLR, core << SHIFT32(21));
 
     PK_TRACE("LPID Drop block interrupt to PC via SICR[2/3]");
@@ -219,7 +212,7 @@ void p9_cme_acquire_pcbmux(uint32_t core, uint32_t check)
 #endif
     }
 
-    PK_TRACE_INF("S: PCB Mux Granted C[%d]", core);
+    PK_TRACE("S: PCB Mux Granted C[%d]", core);
 
 }
 
@@ -511,25 +504,35 @@ p9_cme_stop_entry()
             if (core & CME_MASK_C0)
             {
                 lpid_c0[thread] = ram_read_lpid(CME_MASK_C0, thread);
-                PKTRACE("c0lpid %X thread %X", (uint32_t) lpid_c0[thread], thread);
+                PK_TRACE("c0lpid %X thread %X", (uint32_t) lpid_c0[thread], thread);
                 ram_write_lpid(CME_MASK_C0, thread, POWMAN_RESERVED_LPID);
+
+#if HW402407_PARANOID_LPID_MODE
 
                 if (ram_read_lpid(CME_MASK_C0, thread) != POWMAN_RESERVED_LPID)
                 {
+                    PKTRACE("READ LPID not equal to expected value");
                     asm("trap");
                 }
+
+#endif
             }
 
             if (core & CME_MASK_C1)
             {
                 lpid_c1[thread] = ram_read_lpid(CME_MASK_C1, thread);
-                PKTRACE("c1lpid %X thread %X", (uint32_t) lpid_c1[thread], thread);
+                PK_TRACE("c1lpid %X thread %X", (uint32_t) lpid_c1[thread], thread);
                 ram_write_lpid(CME_MASK_C1, thread, POWMAN_RESERVED_LPID);
+
+#if HW402407_PARANOID_LPID_MODE
 
                 if (ram_read_lpid(CME_MASK_C1, thread) != POWMAN_RESERVED_LPID)
                 {
+                    PKTRACE("READ LPID not equal to expected value");
                     asm("trap");
                 }
+
+#endif
             }
         }
 
@@ -586,6 +589,7 @@ p9_cme_stop_entry()
             }
         }
 
+#if HW402407_PARANOID_LPID_MODE
 
         // Read back and check
         for (thread = 0; thread < 4; thread++ )
@@ -594,6 +598,7 @@ p9_cme_stop_entry()
             {
                 if (ram_read_lpid(CME_MASK_C0, thread) != lpid_c0[thread])
                 {
+                    PKTRACE("READ LPID not equal to expected value");
                     asm("trap");
                 }
             }
@@ -602,11 +607,13 @@ p9_cme_stop_entry()
             {
                 if (ram_read_lpid(CME_MASK_C1, thread) != lpid_c1[thread])
                 {
+                    PKTRACE("READ LPID not equal to expected value");
                     asm("trap");
                 }
             }
         }
 
+#endif
         turn_off_ram_mode (core);
 
 
@@ -1165,29 +1172,6 @@ p9_cme_stop_entry()
         scom_data.words.upper = SSH_ACT_LV5_COMPLETE;
         CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
-        if (core & CME_MASK_C0)
-        {
-            CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
-
-            if ((scom_data.words.upper & BIT32(13)))
-            {
-                PKTRACE("ERROR: C0 notify was already set?");
-                pk_halt();
-
-            }
-        }
-
-        if (core & CME_MASK_C1)
-        {
-            CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
-
-            if ((scom_data.words.upper & BIT32(13)))
-            {
-                PKTRACE("ERROR: C1 notify was already set?");
-                pk_halt();
-            }
-        }
-
         PK_TRACE("Send PCB interrupt per core via PIG, select irq type via CPMMR[10]");
 
         for (core_mask = 2; core_mask; core_mask--)
@@ -1208,38 +1192,15 @@ p9_cme_stop_entry()
                 }
 
                 pig.fields.req_intr_payload = G_cme_stop_record.req_level[core_index];
-                PKTRACE("PIG PUTSCOM core_mask[%d] value %08X", core_mask, (pig.value >> 32));
                 CME_PUTSCOM(PPM_PIG, core_mask, pig.value);
                 G_cme_stop_record.core_stopgpe |= core;
                 G_cme_stop_record.act_level[core_index] = STOP_LEVEL_5;
             }
         }
 
-        PKTRACE("Switch Core%d PPM wakeup to STOP-GPE via CPMMR[13]", core);
+        PK_TRACE("Switch Core%d PPM wakeup to STOP-GPE via CPMMR[13]", core);
         CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(13));
 
-        if (core & CME_MASK_C0)
-        {
-            CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
-
-            if (!(scom_data.words.upper & BIT32(13)))
-            {
-                PKTRACE("ERROR: C0 notify fail to set");
-                pk_halt();
-
-            }
-        }
-
-        if (core & CME_MASK_C1)
-        {
-            CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
-
-            if (!(scom_data.words.upper & BIT32(13)))
-            {
-                PKTRACE("ERROR: C1 notify fail to set");
-                pk_halt();
-            }
-        }
 
         PK_TRACE_INF("SE5.B: Handed off to SGPE");
 

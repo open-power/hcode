@@ -72,7 +72,6 @@ p9_cme_stop_exit_catchup(uint32_t* core,
 
     if (core_catchup)
     {
-
         // chtm purge done
         out32(CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
 
@@ -90,17 +89,6 @@ p9_cme_stop_exit_catchup(uint32_t* core,
                              core_catchup[%d] catchup_level[%d]",
                      *core, G_cme_stop_record.core_running,
                      core_catchup, catchup_level);
-
-
-        if (catchup_level >= STOP_LEVEL_4)
-        {
-            p9_cme_acquire_pcbmux(core_catchup, 0);
-        }
-        else
-        {
-            p9_cme_acquire_pcbmux(core_catchup, 1);
-        }
-
 
         if (catchup_level < STOP_LEVEL_4)
         {
@@ -317,8 +305,8 @@ p9_cme_stop_exit()
             PK_TRACE_DBG("Check: Core[%d] in Progress of SX4FH", core);
 
             // Can't do the read of cplt_stat after flipping the mux before the core is powered on
+            // catchup to stop4 exit will acquire here
             p9_cme_acquire_pcbmux(core, 0);
-
 
             //========================
             MARK_TAG(SX_POWERON, core)
@@ -469,13 +457,14 @@ p9_cme_stop_exit()
     MARK_TAG(SX_STARTCLOCKS, core)
     //============================
 
-    //
-    p9_cme_acquire_pcbmux(core, 1);
-
     // do this again here for stop2 in addition to chiplet_reset
     // Note IPL doesnt need to do this twice
     PK_TRACE("Assert core glitchless mux to DPLL via CGCR[3]");
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
+
+    // do this after assert glsmux so glitch can have time to resolve
+    // catchup to stop2 exit will acquire here
+    p9_cme_acquire_pcbmux(core, 1);
 
     PK_TRACE_INF("SX2.A: Start Core Clock");
     p9_hcd_core_startclocks(core);
