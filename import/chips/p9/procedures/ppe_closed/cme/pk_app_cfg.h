@@ -34,6 +34,8 @@
 /// \brief Application specific overrides go here.
 ///
 
+#define DEBUG_RUNTIME_STATE_CHECK 0
+
 #define USE_PPE_IMPRECISE_MODE
 
 /// @todo RTC 161182

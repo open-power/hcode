@@ -34,6 +34,8 @@
 /// \brief Application specific overrides go here.
 ///
 
+#define DEBUG_RUNTIME_STATE_CHECK 1
+
 #define PLATFORM_PANIC_CODES_H "sgpe_panic_codes.h"
 // @todo RTC 161182
 

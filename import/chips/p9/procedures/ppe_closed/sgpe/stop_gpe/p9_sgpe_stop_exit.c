@@ -970,6 +970,8 @@ p9_sgpe_stop_exit()
                 continue;
             }
 
+#if DEBUG_RUNTIME_STATE_CHECK
+
             if(G_sgpe_stop_record.level[qloop][cloop] != 0)
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
@@ -982,6 +984,8 @@ p9_sgpe_stop_exit()
                     pk_halt();
                 }
             }
+
+#endif
 
             // reset clevel to 0 if core is going to wake up
             G_sgpe_stop_record.level[qloop][cloop] = 0;
