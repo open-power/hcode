@@ -327,6 +327,8 @@ p9_sgpe_stop_entry()
                 continue;
             }
 
+#if DEBUG_RUNTIME_STATE_CHECK
+
             GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
                                            ((qloop << 2) + cloop)), scom_data.value);
 
@@ -335,6 +337,8 @@ p9_sgpe_stop_entry()
                 PKTRACE("ERROR.B: core[%d] notify fail to set", ((qloop << 2) + cloop));
                 pk_halt();
             }
+
+#endif
 
             PK_TRACE("Update STOP history on core[%d]: in transition of entry",
                      ((qloop << 2) + cloop));
@@ -472,6 +476,8 @@ p9_sgpe_stop_entry()
                 continue;
             }
 
+#if DEBUG_RUNTIME_STATE_CHECK
+
             GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
                                            ((qloop << 2) + cloop)), scom_data.value);
 
@@ -480,6 +486,8 @@ p9_sgpe_stop_entry()
                 PKTRACE("ERROR.C: core[%d] notify fail to set", ((qloop << 2) + cloop));
                 pk_halt();
             }
+
+#endif
 
             // request levle already set by CME
             // shift by 2 == times 4, which is cores per quad
