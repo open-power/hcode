@@ -504,7 +504,20 @@ p9_cme_stop_entry()
             if (core & CME_MASK_C0)
             {
                 lpid_c0[thread] = ram_read_lpid(CME_MASK_C0, thread);
-                PK_TRACE("c0lpid %X thread %X", (uint32_t) lpid_c0[thread], thread);
+                PKTRACE("c0lpid %X thread %X", (uint32_t) lpid_c0[thread], thread);
+            }
+
+            if (core & CME_MASK_C1)
+            {
+                lpid_c1[thread] = ram_read_lpid(CME_MASK_C1, thread);
+                PKTRACE("c1lpid %X thread %X", (uint32_t) lpid_c1[thread], thread);
+            }
+        }
+
+        for (thread = 0; thread < 4; thread++ )
+        {
+            if (core & CME_MASK_C0)
+            {
                 ram_write_lpid(CME_MASK_C0, thread, POWMAN_RESERVED_LPID);
 
 #if HW402407_PARANOID_LPID_MODE
@@ -520,8 +533,6 @@ p9_cme_stop_entry()
 
             if (core & CME_MASK_C1)
             {
-                lpid_c1[thread] = ram_read_lpid(CME_MASK_C1, thread);
-                PK_TRACE("c1lpid %X thread %X", (uint32_t) lpid_c1[thread], thread);
                 ram_write_lpid(CME_MASK_C1, thread, POWMAN_RESERVED_LPID);
 
 #if HW402407_PARANOID_LPID_MODE
@@ -628,6 +639,35 @@ p9_cme_stop_entry()
 
         PK_TRACE("Clear SCAN_REGION_TYPE prior to stop core clocks");
         CME_PUTSCOM(C_SCAN_REGION_TYPE, core, 0);
+
+#if NIMBUS_DD_LEVEL == 1
+
+        // NDD1: Core Global Xstop FIR
+        if (core & CME_MASK_C0)
+        {
+            CME_GETSCOM(0x20040000, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
+
+            if (scom_data.value)
+            {
+                PK_TRACE_INF("ERROR: Core[%d] GLOBAL XSTOP[%x] DETECTED. HALT CME!",
+                             core, scom_data.words.upper);
+                pk_halt();
+            }
+        }
+
+        if (core & CME_MASK_C1)
+        {
+            CME_GETSCOM(0x20040000, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
+
+            if (scom_data.value)
+            {
+                PK_TRACE_INF("ERROR: Core[%d] GLOBAL XSTOP[%x] DETECTED. HALT CME!",
+                             core, scom_data.words.upper);
+                pk_halt();
+            }
+        }
+
+#endif
 
         PK_TRACE("Stop Core Clocks via CLK_REGION");
         CME_PUTSCOM(C_CLK_REGION, core,
