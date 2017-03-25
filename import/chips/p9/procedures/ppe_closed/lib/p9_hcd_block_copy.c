@@ -43,8 +43,24 @@
 #include "cme_register_addresses.h"
 
 
-
 //------------------------------------------------------------------------------------
+
+void startCmeBlockCopyWriteHomer(uint64_t i_cmeStartBlk, uint32_t i_blockLength, uint32_t i_cmePos,
+                                 uint8_t i_barIndex, uint32_t i_mbaseVal)
+{
+    uint64_t l_bceStatusData = ((START_BLOCK_COPY)       | // starts block copy operation
+                                (0)                      | // sets direction of copy CME SRAM to HOMER
+                                ((i_barIndex == 0) ? SEL_BCEBAR0 : SEL_BCEBAR1) | // BAR register to be used for accessing main memory base
+                                (SET_RD_PRIORITY_0)      |   // No priority set
+                                ((i_cmeStartBlk & 0x0000FFF ) << SBASE_SHIFT_POS) |  //copy page to this SRAM Block.
+                                (((uint64_t) i_blockLength & 0x00007FF) << NUM_BLK_SHIFT_POS ) | // number of blocks to be copied
+                                (((uint64_t) i_mbaseVal & 0x00000000003FFFFF) ));
+
+    // for CME platform use local address for register BCECSR.
+    // using BCECSR SCOM address will not work as it is meant
+    // for entities external to CME.
+    out64(CME_LCL_BCECSR, l_bceStatusData);
+}
 
 void startCmeBlockCopy( uint64_t i_cmeStartBlk, uint32_t i_blockLength, uint32_t i_cmePos,
                         uint8_t i_barIndex, uint32_t i_mbaseVal )

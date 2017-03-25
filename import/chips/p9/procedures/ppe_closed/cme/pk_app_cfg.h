@@ -34,7 +34,12 @@
 /// \brief Application specific overrides go here.
 ///
 
+// debug only enablement
+
 #define DEBUG_RUNTIME_STATE_CHECK 0
+#define TEST_ONLY_BCE_IRR         0
+
+// --------------------
 
 #define USE_PPE_IMPRECISE_MODE
 #define USE_CME_QUEUED_SCOM

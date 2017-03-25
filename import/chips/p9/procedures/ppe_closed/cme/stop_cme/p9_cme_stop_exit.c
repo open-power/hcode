@@ -927,6 +927,9 @@ p9_cme_stop_exit()
         CME_PUTSCOM(SPATTN_MASK, core, BITS64(0, 64));
 
         PK_TRACE_INF("SF.RS: Self Restore Kickoff, S-Reset All Core Threads");
+
+        // Disable interrupts around the sreset to polling check to not miss the self-restore
+        wrteei(0);
         CME_PUTSCOM(DIRECT_CONTROLS, core,
                     BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
         sync();
@@ -935,6 +938,7 @@ p9_cme_stop_exit()
 
         while((~(in32_sh(CME_LCL_SISR))) & (core << SHIFT64SH(47)));
 
+        wrteei(1);
 
         //==========================
         MARK_TRAP(SX_SRESET_THREADS)

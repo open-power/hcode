@@ -251,20 +251,17 @@ main(int argc, char** argv)
 
 #if TEST_ONLY_BCE_IRR
 
-    if ((G_bce_irr.enable = in32(CME_LCL_FLAGS) & FLAG_BCE_IRR_ENABLE))
-    {
-        // Initialize thread control blocks for the threads
-        pk_thread_create( &G_p9_cme_bce_irr_thread,
-                          (PkThreadRoutine)bce_irr_run,
-                          (void*)NULL,
-                          (PkAddress)G_p9_cme_bce_irr_thread_stack,
-                          (size_t)CME_THREAD_STACK_SIZE_BCE_IRR,
-                          (PkThreadPriority)CME_THREAD_PRIORITY_BCE_IRR);
+    // Initialize thread control blocks for the threads
+    pk_thread_create( &G_p9_cme_bce_irr_thread,
+                      (PkThreadRoutine)bce_irr_thread,
+                      (void*)NULL,
+                      (PkAddress)G_p9_cme_bce_irr_thread_stack,
+                      (size_t)CME_THREAD_STACK_SIZE_BCE_IRR,
+                      (PkThreadPriority)CME_THREAD_PRIORITY_BCE_IRR);
 
-        PK_TRACE_BIN("G_p9_cme_bce_irr_thread",
-                     &G_p9_cme_bce_irr_thread,
-                     sizeof(G_p9_cme_bce_irr_thread));
-    }
+    PK_TRACE_BIN("G_p9_cme_bce_irr_thread",
+                 &G_p9_cme_bce_irr_thread,
+                 sizeof(G_p9_cme_bce_irr_thread));
 
 #endif
 
@@ -282,11 +279,8 @@ main(int argc, char** argv)
 
 #if TEST_ONLY_BCE_IRR
 
-    if (G_bce_irr.enable)
-    {
-        // Make G_p9_cme_bce_irr_thread runnable
-        pk_thread_resume(&G_p9_cme_bce_irr_thread);
-    }
+    // Make G_p9_cme_bce_irr_thread runnable
+    pk_thread_resume(&G_p9_cme_bce_irr_thread);
 
 #endif
 

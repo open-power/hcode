@@ -200,7 +200,6 @@ enum CME_STOP_FLAGS
     FLAG_STOP_READY                  = BIT32(0),
     FLAG_BLOCK_WKUP_C0               = BIT32(8),
     FLAG_BLOCK_WKUP_C1               = BIT32(9),
-    FLAG_BCE_IRR_ENABLE              = BIT32(25),
     FLAG_EX1_INDICATOR               = BIT32(26),
     FLAG_ENTRY_FIRST_C0              = BIT32(28),
     FLAG_ENTRY_FIRST_C1              = BIT32(29),
@@ -250,7 +249,6 @@ typedef struct
         uint32_t word;
         uint8_t  byte[4];
     } data;
-    uint8_t enable;
 } BceIrritator;
 #endif
 

@@ -52,4 +52,11 @@ void instance_scan_init();
 /// @retval    BLOCK_COPY_SUCCESS if function succeeds else error code.
 /// @note      function call is blocking
 BceReturnCode_t isScanRingCopyDone();
+
+#if TEST_ONLY_BCE_IRR
+    void bce_irr_setup();
+    void bce_irr_run();
+    void bce_irr_thread(void*);
+#endif
+
 #endif

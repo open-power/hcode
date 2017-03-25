@@ -75,6 +75,9 @@ enum
 void startCmeBlockCopy( uint64_t i_cmeStartBlk, uint32_t i_blockLength,
                         uint32_t i_cmePos, uint8_t i_barIndex, uint32_t i_mbaseVal );
 
+void startCmeBlockCopyWriteHomer( uint64_t i_cmeStartBlk, uint32_t i_blockLength,
+                                  uint32_t i_cmePos, uint8_t i_barIndex, uint32_t i_mbaseVal);
+
 /// @brief accomplishes block copy from mainstore to CME SRAM.
 /// @param [in]  i_cmePos        Position of CME in the P9 chip.
 /// @param [in]  i_plat          platform requesting block copy transfer.
