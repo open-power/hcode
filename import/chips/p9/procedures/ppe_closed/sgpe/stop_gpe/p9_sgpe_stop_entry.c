@@ -51,6 +51,7 @@ p9_sgpe_stop_entry()
     int          l3_purge_aborted = 0;
     uint32_t     ex               = 0;
     uint32_t     ex_mask          = 0;
+    uint32_t     ex_index         = 0;
     uint32_t     bitloc           = 0;
     uint32_t     qloop            = 0;
     uint32_t     cloop            = 0;
@@ -574,25 +575,32 @@ p9_sgpe_stop_entry()
 
 #if !SKIP_L3_PURGE
 
-        PK_TRACE("Assert purge L3 via EX_PM_PURGE_REG[0]");
-
-        if(ex & FST_EX_IN_QUAD)
+        for (ex_mask = 2; ex_mask; ex_mask--)
         {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 0), BIT64(0));
+            if (ex & ex_mask)
+            {
+                ex_index = ex_mask & 1;
+
+                PK_TRACE("Assert purge L3 on EX[%d] via EX_PM_PURGE_REG[0]", ex_index);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, ex_index), BIT64(0));
+
+                PK_TRACE("Halt CHTM[0+1] on EX[%d] via HTM_TRIG[1]", ex_index);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM0_TRIG_REG, qloop, ex_index), BIT64(1));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM1_TRIG_REG, qloop, ex_index), BIT64(1));
+
+                // Disable PMISC and IMA - Bits 1,2,4
+                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM0_CTRL_REG, qloop, ex_index), 0);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM1_CTRL_REG, qloop, ex_index), 0);
+
+                // Disable Tracing
+                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM0_MODE_REG, qloop, ex_index), 0);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM1_MODE_REG, qloop, ex_index), 0);
+
+            }
         }
 
-        if(ex & SND_EX_IN_QUAD)
-        {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_PURGE_REG, qloop, 1), BIT64(0));
-        }
-
-        // disable cme trace array
-        sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
-
-        if (pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(4))
-        {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(1));
-        }
+        PK_TRACE("Disable cme trace array via DEBUG_TRACE_CONTROL[1]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(1));
 
         PK_TRACE("Poll for L3 purge done via EX_PM_PURGE_REG[0]");
 
@@ -807,7 +815,8 @@ p9_sgpe_stop_entry()
             GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_DRAM_REF_REG, qloop, 1), scom_data.value);
         }
 
-        PK_TRACE("Check NCU_SATUS_REG[0:3] for all zeros");
+        PK_TRACE("Check NCU_STATUS_REG[0:3] for all zeros");
+        // HW407207 - can only check bit 0:2
 
         if (ex & FST_EX_IN_QUAD)
         {
@@ -815,8 +824,9 @@ p9_sgpe_stop_entry()
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_STATUS_REG, qloop, 0),
                             scom_data.value);
+                PKTRACE("Polling NCU_STATUS_REG 0");
             }
-            while(((~(scom_data.words.upper)) & BITS32(0, 4)) != BITS32(0, 4));
+            while(((~(scom_data.words.upper)) & BITS32(0, 3)) != BITS32(0, 3));
         }
 
         if (ex & SND_EX_IN_QUAD)
@@ -825,8 +835,9 @@ p9_sgpe_stop_entry()
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_STATUS_REG, qloop, 1),
                             scom_data.value);
+                PKTRACE("Polling NCU_STATUS_REG 1");
             }
-            while(((~(scom_data.words.upper)) & BITS32(0, 4)) != BITS32(0, 4));
+            while(((~(scom_data.words.upper)) & BITS32(0, 3)) != BITS32(0, 3));
         }
 
         PK_TRACE_DBG("NCU Status Clean");

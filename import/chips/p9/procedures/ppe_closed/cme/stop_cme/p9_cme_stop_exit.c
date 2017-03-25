@@ -546,7 +546,7 @@ p9_cme_stop_exit()
     PK_TRACE_DBG("Check: core[%d] target_lv[%d], deeper_lv[%d], deeper_c[%d]",
                  core, target_level, deeper_level, deeper_core);
 
-    PK_TRACE("Clear chtm purge done via ESIR[24/25]");
+    PK_TRACE("Clear chtm purge done via EISR[24/25]");
     out32(CME_LCL_EISR_CLR, (core << SHIFT32(25)));
 
     PK_TRACE("Update STOP history: in transition of exit");

@@ -303,6 +303,8 @@ p9_sgpe_stop_exit()
     uint32_t     ec_mask         = 0;
     uint32_t     ex_index        = 0;
     uint32_t     ec_index        = 0;
+    uint32_t     chtm_mask       = 0;
+    uint64_t     chtm_size       = 0;
     data64_t     scom_data       = {0};
 #if !STOP_PRIME
     ocb_ccsr_t   ccsr            = {0};
@@ -910,9 +912,12 @@ p9_sgpe_stop_exit()
             // 7: LCL_EN_WAIT_CYCLES
             // 8: LCL_EN_FULL_SPEED
             // inst: 3D20C000 | addis r9, 0, 0xC000 | R9 = 0xC0000000
-            // inst: 3C208F80 | addis r1, 0, 0x8F80 | R1 = 0x88800000
+            // inst: 3C208F80 | addis r1, 0, 0x8F80 | R1 = 0x8F800000
+            // HTM mode, if enabled, forces only 64 bits of data
+            // inst: 38210300 | addi  r1, r1, 0x300 | R1 = 0x8F800300
             // inst: 90290120 | stw   r1, 0x120(r9) | 0xC0000120 = R1
             //
+            // This configures L3 Trace array to receive CME data
             // 1. The trace array has to be stopped to configure it
             // 2. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRCTRL_CONFIG
             //    bit0: store_trig_mode_lt = 1
@@ -940,7 +945,7 @@ p9_sgpe_stop_exit()
 
             sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
-            if (pSgpeImgHdr->g_sgpe_reserve_flags & CME_TRACE_ENABLE)
+            if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_ENABLE_CME_TRACE_ARRAY_BIT_POS)
             {
                 // Stop the trace to configure it
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(1));
@@ -949,11 +954,23 @@ p9_sgpe_stop_exit()
                 {
                     if (m_pg & ex_mask)
                     {
+                        ex_index = ex_mask & 1;
+
+                        PK_TRACE("Configure and Enable L3[%d] Trace Array to receive CME data",
+                                 ex_index);
 
                         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
                                     0x3D20C00000000000);
                         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
                                     0x3C20888000000000);
+
+                        if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_ENABLE_CHTM_TRACE_CME_BIT_POS)
+                        {
+                            PK_TRACE("Puttng PPE in 64 bit data mode before enable CHTM");
+                            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMEDR, qloop, 0),
+                                        0x3821030000000000);
+                        }
+
                         GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
                                     0x9029012000000000);
 
@@ -980,6 +997,71 @@ p9_sgpe_stop_exit()
 
                 // Start the trace
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(0));
+            }
+
+            // Enable CHTM
+            //
+            // This configures CHTM to receive CME data
+            // Set up HTM_MODE: [0] = start, [1:2] = 0b10 PPE Trace
+            // Set up HTM_CTRL
+            // Clear memory allocated in HTM_MEM
+            // Allocate memory in HTM_MEM
+            //   allow the user to have full control over size and starting address
+            // Reset triggers
+            // Start triggers
+
+            if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_ENABLE_CHTM_TRACE_CME_BIT_POS)
+            {
+                for (ex_mask = 2; ex_mask; ex_mask--)
+                {
+                    if (m_pg & ex_mask)
+                    {
+                        ex_index = ex_mask & 1;
+
+                        PK_TRACE("Configure and Enable EX[%d] CHTM to receive CME data",
+                                 ex_index);
+
+                        chtm_mask = (uint32_t)pSgpeImgHdr->g_sgpe_chtm_mem_cfg;
+                        chtm_mask = chtm_mask & BITS64SH(40, 9) >> SHIFT64SH(48);
+
+                        //bit[5] size_small = 1, mask base[31:39,9] with size[40:48,9]
+                        if (pSgpeImgHdr->g_sgpe_chtm_mem_cfg & BIT64(5))
+                        {
+                            chtm_size = BIT64(39); // Base of 16M;
+                        }
+                        //bit[5] size_small = 0, mask base[26:34,9] with size[40:48,9]
+                        else
+                        {
+                            chtm_size = BIT64(34); // Base of 512M
+                        }
+
+                        // Note: it isn't 100% because it only uses the # of bits in the mask,
+                        //       but it isn't valid to configure the mask other ways
+                        while (chtm_mask != 0)
+                        {
+                            chtm_size = chtm_size << 1;
+                            chtm_mask = chtm_mask >> 1;
+                        }
+
+                        scom_data.value = BIT64(0) +
+                                          pSgpeImgHdr->g_sgpe_chtm_mem_cfg +
+                                          chtm_size * ((qloop << 1) + ex_index);
+
+                        // CME Trace is routed through CHTM1
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_MODE_REG),
+                                                     qloop, ex_index), 0xC00F000000000000);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_CTRL_REG),
+                                                     qloop, ex_index), 0x7404000000000000);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_MEM_REG),
+                                                     qloop, ex_index), 0);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_MEM_REG),
+                                                     qloop, ex_index), scom_data.value);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_TRIG_REG),
+                                                     qloop, ex_index), BIT64(4));
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_TRIG_REG),
+                                                     qloop, ex_index), BIT64(0));
+                    }
+                }
             }
 
             if (in32(OCB_OCCS2) & BIT32(CME_DEBUG_TRAP_ENABLE))
