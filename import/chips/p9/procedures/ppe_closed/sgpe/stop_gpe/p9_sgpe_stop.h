@@ -64,6 +64,7 @@ extern "C" {
 #define RESTORE_RING_BITS(mask, ring, save) ring = (((ring) & (~mask)) | (save));
 #endif
 
+
 #define DEBUG_TRACE_CONTROL         0x100107D0
 #define L3TRA_TRACE_TRCTRL_CONFIG   0x10010402
 #define L3TRA_TRACE_TRDATA_CONFIG_0 0x10010403
@@ -139,6 +140,19 @@ extern "C" {
 #define EX_PM_LCO_DIS_REG        0x10011816
 #define EX_PM_L2_RCMD_DIS_REG    0x10011818
 
+#define EX_CHTM0_MODE_REG        0x10012200
+#define EX_CHTM1_MODE_REG        0x10012300
+#define EX_CHTM0_MEM_REG         0x10012201
+#define EX_CHTM1_MEM_REG         0x10012301
+#define EX_CHTM0_STAT_REG        0x10012202
+#define EX_CHTM1_STAT_REG        0x10012302
+#define EX_CHTM0_LAST_REG        0x10012203
+#define EX_CHTM1_LAST_REG        0x10012303
+#define EX_CHTM0_TRIG_REG        0x10012204
+#define EX_CHTM1_TRIG_REG        0x10012304
+#define EX_CHTM0_CTRL_REG        0x10012205
+#define EX_CHTM1_CTRL_REG        0x10012305
+
 #define PERV_CPLT_CTRL0_OR       0x10000010
 #define PERV_CPLT_CTRL0_CLEAR    0x10000020
 #define PERV_CPLT_CTRL1_OR       0x10000011
@@ -205,6 +219,7 @@ enum SGPE_STOP_EVENT_LEVELS
 enum SGPE_STOP_CME_FLAGS
 {
     CME_TRACE_ENABLE                  = BIT32(4),
+    CME_CHTM_ENABLE                   = BIT32(4),
     CME_EX1_INDICATOR                 = BIT32(26),
     CME_SIBLING_FUNCTIONAL            = BIT32(27),
     CME_CORE0_ENTRY_FIRST             = BIT32(28),
