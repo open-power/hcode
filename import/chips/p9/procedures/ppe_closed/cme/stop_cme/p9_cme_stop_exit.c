@@ -652,6 +652,12 @@ p9_cme_stop_exit()
         PK_TRACE_INF("SX4.P: S-Reset All Core Threads to Run Self Restore Image");
         CME_PUTSCOM(DIRECT_CONTROLS, core,
                     BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
+        sync();
+
+        PK_TRACE("Poll for instruction running before drop pm_exit");
+
+        while((~(in32_sh(CME_LCL_SISR))) & (core << SHIFT64SH(47)));
+
 
         //==========================
         MARK_TRAP(SX_SRESET_THREADS)
