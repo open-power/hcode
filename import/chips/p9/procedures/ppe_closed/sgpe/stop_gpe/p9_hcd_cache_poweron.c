@@ -72,7 +72,7 @@ p9_hcd_cache_poweron(uint32_t quad)
     }
     while(!(scom_data & BIT64(0)));
 
-#if !HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
+#if !HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     // vcs_pfet_force_state = 11 (Force Von)
     PK_TRACE("Power On Cache VCS");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, quad), BITS64(2, 2));

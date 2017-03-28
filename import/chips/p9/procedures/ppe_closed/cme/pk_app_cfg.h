@@ -41,11 +41,11 @@
 /// @todo RTC 161182
 
 #if NIMBUS_DD_LEVEL == 1
-    #define HW386841_DD1_DSL_STOP1_FIX          1
+    #define HW386841_NDD1_DSL_STOP1_FIX         1
     #define HW402407_NDD1_TLBIE_STOP_WORKAROUND 1
     #define HW405292_NDD1_PCBMUX_SAVIOR         1
     #define MASK_MSR_SEM6
-    #define RUN_NDD1_ABIST_IN_PARALLEL_MODE 1
+    #define RUN_NDD1_ABIST_IN_PARALLEL_MODE     1
 #endif
 
 // --------------------

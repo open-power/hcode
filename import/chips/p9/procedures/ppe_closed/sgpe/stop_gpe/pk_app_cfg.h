@@ -40,10 +40,9 @@
 // @todo RTC 161182
 
 #if NIMBUS_DD_LEVEL == 1
-    #define HW386311_DD1_PBIE_RW_PTR_STOP11_FIX            1
-    #define HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 1
-    #define FUSED_CORE_MODE_SCAN_FIX                       1
-    #define HW405292_NDD1_PCBMUX_FENCE_FIX                 1
+    #define HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX            1
+    #define HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 1
+    #define NDD1_FUSED_CORE_MODE_SCAN_FIX                   1
 #endif
 
 // --------------------
@@ -57,12 +56,12 @@
 
 #if EPM_P9_TUNING
     // EPM already consumed hardware fix
-    #undef  HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
-    #define HW386311_DD1_PBIE_RW_PTR_STOP11_FIX            0
+    #undef  HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
+    #define HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX            0
 
     // EPM doesnt have this problem
-    #undef  HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
-    #define HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 0
+    #undef  HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
+    #define HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 0
 
     // EPM doesnt have real homer images and pba setup to access homer
     #undef  SKIP_HOMER_ACCESS

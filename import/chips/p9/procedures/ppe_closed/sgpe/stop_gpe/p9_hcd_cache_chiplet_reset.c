@@ -81,7 +81,7 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), (BIT64(0) | BIT64(3)));
 
     PK_TRACE("Flip L2 glsmux to DPLL via QPPM_EXCGCR[34:35]");
-#if HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
+#if HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), BITS64(34, 2));
 #else
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), ((uint64_t)ex << SHIFT64(35)));
@@ -97,7 +97,7 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_PPM_CGCR, quad), BIT64(3));
 
     PK_TRACE("Drop L2 glsmux reset via QPPM_EXCGCR[32:33]");
-#if HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
+#if HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, quad), BITS64(32, 2));
 #else
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, quad), ((uint64_t)ex << SHIFT64(33)));
@@ -129,7 +129,7 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
     // Marker for scan0
     MARK_TRAP(SX_CHIPLET_RESET_SCAN0)
 #if !SKIP_SCAN0
-#if !HW388878_DD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
+#if !HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     uint64_t regions = SCAN0_REGION_ALL_BUT_EX;
 
     if (ex & FST_EX_IN_QUAD)
@@ -144,13 +144,13 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 
     p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_GPTR_REPR_TIME);
 #else
-    PK_TRACE_INF("DD1 VCS workaround:");
+    PK_TRACE_INF("NDD1 VCS workaround:");
     uint32_t l_loop  = 0;
     uint64_t regions = SCAN0_REGION_ALL;
     p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_GPTR_REPR_TIME);
 
     //Eq_fure + Ex_l2_fure(ex0) + Ex_l2_fure(ex1)
-#define DD1_EQ_FURE_RING_LENGTH (46532+119192+119192)
+#define NDD1_EQ_FURE_RING_LENGTH (46532+119192+119192)
     uint64_t l_regions = CLK_REGION_PERV | CLK_REGION_EX0_L2 | CLK_REGION_EX1_L2;
 
     // ----------------------------------------------------
@@ -174,7 +174,7 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 
     PK_TRACE("Write scan data register via 0x1003E040");
 
-    for (l_loop = 0; l_loop <= DD1_EQ_FURE_RING_LENGTH / 64; l_loop++)
+    for (l_loop = 0; l_loop <= NDD1_EQ_FURE_RING_LENGTH / 64; l_loop++)
     {
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(0x1003E040, quad), BITS64(0, 64));
     }

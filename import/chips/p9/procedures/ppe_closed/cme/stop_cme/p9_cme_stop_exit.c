@@ -29,7 +29,7 @@
 
 extern CmeStopRecord G_cme_stop_record;
 
-#if HW386841_DD1_DSL_STOP1_FIX
+#if HW386841_NDD1_DSL_STOP1_FIX
 
 uint8_t G_dsl[MAX_CORES_PER_CME][MAX_THREADS_PER_CORE] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
 
@@ -40,7 +40,7 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
     uint32_t     core_mask         = 0;
     uint32_t     act_stop_level    = 0;
     data64_t     scom_data         = {0};
-#if HW386841_DD1_DSL_STOP1_FIX
+#if HW386841_NDD1_DSL_STOP1_FIX
     uint8_t      srr1[MAX_THREADS_PER_CORE] = {0, 0, 0, 0};
     uint32_t     pscrs             = 0;
     uint32_t     bitloc            = 0;
@@ -56,7 +56,7 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
     PK_TRACE_DBG("Restore PSSCR.PLS+SRR1 back to actual level");
 
-#if HW386841_DD1_DSL_STOP1_FIX
+#if HW386841_NDD1_DSL_STOP1_FIX
 
     for (core_mask = 2; core_mask; core_mask--)
     {
@@ -210,8 +210,12 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
 #endif
 
-    PK_TRACE_DBG("Core Release PCB Mux via SICR[10/11]");
-    p9_cme_release_pcbmux(core);
+    PK_TRACE("Release PCB Mux back on Core via SICR[10/11]");
+    out32(CME_LCL_SICR_CLR, core << SHIFT32(11));
+
+    while((core & ~(in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+
+    PK_TRACE("PCB Mux Released on Core[%d]", core);
 
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
     scom_data.words.lower = 0;
@@ -283,8 +287,28 @@ void p9_cme_stop_exit_lv2(uint32_t core)
 
     // do this after assert glsmux so glitch can have time to resolve
     // catchup to stop2 exit will acquire here
-    PK_TRACE_DBG("Core Ensure Pcb Mux");
-    p9_cme_acquire_pcbmux(core, 1);
+
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+    p9_cme_pcbmux_savior_prologue(core);
+#endif
+
+    PK_TRACE("SX.20: Request PCB mux via SICR[10/11]");
+    out32(CME_LCL_SICR_OR, core << SHIFT32(11));
+
+    // Poll Infinitely for PCB Mux Grant
+    // MF: change watchdog timer in pk to ensure forward progress
+    while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+
+    PK_TRACE("SX.20: PCB Mux Granted on Core[%d]", core);
+
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+
+    if (1)
+    {
+        p9_cme_pcbmux_savior_epilogue(core);
+    }
+
+#endif
 
     PK_TRACE_INF("SX.2A: Core[%d] Start Clock", core);
     p9_hcd_core_startclocks(core);
@@ -385,7 +409,7 @@ p9_cme_stop_exit()
     uint32_t     spwu_stop         = 0;
     uint32_t     spwu_wake         = 0;
 #endif
-#if HW386841_DD1_DSL_STOP1_FIX
+#if HW386841_NDD1_DSL_STOP1_FIX
     uint32_t     core_stop1        = 0;
 #endif
 
@@ -462,7 +486,7 @@ p9_cme_stop_exit()
     MARK_TAG(BEGINSCOPE_STOP_EXIT, core)
     //==================================
 
-#if HW386841_DD1_DSL_STOP1_FIX
+#if HW386841_NDD1_DSL_STOP1_FIX
 
     // figure out who needs stop1 exit
     for (core_mask = 2; core_mask; core_mask--)
@@ -579,8 +603,28 @@ p9_cme_stop_exit()
 
             // Can't do the read of cplt_stat after flipping the mux before the core is powered on
             // catchup to stop4 exit will acquire here
-            PK_TRACE_DBG("Core Acquire Pcb Mux");
-            p9_cme_acquire_pcbmux(core, 0);
+
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+            p9_cme_pcbmux_savior_prologue(core);
+#endif
+
+            PK_TRACE("SX.40: Request PCB mux via SICR[10/11]");
+            out32(CME_LCL_SICR_OR, core << SHIFT32(11));
+
+            // Poll Infinitely for PCB Mux Grant
+            // MF: change watchdog timer in pk to ensure forward progress
+            while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+
+            PK_TRACE("SX.40: PCB Mux Granted on Core[%d]", core);
+
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+
+            if (0)
+            {
+                p9_cme_pcbmux_savior_epilogue(core);
+            }
+
+#endif
 
             //========================
             MARK_TAG(SX_POWERON, core)

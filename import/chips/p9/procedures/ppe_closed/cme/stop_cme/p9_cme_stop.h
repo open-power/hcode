@@ -290,8 +290,11 @@ typedef struct
 
 
 /// CME STOP Entry and Exit Prototypes
-void p9_cme_pcbmux_savior_prologue(uint32_t);
-void p9_cme_pcbmux_savior_epilogue(uint32_t);
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+    void p9_cme_pcbmux_savior_prologue(uint32_t);
+    void p9_cme_pcbmux_savior_epilogue(uint32_t);
+#endif
+
 void p9_cme_acquire_pcbmux(uint32_t, uint32_t);
 void p9_cme_release_pcbmux(uint32_t);
 

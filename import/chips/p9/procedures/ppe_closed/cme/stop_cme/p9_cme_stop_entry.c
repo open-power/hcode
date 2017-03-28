@@ -48,6 +48,10 @@
 
 extern CmeStopRecord G_cme_stop_record;
 
+
+#if HW402407_NDD1_TLBIE_STOP_WORKAROUND
+
+
 void prepare_for_ramming (uint32_t core)
 {
     uint64_t        scom_data;
@@ -122,7 +126,6 @@ uint16_t ram_read_lpid( uint32_t core, uint32_t thread )
     return ((uint16_t) scom_data);
 }
 
-
 void ram_write_lpid( uint32_t core, uint32_t thread, uint16_t lpid )
 {
 
@@ -190,40 +193,9 @@ void turn_off_ram_mode (uint32_t core)
 
 }
 
-
-void p9_cme_acquire_pcbmux(uint32_t core, uint32_t check)
-{
-
-    PK_TRACE("Request PCB mux via SICR[10/11]");
-
-#ifdef HW405292_NDD1_PCBMUX_SAVIOR
-    p9_cme_pcbmux_savior_prologue(core);
 #endif
-    out32(CME_LCL_SICR_OR, core << SHIFT32(11));
 
-    // Poll Infinitely for PCB Mux Grant
-    // MF: change watchdog timer in pk to ensure forward progress
-    while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
 
-    if (check != 0)
-    {
-#ifdef HW405292_NDD1_PCBMUX_SAVIOR
-        p9_cme_pcbmux_savior_epilogue(core);
-#endif
-    }
-
-    PK_TRACE("S: PCB Mux Granted C[%d]", core);
-
-}
-
-void p9_cme_release_pcbmux(uint32_t core)
-{
-
-    out32(CME_LCL_SICR_CLR, core << SHIFT32(11));
-
-    while((core & ~(in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
-
-}
 
 #ifdef HW405292_NDD1_PCBMUX_SAVIOR
 
@@ -413,7 +385,7 @@ p9_cme_stop_entry()
         {
             PK_TRACE_DBG("Check: core[%d] core_stop1[%d]", core, core_stop1);
 
-#if HW386841_DD1_DSL_STOP1_FIX
+#if HW386841_NDD1_DSL_STOP1_FIX
 
             //----------------------------------------------------------------------
             PK_TRACE("+++++ +++++ STOP LEVEL 1 ENTRY +++++ +++++");
@@ -450,7 +422,27 @@ p9_cme_stop_entry()
         PK_TRACE("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
         //----------------------------------------------------------------------
 
-        p9_cme_acquire_pcbmux(core, 1);
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+        p9_cme_pcbmux_savior_prologue(core);
+#endif
+
+        PK_TRACE("Request PCB mux via SICR[10/11]");
+        out32(CME_LCL_SICR_OR, core << SHIFT32(11));
+
+        // Poll Infinitely for PCB Mux Grant
+        // MF: change watchdog timer in pk to ensure forward progress
+        while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+
+        PK_TRACE("PCB Mux Granted on Core[%d]", core);
+
+#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+
+        if (1)
+        {
+            p9_cme_pcbmux_savior_epilogue(core);
+        }
+
+#endif
 
         PK_TRACE("Pulse STOP entry acknowledgement to PC via SICR[0/1]");
         out32(CME_LCL_SICR_OR,  core << SHIFT32(1));

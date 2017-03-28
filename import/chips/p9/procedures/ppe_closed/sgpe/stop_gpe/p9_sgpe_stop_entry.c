@@ -37,7 +37,7 @@ extern SgpeStopRecord                           G_sgpe_stop_record;
 
 #endif
 
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
 
     extern struct ring_save* G_ring_save;
     extern uint64_t   G_ring_spin[10][2];
@@ -61,7 +61,7 @@ p9_sgpe_stop_entry()
     uint64_t     local_xstop      = 0;
     data64_t     scom_data        = {0};
     data64_t     temp_data        = {0};
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
     uint32_t     spin             = 0;
 #endif
 #if !SKIP_IPC
@@ -892,16 +892,29 @@ p9_sgpe_stop_entry()
 
         PK_TRACE_INF("SE.11D: Cache Clock Stopped");
 
-#if HW405292_NDD1_PCBMUX_FENCE_FIX
-        // Gate the PCBMux request so scanning doesn't cause random requests
-        p9_sgpe_set_slvcfg_pm_disable(qloop);
-#endif
+        PK_TRACE("Gate the PCBMux request so scanning doesn't cause random requests");
+
+        for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
+        {
+            // only loop over configured cores
+            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] &
+                  BIT32((qloop << 2) + cloop)))
+            {
+                continue;
+            }
+
+            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
+                                           ((qloop << 2) + cloop)), scom_data.value);
+            scom_data.words.upper |= BITS32(6, 2);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
+                                           ((qloop << 2) + cloop)), scom_data.value);
+        }
 
         //=========================================
         MARK_TAG(SE_POWER_OFF_CACHE, (32 >> qloop))
         //=========================================
 
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
 
         PK_TRACE_DBG("PBRW: Engage with PBIE Read/Write Pointer Scan Workaround");
 

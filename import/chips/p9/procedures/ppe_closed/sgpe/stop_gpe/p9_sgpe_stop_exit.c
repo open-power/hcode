@@ -39,52 +39,15 @@ extern SgpeStopRecord                       G_sgpe_stop_record;
 
 #endif
 
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
 
     extern struct ring_save* G_ring_save;
     extern uint64_t   G_ring_spin[10][2];
 
 #endif
 
-#if HW405292_NDD1_PCBMUX_FENCE_FIX
 
-void p9_sgpe_set_slvcfg_pm_disable(uint32_t qloop)
-{
-    PK_TRACE_INF("Assert PM_DISABLE in SLAVE_CONFIG");
-
-    uint64_t l_scomData = 0;
-    uint32_t l_scomAddr = 0;
-    uint32_t c = 0;
-
-    for (c = 0; c < 4; c++)
-    {
-        l_scomAddr = GPE_SCOM_ADDR_CORE( C_SLAVE_CONFIG, (qloop * 4 + c));
-        GPE_GETSCOM(l_scomAddr, l_scomData);
-        l_scomData |= SLAVE_CONFIG_PM_DISABLE | SLAVE_CONFIG_PM_MUX_DISABLE;
-        GPE_PUTSCOM(l_scomAddr, l_scomData);
-    }
-}
-
-void p9_sgpe_clear_slvcfg_pm_disable(uint32_t qloop)
-{
-    PK_TRACE_INF("Clear PM_DISABLE in SLAVE_CONFIG");
-
-    uint64_t l_scomData = 0;
-    uint32_t l_scomAddr = 0;
-    uint32_t c = 0;
-
-    for (c = 0; c < 4; c++)
-    {
-        l_scomAddr = GPE_SCOM_ADDR_CORE( C_SLAVE_CONFIG, (qloop * 4 + c));
-        GPE_GETSCOM(l_scomAddr, l_scomData);
-        l_scomData &= ~SLAVE_CONFIG_PM_DISABLE & ~SLAVE_CONFIG_PM_MUX_DISABLE;
-        GPE_PUTSCOM(l_scomAddr, l_scomData);
-    }
-}
-
-#endif
-
-#if FUSED_CORE_MODE_SCAN_FIX
+#if NDD1_FUSED_CORE_MODE_SCAN_FIX
 
 uint32_t G_fcm_spin[4] = {0, 435, 1402, 2411};
 
@@ -344,7 +307,7 @@ p9_sgpe_stop_exit()
 #if !STOP_PRIME
     ocb_ccsr_t   ccsr            = {0};
     uint32_t     cme_flags       = 0;
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
     uint32_t     spin            = 0;
 #endif
 #endif
@@ -527,10 +490,23 @@ p9_sgpe_stop_exit()
             scom_data.words.upper = SSH_EXIT_IN_SESSION;
             GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
 
-#if HW405292_NDD1_PCBMUX_FENCE_FIX
-            // Gate the PCBMux request so scanning doesn't cause random requests
-            p9_sgpe_set_slvcfg_pm_disable(qloop);
-#endif
+            PK_TRACE("Gate the PCBMux request so scanning doesn't cause random requests");
+
+            for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
+            {
+                // only loop over configured cores
+                if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] &
+                      BIT32((qloop << 2) + cloop)))
+                {
+                    continue;
+                }
+
+                GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
+                                               ((qloop << 2) + cloop)), scom_data.value);
+                scom_data.words.upper |= BITS32(6, 2);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
+                                               ((qloop << 2) + cloop)), scom_data.value);
+            }
 
             //=================================
             MARK_TAG(SX_POWERON, (32 >> qloop))
@@ -648,7 +624,7 @@ p9_sgpe_stop_exit()
                     }
                 }
 
-#if FUSED_CORE_MODE_SCAN_FIX
+#if NDD1_FUSED_CORE_MODE_SCAN_FIX
 
                 PK_TRACE_DBG("FCMS: Engage with Fused Mode Scan Workaround");
 
@@ -669,7 +645,7 @@ p9_sgpe_stop_exit()
 #endif
 #endif
 
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
 
             PK_TRACE_DBG("PBRW: Engage with PBIE Read/Write Pointer Scan Workaround");
 
@@ -813,11 +789,23 @@ p9_sgpe_stop_exit()
             PK_TRACE_DBG("Cache Scom Cust");
             p9_hcd_cache_scomcust(qloop, m_pg, 0);
 
+            PK_TRACE("Allow the CME to access the PCB Slave NET_CTRL registers");
 
-#if HW405292_NDD1_PCBMUX_FENCE_FIX
-            // Allow the CME to access the PCB Slave NET_CTRL registers
-            p9_sgpe_clear_slvcfg_pm_disable(qloop);
-#endif
+            for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
+            {
+                // only loop over configured cores
+                if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] &
+                      BIT32((qloop << 2) + cloop)))
+                {
+                    continue;
+                }
+
+                GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
+                                               ((qloop << 2) + cloop)), scom_data.value);
+                scom_data.words.upper &= ~BITS32(6, 2);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
+                                               ((qloop << 2) + cloop)), scom_data.value);
+            }
 
             //==================================
             MARK_TAG(SX_CME_BOOT, (32 >> qloop))
