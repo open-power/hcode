@@ -59,7 +59,7 @@ extern "C" {
 #include "p9_pm_hcd_flags.h"
 #include "p9_stop_common.h"
 
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX || FUSED_CORE_MODE_SCAN_FIX
+#if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX || NDD1_FUSED_CORE_MODE_SCAN_FIX
 #define EXTRACT_RING_BITS(mask, ring, save) save = (ring) & (mask);
 #define RESTORE_RING_BITS(mask, ring, save) ring = (((ring) & (~mask)) | (save));
 #endif
@@ -202,12 +202,6 @@ enum SGPE_STOP_EVENT_LEVELS
     LEVEL_EQ_BASE                     = 11
 };
 
-enum SGPE_SLAVE_CONFIG_BITS
-{
-    SLAVE_CONFIG_PM_DISABLE           = BIT64(6),
-    SLAVE_CONFIG_PM_MUX_DISABLE       = BIT64(7)
-};
-
 enum SGPE_STOP_CME_FLAGS
 {
     CME_TRACE_ENABLE                  = BIT32(4),
@@ -300,7 +294,7 @@ typedef struct
     uint64_t data;
 } SgpeScomRestore;
 
-#if HW386311_DD1_PBIE_RW_PTR_STOP11_FIX
+#if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
 // Types for PB EQ asynch work-around
 struct ring_save
 {
@@ -308,10 +302,8 @@ struct ring_save
 };
 #endif
 
-#if HW405292_NDD1_PCBMUX_FENCE_FIX
 void p9_sgpe_set_slvcfg_pm_disable(uint32_t);
 void p9_sgpe_clear_slvcfg_pm_disable(uint32_t);
-#endif
 
 /// SGPE to PGPE IPC handlers
 void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg);
