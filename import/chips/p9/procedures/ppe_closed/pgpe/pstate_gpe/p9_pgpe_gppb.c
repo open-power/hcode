@@ -22,14 +22,13 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
+
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_header.h"
 
 //Global pointer to GlobalPstateParmBlock
 GlobalPstateParmBlock* G_gppb;
 
-//VpdOperatingPoint *G_gppb->operating_points_set[NUM_VPD_PTS_SET][VPD_PV_POINTS];
-uint32_t G_pstate0_dpll_value;
 uint32_t G_ext_vrm_inc_rate_mult_usperus;
 uint32_t G_ext_vrm_dec_rate_mult_usperus;
 extern PgpeHeader_t* G_pgpe_header_data;
@@ -54,17 +53,7 @@ void p9_pgpe_gppb_init()
     void* gppb_sram_offset = G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
     G_gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
 
-    //Apply Biases and System Parameters
-    p9_pgpe_gppb_compute_vpd_pts();
-
-    //Calculate slope co-efficents.
-    p9_pgpe_gppb_compute_PsV_slopes();
-
-    //Dpll value corresponding to Pstate 0
-    G_pstate0_dpll_value = ((G_gppb->reference_frequency_khz + (G_gppb->frequency_step_khz - 1)) /
-                            G_gppb->frequency_step_khz);
-
-    PK_TRACE_INF("GPP: DPLL0Value=0x%x", G_pstate0_dpll_value );
+    PK_TRACE_INF("GPP: DPLL0Value=0x%x", G_gppb->dpll_pstate0_value);
     PK_TRACE_INF("GPP: PowerSave PS=0x%x", G_gppb->operating_points[POWERSAVE].pstate );
     PK_TRACE_INF("GPP: Nominal PS=0x%x", G_gppb->operating_points[NOMINAL].pstate );
     //External VRM increasing rate in us/uv
@@ -72,220 +61,6 @@ void p9_pgpe_gppb_init()
 
     //External VRM decreasing rate in us/uv
     G_ext_vrm_dec_rate_mult_usperus = 1 / G_gppb->ext_vrm_transition_rate_dec_uv_per_us;
-
-}
-
-//
-//p9_pgpe_gppb_compute_vpd_pts
-//
-void p9_pgpe_gppb_compute_vpd_pts()
-{
-    int p = 0;
-
-    //RAW POINTS. We just copy them as is
-    for (p = 0; p < VPD_PV_POINTS; p++)
-    {
-        G_gppb->operating_points_set[VPD_PT_SET_RAW][p].vdd_mv = G_gppb->operating_points[p].vdd_mv ;
-        G_gppb->operating_points_set[VPD_PT_SET_RAW][p].vcs_mv = G_gppb->operating_points[p].vcs_mv;
-        G_gppb->operating_points_set[VPD_PT_SET_RAW][p].idd_100ma = G_gppb->operating_points[p].idd_100ma;
-        G_gppb->operating_points_set[VPD_PT_SET_RAW][p].ics_100ma = G_gppb->operating_points[p].ics_100ma;
-        G_gppb->operating_points_set[VPD_PT_SET_RAW][p].frequency_mhz = G_gppb->operating_points[p].frequency_mhz;
-        G_gppb->operating_points_set[VPD_PT_SET_RAW][p].pstate = G_gppb->operating_points[p].pstate;
-        PK_TRACE_INF("GP:PS=%x,Vdd=%x", G_gppb->operating_points_set[VPD_PT_SET_RAW][p].vdd_mv,
-                     G_gppb->operating_points_set[VPD_PT_SET_RAW][p].frequency_mhz);
-    }
-
-    //SYSTEM PARAMS APPLIED POINTS
-    //We first calculate everything in uV, and then divide by 1000. Doing this ensures
-    //that integer division doesn't result in 0 for intermediate terms
-    for (p = 0; p < VPD_PV_POINTS; p++)
-    {
-        G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].vdd_mv =
-            G_gppb->operating_points[p].vdd_mv  +
-            (((G_gppb->operating_points[p].idd_100ma * 100) * (G_gppb->vdd_sysparm.loadline_uohm +
-                    G_gppb->vdd_sysparm.distloss_uohm)) / 1000 +
-             (G_gppb->vdd_sysparm.distoffset_uv)) / 1000 ;
-        G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].vcs_mv =
-            G_gppb->operating_points[p].vcs_mv  +
-            (((G_gppb->operating_points[p].ics_100ma * 100) * (G_gppb->vcs_sysparm.loadline_uohm +
-                    G_gppb->vcs_sysparm.distloss_uohm)) / 1000 +
-             (G_gppb->vcs_sysparm.distoffset_uv)) / 1000 ;
-        G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].idd_100ma = G_gppb->operating_points[p].idd_100ma;
-        G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].ics_100ma = G_gppb->operating_points[p].ics_100ma;
-        G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].frequency_mhz = G_gppb->operating_points[p].frequency_mhz;
-        G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].pstate = G_gppb->operating_points[p].pstate;
-        PK_TRACE_INF("SP:PS=%x,Vdd=%x", G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].vdd_mv,
-                     G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].frequency_mhz);
-    }
-
-    //BIASED POINTS
-    for (p = 0; p < VPD_PV_POINTS; p++)
-    {
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vdd_mv = (G_gppb->operating_points[p].vdd_mv *
-                (200 + G_gppb->ext_biases[p].vdd_ext_hp)) / 200;
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vcs_mv = (G_gppb->operating_points[p].vcs_mv *
-                (200 + G_gppb->ext_biases[p].vcs_ext_hp)) / 200;
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].idd_100ma = G_gppb->operating_points[p].idd_100ma;
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].ics_100ma = G_gppb->operating_points[p].ics_100ma;
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].frequency_mhz = (G_gppb->operating_points[p].frequency_mhz *
-                (200 + G_gppb->ext_biases[p].frequency_hp)) / 200;
-        PK_TRACE_INF("Bi:PS=%x,Vdd=%x", G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vdd_mv,
-                     G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].frequency_mhz);
-    }
-
-    for (p = 0; p < VPD_PV_POINTS; p++)
-    {
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].pstate =
-            ((G_gppb->operating_points_set[VPD_PT_SET_BIASED][ULTRA].frequency_mhz -
-              G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].frequency_mhz) *
-             1000) /
-            G_gppb->frequency_step_khz;
-    }
-
-    //BIASED POINTS and SYSTEM PARMS APPLIED POINTS
-    //We first calculate everything in uV, and then divide by 1000. Doing this ensures
-    //that integer division doesn't result in 0 for intermediate terms
-    for (p = 0; p < VPD_PV_POINTS; p++)
-    {
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].vdd_mv =
-            (G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vdd_mv ) +
-            (((G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].idd_100ma * 100) *
-              (G_gppb->vdd_sysparm.loadline_uohm + G_gppb->vdd_sysparm.distloss_uohm)) / 1000 +
-             (G_gppb->vdd_sysparm.distoffset_uv)) / 1000 ;
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].vcs_mv =
-            (G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vcs_mv ) +
-            (((G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].ics_100ma * 100) *
-              (G_gppb->vcs_sysparm.loadline_uohm + G_gppb->vcs_sysparm.distloss_uohm)) / 1000 +
-             (G_gppb->vcs_sysparm.distoffset_uv)) / 1000 ;
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].idd_100ma =
-            G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].idd_100ma;
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].ics_100ma =
-            G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].ics_100ma;
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].frequency_mhz =
-            G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].frequency_mhz;
-        G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].pstate =
-            G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].pstate;
-        PK_TRACE_INF("BS:PS=%x,Vdd=%x", G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].vdd_mv,
-                     G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].frequency_mhz);
-    }
-}
-
-//
-//p9_pgpe_compute_PsV_slopes
-//
-//Computes slope of voltage-PState curve and PState-voltage
-//
-//PState(Frequency) on y-axis, Voltage is on x-axis for VF curve
-//Interpolation formula: (y-y0)/(x-x0) = (y1-y0)/(x1-x0)
-//m   = (x1-x0)/(y1-y0), then use this to calculate voltage, x = (y-y0)*m + x0
-//1/m = (y1-y0)/(x1-x0) here, then use this to calculate pstate(frequency), y = (x-x0)*m + y0
-//Region 0 is b/w POWERSAVE and NOMINAL
-//Region 1 is b/w NOMINAL and TURBO
-//Region 2 is between TURBO and ULTRA_TURBO
-//
-//Inflection Point 3 is ULTRA_TURBO
-//Inflection Point 2 is TURBO
-//Inflection Point 1 is NOMINAL
-//Inflection Point 0 is POWERSAVE
-//
-void p9_pgpe_gppb_compute_PsV_slopes()
-{
-    uint32_t tmp;
-    uint32_t eVidFP[VPD_PV_POINTS];
-
-    //
-    //RAW VPD PTS SLOPES
-    //
-    //convert to a fixed-point number
-    eVidFP[POWERSAVE] = G_gppb->operating_points_set[VPD_PT_SET_RAW][POWERSAVE].vdd_mv << EVID_SLOPE_FP_SHIFT;
-    eVidFP[NOMINAL] = G_gppb->operating_points_set[VPD_PT_SET_RAW][NOMINAL].vdd_mv << EVID_SLOPE_FP_SHIFT;
-    eVidFP[TURBO] = G_gppb->operating_points_set[VPD_PT_SET_RAW][TURBO].vdd_mv << EVID_SLOPE_FP_SHIFT;
-    eVidFP[ULTRA] = G_gppb->operating_points_set[VPD_PT_SET_RAW][ULTRA].vdd_mv << EVID_SLOPE_FP_SHIFT;
-
-    //Calculate slopes
-    tmp = (uint32_t)(eVidFP[NOMINAL] - eVidFP[POWERSAVE]) /
-          (uint32_t)(-G_gppb->operating_points_set[VPD_PT_SET_RAW][NOMINAL].pstate +
-                     G_gppb->operating_points_set[VPD_PT_SET_RAW][POWERSAVE].pstate);
-    G_gppb->PsVSlopes[VPD_SLOPES_RAW][REGION_POWERSAVE_NOMINAL] = tmp;
-
-    tmp = (uint32_t)(eVidFP[TURBO] - eVidFP[NOMINAL]) /
-          (uint32_t)(-G_gppb->operating_points_set[VPD_PT_SET_RAW][TURBO].pstate +
-                     G_gppb->operating_points_set[VPD_PT_SET_RAW][NOMINAL].pstate);
-    G_gppb->PsVSlopes[VPD_SLOPES_RAW][REGION_NOMINAL_TURBO] = tmp;
-
-    tmp = (uint32_t)(eVidFP[ULTRA] - eVidFP[TURBO]) /
-          (uint32_t)(-G_gppb->operating_points_set[VPD_PT_SET_RAW][ULTRA].pstate +
-                     G_gppb->operating_points_set[VPD_PT_SET_RAW][TURBO].pstate);
-    G_gppb->PsVSlopes[VPD_SLOPES_RAW][REGION_TURBO_ULTRA] = tmp;
-
-    //Calculate inverted slopes
-    tmp =  (uint32_t)((-G_gppb->operating_points_set[VPD_PT_SET_RAW][NOMINAL].pstate +
-                       G_gppb->operating_points_set[VPD_PT_SET_RAW][POWERSAVE].pstate) <<
-                      EVID_SLOPE_FP_SHIFT)
-           / (uint32_t) (G_gppb->operating_points_set[VPD_PT_SET_RAW][NOMINAL].vdd_mv -
-                         G_gppb->operating_points_set[VPD_PT_SET_RAW][POWERSAVE].vdd_mv);
-    G_gppb->VPsSlopes[VPD_SLOPES_RAW][REGION_POWERSAVE_NOMINAL] = tmp;
-
-    tmp =  (uint32_t)((-G_gppb->operating_points_set[VPD_PT_SET_RAW][TURBO].pstate +
-                       G_gppb->operating_points_set[VPD_PT_SET_RAW][NOMINAL].pstate) <<
-                      EVID_SLOPE_FP_SHIFT)
-           / (uint32_t) (G_gppb->operating_points_set[VPD_PT_SET_RAW][TURBO].vdd_mv -
-                         G_gppb->operating_points_set[VPD_PT_SET_RAW][NOMINAL].vdd_mv);
-    G_gppb->VPsSlopes[VPD_SLOPES_RAW][REGION_NOMINAL_TURBO] = tmp;
-
-    tmp =  (uint32_t)((-G_gppb->operating_points_set[VPD_PT_SET_RAW][ULTRA].pstate +
-                       G_gppb->operating_points_set[VPD_PT_SET_RAW][TURBO].pstate) <<
-                      EVID_SLOPE_FP_SHIFT)
-           / (uint32_t) (G_gppb->operating_points_set[VPD_PT_SET_RAW][ULTRA].vdd_mv -
-                         G_gppb->operating_points_set[VPD_PT_SET_RAW][TURBO].vdd_mv);
-    G_gppb->VPsSlopes[VPD_SLOPES_RAW][REGION_TURBO_ULTRA] = tmp;
-
-    //
-    //BIASED VPD PTS SLOPES
-    //
-    //convert to fixed-point number
-    eVidFP[POWERSAVE] = G_gppb->operating_points_set[VPD_PT_SET_BIASED][POWERSAVE].vdd_mv << EVID_SLOPE_FP_SHIFT;
-    eVidFP[NOMINAL] = G_gppb->operating_points_set[VPD_PT_SET_BIASED][NOMINAL].vdd_mv << EVID_SLOPE_FP_SHIFT;
-    eVidFP[TURBO] = G_gppb->operating_points_set[VPD_PT_SET_BIASED][TURBO].vdd_mv << EVID_SLOPE_FP_SHIFT;
-    eVidFP[ULTRA] = G_gppb->operating_points_set[VPD_PT_SET_BIASED][ULTRA].vdd_mv << EVID_SLOPE_FP_SHIFT;
-
-    //Calculate slopes
-    tmp = (uint32_t)(eVidFP[NOMINAL] - eVidFP[POWERSAVE]) /
-          (uint32_t)(-G_gppb->operating_points_set[VPD_PT_SET_BIASED][NOMINAL].pstate +
-                     G_gppb->operating_points_set[VPD_PT_SET_BIASED][POWERSAVE].pstate);
-    G_gppb->PsVSlopes[VPD_SLOPES_BIASED][REGION_POWERSAVE_NOMINAL] = tmp;
-
-    tmp = (uint32_t)(eVidFP[TURBO] - eVidFP[NOMINAL]) /
-          (uint32_t)(-G_gppb->operating_points_set[VPD_PT_SET_BIASED][TURBO].pstate +
-                     G_gppb->operating_points_set[VPD_PT_SET_BIASED][NOMINAL].pstate);
-    G_gppb->PsVSlopes[VPD_SLOPES_BIASED][REGION_NOMINAL_TURBO] = tmp;
-
-    tmp = (uint32_t)(eVidFP[ULTRA] - eVidFP[TURBO]) /
-          (uint32_t)(-G_gppb->operating_points_set[VPD_PT_SET_BIASED][ULTRA].pstate +
-                     G_gppb->operating_points_set[VPD_PT_SET_BIASED][TURBO].pstate);
-    G_gppb->PsVSlopes[VPD_SLOPES_BIASED][REGION_TURBO_ULTRA] = tmp;
-
-    //Calculate inverted slopes
-    tmp =  (uint32_t)((-G_gppb->operating_points_set[VPD_PT_SET_BIASED][NOMINAL].pstate +
-                       G_gppb->operating_points_set[VPD_PT_SET_BIASED][POWERSAVE].pstate) <<
-                      EVID_SLOPE_FP_SHIFT)
-           / (uint32_t) (G_gppb->operating_points_set[VPD_PT_SET_BIASED][NOMINAL].vdd_mv -
-                         G_gppb->operating_points_set[VPD_PT_SET_BIASED][POWERSAVE].vdd_mv);
-    G_gppb->VPsSlopes[VPD_SLOPES_BIASED][REGION_POWERSAVE_NOMINAL] = tmp;
-
-    tmp =  (uint32_t)((-G_gppb->operating_points_set[VPD_PT_SET_BIASED][TURBO].pstate +
-                       G_gppb->operating_points_set[VPD_PT_SET_BIASED][NOMINAL].pstate) <<
-                      EVID_SLOPE_FP_SHIFT)
-           / (uint32_t) (G_gppb->operating_points_set[VPD_PT_SET_BIASED][TURBO].vdd_mv -
-                         G_gppb->operating_points_set[VPD_PT_SET_BIASED][NOMINAL].vdd_mv);
-    G_gppb->VPsSlopes[VPD_SLOPES_BIASED][REGION_NOMINAL_TURBO] = tmp;
-
-    tmp =  (uint32_t)((-G_gppb->operating_points_set[VPD_PT_SET_BIASED][ULTRA].pstate +
-                       G_gppb->operating_points_set[VPD_PT_SET_BIASED][TURBO].pstate) <<
-                      EVID_SLOPE_FP_SHIFT)
-           / (uint32_t) (G_gppb->operating_points_set[VPD_PT_SET_BIASED][ULTRA].vdd_mv -
-                         G_gppb->operating_points_set[VPD_PT_SET_BIASED][TURBO].vdd_mv);
-    G_gppb->VPsSlopes[VPD_SLOPES_BIASED][REGION_TURBO_ULTRA] = tmp;
 
 }
 

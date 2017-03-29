@@ -50,7 +50,6 @@ void p9_pgpe_thread_actuate_init_actual_quad();
 extern PgpePstateRecord G_pgpe_pstate_record;
 extern ipc_async_cmd_t G_ipc_msg_pgpe_sgpe;
 GPE_BUFFER(extern ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
-extern uint32_t G_pstate0_dpll_value;
 extern GlobalPstateParmBlock* G_gppb;
 
 //Payload data non-cacheable region for IPCs sent to SGPE
@@ -322,7 +321,7 @@ void p9_pgpe_thread_actuate_start(uint32_t pstate_start_origin)
     //2. Read DPLLs
     lowestDpll = 0xFFF;
     dpll.value = 0;
-    PK_TRACE_INF("ACT_TH: DPLL0Value=0x%x", G_pstate0_dpll_value );
+    PK_TRACE_INF("ACT_TH: DPLL0Value=0x%x", G_gppb->dpll_pstate0_value);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -332,7 +331,7 @@ void p9_pgpe_thread_actuate_start(uint32_t pstate_start_origin)
 #if SIMICS_TUNING == 0
             GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_STAT, q), dpll.value);
 #else
-            dpll.fields.freqout = (G_pstate0_dpll_value
+            dpll.fields.freqout = (G_gppb->dpll_pstate0_value
                                    - G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][NOMINAL].pstate);
 #endif
 
@@ -354,13 +353,13 @@ void p9_pgpe_thread_actuate_start(uint32_t pstate_start_origin)
     //DPLL encoding and frequency/pstate have same step size, so
     //they should correspond one to one
     //
-    if (lowestDpll > G_pstate0_dpll_value)
+    if (lowestDpll > G_gppb->dpll_pstate0_value)
     {
-        syncPstate = G_pstate0_dpll_value;
+        syncPstate = G_gppb->dpll_pstate0_value;
     }
     else
     {
-        syncPstate = G_pstate0_dpll_value - lowestDpll;
+        syncPstate = G_gppb->dpll_pstate0_value - lowestDpll;
     }
 
     //Init Core PStates
