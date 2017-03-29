@@ -36,8 +36,8 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
 
     // This is necessary to ensure that the DPLL is in Mode 1.
     // If not, the lock times will go from ~30us to 3-5ms
-    PK_TRACE("Assert DPLL in mode 1,set slew rate via QPPM_DPLL_CTRL[2,6-15]");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_OR, quad), BIT64(2) | BIT64(15));
+    // Done once in sgpe_init:
+    // Assert DPLL in mode 1,set slew rate via QPPM_DPLL_CTRL[2,6-15]");
 
     PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
