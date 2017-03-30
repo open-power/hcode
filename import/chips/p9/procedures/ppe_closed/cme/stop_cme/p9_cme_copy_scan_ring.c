@@ -39,13 +39,13 @@ enum
 
 void instance_scan_init( )
 {
-    uint32_t l_cmePir = 0;
-
-    uint32_t l_bcLength = 0;
+    uint32_t     l_cmePir   = 0;
+    uint32_t     l_bcLength = 0;
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
+
     //Setting Mbase with start address of CME Inst rings in HOMER
-    uint32_t l_bceMbase = CME_IMAGE_CPMR_OFFSET + (pCmeImgHdr->g_cme_core_spec_ring_offset << 5);
-    uint32_t l_exId = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
+    uint32_t     l_bceMbase = CME_IMAGE_CPMR_OFFSET + (pCmeImgHdr->g_cme_core_spec_ring_offset << 5);
+    uint32_t     l_exId     = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
 
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (l_cmePir) : "i" (SPR_NUM_PIR));
 
@@ -53,11 +53,11 @@ void instance_scan_init( )
     //(1). Read CME PIR's CME instance bit field (bit 27 -bit 31)
     //(2). Bitwise shift left by one bit position.
     //(3). OR to LSB of CME PIR (bit 31), bit 26 of CME Flag Register
-
-    l_cmePir = ((( l_cmePir << 1 ) & CME_INST_ID_MASK) | l_exId);     // get CME instance number
+    l_cmePir = (((l_cmePir << 1) & CME_INST_ID_MASK) | l_exId); // get CME instance number
 
     //calculate start address of block copy and length of block copy
     l_bcLength = pCmeImgHdr->g_cme_max_spec_ring_length; // integral multiple of 32.
+
     //let us find out HOMER address where core specific scan rings reside.
     l_bceMbase = l_bceMbase + (( l_cmePir * l_bcLength ) << 5 );
     l_bceMbase = (l_bceMbase >> 5 );
@@ -67,42 +67,43 @@ void instance_scan_init( )
     // multiple of 32 and is populated by Hcode Image build while
     // building HOMER.
     uint32_t cmeSbase = pCmeImgHdr->g_cme_core_spec_ring_offset;
+
     PK_TRACE( "Start second block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  CME Ist %d",
               l_bceMbase, cmeSbase, l_bcLength, l_cmePir );
 
-    startCmeBlockCopy( cmeSbase, l_bcLength, l_cmePir, PLAT_CME, BAR_INDEX_1, l_bceMbase );
+    startCmeBlockCopy( cmeSbase, l_bcLength, l_cmePir, BAR_INDEX_1, l_bceMbase );
 
-    PK_TRACE(" Done startCmeBlockCopy(instance_scan_init).");
+    PK_TRACE("Done startCmeBlockCopy(instance_scan_init).");
 }
 
 
 BceReturnCode_t isScanRingCopyDone( )
 {
     BceReturnCode_t l_rc;
-    uint32_t l_cmePir = 0;
-    uint32_t l_exId = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
+    uint32_t        l_cmePir = 0;
+    uint32_t        l_exId   = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
+
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (l_cmePir) : "i" (SPR_NUM_PIR));
 
     //CME's PIR gives only quad id. To determine the correct CME instance, follow the steps below:
     //(1). Read CME PIR's CME instance bit field (bit 27 -bit 31)
     //(2). Bitwise shift left by one bit position.
     //(3). OR to LSB of CME PIR (bit 31), bit 26 of CME Flag Register
-
-    l_cmePir = ((( l_cmePir << 1 ) & CME_INST_ID_MASK) | l_exId);     // get CME instance number
+    l_cmePir = ((( l_cmePir << 1 ) & CME_INST_ID_MASK) | l_exId); // get CME instance number
 
     while(1)
     {
-        l_rc = checkCmeBlockCopyStatus( l_cmePir, PLAT_CME );
+        l_rc = checkCmeBlockCopyStatus(l_cmePir);
 
-        if( BLOCK_COPY_SUCCESS == l_rc )
+        if(BLOCK_COPY_SUCCESS == l_rc)
         {
             break;
         }
 
-        if( BLOCK_COPY_FAILED == l_rc )
+        if(BLOCK_COPY_FAILED == l_rc)
         {
-            PK_TRACE( "failed to copy instance specific scan ring on cme %d",
-                      l_cmePir );
+            PK_TRACE("failed to copy instance specific scan ring on cme %d",
+                     l_cmePir);
             break;
         }
     }

@@ -42,92 +42,62 @@
 #include "p9_hcd_block_copy.h"
 #include "cme_register_addresses.h"
 
-enum
-{
-    CME_PER_QUAD    = 0x0002,
-};
 
-//------------------------------------------------------------------------------------
-
-void initCmeBceBarAddr( uint8_t i_barIndex, uint64_t i_barRegData, uint8_t i_cmePos )
-{
-    uint32_t l_bceBarAddr = (i_barIndex == 0 ) ? SCOM_ADDR_BCEBAR0 : SCOM_ADDR_BCEBAR1;
-    uint64_t l_bceBarData = 0;
-    int rc = 0;
-
-    uint8_t l_quadId = i_cmePos >> 1;
-
-    l_bceBarAddr = SGPE_SCOM_ADDR( l_bceBarAddr, l_quadId, (i_cmePos % 2) );
-
-    l_bceBarData = ( i_barRegData & 0x00FFFFFFFFF00000); //To extract bitss 8:43 from the i_barRegData
-    l_bceBarData |= (ENABLE_WR_SCOPE | ENABLE_RD_SCOPE | BLOCK_COPY_SIZE_1MB );
-    PPE_PUTSCOM(l_bceBarAddr, l_bceBarData);        // set the source address for block copy
-
-}
 
 //------------------------------------------------------------------------------------
 
 void startCmeBlockCopy( uint64_t i_cmeStartBlk, uint32_t i_blockLength, uint32_t i_cmePos,
-                        InitiatorPlat_t i_plat, uint8_t i_barIndex, uint32_t i_mbaseVal )
+                        uint8_t i_barIndex, uint32_t i_mbaseVal )
 {
-    int rc = 0;
+
+#if defined(__PPE_CME) || defined(__PPE_SGPE)
 
     uint64_t l_bceStatusData = ((START_BLOCK_COPY)       |   // starts block copy operation
                                 (RD_FROM_HOMER_TO_SRAM)  |   // sets direction of copy HOMER to CME SRAM
-                                ((i_barIndex == 0) ? SEL_BCEBAR0 : SEL_BCEBAR1) | // BAR register to be used for accessing main memory base
+                                // BAR register to be used for accessing main memory base
+                                ((i_barIndex == 0) ? SEL_BCEBAR0 : SEL_BCEBAR1) |
                                 (SET_RD_PRIORITY_0)      |   // No priority set
                                 ((i_cmeStartBlk & 0x0000FFF ) << SBASE_SHIFT_POS) |  //copy page to this SRAM Block.
-                                (((uint64_t) i_blockLength & 0x00007FF) << NUM_BLK_SHIFT_POS ) | // number of blocks to be copied
+                                // number of blocks to be copied
+                                (((uint64_t) i_blockLength & 0x00007FF) << NUM_BLK_SHIFT_POS ) |
                                 (((uint64_t) i_mbaseVal & 0x00000000003FFFFF) ));
 
-    if( PLAT_CME == i_plat )
-    {
-        // for CME platform use local address for register BCECSR.
-        // using BCECSR SCOM address will not work as it is meant
-        // for entities external to CME.
-        uint32_t l_cmeBceAddr = CME_LCL_BCECSR;
-        out64( l_cmeBceAddr, l_bceStatusData );
-    }
-    else if( PLAT_SGPE == i_plat )
-    {
-        //getting quad id by dividing cme pos with 2
-        uint8_t l_quadId = i_cmePos >> 1;
+#endif
 
-        uint32_t l_sgpeBceAddr = SGPE_SCOM_ADDR( SCOM_ADDR_BCEBCSR, l_quadId,
-                                 (i_cmePos % 2) );
+#ifdef __PPE_CME
+    // for CME platform use local address for register BCECSR.
+    // using BCECSR SCOM address will not work as it is meant
+    // for entities external to CME.
+    out64(CME_LCL_BCECSR, l_bceStatusData);
+#endif
 
-        PPE_PUTSCOM(l_sgpeBceAddr, l_bceStatusData );
-    }
+#ifdef __PPE_SGPE
+    //getting quad id by dividing cme pos with 2
+    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_BCECSR, (i_cmePos >> 1), (i_cmePos % 2)), l_bceStatusData);
+#endif
 }
 
 //------------------------------------------------------------------------------------
 
-BceReturnCode_t checkCmeBlockCopyStatus( uint32_t i_cmePos, InitiatorPlat_t i_plat )
+BceReturnCode_t checkCmeBlockCopyStatus( uint32_t i_cmePos)
 {
     BceReturnCode_t l_bcRetCode = BLOCK_COPY_IN_PROGRESS;
 
     do
     {
         uint64_t l_bceStatusData = 0;
-        int rc = 0;
 
-        if( PLAT_CME == i_plat )
-        {
-            // for CME platform use local address for register BCECSR.
-            // using BCECSR SCOM address will not work as it is meant
-            // for entities external to CME.
-            uint32_t l_cmeBcelAddr = CME_LCL_BCECSR;
-            l_bceStatusData = in64(l_cmeBcelAddr);
-        }
-        else if( PLAT_SGPE == i_plat )
-        {
-            // getting quad id by dividing cme pos with 2
-            uint8_t l_quadId = i_cmePos >> 1;
+#ifdef __PPE_CME
+        // for CME platform use local address for register BCECSR.
+        // using BCECSR SCOM address will not work as it is meant
+        // for entities external to CME.
+        l_bceStatusData = in64(CME_LCL_BCECSR);
+#endif
 
-            uint32_t l_sgpeBceAddr = SGPE_SCOM_ADDR( SCOM_ADDR_BCEBCSR, l_quadId, (i_cmePos % 2) );
-            // SGPE reading block copy engine status of CME
-            PPE_GETSCOM(l_sgpeBceAddr, l_bceStatusData);
-        }
+#ifdef __PPE_SGPE
+        // SGPE reading block copy engine status of CME
+        GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_BCECSR, (i_cmePos >> 1), (i_cmePos % 2)), l_bceStatusData);
+#endif
 
         if( CHECK_ERROR & l_bceStatusData )     // checking if block copy engine reported an error.
         {

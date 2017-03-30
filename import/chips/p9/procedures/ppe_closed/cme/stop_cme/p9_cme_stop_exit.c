@@ -458,7 +458,7 @@ p9_cme_stop_exit()
     PK_TRACE_DBG("Core Ensure Pcb Mux");
     p9_cme_acquire_pcbmux(core, 1);
 
-    PK_TRACE_INF("SX2.A: Start Core Clock");
+    PK_TRACE_INF("SX.2A: Core[%d] Start Clock", core);
     p9_hcd_core_startclocks(core);
 
     PK_TRACE("Clear CPPM PECE shadow via PECES");
@@ -848,7 +848,7 @@ STOP1_EXIT:
 
 #endif
 
-    PK_TRACE_INF("Core Release PCB Mux via SICR[10/11]");
+    PK_TRACE_DBG("Core Release PCB Mux via SICR[10/11]");
     p9_cme_release_pcbmux(core);
 
     PK_TRACE("Update STOP history: STOP exit completed, core ready");

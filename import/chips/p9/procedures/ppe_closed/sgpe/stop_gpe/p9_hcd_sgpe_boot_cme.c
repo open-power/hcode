@@ -36,16 +36,11 @@
 enum
 {
     ZERO                        =   0,
-    MAX_CME_PER_CHIP            =   MAX_EXES,
     CHECK_BIT                   =   0x8000, // input vector is big endian
-    SCOM_ADDR_CME_FLAGS         =   0x10012020,
-    SCOM_ADDR_CME_FLAGS_CLR     =   SCOM_ADDR_CME_FLAGS + 1,
-    SCOM_ADDR_CME_FLAGS_SET     =   SCOM_ADDR_CME_FLAGS + 2,
     CPMR_POSITION               =   0x00200000,
     CME_IMG_HDR_OFFSET_POS      =   0x20,
     CME_HCODE_LEN_POS           =   0x24,
     CME_FLAG_SHIFT_POS          =   (63 - 31), // @bug: was 0x1E
-    SCOM_ADDR_CME_XCR           =   0x10012010,
     RESUME_PPE_OPERATION        =   0x2000000000000000ll,   // Resume PPE
     HARD_RESET_PPE              =   0x6000000000000000ll,   // Hard Reset PPE
     SBASE_FIRST_BLOCK_COPY      =   0,  // corresponds to address 0xFFFF8000
@@ -53,21 +48,14 @@ enum
     EVEN_CORE_ACTIVE            =   0x02,
     ODD_CORE_ACTIVE             =   0x01,
     BOTH_CORE_ACTIVE            =   0x03,
-    BCEBAR0                     =   0,
-    BCEBAR1                     =   1,
     SCOM_ADDR_CCSR              =   0x0006C090,
     CHECK_BIT_DWORD             =   0x8000000000000000ll,
     SET_ADDR_MSB                =   0x80000000,
     CME_STOP_READY              =   0x8000000000000000ll,
-    SCOM_ADDR_CORE_CPMMR        =   0x200F0106,
-    SCOM_ADDR_CORE_CPMMR_CLR    =   SCOM_ADDR_CORE_CPMMR + 1,
-    SCOM_ADDR_CORE_CPMMR_OR     =   SCOM_ADDR_CORE_CPMMR + 2,
     WKUP_NOTIFY_SELECT          =   0x0004000000000000,
     CME_BOOT_TIMEOUT            =   0x32,
     CME_BCE_TIMEOUT             =   0xB0,
     WRITE_CLR_ALL               =   0xFFFFFFFFF,
-    SCOM_ADDR_CME_FWMODE_CLR    =   0x1001203B,
-    SCOM_ADDR_CME_FWMODE_OR     =   0x1001203C,
     BCESCR_OVERRIDE_ENABLE      =   0x1000000000000000,
     CME_BLOCK_READ_SIZE         =   0x20,
 };
@@ -101,19 +89,16 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
 
     do
     {
-        int rc = 0;
         uint64_t l_dataReg = 0;
         uint64_t l_dataCCSR = 0;
-        PPE_GETSCOM(SCOM_ADDR_CCSR, l_dataCCSR);
+        GPE_GETSCOM(SCOM_ADDR_CCSR, l_dataCCSR);
 
         uint8_t l_corePos = 0;
         uint8_t l_cmeIndex = 0;
-        uint8_t activeCmeList[MAX_CME_PER_CHIP] = {ZERO};
+        uint8_t activeCmeList[MAX_CMES_PER_CHIP] = {ZERO};
         uint8_t activeCmeCnt = 0;
-        uint8_t quadId = 0;
-        uint32_t l_scomAddr = 0;
 
-        for( l_cmeIndex = 0; l_cmeIndex < MAX_CME_PER_CHIP; l_cmeIndex++ )
+        for( l_cmeIndex = 0; l_cmeIndex < MAX_CMES_PER_CHIP; l_cmeIndex++ )
         {
             // Step 1. Screen Valid CME for boot
 
@@ -153,16 +138,13 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                 continue;
             }
 
-            quadId = l_cmeIndex >> 1;
             activeCmeList[l_cmeIndex] = coreCnt;
 
             // core is available and CME can attempt to boot it.
             // From SGPE platform, let us first get control of Block copy engine.
-            l_scomAddr = SGPE_SCOM_ADDR( SCOM_ADDR_CME_FWMODE_OR, //FWMODE -> LMCR
-                                         quadId,
-                                         (l_cmeIndex % 2));
-
-            PPE_PUTSCOM( l_scomAddr, BCESCR_OVERRIDE_ENABLE ); //Disables BCE access via CME's Local register.
+            // Disables BCE access via CME's Local register.
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR,
+                                          (l_cmeIndex >> 1), (l_cmeIndex % 2)), BCESCR_OVERRIDE_ENABLE);
 
 
             // -----------------------------------------------------------------
@@ -178,15 +160,16 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
             //of chip' HOMER. This offset is updated in a specific field of
             //CPMR Header area of chip's HOMER. Let us read that field and
             //find out the offset.
-            PK_TRACE("SCOM addr Pbabar0: 0x%x", SCOM_ADDR_PBABAR0);
             uint64_t l_cpmrAddr = 0;
-            PPE_GETSCOM(SCOM_ADDR_PBABAR0, l_cpmrAddr); // get start of HOMER for the chip.
+            GPE_GETSCOM(PBA_BAR0, l_cpmrAddr); // get start of HOMER for the chip.
             l_cpmrAddr += CPMR_POSITION; // offset to CPMR
 
             //Reading CPMR header to determine :
             //1. start of CME Image
             //2. Length of first block copy
-            HomerImgDesc_t* pCpmrHdrAddr = (HomerImgDesc_t*)(CPMR_POSITION | SET_ADDR_MSB);   // Set MSB to point OCI to PBA
+            //Set MSB to point OCI to PBA
+            HomerImgDesc_t* pCpmrHdrAddr = (HomerImgDesc_t*)(CPMR_POSITION | SET_ADDR_MSB);
+
             PK_TRACE("Magic Number [ 0:31]: 0x%08x", ((pCpmrHdrAddr->cpmrMagicWord & 0xffffffff00000000) >> 32));
             PK_TRACE("Magic Number [32:63]: 0x%08x", ((pCpmrHdrAddr->cpmrMagicWord & 0x00000000ffffffff)));
 
@@ -226,7 +209,9 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
             // update BCEBAR0 with start of CME hcode region
             // update BCEBAR1 with start of CME's instance specific ring region
 
-            initCmeBceBarAddr( BCEBAR0, l_cpmrAddr, l_cmeIndex );
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_BCEBAR0, (l_cmeIndex >> 1), (l_cmeIndex % 2)),
+                        ((l_cpmrAddr & 0x00FFFFFFFFF00000) |
+                         (ENABLE_WR_SCOPE | ENABLE_RD_SCOPE | BLOCK_COPY_SIZE_1MB)));
 
             // -----------------------------------------------------------------
             // -----------------------------------------------------------------
@@ -234,7 +219,9 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
             // -----------------------------------------------------------------
             // -----------------------------------------------------------------
 
-            initCmeBceBarAddr( BCEBAR1, l_cpmrAddr , l_cmeIndex );
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_BCEBAR1, (l_cmeIndex >> 1), (l_cmeIndex % 2)),
+                        ((l_cpmrAddr & 0x00FFFFFFFFF00000) |
+                         (ENABLE_WR_SCOPE | ENABLE_RD_SCOPE | BLOCK_COPY_SIZE_1MB)));
 
             // -----------------------------------------------------------------
             // -----------------------------------------------------------------
@@ -244,8 +231,8 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
             PK_TRACE("Before startCmeBlockCopy l_blockCopyLength in bytes 0x%08x l_cmeIndex: %d l_hdrToSectionOffset 0x%x",
                      l_blockCopyLength, l_cmeIndex, l_hdrToSectionOffset);
 
-            startCmeBlockCopy( SBASE_FIRST_BLOCK_COPY, l_blockCopyLength, l_cmeIndex,
-                               PLAT_SGPE, 0, l_hdrToSectionOffset  );
+            startCmeBlockCopy(SBASE_FIRST_BLOCK_COPY, l_blockCopyLength,
+                              l_cmeIndex, BAR_INDEX_0, l_hdrToSectionOffset);
 
             activeCmeCnt++;
             PK_TRACE("activeCmeCnt: %d", activeCmeCnt);
@@ -268,7 +255,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
         while(cmeInitSuccessCnt != activeCmeCnt)
         {
             // we have started first block copy for every functional CME. Let us check if block copy is done or not.
-            for( l_cmeIndex = 0; l_cmeIndex < MAX_CME_PER_CHIP; l_cmeIndex++ )
+            for( l_cmeIndex = 0; l_cmeIndex < MAX_CMES_PER_CHIP; l_cmeIndex++ )
             {
                 // check if block copy was started on this CME.
                 if( INACTIVE_CORE == activeCmeList[l_cmeIndex] )
@@ -285,7 +272,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                     continue;
                 }
 
-                l_copyStatus = checkCmeBlockCopyStatus( l_cmeIndex, PLAT_SGPE );
+                l_copyStatus = checkCmeBlockCopyStatus( l_cmeIndex );
 
                 if(BLOCK_COPY_IN_PROGRESS == l_copyStatus )
                 {
@@ -303,7 +290,6 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                 }
 
                 l_retCode = BLOCK_COPY_SUCCESS; // atleast one CME's block copy engine was success.
-                quadId = (l_cmeIndex >> 1);
 
                 // -----------------------------------------------------------------
                 // -----------------------------------------------------------------
@@ -320,23 +306,20 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                 // SGPE now should release the control of block copy engine.
                 // Once it kicks off CME, during its initialization, CME will try to block
                 // copy its instance specific scan rings. For that to succeed, SGPE must clear
-                // BCECSR_OVERRIDE_EN bit in CME_FWMODE register.
+                // BCECSR_OVERRIDE_EN bit in CME_LMCR register.
 
-                l_scomAddr = SGPE_SCOM_ADDR( SCOM_ADDR_CME_FWMODE_CLR,
-                                             quadId,
-                                             (l_cmeIndex % 2));
-                PPE_PUTSCOM( l_scomAddr, BCESCR_OVERRIDE_ENABLE ); // release control back to local CME BCECSR
+                // release control back to local CME BCECSR
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR,
+                                              (l_cmeIndex >> 1), (l_cmeIndex % 2)), BCESCR_OVERRIDE_ENABLE);
 
                 //Writing to CME's XCR to Hard Reset it
-                l_scomAddr = SGPE_SCOM_ADDR(SCOM_ADDR_CME_XCR,
-                                            quadId,
-                                            (l_cmeIndex % 2));
-
-                PPE_PUTSCOM( l_scomAddr, HARD_RESET_PPE );
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR,
+                                              (l_cmeIndex >> 1), (l_cmeIndex % 2)), HARD_RESET_PPE);
 
                 // Kick off CME by giving resume command through PPE External Control Register
                 // Writing to XCR to resume PPE operation
-                PPE_PUTSCOM( l_scomAddr, RESUME_PPE_OPERATION );
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR,
+                                              (l_cmeIndex >> 1), (l_cmeIndex % 2)), RESUME_PPE_OPERATION);
                 cmeInitSuccessCnt++;
                 cmeBootedList = cmeBootedList | l_cmeBootedBit;
 
@@ -345,11 +328,11 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
             PPE_WAIT_CORE_CYCLES(256);
         } //while(l_bceCnt != activeCmeCnt)
 
-        PK_TRACE("BCE done and resume scom_addr: 0x%08x", l_scomAddr);
+        PK_TRACE("BCE Done");
 
         // -----------------------------------------------------------------
         // -----------------------------------------------------------------
-        // Step 7, 8,9 is accomplished on CME platform
+        // Step 7, 8, 9 is accomplished on CME platform
         // -----------------------------------------------------------------
         // -----------------------------------------------------------------
 
@@ -367,7 +350,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
 
             while(l_cmeRdyCnt != activeCmeCnt)
             {
-                for( l_cmeIndex = 0; l_cmeIndex < MAX_CME_PER_CHIP; l_cmeIndex++ )
+                for( l_cmeIndex = 0; l_cmeIndex < MAX_CMES_PER_CHIP; l_cmeIndex++ )
                 {
                     if( INACTIVE_CORE == activeCmeList[l_cmeIndex] )
                     {
@@ -383,12 +366,8 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                     }
 
                     //Read CME Flag register to check STOP RDY
-                    quadId = (l_cmeIndex >> 1);
-                    l_scomAddr = SGPE_SCOM_ADDR( SCOM_ADDR_CME_FLAGS,
-                                                 quadId,
-                                                 (l_cmeIndex % 2) );
-
-                    PPE_GETSCOM( l_scomAddr, l_dataReg );
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS,
+                                                  (l_cmeIndex >> 1), (l_cmeIndex % 2)), l_dataReg);
 
                     if (!(l_dataReg & CME_STOP_READY))
                     {
