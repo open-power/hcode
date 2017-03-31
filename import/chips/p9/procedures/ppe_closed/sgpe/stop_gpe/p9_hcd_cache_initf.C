@@ -41,6 +41,8 @@ extern "C" void p9_hcd_cache_initf(uint32_t quad)
 
     FAPI_DBG("Scan eq_fure ring");
     FAPI_TRY(fapi2::putRing(l_eqTarget, eq_fure));
+    FAPI_DBG("Scan eq_inex ring");
+    FAPI_TRY(fapi2::putRing(l_eqTarget, eq_inex));
 
     for (auto l_ex_target : l_eqTarget.getChildren<fapi2::TARGET_TYPE_EX>())
     {
