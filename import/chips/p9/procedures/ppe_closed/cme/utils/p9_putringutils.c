@@ -250,45 +250,116 @@ void queuedScan(enum CME_CORE_MASKS i_core,
     while(0);
 }
 
+int setScanRegion( uint32_t i_scanAddr, enum CME_CORE_MASKS i_core, enum rs4Type_t i_rs4Type)
+{
+    int rc = 0;
+
+    do
+    {
+        uint64_t l_scanRegion = decodeScanRegionData(i_scanAddr);
+
+        if (!l_scanRegion)
+        {
+            PK_TRACE_INF("No data in RS4 container so coming out");
+            rc = 1;
+            break;
+        }
+
+        if( STUMPED_RING == i_rs4Type )
+        {
+            //After scanning a CMSK Ring, when we scan RS4 accompanying it,
+            //MSB of the scan region must be set. This ensures that mask bits
+            //are init to 0 and are not part of the scan chain.
+            uint64_t temp = 0x01;
+            temp = temp << 63;
+            l_scanRegion |= temp;
+        }
+
+        // Set up the scan region for the ring.
+        CME_PUTSCOM(0x00030005, i_core, l_scanRegion);
+    }
+    while(0);
+
+    return rc;
+}
 
 /// @brief Function to decompress the RS4 and apply the Ring data
 //  @param[in] i_core - core select value
 //  @param[in] i_scom_op - scom control value like queue/non-queue
 /// @param[in] i_rs4 The RS4 compressed string
+/// @param[in] i_applyOverride- 0 (no override) 1 (override mode)
+/// @param[in] i_rs4Type type of RS4 package
 int rs4DecompressionSvc(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,
     uint8_t* i_rs4,
-    uint8_t i_applyOverride)
+    uint8_t i_applyOverride,
+    enum rs4Type_t i_rs4Type )
 {
-    CompressedScanData* l_rs4Header = (CompressedScanData*) i_rs4;
-    uint8_t* l_rs4Str = (i_rs4 + sizeof(CompressedScanData));
 
     enum opType_t l_opType = ROTATE;
     enum opType_t l_opValue = ROTATE;
     uint32_t l_nibbleIndx = 0;
     uint32_t l_bitsDecoded = 0;
-    uint32_t l_scanAddr = rs4_revle32(l_rs4Header->iv_scanAddr);
-    uint16_t l_ringId = l_rs4Header->iv_ringId;
-    uint64_t l_scanRegion = decodeScanRegionData(l_scanAddr);
+    uint16_t l_ringId = 0;
     uint32_t l_scanData = 0;
     uint8_t l_mask = 0x08;
     uint64_t l_scomData = 0;
 
+    uint8_t* l_rs4Str = 0;
+    CompressedScanData* l_rs4Header = NULL;
+
+
     do
     {
-        if (!l_scanRegion)
+        //Note: It is a ring with CMSK. This ring needs to be scanned differently
+        //Below are the steps :
+        //(1). To Common Ring Base, add 2B TOR offset. This will take us to
+        //     base of the ring container. Call it A
+        //(2). Add to A size of Rs4v3 Header. This will take us to end of
+        //     RS4V3 Header meant for the ring. Call it B.
+        //(3). At B, begins RSv3 header meant for CMSK ring. Read it's iv_size field.
+        //     Call it C.
+        //(4). By construction, we know RS4 for ring will be at address
+        //     B + C, whereas CMSK RS4 is at B + size of CMSK Ring Header.
+        //
+        //-------------------------------------------  A
+        //          Stumped Ring RS4v3 Header
+        //-------------------------------------------  B  --
+        //          CMSK RS4v3 Header                     |
+        //-------------------------------------------     | --> C
+        //          CMSK Ring Payload                     |
+        //-------------------------------------------  D  --
+        //          Stumped Ring Payload
+        //-------------------------------------------
+
+        if( REGULAR == i_rs4Type )
         {
-            PK_TRACE_INF("No data in RS4 container so coming out");
+            l_rs4Header = (CompressedScanData*) i_rs4;
+            l_rs4Str = i_rs4 + sizeof(CompressedScanData);  //Calculating location 'B'
+        }
+        else if( CMSK == i_rs4Type )
+        {
+            l_rs4Header = (CompressedScanData*)(i_rs4 + sizeof( CompressedScanData ));
+            l_rs4Str = i_rs4 + (2 * sizeof( CompressedScanData ));
+        }
+        else    //Stumped Ring
+        {
+            l_rs4Header = (CompressedScanData*) i_rs4;
+            CompressedScanData* l_cmskHeader = ( CompressedScanData*) ( i_rs4 + sizeof(CompressedScanData) );
+            l_rs4Str = i_rs4 + sizeof(CompressedScanData) + l_cmskHeader->iv_size;   //Calculating location 'D'
+        }
+
+        uint32_t l_scanAddr = rs4_revle32(l_rs4Header->iv_scanAddr);
+        l_ringId = l_rs4Header->iv_ringId;
+
+        if ( setScanRegion( l_scanAddr, i_core, i_rs4Type) )
+        {
             break;
         }
 
-        // Set up the scan region for the ring.
-        CME_PUTSCOM(0x00030005, i_core, l_scanRegion);
-
         // Write a 64 bit value for header.
         CME_PUTSCOM(0x0003E000, i_core, 0xa5a5a5a5a5a5a5a5);
-
 
         // Decompress the RS4 string and scan
         do
@@ -551,5 +622,5 @@ int rs4DecompressionSvc(
     }
     while(0);
 
-    return 1;
+    return 0;
 }

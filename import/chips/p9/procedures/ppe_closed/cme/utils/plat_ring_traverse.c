@@ -26,7 +26,15 @@
 #include "plat_ring_traverse.h"
 #include "p9_ringid_cme.h"
 #include "p9_cme_stop.h"
+#include "p9_scan_compression.H"
+#include "p9_putringutils.h"
 
+enum
+{
+    RING_TYPE_OFFSET    =   3,
+    RING_SIZE_OFFSET    =   4,
+    CMSK_SUPPORTED      =   1,
+};
 
 void getRingProperties(const RingID i_ringId,
                        uint32_t* o_torOffset,
@@ -128,13 +136,26 @@ int putRing(
             // TOR records of Ring TOR are 2 bytes in size.
             l_ringTorAddr = (uint16_t*)(l_sectionAddr) + (l_torOffset);
 
+
         }
 
         if((l_ringTorAddr) && (*l_ringTorAddr != 0))
         {
             uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
             uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
-            l_rc = rs4DecompressionSvc(i_core, l_scomOp, l_rs4Address, 0);
+            enum rs4Type_t rs4Type;
+            rs4Type = REGULAR;
+
+            if( CMSK_SUPPORTED == *( l_rs4Address + RING_TYPE_OFFSET ) )
+            {
+                //if a CMSK is supported, First scan CMSK ring
+                rs4DecompressionSvc( i_core, l_scomOp, l_rs4Address, 0, CMSK );
+                rs4Type = STUMPED_RING;
+            }
+
+
+            //This RS4 can be a STUMP ring or a regular RS4
+            rs4DecompressionSvc( i_core, l_scomOp, l_rs4Address, 0, rs4Type );
         }
         else
         {
@@ -156,8 +177,8 @@ int putRing(
             if((l_ringTorAddr) && (*l_ringTorAddr != 0))
             {
                 uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
-                uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr);
-                l_rc = rs4DecompressionSvc(i_core, l_scomOp, l_rs4Address, 1);
+                uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr );
+                l_rc = rs4DecompressionSvc(i_core, l_scomOp, l_rs4Address, 1, REGULAR );
             }
             else
             {

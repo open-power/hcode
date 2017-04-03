@@ -87,7 +87,6 @@ uint64_t rs4_get_verbatim(const uint8_t* i_rs4Str,
 // Constants and Structures
 //
 
-
 #define SIXTYFOUR_BIT_HEADER 64
 
 /// @brief Constants for operations performed by putRing function.
@@ -95,6 +94,14 @@ enum opType_t
 {
     ROTATE = 0,  ///< Indicates a Rotate operation on the ring
     SCAN = 1     ///< Indicates a Scan operation on the ring
+};
+
+/// @brief  Various RS4 packages CME putring expects
+enum rs4Type_t
+{
+    REGULAR             =   0x00,   //Regular RS4
+    CMSK                =   0x01,   //CMSK RS4
+    STUMPED_RING        =   0x02    //Stumped Ring
 };
 
 //
@@ -130,12 +137,13 @@ int verifyHeader(enum CME_CORE_MASKS i_core,
 /// @param[in] i_scom_op - scom control value like queue/non-queue
 /// @param[in] i_rs4 The RS4 compressed string
 /// @param[in] i_applyOverride- 0 (no override) 1 (override mode)
-/// @param[in] i_ringID - for debug if the header check fails
+/// @param[in] i_rs4Type  RS4 package type e.g. CMSK, STUMPED etc
 int rs4DecompressionSvc(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,
     uint8_t* i_rs4,
-    uint8_t i_applyOverride);
+    uint8_t i_applyOverride,
+    enum rs4Type_t i_rs4Type );
 
 
 #endif

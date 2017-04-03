@@ -28,7 +28,6 @@
 
 #include "p9_putringutils.h" // for RS4 decompression utilities
 
-
 ///
 /// @brief This is a plat specific (CME) function that locates the
 ///        Ring Container in the image and calls the functin to decompress the
