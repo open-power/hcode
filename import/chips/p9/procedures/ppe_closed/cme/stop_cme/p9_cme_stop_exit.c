@@ -288,8 +288,10 @@ void p9_cme_stop_exit_lv2(uint32_t core)
     // do this after assert glsmux so glitch can have time to resolve
     // catchup to stop2 exit will acquire here
 
-#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+#if HW405292_NDD1_PCBMUX_SAVIOR
+
     p9_cme_pcbmux_savior_prologue(core);
+
 #endif
 
     PK_TRACE("SX.20: Request PCB mux via SICR[10/11]");
@@ -301,12 +303,9 @@ void p9_cme_stop_exit_lv2(uint32_t core)
 
     PK_TRACE("SX.20: PCB Mux Granted on Core[%d]", core);
 
-#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+#if HW405292_NDD1_PCBMUX_SAVIOR
 
-    if (1)
-    {
-        p9_cme_pcbmux_savior_epilogue(core);
-    }
+    p9_cme_pcbmux_savior_epilogue(core);
 
 #endif
 
@@ -606,8 +605,10 @@ p9_cme_stop_exit()
             // Can't do the read of cplt_stat after flipping the mux before the core is powered on
             // catchup to stop4 exit will acquire here
 
-#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+#if HW405292_NDD1_PCBMUX_SAVIOR
+
             p9_cme_pcbmux_savior_prologue(core);
+
 #endif
 
             PK_TRACE("SX.40: Request PCB mux via SICR[10/11]");
@@ -619,14 +620,7 @@ p9_cme_stop_exit()
 
             PK_TRACE("SX.40: PCB Mux Granted on Core[%d]", core);
 
-#ifdef HW405292_NDD1_PCBMUX_SAVIOR
-
-            if (0)
-            {
-                p9_cme_pcbmux_savior_epilogue(core);
-            }
-
-#endif
+            // Note: in this case, no need to call p9_cme_pcbmux_savior_epilogue
 
             //========================
             MARK_TAG(SX_POWERON, core)
