@@ -55,15 +55,6 @@ extern CmeStopRecord G_cme_stop_record;
 void prepare_for_ramming (uint32_t core)
 {
     uint64_t        scom_data;
-    PK_TRACE("LPID Assert block interrupt to PC via SICR[2/3]");
-    out32(CME_LCL_SICR_OR, core << SHIFT32(3));
-
-    PK_TRACE("LPID Waking up the core(pm_exit=1) via SICR[4/5]");
-    out32(CME_LCL_SICR_OR, core << SHIFT32(5));
-
-    PK_TRACE("LPID Polling for core wakeup(pm_active=0) via EINR[20/21]");
-
-    while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
     // Now core thinks its awake and ramming is allowed
     PK_TRACE("RAMMING Put in core maintenance mode via direct controls");
@@ -178,26 +169,15 @@ void turn_off_ram_mode (uint32_t core)
     PK_TRACE("LPID Clear core maintenance mode via direct controls");
     CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27)));
 
-    PK_TRACE("LPID Drop pm_exit via SICR[4/5]");
-    out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
-
-    PK_TRACE("LPID Polling for core to stop(pm_active=1) via EINR[20/21]");
-
-    while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)));
-
-    PK_TRACE("LPID Clear pm_active status via EISR[20/21]");
-    out32(CME_LCL_EISR_CLR, core << SHIFT32(21));
-
-    PK_TRACE("LPID Drop block interrupt to PC via SICR[2/3]");
-    out32(CME_LCL_SICR_CLR, core << SHIFT32(3));
-
+    PK_TRACE("LPID Wait for 8K Core Cycles");
+    PPE_WAIT_CORE_CYCLES(8000);
 }
 
 #endif
 
 
 
-#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+#if HW405292_NDD1_PCBMUX_SAVIOR
 
 void p9_cme_pcbmux_savior_prologue(uint32_t core)
 {
@@ -391,6 +371,8 @@ p9_cme_stop_entry()
             PK_TRACE("+++++ +++++ STOP LEVEL 1 ENTRY +++++ +++++");
             //----------------------------------------------------------------------
 
+            // Note: Only Stop1 requires pulsing entry ack to pc,
+            //       thus this is NDD1 only as well.
             PK_TRACE("Pulse STOP entry acknowledgement to PC via SICR[0/1]");
             out32(CME_LCL_SICR_OR,  core_stop1 << SHIFT32(1));
             out32(CME_LCL_SICR_CLR, core_stop1 << SHIFT32(1));
@@ -422,8 +404,10 @@ p9_cme_stop_entry()
         PK_TRACE("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
         //----------------------------------------------------------------------
 
-#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+#if HW405292_NDD1_PCBMUX_SAVIOR
+
         p9_cme_pcbmux_savior_prologue(core);
+
 #endif
 
         PK_TRACE("Request PCB mux via SICR[10/11]");
@@ -435,18 +419,11 @@ p9_cme_stop_entry()
 
         PK_TRACE("PCB Mux Granted on Core[%d]", core);
 
-#ifdef HW405292_NDD1_PCBMUX_SAVIOR
+#if HW405292_NDD1_PCBMUX_SAVIOR
 
-        if (1)
-        {
-            p9_cme_pcbmux_savior_epilogue(core);
-        }
+        p9_cme_pcbmux_savior_epilogue(core);
 
 #endif
-
-        PK_TRACE("Pulse STOP entry acknowledgement to PC via SICR[0/1]");
-        out32(CME_LCL_SICR_OR,  core << SHIFT32(1));
-        out32(CME_LCL_SICR_CLR, core << SHIFT32(1));
 
         // set target_level from pm_state for both cores or just one core
         target_level = (core == CME_MASK_C0) ? G_cme_stop_record.req_level[0] :
@@ -488,9 +465,23 @@ p9_cme_stop_entry()
         PK_TRACE_DBG("Check: core[%d] target_lv[%d] deeper_lv[%d] deeper_core[%d]",
                      core, target_level, deeper_level, deeper_core);
 
+        // Permanent workaround for HW407385
+
+        PK_TRACE("HW407385: Assert block interrupt to PC via SICR[2/3]");
+        out32(CME_LCL_SICR_OR, core << SHIFT32(3));
+
+        PK_TRACE("HW407385: Waking up the core(pm_exit=1) via SICR[4/5]");
+        out32(CME_LCL_SICR_OR, core << SHIFT32(5));
+
+        PK_TRACE("HW407385: Polling for core wakeup(pm_active=0) via EINR[20/21]");
+
+        while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
+
+        // end of HW407385
+
 #if HW402407_NDD1_TLBIE_STOP_WORKAROUND
 
-// Save thread's LPIDs and overwrite with POWMAN_RESERVED_LPID
+        // Save thread's LPIDs and overwrite with POWMAN_RESERVED_LPID
         prepare_for_ramming(core);
 
         for (thread = 0; thread < 4; thread++ )
@@ -541,10 +532,8 @@ p9_cme_stop_entry()
             }
         }
 
-//        turn_off_ram_mode (core);
-
-
 #endif // tlbie stop workaround
+
 
         PK_TRACE_INF("SE.2A: Core[%d] PCB Mux Granted", core);
 
@@ -577,11 +566,10 @@ p9_cme_stop_entry()
 
         PK_TRACE_INF("SE.2B: Interfaces Quiesced");
 
+
 #if HW402407_NDD1_TLBIE_STOP_WORKAROUND
 
-// Restore thread's LPIDs
-
-//       prepare_for_ramming(core);
+        // Restore thread's LPIDs
 
         for (thread = 0; thread < 4; thread++ )
         {
@@ -623,8 +611,24 @@ p9_cme_stop_entry()
 #endif
         turn_off_ram_mode (core);
 
-
 #endif // tlbie stop workaround
+
+        // Permanent workaround for HW407385
+
+        PK_TRACE("HW407385: Drop pm_exit via SICR[4/5]");
+        out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
+
+        PK_TRACE("HW407385: Polling for core to stop(pm_active=1) via EINR[20/21]");
+
+        while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)));
+
+        PK_TRACE("HW407385: Clear pm_active status via EISR[20/21]");
+        out32(CME_LCL_EISR_CLR, core << SHIFT32(21));
+
+        PK_TRACE("HW407385: Drop block interrupt to PC via SICR[2/3]");
+        out32(CME_LCL_SICR_CLR, core << SHIFT32(3));
+
+        // end of HW407385
 
         //==========================
         MARK_TRAP(SE_STOP_CORE_CLKS)
