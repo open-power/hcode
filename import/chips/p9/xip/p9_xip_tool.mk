@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -24,7 +24,7 @@
 # IBM_PROLOG_END_TAG
 EXE = p9_xip_tool
 OBJS += $(EXE).o
-$(EXE)_DEPLIBS += p9_xip_image p9_tor p9_ringId cen_ringId p9_scan_compression p9_dd_container
+$(EXE)_DEPLIBS += p9_xip_image common_ringId p9_tor p9_ringId cen_ringId p9_scan_compression p9_dd_container
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/utils/imageProcs)
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/centaur/utils/imageProcs)
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/common/utils/imageProcs)
