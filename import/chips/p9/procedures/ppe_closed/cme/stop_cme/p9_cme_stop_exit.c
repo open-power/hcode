@@ -503,7 +503,7 @@ p9_cme_stop_exit()
         PK_TRACE_INF("SX.1A: Core[%d] Requested Stop1 Exit", core_stop1);
         p9_cme_stop_exit_end(core_stop1, spwu_stop);
 
-        core = core & ~core_stop1;
+        core = core - core_stop1;
 
         if (!core)
         {
@@ -556,6 +556,8 @@ p9_cme_stop_exit()
 
     if (target_level == STOP_LEVEL_2)
     {
+        core = core - deeper_core;
+
         p9_cme_stop_exit_lv2(core);
 
         PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
@@ -796,7 +798,7 @@ p9_cme_stop_exit()
         MARK_TAG(SX_SCOM_INITS, core)
         //===========================
 
-        PK_TRACE_INF("SX4.G: Core[%d] Scom Inits", core);
+        PK_TRACE_INF("SX.4G: Core[%d] Scom Inits", core);
         p9_hcd_core_scominit(core);
 
         //==========================

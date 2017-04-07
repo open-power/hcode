@@ -293,7 +293,7 @@ p9_sgpe_stop_entry()
         PK_TRACE("+++++ +++++ EX STOP ENTRY [LEVEL 8-10] +++++ +++++");
         // ------------------------------------------------------------------------
 
-        PK_TRACE_INF("SX.8A: Quad[%d] EX_L2[%d] Stopping L2 Clocks", qloop, ex);
+        PK_TRACE_INF("SE.8A: Quad[%d] EX_L2[%d] Stopping L2 Clocks", qloop, ex);
 
         PK_TRACE("Acquire cache clock controller atomic lock");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), BITS64(0, 5));
@@ -532,7 +532,7 @@ p9_sgpe_stop_entry()
             ex |= SND_EX_IN_QUAD;
         }
 
-        PK_TRACE_INF("SX.11A: Quad[%d] EX_PG[%d] Shutting Cache Down", qloop, ex);
+        PK_TRACE_INF("SE.11A: Quad[%d] EX_PG[%d] Shutting Cache Down", qloop, ex);
 
         PK_TRACE("Acquire cache PCB slave atomic lock");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), BITS64(0, 5));

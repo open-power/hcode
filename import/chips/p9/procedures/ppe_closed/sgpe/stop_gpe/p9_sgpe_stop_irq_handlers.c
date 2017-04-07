@@ -225,7 +225,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             }
 
             PK_TRACE_INF("Core[%d] Type2 Payload [%x] Type3 Payload [%x]",
-                         cloop, cpayload_t2, cpayload_t3);
+                         ((qloop << 2) + cloop), cpayload_t2, cpayload_t3);
 
             GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
                                            ((qloop << 2) + cloop)), scom_data);
@@ -276,7 +276,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                     PK_PANIC(SGPE_PIG_TYPE2_ENTRY_WNS_CME);
                 }
 
-                PK_TRACE_INF("Core[%d] Request Entry via Type2", cloop);
+                PK_TRACE_INF("Core Request Entry via Type2");
                 G_sgpe_stop_record.level[qloop][cloop] =
                     (cpayload_t2 & TYPE2_PAYLOAD_STOP_LEVEL);
                 G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
@@ -291,7 +291,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                     PK_PANIC(SGPE_PIG_TYPE3_ENTRY_WNS_CME);
                 }
 
-                PK_TRACE_INF("Core[%d] Request Entry via Type3", cloop);
+                PK_TRACE_INF("Core Request Entry via Type3");
                 G_sgpe_stop_record.level[qloop][cloop] =
                     (cpayload_t3 & TYPE2_PAYLOAD_STOP_LEVEL);
                 G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
@@ -315,7 +315,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                 }
                 else
                 {
-                    PK_TRACE_INF("Core[%d] Request Exit", cloop);
+                    PK_TRACE_INF("Core Request Exit");
 
                     if (cloop < CORES_PER_EX)
                     {
