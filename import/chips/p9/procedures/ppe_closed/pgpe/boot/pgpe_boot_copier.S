@@ -112,10 +112,9 @@ copy_loop:
     addi   GPR_BL_SRAM_ADDR, GPR_BL_SRAM_ADDR, NXT_BLK_OFF    # Increasing Dest address
     bdnz   copy_loop    # Keep repeating the address.
 
-    ##FIXME 167543  Shall be uncommented when availability of memory based system improves
-    ## Write the success status "CP" to PPMR header
-    ##_liw   %GPR_STAT_ADDR, BCPASS_STAT
-    ##stw   GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_ADDR)
+    ## Write the success status "BC-S" to PPMR header
+    _liw   %GPR_STAT_ADDR, PGPE_BOOT_COPY_SUCCESS
+    stw   GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_ADDR)
 
 BRANCH:
     ## branch to the system_reset location for bootLoader to be executed
@@ -123,10 +122,9 @@ BRANCH:
     mtlr   GPR_TEMP
     blr
 
-    ## Write the failure status "CF" to PPMR header
+    ## Write the failure status "BC-F" to PPMR header
 BCFAIL:
-    ##FIXME 167543  Shall be uncommented when availability of memory based system improves
-    ##_liw  %GPR_STAT_ADDR, BCFAIL_STAT
-    ##stw   GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_ADDR)
+    _liw  %GPR_STAT_ADDR, PGPE_BOOT_COPIER_FAIL
+    stw   GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_ADDR)
     trap
     .epilogue __bootCopier

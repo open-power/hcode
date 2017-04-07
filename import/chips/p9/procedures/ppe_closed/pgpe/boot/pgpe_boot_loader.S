@@ -151,10 +151,9 @@ payload_copy_loop:
         addi GPR_SRAM_PGPE_ADDR, GPR_SRAM_PGPE_ADDR, NXT_BLK_OFF
         bdnz payload_copy_loop
 
-        ##FIXME 167543  Shall be uncommented when availability of memory based system improves
-        ## Write the success status "LP" to PPMR header
-        ##_liw   %GPR_STAT_ADDR, BLPASS_STAT
-        ##stw  GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_HOMER_ADDR)
+        ## Write the success status "BL-S" to PPMR header
+        _liw   %GPR_STAT_ADDR, PGPE_BOOT_LOADER_SUCCESS
+        stw  GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_HOMER_ADDR)
 
         ######################
         ## Char Image Copy
@@ -205,10 +204,9 @@ branch:
         stw     GPR_PPMR_HOMER_ADDR, OFFSET(GPR_ADDR_PAYLOAD_HOMER)
         blr
 
-        //Write the failure status "LF" to PPMR header
+        //Write the failure status "BL-F" to PPMR header
 BLFAIL:
-        ##FIXME 167543  Shall be uncommented when availability of memory based system improves
-        ##_liw  %GPR_STAT_ADDR, BLFAIL_STAT
-        ##stw   GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_HOMER_ADDR)
+        _liw  %GPR_STAT_ADDR, PGPE_BOOT_LOADER_FAIL
+        stw   GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_HOMER_ADDR)
         trap
         .epilogue __bootLoader
