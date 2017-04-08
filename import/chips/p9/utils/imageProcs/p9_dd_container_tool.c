@@ -1,0 +1,356 @@
+/* IBM_PROLOG_BEGIN_TAG                                                   */
+/* This is an automatically generated prolog.                             */
+/*                                                                        */
+/* $Source: import/chips/p9/utils/imageProcs/p9_dd_container_tool.c $     */
+/*                                                                        */
+/* OpenPOWER HCODE Project                                                */
+/*                                                                        */
+/* COPYRIGHT 2017                                                         */
+/* [+] International Business Machines Corp.                              */
+/*                                                                        */
+/*                                                                        */
+/* Licensed under the Apache License, Version 2.0 (the "License");        */
+/* you may not use this file except in compliance with the License.       */
+/* You may obtain a copy of the License at                                */
+/*                                                                        */
+/*     http://www.apache.org/licenses/LICENSE-2.0                         */
+/*                                                                        */
+/* Unless required by applicable law or agreed to in writing, software    */
+/* distributed under the License is distributed on an "AS IS" BASIS,      */
+/* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        */
+/* implied. See the License for the specific language governing           */
+/* permissions and limitations under the License.                         */
+/*                                                                        */
+/* IBM_PROLOG_END_TAG                                                     */
+
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <getopt.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "p9_dd_container.h"
+
+bool debug = false;
+
+#define DEBUG(_fmt_, _args_...)  \
+    if (debug)                   \
+    {                            \
+        printf(_fmt_, ##_args_); \
+    }
+
+enum commands
+{
+    COMMAND_UNDEF,
+    COMMAND_ADD,
+    COMMAND_GET,
+    COMMAND_LIST
+};
+
+const char* usage =
+    "adds DD level block to container, and creates container, if needed\n"
+    "\n"
+    "Usage:\n"
+    "  p9_dd_container_tool [options]\n"
+    "    --command add|get|list\n"
+    "    --dd    <num>         DD level number (hexadecimal)\n"
+    "    --block <file name>   DD level block to be added\n"
+    "    --cont  <file name>   DD level block container to be enlarged/shown\n"
+    "    --help                this information\n"
+    "    --debug               enable debug output\n"
+    "\n"
+    "Examples:\n"
+    "  p9_dd_container_tool\n"
+    "    --command add\n"
+    "    --dd      0x10\n"
+    "    --block   output/images/cme/p9n/dd10/cme.bin\n"
+    "    --cont    output/images/cme/hcode.bin\n"
+    "  p9_dd_container_tool\n"
+    "    --command get\n"
+    "    --cont    output/images/cme/hcode.bin\n"
+    "    --dd      0x10\n"
+    "  p9_dd_container_tool\n"
+    "    --command list\n"
+    "    --cont    output/images/cme/hcode.bin\n"
+    "\n"
+    "If the DD level container file already exists, the tool attempts\n"
+    "to add the new DD level block. Otherwise a new DD level container\n"
+    "is created and a new output file is written.\n"
+    "\n"
+    "The tool checks for duplicates. That means, a DD level block\n"
+    "is to be added is rejected if another block for the same DD\n"
+    "level number already exists.\n";
+
+static const struct option options[] =
+{
+    {"command", required_argument, NULL, 'c'},
+    {"dd",      required_argument, NULL, 'n'},
+    {"block",   required_argument, NULL, 'b'},
+    {"cont",    required_argument, NULL, 'o'},
+    {"help",    no_argument,       NULL, 'h'},
+    {"debug",   no_argument,       NULL, 'd'},
+};
+
+static const char* optionstr = "c:nbo:h:d";
+
+int p9_dd_tool_read(uint8_t** buf, uint32_t* size, char* fn, int mandatory)
+{
+    FILE* fp;
+    uint32_t read;
+
+    fp = fopen(fn, "r");
+
+    if (!fp)
+    {
+        if (mandatory)
+        {
+            printf("failed to open %s for reading\n", fn);
+            exit(-1);
+        }
+
+        *buf = NULL;
+        *size = 0;
+        return *size;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    *size = ftell(fp);
+
+    if (*size)
+    {
+        fseek(fp, 0, SEEK_SET);
+        *buf = malloc(*size);
+
+        if (!*buf)
+        {
+            printf("failed to allocate buffer\n");
+            fclose(fp);
+            exit(-1);
+        }
+
+        read = fread(*buf, 1, *size, fp);
+
+        if (read != *size)
+        {
+            printf("failed to read %s\n", fn);
+            exit(-1);
+        }
+    }
+
+    fclose(fp);
+
+    return *size;
+}
+
+int p9_dd_tool_write(uint8_t* buf, uint32_t size, char* fn)
+{
+    FILE* fp;
+    uint32_t written;
+
+    fp = fopen(fn, "w+");
+
+    if (!fp)
+    {
+        printf("failed to open %s for writing\n", fn);
+        exit(-1);
+    }
+
+    written = fwrite(buf, 1, size, fp);
+
+    if (written != size)
+    {
+        printf("failed to write to %s\n", fn);
+        exit(-1);
+    }
+
+    fclose(fp);
+    return size;
+}
+
+int p9_dd_tool_add(int dd, char* fn_block, char* fn_cont)
+{
+    uint32_t block_size;
+    uint32_t cont_size;
+    uint8_t* block;
+    uint8_t* cont;
+    int rc = 0;
+
+    p9_dd_tool_read(&block, &block_size, fn_block, 1);
+    p9_dd_tool_read(&cont,  &cont_size,  fn_cont, 0);
+
+    if (block || block_size)
+    {
+        rc = p9_dd_add(&cont, &cont_size, dd, block, block_size);
+
+        if (rc == P9_DD_SUCCESS)
+        {
+            rc = p9_dd_tool_write(cont, cont_size, fn_cont);
+        }
+        else
+        {
+            printf("failed, p9_dd_add returned %d\n", rc);
+        }
+    }
+
+    free(block);
+    free(cont);
+
+    return rc;
+}
+
+int p9_dd_tool_get(int dd, char* fn_block, char* fn_cont)
+{
+    uint32_t block_size;
+    uint32_t cont_size;
+    uint8_t* block;
+    uint8_t* cont;
+    int rc = 0;
+
+    p9_dd_tool_read(&cont,  &cont_size,  fn_cont, 1);
+
+    rc = p9_dd_get(cont, dd, &block, &block_size);
+
+    if (rc == P9_DD_SUCCESS)
+    {
+        rc = p9_dd_tool_write(block, block_size, fn_block);
+    }
+    else
+    {
+        printf("failed, p9_dd_get returned %d\n", rc);
+    }
+
+    free(cont);
+
+    return rc;
+}
+
+int p9_dd_tool_list(char* fn_cont)
+{
+    uint32_t            cont_size;
+    uint8_t*            cont;
+    struct p9_dd_iter   iter = P9_DD_ITER_INIT(NULL);
+    struct p9_dd_block* block;
+    struct p9_dd_block  block_he;
+
+    p9_dd_tool_read(&cont,  &cont_size,  fn_cont, 1);
+    iter.iv_cont = (struct p9_dd_cont*)cont;
+
+    while ((block = p9_dd_next(&iter)))
+    {
+        p9_dd_betoh(block, &block_he);
+        printf("block: dd=0x%x size=%d\n", block_he.iv_dd, block_he.iv_size);
+    }
+
+    free(cont);
+
+    return 0;
+}
+
+int main(int argc, char* argv[])
+{
+    char* fn_block = NULL;
+    char* fn_cont = NULL;
+    int  dd = 0;
+    int  command = COMMAND_UNDEF;
+    int option = -1;
+
+    if (argc == 1)
+    {
+        printf("%s", usage);
+        exit(-1);
+    }
+
+    while (-1 != (option = getopt_long(argc, argv, optionstr, options, NULL)))
+    {
+        switch (option)
+        {
+            case 'c' :
+                if (!strcmp(optarg, "add"))
+                {
+                    command = COMMAND_ADD;
+                }
+                else if (!strcmp(optarg, "get"))
+                {
+                    command = COMMAND_GET;
+                }
+                else if (!strcmp(optarg, "list"))
+                {
+                    command = COMMAND_LIST;
+                }
+
+                break;
+
+            case 'n' :
+                if (sscanf(optarg, "0x%x", &dd) != 1)
+                {
+                    printf("%s", usage);
+                    exit(-1);
+                }
+
+                break;
+
+            case 'b' :
+                fn_block = strdup(optarg);
+                break;
+
+            case 'o' :
+                if (fn_cont)
+                {
+                    printf("%s", usage);
+                    exit(-1);
+                }
+
+                fn_cont = strdup(optarg);
+                break;
+
+            case 'd' :
+                debug = true;
+                break;
+
+            case 'h' :
+                printf("%s", usage);
+                exit(0);
+
+            default :
+                printf("%s", usage);
+                exit(-1);
+        }
+
+        switch (command)
+        {
+            case COMMAND_LIST :
+                if (fn_cont)
+                {
+                    return p9_dd_tool_list(fn_cont);
+                }
+
+                break;
+
+            case COMMAND_ADD :
+                if (fn_cont && fn_block && dd)
+                {
+                    p9_dd_tool_add(dd, fn_block, fn_cont);
+                    dd = 0;
+                    free(fn_block);
+                    fn_block = NULL;
+                }
+
+                break;
+
+            case COMMAND_GET :
+                if (fn_cont && fn_block && dd)
+                {
+                    p9_dd_tool_get(dd, fn_block, fn_cont);
+                    dd = 0;
+                    free(fn_block);
+                    fn_block = NULL;
+                }
+
+                break;
+        }
+    }
+
+    return 0;
+}
