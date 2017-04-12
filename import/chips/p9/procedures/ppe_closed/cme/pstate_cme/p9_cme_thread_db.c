@@ -46,6 +46,8 @@
 //#include "p9_pstate_vpd.h"
 #include "ppe42_cache.h"
 #include "p9_hcode_image_defines.H"
+#include "p9_cme_pstate.h"
+#include "cme_panic_codes.h"
 
 
 //
@@ -63,10 +65,10 @@ inline void p9_cme_pstate_process_db0();
 inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags);
 inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData, uint32_t cme_flags);
 inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags);
-inline void p9_cme_pstate_freq_update(uint64_t dbData);
-inline void p9_cme_pstate_resclk_update();
+inline void p9_cme_pstate_freq_update(uint32_t next_pstate);
 inline void p9_cme_pstate_pmsr_updt(uint64_t dbData, uint32_t cme_flags);
 inline void p9_cme_pstate_notify_sib();
+inline void p9_cme_pstate_update(uint64_t dbData, uint32_t cme_flags);
 
 //
 //Doorbell0 interrupt handler
@@ -88,6 +90,9 @@ void p9_cme_pstate_db_thread(void* arg)
     uint32_t cme_flags;
     PkMachineContext  ctx;
     uint32_t pir;
+    uint32_t cores = 0;
+    uint64_t scom_data;
+    uint32_t resclk_data;
 
     G_cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     G_lppb = (LocalPstateParmBlock*)(G_cmeHeader->g_cme_pstate_region_offset + CME_SRAM_BASE_ADDR);
@@ -114,29 +119,28 @@ void p9_cme_pstate_db_thread(void* arg)
         //CME0 is functional
         if (cme_flags & CME_FLAGS_SIBLING_FUNCTIONAL)
         {
-            G_db_thread_data.qmFlag = 0;
-            G_db_thread_data.siblingCMEFlag = 1;
-            //CME0 is not functional, CME1 is quadMgr
+            G_cme_pstate_record.qmFlag = 0;
+            G_cme_pstate_record.siblingCMEFlag = 1;
         }
         else
         {
-            G_db_thread_data.qmFlag = 1;
-            G_db_thread_data.siblingCMEFlag = 0;
+            //CME0 is not functional, so CME1 is quadMgr
+            G_cme_pstate_record.qmFlag = 1;
+            G_cme_pstate_record.siblingCMEFlag = 0;
         }
     }
-    //CME 0 is always the quad manager
     else
     {
-        //CME 0 is always the quad manager
-        G_db_thread_data.qmFlag = 1;
+        // A functional CME0 is always the quad manager
+        G_cme_pstate_record.qmFlag = 1;
 
         if (cme_flags & CME_FLAGS_SIBLING_FUNCTIONAL)
         {
-            G_db_thread_data.siblingCMEFlag = 1;
+            G_cme_pstate_record.siblingCMEFlag = 1;
         }
         else
         {
-            G_db_thread_data.siblingCMEFlag = 0;
+            G_cme_pstate_record.siblingCMEFlag = 0;
         }
     }
 
@@ -146,40 +150,134 @@ void p9_cme_pstate_db_thread(void* arg)
     //siblingCME.
     //
     //if quadManager
-    if (G_db_thread_data.qmFlag)
+    if (G_cme_pstate_record.qmFlag)
     {
         if (cme_flags & CME_FLAGS_CORE0_GOOD)
         {
             out32_sh(CME_LCL_EIMR_CLR, BIT32(4));//Enable DB0_0
             out32_sh(CME_LCL_EIMR_OR, BIT32(5));//Disable DB0_1
             g_eimr_override |= BIT64(37);
-            G_db_thread_data.cmeMaskGoodCore = CME_MASK_C0;
+            G_cme_pstate_record.cmeMaskGoodCore = CME_MASK_C0;
+            cores |= CME_MASK_C0;
         }
         else if (cme_flags & CME_FLAGS_CORE1_GOOD)
         {
             out32_sh(CME_LCL_EIMR_OR, BIT32(4));//Disable DB0_0
             out32_sh(CME_LCL_EIMR_CLR, BIT32(5));//Enable DB0_1
             g_eimr_override |= BIT64(36);
-            G_db_thread_data.cmeMaskGoodCore = CME_MASK_C1;
+            G_cme_pstate_record.cmeMaskGoodCore = CME_MASK_C1;
+            cores |= CME_MASK_C1;
         }
 
         out64(CME_LCL_EIMR_OR, BIT64(7));//Disable  InterCME_IN0
         g_eimr_override |= BIT64(7);
         G_db_thread_data.dpll_pstate0_value   = G_lppb->dpll_pstate0_value;
+
+        // Pstate Clocking Initialization (QM)
+        // Calculate the initial pstate
+        ippm_read(QPPM_DPLL_STAT, &scom_data);
+        G_cme_pstate_record.quadPstate = (uint32_t)G_db_thread_data.dpll_pstate0_value
+                                         - (uint32_t)((scom_data & BITS64(1, 11)) >> SHIFT64(11));
+        PK_TRACE_INF("qm | initial pstate=%d", G_cme_pstate_record.quadPstate);
+
+        // Synchronize initial pstate w/ sibling CME
+        if(G_cme_pstate_record.siblingCMEFlag)
+        {
+            out64(CME_LCL_EITR_OR, BIT64(30));
+            out64(CME_LCL_EIPR_OR, BIT64(30));
+            intercme_msg_send(G_cme_pstate_record.quadPstate,
+                              IMT_INIT_PSTATE);
+        }
     }
     else
     {
         out64(CME_LCL_EIMR_OR, BIT64(36) | BIT64(37));//Disable DB0_0 and DB0_1
+
+        if(cme_flags & CME_FLAGS_CORE0_GOOD)
+        {
+            G_cme_pstate_record.cmeMaskGoodCore = CME_MASK_C0;
+            cores |= CME_MASK_C0;
+        }
+        else if(cme_flags & CME_FLAGS_CORE1_GOOD)
+        {
+            G_cme_pstate_record.cmeMaskGoodCore = CME_MASK_C1;
+            cores |= CME_MASK_C1;
+        }
+
+        // Resonant Clocking Initialization (Sibling)
+        out64(CME_LCL_EITR_OR, BIT64(29));
+        out64(CME_LCL_EIPR_OR, BIT64(29));
+
+        intercme_msg_recv(&G_cme_pstate_record.quadPstate, IMT_INIT_PSTATE);
+        PK_TRACE_INF("sib | initial pstate=%d", G_cme_pstate_record.quadPstate);
+
         out64(CME_LCL_EIMR_CLR, BIT64(7)); //Enable InterCME_IN0
         g_eimr_override |= BIT64(37);
         g_eimr_override |= BIT64(36);
+    }
 
+    // At this point, both QM and Sib can set their initial global Pstate
+    G_cme_pstate_record.globalPstate = G_cme_pstate_record.quadPstate;
+
+    // Resonant Clocking Check (QM + Sibling)
+    // Check that resonance is not enabled in CACCR and EXCGCR
+    CME_GETSCOM(CPPM_CACCR, cores, CME_SCOM_EQ, scom_data);
+    // Ignore clk_sync_enable and reserved
+    resclk_data = (scom_data >> 32) & ~BITS32(15, 31);
+
+    if(resclk_data != 0)
+    {
+        PK_PANIC(CME_PSTATE_RESCLK_ENABLED_AT_BOOT);
+    }
+
+    ippm_read(QPPM_EXCGCR, &scom_data);
+    // Ignore clk_sync_enable, clkglm_async_reset, clkglm_sel, and reserved
+    scom_data &= ~(BITS64(29, 37) | BITS64(42, 63));
+
+    if(scom_data != 0)
+    {
+        PK_PANIC(CME_PSTATE_RESCLK_ENABLED_AT_BOOT);
+    }
+
+    // Resonant Clocking Initialization (QM + Sibling)
+    if(G_cmeHeader->g_cme_qm_mode_flags & CME_QM_FLAG_RESCLK_ENABLE)
+    {
+        // Initialize the Resclk indices
+        G_cme_pstate_record.resclkData.core0_resclk_idx =
+            (uint32_t)G_lppb->resclk.resclk_index[0];
+        G_cme_pstate_record.resclkData.core1_resclk_idx =
+            (uint32_t)G_lppb->resclk.resclk_index[0];
+
+        if(G_cme_pstate_record.qmFlag)
+        {
+            G_cme_pstate_record.resclkData.l2_ex0_resclk_idx =
+                (uint32_t)G_lppb->resclk.resclk_index[0];
+            G_cme_pstate_record.resclkData.l2_ex1_resclk_idx =
+                (uint32_t)G_lppb->resclk.resclk_index[0];
+
+            // Extract the resclk value from QCCR
+            ippm_read(QPPM_QACCR, &scom_data);
+            scom_data = (scom_data & BITS64(0, 12)) >> SHIFT64(15);
+            p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate,
+                                    &G_cme_pstate_record.resclkData.common_resclk_idx);
+            // Read QACCR and clear out the resclk settings
+            ippm_read(QPPM_QACCR, &scom_data);
+            scom_data &= ~BITS64(0, 12);
+            // OR-in the resclk settings which match the current Pstate
+            scom_data |= (((uint64_t)G_lppb->resclk.steparray
+                           [G_cme_pstate_record.resclkData.common_resclk_idx].value)
+                          << 48);
+            // Write QACCR
+            ippm_write(QPPM_QACCR, scom_data);
+        }
+
+        out32(CME_LCL_FLAGS_OR, CME_FLAGS_RCLK_OPERABLE);
     }
 
     //Doorbell Thread(this thread) will continue to run on
     //Quad Manager CME. The sibling CME has intercme_in0 enabled
     //and won't run this thread past this point.
-    if (G_db_thread_data.qmFlag)
+    if (G_cme_pstate_record.qmFlag)
     {
         pk_semaphore_create(&G_cme_pstate_record.sem[1], 0, 1);
 
@@ -261,7 +359,7 @@ inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
         ppmPigData.value = 0;
         ppmPigData.fields.req_intr_type = 4;
         ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
-        send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
+        send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
         PK_TRACE_INF("DB_TH: DB0  Start while already started\n");
         pk_halt();
     }
@@ -272,13 +370,7 @@ inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
     //Check for iVRM disable
     //Check for VDM disable
 
-    //Pstate Update
-#if !SIMICS_TUNING
-    p9_cme_pstate_freq_update(dbData.value);
-    p9_cme_pstate_notify_sib(); //Notify sibling
-#endif
-
-    p9_cme_pstate_pmsr_updt(dbData.value, cme_flags);
+    p9_cme_pstate_update(dbData.value, cme_flags);
 
     //\TODO RTC: 152965
     //Enable Resonant Clks if flag
@@ -291,7 +383,7 @@ inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
     ppmPigData.value = 0;
     ppmPigData.fields.req_intr_type = 4;
     ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
-    send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
+    send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
 
     //Clear Pending PMCR interrupts and Enable PMCR Interrupts
     if (cme_flags & CME_FLAGS_CORE0_GOOD)
@@ -323,30 +415,18 @@ inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData, uint32_t cme_flags
         ppmPigData.value = 0;
         ppmPigData.fields.req_intr_type = 4;
         ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
-        send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
+        send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
         PK_TRACE_INF("DB_TH: DB0Bcast while PS disabled\n");
         pk_halt();
     }
 
-    //Update analog
-    /*
-    if (G_resclkEnabled)
-    {
-        p9_cme_pstate_resclk_update();
-    }
-    */
-
-#if !SIMICS_TUNING
-    p9_cme_pstate_freq_update(dbData.value);
-    p9_cme_pstate_notify_sib(); //Notify sibling
-#endif
-    p9_cme_pstate_pmsr_updt(dbData.value, cme_flags);
+    p9_cme_pstate_update(dbData.value, cme_flags);
 
     //Send type4(ack doorbell)
     ppmPigData.value = 0;
     ppmPigData.fields.req_intr_type = 4;
     ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
-    send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
+    send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
     PK_TRACE_INF("DB_TH: DB0 GlbBcast Exit\n");
 }
 
@@ -364,7 +444,7 @@ inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags)
         ppmPigData.value = 0;
         ppmPigData.fields.req_intr_type = 4;
         ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
-        send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
+        send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
         pk_halt();
     }
 
@@ -390,7 +470,7 @@ inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags)
     ppmPigData.value = 0;
     ppmPigData.fields.req_intr_type = 4;
     ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_SUSPENDED;
-    send_pig_packet(ppmPigData.value, G_db_thread_data.cmeMaskGoodCore);
+    send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
     PK_TRACE_INF("DB_TH: DB0 Suspend Exit\n");
 }
 
@@ -432,7 +512,7 @@ inline void p9_cme_pstate_notify_sib()
     PK_TRACE_INF("DB_TH: Notify Enter\n");
 
     //Notify sibling CME(if any)
-    if (G_db_thread_data.siblingCMEFlag == 1)
+    if (G_cme_pstate_record.siblingCMEFlag == 1)
     {
         //Send interCME interrupt
         out32(CME_LCL_ICCR_OR, BIT32(5)); //Send direct InterCME_IN0
@@ -464,81 +544,76 @@ inline void p9_cme_pstate_notify_sib()
 //
 //p9_cme_pstate_freq_update
 //
-inline void p9_cme_pstate_freq_update(uint64_t dbData)
+inline void p9_cme_pstate_freq_update(uint32_t next_pstate)
 {
     PK_TRACE_INF("DB_TH: Freq Updt Enter\n");
-    uint8_t localPS = (dbData >>
-                       ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0xFF;
-
-    PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", dbData >> 32, dbData);
     PK_TRACE_INF("DB_TH: Dpll0=0x%x\n", G_db_thread_data.dpll_pstate0_value);
     PK_TRACE_INF("DB_TH: Hdr=0x%x, LPPB=0x%x\n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb);
     //Adjust DPLL
-
-    cppm_ippmcmd_t  cppm_ippmcmd;
     qppm_dpll_freq_t dpllFreq;
 
     //Write new value of DPLL using INTERPPM
     dpllFreq.value = 0;
-    dpllFreq.fields.fmax  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS);
-    dpllFreq.fields.fmult = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS);
-    dpllFreq.fields.fmin  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - localPS);
-    CME_PUTSCOM(CPPM_IPPMWDATA, G_db_thread_data.cmeMaskGoodCore, dpllFreq.value);
-    cppm_ippmcmd.value = 0;
-    cppm_ippmcmd.fields.qppm_reg = QPPM_DPLL_FREQ & 0x000000ff;
-    cppm_ippmcmd.fields.qppm_rnw = 0;
-    CME_PUTSCOM(CPPM_IPPMCMD, G_db_thread_data.cmeMaskGoodCore, cppm_ippmcmd.value);
+    dpllFreq.fields.fmax  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - next_pstate);
+    dpllFreq.fields.fmult = (uint16_t)(G_db_thread_data.dpll_pstate0_value - next_pstate);
+    dpllFreq.fields.fmin  = (uint16_t)(G_db_thread_data.dpll_pstate0_value - next_pstate);
+    ippm_write(QPPM_DPLL_FREQ, dpllFreq.value);
     PK_TRACE_INF("DB_TH: Freq Updt Exit\n");
 }
 
-//
-//p9_cme_pstate_resclk_update
-//
-/*
-inline void p9_cme_pstate_resclk_update()
+inline void p9_cme_pstate_update(uint64_t dbData, uint32_t cme_flags)
 {
-    uint64_t val;
-    uint8_t tidx, step;
-    int32_t i;
+    PK_TRACE_INF("DB_TH: Pstate Updt Enter");
 
-    //get targetIndex from Table1(ControlIndex) by indexing with localPState
-    tidx = G_db_thread_data.resClkTblIdx;
-
-    for (i = NUM_FREQ_REGIONS - 1; i >= 0; i--)
+    if(G_cme_pstate_record.siblingCMEFlag)
     {
-        if (G_freq2idx[i].pstate > G_db_thread_data.localPS)
+        // "Lock" the sibling until the pstate transition is complete
+        intercme_msg_send(0, IMT_LOCK_SIBLING);
+        // The Sibling is a "pumpkin" from this point forward until calling
+        // p9_cme_pstate_notify_sib()
+    }
+
+    uint32_t next_pstate = (dbData >>
+                            ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0x000000ff;
+    G_cme_pstate_record.globalPstate = (dbData & BITS64(8, 15)) >> SHIFT64(15);
+
+    PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", dbData >> 32, dbData);
+
+    if(next_pstate > G_cme_pstate_record.quadPstate)
+    {
+        p9_cme_pstate_freq_update(next_pstate);
+
+        if(cme_flags & CME_FLAGS_RCLK_OPERABLE)
         {
-            tidx = i;
-            break;
+            PkMachineContext ctx;
+            pk_critical_section_enter(&ctx);
+
+            p9_cme_resclk_update(ANALOG_COMMON, next_pstate,
+                                 G_cme_pstate_record.resclkData.common_resclk_idx);
+
+            pk_critical_section_exit(&ctx);
         }
     }
-
-    //walk Table2[Resonant Grids Control Data)
-    if (tidx > G_db_thread_data.resClkTblIdx)
+    else if(next_pstate < G_cme_pstate_record.quadPstate)
     {
-        step = 1;
-    }
-    else
-    {
-        step = -1;
+        if(cme_flags & CME_FLAGS_RCLK_OPERABLE)
+        {
+            PkMachineContext ctx;
+            pk_critical_section_enter(&ctx);
+
+            p9_cme_resclk_update(ANALOG_COMMON, next_pstate,
+                                 G_cme_pstate_record.resclkData.common_resclk_idx);
+
+            pk_critical_section_exit(&ctx);
+        }
+
+        p9_cme_pstate_freq_update(next_pstate);
     }
 
-    while(G_db_thread_data.resClkTblIdx != tidx)
-    {
-        G_db_thread_data.resClkTblIdx += step;
-        val = (uint64_t)(G_cgm_table[G_db_thread_data.resClkTblIdx]) << 48;
-        val |= G_db_thread_data.qaccr21_23InitVal;
+    p9_cme_pstate_notify_sib(); //Notify sibling
+    p9_cme_pstate_pmsr_updt(dbData, cme_flags);
 
-#if !SIMICS_TUNING
-        cppm_ippmcmd_t  cppm_ippmcmd;
-        //Write val to QACCR
-        CME_PUTSCOM(CPPM_IPPMWDATA, G_db_thread_data.cmeMaskGoodCore, val);
-        cppm_ippmcmd.value = 0;
-        cppm_ippmcmd.fields.qppm_reg = QPPM_QACCR & 0x000000ff;
-        cppm_ippmcmd.fields.qppm_rnw = 0;
-        CME_PUTSCOM(CPPM_IPPMCMD, G_db_thread_data.cmeMaskGoodCore, cppm_ippmcmd.value);
-#endif
-    }
+    G_cme_pstate_record.quadPstate = next_pstate;
+
+    PK_TRACE_INF("DB_TH: Pstate Updt Exit");
 }
-
-*/

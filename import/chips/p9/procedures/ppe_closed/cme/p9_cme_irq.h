@@ -58,10 +58,11 @@
 #define IDX_PRTY_LVL_DB0            8
 #define IDX_PRTY_LVL_INTERCME_IN0   9
 #define IDX_PRTY_LVL_PMCR           10
-#define IDX_PRTY_LVL_DISABLED       11
+#define IDX_PRTY_LVL_COMM_RECVD     11
+#define IDX_PRTY_LVL_DISABLED       12
 #define IDX_PRTY_VEC                0
 #define IDX_MASK_VEC                1
-#define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(12)
+#define NUM_EXT_IRQ_PRTY_LEVELS     13
 extern const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
 // Group0: Non-task hi-prty IRQs
@@ -86,8 +87,10 @@ extern const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2];
 #define IRQ_VEC_PRTY9_CME   (uint64_t)(0x0100000000000000)
 // Group10: PMCR
 #define IRQ_VEC_PRTY10_CME  (uint64_t)(0x0000000030000000)
-// Group11: We should never detect these
-#define IRQ_VEC_PRTY11_CME  (uint64_t)(0x00C003FFC33FFFFF)
+// Group11: COMM_RECVD
+#define IRQ_VEC_PRTY11_CME  (uint64_t)(0x0000000400000000)
+// Group12: We should never detect these
+#define IRQ_VEC_PRTY12_CME  (uint64_t)(0x00C003FBC33FFFFF)
 
 // This should be 0xFFFFFFFFFFFFFFFF
 #define IRQ_VEC_PRTY_CHECK  ( IRQ_VEC_PRTY0_CME | \
@@ -101,7 +104,8 @@ extern const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2];
                               IRQ_VEC_PRTY8_CME | \
                               IRQ_VEC_PRTY9_CME | \
                               IRQ_VEC_PRTY10_CME | \
-                              IRQ_VEC_PRTY11_CME )
+                              IRQ_VEC_PRTY11_CME | \
+                              IRQ_VEC_PRTY12_CME )
 
 extern uint8_t       g_current_prty_level;
 extern uint8_t       g_eimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];

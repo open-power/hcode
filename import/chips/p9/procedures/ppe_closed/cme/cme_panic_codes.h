@@ -76,10 +76,10 @@ CME_STOP_ENTRY_XSTOP_ERROR          = 0x1d09,
 //_UNUSED_1d1e                      = 0x1d1e,
 //_UNUSED_1d1f                      = 0x1d1f,
 
-//_UNUSED_1e00                      = 0x1e00, // Pstate Error
-//_UNUSED_1e01                      = 0x1e01,
-//_UNUSED_1e02                      = 0x1e02,
-//_UNUSED_1e03                      = 0x1e03,
+CME_PSTATE_RESCLK_ENABLED_AT_BOOT   = 0x1e00, // Pstate Error
+CME_PSTATE_IPPM_ACCESS_FAILED       = 0x1e01,
+CME_PSTATE_INVALID_DB0_MSGID        = 0x1e02,
+CME_PSTATE_UNEXPECTED_INTERCME_MSG  = 0x1e03,
 //_UNUSED_1e04                      = 0x1e04,
 //_UNUSED_1e05                      = 0x1e05,
 //_UNUSED_1e06                      = 0x1e06,

@@ -36,6 +36,8 @@
 #include "pstate_pgpe_cme_api.h"
 //#include "p9_pstate_vpd.h"
 #include "ppe42_cache.h"
+#include "p9_cme_pstate.h"
+#include "cme_panic_codes.h"
 
 //
 //Globals
@@ -57,6 +59,8 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
 
     PK_TRACE("INTER0: Enter\n");
 
+    // TODO Revisit this loop as part of CME code review, PMSR update should
+    //      be done in one common function.
     for (c = 0; c < CORES_PER_EX; c++ )
     {
         if (cme_flags & (CME_FLAGS_CORE0_GOOD >> c))
@@ -74,6 +78,10 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
             //Determine PMSR
             localPS = (dbData.value >>
                        ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0xFF;
+            // Update the Pstate variables
+            G_cme_pstate_record.quadPstate = localPS;
+            G_cme_pstate_record.globalPstate = (dbData.value & BITS64(8, 15)) >> SHIFT64(15);
+
             pmsrData = (dbData.value << 8) & 0xFF00000000000000;
             pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
             PK_TRACE_INF("INTER0:C%d PMSR=0x%08x%08x\n", c, pmsrData >> 32, pmsrData);
@@ -100,7 +108,7 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
             }
             else
             {
-                pk_halt();
+                PK_PANIC(CME_PSTATE_INVALID_DB0_MSGID);
             }
 
             out32_sh(CME_LCL_EISR_CLR, BIT32(4) >> c);//Clear DB0_C0/C1
@@ -114,4 +122,19 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     pk_irq_vec_restore(&ctx);
 
     PK_TRACE("INTER0: Exit\n");
+}
+
+void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq)
+{
+    PkMachineContext ctx;
+    // Override mask, disable every interrupt except high-priority ones via the
+    // priority mask for this interrupt (p9_pk_irq.c)
+    uint32_t msg;
+    intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
+
+    // Block on the intercme0 interrupt
+    while(!(in32(CME_LCL_EISR) & BIT32(8))) {}
+
+    // Restore the mask, cede control to the intercme0 interrupt handler
+    pk_irq_vec_restore(&ctx);
 }

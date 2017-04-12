@@ -26,6 +26,7 @@
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 #include "p9_cme_copy_scan_ring.h"
+#include "p9_cme_pstate.h"
 
 extern CmeStopRecord G_cme_stop_record;
 
@@ -285,6 +286,8 @@ void p9_cme_stop_exit_lv2(uint32_t core)
     // Note IPL doesnt need to do this twice
     PK_TRACE("Assert core glitchless mux to DPLL via CGCR[3]");
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
+
+    p9_cme_analog_control(core, ANALOG_ENABLE);
 
     // do this after assert glsmux so glitch can have time to resolve
     // catchup to stop2 exit will acquire here

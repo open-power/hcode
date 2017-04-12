@@ -38,6 +38,7 @@
 #include "pk.h"
 #include "pstate_pgpe_cme_api.h"
 #include "gpehw_common.h"
+#include "cmehw_common.h"
 #include "p9_hcode_image_defines.H"
 #include "p9_pstates_cmeqm.h"
 
@@ -49,19 +50,55 @@ enum  PMCR_CONTROL
     PMCR1_ENABLE   =    0x8
 };
 
-void p9_cme_pstate_pmcr_thread(void*);
-void p9_cme_pstate_db_thread(void*);
-void p9_cme_pstate_pmcr_handler(void*, PkIrqId);
-void p9_cme_pstate_db_handler(void*, PkIrqId);
-void p9_cme_pstate_intercme_in0_handler(void*, PkIrqId);
-int send_pig_packet(uint64_t data, uint32_t coreMask);
+typedef struct
+{
+    uint32_t core0_resclk_idx;
+    uint32_t core1_resclk_idx;
+    uint32_t l2_ex0_resclk_idx;
+    uint32_t l2_ex1_resclk_idx;
+    uint32_t common_resclk_idx;
+} cme_resclk_data_t;
 
+typedef enum
+{
+    ANALOG_CORE0  = (uint32_t)CME_MASK_C0,
+    ANALOG_CORE1  = (uint32_t)CME_MASK_C1,
+    ANALOG_BOTHC  = (uint32_t)CME_MASK_BC,
+    ANALOG_L2EX0  = (uint32_t)0x00000100,
+    ANALOG_L2EX1  = (uint32_t)0x00000200,
+    ANALOG_BOTHL  = (uint32_t)0x00000300,
+    ANALOG_COMMON = (uint32_t)0x00001000
+} ANALOG_TARGET;
+
+typedef enum
+{
+    ANALOG_DISABLE = (uint32_t)0,
+    ANALOG_ENABLE  = (uint32_t)1
+} ANALOG_CONTROL;
+
+typedef enum
+{
+    ANALOG_PSTATE_RESCLK_OFF = (uint32_t)255
+} ANALOG_CONSTANTS;
+
+typedef enum
+{
+    IMT_INIT_PSTATE  = (uint32_t)0x00000001,
+    IMT_LOCK_SIBLING = (uint32_t)0x00000002,
+    IMT_SYNC_SIBLING = (uint32_t)0x00000003
+} INTERCME_MSG_TYPE;
 
 typedef struct
 {
     PkSemaphore sem[2];
+    uint32_t qmFlag;
+    uint32_t siblingCMEFlag;
     uint32_t quadNum;
     uint32_t pstatesEnabled;
+    uint32_t quadPstate;
+    uint32_t globalPstate;
+    uint32_t cmeMaskGoodCore;
+    cme_resclk_data_t resclkData;
 } CmePstateRecord;
 
 typedef struct
@@ -71,14 +108,25 @@ typedef struct
 
 typedef struct
 {
-    uint32_t qmFlag;
-    uint32_t siblingCMEFlag;
-    uint32_t cmeMaskGoodCore;
-    uint32_t globalPS;
-    uint32_t localPS;
-    uint32_t resClkTblIdx;
     uint32_t qaccr21_23InitVal;
     uint32_t dpll_pstate0_value;
 } cme_pstate_db_data_t;
+
+
+void p9_cme_pstate_pmcr_thread(void*);
+void p9_cme_pstate_db_thread(void*);
+void p9_cme_pstate_pmcr_handler(void*, PkIrqId);
+void p9_cme_pstate_db_handler(void*, PkIrqId);
+void p9_cme_pstate_intercme_in0_handler(void*, PkIrqId);
+void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq);
+int send_pig_packet(uint64_t data, uint32_t coreMask);
+void ippm_read(uint32_t addr, uint64_t* data);
+void ippm_write(uint32_t addr, uint64_t data);
+void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type);
+void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type);
+void p9_cme_resclk_get_index(uint32_t pstate, uint32_t* resclk_index);
+void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
+void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_idx);
+
 
 #endif //_P9_CME_PSTATE_H_

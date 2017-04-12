@@ -45,6 +45,7 @@
 #include "pstate_pgpe_cme_api.h"
 //#include "p9_pstate_vpd.h"
 #include "ppe42_cache.h"
+#include "cme_panic_codes.h"
 
 //
 //Globals
@@ -73,6 +74,7 @@ void p9_cme_pstate_pmcr_thread(void* arg)
     uint32_t eisr;
     uint32_t coreMask[CORES_PER_EX];
     uint32_t cme_flags;
+    uint32_t msg;
     coreMask[0] = CME_MASK_C0;
     coreMask[1] = CME_MASK_C1;
 
@@ -82,6 +84,25 @@ void p9_cme_pstate_pmcr_thread(void* arg)
 
     pk_semaphore_create(&G_cme_pstate_record.sem[0], 0, 1);
 
+    // Synchronization between QM and Sibling
+    // @todo RTC173279 move into CME init function
+    if(G_cme_pstate_record.qmFlag)
+    {
+        // Synchronize QACCR setting w/ sibling CME
+        if(G_cme_pstate_record.siblingCMEFlag)
+        {
+            intercme_msg_send(0, IMT_SYNC_SIBLING);
+        }
+    }
+    else
+    {
+        intercme_msg_recv(&msg, IMT_SYNC_SIBLING);
+        // Unmask the COMM_RECVD interrupt for the intercme msg handler
+        out64(CME_LCL_EIMR_CLR, BIT64(29));
+    }
+
+    // This is the current barrier for SGPE booting the CMEs, any and all
+    // initialization must be completed prior!
     out32(CME_LCL_FLAGS_OR, CME_FLAGS_PMCR_READY);
 
     PK_TRACE_INF("PMCR_TH: Inited\n");

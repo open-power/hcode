@@ -81,7 +81,7 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_CHTM_PURGE_DONE_C1
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_BUSY_LOW
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_FINAL_VDM_DATA0
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_FINAL_VDM_DATA1
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_COMM_RECVD
+IRQ_HANDLER(p9_cme_pstate_intercme_msg_handler, (void*)NULL) //CMEHW_IRQ_COMM_RECVD
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_COMM_SEND_ACK
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_COMM_SEND_NACK
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_SPARE_32
