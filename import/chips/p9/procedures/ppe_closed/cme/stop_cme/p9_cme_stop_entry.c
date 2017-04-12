@@ -45,6 +45,7 @@
 
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_enter_marks.h"
+#include "p9_cme_pstate.h"
 
 extern CmeStopRecord G_cme_stop_record;
 
@@ -709,6 +710,8 @@ p9_cme_stop_entry()
             CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_OR, scom_data.value);
         }
         while(scom_data.words.upper & BIT32(13));
+
+        p9_cme_analog_control(core, ANALOG_DISABLE);
 
         PK_TRACE("Switch glsmux to refclk to save clock grid power via CGCR[3]");
         CME_PUTSCOM(C_PPM_CGCR, core, 0);
