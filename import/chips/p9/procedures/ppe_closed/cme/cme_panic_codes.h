@@ -42,7 +42,7 @@
 
 // The following are reserved for instance specific use.
 
-CME_UIH_DISABLED_NOT_LAST_LVL       = 0x1c00,
+CME_UIH_DISABLED_NOT_LAST_LVL       = 0x1c00, // Setup or Common Error
 CME_UIH_NOT_ALL_IN_PRTY_GROUP       = 0x1c01,
 CME_UIH_EIMR_STACK_UNDERFLOW        = 0x1c02,
 CME_UIH_EIMR_STACK_OVERFLOW         = 0x1c03,
@@ -50,25 +50,25 @@ CME_UIH_PHANTOM_INTERRUPT           = 0x1c04,
 CME_STOP_NO_PARTIAL_GOOD_CORE       = 0x1c05,
 CME_STOP_PUTRING_HEADER_ERROR       = 0x1c06,
 CME_STOP_BCE_CORE_RING_FAILED       = 0x1c07,
-CME_STOP_EXIT_PHANTOM_WAKEUP        = 0x1c08,
-CME_STOP_EXIT_BCE_SCOM_FAILED       = 0x1c09,
-CME_STOP_EXIT_SELF_RES_SPATTN       = 0x1c0a,
-CME_STOP_EXIT_STARTCLK_FAILED       = 0x1c0d,
-CME_STOP_ENTRY_STOPCLK_FAILED       = 0x1c1c,
-CME_STOP_ENTRY_XSTOP_ERROR          = 0x1c1d,
-CME_STOP_ENTRY_WITH_AUTO_NAP        = 0x1c1e, // NDD1
-CME_STOP_ENTRY_BAD_LPID_ERROR       = 0x1c1f, // NDD1
+//_UNUSED_1c08                      = 0x1c08,
+//_UNUSED_1c09                      = 0x1c09,
+//_UNUSED_1c0a                      = 0x1c0a,
+//_UNUSED_1c0d                      = 0x1c0d,
+//_UNUSED_1c1c                      = 0x1c1c,
+//_UNUSED_1c1d                      = 0x1c1d,
+//_UNUSED_1c1e                      = 0x1c1e,
+//_UNUSED_1c1f                      = 0x1c1f,
 //
-//_UNUSED_1d00                      = 0x1d00,
-//_UNUSED_1d01                      = 0x1d01,
-//_UNUSED_1d02                      = 0x1d02,
-//_UNUSED_1d03                      = 0x1d03,
-//_UNUSED_1d04                      = 0x1d04,
+CME_STOP_EXIT_PHANTOM_WAKEUP        = 0x1d00, // Stop Error
+CME_STOP_EXIT_BCE_SCOM_FAILED       = 0x1d01,
+CME_STOP_EXIT_SELF_RES_SPATTN       = 0x1d02,
+CME_STOP_EXIT_STARTCLK_FAILED       = 0x1d03,
+CME_STOP_EXIT_XSTOP_ERROR           = 0x1d04,
 //_UNUSED_1d05                      = 0x1d05,
 //_UNUSED_1d06                      = 0x1d06,
 //_UNUSED_1d07                      = 0x1d07,
-//_UNUSED_1d08                      = 0x1d08,
-//_UNUSED_1d09                      = 0x1d09,
+CME_STOP_ENTRY_STOPCLK_FAILED       = 0x1d08,
+CME_STOP_ENTRY_XSTOP_ERROR          = 0x1d09,
 //_UNUSED_1d0a                      = 0x1d0a,
 //_UNUSED_1d0d                      = 0x1d0d,
 //_UNUSED_1d1c                      = 0x1d1c,
@@ -76,7 +76,7 @@ CME_STOP_ENTRY_BAD_LPID_ERROR       = 0x1c1f, // NDD1
 //_UNUSED_1d1e                      = 0x1d1e,
 //_UNUSED_1d1f                      = 0x1d1f,
 
-//_UNUSED_1e00                      = 0x1e00,
+//_UNUSED_1e00                      = 0x1e00, // Pstate Error
 //_UNUSED_1e01                      = 0x1e01,
 //_UNUSED_1e02                      = 0x1e02,
 //_UNUSED_1e03                      = 0x1e03,
@@ -93,8 +93,8 @@ CME_STOP_ENTRY_BAD_LPID_ERROR       = 0x1c1f, // NDD1
 //_UNUSED_1e1e                      = 0x1e1e,
 //_UNUSED_1e1f                      = 0x1e1f,
 
-//_UNUSED_1f00                      = 0x1f00,
-//_UNUSED_1f01                      = 0x1f01,
+CME_STOP_ENTRY_WITH_AUTO_NAP        = 0x1f00, // NDD1
+CME_STOP_ENTRY_BAD_LPID_ERROR       = 0x1f01, // NDD1
 //_UNUSED_1f02                      = 0x1f02,
 //_UNUSED_1f03                      = 0x1f03,
 //_UNUSED_1f04                      = 0x1f04,

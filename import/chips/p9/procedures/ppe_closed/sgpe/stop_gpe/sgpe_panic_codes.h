@@ -22,8 +22,8 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-#ifndef __CME_PANIC_CODES_H__
-#define __CME_PANIC_CODES_H__
+#ifndef __SGPE_PANIC_CODES_H__
+#define __SGPE_PANIC_CODES_H__
 
 // On PPE42, PANIC codes are stored as part of the trap word instruction.
 // tw 31, RA, RB  Where RA and RB would used to encode the trap code.
@@ -42,7 +42,7 @@
 
 // The following are reserved for instance specific use.
 
-SGPE_MAIN_FAPI2_INIT_FAILED         = 0x1c00,
+SGPE_MAIN_FAPI2_INIT_FAILED         = 0x1c00, // Setup or Common Error
 SGPE_UIH_EIMR_STACK_UNDERFLOW       = 0x1c01,
 SGPE_UIH_EIMR_STACK_OVERFLOW        = 0x1c02,
 SGPE_UIH_PHANTOM_INTERRUPT          = 0x1c03,
@@ -60,7 +60,7 @@ SGPE_PIG_TYPE3_ENTRY_WNS_CME        = 0x1c0d,
 //_UNUSED_1c1f                      = 0x1c1f,
 
 
-SGPE_STOP_PUTRING_HEADER_ERROR      = 0x1d00,
+SGPE_STOP_PUTRING_HEADER_ERROR      = 0x1d00, // Stop Exit Error
 SGPE_STOP_PUTRING_OPCG_TIMEOUT      = 0x1d00,
 SGPE_STOP_EXIT_IPC_CORE_FAILED      = 0x1d01,
 SGPE_STOP_EXIT_IPC_CORE_BAD_RC      = 0x1d02,
@@ -71,14 +71,14 @@ SGPE_STOP_EXIT_DROP_SLV_LOCK_FAILED = 0x1d06,
 SGPE_STOP_EXIT_DPLL_STARTCLK_FAILED = 0x1d07,
 SGPE_STOP_EXIT_L2_STARTCLK_FAILED   = 0x1d08,
 SGPE_STOP_EXIT_EQ_STARTCLK_FAILED   = 0x1d09,
-SGPE_STOP_EXIT_VCS_STOPCLK_FAILED   = 0x1d0a, // NDD1
-SGPE_STOP_EXIT_VCS_STARTCLK_FAILED  = 0x1d0d, // NDD1
-SGPE_STOP_EXIT_FUSE_SCAN_HEADER_ERR = 0x1d1c, // NDD1
-SGPE_STOP_EXIT_PBRW_SCAN_HEADER_ERR = 0x1d1d, // NDD1
+SGPE_STOP_EXIT_XSTOP_ERROR          = 0x1d0a,
+//_UNUSED_1d0d                      = 0x1d0d,
+//_UNUSED_1d1c                      = 0x1d1c,
+//_UNUSED_1d1d                      = 0x1d1d,
 //_UNUSED_1d1e                      = 0x1d1e,
 //_UNUSED_1d1f                      = 0x1d1f,
 
-SGPE_STOP_ENTRY_IPC_CORE_FAILED     = 0x1e00,
+SGPE_STOP_ENTRY_IPC_CORE_FAILED     = 0x1e00, // Stop Entry Error
 SGPE_STOP_ENTRY_IPC_CORE_BAD_RC     = 0x1e01,
 SGPE_STOP_ENTRY_IPC_QUAD_FAILED     = 0x1e02,
 SGPE_STOP_ENTRY_IPC_QUAD_BAD_RC     = 0x1e03,
@@ -88,22 +88,22 @@ SGPE_STOP_ENTRY_GET_CLK_LOCK_FAILED = 0x1e06,
 SGPE_STOP_ENTRY_GET_SLV_LOCK_FAILED = 0x1e07,
 SGPE_STOP_ENTRY_L2_STOPCLK_FAILED   = 0x1e08,
 SGPE_STOP_ENTRY_EQ_STOPCLK_FAILED   = 0x1e09,
-SGPE_STOP_ENTRY_PBRW_SCAN_HEADER_ERR = 0x1e0a, // NDD1
+//_UNUSED_1e0a                      = 0x1e0a,
 //_UNUSED_1e0d                      = 0x1e0d,
 //_UNUSED_1e1c                      = 0x1e1c,
 //_UNUSED_1e1d                      = 0x1e1d,
 //_UNUSED_1e1e                      = 0x1e1e,
 //_UNUSED_1e1f                      = 0x1e1f,
 
-//_UNUSED_1f00                      = 0x1f00,
-//_UNUSED_1f01                      = 0x1f01,
-//_UNUSED_1f02                      = 0x1f02,
-//_UNUSED_1f03                      = 0x1f03,
+SGPE_STOP_EXIT_VCS_STOPCLK_FAILED   = 0x1f00, // NDD1
+SGPE_STOP_EXIT_VCS_STARTCLK_FAILED  = 0x1f01, // NDD1
+SGPE_STOP_EXIT_FUSE_SCAN_HEADER_ERR = 0x1f02, // NDD1
+SGPE_STOP_EXIT_PBRW_SCAN_HEADER_ERR = 0x1f03, // NDD1
 //_UNUSED_1f04                      = 0x1f04,
 //_UNUSED_1f05                      = 0x1f05,
 //_UNUSED_1f06                      = 0x1f06,
 //_UNUSED_1f07                      = 0x1f07,
-//_UNUSED_1f08                      = 0x1f08,
+SGPE_STOP_ENTRY_PBRW_SCAN_HEADER_ERR = 0x1f08, // NDD1
 //_UNUSED_1f09                      = 0x1f09,
 //_UNUSED_1f0a                      = 0x1f0a,
 //_UNUSED_1f0d                      = 0x1f0d,

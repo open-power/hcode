@@ -143,7 +143,19 @@ p9_hcd_core_startclocks(uint32_t core)
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
 
-    /// @todo RTC166917 Check the Global Checkstop FIR
+#if !EPM_P9_TUNING
+
+    PK_TRACE("Check Global Xstop FIR of Core Chiplet");
+    CME_GETSCOM(C_XFIR, core, CME_SCOM_AND, scom_data.value);
+
+    if (scom_data.words.upper & BITS32(0, 27))
+    {
+        PK_TRACE_ERR("Core[%d] Chiplet Global Xstop FIR[%x] Detected. HALT CME!",
+                     core, scom_data.words.upper);
+        PK_PANIC(CME_STOP_EXIT_XSTOP_ERROR);
+    }
+
+#endif
 
     PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BIT64(2));

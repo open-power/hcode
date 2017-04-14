@@ -173,7 +173,19 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     // Cleaning up
     // -------------------------------
 
-    /// @todo RTC166917 Check the Global Checkstop FIR
+#if !EPM_P9_TUNING
+
+    PK_TRACE("Check Global Xstop FIR of Cache Chiplet");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_XFIR, quad), scom_data.value);
+
+    if (scom_data.words.upper & BITS32(0, 27))
+    {
+        PK_TRACE_ERR("Cache[%d] Chiplet Global Xstop FIR[%x] Detected. HALT SGPE!",
+                     quad, scom_data.words.upper);
+        PK_PANIC(SGPE_STOP_EXIT_XSTOP_ERROR);
+    }
+
+#endif
 
 #if NIMBUS_DD_LEVEL != 1
 

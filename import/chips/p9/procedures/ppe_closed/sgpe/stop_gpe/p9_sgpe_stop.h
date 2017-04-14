@@ -81,6 +81,7 @@ extern "C" {
 #define EQ_CLOCK_STAT_SL         0x10030008
 #define EQ_CLOCK_STAT_ARY        0x1003000A
 #define EQ_CC_ATOMIC_LOCK        0x100303FF
+#define EQ_XFIR                  0x10040000
 #define EQ_HOST_ATTN             0x10040009
 #define EQ_LOCAL_XSTOP_ERR       0x10040018
 #define EQ_THERM_MODE_REG        0x1005000F

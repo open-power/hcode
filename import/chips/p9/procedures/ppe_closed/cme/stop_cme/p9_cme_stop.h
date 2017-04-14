@@ -107,6 +107,7 @@
 #define C_CLOCK_STAT_NSL       0x20030009
 #define C_CLOCK_STAT_ARY       0x2003000a
 #define C_BIST                 0x2003000B
+#define C_XFIR                 0x20040000
 #define C_THERM_MODE_REG       0x2005000F
 
 #define C_SLAVE_CONFIG_REG     0x200F001E
