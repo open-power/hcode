@@ -84,6 +84,13 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     PK_TRACE("Drop PCB fence via NET_CTRL0[25]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(25));
 
+#if defined(USE_CME_QUEUED_SCOM) && defined(USE_PPE_IMPRECISE_MODE)
+
+    // execute sync before change pcbmux to prevent queued scom issues
+    sync();
+
+#endif
+
     // HW390253: The core clock controller itself is clocked at 2:1 versus the core clock,
     // so it will introduce an additional 2:1 into whatever scan raito is set up. Hence,
     // to get the core to scan at 4:1, need to put a scan ratio of 2:1 if run at pll speed.

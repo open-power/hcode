@@ -57,7 +57,7 @@ enum CME_SCOM_CONTROLS
 
 #if defined(USE_CME_QUEUED_SCOM) && defined(USE_PPE_IMPRECISE_MODE)
 #define CME_GETSCOM(addr, core, scom_op, data)                 \
-    PPE_LVD(CME_SCOM_ADDR(addr, core, CME_SCOM_QUEUED), data);
+    PPE_LVD(CME_SCOM_ADDR(addr, core, scom_op), data);
 #define CME_PUTSCOM(addr, core, data)                          \
     putscom_norc(CME_SCOM_ADDR(addr, core, CME_SCOM_QUEUED), data);
 #else

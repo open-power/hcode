@@ -182,6 +182,10 @@ main(int argc, char** argv)
         out32(CME_LCL_LMCR_OR, BITS32(8, 2));
     }
 
+#if defined(USE_CME_QUEUED_SCOM) && defined(USE_PPE_IMPRECISE_MODE)
+    out32(CME_LCL_LMCR_OR, BITS32(8, 2));
+#endif
+
     // Unified interrupt handler checks
     if (IDX_PRTY_LVL_DISABLED != (NUM_EXT_IRQ_PRTY_LEVELS - 1))
     {
@@ -197,58 +201,6 @@ main(int argc, char** argv)
         PK_PANIC(CME_UIH_NOT_ALL_IN_PRTY_GROUP);
     }
 
-
-    //Currently, commenting this.
-    //This shouldn't really be here at all as SGPE will write this register.
-    //For verification in SIMICS, SOA, EPM currently just write the CME_LCL_FLAGS manually
-    //
-    //
-    //
-    /*   //CMO-Temporary setting
-    // Setup up CME_LCL_FLAGS to indicate whether
-    // this CME is QMGR master or slave.
-    // Rules:
-    // - If even CME then set FLAGS(3)=1. Otherwise =0.
-    // - Whether in CME or Simics or HW,
-    //   the assumption here is that the even CME in
-    //   a configured Quad is always configured.
-    uint32_t l_pir;
-    asm volatile ("mfpir %[data] \n" : [data]"=r"(l_pir) );
-
-    #ifndef _SOA_SC_ENVIRONMENT_
-    if ( l_pir & PIR_INSTANCE_EVEN_ODD_MASK )
-    {
-        // Odd: Set slave status
-        out32(CME_LCL_FLAGS_CLR, CME_FLAGS_QMGR_MASTER);
-    }
-    else
-    {
-        // Even: Set master status
-        out32(CME_LCL_FLAGS_OR, CME_FLAGS_QMGR_MASTER);
-    }
-
-    #else
-
-    if ( l_pir & PIR_INSTANCE_EVEN_ODD_MASK )
-    {
-        // Odd: Set slave status
-        out32(CME_LCL_FLAGS_OR, CME_FLAGS_QMGR_MASTER);
-    }
-    else
-    {
-        // Even: Set master status
-        out32(CME_LCL_FLAGS_CLR, CME_FLAGS_QMGR_MASTER);
-    }
-
-    #endif
-
-    //\todo Fix  this
-    #ifndef _SOA_SC_ENVIRONMENT_
-    out32(CME_LCL_FLAGS_OR, CME_FLAGS_CORE0_GOOD | CME_FLAGS_CORE1_GOOD | CME_FLAGS_SIBLING_FUNCTIONAL);
-    #else
-    out32(CME_LCL_FLAGS_OR, CME_FLAGS_CORE0_GOOD | CME_FLAGS_CORE1_GOOD);
-    #endif
-    */
     // Initialize the thread control block for G_p9_cme_stop_exit_thread
     pk_thread_create(&G_p9_cme_stop_exit_thread,
                      (PkThreadRoutine)p9_cme_stop_exit_thread,
