@@ -62,6 +62,7 @@ cme_pstate_db_data_t G_db_thread_data;
 //Function Prototypes
 //
 inline void p9_cme_pstate_process_db0();
+inline void p9_cme_pstate_register();
 inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags);
 inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData, uint32_t cme_flags);
 inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags);
@@ -279,6 +280,9 @@ void p9_cme_pstate_db_thread(void* arg)
     //and won't run this thread past this point.
     if (G_cme_pstate_record.qmFlag)
     {
+        //Register with PGPE
+        p9_cme_pstate_register();
+
         pk_semaphore_create(&G_cme_pstate_record.sem[1], 0, 1);
 
         PK_TRACE("DB_TH: Inited\n");
@@ -342,6 +346,19 @@ inline void p9_cme_pstate_process_db0()
     }
 
     PK_TRACE_INF("DB_TH: Process DB0 Exit\n");
+}
+
+
+inline void p9_cme_pstate_register()
+{
+    //Send type4(ack doorbell)
+    ppm_pig_t ppmPigData;
+    ppmPigData.value = 0;
+    ppmPigData.fields.req_intr_type = 4;
+    ppmPigData.fields.req_intr_payload =  MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE;
+    send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
+
+    PK_TRACE_INF("DB_TH: Register Msg Sent\n");
 }
 
 //

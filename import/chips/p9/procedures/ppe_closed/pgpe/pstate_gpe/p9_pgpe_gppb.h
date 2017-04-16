@@ -28,10 +28,6 @@
 #include "pk.h"
 #include "p9_pstates_pgpe.h"
 
-//#define REGION_POWERSAVE_NOMINAL    1
-//#define REGION_NOMINAL_TURBO        0
-//#define REGION_TURBO_ULTRA          2
-
 #define EVID_SLOPE_FP_SHIFT         13
 #define MAX_DPLL_VALUE              255
 

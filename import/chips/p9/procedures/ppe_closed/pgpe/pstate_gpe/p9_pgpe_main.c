@@ -52,6 +52,8 @@ PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
     {0, 0, 0, 0, 0, 0},
     0,
     0,
+    {0, 0, 0, 0, 0, 0},
+    {0, 0},
     0,
     0,
     0,
@@ -116,7 +118,7 @@ IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE0_PENDING
 IRQ_HANDLER(p9_pgpe_irq_handler_pcb_type1, NULL) //OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE3_PENDING
-IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE4_PENDING
+IRQ_HANDLER(p9_pgpe_irq_handler_pcb_type4, NULL) //OCCHW_IRQ_PMC_PCB_INTR_TYPE4_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE5_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE6_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE7_PENDING
@@ -233,8 +235,17 @@ main(int argc, char** argv)
     PK_TRACE_DBG("Setup OCCFIR[OCC_HB Error]");
     p9_pgpe_ocb_hb_error_init();
 
+    g_oimr_override |= BIT64(49);
+    out32(OCB_OIMR1_OR, BIT32(17)); //Disable PCB_INTR_TYPE4
+
     PK_TRACE_DBG("Start PK Threads");
 
+    uint64_t data;
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_CTRL, 3), data);
+    PK_TRACE_DBG("Got Data=0x%08x%08x", data >> 32, data);
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, 3), data);
+    PK_TRACE_DBG("Got Data=0x%08x%08x", data >> 32, data);
+    //GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, 3),data);
     // Start running the highest priority thread.
     // This function never returns
     pk_start_threads();

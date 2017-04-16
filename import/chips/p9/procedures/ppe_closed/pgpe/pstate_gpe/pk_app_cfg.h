@@ -42,7 +42,7 @@
 #define BOOT_TEMP_SET_FULL_OCC_IPC_FUNC 1
 #define DEV_DEBUG     1
 #define PK_TRACE_TIMER_OUTPUT 0
-#define SGPE_IPC_ENABLED 0
+#define SGPE_IPC_ENABLED 1
 #define OVERRIDE_OTHER_ENGINES_IRQS 0
 #define OVERRIDE_PSAFE_PSTATE 1
 
@@ -83,7 +83,7 @@
     #define PK_TRACE_ENABLE        1
     #define PK_TRACE_DBG_SUPPRESS  0
     #define PK_TRACE_CRIT_ENABLE   1
-    #define PK_TRACE_CKPT_ENABLE   1
+    #define PK_TRACE_CKPT_ENABLE   0
     #define PK_KERNEL_TRACE_ENABLE 0
 #else                    /*All TRACEs*/
     #define PK_TRACE_ENABLE        1

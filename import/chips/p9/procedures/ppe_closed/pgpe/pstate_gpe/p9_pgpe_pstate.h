@@ -34,15 +34,14 @@
 
 
 #define MAX_IPC_PEND_TBL_ENTRIES                9
-#define IPC_PEND_PSTATE_START                   0
-#define IPC_PEND_PSTATE_STOP                    1
-#define IPC_PEND_SGPE_ACTIVE_CORES_UPDT         2
-#define IPC_PEND_SGPE_ACTIVE_QUADS_UPDT         3
-#define IPC_PEND_CLIP_UPDT                      4
-#define IPC_PEND_WOF_CTRL                       5
-#define IPC_PEND_WOF_VFRT                       6
-#define IPC_PEND_SET_PMCR_REQ                   7
-#define IPC_PEND_SGPE_SUSPEND_PSTATES           8
+#define IPC_PEND_PSTATE_START_STOP              0
+#define IPC_PEND_SGPE_ACTIVE_CORES_UPDT         1
+#define IPC_PEND_SGPE_ACTIVE_QUADS_UPDT         2
+#define IPC_PEND_CLIP_UPDT                      3
+#define IPC_PEND_WOF_CTRL                       4
+#define IPC_PEND_WOF_VFRT                       5
+#define IPC_PEND_SET_PMCR_REQ                   6
+#define IPC_PEND_SGPE_SUSPEND_PSTATES           7
 
 #define ALL_QUADS_BIT_MASK      QUAD0_BIT_MASK | QUAD1_BIT_MASK | \
     QUAD2_BIT_MASK | QUAD3_BIT_MASK | \
@@ -57,14 +56,14 @@
 
 enum PSTATE_STATUS
 {
-    PSTATE_INIT                                 =    0,
-    PSTATE_START_PENDING                        =    1,
-    PSTATE_ACTIVE                               =    2,
-    PSTATE_STOPPED                              =    3,
-    PSTATE_SUSPENDED                            =    4,
-    PSTATE_PM_SUSPEND_PENDING                   =    5,
-    PSTATE_PM_SUSPENDED                         =    6,
-    PSTATE_SAFE_MODE                            =    7
+    PSTATE_INIT                                 =    0, //PGPE Booted
+    PSTATE_ACTIVE                               =    1, //Pstates are active
+    PSTATE_STOPPED                              =    2, //Pstates are stopped
+    PSTATE_SUSPENDED_WHILE_STOPPED_INIT         =    3, //Suspended by SGPE IPC
+    PSTATE_SUSPENDED_WHILE_ACTIVE               =    4, //Suspended by SGPE IPC
+    PSTATE_PM_SUSPEND_PENDING                   =    5, //PM Complex Suspend Pending
+    PSTATE_PM_SUSPENDED                         =    6, //PM Complex Suspend
+    PSTATE_SAFE_MODE                            =    7  //Safe Mode
 };
 
 //Task list entry
@@ -100,6 +99,8 @@ typedef struct
     uint8_t quadPSNext[MAX_QUADS];      //target Pstate per quad
     uint8_t globalPSNext;
     uint8_t pad3;
+    uint8_t quadPSAtStop11[MAX_QUADS];  //target Pstate per quad
+    uint8_t pad4[2];
     uint16_t alreadySemPosted;
     uint32_t eVidCurr, eVidNext;
     ipc_req_t ipcPendTbl[MAX_IPC_PEND_TBL_ENTRIES];
@@ -110,6 +111,7 @@ typedef struct
     PkSemaphore sem_process_req;
     PkSemaphore sem_actuate;
     PkSemaphore sem_sgpe_wait;
+    uint32_t quadsActive;
 } PgpePstateRecord;
 
 
@@ -129,8 +131,12 @@ void p9_pgpe_pstate_safe_mode();
 void p9_pgpe_pstate_apply_safe_clips();
 int32_t p9_pgpe_pstate_at_target();
 void p9_pgpe_pstate_do_step();
+//void p9_pgpe_pstate_do_suspend();
 void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner);
-void p9_pgpe_wait_cme_db_ack(uint8_t msg_id, uint32_t activeCores);
+void p9_pgpe_wait_cme_db_ack(uint32_t activeCores);
 void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid);
-
+void p9_pgpe_pstate_process_quad_entry(uint32_t quadsAffected);
+void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
+void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
+void p9_pgpe_pstate_stop();
 #endif //

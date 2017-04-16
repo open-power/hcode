@@ -77,11 +77,12 @@ extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 #define IRQ_VEC_PRTY2_GPE2  (uint64_t)(0x0001000000000000) // Task2-CHECK_STOP_GPE2
 #define IRQ_VEC_PRTY3_GPE2  (uint64_t)(0x0000000000000008) // Task3-IPI2-LO(Process Flags)
 #define IRQ_VEC_PRTY4_GPE2  (uint64_t)(0x0000001000000000) // Task4-IPI2-HI(IPC from OCC/SGPE)
-#define IRQ_VEC_PRTY5_GPE2  (uint64_t)(0x0000000000020000) // Task5-PCB_INTR_TYPE1(PCB Type1 from CME)
+#define IRQ_VEC_PRTY5_GPE2  (uint64_t)(0x0000000000004000) // Task5-PCB_INTR_TYPE4(PCB Type4 from CME)
+#define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0x0000000000020000) // Task5-PCB_INTR_TYPE1(PCB Type1 from CME)
 #if OVERRIDE_OTHER_ENGINES_IRQS == 1
-    #define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0xDF7EFF03FFFDFFF5) // Other instances' IRQs
+    #define IRQ_VEC_PRTY7_GPE2  (uint64_t)(0xDF7EFF03BFFDFFF5) // Other instances' IRQs
 #else
-    #define IRQ_VEC_PRTY6_GPE2  (uint64_t)(0x0000000000000000) // Other instances' IRQs
+    #define IRQ_VEC_PRTY7_GPE2  (uint64_t)(0x0000000000000000) // Other instances' IRQs
 #endif
 // Unique to each instance
 // We should never detect these
@@ -91,10 +92,11 @@ extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
                                 IRQ_VEC_PRTY2_GPE2 | \
                                 IRQ_VEC_PRTY3_GPE2 | \
                                 IRQ_VEC_PRTY4_GPE2 | \
-                                IRQ_VEC_PRTY5_GPE2 )      // Note, we do not incl PRTY6 here!
+                                IRQ_VEC_PRTY5_GPE2 | \
+                                IRQ_VEC_PRTY6_GPE2 )      // Note, we do not incl PRTY7 here!
 
 #define IRQ_VEC_PRTY_CHECK    ( IRQ_VEC_ALL_OUR_IRQS | \
-                                IRQ_VEC_PRTY6_GPE2 )      // This should be 0xFFFFFFFFFFFFFFFF
+                                IRQ_VEC_PRTY7_GPE2 )      // This should be 0xFFFFFFFFFFFFFFFF
 
 extern uint8_t    g_current_prty_level;
 extern uint8_t    g_oimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];
@@ -103,6 +105,8 @@ extern uint64_t   g_oimr_override_stack[NUM_EXT_IRQ_PRTY_LEVELS];
 extern uint64_t   g_oimr_override;
 
 void pk_irq_save_and_set_mask(uint32_t iPrtyLvl);
+
+
 
 /// Restore a vector of interrupts by overwriting OIMR.
 UNLESS__PPE42_IRQ_CORE_C__(extern)
@@ -137,4 +141,26 @@ pk_irq_vec_restore( PkMachineContext* context)
     pk_critical_section_exit(context);
 }
 
+//As per PPE SPEC, the Fixed-Interval Timer and Decrementer Interrupt
+//are lower priority than external interrupts.
+//In some external interrupts handlers atomiticy might be required while
+//keeping FIT and DEC unmasked. The sub-critical section concepts can be
+//helpful, and the following the two functions can be used for such purpose.
+//
+//PGPE makes use of this in several places
+UNLESS__PPE42_IRQ_CORE_C__(extern)
+inline void pk_irq_sub_critical_enter(PkMachineContext* ctx)
+{
+
+    pk_critical_section_enter(ctx);
+    pk_irq_save_and_set_mask(0);
+    pk_critical_section_exit(ctx);
+}
+
+UNLESS__PPE42_IRQ_CORE_C__(extern)
+inline void pk_irq_sub_critical_exit(PkMachineContext* ctx)
+{
+
+    pk_irq_vec_restore(ctx);
+}
 #endif // _P9_PGPE_IRQ_H_

@@ -62,6 +62,8 @@
 #define OCC_IPC_IMMEDIATE_RESP      0x0080
 #define WOF_IPC_IMMEDIATE_RESP      0x0040
 #define CCSR_CORE_CONFIG_MASK    0x80000000
+#define PSTATE_START_OCC_FLAG 0
+#define PSTATE_START_OCC_IPC  1
 
 
 /// PGPE PState
@@ -69,6 +71,7 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq);
+void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_ipi2_lo(void* arg, PkIrqId irq);
 void p9_pgpe_thread_process_requests(void* arg);
 void p9_pgpe_thread_actuate_pstates(void* arg);
