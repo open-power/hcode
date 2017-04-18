@@ -35,24 +35,28 @@ extern PgpePstateRecord G_pgpe_pstate_record;
 //
 //OCB Error Interrupt Handler
 //
-#define OCC_HB_ERROR 4
+#define OCC_HB_ERROR_FIR 4
 void p9_pgpe_ocb_hb_error_init()
 {
     PK_TRACE_DBG("OCC HB: Enter\n");
 
     uint64_t firact;
 
+    //Set up OCB_HB loss FIR bit to generate interrupt
     GPE_GETSCOM(OCB_OCCLFIRACT0, firact);
-    firact |= BIT64(OCC_HB_ERROR);
+    firact |= BIT64(OCC_HB_ERROR_FIR);
     GPE_PUTSCOM(OCB_OCCLFIRACT0, firact);
 
     GPE_GETSCOM(OCB_OCCLFIRACT1, firact);
-    firact &= ~BIT64(OCC_HB_ERROR);
+    firact &= ~BIT64(OCC_HB_ERROR_FIR);
     GPE_PUTSCOM(OCB_OCCLFIRACT1, firact);
 
-    GPE_PUTSCOM(OCB_OCCLFIRMASK_AND, ~BIT64(OCC_HB_ERROR));
+    GPE_PUTSCOM(OCB_OCCLFIRMASK_AND, ~BIT64(OCC_HB_ERROR_FIR));
 
-    out32(OCB_OIMR0_CLR, BIT32(OCC_HB_ERROR));
+    out64(OCB_OCCHBR, 0); //Clear and Disable OCC Heartbeat Register
+    GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(OCC_HB_ERROR_FIR));
+    out32(OCB_OISR0_CLR, BIT32(2));//Clear any pending interrupts
+    out32(OCB_OIMR0_CLR, BIT32(2));//Unmask interrupt
 
     PK_TRACE_DBG("OCC HB: Exit\n");
 }
@@ -73,6 +77,7 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
     //If OCB_LFIR[occ_hb_error]
     if (fir.fields.occ_hb_error == 1)
     {
+        GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(OCC_HB_ERROR_FIR));
         p9_pgpe_pstate_pm_complex_suspend();
     }
     else
