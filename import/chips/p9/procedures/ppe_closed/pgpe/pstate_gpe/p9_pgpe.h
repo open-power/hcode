@@ -60,6 +60,7 @@
 //#Defines
 //
 #define OCC_IPC_IMMEDIATE_RESP      0x0080
+#define WOF_IPC_IMMEDIATE_RESP      0x0040
 #define CCSR_CORE_CONFIG_MASK    0x80000000
 
 

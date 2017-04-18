@@ -424,7 +424,8 @@ void p9_pgpe_process_wof_ctrl()
 
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_processing = 0;
 
-    if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
+    if((G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP) ||
+       (G_pgpe_header_data->g_pgpe_qm_flags & WOF_IPC_IMMEDIATE_RESP))
     {
         PK_TRACE_DBG("PROCTH: WOF Ctrl Updt Imme\n");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
@@ -515,7 +516,8 @@ void p9_pgpe_process_wof_vfrt()
 
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_processing = 0;
 
-    if(G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP)
+    if((G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP) ||
+       (G_pgpe_header_data->g_pgpe_qm_flags & WOF_IPC_IMMEDIATE_RESP))
     {
         PK_TRACE_DBG("PROCTH: WOF VFRT Imme\n");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
