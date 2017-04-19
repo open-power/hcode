@@ -56,7 +56,7 @@ SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
     // wof status
     {0, 0, 0, 0},
     // semaphores
-    {{0, 0}}
+    {{0, 0, 0}}
 };
 
 // PCB Interrupt Type2

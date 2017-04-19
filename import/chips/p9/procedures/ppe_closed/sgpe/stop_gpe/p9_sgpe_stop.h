@@ -300,7 +300,7 @@ typedef struct
     // group of ex and quad entering or exiting the stop
     sgpe_group_t group;
     sgpe_wof_t   wof;
-    PkSemaphore  sem[2];
+    PkSemaphore  sem[3];
 } SgpeStopRecord;
 
 typedef struct
@@ -324,6 +324,8 @@ void p9_sgpe_clear_slvcfg_pm_disable(uint32_t);
 /// SGPE to PGPE IPC handlers
 void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg);
 void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg);
+void p9_sgpe_ipc_pgpe_rsp_callback(ipc_msg_t* cmd, void* arg);
+
 
 /// SGPE STOP Entry and Exit Prototypes
 void p9_sgpe_stop_pig_handler(void*, PkIrqId);

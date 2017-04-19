@@ -403,39 +403,62 @@ p9_sgpe_stop_exit()
     //   PGPE, as part of its processing this IPC,
     //   will write the QPPM_DPLL_FREQ register before responding.
 
-    if((G_sgpe_stop_record.wof.update_pgpe & SGPE_IPC_UPDATE_QUAD_ENABLED) &&
-       (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)) &&
-       G_sgpe_stop_record.group.quad[VECTOR_EXIT])   // exit from STOP11
+
+    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+        G_sgpe_stop_record.group.quad[VECTOR_EXIT])   // exit from STOP11
     {
-        PK_TRACE_INF("SXIPC: Update PGPE with Active Quads(stop11 and pstate enabled)");
-        G_sgpe_ipcmsg_update_quads.fields.update_type = SGPE_IPC_UPDATE_TYPE_EXIT;
-        G_sgpe_ipcmsg_update_quads.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
-        G_sgpe_ipcmsg_update_quads.fields.requested_quads =
-            (G_sgpe_stop_record.group.quad[VECTOR_EXIT] >> SHIFT32(5));
+        G_sgpe_ipcmsg_update_quads.fields.requested_quads = 0;
 
-        G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
-        ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
-                     IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
-                     0, 0);
-
-        rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
-
-        if(rc)
+        for(cexit = G_sgpe_stop_record.group.core[VECTOR_EXIT],
+            qspwu = G_sgpe_stop_record.group.qswu[VECTOR_EXIT],
+            qloop = 0;
+            (cexit > 0 || qspwu > 0) && (qloop < MAX_QUADS);
+            cexit = cexit << 4, qspwu = qspwu << 1, qloop++)
         {
-            PK_TRACE_ERR("ERROR: Exit Updates PGPE with Active Quads Failed. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_EXIT_IPC_QUAD_FAILED);
+
+            if (!((cexit & BITS32(0, 4)) || (qspwu & BIT32(0))))
+            {
+                continue;
+            }
+
+
+            if(G_sgpe_stop_record.state[qloop].act_state_q >= STOP_LEVEL_11)
+            {
+                G_sgpe_ipcmsg_update_quads.fields.requested_quads |= (0x20 >> qloop);
+            }
         }
 
-        /// @todo RTC166577
-        /// move the poll below to before dpll setup when sgpe supports multicast
-        PK_TRACE_INF("SXIPC: Poll PGPE Update Active Quads Ack");
-
-        while (G_sgpe_ipcmsg_update_quads.fields.return_code == SGPE_IPC_RETURN_CODE_NULL);
-
-        if (G_sgpe_ipcmsg_update_quads.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
+        if (G_sgpe_ipcmsg_update_quads.fields.requested_quads)
         {
-            PK_TRACE_ERR("ERROR: Exit Updates PGPE with Active Quads Bad RC. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_EXIT_IPC_QUAD_BAD_RC);
+            PK_TRACE_INF("SXIPC: Update PGPE with Active Quads(stop11 and pstate enabled)");
+            G_sgpe_ipcmsg_update_quads.fields.update_type = SGPE_IPC_UPDATE_TYPE_EXIT;
+            G_sgpe_ipcmsg_update_quads.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
+            G_sgpe_ipcmsg_update_quads.fields.requested_quads =
+                (G_sgpe_stop_record.group.quad[VECTOR_EXIT] >> SHIFT32(5));
+
+            G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
+            ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
+                         IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
+                         p9_sgpe_ipc_pgpe_rsp_callback, (void*)&G_sgpe_stop_record.sem[3]);
+
+            rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
+
+            if(rc)
+            {
+                PK_TRACE_ERR("ERROR: Exit Updates PGPE with Active Quads Failed. HALT SGPE!");
+                PK_PANIC(SGPE_STOP_EXIT_IPC_QUAD_FAILED);
+            }
+
+            /// @todo RTC166577
+            /// move the poll below to before dpll setup when sgpe supports multicast
+            PK_TRACE_INF("SXIPC: Pend PGPE Update Active Quads Ack");
+            pk_semaphore_pend(&(G_sgpe_stop_record.sem[3]), PK_WAIT_FOREVER);
+
+            if (G_sgpe_ipcmsg_update_quads.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
+            {
+                PK_TRACE_ERR("ERROR: Exit Updates PGPE with Active Quads Bad RC. HALT SGPE!");
+                PK_PANIC(SGPE_STOP_EXIT_IPC_QUAD_BAD_RC);
+            }
         }
 
     }
@@ -1132,6 +1155,7 @@ p9_sgpe_stop_exit()
         G_sgpe_stop_record.group.core[VECTOR_EXIT];
     G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |=
         G_sgpe_stop_record.group.quad[VECTOR_EXIT];
+
 
     //===========================
     MARK_TRAP(ENDSCOPE_STOP_EXIT)
