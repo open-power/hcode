@@ -147,12 +147,21 @@
                 .set THREAD_ID_REG,                 r6
                 .set CORE_RESTORE_BASE_ADDR_REG,    r7
                 .set TEMP_REG,                      r8
-                .set FUSED_MODE_CONST,              0xBB #Chose this flag to be an arbitrary unique value
                 .set HRMOR_RESTORE_REG,             r10
                 .set THREAD_ACTIVE_STATE_REG,       r11
                 .set CORE_SCOPE_RESTORE_ADDR_REG,   r12
+                .set HRMOR_INIT_REG,                r20
+                .set MSR_INIT_REG,                  r21
+                .set SKIP_HRMOR_UPDATE_OFFSET,      4
                 .set STOP,                          0x4C0002E4
                 .set ATTN,                          0x00000200
+                .set MSR_LE0_RESTORE_OFFSET,        0x1200  # Big Endian restore area
+                .set MSR_LE1_RESTORE_OFFSET,        0x1280  # Little Endian restore area
+                .set SWIZZLE_MTHRMOR,               0xA64B597D
+                .set SWIZZLE_SLBIA,                 0xE403007C
+                .set SWIZZLE_STOP,                  0xE402004C
+                .set SWIZZLE_ATTN,                  0x00020000
+
 #--------------------------------------------------------------------#
 #
 #                   Interrupt Vectors
@@ -221,73 +230,230 @@ _start:
 .org _start + SRESET
 
 _sreset_hndlr:
-mfspr r2, HRMOR
-addi  r2, r2, THREAD_LAUNCHER_START_OFFSET
-mtsrr0 r2
-mfmsr r2
-ori r2, r2, MACHINE_CHECK_ENABLE_CONST
-mtsrr1 r2
+mfspr   HRMOR_INIT_REG, HRMOR
+addi    TEMP_REG, HRMOR_INIT_REG, THREAD_LAUNCHER_START_OFFSET
+mtsrr0  TEMP_REG
+mfmsr   MSR_INIT_REG        //saves initial MSR value to a GPR
+ori     MSR_INIT_REG, MSR_INIT_REG, MACHINE_CHECK_ENABLE_CONST
+mtsrr1  MSR_INIT_REG
 rfid
 
 #--------------------------------------------------------------------#
 
 #Error handling for other interrupt vectors.
 
-.org _start + 0x0180
-.long ATTN
-
+#--------------------------------------------------------------------#
+#       Machine Check
+#--------------------------------------------------------------------#
 .org _start + 0x0200
 .long ATTN
 
-.org _start + 0x0280
-.long ATTN
-
+#--------------------------------------------------------------------#
+#       Data Storage
+#--------------------------------------------------------------------#
 .org _start + 0x0300
 .long ATTN
 
+#--------------------------------------------------------------------#
+#       Data Segment
+#--------------------------------------------------------------------#
 .org _start + 0x0380
 .long ATTN
 
+#--------------------------------------------------------------------#
+#       Instruction Storage
+#--------------------------------------------------------------------#
 .org _start + 0x0400
 .long ATTN
 
+#--------------------------------------------------------------------#
+#       Instruction Segment
+#--------------------------------------------------------------------#
 .org _start + 0x0480
 .long ATTN
 
+#--------------------------------------------------------------------#
+#       External
+#--------------------------------------------------------------------#
 .org _start + 0x0500
 .long ATTN
 
-.org _start + 0x0580
-.long ATTN
-
+#--------------------------------------------------------------------#
+#       Alignment
+#--------------------------------------------------------------------#
 .org _start + 0x0600
 .long ATTN
 
-.org _start + 0x0680
-.long ATTN
-
+#--------------------------------------------------------------------#
+#       Program
+#--------------------------------------------------------------------#
 .org _start + 0x0700
 .long ATTN
 
-.org _start + 0x0780
-.long ATTN
-
+#--------------------------------------------------------------------#
+#       Floating Point Unavailable
+#--------------------------------------------------------------------#
 .org _start + 0x0800
 .long ATTN
 
-.org _start + 0x0880
-.long ATTN
+#--------------------------------------------------------------------#
+#       Decrementer
+#--------------------------------------------------------------------#
 .org _start + 0x0900
 .long ATTN
 
-.long _start + 0x0980
+#--------------------------------------------------------------------#
+#       Hypervisor Decrementer
+#--------------------------------------------------------------------#
+.org _start + 0x0980
 .long ATTN
 
-#-----------------------------------------------------------------------------
+#--------------------------------------------------------------------#
+#       Directed Priviledged Doorbell
+#--------------------------------------------------------------------#
+.org _start + 0x0A00
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Reserved
+#--------------------------------------------------------------------#
+.org _start + 0x0B00
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       System Call
+#--------------------------------------------------------------------#
+.org _start + 0x0C00
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Trace
+#--------------------------------------------------------------------#
+.org _start + 0x0D00
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Hypervisor Data Storage
+#--------------------------------------------------------------------#
+.org _start + 0x0E00
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Hypervisor Instruction Storage
+#--------------------------------------------------------------------#
+.org _start + 0x0E20
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Hypervisor Emulation Assistance
+#--------------------------------------------------------------------#
+.org _start + 0x0E40
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Hypervisor Maintenance
+#--------------------------------------------------------------------#
+.org _start + 0x0E60
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Directed Hypervisor Doorbell
+#--------------------------------------------------------------------#
+.org _start + 0x0E80
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Reserved
+#--------------------------------------------------------------------#
+.org _start + 0x0EA0
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Reserved
+#--------------------------------------------------------------------#
+.org _start + 0x0EC0
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Reserved
+#--------------------------------------------------------------------#
+.org _start + 0x0EE0
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Performance Monitoring
+#--------------------------------------------------------------------#
+.org _start + 0x0F00
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Vector Unavailable
+#--------------------------------------------------------------------#
+.org _start + 0x0F20
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       VSX Unavailable
+#--------------------------------------------------------------------#
+.org _start + 0x0F40
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Facility Unavailable
+#--------------------------------------------------------------------#
+.org _start + 0x0F60
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Hypervisor Facility Unavailable
+#--------------------------------------------------------------------#
+.org _start + 0x0F80
+.long ATTN
+
+
+#--------------------------------------------------------------------#
+#       Self Restore Completion - Big Endian Hypervisor
+#--------------------------------------------------------------------#
+.org _start + MSR_LE0_RESTORE_OFFSET
+
+#restore the HRMOR to the value needed by the Hypervisor upon wakeup
+#there can be no future I-fetches after this point, so no more than 7
+#instructions after this
+
+mtspr HRMOR, HRMOR_RESTORE_REG
+
+#necessary to invalidate stale translations in the ERATs that were created
+#during the self-restore code execution.
+
+slbia
+.long STOP
+
+#******* Big Endian Core Entered STOP State **************************
+#Now ready to return execution to the Big Endian Hypervisor
+
+.long ATTN
+
+#--------------------------------------------------------------------#
+#       Self Restore Completion - Little Endian Hypervisor
+#--------------------------------------------------------------------#
+
+#For completion of self restore in case of little endian hypervisor
+.org _start +  MSR_LE1_RESTORE_OFFSET
+
+.long SWIZZLE_MTHRMOR
+.long SWIZZLE_SLBIA
+.long SWIZZLE_STOP
+
+#******* Little Endian Core Entered STOP State ***********************
+#Now ready to return execution to the Little Endian Hypervisor
+
+.long SWIZZLE_ATTN
+
+#---------------------------------------------------------------------
 #
 # common code for thread restoration
 #
-#----------------------------------------------------------------------------
+#---------------------------------------------------------------------
 
 .org _start + THREAD_LAUNCHER_START_OFFSET
 
@@ -374,8 +540,8 @@ blrl                                          #branch to thread register restore
 
 #return here after thread register restoration
 thread_restore_return:
-cmpwi THREAD_ID_REG, 0                        # is it thread 0
-bne enter_stop_state                          # if thread not in STOP 15
+cmpwi  THREAD_ID_REG, 0            # if thread in question is not 0, restore MSR , enter STOP
+bne    core_reg_restore_return     # else wait for other threads to be done then restore core SPR, MSR
 
 wait_until_single_thread:          # wait till all threads are done restoring
 mfspr TEMP_REG, SPRD
@@ -386,29 +552,25 @@ bne wait_until_single_thread
 #**************** all threads restored thread scope register *****************
 
 mtlr CORE_SCOPE_RESTORE_ADDR_REG
-blrl                                # branch to core register restore area
+blrl                            # branch to core register restore area
 
-#********************************* enter STOP State **************************
-# following pseudo-op aligns next opcode to 2^4 = 16B boundary. Each opcode
-# takes 4B. So, next four opcodes will always start at 16B boundary and
-# also never cross 128B cache line.
+core_reg_restore_return:        #so far core reg restored except HRMOR and MSR
 
-.align 4
+#RFID to set the new MSR.  address determined by MSR[LE] bit 63
+mtsrr1  MSR_INIT_REG
+addi    TEMP_REG, HRMOR_INIT_REG, MSR_LE0_RESTORE_OFFSET
+extrdi. MSR_INIT_REG, MSR_INIT_REG, 1, 63
+beq     skip_le1_offset         # if MSR[LE] eq 0, use LE0 offset
+addi    TEMP_REG, HRMOR_INIT_REG, MSR_LE1_RESTORE_OFFSET
 
-core_reg_restore_return:        #so far core reg restored except HRMOR
-mtspr HRMOR, HRMOR_RESTORE_REG
-
-enter_stop_state:
-
-#necessary to invalidate stale translations in the ERATs that were created
-#during the self-restore code execution.
-slbia
-.long STOP
-.long ATTN
+skip_le1_offset:
+cmpwi  THREAD_ID_REG, 0
+beq update_srr0
+addi TEMP_REG, TEMP_REG, SKIP_HRMOR_UPDATE_OFFSET #restore HRMOR only if thread0
+update_srr0:
+mtsrr0  TEMP_REG
+rfid
 
 # THREAD_LAUNCHER_SIZE_OFFSET must be >= (4 * number of instructions between
 # here and thread_launcher_start)
-
-#***************************** finished entered STOP State **************
-
 #********************************* End Thread Launcher **********************

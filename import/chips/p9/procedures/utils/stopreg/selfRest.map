@@ -11,18 +11,18 @@ Linker script and memory map
                 0x0000000000000000                . = ALIGN (0x80)
                 0x0000000000000000                _SELF_RESTORE_START = .
 
-.selfRestore    0x0000000000000000     0x20a0
+.selfRestore    0x0000000000000000     0x20b0
  *(.selfRestore)
- .selfRestore   0x0000000000000000     0x20a0 p9_core_restore_routines.o
+ .selfRestore   0x0000000000000000     0x20b0 /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o
                 0x0000000000000000                _start
-LOAD p9_core_restore_routines.o
-OUTPUT(selfRest.bin binary)
+LOAD /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o
+OUTPUT(/gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/selfRest.bin binary)
 
-.text           0x00000000000020a0        0x0
- .text          0x00000000000020a0        0x0 p9_core_restore_routines.o
+.text           0x00000000000020b0        0x0
+ .text          0x00000000000020b0        0x0 /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o
 
-.data           0x00000000000020a0        0x0
- .data          0x00000000000020a0        0x0 p9_core_restore_routines.o
+.data           0x00000000000020b0        0x0
+ .data          0x00000000000020b0        0x0 /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o
 
-.bss            0x00000000000020a0        0x0
- .bss           0x00000000000020a0        0x0 p9_core_restore_routines.o
+.bss            0x00000000000020b0        0x0
+ .bss           0x00000000000020b0        0x0 /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o
