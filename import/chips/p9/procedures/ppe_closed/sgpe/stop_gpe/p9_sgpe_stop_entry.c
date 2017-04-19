@@ -230,7 +230,7 @@ p9_sgpe_stop_entry()
     //            will resume Pstate protocol operations.
     //   4. optionally finishes the entry (if not done above)
 
-    if ((in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)) &&
+    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
         G_sgpe_stop_record.group.quad[VECTOR_ENTRY]) // entry into STOP11
     {
         //===============================
@@ -246,7 +246,7 @@ p9_sgpe_stop_entry()
         G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_suspend_pstate;
         ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
                      IPC_MSGID_SGPE_PGPE_SUSPEND_PSTATE,
-                     0, 0);
+                     p9_sgpe_ipc_pgpe_rsp_callback, (void*)&G_sgpe_stop_record.sem[2]);
 
         rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
 
@@ -258,9 +258,8 @@ p9_sgpe_stop_entry()
 
         /// @todo RTC166577
         /// move poll below to before stop cache clocks when sgpe supports multicast
-        PK_TRACE_INF("SEIPC: Poll PGPE Suspend Pstate Ack");
-
-        while (G_sgpe_ipcmsg_suspend_pstate.fields.return_code == SGPE_IPC_RETURN_CODE_NULL);
+        PK_TRACE_INF("SEIPC: Pend PGPE Suspend Pstate Ack");
+        pk_semaphore_pend(&(G_sgpe_stop_record.sem[2]), PK_WAIT_FOREVER);
 
         if (G_sgpe_ipcmsg_suspend_pstate.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
         {
@@ -1135,8 +1134,8 @@ p9_sgpe_stop_entry()
     /// @todo RTC166577
     /// this block can be done as early as after stop cache clocks
     /// when sgpe supports multicast
-    if((G_sgpe_stop_record.wof.update_pgpe & SGPE_IPC_UPDATE_QUAD_ENABLED) &&
-       G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
+    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+        G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
     {
         PK_TRACE_INF("SEIPC: Send PGPE Resume with Active Quads Updated(0 if aborted)");
         // Note: if all quads aborted on l3 purge, the list will be 0s;
@@ -1149,7 +1148,7 @@ p9_sgpe_stop_entry()
         G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
         ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
                      IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
-                     0, 0);
+                     p9_sgpe_ipc_pgpe_rsp_callback, (void*)&G_sgpe_stop_record.sem[2]);
 
         rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
 
@@ -1159,9 +1158,8 @@ p9_sgpe_stop_entry()
             PK_PANIC(SGPE_STOP_ENTRY_IPC_QUAD_FAILED);
         }
 
-        PK_TRACE_INF("SEIPC: Poll PGPE Update Active Quads Ack");
-
-        while (G_sgpe_ipcmsg_update_quads.fields.return_code == SGPE_IPC_RETURN_CODE_NULL);
+        PK_TRACE_INF("SEIPC: Pend PGPE Update Active Quads Ack");
+        pk_semaphore_pend(&(G_sgpe_stop_record.sem[2]), PK_WAIT_FOREVER);
 
         if (G_sgpe_ipcmsg_update_quads.fields.return_code != SGPE_IPC_RETURN_CODE_ACK)
         {
