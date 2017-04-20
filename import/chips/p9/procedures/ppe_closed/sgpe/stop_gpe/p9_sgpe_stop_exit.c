@@ -311,8 +311,6 @@ p9_sgpe_stop_exit()
     uint32_t      ec_mask         = 0;
     uint32_t      ex_index        = 0;
     uint32_t      ec_index        = 0;
-    uint32_t      chtm_mask       = 0;
-    uint64_t      chtm_size       = 0;
     data64_t      scom_data       = {0};
 #if !STOP_PRIME
     ocb_ccsr_t    ccsr            = {0};
@@ -326,10 +324,6 @@ p9_sgpe_stop_exit()
 #endif
 #if !SKIP_IPC
     uint32_t      rc              = 0;
-#endif
-    sgpeHeader_t* pSgpeImgHdr     = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
-#if (NIMBUS_DD_LEVEL == 1) && !SKIP_HOMER_ACCESS
-    cpmrHeader_t* pCpmrHdrAddr    = (cpmrHeader_t*)(HOMER_CPMR_HEADER_ADDR);
 #endif
 
     //===============================
@@ -643,6 +637,8 @@ p9_sgpe_stop_exit()
             // Reading fused core mode flag in cpmr header
             // To access memory, need to set MSB of homer address
 
+            cpmrHeader_t* pCpmrHdrAddr = (cpmrHeader_t*)(HOMER_CPMR_HEADER_ADDR);
+
             if (pCpmrHdrAddr->fusedModeStatus == 0xBB)
             {
                 PK_TRACE_INF("WARNING: FUSED_CORE_MODE Flag is Set in CPMR Header");
@@ -792,10 +788,6 @@ p9_sgpe_stop_exit()
                     continue;
                 }
 
-                PK_TRACE("Enable CME SRAM scrub engine via CSCR[1]");
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_CSCR_OR,
-                                              qloop, (ec_index >> 1)), BIT64(1));
-
                 PK_TRACE("Assert core[%d]-L2/CC quiesces via SICR[6/7,8/9]", ec_mask);
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, (ec_index >> 1)),
                             ((uint64_t)ec_mask << SHIFT64(7) |
@@ -822,24 +814,6 @@ p9_sgpe_stop_exit()
 
             PK_TRACE_DBG("Cache Scom Cust");
             p9_hcd_cache_scomcust(qloop, m_pg, 0);
-
-            PK_TRACE("Allow the CME to access the PCB Slave NET_CTRL registers");
-
-            for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
-            {
-                // only loop over configured cores
-                if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] &
-                      BIT32((qloop << 2) + cloop)))
-                {
-                    continue;
-                }
-
-                GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
-                                               ((qloop << 2) + cloop)), scom_data.value);
-                scom_data.words.upper &= ~BITS32(6, 2);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
-                                               ((qloop << 2) + cloop)), scom_data.value);
-            }
 
             //==================================
             MARK_TAG(SX_CME_BOOT, (32 >> qloop))
@@ -926,171 +900,7 @@ p9_sgpe_stop_exit()
                         }
                     }
 
-                    scom_data.words.lower = 0;
-                    scom_data.words.upper = cme_flags;
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR, qloop, ex_index),
-                                scom_data.value);
-                }
-            }
-
-            // enable cme trace array
-            //
-            // Trace configuration
-            // CME_LCL_DBG
-            // 0: LCL_EN_DBG
-            // 4: LCL_EN_INTR_ADDR
-            // 5: LCL_EN_TRACE_EXTRA
-            // 6: LCL_EN_TRACE_STALL
-            // 7: LCL_EN_WAIT_CYCLES
-            // 8: LCL_EN_FULL_SPEED
-            // inst: 3D20C000 | addis r9, 0, 0xC000 | R9 = 0xC0000000
-            // inst: 3C208F80 | addis r1, 0, 0x8F80 | R1 = 0x8F800000
-            // HTM mode, if enabled, forces only 64 bits of data
-            // inst: 38210300 | addi  r1, r1, 0x300 | R1 = 0x8F800300
-            // inst: 90290120 | stw   r1, 0x120(r9) | 0xC0000120 = R1
-            //
-            // This configures L3 Trace array to receive CME data
-            // 1. The trace array has to be stopped to configure it
-            // 2. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRCTRL_CONFIG
-            //    bit0: store_trig_mode_lt = 1
-            //    bit 11 enh_trace_mode = 1
-            //    bit 14:15 = trace_select_lt = 10 for CME0
-            // 3. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_0
-            //    Set trace data compare mask to 0  (0:63)
-            // 4. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_1
-            //    Set trace data compare mask to 0  (64:87)
-            // 5. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_4
-            //    Clear MSKa, MSKb
-            // 6. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_5
-            //    Clear MSKc, MSKd
-            // 7. TP.TCEP03.TPCL3.L3TRA0.TR0.TRACE_TRDATA_CONFIG_9
-            //     bit 0 = disable compression:
-            //     bit 1 = error_bit_compresion_care_mask
-            //             (default is zero so should be enabled)
-            //     32  msk_err_q                <= error_mode_lt(0);
-            //     33  pat_err_q                <= error_mode_lt(1);
-            //     34  trig0_err_msk            <= error_mode_lt(2);
-            //     35  trig1_err_msk            <= error_mode_lt(3);
-            //     match_err                    <= (msk_err_q or not pat_err_q)
-            //                                     xor error_stage_lt(0);
-            //     mask = 0 and pattern = 1 and may be trigger 0
-
-            if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_ENABLE_CME_TRACE_ARRAY_BIT_POS)
-            {
-                // Stop the trace to configure it
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(1));
-
-                for (ex_mask = 2; ex_mask; ex_mask--)
-                {
-                    if (m_pg & ex_mask)
-                    {
-                        ex_index = ex_mask & 1;
-
-                        PK_TRACE("Configure and Enable L3[%d] Trace Array to receive CME data",
-                                 ex_index);
-
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
-                                    0x3D20C00000000000);
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
-                                    0x3C20888000000000);
-
-                        if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_ENABLE_CHTM_TRACE_CME_BIT_POS)
-                        {
-                            PK_TRACE("Puttng PPE in 64 bit data mode before enable CHTM");
-                            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIRAMEDR, qloop, 0),
-                                        0x3821030000000000);
-                        }
-
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX(CME_SCOM_XIRAMEDR, qloop, ex_index),
-                                    0x9029012000000000);
-
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
-                                        (L3TRA_TRACE_TRCTRL_CONFIG   | (ex_index << 7)),
-                                        qloop), (BIT64(0) | BIT64(11) | BIT64(14)));
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
-                                        (L3TRA_TRACE_TRDATA_CONFIG_0 | (ex_index << 7)),
-                                        qloop), 0);
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
-                                        (L3TRA_TRACE_TRDATA_CONFIG_1 | (ex_index << 7)),
-                                        qloop), 0);
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
-                                        (L3TRA_TRACE_TRDATA_CONFIG_4 | (ex_index << 7)),
-                                        qloop), 0);
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
-                                        (L3TRA_TRACE_TRDATA_CONFIG_5 | (ex_index << 7)),
-                                        qloop), 0);
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(
-                                        (L3TRA_TRACE_TRDATA_CONFIG_9 | (ex_index << 7)),
-                                        qloop), BITS64(33, 2));
-                    }
-                }
-
-                // Start the trace
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(0));
-            }
-
-            // Enable CHTM
-            //
-            // This configures CHTM to receive CME data
-            // Set up HTM_MODE: [0] = start, [1:2] = 0b10 PPE Trace
-            // Set up HTM_CTRL
-            // Clear memory allocated in HTM_MEM
-            // Allocate memory in HTM_MEM
-            //   allow the user to have full control over size and starting address
-            // Reset triggers
-            // Start triggers
-
-            if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_ENABLE_CHTM_TRACE_CME_BIT_POS)
-            {
-                for (ex_mask = 2; ex_mask; ex_mask--)
-                {
-                    if (m_pg & ex_mask)
-                    {
-                        ex_index = ex_mask & 1;
-
-                        PK_TRACE("Configure and Enable EX[%d] CHTM to receive CME data",
-                                 ex_index);
-
-                        chtm_mask = (uint32_t)pSgpeImgHdr->g_sgpe_chtm_mem_cfg;
-                        chtm_mask = chtm_mask & BITS64SH(40, 9) >> SHIFT64SH(48);
-
-                        //bit[5] size_small = 1, mask base[31:39,9] with size[40:48,9]
-                        if (pSgpeImgHdr->g_sgpe_chtm_mem_cfg & BIT64(5))
-                        {
-                            chtm_size = BIT64(39); // Base of 16M;
-                        }
-                        //bit[5] size_small = 0, mask base[26:34,9] with size[40:48,9]
-                        else
-                        {
-                            chtm_size = BIT64(34); // Base of 512M
-                        }
-
-                        // Note: it isn't 100% because it only uses the # of bits in the mask,
-                        //       but it isn't valid to configure the mask other ways
-                        while (chtm_mask != 0)
-                        {
-                            chtm_size = chtm_size << 1;
-                            chtm_mask = chtm_mask >> 1;
-                        }
-
-                        scom_data.value = BIT64(0) +
-                                          pSgpeImgHdr->g_sgpe_chtm_mem_cfg +
-                                          chtm_size * ((qloop << 1) + ex_index);
-
-                        // CME Trace is routed through CHTM1
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_MODE_REG),
-                                                     qloop, ex_index), 0xC00F000000000000);
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_CTRL_REG),
-                                                     qloop, ex_index), 0x7404000000000000);
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_MEM_REG),
-                                                     qloop, ex_index), 0);
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_MEM_REG),
-                                                     qloop, ex_index), scom_data.value);
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_TRIG_REG),
-                                                     qloop, ex_index), BIT64(4));
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_EX((EX_CHTM1_TRIG_REG),
-                                                     qloop, ex_index), BIT64(0));
-                    }
+                    p9_sgpe_stop_cme_scominit(qloop, ex_index, cme_flags);
                 }
             }
 
