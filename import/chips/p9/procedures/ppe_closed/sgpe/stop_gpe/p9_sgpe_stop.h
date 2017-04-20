@@ -333,6 +333,7 @@ void p9_sgpe_stop_enter_thread(void*);
 void p9_sgpe_stop_exit_thread(void*);
 void p9_sgpe_stop_entry();
 void p9_sgpe_stop_exit();
+void p9_sgpe_stop_cme_scominit(uint32_t, uint32_t, uint32_t);
 
 /// Procedures shared between Istep4 and SGPE Stop
 void p9_hcd_cache_scan0(uint32_t, uint64_t, uint64_t);
