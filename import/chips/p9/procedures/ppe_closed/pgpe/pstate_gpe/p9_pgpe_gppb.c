@@ -28,6 +28,7 @@
 //Global pointer to GlobalPstateParmBlock
 GlobalPstateParmBlock* G_gppb;
 
+//VpdOperatingPoint *G_gppb->operating_points_set[NUM_VPD_PTS_SET][VPD_PV_POINTS];
 uint32_t G_pstate0_dpll_value;
 uint32_t G_ext_vrm_inc_rate_mult_usperus;
 uint32_t G_ext_vrm_dec_rate_mult_usperus;
@@ -90,6 +91,8 @@ void p9_pgpe_gppb_compute_vpd_pts()
         G_gppb->operating_points_set[VPD_PT_SET_RAW][p].ics_100ma = G_gppb->operating_points[p].ics_100ma;
         G_gppb->operating_points_set[VPD_PT_SET_RAW][p].frequency_mhz = G_gppb->operating_points[p].frequency_mhz;
         G_gppb->operating_points_set[VPD_PT_SET_RAW][p].pstate = G_gppb->operating_points[p].pstate;
+        PK_TRACE_INF("GP:PS=%x,Vdd=%x", G_gppb->operating_points_set[VPD_PT_SET_RAW][p].vdd_mv,
+                     G_gppb->operating_points_set[VPD_PT_SET_RAW][p].frequency_mhz);
     }
 
     //SYSTEM PARAMS APPLIED POINTS
@@ -98,19 +101,21 @@ void p9_pgpe_gppb_compute_vpd_pts()
     for (p = 0; p < VPD_PV_POINTS; p++)
     {
         G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].vdd_mv =
-            (G_gppb->operating_points[p].vdd_mv * 1000 +
-             ((G_gppb->operating_points[p].idd_100ma * 100) * (G_gppb->vdd_sysparm.loadline_uohm +
-                     G_gppb->vdd_sysparm.distloss_uohm)) +
+            G_gppb->operating_points[p].vdd_mv  +
+            (((G_gppb->operating_points[p].idd_100ma * 100) * (G_gppb->vdd_sysparm.loadline_uohm +
+                    G_gppb->vdd_sysparm.distloss_uohm)) / 1000 +
              (G_gppb->vdd_sysparm.distoffset_uv)) / 1000 ;
         G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].vcs_mv =
-            (G_gppb->operating_points[p].vcs_mv * 1000 +
-             ((G_gppb->operating_points[p].ics_100ma * 100) * (G_gppb->vcs_sysparm.loadline_uohm +
-                     G_gppb->vcs_sysparm.distloss_uohm)) +
+            G_gppb->operating_points[p].vcs_mv  +
+            (((G_gppb->operating_points[p].ics_100ma * 100) * (G_gppb->vcs_sysparm.loadline_uohm +
+                    G_gppb->vcs_sysparm.distloss_uohm)) / 1000 +
              (G_gppb->vcs_sysparm.distoffset_uv)) / 1000 ;
         G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].idd_100ma = G_gppb->operating_points[p].idd_100ma;
         G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].ics_100ma = G_gppb->operating_points[p].ics_100ma;
         G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].frequency_mhz = G_gppb->operating_points[p].frequency_mhz;
         G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].pstate = G_gppb->operating_points[p].pstate;
+        PK_TRACE_INF("SP:PS=%x,Vdd=%x", G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].vdd_mv,
+                     G_gppb->operating_points_set[VPD_PT_SET_SYSP][p].frequency_mhz);
     }
 
     //BIASED POINTS
@@ -124,6 +129,8 @@ void p9_pgpe_gppb_compute_vpd_pts()
         G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].ics_100ma = G_gppb->operating_points[p].ics_100ma;
         G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].frequency_mhz = (G_gppb->operating_points[p].frequency_mhz *
                 (200 + G_gppb->ext_biases[p].frequency_hp)) / 200;
+        PK_TRACE_INF("Bi:PS=%x,Vdd=%x", G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vdd_mv,
+                     G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].frequency_mhz);
     }
 
     for (p = 0; p < VPD_PV_POINTS; p++)
@@ -141,14 +148,14 @@ void p9_pgpe_gppb_compute_vpd_pts()
     for (p = 0; p < VPD_PV_POINTS; p++)
     {
         G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].vdd_mv =
-            ((G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vdd_mv * 1000) +
-             ((G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].idd_100ma * 100) *
-              (G_gppb->vdd_sysparm.loadline_uohm + G_gppb->vdd_sysparm.distloss_uohm)) +
+            (G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vdd_mv ) +
+            (((G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].idd_100ma * 100) *
+              (G_gppb->vdd_sysparm.loadline_uohm + G_gppb->vdd_sysparm.distloss_uohm)) / 1000 +
              (G_gppb->vdd_sysparm.distoffset_uv)) / 1000 ;
         G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].vcs_mv =
-            ((G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vcs_mv * 1000) +
-             ((G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].ics_100ma * 100) *
-              (G_gppb->vcs_sysparm.loadline_uohm + G_gppb->vcs_sysparm.distloss_uohm)) +
+            (G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].vcs_mv ) +
+            (((G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].ics_100ma * 100) *
+              (G_gppb->vcs_sysparm.loadline_uohm + G_gppb->vcs_sysparm.distloss_uohm)) / 1000 +
              (G_gppb->vcs_sysparm.distoffset_uv)) / 1000 ;
         G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].idd_100ma =
             G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].idd_100ma;
@@ -158,6 +165,8 @@ void p9_pgpe_gppb_compute_vpd_pts()
             G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].frequency_mhz;
         G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].pstate =
             G_gppb->operating_points_set[VPD_PT_SET_BIASED][p].pstate;
+        PK_TRACE_INF("BS:PS=%x,Vdd=%x", G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].vdd_mv,
+                     G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p].frequency_mhz);
     }
 }
 
@@ -277,6 +286,7 @@ void p9_pgpe_gppb_compute_PsV_slopes()
            / (uint32_t) (G_gppb->operating_points_set[VPD_PT_SET_BIASED][ULTRA].vdd_mv -
                          G_gppb->operating_points_set[VPD_PT_SET_BIASED][TURBO].vdd_mv);
     G_gppb->VPsSlopes[VPD_SLOPES_BIASED][REGION_TURBO_ULTRA] = tmp;
+
 }
 
 //
