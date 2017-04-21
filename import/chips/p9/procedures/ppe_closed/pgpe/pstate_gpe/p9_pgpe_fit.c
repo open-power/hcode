@@ -44,10 +44,12 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq);
 //
 void p9_pgpe_fit_init()
 {
-    uint16_t freq = G_gppb->nest_frequency_mhz;
+//    uint16_t freq = G_gppb->nest_frequency_mhz;
 
     PK_TRACE_DBG("Fit NestFreq=0x%x", G_gppb->nest_frequency_mhz);
     //Set fit count threshold
+    //\todo Set fit_count threshold correctly RTC: 173170
+    /*
     G_fit_count_threshold = (freq < 1049) ? 7 :
                             (freq < 1180) ? 8 :
                             (freq < 1311) ? 9 :
@@ -64,7 +66,9 @@ void p9_pgpe_fit_init()
                             (freq < 2753) ? 20 :
                             (freq < 2884) ? 21 :
                             (freq < 3015) ? 22 :
-                            (freq < 3146) ? 23 : 24;
+                            (freq < 3146) ? 23 : 24;*/
+
+    G_fit_count_threshold = 2;
 
     ppe42_fit_setup(p9_pgpe_fit_handler, NULL);
 }
