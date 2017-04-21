@@ -46,8 +46,8 @@ SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
         {0, 0, 0, 0, 0, 0, 0}
     },
     // group vectors
-    {   {0, 0, 0},
-        {0, 0, 0},
+    {   {0, 0, 0, 0, 0},
+        {0, 0, 0, 0},
         {0, 0, 0},
         {0, 0, 0},
         {0, 0, 0},
@@ -272,15 +272,30 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             {
                 if (!(scom_data & BIT64(13)))
                 {
-                    PK_TRACE_ERR("ERROR: Received Type2 Entry PIG When Wakeup_notify_select = 0. HALT SGPE!");
-                    PK_PANIC(SGPE_PIG_TYPE2_ENTRY_WNS_CME);
-                }
+                    // wakeup=normal + notify=cme -> error
+                    if (cpayload_t2 != 0x400)
+                    {
+                        PK_TRACE_ERR("ERROR: Received Type2 Entry PIG When Wakeup_notify_select = 0. HALT SGPE!");
+                        PK_PANIC(SGPE_PIG_TYPE2_ENTRY_WNS_CME);
+                    }
 
-                PK_TRACE_INF("Core Request Entry via Type2");
-                G_sgpe_stop_record.level[qloop][cloop] =
-                    (cpayload_t2 & TYPE2_PAYLOAD_STOP_LEVEL);
-                G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
-                    BIT32(((qloop << 2) + cloop));
+                    // wakeup=pc + notify=cme -> ignore phantom(already handoff to cme by other wakeup)
+                }
+                else
+                {
+                    // wakeup=pc + notify=sgpe -> go exit with flag to do extra doorbell from normal wakeup
+                    if (cpayload_t2 == 0x400)
+                    {
+                        G_sgpe_stop_record.group.core[VECTOR_PCWU] |= BIT32(((qloop << 2) + cloop));
+                    }
+
+                    // wakeup=normal + notify=sgpe -> go exit
+                    PK_TRACE_INF("Core Request Entry via Type2");
+                    G_sgpe_stop_record.level[qloop][cloop] =
+                        (cpayload_t2 & TYPE2_PAYLOAD_STOP_LEVEL);
+                    G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
+                        BIT32(((qloop << 2) + cloop));
+                }
             }
             // if t3 entry (t2 exit or empty)
             else if (cpayload_t3 && (!(cpayload_t3 & TYPE2_PAYLOAD_EXIT_EVENT)))

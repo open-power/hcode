@@ -278,6 +278,8 @@ typedef struct
     uint32_t      core_running;
     // core stop process handoff to sgpe from cme, used to mask pc_intr_pending
     uint32_t      core_stopgpe;
+    // core with pc_intr_pending blocked for decrementor stop5 wakeup support
+    uint32_t      core_blockpc;
     // core in block wakeup mode, can be used as core select in scom address or data
     uint32_t      core_blockwu;
     // core in special wakeup, can be used as core select in scom address or data
@@ -305,7 +307,8 @@ void p9_cme_stop_exit();
 int  p9_cme_stop_exit_catchup(uint32_t*, uint32_t*, uint32_t*, uint8_t*, int*);
 
 void p9_cme_stop_enter_handler(void*, PkIrqId);
-void p9_cme_stop_exit_handler(void*, PkIrqId);
+void p9_cme_stop_pcwu_handler(void*, PkIrqId);
+void p9_cme_stop_rgwu_handler(void*, PkIrqId);
 void p9_cme_stop_spwu_handler(void*, PkIrqId);
 void p9_cme_stop_db1_handler(void*, PkIrqId);
 void p9_cme_stop_db2_handler(void*, PkIrqId);

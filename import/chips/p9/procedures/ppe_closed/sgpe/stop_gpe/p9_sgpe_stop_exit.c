@@ -276,6 +276,14 @@ void p9_sgpe_stop_exit_end(uint32_t cexit, uint32_t qspwu, uint32_t qloop)
 
 #endif
 
+        // if waken up by pc, send doorbell to unmask pc
+        if (G_sgpe_stop_record.group.core[VECTOR_PCWU] & BIT32(((qloop << 2) + cloop)))
+        {
+            p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2,
+                                                    ((qloop << 2) + cloop)), BIT64(7));
+            G_sgpe_stop_record.group.core[VECTOR_PCWU] &= ~BIT32(((qloop << 2) + cloop));
+        }
+
         PK_TRACE_INF("SX.CME: Core[%d] Switch CorePPM Wakeup Back to CME via CPMMR[13]",
                      ((qloop << 2) + cloop));
         p9_dd1_cppm_unicast_wr(

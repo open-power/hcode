@@ -233,6 +233,7 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
     G_cme_stop_record.core_running |=  core;
     G_cme_stop_record.core_stopgpe &= ~core;
+    G_cme_stop_record.core_blockpc &= ~core;
 
     PK_TRACE_DBG("Drop halt STOP override disable via LMCR[14/15]");
     out32(CME_LCL_LMCR_CLR, (core << SHIFT32(15)));

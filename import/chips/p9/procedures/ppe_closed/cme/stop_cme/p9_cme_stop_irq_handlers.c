@@ -29,6 +29,52 @@
 
 extern CmeStopRecord G_cme_stop_record;
 
+
+void
+p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
+{
+    MARK_TRAP(STOP_PCWU_HANDLER)
+    PK_TRACE_INF("PCWU Handler Trigger %d", irq);
+
+    uint32_t  core_mask = 0;
+    uint32_t  core      = (in32(CME_LCL_EISR) & BITS32(12, 2)) >> SHIFT32(13);
+    data64_t  scom_data = {0};
+    ppm_pig_t pig       = {0};
+
+    for (core_mask = 2; core_mask; core_mask--)
+    {
+        if (core & core_mask)
+        {
+            CME_GETSCOM(CPPM_CPMMR, core_mask, CME_SCOM_AND, scom_data.value);
+
+            // If notify_select == sgpe
+            if (scom_data.words.upper & BIT32(13))
+            {
+                // In stop5 as using type2, send exit pig
+                if (!(scom_data.words.upper & BIT32(10)))
+                {
+                    pig.fields.req_intr_type    = PIG_TYPE2;
+                    pig.fields.req_intr_payload = 0x400;
+                    CME_PUTSCOM(PPM_PIG, core_mask, pig.value);
+                }
+
+                // block pc for stop8,11 or stop5 as pig sent
+                out32(CME_LCL_EIMR_OR, core_mask << SHIFT32(13));
+                G_cme_stop_record.core_blockpc |= core_mask;
+                core = core - core_mask;
+            }
+        }
+    }
+
+    // if still wakeup for core with notify_select == cme, go exit
+    if (core)
+    {
+        out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+        pk_semaphore_post((PkSemaphore*)arg);
+    }
+}
+
+
 // When take an Interrupt on falling edge of SPWU from a CPPM.
 // 1) Read EINR to check if another one has been set
 //    in the meantime from the same core.  If so abort.
@@ -117,11 +163,10 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
 
 
 void
-p9_cme_stop_exit_handler(void* arg, PkIrqId irq)
+p9_cme_stop_rgwu_handler(void* arg, PkIrqId irq)
 {
-    MARK_TRAP(STOP_EXIT_HANDLER)
-    PK_TRACE_INF("SX Handler");
-    PK_TRACE_DBG("SX Trigger %d", irq);
+    MARK_TRAP(STOP_RGWU_HANDLER)
+    PK_TRACE_INF("RGWU Handler Trigger %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
     pk_semaphore_post((PkSemaphore*)arg);
 }
@@ -132,71 +177,35 @@ void
 p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_ENTER_HANDLER)
-    PK_TRACE_INF("SE Handler");
-    PK_TRACE_DBG("SE Trigger %d", irq);
+    PK_TRACE_INF("PM_ACTIVE Handler Trigger %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
     pk_semaphore_post((PkSemaphore*)arg);
 }
-
-
 
 void
 p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
     MARK_TRAP(STOP_DB1_HANDLER)
-    PK_TRACE_INF("DB1 Handler");
-    PK_TRACE_DBG("DB1 Trigger %d", irq);
+    PK_TRACE_DBG("DB1 Handler Trigger %d", irq);
     pk_irq_vec_restore(&ctx);
 }
-
-
 
 void
 p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
-    cppm_cmedb2_t    db2c0 = {0};
-    cppm_cmedb2_t    db2c1 = {0};
-
     MARK_TRAP(STOP_DB2_HANDLER)
-    PK_TRACE_INF("DB2 Handler");
-    PK_TRACE_DBG("DB2 Trigger %d", irq);
+    PK_TRACE_DBG("DB2 Handler Trigger %d", irq);
 
-    CME_GETSCOM(CPPM_CMEDB2, CME_MASK_C0, CME_SCOM_AND, db2c0.value);
-    CME_GETSCOM(CPPM_CMEDB2, CME_MASK_C1, CME_SCOM_AND, db2c1.value);
-    CME_PUTSCOM(CPPM_CMEDB2, CME_MASK_BC, 0);
-    out32(CME_LCL_EISR_CLR,  BITS32(18, 2));
+    // read and clear doorbell
+    uint32_t core = (in32(CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
+    CME_PUTSCOM(CPPM_CMEDB2, core, 0);
+    G_cme_stop_record.core_blockpc &= ~core;
 
-    if (db2c0.fields.cme_message_numbern == DB2_BLOCK_WKUP_ENTRY)
-    {
-        G_cme_stop_record.core_blockwu |= CME_MASK_C0;
-        g_eimr_override                |= IRQ_VEC_PCWU_C0;
-    }
-    else if (db2c0.fields.cme_message_numbern == DB2_BLOCK_WKUP_EXIT)
-    {
-        G_cme_stop_record.core_blockwu &= ~CME_MASK_C0;
-        g_eimr_override                &= ~IRQ_VEC_PCWU_C0;
-    }
-
-    if (db2c1.fields.cme_message_numbern == DB2_BLOCK_WKUP_ENTRY)
-    {
-        G_cme_stop_record.core_blockwu |= CME_MASK_C1;
-        g_eimr_override                |= IRQ_VEC_PCWU_C1;
-    }
-    else if (db2c1.fields.cme_message_numbern == DB2_BLOCK_WKUP_EXIT)
-    {
-        G_cme_stop_record.core_blockwu &= ~CME_MASK_C1;
-        g_eimr_override                &= ~IRQ_VEC_PCWU_C1;
-    }
-
-    out32(CME_LCL_SICR_OR,  G_cme_stop_record.core_blockwu << SHIFT32(3));
-    out32(CME_LCL_SICR_CLR,
-          (~G_cme_stop_record.core_blockwu & CME_MASK_BC) << SHIFT32(3));
-
-    out32(CME_LCL_FLAGS_OR, G_cme_stop_record.core_blockwu << SHIFT32(9));
-    out32(CME_LCL_FLAGS_CLR,
-          (~G_cme_stop_record.core_blockwu & CME_MASK_BC) << SHIFT32(9));
+    // unmask pc interrupt pending to wakeup that is still pending
+    core &= (~(G_cme_stop_record.core_running));
+    out32(CME_LCL_EIMR_CLR, core << SHIFT32(13));
 
     pk_irq_vec_restore(&ctx);
 }

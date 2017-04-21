@@ -53,6 +53,7 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
     /* 0: IDX_PRTY_VEC    1: IDX_MASK_VEC */
     {
         IRQ_VEC_PRTY0_CME, /* 0: IDX_PRTY_LVL_HIPRTY */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -67,6 +68,7 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
     },
     {
         IRQ_VEC_PRTY1_CME, /* 1: IDX_PRTY_LVL_DB3 */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -80,6 +82,7 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
     },
     {
         IRQ_VEC_PRTY2_CME, /* 2: IDX_PRTY_LVL_DB2 */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -92,6 +95,7 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
     },
     {
         IRQ_VEC_PRTY3_CME, /* 3: IDX_PRTY_LVL_SPWU */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -102,7 +106,8 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
         IRQ_VEC_PRTY3_CME
     },
     {
-        IRQ_VEC_PRTY4_CME, /* 4: IDX_PRTY_LVL_WAKE */
+        IRQ_VEC_PRTY4_CME, /* 4: IDX_PRTY_LVL_RGWU */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -112,7 +117,8 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
         IRQ_VEC_PRTY4_CME
     },
     {
-        IRQ_VEC_PRTY5_CME, /* 5: IDX_PRTY_LVL_STOP */
+        IRQ_VEC_PRTY5_CME, /* 5: IDX_PRTY_LVL_PCWU */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -121,7 +127,8 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
         IRQ_VEC_PRTY5_CME
     },
     {
-        IRQ_VEC_PRTY6_CME, /* 6: IDX_PRTY_LVL_DB1 */
+        IRQ_VEC_PRTY6_CME, /* 6: IDX_PRTY_LVL_PM_ACTIVE */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -130,7 +137,8 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
     },
 
     {
-        IRQ_VEC_PRTY7_CME, /* 7: IDX_PRTY_LVL_DB0 */
+        IRQ_VEC_PRTY7_CME, /* 7: IDX_PRTY_LVL_DB1 */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -138,19 +146,26 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
     },
 
     {
-        IRQ_VEC_PRTY8_CME, /* 8: IDX_PRTY_LVL_INTERCME_IN0 */
+        IRQ_VEC_PRTY8_CME, /* 8: IDX_PRTY_LVL_DB0 */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME
     },
     {
-        IRQ_VEC_PRTY9_CME, /* 9: IDX_PRTY_LVL_PMCR */
+        IRQ_VEC_PRTY9_CME, /* 9: IDX_PRTY_LVL_INTERCME_IN0 */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME
     },
     {
-        IRQ_VEC_PRTY10_CME, /* 10: IDX_PRTY_LVL_DISABLED */
+        IRQ_VEC_PRTY11_CME, /* 10: IDX_PRTY_LVL_PMCR */
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME
+    },
+    {
+        IRQ_VEC_PRTY11_CME, /* 11: IDX_PRTY_LVL_DISABLED */
+        IRQ_VEC_PRTY11_CME
     }
 
 };
