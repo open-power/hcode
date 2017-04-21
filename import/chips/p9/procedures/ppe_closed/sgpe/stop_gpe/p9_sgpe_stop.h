@@ -251,7 +251,8 @@ enum SGPE_STOP_VECTOR_INDEX
     VECTOR_EXIT                       = 0,
     VECTOR_ENTRY                      = 1,
     VECTOR_CONFIG                     = 2,
-    VECTOR_ACTIVE                     = 3
+    VECTOR_ACTIVE                     = 3,
+    VECTOR_PCWU                       = 4
 };
 
 typedef struct
@@ -270,7 +271,7 @@ typedef struct
 
 typedef struct
 {
-    uint32_t core[4]; // 24 bits
+    uint32_t core[5]; // 24 bits
     uint32_t quad[4]; // 6 bits
     uint32_t ex_l[3]; // 6 bits
     uint32_t ex_r[3]; // 6 bits
