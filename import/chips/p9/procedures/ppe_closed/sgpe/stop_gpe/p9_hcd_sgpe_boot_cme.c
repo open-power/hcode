@@ -52,6 +52,7 @@ enum
     CHECK_BIT_DWORD             =   0x8000000000000000ll,
     SET_ADDR_MSB                =   0x80000000,
     CME_STOP_READY              =   0x8000000000000000ll,
+    CME_PMCR_READY              =   0x4000000000000000ll,
     WKUP_NOTIFY_SELECT          =   0x0004000000000000,
     CME_BOOT_TIMEOUT            =   0x32,
     CME_BCE_TIMEOUT             =   0xB0,
@@ -365,11 +366,16 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                         continue;
                     }
 
-                    //Read CME Flag register to check STOP RDY
+                    // Read CME Flag register to check PMCR READY
+                    // The PMCR thread is the lowest priority thread running on
+                    // the CME -- waiting until it is "ready" allows for every
+                    // thread to complete its initialization prior to the SGPE
+                    // routing interrupts (wakeup+PMCR) back to the CME.
+                    // @todo RTC173279
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS,
                                                   (l_cmeIndex >> 1), (l_cmeIndex % 2)), l_dataReg);
 
-                    if (!(l_dataReg & CME_STOP_READY))
+                    if (!(l_dataReg & CME_PMCR_READY))
                     {
                         continue;
                     }

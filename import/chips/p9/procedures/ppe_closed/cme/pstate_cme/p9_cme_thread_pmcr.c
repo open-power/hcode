@@ -82,6 +82,8 @@ void p9_cme_pstate_pmcr_thread(void* arg)
 
     pk_semaphore_create(&G_cme_pstate_record.sem[0], 0, 1);
 
+    out32(CME_LCL_FLAGS_OR, CME_FLAGS_PMCR_READY);
+
     PK_TRACE_INF("PMCR_TH: Inited\n");
 
     while(1)
