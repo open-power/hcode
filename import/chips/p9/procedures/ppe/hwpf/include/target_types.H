@@ -72,7 +72,7 @@ enum TargetType
 //         TARGET_TYPE_MIS               = 0xF4, ///< MIS type
 //         TARGET_TYPE_DMI               = 0xF3, ///< DMI type
 //         TARGET_TYPE_OBUS              = 0xF2, ///< OBUS type
-//         TARGET_TYPE_NV                = 0xF1, ///< NV bus type
+//         TARGET_TYPE_OBUS_BRICK        = 0xF1, ///< OBUS Brick type
 //         TARGET_TYPE_SBE               = 0xF0, ///< SBE type
 //         TARGET_TYPE_PPE               = 0xEF, ///< PPE type
 //         TARGET_TYPE_PEC               = 0xEE, ///< PEC type

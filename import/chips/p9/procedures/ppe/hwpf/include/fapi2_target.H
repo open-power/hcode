@@ -219,7 +219,7 @@ class Target
 //                     (K == TARGET_TYPE_MI) ||
 //                     (K == TARGET_TYPE_DMI) ||
 //                     (K == TARGET_TYPE_OBUS) ||
-//                     (K == TARGET_TYPE_NV) ||
+//                     (K == TARGET_TYPE_OBUS_BRICK) ||
 //                     (K == TARGET_TYPE_SBE) ||
 //                     (K == TARGET_TYPE_PPE) ||
 //                    (K == TARGET_TYPE_PERV) ||
