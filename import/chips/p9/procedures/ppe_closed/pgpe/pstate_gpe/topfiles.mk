@@ -22,6 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
+ifdef IMAGE
 TOP-C-SOURCES = p9_pgpe_pstate.c \
 				p9_pgpe_main.c \
 				p9_pgpe_irq.c \
@@ -41,3 +42,4 @@ TOP-S-SOURCES = p9_pgpe_image_header.S \
                 p9_pgpe_ppmr.S
 
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)
+endif

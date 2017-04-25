@@ -35,6 +35,7 @@
 ## $(call BUILD_BINHEADER)
 
 IMAGE=stop_gpe
+IMAGE_EDITOR=stop_gpeImgEdit.exe
 
 # Indicates we are doing an EKB build as opposed to a local build.
 # Allow control of which rules to consider.
@@ -92,7 +93,8 @@ $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(P2P_SRCDIR))
 include $(FAPI2_PLAT_SRCDIR)/fapi2ppeplatfiles.mk
 OBJS += $(FAPI2PLATLIB_OBJECTS)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(FAPI2_PLAT_SRCDIR))
-
+FAPI2PLATLIB_OBJECTS=
+FAPI2PLAT-CPP-SOURCES=
 
 # It's important that the final included *.mk is in the $(CME_SCRDIR)
 include $(SGPE_SRCDIR)/stop_gpe/topfiles.mk
@@ -207,6 +209,7 @@ $(call BUILD_PPEIMAGE)
 
 # QPMR header edit:
 IMAGE=qpmr_header
+IMAGE_EDITOR=stop_gpeImgEdit.exe
 
 # Target tool chain
 $(IMAGE)_TARGET=PPE

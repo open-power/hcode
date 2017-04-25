@@ -27,10 +27,3 @@ IMAGE_DEPS+=pstate_gpeImgEdit
 OBJS=p9_pgpe_img_edit.o
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/procedures/hwp/lib)
 $(call BUILD_EXE)
-
-
-EXE=ppmr_headerImgEdit
-IMAGE_DEPS+=ppmr_headerImgEdit
-OBJS=p9_pgpe_img_edit.o
-$(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/procedures/hwp/lib)
-$(call BUILD_EXE)

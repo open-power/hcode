@@ -36,19 +36,3 @@ $(call ADD_EXE_INCDIR, $(EXE), \
 IMAGE_DEPS+=stop_gpeImgEdit
 OBJS=p9_sgpe_img_edit.o
 $(call BUILD_EXE)
-
-
-EXE=qpmr_headerImgEdit
-
-$(EXE)_COMMONFLAGS+= -D__PPE_PLAT
-
-$(call ADD_EXE_INCDIR, $(EXE), \
-   $(CME_SRCDIR) \
-   $(PK_SRCDIR)/kernel \
-   $(HCODE_COMMON_LIBDIR) \
-   $(HCODE_LIBDIR) \
-    )
-
-IMAGE_DEPS+=qpmr_headerImgEdit
-OBJS=p9_sgpe_img_edit.o
-$(call BUILD_EXE)

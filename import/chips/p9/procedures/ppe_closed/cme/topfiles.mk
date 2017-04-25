@@ -23,6 +23,7 @@
 #
 # IBM_PROLOG_END_TAG
 
+ifdef IMAGE
 
 
 TOP-C-SOURCES    = p9_cme_main.c \
@@ -65,3 +66,5 @@ PSTATE_OBJECTS = $(PSTATE-C-SOURCES:.c=.o)
 STOP_OBJECTS   = $(STOP-C-SOURCES:.c=.o) 
 UTILS_OBJECTS  = $(UTILS-C-SOURCES:.c=.o)
 IMG_OBJECTS    = $(IMG-C-SOURCES:.c=.o) $(IMG-S-SOURCES:.S=.o)
+
+endif

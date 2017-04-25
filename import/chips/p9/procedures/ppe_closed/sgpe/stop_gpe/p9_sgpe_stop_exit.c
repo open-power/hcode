@@ -635,9 +635,9 @@ p9_sgpe_stop_exit()
 
 #if NIMBUS_DD_LEVEL == 1
 
-// EPM only:
-// EPM doesnt have real homer images and pba setup to access homer
-// EPM needs to figure out a fused core mode hack to replace these
+            // EPM only:
+            // EPM doesnt have real homer images and pba setup to access homer
+            // EPM needs to figure out a fused core mode hack to replace these
 #if !SKIP_HOMER_ACCESS
 
             // Reading fused core mode flag in cpmr header

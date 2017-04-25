@@ -22,6 +22,8 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
+ifdef IMAGE
+
 TOP-C-SOURCES = p9_sgpe_stop_entry.c \
                 p9_sgpe_stop_exit.c \
                 p9_sgpe_stop_irq_handlers.c \
@@ -59,3 +61,4 @@ TOP-CPP-SOURCES += p9_hcd_cache_gptr_time_initf.C
 
 UTILS_OBJECTS  = $(UTILS-SRC:.C=.o)
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) $(TOP-CPP-SOURCES:.C=.o)
+endif
