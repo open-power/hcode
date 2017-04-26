@@ -100,19 +100,34 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                 }
 
                 //Check if CLIP_UPDT is pending and Pstates are clipped
-                if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
+                if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1) ||
+                    (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1) ||
+                    (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 1))
                 {
                     inRange = 1;
+
+                    uint32_t minPS;
 
                     for (q = 0; q < MAX_QUADS; q++)
                     {
                         if((G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q)) &&
                            (qcsr.fields.ex_config & (0xC00 >> (2 * q))))
                         {
-                            if (G_pgpe_pstate_record.quadPSCurr[q] > G_pgpe_pstate_record.psClipMax[q] ||
-                                G_pgpe_pstate_record.quadPSCurr[q] <  G_pgpe_pstate_record.psClipMin[q])
+                            minPS = G_pgpe_pstate_record.psClipMin[q];
+
+                            if (G_pgpe_pstate_record.wofEnabled)
                             {
-                                PK_TRACE_DBG("ACT_TH:!Clipped[%d) qPSCur: 0x%x", q, G_pgpe_pstate_record.quadPSCurr[q]);
+                                if ((G_pgpe_pstate_record.wofClip <= G_pgpe_pstate_record.psClipMax[q]) &&
+                                    (minPS < G_pgpe_pstate_record.wofClip))
+                                {
+                                    minPS = G_pgpe_pstate_record.wofClip;
+                                }
+                            }
+
+                            if (G_pgpe_pstate_record.quadPSCurr[q] > G_pgpe_pstate_record.psClipMax[q] ||
+                                G_pgpe_pstate_record.quadPSCurr[q] <  minPS)
+                            {
+                                //            PK_TRACE_DBG("ACT_TH:!Clipped[%d) qPSCur: 0x%x", q, G_pgpe_pstate_record.quadPSCurr[q]);
                                 inRange = 0;
                             }
                         }
@@ -121,15 +136,40 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                     //ACK any pending and unmask IPC interrupt
                     if (inRange == 1)
                     {
-                        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
-                        ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
-                        args->msg_cb.rc = PGPE_RC_SUCCESS;
-                        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
-                        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
+                        if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
+                        {
+                            ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
+                            ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
+                            args->msg_cb.rc = PGPE_RC_SUCCESS;
+                            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
+                            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
+                        }
+
+                        if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1)
+                        {
+                            p9_pgpe_pstate_update_wof_state();
+                            ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd;
+                            ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
+                            args->msg_cb.rc = PGPE_RC_SUCCESS;
+                            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
+                            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
+                        }
+
+                        if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 1)
+                        {
+                            p9_pgpe_pstate_update_wof_state();
+                            ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd;
+                            ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
+                            args->msg_cb.rc = PGPE_RC_SUCCESS;
+                            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
+                            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd, IPC_RC_SUCCESS);
+                        }
+
+
+
                         restore_irq = 1;
                     }
                 }
-
 
                 //Check if IPC should be opened again
                 if (restore_irq == 1)

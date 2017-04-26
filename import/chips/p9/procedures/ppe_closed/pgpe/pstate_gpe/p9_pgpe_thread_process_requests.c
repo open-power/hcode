@@ -427,18 +427,19 @@ void p9_pgpe_process_wof_ctrl()
     if((G_pgpe_header_data->g_pgpe_qm_flags & OCC_IPC_IMMEDIATE_RESP) ||
        (G_pgpe_header_data->g_pgpe_qm_flags & WOF_IPC_IMMEDIATE_RESP))
     {
-        PK_TRACE_DBG("PROCTH: WOF Ctrl Updt Imme\n");
+        PK_TRACE_DBG("PROCTH: WOF Ctrl Imme\n");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
-        PK_TRACE_DBG("PROCTH: Clip Updt PMSUSP/Safe\n");
+        PK_TRACE_DBG("PROCTH: WOF Ctrl PMSUSP/Safe\n");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
     }
     else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT || G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
     {
+        PK_TRACE_DBG("PROCTH: WOF Ctrl PSStop/Init\n");
         args->msg_cb.rc = PGPE_RC_PSTATES_NOT_STARTED;
     }
     else
@@ -450,7 +451,46 @@ void p9_pgpe_process_wof_ctrl()
         {
             if(G_pgpe_pstate_record.wofEnabled == 0)
             {
-                G_pgpe_pstate_record.wofPending = 1;
+#if SGPE_IPC_ENABLED == 1
+                uint32_t rc;
+                PkMachineContext  ctx;
+                //Send "Disable Core Stop Updates" IPC to SGPE
+                G_sgpe_control_updt.fields.return_code = 0x0;
+                G_sge_control_updt.fields.action = CTRL_STOP_UPDT_ENABLE_CORE;
+                G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_control_updt;
+                ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
+                             IPC_MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES,
+                             p9_pgpe_pstate_ipc_rsp_cb_sem_post,
+                             (void*)&G_pgpe_pstate_record.sem_sgpe_wait);
+
+                //send the command
+                rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
+
+                if(rc)
+                {
+                    pk_halt();
+                }
+
+                //Wait for SGPE ACK with alive Quads
+                pk_irq_vec_restore(&ctx);
+                pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
+
+                if (G_sgpe_control_updt.fields.return_code == SGPE_PGPE_IPC_RC_SUCCESS)
+                {
+                    //Update Shared Memory Region
+                    G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
+                    G_pgpe_pstate_record.pQuadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
+                    G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
+                }
+                else
+                {
+                    pk_halt();
+                }
+
+#endif// _SGPE_IPC_ENABLED_
+
+                G_pgpe_pstate_record.wofEnabled = 1;
+                p9_pgpe_pstate_calc_wof();
             }
         }
         else if (args->action == PGPE_ACTION_WOF_OFF)
@@ -494,12 +534,15 @@ void p9_pgpe_process_wof_ctrl()
                 }
 
 #endif// _SGPE_IPC_ENABLED_
+
+                G_pgpe_pstate_record.wofEnabled = 0;
+
+                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
+                ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd, IPC_RC_SUCCESS);
             }
         }
     }
 
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd, IPC_RC_SUCCESS);
 
     PK_TRACE_DBG("PROCTH: WOF Ctrl Exit\n");
 }
@@ -526,76 +569,36 @@ void p9_pgpe_process_wof_vfrt()
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
-        PK_TRACE_DBG("PROCTH: Clip Updt PMSUSP/Safe\n");
+        PK_TRACE_DBG("PROCTH: WOF VFRT PMSUSP/Safe\n");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
     }
-    else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED || G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT ||
-            (G_pgpe_pstate_record.wofEnabled == 0 && G_pgpe_pstate_record.wofPending == 0))
+    else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED || G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT)
     {
+        PK_TRACE_DBG("PROCTH: WOF VFRT PSStop/Init\n");
         args->msg_cb.rc = PGPE_RC_PSTATES_NOT_STARTED;
     }
     else
     {
-        //Update VFRT pointer
-        G_pgpe_pstate_record.pVFRT = args->vfrt_ptr;
-
-        //If active_quads field of this IPC matches requested active quads
-        //in Shared SRAM, then clear OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
-        if (args->active_quads == G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads)
+        if(args->homer_vfrt_ptr == NULL)
         {
-            GPE_PUTSCOM(OCB_OCCFLG_CLR, BIT32(30));
-            p9_pgpe_pstate_calc_wof();
+            pk_halt();
         }
 
-        if (G_pgpe_pstate_record.wofPending == 1)
+        //Update VFRT pointer
+        G_pgpe_pstate_record.pVFRT = args->homer_vfrt_ptr;
+        PK_TRACE_INF("PROCTH: VFRT Table");
+        PK_TRACE_INF("Mgc=0x%x, ver=%d, vdnid=%x,VddQAId=%x", G_pgpe_pstate_record.pVFRT->vfrtHeader.magic_number,
+                     G_pgpe_pstate_record.pVFRT->vfrtHeader.type_version,
+                     G_pgpe_pstate_record.pVFRT->vfrtHeader.res_vdnId,
+                     G_pgpe_pstate_record.pVFRT->vfrtHeader.VddId_QAId);
+
+        if(G_pgpe_pstate_record.wofEnabled == 1)
         {
-            G_pgpe_pstate_record.wofEnabled = 1;
-            G_pgpe_pstate_record.wofPending = 0;
-
-#if SGPE_IPC_ENABLED == 1
-            uint32_t rc;
-            PkMachineContext  ctx;
-            //Send "Disable Core Stop Updates" IPC to SGPE
-            G_sgpe_control_updt.fields.return_code = 0x0;
-            G_sgpe_control_updt.fields.action = CTRL_STOP_UPDT_DISABLE_CORE;
-            G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_control_updt;
-            ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
-                         IPC_MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES,
-                         p9_pgpe_pstate_ipc_rsp_cb_sem_post,
-                         (void*)&G_pgpe_pstate_record.sem_sgpe_wait);
-
-            //send the command
-            rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
-
-            if(rc)
-            {
-                pk_halt();
-            }
-
-            //Wait for SGPE ACK with alive Quads
-            pk_irq_vec_restore(&ctx);
-            pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
-
-            if (G_sgpe_control_updt.fields.return_code == SGPE_PGPE_IPC_RC_SUCCESS)
-            {
-                //Update Shared Memory Region
-                G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
-                G_pgpe_pstate_record.pQuadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
-                G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
-            }
-            else
-            {
-                pk_halt();
-            }
-
-#endif// _SGPE_IPC_ENABLED_
+            p9_pgpe_pstate_calc_wof();
         }
 
         args->msg_cb.rc = PGPE_RC_SUCCESS;
     }
-
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
 
     PK_TRACE_DBG("PROCTH: WOF VFRT Exit\n");
 }

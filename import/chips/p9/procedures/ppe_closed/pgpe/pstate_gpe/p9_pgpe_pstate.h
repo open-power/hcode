@@ -103,7 +103,7 @@ typedef struct
     uint16_t alreadySemPosted;
     uint32_t eVidCurr, eVidNext;
     ipc_req_t ipcPendTbl[MAX_IPC_PEND_TBL_ENTRIES];
-    VFRT_Hcode_t* pVFRT;
+    HomerVFRTLayout_t* pVFRT;
     quad_state0_t* pQuadState0;
     quad_state1_t* pQuadState1;
     requested_active_quads_t* pReqActQuads;
@@ -120,6 +120,7 @@ void p9_pgpe_pstate_init();
 void p9_pgpe_pstate_update(uint8_t* quadPstates);
 void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest);
 void p9_pgpe_pstate_calc_wof();
+void p9_pgpe_pstate_update_wof_state();
 void p9_pgpe_pstate_apply_clips();
 void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg);
 void p9_pgpe_pstate_pm_complex_suspend();

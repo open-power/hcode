@@ -191,28 +191,28 @@ void p9_pgpe_pstate_apply_clips()
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        uint8_t maxPS = G_pgpe_pstate_record.psClipMax[q];
+        uint8_t minPS = G_pgpe_pstate_record.psClipMin[q];
 
-        G_pgpe_pstate_record.quadPSTarget[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+//        G_pgpe_pstate_record.quadPSTarget[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
         if (activeQuads & (QUAD0_BIT_MASK >> q))
         {
 
             if (G_pgpe_pstate_record.wofEnabled == 1)
             {
-                if (G_pgpe_pstate_record.wofClip <= G_pgpe_pstate_record.psClipMax[q])
+                if (G_pgpe_pstate_record.wofClip > minPS)
                 {
-                    maxPS = G_pgpe_pstate_record.wofClip;
+                    minPS = G_pgpe_pstate_record.wofClip;
                 }
             }
 
-            if (G_pgpe_pstate_record.quadPSComputed[q] > maxPS)
+            if (G_pgpe_pstate_record.quadPSComputed[q] > G_pgpe_pstate_record.psClipMax[q])
             {
-                G_pgpe_pstate_record.quadPSTarget[q] = maxPS;
+                G_pgpe_pstate_record.quadPSTarget[q] = G_pgpe_pstate_record.psClipMax[q];
             }
-            else if(G_pgpe_pstate_record.quadPSComputed[q] < G_pgpe_pstate_record.psClipMin[q])
+            else if(G_pgpe_pstate_record.quadPSComputed[q] < minPS)
             {
-                G_pgpe_pstate_record.quadPSTarget[q] = G_pgpe_pstate_record.psClipMin[q];
+                G_pgpe_pstate_record.quadPSTarget[q] = minPS;
             }
             else
             {
@@ -224,7 +224,7 @@ void p9_pgpe_pstate_apply_clips()
             G_pgpe_pstate_record.quadPSTarget[q] = 0xFF;
         }
 
-        PK_TRACE_INF("APCLP: qPSTgt: 0x%x,cl=0x%x,0x%x", G_pgpe_pstate_record.quadPSTarget[q], maxPS,
+        PK_TRACE_INF("APCLP: qPSTgt: 0x%x,cl=0x%x,0x%x", G_pgpe_pstate_record.quadPSTarget[q], minPS,
                      G_pgpe_pstate_record.psClipMin[q]);
     }
 
@@ -253,9 +253,19 @@ void p9_pgpe_pstate_calc_wof()
 {
     //\TODO RTC 162896
     //Figure out how to calculate WOF Clip
-    G_pgpe_pstate_record.wofClip = 150;
+    G_pgpe_pstate_record.wofClip = G_pgpe_pstate_record.pVFRT->vfrt_data[0][23];
 
     p9_pgpe_pstate_apply_clips();
+}
+
+void p9_pgpe_pstate_update_wof_state()
+{
+    pgpe_wof_state_t* wof_state = (pgpe_wof_state_t*)G_pgpe_header_data->g_pgpe_wof_state_addr;
+    PK_TRACE_INF("UPDT_WS: fclip_ps: 0x%x", G_pgpe_pstate_record.wofClip);
+    wof_state->fields.fclip_ps = G_pgpe_pstate_record.wofClip;
+    wof_state->fields.vclip_mv = G_pgpe_pstate_record.eVidCurr;
+    wof_state->fields.fratio = 1;
+    wof_state->fields.vratio = 1;
 }
 
 void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg)
