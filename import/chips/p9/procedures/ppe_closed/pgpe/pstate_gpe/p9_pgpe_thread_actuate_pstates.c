@@ -34,8 +34,13 @@
 #include "p9_dd1_doorbell_wr.h"
 #include "avs_driver.h"
 
+
+//#defines
+#define PSTATE_START_OCC_FLAG 0
+#define PSTATE_START_OCC_IPC  1
+
 //Local Function Prototypes
-void p9_pgpe_thread_actuate_start();
+void p9_pgpe_thread_actuate_start(uint32_t pstate_start_origin);
 void p9_pgpe_thread_actuate_stop();
 void p9_pgpe_thread_actuate_init_actual_quad();
 
@@ -46,6 +51,7 @@ extern PgpePstateRecord G_pgpe_pstate_record;
 extern ipc_async_cmd_t G_ipc_msg_pgpe_sgpe;
 GPE_BUFFER(extern ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 extern uint32_t G_pstate0_dpll_value;
+extern GlobalPstateParmBlock* G_gppb;
 
 //Payload data non-cacheable region for IPCs sent to SGPE
 //
@@ -68,6 +74,23 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
     //Initialize Shared SRAM to a known state
     p9_pgpe_thread_actuate_init_actual_quad();
 
+
+    //Upon PGPE Boot, if OCC_FLAGS[PGPE_PSTATE_PROTOCOL_ACTIVATE] is set, then we start Pstart here, and not wait
+    //for an IPC to come from OCC
+    ocb_occflg_t occFlag;
+    occFlag.value = in32(OCB_OCCFLG);
+
+    if (occFlag.value & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVATE))
+    {
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            G_pgpe_pstate_record.psClipMax[q] = G_gppb->operating_points[POWERSAVE].pstate;
+            G_pgpe_pstate_record.psClipMin[q] = G_gppb->operating_points[ULTRA].pstate;
+        }
+
+        p9_pgpe_thread_actuate_start(PSTATE_START_OCC_FLAG);
+    }
+
     // Set OCC Scratch2[PGPE_ACTIVE]
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PGPE_ACTIVE);
@@ -77,12 +100,16 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
     //Thread Loop
     while(1)
     {
-        PK_TRACE_DBG("ACT_TH: Pend");
-        pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
-        wrteei(1);
+        //If already active, then skip waiting for an OCC Pstate Start IPC
+        if (G_pgpe_pstate_record.pstatesStatus != PSTATE_ACTIVE)
+        {
+            PK_TRACE_DBG("ACT_TH: Pend");
+            pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
+            wrteei(1);
 
-        //Pstates Start. This call will unmask IPC and block on SGPE ACK
-        p9_pgpe_thread_actuate_start();
+            //Pstates Start. This call will unmask IPC and block on SGPE ACK
+            p9_pgpe_thread_actuate_start(PSTATE_START_OCC_IPC);
+        }
 
         //Loop while Pstate is enabled
         PK_TRACE_DBG("ACT_TH: Status=%d", G_pgpe_pstate_record.pstatesStatus);
@@ -214,7 +241,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
 //
 //p9_pgpe_thread_actuate_start()
 //
-void p9_pgpe_thread_actuate_start()
+void p9_pgpe_thread_actuate_start(uint32_t pstate_start_origin)
 {
     PK_TRACE_DBG("ACT_TH: Start Enter");
     ocb_ccsr_t ccsr;
@@ -357,44 +384,59 @@ void p9_pgpe_thread_actuate_start()
     //4. Determine PMCR Owner
     //We save it off so that CMEs that are currently in STOP11
     //can be told upon STOP11 Exit
-    PK_TRACE_DBG("ACT_TH: g_oimr_override:0x%llx", g_oimr_override);
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].cmd;
-    ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
+    if (pstate_start_origin == PSTATE_START_OCC_IPC)
+    {
+        PK_TRACE_DBG("ACT_TH: g_oimr_override:0x%llx", g_oimr_override);
+        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].cmd;
+        ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
 
-    if (args->pmcr_owner == PMCR_OWNER_HOST)
-    {
-        PK_TRACE_DBG("ACT_TH: OWNER_HOST");
-        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_HOST;
-        g_oimr_override &= ~(BIT64(46));
-        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+        if (args->pmcr_owner == PMCR_OWNER_HOST)
+        {
+            PK_TRACE_DBG("ACT_TH: OWNER_HOST");
+            G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_HOST;
+            g_oimr_override &= ~(BIT64(46));
+            out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+        }
+        else if (args->pmcr_owner == PMCR_OWNER_OCC)
+        {
+            PK_TRACE_DBG("ACT_TH: OWNER_OCC");
+            G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_OCC;
+            g_oimr_override |= BIT64(46);
+            out32(OCB_OIMR1_OR, BIT32(14)); //Disable PCB_INTR_TYPE1
+        }
+        else if (args->pmcr_owner == PMCR_OWNER_CHAR)
+        {
+            PK_TRACE_DBG("ACT_TH: OWNER_CHAR");
+            G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
+            g_oimr_override &= ~(BIT64(46));
+            out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+        }
+        else
+        {
+            pk_halt();
+        }
+
+        //Set LMCR for each CME
+        //If OWNER is switched to CHAR, the last LMCR setting is retained
+        if (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_HOST)
+        {
+            p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_HOST);
+        }
+        else if (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_OCC)
+        {
+            p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_OCC);
+        }
+
+        //We set PCB TYPE1 and LMCR for characterization mode
+        //and explicitly set PMCR OWNER to CHAR
     }
-    else if (args->pmcr_owner == PMCR_OWNER_OCC)
+    else
     {
-        PK_TRACE_DBG("ACT_TH: OWNER_OCC");
-        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_OCC;
-        g_oimr_override |= BIT64(46);
-        out32(OCB_OIMR1_OR, BIT32(14)); //Disable PCB_INTR_TYPE1
-    }
-    else if (args->pmcr_owner == PMCR_OWNER_CHAR)
-    {
+        p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_OCC);
         PK_TRACE_DBG("ACT_TH: OWNER_CHAR");
         G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
         g_oimr_override &= ~(BIT64(46));
         out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
-    }
-    else
-    {
-        pk_halt();
-    }
-
-    //Set LMCR for each CME
-    if (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_HOST)
-    {
-        p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_HOST);
-    }
-    else if (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_OCC)
-    {
-        p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_OCC);
     }
 
     //4. Set External VRM and Send DB0 to every active CME
@@ -461,20 +503,25 @@ void p9_pgpe_thread_actuate_start()
     PK_TRACE_DBG("ACT_TH: PSTATE_ACTIVE");
 
     //8. Send Pstate Start ACK to OCC
-    args->msg_cb.rc = PGPE_RC_SUCCESS;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].cmd, IPC_RC_SUCCESS);
+    if (pstate_start_origin == PSTATE_START_OCC_IPC)
+    {
+        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].cmd;
+        ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
+        args->msg_cb.rc = PGPE_RC_SUCCESS;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START].cmd, IPC_RC_SUCCESS);
 
-    if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing == 1) ||
-        (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing == 1))
-    {
-        PK_TRACE_DBG("ACT_TH: Post PROC_TH");
-        pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
-    }
-    else
-    {
-        PK_TRACE_DBG("ACT_TH: Restoring IRQs");
-        pk_irq_vec_restore(&ctx);
+        if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing == 1) ||
+            (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing == 1))
+        {
+            PK_TRACE_DBG("ACT_TH: Post PROC_TH");
+            pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
+        }
+        else
+        {
+            PK_TRACE_DBG("ACT_TH: Restoring IRQs");
+            pk_irq_vec_restore(&ctx);
+        }
     }
 
     PK_TRACE_DBG("ACT_TH: Start Exit");
