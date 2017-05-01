@@ -29,6 +29,7 @@
 #include "p9_hcd_block_copy.h"
 #include "p9_hcd_sgpe_boot_cme.h"
 #include "p9_stop_util.H"
+#include "p9_hcode_image_defines.H"
 
 /**
  * @brief   Summarizes all constants associated with CME boot firmware.
@@ -168,8 +169,8 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
             //Reading CPMR header to determine :
             //1. start of CME Image
             //2. Length of first block copy
-            //Set MSB to point OCI to PBA
-            HomerImgDesc_t* pCpmrHdrAddr = (HomerImgDesc_t*)(CPMR_POSITION | SET_ADDR_MSB);
+
+            HomerImgDesc_t* pCpmrHdrAddr = (HomerImgDesc_t*)(HOMER_CPMR_BASE_ADDR);   //Set MSB to point OCI to PBA
 
             PK_TRACE("Magic Number [ 0:31]: 0x%08x", ((pCpmrHdrAddr->cpmrMagicWord & 0xffffffff00000000) >> 32));
             PK_TRACE("Magic Number [32:63]: 0x%08x", ((pCpmrHdrAddr->cpmrMagicWord & 0x00000000ffffffff)));
@@ -294,9 +295,15 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
 
                 // -----------------------------------------------------------------
                 // -----------------------------------------------------------------
-                // Step 5. Configure BCE for copy of Core SCOM Restore Area: -TODO
+                // Step 5. Configure BCE for copy of Core SCOM Restore Area:
                 // -----------------------------------------------------------------
                 // -----------------------------------------------------------------
+
+                // Doesnt need to configure the bars again as bar0 and bar1 are both
+                // pointed to CPMR base by code above(step2,3), from there the bce
+                // routine in cme can request scan ring or scom restore region to copy
+                // And the way this code is implemented, it will be wrong to change
+                // bar0 here because we are still in a loop of bce all cme images.
 
                 // -----------------------------------------------------------------
                 // -----------------------------------------------------------------

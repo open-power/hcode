@@ -47,12 +47,12 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 
     // To access memory, need to set MSB of homer address
     QpmrHeaderLayout_t* pQpmrHdrAddr = (QpmrHeaderLayout_t*)(HOMER_QPMR_HEADER_ADDR);
-    SgpeScomRestore*    pSgpeScomRes = (SgpeScomRestore*)(pQpmrHdrAddr->quadScomOffset +
-                                       (uint32_t)pQpmrHdrAddr + qoffset);
+    ScomEntry_t*    pSgpeScomRes = (ScomEntry_t*)(pQpmrHdrAddr->quadScomOffset +
+                                   (uint32_t)pQpmrHdrAddr + qoffset);
 
-    for(i = 0; pSgpeScomRes->pad; i++, pSgpeScomRes++)
+    for(i = 0; pSgpeScomRes->scomEntryAddress; i++, pSgpeScomRes++)
     {
-        qaddr = pSgpeScomRes->addr;
+        qaddr = pSgpeScomRes->scomEntryAddress;
 
         // Ring ID:    scom_addr[16:21]
         // PSCOM       000000
@@ -63,6 +63,7 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
         // CME   (0,1) 001000 001001
         // L2_TRA(0,1) 001010 001011
         rid   = (qaddr & BITS32(18, 4)) >> SHIFT32(21);
+        PKTRACE("scom[%d] addr[%x] rid[%X]", i, qaddr, rid);
 
         // STOP11: Partial bad ex and l2 address detection
         // First had to be an EX address not quad address to check for partial bad
@@ -87,8 +88,8 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
             continue;
         }
 
-        qdata = pSgpeScomRes->data;
-        PK_TRACE("scom[%d] addr[%x] data[%016llx]", i, qaddr, qdata);
+        qdata = pSgpeScomRes->scomEntryData;
+        PKTRACE("scom[%d] addr[%x] data[%016llx]", i, qaddr, qdata);
         GPE_PUTSCOM(qaddr, qdata);
     }
 

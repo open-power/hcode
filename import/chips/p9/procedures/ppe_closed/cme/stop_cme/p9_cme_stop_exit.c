@@ -412,6 +412,7 @@ p9_cme_stop_exit()
 #if HW386841_NDD1_DSL_STOP1_FIX
     uint32_t     core_stop1        = 0;
 #endif
+    cmeHeader_t*      pCmeImgHdr  = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
 
     //--------------------------------------------------------------------------
     PK_TRACE("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");
@@ -592,16 +593,22 @@ p9_cme_stop_exit()
             core      = deeper_core;
         }
 
-        do   //catchup loop
-        {
 
 #if !SKIP_BCE_SCOM_RESTORE
 
-            PK_TRACE_DBG("BCE Runtime Kickoff to Copy Scom Restore");
-            //right now a blocking call. Need to confirm this.
-            instance_scom_restore();
+        PK_TRACE("BCE Runtime Kickoff to Copy Scom Restore core");
+        //right now a blocking call. Need to confirm this.
+        start_cme_block_copy(CME_BCEBAR_0,
+                             CORE_SCOM_RESTORE_CPMR_OFFSET,
+                             pCmeImgHdr->g_cme_scom_offset,
+                             (pCmeImgHdr->g_cme_scom_length >> 5));
 
 #endif
+
+
+        do   //catchup loop
+        {
+
 
             // Can't do the read of cplt_stat after flipping the mux before the core is powered on
             // catchup to stop4 exit will acquire here
@@ -804,7 +811,7 @@ p9_cme_stop_exit()
 
         PK_TRACE_DBG("BCE Runtime Check Scom Restore Copy Completed");
 
-        if( BLOCK_COPY_SUCCESS != isScanRingCopyDone() )
+        if( BLOCK_COPY_SUCCESS != check_cme_block_copy() )
         {
             PK_TRACE_ERR("ERROR: BCE Scom Restore Copy Failed. HALT CME!");
             PK_PANIC(CME_STOP_EXIT_BCE_SCOM_FAILED);
@@ -843,7 +850,6 @@ p9_cme_stop_exit()
 
         while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
-        cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
         scom_data.value = pCmeImgHdr->g_cme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
 
 #if NIMBUS_DD_LEVEL == 1

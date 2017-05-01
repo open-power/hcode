@@ -252,13 +252,12 @@ typedef struct
 } BceIrritator;
 #endif
 
-/// Scom restore block
 typedef struct
 {
-    uint32_t pad;
-    uint32_t addr;
-    uint64_t data;
-} CmeScomRestore;
+    uint32_t scomEntryHeader;
+    uint32_t scomEntryAddress;
+    uint64_t scomEntryData;
+} ScomEntry_t;
 
 /// Stop Score Board Structure
 typedef struct

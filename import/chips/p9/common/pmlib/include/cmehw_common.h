@@ -51,7 +51,11 @@ enum CME_SCOM_CONTROLS
     CME_SCOM_QUEUED                 = 3
 };
 
-
+enum CME_BCEBAR_INDEXES
+{
+    CME_BCEBAR_0                    = 0,
+    CME_BCEBAR_1                    = 1
+};
 
 #define CME_SCOM_ADDR(addr, core, op)   (addr | (core << 22) | (op << 20))
 

@@ -303,13 +303,12 @@ typedef struct
     PkSemaphore  sem[2];
 } SgpeStopRecord;
 
-/// Scom restore block
 typedef struct
 {
-    uint32_t pad;
-    uint32_t addr;
-    uint64_t data;
-} SgpeScomRestore;
+    uint32_t scomEntryHeader;
+    uint32_t scomEntryAddress;
+    uint64_t scomEntryData;
+} ScomEntry_t;
 
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
 // Types for PB EQ asynch work-around

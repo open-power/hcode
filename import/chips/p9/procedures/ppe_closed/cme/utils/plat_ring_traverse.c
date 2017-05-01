@@ -76,7 +76,7 @@ int putRing(
         l_chipletData.iv_num_instance_rings = 0;
         l_chipletData.iv_num_variants = 0;
         uint8_t l_chipletID = 0;
-        uint32_t* l_sectionAddr = 0;
+        uint32_t  l_sectionAddr = 0;
         uint16_t* l_ringTorAddr = 0;
         enum CME_SCOM_CONTROLS l_scomOp;
 
@@ -103,8 +103,7 @@ int putRing(
                 break;
             }
 
-            l_sectionAddr =
-                (uint32_t*)(CME_SRAM_BASE_ADDR + (l_cmeHeader->g_cme_core_spec_ring_offset * 32));
+            l_sectionAddr = (CME_SRAM_BASE_ADDR + (l_cmeHeader->g_cme_core_spec_ring_offset * 32));
 
             if (i_core == 2)
             {
@@ -124,8 +123,8 @@ int putRing(
                 break;
             }
 
-            l_sectionAddr =
-                (uint32_t*)(CME_SRAM_BASE_ADDR + l_cmeHeader->g_cme_common_ring_offset);
+            l_sectionAddr = (CME_SRAM_BASE_ADDR + l_cmeHeader->g_cme_common_ring_offset);
+
             // TOR records of Ring TOR are 2 bytes in size.
             l_ringTorAddr = (uint16_t*)(l_sectionAddr) + (l_torOffset);
 
@@ -149,8 +148,8 @@ int putRing(
                 break;
             }
 
-            l_sectionAddr =
-                (uint32_t*)(CME_SRAM_BASE_ADDR + l_cmeHeader->g_cme_cmn_ring_ovrd_offset);
+            l_sectionAddr = (CME_SRAM_BASE_ADDR + l_cmeHeader->g_cme_cmn_ring_ovrd_offset);
+
             // TOR records of Ring TOR are 2 bytes in size.
             l_ringTorAddr = (uint16_t*)(l_sectionAddr) + (l_torOffset);
 

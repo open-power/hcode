@@ -27,31 +27,16 @@
 
 #include "p9_hcd_block_copy.h"
 
-/// models CME Image header copied during first block copy.
-typedef struct
-{
-    uint64_t iv_magicWord;
-    uint32_t iv_buildDate;
-    uint32_t iv_buildVersion;
-    uint32_t iv_cmeHcodeOfset;
-    uint32_t iv_cmeHcodeLen;
-    uint32_t iv_CommonRingOffset;
-    uint32_t iv_CommonRingLength;
-    uint32_t iv_cmeQuadPsate;
-    uint32_t iv_cmeQuadPstateLen;
-    uint32_t iv_coreSpecRingOffset;
-    uint32_t iv_coreSpecRingLength;
-    uint32_t iv_cmeImgMode;
-    uint32_t iv_reserve[3];
-} CmeImageHdr_t;
 
 /// @brief      initiates the second block copy to copy instance specific scan rings.
-void instance_scan_init();
+void            start_cme_block_copy(uint32_t, uint32_t, uint32_t, uint32_t);
+
 
 /// @brief     checks if block copy of scan ring is complete.
 /// @retval    BLOCK_COPY_SUCCESS if function succeeds else error code.
 /// @note      function call is blocking
-BceReturnCode_t isScanRingCopyDone();
+BceReturnCode_t check_cme_block_copy();
+
 
 #if TEST_ONLY_BCE_IRR
     void bce_irr_setup();

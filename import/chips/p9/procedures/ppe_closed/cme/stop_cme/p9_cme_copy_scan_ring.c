@@ -237,16 +237,10 @@ void bce_irr_thread(void* args)
 #endif
 
 
-
-void instance_scan_init( )
+void start_cme_block_copy(uint32_t barIndex, uint32_t bcMembase, uint32_t bcSrambase, uint32_t bcLength)
 {
-    uint32_t     l_cmePir   = 0;
-    uint32_t     l_bcLength = 0;
-    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
-
-    //Setting Mbase with start address of CME Inst rings in HOMER
-    uint32_t     l_bceMbase = CME_IMAGE_CPMR_OFFSET + (pCmeImgHdr->g_cme_core_spec_ring_offset << 5);
-    uint32_t     l_exId     = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
+    uint32_t l_cmePir   = 0;
+    uint32_t l_exId     = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
 
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (l_cmePir) : "i" (SPR_NUM_PIR));
 
@@ -256,29 +250,20 @@ void instance_scan_init( )
     //(3). OR to LSB of CME PIR (bit 31), bit 26 of CME Flag Register
     l_cmePir = (((l_cmePir << 1) & CME_INST_ID_MASK) | l_exId); // get CME instance number
 
-    //calculate start address of block copy and length of block copy
-    l_bcLength = pCmeImgHdr->g_cme_max_spec_ring_length; // integral multiple of 32.
-
     //let us find out HOMER address where core specific scan rings reside.
-    l_bceMbase = l_bceMbase + (( l_cmePir * l_bcLength ) << 5 );
-    l_bceMbase = (l_bceMbase >> 5 );
+    bcMembase = bcMembase + (( l_cmePir * bcLength ) << 5 );
+    bcMembase = bcMembase >> 5;
 
-    // calculate the CME SRAM destination block number(SBASE)
-    // Offset below is wrt start of CME's SRAM. It is an integral
-    // multiple of 32 and is populated by Hcode Image build while
-    // building HOMER.
-    uint32_t cmeSbase = pCmeImgHdr->g_cme_core_spec_ring_offset;
+    PK_TRACE( "Start cme block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  CME Ist %d",
+              bcMembase, bcSrambase, bcLength, l_cmePir );
 
-    PK_TRACE( "Start second block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  CME Ist %d",
-              l_bceMbase, cmeSbase, l_bcLength, l_cmePir );
-
-    startCmeBlockCopy( cmeSbase, l_bcLength, l_cmePir, BAR_INDEX_1, l_bceMbase );
+    startCmeBlockCopy( bcSrambase, bcLength, l_cmePir, barIndex, bcMembase );
 
     PK_TRACE("Done startCmeBlockCopy(instance_scan_init).");
 }
 
 
-BceReturnCode_t isScanRingCopyDone( )
+BceReturnCode_t check_cme_block_copy()
 {
     BceReturnCode_t l_rc;
     uint32_t        l_cmePir = 0;
