@@ -716,6 +716,18 @@ p9_sgpe_stop_entry()
         if (l3_purge_aborted)
         {
             PK_TRACE_INF("Abort: L3 Purge Aborted");
+
+            PK_TRACE("Release cache PCB slave atomic lock");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), 0);
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
+
+            if (scom_data.words.upper & BIT32(0))
+            {
+                PK_TRACE_ERR("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
+                             qloop, scom_data.words.upper);
+                PK_PANIC(SGPE_STOP_EXIT_DROP_SLV_LOCK_FAILED);
+            }
+
             // For IPC reporting, taking aborted quad out of the list
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &= ~BIT32(qloop);
             continue;
