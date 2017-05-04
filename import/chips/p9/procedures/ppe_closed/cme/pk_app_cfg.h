@@ -57,6 +57,8 @@
     #define HW405292_NDD1_PCBMUX_SAVIOR         1
     #define MASK_MSR_SEM6
     #define RUN_NDD1_ABIST_IN_PARALLEL_MODE     1
+    #define USE_CME_VDM_FEATURE
+    #undef  USE_CME_RESCLK_FEATURE
 #endif
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
@@ -65,6 +67,8 @@
     #undef  SKIP_EXIT_CATCHUP
     #define SKIP_ENTRY_CATCHUP 1
     #define SKIP_EXIT_CATCHUP  1
+    #define USE_CME_VDM_FEATURE
+    #define USE_CME_RESCLK_FEATURE
 #endif
 
 // --------------------

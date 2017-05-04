@@ -57,6 +57,7 @@ extern LocalPstateParmBlock* G_lppb;
 uint32_t G_cme_flags;
 cppm_cmedb0_t G_dbData;
 uint32_t G_next_pstate;
+extern uint8_t G_vdm_threshold_table[];
 
 //
 //Function Prototypes
@@ -145,6 +146,42 @@ void p9_cme_pstate_db_thread(void* arg)
                                          - (uint32_t)((scom_data & BITS64(1, 11)) >> SHIFT64(11));
         PK_TRACE_INF("qm | initial pstate=%d", G_cme_pstate_record.quadPstate);
 
+#ifdef USE_CME_VDM_FEATURE
+
+        // VDM Enablement (QM)
+        // Do this prior to synchronizing the Pstate w/ its Sibling CME
+        if(G_cme_pstate_record.qmFlag
+           && (G_cmeHeader->g_cme_qm_mode_flags & CME_QM_FLAG_SYS_VDM_ENABLE))
+        {
+            uint32_t i;
+            uint32_t region = pstate_to_vpd_region(G_cme_pstate_record.quadPstate);
+            // VID compare
+            scom_data = (uint64_t)(pstate_to_vid_compare(G_cme_pstate_record.quadPstate, region)
+                                   & BITS32(24, 8)) << 56;
+            // Calculate the new index for each threshold
+            calc_vdm_threshold_indices(G_cme_pstate_record.quadPstate, region,
+                                       G_cme_pstate_record.vdmData.vdm_threshold_idx);
+
+            // Thresholds; no stepping is required since the VDMs are still
+            // disabled at this point.
+            for(i = 0; i < NUM_THRESHOLD_POINTS; ++i)
+            {
+                scom_data |= (uint64_t)G_vdm_threshold_table[
+                                 G_cme_pstate_record.vdmData.vdm_threshold_idx[i]]
+                             << (52 - (i * 4));
+            }
+
+            PK_TRACE_INF("qm | initial vdmcfgr=%08x%08x", scom_data.upper,
+                         scom_data.lower);
+            ippm_write(QPPM_VDMCFGR, scom_data);
+            // Assumes 100us has elapsed during cache chiplet wakeup after
+            // enabling the full-speed cache clock grid
+            // Clear VDM Disable
+            ippm_write(PPM_VDMCR_CLR, BIT64(1));
+        }
+
+#endif//USE_CME_VDM_FEATURE
+
         // Synchronize initial pstate w/ sibling CME
         if(G_cme_pstate_record.siblingCMEFlag)
         {
@@ -169,7 +206,7 @@ void p9_cme_pstate_db_thread(void* arg)
             cores |= CME_MASK_C1;
         }
 
-        // Resonant Clocking Initialization (Sibling)
+        // Pstate Initialization (Sibling)
         out32(CME_LCL_EITR_OR, BIT32(29));
         out32(CME_LCL_EIPR_OR, BIT32(29));
 
@@ -203,6 +240,8 @@ void p9_cme_pstate_db_thread(void* arg)
     {
         PK_PANIC(CME_PSTATE_RESCLK_ENABLED_AT_BOOT);
     }
+
+#ifdef USE_CME_RESCLK_FEATURE
 
     // Resonant Clocking Initialization (QM + Sibling)
     if(G_cmeHeader->g_cme_qm_mode_flags & CME_QM_FLAG_RESCLK_ENABLE)
@@ -238,6 +277,19 @@ void p9_cme_pstate_db_thread(void* arg)
 
         out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_RCLK_OPERABLE));
     }
+
+#endif//USE_CME_RESCLK_FEATURE
+
+#ifdef USE_CME_VDM_FEATURE
+
+    // Set VDM Operable flag for both QM and Sib, at this point the QM has
+    // completed all initialization for VDMs and QM and Sib are interlocked
+    if(G_cmeHeader->g_cme_qm_mode_flags & CME_QM_FLAG_SYS_VDM_ENABLE)
+    {
+        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_VDM_OPERABLE));
+    }
+
+#endif//USE_CME_VDM_FEATURE
 
     //Doorbell Thread(this thread) will continue to run on
     //Quad Manager CME. The sibling CME has intercme_in0 enabled
@@ -423,8 +475,6 @@ inline void p9_cme_pstate_db0_suspend()
     g_eimr_override |= BITS64(34, 2);
 
     p9_cme_pstate_notify_sib(); //Notify sibling
-    // Prevent Resclk, VDM updates
-    out32(CME_LCL_FLAGS_CLR, (BIT32(CME_FLAGS_RCLK_OPERABLE) | BIT32(CME_FLAGS_VDM_OPERABLE)));
 
     //Send type4(ack doorbell)
     ppmPigData.value = 0;
@@ -499,6 +549,34 @@ inline void p9_cme_pstate_freq_update()
         }
 
         ippm_write(QPPM_DPLL_FREQ, dpllFreq.value);
+
+        if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
+        {
+            // TODO DPLL Mode 3.5 will require some other stuffs
+            data64_t scom_data = { 0 };
+
+            PK_TRACE_INF("Poll on DPLL_STAT[update_complete]");
+            // ... to indicate that the DPLL has sampled the newly requested
+            // frequency into its internal registers as a target,
+            // but may not yet be there
+
+            do
+            {
+                ippm_read(QPPM_DPLL_STAT, &scom_data.value);
+            }
+            while(!(scom_data.words.lower & BIT32(28)));
+
+            PK_TRACE_INF("Poll on DPLL_STAT[block_active|lock]");
+            // ... to indicate that the DPLL is safely either at the new frequency
+            // or in droop protection below the new frequency
+
+            do
+            {
+                ippm_read(QPPM_DPLL_STAT, &scom_data.value);
+            }
+            while(!(scom_data.words.lower & BITS32(30, 2)));
+        }
+
         PK_TRACE_INF("DB_TH: Freq Updt Exit\n");
     }
 }
@@ -507,24 +585,33 @@ void p9_cme_pstate_update()
 {
     PK_TRACE_INF("DB_TH: Pstate Updt Enter");
 
-    if(G_cme_pstate_record.siblingCMEFlag)
+    G_next_pstate = (G_dbData.value >> (in32(CME_LCL_SRTCH0) &
+                                        (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START,
+                                                CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)))) & 0xFF;
+
+    if(G_next_pstate != G_cme_pstate_record.quadPstate)
     {
-        // "Lock" the sibling until the pstate transition is complete
-        intercme_msg_send(0, IMT_LOCK_SIBLING);
-    }
+        if(G_cme_pstate_record.siblingCMEFlag)
+        {
+            // "Lock" the sibling until the pstate transition is complete
+            intercme_msg_send(0, IMT_LOCK_SIBLING);
+            // The Sibling is a "pumpkin" from this point forward until calling
+            // p9_cme_pstate_notify_sib()
+        }
 
-    G_next_pstate = (G_dbData.value >>
-                     (in32(CME_LCL_SRTCH0) &
-                      (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH))
-                     )) & 0xFF;
+        G_cme_pstate_record.globalPstate = (G_dbData.value & BITS64(8, 8))
+                                           >> SHIFT64(15);
 
-    G_cme_pstate_record.globalPstate = (G_dbData.value & BITS64(8, 8)) >> SHIFT64(15);
+        PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", G_dbData.value >> 32,
+                     G_dbData.value);
 
-    PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", G_dbData.value >> 32, G_dbData.value);
+        // Dropping frequency: freq update, resclk, vdms, then ivrms (TODO)
+        if(G_next_pstate > G_cme_pstate_record.quadPstate)
+        {
+            p9_cme_pstate_freq_update();
+        }
 
-    if(G_next_pstate > G_cme_pstate_record.quadPstate)
-    {
-        p9_cme_pstate_freq_update();
+#ifdef USE_CME_RESCLK_FEATURE
 
         if(G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
         {
@@ -536,27 +623,28 @@ void p9_cme_pstate_update()
 
             pk_critical_section_exit(&ctx);
         }
-    }
-    else if(G_next_pstate < G_cme_pstate_record.quadPstate)
-    {
-        if(G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+
+#endif//USE_CME_RESCLK_FEATURE
+#ifdef USE_CME_VDM_FEATURE
+
+        if(G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
         {
-            PkMachineContext ctx;
-            pk_critical_section_enter(&ctx);
-
-            p9_cme_resclk_update(ANALOG_COMMON, G_next_pstate,
-                                 G_cme_pstate_record.resclkData.common_resclk_idx);
-
-            pk_critical_section_exit(&ctx);
+            p9_cme_vdm_update(G_next_pstate);
         }
 
-        p9_cme_pstate_freq_update();
+#endif//USE_CME_VDM_FEATURE
+
+        // Raising frequency: ivrm (TODO), vdm, resclk, freq update
+        if(G_next_pstate < G_cme_pstate_record.quadPstate)
+        {
+            p9_cme_pstate_freq_update();
+        }
+
+        p9_cme_pstate_notify_sib(); // Release Sibling to change Pstate as well
+        // Must update quadPstate before calling PMSR update
+        G_cme_pstate_record.quadPstate = G_next_pstate;
+        p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
     }
-
-    p9_cme_pstate_notify_sib(); //Notify sibling
-    G_cme_pstate_record.quadPstate = G_next_pstate;//Must Update quadPstate before calling pmsr_updt
-    p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
-
 
     PK_TRACE_INF("DB_TH: Pstate Updt Exit");
 }

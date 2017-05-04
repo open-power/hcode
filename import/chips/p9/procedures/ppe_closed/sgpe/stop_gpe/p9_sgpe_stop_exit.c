@@ -366,6 +366,7 @@ p9_sgpe_stop_exit()
 #if !SKIP_IPC
     uint32_t      rc              = 0;
 #endif
+    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
     //===============================
     MARK_TAG(BEGINSCOPE_STOP_EXIT, 0)
@@ -631,6 +632,30 @@ p9_sgpe_stop_exit()
 
             PK_TRACE_INF("SX.11D: Cache Dpll Setup");
             p9_hcd_cache_dpll_setup(qloop);
+
+            if(pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_VDM_ENABLE_BIT_POS)
+            {
+                // Note: 100us must elapse after starting full-speed cache
+                // clock gird and 10us after setting power-on (to VDM) before
+                // clearing the VDM disable in CME
+                PK_TRACE("Clear QPPM VDMCFGR");
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, qloop), 0);
+
+                PK_TRACE("Write QPPM VDMCR to set Disable and set Poweron");
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR, qloop), BITS64(0, 2));
+
+                PK_TRACE("Set Jump Protect Enable");
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_OR, qloop), BIT64(1));
+
+                PK_TRACE("Poll on DPLL_STAT[update_complete]");
+
+                do
+                {
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_STAT, qloop),
+                                scom_data.value);
+                }
+                while(!(scom_data.words.lower & BIT32(28)));
+            }
 
 #if !SKIP_INITF
 

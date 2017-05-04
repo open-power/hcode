@@ -66,6 +66,11 @@ typedef struct
     uint32_t common_resclk_idx;
 } cme_resclk_data_t;
 
+typedef struct
+{
+    uint32_t vdm_threshold_idx[NUM_THRESHOLD_POINTS];
+} cme_vdm_data_t;
+
 typedef enum
 {
     ANALOG_CORE0  = (uint32_t)CME_MASK_C0,
@@ -76,6 +81,38 @@ typedef enum
     ANALOG_BOTHL  = (uint32_t)0x00000300,
     ANALOG_COMMON = (uint32_t)0x00001000
 } ANALOG_TARGET;
+
+typedef enum
+{
+    VDM_OVERVOLT_IDX = 0,
+    VDM_SMALL_IDX    = 1,
+    VDM_LARGE_IDX    = 2,
+    VDM_XTREME_IDX   = 3
+} VDM_THRESHOLD_IDX;
+
+typedef enum
+{
+    // VDM_OVERVOLT_ADJUST
+    // 4/8 rounding (8mV resolution so +/- 4 mV error)
+    // yields 3/7 aggressive and 4/7 conservative to slightly favor not
+    // increasing to Fmax as often
+    VDM_OVERVOLT_ADJUST = (uint32_t)((1 << THRESH_SLOPE_FP_SHIFT) * ((float)4 / 8)),
+    // VDM_SMALL_ADJUST
+    // 5/8 rounding (8mV resolution so +5/-3 mV error)
+    // yields 2/7 conservative and 5/7 aggressive to favor protecting against
+    // performance loss
+    VDM_SMALL_ADJUST    = (uint32_t)((1 << THRESH_SLOPE_FP_SHIFT) * ((float)5 / 8)),
+    // VDM_LARGE_ADJUST and VDM_XTREME_ADJUST
+    // 2/8 rounding (8mV resolution so +3/-5 mV error)
+    // yields 2/7 aggressive and 5/7 conservative to favor protecting droop
+    // guardband
+    VDM_LARGE_ADJUST    = (uint32_t)((1 << THRESH_SLOPE_FP_SHIFT) * ((float)2 / 8)),
+    VDM_XTREME_ADJUST   = (uint32_t)((1 << THRESH_SLOPE_FP_SHIFT) * ((float)2 / 8)),
+    //VDM_VID_COMP_ADJUST
+    // 2/4 rounding (4mV resolution so +/- 2mV error)
+    // yields 1/3 (1mV) aggressive and 2/3 (1 or 2mV) conservative answer
+    VDM_VID_COMP_ADJUST = (uint32_t)((1 << VID_SLOPE_FP_SHIFT_12) * ((float)2 / 4))
+} VDM_ROUNDING_ADJUST;
 
 typedef enum
 {
@@ -104,14 +141,18 @@ typedef struct
     uint32_t globalPstate;
     uint32_t cmeMaskGoodCore;
     uint32_t pmcrSeenErr;
+#ifdef USE_CME_RESCLK_FEATURE
     cme_resclk_data_t resclkData;
+#endif//USE_CME_RESCLK_FEATURE
+#ifdef USE_CME_VDM_FEATURE
+    cme_vdm_data_t vdmData;
+#endif//USE_CME_VDM_FEATURE
 } CmePstateRecord;
 
 typedef struct
 {
     uint32_t seqNum;
 } cme_pstate_pmcr_data_t;
-
 
 void p9_cme_pstate_pmcr_thread(void*);
 void p9_cme_pstate_db_thread(void*);
@@ -124,10 +165,18 @@ void ippm_read(uint32_t addr, uint64_t* data);
 void ippm_write(uint32_t addr, uint64_t data);
 void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type);
 void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type);
-void p9_cme_resclk_get_index(uint32_t pstate, uint32_t* resclk_index);
 void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
-void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_idx);
 void p9_cme_pstate_pmsr_updt(uint32_t coreMask);
-
+#ifdef USE_CME_RESCLK_FEATURE
+    void p9_cme_resclk_get_index(uint32_t pstate, uint32_t* resclk_index);
+    void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_idx);
+#endif//USE_CME_RESCLK_FEATURE
+#ifdef USE_CME_VDM_FEATURE
+void p9_cme_vdm_update(uint32_t pstate);
+uint32_t pstate_to_vid_compare(uint32_t pstate, uint32_t region);
+uint32_t pstate_to_vpd_region(uint32_t pstate);
+void calc_vdm_threshold_indices(uint32_t pstate, uint32_t region,
+                                uint32_t indices[]);
+#endif//USE_CME_VDM_FEATURE
 
 #endif //_P9_CME_PSTATE_H_

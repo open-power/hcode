@@ -695,6 +695,13 @@ p9_cme_stop_exit()
 
                 // Note: in this case, no need to call p9_cme_pcbmux_savior_epilogue
 
+                if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
+                {
+                    // Poweron the VDM giving it time to powerup prior to enabling
+                    PK_TRACE_INF("Set Poweron bit in VDMCR");
+                    CME_PUTSCOM(PPM_VDMCR_OR, core, BIT64(0));
+                }
+
                 //========================
                 MARK_TAG(SX_POWERON, core)
                 //========================

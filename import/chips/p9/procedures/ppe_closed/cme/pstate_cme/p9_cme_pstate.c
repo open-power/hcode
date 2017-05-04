@@ -59,6 +59,11 @@ cmeHeader_t* G_cmeHeader;
 LocalPstateParmBlock* G_lppb;
 extern CmePstateRecord G_cme_pstate_record;
 
+const uint8_t G_vdm_threshold_table[13] =
+{
+    0x00, 0x01, 0x03, 0x02, 0x06, 0x07, 0x05, 0x04,
+    0x0C, 0x0D, 0x0F, 0x0E, 0x0A
+};
 
 //
 //send_pig_packet
@@ -180,6 +185,7 @@ void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type)
     out32(CME_LCL_EISR_CLR, BIT32(29));
 }
 
+#ifdef USE_CME_RESCLK_FEATURE
 void p9_cme_resclk_get_index(uint32_t pstate, uint32_t* resclk_index)
 {
     int32_t i = RESCLK_FREQ_REGIONS;
@@ -193,10 +199,13 @@ void p9_cme_resclk_get_index(uint32_t pstate, uint32_t* resclk_index)
     PK_TRACE_DBG("resclk_idx[i=%d]=%d", i, G_lppb->resclk.resclk_index[i]);
     *resclk_index = (uint32_t)G_lppb->resclk.resclk_index[i];
 }
+#endif//USE_CME_RESCLK_FEATURE
 
 void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
 {
-    if((in32(CME_LCL_FLAGS)) & BIT32(CME_FLAGS_RCLK_OPERABLE))
+#ifdef USE_CME_RESCLK_FEATURE
+
+    if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
     {
         uint32_t pstate;
         uint32_t curr_idx;
@@ -260,8 +269,148 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             p9_cme_resclk_update(core_mask, pstate, curr_idx);
         }
     }
+
+#endif//USE_CME_RESCLK_FEATURE
+
+#ifdef USE_CME_VDM_FEATURE
+
+    if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
+    {
+        if(enable)
+        {
+            PK_TRACE_INF("vdm | enabling vdms");
+            // Clear Disable (Poweron is set earlier in Exit flow)
+            CME_PUTSCOM(PPM_VDMCR_CLR, core_mask, BIT64(1));
+        }
+        else
+        {
+            PK_TRACE_INF("vdm | disabling vdms");
+            // Clear Poweron and set Disable in one operation
+            CME_PUTSCOM(PPM_VDMCR, core_mask, BIT64(1));
+        }
+    }
+
+#endif//USE_CME_VDM_FEATURE
 }
 
+#ifdef USE_CME_VDM_FEATURE
+uint32_t pstate_to_vpd_region(uint32_t pstate)
+{
+    if(pstate > G_lppb->operating_points[NOMINAL].pstate)
+    {
+        return REGION_POWERSAVE_NOMINAL;
+    }
+    else if(pstate > G_lppb->operating_points[TURBO].pstate)
+    {
+        return REGION_NOMINAL_TURBO;
+    }
+    else
+    {
+        return REGION_TURBO_ULTRA;
+    }
+}
+
+uint32_t pstate_to_vid_compare(uint32_t pstate, uint32_t region)
+{
+    return((((uint32_t)G_lppb->PsVIDCompSlopes[region]
+             * ((uint32_t)G_lppb->operating_points[region].pstate - pstate)
+             + VDM_VID_COMP_ADJUST) >> VID_SLOPE_FP_SHIFT_12)
+           + (uint32_t)G_lppb->vid_point_set[region]);
+}
+
+void calc_vdm_threshold_indices(uint32_t pstate, uint32_t region,
+                                uint32_t indices[])
+{
+    static VDM_ROUNDING_ADJUST vdm_rounding_adjust[NUM_THRESHOLD_POINTS] =
+    {
+        VDM_OVERVOLT_ADJUST,
+        VDM_SMALL_ADJUST,
+        VDM_LARGE_ADJUST,
+        VDM_XTREME_ADJUST
+    };
+
+    uint32_t i = 0;
+    int32_t psdiff = (uint32_t)G_lppb->operating_points[region].pstate - pstate;
+
+    for(i = 0; i < NUM_THRESHOLD_POINTS; ++i)
+    {
+        // Cast every math term into 32b for more efficient PPE maths
+        indices[i] = (uint32_t)((int32_t)G_lppb->threshold_set[region][i]
+                                + (((int32_t)G_lppb->PsVDMThreshSlopes[region][i] * psdiff
+                                    // Apply the rounding adjust
+                                    + (int32_t)vdm_rounding_adjust[i]) >> THRESH_SLOPE_FP_SHIFT));
+
+    }
+
+    // Check the interpolation result; since each threshold has a distinct round
+    // adjust, the calculated index can be invalid relative to another threshold
+    // index. Overvolt does not need to be checked and Small Droop will always
+    // be either 0 or greater than 0 by definition.
+    // Ensure that small <= large <= xtreme; where any can be == 0.
+    indices[VDM_LARGE_IDX] = ((indices[VDM_LARGE_IDX] < indices[VDM_SMALL_IDX])
+                              && (indices[VDM_LARGE_IDX] != 0))
+                             ? indices[VDM_SMALL_IDX] : indices[VDM_LARGE_IDX];
+    indices[VDM_XTREME_IDX] = ((indices[VDM_XTREME_IDX] < indices[VDM_LARGE_IDX])
+                               && (indices[VDM_XTREME_IDX] != 0))
+                              ? indices[VDM_LARGE_IDX] : indices[VDM_XTREME_IDX];
+    indices[VDM_XTREME_IDX] = ((indices[VDM_XTREME_IDX] < indices[VDM_SMALL_IDX])
+                               && (indices[VDM_LARGE_IDX]  == 0)
+                               && (indices[VDM_XTREME_IDX] != 0))
+                              ? indices[VDM_SMALL_IDX] : indices[VDM_XTREME_IDX];
+}
+
+void p9_cme_vdm_update(uint32_t pstate)
+{
+    uint32_t new_idx[NUM_THRESHOLD_POINTS] = { 0 };
+    uint32_t i = 0;
+    uint32_t not_done = BITS32(32 - NUM_THRESHOLD_POINTS, NUM_THRESHOLD_POINTS);
+    uint64_t scom_data = 0;
+    uint64_t base_scom_data = 0;
+    uint32_t region = pstate_to_vpd_region(pstate);
+
+    // Calculate the new index for each threshold
+    calc_vdm_threshold_indices(pstate, region, new_idx);
+
+    // Look-up the VID compare value using the Pstate
+    base_scom_data |= (uint64_t)(pstate_to_vid_compare(pstate, region)
+                                 & BITS32(24, 8)) << 56;
+
+    // Step all thresholds in parallel until each reaches its new target.
+    // Doing this in parallel minimizes the number of interppm scom writes.
+    do
+    {
+        // Only keep the VID compare value
+        scom_data = base_scom_data;
+
+        // Loop over all 4 thresholds (overvolt, small, large, xtreme)
+        for(i = 0; i < NUM_THRESHOLD_POINTS; ++i)
+        {
+            if(new_idx[i] != G_cme_pstate_record.vdmData.vdm_threshold_idx[i])
+            {
+                // Decrement or increment the current index, whichever is
+                // required to reach the new/target index
+                G_cme_pstate_record.vdmData.vdm_threshold_idx[i] +=
+                    (G_cme_pstate_record.vdmData.vdm_threshold_idx[i] < new_idx[i])
+                    ? 1 : -1;
+            }
+            else
+            {
+                not_done &= 0x1 << i;
+            }
+
+            // OR the new threshold greycode into the correct position
+            scom_data |= (uint64_t)G_vdm_threshold_table[
+                             G_cme_pstate_record.vdmData.vdm_threshold_idx[i]]
+                         << (52 - (i * 4));
+        }
+
+        ippm_write(QPPM_VDMCFGR, scom_data);
+    }
+    while(not_done);
+}
+#endif//USE_CME_VDM_FEATURE
+
+#ifdef USE_CME_RESCLK_FEATURE
 void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_idx)
 {
     uint64_t base_val;
@@ -337,6 +486,7 @@ void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_i
         }
     }
 }
+#endif//USE_CME_RESCLK_FEATURE
 
 void p9_cme_pstate_pmsr_updt(uint32_t coreMask)
 {
