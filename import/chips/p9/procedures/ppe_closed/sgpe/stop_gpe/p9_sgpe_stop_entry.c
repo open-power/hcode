@@ -66,6 +66,7 @@ p9_sgpe_stop_entry()
 #if !SKIP_IPC
     uint32_t      rc               = 0;
 #endif
+    sgpeHeader_t* pSgpeImgHdr     = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
     //--------------------------------------------------------------------------
     PK_TRACE("+++++ +++++ BEGIN OF STOP ENTRY +++++ +++++");
@@ -924,6 +925,18 @@ p9_sgpe_stop_entry()
 
         PK_TRACE("Checking status of Local Checkstop");
         GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_LOCAL_XSTOP_ERR, qloop), local_xstop);
+
+        if(pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_VDM_ENABLE_BIT_POS)
+        {
+            PK_TRACE("Clear Jump Protect Enable (no need to poll DPLL_STAT");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_CLEAR, qloop), BIT64(1));
+
+            PK_TRACE("Write QPPM VDMCR to set Disable and clear Poweron");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR, qloop), BIT64(1));
+
+            PK_TRACE("Clear QPPM VDMCFGR");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, qloop), 0);
+        }
 
         //===========================
         MARK_TRAP(SE_STOP_CACHE_CLKS)
