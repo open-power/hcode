@@ -908,10 +908,6 @@ p9_sgpe_stop_entry()
         PK_TRACE("Drop CME_INTERPPM_DPLL_ENABLE after DPLL is stopped via QPMMR[26]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26));
 
-        /// @todo RTC166918 add VDM_ENABLE attribute control
-        PK_TRACE("Drop vdm enable via CPPM_VDMCR[0]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR_CLR, qloop), BIT64(0));
-
         PK_TRACE_INF("SE.11D: Cache Clock Stopped");
 
         PK_TRACE("Gate the PCBMux request so scanning doesn't cause random requests");

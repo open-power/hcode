@@ -733,10 +733,6 @@ p9_cme_stop_entry()
         PK_TRACE("Drop sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
         CME_PUTSCOM(C_CPLT_CONF0_CLEAR, core, BIT64(34));
 
-        /// @todo RTC166918 add VDM_ENABLE attribute control
-        PK_TRACE("Drop vdm enable via CPPM_VDMCR[0]");
-        CME_PUTSCOM(PPM_VDMCR_CLR, core, BIT64(0));
-
         PK_TRACE("Copy PECE CME sample to PPM Shadow via PECES");
 
         if (core & CME_MASK_C0)
