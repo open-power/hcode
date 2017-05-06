@@ -109,10 +109,6 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     p9_hcd_core_scan0(core, SCAN0_REGION_ALL, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
 #endif
 
-    /// @todo RTC166918 add VDM_ENABLE attribute control
-    PK_TRACE("Assert vdm enable via CPPM_VDMCR[0]");
-    CME_PUTSCOM(PPM_VDMCR_OR, core, BIT64(0));
-
     /// content of p9_hcd_core_dcc_skewadjust below:
     PK_TRACE("Drop core DCC bypass via NET_CTRL[1]");
     CME_PUTSCOM(CPPM_NC1INDIR_CLR, core, BIT64(1));
