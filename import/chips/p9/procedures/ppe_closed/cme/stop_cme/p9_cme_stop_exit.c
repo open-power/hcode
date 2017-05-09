@@ -874,15 +874,15 @@ p9_cme_stop_exit()
                 PK_TRACE_DBG("Set SPRC to scratch for core[%d] via SCOM_SPRC", core_mask);
                 CME_PUTSCOM(SCOM_SPRC, core_mask, ((core_mask & 1) ? BIT64(60) : 0));
 
-                PK_TRACE_DBG("Load SCRACTH with HOMER+2MB address %x", scom_data.value);
+                PK_TRACE_DBG("Load SCRATCH0 with HOMER+2MB address %x", scom_data.value);
 
 #if EPM_P9_TUNING
 
-                CME_PUTSCOM((SCRACTH0 + (core_mask & 1)), core_mask, 0xA200000);
+                CME_PUTSCOM((SCRATCH0 + (core_mask & 1)), core_mask, 0xA200000);
 
 #else
 
-                CME_PUTSCOM((SCRACTH0 + (core_mask & 1)), core_mask, scom_data.value);
+                CME_PUTSCOM((SCRATCH0 + (core_mask & 1)), core_mask, scom_data.value);
 
 #endif
             }
@@ -906,12 +906,12 @@ p9_cme_stop_exit()
 
         if (core & CME_MASK_C0)
         {
-            CME_PUTSCOM(SCRACTH0,  CME_MASK_C0, 0);
+            CME_PUTSCOM(SCRATCH0,  CME_MASK_C0, 0);
         }
 
         if (core & CME_MASK_C1)
         {
-            CME_PUTSCOM(SCRACTH1,  CME_MASK_C1, 0);
+            CME_PUTSCOM(SCRATCH1,  CME_MASK_C1, 0);
         }
 
 #endif
@@ -972,6 +972,10 @@ p9_cme_stop_exit()
 
         PK_TRACE("Restore SPATTN after self-restore");
         CME_PUTSCOM(SPATTN_MASK, core, scom_data.value);
+
+        PK_TRACE("Always Unfreeze IMA (by clearing bit 34) in case the CHTM is enabled to sample it");
+        CME_GETSCOM(IMA_EVENT_MASK, core, CME_SCOM_EQ, scom_data.value);
+        CME_PUTSCOM(IMA_EVENT_MASK, core, scom_data.value & ~BIT64(34));
 
         PK_TRACE("Drop block interrupt to PC via SICR[2/3]");
         out32(CME_LCL_SICR_CLR, core << SHIFT32(3));

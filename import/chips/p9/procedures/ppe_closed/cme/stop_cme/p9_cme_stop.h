@@ -93,10 +93,11 @@
 #define RAM_STATUS             0x20010A50
 #define SCOM_SPRC              0x20010A80
 #define SPR_MODE               0x20010A84
-#define SCRACTH0               0x20010A86
-#define SCRACTH1               0x20010A87
+#define SCRATCH0               0x20010A86
+#define SCRATCH1               0x20010A87
 #define THREAD_INFO            0x20010A9B
 #define DIRECT_CONTROLS        0x20010A9C
+#define IMA_EVENT_MASK         0x20010AA8
 #define HRMOR                  0x20010AB9
 
 #define C_SYNC_CONFIG          0x20030000
