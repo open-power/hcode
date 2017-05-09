@@ -99,12 +99,12 @@ uint16_t ram_read_lpid( uint32_t core, uint32_t thread )
 
     if (core & CME_MASK_C0)
     {
-        CME_GETSCOM(SCRACTH0, CME_MASK_C0, CME_SCOM_AND, scom_data);
+        CME_GETSCOM(SCRATCH0, CME_MASK_C0, CME_SCOM_AND, scom_data);
     }
 
     if (core & CME_MASK_C1)
     {
-        CME_GETSCOM(SCRACTH1, CME_MASK_C1, CME_SCOM_AND, scom_data);
+        CME_GETSCOM(SCRATCH1, CME_MASK_C1, CME_SCOM_AND, scom_data);
     }
 
     PK_TRACE("RAMMING LPID read for core 0x%X 0x%X", core, (uint32_t) (scom_data & 0xFFFFFFFF));
@@ -127,14 +127,14 @@ void ram_write_lpid( uint32_t core, uint32_t thread, uint16_t lpid )
     {
         PK_TRACE("LPID Set SPRC to scratch0 for core0 via SCOM_SPRC");
         CME_PUTSCOM(SCOM_SPRC, CME_MASK_C0, 0);
-        CME_PUTSCOM(SCRACTH0, CME_MASK_C0, (uint64_t) lpid);
+        CME_PUTSCOM(SCRATCH0, CME_MASK_C0, (uint64_t) lpid);
     }
 
     if (core & CME_MASK_C1)
     {
         PK_TRACE("LPID Set SPRC to scratch1 for core1 via SCOM_SPRC");
         CME_PUTSCOM(SCOM_SPRC, CME_MASK_C1, BIT64(60));
-        CME_PUTSCOM(SCRACTH1, CME_MASK_C1, (uint64_t) lpid);
+        CME_PUTSCOM(SCRATCH1, CME_MASK_C1, (uint64_t) lpid);
     }
 
     PK_TRACE("LPID RAM: mfspr sprd , gpr0 via RAM_CTRL");
@@ -159,12 +159,12 @@ void turn_off_ram_mode (uint32_t core)
 
     if (core & CME_MASK_C0)
     {
-        CME_PUTSCOM(SCRACTH0,  CME_MASK_C0, 0);
+        CME_PUTSCOM(SCRATCH0,  CME_MASK_C0, 0);
     }
 
     if (core & CME_MASK_C1)
     {
-        CME_PUTSCOM(SCRACTH1,  CME_MASK_C1, 0);
+        CME_PUTSCOM(SCRATCH1,  CME_MASK_C1, 0);
     }
 
     PK_TRACE("LPID Clear core maintenance mode via direct controls");
