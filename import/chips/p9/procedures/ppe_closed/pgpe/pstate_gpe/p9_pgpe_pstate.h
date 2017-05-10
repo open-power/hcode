@@ -131,7 +131,6 @@ void p9_pgpe_pstate_safe_mode();
 void p9_pgpe_pstate_apply_safe_clips();
 int32_t p9_pgpe_pstate_at_target();
 void p9_pgpe_pstate_do_step();
-//void p9_pgpe_pstate_do_suspend();
 void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner);
 void p9_pgpe_wait_cme_db_ack(uint32_t activeCores);
 void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid);
@@ -139,4 +138,5 @@ void p9_pgpe_pstate_process_quad_entry(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
 void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
 void p9_pgpe_pstate_stop();
+void p9_pgpe_pstate_updt_actual_quad(uint32_t q);
 #endif //

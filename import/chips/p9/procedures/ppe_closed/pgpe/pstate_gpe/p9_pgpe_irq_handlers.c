@@ -219,13 +219,8 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
 void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
-    //We don't want the register and start doorbell to be interrupted by any external interrupt.
-    //However, we still want FIT Timer to be active, so we mask of all interrupts
-    //in the OIMR through UIH(by setting UIH priority lvl = 0)
-    pk_critical_section_enter(&ctx);
-    pk_irq_save_and_set_mask(0);
-    pk_critical_section_exit(&ctx);
 
+    pk_irq_sub_critical_enter(&ctx);
 
     PK_TRACE_DBG("PCB_TYPE4: Enter\n");
     ocb_ccsr_t ccsr;
@@ -237,8 +232,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
     db0.value = 0;
     db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
 
-    g_oimr_override |= BIT64(49);
-    out32(OCB_OIMR1_OR, BIT32(17)); //Disable PCB_INTR_TYPE4
+    //Check which CMEs sent Registeration Type4
     opit4pr = in32(OCB_OPIT4PRA);
     out32(OCB_OPIT4PRA_CLR, opit4pr);
     PK_TRACE_DBG("PCB_TYPE4: opit4pr 0x%x\n", opit4pr);
@@ -276,9 +270,8 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                     if (ccsr.value & ((0x80000000) >> c))
                     {
                         opit4pr1 = in32(OCB_OPIT4PRA);
-                        PK_TRACE_DBG("PCB_TYPE4: opit4pr 0x%x, quadAckExpect=0x%x\n", opit4pr1, quadAckExpect);
                         p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0.value);
-                        PK_TRACE_DBG("PCB_TYPE4: Sent DB0 to %d\n", q);
+                        PK_TRACE_DBG("PCB_TYPE4: Sent StartDB0 to %d\n", q);
                     }
                 }
             }
@@ -291,7 +284,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
     PK_TRACE_DBG("PCB_TYPE4: opit4pr 0x%x, quadAckExpect=0x%x\n", opit4pr1, quadAckExpect);
 
 
-    //Now, wait for all Pstate Start DB0 to be ACKed
+    //Wait for all CMEs to ACK Pstate Start DB0
     while(quadAckExpect != 0)
     {
         opit4pr1 = in32(OCB_OPIT4PRA);
@@ -309,9 +302,10 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 {
                     quadAckExpect &= ~(0x80 >> q);
                     out32(OCB_OPIT4PRA_CLR, opit4prQuad << ((MAX_QUADS - q + 1) << 2));
-                    PK_TRACE_DBG("PCB_TYPE4: Got DB0 ACK from %d\n", q);
+                    PK_TRACE_DBG("PCB_TYPE4: Got DB0 Start ACK from %d\n", q);
                     G_pgpe_pstate_record.quadPSCurr[q] = G_pgpe_pstate_record.quadPSTarget[q];
                     G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
+                    p9_pgpe_pstate_updt_actual_quad(q);
                 }
                 else
                 {
@@ -322,14 +316,10 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
     }
 
     PK_TRACE_DBG("PCB_TYPE4: opit4pr 0x%x, quadAckExpect=0x%x\n", opit4pr1, quadAckExpect);
-    out32(OCB_OISR1_CLR, BIT32(17));
-    g_oimr_override &= ~BIT64(49);
-    out32(OCB_OIMR1_CLR, BIT32(17)); //Disable PCB_INTR_TYPE4
+    out32(OCB_OISR1_CLR, BIT32(17)); //Clear out TYPE4 in OISR
 
-    //Now, that type4 processing is complete, let's
-    //restore all the interrupts we masked at the top
+    pk_irq_sub_critical_exit(&ctx);
+
     pk_irq_vec_restore(&ctx);
-
-    pk_irq_vec_restore(&ctx);//Second call is to restore type4 interrupt itself
     PK_TRACE_DBG("PCB_TYPE4: Exit\n");
 }

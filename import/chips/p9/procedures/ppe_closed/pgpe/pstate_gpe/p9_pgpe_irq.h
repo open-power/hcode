@@ -63,15 +63,18 @@
 
 #define IDX_PRTY_LVL_HIPRTY        0
 #define IDX_PRTY_LVL_OCBERR        1
-#define IDX_PRTY_LVL_IPI2HI        2
-#define IDX_PRTY_LVL_TYPE1         3
-#define IDX_PRTY_LVL_DISABLED      4
+#define IDX_PRTY_LVL_XSTOP_GPE2    2
+#define IDX_PRTY_LVL_IPI2LO        3
+#define IDX_PRTY_LVL_IPI2HI        4
+#define IDX_PRTY_LVL_TYPE4         5
+#define IDX_PRTY_LVL_TYPE1         6
+#define IDX_PRTY_LVL_DISABLED      7
 #define IDX_PRTY_VEC  0
 #define IDX_MASK_VEC  1
-#define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(7)
+#define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(8)
 extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
-#define IRQ_VEC_PRTY0_GPE   (uint64_t)(0x0000000000000000) // Non-task hi-prty IRQs
+#define IRQ_VEC_PRTY0_GPE2   (uint64_t)(0x0000000000000000) // Non-task hi-prty IRQs
 // Shared between all instances
 #define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x2080000000000000) // Task1-OCB_ERROR(HeartBeat Loss)/GPE3_HALT
 #define IRQ_VEC_PRTY2_GPE2  (uint64_t)(0x0001000000000000) // Task2-CHECK_STOP_GPE2
@@ -87,7 +90,7 @@ extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 // Unique to each instance
 // We should never detect these
 
-#define IRQ_VEC_ALL_OUR_IRQS  ( IRQ_VEC_PRTY0_GPE  | \
+#define IRQ_VEC_ALL_OUR_IRQS  ( IRQ_VEC_PRTY0_GPE2  | \
                                 IRQ_VEC_PRTY1_GPE2 | \
                                 IRQ_VEC_PRTY2_GPE2 | \
                                 IRQ_VEC_PRTY3_GPE2 | \
@@ -130,6 +133,7 @@ pk_irq_vec_restore( PkMachineContext* context)
         // Restore the prty level tracker to the task that was interrupted, if any.
         g_current_prty_level = g_oimr_stack[g_oimr_stack_ctr];
         g_oimr_stack_ctr--;
+        PK_TRACE_DBG("IRQ RS: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
     }
     else
     {
@@ -141,13 +145,14 @@ pk_irq_vec_restore( PkMachineContext* context)
     pk_critical_section_exit(context);
 }
 
-//As per PPE SPEC, the Fixed-Interval Timer and Decrementer Interrupt
-//are lower priority than external interrupts.
-//In some external interrupts handlers atomiticy might be required while
-//keeping FIT and DEC unmasked. The sub-critical section concepts can be
-//helpful, and the following the two functions can be used for such purpose.
+//This masks all UIH external interrupts, but leaves timer interrupts enableda
 //
-//PGPE makes use of this in several places
+//Note: Care must be taken to call equal number of pk_irq_sub_critical_enter and
+//pk_irq_sub_critical_exit calls
+//
+//Timer interrupts FIT and DEC are lower in priority than External Interrupts, and
+//also need EE bit set for interrupt handler to be called. This function is useful
+//in case timer interrupts should be enabled, but external interrupts should be masked
 UNLESS__PPE42_IRQ_CORE_C__(extern)
 inline void pk_irq_sub_critical_enter(PkMachineContext* ctx)
 {
@@ -157,6 +162,8 @@ inline void pk_irq_sub_critical_enter(PkMachineContext* ctx)
     pk_critical_section_exit(ctx);
 }
 
+//This will unmask the UIH external interrupts masked off by previous pk_irq_sub_critical
+//_enter call.
 UNLESS__PPE42_IRQ_CORE_C__(extern)
 inline void pk_irq_sub_critical_exit(PkMachineContext* ctx)
 {
