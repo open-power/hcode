@@ -433,8 +433,6 @@ p9_sgpe_stop_exit()
             PK_TRACE_INF("SXIPC: Update PGPE with Active Quads(stop11 and pstate enabled)");
             G_sgpe_ipcmsg_update_quads.fields.update_type = SGPE_IPC_UPDATE_TYPE_EXIT;
             G_sgpe_ipcmsg_update_quads.fields.return_code = SGPE_IPC_RETURN_CODE_NULL;
-            G_sgpe_ipcmsg_update_quads.fields.requested_quads =
-                (G_sgpe_stop_record.group.quad[VECTOR_EXIT] >> SHIFT32(5));
 
             G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
             ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
