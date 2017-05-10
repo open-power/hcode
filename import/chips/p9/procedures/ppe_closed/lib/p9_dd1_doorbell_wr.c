@@ -38,7 +38,6 @@ void p9_dd1_cppm_unicast_wr(uint32_t baddr, uint32_t laddr, uint64_t wdata, int 
 {
     uint64_t rdata;
 
-    wrteei(0);
 
     do
     {
@@ -53,20 +52,13 @@ void p9_dd1_cppm_unicast_wr(uint32_t baddr, uint32_t laddr, uint64_t wdata, int 
 
     //Write-CLR and the requested bit were not cleared
 
-    wrteei(1);
 }
-
-/// Note: External and timer interrupts are disabled during the "polling"
-//        portions of the code to allow for timeouts using the WDT.
-//        MSR[EE] == 0 will disable the WDT callback and therefore cause
-//        a halt/error condition if the polling takes "too long".
 
 void p9_dd1_db_unicast_wr(uint32_t addr, uint64_t data)
 {
     uint64_t rdata;
 
     // Clear the DB register
-    wrteei(0);
 
     do
     {
@@ -75,13 +67,9 @@ void p9_dd1_db_unicast_wr(uint32_t addr, uint64_t data)
     }
     while((rdata >> 32) != 0);
 
-    wrteei(1);
 
-    // TODO Does it make sense to open up for interrupts here, since the two
-    //      polling loops are right after each other anyways?
 
     // Write data to the DB register
-    wrteei(0);
 
     do
     {
@@ -90,7 +78,6 @@ void p9_dd1_db_unicast_wr(uint32_t addr, uint64_t data)
     }
     while((rdata >> 32) == 0);
 
-    wrteei(1);
 }
 
 void p9_dd1_db_multicast_wr(uint32_t addr, uint64_t data, uint32_t coreMask)
@@ -101,7 +88,6 @@ void p9_dd1_db_multicast_wr(uint32_t addr, uint64_t data, uint32_t coreMask)
     addr &= ~(0x38000000ul);
 
     // Clear the DB register
-    wrteei(0);
 
     do
     {
@@ -110,7 +96,6 @@ void p9_dd1_db_multicast_wr(uint32_t addr, uint64_t data, uint32_t coreMask)
     }
     while((rdata >> 32) != 0);
 
-    wrteei(1);
 
     // Write data to the DB register
     GPE_PUTSCOM(addr | PCB_MC_WRITE, data);
@@ -132,7 +117,6 @@ void p9_dd1_db_multicast_wr(uint32_t addr, uint64_t data, uint32_t coreMask)
                                         ((core + 0x20ul) << 24));
                 GPE_GETSCOM(unicastAddr, rdata);
                 // Only resend the write if needed (do not want duplicate DBs)
-                wrteei(0);
 
                 while((rdata >> 32) == 0)
                 {
@@ -140,7 +124,6 @@ void p9_dd1_db_multicast_wr(uint32_t addr, uint64_t data, uint32_t coreMask)
                     GPE_GETSCOM(unicastAddr, rdata);
                 }
 
-                wrteei(1);
             }
         }
     }
