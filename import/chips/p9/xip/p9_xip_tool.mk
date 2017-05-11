@@ -24,6 +24,6 @@
 # IBM_PROLOG_END_TAG
 EXE = p9_xip_tool
 OBJS += $(EXE).o
-$(EXE)_DEPLIBS += p9_xip_image p9_tor p9_ringId p9_scan_compression
+$(EXE)_DEPLIBS += p9_xip_image p9_tor p9_ringId p9_scan_compression p9_dd_container
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/utils/imageProcs)
 $(call BUILD_EXE)
