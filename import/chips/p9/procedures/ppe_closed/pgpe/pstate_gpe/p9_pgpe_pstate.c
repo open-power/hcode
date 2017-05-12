@@ -266,6 +266,7 @@ void p9_pgpe_pstate_apply_clips()
 //
 void p9_pgpe_pstate_calc_wof()
 {
+    PK_TRACE_DBG("CALC_WOF: fclip_ps: 0x%x", G_pgpe_pstate_record.wofClip);
     G_pgpe_pstate_record.wofClip = G_pgpe_pstate_record.pVFRT->vfrt_data[0][23];
 
     p9_pgpe_pstate_apply_clips();
