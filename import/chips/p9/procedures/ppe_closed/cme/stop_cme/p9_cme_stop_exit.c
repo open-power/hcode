@@ -302,7 +302,6 @@ void p9_cme_stop_exit_lv2(uint32_t core)
     out32(CME_LCL_SICR_OR, core << SHIFT32(11));
 
     // Poll Infinitely for PCB Mux Grant
-    // MF: change watchdog timer in pk to ensure forward progress
     while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
 
     PK_TRACE("SX.20: PCB Mux Granted on Core[%d]", core);
@@ -626,7 +625,6 @@ p9_cme_stop_exit()
             out32(CME_LCL_SICR_OR, core << SHIFT32(11));
 
             // Poll Infinitely for PCB Mux Grant
-            // MF: change watchdog timer in pk to ensure forward progress
             while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
 
             PK_TRACE("SX.40: PCB Mux Granted on Core[%d]", core);

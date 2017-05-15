@@ -378,10 +378,13 @@ p9_cme_stop_entry()
             out32(CME_LCL_SICR_OR,  core_stop1 << SHIFT32(1));
             out32(CME_LCL_SICR_CLR, core_stop1 << SHIFT32(1));
 
-            PK_TRACE("Update STOP history: in core stop level 1");
-            scom_data.words.lower = 0;
-            scom_data.words.upper = SSH_ACT_LV1_COMPLETE;
-            CME_PUTSCOM(PPM_SSHSRC, core_stop1, scom_data.value);
+            // Removed: Do not want users to become accustomed to seeing Stop1 reflected in Stop History on DD1
+            //
+            //PK_TRACE("Update STOP history: in core stop level 1");
+            //scom_data.words.lower = 0;
+            //scom_data.words.upper = SSH_ACT_LV1_COMPLETE;
+            //CME_PUTSCOM(PPM_SSHSRC, core_stop1, scom_data.value);
+            //
 
             core = core & ~core_stop1;
 
@@ -415,7 +418,6 @@ p9_cme_stop_entry()
         out32(CME_LCL_SICR_OR, core << SHIFT32(11));
 
         // Poll Infinitely for PCB Mux Grant
-        // MF: change watchdog timer in pk to ensure forward progress
         while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
 
         PK_TRACE("PCB Mux Granted on Core[%d]", core);
@@ -562,7 +564,6 @@ p9_cme_stop_entry()
         while((lclr_data & core) != core);
 
         // Waits quiesce done for at least 512 core cycles
-        // MF: verify generate FCB otherwise math is wrong.
         PPE_WAIT_CORE_CYCLES(512)
 
         PK_TRACE_INF("SE.2B: Interfaces Quiesced");
@@ -690,9 +691,6 @@ p9_cme_stop_entry()
             PK_TRACE_ERR("ERROR: Core Clock Stop Failed. HALT CME!");
             PK_PANIC(CME_STOP_ENTRY_STOPCLK_FAILED);
         }
-
-        // MF: verify compiler generate single rlwmni
-        // MF: delay may be needed for stage latch to propagate thold
 
         PK_TRACE_INF("SE.2C: Core Clock Stopped");
 
