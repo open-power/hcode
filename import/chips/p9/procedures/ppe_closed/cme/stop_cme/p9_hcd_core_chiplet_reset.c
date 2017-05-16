@@ -85,7 +85,7 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     PK_TRACE("Drop PCB fence via NET_CTRL0[25]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(25));
 
-#if defined(USE_CME_QUEUED_SCOM) && defined(USE_PPE_IMPRECISE_MODE)
+#if defined(USE_CME_QUEUED_SCOM)
 
     // execute sync before change pcbmux to prevent queued scom issues
     sync();

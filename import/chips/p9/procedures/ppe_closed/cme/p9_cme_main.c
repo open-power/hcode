@@ -169,19 +169,7 @@ main(int argc, char** argv)
 
     PK_TRACE("Kernel init completed");
 
-    // reading header attributes and initialize the queued scom mode
-    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
-
-    if (pCmeImgHdr->g_cme_mode_flags & CME_QUEUED_SCAN_DISABLE_BIT_POS)
-    {
-        out32(CME_LCL_LMCR_CLR, BITS32(8, 2));
-    }
-    else
-    {
-        out32(CME_LCL_LMCR_OR, BITS32(8, 2));
-    }
-
-#if defined(USE_CME_QUEUED_SCOM) && defined(USE_PPE_IMPRECISE_MODE)
+#if defined(USE_CME_QUEUED_SCOM) || defined(USE_CME_QUEUED_SCAN)
     out32(CME_LCL_LMCR_OR, BITS32(8, 2));
 #endif
 

@@ -208,6 +208,16 @@ enum CME_STOP_FLAGS
     FLAG_PARTIAL_GOOD_C1             = BIT32(31)
 };
 
+enum ATTR_CME_MODE_FLAGS
+{
+    MAP_3_TO_2                       = BIT32(0),
+    MAP_4_TO_2                       = BIT32(1),
+    MAP_5_TO_4                       = BIT32(2),
+    MAP_8_TO_5                       = BIT32(3),
+    MAP_11_TO_8                      = BIT32(4),
+    SKIP_CORE_POWEROFF               = BIT32(31)
+};
+
 enum CME_STOP_PIG_TYPES
 {
     PIG_TYPE2                        = 2,

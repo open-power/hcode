@@ -214,7 +214,7 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
     while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
-#if defined(USE_CME_QUEUED_SCOM) && defined(USE_PPE_IMPRECISE_MODE)
+#if defined(USE_CME_QUEUED_SCOM)
 
     // execute sync before change pcbmux to prevent queued scom issues
     sync();

@@ -59,7 +59,7 @@ enum CME_BCEBAR_INDEXES
 
 #define CME_SCOM_ADDR(addr, core, op)   (addr | (core << 22) | (op << 20))
 
-#if defined(USE_CME_QUEUED_SCOM) && defined(USE_PPE_IMPRECISE_MODE)
+#if defined(USE_CME_QUEUED_SCOM)
 #define CME_GETSCOM(addr, core, scom_op, data)                 \
     PPE_LVD(CME_SCOM_ADDR(addr, core, scom_op), data);
 #define CME_PUTSCOM(addr, core, data)                          \

@@ -43,8 +43,13 @@
 
 #define USE_PPE_IMPRECISE_MODE
 #define USE_CME_QUEUED_SCOM
+#undef USE_CME_QUEUED_SCAN
 
-/// @todo RTC 161182
+#if !defined(USE_PPE_IMPRECISE_MODE) && (defined(USE_CME_QUEUED_SCOM) || defined(USE_CME_QUEUED_SCAN))
+    #error "USE_PPE_IMPRECISE_MODE must be defined in order to enable USE_CME_QUEUED_SCOM or USE_CME_QUEUED_SCAN"
+#endif
+
+// @todo RTC 161182
 
 #if NIMBUS_DD_LEVEL == 1
     #define HW386841_NDD1_DSL_STOP1_FIX         1

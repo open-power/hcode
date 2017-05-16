@@ -99,7 +99,7 @@ typedef union
 #define PPE_CORE_CYCLE_DIVIDER     (PPE_CORE_CYCLE_RATIO*PPE_FOR_LOOP_CYCLES)
 #ifdef USE_PPE_IMPRECISE_MODE
 #define PPE_WAIT_CORE_CYCLES(cc) \
-    {volatile uint32_t l;for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);asm volatile ("sync");}
+    {volatile uint32_t l;asm volatile ("sync");for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);}
 #else
 #define PPE_WAIT_CORE_CYCLES(cc) \
     {volatile uint32_t l;for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);}
