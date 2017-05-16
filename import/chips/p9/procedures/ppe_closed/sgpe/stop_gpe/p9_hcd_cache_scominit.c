@@ -80,7 +80,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 ex_index = ex_mask & 1;
                 PK_TRACE_DBG("Stop11: Working on EX%d", ex_index);
 
-                // p9_l3_scom: EX_L3_MODE_REG0
+                // p9_l3_scom: EX_L3_MODE_REG1
 
                 PK_TRACE("Setup L3_LCO_TARGET_ID/VICTIMS via EX_L3_MODE_REG1[2-5,6-21]");
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, ex_index), scom_data.value);
@@ -101,10 +101,31 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 
                 GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, quad, ex_index), scom_data.value);
 
+                // p9_l3_scom: EX_L3_MODE_REG0
+                // EXP.L3.L3_MISC.L3CERRS.L3_DMAP_CI_EN_CFG
+                // EXP.L3.L3_MISC.L3CERRS.L3_RDSN_LINEDEL_UE_EN
+                // EXP.L3.L3_MISC.L3CERRS.L3_CERRS_PF_CFG_SKIP_GRP_SCOPE_EN
+                // EXP.L3.L3_MISC.L3CERRS.L3_ADDR_HASH_EN_CFG
+                // EXP.L3.L3_MISC.L3CERRS.L3_SYSMAP_SM_NOT_LG_SEL
+                // EXP.L3.L3_MISC.L3CERRS.L3_HANG_POLL_PULSE_DIV
+                // EXP.L3.L3_MISC.L3CERRS.L3_DATA_POLL_PULSE_DIV
+                // EXP.L3.L3_MISC.L3CERRS.L3_CERRS_LRU_DECR_EN_CFG
+
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, ex_index),
                             scom_data.value);
                 scom_data.words.upper &= ~(BIT32(1) | BITS32(14, 8) | BIT32(22));
                 scom_data.words.upper |= (BIT32(2) | BIT32(11) | BIT32(17) | BIT32(19));
+
+#if NIMBUS_DD_LEVEL != 1
+
+                scom_data.words.upper |=  (BIT32(5) | BIT32(30));
+
+                if (attr_proc_fabric_pump_mode_chip_is_node)
+                {
+                    scom_data.words.upper &= ~BIT32(5);
+                }
+
+#endif
 
                 if (ex_count == 2)
                 {
@@ -121,14 +142,34 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                             scom_data.value);
 
                 // p9_ncu_scom: EX_NCU_MODE_REG
+                // EXP.NC.NCMISC.NCSCOMS.SYSMAP_SM_NOT_LG_SEL
+                // EXP.NC.NCMISC.NCSCOMS.SKIP_GRP_SCOPE_EN
 
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG, quad, ex_index),
                             scom_data.value);
                 scom_data.words.upper &= ~BIT32(9);
+
+#if NIMBUS_DD_LEVEL != 1
+
+                scom_data.words.lower |=  BIT32SH(51);
+
+                if (attr_proc_fabric_pump_mode_chip_is_node)
+                {
+                    scom_data.words.lower &= ~BIT32SH(51);
+                }
+
+#endif
+
                 GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG, quad, ex_index),
                             scom_data.value);
 
                 // p9_ncu_scom: EX_NCU_MODE_REG2
+                // EXP.NC.NCMISC.NCSCOMS.HANG_POLL_PULSE_DIV
+                // EXP.NC.NCMISC.NCSCOMS.MASTER_CP_DATA_POLL_PULSE_DIV
+                // EXP.NC.NCMISC.NCSCOMS.TLB_SNOOP_DATA_POLL_PULSE_DIV
+                // EXP.NC.NCMISC.NCSCOMS.TLB_STG1_HANG_POLL_PULSE_DIV
+                // EXP.NC.NCMISC.NCSCOMS.TLB_STG2_HANG_POLL_PULSE_DIV
+                // EXP.NC.NCMISC.NCSCOMS.MASTER_TLB_DATA_POLL_PULSE_DIV
 
                 GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG2, quad, ex_index),
                             0x1402220100000000);
@@ -145,6 +186,11 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 PK_TRACE_DBG("Stop8: Working on EX%d", ex_index);
 
                 // p9_l2_scom: EX_L2_MODE_REG0
+                // EXP.L2.L2MISC.L2CERRS.CFG_SYSMAP_SM_NOT_LG_SEL
+                // EXP.L2.L2MISC.L2CERRS.CFG_SKIP_GRP_SCOPE_EN
+                // EXP.L2.L2MISC.L2CERRS.CFG_HASH_L3_ADDR_EN
+                // EXP.L2.L2MISC.L2CERRS.CFG_CAC_ERR_REPAIR_EN
+
                 // L3_MODE0[11] L3_ADDR_HASH_EN_CFG must be set along with
                 // L2_MODE0[21] CFG_HASH_L3_ADDR_EN before drop cache chiplet fence
                 // if that L2 region is clocked and L2 snoop disable is dropped
@@ -152,6 +198,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L2_MODE_REG0, quad, ex_index),
                             scom_data.value);
                 scom_data.words.lower |= BIT64SH(38);
+                scom_data.words.upper |= BIT32(15);
                 scom_data.words.upper |= BIT32(21);
                 scom_data.words.upper &= ~BIT32(23);
 
@@ -164,6 +211,8 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                             scom_data.value);
 
                 // p9_l2_scom: EX_L2_MODE_REG1
+                // EXP.L2.L2MISC.L2CERRS.HANG_POLL_PULSE_DIV
+                // EXP.L2.L2MISC.L2CERRS.DATA_POLL_PULSE_DIV
 
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L2_MODE_REG1, quad, ex_index),
                             scom_data.value);
