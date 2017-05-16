@@ -390,11 +390,6 @@ p9_cme_stop_entry()
 
             core = core & ~core_stop1;
 
-            if (!core)
-            {
-                break;
-            }
-
 #else
 
             // Nap should be done by hardware when auto_stop1 is enabled
@@ -405,10 +400,6 @@ p9_cme_stop_entry()
 #endif
 
         }
-
-        //----------------------------------------------------------------------
-        PK_TRACE("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
-        //----------------------------------------------------------------------
 
 #if HW405292_NDD1_PCBMUX_SAVIOR
 
@@ -429,6 +420,20 @@ p9_cme_stop_entry()
         p9_cme_pcbmux_savior_epilogue(core);
 
 #endif
+
+#if HW386841_NDD1_DSL_STOP1_FIX
+
+        // exit after getting PCBMUX for Stop1 Workaround
+        if (!core)
+        {
+            break;
+        }
+
+#endif
+
+        //----------------------------------------------------------------------
+        PK_TRACE("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
+        //----------------------------------------------------------------------
 
         // set target_level from pm_state for both cores or just one core
         target_level = (core == CME_MASK_C0) ? G_cme_stop_record.req_level[0] :
