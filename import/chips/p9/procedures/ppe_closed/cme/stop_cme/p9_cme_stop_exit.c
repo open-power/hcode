@@ -63,22 +63,10 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
     {
         if (core & core_mask)
         {
+            CME_GETSCOM(PPM_SSHSRC, core_mask, CME_SCOM_AND, scom_data.value);
 
             core_index            = core_mask & 1;
-
-            if (G_cme_stop_record.act_level[core_index] != STOP_LEVEL_1)
-            {
-                CME_GETSCOM(PPM_SSHSRC, core_mask, CME_SCOM_NOP, scom_data.value);
-                act_stop_level        = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
-            }
-            else
-            {
-
-                // SSH was not updated for Stop1 so use the internal variable instead
-                act_stop_level = STOP_LEVEL_1;
-            }
-
-            //set up the next SCOM
+            act_stop_level        = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
             scom_data.words.lower = (BIT64SH(32) | BIT64SH(40) | BIT64SH(48) | BIT64SH(56));
             scom_data.words.upper = 0;
 
@@ -314,6 +302,7 @@ void p9_cme_stop_exit_lv2(uint32_t core)
     out32(CME_LCL_SICR_OR, core << SHIFT32(11));
 
     // Poll Infinitely for PCB Mux Grant
+    // MF: change watchdog timer in pk to ensure forward progress
     while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
 
     PK_TRACE("SX.20: PCB Mux Granted on Core[%d]", core);
@@ -637,6 +626,7 @@ p9_cme_stop_exit()
             out32(CME_LCL_SICR_OR, core << SHIFT32(11));
 
             // Poll Infinitely for PCB Mux Grant
+            // MF: change watchdog timer in pk to ensure forward progress
             while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
 
             PK_TRACE("SX.40: PCB Mux Granted on Core[%d]", core);
