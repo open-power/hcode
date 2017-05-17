@@ -380,17 +380,14 @@ p9_cme_stop_entry()
             out32(CME_LCL_SICR_OR,  core_stop1 << SHIFT32(1));
             out32(CME_LCL_SICR_CLR, core_stop1 << SHIFT32(1));
 
+            // Removed: Do not want users to become accustomed to
+            //          seeing Stop1 reflected in Stop History on DD1
+            /*
             PK_TRACE("Update STOP history: in core stop level 1");
             scom_data.words.lower = 0;
             scom_data.words.upper = SSH_ACT_LV1_COMPLETE;
             CME_PUTSCOM(PPM_SSHSRC, core_stop1, scom_data.value);
-
-            core = core & ~core_stop1;
-
-            if (!core)
-            {
-                break;
-            }
+            */
 
 #else
 
@@ -403,9 +400,6 @@ p9_cme_stop_entry()
 
         }
 
-        //----------------------------------------------------------------------
-        PK_TRACE("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
-        //----------------------------------------------------------------------
 
 #if HW405292_NDD1_PCBMUX_SAVIOR
 
@@ -417,7 +411,6 @@ p9_cme_stop_entry()
         out32(CME_LCL_SICR_OR, core << SHIFT32(11));
 
         // Poll Infinitely for PCB Mux Grant
-        // MF: change watchdog timer in pk to ensure forward progress
         while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
 
         PK_TRACE("PCB Mux Granted on Core[%d]", core);
@@ -427,6 +420,25 @@ p9_cme_stop_entry()
         p9_cme_pcbmux_savior_epilogue(core);
 
 #endif
+
+#if HW386841_NDD1_DSL_STOP1_FIX
+
+        // check target after getting PCBMUX for Stop1 Workaround
+        if (core_stop1)
+        {
+            core = core & ~core_stop1;
+
+            if (!core)
+            {
+                break;
+            }
+        }
+
+#endif
+
+        //----------------------------------------------------------------------
+        PK_TRACE("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
+        //----------------------------------------------------------------------
 
         // set target_level from pm_state for both cores or just one core
         target_level = (core == CME_MASK_C0) ? G_cme_stop_record.req_level[0] :
@@ -564,7 +576,6 @@ p9_cme_stop_entry()
         while((lclr_data & core) != core);
 
         // Waits quiesce done for at least 512 core cycles
-        // MF: verify generate FCB otherwise math is wrong.
         PPE_WAIT_CORE_CYCLES(512)
 
         PK_TRACE_INF("SE.2B: Interfaces Quiesced");
@@ -692,9 +703,6 @@ p9_cme_stop_entry()
             PK_TRACE_ERR("ERROR: Core Clock Stop Failed. HALT CME!");
             PK_PANIC(CME_STOP_ENTRY_STOPCLK_FAILED);
         }
-
-        // MF: verify compiler generate single rlwmni
-        // MF: delay may be needed for stage latch to propagate thold
 
         PK_TRACE_INF("SE.2C: Core Clock Stopped");
 
