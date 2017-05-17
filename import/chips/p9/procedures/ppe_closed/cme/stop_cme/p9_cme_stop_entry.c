@@ -171,8 +171,6 @@ void turn_off_ram_mode (uint32_t core)
     PK_TRACE("LPID Clear core maintenance mode via direct controls");
     CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27)));
 
-    PK_TRACE("LPID Wait for 8K Core Cycles");
-    PPE_WAIT_CORE_CYCLES(8000);
 }
 
 #endif
@@ -562,6 +560,12 @@ p9_cme_stop_entry()
 #if SPWU_AUTO
         PK_TRACE("Assert auto special wakeup disable via LMCR[12/13]");
         out32(CME_LCL_LMCR_OR, (core << SHIFT32(13)));
+#endif
+
+
+#if HW402407_NDD1_TLBIE_STOP_WORKAROUND
+        // Need to wait for any pending TLBIEs to complete
+        PPE_WAIT_CORE_CYCLES(2000)
 #endif
 
         PK_TRACE("Assert core-L2 + core-CC quiesces via SICR[6/7,8/9]");
