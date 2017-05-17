@@ -230,6 +230,11 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
 //
 //PCB Type 4 Interrupt Handler
 //
+//This interrupt is enabled at PGPE Init and stays enabled always
+//However, behaviour depends on pstates status.
+//If pstates are enabled, then quadsActive variable is updated, quad manager
+//CME(s) is/are sent a Pstate Start Doorbell, and then ACKs are collected. If pstates are disabled,
+//then only quadsActive variable is updated
 void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
@@ -246,7 +251,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
     db0.value = 0;
     db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
 
-    //Check which CMEs sent Registeration Type4
+    //Check which CMEs sent Registration Type4
     opit4pr = in32(OCB_OPIT4PRA);
     out32(OCB_OPIT4PRA_CLR, opit4pr);
     PK_TRACE_DBG("PCB_TYPE4: opit4pr 0x%x\n", opit4pr);
@@ -261,13 +266,20 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
             //Already registered
             if (G_pgpe_pstate_record.quadsActive & (0x80 >> q))
             {
-                PK_TRACE_DBG("PCB_TYPE4: Already Registered\n");
+                PK_TRACE_DBG("PCB_TYPE4: Quad %d Already Registered. opit4pra=0x%x", q, opit4pr);
                 pk_halt();
             }
 
-            if (ccsr.value & ((0xF0000000) >> (q << 2)))
+            G_pgpe_pstate_record.quadsActive |= (0x80 >> q);
+            PK_TRACE_DBG("PCB_TYPE4: Quad %d Registered. qActive=0x%x", q, G_pgpe_pstate_record.quadsActive,
+                         G_pgpe_pstate_record.quadsActive);
+
+
+            //If Pstates are active or suspended while active, then
+            //send Pstate Start DB0 to quadManager CME
+            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE ||
+                G_pgpe_pstate_record.pstatesStatus == PSTATE_SUSPENDED_WHILE_ACTIVE)
             {
-                G_pgpe_pstate_record.quadsActive |= (0x80 >> q);
                 p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
                 p9_pgpe_pstate_apply_clips();
 
@@ -288,17 +300,17 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                         PK_TRACE_DBG("PCB_TYPE4: Sent StartDB0 to %d\n", q);
                     }
                 }
+
+                quadAckExpect |= (0x80 >> q);
             }
 
-            quadAckExpect |= (0x80 >> q);
         }
     }
 
+    //Wait for all CMEs to ACK Pstate Start DB0
     opit4pr1 = in32(OCB_OPIT4PRA);
     PK_TRACE_DBG("PCB_TYPE4: opit4pr 0x%x, quadAckExpect=0x%x\n", opit4pr1, quadAckExpect);
 
-
-    //Wait for all CMEs to ACK Pstate Start DB0
     while(quadAckExpect != 0)
     {
         opit4pr1 = in32(OCB_OPIT4PRA);
@@ -329,7 +341,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
         }
     }
 
-    PK_TRACE_DBG("PCB_TYPE4: opit4pr 0x%x, quadAckExpect=0x%x\n", opit4pr1, quadAckExpect);
+    PK_TRACE_DBG("PCB_TYPE4: All ACKS rcvd. quadAckExpect=0x%x\n", quadAckExpect);
     out32(OCB_OISR1_CLR, BIT32(17)); //Clear out TYPE4 in OISR
 
     pk_irq_sub_critical_exit(&ctx);

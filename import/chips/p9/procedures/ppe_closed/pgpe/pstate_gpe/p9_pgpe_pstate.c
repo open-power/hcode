@@ -1105,13 +1105,6 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     PK_TRACE_INF("PGPE_PSTATE_PROTOCOL_ACTIVE set");
     out32(OCB_OCCS2, occScr2);
 
-    uint32_t opit4pr;
-    opit4pr = in32(OCB_OPIT4PRA);
-    out32(OCB_OPIT4PRA_CLR, opit4pr);
-    out32(OCB_OISR1_CLR, BIT32(17));
-    g_oimr_override &= ~BIT64(49);
-    out32(OCB_OIMR1_CLR, BIT32(17)); //Enable PCB_INTR_TYPE4
-
     //7. Send Pstate Start ACK to OCC
     if (pstate_start_origin == PSTATE_START_OCC_IPC)
     {

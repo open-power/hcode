@@ -82,6 +82,15 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         p9_pgpe_pstate_start(PSTATE_START_OCC_FLAG);
     }
 
+    //Enable PCB_INTR_TYPE4
+    uint32_t opit4pr;
+    opit4pr = in32(OCB_OPIT4PRA);
+    out32(OCB_OPIT4PRA_CLR, opit4pr);
+    out32(OCB_OISR1_CLR, BIT32(17));
+    g_oimr_override &= ~BIT64(49);
+    out32(OCB_OIMR1_CLR, BIT32(17));
+
+
     // Set OCC Scratch2[PGPE_ACTIVE]
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PGPE_ACTIVE);
@@ -205,15 +214,8 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
             {
                 pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
             }
-        } //while ACTIVE or SUSPENDED loop
+        }
 
-        /*        if (G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
-                {
-                    //Pstates Stop
-                    //If we entered SAFE_MODE already, then do STOP protocol
-                    //This call will unmask IPC and block on SGPE ACK
-                    p9_pgpe_thread_actuate_stop();
-                }*/
         if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING
             || G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
         {

@@ -197,6 +197,7 @@ void p9_pgpe_process_sgpe_updt_active_cores()
     //If in PM_SUSPENDED state, then ack back with error
     if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED)
     {
+        PK_TRACE_DBG("PROCTH: PM Suspended\n");
         args->fields.return_code = SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
@@ -227,6 +228,7 @@ void p9_pgpe_process_sgpe_updt_active_cores()
             //Otherwise, wait to ACK until WOF Clip has been applied(from actuate_pstate thread)
             if (args->fields.update_type == UPDATE_ACTIVE_TYPE_ENTRY)
             {
+                PK_TRACE_DBG("PROCTH: Core Entry ACK back to SGPE\n");
                 args->fields.return_code = SGPE_PGPE_IPC_RC_SUCCESS;
                 G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
                 ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
