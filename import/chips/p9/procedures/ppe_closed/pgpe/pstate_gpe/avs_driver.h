@@ -29,8 +29,9 @@
 #ifndef _AVS_DRIVER_H_
 #define _AVS_DRIVER_H_
 
-#define VEXT_SLEW_RATE_MVPERUS  0x0A0A  // Trise=Tfall=10mv/us
 #define MAX_POLL_COUNT_AVS      10
+#define AVS_RAIL_NUM_MASK       0xF
+#define AVS_BUS_NUM_MASK        0x10
 
 void
 external_voltage_control_init(uint32_t* vext_read_mv);

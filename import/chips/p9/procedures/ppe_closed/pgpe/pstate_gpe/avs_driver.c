@@ -84,12 +84,13 @@ uint8_t pollVoltageTransDone(void)
     uint32_t  ocbRegReadData = 0;
     uint8_t   ongoingFlag = 1;
     uint8_t   count = 0;
+    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
 
     // The point of MAX_POLL_COUNT_AVS is to verify that ongoingFlag turns to
     //   zero very fast. Otherwise, something wrong with this i/f and error out.
     while (ongoingFlag || (count <= MAX_POLL_COUNT_AVS))
     {
-        ocbRegReadData = in32(OCB_O2SST0A);
+        ocbRegReadData = in32(OCB_O2SST0A | BusMask);
         ocbRegReadData = ocbRegReadData & 0x80000000;
 
         if (!ocbRegReadData)
@@ -116,12 +117,13 @@ uint8_t driveIdleFrame(void)
 {
     uint8_t  rc = 0;
     uint32_t idleframe = 0xFFFFFFFF;
+    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
 
     // Clear sticky bits in o2s_status_reg
-    out32(OCB_O2SCMD0A, 0x40000000);
+    out32(OCB_O2SCMD0A | BusMask , 0x40000000);
 
     // Compose and send frame
-    out32(OCB_O2SWD0A, idleframe);
+    out32(OCB_O2SWD0A | BusMask , idleframe);
 
     // Wait on o2s_ongoing = 0
     rc = pollVoltageTransDone();
@@ -138,14 +140,15 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
     uint8_t  rc = 0;
     uint32_t ocbRegWriteData = 0;
 
-    uint32_t RailSelect  = 0;
+    uint32_t RailSelect  =  in32(OCB_OCCS2) & AVS_RAIL_NUM_MASK;
     uint32_t StartCode   = 1;
     uint32_t CmdType     = 0; // 0:write+commit, 1:write+hold, 2: d/c, 3:read
     uint32_t CmdGroup    = 0;
     uint32_t CRC         = 0;
+    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
 
     // Clear sticky bits in o2s_status_reg
-    out32(OCB_O2SCMD0A, 0x40000000);
+    out32(OCB_O2SCMD0A | BusMask, 0x40000000);
 
     // Compose frame
     // CRC(31:29), CmdData(28:13), RailSelect(12:9), CmdDataType(8:5),
@@ -159,7 +162,7 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
 
     // Send frame
     //PK_TRACE_DBG("RegWrite=0x%x", ocbRegWriteData);
-    out32(OCB_O2SWD0A, ocbRegWriteData);
+    out32(OCB_O2SWD0A | BusMask, ocbRegWriteData);
 
     // Wait on o2s_ongoing = 0
     rc = pollVoltageTransDone();
@@ -177,15 +180,17 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
     uint32_t ocbRegReadData = 0;
     uint32_t ocbRegWriteData = 0;
 
-    uint32_t RailSelect  = 0;
+    uint32_t RailSelect  =  in32(OCB_OCCS2) & AVS_RAIL_NUM_MASK;
     uint32_t StartCode   = 1;
     uint32_t CmdType     = 3; // 0:write+commit, 1:write+hold, 2: d/c, 3:read
     uint32_t CmdGroup    = 0;
     uint32_t Reserved    = 0xFFFF;
     uint32_t CRC         = 0;
 
+    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+
     // Clear sticky bits in o2s_status_reg
-    out32(OCB_O2SCMD0A, 0x40000000);
+    out32(OCB_O2SCMD0A | BusMask, 0x40000000);
 
     // Compose frame
     // CRC(31:29), Reserved(28:13), RailSelect(12:9), CmdDataType(8:5),
@@ -198,7 +203,7 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
     ocbRegWriteData = ocbRegWriteData | CRC;
 
     // Send frame
-    out32(OCB_O2SWD0A, ocbRegWriteData);
+    out32(OCB_O2SWD0A | BusMask, ocbRegWriteData);
 
     // Wait on o2s_ongoing = 0
     rc = pollVoltageTransDone();
@@ -209,7 +214,7 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
     }
 
     // Read returned voltage value from Read frame
-    ocbRegReadData = in32(OCB_O2SRD0A);
+    ocbRegReadData = in32(OCB_O2SRD0A | BusMask);
     PK_TRACE_DBG("RegRead=0x%x", ocbRegReadData);
     *CmdData = (ocbRegReadData >> 8) & 0x0000FFFF;
 
@@ -243,25 +248,27 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
     // OCI to SPIPMBus (O2S) bridge initialization
     //
 
+    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+
     // O2SCTRLF
-    ocbRegReadData = in32(OCB_O2SCTRLF0A);
+    ocbRegReadData = in32(OCB_O2SCTRLF0A | BusMask);
     ocbRegWriteData = (0x000000FF & ocbRegReadData) | O2SCTRLF_value;
-    out32(OCB_O2SCTRLF0A, ocbRegWriteData);
+    out32(OCB_O2SCTRLF0A | BusMask, ocbRegWriteData);
 
     // O2SCTRLS
-    ocbRegReadData = in32(OCB_O2SCTRLS0A);
+    ocbRegReadData = in32(OCB_O2SCTRLS0A | BusMask);
     ocbRegWriteData = (0x00003FFF & ocbRegReadData) | O2SCTRLS_value;
-    out32(OCB_O2SCTRLS0A, ocbRegWriteData);
+    out32(OCB_O2SCTRLS0A | BusMask, ocbRegWriteData);
 
     // O2SCTRL2
-    ocbRegReadData = in32(OCB_O2SCTRL20A);
+    ocbRegReadData = in32(OCB_O2SCTRL20A | BusMask);
     ocbRegWriteData = (0x00007FFF & ocbRegReadData) | O2SCTRL2_value;
-    out32(OCB_O2SCTRL20A, ocbRegWriteData);
+    out32(OCB_O2SCTRL20A | BusMask, ocbRegWriteData);
 
     // O2SCTRL1
-    ocbRegReadData = in32(OCB_O2SCTRL10A);
+    ocbRegReadData = in32(OCB_O2SCTRL10A | BusMask);
     ocbRegWriteData = (0x4FFCBFFF & ocbRegReadData) | O2SCTRL1_value;
-    out32(OCB_O2SCTRL10A, ocbRegWriteData);
+    out32(OCB_O2SCTRL10A | BusMask, ocbRegWriteData);
 
     //
     // AVS slave initialization
@@ -278,44 +285,6 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
     {
         pk_halt();
     }
-
-//#endif
-
-    //
-    // Set rail Vout transition rate (slew-rate)
-    //
-    /*
-        // Drive write transaction with a target slew-rate on specific rail and wait on o2s_ongoing=0
-        rc = driveWrite(1, VEXT_SLEW_RATE_MVPERUS);
-
-        if (rc)
-        {
-            PK_TRACE_DBG("Slew-rate driveWrite FAIL");
-            pk_halt();
-        }
-
-        // Drive read transaction to return slew-rate on the same rail and wait on o2s_ongoing=0
-        rc = driveRead(1, &CmdDataRead);
-
-        if (rc)
-        {
-            PK_TRACE_DBG("Slew-rate driveRead FAIL");
-            pk_halt();
-        }
-    */
-#if !EPM_P9_TUNING
-    /*
-        if (CmdDataRead == VEXT_SLEW_RATE_MVPERUS)
-        {
-            PK_TRACE_DBG("Slew-rate write PASS");
-        }
-        else
-        {
-            PK_TRACE_DBG("Slew-rate write FAIL %d",CmdDataRead);
-            pk_halt();
-        }
-    */
-#endif
 
     // Drive read transaction to return initial setting of rail voltage and wait on o2s_ongoing=0
     rc = driveRead(0, &CmdDataRead);
