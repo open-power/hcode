@@ -38,6 +38,7 @@
 
 #define DEBUG_RUNTIME_STATE_CHECK 0
 #define TEST_ONLY_BCE_IRR         0
+#define DISABLE_CME_DUAL_CAST     0
 
 // --------------------
 
@@ -57,6 +58,14 @@
     #define HW405292_NDD1_PCBMUX_SAVIOR         1
     #define MASK_MSR_SEM6
     #define RUN_NDD1_ABIST_IN_PARALLEL_MODE     1
+#endif
+
+#if NIMBUS_DD_LEVEL == 2 || DISABLE_CME_DUAL_CAST == 1
+    // NDD2: no catchup due to dual cast bug
+    #undef  SKIP_ENTRY_CATCHUP
+    #undef  SKIP_EXIT_CATCHUP
+    #define SKIP_ENTRY_CATCHUP 1
+    #define SKIP_EXIT_CATCHUP  1
 #endif
 
 // --------------------
