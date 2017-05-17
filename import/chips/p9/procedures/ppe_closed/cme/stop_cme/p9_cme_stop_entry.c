@@ -1146,6 +1146,9 @@ p9_cme_stop_entry()
         PK_TRACE("+++++ +++++ STOP LEVEL 5-7 ENTRY +++++ +++++");
         //----------------------------------------------------------------------
 
+// NDD1 workaround to save cme image size
+#if NIMBUS_DD_LEVEL != 1
+
         if ((G_cme_stop_record.req_level[0] >= STOP_LEVEL_8) &&
             (G_cme_stop_record.req_level[1] >= STOP_LEVEL_8))
         {
@@ -1228,6 +1231,8 @@ p9_cme_stop_entry()
                 break;
             }
         }
+
+#endif
 
         //=============================
         MARK_TAG(SE_SGPE_HANDOFF, core)

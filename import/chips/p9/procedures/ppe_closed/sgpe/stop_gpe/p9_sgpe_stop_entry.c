@@ -342,6 +342,54 @@ p9_sgpe_stop_entry()
                             scom_data.value);
         }
 
+// NDD1 workaround to save cme image size
+#if NIMBUS_DD_LEVEL == 1
+
+        PK_TRACE("Assert L2+NCU purge and NCU tlbie quiesce via SICR[18,21,22]");
+        // insert tlbie quiesce before ncu purge to avoid window condition
+        // of ncu traffic still happening when purging starts
+        // Note: chtm purge and drop tlbie quiesce will be done in SGPE
+
+        if (ex & FST_EX_IN_QUAD)
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 0), (BIT64(18) | BIT64(21)));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 0), BIT64(22));
+        }
+
+        if (ex & SND_EX_IN_QUAD)
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 1), (BIT64(18) | BIT64(21)));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 1), BIT64(22));
+        }
+
+        PK_TRACE("Poll for purged done via EISR[22,23] then Drop L2+NCU purges via SICR[18,22]");
+
+        if (ex & FST_EX_IN_QUAD)
+        {
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_EISR, qloop, 0), scom_data.value);
+            }
+            while((scom_data.words.upper & BITS32(22, 2)) != BITS32(22, 2));
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, qloop, 0), (BIT64(18) | BIT64(22)));
+        }
+
+        if (ex & SND_EX_IN_QUAD)
+        {
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_EISR, qloop, 1), scom_data.value);
+            }
+            while((scom_data.words.upper & BITS32(22, 2)) != BITS32(22, 2));
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, qloop, 1), (BIT64(18) | BIT64(22)));
+        }
+
+        PK_TRACE_INF("NDD1: L2 and NCU Purged by SGPE");
+
+#endif
+
         //====================================================
         MARK_TAG(SE_STOP_L2_CLKS, ((ex << 6) | (32 >> qloop)))
         //====================================================
@@ -359,7 +407,7 @@ p9_sgpe_stop_entry()
         PPE_WAIT_CORE_CYCLES(256)
 
         PK_TRACE("Assert partial bad L2/L3 and stopping/stoped l2 pscom masks via RING_FENCE_MASK_LATCH");
-        scom_data.words.lower = 0;
+        scom_data.value = 0;
 
         if (!(G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop)))
         {
