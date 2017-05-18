@@ -47,12 +47,14 @@
 #include "ppe42_cache.h"
 #include "p9_hcode_image_defines.H"
 #include "p9_cme_pstate.h"
+#include "p9_cme_stop.h" // for CmeStopRecord
 #include "cme_panic_codes.h"
 
 
 //
 //External Globals and globals
 //
+extern CmeStopRecord G_cme_stop_record;
 extern CmePstateRecord G_cme_pstate_record;
 extern cmeHeader_t* G_cmeHeader;
 extern LocalPstateParmBlock* G_lppb;
@@ -184,8 +186,8 @@ void p9_cme_pstate_db_thread(void* arg)
         // Synchronize initial pstate w/ sibling CME
         if(G_cme_pstate_record.siblingCMEFlag)
         {
-            out64(CME_LCL_EITR_OR, BIT64(30));
-            out64(CME_LCL_EIPR_OR, BIT64(30));
+            out32(CME_LCL_EITR_OR, BIT32(30));
+            out32(CME_LCL_EIPR_OR, BIT32(30));
             intercme_msg_send(G_cme_pstate_record.quadPstate,
                               IMT_INIT_PSTATE);
         }
@@ -206,13 +208,13 @@ void p9_cme_pstate_db_thread(void* arg)
         }
 
         // Resonant Clocking Initialization (Sibling)
-        out64(CME_LCL_EITR_OR, BIT64(29));
-        out64(CME_LCL_EIPR_OR, BIT64(29));
+        out32(CME_LCL_EITR_OR, BIT32(29));
+        out32(CME_LCL_EIPR_OR, BIT32(29));
 
         intercme_msg_recv(&G_cme_pstate_record.quadPstate, IMT_INIT_PSTATE);
         PK_TRACE_INF("sib | initial pstate=%d", G_cme_pstate_record.quadPstate);
 
-        out64(CME_LCL_EIMR_CLR, BIT64(7)); //Enable InterCME_IN0
+        out32(CME_LCL_EIMR_CLR, BIT32(7)); //Enable InterCME_IN0
         g_eimr_override |= BIT64(37);
         g_eimr_override |= BIT64(36);
     }
@@ -224,7 +226,7 @@ void p9_cme_pstate_db_thread(void* arg)
     // Check that resonance is not enabled in CACCR and EXCGCR
     CME_GETSCOM(CPPM_CACCR, cores, CME_SCOM_EQ, scom_data);
     // Ignore clk_sync_enable and reserved
-    resclk_data = (scom_data >> 32) & ~BITS32(15, 31);
+    resclk_data = (scom_data >> 32) & ~BITS32(15, 17);
 
     if(resclk_data != 0)
     {
@@ -233,7 +235,7 @@ void p9_cme_pstate_db_thread(void* arg)
 
     ippm_read(QPPM_EXCGCR, &scom_data);
     // Ignore clk_sync_enable, clkglm_async_reset, clkglm_sel, and reserved
-    scom_data &= ~(BITS64(29, 37) | BITS64(42, 63));
+    scom_data &= ~(BITS64(29, 9) | BITS64(42, 22));
 
     if(scom_data != 0)
     {
@@ -258,12 +260,12 @@ void p9_cme_pstate_db_thread(void* arg)
 
             // Extract the resclk value from QCCR
             ippm_read(QPPM_QACCR, &scom_data);
-            scom_data = (scom_data & BITS64(0, 12)) >> SHIFT64(15);
+            scom_data = (scom_data & BITS64(0, 13)) >> SHIFT64(15);
             p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate,
                                     &G_cme_pstate_record.resclkData.common_resclk_idx);
             // Read QACCR and clear out the resclk settings
             ippm_read(QPPM_QACCR, &scom_data);
-            scom_data &= ~BITS64(0, 12);
+            scom_data &= ~BITS64(0, 13);
             // OR-in the resclk settings which match the current Pstate
             scom_data |= (((uint64_t)G_lppb->resclk.steparray
                            [G_cme_pstate_record.resclkData.common_resclk_idx].value)
@@ -402,18 +404,9 @@ inline void p9_cme_pstate_db0_start(cppm_cmedb0_t dbData, uint32_t cme_flags)
     ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
     send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
 
-    //Clear Pending PMCR interrupts and Enable PMCR Interrupts
-    if (cme_flags & CME_FLAGS_CORE0_GOOD)
-    {
-        out32_sh(CME_LCL_EISR_CLR, BIT32(2));
-        out64(CME_LCL_EIMR_CLR,  BIT64(34));//Enable PMCR0
-    }
-
-    if (cme_flags & CME_FLAGS_CORE1_GOOD)
-    {
-        out32_sh(CME_LCL_EISR_CLR, BIT32(3));
-        out64(CME_LCL_EIMR_CLR,  BIT64(35));//Enable PMCR1
-    }
+    //Clear Pending PMCR interrupts and Enable PMCR Interrupts (for good cores)
+    out32_sh(CME_LCL_EISR_CLR, (G_cme_stop_record.core_enabled << 28));
+    out32_sh(CME_LCL_EIMR_CLR, (G_cme_stop_record.core_enabled << 28));
 
     PK_TRACE_INF("DB_TH: DB0 Start Exit\n");
 }
@@ -467,21 +460,12 @@ inline void p9_cme_pstate_db0_suspend(cppm_cmedb0_t dbData, uint32_t cme_flags)
 
     G_cme_pstate_record.pstatesEnabled = 0;
 
-    if (cme_flags & CME_FLAGS_CORE0_GOOD)
-    {
-        out64(CME_LCL_EIMR_OR,  BIT64(34));//Disable PMCR0
-    }
-
-    if (cme_flags & CME_FLAGS_CORE1_GOOD)
-    {
-        out64(CME_LCL_EIMR_OR,  BIT64(35));//Disable PMCR1
-    }
+    // Disable both PMCR regs ignoring partial-goodness
+    out32_sh(CME_LCL_EIMR_OR, BITS32(2, 2));
 
     p9_cme_pstate_notify_sib(); //Notify sibling
-
-    //\TODO RTC: 152965
-    //Disable iVRM, move into bypass
-    //Disable resonant clocking, move to non-resonant value
+    // Prevent Resclk, VDM updates
+    out32(CME_LCL_FLAGS_CLR, (CME_FLAGS_RCLK_OPERABLE | CME_FLAGS_VDM_OPERABLE));
 
     //Send type4(ack doorbell)
     ppmPigData.value = 0;
@@ -592,7 +576,7 @@ inline void p9_cme_pstate_update(uint64_t dbData, uint32_t cme_flags)
 
     uint32_t next_pstate = (dbData >>
                             ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0x000000ff;
-    G_cme_pstate_record.globalPstate = (dbData & BITS64(8, 15)) >> SHIFT64(15);
+    G_cme_pstate_record.globalPstate = (dbData & BITS64(8, 8)) >> SHIFT64(15);
 
     PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", dbData >> 32, dbData);
 

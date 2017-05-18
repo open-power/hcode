@@ -229,15 +229,15 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             p9_cme_resclk_update(core_mask, pstate, curr_idx);
             // 2) write CACCR[13:15]=0b111 to switch back to common control
             //    and leave clksync enabled
-            CME_PUTSCOM(CPPM_CACCR_OR, core_mask, (BITS64(13, 15)));
+            CME_PUTSCOM(CPPM_CACCR_OR, core_mask, (BITS64(13, 3)));
 
             // Update PMSRS (only on stop-exit)
             // TODO Revisit during CME code review, should use common PMSRS
             //      function instead (for when other fields are added in the
             //      future)
-            uint64_t pmsrs = ((((uint64_t)pstate << 48) & BITS64(8, 15))
+            uint64_t pmsrs = ((((uint64_t)pstate << 48) & BITS64(8, 8))
                               | (((uint64_t)G_cme_pstate_record.globalPstate << 56)
-                                 & BITS64(0, 7)));
+                                 & BITS64(0, 8)));
 
             if(core_mask & ANALOG_CORE0)
             {
@@ -258,7 +258,7 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             //    disabled. QACCR will already be set to a value corresponding
             //    to the current quad Pstate
             ippm_read(QPPM_QACCR, &val);
-            val &= BITS64(13, 63);
+            val &= BITS64(13, 51);
             CME_PUTSCOM(CPPM_CACCR, core_mask, val);
             p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate, &curr_idx);
             // 2) step CACCR to a value which disables resonance
@@ -304,7 +304,7 @@ void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_i
     }
 
     // Preserve only the resclk control bits
-    base_val &= (BITS64(13, 63));
+    base_val &= (BITS64(13, 51));
 
     while(curr_idx != next_idx)
     {

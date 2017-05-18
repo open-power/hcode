@@ -80,7 +80,7 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
                        ((MAX_QUADS - G_cme_pstate_record.quadNum - 1) << 3)) & 0xFF;
             // Update the Pstate variables
             G_cme_pstate_record.quadPstate = localPS;
-            G_cme_pstate_record.globalPstate = (dbData.value & BITS64(8, 15)) >> SHIFT64(15);
+            G_cme_pstate_record.globalPstate = (dbData.value & BITS64(8, 8)) >> SHIFT64(15);
 
             pmsrData = (dbData.value << 8) & 0xFF00000000000000;
             pmsrData |= ((uint64_t)localPS << 48) & 0x00FF000000000000;
@@ -105,6 +105,8 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
             {
                 PK_TRACE("INTER0:C%d DB0 Stop\n");
                 out32_sh(CME_LCL_EIMR_OR,  BIT32(2) >> c);//Disable PMCR0/1
+                // Prevent Resclk, VDM updates
+                out32(CME_LCL_FLAGS_CLR, (CME_FLAGS_RCLK_OPERABLE | CME_FLAGS_VDM_OPERABLE));
             }
             else
             {
