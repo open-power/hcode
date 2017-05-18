@@ -49,6 +49,7 @@
 #include "p9_hcode_image_defines.H"
 
 extern CmeStopRecord G_cme_stop_record;
+extern CmeRecord G_cme_record;
 
 
 #if HW402407_NDD1_TLBIE_STOP_WORKAROUND
@@ -259,11 +260,11 @@ p9_cme_stop_entry()
 
     // filter with partial good and running core mask
     // core cannot enter stop if core is already stopped
-    core = core & G_cme_stop_record.core_enabled &
+    core = core & G_cme_record.core_enabled &
            G_cme_stop_record.core_running;
 
     PK_TRACE_DBG("Check: Core Select[%d] Enabled[%d] Running[%d]",
-                 core, G_cme_stop_record.core_enabled,
+                 core, G_cme_record.core_enabled,
                  G_cme_stop_record.core_running);
 
     if (!core)
@@ -853,7 +854,7 @@ p9_cme_stop_entry()
         }
 
         core_catchup = (in32(CME_LCL_EISR) & BITS32(20, 2)) >> SHIFT32(21);
-        core_catchup = core_catchup & G_cme_stop_record.core_enabled &
+        core_catchup = core_catchup & G_cme_record.core_enabled &
                        G_cme_stop_record.core_running;
 
         if (core_catchup)
