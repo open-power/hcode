@@ -41,6 +41,7 @@
 #include "cmehw_common.h"
 #include "p9_hcode_image_defines.H"
 #include "p9_pstates_cmeqm.h"
+#include "p9_cme.h"
 
 enum  PMCR_CONTROL
 {
@@ -93,24 +94,17 @@ typedef struct
     PkSemaphore sem[2];
     uint32_t qmFlag;
     uint32_t siblingCMEFlag;
-    uint32_t quadNum;
-    uint32_t pstatesEnabled;
     uint32_t quadPstate;
     uint32_t globalPstate;
     uint32_t cmeMaskGoodCore;
+    uint32_t pmcrSeenErr;
     cme_resclk_data_t resclkData;
 } CmePstateRecord;
 
 typedef struct
 {
-    uint64_t seqNum;
+    uint32_t seqNum;
 } cme_pstate_pmcr_data_t;
-
-typedef struct
-{
-    uint32_t qaccr21_23InitVal;
-    uint32_t dpll_pstate0_value;
-} cme_pstate_db_data_t;
 
 
 void p9_cme_pstate_pmcr_thread(void*);
@@ -127,6 +121,7 @@ void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type);
 void p9_cme_resclk_get_index(uint32_t pstate, uint32_t* resclk_index);
 void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
 void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_idx);
+void p9_cme_pstate_pmsr_updt(uint32_t coreMask);
 
 
 #endif //_P9_CME_PSTATE_H_

@@ -44,13 +44,45 @@
 //Bit1 Multicast: 1
 //Bit 2:4 Multicast Type: 101
 //Bit 5:7 Mutlicast Grp: 001
-#define PCB_MUTLICAST_GRP1          0x69000000
+#define PCB_MULTICAST_GRP1          0x69000000
 
 #define QUAD_FROM_CORE(c) \
     ((c&0x1C) >> 2)
 
 #define QUAD_FROM_CME_INSTANCE_NUM(num) \
     ((num&0xE) >> 1)
+
+
+//PMCR GA1 Definition
+enum PMCR_DEFS
+{
+    PMCR_UPPER_PS_START         = 0,
+    PMCR_UPPER_PS_LENGTH        = 8,
+    PMCR_LOWER_PS_START         = 8,
+    PMCR_LOWER_PS_LENGTH        = 8,
+    PMCR_VERSION_START          = 60,
+    PMCR_VERSION_LENGTH         = 4
+};
+
+//PMSR GA1 Definition
+enum PMSR_DEFS
+{
+    PMSR_GLOBAL_ACTUAL_PSTATE_START     = 0,
+    PMSR_GLOBAl_ACTUAL_PSTATE_LENGTH    = 8,
+    PMSR_LOCAL_ACTUAL_PSTATE_START      = 8,
+    PMSR_LOCAL_ACTUAL_PSTATE_LENGTH     = 8,
+    PMSR_PMIN_START                     = 16,
+    PMSR_PMIN_LENGTH                    = 8,
+    PMSR_PMAX_START                     = 24,
+    PMSR_PMAX_LENGTH                    = 8,
+    PMSR_PMCR_DISABLED                  = 32,
+    PMSR_SAFE_MODE                      = 33,
+    PMSR_IVRM_ALLOWED                   = 34,
+    PMSR_IVRM_ENABLED                   = 35,
+    PMSR_INVALID_PMCR_VERSION           = 59,
+    PMSR_VERSION_START                  = 60,
+    PMSR_VERSION_LENGTH                 = 4
+};
 
 //
 // CME<->PGPE API

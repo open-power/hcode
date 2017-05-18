@@ -39,11 +39,8 @@
 #include "cmehw_interrupts.h"
 
 #include "p9_cme_irq.h"
-#include "p9_cme_flags.h"
 #include "p9_cme_pstate.h"
-//#include "p9_cme_header.h"
 #include "pstate_pgpe_cme_api.h"
-//#include "p9_pstate_vpd.h"
 #include "ppe42_cache.h"
 #include "cme_panic_codes.h"
 
@@ -69,16 +66,14 @@ void p9_cme_pstate_pmcr_thread(void* arg)
     PK_TRACE_INF("PMCR_TH: Enter\n");
     int32_t c;
     PkMachineContext  ctx;
-    cme_scom_pmcrs0_t  pmcr[2];
+    uint64_t pmcr;
+    uint32_t cme_flags;
     ppm_pig_t ppmPigData;
     uint32_t eisr;
-    uint32_t coreMask[CORES_PER_EX];
-    uint32_t cme_flags;
+    uint32_t coreMask[CORES_PER_EX] = {CME_MASK_C0, CME_MASK_C1};
     uint32_t msg;
-    coreMask[0] = CME_MASK_C0;
-    coreMask[1] = CME_MASK_C1;
 
-    G_pmcr_thread_data.seqNum = 0;
+    G_pmcr_thread_data.seqNum = 0; //Initialize seqNum to zero
 
     cme_flags = in32(CME_LCL_FLAGS);
 
@@ -98,12 +93,12 @@ void p9_cme_pstate_pmcr_thread(void* arg)
     {
         intercme_msg_recv(&msg, IMT_SYNC_SIBLING);
         // Unmask the COMM_RECVD interrupt for the intercme msg handler
-        out64(CME_LCL_EIMR_CLR, BIT64(29));
+        out32(CME_LCL_EIMR_CLR, BIT32(29));
     }
 
     // This is the current barrier for SGPE booting the CMEs, any and all
     // initialization must be completed prior!
-    out32(CME_LCL_FLAGS_OR, CME_FLAGS_PMCR_READY);
+    out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PMCR_READY));
 
     PK_TRACE_INF("PMCR_TH: Inited\n");
 
@@ -116,7 +111,7 @@ void p9_cme_pstate_pmcr_thread(void* arg)
         //Determine which core have pending request
         for(c = 0; c < CORES_PER_EX; c++)
         {
-            if (cme_flags & (CME_FLAGS_CORE0_GOOD >> c))
+            if (cme_flags & (BIT32(CME_FLAGS_CORE0_GOOD) >> c))
             {
                 eisr = in32_sh(CME_LCL_EISR); //EISR
 
@@ -124,25 +119,38 @@ void p9_cme_pstate_pmcr_thread(void* arg)
                 {
                     //Clear interrupt and read PMCR
                     out32_sh(CME_LCL_EISR_CLR, BIT32(2) >> c);
-                    pmcr[c].value = in64(CME_LCL_PMCRS0 + (c << 5));
+                    //We read the pmcr into a local variable, so that
+                    //both phases use the same PMCR value. Otherwise, it's possible
+                    //for pmcr to change between sending phase 1 and phase 2
+                    pmcr = in64(CME_LCL_PMCRS0 + (c << 5));
 
-                    //Send Phase 1
-                    ppmPigData.value = 0;
-                    ppmPigData.fields.req_intr_type = 0;
-                    ppmPigData.value |= (((pmcr[c].value & PIG_PAYLOAD_PS_PHASE1_MASK)) >> 8);
+                    if ((pmcr & BITS64(PMCR_VERSION_START, PMCR_VERSION_LENGTH)) == 0x1)
+                    {
+                        G_cme_pstate_record.pmcrSeenErr &= ~coreMask[c]; //Clear PMCR error
 
-                    ppmPigData.value |= ((G_pmcr_thread_data.seqNum & 0x6) << 57);
-                    send_pig_packet(ppmPigData.value, coreMask[c]);
-                    G_pmcr_thread_data.seqNum++;
+                        //Send Phase 1
+                        ppmPigData.value = 0;
+                        ppmPigData.fields.req_intr_type = 0;
+                        ppmPigData.value |= ((pmcr & PIG_PAYLOAD_PS_PHASE1_MASK) >> 8);
+                        ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
+                        send_pig_packet(ppmPigData.value, coreMask[c]);
+                        G_pmcr_thread_data.seqNum++;
 
-                    //Send Phase 2
-                    ppmPigData.value = 0;
-                    ppmPigData.fields.req_intr_type = 1;
-                    ppmPigData.value |= (((pmcr[c].value & PIG_PAYLOAD_PS_PHASE2_MASK)));
-                    ppmPigData.value |= ((G_pmcr_thread_data.seqNum & 0x6) << 57);
-                    send_pig_packet(ppmPigData.value, coreMask[c]);
-                    G_pmcr_thread_data.seqNum++;
-                    PK_TRACE_INF("PMCR_TH: Fwd PMCR %d\n", c);
+                        //Send Phase 2
+                        ppmPigData.value = 0;
+                        ppmPigData.fields.req_intr_type = 1;
+                        ppmPigData.value |= (pmcr & PIG_PAYLOAD_PS_PHASE2_MASK);
+                        ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
+                        send_pig_packet(ppmPigData.value, coreMask[c]);
+                        G_pmcr_thread_data.seqNum++;
+                        PK_TRACE_INF("PMCR_TH: Fwd PMCR[%d]=0x%08x%08x\n", c, pmcr >> 32, pmcr);
+                    }
+                    else
+                    {
+                        //Set PMCR error, so that any future PMSR update keep on setting invalid version field
+                        G_cme_pstate_record.pmcrSeenErr |= coreMask[c];
+                        p9_cme_pstate_pmsr_updt(coreMask[c]);
+                    }
                 }
             }
         }

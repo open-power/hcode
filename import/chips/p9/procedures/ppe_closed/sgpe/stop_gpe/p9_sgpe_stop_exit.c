@@ -850,15 +850,25 @@ p9_sgpe_stop_exit()
                     ex_index        = ex_mask & 1;
                     ec_index        = ((qloop << 2) + (ex_index << 1));
 
-                    if (ex_index == 1)
-                    {
-                        cme_flags |= CME_EX1_INDICATOR;
-                    }
-
                     if (m_pg & (~ex_mask))
                     {
                         cme_flags |= CME_SIBLING_FUNCTIONAL;
                     }
+
+                    if (ex_index == 1)
+                    {
+                        cme_flags |= CME_EX1_INDICATOR;
+
+                        if (!(cme_flags & CME_SIBLING_FUNCTIONAL))
+                        {
+                            cme_flags |= CME_QUAD_MGR_INDICATOR;
+                        }
+                    }
+                    else
+                    {
+                        cme_flags |= CME_QUAD_MGR_INDICATOR;
+                    }
+
 
 #if NIMBUS_DD_LEVEL != 1
 

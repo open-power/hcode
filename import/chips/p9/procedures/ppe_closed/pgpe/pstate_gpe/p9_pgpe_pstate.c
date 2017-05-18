@@ -57,7 +57,7 @@ GPE_BUFFER(ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 GPE_BUFFER(ipcmsg_s2p_suspend_pstate_t G_sgpe_suspend_stop);
 
 //Local Functions
-inline void p9_pgpe_pstate_freq_updt(uint32_t activeCores);
+void p9_pgpe_pstate_freq_updt();
 void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg);
 
 //
@@ -638,7 +638,7 @@ void p9_pgpe_pstate_do_step()
             }
         }
 
-        p9_pgpe_pstate_freq_updt(active_conf_cores);
+        p9_pgpe_pstate_freq_updt();
         p9_pgpe_pstate_updt_ext_volt(targetEVid);
     }
     //Lower number PState
@@ -679,7 +679,7 @@ void p9_pgpe_pstate_do_step()
         }
 
         p9_pgpe_pstate_updt_ext_volt(targetEVid);
-        p9_pgpe_pstate_freq_updt(active_conf_cores);
+        p9_pgpe_pstate_freq_updt();
     }
     else
     {
@@ -691,7 +691,7 @@ void p9_pgpe_pstate_do_step()
             }
         }
 
-        p9_pgpe_pstate_freq_updt(active_conf_cores);
+        p9_pgpe_pstate_freq_updt();
     }
 
     //Update current
@@ -767,7 +767,7 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
 //Frequency Update
 //
 //Sends a DB0 to all active CMEs, so that Quad Managers(CMEs) update DPLL
-inline void p9_pgpe_pstate_freq_updt(uint32_t activeCores)
+void p9_pgpe_pstate_freq_updt()
 {
     PK_TRACE_DBG("FreqUpdt Enter");
     uint32_t q, c;
@@ -800,8 +800,7 @@ inline void p9_pgpe_pstate_freq_updt(uint32_t activeCores)
         }
     }
 
-    p9_dd1_db_multicast_wr(PCB_MUTLICAST_GRP1 | CPPM_CMEDB0, db0.value, activeCores);
-    // p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, active_cores), db0.value);
+    p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0.value, active_cores);
     p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.quadsActive);//Wait for ACKs from all QuadManagers
     PK_TRACE_DBG("PS: Freq Updt Exit");
 }
@@ -929,11 +928,14 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     PK_TRACE_DBG("Pstate Start Enter");
     ocb_ccsr_t ccsr;
     ccsr.value = in32(OCB_CCSR);
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(OCB_QCSR);
     uint8_t quadPstates[MAX_QUADS];
     uint32_t lowestDpll, syncPstate;
     qppm_dpll_stat_t dpll;
-    uint32_t active_conf_cores = 0;
-    uint32_t q, c;
+    uint32_t active_cores = 0;
+    uint32_t q;
+    uint64_t value;
 
     //Setup Shared Memory Area
     G_pgpe_pstate_record.pQuadState0->fields.active_cores = (ccsr.value >> 16);
@@ -958,7 +960,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
             }
 
             PK_TRACE_DBG("Quad[%d]: DPLL=0x%x", q, (dpll.fields.freqout));
-            active_conf_cores |= (0xF0000000 >> q * 4);
+            active_cores |= (0xF0000000 >> (q << 2));
         }
     }
 
@@ -1033,25 +1035,34 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
     db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
 
-    if (G_pgpe_pstate_record.eVidCurr > G_pgpe_pstate_record.eVidNext)
+    //Set up CME_SCRATCH0[Local_Pstate_Index] and determine
+    //which cores are active
+    for (q = 0; q < MAX_QUADS; q++)
     {
-        //Send DB0
-        PK_TRACE_DBG("Send DB0");
-
-        for (q = 0; q < MAX_QUADS; q++)
+        if(G_pgpe_pstate_record.quadsActive & (0x80 >> q))
         {
-            if(G_pgpe_pstate_record.quadsActive & (0x80 >> q))
+            if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
             {
-                for (c = q << 2; c < ((q + 1) << 2); c++)
-                {
-                    if (ccsr.value & ((0xc0000000) >> c))
-                    {
-                        p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0.value);
-                    }
-                }
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+                value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+                PK_TRACE_DBG("SRTCH0[%d_1]:0x%08x%08x", q, value >> 32, value);
+            }
+
+            if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+                value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+                PK_TRACE_DBG("SRTCH0[%d_1]:0x%08x%08x", q, value >> 32, value);
             }
         }
+    }
 
+    if (G_pgpe_pstate_record.eVidCurr > G_pgpe_pstate_record.eVidNext)
+    {
+        PK_TRACE_DBG("Send START DB0");
+        p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0.value, active_cores);
         p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.quadsActive);//Wait for ACKs from all QuadManagers
         PK_TRACE_DBG("DB0 ACK");
 
@@ -1061,22 +1072,8 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     {
         p9_pgpe_pstate_updt_ext_volt(G_pgpe_pstate_record.eVidNext); //update voltage
 
-        //Send DB0
-        for (q = 0; q < MAX_QUADS; q++)
-        {
-            if (G_pgpe_pstate_record.quadsActive & (0x80 >> q))
-            {
-                for (c = q << 2; c < ((q + 1) << 2); c++)
-                {
-                    if (ccsr.value & ((0xc0000000) >> c))
-                    {
-                        p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0.value);
-                    }
-                }
-            }
-        }
-
         PK_TRACE_DBG("Send START DB0");
+        p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0.value, active_cores);
         p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.quadsActive);//Wait for ACKs from all QuadManagers
         PK_TRACE_DBG("DB0 ACK");
     }

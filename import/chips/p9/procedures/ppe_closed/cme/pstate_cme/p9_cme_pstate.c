@@ -50,9 +50,7 @@
 #include "cmehw_common.h"
 #include "cmehw_interrupts.h"
 #include "p9_cme_pstate.h"
-#include "p9_cme_stop.h" // For CmeStopRecord
 #include "p9_hcode_image_defines.H"
-#include "p9_cme_flags.h"
 
 //
 //Globals
@@ -60,7 +58,6 @@
 cmeHeader_t* G_cmeHeader;
 LocalPstateParmBlock* G_lppb;
 extern CmePstateRecord G_cme_pstate_record;
-extern CmeStopRecord G_cme_stop_record;
 
 
 //
@@ -202,7 +199,7 @@ void p9_cme_resclk_get_index(uint32_t pstate, uint32_t* resclk_index)
 
 void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
 {
-    if((in32(CME_LCL_FLAGS)) & CME_FLAGS_RCLK_OPERABLE)
+    if((in32(CME_LCL_FLAGS)) & BIT32(CME_FLAGS_RCLK_OPERABLE))
     {
         uint32_t pstate;
         uint32_t curr_idx;
@@ -340,6 +337,30 @@ void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_i
         if(target & ANALOG_CORE1)
         {
             G_cme_pstate_record.resclkData.core1_resclk_idx = curr_idx;
+        }
+    }
+}
+
+void p9_cme_pstate_pmsr_updt(uint32_t coreMask)
+{
+    uint32_t cm;
+    uint64_t pmsrData;
+
+    //CORE0 mask is 0x2, and CORE1 mask is 0x1.
+    //We AND with 0x1 to get the core number from mask.
+    for (cm = 2; cm > 0; cm--)
+    {
+        if (cm & coreMask)
+        {
+            pmsrData = ((uint64_t)G_cme_pstate_record.globalPstate) << 56;
+            pmsrData |= (((uint64_t)(G_cme_pstate_record.quadPstate)) << 48) ;
+
+            if (G_cme_pstate_record.pmcrSeenErr & cm)
+            {
+                pmsrData |= BIT64(PMSR_INVALID_PMCR_VERSION);
+            }
+
+            out64(CME_LCL_PMSRS0 + ((cm & 0x1) << 5), pmsrData);
         }
     }
 }

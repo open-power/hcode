@@ -45,6 +45,7 @@
 
 #include "p9_hcode_image_defines.H"
 #include "p9_stop_common.h"
+#include "p9_cme.h"
 
 // ram_vtid    [0:1]   00
 // pre_decode  [2:5]   0000
@@ -270,8 +271,6 @@ typedef struct
     uint8_t       act_level[MAX_CORES_PER_CME];
     // uint8_t above is processed by stb/lbz in asm, no additional shifting
 
-    // target mask of enabled cores, used to filter 2bit core select in scom address
-    uint32_t      core_enabled;
     // whether core is in running state,
     // used for aborted entry detection or filter wakeup core select in scom address
     uint32_t      core_running;

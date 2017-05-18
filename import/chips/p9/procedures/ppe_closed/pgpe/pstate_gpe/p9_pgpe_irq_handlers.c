@@ -244,9 +244,12 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
     PK_TRACE_DBG("PCB_TYPE4: Enter\n");
     ocb_ccsr_t ccsr;
     ccsr.value = in32(OCB_CCSR);
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(OCB_QCSR);
     uint32_t quadAckExpect = 0;
     volatile uint32_t opit4pr, opit4pr1;
     uint32_t opit4prQuad, q, c;
+    uint64_t value;
     pgpe_db0_start_ps_bcast_t db0;
     db0.value = 0;
     db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
@@ -291,9 +294,24 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
                 db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
 
+                //Write CME_SCRATCH register
+                if (qcsr.fields.ex_config &  (0x800 >> q))
+                {
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+                    value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+                }
+
+                if (qcsr.fields.ex_config &  (0x400 >> q))
+                {
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+                    value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+                }
+
                 for (c = q << 2; c < ((q + 1) << 2); c++)
                 {
-                    if (ccsr.value & ((0x80000000) >> c))
+                    if (ccsr.value & ((BIT32(0)) >> c))
                     {
                         opit4pr1 = in32(OCB_OPIT4PRA);
                         p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0.value);

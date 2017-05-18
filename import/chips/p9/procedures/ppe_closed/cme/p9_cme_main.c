@@ -24,9 +24,14 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "pk.h"
+#include "cmehw_common.h"
 #include "p9_cme_irq.h"
-#include "p9_cme_flags.h"
+//#include "p9_cme_flags.h"
 #include "p9_hcode_image_defines.H"
+
+// CME Pstate Header and Structure
+#include "p9_cme.h"
+CmeRecord G_cme_record ;
 
 // CME Pstate Header and Structure
 #include "p9_cme_pstate.h"
@@ -172,6 +177,10 @@ main(int argc, char** argv)
 #if defined(USE_CME_QUEUED_SCOM) || defined(USE_CME_QUEUED_SCAN)
     out32(CME_LCL_LMCR_OR, BITS32(8, 2));
 #endif
+
+    //Read which cores are good
+    G_cme_record.core_enabled = in32(CME_LCL_FLAGS) &
+                                (BIT32(CME_FLAGS_CORE0_GOOD) | BIT32(CME_FLAGS_CORE1_GOOD));
 
     // Unified interrupt handler checks
     if (IDX_PRTY_LVL_DISABLED != (NUM_EXT_IRQ_PRTY_LEVELS - 1))

@@ -29,6 +29,7 @@
 #include "p9_cme_pstate.h"
 
 extern CmeStopRecord G_cme_stop_record;
+extern CmeRecord G_cme_record;
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -350,7 +351,7 @@ p9_cme_stop_exit_catchup(uint32_t* core,
     wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
     core_catchup = (~(*core)) &
                    ((wakeup >> 4) | (wakeup >> 2) | wakeup);
-    core_catchup = core_catchup & G_cme_stop_record.core_enabled &
+    core_catchup = core_catchup & G_cme_record.core_enabled &
                    (~G_cme_stop_record.core_running);
 
     for(core_mask = 2; core_mask; core_mask--)
@@ -449,7 +450,7 @@ p9_cme_stop_exit()
     }
 
     // override with partial good core mask, also ignore wakeup to running cores
-    core = core & G_cme_stop_record.core_enabled &
+    core = core & G_cme_record.core_enabled &
            (~G_cme_stop_record.core_running);
 
     PK_TRACE_DBG("Check: Core Select[%d] Wakeup[%x] Actual Stop Levels[%d %d]",
@@ -463,7 +464,7 @@ p9_cme_stop_exit()
 
     // for spwu assert, figure out who is already awake and who needs to exit
     // leaving spwu drop to the handler to process
-    spwu_stop = (wakeup >> 2) & G_cme_stop_record.core_enabled &
+    spwu_stop = (wakeup >> 2) & G_cme_record.core_enabled &
                 (~G_cme_stop_record.core_in_spwu);
     spwu_wake = spwu_stop &   G_cme_stop_record.core_running;
     spwu_stop = spwu_stop & (~G_cme_stop_record.core_running);
