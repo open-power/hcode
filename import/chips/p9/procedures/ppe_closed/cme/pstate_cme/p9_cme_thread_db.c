@@ -180,7 +180,7 @@ void p9_cme_pstate_db_thread(void* arg)
 
     // Resonant Clocking Check (QM + Sibling)
     // Check that resonance is not enabled in CACCR and EXCGCR
-    CME_GETSCOM(CPPM_CACCR, cores, CME_SCOM_EQ, scom_data);
+    CME_GETSCOM(CPPM_CACCR, cores, scom_data);
     // Ignore clk_sync_enable and reserved
     resclk_data = (scom_data >> 32) & ~BITS32(15, 17);
 
@@ -275,12 +275,12 @@ inline void p9_cme_pstate_process_db0()
     {
         out32_sh(CME_LCL_EISR_CLR, BIT32(4));
         out32_sh(CME_LCL_EISR_CLR, BIT32(5));
-        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, CME_SCOM_EQ, G_dbData.value);
+        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, G_dbData.value);
     }
     else if (G_cme_flags & BIT32(CME_FLAGS_CORE1_GOOD))
     {
         out32_sh(CME_LCL_EISR_CLR, BIT32(5));
-        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, CME_SCOM_EQ, G_dbData.value);
+        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, G_dbData.value);
     }
 
     PK_TRACE_INF("DB_TH: DB0 0x%x\n"dbData.value);

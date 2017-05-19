@@ -49,7 +49,7 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
     {
         if (core & core_mask)
         {
-            CME_GETSCOM(CPPM_CPMMR, core_mask, CME_SCOM_AND, scom_data.value);
+            CME_GETSCOM(CPPM_CPMMR, core_mask, scom_data.value);
 
             // If notify_select == sgpe
             if (scom_data.words.upper & BIT32(13))
@@ -125,7 +125,7 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
                     PK_TRACE("SPWU drop confirmed, now dropping spwu_done");
                     out32(CME_LCL_SICR_CLR, BIT32((16 + core_index)));
 
-                    CME_GETSCOM(PPM_GPMMR, core_mask, CME_SCOM_AND, scom_data);
+                    CME_GETSCOM(PPM_GPMMR, core_mask, scom_data);
 
                     // if spwu has been re-asserted after spwu_done is dropped:
                     if (scom_data & BIT64(1))

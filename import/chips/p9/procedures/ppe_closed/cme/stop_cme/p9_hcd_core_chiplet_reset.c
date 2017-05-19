@@ -96,7 +96,7 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     // so it will introduce an additional 2:1 into whatever scan raito is set up. Hence,
     // to get the core to scan at 4:1, need to put a scan ratio of 2:1 if run at pll speed.
     PK_TRACE("Set scan ratio to 2:1 in non-bypass mode via OPCG_ALIGN[47-51]");
-    CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, scom_data.value);
+    CME_GETSCOM(C_OPCG_ALIGN, core, scom_data.value);
     scom_data.words.lower &= ~BITS64SH(47, 5);
 #if !EPM_P9_TUNING
     scom_data.words.lower |= BIT32(19);

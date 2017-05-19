@@ -55,7 +55,7 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
     CME_PUTSCOM(PERV_CPLT_CTRL1_OR,  core, BITS64(4, 11));
 
     PK_TRACE("Setup all Clock Domains and Clock Types");
-    CME_GETSCOM(PERV_CLK_REGION, core, CME_SCOM_AND, scom_data);
+    CME_GETSCOM(PERV_CLK_REGION, core, scom_data);
     scom_data |= ((regions << SHIFT64(14)) | BITS64(48, 3));
     CME_PUTSCOM(PERV_CLK_REGION, core, scom_data);
 
@@ -64,12 +64,12 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
     CME_PUTSCOM(PERV_SCAN_REGION_TYPE, core, scom_data);
 
     PK_TRACE("set OPCG_REG0 register bit 0='0'");
-    CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
+    CME_GETSCOM(PERV_OPCG_REG0, core, scom_data);
     scom_data &= ~BIT64(0);
     CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
 
     PK_TRACE("Setting SCAN0 Mode");
-    CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
+    CME_GETSCOM(PERV_OPCG_REG0, core, scom_data);
     scom_data |= BIT64(3);
     CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
 
@@ -88,7 +88,7 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
     CME_PUTSCOM(PERV_OPCG_REG1, core, scom_data);
 
     PK_TRACE("Trigger OPCG GO");
-    CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
+    CME_GETSCOM(PERV_OPCG_REG0, core, scom_data);
     scom_data |= BIT64(1);
     CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
 
@@ -96,17 +96,17 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
 
     do
     {
-        CME_GETSCOM(PERV_CPLT_STAT0, core, CME_SCOM_AND, scom_data);
+        CME_GETSCOM_AND(PERV_CPLT_STAT0, core, scom_data);
     }
     while(!(scom_data & BIT64(8)));
 
     PK_TRACE("Clearing SCAN0 Mode");
-    CME_GETSCOM(PERV_OPCG_REG0, core, CME_SCOM_AND, scom_data);
+    CME_GETSCOM(PERV_OPCG_REG0, core, scom_data);
     scom_data &= ~BIT64(3);
     CME_PUTSCOM(PERV_OPCG_REG0, core, scom_data);
 
     PK_TRACE("Clearing scan length count");
-    CME_GETSCOM(PERV_OPCG_REG1, core, CME_SCOM_AND, scom_data);
+    CME_GETSCOM(PERV_OPCG_REG1, core, scom_data);
     scom_data &=  ~BITS64(0, 12);
     CME_PUTSCOM(PERV_OPCG_REG1, core, scom_data);
 

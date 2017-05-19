@@ -29,6 +29,7 @@
 void
 p9_hcd_core_startclocks(uint32_t core)
 {
+    uint32_t     core_mask  = 0;
     data64_t     scom_data  = {0};
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     uint32_t     id_vector  = pCmeImgHdr->g_cme_location_id;
@@ -37,7 +38,7 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
-    CME_GETSCOM(C_OPCG_ALIGN, core, CME_SCOM_AND, scom_data.value);
+    CME_GETSCOM_AND(C_OPCG_ALIGN, core, scom_data.value);
     scom_data.value &= ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
     scom_data.value |=  (BIT64(1) | BIT64(3) | BIT64(59));
     CME_PUTSCOM(C_OPCG_ALIGN, core, scom_data.value);
@@ -58,14 +59,14 @@ p9_hcd_core_startclocks(uint32_t core)
 
     do
     {
-        CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_AND, scom_data.value);
+        CME_GETSCOM_AND(CPPM_CACSR, core, scom_data.value);
     }
     while((~(scom_data.words.upper)) & BIT32(13));
 
     MARK_TRAP(SX_STARTCLOCKS_ALIGN)
 
     PK_TRACE("Assert ABIST_SRAM_MODE_DC to support ABIST Recovery via BIST[1]");
-    CME_GETSCOM(C_BIST, core, CME_SCOM_AND, scom_data.value);
+    CME_GETSCOM(C_BIST, core, scom_data.value);
     scom_data.words.upper |= BIT32(1);
     CME_PUTSCOM(C_BIST, core, scom_data.value);
 
@@ -73,7 +74,7 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BITS64(0, 2));
 
     PK_TRACE("Set fabric chiplet ID values via EQ_CPLT_CONF0[48-51,52-54,56-60]");
-    CME_GETSCOM(C_CPLT_CONF0, core, CME_SCOM_AND, scom_data.value);
+    CME_GETSCOM(C_CPLT_CONF0, core, scom_data.value);
     scom_data.words.lower &= ~(BITS64SH(48, 7) | BITS64SH(56, 5));
     scom_data.words.lower |= id_vector;
     CME_PUTSCOM(C_CPLT_CONF0, core, scom_data.value);
@@ -87,7 +88,7 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_CPLT_CTRL0_OR, core, BIT64(3));
 
     PK_TRACE("Set then unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
-    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data.value);
+    CME_GETSCOM(C_SYNC_CONFIG, core, scom_data.value);
     scom_data.words.upper |=  BITS32(7, 2);
     CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data.value);
     scom_data.words.upper &= ~BIT32(7);
@@ -100,7 +101,7 @@ p9_hcd_core_startclocks(uint32_t core)
 
     do
     {
-        CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data.value);
+        CME_GETSCOM_AND(C_CPLT_STAT0, core, scom_data.value);
     }
     while((~(scom_data.words.upper)) & BIT32(9));
 
@@ -122,12 +123,12 @@ p9_hcd_core_startclocks(uint32_t core)
 
     do
     {
-        CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data.value);
+        CME_GETSCOM_AND(C_CPLT_STAT0, core, scom_data.value);
     }
     while((~(scom_data.words.upper)) & BIT32(8));
 
     PK_TRACE("Check core clock is running via CLOCK_STAT_SL[4-13]");
-    CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data.value);
+    CME_GETSCOM_OR(C_CLOCK_STAT_SL, core, scom_data.value);
 
     if(scom_data.value & CLK_REGION_ALL_BUT_PLL)
     {
@@ -143,14 +144,20 @@ p9_hcd_core_startclocks(uint32_t core)
 
 #if !EPM_P9_TUNING
 
-    PK_TRACE("Check Global Xstop FIR of Core Chiplet");
-    CME_GETSCOM(C_XFIR, core, CME_SCOM_AND, scom_data.value);
-
-    if (scom_data.words.upper & BITS32(0, 27))
+    for(core_mask = 2; core_mask; core_mask--)
     {
-        PK_TRACE_ERR("Core[%d] Chiplet Global Xstop FIR[%x] Detected. HALT CME!",
-                     core, scom_data.words.upper);
-        PK_PANIC(CME_STOP_EXIT_XSTOP_ERROR);
+        if (core & core_mask)
+        {
+            PK_TRACE("Check Global Xstop FIR of Core Chiplet");
+            CME_GETSCOM(C_XFIR, core_mask, scom_data.value);
+
+            if (scom_data.words.upper & BITS32(0, 27))
+            {
+                PK_TRACE_ERR("Core[%d] Chiplet Global Xstop FIR[%x] Detected. HALT CME!",
+                             core_mask, scom_data.words.upper);
+                PK_PANIC(CME_STOP_EXIT_XSTOP_ERROR);
+            }
+        }
     }
 
 #endif

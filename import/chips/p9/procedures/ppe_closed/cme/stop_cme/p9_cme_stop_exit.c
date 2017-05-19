@@ -68,7 +68,7 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
             if (G_cme_stop_record.act_level[core_index] != STOP_LEVEL_1)
             {
-                CME_GETSCOM(PPM_SSHSRC, core_mask, CME_SCOM_AND, scom_data.value);
+                CME_GETSCOM(PPM_SSHSRC, core_mask, scom_data.value);
                 act_stop_level = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
             }
             else
@@ -156,7 +156,7 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
     {
         if (core & core_mask)
         {
-            CME_GETSCOM(PPM_SSHSRC, core_mask, CME_SCOM_AND, scom_data.value);
+            CME_GETSCOM(PPM_SSHSRC, core_mask, scom_data.value);
 
             act_stop_level = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
             scom_data.words.upper = 0;
@@ -358,7 +358,7 @@ p9_cme_stop_exit_catchup(uint32_t* core,
     {
         if (core_catchup & core_mask)
         {
-            CME_GETSCOM(CPPM_CPMMR, core_mask, CME_SCOM_AND, scom_data.value);
+            CME_GETSCOM(CPPM_CPMMR, core_mask, scom_data.value);
 
             if (scom_data.words.upper & BIT32(13))
             {
@@ -440,7 +440,7 @@ p9_cme_stop_exit()
     {
         if (core & core_mask)
         {
-            CME_GETSCOM(CPPM_CPMMR, core_mask, CME_SCOM_AND, scom_data.value);
+            CME_GETSCOM(CPPM_CPMMR, core_mask, scom_data.value);
 
             if (scom_data.words.upper & BIT32(13))
             {
@@ -961,7 +961,7 @@ p9_cme_stop_exit()
 #endif
 
             PK_TRACE("Save off and mask SPATTN before self-restore");
-            CME_GETSCOM(SPATTN_MASK, core, CME_SCOM_AND, scom_data.value);
+            CME_GETSCOM(SPATTN_MASK, core, scom_data.value);
             CME_PUTSCOM(SPATTN_MASK, core, BITS64(0, 64));
 
             PK_TRACE_INF("SF.RS: Self Restore Kickoff, S-Reset All Core Threads");
@@ -1002,7 +1002,7 @@ p9_cme_stop_exit()
             CME_PUTSCOM(SPATTN_MASK, core, scom_data.value);
 
             PK_TRACE("Always Unfreeze IMA (by clearing bit 34) in case the CHTM is enabled to sample it");
-            CME_GETSCOM(IMA_EVENT_MASK, core, CME_SCOM_EQ, scom_data.value);
+            CME_GETSCOM(IMA_EVENT_MASK, core, scom_data.value);
             CME_PUTSCOM(IMA_EVENT_MASK, core, scom_data.value & ~BIT64(34));
 
             PK_TRACE("Drop block interrupt to PC via SICR[2/3]");

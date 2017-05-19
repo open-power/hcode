@@ -61,11 +61,11 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     {
         if (cme_flags & (BIT32(CME_FLAGS_CORE0_GOOD)))
         {
-            CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, CME_SCOM_EQ, dbData.value);
+            CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, dbData.value);
         }
         else
         {
-            CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, CME_SCOM_EQ, dbData.value);
+            CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, dbData.value);
         }
     }
     while(dbData.value == 0);

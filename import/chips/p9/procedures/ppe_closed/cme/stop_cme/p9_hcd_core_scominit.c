@@ -50,12 +50,12 @@ p9_hcd_core_scominit(uint32_t core)
 
     // how about bit 6?
     PK_TRACE("Restore SYNC_CONFIG[8] for stop1");
-    CME_GETSCOM(C_SYNC_CONFIG, core, CME_SCOM_AND, scom_data.value);
+    CME_GETSCOM(C_SYNC_CONFIG, core, scom_data.value);
     scom_data.words.upper |= BIT32(8);
     CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data.value);
 
     PK_TRACE("Enable DTS via THERM_MODE_REG[5,6-9,20-21]");
-    CME_GETSCOM(C_THERM_MODE_REG, core, CME_SCOM_AND, scom_data.value);
+    CME_GETSCOM(C_THERM_MODE_REG, core, scom_data.value);
     scom_data.words.upper |= BIT32(5);     // DTS sampling enable
     scom_data.words.upper |= BITS32(6, 4); // sample pulse count
     scom_data.words.upper |= BITS32(20, 2);// DTS loop1 enable
@@ -68,7 +68,7 @@ p9_hcd_core_scominit(uint32_t core)
     CME_PUTSCOM(CORE_FIRMASK, core, 0x0301D70000AB76B6);
 
     PK_TRACE("Update Core Hang Pulse Dividers via C_HANG_CONTROL[0-15]");
-    CME_GETSCOM(C_HANG_CONTROL, core, CME_SCOM_AND, scom_data.value);
+    CME_GETSCOM(C_HANG_CONTROL, core, scom_data.value);
     scom_data.words.upper &= ~BITS32(0, 16);
 #if NIMBUS_DD_LEVEL == 1
     scom_data.words.upper |= (CORE_HANG_LIMIT_100_HANG_PULSES << SHIFT32(7));

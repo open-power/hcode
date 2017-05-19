@@ -66,7 +66,7 @@ void prepare_for_ramming (uint32_t core)
     PK_TRACE("RAMMING Activate thread0-3 for RAM via THREAD_INFO 18-21");
     CME_PUTSCOM(THREAD_INFO, core, BITS64(18, 4));
 
-    CME_GETSCOM(THREAD_INFO, core, CME_SCOM_AND, scom_data);
+    CME_GETSCOM(THREAD_INFO, core, scom_data);
     PK_TRACE("THREAD_INFO core 0x%X 0x%X", core, (uint32_t) (scom_data & 0xFFFFFFFF));
 
 
@@ -101,12 +101,12 @@ uint16_t ram_read_lpid( uint32_t core, uint32_t thread )
 
     if (core & CME_MASK_C0)
     {
-        CME_GETSCOM(SCRATCH0, CME_MASK_C0, CME_SCOM_AND, scom_data);
+        CME_GETSCOM(SCRATCH0, CME_MASK_C0, scom_data);
     }
 
     if (core & CME_MASK_C1)
     {
-        CME_GETSCOM(SCRATCH1, CME_MASK_C1, CME_SCOM_AND, scom_data);
+        CME_GETSCOM(SCRATCH1, CME_MASK_C1, scom_data);
     }
 
     PK_TRACE("RAMMING LPID read for core 0x%X 0x%X", core, (uint32_t) (scom_data & 0xFFFFFFFF));
@@ -189,7 +189,7 @@ void p9_cme_pcbmux_savior_prologue(uint32_t core)
     old_msr = mfmsr();
     new_msr = old_msr | 0x7F000000;
     mtmsr(new_msr);
-    CME_GETSCOM(0x8F0002, core, CME_SCOM_AND, scom_data);
+    CME_GETSCOM(0x8F0002, core, scom_data);
     mtmsr(old_msr);
 }
 
@@ -203,7 +203,7 @@ void p9_cme_pcbmux_savior_epilogue(uint32_t core)
     old_msr = mfmsr();
     new_msr = old_msr | 0x7F000000;
     mtmsr(new_msr);
-    CME_GETSCOM(0x00000100, core, CME_SCOM_EQ, scom_data);
+    CME_GETSCOM(0x00000100, core, scom_data);
     mtmsr(old_msr);
 
 }
@@ -698,7 +698,7 @@ p9_cme_stop_entry()
             // NDD1: Core Global Xstop FIR
             if (core & CME_MASK_C0)
             {
-                CME_GETSCOM(0x20040000, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
+                CME_GETSCOM(0x20040000, CME_MASK_C0, scom_data.value);
 
                 if (scom_data.value)
                 {
@@ -710,7 +710,7 @@ p9_cme_stop_entry()
 
             if (core & CME_MASK_C1)
             {
-                CME_GETSCOM(0x20040000, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
+                CME_GETSCOM(0x20040000, CME_MASK_C1, scom_data.value);
 
                 if (scom_data.value)
                 {
@@ -730,12 +730,12 @@ p9_cme_stop_entry()
 
             do
             {
-                CME_GETSCOM(C_CPLT_STAT0, core, CME_SCOM_AND, scom_data.value);
+                CME_GETSCOM_AND(C_CPLT_STAT0, core, scom_data.value);
             }
             while(!(scom_data.words.upper & BIT32(8)));
 
             PK_TRACE("Check core clock is stopped via CLOCK_STAT_SL[4-13]");
-            CME_GETSCOM(C_CLOCK_STAT_SL, core, CME_SCOM_AND, scom_data.value);
+            CME_GETSCOM_AND(C_CLOCK_STAT_SL, core, scom_data.value);
 
             if (((~scom_data.value) & CLK_REGION_ALL_BUT_PLL) != 0)
             {
@@ -756,7 +756,7 @@ p9_cme_stop_entry()
 
             do
             {
-                CME_GETSCOM(CPPM_CACSR, core, CME_SCOM_OR, scom_data.value);
+                CME_GETSCOM_OR(CPPM_CACSR, core, scom_data.value);
             }
             while(scom_data.words.upper & BIT32(13));
 
@@ -769,7 +769,7 @@ p9_cme_stop_entry()
             CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(22));
 
             PK_TRACE("Drop ABIST_SRAM_MODE_DC to support ABIST Recovery via BIST[1]");
-            CME_GETSCOM(C_BIST, core, CME_SCOM_AND, scom_data.value);
+            CME_GETSCOM(C_BIST, core, scom_data.value);
             scom_data.words.upper &= ~BIT32(1);
             CME_PUTSCOM(C_BIST, core, scom_data.value);
 
@@ -1066,7 +1066,7 @@ p9_cme_stop_entry()
 
                 do
                 {
-                    CME_GETSCOM(PPM_PFSNS, core, CME_SCOM_AND, scom_data.value);
+                    CME_GETSCOM_AND(PPM_PFSNS, core, scom_data.value);
                 }
                 while(!(scom_data.words.upper & BIT32(1)));
 
@@ -1274,19 +1274,18 @@ p9_cme_stop_entry()
 
             if (core & CME_MASK_C0)
             {
-                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
+                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, scom_data.value);
 
                 if ((scom_data.words.upper & BIT32(13)))
                 {
                     PKTRACE("ERROR.A0: C0 notify was already set?");
                     pk_halt();
-
                 }
             }
 
             if (core & CME_MASK_C1)
             {
-                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
+                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, scom_data.value);
 
                 if ((scom_data.words.upper & BIT32(13)))
                 {
@@ -1339,19 +1338,18 @@ p9_cme_stop_entry()
 
             if (core & CME_MASK_C0)
             {
-                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, CME_SCOM_AND, scom_data.value);
+                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, scom_data.value);
 
                 if (!(scom_data.words.upper & BIT32(13)))
                 {
                     PKTRACE("ERROR.B0: C0 notify fail to set");
                     pk_halt();
-
                 }
             }
 
             if (core & CME_MASK_C1)
             {
-                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, CME_SCOM_AND, scom_data.value);
+                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, scom_data.value);
 
                 if (!(scom_data.words.upper & BIT32(13)))
                 {

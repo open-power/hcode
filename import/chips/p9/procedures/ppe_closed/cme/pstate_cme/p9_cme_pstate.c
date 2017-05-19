@@ -72,7 +72,7 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
     do
     {
         // Read PPMPIG status
-        CME_GETSCOM(PPM_PIG, coreMask, CME_SCOM_EQ, data_tmp);
+        CME_GETSCOM(PPM_PIG, coreMask, data_tmp);
     }
     while (((ppm_pig_t)data_tmp).fields.intr_granted);
 
@@ -96,8 +96,7 @@ void ippm_read(uint32_t addr, uint64_t* data)
 
     do
     {
-        CME_GETSCOM(CPPM_IPPMSTAT, G_cme_pstate_record.cmeMaskGoodCore,
-                    CME_SCOM_EQ, val);
+        CME_GETSCOM(CPPM_IPPMSTAT, G_cme_pstate_record.cmeMaskGoodCore, val);
     } // Check the QPPM_ONGOING bit
 
     while(val & BIT64(0));
@@ -108,8 +107,7 @@ void ippm_read(uint32_t addr, uint64_t* data)
         PK_PANIC(CME_PSTATE_IPPM_ACCESS_FAILED);
     }
 
-    CME_GETSCOM(CPPM_IPPMRDATA, G_cme_pstate_record.cmeMaskGoodCore,
-                CME_SCOM_EQ, val);
+    CME_GETSCOM(CPPM_IPPMRDATA, G_cme_pstate_record.cmeMaskGoodCore, val);
 
     *data = val;
 }
@@ -130,8 +128,7 @@ void ippm_write(uint32_t addr, uint64_t data)
 
     do
     {
-        CME_GETSCOM(CPPM_IPPMSTAT, G_cme_pstate_record.cmeMaskGoodCore,
-                    CME_SCOM_EQ, val);
+        CME_GETSCOM(CPPM_IPPMSTAT, G_cme_pstate_record.cmeMaskGoodCore, val);
     } // Check the QPPM_ONGOING bit
 
     while(val & BIT64(0));
@@ -297,7 +294,7 @@ void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_i
     }
     else
     {
-        CME_GETSCOM(CPPM_CACCR, target, CME_SCOM_EQ, base_val);
+        CME_GETSCOM(CPPM_CACCR, target, base_val);
     }
 
     // Preserve only the resclk control bits

@@ -233,7 +233,7 @@ void queuedScan(enum CME_CORE_MASKS i_core,
                     l_scomAddress = 0x00038000 | l_rotateCount;
                 }
 
-                CME_GETSCOM(l_scomAddress, i_core, i_scom_op, i_scanData);
+                CME_GETSCOM_OP(l_scomAddress, i_core, i_scom_op, i_scanData);
             }// end of for loop
         }
         else if(SCAN == i_operation)
@@ -602,7 +602,7 @@ int rs4DecompressionSvc(
             l_scomOp = CME_SCOM_NOP;
         }
 
-        CME_GETSCOM(0x0003E000, i_core, l_scomOp, l_readHeader);
+        CME_GETSCOM_OP(0x0003E000, i_core, l_scomOp, l_readHeader);
 
         if(l_readHeader != 0xa5a5a5a5a5a5a5a5)
         {
