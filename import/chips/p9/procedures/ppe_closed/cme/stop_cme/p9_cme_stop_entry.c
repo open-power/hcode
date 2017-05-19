@@ -334,19 +334,21 @@ p9_cme_stop_entry()
                 }
 
                 if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_8_TO_5_BIT_POS) &&
-                    (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_8))
+                    (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_8 &&
+                     G_cme_stop_record.req_level[core_index] <  STOP_LEVEL_11))
                 {
                     G_cme_stop_record.req_level[core_index] = STOP_LEVEL_5;
                 }
 
                 if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_5_TO_4_BIT_POS) &&
-                    (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_5))
+                    (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_5 &&
+                     G_cme_stop_record.req_level[core_index] <  STOP_LEVEL_8))
                 {
                     G_cme_stop_record.req_level[core_index] = STOP_LEVEL_4;
                 }
 
                 if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_4_TO_2_BIT_POS) &&
-                    (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_4))
+                    (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_4))
                 {
                     G_cme_stop_record.req_level[core_index] = STOP_LEVEL_2;
                 }
