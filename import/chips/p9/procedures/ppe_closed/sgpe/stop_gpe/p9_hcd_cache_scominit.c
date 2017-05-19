@@ -151,11 +151,11 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 
 #if NIMBUS_DD_LEVEL != 1
 
-                scom_data.words.lower |=  BIT32SH(51);
+                scom_data.words.lower |=  BIT64SH(51);
 
                 if (attr_proc_fabric_pump_mode_chip_is_node)
                 {
-                    scom_data.words.lower &= ~BIT32SH(51);
+                    scom_data.words.lower &= ~BIT64SH(51);
                 }
 
 #endif
