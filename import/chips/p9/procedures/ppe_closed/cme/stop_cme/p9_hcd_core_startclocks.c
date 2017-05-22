@@ -155,7 +155,7 @@ p9_hcd_core_startclocks(uint32_t core)
             {
                 PK_TRACE_ERR("Core[%d] Chiplet Global Xstop FIR[%x] Detected. HALT CME!",
                              core_mask, scom_data.words.upper);
-                PK_PANIC(CME_STOP_EXIT_XSTOP_ERROR);
+                PK_PANIC(CME_STOP_EXIT_STARTCLK_XSTOP_ERROR);
             }
         }
     }

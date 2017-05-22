@@ -133,5 +133,20 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
 
         PK_TRACE("Drop chiplet fence via NET_CTRL0[18]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(18));
+
+#if !EPM_P9_TUNING
+
+        PK_TRACE("Check Global Xstop FIR of Cache Chiplet After Scom Restore");
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_XFIR, quad), scom_data.value);
+
+        if (scom_data.words.upper & BITS32(0, 27))
+        {
+            PK_TRACE_ERR("Cache[%d] Chiplet Global Xstop FIR[%x] Detected After Scom Restore. HALT SGPE!",
+                         quad, scom_data.words.upper);
+            PK_PANIC(SGPE_STOP_EXIT_SCOM_RES_XSTOP_ERROR);
+        }
+
+#endif
+
     }
 }

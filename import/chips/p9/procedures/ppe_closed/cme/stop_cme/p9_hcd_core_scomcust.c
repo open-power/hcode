@@ -59,4 +59,27 @@ p9_hcd_core_scomcust(uint32_t core)
 
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
+
+#if !EPM_P9_TUNING
+
+    data64_t scom_data = {0};
+
+    for(core_mask = 2; core_mask; core_mask--)
+    {
+        if (core & core_mask)
+        {
+            PK_TRACE("Check Global Xstop FIR of Core Chiplet After Scom Restore");
+            CME_GETSCOM(C_XFIR, core_mask, scom_data.value);
+
+            if (scom_data.words.upper & BITS32(0, 27))
+            {
+                PK_TRACE_ERR("Core[%d] Chiplet Global Xstop FIR[%x] Detected After Scom Restore. HALT CME!",
+                             core_mask, scom_data.words.upper);
+                PK_PANIC(CME_STOP_EXIT_SCOM_RES_XSTOP_ERROR);
+            }
+        }
+    }
+
+#endif
+
 }
