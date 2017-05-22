@@ -129,7 +129,7 @@ void p9_cme_pstate_pmcr_thread(void* arg)
                     //Send Phase 1
                     ppmPigData.value = 0;
                     ppmPigData.fields.req_intr_type = 0;
-                    ppmPigData.value |= (((pmcr[c].value & PIG_PAYLOAD_PS_PHASE1_MASK)));
+                    ppmPigData.value |= (((pmcr[c].value & PIG_PAYLOAD_PS_PHASE1_MASK)) >> 8);
 
                     ppmPigData.value |= ((G_pmcr_thread_data.seqNum & 0x6) << 57);
                     send_pig_packet(ppmPigData.value, coreMask[c]);
@@ -138,7 +138,7 @@ void p9_cme_pstate_pmcr_thread(void* arg)
                     //Send Phase 2
                     ppmPigData.value = 0;
                     ppmPigData.fields.req_intr_type = 1;
-                    ppmPigData.value |= ((pmcr[c].value & PIG_PAYLOAD_PS_PHASE2_MASK) << 16);
+                    ppmPigData.value |= (((pmcr[c].value & PIG_PAYLOAD_PS_PHASE2_MASK)));
                     ppmPigData.value |= ((G_pmcr_thread_data.seqNum & 0x6) << 57);
                     send_pig_packet(ppmPigData.value, coreMask[c]);
                     G_pmcr_thread_data.seqNum++;
