@@ -328,7 +328,9 @@ p9_sgpe_stop_exit()
     uint32_t      rc              = 0;
 #endif
     sgpeHeader_t* pSgpeImgHdr     = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
+#if (NIMBUS_DD_LEVEL == 1) && !SKIP_HOMER_ACCESS
     cpmrHeader_t* pCpmrHdrAddr    = (cpmrHeader_t*)(HOMER_CPMR_HEADER_ADDR);
+#endif
 
     //===============================
     MARK_TAG(BEGINSCOPE_STOP_EXIT, 0)
