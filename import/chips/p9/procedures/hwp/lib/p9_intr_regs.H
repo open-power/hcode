@@ -37,8 +37,8 @@
 #include <p9_ppe_utils.H>
 #include <map>
 
-#ifndef __p9_intr_regs_H__
-#define __p9_intr_regs_H__
+#ifndef __P9_INTR_REGS_H__
+#define __P9_INTR_REGS_H__
 /**
  * @brief Offsets from base address for CME regs.
  */
@@ -83,4 +83,4 @@ extern "C"
 
 } // extern C
 
-#endif  // __P9_PPE_DUMP_H__
+#endif  // __P9_INTR_REGS_H__

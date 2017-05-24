@@ -24,7 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 ///
-/// @file  p9_ppe_dump.H
+/// @file  p9_sbe_localreg_dump.H
 /// @brief Dump a PPE engine's state.
 ///
 /// *HW Owner    : Pradeep CN
@@ -76,4 +76,4 @@ extern "C"
 
 } // extern C
 
-#endif  // __P9_PPE_DUMP_H__
+#endif  // __P9_SBE_LOCALREG_DUMP_H__

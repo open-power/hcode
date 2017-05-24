@@ -36,8 +36,8 @@
 #include <map>
 
 
-#ifndef __p9_cppm_state_H__
-#define __p9_cppm_state_H__
+#ifndef __P9_CPPM_STATE_H__
+#define __P9_CPPM_STATE_H__
 // PPM reg addressing
 //            *******Core******
 //            Core Power Management Mode Register = CPMMR         (200F0106)
@@ -168,4 +168,4 @@ extern "C"
 
 } // extern C
 
-#endif  // __P9_PPE_DUMP_H__
+#endif  // __P9_CPPM_STATE_H__

@@ -37,8 +37,8 @@
 #include <p9_ppe_utils.H>
 #include <map>
 
-#ifndef __p9_mib_state_H__
-#define __p9_mib_state_H__
+#ifndef __P9_MIB_STATE_H__
+#define __P9_MIB_STATE_H__
 enum MIB_REGS
 {
     //Interrupts
@@ -123,4 +123,4 @@ extern "C"
 
 } // extern C
 
-#endif  // __P9_PPE_DUMP_H__
+#endif  // __P9_MIB_STATE_H__
