@@ -28,17 +28,9 @@
 #include "pk.h"
 #include "p9_pstates_pgpe.h"
 
-//#define EVID_SLOPE_FP_SHIFT         13
 #define MAX_DPLL_VALUE              255
 
-#define NUM_VPD_PTS_SET             4
-#define VPD_PT_SET_RAW              0
-#define VPD_PT_SET_SYSP             1
-#define VPD_PT_SET_BIASED           2
-#define VPD_PT_SET_BIASED_SYSP      3
-
-
 void p9_pgpe_gppb_init();
-uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set, uint8_t vpd_slope_set);
+uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set);
 uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd);
 #endif //_P9_PGPE_GPPB_H_

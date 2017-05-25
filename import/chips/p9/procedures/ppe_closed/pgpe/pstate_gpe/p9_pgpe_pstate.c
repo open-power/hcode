@@ -577,8 +577,7 @@ void p9_pgpe_pstate_do_step()
     ocb_qcsr_t qcsr;
     qcsr.value = in32(OCB_QCSR);
     uint32_t active_conf_cores = 0;
-    uint32_t targetEVid = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget, VPD_PT_SET_BIASED_SYSP,
-                          VPD_SLOPES_BIASED);
+    uint32_t targetEVid = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget, VPD_PT_SET_BIASED_SYSP);
 
     //Determine active and configured cores
     for (q = 0; q < MAX_QUADS; q++)
@@ -1021,10 +1020,10 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     PK_TRACE_INF("eVidCurr=%umV", G_pgpe_pstate_record.eVidCurr);
 #if SIMICS_TUNING == 1
     G_pgpe_pstate_record.eVidCurr = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget,
-                                    VPD_PT_SET_BIASED_SYSP, VPD_SLOPES_BIASED);
+                                    VPD_PT_SET_BIASED_SYSP);
 #endif
     G_pgpe_pstate_record.eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget,
-                                    VPD_PT_SET_BIASED_SYSP, VPD_SLOPES_BIASED);
+                                    VPD_PT_SET_BIASED_SYSP);
     PK_TRACE_INF("eVidNext=%umV", G_pgpe_pstate_record.eVidNext);
 
     pgpe_db0_start_ps_bcast_t db0;

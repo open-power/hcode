@@ -36,26 +36,20 @@ extern PgpeHeader_t* G_pgpe_header_data;
 //
 //Private function prototypes
 //
-void p9_pgpe_gppb_compute_vpd_pts();
-void p9_pgpe_gppb_compute_PsV_slopes();
 uint8_t p9_pgpe_gppb_get_ext_vdd_region(uint32_t evid);
 uint8_t p9_pgpe_gppb_get_ps_region(Pstate ps, uint8_t vpt_pt_set);
 
 //
 //p9_pgpe_gppb_init
 //
-//This sets the pointer to GlobalPstateParmBlock, and calculates slope
-//co-efficients
+//This sets the pointer to GlobalPstateParmBlock
 //
-//Note: In future, the slope calculation might be done offline
 void p9_pgpe_gppb_init()
 {
     void* gppb_sram_offset = G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
     G_gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
 
     PK_TRACE_INF("GPP: DPLL0Value=0x%x", G_gppb->dpll_pstate0_value);
-    PK_TRACE_INF("GPP: PowerSave PS=0x%x", G_gppb->operating_points[POWERSAVE].pstate );
-    PK_TRACE_INF("GPP: Nominal PS=0x%x", G_gppb->operating_points[NOMINAL].pstate );
     //External VRM increasing rate in us/uv
     G_ext_vrm_inc_rate_mult_usperus = 1 / G_gppb->ext_vrm_transition_rate_inc_uv_per_us;
 
@@ -69,12 +63,12 @@ void p9_pgpe_gppb_init()
 //
 //Interpolate voltage from pstate
 //
-uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set, uint8_t vpd_slope_set)
+uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set)
 {
     uint32_t vdd;
     uint8_t r  = p9_pgpe_gppb_get_ps_region(ps, vpd_pt_set);
-    vdd = (((G_gppb->PsVSlopes[vpd_slope_set][r]) *
-            (-ps + G_gppb->operating_points_set[vpd_pt_set][r].pstate)) >> VID_SLOPE_FP_SHIFT)
+    vdd = (((G_gppb->PStateVSlopes[vpd_pt_set][r]) *
+            (-ps + G_gppb->operating_points_set[vpd_pt_set][r].pstate)) >> VID_SLOPE_FP_SHIFT_12)
           + G_gppb->operating_points_set[vpd_pt_set][r].vdd_mv;
 
     return vdd;
@@ -105,12 +99,15 @@ uint8_t p9_pgpe_gppb_get_ps_region(Pstate ps, uint8_t vpd_pt_set)
 //p9_pgpe_gppb_intp_ps_from_evid
 //
 //Interpolate pstate from evid
+//This functions is hardcoded to use BIASED_SYSPARAMETERS pt
+//bc currently interpolating pstate from vdd is only needed
+//for Biased SysParam VPD during actuation
 uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd)
 {
     Pstate ps;
     uint8_t  r = p9_pgpe_gppb_get_ext_vdd_region(ext_vdd);
-    ps = -(((G_gppb->VPsSlopes[VPD_SLOPES_BIASED][r]) *
-            (ext_vdd - G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][r].vdd_mv)) >> VID_SLOPE_FP_SHIFT)
+    ps = -(((G_gppb->VPStateSlopes[VPD_PT_SET_BIASED_SYSP][r]) *
+            (ext_vdd - G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][r].vdd_mv)) >> VID_SLOPE_FP_SHIFT_12)
          + G_gppb->operating_points_set[VPD_SLOPES_BIASED][r].pstate;
     return ps;
 }

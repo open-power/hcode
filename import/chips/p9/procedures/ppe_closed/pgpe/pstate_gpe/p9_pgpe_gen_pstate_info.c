@@ -105,11 +105,10 @@ void p9_pgpe_gen_raw_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* g
     {
         gpi->raw_pstates[p].pstate = p;
         gpi->raw_pstates[p].frequency_mhz = (gppb->reference_frequency_khz -  freq_khz_offset) / 1000;
-        gpi->raw_pstates[p].external_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_SYSP, VPD_SLOPES_RAW);
-        gpi->raw_pstates[p].effective_vdd_mv = gpi->raw_pstates[p].external_vdd_mv;
+        gpi->raw_pstates[p].external_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_SYSP);
+        gpi->raw_pstates[p].effective_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
         gpi->raw_pstates[p].effective_regulation_vdd_mv = gpi->raw_pstates[p].external_vdd_mv + gppb->ivrm.deadzone_mv;
-
-        gpi->raw_pstates[p].internal_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_RAW, VPD_SLOPES_RAW);
+        gpi->raw_pstates[p].internal_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
         gpi->raw_pstates[p].internal_vid = (gpi->raw_pstates[p].internal_vdd_mv - 512) >> 4;
         gpi->raw_pstates[p].vdm_mv = 0;
         gpi->raw_pstates[p].vdm_vid = 0;
@@ -136,14 +135,11 @@ void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo
     {
         gpi->biased_pstates[p].pstate = p;
         gpi->biased_pstates[p].frequency_mhz = (G_gpi.pstate0_frequency_khz - freq_khz_offset) / 1000;
-        gpi->biased_pstates[p].external_vdd_mv = (uint16_t)(p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_BIASED_SYSP,
-                VPD_SLOPES_BIASED));
-        gpi->biased_pstates[p].effective_vdd_mv = gpi->biased_pstates[p].external_vdd_mv;
+        gpi->biased_pstates[p].external_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_BIASED_SYSP);
+        gpi->biased_pstates[p].effective_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
         gpi->biased_pstates[p].effective_regulation_vdd_mv = (uint16_t)(gpi->biased_pstates[p].external_vdd_mv +
                 gppb->ivrm.deadzone_mv);
-
-        gpi->biased_pstates[p].internal_vdd_mv = (uint16_t)(p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_BIASED,
-                VPD_SLOPES_BIASED));
+        gpi->biased_pstates[p].internal_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
         gpi->biased_pstates[p].internal_vid = (uint16_t)((gpi->biased_pstates[p].internal_vdd_mv - 512) >> 4);
         gpi->biased_pstates[p].vdm_mv = 0;
         gpi->biased_pstates[p].vdm_vid = 0;
