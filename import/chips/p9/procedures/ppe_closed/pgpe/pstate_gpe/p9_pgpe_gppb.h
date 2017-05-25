@@ -28,7 +28,7 @@
 #include "pk.h"
 #include "p9_pstates_pgpe.h"
 
-#define EVID_SLOPE_FP_SHIFT         13
+//#define EVID_SLOPE_FP_SHIFT         13
 #define MAX_DPLL_VALUE              255
 
 #define NUM_VPD_PTS_SET             4
