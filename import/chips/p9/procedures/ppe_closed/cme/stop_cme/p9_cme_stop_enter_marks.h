@@ -36,14 +36,14 @@ namespace CME_STOP_ENTRY_MARKS
 
 enum CME_SE_MARKS
 {
-    BEGINSCOPE_STOP_ENTRY       =   0x0,
-    ENDSCOPE_STOP_ENTRY     =   0x8,
-    STOP_ENTER_HANDLER      =   0x10,
-    STOP_PCWU_HANDLER      =   0x18,
-    STOP_SPWU_HANDLER       =   0x20,
-    STOP_RGWU_HANDLER       =   0x28,
-    STOP_DB1_HANDLER       =   0x30,
-    STOP_DB2_HANDLER       =   0x38,
+    BEGINSCOPE_STOP_ENTRY       =   0x10,
+    ENDSCOPE_STOP_ENTRY     =   0x18,
+    STOP_ENTER_HANDLER      =   0x20,
+    STOP_PCWU_HANDLER      =   0x28,
+    STOP_SPWU_HANDLER       =   0x30,
+    STOP_RGWU_HANDLER       =   0x38,
+    STOP_DB1_HANDLER       =   0x40,
+    STOP_DB2_HANDLER       =   0x48,
     SE_QUIESCE_CORE_INTF        =   0x68,
     SE_STOP_CORE_CLKS       =   0xe0,
     SE_STOP_CORE_GRID       =   0xe8,

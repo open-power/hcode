@@ -36,8 +36,8 @@ namespace CME_STOP_EXIT_MARKS
 
 enum CME_SX_MARKS
 {
-    BEGINSCOPE_STOP_EXIT        =   0x20,
-    ENDSCOPE_STOP_EXIT      =   0x28,
+    BEGINSCOPE_STOP_EXIT        =   0x0,
+    ENDSCOPE_STOP_EXIT      =   0x8,
     SX_STOP3        =   0x68,
     SX_POWERON      =   0xe0,
     SX_CHIPLET_RESET        =   0xe8,
