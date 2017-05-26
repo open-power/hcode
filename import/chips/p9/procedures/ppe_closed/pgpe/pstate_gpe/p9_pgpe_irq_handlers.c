@@ -168,11 +168,25 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
     PkMachineContext  ctx;
     ocb_opit0cn_t opit0cn;
     ocb_opit1cn_t opit1cn;
-    uint32_t coresPendPSReq = in32(OCB_OPIT1PRA);
     uint32_t c;
+    uint32_t coresPendPSReq = 0;
+    uint32_t opit4pra;
 
-    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE && (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_HOST ||
-            G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_CHAR))
+    //Incrementally build a snapshot of core requests
+    opit4pra = in32(OCB_OPIT1PRA);
+    coresPendPSReq = opit4pra;
+
+    //Keep looping until no more core requests
+    while(opit4pra)
+    {
+        out32(OCB_OPIT1PRA_CLR, opit4pra);
+        coresPendPSReq |= opit4pra;
+        opit4pra = in32(OCB_OPIT1PRA);
+    }
+
+    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE &&
+        (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_HOST ||
+         G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_CHAR))
     {
 
         //Process pending requests
@@ -196,7 +210,7 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
                 {
                     //Extract the LowerPState field
                     G_pgpe_pstate_record.coresPSRequest[c] = op1 & 0xff;
-                    out32(OCB_OPIT1PRA_CLR, 0x80000000 >> c); //Clear out pending bits
+                    PK_TRACE_DBG("PCB_TYPE1: c[%d]=0%x\n", c, G_pgpe_pstate_record.coresPSRequest[c]);
                 }
             }
         }

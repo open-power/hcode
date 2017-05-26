@@ -327,7 +327,11 @@ void p9_pgpe_pstate_process_quad_entry(uint32_t quadsAffected)
             //If Start
             if (args->action == PGPE_ACTION_PSTATE_START)
             {
-                p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_OCC);
+                p9_pgpe_pstate_set_pmcr_owner(args->pmcr_owner);
+                args->msg_cb.rc = PGPE_RC_SUCCESS;
+                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
+                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
+                ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
             }
             else
             {
@@ -853,6 +857,35 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
 //For SIMICS, LMCR should be set through command line
 #if !SIMICS_TUNING
 
+    //Set PCB_TYPE1 interrupt
+    if (owner == PMCR_OWNER_HOST)
+    {
+        PK_TRACE_DBG("OWNER_HOST");
+        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_HOST;
+        g_oimr_override &= ~(BIT64(46));
+        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+    }
+    else if (owner == PMCR_OWNER_OCC)
+    {
+        PK_TRACE_DBG("OWNER_OCC");
+        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_OCC;
+        g_oimr_override |= BIT64(46);
+        out32(OCB_OIMR1_OR, BIT32(14)); //Disable PCB_INTR_TYPE1
+    }
+    else if (owner == PMCR_OWNER_CHAR)
+    {
+        PK_TRACE_DBG("OWNER_CHAR");
+        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
+        g_oimr_override &= ~(BIT64(46));
+        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+    }
+    else
+    {
+        pk_halt();
+    }
+
+    //Set LMCR for each CME
+    //If OWNER is switched to CHAR, the last LMCR setting is retained
     for (q = 0; q < MAX_QUADS; q++)
     {
         if(G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q))
@@ -958,56 +991,19 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     PK_TRACE_INF("GlblPsTgt:0x%x", G_pgpe_pstate_record.globalPSTarget);
 
     //3. Determine PMCR Owner
-    //We save it off so that CMEs that are currently in STOP11
-    //can be told upon STOP11 Exit
     if (pstate_start_origin == PSTATE_START_OCC_IPC)
     {
         PK_TRACE_DBG("g_oimr_override:0x%llx", g_oimr_override);
         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd;
         ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
-
-        if (args->pmcr_owner == PMCR_OWNER_HOST)
-        {
-            PK_TRACE_DBG("OWNER_HOST");
-            G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_HOST;
-            g_oimr_override &= ~(BIT64(46));
-            out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
-        }
-        else if (args->pmcr_owner == PMCR_OWNER_OCC)
-        {
-            PK_TRACE_DBG("OWNER_OCC");
-            G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_OCC;
-            g_oimr_override |= BIT64(46);
-            out32(OCB_OIMR1_OR, BIT32(14)); //Disable PCB_INTR_TYPE1
-        }
-        else if (args->pmcr_owner == PMCR_OWNER_CHAR)
-        {
-            PK_TRACE_DBG("OWNER_CHAR");
-            G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
-            g_oimr_override &= ~(BIT64(46));
-            out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
-        }
-        else
-        {
-            pk_halt();
-        }
-
-        //Set LMCR for each CME
-        //If OWNER is switched to CHAR, the last LMCR setting is retained
-        if (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_HOST)
-        {
-            p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_HOST);
-        }
-        else if (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_OCC)
-        {
-            p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_OCC);
-        }
-
-        //We set PCB TYPE1 and LMCR for characterization mode
-        //and explicitly set PMCR OWNER to CHAR
+        p9_pgpe_pstate_set_pmcr_owner(args->pmcr_owner);
     }
     else
     {
+        //Bring up the PGPE in Characterizaion Mode by default. This mimics
+        //first starting pstates with OCC as owner which enables SCOM writes
+        //to PMCR, and then switching the owner to CHAR which enables PCB_TYPE1 interrupts
+        //and allows CME to forward Pstate Requests
         p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_OCC);
         PK_TRACE_DBG("OWNER_CHAR");
         G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
