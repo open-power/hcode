@@ -74,7 +74,7 @@ uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set, uint8_t vp
     uint32_t vdd;
     uint8_t r  = p9_pgpe_gppb_get_ps_region(ps, vpd_pt_set);
     vdd = (((G_gppb->PsVSlopes[vpd_slope_set][r]) *
-            (-ps + G_gppb->operating_points_set[vpd_pt_set][r].pstate)) >> EVID_SLOPE_FP_SHIFT)
+            (-ps + G_gppb->operating_points_set[vpd_pt_set][r].pstate)) >> VID_SLOPE_FP_SHIFT)
           + G_gppb->operating_points_set[vpd_pt_set][r].vdd_mv;
 
     return vdd;
@@ -110,7 +110,7 @@ uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd)
     Pstate ps;
     uint8_t  r = p9_pgpe_gppb_get_ext_vdd_region(ext_vdd);
     ps = -(((G_gppb->VPsSlopes[VPD_SLOPES_BIASED][r]) *
-            (ext_vdd - G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][r].vdd_mv)) >> EVID_SLOPE_FP_SHIFT)
+            (ext_vdd - G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][r].vdd_mv)) >> VID_SLOPE_FP_SHIFT)
          + G_gppb->operating_points_set[VPD_SLOPES_BIASED][r].pstate;
     return ps;
 }
