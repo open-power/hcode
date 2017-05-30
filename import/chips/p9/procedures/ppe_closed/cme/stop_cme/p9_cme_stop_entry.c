@@ -362,6 +362,30 @@ p9_cme_stop_entry()
         // Mark core as to be stopped
         G_cme_stop_record.core_running &= ~core;
 
+        // Request PCB Mux
+
+#if HW405292_NDD1_PCBMUX_SAVIOR
+
+        p9_cme_pcbmux_savior_prologue(core);
+
+#endif
+
+        PK_TRACE("Request PCB mux via SICR[10/11]");
+        out32(CME_LCL_SICR_OR, core << SHIFT32(11));
+
+        // Poll Infinitely for PCB Mux Grant
+        while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+
+        PK_TRACE("PCB Mux Granted on Core[%d]", core);
+
+#if HW405292_NDD1_PCBMUX_SAVIOR
+
+        p9_cme_pcbmux_savior_epilogue(core);
+
+#endif
+
+        // Stop 1
+
         if(core_stop1)
         {
             PK_TRACE_DBG("Check: core[%d] core_stop1[%d]", core, core_stop1);
@@ -387,6 +411,24 @@ p9_cme_stop_entry()
             CME_PUTSCOM(PPM_SSHSRC, core_stop1, scom_data.value);
             */
 
+            core = core & ~core_stop1;
+
+            if (!core)
+            {
+                // not catchup or catchup with stop2, terminates
+                entry_ongoing = 0;
+
+                // otherwise, go back to origin core and continue
+                if (origin_core && (origin_level > STOP_LEVEL_2))
+                {
+                    core          = origin_core;
+                    target_level  = origin_level;
+                    entry_ongoing = 1;
+                }
+
+                break;
+            }
+
 #else
 
             // Nap should be done by hardware when auto_stop1 is enabled
@@ -397,42 +439,6 @@ p9_cme_stop_entry()
 #endif
 
         }
-
-
-#if HW405292_NDD1_PCBMUX_SAVIOR
-
-        p9_cme_pcbmux_savior_prologue(core);
-
-#endif
-
-        PK_TRACE("Request PCB mux via SICR[10/11]");
-        out32(CME_LCL_SICR_OR, core << SHIFT32(11));
-
-        // Poll Infinitely for PCB Mux Grant
-        while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
-
-        PK_TRACE("PCB Mux Granted on Core[%d]", core);
-
-#if HW405292_NDD1_PCBMUX_SAVIOR
-
-        p9_cme_pcbmux_savior_epilogue(core);
-
-#endif
-
-#if HW386841_NDD1_DSL_STOP1_FIX
-
-        // check target after getting PCBMUX for Stop1 Workaround
-        if (core_stop1)
-        {
-            core = core & ~core_stop1;
-
-            if (!core)
-            {
-                break;
-            }
-        }
-
-#endif
 
         //----------------------------------------------------------------------
         PK_TRACE("+++++ +++++ STOP LEVEL 2 ENTRY +++++ +++++");
@@ -746,6 +752,9 @@ p9_cme_stop_entry()
 
         PK_TRACE("Drop sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
         CME_PUTSCOM(C_CPLT_CONF0_CLEAR, core, BIT64(34));
+
+        // Allow queued scoms to complete to Core EPS before switching to Core PPM
+        sync();
 
         PK_TRACE("Copy PECE CME sample to PPM Shadow via PECES");
 

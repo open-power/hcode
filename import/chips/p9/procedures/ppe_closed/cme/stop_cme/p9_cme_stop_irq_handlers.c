@@ -34,12 +34,14 @@ void
 p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_PCWU_HANDLER)
-    PK_TRACE_INF("PCWU Handler Trigger %d", irq);
 
+    PkMachineContext ctx;
     uint32_t  core_mask = 0;
     uint32_t  core      = (in32(CME_LCL_EISR) & BITS32(12, 2)) >> SHIFT32(13);
     data64_t  scom_data = {0};
     ppm_pig_t pig       = {0};
+
+    PK_TRACE_INF("PCWU Handler Trigger %d Level %d", irq, core);
 
     for (core_mask = 2; core_mask; core_mask--)
     {
@@ -55,11 +57,11 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
                 {
                     pig.fields.req_intr_type    = PIG_TYPE2;
                     pig.fields.req_intr_payload = 0x400;
-                    CME_PUTSCOM(PPM_PIG, core_mask, pig.value);
+                    CME_PUTSCOM_NOP(PPM_PIG, core_mask, pig.value);
                 }
 
                 // block pc for stop8,11 or stop5 as pig sent
-                out32(CME_LCL_EIMR_OR, core_mask << SHIFT32(13));
+                g_eimr_override |= (core_mask << SHIFT32(13));
                 G_cme_stop_record.core_blockpc |= core_mask;
                 core = core - core_mask;
             }
@@ -71,6 +73,10 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
     {
         out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
         pk_semaphore_post((PkSemaphore*)arg);
+    }
+    else
+    {
+        pk_irq_vec_restore(&ctx);
     }
 }
 
@@ -87,7 +93,6 @@ void
 p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_SPWU_HANDLER)
-    //PK_TRACE_INF("SPWU Handler");
 
     PkMachineContext ctx;
     int      sem_post   = 0;
@@ -200,12 +205,12 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 
     // read and clear doorbell
     uint32_t core = (in32(CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
-    CME_PUTSCOM(CPPM_CMEDB2, core, 0);
-    G_cme_stop_record.core_blockpc &= ~core;
+    CME_PUTSCOM_NOP(CPPM_CMEDB2, core, 0);
 
     // unmask pc interrupt pending to wakeup that is still pending
     core &= (~(G_cme_stop_record.core_running));
-    out32(CME_LCL_EIMR_CLR, core << SHIFT32(13));
+    g_eimr_override &= ~(core << SHIFT32(13));
+    G_cme_stop_record.core_blockpc &= ~core;
 
     pk_irq_vec_restore(&ctx);
 }
