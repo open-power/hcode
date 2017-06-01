@@ -32,8 +32,11 @@ $(eval $(IMAGE)_LINK_SCRIPT=cme_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/cme_image/cme_image.o)
 $(eval cme_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
 
+# files with multiple DD level content to be generated
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,cme))
+
 # files to be appended to image
-$(eval $(IMAGE)_FILE_HCODE=$(IMAGEPATH)/cme/cme.bin)
+$(eval $(IMAGE)_FILE_HCODE=$$($(IMAGE)_DD_CONT_cme))
 
 # dependencies for appending image sections in sequence:
 # - file to be appended
@@ -46,7 +49,7 @@ $(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
 $(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
 
 # image build using all files and serialised by dependencies
-$(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HCODE)))
+$(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HCODE) 1))
 
 # create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))

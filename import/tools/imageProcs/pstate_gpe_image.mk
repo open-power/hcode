@@ -32,11 +32,15 @@ $(eval $(IMAGE)_LINK_SCRIPT=pstate_gpe_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/pstate_gpe_image/pstate_gpe_image.o)
 $(eval pstate_gpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
 
+# files with multiple DD level content to be generated
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,ppmr_header))
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,pstate_gpe))
+
 # files to be appended to image
-$(eval $(IMAGE)_FILE_PPMR_HDR=$(IMAGEPATH)/ppmr_header/ppmr_header.bin)
+$(eval $(IMAGE)_FILE_PPMR_HDR=$$($(IMAGE)_DD_CONT_ppmr_header))
 $(eval $(IMAGE)_FILE_LVL1_BL=$(IMAGEPATH)/pgpe_lvl1_copier/pgpe_lvl1_copier.bin)
 $(eval $(IMAGE)_FILE_LVL2_BL=$(IMAGEPATH)/pgpe_lvl2_loader/pgpe_lvl2_loader.bin)
-$(eval $(IMAGE)_FILE_HCODE=$(IMAGEPATH)/pstate_gpe/pstate_gpe.bin)
+$(eval $(IMAGE)_FILE_HCODE=$$($(IMAGE)_DD_CONT_pstate_gpe))
 
 # dependencies for appending image sections in sequence:
 # - file to be appended
@@ -61,10 +65,10 @@ $(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
 $(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
 
 # image build using all files and serialised by dependencies
-$(eval $(call XIP_TOOL,append,.ppmr_header,$$($(IMAGE)_DEPS_PPMR_HDR),$$($(IMAGE)_FILE_PPMR_HDR)))
+$(eval $(call XIP_TOOL,append,.ppmr_header,$$($(IMAGE)_DEPS_PPMR_HDR),$$($(IMAGE)_FILE_PPMR_HDR) 1))
 $(eval $(call XIP_TOOL,append,.lvl1_bl,$$($(IMAGE)_DEPS_LVL1_BL),$$($(IMAGE)_FILE_LVL1_BL)))
 $(eval $(call XIP_TOOL,append,.lvl2_bl,$$($(IMAGE)_DEPS_LVL2_BL),$$($(IMAGE)_FILE_LVL2_BL)))
-$(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HCODE)))
+$(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HCODE) 1))
 
 # create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
