@@ -23,22 +23,57 @@
 #
 # IBM_PROLOG_END_TAG
 
-IMAGE=pstate_gpe_image
-# add dependency on the raw image.bin file completion
-PGPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host
+# $1 == chipId
+define BUILD_PGPE_IMAGE
+$(eval IMAGE=$1.pstate_gpe_image)
 
-# dependencies for bin files needed in the pgpe xip image
-PPMR_HDR_BIN_FILE=$(IMAGEPATH)/ppmr_header/ppmr_header.bin
-LVL1_BL_BIN_FILE=$(IMAGEPATH)/pgpe_lvl1_copier/pgpe_lvl1_copier.bin
-LVL2_BL_BIN_FILE=$(IMAGEPATH)/pgpe_lvl2_loader/pgpe_lvl2_loader.bin
-PGPE_BIN_FILE=$(IMAGEPATH)/pstate_gpe/pstate_gpe.bin
+$(eval $(IMAGE)_PATH=$(IMAGEPATH)/pstate_gpe_image)
+$(eval $(IMAGE)_LINK_SCRIPT=pstate_gpe_image.cmd)
+$(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/pstate_gpe_image/pstate_gpe_image.o)
+$(eval pstate_gpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
 
-$(call XIP_TOOL,append,.ppmr_header,$(PGPE_DEPS) $(PPMR_HDR_BIN_FILE), $(PPMR_HDR_BIN_FILE))
-$(call XIP_TOOL,append,.lvl1_bl,$(PGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.ppmr_header \
-    $(LVL1_BL_BIN_FILE), $(LVL1_BL_BIN_FILE))
-$(call XIP_TOOL,append,.lvl2_bl,$(PGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl \
-   	$(LVL2_BL_BIN_FILE), $(LVL2_BL_BIN_FILE))
-$(call XIP_TOOL,append,.hcode,$(PGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl \
-	$(PGPE_BIN_FILE),$(PGPE_BIN_FILE))
-$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode,)
-$(call BUILD_XIPIMAGE)
+# files to be appended to image
+$(eval $(IMAGE)_FILE_PPMR_HDR=$(IMAGEPATH)/ppmr_header/ppmr_header.bin)
+$(eval $(IMAGE)_FILE_LVL1_BL=$(IMAGEPATH)/pgpe_lvl1_copier/pgpe_lvl1_copier.bin)
+$(eval $(IMAGE)_FILE_LVL2_BL=$(IMAGEPATH)/pgpe_lvl2_loader/pgpe_lvl2_loader.bin)
+$(eval $(IMAGE)_FILE_HCODE=$(IMAGEPATH)/pstate_gpe/pstate_gpe.bin)
+
+# dependencies for appending image sections in sequence:
+# - file to be appended
+# - all dependencies of previously appended sections or on raw image
+# - append operation as to other section that has to be finished first
+$(eval $(IMAGE)_DEPS_PPMR_HDR =$$($(IMAGE)_FILE_PPMR_HDR))
+$(eval $(IMAGE)_DEPS_PPMR_HDR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+
+$(eval $(IMAGE)_DEPS_LVL1_BL =$$($(IMAGE)_FILE_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL1_BL+=$$($(IMAGE)_DEPS_PPMR_HDR))
+$(eval $(IMAGE)_DEPS_LVL1_BL+=$$($(IMAGE)_PATH)/.$(IMAGE).append.ppmr_header)
+
+$(eval $(IMAGE)_DEPS_LVL2_BL =$$($(IMAGE)_FILE_LVL2_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL+=$$($(IMAGE)_DEPS_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL+=$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl)
+
+$(eval $(IMAGE)_DEPS_HCODE =$$($(IMAGE)_FILE_HCODE))
+$(eval $(IMAGE)_DEPS_HCODE+=$$($(IMAGE)_DEPS_LVL2_BL))
+$(eval $(IMAGE)_DEPS_HCODE+=$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl)
+
+$(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
+$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
+
+# image build using all files and serialised by dependencies
+$(eval $(call XIP_TOOL,append,.ppmr_header,$$($(IMAGE)_DEPS_PPMR_HDR),$$($(IMAGE)_FILE_PPMR_HDR)))
+$(eval $(call XIP_TOOL,append,.lvl1_bl,$$($(IMAGE)_DEPS_LVL1_BL),$$($(IMAGE)_FILE_LVL1_BL)))
+$(eval $(call XIP_TOOL,append,.lvl2_bl,$$($(IMAGE)_DEPS_LVL2_BL),$$($(IMAGE)_FILE_LVL2_BL)))
+$(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HCODE)))
+
+# create image report for image with all files appended
+$(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
+
+$(eval $(call BUILD_XIPIMAGE))
+endef
+
+CHIPS :=$(filter-out centaur,$(CHIPS))
+
+$(foreach chip,$(CHIPS),\
+	$(foreach chipId, $($(chip)_CHIPID),\
+	$(eval $(call BUILD_PGPE_IMAGE,$(chipId)))))

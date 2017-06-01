@@ -22,26 +22,58 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-IMAGE=sgpe_image
 
-# add dependency on the raw image.bin file completion
-SGPE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host
+# $1 == chipId
+define BUILD_SGPE_IMAGE
+$(eval IMAGE=$1.sgpe_image)
 
-# dependencies for bin files needed in the sgpe xip image
-QPMR_BIN_FILE=$(IMAGEPATH)/qpmr_header/qpmr_header.bin
-LVL1_BL_BIN_FILE=$(IMAGEPATH)/sgpe_lvl1_copier/sgpe_lvl1_copier.bin
-LVL2_BL_BIN_FILE=$(IMAGEPATH)/sgpe_lvl2_loader/sgpe_lvl2_loader.bin
-SGPE_BIN_FILE=$(IMAGEPATH)/stop_gpe/stop_gpe.bin
+$(eval $(IMAGE)_PATH=$(IMAGEPATH)/sgpe_image)
+$(eval $(IMAGE)_LINK_SCRIPT=sgpe_image.cmd)
+$(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/sgpe_image/sgpe_image.o)
+$(eval sgpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
 
-SGPE_DEPS+=$(SGPE_BIN_FILE)
-SGPE_DEPS+=$(LVL1_BL_BIN_FILE)
-SGPE_DEPS+=$(LVL2_BL_BIN_FILE)
+# files to be appended to image
+$(eval $(IMAGE)_FILE_QPMR=$(IMAGEPATH)/qpmr_header/qpmr_header.bin)
+$(eval $(IMAGE)_FILE_LVL1_BL=$(IMAGEPATH)/sgpe_lvl1_copier/sgpe_lvl1_copier.bin)
+$(eval $(IMAGE)_FILE_LVL2_BL=$(IMAGEPATH)/sgpe_lvl2_loader/sgpe_lvl2_loader.bin)
+$(eval $(IMAGE)_FILE_HCODE=$(IMAGEPATH)/stop_gpe/stop_gpe.bin)
 
-SGPE_DEPS+=$(QPMR_BIN_FILE)
+# dependencies for appending image sections in sequence:
+# - file to be appended
+# - all dependencies of previously appended sections or on raw image
+# - append operation as to other section that has to be finished first
+$(eval $(IMAGE)_DEPS_QPMR =$$($(IMAGE)_FILE_QPMR))
+$(eval $(IMAGE)_DEPS_QPMR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
 
-$(call XIP_TOOL,append,.qpmr,$(SGPE_DEPS) ,$(QPMR_BIN_FILE))
-$(call XIP_TOOL,append,.lvl1_bl,$(SGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.qpmr, $(LVL1_BL_BIN_FILE))
-$(call XIP_TOOL,append,.lvl2_bl,$(SGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl, $(LVL2_BL_BIN_FILE))
-$(call XIP_TOOL,append,.hcode,$(SGPE_DEPS) $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl ,$(SGPE_BIN_FILE))
-$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
-$(call BUILD_XIPIMAGE)
+$(eval $(IMAGE)_DEPS_LVL1_BL =$$($(IMAGE)_FILE_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL1_BL+=$$($(IMAGE)_DEPS_QPMR))
+$(eval $(IMAGE)_DEPS_LVL1_BL+=$$($(IMAGE)_PATH)/.$(IMAGE).append.qpmr)
+
+$(eval $(IMAGE)_DEPS_LVL2_BL =$$($(IMAGE)_FILE_LVL2_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL+=$$($(IMAGE)_DEPS_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL+=$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl)
+
+$(eval $(IMAGE)_DEPS_HCODE =$$($(IMAGE)_FILE_HCODE))
+$(eval $(IMAGE)_DEPS_HCODE+=$$($(IMAGE)_DEPS_LVL2_BL))
+$(eval $(IMAGE)_DEPS_HCODE+=$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl)
+
+$(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
+$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
+
+# image build using all files and serialised by dependencies
+$(eval $(call XIP_TOOL,append,.qpmr,$$($(IMAGE)_DEPS_QPMR),$$($(IMAGE)_FILE_QPMR)))
+$(eval $(call XIP_TOOL,append,.lvl1_bl,$$($(IMAGE)_DEPS_LVL1_BL),$$($(IMAGE)_FILE_LVL1_BL)))
+$(eval $(call XIP_TOOL,append,.lvl2_bl,$$($(IMAGE)_DEPS_LVL2_BL),$$($(IMAGE)_FILE_LVL2_BL)))
+$(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE), $$($(IMAGE)_FILE_HCODE)))
+
+# create image report for image with all files appended
+$(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
+
+$(eval $(call BUILD_XIPIMAGE))
+endef
+
+CHIPS :=$(filter-out centaur,$(CHIPS))
+
+$(foreach chip,$(CHIPS),\
+	$(foreach chipId, $($(chip)_CHIPID),\
+	$(eval $(call BUILD_SGPE_IMAGE,$(chipId)))))

@@ -22,24 +22,46 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-IMAGE=restore_image
 
-# create dependency on the restore image hcode and the final step in the
-# raw image.bin creation
-SELF_REST_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host
+# $1 == chipId
+define BUILD_RESTORE_IMAGE
+$(eval IMAGE=$1.restore_image)
 
-SELF_RESTORE_BIN=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin
-CPRM_HEADER_BIN=$(IMAGEPATH)/cpmr_header/cpmr_header.bin
+$(eval $(IMAGE)_PATH=$(IMAGEPATH)/restore_image)
+$(eval $(IMAGE)_LINK_SCRIPT=restore_image.cmd)
+$(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/restore_image/restore_image.o)
+$(eval restore_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
 
-# apending the cpmr header is also dependent on the raw image being complete
-CPMR_HEADER_DEPS=$(SELF_REST_DEPS)
-CPMR_HEADER_DEPS+=$(CPRM_HEADER_BIN)
+# files to be appended to image
+$(eval $(IMAGE)_FILE_CPMR=$(IMAGEPATH)/cpmr_header/cpmr_header.bin)
+$(eval $(IMAGE)_FILE_SELF=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
 
-# make sure we append the restore image after the cpmr header
-SELF_RESTORE_DEPS+=$$($(IMAGE)_PATH)/.restore_image.append.cpmr
+# dependencies for appending image sections in sequence:
+# - file to be appended
+# - all dependencies of previously appended sections or on raw image
+# - append operation as to other section that has to be finished first
+$(eval $(IMAGE)_DEPS_CPMR =$$($(IMAGE)_FILE_CPMR))
+$(eval $(IMAGE)_DEPS_CPMR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
 
-$(call XIP_TOOL,append,.cpmr,$(CPMR_HEADER_DEPS),$(CPRM_HEADER_BIN))
-$(call XIP_TOOL,append,.self_restore,$(SELF_RESTORE_DEPS),$(SELF_RESTORE_BIN))
-$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.self_restore)
+$(eval $(IMAGE)_DEPS_SELF =$$($(IMAGE)_FILE_SELF))
+$(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_DEPS_CPMR))
+$(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_PATH)/.$(IMAGE).append.cpmr)
 
-$(call BUILD_XIPIMAGE)
+$(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
+$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.self_restore)
+
+# image build using all files and serialised by dependencies
+$(eval $(call XIP_TOOL,append,.cpmr,$$($(IMAGE)_DEPS_CPMR),$$($(IMAGE)_FILE_CPMR)))
+$(eval $(call XIP_TOOL,append,.self_restore,$$($(IMAGE)_DEPS_SELF),$$($(IMAGE)_FILE_SELF)))
+
+# create image report for image with all files appended
+$(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
+
+$(eval $(call BUILD_XIPIMAGE))
+endef
+
+CHIPS :=$(filter-out centaur,$(CHIPS))
+
+$(foreach chip,$(CHIPS),\
+	$(foreach chipId, $($(chip)_CHIPID),\
+	$(eval $(call BUILD_RESTORE_IMAGE,$(chipId)))))

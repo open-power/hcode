@@ -23,19 +23,39 @@
 #
 # IBM_PROLOG_END_TAG
 
-IMAGE=cme_image
+# $1 == chipId
+define BUILD_CME_IMAGE
+$(eval IMAGE=$1.cme_image)
 
-# before appending the various sectoins of the xip image
-# we need to wait until the raw xxx_image.bin and the
-# various sub images are finished - add a dependancy on both below
-CME_BIN_FILE=$(IMAGEPATH)/cme/cme.bin
+$(eval $(IMAGE)_PATH=$(IMAGEPATH)/cme_image)
+$(eval $(IMAGE)_LINK_SCRIPT=cme_image.cmd)
+$(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/cme_image/cme_image.o)
+$(eval cme_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
 
-# adding the build host name is the last thing done to the
-# raw cem_image.bin file before we append sections
-CME_IMAGE_DEPS=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host
+# files to be appended to image
+$(eval $(IMAGE)_FILE_HCODE=$(IMAGEPATH)/cme/cme.bin)
 
-CME_IMAGE_DEPS+= $(CME_BIN_FILE)
+# dependencies for appending image sections in sequence:
+# - file to be appended
+# - all dependencies of previously appended sections or on raw image
+# - append operation as to other section that has to be finished first
+$(eval $(IMAGE)_DEPS_HCODE =$$($(IMAGE)_FILE_HCODE))
+$(eval $(IMAGE)_DEPS_HCODE+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
 
-$(call XIP_TOOL,append,.hcode,$(CME_IMAGE_DEPS),$(CME_BIN_FILE))
-$(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
-$(call BUILD_XIPIMAGE)
+$(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
+$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
+
+# image build using all files and serialised by dependencies
+$(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HCODE)))
+
+# create image report for image with all files appended
+$(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
+
+$(eval $(call BUILD_XIPIMAGE))
+endef
+
+CHIPS :=$(filter-out centaur,$(CHIPS))
+
+$(foreach chip,$(CHIPS),\
+	$(foreach chipId, $($(chip)_CHIPID),\
+	$(eval $(call BUILD_CME_IMAGE,$(chipId)))))
