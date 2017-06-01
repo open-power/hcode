@@ -57,6 +57,8 @@ typedef struct
     uint32_t* g_req_active_quad_addr;         //Requested Active Quads Address
     uint32_t* g_wof_table_addr;               // WOF Table Address
     uint32_t  g_wof_table_length;             // WOF Table Length
+    uint32_t  g_pgpe_throttle_assert;
+    uint32_t  g_pgpe_throttle_deassert;
 } PgpeHeader_t;
 
 void p9_pgpe_header_init();
