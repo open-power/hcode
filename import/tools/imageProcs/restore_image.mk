@@ -32,8 +32,11 @@ $(eval $(IMAGE)_LINK_SCRIPT=restore_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/restore_image/restore_image.o)
 $(eval restore_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
 
+# files with multiple DD level content to be generated
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,cpmr_header))
+
 # files to be appended to image
-$(eval $(IMAGE)_FILE_CPMR=$(IMAGEPATH)/cpmr_header/cpmr_header.bin)
+$(eval $(IMAGE)_FILE_CPMR=$$($(IMAGE)_DD_CONT_cpmr_header))
 $(eval $(IMAGE)_FILE_SELF=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
 
 # dependencies for appending image sections in sequence:
@@ -51,7 +54,7 @@ $(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
 $(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.self_restore)
 
 # image build using all files and serialised by dependencies
-$(eval $(call XIP_TOOL,append,.cpmr,$$($(IMAGE)_DEPS_CPMR),$$($(IMAGE)_FILE_CPMR)))
+$(eval $(call XIP_TOOL,append,.cpmr,$$($(IMAGE)_DEPS_CPMR),$$($(IMAGE)_FILE_CPMR) 1))
 $(eval $(call XIP_TOOL,append,.self_restore,$$($(IMAGE)_DEPS_SELF),$$($(IMAGE)_FILE_SELF)))
 
 # create image report for image with all files appended
