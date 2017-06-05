@@ -43,6 +43,8 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
 
     PK_TRACE_INF("PCWU Handler Trigger %d Level %d", irq, core);
 
+    core &= ~(G_cme_stop_record.core_running);
+
     for (core_mask = 2; core_mask; core_mask--)
     {
         if (core & core_mask)
@@ -61,7 +63,7 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
                 }
 
                 // block pc for stop8,11 or stop5 as pig sent
-                g_eimr_override |= (core_mask << SHIFT32(13));
+                g_eimr_override |= (IRQ_VEC_PCWU_C0 >> (core_mask & 1));
                 G_cme_stop_record.core_blockpc |= core_mask;
                 core = core - core_mask;
             }
@@ -209,7 +211,7 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 
     // unmask pc interrupt pending to wakeup that is still pending
     core &= (~(G_cme_stop_record.core_running));
-    g_eimr_override &= ~(core << SHIFT32(13));
+    g_eimr_override &= ~(((uint64_t)core) << SHIFT64(13));
     G_cme_stop_record.core_blockpc &= ~core;
 
     pk_irq_vec_restore(&ctx);
