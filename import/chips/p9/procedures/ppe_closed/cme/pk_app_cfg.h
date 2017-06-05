@@ -43,7 +43,7 @@
 
 #define USE_PPE_IMPRECISE_MODE
 #define USE_CME_QUEUED_SCOM
-#undef USE_CME_QUEUED_SCAN
+#define USE_CME_QUEUED_SCAN
 
 #if !defined(USE_PPE_IMPRECISE_MODE) && (defined(USE_CME_QUEUED_SCOM) || defined(USE_CME_QUEUED_SCAN))
     #error "USE_PPE_IMPRECISE_MODE must be defined in order to enable USE_CME_QUEUED_SCOM or USE_CME_QUEUED_SCAN"
