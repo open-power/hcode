@@ -551,6 +551,17 @@ p9_sgpe_stop_entry()
 
         PK_TRACE_INF("SE.8C: L2 Clock Sync Dropped");
 
+        PK_TRACE("Release cache clock controller atomic lock");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), 0);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), scom_data.value);
+
+        if (scom_data.words.upper & BIT32(0))
+        {
+            PK_TRACE_ERR("ERROR: Failed to Release Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
+                         qloop, scom_data.words.upper);
+            PK_PANIC(SGPE_STOP_ENTRY_DROP_CLK_LOCK_FAILED);
+        }
+
         //==================================================
         MARK_TAG(SE_STOP8_DONE, ((ex << 6) | (32 >> qloop)))
         //==================================================
@@ -1157,6 +1168,17 @@ p9_sgpe_stop_entry()
 
         PK_TRACE("Update QSSR: drop stop_entry_ongoing");
         out32(OCB_QSSR_CLR, BIT32(qloop + 20));
+
+        PK_TRACE("Release cache PCB slave atomic lock");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), 0);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
+
+        if (scom_data.words.upper & BIT32(0))
+        {
+            PK_TRACE_ERR("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
+                         qloop, scom_data.words.upper);
+            PK_PANIC(SGPE_STOP_ENTRY_DROP_SLV_LOCK_FAILED);
+        }
 
         //=====================================
         MARK_TAG(SE_STOP11_DONE, (32 >> qloop))
