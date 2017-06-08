@@ -63,9 +63,9 @@ p9_hcd_core_poweron(uint32_t core)
 
         do
         {
-            CME_GETSCOM(PPM_PFCS, CME_MASK_C0, scom_data);
+            CME_GETSCOM(PPM_PFSNS, CME_MASK_C0, scom_data);
         }
-        while(!(scom_data & BIT64(42)));
+        while(!(scom_data & BIT64(0)));
     }
 
     if (core & CME_MASK_C1)

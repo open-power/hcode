@@ -207,12 +207,12 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
     // read and clear doorbell
     uint32_t core = (in32(CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
     CME_PUTSCOM_NOP(CPPM_CMEDB2, core, 0);
-    out32(CME_LCL_EISR_CLR, BITS32(18, 2));
+    out32(CME_LCL_EISR_CLR, (core << SHIFT32(19)));
 
     // unmask pc interrupt pending to wakeup that is still pending
     core &= (~(G_cme_stop_record.core_running));
-    g_eimr_override &= ~(((uint64_t)core) << SHIFT64(13));
     G_cme_stop_record.core_blockpc &= ~core;
+    g_eimr_override &= ~(((uint64_t)core) << SHIFT64(13));
 
     pk_irq_vec_restore(&ctx);
 }

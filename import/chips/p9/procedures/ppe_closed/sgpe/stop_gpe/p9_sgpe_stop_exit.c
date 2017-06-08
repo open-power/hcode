@@ -187,6 +187,17 @@ void p9_sgpe_stop_exit_lv8(uint32_t qloop, uint32_t m_l2, uint32_t m_pg)
     MARK_TAG(SX_L2_STARTCLOCKS, ((m_l2 << 6) | (32 >> qloop)))
     //========================================================
 
+    PK_TRACE("Acquire cache clock controller atomic lock");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), BITS64(0, 5));
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), scom_data.value);
+
+    if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
+    {
+        PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
+                     qloop, scom_data.words.upper);
+        PK_PANIC(SGPE_STOP_EXIT_GET_CLK_LOCK_FAILED);
+    }
+
     // do this again here for stop8 in addition to dpll_setup
     PK_TRACE("Switch L2 glsmux select to DPLL output via EXCGCR[34,35]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, qloop), BITS64(34, 2));
@@ -215,19 +226,15 @@ void p9_sgpe_stop_exit_lv8(uint32_t qloop, uint32_t m_l2, uint32_t m_pg)
         G_sgpe_stop_record.state[qloop].act_state_x1 = 0;
     }
 
-    if (G_sgpe_stop_record.state[qloop].act_state_x0 == 0 &&
-        G_sgpe_stop_record.state[qloop].act_state_x1 == 0)
-    {
-        PK_TRACE("Release cache clock controller atomic lock");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), 0);
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), scom_data.value);
+    PK_TRACE("Release cache clock controller atomic lock");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), 0);
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), scom_data.value);
 
-        if (scom_data.words.upper & BIT32(0))
-        {
-            PK_TRACE_ERR("ERROR: Failed to Release Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
-                         qloop, scom_data.words.upper);
-            PK_PANIC(SGPE_STOP_EXIT_DROP_CLK_LOCK_FAILED);
-        }
+    if (scom_data.words.upper & BIT32(0))
+    {
+        PK_TRACE_ERR("ERROR: Failed to Release Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
+                     qloop, scom_data.words.upper);
+        PK_PANIC(SGPE_STOP_EXIT_DROP_CLK_LOCK_FAILED);
     }
 
     PK_TRACE("Update QSSR: drop l2_stopped");
@@ -544,6 +551,17 @@ p9_sgpe_stop_exit()
             //--------------------------------------------------------------------------
             PK_TRACE("+++++ +++++ QUAD STOP EXIT [LEVEL 11-15] +++++ +++++");
             //--------------------------------------------------------------------------
+
+            PK_TRACE("Acquire cache PCB slave atomic lock");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), BITS64(0, 5));
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
+
+            if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
+            {
+                PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
+                             qloop, scom_data.words.upper);
+                PK_PANIC(SGPE_STOP_EXIT_GET_SLV_LOCK_FAILED);
+            }
 
             PK_TRACE("Update STOP history on quad[%d]: in transition of exit",
                      qloop);

@@ -447,6 +447,18 @@ p9_cme_stop_entry()
                 out32(CME_LCL_SICR_OR,  core_stop1 << SHIFT32(1));
                 out32(CME_LCL_SICR_CLR, core_stop1 << SHIFT32(1));
 
+                if (core & CME_MASK_C0)
+                {
+                    scom_data.value = in64(CME_LCL_PECESR0);
+                    CME_PUTSCOM(CPPM_PECES, CME_MASK_C0, scom_data.value);
+                }
+
+                if (core & CME_MASK_C1)
+                {
+                    scom_data.value = in64(CME_LCL_PECESR1);
+                    CME_PUTSCOM(CPPM_PECES, CME_MASK_C1, scom_data.value);
+                }
+
                 // Removed: Do not want users to become accustomed to
                 //          seeing Stop1 reflected in Stop History on DD1
                 /*
