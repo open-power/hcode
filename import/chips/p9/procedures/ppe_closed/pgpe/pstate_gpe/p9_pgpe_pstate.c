@@ -195,22 +195,28 @@ void p9_pgpe_pstate_apply_clips()
     for (q = 0; q < MAX_QUADS; q++)
     {
         uint8_t minPS = G_pgpe_pstate_record.psClipMin[q];
-
+        uint8_t maxPS = G_pgpe_pstate_record.psClipMax[q] <
+                        G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate ?
+                        G_pgpe_pstate_record.psClipMax[q] : G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
         if (activeQuads & (QUAD0_BIT_MASK >> q))
         {
 
             if (G_pgpe_pstate_record.wofEnabled == 1)
             {
-                if (G_pgpe_pstate_record.wofClip > minPS)
+                if (G_pgpe_pstate_record.wofClip > minPS && (G_pgpe_pstate_record.wofClip < maxPS))
                 {
                     minPS = G_pgpe_pstate_record.wofClip;
                 }
+                else if (G_pgpe_pstate_record.wofClip > maxPS)
+                {
+                    minPS = maxPS;
+                }
             }
 
-            if (G_pgpe_pstate_record.quadPSComputed[q] > G_pgpe_pstate_record.psClipMax[q])
+            if (G_pgpe_pstate_record.quadPSComputed[q] > maxPS)
             {
-                G_pgpe_pstate_record.quadPSTarget[q] = G_pgpe_pstate_record.psClipMax[q];
+                G_pgpe_pstate_record.quadPSTarget[q] = maxPS;
             }
             else if(G_pgpe_pstate_record.quadPSComputed[q] < minPS)
             {
