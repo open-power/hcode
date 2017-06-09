@@ -22,6 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
+#if (!defined(PSTATE_GPE) || NIMBUS_DD_LEVEL==1)
     .nolist
 #include "ppe42_asm.h"
     .list
@@ -78,3 +79,4 @@ __umodsi3:
     mtctr       %r10
     li          %r9,1
     b           udivmodsi4_loop
+#endif
