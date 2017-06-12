@@ -210,6 +210,8 @@ void p9_cme_pcbmux_savior_epilogue(uint32_t core)
 
 #endif
 
+
+
 void
 p9_cme_stop_entry()
 {
@@ -730,28 +732,25 @@ p9_cme_stop_entry()
 #if NIMBUS_DD_LEVEL == 10
 
             // NDD1: Core Global Xstop FIR
-            if (core & CME_MASK_C0)
+            for (core_mask = 2; core_mask > 0; core_mask--)
             {
-                CME_GETSCOM(0x20040000, CME_MASK_C0, scom_data.value);
-
-                if (scom_data.value)
+                if (core & core_mask)
                 {
-                    PK_TRACE_ERR("ERROR: Core[%d] GLOBAL XSTOP[%x] DETECTED. HALT CME!",
-                                 core, scom_data.words.upper);
-                    PK_PANIC(CME_STOP_ENTRY_XSTOP_ERROR);
-                }
-            }
+                    CME_GETSCOM(0x20040000, core_mask, scom_data.value);
 
-            if (core & CME_MASK_C1)
-            {
-                CME_GETSCOM(0x20040000, CME_MASK_C1, scom_data.value);
+                    if (scom_data.value)
+                    {
+                        PK_TRACE_ERR("ERROR: Core[%d] GLOBAL XSTOP[%x] DETECTED. Gard Core!",
+                                     core_mask, scom_data.words.upper);
+                        CME_STOP_CORE_ERROR_HANDLER(core, core_mask, CME_STOP_ENTRY_XSTOP_ERROR)
+                    }
 
-                if (scom_data.value)
-                {
-                    PK_TRACE_ERR("ERROR: Core[%d] GLOBAL XSTOP[%x] DETECTED. HALT CME!",
-                                 core, scom_data.words.upper);
-                    PK_PANIC(CME_STOP_ENTRY_XSTOP_ERROR);
+                    if (!core)
+                    {
+                        return;
+                    }
                 }
+
             }
 
 #endif
@@ -769,12 +768,24 @@ p9_cme_stop_entry()
             while(!(scom_data.words.upper & BIT32(8)));
 
             PK_TRACE("Check core clock is stopped via CLOCK_STAT_SL[4-13]");
-            CME_GETSCOM_AND(C_CLOCK_STAT_SL, core, scom_data.value);
 
-            if (((~scom_data.value) & CLK_REGION_ALL_BUT_PLL) != 0)
+            for (core_mask = 2; core_mask > 0; core_mask--)
             {
-                PK_TRACE_ERR("ERROR: Core Clock Stop Failed. HALT CME!");
-                PK_PANIC(CME_STOP_ENTRY_STOPCLK_FAILED);
+                if (core & core_mask)
+                {
+                    CME_GETSCOM(C_CLOCK_STAT_SL, core_mask, scom_data.value);
+
+                    if (((~scom_data.value) & CLK_REGION_ALL_BUT_PLL) != 0)
+                    {
+                        PK_TRACE_ERR("ERROR: Core[%d] Clock Stop Failed. Gard Core!", core_mask);
+                        CME_STOP_CORE_ERROR_HANDLER(core, core_mask, CME_STOP_ENTRY_STOPCLK_FAILED);
+
+                        if (!core)
+                        {
+                            return;
+                        }
+                    }
+                }
             }
 
             PK_TRACE_INF("SE.2C: Core Clock Stopped");

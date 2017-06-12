@@ -318,7 +318,8 @@ p9_sgpe_stop_entry()
         {
             PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
                          qloop, scom_data.words.upper);
-            PK_PANIC(SGPE_STOP_ENTRY_GET_CLK_LOCK_FAILED);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_ENTRY_GET_CLK_LOCK_FAILED);
+            continue;
         }
 
         PK_TRACE("Update QSSR: stop_entry_ongoing");
@@ -389,7 +390,8 @@ p9_sgpe_stop_entry()
         if (((~(scom_data.words.upper)) & (ex << SHIFT32(9))) != 0)
         {
             PK_TRACE_ERR("ERROR: L2 clock stop failed. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_L2_STOPCLK_FAILED);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_ENTRY_L2_STOPCLK_FAILED);
+            continue;
         }
 
         // MF: verify compiler generate single rlwmni
@@ -482,7 +484,8 @@ p9_sgpe_stop_entry()
         {
             PK_TRACE_ERR("ERROR: Failed to Release Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
                          qloop, scom_data.words.upper);
-            PK_PANIC(SGPE_STOP_ENTRY_DROP_CLK_LOCK_FAILED);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_ENTRY_DROP_CLK_LOCK_FAILED);
+            continue;
         }
 
         //==================================================
@@ -518,7 +521,8 @@ p9_sgpe_stop_entry()
         {
             PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
                          qloop, scom_data.words.upper);
-            PK_PANIC(SGPE_STOP_ENTRY_GET_SLV_LOCK_FAILED);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_ENTRY_GET_SLV_LOCK_FAILED);
+            continue;
         }
 
         PK_TRACE("Update QSSR: stop_entry_ongoing");
@@ -986,7 +990,8 @@ p9_sgpe_stop_entry()
         if (((~scom_data.value) & CLK_REGION_ALL) != 0)
         {
             PK_TRACE_ERR("ERROR: Cache clock stop failed. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_EQ_STOPCLK_FAILED);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_ENTRY_EQ_STOPCLK_FAILED);
+            continue;
         }
 
         PK_TRACE("Assert vital fence via CPLT_CTRL1[3]");
@@ -1174,7 +1179,8 @@ p9_sgpe_stop_entry()
         {
             PK_TRACE_ERR("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
                          qloop, scom_data.words.upper);
-            PK_PANIC(SGPE_STOP_ENTRY_DROP_SLV_LOCK_FAILED);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_ENTRY_DROP_SLV_LOCK_FAILED);
+            continue;
         }
 
         for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
