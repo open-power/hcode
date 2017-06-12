@@ -25,6 +25,8 @@
 
 #include "p9_cme_stop_exit_marks.h"
 
+extern CmeStopRecord G_cme_stop_record;
+
 inline __attribute__((always_inline))
 void
 p9_hcd_core_scomcust(uint32_t core)
@@ -75,7 +77,7 @@ p9_hcd_core_scomcust(uint32_t core)
             {
                 PK_TRACE_ERR("Core[%d] Chiplet Global Xstop FIR[%x] Detected After Scom Restore. HALT CME!",
                              core_mask, scom_data.words.upper);
-                PK_PANIC(CME_STOP_EXIT_SCOM_RES_XSTOP_ERROR);
+                CME_STOP_CORE_ERROR_HANDLER(core, core_mask, CME_STOP_EXIT_SCOM_RES_XSTOP_ERROR);
             }
         }
     }

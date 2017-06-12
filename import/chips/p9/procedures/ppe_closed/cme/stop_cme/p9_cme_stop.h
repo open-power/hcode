@@ -112,6 +112,7 @@
 #define C_CLOCK_STAT_ARY       0x2003000a
 #define C_BIST                 0x2003000B
 #define C_XFIR                 0x20040000
+#define C_LFIR_OR              0x2004000C
 #define C_THERM_MODE_REG       0x2005000F
 
 #define C_SLAVE_CONFIG_REG     0x200F001E
@@ -142,6 +143,18 @@
 #define PERV_OPCG_CAPT2        0x20030012
 #define PERV_CPLT_STAT0        0x20000100
 
+#define CME_STOP_CORE_ERROR_HANDLER(core, core_error, panic_code) \
+    core                           &= ~core_error;                \
+    G_cme_stop_record.core_running |=  core_error;                \
+    G_cme_stop_record.core_errored |=  core_error;                \
+    G_cme_stop_record.error_code[core_error & 1] = panic_code;    \
+    /*set the WKUP_FAIL_STATUS breadcrumbs*/                      \
+    out32(CME_LCL_SICR_OR, core_error << SHIFT32(15));            \
+    /*this pulses the FIR trigger using CME Local Debug register  \
+      to optionally set a recoverable or xstop on error*/         \
+    out32(CME_LCL_DBG_OR,  BIT32(16));                            \
+    out32(CME_LCL_DBG_CLR, BIT32(16));                            \
+    //PK_PANIC(panic_code); // enable if desire halt on error
 
 
 enum CME_IRQ_VECTORS
@@ -236,6 +249,11 @@ typedef struct
     uint32_t      core_blockey;
     // core in special wakeup, can be used as core select in scom address or data
     uint32_t      core_in_spwu;
+    // core in error state, prevent it being further processed
+    uint32_t      core_errored;
+    // store panic code indicating where and what that certain core encountered error
+    // mostly from various xstop detection or failed clock operation through stages of code
+    uint32_t      error_code[2];
 #if !defined(__IOTA__)
     PkSemaphore   sem[2];
 #endif

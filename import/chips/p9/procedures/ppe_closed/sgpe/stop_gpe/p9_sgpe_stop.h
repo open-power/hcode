@@ -175,6 +175,12 @@ extern "C" {
 #define PERV_NET_CTRL1_WAND      0x000F0045
 
 
+#define SGPE_STOP_QUAD_ERROR_HANDLER(quad_error, panic_code) \
+    G_sgpe_stop_record.group.quad[VECTOR_ERROR]  |=  BIT32(quad_error); \
+    G_sgpe_stop_record.group.quad[VECTOR_CONFIG] &= ~BIT32(quad_error); \
+    G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] &= ~BIT32(quad_error); \
+    G_sgpe_stop_record.state[quad_error].error_code     = panic_code;   \
+    //PK_PANIC(panic_code); //enable if desire halt on error
 
 enum SGPE_STOP_STATE_HISTORY_VECTORS
 {
@@ -228,25 +234,27 @@ enum SGPE_STOP_VECTOR_INDEX
     VECTOR_EXIT                       = 3, //(core,        quad_ipc  qswu)
     VECTOR_ACTIVE                     = 4, //(core_ipc,    quad_ipc, qswu_active)
     VECTOR_CONFIG                     = 5, //(core,        quad)
-    VECTOR_RCLKE                      = 6, //(core_blocke, quad)
-    VECTOR_RCLKX                      = 7, //(core_blockx, quad)
-    VECTOR_PIGE                       = 8, //(core)
-    VECTOR_PIGX                       = 9, //(core)
-    VECTOR_PCWU                       = 10,//(core)
+    VECTOR_ERROR                      = 6, //(             quad)
+    VECTOR_RCLKE                      = 7, //(core_blocke, quad)
+    VECTOR_RCLKX                      = 8, //(core_blockx, quad)
+    VECTOR_PIGE                       = 9, //(core)
+    VECTOR_PIGX                       = 10,//(core)
+    VECTOR_PCWU                       = 11 //(core)
 };
 
 typedef struct
 {
     // requested stop state calculated from core stop levels
-    uint8_t req_state_x0;
-    uint8_t req_state_x1;
-    uint8_t req_state_q;
+    uint8_t  req_state_x0;
+    uint8_t  req_state_x1;
+    uint8_t  req_state_q;
     // actual stop state
-    uint8_t act_state_x0;
-    uint8_t act_state_x1;
-    uint8_t act_state_q;
+    uint8_t  act_state_x0;
+    uint8_t  act_state_x1;
+    uint8_t  act_state_q;
     // both cme_flags: first(0:3) | enable(4:7)
-    uint8_t cme_flags;
+    uint8_t  cme_flags;
+    uint32_t error_code;
 } sgpe_state_t;
 
 typedef struct
@@ -256,8 +264,8 @@ typedef struct
     uint32_t qex0[2]; // 6  bits
     uint32_t qex1[2]; // 6  bits
     uint32_t qswu[5]; // 6  bits
-    uint32_t quad[8]; // 6  bits
-    uint32_t core[11];// 24 bits
+    uint32_t quad[9]; // 6  bits
+    uint32_t core[12];// 24 bits
 } sgpe_group_t;
 
 typedef struct
@@ -282,7 +290,7 @@ typedef struct
     sgpe_group_t group;
     sgpe_wof_t   wof;
     PkSemaphore  sem[2];
-} SgpeStopRecord;
+} SgpeStopRecord __attribute__ ((aligned (8)));
 
 typedef struct
 {

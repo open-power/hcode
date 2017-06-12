@@ -38,7 +38,7 @@ CmePstateRecord G_cme_pstate_record;
 
 // CME Stop Header and Structure
 #include "p9_cme_stop.h"
-CmeStopRecord G_cme_stop_record __attribute__((section (".dump_ptrs"))) = {{0}, {0}, 0};
+CmeStopRecord G_cme_stop_record __attribute__((section (".dump_ptrs"))) = {{0}, {0}, 0, 0, 0, 0, 0, 0, 0, {0}, {{0}}};
 
 #if TEST_ONLY_BCE_IRR
 #include "p9_cme_copy_scan_ring.h"

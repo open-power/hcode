@@ -164,7 +164,8 @@ p9_hcd_cache_startclocks(uint32_t quad)
                            ((uint64_t)G_sgpe_stop_record.group.expg[quad] << SHIFT64(13))))
     {
         PK_TRACE_ERR("ERROR: Cache Clock Start Failed. HALT SGPE!");
-        PK_PANIC(SGPE_STOP_EXIT_EQ_STARTCLK_FAILED);
+        SGPE_STOP_QUAD_ERROR_HANDLER(quad, SGPE_STOP_EXIT_EQ_STARTCLK_FAILED);
+        return;
     }
 
     PK_TRACE("Cache clocks running now");
@@ -182,7 +183,8 @@ p9_hcd_cache_startclocks(uint32_t quad)
     {
         PK_TRACE_ERR("Cache[%d] Chiplet Global Xstop FIR[%x] Detected After Start Clock. HALT SGPE!",
                      quad, scom_data.words.upper);
-        PK_PANIC(SGPE_STOP_EXIT_STARTCLK_XSTOP_ERROR);
+        SGPE_STOP_QUAD_ERROR_HANDLER(quad, SGPE_STOP_EXIT_STARTCLK_XSTOP_ERROR);
+        return;
     }
 
 #endif

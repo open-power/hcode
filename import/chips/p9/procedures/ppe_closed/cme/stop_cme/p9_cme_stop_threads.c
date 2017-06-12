@@ -39,18 +39,23 @@ p9_cme_stop_eval_eimr_override()
     mask_irqs.words.lower = 0;
 
     mask_irqs.words.upper =
-        ((((~G_cme_record.core_enabled) |
-           G_cme_stop_record.core_running    |
-           G_cme_stop_record.core_blockpc    |
+        ((((~G_cme_record.core_enabled)   |
+           G_cme_stop_record.core_running |
+           G_cme_stop_record.core_errored |
+           G_cme_stop_record.core_blockpc |
            G_cme_stop_record.core_blockwu) & CME_MASK_BC) << SHIFT32(13)) |
 #if SPWU_AUTO
-        ((((~G_cme_record.core_enabled) |
-           G_cme_stop_record.core_running) & CME_MASK_BC) << SHIFT32(15)) |
+        ((((~G_cme_record.core_enabled)   |
+           G_cme_stop_record.core_running |
+           G_cme_stop_record.core_errored) & CME_MASK_BC) << SHIFT32(15)) |
 #endif
-        ((((~G_cme_record.core_enabled) |
-           G_cme_stop_record.core_running) & CME_MASK_BC) << SHIFT32(17)) |
-        (((~(G_cme_record.core_enabled  &
-             G_cme_stop_record.core_running) &
+        ((((~G_cme_record.core_enabled)   |
+           G_cme_stop_record.core_running |
+           G_cme_stop_record.core_errored |
+           G_cme_stop_record.core_blockwu) & CME_MASK_BC) << SHIFT32(17)) |
+        ((((~G_cme_record.core_enabled)      |
+           (~G_cme_stop_record.core_running) |
+           G_cme_stop_record.core_errored    |
            G_cme_stop_record.core_blockey) & CME_MASK_BC) << SHIFT32(21));
 
     g_eimr_override |= mask_irqs.value;

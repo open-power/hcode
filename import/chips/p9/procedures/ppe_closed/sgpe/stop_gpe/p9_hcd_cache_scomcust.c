@@ -143,7 +143,8 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
         {
             PK_TRACE_ERR("Cache[%d] Chiplet Global Xstop FIR[%x] Detected After Scom Restore. HALT SGPE!",
                          quad, scom_data.words.upper);
-            PK_PANIC(SGPE_STOP_EXIT_SCOM_RES_XSTOP_ERROR);
+            SGPE_STOP_QUAD_ERROR_HANDLER(quad, SGPE_STOP_EXIT_SCOM_RES_XSTOP_ERROR);
+            return;
         }
 
 #endif

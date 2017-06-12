@@ -71,7 +71,8 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     if (scom_data & BIT64(14))
     {
         PK_TRACE_ERR("ERROR: Start DPLL Clock Failed. HALT SGPE!");
-        PK_PANIC(SGPE_STOP_EXIT_DPLL_STARTCLK_FAILED);
+        SGPE_STOP_QUAD_ERROR_HANDLER(quad, SGPE_STOP_EXIT_DPLL_STARTCLK_FAILED);
+        return;
     }
 
     PK_TRACE("DPLL clock is now running");

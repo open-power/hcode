@@ -34,13 +34,11 @@
 /// \brief Application specific overrides go here.
 ///
 
-// Debug only enablement
+// Debug Switches
 
-#define TEST_ONLY_BCE_IRR         0
-
-// Function disablement
-
-#define DISABLE_CME_DUAL_CAST     0
+#define TEST_ONLY_BCE_IRR            0
+#define DISABLE_CME_DUAL_CAST        0
+#define DISABLE_CORE_XSTOP_INJECTION 0
 
 // --------------------
 

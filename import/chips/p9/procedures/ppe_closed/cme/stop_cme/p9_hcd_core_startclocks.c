@@ -25,6 +25,8 @@
 
 #include "p9_cme_stop_exit_marks.h"
 
+extern CmeStopRecord G_cme_stop_record;
+
 inline __attribute__((always_inline))
 void
 p9_hcd_core_startclocks(uint32_t core)
@@ -152,12 +154,19 @@ p9_hcd_core_startclocks(uint32_t core)
     while((~(scom_data.words.upper)) & BIT32(8));
 
     PK_TRACE("Check core clock is running via CLOCK_STAT_SL[4-13]");
-    CME_GETSCOM_OR(C_CLOCK_STAT_SL, core, scom_data.value);
 
-    if(scom_data.value & CLK_REGION_ALL_BUT_PLL)
+    for (core_mask = 2; core_mask > 0; core_mask--)
     {
-        PK_TRACE_ERR("ERROR: Core Clock Start Failed. HALT CME!");
-        PK_PANIC(CME_STOP_EXIT_STARTCLK_FAILED);
+        if (core & core_mask)
+        {
+            CME_GETSCOM(C_CLOCK_STAT_SL, core_mask, scom_data.value);
+
+            if(scom_data.value & CLK_REGION_ALL_BUT_PLL)
+            {
+                PK_TRACE_ERR("ERROR: Core[%d] Clock Start Failed. Gard Core!", core_mask);
+                CME_STOP_CORE_ERROR_HANDLER(core, core_mask, CME_STOP_EXIT_STARTCLK_FAILED);
+            }
+        }
     }
 
     PK_TRACE("Core clock is now running");
@@ -171,18 +180,24 @@ p9_hcd_core_startclocks(uint32_t core)
 
 #if !EPM_P9_TUNING
 
-    for(core_mask = 2; core_mask; core_mask--)
+    PK_TRACE("Check Global Xstop FIR of Core Chiplet");
+
+    for (core_mask = 2; core_mask > 0; core_mask--)
     {
         if (core & core_mask)
         {
-            PK_TRACE("Check Global Xstop FIR of Core Chiplet");
             CME_GETSCOM(C_XFIR, core_mask, scom_data.value);
 
             if (scom_data.words.upper & BITS32(0, 27))
             {
-                PK_TRACE_ERR("Core[%d] Chiplet Global Xstop FIR[%x] Detected. HALT CME!",
+                PK_TRACE_ERR("Core[%d] Chiplet Global Xstop FIR[%x] Detected. Gard Core!",
                              core_mask, scom_data.words.upper);
-                PK_PANIC(CME_STOP_EXIT_STARTCLK_XSTOP_ERROR);
+                CME_STOP_CORE_ERROR_HANDLER(core, core_mask, CME_STOP_EXIT_STARTCLK_XSTOP_ERROR);
+
+                if (!core)
+                {
+                    return;
+                }
             }
         }
     }

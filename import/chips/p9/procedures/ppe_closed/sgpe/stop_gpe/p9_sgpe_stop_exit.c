@@ -148,7 +148,8 @@ p9_sgpe_stop_exit_lv8(uint32_t qloop)
     {
         PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
                      qloop, scom_data.words.upper);
-        PK_PANIC(SGPE_STOP_EXIT_GET_CLK_LOCK_FAILED);
+        SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_EXIT_GET_CLK_LOCK_FAILED);
+        return;
     }
 
     // do this again here for stop8 in addition to dpll_setup
@@ -187,7 +188,8 @@ p9_sgpe_stop_exit_lv8(uint32_t qloop)
     {
         PK_TRACE_ERR("ERROR: Failed to Release Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
                      qloop, scom_data.words.upper);
-        PK_PANIC(SGPE_STOP_EXIT_DROP_CLK_LOCK_FAILED);
+        SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_EXIT_DROP_CLK_LOCK_FAILED);
+        return;
     }
 
     PK_TRACE("Update QSSR: drop l2_stopped");
@@ -453,6 +455,11 @@ p9_sgpe_stop_exit()
         if (G_sgpe_stop_record.group.ex01[qloop])
         {
             p9_sgpe_stop_exit_lv8(qloop);
+
+            if (G_sgpe_stop_record.group.quad[VECTOR_ERROR] & BIT32(qloop))
+            {
+                continue;
+            }
         }
 
         p9_sgpe_stop_exit_end(qloop);
@@ -481,7 +488,8 @@ p9_sgpe_stop_exit()
         {
             PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
                          qloop, scom_data.words.upper);
-            PK_PANIC(SGPE_STOP_EXIT_GET_SLV_LOCK_FAILED);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_EXIT_GET_SLV_LOCK_FAILED);
+            continue;
         }
 
         PK_TRACE("Update STOP history on quad[%d]: in transition of exit",
@@ -563,6 +571,11 @@ p9_sgpe_stop_exit()
 
         PK_TRACE_INF("SX.11D: Cache Dpll Setup");
         p9_hcd_cache_dpll_setup(qloop);
+
+        if (G_sgpe_stop_record.group.quad[VECTOR_ERROR] & BIT32(qloop))
+        {
+            continue;
+        }
 
 #if !SKIP_INITF
 
@@ -732,8 +745,17 @@ p9_sgpe_stop_exit()
         PK_TRACE_INF("SX.11H: Cache Startclocks");
         p9_hcd_cache_startclocks(qloop);
 
+        if (G_sgpe_stop_record.group.quad[VECTOR_ERROR] & BIT32(qloop))
+        {
+            continue;
+        }
 
         p9_sgpe_stop_exit_lv8(qloop);
+
+        if (G_sgpe_stop_record.group.quad[VECTOR_ERROR] & BIT32(qloop))
+        {
+            continue;
+        }
 
         //--------------------------------------------------------------------------
         PK_TRACE("+++++ +++++ QUAD STOP EXIT CONTINUE +++++ +++++");
@@ -775,6 +797,11 @@ p9_sgpe_stop_exit()
 
         PK_TRACE_DBG("Cache Scom Cust");
         p9_hcd_cache_scomcust(qloop, G_sgpe_stop_record.group.expg[qloop], 0);
+
+        if (G_sgpe_stop_record.group.quad[VECTOR_ERROR] & BIT32(qloop))
+        {
+            continue;
+        }
 
         //==================================
         MARK_TAG(SX_CME_BOOT, (32 >> qloop))
@@ -937,7 +964,8 @@ p9_sgpe_stop_exit()
         {
             PK_TRACE_ERR("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
                          qloop, scom_data.words.upper);
-            PK_PANIC(SGPE_STOP_EXIT_DROP_SLV_LOCK_FAILED);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_EXIT_DROP_SLV_LOCK_FAILED);
+            continue;
         }
 
         PK_TRACE("Update STOP history on quad[%d]: \
