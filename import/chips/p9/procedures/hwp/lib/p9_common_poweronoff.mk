@@ -24,5 +24,4 @@
 # IBM_PROLOG_END_TAG
 PROCEDURE=p9_common_poweronoff
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p9/procedures/hwp/lib)
-OBJS+=p9_common_poweronoff.o
 $(call BUILD_PROCEDURE)
