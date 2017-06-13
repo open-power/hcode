@@ -34,6 +34,7 @@
 
 #include "pk.h"
 #include "p9_pgpe_irq.h"
+#include "ppehw_common.h"
 
 // Notes:
 // - The following two lists, ext_irq_vectors_gpe[][] and IDX_PRTY_LVL_<task_abbr>,
@@ -138,9 +139,9 @@ void pk_unified_irq_prty_mask_handler(void)
     }
     else
     {
-        MY_TRACE_ERR("A disabled IRQ fired");
-        MY_TRACE_ERR("ext_irq_vector_pk=0x%08x%08x", ext_irq_vector_pk);
-        pk_halt();
+        PK_TRACE_ERR("A Phantom IRQ fired, ext_irq_vector_pk=0x%08x%08x",
+                     UPPER32(ext_irq_vector_pk), LOWER32(ext_irq_vector_pk));
+        PK_PANIC(PGPE_UIH_EIMR_STACK_OVERFLOW);
     }
 
     // 3. Return the priority vector in d5 and let hwmacro_get_ext_irq do the
@@ -176,9 +177,9 @@ void pk_irq_save_and_set_mask(uint32_t iPrtyLvl)
     }
     else
     {
-        MY_TRACE_ERR("Code bug: OIMR S/R stack counter=%d  >=  max=%d.",
+        PK_TRACE_ERR("Code bug: OIMR S/R stack counter=%d  >=  max=%d.",
                      g_oimr_stack_ctr, NUM_EXT_IRQ_PRTY_LEVELS);
-        pk_halt();
+        PK_PANIC(PGPE_UIH_EIMR_STACK_OVERFLOW);
     }
 
     // Write the new mask for this priority level.

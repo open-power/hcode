@@ -57,6 +57,7 @@
 // (comment this line out to use the decrementer as timebase)
 #define APPCFG_USE_EXT_TIMEBASE
 
+#define PLATFORM_PANIC_CODES_H "pgpe_panic_codes.h"
 
 // If we are using the external timebase then assume
 // a frequency of 37.5Mhz.  Otherwise, the default is to use

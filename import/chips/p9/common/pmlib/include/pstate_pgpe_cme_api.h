@@ -91,9 +91,11 @@ enum MESSAGE_ID_DB0
 {
     MSGID_DB0_INVALID                   = 0,
     MSGID_DB0_RESERVED                  = 1,
+    MSGID_DB0_VALID_START               = 2, //This for error checking
     MSGID_DB0_GLOBAL_ACTUAL_BROADCAST   = 2,
     MSGID_DB0_START_PSTATE_BROADCAST    = 3,
-    MSGID_DB0_STOP_PSTATE_BROADCAST     = 4
+    MSGID_DB0_STOP_PSTATE_BROADCAST     = 4,
+    MSGID_DB0_VALID_END                 = 4 //This for error checking
 };
 
 enum MESSAGEID_PCB_TYPE4_ACK_TYPES

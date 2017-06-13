@@ -87,8 +87,8 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
     else
     {
         //\todo handle other FIR Bits
-        PK_TRACE_INF("OCC Error: can't handle OCC_FIR[0x%08x%08x] \n", fir.value);
-        pk_halt();
+        PK_TRACE_ERR("OCC Error: Unexpected OCC_FIR[0x%08x%08x] \n", UPPER32(fir.value), LOWER32(fir.value));
+        PK_PANIC(PGPE_UNEXPECTED_OCC_FIR_IRQ);
     }
 
     pk_irq_vec_restore(&ctx);
@@ -117,7 +117,7 @@ void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq)
     PK_TRACE_DBG("XSTOP GPE2: Enter\n");
     PkMachineContext  ctx;
 
-    pk_halt();
+    PK_PANIC(PGPE_XSTOP_SGPE_IRQ);
 
     pk_irq_vec_restore(&ctx);//Restore interrupts
     PK_TRACE_DBG("XSTOP GPE2: Exit\n");
@@ -270,7 +270,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
             if (G_pgpe_pstate_record.quadsActive & (0x80 >> q))
             {
                 PK_TRACE_DBG("PCB_TYPE4: Quad %d Already Registered. opit4pra=0x%x", q, opit4pr);
-                pk_halt();
+                PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
             }
 
             G_pgpe_pstate_record.quadsActive |= (0x80 >> q);
@@ -353,7 +353,8 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 }
                 else
                 {
-                    pk_halt();
+                    PK_TRACE_ERR("PCB_TYPE4: Unexpected ACK q=0x%x,opit4prQuad=0x%x\n", q, opit4prQuad);
+                    PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
                 }
             }
         }

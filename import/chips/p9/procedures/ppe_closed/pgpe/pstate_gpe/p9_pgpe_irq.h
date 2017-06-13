@@ -137,9 +137,9 @@ pk_irq_vec_restore( PkMachineContext* context)
     }
     else
     {
-        PK_TRACE("ERR: Code bug: Messed up OIMR book keeping: g_oimr_stack_ctr=%d",
-                 g_oimr_stack_ctr);
-        pk_halt();
+        PK_TRACE_ERR("ERR: Code bug: Messed up OIMR book keeping: g_oimr_stack_ctr=%d",
+                     g_oimr_stack_ctr);
+        PK_PANIC(PGPE_UIH_EIMR_STACK_UNDERFLOW);
     }
 
     pk_critical_section_exit(context);

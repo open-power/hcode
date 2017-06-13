@@ -423,8 +423,8 @@ void p9_pgpe_pstate_pm_complex_suspend()
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
     {
         //todo Set FIR[Bit] need to determine which one
-        PK_TRACE_INF("PM Susp in PSTATE_STOPPED(Halting)");
-        pk_halt();
+        PK_TRACE_ERR("PM Susp in PSTATE_STOPPED(Halting)");
+        PK_PANIC(PGPE_PM_SUSPEND_REQ_WHILE_STOPPED);
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT)
     {
@@ -456,7 +456,8 @@ void p9_pgpe_pstate_send_suspend_stop()
 
     if(rc)
     {
-        pk_halt();
+        PK_TRACE_ERR("Suspend Stop BAD ACK");
+        PK_PANIC(PGPE_SGPE_SUSPEND_STOP_BAD_ACK);
     }
 
 #else
@@ -493,8 +494,8 @@ void p9_pgpe_pstate_safe_mode()
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
     {
         //todo Set FIR[Bit] need to determine which one
-        PK_TRACE_INF("PM Susp in PSTATE_STOPPED(Halting)");
-        pk_halt();
+        PK_TRACE_ERR("SAFE MODE req while stopped");
+        PK_PANIC(PGPE_SAFE_MODE_REQ_WHILE_STOPPED);
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT)
     {
@@ -827,8 +828,8 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
                 }
                 else
                 {
-                    PK_TRACE_INF("Unexpected qCME[%u] ACK", q);
-                    pk_halt();
+                    PK_TRACE_ERR("Unexpected qCME[%u] ACK", q);
+                    PK_PANIC(PGPE_CME_UNEXPECTED_DB0_ACK);
                 }
             }
         }
@@ -874,7 +875,8 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
     }
     else
     {
-        pk_halt();
+        PK_TRACE_ERR("Invalid PMCR Owner=%u", owner);
+        PK_PANIC(PGPE_INVALID_PMCR_OWNER);
     }
 
     //Set LMCR for each CME

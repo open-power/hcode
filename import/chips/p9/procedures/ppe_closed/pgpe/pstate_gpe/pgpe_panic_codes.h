@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/cme/cme_panic_codes.h $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/pgpe_panic_codes.h $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -22,8 +22,8 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-#ifndef __CME_PANIC_CODES_H__
-#define __CME_PANIC_CODES_H__
+#ifndef __PGPE_PANIC_CODES_H__
+#define __PGPE_PANIC_CODES_H__
 
 // On PPE42, PANIC codes are stored as part of the trap word instruction.
 // tw 31, RA, RB  Where RA and RB would used to encode the trap code.
@@ -42,33 +42,34 @@
 
 // The following are reserved for instance specific use.
 
-CME_UIH_DISABLED_NOT_LAST_LVL       = 0x1c00, // Setup or Common Error
-CME_UIH_NOT_ALL_IN_PRTY_GROUP       = 0x1c01,
-CME_UIH_EIMR_STACK_UNDERFLOW        = 0x1c02,
-CME_UIH_EIMR_STACK_OVERFLOW         = 0x1c03,
-CME_UIH_PHANTOM_INTERRUPT           = 0x1c04,
-CME_STOP_NO_PARTIAL_GOOD_CORE       = 0x1c05,
-CME_STOP_PUTRING_HEADER_ERROR       = 0x1c06,
-CME_STOP_BCE_CORE_RING_FAILED       = 0x1c07,
-//_UNUSED_1c08                      = 0x1c08,
-//_UNUSED_1c09                      = 0x1c09,
-//_UNUSED_1c0a                      = 0x1c0a,
-//_UNUSED_1c0d                      = 0x1c0d,
-//_UNUSED_1c1c                      = 0x1c1c,
+// Setup, Common Error or AVS BUS
+PGPE_UIH_EIMR_STACK_UNDERFLOW       = 0x1c00,
+PGPE_UIH_EIMR_STACK_OVERFLOW        = 0x1c01,
+PGPE_UIH_PHANTOM_INTERRUPT          = 0x1c02,
+PGPE_AVS_READ_ONGOING_FLAG_TIMEOUT  = 0x1c03,
+PGPE_AVS_INIT_DRIVE_IDLE_FRAME      = 0x1c04,
+PGPE_AVS_INIT_DRIVE_READ            = 0x1c05,
+PGPE_AVS_WRITE_DRIVE_WRITE          = 0x1c06,
+PGPE_AVS_WRITE_DRIVE_READ           = 0x1c07,
+PGPE_AVS_WRITE_RW_MISCOMPARE        = 0x1c08,
+//_UNUSED_1c19                      = 0x1c19,
+//_UNUSED_1c0c                      = 0x1c0a,
+PGPE_UNEXPECTED_OCC_FIR_IRQ         = 0x1c0d,
+PGPE_XSTOP_SGPE_IRQ                 = 0x1c1c,
 //_UNUSED_1c1d                      = 0x1c1d,
 //_UNUSED_1c1e                      = 0x1c1e,
 //_UNUSED_1c1f                      = 0x1c1f,
-//
-CME_STOP_EXIT_PHANTOM_WAKEUP        = 0x1d00, // Stop Error
-CME_STOP_EXIT_BCE_SCOM_FAILED       = 0x1d01,
-CME_STOP_EXIT_SELF_RES_SPATTN       = 0x1d02,
-CME_STOP_EXIT_STARTCLK_FAILED       = 0x1d03,
-CME_STOP_EXIT_STARTCLK_XSTOP_ERROR  = 0x1d04,
-CME_STOP_EXIT_SCOM_RES_XSTOP_ERROR  = 0x1d05,
+
+PGPE_CME_UNEXPECTED_REGISTRATION    = 0x1d00, //Communication
+PGPE_CME_UNEXPECTED_DB0_ACK         = 0x1d01,
+PGPE_SGPE_SUSPEND_STOP_BAD_ACK      = 0x1d02,
+//_UNUSED_1d03                      = 0x1d03,
+//_UNUSED_1d04                      = 0x1d04,
+//_UNUSED_1d05                      = 0x1d05,
 //_UNUSED_1d06                      = 0x1d06,
 //_UNUSED_1d07                      = 0x1d07,
-CME_STOP_ENTRY_STOPCLK_FAILED       = 0x1d08,
-CME_STOP_ENTRY_XSTOP_ERROR          = 0x1d09,
+//_UNUSED_1d08                      = 0x1d08,
+//_UNUSED_1d09                      = 0x1d09,
 //_UNUSED_1d0a                      = 0x1d0a,
 //_UNUSED_1d0d                      = 0x1d0d,
 //_UNUSED_1d1c                      = 0x1d1c,
@@ -76,11 +77,11 @@ CME_STOP_ENTRY_XSTOP_ERROR          = 0x1d09,
 //_UNUSED_1d1e                      = 0x1d1e,
 //_UNUSED_1d1f                      = 0x1d1f,
 
-CME_PSTATE_RESCLK_ENABLED_AT_BOOT   = 0x1e00, // Pstate Error
-CME_PSTATE_IPPM_ACCESS_FAILED       = 0x1e01,
-CME_PSTATE_INVALID_DB0_MSGID        = 0x1e02,
-CME_PSTATE_UNEXPECTED_INTERCME_MSG  = 0x1e03,
-CME_PSTATE_UNEXPECTED_DB0_MSGID     = 0x1e04,
+PGPE_PM_SUSPEND_REQ_WHILE_STOPPED   = 0x1e00,
+PGPE_SAFE_MODE_REQ_WHILE_STOPPED    = 0x1e01,
+PGPE_NULL_VFRT_POINTER              = 0x1e02,
+PGPE_INVALID_PMCR_OWNER             = 0x1e03,
+//_UNUSED_1e04                      = 0x1e04,
 //_UNUSED_1e05                      = 0x1e05,
 //_UNUSED_1e06                      = 0x1e06,
 //_UNUSED_1e07                      = 0x1e07,
@@ -93,8 +94,8 @@ CME_PSTATE_UNEXPECTED_DB0_MSGID     = 0x1e04,
 //_UNUSED_1e1e                      = 0x1e1e,
 //_UNUSED_1e1f                      = 0x1e1f,
 
-CME_STOP_ENTRY_WITH_AUTO_NAP        = 0x1f00, // NDD1
-CME_STOP_ENTRY_BAD_LPID_ERROR       = 0x1f01, // NDD1
+//_UNUSED_1f00                      = 0x1f00,
+//_UNUSED_1f01                      = 0x1f01,
 //_UNUSED_1f02                      = 0x1f02,
 //_UNUSED_1f03                      = 0x1f03,
 //_UNUSED_1f04                      = 0x1f04,
@@ -109,5 +110,6 @@ CME_STOP_ENTRY_BAD_LPID_ERROR       = 0x1f01, // NDD1
 //_UNUSED_1f1d                      = 0x1f1d,
 //_UNUSED_1f1e                      = 0x1f1e,
 //_UNUSED_1f1f                      = 0x1f1f
+
 
 #endif

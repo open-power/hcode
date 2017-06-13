@@ -201,7 +201,6 @@ void p9_pgpe_process_sgpe_updt_active_cores()
         args->fields.return_code = SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
-        pk_halt();
     }
     else
     {
@@ -258,7 +257,6 @@ void p9_pgpe_process_sgpe_updt_active_quads()
         args->fields.return_code = SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-        pk_halt();
     }
     else
     {
@@ -401,7 +399,6 @@ void p9_pgpe_process_sgpe_suspend_pstates()
         args->fields.return_code = SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].cmd, IPC_RC_SUCCESS);
-        pk_halt();
     }
     else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT ||
             G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED ||
@@ -540,7 +537,7 @@ void p9_pgpe_process_wof_ctrl()
 
                 if(rc)
                 {
-                    pk_halt();
+                    PK_PANIC();
                 }
 
                 //Wait for SGPE ACK with alive Quads
@@ -556,7 +553,7 @@ void p9_pgpe_process_wof_ctrl()
                 }
                 else
                 {
-                    pk_halt();
+                    PK_PANIC();
                 }
                 */
 #endif// _SGPE_IPC_ENABLED_
@@ -593,7 +590,7 @@ void p9_pgpe_process_wof_ctrl()
 
                         if(rc)
                         {
-                            pk_halt();
+                            PK_PANIC();
                         }
 
                         //Wait for SGPE ACK with alive Quads
@@ -609,7 +606,7 @@ void p9_pgpe_process_wof_ctrl()
                         }
                         else
                         {
-                            pk_halt();
+                            PK_PANIC();
                         }*/
 
 #endif// _SGPE_IPC_ENABLED_
@@ -669,8 +666,8 @@ void p9_pgpe_process_wof_vfrt()
     {
         if(args->homer_vfrt_ptr == NULL)
         {
-            PK_TRACE_INF("PROCTH: NULL VFRT Ptr");
-            pk_halt();
+            PK_TRACE_ERR("PROCTH: NULL VFRT Ptr");
+            PK_PANIC(PGPE_NULL_VFRT_POINTER);
         }
 
         //Update VFRT pointer

@@ -312,7 +312,16 @@ inline void p9_cme_pstate_process_db0()
         ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
         send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
         PK_TRACE_INF("DB_TH: Bad DB0=0x%x Pstate=0x%x", G_dbData.fields.cme_message_number0, G_cme_flags);
-        pk_halt();
+
+        if(G_dbData.fields.cme_message_number0 < MSGID_DB0_VALID_START ||
+           G_dbData.fields.cme_message_number0 > MSGID_DB0_VALID_END)
+        {
+            PK_PANIC(CME_PSTATE_UNEXPECTED_DB0_MSGID);
+        }
+        else
+        {
+            PK_PANIC(CME_PSTATE_INVALID_DB0_MSGID);
+        }
     }
 
     PK_TRACE_INF("DB_TH: Process DB0 Exit\n");
