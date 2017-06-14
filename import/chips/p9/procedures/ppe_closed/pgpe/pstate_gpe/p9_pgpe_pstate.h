@@ -138,5 +138,6 @@ void p9_pgpe_pstate_process_quad_entry(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
 void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
 void p9_pgpe_pstate_stop();
+void p9_pgpe_pstate_setup_process_pcb_type4();
 void p9_pgpe_pstate_updt_actual_quad(uint32_t q);
 #endif //

@@ -66,12 +66,12 @@ void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg);
 void p9_pgpe_pstate_init()
 {
     uint32_t q;
-    ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
 
     G_pgpe_pstate_record.pstatesStatus = PSTATE_INIT;
     G_pgpe_pstate_record.wofEnabled = 0;
     G_pgpe_pstate_record.wofPending = 0;
+    G_pgpe_pstate_record.quadsActive =
+        0;//We only mark qCME active upon a registration msg whether before or after PGPE boot
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -85,12 +85,6 @@ void p9_pgpe_pstate_init()
         G_pgpe_pstate_record.globalPSCurr  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
         G_pgpe_pstate_record.quadPSNext[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
         G_pgpe_pstate_record.globalPSNext  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-
-        //Set quads active equal to configured quads
-        if (qcsr.fields.ex_config & (0xC00 >> (q << 1)))
-        {
-            G_pgpe_pstate_record.quadsActive |= (0x80 >> q);
-        }
     }
 
     G_pgpe_pstate_record.pQuadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
@@ -1162,6 +1156,28 @@ void p9_pgpe_pstate_stop()
     PK_TRACE_DBG("Stop Done");
 }
 
+void p9_pgpe_pstate_setup_process_pcb_type4()
+{
+    uint32_t opit4pr, q, opit4prQuad;
+    opit4pr = in32(OCB_OPIT4PRA); //Read current opit4pr
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        opit4prQuad = (opit4pr >> ((MAX_QUADS - q + 1) << 2)) & 0xf;
+
+        if (opit4prQuad)
+        {
+            G_pgpe_pstate_record.quadsActive |= (0x80 >> q);
+            PK_TRACE_DBG("Quad %x Registered at boot\n", q);
+        }
+    }
+
+    //Enable PCB_INTR_TYPE4
+    out32(OCB_OPIT4PRA_CLR, opit4pr);
+    out32(OCB_OISR1_CLR, BIT32(17));
+    g_oimr_override &= ~BIT64(49);
+    out32(OCB_OIMR1_CLR, BIT32(17));
+}
 
 void p9_pgpe_pstate_updt_actual_quad(uint32_t q)
 {

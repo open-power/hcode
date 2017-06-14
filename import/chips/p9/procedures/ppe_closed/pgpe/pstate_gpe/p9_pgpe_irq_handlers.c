@@ -170,18 +170,18 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
     ocb_opit1cn_t opit1cn;
     uint32_t c;
     uint32_t coresPendPSReq = 0;
-    uint32_t opit4pra;
+    uint32_t opit1pra;
 
     //Incrementally build a snapshot of core requests
-    opit4pra = in32(OCB_OPIT1PRA);
-    coresPendPSReq = opit4pra;
+    opit1pra = in32(OCB_OPIT1PRA);
+    coresPendPSReq = opit1pra;
 
     //Keep looping until no more core requests
-    while(opit4pra)
+    while(opit1pra)
     {
-        out32(OCB_OPIT1PRA_CLR, opit4pra);
-        coresPendPSReq |= opit4pra;
-        opit4pra = in32(OCB_OPIT1PRA);
+        out32(OCB_OPIT1PRA_CLR, opit1pra);
+        coresPendPSReq |= opit1pra;
+        opit1pra = in32(OCB_OPIT1PRA);
     }
 
     if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE &&

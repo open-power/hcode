@@ -82,14 +82,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         p9_pgpe_pstate_start(PSTATE_START_OCC_FLAG);
     }
 
-    //Enable PCB_INTR_TYPE4
-    uint32_t opit4pr;
-    opit4pr = in32(OCB_OPIT4PRA);
-    out32(OCB_OPIT4PRA_CLR, opit4pr);
-    out32(OCB_OISR1_CLR, BIT32(17));
-    g_oimr_override &= ~BIT64(49);
-    out32(OCB_OIMR1_CLR, BIT32(17));
-
+    p9_pgpe_pstate_setup_process_pcb_type4(); //Setup pcb_type4 and check for qCME registration
 
     // Set OCC Scratch2[PGPE_ACTIVE]
     uint32_t occScr2 = in32(OCB_OCCS2);
