@@ -48,7 +48,6 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
     uint32_t     bitloc            = 0;
     uint32_t     thread            = 0;
     uint32_t     temp_dsl          = 0;
-    uint32_t     temp_srr1         = 0;
     uint32_t     core_index        = 0;
 #endif
 
@@ -91,31 +90,25 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
                 PK_TRACE_DBG("Old DSL[%d] of Core[%d] Thread[%d], current PSCRS[%x]",
                              G_dsl[core_index][thread], core_index, thread, pscrs);
 
-                // Calculate new DSL
-                temp_dsl  = 0;
-                temp_srr1 = NO_STATE_LOSS;
+                // Calculate new DSL, SD bit does not impact PLS reporting
 
-                if (pscrs & BIT32(2))
+                temp_dsl = ((pscrs & BITS32(20, 4)) >> SHIFT32(23));
+
+                if (temp_dsl >= STOP_LEVEL_11)
                 {
-                    temp_srr1 = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
-                    temp_dsl  = ((pscrs & BITS32(20, 4)) >> SHIFT32(23));
-
-                    if (temp_dsl >= STOP_LEVEL_11)
-                    {
-                        temp_dsl = STOP_LEVEL_11;
-                    }
-                    else if (temp_dsl >= STOP_LEVEL_8)
-                    {
-                        temp_dsl = STOP_LEVEL_8;
-                    }
-                    else if (temp_dsl >= STOP_LEVEL_4)
-                    {
-                        temp_dsl = STOP_LEVEL_4;
-                    }
-                    else if (temp_dsl >= STOP_LEVEL_2)
-                    {
-                        temp_dsl = STOP_LEVEL_2;
-                    }
+                    temp_dsl = STOP_LEVEL_11;
+                }
+                else if (temp_dsl >= STOP_LEVEL_8)
+                {
+                    temp_dsl = STOP_LEVEL_8;
+                }
+                else if (temp_dsl >= STOP_LEVEL_4)
+                {
+                    temp_dsl = STOP_LEVEL_4;
+                }
+                else if (temp_dsl >= STOP_LEVEL_2)
+                {
+                    temp_dsl = STOP_LEVEL_2;
                 }
 
                 G_dsl[core_index][thread] =
@@ -124,6 +117,7 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
                 PK_TRACE_DBG("New DSL[%d]", G_dsl[core_index][thread]);
 
                 // Calculate new SRR1
+
                 if (G_dsl[core_index][thread] >= STOP_LEVEL_8)
                 {
                     srr1[thread] = MOST_STATE_LOSS;
@@ -134,10 +128,17 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
                 }
                 else
                 {
-                    srr1[thread] = temp_srr1;
+                    if (pscrs & BIT32(2)) // if state_loss_enable == 1
+                    {
+                        srr1[thread] = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
+                    }
+                    else
+                    {
+                        srr1[thread] = NO_STATE_LOSS;
+                    }
                 }
 
-                PK_TRACE_DBG("Srr1[%d]", srr1[thread]);
+                PK_TRACE_DBG("New Srr1[%d]", srr1[thread]);
 
                 // 36-39|44-47|52-55|60-63
                 scom_data.words.lower |=
