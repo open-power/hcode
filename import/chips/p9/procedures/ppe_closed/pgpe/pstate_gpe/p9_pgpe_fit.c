@@ -51,34 +51,20 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq);
 //and also enable and setup the fit handler
 void p9_pgpe_fit_init()
 {
-//    uint16_t freq = G_gppb->nest_frequency_mhz;
+    uint16_t freq = G_gppb->nest_frequency_mhz;
 
-    PK_TRACE_DBG("Fit NestFreq=0x%x", G_gppb->nest_frequency_mhz);
+    PK_TRACE_DBG("Fit NestFreq=0x%dMhz", G_gppb->nest_frequency_mhz);
+
     //Set fit count threshold
-    //\todo Set fit_count threshold correctly RTC: 173170
-    /*
-    G_beacon_count_threshold = (freq < 1049) ? 7 :
-                            (freq < 1180) ? 8 :
-                            (freq < 1311) ? 9 :
-                            (freq < 1442) ? 10 :
-                            (freq < 1573) ? 11 :
-                            (freq < 1704) ? 12 :
-                            (freq < 1835) ? 13 :
-                            (freq < 1966) ? 14 :
-                            (freq < 2097) ? 15 :
-                            (freq < 2228) ? 16 :
-                            (freq < 2359) ? 17 :
-                            (freq < 2490) ? 18 :
-                            (freq < 2621) ? 19 :
-                            (freq < 2753) ? 20 :
-                            (freq < 2884) ? 21 :
-                            (freq < 3015) ? 22 :
-                            (freq < 3146) ? 23 : 24;*/
-
+    G_beacon_count_threshold = (freq < 1573) ? 6 :
+                               (freq < 1835) ? 7 :
+                               (freq < 2097) ? 8 :
+                               (freq < 2359) ? 9 :
+                               (freq < 2621) ? 10 : 11;
+    PK_TRACE_DBG("Fit BeaconThr=0x%d", G_beacon_count_threshold);
 
     G_throttleCount = 0;
     G_beacon_count = 0;
-    G_beacon_count_threshold = 2;
     ppe42_fit_setup(p9_pgpe_fit_handler, NULL);
 }
 
