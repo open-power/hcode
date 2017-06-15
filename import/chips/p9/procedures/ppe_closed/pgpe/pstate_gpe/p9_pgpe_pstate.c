@@ -453,33 +453,6 @@ void p9_pgpe_send_db0(uint64_t db0, uint32_t quads, uint32_t cores, uint32_t uni
 }
 
 //
-//p9_pgpe_pstate_suspend
-//
-void p9_pgpe_pstate_pm_complex_suspend()
-{
-    PK_TRACE_DBG("PM Suspend Enter");
-
-    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-    {
-        G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPEND_PENDING;
-        p9_pgpe_pstate_apply_safe_clips();
-    }
-    else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
-    {
-        //todo Set FIR[Bit] need to determine which one
-        PK_TRACE_ERR("PM Susp in PSTATE_STOPPED(Halting)");
-        PK_PANIC(PGPE_PM_SUSPEND_REQ_WHILE_STOPPED);
-    }
-    else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT)
-    {
-        G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPEND_PENDING;
-        p9_pgpe_pstate_send_suspend_stop();
-    }
-
-    PK_TRACE_DBG("PM Suspend Exit");
-}
-
-//
 //p9_pgpe_pstate_send_suspend_stop
 //
 void p9_pgpe_pstate_send_suspend_stop()
@@ -490,12 +463,38 @@ void p9_pgpe_pstate_send_suspend_stop()
     G_sgpe_suspend_stop.fields.return_code = 0x0;
     G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_suspend_stop;
     ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
-                 MSGID_PGPE_SGPE_SUSPEND_STOP,
+                 IPC_MSGID_PGPE_SGPE_SUSPEND_STOP,
                  p9_pgpe_suspend_stop_callback,
                  (void*)NULL);
 
+    //Set SCOM Ownership of PMCR
+    PK_TRACE_INF("Setting SCOM Ownership of PMCRs");
+
+    int q = 0;
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(OCB_QCSR);
+
+    //Set LMCR for each CME
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if(G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q))
+        {
+            //CME0 within this quad
+            if (qcsr.fields.ex_config & (0x800 >> 2 * q))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(0));
+            }
+
+            //CME1 within this quad
+            if (qcsr.fields.ex_config & (0x400 >> 2 * q))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(0));
+            }
+        }
+    }
+
     //send the command
-    PK_TRACE_INF("Suspend Stop Sent");
+    PK_TRACE_INF("Sending Suspend  IPC to SGPE");
     rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
 
     if(rc)
@@ -517,12 +516,9 @@ void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg)
     PK_TRACE_INF("Susp Stop Cb");
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
-    occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
     G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
     out32(OCB_OCCS2, occScr2);
 }
-
-
 
 //
 //p9_pgpe_pstate_safe_mode()
@@ -530,29 +526,31 @@ void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg)
 void p9_pgpe_pstate_safe_mode()
 {
     PK_TRACE_DBG("Safe Mode Enter");
+    uint32_t occScr2 = in32(OCB_OCCS2);
+    uint32_t suspend = in32(OCB_OCCFLG) & BIT32(PM_COMPLEX_SUSPEND);
 
     if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
     {
-        G_pgpe_pstate_record.pstatesStatus = PSTATE_SAFE_MODE;
+        occScr2 |= BIT32(PGPE_SAFE_MODE_ACTIVE);
+        //In the case of suspend, if active the send_suspend is handled in actuate_pstates thread
         p9_pgpe_pstate_apply_safe_clips();
     }
-    else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
+    else
     {
-        //todo Set FIR[Bit] need to determine which one
-        PK_TRACE_ERR("SAFE MODE req while stopped");
-        PK_PANIC(PGPE_SAFE_MODE_REQ_WHILE_STOPPED);
-    }
-    else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT)
-    {
-        G_pgpe_pstate_record.pstatesStatus = PSTATE_SAFE_MODE;
+        occScr2 |= BIT32(PGPE_SAFE_MODE_ERROR);
+
+        if(suspend)
+        {
+            p9_pgpe_pstate_send_suspend_stop();
+        }
     }
 
-    uint32_t occScr2 = in32(OCB_OCCS2);
+    G_pgpe_pstate_record.pstatesStatus = suspend ? PSTATE_PM_SUSPEND_PENDING : PSTATE_SAFE_MODE;
     occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
     out32(OCB_OCCS2, occScr2);
-
     PK_TRACE_DBG("Safe Mode Exit");
 }
+
 
 //
 // p9_pgpe_pstate_apply_safe_clips
@@ -944,7 +942,6 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
         PK_PANIC(PGPE_INVALID_PMCR_OWNER);
     }
 
-    //Set LMCR for each CME
     //If OWNER is switched to CHAR, the last LMCR setting is retained
     for (q = 0; q < MAX_QUADS; q++)
     {

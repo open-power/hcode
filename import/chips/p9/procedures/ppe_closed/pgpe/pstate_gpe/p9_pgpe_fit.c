@@ -168,23 +168,25 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
         occFlag.value = 0;
         occFlag.value = in32(OCB_OCCFLG);
 
-        //If we see this flag we want to suspend - must be SUSPEND / SUSPEND_PEND
-        if ((G_pgpe_pstate_record.pstatesStatus < PSTATE_SUSPEND_OR_SUSPEND_PEND)
-            && (occFlag.value & BIT32(PM_COMPLEX_SUSPEND)))
+        if((G_pgpe_pstate_record.pstatesStatus != PSTATE_PM_SUSPENDED)
+           && (G_pgpe_pstate_record.pstatesStatus != PSTATE_PM_SUSPEND_PENDING))
         {
-            p9_pgpe_pstate_pm_complex_suspend();
-        }
-        //If we see this flag we want to go to safe mode - must be !ACTIVE
-        else if ((G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-                 && (occFlag.value & BIT32(PGPE_SAFE_MODE)))
-        {
-            p9_pgpe_pstate_safe_mode();
-        }
-        //If we see this flag we want to stop processing pstates - must be in state STOPPED / SUSPEND / SUSPEND_PEND
-        else if ((G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-                 && (occFlag.value & BIT32(PGPE_START_NOT_STOP)))
-        {
-            p9_pgpe_pstate_stop();
+            if(occFlag.value & BIT32(PM_COMPLEX_SUSPEND))
+            {
+                p9_pgpe_pstate_safe_mode();
+            }
+            else if(G_pgpe_pstate_record.pstatesStatus != PSTATE_SAFE_MODE)
+            {
+                if(occFlag.value & BIT32(PGPE_SAFE_MODE))
+                {
+                    p9_pgpe_pstate_safe_mode();
+                }
+                else if((occFlag.value & BIT32(PGPE_START_NOT_STOP))
+                        && (G_pgpe_pstate_record.pstatesStatus != PSTATE_STOPPED))
+                {
+                    p9_pgpe_pstate_stop();
+                }
+            }
         }
     }
     else

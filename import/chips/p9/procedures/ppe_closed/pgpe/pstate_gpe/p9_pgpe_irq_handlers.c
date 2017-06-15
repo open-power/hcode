@@ -82,7 +82,7 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
     if (fir.fields.occ_hb_error == 1)
     {
         GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(OCC_HB_ERROR_FIR));
-        p9_pgpe_pstate_pm_complex_suspend();
+        p9_pgpe_pstate_safe_mode();
     }
     else
     {
