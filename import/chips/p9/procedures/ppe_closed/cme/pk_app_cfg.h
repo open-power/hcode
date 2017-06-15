@@ -34,9 +34,13 @@
 /// \brief Application specific overrides go here.
 ///
 
-// debug only enablement
+// Debug only enablement
 
 #define TEST_ONLY_BCE_IRR         0
+
+// Function disablement
+
+#define DISABLE_STOP8             1
 #define DISABLE_CME_DUAL_CAST     0
 
 // --------------------

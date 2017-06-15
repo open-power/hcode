@@ -34,9 +34,16 @@
 /// \brief Application specific overrides go here.
 ///
 
-#define DEBUG_RUNTIME_STATE_CHECK 1
+// Debug only enablement
 
-#define PLATFORM_PANIC_CODES_H "sgpe_panic_codes.h"
+#define DEBUG_RUNTIME_STATE_CHECK 0
+
+// Function disablement
+
+#define DISABLE_STOP8             1
+
+// --------------------
+
 // @todo RTC 161182
 
 #if NIMBUS_DD_LEVEL == 10
@@ -143,5 +150,10 @@
     OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING  OCCHW_IRQ_TYPE_LEVEL OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE3_PENDING  OCCHW_IRQ_TYPE_LEVEL OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE6_PENDING  OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED
+
+// --------------------
+
+/// This file provides platform specific panic codes
+#define PLATFORM_PANIC_CODES_H "sgpe_panic_codes.h"
 
 #endif /*__PK_APP_CFG_H__*/

@@ -104,6 +104,8 @@ p9_sgpe_stop_entry()
             G_sgpe_stop_record.state[qloop].req_state_x0 :
             G_sgpe_stop_record.state[qloop].req_state_x1 ;
 
+#if !DISABLE_STOP8
+
         // Check if EX and/or Quad qualifies to proceed with entry
         if (G_sgpe_stop_record.state[qloop].act_state_x0 <  LEVEL_EX_BASE &&
             G_sgpe_stop_record.state[qloop].req_state_x0 >= LEVEL_EX_BASE)
@@ -117,10 +119,20 @@ p9_sgpe_stop_entry()
             G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] |= BIT32(qloop);
         }
 
+#endif
+
         if (G_sgpe_stop_record.state[qloop].act_state_q <  LEVEL_EQ_BASE &&
             G_sgpe_stop_record.state[qloop].req_state_q >= LEVEL_EQ_BASE)
         {
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
+
+#if DISABLE_STOP8
+
+            G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] |= BIT32(qloop);
+            G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] |= BIT32(qloop);
+
+#endif
+
         }
 
         if (G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] ||
@@ -572,8 +584,14 @@ p9_sgpe_stop_entry()
             scom_data.words.lower = 0;
             scom_data.words.upper = (SSH_ACT_LV8_COMPLETE |
                                      (((uint32_t)entry_ongoing[cloop >> 1]) << SHIFT32(3)));
+
+#if !DISABLE_STOP8
+
             GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
                             scom_data.value);
+
+#endif
+
         }
 
         PK_TRACE("Update QSSR: l2_stopped, drop stop_entry_ongoing");

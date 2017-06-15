@@ -244,7 +244,12 @@ void p9_sgpe_stop_exit_lv8(uint32_t qloop, uint32_t m_l2, uint32_t m_pg)
 void p9_sgpe_stop_exit_end(uint32_t cexit, uint32_t qspwu, uint32_t qloop)
 {
     uint32_t cloop = 0;
+
+#if DEBUG_RUNTIME_STATE_CHECK
+
     data64_t scom_data = {0};
+
+#endif
 
     //--------------------------------------------------------------------------
     PK_TRACE("+++++ +++++ END OF STOP EXIT +++++ +++++");
@@ -500,6 +505,7 @@ p9_sgpe_stop_exit()
 
 #endif
 
+
     for(cexit = G_sgpe_stop_record.group.core[VECTOR_EXIT],
         qspwu = G_sgpe_stop_record.group.qswu[VECTOR_EXIT],
         qloop = 0, m_l2 = 0, m_pg = 0;
@@ -518,10 +524,14 @@ p9_sgpe_stop_exit()
 
         p9_sgpe_stop_exit_pre(cexit, qspwu, qloop, &m_l2, &m_pg);
 
+#if !DISABLE_STOP8
+
         if (m_l2)
         {
             p9_sgpe_stop_exit_lv8(qloop, m_l2, m_pg);
         }
+
+#endif
 
         p9_sgpe_stop_exit_end(cexit, qspwu, qloop);
 
@@ -840,10 +850,18 @@ p9_sgpe_stop_exit()
 
         }
 
+#if DISABLE_STOP8
+
+        p9_sgpe_stop_exit_lv8(qloop, m_pg, m_pg);
+
+#else
+
         if (m_l2)
         {
             p9_sgpe_stop_exit_lv8(qloop, m_l2, m_pg);
         }
+
+#endif
 
         if(m_l2 && G_sgpe_stop_record.state[qloop].act_state_q >= STOP_LEVEL_11)
         {
