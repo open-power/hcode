@@ -372,7 +372,15 @@ p9_cme_stop_entry()
                         G_cme_stop_record.req_level[core_index] = STOP_LEVEL_8;
                     }
 
+#if DISABLE_STOP8
+
+                    if (1 &&
+
+#else
+
                     if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_8_TO_5_BIT_POS) &&
+
+#endif
                         (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_8 &&
                          G_cme_stop_record.req_level[core_index] <  STOP_LEVEL_11))
                     {
