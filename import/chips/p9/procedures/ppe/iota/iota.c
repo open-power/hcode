@@ -26,6 +26,10 @@
 #include "iota_uih.h"
 #include "iota_ppe42.h"
 
+// Force all kernel variables into .sdata
+// Order controlled by linker script
+uint64_t ppe42_64bit_timebase __attribute__((section(".sdata.ppe42_64bit_timebase"))) = 0;
+
 iotaMachineState g_iota_machine_state_stack[(IOTA_MAX_NESTED_INTERRUPTS)] __attribute__((aligned(8))) =
 {
     [ 0 ... (IOTA_MAX_NESTED_INTERRUPTS - 1) ] = IOTA_MACHINE_STATE_INIT
@@ -55,7 +59,7 @@ void _iota_evaluate_idle_tasks()
                 iota_halt();
             }
 
-            g_iota_idle_task_list[idle_task_idx].function(idle_task_idx);
+            g_iota_idle_task_list[idle_task_idx].function(idle_task_idx, 0);
 
 #if IOTA_AUTO_DISABLE_IDLE_TASKS
             uint32_t ctx = mfmsr();
@@ -74,16 +78,32 @@ extern void main(void);
 void _iota_boot()
 {
     g_iota_curr_machine_state_ptr = g_iota_machine_state_stack;
+
+    // Can CME be reset w/o reload?
+    // If see need to clean up entire state of ppe42 to known state
+    // enable DEC timer w interrupts
+
+    mtmsr(IOTA_INITIAL_MSR);
+
+    // DEC timer setup
+    mtspr(SPRN_DEC, 0xffffffff);
+    mtspr(SPRN_TSR, TSR_DIS);
+    or_spr(SPRN_TCR, TCR_DIE);
+
+    __hwmacro_setup(); // Configures external interrupt registers
+
     main();
 }
 
 void iota_run()
 {
+    mtmsr(IOTA_DEFAULT_MSR);
+
     while(1)
     {
         // Run any enabled idle tasks
         _iota_evaluate_idle_tasks();
-        // FIXME / TODO load default MSR here?
+
         uint32_t ctx = mfmsr() | MSR_WE | MSR_EE ;
         mtmsr(ctx);
     }
@@ -110,7 +130,8 @@ void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx)
 void _iota_schedule(uint32_t schedule_reason)
 {
     // Increment machine state pointer
-    if(g_iota_curr_machine_state_ptr < &g_iota_machine_state_stack[IOTA_MAX_NESTED_INTERRUPTS - 1])
+    if(g_iota_curr_machine_state_ptr <
+       &g_iota_machine_state_stack[IOTA_MAX_NESTED_INTERRUPTS - 1])
     {
         g_iota_curr_machine_state_ptr++;
     }
@@ -119,20 +140,22 @@ void _iota_schedule(uint32_t schedule_reason)
         iota_halt();
     }
 
-    // TODO call appropriate interrupt handler here
+    // call appropriate interrupt handler here
     uint32_t task_idx;
 
     switch(schedule_reason)
     {
         case _IOTA_SCHEDULE_REASON_EXT:
+
             task_idx = iota_uih();
 
             if(g_iota_task_list[task_idx] != IOTA_NO_TASK)
             {
-                uint32_t ctx = mfmsr();
-                wrteei(1);
-                g_iota_task_list[task_idx](task_idx);
-                mtmsr(ctx);
+                //uint32_t ctx = mfmsr();
+                uint32_t irq = cntlz64(g_ext_irq_vector);
+                mtmsr(IOTA_DEFAULT_MSR);
+                g_iota_task_list[task_idx](task_idx, irq);
+                //mtmsr(ctx);
             }
             else
             {
@@ -150,11 +173,14 @@ void _iota_schedule(uint32_t schedule_reason)
             break;
     }
 
-    // TODO check for idle tasks here
-    // Rationale: if the g_iota_curr_machine_state_ptr == &g_iota_curr_machine_state_ptr[0],
-    //            then all interrupt tasks must be completed since this is the last
-    //            context about to be restored, which means enabled idle tasks
-    //            can be executed
+    wrteei(0);
+
+    // Check for idle tasks here
+    // Rationale: if the g_iota_curr_machine_state_ptr ==
+    //            &g_iota_curr_machine_state_ptr[0],
+    //            then all interrupt tasks must be completed since this is the
+    //            last context about to be restored, which means enabled idle
+    //            tasks can be executed
     iotaMachineState* p = g_iota_curr_machine_state_ptr;
 
     if(--p == g_iota_machine_state_stack)
@@ -174,4 +200,9 @@ void _iota_schedule(uint32_t schedule_reason)
     {
         iota_halt();
     }
+}
+
+uint64_t pk_timebase_get()
+{
+    return (ppe42_64bit_timebase & 0xffffffff00000000ull) | (~(mfspr(SPRN_DEC)) + 1);
 }

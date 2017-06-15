@@ -134,7 +134,9 @@ typedef enum
 
 typedef struct
 {
+#if !defined(__IOTA__)
     PkSemaphore sem[2];
+#endif
     uint32_t qmFlag;
     uint32_t siblingCMEFlag;
     uint32_t quadPstate;

@@ -79,7 +79,15 @@ void p9_cme_pstate_pig_send();
 void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
 {
     PK_TRACE_INF("DB_HDL: Entered\n");
+#if defined(__IOTA__)
+    wrteei(1);
+
+    p9_cme_pstate_process_db0();
+
+    iota_uih_irq_vec_restore();
+#else
     pk_semaphore_post((PkSemaphore*)arg);
+#endif
     PK_TRACE_INF("DB_HDL: Exited\n");
 }
 
@@ -89,7 +97,7 @@ void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
 void p9_cme_pstate_db_thread(void* arg)
 {
     PK_TRACE_INF("DB_TH: Started\n");
-    PkMachineContext  ctx;
+    PkMachineContext  ctx __attribute__((unused));
     uint32_t cores = 0;
     uint64_t scom_data;
     uint32_t resclk_data;
@@ -117,7 +125,9 @@ void p9_cme_pstate_db_thread(void* arg)
     //if quadManager
     if (G_cme_pstate_record.qmFlag)
     {
+#if !defined(__IOTA__)
         pk_semaphore_create(&G_cme_pstate_record.sem[1], 0, 1);
+#endif
 
         if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
         {
@@ -299,8 +309,9 @@ void p9_cme_pstate_db_thread(void* arg)
         //Register with PGPE
         p9_cme_pstate_register();
 
-
         PK_TRACE_INF("DB_TH: Inited\n");
+
+#if !defined(__IOTA__)
 
         while(1)
         {
@@ -312,6 +323,8 @@ void p9_cme_pstate_db_thread(void* arg)
 
             pk_irq_vec_restore(&ctx);
         }
+
+#endif
     }
 
     PK_TRACE_INF("DB_TH: Exit\n");

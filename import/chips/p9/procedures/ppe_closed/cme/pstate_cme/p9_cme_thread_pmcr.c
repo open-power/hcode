@@ -49,13 +49,74 @@
 //
 cme_pstate_pmcr_data_t G_pmcr_thread_data;
 extern CmePstateRecord G_cme_pstate_record;
+uint32_t G_pmcr_cme_flags;
+
+void cme_pstate_pmcr_action()
+{
+    wrteei(1);
+
+    PkMachineContext  ctx __attribute__((unused));
+    uint64_t pmcr;
+    ppm_pig_t ppmPigData;
+    uint32_t eisr;
+    static
+    uint32_t coreMask[CORES_PER_EX] __attribute__((aligned(8))) =
+    {
+        CME_MASK_C0,
+        CME_MASK_C1
+    };
+
+    int c;
+
+    //Determine which core have pending request
+    for(c = 0; c < CORES_PER_EX; c++)
+    {
+        if (G_pmcr_cme_flags & (BIT32(CME_FLAGS_CORE0_GOOD) >> c))
+        {
+            eisr = in32_sh(CME_LCL_EISR); //EISR
+
+            if (eisr & (BIT32(2) >> c))
+            {
+                //Clear interrupt and read PMCR
+                out32_sh(CME_LCL_EISR_CLR, BIT32(2) >> c);
+                //We read the pmcr into a local variable, so that
+                //both phases use the same PMCR value. Otherwise, it's possible
+                //for pmcr to change between sending phase 1 and phase 2
+                pmcr = in64(CME_LCL_PMCRS0 + (c << 5));
+
+                //Send Phase 1
+                ppmPigData.value = 0;
+                ppmPigData.fields.req_intr_type = 0;
+                ppmPigData.value |= ((pmcr & PIG_PAYLOAD_PS_PHASE1_MASK) >> 8);
+                ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
+                send_pig_packet(ppmPigData.value, coreMask[c]);
+                G_pmcr_thread_data.seqNum++;
+
+                //Send Phase 2
+                ppmPigData.value = 0;
+                ppmPigData.fields.req_intr_type = 1;
+                ppmPigData.value |= (pmcr & PIG_PAYLOAD_PS_PHASE2_MASK);
+                ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
+                send_pig_packet(ppmPigData.value, coreMask[c]);
+                G_pmcr_thread_data.seqNum++;
+                PK_TRACE_INF("PMCR_TH: Fwd PMCR[%d]=0x%08x%08x\n", c, pmcr >> 32, pmcr);
+            }
+        }
+    }
+
+    pk_irq_vec_restore(&ctx);
+}
 
 //
 //PMCR Interrupt Handler
 //
 void p9_cme_pstate_pmcr_handler(void* arg, PkIrqId irq)
 {
+#if defined(__IOTA__)
+    cme_pstate_pmcr_action();
+#else
     pk_semaphore_post((PkSemaphore*)arg);
+#endif
 }
 
 //
@@ -64,20 +125,15 @@ void p9_cme_pstate_pmcr_handler(void* arg, PkIrqId irq)
 void p9_cme_pstate_pmcr_thread(void* arg)
 {
     PK_TRACE_INF("PMCR_TH: Enter\n");
-    int32_t c;
-    PkMachineContext  ctx;
-    uint64_t pmcr;
-    uint32_t cme_flags;
-    ppm_pig_t ppmPigData;
-    uint32_t eisr;
-    uint32_t coreMask[CORES_PER_EX] = {CME_MASK_C0, CME_MASK_C1};
     uint32_t msg;
 
     G_pmcr_thread_data.seqNum = 0; //Initialize seqNum to zero
 
-    cme_flags = in32(CME_LCL_FLAGS);
+    G_pmcr_cme_flags = in32(CME_LCL_FLAGS);;
 
+#if !defined(__IOTA__)
     pk_semaphore_create(&G_cme_pstate_record.sem[0], 0, 1);
+#endif
 
     // Synchronization between QM and Sibling
     // @todo RTC173279 move into CME init function
@@ -102,51 +158,16 @@ void p9_cme_pstate_pmcr_thread(void* arg)
 
     PK_TRACE_INF("PMCR_TH: Inited\n");
 
+#if !defined(__IOTA__)
+
     while(1)
     {
         //pend on sempahore
         pk_semaphore_pend(&G_cme_pstate_record.sem[0], PK_WAIT_FOREVER);
-        wrteei(1);
-
-        //Determine which core have pending request
-        for(c = 0; c < CORES_PER_EX; c++)
-        {
-            if (cme_flags & (BIT32(CME_FLAGS_CORE0_GOOD) >> c))
-            {
-                eisr = in32_sh(CME_LCL_EISR); //EISR
-
-                if (eisr & (BIT32(2) >> c))
-                {
-                    //Clear interrupt and read PMCR
-                    out32_sh(CME_LCL_EISR_CLR, BIT32(2) >> c);
-                    //We read the pmcr into a local variable, so that
-                    //both phases use the same PMCR value. Otherwise, it's possible
-                    //for pmcr to change between sending phase 1 and phase 2
-                    pmcr = in64(CME_LCL_PMCRS0 + (c << 5));
-
-                    //Send Phase 1
-                    ppmPigData.value = 0;
-                    ppmPigData.fields.req_intr_type = 0;
-                    ppmPigData.value |= ((pmcr & PIG_PAYLOAD_PS_PHASE1_MASK) >> 8);
-                    ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
-                    send_pig_packet(ppmPigData.value, coreMask[c]);
-                    G_pmcr_thread_data.seqNum++;
-
-                    //Send Phase 2
-                    ppmPigData.value = 0;
-                    ppmPigData.fields.req_intr_type = 1;
-                    ppmPigData.value |= (pmcr & PIG_PAYLOAD_PS_PHASE2_MASK);
-                    ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
-                    send_pig_packet(ppmPigData.value, coreMask[c]);
-                    G_pmcr_thread_data.seqNum++;
-                    PK_TRACE_INF("PMCR_TH: Fwd PMCR[%d]=0x%08x%08x\n", c, pmcr >> 32, pmcr);
-
-                }
-            }
-        }
-
-        pk_irq_vec_restore(&ctx);
+        cme_pstate_pmcr_action();
     }
+
+#endif
 
     PK_TRACE_INF("PMCR_TH: Exit\n");
 }

@@ -24,15 +24,26 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #if !defined(__IOTA_APP_CFG__)
 #define __IOTA_APP_CFG__
-
 /**
  * @file iota_app_cfg.h
  * @brief IOTA CONFIGURATION SETTINGS
  */
 
-//Maximum number of external interrupt priority levels
-// and thus also the maximum number of prioritized tasks allowed.
-#define IOTA_NUM_EXT_IRQ_PRIORITIES  11
+// parts of pk that are included require this
+// Having two  app_cfg files seems confusing
+#include "pk_app_cfg.h"
+
+#define PLATFORM_PANIC_CODES_H "cme_panic_codes.h"
+#include "pk_panic_codes.h"
+
+#if !defined(__ASSEMBLER__)
+    #include "p9_cme_irq.h"
+
+    //Maximum number of external interrupt priority levels
+    // and thus also the maximum number of prioritized tasks allowed.
+    #define IOTA_NUM_EXT_IRQ_PRIORITIES  NUM_EXT_IRQ_PRTY_LEVELS
+
+#endif
 
 // Maximum number of expected nested interrupts
 #define IOTA_MAX_NESTED_INTERRUPTS    4
@@ -44,5 +55,6 @@
 
 // Main "execution" stack size in bytes, must be multiple of 8
 #define IOTA_EXECUTION_STACK_SIZE  2048
+
 
 #endif

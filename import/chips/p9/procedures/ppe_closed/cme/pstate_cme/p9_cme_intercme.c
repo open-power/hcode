@@ -51,7 +51,7 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     cppm_cmedb0_t dbData;
     dbData.value = 0;
     uint32_t cme_flags = in32(CME_LCL_FLAGS);
-    PkMachineContext  ctx;
+    PkMachineContext  ctx __attribute__((unused));
 
     PK_TRACE("INTER0: Enter\n");
 
@@ -119,7 +119,7 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
 
 void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq)
 {
-    PkMachineContext ctx;
+    PkMachineContext ctx __attribute__((unused));
     // Override mask, disable every interrupt except high-priority ones via the
     // priority mask for this interrupt (p9_pk_irq.c)
     uint32_t msg;

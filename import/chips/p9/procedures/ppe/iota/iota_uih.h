@@ -36,6 +36,26 @@
 
 #include "iota.h"
 
+// Need to generically pull this in
+// iota_uih_cfg.h
+#include "iota_app_cfg.h"
+#include "std_register_addresses.h"
+#include "std_irq_config.h"
+
+extern uint32_t iota_uih(void);
+extern void __hwmacro_setup(void);
+
+extern uint64_t g_ext_irq_vector;
+
+// Needed by ppehw_common.h
+#define PK_IRQ_POLARITY_ACTIVE_LOW  0
+#define PK_IRQ_POLARITY_ACTIVE_HIGH 1
+#define PK_IRQ_TRIGGER_LEVEL_SENSITIVE 0
+#define PK_IRQ_TRIGGER_EDGE_SENSITIVE  1
+
+
+// Changed to pick this up from p9_cme_irq.h
+#if defined(__COMMENT_OUT__)
 // Priority Levels
 #define IDX_PRTY_LVL_HIPRTY         0
 #define IDX_PRTY_LVL_DB3            1
@@ -88,11 +108,10 @@ extern const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2];
                               IRQ_VEC_PRTY9_CME | \
                               IRQ_VEC_PRTY10_CME )
 
-extern uint8_t  g_current_prty_level;
-extern uint8_t  g_eimr_stack[IOTA_NUM_EXT_IRQ_PRIORITIES];
+extern uint32_t g_current_prty_level;
+extern uint8_t  g_eimr_stack[IOTA_NUM_EXT_IRQ_PRIORITIES] SECTION_SBSS;
 extern int      g_eimr_stack_ctr;
-extern uint64_t g_eimr_override_stack[IOTA_NUM_EXT_IRQ_PRIORITIES];
+extern uint64_t g_eimr_override_stack[IOTA_NUM_EXT_IRQ_PRIORITIES]SECTION_SBSS;
 extern uint64_t g_eimr_override;
-extern uint32_t iota_uih(void);
-
+#endif
 #endif //__IOTA_UIH_H__

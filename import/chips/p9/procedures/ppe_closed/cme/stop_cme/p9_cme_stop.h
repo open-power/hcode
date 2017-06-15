@@ -146,7 +146,7 @@
 
 enum CME_IRQ_VECTORS
 {
-// if auto mask eimr.spwu else never mask eimr.spwu
+    // if auto mask eimr.spwu else never mask eimr.spwu
 #if SPWU_AUTO
     IRQ_VEC_WAKE_C0                  = BIT64(12) | BIT64(14) | BIT64(16),
     IRQ_VEC_WAKE_C1                  = BIT64(13) | BIT64(15) | BIT64(17),
@@ -236,7 +236,9 @@ typedef struct
     uint32_t      core_blockey;
     // core in special wakeup, can be used as core select in scom address or data
     uint32_t      core_in_spwu;
+#if !defined(__IOTA__)
     PkSemaphore   sem[2];
+#endif
 } CmeStopRecord;
 
 

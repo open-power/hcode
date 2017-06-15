@@ -25,7 +25,10 @@
 
 CME_IMAGE:=cme_p9n20
 IMAGE:=$(CME_IMAGE)
-IMAGE_EDITOR:=cmeImgEdit.exe
+
+#Select KERNEL
+#$(IMAGE)_KERNEL:=__IOTA__
+$(IMAGE)_KERNEL:=__PK__
 
 # Options for Platforms specific tuning
 
@@ -74,4 +77,6 @@ $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
         $(ROOTPATH)/chips/p9/utils/imageProcs/ \
 	)
 
- $(call BUILD_BINHEADER,$(IMAGEPATH)/$(CME_IMAGE)/$(CME_IMAGE).bin,$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
+ $(call BUILD_BINHEADER, \
+	$(IMAGEPATH)/$(CME_IMAGE)/$(CME_IMAGE).bin, \
+	$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)

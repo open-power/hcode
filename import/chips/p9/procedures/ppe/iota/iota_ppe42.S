@@ -24,6 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include "iota.h"
 #include "iota_ppe42.h"
+#include "std_irq_config.h"
 
 .global g_iota_execution_stack
 
@@ -121,6 +122,9 @@ __iota_save_interrupt_state_and_schedule:
     mtcr0   %r9
     lwz     %r9, _IOTA_SAVE_CTR_OFFSET(%r3)
     mtctr   %r9
+    lvd     %d8, _IOTA_SAVE_SRR0_OFFSET(%r3)
+    mtsrr0  %r8
+    mtsrr1  %r9
     # Restore d8
     lvd     %d8, _IOTA_SAVE_D8_OFFSET(%r3)
     # Restore r3
@@ -131,3 +135,7 @@ __iota_save_interrupt_state_and_schedule:
 .global __iota_halt
 __iota_halt:
     trap
+
+## pull in the macro that calculates all the external interrupt config
+## defined in pk/std/std_irq_config.h
+    .std_irq_cfg_bitmaps

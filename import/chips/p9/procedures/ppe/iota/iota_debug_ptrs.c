@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe/iota/iota_ppe42_vectors.S $    */
+/* $Source: import/chips/p9/procedures/ppe/iota/iota_debug_ptrs.c $       */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -22,69 +22,21 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-#include "iota_ppe42.h"
+#include "iota_trace.h"
+#include "iota_debug_ptrs.h"
+#include "iota_app_cfg.h"
 
-.section    .vectors, "ax", @progbits
+iota_debug_ptrs_t iota_debug_ptrs __attribute__((section(".debug_ptrs"))) =
+{
+    .debug_ptrs_size            = sizeof(iota_debug_ptrs_t),
+    .debug_ptrs_version         = IOTA_DEBUG_PTRS_VERSION,
 
-.global __vectors
-__vectors:
+#if PK_TRACE_SUPPORT
+    .debug_trace_ptr            = &g_pk_trace_buf,
+    .debug_trace_size           = sizeof(g_pk_trace_buf),
+#else
+    .debug_trace_ptr            = 0,
+    .debug_trace_size           = 0,
+#endif /* PK_TRACE_SUPPORT */
 
-.global __machine_check
-__machine_check:
-    trap
-
-.global __system_reset
-.org    __vectors + 0x0040
-__system_reset:
-    b       __iota_boot
-
-.global __data_storage
-.org    __vectors + 0x0060
-__data_storage:
-    trap
-
-.global __instruction_storage
-.org    __vectors + 0x0080
-__instruction_storage:
-    trap
-
-.global ppe42_64bit_timebase
-.global __external_interrupt
-.org    __vectors + 0x00a0
-__external_interrupt:
-    __m_iota_interrupt_and_exception_handler _IOTA_SCHEDULE_REASON_EXT
-
-.global __alignment_exception
-.org    __vectors + 0x00c0
-__alignment_exception:
-    trap
-
-.global __program_exception
-.org    __vectors + 0x00e0
-__program_exception:
-    trap
-
-.global __dec_interrupt
-.org    __vectors + 0x0100
-__dec_interrupt:
-    stw     %r3,_IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
-    // Increment upper 32 bits of 64 bit timebase
-    lwz     %r3,ppe42_64bit_timebase@sda21(0)
-    addi    %r3,%r3,1
-    stw     %r3,ppe42_64bit_timebase@sda21(0)
-    _liwa   %r3, TSR_DIS
-    mttsr   %r3
-    lwz     %r3,_IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
-    rfi
-    // remove rfi and restore following line to share DEC timer ovrflow
-    //__m_iota_interrupt_and_exception_handler _IOTA_SCHEDULE_REASON_DEC
-
-.global __fit_interrupt
-.org    __vectors + 0x0120
-__fit_interrupt:
-    __m_iota_interrupt_and_exception_handler _IOTA_SCHEDULE_REASON_FIT
-
-.global __watchdog_interrupt
-.org    __vectors + 0x0140
-__watchdog_interrupt:
-    b __watchdog_interrupt
+};

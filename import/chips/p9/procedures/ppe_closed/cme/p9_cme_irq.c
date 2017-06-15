@@ -184,7 +184,7 @@ const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
 
 };
 
-uint8_t       g_current_prty_level = NUM_EXT_IRQ_PRTY_LEVELS - 1;
+uint32_t      g_current_prty_level = NUM_EXT_IRQ_PRTY_LEVELS - 1;
 uint8_t       g_eimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];
 int           g_eimr_stack_ctr = -1;
 uint64_t      g_eimr_override_stack[NUM_EXT_IRQ_PRTY_LEVELS];

@@ -36,6 +36,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
     /* 0: IDX_PRTY_VEC    1: IDX_MASK_VEC */
     {
         IRQ_VEC_PRTY0_CME, /* 0: IDX_PRTY_LVL_HIPRTY */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -50,6 +52,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
     },
     {
         IRQ_VEC_PRTY1_CME, /* 1: IDX_PRTY_LVL_DB3 */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -63,6 +67,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
     },
     {
         IRQ_VEC_PRTY2_CME, /* 2: IDX_PRTY_LVL_DB2 */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -75,6 +81,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
     },
     {
         IRQ_VEC_PRTY3_CME, /* 3: IDX_PRTY_LVL_SPWU */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -86,6 +94,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
     },
     {
         IRQ_VEC_PRTY4_CME, /* 4: IDX_PRTY_LVL_WAKE */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -96,6 +106,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
     },
     {
         IRQ_VEC_PRTY5_CME, /* 5: IDX_PRTY_LVL_STOP */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -105,6 +117,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
     },
     {
         IRQ_VEC_PRTY6_CME, /* 6: IDX_PRTY_LVL_DB1 */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -114,6 +128,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
 
     {
         IRQ_VEC_PRTY7_CME, /* 7: IDX_PRTY_LVL_DB0 */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME |
@@ -122,27 +138,44 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
 
     {
         IRQ_VEC_PRTY8_CME, /* 8: IDX_PRTY_LVL_INTERCME_IN0 */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME |
         IRQ_VEC_PRTY8_CME
     },
     {
         IRQ_VEC_PRTY9_CME, /* 9: IDX_PRTY_LVL_PMCR */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME
     },
     {
         IRQ_VEC_PRTY10_CME, /* 10: IDX_PRTY_LVL_DISABLED */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME
+    },
+    {
+        IRQ_VEC_PRTY11_CME, /* 11: IDX_PRTY_LVL_COMM_RECVD */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY11_CME
+    },
+    {
+        IRQ_VEC_PRTY12_CME, /* 12: IDX_PRTY_LVL_DISABLED */
+        IRQ_VEC_PRTY12_CME
     }
+
 
 };
 
-uint8_t  g_current_prty_level = IOTA_NUM_EXT_IRQ_PRIORITIES - 1;
+uint32_t g_current_prty_level = IOTA_NUM_EXT_IRQ_PRIORITIES - 1;
 uint8_t  g_eimr_stack[IOTA_NUM_EXT_IRQ_PRIORITIES];
 int      g_eimr_stack_ctr = -1;
 uint64_t g_eimr_override_stack[IOTA_NUM_EXT_IRQ_PRIORITIES];
 uint64_t g_eimr_override = 0x0000000000000000;
+uint64_t g_ext_irq_vector = 0;
 
 // Unified IRQ priority and masking handler.
 // - Locates the highest priority IRQ task vector that has at least one of its
@@ -150,14 +183,14 @@ uint64_t g_eimr_override = 0x0000000000000000;
 uint32_t iota_uih(void)
 {
     uint32_t  iPrtyLvl = 0, bFound = 0;
-    uint64_t  ext_irq_vector;
+    //uint64_t  ext_irq_vector;
 
     // 1. Identify the priority level of the interrupt.
-    ext_irq_vector = in64(CME_LCL_EISTR);
+    g_ext_irq_vector = in64(CME_LCL_EISTR);
 
     do
     {
-        if(ext_irq_vectors_cme[iPrtyLvl][IDX_PRTY_VEC] & ext_irq_vector)
+        if(ext_irq_vectors_cme[iPrtyLvl][IDX_PRTY_VEC] & g_ext_irq_vector)
         {
             bFound = 1;
             break;

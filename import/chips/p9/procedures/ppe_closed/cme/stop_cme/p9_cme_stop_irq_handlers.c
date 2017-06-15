@@ -37,7 +37,7 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_PCWU_HANDLER)
 
-    PkMachineContext ctx;
+    PkMachineContext ctx __attribute__((unused));
     uint32_t  core_mask = 0;
     uint32_t  core      = (in32(CME_LCL_EISR) & BITS32(12, 2)) >> SHIFT32(13);
     data64_t  scom_data = {0};
@@ -76,7 +76,16 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
     if (core)
     {
         out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+#if defined(__IOTA__)
+        wrteei(1);
+        p9_cme_stop_exit();
+
+        // re-evaluate g_eimr_override then restore eimr
+        p9_cme_stop_eval_eimr_override();
+        iota_uih_irq_vec_restore();
+#else
         pk_semaphore_post((PkSemaphore*)arg);
+#endif
     }
     else
     {
@@ -98,7 +107,7 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_SPWU_HANDLER)
 
-    PkMachineContext ctx;
+    PkMachineContext ctx __attribute__((unused));
     int      sem_post   = 0;
     uint32_t core_mask  = 0;
     uint32_t core_index = 0;
@@ -166,7 +175,16 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
     {
         out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
         PK_TRACE_INF("Launching exit thread");
+#if defined(__IOTA__)
+        wrteei(1);
+        p9_cme_stop_exit();
+
+        // re-evaluate g_eimr_override then restore eimr
+        p9_cme_stop_eval_eimr_override();
+        iota_uih_irq_vec_restore();
+#else
         pk_semaphore_post((PkSemaphore*)arg);
+#endif
     }
     else
     {
@@ -182,7 +200,16 @@ p9_cme_stop_rgwu_handler(void* arg, PkIrqId irq)
     MARK_TRAP(STOP_RGWU_HANDLER)
     PK_TRACE_INF("RGWU Handler Trigger %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+#if defined(__IOTA__)
+    wrteei(1);
+    p9_cme_stop_exit();
+
+    // re-evaluate g_eimr_override then restore eimr
+    p9_cme_stop_eval_eimr_override();
+    iota_uih_irq_vec_restore();
+#else
     pk_semaphore_post((PkSemaphore*)arg);
+#endif
 }
 
 
@@ -193,13 +220,24 @@ p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
     MARK_TRAP(STOP_ENTER_HANDLER)
     PK_TRACE_INF("PM_ACTIVE Handler Trigger %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+#if defined(__IOTA__)
+    wrteei(1);
+
+    // The actual entry sequence
+    p9_cme_stop_entry();
+
+    // re-evaluate g_eimr_override then restore eimr
+    p9_cme_stop_eval_eimr_override();
+    iota_uih_irq_vec_restore();
+#else
     pk_semaphore_post((PkSemaphore*)arg);
+#endif
 }
 
 void
 p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 {
-    PkMachineContext ctx;
+    PkMachineContext ctx __attribute__((unused));
 
     MARK_TRAP(STOP_DB2_HANDLER)
     PK_TRACE_DBG("DB2 Handler Trigger %d", irq);
@@ -220,7 +258,7 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 void
 p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
 {
-    PkMachineContext ctx;
+    PkMachineContext ctx __attribute__((unused));
     cppm_cmedb1_t    db1         = {0};
     ppm_pig_t        pig         = {0};
     uint32_t         core        = 0;

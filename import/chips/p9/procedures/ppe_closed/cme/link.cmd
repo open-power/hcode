@@ -120,7 +120,10 @@ SECTIONS
     // offsets.
 
     _SDA_BASE_ = .;
-    .sdata  . : { *(.sdata*)  } > sram
+    .sdata  . : { *(.sdata.ppe42_64bit_timebase)
+                  *(.sdata*)
+                } > sram
+
     .sbss   . : { *(.sbss*)   } > sram
 
     // Other read-write data

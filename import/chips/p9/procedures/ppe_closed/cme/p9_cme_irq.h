@@ -46,6 +46,8 @@
 // - The variable names and actions in this file must perfectly match associated
 //   definitions in cme_irq_common.c
 
+#include <stdint.h>
+
 // Priority Levels
 #define IDX_PRTY_LVL_HIPRTY         0
 #define IDX_PRTY_LVL_DB3            1
@@ -107,13 +109,20 @@ extern const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2];
                               IRQ_VEC_PRTY11_CME | \
                               IRQ_VEC_PRTY12_CME )
 
-extern uint8_t       g_current_prty_level;
-extern uint8_t       g_eimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];
+extern uint32_t      g_current_prty_level;
+
+extern uint8_t
+g_eimr_stack[NUM_EXT_IRQ_PRTY_LEVELS] __attribute__((section(".sbss")));
+
 extern int           g_eimr_stack_ctr;
-extern uint64_t      g_eimr_override_stack[NUM_EXT_IRQ_PRTY_LEVELS];
+
+extern uint64_t
+g_eimr_override_stack[NUM_EXT_IRQ_PRTY_LEVELS] __attribute__((section(".sbss")));
+
 extern uint64_t      g_eimr_override;
 
 /// Restore a vector of interrupts by overwriting EIMR.
+#if !defined(__IOTA__)
 UNLESS__PPE42_IRQ_CORE_C__(extern)
 inline void
 pk_irq_vec_restore(PkMachineContext* context)
@@ -141,3 +150,4 @@ pk_irq_vec_restore(PkMachineContext* context)
 
     //pk_critical_section_exit(context);
 }
+#endif

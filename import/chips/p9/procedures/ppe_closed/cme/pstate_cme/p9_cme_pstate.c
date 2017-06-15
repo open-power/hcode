@@ -235,7 +235,8 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             CME_PUTSCOM(CPPM_CACCR_OR, core_mask, (BITS64(13, 3)));
 
             // Update PMSRS (only on stop-exit)
-            // TODO Revisit during CME code review, should use common PMSRS
+            // TODO RTC 152965
+            //      Revisit during CME code review, should use common PMSRS
             //      function instead (for when other fields are added in the
             //      future)
             uint64_t pmsrs = ((((uint64_t)pstate << 48) & BITS64(8, 8))

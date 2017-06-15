@@ -70,38 +70,57 @@ void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx);
 #define IOTA_IDLE_DISABLED  0x00000000
 #define IOTA_IDLE_ENABLED   0x00000001
 
+#if !defined(IOTA_INITIAL_MSR)
+    #define IOTA_INITIAL_MSR (MSR_ME | MSR_IS0 | MSR_IS1 | MSR_IS2 | MSR_IPE)
+#endif
+
 #if !defined(IOTA_DEFAULT_MSR)
-    #define IOTA_DEFAULT_MSR    0x00000000
+#define IOTA_DEFAULT_MSR    (MSR_UIE | MSR_EE | MSR_ME | MSR_IS0 | \
+                             MSR_IS1 | MSR_IS2 | MSR_IPE | MSR_SEM6)
 #endif
 
 ///
 
 /// IOTA -- CONVENIENCE MACROS
-// This below macro-fu is an adaptation of a similar macro in the Linux kernel (BUILD_BUG_ON)
-// Allows compile time checking of conditions using sizeof()
+// This below macro-fu is an adaptation of a similar macro in the Linux kernel
+// (BUILD_BUG_ON). Allows compile time checking of conditions using sizeof()
 #define IOTA_TOKEN_PASTE0(a,b) a ## b
 #define IOTA_TOKEN_PASTE1(a,b) IOTA_TOKEN_PASTE0(a,b)
-#define IOTA_COMPILE_TIME_UNIQUE IOTA_TOKEN_PASTE1(_iota_compile_unique_,__COUNTER__)
-#define IOTA_COMPILE_TIME_CHECK(condition) extern int IOTA_COMPILE_TIME_UNIQUE [!!(condition)-1];
+#define IOTA_COMPILE_TIME_UNIQUE \
+    IOTA_TOKEN_PASTE1(_iota_compile_unique_,__COUNTER__)
+#define IOTA_COMPILE_TIME_CHECK(condition) \
+    extern int IOTA_COMPILE_TIME_UNIQUE [!!(condition)-1];
+
+#define SECTION_SBSS __attribute__((section(".sbss")))
+#define SECTION_SDATA __attribute__((section(".sdata")))
+#define SECTION(a) __attribute__((section(a)))
 
 #define IOTA_TASK(function) ((iotaTaskFuncPtr)function)
 
 #define IOTA_TIMER_HANDLER(function) ((iotaTimerFuncPtr)function)
-#define IOTA_DEC_HANDLER(function) g_iota_dec_handler = IOTA_TIMER_HANDLER(function);
-#define IOTA_FIT_HANDLER(function) g_iota_fit_handler = IOTA_TIMER_HANDLER(function);
+
+#define IOTA_DEC_HANDLER(function) g_iota_dec_handler \
+        = IOTA_TIMER_HANDLER(function);
+
+#define IOTA_FIT_HANDLER(function) g_iota_fit_handler \
+        = IOTA_TIMER_HANDLER(function);
 
 #define IOTA_BEGIN_IDLE_TASK_TABLE \
-    iotaIdleTask g_iota_idle_task_list[] = {
+    iotaIdleTask g_iota_idle_task_list[] \
+    SECTION(".sdata.g_iota_idle_task_list") = {
 #define IOTA_END_IDLE_TASK_TABLE \
     }; \
-    uint32_t const g_iota_idle_task_list_size = (uint32_t)(sizeof(g_iota_idle_task_list)/sizeof(iotaIdleTask));
+    uint32_t const g_iota_idle_task_list_size \
+        = (uint32_t)(sizeof(g_iota_idle_task_list)/sizeof(iotaIdleTask));
 
 #define IOTA_BEGIN_TASK_TABLE \
-    iotaTaskFuncPtr g_iota_task_list[] = {
+    iotaTaskFuncPtr g_iota_task_list[] SECTION(".sdata.g_iota_task_list") = {
 #define IOTA_END_TASK_TABLE \
     }; \
-    uint32_t const g_iota_task_list_size = (uint32_t)(sizeof(g_iota_task_list)/sizeof(iotaTaskFuncPtr)); \
-    IOTA_COMPILE_TIME_CHECK((sizeof(g_iota_task_list)/sizeof(iotaTaskFuncPtr)) == (IOTA_NUM_EXT_IRQ_PRIORITIES));
+    uint32_t const g_iota_task_list_size \
+        = (uint32_t)(sizeof(g_iota_task_list)/sizeof(iotaTaskFuncPtr)); \
+    IOTA_COMPILE_TIME_CHECK((sizeof(g_iota_task_list)/sizeof(iotaTaskFuncPtr)) \
+                            == (IOTA_NUM_EXT_IRQ_PRIORITIES));
 
 #define IOTA_MACHINE_STATE_INIT { \
         IOTA_32U_ARR_INIT, \
@@ -150,7 +169,7 @@ typedef struct
     uint32_t padding; // needs to be 8B aligned
 } iotaMachineState;
 
-typedef void (*iotaTaskFuncPtr )(uint32_t arg);
+typedef void (*iotaTaskFuncPtr )(uint32_t arg, uint32_t irq);
 typedef void (*iotaTimerFuncPtr)(void        );
 
 typedef struct

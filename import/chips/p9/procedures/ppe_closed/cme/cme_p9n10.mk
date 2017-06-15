@@ -26,6 +26,10 @@
 CME_TARGET := cme_p9n10
 IMAGE:=$(CME_TARGET)
 
+#Select KERNEL
+#$(IMAGE)_KERNEL:=__IOTA__
+$(IMAGE)_KERNEL:=__PK__
+
 # Options for Platforms specific DD lvl
 
 $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=0
@@ -59,7 +63,7 @@ $(call BUILD_PPEIMAGE)
  OBJS := stop_cme/p9_cme_cpmr.o
 
 $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
-    $(CME_SRCDIR)/stop_cme \
+	$(CME_SRCDIR)/stop_cme \
 	$(CME_SRCDIR)/pstate_cme \
 	$(PK_SRCDIR)/kernel \
 	$(PK_SRCDIR)/ppe42 \
@@ -71,7 +75,9 @@ $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
 	$(HCODE_LIBDIR) \
 	$(HCODE_COMMON_LIBDIR) \
 	$(ROOTPATH)/chips/p9/procedures/hwp/lib/ \
-        $(ROOTPATH)/chips/p9/utils/imageProcs/ \
+	$(ROOTPATH)/chips/p9/utils/imageProcs/ \
 	)
 
- $(call BUILD_BINHEADER,$(IMAGEPATH)/$(CME_TARGET)/$(CME_TARGET).bin,$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
+$(call BUILD_BINHEADER, \
+	$(IMAGEPATH)/$(CME_TARGET)/$(CME_TARGET).bin, \
+	$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)

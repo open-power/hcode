@@ -23,6 +23,7 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "iota.h"
+#include "iota_trace.h"
 
 /**
  * @file main.c
@@ -87,6 +88,10 @@ __attribute__((weak)) int main()
 {
     IOTA_DEC_HANDLER(dec_handler);
     IOTA_FIT_HANDLER(func0);
+
+    PK_TRACE("Test Trace");
+    PK_TRACE("Tiny Trace %d", (uint16_t)1234);
+    PK_TRACE("Big trace %d", 0x12345678);
 
     out64(CME_LCL_EITR_OR, 0x8000000000000000ull);
     out64(CME_LCL_EIMR   , 0x7fffffffffffffffull);
