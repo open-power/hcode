@@ -124,33 +124,23 @@ void p9_cme_pstate_pmcr_thread(void* arg)
                     //for pmcr to change between sending phase 1 and phase 2
                     pmcr = in64(CME_LCL_PMCRS0 + (c << 5));
 
-                    if ((pmcr & BITS64(PMCR_VERSION_START, PMCR_VERSION_LENGTH)) == 0x1)
-                    {
-                        G_cme_pstate_record.pmcrSeenErr &= ~coreMask[c]; //Clear PMCR error
+                    //Send Phase 1
+                    ppmPigData.value = 0;
+                    ppmPigData.fields.req_intr_type = 0;
+                    ppmPigData.value |= ((pmcr & PIG_PAYLOAD_PS_PHASE1_MASK) >> 8);
+                    ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
+                    send_pig_packet(ppmPigData.value, coreMask[c]);
+                    G_pmcr_thread_data.seqNum++;
 
-                        //Send Phase 1
-                        ppmPigData.value = 0;
-                        ppmPigData.fields.req_intr_type = 0;
-                        ppmPigData.value |= ((pmcr & PIG_PAYLOAD_PS_PHASE1_MASK) >> 8);
-                        ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
-                        send_pig_packet(ppmPigData.value, coreMask[c]);
-                        G_pmcr_thread_data.seqNum++;
+                    //Send Phase 2
+                    ppmPigData.value = 0;
+                    ppmPigData.fields.req_intr_type = 1;
+                    ppmPigData.value |= (pmcr & PIG_PAYLOAD_PS_PHASE2_MASK);
+                    ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
+                    send_pig_packet(ppmPigData.value, coreMask[c]);
+                    G_pmcr_thread_data.seqNum++;
+                    PK_TRACE_INF("PMCR_TH: Fwd PMCR[%d]=0x%08x%08x\n", c, pmcr >> 32, pmcr);
 
-                        //Send Phase 2
-                        ppmPigData.value = 0;
-                        ppmPigData.fields.req_intr_type = 1;
-                        ppmPigData.value |= (pmcr & PIG_PAYLOAD_PS_PHASE2_MASK);
-                        ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
-                        send_pig_packet(ppmPigData.value, coreMask[c]);
-                        G_pmcr_thread_data.seqNum++;
-                        PK_TRACE_INF("PMCR_TH: Fwd PMCR[%d]=0x%08x%08x\n", c, pmcr >> 32, pmcr);
-                    }
-                    else
-                    {
-                        //Set PMCR error, so that any future PMSR update keep on setting invalid version field
-                        G_cme_pstate_record.pmcrSeenErr |= coreMask[c];
-                        p9_cme_pstate_pmsr_updt(coreMask[c]);
-                    }
                 }
             }
         }
