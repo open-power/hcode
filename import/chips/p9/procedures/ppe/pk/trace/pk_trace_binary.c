@@ -33,7 +33,7 @@
 #include "pk.h"
 #include "pk_trace.h"
 
-#if (PK_TRACE_SUPPORT && PK_TIMER_SUPPORT)
+#if (PK_TRACE_SUPPORT)
 void pk_trace_binary(uint32_t i_hash_and_size, void* bufp)
 {
     PkTraceBinary           footer;
