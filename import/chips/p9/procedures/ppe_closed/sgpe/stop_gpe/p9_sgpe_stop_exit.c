@@ -282,27 +282,48 @@ void p9_sgpe_stop_exit_end(uint32_t cexit, uint32_t qspwu, uint32_t qloop)
 
 #if NIMBUS_DD_LEVEL != 10
 
-        p9_dd1_cppm_unicast_wr(
-            GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
-            GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,  ((qloop << 2) + cloop)),
-            BIT64(0), OR_OP);
+        // do not do this for dd1
+        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_OR,
+                                       ((qloop << 2) + cloop)), BIT64(0));
 
 #endif
 
         // if waken up by pc, send doorbell to unmask pc
         if (G_sgpe_stop_record.group.core[VECTOR_PCWU] & BIT32(((qloop << 2) + cloop)))
         {
+
+#if NIMBUS_DD_LEVEL != 10
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2,
+                                           ((qloop << 2) + cloop)), BIT64(7));
+
+#else
+
             p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2,
                                                     ((qloop << 2) + cloop)), BIT64(7));
+
+#endif
+
             G_sgpe_stop_record.group.core[VECTOR_PCWU] &= ~BIT32(((qloop << 2) + cloop));
         }
 
         PK_TRACE_INF("SX.CME: Core[%d] Switch CorePPM Wakeup Back to CME via CPMMR[13]",
                      ((qloop << 2) + cloop));
+
+#if NIMBUS_DD_LEVEL != 10
+
+        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR,
+                                       ((qloop << 2) + cloop)), BIT64(13));
+
+#else
+
         p9_dd1_cppm_unicast_wr(
             GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
             GPE_SCOM_ADDR_CORE(CPPM_CPMMR_CLR, ((qloop << 2) + cloop)),
             BIT64(13), CLR_OP);
+
+#endif
+
     }
 
     PK_TRACE("Update QSSR: drop stop_exit_ongoing");
@@ -839,9 +860,25 @@ p9_sgpe_stop_exit()
                 }
 
                 PK_TRACE_DBG("Check: Core[%d] will send Doorbell1", ((qloop << 2) + cloop));
+
+#if NIMBUS_DD_LEVEL != 10
+
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG,
+                                               ((qloop << 2) + cloop)), BIT64(0));
+                // workaround has to use base address as read on OR/CLR leads to error
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1,
+                                               ((qloop << 2) + cloop)), BIT64(7));
+
+#else
+
+                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG,
+                                                        ((qloop << 2) + cloop)), BIT64(0));
                 // workaround has to use base address as read on OR/CLR leads to error
                 p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1,
                                                         ((qloop << 2) + cloop)), BIT64(7));
+
+#endif
+
             }
 
             // Setting up cme_flags
