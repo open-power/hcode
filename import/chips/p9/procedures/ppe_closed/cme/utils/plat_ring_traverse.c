@@ -36,28 +36,6 @@ enum
     CMSK_SUPPORTED      =   1,
 };
 
-void getRingProperties(const RingID i_ringId,
-                       uint32_t* o_torOffset,
-                       RINGTYPE* o_ringType)
-{
-    do
-    {
-        // Determine the TOR ID
-        *o_torOffset =
-            (INSTANCE_RING_MASK & (RING_PROPERTIES[i_ringId].iv_torOffSet));
-
-        // Determine Ring Type
-        if(INSTANCE_RING_MARK & (RING_PROPERTIES[i_ringId].iv_torOffSet))
-        {
-            *o_ringType = INSTANCE_RING;
-        }
-        else
-        {
-            *o_ringType = COMMON_RING;
-        }
-    }
-    while(0);
-}
 ///
 /// @brief This is a plat specific (CME) function that locates the
 ///        Ring Container in the image and calls the functin to decompress the
@@ -83,12 +61,13 @@ int putRing(
         l_chipletData.iv_num_common_rings = 0;
         l_chipletData.iv_num_instance_rings = 0;
         l_chipletData.iv_num_variants = 0;
-        uint8_t l_chipletID = 0;
         uint32_t  l_sectionAddr = 0;
         uint16_t* l_ringTorAddr = 0;
         enum CME_SCOM_CONTROLS l_scomOp;
 
-        getRingProperties(i_ringID, &l_torOffset, &l_ringType);
+        l_torOffset = (INSTANCE_RING_MASK & (RING_PROPERTIES[i_ringID].iv_torOffSet));
+        l_ringType  = (INSTANCE_RING_MARK & RING_PROPERTIES[i_ringID].iv_torOffSet) ?
+                      INSTANCE_RING : COMMON_RING;
 
         uint8_t* pCmeImage = (uint8_t*)(CME_SRAM_BASE_ADDR);
 
@@ -104,8 +83,6 @@ int putRing(
 
         if(INSTANCE_RING == l_ringType)
         {
-            uint8_t l_core = 1;
-
             if (!(l_cmeHeader->g_cme_core_spec_ring_offset))
             {
                 break;
@@ -113,15 +90,7 @@ int putRing(
 
             l_sectionAddr = (CME_SRAM_BASE_ADDR + (l_cmeHeader->g_cme_core_spec_ring_offset * 32));
 
-            if (i_core == 2)
-            {
-                l_core = 0;
-            }
-
-            l_chipletID = l_core + l_chipletData.iv_base_chiplet_number;
-            uint8_t l_chipletOffset =
-                (l_chipletID - l_chipletData.iv_base_chiplet_number);
-            l_ringTorAddr =  (uint16_t*)(l_sectionAddr ) + ((l_chipletOffset *
+            l_ringTorAddr =  (uint16_t*)(l_sectionAddr ) + (((i_core & 0x01) *
                              l_chipletData.iv_num_instance_rings ) + (l_torOffset));
         }
         else
@@ -178,7 +147,7 @@ int putRing(
             {
                 uint8_t* l_addr = (uint8_t*)(l_sectionAddr);
                 uint8_t* l_rs4Address = (uint8_t*)(l_addr + *l_ringTorAddr );
-                l_rc = rs4DecompressionSvc(i_core, l_scomOp, l_rs4Address, 1, REGULAR );
+                rs4DecompressionSvc(i_core, l_scomOp, l_rs4Address, 1, REGULAR );
             }
             else
             {
@@ -186,9 +155,6 @@ int putRing(
             }
 
         }
-
-
-
     }
     while(0);
 

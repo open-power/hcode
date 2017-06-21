@@ -44,45 +44,6 @@
 // Forward Declarations
 //
 
-/// @brief Byte-reverse a 32-bit integer
-/// @param[in] i_x 32-bit word that need to be byte reversed
-/// @return Byte reversed 32-bit word
-uint32_t rs4_revle32(const uint32_t i_x);
-
-///
-/// @brief Decode an unsigned integer from a 4-bit octal stop code.
-/// @param[in] i_rs4Str The RS4 scan string
-/// @param[in] i_nibbleIndx Index into i_rs4Str that has the stop-code
-/// @param[out] o_numRotate No.of rotates decoded from the stop-code.
-/// @return The number of nibbles decoded.
-///
-uint32_t stop_decode(const uint8_t* i_rs4Str,
-                     uint32_t i_nibbleIndx,
-                     uint32_t* o_numRotate);
-
-///
-/// @brief Return a big-endian-indexed nibble from a byte string
-/// @param[in] i_rs4Str The RS4 scan string
-/// @param[in] i_nibbleIndx Index into i_rs4Str that need to converted
-///                         into a nibble
-/// @return big-endian-indexed nibble
-///
-uint8_t rs4_get_nibble(const uint8_t* i_rs4Str, const uint32_t i_nibbleIndx);
-
-///
-/// @brief Return verbatim data from the RS4 string
-/// @param[in] i_rs4Str The RS4 scan string
-/// @param[in] i_nibbleIndx Index into i_rs4Str that need to converted
-///                         into a nibble
-/// @param[in] i_nibbleCount The count of nibbles that need to be put
-///                          in the return value.
-/// @return big-endian-indexed double word
-///
-uint64_t rs4_get_verbatim(const uint8_t* i_rs4Str,
-                          const uint32_t i_nibbleIndx,
-                          const uint8_t i_nibbleCount);
-
-
 //
 // Constants and Structures
 //
@@ -115,22 +76,7 @@ enum rs4Type_t
 /// @param[in] i_operation Type of operation to perform - ROTATE/SCAN
 /// @param[in] i_opVal Number of bits for the operation
 /// @param[in] i_scanData This value has to be scanned when i_operation is SCAN
-void queuedScan(
-    enum CME_CORE_MASKS i_core,
-    enum CME_SCOM_CONTROLS i_scom_op,
-    enum opType_t i_operation,
-    uint32_t i_opVal,
-    uint64_t i_scanData);
 
-
-/// @brief Function to reader the header data from the ring and verify it.
-//  @param[in] i_core - core select value
-//  @param[in] i_scom_op - scom control value like queue/non-queue
-/// @param[in] i_header The header data that is expected.
-//  @param[in] i_chipletId data from RS4
-int verifyHeader(enum CME_CORE_MASKS i_core,
-                 enum CME_SCOM_CONTROLS i_scom_op,
-                 const uint64_t i_header);
 
 /// @brief Function to decompress the RS4 and apply the Ring data
 /// @param[in] i_core - core select value
@@ -142,7 +88,7 @@ int rs4DecompressionSvc(
     enum CME_CORE_MASKS i_core,
     enum CME_SCOM_CONTROLS i_scom_op,
     uint8_t* i_rs4,
-    uint8_t i_applyOverride,
+    uint32_t i_applyOverride,
     enum rs4Type_t i_rs4Type );
 
 
