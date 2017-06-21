@@ -53,17 +53,17 @@
 #define QUAD4_BIT_MASK          0x8
 #define QUAD5_BIT_MASK          0x4
 
-
+#define PSTATE_SUSPEND_OR_SUSPEND_PEND 6
 enum PSTATE_STATUS
 {
     PSTATE_INIT                                 =    0, //PGPE Booted
     PSTATE_ACTIVE                               =    1, //Pstates are active
-    PSTATE_STOPPED                              =    2, //Pstates are stopped
-    PSTATE_SUSPENDED_WHILE_STOPPED_INIT         =    3, //Suspended by SGPE IPC
-    PSTATE_SUSPENDED_WHILE_ACTIVE               =    4, //Suspended by SGPE IPC
-    PSTATE_PM_SUSPEND_PENDING                   =    5, //PM Complex Suspend Pending
-    PSTATE_PM_SUSPENDED                         =    6, //PM Complex Suspend
-    PSTATE_SAFE_MODE                            =    7  //Safe Mode
+    PSTATE_SUSPENDED_WHILE_STOPPED_INIT         =    2, //Suspended by SGPE IPC
+    PSTATE_SUSPENDED_WHILE_ACTIVE               =    3, //Suspended by SGPE IPC
+    PSTATE_SAFE_MODE                            =    4,  //Safe Mode
+    PSTATE_STOPPED                              =    5, //Pstates are stopped
+    PSTATE_PM_SUSPEND_PENDING                   =    6, //PM Complex Suspend Pending
+    PSTATE_PM_SUSPENDED                         =    7 //PM Complex Suspend
 };
 
 //Task list entry

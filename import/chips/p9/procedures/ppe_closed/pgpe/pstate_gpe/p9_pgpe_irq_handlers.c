@@ -124,40 +124,6 @@ void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq)
 }
 
 //
-//IPI2 Lo Priority Interrupt Handler
-//
-void p9_pgpe_irq_handler_ipi2_lo(void* arg, PkIrqId irq)
-{
-    PK_TRACE_DBG("IPI2 Lo: Enter\n");
-    PkMachineContext  ctx;
-    ocb_occflg_t occFlag;
-
-    out32(OCB_OISR1_CLR, BIT32(28));
-
-    //Read OCC_FLAGS
-    occFlag.value = 0;
-    occFlag.value = in32(OCB_OCCFLG);
-
-    //If OCC_FLAGS[PM_SUSPEND
-    if (occFlag.value & BIT32(PM_COMPLEX_SUSPEND))
-    {
-        p9_pgpe_pstate_pm_complex_suspend();
-    }
-    else if (occFlag.value & BIT32(PGPE_SAFE_MODE))
-    {
-        p9_pgpe_pstate_safe_mode();
-    }
-    else
-    {
-        PK_TRACE_DBG("IPI2 Lo: !Suspend and !SafeMode\n");
-    }
-
-
-    pk_irq_vec_restore(&ctx);
-    PK_TRACE_DBG("IPI2 Lo: Exit\n");
-}
-
-//
 //PCB Type 1 Interrupt Handler
 //
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)

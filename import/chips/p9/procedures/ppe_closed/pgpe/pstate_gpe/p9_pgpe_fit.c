@@ -23,6 +23,8 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "pk.h"
+#include "p9_pgpe.h"
+#include "p9_pgpe_pstate.h"
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_header.h"
 
@@ -39,6 +41,8 @@ uint32_t G_beacon_count;
 
 extern GlobalPstateParmBlock* G_gppb;
 extern PgpeHeader_t* G_pgpe_header_data;
+extern PgpePstateRecord G_pgpe_pstate_record;
+
 //
 //Local function declarations
 //
@@ -158,6 +162,30 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
         //write to SRAM
         *(G_pgpe_header_data->g_pgpe_beacon_addr) = *(G_pgpe_header_data->g_pgpe_beacon_addr) + 1;
         G_beacon_count = 0;
+
+        ocb_occflg_t occFlag;
+        //Read OCC_FLAGS
+        occFlag.value = 0;
+        occFlag.value = in32(OCB_OCCFLG);
+
+        //If we see this flag we want to suspend - must be SUSPEND / SUSPEND_PEND
+        if ((G_pgpe_pstate_record.pstatesStatus < PSTATE_SUSPEND_OR_SUSPEND_PEND)
+            && (occFlag.value & BIT32(PM_COMPLEX_SUSPEND)))
+        {
+            p9_pgpe_pstate_pm_complex_suspend();
+        }
+        //If we see this flag we want to go to safe mode - must be !ACTIVE
+        else if ((G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+                 && (occFlag.value & BIT32(PGPE_SAFE_MODE)))
+        {
+            p9_pgpe_pstate_safe_mode();
+        }
+        //If we see this flag we want to stop processing pstates - must be in state STOPPED / SUSPEND / SUSPEND_PEND
+        else if ((G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+                 && (occFlag.value & BIT32(PGPE_START_NOT_STOP)))
+        {
+            p9_pgpe_pstate_stop();
+        }
     }
     else
     {

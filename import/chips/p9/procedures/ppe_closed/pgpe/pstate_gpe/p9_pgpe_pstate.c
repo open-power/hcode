@@ -480,6 +480,7 @@ void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg)
     PK_TRACE_INF("Susp Stop Cb");
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
+    occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
     G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
     out32(OCB_OCCS2, occScr2);
 }
@@ -508,6 +509,10 @@ void p9_pgpe_pstate_safe_mode()
     {
         G_pgpe_pstate_record.pstatesStatus = PSTATE_SAFE_MODE;
     }
+
+    uint32_t occScr2 = in32(OCB_OCCS2);
+    occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
+    out32(OCB_OCCS2, occScr2);
 
     PK_TRACE_DBG("Safe Mode Exit");
 }
@@ -1167,16 +1172,11 @@ void p9_pgpe_pstate_stop()
 
     p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.quadsActive);//Wait for ACKs from all CMEs
 
+    uint32_t occScr2 = in32(OCB_OCCS2);
+    occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
+    out32(OCB_OCCS2, occScr2);
+
     G_pgpe_pstate_record.pstatesStatus = PSTATE_STOPPED;
-
-    //Send STOP ACK to OCC
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd;
-    ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
-    args->msg_cb.rc = PGPE_RC_SUCCESS;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
-
     PK_TRACE_DBG("Stop Done");
 }
 

@@ -72,7 +72,6 @@ void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq);
-void p9_pgpe_irq_handler_ipi2_lo(void* arg, PkIrqId irq);
 void p9_pgpe_thread_process_requests(void* arg);
 void p9_pgpe_thread_actuate_pstates(void* arg);
 void p9_pgpe_thread_safe_mode_and_pm_suspend(void* arg);
