@@ -71,6 +71,8 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
     ocb_occflg_t occFlag;
     occFlag.value = in32(OCB_OCCFLG);
 
+    p9_pgpe_pstate_setup_process_pcb_type4(); //Setup pcb_type4 and check for qCME registration
+
     if (occFlag.value & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVATE))
     {
         for (q = 0; q < MAX_QUADS; q++)
@@ -79,10 +81,12 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
             G_pgpe_pstate_record.psClipMin[q] = G_gppb->operating_points[ULTRA].pstate;
         }
 
+        //Mask all external interrupts. Timers are still enabled
+        pk_irq_sub_critical_enter(&ctx);
         p9_pgpe_pstate_start(PSTATE_START_OCC_FLAG);
+        pk_irq_sub_critical_exit(&ctx);
     }
 
-    p9_pgpe_pstate_setup_process_pcb_type4(); //Setup pcb_type4 and check for qCME registration
 
     // Set OCC Scratch2[PGPE_ACTIVE]
     uint32_t occScr2 = in32(OCB_OCCS2);

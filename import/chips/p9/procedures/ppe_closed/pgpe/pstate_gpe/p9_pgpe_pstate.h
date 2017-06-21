@@ -111,8 +111,8 @@ typedef struct
     PkSemaphore sem_process_req;
     PkSemaphore sem_actuate;
     PkSemaphore sem_sgpe_wait;
-    uint32_t quadsActive;
-} PgpePstateRecord;
+    uint32_t quadsActive, coresActive;
+} PgpePstateRecord __attribute__ ((aligned (8)));
 
 
 //

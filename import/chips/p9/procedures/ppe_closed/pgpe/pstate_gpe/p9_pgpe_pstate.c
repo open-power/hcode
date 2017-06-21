@@ -72,6 +72,7 @@ void p9_pgpe_pstate_init()
     G_pgpe_pstate_record.wofPending = 0;
     G_pgpe_pstate_record.quadsActive =
         0;//We only mark qCME active upon a registration msg whether before or after PGPE boot
+    G_pgpe_pstate_record.coresActive = 0;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -935,7 +936,6 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     uint8_t quadPstates[MAX_QUADS];
     uint32_t lowestDpll, syncPstate;
     qppm_dpll_stat_t dpll;
-    uint32_t active_cores = 0;
     uint32_t q;
     uint64_t value;
 
@@ -945,14 +945,15 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads =  G_pgpe_pstate_record.quadsActive;
     PK_TRACE_DBG("Shr Mem Updt");
 
-    //1. Read DPLLs
+    //1. Read DPLLs. Determine lowest DPLL
     lowestDpll = 0xFFF;
     dpll.value = 0;
     PK_TRACE_INF("DPLL0Value=0x%x", G_gppb->dpll_pstate0_value);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_pgpe_pstate_record.quadsActive & (0x80 >> q))
+        //Exclude deconfigured quads
+        if (qcsr.fields.ex_config & (0xC00 >> (q << 1)))
         {
             GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_STAT, q), dpll.value);
 
@@ -962,14 +963,13 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
             }
 
             PK_TRACE_DBG("Quad[%d]: DPLL=0x%x", q, (dpll.fields.freqout));
-            active_cores |= (0xF0000000 >> (q << 2));
         }
     }
 
     //2. Determine Sync Pstate
     if (lowestDpll > G_gppb->dpll_pstate0_value)
     {
-        syncPstate = G_gppb->dpll_pstate0_value;
+        syncPstate = 0;
     }
     else
     {
@@ -1022,23 +1022,20 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     G_pgpe_pstate_record.eVidCurr = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget,
                                     VPD_PT_SET_BIASED_SYSP);
 #endif
-    G_pgpe_pstate_record.eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget,
-                                    VPD_PT_SET_BIASED_SYSP);
+
+    if(G_pgpe_pstate_record.quadsActive != 0 )
+    {
+        G_pgpe_pstate_record.eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget,
+                                        VPD_PT_SET_BIASED_SYSP);
+    }
+    else
+    {
+        G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr;
+    }
+
     PK_TRACE_INF("eVidNext=%umV", G_pgpe_pstate_record.eVidNext);
 
-    pgpe_db0_start_ps_bcast_t db0;
-    db0.value = 0;
-    db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
-    db0.fields.global_actual = G_pgpe_pstate_record.globalPSTarget;
-    db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSTarget[0];
-    db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSTarget[1];
-    db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSTarget[2];
-    db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSTarget[3];
-    db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
-    db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
-
-    //Set up CME_SCRATCH0[Local_Pstate_Index] and determine
-    //which cores are active
+    //Set up CME_SCRATCH0[Local_Pstate_Index]
     for (q = 0; q < MAX_QUADS; q++)
     {
         if(G_pgpe_pstate_record.quadsActive & (0x80 >> q))
@@ -1061,21 +1058,40 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         }
     }
 
+    pgpe_db0_start_ps_bcast_t db0;
+    db0.value = 0;
+    db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
+    db0.fields.global_actual = G_pgpe_pstate_record.globalPSTarget;
+    db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSTarget[0];
+    db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSTarget[1];
+    db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSTarget[2];
+    db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSTarget[3];
+    db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
+    db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
+
     if (G_pgpe_pstate_record.eVidCurr > G_pgpe_pstate_record.eVidNext)
     {
         PK_TRACE_DBG("Send START DB0");
-        p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0.value, active_cores);
+        p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0.value, G_pgpe_pstate_record.coresActive);
         p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.quadsActive);//Wait for ACKs from all QuadManagers
         PK_TRACE_DBG("DB0 ACK");
 
         p9_pgpe_pstate_updt_ext_volt(G_pgpe_pstate_record.eVidNext); //update voltage
     }
-    else
+    else if(G_pgpe_pstate_record.eVidCurr < G_pgpe_pstate_record.eVidNext)
     {
         p9_pgpe_pstate_updt_ext_volt(G_pgpe_pstate_record.eVidNext); //update voltage
 
         PK_TRACE_DBG("Send START DB0");
-        p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0.value, active_cores);
+        p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0.value, G_pgpe_pstate_record.coresActive);
+        p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.quadsActive);//Wait for ACKs from all QuadManagers
+        PK_TRACE_DBG("DB0 ACK");
+    }
+    else     //Equal
+    {
+        //Only Send Global Broadcast Update
+        PK_TRACE_DBG("Send START DB0");
+        p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0.value, G_pgpe_pstate_record.coresActive);
         p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.quadsActive);//Wait for ACKs from all QuadManagers
         PK_TRACE_DBG("DB0 ACK");
     }
@@ -1166,8 +1182,10 @@ void p9_pgpe_pstate_stop()
 
 void p9_pgpe_pstate_setup_process_pcb_type4()
 {
-    uint32_t opit4pr, q, opit4prQuad;
+    ocb_ccsr_t ccsr;
+    uint32_t opit4pr, opit4prQuad, q, c;
     opit4pr = in32(OCB_OPIT4PRA); //Read current opit4pr
+    ccsr.value = in32(OCB_CCSR);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -1176,9 +1194,19 @@ void p9_pgpe_pstate_setup_process_pcb_type4()
         if (opit4prQuad)
         {
             G_pgpe_pstate_record.quadsActive |= (0x80 >> q);
-            PK_TRACE_DBG("Quad %x Registered at boot\n", q);
+
+            for (c = q << 2; c < ((q + 1) << 2); c++)
+            {
+                if (ccsr.value & ((0x80000000) >> c))
+                {
+                    G_pgpe_pstate_record.coresActive |= ((0x80000000) >> c);
+                }
+            }
         }
     }
+
+    PK_TRACE_DBG("ActiveQuads=0x%x ActiveCores=0x%x\n", G_pgpe_pstate_record.quadsActive ,
+                 G_pgpe_pstate_record.coresActive);
 
     //Enable PCB_INTR_TYPE4
     out32(OCB_OPIT4PRA_CLR, opit4pr);

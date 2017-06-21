@@ -273,9 +273,19 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
             }
 
+            //Update quadsActive and coresActive
             G_pgpe_pstate_record.quadsActive |= (0x80 >> q);
-            PK_TRACE_DBG("PCB_TYPE4: Quad %d Registered. qActive=0x%x", q, G_pgpe_pstate_record.quadsActive,
-                         G_pgpe_pstate_record.quadsActive);
+
+            for (c = q << 2; c < ((q + 1) << 2); c++)
+            {
+                if (ccsr.value & ((0x80000000) >> c))
+                {
+                    G_pgpe_pstate_record.coresActive |= ((0x80000000) >> c);
+                }
+            }
+
+            PK_TRACE_DBG("PCB_TYPE4: Quad %d Registered. qActive=0x%x cActive=0x%x", q, G_pgpe_pstate_record.quadsActive,
+                         G_pgpe_pstate_record.coresActive);
 
 
             //If Pstates are active or suspended while active, then
