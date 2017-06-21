@@ -239,10 +239,10 @@ enum SGPE_STOP_PSCOM_MASK
 
 enum SGPE_FUNCTION_STATUS
 {
-    STATUS_RESUMING                  = 0,
-    STATUS_FUNCTIONAL                = 1,
-    STATUS_SUSPENDING                = 2,
-    STATUS_SUSPENDED                 = 3
+    STATUS_IDLE                       = 0,
+    STATUS_PROCESSING                 = 1,
+    STATUS_SUSPENDING                 = 2,
+    STATUS_SUSPENDED                  = 3
 };
 
 enum SGPE_STOP_VECTOR_INDEX

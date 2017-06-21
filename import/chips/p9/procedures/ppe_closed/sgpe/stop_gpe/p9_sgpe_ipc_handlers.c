@@ -61,10 +61,26 @@ void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
 {
     PkMachineContext ctx;
 
-    G_sgpe_stop_record.wof.status_stop = STATUS_SUSPENDING;
-    G_sgpe_stop_record.wof.suspend_cmd = cmd;
+    // stop in process
+    if (G_sgpe_stop_record.wof.status_stop == STATUS_PROCESSING)
+    {
+        // Note: response will be sent by stop threads when suspension is completed
+        G_sgpe_stop_record.wof.suspend_cmd = cmd;
+        G_sgpe_stop_record.wof.status_stop = STATUS_SUSPENDING;
+    }
+    // sgpe idle
+    else if (G_sgpe_stop_record.wof.status_stop == STATUS_IDLE)
+    {
+        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
+        ipcmsg_p2s_suspend_stop_t* msg =
+            (ipcmsg_p2s_suspend_stop_t*)async_cmd->cmd_data;
+        msg->fields.return_code = SGPE_IPC_RETURN_CODE_ACK;
 
-    // Note: response will be sent by stop threads when suspension is completed
+        ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+
+        G_sgpe_stop_record.wof.status_stop = STATUS_SUSPENDED;
+        g_oimr_override |= (BITS64(47, 2) | BIT64(51));
+    }
 
     pk_irq_vec_restore(&ctx);
 }

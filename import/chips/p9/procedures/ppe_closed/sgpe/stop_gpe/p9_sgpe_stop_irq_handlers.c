@@ -391,6 +391,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             G_sgpe_stop_record.group.qswu[VECTOR_EXIT])
         {
             PK_TRACE_INF("Unblock Exit");
+            G_sgpe_stop_record.wof.status_stop = STATUS_PROCESSING;
             pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));
         }
 
@@ -398,6 +399,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             G_sgpe_stop_record.group.qswu[VECTOR_ENTRY])
         {
             PK_TRACE_INF("Unblock Entry");
+            G_sgpe_stop_record.wof.status_stop = STATUS_PROCESSING;
             pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
         }
     }
