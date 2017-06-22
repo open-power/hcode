@@ -289,44 +289,33 @@ struct ring_save
 };
 #endif
 
-void p9_sgpe_set_slvcfg_pm_disable(uint32_t);
-void p9_sgpe_clear_slvcfg_pm_disable(uint32_t);
 
 /// SGPE to PGPE IPC handlers
 void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg);
 void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg);
 void p9_sgpe_ipc_pgpe_rsp_callback(ipc_msg_t* cmd, void* arg);
 
-/// SGPE STOP Entry and Exit Prototypes
-void p9_sgpe_stop_suspend_msg_db1(uint32_t, uint32_t);
-void p9_sgpe_stop_ipi_handler(void*, PkIrqId);
+/// SGPE STOP Interrupt Handlers
 void p9_sgpe_stop_pig_handler(void*, PkIrqId);
+void p9_sgpe_stop_ipi_handler(void*, PkIrqId);
+void p9_sgpe_stop_suspend_msg_db1(uint32_t, uint32_t);
+void p9_sgpe_stop_suspend_all_cmes();
+
+/// SGPE STOP Entry and Exit Prototypes
 void p9_sgpe_stop_enter_thread(void*);
 void p9_sgpe_stop_exit_thread(void*);
 void p9_sgpe_stop_entry();
 void p9_sgpe_stop_exit();
 void p9_sgpe_stop_cme_scominit(uint32_t, uint32_t, uint32_t);
-void p9_sgpe_stop_suspend_all_cmes();
 
 /// Procedures shared between Istep4 and SGPE Stop
-void p9_hcd_cache_scan0(uint32_t, uint64_t, uint64_t);
-void p9_hcd_cache_poweron(uint32_t);
-void p9_hcd_cache_chiplet_reset(uint32_t, uint32_t);
 void p9_hcd_cache_chiplet_l3_dcc_setup(uint32_t);
 void p9_hcd_cache_gptr_time_initf(uint32_t);
 void p9_hcd_cache_dpll_initf(uint32_t);
-void p9_hcd_cache_dpll_setup(uint32_t);
 void p9_hcd_cache_dcc_skewadjust_setup(uint32_t);
-void p9_hcd_cache_chiplet_init(uint32_t);
 void p9_hcd_cache_repair_initf(uint32_t);
-void p9_hcd_cache_arrayinit(uint32_t, uint32_t ex);
 void p9_hcd_cache_initf(uint32_t);
-void p9_hcd_cache_startclocks(uint32_t, uint32_t);
-void p9_hcd_cache_l2_startclocks(uint32_t, uint32_t, uint32_t);
-void p9_hcd_cache_scominit(uint32_t, uint32_t, int);
-void p9_hcd_cache_scomcust(uint32_t, uint32_t, int);
-void p9_hcd_cache_ras_runtime_scom(uint32_t);
-void p9_hcd_cache_occ_runtime_scom(uint32_t);
+void p9_hcd_cache_scan0(uint32_t, uint64_t, uint64_t);
 
 #ifdef __cplusplus
 }  // extern "C"
