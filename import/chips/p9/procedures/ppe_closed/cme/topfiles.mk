@@ -43,18 +43,6 @@ STOP-C-SOURCES   = stop_cme/p9_cme_stop_irq_handlers.c \
                    stop_cme/p9_cme_stop_entry.c \
                    stop_cme/p9_cme_stop_exit.c \
                    stop_cme/p9_hcd_core_scan0.c \
-                   stop_cme/p9_hcd_core_poweron.c \
-                   stop_cme/p9_hcd_core_chiplet_reset.c \
-                   stop_cme/p9_hcd_core_gptr_time_initf.c \
-                   stop_cme/p9_hcd_core_chiplet_init.c \
-                   stop_cme/p9_hcd_core_repair_initf.c \
-                   stop_cme/p9_hcd_core_arrayinit.c \
-                   stop_cme/p9_hcd_core_initf.c \
-                   stop_cme/p9_hcd_core_startclocks.c \
-                   stop_cme/p9_hcd_core_scominit.c \
-                   stop_cme/p9_hcd_core_scomcust.c \
-                   stop_cme/p9_hcd_core_ras_runtime_scom.c \
-                   stop_cme/p9_hcd_core_occ_runtime_scom.c \
                    stop_cme/p9_cme_copy_scan_ring.c
 
 TOP-S-SOURCES  =   stop_cme/p9_cme_header.S

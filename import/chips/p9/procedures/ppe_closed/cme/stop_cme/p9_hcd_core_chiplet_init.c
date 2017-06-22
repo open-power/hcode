@@ -23,9 +23,9 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include "p9_cme_stop.h"
 #include "p9_cme_stop_exit_marks.h"
 
+inline __attribute__((always_inline))
 void
 p9_hcd_core_chiplet_init(uint32_t core)
 {

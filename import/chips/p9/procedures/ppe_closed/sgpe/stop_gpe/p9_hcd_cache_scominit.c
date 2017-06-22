@@ -23,11 +23,11 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
+inline __attribute__((always_inline))
 void
 p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 {

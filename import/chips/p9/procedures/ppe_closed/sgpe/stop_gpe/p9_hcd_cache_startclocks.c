@@ -23,9 +23,9 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_exit_marks.h"
 
+inline __attribute__((always_inline))
 void
 p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 {

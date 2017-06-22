@@ -23,9 +23,8 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include "p9_cme_stop.h"
-#include "p9_cme_stop_exit_marks.h"
 #include "p9_hcode_image_defines.H"
+#include "p9_cme_stop_exit_marks.h"
 
 enum P9_HCD_CORE_CHIPLET_RESET_CONSTANTS
 {
@@ -47,6 +46,7 @@ enum P9_HCD_CORE_CHIPLET_RESET_CONSTANTS
                                BIT64(16) | BIT64(18) | BIT64(22) | BITS64(25, 2))
 };
 
+inline __attribute__((always_inline))
 void
 p9_hcd_core_chiplet_reset(uint32_t core)
 {

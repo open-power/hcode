@@ -25,10 +25,10 @@
 
 
 #include "plat_ring_traverse.h"
-#include "p9_cme_stop.h"
-#include "p9_cme_stop_exit_marks.h"
 #include "p9_ringid_cme_enums.h"
+#include "p9_cme_stop_exit_marks.h"
 
+inline __attribute__((always_inline))
 void
 p9_hcd_core_repair_initf(uint32_t core)
 {

@@ -28,6 +28,22 @@
 #include "p9_cme_copy_scan_ring.h"
 #include "p9_cme_pstate.h"
 
+// inline procedures only called by exit
+#include "p9_hcd_core_poweron.c"
+#include "p9_hcd_core_chiplet_reset.c"
+#include "p9_hcd_core_gptr_time_initf.c"
+#include "p9_hcd_core_chiplet_init.c"
+#include "p9_hcd_core_repair_initf.c"
+#include "p9_hcd_core_arrayinit.c"
+#include "p9_hcd_core_initf.c"
+#include "p9_hcd_core_startclocks.c"
+#include "p9_hcd_core_scominit.c"
+#include "p9_hcd_core_scomcust.c"
+#include "p9_hcd_core_ras_runtime_scom.c"
+#include "p9_hcd_core_occ_runtime_scom.c"
+
+
+
 extern CmeStopRecord G_cme_stop_record;
 extern CmeRecord G_cme_record;
 
@@ -37,7 +53,8 @@ uint8_t G_dsl[MAX_CORES_PER_CME][MAX_THREADS_PER_CORE] = {{0, 0, 0, 0}, {0, 0, 0
 
 #endif
 
-void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
+static void
+p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 {
     uint32_t     core_mask         = 0;
     uint32_t     act_stop_level    = 0;
@@ -294,7 +311,8 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 }
 
 
-void p9_cme_stop_exit_lv2(uint32_t core)
+static void
+p9_cme_stop_exit_lv2(uint32_t core)
 {
     //--------------------------------------------------------------------------
     PK_TRACE("+++++ +++++ STOP LEVEL 2 EXIT +++++ +++++");
@@ -347,7 +365,7 @@ void p9_cme_stop_exit_lv2(uint32_t core)
 
 #if !SKIP_EXIT_CATCHUP
 
-int
+static int
 p9_cme_stop_exit_catchup(uint32_t* core,
                          uint32_t* deeper_core,
                          uint32_t* spwu_stop,

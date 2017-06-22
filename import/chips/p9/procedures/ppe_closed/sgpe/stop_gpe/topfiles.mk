@@ -24,32 +24,18 @@
 # IBM_PROLOG_END_TAG
 ifdef IMAGE
 
+TOP-S-SOURCES =  p9_sgpe_image_header.S
+
 TOP-C-SOURCES = p9_sgpe_stop_entry.c \
                 p9_sgpe_stop_exit.c \
-                p9_sgpe_stop_irq_handlers.c \
                 p9_sgpe_stop_enter_thread.c \
                 p9_sgpe_stop_exit_thread.c \
-                p9_hcd_cache_scan0.c \
-                p9_hcd_cache_poweron.c \
-                p9_hcd_cache_chiplet_reset.c \
-                p9_hcd_cache_dpll_setup.c \
-                p9_hcd_cache_chiplet_init.c \
-                p9_hcd_cache_arrayinit.c \
-                p9_hcd_cache_startclocks.c \
-                p9_hcd_cache_l2_startclocks.c \
-                p9_hcd_cache_scominit.c \
-                p9_hcd_cache_scomcust.c \
-                p9_hcd_cache_occ_runtime_scom.c \
-                p9_hcd_cache_ras_runtime_scom.c \
-                p9_hcd_sgpe_boot_cme.c \
+                p9_sgpe_stop_irq_handlers.c \
                 p9_sgpe_ipc_handlers.c \
                 p9_sgpe_ipc_func_tables.c \
-                p9_sgpe_irq.c
-
-UTILS-SRC   = utils/p9_putringutils.C
-UTILS-SRC  += utils/plat_ring_traverse.C
-
-TOP-S-SOURCES =  p9_sgpe_image_header.S
+                p9_sgpe_irq.c \
+                p9_hcd_sgpe_boot_cme.c \
+                p9_hcd_cache_scan0.c 
 
 TOP-CPP-SOURCES  = p9_sgpe_main.C
 TOP-CPP-SOURCES += p9_hcd_cache_initf.C
@@ -58,6 +44,9 @@ TOP-CPP-SOURCES += p9_hcd_cache_chiplet_l3_dcc_setup.C
 TOP-CPP-SOURCES += p9_hcd_cache_dcc_skewadjust_setup.C
 TOP-CPP-SOURCES += p9_hcd_cache_repair_initf.C
 TOP-CPP-SOURCES += p9_hcd_cache_gptr_time_initf.C
+
+UTILS-SRC   = utils/p9_putringutils.C
+UTILS-SRC  += utils/plat_ring_traverse.C
 
 UTILS_OBJECTS  = $(UTILS-SRC:.C=.o)
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) $(TOP-CPP-SOURCES:.C=.o)

@@ -27,6 +27,20 @@
 #include "p9_sgpe_stop_exit_marks.h"
 #include "p9_hcd_sgpe_boot_cme.h"
 
+// inline procedures only called by exit
+#include "p9_hcd_cache_poweron.c"
+#include "p9_hcd_cache_chiplet_reset.c"
+#include "p9_hcd_cache_dpll_setup.c"
+#include "p9_hcd_cache_chiplet_init.c"
+#include "p9_hcd_cache_arrayinit.c"
+#include "p9_hcd_cache_startclocks.c"
+#include "p9_hcd_cache_l2_startclocks.c"
+#include "p9_hcd_cache_scominit.c"
+#include "p9_hcd_cache_scomcust.c"
+#include "p9_hcd_cache_occ_runtime_scom.c"
+#include "p9_hcd_cache_ras_runtime_scom.c"
+
+
 extern SgpeStopRecord                       G_sgpe_stop_record;
 
 #if !SKIP_IPC
