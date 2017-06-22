@@ -63,6 +63,7 @@ fapi2::ReturnCode p9_sbe_dump(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>&
     uint32_t pibmem_dump_start_byte = 0;
     uint32_t pibmem_dump_num_of_byte = 98296; // ( 12287 * 8 )12287 locations with each location having 8 bytes
     user_options input_switches = START_TILL_END;
+    bool ecc_enable = false;
     PPE_DUMP_MODE mode = XIRS;
 
     FAPI_INF("p9_sbe_dump: Entering ...");
@@ -75,7 +76,7 @@ fapi2::ReturnCode p9_sbe_dump(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>&
 
     //pibmem_dump
     FAPI_TRY(p9_pibmem_dump(i_target_chip, pibmem_dump_start_byte, pibmem_dump_num_of_byte, input_switches ,
-                            o_pibmem_dump_value));
+                            o_pibmem_dump_value, ecc_enable));
 
     //ppe_state
     FAPI_TRY(p9_ppe_state(i_target_chip, SBE_BASE_ADDRESS, mode, o_ppe_sprs_value, o_ppe_xirs_value, o_ppe_gprs_value ));

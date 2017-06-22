@@ -58,7 +58,8 @@ typedef fapi2::ReturnCode (*p9_pibmem_dump_FP_t) (
     const uint32_t start_byte,
     const uint32_t num_of_byte,
     const user_options input_switches,
-    std::vector<array_data_t>& pibmem_contents);
+    std::vector<array_data_t>& pibmem_contents,
+    const bool ecc_enable);
 
 extern "C"
 {
@@ -72,7 +73,8 @@ extern "C"
                    const uint32_t start_byte,
                    const uint32_t num_of_byte,
                    const user_options input_switches,
-                   std::vector<array_data_t>& pibmem_contents);
+                   std::vector<array_data_t>& pibmem_contents,
+                   const bool ecc_enable);
 
 } // extern C
 

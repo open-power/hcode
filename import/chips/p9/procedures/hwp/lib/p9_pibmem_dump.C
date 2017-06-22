@@ -35,17 +35,36 @@
 
 const static uint32_t PIBMEM_START_ARRAY_ADDRESS   = 0x00080000;
 const static uint32_t DEPTH_OF_ARRAY               = 0x00003000;
+const static uint32_t PIBMEM_CTRL_REG              = 0x00088000;
 
 fapi2::ReturnCode p9_pibmem_dump(
     const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     const uint32_t start_byte,
     const uint32_t num_of_byte,
     const user_options input_switches,
-    std::vector<array_data_t>& pibmem_contents)
+    std::vector<array_data_t>& pibmem_contents,
+    const bool ecc_enable)
 {
     uint32_t i, start_address, num_of_address, end_address;
     array_data_t fetch_data;
-    fapi2::buffer<uint64_t> l_data64;
+    fapi2::buffer<uint64_t> l_data64, ctrl_data, original_ctrl_data;
+
+
+    /// The below code enables/disables ECC checking before doing Dump based on inputs from USER.
+    FAPI_TRY(getScom(i_target, PIBMEM_CTRL_REG, original_ctrl_data), "Error in Reading Control Register");
+
+    if(ecc_enable == true)
+    {
+        ctrl_data = original_ctrl_data & 0xdfffffffffffffff;
+        FAPI_TRY(putScom(i_target, PIBMEM_CTRL_REG, ctrl_data), "Error in Writing Control Register");
+    }
+    else
+    {
+        ctrl_data = original_ctrl_data | 0x2000000000000000;
+        FAPI_TRY(putScom(i_target, PIBMEM_CTRL_REG, ctrl_data), "Error in Writing Control Register");
+    }
+
+    /// End of code for Enabling/Disabling ECC Checks
 
     start_address  = (start_byte / 8) + PIBMEM_START_ARRAY_ADDRESS;
     end_address    = (((start_byte + num_of_byte - 1)) / 8) + PIBMEM_START_ARRAY_ADDRESS;
@@ -74,6 +93,10 @@ fapi2::ReturnCode p9_pibmem_dump(
         fetch_data.read_data = l_data64;
         pibmem_contents.push_back(fetch_data);
     }
+
+    /// Code to restore the PIBMEM Control Register to Original Value
+    FAPI_TRY(putScom(i_target, PIBMEM_CTRL_REG, original_ctrl_data), "Error in Writing Control Register");
+    /// End of Code to restore PIBMEM Control Register's Value
 
 fapi_try_exit:
     return fapi2::current_err;
