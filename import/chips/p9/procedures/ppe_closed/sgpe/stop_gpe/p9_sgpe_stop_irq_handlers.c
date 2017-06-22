@@ -489,24 +489,11 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
             {
                 if (!(scom_data.words.upper & BIT32(13)))
                 {
-                    // wakeup=normal + notify=cme -> error
-                    if (cpayload_t2 != 0x400)
-                    {
-                        PK_TRACE_ERR("ERROR: Received Type2 Entry PIG When Wakeup_notify_select = 0. HALT SGPE!");
-                        PK_PANIC(SGPE_PIG_TYPE2_ENTRY_WNS_CME);
-                    }
-
-                    // wakeup=pc + notify=cme -> ignore phantom(already handoff to cme by other wakeup)
+                    PK_TRACE_ERR("ERROR: Received Type2 Entry PIG When Wakeup_notify_select = 0. HALT SGPE!");
+                    PK_PANIC(SGPE_PIG_TYPE2_ENTRY_WNS_CME);
                 }
                 else
                 {
-                    // wakeup=pc + notify=sgpe -> go exit with flag to do extra doorbell from normal wakeup
-                    if (cpayload_t2 == 0x400)
-                    {
-                        G_sgpe_stop_record.group.core[VECTOR_PCWU] |= BIT32(((qloop << 2) + cloop));
-                    }
-
-                    // wakeup=normal + notify=sgpe -> go exit
                     PK_TRACE_INF("Core Request Entry via Type2");
                     G_sgpe_stop_record.level[qloop][cloop] =
                         (cpayload_t2 & TYPE2_PAYLOAD_STOP_LEVEL);
@@ -537,11 +524,13 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                     if ((cpayload_t2 & TYPE2_PAYLOAD_EXIT_EVENT) &&
                         (cpayload_t3 & TYPE2_PAYLOAD_EXIT_EVENT))
                     {
+                        // wakeup=normal + notify=cme -> error
                         PK_TRACE_ERR("ERROR: Received Both Types of Exit PIG When Wakeup_notify_select = 0. HALT SGPE!");
                         PK_PANIC(SGPE_PIG_TYPE23_EXIT_WNS_CME);
                     }
                     else
                     {
+                        // wakeup=pc + notify=cme -> ignore phantom(already handoff to cme by other wakeup)
                         PK_TRACE_INF("WARNING: Received Phantom Exit PIG When Wakeup_notify_select = 0");
                     }
                 }
@@ -558,6 +547,16 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                     else
                     {
                         PK_TRACE_DBG("Core Considered Stopped, Will Wakeup", cloop);
+
+                        // wakeup=pc + notify=sgpe -> go exit with flag to do extra doorbell from normal wakeup
+
+                        if (cpayload_t2 == 0x400)
+                        {
+                            G_sgpe_stop_record.group.core[VECTOR_PCWU] |= BIT32(((qloop << 2) + cloop));
+                        }
+
+                        // wakeup=normal + notify=sgpe -> go exit
+
                         G_sgpe_stop_record.group.quad[VECTOR_EXIT] |=
                             BIT32(qloop);
                         G_sgpe_stop_record.group.core[VECTOR_EXIT] |=
