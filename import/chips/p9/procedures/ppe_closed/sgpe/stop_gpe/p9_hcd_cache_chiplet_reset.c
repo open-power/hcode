@@ -49,7 +49,7 @@ enum P9_HCD_CACHE_CHIPLET_RESET_CONSTANTS
 
 inline __attribute__((always_inline))
 void
-p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
+p9_hcd_cache_chiplet_reset(uint32_t quad)
 {
     uint64_t scom_data  = 0;
     uint32_t core       = 0;
@@ -84,7 +84,8 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 #if HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), BITS64(34, 2));
 #else
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad), ((uint64_t)ex << SHIFT64(35)));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_OR, quad),
+                ((uint64_t)G_sgpe_stop_record.group.expg[quad] << SHIFT64(35)));
 #endif
 
     PK_TRACE("Assert DPLL ff_bypass via QPPM_DPLL_CTRL[2]");
@@ -100,7 +101,8 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 #if HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, quad), BITS64(32, 2));
 #else
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, quad), ((uint64_t)ex << SHIFT64(33)));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, quad),
+                ((uint64_t)G_sgpe_stop_record.group.expg[quad] << SHIFT64(33)));
 #endif
 
     // 40 ref cycles
@@ -132,12 +134,12 @@ p9_hcd_cache_chiplet_reset(uint32_t quad, uint32_t ex)
 #if !HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX
     uint64_t regions = SCAN0_REGION_ALL_BUT_EX;
 
-    if (ex & FST_EX_IN_QUAD)
+    if (G_sgpe_stop_record.group.expg[quad] & FST_EX_IN_QUAD)
     {
         regions |= SCAN0_REGION_EX0_L2_L3_REFR;
     }
 
-    if (ex & SND_EX_IN_QUAD)
+    if (G_sgpe_stop_record.group.expg[quad] & SND_EX_IN_QUAD)
     {
         regions |= SCAN0_REGION_EX1_L2_L3_REFR;
     }

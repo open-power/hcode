@@ -183,6 +183,7 @@ enum SGPE_STOP_STATE_HISTORY_VECTORS
     SSH_ENTRY_IN_SESSION  = (SSH_STOP_GATED  | SSH_TRANS_ENTRY),
     SSH_REQ_LEVEL_UPDATE  = (SSH_STOP_GATED  | SSH_TRANS_ENTRY | SSH_REQ_ENABLE),
     SSH_ACT_LEVEL_UPDATE  = (SSH_STOP_GATED  | SSH_ACT_ENABLE),
+    SSH_ACT_LV5_COMPLETE  = (SSH_ACT_LEVEL_UPDATE | BIT32(9) | BIT32(11)),
     SSH_ACT_LV8_COMPLETE  = (SSH_ACT_LEVEL_UPDATE | BIT32(8)),
     SSH_ACT_LV11_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(8) | BITS32(10, 2))
 };
@@ -204,8 +205,10 @@ enum SGPE_STOP_PSCOM_MASK
 
 enum SGPE_WOF_ACTIVE_UPDATE_STATUS
 {
-    IPC_SGPE_PGPE_UPDATE_CORE_ENABLED = 1,
-    IPC_SGPE_PGPE_UPDATE_QUAD_ENABLED = 2
+    IPC_SGPE_PGPE_UPDATE_QUAD_ENABLED = 1,
+    IPC_SGPE_PGPE_UPDATE_CORE_ENABLED = 2,
+    // Reserved_4_Do_Not_Use
+    IPC_SGPE_PGPE_UPDATE_CTRL_ONGOING = 8
 };
 
 enum SGPE_SUSPEND_FUNCTION_STATUS
@@ -218,13 +221,15 @@ enum SGPE_SUSPEND_FUNCTION_STATUS
 
 enum SGPE_STOP_VECTOR_INDEX
 {
-    VECTOR_CONFIG                     = 0, //(core,      quad,     qswu_ongoing, exlr)
-    VECTOR_BLOCKE                     = 1, //(core_save, quad_req, qswu_save, exlr_ack)
-    VECTOR_BLOCKX                     = 2, //(core_save, quad_req, qswu_save, exlr_ack)
-    VECTOR_ENTRY                      = 3, //(core_ipc,  quad,     qswu,         exlr)
-    VECTOR_EXIT                       = 4, //(core,      quad_ipc  qswu)
-    VECTOR_ACTIVE                     = 5, //(core_ipc,  quad_ipc)
-    VECTOR_PCWU                       = 6  //(core)
+    VECTOR_BLOCKE                     = 0, //(core_save, quad_req, qswu_save, qex01)
+    VECTOR_BLOCKX                     = 1, //(core_save, quad_req, qswu_save, qex01)
+    VECTOR_ENTRY                      = 2, //(core_ipc,  quad,     qswu)
+    VECTOR_EXIT                       = 3, //(core,      quad_ipc  qswu)
+    VECTOR_ACTIVE                     = 4, //(core_ipc,  quad_ipc, qswu_active)
+    VECTOR_CONFIG                     = 5, //(core,      quad)
+    VECTOR_PCWU                       = 6, //(core)
+    VECTOR_PIGE                       = 7, //(core)
+    VECTOR_PIGX                       = 8, //(core)
 };
 
 typedef struct
@@ -243,20 +248,22 @@ typedef struct
 
 typedef struct
 {
-    uint32_t ex_l[4]; // 6 bits
-    uint32_t ex_r[4]; // 6 bits
-    uint32_t qswu[5]; // 6 bits
-    uint32_t quad[6]; // 6 bits
-    uint32_t core[7]; // 24 bits
+    uint32_t expg[6]; // 2  bits
+    uint32_t ex01[6]; // 2  bits
+    uint32_t qex0[2]; // 6  bits
+    uint32_t qex1[2]; // 6  bits
+    uint32_t qswu[5]; // 6  bits
+    uint32_t quad[6]; // 6  bits
+    uint32_t core[9]; // 24 bits
 } sgpe_group_t;
 
 typedef struct
 {
-    // function status(functional, suspending, suspended, resuming)
-    uint8_t    status_pstate;
+    // function status(idle, processing, suspending, suspended)
     uint8_t    status_stop;
     // sgpe-pgpe interlock status(quad/core updates enable/disable)
     uint8_t    update_pgpe;
+    ipc_msg_t* updates_cmd;
     ipc_msg_t* suspend_cmd;
 } sgpe_wof_t;
 
@@ -271,7 +278,7 @@ typedef struct
     // group of ex and quad entering or exiting the stop
     sgpe_group_t group;
     sgpe_wof_t   wof;
-    PkSemaphore  sem[4];
+    PkSemaphore  sem[2];
 } SgpeStopRecord;
 
 typedef struct
@@ -291,21 +298,28 @@ struct ring_save
 
 
 /// SGPE to PGPE IPC handlers
-void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg);
-void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg);
-void p9_sgpe_ipc_pgpe_rsp_callback(ipc_msg_t* cmd, void* arg);
+void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t*, void*);
+void p9_sgpe_ack_pgpe_ctrl_stop_updates();
+void p9_sgpe_ipc_pgpe_update_active_cores(const uint32_t);
+void p9_sgpe_ipc_pgpe_update_active_cores_poll_ack();
+void p9_sgpe_ipc_pgpe_update_active_quads(const uint32_t, const uint32_t);
+void p9_sgpe_ipc_pgpe_update_active_quads_poll_ack();
+void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t*, void*);
+void p9_sgpe_stop_suspend_all_cmes();
 
 /// SGPE STOP Interrupt Handlers
-void p9_sgpe_stop_pig_handler(void*, PkIrqId);
-void p9_sgpe_stop_ipi_handler(void*, PkIrqId);
-void p9_sgpe_stop_suspend_msg_db1(uint32_t, uint32_t);
-void p9_sgpe_stop_suspend_all_cmes();
+void p9_sgpe_pig_type2_handler(void*, PkIrqId);
+void p9_sgpe_pig_type3_handler(void*, PkIrqId);
+void p9_sgpe_pig_type6_handler(void*, PkIrqId);
+void p9_sgpe_ipi3_low_handler(void*, PkIrqId);
+void p9_sgpe_stop_suspend_db1_cme(uint32_t, uint32_t);
 
 /// SGPE STOP Entry and Exit Prototypes
 void p9_sgpe_stop_enter_thread(void*);
 void p9_sgpe_stop_exit_thread(void*);
 void p9_sgpe_stop_entry();
 void p9_sgpe_stop_exit();
+void p9_sgpe_stop_exit_handoff_cme(uint32_t);
 void p9_sgpe_stop_cme_scominit(uint32_t, uint32_t, uint32_t);
 
 /// Procedures shared between Istep4 and SGPE Stop

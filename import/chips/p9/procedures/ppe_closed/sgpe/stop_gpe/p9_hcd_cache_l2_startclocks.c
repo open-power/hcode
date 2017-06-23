@@ -29,7 +29,7 @@ extern SgpeStopRecord G_sgpe_stop_record;
 
 inline __attribute__((always_inline))
 void
-p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
+p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
 {
     uint64_t scom_data = 0;
 
@@ -128,7 +128,7 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
     PK_TRACE("Set parital bad l2/l3 and stopped l2 pscom mask");
     scom_data = 0;
 
-    if ((~pg) & FST_EX_IN_QUAD)
+    if ((~G_sgpe_stop_record.group.expg[quad]) & FST_EX_IN_QUAD)
     {
         scom_data |= (PSCOM_MASK_EX0_L2 | PSCOM_MASK_EX0_L3);
     }
@@ -138,7 +138,7 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
         scom_data |= PSCOM_MASK_EX0_L2;
     }
 
-    if ((~pg) & SND_EX_IN_QUAD)
+    if ((~G_sgpe_stop_record.group.expg[quad]) & SND_EX_IN_QUAD)
     {
         scom_data |= (PSCOM_MASK_EX1_L2 | PSCOM_MASK_EX1_L3);
     }

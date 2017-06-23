@@ -63,7 +63,7 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
         // CME   (0,1) 001000 001001
         // L2_TRA(0,1) 001010 001011
         rid   = (qaddr & BITS32(18, 4)) >> SHIFT32(21);
-        PKTRACE("scom[%d] addr[%x] rid[%X]", i, qaddr, rid);
+        PK_TRACE("scom[%d] addr[%x] rid[%X]", i, qaddr, rid);
 
         // STOP11: Partial bad ex and l2 address detection
         // First had to be an EX address not quad address to check for partial bad
@@ -89,7 +89,7 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
         }
 
         qdata = pSgpeScomRes->scomEntryData;
-        PKTRACE("scom[%d] addr[%x] data[%016llx]", i, qaddr, qdata);
+        PK_TRACE("scom[%d] addr[%x] data[%016llx]", i, qaddr, qdata);
         GPE_PUTSCOM(qaddr, qdata);
     }
 

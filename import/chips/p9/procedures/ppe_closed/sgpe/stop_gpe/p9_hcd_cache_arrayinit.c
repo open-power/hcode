@@ -25,9 +25,11 @@
 
 #include "p9_sgpe_stop_exit_marks.h"
 
+extern SgpeStopRecord G_sgpe_stop_record;
+
 inline __attribute__((always_inline))
 void
-p9_hcd_cache_arrayinit(uint32_t quad, uint32_t ex)
+p9_hcd_cache_arrayinit(uint32_t quad)
 {
     uint64_t scom_data = 0;
 
@@ -98,12 +100,12 @@ p9_hcd_cache_arrayinit(uint32_t quad, uint32_t ex)
 #if !SKIP_SCAN0
     uint64_t regions = SCAN0_REGION_ALL_BUT_EX_ANEP_DPLL;
 
-    if (ex & FST_EX_IN_QUAD)
+    if (G_sgpe_stop_record.group.expg[quad] & FST_EX_IN_QUAD)
     {
         regions |= SCAN0_REGION_EX0_L2_L3_REFR;
     }
 
-    if (ex & SND_EX_IN_QUAD)
+    if (G_sgpe_stop_record.group.expg[quad] & SND_EX_IN_QUAD)
     {
         regions |= SCAN0_REGION_EX1_L2_L3_REFR;
     }

@@ -25,9 +25,11 @@
 
 #include "p9_sgpe_stop_exit_marks.h"
 
+extern SgpeStopRecord G_sgpe_stop_record;
+
 inline __attribute__((always_inline))
 void
-p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
+p9_hcd_cache_startclocks(uint32_t quad)
 {
     uint32_t      bitloc      = 0;
     uint32_t      ex_mask     = 0;
@@ -49,7 +51,7 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     // stagger EDRAM turn-on per EX (not both at same time)
     for (ex_mask = 2; ex_mask; ex_mask--)
     {
-        if (ex & ex_mask)
+        if (G_sgpe_stop_record.group.expg[quad] & ex_mask)
         {
             bitloc = (ex_mask & 1) << 2;
 
@@ -84,8 +86,8 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     PK_TRACE("Drop partial good fences via CPLT_CTRL1[4,5,6/7,11,12/13]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad),
                 (CLK_REGION_ALL_BUT_EX_DPLL  |
-                 ((uint64_t)ex << SHIFT64(7)) |
-                 ((uint64_t)ex << SHIFT64(13))));
+                 ((uint64_t)G_sgpe_stop_record.group.expg[quad] << SHIFT64(7)) |
+                 ((uint64_t)G_sgpe_stop_record.group.expg[quad] << SHIFT64(13))));
 
     PK_TRACE("Drop vital fence via CPLT_CTRL1[3]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad), BIT64(3));
@@ -140,8 +142,8 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     PK_TRACE("Start cache clocks via CLK_REGION");
     scom_data.value = (CLK_START_CMD | CLK_THOLD_ALL   |
                        CLK_REGION_ALL_BUT_EX_DPLL      |
-                       ((uint64_t)ex << SHIFT64(7))    |
-                       ((uint64_t)ex << SHIFT64(13)));
+                       ((uint64_t)G_sgpe_stop_record.group.expg[quad] << SHIFT64(7))    |
+                       ((uint64_t)G_sgpe_stop_record.group.expg[quad] << SHIFT64(13)));
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data.value);
 
     // Read Clock Status Register (Cache chiplet)
@@ -158,8 +160,8 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data.value);
 
     if (scom_data.value & (CLK_REGION_ALL_BUT_EX_DPLL      |
-                           ((uint64_t)ex << SHIFT64(7))    |
-                           ((uint64_t)ex << SHIFT64(13))))
+                           ((uint64_t)G_sgpe_stop_record.group.expg[quad] << SHIFT64(7))    |
+                           ((uint64_t)G_sgpe_stop_record.group.expg[quad] << SHIFT64(13))))
     {
         PK_TRACE_ERR("ERROR: Cache Clock Start Failed. HALT SGPE!");
         PK_PANIC(SGPE_STOP_EXIT_EQ_STARTCLK_FAILED);
@@ -195,12 +197,12 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
     PK_TRACE("Set all l2s and partial bad l3 pscom mask");
     scom_data.value = PSCOM_MASK_ALL_L2;
 
-    if ((~ex) & FST_EX_IN_QUAD)
+    if ((~G_sgpe_stop_record.group.expg[quad]) & FST_EX_IN_QUAD)
     {
         scom_data.value |= PSCOM_MASK_EX0_L3;
     }
 
-    if ((~ex) & SND_EX_IN_QUAD)
+    if ((~G_sgpe_stop_record.group.expg[quad]) & SND_EX_IN_QUAD)
     {
         scom_data.value |= PSCOM_MASK_EX1_L3;
     }

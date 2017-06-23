@@ -25,22 +25,59 @@
 
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_irq.h"
+#include "ppe42_cache.h"
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
+GPE_BUFFER(ipc_async_cmd_t                  G_sgpe_ipccmd_to_pgpe);
+GPE_BUFFER(ipcmsg_s2p_update_active_cores_t G_sgpe_ipcmsg_update_cores);
+GPE_BUFFER(ipcmsg_s2p_update_active_quads_t G_sgpe_ipcmsg_update_quads);
+
+// pgpe send ack back to sgpe upon ipc will trigger interrupt to engage with uih
+// which will stack up oimr, such action will require vec_restore to pop up the
+// stack again to prevent overflow. therefore registering this callback to do so.
+
+static void
+p9_sgpe_ipc_pgpe_rsp_callback(ipc_msg_t* cmd, void* arg)
+{
+    PkMachineContext ctx;
+    pk_irq_vec_restore(&ctx);
+}
+
+// Update Active Cores/Quads
 
 void
 p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg)
 {
     PkMachineContext ctx;
 
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
+    PK_TRACE_INF("IPC.PS: Get Control Stop Updates IPC from PGPE");
+
+    G_sgpe_stop_record.wof.updates_cmd = cmd;
+
+    // stop in process
+    if (G_sgpe_stop_record.wof.status_stop == STATUS_PROCESSING)
+    {
+        // Note: response will be sent by stop threads when ongoing stop is completed
+        G_sgpe_stop_record.wof.update_pgpe |= IPC_SGPE_PGPE_UPDATE_CTRL_ONGOING;
+    }
+    // sgpe idle
+    else if (G_sgpe_stop_record.wof.status_stop == STATUS_IDLE)
+    {
+        p9_sgpe_ack_pgpe_ctrl_stop_updates();
+    }
+
+    pk_irq_vec_restore(&ctx);
+}
+
+
+void
+p9_sgpe_ack_pgpe_ctrl_stop_updates()
+{
+    ipc_async_cmd_t* async_cmd =
+        (ipc_async_cmd_t*)(G_sgpe_stop_record.wof.updates_cmd);
     ipcmsg_p2s_ctrl_stop_updates_t* msg =
         (ipcmsg_p2s_ctrl_stop_updates_t*)async_cmd->cmd_data;
-
-    msg->fields.return_code  = IPC_SGPE_PGPE_RC_SUCCESS;
-    msg->fields.active_quads = G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] >> SHIFT32(5);
-    msg->fields.active_cores = G_sgpe_stop_record.group.core[VECTOR_ACTIVE] >> SHIFT32(23);
 
     if (msg->fields.action < 4)
     {
@@ -53,15 +90,134 @@ p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg)
         G_sgpe_stop_record.wof.update_pgpe &= ~(msg->fields.action);
     }
 
-    ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+    PK_TRACE_INF("IPC.PS: Ack Control Stop Updates IPC to PGPE with Current Action[%x]",
+                 G_sgpe_stop_record.wof.update_pgpe);
 
-    pk_irq_vec_restore(&ctx);
+    msg->fields.return_code  = IPC_SGPE_PGPE_RC_SUCCESS;
+    msg->fields.active_quads = G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] >> SHIFT32(5);
+    msg->fields.active_cores = G_sgpe_stop_record.group.core[VECTOR_ACTIVE] >> SHIFT32(23);
+
+    ipc_send_rsp(G_sgpe_stop_record.wof.updates_cmd, IPC_RC_SUCCESS);
+    G_sgpe_stop_record.wof.update_pgpe &= ~IPC_SGPE_PGPE_UPDATE_CTRL_ONGOING;
 }
+
+
+void
+p9_sgpe_ipc_pgpe_update_active_cores(const uint32_t type)
+{
+    uint32_t rc;
+
+    PK_TRACE_INF("IPC.SP: Message PGPE to Update Active Cores with type[%d]", type);
+    G_sgpe_ipcmsg_update_cores.fields.update_type = type;
+    G_sgpe_ipcmsg_update_cores.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
+
+    if (type == UPDATE_ACTIVE_CORES_TYPE_EXIT)
+    {
+        G_sgpe_ipcmsg_update_cores.fields.active_cores =
+            G_sgpe_stop_record.group.core[VECTOR_PIGX] >> SHIFT32(23);
+    }
+    else
+    {
+        G_sgpe_ipcmsg_update_cores.fields.active_cores =
+            G_sgpe_stop_record.group.core[VECTOR_PIGE] >> SHIFT32(23);
+    }
+
+    G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_cores;
+    ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
+                 IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_CORES,
+                 p9_sgpe_ipc_pgpe_rsp_callback, 0);
+
+    rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
+
+    if (rc)
+    {
+        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Cores Failed. HALT SGPE!");
+        PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_CORE_FAILED);
+    }
+}
+
+void
+p9_sgpe_ipc_pgpe_update_active_cores_poll_ack()
+{
+    PK_TRACE_INF("IPC.SP: Poll PGPE Update Active Cores Ack");
+
+    while (G_sgpe_ipcmsg_update_cores.fields.return_code == IPC_SGPE_PGPE_RC_NULL);
+
+    {
+        dcbi(((void*)(&G_sgpe_ipcmsg_update_cores)));
+    }
+
+    if (G_sgpe_ipcmsg_update_cores.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
+    {
+        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Cores Bad RC. HALT SGPE!");
+        PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_CORE_BAD_RC);
+    }
+}
+
+
+void
+p9_sgpe_ipc_pgpe_update_active_quads(const uint32_t type, const uint32_t stage)
+{
+    uint32_t rc;
+
+    PK_TRACE_INF("IPC.SP: Message PGPE to Update Active Quads with type[%d][%d]", type, stage);
+    G_sgpe_ipcmsg_update_quads.fields.update_type = type;
+    G_sgpe_ipcmsg_update_quads.fields.entry_type = stage;
+    G_sgpe_ipcmsg_update_quads.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
+
+    if (type == UPDATE_ACTIVE_CORES_TYPE_EXIT)
+    {
+        G_sgpe_ipcmsg_update_quads.fields.requested_quads =
+            G_sgpe_stop_record.group.quad[VECTOR_EXIT] >> SHIFT32(5);
+    }
+    else
+    {
+        G_sgpe_ipcmsg_update_quads.fields.requested_quads =
+            G_sgpe_stop_record.group.quad[VECTOR_ENTRY] >> SHIFT32(5);
+    }
+
+    G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
+    ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
+                 IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
+                 p9_sgpe_ipc_pgpe_rsp_callback, 0);
+
+    rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
+
+    if(rc)
+    {
+        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Quads Failed. HALT SGPE!");
+        PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_QUAD_FAILED);
+    }
+
+}
+
+void
+p9_sgpe_ipc_pgpe_update_active_quads_poll_ack()
+{
+    PK_TRACE_INF("IPC.SP: Poll PGPE Update Active Quads Ack");
+
+    while (G_sgpe_ipcmsg_update_quads.fields.return_code == IPC_SGPE_PGPE_RC_NULL)
+    {
+        dcbi(((void*)(&G_sgpe_ipcmsg_update_quads)));
+    }
+
+    if (G_sgpe_ipcmsg_update_quads.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
+    {
+        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Quads Bad RC. HALT SGPE!");
+        PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_QUAD_BAD_RC);
+    }
+}
+
+
+
+// Suspend Stop
 
 void
 p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
 {
     PkMachineContext ctx;
+
+    PK_TRACE_INF("IPC.PS: Get Suspend Stop IPC from PGPE");
 
     G_sgpe_stop_record.wof.suspend_cmd = cmd;
     g_oimr_override |= (BITS64(47, 2) | BIT64(51));
@@ -81,6 +237,8 @@ p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
     pk_irq_vec_restore(&ctx);
 }
 
+
+
 void
 p9_sgpe_stop_suspend_all_cmes()
 {
@@ -92,7 +250,7 @@ p9_sgpe_stop_suspend_all_cmes()
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
-        p9_sgpe_stop_suspend_msg_db1(qloop, BITS32(5, 3));
+        p9_sgpe_stop_suspend_db1_cme(qloop, BITS32(5, 3));
     }
 
     while (cme_list != 0xFFF00000)
@@ -106,10 +264,20 @@ p9_sgpe_stop_suspend_all_cmes()
                 if (cpayload_t2 == 0x780)
                 {
                     cme_list |= BIT32(xloop);
+                    // set STOP OVERRIDE MODE/STOP ACTIVE MASK
+                    // to convert everything to stop1
+                    // Note: not doing this from cme because
+                    // suspend_stop and block_exit/entry protocol
+                    // shares processing code at CME,
+                    // and only want this done under suspend_stop
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR,
+                                                  (xloop >> 1), (xloop % 2)), BITS64(16, 2));
                 }
             }
         }
     }
+
+    PK_TRACE_INF("IPC.PS: Ack Suspend Stop IPC to PGPE as STOP is now SUSPENDED");
 
     ipc_async_cmd_t* async_cmd =
         (ipc_async_cmd_t*)(G_sgpe_stop_record.wof.suspend_cmd);

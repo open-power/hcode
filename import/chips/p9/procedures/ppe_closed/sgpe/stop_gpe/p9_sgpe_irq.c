@@ -57,29 +57,48 @@ const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2] =
         IRQ_VEC_PRTY1_SGPE |
         IRQ_VEC_PRTY2_SGPE |
         IRQ_VEC_PRTY3_SGPE |
-        IRQ_VEC_PRTY4_SGPE
+        IRQ_VEC_PRTY4_SGPE |
+        IRQ_VEC_PRTY5_SGPE |
+        IRQ_VEC_PRTY6_SGPE
     },
     {
         IRQ_VEC_PRTY1_SGPE, /* 1: IDX_PRTY_LVL_IPI3_HIGH */
         IRQ_VEC_PRTY1_SGPE |
         IRQ_VEC_PRTY2_SGPE |
         IRQ_VEC_PRTY3_SGPE |
-        IRQ_VEC_PRTY4_SGPE
+        IRQ_VEC_PRTY4_SGPE |
+        IRQ_VEC_PRTY5_SGPE |
+        IRQ_VEC_PRTY6_SGPE
     },
     {
-        IRQ_VEC_PRTY2_SGPE, /* 2: IDX_PRTY_LVL_PIG_TYPE */
+        IRQ_VEC_PRTY2_SGPE, /* 2: IDX_PRTY_LVL_PIG_TYPE2 */
         IRQ_VEC_PRTY2_SGPE |
         IRQ_VEC_PRTY3_SGPE |
-        IRQ_VEC_PRTY4_SGPE
+        IRQ_VEC_PRTY4_SGPE |
+        IRQ_VEC_PRTY5_SGPE |
+        IRQ_VEC_PRTY6_SGPE
     },
     {
-        IRQ_VEC_PRTY3_SGPE, /* 3: IDX_PRTY_LVL_IPI3_LOW */
+        IRQ_VEC_PRTY3_SGPE, /* 3: IDX_PRTY_LVL_PIG_TYPE6 */
         IRQ_VEC_PRTY3_SGPE |
-        IRQ_VEC_PRTY4_SGPE
+        IRQ_VEC_PRTY4_SGPE |
+        IRQ_VEC_PRTY5_SGPE |
+        IRQ_VEC_PRTY6_SGPE
     },
     {
-        IRQ_VEC_PRTY4_SGPE, /* 4: IDX_PRTY_LVL_DISABLED */
-        IRQ_VEC_PRTY4_SGPE
+        IRQ_VEC_PRTY4_SGPE, /* 3: IDX_PRTY_LVL_PIG_TYPE3 */
+        IRQ_VEC_PRTY4_SGPE |
+        IRQ_VEC_PRTY5_SGPE |
+        IRQ_VEC_PRTY6_SGPE
+    },
+    {
+        IRQ_VEC_PRTY5_SGPE, /* 3: IDX_PRTY_LVL_IPI3_LOW */
+        IRQ_VEC_PRTY5_SGPE |
+        IRQ_VEC_PRTY6_SGPE
+    },
+    {
+        IRQ_VEC_PRTY6_SGPE, /* 4: IDX_PRTY_LVL_DISABLED */
+        IRQ_VEC_PRTY6_SGPE
     }
 };
 

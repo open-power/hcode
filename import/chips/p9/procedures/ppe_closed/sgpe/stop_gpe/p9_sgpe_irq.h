@@ -49,12 +49,14 @@
 // Priority Levels
 #define IDX_PRTY_LVL_HIPRTY         0
 #define IDX_PRTY_LVL_IPI3_HIGH      1
-#define IDX_PRTY_LVL_IPI3_LOW       2
-#define IDX_PRTY_LVL_PIG_TYPE       3
-#define IDX_PRTY_LVL_DISABLED       4
+#define IDX_PRTY_LVL_PIG_TYPE2      2
+#define IDX_PRTY_LVL_PIG_TYPE6      3
+#define IDX_PRTY_LVL_PIG_TYPE3      4
+#define IDX_PRTY_LVL_IPI3_LOW       5
+#define IDX_PRTY_LVL_DISABLED       6
 #define IDX_PRTY_VEC                0
 #define IDX_MASK_VEC                1
-#define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(5)
+#define NUM_EXT_IRQ_PRTY_LEVELS  (uint8_t)(7)
 extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
 // Group0: Non-task hi-prty IRQs
@@ -62,25 +64,33 @@ extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 #define IRQ_VEC_PRTY0_SGPE   (uint64_t)(0x0000000000000000)
 // Group1: ipi3_high
 #define IRQ_VEC_PRTY1_SGPE   (uint64_t)(0x0000000800000000)
-// Group3: ipi3_low
-#define IRQ_VEC_PRTY2_SGPE   (uint64_t)(0x0000000000000004)
-// Group2: pig_type
-#define IRQ_VEC_PRTY3_SGPE   (uint64_t)(0x0000000000019000)
-// Group4: We should never detect these
-#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0x0100800000000000)
-//#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0xFEFF7FF7FFFE6FFB)
+// Group2: pig_type2
+#define IRQ_VEC_PRTY2_SGPE   (uint64_t)(0x0000000000010000)
+// Group3: pig_type6
+#define IRQ_VEC_PRTY3_SGPE   (uint64_t)(0x0000000000001000)
+// Group4: pig_type3
+#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0x0000000000008000)
+// Group5: ipi3_low
+#define IRQ_VEC_PRTY5_SGPE   (uint64_t)(0x0000000000000004)
+// Group6: We should never detect these
+#define IRQ_VEC_PRTY6_SGPE   (uint64_t)(0x0100800000000000)
+//#define IRQ_VEC_PRTY6_SGPE   (uint64_t)(0xFEFF7FF7FFFE6FFB)
 
 #define IRQ_VEC_ALL_OUR_IRQS  ( IRQ_VEC_PRTY0_SGPE | \
                                 IRQ_VEC_PRTY1_SGPE | \
                                 IRQ_VEC_PRTY2_SGPE | \
-                                IRQ_VEC_PRTY3_SGPE )      // Note, we do not incl PRTY4 here!
+                                IRQ_VEC_PRTY3_SGPE | \
+                                IRQ_VEC_PRTY4_SGPE | \
+                                IRQ_VEC_PRTY5_SGPE )      // Note, we do not incl PRTY6 here!
 
 // This should be 0xFFFFFFFFFFFFFFFF
 #define IRQ_VEC_PRTY_CHECK  ( IRQ_VEC_PRTY0_SGPE | \
                               IRQ_VEC_PRTY1_SGPE | \
                               IRQ_VEC_PRTY2_SGPE | \
                               IRQ_VEC_PRTY3_SGPE | \
-                              IRQ_VEC_PRTY4_SGPE )
+                              IRQ_VEC_PRTY4_SGPE | \
+                              IRQ_VEC_PRTY5_SGPE | \
+                              IRQ_VEC_PRTY6_SGPE )
 
 extern uint8_t       g_current_prty_level;
 extern uint8_t       g_oimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];

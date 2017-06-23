@@ -26,15 +26,8 @@
 #include "p9_sgpe_stop.h"
 #include "p9_sgpe_stop_enter_marks.h"
 
-extern SgpeStopRecord                           G_sgpe_stop_record;
+extern SgpeStopRecord G_sgpe_stop_record;
 
-#if !SKIP_IPC
-
-    GPE_BUFFER(ipc_async_cmd_t                  G_sgpe_ipccmd_to_pgpe);
-    GPE_BUFFER(ipcmsg_s2p_update_active_cores_t G_sgpe_ipcmsg_update_cores);
-    GPE_BUFFER(ipcmsg_s2p_update_active_quads_t G_sgpe_ipcmsg_update_quads);
-
-#endif
 
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
 
@@ -46,15 +39,18 @@ extern SgpeStopRecord                           G_sgpe_stop_record;
 void
 p9_sgpe_stop_entry()
 {
-    int          entry_ongoing[2]  = {0, 0};
-    int          l3_purge_aborted  = 0;
+#if !DISABLE_STOP8
+    uint32_t     entry_ongoing[2]  = {0, 0};
+    uint32_t     climit            = 0;
+#endif
+    uint32_t     l3_purge_aborted  = 0;
     uint32_t     ex                = 0;
     uint32_t     ex_mask           = 0;
     uint32_t     ex_index          = 0;
     uint32_t     bitloc            = 0;
     uint32_t     qloop             = 0;
     uint32_t     cloop             = 0;
-    uint32_t     climit            = 0;
+    uint32_t     cindex            = 0;
     uint64_t     host_attn         = 0;
     uint64_t     local_xstop       = 0;
     data64_t     scom_data         = {0};
@@ -63,7 +59,7 @@ p9_sgpe_stop_entry()
     uint32_t      spin             = 0;
 #endif
 #if !SKIP_IPC
-    uint32_t      rc               = 0;
+    uint32_t      ipc_quad_entry   = 0;
 #endif
     sgpeHeader_t* pSgpeImgHdr     = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
@@ -75,14 +71,17 @@ p9_sgpe_stop_entry()
     MARK_TAG(BEGINSCOPE_STOP_ENTRY, 0)
     //================================
 
-    G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] = 0;
-    G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] = 0;
     G_sgpe_stop_record.group.quad[VECTOR_ENTRY] = 0;
+    G_sgpe_stop_record.group.ex01[0]            = 0;
+    G_sgpe_stop_record.group.ex01[1]            = 0;
+    G_sgpe_stop_record.group.ex01[2]            = 0;
+    G_sgpe_stop_record.group.ex01[3]            = 0;
+    G_sgpe_stop_record.group.ex01[4]            = 0;
+    G_sgpe_stop_record.group.ex01[5]            = 0;
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
-
-        if (G_sgpe_stop_record.group.qswu[VECTOR_CONFIG] & BIT32(qloop))
+        if (G_sgpe_stop_record.group.qswu[VECTOR_ACTIVE] & BIT32(qloop))
         {
             continue;
         }
@@ -107,36 +106,37 @@ p9_sgpe_stop_entry()
 #if !DISABLE_STOP8
 
         // Check if EX and/or Quad qualifies to proceed with entry
-        if (G_sgpe_stop_record.state[qloop].act_state_x0 <  LEVEL_EX_BASE &&
-            G_sgpe_stop_record.state[qloop].req_state_x0 >= LEVEL_EX_BASE)
+        if(G_sgpe_stop_record.state[qloop].act_state_x0 <  LEVEL_EX_BASE &&
+           G_sgpe_stop_record.state[qloop].req_state_x0 >= LEVEL_EX_BASE)
         {
-            G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] |= BIT32(qloop);
+            G_sgpe_stop_record.group.ex01[qloop] |= FST_EX_IN_QUAD;
         }
 
-        if (G_sgpe_stop_record.state[qloop].act_state_x1 <  LEVEL_EX_BASE &&
-            G_sgpe_stop_record.state[qloop].req_state_x1 >= LEVEL_EX_BASE)
+        if(G_sgpe_stop_record.state[qloop].act_state_x1 <  LEVEL_EX_BASE &&
+           G_sgpe_stop_record.state[qloop].req_state_x1 >= LEVEL_EX_BASE)
         {
-            G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] |= BIT32(qloop);
+            G_sgpe_stop_record.group.ex01[qloop] |= SND_EX_IN_QUAD;
         }
 
 #endif
 
-        if (G_sgpe_stop_record.state[qloop].act_state_q <  LEVEL_EQ_BASE &&
-            G_sgpe_stop_record.state[qloop].req_state_q >= LEVEL_EQ_BASE)
+        if(G_sgpe_stop_record.state[qloop].act_state_q <  LEVEL_EQ_BASE &&
+           G_sgpe_stop_record.state[qloop].req_state_q >= LEVEL_EQ_BASE)
         {
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
 
 #if DISABLE_STOP8
 
-            G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] |= BIT32(qloop);
-            G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] |= BIT32(qloop);
+            G_sgpe_stop_record.group.ex01[qloop] |= BOTH_EXES_IN_QUAD;
 
 #endif
 
         }
 
-        if (G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] ||
-            G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] ||
+        G_sgpe_stop_record.group.ex01[qloop] &=
+            G_sgpe_stop_record.group.expg[qloop];
+
+        if (G_sgpe_stop_record.group.ex01[qloop] ||
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
         {
             PK_TRACE_DBG("Actual:  clv[%d][%d][%d][%d]",
@@ -155,69 +155,32 @@ p9_sgpe_stop_entry()
                          G_sgpe_stop_record.state[qloop].req_state_x0,
                          G_sgpe_stop_record.state[qloop].req_state_x1);
         }
+        else
+        {
+            //========================================
+            MARK_TAG(SE_LESSTHAN8_DONE, (32 >> qloop))
+            //========================================
+        }
     }
 
-    G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] &=
-        G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG];
-    G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] &=
-        G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG];
     G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &=
         G_sgpe_stop_record.group.quad[VECTOR_CONFIG];
 
-    PK_TRACE_DBG("Core Entry Vectors:   X0[%x] X1[%x] Q[%x]",
-                 G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY],
-                 G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY],
+    PK_TRACE_DBG("Entry Vectors: Q0_EX[%x] Q1_EX[%x] Q2_EX[%x] QSPWU[%x]",
+                 G_sgpe_stop_record.group.ex01[0],
+                 G_sgpe_stop_record.group.ex01[1],
+                 G_sgpe_stop_record.group.ex01[2],
+                 G_sgpe_stop_record.group.qswu[VECTOR_ACTIVE]);
+
+    PK_TRACE_DBG("Entry Vectors: Q3_EX[%x] Q4_EX[%x] Q5_EX[%x] QENTRY[%x]",
+                 G_sgpe_stop_record.group.ex01[3],
+                 G_sgpe_stop_record.group.ex01[4],
+                 G_sgpe_stop_record.group.ex01[5],
                  G_sgpe_stop_record.group.quad[VECTOR_ENTRY]);
 
 
 
 #if !SKIP_IPC
-
-    // If any core entries, including stop5 to stop15
-    //   sends Update Active Cores IPC to the PGPE
-    //   with Update Type being Enter and the ActiveCores field
-    //   indicating the resultant cores that have already been powered off.
-    // PGPE acknowledge immediately and
-    //   then perform any adjustments to take advantage of the powered off cores.
-    // Upon a good response from the PGPE,
-    //   the SGPE retires the operation ???
-    // Upon a bad response from the PGPE,
-    //   the SGPE will halt as the SGPE and PGPE are now out of synchronization.
-    //   [This is not a likely error.]
-
-    if((G_sgpe_stop_record.wof.update_pgpe & IPC_SGPE_PGPE_UPDATE_CORE_ENABLED) &&
-       G_sgpe_stop_record.group.core[VECTOR_ENTRY])
-    {
-        PK_TRACE_INF("SEIPC: Update PGPE with Active Cores");
-        G_sgpe_ipcmsg_update_cores.fields.update_type = UPDATE_ACTIVE_CORES_TYPE_ENTRY;
-        G_sgpe_ipcmsg_update_cores.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
-        G_sgpe_ipcmsg_update_cores.fields.active_cores =
-            (G_sgpe_stop_record.group.core[VECTOR_ENTRY] >> SHIFT32(5));
-
-        G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_cores;
-        ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
-                     IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_CORES,
-                     0, 0);
-
-        rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
-
-        if (rc)
-        {
-            PK_TRACE_ERR("ERROR: Entry Updates PGPE with Active Cores Failed. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_IPC_CORE_FAILED);
-        }
-
-        // can poll right away since pgpe should ack right back
-        PK_TRACE_INF("SEIPC: Poll PGPE Update Active Cores Ack");
-
-        while (G_sgpe_ipcmsg_update_cores.fields.return_code == IPC_SGPE_PGPE_RC_NULL);
-
-        if (G_sgpe_ipcmsg_update_cores.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
-        {
-            PK_TRACE_ERR("ERROR: Entry Updates PGPE with Active Cores Bad RC. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_IPC_CORE_BAD_RC);
-        }
-    }
 
     // Upon entry into STOP 11, right before stopping the clocks to the cache chiplet
     // the SGPE must communicate to the PGPE to
@@ -238,77 +201,74 @@ p9_sgpe_stop_entry()
         G_sgpe_stop_record.group.quad[VECTOR_ENTRY]) // entry into STOP11
     {
         //===============================
-        //MARK_TRAP(SE_STOP_SUSPEND_PSTATE)
+        MARK_TRAP(SE_STOP_SUSPEND_PSTATE)
         //===============================
 
-        /*
-        PK_TRACE_INF("SEIPC: Message PGPE to Suspend Pstate(stop11 and pstate enabled)");
-        G_sgpe_ipcmsg_suspend_pstate.fields.update_type = UPDATE_ACTIVE_TYPE_ENTRY;
-        G_sgpe_ipcmsg_suspend_pstate.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
-        G_sgpe_ipcmsg_suspend_pstate.fields.requested_quads =
-            (G_sgpe_stop_record.group.quad[VECTOR_ENTRY] >> SHIFT32(5));
+        ipc_quad_entry = 1;
 
-        G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_suspend_pstate;
-        ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
-                     IPC_MSGID_SGPE_PGPE_SUSPEND_PSTATE,
-                     p9_sgpe_ipc_pgpe_rsp_callback, (void*)&G_sgpe_stop_record.sem[2]);
+        p9_sgpe_ipc_pgpe_update_active_quads(UPDATE_ACTIVE_QUADS_TYPE_ENTRY,
+                                             UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY);
 
-        rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
-
-        if(rc)
-        {
-            PK_TRACE_ERR("ERROR: Entry Suspend PGPE Pstate Function Failed. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_IPC_PSTATE_FAILED);
-        }
-
-        /// @todo RTC166577
-        /// move poll below to before stop cache clocks when sgpe supports multicast
-        PK_TRACE_INF("SEIPC: Pend PGPE Suspend Pstate Ack");
-        pk_semaphore_pend(&(G_sgpe_stop_record.sem[2]), PK_WAIT_FOREVER);
-
-        if (G_sgpe_ipcmsg_suspend_pstate.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
-        {
-            PK_TRACE_ERR("ERROR: Entry Suspend PGPE Pstate Function Bad RC. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_IPC_PSTATE_BAD_RC);
-        }*/
-
-        PK_TRACE_INF("SEIPC: Send PGPE Quads Active Update ENTRY(Notify)");
-        G_sgpe_ipcmsg_update_quads.fields.requested_quads =
-            G_sgpe_stop_record.group.quad[VECTOR_ENTRY] >> SHIFT32(5);
-        G_sgpe_ipcmsg_update_quads.fields.update_type = UPDATE_ACTIVE_QUADS_TYPE_ENTRY;
-        G_sgpe_ipcmsg_update_quads.fields.entry_type = UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY;
-        G_sgpe_ipcmsg_update_quads.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
-
-        G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
-        ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
-                     IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
-                     p9_sgpe_ipc_pgpe_rsp_callback, (void*)&G_sgpe_stop_record.sem[2]);
-
-        rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
-
-        if(rc)
-        {
-            PK_TRACE_INF("ERROR: Quads Active Update ENTRY(Notify) FAILED. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_IPC_QUAD_FAILED);
-        }
-
-        PK_TRACE_INF("SEIPC: Pend PGPE Update Active Quads Ack");
-        pk_semaphore_pend(&(G_sgpe_stop_record.sem[2]), PK_WAIT_FOREVER);
-
-        if (G_sgpe_ipcmsg_update_quads.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
-        {
-            PK_TRACE_INF("ERROR: Quads Active Update (Notify) Bad RC. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_IPC_QUAD_BAD_RC);
-        }
-
+        // poll for ack is located at SE_WAIT_PGPE_SUSPEND mark below
+        // to parallel latency with pgpe processing
     }
-    else if ((!G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY]) &&
-             (!G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY]))
+
+#endif
+
+
+
+// NDD1 workaround to save cme image size
+#if NIMBUS_DD_LEVEL == 10
+
+    PK_TRACE("Assert L2+NCU purge and NCU tlbie quiesce via SICR[18,21,22]");
+
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
-        //============================
-        MARK_TAG(SE_LESSTHAN8_DONE, 0)
-        //============================
+        // insert tlbie quiesce before ncu purge to avoid window condition
+        // of ncu traffic still happening when purging starts
+        // Note: chtm purge and drop tlbie quiesce will be done in SGPE
+
+        if (G_sgpe_stop_record.group.ex01[qloop] & FST_EX_IN_QUAD)
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 0), (BIT64(18) | BIT64(21)));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 0), BIT64(22));
+        }
+
+        if (G_sgpe_stop_record.group.ex01[qloop] & SND_EX_IN_QUAD)
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 1), (BIT64(18) | BIT64(21)));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 1), BIT64(22));
+        }
     }
+
+    PK_TRACE("Poll for purged done via EISR[22,23] then Drop L2+NCU purges via SICR[18,22]");
+
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
+    {
+        if (G_sgpe_stop_record.group.ex01[qloop] & FST_EX_IN_QUAD)
+        {
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_EISR, qloop, 0), scom_data.value);
+            }
+            while((scom_data.words.upper & BITS32(22, 2)) != BITS32(22, 2));
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, qloop, 0), (BIT64(18) | BIT64(22)));
+        }
+
+        if (G_sgpe_stop_record.group.ex01[qloop] & SND_EX_IN_QUAD)
+        {
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_EISR, qloop, 1), scom_data.value);
+            }
+            while((scom_data.words.upper & BITS32(22, 2)) != BITS32(22, 2));
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, qloop, 1), (BIT64(18) | BIT64(22)));
+        }
+    }
+
+    PK_TRACE_INF("NDD1: L2 and NCU Purged by SGPE");
 
 #endif
 
@@ -318,19 +278,7 @@ p9_sgpe_stop_entry()
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
         // if this ex is not up to entry, skip
-        ex = 0;
-
-        if (G_sgpe_stop_record.group.ex_l[VECTOR_ENTRY] & BIT32(qloop))
-        {
-            ex |= FST_EX_IN_QUAD;
-        }
-
-        if (G_sgpe_stop_record.group.ex_r[VECTOR_ENTRY] & BIT32(qloop))
-        {
-            ex |= SND_EX_IN_QUAD;
-        }
-
-        if (!ex)
+        if (!(ex = G_sgpe_stop_record.group.ex01[qloop]))
         {
             continue;
         }
@@ -355,87 +303,6 @@ p9_sgpe_stop_entry()
         PK_TRACE("Update QSSR: stop_entry_ongoing");
         out32(OCB_QSSR_OR, BIT32(qloop + 20));
 
-        cloop  = (ex & FST_EX_IN_QUAD) ?              0 : CORES_PER_EX;
-        climit = (ex & SND_EX_IN_QUAD) ? CORES_PER_QUAD : CORES_PER_EX;
-
-        for(; cloop < climit; cloop++)
-        {
-            // Check partial good core
-            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] &
-                  BIT32(((qloop << 2) + cloop))))
-            {
-                continue;
-            }
-
-#if DEBUG_RUNTIME_STATE_CHECK
-
-            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
-                                           ((qloop << 2) + cloop)), scom_data.value);
-
-            if (!(scom_data.words.upper & BIT32(13)))
-            {
-                PKTRACE("ERROR.B: core[%d] notify fail to set", ((qloop << 2) + cloop));
-                pk_halt();
-            }
-
-#endif
-
-            PK_TRACE("Update STOP history on core[%d]: in transition of entry",
-                     ((qloop << 2) + cloop));
-            scom_data.words.lower = 0;
-            scom_data.words.upper = SSH_ENTRY_IN_SESSION;
-            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
-                            scom_data.value);
-        }
-
-// NDD1 workaround to save cme image size
-#if NIMBUS_DD_LEVEL == 10
-
-        PK_TRACE("Assert L2+NCU purge and NCU tlbie quiesce via SICR[18,21,22]");
-        // insert tlbie quiesce before ncu purge to avoid window condition
-        // of ncu traffic still happening when purging starts
-        // Note: chtm purge and drop tlbie quiesce will be done in SGPE
-
-        if (ex & FST_EX_IN_QUAD)
-        {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 0), (BIT64(18) | BIT64(21)));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 0), BIT64(22));
-        }
-
-        if (ex & SND_EX_IN_QUAD)
-        {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 1), (BIT64(18) | BIT64(21)));
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 1), BIT64(22));
-        }
-
-        PK_TRACE("Poll for purged done via EISR[22,23] then Drop L2+NCU purges via SICR[18,22]");
-
-        if (ex & FST_EX_IN_QUAD)
-        {
-            do
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_EISR, qloop, 0), scom_data.value);
-            }
-            while((scom_data.words.upper & BITS32(22, 2)) != BITS32(22, 2));
-
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, qloop, 0), (BIT64(18) | BIT64(22)));
-        }
-
-        if (ex & SND_EX_IN_QUAD)
-        {
-            do
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_EISR, qloop, 1), scom_data.value);
-            }
-            while((scom_data.words.upper & BITS32(22, 2)) != BITS32(22, 2));
-
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, qloop, 1), (BIT64(18) | BIT64(22)));
-        }
-
-        PK_TRACE_INF("NDD1: L2 and NCU Purged by SGPE");
-
-#endif
-
         //====================================================
         MARK_TAG(SE_STOP_L2_CLKS, ((ex << 6) | (32 >> qloop)))
         //====================================================
@@ -455,7 +322,7 @@ p9_sgpe_stop_entry()
         PK_TRACE("Assert partial bad L2/L3 and stopping/stoped l2 pscom masks via RING_FENCE_MASK_LATCH");
         scom_data.value = 0;
 
-        if (!(G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop)))
+        if (!(G_sgpe_stop_record.group.expg[qloop] & FST_EX_IN_QUAD))
         {
             scom_data.words.upper |= (PSCOM_MASK_EX0_L2 | PSCOM_MASK_EX0_L3);
         }
@@ -465,7 +332,7 @@ p9_sgpe_stop_entry()
             scom_data.words.upper |= PSCOM_MASK_EX0_L2;
         }
 
-        if (!(G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop)))
+        if (!(G_sgpe_stop_record.group.expg[qloop] & SND_EX_IN_QUAD))
         {
             scom_data.words.upper |= (PSCOM_MASK_EX1_L2 | PSCOM_MASK_EX1_L3);
         }
@@ -529,12 +396,14 @@ p9_sgpe_stop_entry()
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, qloop),
                     ((uint64_t)ex << SHIFT64(35)));
 
+#if !DISABLE_STOP8
+
         if (ex & FST_EX_IN_QUAD)
         {
             cloop = 0;
             G_sgpe_stop_record.state[qloop].act_state_x0 = STOP_LEVEL_8;
             entry_ongoing[0] =
-                G_sgpe_stop_record.state[qloop].req_state_x0 == STOP_LEVEL_8 ?
+                G_sgpe_stop_record.state[qloop].req_state_x0 < STOP_LEVEL_11 ?
                 STOP_TRANS_COMPLETE : STOP_TRANS_ENTRY;
         }
         else
@@ -547,7 +416,7 @@ p9_sgpe_stop_entry()
             climit = CORES_PER_QUAD;
             G_sgpe_stop_record.state[qloop].act_state_x1 = STOP_LEVEL_8;
             entry_ongoing[1] =
-                G_sgpe_stop_record.state[qloop].req_state_x1 == STOP_LEVEL_8 ?
+                G_sgpe_stop_record.state[qloop].req_state_x1 < STOP_LEVEL_11 ?
                 STOP_TRANS_COMPLETE : STOP_TRANS_ENTRY;
         }
         else
@@ -557,42 +426,25 @@ p9_sgpe_stop_entry()
 
         for(; cloop < climit; cloop++)
         {
+            cindex = (qloop << 2) + cloop;
+
             // Check partial good core
-            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] &
-                  BIT32(((qloop << 2) + cloop))))
+            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex)))
             {
                 continue;
             }
 
-#if DEBUG_RUNTIME_STATE_CHECK
-
-            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR,
-                                           ((qloop << 2) + cloop)), scom_data.value);
-
-            if (!(scom_data.words.upper & BIT32(13)))
-            {
-                PKTRACE("ERROR.C: core[%d] notify fail to set", ((qloop << 2) + cloop));
-                pk_halt();
-            }
-
-#endif
-
             // request levle already set by CME
             // shift by 2 == times 4, which is cores per quad
-            PK_TRACE("Update STOP history on core[%d]: in stop level 8",
-                     ((qloop << 2) + cloop));
+            PK_TRACE("Update STOP history on core[%d]: in stop level 8", cindex);
             scom_data.words.lower = 0;
             scom_data.words.upper = (SSH_ACT_LV8_COMPLETE |
                                      (((uint32_t)entry_ongoing[cloop >> 1]) << SHIFT32(3)));
-
-#if !DISABLE_STOP8
-
-            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
-                            scom_data.value);
-
-#endif
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
 
         }
+
+#endif
 
         PK_TRACE("Update QSSR: l2_stopped, drop stop_entry_ongoing");
         out32(OCB_QSSR_CLR, BIT32(qloop + 20));
@@ -615,10 +467,11 @@ p9_sgpe_stop_entry()
         MARK_TAG(SE_STOP8_DONE, ((ex << 6) | (32 >> qloop)))
         //==================================================
 
-    };
+    }
 
 
 
+    // L3 Purge loop to parallel all quad purges
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
         // if this quad is not up to entry, skip
@@ -627,21 +480,11 @@ p9_sgpe_stop_entry()
             continue;
         }
 
+        ex = G_sgpe_stop_record.group.expg[qloop];
+
         // ------------------------------------------------------------------------
         PK_TRACE("+++++ +++++ QUAD STOP ENTRY [LEVEL 11-15] +++++ +++++");
         // ------------------------------------------------------------------------
-
-        ex = 0;
-
-        if (G_sgpe_stop_record.group.ex_l[VECTOR_CONFIG] & BIT32(qloop))
-        {
-            ex |= FST_EX_IN_QUAD;
-        }
-
-        if (G_sgpe_stop_record.group.ex_r[VECTOR_CONFIG] & BIT32(qloop))
-        {
-            ex |= SND_EX_IN_QUAD;
-        }
 
         PK_TRACE_INF("SE.11A: Quad[%d] EX_PG[%d] Shutting Cache Down", qloop, ex);
 
@@ -712,6 +555,21 @@ p9_sgpe_stop_entry()
         PK_TRACE("Disable cme trace array via DEBUG_TRACE_CONTROL[1]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(1));
 
+    }
+
+
+
+    // L3 Purge done poll loop to parallel all quad purge done polls
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
+    {
+        // if this quad is not up to entry, skip
+        if (!(G_sgpe_stop_record.group.quad[VECTOR_ENTRY] & BIT32(qloop)))
+        {
+            continue;
+        }
+
+        ex = G_sgpe_stop_record.group.expg[qloop];
+
         PK_TRACE("Poll for L3 purge done via EX_PM_PURGE_REG[0]");
 
         // Poll on the same request bit thus no need to deassert
@@ -731,10 +589,10 @@ p9_sgpe_stop_entry()
 
                     for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
                     {
-                        if ((in32(OCB_OPIT2CN(((qloop << 2) + cloop))) &
-                             TYPE2_PAYLOAD_EXIT_EVENT) ||
-                            (in32(OCB_OPIT3CN(((qloop << 2) + cloop))) &
-                             TYPE3_PAYLOAD_EXIT_EVENT))
+                        cindex = (qloop << 2) + cloop;
+
+                        if ((in32(OCB_OPIT2CN(cindex)) & TYPE2_PAYLOAD_EXIT_EVENT) ||
+                            (in32(OCB_OPIT3CN(cindex)) & TYPE3_PAYLOAD_EXIT_EVENT))
                         {
                             PK_TRACE_DBG("Abort: core wakeup detected");
                             l3_purge_aborted = 1;
@@ -847,6 +705,20 @@ p9_sgpe_stop_entry()
 
 #endif
 
+    }
+
+
+    // loop for rest of quad stop
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
+    {
+        // if this quad is not up to entry, skip
+        if (!(G_sgpe_stop_record.group.quad[VECTOR_ENTRY] & BIT32(qloop)))
+        {
+            continue;
+        }
+
+        ex = G_sgpe_stop_record.group.expg[qloop];
+
         //==================================
         MARK_TAG(SE_PURGE_PB, (32 >> qloop))
         //==================================
@@ -912,8 +784,11 @@ p9_sgpe_stop_entry()
         MARK_TAG(SE_WAIT_PGPE_SUSPEND, (32 >> qloop))
         //===========================================
 
-        /// @todo RTC166577
-        /// IPC poll will move to here when multicast
+        if (ipc_quad_entry)
+        {
+            p9_sgpe_ipc_pgpe_update_active_quads_poll_ack();
+            ipc_quad_entry = 0;
+        }
 
         //======================================
         MARK_TAG(SE_QUIESCE_QUAD, (32 >> qloop))
@@ -946,7 +821,7 @@ p9_sgpe_stop_entry()
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_STATUS_REG, qloop, 0),
                             scom_data.value);
-                PKTRACE("Polling NCU_STATUS_REG 0");
+                PK_TRACE("Polling NCU_STATUS_REG 0");
             }
             while(((~(scom_data.words.upper)) & BITS32(0, 3)) != BITS32(0, 3));
         }
@@ -957,7 +832,7 @@ p9_sgpe_stop_entry()
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_STATUS_REG, qloop, 1),
                             scom_data.value);
-                PKTRACE("Polling NCU_STATUS_REG 1");
+                PK_TRACE("Polling NCU_STATUS_REG 1");
             }
             while(((~(scom_data.words.upper)) & BITS32(0, 3)) != BITS32(0, 3));
         }
@@ -1039,18 +914,17 @@ p9_sgpe_stop_entry()
 
         for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
         {
+            cindex = (qloop << 2) + cloop;
+
             // only loop over configured cores
-            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] &
-                  BIT32((qloop << 2) + cloop)))
+            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex)))
             {
                 continue;
             }
 
-            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
-                                           ((qloop << 2) + cloop)), scom_data.value);
+            GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG, cindex), scom_data.value);
             scom_data.words.upper |= BITS32(6, 2);
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG,
-                                           ((qloop << 2) + cloop)), scom_data.value);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(C_SLAVE_CONFIG, cindex), scom_data.value);
         }
 
         //=========================================
@@ -1202,23 +1076,31 @@ p9_sgpe_stop_entry()
 
 #endif
 
-        G_sgpe_stop_record.state[qloop].act_state_q = STOP_LEVEL_11;
+        PK_TRACE("Release cache PCB slave atomic lock");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), 0);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
+
+        if (scom_data.words.upper & BIT32(0))
+        {
+            PK_TRACE_ERR("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
+                         qloop, scom_data.words.upper);
+            PK_PANIC(SGPE_STOP_ENTRY_DROP_SLV_LOCK_FAILED);
+        }
 
         for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
         {
+            cindex = (qloop << 2) + cloop;
+
             // Check partial good core
-            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] &
-                  BIT32(((qloop << 2) + cloop))))
+            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex)))
             {
                 continue;
             }
 
-            PK_TRACE("Update STOP history on core[%d]: in stop level 11",
-                     ((qloop << 2) + cloop));
+            PK_TRACE("Update STOP history on core[%d]: in stop level 11", cindex);
             scom_data.words.lower = 0;
             scom_data.words.upper = SSH_ACT_LV11_COMPLETE ;
-            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((qloop << 2) + cloop), 0,
-                            scom_data.value);
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
         }
 
         PK_TRACE("Update STOP history on quad[%d]: in stop level 11", qloop);
@@ -1232,16 +1114,9 @@ p9_sgpe_stop_entry()
         PK_TRACE("Update QSSR: drop stop_entry_ongoing");
         out32(OCB_QSSR_CLR, BIT32(qloop + 20));
 
-        PK_TRACE("Release cache PCB slave atomic lock");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), 0);
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
-
-        if (scom_data.words.upper & BIT32(0))
-        {
-            PK_TRACE_ERR("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
-                         qloop, scom_data.words.upper);
-            PK_PANIC(SGPE_STOP_ENTRY_DROP_SLV_LOCK_FAILED);
-        }
+        G_sgpe_stop_record.state[qloop].act_state_q   = STOP_LEVEL_11;
+        G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] &= ~BIT32(qloop);
+        G_sgpe_stop_record.group.qswu[VECTOR_ENTRY]  &= ~BIT32(qloop);
 
         //=====================================
         MARK_TAG(SE_STOP11_DONE, (32 >> qloop))
@@ -1252,61 +1127,23 @@ p9_sgpe_stop_entry()
     PK_TRACE("+++++ +++++ END OF STOP ENTRY +++++ +++++");
     //--------------------------------------------------------------------------
 
-    //loop quad to clear qswu record
-    for(qloop = 0; qloop < MAX_QUADS; qloop++)
-    {
-        if (G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] & BIT32(qloop))
-        {
-            G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] &= ~BIT32(qloop);
-        }
-    }
-
 #if !SKIP_IPC
 
     /// @todo RTC166577
     /// this block can be done as early as after stop cache clocks
-    /// when sgpe supports multicast
     if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
         G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
     {
-        PK_TRACE_INF("SEIPC: Send PGPE Resume with Active Quads Updated(0 if aborted)");
-        // Note: if all quads aborted on l3 purge, the list will be 0s;
-        G_sgpe_ipcmsg_update_quads.fields.requested_quads =
-            G_sgpe_stop_record.group.quad[VECTOR_ENTRY] >> SHIFT32(5);
+        // Note: if all quads aborted on l3 purge, the quad list will be 0s;
 
-        G_sgpe_ipcmsg_update_quads.fields.update_type = UPDATE_ACTIVE_QUADS_TYPE_ENTRY;
-        G_sgpe_ipcmsg_update_quads.fields.entry_type = UPDATE_ACTIVE_QUADS_ENTRY_TYPE_DONE;
-        G_sgpe_ipcmsg_update_quads.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
+        p9_sgpe_ipc_pgpe_update_active_quads(UPDATE_ACTIVE_QUADS_TYPE_ENTRY,
+                                             UPDATE_ACTIVE_QUADS_ENTRY_TYPE_DONE);
 
-        G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
-        ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
-                     IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
-                     p9_sgpe_ipc_pgpe_rsp_callback, (void*)&G_sgpe_stop_record.sem[2]);
-
-        rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
-
-        if(rc)
-        {
-            PK_TRACE_INF("ERROR: Entry Updates PGPE with Active Quads FAILED. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_IPC_QUAD_FAILED);
-        }
-
-        PK_TRACE_INF("SEIPC: Pend PGPE Update Active Quads Ack");
-        pk_semaphore_pend(&(G_sgpe_stop_record.sem[2]), PK_WAIT_FOREVER);
-
-        if (G_sgpe_ipcmsg_update_quads.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
-        {
-            PK_TRACE_INF("ERROR: Entry Updates PGPE with Active Quads Bad RC. HALT SGPE!");
-            PK_PANIC(SGPE_STOP_ENTRY_IPC_QUAD_BAD_RC);
-        }
+        // pgpe should ack right away
+        p9_sgpe_ipc_pgpe_update_active_quads_poll_ack();
     }
 
 #endif
-
-    G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] &=
-        ~(G_sgpe_stop_record.group.quad[VECTOR_ENTRY]);
-    G_sgpe_stop_record.group.core[VECTOR_ACTIVE] &=
-        ~(G_sgpe_stop_record.group.core[VECTOR_ENTRY]);
 
     //============================
     MARK_TRAP(ENDSCOPE_STOP_ENTRY)

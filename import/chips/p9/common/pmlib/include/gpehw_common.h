@@ -52,8 +52,10 @@ enum GPE_CHIPLET_MASKS
 {
     FST_CORE_IN_EX               = 0x2,
     SND_CORE_IN_EX               = 0x1,
+    BOTH_CORES_IN_EX             = 0x3,
     FST_EX_IN_QUAD               = 0x2,
-    SND_EX_IN_QUAD               = 0x1
+    SND_EX_IN_QUAD               = 0x1,
+    BOTH_EXES_IN_QUAD            = 0x3
 };
 
 
