@@ -333,8 +333,7 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
         }
 
         // if no core request, skip to next quad
-        if(!cirq || (!(BITS32((qloop << 2), 4) & (cpending_t2 | cpending_t3) &
-                       G_sgpe_stop_record.group.core[VECTOR_CONFIG])))
+        if(!cirq || (!(BITS32((qloop << 2), 4) & (cpending_t2 | cpending_t3))))
         {
             continue;
         }
@@ -435,6 +434,13 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                     }
                 }
 
+                continue;
+            }
+
+            // check core partial good here as suspend protocol may send pig on bad core
+            // on behalf of bad ex, which is processed by code above
+            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32((qloop << 2) + cloop)))
+            {
                 continue;
             }
 

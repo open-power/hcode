@@ -29,7 +29,8 @@
 extern SgpeStopRecord G_sgpe_stop_record;
 
 
-void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg)
+void
+p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg)
 {
     PkMachineContext ctx;
 
@@ -57,30 +58,64 @@ void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg)
     pk_irq_vec_restore(&ctx);
 }
 
-void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
+void
+p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
 {
     PkMachineContext ctx;
+
+    G_sgpe_stop_record.wof.suspend_cmd = cmd;
+    g_oimr_override |= (BITS64(47, 2) | BIT64(51));
 
     // stop in process
     if (G_sgpe_stop_record.wof.status_stop == STATUS_PROCESSING)
     {
         // Note: response will be sent by stop threads when suspension is completed
-        G_sgpe_stop_record.wof.suspend_cmd = cmd;
         G_sgpe_stop_record.wof.status_stop = STATUS_SUSPENDING;
     }
     // sgpe idle
     else if (G_sgpe_stop_record.wof.status_stop == STATUS_IDLE)
     {
-        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
-        ipcmsg_p2s_suspend_stop_t* msg =
-            (ipcmsg_p2s_suspend_stop_t*)async_cmd->cmd_data;
-        msg->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-
-        ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-
-        G_sgpe_stop_record.wof.status_stop = STATUS_SUSPENDED;
-        g_oimr_override |= (BITS64(47, 2) | BIT64(51));
+        p9_sgpe_stop_suspend_all_cmes();
     }
 
     pk_irq_vec_restore(&ctx);
+}
+
+void
+p9_sgpe_stop_suspend_all_cmes()
+{
+    uint32_t qloop       = 0;
+    uint32_t xloop       = 0;
+    uint32_t cloop       = 0;
+    uint32_t cpayload_t2 = 0;
+    uint32_t cme_list    = 0;
+
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
+    {
+        p9_sgpe_stop_suspend_msg_db1(qloop, BITS32(5, 3));
+    }
+
+    while (cme_list != 0xFFF00000)
+    {
+        for(xloop = 0; xloop < MAX_EXES; xloop++)
+        {
+            for(cloop = 0; cloop < CORES_PER_EX; cloop++)
+            {
+                cpayload_t2 = in32(OCB_OPIT2CN(((xloop << 1) + cloop)));
+
+                if (cpayload_t2 == 0x780)
+                {
+                    cme_list |= BIT32(xloop);
+                }
+            }
+        }
+    }
+
+    ipc_async_cmd_t* async_cmd =
+        (ipc_async_cmd_t*)(G_sgpe_stop_record.wof.suspend_cmd);
+    ipcmsg_p2s_suspend_stop_t* msg =
+        (ipcmsg_p2s_suspend_stop_t*)async_cmd->cmd_data;
+    msg->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+    ipc_send_rsp(G_sgpe_stop_record.wof.suspend_cmd, IPC_RC_SUCCESS);
+    G_sgpe_stop_record.wof.status_stop = STATUS_SUSPENDED;
 }
