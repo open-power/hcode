@@ -1317,7 +1317,7 @@ p9_cme_stop_entry()
 
             PK_TRACE("Update STOP history: in core stop level 5");
             scom_data.words.lower = 0;
-            scom_data.words.upper = SSH_ACT_LV5_COMPLETE;
+            scom_data.words.upper = SSH_ACT_LV5_CONTINUE;
             CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
             PK_TRACE("Send PCB interrupt per core via PIG, select irq type via CPMMR[10]");
