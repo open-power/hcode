@@ -297,7 +297,6 @@ void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg);
 void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg);
 void p9_sgpe_ipc_pgpe_rsp_callback(ipc_msg_t* cmd, void* arg);
 
-
 /// SGPE STOP Entry and Exit Prototypes
 void p9_sgpe_stop_suspend_msg_db1(uint32_t, uint32_t);
 void p9_sgpe_stop_ipi_handler(void*, PkIrqId);
@@ -307,6 +306,7 @@ void p9_sgpe_stop_exit_thread(void*);
 void p9_sgpe_stop_entry();
 void p9_sgpe_stop_exit();
 void p9_sgpe_stop_cme_scominit(uint32_t, uint32_t, uint32_t);
+void p9_sgpe_stop_suspend_all_cmes();
 
 /// Procedures shared between Istep4 and SGPE Stop
 void p9_hcd_cache_scan0(uint32_t, uint64_t, uint64_t);
