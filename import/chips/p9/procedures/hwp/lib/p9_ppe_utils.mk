@@ -1,7 +1,7 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p9/procedures/hwp/lib/p9_ppe_state.mk $
+# $Source: import/chips/p9/procedures/hwp/lib/p9_ppe_utils.mk $
 #
 # OpenPOWER HCODE Project
 #
@@ -22,6 +22,6 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-PROCEDURE=p9_ppe_state
-$(PROCEDURE)_DEPLIBS += p9_ppe_utils
+
+PROCEDURE=p9_ppe_utils
 $(call BUILD_PROCEDURE)

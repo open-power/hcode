@@ -25,4 +25,5 @@
 PROCEDURE=p9_ppe_commands
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p9/procedures/hwp/lib)
 OBJS+=p9_ppe_commands.o
+lib$(PROCEDURE)_DEPLIBS += p9_ppe_utils
 $(call BUILD_PROCEDURE)

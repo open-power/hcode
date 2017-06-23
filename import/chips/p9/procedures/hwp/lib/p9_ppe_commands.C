@@ -44,7 +44,6 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <fapi2.H>
-#include <p9_ppe_utils.C>
 #include <p9_ppe_commands.H>
 #include <p9_hcd_common.H>
 

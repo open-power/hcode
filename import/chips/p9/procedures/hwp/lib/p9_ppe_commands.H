@@ -36,6 +36,7 @@
 
 #ifndef __P9_PPE_COMMANDS_H__
 #define __P9_PPE_COMMANDS_H__
+#include <p9_ppe_utils.H>
 
 typedef struct
 {
