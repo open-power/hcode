@@ -528,10 +528,6 @@ p9_cme_stop_exit()
 
 
 
-    //==================================
-    MARK_TAG(BEGINSCOPE_STOP_EXIT, core)
-    //==================================
-
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
     uint32_t dual_core   = core;
@@ -550,6 +546,10 @@ p9_cme_stop_exit()
         }
 
 #endif
+
+        //==================================
+        MARK_TAG(BEGINSCOPE_STOP_EXIT, core)
+        //==================================
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 

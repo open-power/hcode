@@ -29,7 +29,6 @@ inline __attribute__((always_inline))
 void
 p9_hcd_core_startclocks(uint32_t core)
 {
-    uint32_t     core_mask  = 0;
     data64_t     scom_data  = {0};
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     uint32_t     id_vector  = pCmeImgHdr->g_cme_location_id;
@@ -143,6 +142,8 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
 
 #if !EPM_P9_TUNING
+
+    uint32_t core_mask  = 0;
 
     for(core_mask = 2; core_mask; core_mask--)
     {

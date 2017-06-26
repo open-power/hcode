@@ -287,10 +287,6 @@ p9_cme_stop_entry()
         return;
     }
 
-    //===================================
-    MARK_TAG(BEGINSCOPE_STOP_ENTRY, core)
-    //===================================
-
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
     uint32_t dual_core   = core;
@@ -309,6 +305,10 @@ p9_cme_stop_entry()
         }
 
 #endif
+
+        //===================================
+        MARK_TAG(BEGINSCOPE_STOP_ENTRY, core)
+        //===================================
 
         do   // while(0) loop for stop flow control
         {
