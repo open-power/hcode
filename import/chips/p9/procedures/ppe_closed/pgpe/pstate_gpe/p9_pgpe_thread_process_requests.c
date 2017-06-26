@@ -45,7 +45,6 @@ extern ipc_async_cmd_t G_ipc_msg_pgpe_sgpe;
 void p9_pgpe_process_sgpe_updt_active_cores();
 void p9_pgpe_process_sgpe_updt_active_quads();
 void p9_pgpe_process_start_stop();
-void p9_pgpe_process_sgpe_suspend_pstates();
 void p9_pgpe_process_clip_updt();
 void p9_pgpe_process_wof_ctrl();
 void p9_pgpe_process_wof_vfrt();
@@ -119,16 +118,6 @@ void p9_pgpe_thread_process_requests(void* arg)
                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_STOP].pending_ack == 1) {
                 restore_irq = 0;
             }*/
-        }
-
-        if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_processing == 1)
-        {
-            p9_pgpe_process_sgpe_suspend_pstates();
-
-            if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack == 1)
-            {
-                restore_irq = 0;
-            }
         }
 
         if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_processing == 1)
@@ -225,7 +214,7 @@ void p9_pgpe_process_sgpe_updt_active_cores()
 
             //If ENTRY type then send ACK to SGPE immediately
             //Otherwise, wait to ACK until WOF Clip has been applied(from actuate_pstate thread)
-            if (args->fields.update_type == UPDATE_ACTIVE_TYPE_ENTRY)
+            if (args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY)
             {
                 PK_TRACE_DBG("PROCTH: Core Entry ACK back to SGPE\n");
                 args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
@@ -262,7 +251,7 @@ void p9_pgpe_process_sgpe_updt_active_quads()
     {
 
         //ENTRY
-        if (args->fields.update_type == UPDATE_ACTIVE_TYPE_ENTRY)
+        if (args->fields.update_type == UPDATE_ACTIVE_QUADS_TYPE_ENTRY)
         {
             //Update Shared Memory Region
             PK_TRACE_DBG("PROCTH: Q Updt Entry, Req_Q: 0x%x\n", (uint32_t)(args->fields.requested_quads));
@@ -389,45 +378,6 @@ void p9_pgpe_process_start_stop()
     PK_TRACE_DBG("PROCTH: Start/Stop End\n");
 }
 
-void p9_pgpe_process_sgpe_suspend_pstates()
-{
-    PK_TRACE_DBG("PROCTH: Susp Pst Entry\n");
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].cmd;
-    ipcmsg_s2p_suspend_pstate_t* args = (ipcmsg_s2p_suspend_pstate_t*)async_cmd->cmd_data;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_processing = 0;
-
-    //If in PM_SUSPENDED state, then ack back with error
-    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
-        G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
-        G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE )
-    {
-        PK_TRACE_DBG("PROCTH: Susp Pst while SUSPEND/SAFE\n");
-        args->fields.return_code = IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].cmd, IPC_RC_SUCCESS);
-    }
-    else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT ||
-            G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED ||
-            G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-    {
-        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_SUSPEND_PSTATES].cmd, IPC_RC_SUCCESS);
-
-        if(G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-        {
-            PK_TRACE_DBG("PROCTH: Susp Pst while ACTIVE\n");
-            G_pgpe_pstate_record.pstatesStatus = PSTATE_SUSPENDED_WHILE_ACTIVE;
-        }
-        else
-        {
-            G_pgpe_pstate_record.pstatesStatus = PSTATE_SUSPENDED_WHILE_STOPPED_INIT;
-            PK_TRACE_DBG("PROCTH: Susp Pst while STOPPED_INIT\n");
-        }
-    }
-
-    PK_TRACE_DBG("PROCTH: Susp Pst Exit\n");
-}
 
 //
 //p9_pgpe_process_clip_updt

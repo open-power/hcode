@@ -54,7 +54,7 @@ extern PgpePstateRecord G_pgpe_pstate_record;
 //
 GPE_BUFFER(ipc_async_cmd_t G_ipc_msg_pgpe_sgpe);
 GPE_BUFFER(ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
-GPE_BUFFER(ipcmsg_s2p_suspend_pstate_t G_sgpe_suspend_stop);
+GPE_BUFFER(ipcmsg_p2s_suspend_stop_t G_sgpe_suspend_stop);
 
 //Local Functions
 void p9_pgpe_pstate_freq_updt();

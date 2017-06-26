@@ -58,11 +58,23 @@ enum CTRL_STOP_UPDATES_ACTION
     CTRL_STOP_UPDT_DISABLE_CORE_QUAD    = 0x7
 };
 
-enum UPDATE_ACTIVE_TYPES
+
+enum UPDATE_ACTIVE
 {
-    UPDATE_ACTIVE_TYPE_ENTRY            = 0,
-    UPDATE_ACTIVE_TYPE_EXIT             = 1
+    UPDATE_ACTIVE_CORES_TYPE_ENTRY              = 0x0,
+    UPDATE_ACTIVE_CORES_TYPE_EXIT               = 0x1,
+    UPDATE_ACTIVE_QUADS_TYPE_ENTRY              = 0x0,
+    UPDATE_ACTIVE_QUADS_TYPE_EXIT               = 0x1,
+    UPDATE_ACTIVE_QUADS_ENTRY_TYPE_DONE         = 0x0,
+    UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY       = 0x1
 };
+
+//
+// Return Codes
+//
+#define SGPE_PGPE_IPC_RC_SUCCESS                0x01
+#define SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK      0x10
+#define SGPE_PGPE_RC_PM_COMPLEX_SUSPEND         0x11
 
 enum IPC_SGPE_PGPE_RETURN_CODES
 {
@@ -72,9 +84,7 @@ enum IPC_SGPE_PGPE_RETURN_CODES
     IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND    = 0x11
 };
 
-
 // Sgpe to Pgpe IPC message format
-
 typedef union
 {
     uint64_t value;
@@ -96,7 +106,8 @@ typedef union
     {
         uint32_t msg_num                : 4;
         uint32_t update_type            : 1;
-        uint32_t reserved               : 3;
+        uint32_t entry_type             : 1;
+        uint32_t reserved               : 2;
         uint32_t return_code            : 8;
         uint32_t requested_quads        : 6;
         uint32_t reserved0              : 2;
@@ -106,26 +117,7 @@ typedef union
     } fields;
 } ipcmsg_s2p_update_active_quads_t;
 
-typedef union
-{
-    uint64_t value;
-    struct
-    {
-        uint32_t msg_num                : 4;
-        uint32_t update_type            : 1;
-        uint32_t reserved               : 3;
-        uint32_t return_code            : 8;
-        uint32_t requested_quads        : 6;
-        uint32_t reserved0              : 2;
-        uint32_t return_active_quads    : 6;
-        uint32_t reserved1              : 2;
-        uint32_t pad                    : 32;
-    } fields;
-} ipcmsg_s2p_suspend_pstate_t;
-
-
 // Pgpe to Sgpe IPC message format
-
 typedef union
 {
     uint64_t value;
@@ -140,6 +132,7 @@ typedef union
         uint32_t active_cores           : 24;
     } fields;
 } ipcmsg_p2s_ctrl_stop_updates_t;
+
 
 typedef union
 {

@@ -46,7 +46,6 @@ extern SgpeStopRecord                       G_sgpe_stop_record;
 #if !SKIP_IPC
 
     GPE_BUFFER(extern ipc_async_cmd_t                  G_sgpe_ipccmd_to_pgpe);
-    GPE_BUFFER(extern ipcmsg_s2p_suspend_pstate_t      G_sgpe_ipcmsg_suspend_pstate);
     GPE_BUFFER(extern ipcmsg_s2p_update_active_cores_t G_sgpe_ipcmsg_update_cores);
     GPE_BUFFER(extern ipcmsg_s2p_update_active_quads_t G_sgpe_ipcmsg_update_quads);
 
@@ -399,7 +398,7 @@ p9_sgpe_stop_exit()
        G_sgpe_stop_record.group.core[VECTOR_EXIT])
     {
         PK_TRACE_INF("SXIPC: Update PGPE with Active Cores");
-        G_sgpe_ipcmsg_update_cores.fields.update_type = UPDATE_ACTIVE_TYPE_EXIT;
+        G_sgpe_ipcmsg_update_cores.fields.update_type = UPDATE_ACTIVE_CORES_TYPE_EXIT;
         G_sgpe_ipcmsg_update_cores.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
         G_sgpe_ipcmsg_update_cores.fields.active_cores =
             (G_sgpe_stop_record.group.core[VECTOR_EXIT] >> SHIFT32(5));
@@ -469,7 +468,7 @@ p9_sgpe_stop_exit()
         if (G_sgpe_ipcmsg_update_quads.fields.requested_quads)
         {
             PK_TRACE_INF("SXIPC: Update PGPE with Active Quads(stop11 and pstate enabled)");
-            G_sgpe_ipcmsg_update_quads.fields.update_type = UPDATE_ACTIVE_TYPE_EXIT;
+            G_sgpe_ipcmsg_update_quads.fields.update_type = UPDATE_ACTIVE_QUADS_TYPE_EXIT;
             G_sgpe_ipcmsg_update_quads.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
 
             G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;

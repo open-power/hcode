@@ -32,7 +32,7 @@ TOP-C-SOURCES = p9_pgpe_pstate.c \
 				p9_pgpe_gppb.c \
 				p9_pgpe_gen_pstate_info.c \
 				p9_pgpe_header.c \
-				ipc_func_tables.c \
+				p9_pgpe_ipc_func_tables.c \
 				p9_pgpe_thread_actuate_pstates.c \
 				p9_pgpe_thread_process_requests.c \
 				p9_pgpe_ipc_handlers.c \

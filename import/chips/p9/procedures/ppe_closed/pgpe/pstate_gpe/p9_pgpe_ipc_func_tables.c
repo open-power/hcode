@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe_ipc_handlers.h $ */
+/* $Source: import/chips/p9/procedures/ppe_closed/pgpe/pstate_gpe/p9_pgpe_ipc_func_tables.c $ */
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
@@ -22,29 +22,38 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-#ifndef _P9_PGPE_IPC_H_
-#define _P9_PGPE_IPC_H_
+#include "ipc_api.h"
+#include "ipc_ping.h"
+#include "p9_pgpe_ipc_handlers.h"
 
-#include "pk.h"
+// Function table for multi target (common) functions
+IPC_MT_FUNC_TABLE_START
+IPC_HANDLER_DEFAULT                          // 0
+IPC_HANDLER_DEFAULT                          // 1
+IPC_HANDLER_DEFAULT                          // 2
+IPC_HANDLER_DEFAULT                          // 3
+IPC_HANDLER_DEFAULT                          // 4
+IPC_HANDLER_DEFAULT                          // 5
+IPC_HANDLER_DEFAULT                          // 6
+IPC_HANDLER_DEFAULT                          // 7
+IPC_MT_FUNC_TABLE_END
 
-//
-//PGPE IPC Initialization
-//
-void p9_pgpe_ipc_init();
-
-//
-//405 IPCs
-//
-void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg);
-void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg);
-void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg);
-void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg);
-void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg);
-
-//
-//SGPE IPCs
-//
-void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg);
-void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg);
-
-#endif //_P9_PGPE_IPC_H_
+// Function table for single target (processor-specific) functions
+IPC_ST_FUNC_TABLE_START
+IPC_HANDLER_DEFAULT                                     // 0
+IPC_HANDLER(p9_pgpe_ipc_405_start_stop, NULL)           // 1
+IPC_HANDLER(p9_pgpe_ipc_405_clips, NULL)                // 2
+IPC_HANDLER(p9_pgpe_ipc_405_set_pmcr, NULL)             // 3
+IPC_HANDLER(p9_pgpe_ipc_405_wof_control, NULL)          // 4
+IPC_HANDLER(p9_pgpe_ipc_405_wof_vfrt, NULL)             // 5
+IPC_HANDLER_DEFAULT                                     // 6
+IPC_HANDLER_DEFAULT                                     // 7
+IPC_HANDLER_DEFAULT                                     // 8
+IPC_HANDLER(p9_pgpe_ipc_sgpe_updt_active_cores, NULL)   // 9
+IPC_HANDLER(p9_pgpe_ipc_sgpe_updt_active_quads, NULL)   // 10
+IPC_HANDLER_DEFAULT                                     // 11
+IPC_HANDLER_DEFAULT                                     // 12
+IPC_HANDLER_DEFAULT                                     // 13
+IPC_HANDLER_DEFAULT                                     // 14
+IPC_HANDLER_DEFAULT                                     // 15
+IPC_ST_FUNC_TABLE_END

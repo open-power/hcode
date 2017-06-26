@@ -256,8 +256,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 
             //If Pstates are active or suspended while active, then
             //send Pstate Start DB0 to quadManager CME
-            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE ||
-                G_pgpe_pstate_record.pstatesStatus == PSTATE_SUSPENDED_WHILE_ACTIVE)
+            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
             {
                 p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
                 p9_pgpe_pstate_apply_clips();
