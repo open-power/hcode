@@ -28,7 +28,7 @@ IMAGE:=$(PSTATE_TARGET)
 #Note: Flags are resolved later - so local variables can't be
 # used to build them
 $(IMAGE)_COMMONFLAGS+= -DNIMBUS_DD_LEVEL=0
-$(IMAGE)_COMMONFLAGS+= -DCUMULUS_DD_LEVEL=1
+$(IMAGE)_COMMONFLAGS+= -DCUMULUS_DD_LEVEL=10
 #$(IMAGE)_COMMONFLAGS+= -fstack-usage
 
 include $(PGPE_SRCDIR)/pstate_gpe/pstate_common.mk

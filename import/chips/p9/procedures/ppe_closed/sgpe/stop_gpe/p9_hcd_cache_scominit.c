@@ -116,7 +116,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 scom_data.words.upper &= ~(BIT32(1) | BITS32(14, 8) | BIT32(22));
                 scom_data.words.upper |= (BIT32(2) | BIT32(11) | BIT32(17) | BIT32(19));
 
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
 
                 scom_data.words.upper |=  (BIT32(5) | BIT32(30));
 
@@ -149,7 +149,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                             scom_data.value);
                 scom_data.words.upper &= ~BIT32(9);
 
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
 
                 scom_data.words.lower |=  BIT64SH(51);
 

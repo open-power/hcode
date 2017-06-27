@@ -80,7 +80,7 @@ p9_hcd_core_scan0(uint32_t core, uint64_t regions, uint64_t scan_type)
     PK_TRACE("Setting scan length count");
 
     // Set bits 59:63 to 24 for the NSL_FILL_COUNT
-#if NIMBUS_DD_LEVEL == 1
+#if NIMBUS_DD_LEVEL == 10
     scom_data =  ((uint64_t)2410 << SHIFT64(11)) | 24;
 #else
     scom_data =  ((uint64_t)1024 << SHIFT64(11)) | 24;

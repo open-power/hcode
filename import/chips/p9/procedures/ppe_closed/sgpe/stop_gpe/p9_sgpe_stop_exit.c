@@ -266,7 +266,7 @@ void p9_sgpe_stop_exit_end(uint32_t cexit, uint32_t qspwu, uint32_t qloop)
         // reset clevel to 0 if core is going to wake up
         G_sgpe_stop_record.level[qloop][cloop] = 0;
 
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
 
         p9_dd1_cppm_unicast_wr(
             GPE_SCOM_ADDR_CORE(CPPM_CPMMR,     ((qloop << 2) + cloop)),
@@ -318,7 +318,7 @@ p9_sgpe_stop_exit()
     uint32_t      spin            = 0;
 #endif
 #endif
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
     uint32_t      fused_core_mode = 0;
 #endif
 #if !SKIP_IPC
@@ -624,7 +624,7 @@ p9_sgpe_stop_exit()
 
 #endif
 
-#if NIMBUS_DD_LEVEL == 1
+#if NIMBUS_DD_LEVEL == 10
 
             // EPM only:
             // EPM doesnt have real homer images and pba setup to access homer
@@ -865,7 +865,7 @@ p9_sgpe_stop_exit()
                     }
 
 
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
 
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SISR, qloop, ex_index),
                                 scom_data.value);
@@ -892,7 +892,7 @@ p9_sgpe_stop_exit()
                                 cme_flags |= (BIT32(CME_STOP_ENTRY_FIRST_C0) >> cloop);
                             }
 
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
 
                             if (fused_core_mode)
                             {

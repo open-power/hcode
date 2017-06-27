@@ -39,7 +39,7 @@
 #define PLATFORM_PANIC_CODES_H "sgpe_panic_codes.h"
 // @todo RTC 161182
 
-#if NIMBUS_DD_LEVEL == 1
+#if NIMBUS_DD_LEVEL == 10
     #define HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX            1
     #define HW388878_NDD1_VCS_POWER_ON_IN_CHIPLET_RESET_FIX 1
     #define NDD1_FUSED_CORE_MODE_SCAN_FIX                   1

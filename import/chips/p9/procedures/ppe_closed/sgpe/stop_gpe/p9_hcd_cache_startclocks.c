@@ -185,7 +185,7 @@ p9_hcd_cache_startclocks(uint32_t quad, uint32_t ex)
 
 #endif
 
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
 
     PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));

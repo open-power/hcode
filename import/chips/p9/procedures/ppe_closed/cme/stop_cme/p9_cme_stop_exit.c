@@ -500,7 +500,7 @@ p9_cme_stop_exit()
     MARK_TAG(BEGINSCOPE_STOP_EXIT, core)
     //==================================
 
-#if NIMBUS_DD_LEVEL == 2 || DISABLE_CME_DUAL_CAST == 1
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
     uint32_t dual_core   = core;
     uint32_t single_core = CME_MASK_C0;
@@ -883,7 +883,7 @@ p9_cme_stop_exit()
 
             scom_data.value = pCmeImgHdr->g_cme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
 
-#if NIMBUS_DD_LEVEL == 1
+#if NIMBUS_DD_LEVEL == 10
 #if !SKIP_RAM_HRMOR
 
             PK_TRACE("Activate thread0 for RAM via THREAD_INFO[18]");
@@ -1025,7 +1025,7 @@ p9_cme_stop_exit()
 
         p9_cme_stop_exit_end(core, spwu_stop);
 
-#if NIMBUS_DD_LEVEL == 2 || DISABLE_CME_DUAL_CAST == 1
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
         // NDD2: dual cast workaround loop end
     }

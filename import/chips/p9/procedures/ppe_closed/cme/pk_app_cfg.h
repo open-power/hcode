@@ -52,7 +52,7 @@
 
 // @todo RTC 161182
 
-#if NIMBUS_DD_LEVEL == 1
+#if NIMBUS_DD_LEVEL == 10
     #define HW386841_NDD1_DSL_STOP1_FIX         1
     #define HW402407_NDD1_TLBIE_STOP_WORKAROUND 1
     #define HW405292_NDD1_PCBMUX_SAVIOR         1
@@ -60,7 +60,7 @@
     #define RUN_NDD1_ABIST_IN_PARALLEL_MODE     1
 #endif
 
-#if NIMBUS_DD_LEVEL == 2 || DISABLE_CME_DUAL_CAST == 1
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
     // NDD2: no catchup due to dual cast bug
     #undef  SKIP_ENTRY_CATCHUP
     #undef  SKIP_EXIT_CATCHUP

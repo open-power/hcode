@@ -70,7 +70,7 @@ p9_hcd_core_scominit(uint32_t core)
     PK_TRACE("Update Core Hang Pulse Dividers via C_HANG_CONTROL[0-15]");
     CME_GETSCOM(C_HANG_CONTROL, core, scom_data.value);
     scom_data.words.upper &= ~BITS32(0, 16);
-#if NIMBUS_DD_LEVEL == 1
+#if NIMBUS_DD_LEVEL == 10
     scom_data.words.upper |= (CORE_HANG_LIMIT_100_HANG_PULSES << SHIFT32(7));
 #else
     scom_data.words.upper |= (CORE_HANG_LIMIT_3_HANG_PULSES   << SHIFT32(7));

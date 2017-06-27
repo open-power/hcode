@@ -118,7 +118,7 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex, uint32_t pg)
 
     /// @todo RTC166917 Check the Global Checkstop FIR
 
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
 
     PK_TRACE("Drop flushmode_inhibit via CPLT_CTRL0[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_CLEAR, quad), BIT64(2));
