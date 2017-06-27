@@ -74,7 +74,7 @@ p9_hcd_core_scominit(uint32_t core)
     PK_TRACE("Initialize FIR MASK/ACT0/ACT1");
     CME_PUTSCOM(CORE_ACTION0, core, 0x0000000000000000);
     CME_PUTSCOM(CORE_ACTION1, core, 0xA854009775100008);
-    CME_PUTSCOM(CORE_FIRMASK, core, 0x0301D70000AB76B6);
+    CME_PUTSCOM(CORE_FIRMASK, core, 0x0301D70000AB76F6);
 
     PK_TRACE("Update Core Hang Pulse Dividers via C_HANG_CONTROL[0-15]");
     CME_GETSCOM(C_HANG_CONTROL, core, scom_data.value);
