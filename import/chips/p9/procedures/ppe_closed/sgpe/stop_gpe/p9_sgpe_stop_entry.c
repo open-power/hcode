@@ -346,7 +346,7 @@ p9_sgpe_stop_entry()
         }
 
 // NDD1 workaround to save cme image size
-#if NIMBUS_DD_LEVEL == 1
+#if NIMBUS_DD_LEVEL == 10
 
         PK_TRACE("Assert L2+NCU purge and NCU tlbie quiesce via SICR[18,21,22]");
         // insert tlbie quiesce before ncu purge to avoid window condition

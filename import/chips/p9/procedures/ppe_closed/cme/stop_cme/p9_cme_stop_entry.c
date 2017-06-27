@@ -291,7 +291,7 @@ p9_cme_stop_entry()
     MARK_TAG(BEGINSCOPE_STOP_ENTRY, core)
     //===================================
 
-#if NIMBUS_DD_LEVEL == 2 || DISABLE_CME_DUAL_CAST == 1
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
     uint32_t dual_core   = core;
     uint32_t single_core = CME_MASK_C0;
@@ -693,7 +693,7 @@ p9_cme_stop_entry()
             PK_TRACE("Clear SCAN_REGION_TYPE prior to stop core clocks");
             CME_PUTSCOM(C_SCAN_REGION_TYPE, core, 0);
 
-#if NIMBUS_DD_LEVEL == 1
+#if NIMBUS_DD_LEVEL == 10
 
             // NDD1: Core Global Xstop FIR
             if (core & CME_MASK_C0)
@@ -1174,7 +1174,7 @@ p9_cme_stop_entry()
             //----------------------------------------------------------------------
 
 // NDD1 workaround to save cme image size
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
 
             if ((G_cme_stop_record.req_level[0] >= STOP_LEVEL_8) &&
                 (G_cme_stop_record.req_level[1] >= STOP_LEVEL_8))
@@ -1324,7 +1324,7 @@ p9_cme_stop_entry()
                 }
             }
 
-#if NIMBUS_DD_LEVEL != 1
+#if NIMBUS_DD_LEVEL != 10
 
             PK_TRACE("Drop PPM_WRITE_DISABLE via CPMMR[0]");
             CME_PUTSCOM(CPPM_CPMMR_CLR, core, BIT64(0));
@@ -1372,7 +1372,7 @@ p9_cme_stop_entry()
         PK_TRACE("+++++ +++++ END OF STOP ENTRY +++++ +++++");
         //--------------------------------------------------------------------------
 
-#if NIMBUS_DD_LEVEL == 2 || DISABLE_CME_DUAL_CAST == 1
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
         // NDD2: dual cast workaround loop end
     }
