@@ -112,6 +112,8 @@ void p9_cme_pstate_db_thread(void* arg)
     //if quadManager
     if (G_cme_pstate_record.qmFlag)
     {
+        pk_semaphore_create(&G_cme_pstate_record.sem[1], 0, 1);
+
         if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
         {
             out32_sh(CME_LCL_EIMR_CLR, BIT32(4));//Enable DB0_0
@@ -241,7 +243,6 @@ void p9_cme_pstate_db_thread(void* arg)
         //Register with PGPE
         p9_cme_pstate_register();
 
-        pk_semaphore_create(&G_cme_pstate_record.sem[1], 0, 1);
 
         PK_TRACE_INF("DB_TH: Inited\n");
 
@@ -293,10 +294,16 @@ inline void p9_cme_pstate_process_db0()
         p9_cme_pstate_db0_start();
     }
     //Global Actual Broadcast and Pstates enabled
-    else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST &&
-            (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
+    else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST)
     {
-        p9_cme_pstate_db0_glb_bcast();
+        //Process Global Bcast only if Pstates are enabled.
+        //Otherwise, ignore. The reason is PGPE multicasts Global Bcast, and doorbell0
+        //can be written while this CME is powered-off. For Pstate Start and Stop
+        //PGPE only unicasts.
+        if (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))
+        {
+            p9_cme_pstate_db0_glb_bcast();
+        }
     }
     //Stop Pstates and Pstates enabled
     else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST &&
@@ -477,6 +484,13 @@ inline void p9_cme_pstate_freq_update()
         dpllFreq.fields.fmax  = G_lppb->dpll_pstate0_value - G_next_pstate;
         dpllFreq.fields.fmult = dpllFreq.fields.fmax;
         dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
+
+        if (dpllFreq.fields.fmult > DPLL_MAX_VALUE ||
+            dpllFreq.fields.fmult < DPLL_MIN_VALUE)
+        {
+            PK_PANIC(CME_PSTATE_DPLL_OUT_OF_BOUNDS_REQ);
+        }
+
         ippm_write(QPPM_DPLL_FREQ, dpllFreq.value);
         PK_TRACE_INF("DB_TH: Freq Updt Exit\n");
     }

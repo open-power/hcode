@@ -32,6 +32,11 @@
 #define MAX_POLL_COUNT_AVS      10
 #define AVS_RAIL_NUM_MASK       0xF
 #define AVS_BUS_NUM_MASK        0x10
+enum AVS_DRIVER
+{
+    AVS_DRIVER_MAX_EXTERNAL_VOLTAGE = 1500,
+    AVS_DRIVER_MIN_EXTERNAL_VOLTAGE = 500
+};
 
 void
 external_voltage_control_init(uint32_t* vext_read_mv);

@@ -198,9 +198,9 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
 //
 //This interrupt is enabled at PGPE Init and stays enabled always
 //However, behaviour depends on pstates status.
-//If pstates are enabled, then quadsActive variable is updated, quad manager
+//If pstates are enabled, then activeQuads variable is updated, quad manager
 //CME(s) is/are sent a Pstate Start Doorbell, and then ACKs are collected. If pstates are disabled,
-//then only quadsActive variable is updated
+//then only activeQuads variable is updated
 void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
@@ -233,25 +233,25 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
         if (opit4prQuad)
         {
             //Already registered
-            if (G_pgpe_pstate_record.quadsActive & (0x80 >> q))
+            if (G_pgpe_pstate_record.activeQuads & (0x80 >> q))
             {
                 PK_TRACE_DBG("PCB_TYPE4: Quad %d Already Registered. opit4pra=0x%x", q, opit4pr);
                 PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
             }
 
-            //Update quadsActive and coresActive
-            G_pgpe_pstate_record.quadsActive |= (0x80 >> q);
+            //Update activeQuads and activeCores
+            G_pgpe_pstate_record.activeQuads |= (0x80 >> q);
 
             for (c = q << 2; c < ((q + 1) << 2); c++)
             {
                 if (ccsr.value & ((0x80000000) >> c))
                 {
-                    G_pgpe_pstate_record.coresActive |= ((0x80000000) >> c);
+                    G_pgpe_pstate_record.activeCores |= ((0x80000000) >> c);
                 }
             }
 
-            PK_TRACE_DBG("PCB_TYPE4: Quad %d Registered. qActive=0x%x cActive=0x%x", q, G_pgpe_pstate_record.quadsActive,
-                         G_pgpe_pstate_record.coresActive);
+            PK_TRACE_DBG("PCB_TYPE4: Quad %d Registered. qActive=0x%x cActive=0x%x", q, G_pgpe_pstate_record.activeQuads,
+                         G_pgpe_pstate_record.activeCores);
 
 
             //If Pstates are active or suspended while active, then
@@ -271,14 +271,14 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
 
                 //Write CME_SCRATCH register
-                if (qcsr.fields.ex_config &  (0x800 >> q))
+                if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
                 {
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
                     value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
                 }
 
-                if (qcsr.fields.ex_config &  (0x400 >> q))
+                if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
                 {
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
                     value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
@@ -287,7 +287,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 
                 for (c = q << 2; c < ((q + 1) << 2); c++)
                 {
-                    if (ccsr.value & ((BIT32(0)) >> c))
+                    if (G_pgpe_pstate_record.activeCores & ((BIT32(0)) >> c))
                     {
                         opit4pr1 = in32(OCB_OPIT4PRA);
                         p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0.value);

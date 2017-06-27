@@ -310,6 +310,12 @@ void external_voltage_control_write(uint32_t vext_write_mv)
     uint8_t   rc = 0;
     uint32_t  CmdDataType = 0; // 0b0000=Target rail voltage
 
+    if (vext_write_mv > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
+        vext_write_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
+    {
+        PK_PANIC(PGPE_VOLTAGE_OUT_OF_BOUNDS);
+    }
+
     // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
     rc = driveWrite(CmdDataType, vext_write_mv);
 

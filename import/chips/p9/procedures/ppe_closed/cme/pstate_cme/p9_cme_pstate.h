@@ -51,6 +51,12 @@ enum  PMCR_CONTROL
     PMCR1_ENABLE   =    0x8
 };
 
+enum DPLL
+{
+    DPLL_MIN_VALUE = 60, //DPLL value @1000Mhz (1000/16.667)
+    DPLL_MAX_VALUE = 300, //DPLL value @5000Mhz (5000/16.667)
+};
+
 typedef struct
 {
     uint32_t core0_resclk_idx;

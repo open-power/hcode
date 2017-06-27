@@ -66,6 +66,12 @@ enum PSTATE_STATUS
     PSTATE_PM_SUSPENDED                         =    7 //PM Complex Suspend
 };
 
+enum PSTATE_DB0
+{
+    PGPE_DB0_UNICAST      = 1,
+    PGPE_DB0_MULTICAST    = 2,
+};
+
 //Task list entry
 typedef struct ipc_req
 {
@@ -111,7 +117,7 @@ typedef struct
     PkSemaphore sem_process_req;
     PkSemaphore sem_actuate;
     PkSemaphore sem_sgpe_wait;
-    uint32_t quadsActive, coresActive;
+    uint32_t activeQuads, activeCores;
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
 
@@ -124,6 +130,7 @@ void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest);
 void p9_pgpe_pstate_calc_wof();
 void p9_pgpe_pstate_update_wof_state();
 void p9_pgpe_pstate_apply_clips();
+void p9_pgpe_send_db0(uint64_t db0, uint32_t quads, uint32_t cores, uint32_t unicast);
 void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg);
 void p9_pgpe_pstate_pm_complex_suspend();
 void p9_pgpe_pstate_send_suspend_stop();

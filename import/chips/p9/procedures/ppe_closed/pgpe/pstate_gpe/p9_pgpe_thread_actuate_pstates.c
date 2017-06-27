@@ -142,7 +142,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
 
                     for (q = 0; q < MAX_QUADS; q++)
                     {
-                        if((G_pgpe_pstate_record.quadsActive & (0x80 >> q)))
+                        if((G_pgpe_pstate_record.activeQuads & (0x80 >> q)))
                         {
                             minPS = G_pgpe_pstate_record.psClipMin[q];
 
