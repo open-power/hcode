@@ -229,6 +229,9 @@ p9_cme_stop_entry()
     uint32_t     core_mask           = 0;
     uint32_t     core_raw            = 0;
     uint32_t     core                = 0;
+    uint32_t     thread              = 0;
+    uint32_t     pscrs               = 0;
+    uint32_t     no_state_loss       = 0;
     uint32_t     pm_states           = 0;
     uint32_t     lclr_data           = 0;
     data64_t     scom_data           = {0};
@@ -237,7 +240,6 @@ p9_cme_stop_entry()
 
 #if HW402407_NDD1_TLBIE_STOP_WORKAROUND
 
-    uint32_t     thread              = 0;
     uint16_t     lpid_c0[4]          = {0, 0, 0, 0};
     uint16_t     lpid_c1[4]          = {0, 0, 0, 0};
 
@@ -339,6 +341,21 @@ p9_cme_stop_entry()
                 if (core & core_mask)
                 {
                     core_index = core_mask & 1;
+                    no_state_loss = 0;
+
+                    for (thread = 0; thread < MAX_THREADS_PER_CORE; thread++)
+                    {
+                        // address are 0x20 apart between threads and 0x80 apart between cores
+                        pscrs = in32((CME_LCL_PSCRS00 + (core_index << 7) + (thread << 5)));
+
+                        // if either esl or ec bit is off with at least one thread
+                        if ((~pscrs) & BITS32(2, 2))
+                        {
+                            no_state_loss = 1;
+                            break;
+                        }
+                    }
+
                     G_cme_stop_record.req_level[core_index] =
                         (pm_states & BITS64SH((36 + (core_index << 2)), 4)) >>
                         SHIFT64SH((39 + (core_index << 2)));
@@ -369,8 +386,11 @@ p9_cme_stop_entry()
                         G_cme_stop_record.req_level[core_index] = STOP_LEVEL_4;
                     }
 
-                    if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_4_TO_2_BIT_POS) &&
-                        (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_4))
+                    // Convert everything to stop2 if no state loss
+                    // stop1 doesnt use req_level variable so doesnt matter
+                    if (no_state_loss ||
+                        ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_4_TO_2_BIT_POS) &&
+                         (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_4)))
                     {
                         G_cme_stop_record.req_level[core_index] = STOP_LEVEL_2;
                     }
