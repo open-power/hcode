@@ -209,6 +209,9 @@ void p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
 #endif
 
+    // make sure all direct control scom are completed before wake core up
+    sync();
+
     PK_TRACE_INF("SX.0A: Core[%d] Waking up(pm_exit=1) via SICR[4/5]", core);
     out32(CME_LCL_SICR_OR, core << SHIFT32(5));
 
