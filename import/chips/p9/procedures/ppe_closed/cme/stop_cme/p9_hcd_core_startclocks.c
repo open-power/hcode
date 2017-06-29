@@ -29,6 +29,7 @@ inline __attribute__((always_inline))
 void
 p9_hcd_core_startclocks(uint32_t core)
 {
+    uint32_t     core_mask  = 0;
     data64_t     scom_data  = {0};
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     uint32_t     id_vector  = pCmeImgHdr->g_cme_location_id;
@@ -37,10 +38,18 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
-    CME_GETSCOM_AND(C_OPCG_ALIGN, core, scom_data.value);
-    scom_data.value &= ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
-    scom_data.value |=  (BIT64(1) | BIT64(3) | BIT64(59));
-    CME_PUTSCOM(C_OPCG_ALIGN, core, scom_data.value);
+
+    // this register requires unicast, dual cast with eq check will fail
+    for(core_mask = 2; core_mask; core_mask--)
+    {
+        if (core & core_mask)
+        {
+            CME_GETSCOM(C_OPCG_ALIGN, core_mask, scom_data.value);
+            scom_data.value &= ~(BITS64(0, 4) | BITS64(12, 8) | BITS64(52, 12));
+            scom_data.value |=  (BIT64(1) | BIT64(3) | BIT64(59));
+            CME_PUTSCOM(C_OPCG_ALIGN, core_mask, scom_data.value);
+        }
+    }
 
     PK_TRACE("Drop partial good fences via CPLT_CTRL1[4-14]");
     CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, BITS64(4, 11));
@@ -87,11 +96,19 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_CPLT_CTRL0_OR, core, BIT64(3));
 
     PK_TRACE("Set then unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
-    CME_GETSCOM(C_SYNC_CONFIG, core, scom_data.value);
-    scom_data.words.upper |=  BITS32(7, 2);
-    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data.value);
-    scom_data.words.upper &= ~BIT32(7);
-    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data.value);
+
+    // this register requires unicast, dual cast with eq check will fail
+    for(core_mask = 2; core_mask; core_mask--)
+    {
+        if (core & core_mask)
+        {
+            CME_GETSCOM(C_SYNC_CONFIG, core_mask, scom_data.value);
+            scom_data.words.upper |=  BITS32(7, 2);
+            CME_PUTSCOM(C_SYNC_CONFIG, core_mask, scom_data.value);
+            scom_data.words.upper &= ~BIT32(7);
+            CME_PUTSCOM(C_SYNC_CONFIG, core_mask, scom_data.value);
+        }
+    }
 
     // 255 cache cycles
     PPE_WAIT_CORE_CYCLES(510);
@@ -142,8 +159,6 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
 
 #if !EPM_P9_TUNING
-
-    uint32_t core_mask  = 0;
 
     for(core_mask = 2; core_mask; core_mask--)
     {

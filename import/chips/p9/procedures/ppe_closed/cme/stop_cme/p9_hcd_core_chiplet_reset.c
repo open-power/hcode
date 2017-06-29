@@ -50,6 +50,7 @@ inline __attribute__((always_inline))
 void
 p9_hcd_core_chiplet_reset(uint32_t core)
 {
+    uint32_t     core_mask  = 0;
     data64_t     scom_data  = {0};
 
     PK_TRACE("Init NET_CTRL0[1,3-5,11-14,16,18,22,25,26],step needed for hotplug");
@@ -96,12 +97,20 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     // so it will introduce an additional 2:1 into whatever scan raito is set up. Hence,
     // to get the core to scan at 4:1, need to put a scan ratio of 2:1 if run at pll speed.
     PK_TRACE("Set scan ratio to 2:1 in non-bypass mode via OPCG_ALIGN[47-51]");
-    CME_GETSCOM(C_OPCG_ALIGN, core, scom_data.value);
-    scom_data.words.lower &= ~BITS64SH(47, 5);
+
+    // this register requires unicast, dual cast with eq check will fail
+    for(core_mask = 2; core_mask; core_mask--)
+    {
+        if (core & core_mask)
+        {
+            CME_GETSCOM(C_OPCG_ALIGN, core_mask, scom_data.value);
+            scom_data.words.lower &= ~BITS64SH(47, 5);
 #if !EPM_P9_TUNING
-    scom_data.words.lower |= BIT32(19);
+            scom_data.words.lower |= BIT32(19);
 #endif
-    CME_PUTSCOM(C_OPCG_ALIGN, core, scom_data.value);
+            CME_PUTSCOM(C_OPCG_ALIGN, core_mask, scom_data.value);
+        }
+    }
 
     // Marker for scan0
     MARK_TRAP(SX_CHIPLET_RESET_SCAN0)

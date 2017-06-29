@@ -46,13 +46,22 @@ inline __attribute__((always_inline))
 void
 p9_hcd_core_scominit(uint32_t core)
 {
+    uint32_t core_mask = 0;
     data64_t scom_data = {0};
 
     // how about bit 6?
     PK_TRACE("Restore SYNC_CONFIG[8] for stop1");
-    CME_GETSCOM(C_SYNC_CONFIG, core, scom_data.value);
-    scom_data.words.upper |= BIT32(8);
-    CME_PUTSCOM(C_SYNC_CONFIG, core, scom_data.value);
+
+    // this register requires unicast, dualcast with eq check will fail
+    for(core_mask = 2; core_mask; core_mask--)
+    {
+        if (core & core_mask)
+        {
+            CME_GETSCOM(C_SYNC_CONFIG, core_mask, scom_data.value);
+            scom_data.words.upper |= BIT32(8);
+            CME_PUTSCOM(C_SYNC_CONFIG, core_mask, scom_data.value);
+        }
+    }
 
     PK_TRACE("Enable DTS via THERM_MODE_REG[5,6-9,20-21]");
     CME_GETSCOM(C_THERM_MODE_REG, core, scom_data.value);
