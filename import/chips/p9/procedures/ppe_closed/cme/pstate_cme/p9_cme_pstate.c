@@ -233,6 +233,8 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             // 2) write CACCR[13:15]=0b111 to switch back to common control
             //    and leave clksync enabled
             CME_PUTSCOM(CPPM_CACCR_OR, core_mask, (BITS64(13, 3)));
+            // 3) Clear out the CACCR resclk values
+            CME_PUTSCOM(CPPM_CACCR_CLR, core_mask, BITS64(0, 13));
 
             // Update PMSRS (only on stop-exit)
             // TODO RTC 152965

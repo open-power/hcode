@@ -234,8 +234,8 @@ void p9_cme_pstate_db_thread(void* arg)
     // Resonant Clocking Check (QM + Sibling)
     // Check that resonance is not enabled in CACCR and EXCGCR
     CME_GETSCOM(CPPM_CACCR, cores, scom_data);
-    // Ignore clk_sync_enable and reserved
-    resclk_data = (scom_data >> 32) & ~BITS32(15, 17);
+    // Ignore clk_sync_enable, reserved, and override bits
+    resclk_data = (scom_data >> 32) & ~BITS32(13, 19);
 
     if(resclk_data != 0)
     {
