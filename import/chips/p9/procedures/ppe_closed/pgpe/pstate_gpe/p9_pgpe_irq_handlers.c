@@ -181,7 +181,7 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
             }
         }
 
-        p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
+        p9_pgpe_pstate_do_auction();
         p9_pgpe_pstate_apply_clips();
     }
 
@@ -239,7 +239,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
             }
 
-            //Update activeQuads and activeCores
+            //Update activeQuads and coresActive
             G_pgpe_pstate_record.activeQuads |= (0x80 >> q);
 
             for (c = q << 2; c < ((q + 1) << 2); c++)
@@ -253,12 +253,11 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
             PK_TRACE_DBG("PCB_TYPE4: Quad %d Registered. qActive=0x%x cActive=0x%x", q, G_pgpe_pstate_record.activeQuads,
                          G_pgpe_pstate_record.activeCores);
 
-
             //If Pstates are active or suspended while active, then
             //send Pstate Start DB0 to quadManager CME
             if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
             {
-                p9_pgpe_pstate_do_auction(ALL_QUADS_BIT_MASK);
+                p9_pgpe_pstate_do_auction();
                 p9_pgpe_pstate_apply_clips();
 
                 db0.fields.global_actual = G_pgpe_pstate_record.globalPSTarget;

@@ -58,8 +58,6 @@ enum PSTATE_STATUS
 {
     PSTATE_INIT                                 =    0, //PGPE Booted
     PSTATE_ACTIVE                               =    1, //Pstates are active
-    PSTATE_SUSPENDED_WHILE_STOPPED_INIT         =    2, //Suspended by SGPE IPC
-    PSTATE_SUSPENDED_WHILE_ACTIVE               =    3, //Suspended by SGPE IPC
     PSTATE_SAFE_MODE                            =    4,  //Safe Mode
     PSTATE_STOPPED                              =    5, //Pstates are stopped
     PSTATE_PM_SUSPEND_PENDING                   =    6, //PM Complex Suspend Pending
@@ -118,6 +116,9 @@ typedef struct
     PkSemaphore sem_actuate;
     PkSemaphore sem_sgpe_wait;
     uint32_t activeQuads, activeCores;
+    uint32_t numActiveCores, numConfCores;
+    uint16_t vratio, fratio;
+    uint16_t vindex, findex;
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
 
@@ -126,7 +127,8 @@ typedef struct
 //
 void p9_pgpe_pstate_init();
 void p9_pgpe_pstate_update(uint8_t* quadPstates);
-void p9_pgpe_pstate_do_auction(uint8_t quadAuctionRequest);
+void p9_pgpe_pstate_apply_clips();
+void p9_pgpe_pstate_do_auction();
 void p9_pgpe_pstate_calc_wof();
 void p9_pgpe_pstate_update_wof_state();
 void p9_pgpe_pstate_apply_clips();
@@ -141,7 +143,8 @@ void p9_pgpe_pstate_do_step();
 void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner);
 void p9_pgpe_wait_cme_db_ack(uint32_t activeCores);
 void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid);
-void p9_pgpe_pstate_process_quad_entry(uint32_t quadsAffected);
+void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsAffected);
+void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
 void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
 void p9_pgpe_pstate_stop();

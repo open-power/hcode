@@ -65,6 +65,11 @@
 #define PSTATE_START_OCC_FLAG 0
 #define PSTATE_START_OCC_IPC  1
 
+enum PGPE_DEFINES
+{
+    QUAD_ACTIVE_MASK    = 0x80,
+    CORE_ACTIVE_MASK    = 0x80000000
+};
 
 /// PGPE PState
 void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq);

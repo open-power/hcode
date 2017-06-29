@@ -100,116 +100,131 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         //If already active, then skip waiting for an OCC Pstate Start IPC
         if (G_pgpe_pstate_record.pstatesStatus != PSTATE_ACTIVE)
         {
-            PK_TRACE_DBG("ACT_TH: Pend");
+            PK_TRACE_DBG("ACT_TH: Pend(waiting for Pstate Start)");
             pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
             wrteei(1);
 
         }
 
-        //Loop while Pstate is enabled
         PK_TRACE_DBG("ACT_TH: Status=%d", G_pgpe_pstate_record.pstatesStatus);
 
         restore_irq = 0;
 
-        while(G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE
-              || G_pgpe_pstate_record.pstatesStatus == PSTATE_SUSPENDED_WHILE_ACTIVE)
+        //Loop while Pstate is ACTIVE
+        while(G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
         {
-            if(G_pgpe_pstate_record.pstatesStatus != PSTATE_SUSPENDED_WHILE_ACTIVE)
+            //Actuate step(if needed)
+            if(p9_pgpe_pstate_at_target() == 0)
             {
-                //Actuate step(if needed)
-                if(p9_pgpe_pstate_at_target() == 0)
+                //We check that pstates are active after entering critical section
+                //It's possible that some IPC which is processed by PROCESS THREAD
+                //has updated the PstatesState to a !PSTATE_ACTIVE state
+                pk_irq_sub_critical_enter(&ctx);
+
+                if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
                 {
-                    //We check that pstates are active after entering critical section
-                    //It's possible that some IPC which is processed by PROCESS THREAD
-                    //has updated the PstatesState to a !PSTATE_ACTIVE state
-                    pk_irq_sub_critical_enter(&ctx);
-
-                    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-                    {
-                        p9_pgpe_pstate_do_step();
-                    }
-
-                    pk_irq_sub_critical_exit(&ctx);
+                    p9_pgpe_pstate_do_step();
                 }
 
-                //Check if CLIP_UPDT is pending and Pstates are clipped
-                if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1) ||
-                    (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1) ||
-                    (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 1))
-                {
-                    inRange = 1;
-                    uint32_t minPS;
-
-                    for (q = 0; q < MAX_QUADS; q++)
-                    {
-                        if((G_pgpe_pstate_record.activeQuads & (0x80 >> q)))
-                        {
-                            minPS = G_pgpe_pstate_record.psClipMin[q];
-
-                            if (G_pgpe_pstate_record.wofEnabled)
-                            {
-                                if ((G_pgpe_pstate_record.wofClip <= G_pgpe_pstate_record.psClipMax[q]) &&
-                                    (minPS < G_pgpe_pstate_record.wofClip))
-                                {
-                                    minPS = G_pgpe_pstate_record.wofClip;
-                                }
-                            }
-
-                            if (G_pgpe_pstate_record.quadPSCurr[q] > G_pgpe_pstate_record.psClipMax[q] ||
-                                G_pgpe_pstate_record.quadPSCurr[q] <  minPS)
-                            {
-                                inRange = 0;
-                            }
-                        }
-                    }
-
-                    //ACK any pending and unmask IPC interrupt
-                    if (inRange == 1)
-                    {
-                        if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
-                        {
-                            ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
-                            ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
-                            args->msg_cb.rc = PGPE_RC_SUCCESS;
-                            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
-                            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
-                        }
-
-                        if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1)
-                        {
-                            p9_pgpe_pstate_update_wof_state();
-                            ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd;
-                            ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
-                            args->msg_cb.rc = PGPE_RC_SUCCESS;
-                            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
-                            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
-                        }
-
-                        if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 1)
-                        {
-                            p9_pgpe_pstate_update_wof_state();
-                            ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd;
-                            ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
-                            args->msg_cb.rc = PGPE_RC_SUCCESS;
-                            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
-                            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd, IPC_RC_SUCCESS);
-                        }
-
-                        restore_irq = 1;
-                    }
-                } //Pending ACKs
-
-                //Check if IPC should be opened again
-                if (restore_irq == 1)
-                {
-                    PK_TRACE_DBG("ACT_TH: IRQ Restore");
-                    restore_irq = 0;
-                    pk_irq_vec_restore(&ctx);
-                }
+                pk_irq_sub_critical_exit(&ctx);
             }
-            else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_SUSPENDED_WHILE_ACTIVE)
+
+            //Process any pending ACKs
+            if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1) ||
+                (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1) ||
+                (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 1) ||
+                (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1))
             {
-                pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
+                inRange = 1;
+                uint32_t minPS;
+
+                for (q = 0; q < MAX_QUADS; q++)
+                {
+                    if((G_pgpe_pstate_record.activeQuads & (0x80 >> q)))
+                    {
+                        minPS = G_pgpe_pstate_record.psClipMin[q];
+
+                        if (G_pgpe_pstate_record.wofEnabled)
+                        {
+                            if ((G_pgpe_pstate_record.wofClip <= G_pgpe_pstate_record.psClipMax[q]) &&
+                                (minPS < G_pgpe_pstate_record.wofClip))
+                            {
+                                minPS = G_pgpe_pstate_record.wofClip;
+                            }
+                        }
+
+                        if (G_pgpe_pstate_record.quadPSCurr[q] > G_pgpe_pstate_record.psClipMax[q] ||
+                            G_pgpe_pstate_record.quadPSCurr[q] <  minPS)
+                        {
+                            inRange = 0;
+                        }
+                    }
+                }
+
+                //ACK any pending and unmask IPC interrupt
+                if (inRange == 1)
+                {
+                    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
+                    {
+                        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
+                        ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
+                        args->msg_cb.rc = PGPE_RC_SUCCESS;
+                        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
+                        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
+                    }
+
+                    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1)
+                    {
+                        p9_pgpe_pstate_update_wof_state();
+                        ipc_async_cmd_t* async_cmd_wof_vfrt = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd;
+                        ipcmsg_wof_vfrt_t* args_wof_vfrt = (ipcmsg_wof_vfrt_t*)async_cmd_wof_vfrt->cmd_data;
+                        args_wof_vfrt->msg_cb.rc = PGPE_RC_SUCCESS;
+                        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
+                        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
+
+                        //See if ACTIVE QUADS ack is pending
+                        if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 1)
+                        {
+                            ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+                            ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
+                            args->fields.return_active_quads = args_wof_vfrt->active_quads;
+                            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+                            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+                            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+                        }
+                    }
+
+                    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 1)
+                    {
+                        p9_pgpe_pstate_update_wof_state();
+                        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd;
+                        ipcmsg_wof_control_t* args = (ipcmsg_wof_control_t*)async_cmd->cmd_data;
+                        args->msg_cb.rc = PGPE_RC_SUCCESS;
+                        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
+                        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd, IPC_RC_SUCCESS);
+                    }
+
+                    if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1)
+                    {
+                        p9_pgpe_pstate_update_wof_state();
+                        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
+                        ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
+                        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+                        args->fields.return_active_cores = G_pgpe_pstate_record.activeCores;
+                        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
+                        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
+                    }
+
+                    restore_irq = 1;
+                }
+            } //Pending ACKs
+
+            //Check if IPC should be opened again
+            if (restore_irq == 1)
+            {
+                PK_TRACE_DBG("ACT_TH: IRQ Restore");
+                restore_irq = 0;
+                pk_irq_vec_restore(&ctx);
             }
         }
 

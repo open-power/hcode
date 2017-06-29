@@ -81,11 +81,11 @@ uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set)
 //
 uint8_t p9_pgpe_gppb_get_ps_region(Pstate ps, uint8_t vpd_pt_set)
 {
-    if (ps < G_gppb->operating_points_set[vpd_pt_set][TURBO].pstate)
+    if (ps <= G_gppb->operating_points_set[vpd_pt_set][TURBO].pstate)
     {
         return REGION_TURBO_ULTRA;
     }
-    else if (ps > G_gppb->operating_points_set[vpd_pt_set][NOMINAL].pstate)
+    else if (ps >= G_gppb->operating_points_set[vpd_pt_set][NOMINAL].pstate)
     {
         return REGION_POWERSAVE_NOMINAL;
     }
@@ -119,11 +119,11 @@ uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd)
 //
 uint8_t p9_pgpe_gppb_get_ext_vdd_region(uint32_t ext_vdd)
 {
-    if (ext_vdd >  G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][TURBO].vdd_mv)
+    if (ext_vdd >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][TURBO].vdd_mv)
     {
         return REGION_TURBO_ULTRA;
     }
-    else if (ext_vdd < G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][NOMINAL].vdd_mv)
+    else if (ext_vdd <= G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][NOMINAL].vdd_mv)
     {
         return REGION_POWERSAVE_NOMINAL;
     }
