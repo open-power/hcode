@@ -87,7 +87,8 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
         //Clear any pending PMCR interrupts
         out32_sh(CME_LCL_EISR_CLR, G_cme_record.core_enabled << 28);
         out32_sh(CME_LCL_EIMR_CLR, G_cme_record.core_enabled << 28);//Enable PMCR0/1
-
+        g_eimr_override |= BITS64(34, 2);
+        g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << 28);
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST)
     {
@@ -97,7 +98,8 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST)
     {
         PK_TRACE("INTER0: DB0 Stop");
-        out32_sh(CME_LCL_EIMR_CLR, G_cme_record.core_enabled << 28);//Enable PMCR0/1
+        out32_sh(CME_LCL_EIMR_OR, (SHIFT64SH(34) | SHIFT64SH(35)));//Disable PMCR0/1
+        g_eimr_override |= BITS64(34, 2);
     }
     else
     {

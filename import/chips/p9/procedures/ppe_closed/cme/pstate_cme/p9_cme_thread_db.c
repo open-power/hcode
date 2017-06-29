@@ -97,6 +97,10 @@ void p9_cme_pstate_db_thread(void* arg)
     G_lppb = (LocalPstateParmBlock*)(G_cmeHeader->g_cme_pstate_region_offset + CME_SRAM_BASE_ADDR);
     PK_TRACE_INF("DB_TH: Hdr=0x%x, LPPB=0x%x\n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb);
 
+    // Mask PMCR interrupts, these will be unmasked when starting Pstates
+    g_eimr_override |= BITS64(34, 2);
+    out32_sh(CME_LCL_EIMR_OR, (SHIFT64SH(34) | SHIFT64SH(35)));
+
     //Read CME_LCL_FLAGS
     G_cme_flags = in32(CME_LCL_FLAGS);
 
@@ -380,6 +384,8 @@ inline void p9_cme_pstate_db0_start()
     //Clear Pending PMCR interrupts and Enable PMCR Interrupts (for good cores)
     out32_sh(CME_LCL_EISR_CLR, G_cme_record.core_enabled << 28 );
     out32_sh(CME_LCL_EIMR_CLR, G_cme_record.core_enabled << 28 );
+    g_eimr_override |= BITS64(34, 2);
+    g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << 28);
 
     PK_TRACE_INF("DB_TH: DB0 Start Exit\n");
 }
@@ -413,7 +419,8 @@ inline void p9_cme_pstate_db0_suspend()
     out32(CME_LCL_FLAGS_CLR, BIT32(24));//Set Pstates Disabled
 
     // Disable both PMCR regs ignoring partial-goodness
-    out32_sh(CME_LCL_EIMR_OR, G_cme_record.core_enabled << 28);
+    out32_sh(CME_LCL_EIMR_OR, (SHIFT64SH(34) | SHIFT64SH(35)));
+    g_eimr_override |= BITS64(34, 2);
 
     p9_cme_pstate_notify_sib(); //Notify sibling
     // Prevent Resclk, VDM updates
