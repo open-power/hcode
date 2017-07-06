@@ -105,7 +105,7 @@ $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 # they are resolved to build the COMMONFLAGS
 
 # Options for PK_TRACE
-CME_COMMONFLAGS = -DPK_TRACE_LEVEL=0
+
 CME_COMMONFLAGS+= -DPK_TRACE_TIMER_OUTPUT=0
 CME_COMMONFLAGS+= -DDEV_DEBUG=0
 
