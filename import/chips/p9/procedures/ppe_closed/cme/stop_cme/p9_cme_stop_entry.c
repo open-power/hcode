@@ -1290,32 +1290,6 @@ p9_cme_stop_entry()
             scom_data.words.upper = SSH_ACT_LV5_COMPLETE;
             CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
-#if DEBUG_RUNTIME_STATE_CHECK
-
-            if (core & CME_MASK_C0)
-            {
-                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, scom_data.value);
-
-                if ((scom_data.words.upper & BIT32(13)))
-                {
-                    PKTRACE("ERROR.A0: C0 notify was already set?");
-                    pk_halt();
-                }
-            }
-
-            if (core & CME_MASK_C1)
-            {
-                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, scom_data.value);
-
-                if ((scom_data.words.upper & BIT32(13)))
-                {
-                    PKTRACE("ERROR.A1: C1 notify was already set?");
-                    pk_halt();
-                }
-            }
-
-#endif
-
             PK_TRACE("Send PCB interrupt per core via PIG, select irq type via CPMMR[10]");
 
             for (core_mask = 2; core_mask; core_mask--)
@@ -1338,11 +1312,21 @@ p9_cme_stop_entry()
                     }
 
                     pig.fields.req_intr_payload = G_cme_stop_record.req_level[core_index];
-                    CME_PUTSCOM(PPM_PIG, core_mask, pig.value);
+
+                    // put PIG and Wakeup_Notify_Select back to back as possible
+                    CME_PUTSCOM(PPM_PIG,       core_mask, pig.value);
+                    CME_PUTSCOM(CPPM_CPMMR_OR, core_mask, BIT64(13));
+                    PK_TRACE_DBG("Switch Core[%d] PPM wakeup to STOP-GPE via CPMMR[13]", core_mask);
+
                     G_cme_stop_record.core_stopgpe |= core;
                     G_cme_stop_record.act_level[core_index] = STOP_LEVEL_5;
                 }
             }
+
+            sync();
+
+            PK_TRACE("Clear special wakeup after wakeup_notify = 1 since it is edge triggered");
+            out32(CME_LCL_EISR_CLR, core << SHIFT32(15));
 
 #if NIMBUS_DD_LEVEL != 10
 
@@ -1350,38 +1334,6 @@ p9_cme_stop_entry()
             CME_PUTSCOM(CPPM_CPMMR_CLR, core, BIT64(0));
 
 #endif
-
-            PK_TRACE_DBG("Switch Core PPM wakeup to STOP-GPE via CPMMR[13]");
-            CME_PUTSCOM(CPPM_CPMMR_OR, core, BIT64(13));
-
-#if DEBUG_RUNTIME_STATE_CHECK
-
-            if (core & CME_MASK_C0)
-            {
-                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C0, scom_data.value);
-
-                if (!(scom_data.words.upper & BIT32(13)))
-                {
-                    PKTRACE("ERROR.B0: C0 notify fail to set");
-                    pk_halt();
-                }
-            }
-
-            if (core & CME_MASK_C1)
-            {
-                CME_GETSCOM(CPPM_CPMMR, CME_MASK_C1, scom_data.value);
-
-                if (!(scom_data.words.upper & BIT32(13)))
-                {
-                    PKTRACE("ERROR.B1: C1 notify fail to set");
-                    pk_halt();
-                }
-            }
-
-#endif
-
-            PK_TRACE("Clear special wakeup after wakeup_notify = 1 since it is edge triggered");
-            out32(CME_LCL_EISR_CLR, core << SHIFT32(15));
 
             PK_TRACE_INF("SE.5B: Core[%d] Handed off to SGPE", core);
 

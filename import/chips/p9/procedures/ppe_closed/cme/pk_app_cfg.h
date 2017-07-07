@@ -36,7 +36,6 @@
 
 // debug only enablement
 
-#define DEBUG_RUNTIME_STATE_CHECK 0
 #define TEST_ONLY_BCE_IRR         0
 #define DISABLE_CME_DUAL_CAST     0
 
