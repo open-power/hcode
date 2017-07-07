@@ -893,36 +893,6 @@ p9_sgpe_stop_exit()
             MARK_TAG(SX_CME_BOOT, (32 >> qloop))
             //==================================
 
-            // doorbell cme to let rebooted cme knows about ongoing stop11
-            for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
-            {
-                if(!(cexit & BIT32(cloop)))
-                {
-                    continue;
-                }
-
-                PK_TRACE_DBG("Check: Core[%d] will send Doorbell1", ((qloop << 2) + cloop));
-
-#if NIMBUS_DD_LEVEL != 10
-
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG,
-                                               ((qloop << 2) + cloop)), BIT64(0));
-                // workaround has to use base address as read on OR/CLR leads to error
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1,
-                                               ((qloop << 2) + cloop)), BIT64(7));
-
-#else
-
-                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEMSG,
-                                                        ((qloop << 2) + cloop)), BIT64(0));
-                // workaround has to use base address as read on OR/CLR leads to error
-                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1,
-                                                        ((qloop << 2) + cloop)), BIT64(7));
-
-#endif
-
-            }
-
             // Setting up cme_flags
             do
             {
