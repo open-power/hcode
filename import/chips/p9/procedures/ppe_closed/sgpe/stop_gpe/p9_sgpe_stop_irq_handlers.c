@@ -492,11 +492,19 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                     PK_TRACE_ERR("ERROR: Received Type2 Entry PIG When Wakeup_notify_select = 0. HALT SGPE!");
                     PK_PANIC(SGPE_PIG_TYPE2_ENTRY_WNS_CME);
                 }
+
+                PK_TRACE_INF("Core Request Entry via Type2");
+                G_sgpe_stop_record.level[qloop][cloop] =
+                    (cpayload_t2 & TYPE2_PAYLOAD_STOP_LEVEL);
+
+                if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] & BIT32(qloop))
+                {
+                    PK_TRACE_DBG("Core is in Block Entry Mode, Ignore Now", cloop);
+                    G_sgpe_stop_record.group.core[VECTOR_BLOCKE] |=
+                        BIT32(((qloop << 2) + cloop));
+                }
                 else
                 {
-                    PK_TRACE_INF("Core Request Entry via Type2");
-                    G_sgpe_stop_record.level[qloop][cloop] =
-                        (cpayload_t2 & TYPE2_PAYLOAD_STOP_LEVEL);
                     G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
                         BIT32(((qloop << 2) + cloop));
                 }
@@ -513,8 +521,18 @@ p9_sgpe_stop_pig_handler(void* arg, PkIrqId irq)
                 PK_TRACE_INF("Core Request Entry via Type3");
                 G_sgpe_stop_record.level[qloop][cloop] =
                     (cpayload_t3 & TYPE2_PAYLOAD_STOP_LEVEL);
-                G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
-                    BIT32(((qloop << 2) + cloop));
+
+                if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] & BIT32(qloop))
+                {
+                    PK_TRACE_DBG("Core is in Block Entry Mode, Ignore Now", cloop);
+                    G_sgpe_stop_record.group.core[VECTOR_BLOCKE] |=
+                        BIT32(((qloop << 2) + cloop));
+                }
+                else
+                {
+                    G_sgpe_stop_record.group.core[VECTOR_ENTRY] |=
+                        BIT32(((qloop << 2) + cloop));
+                }
             }
             // both exit or one exit + one empty
             else

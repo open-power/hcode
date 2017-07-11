@@ -467,6 +467,8 @@ p9_cme_stop_exit()
     wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
     core   = ((wakeup >> 4) | (wakeup >> 2) | wakeup) & CME_MASK_BC;
 
+    PK_TRACE_DBG("DEBUG: Phantom Wakeup Check, Raw Wakeup[%x]", wakeup);
+
     // ignore wakeup when it suppose to be handled by sgpe
     for (core_mask = 2; core_mask; core_mask--)
     {

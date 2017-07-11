@@ -295,14 +295,15 @@ p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
             G_cme_stop_record.core_blockwu |= CME_MASK_BC;
             g_eimr_override                |= IRQ_VEC_WAKE_C0 | IRQ_VEC_WAKE_C1;
 
+#if HW386841_NDD1_DSL_STOP1_FIX
+
             // Set AUTO_STOP1_DISABLE
             out32(CME_LCL_LMCR_OR,  BIT32(18));
 
+#endif
+
             // Set PM_BLOCK_INTERRUPTS
             out32(CME_LCL_SICR_OR,  BITS32(2, 2));
-
-            // Clear PM_EXIT
-            out32(CME_LCL_SICR_CLR, BITS32(4, 2));
 
             // Block Exit Enabled
             out32(CME_LCL_FLAGS_OR, BITS32(8, 2));
@@ -314,8 +315,12 @@ p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
             G_cme_stop_record.core_blockey |= CME_MASK_BC;
             g_eimr_override                |= IRQ_VEC_STOP_C0 | IRQ_VEC_STOP_C1;
 
-            // Clear PM_ENTRY_ACK
-            out32(CME_LCL_SICR_CLR, BITS32(0, 2));
+#if HW386841_NDD1_DSL_STOP1_FIX
+
+            // Set AUTO_STOP1_DISABLE
+            out32(CME_LCL_LMCR_OR,  BIT32(18));
+
+#endif
 
             // Block Entry Enabled
             out32(CME_LCL_FLAGS_OR, BITS32(10, 2));
@@ -333,8 +338,12 @@ p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
             G_cme_stop_record.core_blockwu &= ~CME_MASK_BC;
             g_eimr_override                &= ~(IRQ_VEC_WAKE_C0 | IRQ_VEC_WAKE_C1);
 
+#if HW386841_NDD1_DSL_STOP1_FIX
+
             // Clear AUTO_STOP1_DISABLE
             out32(CME_LCL_LMCR_CLR,  BIT32(18));
+
+#endif
 
             // Clear PM_BLOCK_INTERRUPTS
             out32(CME_LCL_SICR_CLR,  BITS32(2, 2));
@@ -348,6 +357,13 @@ p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
         {
             G_cme_stop_record.core_blockey &= ~CME_MASK_BC;
             g_eimr_override                &= ~(IRQ_VEC_STOP_C0 | IRQ_VEC_STOP_C1);
+
+#if HW386841_NDD1_DSL_STOP1_FIX
+
+            // Clear AUTO_STOP1_DISABLE
+            out32(CME_LCL_LMCR_CLR,  BIT32(18));
+
+#endif
 
             // Block Entry Disabled
             out32(CME_LCL_FLAGS_CLR, BITS32(10, 2));

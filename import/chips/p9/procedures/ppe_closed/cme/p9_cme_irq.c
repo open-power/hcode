@@ -203,6 +203,9 @@ void pk_unified_irq_prty_mask_handler(void)
     bFound   = 0;
     iPrtyLvl = 0;
 
+    PK_TRACE_DBG("DEBUG: Phantom IRQ Check, EISTR=%x %x.",
+                 UPPER32(ext_irq_vector_pk), LOWER32(ext_irq_vector_pk));
+
     do
     {
         if (ext_irq_vectors_cme[iPrtyLvl][IDX_PRTY_VEC] & ext_irq_vector_pk)
