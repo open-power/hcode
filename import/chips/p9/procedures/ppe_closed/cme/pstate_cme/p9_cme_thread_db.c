@@ -171,8 +171,8 @@ void p9_cme_pstate_db_thread(void* arg)
                              << (52 - (i * 4));
             }
 
-            PK_TRACE_INF("qm | initial vdmcfgr=%08x%08x", scom_data.upper,
-                         scom_data.lower);
+            PK_TRACE_INF("qm | initial vdmcfgr=%08x%08x", scom_data >> 32,
+                         scom_data);
             ippm_write(QPPM_VDMCFGR, scom_data);
             // Assumes 100us has elapsed during cache chiplet wakeup after
             // enabling the full-speed cache clock grid
