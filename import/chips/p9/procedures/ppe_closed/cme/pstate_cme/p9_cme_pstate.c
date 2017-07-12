@@ -340,7 +340,6 @@ void calc_vdm_threshold_indices(uint32_t pstate, uint32_t region,
                                 + (((int32_t)G_lppb->PsVDMThreshSlopes[region][i] * psdiff
                                     // Apply the rounding adjust
                                     + (int32_t)vdm_rounding_adjust[i]) >> THRESH_SLOPE_FP_SHIFT));
-
     }
 
     // Check the interpolation result; since each threshold has a distinct round
@@ -362,8 +361,10 @@ void calc_vdm_threshold_indices(uint32_t pstate, uint32_t region,
 
 void p9_cme_vdm_update(uint32_t pstate)
 {
-    uint32_t new_idx[NUM_THRESHOLD_POINTS] = { 0 };
+    // Static forces this array into .sbss instead of calling memset()
+    static uint32_t new_idx[NUM_THRESHOLD_POINTS] = { 0 };
     uint32_t i = 0;
+    // Set one bit per threshold starting at bit 31 (28,29,30,31)
     uint32_t not_done = BITS32(32 - NUM_THRESHOLD_POINTS, NUM_THRESHOLD_POINTS);
     uint64_t scom_data = 0;
     uint64_t base_scom_data = 0;
@@ -396,7 +397,9 @@ void p9_cme_vdm_update(uint32_t pstate)
             }
             else
             {
-                not_done &= 0x1 << i;
+                // Clear the unique bit for each threshold as each threshold is stepped
+                // to its new index
+                not_done &= ~(0x1 << i);
             }
 
             // OR the new threshold greycode into the correct position
