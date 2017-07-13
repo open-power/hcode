@@ -26,10 +26,10 @@ ifdef IMAGE
 
 TOP-S-SOURCES =  p9_sgpe_image_header.S
 
-TOP-C-SOURCES = p9_sgpe_stop_entry.c \
+TOP-C-SOURCES = p9_sgpe_stop_init.c \
                 p9_sgpe_stop_exit.c \
-                p9_sgpe_stop_enter_thread.c \
-                p9_sgpe_stop_exit_thread.c \
+                p9_sgpe_stop_entry.c \
+                p9_sgpe_stop_threads.c \
                 p9_sgpe_stop_irq_handlers.c \
                 p9_sgpe_ipc_handlers.c \
                 p9_sgpe_ipc_func_tables.c \

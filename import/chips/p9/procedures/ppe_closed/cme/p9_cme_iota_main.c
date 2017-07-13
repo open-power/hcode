@@ -87,17 +87,18 @@ int main()
 #if defined(USE_CME_QUEUED_SCOM) || defined(USE_CME_QUEUED_SCAN)
     out32(CME_LCL_LMCR_OR, BITS32(8, 2));
 #endif
+
     //Read which cores are good
     G_cme_record.core_enabled = in32(CME_LCL_FLAGS) &
                                 (BIT32(CME_FLAGS_CORE0_GOOD) | BIT32(CME_FLAGS_CORE1_GOOD));
 
+    p9_cme_stop_init();
 
     // In IOTA, these have become initialization routines, not threads
     p9_cme_stop_exit_thread(NULL);
     p9_cme_stop_enter_thread(NULL);
     p9_cme_pstate_db_thread(NULL);
     p9_cme_pstate_pmcr_thread(NULL);
-
 
     iota_run();
 

@@ -318,12 +318,15 @@ void p9_sgpe_ipi3_low_handler(void*, PkIrqId);
 void p9_sgpe_stop_suspend_db1_cme(uint32_t, uint32_t);
 
 /// SGPE STOP Entry and Exit Prototypes
+void p9_sgpe_stop_init();
+void p9_sgpe_stop_cme_scominit(uint32_t, uint32_t, uint32_t);
+
 void p9_sgpe_stop_enter_thread(void*);
-void p9_sgpe_stop_exit_thread(void*);
 void p9_sgpe_stop_entry();
+
+void p9_sgpe_stop_exit_thread(void*);
 void p9_sgpe_stop_exit();
 void p9_sgpe_stop_exit_handoff_cme(uint32_t);
-void p9_sgpe_stop_cme_scominit(uint32_t, uint32_t, uint32_t);
 
 /// Procedures shared between Istep4 and SGPE Stop
 void p9_hcd_cache_chiplet_l3_dcc_setup(uint32_t);

@@ -26,12 +26,11 @@
 #include "pk.h"
 #include "cmehw_common.h"
 #include "p9_cme_irq.h"
-//#include "p9_cme_flags.h"
 #include "p9_hcode_image_defines.H"
 
 // CME Pstate Header and Structure
 #include "p9_cme.h"
-CmeRecord G_cme_record ;
+CmeRecord G_cme_record;
 
 // CME Pstate Header and Structure
 #include "p9_cme_pstate.h"
@@ -196,6 +195,8 @@ main(int argc, char** argv)
                      IRQ_VEC_PRTY_CHECK);
         PK_PANIC(CME_UIH_NOT_ALL_IN_PRTY_GROUP);
     }
+
+    p9_cme_stop_init();
 
     // Initialize the thread control block for G_p9_cme_stop_exit_thread
     pk_thread_create(&G_p9_cme_stop_exit_thread,

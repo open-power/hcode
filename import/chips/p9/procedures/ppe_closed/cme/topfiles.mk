@@ -32,16 +32,16 @@ TOP-C-SOURCES    = p9_cme_main.c \
 UTILS-C-SOURCES  = utils/p9_putringutils.c \
 		   utils/plat_ring_traverse.c				   
 
-PSTATE-C-SOURCES = 	pstate_cme/p9_cme_pstate.c \
-					pstate_cme/p9_cme_thread_db.c \
-					pstate_cme/p9_cme_thread_pmcr.c \
-					pstate_cme/p9_cme_intercme.c 
+PSTATE-C-SOURCES = pstate_cme/p9_cme_pstate.c \
+                   pstate_cme/p9_cme_thread_db.c \
+                   pstate_cme/p9_cme_thread_pmcr.c \
+                   pstate_cme/p9_cme_intercme.c 
 
-STOP-C-SOURCES   = stop_cme/p9_cme_stop_irq_handlers.c \
-                   stop_cme/p9_cme_stop_enter_thread.c \
-                   stop_cme/p9_cme_stop_exit_thread.c \
-                   stop_cme/p9_cme_stop_entry.c \
+STOP-C-SOURCES   = stop_cme/p9_cme_stop_init.c \
                    stop_cme/p9_cme_stop_exit.c \
+                   stop_cme/p9_cme_stop_entry.c \
+                   stop_cme/p9_cme_stop_threads.c \
+                   stop_cme/p9_cme_stop_irq_handlers.c \
                    stop_cme/p9_hcd_core_scan0.c \
                    stop_cme/p9_cme_copy_scan_ring.c
 

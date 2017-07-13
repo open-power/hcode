@@ -153,6 +153,8 @@ main(int argc, char** argv)
         PK_PANIC(SGPE_MAIN_FAPI2_INIT_FAILED);
     }
 
+    p9_sgpe_stop_init();
+
     // Initialize the thread control block for G_p9_sgpe_stop_enter_thread
     pk_thread_create(&G_p9_sgpe_stop_enter_thread,
                      (PkThreadRoutine)p9_sgpe_stop_enter_thread,

@@ -248,17 +248,22 @@ typedef struct
 #endif
 
 /// CME STOP Entry and Exit Prototypes
+void p9_cme_stop_init();
+void p9_cme_stop_eval_eimr_override();
+
 void p9_cme_stop_enter_thread(void*);
 void p9_cme_stop_exit_thread(void*);
-void p9_cme_stop_eval_eimr_override();
+
 void p9_cme_stop_entry();
 void p9_cme_stop_exit();
 
 // CME STOP Interrupt Handlers
 void p9_cme_stop_enter_handler(void*, PkIrqId);
+
 void p9_cme_stop_pcwu_handler(void*, PkIrqId);
 void p9_cme_stop_rgwu_handler(void*, PkIrqId);
 void p9_cme_stop_spwu_handler(void*, PkIrqId);
+
 void p9_cme_stop_db1_handler(void*, PkIrqId);
 void p9_cme_stop_db2_handler(void*, PkIrqId);
 
