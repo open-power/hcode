@@ -88,7 +88,24 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
     return rc;
 }
 
-void ippm_read(uint32_t addr, uint64_t* data)
+void poll_dpll_update_complete()
+{
+    data64_t polldata;
+    PK_TRACE_INF("Poll on DPLL_STAT[update_complete]");
+
+    // ... to indicate that the DPLL has sampled the newly requested
+    // frequency into its internal registers as a target,
+    // but may not yet be there
+    do
+    {
+        ippm_read(QPPM_DPLL_STAT, &polldata.value);
+    }
+    while(!(polldata.words.lower & BIT32(28)));
+}
+
+// Non-atomic Interppm-read, this function is not made availabe via the header
+// as the toplevel-wrapper (atomic) ippm_read should be used instead
+void nonatomic_ippm_read(uint32_t addr, uint64_t* data)
 {
     // G_cme_pstate_record.cmeMaskGoodCore MUST be set!
     uint64_t val;
@@ -118,7 +135,17 @@ void ippm_read(uint32_t addr, uint64_t* data)
     *data = val;
 }
 
-void ippm_write(uint32_t addr, uint64_t data)
+void ippm_read(uint32_t addr, uint64_t* data)
+{
+    PkMachineContext ctx __attribute__((unused));
+    pk_critical_section_enter(&ctx);
+    nonatomic_ippm_read(addr, data);
+    pk_critical_section_exit(&ctx);
+}
+
+// Non-atomic Interppm-write, this function is not made availabe via the header
+// as the toplevel-wrapper (atomic) ippm_write should be used instead
+void nonatomic_ippm_write(uint32_t addr, uint64_t data)
 {
     // G_cme_pstate_record.cmeMaskGoodCore MUST be set!
     uint64_t val;
@@ -144,6 +171,14 @@ void ippm_write(uint32_t addr, uint64_t data)
     {
         PK_PANIC(CME_PSTATE_IPPM_ACCESS_FAILED);
     }
+}
+
+void ippm_write(uint32_t addr, uint64_t data)
+{
+    PkMachineContext ctx __attribute__((unused));
+    pk_critical_section_enter(&ctx);
+    nonatomic_ippm_write(addr, data);
+    pk_critical_section_exit(&ctx);
 }
 
 void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type)
@@ -351,11 +386,126 @@ uint32_t pstate_to_vpd_region(uint32_t pstate)
 
 uint32_t pstate_to_vid_compare(uint32_t pstate, uint32_t region)
 {
+    // *INDENT-OFF*
     return((((uint32_t)G_lppb->PsVIDCompSlopes[region]
              * ((uint32_t)G_lppb->operating_points[region].pstate - pstate)
              + VDM_VID_COMP_ADJUST) >> VID_SLOPE_FP_SHIFT_12)
-           + (uint32_t)G_lppb->vid_point_set[region]);
+             + (uint32_t)G_lppb->vid_point_set[region]);
+    // *INDENT-ON*
 }
+
+#if NIMBUS_DD_LEVEL != 10
+uint32_t calc_vdm_jump_values(uint32_t pstate, uint32_t region)
+{
+    static uint32_t vdm_jump_values[NUM_JUMP_VALUES] = { 0 };
+    uint32_t i = 0;
+    uint32_t new_jump_values = 0;
+    int32_t  psdiff = (uint32_t)G_lppb->operating_points[region].pstate - pstate;
+
+    for(i = 0; i < NUM_JUMP_VALUES; ++i)
+    {
+        // *INDENT-OFF*
+        vdm_jump_values[i] = (uint32_t)
+              ((int32_t)G_lppb->jump_value_set[region][i]
+            + (((int32_t)G_lppb->PsVDMJumpSlopes[region][i] * psdiff
+            // Apply the rounding adjust
+            + (int32_t)VDM_JUMP_VALUE_ADJUST) >> THRESH_SLOPE_FP_SHIFT));
+        // *INDENT-ON*
+    }
+
+    // Enforce the following:
+    // new_NL = MIN(MAX(I_NL, I_NS+1), MAX(NL[region], NL[region+1]))
+    // new_SN = MIN(I_SN, I_NS)
+    // new_LS = MIN(I_LS, new_NL - I_SN)
+    // where I_* means the calculated (interpolated) value
+    // *INDENT-OFF*
+    vdm_jump_values[VDM_N_L_IDX] = MIN(
+        MAX(vdm_jump_values[VDM_N_L_IDX], (vdm_jump_values[VDM_N_S_IDX]+1)),
+        MAX(G_lppb->jump_value_set[region][VDM_N_L_IDX],
+            G_lppb->jump_value_set[region+1][VDM_N_L_IDX]));
+    vdm_jump_values[VDM_S_N_IDX] = MIN(vdm_jump_values[VDM_S_N_IDX],
+                                       vdm_jump_values[VDM_N_S_IDX]);
+    vdm_jump_values[VDM_L_S_IDX] = MIN(vdm_jump_values[VDM_L_S_IDX],
+                                      (vdm_jump_values[VDM_N_L_IDX]
+                                     - vdm_jump_values[VDM_S_N_IDX]));
+    // *INDENT-ON*
+    // Return the jump values in bit positions as they appear in DPLL_CTRL
+    new_jump_values |= (vdm_jump_values[VDM_N_L_IDX] << SHIFT64SH(35))
+                       |  (vdm_jump_values[VDM_N_S_IDX] << SHIFT64SH(39))
+                       |  (vdm_jump_values[VDM_L_S_IDX] << SHIFT64SH(43))
+                       |  (vdm_jump_values[VDM_S_N_IDX] << SHIFT64SH(47));
+    return new_jump_values;
+}
+
+void update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region)
+{
+    data64_t scom_data = { 0 };
+    uint32_t new_jump_values = calc_vdm_jump_values(pstate, region);
+    // Read the current contents of DPLL_CTRL and then update only the jump
+    // value fields
+    ippm_read(QPPM_DPLL_CTRL, &scom_data.value);
+
+    // This check works because the remaining bits are reserved in DPLL_CTRL[32:63]
+    if(new_jump_values != scom_data.words.lower)
+    {
+        // Critical section to ensure this entire sequence is done atomically
+        // (the nonatomic_ippm_read/write functions can be used safely)
+        PkMachineContext ctx __attribute__((unused));
+        pk_critical_section_enter(&ctx);
+
+        qppm_dpll_freq_t saved_dpll_val;
+        qppm_dpll_freq_t reduced_dpll_val;
+        // The frequency needs to be reduced by the N_L amount, this depends on
+        // if the frequency has already been changed (if raising ps, then the
+        // freq has already been dropped and the N_L value is based on that, ie. "new")
+        uint32_t adj_n_l = (pstate >= G_cme_pstate_record.quadPstate)
+                           ? (new_jump_values & BITS32(0, 4)) >> 28
+                           : (scom_data.words.lower & BITS32(0, 4)) >> 28;
+        data64_t poll_data;
+        // Read the current freq controls
+        nonatomic_ippm_read(QPPM_DPLL_FREQ, &saved_dpll_val.value);
+        // Reduce freq by N_L (in 32nds)
+        reduced_dpll_val.value = 0;
+        reduced_dpll_val.fields.fmult = (saved_dpll_val.fields.fmult
+                                         * (32 - adj_n_l)) >> 5;
+        reduced_dpll_val.fields.fmax = reduced_dpll_val.fields.fmult;
+        reduced_dpll_val.fields.fmin = reduced_dpll_val.fields.fmult;
+        // Write the reduced frequency
+        nonatomic_ippm_write(QPPM_DPLL_FREQ, reduced_dpll_val.value);
+        poll_dpll_update_complete();
+        // Clear jump enable (drop to Mode 2)
+        nonatomic_ippm_write(QPPM_DPLL_CTRL_CLR, BIT64(1));
+        // Poll for lock
+        PK_TRACE_INF("Poll on DPLL_STAT[block_active|lock]");
+
+        // ... to indicate that the DPLL is safely either at the new frequency
+        // or in droop protection below the new frequency
+        do
+        {
+            nonatomic_ippm_read(QPPM_DPLL_STAT, &poll_data.value);
+        }
+        while(!(poll_data.words.lower & BITS32(30, 2)));
+
+        // Write the new jump values (clear jump enable)
+        scom_data.value &= ~BIT64(1);
+        scom_data.words.lower = new_jump_values;
+        nonatomic_ippm_write(QPPM_DPLL_CTRL, scom_data.value);
+        // Set jump enable (switch back to Mode 3)
+        nonatomic_ippm_write(QPPM_DPLL_CTRL_OR, BIT64(1));
+
+        // The frequency will be raised as part of the pstate transition if
+        // lowering the pstate, don't need to do anything here
+        if(pstate >= G_cme_pstate_record.quadPstate)
+        {
+            // Restore frequency
+            nonatomic_ippm_write(QPPM_DPLL_FREQ, saved_dpll_val.value);
+            poll_dpll_update_complete();
+        }
+
+        pk_critical_section_exit(&ctx);
+    }
+}
+#endif//NIMBUS_DD_LEVEL
 
 void calc_vdm_threshold_indices(uint32_t pstate, uint32_t region,
                                 uint32_t indices[])
@@ -373,11 +523,13 @@ void calc_vdm_threshold_indices(uint32_t pstate, uint32_t region,
 
     for(i = 0; i < NUM_THRESHOLD_POINTS; ++i)
     {
+        // *INDENT-OFF*
         // Cast every math term into 32b for more efficient PPE maths
         indices[i] = (uint32_t)((int32_t)G_lppb->threshold_set[region][i]
-                                + (((int32_t)G_lppb->PsVDMThreshSlopes[region][i] * psdiff
-                                    // Apply the rounding adjust
-                                    + (int32_t)vdm_rounding_adjust[i]) >> THRESH_SLOPE_FP_SHIFT));
+            + (((int32_t)G_lppb->PsVDMThreshSlopes[region][i] * psdiff
+            // Apply the rounding adjust
+            + (int32_t)vdm_rounding_adjust[i]) >> THRESH_SLOPE_FP_SHIFT));
+        // *INDENT-ON*
     }
 
     // Check the interpolation result; since each threshold has a distinct round
@@ -449,6 +601,10 @@ void p9_cme_vdm_update(uint32_t pstate)
         ippm_write(QPPM_VDMCFGR, scom_data);
     }
     while(not_done);
+
+#if NIMBUS_DD_LEVEL != 10
+    update_vdm_jump_values_in_dpll(pstate, region);
+#endif//NIMBUS_DD_LEVEL
 }
 #endif//USE_CME_VDM_FEATURE
 

@@ -92,6 +92,14 @@ typedef enum
 
 typedef enum
 {
+    VDM_N_S_IDX = 0,
+    VDM_N_L_IDX = 1,
+    VDM_L_S_IDX = 2,
+    VDM_S_N_IDX = 3
+} VDM_JUMP_VALUE_IDX;
+
+typedef enum
+{
     // VDM_OVERVOLT_ADJUST
     // 4/8 rounding (8mV resolution so +/- 4 mV error)
     // yields 3/7 aggressive and 4/7 conservative to slightly favor not
@@ -111,7 +119,9 @@ typedef enum
     //VDM_VID_COMP_ADJUST
     // 2/4 rounding (4mV resolution so +/- 2mV error)
     // yields 1/3 (1mV) aggressive and 2/3 (1 or 2mV) conservative answer
-    VDM_VID_COMP_ADJUST = (uint32_t)((1 << VID_SLOPE_FP_SHIFT_12) * ((float)2 / 4))
+    VDM_VID_COMP_ADJUST = (uint32_t)((1 << VID_SLOPE_FP_SHIFT_12) * ((float)2 / 4)),
+    //VDM_JUMP_VALUE_ADJUST
+    VDM_JUMP_VALUE_ADJUST = (uint32_t)((1 << THRESH_SLOPE_FP_SHIFT) * ((float)1 / 2))
 } VDM_ROUNDING_ADJUST;
 
 typedef enum
@@ -177,6 +187,7 @@ void p9_cme_pstate_db_handler(void*, PkIrqId);
 void p9_cme_pstate_intercme_in0_handler(void*, PkIrqId);
 void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq);
 int send_pig_packet(uint64_t data, uint32_t coreMask);
+void poll_dpll_update_complete();
 void ippm_read(uint32_t addr, uint64_t* data);
 void ippm_write(uint32_t addr, uint64_t data);
 void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type);
@@ -189,6 +200,8 @@ void p9_cme_pstate_pmsr_updt(uint32_t coreMask);
     void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_idx);
 #endif//USE_CME_RESCLK_FEATURE
 #ifdef USE_CME_VDM_FEATURE
+uint32_t calc_vdm_jump_values(uint32_t pstate, uint32_t region);
+void update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region);
 void p9_cme_vdm_update(uint32_t pstate);
 uint32_t pstate_to_vid_compare(uint32_t pstate, uint32_t region);
 uint32_t pstate_to_vpd_region(uint32_t pstate);

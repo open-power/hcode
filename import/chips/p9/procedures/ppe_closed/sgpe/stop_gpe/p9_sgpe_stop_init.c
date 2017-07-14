@@ -456,6 +456,8 @@ p9_sgpe_stop_init()
 
     uint32_t cme_flags   = 0;
     uint16_t cmeBootList = ((~qssr.value) >> 16) & 0xFFF0;
+    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
+
     PK_TRACE_INF("Setup: Prepare CME[%x] to be Booted", cmeBootList);
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
@@ -500,6 +502,16 @@ p9_sgpe_stop_init()
                 // also see extra handling at VDM enabled in p9_sgpe_stop_exit()
                 scom_data.words.lower = 0;
                 scom_data.words.upper = BIT32(20) | BIT32(22) | BIT32(24);
+
+                if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_VDM_ENABLE_BIT_POS)
+                {
+                    // If VDM function is configured to be turned on,
+                    // then CME will enable VDM at CME boot regardless if pstate is enabled,
+                    // which needs DPLL control access as early as booting time,
+                    // so done here before the boot
+                    // otherwise, when pstate is enabled, PGPE will take care of this bit.
+                    scom_data.words.upper |= BIT32(26);
+                }
 
                 // set 21, 23, 25, and 27 if EX0 is bad (first two cores in the quad are bad)
                 if (!(G_sgpe_stop_record.state[qloop].cme_flags & 0xC))

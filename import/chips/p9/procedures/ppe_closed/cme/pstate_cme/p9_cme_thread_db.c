@@ -101,7 +101,7 @@ void p9_cme_pstate_db_thread(void* arg)
     PK_TRACE_INF("DB_TH: Started\n");
     PkMachineContext  ctx __attribute__((unused));
     uint32_t cores = 0;
-    uint64_t scom_data;
+    data64_t scom_data;
     uint32_t resclk_data;
 
     G_cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
@@ -159,9 +159,9 @@ void p9_cme_pstate_db_thread(void* arg)
 
         // Pstate Clocking Initialization (QM)
         // Calculate the initial pstate
-        ippm_read(QPPM_DPLL_STAT, &scom_data);
+        ippm_read(QPPM_DPLL_STAT, &scom_data.value);
         int32_t pstate = (int32_t)G_lppb->dpll_pstate0_value
-                         - (int32_t)((scom_data & BITS64(1, 11)) >> SHIFT64(11));
+                         - (int32_t)((scom_data.value & BITS64(1, 11)) >> SHIFT64(11));
         // Clip the pstate at ultra-turbo, ie. pstate=0
         G_cme_pstate_record.quadPstate = (pstate < 0) ? 0 : (uint32_t)pstate;
         PK_TRACE_INF("qm | initial pstate=%d", G_cme_pstate_record.quadPstate);
@@ -175,8 +175,8 @@ void p9_cme_pstate_db_thread(void* arg)
             uint32_t i;
             uint32_t region = pstate_to_vpd_region(G_cme_pstate_record.quadPstate);
             // VID compare
-            scom_data = (uint64_t)(pstate_to_vid_compare(G_cme_pstate_record.quadPstate, region)
-                                   & BITS32(24, 8)) << 56;
+            scom_data.value = (uint64_t)(pstate_to_vid_compare(G_cme_pstate_record.quadPstate, region)
+                                         & BITS32(24, 8)) << 56;
             // Calculate the new index for each threshold
             calc_vdm_threshold_indices(G_cme_pstate_record.quadPstate, region,
                                        G_cme_pstate_record.vdmData.vdm_threshold_idx);
@@ -185,14 +185,21 @@ void p9_cme_pstate_db_thread(void* arg)
             // disabled at this point.
             for(i = 0; i < NUM_THRESHOLD_POINTS; ++i)
             {
-                scom_data |= (uint64_t)G_vdm_threshold_table[
-                                 G_cme_pstate_record.vdmData.vdm_threshold_idx[i]]
-                             << (52 - (i * 4));
+                scom_data.value |= (uint64_t)G_vdm_threshold_table[
+                                       G_cme_pstate_record.vdmData.vdm_threshold_idx[i]]
+                                   << (52 - (i * 4));
             }
 
-            PK_TRACE_INF("qm | initial vdmcfgr=%08x%08x", scom_data >> 32,
-                         scom_data);
-            ippm_write(QPPM_VDMCFGR, scom_data);
+            PK_TRACE_INF("qm | initial vdmcfgr=%08x%08x", scom_data.words.upper,
+                         scom_data.words.lower);
+            ippm_write(QPPM_VDMCFGR, scom_data.value);
+#if NIMBUS_DD_LEVEL != 10
+            // Slam the VDM Jump values at CME boot/init (VDMs are not enabled yet)
+            ippm_read(QPPM_DPLL_CTRL, &scom_data.value);
+            scom_data.words.lower = calc_vdm_jump_values(G_cme_pstate_record.quadPstate,
+                                    region);
+            ippm_write(QPPM_DPLL_CTRL, scom_data.value);
+#endif//NIMBUS_DD_LEVEL
             // Assumes 100us has elapsed during cache chiplet wakeup after
             // enabling the full-speed cache clock grid
             // Clear VDM Disable
@@ -250,7 +257,7 @@ void p9_cme_pstate_db_thread(void* arg)
     // Check that resonance is not enabled in CACCR and EXCGCR
     CME_GETSCOM(CPPM_CACCR, cores, scom_data);
     // Ignore clk_sync_enable, reserved, and override bits
-    resclk_data = (scom_data >> 32) & ~BITS32(13, 19);
+    resclk_data = (scom_data.value >> 32) & ~BITS32(13, 19);
 
     if(resclk_data != 0)
     {
@@ -258,11 +265,11 @@ void p9_cme_pstate_db_thread(void* arg)
     }
 
 #if NIMBUS_DD_LEVEL >= 21 || CUMULUS_DD_LEVEL > 10
-    ippm_read(QPPM_EXCGCR, &scom_data);
+    ippm_read(QPPM_EXCGCR, &scom_data.value);
     // Ignore clk_sync_enable, clkglm_async_reset, clkglm_sel, and reserved
-    scom_data &= ~(BITS64(29, 9) | BITS64(42, 22));
+    scom_data.value &= ~(BITS64(29, 9) | BITS64(42, 22));
 
-    if(scom_data != 0)
+    if(scom_data.value != 0)
     {
         PK_PANIC(CME_PSTATE_RESCLK_ENABLED_AT_BOOT);
     }
@@ -288,18 +295,18 @@ void p9_cme_pstate_db_thread(void* arg)
                 (uint32_t)G_lppb->resclk.resclk_index[0];
 
             // Extract the resclk value from QCCR
-            ippm_read(QPPM_QACCR, &scom_data);
-            scom_data = (scom_data & BITS64(0, 13)) >> SHIFT64(15);
+            ippm_read(QPPM_QACCR, &scom_data.value);
+            scom_data.value = (scom_data.value & BITS64(0, 13)) >> SHIFT64(15);
             G_cme_pstate_record.resclkData.common_resclk_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
             // Read QACCR and clear out the resclk settings
-            ippm_read(QPPM_QACCR, &scom_data);
-            scom_data &= ~BITS64(0, 13);
+            ippm_read(QPPM_QACCR, &scom_data.value);
+            scom_data.value &= ~BITS64(0, 13);
             // OR-in the resclk settings which match the current Pstate
-            scom_data |= (((uint64_t)G_lppb->resclk.steparray
-                           [G_cme_pstate_record.resclkData.common_resclk_idx].value)
-                          << 48);
+            scom_data.value |= (((uint64_t)G_lppb->resclk.steparray
+                                 [G_cme_pstate_record.resclkData.common_resclk_idx].value)
+                                << 48);
             // Write QACCR
-            ippm_write(QPPM_QACCR, scom_data);
+            ippm_write(QPPM_QACCR, scom_data.value);
         }
 
         out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_RCLK_OPERABLE));
@@ -671,25 +678,46 @@ inline void p9_cme_pstate_freq_update()
 inline void p9_cme_pstate_update_analog()
 {
 #ifdef USE_CME_RESCLK_FEATURE
-    uint32_t curr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
-                    ? G_cme_pstate_record.resclkData.common_resclk_idx
-                    : G_cme_pstate_record.quadPstate;
-    uint32_t next = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
-                    ? p9_cme_resclk_get_index(G_next_pstate)
-                    : G_next_pstate;
-#else
-    uint32_t curr = G_cme_pstate_record.quadPstate;
-    uint32_t next = G_next_pstate;
+    uint32_t rescurr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                       ? G_cme_pstate_record.resclkData.common_resclk_idx
+                       : G_cme_pstate_record.quadPstate;
+    uint32_t resnext = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                       ? p9_cme_resclk_get_index(G_next_pstate)
+                       : G_next_pstate;
 #endif//USE_CME_RESCLK_FEATURE
 
-    if(next >= curr)
+#ifdef USE_CME_VDM_FEATURE
+
+    if((G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
+       && G_next_pstate < G_cme_pstate_record.quadPstate)
     {
-        p9_cme_pstate_freq_update();
+        p9_cme_vdm_update(G_next_pstate);
     }
+
+#endif//USE_CME_VDM_FEATURE
 
 #ifdef USE_CME_RESCLK_FEATURE
 
-    if(G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+    if((G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+       && (resnext < rescurr))
+    {
+        PkMachineContext ctx;
+        pk_critical_section_enter(&ctx);
+
+        p9_cme_resclk_update(ANALOG_COMMON, G_next_pstate,
+                             G_cme_pstate_record.resclkData.common_resclk_idx);
+
+        pk_critical_section_exit(&ctx);
+    }
+
+#endif//USE_CME_RESCLK_FEATURE
+
+    p9_cme_pstate_freq_update();
+
+#ifdef USE_CME_RESCLK_FEATURE
+
+    if((G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+       && (resnext >= rescurr))
     {
         PkMachineContext ctx;
         pk_critical_section_enter(&ctx);
@@ -704,18 +732,14 @@ inline void p9_cme_pstate_update_analog()
 
 #ifdef USE_CME_VDM_FEATURE
 
-    if(G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
+    if((G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
+       && G_next_pstate >= G_cme_pstate_record.quadPstate)
     {
         p9_cme_vdm_update(G_next_pstate);
     }
 
 #endif//USE_CME_VDM_FEATURE
 
-    // when moving from a higher to a lower index, update resclk then freq
-    if(next < curr)
-    {
-        p9_cme_pstate_freq_update();
-    }
 }
 
 void p9_cme_pstate_update()
