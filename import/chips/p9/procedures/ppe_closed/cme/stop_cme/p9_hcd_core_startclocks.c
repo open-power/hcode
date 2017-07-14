@@ -34,8 +34,12 @@ p9_hcd_core_startclocks(uint32_t core)
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     uint32_t     id_vector  = pCmeImgHdr->g_cme_location_id;
 
+#if NIMBUS_DD_LEVEL == 10
+
     PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     CME_PUTSCOM(C_CPLT_CONF0_OR, core, BIT64(34));
+
+#endif
 
     PK_TRACE("Set inop_align/wait/wait_cycles via OPCG_ALIGN[0-3,12-19,52-63]");
 
@@ -57,6 +61,8 @@ p9_hcd_core_startclocks(uint32_t core)
     PK_TRACE("Drop vital fences via CPLT_CTRL1[3]");
     CME_PUTSCOM(C_CPLT_CTRL1_CLEAR, core, BIT64(3));
 
+    sync();
+
     PK_TRACE("Drop skew sense to skew adjust fence via NET_CTRL0[22]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(22));
 
@@ -72,6 +78,8 @@ p9_hcd_core_startclocks(uint32_t core)
     while((~(scom_data.words.upper)) & BIT32(13));
 
     MARK_TRAP(SX_STARTCLOCKS_ALIGN)
+
+    sync();
 
     PK_TRACE("Assert ABIST_SRAM_MODE_DC to support ABIST Recovery via BIST[1]");
     CME_GETSCOM(C_BIST, core, scom_data.value);
@@ -153,7 +161,10 @@ p9_hcd_core_startclocks(uint32_t core)
     }
 
     PK_TRACE("Core clock is now running");
+
     MARK_TRAP(SX_STARTCLOCKS_DONE)
+
+    sync();
 
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));

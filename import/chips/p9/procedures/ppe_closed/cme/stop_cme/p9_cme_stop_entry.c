@@ -722,6 +722,8 @@ p9_cme_stop_entry()
             PK_TRACE("Assert core chiplet fence via NET_CTRL0[18]");
             CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(18));
 
+            sync();
+
             PK_TRACE("Clear SCAN_REGION_TYPE prior to stop core clocks");
             CME_PUTSCOM(C_SCAN_REGION_TYPE, core, 0);
 
@@ -781,6 +783,8 @@ p9_cme_stop_entry()
             MARK_TRAP(SE_STOP_CORE_GRID)
             //==============================
 
+            sync();
+
             PK_TRACE("Drop clock sync enable before switch to refclk via CACCR[15]");
             CME_PUTSCOM(CPPM_CACCR_CLR, core, BIT64(15));
 
@@ -800,6 +804,8 @@ p9_cme_stop_entry()
             PK_TRACE("Assert skew sense to skewadjust fence via NET_CTRL0[22]");
             CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(22));
 
+            sync();
+
             PK_TRACE("Drop ABIST_SRAM_MODE_DC to support ABIST Recovery via BIST[1]");
             CME_GETSCOM(C_BIST, core, scom_data.value);
             scom_data.words.upper &= ~BIT32(1);
@@ -811,11 +817,15 @@ p9_cme_stop_entry()
             PK_TRACE("Assert regional fences via CPLT_CTRL1[4-13]");
             CME_PUTSCOM(C_CPLT_CTRL1_OR, core, BITS64(4, 11));
 
-            // Allow queued scoms to complete to Core EPS before switching to Core PPM
-            sync();
+#if NIMBUS_DD_LEVEL == 10
 
             PK_TRACE("Drop sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
             CME_PUTSCOM(C_CPLT_CONF0_CLEAR, core, BIT64(34));
+
+#endif
+
+            // Allow queued scoms to complete to Core EPS before switching to Core PPM
+            sync();
 
             PK_TRACE("Copy PECE CME sample to PPM Shadow via PECES");
 

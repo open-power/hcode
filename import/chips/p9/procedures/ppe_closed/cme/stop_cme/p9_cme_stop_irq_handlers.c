@@ -75,7 +75,7 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
     // if still wakeup for core with notify_select == cme, go exit
     if (core)
     {
-        out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
 #if defined(__IOTA__)
         wrteei(1);
         p9_cme_stop_exit();
@@ -173,7 +173,7 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
 
     if (sem_post)
     {
-        out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         PK_TRACE_INF("Launching exit thread");
 #if defined(__IOTA__)
         wrteei(1);
@@ -199,7 +199,7 @@ p9_cme_stop_rgwu_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_RGWU_HANDLER)
     PK_TRACE_INF("RGWU Handler Trigger %d", irq);
-    out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+    out32(CME_LCL_EIMR_OR, BITS32(12, 10));
 #if defined(__IOTA__)
     wrteei(1);
     p9_cme_stop_exit();
@@ -219,7 +219,7 @@ p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_ENTER_HANDLER)
     PK_TRACE_INF("PM_ACTIVE Handler Trigger %d", irq);
-    out32(CME_LCL_EIMR_OR, BITS32(12, 6) | BITS32(20, 2));
+    out32(CME_LCL_EIMR_OR, BITS32(12, 10));
 #if defined(__IOTA__)
     wrteei(1);
 
