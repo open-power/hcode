@@ -53,6 +53,7 @@ p9_sgpe_stop_entry()
     uint64_t     local_xstop       = 0;
     data64_t     scom_data         = {0};
     data64_t     temp_data         = {0};
+    ppm_pig_t    pig               = {0};
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
     uint32_t      spin             = 0;
 #endif
@@ -79,7 +80,8 @@ p9_sgpe_stop_entry()
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
-        if (G_sgpe_stop_record.group.qswu[VECTOR_ACTIVE] & BIT32(qloop))
+        if ((G_sgpe_stop_record.group.qswu[VECTOR_ACTIVE] |
+             (~G_sgpe_stop_record.group.quad[VECTOR_CONFIG])) & BIT32(qloop))
         {
             continue;
         }
@@ -121,20 +123,74 @@ p9_sgpe_stop_entry()
         if(G_sgpe_stop_record.state[qloop].act_state_q <  LEVEL_EQ_BASE &&
            G_sgpe_stop_record.state[qloop].req_state_q >= LEVEL_EQ_BASE)
         {
-            G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
+            // if resonant clock disable is completed, process stop11 entry
+            if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32(qloop))
+            {
+                G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32(qloop);
+
+                // if during resonant clock disable, any exit occured, re-assert them,
+                // but we are going to complete the stop11 entry prior to process it
+                for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
+                {
+                    cindex = (qloop << 2) + cloop;
+
+                    if (G_sgpe_stop_record.group.core[VECTOR_RCLKE] & BIT32(cindex))
+                    {
+                        G_sgpe_stop_record.group.core[VECTOR_RCLKE] &= ~BIT32(cindex);
+                        pig.fields.req_intr_payload = TYPE2_PAYLOAD_SOFTWARE_WAKEUP;
+                        pig.fields.req_intr_type = PIG_TYPE3;
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(PPM_PIG, cindex), pig.value);
+                    }
+                }
+
+                G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
 
 #if DISABLE_STOP8
 
-            ocb_qssr_t qssr = {0};
-            qssr.value      = in32(OCB_QSSR);
+                ocb_qssr_t qssr = {0};
+                qssr.value      = in32(OCB_QSSR);
 
-            // check qssr for already stopped ex
-            G_sgpe_stop_record.group.ex01[qloop] =
-                (((~qssr.value) & BITS32((qloop << 1), 2)) >>
-                 SHIFT32(((qloop << 1) + 1)));
+                // check qssr for already stopped ex
+                G_sgpe_stop_record.group.ex01[qloop] =
+                    (((~qssr.value) & BITS32((qloop << 1), 2)) >>
+                     SHIFT32(((qloop << 1) + 1)));
 
 #endif
 
+            }
+            // if stop11 entry qualifies, hold on processing it but first
+            // send DB to Quad-Manager to disable the resonant clock
+            else
+            {
+                // assume ex0 core0 is good
+                cindex = (qloop << 2);
+
+                // if ex0 is bad, switch to ex1
+                if (!(G_sgpe_stop_record.group.expg[qloop] & FST_EX_IN_QUAD))
+                {
+                    cindex += 2;
+                }
+
+                // if first core in the ex is bad
+                if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex)))
+                {
+                    cindex++;
+                }
+
+                // send DB2 with msgid 0x2 to the first good core
+                // to trigger Quad Manager to disable resonant clock
+
+#if NIMBUS_DD_LEVEL != 10
+
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), BIT64(6));
+
+#else
+
+                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), BIT32(6));
+
+#endif
+
+            }
         }
 
         G_sgpe_stop_record.group.ex01[qloop] &=
@@ -160,9 +216,6 @@ p9_sgpe_stop_entry()
                          G_sgpe_stop_record.state[qloop].req_state_x1);
         }
     }
-
-    G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &=
-        G_sgpe_stop_record.group.quad[VECTOR_CONFIG];
 
     PK_TRACE_DBG("Entry Vectors: Q0_EX[%x] Q1_EX[%x] Q2_EX[%x] QSPWU[%x]",
                  G_sgpe_stop_record.group.ex01[0],
@@ -599,7 +652,7 @@ p9_sgpe_stop_entry()
                         cindex = (qloop << 2) + cloop;
 
                         if ((in32(OCB_OPIT2CN(cindex)) & TYPE2_PAYLOAD_EXIT_EVENT) ||
-                            (in32(OCB_OPIT3CN(cindex)) & TYPE3_PAYLOAD_EXIT_EVENT))
+                            (in32(OCB_OPIT3CN(cindex)) & TYPE2_PAYLOAD_EXIT_EVENT))
                         {
                             PK_TRACE_DBG("Abort: core wakeup detected");
                             l3_purge_aborted = 1;
@@ -702,6 +755,37 @@ p9_sgpe_stop_entry()
                              qloop, scom_data.words.upper);
                 PK_PANIC(SGPE_STOP_EXIT_DROP_SLV_LOCK_FAILED);
             }
+
+            // assume ex0 core0 is good
+            cindex = (qloop << 2);
+
+            // if ex0 is bad, switch to ex1
+            if (!(G_sgpe_stop_record.group.expg[qloop] & FST_EX_IN_QUAD))
+            {
+                cindex += 2;
+            }
+
+            // if first core in the ex is bad, switch to second core
+            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex)))
+            {
+                cindex++;
+            }
+
+            // send DB2 with msgid 0x3 to the first good core
+            // to trigger Quad Manager to enable resonant clock again
+
+#if NIMBUS_DD_LEVEL != 10
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), BITS64(6, 2));
+
+#else
+
+            p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), BITS32(6, 2));
+
+#endif
+
+            // block handoff to cme until resonant clock enable is completed.
+            G_sgpe_stop_record.group.quad[VECTOR_RCLKX] |= BIT32(qloop);
 
             // For IPC reporting, taking aborted quad out of the list
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &= ~BIT32(qloop);
