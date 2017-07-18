@@ -222,15 +222,17 @@ enum SGPE_SUSPEND_FUNCTION_STATUS
 
 enum SGPE_STOP_VECTOR_INDEX
 {
-    VECTOR_BLOCKE                     = 0, //(core_save, quad_req, qswu_save, qex01)
-    VECTOR_BLOCKX                     = 1, //(core_save, quad_req, qswu_save, qex01)
-    VECTOR_ENTRY                      = 2, //(core_ipc,  quad,     qswu)
-    VECTOR_EXIT                       = 3, //(core,      quad_ipc  qswu)
-    VECTOR_ACTIVE                     = 4, //(core_ipc,  quad_ipc, qswu_active)
-    VECTOR_CONFIG                     = 5, //(core,      quad)
-    VECTOR_PCWU                       = 6, //(core)
-    VECTOR_PIGE                       = 7, //(core)
-    VECTOR_PIGX                       = 8, //(core)
+    VECTOR_BLOCKE                     = 0, //(core_save,   quad_req, qswu_save, qex01)
+    VECTOR_BLOCKX                     = 1, //(core_save,   quad_req, qswu_save, qex01)
+    VECTOR_ENTRY                      = 2, //(core_ipc,    quad,     qswu)
+    VECTOR_EXIT                       = 3, //(core,        quad_ipc  qswu)
+    VECTOR_ACTIVE                     = 4, //(core_ipc,    quad_ipc, qswu_active)
+    VECTOR_CONFIG                     = 5, //(core,        quad)
+    VECTOR_RCLKE                      = 6, //(core_blocke, quad)
+    VECTOR_RCLKX                      = 7, //(core_blockx, quad)
+    VECTOR_PIGE                       = 8, //(core)
+    VECTOR_PIGX                       = 9, //(core)
+    VECTOR_PCWU                       = 10,//(core)
 };
 
 typedef struct
@@ -254,8 +256,8 @@ typedef struct
     uint32_t qex0[2]; // 6  bits
     uint32_t qex1[2]; // 6  bits
     uint32_t qswu[5]; // 6  bits
-    uint32_t quad[6]; // 6  bits
-    uint32_t core[9]; // 24 bits
+    uint32_t quad[8]; // 6  bits
+    uint32_t core[11];// 24 bits
 } sgpe_group_t;
 
 typedef struct

@@ -150,7 +150,6 @@ void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type)
     out32(CME_LCL_ICSR, (msg << 4) | type);
 
     PK_TRACE_DBG("imt send | msg=%08x", ((msg << 4) | type));
-    PK_TRACE_DBG("buff");
 
     // Block on ack from companion CME
     while(!(in32(CME_LCL_EISR) & BIT32(30))) {}
@@ -163,9 +162,7 @@ void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type)
     // Poll for inter-cme communication from QM
     while(!(in32(CME_LCL_EISR) & BIT32(29))) {}
 
-    // Get the initial pstate value
     *msg = in32(CME_LCL_ICRR);
-
     PK_TRACE_DBG("imt recv | msg=%08x", *msg);
 
     if(*msg & type)
@@ -183,6 +180,46 @@ void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type)
     // Clear the ack
     out32(CME_LCL_ICCR_CLR, BIT32(0));
     out32(CME_LCL_EISR_CLR, BIT32(29));
+}
+
+void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type)
+{
+    uint32_t addr_offset = 0;
+    // Send intercme interrupt, this is the same whether notifying or acking
+    out32(CME_LCL_ICCR_OR , BIT32(intf));
+    out32(CME_LCL_ICCR_CLR, BIT32(intf));
+
+    // Adjust the EI*R base address based on which intercme direct interface
+    // is used since the bits are spread across both words in the EI*R registers
+    if(intf == INTERCME_DIRECT_IN0)
+    {
+        // IN0: ICCR[5], EI*R[7]
+        intf += 2;
+    }
+    else
+    {
+        // IN1: ICCR[6], EI*R[38], ie. second half EI*R[6]
+        // IN2: ICCR[7], EI*R[39], ie. second half EI*R[7]
+        addr_offset = 4;
+    }
+
+    if(type == INTERCME_DIRECT_NOTIFY)
+    {
+        uint32_t intercme_acked = 0;
+#if SIMICS_TUNING == 1
+        intercme_acked = 1;
+#endif
+
+        while(!intercme_acked)
+        {
+            if(in32((CME_LCL_EISR + addr_offset)) & BIT32(intf))
+            {
+                intercme_acked = 1;
+            }
+        }
+    }
+
+    out32((CME_LCL_EISR_CLR + addr_offset), BIT32(intf)); // Clear the interrupt
 }
 
 #ifdef USE_CME_RESCLK_FEATURE

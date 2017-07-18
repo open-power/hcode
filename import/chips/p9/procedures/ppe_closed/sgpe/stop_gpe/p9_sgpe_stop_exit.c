@@ -222,7 +222,15 @@ p9_sgpe_stop_exit_end(uint32_t qloop)
 
         if (G_sgpe_stop_record.group.core[VECTOR_EXIT] & BIT32(cindex))
         {
-            p9_sgpe_stop_exit_handoff_cme(cindex);
+            if (G_sgpe_stop_record.group.quad[VECTOR_RCLKX] & BIT32(qloop))
+            {
+                G_sgpe_stop_record.group.core[VECTOR_RCLKX] |= BIT32(cindex);
+            }
+            else
+            {
+                G_sgpe_stop_record.group.core[VECTOR_RCLKX] &= ~BIT32(cindex);
+                p9_sgpe_stop_exit_handoff_cme(cindex);
+            }
         }
 
     }
@@ -251,7 +259,8 @@ p9_sgpe_stop_exit_handoff_cme(uint32_t cindex)
     // if waken up by pc, send doorbell to unmask pc
     if (G_sgpe_stop_record.group.core[VECTOR_PCWU] & BIT32(cindex))
     {
-
+        // send DB2 with msgid 0x1 to the core request wakeup via decrementor to
+        // alert CME to process via unmask PC_INTR_PENDING in addition to handoff
         PK_TRACE_DBG("SX.CME: Core[%d] Waking Up by PC_Interrupt_Pending", cindex);
 
 #if NIMBUS_DD_LEVEL != 10

@@ -245,6 +245,7 @@ void p9_cme_pstate_db_thread(void* arg)
         PK_PANIC(CME_PSTATE_RESCLK_ENABLED_AT_BOOT);
     }
 
+#if NIMBUS_DD_LEVEL >= 21 || CUMULUS_DD_LEVEL > 10
     ippm_read(QPPM_EXCGCR, &scom_data);
     // Ignore clk_sync_enable, clkglm_async_reset, clkglm_sel, and reserved
     scom_data &= ~(BITS64(29, 9) | BITS64(42, 22));
@@ -253,6 +254,8 @@ void p9_cme_pstate_db_thread(void* arg)
     {
         PK_PANIC(CME_PSTATE_RESCLK_ENABLED_AT_BOOT);
     }
+
+#endif
 
 #ifdef USE_CME_RESCLK_FEATURE
 
@@ -501,33 +504,12 @@ inline void p9_cme_pstate_db0_suspend()
 
 inline void p9_cme_pstate_notify_sib()
 {
-    uint32_t intercme_acked = 0;
-    uint32_t eisr;
-
     PK_TRACE_INF("DB_TH: Notify Enter\n");
 
     //Notify sibling CME(if any)
-    if (G_cme_pstate_record.siblingCMEFlag)
+    if(G_cme_pstate_record.siblingCMEFlag)
     {
-        //Send interCME interrupt
-        out32(CME_LCL_ICCR_OR, BIT32(5)); //Send direct InterCME_IN0
-        out32(CME_LCL_ICCR_CLR, BIT32(5));//Clear
-
-#if SIMICS_TUNING == 1
-        intercme_acked = 1;
-#endif
-
-        while (!intercme_acked)
-        {
-            eisr = in32(CME_LCL_EISR);
-
-            if (eisr & 0x01000000)
-            {
-                intercme_acked = 1;
-            }
-        }
-
-        out32(CME_LCL_EISR_CLR, BIT32(7));//Clear InterCME_IN0
+        intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_ACK);
     }
 
     PK_TRACE_INF("DB_TH: Notify Exit\n");

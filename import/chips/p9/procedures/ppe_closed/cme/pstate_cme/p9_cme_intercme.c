@@ -108,9 +108,7 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
 
     out32_sh(CME_LCL_EISR_CLR, G_cme_record.core_enabled << 25);//Clear DB0_C0/C1
 
-    out32(CME_LCL_ICCR_OR, BIT32(5));//Send Direct InterCME_IN0(Ack to QM-CME)
-    out32(CME_LCL_ICCR_CLR, BIT32(5));//Clear Ack
-    out32(CME_LCL_EISR_CLR, BIT32(7));//Clear InterCME_IN0
+    intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_ACK);
 
     pk_irq_vec_restore(&ctx);
 

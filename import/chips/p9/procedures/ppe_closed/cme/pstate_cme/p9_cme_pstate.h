@@ -132,6 +132,19 @@ typedef enum
     IMT_SYNC_SIBLING = (uint32_t)0x00000003
 } INTERCME_MSG_TYPE;
 
+typedef enum
+{
+    INTERCME_DIRECT_IN0 = 5,
+    INTERCME_DIRECT_IN1 = 6,
+    INTERCME_DIRECT_IN2 = 7
+} INTERCME_DIRECT_INTF;
+
+typedef enum
+{
+    INTERCME_DIRECT_NOTIFY = 0,
+    INTERCME_DIRECT_ACK    = 1
+} INTERCME_DIRECT_TYPE;
+
 typedef struct
 {
 #if !defined(__IOTA__)
@@ -167,6 +180,7 @@ void ippm_read(uint32_t addr, uint64_t* data);
 void ippm_write(uint32_t addr, uint64_t data);
 void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type);
 void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type);
+void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type);
 void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
 void p9_cme_pstate_pmsr_updt(uint32_t coreMask);
 #ifdef USE_CME_RESCLK_FEATURE

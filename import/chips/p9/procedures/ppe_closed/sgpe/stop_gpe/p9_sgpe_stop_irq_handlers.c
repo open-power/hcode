@@ -52,8 +52,8 @@ SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
         {0, 0},
         {0, 0},
         {0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0}
+        {0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
     },
     // wof status
     {0, 0, 0},
@@ -94,7 +94,17 @@ p9_sgpe_stop_suspend_db1_cme(uint32_t qloop, uint32_t msgid)
         {
             scom_data.words.upper = msgid;
             scom_data.words.lower = 0;
+
+#if NIMBUS_DD_LEVEL != 10
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1, cindex), scom_data.value);
+
+#else
+
             p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1, cindex), scom_data.value);
+
+#endif
+
         }
         // otherwise send an ack pig on behalf of that quad(stop11 or partial bad) or ex (ex is partial bad)
         else
@@ -105,7 +115,7 @@ p9_sgpe_stop_suspend_db1_cme(uint32_t qloop, uint32_t msgid)
             }
 
             pig.fields.req_intr_payload = msgid >> 16;
-            pig.fields.req_intr_payload |= 0x080; // set bit 4 for ack package
+            pig.fields.req_intr_payload |= TYPE2_PAYLOAD_SUSPEND_ACK_MASK;
             pig.fields.req_intr_type    = PIG_TYPE2;
             GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(PPM_PIG, cindex), pig.value);
         }
@@ -445,26 +455,64 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                 }
                 else
                 {
+                    // if wakeup by pc_intr_pending,
+                    // go exit with flag to do extra doorbell from normal wakeup
+                    if (cpayload == TYPE2_PAYLOAD_DECREMENTER_WAKEUP)
+                    {
+                        PK_TRACE_INF("Core Request Exit with Decrementer Wakeup");
+                        G_sgpe_stop_record.group.core[VECTOR_PCWU] |= BIT32(cindex);
+                    }
+
+                    // Quad-Manager completed the resonant clock enable, proceed stop5 exit
+                    if (cpayload == TYPE2_PAYLOAD_EXIT_RCLK)
+                    {
+                        PK_TRACE_INF("Core Request Exit Allowed as Resonant Clock Enable is Completed");
+                        G_sgpe_stop_record.group.quad[VECTOR_RCLKX] &= ~BIT32(qloop);
+                    }
+
                     if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] & BIT32(qloop))
                     {
-                        PK_TRACE_DBG("Core Request Exit, but in Block Wakeup Mode so Ignore");
-                        G_sgpe_stop_record.group.core[VECTOR_BLOCKX] |= BIT32(cindex);
+                        PK_TRACE_DBG("Core Request Exit But in Block Wakeup Mode so Ignore");
+
+                        if (cpayload == TYPE2_PAYLOAD_EXIT_RCLK)
+                        {
+                            G_sgpe_stop_record.group.core[VECTOR_BLOCKX] |=
+                                G_sgpe_stop_record.group.core[VECTOR_RCLKX];
+                        }
+                        else
+                        {
+                            G_sgpe_stop_record.group.core[VECTOR_BLOCKX] |= BIT32(cindex);
+                        }
+                    }
+                    // FIXME exit unblock above can bypass rclk exit block
+                    else if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32(qloop))
+                    {
+                        if (cpayload == TYPE2_PAYLOAD_EXIT_RCLK)
+                        {
+                            PK_TRACE_ERR("ERROR: IMPOSSIBLE! RCLK PROTOCOL BROKEN! HALT SGPE!");
+                            pk_halt();
+                        }
+
+                        PK_TRACE_INF("Core Request Exit But Resonent Clock Disable Ongoing so Ignore");
+                        G_sgpe_stop_record.group.core[VECTOR_RCLKE] |= BIT32(cindex);
                     }
                     else
                     {
-                        PK_TRACE_INF("Core Request Exit");
-                        G_sgpe_stop_record.group.core[VECTOR_PIGX] |= BIT32(cindex);
+                        PK_TRACE_INF("Core Request Exit Confirmed");
 
-                        PK_TRACE("Update STOP history on core: in transition of exit");
-                        scom_data.words.upper = SSH_EXIT_IN_SESSION;
-                        scom_data.words.lower = 0;
-                        GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
-
-                        // if wakeup by pc_intr_pending,
-                        // go exit with flag to do extra doorbell from normal wakeup
-                        if (cpayload == 0x400)
+                        if (cpayload == TYPE2_PAYLOAD_EXIT_RCLK)
                         {
-                            G_sgpe_stop_record.group.core[VECTOR_PCWU] |= BIT32(cindex);
+                            G_sgpe_stop_record.group.core[VECTOR_PIGX] |=
+                                G_sgpe_stop_record.group.core[VECTOR_RCLKX];
+                        }
+                        else
+                        {
+                            G_sgpe_stop_record.group.core[VECTOR_PIGX] |= BIT32(cindex);
+
+                            PK_TRACE("Update STOP history on core: in transition of exit");
+                            scom_data.words.upper = SSH_EXIT_IN_SESSION;
+                            scom_data.words.lower = 0;
+                            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
                         }
                     }
                 }
@@ -483,19 +531,26 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
 
                 if (!timeout)
                 {
-                    PK_TRACE_ERR("ERROR: Received Phantom Entry PIG \
-                                  When Wakeup_notify_select = 0. HALT SGPE!");
+                    PK_TRACE_ERR("ERROR: Received Phantom Entry PIG"
+                                 " When Wakeup_notify_select = 0. HALT SGPE!");
                     PK_PANIC(SGPE_PIG_TYPE23_ENTRY_WNS_CME);
+                }
+
+                // Quad-Manager completed the resonant clock disable, proceed stop11 entry
+                if (cpayload == (TYPE2_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11))
+                {
+                    PK_TRACE_INF("Core Request Entry Allowed as Resonant Clock Disable is Completed");
+                    G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |= BIT32(qloop);
                 }
 
                 if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] & BIT32(qloop))
                 {
-                    PK_TRACE_DBG("Core Request Entry, but in Block Entry Mode so Ignore");
+                    PK_TRACE_DBG("Core Request Entry But in Block Entry Mode so Ignore");
                     G_sgpe_stop_record.group.core[VECTOR_BLOCKE] |= BIT32(cindex);
                 }
                 else
                 {
-                    PK_TRACE_INF("Core Request Entry");
+                    PK_TRACE_INF("Core Request Entry Confirmed");
                     G_sgpe_stop_record.group.core[VECTOR_PIGE] |= BIT32(cindex);
                 }
             }

@@ -385,6 +385,22 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                         continue;
                     }
 
+#if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) && DISABLE_STOP8 == 1
+
+                    if(l_dataReg & BIT64(CME_FLAGS_RCLK_OPERABLE))
+                    {
+                        // Set the EXCGCR to point to QACCR for L2 Resonance
+                        uint64_t excgcr;
+                        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_EXCGCR, (l_cmeIndex / 2)), excgcr);
+                        // EX0: bits 38,40; EX1: bits 39,41
+                        excgcr |= BIT64(38 + (l_cmeIndex % 2)) | BIT64(40 + (l_cmeIndex % 2));
+                        PK_TRACE("Setting EXCGCR[ex=%d] to point to QACCR", l_cmeIndex);
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_EXCGCR, (l_cmeIndex / 2)), excgcr);
+                    }
+
+                    // TODO #else
+#endif
+
                     l_cmeRdyCnt++;
                     cmeReadyList = cmeReadyList | l_cmeActiveBit;
                 }//end for
