@@ -974,6 +974,10 @@ p9_sgpe_stop_entry()
         PK_TRACE("Checking status of Local Checkstop");
         GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_LOCAL_XSTOP_ERR, qloop), local_xstop);
 
+        PK_TRACE("Drop CME_INTERPPM_IVRM/ACLK/VDATA/DPLL_ENABLE  QPMMR[20,22,24,26]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26));
+
+
         if(pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_VDM_ENABLE_BIT_POS)
         {
             PK_TRACE("Clear Jump Protect Enable (no need to poll DPLL_STAT");
@@ -1028,8 +1032,6 @@ p9_sgpe_stop_entry()
         // Note: Stop11 will lose all the fences so here needs to assert them
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop), CLK_REGION_ALL);
 
-        PK_TRACE("Drop CME_INTERPPM_DPLL_ENABLE after DPLL is stopped via QPMMR[26]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26));
 
         PK_TRACE_INF("SE.11D: Cache Clock Stopped");
 
