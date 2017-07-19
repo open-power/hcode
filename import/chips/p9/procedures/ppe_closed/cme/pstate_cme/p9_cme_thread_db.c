@@ -69,6 +69,7 @@ inline void p9_cme_pstate_db0_glb_bcast() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_suspend() __attribute__((always_inline));
 inline void p9_cme_pstate_freq_update() __attribute__((always_inline));
 inline void p9_cme_pstate_notify_sib() __attribute__((always_inline));
+inline void p9_cme_pstate_update_analog() __attribute__((always_inline));
 void p9_cme_pstate_update();
 void p9_cme_pstate_pig_send();
 
@@ -274,8 +275,7 @@ void p9_cme_pstate_db_thread(void* arg)
             // Extract the resclk value from QCCR
             ippm_read(QPPM_QACCR, &scom_data);
             scom_data = (scom_data & BITS64(0, 13)) >> SHIFT64(15);
-            p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate,
-                                    &G_cme_pstate_record.resclkData.common_resclk_idx);
+            G_cme_pstate_record.resclkData.common_resclk_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
             // Read QACCR and clear out the resclk settings
             ippm_read(QPPM_QACCR, &scom_data);
             scom_data &= ~BITS64(0, 13);
@@ -596,6 +596,56 @@ inline void p9_cme_pstate_freq_update()
     }
 }
 
+inline void p9_cme_pstate_update_analog()
+{
+#ifdef USE_CME_RESCLK_FEATURE
+    uint32_t curr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                    ? G_cme_pstate_record.resclkData.common_resclk_idx
+                    : G_cme_pstate_record.quadPstate;
+    uint32_t next = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                    ? p9_cme_resclk_get_index(G_next_pstate)
+                    : G_next_pstate;
+#else
+    uint32_t curr = G_cme_pstate_record.quadPstate;
+    uint32_t next = G_next_pstate;
+#endif//USE_CME_RESCLK_FEATURE
+
+    if(next >= curr)
+    {
+        p9_cme_pstate_freq_update();
+    }
+
+#ifdef USE_CME_RESCLK_FEATURE
+
+    if(G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+    {
+        PkMachineContext ctx;
+        pk_critical_section_enter(&ctx);
+
+        p9_cme_resclk_update(ANALOG_COMMON, G_next_pstate,
+                             G_cme_pstate_record.resclkData.common_resclk_idx);
+
+        pk_critical_section_exit(&ctx);
+    }
+
+#endif//USE_CME_RESCLK_FEATURE
+
+#ifdef USE_CME_VDM_FEATURE
+
+    if(G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
+    {
+        p9_cme_vdm_update(G_next_pstate);
+    }
+
+#endif//USE_CME_VDM_FEATURE
+
+    // when moving from a higher to a lower index, update resclk then freq
+    if(next < curr)
+    {
+        p9_cme_pstate_freq_update();
+    }
+}
+
 void p9_cme_pstate_update()
 {
     PK_TRACE_INF("DB_TH: Pstate Updt Enter");
@@ -620,40 +670,7 @@ void p9_cme_pstate_update()
         PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", G_dbData.value >> 32,
                      G_dbData.value);
 
-        // Dropping frequency: freq update, resclk, vdms, then ivrms (TODO)
-        if(G_next_pstate > G_cme_pstate_record.quadPstate)
-        {
-            p9_cme_pstate_freq_update();
-        }
-
-#ifdef USE_CME_RESCLK_FEATURE
-
-        if(G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
-        {
-            PkMachineContext ctx;
-            pk_critical_section_enter(&ctx);
-
-            p9_cme_resclk_update(ANALOG_COMMON, G_next_pstate,
-                                 G_cme_pstate_record.resclkData.common_resclk_idx);
-
-            pk_critical_section_exit(&ctx);
-        }
-
-#endif//USE_CME_RESCLK_FEATURE
-#ifdef USE_CME_VDM_FEATURE
-
-        if(G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
-        {
-            p9_cme_vdm_update(G_next_pstate);
-        }
-
-#endif//USE_CME_VDM_FEATURE
-
-        // Raising frequency: ivrm (TODO), vdm, resclk, freq update
-        if(G_next_pstate < G_cme_pstate_record.quadPstate)
-        {
-            p9_cme_pstate_freq_update();
-        }
+        p9_cme_pstate_update_analog();
 
         // Must update quadPstate before calling PMSR update
         G_cme_pstate_record.quadPstate = G_next_pstate;

@@ -186,7 +186,7 @@ void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type)
 }
 
 #ifdef USE_CME_RESCLK_FEATURE
-void p9_cme_resclk_get_index(uint32_t pstate, uint32_t* resclk_index)
+uint32_t p9_cme_resclk_get_index(uint32_t pstate)
 {
     int32_t i = RESCLK_FREQ_REGIONS;
 
@@ -197,7 +197,7 @@ void p9_cme_resclk_get_index(uint32_t pstate, uint32_t* resclk_index)
     while((pstate > G_lppb->resclk.resclk_freq[--i]) && (i > 0)) {}
 
     PK_TRACE_DBG("resclk_idx[i=%d]=%d", i, G_lppb->resclk.resclk_index[i]);
-    *resclk_index = (uint32_t)G_lppb->resclk.resclk_index[i];
+    return((uint32_t)G_lppb->resclk.resclk_index[i]);
 }
 #endif//USE_CME_RESCLK_FEATURE
 
@@ -266,7 +266,7 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             ippm_read(QPPM_QACCR, &val);
             val &= BITS64(13, 51);
             CME_PUTSCOM(CPPM_CACCR, core_mask, val);
-            p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate, &curr_idx);
+            curr_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
             // 2) step CACCR to a value which disables resonance
             pstate = ANALOG_PSTATE_RESCLK_OFF;
             p9_cme_resclk_update(core_mask, pstate, curr_idx);
@@ -421,14 +421,11 @@ void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_i
 {
     uint64_t base_val;
     uint64_t val;
-    uint32_t next_idx;
+    uint32_t next_idx = p9_cme_resclk_get_index(pstate);
     int32_t  step;
 
     PK_TRACE_DBG("resclk | target=%08x", (uint32_t)target);
     PK_TRACE_DBG("resclk | pstate=%d"  , pstate);
-
-    p9_cme_resclk_get_index(pstate, &next_idx);
-
     PK_TRACE_DBG("resclk | curr_idx=%d", curr_idx);
     PK_TRACE_DBG("resclk | next_idx=%d", next_idx);
 
