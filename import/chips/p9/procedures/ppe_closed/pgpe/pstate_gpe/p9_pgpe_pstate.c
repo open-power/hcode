@@ -288,7 +288,7 @@ void p9_pgpe_pstate_calc_wof()
     //Currently, PGPE only support VRATIO Fixed and VRATIO active cores only
     if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_ENABLE_VRATIO)
     {
-        G_pgpe_pstate_record.vratio = G_pgpe_pstate_record.numActiveCores / G_pgpe_pstate_record.numConfCores;
+        G_pgpe_pstate_record.vratio = (G_pgpe_pstate_record.numActiveCores << 16) / G_pgpe_pstate_record.numConfCores;
     }
     else
     {
@@ -296,7 +296,7 @@ void p9_pgpe_pstate_calc_wof()
     }
 
     //3. VFRT table lookup
-    G_pgpe_pstate_record.vratio = (G_pgpe_pstate_record.vratio - 0xA8B) / 0xAAC;
+    G_pgpe_pstate_record.vindex = (G_pgpe_pstate_record.vratio - 0xA8B) / 0xAAC;
 
     //4. Update wofClip(int. variable)
     G_pgpe_pstate_record.wofClip =
@@ -907,7 +907,6 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
             {
                 if (quadAckExpect & (0x80 >> q))
                 {
-                    PK_TRACE_DBG("opit4prQuad=0x%x", opit4pr);
                     quadAckExpect &= ~(0x80 >> q);
                     opit4Clr |= (opit4prQuad << ((MAX_QUADS - q + 1) << 2));
                     PK_TRACE_INF("GotAck from %d", q);

@@ -457,43 +457,48 @@ void p9_pgpe_process_wof_ctrl()
             if(G_pgpe_pstate_record.wofEnabled == 0)
             {
                 PK_TRACE_DBG("PROCTH: WOF Ctrl=ON,WOF_Enabled=0\n");
+
+                if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_ENABLE_VRATIO) ||
+                    (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_VRATIO_MODIFIER))
+                {
 #if SGPE_IPC_ENABLED == 1
-                uint32_t rc;
-                PkMachineContext  ctx;
-                //Send "Disable Core Stop Updates" IPC to SGPE
-                G_sgpe_control_updt.fields.return_code = 0x0;
-                G_sgpe_control_updt.fields.action = CTRL_STOP_UPDT_ENABLE_CORE;
-                G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_control_updt;
-                ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
-                             IPC_MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES,
-                             p9_pgpe_pstate_ipc_rsp_cb_sem_post,
-                             (void*)&G_pgpe_pstate_record.sem_sgpe_wait);
+                    uint32_t rc;
+                    PkMachineContext  ctx;
+                    //Send "Disable Core Stop Updates" IPC to SGPE
+                    G_sgpe_control_updt.fields.return_code = 0x0;
+                    G_sgpe_control_updt.fields.action = CTRL_STOP_UPDT_ENABLE_CORE;
+                    G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_control_updt;
+                    ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
+                                 IPC_MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES,
+                                 p9_pgpe_pstate_ipc_rsp_cb_sem_post,
+                                 (void*)&G_pgpe_pstate_record.sem_sgpe_wait);
 
-                //send the command
-                rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
+                    //send the command
+                    rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
 
-                if(rc)
-                {
-                    PK_PANIC(PGPE_SGPE_IPC_SEND_BAD_RC);
-                }
+                    if(rc)
+                    {
+                        PK_PANIC(PGPE_SGPE_IPC_SEND_BAD_RC);
+                    }
 
-                //Wait for SGPE ACK with alive Quads
-                pk_irq_vec_restore(&ctx);
-                pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
+                    //Wait for SGPE ACK with alive Quads
+                    pk_irq_vec_restore(&ctx);
+                    pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
 
-                if (G_sgpe_control_updt.fields.return_code == IPC_SGPE_PGPE_RC_SUCCESS)
-                {
-                    //Update Shared Memory Region
-                    G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
-                    G_pgpe_pstate_record.pQuadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
-                    G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
-                }
-                else
-                {
-                    PK_PANIC(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
-                }
+                    if (G_sgpe_control_updt.fields.return_code == IPC_SGPE_PGPE_RC_SUCCESS)
+                    {
+                        //Update Shared Memory Region
+                        G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
+                        G_pgpe_pstate_record.pQuadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
+                        G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
+                    }
+                    else
+                    {
+                        PK_PANIC(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
+                    }
 
 #endif// _SGPE_IPC_ENABLED_
+                }
 
                 G_pgpe_pstate_record.wofEnabled = 1;
                 p9_pgpe_pstate_calc_wof();
@@ -510,40 +515,45 @@ void p9_pgpe_process_wof_ctrl()
             if(G_pgpe_pstate_record.wofEnabled == 1)
             {
                 PK_TRACE_DBG("PROCTH: WOF Ctrl=OFF,WOF_Enabled=1\n");
+
+                if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_ENABLE_VRATIO) ||
+                    (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_VRATIO_MODIFIER))
+                {
 #if SGPE_IPC_ENABLED == 1
-                uint32_t rc;
-                PkMachineContext  ctx;
-                //Send "Disable Core Stop Updates" IPC to SGPE
-                G_sgpe_control_updt.fields.return_code = 0x0;
-                G_sgpe_control_updt.fields.action = CTRL_STOP_UPDT_DISABLE_CORE;
-                G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_control_updt;
-                ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
-                             IPC_MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES,
-                             p9_pgpe_pstate_ipc_rsp_cb_sem_post,
-                             (void*)&G_pgpe_pstate_record.sem_sgpe_wait);
+                    uint32_t rc;
+                    PkMachineContext  ctx;
+                    //Send "Disable Core Stop Updates" IPC to SGPE
+                    G_sgpe_control_updt.fields.return_code = 0x0;
+                    G_sgpe_control_updt.fields.action = CTRL_STOP_UPDT_DISABLE_CORE;
+                    G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_control_updt;
+                    ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
+                                 IPC_MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES,
+                                 p9_pgpe_pstate_ipc_rsp_cb_sem_post,
+                                 (void*)&G_pgpe_pstate_record.sem_sgpe_wait);
 
-                //send the command
-                rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
+                    //send the command
+                    rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
 
-                if(rc)
-                {
-                    PK_PANIC(PGPE_SGPE_IPC_SEND_BAD_RC);
-                }
+                    if(rc)
+                    {
+                        PK_PANIC(PGPE_SGPE_IPC_SEND_BAD_RC);
+                    }
 
-                //Wait for SGPE ACK with alive Quads
-                pk_irq_vec_restore(&ctx);
-                pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
+                    //Wait for SGPE ACK with alive Quads
+                    pk_irq_vec_restore(&ctx);
+                    pk_semaphore_pend(&(G_pgpe_pstate_record.sem_actuate), PK_WAIT_FOREVER);
 
-                if (G_sgpe_control_updt.fields.return_code == SGPE_PGPE_IPC_RC_SUCCESS)
-                {
-                    //Update Shared Memory Region
-                    G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
-                    G_pgpe_pstate_record.pQuadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
-                    G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
-                }
-                else
-                {
-                    PK_PANIC(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
+                    if (G_sgpe_control_updt.fields.return_code == SGPE_PGPE_IPC_RC_SUCCESS)
+                    {
+                        //Update Shared Memory Region
+                        G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
+                        G_pgpe_pstate_record.pQuadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
+                        G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
+                    }
+                    else
+                    {
+                        PK_PANIC(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
+                    }
                 }
 
 #endif// _SGPE_IPC_ENABLED_
