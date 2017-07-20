@@ -126,61 +126,42 @@ void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq)
 //
 //PCB Type 1 Interrupt Handler
 //
+//\\tbd RTC:177526 GA1 only Phase1 data is used since only LowerPS fields is supported in PMCR
+//
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
 {
     PK_TRACE_DBG("PCB_TYPE1: Enter\n");
 
-    //Snapshot
     PkMachineContext  ctx;
-    ocb_opit0cn_t opit0cn;
     ocb_opit1cn_t opit1cn;
     uint32_t c;
-    uint32_t coresPendPSReq = 0;
     uint32_t opit1pra;
-
-    //Incrementally build a snapshot of core requests
-    opit1pra = in32(OCB_OPIT1PRA);
-    coresPendPSReq = opit1pra;
-
-    //Keep looping until no more core requests
-    while(opit1pra)
-    {
-        out32(OCB_OPIT1PRA_CLR, opit1pra);
-        coresPendPSReq |= opit1pra;
-        opit1pra = in32(OCB_OPIT1PRA);
-    }
 
     if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE &&
         (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_HOST ||
          G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_CHAR))
     {
 
+        //Read and Clear before data is read
+        opit1pra = in32(OCB_OPIT1PRA);
+        out32(OCB_OPIT1PRA_CLR, opit1pra);
+
         //Process pending requests
         for (c = 0; c < MAX_CORES; c++)
         {
             //For each pending bit OPIT1PR[c] (OPIT1PR is 24 bits)
-            if (coresPendPSReq & (0x80000000 >> c))
+            if (opit1pra & (0x80000000 >> c))
             {
-                //Read payload from OPIT0C[c] and OPIT1C[c] register corresponding to the core 'c'
-                //Bits 20:31 OPIT0C - Phase 1 OPIT1C - Phase 2
-                opit0cn.value = in32(OCB_OPIT0CN(c));
+                //Read payload from OPIT1C[c] register corresponding to the core 'c'
                 opit1cn.value = in32(OCB_OPIT1CN(c));
 
-                uint16_t op0 = opit0cn.fields.pcb_intr_payload;
-                uint16_t op1 = opit1cn.fields.pcb_intr_payload;
-
-                //make sure seq number matches for both phases
-                //otherwise, ignore the request
-                if (((op0 >> 10) && 0x3) ==
-                    ((op1 >> 10) && 0x3))
-                {
-                    //Extract the LowerPState field
-                    G_pgpe_pstate_record.coresPSRequest[c] = op1 & 0xff;
-                    PK_TRACE_DBG("PCB_TYPE1: c[%d]=0%x\n", c, G_pgpe_pstate_record.coresPSRequest[c]);
-                }
+                //Extract the LowerPState field and store the Pstate request
+                G_pgpe_pstate_record.coresPSRequest[c] = opit1cn.value & 0xff;
+                PK_TRACE_DBG("PCB_TYPE1: c[%d]=0%x\n", c, G_pgpe_pstate_record.coresPSRequest[c]);
             }
         }
 
+        //Do auction, apply clips and generate new targets
         p9_pgpe_pstate_do_auction();
         p9_pgpe_pstate_apply_clips();
     }

@@ -653,11 +653,12 @@ void p9_cme_pstate_update()
             p9_cme_pstate_freq_update();
         }
 
-        p9_cme_pstate_notify_sib(); // Release Sibling to change Pstate as well
         // Must update quadPstate before calling PMSR update
         G_cme_pstate_record.quadPstate = G_next_pstate;
         p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
     }
+
+    p9_cme_pstate_notify_sib(); // Notify Sibling
 
     PK_TRACE_INF("DB_TH: Pstate Updt Exit");
 }
