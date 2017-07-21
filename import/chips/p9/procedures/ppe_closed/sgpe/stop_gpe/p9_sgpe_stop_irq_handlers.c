@@ -251,6 +251,7 @@ p9_sgpe_ipi3_low_handler(void* arg, PkIrqId irq)
 static void
 p9_sgpe_pig_type23_parser(const uint32_t type)
 {
+    uint32_t   timeout       = 0;
     uint32_t   qloop         = 0;
     uint32_t   cloop         = 0;
     uint32_t   cstart        = 0;
@@ -395,16 +396,20 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
             // request exit
             if (cpayload & TYPE2_PAYLOAD_EXIT_EVENT)
             {
-                if (!(scom_data.words.upper & BIT32(13)))
+                // phantom can be processed when WNS already handoff to cme by a different wakeup
+                // OR can be delayed long enough when WNS handoff back to sgpe by next cme entry
+                if ((!(scom_data.words.upper & BIT32(13))) ||
+                    (G_sgpe_stop_record.level[qloop][cloop] == 0))
                 {
-                    if (cpayload == 0x400)
+                    // type2 duplicate wakeup can happen due to manual PCWU vs other HW wakeup
+                    if (type == 2)
                     {
-                        PK_TRACE_INF("WARNING: Ignore Phantom PCWU PIG \
+                        PK_TRACE_INF("WARNING: Ignore Phantom Type2 Wakeup PIG \
                                       (already handoff cme by other wakeup");
                     }
-                    else
+                    else // otherwise PPM shouldnt send duplicate pig if wakeup is present
                     {
-                        PK_TRACE_INF("ERROR: Received Phantom Exit PIG \
+                        PK_TRACE_INF("ERROR: Received Phantom Type3 Wakeup PIG \
                                       When Wakeup_notify_select = 0. HALT SGPE!");
                         PK_PANIC(SGPE_PIG_TYPE23_EXIT_WNS_CME);
                     }
@@ -439,7 +444,15 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
             else if ((G_sgpe_stop_record.level[qloop][cloop] =
                           (cpayload & TYPE2_PAYLOAD_STOP_LEVEL)))
             {
-                if (!(scom_data.words.upper & BIT32(13)))
+                timeout = 16;
+
+                while((!(scom_data.words.upper & BIT32(13))) && timeout)
+                {
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR, cindex), scom_data.value);
+                    timeout--;
+                }
+
+                if (!timeout)
                 {
                     PK_TRACE_ERR("ERROR: Received Phantom Entry PIG \
                                   When Wakeup_notify_select = 0. HALT SGPE!");
