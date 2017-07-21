@@ -62,6 +62,11 @@ enum MIB_REGS
     SBE_SGB_INFO        = 0x08,
     SBE_ICACHE_INFO     = 0x09,
 
+    FBC_SIB_INFO        = 0x06,
+    FBC_MEM_INFO        = 0x07,
+    FBC_SGB_INFO        = 0x08,
+    FBC_ICACHE_INFO     = 0x09,
+
 };
 enum MIB_ID
 {
@@ -103,6 +108,15 @@ const std::map<uint16_t, std::string> v_sbemib_num_name  =
 
 };
 
+const std::map<uint16_t, std::string> v_fbcmib_num_name  =
+{
+    { FBC_SIB_INFO       ,    "SIB_INFO"       },
+    { FBC_MEM_INFO       ,    "MEM_INFO"       },
+    { FBC_SGB_INFO       ,    "SGB_INFO"       },
+    { FBC_ICACHE_INFO    ,    "ICACHE_INFO"    },
+
+
+};
 
 /// @typedef p9_mib_state_FP_t
 /// function pointer typedef definition for HWP call support
