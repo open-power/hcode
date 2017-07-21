@@ -519,7 +519,8 @@ void p9_pgpe_pstate_send_suspend_stop()
     //Set LMCR for each CME
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q))
+        //if(G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q))
+        if(G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
         {
             //CME0 within this quad
             if (qcsr.fields.ex_config & (0x800 >> 2 * q))
@@ -967,7 +968,7 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
     //If OWNER is switched to CHAR, the last LMCR setting is retained
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_pgpe_pstate_record.activeQuads & QUAD_ACTIVE_MASK)
+        if(G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
         {
             //CME0 within this quad
             if (qcsr.fields.ex_config & (0x800 >> 2 * q))
