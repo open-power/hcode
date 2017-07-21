@@ -27,10 +27,12 @@
 #include "p9_pgpe_pstate.h"
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_header.h"
+#include <p9_hcd_memmap_occ_sram.H>
 
 #define THROTTLE_SCOM_MULTICAST_READ_OR   0x41010A9E
 #define THROTTLE_SCOM_MULTICAST_READ_AND  0x49010A9E
 #define THROTTLE_SCOM_MULTICAST_WRITE     0x69010A9E
+#define AUX_TASK 14
 
 uint32_t G_orig_throttle; //original value of throttle SCOM before manipulation
 uint32_t G_throttleOn;    //is throttling currently enabled
@@ -39,9 +41,14 @@ uint32_t G_throttleCount; //how long has throttle been in current state
 uint32_t G_beacon_count_threshold;
 uint32_t G_beacon_count;
 
+uint32_t G_aux_task_count_threshold;
+uint32_t G_aux_task_count;
+
 extern GlobalPstateParmBlock* G_gppb;
 extern PgpeHeader_t* G_pgpe_header_data;
 extern PgpePstateRecord G_pgpe_pstate_record;
+
+void (*p9_pgpe_auxiliary_task)() = (void*)OCC_SRAM_AUX_TASK_ADDR;
 
 //
 //Local function declarations
@@ -66,6 +73,12 @@ void p9_pgpe_fit_init()
                                (freq < 2359) ? 9 :
                                (freq < 2621) ? 10 : 11;
     PK_TRACE_DBG("Fit BeaconThr=0x%d", G_beacon_count_threshold);
+    //ATTR_AUX_FUNC_INVOCATION_TIME_MS * 1 ms
+    G_aux_task_count_threshold = (freq < 1573) ? 3 :
+                                 (freq < 2097) ? 4 :
+                                 (freq < 2621) ? 5 : 6;
+    G_aux_task_count_threshold *= G_pgpe_header_data->g_pgpe_aux_controls;
+    PK_TRACE_DBG("Fit AuxTaskThr=0x%d", G_aux_task_count_threshold);
 
     G_throttleOn = 0;
     G_throttleCount = 0;
@@ -196,6 +209,31 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
     }
 }
 
+//PGPE characterization thread is called based on . However, we
+//set the FIT interrupt period smaller than that, and
+//call characterization method only when we have seen "G_characterization_count_threshold"
+//number of FIT interrupts
+__attribute__((always_inline)) inline void handle_aux_task()
+{
+    if(in32(OCB_OCCFLG) & BIT32(SGPE_24_7_ACTIVATE))
+    {
+        out32(OCB_OCCFLG_OR, BIT32(SGPE_24_7_ACTIVE));
+
+        if(G_aux_task_count == G_aux_task_count_threshold)
+        {
+            (*p9_pgpe_auxiliary_task)();
+        }
+        else
+        {
+            G_aux_task_count++;
+        }
+    }
+    else
+    {
+        out32(OCB_OCCFLG_CLR, BIT32(SGPE_24_7_ACTIVE));
+    }
+}
+
 //p9_pgpe_fit_handler
 //
 //This is a periodic FIT Handler whose period is determined
@@ -205,4 +243,5 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
     mtmsr(PPE42_MSR_INITIAL);
     handle_occ_beacon();
     handle_core_throttle();
+    handle_aux_task();
 }

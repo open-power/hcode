@@ -59,6 +59,7 @@ typedef struct
     uint32_t  g_wof_table_length;             // WOF Table Length
     uint32_t  g_pgpe_throttle_assert;
     uint32_t  g_pgpe_throttle_deassert;
+    uint32_t  g_pgpe_aux_controls;
 } PgpeHeader_t;
 
 void p9_pgpe_header_init();

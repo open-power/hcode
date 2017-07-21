@@ -59,7 +59,8 @@ SECTIONS
     _strings_offset = . - _pgpe_image_origin;
     .strings . : { *(.strings) }
     _strings_size = . - _strings_origin;
-    ////////////////////////////////
+
+     ////////////////////////////////
     // PPMR Header
     ////////////////////////////////
     . = ALIGN(8);
@@ -112,6 +113,16 @@ SECTIONS
     _hcode_offset = . - _pgpe_image_origin;
     .hcode . : { *(.hcode) }
     _hcode_size = . - _hcode_origin;
+
+    ////////////////////////////////
+    // PGPE Aux Task
+    ////////////////////////////////
+    . = ALIGN(8);
+    _aux_task_origin = .;
+    _aux_task_offset = . - _pgpe_image_origin;
+    .aux_task . : { *(.aux_task) }
+    _aux_task_size = . - _aux_task_origin;
+
 
     ////////////////////////////////
     // end of the image

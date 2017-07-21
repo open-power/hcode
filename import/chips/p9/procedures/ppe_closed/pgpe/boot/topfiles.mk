@@ -27,6 +27,9 @@ TOP-S-SOURCES =  pgpe_boot_loader.S pgpe_boot_copier.S
 
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)
 
+AUX_TASK-C-SOURCES = p9_pgpe_aux_task.c
+AUX_TASK_OBJECTS = $(AUX_TASK-C-SOURCES:.c=.o)
+
 BOOT-LOADER-C-SOURCES = 
 BOOT-LOADER-S-SOURCES =  pgpe_boot_loader.S 
 
