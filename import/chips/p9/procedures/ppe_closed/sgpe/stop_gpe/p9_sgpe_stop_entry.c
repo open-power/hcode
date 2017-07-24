@@ -39,10 +39,7 @@ extern SgpeStopRecord G_sgpe_stop_record;
 void
 p9_sgpe_stop_entry()
 {
-#if !DISABLE_STOP8
     uint32_t     entry_ongoing[2]  = {0, 0};
-    uint32_t     climit            = 0;
-#endif
     uint32_t     l3_purge_aborted  = 0;
     uint32_t     ex                = 0;
     uint32_t     ex_mask           = 0;
@@ -50,6 +47,7 @@ p9_sgpe_stop_entry()
     uint32_t     bitloc            = 0;
     uint32_t     qloop             = 0;
     uint32_t     cloop             = 0;
+    uint32_t     climit            = 0;
     uint32_t     cindex            = 0;
     uint64_t     host_attn         = 0;
     uint64_t     local_xstop       = 0;
@@ -219,6 +217,10 @@ p9_sgpe_stop_entry()
 
 // NDD1 workaround to save cme image size
 #if NIMBUS_DD_LEVEL == 10
+
+    //--------------------------------------------------------------------------
+    PK_TRACE("+++++ +++++ EX STOP ENTRY [L2 PURGE(NDD1 ONLY)] +++++ +++++");
+    //--------------------------------------------------------------------------
 
     PK_TRACE("Assert L2+NCU purge and NCU tlbie quiesce via SICR[18,21,22]");
 
@@ -396,8 +398,6 @@ p9_sgpe_stop_entry()
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_EXCGCR_CLR, qloop),
                     ((uint64_t)ex << SHIFT64(35)));
 
-#if !DISABLE_STOP8
-
         if (ex & FST_EX_IN_QUAD)
         {
             cloop = 0;
@@ -440,11 +440,14 @@ p9_sgpe_stop_entry()
             scom_data.words.lower = 0;
             scom_data.words.upper = (SSH_ACT_LV8_COMPLETE |
                                      (((uint32_t)entry_ongoing[cloop >> 1]) << SHIFT32(3)));
+
+#if !DISABLE_STOP8
+
             GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
 
-        }
-
 #endif
+
+        }
 
         PK_TRACE("Update QSSR: l2_stopped, drop stop_entry_ongoing");
         out32(OCB_QSSR_CLR, BIT32(qloop + 20));
@@ -483,7 +486,7 @@ p9_sgpe_stop_entry()
         ex = G_sgpe_stop_record.group.expg[qloop];
 
         // ------------------------------------------------------------------------
-        PK_TRACE("+++++ +++++ QUAD STOP ENTRY [LEVEL 11-15] +++++ +++++");
+        PK_TRACE("+++++ +++++ QUAD STOP ENTRY [LEVEL 11-15, L3 PURGE] +++++ +++++");
         // ------------------------------------------------------------------------
 
         PK_TRACE_INF("SE.11A: Quad[%d] EX_PG[%d] Shutting Cache Down", qloop, ex);
@@ -569,6 +572,10 @@ p9_sgpe_stop_entry()
         }
 
         ex = G_sgpe_stop_record.group.expg[qloop];
+
+        // ------------------------------------------------------------------------------
+        PK_TRACE("+++++ +++++ QUAD STOP ENTRY [LEVEL 11-15, L3 PURGE DONE] +++++ +++++");
+        // ------------------------------------------------------------------------------
 
         PK_TRACE("Poll for L3 purge done via EX_PM_PURGE_REG[0]");
 
@@ -708,6 +715,7 @@ p9_sgpe_stop_entry()
     }
 
 
+
     // loop for rest of quad stop
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
@@ -718,6 +726,10 @@ p9_sgpe_stop_entry()
         }
 
         ex = G_sgpe_stop_record.group.expg[qloop];
+
+        // ------------------------------------------------------------------------------
+        PK_TRACE("+++++ +++++ QUAD STOP ENTRY [LEVEL 11-15, CONTINUE] +++++ +++++");
+        // ------------------------------------------------------------------------------
 
         //==================================
         MARK_TAG(SE_PURGE_PB, (32 >> qloop))
