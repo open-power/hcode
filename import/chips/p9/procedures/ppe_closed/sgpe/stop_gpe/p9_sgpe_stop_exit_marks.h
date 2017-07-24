@@ -36,8 +36,8 @@ namespace SGPE_STOP_EXIT_MARKS
 
 enum SGPE_SX_MARKS
 {
-    BEGINSCOPE_STOP_EXIT        =   0x20,
-    ENDSCOPE_STOP_EXIT      =   0x28,
+    BEGINSCOPE_STOP_EXIT        =   0x0,
+    ENDSCOPE_STOP_EXIT      =   0x8,
     SX_POWERON      =   0x68,
     SX_CHIPLET_RESET        =   0xe0,
     SX_CHIPLET_RESET_SCAN0      =   0xe8,
