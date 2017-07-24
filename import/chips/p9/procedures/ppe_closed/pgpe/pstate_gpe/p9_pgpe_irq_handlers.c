@@ -86,9 +86,7 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
     }
     else
     {
-        //\todo handle other FIR Bits
         PK_TRACE_ERR("OCC Error: Unexpected OCC_FIR[0x%08x%08x] \n", UPPER32(fir.value), LOWER32(fir.value));
-        PK_PANIC(PGPE_UNEXPECTED_OCC_FIR_IRQ);
     }
 
     pk_irq_vec_restore(&ctx);
