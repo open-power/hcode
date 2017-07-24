@@ -82,7 +82,7 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     do
     {
         GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_STAT, quad), scom_data);
-#if !LAB_P9_TUNING
+#if EPM_P9_TUNING
         break; // only skiping DPLL lock check when in Sim
 #endif
     }
