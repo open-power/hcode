@@ -436,15 +436,10 @@ p9_sgpe_stop_exit()
             continue;
         }
 
-
-#if !DISABLE_STOP8
-
         if (G_sgpe_stop_record.group.ex01[qloop])
         {
             p9_sgpe_stop_exit_lv8(qloop);
         }
-
-#endif
 
         p9_sgpe_stop_exit_end(qloop);
     }
