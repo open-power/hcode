@@ -67,6 +67,7 @@ void p9_pgpe_fit_init()
                                (freq < 2621) ? 10 : 11;
     PK_TRACE_DBG("Fit BeaconThr=0x%d", G_beacon_count_threshold);
 
+    G_throttleOn = 0;
     G_throttleCount = 0;
     G_beacon_count = 0;
     ppe42_fit_setup(p9_pgpe_fit_handler, NULL);
