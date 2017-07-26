@@ -125,7 +125,13 @@ p9_sgpe_stop_entry()
 
 #if DISABLE_STOP8
 
-            G_sgpe_stop_record.group.ex01[qloop] |= BOTH_EXES_IN_QUAD;
+            ocb_qssr_t qssr = {0};
+            qssr.value      = in32(OCB_QSSR);
+
+            // check qssr for already stopped ex
+            G_sgpe_stop_record.group.ex01[qloop] =
+                (((~qssr.value) & BITS32((qloop << 1), 2)) >>
+                 SHIFT32(((qloop << 1) + 1)));
 
 #endif
 
