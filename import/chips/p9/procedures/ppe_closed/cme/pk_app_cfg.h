@@ -40,7 +40,6 @@
 
 // Function disablement
 
-#define DISABLE_STOP8             1
 #define DISABLE_CME_DUAL_CAST     0
 
 // --------------------
