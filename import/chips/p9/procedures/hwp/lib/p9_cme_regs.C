@@ -93,7 +93,7 @@ p9_cme_regs_data(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
     for (auto it : v_cme_stop_st_cntrl)
     {
         FAPI_DBG("cme reg: Address offset %2x\n",  it );
-        FAPI_TRY(getScom(i_target, i_base_address + it, l_data64), "Error in GETSCOM");
+        FAPI_TRY(getScom(i_target, (i_base_address & 0xFFFFFF00) + it, l_data64), "Error in GETSCOM");
         l_scomregVal.number = it;
         l_scomregVal.value = l_data64;
         v_cme_stop_st_cntrl_value.push_back(l_scomregVal);
