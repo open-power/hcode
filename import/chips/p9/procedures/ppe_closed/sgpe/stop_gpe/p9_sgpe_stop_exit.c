@@ -282,6 +282,11 @@ p9_sgpe_stop_exit_handoff_cme(uint32_t cindex)
 
 #endif
 
+    // clear possible phantom interrupts after handoff to cme
+    // there shouldnt be any valid entry or exit to process
+    out32(OCB_OPITNPRA_CLR(2), BIT32(cindex));
+    out32(OCB_OPITNPRA_CLR(3), BIT32(cindex));
+
     // From IPC prospective, core is active when handoff to cme
     // and if core from quad is active, the quad is active
     G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |= BIT32(cindex);

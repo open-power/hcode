@@ -258,6 +258,8 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
     uint32_t   cindex        = 0;
     uint32_t   cpending      = 0;
     uint32_t   cpayload      = 0;
+    uint32_t   payload2      = 0;
+    uint32_t   payload3      = 0;
     uint32_t   vector_index  = 0;
     uint32_t   request_index = 0;
     uint32_t   suspend_index = 0;
@@ -393,23 +395,48 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
             // read wakeup_notify_select
             GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR, cindex), scom_data.value);
 
+            // phantom can be processed when WNS already handoff to cme by a different wakeup
+            // OR can be delayed long enough when WNS handoff back to sgpe by next cme entry
+
+            // In latter case, if left over type2 software dec wakeup happen to catch up with
+            // WNS = 1 by next entry(could be type 2 or 3), we want to detect the type2 entry
+            // and process it instead of this phantom; if type 3 entry, then ignore both
+            // as type3 needs to be hanndled in type3 handler while current is obvious type2
+
+            if ((scom_data.words.upper & BIT32(13)) && cpayload == 0x400)
+            {
+                payload2 = in32(OCB_OPIT2CN(cindex));
+                payload3 = in32(OCB_OPIT3CN(cindex));
+
+                if ((!(payload2 & TYPE2_PAYLOAD_EXIT_EVENT)) &&
+                    (payload2 & TYPE2_PAYLOAD_STOP_LEVEL))
+                {
+                    PK_TRACE_INF("WARNING: Leftover dec wakeup following by new TYPE2 entry PIG");
+                    cpayload = payload2;
+                }
+                else if ((!(payload3 & TYPE2_PAYLOAD_EXIT_EVENT)) &&
+                         (payload3 & TYPE2_PAYLOAD_STOP_LEVEL))
+                {
+                    PK_TRACE_INF("WARNING: Leftover dec wakeup following by new TYPE3 entry PIG");
+                    continue;
+                }
+            }
+
             // request exit
             if (cpayload & TYPE2_PAYLOAD_EXIT_EVENT)
             {
-                // phantom can be processed when WNS already handoff to cme by a different wakeup
-                // OR can be delayed long enough when WNS handoff back to sgpe by next cme entry
-                if ((!(scom_data.words.upper & BIT32(13))) ||
-                    (G_sgpe_stop_record.level[qloop][cloop] == 0))
+                if (!(scom_data.words.upper & BIT32(13)))
                 {
                     // type2 duplicate wakeup can happen due to manual PCWU vs other HW wakeup
-                    if (type == 2)
+                    if (cpayload == 0x400)
                     {
-                        PK_TRACE_INF("WARNING: Ignore Phantom Type2 Wakeup PIG \
+                        PK_TRACE_INF("WARNING: Ignore Phantom Software PC/Decrementer Wakeup PIG \
                                       (already handoff cme by other wakeup");
                     }
-                    else // otherwise PPM shouldnt send duplicate pig if wakeup is present
+                    // otherwise PPM shouldnt send duplicate pig if wakeup is present
+                    else
                     {
-                        PK_TRACE_INF("ERROR: Received Phantom Type3 Wakeup PIG \
+                        PK_TRACE_INF("ERROR: Received Phantom Hardware Type2/3 Wakeup PIG \
                                       When Wakeup_notify_select = 0. HALT SGPE!");
                         PK_PANIC(SGPE_PIG_TYPE23_EXIT_WNS_CME);
                     }
