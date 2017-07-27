@@ -86,12 +86,5 @@ void p9_pgpe_header_fill()
     G_pgpe_header_data->g_pgpe_wof_state_addr = (uint32_t*)&occ_shared_data->pgpe_wof_state;
     G_pgpe_header_data->g_req_active_quad_addr = (uint32_t*)&occ_shared_data->req_active_quads;
 
-#if !BOOT_TEMP_SET_FULL_OCC_IPC_FUNC
-    PK_TRACE_INF("OCC IPC Immediate Response mode set");
-    G_pgpe_header_data->g_pgpe_qm_flags = (uint16_t)(0x0080); //OCC IPC Immediate Response
-#else
-    G_pgpe_header_data->g_pgpe_qm_flags = (uint16_t)(0x0000); //OCC IPC Full Functionality
-#endif //BOOT_TEMP_SET_FULL_OCC_IPC_FUNC
-
     PK_TRACE_DBG("< p9_pgpe_header_fill");
 }
