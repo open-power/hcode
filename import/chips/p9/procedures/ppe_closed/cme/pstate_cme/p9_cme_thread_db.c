@@ -152,8 +152,10 @@ void p9_cme_pstate_db_thread(void* arg)
         // Pstate Clocking Initialization (QM)
         // Calculate the initial pstate
         ippm_read(QPPM_DPLL_STAT, &scom_data);
-        G_cme_pstate_record.quadPstate = (uint32_t)G_lppb->dpll_pstate0_value
-                                         - (uint32_t)((scom_data & BITS64(1, 11)) >> SHIFT64(11));
+        int32_t pstate = (int32_t)G_lppb->dpll_pstate0_value
+                         - (int32_t)((scom_data & BITS64(1, 11)) >> SHIFT64(11));
+        // Clip the pstate at ultra-turbo, ie. pstate=0
+        G_cme_pstate_record.quadPstate = (pstate < 0) ? 0 : (uint32_t)pstate;
         PK_TRACE_INF("qm | initial pstate=%d", G_cme_pstate_record.quadPstate);
 
 #ifdef USE_CME_VDM_FEATURE
