@@ -256,6 +256,8 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
     uint32_t   cloop         = 0;
     uint32_t   cstart        = 0;
     uint32_t   cindex        = 0;
+    uint32_t   cexit         = 0;
+    uint32_t   center        = 0;
     uint32_t   cpending      = 0;
     uint32_t   cpayload      = 0;
     uint32_t   payload2      = 0;
@@ -495,11 +497,6 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                 {
                     PK_TRACE_INF("Core Request Entry");
                     G_sgpe_stop_record.group.core[VECTOR_PIGE] |= BIT32(cindex);
-
-                    PK_TRACE("Update STOP history on core: in transition of entry");
-                    scom_data.words.upper = SSH_ENTRY_IN_SESSION;
-                    scom_data.words.lower = 0;
-                    GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
                 }
             }
             // payload invalid
@@ -574,17 +571,49 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
 
 #endif
 
+    if ((cexit  = G_sgpe_stop_record.group.core[VECTOR_PIGX]) ||
+        (center = G_sgpe_stop_record.group.core[VECTOR_PIGE]))
+    {
+        // Taking Stop5 Actions, Can only do these steps after ipc done above
+        scom_data.words.lower = 0;
+
+        for(cindex = 0; cexit || center; cexit <<= 1, center <<= 1, cindex++)
+        {
+            if ((cexit & BIT32(0)) && (type == 2))
+            {
+                p9_sgpe_stop_exit_handoff_cme(cindex);
+            }
+
+            if (center & BIT32(0))
+            {
+                if (type == 2)
+                {
+                    scom_data.words.upper = SSH_ACT_LV5_COMPLETE;
+                }
+                else
+                {
+                    scom_data.words.upper = SSH_ACT_LV5_CONTINUE;
+                }
+
+                PK_TRACE("Update STOP history: in core[%d] stop level 5", cindex);
+                GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
+
+                G_sgpe_stop_record.group.core[VECTOR_ACTIVE] &= ~BIT32(cindex);
+
+                //================================================
+                MARK_TAG(SE_LESSTHAN8_DONE, (32 >> (cindex >> 2)))
+                //================================================
+            }
+        }
+    }
 }
+
 
 
 void
 p9_sgpe_pig_type2_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
-    uint32_t         cexit     = 0;
-    uint32_t         center    = 0;
-    uint32_t         cindex    = 0;
-    data64_t         scom_data = {0};
 
     //===============================
     MARK_TRAP(STOP_PIG_TYPE2_HANDLER)
@@ -597,37 +626,11 @@ p9_sgpe_pig_type2_handler(void* arg, PkIrqId irq)
     // Parse Type2 Requests
     p9_sgpe_pig_type23_parser(2);
 
-    // Taking Stop5 Actions,
-    // Can only do these steps after ipc done at end of parser above
-    if ((cexit  = G_sgpe_stop_record.group.core[VECTOR_PIGX]) ||
-        (center = G_sgpe_stop_record.group.core[VECTOR_PIGE]))
-    {
-        for(cindex = 0; cexit || center; cexit <<= 1, center <<= 1, cindex++)
-        {
-            if (cexit & BIT32(0))
-            {
-                p9_sgpe_stop_exit_handoff_cme(cindex);
-            }
-
-            if (center & BIT32(0))
-            {
-                PK_TRACE("Update STOP history: in core stop level 5");
-                scom_data.words.upper = SSH_ACT_LV5_COMPLETE;
-                scom_data.words.lower = 0;
-                GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
-
-                G_sgpe_stop_record.group.core[VECTOR_ACTIVE] &= ~BIT32(cindex);
-            }
-        }
-    }
-    else
-    {
-        PK_TRACE_INF("WARNING: PHANTOM TYPE2 STOP5 INTERRUPT");
-    }
-
     // Enable Interrupts
     pk_irq_vec_restore(&ctx);
 }
+
+
 
 void
 p9_sgpe_pig_type3_handler(void* arg, PkIrqId irq)
@@ -670,8 +673,6 @@ p9_sgpe_pig_type3_handler(void* arg, PkIrqId irq)
             PK_TRACE_INF("Unblock Entry Thread");
             G_sgpe_stop_record.group.core[VECTOR_ENTRY] =
                 G_sgpe_stop_record.group.core[VECTOR_PIGE];
-            G_sgpe_stop_record.group.core[VECTOR_ACTIVE] &=
-                ~(G_sgpe_stop_record.group.core[VECTOR_PIGE]);
             pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
         }
     }
