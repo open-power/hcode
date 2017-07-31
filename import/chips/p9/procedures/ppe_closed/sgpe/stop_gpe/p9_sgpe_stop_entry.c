@@ -159,12 +159,6 @@ p9_sgpe_stop_entry()
                          G_sgpe_stop_record.state[qloop].req_state_x0,
                          G_sgpe_stop_record.state[qloop].req_state_x1);
         }
-        else
-        {
-            //========================================
-            MARK_TAG(SE_LESSTHAN8_DONE, (32 >> qloop))
-            //========================================
-        }
     }
 
     G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &=
