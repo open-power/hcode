@@ -70,6 +70,7 @@ p9_sgpe_stop_entry()
     MARK_TAG(BEGINSCOPE_STOP_ENTRY, 0)
     //================================
 
+    G_sgpe_stop_record.group.core[VECTOR_ENTRY] = 0;
     G_sgpe_stop_record.group.quad[VECTOR_ENTRY] = 0;
     G_sgpe_stop_record.group.ex01[0]            = 0;
     G_sgpe_stop_record.group.ex01[1]            = 0;
