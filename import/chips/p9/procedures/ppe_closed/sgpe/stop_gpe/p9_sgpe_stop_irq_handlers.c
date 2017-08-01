@@ -101,7 +101,7 @@ p9_sgpe_stop_suspend_db1_cme(uint32_t qloop, uint32_t msgid)
         {
             if (cloop == (cstart + CORES_PER_EX))
             {
-                cloop = cstart;
+                cindex = (qloop << 2) + cstart;
             }
 
             pig.fields.req_intr_payload = msgid >> 16;
