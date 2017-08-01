@@ -237,6 +237,7 @@ p9_sgpe_stop_exit_end(uint32_t qloop)
 
     PK_TRACE("Update QSSR: drop stop_exit_ongoing");
     out32(OCB_QSSR_CLR, BIT32(qloop + 26));
+    G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |=  BIT32(qloop);
 }
 
 //-------------------------------------------------------------------------
@@ -298,9 +299,8 @@ p9_sgpe_stop_exit_handoff_cme(uint32_t cindex)
 
     // From IPC prospective, core is active when handoff to cme
     // and if core from quad is active, the quad is active
-    G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |= BIT32(cindex);
-    G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |= BIT32((cindex >> 2));
-
+    G_sgpe_stop_record.group.core[VECTOR_EXIT]   &= ~BIT32(cindex);
+    G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |=  BIT32(cindex);
 }
 
 //------------------------------------------------------------------------------

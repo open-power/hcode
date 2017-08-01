@@ -714,6 +714,7 @@ p9_sgpe_pig_type3_handler(void* arg, PkIrqId irq)
         // block both type3 and type6
         // so another doesnt interrupt until next round
         out32(OCB_OIMR1_OR, (BIT32(16) | BIT32(19)));
+        g_oimr_override |= (BIT64(48) | BIT64(51));
 
         if (G_sgpe_stop_record.group.core[VECTOR_PIGX])
         {
@@ -787,6 +788,12 @@ p9_sgpe_pig_type6_handler(void* arg, PkIrqId irq)
             {
                 PK_TRACE_DBG("Quad Already in Special Wakeup");
             }
+            else if (G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] & BIT32(qloop))
+            {
+                PK_TRACE_DBG("Quad Already Waken up, Assert SPWU_DONE");
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_OR, qloop), BIT64(0));
+                G_sgpe_stop_record.group.qswu[VECTOR_ACTIVE] |= BIT32(qloop);
+            }
             else if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] & BIT32(qloop))
             {
                 PK_TRACE_DBG("Quad is in Block Wakeup Mode, Ignore Now");
@@ -825,6 +832,7 @@ p9_sgpe_pig_type6_handler(void* arg, PkIrqId irq)
         // block both type3 and type6
         // so another doesnt interrupt until next round
         out32(OCB_OIMR1_OR, (BIT32(16) | BIT32(19)));
+        g_oimr_override |= (BIT64(48) | BIT64(51));
 
         if (G_sgpe_stop_record.group.qswu[VECTOR_EXIT])
         {
