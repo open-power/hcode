@@ -33,10 +33,12 @@
 #include "wof_sgpe_pgpe_api.h"
 #include "p9_dd1_doorbell_wr.h"
 #include "avs_driver.h"
+#include "p9_pgpe_optrace.h"
 
 //
 //Externs and Globals
 //
+extern TraceData_t G_pgpe_optrace_data;
 extern PgpePstateRecord G_pgpe_pstate_record;
 extern ipc_async_cmd_t G_ipc_msg_pgpe_sgpe;
 GPE_BUFFER(extern ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
@@ -74,6 +76,9 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         //Mask all external interrupts. Timers are still enabled
         pk_irq_sub_critical_enter(&ctx);
         p9_pgpe_pstate_start(PSTATE_START_OCC_FLAG);
+        G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.globalPSComputed << 16) | (in32(
+                                          OCB_QCSR) >> 16);
+        p9_pgpe_optrace(PRC_START_STOP);
         pk_irq_sub_critical_exit(&ctx);
     }
 
@@ -177,6 +182,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                         args->msg_cb.rc = PGPE_RC_SUCCESS;
                         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
                         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
+                        p9_pgpe_optrace(ACK_CLIP_UPDT);
                     }
 
                     if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1)
@@ -187,6 +193,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                         args_wof_vfrt->msg_cb.rc = PGPE_RC_SUCCESS;
                         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
                         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
+                        p9_pgpe_optrace(ACK_WOF_VFRT);
 
                         //See if ACTIVE QUADS ack is pending
                         if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 1)
@@ -197,6 +204,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                             args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
                             G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
                             ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+                            p9_pgpe_optrace(ACK_QUAD_ACTV);
                         }
                     }
 
@@ -208,6 +216,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                         args->msg_cb.rc = PGPE_RC_SUCCESS;
                         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
                         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd, IPC_RC_SUCCESS);
+                        p9_pgpe_optrace(ACK_WOF_CTRL);
                     }
 
                     if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1)
@@ -219,6 +228,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                         args->fields.return_active_cores = G_pgpe_pstate_record.activeCores;
                         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
                         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
+                        p9_pgpe_optrace(ACK_CORES_ACTV);
                     }
 
                     restore_irq = 1;

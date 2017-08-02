@@ -29,7 +29,8 @@
 #include "p9_dd1_doorbell_wr.h"
 #include "ppe42_cache.h"
 #include "p9_pgpe_gppb.h"
-
+#include "p9_pgpe_optrace.h"
+extern TraceData_t G_pgpe_optrace_data;
 //
 //External Global Data
 //
@@ -127,7 +128,6 @@ void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq)
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
 {
     PK_TRACE_DBG("PCB1: Enter");
-
     PkMachineContext  ctx;
     ocb_opit1cn_t opit1cn;
     uint32_t c;
@@ -154,6 +154,10 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
                 //Extract the LowerPState field and store the Pstate request
                 G_pgpe_pstate_record.coresPSRequest[c] = opit1cn.value & 0xff;
                 PK_TRACE_DBG("PCB1: c[%d]=0%x", c, G_pgpe_pstate_record.coresPSRequest[c]);
+                G_pgpe_optrace_data.word[0] = (c << 24) | (G_pgpe_pstate_record.globalPSComputed << 16) |
+                                              G_pgpe_pstate_record.coresPSRequest[c];
+                //RTC:177526 GA1 only Phase1 data is used since only LowerPS fields is supported in PMCR
+                p9_pgpe_optrace(PRC_PCB_T1);
             }
         }
 
@@ -294,6 +298,9 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 quadAckExpect |= QUAD_MASK(q);
             }
 
+            G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.globalPSComputed << 16)
+                                          | (in32(OCB_QCSR) >> 16);
+            p9_pgpe_optrace(PRC_PCB_T4);
         }
     }
 

@@ -28,11 +28,13 @@
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_header.h"
 #include <p9_hcd_memmap_occ_sram.H>
+#include "p9_pgpe_optrace.h"
 
 #define THROTTLE_SCOM_MULTICAST_READ_OR   0x41010A9E
 #define THROTTLE_SCOM_MULTICAST_READ_AND  0x49010A9E
 #define THROTTLE_SCOM_MULTICAST_WRITE     0x69010A9E
 #define AUX_TASK 14
+#define GPE2TSEL 0xC0020000
 
 uint32_t G_orig_throttle; //original value of throttle SCOM before manipulation
 uint32_t G_throttleOn;    //is throttling currently enabled
@@ -44,9 +46,13 @@ uint32_t G_beacon_count;
 uint32_t G_aux_task_count_threshold;
 uint32_t G_aux_task_count;
 
+uint32_t G_tb_sync_count_threshold;
+uint32_t G_tb_sync_count;
+
 extern GlobalPstateParmBlock* G_gppb;
 extern PgpeHeader_t* G_pgpe_header_data;
 extern PgpePstateRecord G_pgpe_pstate_record;
+extern TraceData_t G_pgpe_optrace_data;
 
 void (*p9_pgpe_auxiliary_task)() = (void*)OCC_SRAM_AUX_TASK_ADDR;
 
@@ -84,10 +90,17 @@ void p9_pgpe_fit_init()
     }
 
     PK_TRACE_DBG("Fit AuxTaskThr=0x%d", G_aux_task_count_threshold);
-
+#if NIMBUS_DD_LEVEL != 10
+    uint32_t tsel = ((in32(GPE2TSEL) >> 24) & 0xF);
+#else
+    uint32_t tsel = 0xA;
+#endif
+    G_tb_sync_count_threshold = ((0x2 << tsel) - 1);
+    PK_TRACE_DBG("Fit TimebaseSyncThr=0x%d", G_tb_sync_count_threshold);
     G_throttleOn = 0;
     G_throttleCount = 0;
     G_beacon_count = 0;
+    G_tb_sync_count = 0;
     ppe42_fit_setup(p9_pgpe_fit_handler, NULL);
 }
 
@@ -204,6 +217,10 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
                         && (G_pgpe_pstate_record.pstatesStatus != PSTATE_STOPPED))
                 {
                     p9_pgpe_pstate_stop();
+                    G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.globalPSComputed << 16) | (in32(
+                                                      OCB_QCSR) >> 16);
+                    p9_pgpe_optrace(PRC_START_STOP);
+
                 }
             }
         }
@@ -240,6 +257,22 @@ __attribute__((always_inline)) inline void handle_aux_task()
     }
 }
 
+//FIT Timebase Sync is called every time bottom 3B of OTBR
+//roll over so it's clear in tracing how much time has passed
+__attribute__((always_inline)) inline void handle_fit_timebase_sync()
+{
+    if (G_tb_sync_count == G_tb_sync_count_threshold)
+    {
+        G_pgpe_optrace_data.word[0] = *(G_pgpe_header_data->g_pgpe_beacon_addr);
+        p9_pgpe_optrace(FIT_TB_SYNC);
+        G_tb_sync_count = 0;
+    }
+    else
+    {
+        G_tb_sync_count++;
+    }
+}
+
 //p9_pgpe_fit_handler
 //
 //This is a periodic FIT Handler whose period is determined
@@ -250,4 +283,5 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
     handle_occ_beacon();
     handle_core_throttle();
     handle_aux_task();
+    handle_fit_timebase_sync();
 }

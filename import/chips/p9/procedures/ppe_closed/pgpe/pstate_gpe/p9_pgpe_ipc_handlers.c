@@ -35,6 +35,7 @@
 #include "p9_pgpe_pstate.h"
 #include "qppm_firmware_registers.h"
 #include "qppm_register_addresses.h"
+#include "p9_pgpe_optrace.h"
 
 //
 //#Defines
@@ -92,6 +93,7 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
     {
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_START_STOP);
     }
 
     if (G_pgpe_pstate_record.alreadySemPosted == 0)
@@ -122,6 +124,7 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
     {
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_CLIP_UPDT);
     }
 
     if (G_pgpe_pstate_record.alreadySemPosted == 0)
@@ -183,6 +186,7 @@ void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
     {
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_WOF_CTRL);
     }
 
     if (G_pgpe_pstate_record.alreadySemPosted == 0)
@@ -213,6 +217,7 @@ void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
     {
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_WOF_VFRT);
     }
 
     if (G_pgpe_pstate_record.alreadySemPosted == 0)
@@ -245,6 +250,7 @@ void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
             (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
         args->fields.return_code  = IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_CORES_ACTV);
     }
 
     if (G_pgpe_pstate_record.alreadySemPosted == 0)
@@ -281,6 +287,7 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
             (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
         args->fields.return_code = IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_QUAD_ACTV);
         PK_TRACE_INF("IPC: Updt Quads while pending");
     }
 

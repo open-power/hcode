@@ -28,6 +28,7 @@
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_boot_temp.h"
 #include "p9_pgpe_pstate.h"
+#include "p9_pgpe_optrace.h"
 
 PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
 {
@@ -248,6 +249,8 @@ main(int argc, char** argv)
 
     g_oimr_override |= BIT64(49);
     out32(OCB_OIMR1_OR, BIT32(17)); //Disable PCB_INTR_TYPE4
+
+    p9_pgpe_optrace_init();
 
     PK_TRACE_DBG("Start PK Threads");
 

@@ -36,7 +36,8 @@ TOP-C-SOURCES = p9_pgpe_pstate.c \
 				p9_pgpe_thread_actuate_pstates.c \
 				p9_pgpe_thread_process_requests.c \
 				p9_pgpe_ipc_handlers.c \
-				p9_pgpe_irq_handlers.c 
+				p9_pgpe_irq_handlers.c \
+				p9_pgpe_optrace.c 
 
 TOP-S-SOURCES = p9_pgpe_image_header.S \
                 p9_pgpe_ppmr.S

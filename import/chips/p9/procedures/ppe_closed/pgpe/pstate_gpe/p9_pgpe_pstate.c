@@ -33,6 +33,7 @@
 #include "pstate_pgpe_occ_api.h"
 #include "wof_sgpe_pgpe_api.h"
 #include "p9_pgpe_header.h"
+#include "p9_pgpe_optrace.h"
 
 //
 //#Defines
@@ -43,6 +44,7 @@
 //
 //Global External Data
 //
+extern TraceData_t G_pgpe_optrace_data;
 extern PgpeHeader_t* G_pgpe_header_data;
 extern GlobalPstateParmBlock* G_gppb;
 extern uint32_t G_ext_vrm_inc_rate_mult_usperus;
@@ -303,9 +305,15 @@ void p9_pgpe_pstate_apply_clips()
                  G_pgpe_pstate_record.quadPSTarget[1],
                  G_pgpe_pstate_record.quadPSTarget[2],
                  G_pgpe_pstate_record.quadPSTarget[3]);
-    PK_TRACE_DBG("APC: [Target] qPSTgt: 0x%x[4] 0x%x[5] 0x%x(Glb)", G_pgpe_pstate_record.quadPSTarget[4],
-                 G_pgpe_pstate_record.quadPSTarget[5],
-                 G_pgpe_pstate_record.globalPSTarget);
+    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.quadPSTarget[2] << 24) |
+                                  (G_pgpe_pstate_record.quadPSTarget[3] << 16) |
+                                  (G_pgpe_pstate_record.quadPSTarget[4] << 8) |
+                                  G_pgpe_pstate_record.quadPSTarget[5];
+    G_pgpe_optrace_data.word[1] = (AUCTION_DONE << 24) |
+                                  (G_pgpe_pstate_record.globalPSTarget << 16) |
+                                  (G_pgpe_pstate_record.quadPSTarget[0] << 8) |
+                                  G_pgpe_pstate_record.quadPSTarget[1];
+    p9_pgpe_optrace(AUCTION_DONE);
 }
 
 //
@@ -341,7 +349,13 @@ void p9_pgpe_pstate_calc_wof()
 
     PK_TRACE_DBG("WFC: FClip_PS=0x%x, vindex=%d, vratio=%d", G_pgpe_pstate_record.wofClip, G_pgpe_pstate_record.vindex,
                  G_pgpe_pstate_record.vratio);
-
+    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.vratio << 16) |
+                                  (G_pgpe_pstate_record.fratio << 8);
+    G_pgpe_optrace_data.word[1] = (WOF_CALC_DONE << 24) |
+                                  (G_pgpe_pstate_record.wofClip << 16) |
+                                  (G_pgpe_pstate_record.activeQuads << 8) |
+                                  G_pgpe_pstate_record.numActiveCores;
+    p9_pgpe_optrace(WOF_CALC_DONE);
     p9_pgpe_pstate_apply_clips();
 }
 
@@ -414,6 +428,8 @@ void p9_pgpe_send_db0(uint64_t db0, uint32_t coreVector, uint32_t unicast, uint3
 
     //In case of unicast, only write DB0 for active cores. However, in case of
     //multicast just write DB0 of every configured core, but care only about active cores.
+    p9_pgpe_optrace(ACTL_BROADCAST);
+
     if (unicast == PGPE_DB0_UNICAST)
     {
         for (c = 0; c < MAX_CORES; c++)
@@ -471,6 +487,7 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
         out32(OCB_OPIT4PRA_CLR, opit4Clr);
     }
 
+    p9_pgpe_optrace(ACK_ACTL_DONE);
     PK_TRACE_DBG("DBW:qCME ACKs rcvd");
 }
 
@@ -691,7 +708,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
-
+        p9_pgpe_optrace(ACK_START_STOP);
     }
 
     PK_TRACE_INF("PST: Start Done");
@@ -705,6 +722,7 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
     int q = 0;
     ocb_qcsr_t qcsr;
     qcsr.value = in32(OCB_QCSR);
+
 //Write to LMCR register in SIMICS results in error
 //So, adding a build flag for SIMICS.
 //For SIMICS, LMCR should be set through command line
@@ -770,6 +788,14 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
             }
         }
     }
+
+    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.quadPSComputed[0] << 24) | (G_pgpe_pstate_record.quadPSComputed[1]
+                                  << 16) |
+                                  (G_pgpe_pstate_record.quadPSComputed[2] << 8) | G_pgpe_pstate_record.quadPSComputed[3];
+    G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.quadPSComputed[4] << 24) | (G_pgpe_pstate_record.quadPSComputed[5]
+                                  << 16) |
+                                  G_pgpe_pstate_record.globalPSComputed << 8;
+    p9_pgpe_optrace(PRC_SET_PMCR);
 
 #endif
 }
@@ -880,7 +906,7 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
     args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
     ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-
+    p9_pgpe_optrace(ACK_QUAD_ACTV);
     PK_TRACE_INF("QE:(Notify) End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
@@ -905,7 +931,7 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
     args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
     ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-
+    p9_pgpe_optrace(ACK_QUAD_ACTV);
     PK_TRACE_INF("QE:(Done) End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
@@ -958,7 +984,7 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
     args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
     ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-
+    p9_pgpe_optrace(ACK_QUAD_ACTV);
     PK_TRACE_INF("QX:End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
@@ -991,6 +1017,15 @@ void p9_pgpe_pstate_safe_mode()
     PK_TRACE_INF("SAF: Safe Mode Enter");
     uint32_t occScr2 = in32(OCB_OCCS2);
     uint32_t suspend = in32(OCB_OCCFLG) & BIT32(PM_COMPLEX_SUSPEND);
+    uint32_t trace = suspend ? PRC_PM_SUSP : PRC_SAFE_MODE;
+
+    if(!suspend)
+    {
+        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.globalPSComputed << 16)
+                                      | (G_pgpe_pstate_record.safePstate << 8) | ((in32(OCB_OCCFLG) & BIT32(PGPE_SAFE_MODE)) ? 1 : 0);
+    }
+
+    p9_pgpe_optrace(trace);
 
     if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
     {
@@ -1009,6 +1044,8 @@ void p9_pgpe_pstate_safe_mode()
     }
 
     G_pgpe_pstate_record.pstatesStatus = suspend ? PSTATE_PM_SUSPEND_PENDING : PSTATE_SAFE_MODE;
+    trace = suspend ? ACK_PM_SUSP : ACK_SAFE_DONE;
+    p9_pgpe_optrace(trace);
     occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
     out32(OCB_OCCS2, occScr2);
     PK_TRACE_INF("SAF: Safe Mode Exit");
@@ -1077,6 +1114,7 @@ void p9_pgpe_pstate_send_suspend_stop()
 void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg)
 {
     PK_TRACE_INF("SUSP:Stop Cb");
+    p9_pgpe_optrace(SGPE_SUSP_DONE);
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
     G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
@@ -1244,7 +1282,14 @@ void p9_pgpe_pstate_do_step()
 
     //Update Shared SRAM
     p9_pgpe_pstate_updt_actual_quad(0xFC);
-
+    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.quadPSComputed[0] << 24) | (G_pgpe_pstate_record.quadPSComputed[1]
+                                  << 16) |
+                                  (G_pgpe_pstate_record.quadPSComputed[2] << 8) | G_pgpe_pstate_record.quadPSComputed[3];
+    G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.quadPSComputed[4] << 24) | (G_pgpe_pstate_record.quadPSComputed[5]
+                                  << 16) |
+                                  G_pgpe_pstate_record.globalPSNext << 8 | G_pgpe_pstate_record.globalPSTarget;
+    G_pgpe_optrace_data.word[2] = (G_pgpe_pstate_record.eVidCurr << 16) | G_pgpe_pstate_record.eVidCurr;
+    p9_pgpe_optrace(ACTUATE_STEP_DONE);
     PK_TRACE_DBG("STEP: Exit");
 
 }
