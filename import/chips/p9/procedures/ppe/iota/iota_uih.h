@@ -46,6 +46,7 @@ extern uint32_t iota_uih(void);
 extern void __hwmacro_setup(void);
 
 extern uint64_t g_ext_irq_vector;
+extern const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2];
 
 // Needed by ppehw_common.h
 #define PK_IRQ_POLARITY_ACTIVE_LOW  0
@@ -107,11 +108,10 @@ extern const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2];
                               IRQ_VEC_PRTY8_CME | \
                               IRQ_VEC_PRTY9_CME | \
                               IRQ_VEC_PRTY10_CME )
-
+#endif
 extern uint32_t g_current_prty_level;
 extern uint8_t  g_eimr_stack[IOTA_NUM_EXT_IRQ_PRIORITIES] SECTION_SBSS;
 extern int      g_eimr_stack_ctr;
 extern uint64_t g_eimr_override_stack[IOTA_NUM_EXT_IRQ_PRIORITIES]SECTION_SBSS;
 extern uint64_t g_eimr_override;
-#endif
 #endif //__IOTA_UIH_H__

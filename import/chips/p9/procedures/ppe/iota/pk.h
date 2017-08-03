@@ -48,7 +48,7 @@ typedef uint64_t PkTimebase;
 extern uint64_t pk_timebase_get();
 
 #define pk_halt() iota_halt()
-#define pk_irq_vec_restore(...) iota_uih_irq_vec_restore()
+#define pk_irq_vec_restore(...)
 
 // This sets the SPRG0 in pk.
 static inline void ppe42_app_ctx_set(uint16_t app_ctx)

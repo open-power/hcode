@@ -27,6 +27,7 @@ ifdef IMAGE
 
 
 TOP-C-SOURCES    = p9_cme_main.c \
+                   p9_cme_irq_priority_table.c \
                    p9_cme_irq.c 
                    
 UTILS-C-SOURCES  = utils/p9_putringutils.c \

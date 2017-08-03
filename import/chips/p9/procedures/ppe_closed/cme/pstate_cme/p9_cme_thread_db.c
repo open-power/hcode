@@ -82,11 +82,7 @@ void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
 {
     PK_TRACE_INF("DB_HDL: Entered\n");
 #if defined(__IOTA__)
-    wrteei(1);
-
     p9_cme_pstate_process_db0();
-
-    iota_uih_irq_vec_restore();
 #else
     pk_semaphore_post((PkSemaphore*)arg);
 #endif

@@ -46,7 +46,7 @@
 #endif
 
 // Maximum number of expected nested interrupts
-#define IOTA_MAX_NESTED_INTERRUPTS    4
+#define IOTA_MAX_NESTED_INTERRUPTS    12
 
 //An "idle" task is one that only runs when the ppe42 engine would otherwise
 //be idle and thus has the lowest priority and can be interrupted by anything.

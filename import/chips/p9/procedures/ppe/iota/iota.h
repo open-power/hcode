@@ -40,6 +40,7 @@
 void iota_run()  __attribute__((noreturn));
 
 #define iota_halt() __iota_halt()
+#define iota_dead(code) PK_PANIC((code))
 
 /**
  * Set the state of an idle task
@@ -141,6 +142,7 @@ void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx);
         IOTA_32U_ARR_INIT, \
         IOTA_32U_ARR_INIT, \
         IOTA_32U_ARR_INIT, \
+        IOTA_32U_ARR_INIT, \
         IOTA_32U_ARR_INIT \
     }
 ///
@@ -191,7 +193,7 @@ void _iota_schedule(uint32_t schedule_reason);
 void _iota_evaluate_idle_tasks();
 
 extern void __iota_halt() __attribute__((noreturn));
-extern void iota_uih_irq_vec_restore();
+extern void iota_uih_restore();
 
 extern iotaTimerFuncPtr g_iota_dec_handler;
 extern iotaTimerFuncPtr g_iota_fit_handler;

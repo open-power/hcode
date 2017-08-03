@@ -24,151 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include "iota.h"
 #include "iota_uih.h"
-
-// Notes:
-//   The following two lists,
-//     ext_irq_vectors_cme[][] and IDX_PRTY_LVL_<task_abbr>, must match.
-//   IDX_PRTY_LVL_<task_abbr> is the tasks priority level and serves
-//   as the index into the ext_irq_vectors_cme[][] table.
-
-const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
-{
-    /* 0: IDX_PRTY_VEC    1: IDX_MASK_VEC */
-    {
-        IRQ_VEC_PRTY0_CME, /* 0: IDX_PRTY_LVL_HIPRTY */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME |
-        IRQ_VEC_PRTY8_CME |
-        IRQ_VEC_PRTY7_CME |
-        IRQ_VEC_PRTY6_CME |
-        IRQ_VEC_PRTY5_CME |
-        IRQ_VEC_PRTY4_CME |
-        IRQ_VEC_PRTY3_CME |
-        IRQ_VEC_PRTY2_CME |
-        IRQ_VEC_PRTY1_CME |
-        IRQ_VEC_PRTY0_CME
-    },
-    {
-        IRQ_VEC_PRTY1_CME, /* 1: IDX_PRTY_LVL_DB3 */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME |
-        IRQ_VEC_PRTY8_CME |
-        IRQ_VEC_PRTY7_CME |
-        IRQ_VEC_PRTY6_CME |
-        IRQ_VEC_PRTY5_CME |
-        IRQ_VEC_PRTY4_CME |
-        IRQ_VEC_PRTY3_CME |
-        IRQ_VEC_PRTY2_CME |
-        IRQ_VEC_PRTY1_CME
-    },
-    {
-        IRQ_VEC_PRTY2_CME, /* 2: IDX_PRTY_LVL_DB2 */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME |
-        IRQ_VEC_PRTY8_CME |
-        IRQ_VEC_PRTY7_CME |
-        IRQ_VEC_PRTY6_CME |
-        IRQ_VEC_PRTY5_CME |
-        IRQ_VEC_PRTY4_CME |
-        IRQ_VEC_PRTY3_CME |
-        IRQ_VEC_PRTY2_CME
-    },
-    {
-        IRQ_VEC_PRTY3_CME, /* 3: IDX_PRTY_LVL_SPWU */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME |
-        IRQ_VEC_PRTY8_CME |
-        IRQ_VEC_PRTY7_CME |
-        IRQ_VEC_PRTY6_CME |
-        IRQ_VEC_PRTY5_CME |
-        IRQ_VEC_PRTY4_CME |
-        IRQ_VEC_PRTY3_CME
-    },
-    {
-        IRQ_VEC_PRTY4_CME, /* 4: IDX_PRTY_LVL_WAKE */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME |
-        IRQ_VEC_PRTY8_CME |
-        IRQ_VEC_PRTY7_CME |
-        IRQ_VEC_PRTY6_CME |
-        IRQ_VEC_PRTY5_CME |
-        IRQ_VEC_PRTY4_CME
-    },
-    {
-        IRQ_VEC_PRTY5_CME, /* 5: IDX_PRTY_LVL_STOP */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME |
-        IRQ_VEC_PRTY8_CME |
-        IRQ_VEC_PRTY7_CME |
-        IRQ_VEC_PRTY6_CME |
-        IRQ_VEC_PRTY5_CME
-    },
-    {
-        IRQ_VEC_PRTY6_CME, /* 6: IDX_PRTY_LVL_DB1 */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME |
-        IRQ_VEC_PRTY8_CME |
-        IRQ_VEC_PRTY7_CME |
-        IRQ_VEC_PRTY6_CME
-    },
-
-    {
-        IRQ_VEC_PRTY7_CME, /* 7: IDX_PRTY_LVL_DB0 */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME |
-        IRQ_VEC_PRTY8_CME |
-        IRQ_VEC_PRTY7_CME
-    },
-
-    {
-        IRQ_VEC_PRTY8_CME, /* 8: IDX_PRTY_LVL_INTERCME_IN0 */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME |
-        IRQ_VEC_PRTY8_CME
-    },
-    {
-        IRQ_VEC_PRTY9_CME, /* 9: IDX_PRTY_LVL_PMCR */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY9_CME
-    },
-    {
-        IRQ_VEC_PRTY10_CME, /* 10: IDX_PRTY_LVL_DISABLED */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY10_CME
-    },
-    {
-        IRQ_VEC_PRTY11_CME, /* 11: IDX_PRTY_LVL_COMM_RECVD */
-        IRQ_VEC_PRTY12_CME |
-        IRQ_VEC_PRTY11_CME
-    },
-    {
-        IRQ_VEC_PRTY12_CME, /* 12: IDX_PRTY_LVL_DISABLED */
-        IRQ_VEC_PRTY12_CME
-    }
-
-
-};
+#include "iota_panic_codes.h"
 
 uint32_t g_current_prty_level = IOTA_NUM_EXT_IRQ_PRIORITIES - 1;
 uint8_t  g_eimr_stack[IOTA_NUM_EXT_IRQ_PRIORITIES];
@@ -187,6 +43,11 @@ uint32_t iota_uih(void)
 
     // 1. Identify the priority level of the interrupt.
     g_ext_irq_vector = in64(CME_LCL_EISTR);
+
+    if(g_ext_irq_vector == 0)
+    {
+        iota_dead(IOTA_UIH_PHANTOM_INTERRUPT);
+    }
 
     do
     {
@@ -217,8 +78,7 @@ uint32_t iota_uih(void)
         }
         else
         {
-            asm volatile("mtspr 0x110, %0" : : "r" (0xdead));
-            iota_halt();
+            iota_dead(IOTA_UIH_STACK_OVERFLOW);
         }
 
         // 3. Write the new mask for this priority level.
@@ -228,20 +88,16 @@ uint32_t iota_uih(void)
     }
     else
     {
-        asm volatile("mtspr 0x110, %0" : : "r" (0xbeef));
         // Disabled IRQ fired
-        iota_halt();
+        iota_dead(IOTA_UIH_DISABLED_FIRED);
     }
 
     // Return the priority level
     return iPrtyLvl;
 }
 
-void iota_uih_irq_vec_restore()
+void iota_uih_restore()
 {
-    uint32_t ctx = mfmsr();
-    wrteei(0);
-
     if (g_eimr_stack_ctr >= 0)
     {
         out64(CME_LCL_EIMR,
@@ -256,8 +112,6 @@ void iota_uih_irq_vec_restore()
     }
     else
     {
-        iota_halt();
+        iota_dead(IOTA_UIH_STACK_UNDERFLOW);
     }
-
-    mtmsr(ctx);
 }

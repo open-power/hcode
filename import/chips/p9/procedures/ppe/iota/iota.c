@@ -25,6 +25,7 @@
 #include "iota.h"
 #include "iota_uih.h"
 #include "iota_ppe42.h"
+#include "iota_panic_codes.h"
 
 // Force all kernel variables into .sdata
 // Order controlled by linker script
@@ -56,7 +57,7 @@ void _iota_evaluate_idle_tasks()
             if(g_iota_idle_task_list[idle_task_idx].function == IOTA_NO_TASK)
             {
                 // Tried to execute a NULLPTR task
-                iota_halt();
+                iota_dead(IOTA_NULLPTR_TASK);
             }
 
             g_iota_idle_task_list[idle_task_idx].function(idle_task_idx, 0);
@@ -137,29 +138,30 @@ void _iota_schedule(uint32_t schedule_reason)
     }
     else
     {
-        iota_halt();
+        iota_dead(IOTA_MACHINE_STATE_STACK_OVERFLOW);
     }
 
-    // call appropriate interrupt handler here
-    uint32_t task_idx;
-
+    // Call appropriate interrupt handler here
     switch(schedule_reason)
     {
         case _IOTA_SCHEDULE_REASON_EXT:
-
-            task_idx = iota_uih();
+            // Need semicolon since a label can only be followed by a statement
+            // and not a declaration
+            ;
+            uint32_t task_idx = iota_uih();
 
             if(g_iota_task_list[task_idx] != IOTA_NO_TASK)
             {
-                //uint32_t ctx = mfmsr();
                 uint32_t irq = cntlz64(g_ext_irq_vector);
                 mtmsr(IOTA_DEFAULT_MSR);
                 g_iota_task_list[task_idx](task_idx, irq);
-                //mtmsr(ctx);
+                // Interrupts are disabled once the task returns
+                wrteei(0);
+                iota_uih_restore();
             }
             else
             {
-                iota_halt();
+                iota_dead(IOTA_NULLPTR_TASK);
             }
 
             break;
@@ -173,17 +175,13 @@ void _iota_schedule(uint32_t schedule_reason)
             break;
     }
 
-    wrteei(0);
-
     // Check for idle tasks here
     // Rationale: if the g_iota_curr_machine_state_ptr ==
-    //            &g_iota_curr_machine_state_ptr[0],
+    //            g_iota_machine_state_stack,
     //            then all interrupt tasks must be completed since this is the
     //            last context about to be restored, which means enabled idle
     //            tasks can be executed
-    iotaMachineState* p = g_iota_curr_machine_state_ptr;
-
-    if(--p == g_iota_machine_state_stack)
+    if(g_iota_curr_machine_state_ptr - 1 == g_iota_machine_state_stack)
     {
         uint32_t ctx = mfmsr();
         wrteei(1);
@@ -198,7 +196,7 @@ void _iota_schedule(uint32_t schedule_reason)
     }
     else
     {
-        iota_halt();
+        iota_dead(IOTA_MACHINE_STATE_STACK_UNDERFLOW);
     }
 }
 

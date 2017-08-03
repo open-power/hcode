@@ -53,8 +53,10 @@ uint32_t G_pmcr_cme_flags;
 
 void cme_pstate_pmcr_action()
 {
+    // In IOTA, any task function is executed with EE=1
+#if !defined(__IOTA__)
     wrteei(1);
-
+#endif
     PkMachineContext  ctx __attribute__((unused));
     uint64_t pmcr;
     ppm_pig_t ppmPigData;

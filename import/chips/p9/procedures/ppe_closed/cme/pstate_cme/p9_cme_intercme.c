@@ -168,7 +168,7 @@ void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq)
     intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
 
     // Block on the intercme0 interrupt
-    while(!(in32(CME_LCL_EISR) & BIT32(8))) {}
+    while(!(in32(CME_LCL_EISR) & BIT32(7))) {}
 
     // Restore the mask, cede control to the intercme0 interrupt handler
     pk_irq_vec_restore(&ctx);
