@@ -264,14 +264,19 @@ p9_sgpe_stop_suspend_all_cmes()
                 if (cpayload_t2 == 0x780)
                 {
                     cme_list |= BIT32(xloop);
+
                     // set STOP OVERRIDE MODE/STOP ACTIVE MASK
                     // to convert everything to stop1
                     // Note: not doing this from cme because
                     // suspend_stop and block_exit/entry protocol
                     // shares processing code at CME,
                     // and only want this done under suspend_stop
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR,
-                                                  (xloop >> 1), (xloop % 2)), BITS64(16, 2));
+                    // Note: avoid partial bad cme as sgpe sent pig
+                    if (G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(((xloop << 1) + cloop)))
+                    {
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR,
+                                                      (xloop >> 1), (xloop % 2)), BITS64(16, 2));
+                    }
                 }
             }
         }

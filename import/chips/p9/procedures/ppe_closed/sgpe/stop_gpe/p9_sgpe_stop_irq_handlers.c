@@ -338,7 +338,7 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                     vector_index  = VECTOR_ENTRY,
                     request_index = VECTOR_PIGE,
                     suspend_index = VECTOR_BLOCKE;
-                    suspend_index > VECTOR_BLOCKX;
+                    suspend_index <= VECTOR_BLOCKX;
                     suspend_index++,
                     request_index++,
                     vector_index++,
@@ -352,11 +352,11 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                         {
                             if ((cloop >> 1) % 2)
                             {
-                                G_sgpe_stop_record.group.qex0[suspend_index] |= BIT32(qloop);
+                                G_sgpe_stop_record.group.qex1[suspend_index] |= BIT32(qloop);
                             }
                             else
                             {
-                                G_sgpe_stop_record.group.qex1[suspend_index] |= BIT32(qloop);
+                                G_sgpe_stop_record.group.qex0[suspend_index] |= BIT32(qloop);
                             }
 
                             if((G_sgpe_stop_record.group.qex0[suspend_index] &
@@ -372,11 +372,11 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                         {
                             if ((cloop >> 1) % 2)
                             {
-                                G_sgpe_stop_record.group.qex0[suspend_index] &= ~BIT32(qloop);
+                                G_sgpe_stop_record.group.qex1[suspend_index] &= ~BIT32(qloop);
                             }
                             else
                             {
-                                G_sgpe_stop_record.group.qex1[suspend_index] &= ~BIT32(qloop);
+                                G_sgpe_stop_record.group.qex0[suspend_index] &= ~BIT32(qloop);
                             }
 
                             if ((G_sgpe_stop_record.group.qex0[suspend_index]  |
@@ -415,7 +415,7 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
             // and process it instead of this phantom; if type 3 entry, then ignore both
             // as type3 needs to be hanndled in type3 handler while current is obvious type2
 
-            if ((scom_data.words.upper & BIT32(13)) && cpayload == 0x400)
+            if ((scom_data.words.upper & BIT32(13)) && cpayload == TYPE2_PAYLOAD_DECREMENTER_WAKEUP)
             {
                 payload2 = in32(OCB_OPIT2CN(cindex));
                 payload3 = in32(OCB_OPIT3CN(cindex));
@@ -440,7 +440,7 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                 if (!(scom_data.words.upper & BIT32(13)))
                 {
                     // type2 duplicate wakeup can happen due to manual PCWU vs other HW wakeup
-                    if (cpayload == 0x400)
+                    if (cpayload == TYPE2_PAYLOAD_DECREMENTER_WAKEUP)
                     {
                         PK_TRACE_INF("WARNING: Ignore Phantom Software PC/Decrementer Wakeup PIG \
                                       (already handoff cme by other wakeup");
