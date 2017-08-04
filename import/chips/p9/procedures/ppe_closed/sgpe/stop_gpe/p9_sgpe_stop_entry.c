@@ -232,41 +232,6 @@ p9_sgpe_stop_entry()
 
 
 
-#if !SKIP_IPC
-
-    // Upon entry into STOP 11, right before stopping the clocks to the cache chiplet
-    // the SGPE must communicate to the PGPE to
-    //   allow it to know which CME Quad Managers will no longer be active; and
-    //   if WOF is enabled,
-    //     to perform VRFT calculations to take advantage of the core/cache power.
-    // If Pstates are disabled, SGPE does nothing.
-    // If Pstates are enabled, the SGPE:
-    //   1. sends Suspend Pstates IPC to PGPE and waits for the response IPC .
-    //      PGPE completes any current Pstate operations and responses to the Suspend Pstates IPC.
-    //   2. stops the clocks (and optionally finishes the entry)
-    //   3. sends Update Active Quads IPC to PGPE and waits for the response IPC.
-    //      PGPE, as a side effect of processing the Update Active Quads IPC,
-    //            will resume Pstate protocol operations.
-    //   4. optionally finishes the entry (if not done above)
-
-    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
-        G_sgpe_stop_record.group.quad[VECTOR_ENTRY]) // entry into STOP11
-    {
-        //===============================
-        MARK_TRAP(SE_STOP_SUSPEND_PSTATE)
-        //===============================
-
-        ipc_quad_entry = 1;
-
-        p9_sgpe_ipc_pgpe_update_active_quads(UPDATE_ACTIVE_QUADS_TYPE_ENTRY,
-                                             UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY);
-
-        // poll for ack is located at SE_WAIT_PGPE_SUSPEND mark below
-        // to parallel latency with pgpe processing
-    }
-
-#endif
-
 
 
 // NDD1 workaround to save cme image size
@@ -816,6 +781,44 @@ p9_sgpe_stop_entry()
         PK_TRACE("+++++ +++++ QUAD STOP ENTRY [LEVEL 11-15, CONTINUE] +++++ +++++");
         // ------------------------------------------------------------------------------
 
+#if !SKIP_IPC
+
+        // Upon entry into STOP 11, right before stopping the clocks to the cache chiplet
+        // the SGPE must communicate to the PGPE to
+        //   allow it to know which CME Quad Managers will no longer be active; and
+        //   if WOF is enabled,
+        //     to perform VRFT calculations to take advantage of the core/cache power.
+        // If Pstates are disabled, SGPE does nothing.
+        // If Pstates are enabled, the SGPE:
+        //   1. sends Suspend Pstates IPC to PGPE and waits for the response IPC .
+        //      PGPE completes any current Pstate operations and responses to the Suspend Pstates IPC.
+        //   2. stops the clocks (and optionally finishes the entry)
+        //   3. sends Update Active Quads IPC to PGPE and waits for the response IPC.
+        //      PGPE, as a side effect of processing the Update Active Quads IPC,
+        //            will resume Pstate protocol operations.
+        //   4. optionally finishes the entry (if not done above)
+
+        if ((!ipc_quad_entry) &&
+            (in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+            G_sgpe_stop_record.group.quad[VECTOR_ENTRY]) // entry into STOP11
+        {
+            //============================
+            MARK_TRAP(SE_PGPE_QUAD_NOTIFY)
+            //============================
+
+            p9_sgpe_ipc_pgpe_update_active_quads(UPDATE_ACTIVE_QUADS_TYPE_ENTRY,
+                                                 UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY);
+
+            //===============================================
+            MARK_TAG(SE_WAIT_PGPE_QUAD_NOTIFY, (32 >> qloop))
+            //===============================================
+
+            p9_sgpe_ipc_pgpe_update_active_quads_poll_ack();
+            ipc_quad_entry = 1;
+        }
+
+#endif
+
         //==================================
         MARK_TAG(SE_PURGE_PB, (32 >> qloop))
         //==================================
@@ -877,16 +880,6 @@ p9_sgpe_stop_entry()
 
         PK_TRACE_INF("SE.11C: PowerBus Purged");
 
-        //===========================================
-        MARK_TAG(SE_WAIT_PGPE_SUSPEND, (32 >> qloop))
-        //===========================================
-
-        if (ipc_quad_entry)
-        {
-            p9_sgpe_ipc_pgpe_update_active_quads_poll_ack();
-            ipc_quad_entry = 0;
-        }
-
         //======================================
         MARK_TAG(SE_QUIESCE_QUAD, (32 >> qloop))
         //======================================
@@ -946,9 +939,9 @@ p9_sgpe_stop_entry()
         PK_TRACE("Checking status of Local Checkstop");
         GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_LOCAL_XSTOP_ERR, qloop), local_xstop);
 
-        PK_TRACE("Drop CME_INTERPPM_IVRM/ACLK/VDATA/DPLL_ENABLE  QPMMR[20,22,24,26]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26));
-
+        // PGPE is in charge of bit26: DPLL_ENABLE
+        PK_TRACE("Drop CME_INTERPPM_IVRM/ACLK/VDATA_ENABLE via QPMMR[20,22,24]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24));
 
         if(pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_VDM_ENABLE_BIT_POS)
         {
