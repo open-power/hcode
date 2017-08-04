@@ -45,6 +45,7 @@
 //Bit 2:4 Multicast Type: 101
 //Bit 5:7 Mutlicast Grp: 001
 #define PCB_MULTICAST_GRP1          0x69000000
+#define PCB_MULTICAST_GRP4          0x6c000000
 
 #define QUAD_FROM_CORE(c) \
     ((c&0x1C) >> 2)

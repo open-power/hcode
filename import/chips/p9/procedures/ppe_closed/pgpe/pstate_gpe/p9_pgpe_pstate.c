@@ -325,8 +325,7 @@ void p9_pgpe_pstate_update_wof_state()
 //
 void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
 {
-    uint32_t q, cmeInterppmDpllEnableSet;
-    qppm_qpmmr_t qpmmr;
+    uint32_t q;
     qppm_dpll_freq_t dpllFreq;
     dpllFreq.value = 0;
 
@@ -334,22 +333,18 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
 
     PK_TRACE_DBG("Quad Entry(Notify) Vec=0x%x\n", quadsRequested);
 
-    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+    for (q = 0; q < MAX_QUADS; q++)
     {
-        for (q = 0; q < MAX_QUADS; q++)
+        if (quadsRequested & (QUAD_ACTIVE_MASK >> q))
         {
-            if (quadsRequested & (QUAD_ACTIVE_MASK >> q))
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
+
+            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
             {
                 G_pgpe_pstate_record.quadPSTarget[q] = 0xFF;
                 G_pgpe_pstate_record.quadPSCurr[q] = 0xFF;
                 G_pgpe_pstate_record.quadPSNext[q] = 0xFF;
                 G_pgpe_pstate_record.quadPSComputed[q] = 0xFF;
-
-                //Take away CME control by writing to QPMMR
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
-                cmeInterppmDpllEnableSet = qpmmr.fields.cme_interppm_dpll_enable;
-                qpmmr.fields.cme_interppm_dpll_enable = 0;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
 
                 //Write "Safe Frequency" for quad about to enter STOP
                 //Note, we set fmax = fmult = fmin
@@ -358,18 +353,14 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
                 dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);
 
-                //Restore QPMMR to give CME control back
-                qpmmr.fields.cme_interppm_dpll_enable = cmeInterppmDpllEnableSet;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
+                G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = G_pgpe_pstate_record.quadPSCurr[0];
+                G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = G_pgpe_pstate_record.quadPSCurr[1];
+                G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = G_pgpe_pstate_record.quadPSCurr[2];
+                G_pgpe_pstate_record.pQuadState0->fields.quad3_pstate = G_pgpe_pstate_record.quadPSCurr[3];
+                G_pgpe_pstate_record.pQuadState1->fields.quad4_pstate = G_pgpe_pstate_record.quadPSCurr[4];
+                G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = G_pgpe_pstate_record.quadPSCurr[5];
             }
         }
-
-        G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = G_pgpe_pstate_record.quadPSCurr[0];
-        G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = G_pgpe_pstate_record.quadPSCurr[1];
-        G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = G_pgpe_pstate_record.quadPSCurr[2];
-        G_pgpe_pstate_record.pQuadState0->fields.quad3_pstate = G_pgpe_pstate_record.quadPSCurr[3];
-        G_pgpe_pstate_record.pQuadState1->fields.quad4_pstate = G_pgpe_pstate_record.quadPSCurr[4];
-        G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = G_pgpe_pstate_record.quadPSCurr[5];
     }
 
     //ACK back to SGPE
@@ -412,33 +403,38 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
 //
 void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
 {
-    uint32_t q, cmeInterppmDpllEnableSet;
-    qppm_qpmmr_t qpmmr;
+    uint32_t q;
     qppm_dpll_freq_t dpllFreq;
     dpllFreq.value = 0;
+    qppm_vdmcfgr_t vdmcfg;
 
-    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+    for (q = 0; q < MAX_QUADS; q++)
     {
-        for (q = 0; q < MAX_QUADS; q++)
+        if (quadsRequested & (QUAD_ACTIVE_MASK >> q))
         {
-            if (quadsRequested & (QUAD_ACTIVE_MASK >> q))
-            {
-                //Take away CME control by writing to QPMMR
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
-                cmeInterppmDpllEnableSet = qpmmr.fields.cme_interppm_dpll_enable;
-                qpmmr.fields.cme_interppm_dpll_enable = 0;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
 
-                //Write "Safe Frequency" for quad about to enter STOP
+            //Write "Safe Frequency" for quad about to enter STOP only if
+            //Pstates are Active
+            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+            {
                 //Note, we set fmax = fmult = fmin
                 dpllFreq.fields.fmax  = G_gppb->dpll_pstate0_value - G_pgpe_pstate_record.safePstate;
                 dpllFreq.fields.fmult = dpllFreq.fields.fmax;
                 dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);
 
-                //Restore QPMMR to give CME control back
-                qpmmr.fields.cme_interppm_dpll_enable = cmeInterppmDpllEnableSet;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
+                //If VDMs are enabled, read the register overlay 0:7 and write the register
+                //Otherwise, just write the VDM register
+                vdmcfg.value = 0;
+
+                if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_VDM_ENABLE)
+                {
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
+                }
+
+                vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
             }
         }
     }
@@ -794,6 +790,9 @@ void p9_pgpe_pstate_do_step()
 //Update External VRM to G_eVidNext
 void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
 {
+    qppm_vdmcfgr_t vdmcfg;
+    uint32_t cmeInterppmVdataEnableSet[MAX_QUADS], q;
+    qppm_qpmmr_t qpmmr;
 
 #if !EPM_P9_TUNING
     uint32_t delay_us = 0;
@@ -832,6 +831,40 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
 #endif
 
     G_pgpe_pstate_record.eVidCurr = G_pgpe_pstate_record.eVidNext;
+
+    //If VDM is disabled, update VDMCFG register for every quad
+    if (!(G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_VDM_ENABLE))
+    {
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            if (G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
+            {
+                //Take away CME control by writing to QPMMR
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
+                cmeInterppmVdataEnableSet[q] = qpmmr.fields.cme_interppm_vdata_enable;
+                qpmmr.value = BIT64(24);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), qpmmr.value);
+            }
+        }
+
+        //Update 0:7 of VDMCFG
+        vdmcfg.value = 0;
+        vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
+        GPE_PUTSCOM(PCB_MULTICAST_GRP4 | 0xf01b6, vdmcfg.value);
+
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            if (G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
+            {
+                //Restore QPMMR
+                if (cmeInterppmVdataEnableSet[q] == 1)
+                {
+                    qpmmr.value = BIT64(24);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), qpmmr.value);
+                }
+            }
+        }
+    }
 }
 
 //
@@ -1132,6 +1165,9 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     {
         if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
         {
+            //Give Quad Manager CME control of DPLL through inter-ppm
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
+
             if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);

@@ -564,49 +564,12 @@ p9_sgpe_stop_exit()
         PK_TRACE_INF("SX.11D: Cache Dpll Setup");
         p9_hcd_cache_dpll_setup(qloop);
 
-        if(pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_VDM_ENABLE_BIT_POS)
-        {
-            // Note: 100us must elapse after starting full-speed cache
-            // clock gird and 10us after setting power-on (to VDM) before
-            // clearing the VDM disable in CME
-            PK_TRACE("Clear QPPM VDMCFGR");
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, qloop), 0);
-
-            PK_TRACE("Write QPPM VDMCR to set Disable and set Poweron");
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR, qloop), BITS64(0, 2));
-
-            PK_TRACE("Set Jump Protect Enable");
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_OR, qloop), BIT64(1));
-
-            PK_TRACE("Poll on DPLL_STAT[update_complete]");
-
-            do
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_STAT, qloop),
-                            scom_data.value);
-            }
-            while(!(scom_data.words.lower & BIT32(28)));
-        }
-
 #if !SKIP_INITF
 
         PK_TRACE_DBG("Cache DCC Skewadjust Setup");
         p9_hcd_cache_dcc_skewadjust_setup(qloop);
 
 #endif
-
-        // set 20, 22, 24 and 26 during Stop11 Exit after setting up the DPLL
-        scom_data.words.lower = 0;
-        scom_data.words.upper = BIT32(20) | BIT32(22) | BIT32(24) | BIT32(26);
-
-        // set 21, 23, 25, and 27 if EX0 is bad (not partial good)
-        if ((~G_sgpe_stop_record.group.expg[qloop]) & FST_EX_IN_QUAD)
-        {
-            scom_data.words.upper |= BIT32(21) | BIT32(23) | BIT32(25) | BIT32(27);
-        }
-
-        PK_TRACE("Assert inter-ppm settings via QPMMR[22,24,26,EX0PB:21,23,25]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, qloop), scom_data.value);
 
         //=======================================
         MARK_TAG(SX_CHIPLET_INITS, (32 >> qloop))
@@ -816,6 +779,45 @@ p9_sgpe_stop_exit()
         //==================================
         MARK_TAG(SX_CME_BOOT, (32 >> qloop))
         //==================================
+
+        if(pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_VDM_ENABLE_BIT_POS)
+        {
+            // Note: 100us must elapse after starting full-speed cache
+            // clock gird and 10us after setting power-on (to VDM) before
+            // clearing the VDM disable in CME
+            PK_TRACE("Clear QPPM VDMCFGR");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, qloop), 0);
+
+            PK_TRACE("Write QPPM VDMCR to set Disable and set Poweron");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_VDMCR, qloop), BITS64(0, 2));
+
+            PK_TRACE("Set Jump Protect Enable");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_OR, qloop), BIT64(1));
+
+            PK_TRACE("Poll on DPLL_STAT[update_complete]");
+
+            do
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_STAT, qloop),
+                            scom_data.value);
+            }
+            while(!(scom_data.words.lower & BIT32(28)));
+        }
+
+        // set 20, 22, 24 during Stop11 Exit after setting up the DPLL
+        // (PGPE is in charge of bit26: DPLL_ENABLE)
+        scom_data.words.lower = 0;
+        scom_data.words.upper = BIT32(20) | BIT32(22) | BIT32(24);
+
+        // set 21, 23, 25 if EX0 is bad (not partial good)
+        // (select CME QM for PGPE)
+        if ((~G_sgpe_stop_record.group.expg[qloop]) & FST_EX_IN_QUAD)
+        {
+            scom_data.words.upper |= BIT32(21) | BIT32(23) | BIT32(25) | BIT32(27);
+        }
+
+        PK_TRACE("Assert inter-ppm settings via QPMMR[20,22,24,EX0PB:21,23,25,27]");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, qloop), scom_data.value);
 
         // Setting up cme_flags
         do

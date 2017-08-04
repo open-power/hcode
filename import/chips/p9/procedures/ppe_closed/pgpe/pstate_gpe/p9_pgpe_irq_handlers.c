@@ -87,6 +87,7 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
     else
     {
         PK_TRACE_ERR("OCC Error: Unexpected OCC_FIR[0x%08x%08x] \n", UPPER32(fir.value), LOWER32(fir.value));
+        pk_halt();
     }
 
     pk_irq_vec_restore(&ctx);
@@ -261,6 +262,10 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                     value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
                 }
+
+                //Give Quad Manager CME control of DPLL through inter-ppm
+                //SGPE sets up the DPLL_SEL bits before booting CME
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
 
                 for (c = q << 2; c < ((q + 1) << 2); c++)
                 {
