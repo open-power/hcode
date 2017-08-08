@@ -187,7 +187,7 @@ p9_sgpe_stop_entry()
 
 #else
 
-                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), BIT32(6));
+                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), BIT64(6));
 
 #endif
 
@@ -750,7 +750,7 @@ p9_sgpe_stop_entry()
 
 #else
 
-            p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), BITS32(6, 2));
+            p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), BITS64(6, 2));
 
 #endif
 
