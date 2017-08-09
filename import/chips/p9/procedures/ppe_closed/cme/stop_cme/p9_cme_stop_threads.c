@@ -30,6 +30,24 @@ extern CmeStopRecord G_cme_stop_record;
 extern CmeRecord G_cme_record;
 
 
+void
+p9_cme_stop_core_error_handler(uint32_t core, uint32_t core_error, uint32_t panic_code)
+{
+    core                           &= ~core_error;
+    G_cme_stop_record.core_running |=  core_error;
+    G_cme_stop_record.core_errored |=  core_error;
+    G_cme_stop_record.error_code[core_error & 1] = panic_code;
+
+    // set the WKUP_FAIL_STATUS breadcrumbs
+    out32(CME_LCL_SICR_OR, core_error << SHIFT32(15));
+
+    // this pulses the FIR trigger using CME Local Debug register
+    // to optionally set a recoverable or xstop on error
+    out32(CME_LCL_DBG_OR,  BIT32(16));
+    out32(CME_LCL_DBG_CLR, BIT32(16));
+
+    //PK_PANIC(panic_code); // enable if desire halt on error
+}
 
 void
 p9_cme_stop_eval_eimr_override()

@@ -143,19 +143,13 @@
 #define PERV_OPCG_CAPT2        0x20030012
 #define PERV_CPLT_STAT0        0x20000100
 
+#if NIMBUS_DD_LEVEL == 10
 #define CME_STOP_CORE_ERROR_HANDLER(core, core_error, panic_code) \
-    core                           &= ~core_error;                \
-    G_cme_stop_record.core_running |=  core_error;                \
-    G_cme_stop_record.core_errored |=  core_error;                \
-    G_cme_stop_record.error_code[core_error & 1] = panic_code;    \
-    /*set the WKUP_FAIL_STATUS breadcrumbs*/                      \
-    out32(CME_LCL_SICR_OR, core_error << SHIFT32(15));            \
-    /*this pulses the FIR trigger using CME Local Debug register  \
-      to optionally set a recoverable or xstop on error*/         \
-    out32(CME_LCL_DBG_OR,  BIT32(16));                            \
-    out32(CME_LCL_DBG_CLR, BIT32(16));                            \
-    //PK_PANIC(panic_code); // enable if desire halt on error
-
+    PK_PANIC(panic_code);
+#else
+#define CME_STOP_CORE_ERROR_HANDLER(core, core_error, panic_code) \
+    p9_cme_stop_core_error_handler(core, core_error, panic_code);
+#endif
 
 enum CME_IRQ_VECTORS
 {
@@ -268,6 +262,7 @@ typedef struct
 /// CME STOP Entry and Exit Prototypes
 void p9_cme_stop_init();
 void p9_cme_stop_eval_eimr_override();
+void p9_cme_stop_core_error_handler(uint32_t, uint32_t, uint32_t);
 
 void p9_cme_stop_enter_thread(void*);
 void p9_cme_stop_exit_thread(void*);
