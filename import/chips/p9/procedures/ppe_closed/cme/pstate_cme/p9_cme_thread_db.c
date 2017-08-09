@@ -547,12 +547,42 @@ inline void p9_cme_pstate_freq_update()
 
         ippm_write(QPPM_DPLL_FREQ, dpllFreq.value);
 
-        if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
-        {
-            // TODO DPLL Mode 3.5 will require some other stuffs
-            data64_t scom_data = { 0 };
+        // DPLL Modes
+        //                     enable_fmin    enable_fmax   enable_jump
+        // DPLL Mode  2             0              0             0
+        // DPLL Mode  3             0              0             1
+        // DPLL Mode  4             X              1             0
+        // DPLL Mode  4             1              X             0
+        // DPLL Mode  3.5           0              1             1
+        // DPLL Mode  5             1              X             1
+        // TODO Future Attributes
+        // DROOP_PROTECT          -> DPLL Mode 3
+        // DROOP_PROTECT_OVERVOLT -> DPLL Mode 3.5
+        // DYNAMIC                -> DPLL Mode 4
+        // DYNAMIC_PROTECT        -> DPLL Mode 5
 
-            PK_TRACE_INF("Poll on DPLL_STAT[update_complete]");
+        uint32_t cme_flags = in32(CME_LCL_FLAGS);
+        data64_t scom_data = { 0 };
+
+        // DPLL Mode 2
+        if(!(cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE)))
+        {
+            PK_TRACE_INF("Poll on DPLL_STAT[freq_change=0]");
+
+            // ... to indicate that the DPLL is safely either at the new frequency
+            // or in droop protection below the new frequency
+            do
+            {
+                ippm_read(QPPM_DPLL_STAT, &scom_data.value);
+            }
+            while((scom_data.words.lower & BIT32(29)));
+        }
+
+        // DPLL Mode 3
+        if(cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
+        {
+
+            PK_TRACE_INF("Poll on DPLL_STAT[update_complete=1]");
             // ... to indicate that the DPLL has sampled the newly requested
             // frequency into its internal registers as a target,
             // but may not yet be there
@@ -562,16 +592,6 @@ inline void p9_cme_pstate_freq_update()
                 ippm_read(QPPM_DPLL_STAT, &scom_data.value);
             }
             while(!(scom_data.words.lower & BIT32(28)));
-
-            PK_TRACE_INF("Poll on DPLL_STAT[block_active|lock]");
-            // ... to indicate that the DPLL is safely either at the new frequency
-            // or in droop protection below the new frequency
-
-            do
-            {
-                ippm_read(QPPM_DPLL_STAT, &scom_data.value);
-            }
-            while(!(scom_data.words.lower & BITS32(30, 2)));
         }
 
         PK_TRACE_INF("DB_TH: Freq Updt Exit\n");

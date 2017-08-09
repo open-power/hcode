@@ -821,15 +821,6 @@ p9_sgpe_stop_exit()
             PK_TRACE("Set Jump Protect Enable");
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_CTRL_OR, qloop), BIT64(1));
 
-            PK_TRACE("Poll on DPLL_STAT[update_complete]");
-
-            do
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_STAT, qloop),
-                            scom_data.value);
-            }
-            while(!(scom_data.words.lower & BIT32(28)));
-
             // If VDM function is configured to be turned on,
             // then CME will enable VDM at CME boot regardless if pstate is enabled,
             // which needs DPLL control access as early as booting time,
