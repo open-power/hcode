@@ -96,6 +96,7 @@ enum MESSAGE_ID_DB0
     MSGID_DB0_GLOBAL_ACTUAL_BROADCAST   = 2,
     MSGID_DB0_START_PSTATE_BROADCAST    = 3,
     MSGID_DB0_STOP_PSTATE_BROADCAST     = 4,
+    MSGID_DB0_CLIP_BROADCAST            = 5,
     MSGID_DB0_VALID_END                 = 4 //This for error checking
 };
 
@@ -107,6 +108,11 @@ enum MESSAGEID_PCB_TYPE4_ACK_TYPES
     MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE           = 3
 };
 
+enum DB0_FIELDS
+{
+    DB0_CLIP_BCAST_TYPE_PMIN      = 0,
+    DB0_CLIP_BCAST_TYPE_PMAX      = 1
+};
 
 //
 //PGPE-CME Doorbell0(Global Actual Broadcast)
@@ -185,5 +191,35 @@ typedef union pgpe_db0_stop_ps_bcast
 #endif
     } fields;
 } pgpe_db0_stop_ps_bcast_t;
+
+//
+//PGPE-CME Doorbell0(Clip Broadcast)
+//
+typedef union pgpe_db0_clip_bcast
+{
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t msg_id : 8;
+        uint64_t clip_type : 8;
+        uint64_t quad0_clip : 8;
+        uint64_t quad1_clip : 8;
+        uint64_t quad2_clip : 8;
+        uint64_t quad3_clip : 8;
+        uint64_t quad4_clip : 8;
+        uint64_t quad5_clip : 8;
+#else
+        uint64_t quad5_clip : 8;
+        uint64_t quad4_clip : 8;
+        uint64_t quad3_clip : 8;
+        uint64_t quad2_clip : 8;
+        uint64_t quad1_clip : 8;
+        uint64_t quad0_clip : 8;
+        uint64_t clip_type: 8;
+        uint64_t msg_id : 8;
+#endif
+    } fields;
+} pgpe_db0_clip_bcast_t;
 
 #endif //__PSTATE_PGPE_CME_API_H__

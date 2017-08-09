@@ -166,6 +166,23 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                 {
                     if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
                     {
+                        pk_irq_sub_critical_enter(&ctx);
+
+                        //Notify CMEs about Updated Pmin and Pmax
+                        if (G_pgpe_pstate_record.pendingPminClipBcast)
+                        {
+                            p9_pgpe_pstate_clip_bcast(DB0_CLIP_BCAST_TYPE_PMIN);
+                            G_pgpe_pstate_record.pendingPminClipBcast = 0;
+                        }
+
+                        if (G_pgpe_pstate_record.pendingPmaxClipBcast)
+                        {
+                            p9_pgpe_pstate_clip_bcast(DB0_CLIP_BCAST_TYPE_PMAX);
+                            G_pgpe_pstate_record.pendingPmaxClipBcast = 0;
+                        }
+
+                        pk_irq_sub_critical_exit(&ctx);
+
                         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
                         ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
                         args->msg_cb.rc = PGPE_RC_SUCCESS;

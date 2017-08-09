@@ -50,6 +50,8 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
 {
     cppm_cmedb0_t dbData;
     dbData.value = 0;
+    uint32_t pmsrData;
+    uint32_t dbQuadInfo, dbBit8_15;
     uint32_t cme_flags = in32(CME_LCL_FLAGS);
     PkMachineContext  ctx __attribute__((unused));
 
@@ -70,17 +72,34 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     }
     while(dbData.value == 0);
 
-    //Extract localPS value from DB
-    //Update the Pstate variables
-    G_cme_pstate_record.quadPstate = (dbData.value >>
-                                      (in32(CME_LCL_SRTCH0) &
-                                       (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)
-                                       ))) & 0xFF;
-    G_cme_pstate_record.globalPstate = (dbData.value & BITS64(8, 8)) >> SHIFT64(15);
+    dbQuadInfo = (dbData.value >> (in32(CME_LCL_SRTCH0) &
+                                   (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)
+                                   ))) & 0xFF;
+    dbBit8_15 = (dbData.value & BITS64(8, 8)) >> SHIFT64(15);
 
     if(dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST)
     {
         PK_TRACE("INTER0: DB0 Start");
+
+        //Initialize pmin and pmax by reading from PMSR. PGPE
+        //directly writes PMSR before sending Pstate Start DB0
+        if (G_cme_record.core_enabled & CME_MASK_C0)
+        {
+            pmsrData = in32(CME_LCL_PMSRS0);
+        }
+        else
+        {
+            pmsrData = in32(CME_LCL_PMSRS1);
+        }
+
+        G_cme_pstate_record.pmin = (pmsrData & BITS32(16, 8)) >> SHIFT32(23);
+        G_cme_pstate_record.pmax = pmsrData & BITS32(24, 8);
+
+        PK_TRACE_INF("INTER0: PMSR=0x%08x,pmin=0x%08x,pmax=0x%08x", pmsrData, G_cme_pstate_record.pmin,
+                     G_cme_pstate_record.pmax);
+
+        G_cme_pstate_record.quadPstate = dbQuadInfo;
+        G_cme_pstate_record.globalPstate = dbBit8_15;
 
         p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
 
@@ -93,7 +112,25 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST)
     {
         PK_TRACE("INTER0: DB0 GlbBcast");
+        G_cme_pstate_record.quadPstate = dbQuadInfo;
+        G_cme_pstate_record.globalPstate = dbBit8_15;
         p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
+    }
+    else if(dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST)
+    {
+        PK_TRACE("INTER0: DB0 Clip");
+
+        if (dbBit8_15 == DB0_CLIP_BCAST_TYPE_PMIN)
+        {
+            G_cme_pstate_record.pmin = dbQuadInfo;
+        }
+        else
+        {
+            G_cme_pstate_record.pmax = dbQuadInfo;
+        }
+
+        p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
+        PKTRACE("INTER0: pmin=0x%08x,pmax=0x%08x", G_cme_pstate_record.pmin, G_cme_pstate_record.pmax);
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST)
     {

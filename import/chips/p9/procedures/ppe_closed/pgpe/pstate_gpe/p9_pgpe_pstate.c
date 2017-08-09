@@ -112,6 +112,8 @@ void p9_pgpe_pstate_init()
     G_pgpe_pstate_record.numActiveCores = 0;
     G_pgpe_pstate_record.vratio = 0; //This will be filled up when WOF is enabled
     G_pgpe_pstate_record.fratio = 0; //This will be filled up when WOF is enabled
+    G_pgpe_pstate_record.pendingPminClipBcast = 0;
+    G_pgpe_pstate_record.pendingPmaxClipBcast = 0;
 
     PK_TRACE_INF("SafePstate=0x%x", G_pgpe_pstate_record.safePstate);
 }
@@ -1044,7 +1046,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     ocb_qcsr_t qcsr;
     uint8_t quadPstates[MAX_QUADS];
     uint32_t lowestDpll, syncPstate, q;
-    uint64_t value;
+    uint64_t value, pmin, pmax;
 
     qcsr.value = in32(OCB_QCSR);
 
@@ -1124,10 +1126,65 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         p9_pgpe_pstate_dpll_write(0xfc, dpllFreq.value);
     }
 
-    //4. Determine PMCR Owner
+
+    //4. Init PStates Data and Send Pstate Start DB0 to active CMEs
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
+        {
+            quadPstates[q] = syncPstate;
+        }
+        else
+        {
+            quadPstates[q] = 0xFF;
+        }
+    }
+
+    p9_pgpe_pstate_update(quadPstates);
+
+    //5. Set up CME_SCRATCH0[Local_Pstate_Index]
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
+        {
+            //Give Quad Manager CME control of DPLL through inter-ppm
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
+            pmin = G_pgpe_pstate_record.psClipMax[q];
+            pmax = G_pgpe_pstate_record.psClipMin[q];
+
+            if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+                value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(2));
+                value = 0;
+                value |= (pmin << SHIFT64(23));
+                value |= (pmax << SHIFT64(31));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 0), value);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 0), value);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 0), BIT64(2));
+            }
+
+            if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+                value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(2));
+                value = 0;
+                value |= (pmin << SHIFT64(23));
+                value |= (pmax << SHIFT64(31));
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 1), value);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 1), value);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 1), BIT64(2));
+            }
+        }
+    }
+
+    //6. Determine PMCR Owner
     if (pstate_start_origin == PSTATE_START_OCC_IPC)
     {
-        PK_TRACE_DBG("g_oimr_override:0x%llx", g_oimr_override);
         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd;
         ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
         p9_pgpe_pstate_set_pmcr_owner(args->pmcr_owner);
@@ -1145,47 +1202,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
     }
 
-    //4. Init PStates Data and Send Pstate Start DB0 to active CMEs
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
-        {
-            quadPstates[q] = syncPstate;
-        }
-        else
-        {
-            quadPstates[q] = 0xFF;
-        }
-    }
-
-    p9_pgpe_pstate_update(quadPstates);
-
-    //Set up CME_SCRATCH0[Local_Pstate_Index]
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
-        {
-            //Give Quad Manager CME control of DPLL through inter-ppm
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
-
-            if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
-                value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
-                PK_TRACE_DBG("SRTCH0[%d_1]:0x%08x%08x", q, value >> 32, value);
-            }
-
-            if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
-                value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
-                PK_TRACE_DBG("SRTCH0[%d_1]:0x%08x%08x", q, value >> 32, value);
-            }
-        }
-    }
-
+    //7. Send Pstate Start Doorbell0
     pgpe_db0_start_ps_bcast_t db0;
     db0.value = 0;
     db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
@@ -1261,6 +1278,40 @@ void p9_pgpe_pstate_stop()
 
     G_pgpe_pstate_record.pstatesStatus = PSTATE_STOPPED;
     PK_TRACE_DBG("Stop Done");
+}
+
+void p9_pgpe_pstate_clip_bcast(uint32_t clip_bcast_type)
+{
+    PK_TRACE_DBG("Clip Bcast");
+    pgpe_db0_clip_bcast_t db0;
+    db0.value = 0;
+    db0.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
+    db0.fields.clip_type = clip_bcast_type;
+
+    //Note that we store PMIN as psClipMax(which lower Pstate, but higher numbered Pstate)
+    if (clip_bcast_type == DB0_CLIP_BCAST_TYPE_PMIN)
+    {
+        db0.fields.quad0_clip = G_pgpe_pstate_record.psClipMax[0];
+        db0.fields.quad1_clip = G_pgpe_pstate_record.psClipMax[1];
+        db0.fields.quad2_clip = G_pgpe_pstate_record.psClipMax[2];
+        db0.fields.quad3_clip = G_pgpe_pstate_record.psClipMax[3];
+        db0.fields.quad4_clip = G_pgpe_pstate_record.psClipMax[4];
+        db0.fields.quad5_clip = G_pgpe_pstate_record.psClipMax[5];
+    }
+    else if (clip_bcast_type == DB0_CLIP_BCAST_TYPE_PMAX)
+    {
+        db0.fields.quad0_clip = G_pgpe_pstate_record.psClipMin[0];
+        db0.fields.quad1_clip = G_pgpe_pstate_record.psClipMin[1];
+        db0.fields.quad2_clip = G_pgpe_pstate_record.psClipMin[2];
+        db0.fields.quad3_clip = G_pgpe_pstate_record.psClipMin[3];
+        db0.fields.quad4_clip = G_pgpe_pstate_record.psClipMin[4];
+        db0.fields.quad5_clip = G_pgpe_pstate_record.psClipMin[5];
+    }
+
+    p9_pgpe_send_db0(db0.value,
+                     G_pgpe_pstate_record.activeQuads,
+                     G_pgpe_pstate_record.activeCores,
+                     PGPE_DB0_UNICAST);
 }
 
 void p9_pgpe_pstate_setup_process_pcb_type4()

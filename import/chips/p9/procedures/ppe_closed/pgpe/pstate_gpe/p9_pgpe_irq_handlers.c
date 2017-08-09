@@ -87,7 +87,6 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
     else
     {
         PK_TRACE_ERR("OCC Error: Unexpected OCC_FIR[0x%08x%08x] \n", UPPER32(fir.value), LOWER32(fir.value));
-        pk_halt();
     }
 
     pk_irq_vec_restore(&ctx);
@@ -254,6 +253,12 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
                     value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(2));
+                    value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
+                            SHIFT64(31));
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 0), value);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 0), value);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 0), BIT64(2));
                 }
 
                 if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
@@ -261,6 +266,12 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
                     value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+                    value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
+                            SHIFT64(31));
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(2));
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 1), value);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 1), value);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 1), BIT64(2));
                 }
 
                 //Give Quad Manager CME control of DPLL through inter-ppm

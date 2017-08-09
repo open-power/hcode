@@ -240,12 +240,6 @@ main(int argc, char** argv)
 
     PK_TRACE_DBG("Start PK Threads");
 
-    uint64_t data;
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_CTRL, 3), data);
-    PK_TRACE_DBG("Got Data=0x%08x%08x", data >> 32, data);
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, 3), data);
-    PK_TRACE_DBG("Got Data=0x%08x%08x", data >> 32, data);
-    //GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, 3),data);
     // Start running the highest priority thread.
     // This function never returns
     pk_start_threads();

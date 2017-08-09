@@ -67,6 +67,7 @@ inline void p9_cme_pstate_register() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_start() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_glb_bcast() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_suspend() __attribute__((always_inline));
+inline void p9_cme_pstate_db0_clip_bcast() __attribute__((always_inline));
 inline void p9_cme_pstate_freq_update() __attribute__((always_inline));
 inline void p9_cme_pstate_notify_sib() __attribute__((always_inline));
 inline void p9_cme_pstate_update_analog() __attribute__((always_inline));
@@ -385,6 +386,12 @@ inline void p9_cme_pstate_process_db0()
     {
         p9_cme_pstate_db0_suspend();
     }
+    //Pmin or Pmax Update
+    else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST &&
+            (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
+    {
+        p9_cme_pstate_db0_clip_bcast();
+    }
     //Otherwise, send an ERR ACK to PGPE and Halt
     else
     {
@@ -428,21 +435,26 @@ inline void p9_cme_pstate_db0_start()
 {
     PK_TRACE_INF("DB_TH: DB0 Start Enter\n");
     ppm_pig_t ppmPigData;
+    uint32_t pmsrData;
 
-    //\TODO RTC: 152965
-    //Check operable bits
-    //Check if resonant clkss are either all 0s or "OFF" encode(from the Parm)
-    //Check for iVRM disable
-    //Check for VDM disable
+    //Initialize pmin and pmax by reading from PMSR. PGPE
+    //directly writes PMSR before sending Pstate Start DB0
+    if (G_cme_record.core_enabled & CME_MASK_C0)
+    {
+        pmsrData = in32(CME_LCL_PMSRS0);
+    }
+    else
+    {
+        pmsrData = in32(CME_LCL_PMSRS1);
+    }
+
+    G_cme_pstate_record.pmin = (pmsrData & BITS32(16, 8)) >> SHIFT32(23);
+    G_cme_pstate_record.pmax = pmsrData & BITS32(24, 8);
+    PK_TRACE_INF("DB_TH: PMSR=0x%08x,pmin=0x%08x,pmax=0x%08x", pmsrData, G_cme_pstate_record.pmin,
+                 G_cme_pstate_record.pmax);
 
     p9_cme_pstate_update();
 
-    //\TODO RTC: 152965
-    //Enable Resonant Clks if flag
-    //Enable ivrm if flag
-    //Enable vdm if flag
-
-    //G_cme_pstate_record.pstatesEnabled = 1;
     out32(CME_LCL_FLAGS_OR, BIT32(24));//Set Pstates Enabled
 
     //Send type4(ack doorbell)
@@ -502,6 +514,45 @@ inline void p9_cme_pstate_db0_suspend()
     PK_TRACE_INF("DB_TH: DB0 Suspend Exit\n");
 }
 
+inline void p9_cme_pstate_db0_clip_bcast()
+{
+
+    PK_TRACE_INF("DB_TH: DB0 Clip Enter\n");
+    ppm_pig_t ppmPigData;
+    uint32_t dbBit8_15 = (G_dbData.value & BITS64(8, 8)) >> SHIFT64(40);
+    uint32_t dbQuadValue = (G_dbData.value >> (in32(CME_LCL_SRTCH0) &
+                            (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START,
+                                    CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)))) & 0xFF;
+
+    if (dbBit8_15 == DB0_CLIP_BCAST_TYPE_PMIN)
+    {
+        G_cme_pstate_record.pmin = dbQuadValue;
+    }
+    else
+    {
+        G_cme_pstate_record.pmax = dbQuadValue;
+    }
+
+    PK_TRACE_INF("DB_TH: Pmin=0x%x,Pmax=0x%x", G_cme_pstate_record.pmin, G_cme_pstate_record.pmax);
+
+    if(G_cme_pstate_record.siblingCMEFlag)
+    {
+        // "Lock" the sibling. Notify will unlock it
+        intercme_msg_send(0, IMT_LOCK_SIBLING);
+    }
+
+    p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
+    p9_cme_pstate_notify_sib(); //Notify sibling
+
+    //Send type4(ack doorbell)
+    ppmPigData.value = 0;
+    ppmPigData.fields.req_intr_type = 4;
+    ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
+    send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
+
+    PK_TRACE_INF("DB_TH: DB0 Clip Exit\n");
+}
+
 inline void p9_cme_pstate_notify_sib()
 {
     PK_TRACE_INF("DB_TH: Notify Enter\n");
@@ -509,7 +560,7 @@ inline void p9_cme_pstate_notify_sib()
     //Notify sibling CME(if any)
     if(G_cme_pstate_record.siblingCMEFlag)
     {
-        intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_ACK);
+        intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_NOTIFY);
     }
 
     PK_TRACE_INF("DB_TH: Notify Exit\n");
@@ -656,6 +707,9 @@ void p9_cme_pstate_update()
                                         (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START,
                                                 CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)))) & 0xFF;
 
+    G_cme_pstate_record.globalPstate = (G_dbData.value & BITS64(8, 8))
+                                       >> SHIFT64(15);
+
     if(G_next_pstate != G_cme_pstate_record.quadPstate)
     {
         if(G_cme_pstate_record.siblingCMEFlag)
@@ -666,8 +720,6 @@ void p9_cme_pstate_update()
             // p9_cme_pstate_notify_sib()
         }
 
-        G_cme_pstate_record.globalPstate = (G_dbData.value & BITS64(8, 8))
-                                           >> SHIFT64(15);
 
         PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", G_dbData.value >> 32,
                      G_dbData.value);
@@ -676,9 +728,9 @@ void p9_cme_pstate_update()
 
         // Must update quadPstate before calling PMSR update
         G_cme_pstate_record.quadPstate = G_next_pstate;
-        p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
     }
 
+    p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
     p9_cme_pstate_notify_sib(); // Notify Sibling
 
     PK_TRACE_INF("DB_TH: Pstate Updt Exit");

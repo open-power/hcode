@@ -162,6 +162,7 @@ typedef struct
 #ifdef USE_CME_VDM_FEATURE
     cme_vdm_data_t vdmData;
 #endif//USE_CME_VDM_FEATURE
+    uint32_t pmin, pmax;
 } CmePstateRecord;
 
 typedef struct

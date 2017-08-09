@@ -58,6 +58,7 @@
 cmeHeader_t* G_cmeHeader;
 LocalPstateParmBlock* G_lppb;
 extern CmePstateRecord G_cme_pstate_record;
+extern CmeRecord G_cme_record;
 
 const uint8_t G_vdm_threshold_table[13] =
 {
@@ -273,24 +274,7 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             // 3) Clear out the CACCR resclk values
             CME_PUTSCOM(CPPM_CACCR_CLR, core_mask, BITS64(0, 13));
 
-            // Update PMSRS (only on stop-exit)
-            // TODO RTC 152965
-            //      Revisit during CME code review, should use common PMSRS
-            //      function instead (for when other fields are added in the
-            //      future)
-            uint64_t pmsrs = ((((uint64_t)pstate << 48) & BITS64(8, 8))
-                              | (((uint64_t)G_cme_pstate_record.globalPstate << 56)
-                                 & BITS64(0, 8)));
-
-            if(core_mask & ANALOG_CORE0)
-            {
-                out64(CME_LCL_PMSRS0, pmsrs);
-            }
-
-            if(core_mask & ANALOG_CORE1)
-            {
-                out64(CME_LCL_PMSRS1, pmsrs);
-            }
+            p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
         }
         else
         {
@@ -541,6 +525,8 @@ void p9_cme_pstate_pmsr_updt(uint32_t coreMask)
         {
             pmsrData = ((uint64_t)G_cme_pstate_record.globalPstate) << 56;
             pmsrData |= (((uint64_t)(G_cme_pstate_record.quadPstate)) << 48) ;
+            pmsrData |= (((uint64_t)(G_cme_pstate_record.pmin)) << 40) ;
+            pmsrData |= (((uint64_t)(G_cme_pstate_record.pmax)) << 32) ;
 
             if (G_cme_pstate_record.pmcrSeenErr & cm)
             {

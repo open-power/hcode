@@ -119,6 +119,7 @@ typedef struct
     uint32_t numActiveCores, numConfCores;
     uint16_t vratio, fratio;
     uint16_t vindex, findex;
+    uint32_t pendingPminClipBcast, pendingPmaxClipBcast;
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
 
@@ -148,6 +149,7 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
 void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
 void p9_pgpe_pstate_stop();
+void p9_pgpe_pstate_clip_bcast(uint32_t clip_type);
 void p9_pgpe_pstate_setup_process_pcb_type4();
 void p9_pgpe_pstate_updt_actual_quad(uint32_t q);
 #endif //
