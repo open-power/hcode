@@ -829,12 +829,23 @@ p9_sgpe_stop_exit()
                             scom_data.value);
             }
             while(!(scom_data.words.lower & BIT32(28)));
+
+            // If VDM function is configured to be turned on,
+            // then CME will enable VDM at CME boot regardless if pstate is enabled,
+            // which needs DPLL control access as early as booting time,
+            // so done here before the boot
+            // otherwise, when pstate is enabled, PGPE will take care of this bit.
+            scom_data.words.upper = BIT32(26);
+        }
+        else
+        {
+            scom_data.words.upper = 0;
         }
 
         // set 20, 22, 24 during Stop11 Exit after setting up the DPLL
         // (PGPE is in charge of bit26: DPLL_ENABLE)
         scom_data.words.lower = 0;
-        scom_data.words.upper = BIT32(20) | BIT32(22) | BIT32(24);
+        scom_data.words.upper |= BIT32(20) | BIT32(22) | BIT32(24);
 
         // set 21, 23, 25 if EX0 is bad (not partial good)
         // (select CME QM for PGPE)

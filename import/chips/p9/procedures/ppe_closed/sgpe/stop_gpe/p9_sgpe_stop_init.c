@@ -493,9 +493,13 @@ p9_sgpe_stop_init()
                 PK_TRACE_DBG("CME%d%d_FLAGS :%x", qloop, xloop, cme_flags);
                 p9_sgpe_stop_cme_scominit(qloop, xloop, cme_flags);
 
-                // set 20, 22, 24 and 26 during Stop11 Exit after setting up the DPLL
+                // set 20, 22, 24 before booting CME
+                // if PGPE is booted, it and CME will take care bit 26
+                // if PGPE is not booted like in HB, then CME doesnt need bit 26
+                // either way leave bit 26 in default 0 to open external access
+                // also see extra handling at VDM enabled in p9_sgpe_stop_exit()
                 scom_data.words.lower = 0;
-                scom_data.words.upper = BIT32(20) | BIT32(22) | BIT32(24) | BIT32(26);
+                scom_data.words.upper = BIT32(20) | BIT32(22) | BIT32(24);
 
                 // set 21, 23, 25, and 27 if EX0 is bad (first two cores in the quad are bad)
                 if (!(G_sgpe_stop_record.state[qloop].cme_flags & 0xC))
