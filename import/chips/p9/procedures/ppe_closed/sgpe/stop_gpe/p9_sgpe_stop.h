@@ -47,6 +47,7 @@ extern "C" {
 #include "ppm_register_addresses.h"
 #include "cppm_register_addresses.h"
 #include "qppm_register_addresses.h"
+#include "gpe_register_addresses.h"
 
 #include "ocb_firmware_registers.h"
 #include "cme_firmware_registers.h"
@@ -279,6 +280,11 @@ typedef struct
     ipc_msg_t* suspend_cmd;
 } sgpe_wof_t;
 
+typedef struct
+{
+    uint32_t strave_counter;
+} sgpe_fit_t;
+
 /// SGPE Stop Score Board Structure
 typedef struct
 {
@@ -290,6 +296,7 @@ typedef struct
     // group of ex and quad entering or exiting the stop
     sgpe_group_t group;
     sgpe_wof_t   wof;
+    sgpe_fit_t   fit;
     PkSemaphore  sem[2];
 } SgpeStopRecord __attribute__ ((aligned (8)));
 
@@ -320,8 +327,10 @@ void p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t*, void*);
 void p9_sgpe_stop_suspend_all_cmes();
 
 /// SGPE STOP Interrupt Handlers
+void p9_sgpe_fit_handler();
 void p9_sgpe_pig_type2_handler(void*, PkIrqId);
 void p9_sgpe_pig_type3_handler(void*, PkIrqId);
+void p9_sgpe_pig_type5_handler(void*, PkIrqId);
 void p9_sgpe_pig_type6_handler(void*, PkIrqId);
 void p9_sgpe_ipi3_low_handler(void*, PkIrqId);
 void p9_sgpe_stop_suspend_db1_cme(uint32_t, uint32_t);
