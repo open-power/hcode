@@ -76,7 +76,8 @@ void p9_pgpe_ipc_init()
 //
 void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC: START_STOP");
+
+    PK_TRACE_INF("IPC: Start/Stop");
 
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
@@ -98,7 +99,6 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
         G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
-
 }
 
 //
@@ -108,7 +108,7 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 //
 void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC: CLIP_UPDT");
+    PK_TRACE_INF("IPC: Clips");
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_set_pmcr_t* args = (ipcmsg_set_pmcr_t*)async_cmd->cmd_data;
 
@@ -138,7 +138,7 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 //
 void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC: SET_PMCR");
+    PK_TRACE_INF("IPC: Set PMCR");
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_set_pmcr_t* args = (ipcmsg_set_pmcr_t*)async_cmd->cmd_data;
 
@@ -150,7 +150,7 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
     }
     else
     {
-        PK_TRACE_DBG("IPC: SET_PMCR Dup.");
+        PK_TRACE_DBG("IPC: Set PMCR while pending");
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
     }
@@ -160,7 +160,6 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
         G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
-
 }
 
 //
@@ -170,7 +169,7 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 //
 void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC: WOF_CTRL");
+    PK_TRACE_INF("IPC: WOF CTRL");
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_wof_control_t* args = (ipcmsg_wof_control_t*)async_cmd->cmd_data;
 
@@ -200,7 +199,7 @@ void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
 //
 void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC:_WOF_VFRT");
+    PK_TRACE_INF("IPC:_WOF VFRT");
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_wof_vfrt_t* args = (ipcmsg_wof_vfrt_t*)async_cmd->cmd_data;
 
@@ -230,7 +229,7 @@ void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
 //
 void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC: UPDT_CORES");
+    PK_TRACE_INF("IPC: Updt Cores");
 
     if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 0 &&
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing == 0)
@@ -263,7 +262,7 @@ void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
 //
 void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC: UPDT_QUADS");
+    PK_TRACE_INF("IPC: Updt Quads");
 
     if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 0 &&
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing == 0 &&
@@ -282,7 +281,7 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
             (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
         args->fields.return_code = IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        PK_TRACE_INF("IPC: UPDT_QUADS While Pending");
+        PK_TRACE_INF("IPC: Updt Quads while pending");
     }
 
     if (G_pgpe_pstate_record.alreadySemPosted == 0)
@@ -290,5 +289,4 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
         pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
         G_pgpe_pstate_record.alreadySemPosted  = 1;
     }
-
 }

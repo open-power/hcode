@@ -26,9 +26,8 @@
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_header.h"
 
-//Global pointer to GlobalPstateParmBlock
-GlobalPstateParmBlock* G_gppb;
-
+//Globals and externs
+GlobalPstateParmBlock* G_gppb;//Global pointer to GlobalPstateParmBlock
 uint32_t G_ext_vrm_inc_rate_mult_usperus;
 uint32_t G_ext_vrm_dec_rate_mult_usperus;
 extern PgpeHeader_t* G_pgpe_header_data;
@@ -49,13 +48,12 @@ void p9_pgpe_gppb_init()
     void* gppb_sram_offset = G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
     G_gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
 
-    PK_TRACE_INF("GPP: DPLL0Value=0x%x", G_gppb->dpll_pstate0_value);
+    PK_TRACE_INF("INIT: DPLL0Value=0x%x", G_gppb->dpll_pstate0_value);
     //External VRM increasing rate in us/uv
     G_ext_vrm_inc_rate_mult_usperus = 1 / G_gppb->ext_vrm_transition_rate_inc_uv_per_us;
 
     //External VRM decreasing rate in us/uv
     G_ext_vrm_dec_rate_mult_usperus = 1 / G_gppb->ext_vrm_transition_rate_dec_uv_per_us;
-
 }
 
 //
@@ -67,6 +65,7 @@ uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set)
 {
     uint32_t vdd;
     uint8_t r  = p9_pgpe_gppb_get_ps_region(ps, vpd_pt_set);
+
     vdd = (((G_gppb->PStateVSlopes[vpd_pt_set][r]) *
             (-ps + G_gppb->operating_points_set[vpd_pt_set][r].pstate)) >> VID_SLOPE_FP_SHIFT_12)
           + G_gppb->operating_points_set[vpd_pt_set][r].vdd_mv;
@@ -106,9 +105,11 @@ uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd)
 {
     Pstate ps;
     uint8_t  r = p9_pgpe_gppb_get_ext_vdd_region(ext_vdd);
+
     ps = -(((G_gppb->VPStateSlopes[VPD_PT_SET_BIASED_SYSP][r]) *
             (ext_vdd - G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][r].vdd_mv)) >> VID_SLOPE_FP_SHIFT_12)
          + G_gppb->operating_points_set[VPD_SLOPES_BIASED][r].pstate;
+
     return ps;
 }
 

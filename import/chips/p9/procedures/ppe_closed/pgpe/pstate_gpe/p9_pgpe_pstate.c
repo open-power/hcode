@@ -64,6 +64,8 @@ void p9_pgpe_pstate_dpll_write(uint32_t quadsVector, uint64_t val);
 //
 //p9_pgpe_pstate_init
 //
+//This function initializes all non-zero values in G_pgpe_pstate_record. To begin with all
+//the fields in the structure are set to zero(see p9_pgpe_main.c). Here only non-zero value are set
 void p9_pgpe_pstate_init()
 {
     uint32_t q, c;
@@ -71,11 +73,12 @@ void p9_pgpe_pstate_init()
     ccsr.value = in32(OCB_CCSR);
 
     G_pgpe_pstate_record.pstatesStatus = PSTATE_INIT;
-    G_pgpe_pstate_record.wofEnabled = 0;
-    G_pgpe_pstate_record.wofPending = 0;
-    G_pgpe_pstate_record.activeQuads =
-        0;//We only mark qCME active upon a registration msg whether before or after PGPE boot
-    G_pgpe_pstate_record.activeCores = 0;
+    G_pgpe_pstate_record.safePstate = (G_gppb->reference_frequency_khz - G_gppb->safe_frequency_khz +
+                                       (G_gppb->frequency_step_khz - 1)) / G_gppb->frequency_step_khz;
+#if OVERRIDE_PSAFE_PSTATE == 1
+    G_pgpe_pstate_record.safePstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+#endif
+    PK_TRACE_INF("SafePstate=0x%x", G_pgpe_pstate_record.safePstate);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -92,72 +95,106 @@ void p9_pgpe_pstate_init()
 
         for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
         {
-            if (ccsr.value & (0x80000000 >> c))
+            if (ccsr.value & CORE_MASK(c))
             {
                 G_pgpe_pstate_record.numConfCores += 1;
             }
         }
     }
 
+    //Init OCC Shared SRAM
     G_pgpe_pstate_record.pQuadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
     G_pgpe_pstate_record.pQuadState1 = (quad_state1_t*)(G_pgpe_header_data->g_quad_status_addr + 2);
     G_pgpe_pstate_record.pReqActQuads = (requested_active_quads_t*)(G_pgpe_header_data->g_req_active_quad_addr);
-    G_pgpe_pstate_record.safePstate = (G_gppb->reference_frequency_khz - G_gppb->safe_frequency_khz +
-                                       (G_gppb->frequency_step_khz - 1)) / G_gppb->frequency_step_khz;
-#if OVERRIDE_PSAFE_PSTATE == 1
-    G_pgpe_pstate_record.safePstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-#endif
+    G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = 0xff;
+    G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = 0xff;
+    G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = 0xff;
+    G_pgpe_pstate_record.pQuadState0->fields.quad3_pstate = 0xff;
+    G_pgpe_pstate_record.pQuadState0->fields.active_cores = 0;
+    G_pgpe_pstate_record.pQuadState1->fields.quad4_pstate = 0xff;
+    G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = 0xff;
+    G_pgpe_pstate_record.pQuadState1->fields.active_cores = 0x0;
+    G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = 0x0;
 
-    G_pgpe_pstate_record.activeQuads = 0;
-    G_pgpe_pstate_record.numActiveCores = 0;
-    G_pgpe_pstate_record.vratio = 0; //This will be filled up when WOF is enabled
-    G_pgpe_pstate_record.fratio = 0; //This will be filled up when WOF is enabled
-    G_pgpe_pstate_record.pendingPminClipBcast = 0;
-    G_pgpe_pstate_record.pendingPmaxClipBcast = 0;
-
-    PK_TRACE_INF("SafePstate=0x%x", G_pgpe_pstate_record.safePstate);
+    //Create Semaphores
+    pk_semaphore_create(&(G_pgpe_pstate_record.sem_actuate), 0, 1);
+    pk_semaphore_create(&(G_pgpe_pstate_record.sem_sgpe_wait), 0, 1);
+    pk_semaphore_create(&(G_pgpe_pstate_record.sem_process_req), 0, 1);
 }
 
 //
-//p9_pgpe_pstate_update
+//p9_pgpe_pstate_setup_process_pcb_type4
 //
-void p9_pgpe_pstate_update(uint8_t* s)
+//Called only once during PGPE boot(actuate thread initialization)
+//It reads any pending opit4pr aka CME registration messages from
+//Quad Manager CME, and updates the list of activeQuad and activeCores.
+//Finally, it unmasks PCB_TYPE4 interrupt for future CME registration msgs
+void p9_pgpe_pstate_setup_process_pcb_type4()
 {
-    uint32_t q, c;
+    ocb_ccsr_t ccsr;
+    uint32_t opit4pr, opit4prQuad, q, c;
+    opit4pr = in32(OCB_OPIT4PRA); //Read current opit4pr
+    ccsr.value = in32(OCB_CCSR);
+
+    PK_TRACE_INF("PCB4: opit4pr=0x%x\n", opit4pr);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
+        opit4prQuad = (opit4pr >> ((MAX_QUADS - q + 1) << 2)) & 0xf;
+
+        if (opit4prQuad)
         {
-            G_pgpe_pstate_record.coresPSRequest[c] = s[q];
+            G_pgpe_pstate_record.activeQuads |= QUAD_MASK(q);
+
+            for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
+            {
+                if (ccsr.value & CORE_MASK(c))
+                {
+                    G_pgpe_pstate_record.activeCores |= CORE_MASK(c);
+                }
+            }
         }
     }
 
-    p9_pgpe_pstate_do_auction();
-    p9_pgpe_pstate_apply_clips();
+    //Fill OCC Shared Memory Area fields
+    G_pgpe_pstate_record.pQuadState0->fields.active_cores = (G_pgpe_pstate_record.activeCores >> 16);
+    G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0xFF);
+    G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads =  G_pgpe_pstate_record.activeQuads;
+
+    PK_TRACE_INF("PCB4: ActiveQuads=0x%x ActiveCores=0x%x\n", G_pgpe_pstate_record.activeQuads ,
+                 G_pgpe_pstate_record.activeCores);
+
+    //Enable PCB_INTR_TYPE4
+    out32(OCB_OPIT4PRA_CLR, opit4pr);
+    out32(OCB_OISR1_CLR, BIT32(17));
+    g_oimr_override &= ~BIT64(49);
+    out32(OCB_OIMR1_CLR, BIT32(17));
 }
 
 //
 //p9_pgpe_pstate_do_auction
 //
+//This function does the Pstate Auction. First, it local auction for each quad, and then
+//global auction. It reads from coresPSRequest structure, and produces auction results in
+//quadPSComputed, and globalPSComputer.
 void p9_pgpe_pstate_do_auction()
 {
-    PK_TRACE_DBG("Auction Start");
+    PK_TRACE_INF("AUC: Start");
     uint32_t q, c;
 
     //Local PStates Auction
     for (q = 0; q < MAX_QUADS; q++)
     {
         //Make sure quad is active
-        if ((G_pgpe_pstate_record.activeQuads & (QUAD0_BIT_MASK >> q)))
+        if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
             //Go through all the cores in this quad with pending request
             //and find the lowest numbered PState
             G_pgpe_pstate_record.quadPSComputed[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
-            for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
+            for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
             {
-                if (G_pgpe_pstate_record.activeCores & (CORE_ACTIVE_MASK >> c))
+                if (G_pgpe_pstate_record.activeCores & CORE_MASK(c))
                 {
                     if (G_pgpe_pstate_record.quadPSComputed[q] > G_pgpe_pstate_record.coresPSRequest[c])
                     {
@@ -178,7 +215,7 @@ void p9_pgpe_pstate_do_auction()
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if (G_pgpe_pstate_record.activeQuads & (QUAD0_BIT_MASK >> q))
+        if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
             if (G_pgpe_pstate_record.globalPSComputed  > G_pgpe_pstate_record.quadPSComputed[q])
             {
@@ -187,14 +224,13 @@ void p9_pgpe_pstate_do_auction()
         }
     }
 
-    PK_TRACE_DBG("PSCmpd: 0x%x[0] 0x%x[1] 0x%x[2] 0x%x[3]", G_pgpe_pstate_record.quadPSComputed[0]
+    PK_TRACE_DBG("AUC: [Computed] 0x%x[0] 0x%x[1] 0x%x[2] 0x%x[3]", G_pgpe_pstate_record.quadPSComputed[0]
                  , G_pgpe_pstate_record.quadPSComputed[1]
                  , G_pgpe_pstate_record.quadPSComputed[2],
                  G_pgpe_pstate_record.quadPSComputed[3]);
-    PK_TRACE_DBG("PSCmpd: 0x%x[4] 0x%x[5] 0x%x(glb)", G_pgpe_pstate_record.quadPSComputed[4]
+    PK_TRACE_DBG("AUC: [Computed] 0x%x[4] 0x%x[5] 0x%x(glb)", G_pgpe_pstate_record.quadPSComputed[4]
                  , G_pgpe_pstate_record.quadPSComputed[5]
                  , G_pgpe_pstate_record.globalPSComputed);
-    PK_TRACE_DBG("Auction Done");
 }
 
 //
@@ -202,7 +238,7 @@ void p9_pgpe_pstate_do_auction()
 //
 void p9_pgpe_pstate_apply_clips()
 {
-    PK_TRACE_DBG("ApplyClip Start");
+    PK_TRACE_INF("APC: Applying Clips");
     uint32_t q;
 
     for (q = 0; q < MAX_QUADS; q++)
@@ -212,7 +248,7 @@ void p9_pgpe_pstate_apply_clips()
                         G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate ?
                         G_pgpe_pstate_record.psClipMax[q] : G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
-        if (G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
+        if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
 
             if (G_pgpe_pstate_record.wofEnabled == 1)
@@ -254,7 +290,7 @@ void p9_pgpe_pstate_apply_clips()
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if (G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
+        if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
             if (G_pgpe_pstate_record.globalPSTarget  > G_pgpe_pstate_record.quadPSTarget[q])
             {
@@ -263,15 +299,13 @@ void p9_pgpe_pstate_apply_clips()
         }
     }
 
-    PK_TRACE_INF("qPSTgt: 0x%x[0] 0x%x[1] 0x%x[2] 0x%x[3]", G_pgpe_pstate_record.quadPSTarget[0],
+    PK_TRACE_DBG("APC: [Target] 0x%x[0] 0x%x[1] 0x%x[2] 0x%x[3]", G_pgpe_pstate_record.quadPSTarget[0],
                  G_pgpe_pstate_record.quadPSTarget[1],
                  G_pgpe_pstate_record.quadPSTarget[2],
                  G_pgpe_pstate_record.quadPSTarget[3]);
-    PK_TRACE_INF("qPSTgt: 0x%x[4] 0x%x[5] 0x%x(Glb)", G_pgpe_pstate_record.quadPSTarget[4],
+    PK_TRACE_DBG("APC: [Target] qPSTgt: 0x%x[4] 0x%x[5] 0x%x(Glb)", G_pgpe_pstate_record.quadPSTarget[4],
                  G_pgpe_pstate_record.quadPSTarget[5],
                  G_pgpe_pstate_record.globalPSTarget);
-
-    PK_TRACE_DBG("ApplyClip Done");
 }
 
 //
@@ -279,6 +313,7 @@ void p9_pgpe_pstate_apply_clips()
 //
 void p9_pgpe_pstate_calc_wof()
 {
+    PK_TRACE_INF("WFC: Calc WOF");
 
     //1. Fratio calc
     //look at attributes
@@ -288,7 +323,7 @@ void p9_pgpe_pstate_calc_wof()
 
     //2. Vratio calc
     //Currently, PGPE only support VRATIO Fixed and VRATIO active cores only
-    if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_ENABLE_VRATIO)
+    if (G_pgpe_header_data->g_pgpe_qm_flags & BIT16(PGPE_HEADER_FLAGS_ENABLE_VRATIO))
     {
         G_pgpe_pstate_record.vratio = (G_pgpe_pstate_record.numActiveCores << 16) / G_pgpe_pstate_record.numConfCores;
     }
@@ -304,7 +339,8 @@ void p9_pgpe_pstate_calc_wof()
     G_pgpe_pstate_record.wofClip =
         G_pgpe_pstate_record.pVFRT->vfrt_data[G_pgpe_pstate_record.findex][G_pgpe_pstate_record.vindex];
 
-    PK_TRACE_DBG("FClip_PS: 0x%x", G_pgpe_pstate_record.wofClip);
+    PK_TRACE_DBG("WFC: FClip_PS=0x%x, vindex=%d, vratio=%d", G_pgpe_pstate_record.wofClip, G_pgpe_pstate_record.vindex,
+                 G_pgpe_pstate_record.vratio);
 
     p9_pgpe_pstate_apply_clips();
 }
@@ -314,173 +350,77 @@ void p9_pgpe_pstate_calc_wof()
 //
 void p9_pgpe_pstate_update_wof_state()
 {
+    PK_TRACE_INF("WFU: Updt WOF Shr Sram");
     pgpe_wof_state_t* wof_state = (pgpe_wof_state_t*)G_pgpe_header_data->g_pgpe_wof_state_addr;
-    PK_TRACE_INF("Wof Updt fclip_ps: 0x%x", G_pgpe_pstate_record.wofClip);
     wof_state->fields.fclip_ps = G_pgpe_pstate_record.wofClip;
     wof_state->fields.vclip_mv = G_pgpe_pstate_record.eVidCurr;
     wof_state->fields.fratio = G_pgpe_pstate_record.fratio;
     wof_state->fields.vratio = G_pgpe_pstate_record.vratio;
+    PK_TRACE_DBG("WFU: FClip_PS=0x%x, vindex=%d, vratio=%d", G_pgpe_pstate_record.wofClip, G_pgpe_pstate_record.vindex,
+                 G_pgpe_pstate_record.vratio);
 }
 
 //
-//p9_pgpe_pstate_process_quad_entry_notify
+//p9_pgpe_pstate_updt_actual_quad
 //
-void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
+//Updates OCC Shared SRAM "quad_pstate" fields
+void p9_pgpe_pstate_updt_actual_quad(uint32_t quadsVector)
 {
+    PK_TRACE_INF("SRM: Updt Quad Shr Sram");
     uint32_t q;
-    qppm_dpll_freq_t dpllFreq;
-    dpllFreq.value = 0;
-
-    G_pgpe_pstate_record.activeQuads &= ~quadsRequested;
-
-    PK_TRACE_DBG("Quad Entry(Notify) Vec=0x%x\n", quadsRequested);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if (quadsRequested & (QUAD_ACTIVE_MASK >> q))
+        if (quadsVector & QUAD_MASK(q))
         {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
-
-            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+            if (q == 0)
             {
-                G_pgpe_pstate_record.quadPSTarget[q] = 0xFF;
-                G_pgpe_pstate_record.quadPSCurr[q] = 0xFF;
-                G_pgpe_pstate_record.quadPSNext[q] = 0xFF;
-                G_pgpe_pstate_record.quadPSComputed[q] = 0xFF;
-
-                //Write "Safe Frequency" for quad about to enter STOP
-                //Note, we set fmax = fmult = fmin
-                dpllFreq.fields.fmax  = G_gppb->dpll_pstate0_value - G_pgpe_pstate_record.safePstate;
-                dpllFreq.fields.fmult = dpllFreq.fields.fmax;
-                dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);
-
                 G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = G_pgpe_pstate_record.quadPSCurr[0];
+            }
+            else if(q == 1)
+            {
                 G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = G_pgpe_pstate_record.quadPSCurr[1];
+            }
+            else if(q == 2)
+            {
                 G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = G_pgpe_pstate_record.quadPSCurr[2];
+            }
+            else if(q == 3)
+            {
                 G_pgpe_pstate_record.pQuadState0->fields.quad3_pstate = G_pgpe_pstate_record.quadPSCurr[3];
+            }
+            else if(q == 4)
+            {
                 G_pgpe_pstate_record.pQuadState1->fields.quad4_pstate = G_pgpe_pstate_record.quadPSCurr[4];
+            }
+            else if(q == 5)
+            {
                 G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = G_pgpe_pstate_record.quadPSCurr[5];
             }
         }
     }
-
-    //ACK back to SGPE
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
-    ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-
-    PK_TRACE_DBG("Quad Entry(Notify) End, qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
 //
-//p9_pgpe_pstate_process_quad_entry_done
+//p9_pgpe_send_db0
 //
-void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
-{
-    //Update Shared Memory Region
-    G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads &= (~(quadsRequested));
-    PK_TRACE_DBG("Quad Entry(Done) Vec=0x%x\n", quadsRequested);
-
-    //If WOF Enabled, then interlock with OCC
-    if(G_pgpe_pstate_record.wofEnabled == 1)
-    {
-        GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
-    }
-
-    //ACK back to SGPE
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
-    ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-
-    PK_TRACE_DBG("Quad Entry(Done) End, qAct=%x\n", G_pgpe_pstate_record.activeQuads);
-}
-
-//
-//p9_pgpe_pstate_process_quad_exit
-//
-void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
-{
-    uint32_t q;
-    qppm_dpll_freq_t dpllFreq;
-    dpllFreq.value = 0;
-    qppm_vdmcfgr_t vdmcfg;
-
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        if (quadsRequested & (QUAD_ACTIVE_MASK >> q))
-        {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
-
-            //Write "Safe Frequency" for quad about to enter STOP only if
-            //Pstates are Active
-            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-            {
-                //Note, we set fmax = fmult = fmin
-                dpllFreq.fields.fmax  = G_gppb->dpll_pstate0_value - G_pgpe_pstate_record.safePstate;
-                dpllFreq.fields.fmult = dpllFreq.fields.fmax;
-                dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);
-
-                //If VDMs are enabled, read the register overlay 0:7 and write the register
-                //Otherwise, just write the VDM register
-                vdmcfg.value = 0;
-
-                if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_VDM_ENABLE)
-                {
-                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
-                }
-
-                vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
-            }
-        }
-    }
-
-    //ACK back to SGPE
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
-    ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-
-    PK_TRACE_DBG("Quad Exit End.qAct=%x\n", G_pgpe_pstate_record.activeQuads);
-}
-
-//
-//p9_pgpe_pstate_ipc_rsp_cb_sem_post
-//
-void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg)
-{
-    pk_semaphore_post((PkSemaphore*)arg);
-}
-
-void p9_pgpe_send_db0(uint64_t db0, uint32_t quads, uint32_t cores, uint32_t unicast)
+//Sends DB0 to CMEs
+void p9_pgpe_send_db0(uint64_t db0, uint32_t coreVector, uint32_t unicast, uint32_t ack)
 {
 
-    uint32_t q, c;
+    uint32_t c;
 
-    PK_TRACE_DBG("Send DB0");
+    PK_TRACE_DBG("SDB: Send DB0");
 
     //In case of unicast, only write DB0 for active cores. However, in case of
     //multicast just write DB0 of every configured core, but care only about active cores.
-    if (unicast == 1)
+    if (unicast == PGPE_DB0_UNICAST)
     {
-        for (q = 0; q < MAX_QUADS; q++)
+        for (c = 0; c < MAX_CORES; c++)
         {
-            if (G_pgpe_pstate_record.activeQuads & (0x80 >> q))
+            if (coreVector & CORE_MASK(c))
             {
-                for (c = q << 2; c < ((q + 1) << 2); c++)
-                {
-                    if (G_pgpe_pstate_record.activeCores & ((0xc0000000) >> c))
-                    {
-                        p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0);
-                    }
-                }
+                p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0);
             }
         }
     }
@@ -489,435 +429,9 @@ void p9_pgpe_send_db0(uint64_t db0, uint32_t quads, uint32_t cores, uint32_t uni
         p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0, G_pgpe_pstate_record.activeCores);
     }
 
-    p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.activeQuads);//Wait for ACKs from all QuadManagers
-}
-
-//
-//p9_pgpe_pstate_send_suspend_stop
-//
-void p9_pgpe_pstate_send_suspend_stop()
-{
-#if SGPE_IPC_ENABLED == 1
-    int rc;
-    G_sgpe_suspend_stop.fields.msg_num = MSGID_PGPE_SGPE_SUSPEND_STOP;
-    G_sgpe_suspend_stop.fields.return_code = 0x0;
-    G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_suspend_stop;
-    ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
-                 IPC_MSGID_PGPE_SGPE_SUSPEND_STOP,
-                 p9_pgpe_suspend_stop_callback,
-                 (void*)NULL);
-
-    //Set SCOM Ownership of PMCR
-    PK_TRACE_INF("Setting SCOM Ownership of PMCRs");
-
-    int q = 0;
-    ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
-
-    //Set LMCR for each CME
-    for (q = 0; q < MAX_QUADS; q++)
+    if (ack == PGPE_DB0_ACK_WAIT_CME)
     {
-        //if(G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q))
-        if(G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
-        {
-            //CME0 within this quad
-            if (qcsr.fields.ex_config & (0x800 >> 2 * q))
-            {
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(0));
-            }
-
-            //CME1 within this quad
-            if (qcsr.fields.ex_config & (0x400 >> 2 * q))
-            {
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(0));
-            }
-        }
-    }
-
-    //send the command
-    PK_TRACE_INF("Sending Suspend  IPC to SGPE");
-    rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
-
-    if(rc)
-    {
-        PK_TRACE_ERR("Suspend Stop BAD ACK");
-        PK_PANIC(PGPE_SGPE_SUSPEND_STOP_BAD_ACK);
-    }
-
-#else
-    p9_pgpe_suspend_stop_callback(NULL, NULL);
-#endif
-}
-
-//
-//p9_pgpe_suspend_stop_callback
-//
-void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg)
-{
-    PK_TRACE_INF("Susp Stop Cb");
-    uint32_t occScr2 = in32(OCB_OCCS2);
-    occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
-    G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
-    out32(OCB_OCCS2, occScr2);
-}
-
-//
-//p9_pgpe_pstate_safe_mode()
-//
-void p9_pgpe_pstate_safe_mode()
-{
-    PK_TRACE_DBG("Safe Mode Enter");
-    uint32_t occScr2 = in32(OCB_OCCS2);
-    uint32_t suspend = in32(OCB_OCCFLG) & BIT32(PM_COMPLEX_SUSPEND);
-
-    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-    {
-        occScr2 |= BIT32(PGPE_SAFE_MODE_ACTIVE);
-        //In the case of suspend, if active the send_suspend is handled in actuate_pstates thread
-        p9_pgpe_pstate_apply_safe_clips();
-    }
-    else
-    {
-        occScr2 |= BIT32(PGPE_SAFE_MODE_ERROR);
-
-        if(suspend)
-        {
-            p9_pgpe_pstate_send_suspend_stop();
-        }
-    }
-
-    G_pgpe_pstate_record.pstatesStatus = suspend ? PSTATE_PM_SUSPEND_PENDING : PSTATE_SAFE_MODE;
-    occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
-    out32(OCB_OCCS2, occScr2);
-    PK_TRACE_DBG("Safe Mode Exit");
-}
-
-
-//
-// p9_pgpe_pstate_apply_safe_clips
-//
-void p9_pgpe_pstate_apply_safe_clips()
-{
-    PK_TRACE_DBG("Apply Safe Enter");
-    int q;
-
-    //Set clips to safe pstate
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        G_pgpe_pstate_record.psClipMax[q] = G_pgpe_pstate_record.safePstate;
-        G_pgpe_pstate_record.psClipMin[q] = G_pgpe_pstate_record.safePstate;
-    }
-
-    //Update clips
-    p9_pgpe_pstate_apply_clips();
-
-    PK_TRACE_DBG("Apply Safe Exit");
-}
-
-//
-//p9_pgpe_pstate_at_target
-//
-int32_t p9_pgpe_pstate_at_target()
-{
-    if( G_pgpe_pstate_record.globalPSCurr != G_pgpe_pstate_record.globalPSTarget ||
-        ((G_pgpe_pstate_record.activeQuads & QUAD0_BIT_MASK)
-         && G_pgpe_pstate_record.quadPSCurr[0] ^ G_pgpe_pstate_record.quadPSTarget[0]) ||
-        ((G_pgpe_pstate_record.activeQuads & QUAD1_BIT_MASK)
-         && G_pgpe_pstate_record.quadPSCurr[1] ^ G_pgpe_pstate_record.quadPSTarget[1]) ||
-        ((G_pgpe_pstate_record.activeQuads & QUAD2_BIT_MASK)
-         && G_pgpe_pstate_record.quadPSCurr[2] ^ G_pgpe_pstate_record.quadPSTarget[2]) ||
-        ((G_pgpe_pstate_record.activeQuads & QUAD3_BIT_MASK)
-         && G_pgpe_pstate_record.quadPSCurr[3] ^ G_pgpe_pstate_record.quadPSTarget[3]) ||
-        ((G_pgpe_pstate_record.activeQuads & QUAD4_BIT_MASK)
-         && G_pgpe_pstate_record.quadPSCurr[4] ^ G_pgpe_pstate_record.quadPSTarget[4]) ||
-        ((G_pgpe_pstate_record.activeQuads & QUAD5_BIT_MASK)
-         && G_pgpe_pstate_record.quadPSCurr[5] ^ G_pgpe_pstate_record.quadPSTarget[5]) )
-    {
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
-//
-//p9_pgpe_pstate_do_step
-//
-void p9_pgpe_pstate_do_step()
-{
-    //Do one actuate step
-    PK_TRACE_DBG("Step Entry");
-    PK_TRACE_DBG("GTgt,GCurr: 0x%x, 0x%x", G_pgpe_pstate_record.globalPSTarget,
-                 G_pgpe_pstate_record.globalPSCurr);
-    PK_TRACE_DBG("QTgt,QCurr: 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.quadPSTarget[0],
-                 G_pgpe_pstate_record.quadPSCurr[0], G_pgpe_pstate_record.quadPSTarget[1],
-                 G_pgpe_pstate_record.quadPSCurr[1]);
-    PK_TRACE_DBG("QTgt,QCurr: 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.quadPSTarget[2],
-                 G_pgpe_pstate_record.quadPSCurr[2], G_pgpe_pstate_record.quadPSTarget[3],
-                 G_pgpe_pstate_record.quadPSCurr[3]);
-    PK_TRACE_DBG("QTgt,QCurr: 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.quadPSTarget[4],
-                 G_pgpe_pstate_record.quadPSCurr[4], G_pgpe_pstate_record.quadPSTarget[5],
-                 G_pgpe_pstate_record.quadPSCurr[5]);
-
-    uint32_t q;
-    uint32_t targetEVid = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget, VPD_PT_SET_BIASED_SYSP);
-    PK_TRACE_DBG("eVidCurr=0x%x, eVidNext=0x%x, targetEVid=0x%x", G_pgpe_pstate_record.eVidCurr,
-                 G_pgpe_pstate_record.eVidNext, targetEVid);
-
-
-    //Higher number PState
-    if (((int16_t)(G_pgpe_pstate_record.globalPSTarget) - (int16_t)(G_pgpe_pstate_record.globalPSCurr)) > 0)
-    {
-
-        if ((G_pgpe_pstate_record.eVidCurr - targetEVid ) <= G_gppb->ext_vrm_step_size_mv)
-        {
-            G_pgpe_pstate_record.eVidNext = targetEVid;
-            G_pgpe_pstate_record.globalPSNext = G_pgpe_pstate_record.globalPSTarget;
-
-            for (q = 0; q < MAX_QUADS; q++)
-            {
-                if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
-                {
-                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                }
-            }
-        }
-        else
-        {
-            G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr - G_gppb->ext_vrm_step_size_mv;
-            G_pgpe_pstate_record.globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
-
-            for (q = 0; q < MAX_QUADS; q++)
-            {
-                if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
-                {
-                    if (G_pgpe_pstate_record.quadPSTarget[q] > G_pgpe_pstate_record.globalPSNext)   //Keep localPS under GlobalPS
-                    {
-                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.globalPSNext;
-                    }
-                    else
-                    {
-                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                    }
-                }
-            }
-
-        }
-
-        p9_pgpe_pstate_freq_updt();
-        p9_pgpe_pstate_updt_ext_volt(targetEVid);
-    }
-    //Lower number PState
-    else if (((int16_t)(G_pgpe_pstate_record.globalPSTarget) - (int16_t)(G_pgpe_pstate_record.globalPSCurr)) < 0)
-    {
-
-        if ((targetEVid - G_pgpe_pstate_record.eVidCurr) <= G_gppb->ext_vrm_step_size_mv)
-        {
-            G_pgpe_pstate_record.eVidNext = targetEVid;
-            G_pgpe_pstate_record.globalPSNext = G_pgpe_pstate_record.globalPSTarget;
-
-            for (q = 0; q < MAX_QUADS; q++)
-            {
-                if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
-                {
-                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                }
-            }
-        }
-        else
-        {
-            G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr + G_gppb->ext_vrm_step_size_mv;
-            G_pgpe_pstate_record.globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
-
-            for (q = 0; q < MAX_QUADS; q++)
-            {
-                if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
-                {
-                    if (G_pgpe_pstate_record.quadPSTarget[q] < G_pgpe_pstate_record.globalPSNext)   //Keep localPS under GlobalPS
-                    {
-                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.globalPSNext;
-                    }
-                    else
-                    {
-                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                    }
-                }
-            }
-        }
-
-        p9_pgpe_pstate_updt_ext_volt(targetEVid);
-        p9_pgpe_pstate_freq_updt();
-    }
-    else
-    {
-        for (q = 0; q < MAX_QUADS; q++)
-        {
-            if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
-            {
-                G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
-            }
-        }
-
-        p9_pgpe_pstate_freq_updt();
-    }
-
-    //Update current
-    G_pgpe_pstate_record.globalPSCurr = G_pgpe_pstate_record.globalPSNext;
-
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
-        {
-            G_pgpe_pstate_record.quadPSCurr[q] = G_pgpe_pstate_record.quadPSNext[q];
-        }
-    }
-
-    //Update Shared SRAM
-    G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = G_pgpe_pstate_record.quadPSCurr[0];
-    G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = G_pgpe_pstate_record.quadPSCurr[1];
-    G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = G_pgpe_pstate_record.quadPSCurr[2];
-    G_pgpe_pstate_record.pQuadState0->fields.quad3_pstate = G_pgpe_pstate_record.quadPSCurr[3];
-    G_pgpe_pstate_record.pQuadState1->fields.quad4_pstate = G_pgpe_pstate_record.quadPSCurr[4];
-    G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = G_pgpe_pstate_record.quadPSCurr[5];
-
-    PK_TRACE_DBG("Step Exit");
-
-}
-
-
-//
-//p9_pgpe_pstate__updt_ext_volt
-//
-//Update External VRM to G_eVidNext
-void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
-{
-    qppm_vdmcfgr_t vdmcfg;
-    uint32_t cmeInterppmVdataEnableSet[MAX_QUADS], q;
-    qppm_qpmmr_t qpmmr;
-
-#if !EPM_P9_TUNING
-    uint32_t delay_us = 0;
-
-    //Decreasing
-    if (G_pgpe_pstate_record.eVidNext < G_pgpe_pstate_record.eVidCurr)
-    {
-        delay_us = (G_pgpe_pstate_record.eVidCurr - G_pgpe_pstate_record.eVidNext) *
-                   G_ext_vrm_dec_rate_mult_usperus;
-    }
-    //Increasing
-    else if(G_pgpe_pstate_record.eVidNext > G_pgpe_pstate_record.eVidCurr)
-    {
-        delay_us  = (G_pgpe_pstate_record.eVidNext - G_pgpe_pstate_record.eVidCurr) *
-                    G_ext_vrm_inc_rate_mult_usperus;
-    }
-
-#endif
-
-    //Update external voltage
-    external_voltage_control_write(G_pgpe_pstate_record.eVidNext);
-
-#if !EPM_P9_TUNING
-
-    //Delay for delay_us
-    if (delay_us > 0)
-    {
-        pk_sleep(PK_MICROSECONDS((delay_us)));
-    }
-
-    if(G_pgpe_pstate_record.eVidNext == tgtEVid)
-    {
-        pk_sleep(PK_MICROSECONDS((G_gppb->ext_vrm_stabilization_time_us)));
-    }
-
-#endif
-
-    G_pgpe_pstate_record.eVidCurr = G_pgpe_pstate_record.eVidNext;
-
-    //If VDM is disabled, update VDMCFG register for every quad
-    if (!(G_pgpe_header_data->g_pgpe_qm_flags & PGPE_HEADER_FLAGS_VDM_ENABLE))
-    {
-        for (q = 0; q < MAX_QUADS; q++)
-        {
-            if (G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
-            {
-                //Take away CME control by writing to QPMMR
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
-                cmeInterppmVdataEnableSet[q] = qpmmr.fields.cme_interppm_vdata_enable;
-                qpmmr.value = BIT64(24);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), qpmmr.value);
-            }
-        }
-
-        //Update 0:7 of VDMCFG
-        vdmcfg.value = 0;
-        vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
-        GPE_PUTSCOM(PCB_MULTICAST_GRP4 | 0xf01b6, vdmcfg.value);
-
-        for (q = 0; q < MAX_QUADS; q++)
-        {
-            if (G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
-            {
-                //Restore QPMMR
-                if (cmeInterppmVdataEnableSet[q] == 1)
-                {
-                    qpmmr.value = BIT64(24);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), qpmmr.value);
-                }
-            }
-        }
-    }
-}
-
-//
-//Frequency Update
-//
-//Sends a DB0 to all active CMEs, so that Quad Managers(CMEs) update DPLL
-void p9_pgpe_pstate_freq_updt()
-{
-    PK_TRACE_DBG("FreqUpdt Enter");
-
-
-    pgpe_db0_glb_bcast_t db0;
-    db0.value = 0;
-    db0.fields.msg_id = MSGID_DB0_GLOBAL_ACTUAL_BROADCAST;
-    db0.fields.global_actual = G_pgpe_pstate_record.globalPSNext;
-    db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSNext[0];
-    db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSNext[1];
-    db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSNext[2];
-    db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSNext[3];
-    db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSNext[4];
-    db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSNext[5];
-
-    p9_pgpe_send_db0(db0.value,
-                     G_pgpe_pstate_record.activeQuads,
-                     G_pgpe_pstate_record.activeCores,
-                     PGPE_DB0_MULTICAST);
-
-    PK_TRACE_DBG("PS: Freq Updt Exit");
-}
-
-void p9_pgpe_pstate_dpll_write(uint32_t quadsVector, uint64_t val)
-{
-    qppm_qpmmr_t qpmmr;
-    uint32_t q, cmeInterppmDpllEnableSet;
-
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        if (quadsVector & (q >> 1))
-        {
-            //Make DPLL writable from SCOM temporarily
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
-            cmeInterppmDpllEnableSet = qpmmr.fields.cme_interppm_dpll_enable;
-            qpmmr.fields.cme_interppm_dpll_enable = 0;
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
-
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), val);//Write DPLL
-
-            //Flip the DPLL write owner back to original
-            qpmmr.fields.cme_interppm_dpll_enable = cmeInterppmDpllEnableSet ;
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
-        }
+        p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.activeQuads);//Wait for ACKs from all QuadManagers
     }
 }
 
@@ -926,7 +440,7 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
     uint32_t q;
     uint32_t opit4pr, opit4prQuad, opit4Clr = 0;
 
-    PK_TRACE_INF("AckExpect=0x%x", quadAckExpect);
+    PK_TRACE_INF("DBW: AckExpect=0x%x", quadAckExpect);
 
     //Now, wait for all Pstate Start DB0 to be ACKed
     while(quadAckExpect != 0)
@@ -940,15 +454,15 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
 
             if (opit4prQuad)
             {
-                if (quadAckExpect & (0x80 >> q))
+                if (quadAckExpect & QUAD_MASK(q))
                 {
-                    quadAckExpect &= ~(0x80 >> q);
+                    quadAckExpect &= ~QUAD_MASK(q);
                     opit4Clr |= (opit4prQuad << ((MAX_QUADS - q + 1) << 2));
-                    PK_TRACE_INF("GotAck from %d", q);
+                    PK_TRACE_DBG("DBW: GotAck from %d", q);
                 }
                 else
                 {
-                    PK_TRACE_ERR("Unexpected qCME[%u] ACK", q);
+                    PK_TRACE_ERR("DBW:Unexpected qCME[%u] ACK", q);
                     PK_PANIC(PGPE_CME_UNEXPECTED_DB0_ACK);
                 }
             }
@@ -957,82 +471,7 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
         out32(OCB_OPIT4PRA_CLR, opit4Clr);
     }
 
-
-    PK_TRACE_INF("qCME ACKs rcvd");
-}
-
-void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
-{
-    int q = 0;
-    ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
-//Write to LMCR register in SIMICS results in error
-//So, adding a build flag for SIMICS.
-//For SIMICS, LMCR should be set through command line
-#if !SIMICS_TUNING
-
-    //Set PCB_TYPE1 interrupt
-    if (owner == PMCR_OWNER_HOST)
-    {
-        PK_TRACE_DBG("OWNER_HOST");
-        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_HOST;
-        g_oimr_override &= ~(BIT64(46));
-        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
-    }
-    else if (owner == PMCR_OWNER_OCC)
-    {
-        PK_TRACE_DBG("OWNER_OCC");
-        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_OCC;
-        g_oimr_override |= BIT64(46);
-        out32(OCB_OIMR1_OR, BIT32(14)); //Disable PCB_INTR_TYPE1
-    }
-    else if (owner == PMCR_OWNER_CHAR)
-    {
-        PK_TRACE_DBG("OWNER_CHAR");
-        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
-        g_oimr_override &= ~(BIT64(46));
-        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
-    }
-    else
-    {
-        PK_TRACE_ERR("Invalid PMCR Owner=%u", owner);
-        PK_PANIC(PGPE_INVALID_PMCR_OWNER);
-    }
-
-    //If OWNER is switched to CHAR, the last LMCR setting is retained
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        if(G_pgpe_pstate_record.activeQuads & (QUAD_ACTIVE_MASK >> q))
-        {
-            //CME0 within this quad
-            if (qcsr.fields.ex_config & (0x800 >> 2 * q))
-            {
-                if (owner == PMCR_OWNER_HOST)
-                {
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 0), BIT64(0));
-                }
-                else if (owner == PMCR_OWNER_OCC)
-                {
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(0));
-                }
-            }
-
-            //CME1 within this quad
-            if (qcsr.fields.ex_config & (0x400 >> 2 * q))
-            {
-                if (owner == PMCR_OWNER_HOST)
-                {
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 1), BIT64(0));
-                }
-                else if (owner == PMCR_OWNER_OCC)
-                {
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(0));
-                }
-            }
-        }
-    }
-
-#endif
+    PK_TRACE_DBG("DBW:qCME ACKs rcvd");
 }
 
 //
@@ -1040,12 +479,12 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
 //
 void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
 {
-    PK_TRACE_DBG("Pstate Start Enter");
+    PK_TRACE_INF("PST: Start");
     qppm_dpll_stat_t dpll;
     qppm_dpll_freq_t dpllFreq;
     ocb_qcsr_t qcsr;
-    uint8_t quadPstates[MAX_QUADS];
-    uint32_t lowestDpll, syncPstate, q;
+    uint8_t qPS;
+    uint32_t lowestDpll, syncPstate, q, c;
     uint64_t value, pmin, pmax;
 
     qcsr.value = in32(OCB_QCSR);
@@ -1066,12 +505,12 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
                 lowestDpll = dpll.fields.freqout;
             }
 
-            PK_TRACE_DBG("Quad[%d]: DPLL=0x%x", q, (dpll.fields.freqout));
+            PK_TRACE_INF("PST: DPLL[%d]=0x%x", q, (dpll.fields.freqout));
         }
     }
 
-    PK_TRACE_INF("LowestDPLL:0x%x", lowestDpll);
-    PK_TRACE_INF("DPLL_PS0=0x%x", G_gppb->dpll_pstate0_value);
+    PK_TRACE_INF("PST: LowestDPLL:0x%x", lowestDpll);
+    PK_TRACE_INF("PST: DPLL_PS0=0x%x", G_gppb->dpll_pstate0_value);
 
     //2. Determine Sync Pstate
     if (lowestDpll > G_gppb->dpll_pstate0_value)
@@ -1100,12 +539,13 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         }
     }
 
-    PK_TRACE_INF("SyncPstate=0x%x", syncPstate);
+    PK_TRACE_INF("PST: SyncPstate=0x%x", syncPstate);
 
     //3. Move system to SyncPState
     external_voltage_control_init(&G_pgpe_pstate_record.eVidCurr);
     G_pgpe_pstate_record.eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(syncPstate, VPD_PT_SET_BIASED_SYSP);
-    PK_TRACE_INF("eVid(Boot)=%umV,eVid(SyncPstate)=%umV", G_pgpe_pstate_record.eVidCurr, G_pgpe_pstate_record.eVidNext);
+    PK_TRACE_INF("PST: eVid(Boot)=%umV,eVid(SyncPstate)=%umV", G_pgpe_pstate_record.eVidCurr,
+                 G_pgpe_pstate_record.eVidNext);
     dpllFreq.value = 0;
     dpllFreq.fields.fmax  = G_gppb->dpll_pstate0_value - syncPstate;
     dpllFreq.fields.fmult = dpllFreq.fields.fmax;
@@ -1127,25 +567,31 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     }
 
 
-    //4. Init PStates Data and Send Pstate Start DB0 to active CMEs
+    //4. Init CoresPSRequest data structure
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
+        if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
-            quadPstates[q] = syncPstate;
+            qPS = syncPstate;
         }
         else
         {
-            quadPstates[q] = 0xFF;
+            qPS = 0xFF;
+        }
+
+        for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
+        {
+            G_pgpe_pstate_record.coresPSRequest[c] = qPS;
         }
     }
 
-    p9_pgpe_pstate_update(quadPstates);
+    p9_pgpe_pstate_do_auction();
+    p9_pgpe_pstate_apply_clips();
 
     //5. Set up CME_SCRATCH0[Local_Pstate_Index]
     for (q = 0; q < MAX_QUADS; q++)
     {
-        if(G_pgpe_pstate_record.activeQuads & (0x80 >> q))
+        if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
             //Give Quad Manager CME control of DPLL through inter-ppm
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
@@ -1196,7 +642,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         //to PMCR, and then switching the owner to CHAR which enables PCB_TYPE1 interrupts
         //and allows CME to forward Pstate Requests
         p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_OCC);
-        PK_TRACE_DBG("OWNER_CHAR");
+        PK_TRACE_INF("PST: OWNER_CHAR");
         G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
         g_oimr_override &= ~(BIT64(46));
         out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
@@ -1215,9 +661,9 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
 
     p9_pgpe_send_db0(db0.value,
-                     G_pgpe_pstate_record.activeQuads,
                      G_pgpe_pstate_record.activeCores,
-                     PGPE_DB0_UNICAST);
+                     PGPE_DB0_UNICAST,
+                     PGPE_DB0_ACK_WAIT_CME);
 
     G_pgpe_pstate_record.globalPSCurr = G_pgpe_pstate_record.globalPSTarget;
 
@@ -1227,19 +673,13 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     }
 
     //Update Shared SRAM
-    G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = G_pgpe_pstate_record.quadPSCurr[0];
-    G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = G_pgpe_pstate_record.quadPSCurr[1];
-    G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = G_pgpe_pstate_record.quadPSCurr[2];
-    G_pgpe_pstate_record.pQuadState0->fields.quad3_pstate = G_pgpe_pstate_record.quadPSCurr[3];
-    G_pgpe_pstate_record.pQuadState1->fields.quad4_pstate = G_pgpe_pstate_record.quadPSCurr[4];
-    G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = G_pgpe_pstate_record.quadPSCurr[5];
-
+    p9_pgpe_pstate_updt_actual_quad(0xFC);
 
     //6. Enable PStates
     G_pgpe_pstate_record.pstatesStatus = PSTATE_ACTIVE;
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
-    PK_TRACE_INF("PGPE_PSTATE_PROTOCOL_ACTIVE set");
+    PK_TRACE_INF("PST: PGPE_PSTATE_PROTOCOL_ACTIVE set");
     out32(OCB_OCCS2, occScr2);
 
     //7. Send Pstate Start ACK to OCC
@@ -1254,41 +694,123 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
 
     }
 
-    PK_TRACE_DBG("Start Done");
+    PK_TRACE_INF("PST: Start Done");
+}
+
+//
+//p9_pgpe_pstate_set_pmcr_owner
+//
+void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
+{
+    int q = 0;
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(OCB_QCSR);
+//Write to LMCR register in SIMICS results in error
+//So, adding a build flag for SIMICS.
+//For SIMICS, LMCR should be set through command line
+#if !SIMICS_TUNING
+
+    //Set PCB_TYPE1 interrupt
+    if (owner == PMCR_OWNER_HOST)
+    {
+        PK_TRACE_DBG("OWNER_HOST");
+        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_HOST;
+        g_oimr_override &= ~(BIT64(46));
+        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+    }
+    else if (owner == PMCR_OWNER_OCC)
+    {
+        PK_TRACE_DBG("OWNER_OCC");
+        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_OCC;
+        g_oimr_override |= BIT64(46);
+        out32(OCB_OIMR1_OR, BIT32(14)); //Disable PCB_INTR_TYPE1
+    }
+    else if (owner == PMCR_OWNER_CHAR)
+    {
+        PK_TRACE_DBG("OWNER_CHAR");
+        G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
+        g_oimr_override &= ~(BIT64(46));
+        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+    }
+    else
+    {
+        PK_TRACE_ERR("Invalid PMCR Owner=%u", owner);
+        PK_PANIC(PGPE_INVALID_PMCR_OWNER);
+    }
+
+    //If OWNER is switched to CHAR, the last LMCR setting is retained
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+        {
+            //CME0 within this quad
+            if (qcsr.fields.ex_config & (0x800 >> 2 * q))
+            {
+                if (owner == PMCR_OWNER_HOST)
+                {
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 0), BIT64(0));
+                }
+                else if (owner == PMCR_OWNER_OCC)
+                {
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(0));
+                }
+            }
+
+            //CME1 within this quad
+            if (qcsr.fields.ex_config & (0x400 >> 2 * q))
+            {
+                if (owner == PMCR_OWNER_HOST)
+                {
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 1), BIT64(0));
+                }
+                else if (owner == PMCR_OWNER_OCC)
+                {
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(0));
+                }
+            }
+        }
+    }
+
+#endif
 }
 
 //
 //p9_pgpe_pstate_stop()
 //
+//This function runs the pstate stop protocol.
 void p9_pgpe_pstate_stop()
 {
-    PK_TRACE_DBG("Stop Enter");
+    PK_TRACE_INF("PSS: Pstate Stop Enter");
     pgpe_db0_stop_ps_bcast_t db0_stop;
     db0_stop.value = 0;
     db0_stop.fields.msg_id = MSGID_DB0_STOP_PSTATE_BROADCAST;
 
     p9_pgpe_send_db0(db0_stop.value,
-                     G_pgpe_pstate_record.activeQuads,
                      G_pgpe_pstate_record.activeCores,
-                     PGPE_DB0_UNICAST);
+                     PGPE_DB0_UNICAST,
+                     PGPE_DB0_ACK_WAIT_CME);
 
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
     out32(OCB_OCCS2, occScr2);
 
     G_pgpe_pstate_record.pstatesStatus = PSTATE_STOPPED;
-    PK_TRACE_DBG("Stop Done");
+    PK_TRACE_INF("PSS: Stop Done");
 }
 
+//
+//p9_pgpe_pstate_clip_bcast
+//
+//This functions sends new clips to CMEs
 void p9_pgpe_pstate_clip_bcast(uint32_t clip_bcast_type)
 {
-    PK_TRACE_DBG("Clip Bcast");
+    PK_TRACE_INF("CLB: Clip Bcast");
     pgpe_db0_clip_bcast_t db0;
     db0.value = 0;
     db0.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
     db0.fields.clip_type = clip_bcast_type;
 
-    //Note that we store PMIN as psClipMax(which lower Pstate, but higher numbered Pstate)
+    //Note that we store PMIN as psClipMax(which is lower Pstate, but higher numbered Pstate)
     if (clip_bcast_type == DB0_CLIP_BCAST_TYPE_PMIN)
     {
         db0.fields.quad0_clip = G_pgpe_pstate_record.psClipMax[0];
@@ -1309,79 +831,553 @@ void p9_pgpe_pstate_clip_bcast(uint32_t clip_bcast_type)
     }
 
     p9_pgpe_send_db0(db0.value,
-                     G_pgpe_pstate_record.activeQuads,
                      G_pgpe_pstate_record.activeCores,
-                     PGPE_DB0_UNICAST);
+                     PGPE_DB0_UNICAST,
+                     PGPE_DB0_ACK_WAIT_CME);
 }
 
-void p9_pgpe_pstate_setup_process_pcb_type4()
+//
+//p9_pgpe_pstate_process_quad_entry_notify
+//
+void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
 {
-    ocb_ccsr_t ccsr;
-    uint32_t opit4pr, opit4prQuad, q, c;
-    opit4pr = in32(OCB_OPIT4PRA); //Read current opit4pr
-    ccsr.value = in32(OCB_CCSR);
+    uint32_t q;
+    qppm_dpll_freq_t dpllFreq;
+    dpllFreq.value = 0;
 
-    PK_TRACE_DBG("SetupPCB4: opit4pr=0x%x\n", opit4pr);
+    G_pgpe_pstate_record.activeQuads &= ~quadsRequested;
+
+    PK_TRACE_INF("QE:(Notify) Vec=0x%x\n", quadsRequested);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        opit4prQuad = (opit4pr >> ((MAX_QUADS - q + 1) << 2)) & 0xf;
-
-        if (opit4prQuad)
+        if (quadsRequested & QUAD_MASK(q))
         {
-            G_pgpe_pstate_record.activeQuads |= (0x80 >> q);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
 
-            for (c = q << 2; c < ((q + 1) << 2); c++)
+            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
             {
-                if (ccsr.value & ((0x80000000) >> c))
-                {
-                    G_pgpe_pstate_record.activeCores |= ((0x80000000) >> c);
-                }
+                G_pgpe_pstate_record.quadPSTarget[q] = 0xFF;
+                G_pgpe_pstate_record.quadPSCurr[q] = 0xFF;
+                G_pgpe_pstate_record.quadPSNext[q] = 0xFF;
+                G_pgpe_pstate_record.quadPSComputed[q] = 0xFF;
+
+                //Write "Safe Frequency" for quad about to enter STOP
+                //Note, we set fmax = fmult = fmin
+                dpllFreq.fields.fmax  = G_gppb->dpll_pstate0_value - G_pgpe_pstate_record.safePstate;
+                dpllFreq.fields.fmult = dpllFreq.fields.fmax;
+                dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);
             }
         }
     }
 
-    //Fill OCC Shared Memory Area fields
-    G_pgpe_pstate_record.pQuadState0->fields.active_cores = (G_pgpe_pstate_record.activeCores >> 16);
-    G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0xFF);
-    G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads =  G_pgpe_pstate_record.activeQuads;
+    p9_pgpe_pstate_updt_actual_quad(0xFC);
 
-    PK_TRACE_DBG("ActiveQuads=0x%x ActiveCores=0x%x\n", G_pgpe_pstate_record.activeQuads ,
-                 G_pgpe_pstate_record.activeCores);
+    //ACK back to SGPE
+    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+    ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
+    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
 
-    //Enable PCB_INTR_TYPE4
-    out32(OCB_OPIT4PRA_CLR, opit4pr);
-    out32(OCB_OISR1_CLR, BIT32(17));
-    g_oimr_override &= ~BIT64(49);
-    out32(OCB_OIMR1_CLR, BIT32(17));
+    PK_TRACE_INF("QE:(Notify) End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
-void p9_pgpe_pstate_updt_actual_quad(uint32_t q)
+//
+//p9_pgpe_pstate_process_quad_entry_done
+//
+void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
 {
+    //Update Shared Memory Region
+    G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads &= (~(quadsRequested));
+    PK_TRACE_INF("QE: (Done), Vec=0x%x\n", quadsRequested);
 
-    if (q == 0)
+    //If WOF Enabled, then interlock with OCC
+    if(G_pgpe_pstate_record.wofEnabled == 1)
     {
-        G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = G_pgpe_pstate_record.quadPSCurr[0];
-    }
-    else if(q == 1)
-    {
-        G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = G_pgpe_pstate_record.quadPSCurr[1];
-    }
-    else if(q == 2)
-    {
-        G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = G_pgpe_pstate_record.quadPSCurr[2];
-    }
-    else if(q == 3)
-    {
-        G_pgpe_pstate_record.pQuadState0->fields.quad3_pstate = G_pgpe_pstate_record.quadPSCurr[3];
-    }
-    else if(q == 4)
-    {
-        G_pgpe_pstate_record.pQuadState1->fields.quad4_pstate = G_pgpe_pstate_record.quadPSCurr[4];
-    }
-    else if(q == 5)
-    {
-        G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = G_pgpe_pstate_record.quadPSCurr[5];
+        GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
     }
 
+    //ACK back to SGPE
+    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+    ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
+    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+
+    PK_TRACE_INF("QE:(Done) End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
+}
+
+//
+//p9_pgpe_pstate_process_quad_exit
+//
+void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
+{
+    uint32_t q;
+    qppm_dpll_freq_t dpllFreq;
+    dpllFreq.value = 0;
+    qppm_vdmcfgr_t vdmcfg;
+
+    PK_TRACE_INF("QX: (Done), Vec=0x%x\n", quadsRequested);
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if (quadsRequested & QUAD_MASK(q))
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
+
+            //Write "Safe Frequency" for quad about to enter STOP only if
+            //Pstates are Active
+            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+            {
+                //Note, we set fmax = fmult = fmin
+                dpllFreq.fields.fmax  = G_gppb->dpll_pstate0_value - G_pgpe_pstate_record.safePstate;
+                dpllFreq.fields.fmult = dpllFreq.fields.fmax;
+                dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);
+
+                //If VDMs are enabled, read the register overlay 0:7 and write the register
+                //Otherwise, just write the VDM register
+                vdmcfg.value = 0;
+
+                if (G_pgpe_header_data->g_pgpe_qm_flags & BIT16(PGPE_HEADER_FLAGS_VDM_ENABLE))
+                {
+                    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
+                }
+
+                vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
+            }
+        }
+    }
+
+    //ACK back to SGPE
+    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+    ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
+    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+
+    PK_TRACE_INF("QX:End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
+}
+
+//
+// p9_pgpe_pstate_apply_safe_clips
+//
+void p9_pgpe_pstate_apply_safe_clips()
+{
+    PK_TRACE_INF("SCL: Apply Safe Enter");
+    int q;
+
+    //Set clips to safe pstate
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        G_pgpe_pstate_record.psClipMax[q] = G_pgpe_pstate_record.safePstate;
+        G_pgpe_pstate_record.psClipMin[q] = G_pgpe_pstate_record.safePstate;
+    }
+
+    //Update clips
+    p9_pgpe_pstate_apply_clips();
+
+    PK_TRACE_INF("SCL: Apply Safe Enter");
+}
+
+//
+//p9_pgpe_pstate_safe_mode()
+//
+void p9_pgpe_pstate_safe_mode()
+{
+    PK_TRACE_INF("SAF: Safe Mode Enter");
+    uint32_t occScr2 = in32(OCB_OCCS2);
+    uint32_t suspend = in32(OCB_OCCFLG) & BIT32(PM_COMPLEX_SUSPEND);
+
+    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+    {
+        occScr2 |= BIT32(PGPE_SAFE_MODE_ACTIVE);
+        //In the case of suspend, if active the send_suspend is handled in actuate_pstates thread
+        p9_pgpe_pstate_apply_safe_clips();
+    }
+    else
+    {
+        occScr2 |= BIT32(PGPE_SAFE_MODE_ERROR);
+
+        if(suspend)
+        {
+            p9_pgpe_pstate_send_suspend_stop();
+        }
+    }
+
+    G_pgpe_pstate_record.pstatesStatus = suspend ? PSTATE_PM_SUSPEND_PENDING : PSTATE_SAFE_MODE;
+    occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
+    out32(OCB_OCCS2, occScr2);
+    PK_TRACE_INF("SAF: Safe Mode Exit");
+}
+
+//
+//p9_pgpe_pstate_send_suspend_stop
+//
+void p9_pgpe_pstate_send_suspend_stop()
+{
+#if SGPE_IPC_ENABLED == 1
+    int rc;
+    G_sgpe_suspend_stop.fields.msg_num = MSGID_PGPE_SGPE_SUSPEND_STOP;
+    G_sgpe_suspend_stop.fields.return_code = 0x0;
+    G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_suspend_stop;
+    ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
+                 IPC_MSGID_PGPE_SGPE_SUSPEND_STOP,
+                 p9_pgpe_suspend_stop_callback,
+                 (void*)NULL);
+
+    //Set SCOM Ownership of PMCR
+    PK_TRACE_INF("SUSP: Setting SCOM Ownership of PMCRs");
+
+    int q = 0;
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(OCB_QCSR);
+
+    //Set LMCR for each CME
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        //if(G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (0x80 >> q))
+        if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+        {
+            //CME0 within this quad
+            if (qcsr.fields.ex_config & (0x800 >> (q << 1)))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(0));
+            }
+
+            //CME1 within this quad
+            if (qcsr.fields.ex_config & (0x400 >> (q << 1)))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(0));
+            }
+        }
+    }
+
+    //send the command
+    PK_TRACE_INF("SUSP:Sending Suspend  IPC to SGPE");
+    rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
+
+    if(rc)
+    {
+        PK_TRACE_ERR("SUSP:Suspend Stop BAD ACK");
+        PK_PANIC(PGPE_SGPE_SUSPEND_STOP_BAD_ACK);
+    }
+
+#else
+    p9_pgpe_suspend_stop_callback(NULL, NULL);
+#endif
+}
+
+//
+//p9_pgpe_suspend_stop_callback
+//
+void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg)
+{
+    PK_TRACE_INF("SUSP:Stop Cb");
+    uint32_t occScr2 = in32(OCB_OCCS2);
+    occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
+    G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
+    out32(OCB_OCCS2, occScr2);
+}
+
+//
+//p9_pgpe_pstate_at_target
+//
+int32_t p9_pgpe_pstate_at_target()
+{
+    if( G_pgpe_pstate_record.globalPSCurr != G_pgpe_pstate_record.globalPSTarget ||
+        ((G_pgpe_pstate_record.activeQuads & QUAD0_BIT_MASK)
+         && G_pgpe_pstate_record.quadPSCurr[0] ^ G_pgpe_pstate_record.quadPSTarget[0]) ||
+        ((G_pgpe_pstate_record.activeQuads & QUAD1_BIT_MASK)
+         && G_pgpe_pstate_record.quadPSCurr[1] ^ G_pgpe_pstate_record.quadPSTarget[1]) ||
+        ((G_pgpe_pstate_record.activeQuads & QUAD2_BIT_MASK)
+         && G_pgpe_pstate_record.quadPSCurr[2] ^ G_pgpe_pstate_record.quadPSTarget[2]) ||
+        ((G_pgpe_pstate_record.activeQuads & QUAD3_BIT_MASK)
+         && G_pgpe_pstate_record.quadPSCurr[3] ^ G_pgpe_pstate_record.quadPSTarget[3]) ||
+        ((G_pgpe_pstate_record.activeQuads & QUAD4_BIT_MASK)
+         && G_pgpe_pstate_record.quadPSCurr[4] ^ G_pgpe_pstate_record.quadPSTarget[4]) ||
+        ((G_pgpe_pstate_record.activeQuads & QUAD5_BIT_MASK)
+         && G_pgpe_pstate_record.quadPSCurr[5] ^ G_pgpe_pstate_record.quadPSTarget[5]) )
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+//
+//p9_pgpe_pstate_do_step
+//
+void p9_pgpe_pstate_do_step()
+{
+    //Do one actuate step
+    PK_TRACE_DBG("STEP: Entry");
+    PK_TRACE_DBG("STEP: GTgt,GCurr 0x%x, 0x%x", G_pgpe_pstate_record.globalPSTarget,
+                 G_pgpe_pstate_record.globalPSCurr);
+    PK_TRACE_DBG("STEP: QTgt,QCurr 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.quadPSTarget[0],
+                 G_pgpe_pstate_record.quadPSCurr[0], G_pgpe_pstate_record.quadPSTarget[1],
+                 G_pgpe_pstate_record.quadPSCurr[1]);
+    PK_TRACE_DBG("STEP:QTgt,QCurr 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.quadPSTarget[2],
+                 G_pgpe_pstate_record.quadPSCurr[2], G_pgpe_pstate_record.quadPSTarget[3],
+                 G_pgpe_pstate_record.quadPSCurr[3]);
+    PK_TRACE_DBG("STEP:QTgt,QCurr 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.quadPSTarget[4],
+                 G_pgpe_pstate_record.quadPSCurr[4], G_pgpe_pstate_record.quadPSTarget[5],
+                 G_pgpe_pstate_record.quadPSCurr[5]);
+
+    uint32_t q;
+    uint32_t targetEVid = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSTarget, VPD_PT_SET_BIASED_SYSP);
+    PK_TRACE_DBG("STEP: eVidCurr=0x%x, eVidNext=0x%x, targetEVid=0x%x", G_pgpe_pstate_record.eVidCurr,
+                 G_pgpe_pstate_record.eVidNext, targetEVid);
+
+
+    //Higher number PState
+    if (((int16_t)(G_pgpe_pstate_record.globalPSTarget) - (int16_t)(G_pgpe_pstate_record.globalPSCurr)) > 0)
+    {
+
+        if ((G_pgpe_pstate_record.eVidCurr - targetEVid ) <= G_gppb->ext_vrm_step_size_mv)
+        {
+            G_pgpe_pstate_record.eVidNext = targetEVid;
+            G_pgpe_pstate_record.globalPSNext = G_pgpe_pstate_record.globalPSTarget;
+
+            for (q = 0; q < MAX_QUADS; q++)
+            {
+                if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+                {
+                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
+                }
+            }
+        }
+        else
+        {
+            G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr - G_gppb->ext_vrm_step_size_mv;
+            G_pgpe_pstate_record.globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
+
+            for (q = 0; q < MAX_QUADS; q++)
+            {
+                if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+                {
+                    if (G_pgpe_pstate_record.quadPSTarget[q] > G_pgpe_pstate_record.globalPSNext)   //Keep localPS under GlobalPS
+                    {
+                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.globalPSNext;
+                    }
+                    else
+                    {
+                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
+                    }
+                }
+            }
+
+        }
+
+        p9_pgpe_pstate_freq_updt();
+        p9_pgpe_pstate_updt_ext_volt(targetEVid);
+    }
+    //Lower number PState
+    else if (((int16_t)(G_pgpe_pstate_record.globalPSTarget) - (int16_t)(G_pgpe_pstate_record.globalPSCurr)) < 0)
+    {
+
+        if ((targetEVid - G_pgpe_pstate_record.eVidCurr) <= G_gppb->ext_vrm_step_size_mv)
+        {
+            G_pgpe_pstate_record.eVidNext = targetEVid;
+            G_pgpe_pstate_record.globalPSNext = G_pgpe_pstate_record.globalPSTarget;
+
+            for (q = 0; q < MAX_QUADS; q++)
+            {
+                if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+                {
+                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
+                }
+            }
+        }
+        else
+        {
+            G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr + G_gppb->ext_vrm_step_size_mv;
+            G_pgpe_pstate_record.globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
+
+            for (q = 0; q < MAX_QUADS; q++)
+            {
+                if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+                {
+                    if (G_pgpe_pstate_record.quadPSTarget[q] < G_pgpe_pstate_record.globalPSNext)   //Keep localPS under GlobalPS
+                    {
+                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.globalPSNext;
+                    }
+                    else
+                    {
+                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
+                    }
+                }
+            }
+        }
+
+        p9_pgpe_pstate_updt_ext_volt(targetEVid);
+        p9_pgpe_pstate_freq_updt();
+    }
+    else
+    {
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+            {
+                G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
+            }
+        }
+
+        p9_pgpe_pstate_freq_updt();
+    }
+
+    //Update current
+    G_pgpe_pstate_record.globalPSCurr = G_pgpe_pstate_record.globalPSNext;
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+        {
+            G_pgpe_pstate_record.quadPSCurr[q] = G_pgpe_pstate_record.quadPSNext[q];
+        }
+    }
+
+    //Update Shared SRAM
+    p9_pgpe_pstate_updt_actual_quad(0xFC);
+
+    PK_TRACE_DBG("STEP: Exit");
+
+}
+
+//
+//p9_pgpe_pstate__updt_ext_volt
+//
+//Update External VRM to G_eVidNext
+void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
+{
+    qppm_vdmcfgr_t vdmcfg;
+    uint32_t cmeInterppmVdataEnableSet[MAX_QUADS], q;
+    qppm_qpmmr_t qpmmr;
+
+#if !EPM_P9_TUNING
+    uint32_t delay_us = 0;
+
+    //Decreasing
+    if (G_pgpe_pstate_record.eVidNext < G_pgpe_pstate_record.eVidCurr)
+    {
+        delay_us = (G_pgpe_pstate_record.eVidCurr - G_pgpe_pstate_record.eVidNext) *
+                   G_ext_vrm_dec_rate_mult_usperus;
+    }
+    //Increasing
+    else if(G_pgpe_pstate_record.eVidNext > G_pgpe_pstate_record.eVidCurr)
+    {
+        delay_us  = (G_pgpe_pstate_record.eVidNext - G_pgpe_pstate_record.eVidCurr) *
+                    G_ext_vrm_inc_rate_mult_usperus;
+    }
+
+#endif
+
+    //Update external voltage
+    external_voltage_control_write(G_pgpe_pstate_record.eVidNext);
+
+#if !EPM_P9_TUNING
+
+    //Delay for delay_us
+    if (delay_us > 0)
+    {
+        pk_sleep(PK_MICROSECONDS((delay_us)));
+    }
+
+    if(G_pgpe_pstate_record.eVidNext == tgtEVid)
+    {
+        pk_sleep(PK_MICROSECONDS((G_gppb->ext_vrm_stabilization_time_us)));
+    }
+
+#endif
+
+    G_pgpe_pstate_record.eVidCurr = G_pgpe_pstate_record.eVidNext;
+
+    //If VDM is disabled, update VDMCFG register for every quad
+    if (!(G_pgpe_header_data->g_pgpe_qm_flags & BIT16( PGPE_HEADER_FLAGS_VDM_ENABLE)))
+    {
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+            {
+                //Take away CME control by writing to QPMMR
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
+                cmeInterppmVdataEnableSet[q] = qpmmr.fields.cme_interppm_vdata_enable;
+                qpmmr.value = BIT64(24);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), qpmmr.value);
+            }
+        }
+
+        //Update 0:7 of VDMCFG
+        vdmcfg.value = 0;
+        vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
+        GPE_PUTSCOM(PCB_MULTICAST_GRP4 | 0xf01b6, vdmcfg.value);
+
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+            {
+                //Restore QPMMR
+                if (cmeInterppmVdataEnableSet[q] == 1)
+                {
+                    qpmmr.value = BIT64(24);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), qpmmr.value);
+                }
+            }
+        }
+    }
+}
+
+//
+//Frequency Update
+//
+//Sends a DB0 to all active CMEs, so that Quad Managers(CMEs) update DPLL
+void p9_pgpe_pstate_freq_updt()
+{
+    PK_TRACE_DBG("FREQ: Enter");
+
+
+    pgpe_db0_glb_bcast_t db0;
+    db0.value = 0;
+    db0.fields.msg_id = MSGID_DB0_GLOBAL_ACTUAL_BROADCAST;
+    db0.fields.global_actual = G_pgpe_pstate_record.globalPSNext;
+    db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSNext[0];
+    db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSNext[1];
+    db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSNext[2];
+    db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSNext[3];
+    db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSNext[4];
+    db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSNext[5];
+
+    p9_pgpe_send_db0(db0.value,
+                     G_pgpe_pstate_record.activeCores,
+                     PGPE_DB0_MULTICAST,
+                     PGPE_DB0_ACK_WAIT_CME);
+
+    PK_TRACE_DBG("FREQ: Exit");
+}
+
+void p9_pgpe_pstate_dpll_write(uint32_t quadsVector, uint64_t val)
+{
+    //qppm_qpmmr_t qpmmr;
+    uint32_t q;
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if (quadsVector & (q >> 1))
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), val);//Write DPLL
+        }
+    }
+}
+
+//
+//p9_pgpe_pstate_ipc_rsp_cb_sem_post
+//
+void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg)
+{
+    pk_semaphore_post((PkSemaphore*)arg);
 }

@@ -57,7 +57,7 @@ PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
     0,
     0,
     0,
-    {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+    {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
     0,
     0,
     0,
@@ -216,11 +216,8 @@ main(int argc, char** argv)
     pk_thread_resume(&G_p9_pgpe_thread_process_requests);
     pk_thread_resume(&G_p9_pgpe_thread_actuate_pstates);
 
-    //Do initialization
+    //PGPE Header Init
     p9_pgpe_header_init();
-
-    PK_TRACE_DBG("Update PGPE Header with OCC SRAM info");
-    p9_pgpe_header_fill();
 
 #if USE_BOOT_TEMP
     //This is to be used for development and testing/verif

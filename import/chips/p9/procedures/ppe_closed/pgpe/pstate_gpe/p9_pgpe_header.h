@@ -63,6 +63,5 @@ typedef struct
 } PgpeHeader_t;
 
 void p9_pgpe_header_init();
-void p9_pgpe_header_fill();
 
 #endif //_P9_PGPE_HEADER_H_

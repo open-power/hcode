@@ -43,27 +43,19 @@ extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_head
 //
 void p9_pgpe_header_init()
 {
-    G_pgpe_header_data = (PgpeHeader_t*)&_PGPE_IMG_HEADER;
-}
-
-void p9_pgpe_header_fill()
-{
-    PK_TRACE_DBG("> p9_pgpe_header_fill");
+    PK_TRACE_DBG("INIT: PGPE Header Init");
 
     uint32_t i;
+    G_pgpe_header_data = (PgpeHeader_t*)&_PGPE_IMG_HEADER;
 
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)
                                             OCC_SHARED_SRAM_ADDR_START; //Bottom 2K of PGPE OCC Sram Space
 
-    PK_TRACE_DBG("   occ_shared_data = 0x%0xX\n", (uint32_t)occ_shared_data );
-
+    //OCC Shared SRAM address and length
     G_pgpe_header_data->g_pgpe_shared_sram_addr = (uint32_t*)OCC_SHARED_SRAM_ADDR_START;
     G_pgpe_header_data->g_pgpe_shared_sram_len = OCC_SHARED_SRAM_ADDR_LENGTH;
 
-    PK_TRACE_DBG("   Zeroing occ_shared_data region: start 0x%X length 0x%X",
-                 (uint32_t)OCC_SHARED_SRAM_ADDR_START,
-                 OCC_SHARED_SRAM_ADDR_LENGTH);
-
+    //OCC Pstate Tables SRAM address and length
     uint64_t* occ_shared_data_indx = (uint64_t*)OCC_SHARED_SRAM_ADDR_START;
 
     for (i = 0; i < OCC_SHARED_SRAM_ADDR_LENGTH / sizeof(uint64_t); ++i)
@@ -76,15 +68,14 @@ void p9_pgpe_header_fill()
             &occ_shared_data->pstate_table; //OCC Pstate table address
     G_pgpe_header_data->g_pgpe_occ_pstables_len  = sizeof(OCCPstateTable_t); //OCC Pstate table length
 
-    G_pgpe_header_data->g_pgpe_beacon_addr = (uint32_t*)&occ_shared_data->pgpe_beacon;
-    G_pgpe_header_data->g_quad_status_addr = (uint32_t*)&occ_shared_data->quad_pstate_0;
+    G_pgpe_header_data->g_pgpe_beacon_addr = (uint32_t*)&occ_shared_data->pgpe_beacon;//Beacon
+    G_pgpe_header_data->g_quad_status_addr = (uint32_t*)&occ_shared_data->quad_pstate_0;//Quad Pstate
 
     //GPPB Sram Offset
     G_pgpe_header_data->g_pgpe_gppb_sram_addr = (uint32_t*)(OCC_PGPE_SRAM_ADDR_START +
             G_pgpe_header_data->g_pgpe_hcode_length);
 
-    G_pgpe_header_data->g_pgpe_wof_state_addr = (uint32_t*)&occ_shared_data->pgpe_wof_state;
-    G_pgpe_header_data->g_req_active_quad_addr = (uint32_t*)&occ_shared_data->req_active_quads;
+    G_pgpe_header_data->g_pgpe_wof_state_addr = (uint32_t*)&occ_shared_data->pgpe_wof_state;//Wof State
+    G_pgpe_header_data->g_req_active_quad_addr = (uint32_t*)&occ_shared_data->req_active_quads;//Requested Active Quads
 
-    PK_TRACE_DBG("< p9_pgpe_header_fill");
 }

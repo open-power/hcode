@@ -42,7 +42,7 @@ extern GlobalPstateParmBlock* G_gppb;
 #define OCC_HB_ERROR_FIR 4
 void p9_pgpe_ocb_hb_error_init()
 {
-    PK_TRACE_DBG("OCC HB: Enter\n");
+    PK_TRACE_DBG("INIT: Occ Heartbeat Setup");
 
     uint64_t firact;
 
@@ -61,13 +61,11 @@ void p9_pgpe_ocb_hb_error_init()
     GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(OCC_HB_ERROR_FIR));
     out32(OCB_OISR0_CLR, BIT32(2));//Clear any pending interrupts
     out32(OCB_OIMR0_CLR, BIT32(2));//Unmask interrupt
-
-    PK_TRACE_DBG("OCC HB: Exit\n");
 }
 
 void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
 {
-    PK_TRACE_DBG("OCC Error: Enter\n");
+    PK_TRACE_DBG("OCCHB: Enter");
     PkMachineContext  ctx;
 
     ocb_occlfir_t fir;
@@ -86,11 +84,11 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
     }
     else
     {
-        PK_TRACE_ERR("OCC Error: Unexpected OCC_FIR[0x%08x%08x] \n", UPPER32(fir.value), LOWER32(fir.value));
+        PK_TRACE_ERR("OCCHB: Unexpected OCC_FIR[0x%08x%08x] ", UPPER32(fir.value), LOWER32(fir.value));
     }
 
     pk_irq_vec_restore(&ctx);
-    PK_TRACE_DBG("OCC Error: Exit\n");
+    PK_TRACE_DBG("OCC Error: Exit");
 }
 
 //
@@ -100,11 +98,11 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
 //Implement this handler. Implement Safe Mode
 void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq)
 {
-    PK_TRACE_DBG("SGPE Halt: Enter\n");
+    PK_TRACE_DBG("SGPE Halt: Enter");
     PkMachineContext  ctx;
 
     pk_irq_vec_restore(&ctx);//Restore interrupts
-    PK_TRACE_DBG("SGPE Halt: Exit\n");
+    PK_TRACE_DBG("SGPE Halt: Exit");
 }
 
 //
@@ -112,13 +110,13 @@ void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq)
 //
 void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq)
 {
-    PK_TRACE_DBG("XSTOP GPE2: Enter\n");
+    PK_TRACE_DBG("XSTOP GPE2: Enter");
     PkMachineContext  ctx;
 
     PK_PANIC(PGPE_XSTOP_SGPE_IRQ);
 
     pk_irq_vec_restore(&ctx);//Restore interrupts
-    PK_TRACE_DBG("XSTOP GPE2: Exit\n");
+    PK_TRACE_DBG("XSTOP GPE2: Exit");
 }
 
 //
@@ -128,7 +126,7 @@ void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq)
 //
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
 {
-    PK_TRACE_DBG("PCB_TYPE1: Enter\n");
+    PK_TRACE_DBG("PCB1: Enter");
 
     PkMachineContext  ctx;
     ocb_opit1cn_t opit1cn;
@@ -148,14 +146,14 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
         for (c = 0; c < MAX_CORES; c++)
         {
             //For each pending bit OPIT1PR[c] (OPIT1PR is 24 bits)
-            if (opit1pra & (0x80000000 >> c))
+            if (opit1pra & CORE_MASK(c))
             {
                 //Read payload from OPIT1C[c] register corresponding to the core 'c'
                 opit1cn.value = in32(OCB_OPIT1CN(c));
 
                 //Extract the LowerPState field and store the Pstate request
                 G_pgpe_pstate_record.coresPSRequest[c] = opit1cn.value & 0xff;
-                PK_TRACE_DBG("PCB_TYPE1: c[%d]=0%x\n", c, G_pgpe_pstate_record.coresPSRequest[c]);
+                PK_TRACE_DBG("PCB1: c[%d]=0%x", c, G_pgpe_pstate_record.coresPSRequest[c]);
             }
         }
 
@@ -169,7 +167,7 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
     out32(OCB_OISR1_CLR, BIT32(14));
 #endif
     pk_irq_vec_restore(&ctx);//Restore interrupts
-    PK_TRACE_DBG("PCB_TYPE1: Exit\n");
+    PK_TRACE_DBG("PCB1: Exit");
 }
 
 //
@@ -186,50 +184,49 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 
     pk_irq_sub_critical_enter(&ctx);
 
-    PK_TRACE_DBG("PCB_TYPE4: Enter\n");
+    PK_TRACE_DBG("PCB4: Enter");
     ocb_ccsr_t ccsr;
     ccsr.value = in32(OCB_CCSR);
     ocb_qcsr_t qcsr;
     qcsr.value = in32(OCB_QCSR);
     uint32_t quadAckExpect = 0;
     volatile uint32_t opit4pr, opit4pr1;
-    uint32_t opit4prQuad, q, c;
+    uint32_t opit4prQuad, q, c, coresVector;
     uint64_t value;
     pgpe_db0_start_ps_bcast_t db0;
     db0.value = 0;
-    db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
 
     //Check which CMEs sent Registration Type4
     opit4pr = in32(OCB_OPIT4PRA);
     out32(OCB_OPIT4PRA_CLR, opit4pr);
-    PK_TRACE_DBG("PCB_TYPE4: opit4pr 0x%x\n", opit4pr);
+    PK_TRACE_DBG("PCB4: opit4pr 0x%x", opit4pr);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
         opit4prQuad = (opit4pr >> ((MAX_QUADS - q + 1) << 2)) & 0xf;
-        PK_TRACE_DBG("PCB_TYPE4: opit4prQuad 0x%x\n", opit4prQuad);
+        PK_TRACE_DBG("PCB4: opit4prQuad 0x%x", opit4prQuad);
 
         if (opit4prQuad)
         {
             //Already registered
-            if (G_pgpe_pstate_record.activeQuads & (0x80 >> q))
+            if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
             {
-                PK_TRACE_DBG("PCB_TYPE4: Quad %d Already Registered. opit4pra=0x%x", q, opit4pr);
+                PK_TRACE_DBG("PCB4: Quad %d Already Registered. opit4pra=0x%x", q, opit4pr);
                 PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
             }
 
             //Update activeQuads and coresActive
-            G_pgpe_pstate_record.activeQuads |= (0x80 >> q);
+            G_pgpe_pstate_record.activeQuads |= QUAD_MASK(q);
 
             for (c = q << 2; c < ((q + 1) << 2); c++)
             {
-                if (ccsr.value & ((0x80000000) >> c))
+                if (ccsr.value & CORE_MASK(c))
                 {
-                    G_pgpe_pstate_record.activeCores |= ((0x80000000) >> c);
+                    G_pgpe_pstate_record.activeCores |= CORE_MASK(c);
                 }
             }
 
-            PK_TRACE_DBG("PCB_TYPE4: Quad %d Registered. qActive=0x%x cActive=0x%x", q, G_pgpe_pstate_record.activeQuads,
+            PK_TRACE_DBG("PCB4: Quad %d Registered. qActive=0x%x cActive=0x%x", q, G_pgpe_pstate_record.activeQuads,
                          G_pgpe_pstate_record.activeCores);
 
             //If Pstates are active or suspended while active, then
@@ -238,14 +235,6 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
             {
                 p9_pgpe_pstate_do_auction();
                 p9_pgpe_pstate_apply_clips();
-
-                db0.fields.global_actual = G_pgpe_pstate_record.globalPSTarget;
-                db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSTarget[0];
-                db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSTarget[1];
-                db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSTarget[2];
-                db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSTarget[3];
-                db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
-                db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
 
                 //Write CME_SCRATCH register
                 if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
@@ -278,17 +267,31 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 //SGPE sets up the DPLL_SEL bits before booting CME
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
 
-                for (c = q << 2; c < ((q + 1) << 2); c++)
+                //Send DB0
+                db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
+                db0.fields.global_actual = G_pgpe_pstate_record.globalPSTarget;
+                db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSTarget[0];
+                db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSTarget[1];
+                db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSTarget[2];
+                db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSTarget[3];
+                db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
+                db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
+
+                coresVector = 0;
+
+                for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
                 {
-                    if (G_pgpe_pstate_record.activeCores & ((BIT32(0)) >> c))
+                    if (G_pgpe_pstate_record.activeCores & CORE_MASK(c))
                     {
                         opit4pr1 = in32(OCB_OPIT4PRA);
-                        p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0.value);
-                        PK_TRACE_DBG("PCB_TYPE4: Sent StartDB0 to %d\n", q);
+                        coresVector |= CORE_MASK(c);
                     }
                 }
 
-                quadAckExpect |= (0x80 >> q);
+                PK_TRACE_DBG("PCB4: quad=%d,coresVector0x%x", q, coresVector);
+                p9_pgpe_send_db0(db0.value, coresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_SKIP);
+
+                quadAckExpect |= QUAD_MASK(q);
             }
 
         }
@@ -296,7 +299,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 
     //Wait for all CMEs to ACK Pstate Start DB0
     opit4pr1 = in32(OCB_OPIT4PRA);
-    PK_TRACE_DBG("PCB_TYPE4: opit4pr 0x%x, quadAckExpect=0x%x\n", opit4pr1, quadAckExpect);
+    PK_TRACE_DBG("PCB4: opit4pr 0x%x, quadAckExpect=0x%x", opit4pr1, quadAckExpect);
 
     while(quadAckExpect != 0)
     {
@@ -309,31 +312,26 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 
             if (opit4prQuad)
             {
-                PK_TRACE_DBG("PCB_TYPE4: opit4prQuad 0x%x\n", opit4prQuad);
-
-                if (quadAckExpect & (0x80 >> q))
+                if (quadAckExpect & QUAD_MASK(q))
                 {
-                    quadAckExpect &= ~(0x80 >> q);
+                    quadAckExpect &= ~QUAD_MASK(q);
                     out32(OCB_OPIT4PRA_CLR, opit4prQuad << ((MAX_QUADS - q + 1) << 2));
-                    PK_TRACE_DBG("PCB_TYPE4: Got DB0 Start ACK from %d\n", q);
+                    PK_TRACE_DBG("PCB4: Got DB0 Start ACK from %d", q);
                     G_pgpe_pstate_record.quadPSCurr[q] = G_pgpe_pstate_record.quadPSTarget[q];
                     G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                    p9_pgpe_pstate_updt_actual_quad(q);
+                    p9_pgpe_pstate_updt_actual_quad(QUAD_MASK(q));
                 }
                 else
                 {
-                    PK_TRACE_ERR("PCB_TYPE4: Unexpected ACK q=0x%x,opit4prQuad=0x%x\n", q, opit4prQuad);
+                    PK_TRACE_ERR("PCB4: Unexpected ACK q=0x%x,opit4prQuad=0x%x", q, opit4prQuad);
                     PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
                 }
             }
         }
     }
 
-    PK_TRACE_DBG("PCB_TYPE4: All ACKS rcvd. quadAckExpect=0x%x\n", quadAckExpect);
     out32(OCB_OISR1_CLR, BIT32(17)); //Clear out TYPE4 in OISR
-
     pk_irq_sub_critical_exit(&ctx);
-
     pk_irq_vec_restore(&ctx);
-    PK_TRACE_DBG("PCB_TYPE4: Exit\n");
+    PK_TRACE_DBG("PCB4: Exit");
 }

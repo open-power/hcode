@@ -28,9 +28,13 @@
 #include "pk.h"
 #include "p9_pstates_pgpe.h"
 
-#define MAX_DPLL_VALUE              255
-
+//Initializes global pointer to Global Pstate Parameter Block
 void p9_pgpe_gppb_init();
+
+//Interpolate Voltage from Pstate.
 uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set);
+
+//Interpolate Pstate from Voltage(only for biased and system parameters VPD point)
 uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd);
+
 #endif //_P9_PGPE_GPPB_H_

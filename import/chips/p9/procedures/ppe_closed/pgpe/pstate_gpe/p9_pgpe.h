@@ -59,17 +59,30 @@
 //
 //#Defines
 //
-#define OCC_IPC_IMMEDIATE_RESP      0x0080
-#define WOF_IPC_IMMEDIATE_RESP      0x0040
-#define CCSR_CORE_CONFIG_MASK    0x80000000
-#define PSTATE_START_OCC_FLAG 0
-#define PSTATE_START_OCC_IPC  1
 
 enum PGPE_DEFINES
 {
-    QUAD_ACTIVE_MASK    = 0x80,
-    CORE_ACTIVE_MASK    = 0x80000000
+    QUAD0_MASK        = 0x80,
+    CORE0_MASK        = 0x80000000,
 };
+
+enum PSTATE_START_SOURCE
+{
+    PSTATE_START_OCC_FLAG  = 0,
+    PSTATE_START_OCC_IPC   = 1
+};
+
+#define CORE_MASK(core) \
+    (CORE0_MASK >> core)
+
+#define QUAD_MASK(quad) \
+    (QUAD0_MASK >> quad)
+
+#define FIRST_CORE_FROM_QUAD(quad) \
+    ((quad) << 2)
+
+#define LAST_CORE_FROM_QUAD(quad) \
+    ((quad + 1) << 2)
 
 /// PGPE PState
 void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq);

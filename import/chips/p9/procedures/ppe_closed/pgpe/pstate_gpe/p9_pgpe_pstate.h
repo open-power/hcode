@@ -33,27 +33,28 @@
 #include "p9_pgpe_header.h"
 
 
-#define MAX_IPC_PEND_TBL_ENTRIES                9
-#define IPC_PEND_PSTATE_START_STOP              0
-#define IPC_PEND_SGPE_ACTIVE_CORES_UPDT         1
-#define IPC_PEND_SGPE_ACTIVE_QUADS_UPDT         2
-#define IPC_PEND_CLIP_UPDT                      3
-#define IPC_PEND_WOF_CTRL                       4
-#define IPC_PEND_WOF_VFRT                       5
-#define IPC_PEND_SET_PMCR_REQ                   6
-#define IPC_PEND_SGPE_SUSPEND_PSTATES           7
+enum IPC_PEND_TBL
+{
+    IPC_PEND_PSTATE_START_STOP        =     0,
+    IPC_PEND_SGPE_ACTIVE_CORES_UPDT   =     1,
+    IPC_PEND_SGPE_ACTIVE_QUADS_UPDT   =     2,
+    IPC_PEND_CLIP_UPDT                =     3,
+    IPC_PEND_WOF_CTRL                 =     4,
+    IPC_PEND_WOF_VFRT                 =     5,
+    IPC_PEND_SET_PMCR_REQ             =     6,
+    MAX_IPC_PEND_TBL_ENTRIES          =     7
+};
 
-#define ALL_QUADS_BIT_MASK      QUAD0_BIT_MASK | QUAD1_BIT_MASK | \
-    QUAD2_BIT_MASK | QUAD3_BIT_MASK | \
-    QUAD4_BIT_MASK | QUAD5_BIT_MASK
-#define QUAD0_BIT_MASK          0x80
-#define QUAD1_BIT_MASK          0x40
-#define QUAD2_BIT_MASK          0x20
-#define QUAD3_BIT_MASK          0x10
-#define QUAD4_BIT_MASK          0x8
-#define QUAD5_BIT_MASK          0x4
+enum QUAD_BIT_MASK
+{
+    QUAD0_BIT_MASK   =  0x80,
+    QUAD1_BIT_MASK   =  0x40,
+    QUAD2_BIT_MASK   =  0x20,
+    QUAD3_BIT_MASK   =  0x10,
+    QUAD4_BIT_MASK   =  0x8,
+    QUAD5_BIT_MASK   =  0x4
+};
 
-#define PSTATE_SUSPEND_OR_SUSPEND_PEND 6
 enum PSTATE_STATUS
 {
     PSTATE_INIT                                 =    0, //PGPE Booted
@@ -66,8 +67,10 @@ enum PSTATE_STATUS
 
 enum PSTATE_DB0
 {
-    PGPE_DB0_UNICAST      = 1,
-    PGPE_DB0_MULTICAST    = 2,
+    PGPE_DB0_UNICAST        = 0,
+    PGPE_DB0_MULTICAST      = 1,
+    PGPE_DB0_ACK_WAIT_CME   = 0,
+    PGPE_DB0_ACK_SKIP       = 1,
 };
 
 //Task list entry
@@ -127,29 +130,26 @@ typedef struct
 //Functions called by threads
 //
 void p9_pgpe_pstate_init();
-void p9_pgpe_pstate_update(uint8_t* quadPstates);
-void p9_pgpe_pstate_apply_clips();
+void p9_pgpe_pstate_setup_process_pcb_type4();
 void p9_pgpe_pstate_do_auction();
-void p9_pgpe_pstate_calc_wof();
-void p9_pgpe_pstate_update_wof_state();
 void p9_pgpe_pstate_apply_clips();
-void p9_pgpe_send_db0(uint64_t db0, uint32_t quads, uint32_t cores, uint32_t unicast);
-void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg);
-void p9_pgpe_pstate_pm_complex_suspend();
-void p9_pgpe_pstate_send_suspend_stop();
-void p9_pgpe_pstate_safe_mode();
-void p9_pgpe_pstate_apply_safe_clips();
-int32_t p9_pgpe_pstate_at_target();
-void p9_pgpe_pstate_do_step();
-void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner);
+void p9_pgpe_pstate_calc_wof();
+void p9_pgpe_pstate_updt_actual_quad(uint32_t q);
+void p9_pgpe_pstate_update_wof_state();
+void p9_pgpe_send_db0(uint64_t db0, uint32_t coresVector, uint32_t type, uint32_t process_ack);
 void p9_pgpe_wait_cme_db_ack(uint32_t activeCores);
-void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid);
+void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
+void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner);
+void p9_pgpe_pstate_stop();
+void p9_pgpe_pstate_clip_bcast(uint32_t clip_type);
 void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
-void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
-void p9_pgpe_pstate_stop();
-void p9_pgpe_pstate_clip_bcast(uint32_t clip_type);
-void p9_pgpe_pstate_setup_process_pcb_type4();
-void p9_pgpe_pstate_updt_actual_quad(uint32_t q);
+void p9_pgpe_pstate_apply_safe_clips();
+void p9_pgpe_pstate_safe_mode();
+void p9_pgpe_pstate_send_suspend_stop();
+int32_t p9_pgpe_pstate_at_target();
+void p9_pgpe_pstate_do_step();
+void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid);
+void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg);
 #endif //

@@ -34,44 +34,34 @@
 #include "p9_dd1_doorbell_wr.h"
 #include "avs_driver.h"
 
-
-//Local Function Prototypes
-void p9_pgpe_thread_actuate_init_actual_quad();
-
 //
-//External Global Data
+//Externs and Globals
 //
 extern PgpePstateRecord G_pgpe_pstate_record;
 extern ipc_async_cmd_t G_ipc_msg_pgpe_sgpe;
 GPE_BUFFER(extern ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 extern GlobalPstateParmBlock* G_gppb;
 
-//Payload data non-cacheable region for IPCs sent to SGPE
 //
 //Thread Actuate PStates
 //
+//One of the two threads for PGPE. Main purpose of this thread is to do
+//frequency/voltage actuation by communicating with CMEs.
 void p9_pgpe_thread_actuate_pstates(void* arg)
 {
     PK_TRACE_DBG("ACT_TH: Started");
     uint32_t inRange, q  = 0;
     PkMachineContext  ctx;
     uint32_t restore_irq = 0;
+    ocb_occflg_t occFlag;
+    uint32_t occScr2;
 
-    pk_semaphore_create(&(G_pgpe_pstate_record.sem_actuate), 0, 1);
-    pk_semaphore_create(&(G_pgpe_pstate_record.sem_sgpe_wait), 0, 1);
-
-    PK_TRACE_DBG("ACT_TH: Inited");
-
-    //Initialize Shared SRAM to a known state
-    p9_pgpe_thread_actuate_init_actual_quad();
-
+    //Setup pcb_type4 and check for qCME registration
+    p9_pgpe_pstate_setup_process_pcb_type4();
 
     //Upon PGPE Boot, if OCC_FLAGS[PGPE_PSTATE_PROTOCOL_ACTIVATE] is set, then we start Pstart here, and not wait
     //for an IPC to come from OCC
-    ocb_occflg_t occFlag;
     occFlag.value = in32(OCB_OCCFLG);
-
-    p9_pgpe_pstate_setup_process_pcb_type4(); //Setup pcb_type4 and check for qCME registration
 
     if (occFlag.value & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVATE))
     {
@@ -88,11 +78,11 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
     }
 
 
-    // Set OCC Scratch2[PGPE_ACTIVE]
-    uint32_t occScr2 = in32(OCB_OCCS2);
+    // Set OCC Scratch2[PGPE_ACTIVE], so that external world knows that PGPE is UP
+    occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PGPE_ACTIVE);
-    PK_TRACE_INF("Setting PGPE_ACTIVE in OCC SCRATCH2 addr %X = %X", OCB_OCCS2, occScr2);
     out32(OCB_OCCS2, occScr2);
+    PK_TRACE_INF("Setting PGPE_ACTIVE in OCC SCRATCH2 addr %X = %X", OCB_OCCS2, occScr2);
 
     //Thread Loop
     while(1)
@@ -106,7 +96,6 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
 
         }
 
-        PK_TRACE_DBG("ACT_TH: Status=%d", G_pgpe_pstate_record.pstatesStatus);
 
         restore_irq = 0;
 
@@ -140,7 +129,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
 
                 for (q = 0; q < MAX_QUADS; q++)
                 {
-                    if((G_pgpe_pstate_record.activeQuads & (0x80 >> q)))
+                    if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
                     {
                         minPS = G_pgpe_pstate_record.psClipMin[q];
 
@@ -268,21 +257,4 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
             }
         }
     }//Thread loop
-}
-
-
-
-void p9_pgpe_thread_actuate_init_actual_quad()
-{
-    G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = 0xff;
-    G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = 0xff;
-    G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = 0xff;
-    G_pgpe_pstate_record.pQuadState0->fields.quad3_pstate = 0xff;
-    G_pgpe_pstate_record.pQuadState0->fields.active_cores = 0;
-
-    G_pgpe_pstate_record.pQuadState1->fields.quad4_pstate = 0xff;
-    G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = 0xff;
-    G_pgpe_pstate_record.pQuadState1->fields.active_cores = 0x0;
-    G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = 0x0;
-
 }
