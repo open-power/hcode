@@ -867,6 +867,8 @@ p9_sgpe_stop_entry()
 
         PK_TRACE_DBG("CME Halted");
 
+        //Set Quad GPMMR RESET_STATE_INDICATOR bit to indicate CME is offline
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_OR, qloop), BIT64(15));
 
         PK_TRACE("Assert powerbus purge via QCCR[30]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WOR, qloop), BIT64(30));
