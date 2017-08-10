@@ -29,16 +29,15 @@
 #include "p9_pgpe_header.h"
 #include "pstate_pgpe_occ_api.h"
 
-//Generated PState Table in SRAM
-GeneratedPstateInfo G_gpi;
+//Externs
 extern PgpeHeader_t* G_pgpe_header_data;
-//extern VpdOperatingPoint gppb->operating_points_set[NUM_VPD_PTS_SET][VPD_PV_POINTS];
+extern GlobalPstateParmBlock* G_gppb;
 
 //
 //Local function prototypes
 //
-void p9_pgpe_gen_raw_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi);
-void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi);
+void p9_pgpe_gen_raw_pstates(GeneratedPstateInfo* gpi);
+void p9_pgpe_gen_biased_pstates(GeneratedPstateInfo* gpi);
 void p9_pgpe_gen_occ_pstate_tbl(GeneratedPstateInfo* gpi);
 
 //
@@ -46,44 +45,21 @@ void p9_pgpe_gen_occ_pstate_tbl(GeneratedPstateInfo* gpi);
 //
 void p9_pgpe_gen_pstate_info()
 {
-    //int p;
     //Get GlobalPstateParmBlock offset from pgpe_header
-    uint32_t* pstate_tbl_memory_offset  = G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset;
-    uint32_t pstate_tbl_length = G_pgpe_header_data->g_pgpe_gen_pstables_length;
-    void* gppb_sram_offset = G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
-    GlobalPstateParmBlock* gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
+    GeneratedPstateInfo* gpi = (GeneratedPstateInfo*)G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset;
 
     //Fill out GeneratedPstateInfo structure
-    G_gpi.magic = GEN_PSTATES_TBL_MAGIC;
-    G_gpi.globalppb = *gppb;
-    G_gpi.pstate0_frequency_khz = gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][ULTRA].frequency_mhz * 1000;
-
-    G_gpi.highest_pstate = ((gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][ULTRA].frequency_mhz -
-                             gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].frequency_mhz) * 1000) / gppb->frequency_step_khz;
+    gpi->magic = GEN_PSTATES_TBL_MAGIC;
+    gpi->globalppb = *G_gppb;
+    gpi->pstate0_frequency_khz = G_gppb->reference_frequency_khz;
+    gpi->highest_pstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
 
     //Generate tables
-    p9_pgpe_gen_raw_pstates(gppb, &G_gpi);
-    p9_pgpe_gen_biased_pstates(gppb, &G_gpi);
-
-    /*
-    for (p = 0; p < VPD_PV_POINTS; p++)
-    {
-        G_gpi.operating_points_biased[p] = gppb->operating_points_set[VPD_PT_SET_BIASED][p];
-        G_gpi.operating_points_sysp[p] = gppb->operating_points_set[VPD_PT_SET_SYSP][p];
-        G_gpi.operating_points_biased_sysp[p] = gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][p];
-    }*/
-
-    //Write Generated Pstate out to main memory(HOMER/PPMR.PstateTable)
-    uint32_t* gpi = (uint32_t*)&G_gpi;
-    int32_t w;
-
-    for (w = 0; w < (pstate_tbl_length >> 2); w++)
-    {
-        pstate_tbl_memory_offset[w] = gpi[w];
-    }
+    p9_pgpe_gen_raw_pstates(gpi);
+    p9_pgpe_gen_biased_pstates(gpi);
 
     //Generate Pstate table for OCC in SRAM
-    p9_pgpe_gen_occ_pstate_tbl(&G_gpi);
+    p9_pgpe_gen_occ_pstate_tbl(gpi);
 }
 
 //
@@ -91,58 +67,56 @@ void p9_pgpe_gen_pstate_info()
 //
 //Generates pstate table without biasing
 //
-void p9_pgpe_gen_raw_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi)
+void p9_pgpe_gen_raw_pstates(GeneratedPstateInfo* gpi)
 {
     int32_t p;
-    uint32_t freq_khz_offset = 0, highest_pstate;
-    highest_pstate = gppb->operating_points_set[VPD_PT_SET_SYSP][POWERSAVE].pstate;
+    uint32_t freq_khz_offset = 0;
 
-    for (p = 0; p <= highest_pstate; p++)
+    for (p = 0; p <= G_gppb->operating_points_set[VPD_PT_SET_RAW][POWERSAVE].pstate; p++)
     {
         gpi->raw_pstates[p].pstate = p;
-        gpi->raw_pstates[p].frequency_mhz = (gppb->reference_frequency_khz -  freq_khz_offset) / 1000;
+        gpi->raw_pstates[p].frequency_mhz = (G_gppb->reference_frequency_khz -  freq_khz_offset) / 1000;
         gpi->raw_pstates[p].external_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_SYSP);
         gpi->raw_pstates[p].effective_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
-        gpi->raw_pstates[p].effective_regulation_vdd_mv = gpi->raw_pstates[p].external_vdd_mv + gppb->ivrm.deadzone_mv;
+        gpi->raw_pstates[p].effective_regulation_vdd_mv = gpi->raw_pstates[p].external_vdd_mv + G_gppb->ivrm.deadzone_mv;
         gpi->raw_pstates[p].internal_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
         gpi->raw_pstates[p].internal_vid = (gpi->raw_pstates[p].internal_vdd_mv - 512) >> 4;
         gpi->raw_pstates[p].vdm_mv = 0;
         gpi->raw_pstates[p].vdm_vid = 0;
         gpi->raw_pstates[p].vdm_thresholds = 0;
-        freq_khz_offset += gppb->frequency_step_khz;
+        freq_khz_offset += G_gppb->frequency_step_khz;
     }
 
-    PK_TRACE_DBG("<< p9_pgpe_gen_raw_pstates");
+    PK_TRACE_DBG("INIT: Generated Raw Tbl");
 }
 
 //
 //p9_pgpe_gen_biased_pstates
 //
-//Generates pstate table with biasing
+//Generates pstate table with biasing and system parameters
 //
-void p9_pgpe_gen_biased_pstates(GlobalPstateParmBlock* gppb, GeneratedPstateInfo* gpi)
+void p9_pgpe_gen_biased_pstates(GeneratedPstateInfo* gpi)
 {
     int32_t p;
-    uint32_t freq_khz_offset = 0, highest_pstate;
-    highest_pstate = gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+    uint32_t freq_khz_offset = 0;
 
-    for (p = 0; p <= highest_pstate; p++)
+    for (p = 0; p <= G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate; p++)
     {
         gpi->biased_pstates[p].pstate = p;
-        gpi->biased_pstates[p].frequency_mhz = (G_gpi.pstate0_frequency_khz - freq_khz_offset) / 1000;
+        gpi->biased_pstates[p].frequency_mhz = (G_gppb->reference_frequency_khz - freq_khz_offset) / 1000;
         gpi->biased_pstates[p].external_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_BIASED_SYSP);
         gpi->biased_pstates[p].effective_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
         gpi->biased_pstates[p].effective_regulation_vdd_mv = (uint16_t)(gpi->biased_pstates[p].external_vdd_mv +
-                gppb->ivrm.deadzone_mv);
+                G_gppb->ivrm.deadzone_mv);
         gpi->biased_pstates[p].internal_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
         gpi->biased_pstates[p].internal_vid = (uint16_t)((gpi->biased_pstates[p].internal_vdd_mv - 512) >> 4);
         gpi->biased_pstates[p].vdm_mv = 0;
         gpi->biased_pstates[p].vdm_vid = 0;
         gpi->biased_pstates[p].vdm_thresholds = 0;
-        freq_khz_offset += gppb->frequency_step_khz;
+        freq_khz_offset += G_gppb->frequency_step_khz;
     }
 
-    PK_TRACE_DBG("<< p9_pgpe_gen_biased_pstates");
+    PK_TRACE_DBG("INIT: Generated Biased Tbl");
 }
 
 
@@ -164,5 +138,5 @@ void p9_pgpe_gen_occ_pstate_tbl(GeneratedPstateInfo* gpi)
         opst->table[p].internal_vdd_vid  = gpi->biased_pstates[p].internal_vid;
     }
 
-    PK_TRACE_DBG("<< p9_pgpe_gen_occ_pstate_tbl");
+    PK_TRACE_DBG("INIT: Generated OCC Tbl");
 }
