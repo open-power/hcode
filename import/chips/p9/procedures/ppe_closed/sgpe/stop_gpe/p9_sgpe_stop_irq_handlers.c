@@ -57,9 +57,45 @@ SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
     },
     // wof status
     {0, 0, 0},
+    // fit status
+    {0},
     // semaphores
     {{0, 0, 0}}
 };
+
+
+void
+p9_sgpe_fit_handler()
+{
+    PK_TRACE("FIT: Handler Fired");
+
+    uint32_t tpending = in32(OCB_OPITNPRA(PIG_TYPE3)) |
+                        in32(OCB_OPITNPRA(PIG_TYPE5)) |
+                        in32(OCB_OPIT6PRB);
+
+    // count to 10 times that stop8+ is not serviced, then block stop5
+    if (G_sgpe_stop_record.wof.status_stop == STATUS_IDLE && tpending)
+    {
+        PK_TRACE("FIT: Stravation Counter: %d", G_sgpe_stop_record.fit.strave_counter);
+
+        if (G_sgpe_stop_record.fit.strave_counter < 25)
+        {
+            G_sgpe_stop_record.fit.strave_counter++;
+        }
+        else
+        {
+            PK_TRACE_INF("FIT: Stop8+ Stravation Detected");
+            G_sgpe_stop_record.fit.strave_counter = 0;
+            out32(OCB_OIMR1_OR, BIT32(15));
+            g_oimr_override |= BIT64(47);
+        }
+    }
+    // reset counter if current processing stop8+
+    else if (G_sgpe_stop_record.wof.status_stop == STATUS_PROCESSING)
+    {
+        G_sgpe_stop_record.fit.strave_counter = 0;
+    }
+}
 
 
 
@@ -259,7 +295,7 @@ p9_sgpe_ipi3_low_handler(void* arg, PkIrqId irq)
 
 
 static void
-p9_sgpe_pig_type23_parser(const uint32_t type)
+p9_sgpe_pig_cpayload_parser(const uint32_t type)
 {
     uint32_t   timeout       = 0;
     uint32_t   qloop         = 0;
@@ -270,8 +306,7 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
     uint32_t   center        = 0;
     uint32_t   cpending      = 0;
     uint32_t   cpayload      = 0;
-    uint32_t   payload2      = 0;
-    uint32_t   payload3      = 0;
+    uint32_t   tpayload      = 0;
     uint32_t   vector_index  = 0;
     uint32_t   request_index = 0;
     uint32_t   suspend_index = 0;
@@ -322,10 +357,15 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
             {
                 cpayload = in32(OCB_OPIT2CN(cindex));
             }
-            else
+            else if (type == 3)
             {
                 cpayload = in32(OCB_OPIT3CN(cindex));
             }
+            else
+            {
+                cpayload = in32(OCB_OPIT5CN(cindex));
+            }
+
 
             PK_TRACE_INF("Core[%d] sent PIG Type[%d] with Payload [%x]", cindex, type, cpayload);
 
@@ -415,21 +455,22 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
             // and process it instead of this phantom; if type 3 entry, then ignore both
             // as type3 needs to be hanndled in type3 handler while current is obvious type2
 
-            if ((scom_data.words.upper & BIT32(13)) && cpayload == TYPE2_PAYLOAD_DECREMENTER_WAKEUP)
+            if ((scom_data.words.upper & BIT32(13)) &&
+                (type == PIG_TYPE2) &&
+                (cpayload == TYPE2_PAYLOAD_DECREMENTER_WAKEUP))
             {
-                payload2 = in32(OCB_OPIT2CN(cindex));
-                payload3 = in32(OCB_OPIT3CN(cindex));
+                tpayload = in32(OCB_OPIT2CN(cindex));
 
-                if ((!(payload2 & TYPE2_PAYLOAD_EXIT_EVENT)) &&
-                    (payload2 & TYPE2_PAYLOAD_STOP_LEVEL))
+                if ((in32(OCB_OPITNPRA(PIG_TYPE2)) & BIT32(cindex)) &&
+                    (!(tpayload & TYPE2_PAYLOAD_EXIT_EVENT)) &&
+                    (tpayload & TYPE2_PAYLOAD_STOP_LEVEL))
                 {
                     PK_TRACE_INF("WARNING: Leftover dec wakeup following by new TYPE2 entry PIG");
-                    cpayload = payload2;
+                    cpayload = tpayload;
                 }
-                else if ((!(payload3 & TYPE2_PAYLOAD_EXIT_EVENT)) &&
-                         (payload3 & TYPE2_PAYLOAD_STOP_LEVEL))
+                else if (in32(OCB_OPITNPRA(PIG_TYPE3)) & BIT32(cindex))
                 {
-                    PK_TRACE_INF("WARNING: Leftover dec wakeup following by new TYPE3 entry PIG");
+                    PK_TRACE_INF("WARNING: Leftover dec wakeup following by new TYPE3 PIG");
                     continue;
                 }
             }
@@ -440,16 +481,17 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                 if (!(scom_data.words.upper & BIT32(13)))
                 {
                     // type2 duplicate wakeup can happen due to manual PCWU vs other HW wakeup
-                    if (cpayload == TYPE2_PAYLOAD_DECREMENTER_WAKEUP)
+                    if ((type == PIG_TYPE2) && (cpayload == TYPE2_PAYLOAD_DECREMENTER_WAKEUP))
                     {
                         PK_TRACE_INF("WARNING: Ignore Phantom Software PC/Decrementer Wakeup PIG \
                                       (already handoff cme by other wakeup");
                     }
                     // otherwise PPM shouldnt send duplicate pig if wakeup is present
+                    // also not suppose to handoff to cme if resclk is not enabled before(type5)
                     else
                     {
-                        PK_TRACE_INF("ERROR: Received Phantom Hardware Type2/3 Wakeup PIG \
-                                      When Wakeup_notify_select = 0. HALT SGPE!");
+                        PK_TRACE_INF("ERROR: Received Phantom Hardware Type%d Wakeup PIG \
+                                      When Wakeup_notify_select = 0. HALT SGPE!", type);
                         PK_PANIC(SGPE_PIG_TYPE23_EXIT_WNS_CME);
                     }
                 }
@@ -457,25 +499,31 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                 {
                     // if wakeup by pc_intr_pending,
                     // go exit with flag to do extra doorbell from normal wakeup
-                    if (cpayload == TYPE2_PAYLOAD_DECREMENTER_WAKEUP)
+                    if ((type == PIG_TYPE2) && (cpayload == TYPE2_PAYLOAD_DECREMENTER_WAKEUP))
                     {
                         PK_TRACE_INF("Core Request Exit with Decrementer Wakeup");
                         G_sgpe_stop_record.group.core[VECTOR_PCWU] |= BIT32(cindex);
                     }
 
-                    // Quad-Manager completed the resonant clock enable, proceed stop5 exit
-                    if (cpayload == TYPE2_PAYLOAD_EXIT_RCLK)
+                    // if having ongoing stop11 in resclk disable phase, hold on to all exits
+                    if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32(qloop))
                     {
-                        PK_TRACE_INF("Core Request Exit Allowed as Resonant Clock Enable is Completed");
-                        G_sgpe_stop_record.group.quad[VECTOR_RCLKX] &= ~BIT32(qloop);
-                    }
+                        if ((type == PIG_TYPE5) && (cpayload == TYPE5_PAYLOAD_EXIT_RCLK))
+                        {
+                            PK_TRACE_ERR("ERROR: IMPOSSIBLE! RCLK PROTOCOL BROKEN! HALT SGPE!");
+                            pk_halt();
+                        }
 
-                    if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] & BIT32(qloop))
+                        PK_TRACE_INF("Core Request Exit But Resonent Clock Disable Ongoing so ignore");
+                        G_sgpe_stop_record.group.core[VECTOR_RCLKE] |= BIT32(cindex);
+                    }
+                    else if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] & BIT32(qloop))
                     {
                         PK_TRACE_DBG("Core Request Exit But in Block Wakeup Mode so Ignore");
 
-                        if (cpayload == TYPE2_PAYLOAD_EXIT_RCLK)
+                        if ((type == PIG_TYPE5) && (cpayload == TYPE5_PAYLOAD_EXIT_RCLK))
                         {
+                            G_sgpe_stop_record.group.quad[VECTOR_RCLKX] &= ~BIT32(qloop);
                             G_sgpe_stop_record.group.core[VECTOR_BLOCKX] |=
                                 G_sgpe_stop_record.group.core[VECTOR_RCLKX];
                         }
@@ -484,36 +532,23 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                             G_sgpe_stop_record.group.core[VECTOR_BLOCKX] |= BIT32(cindex);
                         }
                     }
-                    // FIXME exit unblock above can bypass rclk exit block
-                    else if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32(qloop))
+                    // Quad-Manager completed the resonant clock enable, proceed stop5 exit is now allowed
+                    else if ((type == PIG_TYPE5) && (cpayload == TYPE5_PAYLOAD_EXIT_RCLK))
                     {
-                        if (cpayload == TYPE2_PAYLOAD_EXIT_RCLK)
-                        {
-                            PK_TRACE_ERR("ERROR: IMPOSSIBLE! RCLK PROTOCOL BROKEN! HALT SGPE!");
-                            pk_halt();
-                        }
-
-                        PK_TRACE_INF("Core Request Exit But Resonent Clock Disable Ongoing so Ignore");
-                        G_sgpe_stop_record.group.core[VECTOR_RCLKE] |= BIT32(cindex);
+                        PK_TRACE_INF("Core Request Exit Allowed as Resonant Clock Enable is Completed");
+                        G_sgpe_stop_record.group.quad[VECTOR_RCLKX] &= ~BIT32(qloop);
+                        G_sgpe_stop_record.group.core[VECTOR_PIGX] |=
+                            G_sgpe_stop_record.group.core[VECTOR_RCLKX];
                     }
                     else
                     {
                         PK_TRACE_INF("Core Request Exit Confirmed");
+                        G_sgpe_stop_record.group.core[VECTOR_PIGX] |= BIT32(cindex);
 
-                        if (cpayload == TYPE2_PAYLOAD_EXIT_RCLK)
-                        {
-                            G_sgpe_stop_record.group.core[VECTOR_PIGX] |=
-                                G_sgpe_stop_record.group.core[VECTOR_RCLKX];
-                        }
-                        else
-                        {
-                            G_sgpe_stop_record.group.core[VECTOR_PIGX] |= BIT32(cindex);
-
-                            PK_TRACE("Update STOP history on core: in transition of exit");
-                            scom_data.words.upper = SSH_EXIT_IN_SESSION;
-                            scom_data.words.lower = 0;
-                            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
-                        }
+                        PK_TRACE("Update STOP history on core: in transition of exit");
+                        scom_data.words.upper = SSH_EXIT_IN_SESSION;
+                        scom_data.words.lower = 0;
+                        GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
                     }
                 }
             }
@@ -537,10 +572,13 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
                 }
 
                 // Quad-Manager completed the resonant clock disable, proceed stop11 entry
-                if (cpayload == (TYPE2_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11))
+                // block entry protocol is checked in the entry code instead of here below
+                if ((type == PIG_TYPE5) &&
+                    (cpayload == (TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
                 {
                     PK_TRACE_INF("Core Request Entry Allowed as Resonant Clock Disable is Completed");
-                    G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |= BIT32(qloop);
+                    G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32(qloop);
+                    G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + 16));
                 }
 
                 if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] & BIT32(qloop))
@@ -665,43 +703,10 @@ p9_sgpe_pig_type23_parser(const uint32_t type)
 
 
 
-void
-p9_sgpe_pig_type2_handler(void* arg, PkIrqId irq)
+static void
+p9_sgpe_pig_thread_lanucher()
 {
     PkMachineContext ctx;
-
-    //===============================
-    MARK_TRAP(STOP_PIG_TYPE2_HANDLER)
-    //===============================
-    PK_TRACE_DBG("PIG-TYPE2: %d", irq);
-
-    // Clear Type2 Interrupt
-    out32(OCB_OISR1_CLR, BIT32(15));
-
-    // Parse Type2 Requests
-    p9_sgpe_pig_type23_parser(2);
-
-    // Enable Interrupts
-    pk_irq_vec_restore(&ctx);
-}
-
-
-
-void
-p9_sgpe_pig_type3_handler(void* arg, PkIrqId irq)
-{
-    PkMachineContext ctx;
-
-    //===============================
-    MARK_TRAP(STOP_PIG_TYPE3_HANDLER)
-    //===============================
-    PK_TRACE_DBG("PIG-TYPE3: %d", irq);
-
-    // Clear Type3 Interrupt
-    out32(OCB_OISR1_CLR, BIT32(16));
-
-    // Parse Type2 Requests
-    p9_sgpe_pig_type23_parser(3);
 
     // clear group before analyzing input
     G_sgpe_stop_record.group.core[VECTOR_ENTRY] = 0;
@@ -711,10 +716,10 @@ p9_sgpe_pig_type3_handler(void* arg, PkIrqId irq)
     if (G_sgpe_stop_record.group.core[VECTOR_PIGX] ||
         G_sgpe_stop_record.group.core[VECTOR_PIGE])
     {
-        // block both type3 and type6
+        // block both type3 and type5, 6
         // so another doesnt interrupt until next round
-        out32(OCB_OIMR1_OR, (BIT32(16) | BIT32(19)));
-        g_oimr_override |= (BIT64(48) | BIT64(51));
+        out32(OCB_OIMR1_OR, (BIT32(16) | BITS32(18, 2)));
+        g_oimr_override |= (BIT64(48) | BITS64(50, 2));
 
         if (G_sgpe_stop_record.group.core[VECTOR_PIGX])
         {
@@ -735,9 +740,72 @@ p9_sgpe_pig_type3_handler(void* arg, PkIrqId irq)
     else
     {
         PK_TRACE_INF("Nothing to do, Enable Interrupts");
+        g_oimr_override &= ~BIT64(47);
         pk_irq_vec_restore(&ctx);
     }
 }
+
+
+
+void
+p9_sgpe_pig_type2_handler(void* arg, PkIrqId irq)
+{
+    PkMachineContext ctx;
+
+    //===============================
+    MARK_TRAP(STOP_PIG_TYPE2_HANDLER)
+    //===============================
+    PK_TRACE_DBG("PIG-TYPE2: %d", irq);
+
+    // Clear Type2 Interrupt
+    out32(OCB_OISR1_CLR, BIT32(15));
+
+    // Parse Type2 Requests
+    p9_sgpe_pig_cpayload_parser(PIG_TYPE2);
+
+    // Enable Interrupts
+    pk_irq_vec_restore(&ctx);
+}
+
+
+
+void
+p9_sgpe_pig_type3_handler(void* arg, PkIrqId irq)
+{
+    //===============================
+    MARK_TRAP(STOP_PIG_TYPE3_HANDLER)
+    //===============================
+    PK_TRACE_DBG("PIG-TYPE3: %d", irq);
+
+    // Clear Type3 Interrupt
+    out32(OCB_OISR1_CLR, BIT32(16));
+
+    // Parse Type3 Requests
+    p9_sgpe_pig_cpayload_parser(PIG_TYPE3);
+
+    // decide if launch the thread
+    p9_sgpe_pig_thread_lanucher();
+}
+
+
+void
+p9_sgpe_pig_type5_handler(void* arg, PkIrqId irq)
+{
+    //===============================
+    MARK_TRAP(STOP_PIG_TYPE5_HANDLER)
+    //===============================
+    PK_TRACE_DBG("PIG-TYPE5: %d", irq);
+
+    // Clear Type5 Interrupt
+    out32(OCB_OISR1_CLR, BIT32(18));
+
+    // Parse Type5 Requests
+    p9_sgpe_pig_cpayload_parser(PIG_TYPE5);
+
+    // decide if launch the thread
+    p9_sgpe_pig_thread_lanucher();
+}
+
 
 
 void
@@ -829,10 +897,10 @@ p9_sgpe_pig_type6_handler(void* arg, PkIrqId irq)
     if (G_sgpe_stop_record.group.qswu[VECTOR_EXIT] ||
         G_sgpe_stop_record.group.qswu[VECTOR_ENTRY])
     {
-        // block both type3 and type6
+        // block both type3 and type5, 6
         // so another doesnt interrupt until next round
-        out32(OCB_OIMR1_OR, (BIT32(16) | BIT32(19)));
-        g_oimr_override |= (BIT64(48) | BIT64(51));
+        out32(OCB_OIMR1_OR, (BIT32(16) | BITS32(18, 2)));
+        g_oimr_override |= (BIT64(48) | BITS64(50, 2));
 
         if (G_sgpe_stop_record.group.qswu[VECTOR_EXIT])
         {
@@ -849,6 +917,7 @@ p9_sgpe_pig_type6_handler(void* arg, PkIrqId irq)
     else
     {
         PK_TRACE_INF("Nothing to do, Enable Interrupts");
+        g_oimr_override &= ~BIT64(47);
         pk_irq_vec_restore(&ctx);
     }
 }

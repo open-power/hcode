@@ -82,6 +82,8 @@ p9_sgpe_stop_entry()
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
         if ((G_sgpe_stop_record.group.qswu[VECTOR_ACTIVE] |
+             G_sgpe_stop_record.group.quad[VECTOR_RCLKE]  |
+             G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] |
              (~G_sgpe_stop_record.group.quad[VECTOR_CONFIG])) & BIT32(qloop))
         {
             continue;
@@ -125,9 +127,9 @@ p9_sgpe_stop_entry()
            G_sgpe_stop_record.state[qloop].req_state_q >= LEVEL_EQ_BASE)
         {
             // if resonant clock disable is completed, process stop11 entry
-            if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32(qloop))
+            if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32((qloop + 16)))
             {
-                G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32(qloop);
+                G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32((qloop + 16));
 
                 // if during resonant clock disable, any exit occured, re-assert them,
                 // but we are going to complete the stop11 entry prior to process it
@@ -163,6 +165,9 @@ p9_sgpe_stop_entry()
             // send DB to Quad-Manager to disable the resonant clock
             else
             {
+                // from this point on, only process wakeup when stop11 is entered
+                G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |= BIT32(qloop);
+
                 // assume ex0 core0 is good
                 cindex = (qloop << 2);
 
@@ -537,18 +542,6 @@ p9_sgpe_stop_entry()
 
         PK_TRACE_INF("SE.11A: Quad[%d] EX_PG[%d] Shutting Cache Down", qloop, ex);
 
-        PK_TRACE("Acquire cache PCB slave atomic lock");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), BITS64(0, 5));
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
-
-        if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
-        {
-            PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
-                         qloop, scom_data.words.upper);
-            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_ENTRY_GET_SLV_LOCK_FAILED);
-            continue;
-        }
-
         PK_TRACE("Update QSSR: stop_entry_ongoing");
         out32(OCB_QSSR_OR, BIT32(qloop + 20));
 
@@ -739,17 +732,6 @@ p9_sgpe_stop_entry()
         {
             PK_TRACE_INF("Abort: L3 Purge Aborted");
 
-            PK_TRACE("Release cache PCB slave atomic lock");
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), 0);
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
-
-            if (scom_data.words.upper & BIT32(0))
-            {
-                PK_TRACE_ERR("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
-                             qloop, scom_data.words.upper);
-                PK_PANIC(SGPE_STOP_EXIT_DROP_SLV_LOCK_FAILED);
-            }
-
             // assume ex0 core0 is good
             cindex = (qloop << 2);
 
@@ -850,6 +832,18 @@ p9_sgpe_stop_entry()
         //==================================
         MARK_TAG(SE_PURGE_PB, (32 >> qloop))
         //==================================
+
+        PK_TRACE("Acquire cache PCB slave atomic lock");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), BITS64(0, 5));
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
+
+        if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
+        {
+            PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d PCB Slave Atomic Lock. Register Content: %x",
+                         qloop, scom_data.words.upper);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_ENTRY_GET_SLV_LOCK_FAILED);
+            continue;
+        }
 
         // Stopping CME first in case CME initiates Powerbus Traffic
 

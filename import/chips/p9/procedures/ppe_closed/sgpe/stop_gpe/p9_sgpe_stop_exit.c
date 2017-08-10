@@ -803,9 +803,19 @@ p9_sgpe_stop_exit()
             continue;
         }
 
-        //==================================
-        MARK_TAG(SX_CME_BOOT, (32 >> qloop))
-        //==================================
+        //=======================================
+        MARK_TAG(SX_RUNTIME_INITS, (32 >> qloop))
+        //=======================================
+
+        PK_TRACE_DBG("Cache RAS Runtime Scom");
+        p9_hcd_cache_ras_runtime_scom(qloop);
+
+        PK_TRACE_DBG("Cache OCC Runtime Scom");
+        p9_hcd_cache_occ_runtime_scom(qloop);
+
+        //=========================
+        MARK_TRAP(SX_ENABLE_ANALOG)
+        //=========================
 
         if(pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_VDM_ENABLE_BIT_POS)
         {
@@ -847,6 +857,10 @@ p9_sgpe_stop_exit()
 
         PK_TRACE("Assert inter-ppm settings via QPMMR[20,22,24,EX0PB:21,23,25,27]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, qloop), scom_data.value);
+
+        //==================================
+        MARK_TAG(SX_CME_BOOT, (32 >> qloop))
+        //==================================
 
         // Setting up cme_flags
         do
@@ -927,6 +941,18 @@ p9_sgpe_stop_exit()
             }
         }
 
+        PK_TRACE("Release cache PCB slave atomic lock");
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), 0);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
+
+        if (scom_data.words.upper & BIT32(0))
+        {
+            PK_TRACE_ERR("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
+                         qloop, scom_data.words.upper);
+            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_EXIT_DROP_SLV_LOCK_FAILED);
+            continue;
+        }
+
         if (in32(OCB_OCCS2) & BIT32(CME_DEBUG_TRAP_ENABLE))
         {
             PK_TRACE_INF("BREAK: Trap Before CME Boot");
@@ -943,33 +969,7 @@ p9_sgpe_stop_exit()
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_CLR, qloop), BIT64(15));
 #endif
 
-        //=======================================
-        MARK_TAG(SX_RUNTIME_INITS, (32 >> qloop))
-        //=======================================
-
-        PK_TRACE_DBG("Cache RAS Runtime Scom");
-        p9_hcd_cache_ras_runtime_scom(qloop);
-
-        PK_TRACE_DBG("Cache OCC Runtime Scom");
-        p9_hcd_cache_occ_runtime_scom(qloop);
-
-        //=========================
-        MARK_TRAP(SX_ENABLE_ANALOG)
-        //=========================
-
 #endif
-
-        PK_TRACE("Release cache PCB slave atomic lock");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), 0);
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_ATOMIC_LOCK, qloop), scom_data.value);
-
-        if (scom_data.words.upper & BIT32(0))
-        {
-            PK_TRACE_ERR("ERROR: Failed to Release Cache %d PCB Slave Atomic Lock. Register Content: %x",
-                         qloop, scom_data.words.upper);
-            SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_EXIT_DROP_SLV_LOCK_FAILED);
-            continue;
-        }
 
         PK_TRACE("Update STOP history on quad[%d]: \
                  STOP exit completed, cache ready", qloop);

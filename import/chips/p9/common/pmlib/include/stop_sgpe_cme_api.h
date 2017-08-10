@@ -30,14 +30,14 @@ enum SGPE_STOP_IRQ_PAYLOAD_MASKS
 {
     TYPE2_PAYLOAD_STOP_LEVEL               = 0x00F,
     TYPE2_PAYLOAD_ENTRY_EVENT              = 0x000, // 0000
-    TYPE2_PAYLOAD_ENTRY_RCLK               = 0x100, // 0001
+    TYPE5_PAYLOAD_ENTRY_RCLK               = 0x100, // 0001
     // 0010 reserved
     // 0011 reserved
 
     TYPE2_PAYLOAD_EXIT_EVENT               = 0xC00, // 1100
     TYPE2_PAYLOAD_HARDWARE_WAKEUP          = 0x800, // 1000
     TYPE2_PAYLOAD_SOFTWARE_WAKEUP          = 0x400, // 0100
-    TYPE2_PAYLOAD_EXIT_RCLK                = 0x500, // 0101
+    TYPE5_PAYLOAD_EXIT_RCLK                = 0x500, // 0101
     // 0110 reserved
     TYPE2_PAYLOAD_DECREMENTER_WAKEUP       = 0x700, // 0111
 
@@ -55,7 +55,8 @@ enum SGPE_STOP_IRQ_PAYLOAD_MASKS
 enum CME_STOP_PIG_TYPES
 {
     PIG_TYPE2                              = 2,
-    PIG_TYPE3                              = 3
+    PIG_TYPE3                              = 3,
+    PIG_TYPE5                              = 5
 };
 
 /// Numberical Doorbell Message IDs(used by CME check)

@@ -273,8 +273,8 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 #endif
 #endif
             // Finish handshake with SGPE for Stop11 via PIG
-            pig.fields.req_intr_type    = PIG_TYPE3;
-            pig.fields.req_intr_payload = TYPE2_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11;
+            pig.fields.req_intr_type    = PIG_TYPE5;
+            pig.fields.req_intr_payload = TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11;
             CME_PUTSCOM_NOP(PPM_PIG, core, pig.value);
             break;
 
@@ -300,8 +300,8 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 #endif
 #endif
             // Finish handshake with SGPE for Stop11 via PIG
-            pig.fields.req_intr_type    = PIG_TYPE3;
-            pig.fields.req_intr_payload = TYPE2_PAYLOAD_EXIT_RCLK;
+            pig.fields.req_intr_type    = PIG_TYPE5;
+            pig.fields.req_intr_payload = TYPE5_PAYLOAD_EXIT_RCLK;
             CME_PUTSCOM_NOP(PPM_PIG, core, pig.value);
             break;
 

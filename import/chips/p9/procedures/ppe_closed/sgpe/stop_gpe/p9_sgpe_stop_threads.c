@@ -28,8 +28,6 @@
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
-
-
 void
 p9_sgpe_stop_exit_thread(void* arg)
 {
@@ -67,8 +65,8 @@ p9_sgpe_stop_exit_thread(void* arg)
                     p9_sgpe_ack_pgpe_ctrl_stop_updates();
                 }
 
-                PK_TRACE_INF("Setup: Exit Done,no Entry Request.Enable Type2/3/6 Interrupt");
-                g_oimr_override &= ~(BIT64(48) | BIT64(51));
+                PK_TRACE_INF("Setup: Exit Done,no Entry Request.Enable Type2/3/5/6 Interrupt");
+                g_oimr_override &= ~(BITS64(47, 2) | BITS64(50, 2));
                 pk_irq_vec_restore(&ctx);
 
 #if !SKIP_IPC
@@ -117,8 +115,8 @@ p9_sgpe_stop_enter_thread(void* arg)
                 p9_sgpe_ack_pgpe_ctrl_stop_updates();
             }
 
-            PK_TRACE_INF("Setup: Entry done. Enable Type2/3/6 Interrupt");
-            g_oimr_override &= ~(BIT64(48) | BIT64(51));
+            PK_TRACE_INF("Setup: Entry done. Enable Type2/3/5/6 Interrupt");
+            g_oimr_override &= ~(BITS64(47, 2) | BITS64(50, 2));
             pk_irq_vec_restore(&ctx);
 
 #if !SKIP_IPC

@@ -593,12 +593,17 @@ p9_sgpe_stop_init()
 
 #endif
 
+    PK_TRACE("Configure and Enable Fit Timer");
+    out32(GPE_GPE3TSEL, BIT32(4));
+    ppe42_fit_setup((PkIrqHandler)p9_sgpe_fit_handler, 0);
+
     PK_TRACE_INF("Setup: Clear and Unmask Type 2/3/6 Interrupt");
-    out32(OCB_OISR1_CLR, (BITS32(15, 2) | BIT32(19)));
+    out32(OCB_OISR1_CLR, (BITS32(15, 2) | BITS32(18, 2)));
     out32(OCB_OPITNPRA_CLR(2), BITS32(0, 24));
     out32(OCB_OPITNPRA_CLR(3), BITS32(0, 24));
-    out32(OCB_OPITNPRA_CLR(6), BITS32(0, 24));
-    out32(OCB_OIMR1_CLR, (BITS32(15, 2) | BIT32(19)));
+    out32(OCB_OPITNPRA_CLR(5), BITS32(0, 24));
+    out32(OCB_OPIT6PRB_CLR,    BITS32(0, 6));
+    out32(OCB_OIMR1_CLR, (BITS32(15, 2) | BITS32(18, 2)));
 
     //--------------------------------------------------------------------------
     // SGPE Init Completed
