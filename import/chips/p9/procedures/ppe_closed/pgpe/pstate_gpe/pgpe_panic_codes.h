@@ -57,7 +57,7 @@ PGPE_AVS_WRITE_RW_MISCOMPARE        = 0x1c08,
 PGPE_UNEXPECTED_OCC_FIR_IRQ         = 0x1c0d,
 PGPE_XSTOP_SGPE_IRQ                 = 0x1c1c,
 //_UNUSED_1c1d                      = 0x1c1d,
-//_UNUSED_1c1e                      = 0x1c1e,
+PGPE_BAD_DD_LEVEL                   = 0x1c1e,
 //_UNUSED_1c1f                      = 0x1c1f,
 
 PGPE_CME_UNEXPECTED_REGISTRATION    = 0x1d00, //Communication

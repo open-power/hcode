@@ -158,6 +158,20 @@ void __eabi()
 int
 main(int argc, char** argv)
 {
+#if (NIMBUS_DD_LEVEL != 0)
+#define PVR_CONST (0x42090000 | (((NIMBUS_DD_LEVEL ) / 10) << 8) | (NIMBUS_DD_LEVEL % 10))
+#elif (CUMULUS_DD_LEVEL != 0)
+#define PVR_CONST (0x42090800 | (((CUMULUS_DD_LEVEL ) / 10) << 8) | (CUMULUS_DD_LEVEL % 10))
+#elif (AXONE_DD_LEVEL != 0)
+#define PVR_CONST (0x42091000 | (((AXONE_DD_LEVEL ) / 10) << 8) | (AXONE_DD_LEVEL % 10))
+#else
+#define PVR_CONST 0
+#endif
+
+    if(mfspr(287) != PVR_CONST)
+    {
+        PK_PANIC(PGPE_BAD_DD_LEVEL);
+    }
 
     // Initializes kernel data (stack, threads, timebase, timers, etc.)
     pk_initialize((PkAddress)G_kernel_stack,

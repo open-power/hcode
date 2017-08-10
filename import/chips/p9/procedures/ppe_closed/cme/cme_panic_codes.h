@@ -56,7 +56,7 @@ CME_STOP_BCE_CORE_RING_FAILED       = 0x1c07,
 //_UNUSED_1c0d                      = 0x1c0d,
 //_UNUSED_1c1c                      = 0x1c1c,
 //_UNUSED_1c1d                      = 0x1c1d,
-//_UNUSED_1c1e                      = 0x1c1e,
+CME_BAD_DD_LEVEL                    = 0x1c1e,
 //_UNUSED_1c1f                      = 0x1c1f,
 //
 CME_STOP_EXIT_PHANTOM_WAKEUP        = 0x1d00, // Stop Error

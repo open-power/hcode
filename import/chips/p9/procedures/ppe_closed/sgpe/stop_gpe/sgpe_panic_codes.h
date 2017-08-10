@@ -56,7 +56,7 @@ SGPE_IPC_UPDATE_ACTIVE_CORE_FAILED  = 0x1c0a,
 SGPE_IPC_UPDATE_ACTIVE_CORE_BAD_RC  = 0x1c0d,
 SGPE_IPC_UPDATE_ACTIVE_QUAD_FAILED  = 0x1c1c,
 SGPE_IPC_UPDATE_ACTIVE_QUAD_BAD_RC  = 0x1c1d,
-//_UNUSED_1c1e                      = 0x1c1e,
+SGPE_BAD_DD_LEVEL                   = 0x1c1e,
 //_UNUSED_1c1f                      = 0x1c1f,
 
 SGPE_STOP_EXIT_GET_CLK_LOCK_FAILED  = 0x1d00, // Stop Exit Error
