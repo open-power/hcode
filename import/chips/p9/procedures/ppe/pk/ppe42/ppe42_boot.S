@@ -120,6 +120,8 @@ __reset_trap:
 #ifndef NO_INIT_DBCR0
         _liwa   %r3, PPE42_DBCR_INITIAL
         mtdbcr  %r3
+        _liwa   %r3, PPE42_DACR_INITIAL
+        mtdacr  %r3
 #endif
 
         ## The exception vector prefix is set - it must be 512 byte aligned.
