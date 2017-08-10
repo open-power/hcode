@@ -939,7 +939,8 @@ p9_sgpe_stop_exit()
             (G_sgpe_stop_record.group.expg[qloop] << SHIFT16(((qloop << 1) + 1)));
         PK_TRACE_INF("SX.CME: Booting Cme[%x]", cmeBootList);
         boot_cme( cmeBootList );
-
+        //Clear Quad GPMMR RESET_STATE_INDICATOR bit to indicate CME has booted
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_CLR, qloop), BIT64(15));
 #endif
 
         //=======================================

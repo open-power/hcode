@@ -24,6 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include "pk.h"
 #include "ppe42_scom.h"
+#include "ppm_register_addresses.h"
 #include "cppm_register_addresses.h"
 #include "cppm_firmware_registers.h"
 #include "cme_register_addresses.h"
@@ -108,6 +109,9 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
         out32_sh(CME_LCL_EIMR_CLR, G_cme_record.core_enabled << 28);//Enable PMCR0/1
         g_eimr_override |= BITS64(34, 2);
         g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << 28);
+
+        //Clear Core GPMMR RESET_STATE_INDICATOR bit to show pstates have started
+        CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST)
     {
@@ -137,6 +141,9 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
         PK_TRACE("INTER0: DB0 Stop");
         out32_sh(CME_LCL_EIMR_OR, (SHIFT64SH(34) | SHIFT64SH(35)));//Disable PMCR0/1
         g_eimr_override |= BITS64(34, 2);
+
+        //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
+        CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
     }
     else
     {

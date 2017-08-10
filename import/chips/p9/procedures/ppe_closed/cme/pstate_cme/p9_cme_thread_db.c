@@ -469,6 +469,10 @@ inline void p9_cme_pstate_db0_start()
     g_eimr_override |= BITS64(34, 2);
     g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << 28);
 
+
+    //Clear Core GPMMR RESET_STATE_INDICATOR bit to show pstates have started
+    CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));
+
     PK_TRACE_INF("DB_TH: DB0 Start Exit\n");
 }
 
@@ -511,6 +515,10 @@ inline void p9_cme_pstate_db0_suspend()
     ppmPigData.fields.req_intr_type = 4;
     ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_SUSPENDED;
     send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
+
+    //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
+    CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
+
     PK_TRACE_INF("DB_TH: DB0 Suspend Exit\n");
 }
 
