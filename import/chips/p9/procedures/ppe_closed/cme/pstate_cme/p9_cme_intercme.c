@@ -152,7 +152,7 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
 
     out32_sh(CME_LCL_EISR_CLR, G_cme_record.core_enabled << 25);//Clear DB0_C0/C1
 
-    intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_ACK);
+    intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_ACK, 0);
 
     pk_irq_vec_restore(&ctx);
 

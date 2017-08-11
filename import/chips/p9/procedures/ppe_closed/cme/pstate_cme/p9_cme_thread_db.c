@@ -131,6 +131,12 @@ void p9_cme_pstate_db_thread(void* arg)
         pk_semaphore_create(&G_cme_pstate_record.sem[1], 0, 1);
 #endif
 
+        if(G_cme_pstate_record.siblingCMEFlag)
+        {
+            // Wait for the sibling to boot
+            intercme_direct(INTERCME_DIRECT_IN1, INTERCME_DIRECT_NOTIFY, 1);
+        }
+
         if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
         {
             out32_sh(CME_LCL_EIMR_CLR, BIT32(4));//Enable DB0_0
@@ -164,8 +170,7 @@ void p9_cme_pstate_db_thread(void* arg)
 
         // VDM Enablement (QM)
         // Do this prior to synchronizing the Pstate w/ its Sibling CME
-        if(G_cme_pstate_record.qmFlag
-           && (G_cmeHeader->g_cme_qm_mode_flags & CME_QM_FLAG_SYS_VDM_ENABLE))
+        if(G_cmeHeader->g_cme_qm_mode_flags & CME_QM_FLAG_SYS_VDM_ENABLE)
         {
             uint32_t i;
             uint32_t region = pstate_to_vpd_region(G_cme_pstate_record.quadPstate);
@@ -220,9 +225,15 @@ void p9_cme_pstate_db_thread(void* arg)
             cores |= CME_MASK_C1;
         }
 
-        // Pstate Initialization (Sibling)
+        // Sibling set-up for intercme messaging, after this respond to the QMs
+        // notify to tell him the Sib is ready to go
         out32(CME_LCL_EITR_OR, BIT32(29));
         out32(CME_LCL_EIPR_OR, BIT32(29));
+
+        // Wait for QM to send an initial notify
+        while(!(in32_sh(CME_LCL_EISR) & BIT32(6)));
+
+        intercme_direct(INTERCME_DIRECT_IN1, INTERCME_DIRECT_ACK, 0);
 
         intercme_msg_recv(&G_cme_pstate_record.quadPstate, IMT_INIT_PSTATE);
         PK_TRACE_INF("sib | initial pstate=%d", G_cme_pstate_record.quadPstate);
@@ -568,7 +579,7 @@ inline void p9_cme_pstate_notify_sib()
     //Notify sibling CME(if any)
     if(G_cme_pstate_record.siblingCMEFlag)
     {
-        intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_NOTIFY);
+        intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_NOTIFY, 0);
     }
 
     PK_TRACE_INF("DB_TH: Notify Exit\n");

@@ -183,9 +183,14 @@ void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type)
     out32(CME_LCL_EISR_CLR, BIT32(29));
 }
 
-void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type)
+void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint32_t retry_enable)
 {
     uint32_t addr_offset = 0;
+    uint32_t orig_intf = 0;
+    uint32_t poll_count = 0;
+
+    orig_intf = intf;
+
     // Send intercme interrupt, this is the same whether notifying or acking
     out32(CME_LCL_ICCR_OR , BIT32(intf));
     out32(CME_LCL_ICCR_CLR, BIT32(intf));
@@ -210,13 +215,24 @@ void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type)
 #if SIMICS_TUNING == 1
         intercme_acked = 1;
 #endif
+        poll_count = 0;
 
         while(!intercme_acked)
         {
+            // if the master CME is booted long before the slave, the slave won't see the original interrupt
+            if (retry_enable && ((poll_count & 0x1FF) == 0x1FF))
+            {
+                // Send intercme interrupt, this is the same whether notifying or acking
+                out32(CME_LCL_ICCR_OR , BIT32(orig_intf));
+                out32(CME_LCL_ICCR_CLR, BIT32(orig_intf));
+            }
+
             if(in32((CME_LCL_EISR + addr_offset)) & BIT32(intf))
             {
                 intercme_acked = 1;
             }
+
+            poll_count++;
         }
     }
 
