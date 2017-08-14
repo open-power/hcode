@@ -77,7 +77,12 @@ void p9_pgpe_fit_init()
     G_aux_task_count_threshold = (freq < 1573) ? 3 :
                                  (freq < 2097) ? 4 :
                                  (freq < 2621) ? 5 : 6;
-    G_aux_task_count_threshold *= G_pgpe_header_data->g_pgpe_aux_controls;
+
+    if(G_pgpe_header_data->g_pgpe_aux_controls) //multiply by attribute if nonzero
+    {
+        G_aux_task_count_threshold *= G_pgpe_header_data->g_pgpe_aux_controls;
+    }
+
     PK_TRACE_DBG("Fit AuxTaskThr=0x%d", G_aux_task_count_threshold);
 
     G_throttleOn = 0;
@@ -222,6 +227,7 @@ __attribute__((always_inline)) inline void handle_aux_task()
         if(G_aux_task_count == G_aux_task_count_threshold)
         {
             (*p9_pgpe_auxiliary_task)();
+            G_aux_task_count = 0;
         }
         else
         {
