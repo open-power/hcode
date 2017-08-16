@@ -284,9 +284,8 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             // 1) step CACCR to running pstate
             pstate = G_cme_pstate_record.quadPstate;
             p9_cme_resclk_update(core_mask, pstate, curr_idx);
-            // 2) write CACCR[13:15]=0b111 to switch back to common control
-            //    and leave clksync enabled
-            CME_PUTSCOM(CPPM_CACCR_OR, core_mask, (BITS64(13, 3)));
+            // 2) write CACCR[13:14]=0b11 to switch back to common control
+            CME_PUTSCOM(CPPM_CACCR_OR, core_mask, (BITS64(13, 2)));
             // 3) Clear out the CACCR resclk values
             CME_PUTSCOM(CPPM_CACCR_CLR, core_mask, BITS64(0, 13));
 
@@ -295,13 +294,13 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
         else
         {
             PK_TRACE_INF("resclk | disabling resclks");
-
-            // 1) copy QACCR[0:12] into CACCR[0:12], with CACCR[13:15]=0b000,
-            //    to switch away from common control while leaving clksync
-            //    disabled. QACCR will already be set to a value corresponding
-            //    to the current quad Pstate
+            // 1) copy QACCR[0:12] into CACCR[0:12], with CACCR[13:14]=0b00,
+            //    to switch away from common control. QACCR will already be set
+            //    to a value corresponding to the current quad Pstate
             ippm_read(QPPM_QACCR, &val);
-            val &= BITS64(13, 51);
+            val &= BITS64(0, 13);
+            // clk_sync enable (bit 15) is ALWAYS 0b0 at this point due to the
+            // sequence of function calls in Stop Entry
             CME_PUTSCOM(CPPM_CACCR, core_mask, val);
             curr_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
             // 2) step CACCR to a value which disables resonance
