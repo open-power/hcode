@@ -44,6 +44,7 @@
 #define SGPE_IPC_ENABLED 1
 #define OVERRIDE_OTHER_ENGINES_IRQS 0
 #define OVERRIDE_PSAFE_PSTATE 1
+#define USE_GEN_PSTATE_STRUCT_V 0
 
 ///This application uses IPC code
 #define GLOBAL_CFG_USE_IPC
