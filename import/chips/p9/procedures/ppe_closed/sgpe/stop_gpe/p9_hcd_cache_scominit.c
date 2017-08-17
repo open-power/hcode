@@ -172,7 +172,22 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 // EXP.NC.NCMISC.NCSCOMS.MASTER_TLB_DATA_POLL_PULSE_DIV
 
                 GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG2, quad, ex_index),
-                            0x1402220100000000);
+                            0x1402220200000000);
+
+                // p9_ncu_scom: EX_NCU_MODE_REG3
+                // EXP.NC.NCMISC.NCSCOMS.TLBIE_STALL_EN
+                // EXP.NC.NCMISC.NCSCOMS.TLBIE_STALL_THRESHOLD
+                // EXP.NC.NCMISC.NCSCOMS.TLBIE_STALL_CMPLT_CNT
+                // EXP.NC.NCMISC.NCSCOMS.TLBIE_STALL_DELAY_CNT
+
+                GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG3, quad, ex_index),
+                            scom_data.value);
+
+                scom_data.words.upper &= ~BITS32(0, 16);
+                scom_data.words.upper |= (BITS32(0, 3) | BIT32(5) | BITS32(12, 4));
+
+                GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG3, quad, ex_index),
+                            scom_data.value);
             }
         }
     }
