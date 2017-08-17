@@ -139,6 +139,7 @@ extern "C" {
 
 #define EX_NCU_MODE_REG          0x1001100A
 #define EX_NCU_MODE_REG2         0x1001100B
+#define EX_NCU_MODE_REG3         0x1001100C
 #define EX_NCU_STATUS_REG        0x1001100F
 
 #define EX_DRAM_REF_REG          0x1001180F
