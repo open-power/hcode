@@ -1381,16 +1381,16 @@ p9_cme_stop_entry()
         PK_TRACE("+++++ +++++ END OF STOP ENTRY +++++ +++++");
         //--------------------------------------------------------------------------
 
+        //============================
+        MARK_TRAP(ENDSCOPE_STOP_ENTRY)
+        //============================
+
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
         // NDD2: dual cast workaround loop end
     }
 
 #endif
-
-    //============================
-    MARK_TRAP(ENDSCOPE_STOP_ENTRY)
-    //============================
 
     return;
 }

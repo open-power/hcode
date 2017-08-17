@@ -51,7 +51,7 @@ extern SgpeStopRecord G_sgpe_stop_record;
 
 #endif
 
-
+#if !SKIP_HOMER_ACCESS
 #if NDD1_FUSED_CORE_MODE_SCAN_FIX
 
 uint32_t G_fcm_spin[4] = {0, 435, 1402, 2411};
@@ -111,7 +111,7 @@ fused_core_mode_scan_fix(uint32_t qloop, int l2bit)
 }
 
 #endif
-
+#endif
 
 
 //------------------------------------------------------------------------------
