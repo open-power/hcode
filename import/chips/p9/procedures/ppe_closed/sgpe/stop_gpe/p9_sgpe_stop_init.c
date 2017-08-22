@@ -244,6 +244,7 @@ p9_sgpe_stop_init()
     ocb_ccsr_t        ccsr       = {0};
     ocb_qcsr_t        qcsr       = {0};
     ocb_qssr_t        qssr       = {0};
+    sgpeHeader_t*     pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
     //--------------------------------------------------------------------------
     // Basic Software Settings
@@ -302,16 +303,6 @@ p9_sgpe_stop_init()
 
     G_sgpe_stop_record.group.core[VECTOR_PCWU]   = 0;
 
-    //Write Core Quiesce Workaround Disable bit to OCC Flag
-    uint32_t occflg = in32(OCB_OCCFLG) & ~BIT32(13);
-    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
-
-    if(pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(7))//SGPE_CORE_PERIODIC_QUIESCE_DISABLE_POS))
-    {
-        out32(OCB_OCCFLG, occflg | BIT32(OCCFLG_CORE_QUIESCE_WORKARND_DIS));
-    }
-
-
     for(qloop = 0, m_1c = BIT32(0), m_2c = BITS32(0, 2), m_4c = BITS32(0, 4),
         m_1x = BIT32(0), m_2x = BITS32(0, 2), m_qs = BIT32(14);
         qloop < MAX_QUADS;
@@ -341,6 +332,7 @@ p9_sgpe_stop_init()
                     G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |= m_1c;
                     G_sgpe_stop_record.state[qloop].cme_flags |= (0x80 >> cloop);
                     G_sgpe_stop_record.level[qloop][cloop] = STOP_LEVEL_0;
+
                 }
             }
         }
@@ -483,22 +475,22 @@ p9_sgpe_stop_init()
 
                 if (cmeBootList & BIT16(((qloop << 1) + (xloop ^ 1))))
                 {
-                    cme_flags |= BIT32(CME_SIBLING_FUNCTIONAL);
+                    cme_flags |= BIT32(CME_FLAGS_SIBLING_FUNCTIONAL);
                 }
 
                 if (xloop)
                 {
-                    cme_flags |= BIT32(CME_EX_ID);
+                    cme_flags |= BIT32(CME_FLAGS_EX_ID);
 
-                    if(!(cme_flags & BIT32(CME_SIBLING_FUNCTIONAL)))
+                    if(!(cme_flags & BIT32(CME_FLAGS_SIBLING_FUNCTIONAL)))
                     {
                         //EX1 is configured, but EX0 isn't
-                        cme_flags  |= BIT32(CME_QMGR_MASTER);
+                        cme_flags  |= BIT32(CME_FLAGS_QMGR_MASTER);
                     }
                 }
                 else
                 {
-                    cme_flags |= BIT32(CME_QMGR_MASTER);
+                    cme_flags |= BIT32(CME_FLAGS_QMGR_MASTER);
                 }
 
                 PK_TRACE_DBG("CME%d%d_FLAGS :%x", qloop, xloop, cme_flags);

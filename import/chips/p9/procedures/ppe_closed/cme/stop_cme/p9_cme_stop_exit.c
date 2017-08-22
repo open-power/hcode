@@ -234,6 +234,8 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
     PK_TRACE_PERF("SX.0A: Core Waking up(pm_exit=1) via SICR[4/5]");
     out32(CME_LCL_SICR_OR, core << SHIFT32(5));
 
+    CME_PM_EXIT_DELAY
+
     PK_TRACE_PERF("Polling for Core Waking up(pm_active=0) via EINR[20/21]");
 
     while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
@@ -293,6 +295,13 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
         out32(CME_LCL_EIPR_CLR, spwu_stop << SHIFT32(15));  // flip EIPR to falling edge
         out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));  // assert spwu_done now
         G_cme_stop_record.core_in_spwu |= spwu_stop;
+
+#ifdef PCQW_ENABLE
+
+        G_cme_record.fit_record.core_quiesce_fit_trigger = 0;
+
+#endif
+
     }
 
     if ((core = (core & (~spwu_stop))))
@@ -516,6 +525,12 @@ p9_cme_stop_exit()
         out32(CME_LCL_EIPR_CLR, spwu_wake << SHIFT32(15)); // flip EIPR to falling edge
         out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(17)); // assert spwu_done now
         G_cme_stop_record.core_in_spwu |= spwu_wake;
+
+#ifdef PCQW_ENABLE
+
+        G_cme_record.fit_record.core_quiesce_fit_trigger = 0;
+
+#endif
 
         if (!core)
         {
@@ -944,6 +959,8 @@ p9_cme_stop_exit()
 
             PK_TRACE_PERF("SF.RS: Self Restore Prepare, Core Waking up(pm_exit=1) via SICR[4/5]");
             out32(CME_LCL_SICR_OR, core << SHIFT32(5));
+
+            CME_PM_EXIT_DELAY
 
             PK_TRACE("Polling for core wakeup(pm_active=0) via EINR[20/21]");
 

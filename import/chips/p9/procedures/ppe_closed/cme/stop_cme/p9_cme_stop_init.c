@@ -47,9 +47,6 @@ p9_cme_stop_init()
     // Basic Software Settings
     //--------------------------------------------------------------------------
 
-    // Clear SPRG0
-    ppe42_app_ctx_set(0);
-
     // Create a semaphore, updated by a single interrupt handler that services
     // two STOP threads. Thus, max sem count set to two.
 #if !defined(__IOTA__)
@@ -130,7 +127,6 @@ p9_cme_stop_init()
     bce_irr_setup();
 
 #if SKIP_BCE_SCOM_RESTORE
-    out32(CME_LCL_TSEL, BITS32(4, 4));
     ppe42_fit_setup((PkIrqHandler)bce_irr_run, 0);
 #endif
 
@@ -176,7 +172,7 @@ p9_cme_stop_init()
     //--------------------------------------------------------------------------
 
     PK_TRACE_INF("Setup: CME STOP READY");
-    out32(CME_LCL_FLAGS_OR, BIT32(CME_STOP_READY));
+    out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_STOP_READY));
 
 #if EPM_P9_TUNING
     asm volatile ("tw 0, 31, 0");

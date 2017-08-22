@@ -322,15 +322,6 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR,
                                               (l_cmeIndex >> 1), (l_cmeIndex % 2)), HARD_RESET_PPE);
 
-                //Set CME DIS_CORE_QUIESCE_WORKARND accordingly
-                PK_TRACE_INF("OCB_OCCFLG: %X", in32(OCB_OCCFLG));
-
-                if(in32(OCB_OCCFLG) & BIT32(OCCFLG_CORE_QUIESCE_WORKARND_DIS))
-                {
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR,
-                                                  (l_cmeIndex >> 1), (l_cmeIndex % 2)), BIT64(CME_CORE_QUIESCE_WORKARND_DIS));
-                }
-
                 // Kick off CME by giving resume command through PPE External Control Register
                 // Writing to XCR to resume PPE operation
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR,
@@ -389,7 +380,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS,
                                                   (l_cmeIndex >> 1), (l_cmeIndex % 2)), l_dataReg);
 
-                    if (!(l_dataReg & BIT64(CME_PMCR_READY)))
+                    if (!(l_dataReg & BIT64(CME_FLAGS_PMCR_READY)))
                     {
                         continue;
                     }

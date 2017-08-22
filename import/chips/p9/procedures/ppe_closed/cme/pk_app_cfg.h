@@ -36,9 +36,14 @@
 
 // Debug Switches
 
-#define TEST_ONLY_BCE_IRR            0
-#define DISABLE_CME_DUAL_CAST        0
-#define DISABLE_CORE_XSTOP_INJECTION 0
+#define TEST_ONLY_BCE_IRR                0
+#define DISABLE_CME_DUAL_CAST            0
+#define DISABLE_CORE_XSTOP_INJECTION     0
+#define DISABLE_PERIODIC_CORE_QUIESCE    0
+
+#if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
+    #define PCQW_ENABLE
+#endif
 
 // --------------------
 

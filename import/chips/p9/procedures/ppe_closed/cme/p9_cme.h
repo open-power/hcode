@@ -27,10 +27,33 @@
 
 #include "pk.h"
 #include "p9_pm_hcd_flags.h"
+
+#ifdef PCQW_ENABLE
+
+typedef struct
+{
+    uint32_t core_quiesce_fit_trigger;
+    uint32_t core_quiesce_total_count;
+    uint32_t core_quiesce_time_latest;
+    uint32_t core_quiesce_time_max;
+    uint32_t core_quiesce_time_min;
+} CmeFitRecord;
+
+#endif
+
+
+
 typedef struct
 {
     // target mask of enabled cores, used to filter 2bit core select in scom address
-    uint32_t      core_enabled;
+    uint32_t     core_enabled;
+
+#ifdef PCQW_ENABLE
+
+    CmeFitRecord fit_record;
+
+#endif
+
 } CmeRecord;
 
 

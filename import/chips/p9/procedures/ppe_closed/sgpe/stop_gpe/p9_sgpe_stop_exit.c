@@ -879,21 +879,21 @@ p9_sgpe_stop_exit()
 
                 if (G_sgpe_stop_record.group.expg[qloop] & (~ex_mask))
                 {
-                    cme_flags |= BIT32(CME_SIBLING_FUNCTIONAL);
+                    cme_flags |= BIT32(CME_FLAGS_SIBLING_FUNCTIONAL);
                 }
 
                 if (ex_index == 1)
                 {
-                    cme_flags |= BIT32(CME_EX_ID);
+                    cme_flags |= BIT32(CME_FLAGS_EX_ID);
 
-                    if (!(cme_flags & BIT32(CME_SIBLING_FUNCTIONAL)))
+                    if (!(cme_flags & BIT32(CME_FLAGS_SIBLING_FUNCTIONAL)))
                     {
-                        cme_flags |= BIT32(CME_QMGR_MASTER);
+                        cme_flags |= BIT32(CME_FLAGS_QMGR_MASTER);
                     }
                 }
                 else
                 {
-                    cme_flags |= BIT32(CME_QMGR_MASTER);
+                    cme_flags |= BIT32(CME_FLAGS_QMGR_MASTER);
                 }
 
 
@@ -915,13 +915,13 @@ p9_sgpe_stop_exit()
                 {
                     if (ccsr.value & BIT32((ec_index + cloop)))
                     {
-                        cme_flags |= (BIT32(CME_CORE0_GOOD) >> cloop);
+                        cme_flags |= (BIT32(CME_FLAGS_CORE0_GOOD) >> cloop);
                         GPE_GETSCOM(GPE_SCOM_ADDR_CORE(C_NET_CTRL0,
                                                        (ec_index + cloop)), scom_data.value);
 
                         if (!(scom_data.words.upper & BIT32(18)))
                         {
-                            cme_flags |= (BIT32(CME_STOP_ENTRY_FIRST_C0) >> cloop);
+                            cme_flags |= (BIT32(CME_FLAGS_STOP_ENTRY_FIRST_C0) >> cloop);
                         }
 
 #if NIMBUS_DD_LEVEL != 10
