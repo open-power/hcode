@@ -408,6 +408,12 @@ p9_cme_stop_entry()
             // Mark core as to be stopped
             G_cme_stop_record.core_running &= ~core;
 
+#ifdef PCQW_ENABLE
+
+            G_cme_record.fit_record.core_quiesce_fit_trigger = 0;
+
+#endif
+
             // Request PCB Mux
 
 #if HW405292_NDD1_PCBMUX_SAVIOR
@@ -554,6 +560,8 @@ p9_cme_stop_entry()
 
             PK_TRACE("HW407385: Waking up the core(pm_exit=1) via SICR[4/5]");
             out32(CME_LCL_SICR_OR, core << SHIFT32(5));
+
+            CME_PM_EXIT_DELAY
 
             PK_TRACE("HW407385: Polling for core wakeup(pm_active=0) via EINR[20/21]");
 
