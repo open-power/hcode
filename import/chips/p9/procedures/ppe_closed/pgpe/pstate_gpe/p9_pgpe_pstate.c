@@ -476,7 +476,7 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
                     opit4Clr |= (opit4prQuad << ((MAX_QUADS - q + 1) << 2));
                     PK_TRACE_DBG("DBW: GotAck from %d", q);
                 }
-                else
+                else if(!(G_pgpe_pstate_record.pendQuadsRegistration & QUAD_MASK(q)))
                 {
                     PK_TRACE_ERR("DBW:Unexpected qCME[%u] ACK", q);
                     PK_PANIC(PGPE_CME_UNEXPECTED_DB0_ACK);
@@ -977,6 +977,10 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
             }
         }
     }
+
+    //Add quads to pending registration list. They are taken out when
+    //registration msg from the quad is received.
+    G_pgpe_pstate_record.pendQuadsRegistration |= quadsRequested;
 
     //ACK back to SGPE
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;

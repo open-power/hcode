@@ -230,6 +230,10 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 }
             }
 
+            //Quad has registered. Remove from pending quads
+            //registration list
+            G_pgpe_pstate_record.pendQuadsRegistration &= ~QUAD_MASK(q);
+
             PK_TRACE_DBG("PCB4: Quad %d Registered. qActive=0x%x cActive=0x%x", q, G_pgpe_pstate_record.activeQuads,
                          G_pgpe_pstate_record.activeCores);
 

@@ -118,7 +118,7 @@ typedef struct
     PkSemaphore sem_process_req;
     PkSemaphore sem_actuate;
     PkSemaphore sem_sgpe_wait;
-    uint32_t activeQuads, activeCores;
+    uint32_t activeQuads, activeCores, pendQuadsRegistration;
     uint32_t numActiveCores, numConfCores;
     uint16_t vratio, fratio;
     uint16_t vindex, findex;
