@@ -1301,7 +1301,7 @@ void p9_pgpe_pstate_do_step()
 void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
 {
     qppm_vdmcfgr_t vdmcfg;
-    uint32_t cmeInterppmVdataEnableSet[MAX_QUADS], q;
+    uint32_t cmeInterppmVdataEnableSet, q;
     qppm_qpmmr_t qpmmr;
 
 #if !EPM_P9_TUNING
@@ -1345,29 +1345,24 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
     //If VDM is disabled, update VDMCFG register for every quad
     if (!(G_pgpe_header_data->g_pgpe_qm_flags & BIT16( PGPE_HEADER_FLAGS_VDM_ENABLE)))
     {
+        vdmcfg.value = 0;
+        vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
+
         for (q = 0; q < MAX_QUADS; q++)
         {
             if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
             {
                 //Take away CME control by writing to QPMMR
                 GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR, q), qpmmr.value);
-                cmeInterppmVdataEnableSet[q] = qpmmr.fields.cme_interppm_vdata_enable;
+                cmeInterppmVdataEnableSet = qpmmr.fields.cme_interppm_vdata_enable;
                 qpmmr.value = BIT64(24);
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), qpmmr.value);
-            }
-        }
 
-        //Update 0:7 of VDMCFG
-        vdmcfg.value = 0;
-        vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
-        GPE_PUTSCOM(PCB_MULTICAST_GRP4 | 0xf01b6, vdmcfg.value);
+                //Update 0:7 of VDMCFG
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
 
-        for (q = 0; q < MAX_QUADS; q++)
-        {
-            if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
-            {
                 //Restore QPMMR
-                if (cmeInterppmVdataEnableSet[q] == 1)
+                if (cmeInterppmVdataEnableSet == 1)
                 {
                     qpmmr.value = BIT64(24);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), qpmmr.value);
