@@ -67,10 +67,11 @@ SECTIONS
     _DUMP_PTR_STOP_START = _DUMP_PTR_PSTATE_START + PPE_DUMP_PTR_PSTATE_SIZE;
     .dump_ptr_stop _DUMP_PTR_STOP_START : { *(.dump_ptr_stop) } > sram
 
+    . = ALIGN(16);
     /*======================================
      * Code
      ======================================*/
-    .text    . : { *(.text)    } > sram
+    .text    . : { *(.text*)    } > sram
 
 
     /*======================================

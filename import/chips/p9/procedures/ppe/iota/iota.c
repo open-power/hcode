@@ -105,8 +105,8 @@ void iota_run()
         // Run any enabled idle tasks
         _iota_evaluate_idle_tasks();
 
-        uint32_t ctx = mfmsr() | MSR_WE | MSR_EE ;
-        mtmsr(ctx);
+        // Put PPE engine into wait mode (idle).
+        ppe_idle();
     }
 }
 

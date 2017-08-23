@@ -33,6 +33,12 @@ __vectors:
 __machine_check:
     trap
 
+.global __set_msr
+.org    __vectors + 0x0028
+__set_msr:
+    mtmsr   %r3
+    blr
+
 .global __system_reset
 .org    __vectors + 0x0040
 __system_reset:
