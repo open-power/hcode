@@ -160,7 +160,7 @@ void p9_pgpe_pstate_setup_process_pcb_type4()
 
     //Fill OCC Shared Memory Area fields
     G_pgpe_pstate_record.pQuadState0->fields.active_cores = (G_pgpe_pstate_record.activeCores >> 16);
-    G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0xFF);
+    G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0xFF00);
     G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads =  G_pgpe_pstate_record.activeQuads;
 
     PK_TRACE_INF("PCB4: ActiveQuads=0x%x ActiveCores=0x%x\n", G_pgpe_pstate_record.activeQuads ,
@@ -880,6 +880,7 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
         if (quadsRequested & QUAD_MASK(q))
         {
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
+            G_pgpe_pstate_record.activeCores &= ~(0xF >> (q << 2));
 
             if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
             {
@@ -917,6 +918,8 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
 {
     //Update Shared Memory Region
     G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads &= (~(quadsRequested));
+    G_pgpe_pstate_record.pQuadState0->fields.active_cores = (G_pgpe_pstate_record.activeCores >> 16);
+    G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0xFF00);
     PK_TRACE_INF("QE: (Done), Vec=0x%x\n", quadsRequested);
 
     //If WOF Enabled, then interlock with OCC

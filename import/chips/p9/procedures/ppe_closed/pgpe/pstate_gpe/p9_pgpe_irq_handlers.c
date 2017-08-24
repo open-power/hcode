@@ -308,6 +308,10 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
         }
     }
 
+    //Update Active Cores in OCC Shared SRAM
+    G_pgpe_pstate_record.pQuadState0->fields.active_cores = (G_pgpe_pstate_record.activeCores >> 16);
+    G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0xFF00);
+
     //Wait for all CMEs to ACK Pstate Start DB0
     opit4pr1 = in32(OCB_OPIT4PRA);
     PK_TRACE_DBG("PCB4: opit4pr 0x%x, quadAckExpect=0x%x", opit4pr1, quadAckExpect);

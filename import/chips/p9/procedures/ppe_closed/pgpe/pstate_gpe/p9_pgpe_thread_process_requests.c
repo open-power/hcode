@@ -521,7 +521,7 @@ void p9_pgpe_process_wof_ctrl()
                     {
                         //Update Shared Memory Region
                         G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
-                        G_pgpe_pstate_record.pQuadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
+                        G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_sgpe_control_updt.fields.active_cores & 0xFF) << 8;
                         G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
                     }
                     else
@@ -579,7 +579,7 @@ void p9_pgpe_process_wof_ctrl()
                     {
                         //Update Shared Memory Region
                         G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_sgpe_control_updt.fields.active_cores >> 8;
-                        G_pgpe_pstate_record.pQuadState1->fields.active_cores = G_sgpe_control_updt.fields.active_cores & 0xFF;
+                        G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_sgpe_control_updt.fields.active_cores & 0xFF) << 8;
                         G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = G_sgpe_control_updt.fields.active_quads;
                     }
                     else
