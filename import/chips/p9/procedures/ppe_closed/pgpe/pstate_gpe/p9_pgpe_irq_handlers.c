@@ -114,7 +114,7 @@ void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq)
     PK_TRACE_DBG("XSTOP GPE2: Enter");
     PkMachineContext  ctx;
 
-    PK_PANIC(PGPE_XSTOP_SGPE_IRQ);
+    PGPE_PANIC_AND_TRACE(PGPE_XSTOP_SGPE_IRQ);
 
     pk_irq_vec_restore(&ctx);//Restore interrupts
     PK_TRACE_DBG("XSTOP GPE2: Exit");
@@ -152,11 +152,11 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
                 opit1cn.value = in32(OCB_OPIT1CN(c));
 
                 //Extract the LowerPState field and store the Pstate request
+                //RTC:177526 GA1 only Phase1 data is used since only LowerPS fields is supported in PMCR
                 G_pgpe_pstate_record.coresPSRequest[c] = opit1cn.value & 0xff;
                 PK_TRACE_DBG("PCB1: c[%d]=0%x", c, G_pgpe_pstate_record.coresPSRequest[c]);
-                G_pgpe_optrace_data.word[0] = (c << 24) | (G_pgpe_pstate_record.globalPSComputed << 16) |
+                G_pgpe_optrace_data.word[0] = (c << 24) | (G_pgpe_pstate_record.globalPSCurr << 16) |
                                               G_pgpe_pstate_record.coresPSRequest[c];
-                //RTC:177526 GA1 only Phase1 data is used since only LowerPS fields is supported in PMCR
                 p9_pgpe_optrace(PRC_PCB_T1);
             }
         }
@@ -164,6 +164,11 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
         //Do auction, apply clips and generate new targets
         p9_pgpe_pstate_do_auction();
         p9_pgpe_pstate_apply_clips();
+    }
+    else
+    {
+        G_pgpe_optrace_data.word[0] = PGPE_OP_PCB_TYPE1_IN_PSTATE_STOPPED;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
 
 #if SIMICS_TUNING
@@ -216,7 +221,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
             if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
             {
                 PK_TRACE_DBG("PCB4: Quad %d Already Registered. opit4pra=0x%x", q, opit4pr);
-                PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
+                PGPE_PANIC_AND_TRACE(PGPE_CME_UNEXPECTED_REGISTRATION);
             }
 
             //Update activeQuads and coresActive
@@ -310,7 +315,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 quadAckExpect |= QUAD_MASK(q);
             }
 
-            G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.globalPSComputed << 16)
+            G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.globalPSCurr << 16)
                                           | (in32(OCB_QCSR) >> 16);
             p9_pgpe_optrace(PRC_PCB_T4);
         }
@@ -348,7 +353,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 else if(!(G_pgpe_pstate_record.pendQuadsRegistration & QUAD_MASK(q)))
                 {
                     PK_TRACE_ERR("PCB4: Unexpected ACK q=0x%x,opit4prQuad=0x%x", q, opit4prQuad);
-                    PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
+                    PGPE_PANIC_AND_TRACE(PGPE_CME_UNEXPECTED_REGISTRATION);
                 }
             }
         }

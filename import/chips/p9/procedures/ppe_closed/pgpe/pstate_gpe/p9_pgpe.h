@@ -88,6 +88,11 @@ enum PSTATE_START_SOURCE
 #define LAST_CORE_FROM_QUAD(quad) \
     ((quad + 1) << 2)
 
+#define PGPE_PANIC_AND_TRACE(val)\
+    G_pgpe_optrace_data.word[0] = val; \
+    p9_pgpe_optrace(HALT_CONDITION ); \
+    PK_PANIC(val);
+
 /// PGPE PState
 void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq);

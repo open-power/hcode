@@ -36,10 +36,13 @@
 #include "pk.h"
 #include "avs_driver.h"
 #include "p9_pgpe_gppb.h"
+#include "p9_pgpe.h"
+#include "p9_pgpe_optrace.h"
 
 #define CLOCK_SPIVID_MHZ        10 //\todo determine if this should come from attribute
 
 extern GlobalPstateParmBlock* G_gppb;
+extern TraceData_t G_pgpe_optrace_data;
 
 //#################################################################################################
 // Function which generates a 3 bit CRC value for 29 bit data
@@ -211,7 +214,7 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
     if (rc)
     {
         PK_TRACE_ERR("AVS_READ: OnGoingFlag timeout");
-        PK_PANIC(PGPE_AVS_READ_ONGOING_FLAG_TIMEOUT);
+        PGPE_PANIC_AND_TRACE(PGPE_AVS_READ_ONGOING_FLAG_TIMEOUT);
     }
 
     // Read returned voltage value from Read frame
@@ -285,7 +288,7 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
     if (rc)
     {
         PK_TRACE_ERR("AVS_INIT: DriveIdleFrame FAIL");
-        PK_PANIC(PGPE_AVS_INIT_DRIVE_IDLE_FRAME);
+        PGPE_PANIC_AND_TRACE(PGPE_AVS_INIT_DRIVE_IDLE_FRAME);
     }
 
     // Drive read transaction to return initial setting of rail voltage and wait on o2s_ongoing=0
@@ -294,7 +297,7 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
     if (rc)
     {
         PK_TRACE_ERR("AVS_INIT: DriveRead FAIL");
-        PK_PANIC(PGPE_AVS_INIT_DRIVE_READ);
+        PGPE_PANIC_AND_TRACE(PGPE_AVS_INIT_DRIVE_READ);
     }
 
     *vext_read_mv = CmdDataRead;
@@ -313,7 +316,7 @@ void external_voltage_control_write(uint32_t vext_write_mv)
     if (vext_write_mv > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
         vext_write_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
     {
-        PK_PANIC(PGPE_VOLTAGE_OUT_OF_BOUNDS);
+        PGPE_PANIC_AND_TRACE(PGPE_VOLTAGE_OUT_OF_BOUNDS);
     }
 
     // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
@@ -322,7 +325,7 @@ void external_voltage_control_write(uint32_t vext_write_mv)
     if (rc)
     {
         PK_TRACE_ERR("AVS_WRITE: Drive Write FAIL");
-        PK_PANIC(PGPE_AVS_WRITE_DRIVE_WRITE);
+        PGPE_PANIC_AND_TRACE(PGPE_AVS_WRITE_DRIVE_WRITE);
     }
 
 #if !EPM_P9_TUNING
@@ -333,13 +336,13 @@ void external_voltage_control_write(uint32_t vext_write_mv)
     if (rc)
     {
         PK_TRACE_ERR("AVS_WRITE: Drive Read FAIL");
-        PK_PANIC(PGPE_AVS_WRITE_DRIVE_READ);
+        PGPE_PANIC_AND_TRACE(PGPE_AVS_WRITE_DRIVE_READ);
     }
 
     if (CmdDataRead != vext_write_mv)
     {
         PK_TRACE_ERR("AVS_WRITE: Miscompare, Read=%dmV != Write=%dmV", CmdDataRead, vext_write_mv);
-        PK_PANIC(PGPE_AVS_WRITE_RW_MISCOMPARE);
+        PGPE_PANIC_AND_TRACE(PGPE_AVS_WRITE_RW_MISCOMPARE);
     }
 
 #endif

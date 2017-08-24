@@ -35,6 +35,10 @@
 #include "pk.h"
 #include "p9_pgpe_irq.h"
 #include "ppehw_common.h"
+#include "p9_pgpe_optrace.h"
+#include "p9_pgpe.h"
+
+extern TraceData_t G_pgpe_optrace_data;
 
 // Notes:
 // - The following two lists, ext_irq_vectors_gpe[][] and IDX_PRTY_LVL_<task_abbr>,
@@ -139,8 +143,10 @@ void pk_unified_irq_prty_mask_handler(void)
     {
         PK_TRACE_ERR("A Phantom IRQ fired, ext_irq_vector_pk=0x%08x%08x",
                      UPPER32(ext_irq_vector_pk), LOWER32(ext_irq_vector_pk));
-        PK_PANIC(PGPE_UIH_EIMR_STACK_OVERFLOW);
+        PGPE_PANIC_AND_TRACE(PGPE_UIH_EIMR_STACK_OVERFLOW);
     }
+
+    PK_TRACE_DBG("IRQ SET: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
 
     // 3. Return the priority vector in d5 and let hwmacro_get_ext_irq do the
     // rest, i.e. route first found IRQ in the returned priority vector
@@ -152,6 +158,8 @@ void pk_unified_irq_prty_mask_handler(void)
                   : [data]"=r"(l_vecH) \
                   : [addr]"r"(&ext_irq_vectors_gpe[iPrtyLvl][IDX_PRTY_VEC]) );
 
+    //WARNING: Don't add any code here. We are passing values in r5 and r6, and they can be
+    //overwritten by any compiler generated code
 }
 
 //
@@ -177,7 +185,7 @@ void pk_irq_save_and_set_mask(uint32_t iPrtyLvl)
     {
         PK_TRACE_ERR("Code bug: OIMR S/R stack counter=%d  >=  max=%d.",
                      g_oimr_stack_ctr, NUM_EXT_IRQ_PRTY_LEVELS);
-        PK_PANIC(PGPE_UIH_EIMR_STACK_OVERFLOW);
+        PGPE_PANIC_AND_TRACE(PGPE_UIH_EIMR_STACK_OVERFLOW);
     }
 
     // Write the new mask for this priority level.

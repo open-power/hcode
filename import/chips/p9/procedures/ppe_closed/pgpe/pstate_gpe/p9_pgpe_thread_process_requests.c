@@ -164,7 +164,7 @@ void p9_pgpe_thread_process_requests(void* arg)
 void p9_pgpe_process_sgpe_updt_active_cores()
 {
     PK_TRACE_DBG("PTH: Core Updt Entry");
-    uint32_t c;
+    uint32_t c, ack_now = 1;
 
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
     ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
@@ -174,9 +174,8 @@ void p9_pgpe_process_sgpe_updt_active_cores()
     {
         PK_TRACE_DBG("PTH: PM Suspended");
         args->fields.return_code = IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_CORES_ACTV);
+        G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_IN_PM_SUSP;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
     {
@@ -186,9 +185,8 @@ void p9_pgpe_process_sgpe_updt_active_cores()
         {
             PK_TRACE_DBG("PTH: C Updt(WOF_Disabled)");
             args->fields.return_code = PGPE_WOF_RC_NOT_ENABLED;
-            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
-            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
-            p9_pgpe_optrace(ACK_CORES_ACTV);
+            G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_IN_WOF_DISABLED;
+            p9_pgpe_optrace(UNEXPECTED_ERROR);
         }
         else
         {
@@ -210,11 +208,15 @@ void p9_pgpe_process_sgpe_updt_active_cores()
                 }
             }
 
+            //OP_TRACE(Do before auction and wof calculation)
+            G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24)  |
+                                          ((args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY) ? 0x2000000 : 0x1000000) |
+                                          (G_pgpe_pstate_record.activeCores >> 8);
+            p9_pgpe_optrace(PRC_CORES_ACTV);
+
             //Do auction and wof calculation
             p9_pgpe_pstate_do_auction();
             p9_pgpe_pstate_calc_wof();
-            G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.activeCores >> 8);
-            p9_pgpe_optrace(PRC_CORES_ACTV);
 
             //If ENTRY type then send ACK to SGPE immediately
             //Otherwise, wait to ACK until WOF Clip has been applied(from actuate_pstate thread)
@@ -222,12 +224,20 @@ void p9_pgpe_process_sgpe_updt_active_cores()
             {
                 PK_TRACE_DBG("PTH: Core Entry ACK back to SGPE");
                 args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
-                ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
-                p9_pgpe_optrace(ACK_CORES_ACTV);
                 PK_TRACE_DBG("PTH: Core Updt ENTRY ACKed");
             }
+            else
+            {
+                ack_now = 0;
+            }
         }
+    }
+
+    if (ack_now == 1)
+    {
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_CORES_ACTV);
     }
 
     PK_TRACE_DBG("PTH: Core Updt Exit");
@@ -239,6 +249,7 @@ void p9_pgpe_process_sgpe_updt_active_cores()
 void p9_pgpe_process_sgpe_updt_active_quads()
 {
     PK_TRACE_DBG("PTH: Quad Updt Start");
+    uint32_t ack_now = 1;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
     ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing = 0;
@@ -249,14 +260,22 @@ void p9_pgpe_process_sgpe_updt_active_quads()
         G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
         args->fields.return_code = IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_QUAD_ACTV);
+        G_pgpe_optrace_data.word[0] = PGPE_OP_QUADS_ACTIVE_IN_PM_SUSP;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
     {
-        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.activeCores >> 8);
-        p9_pgpe_optrace(PRC_QUAD_ACTV);
+        uint32_t SS;
+
+        if(args->fields.update_type == UPDATE_ACTIVE_QUADS_TYPE_ENTRY) //entry
+        {
+            SS = (args->fields.entry_type == UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY) ? 0x2 : 0x3;
+        }
+        else //exit
+        {
+            SS = 0x1;
+        }
+
 
         //ENTRY
         if (args->fields.update_type == UPDATE_ACTIVE_QUADS_TYPE_ENTRY)
@@ -269,6 +288,8 @@ void p9_pgpe_process_sgpe_updt_active_quads()
             {
                 p9_pgpe_pstate_process_quad_entry_done(args->fields.requested_quads << 2);
             }
+
+            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         }
         //EXIT
         else
@@ -280,13 +301,26 @@ void p9_pgpe_process_sgpe_updt_active_quads()
             if(G_pgpe_pstate_record.wofEnabled == 1)
             {
                 GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
+                ack_now = 0;
             }
             else
             {
                 p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
+                args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
             }
         }
 
+        G_pgpe_optrace_data.word[0] = (args->fields.requested_quads << 26) |
+                                      (SS << 24) |
+                                      (G_pgpe_pstate_record.activeCores >> 8);
+        p9_pgpe_optrace(PRC_QUAD_ACTV);
+    }
+
+    if (ack_now == 1)
+    {
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_QUAD_ACTV);
     }
 
     PK_TRACE_DBG("PTH: Quad Updt End");
@@ -295,17 +329,20 @@ void p9_pgpe_process_sgpe_updt_active_quads()
 void p9_pgpe_process_start_stop()
 {
     PK_TRACE_DBG("PTH: Start/Stop Entry");
+    uint32_t ack_now = 1;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd;
     ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
+
 
     if(G_pgpe_header_data->g_pgpe_qm_flags & BIT16(PGPE_HEADER_FLAGS_OCC_IPC_IMMEDIATE_MODE))
     {
         PK_TRACE_DBG("START_STOP: Imm");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_START_STOP);
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
+        G_pgpe_optrace_data.word[0] = (START_STOP_IPC << 24) |
+                                      (G_pgpe_pstate_record.globalPSComputed << 16) |
+                                      (in32(OCB_QCSR) >> 16);
+        p9_pgpe_optrace(PRC_START_STOP);
+
     }
     else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
             G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
@@ -313,10 +350,8 @@ void p9_pgpe_process_start_stop()
     {
         PK_TRACE_DBG("START_STOP: PM_SUSP/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_START_STOP);
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_START_IN_PM_SUSP;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
     {
@@ -326,6 +361,7 @@ void p9_pgpe_process_start_stop()
             if(G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT || G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
             {
                 p9_pgpe_pstate_start(PSTATE_START_OCC_IPC);
+                args->msg_cb.rc = PGPE_RC_SUCCESS;
                 pk_semaphore_post(&G_pgpe_pstate_record.sem_actuate);
             }
             else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
@@ -333,11 +369,13 @@ void p9_pgpe_process_start_stop()
                 PK_TRACE_DBG("START_STOP: PMCR OWNER Change to %d ", args->pmcr_owner);
                 p9_pgpe_pstate_set_pmcr_owner(args->pmcr_owner);
                 args->msg_cb.rc = PGPE_RC_SUCCESS;
-                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
-                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
-                ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
-                p9_pgpe_optrace(ACK_START_STOP);
             }
+
+            G_pgpe_optrace_data.word[0] = (args->pmcr_owner << 25 ) |
+                                          (1 << 24) |
+                                          (G_pgpe_pstate_record.globalPSCurr << 16) |
+                                          (in32(OCB_QCSR) >> 16);
+            p9_pgpe_optrace(PRC_START_STOP);
         }
         else
         {
@@ -346,28 +384,27 @@ void p9_pgpe_process_start_stop()
             {
                 PK_TRACE_DBG("START_STOP: Already Stopped");
                 args->msg_cb.rc = PGPE_RC_REQ_PSTATE_ALREADY_STOPPED;
-                ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
-                p9_pgpe_optrace(ACK_START_STOP);
-                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
-                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
+                G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_STOP_IN_PSTATE_STOPPED;
+                p9_pgpe_optrace(UNEXPECTED_ERROR);
             }
             else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
             {
                 p9_pgpe_pstate_stop();
-                ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd;
-                ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
                 args->msg_cb.rc = PGPE_RC_SUCCESS;
-                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
-                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
-                ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
-                p9_pgpe_optrace(ACK_START_STOP);
+                G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.globalPSCurr << 16) |
+                                              (in32(OCB_QCSR) >> 16);
+                p9_pgpe_optrace(PRC_START_STOP);
             }
         }
     }
 
-    G_pgpe_optrace_data.word[0] = (START_STOP_IPC << 24) | (G_pgpe_pstate_record.globalPSComputed << 16) | (in32(
-                                      OCB_QCSR) >> 16);
-    p9_pgpe_optrace(PRC_START_STOP);
+    if (ack_now == 1)
+    {
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
+        p9_pgpe_optrace(ACK_START_STOP);
+    }
 
     PK_TRACE_DBG("PTH: Start/Stop End");
 }
@@ -380,7 +417,7 @@ void p9_pgpe_process_clip_updt()
 {
     PK_TRACE_DBG("PTH: Clip Updt Entry");
 
-    uint32_t q, ack = 0;
+    uint32_t q, ack_now = 1;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
     ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
 
@@ -390,7 +427,19 @@ void p9_pgpe_process_clip_updt()
     {
         PK_TRACE_DBG("PTH: Clip Updt Imme");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
-        ack = 1;
+        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.psClipMax[0] << 24) |
+                                      (G_pgpe_pstate_record.psClipMax[1] << 16) |
+                                      (G_pgpe_pstate_record.psClipMax[2] << 8)  |
+                                      (G_pgpe_pstate_record.psClipMax[3]);
+        G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psClipMax[4] << 24) |
+                                      (G_pgpe_pstate_record.psClipMax[5] << 16) |
+                                      (G_pgpe_pstate_record.psClipMin[0] << 8)  |
+                                      (G_pgpe_pstate_record.psClipMin[1]);
+        G_pgpe_optrace_data.word[2] = (G_pgpe_pstate_record.psClipMin[2] << 24) |
+                                      (G_pgpe_pstate_record.psClipMin[3] << 16) |
+                                      (G_pgpe_pstate_record.psClipMin[4] << 8)  |
+                                      (G_pgpe_pstate_record.psClipMin[5]);
+        p9_pgpe_optrace(PRC_CLIP_UPDT);
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
@@ -398,7 +447,8 @@ void p9_pgpe_process_clip_updt()
     {
         PK_TRACE_DBG("PTH: Clip Updt PMSUSP/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
-        ack = 1;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_CLIP_UPDT_IN_PM_SUSP;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
     {
@@ -420,30 +470,43 @@ void p9_pgpe_process_clip_updt()
             }
         }
 
+        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.psClipMax[0] << 24) |
+                                      (G_pgpe_pstate_record.psClipMax[1] << 16) |
+                                      (G_pgpe_pstate_record.psClipMax[2] << 8)  |
+                                      (G_pgpe_pstate_record.psClipMax[3]);
+        G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psClipMax[4] << 24) |
+                                      (G_pgpe_pstate_record.psClipMax[5] << 16) |
+                                      (G_pgpe_pstate_record.psClipMin[0] << 8) |
+                                      (G_pgpe_pstate_record.psClipMin[1]);
+        G_pgpe_optrace_data.word[2] = (G_pgpe_pstate_record.psClipMin[2] << 24) |
+                                      (G_pgpe_pstate_record.psClipMin[3] << 16) |
+                                      (G_pgpe_pstate_record.psClipMin[4] << 8)  |
+                                      (G_pgpe_pstate_record.psClipMin[5]);
+        p9_pgpe_optrace(PRC_CLIP_UPDT);
+
         p9_pgpe_pstate_apply_clips(&G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT]);
 
+        //If CLIP_UPDT before Pstate Start, then ack now. Otherwise, ACK
+        //after actuation
         if (G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT || G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
         {
             args->msg_cb.rc = PGPE_RC_SUCCESS;
-            ack = 1;
+        }
+        else
+        {
+            ack_now = 0;
         }
     }
 
-    //Clips ACKed in error cases or if Pstates are not active
-    if (ack == 1)
+
+    //Clips ACKed in error cases or if Pstates are not active yet
+    if (ack_now == 1)
     {
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
         p9_pgpe_optrace(ACK_CLIP_UPDT);
     }
 
-    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.psClipMax[0] << 24) | (G_pgpe_pstate_record.psClipMax[1] << 16) |
-                                  (G_pgpe_pstate_record.psClipMax[2] << 8)  | (G_pgpe_pstate_record.psClipMax[3]);
-    G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psClipMax[4] << 24) | (G_pgpe_pstate_record.psClipMax[5] << 16) |
-                                  (G_pgpe_pstate_record.psClipMin[0] << 8)  | (G_pgpe_pstate_record.psClipMin[1]);
-    G_pgpe_optrace_data.word[2] = (G_pgpe_pstate_record.psClipMin[2] << 24) | (G_pgpe_pstate_record.psClipMin[3] << 16) |
-                                  (G_pgpe_pstate_record.psClipMin[4] << 8)  | (G_pgpe_pstate_record.psClipMin[5]);
-    p9_pgpe_optrace(PRC_CLIP_UPDT);
     PK_TRACE_DBG("PTH: Clip Upd Exit");
 }
 
@@ -466,6 +529,10 @@ void p9_pgpe_process_wof_ctrl()
     {
         PK_TRACE_DBG("PTH: WOF Ctrl Imme");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
+        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
+                                      (args->action << 16) |
+                                      (in32(OCB_QCSR) >> 16);
+        p9_pgpe_optrace(PRC_WOF_CTRL);
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
@@ -473,11 +540,15 @@ void p9_pgpe_process_wof_ctrl()
     {
         PK_TRACE_DBG("PTH: WOF Ctrl PMSUSP/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_IN_PM_SUSP;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT || G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
     {
         PK_TRACE_DBG("PTH: WOF Ctrl PSStop/Init");
         args->msg_cb.rc = PGPE_RC_PSTATES_NOT_STARTED;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_IN_PSTATE_STOPPED;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
     {
@@ -509,7 +580,7 @@ void p9_pgpe_process_wof_ctrl()
 
                     if(rc)
                     {
-                        PK_PANIC(PGPE_SGPE_IPC_SEND_BAD_RC);
+                        PGPE_PANIC_AND_TRACE(PGPE_SGPE_IPC_SEND_BAD_RC);
                     }
 
                     //Wait for SGPE ACK with alive Quads
@@ -525,7 +596,7 @@ void p9_pgpe_process_wof_ctrl()
                     }
                     else
                     {
-                        PK_PANIC(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
+                        PGPE_PANIC_AND_TRACE(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
                     }
 
 #endif// _SGPE_IPC_ENABLED_
@@ -534,11 +605,17 @@ void p9_pgpe_process_wof_ctrl()
                 G_pgpe_pstate_record.wofEnabled = 1;
                 p9_pgpe_pstate_calc_wof();
                 ack_now = 0;
+                G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
+                                              (args->action << 16) |
+                                              (in32(OCB_QCSR) >> 16);
+                p9_pgpe_optrace(PRC_WOF_CTRL);
             }
             else
             {
                 args->msg_cb.rc = PGPE_RC_WOF_ALREADY_ON;
                 PK_TRACE_DBG("PTH: WOF Ctrl=ON,WOF_Enabled=1");
+                G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_ENABLE_WHEN_ENABLED;
+                p9_pgpe_optrace(UNEXPECTED_ERROR);
             }
         }
         else if (args->action == PGPE_ACTION_WOF_OFF)
@@ -567,7 +644,7 @@ void p9_pgpe_process_wof_ctrl()
 
                     if(rc)
                     {
-                        PK_PANIC(PGPE_SGPE_IPC_SEND_BAD_RC);
+                        PGPE_PANIC_AND_TRACE(PGPE_SGPE_IPC_SEND_BAD_RC);
                     }
 
                     //Wait for SGPE ACK with alive Quads
@@ -583,25 +660,26 @@ void p9_pgpe_process_wof_ctrl()
                     }
                     else
                     {
-                        PK_PANIC(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
+                        PGPE_PANIC_AND_TRACE(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
                     }
                 }
 
 #endif// _SGPE_IPC_ENABLED_
 
                 G_pgpe_pstate_record.wofEnabled = 0;
+                G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
+                                              (args->action << 16) | (in32(OCB_QCSR) >> 16);
+                p9_pgpe_optrace(PRC_WOF_CTRL);
             }
             else
             {
                 args->msg_cb.rc = PGPE_RC_WOF_ALREADY_OFF;
                 PK_TRACE_DBG("PTH: WOF Ctrl=OFF,WOF_Enabled=0");
+                G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_DISABLE_WHEN_DISABLED;
+                p9_pgpe_optrace(UNEXPECTED_ERROR);
             }
         }
     }
-
-    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (args->action << 16) | (in32(
-                                      OCB_QCSR) >> 16);
-    p9_pgpe_optrace(PRC_WOF_CTRL);
 
     if (ack_now == 1)
     {
@@ -631,6 +709,9 @@ void p9_pgpe_process_wof_vfrt()
     {
         PK_TRACE_DBG("PTH: WOF VFRT Imme");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
+        G_pgpe_optrace_data.word[0] = 0;
+        G_pgpe_optrace_data.word[1] = 0;
+        p9_pgpe_optrace(PRC_WOF_VFRT);
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
@@ -638,18 +719,22 @@ void p9_pgpe_process_wof_vfrt()
     {
         PK_TRACE_DBG("PTH: WOF VFRT PMSUSP/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_VFRT_IN_SAFE_MODE;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED || G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT)
     {
         PK_TRACE_DBG("PTH: WOF VFRT PSStop/Init");
         args->msg_cb.rc = PGPE_RC_PSTATES_NOT_STARTED;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_VFRT_IN_PSTATE_STOPPED;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
     {
         if(args->homer_vfrt_ptr == NULL)
         {
             PK_TRACE_ERR("PTH: NULL VFRT Ptr");
-            PK_PANIC(PGPE_NULL_VFRT_POINTER);
+            PGPE_PANIC_AND_TRACE(PGPE_NULL_VFRT_POINTER);
         }
 
         //Update VFRT pointer
@@ -704,24 +789,39 @@ void p9_pgpe_process_set_pmcr_req()
     if(G_pgpe_header_data->g_pgpe_qm_flags & BIT16(PGPE_HEADER_FLAGS_OCC_IPC_IMMEDIATE_MODE))
     {
         PK_TRACE_DBG("PTH: Set PMCR Imme");
+        p9_pgpe_optrace(PRC_SET_PMCR);
         args->msg_cb.rc = PGPE_RC_SUCCESS;
+        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.quadPSTarget[0] << 24) |
+                                      (G_pgpe_pstate_record.quadPSTarget[1] << 16) |
+                                      (G_pgpe_pstate_record.quadPSTarget[2] << 8) |
+                                      G_pgpe_pstate_record.quadPSTarget[3];
+        G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.quadPSTarget[4] << 24) |
+                                      (G_pgpe_pstate_record.quadPSTarget[5] << 16) |
+                                      G_pgpe_pstate_record.globalPSTarget << 8;
+        p9_pgpe_optrace(PRC_SET_PMCR);
     }
     else  if(G_pgpe_pstate_record.pmcrOwner != PMCR_OWNER_OCC)
     {
         PK_TRACE_DBG("PTH: !OCC_PMCR_OWNER");
         args->msg_cb.rc = PGPE_RC_OCC_NOT_PMCR_OWNER;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_SET_PMCR_AND_PMCR_OWNER_NOT_OCC;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT || G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
     {
         PK_TRACE_DBG("PTH: Pstates !Started");
         args->msg_cb.rc = PGPE_RC_PSTATES_NOT_STARTED;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_SET_PMCR_IN_PSTATE_STOPPED;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
-        PK_TRACE_DBG("PTH: Clip Updt PMSUSP/Safe");
+        PK_TRACE_DBG("PTH: Set PMCR in PM_Susp/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_SET_PMCR_IN_PM_SUSP;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
     {
@@ -736,6 +836,16 @@ void p9_pgpe_process_set_pmcr_req()
 
             PK_TRACE_DBG("PTH: coresPSReq: 0x%x", G_pgpe_pstate_record.coresPSRequest[q * CORES_PER_QUAD]);
         }
+
+        //PGPE Trace(PRC_SET_PMCR)
+        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.coresPSRequest[0] << 24) |
+                                      (G_pgpe_pstate_record.coresPSRequest[4] << 16) |
+                                      (G_pgpe_pstate_record.coresPSRequest[8] << 8) |
+                                      G_pgpe_pstate_record.coresPSRequest[12];
+        G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.coresPSRequest[16] << 24) |
+                                      (G_pgpe_pstate_record.coresPSRequest[20] << 16) |
+                                      G_pgpe_pstate_record.globalPSCurr << 8;
+        p9_pgpe_optrace(PRC_SET_PMCR);
 
         p9_pgpe_pstate_do_auction();
         p9_pgpe_pstate_apply_clips();

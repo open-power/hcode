@@ -284,7 +284,6 @@ void p9_pgpe_pstate_apply_clips()
             G_pgpe_pstate_record.quadPSCurr[q] = 0xFF;
             G_pgpe_pstate_record.quadPSNext[q] = 0xFF;
         }
-
     }
 
     //Global PState Auction
@@ -349,6 +348,7 @@ void p9_pgpe_pstate_calc_wof()
 
     PK_TRACE_DBG("WFC: FClip_PS=0x%x, vindex=%d, vratio=%d", G_pgpe_pstate_record.wofClip, G_pgpe_pstate_record.vindex,
                  G_pgpe_pstate_record.vratio);
+    p9_pgpe_pstate_apply_clips();
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.vratio << 16) |
                                   (G_pgpe_pstate_record.fratio << 8);
     G_pgpe_optrace_data.word[1] = (WOF_CALC_DONE << 24) |
@@ -356,7 +356,6 @@ void p9_pgpe_pstate_calc_wof()
                                   (G_pgpe_pstate_record.activeQuads << 8) |
                                   G_pgpe_pstate_record.numActiveCores;
     p9_pgpe_optrace(WOF_CALC_DONE);
-    p9_pgpe_pstate_apply_clips();
 }
 
 //
@@ -428,7 +427,6 @@ void p9_pgpe_send_db0(uint64_t db0, uint32_t coreVector, uint32_t unicast, uint3
 
     //In case of unicast, only write DB0 for active cores. However, in case of
     //multicast just write DB0 of every configured core, but care only about active cores.
-    p9_pgpe_optrace(ACTL_BROADCAST);
 
     if (unicast == PGPE_DB0_UNICAST)
     {
@@ -487,7 +485,7 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
                 else if(!(G_pgpe_pstate_record.pendQuadsRegistration & QUAD_MASK(q)))
                 {
                     PK_TRACE_ERR("DBW:Unexpected qCME[%u] ACK", q);
-                    PK_PANIC(PGPE_CME_UNEXPECTED_DB0_ACK);
+                    PGPE_PANIC_AND_TRACE(PGPE_CME_UNEXPECTED_DB0_ACK);
                 }
             }
         }
@@ -495,7 +493,6 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
         out32(OCB_OPIT4PRA_CLR, opit4Clr);
     }
 
-    p9_pgpe_optrace(ACK_ACTL_DONE);
     PK_TRACE_DBG("DBW:qCME ACKs rcvd");
 }
 
@@ -715,18 +712,6 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     PK_TRACE_INF("PST: PGPE_PSTATE_PROTOCOL_ACTIVE set");
     out32(OCB_OCCS2, occScr2);
 
-    //7. Send Pstate Start ACK to OCC
-    if (pstate_start_origin == PSTATE_START_OCC_IPC)
-    {
-        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd;
-        ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
-        args->msg_cb.rc = PGPE_RC_SUCCESS;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_START_STOP);
-    }
-
     PK_TRACE_INF("PST: Start Done");
 }
 
@@ -769,7 +754,7 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
     else
     {
         PK_TRACE_ERR("Invalid PMCR Owner=%u", owner);
-        PK_PANIC(PGPE_INVALID_PMCR_OWNER);
+        PGPE_PANIC_AND_TRACE(PGPE_INVALID_PMCR_OWNER);
     }
 
     //If OWNER is switched to CHAR, the last LMCR setting is retained
@@ -804,14 +789,6 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
             }
         }
     }
-
-    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.quadPSComputed[0] << 24) | (G_pgpe_pstate_record.quadPSComputed[1]
-                                  << 16) |
-                                  (G_pgpe_pstate_record.quadPSComputed[2] << 8) | G_pgpe_pstate_record.quadPSComputed[3];
-    G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.quadPSComputed[4] << 24) | (G_pgpe_pstate_record.quadPSComputed[5]
-                                  << 16) |
-                                  G_pgpe_pstate_record.globalPSComputed << 8;
-    p9_pgpe_optrace(PRC_SET_PMCR);
 
 #endif
 }
@@ -939,12 +916,12 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
     p9_pgpe_pstate_updt_actual_quad(0xFC);
 
     //ACK back to SGPE
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
-    ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-    p9_pgpe_optrace(ACK_QUAD_ACTV);
+    /*    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+        ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_QUAD_ACTV);*/
     PK_TRACE_INF("QE:(Notify) End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
@@ -966,12 +943,12 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
     }
 
     //ACK back to SGPE
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+    /*ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
     ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
     args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
     ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-    p9_pgpe_optrace(ACK_QUAD_ACTV);
+    p9_pgpe_optrace(ACK_QUAD_ACTV);*/
     PK_TRACE_INF("QE:(Done) End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
@@ -1023,12 +1000,12 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
     G_pgpe_pstate_record.pendQuadsRegistration |= quadsRequested;
 
     //ACK back to SGPE
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
-    ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-    p9_pgpe_optrace(ACK_QUAD_ACTV);
+    /* ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+     ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
+     args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+     ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+     p9_pgpe_optrace(ACK_QUAD_ACTV);*/
     PK_TRACE_INF("QX:End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
@@ -1144,7 +1121,7 @@ void p9_pgpe_pstate_send_suspend_stop()
     if(rc)
     {
         PK_TRACE_ERR("SUSP:Suspend Stop BAD ACK");
-        PK_PANIC(PGPE_SGPE_SUSPEND_STOP_BAD_ACK);
+        PGPE_PANIC_AND_TRACE(PGPE_SGPE_SUSPEND_STOP_BAD_ACK);
     }
 
 #else
@@ -1326,12 +1303,12 @@ void p9_pgpe_pstate_do_step()
 
     //Update Shared SRAM
     p9_pgpe_pstate_updt_actual_quad(0xFC);
-    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.quadPSComputed[0] << 24) | (G_pgpe_pstate_record.quadPSComputed[1]
+    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.quadPSCurr[0] << 24) | (G_pgpe_pstate_record.quadPSCurr[1]
                                   << 16) |
-                                  (G_pgpe_pstate_record.quadPSComputed[2] << 8) | G_pgpe_pstate_record.quadPSComputed[3];
-    G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.quadPSComputed[4] << 24) | (G_pgpe_pstate_record.quadPSComputed[5]
+                                  (G_pgpe_pstate_record.quadPSCurr[2] << 8) | G_pgpe_pstate_record.quadPSCurr[3];
+    G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.quadPSCurr[4] << 24) | (G_pgpe_pstate_record.quadPSCurr[5]
                                   << 16) |
-                                  G_pgpe_pstate_record.globalPSNext << 8 | G_pgpe_pstate_record.globalPSTarget;
+                                  G_pgpe_pstate_record.globalPSCurr << 8 | G_pgpe_pstate_record.globalPSTarget;
     G_pgpe_optrace_data.word[2] = (G_pgpe_pstate_record.eVidCurr << 16) | G_pgpe_pstate_record.eVidCurr;
     p9_pgpe_optrace(ACTUATE_STEP_DONE);
     PK_TRACE_DBG("STEP: Exit");
@@ -1436,10 +1413,12 @@ void p9_pgpe_pstate_freq_updt()
     db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSNext[4];
     db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSNext[5];
 
+    p9_pgpe_optrace(ACTL_BROADCAST);
     p9_pgpe_send_db0(db0.value,
                      G_pgpe_pstate_record.activeCores,
                      PGPE_DB0_MULTICAST,
                      PGPE_DB0_ACK_WAIT_CME);
+    p9_pgpe_optrace(ACK_ACTL_DONE);
 
     PK_TRACE_DBG("FREQ: Exit");
 }

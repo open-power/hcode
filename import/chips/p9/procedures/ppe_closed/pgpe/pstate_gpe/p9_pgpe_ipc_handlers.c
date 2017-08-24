@@ -46,6 +46,7 @@
 //
 extern PgpeHeader_t* G_pgpe_header_data;
 extern PgpePstateRecord G_pgpe_pstate_record;
+extern TraceData_t G_pgpe_optrace_data;
 
 //
 //p9_pgpe_ipc_init
@@ -102,7 +103,8 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
     {
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_START_STOP);
+        G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_START_STOP_WHILE_PENDING;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
 }
 
@@ -127,7 +129,8 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
     {
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_CLIP_UPDT);
+        G_pgpe_optrace_data.word[0] = PGPE_OP_CLIP_UPDT_IN_WHILE_PENDING;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
 }
 
@@ -153,6 +156,8 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
         PK_TRACE_DBG("IPC: Set PMCR while pending");
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        G_pgpe_optrace_data.word[0] = PGPE_OP_SET_PMCR_WHILE_PENDING;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
 }
 
@@ -177,7 +182,8 @@ void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
     {
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_WOF_CTRL);
+        G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_WHILE_PENDING;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
 }
 
@@ -202,7 +208,8 @@ void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
     {
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_WOF_VFRT);
+        G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_VFRT_WHILE_PENDING;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
 }
 
@@ -229,7 +236,8 @@ void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
             (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
         args->fields.return_code  = IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_CORES_ACTV);
+        G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_WHILE_PENDING;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
 }
 
@@ -259,7 +267,8 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
             (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
         args->fields.return_code = IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_QUAD_ACTV);
+        G_pgpe_optrace_data.word[0] = PGPE_OP_QUADS_ACTIVE_WHILE_PENDING;
+        p9_pgpe_optrace(UNEXPECTED_ERROR);
         PK_TRACE_INF("IPC: Updt Quads while pending");
     }
 }

@@ -50,7 +50,7 @@ void p9_pgpe_optrace_init() //sets up address and initializes buffer to 0's
 }
 void p9_pgpe_optrace(uint32_t mark)
 {
-    if(in32(OCB_OCCS2) & PGPE_OPTRACE_DISABLE) //Check to see if tracing is enabled
+    if(in32(OCB_OCCS2) & PGPE_OP_TRACE_DISABLE) //Check to see if tracing is enabled
     {
         G_lastDisable = 1;
     }

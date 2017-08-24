@@ -30,6 +30,8 @@
 #include "p9_pgpe_pstate.h"
 #include "p9_pgpe_optrace.h"
 
+extern TraceData_t G_pgpe_optrace_data;
+
 PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
 {
     0,
@@ -170,7 +172,7 @@ main(int argc, char** argv)
 
     if(mfspr(287) != PVR_CONST)
     {
-        PK_PANIC(PGPE_BAD_DD_LEVEL);
+        PGPE_PANIC_AND_TRACE(PGPE_BAD_DD_LEVEL);
     }
 
     // Initializes kernel data (stack, threads, timebase, timers, etc.)

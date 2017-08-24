@@ -25,42 +25,90 @@
 #ifndef _P9_PGPE_TRACE_HEADER_
 #define _P9_PGPE_TRACE_HEADER_
 
-#define PGPE_OPTRACE_DISABLE 0x00000080
-#define START_STOP_IPC 0
-#define START_STOP_FLAG 1
+enum PGPE_OP_TRACE
+{
+    START_STOP_IPC  =   0,
+    START_STOP_FLAG =   1,
 
-#define WOF_CALC_DONE     0x11
-#define AUCTION_DONE      0x10
-#define ACTUATE_STEP_DONE 0x73
+    //Without Timestamps
+    WOF_CALC_DONE     =  0x11,
+    AUCTION_DONE      =  0x10,
 
-#define ACK_WOF_VFRT      0xC2
-#define ACK_WOF_CTRL      0xC4
-#define ACTL_BROADCAST    0xC5
-#define ACK_ACTL_DONE     0xC6
-#define ACK_CLIP_UPDT     0xC7
-#define ACK_START_STOP    0xC8
-#define RESERVED_TS_0     0xC9
-#define ACK_CORES_ACTV    0xCA
-#define ACK_QUAD_ACTV     0xCB
-#define ACK_START_TRACE   0xCC
-#define INV_TRC_REQ       0xCD
-#define ACK_PM_SUSP       0xCE
-#define ACK_SAFE_DONE     0xCF
+    //ACKs
+    RESERVED_TS0      =  0xC0,
+    RESERVED_TS1      =  0xC1,
+    ACK_WOF_VFRT      =  0xC2,
+    RESERVED_TS3      =  0xC3,
+    ACK_WOF_CTRL      =  0xC4,
+    ACTL_BROADCAST    =  0xC5,
+    ACK_ACTL_DONE     =  0xC6,
+    ACK_CLIP_UPDT     =  0xC7,
+    ACK_START_STOP    =  0xC8,
+    RESERVED_TS9      =  0xC9,
+    ACK_CORES_ACTV    =  0xCA,
+    ACK_QUAD_ACTV     =  0xCB,
+    ACK_START_TRACE   =  0xCC,
+    INV_TRC_REQ       =  0xCD,
+    ACK_PM_SUSP       =  0xCE,
+    ACK_SAFE_DONE     =  0xCF,
 
-#define PRC_WOF_VFRT      0x62
-#define PRC_WOF_CTRL      0x54
-#define PRC_PCB_T4        0x55
-#define PRC_PCB_T1        0x56
-#define PRC_CLIP_UPDT     0x77
-#define PRC_START_STOP    0x58
-#define PRC_SET_PMCR      0x69
-#define PRC_CORES_ACTV    0x5A
-#define PRC_QUAD_ACTV     0x5B
-#define FIT_TB_SYNC       0x5C
-#define SGPE_SUSP_DONE    0x4D
-#define PRC_PM_SUSP       0x4E
-#define PRC_SAFE_MODE     0x5F
+    //Process
+    HALT_CONDITION    =  0x50,
+    UNEXPECTED_ERROR  =  0x51,
+    PRC_WOF_VFRT      =  0x62,
+    ACTUATE_STEP_DONE =  0x73,
+    PRC_WOF_CTRL      =  0x54,
+    PRC_PCB_T4        =  0x55,
+    PRC_PCB_T1        =  0x56,
+    PRC_CLIP_UPDT     =  0x77,
+    PRC_START_STOP    =  0x58,
+    PRC_SET_PMCR      =  0x69,
+    PRC_CORES_ACTV    =  0x5A,
+    PRC_QUAD_ACTV     =  0x5B,
+    FIT_TB_SYNC       =  0x5C,
+    SGPE_SUSP_DONE    =  0x4D,
+    PRC_PM_SUSP       =  0x4E,
+    PRC_SAFE_MODE     =  0x5F
+};
 
+//Unexpected Errors
+enum PGPE_OP_TRACE_UNEXPECTED_ERRORS
+{
+    PGPE_OP_WOF_VFRT_IN_SAFE_MODE               =  0x01,
+    PGPE_OP_WOF_VFRT_IN_PM_SUSP                 =  0x02,
+    PGPE_OP_WOF_VFRT_IN_PSTATE_STOPPED          =  0x03,
+    PGPE_OP_WOF_VFRT_WHILE_PENDING              =  0x04,
+    PGPE_OP_WOF_CTRL_IN_SAFE_MODE               =  0x08,
+    PGPE_OP_WOF_CTRL_IN_PM_SUSP                 =  0x09,
+    PGPE_OP_WOF_CTRL_IN_PSTATE_STOPPED          =  0x0a,
+    PGPE_OP_WOF_CTRL_ENABLE_WHEN_ENABLED        =  0x0b,
+    PGPE_OP_WOF_CTRL_DISABLE_WHEN_DISABLED      =  0x0c,
+    PGPE_OP_WOF_CTRL_WHILE_PENDING              =  0x0d,
+    PGPE_OP_CLIP_UPDT_IN_SAFE_MODE              =  0x10,
+    PGPE_OP_CLIP_UPDT_IN_PM_SUSP                =  0x11,
+    PGPE_OP_CLIP_UPDT_IN_WHILE_PENDING          =  0x12,
+    PGPE_OP_PSTATE_START_IN_SAFE_MODE           =  0x20,
+    PGPE_OP_PSTATE_START_IN_PM_SUSP             =  0x21,
+    PGPE_OP_PSTATE_STOP_IN_SAFE_MODE            =  0x23,
+    PGPE_OP_PSTATE_STOP_IN_PM_SUSP              =  0x24,
+    PGPE_OP_PSTATE_STOP_IN_PSTATE_STOPPED       =  0x25,
+    PGPE_OP_PSTATE_START_STOP_WHILE_PENDING     =  0x26,
+    PGPE_OP_SET_PMCR_AND_PMCR_OWNER_NOT_OCC     =  0x30,
+    PGPE_OP_SET_PMCR_IN_PSTATE_STOPPED          =  0x31,
+    PGPE_OP_SET_PMCR_IN_SAFE_MODE               =  0x32,
+    PGPE_OP_SET_PMCR_IN_PM_SUSP                 =  0x33,
+    PGPE_OP_SET_PMCR_WHILE_PENDING              =  0x34,
+    PGPE_OP_CORES_ACTIVE_IN_SAFE_MODE           =  0x40,
+    PGPE_OP_CORES_ACTIVE_IN_PM_SUSP             =  0x41,
+    PGPE_OP_CORES_ACTIVE_IN_PSTATE_STOPPED      =  0x42,
+    PGPE_OP_CORES_ACTIVE_IN_WOF_DISABLED        =  0x43,
+    PGPE_OP_CORES_ACTIVE_WHILE_PENDING          =  0x44,
+    PGPE_OP_QUADS_ACTIVE_IN_SAFE_MODE           =  0x50,
+    PGPE_OP_QUADS_ACTIVE_IN_PM_SUSP             =  0x51,
+    PGPE_OP_QUADS_ACTIVE_WHILE_PENDING          =  0x52,
+    PGPE_OP_PCB_TYPE1_IN_PSTATE_STOPPED         =  0x60,
+    PGPE_OP_PCB_TYPE1_IN_PMCR_OWNER_OCC         =  0x61
+};
 
 //
 //Functions called by threads
