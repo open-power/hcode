@@ -375,54 +375,57 @@ inline void p9_cme_pstate_process_db0()
 
     PK_TRACE_INF("DB_TH: DB0 0x%x\n"dbData.value);
 
-    //Process DB0
-    //Start Pstates and Pstates NOT enabled
-    if(G_dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST &&
-       !(G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
+    if (in32(CME_LCL_SRTCH0) & BIT32(CME_SCRATCH_DB0_PROCESSING_ENABLE))
     {
-        p9_cme_pstate_db0_start();
-    }
-    //Global Actual Broadcast and Pstates enabled
-    else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST)
-    {
-        //Process Global Bcast only if Pstates are enabled.
-        //Otherwise, ignore. The reason is PGPE multicasts Global Bcast, and doorbell0
-        //can be written while this CME is powered-off. For Pstate Start and Stop
-        //PGPE only unicasts.
-        if (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))
+        //Process DB0
+        //Start Pstates and Pstates NOT enabled
+        if(G_dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST &&
+           !(G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
         {
-            p9_cme_pstate_db0_glb_bcast();
+            p9_cme_pstate_db0_start();
         }
-    }
-    //Stop Pstates and Pstates enabled
-    else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST &&
-            (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
-    {
-        p9_cme_pstate_db0_suspend();
-    }
-    //Pmin or Pmax Update
-    else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST &&
-            (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
-    {
-        p9_cme_pstate_db0_clip_bcast();
-    }
-    //Otherwise, send an ERR ACK to PGPE and Halt
-    else
-    {
-        ppmPigData.value = 0;
-        ppmPigData.fields.req_intr_type = 4;
-        ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
-        send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
-        PK_TRACE_INF("DB_TH: Bad DB0=0x%x Pstate=0x%x", G_dbData.fields.cme_message_number0, G_cme_flags);
-
-        if(G_dbData.fields.cme_message_number0 < MSGID_DB0_VALID_START ||
-           G_dbData.fields.cme_message_number0 > MSGID_DB0_VALID_END)
+        //Global Actual Broadcast and Pstates enabled
+        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST)
         {
-            PK_PANIC(CME_PSTATE_UNEXPECTED_DB0_MSGID);
+            //Process Global Bcast only if Pstates are enabled.
+            //Otherwise, ignore. The reason is PGPE multicasts Global Bcast, and doorbell0
+            //can be written while this CME is powered-off. For Pstate Start and Stop
+            //PGPE only unicasts.
+            if (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))
+            {
+                p9_cme_pstate_db0_glb_bcast();
+            }
         }
+        //Stop Pstates and Pstates enabled
+        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST &&
+                (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
+        {
+            p9_cme_pstate_db0_suspend();
+        }
+        //Pmin or Pmax Update
+        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST &&
+                (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
+        {
+            p9_cme_pstate_db0_clip_bcast();
+        }
+        //Otherwise, send an ERR ACK to PGPE and Halt
         else
         {
-            PK_PANIC(CME_PSTATE_INVALID_DB0_MSGID);
+            ppmPigData.value = 0;
+            ppmPigData.fields.req_intr_type = 4;
+            ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
+            send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
+            PK_TRACE_INF("DB_TH: Bad DB0=0x%x Pstate=0x%x", G_dbData.fields.cme_message_number0, G_cme_flags);
+
+            if(G_dbData.fields.cme_message_number0 < MSGID_DB0_VALID_START ||
+               G_dbData.fields.cme_message_number0 > MSGID_DB0_VALID_END)
+            {
+                PK_PANIC(CME_PSTATE_UNEXPECTED_DB0_MSGID);
+            }
+            else
+            {
+                PK_PANIC(CME_PSTATE_INVALID_DB0_MSGID);
+            }
         }
     }
 
@@ -478,11 +481,8 @@ inline void p9_cme_pstate_db0_start()
     send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
 
     //Clear Pending PMCR interrupts and Enable PMCR Interrupts (for good cores)
-    out32_sh(CME_LCL_EISR_CLR, G_cme_record.core_enabled << 28 );
-    out32_sh(CME_LCL_EIMR_CLR, G_cme_record.core_enabled << 28 );
     g_eimr_override |= BITS64(34, 2);
     g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << 28);
-
 
     //Clear Core GPMMR RESET_STATE_INDICATOR bit to show pstates have started
     CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));

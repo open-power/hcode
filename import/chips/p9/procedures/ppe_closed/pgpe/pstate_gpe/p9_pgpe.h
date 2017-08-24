@@ -64,6 +64,7 @@ enum PGPE_DEFINES
 {
     QUAD0_MASK        = 0x80,
     CORE0_MASK        = 0x80000000,
+    QUAD0_ALL_CORES_MASK = 0xF0000000
 };
 
 enum PSTATE_START_SOURCE
@@ -77,6 +78,9 @@ enum PSTATE_START_SOURCE
 
 #define QUAD_MASK(quad) \
     (QUAD0_MASK >> quad)
+
+#define QUAD_ALL_CORES_MASK(quad) \
+    (QUAD0_ALL_CORES_MASK >> (quad<<2))
 
 #define FIRST_CORE_FROM_QUAD(quad) \
     ((quad) << 2)

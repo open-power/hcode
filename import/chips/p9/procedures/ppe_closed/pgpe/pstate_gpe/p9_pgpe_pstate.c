@@ -617,9 +617,13 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
 
             if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
             {
+                //CME Scratch0
                 GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
                 value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
+                value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+
+                //PMSR0/1
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(2));
                 value = 0;
                 value |= (pmin << SHIFT64(23));
@@ -631,9 +635,13 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
 
             if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
             {
+                //CME Scratch0
                 GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
                 value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
+                value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+
+                //PMSR0/1
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(2));
                 value = 0;
                 value |= (pmin << SHIFT64(23));
@@ -870,6 +878,9 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
     uint32_t q;
     qppm_dpll_freq_t dpllFreq;
     dpllFreq.value = 0;
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(OCB_QCSR);
+    uint64_t value;
 
     G_pgpe_pstate_record.activeQuads &= ~quadsRequested;
 
@@ -880,7 +891,25 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
         if (quadsRequested & QUAD_MASK(q))
         {
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
-            G_pgpe_pstate_record.activeCores &= ~(0xF >> (q << 2));
+
+            G_pgpe_pstate_record.activeCores &= ~(QUAD_ALL_CORES_MASK(q));
+            out32(OCB_OPIT4PRA_CLR, QUAD_ALL_CORES_MASK(q)); //Clear any pending PCB_Type4
+
+            //CME_Scratch0[DB0_PROCESSING_ENABLE]=0
+            if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+                value &= ~BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
+            }
+
+            if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+                value &= ~BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+            }
+
 
             if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
             {

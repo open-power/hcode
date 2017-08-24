@@ -244,15 +244,19 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 p9_pgpe_pstate_do_auction();
                 p9_pgpe_pstate_apply_clips();
 
-                //Write CME_SCRATCH register
+                //Write CME_SCRATCH and PMSR0/1 registers
                 if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
                 {
+                    //CME_Scratch
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
                     value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
+                    value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(2));
+
+                    //PMSR0/1
                     value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
                             SHIFT64(31));
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(2));
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 0), value);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 0), value);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 0), BIT64(2));
@@ -260,9 +264,13 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 
                 if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
                 {
+                    //CME_Scratch
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
                     value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
+                    value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
+
+                    //PMSR0/1
                     value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
                             SHIFT64(31));
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(2));

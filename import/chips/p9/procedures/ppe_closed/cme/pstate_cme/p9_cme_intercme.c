@@ -105,8 +105,6 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
         p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
 
         //Clear any pending PMCR interrupts
-        out32_sh(CME_LCL_EISR_CLR, G_cme_record.core_enabled << 28);
-        out32_sh(CME_LCL_EIMR_CLR, G_cme_record.core_enabled << 28);//Enable PMCR0/1
         g_eimr_override |= BITS64(34, 2);
         g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << 28);
 
