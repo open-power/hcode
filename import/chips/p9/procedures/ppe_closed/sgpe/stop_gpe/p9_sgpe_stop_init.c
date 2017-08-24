@@ -302,6 +302,16 @@ p9_sgpe_stop_init()
 
     G_sgpe_stop_record.group.core[VECTOR_PCWU]   = 0;
 
+    //Write Core Quiesce Workaround Disable bit to OCC Flag
+    uint32_t occflg = in32(OCB_OCCFLG) & ~BIT32(13);
+    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
+
+    if(pSgpeImgHdr->g_sgpe_reserve_flags & BIT32(7))//SGPE_CORE_PERIODIC_QUIESCE_DISABLE_POS))
+    {
+        out32(OCB_OCCFLG, occflg | BIT32(OCCFLG_CORE_QUIESCE_WORKARND_DIS));
+    }
+
+
     for(qloop = 0, m_1c = BIT32(0), m_2c = BITS32(0, 2), m_4c = BITS32(0, 4),
         m_1x = BIT32(0), m_2x = BITS32(0, 2), m_qs = BIT32(14);
         qloop < MAX_QUADS;
@@ -456,7 +466,6 @@ p9_sgpe_stop_init()
 
     uint32_t cme_flags   = 0;
     uint16_t cmeBootList = ((~qssr.value) >> 16) & 0xFFF0;
-    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
     PK_TRACE_INF("Setup: Prepare CME[%x] to be Booted", cmeBootList);
 

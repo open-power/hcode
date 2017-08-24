@@ -49,6 +49,8 @@ uint32_t G_aux_task_count;
 uint32_t G_tb_sync_count_threshold;
 uint32_t G_tb_sync_count;
 
+uint32_t G_last_core_quiesce_dis;
+
 extern GlobalPstateParmBlock* G_gppb;
 extern PgpeHeader_t* G_pgpe_header_data;
 extern PgpePstateRecord G_pgpe_pstate_record;
@@ -101,6 +103,7 @@ void p9_pgpe_fit_init()
     G_throttleCount = 0;
     G_beacon_count = 0;
     G_tb_sync_count = 0;
+    G_last_core_quiesce_dis = (in32(OCB_OCCFLG) & BIT32(OCCFLG_CORE_QUIESCE_WORKARND_DIS));
     ppe42_fit_setup(p9_pgpe_fit_handler, NULL);
 }
 
@@ -273,6 +276,33 @@ __attribute__((always_inline)) inline void handle_fit_timebase_sync()
     }
 }
 
+__attribute__((always_inline)) inline void handle_core_quiesce_dis()
+{
+    if(G_last_core_quiesce_dis != (in32(OCB_OCCFLG) & BIT32(OCCFLG_CORE_QUIESCE_WORKARND_DIS)))
+    {
+        G_last_core_quiesce_dis = (in32(OCB_OCCFLG) & BIT32(OCCFLG_CORE_QUIESCE_WORKARND_DIS));
+        uint64_t wrtAddr = G_last_core_quiesce_dis ? CME_SCOM_FLAGS_OR : CME_SCOM_FLAGS_CLR;
+        uint32_t q;
+        ocb_qcsr_t qcsr;
+        qcsr.value = in32(OCB_QCSR);
+
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(wrtAddr,
+                                              q, 0), BIT64(CME_CORE_QUIESCE_WORKARND_DIS));
+            }
+
+            if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(wrtAddr,
+                                              q, 1), BIT64(CME_CORE_QUIESCE_WORKARND_DIS));
+            }
+        }
+    }
+}
+
 //p9_pgpe_fit_handler
 //
 //This is a periodic FIT Handler whose period is determined
@@ -284,4 +314,5 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
     handle_core_throttle();
     handle_aux_task();
     handle_fit_timebase_sync();
+    handle_core_quiesce_dis();
 }
