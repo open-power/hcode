@@ -350,6 +350,22 @@ int ipc_enable(void);
 ///
 int ipc_disable(uint32_t target_id);
 
+///////////////////////////////////////////////////////////////////////////////
+/// Set the ipc irq handler done hook
+///
+/// \param func Function pointer to the done hook function
+///
+/// This interface should be used by a processor that wants to
+/// hook into the IPC IRQ handler after all the messages in the buffer
+/// have processed.
+///
+/// Possible return codes for this function are:
+///
+/// \retval IPC_RC_SUCCESS Function pointer was successfully set.
+///
+/// \retval IPC_RC_INVALID_FUNC_PTR Function pointer is NULL.
+///
+void ipc_set_done_hook(void* func);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Associates an IPC function ID with a handler function

@@ -57,7 +57,6 @@ PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
     {0, 0},
     0,
     0,
-    0,
     {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
     0,
     0,

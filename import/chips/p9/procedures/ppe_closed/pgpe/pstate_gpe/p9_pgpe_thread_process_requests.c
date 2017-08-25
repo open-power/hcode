@@ -80,7 +80,6 @@ void p9_pgpe_thread_process_requests(void* arg)
         //Enter Sub-Critical Section. Timer Interrupts are enabled
         pk_irq_sub_critical_enter(&ctx);
 
-        G_pgpe_pstate_record.alreadySemPosted  = 0;
         restore_irq  = 1;
 
         PK_TRACE_DBG("PTH: Process Task");

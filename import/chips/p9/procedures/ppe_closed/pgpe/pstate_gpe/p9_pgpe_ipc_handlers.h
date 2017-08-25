@@ -27,10 +27,11 @@
 
 #include "pk.h"
 
+
 //
-//PGPE IPC Initialization
-//
+// IPC Initialization and done hook
 void p9_pgpe_ipc_init();
+void p9_pgpe_ipc_irq_done_hook();
 
 //
 //405 IPCs

@@ -108,7 +108,6 @@ typedef struct
     uint8_t pad3;
     uint8_t quadPSAtStop11[MAX_QUADS];  //target Pstate per quad
     uint8_t pad4[2];
-    uint16_t alreadySemPosted;
     uint32_t eVidCurr, eVidNext;
     ipc_req_t ipcPendTbl[MAX_IPC_PEND_TBL_ENTRIES];
     HomerVFRTLayout_t* pVFRT;
