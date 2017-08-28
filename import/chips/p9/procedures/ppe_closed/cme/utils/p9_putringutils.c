@@ -141,11 +141,17 @@ inline uint64_t rs4_get_verbatim(const uint8_t* i_rs4Str,
                                  const uint32_t i_nibbleCount)
 {
     uint32_t l_byte;
-    uint32_t l_nibble;
+    uint8_t l_nibble;
     uint64_t l_doubleWord = 0;
 
     uint32_t l_index = i_nibbleIndx;
     uint32_t i;
+    uint32_t l_shift = 32;
+
+    if( i_nibbleCount > 7 )
+    {
+        l_shift = 64;
+    }
 
     for(i = 1; i <= i_nibbleCount; i++, l_index++)
     {
@@ -153,13 +159,90 @@ inline uint64_t rs4_get_verbatim(const uint8_t* i_rs4Str,
         l_nibble = l_index % 2 ? l_byte & 0x0f : l_byte >> 4;
 
         uint64_t l_tempDblWord = l_nibble;
-        l_tempDblWord <<= (64 - (4 * i));
+        l_tempDblWord <<= ( l_shift - (4 * i));
 
         l_doubleWord |= l_tempDblWord;
     }
 
+    if( i_nibbleCount <= 7 )
+    {
+        l_doubleWord = l_doubleWord << 32;
+    }
+
     return l_doubleWord;
 }
+inline uint64_t rs4_get_verbatim_word(const uint8_t* i_rs4Str,
+                                      const uint32_t i_nibbleIndx,
+                                      uint32_t i_nibbleCount)__attribute__((always_inline));
+inline uint64_t rs4_get_verbatim_word(const uint8_t* i_rs4Str,
+                                      const uint32_t i_nibbleIndx,
+                                      uint32_t i_nibbleCount)
+{
+    uint64_t l_doubleWord = 0;
+
+    const uint32_t* l_data =  NULL;
+    uint32_t l_offset  = 0;
+    uint32_t l_shift = 32;
+    uint32_t l_cnt;
+    uint32_t l_mod;
+    uint32_t l_index = i_nibbleIndx;
+    uint64_t l_tempWord;
+    uint32_t l_64shift = 32;
+    uint32_t l_rightShift = 0;
+
+    while (i_nibbleCount)
+    {
+        l_cnt =  l_index >> 1;
+        l_mod = l_cnt % 4;
+        l_offset = l_cnt - l_mod;
+        l_data = (uint32_t*)((uint8_t*)i_rs4Str + l_offset);
+        l_shift = ((4 - l_mod) * 8);
+
+        if ((l_index %  2))
+        {
+            l_shift = ((4 - l_mod) * 8) - 4;
+        }
+
+        l_offset = *l_data << (32 - l_shift);
+        l_tempWord = l_offset;
+
+        if (l_64shift)
+        {
+            l_tempWord = l_tempWord <<  l_64shift;
+        }
+        else
+        {
+            l_tempWord = l_tempWord >> (l_rightShift * 4);
+        }
+
+
+        l_doubleWord |= l_tempWord;
+
+        uint32_t x = 8 - (l_index % 8);
+
+        if (x < i_nibbleCount)
+        {
+            l_index += x;
+            l_64shift = 64 - (32 +  (x * 4));
+
+            l_rightShift = i_nibbleIndx % 8;
+
+            if (!l_64shift && l_rightShift)
+            {
+                l_rightShift = 8 - l_rightShift;
+            }
+
+            i_nibbleCount -= x;
+        }
+        else
+        {
+            i_nibbleCount = 0;
+        }
+    }
+
+    return l_doubleWord;
+}
+
 
 //// @brief Function to apply the rotate operation
 //  @param[in] i_core - core select value
@@ -281,6 +364,7 @@ int rs4DecompressionSvc(
         }
         else if( CMSK == i_rs4Type )
         {
+            PKTRACE("CMSK start");
             l_rs4Header = (CompressedScanData*)(i_rs4 + sizeof( CompressedScanData ));
             l_rs4Str = i_rs4 + (2 * sizeof( CompressedScanData ));
         }
@@ -349,11 +433,21 @@ int rs4DecompressionSvc(
                 {
                     l_bitsDecoded += (4 * l_scanCount);
 
-                    // Parse the non-zero nibbles of the RS4 string and
-                    // scan them into the ring
-                    l_scomData = rs4_get_verbatim(l_rs4Str,
-                                                  l_nibbleIndx,
-                                                  l_scanCount);
+                    if (l_scanCount >= 2)
+                    {
+                        l_scomData = rs4_get_verbatim_word(l_rs4Str,
+                                                           l_nibbleIndx,
+                                                           l_scanCount);
+                    }
+                    else
+                    {
+                        // Parse the non-zero nibbles of the RS4 string and
+                        // scan them into the ring
+                        l_scomData = rs4_get_verbatim(l_rs4Str,
+                                                      l_nibbleIndx,
+                                                      l_scanCount);
+                    }
+
                     l_nibbleIndx += l_scanCount;
                     l_scanCount = l_scanCount * 4;
 
@@ -496,6 +590,11 @@ int rs4DecompressionSvc(
                 }
             }
         } // end of if(l_nibble != 0)
+
+        if( CMSK == i_rs4Type )
+        {
+            PKTRACE("CMSK END");
+        }
 
         // Verify header
         enum CME_SCOM_CONTROLS l_scomOp = i_scom_op;
