@@ -224,6 +224,9 @@ p9_sgpe_stop_exit_end(uint32_t qloop)
 
         if (G_sgpe_stop_record.group.core[VECTOR_EXIT] & BIT32(cindex))
         {
+
+#if DISABLE_STOP8
+
             if (G_sgpe_stop_record.group.quad[VECTOR_RCLKX] & BIT32(qloop))
             {
                 G_sgpe_stop_record.group.core[VECTOR_RCLKX] |= BIT32(cindex);
@@ -231,8 +234,17 @@ p9_sgpe_stop_exit_end(uint32_t qloop)
             else
             {
                 G_sgpe_stop_record.group.core[VECTOR_RCLKX] &= ~BIT32(cindex);
+
+#endif
+
                 p9_sgpe_stop_exit_handoff_cme(cindex);
+
+#if DISABLE_STOP8
+
             }
+
+#endif
+
         }
 
     }

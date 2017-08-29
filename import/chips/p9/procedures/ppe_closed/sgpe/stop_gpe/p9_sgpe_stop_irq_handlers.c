@@ -52,8 +52,13 @@ SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
         {0, 0},
         {0, 0},
         {0, 0, 0, 0, 0},
+#if DISABLE_STOP8
         {0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+#else
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0}
+#endif
     },
     // wof status
     {0, 0, 0},
@@ -505,6 +510,8 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                         G_sgpe_stop_record.group.core[VECTOR_PCWU] |= BIT32(cindex);
                     }
 
+#if DISABLE_STOP8
+
                     // if having ongoing stop11 in resclk disable phase, hold on to all exits
                     if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32(qloop))
                     {
@@ -540,6 +547,17 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                         G_sgpe_stop_record.group.core[VECTOR_PIGX] |=
                             G_sgpe_stop_record.group.core[VECTOR_RCLKX];
                     }
+
+#else
+
+                    if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] & BIT32(qloop))
+                    {
+                        PK_TRACE_DBG("Core Request Exit But in Block Wakeup Mode so Ignore");
+                        G_sgpe_stop_record.group.core[VECTOR_BLOCKX] |= BIT32(cindex);
+                    }
+
+#endif
+
                     else
                     {
                         PK_TRACE_INF("Core Request Exit Confirmed");
@@ -571,6 +589,8 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                     PK_PANIC(SGPE_PIG_TYPE23_ENTRY_WNS_CME);
                 }
 
+#if DISABLE_STOP8
+
                 // Quad-Manager completed the resonant clock disable, proceed stop11 entry
                 // block entry protocol is checked in the entry code instead of here below
                 if ((type == PIG_TYPE5) &&
@@ -580,6 +600,8 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                     G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32(qloop);
                     G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + 16));
                 }
+
+#endif
 
                 if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] & BIT32(qloop))
                 {
@@ -799,11 +821,16 @@ p9_sgpe_pig_type5_handler(void* arg, PkIrqId irq)
     // Clear Type5 Interrupt
     out32(OCB_OISR1_CLR, BIT32(18));
 
+#if DISABLE_STOP8
+
     // Parse Type5 Requests
     p9_sgpe_pig_cpayload_parser(PIG_TYPE5);
 
     // decide if launch the thread
     p9_sgpe_pig_thread_lanucher();
+
+#endif
+
 }
 
 
