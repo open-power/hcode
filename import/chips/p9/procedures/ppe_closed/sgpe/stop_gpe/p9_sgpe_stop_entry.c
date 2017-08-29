@@ -53,7 +53,9 @@ p9_sgpe_stop_entry()
     uint64_t     local_xstop       = 0;
     data64_t     scom_data         = {0};
     data64_t     temp_data         = {0};
+#if DISABLE_STOP8
     ppm_pig_t    pig               = {0};
+#endif
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
     uint32_t      spin             = 0;
 #endif
@@ -82,8 +84,14 @@ p9_sgpe_stop_entry()
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
         if ((G_sgpe_stop_record.group.qswu[VECTOR_ACTIVE] |
-             G_sgpe_stop_record.group.quad[VECTOR_RCLKE]  |
              G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] |
+
+#if DISABLE_STOP8
+
+             G_sgpe_stop_record.group.quad[VECTOR_RCLKE]  |
+
+#endif
+
              (~G_sgpe_stop_record.group.quad[VECTOR_CONFIG])) & BIT32(qloop))
         {
             continue;
@@ -126,6 +134,13 @@ p9_sgpe_stop_entry()
         if(G_sgpe_stop_record.state[qloop].act_state_q <  LEVEL_EQ_BASE &&
            G_sgpe_stop_record.state[qloop].req_state_q >= LEVEL_EQ_BASE)
         {
+
+#if !DISABLE_STOP8
+
+            G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
+
+#else
+
             // if resonant clock disable is completed, process stop11 entry
             if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32((qloop + 16)))
             {
@@ -148,8 +163,6 @@ p9_sgpe_stop_entry()
 
                 G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
 
-#if DISABLE_STOP8
-
                 ocb_qssr_t qssr = {0};
                 qssr.value      = in32(OCB_QSSR);
 
@@ -157,8 +170,6 @@ p9_sgpe_stop_entry()
                 G_sgpe_stop_record.group.ex01[qloop] =
                     (((~qssr.value) & BITS32((qloop << 1), 2)) >>
                      SHIFT32(((qloop << 1) + 1)));
-
-#endif
 
             }
             // if stop11 entry qualifies, hold on processing it but first
@@ -197,6 +208,9 @@ p9_sgpe_stop_entry()
 #endif
 
             }
+
+#endif
+
         }
 
         G_sgpe_stop_record.group.ex01[qloop] &=
@@ -316,7 +330,7 @@ p9_sgpe_stop_entry()
         }
     }
 
-    PK_TRACE_INF("NDD1: L2 and NCU Purged by SGPE");
+    PK_TRACE("NDD1: L2 and NCU Purged by SGPE");
 
 #endif
 
@@ -732,6 +746,8 @@ p9_sgpe_stop_entry()
         {
             PK_TRACE_INF("Abort: L3 Purge Aborted");
 
+#if DISABLE_STOP8
+
             // assume ex0 core0 is good
             cindex = (qloop << 2);
 
@@ -762,6 +778,8 @@ p9_sgpe_stop_entry()
 
             // block handoff to cme until resonant clock enable is completed.
             G_sgpe_stop_record.group.quad[VECTOR_RCLKX] |= BIT32(qloop);
+
+#endif
 
             // For IPC reporting, taking aborted quad out of the list
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &= ~BIT32(qloop);

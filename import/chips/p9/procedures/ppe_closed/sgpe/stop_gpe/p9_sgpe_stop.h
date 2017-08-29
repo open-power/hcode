@@ -237,11 +237,23 @@ enum SGPE_STOP_VECTOR_INDEX
     VECTOR_ACTIVE                     = 4, //(core_ipc,    quad_ipc, qswu_active)
     VECTOR_CONFIG                     = 5, //(core,        quad)
     VECTOR_ERROR                      = 6, //(             quad)
+
+#if !DISABLE_STOP8
+
+    VECTOR_PIGE                       = 7, //(core)
+    VECTOR_PIGX                       = 8, //(core)
+    VECTOR_PCWU                       = 9  //(core)
+
+#else
+
     VECTOR_RCLKE                      = 7, //(core_blocke, quad)
     VECTOR_RCLKX                      = 8, //(core_blockx, quad)
     VECTOR_PIGE                       = 9, //(core)
     VECTOR_PIGX                       = 10,//(core)
     VECTOR_PCWU                       = 11 //(core)
+
+#endif
+
 };
 
 typedef struct
@@ -266,8 +278,19 @@ typedef struct
     uint32_t qex0[2]; // 6  bits
     uint32_t qex1[2]; // 6  bits
     uint32_t qswu[5]; // 6  bits
+
+#if !DISABLE_STOP8
+
+    uint32_t quad[7]; // 6  bits
+    uint32_t core[10];// 24 bits
+
+#else
+
     uint32_t quad[9]; // 6  bits
     uint32_t core[12];// 24 bits
+
+#endif
+
 } sgpe_group_t;
 
 typedef struct
