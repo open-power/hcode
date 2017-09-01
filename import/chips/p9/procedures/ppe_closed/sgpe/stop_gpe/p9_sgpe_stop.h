@@ -282,7 +282,7 @@ typedef struct
 
 typedef struct
 {
-    uint32_t strave_counter;
+    uint32_t starve_counter;
 } sgpe_fit_t;
 
 /// SGPE Stop Score Board Structure
