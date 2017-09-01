@@ -85,7 +85,7 @@ extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
                                 IRQ_VEC_PRTY3_SGPE | \
                                 IRQ_VEC_PRTY4_SGPE | \
                                 IRQ_VEC_PRTY5_SGPE | \
-                                IRQ_VEC_PRTY6_SGPE )      // Note, we do not incl PRTY6 here!
+                                IRQ_VEC_PRTY6_SGPE )      // Note, we do not incl PRTY7 here!
 
 // This should be 0xFFFFFFFFFFFFFFFF
 #define IRQ_VEC_PRTY_CHECK  ( IRQ_VEC_PRTY0_SGPE | \

@@ -76,16 +76,16 @@ p9_sgpe_fit_handler()
     // count to 10 times that stop8+ is not serviced, then block stop5
     if (G_sgpe_stop_record.wof.status_stop == STATUS_IDLE && tpending)
     {
-        PK_TRACE("FIT: Stravation Counter: %d", G_sgpe_stop_record.fit.strave_counter);
+        PK_TRACE("FIT: Stravation Counter: %d", G_sgpe_stop_record.fit.starve_counter);
 
-        if (G_sgpe_stop_record.fit.strave_counter < 25)
+        if (G_sgpe_stop_record.fit.starve_counter < 25)
         {
-            G_sgpe_stop_record.fit.strave_counter++;
+            G_sgpe_stop_record.fit.starve_counter++;
         }
         else
         {
             PK_TRACE_INF("FIT: Stop8+ Stravation Detected");
-            G_sgpe_stop_record.fit.strave_counter = 0;
+            G_sgpe_stop_record.fit.starve_counter = 0;
             out32(OCB_OIMR1_OR, BIT32(15));
             g_oimr_override |= BIT64(47);
         }
@@ -93,7 +93,7 @@ p9_sgpe_fit_handler()
     // reset counter if current processing stop8+
     else if (G_sgpe_stop_record.wof.status_stop == STATUS_PROCESSING)
     {
-        G_sgpe_stop_record.fit.strave_counter = 0;
+        G_sgpe_stop_record.fit.starve_counter = 0;
     }
 }
 

@@ -36,9 +36,35 @@
 
 // Debug Switches
 
-#define TEST_ONLY_BCE_IRR                0
+//@todo RTC 161182 this is currently broken:
+//(need iota/fit resolution to restore function)
+//#define TEST_ONLY_BCE_IRR                0
+
+// --------------------
+
+//override switch to disable stop8
+//(with backup resonant clock support),
+//@todo DD level condition is yet to be defined
+#define DISABLE_STOP8                    1
+
+// --------------------
+
+// override switch to disable dual cast,
+// otherwise automatically be disabled if NDD == 2
+// being enabled on all other dd levels unless this override
 #define DISABLE_CME_DUAL_CAST            0
-#define DISABLE_CORE_XSTOP_INJECTION     0
+
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
+    // NDD2: no catchup due to dual cast bug
+    #undef  SKIP_ENTRY_CATCHUP
+    #undef  SKIP_EXIT_CATCHUP
+    #define SKIP_ENTRY_CATCHUP 1
+    #define SKIP_EXIT_CATCHUP  1
+#endif
+
+// --------------------
+
+// override swtich for NDD20/21/CDD10 workaround
 #define DISABLE_PERIODIC_CORE_QUIESCE    0
 
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
@@ -47,34 +73,35 @@
 
 // --------------------
 
+// Hyp debug support,
+// @todo need to disable this for GA
+#define DISABLE_CORE_XSTOP_INJECTION     0
+
+// --------------------
+
+// the following functions are always enabled once working
+// (unless earlier DD level condition undef them below)
+
 #define USE_PPE_IMPRECISE_MODE
 #define USE_CME_QUEUED_SCOM
 #define USE_CME_QUEUED_SCAN
+#define USE_CME_VDM_FEATURE
+#define USE_CME_RESCLK_FEATURE
 
 #if !defined(USE_PPE_IMPRECISE_MODE) && (defined(USE_CME_QUEUED_SCOM) || defined(USE_CME_QUEUED_SCAN))
     #error "USE_PPE_IMPRECISE_MODE must be defined in order to enable USE_CME_QUEUED_SCOM or USE_CME_QUEUED_SCAN"
 #endif
 
-// @todo RTC 161182
+// --------------------
 
 #if NIMBUS_DD_LEVEL == 10
     #define HW386841_NDD1_DSL_STOP1_FIX         1
     #define HW402407_NDD1_TLBIE_STOP_WORKAROUND 1
     #define HW405292_NDD1_PCBMUX_SAVIOR         1
-    #define MASK_MSR_SEM6
     #define RUN_NDD1_ABIST_IN_PARALLEL_MODE     1
+    #define MASK_MSR_SEM6
     #define USE_CME_VDM_FEATURE
     #undef  USE_CME_RESCLK_FEATURE
-#endif
-
-#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
-    // NDD2: no catchup due to dual cast bug
-    #undef  SKIP_ENTRY_CATCHUP
-    #undef  SKIP_EXIT_CATCHUP
-    #define SKIP_ENTRY_CATCHUP 1
-    #define SKIP_EXIT_CATCHUP  1
-    #define USE_CME_VDM_FEATURE
-    #define USE_CME_RESCLK_FEATURE
 #endif
 
 // --------------------
