@@ -79,7 +79,7 @@ void periodic_core_quiesce_workaround()
     CME_GETSCOM_AND(CPPM_CPMMR, CME_MASK_BC, scom_data.value);
     fused_core_mode = scom_data.words.upper & BIT32(9);
 
-    PK_TRACE_DBG("PCQW: Fused Core Mode[%x]", fused_core_mode);
+    PK_TRACE("PCQW: Fused Core Mode[%x]", fused_core_mode);
 
     //0) in case in stop0/1 that we dont know about
 
@@ -189,11 +189,11 @@ void periodic_core_quiesce_workaround()
 
     if (!sample_error)
     {
-        PK_TRACE_DBG("FIT: Both Cores Quiesced");
+        PK_TRACE("FIT: Both Cores Quiesced");
     }
     else
     {
-        PK_TRACE_DBG("FIT: Error while trying to Quiesce Cores");
+        PK_TRACE_INF("FIT: Error while trying to Quiesce Cores");
     }
 
 
@@ -247,7 +247,7 @@ void periodic_core_quiesce_workaround()
         CME_PUTSCOM_NOP(DIRECT_CONTROLS, core, scom_data.value);
     }
 
-    PK_TRACE_DBG("FIT: Both Cores Started");
+    PK_TRACE("FIT: Both Cores Started");
 
     //7) Drop pm_exit
 
@@ -310,7 +310,7 @@ void fit_handler()
     uint32_t scom_op;
     data64_t scom_data;
 
-    PK_TRACE_DBG("FIT Timer Handler");
+    PK_TRACE("FIT Timer Handler");
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
