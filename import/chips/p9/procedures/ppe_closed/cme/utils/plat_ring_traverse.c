@@ -88,7 +88,7 @@ int putRing(
                 break;
             }
 
-            l_sectionAddr = (CME_SRAM_BASE_ADDR + (l_cmeHeader->g_cme_core_spec_ring_offset * 32));
+            l_sectionAddr = (CME_SRAM_BASE_ADDR + (l_cmeHeader->g_cme_core_spec_ring_offset << 5));
 
             l_ringTorAddr =  (uint16_t*)(l_sectionAddr ) + (((i_core & 0x01) *
                              l_chipletData.iv_num_instance_rings ) + (l_torOffset));

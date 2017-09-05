@@ -84,7 +84,7 @@ inline uint32_t stop_decode(const uint8_t* i_rs4Str,
 
         l_nibble = (i_nibbleIndx % 2 ? l_byte & 0x0f : l_byte >> 4);
 
-        l_numNonZeroNibbles = (l_numNonZeroNibbles * 8) + (l_nibble & 0x07);
+        l_numNonZeroNibbles = (l_numNonZeroNibbles << 3) + (l_nibble & 0x07);
 
         i_nibbleIndx++;
         l_numNibblesParsed++;
@@ -132,45 +132,6 @@ inline uint64_t decodeScanRegionData(const uint32_t i_ringAddress)
 ///                          in the return value.
 /// @return big-endian-indexed double word
 ///
-
-inline uint64_t rs4_get_verbatim(const uint8_t* i_rs4Str,
-                                 const uint32_t i_nibbleIndx,
-                                 const uint32_t i_nibbleCount)__attribute__((always_inline));
-inline uint64_t rs4_get_verbatim(const uint8_t* i_rs4Str,
-                                 const uint32_t i_nibbleIndx,
-                                 const uint32_t i_nibbleCount)
-{
-    uint32_t l_byte;
-    uint8_t l_nibble;
-    uint64_t l_doubleWord = 0;
-
-    uint32_t l_index = i_nibbleIndx;
-    uint32_t i;
-    uint32_t l_shift = 32;
-
-    if( i_nibbleCount > 7 )
-    {
-        l_shift = 64;
-    }
-
-    for(i = 1; i <= i_nibbleCount; i++, l_index++)
-    {
-        l_byte = i_rs4Str[l_index >> 1];
-        l_nibble = l_index % 2 ? l_byte & 0x0f : l_byte >> 4;
-
-        uint64_t l_tempDblWord = l_nibble;
-        l_tempDblWord <<= ( l_shift - (4 * i));
-
-        l_doubleWord |= l_tempDblWord;
-    }
-
-    if( i_nibbleCount <= 7 )
-    {
-        l_doubleWord = l_doubleWord << 32;
-    }
-
-    return l_doubleWord;
-}
 inline uint64_t rs4_get_verbatim_word(const uint8_t* i_rs4Str,
                                       const uint32_t i_nibbleIndx,
                                       uint32_t i_nibbleCount)__attribute__((always_inline));
@@ -196,11 +157,13 @@ inline uint64_t rs4_get_verbatim_word(const uint8_t* i_rs4Str,
         l_mod = l_cnt % 4;
         l_offset = l_cnt - l_mod;
         l_data = (uint32_t*)((uint8_t*)i_rs4Str + l_offset);
-        l_shift = ((4 - l_mod) * 8);
+        l_shift = (4 - l_mod) << 3;
 
-        if ((l_index %  2))
+        l_mod = l_index % 2;
+
+        if (l_mod)
         {
-            l_shift = ((4 - l_mod) * 8) - 4;
+            l_shift = l_shift - 4;
         }
 
         l_offset = *l_data << (32 - l_shift);
@@ -212,7 +175,7 @@ inline uint64_t rs4_get_verbatim_word(const uint8_t* i_rs4Str,
         }
         else
         {
-            l_tempWord = l_tempWord >> (l_rightShift * 4);
+            l_tempWord = l_tempWord >> (l_rightShift << 2);
         }
 
 
@@ -223,7 +186,7 @@ inline uint64_t rs4_get_verbatim_word(const uint8_t* i_rs4Str,
         if (x < i_nibbleCount)
         {
             l_index += x;
-            l_64shift = 64 - (32 +  (x * 4));
+            l_64shift = 64 - (32 +  (x << 2));
 
             l_rightShift = i_nibbleIndx % 8;
 
@@ -249,40 +212,6 @@ inline uint64_t rs4_get_verbatim_word(const uint8_t* i_rs4Str,
 //  @param[in] i_scom_op - scom control value like queue/non-queue
 /// @param[in] i_opVal Number of bits for the operation
 /// @param[in] i_scanData This value has to be scanned when i_operation is SCAN
-
-inline void cmeRotate(enum CME_CORE_MASKS i_core,
-                      enum CME_SCOM_CONTROLS i_scom_op,
-                      uint32_t i_opVal,
-                      uint64_t i_scanData) __attribute__((always_inline));
-
-inline void cmeRotate(enum CME_CORE_MASKS i_core,
-                      enum CME_SCOM_CONTROLS i_scom_op,
-                      uint32_t i_opVal,
-                      uint64_t i_scanData)
-{
-    uint32_t l_scomAddress;
-    const uint32_t l_maxRotates = 4095;
-    uint32_t l_rotateCount = i_opVal;
-
-
-    while (l_rotateCount)
-    {
-        l_scomAddress = 0x00038000;
-
-        if (l_rotateCount < l_maxRotates)
-        {
-            l_scomAddress |= l_rotateCount;
-            l_rotateCount = 0;
-        }
-        else
-        {
-            l_scomAddress |= l_maxRotates;
-            l_rotateCount -= l_maxRotates;
-        }
-
-        CME_GETSCOM_OP(l_scomAddress, i_core, i_scom_op, i_scanData);
-    }
-}
 
 /// @brief Byte-reverse a 32-bit integer
 ///// @param[in] i_x 32-bit word that need to be byte reversed
@@ -329,6 +258,7 @@ int rs4DecompressionSvc(
     uint32_t i, x;
     uint32_t l_data;
     uint32_t l_spyData;
+    uint32_t l_maxRotate = 4095;
 
     uint8_t* l_rs4Str = 0;
     CompressedScanData* l_rs4Header = NULL;
@@ -366,7 +296,7 @@ int rs4DecompressionSvc(
         {
             PKTRACE("CMSK start");
             l_rs4Header = (CompressedScanData*)(i_rs4 + sizeof( CompressedScanData ));
-            l_rs4Str = i_rs4 + (2 * sizeof( CompressedScanData ));
+            l_rs4Str = i_rs4 + ( sizeof( CompressedScanData) << 1);
         }
         else    //Stumped Ring
         {
@@ -404,18 +334,23 @@ int rs4DecompressionSvc(
                 l_nibbleIndx += stop_decode(l_rs4Str, l_nibbleIndx, &l_bitRotates);
 
                 // Determine the no.of rotates in bits
-                l_bitRotates = (4 * l_bitRotates);
+                l_bitRotates =  l_bitRotates << 2;
 
                 l_bitsDecoded += l_bitRotates;
 
                 // Do the ROTATE operation
-                if (l_bitRotates != 0)
+                if (l_bitRotates > l_maxRotate)
                 {
-                    cmeRotate(i_core,
-                              i_scom_op,
-                              l_bitRotates,
-                              0);
+                    for (; l_bitRotates > l_maxRotate; )
+                    {
+                        l_bitRotates -= l_maxRotate;
+                        CME_GETSCOM_OP(0x00038000 | l_maxRotate, i_core, i_scom_op, l_scomData);
+                    }
+
+                    l_bitRotates = l_bitRotates % l_maxRotate;
                 }
+
+                CME_GETSCOM_OP(0x00038000 | l_bitRotates, i_core, i_scom_op, l_scomData);
 
                 l_opType = SCAN;
             }
@@ -431,30 +366,30 @@ int rs4DecompressionSvc(
 
                 if ((!i_applyOverride) && l_scanCount != 0xF)
                 {
-                    l_bitsDecoded += (4 * l_scanCount);
+                    uint32_t l_count = l_scanCount << 2;;
+                    l_bitsDecoded += l_count;
 
                     if (l_scanCount >= 2)
                     {
                         l_scomData = rs4_get_verbatim_word(l_rs4Str,
                                                            l_nibbleIndx,
                                                            l_scanCount);
+                        CME_PUTSCOM(0x0003E000 |  l_count, i_core, l_scomData);
                     }
                     else
                     {
                         // Parse the non-zero nibbles of the RS4 string and
                         // scan them into the ring
-                        l_scomData = rs4_get_verbatim(l_rs4Str,
-                                                      l_nibbleIndx,
-                                                      l_scanCount);
+                        l_spyData = l_rs4Str[l_nibbleIndx >> 1];
+                        l_scomData = l_nibbleIndx % 2 ? l_spyData & 0x0f : l_spyData >> 4;
+
+                        l_scomData <<= 28;
+                        l_scomData = l_scomData << 32;
+
+                        CME_PUTSCOM(0x0003E000 |  l_count, i_core, l_scomData);
                     }
 
                     l_nibbleIndx += l_scanCount;
-                    l_scanCount = l_scanCount * 4;
-
-                    if (l_scanCount)
-                    {
-                        CME_PUTSCOM(0x0003E000 |  l_scanCount, i_core, l_scomData);
-                    }
                 }
                 else  // We are parsing RS4 for override rings
                 {
@@ -530,9 +465,11 @@ int rs4DecompressionSvc(
             if (!i_applyOverride)
             {
                 l_bitsDecoded += l_nibble;
-                l_scomData = rs4_get_verbatim(l_rs4Str,
-                                              l_nibbleIndx,
-                                              1); // return 1 nibble
+                l_spyData = l_rs4Str[l_nibbleIndx >> 1];
+                l_scomData = l_nibbleIndx % 2 ? l_spyData & 0x0f : l_spyData >> 4;
+
+                l_scomData <<= 28;
+                l_scomData = l_scomData << 32;
 
                 CME_PUTSCOM(0x0003E000 | (l_nibble & 0x3), i_core, l_scomData);
             }
