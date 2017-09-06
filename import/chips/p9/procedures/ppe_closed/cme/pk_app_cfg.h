@@ -65,7 +65,7 @@
 // --------------------
 
 // override swtich for NDD20/21/CDD10 workaround
-#define DISABLE_PERIODIC_CORE_QUIESCE    1
+#define DISABLE_PERIODIC_CORE_QUIESCE    0
 
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
     #define PCQW_ENABLE
@@ -100,7 +100,7 @@
     #define HW405292_NDD1_PCBMUX_SAVIOR         1
     #define RUN_NDD1_ABIST_IN_PARALLEL_MODE     1
     #define MASK_MSR_SEM6
-    #define USE_CME_VDM_FEATURE
+    #undef  USE_CME_VDM_FEATURE
     #undef  USE_CME_RESCLK_FEATURE
 #endif
 

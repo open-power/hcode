@@ -37,6 +37,7 @@ typedef struct
     uint32_t core_quiesce_time_latest;
     uint32_t core_quiesce_time_max;
     uint32_t core_quiesce_time_min;
+    uint32_t core_quiesce_failed_count;
 } CmeFitRecord;
 
 #endif

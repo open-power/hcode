@@ -33,7 +33,7 @@
 
 #ifdef PCQW_ENABLE
 
-CmeRecord G_cme_record = {0, {0, 0, 0, 0, 0xFFFFFFFF}};
+CmeRecord G_cme_record = {0, {0, 0, 0, 0, 0xFFFFFFFF, 0}};
 
 #else
 
@@ -73,8 +73,9 @@ void periodic_core_quiesce_workaround()
     uint32_t time_stamp[2];
     data64_t scom_data;
     uint32_t sample_error = 0;
+    uint32_t saved_msr = 0;
 
-    PK_TRACE_INF("FIT: Periodic Core Quiesce Workaround");
+    PK_TRACE("FIT: Periodic Core Quiesce Workaround");
 
     CME_GETSCOM_AND(CPPM_CPMMR, CME_MASK_BC, scom_data.value);
     fused_core_mode = scom_data.words.upper & BIT32(9);
@@ -141,7 +142,19 @@ void periodic_core_quiesce_workaround()
 
 #endif
 
-        CME_PUTSCOM_NOP(DIRECT_CONTROLS, core, scom_data.value);
+        // The SCOM can be delayed by traffic on PC on the SPR bus, so it is possible
+        // to get a RC=4 (Address Error), which really indicates a timeout.   Need to mask
+        // this return code and retry until we get a clean return code
+        saved_msr = mfmsr();
+        mtmsr( saved_msr | MSR_SEM4);  // Mask off timeout
+
+        do
+        {
+            CME_PUTSCOM_NOP(DIRECT_CONTROLS, core, scom_data.value);
+        }
+        while ((mfmsr() & MSR_SIBRC) != 0);
+
+        mtmsr(saved_msr);
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
@@ -168,15 +181,36 @@ void periodic_core_quiesce_workaround()
 
 #define THREAD_VECTOR_CHECK (THREAD_VECTOR>>1 | THREAD_VECTOR>>3)
 
+// In a future release of this patch, it should be based on the Nest Frequency, but
+// plumbing for that sill needs to be created.
+// 200us in 32ns timer ticks
+#define QUIESCE_ABORT_TICKS 0x186A
+
+        // Poll on THREAD_QUIESCE, LSU_QUIESCE, and NEST_ACTIVE.
+        // If they do not quiesce in 200us abort the patch and restart the cores.
 
         do
         {
             CME_GETSCOM_AND(RAS_STATUS, core, scom_data.value);
-        }
 
-        while((((scom_data.words.upper& THREAD_VECTOR_CHECK) != THREAD_VECTOR_CHECK) ||  //THREAD_ and LSU_QUIESCE must be ones
+            time_stamp[1] = in32(CME_LCL_TBR);
+
+            if (time_stamp[1] > time_stamp[0])
+            {
+                G_cme_record.fit_record.core_quiesce_time_latest =
+                    time_stamp[1] - time_stamp[0];
+            }
+            else
+            {
+                G_cme_record.fit_record.core_quiesce_time_latest =
+                    0xFFFFFFFF - time_stamp[0] + time_stamp[1] + 1;
+            }
+        }
+        while((((scom_data.words.upper& THREAD_VECTOR_CHECK) != THREAD_VECTOR_CHECK)
+               ||    //THREAD_ and LSU_QUIESCE must be ones
                ((scom_data.words.lower& BIT64SH(32))))  // NEST_ACTIVE must be zero
               && !(sample_error = bad_error_present)
+              && (G_cme_record.fit_record.core_quiesce_time_latest < QUIESCE_ABORT_TICKS)    // 200us in 32ns timer ticks
              );
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
@@ -185,15 +219,15 @@ void periodic_core_quiesce_workaround()
 
 #endif
 
-    time_stamp[1] = in32(CME_LCL_TBR);
-
-    if (!sample_error)
+    if (!sample_error && (G_cme_record.fit_record.core_quiesce_time_latest < QUIESCE_ABORT_TICKS) )
     {
         PK_TRACE("FIT: Both Cores Quiesced");
     }
     else
     {
-        PK_TRACE_INF("FIT: Error while trying to Quiesce Cores");
+        PK_TRACE_INF("FIT: Error while trying to Quiesce Cores.  Bad Error %d, QuiesceTime (ns) %d", sample_error,
+                     (G_cme_record.fit_record.core_quiesce_time_latest << 5));
+        G_cme_record.fit_record.core_quiesce_failed_count++;
     }
 
 
@@ -245,6 +279,7 @@ void periodic_core_quiesce_workaround()
         scom_data.words.upper =
             (THREAD_VECTOR & (~maint_mode[core & 1]) & (~spattn[core & 1])) >> 3;
         CME_PUTSCOM_NOP(DIRECT_CONTROLS, core, scom_data.value);
+
     }
 
     PK_TRACE("FIT: Both Cores Started");
@@ -271,16 +306,7 @@ void periodic_core_quiesce_workaround()
 
     //Profile time
 
-    if (time_stamp[1] > time_stamp[0])
-    {
-        G_cme_record.fit_record.core_quiesce_time_latest =
-            time_stamp[1] - time_stamp[0];
-    }
-    else
-    {
-        G_cme_record.fit_record.core_quiesce_time_latest =
-            0xFFFFFFFF - time_stamp[0] + time_stamp[1] + 1;
-    }
+    // timestamp delta was computed above to handle the abort case
 
     if (G_cme_record.fit_record.core_quiesce_time_latest <
         G_cme_record.fit_record.core_quiesce_time_min)
@@ -305,7 +331,7 @@ void fit_handler()
 
 #ifdef PCQW_ENABLE
 
-    uint32_t core_quiesce_cpmmr_disable = 0;
+    uint32_t core_quiesce_cpmmr_disable;
     uint32_t core;
     uint32_t scom_op;
     data64_t scom_data;
@@ -327,11 +353,7 @@ void fit_handler()
 #endif
 
         CME_GETSCOM_OP(CPPM_CPMMR, core, scom_op, scom_data.value);
-
-        if (scom_data.words.upper & BIT32(2))
-        {
-            core_quiesce_cpmmr_disable = 1;
-        }
+        core_quiesce_cpmmr_disable = scom_data.words.upper & BIT32(2);
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
@@ -357,7 +379,7 @@ void fit_handler()
     // 4) both core doesnt have cpmmr[2] asserted
     // 5) no bad error occurs
     if((G_cme_record.core_enabled == CME_MASK_BC) &&
-       (G_cme_stop_record.core_running == CME_MASK_BC) &&
+       ((in32_sh(CME_LCL_SISR) & BITS64SH(46, 2)) == BITS64SH(46, 2)) &&
        (!(in32(CME_LCL_SISR) & BITS32(16, 2))) &&
        (!core_quiesce_cpmmr_disable) &&
        (!bad_error_present))

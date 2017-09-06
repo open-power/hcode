@@ -84,6 +84,9 @@
 #endif
 
 /// handcoded addresses TO BE REMOVED
+
+#define PSCOM_MODE_REG         0x20010000
+
 #define CORE_FIRMASK           0x20010A43
 #define CORE_ACTION0           0x20010A46
 #define CORE_ACTION1           0x20010A47
