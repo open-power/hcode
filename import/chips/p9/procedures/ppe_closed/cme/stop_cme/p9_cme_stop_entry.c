@@ -555,6 +555,8 @@ p9_cme_stop_entry()
 
             // Permanent workaround for HW407385
 
+            wrteei(0);
+
             PK_TRACE("HW407385: Assert block interrupt to PC via SICR[2/3]");
             out32(CME_LCL_SICR_OR, core << SHIFT32(3));
 
@@ -566,6 +568,8 @@ p9_cme_stop_entry()
             PK_TRACE("HW407385: Polling for core wakeup(pm_active=0) via EINR[20/21]");
 
             while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
+
+            wrteei(1);
 
             // end of HW407385
 
@@ -710,6 +714,8 @@ p9_cme_stop_entry()
 
             // Permanent workaround for HW407385
 
+            wrteei(0);
+
             PK_TRACE("HW407385: Drop pm_exit via SICR[4/5]");
             out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
 
@@ -722,6 +728,8 @@ p9_cme_stop_entry()
 
             PK_TRACE("HW407385: Drop block interrupt to PC via SICR[2/3]");
             out32(CME_LCL_SICR_CLR, core << SHIFT32(3));
+
+            wrteei(1);
 
             // end of HW407385
 
