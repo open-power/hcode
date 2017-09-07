@@ -963,9 +963,10 @@ p9_sgpe_stop_entry()
         PK_TRACE("Checking status of Local Checkstop");
         GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_LOCAL_XSTOP_ERR, qloop), local_xstop);
 
-        // PGPE is in charge of bit26: DPLL_ENABLE
+        // PGPE may have already cleared bit26: DPLL_ENABLE if booted,
+        // but SGPE can always do it in case PGPE isnt booted
         PK_TRACE("Drop CME_INTERPPM_IVRM/ACLK/VDATA_ENABLE via QPMMR[20,22,24]");
-        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), BIT64(20) | BIT64(22) | BIT64(24));
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, qloop), (BIT64(20) | BIT64(22) | BIT64(24) | BIT64(26)));
 
         if(pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_VDM_ENABLE_BIT_POS)
         {
