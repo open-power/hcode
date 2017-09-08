@@ -47,30 +47,8 @@ namespace RS4
 // Forward Declarations
 //
 
-/// @brief Byte-reverse a 32-bit integer
-/// @param[in] i_x 32-bit word that need to be byte reversed
-/// @return Byte reversed 32-bit word
-uint32_t rs4_revle32(const uint32_t i_x);
 
-///
-/// @brief Decode an unsigned integer from a 4-bit octal stop code.
-/// @param[in] i_rs4Str The RS4 scan string
-/// @param[in] i_nibbleIndx Index into i_rs4Str that has the stop-code
-/// @param[out] o_numRotate No.of rotates decoded from the stop-code.
-/// @return The number of nibbles decoded.
-///
-uint64_t stop_decode(const uint8_t* i_rs4Str,
-                     uint32_t i_nibbleIndx,
-                     uint64_t& o_numRotate);
 
-///
-/// @brief Return a big-endian-indexed nibble from a byte string
-/// @param[in] i_rs4Str The RS4 scan string
-/// @param[in] i_nibbleIndx Index into i_rs4Str that need to converted
-///                         into a nibble
-/// @return big-endian-indexed nibble
-///
-uint8_t rs4_get_nibble(const uint8_t* i_rs4Str, const uint32_t i_nibbleIndx);
 
 ///
 /// @brief Return verbatim data from the RS4 string
@@ -112,44 +90,7 @@ enum opType_t
 //
 // Function Definitions
 //
-void getRingProperties(const RingID i_ringId,
-                       uint32_t* o_torOffset,
-                       RINGTYPE* o_ringType);
 
-
-/// @brief Function to apply the Ring data using the standard-scan method
-/// @param[in] i_target Chiplet Target of Scan
-//  @param[in] i_chipletId data from RS4
-/// @param[in] i_operation Type of operation to perform - ROTATE/SCAN
-/// @param[in] i_opVal Number of bits for the operation
-/// @param[in] i_scanData This value has to be scanned when i_operation is SCAN
-/// @return FAPI2_RC_SUCCESS if success, else error code.
-fapi2::ReturnCode standardScan(
-    const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
-    const uint32_t i_chipletId,
-    enum opType_t i_operation,
-    uint64_t i_opVal,
-    uint64_t i_scanData);
-
-
-
-
-
-/// @brief Function to reader the header data from the ring and verify it.
-/// @param[in] i_target Chiplet Target of Scan
-/// @param[in] i_header The header data that is expected.
-//  @param[in] i_chipletId data from RS4
-/// @param[in] i_ringMode Ring operation mode.
-//  @param[in] i_bitsDecoded number of bits rotated and scanned
-//  @param[in] i_ringId ringId
-/// @return FAPI2_RC_SUCCESS if success, else error code.
-fapi2::ReturnCode verifyHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
-                               i_target,
-                               const uint64_t i_header,
-                               const uint32_t i_chipletId,
-                               const fapi2::RingMode i_ringMode,
-                               const uint32_t i_bitsDecoded,
-                               const uint16_t i_ringId);
 
 /// @brief Function to decompress the RS4 and apply the Ring data
 /// @param[in] i_target Chiplet Target of Scan
@@ -182,81 +123,5 @@ inline void cleanScanRegionandTypeData(
 
     fapi2::putScom(i_target, (SCAN_REG_0x00030005 | i_chipletId), l_data);
 }
-
-
-/// @brief Function to set the Scan Region
-/// @param[in] i_target Chiplet Target of Scan
-/// @param[in] i_scanRegion Value to be set to select a Scan Region
-//  @param[in] i_chipletId data from RS4
-/// @return FAPI2_RC_SUCCESS if success, else error code.
-inline void setupScanRegion(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
-                            i_target,
-                            uint64_t i_scanRegion,
-                            const uint32_t i_chipletId)
-{
-
-    // **************************
-    // Setup Scan-Type and Region
-    // **************************
-    fapi2::buffer<uint64_t> l_scanRegion(i_scanRegion);
-
-    fapi2::putScom(i_target, (SCAN_REG_0x00030005 | i_chipletId), l_scanRegion);
-
-}
-
-/// @brief Function to write the header data to the ring.
-/// @param[in] i_target Chiplet Target of Scan
-/// @param[in] i_header The header data that is to be written.
-//  @param[in] i_chipletId data from RS4
-/// @return FAPI2_RC_SUCCESS if success, else error code.
-inline void writeHeader(const fapi2::Target<fapi2::TARGET_TYPE_ALL>&
-                        i_target,
-                        const uint64_t i_header,
-                        const uint32_t i_chipletId)
-{
-    fapi2::putScom(i_target, (SCAN_REG_0x0003E040 | i_chipletId), i_header);
-}
-/// @brief Function to restore the opcg registers
-/// @param[in] i_target Chiplet Target of Scan
-/// @param[out]o_OPCGData Structure that contains opcg data
-//  @param[in] i_chipletId target chiplet ID
-/// @return FAPI2_RC_SUCCESS if success, else error code.
-void storeOPCGRegData(
-    const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
-    uint64_t& i_opcgReg0,
-    uint64_t& i_opcgReg1,
-    uint64_t& i_opcgReg2,
-    uint64_t& i_opcgCapt1,
-    uint64_t& i_opcgCapt2,
-    uint64_t& i_opcgCapt3,
-    const uint32_t i_chipletId);
-
-/// @brief Function to restore the opcg registers
-/// @param[in] i_target Chiplet Target of Scan
-/// @param[in] i_OPCGData opcg register data to restore original values
-//  @param[in] i_chipletId target chiplet ID
-/// @return FAPI2_RC_SUCCESS if success, else error code.
-void restoreOPCGRegData(
-    const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
-    uint64_t& i_opcgReg0,
-    uint64_t& i_opcgReg1,
-    uint64_t& i_opcgReg2,
-    uint64_t& i_opcgCapt1,
-    uint64_t& i_opcgCapt2,
-    uint64_t& i_opcgCapt3,
-    const uint32_t i_chipletId);
-
-/// @brief Function to set the Scan Region for set pulse mode
-/// @param[in] i_target Chiplet Target of Scan
-/// @param[in] i_scanRegion Value to be set to select a Scan Region
-/// @param[in] i_ringMode Ring operation mode.
-//  @param[in] i_chipletId target chiplet ID
-/// @return FAPI2_RC_SUCCESS if success, else error code.
-void setupScanRegionForSetPulse(
-    const fapi2::Target<fapi2::TARGET_TYPE_ALL>& i_target,
-    uint64_t i_scanRegion,
-    const fapi2::RingMode i_ringMode,
-    const uint32_t i_chipletId);
-
 
 #endif

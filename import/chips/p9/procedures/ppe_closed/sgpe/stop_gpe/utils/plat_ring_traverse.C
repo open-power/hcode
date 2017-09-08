@@ -57,7 +57,9 @@ fapi2::ReturnCode findRS4InImageAndApply(
         uint32_t* l_sectionAddr = NULL;
         bool l_override = false;
 
-        getRingProperties(i_ringID, &l_torOffset, &l_ringType);
+        l_torOffset = (INSTANCE_RING_MASK & (RING_PROPERTIES[i_ringID].iv_torOffSet));
+        l_ringType  = (INSTANCE_RING_MARK & RING_PROPERTIES[i_ringID].iv_torOffSet) ?
+                      INSTANCE_RING : COMMON_RING;
 
         sgpeHeader_t* l_hcodeLayout = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
