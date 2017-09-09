@@ -61,8 +61,11 @@ SECTIONS
     _DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
 
-    _DUMP_PTRS_START = _DEBUG_PTRS_START + PPE_DEBUG_PTRS_SIZE;
-    .dump_ptrs _DUMP_PTRS_START : { *(.dump_ptrs) } > sram
+    _DUMP_PTR_PSTATE_START = _DEBUG_PTRS_START + PPE_DEBUG_PTRS_SIZE;
+    .dump_ptr_pstate _DUMP_PTR_PSTATE_START : { *(.dump_ptr_pstate) } > sram
+
+    _DUMP_PTR_STOP_START = _DUMP_PTR_PSTATE_START + PPE_DUMP_PTR_PSTATE_SIZE;
+    .dump_ptr_stop _DUMP_PTR_STOP_START : { *(.dump_ptr_stop) } > sram
 
     /*======================================
      * Code

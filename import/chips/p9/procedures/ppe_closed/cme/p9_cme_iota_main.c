@@ -43,11 +43,11 @@ CmeRecord G_cme_record = {0};
 
 // CME Pstate Header and Structure
 #include "p9_cme_pstate.h"
-CmePstateRecord G_cme_pstate_record;
+CmePstateRecord G_cme_pstate_record __attribute__((section (".dump_ptr_pstate")));
 
 // CME Stop Header and Structure
 #include "p9_cme_stop.h"
-CmeStopRecord G_cme_stop_record __attribute__((section (".dump_ptrs"))) = {{0}, {0}, 0, 0, 0, 0, 0, 0, 0, {0}};
+CmeStopRecord G_cme_stop_record __attribute__((section (".dump_ptr_stop"))) = {{0}, {0}, 0, 0, 0, 0, 0, 0, 0, {0}};
 
 // NDD2: OOB bits wired to SISR
 //       not implemented in DD1
