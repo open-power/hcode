@@ -302,21 +302,22 @@ p9_sgpe_ipi3_low_handler(void* arg, PkIrqId irq)
 static void
 p9_sgpe_pig_cpayload_parser(const uint32_t type)
 {
-    uint32_t   timeout       = 0;
-    uint32_t   qloop         = 0;
-    uint32_t   cloop         = 0;
-    uint32_t   cstart        = 0;
-    uint32_t   cindex        = 0;
-    uint32_t   cexit         = 0;
-    uint32_t   center        = 0;
-    uint32_t   cpending      = 0;
-    uint32_t   cpayload      = 0;
-    uint32_t   tpayload      = 0;
-    uint32_t   vector_index  = 0;
-    uint32_t   request_index = 0;
-    uint32_t   suspend_index = 0;
-    uint32_t   suspend_mask  = 0;
-    data64_t   scom_data     = {0};
+    uint32_t      timeout       = 0;
+    uint32_t      qloop         = 0;
+    uint32_t      cloop         = 0;
+    uint32_t      cstart        = 0;
+    uint32_t      cindex        = 0;
+    uint32_t      cexit         = 0;
+    uint32_t      center        = 0;
+    uint32_t      cpending      = 0;
+    uint32_t      cpayload      = 0;
+    uint32_t      tpayload      = 0;
+    uint32_t      vector_index  = 0;
+    uint32_t      request_index = 0;
+    uint32_t      suspend_index = 0;
+    uint32_t      suspend_mask  = 0;
+    data64_t      scom_data     = {0};
+    sgpeHeader_t* pSgpeImgHdr   = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
     // read typeX interrupt pending status
     // then clear interrupt pending status
@@ -497,7 +498,11 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                     {
                         PK_TRACE_INF("ERROR: Received Phantom Hardware Type%d Wakeup PIG \
                                       When Wakeup_notify_select = 0. HALT SGPE!", type);
-                        PK_PANIC(SGPE_PIG_TYPE23_EXIT_WNS_CME);
+
+                        if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_PHANTOM_HALT_ENABLE_BIT_POS)
+                        {
+                            PK_PANIC(SGPE_PIG_TYPE23_EXIT_WNS_CME);
+                        }
                     }
                 }
                 else
@@ -586,7 +591,11 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                 {
                     PK_TRACE_ERR("ERROR: Received Phantom Entry PIG"
                                  " When Wakeup_notify_select = 0. HALT SGPE!");
-                    PK_PANIC(SGPE_PIG_TYPE23_ENTRY_WNS_CME);
+
+                    if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_PHANTOM_HALT_ENABLE_BIT_POS)
+                    {
+                        PK_PANIC(SGPE_PIG_TYPE23_ENTRY_WNS_CME);
+                    }
                 }
 
 #if DISABLE_STOP8

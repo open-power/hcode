@@ -543,8 +543,12 @@ p9_cme_stop_exit()
 
     if (!core)
     {
-        PK_TRACE_ERR("ERROR: No Wakeup Fired to a Stopped and Enabled Core. HALT CME!");
-        PK_PANIC(CME_STOP_EXIT_PHANTOM_WAKEUP);
+        PK_TRACE_ERR("ERROR: No Wakeup Fired to a Stopped and Enabled Core.");
+
+        if (pCmeImgHdr->g_cme_mode_flags & CME_STOP_PHANTOM_HALT_ENABLE_BIT_POS)
+        {
+            PK_PANIC(CME_STOP_EXIT_PHANTOM_WAKEUP);
+        }
     }
 
 
