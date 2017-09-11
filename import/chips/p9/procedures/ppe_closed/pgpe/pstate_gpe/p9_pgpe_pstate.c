@@ -436,13 +436,21 @@ void p9_pgpe_send_db0(uint64_t db0, uint32_t coreVector, uint32_t unicast, uint3
         {
             if (coreVector & CORE_MASK(c))
             {
+#if NIMBUS_DD_LEVEL == 10
                 p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0);
+#else
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), db0)
+#endif
             }
         }
     }
     else
     {
+#if NIMBUS_DD_LEVEL == 10
         p9_dd1_db_multicast_wr(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0, G_pgpe_pstate_record.activeCores);
+#else
+        GPE_PUTSCOM(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0)
+#endif
     }
 
     if (ack == PGPE_DB0_ACK_WAIT_CME)

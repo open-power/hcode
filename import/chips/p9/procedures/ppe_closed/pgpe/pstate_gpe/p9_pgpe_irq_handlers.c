@@ -335,6 +335,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 
             if (opit4prQuad)
             {
+                //We expect type4 from this quad for the Pstate Start sent above
                 if (quadAckExpect & QUAD_MASK(q))
                 {
                     quadAckExpect &= ~QUAD_MASK(q);
@@ -344,7 +345,7 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                     G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
                     p9_pgpe_pstate_updt_actual_quad(QUAD_MASK(q));
                 }
-                else
+                else if(!(G_pgpe_pstate_record.pendQuadsRegistration & QUAD_MASK(q)))
                 {
                     PK_TRACE_ERR("PCB4: Unexpected ACK q=0x%x,opit4prQuad=0x%x", q, opit4prQuad);
                     PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);

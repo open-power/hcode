@@ -360,11 +360,11 @@ inline void p9_cme_pstate_process_db0()
 
     PK_TRACE_INF("DB_TH: Process DB0 Enter\n");
 
-    //Read DB0 value
+    //Clear EISR and read DB0 register
+    //It's important that we do it in
     if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
     {
         out32_sh(CME_LCL_EISR_CLR, BIT32(4));
-        out32_sh(CME_LCL_EISR_CLR, BIT32(5));
         CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, G_dbData.value);
     }
     else if (G_cme_flags & BIT32(CME_FLAGS_CORE1_GOOD))
@@ -373,15 +373,23 @@ inline void p9_cme_pstate_process_db0()
         CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, G_dbData.value);
     }
 
-    PK_TRACE_INF("DB_TH: DB0 0x%x\n"dbData.value);
-
+    //Ignore if Doorbell0 if DB0_PROCESSING_ENABLE=0. This bit is zero
+    //upon CME boot. PGPE will set it right before sending Pstate Starts.
+    //PGPE clears it before ACKing Stop Entry Notify(this CME is about to powered off)
+    //back to SGPE
     if (in32(CME_LCL_SRTCH0) & BIT32(CME_SCRATCH_DB0_PROCESSING_ENABLE))
     {
         //Process DB0
         //Start Pstates and Pstates NOT enabled
-        if(G_dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST &&
-           !(G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
+        if((G_dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST) &&
+           (!(G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))))
         {
+            //This will Clear EISR[DB0_C0/1] to prevent another DB0 interrupt
+            //PGPE multicast Global Bcast/Clip Bcast DB0, and it's possible that
+            //the DB0 interrupt was taken as a result of multicast operation, but
+            //the value of DB0 read corresponds to Pstate Start. In such a case,
+            //another DB0 interrupt can happen, and it appears as PGPE has sent
+            //a second Pstate Start causing CME to ACK back with error and Halt
             p9_cme_pstate_db0_start();
         }
         //Global Actual Broadcast and Pstates enabled
@@ -389,24 +397,30 @@ inline void p9_cme_pstate_process_db0()
         {
             //Process Global Bcast only if Pstates are enabled.
             //Otherwise, ignore. The reason is PGPE multicasts Global Bcast, and doorbell0
-            //can be written while this CME is powered-off. For Pstate Start and Stop
-            //PGPE only unicasts.
+            //can be written while this CME is powered-off or or about to be powered-off.
+            //For Pstate Start and Stop PGPE only unicasts.
             if (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))
             {
                 p9_cme_pstate_db0_glb_bcast();
             }
         }
         //Stop Pstates and Pstates enabled
-        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST &&
+        else if((G_dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST) &&
                 (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
         {
             p9_cme_pstate_db0_suspend();
         }
         //Pmin or Pmax Update
-        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST &&
-                (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
+        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST)
         {
-            p9_cme_pstate_db0_clip_bcast();
+            //Process Clip Bcast only if Pstates are enabled.
+            //Otherwise, ignore. The reason is PGPE multicasts Clip Bcast, and doorbell0
+            //can be written while this CME is powered-off or about to be powered-off.
+            //For Pstate Start and Stop PGPE only unicasts.
+            if (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))
+            {
+                p9_cme_pstate_db0_clip_bcast();
+            }
         }
         //Otherwise, send an ERR ACK to PGPE and Halt
         else
@@ -473,6 +487,16 @@ inline void p9_cme_pstate_db0_start()
     p9_cme_pstate_update();
 
     out32(CME_LCL_FLAGS_OR, BIT32(24));//Set Pstates Enabled
+
+    //Clear EISR[DB0_C0/1] to prevent another interrupt
+    if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
+    {
+        out32_sh(CME_LCL_EISR_CLR, BIT32(4));
+    }
+    else
+    {
+        out32_sh(CME_LCL_EISR_CLR, BIT32(5));
+    }
 
     //Send type4(ack doorbell)
     ppmPigData.value = 0;
