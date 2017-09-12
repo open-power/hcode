@@ -330,7 +330,7 @@ void p9_pgpe_pstate_calc_wof()
 
     //2. Vratio calc
     //Currently, PGPE only support VRATIO Fixed and VRATIO active cores only
-    if (G_pgpe_header_data->g_pgpe_qm_flags & BIT16(PGPE_HEADER_FLAGS_ENABLE_VRATIO))
+    if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO)
     {
         G_pgpe_pstate_record.vratio = (G_pgpe_pstate_record.numActiveCores << 16) / G_pgpe_pstate_record.numConfCores;
     }
@@ -987,7 +987,7 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
                 //Otherwise, just write the VDM register
                 vdmcfg.value = 0;
 
-                if (G_pgpe_header_data->g_pgpe_qm_flags & BIT16(PGPE_HEADER_FLAGS_VDM_ENABLE))
+                if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VDM_ENABLE)
                 {
                     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
                 }
@@ -1367,7 +1367,7 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
     G_pgpe_pstate_record.eVidCurr = G_pgpe_pstate_record.eVidNext;
 
     //If VDM is disabled, update VDMCFG register for every quad
-    if (!(G_pgpe_header_data->g_pgpe_qm_flags & BIT16( PGPE_HEADER_FLAGS_VDM_ENABLE)))
+    if (!(G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VDM_ENABLE))
     {
         vdmcfg.value = 0;
         vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
