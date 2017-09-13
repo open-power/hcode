@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -60,7 +60,6 @@ HCD_CONST(HOMER_SGPE_BOOT_LOADER_LENGTH_ADDR,
 HCD_CONST(HOMER_SGPE_BOOT_COPIER_ADDR,
           (HOMER_QPMR_HEADER_ADDR + QPMR_HEADER_SIZE))
 HCD_CONST(HOMER_AUX_BASE_ADDR, (HOMER_QPMR_BASE_ADDR + QPMR_AUX_OFFSET))
-
 
 /// CPMR
 
