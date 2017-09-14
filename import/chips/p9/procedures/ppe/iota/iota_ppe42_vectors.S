@@ -55,7 +55,6 @@ __data_storage:
 __instruction_storage:
     _pk_panic IOTA_INSTRUCTION_STORAGE_PANIC
 
-.global ppe42_64bit_timebase
 .global __external_interrupt
 .org    __vectors + 0x00a0
 __external_interrupt:
@@ -74,17 +73,7 @@ __program_exception:
 .global __dec_interrupt
 .org    __vectors + 0x0100
 __dec_interrupt:
-    stw     %r3,_IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
-    // Increment upper 32 bits of 64 bit timebase
-    lwz     %r3,ppe42_64bit_timebase@sda21(0)
-    addi    %r3,%r3,1
-    stw     %r3,ppe42_64bit_timebase@sda21(0)
-    _liwa   %r3, TSR_DIS
-    mttsr   %r3
-    lwz     %r3,_IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
-    rfi
-    // remove rfi and restore following line to share DEC timer ovrflow
-    //__m_iota_interrupt_and_exception_handler _IOTA_SCHEDULE_REASON_DEC
+    __m_iota_interrupt_and_exception_handler _IOTA_SCHEDULE_REASON_DEC
 
 .global __fit_interrupt
 .org    __vectors + 0x0120
