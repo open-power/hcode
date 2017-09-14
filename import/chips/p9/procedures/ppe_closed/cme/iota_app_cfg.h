@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -32,6 +32,7 @@
 // parts of pk that are included require this
 // Having two  app_cfg files seems confusing
 #include "pk_app_cfg.h"
+#include "cme_register_addresses.h"
 
 #define PLATFORM_PANIC_CODES_H "cme_panic_codes.h"
 #include "pk_panic_codes.h"
@@ -55,6 +56,8 @@
 
 // Main "execution" stack size in bytes, must be multiple of 8
 #define IOTA_EXECUTION_STACK_SIZE  2048
+
+#define LOCAL_TIMEBASE_REGISTER CME_LCL_TBR
 
 
 #endif

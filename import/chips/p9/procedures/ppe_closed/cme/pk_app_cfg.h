@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -151,13 +151,16 @@
 
 // --------------------
 
-// If we are using the external timebase then assume
-// a frequency of 37.5Mhz.  Otherwise, the default is to use
-// the decrementer as a timebase and assume a frequency of 600MHz
-// In product code, this value will be IPL-time configurable.
+// The actual timebase is provided in an ipl time attribute.
+// If the attribute is not set up then PPE_TIMEBASE_HZ is used as a default.
+// If we are using the external timebase register, then assume a nominal
+// frequency of nest_freq/64  (2GHz/64).
+// If APPCFG_USE_EXT_TIMEBASE is not defined then use the internal
+// decrementer as a timebase.
 
 #ifdef APPCFG_USE_EXT_TIMEBASE
-    #define PPE_TIMEBASE_HZ 37500000
+    // Nest freq / 64 - use a nominal 2GH as the default
+    #define PPE_TIMEBASE_HZ 31250000
 #else
     #define PPE_TIMEBASE_HZ 600000000
 #endif

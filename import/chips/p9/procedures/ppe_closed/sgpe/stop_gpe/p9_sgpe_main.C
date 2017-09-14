@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -154,11 +154,19 @@ main(int argc, char** argv)
         asm volatile ("trap");
     }
 
+    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
+    uint32_t timebase = pSgpeImgHdr->g_sgpe_timebase_hz;
+
+    if(0 == timebase)
+    {
+        timebase = PPE_TIMEBASE_HZ;
+    }
+
     // Initializes kernel data (stack, threads, timebase, timers, etc.)
     pk_initialize((PkAddress)G_kernel_stack,
                   KERNEL_STACK_SIZE,
                   0,
-                  PPE_TIMEBASE_HZ);
+                  timebase);
 
     fapi2::ReturnCode fapiRc = fapi2::plat_TargetsInit();
 

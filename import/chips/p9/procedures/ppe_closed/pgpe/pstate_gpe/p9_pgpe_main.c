@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -144,6 +144,7 @@ EXTERNAL_IRQ_TABLE_END
 #define  PGPE_THREAD_PRIORITY_ACTUATE_PSTATES   2
 
 uint8_t  G_kernel_stack[KERNEL_STACK_SIZE];
+extern uint32_t g_pgpe_timebase_hz __attribute__ ((section (".pgpe_image_header")));
 
 //Thread Stacks
 uint8_t  G_p9_pgpe_thread_process_requests_stack[THREAD_STACK_SIZE];
@@ -175,11 +176,18 @@ main(int argc, char** argv)
         PGPE_PANIC_AND_TRACE(PGPE_BAD_DD_LEVEL);
     }
 
+    uint32_t timebase = g_pgpe_timebase_hz;
+
+    if(0 == timebase)
+    {
+        timebase = PPE_TIMEBASE_HZ;
+    }
+
     // Initializes kernel data (stack, threads, timebase, timers, etc.)
     pk_initialize((PkAddress)G_kernel_stack,
                   KERNEL_STACK_SIZE,
                   0,
-                  PPE_TIMEBASE_HZ);
+                  timebase);
 
     // Read OCC_SCRATCH[PGPE_DEBUG_TRAP_ENABLE]
     uint32_t occScr2 = in32(OCB_OCCS2);

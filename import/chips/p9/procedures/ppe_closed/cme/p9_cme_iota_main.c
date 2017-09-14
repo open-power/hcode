@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -414,7 +414,6 @@ void fit_handler()
 
 void dec_handler()
 {
-    // Currently not available
 }
 
 void ext_handler(uint32_t task_idx)
@@ -445,11 +444,24 @@ IOTA_TASK(ext_handler), // bits 0-6   default
 
 int main()
 {
+    cmeHeader_t* cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
+
     // Register Timer Handlers
     IOTA_DEC_HANDLER(dec_handler);
     IOTA_FIT_HANDLER(fit_handler);
 
-    PK_TRACE("E>CME MAIN");
+    // Local timebase frequency comes from an attribute.
+    uint32_t trace_timebase = cmeHeader->g_cme_timebase_hz;
+
+    if(0 == trace_timebase)
+    {
+        // if the attribute is not defined, use the default
+        trace_timebase = PPE_TIMEBASE_HZ;
+    }
+
+    pk_trace_set_freq(trace_timebase);
+
+    PK_TRACE(">CME MAIN");
 
     // Clear SPRG0
     ppe42_app_ctx_set(0);
@@ -466,8 +478,8 @@ int main()
     PK_TRACE("Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
     out32(CME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
 
-    PK_TRACE("Enable DEC/FIT/Watchdog Timer");
-    mtspr(SPRN_TCR, (TCR_DIE | TCR_FIE));
+    PK_TRACE("DEC every cycle, Enable FIT Timer");
+    mtspr(SPRN_TCR, (TCR_DS | TCR_FIE));
 
     p9_cme_stop_init();
 

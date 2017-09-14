@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -42,7 +42,7 @@ typedef struct
     uint32_t  g_pgpe_build_ver;               // Build Version
     uint16_t  g_pgpe_qm_flags;                // QM Flags
     uint16_t  g_pgpe_reserve1;                // Reserve field
-    uint32_t  g_pgpe_reserve2;                // Reserve field
+    uint32_t  g_pgpe_timebase_hz;             // Reserve field
     uint32_t* g_pgpe_gppb_sram_addr;          // Offset to Global P State Parameter Block
     uint32_t  g_pgpe_hcode_length;            // Length of PGPE Hcode
     uint32_t* g_pgpe_gppb_mem_offset;         // Offset to start of Global PS Param Block wrt start of HOMER.

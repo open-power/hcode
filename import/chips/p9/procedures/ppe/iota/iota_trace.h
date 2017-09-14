@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -172,7 +172,7 @@ void pk_trace_tiny(uint32_t i_parm);
 void pk_trace_big(uint32_t i_hash_and_count,
                   uint64_t i_parm1, uint64_t i_parm2);
 void pk_trace_binary(uint32_t i_hash_and_size, void* bufp);
-//void pk_trace_set_timebase(PkTimebase timebase);
+void pk_trace_set_freq(uint32_t i_freq);
 
 
 
