@@ -29,7 +29,15 @@
 
 // Force all kernel variables into .sdata
 // Order controlled by linker script
-uint64_t ppe42_64bit_timebase __attribute__((section(".sdata.ppe42_64bit_timebase"))) = 0;
+union
+{
+    uint64_t value;
+    struct
+    {
+        uint32_t upper;
+        uint32_t lower;
+    };
+} ppe42_64bit_timebase __attribute__((section(".sdata.ppe42_64bit_timebase"))) = {0};
 
 iotaMachineState g_iota_machine_state_stack[(IOTA_MAX_NESTED_INTERRUPTS)] __attribute__((aligned(8))) =
 {
@@ -80,16 +88,7 @@ void _iota_boot()
 {
     g_iota_curr_machine_state_ptr = g_iota_machine_state_stack;
 
-    // Can CME be reset w/o reload?
-    // If see need to clean up entire state of ppe42 to known state
-    // enable DEC timer w interrupts
-
     mtmsr(IOTA_INITIAL_MSR);
-
-    // DEC timer setup
-    mtspr(SPRN_DEC, 0xffffffff);
-    mtspr(SPRN_TSR, TSR_DIS);
-    or_spr(SPRN_TCR, TCR_DIE);
 
     __hwmacro_setup(); // Configures external interrupt registers
 
@@ -201,7 +200,17 @@ void _iota_schedule(uint32_t schedule_reason)
     }
 }
 
+// Assumption is that this is called more frequently than
+// the local time base hw register rolls over.
 uint64_t pk_timebase_get()
 {
-    return (ppe42_64bit_timebase & 0xffffffff00000000ull) | (~(mfspr(SPRN_DEC)) + 1);
+    uint32_t hw_timebase = in64(LOCAL_TIMEBASE_REGISTER) >> 32;
+
+    if(ppe42_64bit_timebase.lower > hw_timebase)
+    {
+        ++ppe42_64bit_timebase.upper;
+    }
+
+    ppe42_64bit_timebase.lower = hw_timebase;
+    return ppe42_64bit_timebase.value;
 }
