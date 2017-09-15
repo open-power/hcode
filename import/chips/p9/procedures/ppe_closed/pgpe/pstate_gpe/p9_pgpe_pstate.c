@@ -418,7 +418,7 @@ void p9_pgpe_pstate_updt_actual_quad(uint32_t quadsVector)
 //p9_pgpe_send_db0
 //
 //Sends DB0 to CMEs
-void p9_pgpe_send_db0(uint64_t db0, uint32_t coreVector, uint32_t unicast, uint32_t ack)
+void p9_pgpe_send_db0(uint64_t db0, uint32_t coreVector, uint32_t unicast, uint32_t ack, uint32_t ackVector)
 {
 
     uint32_t c;
@@ -453,7 +453,7 @@ void p9_pgpe_send_db0(uint64_t db0, uint32_t coreVector, uint32_t unicast, uint3
 
     if (ack == PGPE_DB0_ACK_WAIT_CME)
     {
-        p9_pgpe_wait_cme_db_ack(G_pgpe_pstate_record.activeQuads);//Wait for ACKs from all QuadManagers
+        p9_pgpe_wait_cme_db_ack(ackVector);//Wait for ACKs from all QuadManagers
     }
 }
 
@@ -482,7 +482,7 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
                     opit4Clr |= (opit4prQuad << ((MAX_QUADS - q + 1) << 2));
                     PK_TRACE_DBG("DBW: GotAck from %d", q);
                 }
-                else if(!(G_pgpe_pstate_record.pendQuadsRegistration & QUAD_MASK(q)))
+                else if(!(G_pgpe_pstate_record.pendQuadsRegisterReceive & QUAD_MASK(q)))
                 {
                     PK_TRACE_ERR("DBW:Unexpected qCME[%u] ACK", q);
                     PGPE_PANIC_AND_TRACE(PGPE_CME_UNEXPECTED_DB0_ACK);
@@ -693,7 +693,8 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     p9_pgpe_send_db0(db0.value,
                      G_pgpe_pstate_record.activeCores,
                      PGPE_DB0_UNICAST,
-                     PGPE_DB0_ACK_WAIT_CME);
+                     PGPE_DB0_ACK_WAIT_CME,
+                     G_pgpe_pstate_record.activeQuads);
 
     G_pgpe_pstate_record.globalPSCurr = G_pgpe_pstate_record.globalPSTarget;
 
@@ -807,7 +808,8 @@ void p9_pgpe_pstate_stop()
     p9_pgpe_send_db0(db0_stop.value,
                      G_pgpe_pstate_record.activeCores,
                      PGPE_DB0_UNICAST,
-                     PGPE_DB0_ACK_WAIT_CME);
+                     PGPE_DB0_ACK_WAIT_CME,
+                     G_pgpe_pstate_record.activeQuads);
 
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
@@ -852,7 +854,8 @@ void p9_pgpe_pstate_clip_bcast(uint32_t clip_bcast_type)
     p9_pgpe_send_db0(db0.value,
                      G_pgpe_pstate_record.activeCores,
                      PGPE_DB0_UNICAST,
-                     PGPE_DB0_ACK_WAIT_CME);
+                     PGPE_DB0_ACK_WAIT_CME,
+                     G_pgpe_pstate_record.activeQuads);
 }
 
 //
@@ -997,7 +1000,7 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
 
     //Add quads to pending registration list. They are taken out when
     //registration msg from the quad is received.
-    G_pgpe_pstate_record.pendQuadsRegistration |= quadsRequested;
+    G_pgpe_pstate_record.pendQuadsRegisterReceive |= quadsRequested;
 
     //ACK back to SGPE
     /* ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
@@ -1417,7 +1420,8 @@ void p9_pgpe_pstate_freq_updt()
     p9_pgpe_send_db0(db0.value,
                      G_pgpe_pstate_record.activeCores,
                      PGPE_DB0_MULTICAST,
-                     PGPE_DB0_ACK_WAIT_CME);
+                     PGPE_DB0_ACK_WAIT_CME,
+                     G_pgpe_pstate_record.activeQuads);
     p9_pgpe_optrace(ACK_ACTL_DONE);
 
     PK_TRACE_DBG("FREQ: Exit");

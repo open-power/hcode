@@ -77,7 +77,15 @@ void p9_pgpe_ipc_init()
 void p9_pgpe_ipc_irq_done_hook()
 {
     PK_TRACE_INF("IPC: Done Hook");
-    pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
+
+    if (G_pgpe_pstate_record.semProcessPosted == 0)
+    {
+        PK_TRACE_INF("IPC: Done Hook Posted");
+        G_pgpe_pstate_record.semProcessPosted = 1;
+        pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
+    }
+
+    G_pgpe_pstate_record.semProcessSrc |= SEM_PROCESS_SRC_IPI2_IRQ;
 }
 
 //

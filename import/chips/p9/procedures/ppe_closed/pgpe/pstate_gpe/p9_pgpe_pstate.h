@@ -70,7 +70,13 @@ enum PSTATE_DB0
     PGPE_DB0_UNICAST        = 0,
     PGPE_DB0_MULTICAST      = 1,
     PGPE_DB0_ACK_WAIT_CME   = 0,
-    PGPE_DB0_ACK_SKIP       = 1,
+    PGPE_DB0_ACK_SKIP       = 1
+};
+
+enum SEMAPHORE_PROCESS_POST_SRC
+{
+    SEM_PROCESS_SRC_IPI2_IRQ    = 0x1,
+    SEM_PROCESS_SRC_TYPE4_IRQ   = 0x2
 };
 
 //Task list entry
@@ -117,11 +123,12 @@ typedef struct
     PkSemaphore sem_process_req;
     PkSemaphore sem_actuate;
     PkSemaphore sem_sgpe_wait;
-    uint32_t activeQuads, activeCores, pendQuadsRegistration;
+    uint32_t activeQuads, activeCores, pendQuadsRegisterReceive, pendQuadsRegisterProcess;
     uint32_t numActiveCores, numConfCores;
     uint16_t vratio, fratio;
     uint16_t vindex, findex;
     uint32_t pendingPminClipBcast, pendingPmaxClipBcast;
+    uint32_t semProcessPosted, semProcessSrc;
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
 
@@ -135,7 +142,8 @@ void p9_pgpe_pstate_apply_clips();
 void p9_pgpe_pstate_calc_wof();
 void p9_pgpe_pstate_updt_actual_quad(uint32_t q);
 void p9_pgpe_pstate_update_wof_state();
-void p9_pgpe_send_db0(uint64_t db0, uint32_t coresVector, uint32_t type, uint32_t process_ack);
+void p9_pgpe_pstate_freq_updt();
+void p9_pgpe_send_db0(uint64_t db0, uint32_t coresVector, uint32_t type, uint32_t process_ack, uint32_t ackVector);
 void p9_pgpe_wait_cme_db_ack(uint32_t activeCores);
 void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
 void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner);

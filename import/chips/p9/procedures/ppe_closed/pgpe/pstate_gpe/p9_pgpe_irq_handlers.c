@@ -191,19 +191,9 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 {
     PkMachineContext ctx;
 
-    pk_irq_sub_critical_enter(&ctx);
-
     PK_TRACE_DBG("PCB4: Enter");
-    ocb_ccsr_t ccsr;
-    ccsr.value = in32(OCB_CCSR);
-    ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
-    uint32_t quadAckExpect = 0;
-    volatile uint32_t opit4pr, opit4pr1;
-    uint32_t opit4prQuad, q, c, coresVector;
-    uint64_t value;
-    pgpe_db0_start_ps_bcast_t db0;
-    db0.value = 0;
+    volatile uint32_t opit4pr;
+    uint32_t opit4prQuad, q;
 
     //Check which CMEs sent Registration Type4
     opit4pr = in32(OCB_OPIT4PRA);
@@ -224,143 +214,26 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
                 PGPE_PANIC_AND_TRACE(PGPE_CME_UNEXPECTED_REGISTRATION);
             }
 
-            //Update activeQuads and coresActive
-            G_pgpe_pstate_record.activeQuads |= QUAD_MASK(q);
-
-            for (c = q << 2; c < ((q + 1) << 2); c++)
-            {
-                if (ccsr.value & CORE_MASK(c))
-                {
-                    G_pgpe_pstate_record.activeCores |= CORE_MASK(c);
-                }
-            }
-
-            //Quad has registered. Remove from pending quads
-            //registration list
-            G_pgpe_pstate_record.pendQuadsRegistration &= ~QUAD_MASK(q);
-
-            PK_TRACE_DBG("PCB4: Quad %d Registered. qActive=0x%x cActive=0x%x", q, G_pgpe_pstate_record.activeQuads,
-                         G_pgpe_pstate_record.activeCores);
-
-            //If Pstates are active or suspended while active, then
-            //send Pstate Start DB0 to quadManager CME
-            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-            {
-                p9_pgpe_pstate_do_auction();
-                p9_pgpe_pstate_apply_clips();
-
-                //Write CME_SCRATCH and PMSR0/1 registers
-                if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
-                {
-                    //CME_Scratch
-                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
-                    value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
-                    value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
-
-                    //PMSR0/1
-                    value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
-                            SHIFT64(31));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(2));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 0), value);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 0), value);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 0), BIT64(2));
-                }
-
-                if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
-                {
-                    //CME_Scratch
-                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
-                    value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
-                    value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
-
-                    //PMSR0/1
-                    value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
-                            SHIFT64(31));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(2));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 1), value);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 1), value);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 1), BIT64(2));
-                }
-
-                //Give Quad Manager CME control of DPLL through inter-ppm
-                //SGPE sets up the DPLL_SEL bits before booting CME
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
-
-                //Send DB0
-                db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
-                db0.fields.global_actual = G_pgpe_pstate_record.globalPSTarget;
-                db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSTarget[0];
-                db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSTarget[1];
-                db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSTarget[2];
-                db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSTarget[3];
-                db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
-                db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
-
-                coresVector = 0;
-
-                for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
-                {
-                    if (G_pgpe_pstate_record.activeCores & CORE_MASK(c))
-                    {
-                        opit4pr1 = in32(OCB_OPIT4PRA);
-                        coresVector |= CORE_MASK(c);
-                    }
-                }
-
-                PK_TRACE_DBG("PCB4: quad=%d,coresVector0x%x", q, coresVector);
-                p9_pgpe_send_db0(db0.value, coresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_SKIP);
-
-                quadAckExpect |= QUAD_MASK(q);
-            }
-
-            G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.globalPSCurr << 16)
-                                          | (in32(OCB_QCSR) >> 16);
-            p9_pgpe_optrace(PRC_PCB_T4);
+            G_pgpe_pstate_record.pendQuadsRegisterProcess |= QUAD_MASK(q);
         }
     }
 
-    //Update Active Cores in OCC Shared SRAM
-    G_pgpe_pstate_record.pQuadState0->fields.active_cores = (G_pgpe_pstate_record.activeCores >> 16);
-    G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0xFF00);
-
-    //Wait for all CMEs to ACK Pstate Start DB0
-    opit4pr1 = in32(OCB_OPIT4PRA);
-    PK_TRACE_DBG("PCB4: opit4pr 0x%x, quadAckExpect=0x%x", opit4pr1, quadAckExpect);
-
-    while(quadAckExpect != 0)
+    if ((G_pgpe_pstate_record.semProcessPosted == 0) && G_pgpe_pstate_record.pendQuadsRegisterProcess != 0)
     {
-        opit4pr1 = in32(OCB_OPIT4PRA);
-
-
-        for (q = 0; q < MAX_QUADS; q++)
-        {
-            opit4prQuad = (opit4pr1 >> ((MAX_QUADS - q + 1) << 2)) & 0xf;
-
-            if (opit4prQuad)
-            {
-                //We expect type4 from this quad for the Pstate Start sent above
-                if (quadAckExpect & QUAD_MASK(q))
-                {
-                    quadAckExpect &= ~QUAD_MASK(q);
-                    out32(OCB_OPIT4PRA_CLR, opit4prQuad << ((MAX_QUADS - q + 1) << 2));
-                    PK_TRACE_DBG("PCB4: Got DB0 Start ACK from %d", q);
-                    G_pgpe_pstate_record.quadPSCurr[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                    p9_pgpe_pstate_updt_actual_quad(QUAD_MASK(q));
-                }
-                else if(!(G_pgpe_pstate_record.pendQuadsRegistration & QUAD_MASK(q)))
-                {
-                    PK_TRACE_ERR("PCB4: Unexpected ACK q=0x%x,opit4prQuad=0x%x", q, opit4prQuad);
-                    PGPE_PANIC_AND_TRACE(PGPE_CME_UNEXPECTED_REGISTRATION);
-                }
-            }
-        }
+        PK_TRACE_DBG("PCB4: posted");
+        G_pgpe_pstate_record.semProcessPosted = 1;
+        pk_semaphore_post(&G_pgpe_pstate_record.sem_process_req);
     }
+
+    G_pgpe_pstate_record.semProcessSrc |= SEM_PROCESS_SRC_TYPE4_IRQ;
 
     out32(OCB_OISR1_CLR, BIT32(17)); //Clear out TYPE4 in OISR
-    pk_irq_sub_critical_exit(&ctx);
+
+    //Restore the interrupt here. However, it will be processed inside the process thread
+    //This doesn't cause an issue because back to back type4 interrupts will just
+    //set a bit in pendQuadsRegisterProcess bit field. However, semaphore to the process
+    //thread will be posted only once. Also, once process thread starts processing it enters
+    //sub-critical section, and masks all external interrupt through UIH priority mechanism.
     pk_irq_vec_restore(&ctx);
     PK_TRACE_DBG("PCB4: Exit");
 }
