@@ -25,15 +25,24 @@
 #include "pk.h"
 #include "p9_pgpe.h"
 #include "p9_pgpe_optrace.h"
+#include "p9_pgpe_header.h"
 #include "p9_hcd_memmap_occ_sram.H"
 
-#define ADDRESS_MAX OCC_SRAM_PGPE_OPTRACE_ADDR + OCC_SRAM_PGPE_OPTRACE_SIZE - 0x8
+#define SRAM_ADDRESS_MAX OCC_SRAM_PGPE_OPTRACE_ADDR + OCC_SRAM_PGPE_OPTRACE_SIZE - 0x8
 
 TraceData_t G_pgpe_optrace_data;
 uint32_t G_address;
 uint32_t G_data;
 uint32_t G_lastDisable;
 uint32_t G_last_sync_op;
+uint32_t G_mem_address_max;
+
+extern PgpeHeader_t* G_pgpe_header_data;
+
+//Last 16B Memory Map
+//0xfff2bff0,4 Trace Record Data
+//0xfff2bff8   Main Memory Buffer Location
+//0xfff2bffc   SRAM Buffer Location
 
 void p9_pgpe_optrace_init() //sets up address and initializes buffer to 0's
 {
@@ -45,9 +54,14 @@ void p9_pgpe_optrace_init() //sets up address and initializes buffer to 0's
         out32(G_address, 0);
         G_address += 4;
     }
-    while(G_address <= ADDRESS_MAX);
+    while(G_address < SRAM_ADDRESS_MAX);
 
+    G_mem_address_max = (G_pgpe_header_data->g_pgpe_doptrace_offset + G_pgpe_header_data->g_pgpe_doptrace_length) - 8;
     G_address = OCC_SRAM_PGPE_OPTRACE_ADDR;
+    //Initializing Main Memory buffer location
+    out32(SRAM_ADDRESS_MAX, G_pgpe_header_data->g_pgpe_doptrace_offset); //MEM_ADDR_BASE
+    //Initializing SRAM buffer location
+    out32(SRAM_ADDRESS_MAX + 0x4, OCC_SRAM_PGPE_OPTRACE_ADDR);
 }
 void p9_pgpe_optrace(uint32_t mark)
 {
@@ -85,9 +99,15 @@ void p9_pgpe_optrace(uint32_t mark)
         {
             out32(G_address, G_pgpe_optrace_data.word[word]);
 
-            if(G_address == ADDRESS_MAX)
+            if(G_address == SRAM_ADDRESS_MAX - 0x4)
             {
-                G_address =  OCC_SRAM_PGPE_OPTRACE_ADDR;
+                if(G_pgpe_header_data->g_pgpe_doptrace_offset != 0 && G_pgpe_header_data->g_pgpe_doptrace_length != 0 &&
+                   in32(OCB_OCCS2) & BIT32(PGPE_OP_TRACE_MEM_MODE))
+                {
+                    p9_pgpe_optrace_memcopy();
+                }
+
+                G_address = OCC_SRAM_PGPE_OPTRACE_ADDR;
             }
             else
             {
@@ -95,7 +115,21 @@ void p9_pgpe_optrace(uint32_t mark)
             }
         }
 
-        out32(ADDRESS_MAX + 0x4, G_address); //this address contains the oldest entry in the buffer
-
+        out32(SRAM_ADDRESS_MAX + 0x4, G_address);
     }
+}
+void p9_pgpe_optrace_memcopy()
+{
+    uint32_t sram_addr = OCC_SRAM_PGPE_OPTRACE_ADDR;
+    uint32_t mem_addr = in32(SRAM_ADDRESS_MAX);
+
+    while(sram_addr < SRAM_ADDRESS_MAX) //Flushing SRAM to Main memory 8B at a time
+    {
+        uint64_t val = in64(sram_addr);
+        out64(mem_addr, val);
+        mem_addr = (mem_addr == G_mem_address_max) ? G_pgpe_header_data->g_pgpe_doptrace_offset : (mem_addr + 8);
+        sram_addr += 0x8;
+    }
+
+    out32(SRAM_ADDRESS_MAX, mem_addr);
 }
