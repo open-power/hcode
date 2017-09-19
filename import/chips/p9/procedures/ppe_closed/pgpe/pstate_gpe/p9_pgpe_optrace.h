@@ -122,4 +122,5 @@ typedef struct
 
 void p9_pgpe_optrace_init();
 void p9_pgpe_optrace(uint32_t mark);
+void p9_pgpe_optrace_memcopy();
 #endif //
