@@ -33,6 +33,7 @@ TraceData_t G_pgpe_optrace_data;
 uint32_t G_address;
 uint32_t G_data;
 uint32_t G_lastDisable;
+uint32_t G_last_sync_op;
 
 void p9_pgpe_optrace_init() //sets up address and initializes buffer to 0's
 {
@@ -63,13 +64,22 @@ void p9_pgpe_optrace(uint32_t mark)
         }
 
         uint32_t word_count = ((mark >> 4) & 0x3) + 1;
+        uint32_t word;
 
         if((mark & 0x40))//If bit 1 of Mark is set there is a timestamp
         {
             G_pgpe_optrace_data.word[(word_count - 1)] = (mark << 24) | (in32(OCB_OTBR) & 0xFFFFFF);
         }
 
-        uint32_t word;
+        if(G_last_sync_op)
+        {
+            TraceData_t pgpe_optrace_buffer;
+            pgpe_optrace_buffer  = G_pgpe_optrace_data;
+            G_pgpe_optrace_data.word[0] = (FIT_TB_RESYNC << 24) | G_last_sync_op;
+            G_last_sync_op = 0;
+            p9_pgpe_optrace(FIT_TB_RESYNC);
+            G_pgpe_optrace_data  = pgpe_optrace_buffer;
+        }
 
         for(word = 0; word < word_count; word++) //write out all words to  buffer
         {

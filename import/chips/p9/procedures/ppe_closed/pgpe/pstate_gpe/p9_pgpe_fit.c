@@ -53,6 +53,7 @@ extern GlobalPstateParmBlock* G_gppb;
 extern PgpeHeader_t* G_pgpe_header_data;
 extern PgpePstateRecord G_pgpe_pstate_record;
 extern TraceData_t G_pgpe_optrace_data;
+extern uint32_t G_last_sync_op;
 
 void (*p9_pgpe_auxiliary_task)() = (void*)OCC_SRAM_AUX_TASK_ADDR;
 
@@ -263,9 +264,27 @@ __attribute__((always_inline)) inline void handle_fit_timebase_sync()
 {
     if (G_tb_sync_count == G_tb_sync_count_threshold)
     {
-        G_pgpe_optrace_data.word[0] = *(G_pgpe_header_data->g_pgpe_beacon_addr);
-        p9_pgpe_optrace(FIT_TB_SYNC);
-        G_tb_sync_count = 0;
+        if(G_last_sync_op)
+        {
+            if(G_last_sync_op == 0xFFFFFF)
+            {
+                G_pgpe_optrace_data.word[0] = G_last_sync_op;
+                G_last_sync_op = 0;
+                p9_pgpe_optrace(FIT_TB_RESYNC);
+            }
+            else
+            {
+                G_last_sync_op++;
+            }
+        }
+        else
+        {
+            G_pgpe_optrace_data.word[0] = *(G_pgpe_header_data->g_pgpe_beacon_addr);
+            p9_pgpe_optrace(FIT_TB_SYNC);
+            G_last_sync_op = 1;
+        }
+
+        G_tb_sync_count  = 0;
     }
     else
     {

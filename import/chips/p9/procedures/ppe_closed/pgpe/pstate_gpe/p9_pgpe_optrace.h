@@ -33,6 +33,7 @@ enum PGPE_OP_TRACE
     //Without Timestamps
     WOF_CALC_DONE     =  0x11,
     AUCTION_DONE      =  0x10,
+    FIT_TB_RESYNC     =  0x02,
 
     //ACKs
     RESERVED_TS0      =  0xC0,
