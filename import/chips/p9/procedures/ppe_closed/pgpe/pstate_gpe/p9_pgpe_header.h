@@ -60,6 +60,8 @@ typedef struct
     uint32_t  g_pgpe_throttle_assert;
     uint32_t  g_pgpe_throttle_deassert;
     uint32_t  g_pgpe_aux_controls;
+    uint32_t  g_pgpe_doptrace_offset;         //Offset from PBABAR that Deep Operational Trace written into
+    uint32_t  g_pgpe_doptrace_length;         //Size in bytes of Deep Operational Trace memory region
 } PgpeHeader_t;
 
 void p9_pgpe_header_init();
