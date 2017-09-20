@@ -668,7 +668,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
             p9_sgpe_ipc_pgpe_update_active_cores(UPDATE_ACTIVE_CORES_TYPE_EXIT);
 
             /// poll for ack is located before switch exit to cme
-            p9_sgpe_ipc_pgpe_update_active_cores_poll_ack();
+            p9_sgpe_ipc_pgpe_update_active_cores_poll_ack(UPDATE_ACTIVE_CORES_TYPE_EXIT);
         }
 
         // If any core entries, including stop5 to stop15
@@ -688,7 +688,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
             p9_sgpe_ipc_pgpe_update_active_cores(UPDATE_ACTIVE_CORES_TYPE_ENTRY);
 
             // pgpe should ack right away
-            p9_sgpe_ipc_pgpe_update_active_cores_poll_ack();
+            p9_sgpe_ipc_pgpe_update_active_cores_poll_ack(UPDATE_ACTIVE_CORES_TYPE_ENTRY);
         }
 
     }

@@ -137,8 +137,10 @@ p9_sgpe_ipc_pgpe_update_active_cores(const uint32_t type)
 }
 
 void
-p9_sgpe_ipc_pgpe_update_active_cores_poll_ack()
+p9_sgpe_ipc_pgpe_update_active_cores_poll_ack(const uint32_t type)
 {
+    uint32_t vector_active_cores = 0;
+
     PK_TRACE_INF("IPC.SP: Poll PGPE Update Active Cores Ack");
 
     while (G_sgpe_ipcmsg_update_cores.fields.return_code == IPC_SGPE_PGPE_RC_NULL);
@@ -151,6 +153,30 @@ p9_sgpe_ipc_pgpe_update_active_cores_poll_ack()
     {
         PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Cores Bad RC. HALT SGPE!");
         PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_CORE_BAD_RC);
+    }
+
+    if (type == UPDATE_ACTIVE_CORES_TYPE_EXIT)
+    {
+        vector_active_cores =
+            (G_sgpe_stop_record.group.core[VECTOR_PIGX] |
+             G_sgpe_stop_record.group.core[VECTOR_ACTIVE]) >> SHIFT32(23);
+    }
+    else
+    {
+        vector_active_cores =
+            ((~G_sgpe_stop_record.group.core[VECTOR_PIGE]) &
+             G_sgpe_stop_record.group.core[VECTOR_ACTIVE]) >> SHIFT32(23);
+
+        if (G_sgpe_stop_record.group.core[VECTOR_PIGX])
+        {
+            vector_active_cores |= G_sgpe_stop_record.group.core[VECTOR_PIGX] >> SHIFT32(23);
+        }
+    }
+
+    if (G_sgpe_ipcmsg_update_cores.fields.return_active_cores != vector_active_cores)
+    {
+        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Cores Bad Return List. HALT SGPE!");
+        PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_CORE_BAD_LIST);
     }
 }
 
