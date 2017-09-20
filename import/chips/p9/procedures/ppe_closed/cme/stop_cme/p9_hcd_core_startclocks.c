@@ -92,10 +92,18 @@ p9_hcd_core_startclocks(uint32_t core)
     CME_PUTSCOM(C_CPLT_CTRL0_CLEAR, core, BITS64(0, 2));
 
     PK_TRACE("Set fabric chiplet ID values via EQ_CPLT_CONF0[48-51,52-54,56-60]");
-    CME_GETSCOM(C_CPLT_CONF0, core, scom_data.value);
-    scom_data.words.lower &= ~(BITS64SH(48, 7) | BITS64SH(56, 5));
-    scom_data.words.lower |= id_vector;
-    CME_PUTSCOM(C_CPLT_CONF0, core, scom_data.value);
+
+    // this register requires unicast, dual cast with eq check will fail
+    for(core_mask = 2; core_mask; core_mask--)
+    {
+        if (core & core_mask)
+        {
+            CME_GETSCOM(C_CPLT_CONF0, core_mask, scom_data.value);
+            scom_data.words.lower &= ~(BITS64SH(48, 7) | BITS64SH(56, 5));
+            scom_data.words.lower |= id_vector;
+            CME_PUTSCOM(C_CPLT_CONF0, core_mask, scom_data.value);
+        }
+    }
 
     // align_chiplets()
 
