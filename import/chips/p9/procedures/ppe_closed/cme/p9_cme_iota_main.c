@@ -62,7 +62,7 @@ CmeStopRecord G_cme_stop_record __attribute__((section (".dump_ptr_stop"))) = {{
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
 
 inline static
-void periodic_core_quiesce_workaround()
+void periodic_core_quiesce_workaround(uint32_t core_instruction_running)
 {
     uint32_t core;
     uint32_t core_accessible;
@@ -85,20 +85,20 @@ void periodic_core_quiesce_workaround()
     //0) in case in stop0/1 that we dont know about
 
     PK_TRACE("PCQW: Assert block interrupt to PC via SICR[2/3]");
-    out32(CME_LCL_SICR_OR, CME_MASK_BC << SHIFT32(3));
+    out32(CME_LCL_SICR_OR, core_instruction_running << SHIFT32(3));
 
     PK_TRACE("PCQW: Waking up the core(pm_exit=1) via SICR[4/5]");
-    out32(CME_LCL_SICR_OR, CME_MASK_BC << SHIFT32(5));
+    out32(CME_LCL_SICR_OR, core_instruction_running << SHIFT32(5));
 
     CME_PM_EXIT_DELAY
 
     PK_TRACE("PCQW: Polling for core wakeup(pm_active=0) via EINR[20/21]");
 
-    while((in32(CME_LCL_EINR)) & (CME_MASK_BC << SHIFT32(21)));
+    while((in32(CME_LCL_EINR)) & (core_instruction_running << SHIFT32(21)));
 
     //1) Acquire Pcb Mux
 
-    core_accessible = ((~in32(CME_LCL_SISR)) >> SHIFT32(11)) & CME_MASK_BC;
+    core_accessible = ((~in32(CME_LCL_SISR)) >> SHIFT32(11)) & core_instruction_running;
 
     PK_TRACE("PCQW: Request PCB Mux via SICR[10/11]");
     out32(CME_LCL_SICR_OR, core_accessible << SHIFT32(11));
@@ -117,8 +117,11 @@ void periodic_core_quiesce_workaround()
 
     for(core = CME_MASK_C0; core > 0; core--)
     {
-        CME_GETSCOM(RAS_STATUS, core, scom_data.value) ;
-        maint_mode[core & 1] = scom_data.words.upper & THREAD_VECTOR;
+        if (core & core_instruction_running)
+        {
+            CME_GETSCOM(RAS_STATUS, core, scom_data.value) ;
+            maint_mode[core & 1] = scom_data.words.upper & THREAD_VECTOR;
+        }
     }
 
 
@@ -135,29 +138,30 @@ void periodic_core_quiesce_workaround()
 
     for(core = CME_MASK_C0; core > 0; core--)
     {
-
+        if (core & core_instruction_running)
+        {
 #else
 
-    core = CME_MASK_BC;
+    core = core_instruction_running;
 
 #endif
 
-        // The SCOM can be delayed by traffic on PC on the SPR bus, so it is possible
-        // to get a RC=4 (Address Error), which really indicates a timeout.   Need to mask
-        // this return code and retry until we get a clean return code
-        saved_msr = mfmsr();
-        mtmsr( saved_msr | MSR_SEM4);  // Mask off timeout
+            // The SCOM can be delayed by traffic on PC on the SPR bus, so it is possible
+            // to get a RC=4 (Address Error), which really indicates a timeout.   Need to mask
+            // this return code and retry until we get a clean return code
+            saved_msr = mfmsr();
+            mtmsr( saved_msr | MSR_SEM4);  // Mask off timeout
 
-        do
-        {
-            CME_PUTSCOM_NOP(DIRECT_CONTROLS, core, scom_data.value);
-        }
-        while ((mfmsr() & MSR_SIBRC) != 0);
+            do
+            {
+                CME_PUTSCOM_NOP(DIRECT_CONTROLS, core, scom_data.value);
+            }
+            while ((mfmsr() & MSR_SIBRC) != 0);
 
-        mtmsr(saved_msr);
+            mtmsr(saved_msr);
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
-
+        }
     }
 
 #endif
@@ -172,10 +176,11 @@ void periodic_core_quiesce_workaround()
 
     for(core = CME_MASK_C0; core > 0; core--)
     {
-
+        if (core & core_instruction_running)
+        {
 #else
 
-    core = CME_MASK_BC;
+    core = core_instruction_running;
 
 #endif
 
@@ -186,35 +191,35 @@ void periodic_core_quiesce_workaround()
 // 200us in 32ns timer ticks
 #define QUIESCE_ABORT_TICKS 0x186A
 
-        // Poll on THREAD_QUIESCE, LSU_QUIESCE, and NEST_ACTIVE.
-        // If they do not quiesce in 200us abort the patch and restart the cores.
+            // Poll on THREAD_QUIESCE, LSU_QUIESCE, and NEST_ACTIVE.
+            // If they do not quiesce in 200us abort the patch and restart the cores.
 
-        do
-        {
-            CME_GETSCOM_AND(RAS_STATUS, core, scom_data.value);
-
-            time_stamp[1] = in32(CME_LCL_TBR);
-
-            if (time_stamp[1] > time_stamp[0])
+            do
             {
-                G_cme_record.fit_record.core_quiesce_time_latest =
-                    time_stamp[1] - time_stamp[0];
+                CME_GETSCOM_AND(RAS_STATUS, core, scom_data.value);
+
+                time_stamp[1] = in32(CME_LCL_TBR);
+
+                if (time_stamp[1] > time_stamp[0])
+                {
+                    G_cme_record.fit_record.core_quiesce_time_latest =
+                        time_stamp[1] - time_stamp[0];
+                }
+                else
+                {
+                    G_cme_record.fit_record.core_quiesce_time_latest =
+                        0xFFFFFFFF - time_stamp[0] + time_stamp[1] + 1;
+                }
             }
-            else
-            {
-                G_cme_record.fit_record.core_quiesce_time_latest =
-                    0xFFFFFFFF - time_stamp[0] + time_stamp[1] + 1;
-            }
-        }
-        while((((scom_data.words.upper& THREAD_VECTOR_CHECK) != THREAD_VECTOR_CHECK)
-               ||    //THREAD_ and LSU_QUIESCE must be ones
-               ((scom_data.words.lower& BIT64SH(32))))  // NEST_ACTIVE must be zero
-              && !(sample_error = bad_error_present)
-              && (G_cme_record.fit_record.core_quiesce_time_latest < QUIESCE_ABORT_TICKS)    // 200us in 32ns timer ticks
-             );
+            while((((scom_data.words.upper& THREAD_VECTOR_CHECK) != THREAD_VECTOR_CHECK)
+                   ||    //THREAD_ and LSU_QUIESCE must be ones
+                   ((scom_data.words.lower& BIT64SH(32))))  // NEST_ACTIVE must be zero
+                  && !(sample_error = bad_error_present)
+                  && (G_cme_record.fit_record.core_quiesce_time_latest < QUIESCE_ABORT_TICKS)    // 200us in 32ns timer ticks
+                 );
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
-
+        }
     }
 
 #endif
@@ -233,53 +238,54 @@ void periodic_core_quiesce_workaround()
 
     for(core = CME_MASK_C0; core > 0; core--)
     {
-
-        //5) Read SPATTN Scom Addr(20:31) = x0A98 to check for ATTN
-        //   (need to do this after all threads quiesce to close windows)
-
-        CME_GETSCOM(SPATTN_READ, core, scom_data.value);
-
-        if (fused_core_mode)
+        if (core & core_instruction_running)
         {
-            //Fused Core Mode
-            // C0 vtid0=ltid0 bit1  -> tv.bit0
-            // C0 vtid1=ltid2 bit9  -> tv.bit8
-            // C0 vtid2=ltid4 bit17 -> tv.bit16
-            // C0 vtid3=ltid6 bit25 -> tv.bit24
-            //
-            // C1 vtid0=ltid1 bit5  -> tv.bit0
-            // C1 vtid1=ltid3 bit13 -> tv.bit8
-            // C1 vtid2=ltid5 bit21 -> tv.bit16
-            // C1 vtid3=ltid7 bit29 -> tv.bit24
-            spattn_offset = ((core & 1) << 2) + 1; // C0:1, C1:5
-            spattn[core & 1] = ((scom_data.words.upper & BIT32((0 + spattn_offset))) << spattn_offset) | //0
-                               ((scom_data.words.upper & BIT32((8 + spattn_offset))) << spattn_offset) | //8
-                               ((scom_data.words.upper & BIT32((16 + spattn_offset))) << spattn_offset) | //16
-                               ((scom_data.words.upper & BIT32((24 + spattn_offset))) << spattn_offset); //24
+            //5) Read SPATTN Scom Addr(20:31) = x0A98 to check for ATTN
+            //   (need to do this after all threads quiesce to close windows)
+
+            CME_GETSCOM(SPATTN_READ, core, scom_data.value);
+
+            if (fused_core_mode)
+            {
+                //Fused Core Mode
+                // C0 vtid0=ltid0 bit1  -> tv.bit0
+                // C0 vtid1=ltid2 bit9  -> tv.bit8
+                // C0 vtid2=ltid4 bit17 -> tv.bit16
+                // C0 vtid3=ltid6 bit25 -> tv.bit24
+                //
+                // C1 vtid0=ltid1 bit5  -> tv.bit0
+                // C1 vtid1=ltid3 bit13 -> tv.bit8
+                // C1 vtid2=ltid5 bit21 -> tv.bit16
+                // C1 vtid3=ltid7 bit29 -> tv.bit24
+                spattn_offset = ((core & 1) << 2) + 1; // C0:1, C1:5
+                spattn[core & 1] = ((scom_data.words.upper & BIT32((0 + spattn_offset))) << spattn_offset) | //0
+                                   ((scom_data.words.upper & BIT32((8 + spattn_offset))) << spattn_offset) | //8
+                                   ((scom_data.words.upper & BIT32((16 + spattn_offset))) << spattn_offset) | //16
+                                   ((scom_data.words.upper & BIT32((24 + spattn_offset))) << spattn_offset); //24
+            }
+            else
+            {
+                // Normal Mode
+                // vtid0=ltid0 bit1  -> tv.bit0
+                // vtid1=ltid1 bit5  -> tv.bit8
+                // vtid2=ltid2 bit9  -> tv.bit16
+                // vtid3=ltid3 bit13 -> tv.bit24
+                spattn[core & 1] = ((scom_data.words.upper & BIT32(1))  << 1 ) | //0
+                                   ((scom_data.words.upper & BIT32(5))  >> 3 ) | //8
+                                   ((scom_data.words.upper & BIT32(9))  >> 7 ) | //16
+                                   ((scom_data.words.upper & BIT32(13)) >> 11);  //24
+            }
+
+
+            //6) Write DIRECT_CONTROLS Scom Addr(20:31) = x0A9C
+            //   bit (3 + 8*T) where (T= thread) DC_CLEAR_MAINT for all threads
+            //   which were not in maintenance mode in step 1 AND do not have ATTN set in step 4
+
+            scom_data.words.lower = 0;
+            scom_data.words.upper =
+                (THREAD_VECTOR & (~maint_mode[core & 1]) & (~spattn[core & 1])) >> 3;
+            CME_PUTSCOM_NOP(DIRECT_CONTROLS, core, scom_data.value);
         }
-        else
-        {
-            // Normal Mode
-            // vtid0=ltid0 bit1  -> tv.bit0
-            // vtid1=ltid1 bit5  -> tv.bit8
-            // vtid2=ltid2 bit9  -> tv.bit16
-            // vtid3=ltid3 bit13 -> tv.bit24
-            spattn[core & 1] = ((scom_data.words.upper & BIT32(1))  << 1 ) | //0
-                               ((scom_data.words.upper & BIT32(5))  >> 3 ) | //8
-                               ((scom_data.words.upper & BIT32(9))  >> 7 ) | //16
-                               ((scom_data.words.upper & BIT32(13)) >> 11);  //24
-        }
-
-
-        //6) Write DIRECT_CONTROLS Scom Addr(20:31) = x0A9C
-        //   bit (3 + 8*T) where (T= thread) DC_CLEAR_MAINT for all threads
-        //   which were not in maintenance mode in step 1 AND do not have ATTN set in step 4
-
-        scom_data.words.lower = 0;
-        scom_data.words.upper =
-            (THREAD_VECTOR & (~maint_mode[core & 1]) & (~spattn[core & 1])) >> 3;
-        CME_PUTSCOM_NOP(DIRECT_CONTROLS, core, scom_data.value);
-
     }
 
     PK_TRACE("FIT: Both Cores Started");
@@ -287,10 +293,10 @@ void periodic_core_quiesce_workaround()
     //7) Drop pm_exit
 
     PK_TRACE("PCQW: Drop pm_exit via SICR[4/5]");
-    out32(CME_LCL_SICR_CLR, CME_MASK_BC << SHIFT32(5));
+    out32(CME_LCL_SICR_CLR, core_instruction_running << SHIFT32(5));
 
     PK_TRACE("PCQW: Drop block interrupt to PC via SICR[2/3]");
-    out32(CME_LCL_SICR_CLR, CME_MASK_BC << SHIFT32(3));
+    out32(CME_LCL_SICR_CLR, core_instruction_running << SHIFT32(3));
 
     //8) Release Pcb Mux on Both Cores
 
@@ -333,6 +339,7 @@ void fit_handler()
 
     uint32_t core_quiesce_cpmmr_disable;
     uint32_t core;
+    uint32_t core_instr_running;
     uint32_t scom_op;
     data64_t scom_data;
 
@@ -372,14 +379,18 @@ void fit_handler()
 
     // only run workaround if
     // 1) both cores are enabled
-    // 2) both cores are running
+    // 2) at least one core is running
     //    (stop entry clears the counter)
     // 3) both cores doesnt have special_wakeup_done asserted
     //    (spwu_done clears the counter)
     // 4) both core doesnt have cpmmr[2] asserted
     // 5) no bad error occurs
+
+    // Get instruction running per core
+    core_instr_running = (in32_sh(CME_LCL_SISR) >> SHIFT64SH(47))& CME_MASK_BC;
+
     if((G_cme_record.core_enabled == CME_MASK_BC) &&
-       ((in32_sh(CME_LCL_SISR) & BITS64SH(46, 2)) == BITS64SH(46, 2)) &&
+       (core_instr_running != 0) &&
        (!(in32(CME_LCL_SISR) & BITS32(16, 2))) &&
        (!core_quiesce_cpmmr_disable) &&
        (!bad_error_present))
@@ -391,7 +402,7 @@ void fit_handler()
         else
         {
             G_cme_record.fit_record.core_quiesce_fit_trigger = 0;
-            periodic_core_quiesce_workaround();
+            periodic_core_quiesce_workaround(core_instr_running);
         }
     }
 
