@@ -127,6 +127,8 @@ void p9_cme_pstate_intercme_in0_handler()
         out32_sh(CME_LCL_EIMR_OR, (BITS64SH(34, 2)));//Disable PMCR0/1
         g_eimr_override |= BITS64(34, 2);
 
+        //PGPE will update the LMCR[0] before sending the STOP PSTATE Doorbell.
+        //Here we update the PMSR to indicate that Pstates are no longer honored accordingly.
         p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
 
         //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped

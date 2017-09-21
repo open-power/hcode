@@ -82,8 +82,6 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         pk_irq_sub_critical_exit(&ctx);
     }
 
-
-    // Set OCC Scratch2[PGPE_ACTIVE], so that external world knows that PGPE is UP
     occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PGPE_ACTIVE);
     out32(OCB_OCCS2, occScr2);
@@ -129,6 +127,11 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                 (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 1) ||
                 (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1))
             {
+                //Enter sub-critical section
+                //Process any pending ACKs in sub-critical section. Otherwise, it's possible that the inrange check
+                //below is interrupted, and new clips are calculated
+                pk_irq_sub_critical_enter(&ctx);
+
                 inRange = 1;
                 uint32_t minPS;
 
@@ -138,12 +141,19 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                     {
                         minPS = G_pgpe_pstate_record.psClipMin[q];
 
-                        if (G_pgpe_pstate_record.wofEnabled)
+                        if (G_pgpe_pstate_record.wofStatus == WOF_ENABLED)
                         {
+                            //If WOF_CLIP is between thermal clips, then pull down(higher value) mininum pstate
                             if ((G_pgpe_pstate_record.wofClip <= G_pgpe_pstate_record.psClipMax[q]) &&
                                 (minPS < G_pgpe_pstate_record.wofClip))
                             {
                                 minPS = G_pgpe_pstate_record.wofClip;
+                                //If WOF_CLIP is lower(higher value) than the thermal max clips, then pull down(higher value)
+                                //for mininum pstate to thermal max clip
+                            }
+                            else if (G_pgpe_pstate_record.wofClip >= G_pgpe_pstate_record.psClipMax[q])
+                            {
+                                minPS = G_pgpe_pstate_record.psClipMax[q];
                             }
                         }
 
@@ -160,7 +170,6 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                 {
                     if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
                     {
-                        pk_irq_sub_critical_enter(&ctx);
 
                         //Notify CMEs about Updated Pmin and Pmax
                         if (G_pgpe_pstate_record.pendingPminClipBcast)
@@ -175,7 +184,6 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                             G_pgpe_pstate_record.pendingPmaxClipBcast = 0;
                         }
 
-                        pk_irq_sub_critical_exit(&ctx);
 
                         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
                         ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
@@ -183,6 +191,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
                         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
                         p9_pgpe_optrace(ACK_CLIP_UPDT);
+                        restore_irq = 1;
                     }
 
                     if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1)
@@ -212,9 +221,12 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                                 p9_pgpe_optrace(ACK_QUAD_ACTV);
                             }
                         }
+
+                        restore_irq = 1;
                     }
 
-                    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 1)
+                    if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 1) &&
+                        (G_pgpe_pstate_record.wofStatus == WOF_ENABLED))
                     {
                         p9_pgpe_pstate_update_wof_state();
                         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd;
@@ -230,15 +242,17 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                         p9_pgpe_pstate_update_wof_state();
                         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
                         ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
+                        args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
                         args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-                        args->fields.return_active_cores = G_pgpe_pstate_record.activeCores;
                         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
                         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
                         p9_pgpe_optrace(ACK_CORES_ACTV);
+                        restore_irq = 1;
                     }
 
-                    restore_irq = 1;
                 }
+
+                pk_irq_sub_critical_exit(&ctx); //Exit sub-critical section
             } //Pending ACKs
 
             //Check if IPC should be opened again
