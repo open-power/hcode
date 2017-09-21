@@ -71,7 +71,7 @@ inline void p9_cme_pstate_process_db0() __attribute__((always_inline));
 inline void p9_cme_pstate_register() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_start() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_glb_bcast() __attribute__((always_inline));
-inline void p9_cme_pstate_db0_suspend() __attribute__((always_inline));
+inline void p9_cme_pstate_db0_stop() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_clip_bcast() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_safe_mode() __attribute__((always_inline));
 inline void p9_cme_pstate_freq_update() __attribute__((always_inline));
@@ -390,12 +390,12 @@ inline void p9_cme_pstate_process_db0()
     //It's important that we do it in
     if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
     {
-        out32_sh(CME_LCL_EISR_CLR, BIT32(4));
+        out32_sh(CME_LCL_EISR_CLR, BIT64SH(36));
         CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, G_dbData.value);
     }
     else if (G_cme_flags & BIT32(CME_FLAGS_CORE1_GOOD))
     {
-        out32_sh(CME_LCL_EISR_CLR, BIT32(5));
+        out32_sh(CME_LCL_EISR_CLR, BIT64SH(37));
         CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, G_dbData.value);
     }
 
@@ -442,7 +442,7 @@ inline void p9_cme_pstate_process_db0()
         else if((G_dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST) &&
                 (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
         {
-            p9_cme_pstate_db0_suspend();
+            p9_cme_pstate_db0_stop();
         }
         //Pmin or Pmax Update
         else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST)
@@ -522,16 +522,16 @@ inline void p9_cme_pstate_register()
                 //Wait until DB0 is written again
                 if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
                 {
-                    while(!(in32_sh(CME_LCL_EISR) & BIT32(4))) {}
+                    while(!(in32_sh(CME_LCL_EISR) & BIT64SH(36))) {}
 
-                    out32_sh(CME_LCL_EISR_CLR, BIT32(4));
+                    out32_sh(CME_LCL_EISR_CLR, BIT64SH(36));
                     CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, G_dbData.value);
                 }
                 else
                 {
-                    while(!(in32_sh(CME_LCL_EISR) & BIT32(5))) {}
+                    while(!(in32_sh(CME_LCL_EISR) & BIT64SH(37))) {}
 
-                    out32_sh(CME_LCL_EISR_CLR, BIT32(5));
+                    out32_sh(CME_LCL_EISR_CLR, BIT64SH(37));
                     CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, G_dbData.value);
                 }
 
@@ -634,11 +634,11 @@ inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData)
 }
 
 //
-//Doorbell0 Suspend
+//Doorbell0 Pstate Stop
 //
-inline void p9_cme_pstate_db0_suspend()
+inline void p9_cme_pstate_db0_stop()
 {
-    PK_TRACE_INF("DB_TH: DB0 Suspend Enter\n");
+    PK_TRACE_INF("DB_TH: DB0 Stop Enter\n");
     ppm_pig_t ppmPigData;
 
     out32(CME_LCL_FLAGS_CLR, BIT32(24));//Set Pstates Disabled
@@ -647,6 +647,8 @@ inline void p9_cme_pstate_db0_suspend()
     out32_sh(CME_LCL_EIMR_OR, BITS64SH(34, 2));
     g_eimr_override |= BITS64(34, 2);
 
+    //PGPE will update the LMCR[0] before sending the STOP PSTATE Doorbell.
+    //Here we update the PMSR to indicate that Pstates are no longer honored accordingly.
     p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
     p9_cme_pstate_notify_sib(); //Notify sibling
 
@@ -659,7 +661,7 @@ inline void p9_cme_pstate_db0_suspend()
     //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
     CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
 
-    PK_TRACE_INF("DB_TH: DB0 Suspend Exit\n");
+    PK_TRACE_INF("DB_TH: DB0 Stop Exit\n");
 }
 
 inline void p9_cme_pstate_db0_clip_bcast()
