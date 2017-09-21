@@ -1169,6 +1169,14 @@ p9_sgpe_stop_entry()
         }
         else
         {
+            // upon power off cache, dpll is about to be unlocked
+            // to prevent pcb fir fires, need to mask the bit for the time being
+            // the error will be cleared and unmasked when dpll is locked again
+            PK_TRACE("Mask DPLL unlock error in FIR via SLAVE_CONFIG[12]");
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_SLAVE_CONFIG_REG, qloop), scom_data.value);
+            scom_data.words.upper |= BIT32(12);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SLAVE_CONFIG_REG, qloop), scom_data.value);
+
             PK_TRACE("Drop vdd/vcs_pfet_val/sel_override/regulation_finger_en via PFCS[4-7,8]");
             // vdd_pfet_val/sel_override     = 0 (disbaled)
             // vcs_pfet_val/sel_override     = 0 (disbaled)
