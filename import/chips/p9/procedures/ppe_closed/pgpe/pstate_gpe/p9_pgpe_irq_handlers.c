@@ -90,6 +90,7 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
     }
 
     pk_irq_vec_restore(&ctx);
+
     PK_TRACE_DBG("OCC Error: Exit");
 }
 
@@ -211,7 +212,6 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
     for (q = 0; q < MAX_QUADS; q++)
     {
         opit4prQuad = (opit4pr >> ((MAX_QUADS - q + 1) << 2)) & 0xf;
-        PK_TRACE_DBG("PCB4: opit4prQuad 0x%x", opit4prQuad);
 
         if (opit4prQuad)
         {
