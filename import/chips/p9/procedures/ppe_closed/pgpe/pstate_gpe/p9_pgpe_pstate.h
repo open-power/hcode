@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -42,7 +42,9 @@ enum IPC_PEND_TBL
     IPC_PEND_WOF_CTRL                 =     4,
     IPC_PEND_WOF_VFRT                 =     5,
     IPC_PEND_SET_PMCR_REQ             =     6,
-    MAX_IPC_PEND_TBL_ENTRIES          =     7
+    IPC_ACK_CTRL_STOP_CORE_ENABLE     =     7,
+    IPC_ACK_CTRL_STOP_CORE_DISABLE    =     8,
+    MAX_IPC_PEND_TBL_ENTRIES          =     9
 };
 
 enum QUAD_BIT_MASK
@@ -63,6 +65,13 @@ enum PSTATE_STATUS
     PSTATE_STOPPED                              =    5, //Pstates are stopped
     PSTATE_PM_SUSPEND_PENDING                   =    6, //PM Complex Suspend Pending
     PSTATE_PM_SUSPENDED                         =    7 //PM Complex Suspend
+};
+
+enum WOF_STATUS
+{
+    WOF_DISABLED                                =    0, //PGPE Booted
+    WOF_DISABLE_PENDING                         =    1, //Pstates are active
+    WOF_ENABLED                                 =    2 //Pstates are active
 };
 
 enum PSTATE_DB0
@@ -94,26 +103,26 @@ typedef struct
     uint8_t pstatesStatus;
     uint8_t safePstate;
     uint8_t pmcrOwner;
-    uint8_t wofEnabled;                   //wof enable/disable
-    uint8_t wofPending;                   //wof enable pending
-    uint8_t wofClip;                      //wof clip
-    uint8_t psClipMax[MAX_QUADS],         //higher numbered(min freq and volt)
-            psClipMin[MAX_QUADS];         //lower numbered(max freq and volt)
-    uint8_t coresPSRequest[MAX_CORES];    //per core requested pstate
-    uint8_t quadPSComputed[MAX_QUADS];    //computed Pstate per quad
-    uint8_t globalPSComputed;             //computed global Pstate
+    uint8_t wofStatus;                      //wof status
     uint8_t pad0;
-    uint8_t quadPSTarget[MAX_QUADS];      //target Pstate per quad
-    uint8_t globalPSTarget;               //target global Pstate
+    uint8_t wofClip;                        //wof clip
+    uint8_t psClipMax[MAX_QUADS],           //higher numbered(min freq and volt)
+            psClipMin[MAX_QUADS];           //lower numbered(max freq and volt)
+    uint8_t coresPSRequest[MAX_CORES];      //per core requested pstate
+    uint8_t quadPSComputed[MAX_QUADS];      //computed Pstate per quad
+    uint8_t globalPSComputed;               //computed global Pstate
     uint8_t pad1;
-    uint8_t quadPSCurr[MAX_QUADS];      //target Pstate per quad
-    uint8_t globalPSCurr;               //target global Pstate
+    uint8_t quadPSTarget[MAX_QUADS];        //target Pstate per quad
+    uint8_t globalPSTarget;                 //target global Pstate
     uint8_t pad2;
-    uint8_t quadPSNext[MAX_QUADS];      //target Pstate per quad
-    uint8_t globalPSNext;
+    uint8_t quadPSCurr[MAX_QUADS];          //target Pstate per quad
+    uint8_t globalPSCurr;                   //target global Pstate
     uint8_t pad3;
-    uint8_t quadPSAtStop11[MAX_QUADS];  //target Pstate per quad
-    uint8_t pad4[2];
+    uint8_t quadPSNext[MAX_QUADS];          //target Pstate per quad
+    uint8_t globalPSNext;
+    uint8_t pad4;
+    uint8_t quadPSAtStop11[MAX_QUADS];      //target Pstate per quad
+    uint8_t pad5[2];
     uint32_t eVidCurr, eVidNext;
     ipc_req_t ipcPendTbl[MAX_IPC_PEND_TBL_ENTRIES];
     HomerVFRTLayout_t* pVFRT;
@@ -123,9 +132,9 @@ typedef struct
     PkSemaphore sem_process_req;
     PkSemaphore sem_actuate;
     PkSemaphore sem_sgpe_wait;
-    uint32_t activeQuads, activeCores, pendQuadsRegisterReceive, pendQuadsRegisterProcess;
-    uint32_t numActiveCores, numConfCores;
-    uint16_t vratio, fratio;
+    uint32_t activeQuads, activeDB, pendQuadsRegisterReceive, pendQuadsRegisterProcess;
+    uint32_t activeCores, numActiveCores, numConfCores;
+    uint32_t vratio, fratio;
     uint16_t vindex, findex;
     uint32_t pendingPminClipBcast, pendingPmaxClipBcast;
     uint32_t semProcessPosted, semProcessSrc;
@@ -144,7 +153,7 @@ void p9_pgpe_pstate_updt_actual_quad(uint32_t q);
 void p9_pgpe_pstate_update_wof_state();
 void p9_pgpe_pstate_freq_updt();
 void p9_pgpe_send_db0(uint64_t db0, uint32_t coresVector, uint32_t type, uint32_t process_ack, uint32_t ackVector);
-void p9_pgpe_wait_cme_db_ack(uint32_t activeCores);
+void p9_pgpe_wait_cme_db_ack(uint32_t coresVector);
 void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
 void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner);
 void p9_pgpe_pstate_stop();
@@ -152,6 +161,8 @@ void p9_pgpe_pstate_clip_bcast(uint32_t clip_type);
 void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
+void p9_pgpe_pstate_wof_ctrl(uint32_t action, uint32_t activeCores, uint32_t activeQuads);
+void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t ctrl);
 void p9_pgpe_pstate_apply_safe_clips();
 void p9_pgpe_pstate_safe_mode();
 void p9_pgpe_pstate_send_suspend_stop();

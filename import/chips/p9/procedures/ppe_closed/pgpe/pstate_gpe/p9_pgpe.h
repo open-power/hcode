@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -64,6 +64,8 @@
 enum PGPE_DEFINES
 {
     QUAD0_MASK        = 0x80,
+    QUAD0_EX0_MASK    = 0x800,
+    QUAD0_EX1_MASK    = 0x400,
     CORE0_MASK        = 0x80000000,
     QUAD0_ALL_CORES_MASK = 0xF0000000
 };
@@ -72,6 +74,12 @@ enum PSTATE_START_SOURCE
 {
     PSTATE_START_OCC_FLAG  = 0,
     PSTATE_START_OCC_IPC   = 1
+};
+
+enum PGPE_WOF_CTRL
+{
+    WOF_ENABLE      = 0,
+    WOF_DISABLE     = 1
 };
 
 #define CORE_MASK(core) \
@@ -88,6 +96,12 @@ enum PSTATE_START_SOURCE
 
 #define LAST_CORE_FROM_QUAD(quad) \
     ((quad + 1) << 2)
+
+#define QUAD_EX0_MASK(quad) \
+    (QUAD0_EX0_MASK >> (q*2))
+
+#define QUAD_EX1_MASK(quad) \
+    (QUAD0_EX1_MASK >> (q*2))
 
 #define PGPE_PANIC_AND_TRACE(val)\
     G_pgpe_optrace_data.word[0] = val; \

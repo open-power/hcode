@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -47,5 +47,7 @@ void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg);
 //
 void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg);
 void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg);
+void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt_core_enable(ipc_msg_t* msg, void* arg);
+void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt_core_disable(ipc_msg_t* msg, void* arg);
 
 #endif //_P9_PGPE_IPC_H_

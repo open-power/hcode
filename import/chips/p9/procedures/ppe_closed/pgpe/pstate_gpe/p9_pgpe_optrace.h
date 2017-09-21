@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,10 +25,11 @@
 #ifndef _P9_PGPE_TRACE_HEADER_
 #define _P9_PGPE_TRACE_HEADER_
 
-enum PGPE_OP_TRACE
+
+enum PGPE_OP_TRACE_ENCODES
 {
-    START_STOP_IPC  =   0,
-    START_STOP_FLAG =   1,
+    START_STOP_IPC    =   0,
+    START_STOP_FLAG   =   1,
 
     //Without Timestamps
     WOF_CALC_DONE     =  0x11,
