@@ -115,6 +115,12 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
 #endif
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_OPCG_ALIGN, quad), scom_data);
 
+    PK_TRACE("Clear PLL unlock errors in PCB slave, unmask FIR propagation");
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_ERROR_REG, quad), 0xFFFFFFFFFFFFFFFF);
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_SLAVE_CONFIG_REG, quad), scom_data);
+    scom_data &= ~BIT64(12);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SLAVE_CONFIG_REG, quad), scom_data);
+
     PK_TRACE("Drop skew/duty cycle adjust func_clksel via NET_CTRL0[22]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(22));
 }

@@ -93,6 +93,8 @@ extern "C" {
 #define EQ_THERM_MODE_REG        0x1005000F
 
 #define EQ_BIST                  0x100F000B
+#define EQ_SLAVE_CONFIG_REG      0x100F001E
+#define EQ_ERROR_REG             0x100F001F
 #define EQ_HANG_PULSE_6_REG      0x100F0026
 #define EQ_NET_CTRL0_WAND        0x100F0041
 #define EQ_NET_CTRL0_WOR         0x100F0042
