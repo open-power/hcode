@@ -150,8 +150,7 @@ p9_sgpe_ipc_pgpe_update_active_cores_poll_ack(const uint32_t type)
 
     PK_TRACE_INF("IPC.SP: Poll PGPE Update Active Cores Ack");
 
-    while (G_sgpe_ipcmsg_update_cores.fields.return_code == IPC_SGPE_PGPE_RC_NULL);
-
+    while (G_sgpe_ipcmsg_update_cores.fields.return_code == IPC_SGPE_PGPE_RC_NULL)
     {
         dcbi(((void*)(&G_sgpe_ipcmsg_update_cores)));
     }
