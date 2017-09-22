@@ -95,7 +95,7 @@ static const struct option options[] =
 
 static const char* optionstr = "c:nbo:h:d";
 
-int p9_dd_tool_read(uint8_t** buf, uint32_t* size, char* fn, int mandatory)
+void p9_dd_tool_read(uint8_t** buf, uint32_t* size, char* fn, int mandatory)
 {
     FILE* fp;
     uint32_t read;
@@ -106,13 +106,13 @@ int p9_dd_tool_read(uint8_t** buf, uint32_t* size, char* fn, int mandatory)
     {
         if (mandatory)
         {
-            printf("failed to open %s for reading\n", fn);
-            exit(-1);
+            printf("ERROR: p9_dd_tool_read(): Failed to open %s for reading\n", fn);
+            exit(EXIT_FAILURE);
         }
 
         *buf = NULL;
         *size = 0;
-        return *size;
+        return;
     }
 
     fseek(fp, 0, SEEK_END);
@@ -125,26 +125,26 @@ int p9_dd_tool_read(uint8_t** buf, uint32_t* size, char* fn, int mandatory)
 
         if (!*buf)
         {
-            printf("failed to allocate buffer\n");
+            printf("ERROR: p9_dd_tool_read(): Failed to allocate buffer\n");
             fclose(fp);
-            exit(-1);
+            exit(EXIT_FAILURE);
         }
 
         read = fread(*buf, 1, *size, fp);
 
         if (read != *size)
         {
-            printf("failed to read %s\n", fn);
-            exit(-1);
+            printf("ERROR: p9_dd_tool_read(): Failed to read %s\n", fn);
+            exit(EXIT_FAILURE);
         }
     }
 
     fclose(fp);
 
-    return *size;
+    return;
 }
 
-int p9_dd_tool_write(uint8_t* buf, uint32_t size, char* fn)
+void p9_dd_tool_write(uint8_t* buf, uint32_t size, char* fn)
 {
     FILE* fp;
     uint32_t written;
@@ -153,20 +153,21 @@ int p9_dd_tool_write(uint8_t* buf, uint32_t size, char* fn)
 
     if (!fp)
     {
-        printf("failed to open %s for writing\n", fn);
-        exit(-1);
+        printf("ERROR: p9_dd_tool_write(): Failed to open %s for writing\n", fn);
+        exit(EXIT_FAILURE);
     }
 
     written = fwrite(buf, 1, size, fp);
 
     if (written != size)
     {
-        printf("failed to write to %s\n", fn);
-        exit(-1);
+        printf("ERROR: p9_dd_tool_write(): Failed to write to %s\n", fn);
+        exit(EXIT_FAILURE);
     }
 
     fclose(fp);
-    return size;
+
+    return;
 }
 
 int p9_dd_tool_add(int dd, char* fn_block, char* fn_cont)
@@ -184,13 +185,17 @@ int p9_dd_tool_add(int dd, char* fn_block, char* fn_cont)
     {
         rc = p9_dd_add(&cont, &cont_size, dd, block, block_size);
 
-        if (rc == P9_DD_SUCCESS)
+        if (rc == DDCO_SUCCESS)
         {
-            rc = p9_dd_tool_write(cont, cont_size, fn_cont);
+            p9_dd_tool_write(cont, cont_size, fn_cont);
+        }
+        else if (rc == DDCO_DUPLICATE_DDLEVEL)
+        {
+            printf("WARNING: p9_dd_tool_add(): DD level already present in container.\n");
         }
         else
         {
-            printf("failed, p9_dd_add returned %d\n", rc);
+            printf("ERROR: p9_dd_tool_add(): p9_dd_add() returned rc=0x%08x\n", rc);
         }
     }
 
@@ -212,13 +217,13 @@ int p9_dd_tool_get(int dd, char* fn_block, char* fn_cont)
 
     rc = p9_dd_get(cont, dd, &block, &block_size);
 
-    if (rc == P9_DD_SUCCESS)
+    if (rc == DDCO_SUCCESS)
     {
-        rc = p9_dd_tool_write(block, block_size, fn_block);
+        p9_dd_tool_write(block, block_size, fn_block);
     }
     else
     {
-        printf("failed, p9_dd_get returned %d\n", rc);
+        printf("ERROR: p9_dd_tool_get(): p9_dd_get() returned %d\n", rc);
     }
 
     free(cont);
@@ -230,7 +235,7 @@ int p9_dd_tool_list(char* fn_cont)
 {
     uint32_t            cont_size;
     uint8_t*            cont;
-    struct p9_dd_iter   iter = P9_DD_ITER_INIT(NULL);
+    struct p9_dd_iter   iter = {NULL, 0};
     struct p9_dd_block* block;
     struct p9_dd_block  block_he;
 
@@ -250,6 +255,7 @@ int p9_dd_tool_list(char* fn_cont)
 
 int main(int argc, char* argv[])
 {
+    int rc = DDCO_SUCCESS;
     char* fn_block = NULL;
     char* fn_cont = NULL;
     int  dd = 0;
@@ -258,8 +264,8 @@ int main(int argc, char* argv[])
 
     if (argc == 1)
     {
-        printf("%s", usage);
-        exit(-1);
+        printf("ERROR: Missing arguments\n\n%s", usage);
+        exit(EXIT_FAILURE);
     }
 
     while (-1 != (option = getopt_long(argc, argv, optionstr, options, NULL)))
@@ -285,8 +291,8 @@ int main(int argc, char* argv[])
             case 'n' :
                 if (sscanf(optarg, "0x%x", &dd) != 1)
                 {
-                    printf("%s", usage);
-                    exit(-1);
+                    printf("ERROR: Missing DD level. Must specify a DD level after --dd\n\n%s", usage);
+                    exit(EXIT_FAILURE);
                 }
 
                 break;
@@ -298,8 +304,8 @@ int main(int argc, char* argv[])
             case 'o' :
                 if (fn_cont)
                 {
-                    printf("%s", usage);
-                    exit(-1);
+                    printf("ERROR: Only one DD container is allowed\n\n%s", usage);
+                    exit(EXIT_FAILURE);
                 }
 
                 fn_cont = strdup(optarg);
@@ -314,8 +320,8 @@ int main(int argc, char* argv[])
                 exit(0);
 
             default :
-                printf("%s", usage);
-                exit(-1);
+                printf("ERROR: Missing argument\n\n%s", usage);
+                exit(EXIT_FAILURE);
         }
 
         switch (command)
@@ -331,10 +337,15 @@ int main(int argc, char* argv[])
             case COMMAND_ADD :
                 if (fn_cont && fn_block && dd)
                 {
-                    p9_dd_tool_add(dd, fn_block, fn_cont);
+                    rc = p9_dd_tool_add(dd, fn_block, fn_cont);
                     dd = 0;
                     free(fn_block);
                     fn_block = NULL;
+
+                    if (rc == DDCO_DUPLICATE_DDLEVEL)
+                    {
+                        rc = DDCO_SUCCESS;
+                    }
                 }
 
                 break;
@@ -342,7 +353,7 @@ int main(int argc, char* argv[])
             case COMMAND_GET :
                 if (fn_cont && fn_block && dd)
                 {
-                    p9_dd_tool_get(dd, fn_block, fn_cont);
+                    rc = p9_dd_tool_get(dd, fn_block, fn_cont);
                     dd = 0;
                     free(fn_block);
                     fn_block = NULL;
@@ -352,5 +363,12 @@ int main(int argc, char* argv[])
         }
     }
 
-    return 0;
+    if (rc == DDCO_SUCCESS)
+    {
+        exit(EXIT_SUCCESS);
+    }
+    else
+    {
+        exit(EXIT_FAILURE);
+    }
 }
