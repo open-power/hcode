@@ -1219,6 +1219,17 @@ void p9_pgpe_pstate_do_step()
             G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr - G_gppb->ext_vrm_step_size_mv;
             G_pgpe_pstate_record.globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
 
+            //It's possible that the interpolation function returns Pstate higher than
+            //target due to rounding errors, so we adjust back.
+            if (G_pgpe_pstate_record.globalPSNext > G_pgpe_pstate_record.globalPSTarget)
+            {
+                G_pgpe_pstate_record.globalPSNext = G_pgpe_pstate_record.globalPSTarget;
+            }
+
+            //Make sure voltage written corresponds exactly to a pstate
+            G_pgpe_pstate_record.eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSNext,
+                                            VPD_PT_SET_BIASED_SYSP);
+
             for (q = 0; q < MAX_QUADS; q++)
             {
                 if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
@@ -1260,6 +1271,17 @@ void p9_pgpe_pstate_do_step()
         {
             G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr + G_gppb->ext_vrm_step_size_mv;
             G_pgpe_pstate_record.globalPSNext = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
+
+            //It's possible that the interpolation function returns Pstate lower than
+            //target due to rounding errors, so we adjust back.
+            if (G_pgpe_pstate_record.globalPSNext < G_pgpe_pstate_record.globalPSTarget)
+            {
+                G_pgpe_pstate_record.globalPSNext = G_pgpe_pstate_record.globalPSTarget;
+            }
+
+            //Make sure voltage written corresponds exactly to a pstate
+            G_pgpe_pstate_record.eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.globalPSNext,
+                                            VPD_PT_SET_BIASED_SYSP);
 
             for (q = 0; q < MAX_QUADS; q++)
             {
