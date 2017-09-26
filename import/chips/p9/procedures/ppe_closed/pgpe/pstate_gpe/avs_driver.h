@@ -38,6 +38,13 @@ enum AVS_DRIVER
     AVS_DRIVER_MIN_EXTERNAL_VOLTAGE = 500
 };
 
+enum AVS_DRIVER_RETURN_CODES
+{
+    AVS_RC_SUCCESS              = 0,
+    AVS_RC_ONGOING_TIMEOUT      = 1,
+    AVS_RC_RESYNC_ERROR         = 2
+};
+
 void
 external_voltage_control_init(uint32_t* vext_read_mv);
 

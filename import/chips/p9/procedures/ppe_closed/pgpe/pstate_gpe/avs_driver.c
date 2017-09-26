@@ -106,7 +106,11 @@ uint8_t pollVoltageTransDone(void)
 
     if (ongoingFlag)
     {
-        rc = 1;
+        rc = AVS_RC_ONGOING_TIMEOUT;
+    }
+    else
+    {
+        rc = AVS_RC_SUCCESS;
     }
 
     return rc;
@@ -140,8 +144,9 @@ uint8_t driveIdleFrame(void)
 //#################################################################################################
 uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
 {
-    uint8_t  rc = 0;
+    uint8_t  rc = 0, retryCnt = 0, done = 0;
     uint32_t ocbRegWriteData = 0;
+    uint32_t ocbRegReadData = 0;
 
     uint32_t RailSelect  =  in32(OCB_OCCS2) & AVS_RAIL_NUM_MASK;
     uint32_t StartCode   = 1;
@@ -163,12 +168,52 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
     CRC = CRC_calc(ocbRegWriteData);
     ocbRegWriteData = ocbRegWriteData | CRC;
 
-    // Send frame
-    //PK_TRACE_DBG("RegWrite=0x%x", ocbRegWriteData);
-    out32(OCB_O2SWD0A | BusMask, ocbRegWriteData);
+    do
+    {
+        // Send frame
+        out32(OCB_O2SWD0A | BusMask, ocbRegWriteData);
 
-    // Wait on o2s_ongoing = 0
-    rc = pollVoltageTransDone();
+        // Wait on o2s_ongoing = 0
+        rc = pollVoltageTransDone();
+
+        if (rc)
+        {
+            done = 1;
+        }
+        else
+        {
+            ocbRegReadData = in32(OCB_O2SRD0A | BusMask);
+            PK_TRACE_DBG("AVS_W:ReadData=0x%04x", ocbRegReadData);
+
+            //Non-zero SlaveAck
+            if(ocbRegReadData & 0xC0000000)
+            {
+                PK_TRACE_DBG("AVS_W:Error Slave Ack");
+
+                //Retry one-time
+                if (retryCnt)
+                {
+                    rc = AVS_RC_RESYNC_ERROR;
+                    done = 1;
+                }
+                else
+                {
+                    retryCnt++;
+                    rc = driveIdleFrame();
+
+                    if (rc)
+                    {
+                        done = 1;
+                    }
+                }
+            }
+            else
+            {
+                done = 1;
+            }
+        }
+    }
+    while(!done);
 
     return rc;
 }
@@ -179,7 +224,7 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
 //#################################################################################################
 uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
 {
-    uint8_t  rc = 0;
+    uint8_t  rc = 0, retryCnt = 0, done = 0;
     uint32_t ocbRegReadData = 0;
     uint32_t ocbRegWriteData = 0;
 
@@ -205,22 +250,53 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
     CRC = CRC_calc(ocbRegWriteData);
     ocbRegWriteData = ocbRegWriteData | CRC;
 
-    // Send frame
-    out32(OCB_O2SWD0A | BusMask, ocbRegWriteData);
-
-    // Wait on o2s_ongoing = 0
-    rc = pollVoltageTransDone();
-
-    if (rc)
+    do
     {
-        PK_TRACE_ERR("AVS_READ: OnGoingFlag timeout");
-        PGPE_PANIC_AND_TRACE(PGPE_AVS_READ_ONGOING_FLAG_TIMEOUT);
-    }
+        // Send frame
+        out32(OCB_O2SWD0A | BusMask, ocbRegWriteData);
 
-    // Read returned voltage value from Read frame
-    ocbRegReadData = in32(OCB_O2SRD0A | BusMask);
-    PK_TRACE_DBG("RegRead=0x%x", ocbRegReadData);
-    *CmdData = (ocbRegReadData >> 8) & 0x0000FFFF;
+        // Wait on o2s_ongoing = 0
+        rc = pollVoltageTransDone();
+
+        if (rc)
+        {
+            done = 1;
+        }
+        else
+        {
+            // Read returned voltage value from Read frame
+            ocbRegReadData = in32(OCB_O2SRD0A | BusMask);
+            PK_TRACE_DBG("AVS_READ: RegRead=0x%04x", ocbRegReadData);
+
+            //Non-zero SlaveAck
+            if(ocbRegReadData & 0xC0000000)
+            {
+                PK_TRACE_DBG("AVS_W:Error Slave Ack");
+
+                if (retryCnt)
+                {
+                    rc = AVS_RC_RESYNC_ERROR;
+                    done = 1;
+                }
+                else
+                {
+                    retryCnt++;
+                    rc = driveIdleFrame();
+
+                    if (rc)
+                    {
+                        done = 1;
+                    }
+                }
+            }
+            else
+            {
+                *CmdData = (ocbRegReadData >> 8) & 0x0000FFFF;
+                done = 1;
+            }
+        }
+    }
+    while(!done);
 
     return rc;
 }
@@ -322,29 +398,24 @@ void external_voltage_control_write(uint32_t vext_write_mv)
     // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
     rc = driveWrite(CmdDataType, vext_write_mv);
 
-    if (rc)
+    switch (rc)
     {
-        PK_TRACE_ERR("AVS_WRITE: Drive Write FAIL");
-        PGPE_PANIC_AND_TRACE(PGPE_AVS_WRITE_DRIVE_WRITE);
+        case AVS_RC_SUCCESS:
+            PK_TRACE_DBG("AVS_WRITE: Success!");
+            break;
+
+        case AVS_RC_ONGOING_TIMEOUT:
+            PK_TRACE_ERR("AVS_WRITE: OnGoing Flag Timeout");
+            PGPE_PANIC_AND_TRACE(PGPE_AVS_WRITE_ONGOING_FLAG_TIMEOUT);
+            break;
+
+        case AVS_RC_RESYNC_ERROR:
+            PK_TRACE_ERR("AVS_WRITE: Resync Error");
+            GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(59)); //OCCLFIR[59]=AVS Resync Error
+            PGPE_PANIC_AND_TRACE(PGPE_AVS_RESYNC_ERROR);
+            break;
+
+        default:
+            break;
     }
-
-#if !EPM_P9_TUNING
-    uint32_t  CmdDataRead = 0;
-    // Drive read transaction to return the voltage on the same rail and wait on o2s_ongoing=0
-    rc = driveRead(CmdDataType, &CmdDataRead);
-
-    if (rc)
-    {
-        PK_TRACE_ERR("AVS_WRITE: Drive Read FAIL");
-        PGPE_PANIC_AND_TRACE(PGPE_AVS_WRITE_DRIVE_READ);
-    }
-
-    if (CmdDataRead != vext_write_mv)
-    {
-        PK_TRACE_ERR("AVS_WRITE: Miscompare, Read=%dmV != Write=%dmV", CmdDataRead, vext_write_mv);
-        PGPE_PANIC_AND_TRACE(PGPE_AVS_WRITE_RW_MISCOMPARE);
-    }
-
-#endif
-
 }
