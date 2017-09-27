@@ -250,27 +250,26 @@ void p9_cme_pstate_db_thread(void* arg)
     G_cme_pstate_record.globalPstate = G_cme_pstate_record.quadPstate;
 
     // Resonant Clocking Check (QM + Sibling)
-    // Check that resonance is not enabled in CACCR and EXCGCR
-    CME_GETSCOM(CPPM_CACCR, cores, scom_data);
+    // Check that resonance is not enabled in CACCR
+    CME_GETSCOM(CPPM_CACCR, cores, scom_data.value);
     // Ignore clk_sync_enable, reserved, and override bits
-    resclk_data = (scom_data.value >> 32) & ~BITS32(13, 19);
+    resclk_data = scom_data.words.upper & BITS32(0, 13);
+
+#if (NIMBUS_DD_LEVEL > 20 || CUMULUS_DD_LEVEL > 10) && DISABLE_STOP8 == 0
+    // Check that resonance is not enabled in EXCGCR
+    ippm_read(QPPM_EXCGCR, &scom_data.value);
+    // Ignore clk_sync_enable, clkglm_async_reset, clkglm_sel, and reserved
+    resclk_data |= scom_data.words.upper & BITS32(0, 30);
+#endif
+
+    // Check that resonance is not enabled in QACCR
+    ippm_read(QPPM_QACCR, &scom_data.value);
+    resclk_data |= scom_data.words.upper & BITS32(0, 13);
 
     if(resclk_data != 0)
     {
         PK_PANIC(CME_PSTATE_RESCLK_ENABLED_AT_BOOT);
     }
-
-#if (NIMBUS_DD_LEVEL > 20 || CUMULUS_DD_LEVEL > 10) && DISABLE_STOP8 == 0
-    ippm_read(QPPM_EXCGCR, &scom_data.value);
-    // Ignore clk_sync_enable, clkglm_async_reset, clkglm_sel, and reserved
-    scom_data.value &= ~(BITS64(29, 9) | BITS64(42, 22));
-
-    if(scom_data.value != 0)
-    {
-        PK_PANIC(CME_PSTATE_RESCLK_ENABLED_AT_BOOT);
-    }
-
-#endif
 
 #ifdef USE_CME_RESCLK_FEATURE
 
@@ -290,18 +289,18 @@ void p9_cme_pstate_db_thread(void* arg)
             G_cme_pstate_record.resclkData.l2_ex1_resclk_idx =
                 (uint32_t)G_lppb->resclk.resclk_index[0];
 
-            // Extract the resclk value from QCCR
-            ippm_read(QPPM_QACCR, &scom_data.value);
-            scom_data.value = (scom_data.value & BITS64(0, 13)) >> SHIFT64(15);
             G_cme_pstate_record.resclkData.common_resclk_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
-            // Read QACCR and clear out the resclk settings
+            // Read QACCR
             ippm_read(QPPM_QACCR, &scom_data.value);
+            // Clear out the resclk settings just to be safe (should not be needed)
             scom_data.value &= ~BITS64(0, 13);
             // OR-in the resclk settings which match the current Pstate
             scom_data.value |= (((uint64_t)G_lppb->resclk.steparray
                                  [G_cme_pstate_record.resclkData.common_resclk_idx].value)
                                 << 48);
-            // Write QACCR
+
+            // Directly Write QACCR without stepping
+            // assuming EXCGCR and CACCR will be used to cleanly step L2 and core resclk settings later
             ippm_write(QPPM_QACCR, scom_data.value);
         }
 
@@ -698,6 +697,7 @@ inline void p9_cme_pstate_freq_update()
 inline void p9_cme_pstate_update_analog()
 {
 #ifdef USE_CME_RESCLK_FEATURE
+    PkMachineContext ctx;
     uint32_t rescurr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
                        ? G_cme_pstate_record.resclkData.common_resclk_idx
                        : G_cme_pstate_record.quadPstate;
@@ -718,17 +718,16 @@ inline void p9_cme_pstate_update_analog()
 
 #ifdef USE_CME_RESCLK_FEATURE
 
+    pk_critical_section_enter(&ctx);
+
     if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
        && (resnext < rescurr))
     {
-        PkMachineContext ctx;
-        pk_critical_section_enter(&ctx);
-
         p9_cme_resclk_update(ANALOG_COMMON, G_next_pstate,
                              G_cme_pstate_record.resclkData.common_resclk_idx);
-
-        pk_critical_section_exit(&ctx);
     }
+
+    pk_critical_section_exit(&ctx);
 
 #endif//USE_CME_RESCLK_FEATURE
 
@@ -736,17 +735,16 @@ inline void p9_cme_pstate_update_analog()
 
 #ifdef USE_CME_RESCLK_FEATURE
 
+    pk_critical_section_enter(&ctx);
+
     if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
        && (resnext >= rescurr))
     {
-        PkMachineContext ctx;
-        pk_critical_section_enter(&ctx);
-
         p9_cme_resclk_update(ANALOG_COMMON, G_next_pstate,
                              G_cme_pstate_record.resclkData.common_resclk_idx);
-
-        pk_critical_section_exit(&ctx);
     }
+
+    pk_critical_section_exit(&ctx);
 
 #endif//USE_CME_RESCLK_FEATURE
 

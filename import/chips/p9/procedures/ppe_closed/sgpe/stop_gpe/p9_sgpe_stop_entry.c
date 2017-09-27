@@ -89,6 +89,7 @@ p9_sgpe_stop_entry()
 #if DISABLE_STOP8
 
              G_sgpe_stop_record.group.quad[VECTOR_RCLKE]  |
+             G_sgpe_stop_record.group.quad[VECTOR_RCLKX]  |
 
 #endif
 
@@ -181,11 +182,13 @@ p9_sgpe_stop_entry()
 
                 // assume ex0 core0 is good
                 cindex = (qloop << 2);
+                ex = 0;
 
                 // if ex0 is bad, switch to ex1
                 if (!(G_sgpe_stop_record.group.expg[qloop] & FST_EX_IN_QUAD))
                 {
                     cindex += 2;
+                    ex = 1;
                 }
 
                 // if first core in the ex is bad
@@ -196,6 +199,17 @@ p9_sgpe_stop_entry()
 
                 // send DB2 with msgid 0x2 to the first good core
                 // to trigger Quad Manager to disable resonant clock
+
+                // QM will also clear the cme_flag[rclk_operatable] to
+                // temporarily disable pstate code from changing rclk
+                // but the Sibling CME also needs to do so, here SGPE
+                // will do it for the Sibling.
+
+                if (G_sgpe_stop_record.group.expg[qloop] & (ex + 1))
+                {
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_CLR, qloop, (ex ^ 1)),
+                                BIT64(CME_FLAGS_RCLK_OPERABLE));
+                }
 
 #if NIMBUS_DD_LEVEL != 10
 
@@ -902,6 +916,16 @@ p9_sgpe_stop_entry()
         }
 
         PK_TRACE_DBG("CME Halted");
+
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QACCR, qloop), scom_data.value);
+
+        if (scom_data.words.upper)
+        {
+            // Stop11 needs resclk to be off, otherwise exit will fail
+            PK_TRACE_INF("ERROR: Q[%d]ACCR[%x] is not clean after CMEs are halted",
+                         qloop, scom_data.words.upper);
+            PK_PANIC(SGPE_STOP_ENTRY_STOP11_RESCLK_ON);
+        }
 
         //Set Quad GPMMR RESET_STATE_INDICATOR bit to indicate CME is offline
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_OR, qloop), BIT64(15));

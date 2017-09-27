@@ -233,6 +233,7 @@ p9_sgpe_stop_init()
     uint32_t          cmask      = 0;
     uint32_t          xmask      = 0;
     uint32_t          xshift     = 0;
+    sgpeHeader_t*     pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 #endif
     uint32_t          m_1c       = 0;
     uint32_t          m_2c       = 0;
@@ -244,7 +245,6 @@ p9_sgpe_stop_init()
     ocb_ccsr_t        ccsr       = {0};
     ocb_qcsr_t        qcsr       = {0};
     ocb_qssr_t        qssr       = {0};
-    sgpeHeader_t*     pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
     //--------------------------------------------------------------------------
     // Basic Software Settings

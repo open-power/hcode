@@ -32,7 +32,11 @@ extern CmeStopRecord   G_cme_stop_record;
 extern CmePstateRecord G_cme_pstate_record;
 extern CmeRecord       G_cme_record;
 
+#if DISABLE_STOP8
 
+    uint8_t G_ndd20_disable_stop8_abort_stop11_rclk_handshake_flag = 0;
+
+#endif
 
 void
 p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
@@ -234,79 +238,89 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
     ppm_pig_t        pig = {0};
 
     MARK_TRAP(STOP_DB2_HANDLER)
-    PK_TRACE_DBG("DB2 Handler Trigger %d", irq);
+    PK_TRACE_INF("DB2 Handler Trigger %d", irq);
 
     // read and clear doorbell
     uint32_t core = (in32(CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
-    CME_GETSCOM(CPPM_CMEDB2, core, db2.value);
-    CME_PUTSCOM_NOP(CPPM_CMEDB2, core, 0);
-    out32(CME_LCL_EISR_CLR, (core << SHIFT32(19)));
+    uint32_t core_mask;
 
-    switch (db2.fields.cme_message_numbern)
+    for(core_mask = 2; core_mask; core_mask--)
     {
-        case MSGID_DB2_DECREMENTER_WAKEUP:
+        if (core & core_mask)
+        {
+            CME_GETSCOM(CPPM_CMEDB2, core_mask, db2.value);
+            CME_PUTSCOM_NOP(CPPM_CMEDB2, core_mask, 0);
+            out32(CME_LCL_EISR_CLR, (core_mask << SHIFT32(19)));
 
-            // unmask pc interrupt pending to wakeup that is still pending
-            core &= (~(G_cme_stop_record.core_running));
-            G_cme_stop_record.core_blockpc &= ~core;
-            g_eimr_override &= ~(((uint64_t)core) << SHIFT64(13));
-            break;
+            switch (db2.fields.cme_message_numbern)
+            {
+                case MSGID_DB2_DECREMENTER_WAKEUP:
 
-        case MSGID_DB2_RESONANT_CLOCK_DISABLE:
+                    // unmask pc interrupt pending to wakeup that is still pending
+                    G_cme_stop_record.core_blockpc &=
+                        ~(core_mask & (~(G_cme_stop_record.core_running)));
+                    g_eimr_override &= ~(((uint64_t)core_mask) << SHIFT64(13));
+                    break;
+
+                case MSGID_DB2_RESONANT_CLOCK_DISABLE:
 
 #if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) || DISABLE_STOP8 == 1
 #ifdef USE_CME_RESCLK_FEATURE
 
-            // Quad going into Stop11, need to potentially disable Resclks
-            if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
-               && G_cme_pstate_record.qmFlag)
-            {
-                PkMachineContext ctx;
-                pk_critical_section_enter(&ctx);
+                    // Quad going into Stop11, need to potentially disable Resclks
+                    if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                       && G_cme_pstate_record.qmFlag)
+                    {
+                        p9_cme_resclk_update(ANALOG_COMMON, ANALOG_PSTATE_RESCLK_OFF,
+                                             G_cme_pstate_record.resclkData.common_resclk_idx);
 
-                p9_cme_resclk_update(ANALOG_COMMON, ANALOG_PSTATE_RESCLK_OFF,
-                                     G_cme_pstate_record.resclkData.common_resclk_idx);
-
-                pk_critical_section_exit(&ctx);
-            }
+                        // prevent Pstate changes from accidentally re-enabling
+                        // in the meantime before interlock with PGPE
+                        out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_RCLK_OPERABLE));
+                        // in case we abort, need this flag to get into reenable below
+                        G_ndd20_disable_stop8_abort_stop11_rclk_handshake_flag = 1;
+                    }
 
 #endif
 #endif
-            // Finish handshake with SGPE for Stop11 via PIG
-            pig.fields.req_intr_type    = PIG_TYPE5;
-            pig.fields.req_intr_payload = TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11;
-            CME_PUTSCOM_NOP(PPM_PIG, core, pig.value);
-            break;
+                    // Finish handshake with SGPE for Stop11 via PIG
+                    pig.fields.req_intr_type    = PIG_TYPE5;
+                    pig.fields.req_intr_payload = TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11;
+                    CME_PUTSCOM_NOP(PPM_PIG, core_mask, pig.value);
+                    break;
 
-        case MSGID_DB2_RESONANT_CLOCK_ENABLE:
+                case MSGID_DB2_RESONANT_CLOCK_ENABLE:
 
 #if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) || DISABLE_STOP8 == 1
 #ifdef USE_CME_RESCLK_FEATURE
 
-            // Quad aborted Stop11, need to regressively enable Resclks
-            // IF wakeup from fully entered Stop11, this is done by QM
-            if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
-               && G_cme_pstate_record.qmFlag)
-            {
-                PkMachineContext ctx;
-                pk_critical_section_enter(&ctx);
+                    // Quad aborted Stop11, need to regressively enable Resclks
+                    // IF wakeup from fully entered Stop11, this is done by QM
+                    if(((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE)) ||
+                        G_ndd20_disable_stop8_abort_stop11_rclk_handshake_flag)
+                       && G_cme_pstate_record.qmFlag)
+                    {
+                        p9_cme_resclk_update(ANALOG_COMMON, G_cme_pstate_record.quadPstate,
+                                             G_cme_pstate_record.resclkData.common_resclk_idx);
 
-                p9_cme_resclk_update(ANALOG_COMMON, G_cme_pstate_record.quadPstate,
-                                     G_cme_pstate_record.resclkData.common_resclk_idx);
+                        // reenable pstate from changing resonent clock
+                        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_RCLK_OPERABLE));
+                        // clear abort flag to start clean slate
+                        G_ndd20_disable_stop8_abort_stop11_rclk_handshake_flag = 0;
+                    }
 
-                pk_critical_section_exit(&ctx);
+#endif
+#endif
+                    // Finish handshake with SGPE for Stop11 via PIG
+                    pig.fields.req_intr_type    = PIG_TYPE5;
+                    pig.fields.req_intr_payload = TYPE5_PAYLOAD_EXIT_RCLK;
+                    CME_PUTSCOM_NOP(PPM_PIG, core_mask, pig.value);
+                    break;
+
+                default:
+                    break;
             }
-
-#endif
-#endif
-            // Finish handshake with SGPE for Stop11 via PIG
-            pig.fields.req_intr_type    = PIG_TYPE5;
-            pig.fields.req_intr_payload = TYPE5_PAYLOAD_EXIT_RCLK;
-            CME_PUTSCOM_NOP(PPM_PIG, core, pig.value);
-            break;
-
-        default:
-            break;
+        }
     }
 
     pk_irq_vec_restore(&ctx);

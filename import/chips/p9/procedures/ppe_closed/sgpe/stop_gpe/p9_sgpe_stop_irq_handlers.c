@@ -303,6 +303,7 @@ static void
 p9_sgpe_pig_cpayload_parser(const uint32_t type)
 {
     uint32_t      timeout       = 0;
+    uint32_t      ex            = 0;
     uint32_t      qloop         = 0;
     uint32_t      cloop         = 0;
     uint32_t      cstart        = 0;
@@ -522,8 +523,8 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                     {
                         if ((type == PIG_TYPE5) && (cpayload == TYPE5_PAYLOAD_EXIT_RCLK))
                         {
-                            PK_TRACE_ERR("ERROR: IMPOSSIBLE! RCLK PROTOCOL BROKEN! HALT SGPE!");
-                            pk_halt();
+                            PK_TRACE_ERR("ERROR: IMPOSSIBLE! RESCLK CME HANDSHAKE BROKEN! HALT SGPE!");
+                            PK_PANIC(SGPE_PIG_RESCLK_CME_HANDSHAKE_BROKEN);
                         }
 
                         PK_TRACE_INF("Core Request Exit But Resonent Clock Disable Ongoing so ignore");
@@ -537,7 +538,16 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                         {
                             G_sgpe_stop_record.group.quad[VECTOR_RCLKX] &= ~BIT32(qloop);
                             G_sgpe_stop_record.group.core[VECTOR_BLOCKX] |=
-                                G_sgpe_stop_record.group.core[VECTOR_RCLKX];
+                                G_sgpe_stop_record.group.core[VECTOR_RCLKX] & BITS32((qloop << 2), 4);
+
+                            // restore Sibling's ability to change rclk as QM just did to itself
+                            ex = (cindex % 4) >> 1;
+
+                            if (G_sgpe_stop_record.group.expg[qloop] & (ex + 1))
+                            {
+                                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR, qloop, (ex ^ 1)),
+                                            BIT64(CME_FLAGS_RCLK_OPERABLE));
+                            }
                         }
                         else
                         {
@@ -550,7 +560,16 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                         PK_TRACE_INF("Core Request Exit Allowed as Resonant Clock Enable is Completed");
                         G_sgpe_stop_record.group.quad[VECTOR_RCLKX] &= ~BIT32(qloop);
                         G_sgpe_stop_record.group.core[VECTOR_PIGX] |=
-                            G_sgpe_stop_record.group.core[VECTOR_RCLKX];
+                            G_sgpe_stop_record.group.core[VECTOR_RCLKX] & BITS32((qloop << 2), 4);
+
+                        // restore Sibling's ability to change rclk as QM just did to itself
+                        ex = (cindex % 4) >> 1;
+
+                        if (G_sgpe_stop_record.group.expg[qloop] & (ex + 1))
+                        {
+                            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR, qloop, (ex ^ 1)),
+                                        BIT64(CME_FLAGS_RCLK_OPERABLE));
+                        }
                     }
 
 #else
@@ -600,23 +619,42 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
 
 #if DISABLE_STOP8
 
+                if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] & BIT32(qloop))
+                {
+                    PK_TRACE_DBG("Core Request Entry But in Block Entry Mode so Ignore");
+
+                    if ((type == PIG_TYPE5) &&
+                        (cpayload == (TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
+                    {
+                        G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32(qloop);
+                        G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + 16));
+                    }
+                    else
+                    {
+                        G_sgpe_stop_record.group.core[VECTOR_BLOCKE] |= BIT32(cindex);
+                    }
+                }
+
                 // Quad-Manager completed the resonant clock disable, proceed stop11 entry
                 // block entry protocol is checked in the entry code instead of here below
-                if ((type == PIG_TYPE5) &&
-                    (cpayload == (TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
+                else if ((type == PIG_TYPE5) &&
+                         (cpayload == (TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
                 {
                     PK_TRACE_INF("Core Request Entry Allowed as Resonant Clock Disable is Completed");
                     G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32(qloop);
                     G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + 16));
                 }
 
-#endif
+#else
 
                 if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] & BIT32(qloop))
                 {
                     PK_TRACE_DBG("Core Request Entry But in Block Entry Mode so Ignore");
                     G_sgpe_stop_record.group.core[VECTOR_BLOCKE] |= BIT32(cindex);
                 }
+
+#endif
+
                 else
                 {
                     PK_TRACE_INF("Core Request Entry Confirmed");
@@ -745,7 +783,8 @@ p9_sgpe_pig_thread_lanucher()
 
     // Taking Stop8/11 Actions if any
     if (G_sgpe_stop_record.group.core[VECTOR_PIGX] ||
-        G_sgpe_stop_record.group.core[VECTOR_PIGE])
+        G_sgpe_stop_record.group.core[VECTOR_PIGE] ||
+        (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BITS32(16, 6)))
     {
         // block both type3 and type5, 6
         // so another doesnt interrupt until next round
@@ -760,7 +799,9 @@ p9_sgpe_pig_thread_lanucher()
             pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));
         }
 
-        if (G_sgpe_stop_record.group.core[VECTOR_PIGE])
+        if ((G_sgpe_stop_record.group.core[VECTOR_PIGE]) ||
+            (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BITS32(16, 6) &
+             (~(G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] >> 16))))
         {
             PK_TRACE_INF("Unblock Entry Thread");
             G_sgpe_stop_record.group.core[VECTOR_ENTRY] =

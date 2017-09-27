@@ -890,8 +890,8 @@ void p9_pgpe_process_registration()
     uint32_t opit4prQuad, q, c, oldActiveCores, oldActiveQuads, unicastCoresVector = 0, quadsRegisterProcess;
     uint32_t quadAckExpect = 0;
     uint64_t value;
-    pgpe_db0_start_ps_bcast_t db0;
-    db0.value = 0;
+    pgpe_db0_start_ps_bcast_t db0_glb_bcast;
+    pgpe_db0_clip_bcast_t     db0_clip_bcast;
 
     //Save it for global bcast sync in case GlobalPSTarget is higher in
     //after doing auctions with just registered quads
@@ -968,18 +968,17 @@ void p9_pgpe_process_registration()
             G_pgpe_pstate_record.globalPSNext = G_pgpe_pstate_record.globalPSTarget;
 
             //Do globalbcast to sync up globalPS
-            pgpe_db0_glb_bcast_t db0;
-            db0.value = 0;
-            db0.fields.msg_id = MSGID_DB0_GLOBAL_ACTUAL_BROADCAST;
-            db0.fields.global_actual = G_pgpe_pstate_record.globalPSNext;
-            db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSNext[0];
-            db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSNext[1];
-            db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSNext[2];
-            db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSNext[3];
-            db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSNext[4];
-            db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSNext[5];
+            db0_glb_bcast.value = 0;
+            db0_glb_bcast.fields.msg_id = MSGID_DB0_GLOBAL_ACTUAL_BROADCAST;
+            db0_glb_bcast.fields.global_actual = G_pgpe_pstate_record.globalPSNext;
+            db0_glb_bcast.fields.quad0_ps = G_pgpe_pstate_record.quadPSNext[0];
+            db0_glb_bcast.fields.quad1_ps = G_pgpe_pstate_record.quadPSNext[1];
+            db0_glb_bcast.fields.quad2_ps = G_pgpe_pstate_record.quadPSNext[2];
+            db0_glb_bcast.fields.quad3_ps = G_pgpe_pstate_record.quadPSNext[3];
+            db0_glb_bcast.fields.quad4_ps = G_pgpe_pstate_record.quadPSNext[4];
+            db0_glb_bcast.fields.quad5_ps = G_pgpe_pstate_record.quadPSNext[5];
 
-            p9_pgpe_send_db0(db0.value,
+            p9_pgpe_send_db0(db0_glb_bcast.value,
                              oldActiveCores,
                              PGPE_DB0_MULTICAST,
                              PGPE_DB0_ACK_WAIT_CME,
@@ -1003,10 +1002,6 @@ void p9_pgpe_process_registration()
                     //PMSR0/1
                     value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
                             SHIFT64(31));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(2));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 0), value);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 0), value);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 0), BIT64(2));
                 }
 
                 if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
@@ -1020,10 +1015,6 @@ void p9_pgpe_process_registration()
                     //PMSR0/1
                     value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
                             SHIFT64(31));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(2));
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 1), value);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 1), value);
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 1), BIT64(2));
                 }
 
                 //Give Quad Manager CME control of DPLL through inter-ppm
@@ -1042,16 +1033,40 @@ void p9_pgpe_process_registration()
             }
         }
 
+        //Send clip updates to all quads that registered
+        db0_clip_bcast.value = 0;
+        db0_clip_bcast.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
+        db0_clip_bcast.fields.clip_type = DB0_CLIP_BCAST_TYPE_PMIN;
+        db0_clip_bcast.fields.quad0_clip = G_pgpe_pstate_record.psClipMax[0];
+        db0_clip_bcast.fields.quad1_clip = G_pgpe_pstate_record.psClipMax[1];
+        db0_clip_bcast.fields.quad2_clip = G_pgpe_pstate_record.psClipMax[2];
+        db0_clip_bcast.fields.quad3_clip = G_pgpe_pstate_record.psClipMax[3];
+        db0_clip_bcast.fields.quad4_clip = G_pgpe_pstate_record.psClipMax[4];
+        db0_clip_bcast.fields.quad5_clip = G_pgpe_pstate_record.psClipMax[5];
+        p9_pgpe_send_db0(db0_clip_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_WAIT_CME, 0);
+
+        db0_clip_bcast.value = 0;
+        db0_clip_bcast.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
+        db0_clip_bcast.fields.clip_type = DB0_CLIP_BCAST_TYPE_PMAX;
+        db0_clip_bcast.fields.quad0_clip = G_pgpe_pstate_record.psClipMin[0];
+        db0_clip_bcast.fields.quad1_clip = G_pgpe_pstate_record.psClipMin[1];
+        db0_clip_bcast.fields.quad2_clip = G_pgpe_pstate_record.psClipMin[2];
+        db0_clip_bcast.fields.quad3_clip = G_pgpe_pstate_record.psClipMin[3];
+        db0_clip_bcast.fields.quad4_clip = G_pgpe_pstate_record.psClipMin[4];
+        db0_clip_bcast.fields.quad5_clip = G_pgpe_pstate_record.psClipMin[5];
+        p9_pgpe_send_db0(db0_clip_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_WAIT_CME, 0);
+
         //Send Pstate Start DB0 to all quads that registered
-        db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
-        db0.fields.global_actual = G_pgpe_pstate_record.globalPSTarget;
-        db0.fields.quad0_ps = G_pgpe_pstate_record.quadPSTarget[0];
-        db0.fields.quad1_ps = G_pgpe_pstate_record.quadPSTarget[1];
-        db0.fields.quad2_ps = G_pgpe_pstate_record.quadPSTarget[2];
-        db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSTarget[3];
-        db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
-        db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
-        p9_pgpe_send_db0(db0.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_SKIP, 0);
+        db0_glb_bcast.value = 0;
+        db0_glb_bcast.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
+        db0_glb_bcast.fields.global_actual = G_pgpe_pstate_record.globalPSTarget;
+        db0_glb_bcast.fields.quad0_ps = G_pgpe_pstate_record.quadPSTarget[0];
+        db0_glb_bcast.fields.quad1_ps = G_pgpe_pstate_record.quadPSTarget[1];
+        db0_glb_bcast.fields.quad2_ps = G_pgpe_pstate_record.quadPSTarget[2];
+        db0_glb_bcast.fields.quad3_ps = G_pgpe_pstate_record.quadPSTarget[3];
+        db0_glb_bcast.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
+        db0_glb_bcast.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
+        p9_pgpe_send_db0(db0_glb_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_SKIP, 0);
 
         //Now collect ACKS for Pstate Start DB0
         while(quadAckExpect != 0)

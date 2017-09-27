@@ -52,7 +52,7 @@ enum SGPE_SX_MARKS
     SX_L2_STARTCLOCKS_ALIGN     =   0x130,
     SX_L2_STARTCLOCKS_REGION        =   0x138,
     SX_SCOM_INITS       =   0x140,
-    SX_CME_BOOT     =   0x148,
+    SX_CME_BOOT             =   0x148,
     SX_RUNTIME_INITS        =   0x150,
     SX_ENABLE_ANALOG        =   0x168,
     SX_LESSTHAN8_WAIT       =   0x1e0
@@ -79,9 +79,9 @@ const std::vector<SGPE_SX_MARKS> MARKS =
     SX_L2_STARTCLOCKS_ALIGN,
     SX_L2_STARTCLOCKS_REGION,
     SX_SCOM_INITS,
-    SX_CME_BOOT,
     SX_RUNTIME_INITS,
     SX_ENABLE_ANALOG,
+    SX_CME_BOOT,
     SX_LESSTHAN8_WAIT
 };
 
@@ -102,9 +102,9 @@ const std::map<SGPE_SX_MARKS, std::string> mMARKS = boost::assign::map_list_of
         (SX_L2_STARTCLOCKS_ALIGN, "SX_L2_STARTCLOCKS_ALIGN")
         (SX_L2_STARTCLOCKS_REGION, "SX_L2_STARTCLOCKS_REGION")
         (SX_SCOM_INITS, "SX_SCOM_INITS")
-        (SX_CME_BOOT, "SX_CME_BOOT")
         (SX_RUNTIME_INITS, "SX_RUNTIME_INITS")
         (SX_ENABLE_ANALOG, "SX_ENABLE_ANALOG")
+        (SX_CME_BOOT, "SX_CME_BOOT")
         (SX_LESSTHAN8_WAIT, "SX_LESSTHAN8_WAIT");
 
 }
