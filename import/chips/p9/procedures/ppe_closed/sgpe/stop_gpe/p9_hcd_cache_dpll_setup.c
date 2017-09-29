@@ -25,10 +25,20 @@
 
 #include "p9_sgpe_stop_exit_marks.h"
 
+extern SgpeStopRecord G_sgpe_stop_record;
+
 inline __attribute__((always_inline))
 void
 p9_hcd_cache_dpll_setup(uint32_t quad)
 {
+    uint8_t attr_is_simulation = 0;
+    sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
+
+    if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_IS_SIMULATION_BIT_POS)
+    {
+        attr_is_simulation = 1;
+    }
+
     uint64_t scom_data = 0;
 
     PK_TRACE("Drop analog logic fence via QPPM_PFCS[11]");
@@ -85,18 +95,21 @@ p9_hcd_cache_dpll_setup(uint32_t quad)
     PK_TRACE("DPLL clock is now running");
     MARK_TRAP(SX_DPLL_START_DONE)
 
-    PK_TRACE("Poll for DPLL lock");
-
-    do
+    if (!attr_is_simulation)
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_STAT, quad), scom_data);
-#if EPM_P9_TUNING
-        break; // only skiping DPLL lock check when in Sim
-#endif
-    }
-    while (!(scom_data & BIT64(63)));
+        PK_TRACE("Poll for DPLL lock");
 
-    PK_TRACE("DPLL is locked now");
+        do
+        {
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_DPLL_STAT, quad), scom_data);
+#if EPM_P9_TUNING
+            break; // only skiping DPLL lock check when in Sim
+#endif
+        }
+        while (!(scom_data & BIT64(63)));
+
+        PK_TRACE("DPLL is locked now");
+    }
 
     PK_TRACE("Drop DPLL bypass via NET_CTRL0[5]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_NET_CTRL0_WAND, quad), ~BIT64(5));
