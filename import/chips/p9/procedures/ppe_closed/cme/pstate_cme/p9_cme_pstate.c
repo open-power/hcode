@@ -353,14 +353,16 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
         if(enable)
         {
             PK_TRACE_INF("vdm | enabling vdms");
-            // Clear Disable (Poweron is set earlier in Exit flow)
+            // Clear Disable
+            // (Poweron is set earlier in Stop4 Exit flow
+            // due to delay required between poweron and enable)
             CME_PUTSCOM(PPM_VDMCR_CLR, core_mask, BIT64(1));
         }
         else
         {
             PK_TRACE_INF("vdm | disabling vdms");
-            // Clear Poweron and set Disable in one operation
-            CME_PUTSCOM(PPM_VDMCR, core_mask, BIT64(1));
+            // Set Disable (Poweron is cleared in Stop4 Entry)
+            CME_PUTSCOM(PPM_VDMCR_OR, core_mask, BIT64(1));
         }
     }
 

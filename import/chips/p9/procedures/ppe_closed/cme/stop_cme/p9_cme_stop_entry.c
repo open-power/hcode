@@ -1124,6 +1124,12 @@ p9_cme_stop_entry()
             }
             else
             {
+                if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
+                {
+                    PK_TRACE_INF("Clear Poweron bit in VDMCR");
+                    CME_PUTSCOM(PPM_VDMCR_CLR, core, BIT64(0));
+                }
+
                 PK_TRACE("Drop vdd_pfet_val/sel_override/regulation_finger_en via PFCS[4,5,8]");
                 // vdd_pfet_val/sel_override     = 0 (disbaled)
                 // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
