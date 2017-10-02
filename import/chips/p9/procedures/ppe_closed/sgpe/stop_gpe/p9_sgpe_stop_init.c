@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -594,6 +594,7 @@ p9_sgpe_stop_init()
 
     ipc_init();
     ipc_enable();
+    ipc_set_done_hook(*p9_sgpe_ipc_uih_done_hook);
 
 #endif
 

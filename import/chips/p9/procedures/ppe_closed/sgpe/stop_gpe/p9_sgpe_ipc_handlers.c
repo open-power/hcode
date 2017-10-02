@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -35,11 +35,22 @@ GPE_BUFFER(ipcmsg_s2p_update_active_quads_t G_sgpe_ipcmsg_update_quads);
 
 // pgpe send ack back to sgpe upon ipc will trigger interrupt to engage with uih
 // which will stack up oimr, such action will require vec_restore to pop up the
-// stack again to prevent overflow. therefore registering this callback to do so.
+// stack again to prevent overflow.
+//
+// The same time the acks to multiple ipc msgs can stack up in the ipc buffer
+// and only wants to do vec_restore once with X msgs/acks read by one uih/ipc operation.
+// vec_restore per ipc msg/ack will result uih underflow(thus not doing so in callback).
+//
+// Therefore using this hook function called per ipc operation after ipc process loop.
+// Note now all ipc handlers and callbacks will not do vec_restore. In anoter word,
+// one uih engagement should cause one ipc operation and cause one vec_restore
+// during which X number of handlers/callbacks can be called and processed.
+//
 
-static void
-p9_sgpe_ipc_pgpe_rsp_callback(ipc_msg_t* cmd, void* arg)
+void
+p9_sgpe_ipc_uih_done_hook()
 {
+    PK_TRACE_DBG("IPC: Done Hook, UIH Mask Restored");
     PkMachineContext ctx;
     pk_irq_vec_restore(&ctx);
 }
@@ -49,8 +60,6 @@ p9_sgpe_ipc_pgpe_rsp_callback(ipc_msg_t* cmd, void* arg)
 void
 p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg)
 {
-    PkMachineContext ctx;
-
     PK_TRACE_INF("IPC.PS: Get Control Stop Updates IPC from PGPE");
 
     G_sgpe_stop_record.wof.updates_cmd = cmd;
@@ -66,8 +75,6 @@ p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg)
     {
         p9_sgpe_ack_pgpe_ctrl_stop_updates();
     }
-
-    pk_irq_vec_restore(&ctx);
 }
 
 
@@ -125,7 +132,7 @@ p9_sgpe_ipc_pgpe_update_active_cores(const uint32_t type)
     G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_cores;
     ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
                  IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_CORES,
-                 p9_sgpe_ipc_pgpe_rsp_callback, 0);
+                 0, 0);
 
     rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
 
@@ -205,7 +212,7 @@ p9_sgpe_ipc_pgpe_update_active_quads(const uint32_t type, const uint32_t stage)
     G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
     ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
                  IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
-                 p9_sgpe_ipc_pgpe_rsp_callback, 0);
+                 0, 0);
 
     rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
 
@@ -241,8 +248,6 @@ p9_sgpe_ipc_pgpe_update_active_quads_poll_ack()
 void
 p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
 {
-    PkMachineContext ctx;
-
     PK_TRACE_INF("IPC.PS: Get Suspend Stop IPC from PGPE");
 
     G_sgpe_stop_record.wof.suspend_cmd = cmd;
@@ -259,8 +264,6 @@ p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
     {
         p9_sgpe_stop_suspend_all_cmes();
     }
-
-    pk_irq_vec_restore(&ctx);
 }
 
 
