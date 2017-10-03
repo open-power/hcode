@@ -1361,13 +1361,13 @@ p9_cme_stop_entry()
                     {
                         CME_PUTSCOM(CPPM_CPMMR_OR, core_mask, BIT64(10));
                         pig.fields.req_intr_type = PIG_TYPE3;
-                        G_cme_stop_record.core_blockpc |= core;
+                        G_cme_stop_record.core_blockpc |= core_mask;
                     }
                     else
                     {
                         CME_PUTSCOM(CPPM_CPMMR_CLR, core_mask, BIT64(10));
                         pig.fields.req_intr_type = PIG_TYPE2;
-                        G_cme_stop_record.core_blockpc &= ~core;
+                        G_cme_stop_record.core_blockpc &= ~core_mask;
                     }
 
                     pig.fields.req_intr_payload = G_cme_stop_record.req_level[core_index];
