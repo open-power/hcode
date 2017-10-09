@@ -26,7 +26,7 @@
 #define __STRING_H
 
 #include <stdint.h>
-typedef uint32_t size_t;
+#include <stddef.h>
 
 #ifndef NULL
     #ifdef __cplusplus
