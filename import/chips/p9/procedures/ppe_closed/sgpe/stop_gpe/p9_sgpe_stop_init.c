@@ -496,6 +496,10 @@ p9_sgpe_stop_init()
                 PK_TRACE_DBG("CME%d%d_FLAGS :%x", qloop, xloop, cme_flags);
                 p9_sgpe_stop_cme_scominit(qloop, xloop, cme_flags);
 
+                // Drop PM_EXIT on Hostboot Master core
+                // which can then be allowed to enter stop when CME below is booted
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, qloop, xloop), BITS64(4, 2));
+
                 // set 20, 22, 24 before booting CME
                 // if PGPE is booted, it and CME will take care bit 26
                 // if PGPE is not booted like in HB, then CME doesnt need bit 26
