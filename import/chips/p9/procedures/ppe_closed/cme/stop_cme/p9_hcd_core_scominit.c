@@ -82,7 +82,7 @@ p9_hcd_core_scominit(uint32_t core)
 #if NIMBUS_DD_LEVEL == 10
     scom_data.words.upper |= (CORE_HANG_LIMIT_100_HANG_PULSES << SHIFT32(7));
 #else
-    scom_data.words.upper |= (CORE_HANG_LIMIT_3_HANG_PULSES   << SHIFT32(7));
+    scom_data.words.upper |= (CORE_HANG_LIMIT_10_HANG_PULSES   << SHIFT32(7));
 #endif
     scom_data.words.upper |= (NEST_HANG_LIMIT_100_HANG_PULSES << SHIFT32(15));
     CME_PUTSCOM(C_HANG_CONTROL, core, scom_data.value);
