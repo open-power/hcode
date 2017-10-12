@@ -260,7 +260,7 @@ void p9_cme_pstate_db_thread(void* arg)
         PK_PANIC(CME_PSTATE_RESCLK_ENABLED_AT_BOOT);
     }
 
-#if NIMBUS_DD_LEVEL >= 21 || CUMULUS_DD_LEVEL > 10
+#if (NIMBUS_DD_LEVEL > 20 || CUMULUS_DD_LEVEL > 10) && DISABLE_STOP8 == 0
     ippm_read(QPPM_EXCGCR, &scom_data.value);
     // Ignore clk_sync_enable, clkglm_async_reset, clkglm_sel, and reserved
     scom_data.value &= ~(BITS64(29, 9) | BITS64(42, 22));
@@ -718,7 +718,7 @@ inline void p9_cme_pstate_update_analog()
 
 #ifdef USE_CME_RESCLK_FEATURE
 
-    if((G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+    if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
        && (resnext < rescurr))
     {
         PkMachineContext ctx;
@@ -736,7 +736,7 @@ inline void p9_cme_pstate_update_analog()
 
 #ifdef USE_CME_RESCLK_FEATURE
 
-    if((G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+    if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
        && (resnext >= rescurr))
     {
         PkMachineContext ctx;

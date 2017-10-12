@@ -385,7 +385,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                         continue;
                     }
 
-#if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) && DISABLE_STOP8 == 1
+#if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) || DISABLE_STOP8 == 1
 
                     if(l_dataReg & BIT64(CME_FLAGS_RCLK_OPERABLE))
                     {

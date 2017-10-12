@@ -254,7 +254,7 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 
         case MSGID_DB2_RESONANT_CLOCK_DISABLE:
 
-#if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) && DISABLE_STOP8 == 1
+#if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) || DISABLE_STOP8 == 1
 #ifdef USE_CME_RESCLK_FEATURE
 
             // Quad going into Stop11, need to potentially disable Resclks
@@ -280,7 +280,7 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
 
         case MSGID_DB2_RESONANT_CLOCK_ENABLE:
 
-#if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) && DISABLE_STOP8 == 1
+#if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) || DISABLE_STOP8 == 1
 #ifdef USE_CME_RESCLK_FEATURE
 
             // Quad aborted Stop11, need to regressively enable Resclks
