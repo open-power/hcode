@@ -573,10 +573,12 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     dpllFreq.fields.fmult = dpllFreq.fields.fmax;
     dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
 
+    //Move voltage only if raising it. Otherwise, we lower it later after
+    //sending Pstate Start DB0. This is to make sure VDMs are not affected in
+    //this window
     if (G_pgpe_pstate_record.eVidCurr > G_pgpe_pstate_record.eVidNext)
     {
         p9_pgpe_pstate_dpll_write(0xfc, dpllFreq.value);
-        p9_pgpe_pstate_updt_ext_volt(G_pgpe_pstate_record.eVidNext); //update voltage
     }
     else if(G_pgpe_pstate_record.eVidCurr < G_pgpe_pstate_record.eVidNext)
     {
@@ -695,6 +697,12 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
                      PGPE_DB0_UNICAST,
                      PGPE_DB0_ACK_WAIT_CME,
                      G_pgpe_pstate_record.activeQuads);
+
+    //Lower voltage if boot voltage > syncPstate voltage
+    if (G_pgpe_pstate_record.eVidCurr > G_pgpe_pstate_record.eVidNext)
+    {
+        p9_pgpe_pstate_updt_ext_volt(G_pgpe_pstate_record.eVidNext); //update voltage
+    }
 
     G_pgpe_pstate_record.globalPSCurr = G_pgpe_pstate_record.globalPSTarget;
 
