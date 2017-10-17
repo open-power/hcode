@@ -43,8 +43,10 @@ p9_cme_stop_core_error_handler(uint32_t core, uint32_t core_error, uint32_t pani
 
     // this pulses the FIR trigger using CME Local Debug register
     // to optionally set a recoverable or xstop on error
-    out32(CME_LCL_DBG_OR,  BIT32(16));
-    out32(CME_LCL_DBG_CLR, BIT32(16));
+    // Note: the following to due to OR/CLR interface is lack in hw
+    uint32_t           cme_lcl_debug = in32(CME_LCL_DBG);
+    out32(CME_LCL_DBG, cme_lcl_debug | BIT32(16));
+    out32(CME_LCL_DBG, cme_lcl_debug);
 
     //PK_PANIC(panic_code); // enable if desire halt on error
 }
