@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -74,7 +74,7 @@ SGPE_STOP_EXIT_SCOM_RES_XSTOP_ERROR = 0x1d0a,
 //_UNUSED_1d1c                      = 0x1d1c,
 //_UNUSED_1d1d                      = 0x1d1d,
 //_UNUSED_1d1e                      = 0x1d1e,
-//_UNUSED_1d1f                      = 0x1d1f,
+SGPE_STOP_EXIT_TRAP_INJECT          = 0x1d1f,
 
 SGPE_STOP_ENTRY_GET_CLK_LOCK_FAILED = 0x1e00, // Stop Entry Error
 SGPE_STOP_ENTRY_GET_SLV_LOCK_FAILED = 0x1e01,
@@ -91,7 +91,7 @@ SGPE_STOP_ENTRY_STOP11_RESCLK_ON    = 0x1e06,
 //_UNUSED_1e1c                      = 0x1e1c,
 //_UNUSED_1e1d                      = 0x1e1d,
 //_UNUSED_1e1e                      = 0x1e1e,
-//_UNUSED_1e1f                      = 0x1e1f,
+SGPE_STOP_ENTRY_TRAP_INJECT         = 0x1e1f,
 
 SGPE_STOP_EXIT_VCS_STOPCLK_FAILED   = 0x1f00, // NDD1
 SGPE_STOP_EXIT_VCS_STARTCLK_FAILED  = 0x1f01, // NDD1

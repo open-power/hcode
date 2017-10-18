@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -55,6 +55,12 @@ enum CME_BCEBAR_INDEXES
 {
     CME_BCEBAR_0                    = 0,
     CME_BCEBAR_1                    = 1
+};
+
+enum CME_ERR_INJ_BIT_POS
+{
+    CME_PSTATE_HCODE_ERR_INJ_BIT       =   0x00000002,
+    CME_STOP_HCODE_ERR_INJ_BIT         =   0x00000001,
 };
 
 #define CME_SCOM_ADDR(addr, core, op)   (addr | (core << 22) | (op << 20))

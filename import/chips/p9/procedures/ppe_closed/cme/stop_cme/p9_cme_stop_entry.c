@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1141,6 +1141,14 @@ p9_cme_stop_entry()
 
                 PK_TRACE("Poll for vdd_pfets_disabled_sense via PFSNS[1]");
 
+                CME_GETSCOM_OR( CPPM_CSAR, core, scom_data.value );
+
+                if( CME_STOP_HCODE_ERR_INJ_BIT & scom_data.words.upper )
+                {
+                    PK_TRACE_ERR("CME STOP ENTRY ERROR INJECT TRAP");
+                    PK_PANIC(CME_STOP_ENTRY_TRAP_INJECT);
+                }
+
                 do
                 {
                     CME_GETSCOM_AND(PPM_PFSNS, core, scom_data.value);
@@ -1316,6 +1324,8 @@ p9_cme_stop_entry()
                 //===================================================================
                 MARK_TAG(SE_PURGE_L2_DONE, core_aborted ? core_aborted : CME_MASK_BC)
                 //===================================================================
+
+
 
                 // 1) if core = 3 aborted = 1, core = 2(sgpe handoff) aborted (cme wakeup)
                 // 2) if core = 1 aborted = 1, core = 0(break)        aborted (cme wakeup)

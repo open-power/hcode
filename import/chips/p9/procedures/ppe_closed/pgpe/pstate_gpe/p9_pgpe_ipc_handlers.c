@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -150,6 +150,14 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 {
     PK_TRACE_INF("IPC: Set PMCR");
+    uint32_t flg2_data = in32(OCB_OCCFLG2);
+
+    if( flg2_data & PGPE_HCODE_ERR_INJ_BIT )
+    {
+        PK_TRACE_ERR("SET PMCR IPC ERROR INJECT TRAP");
+        PK_PANIC(PGPE_SET_PMCR_TRAP_INJECT);
+    }
+
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_set_pmcr_t* args = (ipcmsg_set_pmcr_t*)async_cmd->cmd_data;
 

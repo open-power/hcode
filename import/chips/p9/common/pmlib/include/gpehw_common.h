@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -75,6 +75,12 @@ enum GPE_SCOM_ADDRESS_PARAMETERS
     CME_ADDR_BASE               = 0x10012000,
     CME0_ADDR_OFFSET            = 0x00000000,
     CME1_ADDR_OFFSET            = 0x00000400
+};
+
+enum GPE_ERR_INJ_BIT_POS
+{
+    SGPE_HCODE_ERR_INJ_BIT      =   0x00000002,
+    PGPE_HCODE_ERR_INJ_BIT      =   0x00000001,
 };
 
 

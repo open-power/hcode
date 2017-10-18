@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -82,7 +82,7 @@ PGPE_SAFE_MODE_REQ_WHILE_STOPPED    = 0x1e01,
 PGPE_NULL_VFRT_POINTER              = 0x1e02,
 PGPE_INVALID_PMCR_OWNER             = 0x1e03,
 PGPE_VOLTAGE_OUT_OF_BOUNDS          = 0x1e04,
-//_UNUSED_1e05                      = 0x1e05,
+PGPE_SET_PMCR_TRAP_INJECT           = 0x1e05,
 //_UNUSED_1e06                      = 0x1e06,
 //_UNUSED_1e07                      = 0x1e07,
 //_UNUSED_1e08                      = 0x1e08,

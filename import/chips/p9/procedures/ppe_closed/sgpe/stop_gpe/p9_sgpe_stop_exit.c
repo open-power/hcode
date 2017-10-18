@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -332,6 +332,7 @@ p9_sgpe_stop_exit()
     uint32_t      ex_index        = 0;
     uint32_t      ec_index        = 0;
     data64_t      scom_data       = {0};
+    uint32_t      flg2_data       = 0;
 #if !STOP_PRIME
     ocb_ccsr_t    ccsr            = {0};
     uint32_t      cme_flags       = 0;
@@ -362,6 +363,14 @@ p9_sgpe_stop_exit()
     G_sgpe_stop_record.group.ex01[3]           = 0;
     G_sgpe_stop_record.group.ex01[4]           = 0;
     G_sgpe_stop_record.group.ex01[5]           = 0;
+
+    flg2_data = in32(OCB_OCCFLG2);
+
+    if( flg2_data & SGPE_HCODE_ERR_INJ_BIT )
+    {
+        PK_TRACE_ERR("SGPE STOP EXIT ERROR INJECT TRAP");
+        PK_PANIC(SGPE_STOP_EXIT_TRAP_INJECT);
+    }
 
     for(cexit = G_sgpe_stop_record.group.core[VECTOR_EXIT],
         qspwu = G_sgpe_stop_record.group.qswu[VECTOR_EXIT],

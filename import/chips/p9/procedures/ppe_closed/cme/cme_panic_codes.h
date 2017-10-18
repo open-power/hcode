@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -69,7 +69,7 @@ CME_STOP_EXIT_SCOM_RES_XSTOP_ERROR  = 0x1d05,
 //_UNUSED_1d07                      = 0x1d07,
 CME_STOP_ENTRY_STOPCLK_FAILED       = 0x1d08,
 CME_STOP_ENTRY_XSTOP_ERROR          = 0x1d09, // NDD1
-//_UNUSED_1d0a                      = 0x1d0a,
+CME_STOP_ENTRY_TRAP_INJECT          = 0x1d0a,
 //_UNUSED_1d0d                      = 0x1d0d,
 //_UNUSED_1d1c                      = 0x1d1c,
 //_UNUSED_1d1d                      = 0x1d1d,
@@ -82,7 +82,7 @@ CME_PSTATE_INVALID_DB0_MSGID        = 0x1e02,
 CME_PSTATE_UNEXPECTED_INTERCME_MSG  = 0x1e03,
 CME_PSTATE_UNEXPECTED_DB0_MSGID     = 0x1e04,
 CME_PSTATE_DPLL_OUT_OF_BOUNDS_REQ   = 0x1e05,
-//_UNUSED_1e06                      = 0x1e06,
+CME_PSTATE_TRAP_INJECT              = 0x1e06,
 //_UNUSED_1e07                      = 0x1e07,
 //_UNUSED_1e08                      = 0x1e08,
 //_UNUSED_1e09                      = 0x1e09,

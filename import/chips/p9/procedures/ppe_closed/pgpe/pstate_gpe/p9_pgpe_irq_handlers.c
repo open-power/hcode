@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -30,6 +30,7 @@
 #include "ppe42_cache.h"
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_optrace.h"
+
 extern TraceData_t G_pgpe_optrace_data;
 //
 //External Global Data
@@ -132,6 +133,13 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
     ocb_opit1cn_t opit1cn;
     uint32_t c;
     uint32_t opit1pra;
+    uint32_t flg2_data = in32(OCB_OCCFLG2);
+
+    if( flg2_data & PGPE_HCODE_ERR_INJ_BIT )
+    {
+        PK_TRACE_ERR("PCB TYPE1 ERROR INJECT TRAP");
+        PK_PANIC(PGPE_SET_PMCR_TRAP_INJECT);
+    }
 
     if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE &&
         (G_pgpe_pstate_record.pmcrOwner == PMCR_OWNER_HOST ||
