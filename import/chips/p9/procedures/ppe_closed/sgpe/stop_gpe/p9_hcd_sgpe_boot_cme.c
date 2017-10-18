@@ -385,6 +385,10 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                         continue;
                     }
 
+                    // Clear CME LFIR[5] (ppe_halted) upon respective CME boot
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LFIR_AND,
+                                                  (l_cmeIndex >> 1), (l_cmeIndex % 2)), ~BIT64(5));
+
 #if (NIMBUS_DD_LEVEL < 21 || CUMULUS_DD_LEVEL == 10) || DISABLE_STOP8 == 1
 
                     if(l_dataReg & BIT64(CME_FLAGS_RCLK_OPERABLE))

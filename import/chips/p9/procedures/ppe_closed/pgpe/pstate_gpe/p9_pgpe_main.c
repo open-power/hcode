@@ -190,6 +190,9 @@ main(int argc, char** argv)
         asm volatile ("trap");
     }
 
+    // Clear OCC LFIR[24] (gpe2_halted) bit upon PGPE boot
+    GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(24));
+
     // Initialize the thread control block for G_p9_pgpe_thread_process_requests
     pk_thread_create(&G_p9_pgpe_thread_process_requests,
                      (PkThreadRoutine)p9_pgpe_thread_process_requests,
