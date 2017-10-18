@@ -250,6 +250,9 @@ p9_sgpe_stop_init()
     // Basic Software Settings
     //--------------------------------------------------------------------------
 
+    // Clear OCC LFIR[25] (gpe3_halted) bit upon SGPE boot
+    GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(25));
+
     // Clear SPRG0
     ppe42_app_ctx_set(0);
 
