@@ -53,6 +53,7 @@ p9_sgpe_stop_entry()
     uint64_t     local_xstop       = 0;
     data64_t     scom_data         = {0};
     data64_t     temp_data         = {0};
+    uint32_t     flg2_data         = 0;
 #if DISABLE_STOP8
     ppm_pig_t    pig               = {0};
 #endif
@@ -71,6 +72,14 @@ p9_sgpe_stop_entry()
     //================================
     MARK_TAG(BEGINSCOPE_STOP_ENTRY, 0)
     //================================
+
+    flg2_data = in32(OCB_OCCFLG2);
+
+    if( flg2_data & SGPE_HCODE_ERR_INJ_BIT )
+    {
+        PK_TRACE_ERR("SGPE STOP ENTRY ERROR INJECT TRAP");
+        PK_PANIC(SGPE_STOP_ENTRY_TRAP_INJECT);
+    }
 
     G_sgpe_stop_record.group.core[VECTOR_ENTRY] = 0;
     G_sgpe_stop_record.group.quad[VECTOR_ENTRY] = 0;
