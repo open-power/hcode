@@ -372,6 +372,7 @@ inline void p9_cme_pstate_process_db0()
 {
     ppm_pig_t ppmPigData;
     G_cme_flags = in32(CME_LCL_FLAGS);
+    uint64_t scom_data   =   0;
 
     PK_TRACE_INF("DB_TH: Process DB0 Enter\n");
 
@@ -386,6 +387,14 @@ inline void p9_cme_pstate_process_db0()
     {
         out32_sh(CME_LCL_EISR_CLR, BIT32(5));
         CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, G_dbData.value);
+    }
+
+    CME_GETSCOM_OR( CPPM_CSAR, CME_MASK_BC, scom_data );
+
+    if( ( scom_data >> 32 ) & CME_PSTATE_HCODE_ERR_INJ_BIT )
+    {
+        PK_TRACE_ERR("CME PSTATE ERROR INJECT TRAP");
+        PK_PANIC(CME_PSTATE_TRAP_INJECT);
     }
 
     //Ignore if Doorbell0 if DB0_PROCESSING_ENABLE=0. This bit is zero
