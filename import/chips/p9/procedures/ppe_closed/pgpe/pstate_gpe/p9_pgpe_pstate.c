@@ -926,13 +926,6 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
 
     p9_pgpe_pstate_updt_actual_quad(0xFC);
 
-    //ACK back to SGPE
-    /*    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
-        ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_QUAD_ACTV);*/
     PK_TRACE_INF("QE:(Notify) End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
@@ -953,13 +946,6 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
         GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
     }
 
-    //ACK back to SGPE
-    /*ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
-    ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-    args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-    p9_pgpe_optrace(ACK_QUAD_ACTV);*/
     PK_TRACE_INF("QE:(Done) End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
@@ -1010,13 +996,6 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
     //registration msg from the quad is received.
     G_pgpe_pstate_record.pendQuadsRegisterReceive |= quadsRequested;
 
-    //ACK back to SGPE
-    /* ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
-     ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-     args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-     ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-     p9_pgpe_optrace(ACK_QUAD_ACTV);*/
     PK_TRACE_INF("QX:End,qAct=%x\n", G_pgpe_pstate_record.activeQuads);
 }
 
