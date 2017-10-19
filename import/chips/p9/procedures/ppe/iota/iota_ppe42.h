@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -65,6 +65,11 @@
 
 #ifdef __ASSEMBLER__
 // *INDENT-OFF*
+
+# halt ppe with panic code macro
+.macro _pk_panic, code
+    tw  31,(\code)/256, (\code)%256
+.endm
 
 # This routine is called on any exception or interrupt and saves some state
 # prior to setting up the call to and calling __iota_save_interrupt_state_and_schedule

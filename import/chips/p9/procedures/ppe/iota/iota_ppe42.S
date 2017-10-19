@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,6 +25,7 @@
 #include "iota.h"
 #include "iota_ppe42.h"
 #include "std_irq_config.h"
+#include "iota_panic_codes.h"
 
 .global g_iota_execution_stack
 
@@ -134,7 +135,7 @@ __iota_save_interrupt_state_and_schedule:
 
 .global __iota_halt
 __iota_halt:
-    trap
+    _pk_panic IOTA_SOFTWARE_HALT
 
 ## pull in the macro that calculates all the external interrupt config
 ## defined in pk/std/std_irq_config.h

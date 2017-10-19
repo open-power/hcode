@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -23,6 +23,7 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "iota_ppe42.h"
+#include "iota_panic_codes.h"
 
 .section    .vectors, "ax", @progbits
 
@@ -31,7 +32,7 @@ __vectors:
 
 .global __machine_check
 __machine_check:
-    trap
+    _pk_panic IOTA_MACHINE_CHECK_PANIC
 
 .global __set_msr
 .org    __vectors + 0x0028
@@ -47,12 +48,12 @@ __system_reset:
 .global __data_storage
 .org    __vectors + 0x0060
 __data_storage:
-    trap
+    _pk_panic IOTA_DATA_STORAGE_PANIC
 
 .global __instruction_storage
 .org    __vectors + 0x0080
 __instruction_storage:
-    trap
+    _pk_panic IOTA_INSTRUCTION_STORAGE_PANIC
 
 .global ppe42_64bit_timebase
 .global __external_interrupt
@@ -63,12 +64,12 @@ __external_interrupt:
 .global __alignment_exception
 .org    __vectors + 0x00c0
 __alignment_exception:
-    trap
+    _pk_panic IOTA_DATA_ALIGNMENT_PANIC
 
 .global __program_exception
 .org    __vectors + 0x00e0
 __program_exception:
-    trap
+    _pk_panic IOTA_ILLEGAL_INSTRUCTION
 
 .global __dec_interrupt
 .org    __vectors + 0x0100

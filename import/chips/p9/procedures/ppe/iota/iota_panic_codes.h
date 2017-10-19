@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -44,12 +44,12 @@ typedef enum
     IOTA_NULLPTR_TASK = 0x0001,
     IOTA_MACHINE_STATE_STACK_OVERFLOW = 0x0002,
     IOTA_MACHINE_STATE_STACK_UNDERFLOW = 0x0003,
-    IOTA_UNUSED_0004 = 0x0004,
-    IOTA_UNUSED_0005 = 0x0005,
-    IOTA_UNUSED_0006 = 0x0006,
-    IOTA_UNUSED_0007 = 0x0007,
-    IOTA_UNUSED_0008 = 0x0008,
-    IOTA_UNUSED_0009 = 0x0009,
+    IOTA_MACHINE_CHECK_PANIC = 0x0004,
+    IOTA_DATA_STORAGE_PANIC  = 0x0005,
+    IOTA_INSTRUCTION_STORAGE_PANIC = 0x0006,
+    IOTA_DATA_ALIGNMENT_PANIC = 0x0007,
+    IOTA_ILLEGAL_INSTRUCTION = 0x0008,
+    IOTA_SOFTWARE_HALT = 0x0009,
     IOTA_UNUSED_000a = 0x000a,
     IOTA_UNUSED_000d = 0x000d,
     IOTA_UNUSED_001c = 0x001c,
@@ -255,6 +255,16 @@ typedef enum
     IOTA_UNUSED_0d1e = 0x0d1e,
     IOTA_UNUSED_0d1f = 0x0d1f
 } iotaPanicCode_t;
+
+#else
+
+/// Assembler specific panic codes
+#define IOTA_MACHINE_CHECK_PANIC           0x0004
+#define IOTA_DATA_STORAGE_PANIC            0x0005
+#define IOTA_INSTRUCTION_STORAGE_PANIC     0x0006
+#define IOTA_DATA_ALIGNMENT_PANIC          0x0007
+#define IOTA_ILLEGAL_INSTRUCTION           0x0008
+#define IOTA_SOFTWARE_HALT                 0x0009
 
 #endif  // __ASSEMBLER__
 #endif
