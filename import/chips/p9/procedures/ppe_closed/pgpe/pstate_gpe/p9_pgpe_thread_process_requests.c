@@ -188,67 +188,56 @@ void p9_pgpe_process_sgpe_updt_active_cores()
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
     ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
 
-    //If in PM_SUSPENDED state, then ack back with error
-    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED)
+    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing = 0;
+
+    if(G_pgpe_pstate_record.wofEnabled == 0)
     {
-        PK_TRACE_DBG("PTH: PM Suspended");
-        args->fields.return_code = IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
-        G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_IN_PM_SUSP;
+        PK_TRACE_DBG("PTH: C Updt(WOF_Disabled)");
+        args->fields.return_code = PGPE_WOF_RC_NOT_ENABLED;
+        G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_IN_WOF_DISABLED;
         p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
     {
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing = 0;
+        //Update Shared Memory Region
+        G_pgpe_pstate_record.pQuadState0->fields.active_cores = (args->fields.active_cores >> 8);
+        G_pgpe_pstate_record.pQuadState1->fields.active_cores = (args->fields.active_cores & 0xFF) << 8;
 
-        if(G_pgpe_pstate_record.wofEnabled == 0)
+        PK_TRACE_DBG("PTH: Core Updt type=%u activeCores=0x%x)", args->fields.update_type, args->fields.active_cores);
+
+        //Store separately as shared SRAM location is split
+        G_pgpe_pstate_record.activeCores = args->fields.active_cores;
+        G_pgpe_pstate_record.numActiveCores = 0;
+
+        for (c = 0; c < MAX_CORES; c++)
         {
-            PK_TRACE_DBG("PTH: C Updt(WOF_Disabled)");
-            args->fields.return_code = PGPE_WOF_RC_NOT_ENABLED;
-            G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_IN_WOF_DISABLED;
-            p9_pgpe_optrace(UNEXPECTED_ERROR);
+            if (c & G_pgpe_pstate_record.activeCores)
+            {
+                G_pgpe_pstate_record.numActiveCores += 1;
+            }
+        }
+
+        //OP_TRACE(Do before auction and wof calculation)
+        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24)  |
+                                      ((args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY) ? 0x2000000 : 0x1000000) |
+                                      (G_pgpe_pstate_record.activeCores >> 8);
+        p9_pgpe_optrace(PRC_CORES_ACTV);
+
+        //Do auction and wof calculation
+        p9_pgpe_pstate_do_auction();
+        p9_pgpe_pstate_calc_wof();
+
+        //If ENTRY type then send ACK to SGPE immediately
+        //Otherwise, wait to ACK until WOF Clip has been applied(from actuate_pstate thread)
+        if (args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY)
+        {
+            PK_TRACE_DBG("PTH: Core Entry ACK back to SGPE");
+            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+            PK_TRACE_DBG("PTH: Core Updt ENTRY ACKed");
         }
         else
         {
-            //Update Shared Memory Region
-            G_pgpe_pstate_record.pQuadState0->fields.active_cores = (args->fields.active_cores >> 8);
-            G_pgpe_pstate_record.pQuadState1->fields.active_cores = (args->fields.active_cores & 0xFF) << 8;
-
-            PK_TRACE_DBG("PTH: Core Updt type=%u activeCores=0x%x)", args->fields.update_type, args->fields.active_cores);
-
-            //Store separately as shared SRAM location is split
-            G_pgpe_pstate_record.activeCores = args->fields.active_cores;
-            G_pgpe_pstate_record.numActiveCores = 0;
-
-            for (c = 0; c < MAX_CORES; c++)
-            {
-                if (c & G_pgpe_pstate_record.activeCores)
-                {
-                    G_pgpe_pstate_record.numActiveCores += 1;
-                }
-            }
-
-            //OP_TRACE(Do before auction and wof calculation)
-            G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24)  |
-                                          ((args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY) ? 0x2000000 : 0x1000000) |
-                                          (G_pgpe_pstate_record.activeCores >> 8);
-            p9_pgpe_optrace(PRC_CORES_ACTV);
-
-            //Do auction and wof calculation
-            p9_pgpe_pstate_do_auction();
-            p9_pgpe_pstate_calc_wof();
-
-            //If ENTRY type then send ACK to SGPE immediately
-            //Otherwise, wait to ACK until WOF Clip has been applied(from actuate_pstate thread)
-            if (args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY)
-            {
-                PK_TRACE_DBG("PTH: Core Entry ACK back to SGPE");
-                args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-                PK_TRACE_DBG("PTH: Core Updt ENTRY ACKed");
-            }
-            else
-            {
-                ack_now = 0;
-            }
+            ack_now = 0;
         }
     }
 
@@ -273,67 +262,54 @@ void p9_pgpe_process_sgpe_updt_active_quads()
     ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing = 0;
 
-    //If in PM_SUSPENDED state, then ack back with error
-    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
-        G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
-        G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
+    uint32_t SS;
+
+    if(args->fields.update_type == UPDATE_ACTIVE_QUADS_TYPE_ENTRY) //entry
     {
-        args->fields.return_code = IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND;
-        G_pgpe_optrace_data.word[0] = PGPE_OP_QUADS_ACTIVE_IN_PM_SUSP;
-        p9_pgpe_optrace(UNEXPECTED_ERROR);
+        SS = (args->fields.entry_type == UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY) ? 0x2 : 0x3;
     }
-    else
+    else //exit
     {
-        uint32_t SS;
+        SS = 0x1;
+    }
 
-        if(args->fields.update_type == UPDATE_ACTIVE_QUADS_TYPE_ENTRY) //entry
+    //ENTRY
+    if (args->fields.update_type == UPDATE_ACTIVE_QUADS_TYPE_ENTRY)
+    {
+        if (args->fields.entry_type == UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY)
         {
-            SS = (args->fields.entry_type == UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY) ? 0x2 : 0x3;
+            p9_pgpe_pstate_process_quad_entry_notify(args->fields.requested_quads << 2);
         }
-        else //exit
-        {
-            SS = 0x1;
-        }
-
-
-        //ENTRY
-        if (args->fields.update_type == UPDATE_ACTIVE_QUADS_TYPE_ENTRY)
-        {
-            if (args->fields.entry_type == UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY)
-            {
-                p9_pgpe_pstate_process_quad_entry_notify(args->fields.requested_quads << 2);
-            }
-            else
-            {
-                p9_pgpe_pstate_process_quad_entry_done(args->fields.requested_quads << 2);
-            }
-
-            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-        }
-        //EXIT
         else
         {
-            //Update Shared Memory Region
-            G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
-
-            //WOF Enabled
-            if(G_pgpe_pstate_record.wofEnabled == 1)
-            {
-                GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
-                ack_now = 0;
-            }
-            else
-            {
-                p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
-                args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-            }
+            p9_pgpe_pstate_process_quad_entry_done(args->fields.requested_quads << 2);
         }
 
-        G_pgpe_optrace_data.word[0] = (args->fields.requested_quads << 26) |
-                                      (SS << 24) |
-                                      (G_pgpe_pstate_record.activeCores >> 8);
-        p9_pgpe_optrace(PRC_QUAD_ACTV);
+        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     }
+    //EXIT
+    else
+    {
+        //Update Shared Memory Region
+        G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
+
+        //WOF Enabled
+        if(G_pgpe_pstate_record.wofEnabled == 1)
+        {
+            GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
+            ack_now = 0;
+        }
+        else
+        {
+            p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
+            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+        }
+    }
+
+    G_pgpe_optrace_data.word[0] = (args->fields.requested_quads << 26) |
+                                  (SS << 24) |
+                                  (G_pgpe_pstate_record.activeCores >> 8);
+    p9_pgpe_optrace(PRC_QUAD_ACTV);
 
     if (ack_now == 1)
     {
