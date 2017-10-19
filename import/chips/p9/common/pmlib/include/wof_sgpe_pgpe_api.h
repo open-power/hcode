@@ -80,8 +80,7 @@ enum IPC_SGPE_PGPE_RETURN_CODES
 {
     IPC_SGPE_PGPE_RC_NULL                  = 0x00,
     IPC_SGPE_PGPE_RC_SUCCESS               = 0x01,
-    IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK = 0x10,
-    IPC_SGPE_PGPE_RC_PM_COMPLEX_SUSPEND    = 0x11
+    IPC_SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK = 0x10
 };
 
 // Sgpe to Pgpe IPC message format
