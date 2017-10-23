@@ -84,9 +84,6 @@ $(eval $(call XIP_TOOL,append,.overlays,$$($(IMAGE)_DEPS_OVERLAYS), $$($(IMAGE)_
 
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.overlays))
 
-$(eval $(foreach ec, $(p9n_EC),\
-	$(eval $(call VERIFY_SBE_RING_SECTION, 0x$(ec), $(MAX_SBE_RING_SECTION_SIZE),$(ec)))))
-
 $(eval $(call BUILD_XIPIMAGE))
 endef
 
