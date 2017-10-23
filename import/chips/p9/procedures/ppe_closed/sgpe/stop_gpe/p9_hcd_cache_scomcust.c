@@ -42,7 +42,7 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
     // doing this instead of multiply since there is no multiply instruction with ppe.
     for(i = 0; i < quad; i++)
     {
-        qoffset += 0x400;
+        qoffset += 0x300;
     }
 
     // To access memory, need to set MSB of homer address
