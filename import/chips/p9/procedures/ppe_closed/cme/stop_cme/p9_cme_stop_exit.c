@@ -679,9 +679,6 @@ p9_cme_stop_exit()
                 return;
             }
 
-            PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
-            CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
-
             p9_cme_stop_exit_end(core, spwu_stop);
 
             core         = deeper_core;
@@ -896,21 +893,6 @@ p9_cme_stop_exit()
         if (!core)
         {
             return;
-        }
-
-        if (target_level < STOP_LEVEL_4)
-        {
-            if (deeper_core && deeper_level == STOP_LEVEL_4)
-            {
-                PK_TRACE_DBG("Core[%d] Dropping Chiplet Fence via NC0INDIR[18] with deeper_core[%d]",
-                             (CME_MASK_BC - deeper_core), deeper_core);
-                CME_PUTSCOM(CPPM_NC0INDIR_CLR, (CME_MASK_BC - deeper_core), BIT64(18));
-            }
-            else
-            {
-                PK_TRACE_DBG("Core[%d] Dropping Chiplet Fence via NC0INDIR[18]", core);
-                CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
-            }
         }
 
         if (deeper_level >= STOP_LEVEL_4)
