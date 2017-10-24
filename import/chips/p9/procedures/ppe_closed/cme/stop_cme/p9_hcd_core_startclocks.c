@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -185,6 +185,8 @@ p9_hcd_core_startclocks(uint32_t core)
 
     PK_TRACE("Drop chiplet fence via NC0INDIR[18]");
     CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(18));
+
+    sync();
 
 #if !EPM_P9_TUNING
 
