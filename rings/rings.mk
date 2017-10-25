@@ -23,10 +23,10 @@
 #
 # IBM_PROLOG_END_TAG
 ../../import/../output/gen/rings/hw/p9n.hw.rings.bin :
-	@mkdir -p $(GENPATH)/rings/p9n/hw/
-	cp $(BASEPATH)/rings/p9n.hw.rings.bin  $(GENPATH)/rings/p9n/hw/p9n.hw.rings.bin
+	@mkdir -p $(GENPATH)/rings/hw/
+	cp $(BASEPATH)/rings/p9n.hw.rings.bin  $(GENPATH)/rings/hw/p9n.hw.rings.bin
 
-../../import/../output/gen/rings/p9n/hw/p9n.hw.overlays.bin :
-	@mkdir -p $(GENPATH)/rings/p9n/hw/
-	cp $(BASEPATH)/rings/p9n.hw.overlays.bin  $(GENPATH)/rings/p9n/hw/p9n.hw.overlays.bin
+../../import/../output/gen/rings/hw/p9n.hw.overlays.bin :
+	@mkdir -p $(GENPATH)/rings/hw/
+	cp $(BASEPATH)/rings/p9n.hw.overlays.bin  $(GENPATH)/rings/hw/p9n.hw.overlays.bin
 
