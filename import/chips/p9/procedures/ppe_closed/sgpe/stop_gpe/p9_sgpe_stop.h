@@ -258,6 +258,13 @@ enum SGPE_STOP_VECTOR_INDEX
 
 };
 
+enum SCOM_RESTORE_CONST
+{
+    SCOM_ENTRY_MARK             =   0xDEADDEAD,
+    SCOM_REST_SIZE_PER_EQ       =   0x300,    //default size
+    SCOM_REST_SKIP_CODE         =   0x60000000,
+};
+
 typedef struct
 {
     // requested stop state calculated from core stop levels
@@ -326,12 +333,29 @@ typedef struct
     PkSemaphore  sem[2];
 } SgpeStopRecord __attribute__ ((aligned (8)));
 
-typedef struct
+/// SCOM restore entry header description
+typedef struct __attribute__((__packed__)) ScomRestoreHeader
 {
-    uint32_t scomEntryHeader;
+    uint32_t entryType: 1;      // 0 - 0xDEADDEAD, 1 - under version control
+    uint32_t entryVersion: 3;   // version number
+    uint32_t reserved: 20;      // reserved
+    uint32_t entryLimit: 8;     // Max scom entries allowed
+} ScomRestoreHeader_t;
+
+typedef union __attribute__((__packed__)) ScomRestValdityMark
+{
+    ScomRestoreHeader_t scomRestHeader;
+    uint32_t            scomRestHeaderValue;
+}  ScomRestValdityMark_t;
+
+/// SCOM restore entry description
+typedef struct __attribute__((__packed__)) ScomEntry
+{
+    ScomRestValdityMark_t scomEntryHeader;
     uint32_t scomEntryAddress;
     uint64_t scomEntryData;
 } ScomEntry_t;
+
 
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
 // Types for PB EQ asynch work-around
