@@ -49,6 +49,13 @@ p9_hcd_core_scomcust(uint32_t core)
 
             for(i = 0; pCmeScomRes->scomEntryAddress; i++, pCmeScomRes++)
             {
+                if( SCOM_REST_SKIP_CODE == pCmeScomRes->scomEntryAddress )
+                {
+                    //Found a NOP entry in the middle of SCOM restore entries.
+                    //Need to ignore it and continue with rest.
+                    continue;
+                }
+
                 PK_TRACE("scom[%d] addr[%x] data[%08X%08X]",
                          i, pCmeScomRes->scomEntryAddress,
                          (pCmeScomRes->scomEntryData >> 32), (pCmeScomRes->scomEntryData & 0xFFFFFFFF));
