@@ -208,6 +208,12 @@ enum CME_STOP_SRR1
     NO_STATE_LOSS                    = 1
 };
 
+enum CME_SCOM_RESTORE_CONST
+{
+    SCOM_REST_SKIP_CODE =   0x60000000,
+};
+
+
 #if TEST_ONLY_BCE_IRR
 #define FLAG_BCE_IRR_ENABLE BIT32(18)
 
