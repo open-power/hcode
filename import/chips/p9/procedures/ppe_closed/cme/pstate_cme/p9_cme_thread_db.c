@@ -102,7 +102,22 @@ void p9_cme_pstate_db_thread(void* arg)
 
     G_cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     G_lppb = (LocalPstateParmBlock*)(G_cmeHeader->g_cme_pstate_region_offset + CME_SRAM_BASE_ADDR);
-    PK_TRACE_INF("DB_TH: Hdr=0x%x, LPPB=0x%x\n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb);
+    PK_TRACE_INF("DB_TH: Hdr=0x%x, LPPB=0x%x, Freq_Mhz=%d\n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb,
+                 G_lppb->operating_points[NOMINAL].frequency_mhz);
+
+    // Pre-compute the value to be used as the SPURR reference during CME Boot and
+    // save in a variable to be used later during Stop exit.
+    // The value is the 2's complement of ROUND((Core Nominal Frequency in Mhz)/64)
+
+    // grab the core freq in MHz from the pstate parameter block
+    uint32_t core_freq = (G_lppb->operating_points[NOMINAL].frequency_mhz);
+
+    // generate a rounded up divide by 64 to normalize
+    // (to the number of cycles/32 in 16x 32Mhz TOD pulses)
+    core_freq = (core_freq >> 5 & 0x1) ? (1 + (core_freq >> 6)) : (core_freq >> 6);
+
+    // generate 2's complement and shift into bits 0:7 of 32-bit value
+    G_cme_record.spurr_freq_ref_upper = ((~core_freq) + 1) << 24;
 
     // Mask PMCR interrupts, these will be unmasked when starting Pstates
     g_eimr_override |= BITS64(34, 2);
