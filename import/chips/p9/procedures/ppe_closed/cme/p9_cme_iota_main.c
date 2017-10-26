@@ -33,11 +33,11 @@
 
 #ifdef PCQW_ENABLE
 
-CmeRecord G_cme_record = {0, {0, 0, 0, 0, 0xFFFFFFFF, 0}};
+CmeRecord G_cme_record = {0, 0, {0, 0, 0, 0, 0xFFFFFFFF, 0}};
 
 #else
 
-CmeRecord G_cme_record = {0};
+CmeRecord G_cme_record = {0, 0};
 
 #endif
 

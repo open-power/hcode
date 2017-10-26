@@ -911,6 +911,12 @@ p9_cme_stop_exit()
             MARK_TAG(SX_SCOM_INITS, core)
             //===========================
 
+            // disable the SPURR scale override by writing 0x40 into bits 0:7
+            // if the VPD data resulted in a bad reference value, write all 0x0 to stop the SPURR
+            CME_PUTSCOM(SPURR_FREQ_SCALE, core, ((G_cme_record.spurr_freq_ref_upper & BIT32(0)) ? BIT64(1) : 0x0));
+            // setup the SPURR reference to the nominal pre-calculated value
+            CME_PUTSCOM(SPURR_FREQ_REF,   core, (uint64_t)G_cme_record.spurr_freq_ref_upper << 32);
+
             PK_TRACE_INF("SX.4G: Core[%d] Scom Inits", core);
             p9_hcd_core_scominit(core);
 

@@ -104,6 +104,8 @@
 #define SCRATCH1               0x20010A87
 #define THREAD_INFO            0x20010A9B
 #define DIRECT_CONTROLS        0x20010A9C
+#define SPURR_FREQ_SCALE       0x20010AA0
+#define SPURR_FREQ_REF         0x20010AA1
 #define IMA_EVENT_MASK         0x20010AA8
 #define HRMOR                  0x20010AB9
 
