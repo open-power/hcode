@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -52,6 +52,15 @@
 //  override these definition.  Note that the exception area only allocates 32
 //  bytes (8 instructions) to an unhandled exception, so any redefinition
 //  would most likely be a branch to an application-defined handler.
+
+// Empty PPE FFDC Handler plugged here, dependent platform needs to plug it in,
+// if specific registers are required to be saved-off during the interupt
+// execution
+// by Default it will not generate any branch instruction in the pk interrupt
+// vector table
+#ifndef PPE_CAPTURE_INTERRUPT_FFDC
+    #define PPE_CAPTURE_INTERRUPT_FFDC
+#endif
 
 #ifndef PPE42_MACHINE_CHECK_HANDLER
     #define PPE42_MACHINE_CHECK_HANDLER PK_PANIC( PPE42_MACHINE_CHECK_PANIC)
