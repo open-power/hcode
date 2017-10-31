@@ -109,7 +109,7 @@ void p9_cme_pstate_db_thread(void* arg)
 
     G_cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     G_lppb = (LocalPstateParmBlock*)(G_cmeHeader->g_cme_pstate_region_offset + CME_SRAM_BASE_ADDR);
-    PK_TRACE_INF("DB_TH: Hdr=0x%x, LPPB=0x%x, Freq_Mhz=%d\n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb,
+    PK_TRACE_INF("DB_TH: Hdr=0x%x, LPPB=0x%x, Nominal_Freq_Mhz=%d \n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb,
                  G_lppb->operating_points[NOMINAL].frequency_mhz);
 
     G_register_in_progress = 0;
@@ -299,32 +299,36 @@ void p9_cme_pstate_db_thread(void* arg)
     // Resonant Clocking Initialization (QM + Sibling)
     if(G_cmeHeader->g_cme_qm_mode_flags & CME_QM_FLAG_RESCLK_ENABLE)
     {
+        uint32_t curr_idx = (uint32_t)G_lppb->resclk.resclk_index[0];
+
         // Initialize the Resclk indices
-        G_cme_pstate_record.resclkData.core0_resclk_idx =
-            (uint32_t)G_lppb->resclk.resclk_index[0];
-        G_cme_pstate_record.resclkData.core1_resclk_idx =
-            (uint32_t)G_lppb->resclk.resclk_index[0];
+        G_cme_pstate_record.resclkData.core0_resclk_idx = curr_idx;
+        G_cme_pstate_record.resclkData.core1_resclk_idx = curr_idx;
 
         if(G_cme_pstate_record.qmFlag)
         {
-            G_cme_pstate_record.resclkData.l2_ex0_resclk_idx =
-                (uint32_t)G_lppb->resclk.resclk_index[0];
-            G_cme_pstate_record.resclkData.l2_ex1_resclk_idx =
-                (uint32_t)G_lppb->resclk.resclk_index[0];
+            G_cme_pstate_record.resclkData.l2_ex0_resclk_idx = curr_idx;
+            G_cme_pstate_record.resclkData.l2_ex1_resclk_idx = curr_idx;
 
-            G_cme_pstate_record.resclkData.common_resclk_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
+            uint32_t next_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
+
+#if DISABLE_STOP8 == 0
+            // Directly Write QACCR without stepping, prepare for later enablement
+            // since cores and L2s are currently being overridden with CACCR and EXCGCR
+            G_cme_pstate_record.resclkData.common_resclk_idx = next_idx;
+
             // Read QACCR
             ippm_read(QPPM_QACCR, &scom_data.value);
             // Clear out the resclk settings just to be safe (should not be needed)
             scom_data.value &= ~BITS64(0, 13);
             // OR-in the resclk settings which match the current Pstate
-            scom_data.value |= (((uint64_t)G_lppb->resclk.steparray
-                                 [G_cme_pstate_record.resclkData.common_resclk_idx].value)
-                                << 48);
-
-            // Directly Write QACCR without stepping
-            // assuming EXCGCR and CACCR will be used to cleanly step L2 and core resclk settings later
+            scom_data.value |= (((uint64_t)G_lppb->resclk.steparray[next_idx].value) << 48);
             ippm_write(QPPM_QACCR, scom_data.value);
+#else
+            // Step QACCR since both L2 clock domains are already enabled, not using EXCGCR due to HW bug
+            p9_cme_resclk_update(ANALOG_COMMON, next_idx, curr_idx);
+#endif
+
         }
 
         out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_RCLK_OPERABLE));
@@ -824,19 +828,9 @@ inline void p9_cme_pstate_freq_update()
 
 inline void p9_cme_pstate_update_analog()
 {
-
-#ifdef USE_CME_RESCLK_FEATURE
-
-    uint32_t rescurr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
-                       ? G_cme_pstate_record.resclkData.common_resclk_idx
-                       : G_cme_pstate_record.quadPstate;
-    uint32_t resnext = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
-                       ? p9_cme_resclk_get_index(G_next_pstate)
-                       : G_next_pstate;
-#endif //USE_CME_RESCLK_FEATURE
-
 #ifdef USE_CME_VDM_FEATURE
 
+    // if increasing voltage (decreasing Pstate) then change VDM threshold settings before changing frequency
     if((G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
        && G_next_pstate < G_cme_pstate_record.quadPstate)
     {
@@ -846,15 +840,21 @@ inline void p9_cme_pstate_update_analog()
 #endif //USE_CME_VDM_FEATURE
 
 #ifdef USE_CME_RESCLK_FEATURE
+    // protect entire IF BLOCK in a critical section
+    // in case a stop11 entry happens during Pstate change
+
+    uint32_t rescurr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                       ? G_cme_pstate_record.resclkData.common_resclk_idx
+                       : 0;
+    uint32_t resnext = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                       ? p9_cme_resclk_get_index(G_next_pstate)
+                       : 0;
 
 
-    if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
-       && (resnext < rescurr))
+    if(resnext < rescurr)
     {
-        p9_cme_resclk_update(ANALOG_COMMON, G_next_pstate,
-                             G_cme_pstate_record.resclkData.common_resclk_idx);
+        p9_cme_resclk_update(ANALOG_COMMON, resnext, rescurr);
     }
-
 
 #endif//USE_CME_RESCLK_FEATURE
 
@@ -862,19 +862,16 @@ inline void p9_cme_pstate_update_analog()
 
 #ifdef USE_CME_RESCLK_FEATURE
 
-
-    if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
-       && (resnext >= rescurr))
+    if(resnext > rescurr)
     {
-        p9_cme_resclk_update(ANALOG_COMMON, G_next_pstate,
-                             G_cme_pstate_record.resclkData.common_resclk_idx);
+        p9_cme_resclk_update(ANALOG_COMMON, resnext, rescurr);
     }
-
 
 #endif//USE_CME_RESCLK_FEATURE
 
 #ifdef USE_CME_VDM_FEATURE
 
+    // if decreasing voltage (increasing Pstate) then change VDM threshold settings after changing frequency
     if((G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
        && G_next_pstate >= G_cme_pstate_record.quadPstate)
     {

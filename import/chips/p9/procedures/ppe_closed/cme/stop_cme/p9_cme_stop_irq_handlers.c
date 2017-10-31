@@ -276,7 +276,8 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
                     if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
                        && G_cme_pstate_record.qmFlag)
                     {
-                        p9_cme_resclk_update(ANALOG_COMMON, ANALOG_PSTATE_RESCLK_OFF,
+
+                        p9_cme_resclk_update(ANALOG_COMMON, p9_cme_resclk_get_index(ANALOG_PSTATE_RESCLK_OFF),
                                              G_cme_pstate_record.resclkData.common_resclk_idx);
 
                         // prevent Pstate changes from accidentally re-enabling
@@ -305,7 +306,7 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
                         G_ndd20_disable_stop8_abort_stop11_rclk_handshake_flag)
                        && G_cme_pstate_record.qmFlag)
                     {
-                        p9_cme_resclk_update(ANALOG_COMMON, G_cme_pstate_record.quadPstate,
+                        p9_cme_resclk_update(ANALOG_COMMON, p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate),
                                              G_cme_pstate_record.resclkData.common_resclk_idx);
 
                         // reenable pstate from changing resonent clock
