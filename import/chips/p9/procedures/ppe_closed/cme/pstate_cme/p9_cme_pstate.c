@@ -318,7 +318,7 @@ void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
 
             // 1) step CACCR to running pstate
             pstate = G_cme_pstate_record.quadPstate;
-            p9_cme_resclk_update(core_mask, pstate, curr_idx);
+            p9_cme_resclk_update(core_mask, p9_cme_resclk_get_index(pstate), curr_idx);
             // 2) write CACCR[13:14]=0b11 to switch back to common control
             CME_PUTSCOM(CPPM_CACCR_OR, core_mask, (BITS64(13, 2)));
             // 3) Clear out the CACCR resclk values
@@ -338,7 +338,7 @@ void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             curr_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
             // 2) step CACCR to a value which disables resonance
             pstate = ANALOG_PSTATE_RESCLK_OFF;
-            p9_cme_resclk_update(core_mask, pstate, curr_idx);
+            p9_cme_resclk_update(core_mask, p9_cme_resclk_get_index(pstate), curr_idx);
         }
     }
 
@@ -609,15 +609,13 @@ void p9_cme_vdm_update(uint32_t pstate)
 #endif//USE_CME_VDM_FEATURE
 
 #ifdef USE_CME_RESCLK_FEATURE
-void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_idx)
+void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t next_idx, uint32_t curr_idx)
 {
     uint64_t base_val;
     uint64_t val;
-    uint32_t next_idx = p9_cme_resclk_get_index(pstate);
     int32_t  step;
 
     PK_TRACE_DBG("resclk | target=%08x", (uint32_t)target);
-    PK_TRACE_DBG("resclk | pstate=%d"  , pstate);
     PK_TRACE_DBG("resclk | curr_idx=%d", curr_idx);
     PK_TRACE_DBG("resclk | next_idx=%d", next_idx);
 

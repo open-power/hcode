@@ -202,7 +202,7 @@ void p9_cme_pstate_intercme_in0_handler();
 
 #ifdef USE_CME_RESCLK_FEATURE
     uint32_t p9_cme_resclk_get_index(uint32_t pstate);
-    void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_idx);
+    void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t next_idx, uint32_t curr_idx);
 #endif//USE_CME_RESCLK_FEATURE
 #ifdef USE_CME_VDM_FEATURE
 uint32_t calc_vdm_jump_values(uint32_t pstate, uint32_t region);
