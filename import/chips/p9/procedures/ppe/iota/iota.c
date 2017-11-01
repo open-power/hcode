@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -99,6 +99,7 @@ void _iota_boot()
 void iota_run()
 {
     mtmsr(IOTA_DEFAULT_MSR);
+    wrteei(1);
 
     while(1)
     {

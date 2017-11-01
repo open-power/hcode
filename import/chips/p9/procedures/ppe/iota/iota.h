@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -76,8 +76,8 @@ void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx);
 #endif
 
 #if !defined(IOTA_DEFAULT_MSR)
-#define IOTA_DEFAULT_MSR    (MSR_UIE | MSR_EE | MSR_ME | MSR_IS0 | \
-                             MSR_IS1 | MSR_IS2 | MSR_IPE | MSR_SEM6)
+#define IOTA_DEFAULT_MSR    (MSR_UIE | MSR_ME | MSR_IS0 | \
+                             MSR_IS1 | MSR_IS2 | MSR_IPE)
 #endif
 
 ///

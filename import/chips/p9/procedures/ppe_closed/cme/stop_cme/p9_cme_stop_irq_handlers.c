@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -83,6 +83,7 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
     {
         out32(CME_LCL_EIMR_OR, BITS32(12, 10));
 #if defined(__IOTA__)
+        wrteei(1);
         p9_cme_stop_exit();
         // re-evaluate g_eimr_override then restore eimr
         p9_cme_stop_eval_eimr_override();
@@ -180,6 +181,7 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
         out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         PK_TRACE_INF("Launching exit thread");
 #if defined(__IOTA__)
+        wrteei(1);
         p9_cme_stop_exit();
         // re-evaluate g_eimr_override then restore eimr
         p9_cme_stop_eval_eimr_override();
@@ -202,6 +204,7 @@ p9_cme_stop_rgwu_handler(void* arg, PkIrqId irq)
     PK_TRACE_INF("RGWU Handler Trigger %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 10));
 #if defined(__IOTA__)
+    wrteei(1);
     p9_cme_stop_exit();
     // re-evaluate g_eimr_override then restore eimr
     p9_cme_stop_eval_eimr_override();
@@ -219,6 +222,7 @@ p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
     PK_TRACE_INF("PM_ACTIVE Handler Trigger %d", irq);
     out32(CME_LCL_EIMR_OR, BITS32(12, 10));
 #if defined(__IOTA__)
+    wrteei(1);
     // The actual entry sequence
     p9_cme_stop_entry();
     // re-evaluate g_eimr_override then restore eimr

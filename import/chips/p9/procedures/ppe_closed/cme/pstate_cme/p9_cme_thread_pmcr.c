@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -53,10 +53,6 @@ uint32_t G_pmcr_cme_flags;
 
 void cme_pstate_pmcr_action()
 {
-    // In IOTA, any task function is executed with EE=1
-#if !defined(__IOTA__)
-    wrteei(1);
-#endif
     PkMachineContext  ctx __attribute__((unused));
     uint64_t pmcr;
     ppm_pig_t ppmPigData;
@@ -115,6 +111,7 @@ void cme_pstate_pmcr_action()
 void p9_cme_pstate_pmcr_handler(void* arg, PkIrqId irq)
 {
 #if defined(__IOTA__)
+    wrteei(1);
     cme_pstate_pmcr_action();
 #else
     pk_semaphore_post((PkSemaphore*)arg);
