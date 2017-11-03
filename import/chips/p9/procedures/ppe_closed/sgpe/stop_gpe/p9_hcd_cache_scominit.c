@@ -114,6 +114,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 // EXP.L3.L3_MISC.L3CERRS.L3_DMAP_CI_EN_CFG
                 // EXP.L3.L3_MISC.L3CERRS.L3_RDSN_LINEDEL_UE_EN
                 // EXP.L3.L3_MISC.L3CERRS.L3_CERRS_PF_CFG_SKIP_GRP_SCOPE_EN
+                // EXP.L3.L3_MISC.L3CERRS.L3_SCOM_CP_ME_DROP_OVERRIDE (Only set After NDD20)
                 // EXP.L3.L3_MISC.L3CERRS.L3_ADDR_HASH_EN_CFG
                 // EXP.L3.L3_MISC.L3CERRS.L3_SYSMAP_SM_NOT_LG_SEL
                 // EXP.L3.L3_MISC.L3CERRS.L3_HANG_POLL_PULSE_DIV
@@ -133,6 +134,15 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 if (attr_proc_fabric_pump_mode_chip_is_node)
                 {
                     scom_data.words.upper &= ~BIT32(5);
+                }
+
+#endif
+
+#if NIMBUS_DD_LEVEL != 10 && NIMBUS_DD_LEVEL != 20
+
+                if (!(pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_ENABLE_MEM_EARLY_DATA_SCOM_POS))
+                {
+                    scom_data.words.upper |= BIT32(6);
                 }
 
 #endif
