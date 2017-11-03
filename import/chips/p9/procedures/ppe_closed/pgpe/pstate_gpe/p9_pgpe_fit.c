@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -33,8 +33,16 @@
 #define THROTTLE_SCOM_MULTICAST_READ_OR   0x41010A9E
 #define THROTTLE_SCOM_MULTICAST_READ_AND  0x49010A9E
 #define THROTTLE_SCOM_MULTICAST_WRITE     0x69010A9E
+
+#define WORKAROUND_SCOM_MULTICAST_WRITE   0x69010800
+
 #define AUX_TASK 14
 #define GPE2TSEL 0xC0020000
+
+// Include core offline, address error, and timeout.   The timeout is included to avoid
+// an extra mtmsr in the event we need to cleanup from SW407201
+#define MSR_THROTTLE_MASK  0x29000000
+
 
 uint32_t G_orig_throttle; //original value of throttle SCOM before manipulation
 uint32_t G_throttleOn;    //is throttling currently enabled
@@ -105,6 +113,21 @@ void p9_pgpe_fit_init()
     ppe42_fit_setup(p9_pgpe_fit_handler, NULL);
 }
 
+__attribute__((always_inline)) inline void cleanup_SW407201()
+{
+    do
+    {
+        if (((mfmsr() >> 20) & 0x7) == 0x4)
+        {
+            // Work-around for HW problem. See SW407201
+            // If ADDRESS_ERROR then perform a SCOM write of all zeros to
+            // 2n010800 where n is the core number. Ignore ADDRESS_ERROR
+            // returned.
+            out64(WORKAROUND_SCOM_MULTICAST_WRITE, 0);
+        }
+    }
+    while (0);
+}
 
 __attribute__((always_inline)) inline void handle_core_throttle()
 {
@@ -119,9 +142,14 @@ __attribute__((always_inline)) inline void handle_core_throttle()
 
             if(G_throttleCount == 0) //when throttle control enabled, read current state of throttle SCOM before manipulation
             {
-                mtmsr(value | 0x20000000); //don't cause halt if all cores offline
+                mtmsr(value | MSR_THROTTLE_MASK); //don't cause halt if all cores offline or address error (PC Timeout)
                 G_orig_throttle = in64(THROTTLE_SCOM_MULTICAST_READ_AND) >> 32;
-                uint32_t fail = (((mfmsr() >> 20) & 0x7) == 2); //if all cores online
+
+                // Fail the throttle on any return code.
+                uint32_t fail = ((mfmsr() >> 20) & 0x7);
+
+                cleanup_SW407201();
+
                 mtmsr(value);
 
                 if(fail)
@@ -164,8 +192,9 @@ __attribute__((always_inline)) inline void handle_core_throttle()
 
             if(G_throttleCount == 0)
             {
-                mtmsr(value | 0x20000000); //don't cause halt if all cores offline
+                mtmsr(value | MSR_THROTTLE_MASK); //don't cause halt if all cores offline or address error (PC Timeout)
                 out64(THROTTLE_SCOM_MULTICAST_WRITE, ((uint64_t) throttleData << 32)); //apply new throttle SCOM setting
+                cleanup_SW407201();
                 mtmsr(value);
             }
 
@@ -175,9 +204,10 @@ __attribute__((always_inline)) inline void handle_core_throttle()
         {
             G_throttleCount = 0;
             uint32_t value = mfmsr();
-            mtmsr(value | 0x20000000); //don't cause halt if all cores offline
+            mtmsr(value | MSR_THROTTLE_MASK); //don't cause halt if all cores offline or address error (PC Timeout)
             G_throttleOn = 0;
             out64(THROTTLE_SCOM_MULTICAST_WRITE, ((uint64_t) G_orig_throttle << 32)); //restore throttle scom to original state
+            cleanup_SW407201();
             mtmsr(value);
         }
     }
