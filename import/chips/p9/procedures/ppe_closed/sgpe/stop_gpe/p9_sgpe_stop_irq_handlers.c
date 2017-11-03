@@ -63,7 +63,7 @@ SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
     // wof status
     {0, 0, 0},
     // fit status
-    {0},
+    {0, 0},
     // semaphores
     {{0, 0, 0}}
 };
@@ -804,6 +804,7 @@ p9_sgpe_pig_thread_lanucher()
              (~(G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] >> 16))))
         {
             PK_TRACE_INF("Unblock Entry Thread");
+            G_sgpe_stop_record.fit.entry_pending = 1;
             G_sgpe_stop_record.group.core[VECTOR_ENTRY] =
                 G_sgpe_stop_record.group.core[VECTOR_PIGE];
             pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
@@ -988,6 +989,7 @@ p9_sgpe_pig_type6_handler(void* arg, PkIrqId irq)
         if (G_sgpe_stop_record.group.qswu[VECTOR_ENTRY])
         {
             PK_TRACE_INF("Unblock Entry");
+            G_sgpe_stop_record.fit.entry_pending = 1;
             pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
         }
     }
