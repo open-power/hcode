@@ -68,7 +68,10 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
     uint32_t     thread            = 0;
     uint32_t     temp_dsl          = 0;
     uint32_t     core_index        = 0;
+#else
+    uint32_t     saved_msr         = 0;
 #endif
+
 
     //--------------------------------------------------------------------------
     PK_TRACE_PERF("+++++ +++++ END OF STOP EXIT +++++ +++++");
@@ -222,7 +225,24 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
                        SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS)));
             }
 
+
+            // Treat the first write with suspicion due to a bug in the PSCOM macro when a previous scom has timed out
+            saved_msr = mfmsr();
+            mtmsr( saved_msr | MSR_SEM4);  // Mask off timeout
+
             CME_PUTSCOM(DIRECT_CONTROLS, core_mask, scom_data.value);
+
+            if ((mfmsr() & MSR_SIBRC) != 0)
+            {
+                // The second write should never fail.   Unmask the error
+                mtmsr(saved_msr);
+                CME_PUTSCOM(DIRECT_CONTROLS, core_mask, scom_data.value);
+            }
+            else
+            {
+                mtmsr(saved_msr);
+            }
+
         }
     }
 
