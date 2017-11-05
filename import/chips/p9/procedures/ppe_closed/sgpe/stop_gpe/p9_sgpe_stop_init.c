@@ -250,9 +250,6 @@ p9_sgpe_stop_init()
     // Basic Software Settings
     //--------------------------------------------------------------------------
 
-    // Clear OCC LFIR[25] (gpe3_halted) bit upon SGPE boot
-    GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(25));
-
     // Clear SPRG0
     ppe42_app_ctx_set(0);
 
@@ -606,6 +603,11 @@ p9_sgpe_stop_init()
     PK_TRACE("Configure and Enable Fit Timer");
     out32(GPE_GPE3TSEL, BIT32(4));
     ppe42_fit_setup((PkIrqHandler)p9_sgpe_fit_handler, 0);
+
+    PK_TRACE("Clear OCC LFIR[gpe3_halted] and OISR[gpe3_error and xstop] bits upon SGPE boot");
+    GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(25));
+    out32(OCB_OISR0_CLR, (BIT32(8) | BIT32(16)));
+    out32(OCB_OIMR0_CLR, (BIT32(8) | BIT32(16)));
 
     PK_TRACE_INF("Setup: Clear and Unmask Type 2,3,5,6 and ipi_lo_3 interrupts");
     out32(OCB_OISR1_CLR, (BITS32(15, 2) | BITS32(18, 2) | BIT32(29)));

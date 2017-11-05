@@ -272,7 +272,7 @@ p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
     PK_TRACE_INF("IPC.PS: Get Suspend Stop IPC from PGPE");
 
     G_sgpe_stop_record.wof.suspend_cmd = cmd;
-    g_oimr_override |= (BITS64(47, 2) | BIT64(51));
+    g_oimr_override |= (BITS64(47, 2) | BITS64(50, 2));
 
     // stop in process
     if (G_sgpe_stop_record.wof.status_stop == STATUS_PROCESSING)

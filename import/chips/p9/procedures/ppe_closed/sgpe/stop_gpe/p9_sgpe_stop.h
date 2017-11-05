@@ -180,12 +180,16 @@ extern "C" {
 #define PERV_NET_CTRL1_WAND      0x000F0045
 
 
+#define PK_OPTIONAL_DEBUG_HALT(panic_code) \
+    if (in32(OCB_OCCS2) & BIT32(PM_DEBUG_HALT_ENABLE)) {PK_PANIC(panic_code);}
+
+
 #define SGPE_STOP_QUAD_ERROR_HANDLER(quad_error, panic_code) \
     G_sgpe_stop_record.group.quad[VECTOR_ERROR]  |=  BIT32(quad_error); \
     G_sgpe_stop_record.group.quad[VECTOR_CONFIG] &= ~BIT32(quad_error); \
     G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] &= ~BIT32(quad_error); \
     G_sgpe_stop_record.state[quad_error].error_code     = panic_code;   \
-    //PK_PANIC(panic_code); //enable if desire halt on error
+    PK_OPTIONAL_DEBUG_HALT(panic_code)
 
 enum SGPE_STOP_STATE_HISTORY_VECTORS
 {
@@ -217,10 +221,11 @@ enum SGPE_STOP_PSCOM_MASK
 
 enum SGPE_WOF_ACTIVE_UPDATE_STATUS
 {
-    IPC_SGPE_PGPE_UPDATE_QUAD_ENABLED = 2,
-    IPC_SGPE_PGPE_UPDATE_CORE_ENABLED = 1,
+    IPC_SGPE_PGPE_UPDATE_QUAD_ENABLED = 0x2,
+    IPC_SGPE_PGPE_UPDATE_CORE_ENABLED = 0x1,
     // Reserved_4_Do_Not_Use
-    IPC_SGPE_PGPE_UPDATE_CTRL_ONGOING = 8
+    IPC_SGPE_PGPE_UPDATE_CTRL_ONGOING = 0x8,
+    IPC_SGPE_PGPE_UPDATE_PGPE_HALTED  = 0xF0
 };
 
 enum SGPE_SUSPEND_FUNCTION_STATUS
@@ -380,6 +385,8 @@ void p9_sgpe_stop_suspend_all_cmes();
 
 /// SGPE STOP Interrupt Handlers
 void p9_sgpe_fit_handler();
+void p9_sgpe_pgpe_halt_handler(void*, PkIrqId);
+void p9_sgpe_checkstop_handler(void*, PkIrqId);
 void p9_sgpe_pig_type2_handler(void*, PkIrqId);
 void p9_sgpe_pig_type3_handler(void*, PkIrqId);
 void p9_sgpe_pig_type5_handler(void*, PkIrqId);
