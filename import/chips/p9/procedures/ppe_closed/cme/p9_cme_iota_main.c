@@ -418,6 +418,50 @@ void dec_handler()
 
 void ext_handler(uint32_t task_idx)
 {
+    uint32_t eisr = in32(CME_LCL_EISR);
+
+    if (eisr & BIT32(0))
+    {
+        PK_TRACE_INF("CME DEBUGGER DETECTED");
+        PK_OPTIONAL_DEBUG_HALT(CME_DEBUGGER_DETECTED);
+        out32(CME_LCL_EISR_CLR, BIT32(0));
+    }
+
+    if (eisr & BIT32(1))
+    {
+        PK_TRACE_INF("CME DEBUG TRIGGER DETECTED");
+        PK_OPTIONAL_DEBUG_HALT(CME_DEBUG_TRIGGER_DETECTED);
+        out32(CME_LCL_EISR_CLR, BIT32(1));
+    }
+
+    if (eisr & BIT32(2))
+    {
+        PK_TRACE_INF("CME_QUAD_CHECKSTOP DETECTED");
+        PK_OPTIONAL_DEBUG_HALT(CME_QUAD_CHECKSTOP_DETECTED);
+        out32(CME_LCL_EISR_CLR, BIT32(2));
+    }
+
+    if (eisr & BIT32(3))
+    {
+        PK_TRACE_INF("CME_PVREF_FAIL DETECTED");
+        PK_OPTIONAL_DEBUG_HALT(CME_PVREF_FAIL_DETECTED);
+        out32(CME_LCL_EISR_CLR, BIT32(3));
+    }
+
+    if (eisr & BIT32(4))
+    {
+        PK_TRACE_INF("CME OCC HEARTBEAT LOST");
+        PK_OPTIONAL_DEBUG_HALT(CME_OCC_HEARTBEAT_LOST_DETECTED);
+        out32(CME_LCL_EISR_CLR, BIT32(4));
+        p9_cme_pstate_db0_safe_mode();
+    }
+
+    if (eisr & BIT32(5))
+    {
+        PK_TRACE_INF("CME_CORE_CHECKSTOP DETECTED");
+        PK_OPTIONAL_DEBUG_HALT(CME_CORE_CHECKSTOP_DETECTED);
+        out32(CME_LCL_EISR_CLR, BIT32(5));
+    }
 }
 
 // List of low priority tasks that run when the cme engine would

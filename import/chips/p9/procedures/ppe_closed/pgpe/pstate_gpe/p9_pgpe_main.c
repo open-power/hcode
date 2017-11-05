@@ -198,8 +198,10 @@ main(int argc, char** argv)
         asm volatile ("trap");
     }
 
-    // Clear OCC LFIR[24] (gpe2_halted) bit upon PGPE boot
+    PK_TRACE("Clear OCC LFIR[gpe2_halted] and OISR[gpe2_error and xstop] bits upon PGPE boot");
     GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(24));
+    out32(OCB_OISR0_CLR, (BIT32(7) | BIT32(15)));
+    out32(OCB_OIMR0_CLR, (BIT32(7) | BIT32(15)));
 
     // Initialize the thread control block for G_p9_pgpe_thread_process_requests
     pk_thread_create(&G_p9_pgpe_thread_process_requests,
