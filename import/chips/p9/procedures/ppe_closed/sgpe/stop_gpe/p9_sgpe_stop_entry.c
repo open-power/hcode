@@ -39,7 +39,6 @@ extern SgpeStopRecord G_sgpe_stop_record;
 void
 p9_sgpe_stop_entry()
 {
-    uint32_t     entry_ongoing[2]  = {0, 0};
     uint32_t     l3_purge_aborted  = 0;
     uint32_t     ex                = 0;
     uint32_t     ex_mask           = 0;
@@ -372,6 +371,40 @@ p9_sgpe_stop_entry()
         PK_TRACE("+++++ +++++ EX STOP ENTRY [LEVEL 8-10] +++++ +++++");
         // ------------------------------------------------------------------------
 
+        if (ex & FST_EX_IN_QUAD)
+        {
+            cloop = 0;
+        }
+        else
+        {
+            cloop = CORES_PER_EX;
+        }
+
+        if (ex & SND_EX_IN_QUAD)
+        {
+            climit = CORES_PER_QUAD;
+        }
+        else
+        {
+            climit = CORES_PER_EX;
+        }
+
+        for(; cloop < climit; cloop++)
+        {
+            cindex = (qloop << 2) + cloop;
+
+            // Check partial good core
+            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex)))
+            {
+                continue;
+            }
+
+            PK_TRACE("Update STOP history on core[%d]: continue on entering", cindex);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_ENTRY_IN_SESSION;
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
+        }
+
         PK_TRACE_INF("SE.8A: Quad[%d] EX_L2[%d] Stopping L2 Clocks", qloop, ex);
 
         PK_TRACE("Acquire cache clock controller atomic lock");
@@ -489,9 +522,6 @@ p9_sgpe_stop_entry()
         {
             cloop = 0;
             G_sgpe_stop_record.state[qloop].act_state_x0 = STOP_LEVEL_8;
-            entry_ongoing[0] =
-                G_sgpe_stop_record.state[qloop].req_state_x0 < STOP_LEVEL_11 ?
-                STOP_TRANS_COMPLETE : STOP_TRANS_ENTRY;
         }
         else
         {
@@ -502,9 +532,6 @@ p9_sgpe_stop_entry()
         {
             climit = CORES_PER_QUAD;
             G_sgpe_stop_record.state[qloop].act_state_x1 = STOP_LEVEL_8;
-            entry_ongoing[1] =
-                G_sgpe_stop_record.state[qloop].req_state_x1 < STOP_LEVEL_11 ?
-                STOP_TRANS_COMPLETE : STOP_TRANS_ENTRY;
         }
         else
         {
@@ -521,12 +548,9 @@ p9_sgpe_stop_entry()
                 continue;
             }
 
-            // request levle already set by CME
-            // shift by 2 == times 4, which is cores per quad
             PK_TRACE("Update STOP history on core[%d]: in stop level 8", cindex);
             scom_data.words.lower = 0;
-            scom_data.words.upper = (SSH_ACT_LV8_COMPLETE |
-                                     (((uint32_t)entry_ongoing[cloop >> 1]) << SHIFT32(3)));
+            scom_data.words.upper = SSH_ACT_LV8_COMPLETE;
 
 #if !DISABLE_STOP8
 
@@ -571,22 +595,38 @@ p9_sgpe_stop_entry()
             continue;
         }
 
-        ex = G_sgpe_stop_record.group.expg[qloop];
-
         // ------------------------------------------------------------------------
         PK_TRACE("+++++ +++++ QUAD STOP ENTRY [LEVEL 11-15, L3 PURGE] +++++ +++++");
         // ------------------------------------------------------------------------
 
-        PK_TRACE_INF("SE.11A: Quad[%d] EX_PG[%d] Shutting Cache Down", qloop, ex);
+        ex = G_sgpe_stop_record.group.expg[qloop];
 
-        PK_TRACE("Update QSSR: stop_entry_ongoing");
-        out32(OCB_QSSR_OR, BIT32(qloop + 20));
+        for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
+        {
+            cindex = (qloop << 2) + cloop;
+
+            // Check partial good core
+            if (!(G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex)))
+            {
+                continue;
+            }
+
+            PK_TRACE("Update STOP history on core[%d]: continue entering", cindex);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_ENTRY_IN_SESSION;
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
+        }
 
         PK_TRACE("Update STOP history on quad[%d]: update request stop level", qloop);
         scom_data.words.lower = 0;
         scom_data.words.upper = (SSH_REQ_LEVEL_UPDATE |
                                  ((uint32_t)G_sgpe_stop_record.state[qloop].req_state_q << SHIFT32(7)));
         GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
+
+        PK_TRACE("Update QSSR: stop_entry_ongoing");
+        out32(OCB_QSSR_OR, BIT32(qloop + 20));
+
+        PK_TRACE_INF("SE.11A: Quad[%d] EX_PG[%d] Shutting Cache Down", qloop, ex);
 
         //==================================
         MARK_TAG(SE_PURGE_L3, (32 >> qloop))
@@ -851,6 +891,7 @@ p9_sgpe_stop_entry()
 
         if ((!ipc_quad_entry) &&
             (in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+            G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY]) // entry into STOP11
         {
             //============================
@@ -1300,6 +1341,7 @@ p9_sgpe_stop_entry()
     /// @todo RTC166577
     /// this block can be done as early as after stop cache clocks
     if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+        G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
         G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
     {
         // Note: if all quads aborted on l3 purge, the quad list will be 0s;

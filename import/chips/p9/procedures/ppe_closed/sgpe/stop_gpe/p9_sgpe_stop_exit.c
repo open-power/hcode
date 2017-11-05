@@ -449,6 +449,7 @@ p9_sgpe_stop_exit()
     //   will write the QPPM_DPLL_FREQ register before responding.
 
     if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+        G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
         G_sgpe_stop_record.group.quad[VECTOR_EXIT])
     {
         ipc_exit_quad = 1;

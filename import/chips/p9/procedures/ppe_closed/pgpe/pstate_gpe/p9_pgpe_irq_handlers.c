@@ -30,6 +30,7 @@
 #include "ppe42_cache.h"
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_optrace.h"
+#include "p9_stop_recovery_trigger.h"
 
 extern TraceData_t G_pgpe_optrace_data;
 //
@@ -97,12 +98,20 @@ void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq)
 //
 //SGPE Halt Interrupt Handler
 //
-//\TODO: RTC 164107
-//Implement this handler. Implement Safe Mode
 void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq)
 {
     PK_TRACE_DBG("SGPE Halt: Enter");
     PkMachineContext  ctx;
+
+    out32(OCB_OISR0_CLR, BIT32(8));
+    //\TODO: RTC 164107
+    //Implement Safe Mode
+    //p9_pgpe_pstate_safe_mode();
+
+    if (in32(OCB_OCCFLG2) & BIT32(STOP_RECOVERY_TRIGGER_ENABLE))
+    {
+        p9_stop_recovery_trigger();
+    }
 
     pk_irq_vec_restore(&ctx);//Restore interrupts
     PK_TRACE_DBG("SGPE Halt: Exit");
