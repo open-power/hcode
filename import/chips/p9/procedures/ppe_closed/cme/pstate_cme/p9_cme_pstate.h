@@ -187,6 +187,7 @@ void p9_cme_pstate_pmcr_handler(void*, PkIrqId);
 void p9_cme_pstate_db_handler(void*, PkIrqId);
 void p9_cme_pstate_intercme_in0_irq_handler(void*, PkIrqId);
 void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq);
+void p9_cme_pstate_db0_safe_mode();
 int send_pig_packet(uint64_t data, uint32_t coreMask);
 void poll_dpll_update_complete();
 void ippm_read(uint32_t addr, uint64_t* data);

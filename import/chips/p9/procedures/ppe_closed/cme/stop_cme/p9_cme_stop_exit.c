@@ -343,14 +343,14 @@ p9_cme_stop_exit_lv2(uint32_t core)
     PK_TRACE_PERF("+++++ +++++ STOP LEVEL 2 EXIT +++++ +++++");
     //--------------------------------------------------------------------------
 
-    //============================
-    MARK_TAG(SX_STARTCLOCKS, core)
-    //============================
-
     // do this again here for stop2 in addition to chiplet_reset
     // Note IPL doesnt need to do this twice
     PK_TRACE("Assert core glitchless mux to DPLL via CGCR[3]");
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
+
+    //=========================
+    MARK_TRAP(SX_ENABLE_ANALOG)
+    //=========================
 
     p9_cme_core_stop_analog_control(core, ANALOG_ENABLE);
 
@@ -376,6 +376,10 @@ p9_cme_stop_exit_lv2(uint32_t core)
     p9_cme_pcbmux_savior_epilogue(core);
 
 #endif
+
+    //============================
+    MARK_TAG(SX_STARTCLOCKS, core)
+    //============================
 
     PK_TRACE_PERF("SX.2A: Core Start Clock");
     p9_hcd_core_startclocks(core);
@@ -554,7 +558,7 @@ p9_cme_stop_exit()
 
         if (!core)
         {
-            PK_TRACE_INF("WARNING: Only Freebie Special Wakeup Processed. Return");
+            PK_TRACE_INF("Only processed Special Wakeup on running cores. Return");
             return;
         }
     }
@@ -1144,10 +1148,6 @@ p9_cme_stop_exit()
                 core = CME_MASK_BC;
             }
         }
-
-        //=========================
-        MARK_TRAP(SX_ENABLE_ANALOG)
-        //=========================
 
         p9_cme_stop_exit_end(core, spwu_stop);
 
