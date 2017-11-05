@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -47,6 +47,7 @@ enum SGPE_STOP_IRQ_PAYLOAD_MASKS
     TYPE2_PAYLOAD_SUSPEND_BOTH_MASK        = 0x300,
     TYPE2_PAYLOAD_SUSPEND_ACK_MASK         = 0x080,
 
+    TYPE5_PAYLOAD_CME_ERROR                = 0x3FF,
     TYPE6_PAYLOAD_EXIT_EVENT               = 0x00F
 };
 

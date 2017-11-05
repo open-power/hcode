@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -42,6 +42,7 @@
 ##########################################################################
 
 HCODE_C_SOURCES = \
+	p9_stop_recovery_trigger.c \
 	p9_hcd_block_copy.c \
 	p9_dd1_doorbell_wr.c
 

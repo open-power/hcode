@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -149,19 +149,29 @@
 #define PERV_OPCG_CAPT2        0x20030012
 #define PERV_CPLT_STAT0        0x20000100
 
+
+
+#define PK_OPTIONAL_DEBUG_HALT(panic_code) \
+    if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_PM_DEBUG_HALT_ENABLE)) {PK_PANIC(panic_code);}
+
+
 #if NIMBUS_DD_LEVEL == 10
 #define CME_STOP_CORE_ERROR_HANDLER(core, core_error, panic_code) \
     PK_PANIC(panic_code);
 #else
 #define CME_STOP_CORE_ERROR_HANDLER(core, core_error, panic_code) \
-    p9_cme_stop_core_error_handler(core, core_error, panic_code);
+    p9_cme_stop_core_error_handler(core, core_error, panic_code); \
+    PK_OPTIONAL_DEBUG_HALT(panic_code)
 #endif
+
 
 #define CME_PM_EXIT_DELAY         \
     asm volatile ("tw 0, 0, 0");  \
     asm volatile ("tw 0, 0, 0");  \
     asm volatile ("tw 0, 0, 0");  \
     asm volatile ("tw 0, 0, 0");
+
+
 
 enum CME_IRQ_VECTORS
 {

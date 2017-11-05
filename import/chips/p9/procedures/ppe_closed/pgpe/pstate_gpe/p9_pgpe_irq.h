@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -94,9 +94,6 @@ extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
                                 IRQ_VEC_PRTY3_GPE2 | \
                                 IRQ_VEC_PRTY4_GPE2 | \
                                 IRQ_VEC_PRTY5_GPE2 )      // Note, we do not incl PRTY6 here!
-
-#define IRQ_VEC_PRTY_CHECK    ( IRQ_VEC_ALL_OUR_IRQS | \
-                                IRQ_VEC_PRTY6_GPE2 )      // This should be 0xFFFFFFFFFFFFFFFF
 
 extern uint8_t    g_current_prty_level;
 extern uint8_t    g_oimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];

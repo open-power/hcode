@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -61,23 +61,26 @@
 extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
 // Group0: Non-task hi-prty IRQs
-// (@todo RTC166767 reenable gpe2_halt/checkstop_gpe3 when ready)
-#define IRQ_VEC_PRTY0_SGPE   (uint64_t)(0x0000000000000000)
+#define IRQ_VEC_PRTY0_SGPE   (uint64_t)(0x0100800000000000)
 // Group1: ipi3_high
 #define IRQ_VEC_PRTY1_SGPE   (uint64_t)(0x0000000800000000)
 // Group2: pig_type2
 #define IRQ_VEC_PRTY2_SGPE   (uint64_t)(0x0000000000010000)
 // Group3: pig_type6
 #define IRQ_VEC_PRTY3_SGPE   (uint64_t)(0x0000000000001000)
-// Group3: pig_type5
+// Group4: pig_type5
 #define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0x0000000000002000)
-// Group4: pig_type3
+// Group5: pig_type3
 #define IRQ_VEC_PRTY5_SGPE   (uint64_t)(0x0000000000008000)
-// Group5: ipi3_low
+// Group6: ipi3_low
 #define IRQ_VEC_PRTY6_SGPE   (uint64_t)(0x0000000000000004)
-// Group6: We should never detect these
-#define IRQ_VEC_PRTY7_SGPE   (uint64_t)(0x0100800000000000)
-//#define IRQ_VEC_PRTY7_SGPE   (uint64_t)(0xFEFF7FF7FFFE6FFB)
+// Group7: We should never detect these
+#define OVERRIDE_OTHER_ENGINES_IRQS 0
+#if OVERRIDE_OTHER_ENGINES_IRQS == 1
+    #define IRQ_VEC_PRTY7_SGPE  (uint64_t)(0xFEFF7FF7FFFE4FFB) // Other instances' IRQs
+#else
+    #define IRQ_VEC_PRTY7_SGPE  (uint64_t)(0x0000000000000000) // Other instances' IRQs
+#endif
 
 #define IRQ_VEC_ALL_OUR_IRQS  ( IRQ_VEC_PRTY0_SGPE | \
                                 IRQ_VEC_PRTY1_SGPE | \
@@ -86,16 +89,6 @@ extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
                                 IRQ_VEC_PRTY4_SGPE | \
                                 IRQ_VEC_PRTY5_SGPE | \
                                 IRQ_VEC_PRTY6_SGPE )      // Note, we do not incl PRTY7 here!
-
-// This should be 0xFFFFFFFFFFFFFFFF
-#define IRQ_VEC_PRTY_CHECK  ( IRQ_VEC_PRTY0_SGPE | \
-                              IRQ_VEC_PRTY1_SGPE | \
-                              IRQ_VEC_PRTY2_SGPE | \
-                              IRQ_VEC_PRTY3_SGPE | \
-                              IRQ_VEC_PRTY4_SGPE | \
-                              IRQ_VEC_PRTY5_SGPE | \
-                              IRQ_VEC_PRTY6_SGPE | \
-                              IRQ_VEC_PRTY7_SGPE )
 
 extern uint8_t       g_current_prty_level;
 extern uint8_t       g_oimr_stack[NUM_EXT_IRQ_PRTY_LEVELS];

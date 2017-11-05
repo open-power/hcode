@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -30,6 +30,7 @@ extern CmeStopRecord G_cme_stop_record;
 extern CmeRecord G_cme_record;
 
 
+
 void
 p9_cme_stop_core_error_handler(uint32_t core, uint32_t core_error, uint32_t panic_code)
 {
@@ -47,8 +48,6 @@ p9_cme_stop_core_error_handler(uint32_t core, uint32_t core_error, uint32_t pani
     uint32_t           cme_lcl_debug = in32(CME_LCL_DBG);
     out32(CME_LCL_DBG, cme_lcl_debug | BIT32(16));
     out32(CME_LCL_DBG, cme_lcl_debug);
-
-    //PK_PANIC(panic_code); // enable if desire halt on error
 }
 
 void

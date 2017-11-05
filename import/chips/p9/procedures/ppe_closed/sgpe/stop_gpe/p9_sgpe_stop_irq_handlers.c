@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -24,8 +24,11 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "p9_sgpe_stop.h"
-#include "p9_sgpe_stop_enter_marks.h"
 #include "p9_sgpe_irq.h"
+#include "p9_sgpe_stop_enter_marks.h"
+#include "p9_stop_recovery_trigger.h"
+
+
 
 SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
 {
@@ -61,12 +64,13 @@ SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
 #endif
     },
     // wof status
-    {0, 0, 0},
+    {0, 0, 0, 0},
     // fit status
     {0, 0},
     // semaphores
     {{0, 0, 0}}
 };
+
 
 
 void
@@ -100,6 +104,39 @@ p9_sgpe_fit_handler()
     {
         G_sgpe_stop_record.fit.starve_counter = 0;
     }
+}
+
+
+
+void
+p9_sgpe_pgpe_halt_handler(void* arg, PkIrqId irq)
+{
+    PkMachineContext   ctx;
+
+    PK_TRACE_INF("WARNING: PGPE Has Halted");
+    PK_OPTIONAL_DEBUG_HALT(SGPE_PGPE_HALT_DETECTED);
+    out32(OCB_OISR0_CLR, BIT32(7));
+
+    G_sgpe_stop_record.wof.update_pgpe = IPC_SGPE_PGPE_UPDATE_PGPE_HALTED;
+
+    if (in32(OCB_OCCFLG2) & BIT32(STOP_RECOVERY_TRIGGER_ENABLE))
+    {
+        p9_stop_recovery_trigger();
+    }
+
+    pk_irq_vec_restore(&ctx);
+}
+
+void
+p9_sgpe_checkstop_handler(void* arg, PkIrqId irq)
+{
+    PkMachineContext   ctx;
+
+    PK_TRACE_INF("WARNING: System Checkstop Detected");
+    PK_OPTIONAL_DEBUG_HALT(SGPE_SYSTEM_CHECKSTOP_DETECTED);
+    out32(OCB_OISR0_CLR, BIT32(16));
+
+    pk_irq_vec_restore(&ctx);
 }
 
 
@@ -360,11 +397,11 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
             }
 
             // read payload on core has interrupt pending
-            if (type == 2)
+            if (type == PIG_TYPE2)
             {
                 cpayload = in32(OCB_OPIT2CN(cindex));
             }
-            else if (type == 3)
+            else if (type == PIG_TYPE3)
             {
                 cpayload = in32(OCB_OPIT3CN(cindex));
             }
@@ -376,8 +413,44 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
 
             PK_TRACE_INF("Core[%d] sent PIG Type[%d] with Payload [%x]", cindex, type, cpayload);
 
+            if (type == PIG_TYPE5)
+            {
+
+#if DISABLE_STOP8
+
+                if ((cpayload != TYPE5_PAYLOAD_EXIT_RCLK) &&
+                    (cpayload != (TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
+                {
+
+#endif
+
+                    // Errors detected by the CME for any reason (STOP or Pstate)
+                    // will cause the CME to halt. The CME halt is communicated via
+                    // a PCB Interrupt Type 5 to SGPE. SGPE will, in turn, set OCC
+                    // LFIR[cme_error_notify] (2) as an FFDC marker for this type of error.
+                    GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(2));
+
+                    if (cpayload == TYPE5_PAYLOAD_CME_ERROR)
+                    {
+                        PK_TRACE_ERR("ERROR: CME Halt Due to Error");
+                        PK_PANIC(SGPE_PIG_TYPE5_CME_ERROR);
+                    }
+                    else
+                    {
+                        PK_TRACE_ERR("ERROR: Undefined Type5 Payload");
+                        PK_PANIC(SGPE_PIG_TYPE5_PAYLOAD_INVALID);
+                    }
+
+#if DISABLE_STOP8
+
+                }
+
+#endif
+
+            }
+
             // if not hardware pig and is an suspend ack pig
-            if ((type == 2) &&
+            if ((type == PIG_TYPE2) &&
                 ((~cpayload) & TYPE2_PAYLOAD_HARDWARE_WAKEUP) &&
                 (cpayload & TYPE2_PAYLOAD_SUSPEND_ACK_MASK))
             {
@@ -748,16 +821,8 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
 
             if (center & BIT32(0))
             {
-                if (type == 2)
-                {
-                    scom_data.words.upper = SSH_ACT_LV5_COMPLETE;
-                }
-                else
-                {
-                    scom_data.words.upper = SSH_ACT_LV5_CONTINUE;
-                }
-
                 PK_TRACE("Update STOP history: in core[%d] stop level 5", cindex);
+                scom_data.words.upper = SSH_ACT_LV5_COMPLETE;
                 GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
 
                 G_sgpe_stop_record.group.core[VECTOR_ACTIVE] &= ~BIT32(cindex);
