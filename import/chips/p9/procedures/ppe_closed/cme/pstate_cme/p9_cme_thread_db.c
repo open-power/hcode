@@ -68,6 +68,7 @@ inline void p9_cme_pstate_db0_start() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_glb_bcast() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_suspend() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_clip_bcast() __attribute__((always_inline));
+inline void p9_cme_pstate_db0_safe_mode() __attribute__((always_inline));
 inline void p9_cme_pstate_freq_update() __attribute__((always_inline));
 inline void p9_cme_pstate_notify_sib() __attribute__((always_inline));
 inline void p9_cme_pstate_update_analog() __attribute__((always_inline));
@@ -129,7 +130,6 @@ void p9_cme_pstate_db_thread(void* arg)
 
     G_cme_pstate_record.qmFlag = G_cme_flags & BIT32(CME_FLAGS_QMGR_MASTER);
     G_cme_pstate_record.siblingCMEFlag = G_cme_flags & BIT32(CME_FLAGS_SIBLING_FUNCTIONAL);
-    G_cme_pstate_record.pmcrSeenErr = 0;
 
     //Enable Interrupts depending on whether this CME is
     //a quadManager or siblingCME. DB0 is enabled only
@@ -439,6 +439,10 @@ inline void p9_cme_pstate_process_db0()
         {
             p9_cme_pstate_db0_clip_bcast();
         }
+        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_SAFE_MODE_BROADCAST)
+        {
+            p9_cme_pstate_db0_safe_mode();
+        }
         //Otherwise, send an ERR ACK to PGPE and Halt
         else
         {
@@ -483,24 +487,8 @@ inline void p9_cme_pstate_db0_start()
 {
     PK_TRACE_INF("DB_TH: DB0 Start Enter\n");
     ppm_pig_t ppmPigData;
-    uint32_t pmsrData;
 
     //Initialize pmin and pmax by reading from PMSR. PGPE
-    //directly writes PMSR before sending Pstate Start DB0
-    if (G_cme_record.core_enabled & CME_MASK_C0)
-    {
-        pmsrData = in32(CME_LCL_PMSRS0);
-    }
-    else
-    {
-        pmsrData = in32(CME_LCL_PMSRS1);
-    }
-
-    G_cme_pstate_record.pmin = (pmsrData & BITS32(16, 8)) >> SHIFT32(23);
-    G_cme_pstate_record.pmax = pmsrData & BITS32(24, 8);
-    PK_TRACE_INF("DB_TH: PMSR=0x%08x,pmin=0x%08x,pmax=0x%08x", pmsrData, G_cme_pstate_record.pmin,
-                 G_cme_pstate_record.pmax);
-
     p9_cme_pstate_update();
 
     out32(CME_LCL_FLAGS_OR, BIT32(24));//Set Pstates Enabled
@@ -582,7 +570,7 @@ inline void p9_cme_pstate_db0_clip_bcast()
 
     PK_TRACE_INF("DB_TH: DB0 Clip Enter\n");
     ppm_pig_t ppmPigData;
-    uint32_t dbBit8_15 = (G_dbData.value & BITS64(8, 8)) >> SHIFT64(40);
+    uint32_t dbBit8_15 = (G_dbData.value & BITS64(8, 8)) >> SHIFT64(15);
     uint32_t dbQuadValue = (G_dbData.value >> (in32(CME_LCL_SRTCH0) &
                             (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START,
                                     CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)))) & 0xFF;
@@ -614,6 +602,29 @@ inline void p9_cme_pstate_db0_clip_bcast()
     send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
 
     PK_TRACE_INF("DB_TH: DB0 Clip Exit\n");
+}
+
+inline void p9_cme_pstate_db0_safe_mode()
+{
+    PK_TRACE_INF("DB_TH: DB0 Safe Mode Enter\n");
+    ppm_pig_t ppmPigData;
+
+    G_cme_pstate_record.safeMode = 1;
+
+    p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
+
+    p9_cme_pstate_notify_sib(); //Notify sibling
+
+    //Send type4(ack doorbell)
+    ppmPigData.value = 0;
+    ppmPigData.fields.req_intr_type = 4;
+    ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_SUSPENDED;
+    send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
+
+    //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
+    CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
+
+    PK_TRACE_INF("DB_TH: DB0 Safe Mode Exit\n");
 }
 
 inline void p9_cme_pstate_notify_sib()
