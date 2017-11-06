@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -254,6 +254,16 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                 p9_pgpe_pstate_do_step();
                 pk_irq_sub_critical_exit(&ctx);
             }
+
+            //Send SAFE Mode Bcast to all CMEs
+            pgpe_db0_safe_mode_bcast_t db0_sm_bcast;
+            db0_sm_bcast.value = 0;
+            db0_sm_bcast.fields.msg_id = MSGID_DB0_SAFE_MODE_BROADCAST;
+            p9_pgpe_send_db0(db0_sm_bcast.value,
+                             G_pgpe_pstate_record.activeCores,
+                             PGPE_DB0_UNICAST,
+                             PGPE_DB0_ACK_WAIT_CME,
+                             G_pgpe_pstate_record.activeQuads);
 
             if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING)
             {

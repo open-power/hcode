@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -290,7 +290,7 @@ uint32_t p9_cme_resclk_get_index(uint32_t pstate)
 }
 #endif//USE_CME_RESCLK_FEATURE
 
-void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
+void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
 {
 #ifdef USE_CME_RESCLK_FEATURE
 
@@ -323,8 +323,6 @@ void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
             CME_PUTSCOM(CPPM_CACCR_OR, core_mask, (BITS64(13, 2)));
             // 3) Clear out the CACCR resclk values
             CME_PUTSCOM(CPPM_CACCR_CLR, core_mask, BITS64(0, 13));
-
-            p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
         }
         else
         {
@@ -701,9 +699,18 @@ void p9_cme_pstate_pmsr_updt(uint32_t coreMask)
             pmsrData |= (((uint64_t)(G_cme_pstate_record.pmin)) << 40) ;
             pmsrData |= (((uint64_t)(G_cme_pstate_record.pmax)) << 32) ;
 
-            if (G_cme_pstate_record.pmcrSeenErr & cm)
+            //LMCR[0] = 1 means PMCR SCOM update are enabled ie.
+            //PMCR SPR does not control Pstates. We reflect that in
+            //PMSR[32/PMCR_DISABLED]
+            if ((in32(CME_LCL_LMCR) & BIT32(0)))
             {
-                pmsrData |= BIT64(PMSR_INVALID_PMCR_VERSION);
+                pmsrData |= BIT64(32);
+            }
+
+            //PMSR[33] is SAFE_MODE bit
+            if(G_cme_pstate_record.safeMode)
+            {
+                pmsrData |= BIT64(33);
             }
 
             out64(CME_LCL_PMSRS0 + ((cm & 0x1) << 5), pmsrData);

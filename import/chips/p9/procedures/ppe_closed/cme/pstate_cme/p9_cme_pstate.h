@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -163,16 +163,17 @@ typedef struct
     uint32_t qmFlag;
     uint32_t siblingCMEFlag;
     uint32_t quadPstate;
-    uint32_t globalPstate;
     uint32_t cmeMaskGoodCore;
-    uint32_t pmcrSeenErr;
+    uint32_t globalPstate;
 #ifdef USE_CME_RESCLK_FEATURE
     cme_resclk_data_t resclkData;
 #endif//USE_CME_RESCLK_FEATURE
 #ifdef USE_CME_VDM_FEATURE
     cme_vdm_data_t vdmData;
 #endif//USE_CME_VDM_FEATURE
-    uint32_t pmin, pmax;
+    uint32_t pmin;
+    uint32_t safeMode;
+    uint32_t pmax;
 } CmePstateRecord;
 
 typedef struct
@@ -193,7 +194,7 @@ void ippm_write(uint32_t addr, uint64_t data);
 void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type);
 void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type);
 void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint32_t retry_enable);
-void p9_cme_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
+void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
 void p9_cme_pstate_pmsr_updt(uint32_t coreMask);
 #ifdef USE_CME_RESCLK_FEATURE
     uint32_t p9_cme_resclk_get_index(uint32_t pstate);

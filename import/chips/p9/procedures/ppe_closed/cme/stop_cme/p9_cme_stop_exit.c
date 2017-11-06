@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -352,7 +352,7 @@ p9_cme_stop_exit_lv2(uint32_t core)
     PK_TRACE("Assert core glitchless mux to DPLL via CGCR[3]");
     CME_PUTSCOM(C_PPM_CGCR, core, BIT64(3));
 
-    p9_cme_analog_control(core, ANALOG_ENABLE);
+    p9_cme_core_stop_analog_control(core, ANALOG_ENABLE);
 
     // do this after assert glsmux so glitch can have time to resolve
     // catchup to stop2 exit will acquire here
@@ -965,6 +965,8 @@ p9_cme_stop_exit()
             {
                 return;
             }
+
+            p9_cme_pstate_pmsr_updt(core);
 
             //==============================
             MARK_TAG(SX_RUNTIME_INITS, core)

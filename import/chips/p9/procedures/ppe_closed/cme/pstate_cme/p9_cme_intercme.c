@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -51,7 +51,6 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
 {
     cppm_cmedb0_t dbData;
     dbData.value = 0;
-    uint32_t pmsrData;
     uint32_t dbQuadInfo, dbBit8_15;
     uint32_t cme_flags = in32(CME_LCL_FLAGS);
     PkMachineContext  ctx __attribute__((unused));
@@ -81,23 +80,6 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     if(dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST)
     {
         PK_TRACE("INTER0: DB0 Start");
-
-        //Initialize pmin and pmax by reading from PMSR. PGPE
-        //directly writes PMSR before sending Pstate Start DB0
-        if (G_cme_record.core_enabled & CME_MASK_C0)
-        {
-            pmsrData = in32(CME_LCL_PMSRS0);
-        }
-        else
-        {
-            pmsrData = in32(CME_LCL_PMSRS1);
-        }
-
-        G_cme_pstate_record.pmin = (pmsrData & BITS32(16, 8)) >> SHIFT32(23);
-        G_cme_pstate_record.pmax = pmsrData & BITS32(24, 8);
-
-        PK_TRACE_INF("INTER0: PMSR=0x%08x,pmin=0x%08x,pmax=0x%08x", pmsrData, G_cme_pstate_record.pmin,
-                     G_cme_pstate_record.pmax);
 
         G_cme_pstate_record.quadPstate = dbQuadInfo;
         G_cme_pstate_record.globalPstate = dbBit8_15;
@@ -142,6 +124,14 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
 
         //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
         CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
+    }
+    else if(dbData.fields.cme_message_number0 == MSGID_DB0_SAFE_MODE_BROADCAST)
+    {
+        PK_TRACE("INTER0: DB0 Safe Mode");
+
+        G_cme_pstate_record.safeMode = 1;
+
+        p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
     }
     else
     {

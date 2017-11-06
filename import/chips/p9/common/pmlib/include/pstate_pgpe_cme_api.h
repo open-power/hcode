@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -97,7 +97,8 @@ enum MESSAGE_ID_DB0
     MSGID_DB0_START_PSTATE_BROADCAST    = 3,
     MSGID_DB0_STOP_PSTATE_BROADCAST     = 4,
     MSGID_DB0_CLIP_BROADCAST            = 5,
-    MSGID_DB0_VALID_END                 = 4 //This for error checking
+    MSGID_DB0_SAFE_MODE_BROADCAST       = 6,
+    MSGID_DB0_VALID_END                 = 6 //This for error checking
 };
 
 enum MESSAGEID_PCB_TYPE4_ACK_TYPES
@@ -221,5 +222,24 @@ typedef union pgpe_db0_clip_bcast
 #endif
     } fields;
 } pgpe_db0_clip_bcast_t;
+
+//
+//PGPE-CME Doorbell0(Safe Mode Broadcast)
+//
+typedef union pgpe_db0_safe_mode_bcast
+{
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t msg_id : 8;
+        uint64_t reserved: 56;
+#else
+        uint64_t reserved: 56;
+        uint64_t msg_id : 8;
+#endif
+    } fields;
+} pgpe_db0_safe_mode_bcast_t;
+
 
 #endif //__PSTATE_PGPE_CME_API_H__

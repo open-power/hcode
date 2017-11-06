@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -974,10 +974,6 @@ void p9_pgpe_process_registration()
                     value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
                     value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
-
-                    //PMSR0/1
-                    value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
-                            SHIFT64(31));
                 }
 
                 if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
@@ -987,10 +983,6 @@ void p9_pgpe_process_registration()
                     value |= ((uint64_t)(MAX_QUADS - 1 - q) << 3) << 32;
                     value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
-
-                    //PMSR0/1
-                    value = ((uint64_t)G_pgpe_pstate_record.psClipMax[q] << SHIFT64(23)) | ((uint64_t)G_pgpe_pstate_record.psClipMin[q] <<
-                            SHIFT64(31));
                 }
 
                 //Give Quad Manager CME control of DPLL through inter-ppm

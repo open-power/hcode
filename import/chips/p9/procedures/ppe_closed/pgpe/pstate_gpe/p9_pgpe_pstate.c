@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -514,7 +514,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     ocb_qcsr_t qcsr;
     uint8_t qPS;
     uint32_t lowestDpll, syncPstate, q, c;
-    uint64_t value, pmin, pmax;
+    uint64_t value;
 
     qcsr.value = in32(OCB_QCSR);
 
@@ -626,8 +626,6 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         {
             //Give Quad Manager CME control of DPLL through inter-ppm
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
-            pmin = G_pgpe_pstate_record.psClipMax[q];
-            pmax = G_pgpe_pstate_record.psClipMin[q];
 
             if (qcsr.fields.ex_config &  (0x800 >> (q << 1)))
             {
@@ -636,15 +634,6 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
                 value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
                 value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
-
-                //PMSR0/1
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(2));
-                value = 0;
-                value |= (pmin << SHIFT64(23));
-                value |= (pmax << SHIFT64(31));
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 0), value);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 0), value);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 0), BIT64(2));
             }
 
             if (qcsr.fields.ex_config &  (0x400 >> (q << 1)))
@@ -654,15 +643,6 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
                 value |= (uint64_t)((MAX_QUADS - 1 - q) << 3) << 32;
                 value |= BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
-
-                //PMSR0/1
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(2));
-                value = 0;
-                value |= (pmin << SHIFT64(23));
-                value |= (pmax << SHIFT64(31));
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS0, q, 1), value);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PMSRS1, q, 1), value);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, 1), BIT64(2));
             }
         }
     }
@@ -688,6 +668,38 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     }
 
     //7. Send Pstate Start Doorbell0
+    pgpe_db0_clip_bcast_t db0_clip_bcast;
+    db0_clip_bcast.value = 0;
+    db0_clip_bcast.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
+    db0_clip_bcast.fields.clip_type = DB0_CLIP_BCAST_TYPE_PMIN;
+    db0_clip_bcast.fields.quad0_clip = G_pgpe_pstate_record.psClipMax[0];
+    db0_clip_bcast.fields.quad1_clip = G_pgpe_pstate_record.psClipMax[1];
+    db0_clip_bcast.fields.quad2_clip = G_pgpe_pstate_record.psClipMax[2];
+    db0_clip_bcast.fields.quad3_clip = G_pgpe_pstate_record.psClipMax[3];
+    db0_clip_bcast.fields.quad4_clip = G_pgpe_pstate_record.psClipMax[4];
+    db0_clip_bcast.fields.quad5_clip = G_pgpe_pstate_record.psClipMax[5];
+    p9_pgpe_send_db0(db0_clip_bcast.value,
+                     G_pgpe_pstate_record.activeCores,
+                     PGPE_DB0_UNICAST,
+                     PGPE_DB0_ACK_WAIT_CME,
+                     G_pgpe_pstate_record.activeQuads);
+
+    db0_clip_bcast.value = 0;
+    db0_clip_bcast.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
+    db0_clip_bcast.fields.clip_type = DB0_CLIP_BCAST_TYPE_PMAX;
+    db0_clip_bcast.fields.quad0_clip = G_pgpe_pstate_record.psClipMin[0];
+    db0_clip_bcast.fields.quad1_clip = G_pgpe_pstate_record.psClipMin[1];
+    db0_clip_bcast.fields.quad2_clip = G_pgpe_pstate_record.psClipMin[2];
+    db0_clip_bcast.fields.quad3_clip = G_pgpe_pstate_record.psClipMin[3];
+    db0_clip_bcast.fields.quad4_clip = G_pgpe_pstate_record.psClipMin[4];
+    db0_clip_bcast.fields.quad5_clip = G_pgpe_pstate_record.psClipMin[5];
+    p9_pgpe_send_db0(db0_clip_bcast.value,
+                     G_pgpe_pstate_record.activeCores,
+                     PGPE_DB0_UNICAST,
+                     PGPE_DB0_ACK_WAIT_CME,
+                     G_pgpe_pstate_record.activeQuads);
+
+
     pgpe_db0_start_ps_bcast_t db0;
     db0.value = 0;
     db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
