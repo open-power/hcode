@@ -1019,7 +1019,7 @@ void p9_pgpe_process_registration()
         db0_clip_bcast.fields.quad3_clip = G_pgpe_pstate_record.psClipMax[3];
         db0_clip_bcast.fields.quad4_clip = G_pgpe_pstate_record.psClipMax[4];
         db0_clip_bcast.fields.quad5_clip = G_pgpe_pstate_record.psClipMax[5];
-        p9_pgpe_send_db0(db0_clip_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_WAIT_CME, 0);
+        p9_pgpe_send_db0(db0_clip_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_WAIT_CME, quadAckExpect);
 
         db0_clip_bcast.value = 0;
         db0_clip_bcast.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
@@ -1030,7 +1030,7 @@ void p9_pgpe_process_registration()
         db0_clip_bcast.fields.quad3_clip = G_pgpe_pstate_record.psClipMin[3];
         db0_clip_bcast.fields.quad4_clip = G_pgpe_pstate_record.psClipMin[4];
         db0_clip_bcast.fields.quad5_clip = G_pgpe_pstate_record.psClipMin[5];
-        p9_pgpe_send_db0(db0_clip_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_WAIT_CME, 0);
+        p9_pgpe_send_db0(db0_clip_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_WAIT_CME, quadAckExpect);
 
         //Send Pstate Start DB0 to all quads that registered
         db0_glb_bcast.value = 0;

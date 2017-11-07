@@ -427,14 +427,7 @@ inline void p9_cme_pstate_process_db0()
         //Pmin or Pmax Update
         else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST)
         {
-            //Process Clip Bcast only if Pstates are enabled.
-            //Otherwise, ignore. The reason is PGPE multicasts Clip Bcast, and doorbell0
-            //can be written while this CME is powered-off or about to be powered-off.
-            //For Pstate Start and Stop PGPE only unicasts.
-            if (G_cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))
-            {
-                p9_cme_pstate_db0_clip_bcast();
-            }
+            p9_cme_pstate_db0_clip_bcast();
         }
         //Otherwise, send an ERR ACK to PGPE and Halt
         else
@@ -711,15 +704,17 @@ inline void p9_cme_pstate_freq_update()
 
 inline void p9_cme_pstate_update_analog()
 {
+
 #ifdef USE_CME_RESCLK_FEATURE
     PkMachineContext ctx;
+
     uint32_t rescurr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
                        ? G_cme_pstate_record.resclkData.common_resclk_idx
                        : G_cme_pstate_record.quadPstate;
     uint32_t resnext = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
                        ? p9_cme_resclk_get_index(G_next_pstate)
                        : G_next_pstate;
-#endif//USE_CME_RESCLK_FEATURE
+#endif //USE_CME_RESCLK_FEATURE
 
 #ifdef USE_CME_VDM_FEATURE
 
@@ -729,7 +724,7 @@ inline void p9_cme_pstate_update_analog()
         p9_cme_vdm_update(G_next_pstate);
     }
 
-#endif//USE_CME_VDM_FEATURE
+#endif //USE_CME_VDM_FEATURE
 
 #ifdef USE_CME_RESCLK_FEATURE
 
@@ -777,6 +772,8 @@ inline void p9_cme_pstate_update_analog()
 
 void p9_cme_pstate_update()
 {
+    PkMachineContext ctx;
+
     PK_TRACE_INF("DB_TH: Pstate Updt Enter");
 
     G_next_pstate = (G_dbData.value >> (in32(CME_LCL_SRTCH0) &
@@ -800,10 +797,14 @@ void p9_cme_pstate_update()
         PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", G_dbData.value >> 32,
                      G_dbData.value);
 
+        pk_critical_section_enter(&ctx);
+
         p9_cme_pstate_update_analog();
 
         // Must update quadPstate before calling PMSR update
         G_cme_pstate_record.quadPstate = G_next_pstate;
+
+        pk_critical_section_exit(&ctx);
     }
 
     p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
