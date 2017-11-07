@@ -75,12 +75,20 @@ void p9_pgpe_pstate_init()
     ccsr.value = in32(OCB_CCSR);
 
     G_pgpe_pstate_record.pstatesStatus = PSTATE_INIT;
-    G_pgpe_pstate_record.safePstate = (G_gppb->reference_frequency_khz - G_gppb->safe_frequency_khz +
-                                       (G_gppb->frequency_step_khz - 1)) / G_gppb->frequency_step_khz;
-#if OVERRIDE_PSAFE_PSTATE == 1
-    G_pgpe_pstate_record.safePstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-#endif
+
+    if (G_gppb->safe_frequency_khz)
+    {
+        G_pgpe_pstate_record.safePstate = (G_gppb->reference_frequency_khz - G_gppb->safe_frequency_khz -
+                                           (G_gppb->frequency_step_khz)) / G_gppb->frequency_step_khz;
+    }
+    else
+    {
+        G_pgpe_pstate_record.safePstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        PK_TRACE_INF("Safe Frequency is NOT set.  Using POWERSAVE as Pstate as safe");
+    }
+
     PK_TRACE_INF("SafePstate=0x%x", G_pgpe_pstate_record.safePstate);
+    PK_TRACE_INF("SafeFrequency=0x%x,SafeVoltage=0x%x", G_gppb->safe_frequency_khz, G_gppb->safe_voltage_mv);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -246,9 +254,8 @@ void p9_pgpe_pstate_apply_clips()
     for (q = 0; q < MAX_QUADS; q++)
     {
         uint8_t minPS = G_pgpe_pstate_record.psClipMin[q];
-        uint8_t maxPS = G_pgpe_pstate_record.psClipMax[q] <
-                        G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate ?
-                        G_pgpe_pstate_record.psClipMax[q] : G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        uint8_t maxPS = G_pgpe_pstate_record.psClipMax[q] < G_pgpe_pstate_record.safePstate ?
+                        G_pgpe_pstate_record.psClipMax[q] : G_pgpe_pstate_record.safePstate;
 
         if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
