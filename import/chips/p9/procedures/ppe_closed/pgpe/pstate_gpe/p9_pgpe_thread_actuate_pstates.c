@@ -69,7 +69,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
     {
         for (q = 0; q < MAX_QUADS; q++)
         {
-            G_pgpe_pstate_record.psClipMax[q] = G_gppb->operating_points[POWERSAVE].pstate;
+            G_pgpe_pstate_record.psClipMax[q] = G_pgpe_pstate_record.safePstate;
             G_pgpe_pstate_record.psClipMin[q] = G_gppb->operating_points[ULTRA].pstate;
         }
 
