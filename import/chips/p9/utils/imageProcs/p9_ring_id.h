@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -355,6 +355,12 @@ enum RingID
 
     // CMSK ring
     ec_cmsk = 252, //0xFC
+
+    // Perv PLL filter override rings
+    perv_pll_bndy_flt_1   = 253, //0xFD
+    perv_pll_bndy_flt_2   = 254, //0xFE
+    perv_pll_bndy_flt_3   = 255, //0xFF
+    perv_pll_bndy_flt_4   = 256, //0x100
 
     //***************************
     // Rings needed for SBE - End
