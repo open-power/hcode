@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -37,7 +37,7 @@ uint32_t G_last_sync_op;
 
 void p9_pgpe_optrace_init() //sets up address and initializes buffer to 0's
 {
-    G_lastDisable = 0;
+    G_lastDisable = 1;
     G_address = OCC_SRAM_PGPE_OPTRACE_ADDR;
 
     do
@@ -51,7 +51,7 @@ void p9_pgpe_optrace_init() //sets up address and initializes buffer to 0's
 }
 void p9_pgpe_optrace(uint32_t mark)
 {
-    if(in32(OCB_OCCS2) & PGPE_OP_TRACE_DISABLE) //Check to see if tracing is enabled
+    if(in32(OCB_OCCS2) & BIT32(PGPE_OP_TRACE_DISABLE)) //Check to see if tracing is enabled
     {
         G_lastDisable = 1;
     }
