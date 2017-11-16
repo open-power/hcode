@@ -51,6 +51,7 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
 
     PK_TRACE_INF("PCWU Handler Trigger %d Level %d", irq, core);
 
+    g_eimr_override |= ((uint64_t)G_cme_stop_record.core_running << SHIFT64(13));
     core &= ~(G_cme_stop_record.core_running);
 
     for (core_mask = 2; core_mask; core_mask--)
