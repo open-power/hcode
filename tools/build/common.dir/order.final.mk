@@ -30,7 +30,6 @@
 #    * 'IMAGE' where images are built.
 #    * 'ALL' for everything else, like documentation.
 
-HW_IMAGE_VERSION = $(shell cat $(ROOTPATH)/../tools/build/release_tag.txt)
 
 .PHONY: _BUILD/GEN_TARGETS _BUILD/GEN_TARGETS/ACT
 _BUILD/GEN_TARGETS:
@@ -53,14 +52,6 @@ _BUILD/IMAGE_TARGETS: _BUILD/EXE_TARGETS | $(IMAGE_DEPS)
 _BUILD/IMAGE_TARGETS/ACT: $(IMAGE_TARGETS) suppress_nothing_to_do
 
 .PHONY: all _BUILD/ALL_TARGETS/ACT
-all: _BUILD/IMAGE_TARGETS install_rings
+all: _BUILD/IMAGE_TARGETS
 		@$(MAKE) _BUILD/ALL_TARGETS/ACT
-		$(EXEPATH)/p9_xip_tool.exe $(IMAGEPATH)/hw_image/p9n.hw_image.bin set build_tag $(HW_IMAGE_VERSION)
 _BUILD/ALL_TARGETS/ACT: $(ALL_TARGETS) suppress_nothing_to_do
-
-
-.PHONY: install_rings
-
-install_rings:
-	@mkdir -p $(GENPATH)/rings/hw/
-	@cp $(BASEPATH)/rings/* $(GENPATH)/rings/hw/

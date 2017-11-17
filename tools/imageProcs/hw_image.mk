@@ -25,6 +25,8 @@
 
 MAX_SBE_RING_SECTION_SIZE ?= 25600
 
+HW_IMAGE_VERSION:= $(shell cat $(ROOTPATH)/../tools/build/release_tag.txt)
+
 #depend on the completion of the base hw_image
 #binfiles to add to the hw_image
 #various image dependencies to serialize hw_image creation
@@ -32,7 +34,6 @@ MAX_SBE_RING_SECTION_SIZE ?= 25600
 #$2 == chipId
 define BUILD_HW_IMAGE
 $(eval IMAGE=$2.$1_image)
-
 
 $(eval $(IMAGE)_PATH=$(IMAGEPATH)/hw_image)
 $(eval $(IMAGE)_LINK_SCRIPT=hw_image.cmd)
@@ -50,7 +51,6 @@ $(eval $(IMAGE)_FILE_OVERLAYS= $(GENPATH)/rings/$1/$2.$1.overlays.bin)
 # dependencies for appending image sections in sequence
 $(eval $(IMAGE)_DEPS_SGPE =$(IMAGEPATH)/sgpe_image/.$2.sgpe_image.bin.built)
 $(eval $(IMAGE)_DEPS_SGPE+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
-
 
 $(eval $(IMAGE)_DEPS_RESTORE =$(IMAGEPATH)/restore_image/.$2.restore_image.bin.built)
 $(eval $(IMAGE)_DEPS_RESTORE+=$$($(IMAGE)_PATH)/.$(IMAGE).append.sgpe)
@@ -70,6 +70,7 @@ $(eval $(IMAGE)_DEPS_RINGS+=$$($(IMAGE)_PATH)/.$(IMAGE).append.ioppe)
 $(eval $(IMAGE)_DEPS_OVERLAYS = $$($(IMAGE)_FILE_OVERLAYS))
 $(eval $(IMAGE)_DEPS_OVERLAYS+= $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
 
+
 # image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.sgpe,$$($(IMAGE)_DEPS_SGPE),$$($(IMAGE)_FILE_SGPE)))
 $(eval $(call XIP_TOOL,append,.core_restore,$$($(IMAGE)_DEPS_RESTORE),$$($(IMAGE)_FILE_RESTORE)))
@@ -77,12 +78,16 @@ $(eval $(call XIP_TOOL,append,.cme,$$($(IMAGE)_DEPS_CME),$$($(IMAGE)_FILE_CME)))
 $(eval $(call XIP_TOOL,append,.pgpe,$$($(IMAGE)_DEPS_PSTATE),$$($(IMAGE)_FILE_PSTATE)))
 $(eval $(call XIP_TOOL,append,.ioppe,$$($(IMAGE)_DEPS_IOPPE),$$($(IMAGE)_FILE_IOPPE)))
 
-
 $(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS)))
 
 $(eval $(call XIP_TOOL,append,.overlays,$$($(IMAGE)_DEPS_OVERLAYS), $$($(IMAGE)_FILE_OVERLAYS) 1))
 
-$(eval $(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).append.overlays))
+$(eval $(call XIP_TOOL,set,build_tag,$$($(IMAGE)_PATH)/.$(IMAGE).append.overlays, $(HW_IMAGE_VERSION)))
+
+$(eval $(call XIP_TOOL,report,,$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_tag))
+
+$(eval $(foreach ec, $($(2)_EC),\
+	    $(eval $(call VERIFY_SBE_RING_SECTION, 0x$(ec), $(MAX_SBE_RING_SECTION_SIZE),$(ec)))))
 
 $(eval $(call BUILD_XIPIMAGE))
 endef
