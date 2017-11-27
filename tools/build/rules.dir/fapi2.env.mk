@@ -47,8 +47,14 @@ FAPI2_PLAT_INCLUDE += $(addsuffix /common/include, \
 	$(addprefix $(ROOTPATH)/chips/,$(CHIPS)))
 
 # HW Init header files.
-FAPI2_PLAT_INCLUDE += $(addsuffix /procedures/hwp/initfiles, \
-	$(addprefix $(ROOTPATH)/chips/,$(CHIPS)))
+FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/p9/utils/
+FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/common/utils/
+FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/centaur/utils/
+
+
+FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/p9/utils/imageProcs
+FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/common/utils/imageProcs
+FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/centaur/utils/imageProcs
 
 # Utils header files
 FAPI2_PLAT_INCLUDE += $(addsuffix /utils, \

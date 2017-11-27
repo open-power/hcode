@@ -43,6 +43,8 @@ MAKEFILE_PATH += $(ROOTPATH)/chips/p9/utils/imageProcs
 MAKEFILE_PATH += $(ROOTPATH)/tools/imageProcs
 MAKEFILE_PATH += $(BASEPATH)/tools/imageProcs
 MAKEFILE_PATH += $(BASEPATH)/rings/
+MAKEFILE_PATH += $(ROOTPATH)/chips/centaur/utils/imageProcs
+MAKEFILE_PATH += $(ROOTPATH)/chips/common/utils/imageProcs
 endif
 
 
