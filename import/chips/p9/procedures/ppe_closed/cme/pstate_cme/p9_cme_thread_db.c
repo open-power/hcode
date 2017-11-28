@@ -911,6 +911,8 @@ void p9_cme_pstate_update()
         PK_TRACE_INF("DB_TH: DBData=0x%08x%08x\n", G_dbData.value >> 32,
                      G_dbData.value);
 
+        p9_cme_pstate_pmsr_updt_in_progress(G_cme_record.core_enabled);
+
         pk_critical_section_enter(&ctx);
 
         p9_cme_pstate_update_analog();
