@@ -196,7 +196,9 @@ void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type);
 void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint32_t retry_enable);
 void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
 void p9_cme_pstate_pmsr_updt(uint32_t coreMask);
+void p9_cme_pstate_pmsr_updt_in_progress(uint32_t coreMask);
 void p9_cme_pstate_intercme_in0_handler();
+
 #ifdef USE_CME_RESCLK_FEATURE
     uint32_t p9_cme_resclk_get_index(uint32_t pstate);
     void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t pstate, uint32_t curr_idx);

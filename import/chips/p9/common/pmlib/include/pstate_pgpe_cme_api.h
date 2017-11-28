@@ -80,6 +80,7 @@ enum PMSR_DEFS
     PMSR_SAFE_MODE                      = 33,
     PMSR_IVRM_ALLOWED                   = 34,
     PMSR_IVRM_ENABLED                   = 35,
+    PMSR_UPDATE_IN_PROGRESS             = 58,
     PMSR_INVALID_PMCR_VERSION           = 59,
     PMSR_VERSION_START                  = 60,
     PMSR_VERSION_LENGTH                 = 4

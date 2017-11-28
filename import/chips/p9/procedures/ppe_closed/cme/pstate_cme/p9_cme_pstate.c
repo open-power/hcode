@@ -717,3 +717,21 @@ void p9_cme_pstate_pmsr_updt(uint32_t coreMask)
         }
     }
 }
+
+
+void p9_cme_pstate_pmsr_updt_in_progress(uint32_t coreMask)
+{
+    uint32_t cm;
+    uint64_t pmsrData;
+
+    //CORE0 mask is 0x2, and CORE1 mask is 0x1.
+    //We AND with 0x1 to get the core number from mask.
+    for (cm = 2; cm > 0; cm--)
+    {
+        if (cm & coreMask)
+        {
+            pmsrData = in64(CME_LCL_PMSRS0 + ((cm & 0x1) << 5)) | BIT64(PMSR_UPDATE_IN_PROGRESS);
+            out64(CME_LCL_PMSRS0 + ((cm & 0x1) << 5), pmsrData);
+        }
+    }
+}
