@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -75,9 +75,17 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 
         for (ex_mask = 2; ex_mask; ex_mask--)
         {
-            if (m_ex & ex_mask)
+            ex_index = ex_mask & 1;
+
+            if (!(m_ex & ex_mask))
             {
-                ex_index = ex_mask & 1;
+                PK_TRACE("Apply EQ_FIR_MASK to Deconfigured EQ[%x]EX[%x]", quad, ex_index);
+                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_FIR_MASK, quad), scom_data.value);
+                scom_data.words.upper |= ((BIT32(4) | BIT32(6) | BIT32(8) | BIT32(11)) >> ex_index);
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_FIR_MASK, quad), scom_data.value);
+            }
+            else
+            {
                 PK_TRACE_DBG("Stop11: Working on EX%d", ex_index);
 
                 // p9_l3_scom: EX_L3_MODE_REG1
