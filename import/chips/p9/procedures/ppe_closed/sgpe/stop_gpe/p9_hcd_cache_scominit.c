@@ -265,7 +265,12 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L2_MODE_REG0, quad, ex_index),
                             scom_data.value);
                 scom_data.words.lower |= BIT64SH(38);
+                // HW415945 -- disable bypass
+#if CUMULUS_DD_LEVEL == 10
+                scom_data.words.upper &= ~BIT32(15);
+#else
                 scom_data.words.upper |= BIT32(15);
+#endif
                 scom_data.words.upper |= BIT32(21);
                 scom_data.words.upper &= ~BIT32(23);
 
