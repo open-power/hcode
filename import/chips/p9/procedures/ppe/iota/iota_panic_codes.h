@@ -50,7 +50,7 @@ typedef enum
     IOTA_DATA_ALIGNMENT_PANIC = 0x0007,
     IOTA_ILLEGAL_INSTRUCTION = 0x0008,
     IOTA_SOFTWARE_HALT = 0x0009,
-    IOTA_UNUSED_000a = 0x000a,
+    IOTA_DEC_NOT_SUPPORTED = 0x000a,
     IOTA_UNUSED_000d = 0x000d,
     IOTA_UNUSED_001c = 0x001c,
     IOTA_UNUSED_001d = 0x001d,
@@ -265,6 +265,7 @@ typedef enum
 #define IOTA_DATA_ALIGNMENT_PANIC          0x0007
 #define IOTA_ILLEGAL_INSTRUCTION           0x0008
 #define IOTA_SOFTWARE_HALT                 0x0009
+#define IOTA_DEC_NOT_SUPPORTED             0x000a
 
 #endif  // __ASSEMBLER__
 #endif
