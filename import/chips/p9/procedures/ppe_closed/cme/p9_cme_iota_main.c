@@ -478,8 +478,8 @@ int main()
     PK_TRACE("Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
     out32(CME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
 
-    PK_TRACE("DEC every cycle, Enable FIT Timer");
-    mtspr(SPRN_TCR, (TCR_DS | TCR_FIE));
+    PK_TRACE("Enable FIT Timer");
+    mtspr(SPRN_TCR, (TCR_FIE));
 
     p9_cme_stop_init();
 
