@@ -125,7 +125,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG0, quad, ex_index),
                             scom_data.value);
                 scom_data.words.upper &= ~(BIT32(1) | BITS32(14, 8) | BIT32(22));
-                scom_data.words.upper |= (BIT32(2) | BIT32(11) | BIT32(17) | BIT32(19));
+                scom_data.words.upper |= (BIT32(2) | BIT32(11) | BITS32(17, 2));
 
 #if NIMBUS_DD_LEVEL != 10
 
@@ -213,8 +213,11 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 // EXP.NC.NCMISC.NCSCOMS.TLB_STG2_HANG_POLL_PULSE_DIV
                 // EXP.NC.NCMISC.NCSCOMS.MASTER_TLB_DATA_POLL_PULSE_DIV
 
+                scom_data.words.lower = 0;
+                scom_data.words.upper = (BITS32(3, 2) | BIT32(13) | BIT32(18) | BIT32(22) | BIT32(29));
+
                 GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG2, quad, ex_index),
-                            0x1402220200000000);
+                            scom_data.value);
 
                 // p9_ncu_scom: EX_NCU_MODE_REG3
                 // EXP.NC.NCMISC.NCSCOMS.TLBIE_STALL_EN
@@ -282,7 +285,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L2_MODE_REG1, quad, ex_index),
                             scom_data.value);
                 scom_data.words.upper &= BITS32(4, 8);
-                scom_data.words.upper |= (BIT32(7) | BIT32(9));
+                scom_data.words.upper |= BITS32(7, 2);
 
                 if (addr_extension != 0)
                 {
