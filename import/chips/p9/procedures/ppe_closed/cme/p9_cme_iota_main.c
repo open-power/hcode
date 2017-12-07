@@ -436,7 +436,7 @@ IOTA_TASK(ext_handler), // bits 0-6   default
           IOTA_TASK(p9_cme_stop_enter_handler), // bits 20,21 p9_cme_stop_enter_handler
           IOTA_TASK(p9_cme_stop_db1_handler), // bits 40,41 p9_cme_stop_db1_handler
           IOTA_TASK(p9_cme_pstate_db_handler), // bits 36,37 p9_cme_pstate_db_handler
-          IOTA_TASK(p9_cme_pstate_intercme_in0_handler), // bit  7     p9_cme_pstate_intercme_in0_handler
+          IOTA_TASK(p9_cme_pstate_intercme_in0_irq_handler), // bit  7     p9_cme_pstate_intercme_in0_handler
           IOTA_TASK(p9_cme_pstate_pmcr_handler), // bits 34,35 p9_cme_pstate_pmcr_handler
           IOTA_TASK(p9_cme_pstate_intercme_msg_handler), // bit  29    p9_cme_pstate_intercme_msg_handler
           IOTA_NO_TASK  // Should never see these
