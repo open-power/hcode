@@ -125,7 +125,7 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 {
     PK_TRACE_INF("IPC: Clips");
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
-    ipcmsg_set_pmcr_t* args = (ipcmsg_set_pmcr_t*)async_cmd->cmd_data;
+    ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
 
     if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 0)
     {

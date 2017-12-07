@@ -864,7 +864,7 @@ p9_sgpe_stop_entry()
             MARK_TAG(SE_WAIT_PGPE_QUAD_NOTIFY, (32 >> qloop))
             //===============================================
 
-            p9_sgpe_ipc_pgpe_update_active_quads_poll_ack();
+            p9_sgpe_ipc_pgpe_update_active_quads_poll_ack(UPDATE_ACTIVE_QUADS_TYPE_ENTRY);
             ipc_quad_entry = 1;
         }
 
@@ -1308,7 +1308,7 @@ p9_sgpe_stop_entry()
                                              UPDATE_ACTIVE_QUADS_ENTRY_TYPE_DONE);
 
         // pgpe should ack right away
-        p9_sgpe_ipc_pgpe_update_active_quads_poll_ack();
+        p9_sgpe_ipc_pgpe_update_active_quads_poll_ack(UPDATE_ACTIVE_QUADS_TYPE_ENTRY);
     }
 
 #endif

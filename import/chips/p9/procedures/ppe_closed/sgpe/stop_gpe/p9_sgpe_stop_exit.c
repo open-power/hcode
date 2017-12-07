@@ -238,7 +238,7 @@ p9_sgpe_stop_exit_end(uint32_t qloop)
 #endif
 
                 p9_sgpe_stop_exit_handoff_cme(cindex);
-
+                G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |=  BIT32(qloop);
 #if DISABLE_STOP8
 
             }
@@ -251,7 +251,6 @@ p9_sgpe_stop_exit_end(uint32_t qloop)
 
     PK_TRACE("Update QSSR: drop stop_exit_ongoing");
     out32(OCB_QSSR_CLR, BIT32(qloop + 26));
-    G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |=  BIT32(qloop);
 }
 
 //-------------------------------------------------------------------------
@@ -483,7 +482,10 @@ p9_sgpe_stop_exit()
             }
         }
 
-        p9_sgpe_stop_exit_end(qloop);
+        if (G_sgpe_stop_record.group.quad[VECTOR_CONFIG] & BIT32(qloop))
+        {
+            p9_sgpe_stop_exit_end(qloop);
+        }
     }
 
 
@@ -585,7 +587,7 @@ p9_sgpe_stop_exit()
         if (ipc_exit_quad)
         {
             ipc_exit_quad = 0;
-            p9_sgpe_ipc_pgpe_update_active_quads_poll_ack();
+            p9_sgpe_ipc_pgpe_update_active_quads_poll_ack(UPDATE_ACTIVE_QUADS_TYPE_EXIT);
         }
 
 #endif
@@ -910,6 +912,8 @@ p9_sgpe_stop_exit()
                     if (!(cme_flags & BIT32(CME_FLAGS_SIBLING_FUNCTIONAL)))
                     {
                         cme_flags |= BIT32(CME_FLAGS_QMGR_MASTER);
+
+
                     }
                 }
                 else
@@ -917,6 +921,10 @@ p9_sgpe_stop_exit()
                     cme_flags |= BIT32(CME_FLAGS_QMGR_MASTER);
                 }
 
+                if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
+                {
+                    cme_flags |= BIT32(CME_FLAGS_WAIT_ON_PSTATE_START);
+                }
 
 #if NIMBUS_DD_LEVEL != 10
 
