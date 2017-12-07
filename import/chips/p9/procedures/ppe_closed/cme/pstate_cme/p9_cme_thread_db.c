@@ -57,6 +57,11 @@ extern LocalPstateParmBlock* G_lppb;
 uint32_t G_cme_flags;
 cppm_cmedb0_t G_dbData;
 uint32_t G_next_pstate;
+//This is set and cleared during registration, so no need
+//to protect it in critical section. It only serves to make sure
+//that p9_cme_update_analog is called if pstates are started during
+//registration even
+uint32_t G_register_in_progress;
 extern uint8_t G_vdm_threshold_table[];
 
 //
@@ -107,6 +112,8 @@ void p9_cme_pstate_db_thread(void* arg)
     PK_TRACE_INF("DB_TH: Hdr=0x%x, LPPB=0x%x, Freq_Mhz=%d\n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb,
                  G_lppb->operating_points[NOMINAL].frequency_mhz);
 
+    G_register_in_progress = 0;
+
     // Pre-compute the value to be used as the SPURR reference during CME Boot and
     // save in a variable to be used later during Stop exit.
     // The value is the 2's complement of ROUND((Core Nominal Frequency in Mhz)/64)
@@ -123,7 +130,7 @@ void p9_cme_pstate_db_thread(void* arg)
 
     // Mask PMCR interrupts, these will be unmasked when starting Pstates
     g_eimr_override |= BITS64(34, 2);
-    out32_sh(CME_LCL_EIMR_OR, (SHIFT64SH(34) | SHIFT64SH(35)));
+    out32_sh(CME_LCL_EIMR_OR, (BITS64SH(34, 2)));
 
     //Read CME_LCL_FLAGS
     G_cme_flags = in32(CME_LCL_FLAGS);
@@ -336,14 +343,17 @@ void p9_cme_pstate_db_thread(void* arg)
 
 #endif//USE_CME_VDM_FEATURE
 
+    //Read CME_LCL_FLAGS again
+    G_cme_flags = in32(CME_LCL_FLAGS);
+
+    //Register with PGPE
+    p9_cme_pstate_register();
+
     //Doorbell Thread(this thread) will continue to run on
     //Quad Manager CME. The sibling CME has intercme_in0 enabled
     //and won't run this thread past this point.
     if (G_cme_pstate_record.qmFlag)
     {
-        //Register with PGPE
-        p9_cme_pstate_register();
-
         PK_TRACE_INF("DB_TH: Inited\n");
 
 #if !defined(__IOTA__)
@@ -470,14 +480,101 @@ inline void p9_cme_pstate_process_db0()
 
 inline void p9_cme_pstate_register()
 {
-    //Send type4(ack doorbell)
-    ppm_pig_t ppmPigData;
-    ppmPigData.value = 0;
-    ppmPigData.fields.req_intr_type = 4;
-    ppmPigData.fields.req_intr_payload =  MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE;
-    send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
+    uint32_t done = 0;
+    G_register_in_progress = 1;
 
-    PK_TRACE_INF("DB_TH: Register Msg Sent\n");
+    //Quad Manager sends register message to PGPE
+    if (G_cme_pstate_record.qmFlag)
+    {
+        //Clear EISR[DB0_C0/1]
+        if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
+        {
+            out32_sh(CME_LCL_EISR_CLR, BIT32(4));
+        }
+        else
+        {
+            out32_sh(CME_LCL_EISR_CLR, BIT32(5));
+        }
+
+        //Send type4(ack doorbell)
+        ppm_pig_t ppmPigData;
+        ppmPigData.value = 0;
+        ppmPigData.fields.req_intr_type = 4;
+        ppmPigData.fields.req_intr_payload =  MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE;
+        send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
+
+        PK_TRACE_INF("DB_TH: Register Msg Sent\n");
+
+        if (G_cme_flags & BIT32(CME_FLAGS_WAIT_ON_PSTATE_START))      //Poll on DB0
+        {
+            PK_TRACE_INF("DB_TH: Wait on Pstate Start\n");
+
+            //Wait until PGPE has set DB0_PROCESSING_ENABLE. This is important as
+            //PGPE might send DB0 to other quads as part of processing registration
+            //msg from this quad, but we don't want this quad to process them until
+            //PGPE has set DB0_PROCESSING_ENABLE
+            while(!(in32(CME_LCL_SRTCH0) & BIT32(CME_SCRATCH_DB0_PROCESSING_ENABLE)));
+
+            //PGPE will send Pmin, Pmax and Pstate Start Doorbells
+            //Pstate Start is the last DB0
+            while(!done)
+            {
+                //Wait until DB0 is written again
+                if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
+                {
+                    while(!(in32_sh(CME_LCL_EISR) & BIT32(4))) {}
+
+                    out32_sh(CME_LCL_EISR_CLR, BIT32(4));
+                    CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, G_dbData.value);
+                }
+                else
+                {
+                    while(!(in32_sh(CME_LCL_EISR) & BIT32(5))) {}
+
+                    out32_sh(CME_LCL_EISR_CLR, BIT32(5));
+                    CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, G_dbData.value);
+                }
+
+                //Process DB0
+                if((G_dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST))
+                {
+                    p9_cme_pstate_db0_start();
+                    done = 1;
+                }
+                else if ((G_dbData.fields.cme_message_number0 ==  MSGID_DB0_CLIP_BROADCAST))
+                {
+                    p9_cme_pstate_db0_clip_bcast();
+                }
+            }
+        }
+
+        //Sibling CME
+    }
+    else
+    {
+        uint32_t msg;
+        uint32_t msgCnt = 0;
+
+        if (G_cme_flags & BIT32(CME_FLAGS_WAIT_ON_PSTATE_START))
+        {
+            //PGPE sends Pmin, Pmax, and Pstate start DB0, so
+            //total of three
+            PK_TRACE_INF("DB_TH: Wait on Pstate Start\n");
+
+            while(msgCnt != 3)
+            {
+                PK_TRACE_INF("DB_TH: Sib Register MsgCnt=0x%xt", msgCnt);
+                intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
+
+                while(!(in32(CME_LCL_EISR) & BIT32(7))) {} // Block on the intercme0 bit set
+
+                p9_cme_pstate_intercme_in0_handler();
+                msgCnt++;
+            }
+        }
+    }
+
+    G_register_in_progress = 0;
 }
 
 //
@@ -488,7 +585,6 @@ inline void p9_cme_pstate_db0_start()
     PK_TRACE_INF("DB_TH: DB0 Start Enter\n");
     ppm_pig_t ppmPigData;
 
-    //Initialize pmin and pmax by reading from PMSR. PGPE
     p9_cme_pstate_update();
 
     out32(CME_LCL_FLAGS_OR, BIT32(24));//Set Pstates Enabled
@@ -548,9 +644,10 @@ inline void p9_cme_pstate_db0_suspend()
     out32(CME_LCL_FLAGS_CLR, BIT32(24));//Set Pstates Disabled
 
     // Disable both PMCR regs ignoring partial-goodness
-    out32_sh(CME_LCL_EIMR_OR, (SHIFT64SH(34) | SHIFT64SH(35)));
+    out32_sh(CME_LCL_EIMR_OR, BITS64SH(34, 2));
     g_eimr_override |= BITS64(34, 2);
 
+    p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
     p9_cme_pstate_notify_sib(); //Notify sibling
 
     //Send type4(ack doorbell)
@@ -727,7 +824,6 @@ inline void p9_cme_pstate_update_analog()
 {
 
 #ifdef USE_CME_RESCLK_FEATURE
-    PkMachineContext ctx;
 
     uint32_t rescurr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
                        ? G_cme_pstate_record.resclkData.common_resclk_idx
@@ -749,7 +845,6 @@ inline void p9_cme_pstate_update_analog()
 
 #ifdef USE_CME_RESCLK_FEATURE
 
-    pk_critical_section_enter(&ctx);
 
     if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
        && (resnext < rescurr))
@@ -758,7 +853,6 @@ inline void p9_cme_pstate_update_analog()
                              G_cme_pstate_record.resclkData.common_resclk_idx);
     }
 
-    pk_critical_section_exit(&ctx);
 
 #endif//USE_CME_RESCLK_FEATURE
 
@@ -766,7 +860,6 @@ inline void p9_cme_pstate_update_analog()
 
 #ifdef USE_CME_RESCLK_FEATURE
 
-    pk_critical_section_enter(&ctx);
 
     if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
        && (resnext >= rescurr))
@@ -775,7 +868,6 @@ inline void p9_cme_pstate_update_analog()
                              G_cme_pstate_record.resclkData.common_resclk_idx);
     }
 
-    pk_critical_section_exit(&ctx);
 
 #endif//USE_CME_RESCLK_FEATURE
 
@@ -804,7 +896,8 @@ void p9_cme_pstate_update()
     G_cme_pstate_record.globalPstate = (G_dbData.value & BITS64(8, 8))
                                        >> SHIFT64(15);
 
-    if(G_next_pstate != G_cme_pstate_record.quadPstate)
+    if(G_next_pstate != G_cme_pstate_record.quadPstate ||
+       G_register_in_progress)
     {
         if(G_cme_pstate_record.siblingCMEFlag)
         {
