@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -54,7 +54,7 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_PVREF_FAIL
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_OCC_HEARTBEAT_LOST
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_CORE_CHECKSTOP
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DROPOUT_FAIL
-IRQ_HANDLER(p9_cme_pstate_intercme_in0_handler, (void*)NULL)
+IRQ_HANDLER(p9_cme_pstate_intercme_in0_irq_handler, (void*)NULL)
 //CMEHW_IRQ_INTERCME_DIRECT_IN0
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_BUSY_HIGH
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_TIMEOUT
