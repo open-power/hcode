@@ -47,7 +47,12 @@ extern CmeRecord G_cme_record;
 //
 //InterCME_IN0 handler
 //
-void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
+void p9_cme_pstate_intercme_in0_irq_handler(void* arg, PkIrqId irq)
+{
+    p9_cme_pstate_intercme_in0_handler();
+}
+
+void p9_cme_pstate_intercme_in0_handler()
 {
     cppm_cmedb0_t dbData;
     dbData.value = 0;
@@ -119,8 +124,10 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST)
     {
         PK_TRACE("INTER0: DB0 Stop");
-        out32_sh(CME_LCL_EIMR_OR, (SHIFT64SH(34) | SHIFT64SH(35)));//Disable PMCR0/1
+        out32_sh(CME_LCL_EIMR_OR, (BITS64SH(34, 2)));//Disable PMCR0/1
         g_eimr_override |= BITS64(34, 2);
+
+        p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
 
         //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
         CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
@@ -138,7 +145,7 @@ void p9_cme_pstate_intercme_in0_handler(void* arg, PkIrqId irq)
         PK_PANIC(CME_PSTATE_INVALID_DB0_MSGID);
     }
 
-    out32_sh(CME_LCL_EISR_CLR, G_cme_record.core_enabled << 25);//Clear DB0_C0/C1
+    out32_sh(CME_LCL_EISR_CLR, G_cme_record.core_enabled << SHIFT64SH(37));//Clear DB0_C0/C1
 
     intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_ACK, 0);
 

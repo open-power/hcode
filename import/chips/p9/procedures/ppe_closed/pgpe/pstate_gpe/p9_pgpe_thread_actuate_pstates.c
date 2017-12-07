@@ -198,13 +198,19 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                         //See if ACTIVE QUADS ack is pending
                         if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 1)
                         {
+
                             ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
                             ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-                            args->fields.return_active_quads = args_wof_vfrt->active_quads;
-                            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-                            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-                            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
-                            p9_pgpe_optrace(ACK_QUAD_ACTV);
+
+                            if (args_wof_vfrt->active_quads ==  G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads)
+                            {
+                                p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
+                                args->fields.return_active_quads = args_wof_vfrt->active_quads >> 2;
+                                args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+                                G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+                                ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+                                p9_pgpe_optrace(ACK_QUAD_ACTV);
+                            }
                         }
                     }
 

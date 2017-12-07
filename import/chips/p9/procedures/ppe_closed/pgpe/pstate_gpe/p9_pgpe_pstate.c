@@ -667,7 +667,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
     }
 
-    //7. Send Pstate Start Doorbell0
+    //7. Send clip updates to all quads that are active
     pgpe_db0_clip_bcast_t db0_clip_bcast;
     db0_clip_bcast.value = 0;
     db0_clip_bcast.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
@@ -699,7 +699,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
                      PGPE_DB0_ACK_WAIT_CME,
                      G_pgpe_pstate_record.activeQuads);
 
-
+    //Send Pstate Start Doorbell0
     pgpe_db0_start_ps_bcast_t db0;
     db0.value = 0;
     db0.fields.msg_id = MSGID_DB0_START_PSTATE_BROADCAST;
@@ -791,7 +791,7 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
         if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
             //CME0 within this quad
-            if (qcsr.fields.ex_config & (0x800 >> 2 * q))
+            if (qcsr.fields.ex_config & (0x800 >> (q << 1)))
             {
                 if (owner == PMCR_OWNER_HOST)
                 {
@@ -804,7 +804,7 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
             }
 
             //CME1 within this quad
-            if (qcsr.fields.ex_config & (0x400 >> 2 * q))
+            if (qcsr.fields.ex_config & (0x400 >> (q << 1)))
             {
                 if (owner == PMCR_OWNER_HOST)
                 {
@@ -828,9 +828,31 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
 void p9_pgpe_pstate_stop()
 {
     PK_TRACE_INF("PSS: Pstate Stop Enter");
+    uint32_t q;
     pgpe_db0_stop_ps_bcast_t db0_stop;
+    ocb_qcsr_t qcsr;
+
+    qcsr.value = in32(OCB_QCSR);
     db0_stop.value = 0;
     db0_stop.fields.msg_id = MSGID_DB0_STOP_PSTATE_BROADCAST;
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+        {
+            //CME0 within this quad
+            if (qcsr.fields.ex_config & (0x800 >> (q << 1)))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(0));
+            }
+
+            //CME1 within this quad
+            if (qcsr.fields.ex_config & (0x400 >> (q << 1)))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(0));
+            }
+        }
+    }
 
     p9_pgpe_send_db0(db0_stop.value,
                      G_pgpe_pstate_record.activeCores,
@@ -1059,7 +1081,6 @@ void p9_pgpe_pstate_safe_mode()
 
     if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
     {
-        occScr2 |= BIT32(PGPE_SAFE_MODE_ACTIVE);
         //In the case of suspend, if active the send_suspend is handled in actuate_pstates thread
         p9_pgpe_pstate_apply_safe_clips();
     }
@@ -1073,10 +1094,19 @@ void p9_pgpe_pstate_safe_mode()
         }
     }
 
+    //Update PstatesStatus
     G_pgpe_pstate_record.pstatesStatus = suspend ? PSTATE_PM_SUSPEND_PENDING : PSTATE_SAFE_MODE;
+
+    //Mark WOF Disabled so that PGPE doesn't interlock with OCC anymore
+    G_pgpe_pstate_record.wofEnabled = 0;
+
+    //Operation Trace Entry
     trace = suspend ? ACK_PM_SUSP : ACK_SAFE_DONE;
     p9_pgpe_optrace(trace);
+
+    //Update OCC Scratch2
     occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
+
     out32(OCB_OCCS2, occScr2);
     PK_TRACE_INF("SAF: Safe Mode Exit");
 }
@@ -1183,6 +1213,7 @@ int32_t p9_pgpe_pstate_at_target()
 //
 void p9_pgpe_pstate_do_step()
 {
+
     //Do one actuate step
     PK_TRACE_DBG("STEP: Entry");
     PK_TRACE_DBG("STEP: GTgt,GCurr 0x%x, 0x%x", G_pgpe_pstate_record.globalPSTarget,
@@ -1343,7 +1374,6 @@ void p9_pgpe_pstate_do_step()
     G_pgpe_optrace_data.word[2] = (G_pgpe_pstate_record.eVidCurr << 16) | G_pgpe_pstate_record.eVidCurr;
     p9_pgpe_optrace(ACTUATE_STEP_DONE);
     PK_TRACE_DBG("STEP: Exit");
-
 }
 
 //

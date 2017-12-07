@@ -285,6 +285,7 @@ void p9_pgpe_process_sgpe_updt_active_quads()
             p9_pgpe_pstate_process_quad_entry_done(args->fields.requested_quads << 2);
         }
 
+        args->fields.return_active_quads = G_pgpe_pstate_record.activeQuads >> 2;
         args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     }
     //EXIT
@@ -302,6 +303,7 @@ void p9_pgpe_process_sgpe_updt_active_quads()
         else
         {
             p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
+            args->fields.return_active_quads = (G_pgpe_pstate_record.activeQuads >> 2) | args->fields.requested_quads;
             args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         }
     }
