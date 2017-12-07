@@ -193,7 +193,6 @@ p9_sgpe_ipc_pgpe_update_active_quads(const uint32_t type, const uint32_t stage)
 {
     uint32_t rc;
 
-    PK_TRACE_INF("IPC.SP: Message PGPE to Update Active Quads with type[%d][%d]", type, stage);
     G_sgpe_ipcmsg_update_quads.fields.update_type = type;
     G_sgpe_ipcmsg_update_quads.fields.entry_type = stage;
     G_sgpe_ipcmsg_update_quads.fields.return_code = IPC_SGPE_PGPE_RC_NULL;
@@ -209,6 +208,8 @@ p9_sgpe_ipc_pgpe_update_active_quads(const uint32_t type, const uint32_t stage)
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] >> SHIFT32(5);
     }
 
+    PK_TRACE_INF("IPC.SP: Message PGPE to Update Active Quads with type[%d][%d], reqQuads=0x%x", type, stage,
+                 G_sgpe_ipcmsg_update_quads.fields.requested_quads);
     G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
     ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
                  IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
@@ -225,9 +226,11 @@ p9_sgpe_ipc_pgpe_update_active_quads(const uint32_t type, const uint32_t stage)
 }
 
 void
-p9_sgpe_ipc_pgpe_update_active_quads_poll_ack()
+p9_sgpe_ipc_pgpe_update_active_quads_poll_ack(const uint32_t type)
 {
     PK_TRACE_INF("IPC.SP: Poll PGPE Update Active Quads Ack");
+
+    uint32_t vector_active_quads = 0;
 
     while (G_sgpe_ipcmsg_update_quads.fields.return_code == IPC_SGPE_PGPE_RC_NULL)
     {
@@ -239,8 +242,27 @@ p9_sgpe_ipc_pgpe_update_active_quads_poll_ack()
         PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Quads Bad RC. HALT SGPE!");
         PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_QUAD_BAD_RC);
     }
-}
 
+    if (type == UPDATE_ACTIVE_QUADS_TYPE_EXIT)
+    {
+        vector_active_quads =
+            (G_sgpe_stop_record.group.quad[VECTOR_EXIT] |
+             G_sgpe_stop_record.group.quad[VECTOR_ACTIVE]) >> SHIFT32(5);
+    }
+    else
+    {
+        vector_active_quads =
+            ((~G_sgpe_stop_record.group.quad[VECTOR_ENTRY]) &
+             G_sgpe_stop_record.group.quad[VECTOR_ACTIVE]) >> SHIFT32(5);
+    }
+
+    if (G_sgpe_ipcmsg_update_quads.fields.return_active_quads != vector_active_quads)
+    {
+        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Quads. ActiveQuads ret=0x%x, exp.=0x%x . HALT SGPE!",
+                     G_sgpe_ipcmsg_update_quads.fields.return_active_quads, vector_active_quads);
+        PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_QUAD_BAD_LIST);
+    }
+}
 
 
 // Suspend Stop

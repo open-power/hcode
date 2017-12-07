@@ -496,6 +496,11 @@ p9_sgpe_stop_init()
                     cme_flags |= BIT32(CME_FLAGS_QMGR_MASTER);
                 }
 
+                if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
+                {
+                    cme_flags  |= BIT32(CME_FLAGS_WAIT_ON_PSTATE_START);
+                }
+
                 PK_TRACE_DBG("CME%d%d_FLAGS :%x", qloop, xloop, cme_flags);
                 p9_sgpe_stop_cme_scominit(qloop, xloop, cme_flags);
 
