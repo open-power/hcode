@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -33,6 +33,7 @@ $(IMAGE)_KERNEL:=__IOTA__
 # Options for Platforms specific DD lvl
 $(IMAGE)_COMMONFLAGS = -DNIMBUS_DD_LEVEL=10
 $(IMAGE)_COMMONFLAGS+= -DCUMULUS_DD_LEVEL=0
+$(IMAGE)_COMMONFLAGS+= -DAXONE_DD_LEVEL=0
 
 $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=0
 

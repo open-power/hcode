@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2017
+# COPYRIGHT 2017,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -28,6 +28,7 @@ IMAGE := $(PSTATE_TARGET)
 
 $(IMAGE)_COMMONFLAGS+= -DNIMBUS_DD_LEVEL=21
 $(IMAGE)_COMMONFLAGS+= -DCUMULUS_DD_LEVEL=0
+$(IMAGE)_COMMONFLAGS+= -DAXONE_DD_LEVEL=0
 
 include $(PGPE_SRCDIR)/pstate_gpe/pstate_common.mk
 $(IMAGE)_COMMONFLAGS += $(PSTATE_COMMONFLAGS)

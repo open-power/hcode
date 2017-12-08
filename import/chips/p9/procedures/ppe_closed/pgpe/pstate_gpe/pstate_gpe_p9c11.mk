@@ -29,6 +29,7 @@ IMAGE:=$(PSTATE_TARGET)
 # used to build them
 $(IMAGE)_COMMONFLAGS+= -DNIMBUS_DD_LEVEL=0
 $(IMAGE)_COMMONFLAGS+= -DCUMULUS_DD_LEVEL=11
+$(IMAGE)_COMMONFLAGS+= -DAXONE_DD_LEVEL=0
 #$(IMAGE)_COMMONFLAGS+= -fstack-usage
 
 include $(PGPE_SRCDIR)/pstate_gpe/pstate_common.mk
