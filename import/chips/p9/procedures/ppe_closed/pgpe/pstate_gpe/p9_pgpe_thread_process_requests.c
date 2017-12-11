@@ -52,8 +52,7 @@ void p9_pgpe_process_wof_ctrl();
 void p9_pgpe_process_wof_vfrt();
 void p9_pgpe_process_set_pmcr_req();
 void p9_pgpe_process_registration();
-void p9_pgpe_process_ack_sgpe_ctrl_stop_updt_core_enable();
-void p9_pgpe_process_ack_sgpe_ctrl_stop_updt_core_disable();
+void p9_pgpe_process_ack_sgpe_ctrl_stop_updt();
 
 //
 //Process Request Thread
@@ -114,36 +113,11 @@ void p9_pgpe_thread_process_requests(void* arg)
             p9_pgpe_process_wof_ctrl();
         }
 
-        //We must process this "before" ACTIVE_CORES_UPDT  as SGPE might have sent one after
-        //sending ACK for CTRL_UPDT_STOP[Core Enable], and we must have marked wofState = Enabled
-        if (G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_ENABLE].pending_processing)
-        {
-            p9_pgpe_process_ack_sgpe_ctrl_stop_updt_core_enable();
-
-            if(G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_ENABLE].pending_ack == 1)
-            {
-                restore_irq = 0;
-            }
-        }
-
-
         if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_processing == 1)
         {
             p9_pgpe_process_sgpe_updt_active_cores();
 
             if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1)
-            {
-                restore_irq = 0;
-            }
-        }
-
-        //We must process this "after" ACTIVE_CORES_UPDT to make sure any pending ACTIVE_CORES_UPDT
-        //have ACKed back to SGPE
-        if (G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_DISABLE].pending_processing)
-        {
-            p9_pgpe_process_ack_sgpe_ctrl_stop_updt_core_disable();
-
-            if(G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_DISABLE].pending_ack == 1)
             {
                 restore_irq = 0;
             }
@@ -190,6 +164,16 @@ void p9_pgpe_thread_process_requests(void* arg)
 
         }
 
+        if (G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_processing)
+        {
+            p9_pgpe_process_ack_sgpe_ctrl_stop_updt();
+
+            if(G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_ack == 1)
+            {
+                restore_irq = 0;
+            }
+        }
+
         if (G_pgpe_pstate_record.pendQuadsRegisterProcess != 0)
         {
             p9_pgpe_process_registration();
@@ -222,7 +206,7 @@ void p9_pgpe_thread_process_requests(void* arg)
 void p9_pgpe_process_sgpe_updt_active_cores()
 {
     PK_TRACE_DBG("PTH: Core Updt Entry");
-    uint32_t c, ack_now = 1;
+    uint32_t c, ack_now = 0;
 
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
     ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
@@ -235,59 +219,66 @@ void p9_pgpe_process_sgpe_updt_active_cores()
         args->fields.return_code = PGPE_WOF_RC_NOT_ENABLED;
         G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_IN_WOF_DISABLED;
         p9_pgpe_optrace(UNEXPECTED_ERROR);
+        ack_now = 1;
     }
     else
     {
-        //Store separately as shared SRAM location is split
-        PK_TRACE_DBG("PTH: Core Updt type=%u(0/1=EN/EX) reqCores=0x%x", args->fields.update_type, args->fields.active_cores);
-
-        //If ENTRY type then send ACK to SGPE immediately
-        //Otherwise, wait to ACK until WOF Clip has been applied(from actuate_pstate thread)
-        if (args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY)
+        //If WOF_ENABLED=1, and pstatesStatus == ACITVE, then process active cores update
+        //Otherwise, pstatesStatus == SAFE_MODE_PENDING, and requests will be ACKed
+        //after actuating to Psafe
+        if(G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
         {
-            G_pgpe_pstate_record.activeCores &= ~(args->fields.active_cores << 8);
-            args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
-            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-        }
-        else
-        {
-            G_pgpe_pstate_record.activeCores |= (args->fields.active_cores << 8);
-            ack_now = 0;
-        }
+            //Store separately as shared SRAM location is split
+            PK_TRACE_DBG("PTH: Core Updt type=%u(0/1=EN/EX) reqCores=0x%x", args->fields.update_type, args->fields.active_cores);
 
-        //Update Shared Memory Region
-        G_pgpe_pstate_record.pQuadState0->fields.active_cores = (G_pgpe_pstate_record.activeCores >> 16);
-        G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0x0000FF00);
-
-        PK_TRACE_DBG("PTH: numActiveCores=0x%x,activeCores=0x%x", G_pgpe_pstate_record.numActiveCores,
-                     G_pgpe_pstate_record.activeCores);
-        PK_TRACE_DBG("PTH: quadPS2=0x%08x%08x,activeCores=0x%x", G_pgpe_pstate_record.pQuadState0->value >> 32,
-                     G_pgpe_pstate_record.pQuadState0->value, G_pgpe_pstate_record.pQuadState0->fields.active_cores );
-        PK_TRACE_DBG("PTH: quadPS1=0x%08x%08x,activeCores=0x%x", G_pgpe_pstate_record.pQuadState1->value >> 32,
-                     G_pgpe_pstate_record.pQuadState1->value, G_pgpe_pstate_record.pQuadState1->fields.active_cores);
-
-        //Calculate number of active cores
-        G_pgpe_pstate_record.numActiveCores = 0;
-
-        for (c = 0; c < MAX_CORES; c++)
-        {
-            if (G_pgpe_pstate_record.activeCores  & CORE_MASK(c))
+            //If ENTRY type then send ACK to SGPE immediately
+            //Otherwise, wait to ACK until WOF Clip has been applied(from actuate_pstate thread)
+            if (args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY)
             {
-                G_pgpe_pstate_record.numActiveCores++;
+                G_pgpe_pstate_record.activeCores &= ~(args->fields.active_cores << 8);
+                args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
+                args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+                ack_now = 1;
             }
+            else
+            {
+                G_pgpe_pstate_record.activeCores |= (args->fields.active_cores << 8);
+            }
+
+            //Update Shared Memory Region
+            G_pgpe_pstate_record.pQuadState0->fields.active_cores = (G_pgpe_pstate_record.activeCores >> 16);
+            G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0x0000FF00);
+
+            PK_TRACE_DBG("PTH: numActiveCores=0x%x,activeCores=0x%x", G_pgpe_pstate_record.numActiveCores,
+                         G_pgpe_pstate_record.activeCores);
+            PK_TRACE_DBG("PTH: quadPS2=0x%08x%08x,activeCores=0x%x", G_pgpe_pstate_record.pQuadState0->value >> 32,
+                         G_pgpe_pstate_record.pQuadState0->value, G_pgpe_pstate_record.pQuadState0->fields.active_cores );
+            PK_TRACE_DBG("PTH: quadPS1=0x%08x%08x,activeCores=0x%x", G_pgpe_pstate_record.pQuadState1->value >> 32,
+                         G_pgpe_pstate_record.pQuadState1->value, G_pgpe_pstate_record.pQuadState1->fields.active_cores);
+
+            //Calculate number of active cores
+            G_pgpe_pstate_record.numActiveCores = 0;
+
+            for (c = 0; c < MAX_CORES; c++)
+            {
+                if (G_pgpe_pstate_record.activeCores  & CORE_MASK(c))
+                {
+                    G_pgpe_pstate_record.numActiveCores++;
+                }
+            }
+
+            PK_TRACE_DBG("PTH: numActiveCores=0x%x", G_pgpe_pstate_record.numActiveCores);
+
+            //OP_TRACE(Do before auction and wof calculation)
+            G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24)  |
+                                          ((args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY) ? 0x2000000 : 0x1000000) |
+                                          (G_pgpe_pstate_record.activeCores >> 8);
+            p9_pgpe_optrace(PRC_CORES_ACTV);
+
+            //Do auction and wof calculation
+            p9_pgpe_pstate_do_auction();
+            p9_pgpe_pstate_calc_wof();
         }
-
-        PK_TRACE_DBG("PTH: numActiveCores=0x%x", G_pgpe_pstate_record.numActiveCores);
-
-        //OP_TRACE(Do before auction and wof calculation)
-        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24)  |
-                                      ((args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY) ? 0x2000000 : 0x1000000) |
-                                      (G_pgpe_pstate_record.activeCores >> 8);
-        p9_pgpe_optrace(PRC_CORES_ACTV);
-
-        //Do auction and wof calculation
-        p9_pgpe_pstate_do_auction();
-        p9_pgpe_pstate_calc_wof();
     }
 
     if (ack_now == 1)
@@ -345,7 +336,9 @@ void p9_pgpe_process_sgpe_updt_active_quads()
         G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
 
         //WOF Enabled
-        if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED)
+        //If WOF_ENABLED=1, and pstatesStatus == ACITVE, then request for WOF_VFRT
+        //Otherwise, we don't as SAFE_MODE or PM_COMPLEX_SUSPEND or STOP is pending
+        if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED && G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
         {
             PK_TRACE_DBG("PTH: OCCLFG[30] set");
             out32(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
@@ -354,7 +347,8 @@ void p9_pgpe_process_sgpe_updt_active_quads()
         else
         {
             p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
-            args->fields.return_active_quads = (G_pgpe_pstate_record.activeQuads >> 2) | args->fields.requested_quads;
+            args->fields.return_active_quads = (G_pgpe_pstate_record.activeQuads >> 2) |
+                                               args->fields.requested_quads; //activeQuads isn't updated until registration, so we OR with requested quads.
             args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         }
     }
@@ -393,11 +387,37 @@ void p9_pgpe_process_start_stop()
     }
     else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
             G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
+            G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
             G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
         PK_TRACE_DBG("START_STOP: PM_SUSP/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
-        G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_START_IN_PM_SUSP;
+
+        if(G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
+           G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
+        {
+
+            if (args->action == PGPE_ACTION_PSTATE_START)
+            {
+                G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_START_IN_SAFE_MODE;
+            }
+            else
+            {
+                G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_STOP_IN_SAFE_MODE;
+            }
+        }
+        else
+        {
+            if (args->action == PGPE_ACTION_PSTATE_START)
+            {
+                G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_START_IN_PM_SUSP;
+            }
+            else
+            {
+                G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_STOP_IN_PM_SUSP;
+            }
+        }
+
         p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
@@ -490,11 +510,22 @@ void p9_pgpe_process_clip_updt()
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
+             G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
         PK_TRACE_DBG("PTH: Clip Updt PMSUSP/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
-        G_pgpe_optrace_data.word[0] = PGPE_OP_CLIP_UPDT_IN_PM_SUSP;
+
+        if(G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
+           G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
+        {
+            G_pgpe_optrace_data.word[0] = PGPE_OP_CLIP_UPDT_IN_SAFE_MODE;
+        }
+        else
+        {
+            G_pgpe_optrace_data.word[0] = PGPE_OP_CLIP_UPDT_IN_PM_SUSP;
+        }
+
         p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
@@ -583,11 +614,22 @@ void p9_pgpe_process_wof_ctrl()
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
+             G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
         PK_TRACE_DBG("PTH: WOF Ctrl PMSUSP/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
-        G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_IN_PM_SUSP;
+
+        if(G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
+           G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
+        {
+            G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_IN_SAFE_MODE;
+        }
+        else
+        {
+            G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_IN_PM_SUSP;
+        }
+
         p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT || G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
@@ -607,17 +649,9 @@ void p9_pgpe_process_wof_ctrl()
             {
                 PK_TRACE_DBG("PTH: WOF Ctrl=ON,WOF_Enabled=0");
 
-                if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO) ||
-                    (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VRATIO_MODIFIER))
-                {
-                    p9_pgpe_pstate_send_ctrl_stop_updt(CTRL_STOP_UPDT_ENABLE_CORE);
-                }
-                else
-                {
-                    p9_pgpe_pstate_wof_ctrl(PGPE_ACTION_WOF_ON, G_pgpe_pstate_record.activeDB >> 8, G_pgpe_pstate_record.activeQuads);
-                }
+                p9_pgpe_pstate_wof_ctrl(PGPE_ACTION_WOF_ON);
+                ack_now = 0; //For WOF_ENABLE, we ACK after WOF_CLIP has been honored(actuate thread)
 
-                ack_now = 0;
                 G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                               (args->action << 16) |
                                               (in32(OCB_QCSR) >> 16);
@@ -637,21 +671,13 @@ void p9_pgpe_process_wof_ctrl()
             {
                 PK_TRACE_DBG("PTH: WOF Ctrl=OFF,WOF_Enabled=1");
 
-                if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO) ||
-                    (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VRATIO_MODIFIER))
-                {
-                    p9_pgpe_pstate_send_ctrl_stop_updt(CTRL_STOP_UPDT_DISABLE_CORE);
-                }
-                else
-                {
-                    p9_pgpe_pstate_wof_ctrl(PGPE_ACTION_WOF_OFF, G_pgpe_pstate_record.activeDB >> 8, G_pgpe_pstate_record.activeQuads);
-                }
+                //Disable WOF, and we ACK to OCC below
+                p9_pgpe_pstate_wof_ctrl(PGPE_ACTION_WOF_OFF);
 
                 G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                               (args->action << 16) |
                                               (in32(OCB_QCSR) >> 16);
                 p9_pgpe_optrace(PRC_WOF_CTRL);
-                ack_now = 0;
             }
             else
             {
@@ -697,11 +723,22 @@ void p9_pgpe_process_wof_vfrt()
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
+             G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
         PK_TRACE_DBG("PTH: WOF VFRT PMSUSP/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
-        G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_VFRT_IN_SAFE_MODE;
+
+        if(G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
+           G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
+        {
+            G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_VFRT_IN_SAFE_MODE;
+        }
+        else
+        {
+            G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_VFRT_IN_PM_SUSP;
+        }
+
         p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else if(G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED || G_pgpe_pstate_record.pstatesStatus == PSTATE_INIT)
@@ -798,11 +835,22 @@ void p9_pgpe_process_set_pmcr_req()
     }
     else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPENDED ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING ||
+             G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
              G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
     {
         PK_TRACE_DBG("PTH: Set PMCR in PM_Susp/Safe");
         args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
-        G_pgpe_optrace_data.word[0] = PGPE_OP_SET_PMCR_IN_PM_SUSP;
+
+        if(G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING ||
+           G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
+        {
+            G_pgpe_optrace_data.word[0] = PGPE_OP_SET_PMCR_IN_SAFE_MODE;
+        }
+        else
+        {
+            G_pgpe_optrace_data.word[0] = PGPE_OP_SET_PMCR_IN_PM_SUSP;
+        }
+
         p9_pgpe_optrace(UNEXPECTED_ERROR);
     }
     else
@@ -1058,47 +1106,8 @@ void p9_pgpe_process_registration()
     PK_TRACE_DBG("PTH: Register Exit");
 }
 
-//
-//p9_pgpe_process_ack_sgpe_ctrl_stop_updt_core_enable
-//
-void p9_pgpe_process_ack_sgpe_ctrl_stop_updt_core_enable()
+void p9_pgpe_process_ack_sgpe_ctrl_stop_updt()
 {
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_ENABLE].cmd;
-    ipcmsg_p2s_ctrl_stop_updates_t* args = (ipcmsg_p2s_ctrl_stop_updates_t*)async_cmd->cmd_data;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_ENABLE].pending_processing = 0;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_ENABLE].pending_ack = 0;
-
-    PK_TRACE_DBG("IPC: SGPE ACKed CTRL_STOP_UPDT(ENABLE_CORE)");
-
-    if (args->fields.return_code == IPC_SGPE_PGPE_RC_SUCCESS)
-    {
-        p9_pgpe_pstate_wof_ctrl(PGPE_ACTION_WOF_ON, args->fields.active_cores, args->fields.active_quads);
-    }
-    else
-    {
-        PK_PANIC(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
-    }
-}
-
-//
-//p9_pgpe_process_ack_sgpe_ctrl_stop_updt_core_disable
-//
-void p9_pgpe_process_ack_sgpe_ctrl_stop_updt_core_disable()
-{
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_DISABLE].cmd;
-    ipcmsg_p2s_ctrl_stop_updates_t* args = (ipcmsg_p2s_ctrl_stop_updates_t*)async_cmd->cmd_data;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_DISABLE].pending_processing = 0;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_DISABLE].pending_ack = 0;
-
-    PK_TRACE_DBG("IPC: SGPE ACKed CTRL_STOP_UPDT(DISABLE_CORE)");
-
-    if (args->fields.return_code == SGPE_PGPE_IPC_RC_SUCCESS)
-    {
-        p9_pgpe_pstate_wof_ctrl(PGPE_ACTION_WOF_OFF, args->fields.active_cores, args->fields.active_quads);
-
-    }
-    else
-    {
-        PK_PANIC(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
-    }
+    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_processing = 0;
+    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_ack = 0;
 }

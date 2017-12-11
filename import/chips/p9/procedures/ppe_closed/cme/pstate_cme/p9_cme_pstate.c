@@ -692,6 +692,7 @@ void p9_cme_pstate_pmsr_updt(uint32_t coreMask)
     {
         if (cm & coreMask)
         {
+            //Note: PMSR[58/UPDATE_IN_PROGRESS] is always cleared here
             pmsrData = ((uint64_t)G_cme_pstate_record.globalPstate) << 56;
             pmsrData |= (((uint64_t)(G_cme_pstate_record.quadPstate)) << 48) ;
             pmsrData |= (((uint64_t)(G_cme_pstate_record.pmin)) << 40) ;

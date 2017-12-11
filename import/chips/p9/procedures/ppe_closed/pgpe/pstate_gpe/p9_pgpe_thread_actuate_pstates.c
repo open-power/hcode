@@ -108,14 +108,15 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
             //Actuate step(if needed)
             if(p9_pgpe_pstate_at_target() == 0)
             {
-                //We check that pstates are active after entering critical section
-                //It's possible that some IPC which is processed by PROCESS THREAD
-                //has updated the PstatesState to a !PSTATE_ACTIVE state
                 pk_irq_sub_critical_enter(&ctx);
 
+                //We check that pstates are active after entering critical section
+                //It's possible that some IPC or even FIT before we set actuating=1
+                //has updated the PstatesState to a !PSTATE_ACTIVE state
                 if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
                 {
                     p9_pgpe_pstate_do_step();
+
                 }
 
                 pk_irq_sub_critical_exit(&ctx);
@@ -130,6 +131,8 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                 //Enter sub-critical section
                 //Process any pending ACKs in sub-critical section. Otherwise, it's possible that the inrange check
                 //below is interrupted, and new clips are calculated
+                //Also, we enter sub-critical section only if some action is pending. If, move this above the
+                //if statement, then we will unnessarily enter/exit sub-critical section.
                 pk_irq_sub_critical_enter(&ctx);
 
                 inRange = 1;
@@ -183,7 +186,6 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                             p9_pgpe_pstate_clip_bcast(DB0_CLIP_BCAST_TYPE_PMAX);
                             G_pgpe_pstate_record.pendingPmaxClipBcast = 0;
                         }
-
 
                         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
                         ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
@@ -262,39 +264,37 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                 restore_irq = 0;
                 pk_irq_vec_restore(&ctx);
             }
-        }
+        }//End PstateStatus = PSTATE_ACTIVE loop
 
-        if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING
-            || G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
+
+        //Do processing inside sub-critical section, so as to not get conflict
+        //with external interrupts
+        pk_irq_sub_critical_enter(&ctx);
+
+        PK_TRACE_DBG("ACT_TH: PSTATE_ACTIVE loop end)");
+
+        //PSTATE_SAFE_MODE_PENDING is set if, pstates are active and PM_COMPLEX_SUSPEND requested.
+        //OR, if SAFE MODE is requested
+        if (G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE_PENDING)
         {
-            //Actuate to PSAFE Pstate
-            while (p9_pgpe_pstate_at_target() == 0)
-            {
-                pk_irq_sub_critical_enter(&ctx);
-                p9_pgpe_pstate_do_step();
-                pk_irq_sub_critical_exit(&ctx);
-            }
-
-            //Send SAFE Mode Bcast to all CMEs
-            pgpe_db0_safe_mode_bcast_t db0_sm_bcast;
-            db0_sm_bcast.value = 0;
-            db0_sm_bcast.fields.msg_id = MSGID_DB0_SAFE_MODE_BROADCAST;
-            p9_pgpe_send_db0(db0_sm_bcast.value,
-                             G_pgpe_pstate_record.activeCores,
-                             PGPE_DB0_UNICAST,
-                             PGPE_DB0_ACK_WAIT_CME,
-                             G_pgpe_pstate_record.activeQuads);
-
-            if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING)
-            {
-                p9_pgpe_pstate_send_suspend_stop(); //Notify SGPE
-            }
-            else if (G_pgpe_pstate_record.pstatesStatus == PSTATE_SAFE_MODE)
-            {
-                uint32_t occScr2 = in32(OCB_OCCS2);
-                occScr2 |= BIT32(PGPE_SAFE_MODE_ACTIVE);
-                out32(OCB_OCCS2, occScr2);
-            }
+            p9_pgpe_pstate_safe_mode();
         }
+
+        //PSTATE_PM_SUSPEND_PENDING is directly set if PM_COMPLEX_SUSPEND is requested
+        //and pstates aren't active. Or, if PM_COMPLEX_SUSPEND is requested and pstates
+        //are active, and system has moved to Psafe(done by p9_pgpe_pstate_safe_mode() above)
+        //This check must come after the possible p9_pgpe_pstate_safe_mode() call above
+        if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING)
+        {
+            p9_pgpe_pstate_send_suspend_stop();
+        }
+
+        if (G_pgpe_pstate_record.pstatesStatus == PSTATE_STOP_PENDING)
+        {
+            p9_pgpe_pstate_stop();
+        }
+
+        pk_irq_sub_critical_exit(&ctx);
+
     }//Thread loop
 }

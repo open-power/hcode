@@ -50,8 +50,7 @@ extern GlobalPstateParmBlock* G_gppb;
 extern uint32_t G_ext_vrm_inc_rate_mult_usperus;
 extern uint32_t G_ext_vrm_dec_rate_mult_usperus;
 extern PgpePstateRecord G_pgpe_pstate_record;
-extern void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt_core_enable(ipc_msg_t* msg, void* arg);
-extern void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt_core_disable(ipc_msg_t* msg, void* arg);
+extern void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt(ipc_msg_t* msg, void* arg);
 
 //
 //Global Data
@@ -889,6 +888,10 @@ void p9_pgpe_pstate_stop()
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
     ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
 
+    G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.globalPSComputed << 16)
+                                  | (in32(OCB_QCSR) >> 16);
+    p9_pgpe_optrace(PRC_START_STOP);
+
     PK_TRACE_INF("PSS: Stop Done");
 }
 
@@ -1004,7 +1007,7 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
     PK_TRACE_INF("QE: (Done), Vec=0x%x\n", quadsRequested);
 
     //If WOF Enabled, then interlock with OCC
-    if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED)
+    if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED && G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
     {
         GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
     }
@@ -1065,12 +1068,27 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
 //
 // p9_pgpe_pstate_wof_ctrl
 //
-void p9_pgpe_pstate_wof_ctrl(uint32_t action, uint32_t activeCores, uint32_t activeQuads)
+void p9_pgpe_pstate_wof_ctrl(uint32_t action)
 {
     uint32_t c;
+    uint32_t activeCores, activeQuads;
 
     if (action == PGPE_ACTION_WOF_ON)
     {
+        //In WOF Phase >= 2, we ask SGPE to start sending active core updates
+        if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO) ||
+            (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VRATIO_MODIFIER))
+        {
+            p9_pgpe_pstate_send_ctrl_stop_updt(CTRL_STOP_UPDT_ENABLE_CORE);
+            activeCores = G_sgpe_control_updt.fields.active_cores << 8;
+            activeQuads = G_sgpe_control_updt.fields.active_quads;
+        }
+        else
+        {
+            activeCores = G_pgpe_pstate_record.activeDB;
+            activeQuads = G_pgpe_pstate_record.activeQuads;
+        }
+
         G_pgpe_pstate_record.wofStatus = WOF_ENABLED;
         //Set to value returned by SGPE or initial value determined during boot(equal to configured cores)
         G_pgpe_pstate_record.activeCores = activeCores << 8;
@@ -1098,17 +1116,15 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action, uint32_t activeCores, uint32_t act
     }
     else if (action == PGPE_ACTION_WOF_OFF)
     {
+        //In WOF Phase >= 2, we ask SGPE to stop sending active core updates
+        if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO) ||
+            (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VRATIO_MODIFIER))
+        {
+            p9_pgpe_pstate_send_ctrl_stop_updt(CTRL_STOP_UPDT_DISABLE_CORE);
+        }
+
         G_pgpe_pstate_record.wofStatus = WOF_DISABLED;
-        p9_pgpe_pstate_update_wof_state();
 
-        //ACK back pending WOF
-        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd;
-        ipcmsg_wof_control_t* args = (ipcmsg_wof_control_t*)async_cmd->cmd_data;
-        args->msg_cb.rc = PGPE_RC_SUCCESS;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].cmd, IPC_RC_SUCCESS);
-
-        p9_pgpe_optrace(ACK_WOF_CTRL);
         PK_TRACE_DBG("WCT: WOF Disabled");
     }
 }
@@ -1125,23 +1141,12 @@ void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t action)
     G_sgpe_control_updt.fields.action = action;
     G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_control_updt;
 
-    if (action == CTRL_STOP_UPDT_ENABLE_CORE)
-    {
-        //Send "Enable Core Stop Updates" IPC to SGPE
-        ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
-                     IPC_MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES,
-                     p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt_core_enable,
-                     NULL);
-        PK_TRACE_DBG("PTH: Sent CTRL_STOP_UPDT(ENABLE_CORE) to SGPE");
-    }
-    else
-    {
-        ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
-                     IPC_MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES,
-                     p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt_core_disable,
-                     NULL);
-        PK_TRACE_DBG("PTH: Sent CTRL_STOP_UPDT(DISABLE_CORE) to SGPE");
-    }
+    //Send "Enable Core Stop Updates" IPC to SGPE
+    ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
+                 IPC_MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES,
+                 p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt,
+                 NULL);
+    PK_TRACE_DBG("PTH: Sent CTRL_STOP_UPDT(ENABLE_CORE) to SGPE");
 
     rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
 
@@ -1149,6 +1154,9 @@ void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t action)
     {
         PK_PANIC(PGPE_SGPE_IPC_SEND_BAD_RC);
     }
+
+    //Wait for return code to be set
+    while(G_sgpe_control_updt.fields.return_code != SGPE_PGPE_IPC_RC_SUCCESS);
 
 #endif// _SGPE_IPC_ENABLED_
 }
@@ -1171,55 +1179,112 @@ void p9_pgpe_pstate_apply_safe_clips()
     //Update clips
     p9_pgpe_pstate_apply_clips();
 
-    PK_TRACE_INF("SCL: Apply Safe Enter");
+    PK_TRACE_INF("SCL: Apply Safe Exit");
 }
 
 //
 //p9_pgpe_pstate_safe_mode()
+//
+//Note: Must call this procedure inside sub-critical section.
 //
 void p9_pgpe_pstate_safe_mode()
 {
     PK_TRACE_INF("SAF: Safe Mode Enter");
     uint32_t occScr2 = in32(OCB_OCCS2);
     uint32_t suspend = in32(OCB_OCCFLG) & BIT32(PM_COMPLEX_SUSPEND);
-    uint32_t trace = suspend ? PRC_PM_SUSP : PRC_SAFE_MODE;
+    uint32_t safemode = in32(OCB_OCCFLG) & BIT32(PGPE_SAFE_MODE);
 
-    if(!suspend)
+    // Generate OPTRACE Process Start
+    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.globalPSComputed << 16)
+                                  | (G_pgpe_pstate_record.safePstate << 8)
+                                  | ((suspend) ? 0x2 : 0)
+                                  | ((safemode) ? 0x1 : 0);
+
+    p9_pgpe_optrace(PRC_SAFE_MODE);
+
+    // Apply clips and actuate to safe mode
+    p9_pgpe_pstate_apply_safe_clips();
+
+    while (p9_pgpe_pstate_at_target() == 0)
     {
-        G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.globalPSComputed << 16)
-                                      | (G_pgpe_pstate_record.safePstate << 8) | ((in32(OCB_OCCFLG) & BIT32(PGPE_SAFE_MODE)) ? 1 : 0);
+        p9_pgpe_pstate_do_step();
     }
 
-    p9_pgpe_optrace(trace);
+    PK_TRACE_INF("SAF: Safe Mode Actuation Done!");
 
-    if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
-    {
-        //In the case of suspend, if active the send_suspend is handled in actuate_pstates thread
-        p9_pgpe_pstate_apply_safe_clips();
-    }
-    else
-    {
-        occScr2 |= BIT32(PGPE_SAFE_MODE_ERROR);
+    //Send SAFE Mode Bcast to all CMEs
+    pgpe_db0_safe_mode_bcast_t db0_sm_bcast;
+    db0_sm_bcast.value = 0;
+    db0_sm_bcast.fields.msg_id = MSGID_DB0_SAFE_MODE_BROADCAST;
+    p9_pgpe_send_db0(db0_sm_bcast.value,
+                     G_pgpe_pstate_record.activeDB,
+                     PGPE_DB0_UNICAST,
+                     PGPE_DB0_ACK_WAIT_CME,
+                     G_pgpe_pstate_record.activeQuads);
 
-        if(suspend)
-        {
-            p9_pgpe_pstate_send_suspend_stop();
-        }
-    }
-
-    //Update PstatesStatus
+    //Update PstatesStatus to PM_SUSPEND_PENDING or PSTATE_SAFE_MODE
     G_pgpe_pstate_record.pstatesStatus = suspend ? PSTATE_PM_SUSPEND_PENDING : PSTATE_SAFE_MODE;
 
-    //Mark WOF Disabled so that PGPE doesn't interlock with OCC anymore
-    G_pgpe_pstate_record.wofStatus = WOF_DISABLED;
+    //Handle any pending ACKs
+    ipc_async_cmd_t* async_cmd;
 
-    //Operation Trace Entry
-    trace = suspend ? ACK_PM_SUSP : ACK_SAFE_DONE;
-    p9_pgpe_optrace(trace);
+    //ACK back to OCC with "PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE"
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
+    {
+        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
+        ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
+        args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_CLIP_UPDT);
+    }
 
-    //Update OCC Scratch2
+    //ACK back to OCC with "PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE"
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1)
+    {
+        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd;
+        ipcmsg_wof_vfrt_t* args_wof_vfrt = (ipcmsg_wof_vfrt_t*)async_cmd->cmd_data;
+        args_wof_vfrt->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
+    }
+
+    //ACK back to SGPE with "IPC_SGPE_PGPE_RC_SUCCESS"
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 1)
+    {
+        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+        ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
+        p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
+
+        //activeQuads isn't updated until registration, so we OR with requested quads.
+        args->fields.return_active_quads = (G_pgpe_pstate_record.activeQuads >> 2) | args->fields.requested_quads;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+    }
+
+    //ACK back to SGPE with "IPC_SGPE_PGPE_RC_SUCCESS"
+    if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1)
+    {
+        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
+        ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
+        args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
+    }
+
+    ///Disable WOF, so that PGPE doesn't interlock with OCC anymore
+    if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED)
+    {
+        p9_pgpe_pstate_wof_ctrl(PGPE_ACTION_WOF_OFF);
+    }
+
+    //OPTRACE ACK done
+    p9_pgpe_optrace(ACK_SAFE_DONE);
+
+    //Update OCC Scratch2  (need to get new value because the suspend_stop callback changes the Scratch2 content)
     occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
-
+    occScr2 |= BIT32(PGPE_SAFE_MODE_ACTIVE);
     out32(OCB_OCCS2, occScr2);
     PK_TRACE_INF("SAF: Safe Mode Exit");
 }
@@ -1230,6 +1295,8 @@ void p9_pgpe_pstate_safe_mode()
 void p9_pgpe_pstate_send_suspend_stop()
 {
 #if SGPE_IPC_ENABLED == 1
+    p9_pgpe_optrace(PRC_PM_SUSP);
+
     int rc;
     G_sgpe_suspend_stop.fields.msg_num = MSGID_PGPE_SGPE_SUSPEND_STOP;
     G_sgpe_suspend_stop.fields.return_code = 0x0;
@@ -1287,7 +1354,7 @@ void p9_pgpe_pstate_send_suspend_stop()
 void p9_pgpe_suspend_stop_callback(ipc_msg_t* msg, void* arg)
 {
     PK_TRACE_INF("SUSP:Stop Cb");
-    p9_pgpe_optrace(SGPE_SUSP_DONE);
+    p9_pgpe_optrace(ACK_PM_SUSP);
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
     G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
