@@ -225,40 +225,65 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
         //write to SRAM
         *(G_pgpe_header_data->g_pgpe_beacon_addr) = *(G_pgpe_header_data->g_pgpe_beacon_addr) + 1;
         G_beacon_count = 0;
-
-        ocb_occflg_t occFlag;
-        //Read OCC_FLAGS
-        occFlag.value = 0;
-        occFlag.value = in32(OCB_OCCFLG);
-
-        if((G_pgpe_pstate_record.pstatesStatus != PSTATE_PM_SUSPENDED)
-           && (G_pgpe_pstate_record.pstatesStatus != PSTATE_PM_SUSPEND_PENDING))
-        {
-            if(occFlag.value & BIT32(PM_COMPLEX_SUSPEND))
-            {
-                p9_pgpe_pstate_safe_mode();
-            }
-            else if(G_pgpe_pstate_record.pstatesStatus != PSTATE_SAFE_MODE)
-            {
-                if(occFlag.value & BIT32(PGPE_SAFE_MODE))
-                {
-                    p9_pgpe_pstate_safe_mode();
-                }
-                else if((occFlag.value & BIT32(PGPE_START_NOT_STOP))
-                        && (G_pgpe_pstate_record.pstatesStatus != PSTATE_STOPPED))
-                {
-                    p9_pgpe_pstate_stop();
-                    G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.globalPSComputed << 16) | (in32(
-                                                      OCB_QCSR) >> 16);
-                    p9_pgpe_optrace(PRC_START_STOP);
-
-                }
-            }
-        }
     }
     else
     {
         G_beacon_count++;
+    }
+}
+
+__attribute__((always_inline)) inline void handle_occflg_requests()
+{
+    ocb_occflg_t occFlag;
+    //Read OCC_FLAGS
+    occFlag.value = in32(OCB_OCCFLG);
+
+    if((G_pgpe_pstate_record.pstatesStatus != PSTATE_PM_SUSPENDED)
+       && (G_pgpe_pstate_record.pstatesStatus != PSTATE_PM_SUSPEND_PENDING)
+       && (G_pgpe_pstate_record.pstatesStatus != PSTATE_SAFE_MODE_PENDING)
+       && (G_pgpe_pstate_record.pstatesStatus != PSTATE_STOP_PENDING))
+    {
+        if(occFlag.value & BIT32(PM_COMPLEX_SUSPEND))
+        {
+            //If pstatesStatus != ACTIVE, then just need to notify SGPE, so
+            //set status to PSTATE_PM_SUSPEND_PENDING and post to actuate thread
+            //Otherwise, we need to first actuate to Psafe, so set PSTATE_SAFE_MODE_PENDING
+            if (G_pgpe_pstate_record.pstatesStatus != PSTATE_ACTIVE)
+            {
+                G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPEND_PENDING;
+                pk_semaphore_post(&G_pgpe_pstate_record.sem_actuate);
+            }
+            else
+            {
+                G_pgpe_pstate_record.pstatesStatus = PSTATE_SAFE_MODE_PENDING;
+            }
+        }
+        else if(G_pgpe_pstate_record.pstatesStatus != PSTATE_SAFE_MODE)
+        {
+            //If not in SAFE Mode and Safe Mode requested
+            if(occFlag.value & BIT32(PGPE_SAFE_MODE))
+            {
+                //If safe mode is requested while pstatesStatus != PSTATE_ACTIVE , then
+                //set error bit
+                if(G_pgpe_pstate_record.pstatesStatus != PSTATE_ACTIVE)
+                {
+                    uint32_t occScr2 = in32(OCB_OCCS2);
+                    occScr2 |= BIT32(PGPE_SAFE_MODE_ERROR);
+                    out32(OCB_OCCS2, occScr2);
+                }
+                //Otherwise, process safe mode request
+                else
+                {
+                    G_pgpe_pstate_record.pstatesStatus = PSTATE_SAFE_MODE_PENDING;
+                }
+            }
+            //Only STOP, if STOP is requested, and pstatesStatus == PSTATES_ACTIVE
+            else if((occFlag.value & BIT32(PGPE_PSTATE_PROTOCOL_STOP))
+                    && (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE))
+            {
+                G_pgpe_pstate_record.pstatesStatus = PSTATE_STOP_PENDING;
+            }
+        }
     }
 }
 
@@ -331,6 +356,7 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
     mtmsr(PPE42_MSR_INITIAL);
     handle_occ_beacon();
     handle_core_throttle();
+    handle_occflg_requests();
     handle_aux_task();
     handle_fit_timebase_sync();
 }
