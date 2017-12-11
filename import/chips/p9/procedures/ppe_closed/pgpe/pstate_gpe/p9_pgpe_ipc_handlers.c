@@ -290,16 +290,10 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
 }
 
 
-void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt_core_enable(ipc_msg_t* cmd, void* arg)
+void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC: Core Updt Enable ACKed");
-    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_ENABLE].cmd = cmd;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_ENABLE].pending_processing = 1;
-}
+    PK_TRACE_INF("IPC: Core Updt ACKed");
 
-void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt_core_disable(ipc_msg_t* cmd, void* arg)
-{
-    PK_TRACE_INF("IPC: Core Updt Disable ACKed");
-    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_DISABLE].cmd = cmd;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_CORE_DISABLE].pending_processing = 1;
+    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].cmd = cmd;
+    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_processing = 1;
 }
