@@ -42,9 +42,8 @@ enum IPC_PEND_TBL
     IPC_PEND_WOF_CTRL                 =     4,
     IPC_PEND_WOF_VFRT                 =     5,
     IPC_PEND_SET_PMCR_REQ             =     6,
-    IPC_ACK_CTRL_STOP_CORE_ENABLE     =     7,
-    IPC_ACK_CTRL_STOP_CORE_DISABLE    =     8,
-    MAX_IPC_PEND_TBL_ENTRIES          =     9
+    IPC_ACK_CTRL_STOP_UPDT            =     7,
+    MAX_IPC_PEND_TBL_ENTRIES          =     8
 };
 
 enum QUAD_BIT_MASK
@@ -61,10 +60,12 @@ enum PSTATE_STATUS
 {
     PSTATE_INIT                                 =    0, //PGPE Booted
     PSTATE_ACTIVE                               =    1, //Pstates are active
-    PSTATE_SAFE_MODE                            =    4,  //Safe Mode
+    PSTATE_STOP_PENDING                         =    2, //Pstate Stop Pending
+    PSTATE_SAFE_MODE_PENDING                    =    3, //Safe Mode Pending
+    PSTATE_SAFE_MODE                            =    4, //Safe Mode
     PSTATE_STOPPED                              =    5, //Pstates are stopped
     PSTATE_PM_SUSPEND_PENDING                   =    6, //PM Complex Suspend Pending
-    PSTATE_PM_SUSPENDED                         =    7 //PM Complex Suspend
+    PSTATE_PM_SUSPENDED                         =    7  //PM Complex Suspend
 };
 
 enum WOF_STATUS
@@ -138,6 +139,7 @@ typedef struct
     uint16_t vindex, findex;
     uint32_t pendingPminClipBcast, pendingPmaxClipBcast;
     uint32_t semProcessPosted, semProcessSrc;
+    uint32_t actuating;
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
 
@@ -161,7 +163,7 @@ void p9_pgpe_pstate_clip_bcast(uint32_t clip_type);
 void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
-void p9_pgpe_pstate_wof_ctrl(uint32_t action, uint32_t activeCores, uint32_t activeQuads);
+void p9_pgpe_pstate_wof_ctrl(uint32_t action);
 void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t ctrl);
 void p9_pgpe_pstate_apply_safe_clips();
 void p9_pgpe_pstate_safe_mode();

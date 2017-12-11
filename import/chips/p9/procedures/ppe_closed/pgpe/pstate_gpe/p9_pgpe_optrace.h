@@ -68,7 +68,7 @@ enum PGPE_OP_TRACE_ENCODES
     PRC_CORES_ACTV    =  0x5A,
     PRC_QUAD_ACTV     =  0x5B,
     FIT_TB_SYNC       =  0x5C,
-    SGPE_SUSP_DONE    =  0x4D,
+    SYSTEM_XSTOP      =  0x4D,
     PRC_PM_SUSP       =  0x4E,
     PRC_SAFE_MODE     =  0x5F
 };
