@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -52,36 +52,17 @@ p9_hcd_core_poweron(uint32_t core)
     PK_TRACE("Prepare PFET Controls");
     CME_PUTSCOM(PPM_PFCS_CLR, core, BIT64(4) | BIT64(5) | BIT64(8));
 
-    // Serialize only the PFET power-on for the Core Pair
-    if (core & CME_MASK_C0)
+    // vdd_pfet_force_state = 11 (Force Von)
+    PK_TRACE("Power On Core VDD");
+    CME_PUTSCOM(PPM_PFCS_OR, core, BITS64(0, 2));
+
+    PK_TRACE("Poll for vdd_pfets_enabled_sense");
+
+    do
     {
-        // vdd_pfet_force_state = 11 (Force Von)
-        PK_TRACE("Power On Core VDD");
-        CME_PUTSCOM(PPM_PFCS_OR, CME_MASK_C0, BITS64(0, 2));
-
-        PK_TRACE("Poll for vdd_pfets_enabled_sense");
-
-        do
-        {
-            CME_GETSCOM(PPM_PFSNS, CME_MASK_C0, scom_data);
-        }
-        while(!(scom_data & BIT64(0)));
+        CME_GETSCOM_AND(PPM_PFSNS, core, scom_data);
     }
-
-    if (core & CME_MASK_C1)
-    {
-        // vdd_pfet_force_state = 11 (Force Von)
-        PK_TRACE("Power On Core VDD");
-        CME_PUTSCOM(PPM_PFCS_OR, CME_MASK_C1, BITS64(0, 2));
-
-        PK_TRACE("Poll for vdd_pfets_enabled_sense");
-
-        do
-        {
-            CME_GETSCOM(PPM_PFSNS, CME_MASK_C1, scom_data);
-        }
-        while(!(scom_data & BIT64(0)));
-    }
+    while(!(scom_data & BIT64(0)));
 
     // vdd_pfet_force_state = 00 (Nop)
     PK_TRACE("Turn Off Force Von");
