@@ -204,13 +204,6 @@ main(int argc, char** argv)
         PK_PANIC(CME_UIH_DISABLED_NOT_LAST_LVL);
     }
 
-    if (IRQ_VEC_PRTY_CHECK != 0xFFFFFFFFFFFFFFFF)
-    {
-        PK_TRACE_ERR("ERROR: IRQ_VEC_PRTY_CHECK=0x%08x%08x Should Be All Ones. HALT CME!",
-                     IRQ_VEC_PRTY_CHECK);
-        PK_PANIC(CME_UIH_NOT_ALL_IN_PRTY_GROUP);
-    }
-
     p9_cme_stop_init();
 
     // Initialize the thread control block for G_p9_cme_stop_exit_thread
