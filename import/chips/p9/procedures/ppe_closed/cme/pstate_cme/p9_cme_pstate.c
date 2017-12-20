@@ -88,19 +88,87 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
     return rc;
 }
 
-void poll_dpll_update_complete()
+uint32_t poll_dpll_stat()
 {
-    data64_t polldata;
-    PK_TRACE_INF("Poll on DPLL_STAT[update_complete]");
+    data64_t data;
+    uint32_t cme_flags = in32(CME_LCL_FLAGS);
+    uint32_t rc = 0;
 
-    // ... to indicate that the DPLL has sampled the newly requested
-    // frequency into its internal registers as a target,
-    // but may not yet be there
-    do
+    // DPLL Mode 2
+    if(!(cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE)))
     {
-        ippm_read(QPPM_DPLL_STAT, &polldata.value);
+        PK_TRACE_INF("Poll on DPLL_STAT[freq_change=0]");
+
+        // ... to indicate that the DPLL is safely either at the new frequency
+        // or in droop protection below the new frequency
+        do
+        {
+            ippm_read(QPPM_DPLL_STAT, &data.value);
+        }
+        while((data.words.lower & BIT64SH(61)));
     }
-    while(!(polldata.words.lower & BIT32(28)));
+
+    // DPLL Mode 3
+    if(cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
+    {
+        PK_TRACE_INF("Poll on DPLL_STAT[update_complete=1]");
+        // ... to indicate that the DPLL has sampled the newly requested
+        // frequency into its internal registers as a target,
+        // but may not yet be there
+        uint32_t tbStart, tbEnd, elapsed;
+        cppm_csar_t csar;
+        csar.value = 0;
+
+        //Read CPPM_CSAR
+        if (cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
+        {
+            CME_GETSCOM(CPPM_CSAR, CME_MASK_C0, csar.value);
+        }
+        else if (cme_flags & BIT32(CME_FLAGS_CORE1_GOOD))
+        {
+            CME_GETSCOM(CPPM_CSAR, CME_MASK_C1, csar.value);
+        }
+
+        //Read TimebaseStart
+        tbStart = in32(CME_LCL_TBR);
+
+        do
+        {
+            //Read DPLL_STAT
+            ippm_read(QPPM_DPLL_STAT, &data.value);
+
+            //If QPPM_DPLL_STAT[60/UPDATE_COMPLETE]=1
+            if(data.words.lower & BIT64SH(60))
+            {
+                break;
+            }
+
+            //Read TimebaseEnd
+            tbEnd = in32(CME_LCL_TBR);
+
+            //Compute Elapsed Count with accounting for Timebase Wrapping
+            if (tbEnd > tbStart)
+            {
+                elapsed = tbEnd - tbStart;
+            }
+            else
+            {
+                elapsed = 0xFFFFFFFF - tbStart + tbEnd + 1;
+            }
+
+            //If !CPPM_CSAR[DIS_NACK] AND (Elapsed Count > DROOP_POLL_COUNT), then prolonged
+            //droop detected
+            if (!(csar.value & BIT64(CPPM_CSAR_DISABLE_CME_NACK_ON_PROLONGED_DROOP)) &&
+                elapsed > DROOP_POLL_COUNT)
+            {
+                rc = 1; //Non-zero return code
+                break;
+            }
+        }
+        while(1);
+    }
+
+    return rc;
 }
 
 // Non-atomic Interppm-read, this function is not made availabe via the header
@@ -437,8 +505,9 @@ uint32_t calc_vdm_jump_values(uint32_t pstate, uint32_t region)
     return new_jump_values;
 }
 
-void update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region)
+uint32_t update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region)
 {
+    uint32_t rc = 0;
     data64_t scom_data = { 0 };
     uint32_t new_jump_values = calc_vdm_jump_values(pstate, region);
     // Read the current contents of DPLL_CTRL and then update only the jump
@@ -472,38 +541,44 @@ void update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region)
         reduced_dpll_val.fields.fmin = reduced_dpll_val.fields.fmult;
         // Write the reduced frequency
         nonatomic_ippm_write(QPPM_DPLL_FREQ, reduced_dpll_val.value);
-        poll_dpll_update_complete();
-        // Clear jump enable (drop to Mode 2)
-        nonatomic_ippm_write(QPPM_DPLL_CTRL_CLR, BIT64(1));
-        // Poll for lock
-        PK_TRACE_INF("Poll on DPLL_STAT[block_active|lock]");
+        rc = poll_dpll_stat();
 
-        // ... to indicate that the DPLL is safely either at the new frequency
-        // or in droop protection below the new frequency
-        do
+        if (!rc)
         {
-            nonatomic_ippm_read(QPPM_DPLL_STAT, &poll_data.value);
-        }
-        while(!(poll_data.words.lower & BITS32(30, 2)));
+            // Clear jump enable (drop to Mode 2)
+            nonatomic_ippm_write(QPPM_DPLL_CTRL_CLR, BIT64(1));
+            // Poll for lock
+            PK_TRACE_INF("Poll on DPLL_STAT[block_active|lock]");
 
-        // Write the new jump values (clear jump enable)
-        scom_data.value &= ~BIT64(1);
-        scom_data.words.lower = new_jump_values;
-        nonatomic_ippm_write(QPPM_DPLL_CTRL, scom_data.value);
-        // Set jump enable (switch back to Mode 3)
-        nonatomic_ippm_write(QPPM_DPLL_CTRL_OR, BIT64(1));
+            // ... to indicate that the DPLL is safely either at the new frequency
+            // or in droop protection below the new frequency
+            do
+            {
+                nonatomic_ippm_read(QPPM_DPLL_STAT, &poll_data.value);
+            }
+            while(!(poll_data.words.lower & BITS32(30, 2)));
 
-        // The frequency will be raised as part of the pstate transition if
-        // lowering the pstate, don't need to do anything here
-        if(pstate >= G_cme_pstate_record.quadPstate)
-        {
-            // Restore frequency
-            nonatomic_ippm_write(QPPM_DPLL_FREQ, saved_dpll_val.value);
-            poll_dpll_update_complete();
+            // Write the new jump values (clear jump enable)
+            scom_data.value &= ~BIT64(1);
+            scom_data.words.lower = new_jump_values;
+            nonatomic_ippm_write(QPPM_DPLL_CTRL, scom_data.value);
+            // Set jump enable (switch back to Mode 3)
+            nonatomic_ippm_write(QPPM_DPLL_CTRL_OR, BIT64(1));
+
+            // The frequency will be raised as part of the pstate transition if
+            // lowering the pstate, don't need to do anything here
+            if(pstate >= G_cme_pstate_record.quadPstate)
+            {
+                // Restore frequency
+                nonatomic_ippm_write(QPPM_DPLL_FREQ, saved_dpll_val.value);
+                rc = poll_dpll_stat();
+            }
         }
 
         pk_critical_section_exit(&ctx);
     }
+
+    return rc;
 }
 #endif//NIMBUS_DD_LEVEL
 
@@ -549,11 +624,11 @@ void calc_vdm_threshold_indices(uint32_t pstate, uint32_t region,
                               ? indices[VDM_SMALL_IDX] : indices[VDM_XTREME_IDX];
 }
 
-void p9_cme_vdm_update(uint32_t pstate)
+uint32_t p9_cme_vdm_update(uint32_t pstate)
 {
     // Static forces this array into .sbss instead of calling memset()
     static uint32_t new_idx[NUM_THRESHOLD_POINTS] = { 0 };
-    uint32_t i = 0;
+    uint32_t i = 0, rc = 0;
     // Set one bit per threshold starting at bit 31 (28,29,30,31)
     uint32_t not_done = BITS32(32 - NUM_THRESHOLD_POINTS, NUM_THRESHOLD_POINTS);
     uint64_t scom_data = 0;
@@ -603,8 +678,9 @@ void p9_cme_vdm_update(uint32_t pstate)
     while(not_done);
 
 #if NIMBUS_DD_LEVEL != 10
-    update_vdm_jump_values_in_dpll(pstate, region);
+    rc = update_vdm_jump_values_in_dpll(pstate, region);
 #endif//NIMBUS_DD_LEVEL
+    return rc;
 }
 #endif//USE_CME_VDM_FEATURE
 
@@ -710,6 +786,12 @@ void p9_cme_pstate_pmsr_updt(uint32_t coreMask)
             if(G_cme_pstate_record.safeMode)
             {
                 pmsrData |= BIT64(33);
+            }
+
+            //PMSR[35] is PSTATES_SUSPENDED bit
+            if(G_cme_pstate_record.pstatesSuspended)
+            {
+                pmsrData |= BIT64(35);
             }
 
             out64(CME_LCL_PMSRS0 + ((cm & 0x1) << 5), pmsrData);

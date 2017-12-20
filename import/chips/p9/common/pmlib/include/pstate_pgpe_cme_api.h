@@ -98,8 +98,20 @@ enum MESSAGE_ID_DB0
     MSGID_DB0_START_PSTATE_BROADCAST    = 3,
     MSGID_DB0_STOP_PSTATE_BROADCAST     = 4,
     MSGID_DB0_CLIP_BROADCAST            = 5,
-    MSGID_DB0_SAFE_MODE_BROADCAST       = 6,
+    MSGID_DB0_PMSR_UPDT                 = 6,
     MSGID_DB0_VALID_END                 = 6 //This for error checking
+};
+
+enum MESSAGE_ID_DB3
+{
+    MSGID_DB3_RESERVED                  = 0,
+    MSGID_DB3_VALID_START               = 1, //This for error checking
+    MSGID_DB3_PSTATE_START              = 1,
+    MSGID_DB3_PSTATE_END                = 0xF0,
+    MSGID_DB3_IMMEDIATE_HALT            = 0xF1,
+    MSGID_DB3_RESTORE_STATE_AND_HALT    = 0xF2,
+    MSGID_DB3_REPLAY_DB0                = 0xF3,
+    MSGID_DB3_VALID_END                 = 0xF3 //This for error checking
 };
 
 enum MESSAGEID_PCB_TYPE4_ACK_TYPES
@@ -107,13 +119,21 @@ enum MESSAGEID_PCB_TYPE4_ACK_TYPES
     MSGID_PCB_TYPE4_ACK_ERROR                    = 0,
     MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK         = 1,
     MSGID_PCB_TYPE4_ACK_PSTATE_SUSPENDED         = 2,
-    MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE           = 3
+    MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE           = 3,
+    MSGID_PCB_TYPE4_NACK_DROOP_PRESENT           = 4
 };
 
-enum DB0_FIELDS
+enum DB0_CLIP_BCAST_FIELDS
 {
     DB0_CLIP_BCAST_TYPE_PMIN      = 0,
     DB0_CLIP_BCAST_TYPE_PMAX      = 1
+};
+
+enum DB0_PMSR_UPDT_COMMANDS
+{
+    DB0_PMSR_UPDT_SET_SAFE_MODE             = 0x0,
+    DB0_PMSR_UPDT_SET_PSTATES_SUSPENDED     = 0x1,
+    DB0_PMSR_UPDT_CLEAR_PSTATES_SUSPENDED   = 0x2
 };
 
 //
@@ -225,22 +245,24 @@ typedef union pgpe_db0_clip_bcast
 } pgpe_db0_clip_bcast_t;
 
 //
-//PGPE-CME Doorbell0(Safe Mode Broadcast)
+//PGPE-CME Doorbell0(PMSR Update)
 //
-typedef union pgpe_db0_safe_mode_bcast
+typedef union pgpe_db0_pmsr_updt
 {
     uint64_t value;
     struct
     {
 #ifdef _BIG_ENDIAN
         uint64_t msg_id : 8;
-        uint64_t reserved: 56;
+        uint64_t command : 8;
+        uint64_t reserved: 48;
 #else
-        uint64_t reserved: 56;
+        uint64_t reserved: 48;
+        uint64_t command : 8;
         uint64_t msg_id : 8;
 #endif
     } fields;
-} pgpe_db0_safe_mode_bcast_t;
+} pgpe_db0_pmsr_updt_t;
 
 
 #endif //__PSTATE_PGPE_CME_API_H__

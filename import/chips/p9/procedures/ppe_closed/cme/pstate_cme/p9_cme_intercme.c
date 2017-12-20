@@ -49,33 +49,89 @@ extern CmeRecord G_cme_record;
 //
 void p9_cme_pstate_intercme_in0_irq_handler(void* arg, PkIrqId irq)
 {
-    p9_cme_pstate_intercme_in0_handler();
-}
-
-void p9_cme_pstate_intercme_in0_handler()
-{
-    cppm_cmedb0_t dbData;
-    dbData.value = 0;
-    uint32_t dbQuadInfo, dbBit8_15;
-    uint32_t cme_flags = in32(CME_LCL_FLAGS);
     PkMachineContext  ctx __attribute__((unused));
-
-    PK_TRACE("INTER0: Enter\n");
 
     //Read DB0 from first good core since PGPE
     //writes same value for both cores
-    do
+    uint64_t dbData;
+
+    if (in32(CME_LCL_FLAGS) & (BIT32(CME_FLAGS_CORE0_GOOD)))
     {
-        if (cme_flags & (BIT32(CME_FLAGS_CORE0_GOOD)))
+        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, dbData);
+    }
+    else
+    {
+        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, dbData);
+    }
+
+    p9_cme_pstate_process_db0_sibling(dbData);
+
+    pk_irq_vec_restore(&ctx);
+}
+
+void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq)
+{
+    PkMachineContext  ctx __attribute__((unused));
+
+    p9_cme_pstate_sibling_lock_and_intercme_protocol(0, 1, 0);
+
+    pk_irq_vec_restore(&ctx);
+}
+
+void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0, uint32_t readDB0, uint64_t dbData)
+{
+    PK_TRACE("SIBL: Enter\n");
+    uint32_t msg;
+    uint64_t data;
+    intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
+
+    // Block on the intercme0/intercme1 interrupt
+    while((!(in32(CME_LCL_EISR) & BIT32(7))) &&
+          (!(in32_sh(CME_LCL_EISR) & BIT64SH(38)))) {}
+
+    //If INTERCME_DIRECT_IN1, then error.
+    if(in32_sh(CME_LCL_EISR) & BIT64SH(38))
+    {
+        G_cme_pstate_record.pstatesSuspended = 1;
+        p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
+        intercme_direct(INTERCME_DIRECT_IN1, INTERCME_DIRECT_ACK, 0);
+    }
+
+    //If INTERCME_DIRECT_IN0, then process DB0 data
+    if((in32(CME_LCL_EISR) & BIT32(7)) && (process_intercme_in0 == 1))
+    {
+        if(readDB0)
         {
-            CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, dbData.value);
+            //Read DB0 from first good core since PGPE
+            //writes same value for both cores
+            if (in32(CME_LCL_FLAGS) & (BIT32(CME_FLAGS_CORE0_GOOD)))
+            {
+                CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, data);
+            }
+            else
+            {
+                CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, data);
+            }
         }
         else
         {
-            CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, dbData.value);
+            data = dbData;
         }
+
+        p9_cme_pstate_process_db0_sibling(data);
     }
-    while(dbData.value == 0);
+
+    PK_TRACE("SIBL: Enter\n");
+}
+
+void p9_cme_pstate_process_db0_sibling(uint64_t data)
+{
+    cppm_cmedb0_t dbData;
+    dbData.value = data;
+    uint32_t dbQuadInfo, dbBit8_15;
+    //uint32_t cme_flags = in32(CME_LCL_FLAGS);
+
+    PK_TRACE("INTER0: Enter\n");
 
     dbQuadInfo = (dbData.value >> (in32(CME_LCL_SRTCH0) &
                                    (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)
@@ -119,7 +175,6 @@ void p9_cme_pstate_intercme_in0_handler()
         }
 
         p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
-        PKTRACE("INTER0: pmin=0x%08x,pmax=0x%08x", G_cme_pstate_record.pmin, G_cme_pstate_record.pmax);
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST)
     {
@@ -134,11 +189,24 @@ void p9_cme_pstate_intercme_in0_handler()
         //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
         CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
     }
-    else if(dbData.fields.cme_message_number0 == MSGID_DB0_SAFE_MODE_BROADCAST)
+    else if(dbData.fields.cme_message_number0 == MSGID_DB0_PMSR_UPDT)
     {
-        PK_TRACE("INTER0: DB0 Safe Mode");
+        PK_TRACE("INTER0: DB0 PMSR Updt");
 
-        G_cme_pstate_record.safeMode = 1;
+        switch(dbBit8_15)
+        {
+            case DB0_PMSR_UPDT_SET_SAFE_MODE:
+                G_cme_pstate_record.safeMode = 1;
+                break;
+
+            case DB0_PMSR_UPDT_SET_PSTATES_SUSPENDED:
+                G_cme_pstate_record.pstatesSuspended = 1;
+                break;
+
+            case DB0_PMSR_UPDT_CLEAR_PSTATES_SUSPENDED:
+                G_cme_pstate_record.pstatesSuspended = 0;
+                break;
+        }
 
         p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
     }
@@ -151,22 +219,5 @@ void p9_cme_pstate_intercme_in0_handler()
 
     intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_ACK, 0);
 
-    pk_irq_vec_restore(&ctx);
-
     PK_TRACE("INTER0: Exit");
-}
-
-void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq)
-{
-    PkMachineContext ctx __attribute__((unused));
-    // Override mask, disable every interrupt except high-priority ones via the
-    // priority mask for this interrupt (p9_pk_irq.c)
-    uint32_t msg;
-    intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
-
-    // Block on the intercme0 interrupt
-    while(!(in32(CME_LCL_EISR) & BIT32(7))) {}
-
-    // Restore the mask, cede control to the intercme0 interrupt handler
-    pk_irq_vec_restore(&ctx);
 }

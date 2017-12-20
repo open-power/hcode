@@ -53,6 +53,7 @@ void p9_pgpe_process_wof_vfrt();
 void p9_pgpe_process_set_pmcr_req();
 void p9_pgpe_process_registration();
 void p9_pgpe_process_ack_sgpe_ctrl_stop_updt();
+void p9_pgpe_process_ack_sgpe_suspend_stop();
 
 //
 //Process Request Thread
@@ -167,11 +168,11 @@ void p9_pgpe_thread_process_requests(void* arg)
         if (G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_processing)
         {
             p9_pgpe_process_ack_sgpe_ctrl_stop_updt();
+        }
 
-            if(G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_ack == 1)
-            {
-                restore_irq = 0;
-            }
+        if (G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_SUSPEND_STOP].pending_processing)
+        {
+            p9_pgpe_process_ack_sgpe_suspend_stop();
         }
 
         if (G_pgpe_pstate_record.pendQuadsRegisterProcess != 0)
@@ -905,8 +906,7 @@ void p9_pgpe_process_registration()
     ccsr.value = in32(OCB_CCSR);
     ocb_qcsr_t qcsr;
     qcsr.value = in32(OCB_QCSR);
-    volatile uint32_t opit4pr;
-    uint32_t opit4prQuad, q, c, oldActiveDB, oldActiveQuads, unicastCoresVector = 0, quadsRegisterProcess;
+    uint32_t  q, c, oldActiveDB, oldActiveQuads, unicastCoresVector = 0, quadsRegisterProcess;
     uint32_t quadAckExpect = 0;
     uint64_t value;
     pgpe_db0_start_ps_bcast_t db0_glb_bcast;
@@ -1077,35 +1077,16 @@ void p9_pgpe_process_registration()
         db0_glb_bcast.fields.quad3_ps = G_pgpe_pstate_record.quadPSTarget[3];
         db0_glb_bcast.fields.quad4_ps = G_pgpe_pstate_record.quadPSTarget[4];
         db0_glb_bcast.fields.quad5_ps = G_pgpe_pstate_record.quadPSTarget[5];
-        p9_pgpe_send_db0(db0_glb_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_SKIP, 0);
+        p9_pgpe_send_db0(db0_glb_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_WAIT_CME, quadAckExpect);
 
-        //Now collect ACKS for Pstate Start DB0
-        while(quadAckExpect != 0)
+        //Quads
+        for (q = 0; q < MAX_QUADS; q++)
         {
-            opit4pr = in32(OCB_OPIT4PRA);
-
-            for (q = 0; q < MAX_QUADS; q++)
+            if (quadAckExpect & QUAD_MASK(q))
             {
-                opit4prQuad = (opit4pr >> ((MAX_QUADS - q + 1) << 2)) & 0xf;
-
-                if (opit4prQuad)
-                {
-                    //We expect type4 from this quad for the Pstate Start sent above
-                    if (quadAckExpect & QUAD_MASK(q))
-                    {
-                        quadAckExpect &= ~QUAD_MASK(q);
-                        out32(OCB_OPIT4PRA_CLR, opit4prQuad << ((MAX_QUADS - q + 1) << 2));
-                        PK_TRACE_DBG("PTH: Got DB0 Start ACK from %d", q);
-                        G_pgpe_pstate_record.quadPSCurr[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                        p9_pgpe_pstate_updt_actual_quad(QUAD_MASK(q));
-                    }
-                    else if(!(G_pgpe_pstate_record.pendQuadsRegisterReceive & QUAD_MASK(q)))
-                    {
-                        PK_TRACE_ERR("PTH: Unexpected ACK q=0x%x,opit4prQuad=0x%x", q, opit4prQuad);
-                        PK_PANIC(PGPE_CME_UNEXPECTED_REGISTRATION);
-                    }
-                }
+                G_pgpe_pstate_record.quadPSCurr[q] = G_pgpe_pstate_record.quadPSTarget[q];
+                G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
+                p9_pgpe_pstate_updt_actual_quad(QUAD_MASK(q));
             }
         }
     }
@@ -1117,4 +1098,10 @@ void p9_pgpe_process_ack_sgpe_ctrl_stop_updt()
 {
     G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_processing = 0;
     G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_ack = 0;
+}
+
+void p9_pgpe_process_ack_sgpe_suspend_stop()
+{
+    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_SUSPEND_STOP].pending_processing = 0;
+    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_SUSPEND_STOP].pending_ack = 0;
 }

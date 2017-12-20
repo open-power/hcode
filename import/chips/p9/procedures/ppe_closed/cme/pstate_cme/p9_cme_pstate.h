@@ -57,18 +57,24 @@ enum DPLL
     DPLL_MAX_VALUE = 300, //DPLL value @5000Mhz (5000/16.667)
 };
 
+enum DROOP_POLL
+{
+    DROOP_POLL_TIME_NS = 200000, //This defines the duration
+    DROOP_POLL_COUNT = DROOP_POLL_TIME_NS / 32 //32ns per timebase tick
+};
+
 typedef struct
 {
-    uint32_t core0_resclk_idx;
-    uint32_t core1_resclk_idx;
-    uint32_t l2_ex0_resclk_idx;
-    uint32_t l2_ex1_resclk_idx;
-    uint32_t common_resclk_idx;
+    uint32_t core0_resclk_idx;  //4
+    uint32_t core1_resclk_idx;  //8
+    uint32_t l2_ex0_resclk_idx; //12
+    uint32_t l2_ex1_resclk_idx; //16
+    uint32_t common_resclk_idx; //20
 } cme_resclk_data_t;
 
 typedef struct
 {
-    uint32_t vdm_threshold_idx[NUM_THRESHOLD_POINTS];
+    uint32_t vdm_threshold_idx[NUM_THRESHOLD_POINTS]; //4*4=16
 } cme_vdm_data_t;
 
 typedef enum
@@ -160,20 +166,21 @@ typedef struct
 #if !defined(__IOTA__)
     PkSemaphore sem[2];
 #endif
-    uint32_t qmFlag;
-    uint32_t siblingCMEFlag;
-    uint32_t quadPstate;
-    uint32_t cmeMaskGoodCore;
-    uint32_t globalPstate;
+    uint32_t qmFlag;            //4
+    uint32_t siblingCMEFlag;    //8
+    uint32_t quadPstate;        //12
+    uint32_t cmeMaskGoodCore;   //16
+    uint32_t globalPstate;      //20
 #ifdef USE_CME_RESCLK_FEATURE
-    cme_resclk_data_t resclkData;
+    cme_resclk_data_t resclkData; //40
 #endif//USE_CME_RESCLK_FEATURE
 #ifdef USE_CME_VDM_FEATURE
-    cme_vdm_data_t vdmData;
+    cme_vdm_data_t vdmData; //56
 #endif//USE_CME_VDM_FEATURE
-    uint32_t pmin;
-    uint32_t safeMode;
-    uint32_t pmax;
+    uint32_t pmin;          //60
+    uint32_t safeMode;      //64
+    uint32_t pmax;          //68
+    uint32_t pstatesSuspended; //72(0x48)
 } CmePstateRecord;
 
 typedef struct
@@ -182,14 +189,17 @@ typedef struct
 } cme_pstate_pmcr_data_t;
 
 void p9_cme_pstate_pmcr_thread(void*);
-void p9_cme_pstate_db_thread(void*);
+void p9_cme_pstate_db0_thread(void*);
 void p9_cme_pstate_pmcr_handler(void*, PkIrqId);
-void p9_cme_pstate_db_handler(void*, PkIrqId);
+void p9_cme_pstate_db0_handler(void*, PkIrqId);
+void p9_cme_pstate_db3_handler(void*, PkIrqId);
+void p9_cme_pstate_db3_handler_replay_db0();
+void p9_cme_pstate_db3_handler_high_priority_pstate(uint32_t pstate);
 void p9_cme_pstate_intercme_in0_irq_handler(void*, PkIrqId);
 void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq);
 void p9_cme_pstate_db0_safe_mode();
 int send_pig_packet(uint64_t data, uint32_t coreMask);
-void poll_dpll_update_complete();
+uint32_t poll_dpll_stat();
 void ippm_read(uint32_t addr, uint64_t* data);
 void ippm_write(uint32_t addr, uint64_t data);
 void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type);
@@ -198,7 +208,8 @@ void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint3
 void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
 void p9_cme_pstate_pmsr_updt(uint32_t coreMask);
 void p9_cme_pstate_pmsr_updt_in_progress(uint32_t coreMask);
-void p9_cme_pstate_intercme_in0_handler();
+void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0, uint32_t readDB0, uint64_t dbData);
+void p9_cme_pstate_process_db0_sibling(uint64_t dbData);
 
 #ifdef USE_CME_RESCLK_FEATURE
     uint32_t p9_cme_resclk_get_index(uint32_t pstate);
@@ -206,8 +217,8 @@ void p9_cme_pstate_intercme_in0_handler();
 #endif//USE_CME_RESCLK_FEATURE
 #ifdef USE_CME_VDM_FEATURE
 uint32_t calc_vdm_jump_values(uint32_t pstate, uint32_t region);
-void update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region);
-void p9_cme_vdm_update(uint32_t pstate);
+uint32_t update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region);
+uint32_t p9_cme_vdm_update(uint32_t pstate);
 uint32_t pstate_to_vid_compare(uint32_t pstate, uint32_t region);
 uint32_t pstate_to_vpd_region(uint32_t pstate);
 void calc_vdm_threshold_indices(uint32_t pstate, uint32_t region,

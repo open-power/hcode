@@ -105,6 +105,26 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         //Loop while Pstate is ACTIVE
         while(G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
         {
+            //If a VDM prolonged droop happened, then we set OCB_OCCFLG[PGPE_PM_RESET_SUPPRESS]
+            //It should be cleared once VDM prolonged droop condition has subsided and all pending IPCs
+            //from OCC have been processed and acked. Note, that pending processing and pending ack are
+            //only set inside IPC handler, and it's possible that while PGPE is stuck in the VDM prolonged
+            //droop loop(the p9_pgpe_pstate_do_step function call) an IPC interrupt happened, so
+            //PGPE must be given a change to take IPC interrupt and see if any other IPC from OCC
+            //needs processing.
+            if ((in32(OCB_OCCFLG) & BIT32(PGPE_PM_RESET_SUPPRESS)))
+            {
+                if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 0) &&
+                    (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 0)  &&
+                    (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_ack == 0)  &&
+                    (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_processing == 0) &&
+                    (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_processing == 0)  &&
+                    (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_processing == 0))
+                {
+                    out32(OCB_OCCFLG_CLR, BIT32(PGPE_PM_RESET_SUPPRESS));
+                }
+            }
+
             //Actuate step(if needed)
             if(p9_pgpe_pstate_at_target() == 0)
             {
@@ -286,7 +306,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         //This check must come after the possible p9_pgpe_pstate_safe_mode() call above
         if (G_pgpe_pstate_record.pstatesStatus == PSTATE_PM_SUSPEND_PENDING)
         {
-            p9_pgpe_pstate_send_suspend_stop();
+            p9_pgpe_pstate_pm_complex_suspend();
         }
 
         if (G_pgpe_pstate_record.pstatesStatus == PSTATE_STOP_PENDING)
