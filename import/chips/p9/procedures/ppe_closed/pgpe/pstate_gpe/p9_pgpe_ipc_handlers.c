@@ -292,8 +292,16 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
 
 void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC: Core Updt ACKed");
+    PK_TRACE_INF("IPC: Ctrl Stop Updt ACKed");
 
     G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].cmd = cmd;
     G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_processing = 1;
+}
+
+void p9_pgpe_ipc_ack_sgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
+{
+    PK_TRACE_INF("IPC: Suspend Stop ACKed");
+
+    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_SUSPEND_STOP].cmd = cmd;
+    G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_SUSPEND_STOP].pending_processing = 1;
 }
