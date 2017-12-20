@@ -54,6 +54,7 @@ extern CmeRecord G_cme_record;
 extern CmePstateRecord G_cme_pstate_record;
 extern cmeHeader_t* G_cmeHeader;
 extern LocalPstateParmBlock* G_lppb;
+extern uint8_t G_vdm_threshold_table[];
 uint32_t G_cme_flags;
 cppm_cmedb0_t G_dbData;
 uint32_t G_next_pstate;
@@ -62,21 +63,21 @@ uint32_t G_next_pstate;
 //that p9_cme_update_analog is called if pstates are started during
 //registration even
 uint32_t G_register_in_progress;
-extern uint8_t G_vdm_threshold_table[];
+uint32_t G_update_analog_error;
 
 //
 //Function Prototypes
 //
-inline void p9_cme_pstate_process_db0() __attribute__((always_inline));
 inline void p9_cme_pstate_register() __attribute__((always_inline));
-inline void p9_cme_pstate_db0_start() __attribute__((always_inline));
-inline void p9_cme_pstate_db0_glb_bcast() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_stop() __attribute__((always_inline));
 inline void p9_cme_pstate_db0_clip_bcast() __attribute__((always_inline));
-inline void p9_cme_pstate_db0_safe_mode() __attribute__((always_inline));
+inline void p9_cme_pstate_db0_pmsr_updt() __attribute__((always_inline));
 inline void p9_cme_pstate_freq_update() __attribute__((always_inline));
-inline void p9_cme_pstate_notify_sib() __attribute__((always_inline));
 inline void p9_cme_pstate_update_analog() __attribute__((always_inline));
+void p9_cme_pstate_process_db0();
+void p9_cme_pstate_notify_sib();
+void p9_cme_pstate_db0_start();
+void p9_cme_pstate_db0_glb_bcast();
 void p9_cme_pstate_update();
 void p9_cme_pstate_pig_send();
 
@@ -84,7 +85,7 @@ void p9_cme_pstate_pig_send();
 //Doorbell0 interrupt handler
 //
 //Only enabled on QuadManager-CME
-void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
+void p9_cme_pstate_db0_handler(void* arg, PkIrqId irq)
 {
     PK_TRACE_INF("DB_HDL: Entered\n");
 #if defined(__IOTA__)
@@ -97,9 +98,102 @@ void p9_cme_pstate_db_handler(void* arg, PkIrqId irq)
 }
 
 //
+//Doorbell3 interrupt handler
+//
+//Note: This enabled on both QuadManagerCME and SiblingCME
+void p9_cme_pstate_db3_handler(void* arg, PkIrqId irq)
+{
+    cppm_cmedb3_t    db3;
+
+    PK_TRACE_INF("DB3 Handler");
+
+    //Clear EISR and read DB3 register
+    if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_CORE0_GOOD))
+    {
+        out32(CME_LCL_EISR_CLR, BIT32(10));
+        CME_GETSCOM(CPPM_CMEDB3, CME_MASK_C0, db3.value);
+
+        //Clear DB3_C1 if CORE1 is good
+        if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_CORE1_GOOD))
+        {
+            out32(CME_LCL_EISR_CLR, BIT32(11));
+        }
+    }
+    else if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_CORE1_GOOD))
+    {
+        out32(CME_LCL_EISR_CLR, BIT32(11));
+        CME_GETSCOM(CPPM_CMEDB3, CME_MASK_C1, db3.value);
+    }
+
+    if((db3.fields.cme_message_numbern >= MSGID_DB3_PSTATE_START) &&
+       (db3.fields.cme_message_numbern <= MSGID_DB3_PSTATE_END))
+    {
+        p9_cme_pstate_db3_handler_high_priority_pstate(db3.fields.cme_message_numbern);
+    }
+    else if (db3.fields.cme_message_numbern == MSGID_DB3_REPLAY_DB0)
+    {
+        p9_cme_pstate_db3_handler_replay_db0();
+    }
+    else
+    {
+        //\todo Will be done in the Error Handling commit
+        //48635
+    }
+}
+//
+//Doorbell3 Handler Replay DB0
+//
+void p9_cme_pstate_db3_handler_replay_db0()
+{
+    G_cme_flags = in32(CME_LCL_FLAGS);
+    G_update_analog_error = 0;
+
+    PK_TRACE_INF("DB_TH: Process DB0 Replay");
+
+    //QuadManager
+    if(G_cme_pstate_record.qmFlag)
+    {
+        p9_cme_pstate_process_db0();
+    }
+    //On Sibling poll on intercme_msg "LOCK_SIBLING", then
+    //poll on intercme_in0/1 direct msg.
+    else
+    {
+        p9_cme_pstate_sibling_lock_and_intercme_protocol(1, 1, 0);
+    }
+}
+
+//
+//Doorbell3 Handler Replay DB0
+//
+void p9_cme_pstate_db3_handler_high_priority_pstate(uint32_t pstate)
+{
+    //QuadManager
+    G_dbData.fields.cme_message_number0 = MSGID_DB0_START_PSTATE_BROADCAST;
+    G_dbData.value |= (uint64_t)pstate;
+    G_dbData.value |= ((uint64_t)pstate << 8);
+    G_dbData.value |= ((uint64_t)pstate << 16);
+    G_dbData.value |= ((uint64_t)pstate << 24);
+    G_dbData.value |= ((uint64_t)pstate << 32);
+    G_dbData.value |= ((uint64_t)pstate << 40);
+    G_dbData.value |= ((uint64_t)pstate << 48);
+
+    if(G_cme_pstate_record.qmFlag)
+    {
+        p9_cme_pstate_db0_glb_bcast();
+    }
+    //On Sibling poll on intercme_msg "LOCK_SIBLING", then
+    //poll on intercme_in0/1 direct msg.
+    else
+    {
+        p9_cme_pstate_sibling_lock_and_intercme_protocol(1, 0, G_dbData.value);
+    }
+}
+
+//
 //p9_cme_db_thread
 //
-void p9_cme_pstate_db_thread(void* arg)
+void p9_cme_pstate_db0_thread(void* arg)
 {
     PK_TRACE_INF("DB_TH: Started\n");
     PkMachineContext  ctx __attribute__((unused));
@@ -158,23 +252,23 @@ void p9_cme_pstate_db_thread(void* arg)
 
         if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
         {
-            out32_sh(CME_LCL_EIMR_CLR, BIT32(4));//Enable DB0_0
-            out32_sh(CME_LCL_EIMR_OR, BIT32(5));//Disable DB0_1
-            g_eimr_override |= BIT64(37);
+            out32_sh(CME_LCL_EIMR_CLR, BIT64SH(36));//Enable DB0_0
+            out32_sh(CME_LCL_EIMR_OR, BIT64SH(37));//Disable DB0_1
+            g_eimr_override |= (BIT64(37) | BIT64(11)) ;
             G_cme_pstate_record.cmeMaskGoodCore = CME_MASK_C0;
             cores |= CME_MASK_C0;
         }
         else if (G_cme_flags & BIT32(CME_FLAGS_CORE1_GOOD))
         {
-            out32_sh(CME_LCL_EIMR_OR, BIT32(4));//Disable DB0_0
-            out32_sh(CME_LCL_EIMR_CLR, BIT32(5));//Enable DB0_1
-            g_eimr_override |= BIT64(36);
+            out32_sh(CME_LCL_EIMR_OR, BIT64SH(36));//Disable DB0_0
+            out32_sh(CME_LCL_EIMR_CLR, BIT64SH(37));//Enable DB0_1
+            g_eimr_override |= (BIT64(36) | BIT64(10)) ;
             G_cme_pstate_record.cmeMaskGoodCore = CME_MASK_C1;
             cores |= CME_MASK_C1;
         }
 
-        out32(CME_LCL_EIMR_OR, BIT32(7));//Disable  InterCME_IN0
-        g_eimr_override |= BIT64(7);
+        out64(CME_LCL_EIMR_OR, BIT64(7) | BIT64(38));//Disable  InterCME_IN0/IN1
+        g_eimr_override |= (BIT64(7) | BIT64(38));
 
         // Pstate Clocking Initialization (QM)
         // Calculate the initial pstate
@@ -265,8 +359,10 @@ void p9_cme_pstate_db_thread(void* arg)
         PK_TRACE_INF("sib | initial pstate=%d", G_cme_pstate_record.quadPstate);
 
         out32(CME_LCL_EIMR_CLR, BIT32(7)); //Enable InterCME_IN0
-        g_eimr_override |= BIT64(37);
-        g_eimr_override |= BIT64(36);
+        g_eimr_override |= BIT64(37); //DB0_C1
+        g_eimr_override |= BIT64(36); //DB0_C0
+        g_eimr_override |= BIT64(10); //DB3_C0
+        g_eimr_override |= BIT64(11); //DB3_C1
     }
 
     // At this point, both QM and Sib can set their initial global Pstate
@@ -382,10 +478,11 @@ void p9_cme_pstate_db_thread(void* arg)
 //
 //Process Doorbell0
 //
-inline void p9_cme_pstate_process_db0()
+void p9_cme_pstate_process_db0()
 {
     ppm_pig_t ppmPigData;
     G_cme_flags = in32(CME_LCL_FLAGS);
+    G_update_analog_error = 0;
     uint64_t scom_data   =   0;
 
     PK_TRACE_INF("DB_TH: Process DB0 Enter\n");
@@ -453,9 +550,9 @@ inline void p9_cme_pstate_process_db0()
         {
             p9_cme_pstate_db0_clip_bcast();
         }
-        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_SAFE_MODE_BROADCAST)
+        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_PMSR_UPDT)
         {
-            p9_cme_pstate_db0_safe_mode();
+            p9_cme_pstate_db0_pmsr_updt();
         }
         //Otherwise, send an ERR ACK to PGPE and Halt
         else
@@ -493,11 +590,11 @@ inline void p9_cme_pstate_register()
         //Clear EISR[DB0_C0/1]
         if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
         {
-            out32_sh(CME_LCL_EISR_CLR, BIT32(4));
+            out32_sh(CME_LCL_EISR_CLR, BIT64SH(36));
         }
         else
         {
-            out32_sh(CME_LCL_EISR_CLR, BIT32(5));
+            out32_sh(CME_LCL_EISR_CLR, BIT64SH(37));
         }
 
         //Send type4(ack doorbell)
@@ -556,7 +653,6 @@ inline void p9_cme_pstate_register()
     }
     else
     {
-        uint32_t msg;
         uint32_t msgCnt = 0;
 
         if (G_cme_flags & BIT32(CME_FLAGS_WAIT_ON_PSTATE_START))
@@ -568,11 +664,7 @@ inline void p9_cme_pstate_register()
             while(msgCnt != 3)
             {
                 PK_TRACE_INF("DB_TH: Sib Register MsgCnt=0x%xt", msgCnt);
-                intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
-
-                while(!(in32(CME_LCL_EISR) & BIT32(7))) {} // Block on the intercme0 bit set
-
-                p9_cme_pstate_intercme_in0_handler();
+                p9_cme_pstate_sibling_lock_and_intercme_protocol(1, 1, 0);
                 msgCnt++;
             }
         }
@@ -584,14 +676,13 @@ inline void p9_cme_pstate_register()
 //
 //Doorbell0 Start
 //
-inline void p9_cme_pstate_db0_start()
+void p9_cme_pstate_db0_start()
 {
     PK_TRACE_INF("DB_TH: DB0 Start Enter\n");
     ppm_pig_t ppmPigData;
 
     p9_cme_pstate_update();
 
-    out32(CME_LCL_FLAGS_OR, BIT32(24));//Set Pstates Enabled
 
     //Clear EISR[DB0_C0/1] to prevent another interrupt
     if (G_cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
@@ -603,18 +694,34 @@ inline void p9_cme_pstate_db0_start()
         out32_sh(CME_LCL_EISR_CLR, BIT32(5));
     }
 
-    //Send type4(ack doorbell)
+    //Prepare PPM type4 payload for ACK/NACK for PGPE
+    //Send NACK, if any errors. Otherwise, send ACK
     ppmPigData.value = 0;
     ppmPigData.fields.req_intr_type = 4;
-    ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
+
+    if(G_update_analog_error)
+    {
+        ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_NACK_DROOP_PRESENT;
+    }
+    else
+    {
+        ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
+
+        out32(CME_LCL_FLAGS_OR, BIT32(24));//Set Pstates Enabled
+
+        //Clear Pending PMCR interrupts and Enable PMCR Interrupts (for good cores)
+        g_eimr_override |= BITS64(34, 2);
+        g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << 28);
+
+        //Clear Core GPMMR RESET_STATE_INDICATOR bit to show pstates have started
+        CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));
+    }
+
+    //Send type4(ack doorbell)
     send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
 
-    //Clear Pending PMCR interrupts and Enable PMCR Interrupts (for good cores)
-    g_eimr_override |= BITS64(34, 2);
-    g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << 28);
-
-    //Clear Core GPMMR RESET_STATE_INDICATOR bit to show pstates have started
-    CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));
+    //Reset G_update_analog_error
+    G_update_analog_error = 0;
 
     PK_TRACE_INF("DB_TH: DB0 Start Exit\n");
 }
@@ -622,18 +729,30 @@ inline void p9_cme_pstate_db0_start()
 //
 //Doorbell0 Global Broadcast
 //
-inline void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData)
+void p9_cme_pstate_db0_glb_bcast(cppm_cmedb0_t dbData)
 {
     PK_TRACE_INF("DB_TH: DB0 GlbBcast Enter\n");
     ppm_pig_t ppmPigData;
 
     p9_cme_pstate_update();
 
-    //Send type4(ack doorbell)
+    //Prepare PPM type4 payload for ACK/NACK for PGPE
+    //Send NACK, if any errors. Otherwise, send ACK
     ppmPigData.value = 0;
     ppmPigData.fields.req_intr_type = 4;
-    ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
+
+    if(G_update_analog_error)
+    {
+        ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_NACK_DROOP_PRESENT;
+    }
+    else
+    {
+        ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
+    }
+
+    //Send type4(ack doorbell)
     send_pig_packet(ppmPigData.value, G_cme_pstate_record.cmeMaskGoodCore);
+    G_update_analog_error = 0;
     PK_TRACE_INF("DB_TH: DB0 GlbBcast Exit\n");
 }
 
@@ -707,12 +826,27 @@ inline void p9_cme_pstate_db0_clip_bcast()
     PK_TRACE_INF("DB_TH: DB0 Clip Exit\n");
 }
 
-inline void p9_cme_pstate_db0_safe_mode()
+inline void p9_cme_pstate_db0_pmsr_updt()
 {
-    PK_TRACE_INF("DB_TH: DB0 Safe Mode Enter\n");
+    PK_TRACE_INF("DB_TH: DB0 Pmsr Updt Enter\n");
     ppm_pig_t ppmPigData;
 
-    G_cme_pstate_record.safeMode = 1;
+    uint32_t dbBit8_15 = (G_dbData.value & BITS64(8, 8)) >> SHIFT64(15);
+
+    switch(dbBit8_15)
+    {
+        case DB0_PMSR_UPDT_SET_SAFE_MODE:
+            G_cme_pstate_record.safeMode = 1;
+            break;
+
+        case DB0_PMSR_UPDT_SET_PSTATES_SUSPENDED:
+            G_cme_pstate_record.pstatesSuspended = 1;
+            break;
+
+        case DB0_PMSR_UPDT_CLEAR_PSTATES_SUSPENDED:
+            G_cme_pstate_record.pstatesSuspended = 0;
+            break;
+    }
 
     p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
 
@@ -730,17 +864,23 @@ inline void p9_cme_pstate_db0_safe_mode()
     PK_TRACE_INF("DB_TH: DB0 Safe Mode Exit\n");
 }
 
-inline void p9_cme_pstate_notify_sib()
+void p9_cme_pstate_notify_sib()
 {
     PK_TRACE_INF("DB_TH: Notify Enter\n");
 
     //Notify sibling CME(if any)
     if(G_cme_pstate_record.siblingCMEFlag)
     {
-        intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_NOTIFY, 0);
+        if(G_update_analog_error)
+        {
+            intercme_direct(INTERCME_DIRECT_IN1, INTERCME_DIRECT_NOTIFY, 0);
+        }
+        else
+        {
+            intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_NOTIFY, 0);
+        }
     }
 
-    PK_TRACE_INF("DB_TH: Notify Exit\n");
 }
 
 //
@@ -775,6 +915,7 @@ inline void p9_cme_pstate_freq_update()
 
         ippm_write(QPPM_DPLL_FREQ, dpllFreq.value);
 
+        /*
         // DPLL Modes
         //                     enable_fmin    enable_fmax   enable_jump
         // DPLL Mode  2             0              0             0
@@ -820,7 +961,8 @@ inline void p9_cme_pstate_freq_update()
                 ippm_read(QPPM_DPLL_STAT, &scom_data.value);
             }
             while(!(scom_data.words.lower & BIT32(28)));
-        }
+        }*/
+        G_update_analog_error = poll_dpll_stat();
 
         PK_TRACE_INF("DB_TH: Freq Updt Exit\n");
     }
@@ -828,57 +970,72 @@ inline void p9_cme_pstate_freq_update()
 
 inline void p9_cme_pstate_update_analog()
 {
+    do
+    {
 #ifdef USE_CME_VDM_FEATURE
 
-    // if increasing voltage (decreasing Pstate) then change VDM threshold settings before changing frequency
-    if((G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
-       && G_next_pstate < G_cme_pstate_record.quadPstate)
-    {
-        p9_cme_vdm_update(G_next_pstate);
-    }
+        // if increasing voltage (decreasing Pstate) then change VDM threshold settings before changing frequency
+        if((G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
+           && G_next_pstate < G_cme_pstate_record.quadPstate)
+        {
+            G_update_analog_error = p9_cme_vdm_update(G_next_pstate);
+        }
+
+        if (G_update_analog_error)
+        {
+            break;
+        } //If error skip the code below
 
 #endif //USE_CME_VDM_FEATURE
 
 #ifdef USE_CME_RESCLK_FEATURE
-    // protect entire IF BLOCK in a critical section
-    // in case a stop11 entry happens during Pstate change
+        // protect entire IF BLOCK in a critical section
+        // in case a stop11 entry happens during Pstate change
 
-    uint32_t rescurr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
-                       ? G_cme_pstate_record.resclkData.common_resclk_idx
-                       : 0;
-    uint32_t resnext = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
-                       ? p9_cme_resclk_get_index(G_next_pstate)
-                       : 0;
+        uint32_t rescurr = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                           ? G_cme_pstate_record.resclkData.common_resclk_idx
+                           : 0;
+
+        uint32_t resnext = (G_cme_flags & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                           ? p9_cme_resclk_get_index(G_next_pstate)
+                           : 0;
 
 
-    if(resnext < rescurr)
-    {
-        p9_cme_resclk_update(ANALOG_COMMON, resnext, rescurr);
-    }
+        if(resnext < rescurr)
+        {
+            p9_cme_resclk_update(ANALOG_COMMON, resnext, rescurr);
+        }
 
 #endif//USE_CME_RESCLK_FEATURE
 
-    p9_cme_pstate_freq_update();
+        p9_cme_pstate_freq_update();
+
+        if (G_update_analog_error)
+        {
+            break;
+        } //If error skip the code below
 
 #ifdef USE_CME_RESCLK_FEATURE
 
-    if(resnext > rescurr)
-    {
-        p9_cme_resclk_update(ANALOG_COMMON, resnext, rescurr);
-    }
+        if(resnext > rescurr)
+        {
+            p9_cme_resclk_update(ANALOG_COMMON, resnext, rescurr);
+        }
 
 #endif//USE_CME_RESCLK_FEATURE
 
 #ifdef USE_CME_VDM_FEATURE
 
-    // if decreasing voltage (increasing Pstate) then change VDM threshold settings after changing frequency
-    if((G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
-       && G_next_pstate >= G_cme_pstate_record.quadPstate)
-    {
-        p9_cme_vdm_update(G_next_pstate);
-    }
+        // if decreasing voltage (increasing Pstate) then change VDM threshold settings after changing frequency
+        if((G_cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
+           && G_next_pstate >= G_cme_pstate_record.quadPstate)
+        {
+            G_update_analog_error = p9_cme_vdm_update(G_next_pstate);
+        }
 
 #endif//USE_CME_VDM_FEATURE
+    }
+    while(0);
 
 }
 
@@ -916,13 +1073,22 @@ void p9_cme_pstate_update()
 
         p9_cme_pstate_update_analog();
 
-        // Must update quadPstate before calling PMSR update
-        G_cme_pstate_record.quadPstate = G_next_pstate;
+        //Update quadPstate only no error
+        if(!G_update_analog_error)
+        {
+            // Must update quadPstate before calling PMSR update
+            G_cme_pstate_record.quadPstate = G_next_pstate;
+        }
+        else
+        {
+            G_cme_pstate_record.pstatesSuspended = 1;
+        }
 
         pk_critical_section_exit(&ctx);
     }
 
     p9_cme_pstate_pmsr_updt(G_cme_record.core_enabled);
+
     p9_cme_pstate_notify_sib(); // Notify Sibling
 
     PK_TRACE_INF("DB_TH: Pstate Updt Exit");
