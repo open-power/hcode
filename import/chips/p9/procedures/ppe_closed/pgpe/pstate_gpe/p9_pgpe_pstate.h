@@ -43,7 +43,8 @@ enum IPC_PEND_TBL
     IPC_PEND_WOF_VFRT                 =     5,
     IPC_PEND_SET_PMCR_REQ             =     6,
     IPC_ACK_CTRL_STOP_UPDT            =     7,
-    MAX_IPC_PEND_TBL_ENTRIES          =     8
+    IPC_ACK_SUSPEND_STOP              =     8,
+    MAX_IPC_PEND_TBL_ENTRIES          =     9
 };
 
 enum QUAD_BIT_MASK
@@ -89,6 +90,26 @@ enum SEMAPHORE_PROCESS_POST_SRC
     SEM_PROCESS_SRC_TYPE4_IRQ   = 0x2
 };
 
+enum PGPE_CORE_THROTTLE
+{
+    // Include core offline, address error, and timeout. The timeout is
+    // included to avoid an extra mtmsr in the event we need to cleanup
+    // from SW407201
+    MSR_THROTTLE_MASK               = 0x29000000,
+    WORKAROUND_SCOM_MULTICAST_WRITE = 0x69010800,
+    THROTTLE_SCOM_MULTICAST_WRITE   = 0x69010A9E,
+    CORE_IFU_THROTTLE               = 0x8000000,
+    CORE_SLOWDOWN                   = 0x1000000,
+    CORE_THROTTLE_OFF               = 0x0000000,
+    NO_RETRY                        = 0,
+    RETRY                           = 1
+};
+
+enum OCCLFIR_PGPE
+{
+    OCCLFIR_PROLONGED_DROOP_DETECTED = 60
+};
+
 //Task list entry
 typedef struct ipc_req
 {
@@ -101,45 +122,43 @@ typedef struct ipc_req
 /// PGPE PState
 typedef struct
 {
-    uint8_t pstatesStatus;
-    uint8_t safePstate;
-    uint8_t pmcrOwner;
-    uint8_t wofStatus;                      //wof status
-    uint8_t pad0;
-    uint8_t wofClip;                        //wof clip
-    uint8_t psClipMax[MAX_QUADS],           //higher numbered(min freq and volt)
-            psClipMin[MAX_QUADS];           //lower numbered(max freq and volt)
-    uint8_t coresPSRequest[MAX_CORES];      //per core requested pstate
-    uint8_t quadPSComputed[MAX_QUADS];      //computed Pstate per quad
-    uint8_t globalPSComputed;               //computed global Pstate
-    uint8_t pad1;
-    uint8_t quadPSTarget[MAX_QUADS];        //target Pstate per quad
-    uint8_t globalPSTarget;                 //target global Pstate
-    uint8_t pad2;
-    uint8_t quadPSCurr[MAX_QUADS];          //target Pstate per quad
-    uint8_t globalPSCurr;                   //target global Pstate
-    uint8_t pad3;
-    uint8_t quadPSNext[MAX_QUADS];          //target Pstate per quad
-    uint8_t globalPSNext;
-    uint8_t pad4;
-    uint8_t quadPSAtStop11[MAX_QUADS];      //target Pstate per quad
-    uint8_t pad5[2];
-    uint32_t eVidCurr, eVidNext;
-    ipc_req_t ipcPendTbl[MAX_IPC_PEND_TBL_ENTRIES];
-    HomerVFRTLayout_t* pVFRT;
-    quad_state0_t* pQuadState0;
-    quad_state1_t* pQuadState1;
-    requested_active_quads_t* pReqActQuads;
-    PkSemaphore sem_process_req;
-    PkSemaphore sem_actuate;
-    PkSemaphore sem_sgpe_wait;
-    uint32_t activeQuads, activeDB, pendQuadsRegisterReceive, pendQuadsRegisterProcess;
-    uint32_t activeCores, numActiveCores, numConfCores;
-    uint32_t vratio, fratio;
-    uint16_t vindex, findex;
-    uint32_t pendingPminClipBcast, pendingPmaxClipBcast;
-    uint32_t semProcessPosted, semProcessSrc;
-    uint32_t actuating;
+    uint8_t pstatesStatus;                  //1
+    uint8_t safePstate;                     //2
+    uint8_t pmcrOwner;                      //3
+    uint8_t wofStatus;                      //4 wof status
+    uint8_t pad0;                           //5
+    uint8_t wofClip;                        //6 wof clip
+    uint8_t psClipMax[MAX_QUADS],           //12 higher numbered(min freq and volt)
+            psClipMin[MAX_QUADS];           //18 lower numbered(max freq and volt)
+    uint8_t coresPSRequest[MAX_CORES];      //42 per core requested pstate
+    uint8_t quadPSComputed[MAX_QUADS];      //48 computed Pstate per quad
+    uint8_t globalPSComputed;               //49 computed global Pstate
+    uint8_t pad1;                           //50
+    uint8_t quadPSTarget[MAX_QUADS];        //56 target Pstate per quad
+    uint8_t globalPSTarget;                 //57 target global Pstate
+    uint8_t pad2;                           //58
+    uint8_t quadPSCurr[MAX_QUADS];          //64 target Pstate per quad
+    uint8_t globalPSCurr;                   //65 target global Pstate
+    uint8_t pad3;                           //66
+    uint8_t quadPSNext[MAX_QUADS];          //72 target Pstate per quad
+    uint8_t globalPSNext;                   //73
+    uint8_t pad4[3];                        //76
+    uint32_t eVidCurr, eVidNext;            //84
+    ipc_req_t ipcPendTbl[MAX_IPC_PEND_TBL_ENTRIES]; //156(9entries*8bytes)
+    HomerVFRTLayout_t* pVFRT; //160
+    quad_state0_t* pQuadState0; //164
+    quad_state1_t* pQuadState1; //168
+    requested_active_quads_t* pReqActQuads; //172
+    PkSemaphore sem_process_req; //184
+    PkSemaphore sem_actuate; //196
+    PkSemaphore sem_sgpe_wait;//208
+    uint32_t activeQuads, activeDB, pendQuadsRegisterReceive, pendQuadsRegisterProcess; //212,216,220,224
+    uint32_t activeCores, numActiveCores, numConfCores; //228,232,236
+    uint32_t vratio, fratio;//240, 244,
+    uint16_t vindex, findex;//246, 248
+    uint32_t pendingPminClipBcast, pendingPmaxClipBcast;//252,256
+    uint32_t semProcessPosted, semProcessSrc;//260,264
+    uint32_t quadsNACKed, cntNACKs, quadsCntNACKs[MAX_QUADS];//268,272,296
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
 
@@ -168,8 +187,11 @@ void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t ctrl);
 void p9_pgpe_pstate_apply_safe_clips();
 void p9_pgpe_pstate_safe_mode();
 void p9_pgpe_pstate_send_suspend_stop();
+void p9_pgpe_pstate_pm_complex_suspend();
+void p9_pgpe_pstate_pmsr_updt(uint32_t command, uint32_t targetCoresVector, uint32_t quadsAckVector);
 int32_t p9_pgpe_pstate_at_target();
 void p9_pgpe_pstate_do_step();
 void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid);
 void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg);
+void p9_pgpe_pstate_write_core_throttle(uint32_t throttleData, uint32_t enable_retry);
 #endif //

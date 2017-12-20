@@ -70,7 +70,11 @@ enum PGPE_OP_TRACE_ENCODES
     FIT_TB_SYNC       =  0x5C,
     SYSTEM_XSTOP      =  0x4D,
     PRC_PM_SUSP       =  0x4E,
-    PRC_SAFE_MODE     =  0x5F
+    PRC_SAFE_MODE     =  0x5F,
+
+    //Debug Markers
+    PROLONGED_DROOP_EVENT       = 0x9E,
+    PROLONGED_DROOP_RESOLVED    = 0xAF
 };
 
 //Unexpected Errors

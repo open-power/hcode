@@ -48,5 +48,6 @@ void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg);
 void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg);
 void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg);
 void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt(ipc_msg_t* msg, void* arg);
+void p9_pgpe_ipc_ack_sgpe_suspend_stop(ipc_msg_t* cmd, void* arg);
 
 #endif //_P9_PGPE_IPC_H_
