@@ -453,7 +453,6 @@ void ext_handler(uint32_t task_idx)
         PK_TRACE_INF("CME OCC HEARTBEAT LOST");
         PK_OPTIONAL_DEBUG_HALT(CME_OCC_HEARTBEAT_LOST_DETECTED);
         out32(CME_LCL_EISR_CLR, BIT32(4));
-        p9_cme_pstate_db0_safe_mode();
     }
 
     if (eisr & BIT32(5))
@@ -464,6 +463,7 @@ void ext_handler(uint32_t task_idx)
     }
 }
 
+
 // List of low priority tasks that run when the cme engine would
 // otheriwse be idle.
 IOTA_BEGIN_IDLE_TASK_TABLE
@@ -472,15 +472,15 @@ IOTA_END_IDLE_TASK_TABLE
 
 IOTA_BEGIN_TASK_TABLE
 IOTA_TASK(ext_handler), // bits 0-6   default
-          IOTA_TASK(ext_handler), // bits 10,11 default
+          IOTA_TASK(p9_cme_pstate_db3_handler), // bits 10,11 default
           IOTA_TASK(p9_cme_stop_db2_handler), // bits 18,19 p9_cme_stop_db2_handler
           IOTA_TASK(p9_cme_stop_spwu_handler), // bits 14,15 p9_cme_stop_spwu_handler
           IOTA_TASK(p9_cme_stop_rgwu_handler), // bits 16,17 p9_cme_stop_rgwu_handler
           IOTA_TASK(p9_cme_stop_pcwu_handler), // bits 12,13 p9_cme_stop_pcwu_handler
           IOTA_TASK(p9_cme_stop_enter_handler), // bits 20,21 p9_cme_stop_enter_handler
           IOTA_TASK(p9_cme_stop_db1_handler), // bits 40,41 p9_cme_stop_db1_handler
-          IOTA_TASK(p9_cme_pstate_db_handler), // bits 36,37 p9_cme_pstate_db_handler
-          IOTA_TASK(p9_cme_pstate_intercme_in0_irq_handler), // bit  7     p9_cme_pstate_intercme_in0_handler
+          IOTA_TASK(p9_cme_pstate_db0_handler), // bits 36,37 p9_cme_pstate_db0_handler
+          IOTA_TASK(p9_cme_pstate_intercme_in0_irq_handler), // bit  7 p9_cme_pstate_intercme_in0_handler
           IOTA_TASK(p9_cme_pstate_pmcr_handler), // bits 34,35 p9_cme_pstate_pmcr_handler
           IOTA_TASK(p9_cme_pstate_intercme_msg_handler), // bit  29    p9_cme_pstate_intercme_msg_handler
           IOTA_NO_TASK  // Should never see these
@@ -488,6 +488,7 @@ IOTA_TASK(ext_handler), // bits 0-6   default
 
 int main()
 {
+
     cmeHeader_t* cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
 
     // Register Timer Handlers
@@ -530,7 +531,7 @@ int main()
     // In IOTA, these have become initialization routines, not threads
     p9_cme_stop_exit_thread(NULL);
     p9_cme_stop_enter_thread(NULL);
-    p9_cme_pstate_db_thread(NULL);
+    p9_cme_pstate_db0_thread(NULL);
     p9_cme_pstate_pmcr_thread(NULL);
 
     iota_run();
