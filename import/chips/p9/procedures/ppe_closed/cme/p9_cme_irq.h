@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -77,14 +77,19 @@
 #define IRQ_VEC_PRTY2_CME   (uint64_t)(0x0000300000000000)
 // Group3: SPWU
 #define IRQ_VEC_PRTY3_CME   (uint64_t)(0x0003000000000000)
+#define IRQ_SPWU            IRQ_VEC_PRTY3_CME
 // Group4: RGWU
 #define IRQ_VEC_PRTY4_CME   (uint64_t)(0x0000C00000000000)
+#define IRQ_RGWU            IRQ_VEC_PRTY4_CME
 // Group5: PCWU
 #define IRQ_VEC_PRTY5_CME   (uint64_t)(0x000C000000000000)
+#define IRQ_PCWU            IRQ_VEC_PRTY5_CME
 // Group6: PM_ACTIVE
 #define IRQ_VEC_PRTY6_CME   (uint64_t)(0x00000C0000000000)
+#define IRQ_PMACT           IRQ_VEC_PRTY6_CME
 // Group7: DB1
 #define IRQ_VEC_PRTY7_CME   (uint64_t)(0x0000000000C00000)
+#define IRQ_DB1             IRQ_VEC_PRTY7_CME
 // Group8: DB0
 #define IRQ_VEC_PRTY8_CME   (uint64_t)(0x000000000C000000)
 // Group9: INTERCME_IN0
@@ -96,20 +101,50 @@
 // Group12: We should never detect these
 #define IRQ_VEC_PRTY12_CME  (uint64_t)(0x00C003FBC33FFFFF)
 
+// Combined vector for all Stop IRQs that need to be manually
+// masked during STOP state processing Do not include DB2 (always unmasked)
+#define IRQ_VEC_STOP_CME (\
+                          IRQ_SPWU  | \
+                          IRQ_RGWU  | \
+                          IRQ_PCWU  | \
+                          IRQ_PMACT | \
+                          IRQ_DB1     \
+                         )
+
 // This should be 0xFFFFFFFFFFFFFFFF
-#define IRQ_VEC_PRTY_CHECK  ( IRQ_VEC_PRTY0_CME | \
-                              IRQ_VEC_PRTY1_CME | \
-                              IRQ_VEC_PRTY2_CME | \
-                              IRQ_VEC_PRTY3_CME | \
-                              IRQ_VEC_PRTY4_CME | \
-                              IRQ_VEC_PRTY5_CME | \
-                              IRQ_VEC_PRTY6_CME | \
-                              IRQ_VEC_PRTY7_CME | \
-                              IRQ_VEC_PRTY8_CME | \
-                              IRQ_VEC_PRTY9_CME | \
-                              IRQ_VEC_PRTY10_CME | \
-                              IRQ_VEC_PRTY11_CME | \
-                              IRQ_VEC_PRTY12_CME )
+#define IRQ_VEC_PRTY_ALL_CHECK   (IRQ_VEC_PRTY0_CME | \
+                                  IRQ_VEC_PRTY1_CME | \
+                                  IRQ_VEC_PRTY2_CME | \
+                                  IRQ_VEC_PRTY3_CME | \
+                                  IRQ_VEC_PRTY4_CME | \
+                                  IRQ_VEC_PRTY5_CME | \
+                                  IRQ_VEC_PRTY6_CME | \
+                                  IRQ_VEC_PRTY7_CME | \
+                                  IRQ_VEC_PRTY8_CME | \
+                                  IRQ_VEC_PRTY9_CME | \
+                                  IRQ_VEC_PRTY10_CME | \
+                                  IRQ_VEC_PRTY11_CME | \
+                                  IRQ_VEC_PRTY12_CME )
+
+#define IRQ_VEC_PRTY_XOR_CHECK   (IRQ_VEC_PRTY0_CME ^ \
+                                  IRQ_VEC_PRTY1_CME ^ \
+                                  IRQ_VEC_PRTY2_CME ^ \
+                                  IRQ_VEC_PRTY3_CME ^ \
+                                  IRQ_VEC_PRTY4_CME ^ \
+                                  IRQ_VEC_PRTY5_CME ^ \
+                                  IRQ_VEC_PRTY6_CME ^ \
+                                  IRQ_VEC_PRTY7_CME ^ \
+                                  IRQ_VEC_PRTY8_CME ^ \
+                                  IRQ_VEC_PRTY9_CME ^ \
+                                  IRQ_VEC_PRTY10_CME ^ \
+                                  IRQ_VEC_PRTY11_CME ^ \
+                                  IRQ_VEC_PRTY12_CME )
+
+
+#define compile_assert(name,e) \
+    enum { compile_assert__##name = 1/(e) };
+
+
 #if !defined(__IOTA__)
 extern const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2];
 extern uint32_t      g_current_prty_level;

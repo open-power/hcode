@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -81,11 +81,7 @@
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY12_CME |
-        // For Stop Entry/Exit related priority groups, mask every other SE/SX
-        // related priority group, even higher ones, since the actual procedures
-        // will open up EIMR at specific points in the SE/SX sequence.
-        IRQ_VEC_PRTY1_CME
+        IRQ_VEC_PRTY12_CME
     },
     {
         IRQ_VEC_PRTY3_CME, /* 3: IDX_PRTY_LVL_SPWU */
@@ -98,12 +94,7 @@
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY12_CME |
-        // For Stop Entry/Exit related priority groups, mask every other SE/SX
-        // related priority group, even higher ones, since the actual procedures
-        // will open up EIMR at specific points in the SE/SX sequence.
-        IRQ_VEC_PRTY2_CME  |
-        IRQ_VEC_PRTY1_CME
+        IRQ_VEC_PRTY12_CME
     },
     {
         IRQ_VEC_PRTY4_CME, /* 4: IDX_PRTY_LVL_RGWU */
@@ -119,9 +110,7 @@
         // For Stop Entry/Exit related priority groups, mask every other SE/SX
         // related priority group, even higher ones, since the actual procedures
         // will open up EIMR at specific points in the SE/SX sequence.
-        IRQ_VEC_PRTY3_CME  |
-        IRQ_VEC_PRTY2_CME  |
-        IRQ_VEC_PRTY1_CME
+        IRQ_VEC_STOP_CME
     },
     {
         IRQ_VEC_PRTY5_CME, /* 5: IDX_PRTY_LVL_PCWU */
@@ -136,10 +125,7 @@
         // For Stop Entry/Exit related priority groups, mask every other SE/SX
         // related priority group, even higher ones, since the actual procedures
         // will open up EIMR at specific points in the SE/SX sequence.
-        IRQ_VEC_PRTY4_CME  |
-        IRQ_VEC_PRTY3_CME  |
-        IRQ_VEC_PRTY2_CME  |
-        IRQ_VEC_PRTY1_CME
+        IRQ_VEC_STOP_CME
     },
     {
         IRQ_VEC_PRTY6_CME, /* 6: IDX_PRTY_LVL_PM_ACTIVE */
@@ -153,11 +139,7 @@
         // For Stop Entry/Exit related priority groups, mask every other SE/SX
         // related priority group, even higher ones, since the actual procedures
         // will open up EIMR at specific points in the SE/SX sequence.
-        IRQ_VEC_PRTY5_CME  |
-        IRQ_VEC_PRTY4_CME  |
-        IRQ_VEC_PRTY3_CME  |
-        IRQ_VEC_PRTY2_CME  |
-        IRQ_VEC_PRTY1_CME
+        IRQ_VEC_STOP_CME
     },
     {
         IRQ_VEC_PRTY7_CME, /* 7: IDX_PRTY_LVL_DB1 */
@@ -224,3 +206,7 @@
         IRQ_VEC_PRTY12_CME
     }
 };
+
+
+compile_assert(ALL_CHECK, IRQ_VEC_PRTY_ALL_CHECK == 0xFFFFFFFFFFFFFFFF);
+compile_assert(XOR_CHECK, IRQ_VEC_PRTY_XOR_CHECK == 0xFFFFFFFFFFFFFFFF);

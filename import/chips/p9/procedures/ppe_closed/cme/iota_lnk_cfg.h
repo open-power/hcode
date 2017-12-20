@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -37,7 +37,7 @@
 #define PPE_DEBUG_PTRS_OFFSET    CME_DEBUG_PTRS_OFFSET
 #define PPE_DEBUG_PTRS_SIZE      CME_DEBUG_PTRS_SIZE
 
-#define PPE_DUMP_PTR_PSTATE_SIZE 0x44
+#define PPE_DUMP_PTR_PSTATE_SIZE 0x48
 #define PPE_DUMP_PTR_STOP_SIZE   0x28
 #define PPE_DUMP_PTR_COMMON_SIZE 0x4
 

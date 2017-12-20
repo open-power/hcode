@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -67,6 +67,16 @@ enum UPDATE_ACTIVE_TYPES
     UPDATE_ACTIVE_QUADS_TYPE_EXIT               = 0x1,
     UPDATE_ACTIVE_QUADS_ENTRY_TYPE_DONE         = 0x0,
     UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY       = 0x1
+};
+
+enum SUSPEND_STOP_COMMANDS
+{
+    SUSPEND_STOP_UNSUSPEND_ENTRY                = 0x1,
+    SUSPEND_STOP_UNSUSPEND_EXIT                 = 0x2,
+    SUSPEND_STOP_UNSUSPEND_ENTRY_EXIT           = 0x3,
+    SUSPEND_STOP_SUSPEND_ENTRY                  = 0x5,
+    SUSPEND_STOP_SUSPEND_EXIT                   = 0x6,
+    SUSPEND_STOP_SUSPEND_ENTRY_EXIT             = 0x7
 };
 
 //
@@ -140,7 +150,8 @@ typedef union
     {
         uint32_t msg_num                : 8;
         uint32_t return_code            : 8;
-        uint32_t reserved0              : 16;
+        uint32_t command                : 8;
+        uint32_t reserved0              : 8;
         uint32_t reserved1              : 32;
     } fields;
 } ipcmsg_p2s_suspend_stop_t;
