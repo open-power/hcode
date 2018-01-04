@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -211,7 +211,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
 
             GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_BCEBAR0, (l_cmeIndex >> 1), (l_cmeIndex % 2)),
                         ((l_cpmrAddr & 0x00FFFFFFFFF00000) |
-                         (ENABLE_WR_SCOPE | ENABLE_RD_SCOPE | BLOCK_COPY_SIZE_1MB)));
+                         (ENABLE_WR_SCOPE | ENABLE_RD_SCOPE | VG_TARGET_1S | BLOCK_COPY_SIZE_1MB)));
 
             // -----------------------------------------------------------------
             // -----------------------------------------------------------------
@@ -221,7 +221,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
 
             GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_BCEBAR1, (l_cmeIndex >> 1), (l_cmeIndex % 2)),
                         ((l_cpmrAddr & 0x00FFFFFFFFF00000) |
-                         (ENABLE_WR_SCOPE | ENABLE_RD_SCOPE | BLOCK_COPY_SIZE_1MB)));
+                         (ENABLE_WR_SCOPE | ENABLE_RD_SCOPE | VG_TARGET_1S | BLOCK_COPY_SIZE_1MB)));
 
             // -----------------------------------------------------------------
             // -----------------------------------------------------------------
