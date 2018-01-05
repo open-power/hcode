@@ -53,7 +53,6 @@ p9_sgpe_stop_entry()
     uint64_t     local_xstop       = 0;
     data64_t     scom_data         = {0};
     data64_t     temp_data         = {0};
-    uint32_t     flg2_data         = 0;
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
     uint32_t      spin             = 0;
 #endif
@@ -70,9 +69,7 @@ p9_sgpe_stop_entry()
     MARK_TAG(BEGINSCOPE_STOP_ENTRY, 0)
     //================================
 
-    flg2_data = in32(OCB_OCCFLG2);
-
-    if( flg2_data & SGPE_HCODE_ERR_INJ_BIT )
+    if( in32(OCB_OCCFLG2) & BIT32(OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ))
     {
         PK_TRACE_ERR("SGPE STOP ENTRY ERROR INJECT TRAP");
         PK_PANIC(SGPE_STOP_ENTRY_TRAP_INJECT);

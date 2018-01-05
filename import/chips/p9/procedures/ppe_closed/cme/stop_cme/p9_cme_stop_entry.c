@@ -1548,6 +1548,12 @@ p9_cme_stop_entry()
 
 #endif
 
+            if (G_cme_record.disableSGPEHandoff)
+            {
+                PK_TRACE_INF("SE.4+: Disable SGPE Handoff due to SGPE Halt");
+                break;
+            }
+
             //=============================
             MARK_TAG(SE_SGPE_HANDOFF, core)
             //=============================
