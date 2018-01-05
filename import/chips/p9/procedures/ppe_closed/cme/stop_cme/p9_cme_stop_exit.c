@@ -199,10 +199,10 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
                 (MAX(act_stop_level, G_pls[core_mask & 1][2]) << SHIFT64SH(52)) |
                 (MAX(act_stop_level, G_pls[core_mask & 1][3]) << SHIFT64SH(60));
 
-            PKTRACE("core[%d] act_stop_level[%d]", core_mask, act_stop_level);
-            PKTRACE("G_pls0[%d], G_pls1[%d], G_pls2[%d], G_pls3[%d]",
-                    G_pls[core_mask & 1][0], G_pls[core_mask & 1][1],
-                    G_pls[core_mask & 1][2], G_pls[core_mask & 1][3]);
+            PK_TRACE("core[%d] act_stop_level[%d]", core_mask, act_stop_level);
+            PK_TRACE("G_pls0[%d], G_pls1[%d], G_pls2[%d], G_pls3[%d]",
+                     G_pls[core_mask & 1][0], G_pls[core_mask & 1][1],
+                     G_pls[core_mask & 1][2], G_pls[core_mask & 1][3]);
 
             if (act_stop_level >= STOP_LEVEL_8)
             {
@@ -512,11 +512,9 @@ p9_cme_stop_exit()
     PK_TRACE_PERF("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");
     //--------------------------------------------------------------------------
 
-    // extract wakeup signals, clear status, and mask wakeup interrupts
+    // extract wakeup signals and clear status
     wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
     core   = ((wakeup >> 4) | (wakeup >> 2) | wakeup) & CME_MASK_BC;
-
-    PK_TRACE_INF("SX.00: Core Wakeup Raw Interrupts[%x]", wakeup);
 
     // ignore wakeup when it suppose to be handled by sgpe
     for (core_mask = 2; core_mask; core_mask--)
@@ -532,14 +530,17 @@ p9_cme_stop_exit()
         }
     }
 
-    // override with partial good core mask, also ignore wakeup to running cores
-    core = core & G_cme_record.core_enabled &
-           (~G_cme_stop_record.core_running);
+    // leave spwu alone, clear pcwu/rgwu only if not stop5+
+    out32(CME_LCL_EISR_CLR, ((core << SHIFT32(13)) | (core << SHIFT32(17))));
 
-    PK_TRACE_DBG("Check: Core Select[%d] Wakeup[%x] Actual Stop Levels[%d %d]",
+    PK_TRACE_INF("SX.00: Core Wakeup[%x] Raw Interrupts[%x] Actual Stop Levels[%d %d]",
                  core, wakeup,
                  G_cme_stop_record.act_level[0],
                  G_cme_stop_record.act_level[1]);
+
+    // override with partial good core mask, also ignore wakeup to running cores
+    core = core & G_cme_record.core_enabled &
+           (~G_cme_stop_record.core_running);
 
 
 
