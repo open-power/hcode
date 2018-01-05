@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -87,7 +87,7 @@
     OCCHW_IRQ_OCC_MALF_ALERT                OCCHW_IRQ_TARGET_ID_NONE \
     OCCHW_IRQ_ADU_MALF_ALERT                OCCHW_IRQ_TARGET_ID_NONE \
     OCCHW_IRQ_EXTERNAL_TRAP                 OCCHW_IRQ_TARGET_ID_405_NONCRIT \
-    OCCHW_IRQ_IVRM_PVREF_ERROR              OCCHW_IRQ_TARGET_ID_NONE \
+    OCCHW_IRQ_IVRM_PVREF_ERROR              OCCHW_IRQ_TARGET_ID_GPE2 \
     OCCHW_IRQ_OCC_TIMER0                    OCCHW_IRQ_TARGET_ID_405_NONCRIT \
     OCCHW_IRQ_OCC_TIMER1                    OCCHW_IRQ_TARGET_ID_405_NONCRIT \
     OCCHW_IRQ_HALT_PSTATES                  OCCHW_IRQ_TARGET_ID_NONE \
@@ -112,12 +112,12 @@
     OCCHW_IRQ_STRM2_PUSH                    OCCHW_IRQ_TARGET_ID_405_NONCRIT \
     OCCHW_IRQ_STRM3_PULL                    OCCHW_IRQ_TARGET_ID_405_NONCRIT \
     OCCHW_IRQ_STRM3_PUSH                    OCCHW_IRQ_TARGET_ID_405_NONCRIT \
-    OCCHW_IRQ_PMC_PCB_INTR_TYPE0_PENDING    OCCHW_IRQ_TARGET_ID_NONE \
+    OCCHW_IRQ_PMC_PCB_INTR_TYPE0_PENDING    OCCHW_IRQ_TARGET_ID_GPE3 \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE1_PENDING    OCCHW_IRQ_TARGET_ID_GPE2 \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING    OCCHW_IRQ_TARGET_ID_GPE3 \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE3_PENDING    OCCHW_IRQ_TARGET_ID_GPE3 \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE4_PENDING    OCCHW_IRQ_TARGET_ID_GPE2 \
-    OCCHW_IRQ_PMC_PCB_INTR_TYPE5_PENDING    OCCHW_IRQ_TARGET_ID_GPE3 \
+    OCCHW_IRQ_PMC_PCB_INTR_TYPE5_PENDING    OCCHW_IRQ_TARGET_ID_GPE2 \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE6_PENDING    OCCHW_IRQ_TARGET_ID_GPE3 \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE7_PENDING    OCCHW_IRQ_TARGET_ID_NONE \
     OCCHW_IRQ_PMC_O2S_0A_ONGOING            OCCHW_IRQ_TARGET_ID_NONE \

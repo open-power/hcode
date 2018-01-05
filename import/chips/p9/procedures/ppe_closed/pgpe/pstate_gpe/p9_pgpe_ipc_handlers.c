@@ -113,6 +113,7 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
         G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_START_STOP_WHILE_PENDING;
         p9_pgpe_optrace(UNEXPECTED_ERROR);
+        PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_OCC_IPC_ACK_BAD_RC);
     }
 }
 
@@ -139,6 +140,7 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
         G_pgpe_optrace_data.word[0] = PGPE_OP_CLIP_UPDT_IN_WHILE_PENDING;
         p9_pgpe_optrace(UNEXPECTED_ERROR);
+        PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_OCC_IPC_ACK_BAD_RC);
     }
 }
 
@@ -150,9 +152,8 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 {
     PK_TRACE_INF("IPC: Set PMCR");
-    uint32_t flg2_data = in32(OCB_OCCFLG2);
 
-    if( flg2_data & PGPE_HCODE_ERR_INJ_BIT )
+    if(in32(OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ))
     {
         PK_TRACE_ERR("SET PMCR IPC ERROR INJECT TRAP");
         PK_PANIC(PGPE_SET_PMCR_TRAP_INJECT);
@@ -174,6 +175,7 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
         G_pgpe_optrace_data.word[0] = PGPE_OP_SET_PMCR_WHILE_PENDING;
         p9_pgpe_optrace(UNEXPECTED_ERROR);
+        PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_OCC_IPC_ACK_BAD_RC);
     }
 }
 
@@ -200,6 +202,7 @@ void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
         G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_WHILE_PENDING;
         p9_pgpe_optrace(UNEXPECTED_ERROR);
+        PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_OCC_IPC_ACK_BAD_RC);
     }
 }
 
@@ -226,6 +229,7 @@ void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
         G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_VFRT_WHILE_PENDING;
         p9_pgpe_optrace(UNEXPECTED_ERROR);
+        PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_OCC_IPC_ACK_BAD_RC);
     }
 }
 
@@ -254,6 +258,7 @@ void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
         G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_WHILE_PENDING;
         p9_pgpe_optrace(UNEXPECTED_ERROR);
+        PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_OCC_IPC_ACK_BAD_RC);
     }
 }
 
@@ -285,7 +290,7 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
         G_pgpe_optrace_data.word[0] = PGPE_OP_QUADS_ACTIVE_WHILE_PENDING;
         p9_pgpe_optrace(UNEXPECTED_ERROR);
-        PK_TRACE_INF("IPC: Updt Quads while pending");
+        PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_OCC_IPC_ACK_BAD_RC);
     }
 }
 

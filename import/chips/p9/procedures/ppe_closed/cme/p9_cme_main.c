@@ -51,7 +51,7 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DEBUGGER
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DEBUG_TRIGGER
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_QUAD_CHECKSTOP
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_PVREF_FAIL
-IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_OCC_HEARTBEAT_LOST
+IRQ_HANDLER(p9_cme_pgpe_hb_loss_handler, 0) //CMEHW_IRQ_OCC_HEARTBEAT_LOST
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_CORE_CHECKSTOP
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_DROPOUT_FAIL
 IRQ_HANDLER(p9_cme_pstate_intercme_in0_irq_handler, (void*)NULL)
@@ -85,7 +85,7 @@ IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_CHTM_PURGE_DONE_C1
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_BCE_BUSY_LOW
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_FINAL_VDM_DATA0
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_FINAL_VDM_DATA1
-IRQ_HANDLER(p9_cme_pstate_intercme_msg_handler, (void*)NULL) //CMEHW_IRQ_COMM_RECVD
+IRQ_HANDLER(p9_cme_pstate_intercme_msg_handler, 0) //CMEHW_IRQ_COMM_RECVD
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_COMM_SEND_ACK
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_COMM_SEND_NACK
 IRQ_HANDLER_DEFAULT                         //CMEHW_IRQ_SPARE_32

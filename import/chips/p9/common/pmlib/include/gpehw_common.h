@@ -77,13 +77,6 @@ enum GPE_SCOM_ADDRESS_PARAMETERS
     CME1_ADDR_OFFSET            = 0x00000400
 };
 
-enum GPE_ERR_INJ_BIT_POS
-{
-    SGPE_HCODE_ERR_INJ_BIT      =   0x00000002,
-    PGPE_HCODE_ERR_INJ_BIT      =   0x00000001,
-};
-
-
 /// GPE SCOM
 #define GPE_SCOM_ADDR(addr, cplt_base, cq_offset, ex_select) \
     (addr | cplt_base | (cq_offset << 24) | (ex_select << 10))

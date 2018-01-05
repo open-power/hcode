@@ -43,18 +43,10 @@ PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
     {0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    0,
-    0,
-    {0, 0, 0, 0, 0, 0},
-    0,
-    0,
-    {0, 0, 0, 0, 0, 0},
-    0,
-    0,
-    {0, 0, 0, 0, 0, 0},
-    0,
-    {0, 0, 0},
+    {0},
+    {0},
+    {0},
+    {0},
     0,
     0,
     {   {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
@@ -66,32 +58,42 @@ PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
     0,
     {0},
     {0},
-    {0}
+    {0},
+    0, 0, 0, 0,
+    0, 0, 0,
+    0, 0,
+    0, 0,
+    0, 0,
+    0, 0,
+    0, 0, {0, 0, 0, 0, 0, 0},
+    0,
+    0,
+    {0, 0, 0, 0}
 };
 
 
 EXTERNAL_IRQ_TABLE_START
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_DEBUGGER
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_TRACE_TRIGGER
-IRQ_HANDLER(p9_pgpe_irq_handler_occ_error, NULL) //OCCHW_IRQ_OCC_ERROR
+IRQ_HANDLER(p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error, NULL) //OCCHW_IRQ_OCC_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PBA_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_SRT_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_GPE0_HALT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_GPE1_HALT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_GPE2_HALT
-IRQ_HANDLER(p9_pgpe_irq_handler_sgpe_halt, NULL) //OCCHW_IRQ_GPE3_HALT
+IRQ_HANDLER(p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error, NULL) //OCCHW_IRQ_GPE3_HALT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PPC405_HALT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_OCB_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_SPIPSS_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_CHECK_STOP_PPC405
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_CHECK_STOP_GPE0
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_CHECK_STOP_GPE1
-IRQ_HANDLER(p9_pgpe_irq_handler_xstop_gpe2, NULL) //OCCHW_IRQ_CHECK_STOP_GPE2
+IRQ_HANDLER(p9_pgpe_irq_handler_system_xstop, NULL) //OCCHW_IRQ_CHECK_STOP_GPE2
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_CHECK_STOP_GPE3
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_OCC_MALF_ALERT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_ADU_MALF_ALERT
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_EXTERNAL_TRAP
-IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_IVRM_PVREF_ERROR
+IRQ_HANDLER(p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error, NULL)//OCCHW_IRQ_IVRM_PVREF_ERROR
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_OCC_TIMER0
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_OCC_TIMER1
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_AVS_SLAVE0
@@ -121,7 +123,7 @@ IRQ_HANDLER(p9_pgpe_irq_handler_pcb_type1, NULL) //OCCHW_IRQ_PMC_PCB_INTR_TYPE1_
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE2_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE3_PENDING
 IRQ_HANDLER(p9_pgpe_irq_handler_pcb_type4, NULL) //OCCHW_IRQ_PMC_PCB_INTR_TYPE4_PENDING
-IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE5_PENDING
+IRQ_HANDLER(p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error, NULL) //OCCHW_IRQ_PMC_PCB_INTR_TYPE5_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE6_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_PCB_INTR_TYPE7_PENDING
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_PMC_O2S_0A_ONGOING
@@ -138,7 +140,8 @@ IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_RESERVED_63
 EXTERNAL_IRQ_TABLE_END
 
 #define  KERNEL_STACK_SIZE  512
-#define  THREAD_STACK_SIZE  512
+#define  THREAD_PROCESS_STACK_SIZE  512
+#define  THREAD_ACTUATE_STACK_SIZE  768
 
 #define  PGPE_THREAD_PRIORITY_PROCESS_REQUESTS  1
 #define  PGPE_THREAD_PRIORITY_ACTUATE_PSTATES   2
@@ -147,8 +150,8 @@ uint8_t  G_kernel_stack[KERNEL_STACK_SIZE];
 extern uint32_t g_pgpe_timebase_hz __attribute__ ((section (".pgpe_image_header")));
 
 //Thread Stacks
-uint8_t  G_p9_pgpe_thread_process_requests_stack[THREAD_STACK_SIZE];
-uint8_t  G_p9_pgpe_thread_actuate_pstates_stack[THREAD_STACK_SIZE];
+uint8_t  G_p9_pgpe_thread_process_requests_stack[THREAD_PROCESS_STACK_SIZE];
+uint8_t  G_p9_pgpe_thread_actuate_pstates_stack[THREAD_ACTUATE_STACK_SIZE];
 
 //Thread Control Block
 PkThread G_p9_pgpe_thread_process_requests;
@@ -173,7 +176,7 @@ main(int argc, char** argv)
 
     if(mfspr(287) != PVR_CONST)
     {
-        PGPE_PANIC_AND_TRACE(PGPE_BAD_DD_LEVEL);
+        PGPE_TRACE_AND_PANIC(PGPE_BAD_DD_LEVEL);
     }
 
     uint32_t timebase = g_pgpe_timebase_hz;
@@ -208,7 +211,7 @@ main(int argc, char** argv)
                      (PkThreadRoutine)p9_pgpe_thread_process_requests,
                      (void*)NULL,
                      (PkAddress)G_p9_pgpe_thread_process_requests_stack,
-                     (size_t)THREAD_STACK_SIZE,
+                     (size_t)THREAD_PROCESS_STACK_SIZE,
                      (PkThreadPriority)PGPE_THREAD_PRIORITY_PROCESS_REQUESTS);
 
     PK_TRACE_BIN("G_p9_pgpe_thread_process_requests",
@@ -220,7 +223,7 @@ main(int argc, char** argv)
                      (PkThreadRoutine)p9_pgpe_thread_actuate_pstates,
                      (void*)NULL,
                      (PkAddress)G_p9_pgpe_thread_actuate_pstates_stack,
-                     (size_t)THREAD_STACK_SIZE,
+                     (size_t)THREAD_ACTUATE_STACK_SIZE,
                      (PkThreadPriority)PGPE_THREAD_PRIORITY_ACTUATE_PSTATES);
 
     PK_TRACE_BIN("G_p9_pgpe_thread_actuate_pstates",
@@ -258,8 +261,8 @@ main(int argc, char** argv)
     PK_TRACE_DBG("Init all pstate data to default values");
     p9_pgpe_pstate_init();
 
-    PK_TRACE_DBG("Setup OCCFIR[OCC_HB Error]");
-    p9_pgpe_ocb_hb_error_init();
+    PK_TRACE_DBG("Setup IRQs");
+    p9_pgpe_irq_init();
 
     g_oimr_override |= BIT64(49);
     out32(OCB_OIMR1_OR, BIT32(17)); //Disable PCB_INTR_TYPE4

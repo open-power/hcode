@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -364,7 +364,7 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
     if (rc)
     {
         PK_TRACE_ERR("AVS_INIT: DriveIdleFrame FAIL");
-        PGPE_PANIC_AND_TRACE(PGPE_AVS_INIT_DRIVE_IDLE_FRAME);
+        PGPE_TRACE_AND_PANIC(PGPE_AVS_INIT_DRIVE_IDLE_FRAME);
     }
 
     // Drive read transaction to return initial setting of rail voltage and wait on o2s_ongoing=0
@@ -373,7 +373,7 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
     if (rc)
     {
         PK_TRACE_ERR("AVS_INIT: DriveRead FAIL");
-        PGPE_PANIC_AND_TRACE(PGPE_AVS_INIT_DRIVE_READ);
+        PGPE_TRACE_AND_PANIC(PGPE_AVS_INIT_DRIVE_READ);
     }
 
     *vext_read_mv = CmdDataRead;
@@ -392,7 +392,7 @@ void external_voltage_control_write(uint32_t vext_write_mv)
     if (vext_write_mv > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
         vext_write_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
     {
-        PGPE_PANIC_AND_TRACE(PGPE_VOLTAGE_OUT_OF_BOUNDS);
+        PGPE_TRACE_AND_PANIC(PGPE_VOLTAGE_OUT_OF_BOUNDS);
     }
 
     // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
@@ -406,13 +406,13 @@ void external_voltage_control_write(uint32_t vext_write_mv)
 
         case AVS_RC_ONGOING_TIMEOUT:
             PK_TRACE_ERR("AVS_WRITE: OnGoing Flag Timeout");
-            PGPE_PANIC_AND_TRACE(PGPE_AVS_WRITE_ONGOING_FLAG_TIMEOUT);
+            PGPE_TRACE_AND_PANIC(PGPE_AVS_WRITE_ONGOING_FLAG_TIMEOUT);
             break;
 
         case AVS_RC_RESYNC_ERROR:
             PK_TRACE_ERR("AVS_WRITE: Resync Error");
             GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(59)); //OCCLFIR[59]=AVS Resync Error
-            PGPE_PANIC_AND_TRACE(PGPE_AVS_RESYNC_ERROR);
+            PGPE_TRACE_AND_PANIC(PGPE_AVS_RESYNC_ERROR);
             break;
 
         default:

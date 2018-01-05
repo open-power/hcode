@@ -39,29 +39,32 @@
 void
 p9_stop_recovery_trigger()
 {
-    uint64_t scom_data = 0;
-    PK_TRACE_INF("WARNING: STOP RECOVERY TRIGGER!");
-
-    PK_TRACE("1. Set ADU lock for exclusive use for a timeout of 500ms.");
-
-    do
+    if (in32(OCB_OCCFLG2) & BIT32(STOP_RECOVERY_TRIGGER_ENABLE))
     {
+        uint64_t scom_data = 0;
+        PK_TRACE_INF("WARNING: STOP RECOVERY TRIGGER!");
 
-        GPE_PUTSCOM(0x90001, 0x0010000000000000ull);
-        GPE_GETSCOM(0x90001, scom_data);
+        PK_TRACE("1. Set ADU lock for exclusive use for a timeout of 500ms.");
 
+        do
+        {
+
+            GPE_PUTSCOM(0x90001, 0x0010000000000000ull);
+            GPE_GETSCOM(0x90001, scom_data);
+
+        }
+        while (!(scom_data  &  0x0010000000000000ull));
+
+        PK_TRACE("2. Cleanup/reset ADU");
+        GPE_PUTSCOM(0x90001, 0x1810000000000000ull);
+
+        PK_TRACE("3. Setup PowerBus 'address' field for malf alert");
+        GPE_PUTSCOM(0x90000, 0x0000100000000000ull);
+
+        PK_TRACE("4. Setup PowerBus command type and launch malfunction");
+        GPE_PUTSCOM(0x90001, 0x2210A03104000000ull);
+
+        PK_TRACE("5. Set OCCFLG2[28] PM Callout Active");
+        out32(OCB_OCCFLG2_OR, BIT32(PM_CALLOUT_ACTIVE));
     }
-    while (!(scom_data  &  0x0010000000000000ull));
-
-    PK_TRACE("2. Cleanup/reset ADU");
-    GPE_PUTSCOM(0x90001, 0x1810000000000000ull);
-
-    PK_TRACE("3. Setup PowerBus 'address' field for malf alert");
-    GPE_PUTSCOM(0x90000, 0x0000100000000000ull);
-
-    PK_TRACE("4. Setup PowerBus command type and launch malfunction");
-    GPE_PUTSCOM(0x90001, 0x2210A03104000000ull);
-
-    PK_TRACE("5. Set OCCFLG2[28] PM Callout Active");
-    out32(OCB_OCCFLG2_OR, BIT32(PM_CALLOUT_ACTIVE));
 }

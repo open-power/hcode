@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -143,10 +143,10 @@ void pk_unified_irq_prty_mask_handler(void)
     {
         PK_TRACE_ERR("A Phantom IRQ fired, ext_irq_vector_pk=0x%08x%08x",
                      UPPER32(ext_irq_vector_pk), LOWER32(ext_irq_vector_pk));
-        PGPE_PANIC_AND_TRACE(PGPE_UIH_EIMR_STACK_OVERFLOW);
+        PGPE_TRACE_AND_PANIC(PGPE_UIH_EIMR_STACK_OVERFLOW);
     }
 
-    PK_TRACE_DBG("IRQ SET: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
+    PK_TRACE_INF("IRQ SET: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
 
     // 3. Return the priority vector in d5 and let hwmacro_get_ext_irq do the
     // rest, i.e. route first found IRQ in the returned priority vector
@@ -179,13 +179,12 @@ void pk_irq_save_and_set_mask(uint32_t iPrtyLvl)
         g_oimr_stack[g_oimr_stack_ctr] = g_current_prty_level;
         g_current_prty_level = iPrtyLvl; // Update prty level tracker.
         g_oimr_override_stack[g_oimr_stack_ctr] = g_oimr_override;
-        PK_TRACE_DBG("IRQ SET: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
     }
     else
     {
         PK_TRACE_ERR("Code bug: OIMR S/R stack counter=%d  >=  max=%d.",
                      g_oimr_stack_ctr, NUM_EXT_IRQ_PRTY_LEVELS);
-        PGPE_PANIC_AND_TRACE(PGPE_UIH_EIMR_STACK_OVERFLOW);
+        PGPE_TRACE_AND_PANIC(PGPE_UIH_EIMR_STACK_OVERFLOW);
     }
 
     // Write the new mask for this priority level.

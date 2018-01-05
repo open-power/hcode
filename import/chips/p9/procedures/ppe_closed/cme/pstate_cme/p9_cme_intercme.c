@@ -49,43 +49,45 @@ extern CmeRecord G_cme_record;
 //
 void p9_cme_pstate_intercme_in0_irq_handler(void)
 {
-
     p9_cme_pstate_process_db0_sibling();
-
 }
 
 void p9_cme_pstate_intercme_msg_handler(void)
 {
-
-    p9_cme_pstate_sibling_lock_and_intercme_protocol(0);
-
+    p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_WAIT_ON_RECV ,
+            INTERCME_IN0_PROCESS_SKIP);
 }
 
-void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0)
+void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION intercme_msg_lock_action,
+        INTERCME_IN0_PROCESS_ACTION intercme_in0_process_action)
 {
-    PK_TRACE("SIBL: Enter");
+    PK_TRACE_INF("SIBL: Enter");
     uint32_t msg;
-    intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
 
-    // Block on the intercme0/intercme1 interrupt
+    if (intercme_msg_lock_action == INTERCME_MSG_LOCK_WAIT_ON_RECV)
+    {
+        intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
+    }
+
+    // Block on the intercme0/intercme1/intercme2 interrupt
     while((!(in32(CME_LCL_EISR) & BIT32(7))) &&
           (!(in32_sh(CME_LCL_EISR) & BIT64SH(38)))) {}
 
     //If INTERCME_DIRECT_IN1, then error.
     if(in32_sh(CME_LCL_EISR) & BIT64SH(38))
     {
-        G_cme_pstate_record.pstatesSuspended = 1;
+        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
         p9_cme_pstate_pmsr_updt();
         intercme_direct(INTERCME_DIRECT_IN1, INTERCME_DIRECT_ACK, 0);
     }
 
     //If INTERCME_DIRECT_IN0, then process DB0 data
-    if((in32(CME_LCL_EISR) & BIT32(7)) && (process_intercme_in0 == 1))
+    if((in32(CME_LCL_EISR) & BIT32(7)) && (intercme_in0_process_action == INTERCME_IN0_PROCESS))
     {
         p9_cme_pstate_process_db0_sibling();
     }
 
-    PK_TRACE("SIBL: Enter");
+    PK_TRACE_INF("SIBL: Exit");
 }
 
 void p9_cme_pstate_process_db0_sibling()
@@ -97,7 +99,7 @@ void p9_cme_pstate_process_db0_sibling()
     //writes same value for both cores
     CME_GETSCOM(CPPM_CMEDB0, G_cme_pstate_record.firstGoodCoreMask, dbData.value);
 
-    PK_TRACE("INTER0: Enter");
+    PK_TRACE_INF("INTER0: Enter");
 
     dbQuadInfo = (dbData.value >> (in32(CME_LCL_SRTCH0) &
                                    (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)
@@ -106,30 +108,33 @@ void p9_cme_pstate_process_db0_sibling()
 
     if(dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST)
     {
-        PK_TRACE("INTER0: DB0 Start");
+        PK_TRACE_INF("INTER0: DB0 Start");
 
         G_cme_pstate_record.quadPstate = dbQuadInfo;
         G_cme_pstate_record.globalPstate = dbBit8_15;
 
         p9_cme_pstate_pmsr_updt();
 
-        // Enable PMCR updates for good cores
+        //Enable PMCR updates for good cores
         g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << SHIFT64(35));
+
+        //Unmask EIMR[OCC_HEARTBEAT_LOST/4]
+        g_eimr_override &= ~BIT64(4);
 
         //Clear Core GPMMR RESET_STATE_INDICATOR bit to show pstates have started
         CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));
     }
     else if((dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST) ||
-            (dbData.fields.cme_message_number0 == MSGID_DB0_DB3_GLOBAL_ACTUAL_BROADCAST))
+            (dbData.fields.cme_message_number0 == MSGID_DB0_DB3_PAYLOAD))
     {
-        PK_TRACE("INTER0: DB0 GlbBcast");
+        PK_TRACE_INF("INTER0: DB0 GlbBcast");
         G_cme_pstate_record.quadPstate = dbQuadInfo;
         G_cme_pstate_record.globalPstate = dbBit8_15;
         p9_cme_pstate_pmsr_updt();
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST)
     {
-        PK_TRACE("INTER0: DB0 Clip");
+        PK_TRACE_INF("INTER0: DB0 Clip");
 
         if (dbBit8_15 == DB0_CLIP_BCAST_TYPE_PMIN)
         {
@@ -144,9 +149,11 @@ void p9_cme_pstate_process_db0_sibling()
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST)
     {
-        PK_TRACE("INTER0: DB0 Stop");
+        PK_TRACE_INF("INTER0: DB0 Stop");
         out32_sh(CME_LCL_EIMR_OR, (BITS64SH(34, 2)));//Disable PMCR0/1
         g_eimr_override |= BITS64(34, 2);
+
+        g_eimr_override |= BIT64(4);
 
         //PGPE will update the LMCR[0] before sending the STOP PSTATE Doorbell.
         //Here we update the PMSR to indicate that Pstates are no longer honored accordingly.
@@ -157,20 +164,16 @@ void p9_cme_pstate_process_db0_sibling()
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_PMSR_UPDT)
     {
-        PK_TRACE("INTER0: DB0 PMSR Updt");
+        PK_TRACE_INF("INTER0: DB0 PMSR Updt");
 
         switch(dbBit8_15)
         {
-            case DB0_PMSR_UPDT_SET_SAFE_MODE:
-                G_cme_pstate_record.safeMode = 1;
-                break;
-
             case DB0_PMSR_UPDT_SET_PSTATES_SUSPENDED:
-                G_cme_pstate_record.pstatesSuspended = 1;
+                out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
                 break;
 
             case DB0_PMSR_UPDT_CLEAR_PSTATES_SUSPENDED:
-                G_cme_pstate_record.pstatesSuspended = 0;
+                out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
                 break;
         }
 
@@ -185,5 +188,5 @@ void p9_cme_pstate_process_db0_sibling()
 
     intercme_direct(INTERCME_DIRECT_IN0, INTERCME_DIRECT_ACK, 0);
 
-    PK_TRACE("INTER0: Exit");
+    PK_TRACE_INF("INTER0: Exit");
 }

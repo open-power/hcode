@@ -296,7 +296,7 @@ typedef struct
     // store panic code indicating where and what that certain core encountered error
     // mostly from various xstop detection or failed clock operation through stages of code
     uint32_t      error_code[2];
-} CmeStopRecord;
+} CmeStopRecord __attribute__ ((aligned (8)));;
 
 
 #if HW405292_NDD1_PCBMUX_SAVIOR
@@ -327,3 +327,6 @@ void p9_cme_stop_db2_handler(void);
 // CME STOP Utility Functions
 void p9_hcd_core_scan0(uint32_t, uint64_t, uint64_t);
 void p9_hcd_core_pcb_arb(uint32_t, uint8_t); // not used
+
+// CME Error Handler
+void p9_cme_pgpe_hb_loss_handler(void*, PkIrqId);

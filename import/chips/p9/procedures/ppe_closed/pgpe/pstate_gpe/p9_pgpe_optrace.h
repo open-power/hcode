@@ -68,13 +68,29 @@ enum PGPE_OP_TRACE_ENCODES
     PRC_CORES_ACTV    =  0x5A,
     PRC_QUAD_ACTV     =  0x5B,
     FIT_TB_SYNC       =  0x5C,
+    SEVERE_FAULT_DETECTED   =  0x5D,
     SYSTEM_XSTOP      =  0x4D,
     PRC_PM_SUSP       =  0x4E,
-    PRC_SAFE_MODE     =  0x5F,
+    PRC_SAFE_MODE     =  0x4F,
 
     //Debug Markers
     PROLONGED_DROOP_EVENT       = 0x9E,
     PROLONGED_DROOP_RESOLVED    = 0xAF
+};
+
+enum PGPE_OP_TRACE_SEVERE_FAULTS
+{
+    PGPE_OP_TRACE_PVREF_FAULT     =   0x10,
+    PGPE_OP_TRACE_SGPE_FAULT      =   0x8,
+    PGPE_OP_TRACE_CME_FAULT       =   0x4,
+    PGPE_OP_TRACE_OCC_HB_FAULT    =   0x2,
+    PGPE_OP_TRACE_SYS_XSTOP       =   0x1
+};
+
+enum PGPE_OP_TRACE_SAFE_MODE_REASON
+{
+    PGPE_OP_TRACE_OCCFLG_SUSP     =   0x2,
+    PGPE_OP_TRACE_OCCFLG_SAFE     =   0x1
 };
 
 //Unexpected Errors
@@ -113,7 +129,8 @@ enum PGPE_OP_TRACE_UNEXPECTED_ERRORS
     PGPE_OP_QUADS_ACTIVE_IN_PM_SUSP             =  0x51,
     PGPE_OP_QUADS_ACTIVE_WHILE_PENDING          =  0x52,
     PGPE_OP_PCB_TYPE1_IN_PSTATE_STOPPED         =  0x60,
-    PGPE_OP_PCB_TYPE1_IN_PMCR_OWNER_OCC         =  0x61
+    PGPE_OP_PCB_TYPE1_IN_PMCR_OWNER_OCC         =  0x61,
+    PGPE_OP_UNEXPECTED_OCC_FIR                  =  0x80
 };
 
 //

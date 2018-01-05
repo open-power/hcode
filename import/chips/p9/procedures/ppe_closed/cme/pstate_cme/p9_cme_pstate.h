@@ -167,6 +167,19 @@ enum DB0_TRIGGER
     PROCESS_DB0_TRIGGER_DB3_IRQ = 2,
 };
 
+typedef enum
+{
+    INTERCME_MSG_LOCK_WAIT_ON_RECV = 0,
+    INTERCME_MSG_LOCK_SKIP         = 1,
+} INTERCME_MSG_LOCK_ACTION;
+
+typedef enum
+{
+    INTERCME_IN0_PROCESS        = 0,
+    INTERCME_IN0_PROCESS_SKIP   = 1,
+} INTERCME_IN0_PROCESS_ACTION;
+
+
 typedef struct
 {
     uint32_t qmFlag;              //4
@@ -174,13 +187,18 @@ typedef struct
     uint32_t quadPstate;          //12
     uint32_t firstGoodCoreMask;   //16
     uint32_t globalPstate;        //20
-    cme_resclk_data_t resclkData; //40
-    cme_vdm_data_t    vdmData;    //56
-    uint32_t pmin;                //60
-    uint32_t safeMode;            //64
-    uint32_t pmax;                //68
-    uint32_t pstatesSuspended;    //72
-    uint32_t nextPstate;          //76
+    uint32_t pmin;                //24
+    uint32_t pmax;                //28
+    uint32_t nextPstate;          //32
+    uint32_t updateAnalogError;   //36
+    //This is set and cleared during CME boot(registration, so no need
+    //to protect it in critical section. It only serves to make sure
+    //that p9_cme_update_analog is called if pstates are started during
+    //registration even
+    uint32_t registerInProgress;  //40
+    cme_resclk_data_t resclkData; //60
+    cme_vdm_data_t    vdmData;    //76
+    uint32_t skipSiblingLock;     //80(0x50 bytes)
 } CmePstateRecord;
 
 typedef struct
@@ -200,6 +218,7 @@ void p9_cme_pstate_intercme_in0_irq_handler(void);
 void p9_cme_pstate_intercme_msg_handler(void);
 void p9_cme_pstate_db0_safe_mode();
 int send_pig_packet(uint64_t data, uint32_t coreMask);
+void send_ack_to_pgpe(uint32_t ack);
 uint32_t poll_dpll_stat();
 void ippm_read(uint32_t addr, uint64_t* data);
 void ippm_write(uint32_t addr, uint64_t data);
@@ -209,8 +228,10 @@ void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint3
 void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
 void p9_cme_pstate_pmsr_updt();
 void p9_cme_pstate_pmsr_updt_in_progress();
-void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0);
+void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION intercme_msg_lock_action,
+        INTERCME_IN0_PROCESS_ACTION intercme_in0_process_action);
 void p9_cme_pstate_process_db0_sibling();
+
 
 #ifdef USE_CME_RESCLK_FEATURE
     uint32_t p9_cme_resclk_get_index(uint32_t pstate);

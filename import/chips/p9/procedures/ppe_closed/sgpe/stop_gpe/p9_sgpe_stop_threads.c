@@ -62,8 +62,8 @@ p9_sgpe_stop_exit_thread(void* arg)
                 p9_sgpe_ack_pgpe_ctrl_stop_updates();
             }
 
-            PK_TRACE_INF("Setup: Exit Done,no Entry Request.Enable Type2/3/5/6 Interrupt");
-            g_oimr_override &= ~(BITS64(47, 2) | BITS64(50, 2));
+            PK_TRACE_INF("Setup: Exit Done,no Entry Request.Enable Type0/2/3/6 Interrupt");
+            g_oimr_override &= ~(BIT64(45) | BITS64(47, 2) | BIT64(51));
             pk_irq_vec_restore(&ctx);
         }
     }
@@ -104,8 +104,8 @@ p9_sgpe_stop_enter_thread(void* arg)
             p9_sgpe_ack_pgpe_ctrl_stop_updates();
         }
 
-        PK_TRACE_INF("Setup: Entry done. Enable Type2/3/5/6 Interrupt");
-        g_oimr_override &= ~(BITS64(47, 2) | BITS64(50, 2));
+        PK_TRACE_INF("Setup: Entry done. Enable Type0/2/3/6 Interrupt");
+        g_oimr_override &= ~(BIT64(45) | BITS64(47, 2) | BIT64(51));
         pk_irq_vec_restore(&ctx);
     }
 }

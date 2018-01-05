@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -90,7 +90,7 @@ const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2] =
         IRQ_VEC_PRTY7_SGPE
     },
     {
-        IRQ_VEC_PRTY4_SGPE, /* 4: IDX_PRTY_LVL_PIG_TYPE5 */
+        IRQ_VEC_PRTY4_SGPE, /* 4: IDX_PRTY_LVL_PIG_TYPE0 */
         IRQ_VEC_PRTY4_SGPE |
         IRQ_VEC_PRTY5_SGPE |
         IRQ_VEC_PRTY6_SGPE |

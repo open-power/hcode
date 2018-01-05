@@ -79,7 +79,7 @@ p9_sgpe_fit_handler()
     PK_TRACE("FIT: Handler Fired");
 
     uint32_t tpending = in32(OCB_OPITNPRA(PIG_TYPE3)) |
-                        in32(OCB_OPITNPRA(PIG_TYPE5)) |
+                        in32(OCB_OPITNPRA(PIG_TYPE0)) |
                         in32(OCB_OPIT6PRB);
 
     // reset counter if current processing stop8+
@@ -113,16 +113,13 @@ p9_sgpe_pgpe_halt_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext   ctx;
 
-    PK_TRACE_INF("WARNING: PGPE Has Halted");
-    PK_OPTIONAL_DEBUG_HALT(SGPE_PGPE_HALT_DETECTED);
+    PK_TRACE_INF("WARNING: PGPE Halted Due to Error");
+    PK_OPTIONAL_DEBUG_HALT(SGPE_PGPE_ERROR_DETECTED);
     out32(OCB_OISR0_CLR, BIT32(7));
 
     G_sgpe_stop_record.wof.update_pgpe = IPC_SGPE_PGPE_UPDATE_PGPE_HALTED;
 
-    if (in32(OCB_OCCFLG2) & BIT32(STOP_RECOVERY_TRIGGER_ENABLE))
-    {
-        p9_stop_recovery_trigger();
-    }
+    p9_stop_recovery_trigger();
 
     pk_irq_vec_restore(&ctx);
 }
@@ -135,176 +132,6 @@ p9_sgpe_checkstop_handler(void* arg, PkIrqId irq)
     PK_TRACE_INF("WARNING: System Checkstop Detected");
     PK_OPTIONAL_DEBUG_HALT(SGPE_SYSTEM_CHECKSTOP_DETECTED);
     out32(OCB_OISR0_CLR, BIT32(16));
-
-    pk_irq_vec_restore(&ctx);
-}
-
-
-
-uint32_t
-p9_sgpe_stop_suspend_db1_cme(uint32_t qloop, uint32_t msgid)
-{
-    uint32_t  cstart    = 0;
-    uint32_t  cindex    = 0;
-    uint32_t  cloop     = 0;
-    uint32_t  cmask     = 0;
-    uint32_t  req_list  = 0;
-    data64_t  scom_data = {0};
-
-    // For each quad that is not in STOP 11, send doorbeel
-    // Note: Stop11 wakeup will write CME_FLAGS to inform CME about BLOCK Entry
-    //       No need for BLOCK Exit with STOP11 tells CME as the wakeup itself is blocked
-    if (!(G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] & BIT32(qloop)))
-    {
-        return 0;
-    }
-
-    for(cstart = 0; cstart < CORES_PER_QUAD; cstart += 2)
-    {
-        for(cloop =  cstart, cmask = BIT32(((qloop << 2) + cstart));
-            cloop < (cstart + CORES_PER_EX);
-            cloop++, cmask = cmask >> 1)
-        {
-            // find the first good core served by each active CME
-            if (G_sgpe_stop_record.group.core[VECTOR_CONFIG] & cmask)
-            {
-                break;
-            }
-        }
-
-        cindex = (qloop << 2) + cloop;
-
-        if (cloop != (cstart + CORES_PER_EX)) // if ex is partial good
-        {
-            req_list |= BIT32(cindex);
-            scom_data.words.upper = msgid;
-            scom_data.words.lower = 0;
-
-#if NIMBUS_DD_LEVEL != 10
-
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1, cindex), scom_data.value);
-
-#else
-
-            p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1, cindex), scom_data.value);
-
-#endif
-
-        }
-    }
-
-    return req_list;
-}
-
-
-
-void
-p9_sgpe_ipi3_low_handler(void* arg, PkIrqId irq)
-{
-    PkMachineContext       ctx;
-    uint32_t req_list      = 0;
-    uint32_t qloop         = 0;
-    uint32_t action        = 0;
-    uint32_t occflg        = in32(OCB_OCCFLG) & BITS32(9, 4);
-    data64_t scom_data     = {0};
-
-    PK_TRACE_INF("IPI-IRQ: %d", irq);
-    // Clear ipi3_lo interrupt
-    out32(OCB_OISR1_CLR, BIT32(29));
-
-    // occflg[9]control + [11]exit/[12]entry(filter bit[10] here)
-    // bit[9] must be on to perform any operations below
-    // also verify we are doing at least one operation from entry/exit
-    // otherwise, even bit[9] is on, the requested operation is undefined
-    // thus cannot be performed(no error taking out when this happens)
-    if ((occflg & (~BIT32(10))) > BIT32(9))
-    {
-        // msg[4-6] << occflg[10]enable + [11]exit/[12]entry (filter bit[9] here)
-        // msg[4] : perform block/unblock operation (enable/disable ignore stop func)
-        // msg[5] : perform exit block/unblock operation
-        // msg[6] : perform entry block/unblock operation
-        // msg[7] : reserved for suspend function
-        action = ((occflg & (~BIT32(9))) << 6);
-
-        if (action & BIT32(6))
-        {
-            G_sgpe_stop_record.group.creq[VECTOR_BLOCKX] = 0;
-            G_sgpe_stop_record.group.cack[VECTOR_BLOCKX] = 0;
-        }
-
-        if (action & BIT32(7))
-        {
-            G_sgpe_stop_record.group.creq[VECTOR_BLOCKE] = 0;
-            G_sgpe_stop_record.group.cack[VECTOR_BLOCKE] = 0;
-        }
-
-        for (qloop = 0; qloop < MAX_QUADS; qloop++)
-        {
-            if (!(G_sgpe_stop_record.group.quad[VECTOR_CONFIG] & BIT32(qloop)))
-            {
-                continue;
-            }
-
-            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QCCR, qloop), scom_data.value);
-
-            // target quad is to participate block/unblock exit
-            if (scom_data.words.upper & BIT32(10))
-            {
-                action = action | BIT32(5);
-
-                if (action & BIT32(4))
-                {
-                    G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] |= BIT32(qloop);
-                }
-                else
-                {
-                    G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] &= ~BIT32(qloop);
-                }
-            }
-            // not participate exit, taking exit encoding bit out
-            else
-            {
-                action = action & (~BIT32(5));
-            }
-
-            // target quad is to participate block/unblock entry
-            if (scom_data.words.upper & BIT32(11))
-            {
-                action = action | BIT32(6);
-
-                if (action & BIT32(4))
-                {
-                    G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] |= BIT32(qloop);
-                }
-                else
-                {
-                    G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] &= ~BIT32(qloop);
-                }
-            }
-            // not participate entry, taking entry encoding bit out
-            else
-            {
-                action = action & (~BIT32(6));
-            }
-
-            // if this quad participates either entry/exit for block/unlock
-            // send msg; otherwise skip the quad
-            if (action & BITS32(5, 2))
-            {
-                req_list = p9_sgpe_stop_suspend_db1_cme(qloop, action);
-
-                if (action & BIT32(6))
-                {
-                    G_sgpe_stop_record.group.creq[VECTOR_BLOCKX] |= req_list;
-                }
-
-                if (action & BIT32(7))
-                {
-                    G_sgpe_stop_record.group.creq[VECTOR_BLOCKE] |= req_list;
-                }
-            }
-        }
-    }
 
     pk_irq_vec_restore(&ctx);
 }
@@ -449,47 +276,10 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
             }
             else
             {
-                cpayload = in32(OCB_OPIT5CN(cindex));
+                cpayload = in32(OCB_OPIT0CN(cindex));
             }
-
 
             PK_TRACE_INF("Core[%d] sent PIG Type[%d] with Payload [%x]", cindex, type, cpayload);
-
-            if (type == PIG_TYPE5)
-            {
-
-#if DISABLE_STOP8
-
-                if ((cpayload != TYPE5_PAYLOAD_EXIT_RCLK) &&
-                    (cpayload != (TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
-                {
-
-#endif
-
-                    // Errors detected by the CME for any reason (STOP or Pstate)
-                    // will cause the CME to halt. The CME halt is communicated via
-                    // a PCB Interrupt Type 5 to SGPE. SGPE will, in turn, set OCC
-                    // LFIR[cme_error_notify] (2) as an FFDC marker for this type of error.
-                    GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(2));
-
-                    if (cpayload == TYPE5_PAYLOAD_CME_ERROR)
-                    {
-                        PK_TRACE_ERR("ERROR: CME Halt Due to Error");
-                        PK_PANIC(SGPE_PIG_TYPE5_CME_ERROR);
-                    }
-                    else
-                    {
-                        PK_TRACE_ERR("ERROR: Undefined Type5 Payload");
-                        PK_PANIC(SGPE_PIG_TYPE5_PAYLOAD_INVALID);
-                    }
-
-#if DISABLE_STOP8
-
-                }
-
-#endif
-
-            }
 
             // if not hardware pig and is an suspend ack pig
             if ((type == PIG_TYPE3) &&
@@ -544,7 +334,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                         // block entry/exit/both
                         if (cpayload & TYPE2_PAYLOAD_SUSPEND_ACTION_MASK)
                         {
-                            G_sgpe_stop_record.group.cack[block_index] |= BIT32(cloop);
+                            G_sgpe_stop_record.group.cack[block_index] |= BIT32(cindex);
 
                             if (G_sgpe_stop_record.group.cack[block_index] ==
                                 G_sgpe_stop_record.group.creq[block_index])
@@ -555,7 +345,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                         // unblock entry/exit/both
                         else
                         {
-                            G_sgpe_stop_record.group.cack[block_index] |= BIT32(cloop);
+                            G_sgpe_stop_record.group.cack[block_index] |= BIT32(cindex);
 
                             if (G_sgpe_stop_record.group.cack[block_index] ==
                                 G_sgpe_stop_record.group.creq[block_index])
@@ -636,7 +426,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                                       (already handoff cme by other wakeup");
                     }
                     // otherwise PPM shouldnt send duplicate pig if wakeup is present
-                    // also not suppose to handoff to cme if resclk is not enabled before(type5)
+                    // also not suppose to handoff to cme if resclk is not enabled before(type0)
                     else
                     {
                         PK_TRACE_INF("ERROR: Received Phantom Hardware Type%d Wakeup PIG \
@@ -661,7 +451,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
 #if DISABLE_STOP8
 
                     // Priority of Processing Exit Requests
-                    // 1) Receive PIG Type5 with Rclk Exit encoding, aka
+                    // 1) Receive PIG Type0 with Rclk Exit encoding, aka
                     //      Stop11 Entry aborted and Resonant Clock Enable completed
                     //      --> allow wakeup from Stop5, previously saved off to RCLKX vector
                     //      +++ set sibling RCLK_OPERATABLE
@@ -669,17 +459,17 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                     // 2) Receive PIG Type3/2 with Core Exit encoding, but
                     //      Stop Exit is Suspended, on all quads
                     //      --> save off exit requests to suspend list
-                    //          if it was Type5 above, move RCLKX to SUSPEND list
+                    //          if it was Type0 above, move RCLKX to SUSPEND list
                     //      AND/OR
                     //      Stop Exit is Blocked, on this quad
                     //      --> save off exit requests to block list
-                    //          if it was Type5 above, move RCLKX to BLOCK list
+                    //          if it was Type0 above, move RCLKX to BLOCK list
 
                     s11x_rclk_enabled = 0;
                     exit_ignored      = 0;
 
                     // Quad-Manager completed the resonant clock enable, proceed stop5 exit is now allowed
-                    if ((type == PIG_TYPE5) && (cpayload == TYPE5_PAYLOAD_EXIT_RCLK))
+                    if ((type == PIG_TYPE0) && (cpayload == TYPE0_PAYLOAD_EXIT_RCLK))
                     {
                         PK_TRACE_INF("Core Request Exit Allowed as Resonant Clock Enable is Completed");
                         G_sgpe_stop_record.group.quad[VECTOR_RCLKX] &= ~BIT32(qloop);
@@ -799,7 +589,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
 #if DISABLE_STOP8
 
                 // Priority of Processing Entry Requests
-                // 1) Receive PIG Type5 with Rclk Entry encoding, aka Resonant Clock Disable completed
+                // 1) Receive PIG Type0 with Rclk Entry encoding, aka Resonant Clock Disable completed
                 //      --> allow stop11 entry to proceed
                 // ELSE
                 // 2) Receive PIG Type3/2 with Core Entry encoding, but
@@ -814,8 +604,8 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
 
                 // Quad-Manager completed the resonant clock disable, proceed stop11 entry
                 // block entry protocol is checked in the entry code instead of here below
-                if ((type == PIG_TYPE5) &&
-                    (cpayload == (TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
+                if ((type == PIG_TYPE0) &&
+                    (cpayload == (TYPE0_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
                 {
                     PK_TRACE_INF("Core Request Entry Allowed as Resonant Clock Disable is Completed");
                     G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32((qloop + RCLK_DIS_REQ_OFFSET));
@@ -967,6 +757,12 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
             //================================================
         }
     }
+
+    if (type == PIG_TYPE2)
+    {
+        G_sgpe_stop_record.group.core[VECTOR_PIGX] = 0;
+        G_sgpe_stop_record.group.core[VECTOR_PIGE] = 0;
+    }
 }
 
 
@@ -981,24 +777,29 @@ p9_sgpe_pig_thread_lanucher()
     G_sgpe_stop_record.group.core[VECTOR_EXIT]  = 0;
 
     // Taking Stop8/11 Actions if any
-    if (G_sgpe_stop_record.group.core[VECTOR_PIGX] ||
+    if (G_sgpe_stop_record.group.qswu[VECTOR_EXIT] ||
+        G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] ||
+        G_sgpe_stop_record.group.core[VECTOR_PIGX] ||
         G_sgpe_stop_record.group.core[VECTOR_PIGE] ||
         (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BITS32(RCLK_DIS_DONE_OFFSET, 6)))
     {
-        // block both type3 and type5, 6
+        // block both type3, type0, type6
         // so another doesnt interrupt until next round
-        out32(OCB_OIMR1_OR, (BIT32(16) | BITS32(18, 2)));
-        g_oimr_override |= (BIT64(48) | BITS64(50, 2));
+        out32(OCB_OIMR1_OR, (BIT32(13) | BIT32(16) | BIT32(19)));
+        g_oimr_override |= (BIT64(45) | BIT64(48) | BIT64(51));
 
-        if (G_sgpe_stop_record.group.core[VECTOR_PIGX])
+        if ((G_sgpe_stop_record.group.core[VECTOR_PIGX]) ||
+            (G_sgpe_stop_record.group.qswu[VECTOR_EXIT]))
         {
             PK_TRACE_INF("Unblock Exit Thread");
             G_sgpe_stop_record.group.core[VECTOR_EXIT] =
                 G_sgpe_stop_record.group.core[VECTOR_PIGX];
+            G_sgpe_stop_record.group.core[VECTOR_PIGX] = 0;
             pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));
         }
 
-        if ((G_sgpe_stop_record.group.core[VECTOR_PIGE]) ||
+        if ((G_sgpe_stop_record.group.qswu[VECTOR_ENTRY]) ||
+            (G_sgpe_stop_record.group.core[VECTOR_PIGE]) ||
             (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BITS32(RCLK_DIS_DONE_OFFSET, 6) &
              (~(G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] >> 16))))
         {
@@ -1006,6 +807,7 @@ p9_sgpe_pig_thread_lanucher()
             G_sgpe_stop_record.fit.entry_pending = 1;
             G_sgpe_stop_record.group.core[VECTOR_ENTRY] =
                 G_sgpe_stop_record.group.core[VECTOR_PIGE];
+            G_sgpe_stop_record.group.core[VECTOR_PIGE] = 0;
             pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
         }
     }
@@ -1015,6 +817,230 @@ p9_sgpe_pig_thread_lanucher()
         g_oimr_override &= ~BIT64(47);
         pk_irq_vec_restore(&ctx);
     }
+}
+
+
+
+uint32_t
+p9_sgpe_stop_suspend_db1_cme(uint32_t qloop, uint32_t msgid)
+{
+    uint32_t  cstart    = 0;
+    uint32_t  cindex    = 0;
+    uint32_t  cloop     = 0;
+    uint32_t  cmask     = 0;
+    uint32_t  req_list  = 0;
+    data64_t  scom_data = {0};
+
+    // For each quad that is not in STOP 11, send doorbeel
+    // Note: Stop11 wakeup will write CME_FLAGS to inform CME about BLOCK Entry
+    //       No need for BLOCK Exit with STOP11 tells CME as the wakeup itself is blocked
+    if (!(G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] & BIT32(qloop)))
+    {
+        return 0;
+    }
+
+    for(cstart = 0; cstart < CORES_PER_QUAD; cstart += 2)
+    {
+        for(cloop =  cstart, cmask = BIT32(((qloop << 2) + cstart));
+            cloop < (cstart + CORES_PER_EX);
+            cloop++, cmask = cmask >> 1)
+        {
+            // find the first good core served by each active CME
+            if (G_sgpe_stop_record.group.core[VECTOR_CONFIG] & cmask)
+            {
+                break;
+            }
+        }
+
+        cindex = (qloop << 2) + cloop;
+
+        if (cloop != (cstart + CORES_PER_EX)) // if ex is partial good
+        {
+            req_list |= BIT32(cindex);
+            scom_data.words.upper = msgid;
+            scom_data.words.lower = 0;
+
+#if NIMBUS_DD_LEVEL != 10
+
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1, cindex), scom_data.value);
+
+#else
+
+            p9_dd1_db_unicast_wr(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1, cindex), scom_data.value);
+
+#endif
+
+        }
+    }
+
+    return req_list;
+}
+
+
+
+void
+p9_sgpe_ipi3_low_handler(void* arg, PkIrqId irq)
+{
+    uint32_t req_list      = 0;
+    uint32_t qloop         = 0;
+    uint32_t action        = 0;
+    uint32_t occflg        = in32(OCB_OCCFLG) & BITS32(SGPE_IGNORE_STOP_CONTROL, 4);
+    data64_t scom_data     = {0};
+
+    PK_TRACE_INF("IPI-IRQ: %d", irq);
+    // Clear ipi3_lo interrupt
+    out32(OCB_OISR1_CLR, BIT32(29));
+
+    // occflg[9]control + [11]exit/[12]entry(filter bit[10] here)
+    // bit[9] must be on to perform any operations below
+    // also verify we are doing at least one operation from entry/exit
+    // otherwise, even bit[9] is on, the requested operation is undefined
+    // thus cannot be performed(no error taking out when this happens)
+    if ((occflg & (~BIT32(SGPE_IGNORE_STOP_ACTION))) > BIT32(SGPE_IGNORE_STOP_CONTROL))
+    {
+        // msg[4-6] << occflg[10]enable + [11]exit/[12]entry (filter bit[9] here)
+        // msg[4] : perform block/unblock operation (enable/disable ignore stop func)
+        // msg[5] : perform exit block/unblock operation
+        // msg[6] : perform entry block/unblock operation
+        // msg[7] : reserved for suspend function
+        action = ((occflg & (~BIT32(SGPE_IGNORE_STOP_CONTROL))) << 6);
+
+        if (occflg & BIT32(SGPE_IGNORE_STOP_EXITS))
+        {
+            G_sgpe_stop_record.group.creq[VECTOR_BLOCKX] = 0;
+            G_sgpe_stop_record.group.cack[VECTOR_BLOCKX] = 0;
+        }
+
+        if (occflg & BIT32(SGPE_IGNORE_STOP_ENTRIES))
+        {
+            G_sgpe_stop_record.group.creq[VECTOR_BLOCKE] = 0;
+            G_sgpe_stop_record.group.cack[VECTOR_BLOCKE] = 0;
+        }
+
+        for (qloop = 0; qloop < MAX_QUADS; qloop++)
+        {
+            if (!(G_sgpe_stop_record.group.quad[VECTOR_CONFIG] & BIT32(qloop)))
+            {
+                continue;
+            }
+
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QCCR, qloop), scom_data.value);
+
+            // target quad is to participate block/unblock exit
+            if (scom_data.words.upper & BIT32(QPPM_QCCR_IGNORE_QUAD_STOP_EXITS))
+            {
+                action = action | BIT32(5);
+
+                if (action & BIT32(4))
+                {
+                    G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] |= BIT32(qloop);
+                }
+                else
+                {
+                    G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] &= ~BIT32(qloop);
+                }
+            }
+            // not participate exit, taking exit encoding bit out
+            else
+            {
+                action = action & (~BIT32(5));
+            }
+
+            // target quad is to participate block/unblock entry
+            if (scom_data.words.upper & BIT32(QPPM_QCCR_IGNORE_QUAD_STOP_ENTRIES))
+            {
+                action = action | BIT32(6);
+
+                if (action & BIT32(4))
+                {
+                    G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] |= BIT32(qloop);
+                }
+                else
+                {
+                    G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] &= ~BIT32(qloop);
+                }
+            }
+            // not participate entry, taking entry encoding bit out
+            else
+            {
+                action = action & (~BIT32(6));
+            }
+
+            // if this quad participates either entry/exit for block/unlock
+            // send msg; otherwise skip the quad
+            if (action & BITS32(5, 2))
+            {
+                req_list = p9_sgpe_stop_suspend_db1_cme(qloop, action);
+
+                if (action & BIT32(5))
+                {
+                    G_sgpe_stop_record.group.creq[VECTOR_BLOCKX] |= req_list;
+                }
+
+                if (action & BIT32(6))
+                {
+                    G_sgpe_stop_record.group.creq[VECTOR_BLOCKE] |= req_list;
+                }
+            }
+        }
+
+        if ((occflg & BIT32(SGPE_IGNORE_STOP_EXITS)) &&
+            (G_sgpe_stop_record.group.creq[VECTOR_BLOCKX] == 0))
+        {
+            if (!(occflg & BIT32(SGPE_IGNORE_STOP_ACTION)))
+            {
+                if (G_sgpe_stop_record.wof.status_stop & STATUS_EXIT_SUSPENDED)
+                {
+                    G_sgpe_stop_record.group.core[VECTOR_SUSPENDX] |=
+                        G_sgpe_stop_record.group.core[VECTOR_BLOCKX];
+                    G_sgpe_stop_record.group.qswu[VECTOR_SUSPENDX] |=
+                        G_sgpe_stop_record.group.qswu[VECTOR_BLOCKX];
+                }
+                else
+                {
+                    G_sgpe_stop_record.group.core[VECTOR_PIGX] |=
+                        G_sgpe_stop_record.group.core[VECTOR_BLOCKX];
+                    G_sgpe_stop_record.group.qswu[VECTOR_EXIT] |=
+                        G_sgpe_stop_record.group.qswu[VECTOR_BLOCKX];
+                }
+
+                G_sgpe_stop_record.group.core[VECTOR_BLOCKX] = 0;
+                G_sgpe_stop_record.group.qswu[VECTOR_BLOCKX] = 0;
+            }
+
+            out32(OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
+        }
+
+        if ((occflg & BIT32(SGPE_IGNORE_STOP_ENTRIES)) &&
+            (G_sgpe_stop_record.group.creq[VECTOR_BLOCKE] == 0))
+        {
+            if (!(occflg & BIT32(SGPE_IGNORE_STOP_ACTION)))
+            {
+                if (G_sgpe_stop_record.wof.status_stop & STATUS_ENTRY_SUSPENDED)
+                {
+                    G_sgpe_stop_record.group.core[VECTOR_SUSPENDE] |=
+                        G_sgpe_stop_record.group.core[VECTOR_BLOCKE];
+                    G_sgpe_stop_record.group.qswu[VECTOR_SUSPENDE] |=
+                        G_sgpe_stop_record.group.qswu[VECTOR_BLOCKE];
+                }
+                else
+                {
+                    G_sgpe_stop_record.group.core[VECTOR_PIGE] |=
+                        G_sgpe_stop_record.group.core[VECTOR_BLOCKE];
+                    G_sgpe_stop_record.group.qswu[VECTOR_ENTRY] |=
+                        G_sgpe_stop_record.group.qswu[VECTOR_BLOCKE];
+                }
+
+                G_sgpe_stop_record.group.core[VECTOR_BLOCKE] = 0;
+                G_sgpe_stop_record.group.qswu[VECTOR_BLOCKE] = 0;
+            }
+
+            out32(OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
+        }
+    }
+
+    // decide if launch the thread
+    p9_sgpe_pig_thread_lanucher();
 }
 
 
@@ -1055,17 +1081,17 @@ p9_sgpe_pig_type3_handler(void* arg, PkIrqId irq)
 
 
 void
-p9_sgpe_pig_type5_handler(void* arg, PkIrqId irq)
+p9_sgpe_pig_type0_handler(void* arg, PkIrqId irq)
 {
     //===============================
-    MARK_TRAP(STOP_PIG_TYPE5_HANDLER)
+    MARK_TRAP(STOP_PIG_TYPE0_HANDLER)
     //===============================
-    PK_TRACE_DBG("PIG-TYPE5: %d", irq);
+    PK_TRACE_DBG("PIG-TYPE0: %d", irq);
 
 #if DISABLE_STOP8
 
-    // Parse Type5 Requests
-    p9_sgpe_pig_cpayload_parser(PIG_TYPE5);
+    // Parse Type0 Requests
+    p9_sgpe_pig_cpayload_parser(PIG_TYPE0);
 
     // decide if launch the thread
     p9_sgpe_pig_thread_lanucher();
@@ -1079,7 +1105,6 @@ p9_sgpe_pig_type5_handler(void* arg, PkIrqId irq)
 void
 p9_sgpe_pig_type6_handler(void* arg, PkIrqId irq)
 {
-    PkMachineContext ctx;
     uint32_t         qloop    = 0;
     uint32_t         qpending = 0;
     uint32_t         qpayload = 0;
@@ -1185,31 +1210,6 @@ p9_sgpe_pig_type6_handler(void* arg, PkIrqId irq)
                  G_sgpe_stop_record.group.qswu[VECTOR_EXIT],
                  G_sgpe_stop_record.group.qswu[VECTOR_ENTRY]);
 
-    if (G_sgpe_stop_record.group.qswu[VECTOR_EXIT] ||
-        G_sgpe_stop_record.group.qswu[VECTOR_ENTRY])
-    {
-        // block both type3 and type5, 6
-        // so another doesnt interrupt until next round
-        out32(OCB_OIMR1_OR, (BIT32(16) | BITS32(18, 2)));
-        g_oimr_override |= (BIT64(48) | BITS64(50, 2));
-
-        if (G_sgpe_stop_record.group.qswu[VECTOR_EXIT])
-        {
-            PK_TRACE_INF("Unblock Exit");
-            pk_semaphore_post(&(G_sgpe_stop_record.sem[1]));
-        }
-
-        if (G_sgpe_stop_record.group.qswu[VECTOR_ENTRY])
-        {
-            PK_TRACE_INF("Unblock Entry");
-            G_sgpe_stop_record.fit.entry_pending = 1;
-            pk_semaphore_post(&(G_sgpe_stop_record.sem[0]));
-        }
-    }
-    else
-    {
-        PK_TRACE_INF("Nothing to do, Enable Interrupts");
-        g_oimr_override &= ~BIT64(47);
-        pk_irq_vec_restore(&ctx);
-    }
+    // decide if launch the thread
+    p9_sgpe_pig_thread_lanucher();
 }

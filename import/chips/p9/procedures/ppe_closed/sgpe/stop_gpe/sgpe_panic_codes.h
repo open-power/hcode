@@ -87,10 +87,10 @@ SGPE_STOP_ENTRY_STOP11_RESCLK_ON    = 0x1e06,
 //_UNUSED_1e08                      = 0x1e08,
 //_UNUSED_1e09                      = 0x1e09,
 SGPE_IPC_UPDATE_ACTIVE_QUAD_BAD_LIST = 0x1e0a,
-SGPE_PGPE_HALT_DETECTED             = 0x1e0d,
+SGPE_PGPE_ERROR_DETECTED            = 0x1e0d,
 SGPE_SYSTEM_CHECKSTOP_DETECTED      = 0x1e1c,
-SGPE_PIG_TYPE5_PAYLOAD_INVALID      = 0x1e1d,
-SGPE_PIG_TYPE5_CME_ERROR            = 0x1e1e,
+//_UNUSED_1e1d                      = 0x1e1d,
+//_UNUSED_1e1e                      = 0x1e1e,
 SGPE_STOP_ENTRY_TRAP_INJECT         = 0x1e1f,
 
 SGPE_STOP_EXIT_VCS_STOPCLK_FAILED   = 0x1f00, // NDD1

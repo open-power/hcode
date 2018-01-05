@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -40,7 +40,7 @@ enum SGPE_SE_MARKS
     ENDSCOPE_STOP_ENTRY     =   0x18,
     STOP_PIG_TYPE2_HANDLER        =   0x20,
     STOP_PIG_TYPE3_HANDLER        =   0x28,
-    STOP_PIG_TYPE5_HANDLER        =   0x30,
+    STOP_PIG_TYPE0_HANDLER        =   0x30,
     STOP_PIG_TYPE6_HANDLER        =   0x38,
     SE_LESSTHAN8_DONE       =   0x68,
     SE_STOP_L2_CLKS     =   0xe0,
@@ -67,7 +67,7 @@ const std::vector<SGPE_SE_MARKS> MARKS =
     ENDSCOPE_STOP_ENTRY,
     STOP_PIG_TYPE2_HANDLER,
     STOP_PIG_TYPE3_HANDLER,
-    STOP_PIG_TYPE5_HANDLER,
+    STOP_PIG_TYPE0_HANDLER,
     STOP_PIG_TYPE6_HANDLER,
     SE_LESSTHAN8_DONE,
     SE_STOP_L2_CLKS,
@@ -90,6 +90,7 @@ const std::map<SGPE_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
         (ENDSCOPE_STOP_ENTRY, "ENDSCOPE_STOP_ENTRY")
         (STOP_PIG_TYPE2_HANDLER, "STOP_PIG_TYPE2_HANDLER")
         (STOP_PIG_TYPE3_HANDLER, "STOP_PIG_TYPE3_HANDLER")
+        (STOP_PIG_TYPE0_HANDLER, "STOP_PIG_TYPE0_HANDLER")
         (STOP_PIG_TYPE6_HANDLER, "STOP_PIG_TYPE6_HANDLER")
         (SE_LESSTHAN8_DONE, "SE_LESSTHAN8_DONE")
         (SE_STOP_L2_CLKS, "SE_STOP_L2_CLKS")

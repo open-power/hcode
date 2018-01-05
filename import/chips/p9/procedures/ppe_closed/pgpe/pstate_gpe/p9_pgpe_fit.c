@@ -32,6 +32,7 @@
 
 #define AUX_TASK 14
 #define GPE2TSEL 0xC0020000
+#define OCB_OCI_OCCHBR_OCC_HEARTBEAT_EN 16
 
 uint32_t G_orig_throttle = 0; //original value of throttle SCOM before manipulation
 uint32_t G_throttleOn;    //is throttling currently enabled
@@ -46,6 +47,8 @@ uint32_t G_aux_task_count;
 uint32_t G_tb_sync_count_threshold;
 uint32_t G_tb_sync_count;
 
+uint32_t G_quad_hb_value;
+
 extern GlobalPstateParmBlock* G_gppb;
 extern PgpeHeader_t* G_pgpe_header_data;
 extern PgpePstateRecord G_pgpe_pstate_record;
@@ -53,6 +56,7 @@ extern TraceData_t G_pgpe_optrace_data;
 extern uint32_t G_last_sync_op;
 
 void (*p9_pgpe_auxiliary_task)() = (void*)OCC_SRAM_AUX_TASK_ADDR;
+
 
 //
 //Local function declarations
@@ -94,6 +98,11 @@ void p9_pgpe_fit_init()
     uint32_t tsel = 0xA;
 #endif
     G_tb_sync_count_threshold = ((0x2 << tsel) - 1);
+    //Calculated to be twice the interval between FIT interrupts in Quad HBR
+    //ticks
+    uint32_t sub = (((1 << (29 - tsel)) / G_gppb->nest_frequency_mhz) <<
+                    4) * (G_beacon_count_threshold + 1);
+    G_quad_hb_value = ((0x10000 - sub) << 16) | BIT32(OCB_OCI_OCCHBR_OCC_HEARTBEAT_EN);
     PK_TRACE_DBG("Fit TimebaseSyncThr=0x%d", G_tb_sync_count_threshold);
     G_throttleOn = 0;
     G_throttleCount = 0;
@@ -155,6 +164,22 @@ __attribute__((always_inline)) inline void handle_core_throttle()
         p9_pgpe_pstate_write_core_throttle(G_orig_throttle, NO_RETRY);
     }
 }
+//Quads must get HB value
+__attribute__((always_inline)) inline void handle_quad_hb_update()
+{
+    uint32_t q;
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(OCB_QCSR);
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        //Update for configured quads
+        if (qcsr.fields.ex_config & (0xC00 >> (q << 1)))
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_OCCHB, q), (uint64_t) G_quad_hb_value << 32);
+        }
+    }
+}
 
 //PGPE beacon needs to be written every 2ms. However, we
 //set the FIT interrupt period smaller than that, and
@@ -164,9 +189,15 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
 {
     if (G_beacon_count == G_beacon_count_threshold)
     {
-        //write to SRAM
-        *(G_pgpe_header_data->g_pgpe_beacon_addr) = *(G_pgpe_header_data->g_pgpe_beacon_addr) + 1;
-        G_beacon_count = 0;
+        //Update OCC heart beat register
+        handle_quad_hb_update();
+
+        if (G_pgpe_pstate_record.updatePGPEBeacon == 1)
+        {
+            //write to SRAM
+            *(G_pgpe_header_data->g_pgpe_beacon_addr) = *(G_pgpe_header_data->g_pgpe_beacon_addr) + 1;
+            G_beacon_count = 0;
+        }
     }
     else
     {
@@ -180,10 +211,13 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
     //Read OCC_FLAGS
     occFlag.value = in32(OCB_OCCFLG);
 
-    if((G_pgpe_pstate_record.pstatesStatus != PSTATE_PM_SUSPENDED)
-       && (G_pgpe_pstate_record.pstatesStatus != PSTATE_PM_SUSPEND_PENDING)
-       && (G_pgpe_pstate_record.pstatesStatus != PSTATE_SAFE_MODE_PENDING)
-       && (G_pgpe_pstate_record.pstatesStatus != PSTATE_STOP_PENDING))
+    if(in32(OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_FIT_ERR_INJ))
+    {
+        PK_TRACE_ERR("FIT_IPC_ERROR_INJECT TRAP");
+        PK_PANIC(PGPE_SET_PMCR_TRAP_INJECT);
+    }
+
+    if (G_pgpe_pstate_record.pstatesStatus & (PSTATE_INIT | PSTATE_ACTIVE | PSTATE_SAFE_MODE | PSTATE_STOPPED))
     {
         if(occFlag.value & BIT32(PM_COMPLEX_SUSPEND))
         {
@@ -235,9 +269,9 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
 //number of FIT interrupts
 __attribute__((always_inline)) inline void handle_aux_task()
 {
-    if(in32(OCB_OCCFLG) & BIT32(SGPE_24_7_ACTIVATE))
+    if(in32(OCB_OCCFLG) & BIT32(AUX_THREAD_ACTIVATE))
     {
-        out32(OCB_OCCFLG_OR, BIT32(SGPE_24_7_ACTIVE));
+        out32(OCB_OCCFLG_OR, BIT32(AUX_THREAD_ACTIVE));
 
         if(G_aux_task_count == G_aux_task_count_threshold)
         {
@@ -251,7 +285,7 @@ __attribute__((always_inline)) inline void handle_aux_task()
     }
     else
     {
-        out32(OCB_OCCFLG_CLR, BIT32(SGPE_24_7_ACTIVE));
+        out32(OCB_OCCFLG_CLR, BIT32(AUX_THREAD_ACTIVE));
     }
 }
 
@@ -295,6 +329,7 @@ __attribute__((always_inline)) inline void handle_fit_timebase_sync()
 //by GPE_TIMER_SELECT register
 void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
 {
+
     mtmsr(PPE42_MSR_INITIAL);
     handle_occ_beacon();
     handle_core_throttle();

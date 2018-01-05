@@ -69,8 +69,9 @@ void cme_pstate_pmcr_action()
             request = in64(CME_LCL_PMCRS0 + ((cm & 1) << 5)) & PMCR_LOWERPS_MASK;
             PK_TRACE_INF("PMCR: Fwd Core[%d] Pstate Request = 0x%02x", cm, (uint32_t)(request >> PMCR_PSTATE_SHIFT_AMOUNT));
 
-            // Note that LowerPS coincidentally is in the correct place for the PIG payload
-
+            //NOTE: that LowerPS coincidentally is in the correct place for the PIG payload
+            //Send Type1(previously Phase 2) only.
+            //Phase 1 is deprecated(Previously used Type0 which is now re-defined)
             ppmPigData.value = 0;
             ppmPigData.fields.req_intr_type = 1;
             ppmPigData.value |= request;

@@ -103,20 +103,25 @@ enum PGPE_WOF_CTRL
 #define QUAD_EX1_MASK(quad) \
     (QUAD0_EX1_MASK >> (q*2))
 
-#define PGPE_PANIC_AND_TRACE(val)\
-    G_pgpe_optrace_data.word[0] = val; \
+#define PGPE_OPTIONAL_TRACE_AND_PANIC(panic_code) \
+    if (in32(OCB_OCCS2) & BIT32(PM_DEBUG_HALT_ENABLE)) { \
+        G_pgpe_optrace_data.word[0] = panic_code; \
+        p9_pgpe_optrace(HALT_CONDITION ); \
+        PK_PANIC(panic_code); }
+
+#define PGPE_TRACE_AND_PANIC(panic_code)\
+    G_pgpe_optrace_data.word[0] = panic_code; \
     p9_pgpe_optrace(HALT_CONDITION ); \
-    PK_PANIC(val);
+    PK_PANIC(panic_code);
+
 
 /// PGPE PState
-void p9_pgpe_irq_handler_occ_error(void* arg, PkIrqId irq);
-void p9_pgpe_irq_handler_sgpe_halt(void* arg, PkIrqId irq);
-void p9_pgpe_irq_handler_xstop_gpe2(void* arg, PkIrqId irq);
+void p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error(void* arg, PkIrqId irq);
+void p9_pgpe_irq_handler_system_xstop(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq);
 void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq);
 void p9_pgpe_thread_process_requests(void* arg);
 void p9_pgpe_thread_actuate_pstates(void* arg);
-void p9_pgpe_thread_safe_mode_and_pm_suspend(void* arg);
 
 ///PGPE PState Info
 void p9_pgpe_gen_pstate_info();
@@ -127,7 +132,7 @@ void p9_pgpe_fit_init();
 ///PGPE IPC
 void p9_pgpe_ipc_init();
 
-//OCB Heartbeat Error
-void p9_pgpe_ocb_hb_error_init();
+//IRQ initialization and setup
+void p9_pgpe_irq_init();
 
 #endif //_P9_PGPE_H_

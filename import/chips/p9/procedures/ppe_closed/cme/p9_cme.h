@@ -47,8 +47,9 @@ typedef struct
 typedef struct
 {
     // target mask of enabled cores, used to filter 2bit core select in scom address
-    uint32_t     core_enabled;
-    uint32_t     spurr_freq_ref_upper;
+    uint32_t    core_enabled;
+    uint32_t    spurr_freq_ref_upper;
+    uint32_t    disableSGPEHandoff;
 
 } CmeRecord;
 

@@ -398,9 +398,9 @@ void p9_sgpe_stop_suspend_all_cmes();
 void p9_sgpe_fit_handler();
 void p9_sgpe_pgpe_halt_handler(void*, PkIrqId);
 void p9_sgpe_checkstop_handler(void*, PkIrqId);
+void p9_sgpe_pig_type0_handler(void*, PkIrqId);
 void p9_sgpe_pig_type2_handler(void*, PkIrqId);
 void p9_sgpe_pig_type3_handler(void*, PkIrqId);
-void p9_sgpe_pig_type5_handler(void*, PkIrqId);
 void p9_sgpe_pig_type6_handler(void*, PkIrqId);
 void p9_sgpe_ipi3_low_handler(void*, PkIrqId);
 

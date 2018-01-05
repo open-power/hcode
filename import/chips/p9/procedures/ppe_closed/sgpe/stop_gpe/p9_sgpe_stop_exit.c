@@ -333,7 +333,6 @@ p9_sgpe_stop_exit()
     uint32_t      ex_index        = 0;
     uint32_t      ec_index        = 0;
     data64_t      scom_data       = {0};
-    uint32_t      flg2_data       = 0;
 #if !STOP_PRIME
     ocb_ccsr_t    ccsr            = {0};
     uint32_t      cme_flags       = 0;
@@ -365,9 +364,7 @@ p9_sgpe_stop_exit()
     G_sgpe_stop_record.group.ex01[4]           = 0;
     G_sgpe_stop_record.group.ex01[5]           = 0;
 
-    flg2_data = in32(OCB_OCCFLG2);
-
-    if( flg2_data & SGPE_HCODE_ERR_INJ_BIT )
+    if(in32(OCB_OCCFLG2) & BIT32(OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ))
     {
         PK_TRACE_ERR("SGPE STOP EXIT ERROR INJECT TRAP");
         PK_PANIC(SGPE_STOP_EXIT_TRAP_INJECT);
@@ -924,10 +921,7 @@ p9_sgpe_stop_exit()
                     cme_flags |= BIT32(CME_FLAGS_QMGR_MASTER);
                 }
 
-                if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
-                {
-                    cme_flags |= BIT32(CME_FLAGS_WAIT_ON_PSTATE_START);
-                }
+
 
 #if NIMBUS_DD_LEVEL != 10
 
@@ -966,6 +960,11 @@ p9_sgpe_stop_exit()
 
 #endif
 
+                        if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
+                        {
+                            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CSAR_OR, (ec_index + cloop)),
+                                        BIT64(CPPM_CSAR_ENABLE_PSTATE_REGISTRATION_INTERLOCK));
+                        }
                     }
                 }
 

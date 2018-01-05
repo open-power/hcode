@@ -79,6 +79,17 @@ void p9_sgpe_stop_cme_scominit(uint32_t quad, uint32_t cme, uint32_t cme_flags)
     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_CSCR_CLR,  quad, cme), BITS64(47, 13));
     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_CSCR_OR,   quad, cme), BIT64(1));
 
+    //CME_LFIR[0,1,2,3,4] should generate CME PCB Error Packet(type5 owned by PGPE)
+    //(1,0,0)(Act0,Act1,Mask) = CME PCB Error Packet
+    PK_TRACE("Setup CME FIR Act0/Act1/Mask for CME_LFIR[0,1,2,3,4]")
+    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LFIRACT0, quad, cme), scom_data.value);
+    scom_data.value |= BITS64(0, 5);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LFIRACT0, quad, cme), scom_data.value);
+    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LFIRACT1, quad, cme), scom_data.value);
+    scom_data.value &= ~BITS64(0, 5);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LFIRACT1, quad, cme), scom_data.value);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LFIRMASK_AND, quad, cme), ~BITS64(0, 5));
+
     PK_TRACE("Allow the CME to access the PCB Slave NET_CTRL registers");
 
     // check core partial good
@@ -501,10 +512,7 @@ p9_sgpe_stop_init()
                     cme_flags |= BIT32(CME_FLAGS_QMGR_MASTER);
                 }
 
-                if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
-                {
-                    cme_flags  |= BIT32(CME_FLAGS_WAIT_ON_PSTATE_START);
-                }
+
 
                 PK_TRACE_DBG("CME%d%d_FLAGS :%x", qloop, xloop, cme_flags);
                 p9_sgpe_stop_cme_scominit(qloop, xloop, cme_flags);
@@ -551,6 +559,11 @@ p9_sgpe_stop_init()
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB1, cindex), 0);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), 0);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB3, cindex), 0);
+
+                    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
+                    {
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CSAR_OR, cindex),  BIT64(CPPM_CSAR_ENABLE_PSTATE_REGISTRATION_INTERLOCK));
+                    }
 
                     if ((G_sgpe_stop_record.state[qloop].cme_flags &  cmask) &&
                         (G_sgpe_stop_record.state[qloop].cme_flags & (cmask << 4)))
@@ -622,13 +635,13 @@ p9_sgpe_stop_init()
     out32(OCB_OISR0_CLR, (BIT32(8) | BIT32(16)));
     out32(OCB_OIMR0_CLR, (BIT32(8) | BIT32(16)));
 
-    PK_TRACE_INF("Setup: Clear and Unmask Type 2,3,5,6 and ipi_lo_3 interrupts");
-    out32(OCB_OISR1_CLR, (BITS32(15, 2) | BITS32(18, 2) | BIT32(29)));
+    PK_TRACE_INF("Setup: Clear and Unmask Type 0, 2,3,6 and ipi_lo_3 interrupts");
+    out32(OCB_OISR1_CLR, (BIT32(13) | BITS32(15, 2) | BIT32(19) | BIT32(29)));
+    out32(OCB_OPITNPRA_CLR(0), BITS32(0, 24));
     out32(OCB_OPITNPRA_CLR(2), BITS32(0, 24));
     out32(OCB_OPITNPRA_CLR(3), BITS32(0, 24));
-    out32(OCB_OPITNPRA_CLR(5), BITS32(0, 24));
     out32(OCB_OPIT6PRB_CLR,    BITS32(0, 6));
-    out32(OCB_OIMR1_CLR, (BITS32(15, 2) | BITS32(18, 2) | BIT32(29)));
+    out32(OCB_OIMR1_CLR, BIT32(13) | (BITS32(15, 2) | BIT32(19) | BIT32(29)));
 
     //--------------------------------------------------------------------------
     // SGPE Init Completed

@@ -76,12 +76,16 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         //Mask all external interrupts. Timers are still enabled
         pk_irq_sub_critical_enter(&ctx);
         p9_pgpe_pstate_start(PSTATE_START_OCC_FLAG);
-        G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.globalPSComputed << 16) | (in32(
+        G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.psComputed.fields.glb << 16) | (in32(
                                           OCB_QCSR) >> 16);
         p9_pgpe_optrace(PRC_START_STOP);
         pk_irq_sub_critical_exit(&ctx);
     }
 
+
+    // Set OCC Scratch2[PGPE_ACTIVE] and start updating beacon,
+    // so that external world knows that PGPE is UP
+    G_pgpe_pstate_record.updatePGPEBeacon = 1;
     occScr2 = in32(OCB_OCCS2);
     occScr2 |= BIT32(PGPE_ACTIVE);
     out32(OCB_OCCS2, occScr2);
@@ -131,8 +135,6 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                 pk_irq_sub_critical_enter(&ctx);
 
                 //We check that pstates are active after entering critical section
-                //It's possible that some IPC or even FIT before we set actuating=1
-                //has updated the PstatesState to a !PSTATE_ACTIVE state
                 if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
                 {
                     p9_pgpe_pstate_do_step();
@@ -183,10 +185,10 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                         //Make sure that minPS is not below(higher value/low freq-volt) than safePstate
                         minPS = (minPS > G_pgpe_pstate_record.safePstate) ? G_pgpe_pstate_record.safePstate : minPS;
 
-                        if (G_pgpe_pstate_record.quadPSCurr[q] > G_pgpe_pstate_record.psClipMax[q] ||
-                            G_pgpe_pstate_record.quadPSCurr[q] <  minPS ||
-                            G_pgpe_pstate_record.globalPSCurr > G_pgpe_pstate_record.psClipMax[q] ||
-                            G_pgpe_pstate_record.globalPSCurr <  minPS)
+                        if (G_pgpe_pstate_record.psCurr.fields.quads[q] > G_pgpe_pstate_record.psClipMax[q] ||
+                            G_pgpe_pstate_record.psCurr.fields.quads[q] <  minPS ||
+                            G_pgpe_pstate_record.psCurr.fields.glb > G_pgpe_pstate_record.psClipMax[q] ||
+                            G_pgpe_pstate_record.psCurr.fields.glb <  minPS)
 
                         {
                             inRange = 0;

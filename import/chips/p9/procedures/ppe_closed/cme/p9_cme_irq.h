@@ -51,52 +51,55 @@
 // Priority Levels
 #define IDX_PRTY_LVL_HIPRTY         0
 #define IDX_PRTY_LVL_DB3            1
-#define IDX_PRTY_LVL_DB2            2
-#define IDX_PRTY_LVL_SPWU           3
-#define IDX_PRTY_LVL_RGWU           4
-#define IDX_PRTY_LVL_PCWU           5
-#define IDX_PRTY_LVL_PM_ACTIVE      6
-#define IDX_PRTY_LVL_DB1            7
-#define IDX_PRTY_LVL_DB0            8
-#define IDX_PRTY_LVL_INTERCME_IN0   9
-#define IDX_PRTY_LVL_PMCR           10
-#define IDX_PRTY_LVL_COMM_RECVD     11
-#define IDX_PRTY_LVL_DISABLED       12
+#define IDX_PRTY_LVL_HB_LOSS        2
+#define IDX_PRTY_LVL_DB2            3
+#define IDX_PRTY_LVL_SPWU           4
+#define IDX_PRTY_LVL_RGWU           5
+#define IDX_PRTY_LVL_PCWU           6
+#define IDX_PRTY_LVL_PM_ACTIVE      7
+#define IDX_PRTY_LVL_DB1            8
+#define IDX_PRTY_LVL_DB0            9
+#define IDX_PRTY_LVL_INTERCME_IN0   10
+#define IDX_PRTY_LVL_PMCR           11
+#define IDX_PRTY_LVL_COMM_RECVD     12
+#define IDX_PRTY_LVL_DISABLED       13
 #define IDX_PRTY_VEC                0
 #define IDX_MASK_VEC                1
-#define NUM_EXT_IRQ_PRTY_LEVELS     13
+#define NUM_EXT_IRQ_PRTY_LEVELS     14
 
 // Group0: Non-task hi-prty IRQs
-#define IRQ_VEC_PRTY0_CME   (uint64_t)(0xFE00000000000000)
+#define IRQ_VEC_PRTY0_CME   (uint64_t)(0xF600000000000000)
 // Group1: DB3
 #define IRQ_VEC_PRTY1_CME   (uint64_t)(0x0030000000000000)
-// Group2: DB2
-#define IRQ_VEC_PRTY2_CME   (uint64_t)(0x0000300000000000)
-// Group3: SPWU
-#define IRQ_VEC_PRTY3_CME   (uint64_t)(0x0003000000000000)
-#define IRQ_SPWU            IRQ_VEC_PRTY3_CME
-// Group4: RGWU
-#define IRQ_VEC_PRTY4_CME   (uint64_t)(0x0000C00000000000)
-#define IRQ_RGWU            IRQ_VEC_PRTY4_CME
-// Group5: PCWU
-#define IRQ_VEC_PRTY5_CME   (uint64_t)(0x000C000000000000)
-#define IRQ_PCWU            IRQ_VEC_PRTY5_CME
-// Group6: PM_ACTIVE
-#define IRQ_VEC_PRTY6_CME   (uint64_t)(0x00000C0000000000)
-#define IRQ_PMACT           IRQ_VEC_PRTY6_CME
-// Group7: DB1
-#define IRQ_VEC_PRTY7_CME   (uint64_t)(0x0000000000C00000)
-#define IRQ_DB1             IRQ_VEC_PRTY7_CME
-// Group8: DB0
-#define IRQ_VEC_PRTY8_CME   (uint64_t)(0x000000000C000000)
-// Group9: INTERCME_IN0
-#define IRQ_VEC_PRTY9_CME   (uint64_t)(0x0100000000000000)
-// Group10: PMCR
-#define IRQ_VEC_PRTY10_CME  (uint64_t)(0x0000000030000000)
-// Group11: COMM_RECVD
-#define IRQ_VEC_PRTY11_CME  (uint64_t)(0x0000000400000000)
-// Group12: We should never detect these
-#define IRQ_VEC_PRTY12_CME  (uint64_t)(0x00C003FBC33FFFFF)
+// Group2: HB LOSS
+#define IRQ_VEC_PRTY2_CME   (uint64_t)(0x0800000000000000)
+// Group3: DB2
+#define IRQ_VEC_PRTY3_CME   (uint64_t)(0x0000300000000000)
+// Group4: SPWU
+#define IRQ_VEC_PRTY4_CME   (uint64_t)(0x0003000000000000)
+#define IRQ_SPWU            IRQ_VEC_PRTY4_CME
+// Group5: RGWU
+#define IRQ_VEC_PRTY5_CME   (uint64_t)(0x0000C00000000000)
+#define IRQ_RGWU            IRQ_VEC_PRTY5_CME
+// Group6: PCWU
+#define IRQ_VEC_PRTY6_CME   (uint64_t)(0x000C000000000000)
+#define IRQ_PCWU            IRQ_VEC_PRTY6_CME
+// Group7: PM_ACTIVE
+#define IRQ_VEC_PRTY7_CME   (uint64_t)(0x00000C0000000000)
+#define IRQ_PMACT           IRQ_VEC_PRTY7_CME
+// Group8: DB1
+#define IRQ_VEC_PRTY8_CME   (uint64_t)(0x0000000000C00000)
+#define IRQ_DB1             IRQ_VEC_PRTY8_CME
+// Group9: DB0
+#define IRQ_VEC_PRTY9_CME   (uint64_t)(0x000000000C000000)
+// Group10: INTERCME_IN0
+#define IRQ_VEC_PRTY10_CME  (uint64_t)(0x0100000000000000)
+// Group11: PMCR
+#define IRQ_VEC_PRTY11_CME  (uint64_t)(0x0000000030000000)
+// Group12: COMM_RECVD
+#define IRQ_VEC_PRTY12_CME  (uint64_t)(0x0000000400000000)
+// Group13: We should never detect these
+#define IRQ_VEC_PRTY13_CME  (uint64_t)(0x00C003FBC33FFFFF)
 
 // Combined vector for all Stop IRQs that need to be manually
 // masked during STOP state processing Do not include DB2 (always unmasked)
@@ -121,7 +124,8 @@
                                   IRQ_VEC_PRTY9_CME | \
                                   IRQ_VEC_PRTY10_CME | \
                                   IRQ_VEC_PRTY11_CME | \
-                                  IRQ_VEC_PRTY12_CME )
+                                  IRQ_VEC_PRTY12_CME | \
+                                  IRQ_VEC_PRTY13_CME )
 
 #define IRQ_VEC_PRTY_XOR_CHECK   (IRQ_VEC_PRTY0_CME ^ \
                                   IRQ_VEC_PRTY1_CME ^ \
@@ -135,4 +139,5 @@
                                   IRQ_VEC_PRTY9_CME ^ \
                                   IRQ_VEC_PRTY10_CME ^ \
                                   IRQ_VEC_PRTY11_CME ^ \
-                                  IRQ_VEC_PRTY12_CME )
+                                  IRQ_VEC_PRTY12_CME ^ \
+                                  IRQ_VEC_PRTY13_CME )

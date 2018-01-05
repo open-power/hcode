@@ -75,7 +75,7 @@ extern const uint64_t ext_irq_vectors_gpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 
 #define IRQ_VEC_PRTY0_GPE2   (uint64_t)(0x0000000000000000) // Non-task hi-prty IRQs
 // Shared between all instances
-#define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x2080000000000000) // Task1-OCB_ERROR(HeartBeat Loss)/GPE3_HALT
+#define IRQ_VEC_PRTY1_GPE2  (uint64_t)(0x2080080000002000) // Task1-OCB_ERROR(HeartBeat Loss)/GPE3_ERROR/PCB_TYPE5/PVREF
 #define IRQ_VEC_PRTY2_GPE2  (uint64_t)(0x0001000000000000) // Task2-CHECK_STOP_GPE2
 #define IRQ_VEC_PRTY3_GPE2  (uint64_t)(0x0000001000000000) // Task3-IPI2-HI(IPC from OCC/SGPE)
 #define IRQ_VEC_PRTY4_GPE2  (uint64_t)(0x0000000000004000) // Task4-PCB_INTR_TYPE4(PCB Type4 from CME)
@@ -127,7 +127,7 @@ pk_irq_vec_restore( PkMachineContext* context)
         // Restore the prty level tracker to the task that was interrupted, if any.
         g_current_prty_level = g_oimr_stack[g_oimr_stack_ctr];
         g_oimr_stack_ctr--;
-        PK_TRACE_DBG("IRQ RS: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
+        PK_TRACE_INF("IRQ RS: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
     }
     else
     {
@@ -139,7 +139,9 @@ pk_irq_vec_restore( PkMachineContext* context)
     pk_critical_section_exit(context);
 }
 
-//This masks all UIH external interrupts, but leaves timer interrupts enableda
+//This masks all UIH external interrupts(EXCEPT for Severe Errors in the Power
+//Management Engines, Chip Voltage Reference, or System Checkstop), but leaves
+//timer interrupts enableda
 //
 //Note: Care must be taken to call equal number of pk_irq_sub_critical_enter and
 //pk_irq_sub_critical_exit calls
@@ -152,7 +154,7 @@ inline void pk_irq_sub_critical_enter(PkMachineContext* ctx)
 {
 
     pk_critical_section_enter(ctx);
-    pk_irq_save_and_set_mask(0);
+    pk_irq_save_and_set_mask(3);
     pk_critical_section_exit(ctx);
 }
 

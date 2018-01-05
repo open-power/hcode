@@ -271,7 +271,7 @@ void
 p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
 {
     G_sgpe_stop_record.wof.suspend_cmd = cmd;
-    g_oimr_override |= (BITS64(47, 2) | BITS64(50, 2));
+    g_oimr_override |= (BIT64(45) | BITS64(47, 2) | BIT64(51));
 
     ipc_async_cmd_t* async_cmd =
         (ipc_async_cmd_t*)(G_sgpe_stop_record.wof.suspend_cmd);

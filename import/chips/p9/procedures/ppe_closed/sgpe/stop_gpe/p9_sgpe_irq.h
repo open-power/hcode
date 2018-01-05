@@ -51,7 +51,7 @@
 #define IDX_PRTY_LVL_IPI3_HIGH      1
 #define IDX_PRTY_LVL_PIG_TYPE2      2
 #define IDX_PRTY_LVL_PIG_TYPE6      3
-#define IDX_PRTY_LVL_PIG_TYPE5      4
+#define IDX_PRTY_LVL_PIG_TYPE0      4
 #define IDX_PRTY_LVL_PIG_TYPE3      5
 #define IDX_PRTY_LVL_IPI3_LOW       6
 #define IDX_PRTY_LVL_DISABLED       7
@@ -68,8 +68,8 @@ extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 #define IRQ_VEC_PRTY2_SGPE   (uint64_t)(0x0000000000010000)
 // Group3: pig_type6
 #define IRQ_VEC_PRTY3_SGPE   (uint64_t)(0x0000000000001000)
-// Group4: pig_type5
-#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0x0000000000002000)
+// Group4: pig_type0
+#define IRQ_VEC_PRTY4_SGPE   (uint64_t)(0x0000000000040000)
 // Group5: pig_type3
 #define IRQ_VEC_PRTY5_SGPE   (uint64_t)(0x0000000000008000)
 // Group6: ipi3_low
@@ -77,7 +77,7 @@ extern const uint64_t ext_irq_vectors_sgpe[NUM_EXT_IRQ_PRTY_LEVELS][2];
 // Group7: We should never detect these
 #define OVERRIDE_OTHER_ENGINES_IRQS 0
 #if OVERRIDE_OTHER_ENGINES_IRQS == 1
-    #define IRQ_VEC_PRTY7_SGPE  (uint64_t)(0xFEFF7FF7FFFE4FFB) // Other instances' IRQs
+    #define IRQ_VEC_PRTY7_SGPE  (uint64_t)(0xFEFF7FF7FFFA6FFB) // Other instances' IRQs
 #else
     #define IRQ_VEC_PRTY7_SGPE  (uint64_t)(0x0000000000000000) // Other instances' IRQs
 #endif

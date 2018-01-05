@@ -31,9 +31,13 @@
 #include "pstate_pgpe_occ_api.h"
 #include "wof_sgpe_pgpe_api.h"
 #include "p9_pgpe_header.h"
+#include "p9_stop_recovery_trigger.h"
 
 
-#define VRATIO_ROUNDING_ADJUST  24        //VFRT tables are built assuming we truncate
+//VFRT tables are built assuming we truncate, and 24 is needed to adjust for the
+//intermediate value truncation in converting Vratio to an Vindex, which involves
+//a *24(multiply by 24) conversion for a max error of -24(negative 24)
+#define VRATIO_ROUNDING_ADJUST  24
 #define MAX_VRATIO              65535    // (2^16) - 1
 
 enum IPC_PEND_TBL
@@ -62,14 +66,14 @@ enum QUAD_BIT_MASK
 
 enum PSTATE_STATUS
 {
-    PSTATE_INIT                                 =    0, //PGPE Booted
-    PSTATE_ACTIVE                               =    1, //Pstates are active
-    PSTATE_STOP_PENDING                         =    2, //Pstate Stop Pending
-    PSTATE_SAFE_MODE_PENDING                    =    3, //Safe Mode Pending
-    PSTATE_SAFE_MODE                            =    4, //Safe Mode
-    PSTATE_STOPPED                              =    5, //Pstates are stopped
-    PSTATE_PM_SUSPEND_PENDING                   =    6, //PM Complex Suspend Pending
-    PSTATE_PM_SUSPENDED                         =    7  //PM Complex Suspend
+    PSTATE_INIT                                 =    0x00000001, //PGPE Booted
+    PSTATE_ACTIVE                               =    0x00000002, //Pstates are active
+    PSTATE_STOP_PENDING                         =    0x00000004, //Pstate Stop Pending
+    PSTATE_SAFE_MODE_PENDING                    =    0x00000008, //Safe Mode Pending
+    PSTATE_SAFE_MODE                            =    0x00000010, //Safe Mode
+    PSTATE_STOPPED                              =    0x00000020, //Pstates are stopped
+    PSTATE_PM_SUSPEND_PENDING                   =    0x00000040, //PM Complex Suspend Pending
+    PSTATE_PM_SUSPENDED                         =    0x00000080, //PM Complex Suspend
 };
 
 enum WOF_STATUS
@@ -79,12 +83,22 @@ enum WOF_STATUS
     WOF_ENABLED                                 =    2 //Pstates are active
 };
 
-enum PSTATE_DB0
+enum SAFE_MODE_FAULT_INDEX
 {
-    PGPE_DB0_UNICAST        = 0,
-    PGPE_DB0_MULTICAST      = 1,
-    PGPE_DB0_ACK_WAIT_CME   = 0,
-    PGPE_DB0_ACK_SKIP       = 1
+    SAFE_MODE_FAULT_OCC     = 0,
+    SAFE_MODE_FAULT_SGPE    = 1,
+    SAFE_MODE_FAULT_CME     = 2,
+    SAFE_MODE_FAULT_PVREF   = 3
+};
+
+enum PSTATE_DB
+{
+    PGPE_DB_ACK_WAIT_CME        = 0,
+    PGPE_DB_ACK_SKIP            = 1,
+    PGPE_DB0_TYPE_UNICAST       = 0,
+    PGPE_DB0_TYPE_MULTICAST     = 1,
+    PGPE_DB3_SKIP_CHECK_NACKS   = 0,
+    PGPE_DB3_CHECK_NACKS        = 1
 };
 
 enum SEMAPHORE_PROCESS_POST_SRC
@@ -122,7 +136,22 @@ typedef struct ipc_req
     uint8_t pad[2];
 } ipc_req_t;
 
-/// PGPE PState
+
+typedef union sys_ps
+{
+    uint64_t value;
+    struct
+    {
+        uint8_t pad;
+        uint8_t glb;
+        uint8_t quads[6];
+    } fields;
+} sys_ps_t;
+
+//
+// PGPE PState
+//
+// Structure for storing internal PGPE state
 typedef struct
 {
     uint8_t pstatesStatus;                  //1
@@ -134,18 +163,10 @@ typedef struct
     uint8_t psClipMax[MAX_QUADS],           //12 higher numbered(min freq and volt)
             psClipMin[MAX_QUADS];           //18 lower numbered(max freq and volt)
     uint8_t coresPSRequest[MAX_CORES];      //42 per core requested pstate
-    uint8_t quadPSComputed[MAX_QUADS];      //48 computed Pstate per quad
-    uint8_t globalPSComputed;               //49 computed global Pstate
-    uint8_t pad1;                           //50
-    uint8_t quadPSTarget[MAX_QUADS];        //56 target Pstate per quad
-    uint8_t globalPSTarget;                 //57 target global Pstate
-    uint8_t pad2;                           //58
-    uint8_t quadPSCurr[MAX_QUADS];          //64 target Pstate per quad
-    uint8_t globalPSCurr;                   //65 target global Pstate
-    uint8_t pad3;                           //66
-    uint8_t quadPSNext[MAX_QUADS];          //72 target Pstate per quad
-    uint8_t globalPSNext;                   //73
-    uint8_t pad4[3];                        //76
+    sys_ps_t psComputed;                    //48
+    sys_ps_t psTarget;                      //56
+    sys_ps_t psCurr;                        //64
+    sys_ps_t psNext;                        //72
     uint32_t eVidCurr, eVidNext;            //84
     ipc_req_t ipcPendTbl[MAX_IPC_PEND_TBL_ENTRIES]; //156(9entries*8bytes)
     HomerVFRTLayout_t* pVFRT; //160
@@ -162,42 +183,79 @@ typedef struct
     uint32_t pendingPminClipBcast, pendingPmaxClipBcast;//252,256
     uint32_t semProcessPosted, semProcessSrc;//260,264
     uint32_t quadsNACKed, cntNACKs, quadsCntNACKs[MAX_QUADS];//268,272,296
+    uint32_t errorQuads;
+    uint32_t updatePGPEBeacon;
+    uint8_t severeFault[4];
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
+
+typedef struct db0_parms
+{
+    uint64_t db0val;
+    uint32_t type;
+    uint32_t targetCores;
+    uint32_t waitForAcks;
+    uint32_t expectedAckFrom;
+    uint32_t expectedAckValue;
+} db0_parms_t;
+
+typedef struct db3_parms
+{
+    uint64_t db3val;
+    uint64_t db0val;
+    uint32_t targetCores;
+    uint32_t waitForAcks;
+    uint32_t expectedAckFrom;
+    uint32_t expectedAckValue;
+    uint32_t checkNACKs;
+} db3_parms_t;
 
 //
 //Functions called by threads
 //
+//PGPE Boot/Iniitilization/Common
 void p9_pgpe_pstate_init();
 void p9_pgpe_pstate_setup_process_pcb_type4();
+void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg);
+
+//Pstate Calculation and Status Updates
 void p9_pgpe_pstate_do_auction();
 void p9_pgpe_pstate_apply_clips();
 void p9_pgpe_pstate_calc_wof();
-void p9_pgpe_pstate_updt_actual_quad(uint32_t q);
+void p9_pgpe_pstate_updt_actual_quad();
 void p9_pgpe_pstate_update_wof_state();
-void p9_pgpe_pstate_freq_updt();
-void p9_pgpe_send_db0(uint64_t db0, uint32_t coresVector, uint32_t type, uint32_t process_ack, uint32_t ackVector);
-void p9_pgpe_send_db3_high_priority_pstate(uint32_t coresVector, uint32_t ackVector);
-void p9_pgpe_wait_cme_db_ack(uint32_t coresVector);
-void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
-void p9_pgpe_wait_cme_db_ack(uint32_t coresVector);
+
+//CME Communication
+void p9_pgpe_send_db0(db0_parms_t p);
+void p9_pgpe_send_db3(db3_parms_t p);
+void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect, uint32_t expectedAck);
+void p9_pgpe_pstate_send_pmsr_updt(uint32_t command, uint32_t targetCoresVector, uint32_t quadsAckVector);
+
+//OCC IPC Processing
 void p9_pgpe_pstate_start(uint32_t pstate_start_origin);
 void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner);
 void p9_pgpe_pstate_stop();
 void p9_pgpe_pstate_clip_bcast(uint32_t clip_type);
+void p9_pgpe_pstate_wof_ctrl(uint32_t action);
+
+//SGPE Comminucation/Processing
 void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
-void p9_pgpe_pstate_wof_ctrl(uint32_t action);
+void p9_pgpe_pstate_send_suspend_stop();
 void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t ctrl);
+
+//Error Handling
 void p9_pgpe_pstate_apply_safe_clips();
 void p9_pgpe_pstate_safe_mode();
-void p9_pgpe_pstate_send_suspend_stop();
 void p9_pgpe_pstate_pm_complex_suspend();
-void p9_pgpe_pstate_pmsr_updt(uint32_t command, uint32_t targetCoresVector, uint32_t quadsAckVector);
+void p9_pgpe_pstate_sgpe_fault();
+void p9_pgpe_pstate_cme_fault();
+void p9_pgpe_pstate_pvref_fault();
+
+//Actuation
 int32_t p9_pgpe_pstate_at_target();
 void p9_pgpe_pstate_do_step();
 void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid);
-void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg);
 void p9_pgpe_pstate_write_core_throttle(uint32_t throttleData, uint32_t enable_retry);
 #endif //

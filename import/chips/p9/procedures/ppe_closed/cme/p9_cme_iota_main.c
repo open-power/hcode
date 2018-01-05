@@ -31,7 +31,7 @@
 // CME Pstate Header and Structure
 #include "p9_cme.h"
 
-CmeRecord G_cme_record = {0, 0};
+CmeRecord G_cme_record = {0, 0, 0};
 
 // CME Pstate Header and Structure
 #include "p9_cme_pstate.h"
@@ -49,6 +49,17 @@ CmeFitRecord G_cme_fit_record = {0, 0, 0, 0, 0xFFFFFFFF, 0};
 
 void fit_handler()
 {
+    data64_t scom_data;
+    scom_data.value = 0;
+
+    CME_GETSCOM_OR(CPPM_CSAR, CME_MASK_BC, scom_data.value);
+
+    if(BIT32(CPPM_CSAR_FIT_HCODE_ERROR_INJECT) & scom_data.words.upper)
+    {
+        PKTRACE("CME FIT ERROR INJECT TRAP");
+        PK_PANIC(CME_STOP_ENTRY_TRAP_INJECT);
+    }
+
 
     mtspr(SPRN_TSR, TSR_FIS);
     PK_TRACE("FIT Timer Handler");
@@ -78,12 +89,10 @@ void p9_cme_hipri_ext_handler(uint32_t task_idx)
 
     PK_TRACE_ERR("CME HIGHEST PRIORITY EXCEPTION DETECTED. EISR(0:7) = %02x", eisr_subset >> 24 );
 
-
-    // report and clear only the first one found
-    // multiples of this priority will cause repeated interrupts until they are all cleared
     uint32_t bitnum = cntlz32(eisr_subset);
 
     if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_PM_DEBUG_HALT_ENABLE))
+    {
         switch (bitnum)
         {
             case 0:
@@ -104,14 +113,17 @@ void p9_cme_hipri_ext_handler(uint32_t task_idx)
             default:
                 break;
         }
+    }
 
-    uint32_t eisr_mask = (1 << (31 - bitnum));
-    out32(CME_LCL_EISR_CLR, eisr_mask);
+    //if debug halt is NOT enabled, clear the ones reported in the trace
+    //above and return
+    out32(CME_LCL_EISR_CLR, eisr_subset);
 }
 
 IOTA_BEGIN_TASK_TABLE
 IOTA_TASK(p9_cme_hipri_ext_handler),  // bits 0-3,5
           IOTA_TASK(p9_cme_pstate_db3_handler), // bits 10,11
+          IOTA_TASK(p9_cme_pgpe_hb_loss_handler), //bit 4
           IOTA_TASK(p9_cme_stop_db2_handler),   // bits 18,19
           IOTA_TASK(p9_cme_stop_spwu_handler),  // bits 14,15
           IOTA_TASK(p9_cme_stop_rgwu_handler),  // bits 16,17

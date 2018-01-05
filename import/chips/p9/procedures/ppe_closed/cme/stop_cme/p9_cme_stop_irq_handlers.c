@@ -25,6 +25,8 @@
 
 #include "p9_cme_stop.h"
 #include "p9_cme_stop_enter_marks.h"
+#include "qppm_register_addresses.h"
+#include "qppm_firmware_registers.h"
 #include "p9_cme_irq.h"
 #include "p9_cme_pstate.h"
 
@@ -171,6 +173,13 @@ p9_cme_stop_spwu_handler(void)
                         // Core is now out of spwu, allow pm_active
                         // block entry mode is handled via eimr override
                         G_cme_stop_record.core_in_spwu &= ~core_mask;
+
+                        // if in block entry mode, do not release the mask
+                        if (!(G_cme_stop_record.core_blockey & core_mask))
+                        {
+                            // use 32 bit UPPER mask to prevent compiler from doing 64-bit shifting
+                            g_eimr_override &=  ((uint64_t)~((IRQ_VEC_STOP_C0_UPPER) >> core_index)) << 32 | 0xFFFFFFFF;
+                        }
                     }
                 }
             }
@@ -307,8 +316,9 @@ p9_cme_stop_db2_handler(void)
 #endif
 #endif
                     // Finish handshake with SGPE for Stop11 via PIG
-                    pig.fields.req_intr_type    = PIG_TYPE5;
-                    pig.fields.req_intr_payload = TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11;
+                    pig.fields.req_intr_type    = PIG_TYPE0;
+                    pig.fields.req_intr_payload = TYPE0_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11;
+                    //CME_PUTSCOM_NOP(PPM_PIG, core_mask, pig.value);
                     send_pig_packet(pig.value, core_mask);
                     break;
 
@@ -335,8 +345,9 @@ p9_cme_stop_db2_handler(void)
 #endif
 #endif
                     // Finish handshake with SGPE for Stop11 via PIG
-                    pig.fields.req_intr_type    = PIG_TYPE5;
-                    pig.fields.req_intr_payload = TYPE5_PAYLOAD_EXIT_RCLK;
+                    pig.fields.req_intr_type    = PIG_TYPE0;
+                    pig.fields.req_intr_payload = TYPE0_PAYLOAD_EXIT_RCLK;
+                    //CME_PUTSCOM_NOP(PPM_PIG, core_mask, pig.value);
                     send_pig_packet(pig.value, core_mask);
                     break;
 
@@ -349,8 +360,6 @@ p9_cme_stop_db2_handler(void)
     // re-evaluate stop entry & exit enables
     p9_cme_stop_eval_eimr_override();
 }
-
-
 
 void
 p9_cme_stop_db1_handler(void)

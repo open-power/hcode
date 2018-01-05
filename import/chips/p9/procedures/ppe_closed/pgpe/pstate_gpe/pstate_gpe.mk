@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -81,7 +81,7 @@ $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 	| xargs -i printf "%d" 0x{})
 
 # Options for PK_TRACE
-$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=2
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=1
 $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_TIMER_OUTPUT=0
 
 

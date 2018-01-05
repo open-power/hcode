@@ -75,8 +75,8 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
 {
     int               rc = 0;
     uint64_t          data_tmp;
-
     PkMachineContext ctx __attribute__((unused));
+
     pk_critical_section_enter(&ctx);
 
     // First make sure no interrupt request is currently granted
@@ -86,6 +86,8 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
         CME_GETSCOM(PPM_PIG, coreMask, data_tmp);
     }
     while ((((ppm_pig_t)data_tmp).fields.pending_source & 0x1));
+
+    PK_TRACE_INF("send pig core=0x%x, data=0x%08x%08x", coreMask, data >> 32, data);
 
     // Send PIG packet
     CME_PUTSCOM(PPM_PIG, coreMask, data);
@@ -97,10 +99,33 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
     return rc;
 }
 
+void send_ack_to_pgpe(uint32_t ack)
+{
+    ppm_pig_t ppmPigData;
+    ppmPigData.value = 0;
+    ppmPigData.fields.req_intr_type = 4;
+    ppmPigData.fields.req_intr_payload = ack;
+    send_pig_packet(ppmPigData.value, G_cme_pstate_record.firstGoodCoreMask);
+}
+
 uint32_t poll_dpll_stat()
 {
     data64_t data;
     uint32_t rc = 0;
+
+    // DPLL Modes
+    //                     enable_fmin    enable_fmax   enable_jump
+    // DPLL Mode  2             0              0             0
+    // DPLL Mode  3             0              0             1
+    // DPLL Mode  4             X              1             0
+    // DPLL Mode  4             1              X             0
+    // DPLL Mode  3.5           0              1             1
+    // DPLL Mode  5             1              X             1
+    // TODO Future Attributes
+    // DROOP_PROTECT          -> DPLL Mode 3
+    // DROOP_PROTECT_OVERVOLT -> DPLL Mode 3.5
+    // DYNAMIC                -> DPLL Mode 4
+    // DYNAMIC_PROTECT        -> DPLL Mode 5
 
     // DPLL Mode 2
     if(!(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE)))
@@ -572,29 +597,34 @@ inline uint32_t update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region)
         PkMachineContext ctx __attribute__((unused));
         pk_critical_section_enter(&ctx);
 
-        qppm_dpll_freq_t saved_dpll_val;
-        qppm_dpll_freq_t reduced_dpll_val;
-        // The frequency needs to be reduced by the N_L amount, this depends on
-        // if the frequency has already been changed (if raising ps, then the
-        // freq has already been dropped and the N_L value is based on that, ie. "new")
-        uint32_t adj_n_l = (pstate >= G_cme_pstate_record.quadPstate)
-                           ? (new_jump_values & BITS32(0, 4)) >> 28
-                           : (scom_data.words.lower & BITS32(0, 4)) >> 28;
-        data64_t poll_data;
-        // Read the current freq controls
-        nonatomic_ippm_read(QPPM_DPLL_FREQ, &saved_dpll_val.value);
-        // Reduce freq by N_L (in 32nds)
-        reduced_dpll_val.value = 0;
-        reduced_dpll_val.fields.fmult = mulu16(saved_dpll_val.fields.fmult
-                                               , (32 - adj_n_l)) >> 5;
-        reduced_dpll_val.fields.fmax = reduced_dpll_val.fields.fmult;
-        reduced_dpll_val.fields.fmin = reduced_dpll_val.fields.fmult;
-        // Write the reduced frequency
-        nonatomic_ippm_write(QPPM_DPLL_FREQ, reduced_dpll_val.value);
-        rc = poll_dpll_stat();
-
-        if (!rc)
+        do
         {
+            qppm_dpll_freq_t saved_dpll_val;
+            qppm_dpll_freq_t reduced_dpll_val;
+            // The frequency needs to be reduced by the N_L amount, this depends on
+            // if the frequency has already been changed (if raising ps, then the
+            // freq has already been dropped and the N_L value is based on that, ie. "new")
+            uint32_t adj_n_l = (pstate >= G_cme_pstate_record.quadPstate)
+                               ? (new_jump_values & BITS32(0, 4)) >> 28
+                               : (scom_data.words.lower & BITS32(0, 4)) >> 28;
+            data64_t poll_data;
+            // Read the current freq controls
+            nonatomic_ippm_read(QPPM_DPLL_FREQ, &saved_dpll_val.value);
+            // Reduce freq by N_L (in 32nds)
+            reduced_dpll_val.value = 0;
+            reduced_dpll_val.fields.fmult = (saved_dpll_val.fields.fmult
+                                             * (32 - adj_n_l)) >> 5;
+            reduced_dpll_val.fields.fmax = reduced_dpll_val.fields.fmult;
+            reduced_dpll_val.fields.fmin = reduced_dpll_val.fields.fmult;
+            // Write the reduced frequency
+            nonatomic_ippm_write(QPPM_DPLL_FREQ, reduced_dpll_val.value);
+            rc = poll_dpll_stat();
+
+            if (rc)
+            {
+                break; //If rc, then skip to the bottom of the function
+            }
+
             // Clear jump enable (drop to Mode 2)
             nonatomic_ippm_write(QPPM_DPLL_CTRL_CLR, BIT64(1));
             // Poll for lock
@@ -622,8 +652,14 @@ inline uint32_t update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region)
                 // Restore frequency
                 nonatomic_ippm_write(QPPM_DPLL_FREQ, saved_dpll_val.value);
                 rc = poll_dpll_stat();
+
+                if (rc)
+                {
+                    break; //If rc, then skip to the bottom of the function
+                }
             }
         }
+        while(0);
 
         pk_critical_section_exit(&ctx);
     }
@@ -836,6 +872,7 @@ void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t next_idx, uint32_t curr
 void p9_cme_pstate_pmsr_updt()
 {
     uint64_t pmsrData;
+    uint32_t cme_flags = in32(CME_LCL_FLAGS);
 
     //Note: PMSR[58/UPDATE_IN_PROGRESS] is always cleared here
     pmsrData  = ((uint64_t)G_cme_pstate_record.globalPstate) << 56;
@@ -852,13 +889,13 @@ void p9_cme_pstate_pmsr_updt()
     }
 
     //PMSR[33] is SAFE_MODE bit
-    if(G_cme_pstate_record.safeMode)
+    if(cme_flags & BIT32(CME_FLAGS_SAFE_MODE))
     {
         pmsrData |= BIT64(33);
     }
 
     //PMSR[35] is PSTATES_SUSPENDED bit
-    if(G_cme_pstate_record.pstatesSuspended)
+    if(cme_flags & BIT32(CME_FLAGS_PSTATES_SUSPENDED))
     {
         pmsrData |= BIT64(35);
     }

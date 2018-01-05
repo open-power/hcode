@@ -91,7 +91,9 @@ enum PMSR_DEFS
 enum MESSAGE_ID_DB0
 {
     MSGID_DB0_VALID_START                   = 0, //This is for error checking
-    MSGID_DB0_DB3_GLOBAL_ACTUAL_BROADCAST   = 0,
+    //This is used when sending DB3 with payloads in DB0.
+    //The reason is DB3 register has less bits than DB0.
+    MSGID_DB0_DB3_PAYLOAD                   = 0,
     MSGID_DB0_RESERVED                      = 1,
     MSGID_DB0_GLOBAL_ACTUAL_BROADCAST       = 2,
     MSGID_DB0_START_PSTATE_BROADCAST        = 3,
@@ -105,12 +107,12 @@ enum MESSAGE_ID_DB0
 enum MESSAGE_ID_DB3
 {
     MSGID_DB3_INVALID                   = 0,
-    MSGID_DB3_VALID_START               = 1, //This is for error checking
-    MSGID_DB3_HIGH_PRIORITY_PSTATE      = 1,
+    MSGID_DB3_HIGH_PRIORITY_PSTATE      = 0x01,
+    MSGID_DB3_ENTER_SAFE_MODE           = 0x02,
+    MSGID_DB3_REPLAY_DB0                = 0x03,
+    MSGID_DB3_DISABLE_SGPE_HANDOFF      = 0x04,
     MSGID_DB3_IMMEDIATE_HALT            = 0xF1,
     MSGID_DB3_RESTORE_STATE_AND_HALT    = 0xF2,
-    MSGID_DB3_REPLAY_DB0                = 0xF3,
-    MSGID_DB3_VALID_END                 = 0xF3 //This is for error checking
 };
 
 enum MESSAGEID_PCB_TYPE4_ACK_TYPES
@@ -130,7 +132,6 @@ enum DB0_CLIP_BCAST_FIELDS
 
 enum DB0_PMSR_UPDT_COMMANDS
 {
-    DB0_PMSR_UPDT_SET_SAFE_MODE             = 0x0,
     DB0_PMSR_UPDT_SET_PSTATES_SUSPENDED     = 0x1,
     DB0_PMSR_UPDT_CLEAR_PSTATES_SUSPENDED   = 0x2
 };
@@ -266,7 +267,7 @@ typedef union pgpe_db0_pmsr_updt
 //
 //PGPE-CME Doorbell0(Pstate Abort)
 //
-typedef union pgpe_db0_pstate_start_abort
+typedef union pgpe_db0_pstate_register_done
 {
     uint64_t value;
     struct
@@ -279,7 +280,7 @@ typedef union pgpe_db0_pstate_start_abort
         uint64_t msg_id : 8;
 #endif
     } fields;
-} pgpe_db0_pstate_start_abort_t;
+} pgpe_db0_pstate_register_done_t;
 
 
 #endif //__PSTATE_PGPE_CME_API_H__

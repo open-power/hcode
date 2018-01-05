@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -28,7 +28,6 @@ TOP-C-SOURCES = p9_pgpe_pstate.c \
 				p9_pgpe_irq.c \
 				p9_pgpe_fit.c \
 				avs_driver.c \
-				p9_pgpe_boot_temp.c \
 				p9_pgpe_gppb.c \
 				p9_pgpe_gen_pstate_info.c \
 				p9_pgpe_header.c \

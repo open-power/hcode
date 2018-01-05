@@ -49,7 +49,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY12_CME
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME
     },
     {
         IRQ_VEC_PRTY1_CME, /* 1: IDX_PRTY_LVL_DB3 */
@@ -64,10 +65,11 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY12_CME
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME
     },
     {
-        IRQ_VEC_PRTY2_CME, /* 2: IDX_PRTY_LVL_DB2 */
+        IRQ_VEC_PRTY2_CME, /* 2: IDX_PRTY_LVL_HB_LOSS */
         IRQ_VEC_PRTY2_CME  |
         IRQ_VEC_PRTY3_CME  |
         IRQ_VEC_PRTY4_CME  |
@@ -78,10 +80,11 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY12_CME
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME
     },
     {
-        IRQ_VEC_PRTY3_CME, /* 3: IDX_PRTY_LVL_SPWU */
+        IRQ_VEC_PRTY3_CME, /* 3: IDX_PRTY_LVL_DB2 */
         IRQ_VEC_PRTY3_CME  |
         IRQ_VEC_PRTY4_CME  |
         IRQ_VEC_PRTY5_CME  |
@@ -91,10 +94,11 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY12_CME
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME
     },
     {
-        IRQ_VEC_PRTY4_CME, /* 4: IDX_PRTY_LVL_RGWU */
+        IRQ_VEC_PRTY4_CME, /* 4: IDX_PRTY_LVL_SPWU */
         IRQ_VEC_PRTY4_CME  |
         IRQ_VEC_PRTY5_CME  |
         IRQ_VEC_PRTY6_CME  |
@@ -104,13 +108,14 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME |
         // For Stop Entry/Exit related priority groups, mask every other SE/SX
         // related priority group, even higher ones, since the actual procedures
         // will open up EIMR at specific points in the SE/SX sequence.
         IRQ_VEC_STOP_CME
     },
     {
-        IRQ_VEC_PRTY5_CME, /* 5: IDX_PRTY_LVL_PCWU */
+        IRQ_VEC_PRTY5_CME, /* 5: IDX_PRTY_LVL_RGWU */
         IRQ_VEC_PRTY5_CME  |
         IRQ_VEC_PRTY6_CME  |
         IRQ_VEC_PRTY7_CME  |
@@ -119,13 +124,14 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME |
         // For Stop Entry/Exit related priority groups, mask every other SE/SX
         // related priority group, even higher ones, since the actual procedures
         // will open up EIMR at specific points in the SE/SX sequence.
         IRQ_VEC_STOP_CME
     },
     {
-        IRQ_VEC_PRTY6_CME, /* 6: IDX_PRTY_LVL_PM_ACTIVE */
+        IRQ_VEC_PRTY6_CME, /* 6: IDX_PRTY_LVL_PCWU */
         IRQ_VEC_PRTY6_CME  |
         IRQ_VEC_PRTY7_CME  |
         IRQ_VEC_PRTY8_CME  |
@@ -133,37 +139,49 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME |
         // For Stop Entry/Exit related priority groups, mask every other SE/SX
         // related priority group, even higher ones, since the actual procedures
         // will open up EIMR at specific points in the SE/SX sequence.
         IRQ_VEC_STOP_CME
     },
     {
-        IRQ_VEC_PRTY7_CME, /* 7: IDX_PRTY_LVL_DB1 */
+        IRQ_VEC_PRTY7_CME, /* 7: IDX_PRTY_LVL_PM_ACTIVE */
         IRQ_VEC_PRTY7_CME  |
         IRQ_VEC_PRTY8_CME  |
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY12_CME
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME
     },
     {
-        IRQ_VEC_PRTY8_CME, /* 8: IDX_PRTY_LVL_DB0 */
+        IRQ_VEC_PRTY8_CME, /* 8: IDX_PRTY_LVL_DB1 */
         IRQ_VEC_PRTY8_CME  |
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY12_CME
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME
     },
     {
-        IRQ_VEC_PRTY9_CME, /* 9: IDX_PRTY_LVL_INTERCME_IN0 */
+        IRQ_VEC_PRTY9_CME, /* 9: IDX_PRTY_LVL_DB0 */
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME
+    },
+    {
+        IRQ_VEC_PRTY10_CME, /* 10: IDX_PRTY_LVL_INTERCME_IN0 */
+        IRQ_VEC_PRTY10_CME |
+        IRQ_VEC_PRTY11_CME |
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME |
         // The entirety of this handler is executed in EE=0 mode on PK, for IOTA
         // this behavior can ony be emulated by masking all higher priority
         // interrupts in the UIH
+        IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY8_CME  |
         IRQ_VEC_PRTY7_CME  |
         IRQ_VEC_PRTY6_CME  |
@@ -174,18 +192,19 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY1_CME
     },
     {
-        IRQ_VEC_PRTY10_CME, /* 10: IDX_PRTY_LVL_PMCR */
-        IRQ_VEC_PRTY10_CME |
-        IRQ_VEC_PRTY11_CME |
-        IRQ_VEC_PRTY12_CME
-    },
-    {
-        IRQ_VEC_PRTY11_CME, /* 11: IDX_PRTY_LVL_COMM_RECVD */
+        IRQ_VEC_PRTY11_CME, /* 11: IDX_PRTY_LVL_PMCR */
         IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME
+    },
+    {
+        IRQ_VEC_PRTY12_CME, /* 12: IDX_PRTY_LVL_COMM_RECVD */
+        IRQ_VEC_PRTY12_CME |
+        IRQ_VEC_PRTY13_CME |
         // The entirety of this handler is executed in EE=0 mode on PK, for IOTA
         // this behavior can ony be emulated by masking all higher priority
         // interrupts in the UIH
+        IRQ_VEC_PRTY11_CME |
         IRQ_VEC_PRTY10_CME |
         IRQ_VEC_PRTY9_CME  |
         IRQ_VEC_PRTY8_CME  |
@@ -199,8 +218,8 @@ const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
 
     },
     {
-        IRQ_VEC_PRTY12_CME, /* 12: IDX_PRTY_LVL_DISABLED */
-        IRQ_VEC_PRTY12_CME
+        IRQ_VEC_PRTY13_CME, /* 13: IDX_PRTY_LVL_DISABLED */
+        IRQ_VEC_PRTY13_CME
     }
 };
 

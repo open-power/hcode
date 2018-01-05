@@ -334,6 +334,7 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
         // done = spwu + !pm_active + !core_chiplet_fence + !pcbmux_req + !pcbmux_grant
         // chiplet fence forces pm_active to zero
         // Note: pm_exit is asserted above for every core waking up including spwu
+
         PK_TRACE_DBG("SX.0B: Core[%d] Assert SPWU_DONE via SICR[16/17]", spwu_stop);
         // Note: clear pm_active so that potential stop1 wont use leftover pm_active upon drop spwu later
         out32(CME_LCL_EISR_CLR, ((spwu_stop << SHIFT32(15)) | (spwu_stop << SHIFT32(21))));  // clear spwu in EISR
