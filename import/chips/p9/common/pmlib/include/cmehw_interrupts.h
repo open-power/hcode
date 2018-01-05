@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -194,12 +194,12 @@
     CMEHW_IRQ_BCE_TIMEOUT           STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_DOORBELL3_C0          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_DOORBELL3_C1          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    CMEHW_IRQ_PC_INTR_PENDING_C0    STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    CMEHW_IRQ_PC_INTR_PENDING_C1    STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PC_INTR_PENDING_C0    STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_PC_INTR_PENDING_C1    STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_SPECIAL_WAKEUP_C0     STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_SPECIAL_WAKEUP_C1     STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    CMEHW_IRQ_REG_WAKEUP_C0         STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    CMEHW_IRQ_REG_WAKEUP_C1         STD_IRQ_TYPE_LEVEL   STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_REG_WAKEUP_C0         STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    CMEHW_IRQ_REG_WAKEUP_C1         STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_DOORBELL2_C0          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_DOORBELL2_C1          STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     CMEHW_IRQ_PC_PM_STATE_ACTIVE_C0 STD_IRQ_TYPE_EDGE    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
