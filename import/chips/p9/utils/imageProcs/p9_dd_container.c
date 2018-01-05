@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -48,7 +48,7 @@ int p9_dd_validate(struct p9_dd_cont* i_cont)
         return DDCO_FAILURE_MAGIC_NOT_FOUND;
     }
 
-    // may want to check here for holes or overlap as to stored blocks
+    // TBD: We can do more checking here, if the container is populated
 
     return DDCO_SUCCESS;
 }
