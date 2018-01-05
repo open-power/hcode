@@ -962,6 +962,8 @@ p9_cme_stop_entry()
             MARK_TRAP(SE_STOP_CORE_CLKS)
             //==========================
 
+            sync();
+
             PK_TRACE("Assert core chiplet fence via NET_CTRL0[18]");
             CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(18));
 
@@ -1612,14 +1614,15 @@ p9_cme_stop_entry()
                     CME_PUTSCOM(CPPM_CPMMR_OR, core_mask, BIT64(13));
                     PK_TRACE_DBG("Switch Core[%d] PPM wakeup to STOP-GPE via CPMMR[13]", core_mask);
 
-                    G_cme_stop_record.core_stopgpe |= core;
+                    G_cme_stop_record.core_stopgpe |= core_mask;
                     G_cme_stop_record.act_level[core_index] = STOP_LEVEL_5;
                 }
             }
 
             sync();
-            PK_TRACE("Clear special wakeup after wakeup_notify = 1 since it is edge triggered");
-            out32(CME_LCL_EISR_CLR, core << SHIFT32(15));
+
+            PK_TRACE("Clear special/regular wakeup after wakeup_notify = 1 since it is edge triggered");
+            out32(CME_LCL_EISR_CLR, (core << SHIFT32(15)) | (core << SHIFT32(17)));
 
 #if NIMBUS_DD_LEVEL != 10
 

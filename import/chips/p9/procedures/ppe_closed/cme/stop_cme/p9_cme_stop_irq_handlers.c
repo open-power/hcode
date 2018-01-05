@@ -49,8 +49,9 @@ p9_cme_stop_pcwu_handler(void)
     MARK_TRAP(STOP_PCWU_HANDLER)
     PK_TRACE_INF("PCWU Handler Trigger: Core Interrupts %x", core);
 
+    out32(CME_LCL_EISR_CLR, (G_cme_stop_record.core_running << SHIFT32(13)));
     g_eimr_override |= ((uint64_t)G_cme_stop_record.core_running << SHIFT64(13));
-    core &= ~(G_cme_stop_record.core_running);
+    core &= (~G_cme_stop_record.core_running);
 
     for (core_mask = 2; core_mask; core_mask--)
     {
@@ -81,7 +82,7 @@ p9_cme_stop_pcwu_handler(void)
     // if still wakeup for core with notify_select == cme, go exit
     if (core)
     {
-        PK_TRACE_INF("Launching exit thread");
+        PK_TRACE_INF("PCWU Launching exit thread");
 
         out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         wrteei(1);
@@ -172,7 +173,7 @@ p9_cme_stop_spwu_handler(void)
 
     if (spwu_rise)
     {
-        PK_TRACE_INF("Launching exit thread");
+        PK_TRACE_INF("SPWU Launching exit thread");
 
         out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         wrteei(1);
