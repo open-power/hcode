@@ -864,6 +864,11 @@ void p9_pgpe_pstate_stop()
             {
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(0));
             }
+
+            //PGPE opens DPLL for SCOMs on quads that are about to enter STOP11
+            //or have exited STOP11, but not registered yet. Or, to said another
+            //non-active quads that are powered on will have DPLL open for SCOMs
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26));
         }
     }
 
