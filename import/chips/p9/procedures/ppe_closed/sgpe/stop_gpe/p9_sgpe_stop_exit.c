@@ -238,7 +238,9 @@ p9_sgpe_stop_exit_end(uint32_t qloop)
 #endif
 
                 p9_sgpe_stop_exit_handoff_cme(cindex);
+                G_sgpe_stop_record.group.quad[VECTOR_RCLKE]  &= ~BIT32((qloop + QUAD_IN_STOP11_OFFSET));
                 G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] |=  BIT32(qloop);
+
 #if DISABLE_STOP8
 
             }
@@ -275,7 +277,7 @@ p9_sgpe_stop_exit_handoff_cme(uint32_t cindex)
     {
         // send DB2 with msgid 0x1 to the core request wakeup via decrementor to
         // alert CME to process via unmask PC_INTR_PENDING in addition to handoff
-        PK_TRACE_DBG("SX.CME: Core[%d] Waking Up by PC_Interrupt_Pending", cindex);
+        PK_TRACE_INF("SX.CME: Core[%d] Waking Up by PC_Interrupt_Pending", cindex);
 
 #if NIMBUS_DD_LEVEL != 10
 
