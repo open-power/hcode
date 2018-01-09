@@ -151,9 +151,10 @@ p9_sgpe_stop_entry()
 #else
 
             // if resonant clock disable is completed, process stop11 entry
-            if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32((qloop + 16)))
+            if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32((qloop + RCLK_DIS_DONE_OFFSET)))
             {
-                G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32((qloop + 16));
+                G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32((qloop + RCLK_DIS_DONE_OFFSET));
+                G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + QUAD_IN_STOP11_OFFSET));
 
                 // if during resonant clock disable, any exit occured, re-assert them,
                 // but we are going to complete the stop11 entry prior to process it
@@ -183,10 +184,10 @@ p9_sgpe_stop_entry()
             }
             // if stop11 entry qualifies, hold on processing it but first
             // send DB to Quad-Manager to disable the resonant clock
-            else
+            else if (!(G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32((qloop + QUAD_IN_STOP11_OFFSET))))
             {
                 // from this point on, only process wakeup when stop11 is entered
-                G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |= BIT32(qloop);
+                G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |= BIT32((qloop + RCLK_DIS_REQ_OFFSET));
 
                 // assume ex0 core0 is good
                 cindex = (qloop << 2);
@@ -218,6 +219,8 @@ p9_sgpe_stop_entry()
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_CLR, qloop, (ex ^ 1)),
                                 BIT64(CME_FLAGS_RCLK_OPERABLE));
                 }
+
+                PK_TRACE_INF("DB2 MessageID 2(Rclk Entry) sent to core %d", cindex);
 
 #if NIMBUS_DD_LEVEL != 10
 
@@ -822,6 +825,8 @@ p9_sgpe_stop_entry()
 
             // send DB2 with msgid 0x3 to the first good core
             // to trigger Quad Manager to enable resonant clock again
+
+            PK_TRACE_INF("DB2 MessageID 3(Rclk Entry Abort) sent to core %d", cindex);
 
 #if NIMBUS_DD_LEVEL != 10
 
