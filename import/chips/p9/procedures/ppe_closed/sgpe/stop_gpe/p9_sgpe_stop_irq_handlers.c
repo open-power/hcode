@@ -592,7 +592,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
 #if DISABLE_STOP8
 
                     // if having ongoing stop11 in resclk disable phase, hold on to all exits
-                    if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32(qloop))
+                    if (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BIT32((qloop + RCLK_DIS_REQ_OFFSET)))
                     {
                         if ((type == PIG_TYPE5) && (cpayload == TYPE5_PAYLOAD_EXIT_RCLK))
                         {
@@ -699,8 +699,8 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                     if ((type == PIG_TYPE5) &&
                         (cpayload == (TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
                     {
-                        G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32(qloop);
-                        G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + 16));
+                        G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32((qloop + RCLK_DIS_REQ_OFFSET));
+                        G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + RCLK_DIS_DONE_OFFSET));
                     }
                     else
                     {
@@ -714,8 +714,8 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                          (cpayload == (TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11)))
                 {
                     PK_TRACE_INF("Core Request Entry Allowed as Resonant Clock Disable is Completed");
-                    G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32(qloop);
-                    G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + 16));
+                    G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32((qloop + RCLK_DIS_REQ_OFFSET));
+                    G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + RCLK_DIS_DONE_OFFSET));
                 }
 
 #else
@@ -849,7 +849,7 @@ p9_sgpe_pig_thread_lanucher()
     // Taking Stop8/11 Actions if any
     if (G_sgpe_stop_record.group.core[VECTOR_PIGX] ||
         G_sgpe_stop_record.group.core[VECTOR_PIGE] ||
-        (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BITS32(16, 6)))
+        (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BITS32(RCLK_DIS_DONE_OFFSET, 6)))
     {
         // block both type3 and type5, 6
         // so another doesnt interrupt until next round
@@ -865,7 +865,7 @@ p9_sgpe_pig_thread_lanucher()
         }
 
         if ((G_sgpe_stop_record.group.core[VECTOR_PIGE]) ||
-            (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BITS32(16, 6) &
+            (G_sgpe_stop_record.group.quad[VECTOR_RCLKE] & BITS32(RCLK_DIS_DONE_OFFSET, 6) &
              (~(G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] >> 16))))
         {
             PK_TRACE_INF("Unblock Entry Thread");
