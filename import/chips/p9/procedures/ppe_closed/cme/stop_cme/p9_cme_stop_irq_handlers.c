@@ -238,6 +238,9 @@ p9_cme_stop_db2_handler(void)
             CME_PUTSCOM_NOP(CPPM_CMEDB2, core_mask, 0);
             out32(CME_LCL_EISR_CLR, (core_mask << SHIFT32(19)));
 
+            PK_TRACE_DBG("DB2 Handler MessageID %d Triggered By Core %d",
+                         db2.fields.cme_message_numbern, core_mask);
+
             switch (db2.fields.cme_message_numbern)
             {
                 case MSGID_DB2_DECREMENTER_WAKEUP:
@@ -329,6 +332,9 @@ p9_cme_stop_db1_handler(void)
     CME_GETSCOM(CPPM_CMEDB1, core, db1.value);
     CME_PUTSCOM_NOP(CPPM_CMEDB1, core, 0);
     out32_sh(CME_LCL_EISR_CLR, core << SHIFT64SH(41));
+
+    PK_TRACE_DBG("DB1 Handler MessageID %d Triggered By Core %d",
+                 db1.fields.cme_message_numbern, core);
 
     // block msgs
     if ((db1.fields.cme_message_numbern > 0x4) &&
