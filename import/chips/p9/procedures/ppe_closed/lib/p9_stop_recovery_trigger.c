@@ -26,7 +26,10 @@
 #include "stdint.h"
 #include "pk.h"
 #include "ppe42_scom.h"
+#include "ppehw_common.h"
 #include "gpehw_common.h"
+#include "ocb_register_addresses.h"
+#include "p9_pm_hcd_flags.h"
 #include "p9_stop_recovery_trigger.h"
 
 // When an error occurs that affects the STOP portion of the PM subsystem,
@@ -39,7 +42,7 @@ p9_stop_recovery_trigger()
     uint64_t scom_data = 0;
     PK_TRACE_INF("WARNING: STOP RECOVERY TRIGGER!");
 
-    //1. Set ADU lock for exclusive use for a timeout of 500ms.
+    PK_TRACE("1. Set ADU lock for exclusive use for a timeout of 500ms.");
 
     do
     {
@@ -50,12 +53,15 @@ p9_stop_recovery_trigger()
     }
     while (!(scom_data  &  0x0010000000000000ull));
 
-    //2. Cleanup/reset ADU
+    PK_TRACE("2. Cleanup/reset ADU");
     GPE_PUTSCOM(0x90001, 0x1810000000000000ull);
 
-    //3. Setup PowerBus 'address' field for malf alert
+    PK_TRACE("3. Setup PowerBus 'address' field for malf alert");
     GPE_PUTSCOM(0x90000, 0x0000100000000000ull);
 
-    //4. Setup PowerBus command type and launch malfunction
+    PK_TRACE("4. Setup PowerBus command type and launch malfunction");
     GPE_PUTSCOM(0x90001, 0x2210A03104000000ull);
+
+    PK_TRACE("5. Set OCCFLG2[28] PM Callout Active");
+    out32(OCB_OCCFLG2_OR, BIT32(PM_CALLOUT_ACTIVE));
 }
