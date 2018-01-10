@@ -65,10 +65,11 @@
 // --------------------
 
 // override swtich for NDD20/21/CDD10 workaround
-#define DISABLE_PERIODIC_CORE_QUIESCE    0
+#define DISABLE_PERIODIC_CORE_QUIESCE    1
+#define DISABLE_CME_FIT_TIMER            0
 
-#if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
-    #define PCQW_ENABLE
+#if !DISABLE_PERIODIC_CORE_QUIESCE
+    #define DISABLE_CME_FIT_TIMER        0
 #endif
 
 // --------------------

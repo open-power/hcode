@@ -31,7 +31,7 @@
 // CME Pstate Header and Structure
 #include "p9_cme.h"
 
-#ifdef PCQW_ENABLE
+#if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
 
 CmeRecord G_cme_record = {0, 0, {0, 0, 0, 0, 0xFFFFFFFF, 0}};
 
@@ -333,17 +333,21 @@ void periodic_core_quiesce_workaround(uint32_t core_instruction_running)
 
 void fit_handler()
 {
-    mtspr(SPRN_TSR, TSR_FIS);
 
-#ifdef PCQW_ENABLE
+#if !DISABLE_CME_FIT_TIMER
+
+    mtspr(SPRN_TSR, TSR_FIS);
+    PK_TRACE("FIT Timer Handler");
+
+#endif
+
+#if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
 
     uint32_t core_quiesce_cpmmr_disable;
     uint32_t core;
     uint32_t core_instr_running;
     uint32_t scom_op;
     data64_t scom_data;
-
-    PK_TRACE("FIT Timer Handler");
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
@@ -415,6 +419,8 @@ void fit_handler()
 void dec_handler()
 {
 }
+
+
 
 void ext_handler(uint32_t task_idx)
 {
@@ -488,14 +494,12 @@ IOTA_TASK(ext_handler), // bits 0-6   default
 
 int main()
 {
-
-    cmeHeader_t* cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
-
     // Register Timer Handlers
     IOTA_DEC_HANDLER(dec_handler);
     IOTA_FIT_HANDLER(fit_handler);
 
     // Local timebase frequency comes from an attribute.
+    cmeHeader_t* cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     uint32_t trace_timebase = cmeHeader->g_cme_timebase_hz;
 
     if(0 == trace_timebase)
@@ -523,8 +527,12 @@ int main()
     PK_TRACE("Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
     out32(CME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
 
+#if !DISABLE_CME_FIT_TIMER
+
     PK_TRACE("Enable FIT Timer");
     mtspr(SPRN_TCR, (TCR_FIE));
+
+#endif
 
     p9_cme_stop_init();
 
