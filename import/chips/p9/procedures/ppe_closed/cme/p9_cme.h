@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -28,7 +28,7 @@
 #include "pk.h"
 #include "p9_pm_hcd_flags.h"
 
-#ifdef PCQW_ENABLE
+#if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
 
 typedef struct
 {
@@ -50,7 +50,7 @@ typedef struct
     uint32_t     core_enabled;
     uint32_t     spurr_freq_ref_upper;
 
-#ifdef PCQW_ENABLE
+#if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
 
     CmeFitRecord fit_record;
 

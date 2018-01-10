@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -294,7 +294,7 @@ int rs4DecompressionSvc(
         }
         else if( CMSK == i_rs4Type )
         {
-            PKTRACE("CMSK start");
+            PK_TRACE_DBG("CMSK start");
             l_rs4Header = (CompressedScanData*)(i_rs4 + sizeof( CompressedScanData ));
             l_rs4Str = i_rs4 + ( sizeof( CompressedScanData) << 1);
         }
@@ -530,7 +530,7 @@ int rs4DecompressionSvc(
 
         if( CMSK == i_rs4Type )
         {
-            PKTRACE("CMSK END");
+            PK_TRACE_DBG("CMSK END");
         }
 
         // Verify header

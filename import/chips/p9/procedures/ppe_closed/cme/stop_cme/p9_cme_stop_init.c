@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -60,7 +60,7 @@ p9_cme_stop_init()
 
     if (!G_cme_record.core_enabled)
     {
-        PK_TRACE_ERR("ERROR: No Partial Good Core Configured to this CME. HALT CME!");
+        PK_TRACE_DBG("ERROR: No Partial Good Core Configured to this CME. HALT CME!");
         PK_PANIC(CME_STOP_NO_PARTIAL_GOOD_CORE);
     }
 
@@ -82,7 +82,7 @@ p9_cme_stop_init()
     // use SISR[16:17] SPECIAL_WKUP_DONE to init special wakeup status
     G_cme_stop_record.core_in_spwu = ((in32(CME_LCL_SISR) & BITS32(16, 2)) >> SHIFT32(17));
 
-    PK_TRACE_INF("Setup: cme_flags[%x] entry_first[%x] exit_first[%x]",
+    PK_TRACE_DBG("Setup: cme_flags[%x] entry_first[%x] exit_first[%x]",
                  cme_flags, entry_first, exit_first);
 
     for (core_mask = 2; core_mask; core_mask--)
@@ -116,7 +116,7 @@ p9_cme_stop_init()
 
     if( BLOCK_COPY_SUCCESS != check_cme_block_copy() )
     {
-        PK_TRACE_ERR("ERROR: BCE Copy of Core Specific Scan Ring Failed. HALT CME!");
+        PK_TRACE_DBG("ERROR: BCE Copy of Core Specific Scan Ring Failed. HALT CME!");
         PK_PANIC(CME_STOP_BCE_CORE_RING_FAILED);
     }
 
@@ -136,9 +136,6 @@ p9_cme_stop_init()
     // Common Hardware Settings
     //--------------------------------------------------------------------------
 
-    PK_TRACE("Drop reset_state_indicator on good core via GPMMR[15]");
-    CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));
-
 #if HW386841_NDD1_DSL_STOP1_FIX
 
     PK_TRACE("Disable the Auto-STOP1 function for Nimbus DD1 via LMCR[18,19]");
@@ -149,23 +146,23 @@ p9_cme_stop_init()
     PK_TRACE("Drop STOP override mode and active mask via LMCR[16,17]");
     out32(CME_LCL_LMCR_CLR, BITS32(16, 2));
 
-    PK_TRACE_INF("Setup: SPWU Interrupt Polority[%d]", G_cme_stop_record.core_in_spwu);
+    PK_TRACE_DBG("Setup: SPWU Interrupt Polority[%d]", G_cme_stop_record.core_in_spwu);
     out32(CME_LCL_EIPR_CLR, (G_cme_stop_record.core_in_spwu << SHIFT32(15)));
     out32(CME_LCL_EIPR_OR,  (((~G_cme_stop_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(15)));
 
-    PK_TRACE_INF("Setup: Umask STOP Interrupts Now Based on Entry_First Flag");
-    out32(CME_LCL_EIMR_CLR, (entry_first << SHIFT32(21)) |
-          (exit_first  << SHIFT32(13)) |
-#if SPWU_AUTO
-          (exit_first  << SHIFT32(15)) |
-#else
-          (CME_MASK_BC << SHIFT32(15)) | // always unmask spwu
-#endif
-          (exit_first  << SHIFT32(17)));
-
-    // unmask db2 for block stop protocol
+    PK_TRACE_DBG("Setup: Umask STOP Interrupts Now Based on Entry_First Flag");
+    // unmask db1 for block stop protocol
     out32_sh(CME_LCL_EIMR_CLR, (CME_MASK_BC << SHIFT64SH(41)));
-    out32(CME_LCL_EIMR_CLR, (CME_MASK_BC << SHIFT32(19)));
+    out32(CME_LCL_EIMR_CLR,
+          ((CME_MASK_BC << SHIFT32(19)) |  // DB2
+           (entry_first << SHIFT32(21)) |  // PM_ACTIVE
+           (exit_first  << SHIFT32(13)) |  // PC_INTR_PENDING
+#if SPWU_AUTO
+           (exit_first  << SHIFT32(15)) |
+#else
+           (CME_MASK_BC << SHIFT32(15)) |  // SPWU always unmask
+#endif
+           (exit_first  << SHIFT32(17)))); // RGWU
 
     //--------------------------------------------------------------------------
     // CME Init Completed
