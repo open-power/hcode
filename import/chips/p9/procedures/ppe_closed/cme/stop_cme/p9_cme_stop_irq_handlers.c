@@ -41,15 +41,14 @@ extern CmeRecord       G_cme_record;
 void
 p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
 {
-    MARK_TRAP(STOP_PCWU_HANDLER)
-
     PkMachineContext ctx __attribute__((unused));
     uint32_t  core_mask = 0;
     uint32_t  core      = (in32(CME_LCL_EISR) & BITS32(12, 2)) >> SHIFT32(13);
     data64_t  scom_data = {0};
     ppm_pig_t pig       = {0};
 
-    PK_TRACE_INF("PCWU Handler Trigger %d Level %d", irq, core);
+    MARK_TRAP(STOP_PCWU_HANDLER)
+    PK_TRACE_INF("PCWU Handler Trigger: Core Interrupts %x", core);
 
     g_eimr_override |= ((uint64_t)G_cme_stop_record.core_running << SHIFT64(13));
     core &= ~(G_cme_stop_record.core_running);
@@ -111,8 +110,6 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
 void
 p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
 {
-    MARK_TRAP(STOP_SPWU_HANDLER)
-
     PkMachineContext ctx __attribute__((unused));
     int      sem_post   = 0;
     uint32_t core_mask  = 0;
@@ -120,8 +117,9 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
     uint32_t raw_spwu   = (in32(CME_LCL_EISR) & BITS32(14, 2)) >> SHIFT32(15);
     uint64_t scom_data  = 0;
 
-    PK_TRACE_INF("SPWU Trigger %d Level %x State %x",
-                 irq, raw_spwu, G_cme_stop_record.core_in_spwu);
+    MARK_TRAP(STOP_SPWU_HANDLER)
+    PK_TRACE_INF("SPWU Handler Trigger: Core Interrupts %x SPWU States %x",
+                 raw_spwu, G_cme_stop_record.core_in_spwu);
 
     for(core_mask = 2; core_mask; core_mask--)
     {
@@ -202,7 +200,7 @@ void
 p9_cme_stop_rgwu_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_RGWU_HANDLER)
-    PK_TRACE_INF("RGWU Handler Trigger %d", irq);
+    PK_TRACE_INF("RGWU Handler Trigger");
     out32(CME_LCL_EIMR_OR, BITS32(12, 10));
 #if defined(__IOTA__)
     wrteei(1);
@@ -220,7 +218,7 @@ void
 p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
 {
     MARK_TRAP(STOP_ENTER_HANDLER)
-    PK_TRACE_INF("PM_ACTIVE Handler Trigger %d", irq);
+    PK_TRACE_INF("PM_ACTIVE Handler Trigger");
     out32(CME_LCL_EIMR_OR, BITS32(12, 10));
 #if defined(__IOTA__)
     wrteei(1);
@@ -241,13 +239,11 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
     PkMachineContext ctx __attribute__((unused));
     cppm_cmedb2_t    db2 = {0};
     ppm_pig_t        pig = {0};
+    uint32_t         core = (in32(CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
+    uint32_t         core_mask;
 
     MARK_TRAP(STOP_DB2_HANDLER)
-    PK_TRACE_INF("DB2 Handler Trigger %d", irq);
-
-    // read and clear doorbell
-    uint32_t core = (in32(CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
-    uint32_t core_mask;
+    PK_TRACE_INF("DB2 Handler Trigger: Core Interrupts %x", core);
 
     for(core_mask = 2; core_mask; core_mask--)
     {
@@ -344,7 +340,7 @@ p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
     uint32_t         suspend_ack = 0;
 
     MARK_TRAP(STOP_DB1_HANDLER)
-    PK_TRACE_DBG("DB1 Handler Trigger %d", irq);
+    PK_TRACE_INF("DB1 Handler Trigger");
 
     // Suspend DB should only come from the first good core
     if (G_cme_record.core_enabled & CME_MASK_C0)
