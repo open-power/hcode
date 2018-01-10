@@ -51,6 +51,14 @@
 extern CmeStopRecord G_cme_stop_record;
 extern CmeRecord G_cme_record;
 
+#if NIMBUS_DD_LEVEL != 10
+
+extern uint8_t  G_pls[MAX_CORES_PER_CME][MAX_THREADS_PER_CORE];
+uint64_t        G_scratch[2] = {0};
+
+#endif
+
+
 
 #if HW402407_NDD1_TLBIE_STOP_WORKAROUND
 
@@ -408,7 +416,8 @@ p9_cme_stop_entry()
             // Mark core as to be stopped
             G_cme_stop_record.core_running &= ~core;
 
-#ifdef PCQW_ENABLE
+
+#if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
 
             G_cme_record.fit_record.core_quiesce_fit_trigger = 0;
 
@@ -553,6 +562,8 @@ p9_cme_stop_entry()
             PK_TRACE_DBG("Check: core[%d] target_lv[%d] deeper_lv[%d] deeper_core[%d]",
                          core, target_level, deeper_level, deeper_core);
 
+
+            // ---------------------------------
             // Permanent workaround for HW407385
 
             wrteei(0);
@@ -570,9 +581,219 @@ p9_cme_stop_entry()
             while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
             wrteei(1);
+            sync();
 
             // end of HW407385
+            // ---------------------------------
 
+
+
+#if NIMBUS_DD_LEVEL != 10
+
+            if (target_level > STOP_LEVEL_3 || deeper_level > STOP_LEVEL_3)
+            {
+
+#ifdef PLS_DEBUG
+
+                PK_TRACE("RAMMING Read RAS_STATUS[(0 + 8*T)] CORE_MAINT_MODE to find out which threads are in maintenance mode");
+
+                if (core & CME_MASK_C0)
+                {
+                    CME_GETSCOM(RAS_STATUS, CME_MASK_C0, scom_data.value);
+                    PKTRACE("CheckA RAS_STATUS_UPPER Core0 %X", scom_data.words.upper);
+                }
+
+                if (core & CME_MASK_C1)
+                {
+                    CME_GETSCOM(RAS_STATUS, CME_MASK_C1, scom_data.value);
+                    PKTRACE("CheckA RAS_STATUS_UPPER Core1 %X", scom_data.words.upper);
+                }
+
+#endif
+
+                // This will quiesce the active threads, put all threads into core maintenance mode,
+                // and eventually quiesce the entire core. Now core thinks its awake and ramming is allowed
+                PK_TRACE("RAMMING Assert DC_CORE_STOP for ALL threads via DIRECT_CONTROL");
+                CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(7) | BIT64(15) | BIT64(23) | BIT64(31)));
+
+                PK_TRACE("RAMMING Loop on RAS_STATUS [(3 + 8*T)]LSU_QUIESCED and [(1 + 8*T)]THREAD_QUIESCE are active");
+
+                do
+                {
+
+                    CME_GETSCOM_AND(RAS_STATUS, core, scom_data.value);
+#ifdef PLS_DEBUG
+                    PKTRACE("CheckB RAS_STATUS_AND_UPPER %X", scom_data.words.upper);
+#endif
+                }
+                while((scom_data.words.upper & (BIT32(1) | BIT32(3) | BIT32(9) | BIT32(11) | BIT32(17) | BIT32(19) | BIT32(25) | BIT32(
+                                                    27)))
+                      != (BIT32(1) | BIT32(3) | BIT32(9) | BIT32(11) | BIT32(17) | BIT32(19) | BIT32(25) | BIT32(27)));
+
+                PK_TRACE("RAMMING Loop on RAS_STATUS[32] NEST_ACTIVE is 0");
+
+                do
+                {
+
+                    CME_GETSCOM_OR(RAS_STATUS, core, scom_data.value);
+#ifdef PLS_DEBUG
+                    PKTRACE("CheckC RAS_STATUS_OR_LOWER[0] %X", scom_data.words.lower);
+#endif
+                }
+                while(scom_data.words.lower & BIT32(0));
+
+                PK_TRACE("RAMMING Loop on THREAD_INFO[23] THREAD_ACTION_IN_PROGRESS is 0");
+
+                do
+                {
+
+                    CME_GETSCOM_OR(THREAD_INFO, core, scom_data.value);
+#ifdef PLS_DEBUG
+                    PKTRACE("CheckD THREAD_INFO_OR_UPPER[23] %X", scom_data.words.upper);
+#endif
+                }
+                while(scom_data.words.upper & BIT32(23));
+
+#ifdef PLS_DEBUG
+
+                PK_TRACE("RAMMING Read THREAD_INFO[0:3] to find out which threads are active");
+
+                if (core & CME_MASK_C0)
+                {
+                    CME_GETSCOM(THREAD_INFO, CME_MASK_C0, scom_data.value);
+                    PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core0 %X", scom_data.words.upper);
+                }
+
+                if (core & CME_MASK_C1)
+                {
+                    CME_GETSCOM(THREAD_INFO, CME_MASK_C1, scom_data.value);
+                    PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core1 %X", scom_data.words.upper);
+                }
+
+                PK_TRACE("RAMMING Read CORE_THREAD_STATE[56:59] to find out which threads are stopped");
+
+                if (core & CME_MASK_C0)
+                {
+                    CME_GETSCOM(CORE_THREAD_STATE, CME_MASK_C0, scom_data.value);
+                    PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core0 %X %X", scom_data.words.upper, scom_data.words.lower);
+                }
+
+                if (core & CME_MASK_C1)
+                {
+                    CME_GETSCOM(CORE_THREAD_STATE, CME_MASK_C1, scom_data.value);
+                    PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core1 %X %X", scom_data.words.upper, scom_data.words.lower);
+                }
+
+#endif
+
+                PK_TRACE("RAMMING Activate thread[0:3] for RAM via THREAD_INFO[18:21]");
+                CME_PUTSCOM(THREAD_INFO, core, BITS64(18, 4));
+
+                do
+                {
+
+                    CME_GETSCOM_AND(THREAD_INFO, core, scom_data.value);
+#ifdef PLS_DEBUG
+                    PKTRACE("CheckG THREAD_INFO_AND_UPPER[0:3] %X", scom_data.words.upper);
+#endif
+                }
+                while((scom_data.words.upper & BITS32(0, 4)) != BITS32(0, 4));
+
+                PK_TRACE("RAMMING Enable RAM mode via RAM_MODEREG[0]");
+                CME_PUTSCOM(RAM_MODEREG, core, BIT64(0));
+
+                PK_TRACE("RAMMING Set SPR mode to LT0-7 via SPR_MODE[20-27]");
+                CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
+
+                if (core & CME_MASK_C0)
+                {
+                    PK_TRACE("RAMMING Set SPRC to scratch0 for core0 via SCOM_SPRC");
+                    CME_PUTSCOM(SCOM_SPRC, CME_MASK_C0, 0);
+                    CME_GETSCOM(SCRATCH0, CME_MASK_C0, G_scratch[0]);
+                }
+
+                if (core & CME_MASK_C1)
+                {
+                    PK_TRACE("RAMMING Set SPRC to scratch1 for core1 via SCOM_SPRC");
+                    CME_PUTSCOM(SCOM_SPRC, CME_MASK_C1, BIT64(60));
+                    CME_GETSCOM(SCRATCH1, CME_MASK_C1, G_scratch[1]);
+                }
+            }
+
+            if ((core & CME_MASK_C0) && G_cme_stop_record.req_level[0] > STOP_LEVEL_3)
+            {
+                for(thread = 0; thread < 4; thread++)
+                {
+                    PK_TRACE("PSSCR RAM: mfspr psscr, gpr0 via RAM_CTRL");
+                    CME_PUTSCOM(RAM_CTRL, CME_MASK_C0, RAM_MFSPR_PSSCR_GPR0 | (((uint64_t) thread) << 62));
+
+                    PK_TRACE("PSSCR RAM: mtspr sprd , gpr0 via RAM_CTRL");
+                    CME_PUTSCOM(RAM_CTRL, CME_MASK_C0, RAM_MTSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
+                    CME_GETSCOM(SCRATCH0, CME_MASK_C0, scom_data.value);
+
+                    G_pls[0][thread] = (scom_data.words.upper & BITS32(0, 4)) >> SHIFT32(3);
+#ifdef PLS_DEBUG
+                    PKTRACE("PSSCR %X %X c0thread %X", scom_data.words.upper, scom_data.words.lower, thread);
+#endif
+                }
+            }
+
+            if ((core & CME_MASK_C1) && G_cme_stop_record.req_level[1] > STOP_LEVEL_3)
+            {
+                for (thread = 0; thread < 4; thread++)
+                {
+                    PK_TRACE("PSSCR RAM: mfspr psscr, gpr0 via RAM_CTRL");
+                    CME_PUTSCOM(RAM_CTRL, CME_MASK_C1, RAM_MFSPR_PSSCR_GPR0 | (((uint64_t) thread) << 62));
+
+                    PK_TRACE("PSSCR RAM: mtspr sprd , gpr0 via RAM_CTRL");
+                    CME_PUTSCOM(RAM_CTRL, CME_MASK_C1, RAM_MTSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
+                    CME_GETSCOM(SCRATCH1, CME_MASK_C1, scom_data.value);
+
+                    G_pls[1][thread] = (scom_data.words.upper & BITS32(0, 4)) >> SHIFT32(3);
+#ifdef PLS_DEBUG
+                    PKTRACE("PSSCR %X %X c1thread %X", scom_data.words.upper, scom_data.words.lower, thread);
+#endif
+                }
+            }
+
+            if (target_level > STOP_LEVEL_3 || deeper_level > STOP_LEVEL_3)
+            {
+                PK_TRACE("RAMMING Disable thread0-3 for RAM via THREAD_INFO");
+                CME_PUTSCOM(THREAD_INFO, core, 0);
+
+                PK_TRACE("RAMMING Disable RAM mode via RAM_MODEREG");
+                CME_PUTSCOM(RAM_MODEREG, core, 0);
+
+                PK_TRACE("RAMMING Clear scratch/spr used in RAM");
+                CME_PUTSCOM(SPR_MODE,  core, 0);
+                CME_PUTSCOM(SCOM_SPRC, core, 0);
+
+                if (core & CME_MASK_C0)
+                {
+#ifdef PLS_DEBUG
+                    PKTRACE("SCRATCH0 %x %x", (G_scratch[0] >> 32), (G_scratch[0] & 0xffffffff));
+#endif
+                    CME_PUTSCOM(SCRATCH0, CME_MASK_C0, G_scratch[0]);
+                }
+
+                if (core & CME_MASK_C1)
+                {
+#ifdef PLS_DEBUG
+                    PKTRACE("SCRATCH1 %x %x", (G_scratch[1] >> 32), (G_scratch[1] & 0xffffffff));
+#endif
+                    CME_PUTSCOM(SCRATCH1, CME_MASK_C1, G_scratch[1]);
+                }
+
+                PK_TRACE("RAMMING Clear core maintenance mode via direct controls");
+                CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27)));
+            }
+
+            sync();
+#endif
+
+
+
+// ====================================
 #if HW402407_NDD1_TLBIE_STOP_WORKAROUND
 
             // Save thread's LPIDs and overwrite with POWMAN_RESERVED_LPID
@@ -627,6 +848,8 @@ p9_cme_stop_entry()
             }
 
 #endif // tlbie stop workaround
+// ====================================
+
 
 
             PK_TRACE_INF("SE.2A: Core[%d] PCB Mux Granted", core);
@@ -663,9 +886,10 @@ p9_cme_stop_entry()
             // Waits quiesce done for at least 512 core cycles
             PPE_WAIT_CORE_CYCLES(512)
 
-            PK_TRACE_INF("SE.2B: Interfaces Quiesced");
+            PK_TRACE_DBG("SE.2B: Interfaces Quiesced");
 
 
+// ====================================
 #if HW402407_NDD1_TLBIE_STOP_WORKAROUND
 
             // Restore thread's LPIDs
@@ -711,9 +935,13 @@ p9_cme_stop_entry()
             turn_off_ram_mode (core);
 
 #endif // tlbie stop workaround
+// ====================================
 
+
+            // ---------------------------------
             // Permanent workaround for HW407385
 
+            sync();
             wrteei(0);
 
             PK_TRACE("HW407385: Drop pm_exit via SICR[4/5]");
@@ -732,6 +960,7 @@ p9_cme_stop_entry()
             wrteei(1);
 
             // end of HW407385
+            // ---------------------------------
 
             //==========================
             MARK_TRAP(SE_STOP_CORE_CLKS)
@@ -804,7 +1033,7 @@ p9_cme_stop_entry()
                 }
             }
 
-            PK_TRACE_INF("SE.2C: Core Clock Stopped");
+            PK_TRACE_DBG("SE.2C: Core Clock Stopped");
 
             //==============================
             MARK_TRAP(SE_STOP_CORE_GRID)
@@ -870,7 +1099,7 @@ p9_cme_stop_entry()
                 G_cme_stop_record.act_level[1] = STOP_LEVEL_2;
             }
 
-            PK_TRACE_INF("SE.2D: Clock Sync Dropped");
+            PK_TRACE_DBG("SE.2D: Clock Sync Dropped");
 
             //===========================
             MARK_TAG(SE_STOP2_DONE, core)
@@ -1126,7 +1355,7 @@ p9_cme_stop_entry()
             {
                 if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
                 {
-                    PK_TRACE_INF("Clear Poweron bit in VDMCR");
+                    PK_TRACE_DBG("Clear Poweron bit in VDMCR");
                     CME_PUTSCOM(PPM_VDMCR_CLR, core, BIT64(0));
                 }
 
@@ -1145,7 +1374,7 @@ p9_cme_stop_entry()
 
                 if( CME_STOP_HCODE_ERR_INJ_BIT & scom_data.words.upper )
                 {
-                    PK_TRACE_ERR("CME STOP ENTRY ERROR INJECT TRAP");
+                    PK_TRACE_DBG("CME STOP ENTRY ERROR INJECT TRAP");
                     PK_PANIC(CME_STOP_ENTRY_TRAP_INJECT);
                 }
 
@@ -1319,7 +1548,7 @@ p9_cme_stop_entry()
                 PK_TRACE("Drop L2+NCU purges and their possible aborts via SICR[18,19,22,23]");
                 out32(CME_LCL_SICR_CLR, (BITS32(18, 2) | BITS32(22, 2)));
 
-                PK_TRACE_INF("SE.5A: L2 and NCU Purged");
+                PK_TRACE_DBG("SE.5A: L2 and NCU Purged");
 
                 //===================================================================
                 MARK_TAG(SE_PURGE_L2_DONE, core_aborted ? core_aborted : CME_MASK_BC)
