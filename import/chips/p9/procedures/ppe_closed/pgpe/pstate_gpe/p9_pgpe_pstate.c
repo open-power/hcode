@@ -341,7 +341,7 @@ void p9_pgpe_pstate_calc_wof()
     G_pgpe_pstate_record.fratio = 1;
     G_pgpe_pstate_record.findex = 0;
 
-    //2. Vratio calc
+    //2. Vratio calc and VFRT table lookup
     //Currently, PGPE only support VRATIO Fixed and VRATIO active cores only
     if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO)
     {
@@ -353,16 +353,16 @@ void p9_pgpe_pstate_calc_wof()
         {
             G_pgpe_pstate_record.vratio = 0;
         }
+
+        G_pgpe_pstate_record.vindex = (G_pgpe_pstate_record.vratio + 0xAAC - 0xA8B) / 0xAAC;
     }
     else
     {
         G_pgpe_pstate_record.vratio = 0xFFFF;
+        G_pgpe_pstate_record.vindex = 23;
     }
 
-    //3. VFRT table lookup
-    G_pgpe_pstate_record.vindex = (G_pgpe_pstate_record.vratio + 0xAAC - 0xA8B) / 0xAAC;
-
-    //4. Update wofClip(int. variable)
+    //3. Update wofClip(int. variable)
     G_pgpe_pstate_record.wofClip =
         G_pgpe_pstate_record.pVFRT->vfrt_data[G_pgpe_pstate_record.findex][G_pgpe_pstate_record.vindex];
 
