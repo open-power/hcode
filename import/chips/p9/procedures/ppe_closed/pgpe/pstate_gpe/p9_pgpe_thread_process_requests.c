@@ -541,12 +541,19 @@ void p9_pgpe_process_clip_updt()
                 G_pgpe_pstate_record.pendingPminClipBcast = 1;
             }
 
+            //We can't have max freq/voltage to be below safePstate, so just halt PGPE
+            if(args->ps_val_clip_max[q] > G_pgpe_pstate_record.safePstate)
+            {
+                PGPE_PANIC_AND_TRACE(PGPE_PMAX_RCV_GREATER_THAN_PSAFE);
+            }
+
             if (G_pgpe_pstate_record.psClipMin[q] != args->ps_val_clip_max[q])
             {
                 G_pgpe_pstate_record.psClipMin[q] = args->ps_val_clip_max[q];
                 G_pgpe_pstate_record.pendingPmaxClipBcast = 1;
             }
         }
+
 
         G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.psClipMax[0] << 24) |
                                       (G_pgpe_pstate_record.psClipMax[1] << 16) |
