@@ -82,8 +82,11 @@ void p9_pgpe_pstate_init()
 
     if (G_gppb->safe_frequency_khz)
     {
-        G_pgpe_pstate_record.safePstate = (G_gppb->reference_frequency_khz - G_gppb->safe_frequency_khz -
-                                           (G_gppb->frequency_step_khz)) / G_gppb->frequency_step_khz;
+        // As the safe frequency (eg Pstate) needs to be FASTER than the core floor,
+        // truncate the resultant computation to the lower integer value (Pstate)
+        // to have the higher frequency
+        G_pgpe_pstate_record.safePstate = (G_gppb->reference_frequency_khz - G_gppb->safe_frequency_khz) /
+                                          G_gppb->frequency_step_khz;
     }
     else
     {
@@ -96,16 +99,16 @@ void p9_pgpe_pstate_init()
 
     for (q = 0; q < MAX_QUADS; q++)
     {
-        G_pgpe_pstate_record.psClipMax[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.psClipMax[q] = G_pgpe_pstate_record.safePstate;
         G_pgpe_pstate_record.psClipMin[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][ULTRA].pstate;
-        G_pgpe_pstate_record.quadPSComputed[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_pgpe_pstate_record.globalPSComputed = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_pgpe_pstate_record.quadPSTarget[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_pgpe_pstate_record.globalPSTarget = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_pgpe_pstate_record.quadPSCurr[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_pgpe_pstate_record.globalPSCurr  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_pgpe_pstate_record.quadPSNext[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
-        G_pgpe_pstate_record.globalPSNext  = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_pgpe_pstate_record.quadPSComputed[q] = G_pgpe_pstate_record.safePstate;
+        G_pgpe_pstate_record.globalPSComputed = G_pgpe_pstate_record.safePstate;
+        G_pgpe_pstate_record.quadPSTarget[q] = G_pgpe_pstate_record.safePstate;
+        G_pgpe_pstate_record.globalPSTarget = G_pgpe_pstate_record.safePstate;
+        G_pgpe_pstate_record.quadPSCurr[q] = G_pgpe_pstate_record.safePstate;
+        G_pgpe_pstate_record.globalPSCurr  = G_pgpe_pstate_record.safePstate;
+        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.safePstate;
+        G_pgpe_pstate_record.globalPSNext  = G_pgpe_pstate_record.safePstate;
 
         for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
         {
@@ -204,8 +207,9 @@ void p9_pgpe_pstate_do_auction()
         if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
             //Go through all the cores in this quad with pending request
-            //and find the lowest numbered PState
-            G_pgpe_pstate_record.quadPSComputed[q] = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+            //and find the lowest numbered PState.  Pstate cannot be greater that
+            //the safe Pstate.
+            G_pgpe_pstate_record.quadPSComputed[q] = G_pgpe_pstate_record.safePstate;
 
             for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
             {
@@ -230,7 +234,7 @@ void p9_pgpe_pstate_do_auction()
     }
 
     //Global PState Auction
-    G_pgpe_pstate_record.globalPSComputed = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+    G_pgpe_pstate_record.globalPSComputed = G_pgpe_pstate_record.safePstate;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -303,7 +307,7 @@ void p9_pgpe_pstate_apply_clips()
     }
 
     //Global PState Auction
-    G_pgpe_pstate_record.globalPSTarget = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+    G_pgpe_pstate_record.globalPSTarget = G_pgpe_pstate_record.safePstate;
 
     for (q = 0; q < MAX_QUADS; q++)
     {
