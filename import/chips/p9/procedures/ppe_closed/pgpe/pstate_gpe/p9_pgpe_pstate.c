@@ -1458,14 +1458,7 @@ void p9_pgpe_pstate_do_step()
             {
                 if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
                 {
-                    if (G_pgpe_pstate_record.quadPSTarget[q] > G_pgpe_pstate_record.globalPSNext)   //Keep localPS under GlobalPS
-                    {
-                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.globalPSNext;
-                    }
-                    else
-                    {
-                        G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
-                    }
+                    G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.quadPSTarget[q];
                 }
             }
 
@@ -1664,6 +1657,18 @@ void p9_pgpe_pstate_freq_updt()
     db0.fields.quad3_ps = G_pgpe_pstate_record.quadPSNext[3];
     db0.fields.quad4_ps = G_pgpe_pstate_record.quadPSNext[4];
     db0.fields.quad5_ps = G_pgpe_pstate_record.quadPSNext[5];
+
+    //Ensure quadPS is not lower numbered(higher freq/volt) than globalPS
+    if ((G_pgpe_pstate_record.quadPSNext[0] < G_pgpe_pstate_record.globalPSNext) ||
+        (G_pgpe_pstate_record.quadPSNext[1] < G_pgpe_pstate_record.globalPSNext) ||
+        (G_pgpe_pstate_record.quadPSNext[2] < G_pgpe_pstate_record.globalPSNext) ||
+        (G_pgpe_pstate_record.quadPSNext[3] < G_pgpe_pstate_record.globalPSNext) ||
+        (G_pgpe_pstate_record.quadPSNext[4] < G_pgpe_pstate_record.globalPSNext) ||
+        (G_pgpe_pstate_record.quadPSNext[5] < G_pgpe_pstate_record.globalPSNext))
+    {
+        PK_TRACE_ERR("FREQ: Invalid Freq Updt. quadPS < globalPS");
+        PGPE_PANIC_AND_TRACE(PGPE_INVALID_FREQ_UPDT);
+    }
 
     p9_pgpe_optrace(ACTL_BROADCAST);
     p9_pgpe_send_db0(db0.value,
