@@ -970,6 +970,9 @@ inline void p9_cme_pstate_freq_update()
 
 inline void p9_cme_pstate_update_analog()
 {
+    // Get the current state of CME flags
+    G_cme_flags = in32(CME_LCL_FLAGS);
+
     do
     {
 #ifdef USE_CME_VDM_FEATURE
