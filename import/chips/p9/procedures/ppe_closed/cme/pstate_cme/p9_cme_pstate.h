@@ -161,6 +161,12 @@ typedef enum
     INTERCME_DIRECT_ACK    = 1
 } INTERCME_DIRECT_TYPE;
 
+enum DB0_TRIGGER
+{
+    PROCESS_DB0_TRIGGER_DB0_IRQ = 1,
+    PROCESS_DB0_TRIGGER_DB3_IRQ = 2,
+};
+
 typedef struct
 {
 #if !defined(__IOTA__)
@@ -194,7 +200,7 @@ void p9_cme_pstate_pmcr_handler(void*, PkIrqId);
 void p9_cme_pstate_db0_handler(void*, PkIrqId);
 void p9_cme_pstate_db3_handler(void*, PkIrqId);
 void p9_cme_pstate_db3_handler_replay_db0();
-void p9_cme_pstate_db3_handler_high_priority_pstate(uint32_t pstate);
+void p9_cme_pstate_db3_handler_high_priority_pstate();
 void p9_cme_pstate_intercme_in0_irq_handler(void*, PkIrqId);
 void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq);
 void p9_cme_pstate_db0_safe_mode();
@@ -208,8 +214,8 @@ void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint3
 void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
 void p9_cme_pstate_pmsr_updt(uint32_t coreMask);
 void p9_cme_pstate_pmsr_updt_in_progress(uint32_t coreMask);
-void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0, uint32_t readDB0, uint64_t dbData);
-void p9_cme_pstate_process_db0_sibling(uint64_t dbData);
+void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0);
+void p9_cme_pstate_process_db0_sibling();
 
 #ifdef USE_CME_RESCLK_FEATURE
     uint32_t p9_cme_resclk_get_index(uint32_t pstate);
