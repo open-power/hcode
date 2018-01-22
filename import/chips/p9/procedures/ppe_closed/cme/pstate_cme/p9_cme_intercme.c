@@ -51,20 +51,7 @@ void p9_cme_pstate_intercme_in0_irq_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext  ctx __attribute__((unused));
 
-    //Read DB0 from first good core since PGPE
-    //writes same value for both cores
-    uint64_t dbData;
-
-    if (in32(CME_LCL_FLAGS) & (BIT32(CME_FLAGS_CORE0_GOOD)))
-    {
-        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, dbData);
-    }
-    else
-    {
-        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, dbData);
-    }
-
-    p9_cme_pstate_process_db0_sibling(dbData);
+    p9_cme_pstate_process_db0_sibling();
 
     pk_irq_vec_restore(&ctx);
 }
@@ -73,16 +60,15 @@ void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext  ctx __attribute__((unused));
 
-    p9_cme_pstate_sibling_lock_and_intercme_protocol(0, 1, 0);
+    p9_cme_pstate_sibling_lock_and_intercme_protocol(0);
 
     pk_irq_vec_restore(&ctx);
 }
 
-void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0, uint32_t readDB0, uint64_t dbData)
+void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0)
 {
     PK_TRACE("SIBL: Enter\n");
     uint32_t msg;
-    uint64_t data;
     intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
 
     // Block on the intercme0/intercme1 interrupt
@@ -100,36 +86,27 @@ void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_
     //If INTERCME_DIRECT_IN0, then process DB0 data
     if((in32(CME_LCL_EISR) & BIT32(7)) && (process_intercme_in0 == 1))
     {
-        if(readDB0)
-        {
-            //Read DB0 from first good core since PGPE
-            //writes same value for both cores
-            if (in32(CME_LCL_FLAGS) & (BIT32(CME_FLAGS_CORE0_GOOD)))
-            {
-                CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, data);
-            }
-            else
-            {
-                CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, data);
-            }
-        }
-        else
-        {
-            data = dbData;
-        }
-
-        p9_cme_pstate_process_db0_sibling(data);
+        p9_cme_pstate_process_db0_sibling();
     }
 
     PK_TRACE("SIBL: Enter\n");
 }
 
-void p9_cme_pstate_process_db0_sibling(uint64_t data)
+void p9_cme_pstate_process_db0_sibling()
 {
     cppm_cmedb0_t dbData;
-    dbData.value = data;
     uint32_t dbQuadInfo, dbBit8_15;
-    //uint32_t cme_flags = in32(CME_LCL_FLAGS);
+
+    //Read DB0 from first good core since PGPE
+    //writes same value for both cores
+    if (in32(CME_LCL_FLAGS) & (BIT32(CME_FLAGS_CORE0_GOOD)))
+    {
+        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C0, dbData.value);
+    }
+    else
+    {
+        CME_GETSCOM(CPPM_CMEDB0, CME_MASK_C1, dbData.value);
+    }
 
     PK_TRACE("INTER0: Enter\n");
 
@@ -154,7 +131,8 @@ void p9_cme_pstate_process_db0_sibling(uint64_t data)
         //Clear Core GPMMR RESET_STATE_INDICATOR bit to show pstates have started
         CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));
     }
-    else if(dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST)
+    else if((dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST) ||
+            (dbData.fields.cme_message_number0 == MSGID_DB0_DB3_GLOBAL_ACTUAL_BROADCAST))
     {
         PK_TRACE("INTER0: DB0 GlbBcast");
         G_cme_pstate_record.quadPstate = dbQuadInfo;
