@@ -180,8 +180,14 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                             }
                         }
 
+                        //Make sure that minPS is not below(higher value/low freq-volt) than safePstate
+                        minPS = (minPS > G_pgpe_pstate_record.safePstate) ? G_pgpe_pstate_record.safePstate : minPS;
+
                         if (G_pgpe_pstate_record.quadPSCurr[q] > G_pgpe_pstate_record.psClipMax[q] ||
-                            G_pgpe_pstate_record.quadPSCurr[q] <  minPS)
+                            G_pgpe_pstate_record.quadPSCurr[q] <  minPS ||
+                            G_pgpe_pstate_record.globalPSCurr > G_pgpe_pstate_record.psClipMax[q] ||
+                            G_pgpe_pstate_record.globalPSCurr <  minPS)
+
                         {
                             inRange = 0;
                         }
