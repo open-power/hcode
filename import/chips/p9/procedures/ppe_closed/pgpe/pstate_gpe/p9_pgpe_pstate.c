@@ -62,6 +62,7 @@ GPE_BUFFER(ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 GPE_BUFFER(ipcmsg_p2s_suspend_stop_t G_sgpe_suspend_stop);
 
 //Local Functions
+void p9_pgpe_handle_nacks(uint32_t origCoreVector, uint32_t origAckVector);
 void p9_pgpe_pstate_freq_updt();
 void p9_pgpe_pstate_dpll_write(uint32_t quadsVector, uint64_t val);
 void p9_pgpe_droop_throttle();
@@ -119,6 +120,7 @@ void p9_pgpe_pstate_init()
     }
 
     // CQ: SW415420
+    // TODO: RTC 187305
     // Load the number of cores for this part.  Note: this is called
     // "Configured Cores" but this is really not the actual case;  this
     // is the originally good cores from the VPD for this sort to be
@@ -378,11 +380,16 @@ void p9_pgpe_pstate_calc_wof()
         }
 
         G_pgpe_pstate_record.vindex = (G_pgpe_pstate_record.vratio + 0xAAC - 0xA8B) / 0xAAC;
+
+        if (G_pgpe_pstate_record.vindex > VFRT_VRATIO_SIZE - 1)
+        {
+            G_pgpe_pstate_record.vindex = VFRT_VRATIO_SIZE - 1;
+        }
     }
     else
     {
         G_pgpe_pstate_record.vratio = 0xFFFF;
-        G_pgpe_pstate_record.vindex = 23;
+        G_pgpe_pstate_record.vindex = VFRT_VRATIO_SIZE - 1;
     }
 
     //3. Update wofClip(int. variable)
@@ -465,7 +472,7 @@ void p9_pgpe_send_db0(uint64_t db0, uint32_t origCoreVector,
                       uint32_t unicast, uint32_t ackWait, uint32_t origAckVector)
 {
 
-    uint32_t c, q;
+    uint32_t c;
     uint32_t ackVector = origAckVector;
     uint32_t coreVector = origCoreVector;
     G_pgpe_pstate_record.quadsNACKed = 0;
@@ -500,85 +507,33 @@ void p9_pgpe_send_db0(uint64_t db0, uint32_t origCoreVector,
 
     p9_pgpe_wait_cme_db_ack(ackVector);//Wait for ACKs from QuadManagers
 
-    PK_TRACE_DBG("SDB: quadsNACKed=0x%x", G_pgpe_pstate_record.quadsNACKed);
+    if(G_pgpe_pstate_record.quadsNACKed)
+    {
+        p9_pgpe_handle_nacks(origCoreVector, origAckVector);
+    }
+}
+
+void p9_pgpe_send_db3_high_priority_pstate(uint32_t coresVector, uint32_t ackVector)
+{
+
+    uint64_t db3val = (uint64_t)MSGID_DB3_HIGH_PRIORITY_PSTATE << 56;
+    uint32_t c;
+
+    for (c = 0; c < MAX_CORES; c++)
+    {
+        if (coresVector & CORE_MASK(c))
+        {
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB3, c), db3val)
+        }
+    }
+
+    p9_pgpe_wait_cme_db_ack(ackVector);//Wait for ACKs from QuadManagers
 
     if(G_pgpe_pstate_record.quadsNACKed)
     {
-        PK_TRACE_DBG("SDB: quadsNACKed=0x%x", G_pgpe_pstate_record.quadsNACKed);
-
-        //a. If OCC Scratch2 Core Throttle Continuous Change Enable bit is set (i.e. during Manufacturing test), halt the PGPE with a unique error code.
-        //Engineering Note: characterization team is responsible to set CSAR bit "Disable CME NACK on Prolonged Droop" when doing PGPE throttle scom injection.
-        if(in32(OCB_OCCS2) & BIT32(CORE_THROTTLE_CONTINUOUS_CHANGE_ENABLE))
-        {
-            PGPE_PANIC_AND_TRACE(PGPE_DROOP_AND_CORE_THRTLE_ENABLED);
-        }
-
-        //b) If  OCC flag PGPE Prolonged Droop Workaround Active bit is not set,
-        //    call droop_throttle()
-
-        if (!(in32(OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
-        {
-            p9_pgpe_droop_throttle();
-        }
-
-        //c) Send DB3 (Replay Previous DB0 Operation) to only the CME Quad Managers, and
-        //their Sibling CME (if present), that responded with a NACK.
-        uint64_t db3val = (uint64_t)MSGID_DB3_REPLAY_DB0 << 56;
-
-        while(G_pgpe_pstate_record.quadsNACKed)
-        {
-            G_pgpe_pstate_record.cntNACKs++;
-            ackVector = G_pgpe_pstate_record.quadsNACKed;
-
-            for (q = 0; q < MAX_QUADS; q++)
-            {
-                //If quad provided an ACK, then don't send DB3 again
-                if(!(G_pgpe_pstate_record.quadsNACKed & QUAD_MASK(q)))
-                {
-                    coreVector &= (~QUAD_ALL_CORES_MASK(q));
-                }
-                else
-                {
-                    G_pgpe_pstate_record.quadsCntNACKs[q]++;
-                }
-            }
-
-            //If a NACK received was in response to the first retry (i.e. second failed attempt):
-            if (G_pgpe_pstate_record.cntNACKs == 2)
-            {
-                // 1 SCOM Write to OCC FIR[prolonged_droop_detected] bit.   This FIR bit is set to recoverable so that it will create an informational error log.
-                GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(OCCLFIR_PROLONGED_DROOP_DETECTED));
-
-                // 2 Set OCC Flag register PGPE PM Reset Suppress bit that OCC
-                //  will read to tell OCC not to attempt a PM Complex reset on
-                //  PGPE timeouts in the meantime.
-                out32(OCB_OCCFLG_OR, BIT32(PGPE_PM_RESET_SUPPRESS));
-
-                // 3 Send DB0 PMSR Update with message Set Pstates Suspended only
-                // to the CME QM (and their Siblings) that provided an ACK
-                // (note: PGPE must also wait for them to ACK the DB0)
-                p9_pgpe_pstate_pmsr_updt(DB0_PMSR_UPDT_SET_PSTATES_SUSPENDED,
-                                         origCoreVector & (~coreVector),
-                                         origAckVector & (~G_pgpe_pstate_record.quadsNACKed));
-            }
-
-            //The PGPE then retries the DB3 (Replay Previous DB0 Operation)
-            //again as described above to all CME QM (and their Siblings)
-            //that responded with NACK until it no longer gets a NACK (attempt to self-heal)
-            for (c = 0; c < MAX_CORES; c++)
-            {
-                if (coreVector & CORE_MASK(c))
-                {
-                    GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB3, c), db3val)
-                }
-            }
-
-            p9_pgpe_wait_cme_db_ack(ackVector);//Wait for ACKs from QuadManagers
-        }//End while(quadNACked) loop
-
-        //if OCC Flag Register PGPE Prolonged Droop Workaround Active bit is set and all CME QMs respond with ACK
-        p9_pgpe_droop_unthrottle();
+        p9_pgpe_handle_nacks(coresVector, ackVector);
     }
+
 }
 
 void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
@@ -603,7 +558,6 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
             {
                 if (quadAckExpect & QUAD_MASK(q))
                 {
-                    PK_TRACE_INF("DBW: Quad[%d] Acked", q);
                     quadAckExpect &= ~QUAD_MASK(q);
                     opit4Clr |= (opit4prQuad << ((MAX_QUADS - q + 1) << 2));
                     c = 0;
@@ -615,7 +569,7 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
 
                     opit4cn.value = in32(OCB_OPIT4CN((q * 4) + c));
 
-                    PK_TRACE_INF("DBW: opit4cn[%d]=0x%x", c, opit4cn.value);
+                    PK_TRACE_INF("DBW: QuadACK opit4cn[%d]=0x%x", ((q * 4) + c), opit4cn.value);
 
                     switch (opit4cn.value & 0xf)
                     {
@@ -632,7 +586,6 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
                             //Mark that this quad sent a NACK
                             PK_TRACE_DBG("DBW: Got NACK from %d", q);
                             G_pgpe_pstate_record.quadsNACKed |= QUAD_MASK(q);
-                            PK_TRACE_DBG("DBW: QuadsNACKed=0x%x", G_pgpe_pstate_record.quadsNACKed);
                             break;
 
                         //Note this includes MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE(0x3)
@@ -655,6 +608,86 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect)
     }
 
     PK_TRACE_DBG("DBW: QuadsNACKed=0x%x", G_pgpe_pstate_record.quadsNACKed);
+}
+
+void p9_pgpe_handle_nacks(uint32_t origCoreVector, uint32_t origAckVector)
+{
+    uint32_t c, q;
+    uint32_t ackVector = origAckVector;
+    uint32_t coreVector = origCoreVector;
+    uint64_t db3val = (uint64_t)MSGID_DB3_REPLAY_DB0 << 56;
+
+    //a. If OCC Scratch2 Core Throttle Continuous Change Enable bit is set (i.e. during Manufacturing test), halt the PGPE with a unique error code.
+    //Engineering Note: characterization team is responsible to set CSAR bit "Disable CME NACK on Prolonged Droop" when doing PGPE throttle scom injection.
+    if(in32(OCB_OCCS2) & BIT32(CORE_THROTTLE_CONTINUOUS_CHANGE_ENABLE))
+    {
+        PGPE_PANIC_AND_TRACE(PGPE_DROOP_AND_CORE_THRTLE_ENABLED);
+    }
+
+    //b) If  OCC flag PGPE Prolonged Droop Workaround Active bit is not set,
+    //    call droop_throttle()
+
+    if (!(in32(OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
+    {
+        p9_pgpe_droop_throttle();
+    }
+
+    //c) Send DB3 (Replay Previous DB0 Operation) to only the CME Quad Managers, and
+    //their Sibling CME (if present), that responded with a NACK.
+
+    while(G_pgpe_pstate_record.quadsNACKed)
+    {
+        G_pgpe_pstate_record.cntNACKs++;
+        ackVector = G_pgpe_pstate_record.quadsNACKed;
+
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            //If quad provided an ACK, then don't send DB3 again
+            if(!(G_pgpe_pstate_record.quadsNACKed & QUAD_MASK(q)))
+            {
+                coreVector &= (~QUAD_ALL_CORES_MASK(q));
+            }
+            else
+            {
+                G_pgpe_pstate_record.quadsCntNACKs[q]++;
+            }
+        }
+
+        //If a NACK received was in response to the first retry (i.e. second failed attempt):
+        if (G_pgpe_pstate_record.cntNACKs == 2)
+        {
+            // 1 SCOM Write to OCC FIR[prolonged_droop_detected] bit.   This FIR bit is set to recoverable so that it will create an informational error log.
+            GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(OCCLFIR_PROLONGED_DROOP_DETECTED));
+
+            // 2 Set OCC Flag register PGPE PM Reset Suppress bit that OCC
+            //  will read to tell OCC not to attempt a PM Complex reset on
+            //  PGPE timeouts in the meantime.
+            out32(OCB_OCCFLG_OR, BIT32(PGPE_PM_RESET_SUPPRESS));
+
+            // 3 Send DB0 PMSR Update with message Set Pstates Suspended only
+            // to the CME QM (and their Siblings) that provided an ACK
+            // (note: PGPE must also wait for them to ACK the DB0)
+            p9_pgpe_pstate_pmsr_updt(DB0_PMSR_UPDT_SET_PSTATES_SUSPENDED,
+                                     origCoreVector & (~coreVector),
+                                     origAckVector & (~G_pgpe_pstate_record.quadsNACKed));
+        }
+
+        //The PGPE then retries the DB3 (Replay Previous DB0 Operation)
+        //again as described above to all CME QM (and their Siblings)
+        //that responded with NACK until it no longer gets a NACK (attempt to self-heal)
+        for (c = 0; c < MAX_CORES; c++)
+        {
+            if (coreVector & CORE_MASK(c))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB3, c), db3val)
+            }
+        }
+
+        p9_pgpe_wait_cme_db_ack(ackVector);//Wait for ACKs from QuadManagers
+    }//End while(quadNACked) loop
+
+    //if OCC Flag Register PGPE Prolonged Droop Workaround Active bit is set and all CME QMs respond with ACK
+    p9_pgpe_droop_unthrottle();
 }
 
 //
@@ -1220,7 +1253,7 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
 //
 void p9_pgpe_pstate_wof_ctrl(uint32_t action)
 {
-    uint32_t c;
+    uint32_t c, q;
     uint32_t activeCores, activeQuads;
 
     if (action == PGPE_ACTION_WOF_ON)
@@ -1231,21 +1264,39 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
         {
             p9_pgpe_pstate_send_ctrl_stop_updt(CTRL_STOP_UPDT_ENABLE_CORE);
             activeCores = G_sgpe_control_updt.fields.active_cores << 8;
-            activeQuads = G_sgpe_control_updt.fields.active_quads;
+            activeQuads = G_sgpe_control_updt.fields.active_quads << 2;
         }
         else
         {
-            activeCores = G_pgpe_pstate_record.activeDB;
-            activeQuads = G_pgpe_pstate_record.activeQuads;
+            //Set equal to configured cores
+            ocb_ccsr_t ccsr;
+            ccsr.value = in32(OCB_CCSR);
+            activeCores = ccsr.value;
+
+            //Determine configured quads
+            ocb_qcsr_t qcsr;
+            qcsr.value = in32(OCB_QCSR);
+            activeQuads = 0;
+
+            for (q = 0; q < MAX_QUADS; q++)
+            {
+                if ((qcsr.fields.ex_config & QUAD_EX0_MASK(q)) ||
+                    (qcsr.fields.ex_config & QUAD_EX1_MASK(q)))
+                {
+                    activeQuads |= QUAD_MASK(q);
+                }
+
+            }
         }
 
         G_pgpe_pstate_record.wofStatus = WOF_ENABLED;
+
         //Set to value returned by SGPE or initial value determined during boot(equal to configured cores)
-        G_pgpe_pstate_record.activeCores = activeCores << 8;
+        G_pgpe_pstate_record.activeCores = activeCores;
 
         //Update Shared Memory Region
         G_pgpe_pstate_record.pQuadState0->fields.active_cores = G_pgpe_pstate_record.activeCores >> 16;
-        G_pgpe_pstate_record.pQuadState1->fields.active_cores |= (G_pgpe_pstate_record.activeCores & 0xFF00);
+        G_pgpe_pstate_record.pQuadState1->fields.active_cores = (G_pgpe_pstate_record.activeCores & 0xFF00);
         G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = activeQuads;
 
         G_pgpe_pstate_record.numActiveCores = 0;
@@ -1305,8 +1356,16 @@ void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t action)
         PK_PANIC(PGPE_SGPE_IPC_SEND_BAD_RC);
     }
 
-    //Wait for return code to be set
-    while(G_sgpe_control_updt.fields.return_code != SGPE_PGPE_IPC_RC_SUCCESS);
+    while(G_sgpe_control_updt.fields.return_code == IPC_SGPE_PGPE_RC_NULL)
+    {
+        dcbi(((void*)(&G_sgpe_control_updt)));
+    }
+
+    if (G_sgpe_control_updt.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
+    {
+        PK_TRACE_ERR("ERROR: SGPE Ctrl Stop Updt. Bad RC. Halting PGPE!");
+        PGPE_PANIC_AND_TRACE(PGPE_SGPE_CTRL_STOP_UPDT_BAD_ACK);
+    }
 
 #endif// _SGPE_IPC_ENABLED_
 }
@@ -1850,11 +1909,29 @@ void p9_pgpe_pstate_freq_updt()
     }
 
     p9_pgpe_optrace(ACTL_BROADCAST);
-    p9_pgpe_send_db0(db0.value,
-                     G_pgpe_pstate_record.activeDB,
-                     PGPE_DB0_MULTICAST,
-                     PGPE_DB0_ACK_WAIT_CME,
-                     G_pgpe_pstate_record.activeQuads);
+
+    //If we ACTIVE_CORES_UPDT pending, then send a DB3(High-Priority Pstate Request) with payload
+    //in DB0.
+    if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1)
+    {
+        //Write DB0, but with top-byte = 0. This way DB0 interrupt doesn't happen, but
+        //we still send CME the necessary data. CME will read this inside the DB3 interrupt
+        //which we write next
+        db0.fields.msg_id = 0;
+        GPE_PUTSCOM(PCB_MULTICAST_GRP1 | CPPM_CMEDB0, db0.value)
+        p9_pgpe_send_db3_high_priority_pstate(G_pgpe_pstate_record.activeDB,
+                                              G_pgpe_pstate_record.activeQuads);
+        //Otherwise, send regular DB0
+    }
+    else
+    {
+        p9_pgpe_send_db0(db0.value,
+                         G_pgpe_pstate_record.activeDB,
+                         PGPE_DB0_MULTICAST,
+                         PGPE_DB0_ACK_WAIT_CME,
+                         G_pgpe_pstate_record.activeQuads);
+    }
+
     p9_pgpe_optrace(ACK_ACTL_DONE);
 
     PK_TRACE_DBG("FREQ: Exit");
