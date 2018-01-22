@@ -125,10 +125,9 @@ void p9_cme_pstate_db3_handler(void* arg, PkIrqId irq)
         CME_GETSCOM(CPPM_CMEDB3, CME_MASK_C1, db3.value);
     }
 
-    if((db3.fields.cme_message_numbern >= MSGID_DB3_PSTATE_START) &&
-       (db3.fields.cme_message_numbern <= MSGID_DB3_PSTATE_END))
+    if(db3.fields.cme_message_numbern >= MSGID_DB3_HIGH_PRIORITY_PSTATE)
     {
-        p9_cme_pstate_db3_handler_high_priority_pstate(db3.fields.cme_message_numbern);
+        p9_cme_pstate_db3_handler_high_priority_pstate();
     }
     else if (db3.fields.cme_message_numbern == MSGID_DB3_REPLAY_DB0)
     {
@@ -155,38 +154,29 @@ void p9_cme_pstate_db3_handler_replay_db0()
     {
         p9_cme_pstate_process_db0();
     }
-    //On Sibling poll on intercme_msg "LOCK_SIBLING", then
+    //On Sibling, poll on intercme_msg "LOCK_SIBLING", then
     //poll on intercme_in0/1 direct msg.
     else
     {
-        p9_cme_pstate_sibling_lock_and_intercme_protocol(1, 1, 0);
+        p9_cme_pstate_sibling_lock_and_intercme_protocol(1);
     }
 }
 
 //
-//Doorbell3 Handler Replay DB0
+//Doorbell3 Handler High Priority Pstate
 //
-void p9_cme_pstate_db3_handler_high_priority_pstate(uint32_t pstate)
+void p9_cme_pstate_db3_handler_high_priority_pstate()
 {
-    //QuadManager
-    G_dbData.fields.cme_message_number0 = MSGID_DB0_START_PSTATE_BROADCAST;
-    G_dbData.value |= (uint64_t)pstate;
-    G_dbData.value |= ((uint64_t)pstate << 8);
-    G_dbData.value |= ((uint64_t)pstate << 16);
-    G_dbData.value |= ((uint64_t)pstate << 24);
-    G_dbData.value |= ((uint64_t)pstate << 32);
-    G_dbData.value |= ((uint64_t)pstate << 40);
-    G_dbData.value |= ((uint64_t)pstate << 48);
-
+    //Quad Manager
     if(G_cme_pstate_record.qmFlag)
     {
-        p9_cme_pstate_db0_glb_bcast();
+        p9_cme_pstate_process_db0();
     }
-    //On Sibling poll on intercme_msg "LOCK_SIBLING", then
+    //On Sibling poll, on intercme_msg "LOCK_SIBLING", then
     //poll on intercme_in0/1 direct msg.
     else
     {
-        p9_cme_pstate_sibling_lock_and_intercme_protocol(1, 0, G_dbData.value);
+        p9_cme_pstate_sibling_lock_and_intercme_protocol(1);
     }
 }
 
@@ -528,7 +518,8 @@ void p9_cme_pstate_process_db0()
             p9_cme_pstate_db0_start();
         }
         //Global Actual Broadcast and Pstates enabled
-        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST)
+        else if((G_dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST) ||
+                (G_dbData.fields.cme_message_number0 == MSGID_DB0_DB3_GLOBAL_ACTUAL_BROADCAST))
         {
             //Process Global Bcast only if Pstates are enabled.
             //Otherwise, ignore. The reason is PGPE multicasts Global Bcast, and doorbell0
@@ -664,7 +655,7 @@ inline void p9_cme_pstate_register()
             while(msgCnt != 3)
             {
                 PK_TRACE_INF("DB_TH: Sib Register MsgCnt=0x%xt", msgCnt);
-                p9_cme_pstate_sibling_lock_and_intercme_protocol(1, 1, 0);
+                p9_cme_pstate_sibling_lock_and_intercme_protocol(1);
                 msgCnt++;
             }
         }

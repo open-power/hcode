@@ -91,27 +91,26 @@ enum PMSR_DEFS
 //
 enum MESSAGE_ID_DB0
 {
-    MSGID_DB0_INVALID                   = 0,
-    MSGID_DB0_RESERVED                  = 1,
-    MSGID_DB0_VALID_START               = 2, //This for error checking
-    MSGID_DB0_GLOBAL_ACTUAL_BROADCAST   = 2,
-    MSGID_DB0_START_PSTATE_BROADCAST    = 3,
-    MSGID_DB0_STOP_PSTATE_BROADCAST     = 4,
-    MSGID_DB0_CLIP_BROADCAST            = 5,
-    MSGID_DB0_PMSR_UPDT                 = 6,
-    MSGID_DB0_VALID_END                 = 6 //This for error checking
+    MSGID_DB0_VALID_START                   = 0, //This is for error checking
+    MSGID_DB0_DB3_GLOBAL_ACTUAL_BROADCAST   = 0,
+    MSGID_DB0_RESERVED                      = 1,
+    MSGID_DB0_GLOBAL_ACTUAL_BROADCAST       = 2,
+    MSGID_DB0_START_PSTATE_BROADCAST        = 3,
+    MSGID_DB0_STOP_PSTATE_BROADCAST         = 4,
+    MSGID_DB0_CLIP_BROADCAST                = 5,
+    MSGID_DB0_PMSR_UPDT                     = 6,
+    MSGID_DB0_VALID_END                     = 6 //This is for error checking
 };
 
 enum MESSAGE_ID_DB3
 {
-    MSGID_DB3_RESERVED                  = 0,
-    MSGID_DB3_VALID_START               = 1, //This for error checking
-    MSGID_DB3_PSTATE_START              = 1,
-    MSGID_DB3_PSTATE_END                = 0xF0,
+    MSGID_DB3_INVALID                   = 0,
+    MSGID_DB3_VALID_START               = 1, //This is for error checking
+    MSGID_DB3_HIGH_PRIORITY_PSTATE      = 1,
     MSGID_DB3_IMMEDIATE_HALT            = 0xF1,
     MSGID_DB3_RESTORE_STATE_AND_HALT    = 0xF2,
     MSGID_DB3_REPLAY_DB0                = 0xF3,
-    MSGID_DB3_VALID_END                 = 0xF3 //This for error checking
+    MSGID_DB3_VALID_END                 = 0xF3 //This is for error checking
 };
 
 enum MESSAGEID_PCB_TYPE4_ACK_TYPES
