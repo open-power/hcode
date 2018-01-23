@@ -98,9 +98,9 @@ enum PGPE_CORE_THROTTLE
     MSR_THROTTLE_MASK               = 0x29000000,
     WORKAROUND_SCOM_MULTICAST_WRITE = 0x69010800,
     THROTTLE_SCOM_MULTICAST_WRITE   = 0x69010A9E,
-    CORE_IFU_THROTTLE               = 0x8000000,
-    CORE_SLOWDOWN                   = 0x1000000,
-    CORE_THROTTLE_OFF               = 0x0000000,
+    CORE_IFU_THROTTLE               = 0x80000000,
+    CORE_SLOWDOWN                   = 0x10000000,
+    CORE_THROTTLE_OFF               = 0x0,
     NO_RETRY                        = 0,
     RETRY                           = 1
 };
