@@ -551,13 +551,7 @@ p9_sgpe_stop_entry()
             PK_TRACE("Update STOP history on core[%d]: in stop level 8", cindex);
             scom_data.words.lower = 0;
             scom_data.words.upper = SSH_ACT_LV8_COMPLETE;
-
-#if !DISABLE_STOP8
-
             GPE_PUTSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, cindex, 0, scom_data.value);
-
-#endif
-
         }
 
         PK_TRACE("Update QSSR: l2_stopped, drop stop_entry_ongoing");
