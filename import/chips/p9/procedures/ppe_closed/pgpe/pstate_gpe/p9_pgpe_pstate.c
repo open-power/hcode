@@ -94,9 +94,6 @@ void p9_pgpe_pstate_init()
         PK_TRACE_INF("Safe Frequency is NOT set.  Using POWERSAVE as Pstate as safe");
     }
 
-    PK_TRACE_INF("SafePstate=0x%x", G_pgpe_pstate_record.safePstate);
-    PK_TRACE_INF("SafeFrequency=0x%x,SafeVoltage=0x%x", G_gppb->safe_frequency_khz, G_gppb->safe_voltage_mv);
-
     for (q = 0; q < MAX_QUADS; q++)
     {
         G_pgpe_pstate_record.psClipMax[q] = G_pgpe_pstate_record.safePstate;
@@ -110,6 +107,8 @@ void p9_pgpe_pstate_init()
         G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.safePstate;
         G_pgpe_pstate_record.globalPSNext  = G_pgpe_pstate_record.safePstate;
 
+        // Original behavior.  Can be removed once G_gppb->options.pad has
+        // good_cores_in_sort always filled in correctly.
         for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
         {
             if (ccsr.value & CORE_MASK(c))
@@ -117,6 +116,23 @@ void p9_pgpe_pstate_init()
                 G_pgpe_pstate_record.numConfCores += 1;
             }
         }
+    }
+
+    // CQ: SW415420
+    // Load the number of cores for this part.  Note: this is called
+    // "Configured Cores" but this is really not the actual case;  this
+    // is the originally good cores from the VPD for this sort to be
+    // used by the WOF algorithm to compute vratio.
+    //
+    // The following overlay is done so allow external tooling to use
+    // the earlier version of header (pre-adding the good_cores_in_sort
+    // field in the options.pad word).
+    GPPBOptionsPadUse pad;
+    pad = (GPPBOptionsPadUse)G_gppb->options.pad;
+
+    if (pad.fields.good_cores_in_sort)
+    {
+        G_pgpe_pstate_record.numConfCores = pad.fields.good_cores_in_sort;
     }
 
     //Init OCC Shared SRAM
