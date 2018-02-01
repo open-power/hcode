@@ -139,6 +139,9 @@ p9_cme_stop_init()
     out32(CME_LCL_EIPR_CLR, (G_cme_stop_record.core_in_spwu << SHIFT32(15)));
     out32(CME_LCL_EIPR_OR,  (((~G_cme_stop_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(15)));
 
+    PK_TRACE("Assert auto spwu disable, disable auto spwu via LMCR[12/13]");
+    out32(CME_LCL_LMCR_OR, BITS32(12, 2));
+
     PK_TRACE_DBG("Setup: Umask STOP Interrupts Now Based on Entry_First Flag");
     // unmask db1 for block stop protocol
     out32_sh(CME_LCL_EIMR_CLR, (CME_MASK_BC << SHIFT64SH(41)));
