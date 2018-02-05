@@ -1004,11 +1004,39 @@ void p9_pgpe_process_registration()
                              oldActiveQuads);
         }
 
+        //Send clip updates to all quads that are already registered
+        db0_clip_bcast.value = 0;
+        db0_clip_bcast.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
+        db0_clip_bcast.fields.clip_type = DB0_CLIP_BCAST_TYPE_PMIN;
+        db0_clip_bcast.fields.quad0_clip = G_pgpe_pstate_record.psClipMax[0];
+        db0_clip_bcast.fields.quad1_clip = G_pgpe_pstate_record.psClipMax[1];
+        db0_clip_bcast.fields.quad2_clip = G_pgpe_pstate_record.psClipMax[2];
+        db0_clip_bcast.fields.quad3_clip = G_pgpe_pstate_record.psClipMax[3];
+        db0_clip_bcast.fields.quad4_clip = G_pgpe_pstate_record.psClipMax[4];
+        db0_clip_bcast.fields.quad5_clip = G_pgpe_pstate_record.psClipMax[5];
+
         //Do setup for every quad that registered
         for (q = 0; q < MAX_QUADS; q++)
         {
             if(quadsRegisterProcess & QUAD_MASK(q))
             {
+                //Give Quad Manager CME control of DPLL through inter-ppm
+                //SGPE sets up the DPLL_SEL bits before booting CME
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
+
+                uint32_t quadCoresVector = 0;
+
+                for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
+                {
+                    if (G_pgpe_pstate_record.activeDB & CORE_MASK(c))
+                    {
+                        unicastCoresVector |= CORE_MASK(c);
+                        quadCoresVector    |= CORE_MASK(c);
+                    }
+                }
+
+                p9_pgpe_send_db0(db0_clip_bcast.value, quadCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_SKIP, 0);
+
                 //Write CME_SCRATCH and PMSR0/1 registers
                 if (qcsr.fields.ex_config & QUAD_EX0_MASK(q))
                 {
@@ -1028,33 +1056,11 @@ void p9_pgpe_process_registration()
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
                 }
 
-                //Give Quad Manager CME control of DPLL through inter-ppm
-                //SGPE sets up the DPLL_SEL bits before booting CME
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
-
-                for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
-                {
-                    if (G_pgpe_pstate_record.activeDB & CORE_MASK(c))
-                    {
-                        unicastCoresVector |= CORE_MASK(c);
-                    }
-                }
-
                 quadAckExpect |= QUAD_MASK(q);
             }
         }
 
-        //Send clip updates to all quads that registered
-        db0_clip_bcast.value = 0;
-        db0_clip_bcast.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
-        db0_clip_bcast.fields.clip_type = DB0_CLIP_BCAST_TYPE_PMIN;
-        db0_clip_bcast.fields.quad0_clip = G_pgpe_pstate_record.psClipMax[0];
-        db0_clip_bcast.fields.quad1_clip = G_pgpe_pstate_record.psClipMax[1];
-        db0_clip_bcast.fields.quad2_clip = G_pgpe_pstate_record.psClipMax[2];
-        db0_clip_bcast.fields.quad3_clip = G_pgpe_pstate_record.psClipMax[3];
-        db0_clip_bcast.fields.quad4_clip = G_pgpe_pstate_record.psClipMax[4];
-        db0_clip_bcast.fields.quad5_clip = G_pgpe_pstate_record.psClipMax[5];
-        p9_pgpe_send_db0(db0_clip_bcast.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_WAIT_CME, quadAckExpect);
+        p9_pgpe_wait_cme_db_ack(quadAckExpect);
 
         db0_clip_bcast.value = 0;
         db0_clip_bcast.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
