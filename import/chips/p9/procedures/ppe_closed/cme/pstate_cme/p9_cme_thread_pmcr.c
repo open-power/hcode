@@ -47,92 +47,54 @@
 //
 //Globals
 //
-cme_pstate_pmcr_data_t G_pmcr_thread_data;
 extern CmePstateRecord G_cme_pstate_record;
-uint32_t G_pmcr_cme_flags;
 
 void cme_pstate_pmcr_action()
 {
     PkMachineContext  ctx __attribute__((unused));
-    uint64_t pmcr;
     ppm_pig_t ppmPigData;
-    uint32_t eisr;
-    static
-    uint32_t coreMask[CORES_PER_EX] __attribute__((aligned(8))) =
-    {
-        CME_MASK_C0,
-        CME_MASK_C1
-    };
+    uint64_t request;
+    uint32_t eisr_mask, core, cm;
 
-    int c;
+    //Determine which cores have pending request & clear interrupt
+    eisr_mask = in32_sh(CME_LCL_EISR) & BITS64SH(34, 2);
+    core = eisr_mask >> SHIFT64SH(35);
+    out32_sh(CME_LCL_EISR_CLR, eisr_mask);
 
-    //Determine which core have pending request
-    for(c = 0; c < CORES_PER_EX; c++)
+    //Read PMCR and send request to PGPE (Type1 only, previously sent 2 phases)
+    for(cm = 2; cm > 0; cm--)
     {
-        if (G_pmcr_cme_flags & (BIT32(CME_FLAGS_CORE0_GOOD) >> c))
+        if (core & cm)
         {
-            eisr = in32_sh(CME_LCL_EISR); //EISR
+            request = in64(CME_LCL_PMCRS0 + ((cm & 1) << 5)) & PMCR_LOWERPS_MASK;
+            PK_TRACE_INF("PMCR: Fwd Core[%d] Pstate Request = 0x%02x\n", cm, (uint32_t)(request >> PMCR_PSTATE_SHIFT_AMOUNT));
 
-            if (eisr & (BIT32(2) >> c))
-            {
-                //Clear interrupt and read PMCR
-                out32_sh(CME_LCL_EISR_CLR, BIT32(2) >> c);
-                //We read the pmcr into a local variable, so that
-                //both phases use the same PMCR value. Otherwise, it's possible
-                //for pmcr to change between sending phase 1 and phase 2
-                pmcr = in64(CME_LCL_PMCRS0 + (c << 5));
+            // Note that LowerPS coincidentally is in the correct place for the PIG payload
 
-                //Send Phase 1
-                ppmPigData.value = 0;
-                ppmPigData.fields.req_intr_type = 0;
-                ppmPigData.value |= ((pmcr & PIG_PAYLOAD_PS_PHASE1_MASK) >> 8);
-                ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
-                send_pig_packet(ppmPigData.value, coreMask[c]);
-                G_pmcr_thread_data.seqNum++;
-
-                //Send Phase 2
-                ppmPigData.value = 0;
-                ppmPigData.fields.req_intr_type = 1;
-                ppmPigData.value |= (pmcr & PIG_PAYLOAD_PS_PHASE2_MASK);
-                ppmPigData.value |= ((uint64_t)(G_pmcr_thread_data.seqNum & 0x6) << 57);
-                send_pig_packet(ppmPigData.value, coreMask[c]);
-                G_pmcr_thread_data.seqNum++;
-                PK_TRACE_INF("PMCR_TH: Fwd PMCR[%d]=0x%08x%08x\n", c, pmcr >> 32, pmcr);
-            }
+            ppmPigData.value = 0;
+            ppmPigData.fields.req_intr_type = 1;
+            ppmPigData.value |= request;
+            send_pig_packet(ppmPigData.value, cm);
         }
     }
-
-    pk_irq_vec_restore(&ctx);
 }
 
 //
 //PMCR Interrupt Handler
 //
-void p9_cme_pstate_pmcr_handler(void* arg, PkIrqId irq)
+void p9_cme_pstate_pmcr_handler(void)
 {
-#if defined(__IOTA__)
     wrteei(1);
     cme_pstate_pmcr_action();
-#else
-    pk_semaphore_post((PkSemaphore*)arg);
-#endif
 }
 
 //
-//p9_cme_pmcr_thread
+// Run this when all inits are done
 //
-void p9_cme_pstate_pmcr_thread(void* arg)
+void p9_cme_init_done()
 {
-    PK_TRACE_INF("PMCR_TH: Enter\n");
+    PK_TRACE_INF("CME INIT DONE: Enter\n");
     uint32_t msg;
-
-    G_pmcr_thread_data.seqNum = 0; //Initialize seqNum to zero
-
-    G_pmcr_cme_flags = in32(CME_LCL_FLAGS);;
-
-#if !defined(__IOTA__)
-    pk_semaphore_create(&G_cme_pstate_record.sem[0], 0, 1);
-#endif
 
     // Synchronization between QM and Sibling
     // @todo RTC173279 move into CME init function
@@ -153,20 +115,8 @@ void p9_cme_pstate_pmcr_thread(void* arg)
 
     // This is the current barrier for SGPE booting the CMEs, any and all
     // initialization must be completed prior!
+// @todo RTC173279 rename this flag to CME_FLAGS_BOOT_DONE
     out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PMCR_READY));
 
-    PK_TRACE_INF("PMCR_TH: Inited\n");
-
-#if !defined(__IOTA__)
-
-    while(1)
-    {
-        //pend on sempahore
-        pk_semaphore_pend(&G_cme_pstate_record.sem[0], PK_WAIT_FOREVER);
-        cme_pstate_pmcr_action();
-    }
-
-#endif
-
-    PK_TRACE_INF("PMCR_TH: Exit\n");
+    PK_TRACE_INF("CME INIT DONE: Exit\n");
 }
