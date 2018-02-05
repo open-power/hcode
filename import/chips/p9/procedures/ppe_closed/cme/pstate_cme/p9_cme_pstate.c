@@ -60,6 +60,8 @@ LocalPstateParmBlock* G_lppb;
 extern CmePstateRecord G_cme_pstate_record;
 extern CmeRecord G_cme_record;
 
+inline uint32_t update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region) __attribute__((always_inline));
+
 const uint8_t G_vdm_threshold_table[13] =
 {
     0x00, 0x01, 0x03, 0x02, 0x06, 0x07, 0x05, 0x04,
@@ -91,11 +93,10 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
 uint32_t poll_dpll_stat()
 {
     data64_t data;
-    uint32_t cme_flags = in32(CME_LCL_FLAGS);
     uint32_t rc = 0;
 
     // DPLL Mode 2
-    if(!(cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE)))
+    if(!(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE)))
     {
         PK_TRACE_INF("Poll on DPLL_STAT[freq_change=0]");
 
@@ -107,9 +108,8 @@ uint32_t poll_dpll_stat()
         }
         while((data.words.lower & BIT64SH(61)));
     }
-
-    // DPLL Mode 3
-    if(cme_flags & BIT32(CME_FLAGS_VDM_OPERABLE))
+    else
+        // DPLL Mode 3
     {
         PK_TRACE_INF("Poll on DPLL_STAT[update_complete=1]");
         // ... to indicate that the DPLL has sampled the newly requested
@@ -120,14 +120,7 @@ uint32_t poll_dpll_stat()
         csar.value = 0;
 
         //Read CPPM_CSAR
-        if (cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
-        {
-            CME_GETSCOM(CPPM_CSAR, CME_MASK_C0, csar.value);
-        }
-        else if (cme_flags & BIT32(CME_FLAGS_CORE1_GOOD))
-        {
-            CME_GETSCOM(CPPM_CSAR, CME_MASK_C1, csar.value);
-        }
+        CME_GETSCOM(CPPM_CSAR, G_cme_pstate_record.firstGoodCoreMask, csar.value);
 
         //Read TimebaseStart
         tbStart = in32(CME_LCL_TBR);
@@ -175,19 +168,19 @@ uint32_t poll_dpll_stat()
 // as the toplevel-wrapper (atomic) ippm_read should be used instead
 void nonatomic_ippm_read(uint32_t addr, uint64_t* data)
 {
-    // G_cme_pstate_record.cmeMaskGoodCore MUST be set!
+    // G_cme_pstate_record.firstGoodCoreMask MUST be set!
     uint64_t val;
 
     cppm_ippmcmd_t cppm_ippmcmd;
     cppm_ippmcmd.value = 0;
     cppm_ippmcmd.fields.qppm_reg = addr & 0x000000ff;
     cppm_ippmcmd.fields.qppm_rnw = 1;
-    CME_PUTSCOM(CPPM_IPPMCMD, G_cme_pstate_record.cmeMaskGoodCore,
+    CME_PUTSCOM(CPPM_IPPMCMD, G_cme_pstate_record.firstGoodCoreMask,
                 cppm_ippmcmd.value);
 
     do
     {
-        CME_GETSCOM(CPPM_IPPMSTAT, G_cme_pstate_record.cmeMaskGoodCore, val);
+        CME_GETSCOM(CPPM_IPPMSTAT, G_cme_pstate_record.firstGoodCoreMask, val);
     } // Check the QPPM_ONGOING bit
 
     while(val & BIT64(0));
@@ -198,7 +191,7 @@ void nonatomic_ippm_read(uint32_t addr, uint64_t* data)
         PK_PANIC(CME_PSTATE_IPPM_ACCESS_FAILED);
     }
 
-    CME_GETSCOM(CPPM_IPPMRDATA, G_cme_pstate_record.cmeMaskGoodCore, val);
+    CME_GETSCOM(CPPM_IPPMRDATA, G_cme_pstate_record.firstGoodCoreMask, val);
 
     *data = val;
 }
@@ -215,21 +208,21 @@ void ippm_read(uint32_t addr, uint64_t* data)
 // as the toplevel-wrapper (atomic) ippm_write should be used instead
 void nonatomic_ippm_write(uint32_t addr, uint64_t data)
 {
-    // G_cme_pstate_record.cmeMaskGoodCore MUST be set!
+    // G_cme_pstate_record.firstGoodCoreMask MUST be set!
     uint64_t val;
 
-    CME_PUTSCOM(CPPM_IPPMWDATA, G_cme_pstate_record.cmeMaskGoodCore,
+    CME_PUTSCOM(CPPM_IPPMWDATA, G_cme_pstate_record.firstGoodCoreMask,
                 data);
     cppm_ippmcmd_t cppm_ippmcmd;
     cppm_ippmcmd.value = 0;
     cppm_ippmcmd.fields.qppm_reg = addr & 0x000000ff;
     cppm_ippmcmd.fields.qppm_rnw = 0;
-    CME_PUTSCOM(CPPM_IPPMCMD, G_cme_pstate_record.cmeMaskGoodCore,
+    CME_PUTSCOM(CPPM_IPPMCMD, G_cme_pstate_record.firstGoodCoreMask,
                 cppm_ippmcmd.value);
 
     do
     {
-        CME_GETSCOM(CPPM_IPPMSTAT, G_cme_pstate_record.cmeMaskGoodCore, val);
+        CME_GETSCOM(CPPM_IPPMSTAT, G_cme_pstate_record.firstGoodCoreMask, val);
     } // Check the QPPM_ONGOING bit
 
     while(val & BIT64(0));
@@ -454,10 +447,35 @@ uint32_t pstate_to_vpd_region(uint32_t pstate)
 
 uint32_t pstate_to_vid_compare(uint32_t pstate, uint32_t region)
 {
+    // prevent compiler from using software multiply
+    // to index the array of structs
+    uint32_t base_pstate;
+    compile_assert(NumSlopeRegions, VPD_NUM_SLOPES_REGION == 3);
+
+    if (region == 0)
+    {
+        base_pstate = G_lppb->operating_points[0].pstate;
+    }
+    else if (region == 1)
+    {
+        base_pstate = G_lppb->operating_points[1].pstate;
+    }
+    else
+    {
+        base_pstate = G_lppb->operating_points[2].pstate;
+    }
+
+    uint32_t  psdiff = base_pstate - pstate;
+// uint32_t  psdiff = (uint32_t)G_lppb->operating_points[region].pstate - pstate;
+
     // *INDENT-OFF*
-    return((((uint32_t)G_lppb->PsVIDCompSlopes[region]
-             * ((uint32_t)G_lppb->operating_points[region].pstate - pstate)
+        // use native PPE 16-bit multiply instruction
+        // VID codes must by definition have positive slope so use unsigned
+        // delta = slope times difference in pstate (interpolate)
+    return(((mulu16((uint32_t)G_lppb->PsVIDCompSlopes[region], psdiff)
+            // Apply the rounding adjust
              + VDM_VID_COMP_ADJUST) >> VID_SLOPE_FP_SHIFT_12)
+            // Offset value at bottom of the range
              + (uint32_t)G_lppb->vid_point_set[region]);
     // *INDENT-ON*
 }
@@ -466,16 +484,41 @@ uint32_t pstate_to_vid_compare(uint32_t pstate, uint32_t region)
 uint32_t calc_vdm_jump_values(uint32_t pstate, uint32_t region)
 {
     static uint32_t vdm_jump_values[NUM_JUMP_VALUES] = { 0 };
-    uint32_t i = 0;
     uint32_t new_jump_values = 0;
-    int32_t  psdiff = (uint32_t)G_lppb->operating_points[region].pstate - pstate;
+    uint32_t i;
 
-    for(i = 0; i < NUM_JUMP_VALUES; ++i)
+    // prevent compiler from using software multiply
+    // to index the array of structs
+    uint32_t base_pstate;
+    compile_assert(NumSlopeRegions, VPD_NUM_SLOPES_REGION == 3);
+
+    if (region == 0)
+    {
+        base_pstate = G_lppb->operating_points[0].pstate;
+    }
+    else if (region == 1)
+    {
+        base_pstate = G_lppb->operating_points[1].pstate;
+    }
+    else
+    {
+        base_pstate = G_lppb->operating_points[2].pstate;
+    }
+
+    int32_t  psdiff = base_pstate - pstate;
+// int32_t  psdiff = (uint32_t)G_lppb->operating_points[region].pstate - pstate;
+
+    for(i = 0; i < NUM_JUMP_VALUES; ++i )
     {
         // *INDENT-OFF*
+        // use native PPE 16-bit multiply instruction
+        // jump values can decrease with voltage so must use signed
+        // Cast every math term into 32b for more efficient PPE maths
         vdm_jump_values[i] = (uint32_t)
+            // Offset by value at bottom of the range
               ((int32_t)G_lppb->jump_value_set[region][i]
-            + (((int32_t)G_lppb->PsVDMJumpSlopes[region][i] * psdiff
+            // delta = slope times difference in pstate (interpolate)
+            + ((muls16((int32_t)G_lppb->PsVDMJumpSlopes[region][i] , psdiff)
             // Apply the rounding adjust
             + (int32_t)VDM_JUMP_VALUE_ADJUST) >> THRESH_SLOPE_FP_SHIFT));
         // *INDENT-ON*
@@ -505,7 +548,7 @@ uint32_t calc_vdm_jump_values(uint32_t pstate, uint32_t region)
     return new_jump_values;
 }
 
-uint32_t update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region)
+inline uint32_t update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region)
 {
     uint32_t rc = 0;
     data64_t scom_data = { 0 };
@@ -535,8 +578,8 @@ uint32_t update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region)
         nonatomic_ippm_read(QPPM_DPLL_FREQ, &saved_dpll_val.value);
         // Reduce freq by N_L (in 32nds)
         reduced_dpll_val.value = 0;
-        reduced_dpll_val.fields.fmult = (saved_dpll_val.fields.fmult
-                                         * (32 - adj_n_l)) >> 5;
+        reduced_dpll_val.fields.fmult = mulu16(saved_dpll_val.fields.fmult
+                                               , (32 - adj_n_l)) >> 5;
         reduced_dpll_val.fields.fmax = reduced_dpll_val.fields.fmult;
         reduced_dpll_val.fields.fmin = reduced_dpll_val.fields.fmult;
         // Write the reduced frequency
@@ -593,15 +636,38 @@ void calc_vdm_threshold_indices(uint32_t pstate, uint32_t region,
         VDM_XTREME_ADJUST
     };
 
-    uint32_t i = 0;
-    int32_t psdiff = (uint32_t)G_lppb->operating_points[region].pstate - pstate;
+    // prevent compiler from using software multiply
+    // to index the array of structs
+    uint32_t base_pstate;
+    compile_assert(NumSlopeRegions, VPD_NUM_SLOPES_REGION == 3);
+
+    if (region == 0)
+    {
+        base_pstate = G_lppb->operating_points[0].pstate;
+    }
+    else if (region == 1)
+    {
+        base_pstate = G_lppb->operating_points[1].pstate;
+    }
+    else
+    {
+        base_pstate = G_lppb->operating_points[2].pstate;
+    }
+
+    uint32_t  psdiff = base_pstate - pstate;
+// int32_t psdiff = (uint32_t)G_lppb->operating_points[region].pstate - pstate;
+
+    uint32_t i;
 
     for(i = 0; i < NUM_THRESHOLD_POINTS; ++i)
     {
         // *INDENT-OFF*
+        // use native PPE 16-bit multiply instruction
+        // jump values can decrease with voltage so must use signed
         // Cast every math term into 32b for more efficient PPE maths
         indices[i] = (uint32_t)((int32_t)G_lppb->threshold_set[region][i]
-            + (((int32_t)G_lppb->PsVDMThreshSlopes[region][i] * psdiff
+            // delta = slope times difference in pstate (interpolate)
+            + ((muls16((int32_t)G_lppb->PsVDMThreshSlopes[region][i] , psdiff)
             // Apply the rounding adjust
             + (int32_t)vdm_rounding_adjust[i]) >> THRESH_SLOPE_FP_SHIFT));
         // *INDENT-ON*
@@ -628,19 +694,20 @@ uint32_t p9_cme_vdm_update(uint32_t pstate)
 {
     // Static forces this array into .sbss instead of calling memset()
     static uint32_t new_idx[NUM_THRESHOLD_POINTS] = { 0 };
-    uint32_t i = 0, rc = 0;
+    uint32_t i, rc = 0;
     // Set one bit per threshold starting at bit 31 (28,29,30,31)
     uint32_t not_done = BITS32(32 - NUM_THRESHOLD_POINTS, NUM_THRESHOLD_POINTS);
-    uint64_t scom_data = 0;
-    uint64_t base_scom_data = 0;
+    data64_t scom_data;
+    data64_t base_scom_data;
     uint32_t region = pstate_to_vpd_region(pstate);
 
     // Calculate the new index for each threshold
     calc_vdm_threshold_indices(pstate, region, new_idx);
 
     // Look-up the VID compare value using the Pstate
-    base_scom_data |= (uint64_t)(pstate_to_vid_compare(pstate, region)
-                                 & BITS32(24, 8)) << 56;
+    // Populate the VID compare field and init all other bits to zero
+    base_scom_data.value = (uint64_t)(pstate_to_vid_compare(pstate, region)
+                                      & BITS32(24, 8)) << SHIFT64(7);
 
     // Step all thresholds in parallel until each reaches its new target.
     // Doing this in parallel minimizes the number of interppm scom writes.
@@ -668,12 +735,12 @@ uint32_t p9_cme_vdm_update(uint32_t pstate)
             }
 
             // OR the new threshold greycode into the correct position
-            scom_data |= (uint64_t)G_vdm_threshold_table[
-                             G_cme_pstate_record.vdmData.vdm_threshold_idx[i]]
-                         << (52 - (i * 4));
+            scom_data.words.upper |= G_vdm_threshold_table[
+                                         G_cme_pstate_record.vdmData.vdm_threshold_idx[i]]
+                                     << (SHIFT32(11) - (i * 4));
         }
 
-        ippm_write(QPPM_VDMCFGR, scom_data);
+        ippm_write(QPPM_VDMCFGR, scom_data.value);
     }
     while(not_done);
 
@@ -757,62 +824,50 @@ void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t next_idx, uint32_t curr
 }
 #endif//USE_CME_RESCLK_FEATURE
 
-void p9_cme_pstate_pmsr_updt(uint32_t coreMask)
+// always update both cores regardless of partial good or stop state
+//
+void p9_cme_pstate_pmsr_updt()
 {
-    uint32_t cm;
     uint64_t pmsrData;
 
-    //CORE0 mask is 0x2, and CORE1 mask is 0x1.
-    //We AND with 0x1 to get the core number from mask.
-    for (cm = 2; cm > 0; cm--)
+    //Note: PMSR[58/UPDATE_IN_PROGRESS] is always cleared here
+    pmsrData  = ((uint64_t)G_cme_pstate_record.globalPstate) << 56;
+    pmsrData |= ((uint64_t)(G_cme_pstate_record.quadPstate)) << 48;
+    pmsrData |= ((uint64_t)(G_cme_pstate_record.pmin)) << 40;
+    pmsrData |= ((uint64_t)(G_cme_pstate_record.pmax)) << 32;
+
+    //LMCR[0] = 1 means PMCR SCOM update are enabled ie.
+    //PMCR SPR does not control Pstates. We reflect that in
+    //PMSR[32/PMCR_DISABLED]
+    if ((in32(CME_LCL_LMCR) & BIT32(0)))
     {
-        if (cm & coreMask)
-        {
-            //Note: PMSR[58/UPDATE_IN_PROGRESS] is always cleared here
-            pmsrData = ((uint64_t)G_cme_pstate_record.globalPstate) << 56;
-            pmsrData |= (((uint64_t)(G_cme_pstate_record.quadPstate)) << 48) ;
-            pmsrData |= (((uint64_t)(G_cme_pstate_record.pmin)) << 40) ;
-            pmsrData |= (((uint64_t)(G_cme_pstate_record.pmax)) << 32) ;
-
-            //LMCR[0] = 1 means PMCR SCOM update are enabled ie.
-            //PMCR SPR does not control Pstates. We reflect that in
-            //PMSR[32/PMCR_DISABLED]
-            if ((in32(CME_LCL_LMCR) & BIT32(0)))
-            {
-                pmsrData |= BIT64(32);
-            }
-
-            //PMSR[33] is SAFE_MODE bit
-            if(G_cme_pstate_record.safeMode)
-            {
-                pmsrData |= BIT64(33);
-            }
-
-            //PMSR[35] is PSTATES_SUSPENDED bit
-            if(G_cme_pstate_record.pstatesSuspended)
-            {
-                pmsrData |= BIT64(35);
-            }
-
-            out64(CME_LCL_PMSRS0 + ((cm & 0x1) << 5), pmsrData);
-        }
+        pmsrData |= BIT64(32);
     }
+
+    //PMSR[33] is SAFE_MODE bit
+    if(G_cme_pstate_record.safeMode)
+    {
+        pmsrData |= BIT64(33);
+    }
+
+    //PMSR[35] is PSTATES_SUSPENDED bit
+    if(G_cme_pstate_record.pstatesSuspended)
+    {
+        pmsrData |= BIT64(35);
+    }
+
+    out64(CME_LCL_PMSRS0, pmsrData);
+    out64(CME_LCL_PMSRS1, pmsrData);
 }
 
 
-void p9_cme_pstate_pmsr_updt_in_progress(uint32_t coreMask)
+// this is needed for our test exercisers to know
+// when to check that DVFS changes are complete
+// always update both cores regardless of partial good or stop state
+//
+void p9_cme_pstate_pmsr_updt_in_progress()
 {
-    uint32_t cm;
-    uint64_t pmsrData;
 
-    //CORE0 mask is 0x2, and CORE1 mask is 0x1.
-    //We AND with 0x1 to get the core number from mask.
-    for (cm = 2; cm > 0; cm--)
-    {
-        if (cm & coreMask)
-        {
-            pmsrData = in64(CME_LCL_PMSRS0 + ((cm & 0x1) << 5)) | BIT64(PMSR_UPDATE_IN_PROGRESS);
-            out64(CME_LCL_PMSRS0 + ((cm & 0x1) << 5), pmsrData);
-        }
-    }
+    out64(CME_LCL_PMSRS0, in64(CME_LCL_PMSRS0) | BIT64(PMSR_UPDATE_IN_PROGRESS));
+    out64(CME_LCL_PMSRS1, in64(CME_LCL_PMSRS1) | BIT64(PMSR_UPDATE_IN_PROGRESS));
 }

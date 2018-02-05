@@ -39,9 +39,8 @@ extern CmeRecord       G_cme_record;
 #endif
 
 void
-p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
+p9_cme_stop_pcwu_handler(void)
 {
-    PkMachineContext ctx __attribute__((unused));
     uint32_t  core_mask = 0;
     uint32_t  core      = (in32(CME_LCL_EISR) & BITS32(12, 2)) >> SHIFT32(13);
     data64_t  scom_data = {0};
@@ -71,7 +70,8 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
                 }
 
                 // block pc for stop8,11 or stop5 as pig sent
-                g_eimr_override |= (IRQ_VEC_PCWU_C0 >> (core_mask & 1));
+                // use 32 bit UPPER mask to prevent compiler from doing 64-bit shifting
+                g_eimr_override |= ((uint64_t)(IRQ_VEC_PCWU_C0_UPPER >> (core_mask & 1))) << 32 | 0x00000000;
                 G_cme_stop_record.core_blockpc |= core_mask;
                 core = core - core_mask;
             }
@@ -81,19 +81,14 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
     // if still wakeup for core with notify_select == cme, go exit
     if (core)
     {
+        PK_TRACE_INF("Launching exit thread");
+
         out32(CME_LCL_EIMR_OR, BITS32(12, 10));
-#if defined(__IOTA__)
         wrteei(1);
         p9_cme_stop_exit();
-        // re-evaluate g_eimr_override then restore eimr
+
+        // re-evaluate stop entry & exit enables
         p9_cme_stop_eval_eimr_override();
-#else
-        pk_semaphore_post((PkSemaphore*)arg);
-#endif
-    }
-    else
-    {
-        pk_irq_vec_restore(&ctx);
     }
 }
 
@@ -108,10 +103,9 @@ p9_cme_stop_pcwu_handler(void* arg, PkIrqId irq)
 // 4) Otherwise flip polarity of Special Wakeup in EISR and clear PM_EXIT
 //    (note for abort cases do not Do not flip polarity of Special Wakeup in EISR.)
 void
-p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
+p9_cme_stop_spwu_handler(void)
 {
-    PkMachineContext ctx __attribute__((unused));
-    int      sem_post   = 0;
+    int      spwu_rise   = 0;
     uint32_t core_mask  = 0;
     uint32_t core_index = 0;
     uint32_t raw_spwu   = (in32(CME_LCL_EISR) & BITS32(14, 2)) >> SHIFT32(15);
@@ -128,7 +122,7 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
             core_index = core_mask & 1;
             PK_TRACE("Detect SPWU signal level change on core%d", core_index);
 
-            // if failing edge == spwu drop:
+            // if falling edge == spwu drop:
             if (G_cme_stop_record.core_in_spwu & core_mask)
             {
                 PK_TRACE("Falling edge of spwu, first clearing EISR");
@@ -161,82 +155,73 @@ p9_cme_stop_spwu_handler(void* arg, PkIrqId irq)
                         // if in block entry mode, do not release the mask
                         if (!(G_cme_stop_record.core_blockey & core_mask))
                         {
-                            g_eimr_override &= ~(IRQ_VEC_STOP_C0 >> core_index);
+                            // use 32 bit UPPER mask to prevent compiler from doing 64-bit shifting
+                            g_eimr_override &=  ((uint64_t)((~IRQ_VEC_STOP_C0_UPPER) >> core_index)) << 32 | 0xFFFFFFFF;
                         }
                     }
                 }
             }
-            // raising edge, Note do not clear EISR as thread will read and clear:
+            // rising edge, do not clear EISR since thread will read and clear:
             else
             {
-                PK_TRACE("Raising edge of spwu, clear EISR later in exit thread");
-                sem_post = 1;
+                PK_TRACE("Rising edge of spwu, clear EISR later in exit thread");
+                spwu_rise = 1;
             }
         }
     }
 
-    if (sem_post)
+    if (spwu_rise)
     {
-        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         PK_TRACE_INF("Launching exit thread");
-#if defined(__IOTA__)
+
+        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         wrteei(1);
         p9_cme_stop_exit();
-        // re-evaluate g_eimr_override then restore eimr
+
+        // re-evaluate stop entry & exit enables
         p9_cme_stop_eval_eimr_override();
-#else
-        pk_semaphore_post((PkSemaphore*)arg);
-#endif
-    }
-    else
-    {
-        pk_irq_vec_restore(&ctx);
     }
 }
 
 
 
 void
-p9_cme_stop_rgwu_handler(void* arg, PkIrqId irq)
+p9_cme_stop_rgwu_handler(void)
 {
     MARK_TRAP(STOP_RGWU_HANDLER)
     PK_TRACE_INF("RGWU Handler Trigger");
+
     out32(CME_LCL_EIMR_OR, BITS32(12, 10));
-#if defined(__IOTA__)
     wrteei(1);
     p9_cme_stop_exit();
-    // re-evaluate g_eimr_override then restore eimr
+
+    // re-evaluate stop entry & exit enables
     p9_cme_stop_eval_eimr_override();
-#else
-    pk_semaphore_post((PkSemaphore*)arg);
-#endif
 }
 
 
 
 void
-p9_cme_stop_enter_handler(void* arg, PkIrqId irq)
+p9_cme_stop_enter_handler(void)
 {
     MARK_TRAP(STOP_ENTER_HANDLER)
     PK_TRACE_INF("PM_ACTIVE Handler Trigger");
+
     out32(CME_LCL_EIMR_OR, BITS32(12, 10));
-#if defined(__IOTA__)
     wrteei(1);
+
     // The actual entry sequence
     p9_cme_stop_entry();
-    // re-evaluate g_eimr_override then restore eimr
+
+    // re-evaluate stop entry & exit enables
     p9_cme_stop_eval_eimr_override();
-#else
-    pk_semaphore_post((PkSemaphore*)arg);
-#endif
 }
 
 
 
 void
-p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
+p9_cme_stop_db2_handler(void)
 {
-    PkMachineContext ctx __attribute__((unused));
     cppm_cmedb2_t    db2 = {0};
     ppm_pig_t        pig = {0};
     uint32_t         core = (in32(CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
@@ -305,7 +290,7 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
                         p9_cme_resclk_update(ANALOG_COMMON, p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate),
                                              G_cme_pstate_record.resclkData.common_resclk_idx);
 
-                        // reenable pstate from changing resonent clock
+                        // reenable pstate from changing resonant clock
                         out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_RCLK_OPERABLE));
                         // clear abort flag to start clean slate
                         G_ndd20_disable_stop8_abort_stop11_rclk_handshake_flag = 0;
@@ -324,39 +309,26 @@ p9_cme_stop_db2_handler(void* arg, PkIrqId irq)
             }
         }
     }
-
-    pk_irq_vec_restore(&ctx);
 }
 
 
 
 void
-p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
+p9_cme_stop_db1_handler(void)
 {
-    PkMachineContext ctx __attribute__((unused));
     cppm_cmedb1_t    db1         = {0};
     ppm_pig_t        pig         = {0};
-    uint32_t         core        = 0;
     uint32_t         suspend_ack = 0;
 
     MARK_TRAP(STOP_DB1_HANDLER)
     PK_TRACE_INF("DB1 Handler Trigger");
 
     // Suspend DB should only come from the first good core
-    if (G_cme_record.core_enabled & CME_MASK_C0)
-    {
-        CME_GETSCOM(CPPM_CMEDB1, CME_MASK_C0, db1.value);
-        CME_PUTSCOM_NOP(CPPM_CMEDB1, CME_MASK_C0, 0);
-        out32_sh(CME_LCL_EISR_CLR, BIT64SH(40));
-        core = CME_MASK_C0;
-    }
-    else if (G_cme_record.core_enabled & CME_MASK_C1)
-    {
-        CME_GETSCOM(CPPM_CMEDB1, CME_MASK_C1, db1.value);
-        CME_PUTSCOM_NOP(CPPM_CMEDB1, CME_MASK_C1, 0);
-        out32_sh(CME_LCL_EISR_CLR, BIT64SH(41));
-        core = CME_MASK_C1;
-    }
+    uint32_t core = G_cme_pstate_record.firstGoodCoreMask;
+
+    CME_GETSCOM(CPPM_CMEDB1, core, db1.value);
+    CME_PUTSCOM_NOP(CPPM_CMEDB1, core, 0);
+    out32_sh(CME_LCL_EISR_CLR, core << SHIFT64SH(41));
 
     // block msgs
     if ((db1.fields.cme_message_numbern > 0x4) &&
@@ -453,6 +425,4 @@ p9_cme_stop_db1_handler(void* arg, PkIrqId irq)
         pig.fields.req_intr_type    = PIG_TYPE2;
         CME_PUTSCOM_NOP(PPM_PIG, core, pig.value);
     }
-
-    pk_irq_vec_restore(&ctx);
 }
