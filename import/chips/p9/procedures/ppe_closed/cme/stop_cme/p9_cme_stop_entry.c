@@ -705,6 +705,7 @@ p9_cme_stop_entry()
                 PK_TRACE("RAMMING Set SPR mode to LT0-7 via SPR_MODE[20-27]");
                 CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
 
+
                 if (core & CME_MASK_C0)
                 {
                     PK_TRACE("RAMMING Set SPRC to scratch0 for core0 via SCOM_SPRC");
@@ -718,46 +719,39 @@ p9_cme_stop_entry()
                     CME_PUTSCOM(SCOM_SPRC, CME_MASK_C1, BIT64(60));
                     CME_GETSCOM(SCRATCH1, CME_MASK_C1, G_scratch[1]);
                 }
-            }
 
-            if ((core & CME_MASK_C0) && G_cme_stop_record.req_level[0] > STOP_LEVEL_3)
-            {
+                uint32_t pls_core = ((G_cme_stop_record.req_level[0] > STOP_LEVEL_3) ? (core & CME_MASK_C0) : 0)
+                                    | ((G_cme_stop_record.req_level[1] > STOP_LEVEL_3) ? (core & CME_MASK_C1) : 0);
+
                 for(thread = 0; thread < 4; thread++)
                 {
                     PK_TRACE("PSSCR RAM: mfspr psscr, gpr0 via RAM_CTRL");
-                    CME_PUTSCOM(RAM_CTRL, CME_MASK_C0, RAM_MFSPR_PSSCR_GPR0 | (((uint64_t) thread) << 62));
+                    CME_PUTSCOM(RAM_CTRL, pls_core, RAM_MFSPR_PSSCR_GPR0 | (((uint64_t) thread) << 62));
 
                     PK_TRACE("PSSCR RAM: mtspr sprd , gpr0 via RAM_CTRL");
-                    CME_PUTSCOM(RAM_CTRL, CME_MASK_C0, RAM_MTSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
-                    CME_GETSCOM(SCRATCH0, CME_MASK_C0, scom_data.value);
+                    CME_PUTSCOM(RAM_CTRL, pls_core, RAM_MTSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
 
-                    G_pls[0][thread] = (scom_data.words.upper & BITS32(0, 4)) >> SHIFT32(3);
+                    if (pls_core & CME_MASK_C0)
+                    {
+                        CME_GETSCOM(SCRATCH0, CME_MASK_C0, scom_data.value);
+                        G_pls[0][thread] = (scom_data.words.upper & BITS32(0, 4)) >> SHIFT32(3);
+                    }
+
 #ifdef PLS_DEBUG
                     PKTRACE("PSSCR %X %X c0thread %X", scom_data.words.upper, scom_data.words.lower, thread);
 #endif
-                }
-            }
 
-            if ((core & CME_MASK_C1) && G_cme_stop_record.req_level[1] > STOP_LEVEL_3)
-            {
-                for (thread = 0; thread < 4; thread++)
-                {
-                    PK_TRACE("PSSCR RAM: mfspr psscr, gpr0 via RAM_CTRL");
-                    CME_PUTSCOM(RAM_CTRL, CME_MASK_C1, RAM_MFSPR_PSSCR_GPR0 | (((uint64_t) thread) << 62));
+                    if (pls_core & CME_MASK_C1)
+                    {
+                        CME_GETSCOM(SCRATCH1, CME_MASK_C1, scom_data.value);
+                        G_pls[1][thread] = (scom_data.words.upper & BITS32(0, 4)) >> SHIFT32(3);
+                    }
 
-                    PK_TRACE("PSSCR RAM: mtspr sprd , gpr0 via RAM_CTRL");
-                    CME_PUTSCOM(RAM_CTRL, CME_MASK_C1, RAM_MTSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
-                    CME_GETSCOM(SCRATCH1, CME_MASK_C1, scom_data.value);
-
-                    G_pls[1][thread] = (scom_data.words.upper & BITS32(0, 4)) >> SHIFT32(3);
 #ifdef PLS_DEBUG
                     PKTRACE("PSSCR %X %X c1thread %X", scom_data.words.upper, scom_data.words.lower, thread);
 #endif
                 }
-            }
 
-            if (target_level > STOP_LEVEL_3 || deeper_level > STOP_LEVEL_3)
-            {
                 PK_TRACE("RAMMING Disable thread0-3 for RAM via THREAD_INFO");
                 CME_PUTSCOM(THREAD_INFO, core, 0);
 
@@ -786,9 +780,11 @@ p9_cme_stop_entry()
 
                 PK_TRACE("RAMMING Clear core maintenance mode via direct controls");
                 CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27)));
+
+                sync();
+
             }
 
-            sync();
 #endif
 
 
@@ -1372,7 +1368,7 @@ p9_cme_stop_entry()
 
                 CME_GETSCOM_OR( CPPM_CSAR, core, scom_data.value );
 
-                if( CME_STOP_HCODE_ERR_INJ_BIT & scom_data.words.upper )
+                if( BIT64(CPPM_CSAR_STOP_HCODE_ERROR_INJECT) & scom_data.value )
                 {
                     PK_TRACE_DBG("CME STOP ENTRY ERROR INJECT TRAP");
                     PK_PANIC(CME_STOP_ENTRY_TRAP_INJECT);
@@ -1622,7 +1618,6 @@ p9_cme_stop_entry()
             }
 
             sync();
-
             PK_TRACE("Clear special wakeup after wakeup_notify = 1 since it is edge triggered");
             out32(CME_LCL_EISR_CLR, core << SHIFT32(15));
 
