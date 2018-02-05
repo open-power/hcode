@@ -505,7 +505,10 @@ void p9_pgpe_send_db0(uint64_t db0, uint32_t origCoreVector,
 #endif
     }
 
-    p9_pgpe_wait_cme_db_ack(ackVector);//Wait for ACKs from QuadManagers
+    if (ackWait == PGPE_DB0_ACK_WAIT_CME)
+    {
+        p9_pgpe_wait_cme_db_ack(ackVector);//Wait for ACKs from QuadManagers
+    }
 
     if(G_pgpe_pstate_record.quadsNACKed)
     {
