@@ -73,6 +73,8 @@
 #endif
 
 // --------------------
+#define ENABLE_CME_DEC_TIMER             0
+// --------------------
 
 // Hyp debug support,
 // @todo need to disable this for GA

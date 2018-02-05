@@ -44,17 +44,6 @@ p9_cme_stop_init()
     uint32_t   core_mask   = 0;
 
     //--------------------------------------------------------------------------
-    // Basic Software Settings
-    //--------------------------------------------------------------------------
-
-    // Create a semaphore, updated by a single interrupt handler that services
-    // two STOP threads. Thus, max sem count set to two.
-#if !defined(__IOTA__)
-    pk_semaphore_create(&(G_cme_stop_record.sem[0]), 0, 2);
-    pk_semaphore_create(&(G_cme_stop_record.sem[1]), 0, 2);
-#endif
-
-    //--------------------------------------------------------------------------
     // Parse CME Flags and Initialize Core States
     //--------------------------------------------------------------------------
 
