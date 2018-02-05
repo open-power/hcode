@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,7 +41,7 @@ BceReturnCode_t check_cme_block_copy();
 #if TEST_ONLY_BCE_IRR
     void bce_irr_setup();
     void bce_irr_run();
-    void bce_irr_thread(void*);
+    void bce_irr_thread();
 #endif
 
 #endif

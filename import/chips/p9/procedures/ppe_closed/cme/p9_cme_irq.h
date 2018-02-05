@@ -47,9 +47,6 @@
 //   definitions in cme_irq_common.c
 
 #include <stdint.h>
-#if !defined(__IOTA__)
-    #include "pk.h"
-#endif
 
 // Priority Levels
 #define IDX_PRTY_LVL_HIPRTY         0
@@ -139,52 +136,3 @@
                                   IRQ_VEC_PRTY10_CME ^ \
                                   IRQ_VEC_PRTY11_CME ^ \
                                   IRQ_VEC_PRTY12_CME )
-
-
-#define compile_assert(name,e) \
-    enum { compile_assert__##name = 1/(e) };
-
-
-#if !defined(__IOTA__)
-extern const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2];
-extern uint32_t      g_current_prty_level;
-
-extern uint8_t
-g_eimr_stack[NUM_EXT_IRQ_PRTY_LEVELS] __attribute__((section(".sbss")));
-
-extern int           g_eimr_stack_ctr;
-
-extern uint64_t
-g_eimr_override_stack[NUM_EXT_IRQ_PRTY_LEVELS] __attribute__((section(".sbss")));
-
-extern uint64_t      g_eimr_override;
-
-/// Restore a vector of interrupts by overwriting EIMR.
-UNLESS__PPE42_IRQ_CORE_C__(extern)
-inline void
-pk_irq_vec_restore(PkMachineContext* context)
-{
-    pk_critical_section_enter(context);
-
-    if (g_eimr_stack_ctr >= 0)
-    {
-        out64(STD_LCL_EIMR,
-              ext_irq_vectors_cme[g_eimr_stack[g_eimr_stack_ctr]][IDX_MASK_VEC]);
-        out64(STD_LCL_EIMR_CLR,
-              g_eimr_override_stack[g_eimr_stack_ctr]);
-        out64(STD_LCL_EIMR_OR,
-              g_eimr_override);
-        // Restore the prty level tracker to the task that was interrupted, if any.
-        g_current_prty_level = g_eimr_stack[g_eimr_stack_ctr];
-        g_eimr_stack_ctr--;
-    }
-    else
-    {
-        PK_TRACE_ERR("ERROR: Messed up EIMR book keeping: g_eimr_stack_ctr=%d. HALT CME!",
-                     g_eimr_stack_ctr);
-        PK_PANIC(CME_UIH_EIMR_STACK_UNDERFLOW);
-    }
-
-    //pk_critical_section_exit(context);
-}
-#endif

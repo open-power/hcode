@@ -35,9 +35,9 @@
 
 enum CME_CORE_MASKS
 {
-    CME_MASK_C0                     = 2,
-    CME_MASK_C1                     = 1,
-    CME_MASK_BC                     = 3
+    CME_MASK_C0                     = 2, // Just Core0 = 0b10
+    CME_MASK_C1                     = 1, // Just Core1 = 0b01
+    CME_MASK_BC                     = 3  // Both Cores = 0b11
 };
 
 /// CME SCOM
@@ -55,12 +55,6 @@ enum CME_BCEBAR_INDEXES
 {
     CME_BCEBAR_0                    = 0,
     CME_BCEBAR_1                    = 1
-};
-
-enum CME_ERR_INJ_BIT_POS
-{
-    CME_PSTATE_HCODE_ERR_INJ_BIT       =   0x00000002,
-    CME_STOP_HCODE_ERR_INJ_BIT         =   0x00000001,
 };
 
 #define CME_SCOM_ADDR(addr, core, op)   (addr | (core << 22) | (op << 20))

@@ -102,9 +102,7 @@ __iota_save_interrupt_state_and_schedule:
 
     # Task completed, need to restore machine state now
     # Get pointer to machine state
-    lis     %r3, g_iota_curr_machine_state_ptr@h
-    ori     %r3, %r3, g_iota_curr_machine_state_ptr@l
-    lwz     %r3, 0(%r3)
+    lwz      %r3, g_iota_curr_machine_state_ptr@sda21(0)
     # Restore d0 first (need sp in r1)
     lvd     %d0, _IOTA_SAVE_D0_OFFSET(%r3)
     # Save the restore value of r3 to _IOTA_TEMPORARY_R3_STACK_OFFSET(sp) 

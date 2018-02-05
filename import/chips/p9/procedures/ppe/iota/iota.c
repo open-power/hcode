@@ -43,15 +43,16 @@ iotaMachineState g_iota_machine_state_stack[(IOTA_MAX_NESTED_INTERRUPTS)] __attr
 {
     [ 0 ... (IOTA_MAX_NESTED_INTERRUPTS - 1) ] = IOTA_MACHINE_STATE_INIT
 };
-uint64_t g_iota_execution_stack[(IOTA_EXECUTION_STACK_SIZE / 8)] __attribute__((aligned(8))) =
+uint64_t g_iota_execution_stack[((IOTA_EXECUTION_STACK_SIZE / 8) + 1)] __attribute__((aligned(8))) =
 {
-    [ 0 ... ((IOTA_EXECUTION_STACK_SIZE / 8) - 1) ] = IOTA_STACK_PATTERN
+    [ 0 ... (IOTA_EXECUTION_STACK_SIZE / 8) ] = IOTA_STACK_PATTERN
 };
 iotaMachineState*  g_iota_curr_machine_state_ptr = g_iota_machine_state_stack;
 
 iotaTimerFuncPtr g_iota_dec_handler = IOTA_TIMER_HANDLER(__iota_halt);
 iotaTimerFuncPtr g_iota_fit_handler = IOTA_TIMER_HANDLER(__iota_halt);
 
+#if IOTA_IDLE_TASKS_ENABLE
 void _iota_evaluate_idle_tasks()
 {
     // Iterate over all idle tasks
@@ -81,6 +82,7 @@ void _iota_evaluate_idle_tasks()
         }
     }
 }
+#endif  // IOTA_IDLE_TASKS_ENABLE
 
 extern void main(void);
 
@@ -102,14 +104,17 @@ void iota_run()
 
     while(1)
     {
+#if IOTA_IDLE_TASKS_ENABLE
         // Run any enabled idle tasks
         _iota_evaluate_idle_tasks();
+#endif
 
         // Put PPE engine into wait mode (idle).
         ppe_idle();
     }
 }
 
+#if IOTA_IDLE_TASKS_ENABLE
 void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx)
 {
     if(idle_task_idx < g_iota_idle_task_list_size)
@@ -127,6 +132,7 @@ void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx)
         }
     }
 }
+#endif
 
 void _iota_schedule(uint32_t schedule_reason)
 {
@@ -152,9 +158,8 @@ void _iota_schedule(uint32_t schedule_reason)
 
             if(g_iota_task_list[task_idx] != IOTA_NO_TASK)
             {
-                uint32_t irq = cntlz64(g_ext_irq_vector);
                 mtmsr(IOTA_DEFAULT_MSR);
-                g_iota_task_list[task_idx](task_idx, irq);
+                g_iota_task_list[task_idx]();
                 // Interrupts are disabled once the task returns
                 wrteei(0);
                 iota_uih_restore();
@@ -166,14 +171,23 @@ void _iota_schedule(uint32_t schedule_reason)
 
             break;
 
+#if ENABLE_CME_DEC_TIMER
+
         case _IOTA_SCHEDULE_REASON_DEC:
             g_iota_dec_handler();
             break;
+#endif
+
+#if !DISABLE_CME_FIT_TIMER
 
         case _IOTA_SCHEDULE_REASON_FIT:
             g_iota_fit_handler();
             break;
+#endif
+
     }
+
+#if IOTA_IDLE_TASKS_ENABLE
 
     // Check for idle tasks here
     // Rationale: if the g_iota_curr_machine_state_ptr ==
@@ -187,6 +201,14 @@ void _iota_schedule(uint32_t schedule_reason)
         wrteei(1);
         _iota_evaluate_idle_tasks();
         mtmsr(ctx);
+    }
+
+#endif
+
+    // Check execution stack integrity
+    if(g_iota_execution_stack[0] != IOTA_STACK_PATTERN)
+    {
+        iota_dead(IOTA_EXECUTION_STACK_OVERFLOW);
     }
 
     // Decrement machine state pointer

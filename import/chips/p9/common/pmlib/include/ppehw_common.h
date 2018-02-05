@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -24,6 +24,8 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #ifndef __PPEHW_COMMON_H__
 #define __PPEHW_COMMON_H__
+
+#include "ppe42math.h"
 
 /// 64bits data
 typedef union

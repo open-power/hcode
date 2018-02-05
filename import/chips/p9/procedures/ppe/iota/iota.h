@@ -33,6 +33,11 @@
 #include "iota_ppe42.h"
 #include "cme_register_addresses.h"
 
+// Default for IOTA_IDLE_TASKS_ENABLE is no idle task support
+#if !defined(IOTA_IDLE_TASKS_ENABLE)
+    #define IOTA_IDLE_TASKS_ENABLE 0
+#endif
+
 /**
  * Run the main IOTA kernel loop
  * @note does not return
@@ -42,13 +47,14 @@ void iota_run()  __attribute__((noreturn));
 #define iota_halt() __iota_halt()
 #define iota_dead(code) PK_PANIC((code))
 
-/**
- * Set the state of an idle task
- * @param[in] The state
- * @param[in[ The task index in the idle task table
- */
-void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx);
-
+#if IOTA_IDLE_TASKS_ENABLE
+    /**
+    * Set the state of an idle task
+    * @param[in] The state
+    * @param[in[ The task index in the idle task table
+    */
+    void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx);
+#endif
 
 /// IOTA --- CONSTANTS
 #if !defined(IOTA_STACK_PATTERN)
@@ -106,6 +112,8 @@ void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx);
 #define IOTA_FIT_HANDLER(function) g_iota_fit_handler \
         = IOTA_TIMER_HANDLER(function);
 
+#if IOTA_IDLE_TASKS_ENABLE
+
 #define IOTA_BEGIN_IDLE_TASK_TABLE \
     iotaIdleTask g_iota_idle_task_list[] \
     SECTION(".sdata.g_iota_idle_task_list") = {
@@ -113,6 +121,7 @@ void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx);
     }; \
     uint32_t const g_iota_idle_task_list_size \
         = (uint32_t)(sizeof(g_iota_idle_task_list)/sizeof(iotaIdleTask));
+#endif
 
 #define IOTA_BEGIN_TASK_TABLE \
     iotaTaskFuncPtr g_iota_task_list[] SECTION(".sdata.g_iota_task_list") = {
@@ -171,7 +180,7 @@ typedef struct
     uint32_t padding; // needs to be 8B aligned
 } iotaMachineState;
 
-typedef void (*iotaTaskFuncPtr )(uint32_t arg, uint32_t irq);
+typedef void (*iotaTaskFuncPtr )( );
 typedef void (*iotaTimerFuncPtr)(void        );
 
 typedef struct
@@ -183,10 +192,13 @@ typedef struct
 extern iotaMachineState   g_iota_machine_state_stack[];
 extern iotaMachineState* g_iota_curr_machine_state_ptr;
 extern iotaTaskFuncPtr    g_iota_task_list[];
-extern iotaIdleTask       g_iota_idle_task_list[];
-extern uint32_t const     g_iota_idle_task_list_size;
 extern uint32_t const     g_iota_task_list_size;
 extern uint64_t           g_iota_execution_stack[];
+
+#if IOTA_IDLE_TASKS_ENABLE
+    extern iotaIdleTask       g_iota_idle_task_list[];
+    extern uint32_t const     g_iota_idle_task_list_size;
+#endif
 
 void _iota_boot();
 void _iota_schedule(uint32_t schedule_reason);

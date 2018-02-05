@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -138,6 +138,10 @@ typedef union
         asm volatile ("mfspr %0, %1" : "=r" (__value) : "i" (sprn) : "memory"); \
         __value;})
 
+#define mfpir()                                                 \
+    ({uint32_t __value;                                          \
+        asm volatile ("mfspr %0, 1023" : "=r" (__value) : : "memory"); \
+        __value;})
 
 /// Move to SPR
 ///

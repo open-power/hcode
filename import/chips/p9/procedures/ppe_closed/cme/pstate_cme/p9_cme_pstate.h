@@ -67,9 +67,9 @@ typedef struct
 {
     uint32_t core0_resclk_idx;  //4
     uint32_t core1_resclk_idx;  //8
-    uint32_t l2_ex0_resclk_idx; //12
-    uint32_t l2_ex1_resclk_idx; //16
-    uint32_t common_resclk_idx; //20
+    uint32_t common_resclk_idx; //12
+    uint32_t l2_ex0_resclk_idx; //16
+    uint32_t l2_ex1_resclk_idx; //20
 } cme_resclk_data_t;
 
 typedef struct
@@ -169,24 +169,18 @@ enum DB0_TRIGGER
 
 typedef struct
 {
-#if !defined(__IOTA__)
-    PkSemaphore sem[2];
-#endif
-    uint32_t qmFlag;            //4
-    uint32_t siblingCMEFlag;    //8
-    uint32_t quadPstate;        //12
-    uint32_t cmeMaskGoodCore;   //16
-    uint32_t globalPstate;      //20
-#ifdef USE_CME_RESCLK_FEATURE
+    uint32_t qmFlag;              //4
+    uint32_t siblingCMEFlag;      //8
+    uint32_t quadPstate;          //12
+    uint32_t firstGoodCoreMask;   //16
+    uint32_t globalPstate;        //20
     cme_resclk_data_t resclkData; //40
-#endif//USE_CME_RESCLK_FEATURE
-#ifdef USE_CME_VDM_FEATURE
-    cme_vdm_data_t vdmData; //56
-#endif//USE_CME_VDM_FEATURE
-    uint32_t pmin;          //60
-    uint32_t safeMode;      //64
-    uint32_t pmax;          //68
-    uint32_t pstatesSuspended; //72(0x48)
+    cme_vdm_data_t    vdmData;    //56
+    uint32_t pmin;                //60
+    uint32_t safeMode;            //64
+    uint32_t pmax;                //68
+    uint32_t pstatesSuspended;    //72
+    uint32_t nextPstate;          //76
 } CmePstateRecord;
 
 typedef struct
@@ -194,15 +188,16 @@ typedef struct
     uint32_t seqNum;
 } cme_pstate_pmcr_data_t;
 
-void p9_cme_pstate_pmcr_thread(void*);
-void p9_cme_pstate_db0_thread(void*);
-void p9_cme_pstate_pmcr_handler(void*, PkIrqId);
-void p9_cme_pstate_db0_handler(void*, PkIrqId);
-void p9_cme_pstate_db3_handler(void*, PkIrqId);
+void p9_cme_pstate_init();
+void p9_cme_init_done();
+
+void p9_cme_pstate_pmcr_handler();
+void p9_cme_pstate_db0_handler();
+void p9_cme_pstate_db3_handler();
 void p9_cme_pstate_db3_handler_replay_db0();
 void p9_cme_pstate_db3_handler_high_priority_pstate();
-void p9_cme_pstate_intercme_in0_irq_handler(void*, PkIrqId);
-void p9_cme_pstate_intercme_msg_handler(void* arg, PkIrqId irq);
+void p9_cme_pstate_intercme_in0_irq_handler(void);
+void p9_cme_pstate_intercme_msg_handler(void);
 void p9_cme_pstate_db0_safe_mode();
 int send_pig_packet(uint64_t data, uint32_t coreMask);
 uint32_t poll_dpll_stat();
@@ -212,8 +207,8 @@ void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type);
 void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type);
 void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint32_t retry_enable);
 void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
-void p9_cme_pstate_pmsr_updt(uint32_t coreMask);
-void p9_cme_pstate_pmsr_updt_in_progress(uint32_t coreMask);
+void p9_cme_pstate_pmsr_updt();
+void p9_cme_pstate_pmsr_updt_in_progress();
 void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0);
 void p9_cme_pstate_process_db0_sibling();
 
@@ -223,7 +218,6 @@ void p9_cme_pstate_process_db0_sibling();
 #endif//USE_CME_RESCLK_FEATURE
 #ifdef USE_CME_VDM_FEATURE
 uint32_t calc_vdm_jump_values(uint32_t pstate, uint32_t region);
-uint32_t update_vdm_jump_values_in_dpll(uint32_t pstate, uint32_t region);
 uint32_t p9_cme_vdm_update(uint32_t pstate);
 uint32_t pstate_to_vid_compare(uint32_t pstate, uint32_t region);
 uint32_t pstate_to_vpd_region(uint32_t pstate);

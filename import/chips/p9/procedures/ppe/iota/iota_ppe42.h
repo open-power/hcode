@@ -79,9 +79,7 @@
 # temporarily place r3 on the stack, without incrementing sp
 stw     %r3, _IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
 # load the pointer to the location of where to save machine state
-lis     %r3, g_iota_curr_machine_state_ptr@h
-ori     %r3, %r3, g_iota_curr_machine_state_ptr@l
-lwz     %r3, 0(%r3)
+lwz     %r3, g_iota_curr_machine_state_ptr@sda21(0)
 # save d8
 stvd    %d8, _IOTA_SAVE_D8_OFFSET(%r3)
 mr      %r9, %r3

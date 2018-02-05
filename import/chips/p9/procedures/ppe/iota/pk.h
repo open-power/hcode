@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -49,6 +49,9 @@ extern uint64_t pk_timebase_get();
 
 #define pk_halt() iota_halt()
 #define pk_irq_vec_restore(...)
+#define compile_assert(name,e) \
+    enum { compile_assert__##name = 1/(e) };
+
 
 // This sets the SPRG0 in pk.
 static inline void ppe42_app_ctx_set(uint16_t app_ctx)

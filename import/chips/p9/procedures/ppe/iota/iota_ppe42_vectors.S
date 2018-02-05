@@ -85,4 +85,5 @@ __fit_interrupt:
 .global __watchdog_interrupt
 .org    __vectors + 0x0140
 __watchdog_interrupt:
-    b __watchdog_interrupt
+ /*   b __watchdog_interrupt  */
+    _pk_panic IOTA_WATCHDOG_NOT_SUPPORTED 

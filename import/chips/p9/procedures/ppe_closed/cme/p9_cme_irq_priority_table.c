@@ -29,13 +29,10 @@
 //   as the index into the ext_irq_vectors_cme[][] table.
 
 #include "p9_cme_irq.h"
+#include "p9_cme_pstate.h"
+#include "iota_app_cfg.h"
 
-#if defined(__IOTA__)
-    #include "iota_app_cfg.h"
-    const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
-#else
-    const uint64_t ext_irq_vectors_cme[NUM_EXT_IRQ_PRTY_LEVELS][2] =
-#endif
+const uint64_t ext_irq_vectors_cme[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
 {
     /* 0: IDX_PRTY_VEC    1: IDX_MASK_VEC */
     {

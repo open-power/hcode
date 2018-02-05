@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -224,7 +224,7 @@ void bce_irr_run()
     }
 }
 
-void bce_irr_thread(void* args)
+void bce_irr_thread()
 {
     while(1)
     {
@@ -251,7 +251,8 @@ void start_cme_block_copy(uint32_t barIndex, uint32_t bcMembase, uint32_t bcSram
     l_cmePir = (((l_cmePir << 1) & CME_INST_ID_MASK) | l_exId); // get CME instance number
 
     //let us find out HOMER address where core specific scan rings reside.
-    bcMembase = bcMembase + (( l_cmePir * bcLength ) << 5 );
+    // use native 16-bit PPE multiply instruction
+    bcMembase = bcMembase + (mulu16( l_cmePir , bcLength ) << 5 );
     bcMembase = bcMembase >> 5;
 
     PK_TRACE( "Start cme block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  CME Ist %d",

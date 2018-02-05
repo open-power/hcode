@@ -51,6 +51,9 @@
 
 //An "idle" task is one that only runs when the ppe42 engine would otherwise
 //be idle and thus has the lowest priority and can be interrupted by anything.
+//To enable IDLE task support in the kernel set this to 1. (OPT)
+#define IOTA_IDLE_TASKS_ENABLE 0
+
 //To automatically disable an "IDLE" task after executing, set this to 1. (OPT)
 #define IOTA_AUTO_DISABLE_IDLE_TASKS  0
 

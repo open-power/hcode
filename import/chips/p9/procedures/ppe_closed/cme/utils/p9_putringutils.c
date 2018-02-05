@@ -258,7 +258,7 @@ int rs4DecompressionSvc(
     uint32_t i, x;
     uint32_t l_data;
     uint32_t l_spyData;
-    uint32_t l_maxRotate = 4095;
+    const uint32_t l_maxRotate = 4095;
 
     uint8_t* l_rs4Str = 0;
     CompressedScanData* l_rs4Header = NULL;
@@ -341,13 +341,25 @@ int rs4DecompressionSvc(
                 // Do the ROTATE operation
                 if (l_bitRotates > l_maxRotate)
                 {
-                    for (; l_bitRotates > l_maxRotate; )
+
+// Prevent PPE compiler from using a software divide
+// (l_bitRotates/l_maxRotate) to pre-calculate number of loop iterations
+// this saves 128 Bytes and takes less time than a software divide
+// (hide behind the getscoms)
+                    uint32_t primenum = 32749; //largest 15-bit prime
+                    uint32_t fakenumber = primenum;
+
+// fakenumber can never be zero
+                    for (; (l_bitRotates > l_maxRotate) || (fakenumber == 0); )
                     {
                         l_bitRotates -= l_maxRotate;
                         CME_GETSCOM_OP(0x00038000 | l_maxRotate, i_core, i_scom_op, l_scomData);
-                    }
 
-                    l_bitRotates = l_bitRotates % l_maxRotate;
+                        if ((fakenumber -= 7) < 15)
+                        {
+                            fakenumber = primenum;    // ensure always >0
+                        }
+                    }
                 }
 
                 CME_GETSCOM_OP(0x00038000 | l_bitRotates, i_core, i_scom_op, l_scomData);

@@ -50,12 +50,6 @@ typedef struct
     uint32_t     core_enabled;
     uint32_t     spurr_freq_ref_upper;
 
-#if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
-
-    CmeFitRecord fit_record;
-
-#endif
-
 } CmeRecord;
 
 
