@@ -887,20 +887,24 @@ p9_cme_stop_exit()
         }
 
 
+        /**************
+        // Remove STOP3
 
-        if (deeper_level == STOP_LEVEL_3 || target_level == STOP_LEVEL_3)
-        {
-            //--------------------------------------------------------------------------
-            PK_TRACE("+++++ +++++ STOP LEVEL 3 EXIT +++++ +++++");
-            //--------------------------------------------------------------------------
+                if (deeper_level == STOP_LEVEL_3 || target_level == STOP_LEVEL_3)
+                {
+                    //--------------------------------------------------------------------------
+                    PK_TRACE("+++++ +++++ STOP LEVEL 3 EXIT +++++ +++++");
+                    //--------------------------------------------------------------------------
 
-            //======================
-            MARK_TAG(SX_STOP3, core)
-            //======================
+                    //======================
+                    MARK_TAG(SX_STOP3, core)
+                    //======================
 
-            PK_TRACE_DBG("SX.3A: Core[%d] Return to Full Voltage", core);
-            //disable ivrm?
-        }
+                    PK_TRACE_DBG("SX.3A: Core[%d] Return to Full Voltage", core);
+                    //disable ivrm?
+                }
+        // Remove STOP3
+        ***************/
 
         p9_cme_stop_exit_lv2(core);
 
@@ -964,7 +968,7 @@ p9_cme_stop_exit()
                 return;
             }
 
-            p9_cme_pstate_pmsr_updt(core);
+            p9_cme_pstate_pmsr_updt();
 
             //==============================
             MARK_TAG(SX_RUNTIME_INITS, core)
