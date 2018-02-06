@@ -48,6 +48,7 @@ p9_sgpe_stop_entry()
     uint32_t     cloop             = 0;
     uint32_t     climit            = 0;
     uint32_t     cindex            = 0;
+    uint32_t     quad_error        = 0;
     uint64_t     host_attn         = 0;
     uint64_t     local_xstop       = 0;
     data64_t     scom_data         = {0};
@@ -276,19 +277,51 @@ p9_sgpe_stop_entry()
 
 
 
+    for(qloop = 0; qloop < MAX_QUADS; qloop++)
+    {
+        // if this ex is not up to entry, skip
+        if (!(ex = G_sgpe_stop_record.group.ex01[qloop]))
+        {
+            continue;
+        }
+
+        // In order to preserve state for PRD,
+        // If host attn or local xstop present,
+        // abort L2 Purge and rest of Entry
+        // Note: Need to read status before stopclocks
+        // while these registers are still accessible
+        PK_TRACE("Checking status of Host Attention");
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_HOST_ATTN, qloop), host_attn);
+
+        PK_TRACE("Checking status of Local Checkstop");
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_LOCAL_XSTOP_ERR, qloop), local_xstop);
+
+        if ((host_attn | local_xstop) & BIT64(0))
+        {
+            PK_TRACE_INF("WARNING: HostAttn or LocalXstop Present, Abort EX Entry for Quad[%d]", qloop);
+            quad_error |= BIT32(qloop);
+            continue;
+        }
+    }
 
 
-// NDD1 workaround to save cme image size
+
+// Permanent workaround to save cme image size
 #if NIMBUS_DD_LEVEL == 10 || DISABLE_STOP8 == 1
 
-    //--------------------------------------------------------------------------
-    PK_TRACE("+++++ +++++ EX STOP ENTRY [L2 PURGE(NDD1 ONLY)] +++++ +++++");
-    //--------------------------------------------------------------------------
+    //-----------------------------------------------------------
+    PK_TRACE("+++++ +++++ EX STOP ENTRY [L2 PURGE] +++++ +++++");
+    //-----------------------------------------------------------
 
     PK_TRACE("Assert L2+NCU purge and NCU tlbie quiesce via SICR[18,21,22]");
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
+        if (quad_error & BIT32(qloop))
+        {
+            continue;
+        }
+
         // insert tlbie quiesce before ncu purge to avoid window condition
         // of ncu traffic still happening when purging starts
         // Note: chtm purge and drop tlbie quiesce will be done in SGPE
@@ -310,6 +343,11 @@ p9_sgpe_stop_entry()
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
+        if (quad_error & BIT32(qloop))
+        {
+            continue;
+        }
+
         if (G_sgpe_stop_record.group.ex01[qloop] & FST_EX_IN_QUAD)
         {
             do
@@ -333,7 +371,7 @@ p9_sgpe_stop_entry()
         }
     }
 
-    PK_TRACE("NDD1: L2 and NCU Purged by SGPE");
+    PK_TRACE_INF("SE.5+: L2 and NCU Purged by SGPE");
 
 #endif
 
@@ -343,7 +381,7 @@ p9_sgpe_stop_entry()
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
         // if this ex is not up to entry, skip
-        if (!(ex = G_sgpe_stop_record.group.ex01[qloop]))
+        if ((!(ex = G_sgpe_stop_record.group.ex01[qloop])) || (quad_error & BIT32(qloop)))
         {
             continue;
         }
@@ -567,6 +605,31 @@ p9_sgpe_stop_entry()
         // if this quad is not up to entry, skip
         if (!(G_sgpe_stop_record.group.quad[VECTOR_ENTRY] & BIT32(qloop)))
         {
+            continue;
+        }
+
+        // In order to preserve state for PRD,
+        // If host attn or local xstop present,
+        // abort L3 Purge and rest of Entry
+        // Note: Need to read status before stopclocks
+        // while these registers are still accessible
+        PK_TRACE("Checking status of Host Attention");
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_HOST_ATTN, qloop), host_attn);
+
+        PK_TRACE("Checking status of Local Checkstop");
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_LOCAL_XSTOP_ERR, qloop), local_xstop);
+
+        if ((host_attn | local_xstop) & BIT64(0))
+        {
+            PK_TRACE_INF("WARNING: HostAttn or LocalXstop Present, Abort L3 Purge on Quad[%d]", qloop);
+            quad_error |= BIT32(qloop);
+        }
+
+        // for L3 Purge check above and L2 Purge check earlier
+        if (quad_error & BIT32(qloop))
+        {
+            // Take this out for rest of Stop11 entry and IPC code at the end
+            G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &= ~BIT32(qloop);
             continue;
         }
 
@@ -1024,16 +1087,6 @@ p9_sgpe_stop_entry()
 
         PK_TRACE_DBG("NCU Status Clean");
 
-        // In order to preserve state for PRD,
-        // skip power off if host attn or local xstop present
-        // Need to read status before stopclocks
-        // while these registers are still accessible
-        PK_TRACE("Checking status of Host Attention");
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_HOST_ATTN, qloop), host_attn);
-
-        PK_TRACE("Checking status of Local Checkstop");
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_LOCAL_XSTOP_ERR, qloop), local_xstop);
-
         // PGPE may have already cleared bit26: DPLL_ENABLE if booted,
         // but SGPE can always do it in case PGPE isnt booted
         PK_TRACE("Drop CME_INTERPPM_IVRM/ACLK/VDATA_ENABLE via QPMMR[20,22,24]");
@@ -1216,50 +1269,43 @@ p9_sgpe_stop_entry()
 
 #if !STOP_PRIME
 
-        if ((host_attn | local_xstop) & BIT64(0))
+        PK_TRACE("Drop vdd/vcs_pfet_val/sel_override/regulation_finger_en via PFCS[4-7,8]");
+        // vdd_pfet_val/sel_override     = 0 (disbaled)
+        // vcs_pfet_val/sel_override     = 0 (disbaled)
+        // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop),
+                    BITS64(4, 4) | BIT64(8));
+
+        PK_TRACE("Power off VCS via PFCS[2-3]");
+        // vcs_pfet_force_state = 01 (Force Voff)
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(3));
+
+        PK_TRACE("Poll for vcs_pfets_disabled_sense via PFSNS[3]");
+
+        do
         {
-            PK_TRACE_INF("WARNING: HostAttn or LocalXstop Present, Skip Cache Power Off");
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data.value);
         }
-        else
+        while(!(scom_data.words.upper & BIT32(3)));
+
+        PK_TRACE("Power off VDD via PFCS[0-1]");
+        // vdd_pfet_force_state = 01 (Force Voff)
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(1));
+
+        PK_TRACE("Poll for vdd_pfets_disabled_sense via PFSNS[1]");
+
+        do
         {
-            PK_TRACE("Drop vdd/vcs_pfet_val/sel_override/regulation_finger_en via PFCS[4-7,8]");
-            // vdd_pfet_val/sel_override     = 0 (disbaled)
-            // vcs_pfet_val/sel_override     = 0 (disbaled)
-            // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop),
-                        BITS64(4, 4) | BIT64(8));
-
-            PK_TRACE("Power off VCS via PFCS[2-3]");
-            // vcs_pfet_force_state = 01 (Force Voff)
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(3));
-
-            PK_TRACE("Poll for vcs_pfets_disabled_sense via PFSNS[3]");
-
-            do
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data.value);
-            }
-            while(!(scom_data.words.upper & BIT32(3)));
-
-            PK_TRACE("Power off VDD via PFCS[0-1]");
-            // vdd_pfet_force_state = 01 (Force Voff)
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_OR, qloop), BIT64(1));
-
-            PK_TRACE("Poll for vdd_pfets_disabled_sense via PFSNS[1]");
-
-            do
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data.value);
-            }
-            while(!(scom_data.words.upper & BIT32(1)));
-
-            PK_TRACE("Turn off force voff via PFCS[0-3]");
-            // vdd_pfet_force_state = 00 (Nop)
-            // vcs_pfet_force_state = 00 (Nop)
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop), BITS64(0, 4));
-
-            PK_TRACE_INF("SE.11E: Cache Powered Off");
+            GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFSNS, qloop), scom_data.value);
         }
+        while(!(scom_data.words.upper & BIT32(1)));
+
+        PK_TRACE("Turn off force voff via PFCS[0-3]");
+        // vdd_pfet_force_state = 00 (Nop)
+        // vcs_pfet_force_state = 00 (Nop)
+        GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop), BITS64(0, 4));
+
+        PK_TRACE_INF("SE.11E: Cache Powered Off");
 
 #endif
 

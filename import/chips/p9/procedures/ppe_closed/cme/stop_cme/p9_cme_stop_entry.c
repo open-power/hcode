@@ -1327,6 +1327,30 @@ p9_cme_stop_entry()
             PK_TRACE("+++++ +++++ STOP LEVEL 4 ENTRY +++++ +++++");
             //----------------------------------------------------------------------
 
+            // NDD2: OOB bits wired to SISR
+            //       not implemented in DD1
+            // bit0 is System checkstop
+            // bit1 is Recoverable Error
+            // bit2 is Special Attention
+            // bit3 is Core Checkstop
+
+            if ((core & CME_MASK_C0) && (in32(CME_LCL_SISR) & BITS32(12, 4)))
+            {
+                PK_TRACE_INF("WARNING: Core0 Xstop/Attn/Recov Present, Abort Entry");
+                core -= CME_MASK_C0;
+            }
+
+            if ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS64SH(60, 4)))
+            {
+                PK_TRACE_INF("WARNING: Core1 Xstop/Attn/Recov Present, Abort Entry");
+                core -= CME_MASK_C1;
+            }
+
+            if (!core)
+            {
+                break;
+            }
+
             //===============================
             MARK_TAG(SE_POWER_OFF_CORE, core)
             //===============================
@@ -1342,56 +1366,42 @@ p9_cme_stop_entry()
 
 #if !STOP_PRIME
 
-            // NDD2: OOB bits wired to SISR
-            //       not implemented in DD1
-            // bit0 is System checkstop
-            // bit1 is Recoverable Error
-            // bit2 is Special Attention
-            // bit3 is Core Checkstop
-            if (((core & CME_MASK_C0) && (in32(CME_LCL_SISR)    & BITS32(12, 4))) ||
-                ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS64SH(60, 4))))
+            if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
             {
-                PK_TRACE_INF("WARNING: Xstop/Attn/Recov Present, Skip Core Power Off");
+                PK_TRACE_DBG("Clear Poweron bit in VDMCR");
+                CME_PUTSCOM(PPM_VDMCR_CLR, core, BIT64(0));
             }
-            else
+
+            PK_TRACE("Drop vdd_pfet_val/sel_override/regulation_finger_en via PFCS[4,5,8]");
+            // vdd_pfet_val/sel_override     = 0 (disbaled)
+            // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
+            CME_PUTSCOM(PPM_PFCS_CLR, core, BIT64(4) | BIT64(5) | BIT64(8));
+
+            PK_TRACE("Power off core VDD via PFCS[0-1]");
+            // vdd_pfet_force_state = 01 (Force Voff)
+            CME_PUTSCOM(PPM_PFCS_OR, core, BIT64(1));
+
+            PK_TRACE("Poll for vdd_pfets_disabled_sense via PFSNS[1]");
+
+            CME_GETSCOM_OR( CPPM_CSAR, core, scom_data.value );
+
+            if( BIT64(CPPM_CSAR_STOP_HCODE_ERROR_INJECT) & scom_data.value )
             {
-                if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
-                {
-                    PK_TRACE_DBG("Clear Poweron bit in VDMCR");
-                    CME_PUTSCOM(PPM_VDMCR_CLR, core, BIT64(0));
-                }
-
-                PK_TRACE("Drop vdd_pfet_val/sel_override/regulation_finger_en via PFCS[4,5,8]");
-                // vdd_pfet_val/sel_override     = 0 (disbaled)
-                // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
-                CME_PUTSCOM(PPM_PFCS_CLR, core, BIT64(4) | BIT64(5) | BIT64(8));
-
-                PK_TRACE("Power off core VDD via PFCS[0-1]");
-                // vdd_pfet_force_state = 01 (Force Voff)
-                CME_PUTSCOM(PPM_PFCS_OR, core, BIT64(1));
-
-                PK_TRACE("Poll for vdd_pfets_disabled_sense via PFSNS[1]");
-
-                CME_GETSCOM_OR( CPPM_CSAR, core, scom_data.value );
-
-                if( BIT64(CPPM_CSAR_STOP_HCODE_ERROR_INJECT) & scom_data.value )
-                {
-                    PK_TRACE_DBG("CME STOP ENTRY ERROR INJECT TRAP");
-                    PK_PANIC(CME_STOP_ENTRY_TRAP_INJECT);
-                }
-
-                do
-                {
-                    CME_GETSCOM_AND(PPM_PFSNS, core, scom_data.value);
-                }
-                while(!(scom_data.words.upper & BIT32(1)));
-
-                PK_TRACE("Turn off force voff via PFCS[0-1]");
-                // vdd_pfet_force_state = 00 (Nop)
-                CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));
-
-                PK_TRACE_INF("SE.4A: Core[%d] Powered Off", core);
+                PK_TRACE_DBG("CME STOP ENTRY ERROR INJECT TRAP");
+                PK_PANIC(CME_STOP_ENTRY_TRAP_INJECT);
             }
+
+            do
+            {
+                CME_GETSCOM_AND(PPM_PFSNS, core, scom_data.value);
+            }
+            while(!(scom_data.words.upper & BIT32(1)));
+
+            PK_TRACE("Turn off force voff via PFCS[0-1]");
+            // vdd_pfet_force_state = 00 (Nop)
+            CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));
+
+            PK_TRACE_INF("SE.4A: Core[%d] Powered Off", core);
 
 #endif
 
