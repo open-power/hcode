@@ -18,7 +18,7 @@
 =====================================
 Hardware Image Official Release Notes
 =====================================
-Level: hw112217a.910
+Level: hw020118.910
 Included Commits:
 cc39fc9 - Richard J. Knight,5 months ago : p9_xip_tool support for DD level section parsing
 7a76c05 - Louis Stermole,3 weeks ago : Add Vreg==1 trigger to DLL workaround
@@ -32,5 +32,5 @@ f453865 - Sharath Manjunath,3 weeks ago : Add "End of Test Processing" banner to
 6f82839 - Luke C. Murray,3 weeks ago : NCU initfile - turn off 8 to 1 tlbie filtering
 
 
-p9n.hw.overlays.bin	Checksum: c9e5b0cfa1c368e957ce433799295bfd
-p9n.hw.rings.bin	Checksum: 5f60c57714b8cba9bd0229780c8d2fc2
+p9n.hw.overlays.bin	Checksum: 9f17c9234d3ba525c3ede1712dacef1e
+p9n.hw.rings.bin	Checksum: 8dfc85ba73b57a9e2d59f461440f3864
