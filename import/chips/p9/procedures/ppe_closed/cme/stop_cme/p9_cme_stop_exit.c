@@ -551,7 +551,8 @@ p9_cme_stop_exit()
     spwu_stop = (wakeup >> 2) & G_cme_record.core_enabled &
                 (~G_cme_stop_record.core_in_spwu);
     spwu_wake = spwu_stop &   G_cme_stop_record.core_running;
-    spwu_stop = spwu_stop & (~G_cme_stop_record.core_running);
+    spwu_stop = spwu_stop & (~G_cme_stop_record.core_running) &
+                (~G_cme_stop_record.core_blockwu);
 
     if (spwu_wake)
     {
