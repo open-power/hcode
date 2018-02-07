@@ -74,6 +74,9 @@ p9_cme_stop_eval_eimr_override()
         ((((~G_cme_record.core_enabled)   |
            G_cme_stop_record.core_running |
            G_cme_stop_record.core_errored) & CME_MASK_BC) << SHIFT32(15)) |
+#else
+        ((((~G_cme_stop_record.core_running) &
+           G_cme_stop_record.core_blockwu) & CME_MASK_BC) << SHIFT32(15)) |
 #endif
         ((((~G_cme_record.core_enabled)   |
            G_cme_stop_record.core_running |
@@ -82,6 +85,7 @@ p9_cme_stop_eval_eimr_override()
         ((((~G_cme_record.core_enabled)      |
            (~G_cme_stop_record.core_running) |
            G_cme_stop_record.core_errored    |
+           G_cme_stop_record.core_in_spwu    |
            G_cme_stop_record.core_blockey) & CME_MASK_BC) << SHIFT32(21));
 
     g_eimr_override |= mask_irqs.value;

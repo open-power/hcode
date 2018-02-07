@@ -49,9 +49,9 @@ p9_cme_stop_pcwu_handler(void)
     MARK_TRAP(STOP_PCWU_HANDLER)
     PK_TRACE_INF("PCWU Handler Trigger: Core Interrupts %x", core);
 
-    out32(CME_LCL_EISR_CLR, (G_cme_stop_record.core_running << SHIFT32(13)));
-    g_eimr_override |= ((uint64_t)G_cme_stop_record.core_running << SHIFT64(13));
+    // consider wakeup is done on a running core
     core &= (~G_cme_stop_record.core_running);
+    out32(CME_LCL_EISR_CLR, (G_cme_stop_record.core_running << SHIFT32(13)));
 
     for (core_mask = 2; core_mask; core_mask--)
     {
@@ -71,8 +71,6 @@ p9_cme_stop_pcwu_handler(void)
                 }
 
                 // block pc for stop8,11 or stop5 as pig sent
-                // use 32 bit UPPER mask to prevent compiler from doing 64-bit shifting
-                g_eimr_override |= ((uint64_t)(IRQ_VEC_PCWU_C0_UPPER >> (core_mask & 1))) << 32 | 0x00000000;
                 G_cme_stop_record.core_blockpc |= core_mask;
                 core = core - core_mask;
             }
@@ -87,10 +85,10 @@ p9_cme_stop_pcwu_handler(void)
         out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         wrteei(1);
         p9_cme_stop_exit();
-
-        // re-evaluate stop entry & exit enables
-        p9_cme_stop_eval_eimr_override();
     }
+
+    // re-evaluate stop entry & exit enables
+    p9_cme_stop_eval_eimr_override();
 }
 
 
@@ -151,18 +149,13 @@ p9_cme_stop_spwu_handler(void)
                         out32(CME_LCL_SICR_CLR, BIT32((4  + core_index)));
 
                         // Core is now out of spwu, allow pm_active
+                        // block entry mode is handled via eimr override
                         G_cme_stop_record.core_in_spwu &= ~core_mask;
-
-                        // if in block entry mode, do not release the mask
-                        if (!(G_cme_stop_record.core_blockey & core_mask))
-                        {
-                            // use 32 bit UPPER mask to prevent compiler from doing 64-bit shifting
-                            g_eimr_override &=  ((uint64_t)~((IRQ_VEC_STOP_C0_UPPER) >> core_index)) << 32 | 0xFFFFFFFF;
-                        }
                     }
                 }
             }
             // rising edge, do not clear EISR since thread will read and clear:
+            // block wakeup mode is handled in the thread and eimr override
             else
             {
                 PK_TRACE("Rising edge of spwu, clear EISR later in exit thread");
@@ -178,10 +171,10 @@ p9_cme_stop_spwu_handler(void)
         out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         wrteei(1);
         p9_cme_stop_exit();
-
-        // re-evaluate stop entry & exit enables
-        p9_cme_stop_eval_eimr_override();
     }
+
+    // re-evaluate stop entry & exit enables
+    p9_cme_stop_eval_eimr_override();
 }
 
 
@@ -249,7 +242,6 @@ p9_cme_stop_db2_handler(void)
                     // unmask pc interrupt pending to wakeup that is still pending
                     G_cme_stop_record.core_blockpc &=
                         ~(core_mask & (~(G_cme_stop_record.core_running)));
-                    g_eimr_override &= ~(((uint64_t)core_mask) << SHIFT64(13));
                     break;
 
                 case MSGID_DB2_RESONANT_CLOCK_DISABLE:
@@ -313,6 +305,9 @@ p9_cme_stop_db2_handler(void)
             }
         }
     }
+
+    // re-evaluate stop entry & exit enables
+    p9_cme_stop_eval_eimr_override();
 }
 
 
@@ -347,7 +342,6 @@ p9_cme_stop_db1_handler(void)
         if (db1.fields.cme_message_numbern & 0x2)
         {
             G_cme_stop_record.core_blockwu |= CME_MASK_BC;
-            g_eimr_override                |= IRQ_VEC_WAKE_C0 | IRQ_VEC_WAKE_C1;
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -367,7 +361,6 @@ p9_cme_stop_db1_handler(void)
         if (db1.fields.cme_message_numbern & 0x1)
         {
             G_cme_stop_record.core_blockey |= CME_MASK_BC;
-            g_eimr_override                |= IRQ_VEC_STOP_C0 | IRQ_VEC_STOP_C1;
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -390,7 +383,6 @@ p9_cme_stop_db1_handler(void)
         if (db1.fields.cme_message_numbern & 0x2)
         {
             G_cme_stop_record.core_blockwu &= ~CME_MASK_BC;
-            g_eimr_override                &= ~(IRQ_VEC_WAKE_C0 | IRQ_VEC_WAKE_C1);
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -410,7 +402,6 @@ p9_cme_stop_db1_handler(void)
         if (db1.fields.cme_message_numbern & 0x1)
         {
             G_cme_stop_record.core_blockey &= ~CME_MASK_BC;
-            g_eimr_override                &= ~(IRQ_VEC_STOP_C0 | IRQ_VEC_STOP_C1);
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -429,7 +420,10 @@ p9_cme_stop_db1_handler(void)
         pig.fields.req_intr_payload = db1.fields.cme_message_numbern;
         pig.fields.req_intr_payload = pig.fields.req_intr_payload << 8;
         pig.fields.req_intr_payload |= 0x080; // set bit 4 for ack package
-        pig.fields.req_intr_type    = PIG_TYPE2;
+        pig.fields.req_intr_type    = PIG_TYPE3;
         CME_PUTSCOM_NOP(PPM_PIG, core, pig.value);
     }
+
+    // re-evaluate stop entry & exit enables
+    p9_cme_stop_eval_eimr_override();
 }
