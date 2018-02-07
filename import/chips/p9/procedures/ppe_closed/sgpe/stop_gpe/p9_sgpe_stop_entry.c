@@ -699,7 +699,9 @@ p9_sgpe_stop_entry()
 
 #if !SKIP_L3_PURGE_ABORT
 
-            if (in32(OCB_OISR1) & (BITS32(15, 2) | BIT32(19)))
+            if ((in32(OCB_OISR1) & (BITS32(15, 2) | BIT32(19))) &&
+                // Skip L3 Purge Abort check if in Block Wakeup mode
+                (!(G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] & BIT32(qloop))))
             {
                 PK_TRACE("Abort: interrupt detected");
 

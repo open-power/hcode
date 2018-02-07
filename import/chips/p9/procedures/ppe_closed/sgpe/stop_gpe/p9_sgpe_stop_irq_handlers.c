@@ -194,7 +194,7 @@ p9_sgpe_stop_suspend_db1_cme(uint32_t qloop, uint32_t msgid)
 
             pig.fields.req_intr_payload = msgid >> 16;
             pig.fields.req_intr_payload |= TYPE2_PAYLOAD_SUSPEND_ACK_MASK;
-            pig.fields.req_intr_type    = PIG_TYPE2;
+            pig.fields.req_intr_type    = PIG_TYPE3;
             GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(PPM_PIG, cindex), pig.value);
         }
     }
@@ -450,7 +450,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
             }
 
             // if not hardware pig and is an suspend ack pig
-            if ((type == PIG_TYPE2) &&
+            if ((type == PIG_TYPE3) &&
                 ((~cpayload) & TYPE2_PAYLOAD_HARDWARE_WAKEUP) &&
                 (cpayload & TYPE2_PAYLOAD_SUSPEND_ACK_MASK))
             {

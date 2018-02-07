@@ -295,7 +295,7 @@ p9_sgpe_stop_suspend_all_cmes()
     uint32_t qloop       = 0;
     uint32_t xloop       = 0;
     uint32_t cloop       = 0;
-    uint32_t cpayload_t2 = 0;
+    uint32_t cpayload_t3 = 0;
     uint32_t cme_list    = 0;
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
@@ -309,9 +309,9 @@ p9_sgpe_stop_suspend_all_cmes()
         {
             for(cloop = 0; cloop < CORES_PER_EX; cloop++)
             {
-                cpayload_t2 = in32(OCB_OPIT2CN(((xloop << 1) + cloop)));
+                cpayload_t3 = in32(OCB_OPIT3CN(((xloop << 1) + cloop)));
 
-                if (cpayload_t2 == 0x780)
+                if (cpayload_t3 == 0x780)
                 {
                     cme_list |= BIT32(xloop);
 
