@@ -163,7 +163,7 @@ void p9_cme_pstate_db3_handler_high_priority_pstate()
 //
 void p9_cme_pstate_init()
 {
-    PK_TRACE_INF("PSTATE: Init Started\n");
+    PK_TRACE_INF("PSTATE: Init Started");
     PkMachineContext  ctx __attribute__((unused));
     uint32_t cores = 0;
     data64_t scom_data;
@@ -173,7 +173,7 @@ void p9_cme_pstate_init()
 
     G_cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     G_lppb = (LocalPstateParmBlock*)(G_cmeHeader->g_cme_pstate_region_offset + CME_SRAM_BASE_ADDR);
-    PK_TRACE_INF("PSTATE: Hdr=0x%x, LPPB=0x%x, Nominal_Freq_Mhz=%d \n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb,
+    PK_TRACE_INF("PSTATE: Hdr=0x%x, LPPB=0x%x, Nominal_Freq_Mhz=%d ", (uint32_t)G_cmeHeader, (uint32_t)G_lppb,
                  G_lppb->operating_points[NOMINAL].frequency_mhz);
 
     G_register_in_progress = 0;
@@ -318,7 +318,8 @@ void p9_cme_pstate_init()
         intercme_msg_recv(&G_cme_pstate_record.quadPstate, IMT_INIT_PSTATE);
         PK_TRACE_INF("sib | initial pstate=%d", G_cme_pstate_record.quadPstate);
 
-        eimr_clr |= BIT32(7); //Enable InterCME_IN0
+        //Enable InterCME_IN0 but do not clear the override mask
+        out32(CME_LCL_EIMR_CLR, BIT32(7));
     }
 
     g_eimr_override |= eimr_or;
@@ -407,7 +408,7 @@ void p9_cme_pstate_init()
     //Register with PGPE
     p9_cme_pstate_register();
 
-    PK_TRACE_INF("PSTATE: Init Exit\n");
+    PK_TRACE_INF("PSTATE: Init Exit");
 }
 
 //
@@ -417,9 +418,9 @@ void p9_cme_pstate_process_db0()
 {
     ppm_pig_t ppmPigData;
     G_update_analog_error = 0;
-    uint64_t scom_data   =   0;
+    uint64_t scom_data;
 
-    PK_TRACE_INF("PSTATE: Process DB0 Enter\n");
+    PK_TRACE_INF("PSTATE: Process DB0 Enter");
 
     //Clear EISR and read DB0 register
     out32_sh(CME_LCL_EISR_CLR, BITS64SH(36, 2));
@@ -503,7 +504,7 @@ void p9_cme_pstate_process_db0()
         }
     }
 
-    PK_TRACE_INF("PSTATE: Process DB0 Exit\n");
+    PK_TRACE_INF("PSTATE: Process DB0 Exit");
 }
 
 
@@ -526,11 +527,11 @@ inline void p9_cme_pstate_register()
         ppmPigData.fields.req_intr_payload =  MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE;
         send_pig_packet(ppmPigData.value, G_cme_pstate_record.firstGoodCoreMask);
 
-        PK_TRACE_INF("PSTATE: Register Msg Sent\n");
+        PK_TRACE_INF("PSTATE: Register Msg Sent");
 
         if (cme_flags & BIT32(CME_FLAGS_WAIT_ON_PSTATE_START))      //Poll on DB0
         {
-            PK_TRACE_INF("PSTATE: Wait on Pstate Start\n");
+            PK_TRACE_INF("PSTATE: Wait on Pstate Start");
 
             //Wait until PGPE has set DB0_PROCESSING_ENABLE. This is important as
             //PGPE might send DB0 to other quads as part of processing registration
@@ -538,7 +539,7 @@ inline void p9_cme_pstate_register()
             //PGPE has set DB0_PROCESSING_ENABLE
             while(!(in32(CME_LCL_SRTCH0) & BIT32(CME_SCRATCH_DB0_PROCESSING_ENABLE)));
 
-            PK_TRACE_INF("PSTATE: DB0 Processing is Enabled\n");
+            PK_TRACE_INF("PSTATE: DB0 Processing is Enabled");
 
             //PGPE will send Pmin, Pmax and Pstate Start Doorbells
             //Pstate Start is the last DB0
@@ -577,20 +578,19 @@ inline void p9_cme_pstate_register()
         {
             //PGPE sends Pmin, Pmax, and Pstate start DB0, so
             //total of three
-            PK_TRACE_INF("PSTATE: Wait on Pstate Start\n");
+            PK_TRACE_INF("PSTATE: Wait on Pstate Start");
 
             while(msgCnt != 3)
             {
-                PK_TRACE_INF("DB_TH: Sib Register MsgCnt=0x%xt", msgCnt);
                 p9_cme_pstate_sibling_lock_and_intercme_protocol(1);
                 msgCnt++;
-                PK_TRACE_INF("PSTATE: Sib Register MsgCnt=%d\n", msgCnt);
+                PK_TRACE_INF("PSTATE: Sib Register MsgCnt=%d", msgCnt);
             }
         }
     }
 
     G_register_in_progress = 0;
-    PK_TRACE_INF("PSTATE: Register Done\n");
+    PK_TRACE_INF("PSTATE: Register Done");
 }
 
 //
@@ -598,7 +598,7 @@ inline void p9_cme_pstate_register()
 //
 void p9_cme_pstate_db0_start()
 {
-    PK_TRACE_INF("PSTATE: DB0 Start Enter\n");
+    PK_TRACE_INF("PSTATE: DB0 Start Enter");
     ppm_pig_t ppmPigData;
 
     p9_cme_pstate_update();
@@ -634,7 +634,7 @@ void p9_cme_pstate_db0_start()
     //Reset G_update_analog_error
     G_update_analog_error = 0;
 
-    PK_TRACE_INF("PSTATE: DB0 Start Exit\n");
+    PK_TRACE_INF("PSTATE: DB0 Start Exit");
 }
 
 //
@@ -642,7 +642,7 @@ void p9_cme_pstate_db0_start()
 //
 void p9_cme_pstate_db0_glb_bcast()
 {
-    PK_TRACE_INF("PSTATE: DB0 GlbBcast Enter\n");
+    PK_TRACE_INF("PSTATE: DB0 GlbBcast Enter");
     ppm_pig_t ppmPigData;
 
     p9_cme_pstate_update();
@@ -664,7 +664,7 @@ void p9_cme_pstate_db0_glb_bcast()
     //Send type4(ack doorbell)
     send_pig_packet(ppmPigData.value, G_cme_pstate_record.firstGoodCoreMask);
     G_update_analog_error = 0;
-    PK_TRACE_INF("PSTATE: DB0 GlbBcast Exit\n");
+    PK_TRACE_INF("PSTATE: DB0 GlbBcast Exit");
 }
 
 //
@@ -672,7 +672,7 @@ void p9_cme_pstate_db0_glb_bcast()
 //
 inline void p9_cme_pstate_db0_stop()
 {
-    PK_TRACE_INF("PSTATE: DB0 Stop Enter\n");
+    PK_TRACE_INF("PSTATE: DB0 Stop Enter");
     ppm_pig_t ppmPigData;
 
     out32(CME_LCL_FLAGS_CLR, BIT32(24));//Set Pstates Disabled
@@ -695,13 +695,13 @@ inline void p9_cme_pstate_db0_stop()
     //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
     CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
 
-    PK_TRACE_INF("PSTATE: DB0 Stop Exit\n");
+    PK_TRACE_INF("PSTATE: DB0 Stop Exit");
 }
 
 void p9_cme_pstate_db0_clip_bcast()
 {
 
-    PK_TRACE_INF("PSTATE: DB0 Clip Enter\n");
+    PK_TRACE_INF("PSTATE: DB0 Clip Enter");
 
     ppm_pig_t ppmPigData;
 
@@ -737,12 +737,12 @@ void p9_cme_pstate_db0_clip_bcast()
     ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
     send_pig_packet(ppmPigData.value, G_cme_pstate_record.firstGoodCoreMask);
 
-    PK_TRACE_INF("PSTATE: DB0 Clip Exit\n");
+    PK_TRACE_INF("PSTATE: DB0 Clip Exit");
 }
 
 inline void p9_cme_pstate_db0_pmsr_updt()
 {
-    PK_TRACE_INF("PSTATE: DB0 Pmsr Updt Enter\n");
+    PK_TRACE_INF("PSTATE: DB0 Pmsr Updt Enter");
     ppm_pig_t ppmPigData;
 
     uint32_t dbBit8_15 = (G_dbData.value & BITS64(8, 8)) >> SHIFT64(15);
@@ -775,12 +775,12 @@ inline void p9_cme_pstate_db0_pmsr_updt()
     //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
     CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
 
-    PK_TRACE_INF("PSTATE: DB0 Safe Mode Exit\n");
+    PK_TRACE_INF("PSTATE: DB0 Safe Mode Exit");
 }
 
 void p9_cme_pstate_notify_sib()
 {
-    PK_TRACE_INF("PSTATE: Notify Enter\n");
+    PK_TRACE_INF("PSTATE: Notify Enter");
 
     //Notify sibling CME(if any)
     if(G_cme_pstate_record.siblingCMEFlag)
@@ -801,13 +801,13 @@ inline void p9_cme_pstate_freq_update(uint32_t cme_flags)
 {
     if(cme_flags & BIT32(CME_FLAGS_FREQ_UPDT_DISABLE))
     {
-        PK_TRACE_INF("PSTATE: Freq Updt Disabled\n");
+        PK_TRACE_INF("PSTATE: Freq Updt Disabled");
     }
     else
     {
-        PK_TRACE_INF("PSTATE: Freq Updt Enter\n");
-        PK_TRACE_INF("PSTATE: Dpll0=0x%x\n", G_lppb->dpll_pstate0_value);
-        PK_TRACE_INF("PSTATE: Hdr=0x%x, LPPB=0x%x\n", (uint32_t)G_cmeHeader, (uint32_t)G_lppb);
+        PK_TRACE_INF("PSTATE: Freq Updt Enter");
+        PK_TRACE_INF("PSTATE: Dpll0=0x%x", G_lppb->dpll_pstate0_value);
+        PK_TRACE_INF("PSTATE: Hdr=0x%x, LPPB=0x%x", (uint32_t)G_cmeHeader, (uint32_t)G_lppb);
 
         //Adjust DPLL
         qppm_dpll_freq_t dpllFreq;
@@ -829,7 +829,7 @@ inline void p9_cme_pstate_freq_update(uint32_t cme_flags)
 
         G_update_analog_error = poll_dpll_stat();
 
-        PK_TRACE_INF("PSTATE: Freq Updt Exit\n");
+        PK_TRACE_INF("PSTATE: Freq Updt Exit");
     }
 }
 
@@ -934,7 +934,7 @@ void p9_cme_pstate_update()
             // we call p9_cme_pstate_notify_sib()
         }
 
-        PK_TRACE_INF("PSTATE: DBData=0x%08x%08x\n", G_dbData.value >> 32,
+        PK_TRACE_INF("PSTATE: DBData=0x%08x%08x", G_dbData.value >> 32,
                      G_dbData.value);
 
         p9_cme_pstate_pmsr_updt_in_progress();
