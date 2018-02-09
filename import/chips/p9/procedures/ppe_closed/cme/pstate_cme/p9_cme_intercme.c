@@ -63,7 +63,7 @@ void p9_cme_pstate_intercme_msg_handler(void)
 
 void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_in0)
 {
-    PK_TRACE("SIBL: Enter\n");
+    PK_TRACE("SIBL: Enter");
     uint32_t msg;
     intercme_msg_recv(&msg, IMT_LOCK_SIBLING);
 
@@ -85,7 +85,7 @@ void p9_cme_pstate_sibling_lock_and_intercme_protocol(uint32_t process_intercme_
         p9_cme_pstate_process_db0_sibling();
     }
 
-    PK_TRACE("SIBL: Enter\n");
+    PK_TRACE("SIBL: Enter");
 }
 
 void p9_cme_pstate_process_db0_sibling()
@@ -97,7 +97,7 @@ void p9_cme_pstate_process_db0_sibling()
     //writes same value for both cores
     CME_GETSCOM(CPPM_CMEDB0, G_cme_pstate_record.firstGoodCoreMask, dbData.value);
 
-    PK_TRACE("INTER0: Enter\n");
+    PK_TRACE("INTER0: Enter");
 
     dbQuadInfo = (dbData.value >> (in32(CME_LCL_SRTCH0) &
                                    (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)
@@ -113,9 +113,8 @@ void p9_cme_pstate_process_db0_sibling()
 
         p9_cme_pstate_pmsr_updt();
 
-        //Clear any pending PMCR interrupts
-        g_eimr_override |= BITS64(34, 2);
-        g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << 28);
+        // Enable PMCR updates for good cores
+        g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << SHIFT64(35));
 
         //Clear Core GPMMR RESET_STATE_INDICATOR bit to show pstates have started
         CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));
