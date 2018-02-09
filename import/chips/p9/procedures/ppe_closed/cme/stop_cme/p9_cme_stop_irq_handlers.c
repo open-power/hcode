@@ -157,7 +157,7 @@ p9_cme_stop_spwu_handler(void)
                         if (!(G_cme_stop_record.core_blockey & core_mask))
                         {
                             // use 32 bit UPPER mask to prevent compiler from doing 64-bit shifting
-                            g_eimr_override &=  ((uint64_t)((~IRQ_VEC_STOP_C0_UPPER) >> core_index)) << 32 | 0xFFFFFFFF;
+                            g_eimr_override &=  ((uint64_t)~((IRQ_VEC_STOP_C0_UPPER) >> core_index)) << 32 | 0xFFFFFFFF;
                         }
                     }
                 }
