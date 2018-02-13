@@ -451,7 +451,7 @@ void p9_pgpe_process_start_stop()
                || G_pgpe_pstate_record.pstatesStatus == PSTATE_STOPPED)
             {
                 PK_TRACE_DBG("START_STOP: Already Stopped");
-                args->msg_cb.rc = PGPE_RC_REQ_PSTATE_ALREADY_STOPPED;
+                args->msg_cb.rc = PGPE_RC_SUCCESS;
                 G_pgpe_optrace_data.word[0] = PGPE_OP_PSTATE_STOP_IN_PSTATE_STOPPED;
                 p9_pgpe_optrace(UNEXPECTED_ERROR);
             }
@@ -667,7 +667,7 @@ void p9_pgpe_process_wof_ctrl()
             }
             else
             {
-                args->msg_cb.rc = PGPE_RC_WOF_ALREADY_ON;
+                args->msg_cb.rc = PGPE_RC_SUCCESS;
                 PK_TRACE_DBG("PTH: WOF Ctrl=ON,WOF_Enabled=1");
                 G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_ENABLE_WHEN_ENABLED;
                 p9_pgpe_optrace(UNEXPECTED_ERROR);
@@ -689,7 +689,7 @@ void p9_pgpe_process_wof_ctrl()
             }
             else
             {
-                args->msg_cb.rc = PGPE_RC_WOF_ALREADY_OFF;
+                args->msg_cb.rc = PGPE_RC_SUCCESS;
                 PK_TRACE_DBG("PTH: WOF Ctrl=OFF,WOF_Enabled=0");
                 G_pgpe_optrace_data.word[0] = PGPE_OP_WOF_CTRL_DISABLE_WHEN_DISABLED;
                 p9_pgpe_optrace(UNEXPECTED_ERROR);
