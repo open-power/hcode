@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -32,6 +32,17 @@ void
 p9_hcd_cache_arrayinit(uint32_t quad)
 {
     uint64_t scom_data = 0;
+    uint64_t regions   = SCAN0_REGION_ALL_BUT_EX_DPLL;
+
+    if (G_sgpe_stop_record.group.expg[quad] & FST_EX_IN_QUAD)
+    {
+        regions |= SCAN0_REGION_EX0_L2_L3_REFR;
+    }
+
+    if (G_sgpe_stop_record.group.expg[quad] & SND_EX_IN_QUAD)
+    {
+        regions |= SCAN0_REGION_EX1_L2_L3_REFR;
+    }
 
     PK_TRACE("Assert sdis_n(flushing LCBES condition) via CPLT_CONF0[34]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CONF0_OR, quad), BIT64(34));
@@ -47,18 +58,18 @@ p9_hcd_cache_arrayinit(uint32_t quad)
     scom_data &= ~BIT64(0);
     scom_data |=  BIT64(1);     // select_sram  = 1
     scom_data &= ~BIT64(2);     // select_edram = 0
-    scom_data |=  BITS64(4, 10);// regions      = 0x7FE all but dpll
+    scom_data |=  (regions << SHIFT64(14));
     scom_data &= ~BIT64(14);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_BIST, quad), scom_data);
 
     PK_TRACE("Setup all Clock Domains and Clock Types");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PERV_CLK_REGION, quad), scom_data);
-    scom_data |= (BITS64(4, 10) | BITS64(48, 3));// regions = 0x7FE
+    scom_data |= ((regions << SHIFT64(14)) | BITS64(48, 3));
     scom_data &= ~BIT64(14);
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_CLK_REGION, quad), scom_data);
 
     PK_TRACE("Drop Region fences");
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_CPLT_CTRL1_CLEAR, quad), BITS64(4, 11));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_CPLT_CTRL1_CLEAR, quad), (regions << SHIFT64(14)));
 
     PK_TRACE("Setup: loopcount , OPCG engine start ABIST, run-N mode");
     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(PERV_OPCG_REG0, quad), scom_data);
@@ -98,18 +109,7 @@ p9_hcd_cache_arrayinit(uint32_t quad)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PERV_BIST, quad), 0);
 
 #if !SKIP_SCAN0
-    uint64_t regions = SCAN0_REGION_ALL_BUT_EX_ANEP_DPLL;
-
-    if (G_sgpe_stop_record.group.expg[quad] & FST_EX_IN_QUAD)
-    {
-        regions |= SCAN0_REGION_EX0_L2_L3_REFR;
-    }
-
-    if (G_sgpe_stop_record.group.expg[quad] & SND_EX_IN_QUAD)
-    {
-        regions |= SCAN0_REGION_EX1_L2_L3_REFR;
-    }
-
+    regions &= ~(0x010); // taking out ANEP for scan0
     p9_hcd_cache_scan0(quad, regions, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
     // all but anep dpll all but gptr repr time
 #endif
