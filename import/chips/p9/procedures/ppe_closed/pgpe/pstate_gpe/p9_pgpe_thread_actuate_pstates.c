@@ -247,6 +247,8 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                                 G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
                                 ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
                                 p9_pgpe_optrace(ACK_QUAD_ACTV);
+                                GPE_PUTSCOM(OCB_OCCFLG_CLR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Clear OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
+
                             }
                         }
 
