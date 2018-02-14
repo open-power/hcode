@@ -289,30 +289,19 @@ p9_sgpe_stop_entry()
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
-
-#if NIMBUS_DD_LEVEL == 10
-
-        scom_data.value = BIT64(18) | BIT64(21);
-
-#elif DISABLE_STOP8
-
-        scom_data.value = BIT64(21);
-
-#endif
-
         // insert tlbie quiesce before ncu purge to avoid window condition
         // of ncu traffic still happening when purging starts
         // Note: chtm purge and drop tlbie quiesce will be done in SGPE
 
         if (G_sgpe_stop_record.group.ex01[qloop] & FST_EX_IN_QUAD)
         {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 0), scom_data.value);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 0), BIT64(18) | BIT64(21));
             GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 0), BIT64(22));
         }
 
         if (G_sgpe_stop_record.group.ex01[qloop] & SND_EX_IN_QUAD)
         {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 1), scom_data.value);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 1), BIT64(18) | BIT64(21));
             GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_OR, qloop, 1), BIT64(22));
         }
     }
@@ -321,24 +310,13 @@ p9_sgpe_stop_entry()
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
-
-#if NIMBUS_DD_LEVEL == 10
-
-        uint32_t purge_done = BITS32(22, 2);
-
-#elif DISABLE_STOP8
-
-        uint32_t purge_done = BIT32(23);
-
-#endif
-
         if (G_sgpe_stop_record.group.ex01[qloop] & FST_EX_IN_QUAD)
         {
             do
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_EISR, qloop, 0), scom_data.value);
             }
-            while((scom_data.words.upper & purge_done) != purge_done);
+            while((scom_data.words.upper & BITS32(22, 2)) != BITS32(22, 2));
 
             GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, qloop, 0), (BIT64(18) | BIT64(22)));
         }
@@ -349,7 +327,7 @@ p9_sgpe_stop_entry()
             {
                 GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_EISR, qloop, 1), scom_data.value);
             }
-            while((scom_data.words.upper & purge_done) != purge_done);
+            while((scom_data.words.upper & BITS32(22, 2)) != BITS32(22, 2));
 
             GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SICR_CLR, qloop, 1), (BIT64(18) | BIT64(22)));
         }
