@@ -426,11 +426,12 @@ p9_cme_stop_exit_catchup(uint32_t* core,
     data64_t scom_data     = {0};
 
     wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
-    core_catchup = (~(*core)) &
-                   ((wakeup >> 4) | (wakeup >> 2) | wakeup);
-    core_catchup = core_catchup & G_cme_record.core_enabled &
-                   (~G_cme_stop_record.core_running);
+    core_catchup = (~(*core)) & ((wakeup >> 4) | wakeup) & CME_MASK_BC;
 
+    // ignore wakeup being blocked, do not clear
+    core_catchup &= (~G_cme_stop_record.core_blockwu);
+
+    // ignore wakeup when it suppose to be handled by sgpe, do not clear
     for(core_mask = 2; core_mask; core_mask--)
     {
         if (core_catchup & core_mask)
@@ -443,6 +444,14 @@ p9_cme_stop_exit_catchup(uint32_t* core,
             }
         }
     }
+
+    // leave spwu alone, clear pcwu/rgwu only if not stop5+ or blocked
+    out32(CME_LCL_EISR_CLR, ((core_catchup << SHIFT32(13)) | (core_catchup << SHIFT32(17))));
+
+    // override with partial good core mask, also ignore wakeup to running cores
+    // these are being cleared and considered done for running or disabled cores
+    core_catchup = core_catchup & G_cme_record.core_enabled &
+                   (~G_cme_stop_record.core_running);
 
     if (core_catchup)
     {
@@ -516,7 +525,10 @@ p9_cme_stop_exit()
     wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
     core   = ((wakeup >> 4) | (wakeup >> 2) | wakeup) & CME_MASK_BC;
 
-    // ignore wakeup when it suppose to be handled by sgpe
+    // ignore wakeup being blocked, do not clear
+    core &= (~G_cme_stop_record.core_blockwu);
+
+    // ignore wakeup when it suppose to be handled by sgpe, do not clear
     for (core_mask = 2; core_mask; core_mask--)
     {
         if (core & core_mask)
@@ -530,7 +542,7 @@ p9_cme_stop_exit()
         }
     }
 
-    // leave spwu alone, clear pcwu/rgwu only if not stop5+
+    // leave spwu alone, clear pcwu/rgwu only if not stop5+ or blocked
     out32(CME_LCL_EISR_CLR, ((core << SHIFT32(13)) | (core << SHIFT32(17))));
 
     PK_TRACE_INF("SX.00: Core Wakeup[%x] Raw Interrupts[%x] Actual Stop Levels[%d %d]",
@@ -539,6 +551,7 @@ p9_cme_stop_exit()
                  G_cme_stop_record.act_level[1]);
 
     // override with partial good core mask, also ignore wakeup to running cores
+    // these are being cleared and considered done for running or disabled cores
     core = core & G_cme_record.core_enabled &
            (~G_cme_stop_record.core_running);
 
@@ -587,6 +600,8 @@ p9_cme_stop_exit()
         {
             PK_PANIC(CME_STOP_EXIT_PHANTOM_WAKEUP);
         }
+
+        return;
     }
 
 
