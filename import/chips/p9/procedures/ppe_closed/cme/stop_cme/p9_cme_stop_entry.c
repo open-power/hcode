@@ -233,6 +233,9 @@ p9_cme_stop_entry()
     uint32_t     origin_core         = 0;
     uint32_t     core_catchup        = 0;
 #endif
+#if !SKIP_ABORT
+    uint32_t     core_wakeup         = 0;
+#endif
     uint32_t     core_aborted        = 0;
     uint32_t     core_stop1          = 0;
     uint32_t     core_index          = 0;
@@ -1214,9 +1217,10 @@ p9_cme_stop_entry()
             //===========================
 
 #if !SKIP_ABORT
-            out32(CME_LCL_EIMR_CLR, (core << SHIFT32(13)) |
-                  (core << SHIFT32(15)) |
-                  (core << SHIFT32(17)));
+            core_wakeup = core & (~G_cme_stop_record.core_blockwu);
+            out32(CME_LCL_EIMR_CLR, (core_wakeup << SHIFT32(13)) |
+                  (core_wakeup << SHIFT32(15)) |
+                  (core_wakeup << SHIFT32(17)));
             sync();
             wrteei(0);
             out32(CME_LCL_EIMR_OR,  (BITS32(12, 6) | BITS32(20, 2)));
@@ -1444,9 +1448,10 @@ p9_cme_stop_entry()
             //===========================
 
 #if !SKIP_ABORT
-            out32(CME_LCL_EIMR_CLR, (core << SHIFT32(13)) |
-                  (core << SHIFT32(15)) |
-                  (core << SHIFT32(17)));
+            core_wakeup = core & (~G_cme_stop_record.core_blockwu);
+            out32(CME_LCL_EIMR_CLR, (core_wakeup << SHIFT32(13)) |
+                  (core_wakeup << SHIFT32(15)) |
+                  (core_wakeup << SHIFT32(17)));
             sync();
             wrteei(0);
             out32(CME_LCL_EIMR_OR,  (BITS32(12, 6) | BITS32(20, 2)));
@@ -1488,7 +1493,7 @@ p9_cme_stop_entry()
             //----------------------------------------------------------------------
 
 // NDD1 workaround to save cme image size
-#if NIMBUS_DD_LEVEL != 10
+#if NIMBUS_DD_LEVEL != 10 && DISABLE_STOP8 != 1
 
             if ((G_cme_stop_record.req_level[0] >= STOP_LEVEL_8) &&
                 (G_cme_stop_record.req_level[1] >= STOP_LEVEL_8))
