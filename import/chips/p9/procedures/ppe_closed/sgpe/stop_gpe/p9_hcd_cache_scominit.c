@@ -169,8 +169,8 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 // p9_ncu_scom: EX_NCU_MODE_REG
                 // EXP.NC.NCMISC.NCSCOMS.SYSMAP_SM_NOT_LG_SEL
                 // EXP.NC.NCMISC.NCSCOMS.TLBIE_PACING_CNT_EN
-                // EXP.NC.NCMISC.NCSCOMS.TLBIE_DEC_RATE   0x4
-                // EXP.NC.NCMISC.NCSCOMS.TLBIE_INC_RATE   0x3
+                // EXP.NC.NCMISC.NCSCOMS.TLBIE_DEC_RATE   0x10
+                // EXP.NC.NCMISC.NCSCOMS.TLBIE_INC_RATE   0xF
                 // EXP.NC.NCMISC.NCSCOMS.TLBIE_CNT_THRESH 0x4
                 // EXP.NC.NCMISC.NCSCOMS.SKIP_GRP_SCOPE_EN
                 // EXP.NC.NCMISC.NCSCOMS.SYSMAP_PB_CHIP_ADDR_EXT_MASK_EN
@@ -188,8 +188,8 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 
                 scom_data.words.upper &= ~(BITS32(11, 21));
                 scom_data.words.upper |= BIT32(10);
-                scom_data.words.upper |= BIT32(16);
-                scom_data.words.upper |= BITS32(25, 2);
+                scom_data.words.upper |= BIT32(14);
+                scom_data.words.upper |= BITS32(23, 4);
 
                 scom_data.words.lower &= ~(BITS64SH(32, 3));
                 scom_data.words.lower |= BIT64SH(32);
