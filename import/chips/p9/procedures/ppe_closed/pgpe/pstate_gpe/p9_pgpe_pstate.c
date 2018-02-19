@@ -1256,8 +1256,7 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
 //
 void p9_pgpe_pstate_wof_ctrl(uint32_t action)
 {
-    uint32_t c, q;
-    uint32_t activeCores, activeQuads;
+    uint32_t activeCores, activeQuads, c;
 
     if (action == PGPE_ACTION_WOF_ON)
     {
@@ -1271,25 +1270,8 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
         }
         else
         {
-            //Set equal to configured cores
-            ocb_ccsr_t ccsr;
-            ccsr.value = in32(OCB_CCSR);
-            activeCores = ccsr.value;
-
-            //Determine configured quads
-            ocb_qcsr_t qcsr;
-            qcsr.value = in32(OCB_QCSR);
-            activeQuads = 0;
-
-            for (q = 0; q < MAX_QUADS; q++)
-            {
-                if ((qcsr.fields.ex_config & QUAD_EX0_MASK(q)) ||
-                    (qcsr.fields.ex_config & QUAD_EX1_MASK(q)))
-                {
-                    activeQuads |= QUAD_MASK(q);
-                }
-
-            }
+            activeCores = G_pgpe_pstate_record.activeDB;
+            activeQuads = G_pgpe_pstate_record.activeQuads;
         }
 
         G_pgpe_pstate_record.wofStatus = WOF_ENABLED;
