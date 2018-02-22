@@ -323,7 +323,7 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
         // chiplet fence forces pm_active to zero
         // Note: pm_exit is asserted above for every core waking up including spwu
         PK_TRACE_DBG("SX.0B: Core[%d] Assert SPWU_DONE via SICR[16/17]", spwu_stop);
-        out32(CME_LCL_EISR_CLR, spwu_stop << SHIFT32(15));  // clear spwu in EISR
+        out32(CME_LCL_EISR_CLR, (spwu_stop << SHIFT32(15)) | (spwu_stop << SHIFT32(21)));  // clear spwu in EISR
         out32(CME_LCL_EIPR_CLR, spwu_stop << SHIFT32(15));  // flip EIPR to falling edge
         out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));  // assert spwu_done now
         G_cme_stop_record.core_in_spwu |= spwu_stop;
@@ -572,7 +572,7 @@ p9_cme_stop_exit()
         // Process special wakeup on a core that is already running
         PK_TRACE_DBG("SP.WU: Core[%d] Assert PM_EXIT and SPWU_DONE via SICR[4/5, 16/17]", spwu_wake);
         out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(5));  // assert pm_exit
-        out32(CME_LCL_EISR_CLR, spwu_wake << SHIFT32(15)); // clear spwu in EISR
+        out32(CME_LCL_EISR_CLR, ((spwu_wake << SHIFT32(15)) | (spwu_wake << SHIFT32(21)))); // clear spwu in EISR
         out32(CME_LCL_EIPR_CLR, spwu_wake << SHIFT32(15)); // flip EIPR to falling edge
         out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(17)); // assert spwu_done now
         G_cme_stop_record.core_in_spwu |= spwu_wake;
@@ -709,7 +709,17 @@ p9_cme_stop_exit()
 
             if (!core)
             {
+
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
+
+                continue;
+
+#else
+
                 return;
+
+#endif
+
             }
 
             p9_cme_stop_exit_end(core, spwu_stop);
@@ -723,7 +733,16 @@ p9_cme_stop_exit()
                 MARK_TRAP(ENDSCOPE_STOP_EXIT)
                 //===========================
 
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
+
+                continue;
+
+#else
+
                 return;
+
+#endif
+
             }
         }
 
@@ -903,33 +922,23 @@ p9_cme_stop_exit()
             }
         }
 
-
-        /**************
-        // Remove STOP3
-
-                if (deeper_level == STOP_LEVEL_3 || target_level == STOP_LEVEL_3)
-                {
-                    //--------------------------------------------------------------------------
-                    PK_TRACE("+++++ +++++ STOP LEVEL 3 EXIT +++++ +++++");
-                    //--------------------------------------------------------------------------
-
-                    //======================
-                    MARK_TAG(SX_STOP3, core)
-                    //======================
-
-                    PK_TRACE_DBG("SX.3A: Core[%d] Return to Full Voltage", core);
-                    //disable ivrm?
-                }
-        // Remove STOP3
-        ***************/
-
         p9_cme_stop_exit_lv2(core);
 
         core &= ~G_cme_stop_record.core_errored;
 
         if (!core)
         {
+
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
+
+            continue;
+
+#else
+
             return;
+
+#endif
+
         }
 
         if (deeper_level >= STOP_LEVEL_4)
@@ -982,7 +991,17 @@ p9_cme_stop_exit()
 
             if (!core)
             {
+
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
+
+                continue;
+
+#else
+
                 return;
+
+#endif
+
             }
 
             p9_cme_pstate_pmsr_updt();
@@ -1155,7 +1174,17 @@ p9_cme_stop_exit()
 
                 if (!core)
                 {
+
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
+
+                    continue;
+
+#else
+
                     return;
+
+#endif
+
                 }
             }
 
