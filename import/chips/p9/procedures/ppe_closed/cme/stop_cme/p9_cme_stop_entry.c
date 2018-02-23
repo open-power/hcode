@@ -584,11 +584,9 @@ p9_cme_stop_entry()
             while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
 
             wrteei(1);
-            sync();
 
             // end of HW407385
             // ---------------------------------
-
 
 
 #if NIMBUS_DD_LEVEL != 10
@@ -846,6 +844,8 @@ p9_cme_stop_entry()
                 }
             }
 
+            sync();
+
 #endif // tlbie stop workaround
 // ====================================
 
@@ -933,6 +933,8 @@ p9_cme_stop_entry()
 #endif
             turn_off_ram_mode (core);
 
+            sync();
+
 #endif // tlbie stop workaround
 // ====================================
 
@@ -940,7 +942,6 @@ p9_cme_stop_entry()
             // ---------------------------------
             // Permanent workaround for HW407385
 
-            sync();
             wrteei(0);
 
             PK_TRACE("HW407385: Drop pm_exit via SICR[4/5]");
@@ -1106,6 +1107,18 @@ p9_cme_stop_entry()
             MARK_TAG(SE_STOP2_DONE, core)
             //===========================
 
+            // Round Stop3 to Stop2
+            if (target_level == STOP_LEVEL_3)
+            {
+                target_level = STOP_LEVEL_2;
+            }
+
+            if (deeper_level == STOP_LEVEL_3)
+            {
+                deeper_core  = 0;
+                deeper_level = 0;
+            }
+
             PK_TRACE("Update STOP history: in core stop level 2");
             // Check if STOP level 2 reaches the target for both or one core
             entry_ongoing =
@@ -1256,72 +1269,6 @@ p9_cme_stop_entry()
 
             PK_TRACE_DBG("Check: core[%d] deeper_core[%d] target_level[%d] deeper_level[%d]",
                          core, deeper_core, target_level, deeper_level);
-
-            //----------------------------------------------------------------------
-            PK_TRACE("+++++ +++++ STOP LEVEL 3 ENTRY +++++ +++++");
-            //----------------------------------------------------------------------
-
-            if (target_level == 3)
-            {
-                /*
-                            //==========================
-                            MARK_TAG(SE_CORE_VMIN, core)
-                            //==========================
-
-                            PK_TRACE("SE3.a");
-                            // Enable IVRM if not already
-
-                            PK_TRACE("SE3.b");
-
-                            // Drop to Vmin
-                            if(core & CME_MASK_C0)
-                            {
-                                G_cme_stop_record.act_level[0] = STOP_LEVEL_3;
-                            }
-
-                            if(core & CME_MASK_C1)
-                            {
-                                G_cme_stop_record.act_level[1] = STOP_LEVEL_3;
-                            }
-
-                            //===========================
-                            MARK_TAG(SE_STOP3_DONE, core)
-                            //===========================
-
-                            PK_TRACE("SE3.c");
-                            // Update Stop History: In Core Stop Level 3
-                            scom_data.words.lower = 0;
-                            scom_data.words.upper = SSH_ACT_LV3_COMPLETE;
-                            CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
-                */
-                // If both cores targeting different levels
-                // deeper core should have at least deeper stop level than 3
-                // only need to modify deeper core history if another one was done
-                if (deeper_core)
-                {
-                    /*
-                    scom_data.words.lower = 0;
-                    scom_data.words.upper = SSH_ACT_LV3_CONTINUE;
-                    CME_PUTSCOM(PPM_SSHSRC, deeper_core, scom_data.value);
-                    */
-                    // from now on, proceed with only deeper core
-                    core          = deeper_core;
-                    target_level  = deeper_level;
-                    deeper_level  = 0;
-                    deeper_core   = 0;
-                    entry_ongoing = 1;
-                }
-                else
-                {
-                    entry_ongoing = 0;
-                }
-
-                // If we are done at STOP level 3
-                if (!entry_ongoing)
-                {
-                    break;
-                }
-            }
 
             //----------------------------------------------------------------------
             PK_TRACE("+++++ +++++ STOP LEVEL 4 ENTRY +++++ +++++");
@@ -1625,7 +1572,7 @@ p9_cme_stop_entry()
                     pig.fields.req_intr_payload = G_cme_stop_record.req_level[core_index];
 
                     // put PIG and Wakeup_Notify_Select back to back as possible
-                    CME_PUTSCOM(PPM_PIG,       core_mask, pig.value);
+                    send_pig_packet(pig.value, core_mask);
                     CME_PUTSCOM(CPPM_CPMMR_OR, core_mask, BIT64(13));
                     PK_TRACE_DBG("Switch Core[%d] PPM wakeup to STOP-GPE via CPMMR[13]", core_mask);
 

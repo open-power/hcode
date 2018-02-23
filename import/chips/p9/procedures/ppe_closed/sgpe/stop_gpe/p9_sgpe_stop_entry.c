@@ -54,9 +54,6 @@ p9_sgpe_stop_entry()
     data64_t     scom_data         = {0};
     data64_t     temp_data         = {0};
     uint32_t     flg2_data         = 0;
-#if DISABLE_STOP8
-    ppm_pig_t    pig               = {0};
-#endif
 #if HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX
     uint32_t      spin             = 0;
 #endif
@@ -156,22 +153,7 @@ p9_sgpe_stop_entry()
             {
                 G_sgpe_stop_record.group.quad[VECTOR_RCLKE] &= ~BIT32((qloop + RCLK_DIS_DONE_OFFSET));
                 G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |=  BIT32((qloop + QUAD_IN_STOP11_OFFSET));
-
-                // if during resonant clock disable, any exit occured, re-assert them,
-                // but we are going to complete the stop11 entry prior to process it
-                for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
-                {
-                    cindex = (qloop << 2) + cloop;
-
-                    if (G_sgpe_stop_record.group.core[VECTOR_RCLKE] & BIT32(cindex))
-                    {
-                        G_sgpe_stop_record.group.core[VECTOR_RCLKE] &= ~BIT32(cindex);
-                        pig.fields.req_intr_payload = TYPE2_PAYLOAD_SOFTWARE_WAKEUP;
-                        pig.fields.req_intr_type = PIG_TYPE3;
-                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(PPM_PIG, cindex), pig.value);
-                    }
-                }
-
+                G_sgpe_stop_record.group.core[VECTOR_RCLKE] &= ~BITS32((qloop << 2), 4);
                 G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
 
                 ocb_qssr_t qssr = {0};
@@ -189,6 +171,8 @@ p9_sgpe_stop_entry()
             {
                 // from this point on, only process wakeup when stop11 is entered
                 G_sgpe_stop_record.group.quad[VECTOR_RCLKE] |= BIT32((qloop + RCLK_DIS_REQ_OFFSET));
+                // establish mask to ignore the wakeup while in rclk disable
+                G_sgpe_stop_record.group.core[VECTOR_RCLKE] |= BITS32((qloop << 2), 4);
 
                 // assume ex0 core0 is good
                 cindex = (qloop << 2);
@@ -1147,7 +1131,6 @@ p9_sgpe_stop_entry()
         // Note: Stop11 will lose all the fences so here needs to assert them
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop), CLK_REGION_ALL);
 
-
         PK_TRACE_INF("SE.11D: Cache Clock Stopped");
 
         PK_TRACE("Gate the PCBMux request so scanning doesn't cause random requests");
@@ -1363,14 +1346,11 @@ p9_sgpe_stop_entry()
 
 #if !SKIP_IPC
 
-    /// @todo RTC166577
-    /// this block can be done as early as after stop cache clocks
     if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
         G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
         G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
     {
         // Note: if all quads aborted on l3 purge, the quad list will be 0s;
-
         p9_sgpe_ipc_pgpe_update_active_quads(UPDATE_ACTIVE_QUADS_TYPE_ENTRY,
                                              UPDATE_ACTIVE_QUADS_ENTRY_TYPE_DONE);
 
