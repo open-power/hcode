@@ -323,7 +323,8 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
         // chiplet fence forces pm_active to zero
         // Note: pm_exit is asserted above for every core waking up including spwu
         PK_TRACE_DBG("SX.0B: Core[%d] Assert SPWU_DONE via SICR[16/17]", spwu_stop);
-        out32(CME_LCL_EISR_CLR, (spwu_stop << SHIFT32(15)) | (spwu_stop << SHIFT32(21)));  // clear spwu in EISR
+        // Note: clear pm_active so that potential stop1 wont use leftover pm_active upon drop spwu later
+        out32(CME_LCL_EISR_CLR, ((spwu_stop << SHIFT32(15)) | (spwu_stop << SHIFT32(21))));  // clear spwu in EISR
         out32(CME_LCL_EIPR_CLR, spwu_stop << SHIFT32(15));  // flip EIPR to falling edge
         out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));  // assert spwu_done now
         G_cme_stop_record.core_in_spwu |= spwu_stop;
@@ -571,6 +572,7 @@ p9_cme_stop_exit()
     {
         // Process special wakeup on a core that is already running
         PK_TRACE_DBG("SP.WU: Core[%d] Assert PM_EXIT and SPWU_DONE via SICR[4/5, 16/17]", spwu_wake);
+        // Note: clear pm_active so that potential stop1 wont use leftover pm_active upon drop spwu later
         out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(5));  // assert pm_exit
         out32(CME_LCL_EISR_CLR, ((spwu_wake << SHIFT32(15)) | (spwu_wake << SHIFT32(21)))); // clear spwu in EISR
         out32(CME_LCL_EIPR_CLR, spwu_wake << SHIFT32(15)); // flip EIPR to falling edge

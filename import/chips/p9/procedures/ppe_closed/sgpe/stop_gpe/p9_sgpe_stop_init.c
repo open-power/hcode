@@ -60,6 +60,11 @@ void p9_sgpe_stop_cme_scominit(uint32_t quad, uint32_t cme, uint32_t cme_flags)
     uint64_t chtm_size = 0;
     data64_t scom_data = {0};
 
+    if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKE] & BIT32(quad))
+    {
+        cme_flags |= BIT32(CME_FLAGS_BLOCK_ENTRY_STOP11);
+    }
+
     PK_TRACE("Setup CME Flags");
     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS,     quad, cme), ((uint64_t)cme_flags) << 32);
 
