@@ -50,7 +50,8 @@ p9_cme_stop_pcwu_handler(void)
     PK_TRACE_INF("PCWU Handler Trigger: Core Interrupts %x", core);
 
     // consider wakeup is done on a running core
-    core &= (~G_cme_stop_record.core_running);
+    // also ignore the decrementor request that already sent to sgpe
+    core &= ~(G_cme_stop_record.core_running | G_cme_stop_record.core_blockpc);
     out32(CME_LCL_EISR_CLR, (G_cme_stop_record.core_running << SHIFT32(13)));
 
     for (core_mask = 2; core_mask; core_mask--)
@@ -67,7 +68,7 @@ p9_cme_stop_pcwu_handler(void)
                 {
                     pig.fields.req_intr_type    = PIG_TYPE2;
                     pig.fields.req_intr_payload = TYPE2_PAYLOAD_DECREMENTER_WAKEUP;
-                    CME_PUTSCOM_NOP(PPM_PIG, core_mask, pig.value);
+                    send_pig_packet(pig.value, core_mask);
                 }
 
                 // block pc for stop8,11 or stop5 as pig sent
@@ -82,7 +83,7 @@ p9_cme_stop_pcwu_handler(void)
     {
         PK_TRACE_INF("PCWU Launching exit thread");
 
-        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+        out32(CME_LCL_EIMR_OR, BITS32(10, 12));
         wrteei(1);
         p9_cme_stop_exit();
     }
@@ -168,7 +169,7 @@ p9_cme_stop_spwu_handler(void)
     {
         PK_TRACE_INF("SPWU Launching exit thread");
 
-        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+        out32(CME_LCL_EIMR_OR, BITS32(10, 12));
         wrteei(1);
         p9_cme_stop_exit();
     }
@@ -185,7 +186,7 @@ p9_cme_stop_rgwu_handler(void)
     MARK_TRAP(STOP_RGWU_HANDLER)
     PK_TRACE_INF("RGWU Handler Trigger");
 
-    out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+    out32(CME_LCL_EIMR_OR, BITS32(10, 12));
     wrteei(1);
     p9_cme_stop_exit();
 
@@ -201,7 +202,7 @@ p9_cme_stop_enter_handler(void)
     MARK_TRAP(STOP_ENTER_HANDLER)
     PK_TRACE_INF("PM_ACTIVE Handler Trigger");
 
-    out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+    out32(CME_LCL_EIMR_OR, BITS32(10, 12));
     wrteei(1);
 
     // The actual entry sequence
@@ -269,7 +270,7 @@ p9_cme_stop_db2_handler(void)
                     // Finish handshake with SGPE for Stop11 via PIG
                     pig.fields.req_intr_type    = PIG_TYPE5;
                     pig.fields.req_intr_payload = TYPE5_PAYLOAD_ENTRY_RCLK | STOP_LEVEL_11;
-                    CME_PUTSCOM_NOP(PPM_PIG, core_mask, pig.value);
+                    send_pig_packet(pig.value, core_mask);
                     break;
 
                 case MSGID_DB2_RESONANT_CLOCK_ENABLE:
@@ -297,7 +298,7 @@ p9_cme_stop_db2_handler(void)
                     // Finish handshake with SGPE for Stop11 via PIG
                     pig.fields.req_intr_type    = PIG_TYPE5;
                     pig.fields.req_intr_payload = TYPE5_PAYLOAD_EXIT_RCLK;
-                    CME_PUTSCOM_NOP(PPM_PIG, core_mask, pig.value);
+                    send_pig_packet(pig.value, core_mask);
                     break;
 
                 default:
@@ -317,13 +318,15 @@ p9_cme_stop_db1_handler(void)
 {
     cppm_cmedb1_t    db1         = {0};
     ppm_pig_t        pig         = {0};
+    uint32_t         core        = 0;
+    uint32_t         encode      = 0;
     uint32_t         suspend_ack = 0;
 
     MARK_TRAP(STOP_DB1_HANDLER)
     PK_TRACE_INF("DB1 Handler Trigger");
 
     // Suspend DB should only come from the first good core
-    uint32_t core = G_cme_pstate_record.firstGoodCoreMask;
+    core = G_cme_pstate_record.firstGoodCoreMask;
 
     CME_GETSCOM(CPPM_CMEDB1, core, db1.value);
     CME_PUTSCOM_NOP(CPPM_CMEDB1, core, 0);
@@ -332,16 +335,26 @@ p9_cme_stop_db1_handler(void)
     PK_TRACE_DBG("DB1 Handler MessageID %d Triggered By Core %d",
                  db1.fields.cme_message_numbern, core);
 
-    // block msgs
-    if ((db1.fields.cme_message_numbern > 0x4) &&
-        (db1.fields.cme_message_numbern < 0x8))
+    encode = db1.fields.cme_message_numbern & STOP_SUSPEND_ENCODE;
+
+    // block/suspend msgs(0xA-0xF)
+    if ((encode > (STOP_SUSPEND_ACTION | STOP_SUSPEND_SELECT)) && (encode <= STOP_SUSPEND_ENCODE))
     {
         suspend_ack = 1;
 
         // exit
-        if (db1.fields.cme_message_numbern & 0x2)
+        if (encode & STOP_SUSPEND_EXIT)
         {
-            G_cme_stop_record.core_blockwu |= CME_MASK_BC;
+            if (encode & STOP_SUSPEND_SELECT)
+            {
+                G_cme_stop_record.core_suspendwu |= CME_MASK_BC;
+            }
+            else
+            {
+                G_cme_stop_record.core_blockwu |= CME_MASK_BC;
+            }
+
+            g_eimr_override |= IRQ_VEC_WAKE_C0 | IRQ_VEC_WAKE_C1;
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -358,9 +371,18 @@ p9_cme_stop_db1_handler(void)
         }
 
         // entry
-        if (db1.fields.cme_message_numbern & 0x1)
+        if (encode & STOP_SUSPEND_ENTRY)
         {
-            G_cme_stop_record.core_blockey |= CME_MASK_BC;
+            if (encode & STOP_SUSPEND_SELECT)
+            {
+                G_cme_stop_record.core_suspendey |= CME_MASK_BC;
+            }
+            else
+            {
+                G_cme_stop_record.core_blockey |= CME_MASK_BC;
+            }
+
+            g_eimr_override |= IRQ_VEC_STOP_C0 | IRQ_VEC_STOP_C1;
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -373,16 +395,24 @@ p9_cme_stop_db1_handler(void)
             out32(CME_LCL_FLAGS_OR, BITS32(10, 2));
         }
     }
-    // unblock msgs
-    else if ((db1.fields.cme_message_numbern < 0x4) &&
-             (db1.fields.cme_message_numbern > 0))
+    // unblock/unsuspend msgs(0x2-0x7)
+    else if ((encode < STOP_SUSPEND_ACTION) && (encode > STOP_SUSPEND_SELECT))
     {
         suspend_ack = 1;
 
         // exit
-        if (db1.fields.cme_message_numbern & 0x2)
+        if (encode & STOP_SUSPEND_EXIT)
         {
-            G_cme_stop_record.core_blockwu &= ~CME_MASK_BC;
+            if (encode & STOP_SUSPEND_SELECT)
+            {
+                G_cme_stop_record.core_suspendwu &= ~CME_MASK_BC;
+            }
+            else
+            {
+                G_cme_stop_record.core_blockwu &= ~CME_MASK_BC;
+            }
+
+            g_eimr_override &= ~(IRQ_VEC_WAKE_C0 | IRQ_VEC_WAKE_C1);
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -399,9 +429,18 @@ p9_cme_stop_db1_handler(void)
         }
 
         // entry
-        if (db1.fields.cme_message_numbern & 0x1)
+        if (encode & STOP_SUSPEND_ENTRY)
         {
-            G_cme_stop_record.core_blockey &= ~CME_MASK_BC;
+            if (encode & STOP_SUSPEND_SELECT)
+            {
+                G_cme_stop_record.core_suspendey &= ~CME_MASK_BC;
+            }
+            else
+            {
+                G_cme_stop_record.core_blockey &= ~CME_MASK_BC;
+            }
+
+            g_eimr_override &= ~(IRQ_VEC_STOP_C0 | IRQ_VEC_STOP_C1);
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -417,11 +456,10 @@ p9_cme_stop_db1_handler(void)
 
     if (suspend_ack)
     {
-        pig.fields.req_intr_payload = db1.fields.cme_message_numbern;
-        pig.fields.req_intr_payload = pig.fields.req_intr_payload << 8;
-        pig.fields.req_intr_payload |= 0x080; // set bit 4 for ack package
+        // Shift encode to bit4 of 12 bits, then set bit5
+        pig.fields.req_intr_payload = ((encode << 7) | TYPE2_PAYLOAD_SUSPEND_ACK_MASK);
         pig.fields.req_intr_type    = PIG_TYPE3;
-        CME_PUTSCOM_NOP(PPM_PIG, core, pig.value);
+        send_pig_packet(pig.value, core);
     }
 
     // re-evaluate stop entry & exit enables

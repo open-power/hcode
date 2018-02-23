@@ -76,6 +76,9 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
     int               rc = 0;
     uint64_t          data_tmp;
 
+    PkMachineContext ctx __attribute__((unused));
+    pk_critical_section_enter(&ctx);
+
     // First make sure no interrupt request is currently granted
     do
     {
@@ -86,6 +89,8 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
 
     // Send PIG packet
     CME_PUTSCOM(PPM_PIG, coreMask, data);
+
+    pk_critical_section_exit(&ctx);
 
     return rc;
 }

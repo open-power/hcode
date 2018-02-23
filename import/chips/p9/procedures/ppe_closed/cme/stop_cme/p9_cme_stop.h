@@ -222,6 +222,16 @@ enum CME_STOP_SRR1
     NO_STATE_LOSS                    = 1
 };
 
+enum CME_STOP_SUSPEND_BLOCK
+{
+    STOP_SUSPEND_ENCODE = 0xF, //0bxxxx for command encodings of (un)block or (un)suspend
+    STOP_SUSPEND_ACTION = 0x8, //0b1xxY for suspend/block, 0xxY for unsuspend/unblock
+    STOP_SUSPEND_EXIT   = 0x4, //0bZ10Y for (un)suspend/(un)block exit
+    STOP_SUSPEND_ENTRY  = 0x2, //0bZ01Y for (un)suspend/(un)block entry
+    STOP_SUSPEND_SELECT = 0x1  //0bZxx1 for SUSPEND, 0bZxx0 for BLOCK
+};
+
+
 enum CME_SCOM_RESTORE_CONST
 {
     SCOM_REST_SKIP_CODE =   0x60000000,
@@ -273,6 +283,10 @@ typedef struct
     uint32_t      core_blockwu;
     // core in block entry mode, can be used as core select in scom address or data
     uint32_t      core_blockey;
+    // core in suspend wakeup mode, can be used as core select in scom address or data
+    uint32_t      core_suspendwu;
+    // core in suspend entry mode, can be used as core select in scom address or data
+    uint32_t      core_suspendey;
     // core in special wakeup, can be used as core select in scom address or data
     uint32_t      core_in_spwu;
     // core in error state, prevent it being further processed
