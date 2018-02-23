@@ -686,6 +686,8 @@ void p9_pgpe_handle_nacks(uint32_t origCoreVector, uint32_t origAckVector)
             }
         }
 
+        G_pgpe_pstate_record.quadsNACKed = 0;
+
         p9_pgpe_wait_cme_db_ack(ackVector);//Wait for ACKs from QuadManagers
     }//End while(quadNACked) loop
 
@@ -1979,7 +1981,7 @@ void p9_pgpe_droop_throttle()
 
     uint32_t q;
     //1.  PGPE sends IPC to SGPE to Suspend Stop Entries Only, and poll for Success return code (do not open IPCs, ignore the subsequent ACK).  This will prevent a core from going into Stop2 and missing the subsequent "unthrottle."
-    //p9_pgpe_pstate_send_suspend_stop(SUSPEND_STOP_SUSPEND_ENTRY);
+    p9_pgpe_pstate_send_suspend_stop(SUSPEND_STOP_SUSPEND_ENTRY);
 
 
     //2.  Call the core_instruction_throttle() procedure to enable throttle (same as used by FIT).
@@ -2016,7 +2018,7 @@ void p9_pgpe_droop_unthrottle()
     p9_pgpe_pstate_write_core_throttle(CORE_THROTTLE_OFF, RETRY);
 
     //2.  PGPE sends IPC to SGPE to Unsuspend STOP entries & poll for Success return code (do not open IPCs, ignore the subsequent ACK).
-    // p9_pgpe_pstate_send_suspend_stop(SUSPEND_STOP_UNSUSPEND_ENTRY);
+    p9_pgpe_pstate_send_suspend_stop(SUSPEND_STOP_UNSUSPEND_ENTRY);
 
     //3.  Send Doorbell0 PMSR Update with message Clear Pstates Suspended to all configured cores in the active Quads.
     p9_pgpe_pstate_pmsr_updt(DB0_PMSR_UPDT_CLEAR_PSTATES_SUSPENDED,
