@@ -230,35 +230,37 @@ enum SGPE_WOF_ACTIVE_UPDATE_STATUS
 
 enum SGPE_SUSPEND_FUNCTION_STATUS
 {
-    STATUS_IDLE                       = 0,
-    STATUS_PROCESSING                 = 1,
-    STATUS_SUSPENDING                 = 2,
-    STATUS_SUSPENDED                  = 3
+    STATUS_ENTRY_SUSPENDED            = 1,
+    STATUS_EXIT_SUSPENDED             = 2,
+    STATUS_SUSPEND_PENDING            = 4,
+    STATUS_STOP_PROCESSING            = 8
 };
 
 enum SGPE_STOP_VECTOR_INDEX
 {
-    VECTOR_BLOCKE                     = 0, //(core_save,   quad_req, qswu_save, qex01)
-    VECTOR_BLOCKX                     = 1, //(core_save,   quad_req, qswu_save, qex01)
-    VECTOR_ENTRY                      = 2, //(core_ipc,    quad,     qswu)
-    VECTOR_EXIT                       = 3, //(core,        quad_ipc  qswu)
-    VECTOR_ACTIVE                     = 4, //(core_ipc,    quad_ipc, qswu_active)
-    VECTOR_CONFIG                     = 5, //(core,        quad)
-    VECTOR_ERROR                      = 6, //(             quad)
+    VECTOR_BLOCKE                     = 0, //(core_save,   quad_req, qswu_save, req, ack)
+    VECTOR_BLOCKX                     = 1, //(core_save,   quad_req, qswu_save, req, ack)
+    VECTOR_SUSPENDE                   = 2, //(core_save,             qswu_save)
+    VECTOR_SUSPENDX                   = 3, //(core_save,             qswu_save)
+    VECTOR_ENTRY                      = 4, //(core_ipc,    quad,     qswu)
+    VECTOR_EXIT                       = 5, //(core,        quad_ipc  qswu)
+    VECTOR_ACTIVE                     = 6, //(core_ipc,    quad_ipc, qswu_active)
+    VECTOR_CONFIG                     = 7, //(core,        quad)
+    VECTOR_ERROR                      = 8, //(             quad)
 
 #if !DISABLE_STOP8
 
-    VECTOR_PIGE                       = 7, //(core)
-    VECTOR_PIGX                       = 8, //(core)
-    VECTOR_PCWU                       = 9  //(core)
-
-#else
-
-    VECTOR_RCLKE                      = 7, //(core_blocke, quad)
-    VECTOR_RCLKX                      = 8, //(core_blockx, quad)
     VECTOR_PIGE                       = 9, //(core)
     VECTOR_PIGX                       = 10,//(core)
     VECTOR_PCWU                       = 11 //(core)
+
+#else
+
+    VECTOR_RCLKE                      = 9, //(core_blocke, quad)
+    VECTOR_RCLKX                      = 10,//(core_blockx, quad)
+    VECTOR_PIGE                       = 11,//(core)
+    VECTOR_PIGX                       = 12,//(core)
+    VECTOR_PCWU                       = 13 //(core)
 
 #endif
 
@@ -295,21 +297,21 @@ typedef struct
 
 typedef struct
 {
+    uint32_t creq[2]; // 24 bits
+    uint32_t cack[2]; // 24 bits
     uint32_t expg[6]; // 2  bits
     uint32_t ex01[6]; // 2  bits
-    uint32_t qex0[2]; // 6  bits
-    uint32_t qex1[2]; // 6  bits
-    uint32_t qswu[5]; // 6  bits
+    uint32_t qswu[7]; // 6  bits
 
 #if !DISABLE_STOP8
 
-    uint32_t quad[7]; // 6  bits
-    uint32_t core[10];// 24 bits
+    uint32_t quad[9]; // 6  bits
+    uint32_t core[12];// 24 bits
 
 #else
 
-    uint32_t quad[9]; // 6  bits
-    uint32_t core[12];// 24 bits
+    uint32_t quad[11]; // 6  bits
+    uint32_t core[14];// 24 bits
 
 #endif
 
@@ -321,6 +323,8 @@ typedef struct
     uint8_t    status_stop;
     // sgpe-pgpe interlock status(quad/core updates enable/disable)
     uint8_t    update_pgpe;
+    // current/latest actions in suspend stop ipc
+    uint8_t    suspend_act;
     ipc_msg_t* updates_cmd;
     ipc_msg_t* suspend_cmd;
 } sgpe_wof_t;
@@ -399,7 +403,9 @@ void p9_sgpe_pig_type3_handler(void*, PkIrqId);
 void p9_sgpe_pig_type5_handler(void*, PkIrqId);
 void p9_sgpe_pig_type6_handler(void*, PkIrqId);
 void p9_sgpe_ipi3_low_handler(void*, PkIrqId);
-void p9_sgpe_stop_suspend_db1_cme(uint32_t, uint32_t);
+
+/// Support Functions shared between suspend and block protocol
+uint32_t p9_sgpe_stop_suspend_db1_cme(uint32_t, uint32_t);
 
 /// SGPE STOP Entry and Exit Prototypes
 void p9_sgpe_stop_init();

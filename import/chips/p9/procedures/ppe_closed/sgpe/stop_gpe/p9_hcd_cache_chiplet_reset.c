@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -66,7 +66,6 @@ p9_hcd_cache_chiplet_reset(uint32_t quad)
         }
     }
 
-    /// @todo needs to revisit this sim workaround
     PK_TRACE("Init heartbeat hang counter via HANG_PULSE_6[2]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_HANG_PULSE_6_REG, quad), BIT64(2));
 

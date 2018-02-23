@@ -67,6 +67,14 @@ p9_cme_stop_init()
     G_cme_stop_record.core_blockpc = ((in32(CME_LCL_SISR) & BITS32(2, 2)) >> SHIFT32(3));
     G_cme_stop_record.core_blockwu = G_cme_stop_record.core_blockpc;
     G_cme_stop_record.core_blockey = 0;
+    G_cme_stop_record.core_suspendwu = G_cme_stop_record.core_blockpc;
+    G_cme_stop_record.core_suspendey = 0;
+
+    if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_BLOCK_ENTRY_STOP11))
+    {
+        G_cme_stop_record.core_blockey = CME_MASK_BC;
+        G_cme_stop_record.core_suspendey = CME_MASK_BC;
+    }
 
     // use SISR[16:17] SPECIAL_WKUP_DONE to init special wakeup status
     G_cme_stop_record.core_in_spwu = ((in32(CME_LCL_SISR) & BITS32(16, 2)) >> SHIFT32(17));

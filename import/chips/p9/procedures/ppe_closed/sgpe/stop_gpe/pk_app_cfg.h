@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -43,8 +43,6 @@
 #define DISABLE_STOP8             1
 
 // --------------------
-
-// @todo RTC 161182
 
 #if NIMBUS_DD_LEVEL == 10
     #define HW386311_NDD1_PBIE_RW_PTR_STOP11_FIX            1

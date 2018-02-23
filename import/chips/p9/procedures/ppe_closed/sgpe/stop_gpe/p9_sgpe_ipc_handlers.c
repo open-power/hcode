@@ -65,13 +65,13 @@ p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t* cmd, void* arg)
     G_sgpe_stop_record.wof.updates_cmd = cmd;
 
     // stop in process
-    if (G_sgpe_stop_record.wof.status_stop == STATUS_PROCESSING)
+    if (G_sgpe_stop_record.wof.status_stop & STATUS_STOP_PROCESSING)
     {
         // Note: response will be sent by stop threads when ongoing stop is completed
         G_sgpe_stop_record.wof.update_pgpe |= IPC_SGPE_PGPE_UPDATE_CTRL_ONGOING;
     }
     // sgpe idle
-    else if (G_sgpe_stop_record.wof.status_stop == STATUS_IDLE)
+    else
     {
         p9_sgpe_ack_pgpe_ctrl_stop_updates();
     }
@@ -181,7 +181,8 @@ p9_sgpe_ipc_pgpe_update_active_cores_poll_ack(const uint32_t type)
 
     if (G_sgpe_ipcmsg_update_cores.fields.return_active_cores != vector_active_cores)
     {
-        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Cores Bad Return List. HALT SGPE!");
+        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Cores. ActiveCores ret=0x%x, exp.=0x%x. HALT SGPE!",
+                     G_sgpe_ipcmsg_update_cores.fields.return_active_cores, vector_active_cores);
         PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_CORE_BAD_LIST);
     }
 }
@@ -269,19 +270,25 @@ p9_sgpe_ipc_pgpe_update_active_quads_poll_ack(const uint32_t type)
 void
 p9_sgpe_ipc_pgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC.PS: Get Suspend Stop IPC from PGPE");
-
     G_sgpe_stop_record.wof.suspend_cmd = cmd;
     g_oimr_override |= (BITS64(47, 2) | BITS64(50, 2));
 
+    ipc_async_cmd_t* async_cmd =
+        (ipc_async_cmd_t*)(G_sgpe_stop_record.wof.suspend_cmd);
+    ipcmsg_p2s_suspend_stop_t* msg =
+        (ipcmsg_p2s_suspend_stop_t*)async_cmd->cmd_data;
+    G_sgpe_stop_record.wof.suspend_act = msg->fields.command;
+
+    PK_TRACE_INF("IPC.PS: Get Suspend Stop IPC with Action[%x] from PGPE", G_sgpe_stop_record.wof.suspend_act);
+
     // stop in process
-    if (G_sgpe_stop_record.wof.status_stop == STATUS_PROCESSING)
+    if (G_sgpe_stop_record.wof.status_stop & STATUS_STOP_PROCESSING)
     {
         // Note: response will be sent by stop threads when suspension is completed
-        G_sgpe_stop_record.wof.status_stop = STATUS_SUSPENDING;
+        G_sgpe_stop_record.wof.status_stop |= STATUS_SUSPEND_PENDING;
     }
     // sgpe idle
-    else if (G_sgpe_stop_record.wof.status_stop == STATUS_IDLE)
+    else
     {
         p9_sgpe_stop_suspend_all_cmes();
     }
@@ -293,27 +300,33 @@ void
 p9_sgpe_stop_suspend_all_cmes()
 {
     uint32_t qloop       = 0;
-    uint32_t xloop       = 0;
     uint32_t cloop       = 0;
     uint32_t cpayload_t3 = 0;
-    uint32_t cme_list    = 0;
+    uint32_t req_list    = 0;
+    uint32_t ack_list    = 0;
+    uint32_t action      = G_sgpe_stop_record.wof.suspend_act;
+    uint32_t ack_msg     = (action << 8) | TYPE2_PAYLOAD_SUSPEND_SELECT_MASK | TYPE2_PAYLOAD_SUSPEND_ACK_MASK;
 
     for(qloop = 0; qloop < MAX_QUADS; qloop++)
     {
-        p9_sgpe_stop_suspend_db1_cme(qloop, BITS32(5, 3));
+        req_list |= p9_sgpe_stop_suspend_db1_cme(qloop, ((action << SHIFT32(6)) | BIT32(7)));
     }
 
-    while (cme_list != 0xFFF00000)
-    {
-        for(xloop = 0; xloop < MAX_EXES; xloop++)
-        {
-            for(cloop = 0; cloop < CORES_PER_EX; cloop++)
-            {
-                cpayload_t3 = in32(OCB_OPIT3CN(((xloop << 1) + cloop)));
+    PK_TRACE_INF("Requested Suspend on cores[%x] with action[%x]", req_list, action);
 
-                if (cpayload_t3 == 0x780)
+    while (ack_list != req_list)
+    {
+        for(cloop = 0; cloop < MAX_CORES; cloop++)
+        {
+            if ((~ack_list) & req_list & BIT32(cloop))
+            {
+                cpayload_t3 = in32(OCB_OPIT3CN(cloop));
+                PK_TRACE_INF("Read PIG from Core[%d] with payload[%x]", cloop, cpayload_t3);
+
+                if (cpayload_t3 == ack_msg)
                 {
-                    cme_list |= BIT32(xloop);
+                    ack_list |= BIT32(cloop);
+                    PK_TRACE_INF("Acked Suspend from cores[%x] with message[%x]", ack_list, ack_msg);
 
                     // set STOP OVERRIDE MODE/STOP ACTIVE MASK
                     // to convert everything to stop1
@@ -322,17 +335,19 @@ p9_sgpe_stop_suspend_all_cmes()
                     // shares processing code at CME,
                     // and only want this done under suspend_stop
                     // Note: avoid partial bad cme as sgpe sent pig
-                    if (G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(((xloop << 1) + cloop)))
+                    //       only doing this when suspend all stop
+                    if ((action == 0x7) &&
+                        (G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cloop)))
                     {
                         GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR,
-                                                      (xloop >> 1), (xloop % 2)), BITS64(16, 2));
+                                                      (cloop >> 2), ((cloop & 2) >> 1)), BITS64(16, 2));
                     }
                 }
             }
         }
     }
 
-    PK_TRACE_INF("IPC.PS: Ack Suspend Stop IPC to PGPE as STOP is now SUSPENDED");
+    PK_TRACE_INF("IPC.PS: Ack Suspend Stop IPC to PGPE");
 
     ipc_async_cmd_t* async_cmd =
         (ipc_async_cmd_t*)(G_sgpe_stop_record.wof.suspend_cmd);
@@ -340,5 +355,15 @@ p9_sgpe_stop_suspend_all_cmes()
         (ipcmsg_p2s_suspend_stop_t*)async_cmd->cmd_data;
     msg->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     ipc_send_rsp(G_sgpe_stop_record.wof.suspend_cmd, IPC_RC_SUCCESS);
-    G_sgpe_stop_record.wof.status_stop = STATUS_SUSPENDED;
+
+    G_sgpe_stop_record.wof.status_stop &= ~STATUS_SUSPEND_PENDING;
+
+    if (action < 4)
+    {
+        G_sgpe_stop_record.wof.status_stop &= ~action;
+    }
+    else
+    {
+        G_sgpe_stop_record.wof.status_stop |= (action & 0x3);
+    }
 }

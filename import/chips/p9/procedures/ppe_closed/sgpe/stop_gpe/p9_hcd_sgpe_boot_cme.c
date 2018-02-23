@@ -376,7 +376,6 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                     // the CME -- waiting until it is "ready" allows for every
                     // thread to complete its initialization prior to the SGPE
                     // routing interrupts (wakeup+PMCR) back to the CME.
-                    // @todo RTC173279
                     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS,
                                                   (l_cmeIndex >> 1), (l_cmeIndex % 2)), l_dataReg);
 
@@ -402,7 +401,7 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_EXCGCR, (l_cmeIndex / 2)), excgcr);
                     }
 
-                    // TODO #else
+                    // #else RE-ENABLE STOP8 on DD22
 #endif
 
                     l_cmeRdyCnt++;

@@ -273,9 +273,9 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                         ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
                         ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
                         args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
-                        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
                         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
                         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
+                        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
                         p9_pgpe_optrace(ACK_CORES_ACTV);
                         restore_irq = 1;
                     }

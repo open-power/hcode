@@ -99,12 +99,12 @@ typedef union
     uint64_t value;
     struct
     {
-        uint32_t msg_num                : 4;
-        uint32_t update_type            : 1;
-        uint32_t reserved               : 3;
-        uint32_t return_code            : 8;
-        uint32_t active_cores           : 24;
-        uint32_t return_active_cores    : 24;
+        uint64_t msg_num                : 4;
+        uint64_t update_type            : 1;
+        uint64_t reserved               : 3;
+        uint64_t return_code            : 8;
+        uint64_t active_cores           : 24;
+        uint64_t return_active_cores    : 24;
     } fields;
 } ipcmsg_s2p_update_active_cores_t;
 
@@ -113,16 +113,16 @@ typedef union
     uint64_t value;
     struct
     {
-        uint32_t msg_num                : 4;
-        uint32_t update_type            : 1;
-        uint32_t entry_type             : 1;
-        uint32_t reserved               : 2;
-        uint32_t return_code            : 8;
-        uint32_t requested_quads        : 6;
-        uint32_t reserved0              : 2;
-        uint32_t return_active_quads    : 6;
-        uint32_t reserved1              : 2;
-        uint32_t pad                    : 32;
+        uint64_t msg_num                : 4;
+        uint64_t update_type            : 1;
+        uint64_t entry_type             : 1;
+        uint64_t reserved               : 2;
+        uint64_t return_code            : 8;
+        uint64_t requested_quads        : 6;
+        uint64_t reserved0              : 2;
+        uint64_t return_active_quads    : 6;
+        uint64_t reserved1              : 2;
+        uint64_t pad                    : 32;
     } fields;
 } ipcmsg_s2p_update_active_quads_t;
 

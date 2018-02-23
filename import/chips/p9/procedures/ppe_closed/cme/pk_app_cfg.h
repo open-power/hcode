@@ -36,15 +36,18 @@
 
 // Debug Switches
 
-//@todo RTC 161182 this is currently broken:
-//(need iota/fit resolution to restore function)
+//NOTE this is currently broken:
+//need iota/fit resolution to restore function
 //#define TEST_ONLY_BCE_IRR                0
 
 // --------------------
 
-//override switch to disable stop8
-//(with backup resonant clock support),
-//@todo DD level condition is yet to be defined
+// Hyp debug support,
+#define DISABLE_CORE_XSTOP_INJECTION     0
+
+// --------------------
+
+//override switch to disable stop8 with backup resonant clock support
 #define DISABLE_STOP8                    1
 
 // --------------------
@@ -74,12 +77,6 @@
 
 // --------------------
 #define ENABLE_CME_DEC_TIMER             0
-// --------------------
-
-// Hyp debug support,
-// @todo need to disable this for GA
-#define DISABLE_CORE_XSTOP_INJECTION     0
-
 // --------------------
 
 // the following functions are always enabled once working

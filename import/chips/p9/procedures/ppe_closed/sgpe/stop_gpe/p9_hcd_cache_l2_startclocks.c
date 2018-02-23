@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -31,7 +31,7 @@ inline __attribute__((always_inline))
 void
 p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
 {
-    uint64_t scom_data = 0;
+    data64_t scom_data = {0};
 
     PK_TRACE("Drop L2 Regional Fences via CPLT_CTRL1[8/9]");
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_CLEAR, quad),
@@ -45,9 +45,9 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
 
     do
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QACSR, quad), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QACSR, quad), scom_data.value);
     }
-    while((~scom_data) & ((uint64_t)ex << SHIFT64(37)));
+    while((~scom_data.words.lower) & (ex << SHIFT64SH(37)));
 
     MARK_TRAP(SX_L2_STARTCLOCKS_ALIGN)
 
@@ -60,11 +60,11 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL0_OR, quad), BIT64(3));
 
     PK_TRACE("Set then unset clear_chiplet_is_aligned via SYNC_CONFIG[7]");
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
-    scom_data = scom_data | BIT64(7);
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
-    scom_data = scom_data & ~BIT64(7);
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data);
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
+    scom_data.words.upper |= BIT32(7);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
+    scom_data.words.upper &= ~BIT32(7);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SYNC_CONFIG, quad), scom_data.value);
 
     // 255 cache cycles
     PPE_WAIT_CORE_CYCLES(510);
@@ -73,9 +73,9 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
 
     do
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data.value);
     }
-    while((~scom_data) & BIT64(9));
+    while((~scom_data.words.upper) & BIT32(9));
 
     MARK_TRAP(SX_L2_STARTCLOCKS_REGION)
 
@@ -90,21 +90,21 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_SCAN_REGION_TYPE, quad), 0);
 
     PK_TRACE("Start clock via CLK_REGION");
-    scom_data = (CLK_START_CMD | CLK_THOLD_ALL | ((uint64_t)ex << SHIFT64(9)));
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data);
+    scom_data.value = (CLK_START_CMD | CLK_THOLD_ALL | ((uint64_t)ex << SHIFT64(9)));
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLK_REGION, quad), scom_data.value);
 
     PK_TRACE("Polling for clocks starting via CPLT_STAT0[8]");
 
     do
     {
-        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data);
+        GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_STAT0, quad), scom_data.value);
     }
-    while((~scom_data) & BIT64(8));
+    while((~scom_data.words.upper) & BIT32(8));
 
     PK_TRACE("Check L2 clock running via CLOCK_STAT_SL[8:9]");
-    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data);
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_CLOCK_STAT_SL, quad), scom_data.value);
 
-    if (scom_data & ((uint64_t)ex << SHIFT64(9)))
+    if (scom_data.words.upper & (ex << SHIFT32(9)))
     {
         PK_TRACE_ERR("ERROR: L2 Clock Start Failed. HALT SGPE!");
         SGPE_STOP_QUAD_ERROR_HANDLER(quad, SGPE_STOP_EXIT_L2_STARTCLK_FAILED);
@@ -117,7 +117,20 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
     // Cleaning up
     // -------------------------------
 
-    /// @todo RTC166917 Check the Global Checkstop FIR
+#if !EPM_P9_TUNING
+
+    PK_TRACE("Check Global Xstop FIR of Cache Chiplet After Start L2 Clock");
+    GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(EQ_XFIR, quad), scom_data.value);
+
+    if (scom_data.words.upper & BITS32(0, 27))
+    {
+        PK_TRACE_ERR("Cache[%d] Chiplet Global Xstop FIR[%x] Detected After Start L2 Clock. HALT SGPE!",
+                     quad, scom_data.words.upper);
+        SGPE_STOP_QUAD_ERROR_HANDLER(quad, SGPE_STOP_EXIT_START_L2_XSTOP_ERROR);
+        return;
+    }
+
+#endif
 
 #if NIMBUS_DD_LEVEL != 10
 
@@ -127,27 +140,27 @@ p9_hcd_cache_l2_startclocks(uint32_t quad, uint32_t ex)
 #endif
 
     PK_TRACE("Set parital bad l2/l3 and stopped l2 pscom mask");
-    scom_data = 0;
+    scom_data.value = 0;
 
     if ((~G_sgpe_stop_record.group.expg[quad]) & FST_EX_IN_QUAD)
     {
-        scom_data |= (PSCOM_MASK_EX0_L2 | PSCOM_MASK_EX0_L3);
+        scom_data.value |= (PSCOM_MASK_EX0_L2 | PSCOM_MASK_EX0_L3);
     }
     else if (((~ex) & FST_EX_IN_QUAD) &&
              (G_sgpe_stop_record.state[quad].act_state_x0 >= LEVEL_EX_BASE))
     {
-        scom_data |= PSCOM_MASK_EX0_L2;
+        scom_data.value |= PSCOM_MASK_EX0_L2;
     }
 
     if ((~G_sgpe_stop_record.group.expg[quad]) & SND_EX_IN_QUAD)
     {
-        scom_data |= (PSCOM_MASK_EX1_L2 | PSCOM_MASK_EX1_L3);
+        scom_data.value |= (PSCOM_MASK_EX1_L2 | PSCOM_MASK_EX1_L3);
     }
     else if (((~ex) & SND_EX_IN_QUAD) &&
              (G_sgpe_stop_record.state[quad].act_state_x1 >= LEVEL_EX_BASE))
     {
-        scom_data |= PSCOM_MASK_EX1_L2;
+        scom_data.value |= PSCOM_MASK_EX1_L2;
     }
 
-    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data);
+    GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_RING_FENCE_MASK_LATCH, quad), scom_data.value);
 }
