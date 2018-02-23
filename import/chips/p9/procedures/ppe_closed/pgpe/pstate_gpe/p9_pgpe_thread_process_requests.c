@@ -238,7 +238,6 @@ void p9_pgpe_process_sgpe_updt_active_cores()
             {
                 G_pgpe_pstate_record.activeCores &= ~(args->fields.active_cores << 8);
                 args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
-                args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
                 ack_now = 1;
             }
             else
@@ -286,6 +285,7 @@ void p9_pgpe_process_sgpe_updt_active_cores()
     {
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
+        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         PK_TRACE_DBG("PTH: Core Entry ACK back to SGPE");
         p9_pgpe_optrace(ACK_CORES_ACTV);
     }
