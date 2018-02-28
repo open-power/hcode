@@ -319,6 +319,18 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
     if ((spwu_stop = (core & spwu_stop)))
     {
+        if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE))
+        {
+            CME_GETSCOM_OR(PPM_SSHSRC, spwu_stop, scom_data.value);
+
+            if (scom_data.words.upper & BIT32(0))
+            {
+                PK_TRACE_ERR("Protocol Error[2]: Assert SPWU_Done when STOP_GATED=1, SSH[%d][%x]",
+                             spwu_stop, scom_data.words.upper);
+                PK_PANIC(CME_STOP_SPWU_PROTOCOL_ERROR);
+            }
+        }
+
         // done = spwu + !pm_active + !core_chiplet_fence + !pcbmux_req + !pcbmux_grant
         // chiplet fence forces pm_active to zero
         // Note: pm_exit is asserted above for every core waking up including spwu
@@ -570,6 +582,18 @@ p9_cme_stop_exit()
 
     if (spwu_wake)
     {
+        if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE))
+        {
+            CME_GETSCOM_OR(PPM_SSHSRC, spwu_wake, scom_data.value);
+
+            if (scom_data.words.upper & BIT32(0))
+            {
+                PK_TRACE_ERR("Protocol Error[1]: Assert SPWU_Done when STOP_GATED=1, SSH[%d][%x]",
+                             spwu_wake, scom_data.words.upper);
+                PK_PANIC(CME_STOP_SPWU_PROTOCOL_ERROR);
+            }
+        }
+
         // Process special wakeup on a core that is already running
         PK_TRACE_DBG("SP.WU: Core[%d] Assert PM_EXIT and SPWU_DONE via SICR[4/5, 16/17]", spwu_wake);
         // Note: clear pm_active so that potential stop1 wont use leftover pm_active upon drop spwu later
@@ -718,13 +742,18 @@ p9_cme_stop_exit()
 
 #else
 
-                return;
+                if (!deeper_core)
+                {
+                    return;
+                }
 
 #endif
 
             }
-
-            p9_cme_stop_exit_end(core, spwu_stop);
+            else
+            {
+                p9_cme_stop_exit_end(core, spwu_stop);
+            }
 
             core         = deeper_core;
             target_level = deeper_level;
@@ -1000,6 +1029,11 @@ p9_cme_stop_exit()
 
 #else
 
+                if (d2u4_flag)
+                {
+                    p9_cme_stop_exit_end((CME_MASK_BC - deeper_core), spwu_stop);
+                }
+
                 return;
 
 #endif
@@ -1182,6 +1216,11 @@ p9_cme_stop_exit()
                     continue;
 
 #else
+
+                    if (d2u4_flag)
+                    {
+                        p9_cme_stop_exit_end((CME_MASK_BC - deeper_core), spwu_stop);
+                    }
 
                     return;
 

@@ -65,6 +65,9 @@ void p9_sgpe_stop_cme_scominit(uint32_t quad, uint32_t cme, uint32_t cme_flags)
         cme_flags |= BIT32(CME_FLAGS_BLOCK_ENTRY_STOP11);
     }
 
+    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS,     quad, cme), scom_data.value);
+    cme_flags |= (scom_data.words.upper & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE));
+
     PK_TRACE("Setup CME Flags");
     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS,     quad, cme), ((uint64_t)cme_flags) << 32);
 

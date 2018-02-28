@@ -969,6 +969,7 @@ p9_sgpe_stop_exit()
                     }
                 }
 
+                cme_flags |= BIT32(CME_FLAGS_SPWU_CHECK_ENABLE);
                 p9_sgpe_stop_cme_scominit(qloop, ex_index, cme_flags);
             }
         }
