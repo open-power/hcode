@@ -125,6 +125,18 @@ p9_cme_stop_spwu_handler(void)
             // if falling edge == spwu drop:
             if (G_cme_stop_record.core_in_spwu & core_mask)
             {
+                if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE))
+                {
+                    CME_GETSCOM(PPM_SSHSRC, core_mask, scom_data);
+
+                    if ((scom_data & BIT64(0)) || ((~scom_data) & BIT64(1)))
+                    {
+                        PK_TRACE_ERR("Protocol Error[0]: SPWU Dropped when STOP_GATED=1/SPWU_DONE=0, SSH[%d][%x]",
+                                     core_mask, (uint32_t)(scom_data >> 32));
+                        PK_PANIC(CME_STOP_SPWU_PROTOCOL_ERROR);
+                    }
+                }
+
                 PK_TRACE("Falling edge of spwu, first clearing EISR");
                 out32(CME_LCL_EISR_CLR, BIT32((14 + core_index)));
 
@@ -134,7 +146,7 @@ p9_cme_stop_spwu_handler(void)
                     PK_TRACE("SPWU drop confirmed, now dropping spwu_done");
                     out32(CME_LCL_SICR_CLR, BIT32((16 + core_index)));
 
-                    CME_GETSCOM(PPM_GPMMR, core_mask, scom_data);
+                    CME_GETSCOM(PPM_GPMMR,  core_mask, scom_data);
 
                     // if spwu has been re-asserted after spwu_done is dropped:
                     if (scom_data & BIT64(1))
