@@ -581,6 +581,11 @@ p9_sgpe_stop_init()
                     {
                         GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(PPM_SPWKUP_OTR,
                                                        ((qloop << 2) + (xloop << 1) + cloop)), 0);
+                        // Clear the CPPM error register bits as we just violated
+                        // the special wake-up protocol of dropping special
+                        // wake-up without a done
+                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(PPM_ERROR,
+                                                       ((qloop << 2) + (xloop << 1) + cloop)), BITS64(1, 2));
                     }
                 }
             }
