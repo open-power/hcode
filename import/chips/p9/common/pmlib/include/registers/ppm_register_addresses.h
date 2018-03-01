@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -63,5 +63,8 @@
 #define PPM_VDMCR 0x000f01b8
 #define PPM_VDMCR_CLR 0x000f01b9
 #define PPM_VDMCR_OR 0x000f01ba
+
+// Hand added
+#define PPM_ERROR 0x000f0121
 
 #endif // __PPM_REGISTER_ADDRESSES_H__
