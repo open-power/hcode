@@ -909,8 +909,9 @@ void p9_pgpe_process_registration()
     uint32_t  q, c, oldActiveDB, oldActiveQuads, unicastCoresVector = 0, quadsRegisterProcess;
     uint32_t quadAckExpect = 0;
     uint64_t value;
-    pgpe_db0_start_ps_bcast_t db0_glb_bcast;
-    pgpe_db0_clip_bcast_t     db0_clip_bcast;
+    pgpe_db0_start_ps_bcast_t   db0_glb_bcast;
+    pgpe_db0_clip_bcast_t       db0_clip_bcast;
+    pgpe_db0_pstate_start_abort_t     db0_pstate_start_abort;
 
     //Save it for global bcast sync in case GlobalPSTarget is higher in
     //after doing auctions with just registered quads
@@ -1095,6 +1096,34 @@ void p9_pgpe_process_registration()
                 p9_pgpe_pstate_updt_actual_quad(QUAD_MASK(q));
             }
         }
+    }
+    //Send REGISTER_DONE if Pstates aren't active anymore
+    else
+    {
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            if(quadsRegisterProcess & QUAD_MASK(q))
+            {
+                //Give Quad Manager CME control of DPLL through inter-ppm
+                //SGPE sets up the DPLL_SEL bits before booting CME
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_OR, q), BIT64(26));
+
+                for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
+                {
+                    if (G_pgpe_pstate_record.activeDB & CORE_MASK(c))
+                    {
+                        unicastCoresVector |= CORE_MASK(c);
+                    }
+                }
+
+                quadAckExpect |= QUAD_MASK(q);
+            }
+        }
+
+        db0_pstate_start_abort.value = 0;
+        db0_pstate_start_abort.fields.msg_id = MSGID_DB0_REGISTER_DONE;
+        p9_pgpe_send_db0(db0_pstate_start_abort.value, unicastCoresVector, PGPE_DB0_UNICAST, PGPE_DB0_ACK_WAIT_CME,
+                         quadAckExpect);
     }
 
     PK_TRACE_DBG("PTH: Register Exit");

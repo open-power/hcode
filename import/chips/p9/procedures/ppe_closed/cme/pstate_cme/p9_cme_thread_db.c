@@ -436,71 +436,71 @@ void p9_cme_pstate_process_db0()
 
     uint32_t cme_flags = in32(CME_LCL_FLAGS);
 
-    //Ignore if Doorbell0 if DB0_PROCESSING_ENABLE=0. This bit is zero
-    //upon CME boot. PGPE will set it right before sending Pstate Starts.
-    //PGPE clears it before ACKing Stop Entry Notify(this CME is about to powered off)
-    //back to SGPE
-    if (in32(CME_LCL_SRTCH0) & BIT32(CME_SCRATCH_DB0_PROCESSING_ENABLE))
+    //Process DB0
+    //Start Pstates and Pstates NOT enabled
+    if((G_dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST) &&
+       (!(cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))))
     {
-        //Process DB0
-        //Start Pstates and Pstates NOT enabled
-        if((G_dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST) &&
-           (!(cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))))
+        //This will Clear EISR[DB0_C0/1] to prevent another DB0 interrupt
+        //PGPE multicast Global Bcast/Clip Bcast DB0, and it's possible that
+        //the DB0 interrupt was taken as a result of multicast operation, but
+        //the value of DB0 read corresponds to Pstate Start. In such a case,
+        //another DB0 interrupt can happen, and it appears as PGPE has sent
+        //a second Pstate Start causing CME to ACK back with error and Halt
+        p9_cme_pstate_db0_start();
+    }
+    //Global Actual Broadcast and Pstates enabled
+    else if((G_dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST) ||
+            (G_dbData.fields.cme_message_number0 == MSGID_DB0_DB3_GLOBAL_ACTUAL_BROADCAST))
+    {
+        //Process Global Bcast only if Pstates are enabled.
+        //Otherwise, ignore. The reason is PGPE multicasts Global Bcast, and doorbell0
+        //can be written while this CME is powered-off or or about to be powered-off.
+        //For Pstate Start and Stop PGPE only unicasts.
+        if (cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))
         {
-            //This will Clear EISR[DB0_C0/1] to prevent another DB0 interrupt
-            //PGPE multicast Global Bcast/Clip Bcast DB0, and it's possible that
-            //the DB0 interrupt was taken as a result of multicast operation, but
-            //the value of DB0 read corresponds to Pstate Start. In such a case,
-            //another DB0 interrupt can happen, and it appears as PGPE has sent
-            //a second Pstate Start causing CME to ACK back with error and Halt
-            p9_cme_pstate_db0_start();
+            p9_cme_pstate_db0_glb_bcast();
         }
-        //Global Actual Broadcast and Pstates enabled
-        else if((G_dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST) ||
-                (G_dbData.fields.cme_message_number0 == MSGID_DB0_DB3_GLOBAL_ACTUAL_BROADCAST))
+    }
+    //Stop Pstates and Pstates enabled
+    else if((G_dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST) &&
+            (cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
+    {
+        p9_cme_pstate_db0_stop();
+    }
+    //Pmin or Pmax Update
+    else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST)
+    {
+        p9_cme_pstate_db0_clip_bcast();
+    }
+    else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_PMSR_UPDT)
+    {
+        p9_cme_pstate_db0_pmsr_updt();
+    }
+    else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_REGISTER_DONE)
+    {
+        ppmPigData.value = 0;
+        ppmPigData.fields.req_intr_type = 4;
+        ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
+        send_pig_packet(ppmPigData.value, G_cme_pstate_record.firstGoodCoreMask);
+    }
+    //Otherwise, send an ERR ACK to PGPE and Halt
+    else
+    {
+        ppmPigData.value = 0;
+        ppmPigData.fields.req_intr_type = 4;
+        ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
+        send_pig_packet(ppmPigData.value, G_cme_pstate_record.firstGoodCoreMask);
+        PK_TRACE_INF("PSTATE: Bad DB0=0x%x", (uint8_t)G_dbData.fields.cme_message_number0);
+
+        if(G_dbData.fields.cme_message_number0 < MSGID_DB0_VALID_START ||
+           G_dbData.fields.cme_message_number0 > MSGID_DB0_VALID_END)
         {
-            //Process Global Bcast only if Pstates are enabled.
-            //Otherwise, ignore. The reason is PGPE multicasts Global Bcast, and doorbell0
-            //can be written while this CME is powered-off or or about to be powered-off.
-            //For Pstate Start and Stop PGPE only unicasts.
-            if (cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED))
-            {
-                p9_cme_pstate_db0_glb_bcast();
-            }
+            PK_PANIC(CME_PSTATE_UNEXPECTED_DB0_MSGID);
         }
-        //Stop Pstates and Pstates enabled
-        else if((G_dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST) &&
-                (cme_flags & BIT32(CME_FLAGS_PSTATES_ENABLED)))
-        {
-            p9_cme_pstate_db0_stop();
-        }
-        //Pmin or Pmax Update
-        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST)
-        {
-            p9_cme_pstate_db0_clip_bcast();
-        }
-        else if(G_dbData.fields.cme_message_number0 == MSGID_DB0_PMSR_UPDT)
-        {
-            p9_cme_pstate_db0_pmsr_updt();
-        }
-        //Otherwise, send an ERR ACK to PGPE and Halt
         else
         {
-            ppmPigData.value = 0;
-            ppmPigData.fields.req_intr_type = 4;
-            ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_ERROR;
-            send_pig_packet(ppmPigData.value, G_cme_pstate_record.firstGoodCoreMask);
-            PK_TRACE_INF("PSTATE: Bad DB0=0x%x", (uint8_t)G_dbData.fields.cme_message_number0);
-
-            if(G_dbData.fields.cme_message_number0 < MSGID_DB0_VALID_START ||
-               G_dbData.fields.cme_message_number0 > MSGID_DB0_VALID_END)
-            {
-                PK_PANIC(CME_PSTATE_UNEXPECTED_DB0_MSGID);
-            }
-            else
-            {
-                PK_PANIC(CME_PSTATE_INVALID_DB0_MSGID);
-            }
+            PK_PANIC(CME_PSTATE_INVALID_DB0_MSGID);
         }
     }
 
@@ -541,8 +541,11 @@ inline void p9_cme_pstate_register()
 
             PK_TRACE_INF("PSTATE: DB0 Processing is Enabled");
 
-            //PGPE will send Pmin, Pmax and Pstate Start Doorbells
-            //Pstate Start is the last DB0
+            //PGPE sends MSGID_DB0_REGISTER_DONE, if Pstates aren't active anymore.
+            //Otherwise, PGPE sends DB0 in the following order
+            //1. MSGID_DB0_CLIP_BROADCAST
+            //2. MSGID_DB0_CLIP_BROADCAST
+            //3. MSGID_DB0_START_PSTATE_BROADCAST
             while(!done)
             {
                 uint32_t db0_check = G_cme_pstate_record.firstGoodCoreMask << SHIFT64SH(37);
@@ -565,6 +568,15 @@ inline void p9_cme_pstate_register()
                 {
                     p9_cme_pstate_db0_clip_bcast();
                 }
+                //PGPE sends this if Pstates aren't active anymore
+                else if ((G_dbData.fields.cme_message_number0 ==  MSGID_DB0_REGISTER_DONE))
+                {
+                    done = 1;
+                    ppmPigData.value = 0;
+                    ppmPigData.fields.req_intr_type = 4;
+                    ppmPigData.fields.req_intr_payload = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
+                    send_pig_packet(ppmPigData.value, G_cme_pstate_record.firstGoodCoreMask);
+                }
             }
         }
 
@@ -576,15 +588,32 @@ inline void p9_cme_pstate_register()
 
         if (cme_flags & BIT32(CME_FLAGS_WAIT_ON_PSTATE_START))
         {
-            //PGPE sends Pmin, Pmax, and Pstate start DB0, so
-            //total of three
             PK_TRACE_INF("PSTATE: Wait on Pstate Start");
 
-            while(msgCnt != 3)
+            //PGPE sends MSGID_DB0_REGISTER_DONE, if Pstates aren't active anymore.
+            //Otherwise, PGPE sends DB0 in the following order
+            //1. MSGID_DB0_CLIP_BROADCAST
+            //2. MSGID_DB0_CLIP_BROADCAST
+            //3. MSGID_DB0_START_PSTATE_BROADCAST
+            while(!done)
             {
-                p9_cme_pstate_sibling_lock_and_intercme_protocol(1);
-                msgCnt++;
-                PK_TRACE_INF("PSTATE: Sib Register MsgCnt=%d", msgCnt);
+                if ((G_dbData.fields.cme_message_number0 ==  MSGID_DB0_REGISTER_DONE))
+                {
+                    done = 1;
+                    PK_TRACE_INF("PSTATE: Sib Register Got Pstate Register Done");
+                }
+                else
+                {
+                    p9_cme_pstate_sibling_lock_and_intercme_protocol(1);
+                    msgCnt++;
+
+                    if (msgCnt == 3)
+                    {
+                        done = 1;
+                    }
+
+                    PK_TRACE_INF("PSTATE: Sib Register MsgCnt=%d", msgCnt);
+                }
             }
         }
     }

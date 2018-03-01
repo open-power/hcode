@@ -98,7 +98,8 @@ enum MESSAGE_ID_DB0
     MSGID_DB0_STOP_PSTATE_BROADCAST         = 4,
     MSGID_DB0_CLIP_BROADCAST                = 5,
     MSGID_DB0_PMSR_UPDT                     = 6,
-    MSGID_DB0_VALID_END                     = 6 //This is for error checking
+    MSGID_DB0_REGISTER_DONE                 = 7,
+    MSGID_DB0_VALID_END                     = 7 //This is for error checking
 };
 
 enum MESSAGE_ID_DB3
@@ -261,6 +262,24 @@ typedef union pgpe_db0_pmsr_updt
 #endif
     } fields;
 } pgpe_db0_pmsr_updt_t;
+
+//
+//PGPE-CME Doorbell0(Pstate Abort)
+//
+typedef union pgpe_db0_pstate_start_abort
+{
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t msg_id : 8;
+        uint64_t reserved: 56;
+#else
+        uint64_t reserved: 56;
+        uint64_t msg_id : 8;
+#endif
+    } fields;
+} pgpe_db0_pstate_start_abort_t;
 
 
 #endif //__PSTATE_PGPE_CME_API_H__
