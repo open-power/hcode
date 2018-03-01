@@ -593,6 +593,10 @@ p9_cme_stop_entry()
 
             if (target_level > STOP_LEVEL_3 || deeper_level > STOP_LEVEL_3)
             {
+                if (target_level < STOP_LEVEL_4)
+                {
+                    core = deeper_core;
+                }
 
 #ifdef PLS_DEBUG
 
@@ -784,6 +788,10 @@ p9_cme_stop_entry()
 
                 sync();
 
+                if (target_level < STOP_LEVEL_4)
+                {
+                    core = CME_MASK_BC;
+                }
             }
 
 #endif
