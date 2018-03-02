@@ -114,7 +114,7 @@ void p9_pgpe_pstate_init()
         {
             if (ccsr.value & CORE_MASK(c))
             {
-                G_pgpe_pstate_record.numConfCores += 1;
+                G_pgpe_pstate_record.numSortCores += 1;
             }
         }
     }
@@ -134,7 +134,7 @@ void p9_pgpe_pstate_init()
 
     if (pad.fields.good_cores_in_sort)
     {
-        G_pgpe_pstate_record.numConfCores = pad.fields.good_cores_in_sort;
+        G_pgpe_pstate_record.numSortCores = pad.fields.good_cores_in_sort;
     }
 
     //Init OCC Shared SRAM
@@ -370,25 +370,23 @@ void p9_pgpe_pstate_calc_wof()
     //Currently, PGPE only support VRATIO Fixed and VRATIO active cores only
     if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO)
     {
+        G_pgpe_pstate_record.vratio = (G_pgpe_pstate_record.numActiveCores * MAX_VRATIO) / (G_pgpe_pstate_record.numSortCores);
+
+
+        // Note we separate out numActiveCores = 0 case. Otherwise, subtracting 1 might
+        // result in invalid vindex
         if (G_pgpe_pstate_record.numActiveCores != 0)
         {
-            G_pgpe_pstate_record.vratio = ((G_pgpe_pstate_record.numActiveCores << 16) - 1) / G_pgpe_pstate_record.numConfCores;
+            G_pgpe_pstate_record.vindex = (((24 * G_pgpe_pstate_record.vratio) + VRATIO_ROUNDING_ADJUST) / MAX_VRATIO) - 1;
         }
         else
         {
-            G_pgpe_pstate_record.vratio = 0;
-        }
-
-        G_pgpe_pstate_record.vindex = (G_pgpe_pstate_record.vratio + 0xAAC - 0xA8B) / 0xAAC;
-
-        if (G_pgpe_pstate_record.vindex > VFRT_VRATIO_SIZE - 1)
-        {
-            G_pgpe_pstate_record.vindex = VFRT_VRATIO_SIZE - 1;
+            G_pgpe_pstate_record.vindex = 0;
         }
     }
     else
     {
-        G_pgpe_pstate_record.vratio = 0xFFFF;
+        G_pgpe_pstate_record.vratio = MAX_VRATIO; //0xFFFF
         G_pgpe_pstate_record.vindex = VFRT_VRATIO_SIZE - 1;
     }
 
