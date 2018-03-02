@@ -317,7 +317,7 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
 #else
 
-    if (spwu_stop)
+    if ((spwu_stop = (core & spwu_stop)))
     {
         // done = spwu + !pm_active + !core_chiplet_fence + !pcbmux_req + !pcbmux_grant
         // chiplet fence forces pm_active to zero
