@@ -33,6 +33,9 @@
 #include "p9_pgpe_header.h"
 
 
+#define VRATIO_ROUNDING_ADJUST  24        //VFRT tables are built assuming we truncate
+#define MAX_VRATIO              65535    // (2^16) - 1
+
 enum IPC_PEND_TBL
 {
     IPC_PEND_PSTATE_START_STOP        =     0,
@@ -153,7 +156,7 @@ typedef struct
     PkSemaphore sem_actuate; //196
     PkSemaphore sem_sgpe_wait;//208
     uint32_t activeQuads, activeDB, pendQuadsRegisterReceive, pendQuadsRegisterProcess; //212,216,220,224
-    uint32_t activeCores, numActiveCores, numConfCores; //228,232,236
+    uint32_t activeCores, numActiveCores, numSortCores; //228,232,236
     uint32_t vratio, fratio;//240, 244,
     uint16_t vindex, findex;//246, 248
     uint32_t pendingPminClipBcast, pendingPmaxClipBcast;//252,256
