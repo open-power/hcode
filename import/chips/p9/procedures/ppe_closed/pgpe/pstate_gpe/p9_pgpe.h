@@ -82,6 +82,12 @@ enum PGPE_WOF_CTRL
     WOF_DISABLE     = 1
 };
 
+//VFRT tables are built assuming we truncate, and 24 is needed to adjust for the
+//intermediate value truncation in converting Vratio to an Vindex, which involves
+//a *24(multiply by 24) conversion for a max error of -24(negative 24)
+#define VRATIO_ROUNDING_ADJUST  24        //VFRT tables are built assuming we truncate
+#define MAX_VRATIO              65535    // (2^16) - 1
+
 #define CORE_MASK(core) \
     (CORE0_MASK >> core)
 

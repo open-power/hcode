@@ -34,12 +34,6 @@
 #include "p9_stop_recovery_trigger.h"
 
 
-//VFRT tables are built assuming we truncate, and 24 is needed to adjust for the
-//intermediate value truncation in converting Vratio to an Vindex, which involves
-//a *24(multiply by 24) conversion for a max error of -24(negative 24)
-#define VRATIO_ROUNDING_ADJUST  24
-#define MAX_VRATIO              65535    // (2^16) - 1
-
 enum IPC_PEND_TBL
 {
     IPC_PEND_PSTATE_START_STOP        =     0,
