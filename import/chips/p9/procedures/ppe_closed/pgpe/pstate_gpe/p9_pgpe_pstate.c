@@ -1897,7 +1897,8 @@ void p9_pgpe_pstate_freq_updt()
 
     //If we ACTIVE_CORES_UPDT pending, then send a DB3(High-Priority Pstate Request) with payload
     //in DB0.
-    if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1)
+    if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1) ||
+        (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1))
     {
         //Write DB0, but with top-byte = 0. This way DB0 interrupt doesn't happen, but
         //we still send CME the necessary data. CME will read this inside the DB3 interrupt
