@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -37,7 +37,7 @@ $(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,cpmr_header))
 
 # files to be appended to image
 $(eval $(IMAGE)_FILE_CPMR=$$($(IMAGE)_DD_CONT_cpmr_header))
-$(eval $(IMAGE)_FILE_SELF=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
+$(eval $(IMAGE)_FILE_SELF=$(ROOTPATH)/output/images/utils/stopreg/p9_core_restore_routines/p9_core_restore_routines.bin)
 
 # dependencies for appending image sections in sequence:
 # - file to be appended
