@@ -1244,8 +1244,9 @@ p9_cme_stop_entry()
                   (core_wakeup << SHIFT32(17)));
             sync();
             wrteei(0);
-            out32(CME_LCL_EIMR_OR,  (BITS32(12, 6) | BITS32(20, 2)));
+            out32(CME_LCL_EIMR_OR, BITS32(10, 12));
             wrteei(1);
+
 #endif
 
             //===================
@@ -1419,7 +1420,7 @@ p9_cme_stop_entry()
                   (core_wakeup << SHIFT32(17)));
             sync();
             wrteei(0);
-            out32(CME_LCL_EIMR_OR,  (BITS32(12, 6) | BITS32(20, 2)));
+            out32(CME_LCL_EIMR_OR, BITS32(10, 12));
             wrteei(1);
 #endif
 
@@ -1564,23 +1565,45 @@ p9_cme_stop_entry()
                 {
                     core_index = core_mask & 1;
 
+#if DISABLE_STOP8
+
+                    if (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_11)
+
+#else
+
                     if (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_8)
+
+#endif
+
                     {
                         CME_PUTSCOM(CPPM_CPMMR_OR, core_mask, BIT64(10));
                         pig.fields.req_intr_type = PIG_TYPE3;
                         G_cme_stop_record.core_blockpc |= core_mask;
                     }
-                    else
+                    else if (G_cme_stop_record.req_level[core_index] >= STOP_LEVEL_5)
                     {
                         CME_PUTSCOM(CPPM_CPMMR_CLR, core_mask, BIT64(10));
                         pig.fields.req_intr_type = PIG_TYPE2;
                         G_cme_stop_record.core_blockpc &= ~core_mask;
+                    }
+                    else
+                    {
+                        PK_TRACE_ERR("ERROR: Core[%d] Handoff to SGPE with Requested Stop Level[%d]",
+                                     core_mask, G_cme_stop_record.req_level[core_index]);
+                        PK_PANIC(CME_STOP_ENTRY_HANDOFF_LESSTHAN5);
                     }
 
                     pig.fields.req_intr_payload = G_cme_stop_record.req_level[core_index];
 
                     // put PIG and Wakeup_Notify_Select back to back as possible
                     send_pig_packet(pig.value, core_mask);
+
+                    do
+                    {
+                        CME_GETSCOM(PPM_PIG, core_mask, scom_data.value);
+                    }
+                    while (scom_data.words.lower & BIT64SH(39));
+
                     CME_PUTSCOM(CPPM_CPMMR_OR, core_mask, BIT64(13));
                     PK_TRACE_DBG("Switch Core[%d] PPM wakeup to STOP-GPE via CPMMR[13]", core_mask);
 

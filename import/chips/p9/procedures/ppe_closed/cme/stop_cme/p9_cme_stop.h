@@ -272,6 +272,8 @@ typedef struct
     uint8_t       act_level[MAX_CORES_PER_CME];
     // uint8_t above is processed by stb/lbz in asm, no additional shifting
 
+    // mark the start and the end of entry process
+    uint32_t      entry_pending;
     // whether core is in running state,
     // used for aborted entry detection or filter wakeup core select in scom address
     uint32_t      core_running;

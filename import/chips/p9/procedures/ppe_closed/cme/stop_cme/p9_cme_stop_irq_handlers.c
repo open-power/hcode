@@ -83,13 +83,20 @@ p9_cme_stop_pcwu_handler(void)
     {
         PK_TRACE_INF("PCWU Launching exit thread");
 
-        out32(CME_LCL_EIMR_OR, BITS32(10, 12));
+        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+        g_eimr_override |= BITS64(12, 10);
         wrteei(1);
+
+        // The actual exit sequence
         p9_cme_stop_exit();
     }
 
-    // re-evaluate stop entry & exit enables
-    p9_cme_stop_eval_eimr_override();
+    // in case abort, complete pending entry first
+    if (!G_cme_stop_record.entry_pending)
+    {
+        // re-evaluate stop entry & exit enables
+        p9_cme_stop_eval_eimr_override();
+    }
 }
 
 
@@ -181,13 +188,20 @@ p9_cme_stop_spwu_handler(void)
     {
         PK_TRACE_INF("SPWU Launching exit thread");
 
-        out32(CME_LCL_EIMR_OR, BITS32(10, 12));
+        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+        g_eimr_override |= BITS64(12, 10);
         wrteei(1);
+
+        // The actual exit sequence
         p9_cme_stop_exit();
     }
 
-    // re-evaluate stop entry & exit enables
-    p9_cme_stop_eval_eimr_override();
+    // in case abort, complete pending entry first
+    if (!G_cme_stop_record.entry_pending)
+    {
+        // re-evaluate stop entry & exit enables
+        p9_cme_stop_eval_eimr_override();
+    }
 }
 
 
@@ -198,12 +212,19 @@ p9_cme_stop_rgwu_handler(void)
     MARK_TRAP(STOP_RGWU_HANDLER)
     PK_TRACE_INF("RGWU Handler Trigger");
 
-    out32(CME_LCL_EIMR_OR, BITS32(10, 12));
+    out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+    g_eimr_override |= BITS64(12, 10);
     wrteei(1);
+
+    // The actual exit sequence
     p9_cme_stop_exit();
 
-    // re-evaluate stop entry & exit enables
-    p9_cme_stop_eval_eimr_override();
+    // in case abort, complete pending entry first
+    if (!G_cme_stop_record.entry_pending)
+    {
+        // re-evaluate stop entry & exit enables
+        p9_cme_stop_eval_eimr_override();
+    }
 }
 
 
@@ -214,11 +235,17 @@ p9_cme_stop_enter_handler(void)
     MARK_TRAP(STOP_ENTER_HANDLER)
     PK_TRACE_INF("PM_ACTIVE Handler Trigger");
 
-    out32(CME_LCL_EIMR_OR, BITS32(10, 12));
+    // Abort Protection
+    out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+    g_eimr_override |= BITS64(12, 10);
+    G_cme_stop_record.entry_pending = 1;
     wrteei(1);
 
     // The actual entry sequence
     p9_cme_stop_entry();
+
+    // Restore Abort Protection
+    G_cme_stop_record.entry_pending = 0;
 
     // re-evaluate stop entry & exit enables
     p9_cme_stop_eval_eimr_override();

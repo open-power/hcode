@@ -85,10 +85,12 @@ int send_pig_packet(uint64_t data, uint32_t coreMask)
         // Read PPMPIG status
         CME_GETSCOM(PPM_PIG, coreMask, data_tmp);
     }
-    while (((ppm_pig_t)data_tmp).fields.intr_granted);
+    while ((((ppm_pig_t)data_tmp).fields.pending_source & 0x1));
 
     // Send PIG packet
     CME_PUTSCOM(PPM_PIG, coreMask, data);
+    PK_TRACE_DBG("CME: Sending PIG[%x] at core[%x]",
+                 (uint32_t)(data >> 32), coreMask);
 
     pk_critical_section_exit(&ctx);
 
