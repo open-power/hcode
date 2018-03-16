@@ -75,9 +75,7 @@ void p9_pgpe_droop_unthrottle();
 //the fields in the structure are set to zero(see p9_pgpe_main.c). Here only non-zero value are set
 void p9_pgpe_pstate_init()
 {
-    uint32_t q, c;
-    ocb_ccsr_t ccsr;
-    ccsr.value = in32(OCB_CCSR);
+    uint32_t q;
 
     G_pgpe_pstate_record.pstatesStatus = PSTATE_INIT;
 
@@ -108,34 +106,15 @@ void p9_pgpe_pstate_init()
         G_pgpe_pstate_record.quadPSNext[q] = G_pgpe_pstate_record.safePstate;
         G_pgpe_pstate_record.globalPSNext  = G_pgpe_pstate_record.safePstate;
 
-        // Original behavior.  Can be removed once G_gppb->options.pad has
-        // good_cores_in_sort always filled in correctly.
-        for (c = (q * CORES_PER_QUAD); c < (q + 1)*CORES_PER_QUAD; c++)
-        {
-            if (ccsr.value & CORE_MASK(c))
-            {
-                G_pgpe_pstate_record.numSortCores += 1;
-            }
-        }
     }
 
-    // CQ: SW415420
-    // TODO: RTC 187305
-    // Load the number of cores for this part.  Note: this is called
-    // "Configured Cores" but this is really not the actual case;  this
-    // is the originally good cores from the VPD for this sort to be
-    // used by the WOF algorithm to compute vratio.
-    //
     // The following overlay is done so allow external tooling to use
     // the earlier version of header (pre-adding the good_cores_in_sort
-    // field in the options.pad word).
+    // field in the options.pad word)
     GPPBOptionsPadUse pad;
     pad = (GPPBOptionsPadUse)G_gppb->options.pad;
 
-    if (pad.fields.good_cores_in_sort)
-    {
-        G_pgpe_pstate_record.numSortCores = pad.fields.good_cores_in_sort;
-    }
+    G_pgpe_pstate_record.numSortCores = pad.fields.good_cores_in_sort;
 
     //Init OCC Shared SRAM
     G_pgpe_pstate_record.pQuadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
