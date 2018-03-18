@@ -119,8 +119,8 @@ void p9_pgpe_pstate_init()
 
     //Init OCC Shared SRAM
     G_pgpe_pstate_record.pQuadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
-    G_pgpe_pstate_record.pQuadState1 = (quad_state1_t*)(G_pgpe_header_data->g_quad_status_addr + 2);
-    G_pgpe_pstate_record.pReqActQuads = (requested_active_quads_t*)(G_pgpe_header_data->g_req_active_quad_addr);
+    G_pgpe_pstate_record.pQuadState1 = (quad_state1_t*)(G_pgpe_header_data->g_quad_status_addr + 8);
+    G_pgpe_pstate_record.pReqActQuads = (requested_active_quads_t*)(G_pgpe_header_data->g_pgpe_req_active_quad_address);
     G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = 0xff;
     G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = 0xff;
     G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = 0xff;
@@ -350,7 +350,7 @@ void p9_pgpe_pstate_calc_wof()
 
     //2. Vratio calc and VFRT table lookup
     //Currently, PGPE only support VRATIO Fixed and VRATIO active cores only
-    if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO)
+    if (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_ENABLE_VRATIO)
     {
         G_pgpe_pstate_record.vratio = (G_pgpe_pstate_record.numActiveCores * MAX_VRATIO) / (G_pgpe_pstate_record.numSortCores);
 
@@ -394,7 +394,7 @@ void p9_pgpe_pstate_calc_wof()
 void p9_pgpe_pstate_update_wof_state()
 {
     PK_TRACE_DBG("WFU: Updt WOF Shr Sram");
-    pgpe_wof_state_t* wof_state = (pgpe_wof_state_t*)G_pgpe_header_data->g_pgpe_wof_state_addr;
+    pgpe_wof_state_t* wof_state = (pgpe_wof_state_t*)G_pgpe_header_data->g_pgpe_wof_state_address;
     wof_state->fields.fclip_ps = G_pgpe_pstate_record.wofClip;
     wof_state->fields.vclip_mv = G_pgpe_pstate_record.eVidCurr;
     wof_state->fields.fratio = G_pgpe_pstate_record.fratio;
@@ -1135,8 +1135,8 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
     if (action == PGPE_ACTION_WOF_ON)
     {
         //In WOF Phase >= 2, we ask SGPE to start sending active core updates
-        if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO) ||
-            (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VRATIO_MODIFIER))
+        if ((G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_ENABLE_VRATIO) ||
+            (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_VRATIO_MODIFIER))
         {
             //If this is first time wof has been enabled since PGPE boot, then ask SGPE for
             //core active update. Otherwise, core active update are already enabled, and sending
@@ -1190,8 +1190,8 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
     {
         //In WOF Phase >= 2, we take a note that WOF has been disabled, and
         //simply ACK any active cores updates that come from SGPE.
-        if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO) ||
-            (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VRATIO_MODIFIER))
+        if ((G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_ENABLE_VRATIO) ||
+            (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_VRATIO_MODIFIER))
         {
             G_pgpe_pstate_record.activeCoreUpdtAction = ACTIVE_CORE_UPDATE_ACTION_ACK_ONLY;
         }
@@ -1347,7 +1347,7 @@ void p9_pgpe_pstate_process_quad_exit_notify(uint32_t quadsRequested)
                 //Otherwise, just write the VDM register
                 vdmcfg.value = 0;
 
-                if (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VDM_ENABLE)
+                if (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_VDM_ENABLE)
                 {
                     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
                 }
@@ -1956,7 +1956,7 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
     G_pgpe_pstate_record.eVidCurr = G_pgpe_pstate_record.eVidNext;
 
     //If VDM is disabled, update VDMCFG register for every quad
-    if (!(G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VDM_ENABLE))
+    if (!(G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_VDM_ENABLE))
     {
         vdmcfg.value = 0;
         vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;

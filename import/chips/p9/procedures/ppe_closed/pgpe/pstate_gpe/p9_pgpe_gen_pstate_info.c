@@ -26,7 +26,7 @@
 #include "p9_pstates_pgpe.h"
 #include "p9_pstates_table.h"
 #include "p9_pgpe_gppb.h"
-#include "p9_pgpe_header.h"
+#include "p9_hcode_image_defines.H"
 #include "pstate_pgpe_occ_api.h"
 #include "p9_pgpe.h"
 
@@ -89,14 +89,17 @@ void p9_pgpe_gen_pstate_info()
     PK_TRACE_DBG("INIT:highest_ps=0x%x, biased_ps=0x%x",
                  G_gpi->header.highest_ps_offset,
                  G_gpi->header.biased_pstate_tbl_offset);
-    gppb = (GlobalPstateParmBlock*)((G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.gppb_offset));
-    ps0 = (uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.ps0_offset);
-    highest_pstate = (uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.highest_ps_offset);
-    rTbl = (PstateTable*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.raw_pstate_tbl_offset);
-    bTbl = (PstateTable*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.biased_pstate_tbl_offset);
-    PK_TRACE_DBG("INIT:highest_ps=0x%x, ps0=0x%x",
-                 *highest_pstate,
-                 *ps0);
+    gppb = (GlobalPstateParmBlock*)((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
+                                    G_gpi->header.gppb_offset));
+    ps0 = ((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) + G_gpi->header.ps0_offset);
+    highest_pstate = ((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) + G_gpi->header.highest_ps_offset);
+    rTbl = (PstateTable*)((uint32_t*)(G_(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
+                                      G_gpi->header.raw_pstate_tbl_offset);
+           bTbl = (PstateTable*)(((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
+                                  G_gpi->header.biased_pstate_tbl_offset);
+                                 PK_TRACE_DBG("INIT:highest_ps=0x%x, ps0=0x%x",
+                                         *highest_pstate,
+                                         *ps0);
 #elif USE_GEN_PSTATE_STRUCT_V == 2
     G_gpi = (GeneratedPstateInfo_v2*)G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset;
     G_gpi->magic = GEN_PSTATES_TBL_MAGIC_V2;
@@ -120,12 +123,15 @@ void p9_pgpe_gen_pstate_info()
     PK_TRACE_DBG("INIT:vratio_vindex ofsset=0x%x,length=0x%x ",
                  G_gpi->header.vratio_vindex_tbl_offset,
                  G_gpi->header.vratio_vindex_tbl_length);
-    gppb = (GlobalPstateParmBlock*)((G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.gppb_offset));
-    ps0 = (uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.ps0_offset);
-    highest_pstate = (uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.highest_ps_offset);
-    rTbl = (PstateTable*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.raw_pstate_tbl_offset);
-    bTbl = (PstateTable*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset + G_gpi->header.biased_pstate_tbl_offset);
-    VRatioVIndexTable* vTbl = (VRatioVIndexTable*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset +
+    gppb = (GlobalPstateParmBlock*)((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
+                                    G_gpi->header.gppb_offset);
+    ps0 = (((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset)) + G_gpi->header.ps0_offset);
+    highest_pstate = ((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) + G_gpi->header.highest_ps_offset);
+    rTbl = (PstateTable*)((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
+                          G_gpi->header.raw_pstate_tbl_offset);
+    bTbl = (PstateTable*)((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
+                          G_gpi->header.biased_pstate_tbl_offset);
+    VRatioVIndexTable* vTbl = (VRatioVIndexTable*)((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
                               G_gpi->header.vratio_vindex_tbl_offset);
     PK_TRACE_DBG("INIT:highest_ps=0x%x, ps0=0x%x",
                  *highest_pstate,

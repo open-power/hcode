@@ -54,6 +54,8 @@
 #include "pstate_pgpe_cme_api.h"
 #include "p9_hcd_memmap_base.H"
 #include "p9_pm_hcd_flags.h"
+#include "p9_hcode_image_defines.H"
+#include "p9_hcd_memmap_occ_sram.H"
 #include "ipc_api.h"
 #include "ipc_async_cmd.h"
 
