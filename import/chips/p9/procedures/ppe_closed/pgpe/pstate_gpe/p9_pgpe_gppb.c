@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,6 +25,7 @@
 
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_header.h"
+#include "p9_hcode_image_defines.H"
 
 //Globals and externs
 GlobalPstateParmBlock* G_gppb;//Global pointer to GlobalPstateParmBlock
@@ -45,7 +46,7 @@ uint8_t p9_pgpe_gppb_get_ps_region(Pstate ps, uint8_t vpt_pt_set);
 //
 void p9_pgpe_gppb_init()
 {
-    void* gppb_sram_offset = G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
+    void* gppb_sram_offset = (void*)G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
     G_gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
 
     PK_TRACE_INF("INIT: DPLL0Value=0x%x", G_gppb->dpll_pstate0_value);

@@ -122,8 +122,8 @@ __attribute__((always_inline)) inline void handle_core_throttle()
         uint32_t inject = run & 0x1; //Inject is bit 17, if this is high we run one throttle burst then turn off
         uint32_t type = (config >> 13) & 0x1; //type is bit 18, this determines which kind of throttling we do
         uint32_t mask = type ? CORE_SLOWDOWN : CORE_IFU_THROTTLE;
-        uint32_t pgpe_throttle_assert   = G_pgpe_header_data->g_pgpe_throttle_assert;
-        uint32_t pgpe_throttle_deassert = G_pgpe_header_data->g_pgpe_throttle_deassert;
+        uint32_t pgpe_throttle_assert   = G_pgpe_header_data->g_pgpe_core_throttle_assert_cnt;
+        uint32_t pgpe_throttle_deassert = G_pgpe_header_data->g_pgpe_core_throttle_deassert_cnt;
 
         //if currently off, we don't desire always off, this is the first evaluation since become enabled, we are in always on,
         //or we (re enabled and have reached the count, then we turn throttling on (if both assert and deassert are 0 this statement fails)
@@ -195,7 +195,7 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
         if (G_pgpe_pstate_record.updatePGPEBeacon == 1)
         {
             //write to SRAM
-            *(G_pgpe_header_data->g_pgpe_beacon_addr) = *(G_pgpe_header_data->g_pgpe_beacon_addr) + 1;
+            *((uint32_t*)(G_pgpe_header_data->g_pgpe_beacon_addr)) = *((uint32_t*)(G_pgpe_header_data->g_pgpe_beacon_addr)) + 1;
             G_beacon_count = 0;
         }
     }
@@ -310,7 +310,7 @@ __attribute__((always_inline)) inline void handle_fit_timebase_sync()
         }
         else
         {
-            G_pgpe_optrace_data.word[0] = *(G_pgpe_header_data->g_pgpe_beacon_addr);
+            G_pgpe_optrace_data.word[0] = *((uint32_t*)(G_pgpe_header_data->g_pgpe_beacon_addr));
             p9_pgpe_optrace(FIT_TB_SYNC);
             G_last_sync_op = 1;
         }

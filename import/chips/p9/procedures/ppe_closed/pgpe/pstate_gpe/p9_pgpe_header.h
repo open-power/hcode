@@ -27,43 +27,6 @@
 
 #include "pk.h"
 
-
-//
-//\todo RTC: 164335 Use the structure from p9_hcode_image_defines.H
-//when it's updated
-typedef struct
-{
-    uint32_t  g_pgpe_magic_number[2];         // PGPE_1.0
-    uint32_t* g_pgpe_sys_reset_addr;          // Fully qualified OCC address where pk_init resides
-    uint32_t* g_pgpe_shared_sram_addr;        // SRAM address where shared SRAM begins
-    uint32_t* g_pgpe_ivpr_addr;               // Beginning of PGPE region in OCC SRAM
-    uint32_t  g_pgpe_shared_sram_len;         // Length of shared SRAM area
-    uint32_t  g_pgpe_build_date;              // Build date for PGPE Image
-    uint32_t  g_pgpe_build_ver;               // Build Version
-    uint16_t  g_pgpe_qm_flags;                // QM Flags
-    uint16_t  g_pgpe_reserve1;                // Reserve field
-    uint32_t  g_pgpe_timebase_hz;             // Reserve field
-    uint32_t* g_pgpe_gppb_sram_addr;          // Offset to Global P State Parameter Block
-    uint32_t  g_pgpe_hcode_length;            // Length of PGPE Hcode
-    uint32_t* g_pgpe_gppb_mem_offset;         // Offset to start of Global PS Param Block wrt start of HOMER.
-    uint32_t  g_pgpe_gppb_length;             // Length of Global P State Parameter Block
-    uint32_t* g_pgpe_gen_pstables_mem_offset; // Offset to PState Table wrt start of HOMER
-    uint32_t  g_pgpe_gen_pstables_length;     // Length of P State table
-    uint32_t* g_pgpe_occ_pstables_sram_addr;  // Offset to start of OCC P-State table
-    uint32_t  g_pgpe_occ_pstables_len;        // Length of OCC P-State table
-    uint32_t* g_pgpe_beacon_addr;             // SRAM addr where PGPE beacon is located
-    uint32_t* g_quad_status_addr;             // Actual Quad address
-    uint32_t* g_pgpe_wof_state_addr;          //
-    uint32_t* g_req_active_quad_addr;         //Requested Active Quads Address
-    uint32_t* g_wof_table_addr;               // WOF Table Address
-    uint32_t  g_wof_table_length;             // WOF Table Length
-    uint32_t  g_pgpe_throttle_assert;
-    uint32_t  g_pgpe_throttle_deassert;
-    uint32_t  g_pgpe_aux_controls;
-    uint32_t  g_pgpe_doptrace_offset;         //Offset from PBABAR that Deep Operational Trace written into
-    uint32_t  g_pgpe_doptrace_length;         //Size in bytes of Deep Operational Trace memory region
-} PgpeHeader_t;
-
 void p9_pgpe_header_init();
 
 #endif //_P9_PGPE_HEADER_H_

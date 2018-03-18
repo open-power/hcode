@@ -78,9 +78,9 @@ void p9_pgpe_thread_process_requests(void* arg)
     // 10 - WOF Phase3(Vratio Full, Fratio Fixed)
     // 11 - WOF Phase4(Vratio Full, Fratio Full)
     // Currently, only Phase 1 and 2 are supported.
-    if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO) ||
-        (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VRATIO_MODIFIER) ||
-        (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_FRATIO))
+    if ((G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_ENABLE_VRATIO) ||
+        (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_VRATIO_MODIFIER) ||
+        (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_ENABLE_FRATIO))
     {
         out32(OCB_OCCFLG_OR, BIT32(29));
     }
@@ -425,7 +425,7 @@ inline void p9_pgpe_process_start_stop()
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd;
     ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
 
-    if(G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE)
+    if(G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE)
     {
         PK_TRACE_DBG("START_STOP: Imm");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
@@ -554,7 +554,7 @@ inline void p9_pgpe_process_clip_updt()
 
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_processing = 0;
 
-    if(G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE)
+    if(G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE)
     {
         PK_TRACE_DBG("PTH: Clip Updt Imme");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
@@ -679,8 +679,8 @@ inline void p9_pgpe_process_wof_ctrl()
 
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_processing = 0;
 
-    if((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) ||
-       (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE))
+    if((G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) ||
+       (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE))
     {
         PK_TRACE_DBG("PTH: WOF Ctrl Imme");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
@@ -795,8 +795,8 @@ inline void p9_pgpe_process_wof_vfrt()
 
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_processing = 0;
 
-    if((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) ||
-       (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE))
+    if((G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) ||
+       (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE))
     {
         PK_TRACE_DBG("PTH: WOF VFRT Imme");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
@@ -893,7 +893,7 @@ inline void p9_pgpe_process_set_pmcr_req()
 
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SET_PMCR_REQ].pending_processing = 0;
 
-    if(G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE)
+    if(G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE)
     {
         PK_TRACE_DBG("PTH: Set PMCR Imme");
         p9_pgpe_optrace(PRC_SET_PMCR);
