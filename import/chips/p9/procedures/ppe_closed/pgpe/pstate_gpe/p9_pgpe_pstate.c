@@ -1047,6 +1047,7 @@ void p9_pgpe_pstate_stop()
         }
     }
 
+    //Send PSTATE_STOP DB0
     p.db0val             = db0_stop.value;
     p.type               = PGPE_DB0_TYPE_UNICAST;
     p.targetCores        = G_pgpe_pstate_record.activeDB;
@@ -1059,16 +1060,7 @@ void p9_pgpe_pstate_stop()
     uint32_t occScr2 = in32(OCB_OCCS2);
     occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
     out32(OCB_OCCS2, occScr2);
-
     G_pgpe_pstate_record.pstatesStatus = PSTATE_STOPPED;
-
-    //ACK back to OCC
-    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd;
-    ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
-    args->msg_cb.rc = PGPE_RC_SUCCESS;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing = 0;
-    G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_ack = 0;
-    ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].cmd, IPC_RC_SUCCESS);
 
     G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.psComputed.fields.glb << 16)
                                   | (in32(OCB_QCSR) >> 16);
