@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -78,7 +78,7 @@ $(eval $(call XIP_TOOL,append,.cme,$$($(IMAGE)_DEPS_CME),$$($(IMAGE)_FILE_CME)))
 $(eval $(call XIP_TOOL,append,.pgpe,$$($(IMAGE)_DEPS_PSTATE),$$($(IMAGE)_FILE_PSTATE)))
 $(eval $(call XIP_TOOL,append,.ioppe,$$($(IMAGE)_DEPS_IOPPE),$$($(IMAGE)_FILE_IOPPE)))
 
-$(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS)))
+$(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1))
 
 $(eval $(call XIP_TOOL,append,.overlays,$$($(IMAGE)_DEPS_OVERLAYS), $$($(IMAGE)_FILE_OVERLAYS) 1))
 
