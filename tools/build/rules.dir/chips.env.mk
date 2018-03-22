@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -28,6 +28,6 @@ CHIPS += p9
 
 p9_CHIPID += p9n
 
-p9n_EC += 10 20 21
+p9n_EC += 20 21 22
 
 HW_IMAGE_VARIATIONS = hw
