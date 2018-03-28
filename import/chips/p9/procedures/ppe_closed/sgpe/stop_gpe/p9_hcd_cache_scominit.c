@@ -230,7 +230,11 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                             scom_data.value);
 
                 scom_data.words.upper &= ~BITS32(0, 16);
+#if CUMULUS_DD_LEVEL != 0
+                scom_data.words.upper |= (BITS32(0, 3) | BITS32(4, 4) | BIT32(15));
+#else
                 scom_data.words.upper |= (BITS32(0, 3) | BIT32(5) | BITS32(12, 4));
+#endif
 
 #if NIMBUS_DD_LEVEL != 10
 
