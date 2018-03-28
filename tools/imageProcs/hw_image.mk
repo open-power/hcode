@@ -33,24 +33,26 @@ HW_IMAGE_VERSION:= $(shell cat $(ROOTPATH)/../tools/build/release_tag.txt)
 #$1 == type
 #$2 == chipId
 define BUILD_HW_IMAGE
+$(eval RINGFILEPATH?=$(GENPATH)/rings/$1)
 $(eval IMAGE=$2.$1_image)
-
 $(eval $(IMAGE)_PATH=$(IMAGEPATH)/hw_image)
 $(eval $(IMAGE)_LINK_SCRIPT=hw_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/hw_image/hw_image.o)
 $(eval hw_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
 
+# files to be appended to image
 $(eval $(IMAGE)_FILE_SGPE    = $(IMAGEPATH)/sgpe_image/$2.sgpe_image.bin)
 $(eval $(IMAGE)_FILE_RESTORE = $(IMAGEPATH)/restore_image/$2.restore_image.bin)
 $(eval $(IMAGE)_FILE_CME     = $(IMAGEPATH)/cme_image/$2.cme_image.bin)
 $(eval $(IMAGE)_FILE_PSTATE  = $(IMAGEPATH)/pstate_gpe_image/$2.pstate_gpe_image.bin)
 $(eval $(IMAGE)_FILE_IOPPE   = $(IMAGEPATH)/ioppe_image/$2.ioppe_image.bin)
-$(eval $(IMAGE)_FILE_RINGS   = $(GENPATH)/rings/$1/$2.$1.rings.bin)
-$(eval $(IMAGE)_FILE_OVERLAYS= $(GENPATH)/rings/$1/$2.$1.overlays.bin)
+$(eval $(IMAGE)_FILE_RINGS   = $(RINGFILEPATH)/$2.$1.rings.bin)
+$(eval $(IMAGE)_FILE_OVERLAYS= $(RINGFILEPATH)/$2.$1.overlays.bin)
 
 # dependencies for appending image sections in sequence
 $(eval $(IMAGE)_DEPS_SGPE =$(IMAGEPATH)/sgpe_image/.$2.sgpe_image.bin.built)
 $(eval $(IMAGE)_DEPS_SGPE+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+
 
 $(eval $(IMAGE)_DEPS_RESTORE =$(IMAGEPATH)/restore_image/.$2.restore_image.bin.built)
 $(eval $(IMAGE)_DEPS_RESTORE+=$$($(IMAGE)_PATH)/.$(IMAGE).append.sgpe)
@@ -69,7 +71,6 @@ $(eval $(IMAGE)_DEPS_RINGS+=$$($(IMAGE)_PATH)/.$(IMAGE).append.ioppe)
 
 $(eval $(IMAGE)_DEPS_OVERLAYS = $$($(IMAGE)_FILE_OVERLAYS))
 $(eval $(IMAGE)_DEPS_OVERLAYS+= $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
-
 
 # image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.sgpe,$$($(IMAGE)_DEPS_SGPE),$$($(IMAGE)_FILE_SGPE)))
