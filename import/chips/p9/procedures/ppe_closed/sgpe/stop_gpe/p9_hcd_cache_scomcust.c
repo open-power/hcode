@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -42,37 +42,40 @@ p9_hcd_cache_scomcust(uint32_t quad, uint32_t m_ex, int is_stop8)
     uint16_t            scom_rest_len   = 0;
 
     // To access memory, need to set MSB of homer address
-    QpmrHeaderLayout_t* pQpmrHdrAddr = (QpmrHeaderLayout_t*)(HOMER_QPMR_HEADER_ADDR);
-    ScomEntry_t* pSgpeScomRes = ( ScomEntry_t*) ( pQpmrHdrAddr->quadScomOffset + (uint32_t)pQpmrHdrAddr );
-    scom_rest_len = ( pQpmrHdrAddr->quadScomLength / (sizeof( ScomEntry_t )) );
+    QpmrHeaderLayout_t* pQpmrHdrAddr =  (QpmrHeaderLayout_t*)(HOMER_QPMR_HEADER_ADDR);
+    ScomEntry_t* pSgpeScomRes        =  ( ScomEntry_t*) ( pQpmrHdrAddr->quadScomOffset + (uint32_t)pQpmrHdrAddr );
+    scom_rest_size                   =  pQpmrHdrAddr->maxQuadScomRestoreEntry;
+    scom_rest_size++;
+    scom_rest_size                   =  (scom_rest_size * sizeof(ScomEntry_t));
+    scom_rest_len                    =  ( pQpmrHdrAddr->quadScomLength / (sizeof( ScomEntry_t )) );
 
-    for( i = 0; i < scom_rest_len; i++ )
+    if( !pQpmrHdrAddr->maxQuadScomRestoreEntry )
     {
-        if( SCOM_ENTRY_MARK == pSgpeScomRes->scomEntryHeader.scomRestHeaderValue )
+        //We failed to get max entries supported from header.
+        //Let us try to determine it from SCOM Restore entry
+        //This also maintains backward compatibility.
+
+        for( i = 0; i < scom_rest_len; i++ )
         {
-            scom_rest_size  =  SCOM_REST_SIZE_PER_EQ;
-            break;
-        }
-        else if ( pSgpeScomRes->scomEntryHeader.scomRestHeaderValue )
-        {
-            scom_rest_size =
-                ( pSgpeScomRes->scomEntryHeader.scomRestHeader.entryLimit + 1 ) *  sizeof( ScomEntry_t );
-            break;
-        }
-        else
-        {
-            pSgpeScomRes++;
-            continue;
+            if( SCOM_ENTRY_MARK == pSgpeScomRes->scomEntryHeader.scomRestHeaderValue )
+            {
+                scom_rest_size  =  SCOM_REST_SIZE_PER_EQ;
+                break;
+            }
+            else if ( pSgpeScomRes->scomEntryHeader.scomRestHeaderValue )
+            {
+                scom_rest_size =
+                    ( pSgpeScomRes->scomEntryHeader.scomRestHeader.entryLimit + 1 ) *  sizeof( ScomEntry_t );
+                break;
+            }
+            else
+            {
+                pSgpeScomRes++;
+                continue;
+            }
         }
     }
 
-    if( !scom_rest_size )
-    {
-        PK_TRACE("ERR: Quad SCOM Restore Entry Not Found");
-        asm volatile( "trap" ::: );
-    }
-
-    // doing this instead of multiply since there is no multiply instruction with ppe.
     for(i = 0; i < quad; i++)
     {
         qoffset += scom_rest_size;
