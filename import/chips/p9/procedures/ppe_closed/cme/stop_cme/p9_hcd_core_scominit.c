@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -70,11 +70,18 @@ p9_hcd_core_scominit(uint32_t core)
     scom_data.words.upper |= BITS32(20, 2);// DTS loop1 enable
     CME_PUTSCOM(C_THERM_MODE_REG, core, scom_data.value);
 
-    // content of p9_core_scom
+    // Cumulus and Axone support core-level checkstop,
+    // however Nimbus-based products do not.
     PK_TRACE("Initialize FIR MASK/ACT0/ACT1");
+#if NIMBUS_DD_LEVEL >= 10
     CME_PUTSCOM(CORE_ACTION0, core, 0x0000000000000000);
     CME_PUTSCOM(CORE_ACTION1, core, 0xA854009775100000);
     CME_PUTSCOM(CORE_FIRMASK, core, 0x0301D70000AB76FE);
+#else
+    CME_PUTSCOM(CORE_ACTION0, core, 0x14A800408A000040);
+    CME_PUTSCOM(CORE_ACTION1, core, 0xBCFC00D7FF100040);
+    CME_PUTSCOM(CORE_FIRMASK, core, 0x0301D70000AB76BE);
+#endif
 
     PK_TRACE("Update Core Hang Pulse Dividers via C_HANG_CONTROL[0-15]");
     CME_GETSCOM(C_HANG_CONTROL, core, scom_data.value);
