@@ -1,0 +1,146 @@
+
+/gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o:     file format elf64-powerpc
+
+
+Disassembly of section .selfRestore:
+
+0000000000000000 <_start>:
+	...
+
+0000000000000100 <_sreset_hndlr>:
+     100:	7e 99 4a a6 	mfspr   r20,313
+     104:	39 14 20 00 	addi    r8,r20,8192
+     108:	7d 1a 03 a6 	mtsrr0  r8
+     10c:	7e a0 00 a6 	mfmsr   r21
+     110:	62 b5 10 00 	ori     r21,r21,4096
+     114:	7e bb 03 a6 	mtsrr1  r21
+     118:	4c 00 00 24 	rfid
+	...
+     200:	00 00 02 00 	attn
+	...
+     300:	00 00 02 00 	attn
+	...
+     380:	00 00 02 00 	attn
+	...
+     400:	00 00 02 00 	attn
+	...
+     480:	00 00 02 00 	attn
+	...
+     500:	00 00 02 00 	attn
+	...
+     600:	00 00 02 00 	attn
+	...
+     700:	00 00 02 00 	attn
+	...
+     800:	00 00 02 00 	attn
+	...
+     900:	00 00 02 00 	attn
+	...
+     980:	00 00 02 00 	attn
+	...
+     a00:	00 00 02 00 	attn
+	...
+     b00:	00 00 02 00 	attn
+	...
+     c00:	00 00 02 00 	attn
+	...
+     d00:	00 00 02 00 	attn
+	...
+     e00:	00 00 02 00 	attn
+	...
+     e20:	00 00 02 00 	attn
+	...
+     e40:	00 00 02 00 	attn
+	...
+     e60:	00 00 02 00 	attn
+	...
+     e80:	00 00 02 00 	attn
+	...
+     ea0:	00 00 02 00 	attn
+	...
+     ec0:	00 00 02 00 	attn
+	...
+     ee0:	00 00 02 00 	attn
+	...
+     f00:	00 00 02 00 	attn
+	...
+     f20:	00 00 02 00 	attn
+	...
+     f40:	00 00 02 00 	attn
+	...
+     f60:	00 00 02 00 	attn
+	...
+     f80:	00 00 02 00 	attn
+	...
+    1200:	7d 59 4b a6 	mtspr   313,r10
+    1204:	7c 00 03 e4 	slbia
+    1208:	4c 00 02 e4 	.long 0x4c0002e4
+    120c:	00 00 02 00 	attn
+	...
+    1280:	a6 4b 59 7d 	lhzu    r18,22909(r11)
+    1284:	e4 03 00 7c 	lfdp    f0,124(r3)
+    1288:	e4 02 00 4c 	lfdp    f0,76(r2)
+    128c:	00 02 00 00 	.long 0x20000
+	...
+
+0000000000002000 <thread_launcher_start>:
+    2000:	7c 5f fa a6 	mfspr   r2,1023
+    2004:	39 00 01 e0 	li      r8,480
+    2008:	7d 14 43 a6 	mtspr   276,r8
+    200c:	7c 95 42 a6 	mfspr   r4,277
+    2010:	78 84 07 e1 	clrldi. r4,r4,63
+    2014:	41 82 00 1c 	beq     2030 <core_is_not_fused>
+
+0000000000002018 <core_is_fused>:
+    2018:	78 45 ef e2 	rldicl  r5,r2,61,63
+    201c:	78 a5 0f a4 	rldicr  r5,r5,1,62
+    2020:	78 48 07 e0 	clrldi  r8,r2,63
+    2024:	7c a5 42 14 	add     r5,r5,r8
+    2028:	78 46 ff a2 	rldicl  r6,r2,63,62
+    202c:	48 00 00 0c 	b       2038 <jump_thread_restore>
+
+0000000000002030 <core_is_not_fused>:
+    2030:	78 45 f7 a2 	rldicl  r5,r2,62,62
+    2034:	78 46 07 a0 	clrldi  r6,r2,62
+
+0000000000002038 <jump_thread_restore>:
+    2038:	78 48 e7 62 	rldicl  r8,r2,60,61
+    203c:	79 08 17 64 	rldicr  r8,r8,2,61
+    2040:	7c a5 42 14 	add     r5,r5,r8
+    2044:	7c 79 4a a6 	mfspr   r3,313
+    2048:	78 a7 6c a4 	rldicr  r7,r5,13,50
+    204c:	7c e7 1a 14 	add     r7,r7,r3
+    2050:	38 e7 21 00 	addi    r7,r7,8448
+    2054:	78 c8 5d 24 	rldicr  r8,r6,11,52
+    2058:	7d 07 42 14 	add     r8,r7,r8
+    205c:	39 88 04 00 	addi    r12,r8,1024
+    2060:	7d 08 03 a6 	mtlr    r8
+    2064:	4e 80 00 21 	blrl
+
+0000000000002068 <thread_restore_return>:
+    2068:	2c 06 00 00 	cmpwi   r6,0
+    206c:	40 82 00 1c 	bne     2088 <core_reg_restore_return>
+
+0000000000002070 <wait_until_single_thread>:
+    2070:	7d 15 42 a6 	mfspr   r8,277
+    2074:	79 08 e7 22 	rldicl  r8,r8,60,60
+    2078:	2c 08 00 07 	cmpwi   r8,7
+    207c:	40 82 ff f4 	bne     2070 <wait_until_single_thread>
+    2080:	7d 88 03 a6 	mtlr    r12
+    2084:	4e 80 00 21 	blrl
+
+0000000000002088 <core_reg_restore_return>:
+    2088:	7e bb 03 a6 	mtsrr1  r21
+    208c:	39 14 12 00 	addi    r8,r20,4608
+    2090:	7a b5 07 e1 	clrldi. r21,r21,63
+    2094:	41 82 00 08 	beq     209c <skip_le1_offset>
+    2098:	39 14 12 80 	addi    r8,r20,4736
+
+000000000000209c <skip_le1_offset>:
+    209c:	2c 06 00 00 	cmpwi   r6,0
+    20a0:	41 82 00 08 	beq     20a8 <update_srr0>
+    20a4:	39 08 00 04 	addi    r8,r8,4
+
+00000000000020a8 <update_srr0>:
+    20a8:	7d 1a 03 a6 	mtsrr0  r8
+    20ac:	4c 00 00 24 	rfid
