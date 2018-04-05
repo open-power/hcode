@@ -473,6 +473,17 @@ p9_sgpe_stop_init()
     // Hostboot Mode Booting CME
     //--------------------------------------------------------------------------
 
+    PK_TRACE_INF("Setup: Clear Type 0,2,3,6 and ipi_lo_3 interrupts");
+    out32(OCB_OISR1_CLR, (BIT32(13) | BITS32(15, 2) | BIT32(19) | BIT32(29)));
+    out32(OCB_OPITNPRA_CLR(0), BITS32(0, 24));
+    out32(OCB_OPITNPRA_CLR(1), BITS32(0, 24));
+    out32(OCB_OPITNPRA_CLR(2), BITS32(0, 24));
+    out32(OCB_OPITNPRA_CLR(3), BITS32(0, 24));
+    out32(OCB_OPITNPRA_CLR(4), BITS32(0, 24));
+    out32(OCB_OPITNPRA_CLR(5), BITS32(0, 24));
+    out32(OCB_OPIT6PRB_CLR,    BITS32(0, 6));
+    out32(OCB_OPIT7PRB_CLR,    BITS32(0, 6));
+
 #if !SKIP_CME_BOOT_IPL_HB
 
     uint32_t cme_flags   = 0;
@@ -635,12 +646,7 @@ p9_sgpe_stop_init()
     out32(OCB_OISR0_CLR, (BIT32(8) | BIT32(16)));
     out32(OCB_OIMR0_CLR, (BIT32(8) | BIT32(16)));
 
-    PK_TRACE_INF("Setup: Clear and Unmask Type 0, 2,3,6 and ipi_lo_3 interrupts");
-    out32(OCB_OISR1_CLR, (BIT32(13) | BITS32(15, 2) | BIT32(19) | BIT32(29)));
-    out32(OCB_OPITNPRA_CLR(0), BITS32(0, 24));
-    out32(OCB_OPITNPRA_CLR(2), BITS32(0, 24));
-    out32(OCB_OPITNPRA_CLR(3), BITS32(0, 24));
-    out32(OCB_OPIT6PRB_CLR,    BITS32(0, 6));
+    PK_TRACE_INF("Setup: Unmask Type 0, 2,3,6 and ipi_lo_3 interrupts");
     out32(OCB_OIMR1_CLR, BIT32(13) | (BITS32(15, 2) | BIT32(19) | BIT32(29)));
 
     //--------------------------------------------------------------------------
