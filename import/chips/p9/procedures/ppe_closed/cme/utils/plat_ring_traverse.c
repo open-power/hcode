@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -61,7 +61,7 @@ int putRing(
         l_chipletData.iv_num_common_rings = 0;
         l_chipletData.iv_num_instance_rings = 0;
         l_chipletData.iv_num_instance_rings_scan_addrs = 0;
-        l_chipletData.iv_num_ring_variants = 0;
+        l_chipletData.iv_num_common_ring_variants = 0;
         uint32_t  l_sectionAddr = 0;
         uint16_t* l_ringTorAddr = 0;
         enum CME_SCOM_CONTROLS l_scomOp;

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -53,7 +53,7 @@ fapi2::ReturnCode findRS4InImageAndApply(
         l_chipletData.iv_num_common_rings = 0;
         l_chipletData.iv_num_instance_rings = 0;
         l_chipletData.iv_num_instance_rings_scan_addrs = 0;
-        l_chipletData.iv_num_ring_variants = 0;
+        l_chipletData.iv_num_common_ring_variants = 0;
         uint16_t* l_ringTorAddr = NULL;
         uint32_t* l_sectionAddr = NULL;
         bool l_override = false;
