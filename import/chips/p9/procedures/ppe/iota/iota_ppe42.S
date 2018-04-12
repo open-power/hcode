@@ -92,7 +92,9 @@ __iota_save_interrupt_state_and_schedule:
     mfcr    %r5
     stvd    %d4, _IOTA_SAVE_LR_OFFSET(%r9)
     mfctr   %r4
-    stw     %r4, _IOTA_SAVE_CTR_OFFSET(%r9)
+    mfxer   %r5
+    stvd    %d4, _IOTA_SAVE_CTR_OFFSET(%r9)
+
     # All state is saved, sp(r1) intact pointing to "Execution Stack"
 
     # _iota_schedule(uint32_t schedule_reason)
@@ -119,8 +121,9 @@ __iota_save_interrupt_state_and_schedule:
     lvd     %d8, _IOTA_SAVE_LR_OFFSET(%r3)
     mtlr    %r8
     mtcr0   %r9
-    lwz     %r9, _IOTA_SAVE_CTR_OFFSET(%r3)
-    mtctr   %r9
+    lvd     %d8, _IOTA_SAVE_CTR_OFFSET(%r3)
+    mtctr   %r8
+    mtxer   %r9
     lvd     %d8, _IOTA_SAVE_SRR0_OFFSET(%r3)
     mtsrr0  %r8
     mtsrr1  %r9
