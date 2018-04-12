@@ -57,6 +57,7 @@
 // being enabled on all other dd levels unless this override
 #define DISABLE_CME_DUAL_CAST            0
 
+
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
     // NDD2: no catchup due to dual cast bug
     #undef  SKIP_ENTRY_CATCHUP
@@ -75,6 +76,7 @@
     #define DISABLE_CME_FIT_TIMER        0
 #endif
 
+#define ENABLE_CME_WATCHDOG_TIMER        0
 // --------------------
 #define ENABLE_CME_DEC_TIMER             0
 // --------------------

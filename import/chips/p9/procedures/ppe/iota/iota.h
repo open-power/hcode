@@ -177,7 +177,7 @@ typedef struct
     uint32_t GPR3;
     uint32_t GPR10;
     uint32_t CTR;
-    uint32_t padding; // needs to be 8B aligned
+    uint32_t XER; // needs to be 8B aligned
 } iotaMachineState;
 
 typedef void (*iotaTaskFuncPtr )( );

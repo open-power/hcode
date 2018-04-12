@@ -46,8 +46,23 @@
 
 #endif
 
+
+#define NUM_TIMER_INTERRUPTS \
+    (ENABLE_CME_WATCHDOG_TIMER ? 1:0 + \
+     ENABLE_CME_DEC_TIMER ? 1:0 + \
+     DISABLE_CME_FIT_TIMER ? 0:1)
+
 // Maximum number of expected nested interrupts
-#define IOTA_MAX_NESTED_INTERRUPTS    12
+//
+// We add 3 here to account for FIT, DEC, and Watchdog Interrupts
+// First, we start with the total number of priority levels, and then
+// add one for each enabled timer interrupt plus one to leave a
+// stack entry unused for checking
+//
+#define IOTA_MAX_NESTED_INTERRUPTS   (IOTA_NUM_EXT_IRQ_PRIORITIES + \
+                                      NUM_TIMER_INTERRUPTS + 1)
+
+
 
 //An "idle" task is one that only runs when the ppe42 engine would otherwise
 //be idle and thus has the lowest priority and can be interrupted by anything.
