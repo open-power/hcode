@@ -90,9 +90,19 @@ p9_cme_stop_eval_eimr_override()
            G_cme_stop_record.core_errored    |
            G_cme_stop_record.core_in_spwu    |
            G_cme_stop_record.core_blockey    |
+           G_cme_stop_record.core_vdm_droop  |
            G_cme_stop_record.core_suspendey) & CME_MASK_BC) << SHIFT32(21));
 
     g_eimr_override |= mask_irqs.value;
+
+    if (G_cme_stop_record.core_vdm_droop)
+    {
+        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_DROOP_SUSPEND_ENTRY));
+    }
+    else
+    {
+        out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_DROOP_SUSPEND_ENTRY));
+    }
 }
 
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)

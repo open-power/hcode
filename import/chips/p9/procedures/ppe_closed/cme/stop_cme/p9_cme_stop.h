@@ -271,9 +271,9 @@ typedef struct
     // need to be a global state for aborting entry
     uint8_t       act_level[MAX_CORES_PER_CME];
     // uint8_t above is processed by stb/lbz in asm, no additional shifting
-
-    // mark the start and the end of entry process
-    uint32_t      entry_pending;
+    // mark the start and the end of entry/exit process
+    uint32_t      entry_ongoing;
+    uint32_t      exit_ongoing;
     // whether core is in running state,
     // used for aborted entry detection or filter wakeup core select in scom address
     uint32_t      core_running;
@@ -289,6 +289,8 @@ typedef struct
     uint32_t      core_suspendwu;
     // core in suspend entry mode, can be used as core select in scom address or data
     uint32_t      core_suspendey;
+    // core needs specifical entry masks due to vdm prolonged droop events
+    uint32_t      core_vdm_droop;
     // core in special wakeup, can be used as core select in scom address or data
     uint32_t      core_in_spwu;
     // core in error state, prevent it being further processed

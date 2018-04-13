@@ -121,6 +121,13 @@ enum OCCLFIR_PGPE
     OCCLFIR_PROLONGED_DROOP_DETECTED = 60
 };
 
+enum ACTIVE_CORE_UPDATE_ACTION
+{
+    ACTIVE_CORE_UPDATE_ACTION_ERROR             = 0x0,
+    ACTIVE_CORE_UPDATE_ACTION_PROCESS_AND_ACK   = 0x1,
+    ACTIVE_CORE_UPDATE_ACTION_ACK_ONLY          = 0x2
+};
+
 //Task list entry
 typedef struct ipc_req
 {
@@ -180,6 +187,8 @@ typedef struct
     uint32_t errorQuads;
     uint32_t updatePGPEBeacon;
     uint8_t severeFault[4];
+    uint32_t pendingActiveQuadUpdtDone;
+    uint32_t activeCoreUpdtAction;
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
 
@@ -235,7 +244,8 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action);
 //SGPE Comminucation/Processing
 void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsAffected);
 void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsAffected);
-void p9_pgpe_pstate_process_quad_exit(uint32_t quadsAffected);
+void p9_pgpe_pstate_process_quad_exit_notify(uint32_t quadsAffected);
+void p9_pgpe_pstate_process_quad_exit_done();
 void p9_pgpe_pstate_send_suspend_stop();
 void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t ctrl);
 

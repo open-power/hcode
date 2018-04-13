@@ -39,7 +39,7 @@
 #include "cmehw_interrupts.h"
 
 #include "p9_cme_irq.h"
-#include "p9_cme_pstate.h"
+#include "p9_cme_stop.h"
 #include "pstate_pgpe_cme_api.h"
 #include "ppe42_cache.h"
 #include "p9_hcode_image_defines.H"
@@ -51,6 +51,7 @@
 //External Globals and globals
 //
 extern CmeRecord G_cme_record;
+extern CmeStopRecord G_cme_stop_record;
 extern CmePstateRecord G_cme_pstate_record;
 extern cmeHeader_t* G_cmeHeader;
 extern LocalPstateParmBlock* G_lppb;
@@ -256,6 +257,43 @@ void p9_cme_pstate_db3_handler(void)
             intercme_direct(INTERCME_DIRECT_IN2, INTERCME_DIRECT_ACK, 0);
         }
     }
+    else if (db3.fields.cme_message_numbern == MSGID_DB3_SUSPEND_STOP_ENTRY)
+    {
+        G_cme_stop_record.core_vdm_droop = CME_MASK_BC;
+
+        if (!(G_cme_stop_record.entry_ongoing ||
+              G_cme_stop_record.exit_ongoing))
+        {
+            p9_cme_stop_eval_eimr_override();
+        }
+
+        //Note: we don't ack back to PGPE. Instead, the STOP code will set the
+        //CME_FLAGS[SUSPEND_ENTRY] whenever it finishes any currently ongoing entry
+
+    }
+    else if (db3.fields.cme_message_numbern == MSGID_DB3_UNSUSPEND_STOP_ENTRY)
+    {
+        G_cme_stop_record.core_vdm_droop = 0;
+        p9_cme_stop_eval_eimr_override();
+
+        //Notify and Receive ack from sibling CME. This syncs up
+        //Quad Manager and Sibling before Quad Manager acks back to
+        //PGPE
+        if (G_cme_pstate_record.qmFlag)
+        {
+            p9_cme_pstate_notify_sib(INTERCME_DIRECT_IN2);
+            send_ack_to_pgpe(MSGID_PCB_TYPE4_UNSUSPEND_ENTRY_ACK);
+        }
+        else
+        {
+            //Wait to receive a notify from Quad Manager
+            //and then ACK back to quad manager
+            while(!(in32_sh(CME_LCL_EISR) & BIT64SH(39)));
+
+            intercme_direct(INTERCME_DIRECT_IN2, INTERCME_DIRECT_ACK, 0);
+        }
+
+    }
     else
     {
         //\todo  Will be done as part of 41947
@@ -264,6 +302,7 @@ void p9_cme_pstate_db3_handler(void)
 
     PK_TRACE_INF("DB3 Handler Done ");
 }
+
 
 //
 void p9_cme_pstate_init()
@@ -433,8 +472,8 @@ void p9_cme_pstate_init()
 
     if (cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
     {
-        eimr_clr |=  BIT64(11); //Enable DB3_0
-        eimr_or  |=  BIT64(10); //Disable DB3_1
+        eimr_clr |=  BIT64(10); //Enable DB3_0
+        eimr_or  |=  BIT64(11); //Disable DB3_1
     }
     else
     {

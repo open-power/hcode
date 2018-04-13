@@ -69,6 +69,7 @@ p9_cme_stop_init()
     G_cme_stop_record.core_blockey = 0;
     G_cme_stop_record.core_suspendwu = G_cme_stop_record.core_blockpc;
     G_cme_stop_record.core_suspendey = 0;
+    G_cme_stop_record.core_vdm_droop = 0;
 
     if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_BLOCK_ENTRY_STOP11))
     {

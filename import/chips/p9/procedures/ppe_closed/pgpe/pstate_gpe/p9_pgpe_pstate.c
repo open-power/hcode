@@ -65,8 +65,8 @@ GPE_BUFFER(ipcmsg_p2s_suspend_stop_t G_sgpe_suspend_stop);
 //Local Functions
 void p9_pgpe_handle_nacks(uint32_t origCoreVector, uint32_t origAckVector, uint32_t expectedAcks);
 void p9_pgpe_pstate_freq_updt();
-void p9_pgpe_droop_throttle();
-void p9_pgpe_droop_unthrottle();
+inline void p9_pgpe_droop_throttle() __attribute__((always_inline));
+inline void p9_pgpe_droop_unthrottle() __attribute__((always_inline));
 
 //
 //p9_pgpe_pstate_init
@@ -130,6 +130,7 @@ void p9_pgpe_pstate_init()
     G_pgpe_pstate_record.pQuadState1->fields.quad5_pstate = 0xff;
     G_pgpe_pstate_record.pQuadState1->fields.active_cores = 0x0;
     G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = 0x0;
+    G_pgpe_pstate_record.activeCoreUpdtAction = ACTIVE_CORE_UPDATE_ACTION_ERROR;
 
     //Create Semaphores
     pk_semaphore_create(&(G_pgpe_pstate_record.sem_actuate), 0, 1);
@@ -261,7 +262,7 @@ void p9_pgpe_pstate_do_auction()
 //
 void p9_pgpe_pstate_apply_clips()
 {
-    PK_TRACE_INF("APC: Applying Clips");
+    PK_TRACE_DBG("APC: Applying Clips");
     uint32_t q;
 
     for (q = 0; q < MAX_QUADS; q++)
@@ -555,6 +556,8 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect, uint32_t expectedAck)
 
                         case MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK: //0x1
                         case MSGID_PCB_TYPE4_ACK_PSTATE_SUSPENDED: //0x2
+                        case MSGID_PCB_TYPE4_SUSPEND_ENTRY_ACK:    //0x5
+                        case MSGID_PCB_TYPE4_UNSUSPEND_ENTRY_ACK:  //0x6
 
                             //Check if ack is same as expected
                             if (ack != expectedAck)
@@ -778,26 +781,17 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     //Move voltage only if raising it. Otherwise, we lower it later after
     //sending Pstate Start DB0. This is to make sure VDMs are not affected in
     //this window
-    if (G_pgpe_pstate_record.eVidCurr >= G_pgpe_pstate_record.eVidNext)
-    {
-        for (q = 0; q < MAX_QUADS; q++)
-        {
-            if (!(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q)))
-            {
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);//Write DPLL
-            }
-        }
-    }
-    else if(G_pgpe_pstate_record.eVidCurr < G_pgpe_pstate_record.eVidNext)
+    if(G_pgpe_pstate_record.eVidCurr < G_pgpe_pstate_record.eVidNext)
     {
         p9_pgpe_pstate_updt_ext_volt(G_pgpe_pstate_record.eVidNext); //update voltage
+    }
 
-        for (q = 0; q < MAX_QUADS; q++)
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if (!(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q)))
         {
-            if (!(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q)))
-            {
-                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);//Write DPLL
-            }
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26));
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);//Write DPLL
         }
     }
 
@@ -1025,6 +1019,20 @@ void p9_pgpe_pstate_stop()
     db0_stop.value = 0;
     db0_stop.fields.msg_id = MSGID_DB0_STOP_PSTATE_BROADCAST;
 
+    //Send PSTATE_STOP DB0
+    p.db0val             = db0_stop.value;
+    p.type               = PGPE_DB0_TYPE_UNICAST;
+    p.targetCores        = G_pgpe_pstate_record.activeDB;
+    p.waitForAcks        = PGPE_DB_ACK_WAIT_CME;
+    p.expectedAckFrom    = G_pgpe_pstate_record.activeQuads;
+    p.expectedAckValue   = MSGID_PCB_TYPE4_ACK_PSTATE_SUSPENDED;
+    p9_pgpe_send_db0(p);
+
+    //Note: We take away DPLL control from CME after stopping pstates on it
+    //Otherwise, we can have a case where PGPE Heartbeat loss occurs after
+    //PGPE has taken away DPLL control from CME, but haven't sent Pstate Stop
+    //DB0. CME unmasks Heartbeat Loss interrupt upon receiving Pstate Start,
+    //and masks it upon receiving Pstate Stop.
     for (q = 0; q < MAX_QUADS; q++)
     {
         if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
@@ -1046,14 +1054,6 @@ void p9_pgpe_pstate_stop()
             GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26));
         }
     }
-
-    p.db0val             = db0_stop.value;
-    p.type               = PGPE_DB0_TYPE_UNICAST;
-    p.targetCores        = G_pgpe_pstate_record.activeDB;
-    p.waitForAcks        = PGPE_DB_ACK_WAIT_CME;
-    p.expectedAckFrom    = G_pgpe_pstate_record.activeQuads;
-    p.expectedAckValue   = MSGID_PCB_TYPE4_ACK_PSTATE_SUSPENDED;
-    p9_pgpe_send_db0(p);
 
     //Set status in OCC_Scratch2
     uint32_t occScr2 = in32(OCB_OCCS2);
@@ -1134,14 +1134,14 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
         {
             p9_pgpe_pstate_send_ctrl_stop_updt(CTRL_STOP_UPDT_ENABLE_CORE);
             activeCores = G_sgpe_control_updt.fields.active_cores << 8;
-            activeQuads = G_sgpe_control_updt.fields.active_quads << 2;
+            G_pgpe_pstate_record.activeCoreUpdtAction = ACTIVE_CORE_UPDATE_ACTION_PROCESS_AND_ACK;
         }
         else
         {
             activeCores = G_pgpe_pstate_record.activeDB;
-            activeQuads = G_pgpe_pstate_record.activeQuads;
         }
 
+        activeQuads = G_pgpe_pstate_record.activeQuads;
         G_pgpe_pstate_record.wofStatus = WOF_ENABLED;
 
         //Set to value returned by SGPE or initial value determined during boot(equal to configured cores)
@@ -1170,11 +1170,12 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
     }
     else if (action == PGPE_ACTION_WOF_OFF)
     {
-        //In WOF Phase >= 2, we ask SGPE to stop sending active core updates
+        //In WOF Phase >= 2, we take a note that WOF has been disabled, and
+        //simply ACK any active cores updates that come from SGPE.
         if ((G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_VRATIO) ||
             (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VRATIO_MODIFIER))
         {
-            p9_pgpe_pstate_send_ctrl_stop_updt(CTRL_STOP_UPDT_DISABLE_CORE);
+            G_pgpe_pstate_record.activeCoreUpdtAction = ACTIVE_CORE_UPDATE_ACTION_ACK_ONLY;
         }
 
         G_pgpe_pstate_record.wofStatus = WOF_DISABLED;
@@ -1189,14 +1190,16 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
 //
 void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
 {
-    uint32_t q;
+    uint32_t q, c;
     qppm_dpll_freq_t dpllFreq;
     dpllFreq.value = 0;
-    ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
-    uint64_t value;
+    db0_parms_t p;
+    pgpe_db0_stop_ps_bcast_t db0_stop;
+    uint32_t target_cores;
 
     G_pgpe_pstate_record.activeQuads &= ~quadsRequested;
+    db0_stop.value = 0;
+    db0_stop.fields.msg_id = MSGID_DB0_STOP_PSTATE_BROADCAST;
 
     PK_TRACE_INF("QE:(Notify) QReq=0x%x QAct=%x \n", quadsRequested, G_pgpe_pstate_record.activeQuads);
 
@@ -1204,33 +1207,34 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
     {
         if (quadsRequested & QUAD_MASK(q))
         {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
-
-            G_pgpe_pstate_record.activeDB &= ~(QUAD_ALL_CORES_MASK(q));
-            out32(OCB_OPIT4PRA_CLR, QUAD_ALL_CORES_MASK(q)); //Clear any pending PCB_Type4
-
-            //CME_Scratch0[DB0_PROCESSING_ENABLE]=0
-            if (qcsr.fields.ex_config &  (0x800 >> (q * 2)))
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
-                value &= ~BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 0), value);
-            }
-
-            if (qcsr.fields.ex_config &  (0x400 >> (q * 2)))
-            {
-                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
-                value &= ~BIT64(CME_SCRATCH_DB0_PROCESSING_ENABLE);
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_SRTCH0, q, 1), value);
-            }
-
+            target_cores = 0;
 
             if (G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
             {
+                for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
+                {
+                    if (G_pgpe_pstate_record.activeDB & CORE_MASK(c))
+                    {
+                        target_cores |= CORE_MASK(c);
+                    }
+                }
+
+
+                //Send PSTATE_STOP DB0
+                p.db0val             = db0_stop.value;
+                p.type               = PGPE_DB0_TYPE_UNICAST;
+                p.targetCores        = target_cores;
+                p.waitForAcks        = PGPE_DB_ACK_WAIT_CME;
+                p.expectedAckFrom    = QUAD_MASK(q);
+                p.expectedAckValue   = MSGID_PCB_TYPE4_ACK_PSTATE_SUSPENDED;
+                p9_pgpe_send_db0(p);
+
                 G_pgpe_pstate_record.psTarget.fields.quads[q] = 0xFF;
                 G_pgpe_pstate_record.psCurr.fields.quads[q] = 0xFF;
                 G_pgpe_pstate_record.psNext.fields.quads[q] = 0xFF;
                 G_pgpe_pstate_record.psComputed.fields.quads[q] = 0xFF;
+
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
 
                 //Write "Safe Frequency" for quad about to enter STOP
                 //Note, we set fmax = fmult = fmin
@@ -1239,11 +1243,20 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
                 dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_DPLL_FREQ, q), dpllFreq.value);
             }
+            else
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QPMMR_CLR, q), BIT64(26)); //Open DPLL for SCOMs
+            }
+
+            G_pgpe_pstate_record.activeDB &= ~(QUAD_ALL_CORES_MASK(q));
+            out32(OCB_OPIT4PRA_CLR, QUAD_ALL_CORES_MASK(q)); //Clear any pending PCB_Type4
+
         }
     }
 
     p9_pgpe_pstate_updt_actual_quad();
 
+    G_pgpe_pstate_record.pendingActiveQuadUpdtDone = 1;
 }
 
 //
@@ -1261,12 +1274,13 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
         GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
     }
 
+    G_pgpe_pstate_record.pendingActiveQuadUpdtDone = 0;
 }
 
 //
 //p9_pgpe_pstate_process_quad_exit
 //
-void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
+void p9_pgpe_pstate_process_quad_exit_notify(uint32_t quadsRequested)
 {
     uint32_t q;
     qppm_dpll_freq_t dpllFreq;
@@ -1309,9 +1323,18 @@ void p9_pgpe_pstate_process_quad_exit(uint32_t quadsRequested)
     //registration msg from the quad is received.
     G_pgpe_pstate_record.pendQuadsRegisterReceive |= quadsRequested;
 
-    PK_TRACE_INF("QX: (Done), QReq=0x%x,QAct=%x\n", quadsRequested, G_pgpe_pstate_record.activeQuads);
+    PK_TRACE_INF("QX: (Notify), QReq=0x%x,QAct=%x\n", quadsRequested, G_pgpe_pstate_record.activeQuads);
+
+    G_pgpe_pstate_record.pendingActiveQuadUpdtDone = 1;
 }
 
+
+void p9_pgpe_pstate_process_quad_exit_done()
+{
+
+    G_pgpe_pstate_record.pendingActiveQuadUpdtDone = 0;
+    PK_TRACE_INF("QX: (Done) QAct=%x\n", G_pgpe_pstate_record.activeQuads);
+}
 
 //
 //p9_pgpe_pstate_send_ctrl_stop_updt
@@ -1359,13 +1382,13 @@ void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t action)
 //
 //p9_pgpe_pstate_send_suspend_stop
 //
-void p9_pgpe_pstate_send_suspend_stop(uint32_t command)
+void p9_pgpe_pstate_send_suspend_stop()
 {
     p9_pgpe_optrace(PRC_PM_SUSP);
 
     int rc;
     G_sgpe_suspend_stop.fields.msg_num = MSGID_PGPE_SGPE_SUSPEND_STOP;
-    G_sgpe_suspend_stop.fields.command  = command;
+    G_sgpe_suspend_stop.fields.command  = SUSPEND_STOP_SUSPEND_ENTRY_EXIT;
     G_sgpe_suspend_stop.fields.return_code = 0x0;
     G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_suspend_stop;
     ipc_init_msg(&G_ipc_msg_pgpe_sgpe.cmd,
@@ -1376,35 +1399,11 @@ void p9_pgpe_pstate_send_suspend_stop(uint32_t command)
     //send the command
     rc = ipc_send_cmd(&G_ipc_msg_pgpe_sgpe.cmd);
 
-    PK_TRACE_INF("SUSP:Sent Suspend Stop(cmd=0x%x)", command);
-
     if(rc)
     {
         PK_TRACE_ERR("SUSP:Suspend Stop IPC FAIL");
         PGPE_TRACE_AND_PANIC(PGPE_SGPE_IPC_SEND_FAIL);
     }
-
-    //Just block until SGPE writes the return code field
-    //It is assumed that SGPE will write this field right before
-    //calling ipc_send_rsp(). Also, note that PGPE will get the ACK
-    //in the form of IPC interrupt which will call the p9_pgpe_process_ack_sgpe_suspend_stop
-    //
-    // Alternative is to wait until ACKs arrives and do processing
-    //in the IPC ACK handler, but this requires opening up IPC interrupt. Instead, we
-    //do processing after blocking here
-    while ((G_sgpe_suspend_stop.fields.return_code == IPC_SGPE_PGPE_RC_NULL) &&
-           !G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_SGPE])
-    {
-        dcbi(((void*)(&G_sgpe_suspend_stop)));
-    }
-
-    if (G_sgpe_suspend_stop.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
-    {
-        PK_TRACE_ERR("ERROR: SGPE Suspend STOP Bad RC. Halting PGPE!");
-        PGPE_TRACE_AND_PANIC(PGPE_SGPE_SUSPEND_STOP_BAD_ACK);
-    }
-
-    PK_TRACE_INF("SUSP:Suspend Stop(cmd=0x%x) ACKed", command);
 }
 
 //
@@ -1505,7 +1504,7 @@ void p9_pgpe_pstate_safe_mode()
     {
         async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
         ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-        p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
+        p9_pgpe_pstate_process_quad_exit_notify(args->fields.requested_quads << 2);
 
         //activeQuads isn't updated until registration, so we OR with requested quads.
         args->fields.return_active_quads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads >> 2;
@@ -1518,6 +1517,7 @@ void p9_pgpe_pstate_safe_mode()
     {
         async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
         ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
+        G_pgpe_pstate_record.activeCores &= ~(args->fields.active_cores << 8);
         args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
         args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
@@ -1569,41 +1569,8 @@ void p9_pgpe_pstate_safe_mode()
 //
 void p9_pgpe_pstate_pm_complex_suspend()
 {
-    int q = 0;
-    ocb_qcsr_t qcsr;
-
-    //Send IPC and wait for ACK
-    p9_pgpe_pstate_send_suspend_stop(SUSPEND_STOP_SUSPEND_ENTRY_EXIT);
-
-    //Change PMCR ownership
-    PK_TRACE_INF("SUSP: Setting SCOM Ownership of PMCRs");
-    qcsr.value = in32(OCB_QCSR);
-
-    //Set LMCR for each CME
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
-        {
-            //CME0 within this quad
-            if (qcsr.fields.ex_config & QUAD_EX0_MASK(q))
-            {
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(0));
-            }
-
-            //CME1 within this quad
-            if (qcsr.fields.ex_config & QUAD_EX1_MASK(q))
-            {
-                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(0));
-            }
-        }
-    }
-
-    //OP Trace and Set OCCS2[PM_COMPLEX_SUSPENDED)
-    p9_pgpe_optrace(ACK_PM_SUSP);
-    uint32_t occScr2 = in32(OCB_OCCS2);
-    occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
-    G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
-    out32(OCB_OCCS2, occScr2);
+    //Send Suspend Stop IPC
+    p9_pgpe_pstate_send_suspend_stop();
 }
 
 
@@ -2067,13 +2034,61 @@ void p9_pgpe_pstate_write_core_throttle(uint32_t throttleData, uint32_t enable_r
 //
 //p9_pgpe_droop_throttle
 //
-void p9_pgpe_droop_throttle()
+inline void p9_pgpe_droop_throttle()
 {
 
     uint32_t q;
-    //1.  PGPE sends IPC to SGPE to Suspend Stop Entries Only, and poll for Success return code (do not open IPCs, ignore the subsequent ACK).  This will prevent a core from going into Stop2 and missing the subsequent "unthrottle."
-    p9_pgpe_pstate_send_suspend_stop(SUSPEND_STOP_SUSPEND_ENTRY);
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(OCB_QCSR);
+    uint64_t value;
+    uint32_t ex;
 
+    //1.  PGPE sends Suspend Stop Entry DB3 to all active CMEs
+    db3_parms_t p;
+    p.db3val = (uint64_t)MSGID_DB3_SUSPEND_STOP_ENTRY << 56;
+    p.db0val = 0;
+    p.targetCores       = G_pgpe_pstate_record.activeDB;
+    p.waitForAcks       = PGPE_DB_ACK_SKIP; //We skip ACKs here bc CME will set CME_FLAGS[]
+    p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;
+    p.expectedAckValue  = MSGID_PCB_TYPE4_SUSPEND_ENTRY_ACK;
+    p.checkNACKs        = PGPE_DB3_SKIP_CHECK_NACKS;
+
+    p9_pgpe_send_db3(p);
+
+    //We poll on CME_FLAGS[] here. The CME doesn't send an ACK for SUSPEND_ENTRY DB3.
+    //Instead, the stop code on CME will set the CME_FLAGS[] when it has suspended stop
+    //entries
+    uint32_t expectedCMEs = 0;
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+        {
+            expectedCMEs |= (qcsr.fields.ex_config & (QUAD_EX0_MASK(q) | QUAD_EX1_MASK(q)));
+        }
+    }
+
+    PK_TRACE_INF("DTH: Expected CMEs=0x%x", expectedCMEs);
+
+    while (expectedCMEs != 0)
+    {
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            for (ex = 0; ex < 2; ex++)
+            {
+                if (expectedCMEs & (QUAD_EX0_MASK(q) >> ex))
+                {
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS, q, ex), value);
+
+                    if (value & BIT64(CME_FLAGS_DROOP_SUSPEND_ENTRY))
+                    {
+                        expectedCMEs &= (~ (QUAD_EX0_MASK(q) >> ex));
+                        PK_TRACE_INF("DTH: Suspend Entry Set Expected CMEs=0x%x", expectedCMEs);
+                    }
+                }
+            }
+        }
+    }
 
     //2.  Call the core_instruction_throttle() procedure to enable throttle (same as used by FIT).
     p9_pgpe_pstate_write_core_throttle(CORE_IFU_THROTTLE, RETRY);
@@ -2104,14 +2119,23 @@ void p9_pgpe_droop_throttle()
 //
 //p9_pgpe_droop_unthrottle
 //
-void p9_pgpe_droop_unthrottle()
+inline void p9_pgpe_droop_unthrottle()
 {
 
     //1.  Call the core_instruction_throttle() procedure to disable throttle (same as used by FIT).
     p9_pgpe_pstate_write_core_throttle(CORE_THROTTLE_OFF, RETRY);
 
-    //2.  PGPE sends IPC to SGPE to Unsuspend STOP entries & poll for Success return code (do not open IPCs, ignore the subsequent ACK).
-    p9_pgpe_pstate_send_suspend_stop(SUSPEND_STOP_UNSUSPEND_ENTRY);
+    //2.  PGPE sends Unsuspend Stop Entry DB3 to all active CMEs
+    db3_parms_t p;
+    p.db3val = (uint64_t)MSGID_DB3_UNSUSPEND_STOP_ENTRY << 56;
+    p.db0val = 0;
+    p.targetCores       = G_pgpe_pstate_record.activeDB;
+    p.waitForAcks       = PGPE_DB_ACK_WAIT_CME;
+    p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;
+    p.expectedAckValue  = MSGID_PCB_TYPE4_UNSUSPEND_ENTRY_ACK;
+    p.checkNACKs        = PGPE_DB3_SKIP_CHECK_NACKS;
+
+    p9_pgpe_send_db3(p);
 
     //3.  Send Doorbell0 PMSR Update with message Clear Pstates Suspended to all configured cores in the active Quads.
     p9_pgpe_pstate_send_pmsr_updt(DB0_PMSR_UPDT_CLEAR_PSTATES_SUSPENDED,

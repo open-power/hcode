@@ -102,8 +102,8 @@ void p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error(void* arg, PkIrqId irq)
 {
     PkMachineContext  ctx;
 
-    PK_TRACE_INF("Error IRQ Detected");
     uint64_t oisr = ((uint64_t)(in32(OCB_OISR0)) << 32) | in32(OCB_OISR1);
+    PK_TRACE_INF("Error IRQ Detected OISR=0x%08x%08x", oisr >> 32, oisr);
 
     //OCC Error
     if(oisr & BIT64(2))
@@ -187,6 +187,8 @@ void p9_pgpe_irq_handler_sgpe_err()
 {
     PK_TRACE_INF("SGPE Error");
 
+    g_oimr_override |=   BIT64(8);
+    out32(OCB_OIMR0_OR,  BIT32(8));
     out32(OCB_OISR0_CLR, BIT32(8));
 
     //Optrace
@@ -262,6 +264,8 @@ void p9_pgpe_irq_handler_system_xstop(void* arg, PkIrqId irq)
     PK_TRACE_INF("SYSTEM XSTOP");
     PkMachineContext  ctx;
 
+    g_oimr_override |=   BIT64(15);
+    out32(OCB_OIMR0_OR,  BIT32(15));
     out32(OCB_OISR0_CLR, BIT32(15));
 
     //Optrace
@@ -454,9 +458,10 @@ void p9_pgpe_irq_handler_cme_err()
 
         if (opit5prQuad)
         {
-            PK_TRACE_DBG("CER:Quad[%d]", q);
-
             G_pgpe_pstate_record.errorQuads |= QUAD_MASK(q);
+
+            PK_TRACE_INF("CER:Quad[%d]", q);
+
 
             //1.1 Halt both CMEs in the quad containing faulted CME,
             if (qcsr.fields.ex_config & QUAD_EX0_MASK(q))
@@ -476,7 +481,6 @@ void p9_pgpe_irq_handler_cme_err()
                 }
             }
 
-            PK_TRACE_DBG("CER:Quad[%d] CMEs Halted", q);
 
             //1.2 The quad in error is stepped out of resonance by the PGPE. This keeps the cores that may be
             //  running in the quad operating. There is a momentary rise in power as resonance is disabled.
@@ -522,7 +526,6 @@ void p9_pgpe_irq_handler_cme_err()
                     GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_QACCR, q), value);
                 }
 
-                PK_TRACE_DBG("CER:Quad[%d] ResClk Disabled", q);
             }
 
             //1.3 Move DPLL to Fsafe (~100us)
@@ -552,12 +555,11 @@ void p9_pgpe_irq_handler_cme_err()
             }
             while (!freq_done);
 
-            PK_TRACE_DBG("CER:Quad[%d] DPLL Moved to Fsafe", q);
 
             //2. The quad in error is removed from the expected Ack vector.
             G_pgpe_pstate_record.activeQuads &= (~QUAD_MASK(q));
             G_pgpe_pstate_record.activeDB &= ~(QUAD_ALL_CORES_MASK(q));
-            PK_TRACE_DBG("CER: Quad[%d] Removed from activeQuads", q);
+            PK_TRACE_DBG("CER: Quad[%d] ResclkDisabled, Moved to Fsafe, and removed from activeQuads", q);
         }
     }
 
