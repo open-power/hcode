@@ -243,7 +243,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
 
                             if (args_wof_vfrt->active_quads ==  G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads)
                             {
-                                p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
+                                p9_pgpe_pstate_process_quad_exit_notify(args->fields.requested_quads << 2);
                                 args->fields.return_active_quads = args_wof_vfrt->active_quads >> 2;
                                 args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
                                 G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;

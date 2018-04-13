@@ -87,14 +87,16 @@ p9_cme_stop_pcwu_handler(void)
 
         out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         g_eimr_override |= BITS64(12, 10);
+        G_cme_stop_record.exit_ongoing = 1;
         wrteei(1);
 
         // The actual exit sequence
         p9_cme_stop_exit();
+        G_cme_stop_record.exit_ongoing = 0;
     }
 
     // in case abort, complete pending entry first
-    if (!G_cme_stop_record.entry_pending)
+    if (!G_cme_stop_record.entry_ongoing)
     {
         // re-evaluate stop entry & exit enables
         p9_cme_stop_eval_eimr_override();
@@ -199,14 +201,16 @@ p9_cme_stop_spwu_handler(void)
 
         out32(CME_LCL_EIMR_OR, BITS32(12, 10));
         g_eimr_override |= BITS64(12, 10);
+        G_cme_stop_record.exit_ongoing = 1;
         wrteei(1);
 
         // The actual exit sequence
         p9_cme_stop_exit();
+        G_cme_stop_record.exit_ongoing = 0;
     }
 
     // in case abort, complete pending entry first
-    if (!G_cme_stop_record.entry_pending)
+    if (!G_cme_stop_record.entry_ongoing)
     {
         // re-evaluate stop entry & exit enables
         p9_cme_stop_eval_eimr_override();
@@ -223,13 +227,16 @@ p9_cme_stop_rgwu_handler(void)
 
     out32(CME_LCL_EIMR_OR, BITS32(12, 10));
     g_eimr_override |= BITS64(12, 10);
+    G_cme_stop_record.exit_ongoing = 1;
     wrteei(1);
 
     // The actual exit sequence
     p9_cme_stop_exit();
 
+    G_cme_stop_record.exit_ongoing = 0;
+
     // in case abort, complete pending entry first
-    if (!G_cme_stop_record.entry_pending)
+    if (!G_cme_stop_record.entry_ongoing)
     {
         // re-evaluate stop entry & exit enables
         p9_cme_stop_eval_eimr_override();
@@ -247,14 +254,14 @@ p9_cme_stop_enter_handler(void)
     // Abort Protection
     out32(CME_LCL_EIMR_OR, BITS32(12, 10));
     g_eimr_override |= BITS64(12, 10);
-    G_cme_stop_record.entry_pending = 1;
+    G_cme_stop_record.entry_ongoing = 1;
     wrteei(1);
 
     // The actual entry sequence
     p9_cme_stop_entry();
 
     // Restore Abort Protection
-    G_cme_stop_record.entry_pending = 0;
+    G_cme_stop_record.entry_ongoing = 0;
 
     // re-evaluate stop entry & exit enables
     p9_cme_stop_eval_eimr_override();

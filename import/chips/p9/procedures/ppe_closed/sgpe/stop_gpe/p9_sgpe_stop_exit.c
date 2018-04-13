@@ -342,9 +342,6 @@ p9_sgpe_stop_exit()
 #if NIMBUS_DD_LEVEL != 10
     uint32_t      fused_core_mode = 0;
 #endif
-#if !SKIP_IPC
-    uint32_t      ipc_exit_quad   = 0;
-#endif
     sgpeHeader_t* pSgpeImgHdr = (sgpeHeader_t*)(OCC_SRAM_SGPE_HEADER_ADDR);
 
     //===============================
@@ -450,12 +447,10 @@ p9_sgpe_stop_exit()
         G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
         G_sgpe_stop_record.group.quad[VECTOR_EXIT])
     {
-        ipc_exit_quad = 1;
-
         p9_sgpe_ipc_pgpe_update_active_quads(UPDATE_ACTIVE_QUADS_TYPE_EXIT,
-                                             UPDATE_ACTIVE_QUADS_ENTRY_TYPE_DONE);
+                                             UPDATE_ACTIVE_QUADS_EXIT_TYPE_NOTIFY);
 
-        /// the poll for ack is located before dpll setup
+        p9_sgpe_ipc_pgpe_update_active_quads_poll_ack(UPDATE_ACTIVE_QUADS_TYPE_EXIT);
     }
 
 #endif
@@ -580,16 +575,6 @@ p9_sgpe_stop_exit()
 
 #endif
 
-
-#if !SKIP_IPC
-
-        if (ipc_exit_quad)
-        {
-            ipc_exit_quad = 0;
-            p9_sgpe_ipc_pgpe_update_active_quads_poll_ack(UPDATE_ACTIVE_QUADS_TYPE_EXIT);
-        }
-
-#endif
 
         PK_TRACE_DBG("SX.11D: Cache Dpll Setup");
         p9_hcd_cache_dpll_setup(qloop);
@@ -1014,6 +999,21 @@ p9_sgpe_stop_exit()
         G_sgpe_stop_record.state[qloop].act_state_q = 0;
         p9_sgpe_stop_exit_end(qloop);
     }
+
+
+#if !SKIP_IPC
+
+    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+        G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
+        G_sgpe_stop_record.group.quad[VECTOR_EXIT])
+    {
+        p9_sgpe_ipc_pgpe_update_active_quads(UPDATE_ACTIVE_QUADS_TYPE_EXIT,
+                                             UPDATE_ACTIVE_QUADS_EXIT_TYPE_DONE);
+
+        p9_sgpe_ipc_pgpe_update_active_quads_poll_ack(UPDATE_ACTIVE_QUADS_TYPE_EXIT);
+    }
+
+#endif
 
     //===========================
     MARK_TRAP(ENDSCOPE_STOP_EXIT)

@@ -48,14 +48,7 @@ enum MESSAGE_ID_IPI3HI_PGPE_SGPE
 
 enum CTRL_STOP_UPDATES_ACTIONS
 {
-    CTRL_STOP_UPDT_RESERVED0               = 0x0,
     CTRL_STOP_UPDT_ENABLE_CORE             = 0x1,
-    CTRL_STOP_UPDT_ENABLE_QUAD             = 0x2,
-    CTRL_STOP_UPDT_ENABLE_CORE_QUAD        = 0x3,
-    CTRL_STOP_UPDT_RESERVED1               = 0x4,
-    CTRL_STOP_UPDT_DISABLE_CORE            = 0x5,
-    CTRL_STOP_UPDT_DISABLE_QUAD            = 0x6,
-    CTRL_STOP_UPDT_DISABLE_CORE_QUAD       = 0x7
 };
 
 
@@ -65,6 +58,8 @@ enum UPDATE_ACTIVE_TYPES
     UPDATE_ACTIVE_CORES_TYPE_EXIT               = 0x1,
     UPDATE_ACTIVE_QUADS_TYPE_ENTRY              = 0x0,
     UPDATE_ACTIVE_QUADS_TYPE_EXIT               = 0x1,
+    UPDATE_ACTIVE_QUADS_EXIT_TYPE_DONE          = 0x0,
+    UPDATE_ACTIVE_QUADS_EXIT_TYPE_NOTIFY        = 0x1,
     UPDATE_ACTIVE_QUADS_ENTRY_TYPE_DONE         = 0x0,
     UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY       = 0x1
 };
@@ -85,6 +80,7 @@ enum SUSPEND_STOP_COMMANDS
 #define SGPE_PGPE_IPC_RC_SUCCESS                0x01
 #define SGPE_PGPE_RC_REQ_WHILE_PENDING_ACK      0x10
 #define SGPE_PGPE_RC_PM_COMPLEX_SUSPEND         0x11
+#define SGPE_PGPE_RC_WOF_DISABLED               0x12
 
 enum IPC_SGPE_PGPE_RETURN_CODES
 {
@@ -116,7 +112,8 @@ typedef union
         uint64_t msg_num                : 4;
         uint64_t update_type            : 1;
         uint64_t entry_type             : 1;
-        uint64_t reserved               : 2;
+        uint64_t exit_type              : 1;
+        uint64_t reserved               : 1;
         uint64_t return_code            : 8;
         uint64_t requested_quads        : 6;
         uint64_t reserved0              : 2;
