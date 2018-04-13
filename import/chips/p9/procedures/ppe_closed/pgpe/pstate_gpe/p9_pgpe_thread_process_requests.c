@@ -44,16 +44,16 @@ extern GlobalPstateParmBlock* G_gppb;
 //
 //Local Function Prototypes
 //
-void p9_pgpe_process_sgpe_updt_active_cores();
-void p9_pgpe_process_sgpe_updt_active_quads();
-void p9_pgpe_process_start_stop();
-void p9_pgpe_process_clip_updt();
-void p9_pgpe_process_wof_ctrl();
-void p9_pgpe_process_wof_vfrt();
-void p9_pgpe_process_set_pmcr_req();
-void p9_pgpe_process_registration();
-void p9_pgpe_process_ack_sgpe_ctrl_stop_updt();
-void p9_pgpe_process_ack_sgpe_suspend_stop();
+inline void p9_pgpe_process_sgpe_updt_active_cores() __attribute__((always_inline));
+inline void p9_pgpe_process_sgpe_updt_active_quads() __attribute__((always_inline));
+inline void p9_pgpe_process_start_stop() __attribute__((always_inline));
+inline void p9_pgpe_process_clip_updt() __attribute__((always_inline));
+inline void p9_pgpe_process_wof_ctrl() __attribute__((always_inline));
+inline void p9_pgpe_process_wof_vfrt() __attribute__((always_inline));
+inline void p9_pgpe_process_set_pmcr_req() __attribute__((always_inline));
+inline void p9_pgpe_process_registration() __attribute__((always_inline));
+inline void p9_pgpe_process_ack_sgpe_ctrl_stop_updt() __attribute__((always_inline));
+inline void p9_pgpe_process_ack_sgpe_suspend_stop() __attribute__((always_inline));
 
 //
 //Process Request Thread
@@ -128,7 +128,8 @@ void p9_pgpe_thread_process_requests(void* arg)
             p9_pgpe_process_sgpe_updt_active_quads();
         }
 
-        if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing == 1)
+        if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_PSTATE_START_STOP].pending_processing == 1) &&
+            (G_pgpe_pstate_record.pendingActiveQuadUpdtDone != 1))
         {
             //During process_start_stop, it's pending_ack bit is cleared
             p9_pgpe_process_start_stop();
@@ -203,7 +204,7 @@ void p9_pgpe_thread_process_requests(void* arg)
 //
 //p9_pgpe_process_sgpe_updt_active_cores
 //
-void p9_pgpe_process_sgpe_updt_active_cores()
+inline void p9_pgpe_process_sgpe_updt_active_cores()
 {
     PK_TRACE_DBG("PTH: Core Updt Entry");
     uint32_t c, ack_now = 0, bad_rc = 0;
@@ -215,12 +216,21 @@ void p9_pgpe_process_sgpe_updt_active_cores()
 
     if(G_pgpe_pstate_record.wofStatus != WOF_ENABLED)
     {
-        PK_TRACE_DBG("PTH: C Updt(WOF_Disabled)");
-        args->fields.return_code = PGPE_WOF_RC_NOT_ENABLED;
-        G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_IN_WOF_DISABLED;
-        p9_pgpe_optrace(UNEXPECTED_ERROR);
         ack_now = 1;
-        bad_rc = 1;
+
+        if (G_pgpe_pstate_record.activeCoreUpdtAction == ACTIVE_CORE_UPDATE_ACTION_ERROR)
+        {
+            G_pgpe_optrace_data.word[0] = PGPE_OP_CORES_ACTIVE_IN_WOF_DISABLED;
+            p9_pgpe_optrace(UNEXPECTED_ERROR);
+            bad_rc = 1;
+            PK_TRACE_DBG("PTH: Core Updt(WOF_Disabled) Error");
+        }
+        else
+        {
+            args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
+            ack_now = 1;
+            PK_TRACE_DBG("PTH: Core Updt(WOF_Disabled) Ack Only");
+        }
     }
     else
     {
@@ -284,13 +294,20 @@ void p9_pgpe_process_sgpe_updt_active_cores()
     {
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
-        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         PK_TRACE_DBG("PTH: Core Entry ACK back to SGPE");
         p9_pgpe_optrace(ACK_CORES_ACTV);
 
+        //We set the return code after sending the ipc response. This is because
+        //SGPE is polling on the return code and will move on as soon as it is set.
+        //To prevent any race condition, we set the return code afterwards.
         if (bad_rc == 1)
         {
+            args->fields.return_code = SGPE_PGPE_RC_WOF_DISABLED;
             PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_SGPE_IPC_ACK_BAD_RC);
+        }
+        else
+        {
+            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         }
     }
 
@@ -300,9 +317,9 @@ void p9_pgpe_process_sgpe_updt_active_cores()
 //
 //p9_pgpe_process_sgpe_updt_active_quads
 //
-void p9_pgpe_process_sgpe_updt_active_quads()
+inline void p9_pgpe_process_sgpe_updt_active_quads()
 {
-    PK_TRACE_DBG("PTH: Quad Updt Start");
+    PK_TRACE_DBG("QX: Quad Updt Start");
     uint32_t ack_now = 1;
     uint32_t SS;
     uint32_t quads_requested;
@@ -341,28 +358,39 @@ void p9_pgpe_process_sgpe_updt_active_quads()
     //EXIT
     else
     {
-        //Update Shared Memory Region
-        G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
-
-        //WOF Enabled
-        //If WOF_ENABLED=1, and pstatesStatus == ACITVE, then request for WOF_VFRT
-        //Otherwise, we don't as SAFE_MODE or PM_COMPLEX_SUSPEND or STOP is pending
-        if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED && G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+        if (args->fields.exit_type == UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY)
         {
-            PK_TRACE_INF("PTH: OCCLFG[30] set");
-            out32(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
-            ack_now = 0;
+            //Update Shared Memory Region
+            G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
+
+            //WOF Enabled
+            //If WOF_ENABLED=1, and pstatesStatus == ACITVE, then request for WOF_VFRT
+            //Otherwise, we don't as SAFE_MODE or PM_COMPLEX_SUSPEND or STOP is pending
+            if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED && G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
+            {
+                PK_TRACE_INF("PTH: OCCLFG[30] set");
+                out32(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
+                ack_now = 0;
+            }
+            else
+            {
+                p9_pgpe_pstate_process_quad_exit_notify(args->fields.requested_quads << 2);
+                args->fields.return_active_quads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads >>
+                                                   2; //activeQuads isn't updated until registration, so we OR with requested quads.
+                args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+            }
         }
         else
         {
-            p9_pgpe_pstate_process_quad_exit(args->fields.requested_quads << 2);
+            p9_pgpe_pstate_process_quad_exit_done();
             args->fields.return_active_quads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads >>
                                                2; //activeQuads isn't updated until registration, so we OR with requested quads.
             args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         }
+
     }
 
-    PK_TRACE_INF("PTH: type=0x%x(EN=0,EX=1), req=0x%x,active=0x%x,ret=0x%x", args->fields.update_type,
+    PK_TRACE_INF("QU: type=0x%x(EN=0,EX=1), req=0x%x,active=0x%x,ret=0x%x", args->fields.update_type,
                  args->fields.requested_quads, G_pgpe_pstate_record.activeQuads, args->fields.return_active_quads);
     G_pgpe_optrace_data.word[0] = (args->fields.requested_quads << 26) |
                                   (SS << 24) |
@@ -376,10 +404,10 @@ void p9_pgpe_process_sgpe_updt_active_quads()
         p9_pgpe_optrace(ACK_QUAD_ACTV);
     }
 
-    PK_TRACE_DBG("PTH: Quad Updt End");
+    PK_TRACE_DBG("QX: Quad Updt End");
 }
 
-void p9_pgpe_process_start_stop()
+inline void p9_pgpe_process_start_stop()
 {
     PK_TRACE_DBG("PTH: Start/Stop Entry");
     uint32_t ack_now = 1, bad_rc = 0;
@@ -505,7 +533,7 @@ void p9_pgpe_process_start_stop()
 //
 //p9_pgpe_process_clip_updt
 //
-void p9_pgpe_process_clip_updt()
+inline void p9_pgpe_process_clip_updt()
 {
     PK_TRACE_DBG("PTH: Clip Updt Entry");
 
@@ -629,7 +657,7 @@ void p9_pgpe_process_clip_updt()
 //
 //p9_pgpe_process_wof_ctrl
 //
-void p9_pgpe_process_wof_ctrl()
+inline void p9_pgpe_process_wof_ctrl()
 {
     PK_TRACE_DBG("PTH: WOF Ctrl Enter");
 
@@ -746,7 +774,7 @@ void p9_pgpe_process_wof_ctrl()
 //
 //p9_pgpe_process_wof_vfrt
 //
-void p9_pgpe_process_wof_vfrt()
+inline void p9_pgpe_process_wof_vfrt()
 {
     PK_TRACE_DBG("PTH: WOF VFRT Enter");
     uint32_t ack_now = 1, bad_rc = 0;
@@ -844,7 +872,7 @@ void p9_pgpe_process_wof_vfrt()
 //
 //p9_pgpe_process_set_pmcr_req
 //
-void p9_pgpe_process_set_pmcr_req()
+inline void p9_pgpe_process_set_pmcr_req()
 {
     PK_TRACE_DBG("PTH: Set PMCR Enter");
 
@@ -944,7 +972,7 @@ void p9_pgpe_process_set_pmcr_req()
     PK_TRACE_DBG("PTH: Set PMCR Exit");
 }
 
-void p9_pgpe_process_registration()
+inline void p9_pgpe_process_registration()
 {
     PK_TRACE_DBG("PTH: Register Enter");
 
@@ -1180,7 +1208,7 @@ void p9_pgpe_process_registration()
 //sent by PGPE to SGPE. This handler is effectively a NOP and is there
 //just to keep the IPC mechanism happy
 //
-void p9_pgpe_process_ack_sgpe_ctrl_stop_updt()
+inline void p9_pgpe_process_ack_sgpe_ctrl_stop_updt()
 {
     G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_processing = 0;
     G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_ack = 0;
@@ -1191,8 +1219,44 @@ void p9_pgpe_process_ack_sgpe_ctrl_stop_updt()
 //sent by PGPE to SGPE. This handler is effectively a NOP and is there
 //just to keep the IPC mechanism happy
 //
-void p9_pgpe_process_ack_sgpe_suspend_stop()
+inline void p9_pgpe_process_ack_sgpe_suspend_stop()
 {
+    int q = 0;
+    ocb_qcsr_t qcsr;
+
     G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_SUSPEND_STOP].pending_processing = 0;
     G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_SUSPEND_STOP].pending_ack = 0;
+
+
+    //Change PMCR ownership
+    PK_TRACE_INF("SUSP: Setting SCOM Ownership of PMCRs");
+    qcsr.value = in32(OCB_QCSR);
+
+    //Set LMCR for each CME
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+        {
+            //CME0 within this quad
+            if (qcsr.fields.ex_config & QUAD_EX0_MASK(q))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 0), BIT64(0));
+            }
+
+            //CME1 within this quad
+            if (qcsr.fields.ex_config & QUAD_EX1_MASK(q))
+            {
+                GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_OR, q, 1), BIT64(0));
+            }
+        }
+    }
+
+    //OP Trace and Set OCCS2[PM_COMPLEX_SUSPENDED)
+    p9_pgpe_optrace(ACK_PM_SUSP);
+    uint32_t occScr2 = in32(OCB_OCCS2);
+    occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
+    G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
+    out32(OCB_OCCS2, occScr2);
+
+    PK_TRACE_INF("SUSP: Suspend Stop Processed");
 }

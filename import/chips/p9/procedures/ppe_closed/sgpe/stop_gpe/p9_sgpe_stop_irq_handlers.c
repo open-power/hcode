@@ -113,6 +113,9 @@ p9_sgpe_pgpe_halt_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext   ctx;
 
+    g_oimr_override |=   BIT64(7);
+    out32(OCB_OIMR0_OR,  BIT32(7));
+
     PK_TRACE_INF("WARNING: PGPE Halted Due to Error");
     PK_OPTIONAL_DEBUG_HALT(SGPE_PGPE_ERROR_DETECTED);
     out32(OCB_OISR0_CLR, BIT32(7));
@@ -128,6 +131,9 @@ void
 p9_sgpe_checkstop_handler(void* arg, PkIrqId irq)
 {
     PkMachineContext   ctx;
+
+    g_oimr_override |=   BIT64(16);
+    out32(OCB_OIMR0_OR,  BIT32(16));
 
     PK_TRACE_INF("WARNING: System Checkstop Detected");
     PK_OPTIONAL_DEBUG_HALT(SGPE_SYSTEM_CHECKSTOP_DETECTED);
