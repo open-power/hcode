@@ -221,10 +221,7 @@ enum SGPE_STOP_PSCOM_MASK
 
 enum SGPE_WOF_ACTIVE_UPDATE_STATUS
 {
-    IPC_SGPE_PGPE_UPDATE_QUAD_ENABLED = 0x2,
-    IPC_SGPE_PGPE_UPDATE_CORE_ENABLED = 0x1,
-    // Reserved_4_Do_Not_Use
-    IPC_SGPE_PGPE_UPDATE_CTRL_ONGOING = 0x8,
+    IPC_SGPE_PGPE_UPDATE_CORE_ENABLED = 0x01,
     IPC_SGPE_PGPE_UPDATE_PGPE_HALTED  = 0xF0
 };
 
@@ -386,7 +383,6 @@ struct ring_save
 /// SGPE to PGPE IPC handlers
 void p9_sgpe_ipc_uih_done_hook();
 void p9_sgpe_ipc_pgpe_ctrl_stop_updates(ipc_msg_t*, void*);
-void p9_sgpe_ack_pgpe_ctrl_stop_updates();
 void p9_sgpe_ipc_pgpe_update_active_cores(const uint32_t);
 void p9_sgpe_ipc_pgpe_update_active_cores_poll_ack();
 void p9_sgpe_ipc_pgpe_update_active_quads(const uint32_t, const uint32_t);
