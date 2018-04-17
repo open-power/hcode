@@ -32,6 +32,7 @@ void
 p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 {
     uint32_t      attr_proc_fabric_pump_mode_chip_is_node = 0; // default chip_is_group
+    uint32_t      attr_proc_smf_config_enabled            = 0;
     uint32_t      ex_loop                                 = 0;
     uint32_t      ex_count                                = 0;
     uint32_t      ex_mask                                 = 0;
@@ -44,6 +45,11 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
     if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_PROC_FAB_PUMP_MODE_BIT_POS)
     {
         attr_proc_fabric_pump_mode_chip_is_node = 1;
+    }
+
+    if (pSgpeImgHdr->g_sgpe_reserve_flags & SGPE_PROC_SMF_CONFIG_BIT_POS)
+    {
+        attr_proc_smf_config_enabled = 1;
     }
 
     // Note: Epsilon settings are done via image build and scom restore(scomcust), not here
@@ -225,6 +231,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 // EXP.NC.NCMISC.NCSCOMS.TLBIE_STALL_CMPLT_CNT
                 // EXP.NC.NCMISC.NCSCOMS.TLBIE_STALL_DELAY_CNT
                 // EXP.NC.NCMISC.NCSCOMS.TLBIE_PACING_MST_DLY_EN
+                // EXP.NC.NCMISC.NCSCOMS.SMF_CONFIG
 
                 GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG3, quad, ex_index),
                             scom_data.value);
@@ -237,10 +244,15 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
 #endif
 
 #if NIMBUS_DD_LEVEL != 10
-
                 scom_data.words.upper |= BIT32(16);
-
 #endif
+
+                if (attr_proc_smf_config_enabled)
+                {
+#if NIMBUS_DD_LEVEL != 10 && NIMBUS_DD_LEVEL != 20 && NIMBUS_DD_LEVEL != 21 && CUMULUS_DD_LEVEL != 10 && CUMULUS_DD_LEVEL != 11
+                    scom_data.words.upper |= BIT32(20);
+#endif
+                }
 
                 GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_NCU_MODE_REG3, quad, ex_index),
                             scom_data.value);
