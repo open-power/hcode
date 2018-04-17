@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2018
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -79,4 +79,6 @@ $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
         $(ROOTPATH)/chips/p9/utils/imageProcs/ \
 	)
 
- $(call BUILD_BINHEADER,$(IMAGEPATH)/$(CME_TARGET)/$(CME_TARGET).bin,$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
+ $(call BUILD_BINHEADER,\
+ $(IMAGEPATH)/$(CME_TARGET)/$(CME_TARGET).bin,\
+ $(ROOTPATH)/output/images/utils/stopreg/p9_core_restore_routines/p9_core_restore_routines.bin)
