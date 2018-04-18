@@ -739,9 +739,14 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
 
     for(cindex = 0; cexit || center; cexit <<= 1, center <<= 1, cindex++)
     {
-        if ((cexit & BIT32(0)) && (type == 2))
+        if (cexit & BIT32(0))
         {
-            p9_sgpe_stop_exit_handoff_cme(cindex);
+            G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |= BIT32(cindex);
+
+            if (type == 2)
+            {
+                p9_sgpe_stop_exit_handoff_cme(cindex);
+            }
         }
 
         if (center & BIT32(0))
