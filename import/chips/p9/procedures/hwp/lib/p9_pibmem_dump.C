@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -33,8 +33,10 @@
 #include <fapi2.H>
 #include <p9_pibmem_dump.H>
 
-const static uint32_t PIBMEM_START_ARRAY_ADDRESS   = 0x00080000;
-const static uint32_t DEPTH_OF_ARRAY               = 0x00003000;
+const static uint32_t P9n_PIBMEM_START_ARRAY_ADDRESS   = 0x00080000;
+const static uint32_t P9n_DEPTH_OF_ARRAY               = 0x00003000;
+const static uint32_t P9a_PIBMEM_START_ARRAY_ADDRESS   = 0x00080000;
+const static uint32_t P9a_DEPTH_OF_ARRAY               = 0x00007000;
 const static uint32_t PIBMEM_CTRL_REG              = 0x00088000;
 
 fapi2::ReturnCode p9_pibmem_dump(
@@ -45,10 +47,24 @@ fapi2::ReturnCode p9_pibmem_dump(
     std::vector<array_data_t>& pibmem_contents,
     const bool ecc_enable)
 {
+    uint8_t l_attr_axone_only;
     uint32_t i, start_address, num_of_address, end_address;
+    uint32_t PIBMEM_START_ARRAY_ADDRESS, DEPTH_OF_ARRAY;
     array_data_t fetch_data;
     fapi2::buffer<uint64_t> l_data64, ctrl_data, original_ctrl_data;
 
+    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_CHIP_EC_FEATURE_P9A_LOGIC_ONLY, i_target, l_attr_axone_only));
+
+    if (l_attr_axone_only) // Axone only
+    {
+        PIBMEM_START_ARRAY_ADDRESS = P9a_PIBMEM_START_ARRAY_ADDRESS;
+        DEPTH_OF_ARRAY = P9a_DEPTH_OF_ARRAY;
+    }
+    else
+    {
+        PIBMEM_START_ARRAY_ADDRESS = P9n_PIBMEM_START_ARRAY_ADDRESS;
+        DEPTH_OF_ARRAY = P9n_DEPTH_OF_ARRAY;
+    }
 
     /// The below code enables/disables ECC checking before doing Dump based on inputs from USER.
     FAPI_TRY(getScom(i_target, PIBMEM_CTRL_REG, original_ctrl_data), "Error in Reading Control Register");
