@@ -163,7 +163,7 @@ p9_sgpe_stop_exit_lv8(uint32_t qloop)
     // for l2 scom init and restore that cannot be done via stop11
     // as if that certain l2 wasnt exiting(thus lack of clock for scom)
 
-    PK_TRACE_INF("SX.8B: Cache L2 Scominit");
+    PK_TRACE_DBG("SX.8B: Cache L2 Scominit");
     p9_hcd_cache_scominit(qloop, ex, 1);
 
     PK_TRACE_DBG("Cache L2 Scomcust");
@@ -315,7 +315,6 @@ p9_sgpe_stop_exit_handoff_cme(uint32_t cindex)
     // From IPC prospective, core is active when handoff to cme
     // and if core from quad is active, the quad is active
     G_sgpe_stop_record.group.core[VECTOR_EXIT]   &= ~BIT32(cindex);
-    G_sgpe_stop_record.group.core[VECTOR_ACTIVE] |=  BIT32(cindex);
 }
 
 //------------------------------------------------------------------------------
@@ -353,7 +352,7 @@ p9_sgpe_stop_exit()
     //===============================
 
     //--------------------------------------------------------------------------
-    PK_TRACE_INF("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");
+    PK_TRACE("+++++ +++++ BEGIN OF STOP EXIT +++++ +++++");
     //--------------------------------------------------------------------------
 
     G_sgpe_stop_record.group.quad[VECTOR_EXIT] = 0;
@@ -551,7 +550,7 @@ p9_sgpe_stop_exit()
         MARK_TRAP(SX_CHIPLET_RESET)
         //=========================
 
-        PK_TRACE_INF("SX.11B: Cache Chiplet Reset");
+        PK_TRACE_DBG("SX.11B: Cache Chiplet Reset");
         p9_hcd_cache_chiplet_reset(qloop);
 
 #if !SKIP_INITF
@@ -565,7 +564,7 @@ p9_sgpe_stop_exit()
 #if !STOP_PRIME
 #if !SKIP_INITF
 
-        PK_TRACE_INF("SX.11C: Cache Gptr/Time Initf");
+        PK_TRACE_DBG("SX.11C: Cache Gptr/Time Initf");
         p9_hcd_cache_gptr_time_initf(qloop);
 
 #endif
@@ -592,7 +591,7 @@ p9_sgpe_stop_exit()
 
 #endif
 
-        PK_TRACE_INF("SX.11D: Cache Dpll Setup");
+        PK_TRACE_DBG("SX.11D: Cache Dpll Setup");
         p9_hcd_cache_dpll_setup(qloop);
 
         if (G_sgpe_stop_record.group.quad[VECTOR_ERROR] & BIT32(qloop))
@@ -616,7 +615,7 @@ p9_sgpe_stop_exit()
 
 #if !SKIP_INITF
 
-        PK_TRACE_INF("SX.11E: Cache Repair Initf");
+        PK_TRACE_DBG("SX.11E: Cache Repair Initf");
         p9_hcd_cache_repair_initf(qloop);
 
 #endif
@@ -627,7 +626,7 @@ p9_sgpe_stop_exit()
 
 #if !SKIP_ARRAYINIT
 
-        PK_TRACE_INF("SX.11F: Cache Arrayinit");
+        PK_TRACE_DBG("SX.11F: Cache Arrayinit");
         p9_hcd_cache_arrayinit(qloop);
 
 #endif
@@ -755,7 +754,7 @@ p9_sgpe_stop_exit()
 
 #if !SKIP_INITF
 
-        PK_TRACE_INF("SX.11G: Cache Func Scan");
+        PK_TRACE_DBG("SX.11G: Cache Func Scan");
         p9_hcd_cache_initf(qloop);
 
 #endif
@@ -765,7 +764,7 @@ p9_sgpe_stop_exit()
         MARK_TAG(SX_CACHE_STARTCLOCKS, (32 >> qloop))
         //===========================================
 
-        PK_TRACE_INF("SX.11H: Cache Startclocks");
+        PK_TRACE_DBG("SX.11H: Cache Startclocks");
         p9_hcd_cache_startclocks(qloop);
 
         if (G_sgpe_stop_record.group.quad[VECTOR_ERROR] & BIT32(qloop))
@@ -815,7 +814,7 @@ p9_sgpe_stop_exit()
         MARK_TAG(SX_SCOM_INITS, (32 >> qloop))
         //====================================
 
-        PK_TRACE_INF("SX.11I: Cache Scom Init");
+        PK_TRACE_DBG("SX.11I: Cache Scom Init");
         p9_hcd_cache_scominit(qloop, G_sgpe_stop_record.group.expg[qloop], 0);
 
         PK_TRACE_DBG("Cache Scom Cust");

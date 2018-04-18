@@ -29,7 +29,8 @@
 
 extern SgpeStopRecord G_sgpe_stop_record;
 
-GPE_BUFFER(ipc_async_cmd_t                  G_sgpe_ipccmd_to_pgpe);
+GPE_BUFFER(ipc_async_cmd_t                  G_sgpe_ipccmd_to_pgpe_cores);
+GPE_BUFFER(ipc_async_cmd_t                  G_sgpe_ipccmd_to_pgpe_quads);
 GPE_BUFFER(ipcmsg_s2p_update_active_cores_t G_sgpe_ipcmsg_update_cores);
 GPE_BUFFER(ipcmsg_s2p_update_active_quads_t G_sgpe_ipcmsg_update_quads);
 
@@ -129,12 +130,12 @@ p9_sgpe_ipc_pgpe_update_active_cores(const uint32_t type)
             G_sgpe_stop_record.group.core[VECTOR_PIGE] >> SHIFT32(23);
     }
 
-    G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_cores;
-    ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
+    G_sgpe_ipccmd_to_pgpe_cores.cmd_data = &G_sgpe_ipcmsg_update_cores;
+    ipc_init_msg(&G_sgpe_ipccmd_to_pgpe_cores.cmd,
                  IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_CORES,
                  0, 0);
 
-    rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
+    rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe_cores.cmd);
 
     if (rc)
     {
@@ -157,7 +158,8 @@ p9_sgpe_ipc_pgpe_update_active_cores_poll_ack(const uint32_t type)
 
     if (G_sgpe_ipcmsg_update_cores.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
     {
-        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Cores Bad RC. HALT SGPE!");
+        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Cores Bad RC[%x]. HALT SGPE!",
+                     (uint32_t)G_sgpe_ipcmsg_update_cores.fields.return_code);
         PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_CORE_BAD_RC);
     }
 
@@ -210,12 +212,12 @@ p9_sgpe_ipc_pgpe_update_active_quads(const uint32_t type, const uint32_t stage)
 
     PK_TRACE_INF("IPC.SP: Message PGPE to Update Active Quads with type[%d][%d], reqQuads=0x%x", type, stage,
                  G_sgpe_ipcmsg_update_quads.fields.requested_quads);
-    G_sgpe_ipccmd_to_pgpe.cmd_data = &G_sgpe_ipcmsg_update_quads;
-    ipc_init_msg(&G_sgpe_ipccmd_to_pgpe.cmd,
+    G_sgpe_ipccmd_to_pgpe_quads.cmd_data = &G_sgpe_ipcmsg_update_quads;
+    ipc_init_msg(&G_sgpe_ipccmd_to_pgpe_quads.cmd,
                  IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS,
                  0, 0);
 
-    rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe.cmd);
+    rc = ipc_send_cmd(&G_sgpe_ipccmd_to_pgpe_quads.cmd);
 
     if(rc)
     {
@@ -239,7 +241,8 @@ p9_sgpe_ipc_pgpe_update_active_quads_poll_ack(const uint32_t type)
 
     if (G_sgpe_ipcmsg_update_quads.fields.return_code != IPC_SGPE_PGPE_RC_SUCCESS)
     {
-        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Quads Bad RC. HALT SGPE!");
+        PK_TRACE_ERR("ERROR: SGPE Updates PGPE with Active Quads Bad RC[%x]. HALT SGPE!",
+                     (uint32_t)G_sgpe_ipcmsg_update_quads.fields.return_code);
         PK_PANIC(SGPE_IPC_UPDATE_ACTIVE_QUAD_BAD_RC);
     }
 

@@ -304,11 +304,12 @@ void p9_pgpe_process_sgpe_updt_active_quads()
 {
     PK_TRACE_DBG("PTH: Quad Updt Start");
     uint32_t ack_now = 1;
+    uint32_t SS;
+    uint32_t quads_requested;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
     ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
     G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_processing = 0;
 
-    uint32_t SS;
 
     if(args->fields.update_type == UPDATE_ACTIVE_QUADS_TYPE_ENTRY) //entry
     {
@@ -320,18 +321,21 @@ void p9_pgpe_process_sgpe_updt_active_quads()
     }
 
     //ENTRY
+    quads_requested = (args->fields.requested_quads << 2);
+
     if (args->fields.update_type == UPDATE_ACTIVE_QUADS_TYPE_ENTRY)
     {
         if (args->fields.entry_type == UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY)
         {
-            p9_pgpe_pstate_process_quad_entry_notify(args->fields.requested_quads << 2);
+            p9_pgpe_pstate_process_quad_entry_notify(quads_requested);
         }
         else
         {
-            p9_pgpe_pstate_process_quad_entry_done(args->fields.requested_quads << 2);
+            p9_pgpe_pstate_process_quad_entry_done(quads_requested);
         }
 
-        args->fields.return_active_quads = (G_pgpe_pstate_record.activeQuads >> 2);
+        args->fields.return_active_quads =
+            ((G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads &= (~(quads_requested))) >> 2);
         args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     }
     //EXIT
