@@ -352,7 +352,7 @@ p9_sgpe_stop_entry()
         }
     }
 
-    PK_TRACE_INF("SE.5+: L2 and NCU Purged by SGPE");
+    PK_TRACE_DBG("SE.5+: L2 and NCU Purged by SGPE");
 
 #endif
 
@@ -496,7 +496,7 @@ p9_sgpe_stop_entry()
         // MF: verify compiler generate single rlwmni
         // MF: delay may be needed for stage latch to propagate thold
 
-        PK_TRACE_INF("SE.8B: L2 Clock Stopped");
+        PK_TRACE_DBG("SE.8B: L2 Clock Stopped");
 
         //========================
         MARK_TRAP(SE_STOP_L2_GRID)
@@ -558,7 +558,7 @@ p9_sgpe_stop_entry()
         out32(OCB_QSSR_CLR, BIT32(qloop + 20));
         out32(OCB_QSSR_OR, (ex << SHIFT32((qloop << 1) + 1)));
 
-        PK_TRACE_INF("SE.8C: L2 Clock Sync Dropped");
+        PK_TRACE_DBG("SE.8C: L2 Clock Sync Dropped");
 
         PK_TRACE("Release cache clock controller atomic lock");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CC_ATOMIC_LOCK, qloop), 0);
@@ -872,7 +872,7 @@ p9_sgpe_stop_entry()
             continue;
         }
 
-        PK_TRACE_INF("SE.11B: L3 Purged");
+        PK_TRACE_DBG("SE.11B: L3 Purged");
 
 #endif
 
@@ -995,7 +995,7 @@ p9_sgpe_stop_entry()
         if (scom_data.words.upper)
         {
             // Stop11 needs resclk to be off, otherwise exit will fail
-            PK_TRACE_INF("ERROR: Q[%d]ACCR[%x] is not clean after CMEs are halted",
+            PK_TRACE_ERR("ERROR: Q[%d]ACCR[%x] is not clean after CMEs are halted",
                          qloop, scom_data.words.upper);
             PK_PANIC(SGPE_STOP_ENTRY_STOP11_RESCLK_ON);
         }
@@ -1017,7 +1017,7 @@ p9_sgpe_stop_entry()
         PK_TRACE("Drop powerbus purge via QCCR[30]");
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_QPPM_QCCR_WCLEAR, qloop), BIT64(30));
 
-        PK_TRACE_INF("SE.11C: PowerBus Purged");
+        PK_TRACE_DBG("SE.11C: PowerBus Purged");
 
         //======================================
         MARK_TAG(SE_QUIESCE_QUAD, (32 >> qloop))
@@ -1128,7 +1128,7 @@ p9_sgpe_stop_entry()
         // Note: Stop11 will lose all the fences so here needs to assert them
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(EQ_CPLT_CTRL1_OR, qloop), CLK_REGION_ALL);
 
-        PK_TRACE_INF("SE.11D: Cache Clock Stopped");
+        PK_TRACE_DBG("SE.11D: Cache Clock Stopped");
 
         PK_TRACE("Gate the PCBMux request so scanning doesn't cause random requests");
 
@@ -1285,7 +1285,7 @@ p9_sgpe_stop_entry()
         // vcs_pfet_force_state = 00 (Nop)
         GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_PFCS_CLR, qloop), BITS64(0, 4));
 
-        PK_TRACE_INF("SE.11E: Cache Powered Off");
+        PK_TRACE_DBG("SE.11E: Cache Powered Off");
 
 #endif
 
