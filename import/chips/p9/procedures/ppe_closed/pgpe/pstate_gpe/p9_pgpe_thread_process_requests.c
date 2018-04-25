@@ -227,9 +227,20 @@ inline void p9_pgpe_process_sgpe_updt_active_cores()
         }
         else
         {
+            if (args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY)
+            {
+                G_pgpe_pstate_record.activeCores &= ~(args->fields.active_cores << 8);
+            }
+            else
+            {
+                G_pgpe_pstate_record.activeCores |= (args->fields.active_cores << 8);
+            }
+
             args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
-            ack_now = 1;
-            PK_TRACE_DBG("PTH: Core Updt(WOF_Disabled) Ack Only");
+
+            PK_TRACE_INF("PTH: Core Updt(WOF_Disabled) Ack Only numActiveCores=0x%x,activeCores=0x%x",
+                         G_pgpe_pstate_record.numActiveCores, G_pgpe_pstate_record.activeCores);
+
         }
     }
     else

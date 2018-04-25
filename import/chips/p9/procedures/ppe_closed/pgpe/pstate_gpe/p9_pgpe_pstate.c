@@ -1517,11 +1517,20 @@ void p9_pgpe_pstate_safe_mode()
     {
         async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
         ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
-        G_pgpe_pstate_record.activeCores &= ~(args->fields.active_cores << 8);
+
+        if (args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY)
+        {
+            G_pgpe_pstate_record.activeCores &= ~(args->fields.active_cores << 8);
+        }
+        else
+        {
+            G_pgpe_pstate_record.activeCores |= (args->fields.active_cores << 8);
+        }
+
         args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
-        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
+        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     }
 
     ///Disable WOF, so that PGPE doesn't interlock with OCC anymore
