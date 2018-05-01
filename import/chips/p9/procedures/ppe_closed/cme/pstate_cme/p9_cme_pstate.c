@@ -391,7 +391,6 @@ void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
     {
         uint32_t pstate;
         uint32_t curr_idx;
-        uint32_t next_idx;
         uint64_t val;
 
         if(enable)
@@ -421,30 +420,18 @@ void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
         else
         {
             PK_TRACE_INF("resclk | disabling resclks");
-
-            pstate = ANALOG_PSTATE_RESCLK_OFF;
-            next_idx = p9_cme_resclk_get_index(pstate);
-            curr_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
-
             // 1) copy QACCR[0:12] into CACCR[0:12], with CACCR[13:14]=0b00,
             //    to switch away from common control. QACCR will already be set
             //    to a value corresponding to the current quad Pstate
-
-            if (curr_idx != next_idx)
-            {
-                ippm_read(QPPM_QACCR, &val);
-                val &= BITS64(0, 13);
-                // clk_sync enable (bit 15) is ALWAYS 0b0 at this point due to the
-                // sequence of function calls in Stop Entry
-                CME_PUTSCOM(CPPM_CACCR, core_mask, val);
-            }
-            else
-            {
-                CME_PUTSCOM(CPPM_CACCR_CLR, core_mask, (BITS64(13, 2)));
-            }
-
+            ippm_read(QPPM_QACCR, &val);
+            val &= BITS64(0, 13);
+            // clk_sync enable (bit 15) is ALWAYS 0b0 at this point due to the
+            // sequence of function calls in Stop Entry
+            CME_PUTSCOM(CPPM_CACCR, core_mask, val);
+            curr_idx = p9_cme_resclk_get_index(G_cme_pstate_record.quadPstate);
             // 2) step CACCR to a value which disables resonance
-            p9_cme_resclk_update(core_mask, next_idx, curr_idx);
+            pstate = ANALOG_PSTATE_RESCLK_OFF;
+            p9_cme_resclk_update(core_mask, p9_cme_resclk_get_index(pstate), curr_idx);
         }
     }
 
@@ -810,9 +797,9 @@ uint32_t p9_cme_vdm_update(uint32_t pstate)
 #ifdef USE_CME_RESCLK_FEATURE
 void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t next_idx, uint32_t curr_idx)
 {
-    uint64_t base_val = 0;
-    uint64_t val      = 0;
-    int32_t  step     = 0;
+    uint64_t base_val;
+    uint64_t val;
+    int32_t  step;
 
     PK_TRACE_DBG("resclk | target=%08x", (uint32_t)target);
     PK_TRACE_DBG("resclk | curr_idx=%d", curr_idx);
@@ -833,7 +820,7 @@ void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t next_idx, uint32_t curr
     {
         ippm_read(QPPM_QACCR, &base_val);
     }
-    else if (curr_idx != next_idx)
+    else
     {
         CME_GETSCOM(CPPM_CACCR, target, base_val);
     }
