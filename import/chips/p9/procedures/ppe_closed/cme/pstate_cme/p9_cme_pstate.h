@@ -173,12 +173,6 @@ typedef enum
     INTERCME_MSG_LOCK_SKIP         = 1,
 } INTERCME_MSG_LOCK_ACTION;
 
-typedef enum
-{
-    INTERCME_IN0_PROCESS        = 0,
-    INTERCME_IN0_PROCESS_SKIP   = 1,
-} INTERCME_IN0_PROCESS_ACTION;
-
 
 typedef struct
 {
@@ -228,8 +222,7 @@ void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint3
 void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable);
 void p9_cme_pstate_pmsr_updt();
 void p9_cme_pstate_pmsr_updt_in_progress();
-void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION intercme_msg_lock_action,
-        INTERCME_IN0_PROCESS_ACTION intercme_in0_process_action);
+void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION intercme_msg_lock_action);
 void p9_cme_pstate_process_db0_sibling();
 
 

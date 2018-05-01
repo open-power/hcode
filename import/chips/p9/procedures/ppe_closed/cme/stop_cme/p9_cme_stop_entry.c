@@ -1062,7 +1062,9 @@ p9_cme_stop_entry()
             }
             while(scom_data.words.upper & BIT32(13));
 
+            wrteei(0);
             p9_cme_core_stop_analog_control(core, ANALOG_DISABLE);
+            wrteei(1);
 
             PK_TRACE("Switch glsmux to refclk to save clock grid power via CGCR[3]");
             CME_PUTSCOM(C_PPM_CGCR, core, 0);

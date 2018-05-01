@@ -378,7 +378,9 @@ p9_cme_stop_exit_lv2(uint32_t core)
     MARK_TRAP(SX_ENABLE_ANALOG)
     //=========================
 
+    wrteei(0);
     p9_cme_core_stop_analog_control(core, ANALOG_ENABLE);
+    wrteei(1);
 
     // do this after assert glsmux so glitch can have time to resolve
     // catchup to stop2 exit will acquire here
