@@ -54,12 +54,10 @@ void p9_cme_pstate_intercme_in0_irq_handler(void)
 
 void p9_cme_pstate_intercme_msg_handler(void)
 {
-    p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_WAIT_ON_RECV ,
-            INTERCME_IN0_PROCESS_SKIP);
+    p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_WAIT_ON_RECV);
 }
 
-void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION intercme_msg_lock_action,
-        INTERCME_IN0_PROCESS_ACTION intercme_in0_process_action)
+void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION intercme_msg_lock_action)
 {
     PK_TRACE_INF("SIBL: Enter");
     uint32_t msg;
@@ -82,7 +80,7 @@ void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION i
     }
 
     //If INTERCME_DIRECT_IN0, then process DB0 data
-    if((in32(CME_LCL_EISR) & BIT32(7)) && (intercme_in0_process_action == INTERCME_IN0_PROCESS))
+    if(in32(CME_LCL_EISR) & BIT32(7))
     {
         p9_cme_pstate_process_db0_sibling();
     }

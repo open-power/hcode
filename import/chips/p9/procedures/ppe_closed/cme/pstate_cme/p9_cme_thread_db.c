@@ -208,7 +208,7 @@ void p9_cme_pstate_db3_handler(void)
 
             intercme_direct(INTERCME_DIRECT_IN2, INTERCME_DIRECT_ACK, 0);
 
-            p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_SKIP, INTERCME_IN0_PROCESS);
+            p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_SKIP);
         }
 
         if (db3.fields.cme_message_numbern == MSGID_DB3_ENTER_SAFE_MODE)
@@ -772,7 +772,7 @@ inline void p9_cme_pstate_register()
                 }
                 else
                 {
-                    p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_WAIT_ON_RECV, INTERCME_IN0_PROCESS);
+                    p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_WAIT_ON_RECV);
                     msgCnt++;
 
                     if (msgCnt == 3)
