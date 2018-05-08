@@ -183,7 +183,7 @@ void p9_pgpe_pstate_setup_process_pcb_type4()
     out32(OCB_OPIT4PRA_CLR, opit4pr);
     out32(OCB_OISR1_CLR, BIT32(17));
     g_oimr_override &= ~BIT64(49);
-    out32(OCB_OIMR1_CLR, BIT32(17));
+    out32(G_OCB_OIMR1_CLR, BIT32(17));
 }
 
 //
@@ -637,7 +637,7 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
 
     //a. If OCC Scratch2 Core Throttle Continuous Change Enable bit is set (i.e. during Manufacturing test), halt the PGPE with a unique error code.
     //Engineering Note: characterization team is responsible to set CSAR bit "Disable CME NACK on Prolonged Droop" when doing PGPE throttle scom injection.
-    if(in32(OCB_OCCS2) & BIT32(CORE_THROTTLE_CONTINUOUS_CHANGE_ENABLE))
+    if(in32(G_OCB_OCCS2) & BIT32(CORE_THROTTLE_CONTINUOUS_CHANGE_ENABLE))
     {
         PGPE_TRACE_AND_PANIC(PGPE_DROOP_AND_CORE_THROTTLE_ENABLED);
     }
@@ -645,7 +645,7 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
     //b) If  OCC flag PGPE Prolonged Droop Workaround Active bit is not set,
     //    call droop_throttle()
 
-    if (!(in32(OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
+    if (!(in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
     {
         p9_pgpe_droop_throttle();
     }
@@ -680,7 +680,7 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
             // 2 Set OCC Flag register PGPE PM Reset Suppress bit that OCC
             //  will read to tell OCC not to attempt a PM Complex reset on
             //  PGPE timeouts in the meantime.
-            out32(OCB_OCCFLG_OR, BIT32(PGPE_PM_RESET_SUPPRESS));
+            out32(G_OCB_OCCFLG_OR, BIT32(PGPE_PM_RESET_SUPPRESS));
 
             // 3 Send DB0 PMSR Update with message Set Pstates Suspended only
             // to the CME QM (and their Siblings) that provided an ACK
@@ -718,7 +718,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     uint64_t value;
     db0_parms_t p;
 
-    qcsr.value = in32(OCB_QCSR);
+    qcsr.value = in32(G_OCB_QCSR);
 
     //1. Read DPLLs. Determine lowest DPLL
     lowestDpll = 0xFFF;
@@ -860,7 +860,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         PK_TRACE_INF("PST: OWNER_CHAR");
         G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
         g_oimr_override &= ~(BIT64(46));
-        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+        out32(G_OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
     }
 
     //7. Send Pstate Start Doorbell0
@@ -905,7 +905,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     //In case VDM Prolonged Droop event occured during PSTATE_START, then clearing
     //ensures OCC is notified about Prolonged Droop event resolution.
     //Also, at this point nothing else should be pending from OCC, so safe to clear.
-    out32(OCB_OCCFLG_CLR, BIT32(PGPE_PM_RESET_SUPPRESS));
+    out32(G_OCB_OCCFLG_CLR, BIT32(PGPE_PM_RESET_SUPPRESS));
 
     //Lower voltage if boot voltage > syncPstate voltage
     if (G_pgpe_pstate_record.eVidCurr > G_pgpe_pstate_record.eVidNext)
@@ -920,10 +920,10 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
 
     //6. Enable PStates
     G_pgpe_pstate_record.pstatesStatus = PSTATE_ACTIVE;
-    uint32_t occScr2 = in32(OCB_OCCS2);
+    uint32_t occScr2 = in32(G_OCB_OCCS2);
     occScr2 |= BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
     PK_TRACE_DBG("PST: PGPE_PSTATE_PROTOCOL_ACTIVE set");
-    out32(OCB_OCCS2, occScr2);
+    out32(G_OCB_OCCS2, occScr2);
 
     PK_TRACE_DBG("PST: Start Done");
 }
@@ -938,7 +938,7 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
 {
     int q = 0;
     ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
+    qcsr.value = in32(G_OCB_QCSR);
 
 //Write to LMCR register in SIMICS results in error
 //So, adding a build flag for SIMICS.
@@ -952,19 +952,19 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
     {
         G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_HOST;
         g_oimr_override &= ~(BIT64(46));
-        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+        out32(G_OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
     }
     else if (owner == PMCR_OWNER_OCC)
     {
         G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_OCC;
         g_oimr_override |= BIT64(46);
-        out32(OCB_OIMR1_OR, BIT32(14)); //Disable PCB_INTR_TYPE1
+        out32(G_OCB_OIMR1_OR, BIT32(14)); //Disable PCB_INTR_TYPE1
     }
     else if (owner == PMCR_OWNER_CHAR)
     {
         G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
         g_oimr_override &= ~(BIT64(46));
-        out32(OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
+        out32(G_OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
     }
 
 
@@ -1016,7 +1016,7 @@ void p9_pgpe_pstate_stop()
     ocb_qcsr_t qcsr;
     db0_parms_t p;
 
-    qcsr.value = in32(OCB_QCSR);
+    qcsr.value = in32(G_OCB_QCSR);
     db0_stop.value = 0;
     db0_stop.fields.msg_id = MSGID_DB0_STOP_PSTATE_BROADCAST;
 
@@ -1058,13 +1058,13 @@ void p9_pgpe_pstate_stop()
 
 
     //Set status in OCC_Scratch2
-    uint32_t occScr2 = in32(OCB_OCCS2);
+    uint32_t occScr2 = in32(G_OCB_OCCS2);
     occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
-    out32(OCB_OCCS2, occScr2);
+    out32(G_OCB_OCCS2, occScr2);
     G_pgpe_pstate_record.pstatesStatus = PSTATE_STOPPED;
 
     G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.psComputed.fields.glb << 16)
-                                  | (in32(OCB_QCSR) >> 16);
+                                  | (in32(G_OCB_QCSR) >> 16);
     p9_pgpe_optrace(PRC_START_STOP);
 
     PK_TRACE_DBG("PSS: Stop Done");
@@ -1264,7 +1264,7 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
     //If WOF Enabled, then interlock with OCC
     if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED && G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
     {
-        GPE_PUTSCOM(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
+        GPE_PUTSCOM(G_OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
     }
 
     G_pgpe_pstate_record.pendingActiveQuadUpdtDone = 0;
@@ -1428,10 +1428,10 @@ void p9_pgpe_pstate_apply_safe_clips()
 void p9_pgpe_pstate_safe_mode()
 {
     PK_TRACE_DBG("SAF: Safe Mode Enter");
-    uint32_t occScr2 = in32(OCB_OCCS2);
-    uint32_t suspend = in32(OCB_OCCFLG) & BIT32(PM_COMPLEX_SUSPEND)
+    uint32_t occScr2 = in32(G_OCB_OCCS2);
+    uint32_t suspend = in32(G_OCB_OCCFLG) & BIT32(PM_COMPLEX_SUSPEND)
                        && !(G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_SGPE]);
-    uint32_t safemode = in32(OCB_OCCFLG) & BIT32(PGPE_SAFE_MODE);
+    uint32_t safemode = in32(G_OCB_OCCFLG) & BIT32(PGPE_SAFE_MODE);
     db3_parms_t p;
     pgpe_db0_glb_bcast_t db0;
 
@@ -1539,7 +1539,7 @@ void p9_pgpe_pstate_safe_mode()
     //Update OCC Scratch2  (need to get new value because the suspend_stop callback changes the Scratch2 content)
     occScr2 &= ~BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
     occScr2 |= BIT32(PGPE_SAFE_MODE_ACTIVE);
-    out32(OCB_OCCS2, occScr2);
+    out32(G_OCB_OCCS2, occScr2);
 
     if (G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_CME])
     {
@@ -1631,9 +1631,9 @@ void p9_pgpe_pstate_cme_fault()
     //5. Clears OCC Scratch 2 [PGPE Active].
     //  This keeps the SGPE from performing Update Active Cores and Update
     //  Active Quads IPC operations to PGPE in the future.
-    uint32_t occScr2 = in32(OCB_OCCS2);
+    uint32_t occScr2 = in32(G_OCB_OCCS2);
     occScr2 &= ~BIT32(PGPE_ACTIVE);
-    out32(OCB_OCCS2, occScr2);
+    out32(G_OCB_OCCS2, occScr2);
 
     //6. Responds to any Update Active Cores and Update Active Quads IPC
     //  operations.
@@ -2044,7 +2044,7 @@ inline void p9_pgpe_droop_throttle()
 
     uint32_t q;
     ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
+    qcsr.value = in32(G_OCB_QCSR);
     uint64_t value;
     uint32_t ex;
 
@@ -2100,7 +2100,7 @@ inline void p9_pgpe_droop_throttle()
     p9_pgpe_pstate_write_core_throttle(CORE_IFU_THROTTLE, RETRY);
 
     //3.  Set the OCC flag PGPE Prolonged Droop Workaround Active bit.
-    out32(OCB_OCCFLG_OR, BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE));
+    out32(G_OCB_OCCFLG_OR, BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE));
 
     //4.  Clear the Prolonged Droop Global variables (Bit vector and retry counts).
     G_pgpe_pstate_record.cntNACKs = 0;
@@ -2151,7 +2151,7 @@ inline void p9_pgpe_droop_unthrottle()
 
     //4.  Clear the OCC flag PGPE Prolonged Droop Workaround Active. OCCFLG[PM_RESET_SUPPRESS] will be cleared later
     //after any pending IPCs from OCC have been processed and acked.
-    out32(OCB_OCCFLG_CLR, BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE));
+    out32(G_OCB_OCCFLG_CLR, BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE));
 
     //5.  Write PK Trace and Optrace record that the Prolonged Throttle workaround was removed,
     //including the Total Retry Count and the most recent bit vector of Quads that provided the NACK(s) .

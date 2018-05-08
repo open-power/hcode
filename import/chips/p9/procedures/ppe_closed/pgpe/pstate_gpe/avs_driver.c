@@ -87,7 +87,7 @@ uint8_t pollVoltageTransDone(void)
     uint32_t  ocbRegReadData = 0;
     uint8_t   ongoingFlag = 1;
     uint8_t   count = 0;
-    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
 
     // The point of MAX_POLL_COUNT_AVS is to verify that ongoingFlag turns to
     //   zero very fast. Otherwise, something wrong with this i/f and error out.
@@ -124,7 +124,7 @@ uint8_t driveIdleFrame(void)
 {
     uint8_t  rc = 0;
     uint32_t idleframe = 0xFFFFFFFF;
-    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
 
     // Clear sticky bits in o2s_status_reg
     out32(OCB_O2SCMD0A | BusMask , 0x40000000);
@@ -148,12 +148,12 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
     uint32_t ocbRegWriteData = 0;
     uint32_t ocbRegReadData = 0;
 
-    uint32_t RailSelect  =  in32(OCB_OCCS2) & AVS_RAIL_NUM_MASK;
+    uint32_t RailSelect  =  in32(G_OCB_OCCS2) & AVS_RAIL_NUM_MASK;
     uint32_t StartCode   = 1;
     uint32_t CmdType     = 0; // 0:write+commit, 1:write+hold, 2: d/c, 3:read
     uint32_t CmdGroup    = 0;
     uint32_t CRC         = 0;
-    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
 
     // Clear sticky bits in o2s_status_reg
     out32(OCB_O2SCMD0A | BusMask, 0x40000000);
@@ -228,14 +228,14 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
     uint32_t ocbRegReadData = 0;
     uint32_t ocbRegWriteData = 0;
 
-    uint32_t RailSelect  =  in32(OCB_OCCS2) & AVS_RAIL_NUM_MASK;
+    uint32_t RailSelect  =  in32(G_OCB_OCCS2) & AVS_RAIL_NUM_MASK;
     uint32_t StartCode   = 1;
     uint32_t CmdType     = 3; // 0:write+commit, 1:write+hold, 2: d/c, 3:read
     uint32_t CmdGroup    = 0;
     uint32_t Reserved    = 0xFFFF;
     uint32_t CRC         = 0;
 
-    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
 
     // Clear sticky bits in o2s_status_reg
     out32(OCB_O2SCMD0A | BusMask, 0x40000000);
@@ -328,7 +328,7 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
     // OCI to SPIPMBus (O2S) bridge initialization
     //
 
-    uint32_t BusMask = (in32(OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
 
     // O2SCTRLF
     ocbRegReadData = in32(OCB_O2SCTRLF0A | BusMask);

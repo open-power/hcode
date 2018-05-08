@@ -72,6 +72,27 @@ PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
 };
 
 
+//We define a global literal for these register addresses
+//This way compiler put them in .sdata area, and the address
+//can be loaded with one instruction using r13 as offset into
+//sdata area. The change helped save about 448 bytes of code space.
+//Note, some register's address were not moved to using global literals
+//because in some cases they registers are accessed few times or they are
+//used inside a loop. In both cases, either no code reduction was observed
+//or resulted in code increase.
+uint32_t G_OCB_QCSR = OCB_QCSR;
+uint32_t G_OCB_OCCS2 = OCB_OCCS2;
+uint32_t G_OCB_OCCFLG = OCB_OCCFLG;
+uint32_t G_OCB_OCCFLG_OR = OCB_OCCFLG_OR;
+uint32_t G_OCB_OCCFLG_CLR = OCB_OCCFLG_CLR;
+uint32_t G_OCB_OCCFLG2 = OCB_OCCFLG2;
+uint32_t G_OCB_OISR0_CLR = OCB_OISR0_CLR;
+uint32_t G_OCB_OIMR0_OR = OCB_OIMR0_OR;
+uint32_t G_OCB_OIMR1_OR = OCB_OIMR1_OR;
+uint32_t G_OCB_OIMR0_CLR = OCB_OIMR0_CLR;
+uint32_t G_OCB_OIMR1_CLR = OCB_OIMR1_CLR;
+
+
 EXTERNAL_IRQ_TABLE_START
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_DEBUGGER
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_TRACE_TRIGGER
@@ -193,7 +214,7 @@ main(int argc, char** argv)
                   timebase);
 
     // Read OCC_SCRATCH[PGPE_DEBUG_TRAP_ENABLE]
-    uint32_t occScr2 = in32(OCB_OCCS2);
+    uint32_t occScr2 = in32(G_OCB_OCCS2);
 
     if (occScr2 & BIT32(PGPE_DEBUG_TRAP_ENABLE))
     {
@@ -203,8 +224,8 @@ main(int argc, char** argv)
 
     PK_TRACE("Clear OCC LFIR[gpe2_halted] and OISR[gpe2_error and xstop] bits upon PGPE boot");
     GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(24));
-    out32(OCB_OISR0_CLR, (BIT32(7) | BIT32(15)));
-    out32(OCB_OIMR0_CLR, (BIT32(7) | BIT32(15)));
+    out32(G_OCB_OISR0_CLR, (BIT32(7) | BIT32(15)));
+    out32(G_OCB_OIMR0_CLR, (BIT32(7) | BIT32(15)));
 
     // Initialize the thread control block for G_p9_pgpe_thread_process_requests
     pk_thread_create(&G_p9_pgpe_thread_process_requests,
@@ -265,7 +286,7 @@ main(int argc, char** argv)
     p9_pgpe_irq_init();
 
     g_oimr_override |= BIT64(49);
-    out32(OCB_OIMR1_OR, BIT32(17)); //Disable PCB_INTR_TYPE4
+    out32(G_OCB_OIMR1_OR, BIT32(17)); //Disable PCB_INTR_TYPE4
 
     p9_pgpe_optrace_init();
 

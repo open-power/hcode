@@ -44,6 +44,11 @@
 #ifndef _P9_PGPE_IRQ_H_
 #define _P9_PGPE_IRQ_H_
 
+extern uint32_t G_OCB_OIMR1_OR;
+extern uint32_t G_OCB_OIMR1_CLR;
+extern uint32_t G_OCB_OIMR0_OR;
+extern uint32_t G_OCB_OIMR0_CLR;
+
 // We define four levels of TRACE outputs:
 // _INF:  Trace level used for main informational events.
 // _DBG:  Trace level used for expanded debugging.
@@ -114,14 +119,14 @@ pk_irq_vec_restore( PkMachineContext* context)
 
     if (g_oimr_stack_ctr >= 0)
     {
-        out32( OCB_OIMR0_CLR, (uint32_t)((IRQ_VEC_ALL_OUR_IRQS |
-                                          g_oimr_override_stack[g_oimr_stack_ctr]) >> 32));
-        out32( OCB_OIMR1_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS |
-                                         g_oimr_override_stack[g_oimr_stack_ctr]));
-        out32( OCB_OIMR0_OR,
+        out32( G_OCB_OIMR0_CLR, (uint32_t)((IRQ_VEC_ALL_OUR_IRQS |
+                                            g_oimr_override_stack[g_oimr_stack_ctr]) >> 32));
+        out32( G_OCB_OIMR1_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS |
+                                           g_oimr_override_stack[g_oimr_stack_ctr]));
+        out32( G_OCB_OIMR0_OR,
                (uint32_t)((ext_irq_vectors_gpe[g_oimr_stack[g_oimr_stack_ctr]][IDX_MASK_VEC] |
                            g_oimr_override) >> 32));
-        out32( OCB_OIMR1_OR,
+        out32( G_OCB_OIMR1_OR,
                (uint32_t)(ext_irq_vectors_gpe[g_oimr_stack[g_oimr_stack_ctr]][IDX_MASK_VEC] |
                           g_oimr_override));
         // Restore the prty level tracker to the task that was interrupted, if any.

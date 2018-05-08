@@ -63,7 +63,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
 
     //Upon PGPE Boot, if OCC_FLAGS[PGPE_PSTATE_PROTOCOL_ACTIVATE] is set, then we start Pstart here, and not wait
     //for an IPC to come from OCC
-    occFlag.value = in32(OCB_OCCFLG);
+    occFlag.value = in32(G_OCB_OCCFLG);
 
     if (occFlag.value & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVATE))
     {
@@ -77,7 +77,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         pk_irq_sub_critical_enter(&ctx);
         p9_pgpe_pstate_start(PSTATE_START_OCC_FLAG);
         G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.psComputed.fields.glb << 16) | (in32(
-                                          OCB_QCSR) >> 16);
+                                          G_OCB_QCSR) >> 16);
         p9_pgpe_optrace(PRC_START_STOP);
         pk_irq_sub_critical_exit(&ctx);
     }
@@ -86,10 +86,10 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
     // Set OCC Scratch2[PGPE_ACTIVE] and start updating beacon,
     // so that external world knows that PGPE is UP
     G_pgpe_pstate_record.updatePGPEBeacon = 1;
-    occScr2 = in32(OCB_OCCS2);
+    occScr2 = in32(G_OCB_OCCS2);
     occScr2 |= BIT32(PGPE_ACTIVE);
-    out32(OCB_OCCS2, occScr2);
-    PK_TRACE_INF("Setting PGPE_ACTIVE in OCC SCRATCH2 addr %X = %X", OCB_OCCS2, occScr2);
+    out32(G_OCB_OCCS2, occScr2);
+    PK_TRACE_INF("Setting PGPE_ACTIVE in OCC SCRATCH2 addr %X = %X", G_OCB_OCCS2, occScr2);
 
     //Thread Loop
     while(1)
@@ -109,14 +109,14 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         //Loop while Pstate is ACTIVE
         while(G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
         {
-            //If a VDM prolonged droop happened, then we set OCB_OCCFLG[PGPE_PM_RESET_SUPPRESS]
+            //If a VDM prolonged droop happened, then we set G_OCB_OCCFLG[PGPE_PM_RESET_SUPPRESS]
             //It should be cleared once VDM prolonged droop condition has subsided and all pending IPCs
             //from OCC have been processed and acked. Note, that pending processing and pending ack are
             //only set inside IPC handler, and it's possible that while PGPE is stuck in the VDM prolonged
             //droop loop(the p9_pgpe_pstate_do_step function call) an IPC interrupt happened, so
             //PGPE must be given a change to take IPC interrupt and see if any other IPC from OCC
             //needs processing.
-            if ((in32(OCB_OCCFLG) & BIT32(PGPE_PM_RESET_SUPPRESS)))
+            if ((in32(G_OCB_OCCFLG) & BIT32(PGPE_PM_RESET_SUPPRESS)))
             {
                 if ((G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 0) &&
                     (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 0)  &&
@@ -125,7 +125,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                     (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_processing == 0)  &&
                     (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_processing == 0))
                 {
-                    out32(OCB_OCCFLG_CLR, BIT32(PGPE_PM_RESET_SUPPRESS));
+                    out32(G_OCB_OCCFLG_CLR, BIT32(PGPE_PM_RESET_SUPPRESS));
                 }
             }
 
@@ -249,7 +249,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                                 G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
                                 ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
                                 p9_pgpe_optrace(ACK_QUAD_ACTV);
-                                GPE_PUTSCOM(OCB_OCCFLG_CLR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Clear OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
+                                GPE_PUTSCOM(G_OCB_OCCFLG_CLR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Clear OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
 
                             }
                         }
