@@ -113,7 +113,7 @@ void p9_pgpe_fit_init()
 
 __attribute__((always_inline)) inline void handle_core_throttle()
 {
-    uint32_t config = in32(OCB_OCCS2); //bits 16-18 in OCC Scratch Register 2
+    uint32_t config = in32(G_OCB_OCCS2); //bits 16-18 in OCC Scratch Register 2
     uint32_t run = (config >> 14) & 0x3; //this looks at the inject and enable bits, if either are high we run
 
     if(run) //Currently running
@@ -146,7 +146,7 @@ __attribute__((always_inline)) inline void handle_core_throttle()
 
             if(inject == 1)
             {
-                out32(OCB_OCCS2, (config & 0xFFFFBFFF)); //write out to indicate inject has finished
+                out32(G_OCB_OCCS2, (config & 0xFFFFBFFF)); //write out to indicate inject has finished
             }
         }
 
@@ -169,7 +169,7 @@ __attribute__((always_inline)) inline void handle_quad_hb_update()
 {
     uint32_t q;
     ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
+    qcsr.value = in32(G_OCB_QCSR);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -209,9 +209,9 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
 {
     ocb_occflg_t occFlag;
     //Read OCC_FLAGS
-    occFlag.value = in32(OCB_OCCFLG);
+    occFlag.value = in32(G_OCB_OCCFLG);
 
-    if(in32(OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_FIT_ERR_INJ))
+    if(in32(G_OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_FIT_ERR_INJ))
     {
         PK_TRACE_ERR("FIT_IPC_ERROR_INJECT TRAP");
         PK_PANIC(PGPE_SET_PMCR_TRAP_INJECT);
@@ -243,9 +243,9 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
                 //set error bit
                 if(G_pgpe_pstate_record.pstatesStatus != PSTATE_ACTIVE)
                 {
-                    uint32_t occScr2 = in32(OCB_OCCS2);
+                    uint32_t occScr2 = in32(G_OCB_OCCS2);
                     occScr2 |= BIT32(PGPE_SAFE_MODE_ERROR);
-                    out32(OCB_OCCS2, occScr2);
+                    out32(G_OCB_OCCS2, occScr2);
                 }
                 //Otherwise, process safe mode request
                 else
@@ -269,9 +269,9 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
 //number of FIT interrupts
 __attribute__((always_inline)) inline void handle_aux_task()
 {
-    if(in32(OCB_OCCFLG) & BIT32(AUX_THREAD_ACTIVATE))
+    if(in32(G_OCB_OCCFLG) & BIT32(AUX_THREAD_ACTIVATE))
     {
-        out32(OCB_OCCFLG_OR, BIT32(AUX_THREAD_ACTIVE));
+        out32(G_OCB_OCCFLG_OR, BIT32(AUX_THREAD_ACTIVE));
 
         if(G_aux_task_count == G_aux_task_count_threshold)
         {
@@ -285,7 +285,7 @@ __attribute__((always_inline)) inline void handle_aux_task()
     }
     else
     {
-        out32(OCB_OCCFLG_CLR, BIT32(AUX_THREAD_ACTIVE));
+        out32(G_OCB_OCCFLG_CLR, BIT32(AUX_THREAD_ACTIVE));
     }
 }
 

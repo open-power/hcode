@@ -173,8 +173,8 @@ void pk_irq_save_and_set_mask(uint32_t iPrtyLvl)
     //  the OIMR to a known value when we exit our thread.
     if (++g_oimr_stack_ctr < NUM_EXT_IRQ_PRTY_LEVELS)
     {
-        //prev: g_oimr_stack[g_oimr_stack_ctr] = ((uint64_t)in32(OCB_OIMR0))<<32 |
-        //                                 (uint64_t)in32(OCB_OIMR1);
+        //prev: g_oimr_stack[g_oimr_stack_ctr] = ((uint64_t)in32(G_OCB_OIMR0))<<32 |
+        //                                 (uint64_t)in32(G_OCB_OIMR1);
         // Make a note of present prty level and then update tracker to new prty level.
         g_oimr_stack[g_oimr_stack_ctr] = g_current_prty_level;
         g_current_prty_level = iPrtyLvl; // Update prty level tracker.
@@ -192,16 +192,16 @@ void pk_irq_save_and_set_mask(uint32_t iPrtyLvl)
     // This includes all those IRQs which belong to this instance as well as
     // those high-prty IRQs shared with the other instances.
     //
-    out32(OCB_OIMR0_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS >> 32));
-    out32(OCB_OIMR1_CLR, (uint32_t)IRQ_VEC_ALL_OUR_IRQS);
+    out32(G_OCB_OIMR0_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS >> 32));
+    out32(G_OCB_OIMR1_CLR, (uint32_t)IRQ_VEC_ALL_OUR_IRQS);
 
     // Second, mask IRQs belonging to this task and lower prty tasks.
     // Note, that we do not modify the permanently disabled IRQs, such as the
     //  _RESERVED_ ones. Nor do we touch other instances' IRQs. Iow, the
     //  IDX_PRTY_LVL_DISABLED mask is  NOT  part of the mask we apply below.
-    out32(OCB_OIMR0_OR, (uint32_t)((ext_irq_vectors_gpe[iPrtyLvl][IDX_MASK_VEC] |
-                                    g_oimr_override) >> 32) );
-    out32(OCB_OIMR1_OR, (uint32_t)(ext_irq_vectors_gpe[iPrtyLvl][IDX_MASK_VEC] |
-                                   g_oimr_override) );
+    out32(G_OCB_OIMR0_OR, (uint32_t)((ext_irq_vectors_gpe[iPrtyLvl][IDX_MASK_VEC] |
+                                      g_oimr_override) >> 32) );
+    out32(G_OCB_OIMR1_OR, (uint32_t)(ext_irq_vectors_gpe[iPrtyLvl][IDX_MASK_VEC] |
+                                     g_oimr_override) );
 
 }

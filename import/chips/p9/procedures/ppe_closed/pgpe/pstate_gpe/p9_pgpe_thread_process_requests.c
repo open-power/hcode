@@ -82,7 +82,7 @@ void p9_pgpe_thread_process_requests(void* arg)
         (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_VRATIO_MODIFIER) ||
         (G_pgpe_header_data->g_pgpe_qm_flags & PGPE_FLAG_ENABLE_FRATIO))
     {
-        out32(OCB_OCCFLG_OR, BIT32(29));
+        out32(G_OCB_OCCFLG_OR, BIT32(29));
     }
 
     PK_TRACE_DBG("PTH:Inited");
@@ -380,7 +380,7 @@ inline void p9_pgpe_process_sgpe_updt_active_quads()
             if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED && G_pgpe_pstate_record.pstatesStatus == PSTATE_ACTIVE)
             {
                 PK_TRACE_INF("PTH: OCCLFG[30] set");
-                out32(OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
+                out32(G_OCB_OCCFLG_OR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Set OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
                 ack_now = 0;
             }
             else
@@ -431,7 +431,7 @@ inline void p9_pgpe_process_start_stop()
         args->msg_cb.rc = PGPE_RC_SUCCESS;
         G_pgpe_optrace_data.word[0] = (START_STOP_IPC << 24) |
                                       (G_pgpe_pstate_record.psComputed.fields.glb << 16) |
-                                      (in32(OCB_QCSR) >> 16);
+                                      (in32(G_OCB_QCSR) >> 16);
         p9_pgpe_optrace(PRC_START_STOP);
 
     }
@@ -493,7 +493,7 @@ inline void p9_pgpe_process_start_stop()
                 G_pgpe_optrace_data.word[0] = (args->pmcr_owner << 25 ) |
                                               (1 << 24) |
                                               (G_pgpe_pstate_record.psCurr.fields.glb << 16) |
-                                              (in32(OCB_QCSR) >> 16);
+                                              (in32(G_OCB_QCSR) >> 16);
                 p9_pgpe_optrace(PRC_START_STOP);
             }
             else
@@ -518,7 +518,7 @@ inline void p9_pgpe_process_start_stop()
                 p9_pgpe_pstate_stop();
                 args->msg_cb.rc = PGPE_RC_SUCCESS;
                 G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.psCurr.fields.glb << 16) |
-                                              (in32(OCB_QCSR) >> 16);
+                                              (in32(G_OCB_QCSR) >> 16);
                 p9_pgpe_optrace(PRC_START_STOP);
             }
         }
@@ -686,7 +686,7 @@ inline void p9_pgpe_process_wof_ctrl()
         args->msg_cb.rc = PGPE_RC_SUCCESS;
         G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                       (args->action << 16) |
-                                      (in32(OCB_QCSR) >> 16);
+                                      (in32(G_OCB_QCSR) >> 16);
         p9_pgpe_optrace(PRC_WOF_CTRL);
     }
     else if (G_pgpe_pstate_record.pstatesStatus & ( PSTATE_PM_SUSPENDED | PSTATE_PM_SUSPEND_PENDING |
@@ -730,7 +730,7 @@ inline void p9_pgpe_process_wof_ctrl()
 
                 G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                               (args->action << 16) |
-                                              (in32(OCB_QCSR) >> 16);
+                                              (in32(G_OCB_QCSR) >> 16);
                 p9_pgpe_optrace(PRC_WOF_CTRL);
             }
             else
@@ -753,7 +753,7 @@ inline void p9_pgpe_process_wof_ctrl()
 
                 G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                               (args->action << 16) |
-                                              (in32(OCB_QCSR) >> 16);
+                                              (in32(G_OCB_QCSR) >> 16);
                 p9_pgpe_optrace(PRC_WOF_CTRL);
                 args->msg_cb.rc = PGPE_RC_SUCCESS;
             }
@@ -991,7 +991,7 @@ inline void p9_pgpe_process_registration()
     ocb_ccsr_t ccsr;
     ccsr.value = in32(OCB_CCSR);
     ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
+    qcsr.value = in32(G_OCB_QCSR);
     uint32_t  q, c, oldActiveDB, oldActiveQuads, unicastCoresVector = 0, quadsRegisterProcess;
     uint32_t quadAckExpect = 0;
     uint64_t value;
@@ -1033,7 +1033,7 @@ inline void p9_pgpe_process_registration()
                          G_pgpe_pstate_record.activeDB);
 
             G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.psCurr.fields.glb << 16)
-                                          | (in32(OCB_QCSR) >> 16);
+                                          | (in32(G_OCB_QCSR) >> 16);
             p9_pgpe_optrace(PRC_PCB_T4);
         }
     }
@@ -1242,7 +1242,7 @@ inline void p9_pgpe_process_ack_sgpe_suspend_stop()
 
     //Change PMCR ownership
     PK_TRACE_INF("SUSP: Setting SCOM Ownership of PMCRs");
-    qcsr.value = in32(OCB_QCSR);
+    qcsr.value = in32(G_OCB_QCSR);
 
     //Set LMCR for each CME
     for (q = 0; q < MAX_QUADS; q++)
@@ -1265,10 +1265,10 @@ inline void p9_pgpe_process_ack_sgpe_suspend_stop()
 
     //OP Trace and Set OCCS2[PM_COMPLEX_SUSPENDED)
     p9_pgpe_optrace(ACK_PM_SUSP);
-    uint32_t occScr2 = in32(OCB_OCCS2);
+    uint32_t occScr2 = in32(G_OCB_OCCS2);
     occScr2 |= BIT32(PM_COMPLEX_SUSPENDED);
     G_pgpe_pstate_record.pstatesStatus = PSTATE_PM_SUSPENDED;
-    out32(OCB_OCCS2, occScr2);
+    out32(G_OCB_OCCS2, occScr2);
 
     PK_TRACE_INF("SUSP: Suspend Stop Processed");
 }

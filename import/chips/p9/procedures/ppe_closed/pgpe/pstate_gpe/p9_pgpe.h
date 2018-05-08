@@ -110,7 +110,7 @@ enum PGPE_WOF_CTRL
     (QUAD0_EX1_MASK >> (q*2))
 
 #define PGPE_OPTIONAL_TRACE_AND_PANIC(panic_code) \
-    if (in32(OCB_OCCS2) & BIT32(PM_DEBUG_HALT_ENABLE)) { \
+    if (in32(G_OCB_OCCS2) & BIT32(PM_DEBUG_HALT_ENABLE)) { \
         G_pgpe_optrace_data.word[0] = panic_code; \
         p9_pgpe_optrace(HALT_CONDITION ); \
         PK_PANIC(panic_code); }
@@ -119,6 +119,19 @@ enum PGPE_WOF_CTRL
     G_pgpe_optrace_data.word[0] = panic_code; \
     p9_pgpe_optrace(HALT_CONDITION ); \
     PK_PANIC(panic_code);
+
+
+extern uint32_t G_OCB_QCSR;
+extern uint32_t G_OCB_OCCS2;
+extern uint32_t G_OCB_OCCFLG;
+extern uint32_t G_OCB_OCCFLG_OR;
+extern uint32_t G_OCB_OCCFLG_CLR;
+extern uint32_t G_OCB_OCCFLG2;
+extern uint32_t G_OCB_OISR0_CLR;
+extern uint32_t G_OCB_OIMR1_OR;
+extern uint32_t G_OCB_OIMR1_CLR;
+extern uint32_t G_OCB_OIMR0_OR;
+extern uint32_t G_OCB_OIMR0_CLR;
 
 
 /// PGPE PState

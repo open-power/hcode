@@ -56,8 +56,8 @@ void p9_pgpe_irq_init()
     p9_pgpe_ocb_hb_error_init();
 
     //Setup SGPE_ERR(OISR[8]) and PVREF_ERR(OISR[20])
-    out32(OCB_OISR0_CLR, BIT32(8) | BIT32(20));//Clear any pending interrupts
-    out32(OCB_OIMR0_CLR, BIT32(8) | BIT32(20));//Unmask interrupts
+    out32(G_OCB_OISR0_CLR, BIT32(8) | BIT32(20));//Clear any pending interrupts
+    out32(G_OCB_OIMR0_CLR, BIT32(8) | BIT32(20));//Unmask interrupts
 }
 
 //
@@ -86,8 +86,8 @@ void p9_pgpe_ocb_hb_error_init()
 
     out64(OCB_OCCHBR, 0); //Clear and Disable OCC Heartbeat Register
     GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(OCC_HB_ERROR_FIR));
-    out32(OCB_OISR0_CLR, BIT32(2));//Clear any pending interrupts
-    out32(OCB_OIMR0_CLR, BIT32(2));//Unmask interrupt
+    out32(G_OCB_OISR0_CLR, BIT32(2));//Clear any pending interrupts
+    out32(G_OCB_OIMR0_CLR, BIT32(2));//Unmask interrupt
 }
 
 //
@@ -145,7 +145,7 @@ void p9_pgpe_irq_handler_ocb_err()
 
     PK_TRACE_INF("OCB FIR Detected");
 
-    out32(OCB_OISR0_CLR, BIT32(2));
+    out32(G_OCB_OISR0_CLR, BIT32(2));
 
     PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_OCC_FIR_IRQ);
 
@@ -188,8 +188,8 @@ void p9_pgpe_irq_handler_sgpe_err()
     PK_TRACE_INF("SGPE Error");
 
     g_oimr_override |=   BIT64(8);
-    out32(OCB_OIMR0_OR,  BIT32(8));
-    out32(OCB_OISR0_CLR, BIT32(8));
+    out32(G_OCB_OIMR0_OR,  BIT32(8));
+    out32(G_OCB_OISR0_CLR, BIT32(8));
 
     //Optrace
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
@@ -226,7 +226,7 @@ void p9_pgpe_irq_handler_pvref_err()
 {
     PK_TRACE_INF("PVREF Error");
 
-    out32(OCB_OISR0_CLR, BIT32(20));
+    out32(G_OCB_OISR0_CLR, BIT32(20));
 
     //Optrace
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
@@ -265,8 +265,8 @@ void p9_pgpe_irq_handler_system_xstop(void* arg, PkIrqId irq)
     PkMachineContext  ctx;
 
     g_oimr_override |=   BIT64(15);
-    out32(OCB_OIMR0_OR,  BIT32(15));
-    out32(OCB_OISR0_CLR, BIT32(15));
+    out32(G_OCB_OIMR0_OR,  BIT32(15));
+    out32(G_OCB_OISR0_CLR, BIT32(15));
 
     //Optrace
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
@@ -296,7 +296,7 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
     uint32_t c;
     uint32_t opit1pra;
 
-    if(in32(OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ))
+    if(in32(G_OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ))
     {
         PK_TRACE_ERR("PCB TYPE1 ERROR INJECT TRAP");
         PK_PANIC(PGPE_SET_PMCR_TRAP_INJECT);
@@ -425,7 +425,7 @@ void p9_pgpe_irq_handler_cme_err()
     uint64_t value, baseVal;
     qppm_dpll_freq_t dpllFreq;
     ocb_qcsr_t qcsr;
-    qcsr.value = in32(OCB_QCSR);
+    qcsr.value = in32(G_OCB_QCSR);
     uint64_t cme_flags = 0;
 
     //Optrace
@@ -444,7 +444,7 @@ void p9_pgpe_irq_handler_cme_err()
     PK_TRACE_INF("CER:CME ERR opit5pr 0x%x", opit5pr);
 
     //If prolonged droop recovery is not active
-    if (!(in32(OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
+    if (!(in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
     {
         p9_pgpe_pstate_write_core_throttle(CORE_IFU_THROTTLE, RETRY);
     }
@@ -564,7 +564,7 @@ void p9_pgpe_irq_handler_cme_err()
     }
 
     //If prolonged droop recovery is not active
-    if (!(in32(OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
+    if (!(in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
     {
         p9_pgpe_pstate_write_core_throttle(CORE_THROTTLE_OFF, RETRY);
     }
