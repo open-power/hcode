@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -29,15 +29,9 @@ if [ -e ./customrc ]; then
     source ./customrc
 fi
 
-GIT_ROOT=`git rev-parse --show-toplevel`
-if [ $? -ne 0 ]; then
-    echo "Could not find git root"
-    exit -1
-fi
-
 # Setup some global variables
 export PROJECT_NAME=HCODE
-export PROJECT_ROOT=$GIT_ROOT
+export PROJECT_ROOT=$ROOTDIR
 export TOOLSDIR=$PROJECT_ROOT/tools
 export PERLMODULES=$TOOLSDIR/perl.modules
 export HOOKSDIR=$PROJECT_ROOT/.git/hooks
