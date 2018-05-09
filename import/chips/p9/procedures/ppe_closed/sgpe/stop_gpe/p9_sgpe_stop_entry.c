@@ -69,7 +69,7 @@ p9_sgpe_stop_entry()
     MARK_TAG(BEGINSCOPE_STOP_ENTRY, 0)
     //================================
 
-    if( in32(OCB_OCCFLG2) & BIT32(OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ))
+    if( in32(G_OCB_OCCFLG2) & BIT32(OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ))
     {
         PK_TRACE_ERR("SGPE STOP ENTRY ERROR INJECT TRAP");
         PK_PANIC(SGPE_STOP_ENTRY_TRAP_INJECT);
@@ -154,7 +154,7 @@ p9_sgpe_stop_entry()
                 G_sgpe_stop_record.group.quad[VECTOR_ENTRY] |= BIT32(qloop);
 
                 ocb_qssr_t qssr = {0};
-                qssr.value      = in32(OCB_QSSR);
+                qssr.value      = in32(G_OCB_QSSR);
 
                 // check qssr for already stopped ex
                 G_sgpe_stop_record.group.ex01[qloop] =
@@ -420,7 +420,7 @@ p9_sgpe_stop_entry()
         }
 
         PK_TRACE("Update QSSR: stop_entry_ongoing");
-        out32(OCB_QSSR_OR, BIT32(qloop + 20));
+        out32(G_OCB_QSSR_OR, BIT32(qloop + 20));
 
         //====================================================
         MARK_TAG(SE_STOP_L2_CLKS, ((ex << 6) | (32 >> qloop)))
@@ -555,8 +555,8 @@ p9_sgpe_stop_entry()
         }
 
         PK_TRACE("Update QSSR: l2_stopped, drop stop_entry_ongoing");
-        out32(OCB_QSSR_CLR, BIT32(qloop + 20));
-        out32(OCB_QSSR_OR, (ex << SHIFT32((qloop << 1) + 1)));
+        out32(G_OCB_QSSR_CLR, BIT32(qloop + 20));
+        out32(G_OCB_QSSR_OR, (ex << SHIFT32((qloop << 1) + 1)));
 
         PK_TRACE_DBG("SE.8C: L2 Clock Sync Dropped");
 
@@ -643,7 +643,7 @@ p9_sgpe_stop_entry()
         GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
 
         PK_TRACE("Update QSSR: stop_entry_ongoing");
-        out32(OCB_QSSR_OR, BIT32(qloop + 20));
+        out32(G_OCB_QSSR_OR, BIT32(qloop + 20));
 
         PK_TRACE_INF("SE.11A: Quad[%d] EX_PG[%d] Shutting Cache Down", qloop, ex);
 
@@ -721,14 +721,14 @@ p9_sgpe_stop_entry()
 
 #if !SKIP_L3_PURGE_ABORT
 
-            if ((in32(OCB_OISR1) & (BITS32(15, 2) | BIT32(19))) &&
+            if ((in32(G_OCB_OISR1) & (BITS32(15, 2) | BIT32(19))) &&
                 // Skip L3 Purge Abort check if in Block Wakeup mode
                 (!(G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] & BIT32(qloop))))
             {
                 PK_TRACE("Abort: interrupt detected");
 
-                if ((in32(OCB_OPITNPRA(2)) & BITS32((qloop << 2), 4)) ||
-                    (in32(OCB_OPITNPRA(3)) & BITS32((qloop << 2), 4)))
+                if ((in32(G_OCB_OPIT2PRA) & BITS32((qloop << 2), 4)) ||
+                    (in32(G_OCB_OPIT3PRA) & BITS32((qloop << 2), 4)))
                 {
                     PK_TRACE("Abort: core interrupt detected");
 
@@ -746,7 +746,7 @@ p9_sgpe_stop_entry()
                     }
                 }
 
-                if ((in32(OCB_OPIT6PRB) & BIT32(qloop)) &&
+                if ((in32(G_OCB_OPIT6PRB) & BIT32(qloop)) &&
                     (in32(OCB_OPIT6QN(qloop)) & TYPE6_PAYLOAD_EXIT_EVENT))
                 {
                     PK_TRACE_DBG("Abort: quad wakeup detected");
@@ -913,7 +913,7 @@ p9_sgpe_stop_entry()
         //   4. optionally finishes the entry (if not done above)
 
         if ((!ipc_quad_entry) &&
-            (in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+            (in32(G_OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
             G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY]) // entry into STOP11
         {
@@ -1323,10 +1323,10 @@ p9_sgpe_stop_entry()
         GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
 
         PK_TRACE("Update QSSR: quad_stopped");
-        out32(OCB_QSSR_OR, BIT32(qloop + 14));
+        out32(G_OCB_QSSR_OR, BIT32(qloop + 14));
 
         PK_TRACE("Update QSSR: drop stop_entry_ongoing");
-        out32(OCB_QSSR_CLR, BIT32(qloop + 20));
+        out32(G_OCB_QSSR_CLR, BIT32(qloop + 20));
 
         G_sgpe_stop_record.state[qloop].act_state_q   = STOP_LEVEL_11;
         G_sgpe_stop_record.group.quad[VECTOR_ACTIVE] &= ~BIT32(qloop);
@@ -1343,7 +1343,7 @@ p9_sgpe_stop_entry()
 
 #if !SKIP_IPC
 
-    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+    if ((in32(G_OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
         G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
         G_sgpe_stop_record.group.quad[VECTOR_ENTRY])
     {

@@ -270,9 +270,9 @@ p9_cme_stop_entry()
     // pm_active is edge trigger because its level can be phantom
     // due to common-core constantly gives pm_active when core is stopped,
     // reading from EINR for raw signal, ignore EISR if EINR signal is gone
-    core     = (in32(CME_LCL_EISR) & BITS32(20, 2));
-    core_raw = (in32(CME_LCL_EINR) & BITS32(20, 2));
-    out32(CME_LCL_EISR_CLR, core);
+    core     = (in32(G_CME_LCL_EISR) & BITS32(20, 2));
+    core_raw = (in32(G_CME_LCL_EINR) & BITS32(20, 2));
+    out32(G_CME_LCL_EISR_CLR, core);
     core     = (core & core_raw) >> SHIFT32(21);
 
     // filter with partial good and running core mask
@@ -295,7 +295,7 @@ p9_cme_stop_entry()
     //       not implemented in DD1
     // bit1 is Recoverable Error
     // bit2 is Special Attention
-    if (((core & CME_MASK_C0) && (in32(CME_LCL_SISR)    & BITS32(13, 2))) ||
+    if (((core & CME_MASK_C0) && (in32(G_CME_LCL_SISR)    & BITS32(13, 2))) ||
         ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS64SH(61, 2))))
     {
         PK_TRACE_INF("WARNING: Attn/Recov Present, Abort Entry and Return");
@@ -435,10 +435,10 @@ p9_cme_stop_entry()
 #endif
 
             PK_TRACE("Request PCB mux via SICR[10/11]");
-            out32(CME_LCL_SICR_OR, core << SHIFT32(11));
+            out32(G_CME_LCL_SICR_OR, core << SHIFT32(11));
 
             // Poll Infinitely for PCB Mux Grant
-            while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+            while((core & (in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core);
 
             PK_TRACE("PCB Mux Granted on Core[%d]", core);
 
@@ -464,8 +464,8 @@ p9_cme_stop_entry()
                 // Note: Only Stop1 requires pulsing entry ack to pc,
                 //       thus this is NDD1 only as well.
                 PK_TRACE("Pulse STOP entry acknowledgement to PC via SICR[0/1]");
-                out32(CME_LCL_SICR_OR,  core_stop1 << SHIFT32(1));
-                out32(CME_LCL_SICR_CLR, core_stop1 << SHIFT32(1));
+                out32(G_CME_LCL_SICR_OR,  core_stop1 << SHIFT32(1));
+                out32(G_CME_LCL_SICR_CLR, core_stop1 << SHIFT32(1));
 
                 if (core & CME_MASK_C0)
                 {
@@ -572,16 +572,16 @@ p9_cme_stop_entry()
             wrteei(0);
 
             PK_TRACE("HW407385: Assert block interrupt to PC via SICR[2/3]");
-            out32(CME_LCL_SICR_OR, core << SHIFT32(3));
+            out32(G_CME_LCL_SICR_OR, core << SHIFT32(3));
 
             PK_TRACE("HW407385: Waking up the core(pm_exit=1) via SICR[4/5]");
-            out32(CME_LCL_SICR_OR, core << SHIFT32(5));
+            out32(G_CME_LCL_SICR_OR, core << SHIFT32(5));
 
             CME_PM_EXIT_DELAY
 
             PK_TRACE("HW407385: Polling for core wakeup(pm_active=0) via EINR[20/21]");
 
-            while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
+            while((in32(G_CME_LCL_EINR)) & (core << SHIFT32(21)));
 
             wrteei(1);
 
@@ -866,11 +866,11 @@ p9_cme_stop_entry()
             //=============================
 
             PK_TRACE("Assert halt STOP override disable via LMCR[14/15]");
-            out32(CME_LCL_LMCR_OR, (core << SHIFT32(15)));
+            out32(G_CME_LCL_LMCR_OR, (core << SHIFT32(15)));
 
 #if SPWU_AUTO
             PK_TRACE("Assert auto special wakeup disable via LMCR[12/13]");
-            out32(CME_LCL_LMCR_OR, (core << SHIFT32(13)));
+            out32(G_CME_LCL_LMCR_OR, (core << SHIFT32(13)));
 #endif
 
 
@@ -880,13 +880,13 @@ p9_cme_stop_entry()
 #endif
 
             PK_TRACE("Assert core-L2 + core-CC quiesces via SICR[6/7,8/9]");
-            out32(CME_LCL_SICR_OR, (core << SHIFT32(7)) | (core << SHIFT32(9)));
+            out32(G_CME_LCL_SICR_OR, (core << SHIFT32(7)) | (core << SHIFT32(9)));
 
             PK_TRACE("Poll for L2 interface quiesced via SISR[30/31]");
 
             do
             {
-                lclr_data = in32(CME_LCL_SISR);
+                lclr_data = in32(G_CME_LCL_SISR);
             }
             while((lclr_data & core) != core);
 
@@ -953,17 +953,17 @@ p9_cme_stop_entry()
             wrteei(0);
 
             PK_TRACE("HW407385: Drop pm_exit via SICR[4/5]");
-            out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
+            out32(G_CME_LCL_SICR_CLR, core << SHIFT32(5));
 
             PK_TRACE("HW407385: Polling for core to stop(pm_active=1) via EINR[20/21]");
 
-            while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)));
+            while((~(in32(G_CME_LCL_EINR))) & (core << SHIFT32(21)));
 
             PK_TRACE("HW407385: Clear pm_active status via EISR[20/21]");
-            out32(CME_LCL_EISR_CLR, core << SHIFT32(21));
+            out32(G_CME_LCL_EISR_CLR, core << SHIFT32(21));
 
             PK_TRACE("HW407385: Drop block interrupt to PC via SICR[2/3]");
-            out32(CME_LCL_SICR_CLR, core << SHIFT32(3));
+            out32(G_CME_LCL_SICR_CLR, core << SHIFT32(3));
 
             wrteei(1);
 
@@ -1201,13 +1201,13 @@ p9_cme_stop_entry()
                 break;
             }
 
-            core_catchup = (in32(CME_LCL_EISR) & BITS32(20, 2)) >> SHIFT32(21);
+            core_catchup = (in32(G_CME_LCL_EISR) & BITS32(20, 2)) >> SHIFT32(21);
             core_catchup = core_catchup & G_cme_record.core_enabled &
                            G_cme_stop_record.core_running;
 
             if (core_catchup)
             {
-                out32(CME_LCL_EISR_CLR, core_catchup << SHIFT32(21));
+                out32(G_CME_LCL_EISR_CLR, core_catchup << SHIFT32(21));
                 origin_core  = core;
                 origin_level = target_level;
                 core = core_catchup;
@@ -1240,13 +1240,14 @@ p9_cme_stop_entry()
             //===========================
 
 #if !SKIP_ABORT
+
             core_wakeup = core & (~G_cme_stop_record.core_blockwu);
-            out32(CME_LCL_EIMR_CLR, (core_wakeup << SHIFT32(13)) |
+            out32(G_CME_LCL_EIMR_CLR, (core_wakeup << SHIFT32(13)) |
                   (core_wakeup << SHIFT32(15)) |
                   (core_wakeup << SHIFT32(17)));
             sync();
             wrteei(0);
-            out32(CME_LCL_EIMR_OR, BITS32(10, 12));
+            out32(G_CME_LCL_EIMR_OR, BITS32(10, 12));
             wrteei(1);
 
 #endif
@@ -1292,7 +1293,7 @@ p9_cme_stop_entry()
             // bit2 is Special Attention
             // bit3 is Core Checkstop
 
-            if ((core & CME_MASK_C0) && (in32(CME_LCL_SISR) & BITS32(12, 4)))
+            if ((core & CME_MASK_C0) && (in32(G_CME_LCL_SISR) & BITS32(12, 4)))
             {
                 PK_TRACE_INF("WARNING: Core0 Xstop/Attn/Recov Present, Abort Entry");
                 core -= CME_MASK_C0;
@@ -1324,7 +1325,7 @@ p9_cme_stop_entry()
 
 #if !STOP_PRIME
 
-            if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
+            if(in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
             {
                 PK_TRACE_DBG("Clear Poweron bit in VDMCR");
                 CME_PUTSCOM(PPM_VDMCR_CLR, core, BIT64(0));
@@ -1416,14 +1417,16 @@ p9_cme_stop_entry()
             //===========================
 
 #if !SKIP_ABORT
+
             core_wakeup = core & (~G_cme_stop_record.core_blockwu);
-            out32(CME_LCL_EIMR_CLR, (core_wakeup << SHIFT32(13)) |
+            out32(G_CME_LCL_EIMR_CLR, (core_wakeup << SHIFT32(13)) |
                   (core_wakeup << SHIFT32(15)) |
                   (core_wakeup << SHIFT32(17)));
             sync();
             wrteei(0);
-            out32(CME_LCL_EIMR_OR, BITS32(10, 12));
+            out32(G_CME_LCL_EIMR_OR, BITS32(10, 12));
             wrteei(1);
+
 #endif
 
             //===================
@@ -1475,8 +1478,8 @@ p9_cme_stop_entry()
                 // insert tlbie quiesce before ncu purge to avoid window condition
                 // of ncu traffic still happening when purging starts
                 // Note: chtm purge and drop tlbie quiesce will be done in SGPE
-                out32(CME_LCL_SICR_OR, BIT32(18) | BIT32(21));
-                out32(CME_LCL_SICR_OR, BIT32(22));
+                out32(G_CME_LCL_SICR_OR, BIT32(18) | BIT32(21));
+                out32(G_CME_LCL_SICR_OR, BIT32(22));
 
                 PK_TRACE("Poll for purged done via EISR[22,23]");
 
@@ -1486,15 +1489,15 @@ p9_cme_stop_entry()
 #if !SKIP_L2_PURGE_ABORT
 
                     if (!core_aborted &&
-                        (in32(CME_LCL_EINR) & BITS32(12, 6)))
+                        (in32(G_CME_LCL_EINR) & BITS32(12, 6)))
                     {
-                        if (in32(CME_LCL_EINR) &
+                        if (in32(G_CME_LCL_EINR) &
                             (((core & CME_MASK_C0) ? BIT32(12) : 0) | BIT32(14) | BIT32(16)))
                         {
                             core_aborted |= CME_MASK_C0;
                         }
 
-                        if (in32(CME_LCL_EINR) &
+                        if (in32(G_CME_LCL_EINR) &
                             (((core & CME_MASK_C1) ? BIT32(13) : 0) | BIT32(15) | BIT32(17)))
                         {
                             core_aborted |= CME_MASK_C1;
@@ -1507,17 +1510,17 @@ p9_cme_stop_entry()
                             //=======================================
 
                             PK_TRACE_INF("Abort: L2+NCU purge aborted by core[%d]", core_aborted);
-                            out32(CME_LCL_SICR_OR, BIT32(19) | BIT32(23));
+                            out32(G_CME_LCL_SICR_OR, BIT32(19) | BIT32(23));
                         }
                     }
 
 #endif
 
                 }
-                while((in32(CME_LCL_EISR) & BITS32(22, 2)) != BITS32(22, 2));
+                while((in32(G_CME_LCL_EISR) & BITS32(22, 2)) != BITS32(22, 2));
 
                 PK_TRACE("Drop L2+NCU purges and their possible aborts via SICR[18,19,22,23]");
-                out32(CME_LCL_SICR_CLR, (BITS32(18, 2) | BITS32(22, 2)));
+                out32(G_CME_LCL_SICR_CLR, (BITS32(18, 2) | BITS32(22, 2)));
 
                 PK_TRACE_DBG("SE.5A: L2 and NCU Purged");
 
@@ -1630,7 +1633,7 @@ p9_cme_stop_entry()
             sync();
 
             PK_TRACE("Clear special/regular wakeup after wakeup_notify = 1 since it is edge triggered");
-            out32(CME_LCL_EISR_CLR, (core << SHIFT32(15)) | (core << SHIFT32(17)));
+            out32(G_CME_LCL_EISR_CLR, (core << SHIFT32(15)) | (core << SHIFT32(17)));
 
             PK_TRACE_INF("SE.5B: Core[%d] Handed off to SGPE", core);
 
