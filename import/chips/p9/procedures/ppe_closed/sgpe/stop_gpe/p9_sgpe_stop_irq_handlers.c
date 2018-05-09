@@ -78,9 +78,9 @@ p9_sgpe_fit_handler()
 {
     PK_TRACE("FIT: Handler Fired");
 
-    uint32_t tpending = in32(OCB_OPITNPRA(PIG_TYPE3)) |
-                        in32(OCB_OPITNPRA(PIG_TYPE0)) |
-                        in32(OCB_OPIT6PRB);
+    uint32_t tpending = in32(G_OCB_OPIT0PRA) |
+                        in32(G_OCB_OPIT3PRA) |
+                        in32(G_OCB_OPIT6PRB);
 
     // reset counter if current processing stop8+
     if (G_sgpe_stop_record.wof.status_stop & STATUS_STOP_PROCESSING)
@@ -100,7 +100,7 @@ p9_sgpe_fit_handler()
         {
             PK_TRACE_INF("FIT: Stop8+ Stravation Detected");
             G_sgpe_stop_record.fit.starve_counter = 0;
-            out32(OCB_OIMR1_OR, BIT32(15));
+            out32(G_OCB_OIMR1_OR, BIT32(15));
             g_oimr_override |= BIT64(47);
         }
     }
@@ -114,11 +114,11 @@ p9_sgpe_pgpe_halt_handler(void* arg, PkIrqId irq)
     PkMachineContext   ctx;
 
     g_oimr_override |=   BIT64(7);
-    out32(OCB_OIMR0_OR,  BIT32(7));
+    out32(G_OCB_OIMR0_OR,  BIT32(7));
 
     PK_TRACE_INF("WARNING: PGPE Halted Due to Error");
     PK_OPTIONAL_DEBUG_HALT(SGPE_PGPE_ERROR_DETECTED);
-    out32(OCB_OISR0_CLR, BIT32(7));
+    out32(G_OCB_OISR0_CLR, BIT32(7));
 
     G_sgpe_stop_record.wof.update_pgpe = IPC_SGPE_PGPE_UPDATE_PGPE_HALTED;
 
@@ -133,11 +133,11 @@ p9_sgpe_checkstop_handler(void* arg, PkIrqId irq)
     PkMachineContext   ctx;
 
     g_oimr_override |=   BIT64(16);
-    out32(OCB_OIMR0_OR,  BIT32(16));
+    out32(G_OCB_OIMR0_OR,  BIT32(16));
 
     PK_TRACE_INF("WARNING: System Checkstop Detected");
     PK_OPTIONAL_DEBUG_HALT(SGPE_SYSTEM_CHECKSTOP_DETECTED);
-    out32(OCB_OISR0_CLR, BIT32(16));
+    out32(G_OCB_OISR0_CLR, BIT32(16));
 
     pk_irq_vec_restore(&ctx);
 }
@@ -345,7 +345,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
                             if (G_sgpe_stop_record.group.cack[block_index] ==
                                 G_sgpe_stop_record.group.creq[block_index])
                             {
-                                out32(OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
+                                out32(G_OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
                             }
                         }
                         // unblock entry/exit/both
@@ -373,7 +373,7 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
 
                                 G_sgpe_stop_record.group.core[block_index] = 0;
                                 G_sgpe_stop_record.group.qswu[block_index] = 0;
-                                out32(OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
+                                out32(G_OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
                             }
                         }
                     }
@@ -406,14 +406,14 @@ p9_sgpe_pig_cpayload_parser(const uint32_t type)
             {
                 tpayload = in32(OCB_OPIT2CN(cindex));
 
-                if ((in32(OCB_OPITNPRA(PIG_TYPE2)) & BIT32(cindex)) &&
+                if ((in32(G_OCB_OPIT2PRA) & BIT32(cindex)) &&
                     (!(tpayload & TYPE2_PAYLOAD_EXIT_EVENT)) &&
                     (tpayload & TYPE2_PAYLOAD_STOP_LEVEL))
                 {
                     PK_TRACE_INF("WARNING: Leftover dec wakeup following by new TYPE2 entry PIG");
                     cpayload = tpayload;
                 }
-                else if (in32(OCB_OPITNPRA(PIG_TYPE3)) & BIT32(cindex))
+                else if (in32(G_OCB_OPIT3PRA) & BIT32(cindex))
                 {
                     PK_TRACE_INF("WARNING: Leftover dec wakeup following by new TYPE3 PIG");
                     continue;
@@ -796,7 +796,7 @@ p9_sgpe_pig_thread_lanucher()
     {
         // block both type3, type0, type6
         // so another doesnt interrupt until next round
-        out32(OCB_OIMR1_OR, (BIT32(13) | BIT32(16) | BIT32(19)));
+        out32(G_OCB_OIMR1_OR, (BIT32(13) | BIT32(16) | BIT32(19)));
         g_oimr_override |= (BIT64(45) | BIT64(48) | BIT64(51));
 
         if ((G_sgpe_stop_record.group.core[VECTOR_PIGX]) ||
@@ -895,12 +895,12 @@ p9_sgpe_ipi3_low_handler(void* arg, PkIrqId irq)
     uint32_t req_list      = 0;
     uint32_t qloop         = 0;
     uint32_t action        = 0;
-    uint32_t occflg        = in32(OCB_OCCFLG) & BITS32(SGPE_IGNORE_STOP_CONTROL, 4);
+    uint32_t occflg        = in32(G_OCB_OCCFLG) & BITS32(SGPE_IGNORE_STOP_CONTROL, 4);
     data64_t scom_data     = {0};
 
     PK_TRACE_INF("IPI-IRQ: %d", irq);
     // Clear ipi3_lo interrupt
-    out32(OCB_OISR1_CLR, BIT32(29));
+    out32(G_OCB_OISR1_CLR, BIT32(29));
 
     // occflg[9]control + [11]exit/[12]entry(filter bit[10] here)
     // bit[9] must be on to perform any operations below
@@ -1019,7 +1019,7 @@ p9_sgpe_ipi3_low_handler(void* arg, PkIrqId irq)
                 G_sgpe_stop_record.group.qswu[VECTOR_BLOCKX] = 0;
             }
 
-            out32(OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
+            out32(G_OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
         }
 
         if ((occflg & BIT32(SGPE_IGNORE_STOP_ENTRIES)) &&
@@ -1046,7 +1046,7 @@ p9_sgpe_ipi3_low_handler(void* arg, PkIrqId irq)
                 G_sgpe_stop_record.group.qswu[VECTOR_BLOCKE] = 0;
             }
 
-            out32(OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
+            out32(G_OCB_OCCFLG_CLR, BIT32(SGPE_IGNORE_STOP_CONTROL));
         }
     }
 
@@ -1128,12 +1128,12 @@ p9_sgpe_pig_type6_handler(void* arg, PkIrqId irq)
     PK_TRACE_DBG("PIG-TYPE6: %d", irq);
 
     // Clear type6 interrupt
-    out32(OCB_OISR1_CLR, BIT32(19));
+    out32(G_OCB_OISR1_CLR, BIT32(19));
 
     // read type6 interrupt pending status
     // then clear interrupt pending status
-    qpending = in32(OCB_OPIT6PRB);
-    out32(OCB_OPIT6PRB_CLR, qpending);
+    qpending = in32(G_OCB_OPIT6PRB);
+    out32(G_OCB_OPIT6PRB_CLR, qpending);
     PK_TRACE("Quads Pending: %x", qpending);
 
     // clear group before analyzing input

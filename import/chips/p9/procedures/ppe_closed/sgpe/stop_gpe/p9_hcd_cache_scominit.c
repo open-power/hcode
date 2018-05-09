@@ -60,7 +60,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
         // read partial good exes for LCO setup below
         do
         {
-            qcsr.value = in32(OCB_QCSR);
+            qcsr.value = in32(G_OCB_QCSR);
         }
         while (qcsr.fields.change_in_progress);
 

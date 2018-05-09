@@ -46,6 +46,11 @@
 // - The variable names and actions in this file must perfectly match associated
 //   definitions in p9_sgpe_irq.c
 
+extern uint32_t G_OCB_OIMR0_CLR;
+extern uint32_t G_OCB_OIMR0_OR;
+extern uint32_t G_OCB_OIMR1_CLR;
+extern uint32_t G_OCB_OIMR1_OR;
+
 // Priority Levels
 #define IDX_PRTY_LVL_HIPRTY         0
 #define IDX_PRTY_LVL_IPI3_HIGH      1
@@ -106,14 +111,14 @@ pk_irq_vec_restore(PkMachineContext* context)
     if (g_oimr_stack_ctr >= 0)
     {
 
-        out32(OCB_OIMR0_CLR, (uint32_t)((IRQ_VEC_ALL_OUR_IRQS |
-                                         g_oimr_override_stack[g_oimr_stack_ctr]) >> 32));
-        out32(OCB_OIMR1_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS |
-                                        g_oimr_override_stack[g_oimr_stack_ctr]));
-        out32(OCB_OIMR0_OR,
+        out32(G_OCB_OIMR0_CLR, (uint32_t)((IRQ_VEC_ALL_OUR_IRQS |
+                                           g_oimr_override_stack[g_oimr_stack_ctr]) >> 32));
+        out32(G_OCB_OIMR1_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS |
+                                          g_oimr_override_stack[g_oimr_stack_ctr]));
+        out32(G_OCB_OIMR0_OR,
               (uint32_t)((ext_irq_vectors_sgpe[g_oimr_stack[g_oimr_stack_ctr]][IDX_MASK_VEC] |
                           g_oimr_override) >> 32));
-        out32(OCB_OIMR1_OR,
+        out32(G_OCB_OIMR1_OR,
               (uint32_t)(ext_irq_vectors_sgpe[g_oimr_stack[g_oimr_stack_ctr]][IDX_MASK_VEC] |
                          g_oimr_override));
 

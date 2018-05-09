@@ -56,7 +56,7 @@ p9_cme_stop_init()
     // partial_good and entry_first:  unmask entry
     // partial_good and !entry_first: unmask exit
     // !partial_good:                 dont unmask
-    cme_flags   = (in32(CME_LCL_FLAGS) & 0xF);
+    cme_flags   = (in32(G_CME_LCL_FLAGS) & 0xF);
     entry_first = ( (cme_flags >> 2) & cme_flags & CME_MASK_BC);
     exit_first  = (~(cme_flags >> 2) & cme_flags & CME_MASK_BC);
 
@@ -64,21 +64,21 @@ p9_cme_stop_init()
     G_cme_stop_record.core_stopgpe = 0;
 
     // use SISR[2:3] PM_BLOCK_INTERRUPTS to init block wakeup status
-    G_cme_stop_record.core_blockpc = ((in32(CME_LCL_SISR) & BITS32(2, 2)) >> SHIFT32(3));
+    G_cme_stop_record.core_blockpc = ((in32(G_CME_LCL_SISR) & BITS32(2, 2)) >> SHIFT32(3));
     G_cme_stop_record.core_blockwu = G_cme_stop_record.core_blockpc;
     G_cme_stop_record.core_blockey = 0;
     G_cme_stop_record.core_suspendwu = G_cme_stop_record.core_blockpc;
     G_cme_stop_record.core_suspendey = 0;
     G_cme_stop_record.core_vdm_droop = 0;
 
-    if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_BLOCK_ENTRY_STOP11))
+    if (in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_BLOCK_ENTRY_STOP11))
     {
         G_cme_stop_record.core_blockey = CME_MASK_BC;
         G_cme_stop_record.core_suspendey = CME_MASK_BC;
     }
 
     // use SISR[16:17] SPECIAL_WKUP_DONE to init special wakeup status
-    G_cme_stop_record.core_in_spwu = ((in32(CME_LCL_SISR) & BITS32(16, 2)) >> SHIFT32(17));
+    G_cme_stop_record.core_in_spwu = ((in32(G_CME_LCL_SISR) & BITS32(16, 2)) >> SHIFT32(17));
 
     PK_TRACE_DBG("Setup: cme_flags[%x] entry_first[%x] exit_first[%x]",
                  cme_flags, entry_first, exit_first);
@@ -137,24 +137,24 @@ p9_cme_stop_init()
 #if HW386841_NDD1_DSL_STOP1_FIX
 
     PK_TRACE("Disable the Auto-STOP1 function for Nimbus DD1 via LMCR[18,19]");
-    out32(CME_LCL_LMCR_OR, BITS32(18, 2));
+    out32(G_CME_LCL_LMCR_OR, BITS32(18, 2));
 
 #endif
 
     PK_TRACE("Drop STOP override mode and active mask via LMCR[16,17]");
-    out32(CME_LCL_LMCR_CLR, BITS32(16, 2));
+    out32(G_CME_LCL_LMCR_CLR, BITS32(16, 2));
 
     PK_TRACE_DBG("Setup: SPWU Interrupt Polority[%d]", G_cme_stop_record.core_in_spwu);
-    out32(CME_LCL_EIPR_CLR, (G_cme_stop_record.core_in_spwu << SHIFT32(15)));
-    out32(CME_LCL_EIPR_OR,  (((~G_cme_stop_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(15)));
+    out32(G_CME_LCL_EIPR_CLR, (G_cme_stop_record.core_in_spwu << SHIFT32(15)));
+    out32(G_CME_LCL_EIPR_OR,  (((~G_cme_stop_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(15)));
 
     PK_TRACE("Assert auto spwu disable, disable auto spwu via LMCR[12/13]");
-    out32(CME_LCL_LMCR_OR, BITS32(12, 2));
+    out32(G_CME_LCL_LMCR_OR, BITS32(12, 2));
 
     PK_TRACE_DBG("Setup: Umask STOP Interrupts Now Based on Entry_First Flag");
     // unmask db1 for block stop protocol
     out32_sh(CME_LCL_EIMR_CLR, (CME_MASK_BC << SHIFT64SH(41)));
-    out32(CME_LCL_EIMR_CLR,
+    out32(G_CME_LCL_EIMR_CLR,
           ((CME_MASK_BC << SHIFT32(19)) |  // DB2
            (entry_first << SHIFT32(21)) |  // PM_ACTIVE
            (exit_first  << SHIFT32(13)) |  // PC_INTR_PENDING
@@ -170,7 +170,7 @@ p9_cme_stop_init()
     //--------------------------------------------------------------------------
 
     PK_TRACE_INF("Setup: CME STOP READY");
-    out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_STOP_READY));
+    out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_STOP_READY));
 
 #if EPM_P9_TUNING
     asm volatile ("tw 0, 31, 0");

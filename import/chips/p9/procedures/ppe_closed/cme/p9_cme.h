@@ -28,6 +28,38 @@
 #include "pk.h"
 #include "p9_pm_hcd_flags.h"
 
+
+extern uint32_t G_CME_LCL_EINR;
+extern uint32_t G_CME_LCL_EISR;
+extern uint32_t G_CME_LCL_EISR_CLR;
+extern uint32_t G_CME_LCL_EIMR_CLR;
+extern uint32_t G_CME_LCL_EIMR_OR;
+extern uint32_t G_CME_LCL_EIPR_CLR;
+extern uint32_t G_CME_LCL_EIPR_OR;
+extern uint32_t G_CME_LCL_EITR_OR;
+extern uint32_t G_CME_LCL_FLAGS;
+extern uint32_t G_CME_LCL_FLAGS_CLR;
+extern uint32_t G_CME_LCL_FLAGS_OR;
+extern uint32_t G_CME_LCL_SRTCH0;
+extern uint32_t G_CME_LCL_TSEL;
+extern uint32_t G_CME_LCL_TBR;
+extern uint32_t G_CME_LCL_DBG;
+extern uint32_t G_CME_LCL_LMCR;
+extern uint32_t G_CME_LCL_LMCR_CLR;
+extern uint32_t G_CME_LCL_LMCR_OR;
+extern uint32_t G_CME_LCL_ICSR;
+extern uint32_t G_CME_LCL_ICRR;
+extern uint32_t G_CME_LCL_ICCR_CLR;
+extern uint32_t G_CME_LCL_ICCR_OR;
+extern uint32_t G_CME_LCL_SISR;
+extern uint32_t G_CME_LCL_SICR_CLR;
+extern uint32_t G_CME_LCL_SICR_OR;
+extern uint32_t G_CME_LCL_PSCRS00;
+extern uint32_t G_CME_LCL_PSCRS10;
+extern uint32_t G_CME_LCL_PSCRS20;
+extern uint32_t G_CME_LCL_PSCRS30;
+
+
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
 
 typedef struct

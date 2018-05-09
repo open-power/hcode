@@ -35,7 +35,7 @@ extern CmeRecord G_cme_record;
 // bit1 is Recoverable Error
 // bit2 is Special Attention
 // bit3 is Core Checkstop
-#define bad_error_present (((in32   (CME_LCL_SISR) & (  BIT32(12) |   BITS32(14,2)))) || \
+#define bad_error_present (((in32 (G_CME_LCL_SISR) & (BIT32(12) |   BITS32(14,2)))) || \
                            ((in32_sh(CME_LCL_SISR) & (BIT64SH(60) | BITS64SH(62,2)))))
 
 void
@@ -47,14 +47,14 @@ p9_cme_stop_core_error_handler(uint32_t core, uint32_t core_error, uint32_t pani
     G_cme_stop_record.error_code[core_error & 1] = panic_code;
 
     // set the WKUP_FAIL_STATUS breadcrumbs
-    out32(CME_LCL_SICR_OR, core_error << SHIFT32(15));
+    out32(G_CME_LCL_SICR_OR, core_error << SHIFT32(15));
 
     // this pulses the FIR trigger using CME Local Debug register
     // to optionally set a recoverable or xstop on error
     // Note: the following to due to OR/CLR interface is lack in hw
-    uint32_t           cme_lcl_debug = in32(CME_LCL_DBG);
-    out32(CME_LCL_DBG, cme_lcl_debug | BIT32(16));
-    out32(CME_LCL_DBG, cme_lcl_debug);
+    uint32_t cme_lcl_debug = in32(G_CME_LCL_DBG);
+    out32(G_CME_LCL_DBG, cme_lcl_debug | BIT32(16));
+    out32(G_CME_LCL_DBG, cme_lcl_debug);
 }
 
 void
@@ -97,11 +97,11 @@ p9_cme_stop_eval_eimr_override()
 
     if (G_cme_stop_record.core_vdm_droop)
     {
-        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_DROOP_SUSPEND_ENTRY));
+        out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_DROOP_SUSPEND_ENTRY));
     }
     else
     {
-        out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_DROOP_SUSPEND_ENTRY));
+        out32(G_CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_DROOP_SUSPEND_ENTRY));
     }
 }
 
@@ -142,11 +142,11 @@ p9_cme_core_livelock_buster()
 
     if (!core_quiesce_cpmmr_disable)
     {
-        out32(CME_LCL_FLAGS_OR,  BIT32(CME_FLAGS_CORE_QUIESCE_ACTIVE));
+        out32(G_CME_LCL_FLAGS_OR,  BIT32(CME_FLAGS_CORE_QUIESCE_ACTIVE));
     }
     else
     {
-        out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_CORE_QUIESCE_ACTIVE));
+        out32(G_CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_CORE_QUIESCE_ACTIVE));
     }
 
     // only run workaround if
@@ -163,7 +163,7 @@ p9_cme_core_livelock_buster()
 
     if((G_cme_record.core_enabled == CME_MASK_BC) &&
        (core_instr_running != 0) &&
-       (!(in32(CME_LCL_SISR) & BITS32(16, 2))) &&
+       (!(in32(G_CME_LCL_SISR) & BITS32(16, 2))) &&
        (!core_quiesce_cpmmr_disable) &&
        (!bad_error_present))
     {
@@ -202,26 +202,26 @@ void periodic_core_quiesce_workaround(uint32_t core_instruction_running)
     //0) in case in stop0/1 that we dont know about
 
     PK_TRACE("PCQW: Assert block interrupt to PC via SICR[2/3]");
-    out32(CME_LCL_SICR_OR, core_instruction_running << SHIFT32(3));
+    out32(G_CME_LCL_SICR_OR, core_instruction_running << SHIFT32(3));
 
     PK_TRACE("PCQW: Waking up the core(pm_exit=1) via SICR[4/5]");
-    out32(CME_LCL_SICR_OR, core_instruction_running << SHIFT32(5));
+    out32(G_CME_LCL_SICR_OR, core_instruction_running << SHIFT32(5));
 
     CME_PM_EXIT_DELAY
 
     PK_TRACE("PCQW: Polling for core wakeup(pm_active=0) via EINR[20/21]");
 
-    while((in32(CME_LCL_EINR)) & (core_instruction_running << SHIFT32(21)));
+    while((in32(G_CME_LCL_EINR)) & (core_instruction_running << SHIFT32(21)));
 
     //1) Acquire Pcb Mux
 
-    core_accessible = ((~in32(CME_LCL_SISR)) >> SHIFT32(11)) & core_instruction_running;
+    core_accessible = ((~in32(G_CME_LCL_SISR)) >> SHIFT32(11)) & core_instruction_running;
 
     PK_TRACE("PCQW: Request PCB Mux via SICR[10/11]");
-    out32(CME_LCL_SICR_OR, core_accessible << SHIFT32(11));
+    out32(G_CME_LCL_SICR_OR, core_accessible << SHIFT32(11));
 
     // Poll Infinitely for PCB Mux Grant
-    while((core_accessible & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core_accessible);
+    while((core_accessible & (in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core_accessible);
 
     PK_TRACE("PCQW: PCB Mux Granted");
 
@@ -287,7 +287,7 @@ void periodic_core_quiesce_workaround(uint32_t core_instruction_running)
     //4) Loop on RAS_STATUS Scom Addr(20:31) = x0A02
     //   until bit(1 + 8*T) THREAD_QUIESCE are all active b1
 
-    time_stamp[0] = in32(CME_LCL_TBR);
+    time_stamp[0] = in32(G_CME_LCL_TBR);
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
@@ -315,7 +315,7 @@ void periodic_core_quiesce_workaround(uint32_t core_instruction_running)
             {
                 CME_GETSCOM_AND(RAS_STATUS, core, scom_data.value);
 
-                time_stamp[1] = in32(CME_LCL_TBR);
+                time_stamp[1] = in32(G_CME_LCL_TBR);
 
                 if (time_stamp[1] > time_stamp[0])
                 {
@@ -411,17 +411,17 @@ void periodic_core_quiesce_workaround(uint32_t core_instruction_running)
     //7) Drop pm_exit
 
     PK_TRACE("PCQW: Drop pm_exit via SICR[4/5]");
-    out32(CME_LCL_SICR_CLR, core_instruction_running << SHIFT32(5));
+    out32(G_CME_LCL_SICR_CLR, core_instruction_running << SHIFT32(5));
 
     PK_TRACE("PCQW: Drop block interrupt to PC via SICR[2/3]");
-    out32(CME_LCL_SICR_CLR, core_instruction_running << SHIFT32(3));
+    out32(G_CME_LCL_SICR_CLR, core_instruction_running << SHIFT32(3));
 
     //8) Release Pcb Mux on Both Cores
 
     PK_TRACE("PCQW: Release PCB Mux back on Both Cores via SICR[10/11]");
-    out32(CME_LCL_SICR_CLR, core_accessible << SHIFT32(11));
+    out32(G_CME_LCL_SICR_CLR, core_accessible << SHIFT32(11));
 
-    while((core_accessible & ~(in32(CME_LCL_SISR) >> SHIFT32(11))) != core_accessible);
+    while((core_accessible & ~(in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core_accessible);
 
     PK_TRACE("PCQW: PCB Mux Released on Both Cores");
 

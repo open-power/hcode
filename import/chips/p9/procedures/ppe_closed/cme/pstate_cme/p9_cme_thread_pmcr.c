@@ -111,13 +111,12 @@ void p9_cme_init_done()
     {
         intercme_msg_recv(&msg, IMT_SYNC_SIBLING);
         // Unmask the COMM_RECVD interrupt for the intercme msg handler
-        out32(CME_LCL_EIMR_CLR, BIT32(29));
+        out32(G_CME_LCL_EIMR_CLR, BIT32(29));
     }
 
     // This is the current barrier for SGPE booting the CMEs, any and all
     // initialization must be completed prior!
-// @todo RTC173279 rename this flag to CME_FLAGS_BOOT_DONE
-    out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PMCR_READY));
+    out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PMCR_READY));
 
     PK_TRACE_INF("CME INIT DONE: Exit");
 }

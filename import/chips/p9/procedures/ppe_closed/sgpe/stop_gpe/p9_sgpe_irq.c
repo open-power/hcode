@@ -172,17 +172,17 @@ void pk_unified_irq_prty_mask_handler(void)
         // First, clear all those IRQs that could possibly interrupt this instance.
         //  This includes all those IRQs which belong to this instance as well as
         //  those high-prty IRQs shared with the other instances.
-        out32(OCB_OIMR0_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS >> 32));
-        out32(OCB_OIMR1_CLR, (uint32_t)IRQ_VEC_ALL_OUR_IRQS);
+        out32(G_OCB_OIMR0_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS >> 32));
+        out32(G_OCB_OIMR1_CLR, (uint32_t)IRQ_VEC_ALL_OUR_IRQS);
 
         // Second, mask IRQs belonging to this task and lower prty tasks.
         // Note, that we do not modify the permanently disabled IRQs, such as the
         //  _RESERVED_ ones. Nor do we touch other instances' IRQs. Iow, the
         //  IDX_PRTY_LVL_DISABLED mask is  NOT  part of the mask we apply below.
-        out32(OCB_OIMR0_OR, (uint32_t)((ext_irq_vectors_sgpe[iPrtyLvl][IDX_MASK_VEC] |
-                                        g_oimr_override) >> 32) );
-        out32(OCB_OIMR1_OR, (uint32_t)(ext_irq_vectors_sgpe[iPrtyLvl][IDX_MASK_VEC] |
-                                       g_oimr_override) );
+        out32(G_OCB_OIMR0_OR, (uint32_t)((ext_irq_vectors_sgpe[iPrtyLvl][IDX_MASK_VEC] |
+                                          g_oimr_override) >> 32) );
+        out32(G_OCB_OIMR1_OR, (uint32_t)(ext_irq_vectors_sgpe[iPrtyLvl][IDX_MASK_VEC] |
+                                         g_oimr_override) );
 
     }
     else

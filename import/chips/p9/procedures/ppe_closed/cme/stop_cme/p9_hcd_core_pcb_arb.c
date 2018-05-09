@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -30,11 +30,11 @@ void
 p9_hcd_core_pcb_arb(uint32_t core, uint8_t req_rel)
 {
     uint32_t sisr = 0;
-    out32(req_rel ? CME_LCL_SICR_OR : CME_LCL_SICR_CLR, core << SHIFT32(11));
+    out32(req_rel ? G_CME_LCL_SICR_OR : G_CME_LCL_SICR_CLR, core << SHIFT32(11));
 
     do
     {
-        sisr = in32(CME_LCL_SISR) >> SHIFT32(11);
+        sisr = in32(G_CME_LCL_SISR) >> SHIFT32(11);
 
         if((req_rel && (core & sisr == core)) || ((!req_rel) && (core & (~sisr) == core)))
         {

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -63,7 +63,7 @@ extern "C" void p9_hcd_cache_dcc_skewadjust_setup(uint32_t quad)
 
         do
         {
-            ccsr.value = in32(OCB_CCSR);
+            ccsr.value = in32(G_OCB_CCSR);
         }
         while (ccsr.fields.change_in_progress);
 

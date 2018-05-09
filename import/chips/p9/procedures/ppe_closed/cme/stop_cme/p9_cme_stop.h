@@ -153,7 +153,7 @@
 
 
 #define PK_OPTIONAL_DEBUG_HALT(panic_code) \
-    if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_PM_DEBUG_HALT_ENABLE)) {PK_PANIC(panic_code);}
+    if(in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_PM_DEBUG_HALT_ENABLE)) {PK_PANIC(panic_code);}
 
 
 #if NIMBUS_DD_LEVEL == 10

@@ -85,7 +85,7 @@ p9_cme_pgpe_hb_loss_handler(void* arg, PkIrqId irq)
     PK_TRACE_ERR("HB LOSS OCCURED");
 
     //Clear Interrupt
-    out32(CME_LCL_EISR_CLR, BIT32(4));
+    out32(G_CME_LCL_EISR_CLR, BIT32(4));
 
     //Quad Manager
     if(G_cme_pstate_record.qmFlag)
@@ -97,11 +97,11 @@ p9_cme_pgpe_hb_loss_handler(void* arg, PkIrqId irq)
 
 #ifdef USE_CME_RESCLK_FEATURE
 
-        if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
+        if (in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
         {
             p9_cme_resclk_update(ANALOG_COMMON, p9_cme_resclk_get_index(ANALOG_PSTATE_RESCLK_OFF),
                                  G_cme_pstate_record.resclkData.common_resclk_idx);
-            out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_RCLK_OPERABLE));
+            out32(G_CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_RCLK_OPERABLE));
         }
 
 #endif
@@ -110,8 +110,8 @@ p9_cme_pgpe_hb_loss_handler(void* arg, PkIrqId irq)
         ippm_read(QPPM_QPMMR, &scom_data.value);
         uint32_t FSafe = (scom_data.words.upper >> 20) & 0x7FF;
 
-        out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_PSTATES_ENABLED));
-        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_SAFE_MODE) |
+        out32(G_CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_PSTATES_ENABLED));
+        out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_SAFE_MODE) |
               BIT32(CME_FLAGS_PGPE_HB_LOSS_SAFE_MODE));
 
         if(FSafe)
@@ -137,8 +137,8 @@ p9_cme_pgpe_hb_loss_handler(void* arg, PkIrqId irq)
 
         PK_TRACE_INF("RCVed Notify and ACKed");
 
-        out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_PSTATES_ENABLED));
-        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_SAFE_MODE) |
+        out32(G_CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_PSTATES_ENABLED));
+        out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_SAFE_MODE) |
               BIT32(CME_FLAGS_PGPE_HB_LOSS_SAFE_MODE));
 
         //Wait to receive a notify from Quad Manager
@@ -159,12 +159,10 @@ p9_cme_pgpe_hb_loss_handler(void* arg, PkIrqId irq)
 void p9_cme_pstate_db0_handler(void)
 {
     //Mask EIMR[PGPE_HB_LOSS/4];
-//    out32(CME_LCL_EIMR_OR, BIT32(4));
     g_eimr_override |= BIT64(4);
 
     p9_cme_pstate_process_db0();
 
-//    out32(CME_LCL_EIMR_CLR, BIT32(4));
     g_eimr_override &= ~BIT64(4);
 }
 
@@ -179,7 +177,7 @@ void p9_cme_pstate_db3_handler(void)
     uint32_t cm;
 
     //Clear EISR and read DB3 register
-    out32(CME_LCL_EISR_CLR, BITS32(10, 2));
+    out32(G_CME_LCL_EISR_CLR, BITS32(10, 2));
     CME_GETSCOM(CPPM_CMEDB3, G_cme_pstate_record.firstGoodCoreMask, db3.value);
     PK_TRACE_INF("DB3 Handler DB3=0x%08x%08x", db3.value >> 32, db3.value);
 
@@ -213,7 +211,7 @@ void p9_cme_pstate_db3_handler(void)
 
         if (db3.fields.cme_message_numbern == MSGID_DB3_ENTER_SAFE_MODE)
         {
-            out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_SAFE_MODE));
+            out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_SAFE_MODE));
         }
 
         G_cme_pstate_record.skipSiblingLock = 0;
@@ -225,7 +223,7 @@ void p9_cme_pstate_db3_handler(void)
 
         for(cm = 2; cm > 0; cm--)
         {
-            if (in32(CME_LCL_FLAGS) & cm)
+            if (in32(G_CME_LCL_FLAGS) & cm)
             {
                 CME_GETSCOM(PPM_SSHSRC, cm, sshsrc);
 
@@ -235,7 +233,7 @@ void p9_cme_pstate_db3_handler(void)
                         (sshsrc.fields.act_stop_level == 5 && sshsrc.fields.stop_transition != 0x2)))
                 {
                     CME_PUTSCOM(CPPM_CPMMR_CLR, cm, BIT64(13));
-                    out32(CME_LCL_EIMR_CLR, cm << SHIFT32(13));
+                    out32(G_CME_LCL_EIMR_CLR, cm << SHIFT32(13));
                 }
             }
         }
@@ -340,7 +338,7 @@ void p9_cme_pstate_init()
 
 
     //Read CME_LCL_FLAGS
-    uint32_t cme_flags = in32(CME_LCL_FLAGS);
+    uint32_t cme_flags = in32(G_CME_LCL_FLAGS);
 
     G_cme_pstate_record.qmFlag         = cme_flags & BIT32(CME_FLAGS_QMGR_MASTER);
     G_cme_pstate_record.siblingCMEFlag = cme_flags & BIT32(CME_FLAGS_SIBLING_FUNCTIONAL);
@@ -358,7 +356,7 @@ void p9_cme_pstate_init()
 
     //Disable PGPE heart beat loss
     g_eimr_override |= BIT64(4);
-    out32(CME_LCL_EIMR_OR, BIT32(4));
+    out32(G_CME_LCL_EIMR_OR, BIT32(4));
 
     //Enable Interrupts depending on whether this CME is
     //a quadManager or siblingCME. DB0 is enabled only
@@ -442,8 +440,8 @@ void p9_cme_pstate_init()
         // Synchronize initial pstate w/ sibling CME
         if(G_cme_pstate_record.siblingCMEFlag)
         {
-            out32(CME_LCL_EITR_OR, BIT32(30));
-            out32(CME_LCL_EIPR_OR, BIT32(30));
+            out32(G_CME_LCL_EITR_OR, BIT32(30));
+            out32(G_CME_LCL_EIPR_OR, BIT32(30));
             intercme_msg_send(G_cme_pstate_record.quadPstate,
                               IMT_INIT_PSTATE);
         }
@@ -455,8 +453,8 @@ void p9_cme_pstate_init()
 
         // Sibling set-up for intercme messaging, after this respond to the QMs
         // notify to tell him the Sib is ready to go
-        out32(CME_LCL_EITR_OR, BIT32(29));
-        out32(CME_LCL_EIPR_OR, BIT32(29));
+        out32(G_CME_LCL_EITR_OR, BIT32(29));
+        out32(G_CME_LCL_EIPR_OR, BIT32(29));
 
         // Wait for QM to send an initial notify
         while(!(in32_sh(CME_LCL_EISR) & BIT64SH(38)));
@@ -549,7 +547,7 @@ void p9_cme_pstate_init()
 
         }
 
-        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_RCLK_OPERABLE));
+        out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_RCLK_OPERABLE));
     }
 
 #endif//USE_CME_RESCLK_FEATURE
@@ -560,7 +558,7 @@ void p9_cme_pstate_init()
     // completed all initialization for VDMs and QM and Sib are interlocked
     if(G_cmeHeader->g_cme_qm_mode_flags & CME_QM_FLAG_SYS_VDM_ENABLE)
     {
-        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_VDM_OPERABLE));
+        out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_VDM_OPERABLE));
     }
 
 #endif//USE_CME_VDM_FEATURE
@@ -593,7 +591,7 @@ void p9_cme_pstate_process_db0()
         PK_PANIC(CME_PSTATE_TRAP_INJECT);
     }
 
-    uint32_t cme_flags = in32(CME_LCL_FLAGS);
+    uint32_t cme_flags = in32(G_CME_LCL_FLAGS);
 
     PK_TRACE_INF("PSTATE: DB0=0x%08x%08x", G_dbData.value >> 32, G_dbData.value);
 
@@ -658,7 +656,7 @@ void p9_cme_pstate_process_db0()
             PK_TRACE_INF("PSTATE: Bad DB0=0x%x", (uint8_t)G_dbData.fields.cme_message_number0);
             send_ack_to_pgpe(MSGID_PCB_TYPE4_ACK_ERROR);
 
-            if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_PM_DEBUG_HALT_ENABLE))
+            if(in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_PM_DEBUG_HALT_ENABLE))
             {
                 if(G_dbData.fields.cme_message_number0 < MSGID_DB0_VALID_START ||
                    G_dbData.fields.cme_message_number0 > MSGID_DB0_VALID_END)
@@ -697,14 +695,6 @@ inline void p9_cme_pstate_register()
 
         if(register_enable)
         {
-            PK_TRACE_INF("PSTATE: Wait on Pstate Start");
-
-            //Wait until PGPE has set DB0_PROCESSING_ENABLE. This is important as
-            //PGPE might send DB0 to other quads as part of processing registration
-            //msg from this quad, but we don't want this quad to process them until
-            //PGPE has set DB0_PROCESSING_ENABLE
-            //while(!(in32(CME_LCL_SRTCH0) & BIT32(CME_SCRATCH_DB0_PROCESSING_ENABLE)));
-
             PK_TRACE_INF("PSTATE: DB0 Processing is Enabled");
 
             //PGPE sends MSGID_DB0_REGISTER_DONE, if Pstates aren't active anymore.
@@ -731,7 +721,7 @@ inline void p9_cme_pstate_register()
                     msgCnt++;
                 }
                 else if ((G_dbData.fields.cme_message_number0 ==  MSGID_DB0_CLIP_BROADCAST) &&
-                         ((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_PSTATES_ENABLED))))
+                         ((in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_PSTATES_ENABLED))))
                 {
                     p9_cme_pstate_db0_clip_bcast();
                     msgCnt++;
@@ -818,7 +808,7 @@ void p9_cme_pstate_db0_start()
     {
         ack = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
 
-        out32(CME_LCL_FLAGS_OR, BIT32(24));//Set Pstates Enabled
+        out32(G_CME_LCL_FLAGS_OR, BIT32(24));//Set Pstates Enabled
 
         //Enable PMCR Interrupts (for good cores) when this task is done
         g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << SHIFT64(35));
@@ -870,12 +860,12 @@ inline void p9_cme_pstate_db0_stop()
 {
     PK_TRACE_INF("PSTATE: DB0 Stop Enter");
 
-    out32(CME_LCL_FLAGS_CLR, BIT32(24));//Set Pstates Disabled
+    out32(G_CME_LCL_FLAGS_CLR, BIT32(24));//Set Pstates Disabled
 
     //Disable PGPE_HEARTBEAT_LOSS in EIMR
     //will be applied on return from DB0 interrupt
     g_eimr_override |= BIT64(4);
-    out32(CME_LCL_EIMR_OR, BIT32(4));
+    out32(G_CME_LCL_EIMR_OR, BIT32(4));
 
     // Disable both PMCR regs ignoring partial-goodness
     out32_sh(CME_LCL_EIMR_OR, BITS64SH(34, 2));
@@ -903,7 +893,7 @@ void p9_cme_pstate_db0_clip_bcast()
 
     uint32_t dbBit8_15 = (G_dbData.value & BITS64(8, 8)) >> SHIFT64(15);
 
-    uint32_t dbQuadValue = (G_dbData.value >> (in32(CME_LCL_SRTCH0) &
+    uint32_t dbQuadValue = (G_dbData.value >> (in32(G_CME_LCL_SRTCH0) &
                             (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START,
                                     CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)))) & 0xFF;
 
@@ -942,11 +932,11 @@ inline void p9_cme_pstate_db0_pmsr_updt()
     switch(dbBit8_15)
     {
         case DB0_PMSR_UPDT_SET_PSTATES_SUSPENDED:
-            out32(CME_LCL_FLAGS_OR, BIT32(17));
+            out32(G_CME_LCL_FLAGS_OR, BIT32(17));
             break;
 
         case DB0_PMSR_UPDT_CLEAR_PSTATES_SUSPENDED:
-            out32(CME_LCL_FLAGS_CLR, BIT32(17));
+            out32(G_CME_LCL_FLAGS_CLR, BIT32(17));
             break;
     }
 
@@ -1014,7 +1004,7 @@ inline void p9_cme_pstate_update_analog()
     do
     {
 
-        uint32_t cme_flags = in32(CME_LCL_FLAGS);
+        uint32_t cme_flags = in32(G_CME_LCL_FLAGS);
 
 #ifdef USE_CME_VDM_FEATURE
 
@@ -1092,7 +1082,7 @@ void p9_cme_pstate_update()
 
     PK_TRACE_INF("PSTATE: Pstate Updt Enter");
 
-    G_cme_pstate_record.nextPstate = (G_dbData.value >> (in32(CME_LCL_SRTCH0) &
+    G_cme_pstate_record.nextPstate = (G_dbData.value >> (in32(G_CME_LCL_SRTCH0) &
                                       (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START,
                                               CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)))) & 0xFF;
 
@@ -1127,7 +1117,7 @@ void p9_cme_pstate_update()
         }
         else
         {
-            out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
+            out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
         }
 
         pk_critical_section_exit(&ctx);

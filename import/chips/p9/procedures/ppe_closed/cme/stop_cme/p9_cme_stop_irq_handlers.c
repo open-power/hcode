@@ -44,7 +44,7 @@ void
 p9_cme_stop_pcwu_handler(void)
 {
     uint32_t  core_mask = 0;
-    uint32_t  core      = (in32(CME_LCL_EISR) & BITS32(12, 2)) >> SHIFT32(13);
+    uint32_t  core      = (in32(G_CME_LCL_EISR) & BITS32(12, 2)) >> SHIFT32(13);
     data64_t  scom_data = {0};
     ppm_pig_t pig       = {0};
 
@@ -54,7 +54,7 @@ p9_cme_stop_pcwu_handler(void)
     // consider wakeup is done on a running core
     // also ignore the decrementor request that already sent to sgpe
     core &= ~(G_cme_stop_record.core_running | G_cme_stop_record.core_blockpc);
-    out32(CME_LCL_EISR_CLR, (G_cme_stop_record.core_running << SHIFT32(13)));
+    out32(G_CME_LCL_EISR_CLR, (G_cme_stop_record.core_running << SHIFT32(13)));
 
     for (core_mask = 2; core_mask; core_mask--)
     {
@@ -85,7 +85,7 @@ p9_cme_stop_pcwu_handler(void)
     {
         PK_TRACE_INF("PCWU Launching exit thread");
 
-        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+        out32(G_CME_LCL_EIMR_OR, BITS32(12, 10));
         g_eimr_override |= BITS64(12, 10);
         G_cme_stop_record.exit_ongoing = 1;
         wrteei(1);
@@ -119,7 +119,7 @@ p9_cme_stop_spwu_handler(void)
     int      spwu_rise   = 0;
     uint32_t core_mask  = 0;
     uint32_t core_index = 0;
-    uint32_t raw_spwu   = (in32(CME_LCL_EISR) & BITS32(14, 2)) >> SHIFT32(15);
+    uint32_t raw_spwu   = (in32(G_CME_LCL_EISR) & BITS32(14, 2)) >> SHIFT32(15);
     uint64_t scom_data  = 0;
 
     MARK_TRAP(STOP_SPWU_HANDLER)
@@ -136,7 +136,7 @@ p9_cme_stop_spwu_handler(void)
             // if falling edge == spwu drop:
             if (G_cme_stop_record.core_in_spwu & core_mask)
             {
-                if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE))
+                if (in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE))
                 {
                     CME_GETSCOM(PPM_SSHSRC, core_mask, scom_data);
 
@@ -149,13 +149,13 @@ p9_cme_stop_spwu_handler(void)
                 }
 
                 PK_TRACE("Falling edge of spwu, first clearing EISR");
-                out32(CME_LCL_EISR_CLR, BIT32((14 + core_index)));
+                out32(G_CME_LCL_EISR_CLR, BIT32((14 + core_index)));
 
                 // if spwu asserts again before we drop spwu_done, do nothing, else:
-                if ((~(in32(CME_LCL_EINR))) & BIT32((14 + core_index)))
+                if ((~(in32(G_CME_LCL_EINR))) & BIT32((14 + core_index)))
                 {
                     PK_TRACE("SPWU drop confirmed, now dropping spwu_done");
-                    out32(CME_LCL_SICR_CLR, BIT32((16 + core_index)));
+                    out32(G_CME_LCL_SICR_CLR, BIT32((16 + core_index)));
 
                     CME_GETSCOM(PPM_GPMMR,  core_mask, scom_data);
 
@@ -163,14 +163,14 @@ p9_cme_stop_spwu_handler(void)
                     if (scom_data & BIT64(1))
                     {
                         PK_TRACE("SPWU asserts again, re-asserting spwu_done");
-                        out32(CME_LCL_SICR_OR, BIT32((16 + core_index)));
+                        out32(G_CME_LCL_SICR_OR, BIT32((16 + core_index)));
                     }
                     // if spwu truly dropped:
                     else
                     {
                         PK_TRACE("Flip EIPR to raising edge and drop pm_exit");
-                        out32(CME_LCL_EIPR_OR,  BIT32((14 + core_index)));
-                        out32(CME_LCL_SICR_CLR, BIT32((4  + core_index)));
+                        out32(G_CME_LCL_EIPR_OR,  BIT32((14 + core_index)));
+                        out32(G_CME_LCL_SICR_CLR, BIT32((4  + core_index)));
 
                         // Core is now out of spwu, allow pm_active
                         // block entry mode is handled via eimr override
@@ -199,7 +199,7 @@ p9_cme_stop_spwu_handler(void)
     {
         PK_TRACE_INF("SPWU Launching exit thread");
 
-        out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+        out32(G_CME_LCL_EIMR_OR, BITS32(12, 10));
         g_eimr_override |= BITS64(12, 10);
         G_cme_stop_record.exit_ongoing = 1;
         wrteei(1);
@@ -225,7 +225,7 @@ p9_cme_stop_rgwu_handler(void)
     MARK_TRAP(STOP_RGWU_HANDLER)
     PK_TRACE_INF("RGWU Handler Trigger");
 
-    out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+    out32(G_CME_LCL_EIMR_OR, BITS32(12, 10));
     g_eimr_override |= BITS64(12, 10);
     G_cme_stop_record.exit_ongoing = 1;
     wrteei(1);
@@ -252,7 +252,7 @@ p9_cme_stop_enter_handler(void)
     PK_TRACE_INF("PM_ACTIVE Handler Trigger");
 
     // Abort Protection
-    out32(CME_LCL_EIMR_OR, BITS32(12, 10));
+    out32(G_CME_LCL_EIMR_OR, BITS32(12, 10));
     g_eimr_override |= BITS64(12, 10);
     G_cme_stop_record.entry_ongoing = 1;
     wrteei(1);
@@ -274,7 +274,7 @@ p9_cme_stop_db2_handler(void)
 {
     cppm_cmedb2_t    db2 = {0};
     ppm_pig_t        pig = {0};
-    uint32_t         core = (in32(CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
+    uint32_t         core = (in32(G_CME_LCL_EISR) & BITS32(18, 2)) >> SHIFT32(19);
     uint32_t         core_mask;
 
     MARK_TRAP(STOP_DB2_HANDLER)
@@ -286,7 +286,7 @@ p9_cme_stop_db2_handler(void)
         {
             CME_GETSCOM(CPPM_CMEDB2, core_mask, db2.value);
             CME_PUTSCOM_NOP(CPPM_CMEDB2, core_mask, 0);
-            out32(CME_LCL_EISR_CLR, (core_mask << SHIFT32(19)));
+            out32(G_CME_LCL_EISR_CLR, (core_mask << SHIFT32(19)));
 
             PK_TRACE_DBG("DB2 Handler MessageID %d Triggered By Core %d",
                          db2.fields.cme_message_numbern, core_mask);
@@ -306,7 +306,7 @@ p9_cme_stop_db2_handler(void)
 #ifdef USE_CME_RESCLK_FEATURE
 
                     // Quad going into Stop11, need to potentially disable Resclks
-                    if((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
+                    if((in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
                        && G_cme_pstate_record.qmFlag)
                     {
 
@@ -315,7 +315,7 @@ p9_cme_stop_db2_handler(void)
 
                         // prevent Pstate changes from accidentally re-enabling
                         // in the meantime before interlock with PGPE
-                        out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_RCLK_OPERABLE));
+                        out32(G_CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_RCLK_OPERABLE));
                         // in case we abort, need this flag to get into reenable below
                         G_ndd20_disable_stop8_abort_stop11_rclk_handshake_flag = 1;
                     }
@@ -336,7 +336,7 @@ p9_cme_stop_db2_handler(void)
 
                     // Quad aborted Stop11, need to regressively enable Resclks
                     // IF wakeup from fully entered Stop11, this is done by QM
-                    if(((in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE)) ||
+                    if(((in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE)) ||
                         G_ndd20_disable_stop8_abort_stop11_rclk_handshake_flag)
                        && G_cme_pstate_record.qmFlag)
                     {
@@ -344,7 +344,7 @@ p9_cme_stop_db2_handler(void)
                                              G_cme_pstate_record.resclkData.common_resclk_idx);
 
                         // reenable pstate from changing resonant clock
-                        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_RCLK_OPERABLE));
+                        out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_RCLK_OPERABLE));
                         // clear abort flag to start clean slate
                         G_ndd20_disable_stop8_abort_stop11_rclk_handshake_flag = 0;
                     }
@@ -414,15 +414,15 @@ p9_cme_stop_db1_handler(void)
 #if HW386841_NDD1_DSL_STOP1_FIX
 
             // Set AUTO_STOP1_DISABLE
-            out32(CME_LCL_LMCR_OR,  BIT32(18));
+            out32(G_CME_LCL_LMCR_OR,  BIT32(18));
 
 #endif
 
             // Set PM_BLOCK_INTERRUPTS
-            out32(CME_LCL_SICR_OR,  BITS32(2, 2));
+            out32(G_CME_LCL_SICR_OR,  BITS32(2, 2));
 
             // Block Exit Enabled
-            out32(CME_LCL_FLAGS_OR, BITS32(8, 2));
+            out32(G_CME_LCL_FLAGS_OR, BITS32(8, 2));
         }
 
         // entry
@@ -442,12 +442,12 @@ p9_cme_stop_db1_handler(void)
 #if HW386841_NDD1_DSL_STOP1_FIX
 
             // Set AUTO_STOP1_DISABLE
-            out32(CME_LCL_LMCR_OR,  BIT32(18));
+            out32(G_CME_LCL_LMCR_OR,  BIT32(18));
 
 #endif
 
             // Block Entry Enabled
-            out32(CME_LCL_FLAGS_OR, BITS32(10, 2));
+            out32(G_CME_LCL_FLAGS_OR, BITS32(10, 2));
         }
     }
     // unblock/unsuspend msgs(0x2-0x7)
@@ -472,15 +472,15 @@ p9_cme_stop_db1_handler(void)
 #if HW386841_NDD1_DSL_STOP1_FIX
 
             // Clear AUTO_STOP1_DISABLE
-            out32(CME_LCL_LMCR_CLR,  BIT32(18));
+            out32(G_CME_LCL_LMCR_CLR,  BIT32(18));
 
 #endif
 
             // Clear PM_BLOCK_INTERRUPTS
-            out32(CME_LCL_SICR_CLR,  BITS32(2, 2));
+            out32(G_CME_LCL_SICR_CLR,  BITS32(2, 2));
 
             // Block Exit Disabled
-            out32(CME_LCL_FLAGS_CLR, BITS32(8, 2));
+            out32(G_CME_LCL_FLAGS_CLR, BITS32(8, 2));
         }
 
         // entry
@@ -500,12 +500,12 @@ p9_cme_stop_db1_handler(void)
 #if HW386841_NDD1_DSL_STOP1_FIX
 
             // Clear AUTO_STOP1_DISABLE
-            out32(CME_LCL_LMCR_CLR,  BIT32(18));
+            out32(G_CME_LCL_LMCR_CLR,  BIT32(18));
 
 #endif
 
             // Block Entry Disabled
-            out32(CME_LCL_FLAGS_CLR, BITS32(10, 2));
+            out32(G_CME_LCL_FLAGS_CLR, BITS32(10, 2));
         }
     }
 

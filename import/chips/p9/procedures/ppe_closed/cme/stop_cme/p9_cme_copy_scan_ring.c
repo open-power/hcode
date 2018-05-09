@@ -75,7 +75,7 @@ void bce_irr_setup()
 {
     BceReturnCode_t l_rc;
     uint32_t l_cmePir = 0;
-    uint32_t l_exId   = (in32(CME_LCL_FLAGS) & BIT32(26)) >> SHIFT32(26);
+    uint32_t l_exId   = (in32(G_CME_LCL_FLAGS) & BIT32(26)) >> SHIFT32(26);
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (l_cmePir) : "i" (SPR_NUM_PIR));
 
     //CME's PIR gives only quad id. To determine the correct CME instance, follow the steps below:
@@ -240,7 +240,7 @@ void bce_irr_thread()
 void start_cme_block_copy(uint32_t barIndex, uint32_t bcMembase, uint32_t bcSrambase, uint32_t bcLength)
 {
     uint32_t l_cmePir   = 0;
-    uint32_t l_exId     = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
+    uint32_t l_exId     = ((in32(G_CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
 
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (l_cmePir) : "i" (SPR_NUM_PIR));
 
@@ -268,7 +268,7 @@ BceReturnCode_t check_cme_block_copy()
 {
     BceReturnCode_t l_rc;
     uint32_t        l_cmePir = 0;
-    uint32_t        l_exId   = ((in32(CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
+    uint32_t        l_exId   = ((in32(G_CME_LCL_FLAGS) & BITS32(CME_FLAG_EX_ID_BIT, 1)) >> EX_ID_SHIFT_POS);
 
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (l_cmePir) : "i" (SPR_NUM_PIR));
 

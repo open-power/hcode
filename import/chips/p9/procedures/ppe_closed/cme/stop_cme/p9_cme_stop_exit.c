@@ -227,13 +227,13 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
                      (act_stop_level << SHIFT64SH(44)) |
                      (act_stop_level << SHIFT64SH(52)) |
                      (act_stop_level << SHIFT64SH(60)) |
-                     (((in32(CME_LCL_PSCRS00) & BIT32(2)) ?
+                     (((in32(G_CME_LCL_PSCRS00) & BIT32(2)) ?
                        SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH(39)) |
-                     (((in32(CME_LCL_PSCRS10) & BIT32(2)) ?
+                     (((in32(G_CME_LCL_PSCRS10) & BIT32(2)) ?
                        SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH(47)) |
-                     (((in32(CME_LCL_PSCRS20) & BIT32(2)) ?
+                     (((in32(G_CME_LCL_PSCRS20) & BIT32(2)) ?
                        SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH(55)) |
-                     (((in32(CME_LCL_PSCRS30) & BIT32(2)) ?
+                     (((in32(G_CME_LCL_PSCRS30) & BIT32(2)) ?
                        SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS)));
             }
 
@@ -264,13 +264,13 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
     sync();
 
     PK_TRACE_PERF("Core Waking up(pm_exit=1) via SICR[4/5]");
-    out32(CME_LCL_SICR_OR, core << SHIFT32(5));
+    out32(G_CME_LCL_SICR_OR, core << SHIFT32(5));
 
     CME_PM_EXIT_DELAY
 
     PK_TRACE_PERF("Polling for Core Waking up(pm_active=0) via EINR[20/21]");
 
-    while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
+    while((in32(G_CME_LCL_EINR)) & (core << SHIFT32(21)));
 
 #if defined(USE_CME_QUEUED_SCOM)
 
@@ -280,9 +280,9 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 #endif
 
     PK_TRACE_PERF("Release PCB Mux back on Core via SICR[10/11]");
-    out32(CME_LCL_SICR_CLR, core << SHIFT32(11));
+    out32(G_CME_LCL_SICR_CLR, core << SHIFT32(11));
 
-    while((core & ~(in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+    while((core & ~(in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core);
 
     PK_TRACE_INF("SX.0A: PCB Mux Released on Core[%d]", core);
 
@@ -305,21 +305,21 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
     G_cme_stop_record.core_blockpc &= ~core;
 
     PK_TRACE_DBG("Drop halt STOP override disable via LMCR[14/15]");
-    out32(CME_LCL_LMCR_CLR, (core << SHIFT32(15)));
+    out32(G_CME_LCL_LMCR_CLR, (core << SHIFT32(15)));
 
 #if SPWU_AUTO
 
     PK_TRACE_DBG("Drop auto spwu disable, enable auto spwu via LMCR[12/13]");
-    out32(CME_LCL_LMCR_CLR, core << SHIFT32(13));
+    out32(G_CME_LCL_LMCR_CLR, core << SHIFT32(13));
 
     PK_TRACE_PERF("SX.0B: Core Drop PM_EXIT via SICR[4/5]");
-    out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
+    out32(G_CME_LCL_SICR_CLR, core << SHIFT32(5));
 
 #else
 
     if ((spwu_stop = (core & spwu_stop)))
     {
-        if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE))
+        if (in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE))
         {
             CME_GETSCOM_OR(PPM_SSHSRC, spwu_stop, scom_data.value);
 
@@ -337,9 +337,9 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
         PK_TRACE_DBG("SX.0B: Core[%d] Assert SPWU_DONE via SICR[16/17]", spwu_stop);
         // Note: clear pm_active so that potential stop1 wont use leftover pm_active upon drop spwu later
-        out32(CME_LCL_EISR_CLR, ((spwu_stop << SHIFT32(15)) | (spwu_stop << SHIFT32(21))));  // clear spwu in EISR
-        out32(CME_LCL_EIPR_CLR, spwu_stop << SHIFT32(15));  // flip EIPR to falling edge
-        out32(CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));  // assert spwu_done now
+        out32(G_CME_LCL_EISR_CLR, ((spwu_stop << SHIFT32(15)) | (spwu_stop << SHIFT32(21))));  // clear spwu in EISR
+        out32(G_CME_LCL_EIPR_CLR, spwu_stop << SHIFT32(15));  // flip EIPR to falling edge
+        out32(G_CME_LCL_SICR_OR,  spwu_stop << SHIFT32(17));  // assert spwu_done now
         G_cme_stop_record.core_in_spwu |= spwu_stop;
 
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
@@ -353,7 +353,7 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
     if ((core = (core & (~spwu_stop))))
     {
         PK_TRACE_PERF("SX.0C: Core isnt SPWUed, Drop PM_EXIT via SICR[4/5]");
-        out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
+        out32(G_CME_LCL_SICR_CLR, core << SHIFT32(5));
     }
 
 #endif
@@ -392,10 +392,10 @@ p9_cme_stop_exit_lv2(uint32_t core)
 #endif
 
     PK_TRACE("SX.20: Request PCB mux via SICR[10/11]");
-    out32(CME_LCL_SICR_OR, core << SHIFT32(11));
+    out32(G_CME_LCL_SICR_OR, core << SHIFT32(11));
 
     // Poll Infinitely for PCB Mux Grant
-    while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+    while((core & (in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core);
 
     PK_TRACE("SX.20: PCB Mux Granted on Core[%d]", core);
 
@@ -441,7 +441,7 @@ p9_cme_stop_exit_catchup(uint32_t* core,
     uint32_t wakeup        = 0;
     data64_t scom_data     = {0};
 
-    wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
+    wakeup = (in32(G_CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
     core_catchup = (~(*core)) & ((wakeup >> 4) | wakeup) & CME_MASK_BC;
 
     // ignore wakeup being blocked, do not clear
@@ -462,7 +462,7 @@ p9_cme_stop_exit_catchup(uint32_t* core,
     }
 
     // leave spwu alone, clear pcwu/rgwu only if not stop5+ or blocked
-    out32(CME_LCL_EISR_CLR, ((core_catchup << SHIFT32(13)) | (core_catchup << SHIFT32(17))));
+    out32(G_CME_LCL_EISR_CLR, ((core_catchup << SHIFT32(13)) | (core_catchup << SHIFT32(17))));
 
     // override with partial good core mask, also ignore wakeup to running cores
     // these are being cleared and considered done for running or disabled cores
@@ -472,7 +472,7 @@ p9_cme_stop_exit_catchup(uint32_t* core,
     if (core_catchup)
     {
         // chtm purge done
-        out32(CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
+        out32(G_CME_LCL_EISR_CLR, (core_catchup << SHIFT32(25)));
 
         scom_data.words.lower = 0;
         scom_data.words.upper = SSH_EXIT_IN_SESSION;
@@ -538,7 +538,7 @@ p9_cme_stop_exit()
     //--------------------------------------------------------------------------
 
     // extract wakeup signals and clear status
-    wakeup = (in32(CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
+    wakeup = (in32(G_CME_LCL_EISR) >> SHIFT32(17)) & 0x3F;
     core   = ((wakeup >> 4) | (wakeup >> 2) | wakeup) & CME_MASK_BC;
 
     // ignore wakeup being blocked, do not clear
@@ -559,7 +559,7 @@ p9_cme_stop_exit()
     }
 
     // leave spwu alone, clear pcwu/rgwu only if not stop5+ or blocked
-    out32(CME_LCL_EISR_CLR, ((core << SHIFT32(13)) | (core << SHIFT32(17))));
+    out32(G_CME_LCL_EISR_CLR, ((core << SHIFT32(13)) | (core << SHIFT32(17))));
 
     PK_TRACE_INF("SX.00: Core Wakeup[%x] Raw Interrupts[%x] Actual Stop Levels[%d %d]",
                  core, wakeup,
@@ -585,7 +585,7 @@ p9_cme_stop_exit()
 
     if (spwu_wake)
     {
-        if (in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE))
+        if (in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_SPWU_CHECK_ENABLE))
         {
             CME_GETSCOM_OR(PPM_SSHSRC, spwu_wake, scom_data.value);
 
@@ -600,10 +600,10 @@ p9_cme_stop_exit()
         // Process special wakeup on a core that is already running
         PK_TRACE_DBG("SP.WU: Core[%d] Assert PM_EXIT and SPWU_DONE via SICR[4/5, 16/17]", spwu_wake);
         // Note: clear pm_active so that potential stop1 wont use leftover pm_active upon drop spwu later
-        out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(5));  // assert pm_exit
-        out32(CME_LCL_EISR_CLR, ((spwu_wake << SHIFT32(15)) | (spwu_wake << SHIFT32(21)))); // clear spwu in EISR
-        out32(CME_LCL_EIPR_CLR, spwu_wake << SHIFT32(15)); // flip EIPR to falling edge
-        out32(CME_LCL_SICR_OR,  spwu_wake << SHIFT32(17)); // assert spwu_done now
+        out32(G_CME_LCL_SICR_OR,  spwu_wake << SHIFT32(5));  // assert pm_exit
+        out32(G_CME_LCL_EISR_CLR, ((spwu_wake << SHIFT32(15)) | (spwu_wake << SHIFT32(21)))); // clear spwu in EISR
+        out32(G_CME_LCL_EIPR_CLR, spwu_wake << SHIFT32(15)); // flip EIPR to falling edge
+        out32(G_CME_LCL_SICR_OR,  spwu_wake << SHIFT32(17)); // assert spwu_done now
         G_cme_stop_record.core_in_spwu |= spwu_wake;
 
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
@@ -719,7 +719,7 @@ p9_cme_stop_exit()
                      core, target_level, deeper_level, deeper_core);
 
         PK_TRACE("Clear chtm purge done via EISR[24/25]");
-        out32(CME_LCL_EISR_CLR, (core << SHIFT32(25)));
+        out32(G_CME_LCL_EISR_CLR, (core << SHIFT32(25)));
 
         PK_TRACE("Update STOP history: in transition of exit");
         scom_data.words.lower = 0;
@@ -821,16 +821,16 @@ p9_cme_stop_exit()
 #endif
 
                 PK_TRACE("SX.40: Request PCB mux via SICR[10/11]");
-                out32(CME_LCL_SICR_OR, core << SHIFT32(11));
+                out32(G_CME_LCL_SICR_OR, core << SHIFT32(11));
 
                 // Poll Infinitely for PCB Mux Grant
-                while((core & (in32(CME_LCL_SISR) >> SHIFT32(11))) != core);
+                while((core & (in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core);
 
                 PK_TRACE_PERF("SX.40: PCB Mux Granted on Core");
 
                 // Note: in this case, no need to call p9_cme_pcbmux_savior_epilogue
 
-                if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
+                if(in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
                 {
                     // Poweron the VDM giving it time to powerup prior to enabling
                     PK_TRACE_DBG("Set Poweron bit in VDMCR");
@@ -1064,16 +1064,16 @@ p9_cme_stop_exit()
 #if !SKIP_SELF_RESTORE
 
             PK_TRACE("Assert block interrupt to PC via SICR[2/3]");
-            out32(CME_LCL_SICR_OR, core << SHIFT32(3));
+            out32(G_CME_LCL_SICR_OR, core << SHIFT32(3));
 
             PK_TRACE_PERF("SF.RS: Self Restore Prepare, Core Waking up(pm_exit=1) via SICR[4/5]");
-            out32(CME_LCL_SICR_OR, core << SHIFT32(5));
+            out32(G_CME_LCL_SICR_OR, core << SHIFT32(5));
 
             CME_PM_EXIT_DELAY
 
             PK_TRACE("Polling for core wakeup(pm_active=0) via EINR[20/21]");
 
-            while((in32(CME_LCL_EINR)) & (core << SHIFT32(21)));
+            while((in32(G_CME_LCL_EINR)) & (core << SHIFT32(21)));
 
             scom_data.value = pCmeImgHdr->g_cme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
 
@@ -1211,11 +1211,11 @@ p9_cme_stop_exit()
             //==========================
 
             PK_TRACE("Allow threads to run(pm_exit=0)");
-            out32(CME_LCL_SICR_CLR, core << SHIFT32(5));
+            out32(G_CME_LCL_SICR_CLR, core << SHIFT32(5));
 
             PK_TRACE("Poll for core stop again(pm_active=1)");
 
-            while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)))
+            while((~(in32(G_CME_LCL_EINR))) & (core << SHIFT32(21)))
             {
                 core_spattn = (in32_sh(CME_LCL_SISR) >> SHIFT64SH(33)) & CME_MASK_BC;
 
@@ -1256,10 +1256,10 @@ p9_cme_stop_exit()
             CME_PUTSCOM(IMA_EVENT_MASK, core, scom_data.value & ~BIT64(34));
 
             PK_TRACE("Drop block interrupt to PC via SICR[2/3]");
-            out32(CME_LCL_SICR_CLR, core << SHIFT32(3));
+            out32(G_CME_LCL_SICR_CLR, core << SHIFT32(3));
 
             PK_TRACE("Clear pm_active status via EISR[20/21]");
-            out32(CME_LCL_EISR_CLR, core << SHIFT32(21));
+            out32(G_CME_LCL_EISR_CLR, core << SHIFT32(21));
 
 #endif
 

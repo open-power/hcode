@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -52,9 +52,9 @@ enum SGPE_SX_MARKS
     SX_L2_STARTCLOCKS_ALIGN     =   0x130,
     SX_L2_STARTCLOCKS_REGION        =   0x138,
     SX_SCOM_INITS       =   0x140,
-    SX_CME_BOOT             =   0x148,
-    SX_RUNTIME_INITS        =   0x150,
-    SX_ENABLE_ANALOG        =   0x168,
+    SX_RUNTIME_INITS        =   0x148,
+    SX_ENABLE_ANALOG        =   0x150,
+    SX_CME_BOOT             =   0x168,
     SX_LESSTHAN8_WAIT       =   0x1e0
 };
 

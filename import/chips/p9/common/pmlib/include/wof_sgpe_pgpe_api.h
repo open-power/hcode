@@ -26,29 +26,9 @@
 #ifndef __IPC_MESSAGES_H__
 #define __IPC_MESSAGES_H__
 
-//---------------
-// IPC from SGPE to PGPE
-//---------------
-enum MESSAGE_ID_IPI2HI_SGPE_PGPE
-{
-    MSGID_SGPE_PGPE_UPDATE_ACTIVE_CORES    = 0x8,
-    MSGID_SGPE_PGPE_UPDATE_ACTIVE_QUADS    = 0x9,
-    MSGID_SGPE_PGPE_SUSPEND_PSTATES        = 0x10
-};
-
-//---------------
-// IPC from PGPE to SGPE
-//---------------
-enum MESSAGE_ID_IPI3HI_PGPE_SGPE
-{
-    MSGID_PGPE_SGPE_INVALID                = 0,
-    MSGID_PGPE_SGPE_CONTROL_STOP_UPDATES   = 1,
-    MSGID_PGPE_SGPE_SUSPEND_STOP           = 2
-};
-
 enum CTRL_STOP_UPDATES_ACTIONS
 {
-    CTRL_STOP_UPDT_ENABLE_CORE             = 0x1,
+    CTRL_STOP_UPDT_ENABLE_CORE                  = 0x1,
 };
 
 

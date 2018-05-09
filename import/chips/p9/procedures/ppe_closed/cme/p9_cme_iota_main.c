@@ -45,6 +45,38 @@ CmeStopRecord G_cme_stop_record __attribute__((section (".dump_ptr_stop"))) = {{
 CmeFitRecord G_cme_fit_record = {0, 0, 0, 0, 0xFFFFFFFF, 0};
 #endif
 
+
+uint32_t G_CME_LCL_EINR      = CME_LCL_EINR;
+uint32_t G_CME_LCL_EISR      = CME_LCL_EISR;
+uint32_t G_CME_LCL_EISR_CLR  = CME_LCL_EISR_CLR;
+uint32_t G_CME_LCL_EIMR_CLR  = CME_LCL_EIMR_CLR;
+uint32_t G_CME_LCL_EIMR_OR   = CME_LCL_EIMR_OR;
+uint32_t G_CME_LCL_EIPR_CLR  = CME_LCL_EIPR_CLR;
+uint32_t G_CME_LCL_EIPR_OR   = CME_LCL_EIPR_OR;
+uint32_t G_CME_LCL_EITR_OR   = CME_LCL_EITR_OR;
+uint32_t G_CME_LCL_FLAGS     = CME_LCL_FLAGS;
+uint32_t G_CME_LCL_FLAGS_CLR = CME_LCL_FLAGS_CLR;
+uint32_t G_CME_LCL_FLAGS_OR  = CME_LCL_FLAGS_OR;
+uint32_t G_CME_LCL_SRTCH0    = CME_LCL_SRTCH0;
+uint32_t G_CME_LCL_TSEL      = CME_LCL_TSEL;
+uint32_t G_CME_LCL_TBR       = CME_LCL_TBR;
+uint32_t G_CME_LCL_DBG       = CME_LCL_DBG;
+uint32_t G_CME_LCL_LMCR      = CME_LCL_LMCR;
+uint32_t G_CME_LCL_LMCR_CLR  = CME_LCL_LMCR_CLR;
+uint32_t G_CME_LCL_LMCR_OR   = CME_LCL_LMCR_OR;
+uint32_t G_CME_LCL_ICSR      = CME_LCL_ICSR;
+uint32_t G_CME_LCL_ICRR      = CME_LCL_ICRR;
+uint32_t G_CME_LCL_ICCR_CLR  = CME_LCL_ICCR_CLR;
+uint32_t G_CME_LCL_ICCR_OR   = CME_LCL_ICCR_OR;
+uint32_t G_CME_LCL_SISR      = CME_LCL_SISR;
+uint32_t G_CME_LCL_SICR_CLR  = CME_LCL_SICR_CLR;
+uint32_t G_CME_LCL_SICR_OR   = CME_LCL_SICR_OR;
+uint32_t G_CME_LCL_PSCRS00   = CME_LCL_PSCRS00;
+uint32_t G_CME_LCL_PSCRS10   = CME_LCL_PSCRS10;
+uint32_t G_CME_LCL_PSCRS20   = CME_LCL_PSCRS20;
+uint32_t G_CME_LCL_PSCRS30   = CME_LCL_PSCRS30;
+
+
 #if !DISABLE_CME_FIT_TIMER
 
 void fit_handler()
@@ -83,7 +115,7 @@ void dec_handler()
 void p9_cme_hipri_ext_handler(uint32_t task_idx)
 {
     //Only look at bits 0,1,2,3, and 5
-    uint32_t eisr_subset = in32(CME_LCL_EISR) & BITS32(0, 6);
+    uint32_t eisr_subset = in32(G_CME_LCL_EISR) & BITS32(0, 6);
     //exclude bit 4: PGPE Heartbeat lost
     eisr_subset &= ~BIT32(4);
 
@@ -91,7 +123,7 @@ void p9_cme_hipri_ext_handler(uint32_t task_idx)
 
     uint32_t bitnum = cntlz32(eisr_subset);
 
-    if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_PM_DEBUG_HALT_ENABLE))
+    if(in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_PM_DEBUG_HALT_ENABLE))
     {
         switch (bitnum)
         {
@@ -117,7 +149,7 @@ void p9_cme_hipri_ext_handler(uint32_t task_idx)
 
     //if debug halt is NOT enabled, clear the ones reported in the trace
     //above and return
-    out32(CME_LCL_EISR_CLR, eisr_subset);
+    out32(G_CME_LCL_EISR_CLR, eisr_subset);
 }
 
 IOTA_BEGIN_TASK_TABLE
@@ -165,17 +197,17 @@ int main()
     // Clear SPRG0
     ppe42_app_ctx_set(0);
 
-    G_cme_record.core_enabled = in32(CME_LCL_FLAGS) &
+    G_cme_record.core_enabled = in32(G_CME_LCL_FLAGS) &
                                 (BIT32(CME_FLAGS_CORE0_GOOD) | BIT32(CME_FLAGS_CORE1_GOOD));
     PK_TRACE("CME Register Partial Good Cores[%d]", G_cme_record.core_enabled);
 
 #if defined(USE_CME_QUEUED_SCOM) || defined(USE_CME_QUEUED_SCAN)
     PK_TRACE("CME Enabling Queued Scom/Scan");
-    out32(CME_LCL_LMCR_OR, BITS32(8, 2));
+    out32(G_CME_LCL_LMCR_OR, BITS32(8, 2));
 #endif
 
     PK_TRACE("Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
-    out32(CME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
+    out32(G_CME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
 
 #if (!DISABLE_CME_FIT_TIMER || ENABLE_CME_DEC_TIMER)
 

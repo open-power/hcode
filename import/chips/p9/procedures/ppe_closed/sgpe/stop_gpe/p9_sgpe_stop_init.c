@@ -81,7 +81,7 @@ void p9_sgpe_stop_cme_scominit(uint32_t quad, uint32_t cme, uint32_t cme_flags)
 
     //CME_LFIR[0,1,2,3,4] should generate CME PCB Error Packet(type5 owned by PGPE)
     //(1,0,0)(Act0,Act1,Mask) = CME PCB Error Packet
-    PK_TRACE("Setup CME FIR Act0/Act1/Mask for CME_LFIR[0,1,2,3,4]")
+    PK_TRACE("Setup CME FIR Act0/Act1/Mask for CME_LFIR[0,1,2,3,4]");
     GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LFIRACT0, quad, cme), scom_data.value);
     scom_data.value |= BITS64(0, 5);
     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LFIRACT0, quad, cme), scom_data.value);
@@ -284,19 +284,19 @@ p9_sgpe_stop_init()
     // read partial good cores
     do
     {
-        ccsr.value = in32(OCB_CCSR);
+        ccsr.value = in32(G_OCB_CCSR);
     }
     while (ccsr.fields.change_in_progress);
 
     // read partial good exes
     do
     {
-        qcsr.value = in32(OCB_QCSR);
+        qcsr.value = in32(G_OCB_QCSR);
     }
     while (qcsr.fields.change_in_progress);
 
     // read initial stop states
-    qssr.value = in32(OCB_QSSR);
+    qssr.value = in32(G_OCB_QSSR);
 
     PK_TRACE_DBG("Setup: CCSR[%x] QCSR[%x] QSSR[%x]",
                  ccsr.value, qcsr.value, qssr.value);
@@ -476,15 +476,15 @@ p9_sgpe_stop_init()
     //--------------------------------------------------------------------------
 
     PK_TRACE_INF("Setup: Clear Type 0,2,3,6 and ipi_lo_3 interrupts");
-    out32(OCB_OISR1_CLR, (BIT32(13) | BITS32(15, 2) | BIT32(19) | BIT32(29)));
-    out32(OCB_OPITNPRA_CLR(0), BITS32(0, 24));
-    out32(OCB_OPITNPRA_CLR(1), BITS32(0, 24));
-    out32(OCB_OPITNPRA_CLR(2), BITS32(0, 24));
-    out32(OCB_OPITNPRA_CLR(3), BITS32(0, 24));
-    out32(OCB_OPITNPRA_CLR(4), BITS32(0, 24));
-    out32(OCB_OPITNPRA_CLR(5), BITS32(0, 24));
-    out32(OCB_OPIT6PRB_CLR,    BITS32(0, 6));
-    out32(OCB_OPIT7PRB_CLR,    BITS32(0, 6));
+    out32(G_OCB_OISR1_CLR, (BIT32(13) | BITS32(15, 2) | BIT32(19) | BIT32(29)));
+    out32(G_OCB_OPIT0PRA_CLR, BITS32(0, 24));
+    out32(G_OCB_OPIT1PRA_CLR, BITS32(0, 24));
+    out32(G_OCB_OPIT2PRA_CLR, BITS32(0, 24));
+    out32(G_OCB_OPIT3PRA_CLR, BITS32(0, 24));
+    out32(G_OCB_OPIT4PRA_CLR, BITS32(0, 24));
+    out32(G_OCB_OPIT5PRA_CLR, BITS32(0, 24));
+    out32(G_OCB_OPIT6PRB_CLR, BITS32(0, 6));
+    out32(G_OCB_OPIT7PRB_CLR, BITS32(0, 6));
 
 #if !SKIP_CME_BOOT_IPL_HB
 
@@ -573,7 +573,7 @@ p9_sgpe_stop_init()
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB2, cindex), 0);
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB3, cindex), 0);
 
-                    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
+                    if ((in32(G_OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(G_OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
                     {
                         GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CSAR_OR, cindex),  BIT64(CPPM_CSAR_ENABLE_PSTATE_REGISTRATION_INTERLOCK));
                     }
@@ -640,23 +640,23 @@ p9_sgpe_stop_init()
 #endif
 
     PK_TRACE("Configure and Enable Fit Timer");
-    out32(GPE_GPE3TSEL, BIT32(4));
+    out32(G_GPE_GPE3TSEL, BIT32(4));
     ppe42_fit_setup((PkIrqHandler)p9_sgpe_fit_handler, 0);
 
     PK_TRACE("Clear OCC LFIR[gpe3_halted] and OISR[gpe3_error and xstop] bits upon SGPE boot");
-    GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(25));
-    out32(OCB_OISR0_CLR, (BIT32(8) | BIT32(16)));
-    out32(OCB_OIMR0_CLR, (BIT32(8) | BIT32(16)));
+    GPE_PUTSCOM(G_OCB_OCCLFIR_AND, ~BIT64(25));
+    out32(G_OCB_OISR0_CLR, (BIT32(8) | BIT32(16)));
+    out32(G_OCB_OIMR0_CLR, (BIT32(8) | BIT32(16)));
 
     PK_TRACE_INF("Setup: Unmask Type 0, 2,3,6 and ipi_lo_3 interrupts");
-    out32(OCB_OIMR1_CLR, BIT32(13) | (BITS32(15, 2) | BIT32(19) | BIT32(29)));
+    out32(G_OCB_OIMR1_CLR, BIT32(13) | (BITS32(15, 2) | BIT32(19) | BIT32(29)));
 
     //--------------------------------------------------------------------------
     // SGPE Init Completed
     //--------------------------------------------------------------------------
 
     PK_TRACE_INF("Setup: SGPE STOP READY");
-    out32(OCB_OCCFLG_OR, BIT32(SGPE_ACTIVE));
+    out32(G_OCB_OCCFLG_OR, BIT32(SGPE_ACTIVE));
 
 #if EPM_P9_TUNING
     asm volatile ("tw 0, 31, 0");

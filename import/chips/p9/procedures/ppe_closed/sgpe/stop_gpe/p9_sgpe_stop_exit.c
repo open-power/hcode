@@ -146,7 +146,7 @@ p9_sgpe_stop_exit_lv8(uint32_t qloop)
 
     if ((scom_data.words.upper & BITS32(0, 5)) != 0xC0000000)
     {
-        PK_TRACE_ERR("ERROR: Failed to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
+        PK_TRACE_ERR("ERROR: Fail to Obtain Cache %d Clk Ctrl Atomic Lock. Register Content: %x",
                      qloop, scom_data.words.upper);
         SGPE_STOP_QUAD_ERROR_HANDLER(qloop, SGPE_STOP_EXIT_GET_CLK_LOCK_FAILED);
         return;
@@ -193,7 +193,7 @@ p9_sgpe_stop_exit_lv8(uint32_t qloop)
     }
 
     PK_TRACE("Update QSSR: drop l2_stopped");
-    out32(OCB_QSSR_CLR, (ex << SHIFT32((qloop << 1) + 1)));
+    out32(G_OCB_QSSR_CLR, (ex << SHIFT32((qloop << 1) + 1)));
 }
 
 
@@ -252,7 +252,7 @@ p9_sgpe_stop_exit_end(uint32_t qloop)
     }
 
     PK_TRACE("Update QSSR: drop stop_exit_ongoing");
-    out32(OCB_QSSR_CLR, BIT32(qloop + 26));
+    out32(G_OCB_QSSR_CLR, BIT32(qloop + 26));
 }
 
 //-------------------------------------------------------------------------
@@ -309,8 +309,8 @@ p9_sgpe_stop_exit_handoff_cme(uint32_t cindex)
 
     // clear possible phantom interrupts after handoff to cme
     // there shouldnt be any valid entry or exit to process
-    out32(OCB_OPITNPRA_CLR(2), BIT32(cindex));
-    out32(OCB_OPITNPRA_CLR(3), BIT32(cindex));
+    out32(G_OCB_OPIT2PRA_CLR, BIT32(cindex));
+    out32(G_OCB_OPIT3PRA_CLR, BIT32(cindex));
 
     // From IPC prospective, core is active when handoff to cme
     // and if core from quad is active, the quad is active
@@ -360,7 +360,7 @@ p9_sgpe_stop_exit()
     G_sgpe_stop_record.group.ex01[4]           = 0;
     G_sgpe_stop_record.group.ex01[5]           = 0;
 
-    if(in32(OCB_OCCFLG2) & BIT32(OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ))
+    if(in32(G_OCB_OCCFLG2) & BIT32(OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ))
     {
         PK_TRACE_ERR("SGPE STOP EXIT ERROR INJECT TRAP");
         PK_PANIC(SGPE_STOP_EXIT_TRAP_INJECT);
@@ -398,7 +398,7 @@ p9_sgpe_stop_exit()
         }
 
         PK_TRACE("Update QSSR: stop_exit_ongoing");
-        out32(OCB_QSSR_OR, BIT32(qloop + 26));
+        out32(G_OCB_QSSR_OR, BIT32(qloop + 26));
 
         for(cloop = 0; cloop < CORES_PER_QUAD; cloop++)
         {
@@ -443,7 +443,7 @@ p9_sgpe_stop_exit()
     //   PGPE, as part of its processing this IPC,
     //   will write the QPPM_DPLL_FREQ register before responding.
 
-    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+    if ((in32(G_OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
         G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
         G_sgpe_stop_record.group.quad[VECTOR_EXIT])
     {
@@ -872,7 +872,7 @@ p9_sgpe_stop_exit()
         // Setting up cme_flags
         do
         {
-            ccsr.value = in32(OCB_CCSR);
+            ccsr.value = in32(G_OCB_CCSR);
         }
         while (ccsr.fields.change_in_progress);
 
@@ -944,7 +944,7 @@ p9_sgpe_stop_exit()
 
 #endif
 
-                        if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
+                        if ((in32(G_OCB_OCCS2) & BIT32(PGPE_ACTIVE)) && (in32(G_OCB_OCCS2) & BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE)))
                         {
                             GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CSAR_OR, (ec_index + cloop)),
                                         BIT64(CPPM_CSAR_ENABLE_PSTATE_REGISTRATION_INTERLOCK));
@@ -969,7 +969,7 @@ p9_sgpe_stop_exit()
             continue;
         }
 
-        if (in32(OCB_OCCS2) & BIT32(CME_DEBUG_TRAP_ENABLE))
+        if (in32(G_OCB_OCCS2) & BIT32(CME_DEBUG_TRAP_ENABLE))
         {
             PK_TRACE_INF("BREAK: Trap Before CME Boot");
             asm volatile ("trap");
@@ -994,7 +994,7 @@ p9_sgpe_stop_exit()
         GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
 
         PK_TRACE("Update QSSR: drop quad_stopped");
-        out32(OCB_QSSR_CLR, BIT32(qloop + 14));
+        out32(G_OCB_QSSR_CLR, BIT32(qloop + 14));
 
         G_sgpe_stop_record.state[qloop].act_state_q = 0;
         p9_sgpe_stop_exit_end(qloop);
@@ -1003,7 +1003,7 @@ p9_sgpe_stop_exit()
 
 #if !SKIP_IPC
 
-    if ((in32(OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
+    if ((in32(G_OCB_OCCS2) & BIT32(PGPE_ACTIVE)) &&
         G_sgpe_stop_record.wof.update_pgpe != IPC_SGPE_PGPE_UPDATE_PGPE_HALTED &&
         G_sgpe_stop_record.group.quad[VECTOR_EXIT])
     {

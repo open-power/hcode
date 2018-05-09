@@ -98,6 +98,9 @@ p9_hcd_core_chiplet_reset(uint32_t core)
     // to get the core to scan at 4:1, need to put a scan ratio of 2:1 if run at pll speed.
     PK_TRACE("Set scan ratio to 2:1 in non-bypass mode via OPCG_ALIGN[47-51]");
 
+    // Marker for scan0
+    MARK_TRAP(SX_CHIPLET_RESET_SCAN0)
+
     // this register requires unicast, dual cast with eq check will fail
     for(core_mask = 2; core_mask; core_mask--)
     {
@@ -110,8 +113,6 @@ p9_hcd_core_chiplet_reset(uint32_t core)
 #endif
             CME_PUTSCOM(C_OPCG_ALIGN, core_mask, scom_data.value);
 
-            // Marker for scan0
-            MARK_TRAP(SX_CHIPLET_RESET_SCAN0)
 #if !SKIP_SCAN0
             p9_hcd_core_scan0(core_mask, SCAN0_REGION_ALL, SCAN0_TYPE_GPTR_REPR_TIME);
             p9_hcd_core_scan0(core_mask, SCAN0_REGION_ALL, SCAN0_TYPE_ALL_BUT_GPTR_REPR_TIME);
@@ -119,7 +120,6 @@ p9_hcd_core_chiplet_reset(uint32_t core)
 
         }
     }
-
 
     /// content of p9_hcd_core_dcc_skewadjust below:
     PK_TRACE("Drop core DCC bypass via NET_CTRL[1]");

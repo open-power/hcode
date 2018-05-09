@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -51,16 +51,14 @@ enum CME_SE_MARKS
     SE_IS0_BEGIN        =   0xf8,
     SE_IS0_END      =   0x100,
     SE_CATCHUP      =   0x108,
-    SE_CORE_VMIN        =   0x110,
-    SE_STOP3_DONE       =   0x118,
-    SE_POWER_OFF_CORE       =   0x120,
-    SE_STOP4_DONE       =   0x128,
-    SE_IS1_BEGIN        =   0x130,
-    SE_IS1_END      =   0x138,
-    SE_PURGE_L2     =   0x140,
-    SE_PURGE_L2_ABORT       =   0x148,
-    SE_PURGE_L2_DONE        =   0x150,
-    SE_SGPE_HANDOFF     =   0x168
+    SE_POWER_OFF_CORE       =   0x110,
+    SE_STOP4_DONE       =   0x118,
+    SE_IS1_BEGIN        =   0x120,
+    SE_IS1_END      =   0x128,
+    SE_PURGE_L2     =   0x130,
+    SE_PURGE_L2_ABORT       =   0x138,
+    SE_PURGE_L2_DONE        =   0x140,
+    SE_SGPE_HANDOFF     =   0x148
 };
 
 
@@ -83,8 +81,6 @@ const std::vector<CME_SE_MARKS> MARKS =
     SE_IS0_BEGIN,
     SE_IS0_END,
     SE_CATCHUP,
-    SE_CORE_VMIN,
-    SE_STOP3_DONE,
     SE_POWER_OFF_CORE,
     SE_STOP4_DONE,
     SE_IS1_BEGIN,
@@ -111,8 +107,6 @@ const std::map<CME_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
         (SE_IS0_BEGIN, "SE_IS0_BEGIN")
         (SE_IS0_END, "SE_IS0_END")
         (SE_CATCHUP, "SE_CATCHUP")
-        (SE_CORE_VMIN, "SE_CORE_VMIN")
-        (SE_STOP3_DONE, "SE_STOP3_DONE")
         (SE_POWER_OFF_CORE, "SE_POWER_OFF_CORE")
         (SE_STOP4_DONE, "SE_STOP4_DONE")
         (SE_IS1_BEGIN, "SE_IS1_BEGIN")

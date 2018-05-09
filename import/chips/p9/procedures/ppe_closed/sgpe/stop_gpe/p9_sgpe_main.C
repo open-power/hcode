@@ -27,6 +27,46 @@
 #include <fapi2.H>
 
 
+//We define a global literal for these register addresses
+////This way compiler put them in .sdata area, and the address
+////can be loaded with one instruction using r13 as offset into
+////sdata area. The change helped save about 448 bytes of code space.
+////Note, some register's address were not moved to using global literals
+////because in some cases they registers are accessed few times or they are
+////used inside a loop. In both cases, either no code reduction was observed
+////or resulted in code increase.
+uint32_t G_OCB_CCSR         = OCB_CCSR;
+uint32_t G_OCB_QCSR         = OCB_QCSR;
+uint32_t G_OCB_QSSR         = OCB_QSSR;
+uint32_t G_OCB_QSSR_CLR     = OCB_QSSR_CLR;
+uint32_t G_OCB_QSSR_OR      = OCB_QSSR_OR;
+uint32_t G_OCB_OCCFLG       = OCB_OCCFLG;
+uint32_t G_OCB_OCCFLG_CLR   = OCB_OCCFLG_CLR;
+uint32_t G_OCB_OCCFLG_OR    = OCB_OCCFLG_OR;
+uint32_t G_OCB_OCCFLG2      = OCB_OCCFLG2;
+uint32_t G_OCB_OCCS2        = OCB_OCCS2;
+uint32_t G_OCB_OISR0_CLR    = OCB_OISR0_CLR;
+uint32_t G_OCB_OISR1        = OCB_OISR1;
+uint32_t G_OCB_OISR1_CLR    = OCB_OISR1_CLR;
+uint32_t G_OCB_OIMR0_CLR    = OCB_OIMR0_CLR;
+uint32_t G_OCB_OIMR0_OR     = OCB_OIMR0_OR;
+uint32_t G_OCB_OIMR1_CLR    = OCB_OIMR1_CLR;
+uint32_t G_OCB_OIMR1_OR     = OCB_OIMR1_OR ;
+uint32_t G_OCB_OPIT0PRA     = OCB_OPIT0PRA;
+uint32_t G_OCB_OPIT2PRA     = OCB_OPIT2PRA;
+uint32_t G_OCB_OPIT3PRA     = OCB_OPIT3PRA;
+uint32_t G_OCB_OPIT6PRB     = OCB_OPIT6PRB;
+uint32_t G_OCB_OPIT0PRA_CLR = OCB_OPIT0PRA_CLR;
+uint32_t G_OCB_OPIT1PRA_CLR = OCB_OPIT1PRA_CLR;
+uint32_t G_OCB_OPIT2PRA_CLR = OCB_OPIT2PRA_CLR;
+uint32_t G_OCB_OPIT3PRA_CLR = OCB_OPIT3PRA_CLR;
+uint32_t G_OCB_OPIT4PRA_CLR = OCB_OPIT4PRA_CLR;
+uint32_t G_OCB_OPIT5PRA_CLR = OCB_OPIT5PRA_CLR;
+uint32_t G_OCB_OPIT6PRB_CLR = OCB_OPIT6PRB_CLR;
+uint32_t G_OCB_OPIT7PRB_CLR = OCB_OPIT7PRB_CLR;
+uint32_t G_OCB_OCCLFIR_AND  = OCB_OCCLFIR_AND;
+uint32_t G_GPE_GPE3TSEL     = GPE_GPE3TSEL;
+
 
 EXTERNAL_IRQ_TABLE_START
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_DEBUGGER
@@ -150,7 +190,7 @@ main(int argc, char** argv)
         PK_PANIC(SGPE_BAD_DD_LEVEL);
     }
 
-    if (in32(OCB_OCCS2) & BIT32(SPGE_DEBUG_TRAP_ENABLE))
+    if (in32(G_OCB_OCCS2) & BIT32(SPGE_DEBUG_TRAP_ENABLE))
     {
         PK_TRACE_INF("BREAK: Trap at SGPE Booted");
         asm volatile ("trap");

@@ -1398,7 +1398,7 @@ void p9_pgpe_pstate_send_suspend_stop()
     p9_pgpe_optrace(PRC_PM_SUSP);
 
     int rc;
-    G_sgpe_suspend_stop.fields.msg_num = MSGID_PGPE_SGPE_SUSPEND_STOP;
+    G_sgpe_suspend_stop.fields.msg_num = 0;
     G_sgpe_suspend_stop.fields.command  = SUSPEND_STOP_SUSPEND_ENTRY_EXIT;
     G_sgpe_suspend_stop.fields.return_code = 0x0;
     G_ipc_msg_pgpe_sgpe.cmd_data = &G_sgpe_suspend_stop;

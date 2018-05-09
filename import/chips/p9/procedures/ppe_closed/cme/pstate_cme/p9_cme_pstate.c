@@ -128,7 +128,7 @@ uint32_t poll_dpll_stat()
     // DYNAMIC_PROTECT        -> DPLL Mode 5
 
     // DPLL Mode 2
-    if(!(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE)))
+    if(!(in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE)))
     {
         PK_TRACE_INF("Poll on DPLL_STAT[freq_change=0]");
 
@@ -155,7 +155,7 @@ uint32_t poll_dpll_stat()
         CME_GETSCOM(CPPM_CSAR, G_cme_pstate_record.firstGoodCoreMask, csar.value);
 
         //Read TimebaseStart
-        tbStart = in32(CME_LCL_TBR);
+        tbStart = in32(G_CME_LCL_TBR);
 
         do
         {
@@ -169,7 +169,7 @@ uint32_t poll_dpll_stat()
             }
 
             //Read TimebaseEnd
-            tbEnd = in32(CME_LCL_TBR);
+            tbEnd = in32(G_CME_LCL_TBR);
 
             //Compute Elapsed Count with accounting for Timebase Wrapping
             if (tbEnd > tbStart)
@@ -276,22 +276,22 @@ void ippm_write(uint32_t addr, uint64_t data)
 
 void intercme_msg_send(uint32_t msg, INTERCME_MSG_TYPE type)
 {
-    out32(CME_LCL_ICSR, (msg << 4) | type);
+    out32(G_CME_LCL_ICSR, (msg << 4) | type);
 
     PK_TRACE_DBG("imt send | msg=%08x", ((msg << 4) | type));
 
     // Block on ack from companion CME
-    while(!(in32(CME_LCL_EISR) & BIT32(30))) {}
+    while(!(in32(G_CME_LCL_EISR) & BIT32(30))) {}
 
-    out32(CME_LCL_EISR_CLR, BIT32(30));
+    out32(G_CME_LCL_EISR_CLR, BIT32(30));
 }
 
 void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type)
 {
     // Poll for inter-cme communication from QM
-    while(!(in32(CME_LCL_EISR) & BIT32(29))) {}
+    while(!(in32(G_CME_LCL_EISR) & BIT32(29))) {}
 
-    *msg = in32(CME_LCL_ICRR);
+    *msg = in32(G_CME_LCL_ICRR);
     PK_TRACE_DBG("imt recv | msg=%08x", *msg);
 
     if(*msg & type)
@@ -305,10 +305,10 @@ void intercme_msg_recv(uint32_t* msg, INTERCME_MSG_TYPE type)
     }
 
     // Ack back to companion CME that msg was received
-    out32(CME_LCL_ICCR_OR, BIT32(0));
+    out32(G_CME_LCL_ICCR_OR, BIT32(0));
     // Clear the ack
-    out32(CME_LCL_ICCR_CLR, BIT32(0));
-    out32(CME_LCL_EISR_CLR, BIT32(29));
+    out32(G_CME_LCL_ICCR_CLR, BIT32(0));
+    out32(G_CME_LCL_EISR_CLR, BIT32(29));
 }
 
 void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint32_t retry_enable)
@@ -320,8 +320,8 @@ void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint3
     orig_intf = intf;
 
     // Send intercme interrupt, this is the same whether notifying or acking
-    out32(CME_LCL_ICCR_OR , BIT32(intf));
-    out32(CME_LCL_ICCR_CLR, BIT32(intf));
+    out32(G_CME_LCL_ICCR_OR , BIT32(intf));
+    out32(G_CME_LCL_ICCR_CLR, BIT32(intf));
 
     // Adjust the EI*R base address based on which intercme direct interface
     // is used since the bits are spread across both words in the EI*R registers
@@ -351,11 +351,11 @@ void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint3
             if (retry_enable && ((poll_count & 0x1FF) == 0x1FF))
             {
                 // Send intercme interrupt, this is the same whether notifying or acking
-                out32(CME_LCL_ICCR_OR , BIT32(orig_intf));
-                out32(CME_LCL_ICCR_CLR, BIT32(orig_intf));
+                out32(G_CME_LCL_ICCR_OR , BIT32(orig_intf));
+                out32(G_CME_LCL_ICCR_CLR, BIT32(orig_intf));
             }
 
-            if(in32((CME_LCL_EISR + addr_offset)) & BIT32(intf))
+            if(in32((G_CME_LCL_EISR + addr_offset)) & BIT32(intf))
             {
                 intercme_acked = 1;
             }
@@ -364,7 +364,7 @@ void intercme_direct(INTERCME_DIRECT_INTF intf, INTERCME_DIRECT_TYPE type, uint3
         }
     }
 
-    out32((CME_LCL_EISR_CLR + addr_offset), BIT32(intf)); // Clear the interrupt
+    out32((G_CME_LCL_EISR_CLR + addr_offset), BIT32(intf)); // Clear the interrupt
 }
 
 #ifdef USE_CME_RESCLK_FEATURE
@@ -387,7 +387,7 @@ void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
 {
 #ifdef USE_CME_RESCLK_FEATURE
 
-    if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
+    if(in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_RCLK_OPERABLE))
     {
         uint32_t pstate;
         uint32_t curr_idx;
@@ -439,7 +439,7 @@ void p9_cme_core_stop_analog_control(uint32_t core_mask, ANALOG_CONTROL enable)
 
 #ifdef USE_CME_VDM_FEATURE
 
-    if(in32(CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
+    if(in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_VDM_OPERABLE))
     {
         if(enable)
         {
@@ -872,7 +872,7 @@ void p9_cme_resclk_update(ANALOG_TARGET target, uint32_t next_idx, uint32_t curr
 void p9_cme_pstate_pmsr_updt()
 {
     uint64_t pmsrData;
-    uint32_t cme_flags = in32(CME_LCL_FLAGS);
+    uint32_t cme_flags = in32(G_CME_LCL_FLAGS);
 
     //Note: PMSR[58/UPDATE_IN_PROGRESS] is always cleared here
     pmsrData  = ((uint64_t)G_cme_pstate_record.globalPstate) << 56;
@@ -883,7 +883,7 @@ void p9_cme_pstate_pmsr_updt()
     //LMCR[0] = 1 means PMCR SCOM update are enabled ie.
     //PMCR SPR does not control Pstates. We reflect that in
     //PMSR[32/PMCR_DISABLED]
-    if ((in32(CME_LCL_LMCR) & BIT32(0)))
+    if ((in32(G_CME_LCL_LMCR) & BIT32(0)))
     {
         pmsrData |= BIT64(32);
     }

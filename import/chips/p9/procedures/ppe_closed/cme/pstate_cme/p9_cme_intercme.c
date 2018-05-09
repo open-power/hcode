@@ -68,19 +68,19 @@ void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION i
     }
 
     // Block on the intercme0/intercme1/intercme2 interrupt
-    while((!(in32(CME_LCL_EISR) & BIT32(7))) &&
+    while((!(in32(G_CME_LCL_EISR) & BIT32(7))) &&
           (!(in32_sh(CME_LCL_EISR) & BIT64SH(38)))) {}
 
     //If INTERCME_DIRECT_IN1, then error.
     if(in32_sh(CME_LCL_EISR) & BIT64SH(38))
     {
-        out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
+        out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
         p9_cme_pstate_pmsr_updt();
         intercme_direct(INTERCME_DIRECT_IN1, INTERCME_DIRECT_ACK, 0);
     }
 
     //If INTERCME_DIRECT_IN0, then process DB0 data
-    if(in32(CME_LCL_EISR) & BIT32(7))
+    if(in32(G_CME_LCL_EISR) & BIT32(7))
     {
         p9_cme_pstate_process_db0_sibling();
     }
@@ -99,7 +99,7 @@ void p9_cme_pstate_process_db0_sibling()
 
     PK_TRACE_INF("INTER0: Enter");
 
-    dbQuadInfo = (dbData.value >> (in32(CME_LCL_SRTCH0) &
+    dbQuadInfo = (dbData.value >> (in32(G_CME_LCL_SRTCH0) &
                                    (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)
                                    ))) & 0xFF;
     dbBit8_15 = (dbData.value & BITS64(8, 8)) >> SHIFT64(15);
@@ -167,11 +167,11 @@ void p9_cme_pstate_process_db0_sibling()
         switch(dbBit8_15)
         {
             case DB0_PMSR_UPDT_SET_PSTATES_SUSPENDED:
-                out32(CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
+                out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
                 break;
 
             case DB0_PMSR_UPDT_CLEAR_PSTATES_SUSPENDED:
-                out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
+                out32(G_CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_PSTATES_SUSPENDED));
                 break;
         }
 
