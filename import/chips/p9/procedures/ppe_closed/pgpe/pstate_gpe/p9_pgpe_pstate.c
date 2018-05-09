@@ -487,7 +487,7 @@ void p9_pgpe_send_db3(db3_parms_t p)
     {
         if (p.targetCores & CORE_MASK(c))
         {
-            if(p.db0val)
+            if(p.writeDB0 == PGPE_DB3_WRITE_DB0)
             {
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CMEDB0, c), p.db0val)
             }
@@ -631,6 +631,7 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
     db3_parms_t p;
     p.db3val = (uint64_t)MSGID_DB3_REPLAY_DB0 << 56;
     p.db0val = 0;
+    p.writeDB0 = PGPE_DB3_SKIP_WRITE_DB0;
     p.waitForAcks = PGPE_DB_ACK_WAIT_CME;
     p.checkNACKs = PGPE_DB3_SKIP_CHECK_NACKS;
 
@@ -1455,6 +1456,7 @@ void p9_pgpe_pstate_safe_mode()
     db0.fields.msg_id = MSGID_DB0_DB3_PAYLOAD;
     p.db3val            = (uint64_t)MSGID_DB3_ENTER_SAFE_MODE << 56;
     p.db0val            = db0.value;
+    p.writeDB0          = PGPE_DB3_WRITE_DB0;
     p.targetCores       = G_pgpe_pstate_record.activeDB;
     p.waitForAcks       = PGPE_DB_ACK_WAIT_CME;
     p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;
@@ -1590,6 +1592,7 @@ void p9_pgpe_pstate_sgpe_fault()
     //2. PGPE sends all active CMEs a DB3 to disable SGPE Handoff
     p.db3val            = (uint64_t)MSGID_DB3_DISABLE_SGPE_HANDOFF << 56;
     p.db0val            = 0;
+    p.writeDB0          = PGPE_DB3_SKIP_WRITE_DB0;
     p.targetCores       = G_pgpe_pstate_record.activeDB;
     p.waitForAcks       = PGPE_DB_ACK_WAIT_CME;
     p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;
@@ -1972,6 +1975,7 @@ void p9_pgpe_pstate_freq_updt()
         db0.fields.msg_id =  MSGID_DB0_DB3_PAYLOAD;
         db3_parms_t p = {MSGID_DB3_HIGH_PRIORITY_PSTATE,
                          db0.value,
+                         PGPE_DB3_WRITE_DB0,
                          G_pgpe_pstate_record.activeDB,
                          PGPE_DB_ACK_WAIT_CME,
                          G_pgpe_pstate_record.activeQuads,
@@ -2048,6 +2052,7 @@ inline void p9_pgpe_droop_throttle()
     db3_parms_t p;
     p.db3val = (uint64_t)MSGID_DB3_SUSPEND_STOP_ENTRY << 56;
     p.db0val = 0;
+    p.writeDB0          = PGPE_DB3_SKIP_WRITE_DB0;
     p.targetCores       = G_pgpe_pstate_record.activeDB;
     p.waitForAcks       = PGPE_DB_ACK_SKIP; //We skip ACKs here bc CME will set CME_FLAGS[]
     p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;
@@ -2130,6 +2135,7 @@ inline void p9_pgpe_droop_unthrottle()
     db3_parms_t p;
     p.db3val = (uint64_t)MSGID_DB3_UNSUSPEND_STOP_ENTRY << 56;
     p.db0val = 0;
+    p.writeDB0          = PGPE_DB3_SKIP_WRITE_DB0;
     p.targetCores       = G_pgpe_pstate_record.activeDB;
     p.waitForAcks       = PGPE_DB_ACK_WAIT_CME;
     p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;

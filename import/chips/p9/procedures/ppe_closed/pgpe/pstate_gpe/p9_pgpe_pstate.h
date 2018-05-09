@@ -92,7 +92,9 @@ enum PSTATE_DB
     PGPE_DB0_TYPE_UNICAST       = 0,
     PGPE_DB0_TYPE_MULTICAST     = 1,
     PGPE_DB3_SKIP_CHECK_NACKS   = 0,
-    PGPE_DB3_CHECK_NACKS        = 1
+    PGPE_DB3_CHECK_NACKS        = 1,
+    PGPE_DB3_SKIP_WRITE_DB0     = 0,
+    PGPE_DB3_WRITE_DB0          = 1
 };
 
 enum SEMAPHORE_PROCESS_POST_SRC
@@ -206,6 +208,7 @@ typedef struct db3_parms
 {
     uint64_t db3val;
     uint64_t db0val;
+    uint32_t writeDB0;
     uint32_t targetCores;
     uint32_t waitForAcks;
     uint32_t expectedAckFrom;
