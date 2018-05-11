@@ -1565,6 +1565,13 @@ p9_cme_stop_entry()
             scom_data.words.upper = SSH_ACT_LV5_CONTINUE;
             CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
 
+#if NIMBUS_DD_LEVEL != 10
+
+            PK_TRACE("Drop PPM_WRITE_DISABLE via CPMMR[0]");
+            CME_PUTSCOM(CPPM_CPMMR_CLR, core, BIT64(0));
+
+#endif
+
             PK_TRACE("Send PCB interrupt per core via PIG, select irq type via CPMMR[10]");
 
             for (core_mask = 2; core_mask; core_mask--)
@@ -1624,13 +1631,6 @@ p9_cme_stop_entry()
 
             PK_TRACE("Clear special/regular wakeup after wakeup_notify = 1 since it is edge triggered");
             out32(CME_LCL_EISR_CLR, (core << SHIFT32(15)) | (core << SHIFT32(17)));
-
-#if NIMBUS_DD_LEVEL != 10
-
-            PK_TRACE("Drop PPM_WRITE_DISABLE via CPMMR[0]");
-            CME_PUTSCOM(CPPM_CPMMR_CLR, core, BIT64(0));
-
-#endif
 
             PK_TRACE_INF("SE.5B: Core[%d] Handed off to SGPE", core);
 
