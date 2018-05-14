@@ -755,6 +755,7 @@ inline void p9_pgpe_process_wof_ctrl()
                                               (args->action << 16) |
                                               (in32(G_OCB_QCSR) >> 16);
                 p9_pgpe_optrace(PRC_WOF_CTRL);
+                args->msg_cb.rc = PGPE_RC_SUCCESS;
             }
             else
             {
