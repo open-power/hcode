@@ -1494,13 +1494,15 @@ void p9_pgpe_pstate_safe_mode()
     }
 
     //ACK back to SGPE with "IPC_SGPE_PGPE_RC_SUCCESS"
+    //At this point, every quad is at safe Pstate, so no need to to move quad's frequency. Also,
+    //system is at safe frequency/voltage, so need to interlock with OCC for a quad exit. Simply,
+    //ACK back to SGPE, so that it can complete STOP11 Exit.
     if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 1)
     {
         async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
         ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-        p9_pgpe_pstate_process_quad_exit_notify(args->fields.requested_quads << 2);
 
-        //activeQuads isn't updated until registration, so we OR with requested quads.
+        G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
         args->fields.return_active_quads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads >> 2;
         args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
