@@ -1016,11 +1016,17 @@ void p9_pgpe_pstate_stop()
     ocb_qcsr_t qcsr;
     db0_parms_t p;
 
+    //If WOF is enabled, then disable it also. We should never have
+    //WOF enabled, but Pstate stopped
+    if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED)
+    {
+        p9_pgpe_pstate_wof_ctrl(PGPE_ACTION_WOF_OFF);
+    }
+
+    //Send PSTATE_STOP DB0
     qcsr.value = in32(G_OCB_QCSR);
     db0_stop.value = 0;
     db0_stop.fields.msg_id = MSGID_DB0_STOP_PSTATE_BROADCAST;
-
-    //Send PSTATE_STOP DB0
     p.db0val             = db0_stop.value;
     p.type               = PGPE_DB0_TYPE_UNICAST;
     p.targetCores        = G_pgpe_pstate_record.activeDB;
@@ -1125,8 +1131,20 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
         if ((G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_ENABLE_VRATIO) ||
             (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_VRATIO_MODIFIER))
         {
-            p9_pgpe_pstate_send_ctrl_stop_updt(CTRL_STOP_UPDT_ENABLE_CORE);
-            activeCores = G_sgpe_control_updt.fields.active_cores << 8;
+            //If this is first time wof has been enabled since PGPE boot, then ask SGPE for
+            //core active update. Otherwise, core active update are already enabled, and sending
+            //a Ctrl Stop Updt IPC can cause a livelock where SGPE is waiting for an ack
+            //for Active Cores Update and PGPE is waiting for an ack for Ctrl Stop Updt
+            if (G_pgpe_pstate_record.activeCoreUpdtAction == ACTIVE_CORE_UPDATE_ACTION_ERROR)
+            {
+                p9_pgpe_pstate_send_ctrl_stop_updt(CTRL_STOP_UPDT_ENABLE_CORE);
+                activeCores = G_sgpe_control_updt.fields.active_cores << 8;
+            }
+            else
+            {
+                activeCores = G_pgpe_pstate_record.activeCores;
+            }
+
             G_pgpe_pstate_record.activeCoreUpdtAction = ACTIVE_CORE_UPDATE_ACTION_PROCESS_AND_ACK;
         }
         else
