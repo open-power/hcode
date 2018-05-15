@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -23,9 +23,9 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #define SRESET_HNDLR_OFFSET    0x00
-#define SELF_RESTORE_SIZE      0x2100
+#define SELF_RESTORE_SIZE      0x2400
 #define INT_VECT_AREA          THREAD_LAUNCHER_OFFSET
-#define THREAD_LAUNCHER_SIZE   256
+#define THREAD_LAUNCHER_SIZE   1024
 #define CACHE_LINE_SIZE        128
 
 OUTPUT_FORMAT(binary)
