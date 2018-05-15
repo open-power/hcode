@@ -108,6 +108,7 @@
 #define IMA_EVENT_MASK         0x20010AA8
 #define CORE_THREAD_STATE      0x20010AB3
 #define HRMOR                  0x20010AB9
+#define URMOR                  0x20010ABA
 
 #define C_SYNC_CONFIG          0x20030000
 #define C_OPCG_ALIGN           0x20030001

@@ -1140,6 +1140,20 @@ p9_cme_stop_exit()
 // Nimbus DD2+
 #else
 
+#if SMF_SUPPORT_ENABLE
+
+#if EPM_P9_TUNING
+
+            CME_PUTSCOM(URMOR, core, 0xA200000);
+
+#else
+
+            PK_TRACE_INF("Core Wakes Up, Write URMOR with HOMER address");
+            CME_PUTSCOM(URMOR, core, scom_data.value);
+
+#endif
+
+#endif
 
 #if EPM_P9_TUNING
 

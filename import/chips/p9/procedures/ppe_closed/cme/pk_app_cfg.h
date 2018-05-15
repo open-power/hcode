@@ -57,6 +57,16 @@
 // being enabled on all other dd levels unless this override
 #define DISABLE_CME_DUAL_CAST            0
 
+// NDD23 Secure Memory Support: RAM URMOR
+#if NIMBUS_DD_LEVEL >= 23 || CUMULUS_DD_LEVEL >= 13
+
+    #define SMF_SUPPORT_ENABLE 1
+
+#else
+
+    #define SMF_SUPPORT_ENABLE 0
+
+#endif
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
     // NDD2: no catchup due to dual cast bug
