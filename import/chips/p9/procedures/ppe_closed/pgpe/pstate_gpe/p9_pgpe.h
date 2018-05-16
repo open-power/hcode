@@ -137,20 +137,75 @@ extern uint32_t G_OCB_OIMR0_CLR;
 
 
 /// PGPE PState
+
+//
+//  This is the common handler for OISR[2/OCC_ERROR], OISR[8/GPE3_ERROR],
+//  OISR[20/PVREF_ERROR] and  OISR[50/PCB_TYPE5]
+//  All these interrupts are same priority in UIH(unified interrupt handler),
+//  but OCB_ERROR is higher priority from HW perspective so UIH will always
+//  call its handler. Therefore, we have one handler, and then check to see
+//  which interrupt(s) fired
+//
 void p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error(void* arg, PkIrqId irq);
+
+//
+//  Handles system xstop. PGPE does NOT do anything in response
+//  except logs it in the trace
+//
 void p9_pgpe_irq_handler_system_xstop(void* arg, PkIrqId irq);
+
+//
+//  Handler for PCB Type 1 interrupt which is forwarding of Pstates
+//  Requests by CME
+//
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq);
+
+//
+//  Handles PCB Type4 interrupts from CME which are CME registration
+//  messages.
 void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq);
+
+//
+// Entry Point for Process Thread
+//
 void p9_pgpe_thread_process_requests(void* arg);
+
+//
+// Entry Point for Actuate Thread
+//
 void p9_pgpe_thread_actuate_pstates(void* arg);
 
-///PGPE PState Info
+//
+//  p9_pgpe_gen_pstate_info
+//
+//  Generates Pstate info into main memory which then can be read.
+//
+//  This function is called during PGPE boot. It writes data related to
+//  pstate as defined in the GeneratedPstateInfo struct in predetermined location
+//  in main memory. This data can then be read for informational and debug purpose.
+//  Note, There are multiple versions of GeneratedPstateInfo struct, but PGPE Hcode is
+//  built using one of them. The reason for multiple structs is to ensure compatibility with
+//  different versions of dump tool. Ideally, both PGPE Hcode and dump tool on machine will be
+//  built using the same version. However, during development where Hcode and dump tool are released
+//  independently of each other it is possible for versions to be different.
+//
 void p9_pgpe_gen_pstate_info();
 
-///PGPE FIT
+//  p9_pgpe_fit_init
+//
+//  This is called during PGPE Boot to intialize FIT(Fixed Internal Timer) related
+//  data.
+//  For nest frequency of 2000Mhz, it is expected FIT interrupt will happen
+//  every 262us
+//
 void p9_pgpe_fit_init();
 
-///PGPE IPC
+///
+//  p9_pgpe_ipc_init
+//
+//  Called during PGPE initialziation to enable IPC functions
+//  and initialize static ipc task list
+//
 void p9_pgpe_ipc_init();
 
 //IRQ initialization and setup

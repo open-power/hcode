@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -28,13 +28,30 @@
 #include "pk.h"
 #include "p9_pstates_pgpe.h"
 
-//Initializes global pointer to Global Pstate Parameter Block
+//  This is called during PGPE boot to initialize Global Pstate Parameter block pointer
+//  and external vrm increment and decrement rates
 void p9_pgpe_gppb_init();
 
-//Interpolate Voltage from Pstate.
+// Interpolate Voltage from Pstate.
+//
+//  ps - Pstate from which to interpolate voltage
+//
+//  vpd_st_set - Type of VPD point set to use
+//      VPD_PT_SET_RAW(VPD point with no biases or system parameters)
+//      VPD_PT_SET_BIASED(VPD point with biases applied)
+//      VPD_PT_SET_SYSP(VPD point with system parameters applied)
+//      VPD_PT_SET_BIASED_SYSP(VPD point with biases and system parameters applied)
 uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set);
 
-//Interpolate Pstate from Voltage(only for biased and system parameters VPD point)
+//  Interpolate pstate from external vdd
+//
+//  Note: This function is hardcoded to use biased with system parameters applied
+//  VPD points because currently interpolating pstate from vdd is only needed
+//  for biased with system parameter applied VPD point
+//
+//  ext_vdd - External Voltage for which pstate is to be interpolated
+//
+//  retval - Pstate interpolated corresponding to external voltage
 uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd);
 
 #endif //_P9_PGPE_GPPB_H_

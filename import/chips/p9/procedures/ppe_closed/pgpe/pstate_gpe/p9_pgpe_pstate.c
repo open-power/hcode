@@ -69,10 +69,12 @@ inline void p9_pgpe_droop_throttle() __attribute__((always_inline));
 inline void p9_pgpe_droop_unthrottle() __attribute__((always_inline));
 
 //
-//p9_pgpe_pstate_init
+//  p9_pgpe_pstate_init
 //
-//This function initializes all non-zero values in G_pgpe_pstate_record. To begin with all
-//the fields in the structure are set to zero(see p9_pgpe_main.c). Here only non-zero value are set
+//  This function initializes all non-zero values in G_pgpe_pstate_record.
+//  To begin with all the fields in the structure are set to zero(see p9_pgpe_main.c).
+//  Here only non-zero values are set
+//
 void p9_pgpe_pstate_init()
 {
     uint32_t q;
@@ -139,12 +141,13 @@ void p9_pgpe_pstate_init()
 }
 
 //
-//p9_pgpe_pstate_setup_process_pcb_type4
+//  p9_pgpe_pstate_setup_process_pcb_type4
 //
-//Called only once during PGPE boot(actuate thread initialization)
-//It reads any pending opit4pr aka CME registration messages from
-//Quad Manager CME, and updates the list of activeQuad and activeCores.
-//Finally, it unmasks PCB_TYPE4 interrupt for future CME registration msgs
+//  This is called only once during PGPE boot(actuate thread initialization)
+//  It reads any pending opit4pr aka CME registration messages from
+//  Quad Manager CME, and updates the list of activeQuad and activeCores.
+//  Finally, it unmasks PCB_TYPE4 interrupt for future CME registration msgs
+//
 void p9_pgpe_pstate_setup_process_pcb_type4()
 {
     ocb_ccsr_t ccsr;
@@ -187,7 +190,7 @@ void p9_pgpe_pstate_setup_process_pcb_type4()
 }
 
 //
-//p9_pgpe_pstate_ipc_rsp_cb_sem_post
+//  p9_pgpe_pstate_ipc_rsp_cb_sem_post
 //
 void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg)
 {
@@ -195,11 +198,13 @@ void p9_pgpe_pstate_ipc_rsp_cb_sem_post(ipc_msg_t* msg, void* arg)
 }
 
 //
-//p9_pgpe_pstate_do_auction
+//  p9_pgpe_pstate_do_auction
 //
-//This function does the Pstate Auction. First, it local auction for each quad, and then
-//global auction. It reads from coresPSRequest structure, and produces auction results in
-//psComputed.fields.quads, and globalPSComputer.
+//  This function does the Pstate Auction. First, it does the local auction for
+//  each active quad, and then global auction among all quads.
+//  It reads from coresPSRequest structure, and produces auction results in
+//  psComputed
+//
 void p9_pgpe_pstate_do_auction()
 {
     PK_TRACE_DBG("AUC: Start");
@@ -258,13 +263,16 @@ void p9_pgpe_pstate_do_auction()
 }
 
 //
-//p9_pgpe_pstate_apply_clips
+//  p9_pgpe_pstate_apply_clips
 //
+//  This function applies the clips to currently computer local and global pstates.
+//  And, generates the target local and global pstates in the psTarget field
 void p9_pgpe_pstate_apply_clips()
 {
     PK_TRACE_DBG("APC: Applying Clips");
     uint32_t q;
 
+    //Apply Clips to Local Pstate
     for (q = 0; q < MAX_QUADS; q++)
     {
         uint8_t minPS = G_pgpe_pstate_record.psClipMin[q];
@@ -274,6 +282,7 @@ void p9_pgpe_pstate_apply_clips()
         if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
         {
 
+            //If wof is enabled, then also take into WOF Clip
             if (G_pgpe_pstate_record.wofStatus == WOF_ENABLED)
             {
                 if (G_pgpe_pstate_record.wofClip > minPS && (G_pgpe_pstate_record.wofClip < maxPS))
@@ -286,6 +295,7 @@ void p9_pgpe_pstate_apply_clips()
                 }
             }
 
+            //Clip the pstates if outside the bounds of clips
             if (G_pgpe_pstate_record.psComputed.fields.quads[q] > maxPS)
             {
                 G_pgpe_pstate_record.psTarget.fields.quads[q] = maxPS;
@@ -307,7 +317,7 @@ void p9_pgpe_pstate_apply_clips()
         }
     }
 
-    //Global PState Auction
+    //Determine the target global pstate(lowest value)
     G_pgpe_pstate_record.psTarget.fields.glb = G_pgpe_pstate_record.safePstate;
 
     for (q = 0; q < MAX_QUADS; q++)
@@ -336,7 +346,10 @@ void p9_pgpe_pstate_apply_clips()
 }
 
 //
-//p9_pgpe_pstate_calc_wof
+//  p9_pgpe_pstate_calc_wof
+//
+//  This function determines the wofClip by calculating current
+//  vratio and vindex, and then indexing into the current VFRT table
 //
 void p9_pgpe_pstate_calc_wof()
 {
@@ -389,7 +402,9 @@ void p9_pgpe_pstate_calc_wof()
 }
 
 //
-//p9_pgpe_pstate_update_wof_state
+//  p9_pgpe_pstate_update_wof_state
+//
+//  This function updates the wof state in the OCC Shared SRAM area
 //
 void p9_pgpe_pstate_update_wof_state()
 {
@@ -404,9 +419,9 @@ void p9_pgpe_pstate_update_wof_state()
 }
 
 //
-//p9_pgpe_pstate_updt_actual_quad
+//  p9_pgpe_pstate_updt_actual_quad
 //
-//Updates OCC Shared SRAM "quad_pstate" fields
+//  Updates OCC Shared SRAM "quad_pstate" fields
 void p9_pgpe_pstate_updt_actual_quad()
 {
     PK_TRACE_DBG("SRM: Updt Quad Shr Sram");
@@ -420,9 +435,13 @@ void p9_pgpe_pstate_updt_actual_quad()
 }
 
 //
-//p9_pgpe_send_db0
+//  p9_pgpe_send_db0
 //
-//Sends DB0 to CMEs
+//  Generic function to send DB0(Doorbell0) to CMEs
+//  Note: PGPE can only send one doorbell3 or doorbell0 at a time
+//
+//  p - Set of parameters filled up the caller of this function
+//
 void p9_pgpe_send_db0(db0_parms_t p)
 {
 
@@ -471,9 +490,12 @@ void p9_pgpe_send_db0(db0_parms_t p)
 }
 
 //
-//p9_pgpe_send_db3
+//  p9_pgpe_send_db3
 //
-//This function is used to send Doorbell3 to CME
+//  Generic function to send Doorbell3 to CME
+//  Note: PGPE can only send one doorbell3 or doorbell0 at a time
+//
+//  p - Set of parameters filled up the caller of this function
 //
 void p9_pgpe_send_db3(db3_parms_t p)
 {
@@ -509,7 +531,15 @@ void p9_pgpe_send_db3(db3_parms_t p)
 }
 
 //
-//p9_pgpe_wait_cme_db_ack
+//  p9_pgpe_wait_cme_db_ack
+//
+//  Collects acks from CMEs by polling type4. CME uses type4 to
+//  ack DB0 and DB3
+//
+//  quadAckExpect - Vector of quads from whose CMEs(one per quad/quad manager CME) to
+//                  expect an ACK
+//
+//  expectedAck -   expected type of ack sent by CME. This is used for error checking
 //
 void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect, uint32_t expectedAck)
 {
@@ -519,7 +549,8 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect, uint32_t expectedAck)
 
     PK_TRACE_INF("DBW: AckExpect=0x%x, AckType=0x%x", quadAckExpect, expectedAck);
 
-    //Now, wait for all expected ACKs
+    //Wait until acks from all the expected CMEs have been received
+    //by polling OPIT4PRA(type4)
     while(quadAckExpect != 0)
     {
         opit4pr = in32(OCB_OPIT4PRA);
@@ -604,7 +635,9 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect, uint32_t expectedAck)
 }
 
 //
-//p9_pgpe_pstate_send_pmsr_updt
+//  p9_pgpe_pstate_send_pmsr_updt
+//
+//  Wrapper function to send PMSR Updt DB0
 //
 void p9_pgpe_pstate_send_pmsr_updt(uint32_t command, uint32_t targetCoresVector, uint32_t quadsAckVector)
 {
@@ -623,6 +656,12 @@ void p9_pgpe_pstate_send_pmsr_updt(uint32_t command, uint32_t targetCoresVector,
     p9_pgpe_send_db0(p);
 }
 
+//
+//  p9_pgpe_handle_nacks
+//
+//  In case a prolonged droop event happens, CME will detect a timeout and send nack.
+//  This function handles the nacks from CME
+//
 void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom, uint32_t expectedAckVal)
 {
     uint32_t q;
@@ -705,7 +744,9 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
 }
 
 //
-//p9_pgpe_pstate_start()
+//  p9_pgpe_pstate_start()
+//
+//  Implement Pstate Start Protocol
 //
 void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
 {
@@ -929,11 +970,14 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
 }
 
 //
-//p9_pgpe_pstate_set_pmcr_owner
+//  p9_pgpe_pstate_set_pmcr_owner
 //
-//Note: This function doesn't check if owner is valid.
-//It must be passed either PMCR_OWNER_OCC or PMCR_OWNER_HOST or
-//PMCR_OWNER_CHAR
+//  Note: This function doesn't check if owner is valid.
+//  It must be passed either PMCR_OWNER_OCC or PMCR_OWNER_HOST or
+//  PMCR_OWNER_CHAR
+//
+//  owner - New onwer of PMCR
+//
 void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
 {
     int q = 0;
@@ -1005,9 +1049,9 @@ void p9_pgpe_pstate_set_pmcr_owner(uint32_t owner)
 }
 
 //
-//p9_pgpe_pstate_stop()
+//  p9_pgpe_pstate_stop()
 //
-//This function runs the pstate stop protocol.
+//  This function implements the pstate stop protocol.
 void p9_pgpe_pstate_stop()
 {
     PK_TRACE_DBG("PSS: Pstate Stop Enter");
@@ -1077,9 +1121,9 @@ void p9_pgpe_pstate_stop()
 }
 
 //
-//p9_pgpe_pstate_clip_bcast
+//  p9_pgpe_pstate_clip_bcast
 //
-//This functions sends new clips to CMEs
+//  Wrapper function for sending Pstate Clip Bcast DB0 to CMEs
 void p9_pgpe_pstate_clip_bcast(uint32_t clip_bcast_type)
 {
     PK_TRACE_DBG("CLB: Clip Bcast");
@@ -1119,7 +1163,11 @@ void p9_pgpe_pstate_clip_bcast(uint32_t clip_bcast_type)
 }
 
 //
-// p9_pgpe_pstate_wof_ctrl
+//  p9_pgpe_pstate_wof_ctrl
+//
+//  Enables or Disables WOF
+//
+//  action - PGPE_ACTION_WOF_ON(Enables WOF) or PGPE_ACTION_WOF_OFF(Disables WOF)
 //
 void p9_pgpe_pstate_wof_ctrl(uint32_t action)
 {
@@ -1218,7 +1266,9 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
 
 
 //
-//p9_pgpe_pstate_process_quad_entry_notify
+//  p9_pgpe_pstate_process_quad_entry_notify
+//
+//  Process Active Quad Update Entry(Notify) sent by SGPE
 //
 void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
 {
@@ -1292,7 +1342,9 @@ void p9_pgpe_pstate_process_quad_entry_notify(uint32_t quadsRequested)
 }
 
 //
-//p9_pgpe_pstate_process_quad_entry_done
+//  p9_pgpe_pstate_process_quad_entry_done
+//
+//  Process Active Quad Update Entry(Done) sent by SGPE
 //
 void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
 {
@@ -1310,7 +1362,9 @@ void p9_pgpe_pstate_process_quad_entry_done(uint32_t quadsRequested)
 }
 
 //
-//p9_pgpe_pstate_process_quad_exit
+//  p9_pgpe_pstate_process_quad_exit
+//
+//  Process Active Quad Update Exit(Notify) sent by SGPE
 //
 void p9_pgpe_pstate_process_quad_exit_notify(uint32_t quadsRequested)
 {
@@ -1360,7 +1414,11 @@ void p9_pgpe_pstate_process_quad_exit_notify(uint32_t quadsRequested)
     G_pgpe_pstate_record.pendingActiveQuadUpdtDone = 1;
 }
 
-
+//
+//  p9_pgpe_pstate_process_quad_exit_done
+//
+//  Process Active Quad Update Exit(Done) sent by SGPE
+//
 void p9_pgpe_pstate_process_quad_exit_done()
 {
 
@@ -1369,7 +1427,9 @@ void p9_pgpe_pstate_process_quad_exit_done()
 }
 
 //
-//p9_pgpe_pstate_send_ctrl_stop_updt
+//  p9_pgpe_pstate_send_ctrl_stop_updt
+//
+//  Wrapper function to send Ctrl Stop Update IPC to SGPE
 //
 void p9_pgpe_pstate_send_ctrl_stop_updt(uint32_t action)
 {
@@ -1439,7 +1499,9 @@ void p9_pgpe_pstate_send_suspend_stop()
 }
 
 //
-// p9_pgpe_pstate_apply_safe_clips
+//  p9_pgpe_pstate_apply_safe_clips
+//
+//  Updates current clips to safePstate
 //
 void p9_pgpe_pstate_apply_safe_clips()
 {
@@ -1460,9 +1522,11 @@ void p9_pgpe_pstate_apply_safe_clips()
 }
 
 //
-//p9_pgpe_pstate_safe_mode()
+//  p9_pgpe_pstate_safe_mode()
 //
-//Note: Must call this procedure inside sub-critical section.
+//  Note: Must call this procedure inside sub-critical section.
+//
+//  Implements the Safe Mode Protocol
 //
 void p9_pgpe_pstate_safe_mode()
 {
@@ -1605,11 +1669,11 @@ void p9_pgpe_pstate_safe_mode()
 //
 //p9_pgpe_pstate_pm_complex_suspend
 //
-//This function sends Suspend Stop(Entry and Exit) to SGPE
-//It is called as part of PM Complex Suspend processing. Before
-//calling this function it is assumed the system is in SAFE_MODE.
-//There is no function to undo the suspend. Only PM Reset can bring the
-//PM Complex out of this state.
+//  This function sends Suspend Stop(Entry and Exit) to SGPE
+//  It is called as part of PM Complex Suspend processing. Before
+//  calling this function it is assumed the system is in SAFE_MODE.
+//  There is no function to undo the suspend. Only PM Reset can bring the
+//  PM Complex out of this state.
 //
 void p9_pgpe_pstate_pm_complex_suspend()
 {
@@ -1619,11 +1683,11 @@ void p9_pgpe_pstate_pm_complex_suspend()
 
 
 //
-//p9_pgpe_pstate_sgpe_fault
+//  p9_pgpe_pstate_sgpe_fault
 //
-//This function implements the steps for handling SGPE error
-//Before this function is called, it is assumed that system has been
-//actuated to Psafe
+//  This function implements the steps for handling SGPE error
+//  Before this function is called, it is assumed that system has been
+//  actuated to Psafe
 void p9_pgpe_pstate_sgpe_fault()
 {
     PK_TRACE_INF("SGPE Fault");
@@ -1659,11 +1723,11 @@ void p9_pgpe_pstate_sgpe_fault()
 
 
 //
-//p9_pgpe_pstate_cme_fault
+//  p9_pgpe_pstate_cme_fault
 //
-//This function implements the steps for handling CME error i
-//Before this function is called, it is assumed that system has been
-//actuated to Psafe
+//  This function implements the steps for handling CME error i
+//  Before this function is called, it is assumed that system has been
+//  actuated to Psafe
 //
 void p9_pgpe_pstate_cme_fault()
 {
@@ -1697,7 +1761,7 @@ void p9_pgpe_pstate_cme_fault()
 }
 
 //
-//p9_pgpe_pstate_pvref_fault
+//  p9_pgpe_pstate_pvref_fault
 //
 void p9_pgpe_pstate_pvref_fault()
 {
@@ -1710,7 +1774,10 @@ void p9_pgpe_pstate_pvref_fault()
 }
 
 //
-//p9_pgpe_pstate_at_target
+//  p9_pgpe_pstate_at_target
+//
+//  This function checks if PGPE has actuated the system to the target pstate. It
+//  is called in actuate thread loop
 //
 int32_t p9_pgpe_pstate_at_target()
 {
@@ -1737,7 +1804,10 @@ int32_t p9_pgpe_pstate_at_target()
 }
 
 //
-//p9_pgpe_pstate_do_step
+//  p9_pgpe_pstate_do_step
+//
+//  This function actuates(move frequency and voltage) the system towards target pstate
+//  with 'external vrm step size" voltage at a time.
 //
 void p9_pgpe_pstate_do_step()
 {
@@ -1901,9 +1971,10 @@ void p9_pgpe_pstate_do_step()
 }
 
 //
-//p9_pgpe_pstate__updt_ext_volt
+//  p9_pgpe_pstate__updt_ext_volt
 //
-//Update External VRM to G_eVidNext
+//  Update External VRM to G_eVidNext
+//
 void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
 {
     qppm_vdmcfgr_t vdmcfg;
@@ -1979,9 +2050,9 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
 }
 
 //
-//Frequency Update
+//  Frequency Update
 //
-//Sends a DB0 to all active CMEs, so that Quad Managers(CMEs) update DPLL
+//  Sends a DB0 to all active CMEs, so that Quad Managers(CMEs) update DPLL
 void p9_pgpe_pstate_freq_updt()
 {
     PK_TRACE_DBG("FREQ: Enter");
@@ -2045,10 +2116,10 @@ void p9_pgpe_pstate_freq_updt()
 }
 
 //
-//p9_pgpe_pstate_write_core_throttle
+//  p9_pgpe_pstate_write_core_throttle
 //
-// Write to the PC Throttle Control register.  Ignore any PCB errors.
-// Option to retry on known PC hardware bug (always cleanup if happens)
+//  Write to the PC Throttle Control register.  Ignore any PCB errors.
+//  Option to retry on known PC hardware bug (always cleanup if happens)
 //
 void p9_pgpe_pstate_write_core_throttle(uint32_t throttleData, uint32_t enable_retry)
 {
@@ -2078,7 +2149,7 @@ void p9_pgpe_pstate_write_core_throttle(uint32_t throttleData, uint32_t enable_r
 
 
 //
-//p9_pgpe_droop_throttle
+//  p9_pgpe_droop_throttle
 //
 inline void p9_pgpe_droop_throttle()
 {
@@ -2164,7 +2235,7 @@ inline void p9_pgpe_droop_throttle()
 
 
 //
-//p9_pgpe_droop_unthrottle
+//  p9_pgpe_droop_unthrottle
 //
 inline void p9_pgpe_droop_unthrottle()
 {

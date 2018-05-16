@@ -55,8 +55,18 @@ void p9_pgpe_gen_occ_pstate_tbl();
 void p9_pgpe_gen_vratio_vindex_tbl(VRatioVIndexTable* tbl);
 
 //
-//p9_pgpe_gen_pstate_info
+//  p9_pgpe_gen_pstate_info
 //
+//  Generates Pstate info into main memory which then can be read.
+//
+//  This function is called during PGPE boot. It writes data related to
+//  pstate as defined in the GeneratedPstateInfo struct in predetermined location
+//  in main memory. This data can then be read for informational and debug purpose.
+//  Note, There are multiple versions of GeneratedPstateInfo struct, but PGPE Hcode is
+//  built using one of them. The reason for multiple structs to ensure compatibility with
+//  different versions of dump tool. Ideally, both PGPE Hcode and dump tool on machine will be
+//  built using the same version. However, during development where Hcode and dump tool are released
+//  independently of each other it is possible for versions to be different
 void p9_pgpe_gen_pstate_info()
 {
     uint32_t* ps0, *highest_pstate;
@@ -155,10 +165,11 @@ void p9_pgpe_gen_pstate_info()
 }
 
 //
-//p9_pgpe_gen_raw_pstates
+//  p9_pgpe_gen_raw_pstates
 //
-//Generates pstate table without biasing
+//  Generates pstate table using VPD without biasing applied
 //
+//  tbl - Pointer to where Pstate Table is to be written
 void p9_pgpe_gen_raw_pstates(PstateTable* tbl)
 {
     int32_t p;
@@ -183,10 +194,11 @@ void p9_pgpe_gen_raw_pstates(PstateTable* tbl)
 }
 
 //
-//p9_pgpe_gen_biased_pstates
+//  p9_pgpe_gen_biased_pstates
 //
-//Generates pstate table with biasing and system parameters
+//  Generates pstate table using VPD with biasing and system parameters applied
 //
+//  tbl - Pointer to where Pstate Table is to be written
 void p9_pgpe_gen_biased_pstates(PstateTable* tbl)
 {
     int32_t p;
@@ -213,9 +225,9 @@ void p9_pgpe_gen_biased_pstates(PstateTable* tbl)
 
 
 //
-//p9_pgpe_gen_occ_pstate_tbl
+//  p9_pgpe_gen_occ_pstate_tbl
 //
-//Generates pstate table for OCC consumption
+//  Generates pstate table for OCC consumption
 //
 void p9_pgpe_gen_occ_pstate_tbl()
 {
@@ -233,7 +245,12 @@ void p9_pgpe_gen_occ_pstate_tbl()
     PK_TRACE_DBG("INIT: Generated OCC Tbl");
 }
 
-
+//
+//  p9_pgpe_gen_vratio_vindex_tbl
+//
+//  Generates WOF(Workload Optimized Frequency) vratio/vindex table
+//
+//  tbl - Pointer to where vratio/vindex table is to be written
 void p9_pgpe_gen_vratio_vindex_tbl(VRatioVIndexTable* tbl)
 {
     uint32_t ac, sc, idx = 0;

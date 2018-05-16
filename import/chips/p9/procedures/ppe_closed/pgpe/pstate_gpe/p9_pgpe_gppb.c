@@ -40,9 +40,10 @@ uint8_t p9_pgpe_gppb_get_ext_vdd_region(uint32_t evid);
 uint8_t p9_pgpe_gppb_get_ps_region(Pstate ps, uint8_t vpt_pt_set);
 
 //
-//p9_pgpe_gppb_init
+//  p9_pgpe_gppb_init
 //
-//This sets the pointer to GlobalPstateParmBlock
+//  This is called during PGPE boot to initialize Global Pstate Parameter block pointer
+//  and external vrm increment and decrement rates
 //
 void p9_pgpe_gppb_init()
 {
@@ -58,10 +59,17 @@ void p9_pgpe_gppb_init()
 }
 
 //
-//p9_pgpe_gppb_intp_vdd_from_ps
+//  p9_pgpe_gppb_intp_vdd_from_ps
 //
-//Interpolate voltage from pstate
+//  Interpolate voltage from pstate
 //
+//  ps - Pstate from which to interpolate voltage
+//
+//  vpd_st_set - Type of VPD point set to use
+//      VPD_PT_SET_RAW(VPD point with no biases or system parameters)
+//      VPD_PT_SET_BIASED(VPD point with biases applied)
+//      VPD_PT_SET_SYSP(VPD point with system parameters applied)
+//      VPD_PT_SET_BIASED_SYSP(VPD point with biases and system parameters applied)
 uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set)
 {
     uint32_t vdd;
@@ -80,8 +88,19 @@ uint32_t p9_pgpe_gppb_intp_vdd_from_ps(Pstate ps, uint8_t vpd_pt_set)
 //
 //p9_pgpe_gppb_get_ps_region
 //
-//Returns which of three regions the pstate value falls under
+//  Determines VPD region for a pstate value
 //
+//  ps - Pstate for which region is to be determined
+//
+//  vpd_st_set - Type of VPD point set to use
+//      VPD_PT_SET_RAW(VPD point with no biases or system parameters)
+//      VPD_PT_SET_BIASED(VPD point with biases applied)
+//      VPD_PT_SET_SYSP(VPD point with system parameters applied)
+//      VPD_PT_SET_BIASED_SYSP(VPD point with biases and system parameters applied)
+//
+// retval
+//      One of three regions(POWERSAVE-NOMINAL, NOMINAL-TURBO, or TURBO-ULTRA_TURBO)
+//      the pstate falls under.
 uint8_t p9_pgpe_gppb_get_ps_region(Pstate ps, uint8_t vpd_pt_set)
 {
     if (ps <= G_gppb->operating_points_set[vpd_pt_set][TURBO].pstate)
@@ -99,12 +118,17 @@ uint8_t p9_pgpe_gppb_get_ps_region(Pstate ps, uint8_t vpd_pt_set)
 }
 
 //
-//p9_pgpe_gppb_intp_ps_from_evid
+//  p9_pgpe_gppb_intp_ps_from_ext_vdd
 //
-//Interpolate pstate from evid
-//This functions is hardcoded to use BIASED_SYSPARAMETERS pt
-//bc currently interpolating pstate from vdd is only needed
-//for Biased SysParam VPD during actuation
+//  Interpolate pstate from external vdd
+//
+//  Note: This function is hardcoded to use biased with system parameters applied
+//  VPD points because currently interpolating pstate from vdd is only needed
+//  for biased with system parameter applied VPD point
+//
+//  ext_vdd - External Voltage for which pstate is to be interpolated
+//
+//  retval - Pstate interpolated corresponding to external voltage
 uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd)
 {
     Pstate ps;
@@ -120,10 +144,25 @@ uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd)
 }
 
 //
-//p9_pgpe_gppb_get_evid_region
+//  p9_pgpe_gppb_get_ext_vdd_region
 //
-//Returns which of three regions the evid value falls under
+//  Determines VPD region for a external voltage
 //
+//  Note: This function is hardcoded to use biased with system parameters applied
+//  VPD points because currently interpolating pstate from vdd is only needed
+//  for biased with system parameter applied VPD point
+//
+//  ext_vdd - External voltage for which region is to be determined
+//
+//  vpd_st_set - Type of VPD point set to use
+//      VPD_PT_SET_RAW(VPD point with no biases or system parameters)
+//      VPD_PT_SET_BIASED(VPD point with biases applied)
+//      VPD_PT_SET_SYSP(VPD point with system parameters applied)
+//      VPD_PT_SET_BIASED_SYSP(VPD point with biases and system parameters applied)
+//
+// retval
+//      One of three regions(POWERSAVE-NOMINAL, NOMINAL-TURBO, or TURBO-ULTRA_TURBO)
+//      the pstate falls under.
 uint8_t p9_pgpe_gppb_get_ext_vdd_region(uint32_t ext_vdd)
 {
     if (ext_vdd >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][TURBO].vdd_mv)

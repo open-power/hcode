@@ -58,6 +58,11 @@ inline void p9_pgpe_process_ack_sgpe_suspend_stop() __attribute__((always_inline
 //
 //Process Request Thread
 //
+//This thread processes IPC request from SGPE and OCC, registration msg(type4),
+//PMCR requests(type1), and IPC acks from SGPE. When any of interrupts associated
+//with these require happen, the interrupt handler takes a note of the request, and
+//posts semaphore.
+//
 void p9_pgpe_thread_process_requests(void* arg)
 {
     PK_TRACE_DBG("PTH:Started");
@@ -202,7 +207,23 @@ void p9_pgpe_thread_process_requests(void* arg)
 }
 
 //
-//p9_pgpe_process_sgpe_updt_active_cores
+//  p9_pgpe_process_sgpe_updt_active_cores
+//
+//  Process Update Active Cores IPC sent from SGPE
+//
+//  ACTION:
+//      1) Do nothing(error ack), if WOF is disabled
+//          and active core update action is set to error.
+//      2) Update active_cores list and ack right away, if WOF is disabled
+//          and active core update action is set to ack only.
+//      3) Update active cores list, calculate wof clips, and new target pstate,
+//          if WOF is enabled. If core is entrying stop, then ack is sent right away.
+//          Otherwise, ack is sent after acutation
+//  ACK:
+//      1) IPC_SGPE_PGPE_RC_SUCCESS - If WOF is disabled and active core update action i
+//          is ACTIVE_CORE_UPDATE_ACTION_ERROR. Or, WOF is enabled
+//      2) SGPE_PGPE_RC_WOF_DISABLED - If WOF is  disabled and active core update action i
+//          is ACTIVE_CORE_UPDATE_ACTION_ERROR
 //
 inline void p9_pgpe_process_sgpe_updt_active_cores()
 {
@@ -326,7 +347,18 @@ inline void p9_pgpe_process_sgpe_updt_active_cores()
 }
 
 //
-//p9_pgpe_process_sgpe_updt_active_quads
+//  p9_pgpe_process_sgpe_updt_active_quads
+//
+//  Process Update Active Quads IPC sent from SGPE
+//
+//  ACTION: Update Active Quads IPC is processed according to it's type. There are
+//          4 types: Quad Entry Notify, Quad Entry Done, Quad Exit Notify, and
+//          Quad Entry Notify.
+//
+//  ACK RETURN CODE:
+//      1) IPC_SGPE_PGPE_RC_SUCCESS - If WOF is enabled, then Quad Exit Notify processing is
+//          delayed until a WOF VFRT is received from OCC. Otherwise, an ACK is sent
+//          always at the end of this function.
 //
 inline void p9_pgpe_process_sgpe_updt_active_quads()
 {
@@ -419,6 +451,27 @@ inline void p9_pgpe_process_sgpe_updt_active_quads()
     PK_TRACE_DBG("QX: Quad Updt End");
 }
 
+
+//
+// p9_pgpe_process_start_stop
+//
+// Process PSTATE_START_STOP IPC from OCC
+//
+// ACTION:
+//      1) Start Pstates and Set Onwer - If ACTION is START and PstatesStatus is INIT or STOPPED
+//      2) Change PMCR Owner - If ACTION is START and PstatesStatus is ACTIVE
+//      3) Stop Pstates - If ACTION is STOP and PstatesStatus is ACTIVE
+//      4) Do nothing - If ACTION is STOP and PstatesStatus is STOPPED or INIT
+//
+// ACK RETURN CODE:
+//      1) PGPE_RC_SUCCESS
+//          a) If PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE is set in PGPE_FLAGS.
+//          b) If PstateStatus is NOT one of these PSTATE_PM_SUSPEND_PENDING or
+//              PSTATE_PM_SUSPENDED or PSTATE_SAFE_MODE_PENDING or PSTATE_SAFE_MODE.
+//      2) PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE
+//          a) If PstateStatus is one of these PSTATE_PM_SUSPEND_PENDING or
+//              PSTATE_PM_SUSPENDED or PSTATE_SAFE_MODE_PENDING or PSTATE_SAFE_MODE.
+//
 inline void p9_pgpe_process_start_stop()
 {
     PK_TRACE_DBG("PTH: Start/Stop Entry");
@@ -545,6 +598,28 @@ inline void p9_pgpe_process_start_stop()
 //
 //p9_pgpe_process_clip_updt
 //
+// Process CLIP_UPDATE IPC from OCC
+//
+// ACTION:
+//      1) Ack back only - If PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE is set in PGPE_FLAGS.
+//      2) Ack back with error - If PstateStatus is NOT one of these
+//          PSTATE_PM_SUSPEND_PENDING or PSTATE_PM_SUSPENDED or PSTATE_SAFE_MODE_PENDING
+//          or PSTATE_SAFE_MODE.
+//      3) Update Clips and Calculate New Pstart Target - If PstateStatus is NOT
+//          one of these PSTATE_PM_SUSPEND_PENDING or PSTATE_PM_SUSPENDED or
+//          PSTATE_SAFE_MODE_PENDING or PSTATE_SAFE_MODE.
+//
+// ACK RETURN CODE:
+//      1) PGPE_RC_SUCCESS
+//          a) If PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE is set in PGPE_FLAGS.
+//          b) If PstateStatus is NOT one of these PSTATE_PM_SUSPEND_PENDING or
+//              PSTATE_PM_SUSPENDED or PSTATE_SAFE_MODE_PENDING or PSTATE_SAFE_MODE.
+//              Ack is sent right away if Pstates aren't active. Or, after system
+//              has been actuated within the bounds of the clips
+//      2) PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE
+//          a) If PstateStatus is one of these PSTATE_PM_SUSPEND_PENDING or
+//              PSTATE_PM_SUSPENDED or PSTATE_SAFE_MODE_PENDING or PSTATE_SAFE_MODE.
+//
 inline void p9_pgpe_process_clip_updt()
 {
     PK_TRACE_DBG("PTH: Clip Updt Entry");
@@ -667,7 +742,33 @@ inline void p9_pgpe_process_clip_updt()
 }
 
 //
-//p9_pgpe_process_wof_ctrl
+//  p9_pgpe_process_wof_ctrl
+//
+//  Process WOF_CTRL IPC from OCC
+//
+//  ACTION:
+//      1) Ack back only -
+//          a) If PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE is set in PGPE_FLAGS.
+//          b) If WOF_CTRL(Enable) when WOF is already enabled
+//          c) If WOF_CTRL(Disable) when WOF is already disabled
+//      2) Ack with error -
+//          a) If PstatesStatus is one of these PSTATE_INIT, PSTATE_STOPPED,
+//              PSTATE_PM_SUSPENDED, PSTATE_PM_SUSPEND_PENDING,
+//              PSTATE_SAFE_MODE_PENDING, PSTATE_SAFE_MODE
+//          b) If NULL VFRT pointer is sent
+//      3) Enable WOF - If WOF_CTRL(Enable), WOF is disabled and PstatesStatus is ACTIVE
+//      3) Disable WOF - If WOF_CTRL(Enable), WOF is enabled and PstatesStatus is ACTIVE
+//
+//  ACK RETURN CODE:
+//      1) PGPE_RC_PSTATES_NOT_STARTED - If PstatesStatus is one of
+//          these PSTATE_INIT or PSTATE_STOPPED.
+//      2) PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE - If PstatesStatus is one of these
+//          PSTATE_PM_SUSPENDED, PSTATE_PM_SUSPEND_PENDING,
+//          PSTATE_SAFE_MODE_PENDING, PSTATE_SAFE_MODE
+//      4) PGPE_RC_SUCCESS -
+//          a) If PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE is set in PGPE_FLAGS.
+//          b) If WOF_CTRL(Enable) when WOF is already enabled
+//          c) If WOF_CTRL(Disable) when WOF is already disabled
 //
 inline void p9_pgpe_process_wof_ctrl()
 {
@@ -785,7 +886,29 @@ inline void p9_pgpe_process_wof_ctrl()
 }
 
 //
-//p9_pgpe_process_wof_vfrt
+//  p9_pgpe_process_wof_vfrt
+//
+//  ACTION:
+//      1) Ack back only - If PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE is set in PGPE_FLAGS.
+//      2) Ack with error -
+//          a) If PstatesStatus is one of these PSTATE_INIT, PSTATE_STOPPED,
+//              PSTATE_PM_SUSPENDED, PSTATE_PM_SUSPEND_PENDING,
+//              PSTATE_SAFE_MODE_PENDING, PSTATE_SAFE_MODE
+//          b) If NULL VFRT pointer is sent
+//      3) Update VFRT pointer, and if wof is enabled then
+//          calculate wof clips, and generate new targets. Ack is sent right away
+//          if WOF is enabled. Otherwise, ack is sent after actuation
+//
+//  ACK RETURN CODE:
+//      1) PGPE_RC_PSTATES_NOT_STARTED - If PstatesStatus is one of
+//          these PSTATE_INIT or PSTATE_STOPPED.
+//      2) PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE - If PstatesStatus is one of these
+//          PSTATE_PM_SUSPENDED, PSTATE_PM_SUSPEND_PENDING,
+//          PSTATE_SAFE_MODE_PENDING, PSTATE_SAFE_MODE
+//      3) PGPE_RC_NULL_VFRT_POINTER - If NULL VFRT pointer is sent.
+//      4) PGPE_RC_SUCCESS -
+//          a) If Pstate Status is ACTIVE and VFRT pointer is not NULL.
+//          b) If PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE is set in PGPE_FLAGS.
 //
 inline void p9_pgpe_process_wof_vfrt()
 {
@@ -883,7 +1006,31 @@ inline void p9_pgpe_process_wof_vfrt()
 }
 
 //
-//p9_pgpe_process_set_pmcr_req
+//  p9_pgpe_process_set_pmcr_req
+//
+//  Process Set PMCR Request from OCC
+//
+//  ACTION:
+//      1) Ack back only - If PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE is set in PGPE_FLAGS.
+//      2) Ack with error -
+//          a) If pmcrOwner is NOT OCC
+//          b) If PstatesStatus is one of these PSTATE_INIT, PSTATE_STOPPED,
+//              PSTATE_PM_SUSPENDED, PSTATE_PM_SUSPEND_PENDING,
+//              PSTATE_SAFE_MODE_PENDING, PSTATE_SAFE_MODE
+//     3) Update coresPSRequest, do auction, apply clip and generate new
+//          targets, and ack back if If Pstate Status is ACTIVE and pmcrOwner is OCC
+//          Also, ack is sent right away. The actuation is performed later.
+//
+//   ACK RETURN CODE:
+//      1) PGPE_RC_OCC_NOT_PMCR_OWNER - If pmcrOwner is NOT OCC
+//      2) PGPE_RC_PSTATES_NOT_STARTED - If PstatesStatus is one of
+//          these PSTATE_INIT or PSTATE_STOPPED.
+//      3) PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE - If PstatesStatus is one of these
+//          PSTATE_PM_SUSPENDED, PSTATE_PM_SUSPEND_PENDING,
+//          PSTATE_SAFE_MODE_PENDING, PSTATE_SAFE_MODE
+//      4) PGPE_RC_SUCCESS -
+//          a) If Pstate Status is ACTIVE and pmcrOwner is OCC
+//          b) If PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE is set in PGPE_FLAGS.
 //
 inline void p9_pgpe_process_set_pmcr_req()
 {
@@ -985,6 +1132,11 @@ inline void p9_pgpe_process_set_pmcr_req()
     PK_TRACE_DBG("PTH: Set PMCR Exit");
 }
 
+//
+//  p9_pgpe_process_registration
+//
+//  Process Registration message from CME
+//
 inline void p9_pgpe_process_registration()
 {
     PK_TRACE_DBG("PTH: Register Enter");
@@ -1217,9 +1369,13 @@ inline void p9_pgpe_process_registration()
 }
 
 //
-//This is called when an ACK is received for CTRL_STOP_UPDT ipc
-//sent by PGPE to SGPE. This handler is effectively a NOP and is there
-//just to keep the IPC mechanism happy
+//  p9_pgpe_process_ack_sgpe_ctrl_stop_updt
+//
+//  Process CTRL_STOP_UPDT IPC ack from SGPE
+//
+//  This is called when an ACK is received for CTRL_STOP_UPDT IPC
+//  sent by PGPE to SGPE. This handler is effectively a NOP and is there
+//  just to keep the IPC mechanism happy
 //
 inline void p9_pgpe_process_ack_sgpe_ctrl_stop_updt()
 {
@@ -1228,9 +1384,13 @@ inline void p9_pgpe_process_ack_sgpe_ctrl_stop_updt()
 }
 
 //
-//This is called when an ACK is received for SUSPEND_STOP ipc
-//sent by PGPE to SGPE. This handler is effectively a NOP and is there
-//just to keep the IPC mechanism happy
+//  p9_pgpe_process_ack_sgpe_suspend_stop
+//
+//  Process SGPE_SUSPEND_STOP IPC ack from SGPE
+//
+//  PGPE sends Suspend Stop IPC to SGPE when PGPE is requested to
+//  go into PM Complex Suspend. Upon receiving the ACK from SGPE
+//  PGPE completes the rest of PM Complex Suspend protocol.
 //
 inline void p9_pgpe_process_ack_sgpe_suspend_stop()
 {

@@ -110,7 +110,11 @@ void pk_irq_save_and_set_mask(uint32_t iPrtyLvl);
 
 
 
-/// Restore a vector of interrupts by overwriting OIMR.
+//
+//  pk_irq_vec_restore
+//
+//  Restore a vector of interrupts by overwriting OIMR.
+//
 UNLESS__PPE42_IRQ_CORE_C__(extern)
 inline void
 pk_irq_vec_restore( PkMachineContext* context)
@@ -144,16 +148,20 @@ pk_irq_vec_restore( PkMachineContext* context)
     pk_critical_section_exit(context);
 }
 
-//This masks all UIH external interrupts(EXCEPT for Severe Errors in the Power
-//Management Engines, Chip Voltage Reference, or System Checkstop), but leaves
-//timer interrupts enableda
 //
-//Note: Care must be taken to call equal number of pk_irq_sub_critical_enter and
-//pk_irq_sub_critical_exit calls
+//  pk_irq_sub_critical_enter
 //
-//Timer interrupts FIT and DEC are lower in priority than External Interrupts, and
-//also need EE bit set for interrupt handler to be called. This function is useful
-//in case timer interrupts should be enabled, but external interrupts should be masked
+//  This masks all UIH external interrupts(EXCEPT for Severe Errors in the Power
+//  Management Engines, Chip Voltage Reference, or System Checkstop), but leaves
+//  timer interrupts enabled
+//
+//  Note: Care must be taken to call equal number of pk_irq_sub_critical_enter and
+//  pk_irq_sub_critical_exit calls
+//
+//  Timer interrupts FIT and DEC are lower in priority than External Interrupts, and
+//  also need EE bit set for interrupt handler to be called. This function is useful
+//  in case timer interrupts should be enabled, but external interrupts should be masked
+//
 UNLESS__PPE42_IRQ_CORE_C__(extern)
 inline void pk_irq_sub_critical_enter(PkMachineContext* ctx)
 {
@@ -163,8 +171,12 @@ inline void pk_irq_sub_critical_enter(PkMachineContext* ctx)
     pk_critical_section_exit(ctx);
 }
 
-//This will unmask the UIH external interrupts masked off by previous pk_irq_sub_critical
-//_enter call.
+//
+//  pk_irq_sub_critical_exit
+//
+//  This will unmask the UIH external interrupts masked off by previous
+//  pk_irq_sub_critical_enter call.
+//
 UNLESS__PPE42_IRQ_CORE_C__(extern)
 inline void pk_irq_sub_critical_exit(PkMachineContext* ctx)
 {

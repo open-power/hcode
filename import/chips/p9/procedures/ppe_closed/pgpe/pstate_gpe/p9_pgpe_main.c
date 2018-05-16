@@ -32,6 +32,11 @@
 
 extern TraceData_t G_pgpe_optrace_data;
 
+//
+// G_pgpe_pstate_record contains all the global variables in one struct
+// that are accessed/manipulated by PGPE. Here we statically initialize
+// all the fields to zero, and also direct this struct to a special section
+// which ends up at a fixed address.
 PgpePstateRecord G_pgpe_pstate_record __attribute__((section (".dump_ptrs"))) =
 {
     0,
@@ -93,6 +98,9 @@ uint32_t G_OCB_OIMR0_CLR = OCB_OIMR0_CLR;
 uint32_t G_OCB_OIMR1_CLR = OCB_OIMR1_CLR;
 
 
+//
+// Interrupt handlers for interrupts owned by PGPE
+//
 EXTERNAL_IRQ_TABLE_START
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_DEBUGGER
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_TRACE_TRIGGER
@@ -160,6 +168,11 @@ IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_IPI4_LO_PRIORITY
 IRQ_HANDLER_DEFAULT            //OCCHW_IRQ_RESERVED_63
 EXTERNAL_IRQ_TABLE_END
 
+
+//
+// PGPE has two threads, Process and Actuate. We define their stack sizes, entry point, and
+// control block here
+//
 #define  KERNEL_STACK_SIZE  512
 #define  THREAD_PROCESS_STACK_SIZE  768
 #define  THREAD_ACTUATE_STACK_SIZE  768
@@ -182,6 +195,13 @@ void __eabi()
 {
 }
 
+
+//
+// main
+//
+// This function is called after PK is done booting, and is the main point of
+// entry for PGPE
+//
 int
 main(int argc, char** argv)
 {

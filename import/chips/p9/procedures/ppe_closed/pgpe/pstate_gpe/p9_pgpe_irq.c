@@ -105,9 +105,11 @@ uint64_t  g_oimr_override_stack[NUM_EXT_IRQ_PRTY_LEVELS];
 
 
 //
-// Unified IRQ priority and masking handler.
-// Locates the highest priority IRQ task vector that has at least one of its
-// interrupts in the current external PK interrupt vector.
+//  pk_unified_irq_prty_mask_handler
+//
+//  Unified IRQ priority and masking handler.
+//  Locates the highest priority IRQ task vector that has at least one of its
+//  interrupts in the current external PK interrupt vector.
 //
 void pk_unified_irq_prty_mask_handler(void)
 {
@@ -163,7 +165,12 @@ void pk_unified_irq_prty_mask_handler(void)
 }
 
 //
-//pk_irq_save_and_set_mask()
+//  pk_irq_save_and_set_mask()
+//
+//  iPrtyLvl - Priority Level to mask off
+//
+//  This function masks off all interrupts with priority
+//  'iPrtyLvl' and below
 //
 void pk_irq_save_and_set_mask(uint32_t iPrtyLvl)
 {

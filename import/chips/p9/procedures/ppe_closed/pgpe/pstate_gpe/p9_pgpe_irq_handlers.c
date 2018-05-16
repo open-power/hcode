@@ -31,10 +31,10 @@
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_optrace.h"
 
-extern TraceData_t G_pgpe_optrace_data;
 //
 //External Global Data
 //
+extern TraceData_t G_pgpe_optrace_data;
 extern PgpePstateRecord G_pgpe_pstate_record;
 extern GlobalPstateParmBlock* G_gppb;
 
@@ -46,10 +46,10 @@ void p9_pgpe_irq_handler_cme_err();
 void p9_pgpe_irq_handler_pvref_err();
 
 //
-//p9_pgpe_irq_init()
+//  p9_pgpe_irq_init()
 //
-//This function is callded during PGPE boot, and does
-//needed initialization and setup of PGPE owned IRQs
+//  This function is called during PGPE boot, and does
+//  needed initialization and setup of PGPE owned IRQs
 void p9_pgpe_irq_init()
 {
     //Set up OCB Heartbeat Loss(OISR[2])
@@ -61,11 +61,12 @@ void p9_pgpe_irq_init()
 }
 
 //
-//p9_pgpe_ocb_hb_error_init
+//  p9_pgpe_ocb_hb_error_init
 //
-//This is called during PGPE boot, and sets up OCB_HW loss fir bit
-//to generate OCB interrupt. Also, clears the FIR bit
-//and any pending OCB_HB interrupt
+//  This is called during PGPE boot, and sets up OCB_HW loss fir bit
+//  to generate OCB interrupt. Also, clears the FIR bit
+//  and any pending OCB_HB interrupt
+//
 #define OCC_HB_ERROR_FIR 4
 void p9_pgpe_ocb_hb_error_init()
 {
@@ -91,13 +92,15 @@ void p9_pgpe_ocb_hb_error_init()
 }
 
 //
-//p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error
+//  p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error
 //
-//This is the common handler for OISR[2/OCC_ERROR], OISR[8/GPE3_ERROR], OISR[20/PVREF_ERROR]
-//or OISR[50/PCB_TYPE5]
-//They are same priority in UIH, but OCB_ERROR is higher priority from HW perspective
-//so UIH will always call its handler. Therefore, we have one handler,
-//and then check to see which interrupt(s) fired
+//  This is the common handler for OISR[2/OCC_ERROR], OISR[8/GPE3_ERROR],
+//  OISR[20/PVREF_ERROR] and  OISR[50/PCB_TYPE5]
+//  All these interrupts are same priority in UIH(unified interrupt handler),
+//  but OCB_ERROR is higher priority from HW perspective so UIH will always
+//  call its handler. Therefore, we have one handler, and then check to see
+//  which interrupt(s) fired
+//
 void p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error(void* arg, PkIrqId irq)
 {
     PkMachineContext  ctx;
@@ -133,10 +136,10 @@ void p9_pgpe_irq_handler_occ_sgpe_cme_pvref_error(void* arg, PkIrqId irq)
 }
 
 //
-//p9_pgpe_irq_handler_ocb_error
+//  p9_pgpe_irq_handler_ocb_error
 //
-//Handler for OCB_ERROR interrupt which is trigerred by a loss of OCC
-//heartbeat
+//  Handler for OCB_ERROR interrupt which is trigerred by a loss
+//  of OCC heartbeat
 //
 void p9_pgpe_irq_handler_ocb_err()
 {
@@ -179,9 +182,9 @@ void p9_pgpe_irq_handler_ocb_err()
 }
 
 //
-//p9_pgpe_irq_handler_sgpe_err
+//  p9_pgpe_irq_handler_sgpe_err
 //
-//Handles SGPE Fault
+//  Handler for SGPE(GPE3) Fault
 //
 void p9_pgpe_irq_handler_sgpe_err()
 {
@@ -218,9 +221,9 @@ void p9_pgpe_irq_handler_sgpe_err()
 }
 
 //
-//p9_pgpe_irq_handler_pvref_err
+//  p9_pgpe_irq_handler_pvref_err
 //
-//Handles pvref error interrupt
+//  Handler for pvref error interrupt
 //
 void p9_pgpe_irq_handler_pvref_err()
 {
@@ -255,10 +258,11 @@ void p9_pgpe_irq_handler_pvref_err()
 }
 
 //
-//System Checkstop Interrupt Handler
+//  p9_pgpe_irq_handler_system_xstop
 //
-//Handles system xstop. PGPE does NOT do anything in response
-//except logs in the trace
+//  Handles system xstop. PGPE does NOT do anything in response
+//  except logs it in the trace
+//
 void p9_pgpe_irq_handler_system_xstop(void* arg, PkIrqId irq)
 {
     PK_TRACE_INF("SYSTEM XSTOP");
@@ -283,10 +287,13 @@ void p9_pgpe_irq_handler_system_xstop(void* arg, PkIrqId irq)
 }
 
 //
-//PCB Type 1 Interrupt Handler
+//  p9_pgpe_irq_handler_pcb_type1
 //
-//Handler PCB Type 1 interrupt which is forwarding of Pstates
-//Requests by CME
+//  Handler for PCB Type 1 interrupt which is forwarding of Pstates
+//  Requests by CME
+//
+//  Pstate must be active and an onwer for PMSR must be set for any
+//  effect. Otherwise, no action is taken
 //
 void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
 {
@@ -296,6 +303,7 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
     uint32_t c;
     uint32_t opit1pra;
 
+    //If error injection bit is set in OCC Scratch 2, then halt PGPE immediately
     if(in32(G_OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ))
     {
         PK_TRACE_ERR("PCB TYPE1 ERROR INJECT TRAP");
@@ -333,6 +341,7 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
         p9_pgpe_pstate_do_auction();
         p9_pgpe_pstate_apply_clips();
     }
+    //If pstates aren't active or PMCR Onwer isn't set, then do nothing
     else
     {
         opit1pra = in32(OCB_OPIT1PRA);
@@ -350,12 +359,12 @@ void p9_pgpe_irq_handler_pcb_type1(void* arg, PkIrqId irq)
 }
 
 //
-//PCB Type 4 Interrupt Handler
+//  p9_pgpe_irq_handler_pcb_type4
 //
-//Handles PCB Type4 interrupts from CME which are CME registration
-//messages. In this handler, PGPE simply takes note of which CMEs
-//sent registration message. The actual processing is handled in the
-//process thread.
+//  Handles PCB Type4 interrupts from CME which are CME registration
+//  messages. In this handler, PGPE simply takes note of which CMEs
+//  sent registration message. The actual processing is handled in the
+//  process thread.
 //
 void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 {
@@ -407,10 +416,9 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 }
 
 //
-//CME Error(PCB Type5) Interrupt Handler
+//  p9_pgpe_irq_handler_cme_err
 //
-//Handles CME error
-//
+//  Handles CME error interrupt which is pcb type5 interrupt
 //
 // Take immediate action here since Pstates cannot be moved using the faulted
 // CMEs per normal protocols.  The remainder of the actions in response to this error

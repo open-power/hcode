@@ -27,6 +27,13 @@
 
 #include "pk.h"
 
+//
+//  p9_pgpe_header_init
+//
+//  This function is called during PGPE boot to initialize
+//  pointer to PgpeImageHeader, and also fill some values in
+//  PgpeImageHeader
+//
 void p9_pgpe_header_init();
 
 #endif //_P9_PGPE_HEADER_H_

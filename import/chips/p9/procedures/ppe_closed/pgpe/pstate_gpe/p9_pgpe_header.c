@@ -35,8 +35,11 @@ PgpeHeader_t* G_pgpe_header_data;
 extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
 
 //
-//Set the pgpe_header_data struct to point to PGPE HEADER in SRAM
+//  p9_pgpe_header_init
 //
+//  This function is called during PGPE boot to initialize
+//  pointer to PgpeImageHeader, and also fill some values in
+//  PgpeImageHeader
 //
 void p9_pgpe_header_init()
 {

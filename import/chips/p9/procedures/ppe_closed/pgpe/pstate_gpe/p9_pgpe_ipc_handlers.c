@@ -49,10 +49,10 @@ extern PgpePstateRecord G_pgpe_pstate_record;
 extern TraceData_t G_pgpe_optrace_data;
 
 //
-//p9_pgpe_ipc_init
+//  p9_pgpe_ipc_init
 //
-//Called during PGPE initialziation to enable IPC functions
-//and init task list
+//  Called during PGPE initialziation to enable IPC functions
+//  and initialize static ipc task list
 //
 void p9_pgpe_ipc_init()
 {
@@ -72,7 +72,12 @@ void p9_pgpe_ipc_init()
 }
 
 //
-//p9_pgpe_ipc_irq_done_hook
+//  p9_pgpe_ipc_irq_done_hook
+//
+//  This function is called by the IPC Handler(defined in the ipc code)
+//  when there are no more IPC messages left to be processed. This then
+//  posts to the process thread to do further processing of IPCs
+//
 //
 void p9_pgpe_ipc_irq_done_hook()
 {
@@ -89,9 +94,14 @@ void p9_pgpe_ipc_irq_done_hook()
 }
 
 //
-//p9_pgpe_ipc_405_start_stop
+//  p9_pgpe_ipc_405_start_stop
 //
-//IPC function called upon receiving 'Pstate Start/Stop' IPC from OCC
+//  IPC function called upon receiving 'Pstate Start/Stop' IPC from OCC.
+//
+//  We store the pointer to ipc msg in the static ipcPendTbl, and mark
+//  that this IPC needs to be processed and acked. Also, a check is done
+//  to ensure that previous IPC of this type has been ACKed because OCC
+//  should never send another IPC of same type if one is already pending.
 //
 void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 {
@@ -118,9 +128,14 @@ void p9_pgpe_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 }
 
 //
-//p9_pgpe_ipc_405_clips
+//  p9_pgpe_ipc_405_clips
 //
-//IPC function called upon receiving 'Clip Update' IPC from OCC
+//  IPC function called upon receiving 'Clip Update' IPC from OCC
+//
+//  We store the pointer to ipc msg in the static ipcPendTbl, and mark
+//  that this IPC needs to be processed and acked. Also, a check is done
+//  to ensure that previous IPC of this type has been ACKed because OCC
+//  should never send another IPC of same type if one is already pending
 //
 void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 {
@@ -145,9 +160,14 @@ void p9_pgpe_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 }
 
 //
-//p9_pgpe_ipc_405_set_pmcr
+//  p9_pgpe_ipc_405_set_pmcr
 //
-//IPC function called upon receiving 'Set PMCR' IPC from OCC
+//  IPC function called upon receiving 'Set PMCR' IPC from OCC
+//
+//  We store the pointer to ipc msg in the static ipcPendTbl, and mark
+//  that this IPC needs to be processed and acked. Also, a check is done
+//  to ensure that previous IPC of this type has been ACKed because OCC
+//  should never send another IPC of same type if one is already pending.
 //
 void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 {
@@ -180,9 +200,15 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 }
 
 //
-//p9_pgpe_ipc_405_wof_control
+//  p9_pgpe_ipc_405_wof_control
 //
-//IPC function called upon receiving 'WOF Control' IPC from OCC
+//  IPC function called upon receiving 'WOF Control' IPC from OCC
+//
+//  We store the pointer to ipc msg in the static ipcPendTbl, and mark
+//  that this IPC needs to be processed and acked. Also, a check is done
+//  to ensure that previous IPC of this type has been ACKed because OCC
+//  should never send another IPC of same type if one is already pending.
+//
 //
 void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
 {
@@ -207,9 +233,14 @@ void p9_pgpe_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
 }
 
 //
-//p9_pgpe_ipc_405_wof_vfrt
+//  p9_pgpe_ipc_405_wof_vfrt
 //
-//IPC function called upon receiving 'WOF VFRT' IPC from OCC
+//  IPC function called upon receiving 'WOF VFRT' IPC from OCC
+//
+//  We store the pointer to ipc msg in the static ipcPendTbl, and mark
+//  that this IPC needs to be processed and acked. Also, a check is done
+//  to ensure that previous IPC of this type has been ACKed because OCC
+//  should never send another IPC of same type if one is already pending.
 //
 void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
 {
@@ -234,9 +265,14 @@ void p9_pgpe_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
 }
 
 //
-//p9_pgpe_ipc_sgpe_updt_active_cores
+//  p9_pgpe_ipc_sgpe_updt_active_cores
 //
-//IPC function called upon receiving 'Update Active Cores' IPC from SGPE
+//  IPC function called upon receiving 'Update Active Cores' IPC from SGPE
+//
+//  We store the pointer to ipc msg in the static ipcPendTbl, and mark
+//  that this IPC needs to be processed and acked. Also, a check is done
+//  to ensure that previous IPC of this type has been ACKed because SGPE
+//  should never send another IPC of same type if one is already pending.
 //
 void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
 {
@@ -263,9 +299,16 @@ void p9_pgpe_ipc_sgpe_updt_active_cores(ipc_msg_t* cmd, void* arg)
 }
 
 //
-//p9_pgpe_ipc_sgpe_updt_active_quads
+//  p9_pgpe_ipc_sgpe_updt_active_quads
 //
-//IPC function called upon receiving 'Update Active Quads' IPC from SGPE
+//  IPC function called upon receiving 'Update Active Quads' IPC from SGPE
+//
+//  We store the pointer to ipc msg in the static ipcPendTbl, and mark
+//  that this IPC needs to be processed and acked. Also, a check is done
+//  to ensure that previous IPC of this type has been ACKed and also there is
+//  no pending_ack for active cores IPC because SGPE
+//  should never send another IPC of same type if one is already pending, and quads
+//  update should not be sent if a core update is pending.
 //
 void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
 {
@@ -295,6 +338,11 @@ void p9_pgpe_ipc_sgpe_updt_active_quads(ipc_msg_t* cmd, void* arg)
 }
 
 
+//
+//  p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt
+//
+//  This is the callback handler when SGPE acks Control Stop Update IPC sent by PGPE
+//
 void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt(ipc_msg_t* cmd, void* arg)
 {
     PK_TRACE_INF("IPC: Ctrl Stop Updt ACKed");
@@ -303,6 +351,11 @@ void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt(ipc_msg_t* cmd, void* arg)
     G_pgpe_pstate_record.ipcPendTbl[IPC_ACK_CTRL_STOP_UPDT].pending_processing = 1;
 }
 
+//
+//  p9_pgpe_ipc_ack_sgpe_suspend_stop
+//
+//  This is the callback handler when SGPE acks Suspend_Stop IPC sent by PGPE
+//
 void p9_pgpe_ipc_ack_sgpe_suspend_stop(ipc_msg_t* cmd, void* arg)
 {
     PK_TRACE_INF("IPC: Suspend Stop ACKed");

@@ -59,29 +59,35 @@ void (*p9_pgpe_auxiliary_task)() = (void*)OCC_SRAM_AUX_TASK_ADDR;
 
 
 //
-//Local function declarations
+//  Local function declarations
 //
 void p9_pgpe_fit_handler(void* arg, PkIrqId irq);
 
 //
-//p9_pgpe_fit_init
+//  p9_pgpe_fit_init
 //
-//We set fit_count_threshold based on nest frequency
-//and also enable and setup the fit handler
+//  This is called during PGPE Boot to intialize FIT(Fixed Internal Timer) related
+//  data.
+//  For nest frequency of 2000Mhz, it is expected FIT interrupt will happen
+//  every 262us
+//
 void p9_pgpe_fit_init()
 {
     uint16_t freq = G_gppb->nest_frequency_mhz;
 
     PK_TRACE_DBG("Fit NestFreq=0x%dMhz", G_gppb->nest_frequency_mhz);
 
-    //Set fit count threshold
+    //Set PGPE beacon count threshold. PGPE beacon should be incremented
+    //every 2ms. This is monitored by OCC
     G_beacon_count_threshold = (freq < 1573) ? 6 :
                                (freq < 1835) ? 7 :
                                (freq < 2097) ? 8 :
                                (freq < 2359) ? 9 :
                                (freq < 2621) ? 10 : 11;
     PK_TRACE_DBG("Fit BeaconThr=0x%d", G_beacon_count_threshold);
-    //ATTR_AUX_FUNC_INVOCATION_TIME_MS * 1 ms
+
+    //Determine how often to call the auxillary function. It should be
+    //attribute ATTR_AUX_FUNC_INVOCATION_TIME_MS * 1 ms
     G_aux_task_count_threshold = (freq < 1573) ? 3 :
                                  (freq < 2097) ? 4 :
                                  (freq < 2621) ? 5 : 6;
@@ -97,20 +103,34 @@ void p9_pgpe_fit_init()
 #else
     uint32_t tsel = 0xA;
 #endif
+
+    //Determine how often to sync timebase
     G_tb_sync_count_threshold = ((0x2 << tsel) - 1);
-    //Calculated to be twice the interval between FIT interrupts in Quad HBR
+    PK_TRACE_DBG("Fit TimebaseSyncThr=0x%d", G_tb_sync_count_threshold);
+
+    //Determine PGPE heartbeat value to be written in each quad(monitored by CME)
+    //This should be twice the interval between FIT interrupts in Quad HBR
     //ticks
     uint32_t sub = (((1 << (29 - tsel)) / G_gppb->nest_frequency_mhz) <<
                     4) * (G_beacon_count_threshold + 1);
     G_quad_hb_value = ((0x10000 - sub) << 16) | BIT32(OCB_OCI_OCCHBR_OCC_HEARTBEAT_EN);
-    PK_TRACE_DBG("Fit TimebaseSyncThr=0x%d", G_tb_sync_count_threshold);
+
     G_throttleOn = 0;
     G_throttleCount = 0;
     G_beacon_count = 0;
     G_tb_sync_count = 0;
+
+    //Set FIT handler which is called on every FIT interrupt tick
     ppe42_fit_setup(p9_pgpe_fit_handler, NULL);
 }
 
+
+//
+//  handle_core_throttle
+//
+// This function throttle/unthrottle the cores as determine by the OCC Scratch Register2 fields
+//
+//
 __attribute__((always_inline)) inline void handle_core_throttle()
 {
     uint32_t config = in32(G_OCB_OCCS2); //bits 16-18 in OCC Scratch Register 2
@@ -181,10 +201,15 @@ __attribute__((always_inline)) inline void handle_quad_hb_update()
     }
 }
 
-//PGPE beacon needs to be written every 2ms. However, we
-//set the FIT interrupt period smaller than that, and
-//update PGPE beacon only when we have seen "G_beacon_count_threshold"
-//number of FIT interrupts
+//
+//  handle_occ_beacon
+//
+//  Updates Heart Beat Register in every quad, and increments PGPE Beacon
+//
+//  PGPE beacon needs to be written every 2ms. However, we
+//  set the FIT interrupt period smaller than that, and
+//  update PGPE beacon only when we have seen "G_beacon_count_threshold"
+//  number of FIT interrupts
 __attribute__((always_inline)) inline void handle_occ_beacon()
 {
     if (G_beacon_count == G_beacon_count_threshold)
@@ -205,6 +230,12 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
     }
 }
 
+//
+//  handle_occflg_requests
+//
+//  This function samples OCCFLG[0/Pstate Stop,2/Safe mode Request,3/PM Complex Suspend] and
+//  updates PstateStatus accordingly
+//
 __attribute__((always_inline)) inline void handle_occflg_requests()
 {
     ocb_occflg_t occFlag;
@@ -263,10 +294,16 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
     }
 }
 
-//PGPE characterization thread is called based on . However, we
-//set the FIT interrupt period smaller than that, and
-//call characterization method only when we have seen "G_characterization_count_threshold"
-//number of FIT interrupts
+//
+//  handle_aux_task
+//
+//  This function calls auxilliary task if enabled at period determined
+//  by G_aux_task_count_threshold
+//
+//  PGPE characterization thread is called based on OCB_OCCFLG[AUX_THREAD_ACTIVATE] .
+//  We set the FIT interrupt period smaller than that, and
+//  call characterization method only when we have seen "G_aux_task_count_threshold"
+//  number of FIT interrupts
 __attribute__((always_inline)) inline void handle_aux_task()
 {
     if(in32(G_OCB_OCCFLG) & BIT32(AUX_THREAD_ACTIVATE))
@@ -289,8 +326,14 @@ __attribute__((always_inline)) inline void handle_aux_task()
     }
 }
 
-//FIT Timebase Sync is called every time bottom 3B of OTBR
-//roll over so it's clear in tracing how much time has passed
+
+//
+//  handle_fit_timebase_sync
+//
+//  This function syncs up timebase for pgpe op trace
+//
+//  FIT Timebase Sync is called every time bottom 3B of OTBR
+//  roll over so it's clear in tracing how much time has passed
 __attribute__((always_inline)) inline void handle_fit_timebase_sync()
 {
     if (G_tb_sync_count == G_tb_sync_count_threshold)
@@ -323,10 +366,11 @@ __attribute__((always_inline)) inline void handle_fit_timebase_sync()
     }
 }
 
-//p9_pgpe_fit_handler
+//  p9_pgpe_fit_handler
 //
-//This is a periodic FIT Handler whose period is determined
-//by GPE_TIMER_SELECT register
+//  This is a periodic FIT Handler which is called up at fixed period
+//  as determined by GPE_TIMER_SELECT register
+//
 void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
 {
 
