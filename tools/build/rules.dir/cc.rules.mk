@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -100,7 +100,6 @@ else
 		$(C2) "    AR$(1)     $$(@F)"
 endif
 		$(C1) mkdir -p $$(@D)
-		$(C1) rm -f $$@
 		$(C1) $$($(1)_PREFIX)$$(AR) rcs $$@ $$^
 endef
 
