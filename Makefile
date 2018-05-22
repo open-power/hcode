@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2017
+# COPYRIGHT 2017,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -24,12 +24,21 @@
 # IBM_PROLOG_END_TAG
 export BASEPATH=../..
 BUILD_DIR = tools/build
-.PHONY: install all clean install_rings
+.PHONY: install all clean
 
-install: all install_rings
+install: all
 
-all: install_rings
+TOOLS = ppetracepp
+
+# ppetrace.exe is a dependancy for several independent
+# targets, build it first to eliminate concurrancy
+# issues
+all: $(TOOLS)
 	@$(MAKE) -C $(BUILD_DIR) all --no-print-directory
 
 clean:
 	@$(MAKE) -C $(BUILD_DIR) clean  --no-print-directory
+
+%:
+	@$(MAKE) -C $(BUILD_DIR) $@  --no-print-directory
+
