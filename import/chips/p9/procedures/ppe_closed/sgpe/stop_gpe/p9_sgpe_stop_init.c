@@ -435,7 +435,9 @@ p9_sgpe_stop_init()
             G_sgpe_stop_record.state[qloop].act_state_q = STOP_LEVEL_0;
             G_sgpe_stop_record.group.quad[VECTOR_CONFIG] |= BIT32(qloop);
             // clear gpmmr[reset_state_indicator] if partial good quad
-            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_CLR, qloop), BIT64(15));
+            // clear quad special wakeup that may be set by pm_reset
+            // either way, before enable quad special wakeup interrupt service, start clean
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(PPM_GPMMR_CLR, qloop), (BIT64(0) | BIT64(15)));
 
             if (qssr.value & m_qs)
             {
