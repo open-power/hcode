@@ -1191,6 +1191,27 @@ void p9_pgpe_pstate_wof_ctrl(uint32_t action)
 
         G_pgpe_pstate_record.wofStatus = WOF_DISABLED;
 
+        //ACK any pending quad active update exit. PGPE might have been waiting for WOF VFRT from OCC, but
+        //with WOF disabled that will never come.
+        if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 1)
+        {
+            ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+            ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
+
+            G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+            G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
+
+            p9_pgpe_pstate_process_quad_exit_notify(args->fields.requested_quads << 2);
+
+            args->fields.return_active_quads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads >> 2;
+            args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+            ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+
+            p9_pgpe_optrace(ACK_QUAD_ACTV);
+
+            GPE_PUTSCOM(G_OCB_OCCFLG_CLR, BIT32(REQUESTED_ACTIVE_QUAD_UPDATE));//Clear OCCFLG[REQUESTED_ACTIVE_QUAD_UPDATE]
+        }
+
         PK_TRACE_DBG("WCT: WOF Disabled");
     }
 }

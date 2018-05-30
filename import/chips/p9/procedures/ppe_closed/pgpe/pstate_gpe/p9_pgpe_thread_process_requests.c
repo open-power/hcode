@@ -363,16 +363,17 @@ inline void p9_pgpe_process_sgpe_updt_active_quads()
         }
 
         args->fields.return_active_quads =
-            ((G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads &= (~(quads_requested))) >> 2);
+            ((G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads & (~(quads_requested))) >> 2);
         args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
     }
     //EXIT
     else
     {
-        if (args->fields.exit_type == UPDATE_ACTIVE_QUADS_ENTRY_TYPE_NOTIFY)
+        //Update Shared Memory Region
+        G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (quads_requested);
+
+        if (args->fields.exit_type == UPDATE_ACTIVE_QUADS_EXIT_TYPE_NOTIFY)
         {
-            //Update Shared Memory Region
-            G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
 
             //WOF Enabled
             //If WOF_ENABLED=1, and pstatesStatus == ACITVE, then request for WOF_VFRT
@@ -385,7 +386,7 @@ inline void p9_pgpe_process_sgpe_updt_active_quads()
             }
             else
             {
-                p9_pgpe_pstate_process_quad_exit_notify(args->fields.requested_quads << 2);
+                p9_pgpe_pstate_process_quad_exit_notify(quads_requested);
                 args->fields.return_active_quads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads >>
                                                    2; //activeQuads isn't updated until registration, so we OR with requested quads.
                 args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
