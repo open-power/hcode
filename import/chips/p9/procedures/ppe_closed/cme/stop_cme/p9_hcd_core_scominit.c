@@ -81,6 +81,9 @@ p9_hcd_core_scominit(uint32_t core)
     CME_PUTSCOM(CORE_ACTION0, core, 0x14A800408A000040);
     CME_PUTSCOM(CORE_ACTION1, core, 0xBCFC00D7FF100040);
     CME_PUTSCOM(CORE_FIRMASK, core, 0x0301D70000AB76BE);
+
+    // set mask for core_cs_recovery_handshake
+    CME_PUTSCOM(C_SPATTN_MASK, core, 0x2222222200000000);
 #endif
 
     PK_TRACE("Update Core Hang Pulse Dividers via C_HANG_CONTROL[0-15]");

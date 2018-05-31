@@ -101,6 +101,7 @@
 #define SPR_MODE               0x20010A84
 #define SCRATCH0               0x20010A86
 #define SCRATCH1               0x20010A87
+#define C_SPATTN_MASK          0x20010A9A
 #define THREAD_INFO            0x20010A9B
 #define DIRECT_CONTROLS        0x20010A9C
 #define SPURR_FREQ_SCALE       0x20010AA0
