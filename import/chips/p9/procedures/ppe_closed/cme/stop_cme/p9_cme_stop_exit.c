@@ -65,16 +65,17 @@ static void
 p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 {
     uint32_t     core_mask         = 0;
+    uint32_t     core_index        = 0;
     uint32_t     act_stop_level    = 0;
+    uint32_t     thread            = 0;
+    uint32_t     bitloc            = 0;
+    uint32_t     pscrs             = 0;
     data64_t     scom_data         = {0};
 #if HW386841_NDD1_DSL_STOP1_FIX
     uint8_t      srr1[MAX_THREADS_PER_CORE] = {0, 0, 0, 0};
-    uint32_t     pscrs             = 0;
-    uint32_t     bitloc            = 0;
-    uint32_t     thread            = 0;
     uint32_t     temp_dsl          = 0;
-    uint32_t     core_index        = 0;
 #else
+    uint32_t     pls               = 0;
     uint32_t     saved_msr         = 0;
 #endif
 
@@ -190,53 +191,42 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
         if (core & core_mask)
         {
             CME_GETSCOM(PPM_SSHSRC, core_mask, scom_data.value);
-
             act_stop_level = (scom_data.words.upper & BITS32(8, 4)) >> SHIFT32(11);
+            core_index = core_mask & 1;
+
+            scom_data.words.lower = (BIT64SH(32) | BIT64SH(40) | BIT64SH(48) | BIT64SH(56));
             scom_data.words.upper = 0;
-            scom_data.words.lower =
-                (MAX(act_stop_level, G_pls[core_mask & 1][0]) << SHIFT64SH(36)) |
-                (MAX(act_stop_level, G_pls[core_mask & 1][1]) << SHIFT64SH(44)) |
-                (MAX(act_stop_level, G_pls[core_mask & 1][2]) << SHIFT64SH(52)) |
-                (MAX(act_stop_level, G_pls[core_mask & 1][3]) << SHIFT64SH(60));
 
-            PK_TRACE("core[%d] act_stop_level[%d]", core_mask, act_stop_level);
-            PK_TRACE("G_pls0[%d], G_pls1[%d], G_pls2[%d], G_pls3[%d]",
-                     G_pls[core_mask & 1][0], G_pls[core_mask & 1][1],
-                     G_pls[core_mask & 1][2], G_pls[core_mask & 1][3]);
+            for(thread = 0, bitloc = 36;
+                thread < MAX_THREADS_PER_CORE;
+                thread++,   bitloc += 8)
+            {
+                pls = MAX(act_stop_level, G_pls[core_index][thread]);
+                scom_data.words.lower |= (pls << SHIFT64SH(bitloc));
 
-            if (act_stop_level >= STOP_LEVEL_8)
-            {
-                // MOST_STATE_LOSS(3) + b32/40/48/56
-                scom_data.words.lower |= (BIT64SH(32)  |
-                                          BITS64SH(38, 3) | BITS64SH(46, 3) |
-                                          BITS64SH(54, 3) | BITS64SH(62, 2));
-            }
-            else if (act_stop_level >= STOP_LEVEL_4)
-            {
-                // SOME_STATE_LOSS_BUT_NOT_TIMEBASE(2)
-                scom_data.words.lower |=
-                    (BIT64SH(32) | BIT64SH(40) | BIT64SH(48) | BIT64SH(56) |
-                     BIT64SH(38) | BIT64SH(46) | BIT64SH(54) | BIT64SH(62));
-            }
-            else
-            {
-                // SOME_STATE_LOSS_BUT_NOT_TIMEBASE(2) vs NO_STATE_LOSS(1)
-                scom_data.words.lower =
-                    ((BIT64SH(32) | BIT64SH(40) | BIT64SH(48) | BIT64SH(56)) |
-                     (act_stop_level << SHIFT64SH(36)) |
-                     (act_stop_level << SHIFT64SH(44)) |
-                     (act_stop_level << SHIFT64SH(52)) |
-                     (act_stop_level << SHIFT64SH(60)) |
-                     (((in32(G_CME_LCL_PSCRS00) & BIT32(2)) ?
-                       SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH(39)) |
-                     (((in32(G_CME_LCL_PSCRS10) & BIT32(2)) ?
-                       SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH(47)) |
-                     (((in32(G_CME_LCL_PSCRS20) & BIT32(2)) ?
-                       SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH(55)) |
-                     (((in32(G_CME_LCL_PSCRS30) & BIT32(2)) ?
-                       SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS)));
-            }
+                if (pls >= STOP_LEVEL_8)
+                {
+                    // MOST_STATE_LOSS(3)
+                    scom_data.words.lower |= (MOST_STATE_LOSS << SHIFT64SH((bitloc + 3)));
+                }
+                else if (pls >= STOP_LEVEL_4)
+                {
+                    // SOME_STATE_LOSS_BUT_NOT_TIMEBASE(2)
+                    scom_data.words.lower |= (SOME_STATE_LOSS_BUT_NOT_TIMEBASE << SHIFT64SH((bitloc + 3)));
+                }
+                else
+                {
+                    // address are 0x20 apart between threads and 0x80 apart between cores
+                    pscrs = in32((CME_LCL_PSCRS00 + (core_index << 7) + (thread << 5)));
 
+                    // SOME_STATE_LOSS_BUT_NOT_TIMEBASE(2) vs NO_STATE_LOSS(1)
+                    scom_data.words.lower |= (((pscrs & BIT32(2)) ?
+                                               SOME_STATE_LOSS_BUT_NOT_TIMEBASE : NO_STATE_LOSS) << SHIFT64SH((bitloc + 3)));
+                }
+
+                PK_TRACE("core[%d] act_stop_level[%d] G_pls_tX[%d], scom_data.lower[%x]",
+                         core_mask, act_stop_level, G_pls[core_index][thread], scom_data.words.lower);
+            }
 
             // Treat the first write with suspicion due to a bug in the PSCOM macro when a previous scom has timed out
             saved_msr = mfmsr();
@@ -254,7 +244,6 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
             {
                 mtmsr(saved_msr);
             }
-
         }
     }
 
