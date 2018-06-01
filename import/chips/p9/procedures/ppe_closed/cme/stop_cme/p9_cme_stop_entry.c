@@ -246,6 +246,7 @@ p9_cme_stop_entry()
     uint32_t     pscrs               = 0;
     uint32_t     no_state_loss       = 0;
     uint32_t     pm_states           = 0;
+    uint32_t     wake_mask           = 0;
     uint32_t     lclr_data           = 0;
     data64_t     scom_data           = {0};
     ppm_pig_t    pig                 = {0};
@@ -301,6 +302,14 @@ p9_cme_stop_entry()
         PK_TRACE_INF("WARNING: Attn/Recov Present, Abort Entry and Return");
         return;
     }
+
+    // clear and resample wakeup to make sure
+    // only wakeup requested after pm_active
+    // is used to wakeup after current stop
+    wake_mask = ((core << SHIFT32(13)) | (core << SHIFT32(17)));
+    out32(G_CME_LCL_EISR_CLR, wake_mask);
+    core_raw = in32(G_CME_LCL_EINR) & wake_mask;
+    out32(G_CME_LCL_EISR_OR, core_raw);
 
 #if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
 
