@@ -32,6 +32,7 @@
 extern uint32_t G_CME_LCL_EINR;
 extern uint32_t G_CME_LCL_EISR;
 extern uint32_t G_CME_LCL_EISR_CLR;
+extern uint32_t G_CME_LCL_EISR_OR;
 extern uint32_t G_CME_LCL_EIMR_CLR;
 extern uint32_t G_CME_LCL_EIMR_OR;
 extern uint32_t G_CME_LCL_EIPR_CLR;
