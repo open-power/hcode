@@ -71,6 +71,7 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq);
 void p9_pgpe_fit_init()
 {
     uint16_t freq = G_gppb->nest_frequency_mhz;
+    uint16_t aux_period;
 
     PK_TRACE_DBG("Fit NestFreq=0x%dMhz", G_gppb->nest_frequency_mhz);
 
@@ -86,9 +87,11 @@ void p9_pgpe_fit_init()
                                  (freq < 2097) ? 4 :
                                  (freq < 2621) ? 5 : 6;
 
-    if(G_pgpe_header_data->g_pgpe_aux_controls) //multiply by attribute if nonzero
+    aux_period = G_pgpe_header_data->g_pgpe_aux_controls >> 24;
+
+    if(aux_period) //multiply by attribute if nonzero
     {
-        G_aux_task_count_threshold *= G_pgpe_header_data->g_pgpe_aux_controls;
+        G_aux_task_count_threshold *= aux_period;
     }
 
     PK_TRACE_DBG("Fit AuxTaskThr=0x%d", G_aux_task_count_threshold);
