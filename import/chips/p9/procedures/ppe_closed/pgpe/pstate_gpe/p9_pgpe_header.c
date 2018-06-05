@@ -66,7 +66,7 @@ void p9_pgpe_header_init()
 
     G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr = (uint32_t)
             &occ_shared_data->pstate_table; //OCC Pstate table address
-    G_pgpe_header_data->g_pgpe_occ_pstables_len  = sizeof(OCCPstateTable_t); //OCC Pstate table length
+    G_pgpe_header_data->g_pgpe_occ_pstables_len  = MAX_PSTATE_TABLE_ENTRIES; //OCC Pstate table length
 
     G_pgpe_header_data->g_pgpe_beacon_addr = (uint32_t)&occ_shared_data->pgpe_beacon;//Beacon
     G_pgpe_header_data->g_quad_status_addr = (uint32_t)&occ_shared_data->quad_pstate_0;//Quad Pstate

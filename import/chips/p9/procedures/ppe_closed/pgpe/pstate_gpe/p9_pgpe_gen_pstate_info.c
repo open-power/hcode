@@ -100,16 +100,16 @@ void p9_pgpe_gen_pstate_info()
                  G_gpi->header.highest_ps_offset,
                  G_gpi->header.biased_pstate_tbl_offset);
     gppb = (GlobalPstateParmBlock*)((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
-                                    G_gpi->header.gppb_offset));
+                                    G_gpi->header.gppb_offset);
     ps0 = ((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) + G_gpi->header.ps0_offset);
     highest_pstate = ((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) + G_gpi->header.highest_ps_offset);
     rTbl = (PstateTable*)((uint32_t*)(G_(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
                                       G_gpi->header.raw_pstate_tbl_offset);
-           bTbl = (PstateTable*)(((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
+                          bTbl = (PstateTable*)(((uint32_t*)(G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset) +
                                   G_gpi->header.biased_pstate_tbl_offset);
-                                 PK_TRACE_DBG("INIT:highest_ps=0x%x, ps0=0x%x",
-                                         *highest_pstate,
-                                         *ps0);
+                                  PK_TRACE_DBG("INIT:highest_ps=0x%x, ps0=0x%x",
+                                          *highest_pstate,
+                                          *ps0);
 #elif USE_GEN_PSTATE_STRUCT_V == 2
     G_gpi = (GeneratedPstateInfo_v2*)G_pgpe_header_data->g_pgpe_gen_pstables_mem_offset;
     G_gpi->magic = GEN_PSTATES_TBL_MAGIC_V2;
@@ -184,9 +184,9 @@ void p9_pgpe_gen_raw_pstates(PstateTable* tbl)
         tbl[p].effective_regulation_vdd_mv = G_gpi->raw_pstates[p].external_vdd_mv + G_gppb->ivrm.deadzone_mv;
         tbl[p].internal_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
         tbl[p].internal_vid = (G_gpi->raw_pstates[p].internal_vdd_mv - 512) >> 4;
-        tbl[p].vdm_mv = 0;
-        tbl[p].vdm_vid = 0;
-        tbl[p].vdm_thresholds = 0;
+        tbl[p].vdm_vid = (uint8_t)p9_pgpe_gppb_vdm_vid_cmp_from_ps(p);
+        tbl[p].vdm_mv = (uint8_t)tbl[p].vdm_vid; //Note: the field in struct is 8 bits only, we can put in the value in mV
+        tbl[p].vdm_thresholds = (uint16_t)p9_pgpe_gppb_vdm_threshold_from_ps(p);
         freq_khz_offset += G_gppb->frequency_step_khz;
     }
 
@@ -214,9 +214,9 @@ void p9_pgpe_gen_biased_pstates(PstateTable* tbl)
                                              G_gppb->ivrm.deadzone_mv);
         tbl[p].internal_vdd_mv = p9_pgpe_gppb_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
         tbl[p].internal_vid = (uint16_t)((G_gpi->biased_pstates[p].internal_vdd_mv - 512) >> 4);
-        tbl[p].vdm_mv = 0;
-        tbl[p].vdm_vid = 0;
-        tbl[p].vdm_thresholds = 0;
+        tbl[p].vdm_vid = (uint8_t)p9_pgpe_gppb_vdm_vid_cmp_from_ps(p);
+        tbl[p].vdm_mv = (uint8_t)tbl[p].vdm_vid; //Note: the field in struct is 8 bits only, we can put in the value in mV
+        tbl[p].vdm_thresholds = (uint16_t)p9_pgpe_gppb_vdm_threshold_from_ps(p);
         freq_khz_offset += G_gppb->frequency_step_khz;
     }
 
@@ -235,7 +235,7 @@ void p9_pgpe_gen_occ_pstate_tbl()
     OCCPstateTable_t* opst = (OCCPstateTable_t*)G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr;
     opst->entries = (G_pgpe_header_data->g_pgpe_occ_pstables_len) / sizeof(OCCPstateTable_entry_t);
 
-    for (p = 0; p <= opst->entries; p++)
+    for (p = 0; p < opst->entries; p++)
     {
         opst->table[p].pstate = G_gpi->biased_pstates[p].pstate;
         opst->table[p].frequency_mhz = G_gpi->biased_pstates[p].frequency_mhz ;
