@@ -60,6 +60,8 @@ p9_cme_stop_core_error_handler(uint32_t core, uint32_t core_error, uint32_t pani
 void
 p9_cme_stop_eval_eimr_override()
 {
+    wrteei(0);
+
     g_eimr_override      &= ~BITS64(12, 10);
     data64_t mask_irqs    = {0};
     mask_irqs.words.lower = 0;
@@ -103,6 +105,8 @@ p9_cme_stop_eval_eimr_override()
     {
         out32(CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_DROOP_SUSPEND_ENTRY));
     }
+
+    wrteei(1);
 }
 
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
