@@ -362,6 +362,8 @@ p9_sgpe_stop_exit()
 
     if(in32(OCB_OCCFLG2) & BIT32(OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ))
     {
+        // Clear the injection so things are not permenently stuck
+        out32(G_OCB_OCCFLG2_CLR, BIT32(OCCFLG2_SGPE_HCODE_STOP_REQ_ERR_INJ));
         PK_TRACE_ERR("SGPE STOP EXIT ERROR INJECT TRAP");
         PK_PANIC(SGPE_STOP_EXIT_TRAP_INJECT);
     }

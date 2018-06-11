@@ -1367,6 +1367,8 @@ p9_cme_stop_entry()
 
             if( BIT64(CPPM_CSAR_STOP_HCODE_ERROR_INJECT) & scom_data.value )
             {
+                // Clear the injection so things are not permenently stuck
+                CME_PUTSCOM(CPPM_CSAR_CLR, core, BIT64(CPPM_CSAR_STOP_HCODE_ERROR_INJECT));
                 PK_TRACE_DBG("CME STOP ENTRY ERROR INJECT TRAP");
                 PK_PANIC(CME_STOP_ENTRY_TRAP_INJECT);
             }

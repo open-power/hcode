@@ -213,6 +213,8 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
 
     if(in32(G_OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_FIT_ERR_INJ))
     {
+        // Clear the injection so things are not permenently stuck
+        out32(G_OCB_OCCFLG2_CLR, BIT32(OCCFLG2_PGPE_HCODE_FIT_ERR_INJ));
         PK_TRACE_ERR("FIT_IPC_ERROR_INJECT TRAP");
         PK_PANIC(PGPE_SET_PMCR_TRAP_INJECT);
     }

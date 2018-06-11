@@ -71,6 +71,40 @@ extern "C" {
 #endif
 
 
+extern uint32_t G_OCB_CCSR;
+extern uint32_t G_OCB_QCSR;
+extern uint32_t G_OCB_QSSR;
+extern uint32_t G_OCB_QSSR_CLR;
+extern uint32_t G_OCB_QSSR_OR;
+extern uint32_t G_OCB_OCCFLG;
+extern uint32_t G_OCB_OCCFLG_CLR;
+extern uint32_t G_OCB_OCCFLG_OR;
+extern uint32_t G_OCB_OCCFLG2;
+extern uint32_t G_OCB_OCCFLG2_CLR;
+extern uint32_t G_OCB_OCCS2;
+extern uint32_t G_OCB_OISR0_CLR;
+extern uint32_t G_OCB_OISR1;
+extern uint32_t G_OCB_OISR1_CLR;
+extern uint32_t G_OCB_OIMR0_CLR;
+extern uint32_t G_OCB_OIMR0_OR;
+extern uint32_t G_OCB_OIMR1_CLR;
+extern uint32_t G_OCB_OIMR1_OR;
+extern uint32_t G_OCB_OPIT0PRA;
+extern uint32_t G_OCB_OPIT2PRA;
+extern uint32_t G_OCB_OPIT3PRA;
+extern uint32_t G_OCB_OPIT6PRB;
+extern uint32_t G_OCB_OPIT0PRA_CLR;
+extern uint32_t G_OCB_OPIT1PRA_CLR;
+extern uint32_t G_OCB_OPIT2PRA_CLR;
+extern uint32_t G_OCB_OPIT3PRA_CLR;
+extern uint32_t G_OCB_OPIT4PRA_CLR;
+extern uint32_t G_OCB_OPIT5PRA_CLR;
+extern uint32_t G_OCB_OPIT6PRB_CLR;
+extern uint32_t G_OCB_OPIT7PRB_CLR;
+extern uint32_t G_OCB_OCCLFIR_AND;
+extern uint32_t G_GPE_GPE3TSEL;
+
+
 #define DEBUG_TRACE_CONTROL         0x100107D0
 #define L3TRA_TRACE_TRCTRL_CONFIG   0x10010402
 #define L3TRA_TRACE_TRDATA_CONFIG_0 0x10010403
