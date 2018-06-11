@@ -587,6 +587,8 @@ void p9_cme_pstate_process_db0()
 
     if( scom_data & BIT64(CPPM_CSAR_PSTATE_HCODE_ERROR_INJECT) )
     {
+        // Clear the injection so things are not permenently stuck
+        CME_PUTSCOM(CPPM_CSAR_CLR, CME_MASK_BC, BIT64(CPPM_CSAR_PSTATE_HCODE_ERROR_INJECT));
         PK_TRACE_ERR("CME PSTATE ERROR INJECT TRAP");
         PK_PANIC(CME_PSTATE_TRAP_INJECT);
     }

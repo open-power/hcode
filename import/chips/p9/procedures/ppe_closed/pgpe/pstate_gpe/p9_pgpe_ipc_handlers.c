@@ -175,6 +175,8 @@ void p9_pgpe_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 
     if(in32(G_OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ))
     {
+        // Clear the injection so things are not permenently stuck
+        out32(G_OCB_OCCFLG2_CLR, BIT32(OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ));
         PK_TRACE_ERR("SET PMCR IPC ERROR INJECT TRAP");
         PK_PANIC(PGPE_SET_PMCR_TRAP_INJECT);
     }

@@ -80,6 +80,7 @@ extern uint32_t G_OCB_OCCFLG;
 extern uint32_t G_OCB_OCCFLG_CLR;
 extern uint32_t G_OCB_OCCFLG_OR;
 extern uint32_t G_OCB_OCCFLG2;
+extern uint32_t G_OCB_OCCFLG2_CLR;
 extern uint32_t G_OCB_OCCS2;
 extern uint32_t G_OCB_OISR0_CLR;
 extern uint32_t G_OCB_OISR1;
