@@ -1203,12 +1203,19 @@ p9_cme_stop_exit()
 
             while((~(in32(CME_LCL_EINR))) & (core << SHIFT32(21)))
             {
-                core_spattn = (in32_sh(CME_LCL_SISR) >> SHIFT64SH(33)) & CME_MASK_BC;
+                core_spattn = (in32_sh(CME_LCL_SISR) >> SHIFT64SH(33)) & core;
 
                 if (core_spattn)
                 {
                     PK_TRACE_ERR("ERROR: Core[%d] Special Attention Detected. Gard Core!", core_spattn);
                     CME_STOP_CORE_ERROR_HANDLER(core, core_spattn, CME_STOP_EXIT_SELF_RES_SPATTN);
+
+                    PK_TRACE("Release PCB Mux back on Core via SICR[10/11]");
+                    out32(CME_LCL_SICR_CLR, core_spattn << SHIFT32(11));
+
+                    while((core_spattn & ~(in32(CME_LCL_SISR) >> SHIFT32(11))) != core_spattn);
+
+                    PK_TRACE("PCB Mux Released on Core[%d]", core_spattn);
                 }
 
                 if (!core)
