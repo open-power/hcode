@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2018
 # [+] International Business Machines Corp.
 #
 #
@@ -22,8 +22,9 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
+
 # Source files depends on build target
-TOP-C-SOURCES = p9_abus_main.c pk_app_irq_table.c
+TOP-C-SOURCES = p9_abus_main.c pk_app_irq_table.c io_lib.c p9_a_common.c
 TOP-CXX-SOURCES =
 TOP-S-SOURCES =
 
