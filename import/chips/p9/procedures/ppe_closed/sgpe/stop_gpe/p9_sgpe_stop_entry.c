@@ -287,6 +287,125 @@ p9_sgpe_stop_entry()
         }
     }
 
+    for (qloop = 0; qloop < MAX_QUADS; qloop++)
+    {
+        // if this ex is not up to entry, skip
+        if (!(ex = G_sgpe_stop_record.group.ex01[qloop]))
+        {
+            continue;
+        }
+
+        // If this quad is in block exit, copy the PSCR information back to the CPPM PECE Shadow
+        // Bit 8:13 correspond to 0:5, 8:13, 16:21, and 24:29.  Bit 3 corresponds to 32,33,34,35
+        if (G_sgpe_stop_record.group.quad[VECTOR_BLOCKX] & BIT32(qloop))
+        {
+            if (G_sgpe_stop_record.group.ex01[qloop] & FST_EX_IN_QUAD)
+            {
+
+                cindex = qloop << 2;
+
+                if (G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex))
+                {
+                    temp_data.value = 0;
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS00, qloop, 0), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) << 8;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 3;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS01, qloop, 0), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6));
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 2;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS02, qloop, 0), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) >> 8;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 1;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS03, qloop, 0), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) >> 16;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3));
+
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_PECES, cindex), temp_data.value);
+                }
+
+                cindex = (qloop << 2) + 1;
+
+                if (G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex))
+                {
+                    temp_data.value = 0;
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS10, qloop, 0), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) << 8;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 3;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS11, qloop, 0), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6));
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 2;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS12, qloop, 0), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) >> 8;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 1;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS13, qloop, 0), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) >> 16;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3));
+
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_PECES, cindex), temp_data.value);
+                }
+            }
+
+            if (G_sgpe_stop_record.group.ex01[qloop] & SND_EX_IN_QUAD)
+            {
+                cindex = (qloop << 2) + 2;
+
+                if (G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex))
+                {
+                    temp_data.value = 0;
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS00, qloop, 1), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) << 8;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 3;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS01, qloop, 1), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6));
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 2;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS02, qloop, 1), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) >> 8;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 1;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS03, qloop, 1), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) >> 16;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3));
+
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_PECES, cindex), temp_data.value);
+                }
+
+                cindex = (qloop << 2) + 3;
+
+                if (G_sgpe_stop_record.group.core[VECTOR_CONFIG] & BIT32(cindex))
+                {
+                    temp_data.value = 0;
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS10, qloop, 1), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) << 8;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 3;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS11, qloop, 1), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6));
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 2;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS12, qloop, 1), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) >> 8;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3)) << 1;
+
+                    GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_PSCRS13, qloop, 1), scom_data.value);
+                    temp_data.words.upper = (scom_data.words.upper & BITS32(8, 6)) >> 16;
+                    temp_data.words.lower = (scom_data.words.upper & BIT32(3));
+
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_PECES, cindex), temp_data.value);
+                }
+            }
+
+            PK_TRACE("Restored PECES due to block wakeup being active");
+
+        }
+    }
 
 
 // Permanent workaround to save cme image size
