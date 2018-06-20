@@ -1637,6 +1637,15 @@ p9_cme_stop_entry()
 
                     pig.fields.req_intr_payload = G_cme_stop_record.req_level[core_index];
 
+
+                    // If in block wakeup mode, disable all interrupts so the PPM PIG doesn't
+                    // send one that could overwrite the stop entry request
+                    // The SGPE will restore the CPPM PECE Shadow
+                    if (G_cme_stop_record.core_blockwu & core_mask)
+                    {
+                        CME_PUTSCOM(CPPM_PECES, core_mask, BITS64(32, 4));
+                    }
+
                     // put PIG and Wakeup_Notify_Select back to back as possible
                     send_pig_packet(pig.value, core_mask);
 
