@@ -79,4 +79,4 @@ $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
 
  $(call BUILD_BINHEADER, \
 	$(IMAGEPATH)/$(CME_IMAGE)/$(CME_IMAGE).bin, \
-	$(ROOTPATH)/output/images/utils/stopreg/p9_core_restore_routines/p9_core_restore_routines.bin)
+	$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
