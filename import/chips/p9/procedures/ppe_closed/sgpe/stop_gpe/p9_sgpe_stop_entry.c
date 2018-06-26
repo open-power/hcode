@@ -988,6 +988,36 @@ p9_sgpe_stop_entry()
 
 #endif
 
+            for (ex_mask = 2; ex_mask; ex_mask--)
+            {
+                if (ex & ex_mask)
+                {
+                    ex_index = ex_mask & 1;
+
+                    // Re-enable Tracing
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM1_MODE_REG, qloop, ex_index), 0xC00F000000000000);
+
+                    // Re-enable PMISC and IMA - Bits 1,2,4
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM1_CTRL_REG, qloop, ex_index), 0x7404000000000000);
+
+                    PK_TRACE("Restart CHTM1 on EX[%d] via HTM_TRIG[0/4]", ex_index);
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM1_TRIG_REG, qloop, ex_index), BIT64(4));
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_CHTM1_TRIG_REG, qloop, ex_index), BIT64(0));
+
+                }
+            }
+
+            PK_TRACE("Re-enable cme trace array via DEBUG_TRACE_CONTROL[0]");
+            GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(DEBUG_TRACE_CONTROL, qloop), BIT64(0));
+
+            PK_TRACE("Update QSSR afer L3 Purge Abort: drop stop_entry_ongoing");
+            out32(OCB_QSSR_CLR, BIT32(qloop + 20));
+
+            PK_TRACE("Clear stop history on quad[%d]", qloop);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_ENTRY_COMPLETE;
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
+
             // For IPC reporting, taking aborted quad out of the list
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &= ~BIT32(qloop);
             continue;
