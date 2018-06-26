@@ -988,6 +988,14 @@ p9_sgpe_stop_entry()
 
 #endif
 
+            PK_TRACE("Update QSSR afer L3 Purge Abort: drop stop_entry_ongoing");
+            out32(OCB_QSSR_CLR, BIT32(qloop + 20));
+
+            PK_TRACE("Clear stop history on quad[%d]", qloop);
+            scom_data.words.lower = 0;
+            scom_data.words.upper = SSH_EXIT_COMPLETE;
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
+
             // For IPC reporting, taking aborted quad out of the list
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &= ~BIT32(qloop);
             continue;
