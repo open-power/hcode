@@ -148,40 +148,34 @@ p9_cme_stop_spwu_handler(void)
                     }
                 }
 
-                PK_TRACE("Falling edge of spwu, first clearing EISR");
+                PK_TRACE_INF("Falling edge of SPWU, now clear spwu_done, eisr and flip eipr");
+                out32(CME_LCL_SICR_CLR, BIT32((16 + core_index)));
                 out32(CME_LCL_EISR_CLR, BIT32((14 + core_index)));
+                out32(CME_LCL_EIPR_OR,  BIT32((14 + core_index)));
 
-                // if spwu asserts again before we drop spwu_done, do nothing, else:
-                if ((~(in32(CME_LCL_EINR))) & BIT32((14 + core_index)))
+                // if spwu has been re-asserted after spwu_done is dropped:
+                if (((in32(CME_LCL_EINR))) & BIT32((14 + core_index)))
                 {
-                    PK_TRACE("SPWU drop confirmed, now dropping spwu_done");
-                    out32(CME_LCL_SICR_CLR, BIT32((16 + core_index)));
+                    out32(CME_LCL_EISR_CLR, BIT32((14 + core_index)));
+                    out32(CME_LCL_EIPR_CLR, BIT32((14 + core_index)));
+                    out32(CME_LCL_SICR_OR,  BIT32((16 + core_index)));
+                    PK_TRACE_INF("SPWU asserts again, clear eisr, flip eipr, re-assert spwu_done");
+                }
+                // if spwu truly dropped:
+                else
+                {
+                    out32(CME_LCL_SICR_CLR, BIT32((4  + core_index)));
+                    PK_TRACE_INF("SPWU drop confirmed, now drop pm_exit");
 
-                    CME_GETSCOM(PPM_GPMMR,  core_mask, scom_data);
+                    // Core is now out of spwu, allow pm_active
+                    // block entry mode is handled via eimr override
+                    G_cme_stop_record.core_in_spwu &= ~core_mask;
 
-                    // if spwu has been re-asserted after spwu_done is dropped:
-                    if (scom_data & BIT64(1))
+                    // if in block entry mode, do not release the mask
+                    if (!(G_cme_stop_record.core_blockey & core_mask))
                     {
-                        PK_TRACE("SPWU asserts again, re-asserting spwu_done");
-                        out32(CME_LCL_SICR_OR, BIT32((16 + core_index)));
-                    }
-                    // if spwu truly dropped:
-                    else
-                    {
-                        PK_TRACE("Flip EIPR to raising edge and drop pm_exit");
-                        out32(CME_LCL_EIPR_OR,  BIT32((14 + core_index)));
-                        out32(CME_LCL_SICR_CLR, BIT32((4  + core_index)));
-
-                        // Core is now out of spwu, allow pm_active
-                        // block entry mode is handled via eimr override
-                        G_cme_stop_record.core_in_spwu &= ~core_mask;
-
-                        // if in block entry mode, do not release the mask
-                        if (!(G_cme_stop_record.core_blockey & core_mask))
-                        {
-                            // use 32 bit UPPER mask to prevent compiler from doing 64-bit shifting
-                            g_eimr_override &=  ((uint64_t)~((IRQ_VEC_STOP_C0_UPPER) >> core_index)) << 32 | 0xFFFFFFFF;
-                        }
+                        // use 32 bit UPPER mask to prevent compiler from doing 64-bit shifting
+                        g_eimr_override &=  ((uint64_t)~((IRQ_VEC_STOP_C0_UPPER) >> core_index)) << 32 | 0xFFFFFFFF;
                     }
                 }
             }
