@@ -597,230 +597,214 @@ p9_cme_stop_entry()
 
 #if NIMBUS_DD_LEVEL != 10
 
-            if (target_level > STOP_LEVEL_3 || deeper_level > STOP_LEVEL_3)
+#ifdef PLS_DEBUG
+
+            PK_TRACE("RAMMING Read RAS_STATUS[(0 + 8*T)] CORE_MAINT_MODE to find out which threads are in maintenance mode");
+
+            if (core & CME_MASK_C0)
             {
-                if (target_level < STOP_LEVEL_4)
-                {
-                    core = deeper_core;
-                }
+                CME_GETSCOM(RAS_STATUS, CME_MASK_C0, scom_data.value);
+                PKTRACE("CheckA RAS_STATUS_UPPER Core0 %X", scom_data.words.upper);
+            }
 
-#ifdef PLS_DEBUG
-
-                PK_TRACE("RAMMING Read RAS_STATUS[(0 + 8*T)] CORE_MAINT_MODE to find out which threads are in maintenance mode");
-
-                if (core & CME_MASK_C0)
-                {
-                    CME_GETSCOM(RAS_STATUS, CME_MASK_C0, scom_data.value);
-                    PKTRACE("CheckA RAS_STATUS_UPPER Core0 %X", scom_data.words.upper);
-                }
-
-                if (core & CME_MASK_C1)
-                {
-                    CME_GETSCOM(RAS_STATUS, CME_MASK_C1, scom_data.value);
-                    PKTRACE("CheckA RAS_STATUS_UPPER Core1 %X", scom_data.words.upper);
-                }
+            if (core & CME_MASK_C1)
+            {
+                CME_GETSCOM(RAS_STATUS, CME_MASK_C1, scom_data.value);
+                PKTRACE("CheckA RAS_STATUS_UPPER Core1 %X", scom_data.words.upper);
+            }
 
 #endif
 
-                // This will quiesce the active threads, put all threads into core maintenance mode,
-                // and eventually quiesce the entire core. Now core thinks its awake and ramming is allowed
-                PK_TRACE("RAMMING Assert DC_CORE_STOP for ALL threads via DIRECT_CONTROL");
-                CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(7) | BIT64(15) | BIT64(23) | BIT64(31)));
+            // This will quiesce the active threads, put all threads into core maintenance mode,
+            // and eventually quiesce the entire core. Now core thinks its awake and ramming is allowed
+            PK_TRACE("RAMMING Assert DC_CORE_STOP for ALL threads via DIRECT_CONTROL");
+            CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(7) | BIT64(15) | BIT64(23) | BIT64(31)));
 
-                PK_TRACE("RAMMING Loop on RAS_STATUS [(3 + 8*T)]LSU_QUIESCED and [(1 + 8*T)]THREAD_QUIESCE are active");
+            PK_TRACE("RAMMING Loop on RAS_STATUS [(3 + 8*T)]LSU_QUIESCED and [(1 + 8*T)]THREAD_QUIESCE are active");
 
-                do
-                {
+            do
+            {
 
-                    CME_GETSCOM_AND(RAS_STATUS, core, scom_data.value);
+                CME_GETSCOM_AND(RAS_STATUS, core, scom_data.value);
 #ifdef PLS_DEBUG
-                    PKTRACE("CheckB RAS_STATUS_AND_UPPER %X", scom_data.words.upper);
+                PKTRACE("CheckB RAS_STATUS_AND_UPPER %X", scom_data.words.upper);
 #endif
-                }
-                while((scom_data.words.upper & (BIT32(1) | BIT32(3) | BIT32(9) | BIT32(11) | BIT32(17) | BIT32(19) | BIT32(25) | BIT32(
-                                                    27)))
-                      != (BIT32(1) | BIT32(3) | BIT32(9) | BIT32(11) | BIT32(17) | BIT32(19) | BIT32(25) | BIT32(27)));
+            }
+            while((scom_data.words.upper & (BIT32(1) | BIT32(3) | BIT32(9) | BIT32(11) | BIT32(17) | BIT32(19) | BIT32(25) | BIT32(
+                                                27)))
+                  != (BIT32(1) | BIT32(3) | BIT32(9) | BIT32(11) | BIT32(17) | BIT32(19) | BIT32(25) | BIT32(27)));
 
-                PK_TRACE("RAMMING Loop on RAS_STATUS[32] NEST_ACTIVE is 0");
+            PK_TRACE("RAMMING Loop on RAS_STATUS[32] NEST_ACTIVE is 0");
 
-                do
-                {
+            do
+            {
 
-                    CME_GETSCOM_OR(RAS_STATUS, core, scom_data.value);
+                CME_GETSCOM_OR(RAS_STATUS, core, scom_data.value);
 #ifdef PLS_DEBUG
-                    PKTRACE("CheckC RAS_STATUS_OR_LOWER[0] %X", scom_data.words.lower);
+                PKTRACE("CheckC RAS_STATUS_OR_LOWER[0] %X", scom_data.words.lower);
 #endif
-                }
-                while(scom_data.words.lower & BIT32(0));
+            }
+            while(scom_data.words.lower & BIT32(0));
 
-                PK_TRACE("RAMMING Loop on THREAD_INFO[23] THREAD_ACTION_IN_PROGRESS is 0");
+            PK_TRACE("RAMMING Loop on THREAD_INFO[23] THREAD_ACTION_IN_PROGRESS is 0");
 
-                do
-                {
+            do
+            {
 
-                    CME_GETSCOM_OR(THREAD_INFO, core, scom_data.value);
+                CME_GETSCOM_OR(THREAD_INFO, core, scom_data.value);
 #ifdef PLS_DEBUG
-                    PKTRACE("CheckD THREAD_INFO_OR_UPPER[23] %X", scom_data.words.upper);
+                PKTRACE("CheckD THREAD_INFO_OR_UPPER[23] %X", scom_data.words.upper);
 #endif
-                }
-                while(scom_data.words.upper & BIT32(23));
+            }
+            while(scom_data.words.upper & BIT32(23));
 
 #ifdef PLS_DEBUG
 
-                PK_TRACE("RAMMING Read THREAD_INFO[0:3] to find out which threads are active");
+            PK_TRACE("RAMMING Read THREAD_INFO[0:3] to find out which threads are active");
 
-                if (core & CME_MASK_C0)
-                {
-                    CME_GETSCOM(THREAD_INFO, CME_MASK_C0, scom_data.value);
-                    PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core0 %X", scom_data.words.upper);
-                }
+            if (core & CME_MASK_C0)
+            {
+                CME_GETSCOM(THREAD_INFO, CME_MASK_C0, scom_data.value);
+                PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core0 %X", scom_data.words.upper);
+            }
 
-                if (core & CME_MASK_C1)
-                {
-                    CME_GETSCOM(THREAD_INFO, CME_MASK_C1, scom_data.value);
-                    PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core1 %X", scom_data.words.upper);
-                }
+            if (core & CME_MASK_C1)
+            {
+                CME_GETSCOM(THREAD_INFO, CME_MASK_C1, scom_data.value);
+                PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core1 %X", scom_data.words.upper);
+            }
 
-                PK_TRACE("RAMMING Read CORE_THREAD_STATE[56:59] to find out which threads are stopped");
+            PK_TRACE("RAMMING Read CORE_THREAD_STATE[56:59] to find out which threads are stopped");
 
-                if (core & CME_MASK_C0)
-                {
-                    CME_GETSCOM(CORE_THREAD_STATE, CME_MASK_C0, scom_data.value);
-                    PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core0 %X %X", scom_data.words.upper, scom_data.words.lower);
-                }
+            if (core & CME_MASK_C0)
+            {
+                CME_GETSCOM(CORE_THREAD_STATE, CME_MASK_C0, scom_data.value);
+                PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core0 %X %X", scom_data.words.upper, scom_data.words.lower);
+            }
 
-                if (core & CME_MASK_C1)
-                {
-                    CME_GETSCOM(CORE_THREAD_STATE, CME_MASK_C1, scom_data.value);
-                    PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core1 %X %X", scom_data.words.upper, scom_data.words.lower);
-                }
+            if (core & CME_MASK_C1)
+            {
+                CME_GETSCOM(CORE_THREAD_STATE, CME_MASK_C1, scom_data.value);
+                PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core1 %X %X", scom_data.words.upper, scom_data.words.lower);
+            }
 
 #endif
 
-                PK_TRACE("RAMMING Activate thread[0:3] for RAM via THREAD_INFO[18:21]");
-                CME_PUTSCOM(THREAD_INFO, core, BITS64(18, 4));
+            PK_TRACE("RAMMING Activate thread[0:3] for RAM via THREAD_INFO[18:21]");
+            CME_PUTSCOM(THREAD_INFO, core, BITS64(18, 4));
 
-                do
-                {
+            do
+            {
 
-                    CME_GETSCOM_AND(THREAD_INFO, core, scom_data.value);
+                CME_GETSCOM_AND(THREAD_INFO, core, scom_data.value);
 #ifdef PLS_DEBUG
-                    PKTRACE("CheckG THREAD_INFO_AND_UPPER[0:3] %X", scom_data.words.upper);
+                PKTRACE("CheckG THREAD_INFO_AND_UPPER[0:3] %X", scom_data.words.upper);
 #endif
-                }
-                while((scom_data.words.upper & BITS32(0, 4)) != BITS32(0, 4));
+            }
+            while((scom_data.words.upper & BITS32(0, 4)) != BITS32(0, 4));
 
-                PK_TRACE("RAMMING Enable RAM mode via RAM_MODEREG[0]");
-                CME_PUTSCOM(RAM_MODEREG, core, BIT64(0));
+            PK_TRACE("RAMMING Enable RAM mode via RAM_MODEREG[0]");
+            CME_PUTSCOM(RAM_MODEREG, core, BIT64(0));
 
-                PK_TRACE("RAMMING Set SPR mode to LT0-7 via SPR_MODE[20-27]");
-                CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
+            PK_TRACE("RAMMING Set SPR mode to LT0-7 via SPR_MODE[20-27]");
+            CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
 
-                PK_TRACE("RAMMING Set SPRC to scratch1 for cores via SCOM_SPRC");
-                CME_PUTSCOM(SCOM_SPRC, core, BIT64(60));
+            PK_TRACE("RAMMING Set SPRC to scratch1 for cores via SCOM_SPRC");
+            CME_PUTSCOM(SCOM_SPRC, core, BIT64(60));
 
-                PK_TRACE("Save off Scratch1 Register from cores");
+            PK_TRACE("Save off Scratch1 Register from cores");
 
-                if (core & CME_MASK_C0)
+            if (core & CME_MASK_C0)
+            {
+                CME_GETSCOM(SCRATCH1, CME_MASK_C0, G_scratch[0]);
+            }
+
+            if (core & CME_MASK_C1)
+            {
+                CME_GETSCOM(SCRATCH1, CME_MASK_C1, G_scratch[1]);
+            }
+
+            PK_TRACE("Write default Data into Scratch1 Register");
+            CME_PUTSCOM(SCRATCH1, core, 0xDEADBEEFDEADBEEF);
+
+            for(core_mask = CME_MASK_C0; core_mask > 0; core_mask --)
+            {
+                if (core_mask & core)
                 {
-                    CME_GETSCOM(SCRATCH1, CME_MASK_C0, G_scratch[0]);
-                }
-
-                if (core & CME_MASK_C1)
-                {
-                    CME_GETSCOM(SCRATCH1, CME_MASK_C1, G_scratch[1]);
-                }
-
-                PK_TRACE("Write default Data into Scratch1 Register");
-                CME_PUTSCOM(SCRATCH1, core, 0xDEADBEEFDEADBEEF);
-
-                uint32_t pls_core = ((G_cme_stop_record.req_level[0] > STOP_LEVEL_3) ? (core & CME_MASK_C0) : 0)
-                                    | ((G_cme_stop_record.req_level[1] > STOP_LEVEL_3) ? (core & CME_MASK_C1) : 0);
-
-                for(core_mask = CME_MASK_C0; core_mask > 0; core_mask --)
-                {
-                    if (core_mask & pls_core)
+                    for(thread = 0; thread < 4; thread++)
                     {
-                        for(thread = 0; thread < 4; thread++)
+                        PK_TRACE("PSSCR RAM: mfspr psscr, gpr0 via RAM_CTRL");
+                        CME_PUTSCOM(RAM_CTRL, core_mask, RAM_MFSPR_PSSCR_GPR0 | (((uint64_t) thread) << 62));
+
+                        do
                         {
-                            PK_TRACE("PSSCR RAM: mfspr psscr, gpr0 via RAM_CTRL");
-                            CME_PUTSCOM(RAM_CTRL, core_mask, RAM_MFSPR_PSSCR_GPR0 | (((uint64_t) thread) << 62));
+                            CME_GETSCOM(RAM_STATUS, core_mask, scom_data.value);
+                        }
+                        while(!(scom_data.words.upper & BIT32(1)));
 
-                            do
-                            {
-                                CME_GETSCOM(RAM_STATUS, core_mask, scom_data.value);
-                            }
-                            while(!(scom_data.words.upper & BIT32(1)));
+                        PK_TRACE("PSSCR RAM: mtspr sprd , gpr0 via RAM_CTRL");
+                        CME_PUTSCOM(RAM_CTRL, core_mask, RAM_MTSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
 
-                            PK_TRACE("PSSCR RAM: mtspr sprd , gpr0 via RAM_CTRL");
-                            CME_PUTSCOM(RAM_CTRL, core_mask, RAM_MTSPR_SPRD_GPR0 | (((uint64_t) thread) << 62));
+                        do
+                        {
+                            CME_GETSCOM(RAM_STATUS, core_mask, scom_data.value);
+                        }
+                        while(!(scom_data.words.upper & BIT32(1)));
 
-                            do
-                            {
-                                CME_GETSCOM(RAM_STATUS, core_mask, scom_data.value);
-                            }
-                            while(!(scom_data.words.upper & BIT32(1)));
+                        do
+                        {
+                            CME_GETSCOM(SCRATCH1, core_mask, scom_data.value);
+                        }
+                        while ((scom_data.words.upper == 0xDEADBEEF) || (scom_data.words.lower == 0xDEADBEEF));
 
-                            do
-                            {
-                                CME_GETSCOM(SCRATCH1, core_mask, scom_data.value);
-                            }
-                            while ((scom_data.words.upper == 0xDEADBEEF) || (scom_data.words.lower == 0xDEADBEEF));
-
-                            if (scom_data.words.lower & BIT64SH(41))
-                            {
-                                G_pls[core_mask & 1][thread] = 11;
-                            }
-                            else
-                            {
-                                G_pls[core_mask & 1][thread] = (scom_data.words.upper & BITS32(0, 4)) >> SHIFT32(3);
-                            }
+                        if (scom_data.words.lower & BIT64SH(41))
+                        {
+                            G_pls[core_mask & 1][thread] = 11;
+                        }
+                        else
+                        {
+                            G_pls[core_mask & 1][thread] = (scom_data.words.upper & BITS32(0, 4)) >> SHIFT32(3);
+                        }
 
 #ifdef PLS_DEBUG
-                            PKTRACE("cXtX PSSCR %X %X G_pls %x pls_core %d",
-                                    scom_data.words.upper, scom_data.words.lower, G_pls[core_mask & 1][thread], pls_core);
+                        PKTRACE("cXtX PSSCR %X %X G_pls %x core %d",
+                                scom_data.words.upper, scom_data.words.lower, G_pls[core_mask & 1][thread], core);
 #endif
 
-                        }
                     }
                 }
-
-                PK_TRACE("RAMMING Disable thread0-3 for RAM via THREAD_INFO");
-                CME_PUTSCOM(THREAD_INFO, core, 0);
-
-                PK_TRACE("RAMMING Disable RAM mode via RAM_MODEREG");
-                CME_PUTSCOM(RAM_MODEREG, core, 0);
-
-                PK_TRACE("RAMMING Clear scratch/spr used in RAM");
-                CME_PUTSCOM(SPR_MODE,  core, 0);
-                CME_PUTSCOM(SCOM_SPRC, core, 0);
-
-                if (core & CME_MASK_C0)
-                {
-#ifdef PLS_DEBUG
-                    PKTRACE("SCRATCH1 %x %x", (G_scratch[0] >> 32), (G_scratch[0] & 0xffffffff));
-#endif
-                    CME_PUTSCOM(SCRATCH1, CME_MASK_C0, G_scratch[0]);
-                }
-
-                if (core & CME_MASK_C1)
-                {
-#ifdef PLS_DEBUG
-                    PKTRACE("SCRATCH1 %x %x", (G_scratch[1] >> 32), (G_scratch[1] & 0xffffffff));
-#endif
-                    CME_PUTSCOM(SCRATCH1, CME_MASK_C1, G_scratch[1]);
-                }
-
-                PK_TRACE("RAMMING Clear core maintenance mode via direct controls");
-                CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27)));
-
-                sync();
-
-                if (target_level < STOP_LEVEL_4)
-                {
-                    core = CME_MASK_BC;
-                }
             }
+
+            PK_TRACE("RAMMING Disable thread0-3 for RAM via THREAD_INFO");
+            CME_PUTSCOM(THREAD_INFO, core, 0);
+
+            PK_TRACE("RAMMING Disable RAM mode via RAM_MODEREG");
+            CME_PUTSCOM(RAM_MODEREG, core, 0);
+
+            PK_TRACE("RAMMING Clear scratch/spr used in RAM");
+            CME_PUTSCOM(SPR_MODE,  core, 0);
+            CME_PUTSCOM(SCOM_SPRC, core, 0);
+
+            if (core & CME_MASK_C0)
+            {
+#ifdef PLS_DEBUG
+                PKTRACE("SCRATCH1 %x %x", (G_scratch[0] >> 32), (G_scratch[0] & 0xffffffff));
+#endif
+                CME_PUTSCOM(SCRATCH1, CME_MASK_C0, G_scratch[0]);
+            }
+
+            if (core & CME_MASK_C1)
+            {
+#ifdef PLS_DEBUG
+                PKTRACE("SCRATCH1 %x %x", (G_scratch[1] >> 32), (G_scratch[1] & 0xffffffff));
+#endif
+                CME_PUTSCOM(SCRATCH1, CME_MASK_C1, G_scratch[1]);
+            }
+
+            PK_TRACE("RAMMING Clear core maintenance mode via direct controls");
+            CME_PUTSCOM(DIRECT_CONTROLS, core, (BIT64(3) | BIT64(11) | BIT64(19) | BIT64(27)));
+
+            sync();
 
 #endif
 
