@@ -29,9 +29,6 @@ inline __attribute__((always_inline))
 void
 p9_hcd_core_poweron(uint32_t core)
 {
-    PK_TRACE("Drop chiplet enable via NET_CTRL0[0]");
-    CME_PUTSCOM(CPPM_NC0INDIR_CLR, core, BIT64(0));
-
     PK_TRACE("Assert PCB fence via NET_CTRL0[25]");
     CME_PUTSCOM(CPPM_NC0INDIR_OR, core, BIT64(25));
 
