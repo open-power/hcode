@@ -376,7 +376,7 @@ p9_cme_stop_entry()
                     if (G_cme_stop_record.req_level[core_index] == STOP_LEVEL_1)
                     {
                         G_cme_stop_record.act_level[core_index] = STOP_LEVEL_1;
-                        core_stop1 |= core_mask;
+                        core &= ~core_mask;
                     }
 
                     if ((pCmeImgHdr->g_cme_mode_flags & CME_STOP_11_TO_8_BIT_POS) &&
