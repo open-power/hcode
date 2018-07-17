@@ -416,6 +416,12 @@ p9_cme_stop_entry()
                          G_cme_stop_record.act_level[0],
                          G_cme_stop_record.act_level[1]);
 
+            if (!core)
+            {
+                PK_TRACE_INF("WARNING: STOP1 PM_ACTIVE to be Ignored. Return");
+                return;
+            }
+
             // Mark core as to be stopped
             G_cme_stop_record.core_running &= ~core;
 
