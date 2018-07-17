@@ -274,7 +274,12 @@ void p9_cme_pstate_db3_handler(void)
     else if (db3.fields.cme_message_numbern == MSGID_DB3_UNSUSPEND_STOP_ENTRY)
     {
         G_cme_stop_record.core_vdm_droop = 0;
-        p9_cme_stop_eval_eimr_override();
+
+        if (!(G_cme_stop_record.entry_ongoing ||
+              G_cme_stop_record.exit_ongoing))
+        {
+            p9_cme_stop_eval_eimr_override();
+        }
 
         //Notify and Receive ack from sibling CME. This syncs up
         //Quad Manager and Sibling before Quad Manager acks back to
