@@ -1515,65 +1515,9 @@ void p9_pgpe_pstate_safe_mode()
     //Update PstatesStatus to PM_SUSPEND_PENDING or PSTATE_SAFE_MODE
     G_pgpe_pstate_record.pstatesStatus = suspend ? PSTATE_PM_SUSPEND_PENDING : PSTATE_SAFE_MODE;
 
-    //Handle any pending ACKs
-    ipc_async_cmd_t* async_cmd;
-
-    //ACK back to OCC with "PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE"
-    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
-    {
-        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
-        ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
-        args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
-        p9_pgpe_optrace(ACK_CLIP_UPDT);
-    }
-
-    //ACK back to OCC with "PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE"
-    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1)
-    {
-        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd;
-        ipcmsg_wof_vfrt_t* args_wof_vfrt = (ipcmsg_wof_vfrt_t*)async_cmd->cmd_data;
-        args_wof_vfrt->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
-    }
-
-    //ACK back to SGPE with "IPC_SGPE_PGPE_RC_SUCCESS"
-    //At this point, every quad is at safe Pstate, so no need to to move quad's frequency. Also,
-    //system is at safe frequency/voltage, so need to interlock with OCC for a quad exit. Simply,
-    //ACK back to SGPE, so that it can complete STOP11 Exit.
-    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 1)
-    {
-        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
-        ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
-
-        G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
-        args->fields.return_active_quads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads >> 2;
-        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
-    }
-
-    //ACK back to SGPE with "IPC_SGPE_PGPE_RC_SUCCESS"
-    if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1)
-    {
-        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
-        ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
-
-        if (args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY)
-        {
-            G_pgpe_pstate_record.activeCores &= ~(args->fields.active_cores << 8);
-        }
-        else
-        {
-            G_pgpe_pstate_record.activeCores |= (args->fields.active_cores << 8);
-        }
-
-        args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
-        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
-        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
-        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
-    }
+    //Ack any pending IPCs from OCC and SGPE
+    p9_pgpe_pstate_handle_pending_occ_ack_on_fault();
+    p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault();
 
     ///Disable WOF, so that PGPE doesn't interlock with OCC anymore
     if(G_pgpe_pstate_record.wofStatus == WOF_ENABLED)
@@ -1717,7 +1661,87 @@ void p9_pgpe_pstate_pvref_fault()
 }
 
 //
-//p9_pgpe_pstate_at_target
+// p9_pgpe_pstate_handle_pending_occ_ack_on_fault()
+//
+void p9_pgpe_pstate_handle_pending_occ_ack_on_fault()
+{
+    //Handle any pending ACKs
+    ipc_async_cmd_t* async_cmd;
+
+    //ACK back to OCC with "PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE"
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack == 1)
+    {
+        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd;
+        ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
+        args->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_CLIP_UPDT].cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_CLIP_UPDT);
+    }
+
+    //ACK back to OCC with "PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE"
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack == 1)
+    {
+        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd;
+        ipcmsg_wof_vfrt_t* args_wof_vfrt = (ipcmsg_wof_vfrt_t*)async_cmd->cmd_data;
+        args_wof_vfrt->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
+    }
+}
+
+//
+// p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault()
+//
+void p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault()
+{
+    //Handle any pending ACKs
+    ipc_async_cmd_t* async_cmd;
+
+    //ACK back to SGPE with "IPC_SGPE_PGPE_RC_SUCCESS"
+    //At this point, every quad is at safe Pstate, so no need to to move quad's frequency. Also,
+    //system is at safe frequency/voltage, so need to interlock with OCC for a quad exit. Simply,
+    //ACK back to SGPE, so that it can complete STOP11 Exit.
+    if (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack == 1)
+    {
+        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd;
+        ipcmsg_s2p_update_active_quads_t* args = (ipcmsg_s2p_update_active_quads_t*)async_cmd->cmd_data;
+
+        G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads |= (args->fields.requested_quads << 2);
+        args->fields.return_active_quads = G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads >> 2;
+        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+    }
+
+    //ACK back to SGPE with "IPC_SGPE_PGPE_RC_SUCCESS"
+    if(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack == 1)
+    {
+        async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd;
+        ipcmsg_s2p_update_active_cores_t* args = (ipcmsg_s2p_update_active_cores_t*)async_cmd->cmd_data;
+
+        if (args->fields.update_type == UPDATE_ACTIVE_CORES_TYPE_ENTRY)
+        {
+            G_pgpe_pstate_record.activeCores &= ~(args->fields.active_cores << 8);
+        }
+        else
+        {
+            G_pgpe_pstate_record.activeCores |= (args->fields.active_cores << 8);
+        }
+
+        args->fields.return_active_cores = G_pgpe_pstate_record.activeCores >> 8;
+        G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
+        ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
+        args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+    }
+
+}
+
+//
+//  p9_pgpe_pstate_at_target
+//
+//  This function checks if PGPE has actuated the system to the target pstate. It
+//  is called in actuate thread loop
 //
 int32_t p9_pgpe_pstate_at_target()
 {

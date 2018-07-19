@@ -167,6 +167,11 @@ void p9_pgpe_irq_handler_ocb_err()
         {
             G_pgpe_pstate_record.pstatesStatus = PSTATE_SAFE_MODE_PENDING;
         }
+        else
+        {
+            //Ack any pending IPCs from SGPE
+            p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault();
+        }
 
         G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_OCC] = 1;
     }
@@ -210,6 +215,9 @@ void p9_pgpe_irq_handler_sgpe_err()
     }
     else
     {
+        //Ack any pending IPCs from OCC
+        p9_pgpe_pstate_handle_pending_occ_ack_on_fault();
+
         p9_pgpe_pstate_sgpe_fault();
     }
 
@@ -247,6 +255,10 @@ void p9_pgpe_irq_handler_pvref_err()
     }
     else
     {
+        //Ack any pending IPCs from OCC and SGPE
+        p9_pgpe_pstate_handle_pending_occ_ack_on_fault();
+        p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault();
+
         p9_pgpe_pstate_pvref_fault();
     }
 
@@ -580,6 +592,15 @@ void p9_pgpe_irq_handler_cme_err()
     {
         G_pgpe_pstate_record.pstatesStatus = PSTATE_SAFE_MODE_PENDING;
     }
+    else
+    {
+        //Ack any pending IPCs from OCC and SGPE
+        p9_pgpe_pstate_handle_pending_occ_ack_on_fault();
+        p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault();
+
+        p9_pgpe_pstate_cme_fault();
+    }
+
 
     G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_CME] = 1;
 

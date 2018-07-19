@@ -259,6 +259,8 @@ void p9_pgpe_pstate_pm_complex_suspend();
 void p9_pgpe_pstate_sgpe_fault();
 void p9_pgpe_pstate_cme_fault();
 void p9_pgpe_pstate_pvref_fault();
+void p9_pgpe_pstate_handle_pending_occ_ack_on_fault();
+void p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault();
 
 //Actuation
 int32_t p9_pgpe_pstate_at_target();
