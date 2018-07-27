@@ -441,28 +441,6 @@ p9_cme_stop_entry()
 
 #endif
 
-            // Request PCB Mux
-
-#if HW405292_NDD1_PCBMUX_SAVIOR
-
-            p9_cme_pcbmux_savior_prologue(core);
-
-#endif
-
-            PK_TRACE("Request PCB mux via SICR[10/11]");
-            out32(G_CME_LCL_SICR_OR, core << SHIFT32(11));
-
-            // Poll Infinitely for PCB Mux Grant
-            while((core & (in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core);
-
-            PK_TRACE("PCB Mux Granted on Core[%d]", core);
-
-#if HW405292_NDD1_PCBMUX_SAVIOR
-
-            p9_cme_pcbmux_savior_epilogue(core);
-
-#endif
-
             // Stop 1
 
             if(core_stop1)
@@ -580,6 +558,27 @@ p9_cme_stop_entry()
             PK_TRACE_DBG("Check: core[%d] target_lv[%d] deeper_lv[%d] deeper_core[%d]",
                          core, target_level, deeper_level, deeper_core);
 
+            // Request PCB Mux
+
+#if HW405292_NDD1_PCBMUX_SAVIOR
+
+            p9_cme_pcbmux_savior_prologue(core);
+
+#endif
+
+            PK_TRACE("Request PCB mux via SICR[10/11]");
+            out32(G_CME_LCL_SICR_OR, core << SHIFT32(11));
+
+            // Poll Infinitely for PCB Mux Grant
+            while((core & (in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core);
+
+            PK_TRACE("PCB Mux Granted on Core[%d]", core);
+
+#if HW405292_NDD1_PCBMUX_SAVIOR
+
+            p9_cme_pcbmux_savior_epilogue(core);
+
+#endif
 
             // ---------------------------------
             // Permanent workaround for HW407385
