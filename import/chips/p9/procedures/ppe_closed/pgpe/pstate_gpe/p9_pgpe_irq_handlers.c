@@ -441,10 +441,10 @@ void p9_pgpe_irq_handler_pcb_type4(void* arg, PkIrqId irq)
 void p9_pgpe_irq_handler_cme_err()
 {
 
-    uint32_t q, idx, idx_off, freq_done;
+    uint32_t c, q, idx, idx_off, freq_done;
     uint32_t opit5pr;
     uint32_t opit5prQuad;
-    uint64_t value, baseVal;
+    uint64_t value, baseVal, coreSsh;
     qppm_dpll_freq_t dpllFreq;
     ocb_qcsr_t qcsr;
     qcsr.value = in32(G_OCB_QCSR);
@@ -503,6 +503,17 @@ void p9_pgpe_irq_handler_cme_err()
                 }
             }
 
+            /// Also read stop history of the cores belongs to both cmes,
+            //  and assert auto special wakeup mode for the core that is not gated.
+            for (c = 0; c < CORES_PER_QUAD; c++)
+            {
+                GPE_GETSCOM_VAR(PPM_SSHSRC, CORE_ADDR_BASE, ((q << 2) + c), 0, coreSsh);
+
+                if (!(coreSsh & BIT64(0)))
+                {
+                    GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LMCR_CLR, q, ((c & 2) >> 1)), (BIT64(12) >> (c & 1)));
+                }
+            }
 
             //1.2 The quad in error is stepped out of resonance by the PGPE. This keeps the cores that may be
             //  running in the quad operating. There is a momentary rise in power as resonance is disabled.
