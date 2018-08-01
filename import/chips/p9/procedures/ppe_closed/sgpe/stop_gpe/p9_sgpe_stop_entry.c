@@ -1014,9 +1014,7 @@ p9_sgpe_stop_entry()
             out32(OCB_QSSR_CLR, BIT32(qloop + 20));
 
             PK_TRACE("Clear stop history on quad[%d]", qloop);
-            scom_data.words.lower = 0;
-            scom_data.words.upper = SSH_ENTRY_COMPLETE;
-            GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, scom_data.value);
+            GPE_PUTSCOM_VAR(PPM_SSHSRC, QUAD_ADDR_BASE, qloop, 0, 0);
 
             // For IPC reporting, taking aborted quad out of the list
             G_sgpe_stop_record.group.quad[VECTOR_ENTRY] &= ~BIT32(qloop);
