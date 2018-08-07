@@ -471,8 +471,6 @@ void p9_pgpe_irq_handler_cme_err()
         p9_pgpe_pstate_write_core_throttle(CORE_IFU_THROTTLE, RETRY);
     }
 
-    wrteei(1);
-
     for (q = 0; q < MAX_QUADS; q++)
     {
         opit5prQuad = (opit5pr >> ((MAX_QUADS - q + 1) << 2)) & 0xf;
@@ -595,6 +593,8 @@ void p9_pgpe_irq_handler_cme_err()
             PK_TRACE_DBG("CER: Quad[%d] ResclkDisabled, Moved to Fsafe, and removed from activeQuads", q);
         }
     }
+
+    PK_TRACE_INF("CER: CME Fault Processed");
 
     //If prolonged droop recovery is not active
     if (!(in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
