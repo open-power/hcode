@@ -1181,6 +1181,31 @@ p9_cme_stop_exit()
 
 #endif
 
+            for (core_mask = 2; core_mask; core_mask--)
+            {
+                if (core & core_mask)
+                {
+                    CME_GETSCOM(CPPM_CPMMR, core_mask, scom_data.value);
+
+                    if (scom_data.words.upper & BIT32(3))
+                    {
+                        scom_data.value = BIT64(59);
+                    }
+                    else
+                    {
+                        scom_data.value = 0;
+                    }
+
+                    //Writing thread scratch register to
+                    // 1. Init Runtime wakeup mode for core.
+                    // 2. Signal Self Save Restore code for restore operation.
+                    CME_PUTSCOM(SCRATCH0, core_mask, scom_data.value);
+                    CME_PUTSCOM(SCRATCH1, core_mask, scom_data.value);
+                    CME_PUTSCOM(SCRATCH2, core_mask, scom_data.value);
+                    CME_PUTSCOM(SCRATCH3, core_mask, scom_data.value);
+                }
+            }
+
             PK_TRACE_PERF("SF.RS: Self Restore Kickoff, S-Reset All Core Threads");
 
             // Disable interrupts around the sreset to polling check to not miss the self-restore
@@ -1192,6 +1217,7 @@ p9_cme_stop_exit()
             PK_TRACE("Poll for instruction running before drop pm_exit");
 
             while((~(in32_sh(CME_LCL_SISR))) & (core << SHIFT64SH(47)));
+
 
             wrteei(1);
 
@@ -1239,6 +1265,18 @@ p9_cme_stop_exit()
 
 #endif
 
+                }
+            }
+
+            for (core_mask = 2; core_mask; core_mask--)
+            {
+                if (core & core_mask)
+                {
+                    //Cleaning up thread scratch register after self restore.
+                    CME_PUTSCOM(SCRATCH0, core_mask, 0);
+                    CME_PUTSCOM(SCRATCH1, core_mask, 0);
+                    CME_PUTSCOM(SCRATCH2, core_mask, 0);
+                    CME_PUTSCOM(SCRATCH3, core_mask, 0);
                 }
             }
 
