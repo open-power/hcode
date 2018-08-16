@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>     /* offsetof */
+#include <stdlib.h>
 #include <netinet/in.h>
 #include <time.h>
 
@@ -117,7 +118,16 @@ int main(int narg, char* argv[])
 
         // build ver
         fseek( pMainImage,  buildVerPos, SEEK_SET );
-        temp = htonl(SGPE_BUILD_VERSION);
+
+        if(narg > 3) // if version pass in then use it
+        {
+            temp = htonl(strtoul(argv[3], 0, 16));
+        }
+        else
+        {
+            temp = htonl(SGPE_BUILD_VERSION);
+        }
+
         fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
 
         if (imageType == QPMR_IMAGE)

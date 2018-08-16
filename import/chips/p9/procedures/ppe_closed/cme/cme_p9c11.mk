@@ -79,4 +79,7 @@ $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
         $(ROOTPATH)/chips/p9/utils/imageProcs/ \
 	)
 
- $(call BUILD_BINHEADER,$(IMAGEPATH)/$(CME_TARGET)/$(CME_TARGET).bin,$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
+gitsha := $(shell git log -1 --pretty=format:"%h")
+ $(call BUILD_BINHEADER,$(IMAGEPATH)/$(CME_TARGET)/$(CME_TARGET).bin, \
+		$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin \
+		$(gitsha))

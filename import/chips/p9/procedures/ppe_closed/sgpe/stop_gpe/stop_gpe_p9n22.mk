@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2017,2018
+# COPYRIGHT 2017,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -90,4 +90,6 @@ $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
         $(ROOTPATH)/chips/p9/utils/imageProcs/ \
 	)
 
-$(call BUILD_BINHEADER,$(IMAGEPATH)/$(STOP_TARGET)/$(STOP_TARGET).bin)
+gitsha := $(shell git log -1 --pretty=format:"%h")
+$(call BUILD_BINHEADER,$(IMAGEPATH)/$(STOP_TARGET)/$(STOP_TARGET).bin, \
+		$(gitsha))

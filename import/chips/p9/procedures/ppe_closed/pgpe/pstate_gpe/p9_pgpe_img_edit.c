@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>     /* offsetof */
+#include <stdlib.h>
 #include <netinet/in.h>
 #include <time.h>
 #include <p9_hcode_image_defines.H>
@@ -124,7 +125,16 @@ int main(int narg, char* argv[])
         // build ver
         printf("                    Build version: %X pos %X\n", temp, buildVerPos);
         fseek( pMainImage,  buildVerPos, SEEK_SET );
-        temp = htonl(PGPE_BUILD_VERSION);
+
+        if(narg > 3) // if version passed in the use it
+        {
+            temp = htonl(strtoul(argv[3], 0, 16));
+        }
+        else
+        {
+            temp = htonl(PGPE_BUILD_VERSION);
+        }
+
         fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
 
         if (imageType == PPMR_IMAGE)

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <netinet/in.h>
 #include <stddef.h>   /* offsetof  */
+#include <stdlib.h>
 
 #include <pk_debug_ptrs.h>
 #include <p9_hcode_image_defines.H>
@@ -85,6 +86,7 @@ int main(int narg, char* argv[])
             imageType = CPMR_IMAGE;
             hcodeLenPos    = offsetof(cpmrHeader_t, cmeImgLength);
             hcodeOffsetPos = offsetof(cpmrHeader_t, cmeImgOffset);
+
             printf("                    CPMR size               : %d (0x%X)\n", size, size);
             FILE* pHcodeImage = fopen( argv[2], "r+" );
             fseek (pHcodeImage, 0, SEEK_END);
@@ -121,6 +123,14 @@ int main(int narg, char* argv[])
             fseek ( pImage  , CPMR_SELF_RESTORE_LENGTH_BYTE , SEEK_SET );
             temp = htonl( selfRestSize );
             fwrite(&temp, sizeof(uint32_t), 1, pImage );
+
+            if(narg > 4) // if version passed in then set it.
+            {
+                long int buildVerPos  = offsetof(cpmrHeader_t, cpmrVersion);
+                uint32_t gitsha = htonl(strtoul(argv[4], 0, 16));
+                fseek ( pImage , buildVerPos, SEEK_SET );
+                fwrite(&gitsha, sizeof(uint32_t), 1, pImage);
+            }
         }
 
         fclose(pImage);
