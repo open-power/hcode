@@ -147,6 +147,10 @@ p9_cme_stop_init()
     PK_TRACE_DBG("Setup: SPWU Interrupt Polority[%d]", G_cme_stop_record.core_in_spwu);
     out32(G_CME_LCL_EIPR_CLR, (G_cme_stop_record.core_in_spwu << SHIFT32(15)));
     out32(G_CME_LCL_EIPR_OR,  (((~G_cme_stop_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(15)));
+    out32(G_CME_LCL_SICR_OR,  ((G_cme_stop_record.core_in_spwu << SHIFT32(5)) |
+                               (G_cme_stop_record.core_in_spwu << SHIFT32(17))));
+    out32(G_CME_LCL_SICR_CLR, ((((~G_cme_stop_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(5)) |
+                               (((~G_cme_stop_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(17))));
 
     PK_TRACE("Assert auto spwu disable, disable auto spwu via LMCR[12/13]");
     out32(G_CME_LCL_LMCR_OR, BITS32(12, 2));
