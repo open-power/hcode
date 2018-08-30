@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -50,6 +50,7 @@
 
 extern CmeStopRecord G_cme_stop_record;
 extern CmeRecord G_cme_record;
+extern uint64_t G_spattn_mask;
 
 #if NIMBUS_DD_LEVEL != 10
 
@@ -242,6 +243,10 @@ p9_cme_stop_entry()
     uint32_t     core_mask           = 0;
     uint32_t     core_raw            = 0;
     uint32_t     core                = 0;
+#if SMF_SUPPORT_ENABLE
+    uint32_t     core_spattn         = 0;
+    uint32_t     self_save_core      = 0;
+#endif
     uint32_t     thread              = 0;
     uint32_t     pscrs               = 0;
     uint32_t     no_state_loss       = 0;
@@ -580,6 +585,67 @@ p9_cme_stop_entry()
 
 #endif
 
+#if SMF_SUPPORT_ENABLE
+
+            if (G_cme_stop_record.req_level[0] >= STOP_LEVEL_4)
+            {
+                self_save_core  |=   CME_MASK_C0;
+            }
+
+            if (G_cme_stop_record.req_level[1] >= STOP_LEVEL_4)
+            {
+                self_save_core  |=   CME_MASK_C1;
+            }
+
+            self_save_core = self_save_core & core;
+
+            if ( self_save_core )
+            {
+
+                p9_cme_stop_self_execute(self_save_core, SPR_SELF_SAVE);
+
+                PK_TRACE("Poll for core stop again(pm_active=1)");
+
+                while((~(in32(G_CME_LCL_EINR))) & (self_save_core << SHIFT32(21)))
+                {
+                    core_spattn = (in32_sh(CME_LCL_SISR) >> SHIFT64SH(33)) & self_save_core;
+
+                    if (core_spattn)
+                    {
+                        PK_TRACE_ERR("ERROR: Core[%d] Special Attention Detected. Gard Core!", core_spattn);
+                        CME_STOP_CORE_ERROR_HANDLER(self_save_core, core_spattn, CME_STOP_EXIT_SELF_RES_SPATTN);
+
+                        PK_TRACE("Release PCB Mux back on Core via SICR[10/11]");
+                        out32(G_CME_LCL_SICR_CLR, core_spattn << SHIFT32(11));
+
+                        while((core_spattn & ~(in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core_spattn);
+
+                        PK_TRACE("PCB Mux Released on Core[%d]", core_spattn);
+                    }
+
+                    if (!self_save_core)
+                    {
+
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
+
+                        continue;
+
+#else
+
+                        return;
+
+#endif
+
+                    }
+                }
+
+                PK_TRACE("SF.RS: Self Save Completed, Core Stopped Again(pm_exit=0/pm_active=1)");
+
+                p9_cme_stop_self_cleanup(self_save_core);
+
+            }// if self_save_core
+
+#endif
             // ---------------------------------
             // Permanent workaround for HW407385
 
@@ -1259,18 +1325,20 @@ p9_cme_stop_entry()
             MARK_TRAP(SE_IS0_BEGIN)
             //===========================
 
-#if !SKIP_ABORT
+            /*** DISABLE STOP4 to STOP2 abort due to UV mode incorrectly reached on such case ***
+            #if !SKIP_ABORT
 
-            core_wakeup = core & (~G_cme_stop_record.core_blockwu);
-            out32(G_CME_LCL_EIMR_CLR, (core_wakeup << SHIFT32(13)) |
-                  (core_wakeup << SHIFT32(15)) |
-                  (core_wakeup << SHIFT32(17)));
-            sync();
-            wrteei(0);
-            out32(G_CME_LCL_EIMR_OR, BITS32(10, 12));
-            wrteei(1);
+                        core_wakeup = core & (~G_cme_stop_record.core_blockwu);
+                        out32(G_CME_LCL_EIMR_CLR, (core_wakeup << SHIFT32(13)) |
+                              (core_wakeup << SHIFT32(15)) |
+                              (core_wakeup << SHIFT32(17)));
+                        sync();
+                        wrteei(0);
+                        out32(G_CME_LCL_EIMR_OR, BITS32(10, 12));
+                        wrteei(1);
 
-#endif
+            #endif
+            */
 
             //===================
             MARK_TRAP(SE_IS0_END)

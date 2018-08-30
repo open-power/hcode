@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -46,6 +46,7 @@
 
 extern CmeStopRecord G_cme_stop_record;
 extern CmeRecord G_cme_record;
+uint64_t G_spattn_mask = 0;
 
 #if HW386841_NDD1_DSL_STOP1_FIX
 
@@ -511,7 +512,6 @@ p9_cme_stop_exit()
     uint32_t     core              = 0;
     uint32_t     core_mask         = 0;
     uint32_t     core_spattn       = 0;
-    uint64_t     spattn_mask       = 0;
     data64_t     scom_data         = {0};
 #if !SPWU_AUTO
     uint32_t     spwu_stop         = 0;
@@ -1052,183 +1052,11 @@ p9_cme_stop_exit()
 
 #if !SKIP_SELF_RESTORE
 
-            PK_TRACE("Assert block interrupt to PC via SICR[2/3]");
-            out32(G_CME_LCL_SICR_OR, core << SHIFT32(3));
-
-            PK_TRACE_PERF("SF.RS: Self Restore Prepare, Core Waking up(pm_exit=1) via SICR[4/5]");
-            out32(G_CME_LCL_SICR_OR, core << SHIFT32(5));
-
-            CME_PM_EXIT_DELAY
-
-            PK_TRACE("Polling for core wakeup(pm_active=0) via EINR[20/21]");
-
-            while((in32(G_CME_LCL_EINR)) & (core << SHIFT32(21)));
-
-            scom_data.value = pCmeImgHdr->g_cme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
-
-#if NIMBUS_DD_LEVEL == 10
-#if !SKIP_RAM_HRMOR
-
-            PK_TRACE("Activate thread0 for RAM via THREAD_INFO[18]");
-            CME_PUTSCOM(THREAD_INFO, core, BIT64(18));
-
-            PK_TRACE("Enable RAM mode via RAM_MODEREG[0]");
-            CME_PUTSCOM(RAM_MODEREG, core, BIT64(0));
-
-            PK_TRACE("Set SPR mode to LT0-7 via SPR_MODE[20-27]");
-            CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
-
-            for (core_mask = 2; core_mask; core_mask--)
-            {
-                if (core & core_mask)
-                {
-                    PK_TRACE_DBG("Set SPRC to scratch for core[%d] via SCOM_SPRC", core_mask);
-                    CME_PUTSCOM(SCOM_SPRC, core_mask, ((core_mask & 1) ? BIT64(60) : 0));
-
-                    PK_TRACE_DBG("Load SCRATCH0 with HOMER+2MB address %x", scom_data.value);
-
-#if EPM_P9_TUNING
-
-                    CME_PUTSCOM((SCRATCH0 + (core_mask & 1)), core_mask, 0xA200000);
-
-#else
-
-                    CME_PUTSCOM((SCRATCH0 + (core_mask & 1)), core_mask, scom_data.value);
-
-#endif
-                }
-            }
-
-            PK_TRACE("RAM: mfspr sprd , gpr0 via RAM_CTRL");
-            CME_PUTSCOM(RAM_CTRL, core, RAM_MFSPR_SPRD_GPR0);
-
-            PK_TRACE("RAM: mtspr hrmor, gpr0 via RAM_CTRL");
-            CME_PUTSCOM(RAM_CTRL, core, RAM_MTSPR_HRMOR_GPR0);
-
-            PK_TRACE("Disable thread0 for RAM via THREAD_INFO");
-            CME_PUTSCOM(THREAD_INFO, core, 0);
-
-            PK_TRACE("Disable RAM mode via RAM_MODEREG");
-            CME_PUTSCOM(RAM_MODEREG, core, 0);
-
-            PK_TRACE("Clear scratch/spr used in RAM");
-            CME_PUTSCOM(SPR_MODE,  core, 0);
-            CME_PUTSCOM(SCOM_SPRC, core, 0);
-
-            if (core & CME_MASK_C0)
-            {
-                CME_PUTSCOM(SCRATCH0,  CME_MASK_C0, 0);
-            }
-
-            if (core & CME_MASK_C1)
-            {
-                CME_PUTSCOM(SCRATCH1,  CME_MASK_C1, 0);
-            }
-
-#endif
-// Nimbus DD2+
-#else
-
-#if SMF_SUPPORT_ENABLE
-
-#if EPM_P9_TUNING
-
-            CME_PUTSCOM(URMOR, core, 0xA200000);
-
-#else
-
-            PK_TRACE_INF("Core Wakes Up, Write URMOR with HOMER address");
-            CME_PUTSCOM(URMOR, core, scom_data.value);
-
-#endif
-
-#endif
-
-#if EPM_P9_TUNING
-
-            CME_PUTSCOM(HRMOR, core, 0xA200000);
-
-#else
-
-            PK_TRACE_PERF("Core Wakes Up, Write HRMOR with HOMER address");
-            // Must not set bit 15 in HRMOR
-            scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
-            CME_PUTSCOM(HRMOR, core, scom_data.value);
-
-#endif
-
-#endif
-
-            PK_TRACE("Save off and mask SPATTN before self-restore");
-            CME_GETSCOM(SPATTN_MASK, core, spattn_mask);
-            CME_PUTSCOM(SPATTN_MASK, core, BITS64(0, 64));
-
-#if !DISABLE_CORE_XSTOP_INJECTION
-
-            PK_TRACE("Read WKUP_ERR_INJECT_MODE via CPMMR[8]");
-
-            for (core_mask = 2; core_mask; core_mask--)
-            {
-                if (core & core_mask)
-                {
-                    CME_GETSCOM(CPPM_CPMMR, core_mask, scom_data.value);
-
-                    if (scom_data.words.upper & BIT32(8))
-                    {
-                        PK_TRACE_INF("WARNING: Injecting a core[%d] xstop via C_LFIR[11]", core);
-                        CME_PUTSCOM(C_LFIR_OR, core_mask, BIT64(11));
-                    }
-                }
-            }
-
-#endif
-
-            for (core_mask = 2; core_mask; core_mask--)
-            {
-                if (core & core_mask)
-                {
-                    CME_GETSCOM(CPPM_CPMMR, core_mask, scom_data.value);
-
-                    if (scom_data.words.upper & BIT32(3))
-                    {
-                        scom_data.value = BIT64(59);
-                    }
-                    else
-                    {
-                        scom_data.value = 0;
-                    }
-
-                    //Writing thread scratch register to
-                    // 1. Init Runtime wakeup mode for core.
-                    // 2. Signal Self Save Restore code for restore operation.
-                    CME_PUTSCOM(SCRATCH0, core_mask, scom_data.value);
-                    CME_PUTSCOM(SCRATCH1, core_mask, scom_data.value);
-                    CME_PUTSCOM(SCRATCH2, core_mask, scom_data.value);
-                    CME_PUTSCOM(SCRATCH3, core_mask, scom_data.value);
-                }
-            }
-
-            PK_TRACE_PERF("SF.RS: Self Restore Kickoff, S-Reset All Core Threads");
-
-            // Disable interrupts around the sreset to polling check to not miss the self-restore
-            wrteei(0);
-            CME_PUTSCOM(DIRECT_CONTROLS, core,
-                        BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
-            sync();
-
-            PK_TRACE("Poll for instruction running before drop pm_exit");
-
-            while((~(in32_sh(CME_LCL_SISR))) & (core << SHIFT64SH(47)));
-
-
-            wrteei(1);
+            p9_cme_stop_self_execute(core, SPR_SELF_RESTORE);
 
             //==========================
             MARK_TRAP(SX_SRESET_THREADS)
             //==========================
-
-            PK_TRACE("Allow threads to run(pm_exit=0)");
-            out32(G_CME_LCL_SICR_CLR, core << SHIFT32(5));
 
             PK_TRACE("Poll for core stop again(pm_active=1)");
 
@@ -1270,32 +1098,9 @@ p9_cme_stop_exit()
                 }
             }
 
-            for (core_mask = 2; core_mask; core_mask--)
-            {
-                if (core & core_mask)
-                {
-                    //Cleaning up thread scratch register after self restore.
-                    CME_PUTSCOM(SCRATCH0, core_mask, 0);
-                    CME_PUTSCOM(SCRATCH1, core_mask, 0);
-                    CME_PUTSCOM(SCRATCH2, core_mask, 0);
-                    CME_PUTSCOM(SCRATCH3, core_mask, 0);
-                }
-            }
-
             PK_TRACE_PERF("SF.RS: Self Restore Completed, Core Stopped Again(pm_exit=0/pm_active=1)");
 
-            PK_TRACE("Restore SPATTN after self-restore");
-            CME_PUTSCOM(SPATTN_MASK, core, spattn_mask);
-
-            PK_TRACE("Always Unfreeze IMA (by clearing bit 34) in case the CHTM is enabled to sample it");
-            CME_GETSCOM(IMA_EVENT_MASK, core, scom_data.value);
-            CME_PUTSCOM(IMA_EVENT_MASK, core, scom_data.value & ~BIT64(34));
-
-            PK_TRACE("Drop block interrupt to PC via SICR[2/3]");
-            out32(G_CME_LCL_SICR_CLR, core << SHIFT32(3));
-
-            PK_TRACE("Clear pm_active status via EISR[20/21]");
-            out32(G_CME_LCL_EISR_CLR, core << SHIFT32(21));
+            p9_cme_stop_self_cleanup(core);
 
 #endif
 
@@ -1319,4 +1124,236 @@ p9_cme_stop_exit()
     //===========================
 
     return;
+}
+
+void
+p9_cme_stop_self_cleanup(uint32_t core)
+{
+    data64_t scom_data;
+
+    //Cleaning up thread scratch register after self restore.
+    if( CME_MASK_C0 & core )
+    {
+        CME_PUTSCOM(SCRATCH0, CME_MASK_C0, 0);
+    }
+
+    if( CME_MASK_C1 & core )
+    {
+        CME_PUTSCOM(SCRATCH1, CME_MASK_C1, 0);
+    }
+
+    PK_TRACE("Restore SPATTN after self-restore");
+    CME_PUTSCOM(SPATTN_MASK, core, G_spattn_mask);
+
+    PK_TRACE("Always Unfreeze IMA (by clearing bit 34) in case the CHTM is enabled to sample it");
+    CME_GETSCOM(IMA_EVENT_MASK, core, scom_data.value);
+    CME_PUTSCOM(IMA_EVENT_MASK, core, scom_data.value & ~BIT64(34));
+
+    PK_TRACE("Drop block interrupt to PC via SICR[2/3]");
+    out32(G_CME_LCL_SICR_CLR, core << SHIFT32(3));
+
+    PK_TRACE("Clear pm_active status via EISR[20/21]");
+    out32(G_CME_LCL_EISR_CLR, core << SHIFT32(21));
+
+}
+
+void
+p9_cme_stop_self_execute(uint32_t core, uint32_t i_saveRestore )
+{
+    uint32_t core_mask;
+    data64_t scom_data;
+    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
+    scom_data.value = pCmeImgHdr->g_cme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
+
+    PK_TRACE("Assert block interrupt to PC via SICR[2/3]");
+
+    out32(G_CME_LCL_SICR_OR, core << SHIFT32(3));
+
+    PK_TRACE_PERF("SF.RS: Self Restore Prepare, Core Waking up(pm_exit=1) via SICR[4/5]");
+    out32(G_CME_LCL_SICR_OR, core << SHIFT32(5));
+
+    CME_PM_EXIT_DELAY
+
+    PK_TRACE("Polling for core wakeup(pm_active=0) via EINR[20/21]");
+
+    while((in32(G_CME_LCL_EINR)) & (core << SHIFT32(21)));
+
+#if NIMBUS_DD_LEVEL == 10
+#if !SKIP_RAM_HRMOR
+
+    PK_TRACE("Activate thread0 for RAM via THREAD_INFO[18]");
+    CME_PUTSCOM(THREAD_INFO, core, BIT64(18));
+
+    PK_TRACE("Enable RAM mode via RAM_MODEREG[0]");
+    CME_PUTSCOM(RAM_MODEREG, core, BIT64(0));
+
+    PK_TRACE("Set SPR mode to LT0-7 via SPR_MODE[20-27]");
+    CME_PUTSCOM(SPR_MODE, core, BITS64(20, 8));
+
+    for (core_mask = 2; core_mask; core_mask--)
+    {
+        if (core & core_mask)
+        {
+            PK_TRACE_DBG("Set SPRC to scratch for core[%d] via SCOM_SPRC", core_mask);
+            CME_PUTSCOM(SCOM_SPRC, core_mask, ((core_mask & 1) ? BIT64(60) : 0));
+
+            PK_TRACE_DBG("Load SCRATCH0 with HOMER+2MB address %x", scom_data.value);
+
+#if EPM_P9_TUNING
+
+            CME_PUTSCOM((SCRATCH0 + (core_mask & 1)), core_mask, 0xA200000);
+
+#else
+
+            CME_PUTSCOM((SCRATCH0 + (core_mask & 1)), core_mask, scom_data.value);
+
+#endif
+
+        }
+    }
+
+    PK_TRACE("RAM: mfspr sprd , gpr0 via RAM_CTRL");
+    CME_PUTSCOM(RAM_CTRL, core, RAM_MFSPR_SPRD_GPR0);
+
+    PK_TRACE("RAM: mtspr hrmor, gpr0 via RAM_CTRL");
+    CME_PUTSCOM(RAM_CTRL, core, RAM_MTSPR_HRMOR_GPR0);
+
+    PK_TRACE("Disable thread0 for RAM via THREAD_INFO");
+    CME_PUTSCOM(THREAD_INFO, core, 0);
+
+    PK_TRACE("Disable RAM mode via RAM_MODEREG");
+    CME_PUTSCOM(RAM_MODEREG, core, 0);
+
+    PK_TRACE("Clear scratch/spr used in RAM");
+    CME_PUTSCOM(SPR_MODE,  core, 0);
+    CME_PUTSCOM(SCOM_SPRC, core, 0);
+
+    if (core & CME_MASK_C0)
+    {
+        CME_PUTSCOM(SCRATCH0,  CME_MASK_C0, 0);
+    }
+
+    if (core & CME_MASK_C1)
+    {
+        CME_PUTSCOM(SCRATCH1,  CME_MASK_C1, 0);
+    }
+
+#endif
+// Nimbus DD2+
+#else
+
+#if SMF_SUPPORT_ENABLE
+
+#if EPM_P9_TUNING
+
+    CME_PUTSCOM(URMOR, core, 0xA200000);
+    CME_PUTSCOM(HRMOR, core, 0xA200000);
+#else
+
+    CME_PUTSCOM(URMOR, core, scom_data.value);
+    PK_TRACE_INF("SMF core wakes up, write URMOR with HOMER address" );
+    scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
+
+    if( SPR_SELF_SAVE == i_saveRestore )
+    {
+        scom_data.value = pCmeImgHdr->g_cme_unsec_cpmr_PhyAddr & BITS64(13, 30); //Unsecure HOMER
+        PKTRACE("SMF core self save, write un-secure HOMER address");
+    }
+
+    CME_PUTSCOM(HRMOR, core, scom_data.value);
+
+#endif  //EPM_P9_TUNING
+
+#else  //SMF Not supported
+
+#if EPM_P9_TUNING
+
+    CME_PUTSCOM(HRMOR, core, 0xA200000);
+#else
+
+    PK_TRACE_INF("Non SMF core wakes up, write HRMOR with HOMER address");
+    scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
+    CME_PUTSCOM(HRMOR, core, scom_data.value);
+
+#endif   //EPM_P9_TUNING
+
+#endif //SMF_SUPPORT_ENABLE
+
+#endif //Nimbus DD2+
+
+    PK_TRACE("Save off and mask SPATTN before self-restore");
+    CME_GETSCOM(SPATTN_MASK, core, G_spattn_mask);
+    CME_PUTSCOM(SPATTN_MASK, core, BITS64(0, 64));
+
+#if !DISABLE_CORE_XSTOP_INJECTION
+
+    PK_TRACE("Read WKUP_ERR_INJECT_MODE via CPMMR[8]");
+
+    for (core_mask = 2; core_mask; core_mask--)
+    {
+        if (core & core_mask)
+        {
+            CME_GETSCOM(CPPM_CPMMR, core_mask, scom_data.value);
+
+            if (scom_data.words.upper & BIT32(8))
+            {
+                PK_TRACE_INF("WARNING: Injecting a core[%d] xstop via C_LFIR[11]", core);
+                CME_PUTSCOM(C_LFIR_OR, core_mask, BIT64(11));
+            }
+
+            if( SPR_SELF_SAVE == i_saveRestore )
+            {
+                //Writing thread scratch register to
+                //Signal Self Save Restore code for save operation.
+                scom_data.words.upper     =   0;
+                scom_data.words.lower     =   1;
+            }
+            else
+            {
+                //Writing thread scratch register to
+                // 1. Init Runtime wakeup mode for core.
+                // 2. Signal Self Save Restore code for restore operation.
+
+                if (scom_data.words.upper & BIT32(3))
+                {
+                    scom_data.value = BIT64(59);
+                }
+                else
+                {
+                    scom_data.value = 0;
+                }
+            }
+
+            if( CME_MASK_C0 & core_mask )
+            {
+                CME_PUTSCOM(SCRATCH0, CME_MASK_C0, scom_data.value);
+            }
+
+            if( CME_MASK_C1 & core_mask )
+            {
+                CME_PUTSCOM(SCRATCH1, CME_MASK_C1, scom_data.value);
+            }
+        }
+    }
+
+#endif
+
+    PK_TRACE_PERF("SF.RS: Self Restore Kickoff, S-Reset All Core Threads");
+
+    // Disable interrupts around the sreset to polling check to not miss the self-restore
+    wrteei(0);
+
+    CME_PUTSCOM(DIRECT_CONTROLS, core,
+                BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
+    sync();
+
+    //**DISABLE CHECK FOR instruction running to avoid race condition**
+    //PK_TRACE_INF("Poll for instruction running before drop pm_exit");
+    //while((~(in32_sh(CME_LCL_SISR))) & (core << SHIFT64SH(47)));
+
+    wrteei(1);
+
+    PK_TRACE_INF("Allow threads to run(pm_exit=0)");
+    out32(G_CME_LCL_SICR_CLR, core << SHIFT32(5));
+
 }

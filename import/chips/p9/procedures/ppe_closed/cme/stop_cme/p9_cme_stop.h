@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -235,6 +235,12 @@ enum CME_STOP_SUSPEND_BLOCK
     STOP_SUSPEND_SELECT = 0x1  //0bZxx1 for SUSPEND, 0bZxx0 for BLOCK
 };
 
+enum SPR_ACTN
+{
+    SPR_SELF_SAVE       =   0x00,
+    SPR_SELF_RESTORE    =   0x01,
+};
+
 
 enum CME_SCOM_RESTORE_CONST
 {
@@ -319,6 +325,9 @@ void p9_cme_core_livelock_buster();
 
 void p9_cme_stop_entry();
 void p9_cme_stop_exit();
+
+void p9_cme_stop_self_execute(uint32_t, uint32_t);
+void p9_cme_stop_self_cleanup(uint32_t);
 
 // CME STOP Interrupt Handlers
 void p9_cme_stop_enter_handler(void);
