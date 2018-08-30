@@ -284,6 +284,7 @@ _start:
 .org _start + SRESET
 
 _sreset_hndlr:
+
 mfmsr       MSR_INIT_REG
 ori         MSR_INIT_REG,    MSR_INIT_REG, MACHINE_CHECK_ENABLE_CONST       # Set the ME bit
 extrdi.     MSR_SECURITY_ENABLE_REG,   MSR_INIT_REG, 1, MSR_SECURITY_BIT    # read Secure Bit (S) of MSR
@@ -411,7 +412,7 @@ mtspr       USRR1,           MSR_INIT_REG            # Save MSR to USRR1
 #       System Call
 #--------------------------------------------------------------------#
 .org _start + 0x0C00
-.long ATTN
+b _sreset_hndlr
 
 #--------------------------------------------------------------------#
 #       Trace
@@ -539,9 +540,7 @@ slbia
 .org _start + THREAD_LAUNCHER_START_OFFSET
 
 thread_launcher_start:
-
 mfspr PIR_VAL_REG, PIR       #Processor Identification Register
-
 #Select to read the Thread State Status register in PC using SPRC & SPRD
 li          TEMP_REG1,          CORE_THREAD_STATE_REG_ID
 mtspr       SPRC,               TEMP_REG1
@@ -664,7 +663,6 @@ and         TEMP_REG1,   THREAD_SCRATCH_VAL_REG, TEMP_REG2
 cmpwi       TEMP_REG1,   0x00
 bne         find_self_save
 
-
 thread_restore_base:
 li          TEMP_REG1,   CORE_THREAD_STATE_REG_ID
 mtspr       SPRC,        TEMP_REG1
@@ -780,7 +778,6 @@ find_self_save:
 addi        SELF_RESTORE_ADDR_REG,      THREAD_SCOPE_RESTORE_ADDR_REG, 8
 mtlr        THREAD_SELF_SAVE_BASE_ADDR
 blrl
-
 cmpwi       THREAD_ID_REG,  0               # if thread in question is 0, also, save core SPRs
 bne         save_restore_done               # else saving of SPRs is done
 
@@ -791,14 +788,6 @@ blrl
 
 b           save_restore_done
 
-#non_smf_self_restore:
-#sldi    BASE_ADDR_REG, CORE_ID_REG,   13
-#add     BASE_ADDR_REG, BASE_ADDR_REG, RMOR_INIT_REG
-#addi    BASE_ADDR_REG, BASE_ADDR_REG, SPR_RESTORE_OFFSET
-#sldi    TEMP_REG1,     THREAD_ID_REG, 11
-#add     TEMP_REG1,     BASE_ADDR_REG, TEMP_REG1                     # got thread reg restore address
-#addi    CORE_SCOPE_RESTORE_ADDR_REG,  TEMP_REG1,  CORE_SPR_OFFSET   # got core register restore address.
-                                                                    # It is used by thread0 only.
 #-------------------- Self Save Routine --------------------------------
 
 ## This is a common routine which can edit SPR restore entry for an SPR
