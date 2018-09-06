@@ -55,6 +55,7 @@ extern uint32_t G_CME_LCL_ICCR_OR;
 extern uint32_t G_CME_LCL_SISR;
 extern uint32_t G_CME_LCL_SICR_CLR;
 extern uint32_t G_CME_LCL_SICR_OR;
+extern uint32_t G_CME_LCL_SICR;
 extern uint32_t G_CME_LCL_PSCRS00;
 extern uint32_t G_CME_LCL_PSCRS10;
 extern uint32_t G_CME_LCL_PSCRS20;

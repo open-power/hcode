@@ -64,7 +64,7 @@ p9_cme_stop_init()
     G_cme_stop_record.core_stopgpe = 0;
 
     // use SISR[2:3] PM_BLOCK_INTERRUPTS to init block wakeup status
-    G_cme_stop_record.core_blockpc = ((in32(G_CME_LCL_SISR) & BITS32(2, 2)) >> SHIFT32(3));
+    G_cme_stop_record.core_blockpc = ((in32(G_CME_LCL_SICR) & BITS32(2, 2)) >> SHIFT32(3));
     G_cme_stop_record.core_blockwu = G_cme_stop_record.core_blockpc;
     G_cme_stop_record.core_blockey = 0;
     G_cme_stop_record.core_suspendwu = G_cme_stop_record.core_blockpc;
