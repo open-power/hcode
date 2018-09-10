@@ -2,7 +2,7 @@
 Memory Configuration
 
 Name             Origin             Length             Attributes
-selfRestoreRegion 0x0000000000000000 0x0000000000002400 xr
+selfRestoreRegion 0x0000000000000000 0x0000000000002100 xr
 *default*        0x0000000000000000 0xffffffffffffffff
 
 Linker script and memory map
@@ -11,18 +11,18 @@ Linker script and memory map
                 0x0000000000000000                . = ALIGN (0x80)
                 0x0000000000000000                _SELF_RESTORE_START = .
 
-.selfRestore    0x0000000000000000     0x2338
+.selfRestore    0x0000000000000000     0x20b0
  *(.selfRestore)
- .selfRestore   0x0000000000000000     0x2338 /esw/san2/premjha2/fapi2_lite/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
+ .selfRestore   0x0000000000000000     0x20b0 /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o
                 0x0000000000000000                _start
-LOAD /esw/san2/premjha2/fapi2_lite/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
-OUTPUT(/esw/san2/premjha2/fapi2_lite/ekb/chips/p9/procedures/utils/stopreg/selfRest.bin binary)
+LOAD /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o
+OUTPUT(/gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/selfRest.bin binary)
 
-.text           0x0000000000002338        0x0
- .text          0x0000000000002338        0x0 /esw/san2/premjha2/fapi2_lite/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
+.text           0x00000000000020b0        0x0
+ .text          0x00000000000020b0        0x0 /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o
 
-.data           0x0000000000002338        0x0
- .data          0x0000000000002338        0x0 /esw/san2/premjha2/fapi2_lite/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
+.data           0x00000000000020b0        0x0
+ .data          0x00000000000020b0        0x0 /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o
 
-.bss            0x0000000000002338        0x0
- .bss           0x0000000000002338        0x0 /esw/san2/premjha2/fapi2_lite/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
+.bss            0x00000000000020b0        0x0
+ .bss           0x00000000000020b0        0x0 /gsa/ausgsa/projects/i/indiateam01/premjha2/ekb/chips/p9/procedures/utils/stopreg/p9_core_restore_routines.o

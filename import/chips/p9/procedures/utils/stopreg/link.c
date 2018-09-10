@@ -23,9 +23,9 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #define SRESET_HNDLR_OFFSET    0x00
-#define SELF_RESTORE_SIZE      0x2400
+#define SELF_RESTORE_SIZE      0x2100
 #define INT_VECT_AREA          THREAD_LAUNCHER_OFFSET
-#define THREAD_LAUNCHER_SIZE   1024
+#define THREAD_LAUNCHER_SIZE   256
 #define CACHE_LINE_SIZE        128
 
 OUTPUT_FORMAT(binary)

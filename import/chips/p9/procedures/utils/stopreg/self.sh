@@ -26,8 +26,8 @@
 
 #!/bin/bash
 SELF_REST_PATH=$PROJECT_ROOT/chips/p9/procedures/utils/stopreg
-SRC=$SELF_REST_PATH/p9_core_save_restore_routines.S
-OBJ=$SELF_REST_PATH/p9_core_save_restore_routines.o
+SRC=$SELF_REST_PATH/p9_core_restore_routines.S
+OBJ=$SELF_REST_PATH/p9_core_restore_routines.o
 IMG=$SELF_REST_PATH/selfRest
 LINK=$SELF_REST_PATH/link.c
 OBJDUMP="/opt/mcp/shared/powerpc64-gcc-20150516/wrappers/powerpc64-unknown-linux-gnu-objdump "
