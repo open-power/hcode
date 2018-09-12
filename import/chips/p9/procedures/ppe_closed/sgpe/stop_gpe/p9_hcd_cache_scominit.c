@@ -97,7 +97,7 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 scom_data.words.upper |= ((quad << SHIFT32(4)) | (ex_index << SHIFT32(5)));
                 scom_data.words.upper |= ((qcsr.value & BITS32(0, 12)) >> 6);
 
-                if (ex_count > 1)
+                if (ex_count > 2)
                 {
                     PK_TRACE("Assert L3_LCO_ENABLE_CFG via EX_L3_MODE_REG1[0]");
                     scom_data.words.upper |= BIT32(0);
@@ -146,17 +146,6 @@ p9_hcd_cache_scominit(uint32_t quad, uint32_t m_ex, int is_stop8)
                 }
 
 #endif
-
-                if (ex_count == 2)
-                {
-                    PK_TRACE("Assert L3_DYN_LCO_BLK_DIS_CFG via EX_L3_MODE_REG0[9]");
-                    scom_data.words.upper |= BIT32(9);
-                }
-                else
-                {
-                    PK_TRACE("Drop L3_DYN_LCO_BLK_DIS_CFG via EX_L3_MODE_REG0[9]");
-                    scom_data.words.upper &= ~BIT32(9);
-                }
 
                 if (addr_extension != 0)
                 {
