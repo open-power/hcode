@@ -772,18 +772,20 @@ p9_sgpe_stop_entry()
         MARK_TAG(SE_PURGE_L3, (32 >> qloop))
         //==================================
 
-        PK_TRACE("Drop LCO prior to purge via EX_PM_LCO_DIS_REG[0]");
+        PK_TRACE("Drop LCO and Cache Inject prior to purge via EX_L3_MODE_REG1[22]");
 
         if(ex & FST_EX_IN_QUAD)
         {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG, qloop, 0),
-                        BIT64(0));
+            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, qloop, 0), scom_data.value);
+            scom_data.words.upper |= BIT32(22);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, qloop, 0), scom_data.value);
         }
 
         if(ex & SND_EX_IN_QUAD)
         {
-            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_PM_LCO_DIS_REG, qloop, 1),
-                        BIT64(0));
+            GPE_GETSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, qloop, 1), scom_data.value);
+            scom_data.words.upper |= BIT32(22);
+            GPE_PUTSCOM(GPE_SCOM_ADDR_EX(EX_L3_MODE_REG1, qloop, 1), scom_data.value);
         }
 
 #if !SKIP_L3_PURGE
