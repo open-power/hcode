@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/tools/imageProcs/pgpe_image.S $                        */
+/* $Source: import/tools/imageProcs/xgpe_image.S $                        */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
@@ -50,8 +50,6 @@ __header_64_reserved:
         .quad 0, 0, 0
 
         .xip_toc magic, P9_XIP_UINT64, __magic
-        .xip_toc L1_LoaderAddr, P9_XIP_UINT64, __L1_LoaderAddr
-        .xip_toc L2_LoaderAddr, P9_XIP_UINT64, __L2_LoaderAddr
         .xip_toc kernelAddr, P9_XIP_UINT64, __kernelAddr
         .xip_toc link_address, P9_XIP_UINT64, __link_address
 
@@ -65,12 +63,12 @@ __header_64_reserved:
         .xip_section toc,               4
         .xip_section strings
 
-        .xip_section ppmr_hdr,          8
+        .xip_section xpmr_hdr,          8
         .xip_section lvl1_bl,           8
         .xip_section lvl2_bl,           8
         .xip_section hcode,             8
+        .xip_section aux_task,          8
 
-        .xip_section
         .xip_section
         .xip_section
         .xip_section
@@ -131,6 +129,7 @@ __header_string_reserved:
     .section .toc, "a", @progbits
     .section .strings, "aS", @progbits
 
-    P9XipHeader P9_XIP_MAGIC_PGPE, 0x80000000, _pgpe_image_size
+    // FIXME: start address of HW Image in PNOR
+    P9XipHeader P9_XIP_MAGIC_XGPE, 0x80000000, _xgpe_image_size
 
 // *INDENT-ON*
