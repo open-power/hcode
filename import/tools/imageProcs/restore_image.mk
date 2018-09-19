@@ -33,28 +33,28 @@ $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/restore_image/restore_image.o)
 $(eval restore_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
 # files with multiple DD level content to be generated
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,cpmr_header))
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,cpmr_hdr))
 
 # files to be appended to image
-$(eval $(IMAGE)_FILE_CPMR=$$($(IMAGE)_DD_CONT_cpmr_header))
+$(eval $(IMAGE)_FILE_CPMR_HDR=$$($(IMAGE)_DD_CONT_cpmr_hdr))
 $(eval $(IMAGE)_FILE_SELF=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
 
 # dependencies for appending image sections in sequence:
 # - file to be appended
 # - all dependencies of previously appended sections or on raw image
 # - append operation as to other section that has to be finished first
-$(eval $(IMAGE)_DEPS_CPMR =$$($(IMAGE)_FILE_CPMR))
-$(eval $(IMAGE)_DEPS_CPMR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_CPMR_HDR =$$($(IMAGE)_FILE_CPMR_HDR))
+$(eval $(IMAGE)_DEPS_CPMR_HDR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
 
 $(eval $(IMAGE)_DEPS_SELF =$$($(IMAGE)_FILE_SELF))
-$(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_DEPS_CPMR))
-$(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_PATH)/.$(IMAGE).append.cpmr)
+$(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_DEPS_CPMR_HDR))
+$(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_PATH)/.$(IMAGE).append.cpmr_hdr)
 
 $(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
 $(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.self_restore)
 
 # image build using all files and serialised by dependencies
-$(eval $(call XIP_TOOL,append,.cpmr,$$($(IMAGE)_DEPS_CPMR),$$($(IMAGE)_FILE_CPMR) 1))
+$(eval $(call XIP_TOOL,append,.cpmr_hdr,$$($(IMAGE)_DEPS_CPMR_HDR),$$($(IMAGE)_FILE_CPMR_HDR) 1))
 $(eval $(call XIP_TOOL,append,.self_restore,$$($(IMAGE)_DEPS_SELF),$$($(IMAGE)_FILE_SELF)))
 
 # create image report for image with all files appended
@@ -63,8 +63,8 @@ $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 $(eval $(call BUILD_XIPIMAGE))
 endef
 
-$(eval CHIPS := $(filter-out ocmb,$(CHIPS)))
+$(eval MYCHIPS := $(filter-out ocmb,$(CHIPS)))
 
-$(foreach chip,$(CHIPS),\
+$(foreach chip,$(MYCHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
 		$(eval $(call BUILD_RESTORE_IMAGE,$(chipId)))))
