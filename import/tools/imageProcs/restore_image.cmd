@@ -52,7 +52,7 @@ SECTIONS
     _toc_size = . - _toc_origin;
 
     ////////////////////////////////
-    // STRING
+    // STRINGS
     ////////////////////////////////
     . = ALIGN(1);
     _strings_origin = .;

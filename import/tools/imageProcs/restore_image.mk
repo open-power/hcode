@@ -63,8 +63,8 @@ $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 $(eval $(call BUILD_XIPIMAGE))
 endef
 
-$(eval CHIPS := $(filter-out centaur ocmb,$(CHIPS)))
+$(eval CHIPS := $(filter-out ocmb,$(CHIPS)))
 
 $(foreach chip,$(CHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
-	$(eval $(call BUILD_RESTORE_IMAGE,$(chipId)))))
+		$(eval $(call BUILD_RESTORE_IMAGE,$(chipId)))))
