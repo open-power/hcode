@@ -51,15 +51,23 @@
 #define HANG_PULSE_FREQ_HZ 31250000 // ioo
 #define KERNEL_STACK_SIZE  512
 
+
+#define START_LANE_EVEN 0
+#define START_LANE_ODD  13
+#define END_LANE_EVEN   11
+#define END_LANE_ODD    24
+#define MAX_LANES       24
+
 uint8_t G_kernel_stack[KERNEL_STACK_SIZE];
 
 enum Bank
 {
-    BankA = 0x00,
-    BankB = 0x01
+    BANK_EVEN = 0x00,
+    BANK_ODD = 0x01
 };
 
 void wait_ns(uint32_t i_ns);
+void rxEnableAmpdac(t_gcr_addr* gcr_addr, const bool iEnable);
 void powerDownBank(t_gcr_addr* gcr_addr, uint32_t iBankPowerDown);
 void disableBank(t_gcr_addr* gcr_addr, uint32_t iBankPowerDown);
 
@@ -112,16 +120,24 @@ int main(int argc, char** argv)
         else if ((currentRecalAbort == 1) && (state == 0x01))
         {
             // Stop auto recal
-            put_ptr_field(&gcr_addr, rx_rc_enable_auto_recal, 0x0, read_modify_write);
+            put_ptr_field(&gcr_addr, rx_rc_enable_auto_recal, 0x0, read_modify_write); // per-group
 
             // Wait for servo ops to finish.
-            while(get_ptr_field(&gcr_addr, rx_servo_done) == 0x0);
+            while(get_ptr_field(&gcr_addr, rx_servo_done) == 0x0); // per-group
 
-            uint32_t bankPowerDown = BankA;
+            wait_ns(2000000); // Wait for 20us
+
+            // Write ampdac to ZERO
+            set_gcr_addr_lane(&gcr_addr, 0x1F);
+            put_ptr_field(&gcr_addr, rx_amp_val, 0x0, fast_write); // broadcast per-lane
+            set_gcr_addr_lane(&gcr_addr, 0x00);
+
+            // Enable the ampdac for all lanes
+            rxEnableAmpdac(&gcr_addr, true);
+
+            uint32_t bankPowerDown = BANK_EVEN;
             uint32_t loopCount = 0;
-            uint32_t bankARecalAbortCnt = 0;
-            uint32_t bankBRecalAbortCnt = 0;
-            bool badBankFound = false;
+            uint32_t recalAbortCnt[2] = {0, 0};
             localPut(WORK2_REG, 0xDEADFFFF00000000);
 
             // Workaround Loop:
@@ -132,38 +148,27 @@ int main(int argc, char** argv)
             do
             {
                 powerDownBank(&gcr_addr, bankPowerDown);
-                wait_ns(2000000); // Wait for 2ms
+                //wait_ns(20000); // Wait for 20us
 
-                for(count = 0; count < 10000; ++count) // Write(530.67ns), RMW(1101ns), Read(1132ns)
+                // Write(530.67ns), RMW(1101ns), Read(1132ns)
+                for (count = 0; ((count < 40000) && (recalAbortCnt[bankPowerDown] < 2)); ++count)
                 {
-                    currentRecalAbort = get_ptr_field(&gcr_addr, rx_recal_abort_active); // DL
-
-                    if(currentRecalAbort)
-                    {
-                        if(bankPowerDown == BankA)
-                        {
-                            bankBRecalAbortCnt += 1;
-                        }
-                        else
-                        {
-                            bankARecalAbortCnt += 1;
-                        }
-                    }
-
-                    if((bankARecalAbortCnt > 1) || (bankBRecalAbortCnt > 1))
-                    {
-                        badBankFound = true;
-                        break;
-                    }
+                    // Read rx_recal_abort_active (Returns a 0 or 1)
+                    // - The DL sources this signal
+                    // - Add this read to the recal abort count
+                    recalAbortCnt[bankPowerDown] += get_ptr_field(&gcr_addr, rx_recal_abort_active);
                 }
 
                 ++loopCount;
-                bankPowerDown = (bankPowerDown == BankA) ? BankB : BankA;
+                bankPowerDown = (bankPowerDown == BANK_EVEN) ? BANK_ODD : BANK_EVEN;
             }
-            while(!badBankFound);
+            while((recalAbortCnt[BANK_EVEN] < 2) && (recalAbortCnt[BANK_ODD] < 2));
 
             // Power down the bank with the bad lane/lanes
             powerDownBank(&gcr_addr, bankPowerDown);
+
+            // Disable the ampdac for all lanes
+            rxEnableAmpdac(&gcr_addr, false);
 
             // Disable the bad bank so we don't run recal on those lanes
             disableBank(&gcr_addr, bankPowerDown);
@@ -179,10 +184,9 @@ int main(int argc, char** argv)
             work1Data = (work1Data & 0x0FFFFFFF00000000) | (((uint64_t)workDoneCnt       << 60) & 0xF000000000000000);
             work1Data = (work1Data & 0xFFFF000000000000) | (((uint64_t)(mfspr(SPRN_DEC)) << 32) & 0x0000FFFF00000000);
             work2Data = (((uint64_t)loopCount << 32) & 0xFFFFFFFF00000000);
+            work2Data |= (bankPowerDown == BANK_EVEN) ? 0xAAAA000000000000 : 0x5555000000000000;
             localPut(WORK1_REG, work1Data);
             localPut(WORK2_REG, work2Data);
-
-            wait_ns(200000); // Wait for 200us
 
             currentRecalAbort = 0x0;
             count             = 0x0;
@@ -200,6 +204,13 @@ int main(int argc, char** argv)
         else if(state == 0x01)
         {
             ++count;
+        }
+
+        // After we complete the workaround once, we will break out of the
+        //   while loop and halt the ppe execution.
+        if (workDoneCnt > 0x0)
+        {
+            break;
         }
     }
 
@@ -234,33 +245,74 @@ void wait_ns(uint32_t i_ns)
     return;
 }
 
-void powerDownBank(t_gcr_addr* gcr_addr, uint32_t iBankPowerDown)
+/// Enable/Disable the Ampdac for all lanes
+/// - The Ampdac is shared between the A/B Bank
+/// - Therefore, we have to check which bank is passing main data
+/// - The bank that is passing main data then has the ampdac configured
+void rxEnableAmpdac(t_gcr_addr* gcr_addr, const bool iEnable)
 {
-    const uint32_t START_LANE = (iBankPowerDown == BankB) ? 0  : 13;
-    const uint32_t END_LANE   = (iBankPowerDown == BankB) ? 11 : 24;
+    const uint32_t RX_A_EN_SPEC = 0x20;
+    const uint32_t RX_A_EN_AMP  = 0x04;
+    const uint32_t RX_B_EN_SPEC = 0x10;
+    const uint32_t RX_B_EN_AMP  = 0x02;
+    const uint32_t RX_A_CONTROLS_DATA = iEnable ? (RX_A_EN_SPEC | RX_A_EN_AMP) : RX_A_EN_SPEC;
+    const uint32_t RX_B_CONTROLS_DATA = iEnable ? (RX_B_EN_SPEC | RX_B_EN_AMP) : RX_B_EN_SPEC;
+    uint32_t       bankSel            = 0x0;
+    uint32_t       lane               = 0x0;
 
-    // Power Down All Lanes
-    set_gcr_addr_lane(gcr_addr, 0x1F);
-    put_ptr_field(gcr_addr, rx_lane_ana_pdwn, 0x01, fast_write);
-    set_gcr_addr_lane(gcr_addr, 0x00);
-
-    uint32_t lane = 0x0;
-
-    // Power Up Specifc Lanes
-    for(lane = START_LANE; lane < END_LANE; ++lane)
+    for (; lane < MAX_LANES; ++lane)
     {
         set_gcr_addr_lane(gcr_addr, lane);
-        put_ptr(gcr_addr, rx_dac_cntl1_eo_pl_addr, rx_dac_cntl1_eo_pl_startbit, rx_dac_cntl1_eo_pl_endbit, 0x0000, fast_write);
+        bankSel = get_ptr_field(gcr_addr, rx_bank_sel_a);
+
+        if (bankSel)
+        {
+            put_ptr_field(gcr_addr, rx_a_controls, RX_A_CONTROLS_DATA, fast_write);
+        }
+        else
+        {
+            put_ptr_field(gcr_addr, rx_b_controls, RX_B_CONTROLS_DATA, fast_write);
+        }
     }
 
     set_gcr_addr_lane(gcr_addr, 0);
     return;
 }
 
-void disableBank(t_gcr_addr* gcr_addr, uint32_t iBankPowerDown)
+// The bank that is passed in, is the bank that we want to power down
+void powerDownBank(t_gcr_addr* gcr_addr, uint32_t iTargetBank)
 {
-    const uint32_t START_LANE = (iBankPowerDown == BankA) ? 0  : 13;
-    const uint32_t END_LANE   = (iBankPowerDown == BankA) ? 11 : 24;
+    const uint32_t START_LANE = (iTargetBank == BANK_EVEN) ? START_LANE_ODD : START_LANE_EVEN;
+    const uint32_t END_LANE   = (iTargetBank == BANK_EVEN) ? END_LANE_ODD   : END_LANE_EVEN;
+
+    // Bias and Power Down all the Lanes
+    set_gcr_addr_lane(gcr_addr, 0x1F);
+    put_ptr_field(gcr_addr, rx_amp_val, 0x7F, fast_write);
+    wait_ns(20000); // Wait for 20us to allow values to propogate
+    put_ptr_field(gcr_addr, rx_lane_ana_pdwn, 0x01, fast_write);
+    set_gcr_addr_lane(gcr_addr, 0x00);
+
+
+    // Power back up the lanes that we want to look at.
+    uint32_t lane = START_LANE;
+
+    for(; lane < END_LANE; ++lane)
+    {
+        set_gcr_addr_lane(gcr_addr, lane);
+        put_ptr_field(gcr_addr, rx_lane_ana_pdwn, 0x0, fast_write);
+        put_ptr_field(gcr_addr, rx_amp_val, 0x0, fast_write);
+    }
+
+    set_gcr_addr_lane(gcr_addr, 0);
+    return;
+}
+
+
+
+void disableBank(t_gcr_addr* gcr_addr, uint32_t iTargetBank)
+{
+    const uint32_t START_LANE = (iTargetBank == BANK_EVEN) ? START_LANE_EVEN : START_LANE_ODD;
+    const uint32_t END_LANE   = (iTargetBank == BANK_EVEN) ? END_LANE_EVEN   : END_LANE_ODD;
 
     uint32_t lane = 0x0;
 
