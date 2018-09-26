@@ -179,7 +179,7 @@ uint8_t p9_pgpe_gppb_intp_ps_from_ext_vdd(uint16_t ext_vdd)
     //Do the math using shifted by 1.
     ps = -(((G_gppb->VPStateSlopes[VPD_PT_SET_BIASED_SYSP][r]) *
             (ext_vdd - G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][r].vdd_mv)) >> (VID_SLOPE_FP_SHIFT_12 - 1)) +
-         (G_gppb->operating_points_set[VPD_SLOPES_BIASED][r].pstate << 1)  ;
+         (G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][r].pstate << 1)  ;
     ps = ps >> 1;//Shift it back
 
     return ps;
