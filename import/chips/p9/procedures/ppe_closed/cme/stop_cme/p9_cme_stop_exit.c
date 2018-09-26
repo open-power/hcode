@@ -1151,6 +1151,8 @@ p9_cme_stop_exit()
 #else
 
             PK_TRACE_PERF("Core Wakes Up, Write HRMOR with HOMER address");
+            // Must not set bit 15 in HRMOR
+            scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
             CME_PUTSCOM(HRMOR, core, scom_data.value);
 
 #endif
