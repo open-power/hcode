@@ -648,8 +648,8 @@ p9_sgpe_stop_init()
     out32(G_OCB_OISR0_CLR, (BIT32(8) | BIT32(16)));
     out32(G_OCB_OIMR0_CLR, (BIT32(8) | BIT32(16)));
 
-    PK_TRACE_INF("Setup: Unmask Type 2,3,5,6 and ipi_lo_3 interrupts, keep type0/7 masked as unused");
-    out32(G_OCB_OIMR1_CLR, (BITS32(15, 2) | BITS32(18, 2) | BIT32(29)));
+    PK_TRACE_INF("Setup: Unmask Type 0,2,3,5,6 and ipi_lo_3 interrupts, keep type7 masked as unused");
+    out32(G_OCB_OIMR1_CLR, (BIT32(13) | BITS32(15, 2) | BITS32(18, 2) | BIT32(29)));
 
     //--------------------------------------------------------------------------
     // SGPE Init Completed
