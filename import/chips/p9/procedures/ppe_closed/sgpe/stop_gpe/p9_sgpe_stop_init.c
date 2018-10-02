@@ -473,8 +473,8 @@ p9_sgpe_stop_init()
     // Hostboot Mode Booting CME
     //--------------------------------------------------------------------------
 
-    PK_TRACE_INF("Setup: Clear Type 0,2,3,6 and ipi_lo_3 interrupts");
-    out32(OCB_OISR1_CLR, (BIT32(13) | BITS32(15, 2) | BIT32(19) | BIT32(29)));
+    PK_TRACE_INF("Setup: Clear Type 0,2,3,5,6,7 and ipi_lo_3 interrupts");
+    out32(OCB_OISR1_CLR, (BIT32(13) | BITS32(15, 2) | BITS32(18, 3) | BIT32(29)));
     out32(OCB_OPITNPRA_CLR(0), BITS32(0, 24));
     out32(OCB_OPITNPRA_CLR(1), BITS32(0, 24));
     out32(OCB_OPITNPRA_CLR(2), BITS32(0, 24));
@@ -646,8 +646,8 @@ p9_sgpe_stop_init()
     out32(OCB_OISR0_CLR, (BIT32(8) | BIT32(16)));
     out32(OCB_OIMR0_CLR, (BIT32(8) | BIT32(16)));
 
-    PK_TRACE_INF("Setup: Unmask Type 0, 2,3,6 and ipi_lo_3 interrupts");
-    out32(OCB_OIMR1_CLR, BIT32(13) | (BITS32(15, 2) | BIT32(19) | BIT32(29)));
+    PK_TRACE_INF("Setup: Unmask Type 0,2,3,5,6 and ipi_lo_3 interrupts, keep type7 masked as unused");
+    out32(OCB_OIMR1_CLR, (BIT32(13) | BITS32(15, 2) | BITS32(18, 2) | BIT32(29)));
 
     //--------------------------------------------------------------------------
     // SGPE Init Completed
