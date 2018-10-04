@@ -316,7 +316,7 @@ main(int argc, char** argv)
 
     OSD_PTR->occ_comp_shr_data.gpe2_data.gpe2_sram_region_start = OCC_SRAM_PGPE_BASE_ADDR;
     OSD_PTR->occ_comp_shr_data.gpe2_data.gpe2_image_header_addr = OCC_SRAM_PGPE_BASE_ADDR + PGPE_HEADER_IMAGE_OFFSET;
-    OSD_PTR->occ_comp_shr_data.gpe2_data.gpe2_debug_header_addr = OCC_SRAM_PGPE_BASE_ADDR + SGPE_DEBUG_PTRS_OFFSET;
+    OSD_PTR->occ_comp_shr_data.gpe2_data.gpe2_debug_header_addr = OCC_SRAM_PGPE_BASE_ADDR + PGPE_DEBUG_PTRS_OFFSET;
 
     // Start running the highest priority thread.
     // This function never returns

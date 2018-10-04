@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -99,14 +99,14 @@ int main(int narg, char* argv[])
             printf("                    PGPE size: %d\n", size);
             //  populating PGPE Image Header
             //  populating RESET address
-            uint32_t l_reset_addr_pos = offsetof(PgpeHeader_t, g_pgpe_sys_reset_addr);
+            uint32_t l_reset_addr_pos = PGPE_HEADER_IMAGE_OFFSET + offsetof(PgpeHeader_t, g_pgpe_sys_reset_addr);
             fseek (pMainImage, l_reset_addr_pos, SEEK_SET);
-            temp = PGPE_HCODE_RESET_ADDR_VAL;
+            temp = OCC_SRAM_PGPE_HCODE_RESET_ADDR;
             temp = htonl(temp);
             fwrite(&(temp), sizeof(uint32_t), 1, pMainImage );
 
-            buildDatePos = offsetof(PgpeHeader_t, g_pgpe_build_date);
-            buildVerPos  = offsetof(PgpeHeader_t, g_pgpe_build_ver);
+            buildDatePos = PGPE_HEADER_IMAGE_OFFSET + offsetof(PgpeHeader_t, g_pgpe_build_date);
+            buildVerPos  = PGPE_HEADER_IMAGE_OFFSET + offsetof(PgpeHeader_t, g_pgpe_build_ver);
         }
 
         // build date
@@ -129,7 +129,7 @@ int main(int narg, char* argv[])
 
         if (imageType == PPMR_IMAGE)
         {
-            //SGPE HCODE offset in PPMR header
+            //PGPE HCODE offset in PPMR header
             uint32_t l_hcode_offset_pos = offsetof(PpmrHeader_t, g_ppmr_hcode_offset);
             fseek ( pMainImage , l_hcode_offset_pos, SEEK_SET );
             temp =  sizeof(PpmrHeader_t) +
@@ -139,11 +139,27 @@ int main(int narg, char* argv[])
             temp = htonl(temp);
             fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
 
-            //SGPE Hcode length in PPMR header
+            //PGPE Hcode length in PPMR header
             uint32_t l_hcode_length_pos = offsetof(PpmrHeader_t, g_ppmr_hcode_length);
             fseek ( pMainImage , l_hcode_length_pos, SEEK_SET );
             temp = l_ppmr_pgpe_hcode_len_val;
             printf("                    PPMR Hcode size:   0x%X (%d)\n", temp, temp);
+            temp = htonl(temp);
+            fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
+
+            //PGPE SRAM Region Start
+            uint32_t l_pgpe_sram_region_start_offset = offsetof(PpmrHeader_t, g_ppmr_pgpe_sram_region_start);
+            fseek ( pMainImage , l_pgpe_sram_region_start_offset, SEEK_SET );
+            temp = OCC_SRAM_PGPE_BASE_ADDR;
+            printf("                    PPMR Pgpe Sram Region Start: 0x%X\n", temp);
+            temp = htonl(temp);
+            fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
+
+            //PGPE SRAM Region Size
+            uint32_t l_pgpe_sram_region_size_offset = offsetof(PpmrHeader_t, g_ppmr_pgpe_sram_region_size);
+            fseek ( pMainImage , l_pgpe_sram_region_size_offset, SEEK_SET );
+            temp = OCC_SRAM_PGPE_REGION_SIZE;
+            printf("                    PPMR Pgpe Sram Region Size: 0x%X\n", temp);
             temp = htonl(temp);
             fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
         }

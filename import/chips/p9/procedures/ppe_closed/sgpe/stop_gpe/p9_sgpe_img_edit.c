@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,10 +25,12 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stddef.h>     /* offsetof */
 #include <netinet/in.h>
 #include <time.h>
 
 #include <p9_hcd_memmap_base.H>
+#include <p9_hcode_image_defines.H>
 
 enum
 {
@@ -98,7 +100,7 @@ int main(int narg, char* argv[])
             //  populating SGPE Image Header
             //  populating RESET address
             fseek (pMainImage, SGPE_RESET_ADDR_IMAGE_OFFSET, SEEK_SET);
-            temp = SGPE_HCODE_RESET_ADDR_VAL;
+            temp = OCC_SRAM_SGPE_HCODE_RESET_ADDR;
             temp = htonl(temp);
             fwrite(&(temp), sizeof(uint32_t), 1, pMainImage );
         }
@@ -131,6 +133,23 @@ int main(int narg, char* argv[])
             temp = QPMR_SGPE_HCODE_LEN_VAL;
             temp = htonl(temp);
             fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
+
+            //SGPE SRAM Region Start
+            uint32_t l_sgpe_sram_region_start_offset = offsetof(QpmrHeaderLayout_t, sgpeSramRegionStart);
+            fseek ( pMainImage , l_sgpe_sram_region_start_offset, SEEK_SET );
+            temp = OCC_SRAM_SGPE_BASE_ADDR;
+            printf("                    QPMR Sgpe Sram Region Start: 0x%X\n", temp);
+            temp = htonl(temp);
+            fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
+
+            //SGPE SRAM Region Size
+            uint32_t l_sgpe_sram_region_size_offset = offsetof(QpmrHeaderLayout_t, sgpeSramRegionSize);
+            fseek ( pMainImage , l_sgpe_sram_region_size_offset, SEEK_SET );
+            temp = OCC_SRAM_SGPE_REGION_SIZE;
+            printf("                    QPMR Sgpe Sram Region Size: 0x%X\n", temp);
+            temp = htonl(temp);
+            fwrite(&temp, sizeof(uint32_t), 1, pMainImage );
+
         }
 
         fclose(pMainImage);
