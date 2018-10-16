@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,12 @@
 ///
 ///
 /// @endverbatim
+// -------------------------------------Axone Mux configs-------------------------------------------------------------
+// FSI2PCB(16)                 PIB2PCB(18)                   PCB2PCB(19)          cannot access       can access
+//    1                           0                             0                      PIB             EPS - perv
+//    0                           1                             0                      PCB             PIB, SBE, EPS
+//    0                           0                             1                       -              PIB, PCB n/w
+// -------------------------------------------------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
 //  Includes
@@ -55,8 +61,6 @@
 // ----------------------------------------------------------------------
 
 // these are probably in some include file
-
-
 
 
 enum PIBMS_REGS
@@ -236,13 +240,6 @@ std::vector<PIBMSReg_t> v_pibms_regs =
 
 
 
-
-
-
-
-
-
-
 // -----------------------------------------------------------------------------
 //  Function definitions
 // -----------------------------------------------------------------------------
@@ -259,6 +256,8 @@ fapi2::ReturnCode p9_pibms_reg_dump( const fapi2::Target<fapi2::TARGET_TYPE_PROC
 
 
 {
+    fapi2::buffer<uint64_t> INVALID_REGISTER = 0xDEADBEEFDEADBEEF;
+    fapi2::buffer<uint8_t>  l_is_axone;
     fapi2::buffer<uint32_t> l_data32_cbs_cs;
     fapi2::buffer<uint32_t> l_data32_sb_cs;
     std::vector<PIBMSRegValue_t> v_pibms_reg_value;
@@ -271,8 +270,32 @@ fapi2::ReturnCode p9_pibms_reg_dump( const fapi2::Target<fapi2::TARGET_TYPE_PROC
     FAPI_IMP("p9_pibms_reg_dump");
     FAPI_INF("Executing p9_pibms_reg_dump " );
 
-
     fapi2::buffer<uint64_t> buf;
+    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_CHIP_EC_FEATURE_P9A_LOGIC_ONLY, i_target, l_is_axone));
+
+    if (l_is_axone)
+    {
+        // Checking mux config and fence values for Axone
+        fapi2::buffer<uint64_t> l_tempdata64;
+        fapi2::buffer<uint32_t> l_tempdata32;
+
+        FAPI_TRY(getCfamRegister(i_target, PERV_ROOT_CTRL0_FSI, l_tempdata32 ));
+        FAPI_TRY(getScom(i_target, PERV_TP_CPLT_CTRL1, l_tempdata64));
+
+        // RC0bits 16,18,19 != 000 && RC0bit16 != 1 && cplt_ctrl[ pib(bit6) sbe(bit9)] != 1
+        if ( ! ((l_tempdata32.getBit<PERV_ROOT_CTRL0_PIB2PCB_DC>()
+                 || l_tempdata32.getBit<PERV_ROOT_CTRL0_18_SPARE_MUX_CONTROL>()
+                 || l_tempdata32.getBit<PERV_ROOT_CTRL0_19_SPARE_MUX_CONTROL>()) &&
+                !(l_tempdata32.getBit<PERV_ROOT_CTRL0_PIB2PCB_DC>())            &&
+                !(l_tempdata64.getBit<PERV_1_CPLT_CTRL1_UNUSED_9B>())       &&
+                !(l_tempdata64.getBit<PERV_1_CPLT_CTRL1_UNUSED_6B>()) ))
+        {
+            FAPI_ERR("Invalid Mux config(RC0 bits 16,18,19): %#010lX or Fence setup(CPLT_CTRL1 bits 6,9): %#018lX to perform pibmem dump.\n",
+                     l_tempdata32, l_tempdata64);
+            goto fapi_try_exit;
+        }
+    }
+
     FAPI_TRY(fapi2::getCfamRegister(i_target, PERV_CBS_CS_FSI, l_data32_cbs_cs));
     FAPI_TRY(fapi2::getCfamRegister(i_target, PERV_SB_CS_FSI, l_data32_sb_cs));
 
@@ -286,12 +309,23 @@ fapi2::ReturnCode p9_pibms_reg_dump( const fapi2::Target<fapi2::TARGET_TYPE_PROC
         {
             // ******************************************************************
             address = it.number ;
-            FAPI_TRY((getScom(i_target , address , buf )));
+
+            // No pibmem_registers in Axone. Pibmem_repair done through scan.
+            if (l_is_axone && (address == 0x0008800B || address == 0x0008800C || address == 0x0008800D || address == 0x0008800E) )
+            {
+                buf = INVALID_REGISTER;
+            }
+            else
+            {
+                FAPI_TRY((getScom(i_target , address , buf )));
+            }
+
             l_regVal.reg = it;
             l_regVal.value = buf;
             pibms_reg_set.push_back(l_regVal);
             // ******************************************************************
         }
+
     }
 
     else
@@ -301,7 +335,17 @@ fapi2::ReturnCode p9_pibms_reg_dump( const fapi2::Target<fapi2::TARGET_TYPE_PROC
         {
             // ******************************************************************
             address = it.number ;
-            FAPI_TRY((getScom(i_target , address , buf )));
+
+            // No pibmem_registers in Axone. Pibmem_repair done through scan.
+            if (l_is_axone && (address == 0x0008800B || address == 0x0008800C || address == 0x0008800D || address == 0x0008800E) )
+            {
+                buf = INVALID_REGISTER;
+            }
+            else
+            {
+                FAPI_TRY((getScom(i_target , address , buf )));
+            }
+
             l_regVal.reg = it;
             l_regVal.value = buf;
             pibms_reg_set.push_back(l_regVal);
@@ -319,6 +363,7 @@ fapi2::ReturnCode p9_pibms_reg_dump( const fapi2::Target<fapi2::TARGET_TYPE_PROC
             // ******************************************************************
         }
     }
+
 
 fapi_try_exit:
     FAPI_INF("< p9_pibms_reg_dump");

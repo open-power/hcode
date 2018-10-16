@@ -30,7 +30,17 @@
 /// *HW Owner    : Anay K Desai
 /// *FW Owner    :
 /// *Team        : Pervasive
+
+// -------------------------------------Axone Mux configs-------------------------------------------------------------
+// FSI2PCB(16)                 PIB2PCB(18)                   PCB2PCB(19)          cannot access       can access
+//    1                           0                             0                      PIB             EPS - perv
+//    0                           1                             0                      PCB             PIB, SBE, EPS
+//    0                           0                             1                       -              PIB, PCB n/w
+// -------------------------------------------------------------------------------------------------------------------
+
 #include <fapi2.H>
+#include <p9_perv_scom_addresses.H>
+#include <p9_perv_scom_addresses_fld.H>
 #include <p9_pibmem_dump.H>
 
 const static uint32_t P9n_PIBMEM_START_ARRAY_ADDRESS   = 0x00080000;
@@ -59,6 +69,26 @@ fapi2::ReturnCode p9_pibmem_dump(
     {
         PIBMEM_START_ARRAY_ADDRESS = P9a_PIBMEM_START_ARRAY_ADDRESS;
         DEPTH_OF_ARRAY = P9a_DEPTH_OF_ARRAY;
+
+        // Checking mux config and fence values for Axone
+        fapi2::buffer<uint64_t> l_tempdata64;
+        fapi2::buffer<uint32_t> l_tempdata32;
+
+        FAPI_TRY(getCfamRegister(i_target, PERV_ROOT_CTRL0_FSI, l_tempdata32 ));
+        FAPI_TRY(getScom(i_target, PERV_TP_CPLT_CTRL1, l_tempdata64));
+
+        // RC0bits 16,18,19 != 000 && RC0bit16 != 1 && cplt_ctrl[ pib(bit6) sbe(bit9)] != 1
+        if ( ! ((l_tempdata32.getBit<PERV_ROOT_CTRL0_PIB2PCB_DC>()
+                 || l_tempdata32.getBit<PERV_ROOT_CTRL0_18_SPARE_MUX_CONTROL>()
+                 || l_tempdata32.getBit<PERV_ROOT_CTRL0_19_SPARE_MUX_CONTROL>()) &&
+                !(l_tempdata32.getBit<PERV_ROOT_CTRL0_PIB2PCB_DC>())            &&
+                !(l_tempdata64.getBit<PERV_1_CPLT_CTRL1_UNUSED_9B>())       &&
+                !(l_tempdata64.getBit<PERV_1_CPLT_CTRL1_UNUSED_6B>()) ))
+        {
+            FAPI_ERR("Invalid Mux config(RC0 bits 16,18,19): %#010lX or Fence setup(CPLT_CTRL1 bits 6,9): %#018lX to perform pibmem dump. \n",
+                     l_tempdata32, l_tempdata64);
+            goto fapi_try_exit;
+        }
     }
     else
     {
