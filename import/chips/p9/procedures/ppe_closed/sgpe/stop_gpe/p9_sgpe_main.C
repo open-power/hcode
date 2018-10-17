@@ -25,6 +25,9 @@
 
 #include "p9_sgpe_stop.h"
 #include <fapi2.H>
+#include "occhw_shared_data.h"
+#include "p9_hcd_memmap_occ_sram.H"
+#include "p9_hcd_memmap_base.H"
 
 
 //We define a global literal for these register addresses
@@ -250,6 +253,10 @@ main(int argc, char** argv)
 
     // Make G_p9_sgpe_stop_exit_thread runnable
     pk_thread_resume(&G_p9_sgpe_stop_exit_thread);
+
+    OSD_PTR->occ_comp_shr_data.gpe3_data.gpe3_sram_region_start = OCC_SRAM_SGPE_BASE_ADDR;
+    OSD_PTR->occ_comp_shr_data.gpe3_data.gpe3_image_header_addr = OCC_SRAM_SGPE_BASE_ADDR + SGPE_HEADER_IMAGE_OFFSET;
+    OSD_PTR->occ_comp_shr_data.gpe3_data.gpe3_debug_header_addr = OCC_SRAM_SGPE_BASE_ADDR + SGPE_DEBUG_PTRS_OFFSET;
 
     // Start running the highest priority thread.
     // This function never returns

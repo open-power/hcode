@@ -29,6 +29,9 @@
 #include "p9_pgpe_boot_temp.h"
 #include "p9_pgpe_pstate.h"
 #include "p9_pgpe_optrace.h"
+#include "occhw_shared_data.h"
+#include "p9_hcd_memmap_occ_sram.H"
+#include "p9_hcd_memmap_base.H"
 
 extern TraceData_t G_pgpe_optrace_data;
 
@@ -311,7 +314,9 @@ main(int argc, char** argv)
 
     p9_pgpe_optrace_init();
 
-    PK_TRACE_DBG("Start PK Threads");
+    OSD_PTR->occ_comp_shr_data.gpe2_data.gpe2_sram_region_start = OCC_SRAM_PGPE_BASE_ADDR;
+    OSD_PTR->occ_comp_shr_data.gpe2_data.gpe2_image_header_addr = OCC_SRAM_PGPE_BASE_ADDR + PGPE_HEADER_IMAGE_OFFSET;
+    OSD_PTR->occ_comp_shr_data.gpe2_data.gpe2_debug_header_addr = OCC_SRAM_PGPE_BASE_ADDR + SGPE_DEBUG_PTRS_OFFSET;
 
     // Start running the highest priority thread.
     // This function never returns

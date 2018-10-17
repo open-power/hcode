@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -52,7 +52,41 @@
 
 #define OSD_GPE_SCOM_RESERVED_BYTES 32
 
+#define OSD_RESERVED_BYTES  1184
+
+#define OSD_OCC_COMPLEX_SHARED_DATA_RESERVED_BYTES  320
+
+#define OSD_OCC_COMPLEX_SHARED_DATA_ADDR  (OSD_ADDR + OSD_TOTAL_SHARED_DATA_BYTES - OSD_OCC_COMPLEX_SHARED_DATA_RESERVED_BYTES)
+
 #ifndef __ASSEMBLER__
+
+//GPE2 knowledge of OCC SRAM region for GPE2
+typedef struct gpe2_occ_sram_region_data
+{
+    uint32_t gpe2_sram_region_start; //GPE2 sram region starting address
+    uint32_t gpe2_image_header_addr;
+    uint32_t gpe2_debug_header_addr;
+    uint8_t  reserved[52];
+} gpe2_occ_sram_region_data_t;
+
+//GPE3 knowledge of OCC SRAM region for GPE3
+typedef struct gpe3_occ_sram_region_data
+{
+    uint32_t gpe3_sram_region_start; //GPE3 sram region starting address
+    uint32_t gpe3_image_header_addr;
+    uint32_t gpe3_debug_header_addr;
+    uint8_t  reserved[52];
+} gpe3_occ_sram_region_data_t;
+
+//OCC Complex Shared Data.
+typedef struct occ_comp_shr_data
+{
+    uint8_t  reserved[128]; //reserved
+    gpe2_occ_sram_region_data_t gpe2_data; //written by GPE2
+    gpe3_occ_sram_region_data_t gpe3_data; //written by GPE3
+    uint8_t  reserved1[64]; //reserved
+} occ_comp_shr_data_t;
+
 typedef union
 {
     struct
@@ -73,6 +107,15 @@ typedef union
             uint8_t             gpe_scom_reserved[OSD_GPE_SCOM_RESERVED_BYTES];
         };
 
+        union
+        {
+            uint8_t             reserved[OSD_RESERVED_BYTES];
+        };
+        union
+        {
+            occ_comp_shr_data_t occ_comp_shr_data;
+            uint8_t             occ_comp_shr_sram[OSD_OCC_COMPLEX_SHARED_DATA_RESERVED_BYTES];
+        };
     };
     uint8_t total_reserved[OSD_TOTAL_SHARED_DATA_BYTES];
 } occhw_osd_t;

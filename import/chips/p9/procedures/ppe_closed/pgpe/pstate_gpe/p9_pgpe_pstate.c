@@ -781,7 +781,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         }
     }
 
-    PK_TRACE_INF("PST: LowestDPLL:0x%x DPLL_PS0=0x%x", lowestDpll, G_gppb->dpll_pstate0_value);
+    //PK_TRACE_INF("PST: LowestDPLL:0x%x DPLL_PS0=0x%x", lowestDpll, G_gppb->dpll_pstate0_value);
 
     //2. Determine Sync Pstate
     if (lowestDpll > G_gppb->dpll_pstate0_value)
@@ -898,7 +898,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
         //to PMCR, and then switching the owner to CHAR which enables PCB_TYPE1 interrupts
         //and allows CME to forward Pstate Requests
         p9_pgpe_pstate_set_pmcr_owner(PMCR_OWNER_OCC);
-        PK_TRACE_INF("PST: OWNER_CHAR");
+        //PK_TRACE_INF("PST: OWNER_CHAR");
         G_pgpe_pstate_record.pmcrOwner = PMCR_OWNER_CHAR;
         g_oimr_override &= ~(BIT64(46));
         out32(G_OCB_OIMR1_CLR, BIT32(14)); //Enable PCB_INTR_TYPE1
