@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017                                                         */
+/* COPYRIGHT 2017,2018                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -30,33 +30,15 @@
 #include "pk.h"
 #include "ppe42.h"
 
-#define BUFFER_BASE         (0xFFF2B800 - 0x100)
-#define IDX                 (BUFFER_BASE - 4)
-#define SRAM_MAX             0xFFF2B7FC
-#define QUAD_PS_CURR_ADDR_0  0xFFF2025C
-#define QUAD_PS_CURR_ADDR_1 (QUAD_PS_CURR_ADDR_0 + 0x4)
 
-uint32_t buffer_address;
+#define BUFFER_SIZE 32
+uint8_t buffer[BUFFER_SIZE];
 void aux_task()
 {
-    if(buffer_address < BUFFER_BASE)//handles initialization
+    uint32_t i;
+
+    for (i = 0; i < BUFFER_SIZE; i++)
     {
-        buffer_address = BUFFER_BASE;
+        buffer[i] = i;
     }
-
-    /* get pstates */
-    uint32_t data;
-    uint32_t temp;
-
-    temp = in32(QUAD_PS_CURR_ADDR_0);
-    data = (temp << 16);
-    temp = in32(QUAD_PS_CURR_ADDR_1);
-    data |= (temp >> 16);
-
-    /* write pstates */
-    out32(buffer_address, data);
-    buffer_address = (buffer_address == SRAM_MAX) ? BUFFER_BASE : (buffer_address + 0x4);
-    out32(buffer_address, ((temp & 0xFFFF) << 16));
-    buffer_address = (buffer_address == SRAM_MAX) ? BUFFER_BASE : (buffer_address + 0x4);
-    out32(IDX, buffer_address);
 }

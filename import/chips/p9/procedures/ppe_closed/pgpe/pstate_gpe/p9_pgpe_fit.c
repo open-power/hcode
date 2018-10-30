@@ -29,6 +29,7 @@
 #include "p9_pgpe_header.h"
 #include <p9_hcd_memmap_occ_sram.H>
 #include "p9_pgpe_optrace.h"
+#include "occhw_shared_data.h"
 
 #define AUX_TASK 14
 #define GPE2TSEL 0xC0020000
@@ -97,6 +98,12 @@ void p9_pgpe_fit_init()
 
     if(aux_period) //multiply by attribute if nonzero
     {
+        //If auxilary task is enabled, then fills up the fields in OCC Complex Shared SRAM
+        //NOte: PGPE ends up writing gpe3 area, but this is because in future aux task will
+        //move to GPE3. So, to have continuity for aux task interface, we are writing
+        //it through GPE2 for now.
+        OSD_PTR->occ_comp_shr_data.gpe3_data.aux_region_start = OCC_SRAM_AUX_TASK_ADDR;
+        OSD_PTR->occ_comp_shr_data.gpe3_data.aux_region_length =  PGPE_AUX_TASK_SIZE;
         G_aux_task_count_threshold *= aux_period;
     }
 

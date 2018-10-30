@@ -75,7 +75,9 @@ typedef struct gpe3_occ_sram_region_data
     uint32_t gpe3_sram_region_start; //GPE3 sram region starting address
     uint32_t gpe3_image_header_addr;
     uint32_t gpe3_debug_header_addr;
-    uint8_t  reserved[52];
+    uint8_t  reserved[44];
+    uint32_t aux_region_start;
+    uint32_t aux_region_length;
 } gpe3_occ_sram_region_data_t;
 
 //OCC Complex Shared Data.
