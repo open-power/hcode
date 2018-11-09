@@ -382,6 +382,7 @@ __attribute__((always_inline)) inline void handle_fit_timebase_sync()
         G_tb_sync_count++;
     }
 }
+extern uint32_t G_pib_reset_flag;
 
 //
 // handle_undervolt
@@ -409,6 +410,8 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
 {
 
     mtmsr(PPE42_MSR_INITIAL);
+    PK_TRACE_DBG("IPB reset flag value %x", G_pib_reset_flag);
+    G_pib_reset_flag = 0;
     handle_occ_beacon();
     handle_core_throttle();
     handle_occflg_requests();

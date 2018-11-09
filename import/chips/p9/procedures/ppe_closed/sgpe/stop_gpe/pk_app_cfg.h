@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -155,5 +155,10 @@
 
 /// This file provides platform specific panic codes
 #define PLATFORM_PANIC_CODES_H "sgpe_panic_codes.h"
+
+#define PK_MACHINE_HANDLER_SUPPORT 1
+
+#define PPE42_MACHINE_CHECK_HANDLER \
+    b __special_machine_check_handler
 
 #endif /*__PK_APP_CFG_H__*/

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -106,6 +106,11 @@
 /// This application will statically initialize it's external interrupt table
 /// using the table defined in pk_app_irq_table.c.
 #define STATIC_IRQ_TABLE
+
+#define PK_MACHINE_HANDLER_SUPPORT 1
+
+#define PPE42_MACHINE_CHECK_HANDLER \
+    b __special_machine_check_handler
 
 
 /// Static configuration data for external interrupts:

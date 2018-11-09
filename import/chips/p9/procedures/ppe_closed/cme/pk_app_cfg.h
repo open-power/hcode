@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -103,6 +103,8 @@
 #if !defined(USE_PPE_IMPRECISE_MODE) && (defined(USE_CME_QUEUED_SCOM) || defined(USE_CME_QUEUED_SCAN))
     #error "USE_PPE_IMPRECISE_MODE must be defined in order to enable USE_CME_QUEUED_SCOM or USE_CME_QUEUED_SCAN"
 #endif
+
+#define PK_MACHINE_HANDLER_SUPPORT 0
 
 // --------------------
 

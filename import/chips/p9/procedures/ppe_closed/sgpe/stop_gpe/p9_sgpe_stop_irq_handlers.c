@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -71,6 +71,7 @@ SgpeStopRecord G_sgpe_stop_record __attribute__((section (".dump_ptrs"))) =
     {{0, 0, 0}}
 };
 
+extern uint32_t G_pib_reset_flag;
 
 
 void
@@ -78,6 +79,8 @@ p9_sgpe_fit_handler()
 {
     PK_TRACE("FIT: Handler Fired");
 
+    PK_TRACE_DBG("IPB reset flag value %x", G_pib_reset_flag);
+    G_pib_reset_flag = 0;
     uint32_t tpending = in32(G_OCB_OPIT0PRA) |
                         in32(G_OCB_OPIT3PRA) |
                         in32(G_OCB_OPIT6PRB);
