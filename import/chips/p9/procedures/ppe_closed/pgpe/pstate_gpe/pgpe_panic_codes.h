@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -86,10 +86,8 @@ PGPE_SET_PMCR_TRAP_INJECT               = 0x1e05,
 PGPE_DROOP_AND_CORE_THROTTLE_ENABLED    = 0x1e06,
 PGPE_INVALID_FREQ_UPDT                  = 0x1e07,
 PGPE_PMAX_RCV_GREATER_THAN_PSAFE        = 0x1e08,
-//_UNUSED_1e07                          = 0x1e07,
-//_UNUSED_1e08                          = 0x1e08,
-//_UNUSED_1e09                          = 0x1e09,
-//_UNUSED_1e0a                          = 0x1e0a,
+PGPE_UVOLT_FREQ_LOSS_GREATER_THAN_MAX_DROOP   = 0x1e09,
+PGPE_UVOLT_AVG_FREQ_GREATER_THAN_TARGET = 0x1e0a,
 //_UNUSED_1e0d                          = 0x1e0d,
 //_UNUSED_1e1c                          = 0x1e1c,
 //_UNUSED_1e1d                          = 0x1e1d,

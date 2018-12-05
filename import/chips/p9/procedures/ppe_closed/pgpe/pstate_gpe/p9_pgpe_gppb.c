@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -26,6 +26,7 @@
 #include "p9_pgpe_gppb.h"
 #include "p9_pgpe_header.h"
 #include "p9_hcode_image_defines.H"
+#include "ppehw_common.h"
 
 typedef enum
 {
@@ -300,4 +301,9 @@ uint16_t p9_pgpe_gppb_vdm_threshold_from_ps(uint32_t pstate)
     PK_TRACE_DBG("ps=%d, %x", pstate, ret);
     return ret;
 
+}
+
+uint32_t p9_pgpe_gppb_freq_from_ps(Pstate ps)
+{
+    return  (G_gppb->reference_frequency_khz - ((ps) * G_gppb->frequency_step_khz)) / 1000;
 }

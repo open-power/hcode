@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -71,5 +71,8 @@ uint32_t p9_pgpe_gppb_vdm_vid_cmp_from_ps(Pstate ps);
 //
 //  retval - VDM Threshold(VDM_OVERVOLT:VDM_DROOP_SMALL:VDM_DROOP_LARGE:VDM_DROOP_XTREME]
 uint16_t p9_pgpe_gppb_vdm_threshold_from_ps(uint32_t pstate);
+
+//Get Frequency for a Pstate
+uint32_t p9_pgpe_gppb_freq_from_ps(Pstate ps);
 
 #endif //_P9_PGPE_GPPB_H_

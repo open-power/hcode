@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -49,6 +49,8 @@ uint32_t G_tb_sync_count_threshold;
 uint32_t G_tb_sync_count;
 
 uint32_t G_quad_hb_value;
+
+uint32_t G_wov_count;
 
 extern GlobalPstateParmBlock* G_gppb;
 extern PgpeHeader_t* G_pgpe_header_data;
@@ -129,7 +131,7 @@ void p9_pgpe_fit_init()
     G_throttleCount = 0;
     G_beacon_count = 0;
     G_tb_sync_count = 0;
-
+    G_wov_count = 0;
     //Set FIT handler which is called on every FIT interrupt tick
     ppe42_fit_setup(p9_pgpe_fit_handler, NULL);
 }
@@ -146,52 +148,55 @@ __attribute__((always_inline)) inline void handle_core_throttle()
     uint32_t config = in32(G_OCB_OCCS2); //bits 16-18 in OCC Scratch Register 2
     uint32_t run = (config >> 14) & 0x3; //this looks at the inject and enable bits, if either are high we run
 
-    if(run) //Currently running
+    if (!(in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
     {
-        uint32_t throttleData = G_orig_throttle;
-        uint32_t inject = run & 0x1; //Inject is bit 17, if this is high we run one throttle burst then turn off
-        uint32_t type = (config >> 13) & 0x1; //type is bit 18, this determines which kind of throttling we do
-        uint32_t mask = type ? CORE_SLOWDOWN : CORE_IFU_THROTTLE;
-        uint32_t pgpe_throttle_assert   = G_pgpe_header_data->g_pgpe_core_throttle_assert_cnt;
-        uint32_t pgpe_throttle_deassert = G_pgpe_header_data->g_pgpe_core_throttle_deassert_cnt;
-
-        //if currently off, we don't desire always off, this is the first evaluation since become enabled, we are in always on,
-        //or we (re enabled and have reached the count, then we turn throttling on (if both assert and deassert are 0 this statement fails)
-        if(!G_throttleOn && pgpe_throttle_assert != 0 &&
-           (G_throttleCount == 0 || pgpe_throttle_deassert == 0 || pgpe_throttle_deassert == G_throttleCount))
+        if(run) //Currently running
         {
-            G_throttleOn = 1;
-            G_throttleCount = 0;
-            throttleData |= mask; //data for start throttle
+            uint32_t throttleData = G_orig_throttle;
+            uint32_t inject = run & 0x1; //Inject is bit 17, if this is high we run one throttle burst then turn off
+            uint32_t type = (config >> 13) & 0x1; //type is bit 18, this determines which kind of throttling we do
+            uint32_t mask = type ? CORE_SLOWDOWN : CORE_IFU_THROTTLE;
+            uint32_t pgpe_throttle_assert   = G_pgpe_header_data->g_pgpe_core_throttle_assert_cnt;
+            uint32_t pgpe_throttle_deassert = G_pgpe_header_data->g_pgpe_core_throttle_deassert_cnt;
 
-        }
-        //if currently on and we desire always off or we don't desire always on and have reached the count,
-        //then we turn it off (if both assert and deassert are 0 this statement true)
-        else if(G_throttleOn &&
-                (pgpe_throttle_assert == 0 || ( pgpe_throttle_deassert != 0 && pgpe_throttle_assert == G_throttleCount)))
-        {
-            G_throttleOn = 0;
-            G_throttleCount = 0;
-            throttleData &= ~mask; //data for stop throttle
-
-            if(inject == 1)
+            //if currently off, we don't desire always off, this is the first evaluation since become enabled, we are in always on,
+            //or we (re enabled and have reached the count, then we turn throttling on (if both assert and deassert are 0 this statement fails)
+            if(!G_throttleOn && pgpe_throttle_assert != 0 &&
+               (G_throttleCount == 0 || pgpe_throttle_deassert == 0 || pgpe_throttle_deassert == G_throttleCount))
             {
-                out32(G_OCB_OCCS2, (config & 0xFFFFBFFF)); //write out to indicate inject has finished
+                G_throttleOn = 1;
+                G_throttleCount = 0;
+                throttleData |= mask; //data for start throttle
+
             }
-        }
+            //if currently on and we desire always off or we don't desire always on and have reached the count,
+            //then we turn it off (if both assert and deassert are 0 this statement true)
+            else if(G_throttleOn &&
+                    (pgpe_throttle_assert == 0 || ( pgpe_throttle_deassert != 0 && pgpe_throttle_assert == G_throttleCount)))
+            {
+                G_throttleOn = 0;
+                G_throttleCount = 0;
+                throttleData &= ~mask; //data for stop throttle
 
-        if(G_throttleCount == 0)
+                if(inject == 1)
+                {
+                    out32(G_OCB_OCCS2, (config & 0xFFFFBFFF)); //write out to indicate inject has finished
+                }
+            }
+
+            if(G_throttleCount == 0)
+            {
+                p9_pgpe_pstate_write_core_throttle(throttleData, NO_RETRY);
+            }
+
+            G_throttleCount++; //count always incremented, it is impossible to reach a count of 0 while enabled
+        }
+        else if(G_throttleCount != 0)
         {
-            p9_pgpe_pstate_write_core_throttle(throttleData, NO_RETRY);
+            G_throttleCount = 0;
+            G_throttleOn = 0;
+            p9_pgpe_pstate_write_core_throttle(G_orig_throttle, NO_RETRY);
         }
-
-        G_throttleCount++; //count always incremented, it is impossible to reach a count of 0 while enabled
-    }
-    else if(G_throttleCount != 0)
-    {
-        G_throttleCount = 0;
-        G_throttleOn = 0;
-        p9_pgpe_pstate_write_core_throttle(G_orig_throttle, NO_RETRY);
     }
 }
 //Quads must get HB value
@@ -378,6 +383,23 @@ __attribute__((always_inline)) inline void handle_fit_timebase_sync()
     }
 }
 
+//
+// handle_undervolt
+//
+__attribute__((always_inline)) inline void handle_wov()
+{
+    if (G_pgpe_pstate_record.wov.status & WOV_UNDERVOLT_ENABLED)
+    {
+        G_wov_count++;
+
+        if (G_gppb->wov_sample_125us  == G_wov_count)
+        {
+            p9_pgpe_pstate_adjust_wov();
+            G_wov_count = 0;
+        }
+    }
+}
+
 //  p9_pgpe_fit_handler
 //
 //  This is a periodic FIT Handler which is called up at fixed period
@@ -392,4 +414,5 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
     handle_occflg_requests();
     handle_aux_task();
     handle_fit_timebase_sync();
+    handle_wov();
 }

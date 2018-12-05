@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -130,7 +130,8 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
             }
 
             //Actuate step(if needed)
-            if(p9_pgpe_pstate_at_target() == 0)
+            if ((p9_pgpe_pstate_at_target() == 0) ||
+                (p9_pgpe_pstate_at_wov_target() == 0))
             {
                 pk_irq_sub_critical_enter(&ctx);
 

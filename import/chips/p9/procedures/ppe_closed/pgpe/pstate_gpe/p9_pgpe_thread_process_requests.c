@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1210,18 +1210,32 @@ inline void p9_pgpe_process_registration()
                                   VPD_PT_SET_BIASED_SYSP);
 
             //Move voltage by voltage step-size
-            while(G_pgpe_pstate_record.eVidCurr != targetEVid)
+            while(G_pgpe_pstate_record.biasSyspExtVrmCurr != targetEVid)
             {
-                if ((targetEVid - G_pgpe_pstate_record.eVidCurr) <= G_gppb->ext_vrm_step_size_mv)
+                if ((targetEVid - G_pgpe_pstate_record.biasSyspExtVrmCurr) <= G_gppb->ext_vrm_step_size_mv)
                 {
-                    G_pgpe_pstate_record.eVidNext = targetEVid;
+                    G_pgpe_pstate_record.biasSyspExtVrmNext = targetEVid;
+                    G_pgpe_pstate_record.psNext.fields.glb = G_pgpe_pstate_record.psTarget.fields.glb;
                 }
                 else
                 {
-                    G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr + G_gppb->ext_vrm_step_size_mv;
+                    G_pgpe_pstate_record.biasSyspExtVrmNext = G_pgpe_pstate_record.biasSyspExtVrmCurr + G_gppb->ext_vrm_step_size_mv;
+                    G_pgpe_pstate_record.psNext.fields.glb = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.biasSyspExtVrmNext);
+
+                    //It's possible that the interpolation function returns Pstate higher than
+                    //target due to rounding errors, so we adjust back.
+                    if (G_pgpe_pstate_record.psNext.fields.glb > G_pgpe_pstate_record.psTarget.fields.glb)
+                    {
+                        G_pgpe_pstate_record.psNext.fields.glb = G_pgpe_pstate_record.psTarget.fields.glb;
+                    }
+
+                    //Make sure voltage written corresponds exactly to a pstate
+                    G_pgpe_pstate_record.biasSyspExtVrmNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.psNext.fields.glb,
+                            VPD_PT_SET_BIASED_SYSP);
+
                 }
 
-                p9_pgpe_pstate_updt_ext_volt(targetEVid);
+                p9_pgpe_pstate_updt_ext_volt();
             }
 
             //Set GlobalPSCurr and Next

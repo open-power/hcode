@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -65,6 +65,7 @@ GPE_BUFFER(ipcmsg_p2s_suspend_stop_t G_sgpe_suspend_stop);
 //Local Functions
 void p9_pgpe_handle_nacks(uint32_t origCoreVector, uint32_t origAckVector, uint32_t expectedAcks);
 void p9_pgpe_pstate_freq_updt();
+void p9_pgpe_pstate_wov_init();
 inline void p9_pgpe_droop_throttle() __attribute__((always_inline));
 inline void p9_pgpe_droop_unthrottle() __attribute__((always_inline));
 
@@ -138,6 +139,9 @@ void p9_pgpe_pstate_init()
     pk_semaphore_create(&(G_pgpe_pstate_record.sem_actuate), 0, 1);
     pk_semaphore_create(&(G_pgpe_pstate_record.sem_sgpe_wait), 0, 1);
     pk_semaphore_create(&(G_pgpe_pstate_record.sem_process_req), 0, 1);
+
+    //WOV init
+    p9_pgpe_pstate_wov_init();
 }
 
 //
@@ -367,7 +371,6 @@ void p9_pgpe_pstate_calc_wof()
     {
         G_pgpe_pstate_record.vratio = (G_pgpe_pstate_record.numActiveCores * MAX_VRATIO) / (G_pgpe_pstate_record.numSortCores);
 
-
         // Note we separate out numActiveCores = 0 case. Otherwise, subtracting 1 will
         // result in invalid vindex
         if (G_pgpe_pstate_record.numActiveCores != 0)
@@ -411,7 +414,7 @@ void p9_pgpe_pstate_update_wof_state()
     PK_TRACE_DBG("WFU: Updt WOF Shr Sram");
     pgpe_wof_state_t* wof_state = (pgpe_wof_state_t*)G_pgpe_header_data->g_pgpe_wof_state_address;
     wof_state->fields.fclip_ps = G_pgpe_pstate_record.wofClip;
-    wof_state->fields.vclip_mv = G_pgpe_pstate_record.eVidCurr;
+    wof_state->fields.vclip_mv = G_pgpe_pstate_record.extVrmCurr;
     wof_state->fields.fratio = G_pgpe_pstate_record.fratio;
     wof_state->fields.vratio = G_pgpe_pstate_record.vratio;
     PK_TRACE_INF("WFU: FClip_PS=0x%x, vindex=0x%x, vratio=0x%x", G_pgpe_pstate_record.wofClip, G_pgpe_pstate_record.vindex,
@@ -674,20 +677,8 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
     p.waitForAcks = PGPE_DB_ACK_WAIT_CME;
     p.checkNACKs = PGPE_DB3_SKIP_CHECK_NACKS;
 
-    //a. If OCC Scratch2 Core Throttle Continuous Change Enable bit is set (i.e. during Manufacturing test), halt the PGPE with a unique error code.
-    //Engineering Note: characterization team is responsible to set CSAR bit "Disable CME NACK on Prolonged Droop" when doing PGPE throttle scom injection.
-    if(in32(G_OCB_OCCS2) & BIT32(CORE_THROTTLE_CONTINUOUS_CHANGE_ENABLE))
-    {
-        PGPE_TRACE_AND_PANIC(PGPE_DROOP_AND_CORE_THROTTLE_ENABLED);
-    }
-
-    //b) If  OCC flag PGPE Prolonged Droop Workaround Active bit is not set,
-    //    call droop_throttle()
-
-    if (!(in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
-    {
-        p9_pgpe_droop_throttle();
-    }
+    G_pgpe_pstate_record.wov.target_pct = 0;
+    p9_pgpe_pstate_updt_ext_volt();
 
     //c) Send DB3 (Replay Previous DB0 Operation) to only the CME Quad Managers, and
     //their Sibling CME (if present), that responded with a NACK.
@@ -713,6 +704,14 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
         //If a NACK received was in response to the first retry (i.e. second failed attempt):
         if (G_pgpe_pstate_record.cntNACKs == 2)
         {
+
+            //b) If  OCC flag PGPE Prolonged Droop Workaround Active bit is not set,
+            //    call droop_throttle()
+            if (!(in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
+            {
+                p9_pgpe_droop_throttle();
+            }
+
             // 1 SCOM Write to OCC FIR[prolonged_droop_detected] bit.   This FIR bit is set to recoverable so that it will create an informational error log.
             GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(OCCLFIR_PROLONGED_DROOP_DETECTED));
 
@@ -811,21 +810,26 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     }
 
     //3. Move system to SyncPState
-    external_voltage_control_init(&G_pgpe_pstate_record.eVidCurr);
-    G_pgpe_pstate_record.eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(syncPstate, VPD_PT_SET_BIASED_SYSP);
-    PK_TRACE_INF("PST: SyncPstate=0x%x eVid(Boot)=%umV,eVid(SyncPstate)=%umV", syncPstate, G_pgpe_pstate_record.eVidCurr,
-                 G_pgpe_pstate_record.eVidNext);
+    external_voltage_control_init(&G_pgpe_pstate_record.extVrmCurr);
+    G_pgpe_pstate_record.biasSyspExtVrmCurr = G_pgpe_pstate_record.extVrmCurr;
+    G_pgpe_pstate_record.biasSyspExtVrmNext = p9_pgpe_gppb_intp_vdd_from_ps(syncPstate, VPD_PT_SET_BIASED_SYSP);
+    PK_TRACE_INF("PST: SyncPstate=0x%x eVid(Boot)=%umV,eVid(SyncPstate)=%umV", syncPstate,
+                 G_pgpe_pstate_record.biasSyspExtVrmCurr,
+                 G_pgpe_pstate_record.biasSyspExtVrmNext);
     dpllFreq.value = 0;
     dpllFreq.fields.fmax  = G_gppb->dpll_pstate0_value - syncPstate;
     dpllFreq.fields.fmult = dpllFreq.fields.fmax;
     dpllFreq.fields.fmin  = dpllFreq.fields.fmax;
 
+    G_pgpe_pstate_record.psNext.fields.glb = syncPstate;
+    p9_pgpe_pstate_reset_wov();
+
     //Move voltage only if raising it. Otherwise, we lower it later after
     //sending Pstate Start DB0. This is to make sure VDMs are not affected in
     //this window
-    if(G_pgpe_pstate_record.eVidCurr < G_pgpe_pstate_record.eVidNext)
+    if(G_pgpe_pstate_record.biasSyspExtVrmCurr < G_pgpe_pstate_record.biasSyspExtVrmNext)
     {
-        p9_pgpe_pstate_updt_ext_volt(G_pgpe_pstate_record.eVidNext); //update voltage
+        p9_pgpe_pstate_updt_ext_volt(); //update voltage
     }
 
     for (q = 0; q < MAX_QUADS; q++)
@@ -857,6 +861,7 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
 
     p9_pgpe_pstate_do_auction();
     p9_pgpe_pstate_apply_clips();
+    G_pgpe_pstate_record.psNext.value  = G_pgpe_pstate_record.psTarget.value;
 
     //5. Set up CME_SCRATCH0[Local_Pstate_Index]
     for (q = 0; q < MAX_QUADS; q++)
@@ -949,9 +954,9 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     out32(G_OCB_OCCFLG_CLR, BIT32(PGPE_PM_RESET_SUPPRESS));
 
     //Lower voltage if boot voltage > syncPstate voltage
-    if (G_pgpe_pstate_record.eVidCurr > G_pgpe_pstate_record.eVidNext)
+    if (G_pgpe_pstate_record.biasSyspExtVrmCurr > G_pgpe_pstate_record.biasSyspExtVrmNext)
     {
-        p9_pgpe_pstate_updt_ext_volt(G_pgpe_pstate_record.eVidNext); //update voltage
+        p9_pgpe_pstate_updt_ext_volt(); //update voltage
     }
 
     G_pgpe_pstate_record.psCurr.value  = G_pgpe_pstate_record.psTarget.value;
@@ -965,6 +970,13 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     occScr2 |= BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE);
     PK_TRACE_DBG("PST: PGPE_PSTATE_PROTOCOL_ACTIVE set");
     out32(G_OCB_OCCS2, occScr2);
+
+    //7. Enable Undervolt if needed
+    if (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_WOV_UNDERVOLT_ENABLE)
+    {
+        G_pgpe_pstate_record.wov.status = WOV_UNDERVOLT_ENABLED;
+        PK_TRACE_INF("PST: Undervolting Enabled");
+    }
 
     PK_TRACE_DBG("PST: Start Done");
 }
@@ -1400,7 +1412,7 @@ void p9_pgpe_pstate_process_quad_exit_notify(uint32_t quadsRequested)
                     GPE_GETSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
                 }
 
-                vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
+                vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.biasSyspExtVrmCurr - 512) >> 2;
                 GPE_PUTSCOM(GPE_SCOM_ADDR_QUAD(QPPM_VDMCFGR, q), vdmcfg.value);
             }
         }
@@ -1825,6 +1837,18 @@ int32_t p9_pgpe_pstate_at_target()
     }
 }
 
+int32_t p9_pgpe_pstate_at_wov_target()
+{
+    if (G_pgpe_pstate_record.wov.curr_pct ^ G_pgpe_pstate_record.wov.target_pct)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
 //
 //  p9_pgpe_pstate_do_step
 //
@@ -1836,34 +1860,35 @@ void p9_pgpe_pstate_do_step()
 
     //Do one actuate step
     PK_TRACE_DBG("STEP: Entry");
-    PK_TRACE_DBG("STEP: GTgt,GCurr 0x%x, 0x%x", G_pgpe_pstate_record.psTarget.fields.glb,
+    PK_TRACE_INF("STEP: GTgt,GCurr 0x%x, 0x%x", G_pgpe_pstate_record.psTarget.fields.glb,
                  G_pgpe_pstate_record.psCurr.fields.glb);
-    PK_TRACE_DBG("STEP: QTgt,QCurr 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.psTarget.fields.quads[0],
+    PK_TRACE_INF("STEP: QTgt,QCurr 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.psTarget.fields.quads[0],
                  G_pgpe_pstate_record.psCurr.fields.quads[0], G_pgpe_pstate_record.psTarget.fields.quads[1],
                  G_pgpe_pstate_record.psCurr.fields.quads[1]);
-    PK_TRACE_DBG("STEP:QTgt,QCurr 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.psTarget.fields.quads[2],
+    PK_TRACE_INF("STEP:QTgt,QCurr 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.psTarget.fields.quads[2],
                  G_pgpe_pstate_record.psCurr.fields.quads[2], G_pgpe_pstate_record.psTarget.fields.quads[3],
                  G_pgpe_pstate_record.psCurr.fields.quads[3]);
-    PK_TRACE_DBG("STEP:QTgt,QCurr 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.psTarget.fields.quads[4],
+    PK_TRACE_INF("STEP:QTgt,QCurr 0x%x,0x%x 0x%x,0x%x", G_pgpe_pstate_record.psTarget.fields.quads[4],
                  G_pgpe_pstate_record.psCurr.fields.quads[4], G_pgpe_pstate_record.psTarget.fields.quads[5],
                  G_pgpe_pstate_record.psCurr.fields.quads[5]);
 
     uint32_t q;
     uint32_t targetEVid = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.psTarget.fields.glb, VPD_PT_SET_BIASED_SYSP);
-    PK_TRACE_DBG("STEP: eVidCurr=0x%x, eVidNext=0x%x, targetEVid=0x%x", G_pgpe_pstate_record.eVidCurr,
-                 G_pgpe_pstate_record.eVidNext, targetEVid);
+    PK_TRACE_INF("STEP: biasSyspExtVrmCurr=0x%x, biasSyspExtVrmNext=0x%x, targetEVid=0x%x",
+                 G_pgpe_pstate_record.biasSyspExtVrmCurr,
+                 G_pgpe_pstate_record.biasSyspExtVrmNext, targetEVid);
 
 
     //Higher number PState
     if (((int16_t)(G_pgpe_pstate_record.psTarget.fields.glb) - (int16_t)(G_pgpe_pstate_record.psCurr.fields.glb)) > 0)
     {
 
-        if ((G_pgpe_pstate_record.eVidCurr - targetEVid ) <= G_gppb->ext_vrm_step_size_mv)
+        if ((G_pgpe_pstate_record.biasSyspExtVrmCurr - targetEVid ) <= G_gppb->ext_vrm_step_size_mv)
         {
-            G_pgpe_pstate_record.eVidNext = targetEVid;
+            G_pgpe_pstate_record.biasSyspExtVrmNext = targetEVid;
             G_pgpe_pstate_record.psNext.fields.glb = G_pgpe_pstate_record.psTarget.fields.glb;
 
-            PK_TRACE_DBG("STEP: <= step_size");
+            PK_TRACE_INF("STEP: <= step_size");
 
             for (q = 0; q < MAX_QUADS; q++)
             {
@@ -1875,8 +1900,8 @@ void p9_pgpe_pstate_do_step()
         }
         else
         {
-            G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr - G_gppb->ext_vrm_step_size_mv;
-            G_pgpe_pstate_record.psNext.fields.glb = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
+            G_pgpe_pstate_record.biasSyspExtVrmNext = G_pgpe_pstate_record.biasSyspExtVrmCurr - G_gppb->ext_vrm_step_size_mv;
+            G_pgpe_pstate_record.psNext.fields.glb = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.biasSyspExtVrmNext);
 
             //It's possible that the interpolation function returns Pstate higher than
             //target due to rounding errors, so we adjust back.
@@ -1886,8 +1911,8 @@ void p9_pgpe_pstate_do_step()
             }
 
             //Make sure voltage written corresponds exactly to a pstate
-            G_pgpe_pstate_record.eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.psNext.fields.glb,
-                                            VPD_PT_SET_BIASED_SYSP);
+            G_pgpe_pstate_record.biasSyspExtVrmNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.psNext.fields.glb,
+                    VPD_PT_SET_BIASED_SYSP);
 
             for (q = 0; q < MAX_QUADS; q++)
             {
@@ -1899,19 +1924,19 @@ void p9_pgpe_pstate_do_step()
 
         }
 
-        PK_TRACE_DBG("STEP: eVidNext=0x%x, glbPSNext=0x%x", G_pgpe_pstate_record.eVidCurr,
+        PK_TRACE_INF("STEP: biasSyspExtVrmNext=0x%x, glbPSNext=0x%x", G_pgpe_pstate_record.biasSyspExtVrmCurr,
                      G_pgpe_pstate_record.psNext.fields.glb);
-        p9_pgpe_pstate_freq_updt();
-        p9_pgpe_pstate_updt_ext_volt(targetEVid);
+        p9_pgpe_pstate_freq_updt(PGPE_FREQ_DIRECTION_DOWN);
+        p9_pgpe_pstate_updt_ext_volt();
     }
     //Lower number PState
     else if (((int16_t)(G_pgpe_pstate_record.psTarget.fields.glb) - (int16_t)(G_pgpe_pstate_record.psCurr.fields.glb)) < 0)
     {
 
-        if ((targetEVid - G_pgpe_pstate_record.eVidCurr) <= G_gppb->ext_vrm_step_size_mv)
+        if ((targetEVid - G_pgpe_pstate_record.biasSyspExtVrmCurr) <= G_gppb->ext_vrm_step_size_mv)
         {
-            PK_TRACE_DBG("STEP: <= step_size");
-            G_pgpe_pstate_record.eVidNext = targetEVid;
+            PK_TRACE_INF("STEP: <= step_size");
+            G_pgpe_pstate_record.biasSyspExtVrmNext = targetEVid;
             G_pgpe_pstate_record.psNext.fields.glb = G_pgpe_pstate_record.psTarget.fields.glb;
 
             for (q = 0; q < MAX_QUADS; q++)
@@ -1924,9 +1949,9 @@ void p9_pgpe_pstate_do_step()
         }
         else
         {
-            PK_TRACE_DBG("STEP: > step_size");
-            G_pgpe_pstate_record.eVidNext = G_pgpe_pstate_record.eVidCurr + G_gppb->ext_vrm_step_size_mv;
-            G_pgpe_pstate_record.psNext.fields.glb = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.eVidNext);
+            PK_TRACE_INF("STEP: > step_size");
+            G_pgpe_pstate_record.biasSyspExtVrmNext = G_pgpe_pstate_record.biasSyspExtVrmCurr + G_gppb->ext_vrm_step_size_mv;
+            G_pgpe_pstate_record.psNext.fields.glb = p9_pgpe_gppb_intp_ps_from_ext_vdd(G_pgpe_pstate_record.biasSyspExtVrmNext);
 
             //It's possible that the interpolation function returns Pstate lower than
             //target due to rounding errors, so we adjust back.
@@ -1936,8 +1961,8 @@ void p9_pgpe_pstate_do_step()
             }
 
             //Make sure voltage written corresponds exactly to a pstate
-            G_pgpe_pstate_record.eVidNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.psNext.fields.glb,
-                                            VPD_PT_SET_BIASED_SYSP);
+            G_pgpe_pstate_record.biasSyspExtVrmNext = p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.psNext.fields.glb,
+                    VPD_PT_SET_BIASED_SYSP);
 
             for (q = 0; q < MAX_QUADS; q++)
             {
@@ -1956,22 +1981,33 @@ void p9_pgpe_pstate_do_step()
             }
         }
 
-        PK_TRACE_DBG("STEP: eVidNext=0x%x, glbPSNext=0x%x", G_pgpe_pstate_record.eVidCurr,
+        PK_TRACE_INF("STEP: biasSyspExtVrmNext=0x%x, glbPSNext=0x%x", G_pgpe_pstate_record.biasSyspExtVrmCurr,
                      G_pgpe_pstate_record.psNext.fields.glb);
-        p9_pgpe_pstate_updt_ext_volt(targetEVid);
-        p9_pgpe_pstate_freq_updt();
+        p9_pgpe_pstate_updt_ext_volt();
+        p9_pgpe_pstate_freq_updt(PGPE_FREQ_DIRECTION_UP);
     }
     else
     {
-        for (q = 0; q < MAX_QUADS; q++)
+        //Local Pstate change
+        if (p9_pgpe_pstate_at_target() == 0)
         {
-            if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+            for (q = 0; q < MAX_QUADS; q++)
             {
-                G_pgpe_pstate_record.psNext.fields.quads[q] = G_pgpe_pstate_record.psTarget.fields.quads[q];
+                if(G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+                {
+                    G_pgpe_pstate_record.psNext.fields.quads[q] = G_pgpe_pstate_record.psTarget.fields.quads[q];
+                }
             }
+
+            //Only local pstate change
+            p9_pgpe_pstate_freq_updt(PGPE_FREQ_DIRECTION_NO_CHANGE);
         }
 
-        p9_pgpe_pstate_freq_updt();
+        if (p9_pgpe_pstate_at_wov_target() == 0)
+        {
+            PK_TRACE_INF("WOV updt ext_volt");
+            p9_pgpe_pstate_updt_ext_volt();
+        }
     }
 
     //Update current
@@ -1987,7 +2023,7 @@ void p9_pgpe_pstate_do_step()
                                   (G_pgpe_pstate_record.psCurr.fields.quads[5]
                                    << 16) |
                                   G_pgpe_pstate_record.psCurr.fields.glb << 8 | G_pgpe_pstate_record.psTarget.fields.glb;
-    G_pgpe_optrace_data.word[2] = (G_pgpe_pstate_record.eVidCurr << 16) | G_pgpe_pstate_record.eVidCurr;
+    G_pgpe_optrace_data.word[2] = (G_pgpe_pstate_record.biasSyspExtVrmCurr << 16) | G_pgpe_pstate_record.biasSyspExtVrmCurr;
     p9_pgpe_optrace(ACTUATE_STEP_DONE);
     PK_TRACE_DBG("STEP: Exit");
 }
@@ -1997,32 +2033,41 @@ void p9_pgpe_pstate_do_step()
 //
 //  Update External VRM to G_eVidNext
 //
-void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
+void p9_pgpe_pstate_updt_ext_volt()
 {
     qppm_vdmcfgr_t vdmcfg;
     uint32_t cmeInterppmVdataEnableSet, q;
     qppm_qpmmr_t qpmmr;
 
+    G_pgpe_pstate_record.wov.target_mv =
+        (G_pgpe_pstate_record.biasSyspExtVrmNext * G_pgpe_pstate_record.wov.target_pct) / 1000;
+    G_pgpe_pstate_record.extVrmNext = G_pgpe_pstate_record.biasSyspExtVrmNext - G_pgpe_pstate_record.wov.target_mv;
+
+    if (G_gppb->wov_underv_vmin_mv  > G_pgpe_pstate_record.extVrmNext)
+    {
+        G_pgpe_pstate_record.extVrmNext = G_gppb->wov_underv_vmin_mv;
+    }
+
 #if !EPM_P9_TUNING
     uint32_t delay_us = 0;
 
     //Decreasing
-    if (G_pgpe_pstate_record.eVidNext < G_pgpe_pstate_record.eVidCurr)
+    if (G_pgpe_pstate_record.extVrmNext < G_pgpe_pstate_record.extVrmCurr)
     {
-        delay_us = (G_pgpe_pstate_record.eVidCurr - G_pgpe_pstate_record.eVidNext) *
+        delay_us = (G_pgpe_pstate_record.extVrmCurr - G_pgpe_pstate_record.extVrmNext) *
                    G_ext_vrm_dec_rate_mult_usperus;
     }
     //Increasing
-    else if(G_pgpe_pstate_record.eVidNext > G_pgpe_pstate_record.eVidCurr)
+    else if (G_pgpe_pstate_record.extVrmNext > G_pgpe_pstate_record.extVrmCurr)
     {
-        delay_us  = (G_pgpe_pstate_record.eVidNext - G_pgpe_pstate_record.eVidCurr) *
+        delay_us  = (G_pgpe_pstate_record.extVrmNext - G_pgpe_pstate_record.extVrmCurr) *
                     G_ext_vrm_inc_rate_mult_usperus;
     }
 
 #endif
 
     //Update external voltage
-    external_voltage_control_write(G_pgpe_pstate_record.eVidNext);
+    external_voltage_control_write(G_pgpe_pstate_record.extVrmNext);
 
 #if !EPM_P9_TUNING
 
@@ -2032,20 +2077,34 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
         pk_sleep(PK_MICROSECONDS((delay_us)));
     }
 
-    if(G_pgpe_pstate_record.eVidNext == tgtEVid)
+    if(G_pgpe_pstate_record.biasSyspExtVrmNext == p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.psNext.fields.glb,
+            VPD_PT_SET_BIASED_SYSP))
     {
         pk_sleep(PK_MICROSECONDS((G_gppb->ext_vrm_stabilization_time_us)));
     }
 
 #endif
 
-    G_pgpe_pstate_record.eVidCurr = G_pgpe_pstate_record.eVidNext;
+    G_pgpe_pstate_record.biasSyspExtVrmCurr = G_pgpe_pstate_record.biasSyspExtVrmNext;
+    G_pgpe_pstate_record.extVrmCurr = G_pgpe_pstate_record.extVrmNext;
+    G_pgpe_pstate_record.wov.curr_mv =  G_pgpe_pstate_record.wov.target_mv;
+    G_pgpe_pstate_record.wov.curr_pct =  G_pgpe_pstate_record.wov.target_pct;
+
+    if (G_pgpe_pstate_record.wov.min_volt > G_pgpe_pstate_record.wov.curr_mv)
+    {
+        G_pgpe_pstate_record.wov.min_volt = G_pgpe_pstate_record.wov.curr_mv;
+    }
+
+    if (G_pgpe_pstate_record.wov.max_volt < G_pgpe_pstate_record.wov.curr_mv)
+    {
+        G_pgpe_pstate_record.wov.max_volt = G_pgpe_pstate_record.wov.curr_mv;
+    }
 
     //If VDM is disabled, update VDMCFG register for every quad
     if (!(G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_VDM_ENABLE))
     {
         vdmcfg.value = 0;
-        vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.eVidCurr - 512) >> 2;
+        vdmcfg.fields.vdm_vid_compare = (G_pgpe_pstate_record.biasSyspExtVrmCurr - 512) >> 2;
 
         for (q = 0; q < MAX_QUADS; q++)
         {
@@ -2074,11 +2133,13 @@ void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid)
 //
 //  Frequency Update
 //
-//  Sends a DB0 to all active CMEs, so that Quad Managers(CMEs) update DPLL
-void p9_pgpe_pstate_freq_updt()
+//Sends a DB0 to all active CMEs, so that Quad Managers(CMEs) update DPLL
+void p9_pgpe_pstate_freq_updt(uint32_t freq_change_dir)
 {
     PK_TRACE_DBG("FREQ: Enter");
 
+    G_pgpe_pstate_record.wov.frequency_change_direction =  freq_change_dir;
+    p9_pgpe_pstate_adjust_wov();
 
     pgpe_db0_glb_bcast_t db0;
     db0.value = G_pgpe_pstate_record.psNext.value;
@@ -2134,6 +2195,8 @@ void p9_pgpe_pstate_freq_updt()
 
     p9_pgpe_optrace(ACK_ACTL_DONE);
 
+    G_pgpe_pstate_record.wov.frequency_change_direction = PGPE_FREQ_DIRECTION_NO_CHANGE;
+
     PK_TRACE_DBG("FREQ: Exit");
 }
 
@@ -2148,6 +2211,7 @@ void p9_pgpe_pstate_write_core_throttle(uint32_t throttleData, uint32_t enable_r
     uint32_t pc_fail;
     uint32_t value = mfmsr();
     mtmsr(value | MSR_THROTTLE_MASK); //don't cause halt if all cores offline or address error (PC Timeout)
+
 
     do
     {
@@ -2175,7 +2239,7 @@ void p9_pgpe_pstate_write_core_throttle(uint32_t throttleData, uint32_t enable_r
 //
 inline void p9_pgpe_droop_throttle()
 {
-
+    PkMachineContext ctx __attribute__((unused));
     uint32_t q;
     ocb_qcsr_t qcsr;
     qcsr.value = in32(G_OCB_QCSR);
@@ -2230,11 +2294,13 @@ inline void p9_pgpe_droop_throttle()
         }
     }
 
-    //2.  Call the core_instruction_throttle() procedure to enable throttle (same as used by FIT).
-    p9_pgpe_pstate_write_core_throttle(CORE_IFU_THROTTLE, RETRY);
 
     //3.  Set the OCC flag PGPE Prolonged Droop Workaround Active bit.
     out32(G_OCB_OCCFLG_OR, BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE));
+
+    //2.  Call the core_instruction_throttle() procedure to enable throttle (same as used by FIT).
+    p9_pgpe_pstate_write_core_throttle(CORE_IFU_THROTTLE, RETRY);
+
 
     //4.  Clear the Prolonged Droop Global variables (Bit vector and retry counts).
     G_pgpe_pstate_record.cntNACKs = 0;
@@ -2295,4 +2361,197 @@ inline void p9_pgpe_droop_unthrottle()
     p9_pgpe_optrace(PROLONGED_DROOP_RESOLVED);
 
     PK_TRACE_INF("DTH: Droop Unthrottle Done");
+}
+
+
+//
+// p9_pgpe_pstate_wov_init
+//
+void p9_pgpe_pstate_wov_init()
+{
+    //G_pgpe_pstate_record.wov.freq_loss_threshold_tenths = UNDERVOLT_LOSS_THRESHOLD_TENTHS;
+    G_pgpe_pstate_record.wov.avg_freq_gt_target_freq = 0;
+    G_pgpe_pstate_record.wov.freq_loss_tenths_gt_max_droop_tenths = 0;
+    G_pgpe_pstate_record.wov.status = WOV_DISABLED;
+    G_pgpe_pstate_record.wov.info = 0xdeadbeef;
+}
+
+//
+//p9_pgpe_pstate_adjust_wov
+//
+void p9_pgpe_pstate_adjust_wov()
+{
+    uint32_t max_freq_loss_percent_tenths = 0;
+    uint32_t sample_valid = 0;
+    uint32_t q = 0;
+    uint32_t freq_loss = 0;
+    uint64_t qfmr;
+    uint32_t delta_tb, delta_cycles, new_tb, new_cycles;
+
+    PK_TRACE_INF("WOV: Adjust");
+
+    ocb_qcsr_t qcsr;
+    qcsr.value = in32(G_OCB_QCSR);
+
+    //Determine performance loss
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        //If quad not in STOP11. Active quads only has quads that are NOT in STOP11, and
+        //have been registered with PGPE. Therefore we OR in the requested_active_quads which
+        //include quads that are up, but not yet registered with PGPE
+        if (G_pgpe_pstate_record.activeQuads  &  QUAD_MASK(q))
+        {
+            //Sample Frequency
+            //Read from EX0(if configured). Otherwise, read from EX1
+            if (qcsr.fields.ex_config & QUAD_EX0_MASK(q))
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_QFMR, q, 0), qfmr);
+            }
+            else
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_QFMR, q, 1), qfmr);
+            }
+
+            new_tb = qfmr >> 32;
+            new_cycles = qfmr & (0xFFFFFFFF);
+
+            PK_TRACE_INF("WOV: QFMR[%d]=0x%08x %08x ", q, qfmr >> 32, qfmr);
+
+            //If freq_change_in_progress
+            if (G_pgpe_pstate_record.wov.frequency_change_direction != PGPE_FREQ_DIRECTION_NO_CHANGE)
+            {
+                G_pgpe_pstate_record.wov.freq_changed[q] = G_pgpe_pstate_record.wov.frequency_change_direction;
+            }
+            else
+            {
+                sample_valid = 1;
+                G_pgpe_pstate_record.wov.target_freq[q] = p9_pgpe_gppb_freq_from_ps(G_pgpe_pstate_record.psCurr.fields.quads[q]);
+
+                //Calculate delta timebase while accounting for rollover
+                delta_tb = new_tb - G_pgpe_pstate_record.wov.last_qfmr_tb[q];
+
+                if (delta_tb & 0x80000000)
+                {
+                    delta_tb += 0xFFFFFFFF;
+                }
+
+                //Calculate delta cyles while accounting for rollover
+                delta_cycles = new_cycles - G_pgpe_pstate_record.wov.last_qfmr_cycles[q];
+
+                if (delta_cycles & 0x80000000)
+                {
+                    delta_cycles += 0xFFFFFFFF;
+                }
+
+                G_pgpe_pstate_record.wov.avg_freq[q] = (delta_cycles * (G_gppb->nest_frequency_mhz >> 3)) /
+                                                       delta_tb;
+
+
+                if (G_pgpe_pstate_record.wov.avg_freq[q] >
+                    G_pgpe_pstate_record.wov.target_freq[q])   // ensure that the calculation doesn't result in negative loss
+                {
+                    //\todo Understand why is happening on pstate change and Add this back
+                    PK_TRACE_INF("WOV: WARNING Avg Freq sampled greater than target freq for quad[%d], avg=0x%x,tgt=0x%x", q,
+                                 G_pgpe_pstate_record.wov.avg_freq[q],
+                                 G_pgpe_pstate_record.wov.target_freq[q]);
+                    G_pgpe_pstate_record.wov.avg_freq_gt_target_freq = 1;
+                    // PGPE_TRACE_AND_PANIC(PGPE_UVOLT_AVG_FREQ_GREATER_THAN_TARGET);//should not happen since we interlock with Pstate change
+                }
+                else
+                {
+                    freq_loss = G_pgpe_pstate_record.wov.target_freq[q] - G_pgpe_pstate_record.wov.avg_freq[q];
+                }
+
+                G_pgpe_pstate_record.wov.freq_loss_percent_tenths[q] = (freq_loss * 1000) / G_pgpe_pstate_record.wov.target_freq[q];
+
+                PK_TRACE_INF("AUV: Quad[%d] TgtFreq=0x%x Avg_Freq=0x%x FreqLossPercentTenths=0x%x", q,
+                             G_pgpe_pstate_record.wov.target_freq[q], G_pgpe_pstate_record.wov.avg_freq[q],
+                             G_pgpe_pstate_record.wov.freq_loss_percent_tenths[q]);
+
+                if (G_pgpe_pstate_record.wov.freq_loss_percent_tenths[q] > G_gppb->wov_max_droop_pct)
+                {
+                    //\todo Understand why is happening on pstate change and Add this back
+                    PK_TRACE_INF("AUV: WARNING Freq Lost Percent Tenths greater than Max Droop Percent Tenths for quad [%d], freq_loss=0x%x",
+                                 q, G_pgpe_pstate_record.wov.freq_loss_percent_tenths[q]);
+                    G_pgpe_pstate_record.wov.freq_loss_tenths_gt_max_droop_tenths =
+                        G_pgpe_pstate_record.wov.freq_loss_percent_tenths[q];
+                    //   PGPE_TRACE_AND_PANIC(PGPE_UVOLT_FREQ_LOSS_GREATER_THAN_MAX_DROOP);  // only DPLL droop can reduce frequency if not pstate change
+                }
+
+                // remember the most freq loss seen across all quads that didnt change pstate
+                if (G_pgpe_pstate_record.wov.freq_loss_percent_tenths[q] > max_freq_loss_percent_tenths)
+                {
+                    max_freq_loss_percent_tenths = G_pgpe_pstate_record.wov.freq_loss_percent_tenths[q];
+                }
+            }
+
+            G_pgpe_pstate_record.wov.last_qfmr_tb[q] = new_tb;
+            G_pgpe_pstate_record.wov.last_qfmr_cycles[q] = new_cycles;
+        }
+    }
+
+    if (sample_valid)   // don't update wov parameters unless at least one quad has a valid sample
+    {
+        // WOV ALGORITHM BEGIN
+        if (max_freq_loss_percent_tenths < G_gppb->wov_underv_perf_loss_thresh_pct)
+        {
+            if (G_pgpe_pstate_record.wov.curr_pct < G_gppb->wov_underv_max_pct)
+            {
+                G_pgpe_pstate_record.wov.target_pct += G_gppb->wov_underv_step_incr_pct;
+            }
+            else
+            {
+                G_pgpe_pstate_record.wov.target_pct = G_gppb->wov_underv_max_pct;
+            }
+        }
+        else
+        {
+            if (G_pgpe_pstate_record.wov.target_pct > 0)
+            {
+                G_pgpe_pstate_record.wov.target_pct -= G_gppb->wov_underv_step_incr_pct;
+            }
+        }
+    }// WOV ALGORITHM END
+
+    PK_TRACE_INF("WOV: wov_curr_pct=%d, wov_tgt_pct=%d",
+                 G_pgpe_pstate_record.wov.curr_pct,
+                 G_pgpe_pstate_record.wov.target_pct);
+
+}
+
+//
+// p9_pgpe_pstate_reset_wov()
+//
+void p9_pgpe_pstate_reset_wov()
+{
+    uint64_t qfmr;
+    ocb_qcsr_t qcsr;
+    uint32_t q;
+
+    //Reset wov steps to 0
+    G_pgpe_pstate_record.wov.curr_pct = 0;
+    G_pgpe_pstate_record.wov.target_pct = 0;
+
+    //Update QFMR snapshot
+    qcsr.value = in32(G_OCB_QCSR);
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if (G_pgpe_pstate_record.activeQuads &  QUAD_MASK(q))
+        {
+            //Read from EX0(if configured). Otherwise, read from EX1
+            if (qcsr.fields.ex_config & QUAD_EX0_MASK(q))
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_QFMR, q, 0), qfmr);
+            }
+            else
+            {
+                GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_QFMR, q, 1), qfmr);
+            }
+
+            G_pgpe_pstate_record.wov.last_qfmr_tb[q] = ((qfmr >> 32) & 0xFFFFFFFF);
+            G_pgpe_pstate_record.wov.last_qfmr_cycles[q] = qfmr & 0xFFFFFFFF;
+        }
+    }
+
 }

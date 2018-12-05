@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -32,7 +32,6 @@
 #include "wof_sgpe_pgpe_api.h"
 #include "p9_pgpe_header.h"
 #include "p9_stop_recovery_trigger.h"
-
 
 enum IPC_PEND_TBL
 {
@@ -77,6 +76,13 @@ enum WOF_STATUS
     WOF_ENABLED                                 =    2 //Pstates are active
 };
 
+enum WOV_STATUS
+{
+    WOV_DISABLED                                = 0x0, //WOV Disabled
+    WOV_UNDERVOLT_ENABLED                       = 0x1, //WOV Undervolt Enabled
+    WOV_OVERVOLT_ENABLED                        = 0x2, //WOV Overvolt Enabled
+};
+
 enum SAFE_MODE_FAULT_INDEX
 {
     SAFE_MODE_FAULT_OCC     = 0,
@@ -108,7 +114,7 @@ enum PGPE_CORE_THROTTLE
     // Include core offline, address error, and timeout. The timeout is
     // included to avoid an extra mtmsr in the event we need to cleanup
     // from SW407201
-    MSR_THROTTLE_MASK               = 0x39000000,
+    MSR_THROTTLE_MASK               = 0x29000000,
     WORKAROUND_SCOM_MULTICAST_WRITE = 0x69010800,
     THROTTLE_SCOM_MULTICAST_WRITE   = 0x69010A9E,
     CORE_IFU_THROTTLE               = 0x80000000,
@@ -128,6 +134,13 @@ enum ACTIVE_CORE_UPDATE_ACTION
     ACTIVE_CORE_UPDATE_ACTION_ERROR             = 0x0,
     ACTIVE_CORE_UPDATE_ACTION_PROCESS_AND_ACK   = 0x1,
     ACTIVE_CORE_UPDATE_ACTION_ACK_ONLY          = 0x2
+};
+
+enum PGPE_FREQ_DIRECTION
+{
+    PGPE_FREQ_DIRECTION_NO_CHANGE = 0,
+    PGPE_FREQ_DIRECTION_DOWN      = -1,
+    PGPE_FREQ_DIRECTION_UP        = 1
 };
 
 //Task list entry
@@ -152,6 +165,27 @@ typedef union sys_ps
 } sys_ps_t;
 
 //
+// Struct for WOV(Workload Optimized Voltage) data
+//
+typedef struct wov
+{
+    uint32_t curr_pct, target_pct;
+    uint32_t curr_mv, target_mv;
+    uint32_t status;
+    uint32_t info;
+    uint32_t min_volt, max_volt;
+    uint32_t avg_freq_gt_target_freq;
+    uint32_t freq_loss_tenths_gt_max_droop_tenths;
+    uint32_t avg_freq[MAX_QUADS];
+    uint32_t target_freq[MAX_QUADS];
+    uint32_t freq_loss_percent_tenths[MAX_QUADS];
+    uint32_t frequency_change_direction; //Indicates frequency change direction
+    uint32_t freq_changed[MAX_QUADS];
+    uint32_t last_qfmr_tb[MAX_QUADS]; //CME_QFMR timebase field
+    uint32_t last_qfmr_cycles[MAX_QUADS]; //CME_QFMR cycles field
+} wov_t;
+
+//
 // PGPE PState
 //
 // Structure for storing internal PGPE state
@@ -170,7 +204,7 @@ typedef struct
     sys_ps_t psTarget;                      //56
     sys_ps_t psCurr;                        //64
     sys_ps_t psNext;                        //72
-    uint32_t eVidCurr, eVidNext;            //84
+    uint32_t extVrmCurr, extVrmNext;//84
     ipc_req_t ipcPendTbl[MAX_IPC_PEND_TBL_ENTRIES]; //156(9entries*8bytes)
     HomerVFRTLayout_t* pVFRT; //160
     quad_state0_t* pQuadState0; //164
@@ -191,6 +225,8 @@ typedef struct
     uint8_t severeFault[4];
     uint32_t pendingActiveQuadUpdtDone;
     uint32_t activeCoreUpdtAction;
+    uint32_t biasSyspExtVrmCurr, biasSyspExtVrmNext;
+    wov_t wov;
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
 
@@ -264,7 +300,13 @@ void p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault();
 
 //Actuation
 int32_t p9_pgpe_pstate_at_target();
+int32_t p9_pgpe_pstate_at_wov_target();
 void p9_pgpe_pstate_do_step();
-void p9_pgpe_pstate_updt_ext_volt(uint32_t tgtEVid);
+void p9_pgpe_pstate_updt_ext_volt();
 void p9_pgpe_pstate_write_core_throttle(uint32_t throttleData, uint32_t enable_retry);
+
+//Wov
+void p9_pgpe_pstate_adjust_wov();
+void p9_pgpe_pstate_reset_wov();
+
 #endif //

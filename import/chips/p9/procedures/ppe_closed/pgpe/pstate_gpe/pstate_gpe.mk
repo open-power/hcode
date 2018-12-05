@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2018
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -94,7 +94,7 @@ $(IMAGE)_COMMONFLAGS+= -DUSE_PK_APP_CFG_H=1
 $(IMAGE)_COMMONFLAGS+= -D__PPE_PLAT
 $(IMAGE)_COMMONFLAGS+= -D__PK__=1
 #$(IMAGE)_COMMONFLAGS+= -fstack-usage
-$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SZ=1024
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SZ=2048
 
 # add include paths
 $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\

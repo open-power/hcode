@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -162,7 +162,7 @@ void p9_pgpe_irq_handler_ocb_err()
         G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                       (G_pgpe_pstate_record.activeCores << 8);
         G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
-                                      (G_pgpe_pstate_record.eVidCurr << 8) |
+                                      (G_pgpe_pstate_record.extVrmCurr << 8) |
                                       PGPE_OP_TRACE_OCC_HB_FAULT;
         p9_pgpe_optrace(SEVERE_FAULT_DETECTED);
 
@@ -203,7 +203,7 @@ void p9_pgpe_irq_handler_sgpe_err()
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                   (G_pgpe_pstate_record.activeCores << 8);
     G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
-                                  (G_pgpe_pstate_record.eVidCurr << 8) |
+                                  (G_pgpe_pstate_record.extVrmCurr << 8) |
                                   PGPE_OP_TRACE_SGPE_FAULT;
     p9_pgpe_optrace(SEVERE_FAULT_DETECTED);
 
@@ -243,7 +243,7 @@ void p9_pgpe_irq_handler_pvref_err()
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                   (G_pgpe_pstate_record.activeCores << 8);
     G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
-                                  (G_pgpe_pstate_record.eVidCurr << 8) |
+                                  (G_pgpe_pstate_record.extVrmCurr << 8) |
                                   PGPE_OP_TRACE_PVREF_FAULT;
     p9_pgpe_optrace(SEVERE_FAULT_DETECTED);
 
@@ -288,7 +288,7 @@ void p9_pgpe_irq_handler_system_xstop(void* arg, PkIrqId irq)
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                   (G_pgpe_pstate_record.activeCores << 8);
     G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
-                                  (G_pgpe_pstate_record.eVidCurr << 8) |
+                                  (G_pgpe_pstate_record.extVrmCurr << 8) |
                                   PGPE_OP_TRACE_SYS_XSTOP;
     p9_pgpe_optrace(SEVERE_FAULT_DETECTED);
 
@@ -454,7 +454,7 @@ void p9_pgpe_irq_handler_cme_err()
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
                                   (G_pgpe_pstate_record.activeCores << 8);
     G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
-                                  (G_pgpe_pstate_record.eVidCurr << 8) |
+                                  (G_pgpe_pstate_record.extVrmCurr << 8) |
                                   PGPE_OP_TRACE_CME_FAULT;
     p9_pgpe_optrace(SEVERE_FAULT_DETECTED);
 
