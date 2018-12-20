@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -42,6 +42,7 @@ p9_cme_stop_init()
     uint32_t   exit_first  = 0;
     uint32_t   cme_flags   = 0;
     uint32_t   core_mask   = 0;
+    uint32_t   bce_cpy_len = 0;
 
     //--------------------------------------------------------------------------
     // Parse CME Flags and Initialize Core States
@@ -104,11 +105,20 @@ p9_cme_stop_init()
 
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
 
+    if( pCmeImgHdr->g_cme_qm_mode_flags & CME_QM_FLAG_PER_QUAD_VDM_ENABLE )
+    {
+        bce_cpy_len     =   pCmeImgHdr->g_cme_custom_length;
+    }
+    else
+    {
+        bce_cpy_len     =   pCmeImgHdr->g_cme_max_spec_ring_length;
+    }
+
     //right now a blocking call. Need to confirm this.
-    start_cme_block_copy(CME_BCEBAR_1,
-                         (CME_IMAGE_CPMR_OFFSET + (pCmeImgHdr->g_cme_core_spec_ring_offset << 5)),
-                         pCmeImgHdr->g_cme_core_spec_ring_offset,
-                         pCmeImgHdr->g_cme_max_spec_ring_length);
+    start_cme_block_copy( CME_BCEBAR_1,
+                          (CME_IMAGE_CPMR_OFFSET + (pCmeImgHdr->g_cme_core_spec_ring_offset << 5)),
+                          pCmeImgHdr->g_cme_core_spec_ring_offset,
+                          bce_cpy_len );
 
     PK_TRACE_DBG("Setup: BCE Check for Copy Completed");
 

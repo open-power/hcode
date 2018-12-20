@@ -386,9 +386,18 @@ void p9_cme_pstate_init()
     uint64_t eimr_clr = 0;
     uint64_t eimr_or = 0;
     uint32_t resclk_data;
+    uint32_t pstate_offset  = 0;
 
-    G_cmeHeader = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
-    G_lppb = (LocalPstateParmBlock*)(G_cmeHeader->g_cme_pstate_region_offset + CME_SRAM_BASE_ADDR);
+    G_cmeHeader     =   (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
+    pstate_offset   =   G_cmeHeader->g_cme_pstate_region_offset;
+
+    if( G_cmeHeader->g_cme_qm_mode_flags & CME_QM_FLAG_PER_QUAD_VDM_ENABLE )
+    {
+        pstate_offset   =   G_cmeHeader->g_cme_pstate_offset << 5;
+    }
+
+    G_lppb = (LocalPstateParmBlock*)(pstate_offset + CME_SRAM_BASE_ADDR);
+
     PK_TRACE_INF("PSTATE: Hdr=0x%x, LPPB=0x%x, Nominal_Freq_Mhz=%d ", (uint32_t)G_cmeHeader, (uint32_t)G_lppb,
                  G_lppb->operating_points[NOMINAL].frequency_mhz);
 

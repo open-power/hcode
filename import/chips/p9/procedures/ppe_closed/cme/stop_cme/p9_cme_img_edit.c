@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <netinet/in.h>
+#include <time.h>
 #include <stddef.h>   /* offsetof  */
 #include <stdlib.h>
 
@@ -115,6 +116,18 @@ int main(int narg, char* argv[])
             uint32_t selfRestSize = ftell (pSelfRest);
             rewind(pSelfRest);
             printf("                    Self Restore size  %s     : %d (0x%X)\n", argv[3], selfRestSize, selfRestSize);
+
+            time_t buildTime        =   time(NULL);
+            struct tm* headerTime   =   localtime(&buildTime);
+            uint32_t temp           =   (((headerTime->tm_year + 1900) << 16) |
+                                         ((headerTime->tm_mon + 1) << 8) |
+                                         (headerTime->tm_mday));
+
+            printf("                    Build date              : %X -> %04d/%02d/%02d (YYYY/MM/DD)\n",
+                   temp, headerTime->tm_year + 1900, headerTime->tm_mon + 1, headerTime->tm_mday);
+            fseek ( pImage  , CPMR_BUILD_DATE_BYTE, SEEK_SET );
+            temp = htonl( temp );
+            fwrite(&temp, sizeof(uint32_t), 1, pImage );
 
             fseek ( pImage  , CPMR_SELF_RESTORE_OFFSET_BYTE , SEEK_SET );
             temp = htonl( SELF_RESTORE_CPMR_OFFSET );
