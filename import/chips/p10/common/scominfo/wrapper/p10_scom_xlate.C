@@ -26,9 +26,8 @@
 /// @file p10_scom_xlate.C
 /// @brief P10 SCOM address translation test utility
 ///
-/// HWP Owner: jmcgill@us.ibm.com
-/// HWP Team: Nest
-/// HWP Level: N/A
+/// HWP HW Maintainer: Thi Tran <thi@us.ibm.com>
+/// HWP FW Maintainer:
 /// HWP Consumed by: N/A
 ///
 
@@ -39,12 +38,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "p10_scominfo.H"
-#include "p10_cu_utils.H"
-#include "p10_scom_addr.H"
+#include <p10_scominfo.H>
+#include <p10_cu_utils.H>
+#include <p10_scom_addr.H>
+#include <ClockDomains.H>
+#include <p10_clockcntl.H>
 
-// Debug print
-const uint8_t DEBUG = 0;
+// DEBUG:
+// DEBUG_PRINT is set in chips/p10/common/scominfo/wrapper/p10_scom_xlate.mk
 
 // return codes
 const int E_ARGS_BAD_ARG_COUNT = 0x1;            ///< Invalid argument count
@@ -177,32 +178,31 @@ uint8_t loadInputArguments(int i_argc,
     }
     while (0);
 
-    // Debug print
-    if (DEBUG == 1)
+#ifdef DEBUG_PRINT
+    printf("\n Num of arguments: %d\n", i_argc);
+
+    for (uint8_t ii = 0; ii < i_argc; ii++)
     {
-        printf("\n Num of arguments: %d\n", i_argc);
-
-        for (uint8_t ii = 0; ii < i_argc; ii++)
-        {
-            printf("    i_argv[%d] = %s\n", ii, i_argv[ii]);
-        }
-
-        printf("    l_ecArgIdx = %d\n", l_ecArgIdx);
-
-        if (!l_rc)
-        {
-            printf(" Output values\n");
-            printf("    o_targetStr   %s\n", o_targetStr.c_str());
-            printf("    Chip target   %d\n", o_targetIsChip);
-            printf("    o_addr        0x%08lx_%08llx\n", (o_addr >> 32), (o_addr & 0xFFFFFFFFULL));
-            printf("    o_chipUnitNum %d\n", o_chipUnitNum);
-            printf("    o_chipEcLevel 0x%.2X\n", o_chipEcLevel);
-        }
-        else
-        {
-            printf("\n loadInputArguments encounters error %d\n", l_rc);
-        }
+        printf("    i_argv[%d] = %s\n", ii, i_argv[ii]);
     }
+
+    printf("    l_ecArgIdx = %d\n", l_ecArgIdx);
+
+    if (!l_rc)
+    {
+        printf(" Command line input values\n");
+        printf("    i_targetStr   %s\n", o_targetStr.c_str());
+        printf("    Chip target   %d\n", o_targetIsChip);
+        printf("    i_addr        0x%08lx_%08llx\n", (o_addr >> 32), (o_addr & 0xFFFFFFFFULL));
+        printf("    i_chipUnitNum %d\n", o_chipUnitNum);
+        printf("    i_chipEcLevel 0x%.2X\n", o_chipEcLevel);
+    }
+    else
+    {
+        printf("\n loadInputArguments encounters error %d\n", l_rc);
+    }
+
+#endif
 
     return l_rc;
 }
@@ -280,7 +280,6 @@ int main(int i_argc, char** i_argv)
         std::string l_chip_unit_str;
         p10ChipUnits_t l_chip_target_type;
         p10ChipUnits_t l_chip_unit_target_type;
-        uint8_t l_max_unit_target_num = 0;
         p10TranslationMode_t l_tx_mode = P10_DEFAULT_MODE;
 
         // Get the arguments
@@ -338,72 +337,29 @@ int main(int i_argc, char** i_argv)
             }
 
             // Verify Chip Unit num is within range
-            // Get max # of Chip unit targets for given chip unit type
-            l_rc = getMaxUnitTargetNum(l_chip_unit_target_type, l_max_unit_target_num);
+            l_rc = validateChipUnitNum(l_unit_target_num, l_chip_unit_target_type);
 
             if (l_rc)
             {
-                printf("ERROR: Error from getMaxUnitTargetNum, unsupported chip unit target type: '%s'!\n\n", l_chip_unit_str.c_str());
-                usage(i_argv[0]);
-                l_rc = E_ARGS_BAD_TARGET_TYPE;
-                break;
-            }
-
-            // Chip unit target num must be within range of the chip unit type
-            if (l_unit_target_num > l_max_unit_target_num)
-            {
-                printf("ERROR: Chip unit instance number '%d' is out-of-range for target type '%s' (expected 0-%d)!\n\n",
-                       l_unit_target_num, l_target_str.c_str(), l_max_unit_target_num - 1);
+                printf("ERROR: Chip unit instance number '%d' is invalid for target type '%s'!\n\n",
+                       l_unit_target_num, l_target_str.c_str());
                 usage(i_argv[0]);
                 l_rc = E_ARGS_BAD_CHIP_UNIT_NUM;
                 break;
             }
-
-            // Additional range check for PERV targets, where there are gaps between chip unit numbers (instances)
-            if (l_chip_unit_target_type == PU_PERV_CHIPUNIT)
-            {
-                if ( (l_unit_target_num == 0) ||
-                     ((l_unit_target_num >= 4) && (l_unit_target_num <= 7)) ||
-                     ((l_unit_target_num >= 10) && (l_unit_target_num <= 11)) ||
-                     ((l_unit_target_num >= 20) && (l_unit_target_num <= 23)) )
-                {
-                    printf("ERROR: Chip unit instance number '%d' is invalid for target type '%s'!\n\n",
-                           l_unit_target_num, l_target_str.c_str());
-                    usage(i_argv[0]);
-                    l_rc = E_ARGS_BAD_CHIP_UNIT_NUM;
-                    break;
-                }
-            }
-
-            // Additional range check for PPE targets, where there are gaps between chip unit numbers (instances)
-            if (l_chip_unit_target_type == PU_PPE_CHIPUNIT)
-            {
-                if ( ((l_unit_target_num >= 1) && (l_unit_target_num <= 3))   ||
-                     ((l_unit_target_num >= 8) && (l_unit_target_num <= 15))  ||
-                     ((l_unit_target_num >= 20) && (l_unit_target_num <= 31)) )
-                {
-                    printf("ERROR: Chip unit instance number '%d' is invalid for target type '%s'!\n\n",
-                           l_unit_target_num, l_target_str.c_str());
-                    usage(i_argv[0]);
-                    l_rc = E_ARGS_BAD_CHIP_UNIT_NUM;
-                    break;
-                }
-            }
         }
 
-        // Debug print
-        if (DEBUG == 1)
-        {
-            printf("    l_chip_str        %s\n", l_chip_str.c_str());
-            printf("    l_chip_unit_str   %s\n", l_chip_unit_str.c_str());
-        }
+#ifdef DEBUG_PRINT
+        printf("    l_chip_str        %s\n", l_chip_str.c_str());
+        printf("    l_chip_unit_str   %s\n", l_chip_unit_str.c_str());
+#endif
 
         // Print input address fields
         printf("\n-------------------------------------\n");
         printf("              INPUT                    \n");
         printf("-------------------------------------\n");
         printf("      Target: %s\n", l_target_str.c_str());
-        printf("        Unit: %d\n", l_unit_target_num);
+        printf("        Unit: %d", l_unit_target_num);
         displayAddrFields(l_addr, l_chip_unit_target_type, l_EcLevel);
 
         // check for valid address format, find list of any chip unit targets
@@ -496,8 +452,67 @@ int main(int i_argc, char** i_argv)
         // Print output address fields
         printf("\n-------------------------------------\n");
         printf("              OUTPUT                   \n");
-        printf("-------------------------------------\n");
+        printf("-------------------------------------");
         displayAddrFields(l_addr_abs, l_chip_unit_target_type, l_EcLevel);
+
+        printf("\n\n");
+        printf("----------------------------------------\n");
+        printf("            Clock Domains               \n");
+        printf("----------------------------------------\n");
+
+        // Get clock domain
+        CLOCK_DOMAIN l_domain = P10_FAKE_DOMAIN;
+        l_rc = p10_clockcntl_getScomClockDomain(l_chip_unit_target_type,
+                                                l_unit_target_num,
+                                                l_addr,
+                                                l_domain,
+                                                P10_DEFAULT_MODE);
+
+        if (l_rc)
+        {
+            printf("ERROR: p10_clockcntl_getScomClockDomain returns an error."
+                   " Address 0x%08lx_%08llx, UnitType %s, Instance %d\n",
+                   l_addr >> 32, l_addr & 0xFFFFFFFFULL,
+                   l_chip_str.c_str(), l_unit_target_num);
+        }
+        else
+        {
+            // Convert output domain to string
+            std::string l_domainStr = p10_clockcntl_convertClockDomainEnum(l_domain);
+            printf("(i)      Addr                     : 0x%08lx_%08llx\n", (l_addr >> 32), (l_addr & 0xFFFFFFFFULL));
+            printf("(i)      Chip Unit Type           : %d\n", l_chip_unit_target_type);
+            printf("(i)      Chip Unit Num            : %d\n", l_unit_target_num);
+            printf("(o)      Clock domain             : %d (%s)\n", l_domain, l_domainStr.c_str());
+            printf("(o)      Possible domains altered : ");
+            std::list<CLOCK_DOMAIN> l_domains;
+            l_rc = p10_clockcntl_clockStateRegisterScreen(l_chip_unit_target_type,
+                    l_unit_target_num,
+                    l_addr,
+                    l_domains,
+                    P10_DEFAULT_MODE);
+
+            if (l_rc)
+            {
+                printf("ERROR: p10_clockcntl_clockStateRegisterScreen returns an error."
+                       " Address 0x%08lx_%08llx, UnitType %s, Instance %d\n",
+                       l_addr >> 32, l_addr & 0xFFFFFFFFULL,
+                       l_chip_str.c_str(), l_unit_target_num);
+            }
+            else if (l_domains.size() != 0)
+            {
+                for (CLOCK_DOMAIN domain : l_domains)
+                {
+                    l_domainStr = p10_clockcntl_convertClockDomainEnum(domain);
+                    printf("%d (%s), ", domain, l_domainStr.c_str());
+                }
+
+                printf("\n");
+            }
+            else
+            {
+                printf("N/A\n");
+            }
+        }
 
         printf("\n");
     }
