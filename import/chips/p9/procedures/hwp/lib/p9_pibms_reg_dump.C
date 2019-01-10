@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -282,15 +282,14 @@ fapi2::ReturnCode p9_pibms_reg_dump( const fapi2::Target<fapi2::TARGET_TYPE_PROC
         FAPI_TRY(getCfamRegister(i_target, PERV_ROOT_CTRL0_FSI, l_tempdata32 ));
         FAPI_TRY(getScom(i_target, PERV_TP_CPLT_CTRL1, l_tempdata64));
 
-        // RC0bits 16,18,19 != 000 && RC0bit16 != 1 && cplt_ctrl[ pib(bit6) sbe(bit9)] != 1
+        // RC0bits 16,18,19 != 000 && RC0bit16 != 1 && cplt_ctrl[pib(bit6)] != 1
         if ( ! ((l_tempdata32.getBit<PERV_ROOT_CTRL0_PIB2PCB_DC>()
                  || l_tempdata32.getBit<PERV_ROOT_CTRL0_18_SPARE_MUX_CONTROL>()
                  || l_tempdata32.getBit<PERV_ROOT_CTRL0_19_SPARE_MUX_CONTROL>()) &&
                 !(l_tempdata32.getBit<PERV_ROOT_CTRL0_PIB2PCB_DC>())            &&
-                !(l_tempdata64.getBit<PERV_1_CPLT_CTRL1_UNUSED_9B>())       &&
                 !(l_tempdata64.getBit<PERV_1_CPLT_CTRL1_UNUSED_6B>()) ))
         {
-            FAPI_ERR("Invalid Mux config(RC0 bits 16,18,19): %#010lX or Fence setup(CPLT_CTRL1 bits 6,9): %#018lX to perform pibmem dump.\n",
+            FAPI_ERR("Invalid Mux config(RC0 bits 16,18,19): %#010lX or Fence setup(CPLT_CTRL1 bits 6 (pib fence)): %#018lX to perform pibmem dump.\n",
                      l_tempdata32, l_tempdata64);
             goto fapi_try_exit;
         }
