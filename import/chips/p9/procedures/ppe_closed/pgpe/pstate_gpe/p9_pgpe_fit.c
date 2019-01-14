@@ -392,7 +392,7 @@ __attribute__((always_inline)) inline void handle_wov()
     {
         G_wov_count++;
 
-        if (G_gppb->wov_sample_125us  == G_wov_count)
+        if ((G_gppb->wov_sample_125us / 2)  == G_wov_count)
         {
             p9_pgpe_pstate_adjust_wov();
             G_wov_count = 0;

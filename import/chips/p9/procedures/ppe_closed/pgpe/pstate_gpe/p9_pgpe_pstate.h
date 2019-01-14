@@ -114,7 +114,7 @@ enum PGPE_CORE_THROTTLE
     // Include core offline, address error, and timeout. The timeout is
     // included to avoid an extra mtmsr in the event we need to cleanup
     // from SW407201
-    MSR_THROTTLE_MASK               = 0x29000000,
+    MSR_THROTTLE_MASK               = 0x39000000,
     WORKAROUND_SCOM_MULTICAST_WRITE = 0x69010800,
     THROTTLE_SCOM_MULTICAST_WRITE   = 0x69010A9E,
     CORE_IFU_THROTTLE               = 0x80000000,

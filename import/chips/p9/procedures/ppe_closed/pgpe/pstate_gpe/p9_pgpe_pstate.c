@@ -1118,6 +1118,12 @@ void p9_pgpe_pstate_stop()
         }
     }
 
+    if (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_WOV_UNDERVOLT_ENABLE)
+    {
+        G_pgpe_pstate_record.wov.status = WOV_DISABLED;
+        PK_TRACE_INF("PST: Undervolting Enabled");
+    }
+
 
     //Set status in OCC_Scratch2
     uint32_t occScr2 = in32(G_OCB_OCCS2);
@@ -2139,7 +2145,11 @@ void p9_pgpe_pstate_freq_updt(uint32_t freq_change_dir)
     PK_TRACE_DBG("FREQ: Enter");
 
     G_pgpe_pstate_record.wov.frequency_change_direction =  freq_change_dir;
-    p9_pgpe_pstate_adjust_wov();
+
+    if (G_pgpe_pstate_record.wov.status & WOV_UNDERVOLT_ENABLED)
+    {
+        p9_pgpe_pstate_adjust_wov();
+    }
 
     pgpe_db0_glb_bcast_t db0;
     db0.value = G_pgpe_pstate_record.psNext.value;
@@ -2369,7 +2379,6 @@ inline void p9_pgpe_droop_unthrottle()
 //
 void p9_pgpe_pstate_wov_init()
 {
-    //G_pgpe_pstate_record.wov.freq_loss_threshold_tenths = UNDERVOLT_LOSS_THRESHOLD_TENTHS;
     G_pgpe_pstate_record.wov.avg_freq_gt_target_freq = 0;
     G_pgpe_pstate_record.wov.freq_loss_tenths_gt_max_droop_tenths = 0;
     G_pgpe_pstate_record.wov.status = WOV_DISABLED;
@@ -2388,7 +2397,7 @@ void p9_pgpe_pstate_adjust_wov()
     uint64_t qfmr;
     uint32_t delta_tb, delta_cycles, new_tb, new_cycles;
 
-    PK_TRACE_INF("WOV: Adjust");
+    PK_TRACE_DBG("WOV: Adjust");
 
     ocb_qcsr_t qcsr;
     qcsr.value = in32(G_OCB_QCSR);
@@ -2415,7 +2424,7 @@ void p9_pgpe_pstate_adjust_wov()
             new_tb = qfmr >> 32;
             new_cycles = qfmr & (0xFFFFFFFF);
 
-            PK_TRACE_INF("WOV: QFMR[%d]=0x%08x %08x ", q, qfmr >> 32, qfmr);
+            PK_TRACE_DBG("WOV: QFMR[%d]=0x%08x %08x ", q, qfmr >> 32, qfmr);
 
             //If freq_change_in_progress
             if (G_pgpe_pstate_record.wov.frequency_change_direction != PGPE_FREQ_DIRECTION_NO_CHANGE)
@@ -2464,7 +2473,7 @@ void p9_pgpe_pstate_adjust_wov()
 
                 G_pgpe_pstate_record.wov.freq_loss_percent_tenths[q] = (freq_loss * 1000) / G_pgpe_pstate_record.wov.target_freq[q];
 
-                PK_TRACE_INF("AUV: Quad[%d] TgtFreq=0x%x Avg_Freq=0x%x FreqLossPercentTenths=0x%x", q,
+                PK_TRACE_DBG("AUV: Quad[%d] TgtFreq=0x%x Avg_Freq=0x%x FreqLossPercentTenths=0x%x", q,
                              G_pgpe_pstate_record.wov.target_freq[q], G_pgpe_pstate_record.wov.avg_freq[q],
                              G_pgpe_pstate_record.wov.freq_loss_percent_tenths[q]);
 
