@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -26,8 +26,11 @@
 // Setup and enable the O2S bridge on the AVS bus.
 //
 
+
 #ifndef _AVS_DRIVER_H_
 #define _AVS_DRIVER_H_
+
+#include "pstate_pgpe_occ_api.h"
 
 #define MAX_POLL_COUNT_AVS      10
 #define AVS_RAIL_NUM_MASK       0xF
@@ -35,7 +38,8 @@
 enum AVS_DRIVER
 {
     AVS_DRIVER_MAX_EXTERNAL_VOLTAGE = 1500,
-    AVS_DRIVER_MIN_EXTERNAL_VOLTAGE = 500
+    AVS_DRIVER_MIN_EXTERNAL_VOLTAGE = 500,
+    O2S_BUSNUM_OFFSET_SHIFT = 8
 };
 
 enum AVS_DRIVER_RETURN_CODES
@@ -45,11 +49,17 @@ enum AVS_DRIVER_RETURN_CODES
     AVS_RC_RESYNC_ERROR         = 2
 };
 
-void
-external_voltage_control_init(uint32_t* vext_read_mv);
+void avs_driver_init();
 
+void avs_driver_bus_init(uint32_t BusNum);
 
 void
-external_voltage_control_write(uint32_t vext_write_mv);
+avs_driver_voltage_write(uint32_t BusNum, uint32_t RailNum, uint32_t VoltMV);
+
+void
+avs_driver_voltage_read(uint32_t BusNum, uint32_t RailNum, uint32_t* RetVolt);
+
+void
+avs_driver_current_read(uint32_t BusNum, uint32_t RailNum, uint32_t* RetCurrent);
 
 #endif //_AVS_DRIVER_H_

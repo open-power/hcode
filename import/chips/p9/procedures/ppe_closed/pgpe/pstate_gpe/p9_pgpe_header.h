@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -26,6 +26,12 @@
 #define _P9_PGPE_HEADER_H_
 
 #include "pk.h"
+#include "p9_hcode_image_defines.H"
+#include "p9_hcd_memmap_base.H"
+
+//OCC Shared SRAM starts at bottom 2K of PGPE OCC SRAM space
+#define OCC_SHARED_SRAM_ADDR_START \
+    (OCC_SRAM_PGPE_BASE_ADDR + OCC_SRAM_PGPE_REGION_SIZE - PGPE_OCC_SHARED_SRAM_SIZE)
 
 //
 //  p9_pgpe_header_init

@@ -124,6 +124,7 @@ void p9_pgpe_pstate_init()
     G_pgpe_pstate_record.pQuadState0 = (quad_state0_t*)G_pgpe_header_data->g_quad_status_addr;
     G_pgpe_pstate_record.pQuadState1 = (quad_state1_t*)(G_pgpe_header_data->g_quad_status_addr + 8);
     G_pgpe_pstate_record.pReqActQuads = (requested_active_quads_t*)(G_pgpe_header_data->g_pgpe_req_active_quad_address);
+    G_pgpe_pstate_record.pWofValues = (pgpe_wof_values_t*)(G_pgpe_header_data->g_pgpe_wof_values_address);
     G_pgpe_pstate_record.pQuadState0->fields.quad0_pstate = 0xff;
     G_pgpe_pstate_record.pQuadState0->fields.quad1_pstate = 0xff;
     G_pgpe_pstate_record.pQuadState0->fields.quad2_pstate = 0xff;
@@ -134,6 +135,15 @@ void p9_pgpe_pstate_init()
     G_pgpe_pstate_record.pQuadState1->fields.active_cores = 0x0;
     G_pgpe_pstate_record.pReqActQuads->fields.requested_active_quads = 0x0;
     G_pgpe_pstate_record.activeCoreUpdtAction = ACTIVE_CORE_UPDATE_ACTION_ERROR;
+    G_pgpe_pstate_record.pWofValues->dw0.value = 0;
+    G_pgpe_pstate_record.pWofValues->dw1.value = 0;
+    G_pgpe_pstate_record.pWofValues->dw2.value = 0;
+    G_pgpe_pstate_record.pWofValues->dw3.value = 0;
+    G_pgpe_pstate_record.prevIdd = 0;
+    G_pgpe_pstate_record.prevIdn = 0;
+    G_pgpe_pstate_record.prevVdd = 0;
+    G_pgpe_pstate_record.vddCurrentThresh = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][TURBO].idd_100ma;
+    G_pgpe_pstate_record.excessiveDroop = 0;
 
     //Create Semaphores
     pk_semaphore_create(&(G_pgpe_pstate_record.sem_actuate), 0, 1);
@@ -142,6 +152,30 @@ void p9_pgpe_pstate_init()
 
     //WOV init
     p9_pgpe_pstate_wov_init();
+
+    //Initialize avs_driver
+    avs_driver_init();
+
+    HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)
+                                            OCC_SHARED_SRAM_ADDR_START; //Bottom 2K of PGPE OCC Sram Space
+
+    if (in32(OCB_OCCFLG2) & BIT32(OCCFLG2_ENABLE_PRODUCE_WOF_VALUES))
+    {
+        //Write the magic number in the HcodeOCCSharedData struct
+        occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS1;
+        G_pgpe_pstate_record.produceWOFValues = 1;
+
+        //Read VDN Voltage. On P9, VDN is NOT updated by PGPE, so we read it
+        //once during init and then don't read it all
+        uint32_t vdn = 0;
+        avs_driver_voltage_read(G_gppb->avs_bus_topology.vdn_avsbus_num, G_gppb->avs_bus_topology.vdn_avsbus_rail, &vdn);
+        G_pgpe_pstate_record.pWofValues->dw2.fields.vdn_avg_mv = vdn;
+    }
+    else
+    {
+        occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS0;
+        G_pgpe_pstate_record.produceWOFValues = 0;
+    }
 }
 
 //
@@ -419,6 +453,64 @@ void p9_pgpe_pstate_update_wof_state()
     wof_state->fields.vratio = G_pgpe_pstate_record.vratio;
     PK_TRACE_INF("WFU: FClip_PS=0x%x, vindex=0x%x, vratio=0x%x", G_pgpe_pstate_record.wofClip, G_pgpe_pstate_record.vindex,
                  G_pgpe_pstate_record.vratio);
+
+}
+
+//
+//  p9_pgpe_pstate_update_wof_produced_values
+//
+//  This function updates the wof produced values in the OCC Shared SRAM area
+//
+void p9_pgpe_pstate_update_wof_produced_values()
+{
+    uint32_t current;
+
+    avs_driver_current_read(G_gppb->avs_bus_topology.vdd_avsbus_num, G_gppb->avs_bus_topology.vdd_avsbus_rail, &current);
+    PK_TRACE_DBG("VDD Current=0x%x, BusNum=0x%x, RailNum=0x%x", current, G_gppb->avs_bus_topology.vdd_avsbus_num,
+                 G_gppb->avs_bus_topology.vdd_avsbus_rail);
+
+    G_pgpe_pstate_record.pWofValues->dw1.fields.idd_avg_ma = (G_pgpe_pstate_record.prevIdd + current) >> 1;
+    G_pgpe_pstate_record.prevIdd = current;
+
+    avs_driver_current_read(G_gppb->avs_bus_topology.vdn_avsbus_num, G_gppb->avs_bus_topology.vdn_avsbus_rail, &current);
+    PK_TRACE_DBG("VDN Current=0x%x, BusNum=0x%x, RailNum=0x%x", current, G_gppb->avs_bus_topology.vdn_avsbus_num,
+                 G_gppb->avs_bus_topology.vdn_avsbus_rail);
+
+    G_pgpe_pstate_record.pWofValues->dw1.fields.idn_avg_ma = (G_pgpe_pstate_record.prevIdn + current) >> 1;
+    G_pgpe_pstate_record.prevIdn = current;
+
+    G_pgpe_pstate_record.pWofValues->dw2.fields.vdd_avg_mv = (G_pgpe_pstate_record.prevVdd +
+            G_pgpe_pstate_record.extVrmCurr) >> 1;
+    G_pgpe_pstate_record.prevVdd = G_pgpe_pstate_record.extVrmCurr;
+
+
+    uint32_t avg_pstate = 0;
+    uint32_t q, num = 0;
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if (G_pgpe_pstate_record.activeQuads & QUAD_MASK(q))
+        {
+            avg_pstate += G_pgpe_pstate_record.psComputed.fields.quads[q];
+            num = num + 1;
+        }
+    }
+
+    if (num > 0)
+    {
+        G_pgpe_pstate_record.pWofValues->dw0.fields.average_pstate = ((avg_pstate / num) + G_pgpe_pstate_record.prevAvgPstate)
+                >> 1;
+        G_pgpe_pstate_record.pWofValues->dw0.fields.average_frequency_pstate =
+            G_pgpe_pstate_record.pWofValues->dw0.fields.average_pstate;
+        G_pgpe_pstate_record.prevAvgPstate = G_pgpe_pstate_record.pWofValues->dw0.fields.average_pstate;
+    }
+
+    G_pgpe_pstate_record.pWofValues->dw0.fields.clip_pstate = G_pgpe_pstate_record.wofClip;
+    G_pgpe_pstate_record.pWofValues->dw0.fields.vratio_inst = G_pgpe_pstate_record.vratio;
+    G_pgpe_pstate_record.pWofValues->dw0.fields.vratio_avg  = (G_pgpe_pstate_record.vratio +
+            G_pgpe_pstate_record.prevVratio) >> 1;
+    G_pgpe_pstate_record.prevVratio = G_pgpe_pstate_record.vratio;
+
 }
 
 //
@@ -810,7 +902,15 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     }
 
     //3. Move system to SyncPState
-    external_voltage_control_init(&G_pgpe_pstate_record.extVrmCurr);
+    PK_TRACE_INF("VDD_BUS_NUM=0x%x" , G_gppb->avs_bus_topology.vdd_avsbus_num);
+    PK_TRACE_INF("VDD_RAIL_NUM=0x%x", G_gppb->avs_bus_topology.vdd_avsbus_rail);
+    PK_TRACE_INF("VDN_BUS_NUM=0x%x" , G_gppb->avs_bus_topology.vdn_avsbus_num);
+    PK_TRACE_INF("VDN_RAIL_NUM=0x%x", G_gppb->avs_bus_topology.vdn_avsbus_rail);
+
+    //avs_driver_init();
+    avs_driver_voltage_read(G_gppb->avs_bus_topology.vdd_avsbus_num, G_gppb->avs_bus_topology.vdd_avsbus_rail,
+                            &G_pgpe_pstate_record.extVrmCurr);
+
     G_pgpe_pstate_record.biasSyspExtVrmCurr = G_pgpe_pstate_record.extVrmCurr;
     G_pgpe_pstate_record.biasSyspExtVrmNext = p9_pgpe_gppb_intp_vdd_from_ps(syncPstate, VPD_PT_SET_BIASED_SYSP);
     PK_TRACE_INF("PST: SyncPstate=0x%x eVid(Boot)=%umV,eVid(SyncPstate)=%umV", syncPstate,
@@ -976,6 +1076,12 @@ void p9_pgpe_pstate_start(uint32_t pstate_start_origin)
     {
         G_pgpe_pstate_record.wov.status = WOV_UNDERVOLT_ENABLED;
         PK_TRACE_INF("PST: Undervolting Enabled");
+    }
+
+    if (G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_WOV_OVERVOLT_ENABLE)
+    {
+        G_pgpe_pstate_record.wov.status = WOV_OVERVOLT_ENABLED;
+        PK_TRACE_INF("PST: Overvolting Enabled");
     }
 
     PK_TRACE_DBG("PST: Start Done");
@@ -2080,7 +2186,8 @@ void p9_pgpe_pstate_updt_ext_volt()
 #endif
 
     //Update external voltage
-    external_voltage_control_write(G_pgpe_pstate_record.extVrmNext);
+    avs_driver_voltage_write(G_gppb->avs_bus_topology.vdd_avsbus_num, G_gppb->avs_bus_topology.vdd_avsbus_rail,
+                             G_pgpe_pstate_record.extVrmNext);
 
 #if !EPM_P9_TUNING
 
@@ -2158,6 +2265,7 @@ void p9_pgpe_pstate_updt_ext_volt()
     {
         G_pgpe_pstate_record.wov.max_volt = G_pgpe_pstate_record.wov.curr_mv;
     }
+
 
     //If VDM is disabled, update VDMCFG register for every quad
     if (!(G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_VDM_ENABLE))
@@ -2565,6 +2673,8 @@ void p9_pgpe_pstate_adjust_wov()
             {
                 G_pgpe_pstate_record.wov.target_pct = G_gppb->wov_underv_max_pct;
             }
+
+            G_pgpe_pstate_record.excessiveDroop = 0;
         }
         else
         {
@@ -2572,6 +2682,8 @@ void p9_pgpe_pstate_adjust_wov()
             {
                 G_pgpe_pstate_record.wov.target_pct -= G_gppb->wov_underv_step_incr_pct;
             }
+
+            G_pgpe_pstate_record.excessiveDroop = 1;
         }
     }// WOV ALGORITHM END
 

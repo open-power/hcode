@@ -30,6 +30,7 @@
 #include <p9_hcd_memmap_occ_sram.H>
 #include "p9_pgpe_optrace.h"
 #include "occhw_shared_data.h"
+#include "avs_driver.h"
 
 #define AUX_TASK 14
 #define GPE2TSEL 0xC0020000
@@ -389,14 +390,43 @@ extern uint32_t G_pib_reset_flag;
 //
 __attribute__((always_inline)) inline void handle_wov()
 {
-    if (G_pgpe_pstate_record.wov.status & WOV_UNDERVOLT_ENABLED)
-    {
-        G_wov_count++;
 
-        if ((G_gppb->wov_sample_125us / 2)  == G_wov_count)
+    G_wov_count++;
+
+    if ((G_gppb->wov_sample_125us >> 1)  == G_wov_count)
+    {
+        G_wov_count = 0;
+
+        if (G_pgpe_pstate_record.produceWOFValues)
+        {
+            p9_pgpe_pstate_update_wof_produced_values();
+        }
+
+        //If enabled, run undervolting algorithm
+        if (G_pgpe_pstate_record.wov.status & WOV_UNDERVOLT_ENABLED)
         {
             p9_pgpe_pstate_adjust_wov();
-            G_wov_count = 0;
+        }
+
+        //If enabled, run over rvolting algorithm
+        if (G_pgpe_pstate_record.wov.status & WOV_OVERVOLT_ENABLED)
+        {
+            if (G_pgpe_pstate_record.excessiveDroop == 1)
+            {
+                out32(G_OCB_OCCFLG_OR, BIT32(PGPE_OCS_DIRTY));
+            }
+            else
+            {
+                if (G_pgpe_pstate_record.pWofValues->dw2.fields.vdd_avg_mv >=
+                    G_pgpe_pstate_record.vddCurrentThresh)    //(default is #V turbo current)
+                {
+                    out32(G_OCB_OCCFLG_OR, BIT32(PGPE_OCS_DIRTY));
+                }
+                else
+                {
+                    out32(G_OCB_OCCFLG_CLR, BIT32(PGPE_OCS_DIRTY));
+                }
+            }
         }
     }
 }
@@ -418,4 +448,5 @@ void p9_pgpe_fit_handler(void* arg, PkIrqId irq)
     handle_aux_task();
     handle_fit_timebase_sync();
     handle_wov();
+
 }

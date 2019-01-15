@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -81,16 +81,17 @@ uint32_t CRC_calc(uint32_t data)
 //#################################################################################################
 // Function polls OCB status register O2SST for o2s_ongoing=0
 //#################################################################################################
-uint8_t pollVoltageTransDone(void)
+uint8_t pollVoltageTransDone(uint32_t BusNum)
 {
     uint8_t   rc = 0;
     uint32_t  ocbRegReadData = 0;
     uint8_t   ongoingFlag = 1;
     uint8_t   count = 0;
-    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = BusNum << O2S_BUSNUM_OFFSET_SHIFT;
 
     // The point of MAX_POLL_COUNT_AVS is to verify that ongoingFlag turns to
     //   zero very fast. Otherwise, something wrong with this i/f and error out.
+    //PK_TRACE_INF("PV:OCB_O2SST0A =0x%x",OCB_O2SST0A | BusMask);
     while (ongoingFlag || (count <= MAX_POLL_COUNT_AVS))
     {
         ocbRegReadData = in32(OCB_O2SST0A | BusMask);
@@ -120,11 +121,11 @@ uint8_t pollVoltageTransDone(void)
 //#################################################################################################
 // Function which writes to OCB registers to initialize the AVS Slave with an idle frame
 //#################################################################################################
-uint8_t driveIdleFrame(void)
+uint8_t driveIdleFrame(uint32_t BusNum)
 {
     uint8_t  rc = 0;
     uint32_t idleframe = 0xFFFFFFFF;
-    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = BusNum << O2S_BUSNUM_OFFSET_SHIFT;
 
     // Clear sticky bits in o2s_status_reg
     out32(OCB_O2SCMD0A | BusMask , 0x40000000);
@@ -133,7 +134,7 @@ uint8_t driveIdleFrame(void)
     out32(OCB_O2SWD0A | BusMask , idleframe);
 
     // Wait on o2s_ongoing = 0
-    rc = pollVoltageTransDone();
+    rc = pollVoltageTransDone(BusNum);
 
     return rc;
 }
@@ -142,18 +143,18 @@ uint8_t driveIdleFrame(void)
 //#################################################################################################
 // Function which writes to OCB registers to initiate a AVS write transaction
 //#################################################################################################
-uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
+uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData, uint32_t BusNum, uint32_t RailNum)
 {
     uint8_t  rc = 0, retryCnt = 0, done = 0;
     uint32_t ocbRegWriteData = 0;
     uint32_t ocbRegReadData = 0;
 
-    uint32_t RailSelect  =  in32(G_OCB_OCCS2) & AVS_RAIL_NUM_MASK;
+    uint32_t RailSelect  =  RailNum;
     uint32_t StartCode   = 1;
     uint32_t CmdType     = 0; // 0:write+commit, 1:write+hold, 2: d/c, 3:read
     uint32_t CmdGroup    = 0;
     uint32_t CRC         = 0;
-    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = BusNum << O2S_BUSNUM_OFFSET_SHIFT;
 
     // Clear sticky bits in o2s_status_reg
     out32(OCB_O2SCMD0A | BusMask, 0x40000000);
@@ -174,7 +175,7 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
         out32(OCB_O2SWD0A | BusMask, ocbRegWriteData);
 
         // Wait on o2s_ongoing = 0
-        rc = pollVoltageTransDone();
+        rc = pollVoltageTransDone(BusNum);
 
         if (rc)
         {
@@ -199,7 +200,7 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
                 else
                 {
                     retryCnt++;
-                    rc = driveIdleFrame();
+                    rc = driveIdleFrame(BusNum);
 
                     if (rc)
                     {
@@ -222,20 +223,20 @@ uint8_t driveWrite(uint32_t CmdDataType, uint32_t CmdData)
 //#################################################################################################
 // Function which writes to OCB registers to initiate a AVS read transaction
 //#################################################################################################
-uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
+uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData, uint32_t BusNum, uint32_t RailNum)
 {
     uint8_t  rc = 0, retryCnt = 0, done = 0;
     uint32_t ocbRegReadData = 0;
     uint32_t ocbRegWriteData = 0;
 
-    uint32_t RailSelect  =  in32(G_OCB_OCCS2) & AVS_RAIL_NUM_MASK;
+    uint32_t RailSelect  =  RailNum;
     uint32_t StartCode   = 1;
     uint32_t CmdType     = 3; // 0:write+commit, 1:write+hold, 2: d/c, 3:read
     uint32_t CmdGroup    = 0;
     uint32_t Reserved    = 0xFFFF;
     uint32_t CRC         = 0;
 
-    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = BusNum << O2S_BUSNUM_OFFSET_SHIFT;
 
     // Clear sticky bits in o2s_status_reg
     out32(OCB_O2SCMD0A | BusMask, 0x40000000);
@@ -256,7 +257,7 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
         out32(OCB_O2SWD0A | BusMask, ocbRegWriteData);
 
         // Wait on o2s_ongoing = 0
-        rc = pollVoltageTransDone();
+        rc = pollVoltageTransDone(BusNum);
 
         if (rc)
         {
@@ -281,7 +282,7 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
                 else
                 {
                     retryCnt++;
-                    rc = driveIdleFrame();
+                    rc = driveIdleFrame(BusNum);
 
                     if (rc)
                     {
@@ -301,19 +302,20 @@ uint8_t driveRead(uint32_t CmdDataType, uint32_t* CmdData)
     return rc;
 }
 
+void avs_driver_init()
+{
+    //Initialize VDD
+    avs_driver_bus_init(G_gppb->avs_bus_topology.vdd_avsbus_num);
 
-//#################################################################################################
-// Function which initializes the OCB O2S registers
-//#################################################################################################
-void external_voltage_control_init(uint32_t* vext_read_mv)
+    //Initialize VDN
+    avs_driver_bus_init(G_gppb->avs_bus_topology.vdn_avsbus_num);
+}
+
+
+void avs_driver_bus_init(uint32_t BusNum)
 {
     uint8_t   rc = 0;
-    uint32_t  CmdDataRead = 0;
 
-//#if EPM_P9_TUNING
-// We do not need to initialize O2S and AVS slave in product
-//   because this is done in istep 6. But for EPM, we need to do it.
-//\todo Read from Parameter Block. These are attributes
 #define CLOCK_SPIVID_MHZ        10
     PK_TRACE_DBG("NestFreq=0x%x", G_gppb->nest_frequency_mhz);
     uint32_t  ocbRegReadData = 0;
@@ -324,11 +326,8 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
     uint32_t  O2SCTRL1_value = 0b10010000000000000100000000000000 |
                                (G_gppb->nest_frequency_mhz / (8 * CLOCK_SPIVID_MHZ) - 1) << 18;
 
-    //
     // OCI to SPIPMBus (O2S) bridge initialization
-    //
-
-    uint32_t BusMask = (in32(G_OCB_OCCS2) & AVS_BUS_NUM_MASK) << 4;
+    uint32_t BusMask = BusNum << O2S_BUSNUM_OFFSET_SHIFT;
 
     // O2SCTRLF
     ocbRegReadData = in32(OCB_O2SCTRLF0A | BusMask);
@@ -358,8 +357,7 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
     // In principle this only has to be done once. Though Doug Lane
     // says that due to noise on the chip this init should be done
     // periodically.
-
-    rc = driveIdleFrame();
+    rc = driveIdleFrame(BusNum);
 
     if (rc)
     {
@@ -367,36 +365,25 @@ void external_voltage_control_init(uint32_t* vext_read_mv)
         PGPE_TRACE_AND_PANIC(PGPE_AVS_INIT_DRIVE_IDLE_FRAME);
     }
 
-    // Drive read transaction to return initial setting of rail voltage and wait on o2s_ongoing=0
-    rc = driveRead(0, &CmdDataRead);
-
-    if (rc)
-    {
-        PK_TRACE_ERR("AVS_INIT: DriveRead FAIL");
-        PGPE_TRACE_AND_PANIC(PGPE_AVS_INIT_DRIVE_READ);
-    }
-
-    *vext_read_mv = CmdDataRead;
 }
-
 
 //#################################################################################################
 // Main function to initiate an eVRM voltage change.  There is a write followed by a
 // read, and then a voltage value compare check.
 //#################################################################################################
-void external_voltage_control_write(uint32_t vext_write_mv)
+void avs_driver_voltage_write(uint32_t BusNum, uint32_t RailNum, uint32_t VoltMV)
 {
     uint8_t   rc = 0;
     uint32_t  CmdDataType = 0; // 0b0000=Target rail voltage
 
-    if (vext_write_mv > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
-        vext_write_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
+    if (VoltMV > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
+        VoltMV < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
     {
         PGPE_TRACE_AND_PANIC(PGPE_VOLTAGE_OUT_OF_BOUNDS);
     }
 
     // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
-    rc = driveWrite(CmdDataType, vext_write_mv);
+    rc = driveWrite(CmdDataType, VoltMV, BusNum, RailNum);
 
     switch (rc)
     {
@@ -417,5 +404,31 @@ void external_voltage_control_write(uint32_t vext_write_mv)
 
         default:
             break;
+    }
+}
+
+void avs_driver_voltage_read(uint32_t BusNum, uint32_t RailNum, uint32_t* RetVolt)
+{
+    uint32_t rc = 0;
+
+    rc = driveRead(0x0, RetVolt, BusNum, RailNum);
+
+    if (rc)
+    {
+        PK_TRACE_ERR("AVS_READ_VOLT: DriveRead FAILED. BusNum=0x%x,RailNum=0x%x", BusNum, RailNum);
+        PGPE_TRACE_AND_PANIC(PGPE_AVS_DRIVE_READ);
+    }
+}
+
+void avs_driver_current_read(uint32_t BusNum, uint32_t RailNum, uint32_t* RetCurrent)
+{
+    uint32_t rc = 0;
+
+    rc = driveRead(0x2, RetCurrent, BusNum, RailNum);
+
+    if (rc)
+    {
+        PK_TRACE_ERR("AVS_READ_CURRENT: DriveRead FAILED rc=0x%x. BusNum=0x%x, RailNum=0x%x", rc, BusNum, RailNum);
+        PGPE_TRACE_AND_PANIC(PGPE_AVS_DRIVE_READ);
     }
 }

@@ -227,6 +227,10 @@ typedef struct
     uint32_t activeCoreUpdtAction;
     uint32_t biasSyspExtVrmCurr, biasSyspExtVrmNext;
     wov_t wov;
+    pgpe_wof_values_t* pWofValues;
+    uint32_t produceWOFValues;
+    uint32_t prevIdd, prevIdn, prevVdd, prevAvgPstate, prevVratio;
+    uint32_t excessiveDroop, vddCurrentThresh;
 } PgpePstateRecord __attribute__ ((aligned (8)));
 
 
@@ -266,6 +270,7 @@ void p9_pgpe_pstate_apply_clips();
 void p9_pgpe_pstate_calc_wof();
 void p9_pgpe_pstate_updt_actual_quad();
 void p9_pgpe_pstate_update_wof_state();
+void p9_pgpe_pstate_update_wof_produced_values();
 
 //CME Communication
 void p9_pgpe_send_db0(db0_parms_t p);

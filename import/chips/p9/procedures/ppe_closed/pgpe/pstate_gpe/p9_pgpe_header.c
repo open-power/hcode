@@ -27,9 +27,6 @@
 #include "p9_hcode_image_defines.H"
 #include "p9_hcd_memmap_base.H"
 
-//OCC Shared SRAM starts at bottom 2K of PGPE OCC SRAM space
-#define OCC_SHARED_SRAM_ADDR_START \
-    (OCC_SRAM_PGPE_BASE_ADDR + OCC_SRAM_PGPE_REGION_SIZE - PGPE_OCC_SHARED_SRAM_SIZE)
 
 PgpeHeader_t* G_pgpe_header_data;
 extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
@@ -78,7 +75,6 @@ void p9_pgpe_header_init()
     G_pgpe_header_data->g_pgpe_wof_state_address = (uint32_t)&occ_shared_data->pgpe_wof_state;//Wof State
     G_pgpe_header_data->g_pgpe_req_active_quad_address = (uint32_t)
             &occ_shared_data->req_active_quads;//Requested Active Quads
+    G_pgpe_header_data->g_pgpe_wof_values_address = (uint32_t)&occ_shared_data->pgpe_wof_values;//Wof Values
 
-    //Write the magic number in the HcodeOCCSharedData struct
-    occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER;
 }
