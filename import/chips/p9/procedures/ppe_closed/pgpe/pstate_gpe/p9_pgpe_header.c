@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -79,4 +79,6 @@ void p9_pgpe_header_init()
     G_pgpe_header_data->g_pgpe_req_active_quad_address = (uint32_t)
             &occ_shared_data->req_active_quads;//Requested Active Quads
 
+    //Write the magic number in the HcodeOCCSharedData struct
+    occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER;
 }
