@@ -116,6 +116,7 @@ extern "C" {
     {
         //      Chiplet               RingID                Clock domain
         //      -------          --------------     -----------------------------
+        {  PIB_CHIPLET_ID,     ALL_GOOD_ID,         P10_FSI_VITL_DOMAIN            },  // FSI
         {  PERV_CHIPLET_ID,    ALL_GOOD_ID,         P10_TP_SBEPIBOCCNET_DOMAIN     },  // TP
 
         {  N0_CHIPLET_ID,      ALL_GOOD_ID,         P10_N0_NXVASINTNMMU0PE0_DOMAIN },
