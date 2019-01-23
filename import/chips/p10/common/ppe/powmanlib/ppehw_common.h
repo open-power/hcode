@@ -42,7 +42,6 @@ typedef union
 #define UPPER32(variable) (uint32_t)((variable >> 32) & 0xFFFFFFFF)
 #define LOWER32(variable) (uint32_t)(variable & 0xFFFFFFFF)
 
-
 /// \defgroup be64_bits Bit manipulation for 64-bit Big-Endian values
 ///
 /// \note These macros only work in the assembler context because we build our
@@ -73,14 +72,21 @@ typedef union
 #define BITS64SH(bit64, size)   BITS32((bit64-32), size)
 #define SHIFT64SH(bit64)        SHIFT32((bit64-32))
 
+/// Second Half Local Register Access
+/// use in32/out32 for first half
+#define in32_sh(addr)           in32(addr+4)
+#define out32_sh(addr, data)    out32(addr+4, data)
+
 /// Mark and Tag
 
-#define CODE2REGA(code)     ((code & 0x1F00) >> 8)
-#define CODE2REGB(code)     ((code & 0xF8) >> 3)
-#define CODE2TAG(code,tag)  ((tag << 8) | (code >> 3))
-#define TAG_SPRG0(tag)      {ppe42_app_ctx_set(tag);}
+// TAG = [18bits reserved][4bits targets][10bits code]
 
-#if EPM_P9_TUNING
+#define CODE2REGA(code)          ((code & 0x1F00) >> 8)
+#define CODE2REGB(code)          ((code & 0xF8) >> 3)
+#define CODE2TAG(targets, code)  ((targets << 10) | (code >> 3))
+#define TAG_SPRG0(tag)           {ppe42_app_ctx_set(tag);}
+
+#if EPM_TUNING
 #define MARK_TRAP(code) \
     {asm volatile ("tw 0, %0, %1" : : \
                    "i" (CODE2REGA(code)), \
@@ -89,56 +95,16 @@ typedef union
 #define MARK_TRAP(code)
 #endif
 
-#define MARK_TAG(code, tag) \
-    TAG_SPRG0(CODE2TAG(code, tag)) \
+#define MARK_TAG(targets, code) \
+    TAG_SPRG0(CODE2TAG(targets, code)) \
     MARK_TRAP(code)
 
 
-/// Wait Macro
-
-#define PPE_CORE_CYCLE_RATIO       8 // core is 8 times faster than cme
-#define PPE_FOR_LOOP_CYCLES        4 // fused compare branch(3), addition(1)
-#define PPE_CORE_CYCLE_DIVIDER     (PPE_CORE_CYCLE_RATIO*PPE_FOR_LOOP_CYCLES)
-#ifdef USE_PPE_IMPRECISE_MODE
-#define PPE_WAIT_CORE_CYCLES(cc) \
-    {volatile uint32_t l;asm volatile ("sync");for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);}
-#else
-#define PPE_WAIT_CORE_CYCLES(cc) \
-    {volatile uint32_t l;for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);}
-#endif
-
-#if !defined(__PK__)
-    #define PK_IRQ_POLARITY_ACTIVE_LOW  0
-    #define PK_IRQ_POLARITY_ACTIVE_HIGH 1
-
-    #define PK_IRQ_TRIGGER_LEVEL_SENSITIVE 0
-    #define PK_IRQ_TRIGGER_EDGE_SENSITIVE  1
-#endif
-
-/// IRQ Setup
-enum PK_IRQ_SHORT_PARAMETER_NAMES
-{
-    POLARITY_LOW  = PK_IRQ_POLARITY_ACTIVE_LOW,
-    POLARITY_HIGH = PK_IRQ_POLARITY_ACTIVE_HIGH,
-    TRIGGER_EDGE  = PK_IRQ_TRIGGER_EDGE_SENSITIVE,
-    TRIGGER_LEVEL = PK_IRQ_TRIGGER_LEVEL_SENSITIVE
-};
-
-#define PK_IRQ_SETUP(irq, polarity, trigger)                           \
-    rc = pk_irq_setup(irq, polarity, trigger);                         \
-    if (rc) {                                                          \
-        PK_TRACE("pk_irq_setup(irq) failed w/rc=0x%08x", rc);          \
-        pk_halt();                                                     \
-    }
-
-#define PK_IRQ_HANDLER_SET(irq, handler, sem)                          \
-    rc = pk_irq_handler_set(irq,                                       \
-                            handler,                                   \
-                            (void*)&sem);                              \
-    if (rc) {                                                          \
-        PK_TRACE("pk_irq_handler_set(irq) failed w/rc=0x%08x", rc);    \
-        pk_halt();                                                     \
-    }
+#define WAIT_4_PPE_CYCLES          \
+    asm volatile ("tw 0, 0, 0");   \
+    asm volatile ("tw 0, 0, 0");   \
+    asm volatile ("tw 0, 0, 0");   \
+    asm volatile ("tw 0, 0, 0");
 
 
 #endif  /* __PPEHW_COMMON_H__ */

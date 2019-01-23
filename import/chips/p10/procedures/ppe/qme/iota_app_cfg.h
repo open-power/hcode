@@ -42,6 +42,18 @@
 
 // --------------------
 
+#if EPM_TUNING
+    #define PK_TRACE_BUFFER_WRAP_MARKER 1
+    #define __FAPI_DELAY_SIM__
+#endif
+
+// --------------------
+#define VALUE_TO_STRING(x) #x
+#define VALUE(x) VALUE_TO_STRING(x)
+#define VAR_NAME_VALUE(var) #var "="  VALUE(var)
+//#pragma message(VAR_NAME_VALUE(PK_TRACE_LEVEL))
+//#pragma message(VAR_NAME_VALUE(CURRENT_GIT_HEAD))
+
 #if PK_TRACE_LEVEL == 0   /*No TRACEs*/
     #define PK_TRACE_ENABLE        0
     #define PK_KERNEL_TRACE_ENABLE 0
@@ -131,7 +143,6 @@
 // Main "execution" stack size in bytes, must be multiple of 8
 #define IOTA_EXECUTION_STACK_SIZE  2048
 
-#include "qme_register_addresses.h"
-#define LOCAL_TIMEBASE_REGISTER QME_LCL_TBR
+#define LOCAL_TIMEBASE_REGISTER STD_LCL_TBR
 
 #endif
