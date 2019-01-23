@@ -46,7 +46,6 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "iota_ppe42.h"
-//#include "pk.h"
 
 
 // Default for IOTA_IDLE_TASKS_ENABLE is no idle task support
@@ -117,7 +116,6 @@ void iota_run()  __attribute__((noreturn));
 #define compile_assert(name,e) \
     enum { compile_assert__##name = 1/(e) };
 
-// TODO move this to a more generic PPE header file
 #define SECTION_SBSS __attribute__((section(".sbss")))
 #define SECTION_SDATA __attribute__((section(".sdata")))
 #define SECTION(a) __attribute__((section(a)))
@@ -251,6 +249,9 @@ typedef struct
 
 #endif
 
+// IF IOTA_IDLE_TASKS_ENABLE,
+// This variable just becomes an interrupt level count to
+// determine when idle tasks can run.
 extern iotaTaskFuncPtr    g_iota_task_list[];
 extern uint32_t const     g_iota_task_list_size;
 extern uint64_t           g_iota_execution_stack[];

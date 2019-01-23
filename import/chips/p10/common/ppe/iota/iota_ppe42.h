@@ -120,6 +120,7 @@
     bl      _iota_boot
 .endm
 
+
 # This routine is called on any exception or interrupt and saves some state
 # prior to setting up the call to and calling __iota_save_interrupt_state_and_schedule
 # Note: must be <=8 instructions!
@@ -146,6 +147,7 @@ li      %r3, \iota_schedule_reason
 b      __iota_save_interrupt_state_and_schedule
 .endm
 #endif //__PPE42X__
+
 
 // *INDENT-ON*
 #else

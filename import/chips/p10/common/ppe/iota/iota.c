@@ -174,6 +174,7 @@ void _iota_schedule(uint32_t schedule_reason)
     }
 
 #else
+
     ++g_iota_curr_machine_state_ptr;
     // stack check
     uint32_t stack_ptr;
@@ -216,7 +217,7 @@ void _iota_schedule(uint32_t schedule_reason)
             break;
 #endif
 
-#if !DISABLE_FIT_TIMER
+#if ENABLE_FIT_TIMER
 
         case _IOTA_SCHEDULE_REASON_FIT:
             g_iota_fit_handler();
