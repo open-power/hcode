@@ -24,135 +24,137 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "qme.h"
-#include "p9_cme_copy_scan_ring.h"
-#include "p9_hcode_image_defines.H"
+//#include "p9_qme_copy_scan_ring.h"
+//#include "p9_hcode_image_defines.H"
 
-extern QmeRecord G_qme_record;
+// QME Stop Header and Structure
+QmeRecord G_qme_record __attribute__((section (".dump_ptr"))) =
+{
+    // Put Static fingerprints into image
+    QME_SCOREBOARD_VERSION,
+    sizeof(QmeRecord),
+    POWER10_DD_LEVEL,
+    CURRENT_GIT_HEAD,
+    0, //Timer_enabled
+    ENABLED_HCODE_FUNCTIONS,
+    ( BIT32(STOP_LEVEL_2) | BIT32(STOP_LEVEL_5) ),
+    0
+};
 
 void
 qme_init()
 {
-    uint32_t   entry_first = 0;
-    uint32_t   exit_first  = 0;
-    uint32_t   qme_flags   = 0;
-    uint32_t   core_mask   = 0;
+    //--------------------------------------------------------------------------
+    // Initialize Software Scoreboard
+    //--------------------------------------------------------------------------
 
-    //--------------------------------------------------------------------------
-    // Parse CME Flags and Initialize Core States
-    //--------------------------------------------------------------------------
+    uint32_t local_data = in32_sh(G_QME_LCL_QMCR);
+
+    G_qme_record.c_configured       = local_data & BITS64SH(60, 4);
+    G_qme_record.fused_core_enabled = ( local_data >> SHIFT64SH(47) ) & 0x1;
+
+    // TODO attributes or flag bits
+    G_qme_record.stop_level_enabled = ( BIT32(STOP_LEVEL_2) | BIT32(STOP_LEVEL_5) );
+    G_qme_record.mma_enabled        = 0;
+    G_qme_record.pmcr_fwd_enabled   = 0;
+    G_qme_record.throttle_enabled   = 0;
+
+    PK_TRACE_INF("Setup: Git Head[%x], Chip DD Level[%d], Stop Level Enabled[%x], Configured Cores[%x]",
+                 G_qme_record.git_head,
+                 G_qme_record.chip_dd_level,
+                 G_qme_record.stop_level_enabled,
+                 G_qme_record.c_configured);
 
     if (!G_qme_record.c_configured)
     {
-        PK_TRACE_DBG("ERROR: Not a single core is configured to this QME. HALT QME!");
-        PK_PANIC(QME_NO_CONFIGURED_CORE);
+        PK_TRACE_ERR("ERROR: Not a single core is configured to this QME. HALT QME!");
+        IOTA_PANIC(QME_STOP_NO_PARTIAL_GOOD_CORE);
     }
 
-    // partial_good and entry_first:  unmask entry
-    // partial_good and !entry_first: unmask exit
-    // !partial_good:                 dont unmask
-    qme_flags   = (in32(G_QME_LCL_FLAGS) & 0xF);
-    entry_first = ( (cme_flags >> 2) & cme_flags & CME_MASK_BC);
-    exit_first  = (~(cme_flags >> 2) & cme_flags & CME_MASK_BC);
+    // use SCDR[0:3] STOP_GATED to initialize core stop status
+    // Note when QME is booted, either core is in stop11 or running
+    G_qme_record.c_stop11_reached   = ((in32(G_QME_LCL_SCDR) & BITS32(0, 4))  >> SHIFT32(3)) ;
+    G_qme_record.c_stop11_reached  |= (~G_qme_record.c_configured) & QME_MASK_ALL_CORES;
+    G_qme_record.c_stop5_reached    = G_qme_record.c_stop11_reached;
+    G_qme_record.c_stop2_reached    = G_qme_record.c_stop11_reached;
 
-    G_qme_record.c_stopped = exit_first;
+#if EPM_TUNING
+    // EPM Always have cores ready to enter first, aka cores are running when boot
+    G_qme_record.c_stop2_reached  = 0;
+    G_qme_record.c_stop5_reached  = 0;
+    G_qme_record.c_stop11_reached = 0;
+#endif
 
-    // use SISR[2:3] PM_BLOCK_INTERRUPTS to init block wakeup status
-    G_qme_record.core_blockpc = ((in32(G_CME_LCL_SICR) & BITS32(2, 2)) >> SHIFT32(3));
-    G_qme_record.core_blockwu = G_qme_record.core_blockpc;
-    G_qme_record.core_blockey = 0;
-    G_qme_record.core_suspendwu = G_qme_record.core_blockpc;
-    G_qme_record.core_suspendey = 0;
-    G_qme_record.core_vdm_droop = 0;
+    // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
+    G_qme_record.c_special_wakeup_done = ((in32(G_QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
 
-    if (in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_BLOCK_ENTRY_STOP11))
-    {
-        G_qme_record.core_blockey = CME_MASK_BC;
-        G_qme_record.core_suspendey = CME_MASK_BC;
-    }
+    // use SSDR[36:39] PM_BLOCK_INTERRUPTS to initalize block wakeup status
+    G_qme_record.c_block_wake_done = ((in32_sh(G_QME_LCL_SSDR) & BITS64SH(36, 4)) >> SHIFT64SH(39));
+    G_qme_record.c_block_stop_done = 0;
 
-    // use SISR[16:17] SPECIAL_WKUP_DONE to init special wakeup status
-    G_qme_record.c_special_wakeup_done = ((in32(G_CME_LCL_SISR) & BITS32(16, 2)) >> SHIFT32(17));
+    PK_TRACE_INF("Setup: Core Stop Gated[%x], Core in Special Wakeup[%d], Core in Block Wakeup[%x]",
+                 G_qme_record.c_stop11_reached,
+                 G_qme_record.c_special_wakeup_done,
+                 G_qme_record.c_block_wake_done);
 
-    PK_TRACE_DBG("Setup: cme_flags[%x] entry_first[%x] exit_first[%x]",
-                 cme_flags, entry_first, exit_first);
-
-    G_qme_record.c_stop11_done = ((~G_cme_record.c_configured) | exit_first);
-    p9_cme_stop_eval_eimr_override();
+    qme_eval_eimr_override();
 
     //--------------------------------------------------------------------------
     // BCE Core Specific Scan Ring
     //--------------------------------------------------------------------------
+    /*
+    #if !SKIP_BCE_SCAN_RING
 
-#if !SKIP_BCE_SCAN_RING
+        PK_TRACE_DBG("Setup: BCE Setup Kickoff to Copy Core Specific Scan Ring");
 
-    PK_TRACE_DBG("Setup: BCE Setup Kickoff to Copy Core Specific Scan Ring");
+        cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
 
-    cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
+        //right now a blocking call. Need to confirm this.
+        start_cme_block_copy(CME_BCEBAR_1,
+                             (CME_IMAGE_CPMR_OFFSET + (pCmeImgHdr->g_cme_core_spec_ring_offset << 5)),
+                             pCmeImgHdr->g_cme_core_spec_ring_offset,
+                             pCmeImgHdr->g_cme_max_spec_ring_length);
 
-    //right now a blocking call. Need to confirm this.
-    start_cme_block_copy(CME_BCEBAR_1,
-                         (CME_IMAGE_CPMR_OFFSET + (pCmeImgHdr->g_cme_core_spec_ring_offset << 5)),
-                         pCmeImgHdr->g_cme_core_spec_ring_offset,
-                         pCmeImgHdr->g_cme_max_spec_ring_length);
+        PK_TRACE_DBG("Setup: BCE Check for Copy Completed");
 
-    PK_TRACE_DBG("Setup: BCE Check for Copy Completed");
+        if( BLOCK_COPY_SUCCESS != check_cme_block_copy() )
+        {
+            PK_TRACE_DBG("ERROR: BCE Copy of Core Specific Scan Ring Failed. HALT CME!");
+            IOTA_PANIC(CME_STOP_BCE_CORE_RING_FAILED);
+        }
 
-    if( BLOCK_COPY_SUCCESS != check_cme_block_copy() )
+    #endif
+    */
+    //--------------------------------------------------------------------------
+    // Initialize Hardware Settings
+    //--------------------------------------------------------------------------
+
+    PK_TRACE("Drop STOP override mode and active mask via QMCR[6,7]");
+    out32(G_QME_LCL_QMCR_OR,  BITS32(16, 8)); //0xB=1011 (Lo-Pri Sel)
+    out32(G_QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2)));
+
+    if( G_qme_record.c_special_wakeup_done )
     {
-        PK_TRACE_DBG("ERROR: BCE Copy of Core Specific Scan Ring Failed. HALT CME!");
-        PK_PANIC(CME_STOP_BCE_CORE_RING_FAILED);
+        PK_TRACE_DBG("Setup: Special Wakeup Done[%d], Assert PM_EXIT", G_qme_record.c_special_wakeup_done);
+        out32( QME_LCL_CORE_ADDR_WR(
+                   G_QME_SCSR_OR, G_qme_record.c_special_wakeup_done ), BIT32(1) );
     }
 
-#endif
+    PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE/CTFS_DEC_WKUP_ENABLE via PCR_SCSR[20, 26, 27]");
+    out32( QME_LCL_CORE_ADDR_WR(
+               G_QME_SCSR_OR, G_qme_record.c_configured ), ( BIT32(20) | BITS32(26, 2) ) );
 
     //--------------------------------------------------------------------------
-    // Common Hardware Settings
+    // QME Init Completed, Enable Interrupts
     //--------------------------------------------------------------------------
 
-#if HW386841_NDD1_DSL_STOP1_FIX
+    PK_TRACE_INF("Setup: QME STOP READY");
+    out32(G_QME_LCL_FLAGS_OR, BIT32(QME_FLAGS_READY));
 
-    PK_TRACE("Disable the Auto-STOP1 function for Nimbus DD1 via LMCR[18,19]");
-    out32(G_CME_LCL_LMCR_OR, BITS32(18, 2));
-
-#endif
-
-    PK_TRACE("Drop STOP override mode and active mask via LMCR[16,17]");
-    out32(G_CME_LCL_LMCR_CLR, BITS32(16, 2));
-
-    PK_TRACE_DBG("Setup: SPWU Interrupt Polority[%d]", G_qme_record.core_in_spwu);
-    out32(G_CME_LCL_EIPR_CLR, (G_qme_record.core_in_spwu << SHIFT32(15)));
-    out32(G_CME_LCL_EIPR_OR,  (((~G_qme_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(15)));
-    out32(G_CME_LCL_SICR_OR,  ((G_qme_record.core_in_spwu << SHIFT32(5)) |
-                               (G_qme_record.core_in_spwu << SHIFT32(17))));
-    out32(G_CME_LCL_SICR_CLR, ((((~G_qme_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(5)) |
-                               (((~G_qme_record.core_in_spwu) & CME_MASK_BC) << SHIFT32(17))));
-
-    PK_TRACE("Assert auto spwu disable, disable auto spwu via LMCR[12/13]");
-    out32(G_CME_LCL_LMCR_OR, BITS32(12, 2));
-
-    PK_TRACE_DBG("Setup: Umask STOP Interrupts Now Based on Entry_First Flag");
-    // unmask db1 for block stop protocol
-    out32_sh(CME_LCL_EIMR_CLR, (CME_MASK_BC << SHIFT64SH(41)));
-    out32(G_CME_LCL_EIMR_CLR,
-          ((CME_MASK_BC << SHIFT32(19)) |  // DB2
-           (entry_first << SHIFT32(21)) |  // PM_ACTIVE
-           (exit_first  << SHIFT32(13)) |  // PC_INTR_PENDING
-#if SPWU_AUTO
-           (exit_first  << SHIFT32(15)) |
-#else
-           (CME_MASK_BC << SHIFT32(15)) |  // SPWU always unmask
-#endif
-           (exit_first  << SHIFT32(17)))); // RGWU
-
-    //--------------------------------------------------------------------------
-    // CME Init Completed
-    //--------------------------------------------------------------------------
-
-    PK_TRACE_INF("Setup: CME STOP READY");
-    out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_STOP_READY));
-
-#if EPM_P9_TUNING
+#if EPM_TUNING
     asm volatile ("tw 0, 31, 0");
 #endif
 
+    PK_TRACE_DBG("Setup: Unmask STOP Interrupts Now with Reversing Initial Mask[%x]", G_qme_record.c_all_stop_mask);
+    out32_sh( G_QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & BITS64SH(32, 24) ) );
 }
