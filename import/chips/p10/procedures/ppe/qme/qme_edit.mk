@@ -22,18 +22,18 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-#EXE=cmeImgEdit
 
-#$(EXE)_COMMONFLAGS+= -D__PPE_PLAT
+EXE=qmeImgEdit
 
-#$(call ADD_EXE_INCDIR, $(EXE), \
-   $(CME_SRCDIR) \
-   $(PK_SRCDIR)/kernel \
+$(EXE)_COMMONFLAGS+= -D__PPE_PLAT
+
+$(call ADD_EXE_INCDIR, $(EXE), \
+   $(QME_SRCDIR) \
+   $(IOTA_SRCDIR) \
    $(HCODE_COMMON_LIBDIR) \
    $(HCODE_LIBDIR) \
     )
 
-
-#IMAGE_DEPS+=cmeImgEdit
-#OBJS=p9_cme_img_edit.o
+#IMAGE_DEPS+=qmeImgEdit
+#OBJS=qme_img_edit.o
 #$(call BUILD_EXE)
