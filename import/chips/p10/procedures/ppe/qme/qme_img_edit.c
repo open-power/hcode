@@ -28,12 +28,12 @@
 #include <netinet/in.h>
 #include <stddef.h>   /* offsetof  */
 
-#include <pk_debug_ptrs.h>
-#include <p9_hcode_image_defines.H>
+#include <iota_debug_ptrs.h>
+//#include <p9_hcode_image_defines.H>
 
 enum
 {
-    CME_IMAGE               =   1,
+    QME_IMAGE               =   1,
     CPMR_IMAGE              =   2,
 };
 
@@ -46,11 +46,11 @@ int main(int narg, char* argv[])
         return -1;
     }
 
-    cmeHeader_t  cmeHeader;
+    qmeHeader_t  qmeHeader;
 
-    int imageType = CME_IMAGE;
-    long int hcodeLenPos    = CME_HEADER_IMAGE_OFFSET + offsetof(cmeHeader_t, g_cme_hcode_length);
-    long int hcodeOffsetPos = CME_HEADER_IMAGE_OFFSET + offsetof(cmeHeader_t, g_cme_hcode_offset);
+    int imageType = QME_IMAGE;
+    long int hcodeLenPos    = QME_HEADER_IMAGE_OFFSET + offsetof(qmeHeader_t, g_qme_hcode_length);
+    long int hcodeOffsetPos = QME_HEADER_IMAGE_OFFSET + offsetof(qmeHeader_t, g_qme_hcode_offset);
 
     FILE* pImage = fopen( argv[1], "r+" );
 
@@ -67,10 +67,11 @@ int main(int narg, char* argv[])
             break;
         }
 
-        printf("                    Debug Pointers Offset   : %d (0x%X)\n", CME_DEBUG_PTRS_OFFSET, CME_DEBUG_PTRS_OFFSET);
-        printf("                    Debug Pointers size     : %ld (0x%lX)\n", sizeof(pk_debug_ptrs_t), sizeof(pk_debug_ptrs_t));
-        printf("                    CME Image Offset        : %ld (0x%lX)\n", CME_DEBUG_PTRS_OFFSET + sizeof(pk_debug_ptrs_t),
-               CME_DEBUG_PTRS_OFFSET + sizeof(pk_debug_ptrs_t));
+        printf("                    Debug Pointers Offset   : %d (0x%X)\n", QME_DEBUG_PTRS_OFFSET, QME_DEBUG_PTRS_OFFSET);
+        printf("                    Debug Pointers size     : %ld (0x%lX)\n", sizeof(iota_debug_ptrs_t),
+               sizeof(iota_debug_ptrs_t));
+        printf("                    QME Image Offset        : %ld (0x%lX)\n", QME_DEBUG_PTRS_OFFSET + sizeof(iota_debug_ptrs_t),
+               QME_DEBUG_PTRS_OFFSET + sizeof(iota_debug_ptrs_t));
 
 
         fseek (pImage, 0, SEEK_END);
@@ -80,30 +81,30 @@ int main(int narg, char* argv[])
 
         // For ekb build it's desired to detect the image type w/o special
         // make rules. Better way?
-        if(size < CME_HCODE_IMAGE_OFFSET)
+        if(size < QME_HCODE_IMAGE_OFFSET)
         {
             imageType = CPMR_IMAGE;
-            hcodeLenPos    = offsetof(cpmrHeader_t, cmeImgLength);
-            hcodeOffsetPos = offsetof(cpmrHeader_t, cmeImgOffset);
+            hcodeLenPos    = offsetof(cpmrHeader_t, qmeImgLength);
+            hcodeOffsetPos = offsetof(cpmrHeader_t, qmeImgOffset);
             printf("                    CPMR size               : %d (0x%X)\n", size, size);
             FILE* pHcodeImage = fopen( argv[2], "r+" );
             fseek (pHcodeImage, 0, SEEK_END);
             size = ftell (pHcodeImage);
             rewind (pHcodeImage);
-            printf("                    CME Hcode size          : %d (0x%X)\n", size, size);
+            printf("                    QME Hcode size          : %d (0x%X)\n", size, size);
         }
 
-        printf("                    CME Hcode Offset Address: %ld (0x%lX)\n", hcodeOffsetPos , hcodeOffsetPos);
+        printf("                    QME Hcode Offset Address: %ld (0x%lX)\n", hcodeOffsetPos , hcodeOffsetPos);
         fseek ( pImage, hcodeOffsetPos , SEEK_SET );
-        uint32_t temp = CME_HCODE_IMAGE_OFFSET;
+        uint32_t temp = QME_HCODE_IMAGE_OFFSET;
         temp = htonl(temp);
-        fwrite(&temp, sizeof(cmeHeader.g_cme_hcode_offset), 1, pImage );
+        fwrite(&temp, sizeof(qmeHeader.g_qme_hcode_offset), 1, pImage );
 
-        // cme hcode length
-        printf("                    CME HCode Length Address: %ld (0x%lX)\n", hcodeLenPos, hcodeLenPos);
+        // qme hcode length
+        printf("                    QME HCode Length Address: %ld (0x%lX)\n", hcodeLenPos, hcodeLenPos);
         fseek ( pImage, hcodeLenPos, SEEK_SET );
         temp = htonl( size );
-        fwrite(&temp, sizeof(cmeHeader.g_cme_hcode_length), 1, pImage );
+        fwrite(&temp, sizeof(qmeHeader.g_qme_hcode_length), 1, pImage );
 
         // self restore offset + length
         if (imageType == CPMR_IMAGE )
