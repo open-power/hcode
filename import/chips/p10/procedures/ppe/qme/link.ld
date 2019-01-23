@@ -40,7 +40,7 @@ MEMORY
 // Declare as EXTERN any symbols only used externally to ensure the linker
 // keeps them even though APP code never references them.
 EXTERN(iota_debug_ptrs);
-EXTERN(g_cme_magic_word);
+EXTERN(g_qme_magic_word);
 
 SECTIONS
 {
@@ -61,11 +61,8 @@ SECTIONS
     _DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
 
-    _DUMP_PTR_PSTATE_START = _DEBUG_PTRS_START + PPE_DEBUG_PTRS_SIZE;
-    .dump_ptr_pstate _DUMP_PTR_PSTATE_START : { *(.dump_ptr_pstate) } > sram
-
-    _DUMP_PTR_STOP_START = _DUMP_PTR_PSTATE_START + PPE_DUMP_PTR_PSTATE_SIZE;
-    .dump_ptr_stop _DUMP_PTR_STOP_START : { *(.dump_ptr_stop) } > sram
+    _DUMP_PTR_START = _DEBUG_PTRS_START + PPE_DEBUG_PTRS_SIZE;
+    .dump_ptr _DUMP_PTR_START : { *(.dump_ptr) } > sram
 
     . = ALIGN(16);
     /*======================================

@@ -43,10 +43,7 @@
 #define PPE_HEADER_IMAGE_OFFSET  0x200
 #define PPE_HEADER_IMAGE_NAME    .qme_image_header
 #define PPE_DEBUG_PTRS_OFFSET    0x200
-#define PPE_DEBUG_PTRS_SIZE      0x64
-
-#define PPE_DUMP_PTR_PSTATE_SIZE 0x50
-#define PPE_DUMP_PTR_STOP_SIZE   0x3C
-#define PPE_DUMP_PTR_COMMON_SIZE 0xC
+#define PPE_DEBUG_PTRS_SIZE      0x20
+#define PPE_DUMP_PTRS_SIZE       0x150
 
 #endif
