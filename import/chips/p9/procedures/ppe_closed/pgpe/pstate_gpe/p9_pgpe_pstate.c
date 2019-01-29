@@ -2055,19 +2055,25 @@ void p9_pgpe_pstate_updt_ext_volt()
     }
 
 #if !EPM_P9_TUNING
-    uint32_t delay_us = 0;
+    uint32_t delay_ticks = 0;
 
     //Decreasing
     if (G_pgpe_pstate_record.extVrmNext < G_pgpe_pstate_record.extVrmCurr)
     {
-        delay_us = (G_pgpe_pstate_record.extVrmCurr - G_pgpe_pstate_record.extVrmNext) *
-                   G_ext_vrm_dec_rate_mult_usperus;
+        //Convert us to OTBR ticks. Each OTBR tick is 32ns, so 1us=(1000/32) OTBR ticks. But,
+        //to keep the math simple(use shift instead of multiply) we approximate
+        //1us as (1024/32)=32 OTBR ticks
+        delay_ticks = ((G_pgpe_pstate_record.extVrmCurr - G_pgpe_pstate_record.extVrmNext) *
+                       G_ext_vrm_dec_rate_mult_usperus) << 5;
     }
     //Increasing
     else if (G_pgpe_pstate_record.extVrmNext > G_pgpe_pstate_record.extVrmCurr)
     {
-        delay_us  = (G_pgpe_pstate_record.extVrmNext - G_pgpe_pstate_record.extVrmCurr) *
-                    G_ext_vrm_inc_rate_mult_usperus;
+        //Convert us to OTBR ticks. Each OTBR tick is 32ns, so 1us=(1000/32) OTBR ticks. But,
+        //to keep the math simple(use shift instead of multiply) we approximate
+        //1us as (1024/32)=32 OTBR ticks
+        delay_ticks  = ((G_pgpe_pstate_record.extVrmNext - G_pgpe_pstate_record.extVrmCurr) *
+                        G_ext_vrm_inc_rate_mult_usperus) << 5;
     }
 
 #endif
@@ -2077,16 +2083,62 @@ void p9_pgpe_pstate_updt_ext_volt()
 
 #if !EPM_P9_TUNING
 
-    //Delay for delay_us
-    if (delay_us > 0)
+    //Delay for delay_ticks.
+    //We do busy wait here, so that the running thread does NOT get blocked and is kept running by
+    //PK kernel
+    uint32_t tbStart, tbEnd, elapsed;
+
+    if (delay_ticks > 0)
     {
-        pk_sleep(PK_MICROSECONDS((delay_us)));
+        //Read TimebaseStart
+        tbStart = in32(OCB_OTBR);
+
+        do
+        {
+            //Read TimebaseEnd
+            tbEnd = in32(OCB_OTBR);
+
+            //Compute Elapsed Count with accounting for Timebase Wrapping
+            if (tbEnd > tbStart)
+            {
+                elapsed = tbEnd - tbStart;
+            }
+            else
+            {
+                elapsed = 0xFFFFFFFF - tbStart + tbEnd + 1;
+            }
+        }
+        while(elapsed < delay_ticks);
     }
 
+
+    //We do busy wait here, so that the running thread does NOT get blocked and is kept running by
+    //PK kernel
     if(G_pgpe_pstate_record.biasSyspExtVrmNext == p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.psNext.fields.glb,
             VPD_PT_SET_BIASED_SYSP))
     {
-        pk_sleep(PK_MICROSECONDS((G_gppb->ext_vrm_stabilization_time_us)));
+        delay_ticks = G_gppb->ext_vrm_stabilization_time_us << 5;
+
+        //Read TimebaseStart
+        tbStart = in32(OCB_OTBR);
+
+        do
+        {
+            //Read TimebaseEnd
+            tbEnd = in32(OCB_OTBR);
+
+            //Compute Elapsed Count with accounting for Timebase Wrapping
+            if (tbEnd > tbStart)
+            {
+                elapsed = tbEnd - tbStart;
+            }
+            else
+            {
+                elapsed = 0xFFFFFFFF - tbStart + tbEnd + 1;
+            }
+        }
+        while(elapsed < delay_ticks);
+
     }
 
 #endif
