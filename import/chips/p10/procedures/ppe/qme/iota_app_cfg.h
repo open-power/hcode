@@ -131,7 +131,7 @@
 // Main "execution" stack size in bytes, must be multiple of 8
 #define IOTA_EXECUTION_STACK_SIZE  2048
 
-#define QME_LCL_TBR 0xffff0000
+#include "qme_register_addresses.h"
 #define LOCAL_TIMEBASE_REGISTER QME_LCL_TBR
 
 #endif

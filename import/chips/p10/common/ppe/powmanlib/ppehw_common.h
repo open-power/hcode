@@ -80,7 +80,7 @@ typedef union
 #define CODE2TAG(code,tag)  ((tag << 8) | (code >> 3))
 #define TAG_SPRG0(tag)      {ppe42_app_ctx_set(tag);}
 
-#if EPM_TUNING
+#if EPM_P9_TUNING
 #define MARK_TRAP(code) \
     {asm volatile ("tw 0, %0, %1" : : \
                    "i" (CODE2REGA(code)), \
@@ -107,14 +107,21 @@ typedef union
     {volatile uint32_t l;for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);}
 #endif
 
+#if !defined(__PK__)
+    #define PK_IRQ_POLARITY_ACTIVE_LOW  0
+    #define PK_IRQ_POLARITY_ACTIVE_HIGH 1
+
+    #define PK_IRQ_TRIGGER_LEVEL_SENSITIVE 0
+    #define PK_IRQ_TRIGGER_EDGE_SENSITIVE  1
+#endif
 
 /// IRQ Setup
 enum PK_IRQ_SHORT_PARAMETER_NAMES
 {
-    IRQ_POLARITY_ACTIVE_LOW = 0,
-    IRQ_POLARITY_ACTIVE_HIGH = 1,
-    IRQ_TRIGGER_EDGE_SENSITIVE = 0,
-    IRQ_TRIGGER_LEVEL_SENSITIVE = 1
+    POLARITY_LOW  = PK_IRQ_POLARITY_ACTIVE_LOW,
+    POLARITY_HIGH = PK_IRQ_POLARITY_ACTIVE_HIGH,
+    TRIGGER_EDGE  = PK_IRQ_TRIGGER_EDGE_SENSITIVE,
+    TRIGGER_LEVEL = PK_IRQ_TRIGGER_LEVEL_SENSITIVE
 };
 
 #define PK_IRQ_SETUP(irq, polarity, trigger)                           \
@@ -133,9 +140,5 @@ enum PK_IRQ_SHORT_PARAMETER_NAMES
         pk_halt();                                                     \
     }
 
-
-#define SECTION_SBSS __attribute__((section(".sbss")))
-#define SECTION_SDATA __attribute__((section(".sdata")))
-#define SECTION(a) __attribute__((section(a)))
 
 #endif  /* __PPEHW_COMMON_H__ */
