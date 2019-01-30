@@ -24,6 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "qme.h"
+#include "iota_trace.h"
 
 extern QmeRecord G_qme_record;
 
