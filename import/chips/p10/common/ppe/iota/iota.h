@@ -25,13 +25,29 @@
 #ifndef __IOTA_H__
 #define __IOTA_H__
 
-#include "iota_app_cfg.h"
+#ifndef __IOTA__
+    #define __IOTA__ 1
+#endif
+
+#ifdef USE_APP_CFG_H
+    #include "iota_app_cfg.h"
+#endif
+
+#ifndef APPCFG_TRACE
+    #define APPCFG_TRACE PK_TRACE
+#endif
+
+#ifndef APPCFG_PANIC
+    #define APPCFG_PANIC IOTA_PANIC
+#endif
 
 #ifndef __ASSEMBLER__
 
 #include <stdint.h>
+#include <stddef.h>
 #include "iota_ppe42.h"
-#include "pk.h"
+//#include "pk.h"
+
 
 // Default for IOTA_IDLE_TASKS_ENABLE is no idle task support
 #if !defined(IOTA_IDLE_TASKS_ENABLE)
@@ -45,7 +61,7 @@
 void iota_run()  __attribute__((noreturn));
 
 #define iota_halt() __iota_halt()
-#define iota_dead(code) PK_PANIC((code))
+#define iota_dead(code) IOTA_PANIC((code))
 
 #if IOTA_IDLE_TASKS_ENABLE
     /**
@@ -98,9 +114,18 @@ void iota_run()  __attribute__((noreturn));
 #define IOTA_COMPILE_TIME_CHECK(condition) \
     extern int IOTA_COMPILE_TIME_UNIQUE [!!(condition)-1];
 
+#define compile_assert(name,e) \
+    enum { compile_assert__##name = 1/(e) };
+
+// TODO move this to a more generic PPE header file
+#define SECTION_SBSS __attribute__((section(".sbss")))
+#define SECTION_SDATA __attribute__((section(".sdata")))
+#define SECTION(a) __attribute__((section(a)))
+
 // IOTA Plugin functions
 #define IOTA_TASK(function) ((iotaTaskFuncPtr)function)
 #define IOTA_TIMER_HANDLER(function) ((iotaTimerFuncPtr)function)
+
 
 #define IOTA_DEC_HANDLER(function) g_iota_dec_handler \
         = IOTA_TIMER_HANDLER(function);
@@ -154,6 +179,28 @@ void iota_run()  __attribute__((noreturn));
 
 typedef struct
 {
+#if defined(__PPE42A__)
+    uint32_t GPR0;
+    uint32_t GPR1;
+    uint32_t GPR4;
+    uint32_t GPR5;
+    uint32_t GPR6;
+    uint32_t GPR7;
+    uint32_t GPR8;
+    uint32_t GPR9;
+    uint32_t GPR28;
+    uint32_t GPR29;
+    uint32_t GPR30;
+    uint32_t GPR31;
+    uint32_t SRR0;
+    uint32_t SRR1;
+    uint32_t LR;
+    uint32_t CR;
+    uint32_t GPR3;
+    uint32_t GPR10;
+    uint32_t CTR;
+    uint32_t XER; // needs to be 8B aligned
+#else
     uint32_t back_chain;
     uint32_t next_lr;
     uint32_t CR;
@@ -176,6 +223,7 @@ typedef struct
     uint32_t GPR29;
     uint32_t GPR30;
     uint32_t GPR31;
+#endif
 } iotaMachineState;
 
 typedef void (*iotaTaskFuncPtr )( );
@@ -187,14 +235,22 @@ typedef struct
     iotaTaskFuncPtr function;
 } iotaIdleTask;
 
-#define MACHINE_STATE_CONTEXT_SIZE  sizeof(iotaMachineState)
-#define MACHINE_STATE_STACK_SIZE (IOTA_MAX_NESTED_INTERRUPTS * MACHINE_STATE_CONTEXT_SIZE)
-#define IOTA_STACK_DWORD_SIZE ((IOTA_EXECUTION_STACK_SIZE + MACHINE_STATE_STACK_SIZE)/8 + 1)
+#if defined(__PPE42A__)
 
-// IF IOTA_IDLE_TASKS_ENABLE,
-// This variable just becomes an interrupt level count to
-// determine when idle tasks can run.
-extern uint32_t           g_iota_curr_machine_state_ptr;
+    #define IOTA_STACK_DWORD_SIZE ((IOTA_EXECUTION_STACK_SIZE/8)+1)
+    extern iotaMachineState   g_iota_machine_state_stack[];
+    extern iotaMachineState* g_iota_curr_machine_state_ptr;
+
+#else
+
+    #define MACHINE_STATE_CONTEXT_SIZE  sizeof(iotaMachineState)
+    #define MACHINE_STATE_STACK_SIZE (IOTA_MAX_NESTED_INTERRUPTS * MACHINE_STATE_CONTEXT_SIZE)
+    #define IOTA_STACK_DWORD_SIZE ((IOTA_EXECUTION_STACK_SIZE + MACHINE_STATE_STACK_SIZE)/8 + 1)
+
+    extern uint32_t g_iota_curr_machine_state_ptr;
+
+#endif
+
 extern iotaTaskFuncPtr    g_iota_task_list[];
 extern uint32_t const     g_iota_task_list_size;
 extern uint64_t           g_iota_execution_stack[];
@@ -203,6 +259,11 @@ extern uint64_t           g_iota_execution_stack_end;
 #if IOTA_IDLE_TASKS_ENABLE
     extern iotaIdleTask       g_iota_idle_task_list[];
     extern uint32_t const     g_iota_idle_task_list_size;
+    #if !defined(__PPE42A__)
+        // This variable just becomes an interrupt level count to determine when
+        // idle tasks can run.
+        extern uint32_t g_iota_curr_machine_state_ptr;
+    #endif
 #endif
 
 void _iota_boot();
@@ -213,11 +274,15 @@ extern void __iota_halt() __attribute__((noreturn));
 
 extern iotaTimerFuncPtr g_iota_dec_handler;
 extern iotaTimerFuncPtr g_iota_fit_handler;
+extern void __hwmacro_setup(void);
 
 extern uint32_t __ext_irq_handler(void);
 extern void     __ext_irq_resume(void);
-extern void     __hwmacro_setup(void);
 
-#endif // __ASSEMBLER__
+// To satisfy pk_trace
+typedef uint64_t PkTimebase;
+PkTimebase pk_timebase_get(void);
+
+#endif // !__ASSEMBLER__
 
 #endif //__IOTA_H__

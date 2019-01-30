@@ -22,6 +22,15 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
+#ifndef __IOTA_PPE42_H__
+#define __IOTA_PPE42_H__
+
+// If not using the PPE42X compiler then don't use PPE42X instructions.
+// __PPE42A__ and __PPE42X__ are defined by the ppe42 compiler. Earlier
+// versions of the compiler don't define them.
+#if !defined(__PPE42X__) && !defined(__PPE42A__)
+    #define __PPE42A__
+#endif
 
 #ifndef __ASSEMBLER__
     #include <stdint.h>
@@ -30,9 +39,8 @@
 #include "ppe42_asm.h"
 #include "ppe42_msr.h"
 #include "ppe42_spr.h"
-
-#ifndef __IOTA_PPE42_H__
-#define __IOTA_PPE42_H__
+#include "ppe42_mmio.h"
+#include "ppe_port.h"
 
 #ifdef __PPE42_CORE_C__
     #define IF__PPE42_CORE_C__(x) x
@@ -42,26 +50,58 @@
     #define UNLESS__PPE42_CORE_C__(x) x
 #endif
 
+#ifdef __PPE42_IRQ_CORE_C__
+    #define IF__PPE42_IRQ_CORE_C__(x) x
+    #define UNLESS__PPE42_IRQ_CORE_C__(x)
+#else
+    #define IF__PPE42_IRQ_CORE_C__(x)
+    #define UNLESS__PPE42_IRQ_CORE_C__(x) x
+#endif
+
+
+#ifdef HWMACRO_GPE
+    #include "gpe.h"
+#elif defined(HWMACRO_STD)
+    #include "std.h"
+#elif defined(HWMACRO_PPE)
+    #include "ppe.h"
+#else
+    #error "Macro Type not specified.  Are you building from the correct directory?"
+#endif
+
+
 #define _IOTA_SCHEDULE_REASON_FIT 0x0f
 #define _IOTA_SCHEDULE_REASON_DEC 0x0d
 #define _IOTA_SCHEDULE_REASON_EXT 0x0e
+
+#if !defined(__PPE42X__)
+
+    #define _IOTA_SAVE_D0_OFFSET    0
+    #define _IOTA_SAVE_D4_OFFSET    8
+    #define _IOTA_SAVE_D6_OFFSET   16
+    #define _IOTA_SAVE_D8_OFFSET   24
+    #define _IOTA_SAVE_D28_OFFSET  32
+    #define _IOTA_SAVE_D30_OFFSET  40
+    #define _IOTA_SAVE_SRR0_OFFSET 48
+    #define _IOTA_SAVE_SRR1_OFFSET 52
+    #define _IOTA_SAVE_LR_OFFSET   56
+    #define _IOTA_SAVE_CR_OFFSET   60
+    #define _IOTA_SAVE_R3_OFFSET   64
+    #define _IOTA_SAVE_R10_OFFSET  68
+    #define _IOTA_SAVE_CTR_OFFSET  72
+    #define _IOTA_SAVE_XER_OFFSET  76
+
+    #define _IOTA_TEMPORARY_R3_STACK_OFFSET -4
+
+#endif
 
 #ifndef PPE42_DBCR_INITIAL
     // Enable 'trap' to cause a halt
     #define PPE42_DBCR_INITIAL (DBCR_TRAP | DBCR_ZACE)
 #endif
 
-#define mtdbcr(value) \
-    asm volatile ("mtdbcr %0" : : "r" (value) : "memory")
-
-#define mttcr(value) \
-    asm volatile ("mttcr %0" : : "r" (value) : "memory")
-
-#define sync() asm volatile ("sync" : : : "memory")
-
 #ifdef __ASSEMBLER__
 // *INDENT-OFF*
-
 # halt ppe with panic code macro
 .macro _pk_panic, code
     tw  31,(\code)/256, (\code)%256
@@ -80,74 +120,35 @@
     bl      _iota_boot
 .endm
 
-
-#ifdef __PPE42X__
 # This routine is called on any exception or interrupt and saves some state
 # prior to setting up the call to and calling __iota_save_interrupt_state_and_schedule
 # Note: must be <=8 instructions!
+
+#ifdef __PPE42X__
 .macro __m_iota_interrupt_and_exception_handler, iota_schedule_reason
 # Creates Stack frame and saves CR,SPRG0,R0,R1,R3-R10,XER,CTR,SRR0,SRR1,R28-R31
 stcxtu  %r1,-88(%r1)
 li      %r3, \iota_schedule_reason
 bl      _iota_schedule
-lcxt    %r1,%r1
+lcxu    %r1, 88(%r1)
 rfi
 .endm
-#endif
+#else
+.macro __m_iota_interrupt_and_exception_handler, iota_schedule_reason
+# temporarily place r3 on the stack, without incrementing sp
+stw     %r3, _IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
+# load the pointer to the location of where to save machine state
+lwz     %r3, g_iota_curr_machine_state_ptr@sda21(0)
+# save d8
+stvd    %d8, _IOTA_SAVE_D8_OFFSET(%r3)
+mr      %r9, %r3
+li      %r3, \iota_schedule_reason
+b      __iota_save_interrupt_state_and_schedule
+.endm
+#endif //__PPE42X__
 
 // *INDENT-ON*
 #else
-
-/// 8-bit MMIO Write
-#define out8(addr, data) \
-    do {*(volatile uint8_t *)(addr) = (data);} while(0)
-
-/// 8-bit MMIO Read
-#define in8(addr) \
-    ({uint8_t __data = *(volatile uint8_t *)(addr); __data;})
-
-/// 16-bit MMIO Write
-#define out16(addr, data) \
-    do {*(volatile uint16_t *)(addr) = (data);} while(0)
-
-/// 16-bit MMIO Read
-#define in16(addr) \
-    ({uint16_t __data = *(volatile uint16_t *)(addr); __data;})
-
-/// 32-bit MMIO Write
-#define out32(addr, data) \
-    do {*(volatile uint32_t *)(addr) = (data);} while(0)
-
-/// 32-bit MMIO Read
-#define in32(addr) \
-    ({uint32_t __data = *(volatile uint32_t *)(addr); __data;})
-
-/// 64-bit MMIO Write
-#define out64(addr, data) \
-    {\
-        uint64_t __d = (data); \
-        uint32_t* __a = (uint32_t*)(addr); \
-        asm volatile \
-        (\
-         "stvd %1, %0 \n" \
-         : "=o"(*__a) \
-         : "r"(__d) \
-        ); \
-    }
-
-/// 64-bit MMIO Read
-#define in64(addr) \
-    ({\
-        uint64_t __d; \
-        uint32_t* __a = (uint32_t*)(addr); \
-        asm volatile \
-        (\
-         "lvd %0, %1 \n" \
-         :"=r"(__d) \
-         :"o"(*__a) \
-        ); \
-        __d; \
-    })
 
 /// CouNT Leading Zeros Word
 #define cntlzw(x) \
@@ -177,6 +178,11 @@ cntlz64(uint64_t x)
     }
 }
 
+// Memory barrier
+#define barrier() asm volatile ("" : : : "memory")
+
+
+#define sync() asm volatile ("sync" : : : "memory")
 
 // machine context is simply the MSR
 typedef unsigned long PkMachineContext;
@@ -185,7 +191,7 @@ typedef unsigned long PkMachineContext;
 /// context.
 UNLESS__PPE42_CORE_C__(extern)
 inline
-void pk_interrupt_disable(PkMachineContext* context)
+void ppe_interrupt_disable(PkMachineContext* context)
 {
     *context = mfmsr();
     wrteei(0);
@@ -193,19 +199,29 @@ void pk_interrupt_disable(PkMachineContext* context)
 
 UNLESS__PPE42_CORE_C__(extern)
 inline
-void pk_machine_context_set(PkMachineContext* context)
+void ppe_machine_context_set(PkMachineContext* context)
 {
     mtmsr(*context);
 }
 
+// These are needed for pk trace
 #define pk_critical_section_enter(pctx) \
-    pk_interrupt_disable(pctx)
+    ppe_interrupt_disable(pctx)
 
 /// Exit a critical section by restoring the previous machine context.
 
 #define pk_critical_section_exit(pctx) \
-    pk_machine_context_set(pctx)
+    ppe_machine_context_set(pctx)
 
+// Use these instead of pk version for iota based code
+#define ppe_critical_section_enter(pctx) \
+    ppe_interrupt_disable(pctx)
+
+#define ppe_critical_section_exit(pctx) \
+    ppe_machine_context_set(pctx)
+
+
+// TODO What do we want the context to be for IOTA? if any.
 typedef union
 {
 
@@ -249,6 +265,18 @@ typedef union
     } fields;
 
 } __KernelContext;
+
+static inline void ppe42_app_ctx_set(uint16_t app_ctx)
+{
+    uint32_t    mctx;
+    __KernelContext   __ctx;
+    mctx = mfmsr();
+    wrteei(0);
+    __ctx.value = mfspr(SPRN_SPRG0);
+    __ctx.fields.app_specific = app_ctx;
+    mtspr(SPRN_SPRG0, __ctx.value);
+    mtmsr(mctx);
+}
 
 #endif // __ASSEMBLER__
 

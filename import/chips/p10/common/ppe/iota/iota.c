@@ -38,7 +38,21 @@ union
     };
 } ppe42_64bit_timebase __attribute__((section(".sdata.ppe42_64bit_timebase"))) = {0};
 
+#if defined(__PPE42A__)
+
+iotaMachineState g_iota_machine_state_stack[(IOTA_MAX_NESTED_INTERRUPTS)] __attribute__((aligned(8))) =
+{
+    [ 0 ... (IOTA_MAX_NESTED_INTERRUPTS - 1) ] = IOTA_MACHINE_STATE_INIT
+};
+iotaMachineState*  g_iota_curr_machine_state_ptr
+__attribute__((section(".sdata.g_iota_curr_machine_state_ptr")))
+    = g_iota_machine_state_stack;
+
+#else
+
 uint32_t g_iota_curr_machine_state_ptr __attribute__((section(".sdata.g_iota_curr_machine_state_ptr"))) = 0;
+
+#endif
 
 uint64_t g_iota_execution_stack[IOTA_STACK_DWORD_SIZE] __attribute__((aligned(8))) =
 {
@@ -51,7 +65,7 @@ iotaTimerFuncPtr g_iota_dec_handler = IOTA_TIMER_HANDLER(__iota_halt);
 iotaTimerFuncPtr g_iota_fit_handler = IOTA_TIMER_HANDLER(__iota_halt);
 
 extern uint32_t G_LOCAL_TIMEBASE_REGISTER __attribute__((section(".sdata")));
-uint32_t        G_LOCAL_TIMEBASE_REGISTER = LOCAL_TIMEBASE_REGISTER;
+uint32_t G_LOCAL_TIMEBASE_REGISTER = LOCAL_TIMEBASE_REGISTER;
 
 #if IOTA_IDLE_TASKS_ENABLE
 void _iota_evaluate_idle_tasks()
@@ -94,7 +108,11 @@ void _iota_boot()
     // Disable timer interrupts
     mttcr(0);
 
+#if defined(__PPE42A__)
+    g_iota_curr_machine_state_ptr = g_iota_machine_state_stack;
+#else
     g_iota_curr_machine_state_ptr = 0;
+#endif
 
     mtmsr(IOTA_INITIAL_MSR);
 
@@ -142,6 +160,20 @@ void iota_set_idle_task_state(uint32_t state, uint32_t idle_task_idx)
 
 void _iota_schedule(uint32_t schedule_reason)
 {
+#if defined(__PPE42A__)
+
+    // Increment machine state pointer
+    if(g_iota_curr_machine_state_ptr <
+       &g_iota_machine_state_stack[IOTA_MAX_NESTED_INTERRUPTS - 1])
+    {
+        g_iota_curr_machine_state_ptr++;
+    }
+    else
+    {
+        iota_dead(IOTA_MACHINE_STATE_STACK_OVERFLOW);
+    }
+
+#else
     ++g_iota_curr_machine_state_ptr;
     // stack check
     uint32_t stack_ptr;
@@ -151,6 +183,8 @@ void _iota_schedule(uint32_t schedule_reason)
     {
         iota_dead(IOTA_MACHINE_STATE_STACK_OVERFLOW);
     }
+
+#endif
 
     // Call appropriate interrupt handler here
     switch(schedule_reason)
@@ -172,6 +206,7 @@ void _iota_schedule(uint32_t schedule_reason)
                     iota_dead(IOTA_NULLPTR_TASK);
                 }
             }
+
             break;
 
 #if ENABLE_DEC_TIMER
@@ -181,7 +216,7 @@ void _iota_schedule(uint32_t schedule_reason)
             break;
 #endif
 
-#if ENABLE_FIT_TIMER
+#if !DISABLE_FIT_TIMER
 
         case _IOTA_SCHEDULE_REASON_FIT:
             g_iota_fit_handler();
@@ -191,14 +226,18 @@ void _iota_schedule(uint32_t schedule_reason)
     }
 
 #if IOTA_IDLE_TASKS_ENABLE
-
     // Check for idle tasks here
     // Rationale: if the g_iota_curr_machine_state_ptr ==
     //            g_iota_machine_state_stack,
     //            then all interrupt tasks must be completed since this is the
     //            last context about to be restored, which means enabled idle
     //            tasks can be executed
-    if(g_iota_curr_machine_state_ptr == 1)
+#if defined(__PPE42A__)
+
+    if(g_iota_curr_machine_state_ptr - 1 == g_iota_machine_state_stack)
+#else
+    if(g_iot_curr_machine_state_ptr == 1)
+#endif
     {
         uint32_t ctx = mfmsr();
         wrteei(1);
@@ -214,8 +253,13 @@ void _iota_schedule(uint32_t schedule_reason)
         iota_dead(IOTA_EXECUTION_STACK_OVERFLOW);
     }
 
+#if defined(__PPE42A__)
+
     // Decrement machine state pointer
+    if(g_iota_curr_machine_state_ptr > g_iota_machine_state_stack)
+#else
     if(g_iota_curr_machine_state_ptr != 0)
+#endif
     {
         g_iota_curr_machine_state_ptr--;
     }
@@ -223,6 +267,7 @@ void _iota_schedule(uint32_t schedule_reason)
     {
         iota_dead(IOTA_MACHINE_STATE_STACK_UNDERFLOW);
     }
+
 }
 
 // Assumption is that this is called more frequently than
