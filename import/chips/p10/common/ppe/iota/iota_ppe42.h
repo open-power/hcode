@@ -48,7 +48,7 @@
 
 #ifndef PPE42_DBCR_INITIAL
     // Enable 'trap' to cause a halt
-    #define PPE42_DBCR_INITIAL 0x01000000
+    #define PPE42_DBCR_INITIAL (DBCR_TRAP | DBCR_ZACE)
 #endif
 
 #define mtdbcr(value) \
