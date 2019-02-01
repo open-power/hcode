@@ -22,11 +22,11 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-EXE=cmeImgEdit
+#EXE=cmeImgEdit
 
-$(EXE)_COMMONFLAGS+= -D__PPE_PLAT
+#$(EXE)_COMMONFLAGS+= -D__PPE_PLAT
 
-$(call ADD_EXE_INCDIR, $(EXE), \
+#$(call ADD_EXE_INCDIR, $(EXE), \
    $(CME_SRCDIR) \
    $(PK_SRCDIR)/kernel \
    $(HCODE_COMMON_LIBDIR) \
@@ -34,6 +34,6 @@ $(call ADD_EXE_INCDIR, $(EXE), \
     )
 
 
-IMAGE_DEPS+=cmeImgEdit
-OBJS=p9_cme_img_edit.o
-$(call BUILD_EXE)
+#IMAGE_DEPS+=cmeImgEdit
+#OBJS=p9_cme_img_edit.o
+#$(call BUILD_EXE)
