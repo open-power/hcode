@@ -138,8 +138,7 @@ extern "C"
                 // Additional check for PERV targets, where there are gaps between instances
                 else if (i_chipUnitType == PU_PERV_CHIPUNIT)
                 {
-                    if ( (i_chipUnitNum == 0) ||
-                         ((i_chipUnitNum > 3) && (i_chipUnitNum < 8)) ||
+                    if ( ((i_chipUnitNum > 3) && (i_chipUnitNum < 8)) ||
                          ((i_chipUnitNum > 9) && (i_chipUnitNum < 12)) ||
                          ((i_chipUnitNum > 19) && (i_chipUnitNum < 24)) )
                     {
