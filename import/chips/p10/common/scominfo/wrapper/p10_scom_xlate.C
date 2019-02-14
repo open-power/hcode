@@ -58,7 +58,7 @@ const int E_TYPE_MATCHES_NO_CANDIDATES =
 const int E_TYPE_MATCHES_GT1_CANDIDATES =
     0x12;  ///< Target type/address matched more than one chip unit types (one or more candidates found)
 const int E_ADDR_IS_NOT_UNIT_ZERO =
-    0x13;        ///< Target type/address matched a chip unit type, but not instance zero
+    0x13;  ///< Target type/address matched a chip unit type, but not instance zero
 
 // *********************************************
 // Functions
