@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -32,7 +32,7 @@ typedef enum
     ENABLE_WR_SCOPE         = 0x0000000000000010,
 
 // Due to HW423589, need to enable vector scope to all targets
-#if NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL >= 22
+#if NIMBUS_DD_LEVEL >= 20
     ENABLE_RD_SCOPE         = 0x0000000000000020,
     VG_TARGET_1S            = 0x0000000000000008,
 #else
