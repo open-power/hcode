@@ -129,7 +129,7 @@ extern "C"
             // Set to P10_TP_VITL_DOMAIN if multicast
             if (l_addr.isMulticast())
             {
-                o_domain = P10_TP_VITL_DOMAIN;
+                o_domain = P10_TPVITL_DOMAIN;
                 break;
             }
 
@@ -383,15 +383,15 @@ extern "C"
         // MC chiplets
         // -------------------------------
 #define CHECKMC(P)                         \
-    if (io_domain == P10_MC0_##P##_DOMAIN  ||  \
-        io_domain == P10_MC1_##P##_DOMAIN  ||  \
-        io_domain == P10_MC2_##P##_DOMAIN  ||  \
-        io_domain == P10_MC3_##P##_DOMAIN ) {  \
+    if (io_domain == P10_MC0##P##_DOMAIN  ||  \
+        io_domain == P10_MC1##P##_DOMAIN  ||  \
+        io_domain == P10_MC2##P##_DOMAIN  ||  \
+        io_domain == P10_MC3##P##_DOMAIN ) {  \
         switch (i_chipUnitNum) {             \
-            case 0 : io_domain = P10_MC0_##P##_DOMAIN; break; \
-            case 1 : io_domain = P10_MC1_##P##_DOMAIN; break; \
-            case 2 : io_domain = P10_MC2_##P##_DOMAIN; break; \
-            case 3 : io_domain = P10_MC3_##P##_DOMAIN; break; \
+            case 0 : io_domain = P10_MC0##P##_DOMAIN; break; \
+            case 1 : io_domain = P10_MC1##P##_DOMAIN; break; \
+            case 2 : io_domain = P10_MC2##P##_DOMAIN; break; \
+            case 3 : io_domain = P10_MC3##P##_DOMAIN; break; \
             default : l_rc = 1; \
         } \
     }
@@ -404,23 +404,23 @@ extern "C"
         // EQ chiplets
         // -------------------------------
 #define CHECKEQ(P)                            \
-    if (io_domain == P10_EQ0_##P##_DOMAIN ||  \
-        io_domain == P10_EQ1_##P##_DOMAIN ||  \
-        io_domain == P10_EQ2_##P##_DOMAIN ||  \
-        io_domain == P10_EQ3_##P##_DOMAIN ||  \
-        io_domain == P10_EQ4_##P##_DOMAIN ||  \
-        io_domain == P10_EQ5_##P##_DOMAIN ||  \
-        io_domain == P10_EQ6_##P##_DOMAIN ||  \
-        io_domain == P10_EQ7_##P##_DOMAIN) {  \
+    if (io_domain == P10_EQ0##P##_DOMAIN ||  \
+        io_domain == P10_EQ1##P##_DOMAIN ||  \
+        io_domain == P10_EQ2##P##_DOMAIN ||  \
+        io_domain == P10_EQ3##P##_DOMAIN ||  \
+        io_domain == P10_EQ4##P##_DOMAIN ||  \
+        io_domain == P10_EQ5##P##_DOMAIN ||  \
+        io_domain == P10_EQ6##P##_DOMAIN ||  \
+        io_domain == P10_EQ7##P##_DOMAIN) {  \
         switch (i_chipUnitNum) { \
-            case 0 : io_domain = P10_EQ0_##P##_DOMAIN; break; \
-            case 1 : io_domain = P10_EQ1_##P##_DOMAIN; break; \
-            case 2 : io_domain = P10_EQ2_##P##_DOMAIN; break; \
-            case 3 : io_domain = P10_EQ3_##P##_DOMAIN; break; \
-            case 4 : io_domain = P10_EQ4_##P##_DOMAIN; break; \
-            case 5 : io_domain = P10_EQ5_##P##_DOMAIN; break; \
-            case 6 : io_domain = P10_EQ6_##P##_DOMAIN; break; \
-            case 7 : io_domain = P10_EQ7_##P##_DOMAIN; break; \
+            case 0 : io_domain = P10_EQ0##P##_DOMAIN; break; \
+            case 1 : io_domain = P10_EQ1##P##_DOMAIN; break; \
+            case 2 : io_domain = P10_EQ2##P##_DOMAIN; break; \
+            case 3 : io_domain = P10_EQ3##P##_DOMAIN; break; \
+            case 4 : io_domain = P10_EQ4##P##_DOMAIN; break; \
+            case 5 : io_domain = P10_EQ5##P##_DOMAIN; break; \
+            case 6 : io_domain = P10_EQ6##P##_DOMAIN; break; \
+            case 7 : io_domain = P10_EQ7##P##_DOMAIN; break; \
             default : l_rc = 1; \
         } \
     }
@@ -442,11 +442,11 @@ extern "C"
         // PCI chiplets
         // -------------------------------
 #define CHECKPCI(P)                            \
-    if (io_domain == P10_PCI0_##P##_DOMAIN ||  \
-        io_domain == P10_PCI1_##P##_DOMAIN) {   \
+    if (io_domain == P10_PCI0##P##_DOMAIN ||  \
+        io_domain == P10_PCI1##P##_DOMAIN) {   \
         switch (i_chipUnitNum) { \
-            case 0 : io_domain = P10_PCI0_##P##_DOMAIN; break; \
-            case 1 : io_domain = P10_PCI1_##P##_DOMAIN; break; \
+            case 0 : io_domain = P10_PCI0##P##_DOMAIN; break; \
+            case 1 : io_domain = P10_PCI1##P##_DOMAIN; break; \
             default : l_rc = 1; \
         } \
     }
@@ -459,23 +459,23 @@ extern "C"
         // AXON chiplets
         // -------------------------------
 #define CHECKAXON(P)                            \
-    if (io_domain == P10_AXON0_##P##_DOMAIN ||  \
-        io_domain == P10_AXON1_##P##_DOMAIN ||  \
-        io_domain == P10_AXON2_##P##_DOMAIN ||  \
-        io_domain == P10_AXON3_##P##_DOMAIN ||  \
-        io_domain == P10_AXON4_##P##_DOMAIN ||  \
-        io_domain == P10_AXON5_##P##_DOMAIN ||  \
-        io_domain == P10_AXON6_##P##_DOMAIN ||  \
-        io_domain == P10_AXON7_##P##_DOMAIN) {   \
+    if (io_domain == P10_AXON0##P##_DOMAIN ||  \
+        io_domain == P10_AXON1##P##_DOMAIN ||  \
+        io_domain == P10_AXON2##P##_DOMAIN ||  \
+        io_domain == P10_AXON3##P##_DOMAIN ||  \
+        io_domain == P10_AXON4##P##_DOMAIN ||  \
+        io_domain == P10_AXON5##P##_DOMAIN ||  \
+        io_domain == P10_AXON6##P##_DOMAIN ||  \
+        io_domain == P10_AXON7##P##_DOMAIN) {   \
         switch (i_chipUnitNum) { \
-            case 0 : io_domain = P10_AXON0_##P##_DOMAIN; break; \
-            case 1 : io_domain = P10_AXON1_##P##_DOMAIN; break; \
-            case 2 : io_domain = P10_AXON2_##P##_DOMAIN; break; \
-            case 3 : io_domain = P10_AXON3_##P##_DOMAIN; break; \
-            case 4 : io_domain = P10_AXON4_##P##_DOMAIN; break; \
-            case 5 : io_domain = P10_AXON5_##P##_DOMAIN; break; \
-            case 6 : io_domain = P10_AXON6_##P##_DOMAIN; break; \
-            case 7 : io_domain = P10_AXON7_##P##_DOMAIN; break; \
+            case 0 : io_domain = P10_AXON0##P##_DOMAIN; break; \
+            case 1 : io_domain = P10_AXON1##P##_DOMAIN; break; \
+            case 2 : io_domain = P10_AXON2##P##_DOMAIN; break; \
+            case 3 : io_domain = P10_AXON3##P##_DOMAIN; break; \
+            case 4 : io_domain = P10_AXON4##P##_DOMAIN; break; \
+            case 5 : io_domain = P10_AXON5##P##_DOMAIN; break; \
+            case 6 : io_domain = P10_AXON6##P##_DOMAIN; break; \
+            case 7 : io_domain = P10_AXON7##P##_DOMAIN; break; \
             default : l_rc = 1; \
         } \
     }
@@ -490,15 +490,15 @@ extern "C"
         // PAU chiplets
         // -------------------------------
 #define CHECKPAU(P)                            \
-    if (io_domain == P10_PAU0_##P##_DOMAIN ||  \
-        io_domain == P10_PAU1_##P##_DOMAIN ||  \
-        io_domain == P10_PAU2_##P##_DOMAIN ||  \
-        io_domain == P10_PAU3_##P##_DOMAIN) {   \
+    if (io_domain == P10_PAU0##P##_DOMAIN ||  \
+        io_domain == P10_PAU1##P##_DOMAIN ||  \
+        io_domain == P10_PAU2##P##_DOMAIN ||  \
+        io_domain == P10_PAU3##P##_DOMAIN) {   \
         switch (i_chipUnitNum) { \
-            case 0 : io_domain = P10_PAU0_##P##_DOMAIN; break; \
-            case 1 : io_domain = P10_PAU1_##P##_DOMAIN; break; \
-            case 2 : io_domain = P10_PAU2_##P##_DOMAIN; break; \
-            case 3 : io_domain = P10_PAU3_##P##_DOMAIN; break; \
+            case 0 : io_domain = P10_PAU0##P##_DOMAIN; break; \
+            case 1 : io_domain = P10_PAU1##P##_DOMAIN; break; \
+            case 2 : io_domain = P10_PAU2##P##_DOMAIN; break; \
+            case 3 : io_domain = P10_PAU3##P##_DOMAIN; break; \
             default : l_rc = 1; \
         } \
     }
@@ -506,35 +506,35 @@ extern "C"
         CHECKPAU(TLPPE)
 
         // PAU NTLOTL domain is special case
-        if ( (io_domain == P10_PAU0_PAU0_NTLOTL_DOMAIN) ||
-             (io_domain == P10_PAU1_PAU3_NTLOTL_DOMAIN) ||
-             (io_domain == P10_PAU2_PAU4_NTLOTL_DOMAIN) ||
-             (io_domain == P10_PAU3_PAU6_NTLOTL_DOMAIN) )
+        if ( (io_domain == P10_PAU0PAU0NTLOTL_DOMAIN) ||
+             (io_domain == P10_PAU1PAU3NTLOTL_DOMAIN) ||
+             (io_domain == P10_PAU2PAU4NTLOTL_DOMAIN) ||
+             (io_domain == P10_PAU3PAU6NTLOTL_DOMAIN) )
         {
             switch (i_chipUnitNum)
             {
                 case 0 :
-                    io_domain = P10_PAU0_PAU0_NTLOTL_DOMAIN;
+                    io_domain = P10_PAU0PAU0NTLOTL_DOMAIN;
                     break;
 
                 case 1 :
-                    io_domain = P10_PAU1_PAU3_NTLOTL_DOMAIN;
+                    io_domain = P10_PAU1PAU3NTLOTL_DOMAIN;
                     break;
 
                 case 2 :
-                    io_domain = P10_PAU2_PAU4_NTLOTL_DOMAIN;
+                    io_domain = P10_PAU2PAU4NTLOTL_DOMAIN;
                     break;
 
                 case 3 :
-                    io_domain = P10_PAU3_PAU6_NTLOTL_DOMAIN;
+                    io_domain = P10_PAU3PAU6NTLOTL_DOMAIN;
                     break;
 
                 default :
                     l_rc = 1;
             }
         }
-        else if ( (io_domain == P10_PAU2_PAU5_NTLOTL_DOMAIN) ||
-                  (io_domain == P10_PAU3_PAU7_NTLOTL_DOMAIN) )
+        else if ( (io_domain == P10_PAU2PAU5NTLOTL_DOMAIN) ||
+                  (io_domain == P10_PAU3PAU7NTLOTL_DOMAIN) )
         {
             switch (i_chipUnitNum)
             {
@@ -547,11 +547,11 @@ extern "C"
                     break;  // No equivalent domain for PAU1
 
                 case 2 :
-                    io_domain = P10_PAU2_PAU5_NTLOTL_DOMAIN;
+                    io_domain = P10_PAU2PAU5NTLOTL_DOMAIN;
                     break;
 
                 case 3 :
-                    io_domain = P10_PAU3_PAU7_NTLOTL_DOMAIN;
+                    io_domain = P10_PAU3PAU7NTLOTL_DOMAIN;
                     break;
 
                 default :
@@ -662,48 +662,48 @@ extern "C"
                     case P10_FAKE_DOMAIN:
                         break;
 
-                    case P10_TP_VITL_DOMAIN:
-                        o_domainList.push_back(P10_TP_SBEPIBOCCNET_DOMAIN);
-                        o_domainList.push_back(P10_TP_PLL_DOMAIN);
+                    case P10_TPVITL_DOMAIN:
+                        o_domainList.push_back(P10_TPSBEPIBOCCNET_DOMAIN);
+                        o_domainList.push_back(P10_TPPLL_DOMAIN);
                         break;
 
-                    case P10_N0_VITL_DOMAIN:
-                        o_domainList.push_back(P10_N0_NXVASINTNMMU0PE0_DOMAIN);
+                    case P10_N0VITL_DOMAIN:
+                        o_domainList.push_back(P10_N0NXVASINTNMMU0PE0_DOMAIN);
                         break;
 
-                    case P10_N1_VITL_DOMAIN:
-                        o_domainList.push_back(P10_N1_NMMU1_DOMAIN);
-                        o_domainList.push_back(P10_N1_MCDPE1FBC_DOMAIN);
+                    case P10_N1VITL_DOMAIN:
+                        o_domainList.push_back(P10_N1NMMU1_DOMAIN);
+                        o_domainList.push_back(P10_N1MCDPE1FBC_DOMAIN);
                         break;
 
-                    case P10_PAU0_VITL_DOMAIN:
-                        o_domainList.push_back(P10_PAU0_PAU0_NTLOTL_DOMAIN);
-                        o_domainList.push_back(P10_PAU0_TLPPE_DOMAIN);
+                    case P10_PAU0VITL_DOMAIN:
+                        o_domainList.push_back(P10_PAU0PAU0NTLOTL_DOMAIN);
+                        o_domainList.push_back(P10_PAU0TLPPE_DOMAIN);
                         break;
 
-                    case P10_PAU1_VITL_DOMAIN:
-                        o_domainList.push_back(P10_PAU1_PAU3_NTLOTL_DOMAIN);
-                        o_domainList.push_back(P10_PAU1_TLPPE_DOMAIN);
+                    case P10_PAU1VITL_DOMAIN:
+                        o_domainList.push_back(P10_PAU1PAU3NTLOTL_DOMAIN);
+                        o_domainList.push_back(P10_PAU1TLPPE_DOMAIN);
                         break;
 
-                    case P10_PAU2_VITL_DOMAIN:
-                        o_domainList.push_back(P10_PAU2_PAU4_NTLOTL_DOMAIN);
-                        o_domainList.push_back(P10_PAU2_PAU5_NTLOTL_DOMAIN);
-                        o_domainList.push_back(P10_PAU2_TLPPE_DOMAIN);
+                    case P10_PAU2VITL_DOMAIN:
+                        o_domainList.push_back(P10_PAU2PAU4NTLOTL_DOMAIN);
+                        o_domainList.push_back(P10_PAU2PAU5NTLOTL_DOMAIN);
+                        o_domainList.push_back(P10_PAU2TLPPE_DOMAIN);
                         break;
 
-                    case P10_PAU3_VITL_DOMAIN:
-                        o_domainList.push_back(P10_PAU3_PAU6_NTLOTL_DOMAIN);
-                        o_domainList.push_back(P10_PAU3_PAU7_NTLOTL_DOMAIN);
-                        o_domainList.push_back(P10_PAU3_TLPPE_DOMAIN);
+                    case P10_PAU3VITL_DOMAIN:
+                        o_domainList.push_back(P10_PAU3PAU6NTLOTL_DOMAIN);
+                        o_domainList.push_back(P10_PAU3PAU7NTLOTL_DOMAIN);
+                        o_domainList.push_back(P10_PAU3TLPPE_DOMAIN);
                         break;
 
-                    case P10_AXON0_VITL_DOMAIN:
-                        o_domainList.push_back(P10_AXON0_IOO_DOMAIN);
-                        o_domainList.push_back(P10_AXON0_ODL_DOMAIN);
-                        o_domainList.push_back(P10_AXON0_NDL_DOMAIN);
-                        o_domainList.push_back(P10_AXON0_PDL_DOMAIN);
-                        o_domainList.push_back(P10_AXON0_PLL_DOMAIN);
+                    case P10_AXON0VITL_DOMAIN:
+                        o_domainList.push_back(P10_AXON0IOO_DOMAIN);
+                        o_domainList.push_back(P10_AXON0ODL_DOMAIN);
+                        o_domainList.push_back(P10_AXON0NDL_DOMAIN);
+                        o_domainList.push_back(P10_AXON0PDL_DOMAIN);
+                        o_domainList.push_back(P10_AXON0PLL_DOMAIN);
                         break;
 
 
@@ -715,22 +715,22 @@ extern "C"
 
 // P = PCIx
 #define SCREENPCI(P)                                             \
-    if (l_domain == P10_##P##_VITL_DOMAIN)           \
+    if (l_domain == P10_##P##VITL_DOMAIN)           \
     {                                                \
-        o_domainList.push_back(P10_##P##_PH5_DOMAIN); \
-        o_domainList.push_back(P10_##P##_IOP_DOMAIN); \
-        o_domainList.push_back(P10_##P##_PLL_DOMAIN); \
+        o_domainList.push_back(P10_##P##PH5_DOMAIN); \
+        o_domainList.push_back(P10_##P##IOP_DOMAIN); \
+        o_domainList.push_back(P10_##P##PLL_DOMAIN); \
     }
                 SCREENPCI(PCI0)
                 SCREENPCI(PCI1)
 
 // P = MCx
 #define SCREENMC(P)                                                 \
-    if (l_domain == P10_##P##_VITL_DOMAIN)              \
+    if (l_domain == P10_##P##VITL_DOMAIN)              \
     {                                                   \
-        o_domainList.push_back(P10_##P##_MC_DOMAIN);     \
-        o_domainList.push_back(P10_##P##_ODLIOO_DOMAIN); \
-        o_domainList.push_back(P10_##P##_PLL_DOMAIN);    \
+        o_domainList.push_back(P10_##P##MC_DOMAIN);     \
+        o_domainList.push_back(P10_##P##ODLIOO_DOMAIN); \
+        o_domainList.push_back(P10_##P##PLL_DOMAIN);    \
     }
                 SCREENMC(MC0)
                 SCREENMC(MC1)
@@ -739,13 +739,13 @@ extern "C"
 
 // P = AXONx
 #define SCREENAXON(P)                                               \
-    if (l_domain == P10_##P##_VITL_DOMAIN)              \
+    if (l_domain == P10_##P##VITL_DOMAIN)              \
     {                                                   \
-        o_domainList.push_back(P10_##P##_IOO_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_ODL_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_NDL_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_PDL_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_PLL_DOMAIN);    \
+        o_domainList.push_back(P10_##P##IOO_DOMAIN);    \
+        o_domainList.push_back(P10_##P##ODL_DOMAIN);    \
+        o_domainList.push_back(P10_##P##NDL_DOMAIN);    \
+        o_domainList.push_back(P10_##P##PDL_DOMAIN);    \
+        o_domainList.push_back(P10_##P##PLL_DOMAIN);    \
     }
                 SCREENAXON(AXON0)
                 SCREENAXON(AXON1)
@@ -758,21 +758,21 @@ extern "C"
 
 // P = EQx
 #define SCREENEQ(P)                                               \
-    if (l_domain == P10_##P##_VITL_DOMAIN)              \
+    if (l_domain == P10_##P##VITL_DOMAIN)              \
     {                                                   \
-        o_domainList.push_back(P10_##P##_ECL20_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_ECL21_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_ECL22_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_ECL23_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_L30_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_L31_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_L32_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_L33_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_MMA0_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_MMA1_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_MMA2_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_MMA3_DOMAIN);    \
-        o_domainList.push_back(P10_##P##_QME_DOMAIN);    \
+        o_domainList.push_back(P10_##P##ECL20_DOMAIN);    \
+        o_domainList.push_back(P10_##P##ECL21_DOMAIN);    \
+        o_domainList.push_back(P10_##P##ECL22_DOMAIN);    \
+        o_domainList.push_back(P10_##P##ECL23_DOMAIN);    \
+        o_domainList.push_back(P10_##P##L30_DOMAIN);    \
+        o_domainList.push_back(P10_##P##L31_DOMAIN);    \
+        o_domainList.push_back(P10_##P##L32_DOMAIN);    \
+        o_domainList.push_back(P10_##P##L33_DOMAIN);    \
+        o_domainList.push_back(P10_##P##MMA0_DOMAIN);    \
+        o_domainList.push_back(P10_##P##MMA1_DOMAIN);    \
+        o_domainList.push_back(P10_##P##MMA2_DOMAIN);    \
+        o_domainList.push_back(P10_##P##MMA3_DOMAIN);    \
+        o_domainList.push_back(P10_##P##QME_DOMAIN);    \
     }
                 SCREENEQ(EQ0)
                 SCREENEQ(EQ1)
