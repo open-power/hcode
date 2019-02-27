@@ -25,7 +25,7 @@
 
 // *INDENT-OFF*
 
-#include <p9_xip_image.h>
+#include <p10_ipl_image.H>
 
     .macro P9XipHeader, magic, link_address, image_size
 
@@ -98,7 +98,7 @@ __build_tag:
         ////////////////////////////////////////////////////////////////////
 
 __header_version:
-        .byte P9_XIP_HEADER_VERSION
+        .byte IPL_IMAGE_HEADER_VERSION
 __toc_normalized:
         .byte 0
 __toc_sorted:
