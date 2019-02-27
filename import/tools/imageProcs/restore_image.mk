@@ -30,7 +30,7 @@ $(eval IMAGE=$1.restore_image)
 $(eval $(IMAGE)_PATH=$(IMAGEPATH)/restore_image)
 $(eval $(IMAGE)_LINK_SCRIPT=restore_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/restore_image/restore_image.o)
-$(eval restore_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
+$(eval restore_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
 # files with multiple DD level content to be generated
 $(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,cpmr_header))
