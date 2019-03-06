@@ -237,7 +237,7 @@ void _iota_schedule(uint32_t schedule_reason)
 
     if(g_iota_curr_machine_state_ptr - 1 == g_iota_machine_state_stack)
 #else
-    if(g_iot_curr_machine_state_ptr == 1)
+    if(g_iota_curr_machine_state_ptr == 1)
 #endif
     {
         uint32_t ctx = mfmsr();
