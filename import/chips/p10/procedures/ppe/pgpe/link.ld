@@ -22,122 +22,129 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-// Need to do this so that elf32-powerpc is not modified!
-#undef powerpc
+OUTPUT_FORMAT(elf32-powerpc)
 
-#ifndef INITIAL_STACK_SIZE
-#define INITIAL_STACK_SIZE 256
+#define  __LINKERSCRIPT__
+#include "iota_lnk_cfg.h"
+
+#if ((SRAM_START % 512) != 0)
+#error SRAM_START must be 512 byte aligned
 #endif
-
-OUTPUT_FORMAT(elf32-powerpc);
-
-// GPE2 is loaded at 0xfff20000
-#define GPE2_SRAM_START 0xfff20000
-#define SRAM_LENGTH 0x10000
-#define PGPE_HEADER_OFFSET    0x180
-//debug pointer offset at an offset of 0x200
-#define PPE_DEBUG_PTRS_OFFSET PGPE_HEADER_OFFSET + 0x80
-#define PPE_DEBUG_PTRS_SIZE     0x24
 
 MEMORY
 {
- sram : ORIGIN = GPE2_SRAM_START, LENGTH = SRAM_LENGTH
+    sram : ORIGIN = SRAM_START, LENGTH = SRAM_LENGTH
 }
 
-// This symbol is only needed by external debug tools, so add this command
-// to ensure that table is pulled in by the linker even though PPE code
-// never references it.
-EXTERN(pk_debug_ptrs);
+// The linker will discard any symbols and sections it deems are unused.
+// Declare as EXTERN any symbols only used externally to ensure the linker
+// keeps them even though APP code never references them.
+EXTERN(iota_debug_ptrs);
 
 SECTIONS
 {
-    . = GPE2_SRAM_START;
-
-    . = ALIGN(512);
-
+    . = SRAM_START;
     _VECTOR_START = .;
 
-    .vectors  _VECTOR_START  : { *(.vectors) } > sram
+    .vectors _VECTOR_START  : { *(.vectors) } > sram
 
-///////////////////////////////////////////////////////////////////////////
-    //
-    // PGPE Image Header
-    //
-    ///////////////////////////////////////////////////////////////////////////
-    _PGPE_IMG_HEADER = _VECTOR_START + PGPE_HEADER_OFFSET;
-    .pgpe_image_header _PGPE_IMG_HEADER : { *(.pgpe_image_header) } > sram
+    /*=====================================
+     * IMAGE HEADER
+     ======================================*/
+    _IMG_HEADER = _VECTOR_START +  PPE_HEADER_IMAGE_OFFSET;
+    PPE_HEADER_IMAGE_NAME _IMG_HEADER : { *(PPE_HEADER_IMAGE_NAME) } > sram
 
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Debug Pointers Table
-    //
-    // We want the debug pointers table to always appear at
-    // PPE_DEBUG_PTRS_OFFSET from the IVPR address.
-    ///////////////////////////////////////////////////////////////////////////
-
+    /*====================================
+     * Debug pointers table
+     ====================================*/
     _DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
 
-	_DUMP_PTRS_START = _DEBUG_PTRS_START + PPE_DEBUG_PTRS_SIZE;
-    .dump_ptrs _DUMP_PTRS_START : { *(.dump_ptrs) } > sram
+    
+    . = ALIGN(16);
+    /*======================================
+     * Code
+     ======================================*/
+    .text    . : { *(.text*)    } > sram
 
-    ////////////////////////////////
-    // All non-vector code goes here
-    ////////////////////////////////
-    .text       : { *(.text) } > sram
 
-    ////////////////////////////////
-    // Read-only Data
-    ////////////////////////////////
+    /*======================================
+     * Read only data
+     *====================================*/
+    .rodata . : { *(.rodata*) *(.got2) } > sram
 
+    /*===================================================
+     * Small data area 2. Must be 8 byte aligned
+     * .sdata2 and .sbss2 should be next to each other.
+     * .sdata2 is intended for read-only data (const).
+     * .sbss2 is for zero initailized or non-initialized
+     * const data, but the POWER EABI allow it to be written.
+     * This area is referenced by an offset to gpr2
+     ====================================================*/
     . = ALIGN(8);
-    _RODATA_SECTION_BASE = .;
+    _SDA2_BASE_ = . ;
+    .sdata2  . : { *(.sdata2*) } > sram
+    .sbss2   . : { *(.sbss2*)  } > sram
 
-    // SDA2 constant sections .sdata2 and .sbss2 must be adjacent to each
-    // other.  Our SDATA sections are small so we'll use strictly positive
-    // offsets.
-
-    _SDA2_BASE_ = .;
-   .sdata2 . : { *(.sdata2) } > sram
-   .sbss2  . : { *(.sbss2) } > sram
-
-   // Other read-only data.
-
-   .rodata . : { *(.rodata*) *(.got2) } > sram
-
-    _RODATA_SECTION_SIZE = . - _RODATA_SECTION_BASE;
-
-    ////////////////////////////////
-    // Read-write Data
-    ////////////////////////////////
-
+    /*================================================
+     * The Small data area. Must by 8 byte aligned
+     * .sdata and .sbss should be next to each other
+     * This area is referenced by an offset to gpr13.
+     * The compiler will place any static/global data
+     * type 8 bytes or less in length in these sections
+     * .sdata is for initialized data.
+     * .sbss is for uninitialized or zero initialized data
+     * Any data object can be forced into this secion
+     * using __attribute__((section(".sdata")))
+     * @note
+     * This would be good place to put iota kernel data
+     * such that multiple ppe engines could share the
+     * same kernel, but have their own context (not complete)
+     ================================================*/
     . = ALIGN(8);
-    _DATA_SECTION_BASE = .;
+    _SDA_BASE_ = . ;
+    .sdata   . : {  *(.sdata.ppe42_64bit_timebase)
+                    *(.sdata.g_current_prty_level)
+                    *(.sdata.g_iota_curr_machine_state_ptr)
+                    *(.sdata.g_iota_fit_handler)
+                    *(.sdata.g_iota_dec_handler)
+                    *(.sdata.g_iota_idle_task_list)
+                    *(.sdata.g_iota_task_list)
+                    *(.sdata*)
+                 } > sram
 
-    // SDA sections .sdata and .sbss must be adjacent to each
-    // other.  Our SDATA sections are small so we'll use strictly positive
-    // offsets.
+    .sbss    . : {  *(.sbss.sbss.g_ext_irq_vector)
+                    *(.sbss.g_eimr_override)
+                    *(.sbss*)  } > sram
 
-    _SDA_BASE_ = .;
-    .sdata  . : { *(.sdata)  } > sram
-    .sbss   . : { *(.sbss)   } > sram
+    /*=====================================================
+     * Large data area.
+     * data types > 8 bytes go here by default.
+     * The linker will throw out sections at the end of
+     * an image that only contain zeros, so use KEEP()
+     =====================================================*/
+    . = ALIGN(8);
+    .rwdata . : { KEEP(*(.data.g_iota_execution_stack))
+                  KEEP(*(.data.g_iota_execution_stack_end))
+                  KEEP(*(.data*))
+                  KEEP(*(.bss*))
+                  FILL(0xA55A);  /* mark end of image     */
+                  . = ALIGN(16); /* keeps the linker from */
+                                 /* truncating the image  */
+              } > sram
 
-    // Other read-write data
-    // It's not clear why boot.S is generating empty .glink,.iplt
+    _IMAGE_END = .;
+    _IMAGE_SIZE = . - SRAM_START;
 
-   .rela   . : { *(.rela*) } > sram
-   .rwdata . : { KEEP(*(.data*)) *(.bss*)
+    .rela     : { *(.rela*) }
+    .eh_frame : { *(.eh_frame) }
+    .iplt     : { *(.iplt) }
 
-        . = ALIGN(8);
-        _PK_INITIAL_STACK_LIMIT = .;
-        FILL(0xA55A);
-        . = . + INITIAL_STACK_SIZE;
-        . = ALIGN(8);
-        _PK_INITIAL_STACK = . - 8;
-
-    } > sram
-//   .iplt . : { *(.iplt) } > sram
-    _PGPE_END = .;
-    _PGPE_SIZE = . - GPE2_SRAM_START;
+    /DISCARD/ : {
+        *(.comment)
+        *(.gnu.attributes)
+        *(.dtors)
+        *(.interp)
+    }
 
 }
