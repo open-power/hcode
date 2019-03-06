@@ -22,104 +22,85 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-ifdef IMAGE
 
-#IMAGE_EDITOR=pstate_gpeImgEdit.exe
+IMAGE := pgpe
 
-## Set _TARGET = PPC2PPE to use the 405 compiler with PPE backend or
-#  set _TARGET = PPE to use the new native compiler
+$(IMAGE)_KERNEL:=__IOTA__
 $(IMAGE)_TARGET=PPE
-
-## PPE_TYPE can be std or gpe
-_PPE_TYPE=gpe
-
-BASELIB_SRCDIR=$(PPE_SRCDIR)/baselib
-BOLTONLIB_SRCDIR=$(PPE_SRCDIR)/boltonlib
-POWMANLIB_SRCDIR=$(PPE_SRCDIR)/powmanlib
-TRACE_SRCDIR=$(PPE_SRCDIR)/ppetrace
-
 $(IMAGE)_LINK_SCRIPT=link.ld
 
-$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(BASELIB_SRCDIR))
+_PPE_TYPE=gpe
 
-include $(TRACE_SRCDIR)/pktracefiles.mk
-PGPE_OBJS := $(PKTRACE_OBJECTS)
+$(IMAGE)_COMMONFLAGS = -DPK_TRACE_LEVEL=1
+$(IMAGE)_COMMONFLAGS+= -DSIMICS_TUNING=0
+$(IMAGE)_COMMONFLAGS+= -DUSE_SIMICS_IO=0
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SUPPORT=1
+$(IMAGE)_COMMONFLAGS+= -DUSE_APP_CFG_H=1
+$(IMAGE)_COMMONFLAGS+= -DPK_TIMER_SUPPORT=0
+$(IMAGE)_COMMONFLAGS+= -D__IOTA__
+$(IMAGE)_COMMONFLAGS+= -D__PPE_PLAT
+$(IMAGE)_COMMONFLAGS+= -DAPPCFG_OCC_INSTANCE_ID=2
+$(IMAGE)_COMMONFLAGS+= -DUNIFIED_IRQ_HANDLER_GPE
+#$(IMAGE)_COMMONFLAGS+= -DSTATIC_IPC_TABLES
+
+
+PGPE_OBJS := $(_PPE_TYPE)_init.o
+
+# system objects
+PGPE_OBJS += iota_ppe42.o
+PGPE_OBJS += iota_ppe42_vectors.o
+PGPE_OBJS += iota.o
+PGPE_OBJS += iota_debug_ptrs.o
+PGPE_OBJS += eabi.o
+PGPE_OBJS += ppe42_math.o
+PGPE_OBJS += ppe42_gcc.o
+PGPE_OBJS += ppe42_string.o
+
+# Include IPC support
+PGPE_OBJS += ipc_core.o
+PGPE_OBJS += ipc_init.o
+
+# Include PK trace support
+PGPE_OBJS += pk_trace_core.o
+PGPE_OBJS += pk_trace_big.o
+PGPE_OBJS += pk_trace_binary.o
+
+# component objects
+#PGPE_OBJS += pgpe_main.o
+#PGPE_OBJS += pgpe_uih.o
+#PGPE_OBJS += pgpe_irq_priority_table.o
+
+
+# Add source code directories for the above objects
+PPE_SRCDIR=$(ROOTPATH)/chips/p10/common/ppe
+IOTA_SRCDIR=$(PPE_SRCDIR)/iota
+TRACE_SRCDIR=$(PPE_SRCDIR)/ppetrace
+
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(IOTA_SRCDIR))
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/boltonlib/$(_PPE_TYPE))
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/ppetrace)
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(OCC_SRCDIR)/occlib)
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/baselib)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(TRACE_SRCDIR))
 
-PGPE_OBJS += ppe42_gcc.o
-PGPE_OBJS += ppe42_init.o
-PGPE_OBJS += ppe42_core.o
-PGPE_OBJS += ppe42_irq_core.o
-PGPE_OBJS += ppe42_irq_init.o
-PGPE_OBJS += ppe42_scom.o
-PGPE_OBJS += eabi.o
-PGPE_OBJS += ppe42_boot.o
-PGPE_OBJS += ppe42_timebase.o
-PGPE_OBJS += ppe42_thread_init.o
-PGPE_OBJS += ppe42_exceptions.o
+include $(PGPE_SRCDIR)/pgpe_files.mk
 
+PGPE_OBJS+=$(PGPE_OBJECTS)
 
-include $(PK_SRCDIR)/kernel/pkkernelfiles.mk
-PGPE_OBJS += $(PK_OBJECTS)
-PGPE_OBJS += $(PK_TIMER_OBJECTS)
-PGPE_OBJS += $(PK_THREAD_OBJECTS)
-$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PK_SRCDIR)/kernel)
-
-#include $(PK_SRCDIR)/ppe42/pkppe42files.mk
-#PGPE_OBJS += $(PPE42_OBJECTS)
-#PGPE_OBJS += $(PPE42_THREAD_OBJECTS)
-$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PK_SRCDIR)/ppe42)
-
-include $(BOLTONLIB_SRCDIR)/$(_PPE_TYPE)/pk$(_PPE_TYPE)files.mk
-PGPE_OBJS += $(GPE_OBJECTS)
-$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(BOLTONLIB_SRCDIR)/$(_PPE_TYPE))
-
-include $(OCC_SRCDIR)/commonlib/libcommonfiles.mk
-PGPE_OBJS += $(LIBCOMMON_OBJECTS)
-$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(OCC_SRCDIR)/commonlib)
-
-include $(OCC_SRCDIR)/occlib/liboccfiles.mk
-PGPE_OBJS += $(LIBOCC_OBJECTS)
-$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(OCC_SRCDIR)/occlib)
-
-# It's important that the final included *.mk is in the $(CME_SCRDIR)
-include $(PGPE_SRCDIR)/topfiles.mk
-PGPE_OBJS+=$(TOP_OBJECTS)
+# Include paths
+$(call ADD_PPEIMAGE_INCDIR,$(IMAGE), \
+	$(IOTA_SRCDIR) \
+	$(PPE_SRCDIR)/varietylib/$(_PPE_TYPE) \
+	$(PPE_SRCDIR)/ppetrace \
+	$(OCC_SRCDIR)/commonlib/include \
+	$(OCC_SRCDIR)/commonlib \
+	$(PPE_SRCDIR)/commonlib \
+	$(PPE_SRCDIR)/powmanlib \
+	$(OCC_SRCDIR)/registers \
+	$(TRACE_SRCDIR)/ \
+	)
 
 $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 	| xargs -i printf "%d" 0x{})
 
-
-#Note: Flags are resolved very late - so local variables can't be
-# used to build them
-$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=1
-#$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_TIMER_OUTPUT=0
-#$(IMAGE)_COMMONFLAGS+= -DPK_TIMER_SUPPORT=1
-$(IMAGE)_COMMONFLAGS+= -DPK_THREAD_SUPPORT=1
-$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SUPPORT=1
-$(IMAGE)_COMMONFLAGS+= -DUSE_PK_APP_CFG_H=1
-$(IMAGE)_COMMONFLAGS+= -D__PPE_PLAT
-$(IMAGE)_COMMONFLAGS+= -D__PK__=1
-$(IMAGE)_COMMONFLAGS+= -DPGPE
-$(IMAGE)_COMMONFLAGS+= -DPBASLVCTLN=1
-
-
-
-$(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
-	$(PK_SRCDIR)/kernel \
-	$(PK_SRCDIR)/ppe42 \
-	$(PK_SRCDIR)/../ppetrace \
-	$(PK_SRCDIR)/$(_PPE_TYPE) \
-	$(PK_SRCDIR)/../boltonlib/$(_PPE_TYPE) \
-	$(OCC_SRCDIR) \
-	$(OCC_SRCDIR)/registers \
-	$(ROOTPATH)/chips/p10/common \
-	$(OCC_SRCDIR)/occlib \
-	$(ROOTPATH)/chips/p10/common/ppe/powmanlib \
-	$(PGPE_SRCDIR) \
-	)
-
 $(IMAGE)_LDFLAGS=-e __system_reset -N -gc-sections -Bstatic
-
-
-endif
