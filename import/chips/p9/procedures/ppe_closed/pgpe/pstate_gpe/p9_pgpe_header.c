@@ -77,4 +77,9 @@ void p9_pgpe_header_init()
             &occ_shared_data->req_active_quads;//Requested Active Quads
     G_pgpe_header_data->g_pgpe_wof_values_address = (uint32_t)&occ_shared_data->pgpe_wof_values;//Wof Values
 
+    // Write magic number & total error log slots supported in the shared data
+    // hcode error log table, for OCC to start acting on PGPE and SGPE errors.
+    // Init all error slots to available.
+    occ_shared_data->errlog_idx.dw0.fields.total_log_slots = MAX_HCODE_ELOG_ENTRIES;
+    occ_shared_data->errlog_idx.dw0.fields.magic_word = HCODE_ELOG_TABLE_MAGIC_WORD;
 }

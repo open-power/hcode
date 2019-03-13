@@ -28,7 +28,8 @@
 #include "occhw_shared_data.h"
 #include "p9_hcd_memmap_occ_sram.H"
 #include "p9_hcd_memmap_base.H"
-
+#include "p9_hcd_occ_errldefs.h"
+#include "p9_hcd_errldefs.h"
 
 //We define a global literal for these register addresses
 ////This way compiler put them in .sdata area, and the address
@@ -222,6 +223,7 @@ main(int argc, char** argv)
         PK_PANIC(SGPE_MAIN_FAPI2_INIT_FAILED);
     }
 
+    initErrLogging ((uint8_t) ERRL_SOURCE_XGPE);
     p9_sgpe_stop_init();
 
     // Initialize the thread control block for G_p9_sgpe_stop_enter_thread
@@ -257,6 +259,7 @@ main(int argc, char** argv)
     OSD_PTR->occ_comp_shr_data.gpe3_data.gpe3_sram_region_start = OCC_SRAM_SGPE_BASE_ADDR;
     OSD_PTR->occ_comp_shr_data.gpe3_data.gpe3_image_header_addr = OCC_SRAM_SGPE_BASE_ADDR + SGPE_HEADER_IMAGE_OFFSET;
     OSD_PTR->occ_comp_shr_data.gpe3_data.gpe3_debug_header_addr = OCC_SRAM_SGPE_BASE_ADDR + SGPE_DEBUG_PTRS_OFFSET;
+
 
     // Start running the highest priority thread.
     // This function never returns

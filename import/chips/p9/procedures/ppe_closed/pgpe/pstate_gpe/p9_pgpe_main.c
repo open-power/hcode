@@ -32,6 +32,8 @@
 #include "occhw_shared_data.h"
 #include "p9_hcd_memmap_occ_sram.H"
 #include "p9_hcd_memmap_base.H"
+#include "p9_hcd_occ_errldefs.h"
+#include "p9_hcd_errldefs.h"
 
 extern TraceData_t G_pgpe_optrace_data;
 
@@ -278,6 +280,9 @@ main(int argc, char** argv)
     // Make G_p9_pgpe_thread pstates_update runnable
     pk_thread_resume(&G_p9_pgpe_thread_process_requests);
     pk_thread_resume(&G_p9_pgpe_thread_actuate_pstates);
+
+    // Initialize the PGPE Error Logging
+    initErrLogging ((uint8_t) ERRL_SOURCE_PGPE);
 
     //PGPE Header Init
     p9_pgpe_header_init();
