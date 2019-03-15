@@ -1,7 +1,7 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_cache_poweron.mk $
+# $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_corecache_power_control.mk $
 #
 # OpenPOWER EKB Project
 #
@@ -22,9 +22,9 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-PROCEDURE=p10_hcd_cache_poweron
-OBJS += p10_hcd_corecache_power_control.o
-lib$(PROCEDURE)_COMMONFLAGS += -DPFET_SENSE_POLL_DISABLE
+PROCEDURE=p10_hcd_corecache_power_control
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
+# TODO:  remove when PFET senses work.
+lib$(PROCEDURE)_COMMONFLAGS += -DPFET_SENSE_POLL_DISABLE
 $(call BUILD_PROCEDURE)
