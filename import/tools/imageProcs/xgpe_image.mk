@@ -25,6 +25,11 @@
 
 # $1 == type
 # $2 == chipId
+# FIXMI -
+# The following define has the full P10 build image sections. However, since
+# some of the PPE binaries are not yet getting built, we will use the define
+# BUILD_XGPE_IMAGE_TEMP at the end instead as the binaries become incrementally
+# available.
 define BUILD_XGPE_IMAGE
 $(eval IMAGE=$2.$1.xgpe_image)
 
@@ -83,9 +88,33 @@ $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 $(eval $(call BUILD_XIPIMAGE))
 endef
 
+define BUILD_XGPE_IMAGE_TEMP
+$(eval IMAGE=$2.$1.xgpe_image)
+
+$(eval $(IMAGE)_PATH=$(IMAGEPATH)/xgpe_image)
+$(eval $(IMAGE)_LINK_SCRIPT=xgpe_image.cmd)
+$(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/xgpe_image/xgpe_image.o)
+$(eval xgpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
+
+# Files with multiple DD level content to be generated
+
+# Files to be appended to image
+
+# Dependencies for appending image sections in sequence:
+# - file to be appended
+# - all dependencies of previously appended sections or on raw image
+# - append operation as to other section that has to be finished first
+
+# Image build using all files and serialized by dependencies
+
+# Create image report for image with all files appended
+
+$(eval $(call BUILD_XIPIMAGE))
+endef
+
 $(eval MYCHIPS := $(filter-out ocmb,$(CHIPS)))
 
 $(foreach chip,$(MYCHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
 		$(foreach type, $(HW_IMAGE_VARIATIONS),\
-			$(eval $(call BUILD_XGPE_IMAGE,$(type),$(chipId))))))
+			$(eval $(call BUILD_XGPE_IMAGE_TEMP,$(type),$(chipId))))))
