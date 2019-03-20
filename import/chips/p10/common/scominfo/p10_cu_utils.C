@@ -111,6 +111,16 @@ extern "C"
             printf("      SatReg: 0x%.2X\n", l_scom.getSatOffset());
         }
 
+        // Display values of the OBUS Super Wrapper (upper 32-bit)
+        if ( l_scom.isIndirect() )
+        {
+            printf("\nOBUS Super Wrapper:\n");
+            printf("    Reg addr: 0x%.3X\n", l_scom.getIoRegAddr());
+            printf("TX/RX select: 0x%.1X\n", l_scom.getIoTxRxBit());
+            printf("  Group Addr: 0x%.2X\n", l_scom.getIoGroupAddr());
+            printf("        Lane: 0x%.2X\n", l_scom.getIoLane());
+        }
+
         return;
     }
 
@@ -138,6 +148,8 @@ extern "C"
                 // Additional check for PERV targets, where there are gaps between instances
                 else if (i_chipUnitType == PU_PERV_CHIPUNIT)
                 {
+                    // Note: We allow content in chiplet ID = 0x00 to be referenced with a perv target instance,
+                    //       so do not check for instance = 0 here.
                     if ( ((i_chipUnitNum > 3) && (i_chipUnitNum < 8)) ||
                          ((i_chipUnitNum > 9) && (i_chipUnitNum < 12)) ||
                          ((i_chipUnitNum > 19) && (i_chipUnitNum < 24)) )
