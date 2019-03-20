@@ -45,7 +45,7 @@
 //------------------------------------------------------------------------------
 // Debug print level
 //------------------------------------------------------------------------------
-const uint8_t DEBUG = 1;
+const uint8_t DEBUG = 0;
 
 //------------------------------------------------------------------------------
 // Constant definitions
@@ -82,7 +82,7 @@ struct errorPathEntry_t
     { 0x0000000014010000, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid chip ID 0x14
     { 0x0000000026020400, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid Endpoint 0x0
     { 0x000000001D010800, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid Ring ID 0x2
-    { 0x0000000021030800, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",    0,      0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR }, // Invalid instance 0
+    { 0x0000000021030800, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",    5,      0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR }, // Invalid instance 5
     { 0x0000000021030800, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",   40,      0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR }, // Invalid instance 40
 
     { 0x00000000280E0000, PU_EQ_CHIPUNIT,   "PU_EQ_CHIPUNIT"  ,    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid chip ID 0x28
@@ -108,7 +108,7 @@ struct errorPathEntry_t
 
     { 0x0000000022010400, PU_IOHS_CHIPUNIT, "PU_IOHS_CHIPUNIT" ,   1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid chip ID 0x22
     { 0x000000001F051400, PU_IOHS_CHIPUNIT, "PU_IOHS_CHIPUNIT" ,   1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid Endpoint 0x05
-    { 0x000000001D010000, PU_IOHS_CHIPUNIT, "PU_IOHS_CHIPUNIT" ,   1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid RingId 0x00
+    { 0x000000001D012000, PU_IOHS_CHIPUNIT, "PU_IOHS_CHIPUNIT" ,   1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid RingId 0x08
     { 0x0000000010012800, PU_IOHS_CHIPUNIT, "PU_IOHS_CHIPUNIT" ,   8,      0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR }, // Invalid instance 8
 
     { 0x0000000000010C00, PU_NMMU_CHIPUNIT, "PU_NMMU_CHIPUNIT" ,  1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid chip ID 0x00
@@ -118,12 +118,12 @@ struct errorPathEntry_t
 
     { 0x000000000B010800, PU_MC_CHIPUNIT,   "PU_MC_CHIPUNIT" ,    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid chip ID 0x0B
     { 0x000000000C020800, PU_MC_CHIPUNIT,   "PU_MC_CHIPUNIT" ,    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid Endpoint 0x2
-    { 0x000000000F0100C0, PU_MC_CHIPUNIT,   "PU_MC_CHIPUNIT" ,    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid RingId 0x00
+    { 0x000000000F010CC0, PU_MC_CHIPUNIT,   "PU_MC_CHIPUNIT" ,    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid RingId 0x03
     { 0x000000000D010800, PU_MC_CHIPUNIT,   "PU_MC_CHIPUNIT" ,    5,      0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR }, // Invalid instance 5
 
     { 0x000000000B010800, PU_MI_CHIPUNIT,   "PU_MI_CHIPUNIT" ,    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid chip ID 0x0B
     { 0x000000000C020800, PU_MI_CHIPUNIT,   "PU_MI_CHIPUNIT" ,    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid Endpoint 0x2
-    { 0x000000000F0100C0, PU_MI_CHIPUNIT,   "PU_MI_CHIPUNIT" ,    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid RingId 0x00
+    { 0x000000000F010CC0, PU_MI_CHIPUNIT,   "PU_MI_CHIPUNIT" ,    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid RingId 0x03
     { 0x000000000D010800, PU_MI_CHIPUNIT,   "PU_MI_CHIPUNIT" ,    5,      0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR }, // Invalid instance 5
 
     { 0x0000000010010900, PU_MCC_CHIPUNIT,  "PU_MCC_CHIPUNIT" ,   1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid chip ID 0x10
@@ -152,6 +152,11 @@ struct errorPathEntry_t
     { 0x0000000012010400, PU_PAU_CHIPUNIT,  "PU_PAU_CHIPUNIT" ,   4,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid RingId 0x1
     { 0x000000001201C000, PU_PAU_CHIPUNIT,  "PU_PAU_CHIPUNIT" ,   8,      0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR }, // Invalid instance 8
 
+    //  TEST INDIRECT ADDRESSES
+    { 0x800C84C01001303F, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT",    5,     0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM},          // Invalid Group Addr
+    { 0x800C844018010C3F, PU_OMI_CHIPUNIT,   "PU_OMI_CHIPUNIT",    16,     0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR}, // Invalid instance 16
+
+
 };
 
 //------------------------------------------------------------------------------
@@ -178,7 +183,7 @@ struct goodPathEntry_t
     //     Addr             ChipUnitType     ChipUnitType str   Instance  ChipEC       Mode             Output Addr
     //------------------   --------------    -----------------  --------  ------       -----          -------------------
     { 0x0000000001000000, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",    39,     0x00,   P10_DEFAULT_MODE,  0x0000000027000000}, // InAddr: inst  1, OutAddr: inst 39
-    { 0x000000001D050800, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",    15,     0x00,   P10_DEFAULT_MODE,  0x000000000F050800}, // InAddr: inst 29, OutAddr: inst 15
+    { 0x000000001D050000, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",    15,     0x00,   P10_DEFAULT_MODE,  0x000000000F050000}, // InAddr: inst 29, OutAddr: inst 15
     { 0x0000000027010400, PU_PERV_CHIPUNIT, "PU_PERV_CHIPUNIT",     1,     0x00,   P10_DEFAULT_MODE,  0x0000000001010400}, // InAddr: inst 39, OutAddr: inst 1
 
     { 0x0000000020050022, PU_EQ_CHIPUNIT,   "PU_EQ_CHIPUNIT"  ,     7,     0x00,   P10_DEFAULT_MODE,  0x0000000027050022}, // InAddr: inst 0, OutAddr: inst 7
@@ -199,11 +204,8 @@ struct goodPathEntry_t
     { 0x000000000801140F, PU_PHB_CHIPUNIT,  "PU_PHB_CHIPUNIT" ,     4,     0x00,   P10_DEFAULT_MODE,  0x000000000901100F}, // InAddr: inst 2, OutAddr: inst 4
 
     { 0x00000000180104AA, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT" ,   7,     0x00,   P10_DEFAULT_MODE,  0x000000001F0104AA}, // InAddr: inst 0, OutAddr: inst 7 (Axon chiplet)
-    { 0x000000001F0114BB, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT" ,   0,     0x00,   P10_DEFAULT_MODE,  0x00000000180114BB}, // InAddr: inst 7, OutAddr: inst 0 (Axon chiplet)
-    { 0x0000000019010CFA, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT" ,   6,     0x00,   P10_DEFAULT_MODE,  0x000000001E010CFA}, // InAddr: inst 1, OutAddr: inst 6 (Axon chiplet)
-    { 0x0000000010012800, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT" ,   7,     0x00,   P10_DEFAULT_MODE,  0x0000000013012800}, // InAddr: inst 0, OutAddr: inst 7 (Pau chiplet)
-    { 0x0000000013012800, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT" ,   0,     0x00,   P10_DEFAULT_MODE,  0x0000000010012800}, // InAddr: inst 6, OutAddr: inst 0 (Pau chiplet)
-    { 0x00000000110128FA, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT" ,   5,     0x00,   P10_DEFAULT_MODE,  0x00000000120128FA}, // InAddr: inst 2, OutAddr: inst 5 (Pau chiplet)
+    { 0x000000001F0104BB, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT" ,   0,     0x00,   P10_DEFAULT_MODE,  0x00000000180104BB}, // InAddr: inst 7, OutAddr: inst 0 (Axon chiplet)
+    { 0x00000000190104FA, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT" ,   6,     0x00,   P10_DEFAULT_MODE,  0x000000001E0104FA}, // InAddr: inst 1, OutAddr: inst 6 (Axon chiplet)
 
     { 0x0000000002010C00, PU_NMMU_CHIPUNIT,  "PU_NMMU_CHIPUNIT" ,   1,     0x00,   P10_DEFAULT_MODE,  0x0000000003010C00}, // InAddr: inst 0, OutAddr: inst 1
     { 0x0000000003010C0A, PU_NMMU_CHIPUNIT,  "PU_NMMU_CHIPUNIT" ,   0,     0x00,   P10_DEFAULT_MODE,  0x0000000002010C0A}, // InAddr: inst 1, OutAddr: inst 0
@@ -236,6 +238,12 @@ struct goodPathEntry_t
     { 0x0000000010011800, PU_PAU_CHIPUNIT,   "PU_PAU_CHIPUNIT",     7,     0x00,   P10_DEFAULT_MODE,  0x0000000013012000}, // InAddr: inst 0, OutAddr: inst 7
     { 0x0000000013012000, PU_PAU_CHIPUNIT,   "PU_PAU_CHIPUNIT",     0,     0x00,   P10_DEFAULT_MODE,  0x0000000010011800}, // InAddr: inst 7, OutAddr: inst 0
     { 0x0000000011010800, PU_PAU_CHIPUNIT,   "PU_PAU_CHIPUNIT",     6,     0x00,   P10_DEFAULT_MODE,  0x0000000013010800}, // InAddr: inst 3, OutAddr: inst 6
+
+    //  TEST INDIRECT ADDRESSES
+    { 0x800C840010012C3F, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT",    5,     0x00,   P10_DEFAULT_MODE,  0x800C842012012C3f}, // InAddr: inst 0, OutAddr: inst 5
+    { 0x800C842013012C3F, PU_IOHS_CHIPUNIT,  "PU_IOHS_CHIPUNIT",    1,     0x00,   P10_DEFAULT_MODE,  0x800C842010012C3F}, // InAddr: inst 7, OutAddr: inst 1
+    { 0x800C846010012C3F, PU_OMI_CHIPUNIT,   "PU_OMI_CHIPUNIT",    14,     0x00,   P10_DEFAULT_MODE,  0x800C846013012C3F}, // InAddr: inst 2, OutAddr: inst 14
+    { 0x800C844011012C3F, PU_OMI_CHIPUNIT,   "PU_OMI_CHIPUNIT",    10,     0x00,   P10_DEFAULT_MODE,  0x800C846011012C3F}, // InAddr: inst 8, OutAddr: inst 10
 };
 
 //------------------------------------------------------------------------------
