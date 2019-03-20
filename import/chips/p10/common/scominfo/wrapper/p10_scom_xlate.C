@@ -464,7 +464,7 @@ int main(int i_argc, char** i_argv)
         CLOCK_DOMAIN l_domain = P10_FAKE_DOMAIN;
         l_rc = p10_clockcntl_getScomClockDomain(l_chip_unit_target_type,
                                                 l_unit_target_num,
-                                                l_addr,
+                                                l_addr_abs,
                                                 l_domain,
                                                 P10_DEFAULT_MODE);
 
@@ -472,14 +472,14 @@ int main(int i_argc, char** i_argv)
         {
             printf("ERROR: p10_clockcntl_getScomClockDomain returns an error."
                    " Address 0x%08lx_%08llx, UnitType %s, Instance %d\n",
-                   l_addr >> 32, l_addr & 0xFFFFFFFFULL,
+                   l_addr_abs >> 32, l_addr_abs & 0xFFFFFFFFULL,
                    l_chip_str.c_str(), l_unit_target_num);
         }
         else
         {
             // Convert output domain to string
             std::string l_domainStr = p10_clockcntl_convertClockDomainEnum(l_domain);
-            printf("(i)      Addr                     : 0x%08lx_%08llx\n", (l_addr >> 32), (l_addr & 0xFFFFFFFFULL));
+            printf("(i)      Addr                     : 0x%08lx_%08llx\n", (l_addr_abs >> 32), (l_addr_abs & 0xFFFFFFFFULL));
             printf("(i)      Chip Unit Type           : %d\n", l_chip_unit_target_type);
             printf("(i)      Chip Unit Num            : %d\n", l_unit_target_num);
             printf("(o)      Clock domain             : %d (%s)\n", l_domain, l_domainStr.c_str());
@@ -487,7 +487,7 @@ int main(int i_argc, char** i_argv)
             std::list<CLOCK_DOMAIN> l_domains;
             l_rc = p10_clockcntl_clockStateRegisterScreen(l_chip_unit_target_type,
                     l_unit_target_num,
-                    l_addr,
+                    l_addr_abs,
                     l_domains,
                     P10_DEFAULT_MODE);
 
@@ -495,7 +495,7 @@ int main(int i_argc, char** i_argv)
             {
                 printf("ERROR: p10_clockcntl_clockStateRegisterScreen returns an error."
                        " Address 0x%08lx_%08llx, UnitType %s, Instance %d\n",
-                       l_addr >> 32, l_addr & 0xFFFFFFFFULL,
+                       l_addr_abs >> 32, l_addr_abs & 0xFFFFFFFFULL,
                        l_chip_str.c_str(), l_unit_target_num);
             }
             else if (l_domains.size() != 0)
