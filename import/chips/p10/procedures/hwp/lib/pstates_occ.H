@@ -134,7 +134,7 @@ typedef struct
         uint64_t        value;
         struct
         {
-            unit64_t    eye_catcher : 56;
+            uint64_t    eye_catcher : 56;
             uint64_t    version     : 8 ;
 
         } fields;
@@ -146,7 +146,7 @@ typedef struct
     /// Frequencies are in MHz, voltages are specified in units of 1mV, currents
     /// are specified in units of 10mA, and temperatures are specified in 0.5
     /// degrees C.
-    VpdOperatingPoint_t operating_points[NUM_OP_POINTS];
+    PoundVOpPoint_t operating_points[NUM_PV_POINTS];
 
     SysPowerDistParms_t vdd_sysparm;
     SysPowerDistParms_t vdn_sysparm;
