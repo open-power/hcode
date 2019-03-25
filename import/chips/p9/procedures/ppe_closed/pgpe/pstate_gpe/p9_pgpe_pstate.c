@@ -1138,18 +1138,13 @@ void p9_pgpe_pstate_stop()
     PK_TRACE_DBG("PSS: Stop Done");
 }
 
-//
-//  p9_pgpe_pstate_clip_bcast
-//
-//  Wrapper function for sending Pstate Clip Bcast DB0 to CMEs
 void p9_pgpe_pstate_clip_bcast(uint32_t clip_bcast_type)
 {
     PK_TRACE_DBG("CLB: Clip Bcast");
     pgpe_db0_clip_bcast_t db0;
     db0.value = 0;
-    db0.fields.msg_id = MSGID_DB0_CLIP_BROADCAST;
+    db0.fields.msg_id =  MSGID_DB0_DB3_PAYLOAD;
     db0.fields.clip_type = clip_bcast_type;
-    db0_parms_t p;
 
     //Note that we store PMIN as psClipMax(which is lower Pstate, but higher numbered Pstate)
     if (clip_bcast_type == DB0_CLIP_BCAST_TYPE_PMIN)
@@ -1171,15 +1166,21 @@ void p9_pgpe_pstate_clip_bcast(uint32_t clip_bcast_type)
         db0.fields.quad5_clip = G_pgpe_pstate_record.psClipMin[5];
     }
 
-    p.db0val             = db0.value;
-    p.type               = PGPE_DB0_TYPE_UNICAST;
-    p.targetCores        = G_pgpe_pstate_record.activeDB;
-    p.waitForAcks        = PGPE_DB_ACK_WAIT_CME;
-    p.expectedAckFrom    = G_pgpe_pstate_record.activeQuads;
-    p.expectedAckValue   = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
-    p9_pgpe_send_db0(p);
+    //Write DB0, but with top-byte = 0. This way DB0 interrupt doesn't happen, but
+    //we still send CME the necessary data. CME will read this inside the DB3 interrupt
+    //which we write next
+    db3_parms_t p = {   MSGID_DB3_CLIP_BROADCAST,
+                        db0.value,
+                        PGPE_DB3_WRITE_DB0,
+                        G_pgpe_pstate_record.activeDB,
+                        PGPE_DB_ACK_WAIT_CME,
+                        G_pgpe_pstate_record.activeQuads,
+                        MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK,
+                        PGPE_DB3_SKIP_CHECK_NACKS
+                    };
+    p.db3val = (uint64_t)(MSGID_DB3_CLIP_BROADCAST) << 56;
+    p9_pgpe_send_db3(p);
 }
-
 //
 //  p9_pgpe_pstate_wof_ctrl
 //

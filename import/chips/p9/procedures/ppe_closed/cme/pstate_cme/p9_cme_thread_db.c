@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -297,6 +297,75 @@ void p9_cme_pstate_db3_handler(void)
         }
 
     }
+    else if (db3.fields.cme_message_numbern == MSGID_DB3_CLIP_BROADCAST)
+    {
+        PK_TRACE_INF("PSTATE: DB3 Clip Enter");
+
+        uint32_t dbQuadInfo, dbBit8_15;
+        cppm_cmedb0_t dbData;
+        CME_GETSCOM(CPPM_CMEDB0, G_cme_pstate_record.firstGoodCoreMask, dbData.value);
+        dbBit8_15 = (dbData.value & BITS64(8, 8)) >> SHIFT64(15);
+        dbQuadInfo = (dbData.value >> (in32(G_CME_LCL_SRTCH0) &
+                                       (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)
+                                       ))) & 0xFF;
+
+        //Quad Manager
+        if(G_cme_pstate_record.qmFlag)
+        {
+            //Sync up with sibling CME
+            p9_cme_pstate_notify_sib(INTERCME_DIRECT_IN2);
+
+            if (dbBit8_15 == DB0_CLIP_BCAST_TYPE_PMIN)
+            {
+                G_cme_pstate_record.pmin = dbQuadInfo;
+            }
+            else
+            {
+                G_cme_pstate_record.pmax = dbQuadInfo;
+            }
+
+            PK_TRACE_INF("PSTATE: Pmin=0x%x,Pmax=0x%x", G_cme_pstate_record.pmin, G_cme_pstate_record.pmax);
+
+
+            p9_cme_pstate_pmsr_updt();
+
+            //Sync up with the sibling CME before ACKing back to PGPE
+            p9_cme_pstate_notify_sib(INTERCME_DIRECT_IN2); //Notify sibling
+
+            //Send type4(ack doorbell)
+            send_ack_to_pgpe(MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK);
+
+        }
+        //On Sibling, poll on intercme_in2 direct msg.
+        else
+        {
+            //Wait to receive a notify from Quad Manager
+            //and then ACK back to quad manager
+            while(!(in32_sh(CME_LCL_EISR) & BIT64SH(39)));
+
+            intercme_direct(INTERCME_DIRECT_IN2, INTERCME_DIRECT_ACK, 0);
+
+            if (dbBit8_15 == DB0_CLIP_BCAST_TYPE_PMIN)
+            {
+                G_cme_pstate_record.pmin = dbQuadInfo;
+            }
+            else
+            {
+                G_cme_pstate_record.pmax = dbQuadInfo;
+            }
+
+            p9_cme_pstate_pmsr_updt();
+
+            //Wait to receive a notify from Quad Manager
+            //and then ACK back to quad manager
+            while(!(in32_sh(CME_LCL_EISR) & BIT64SH(39)));
+
+            intercme_direct(INTERCME_DIRECT_IN2, INTERCME_DIRECT_ACK, 0);
+        }
+
+        PK_TRACE_INF("PSTATE: DB3 Clip Exit");
+    }
+
     else
     {
         //\todo  Will be done as part of 41947

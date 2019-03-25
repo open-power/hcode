@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -113,6 +113,7 @@ enum MESSAGE_ID_DB3
     MSGID_DB3_DISABLE_SGPE_HANDOFF      = 0x04,
     MSGID_DB3_SUSPEND_STOP_ENTRY        = 0x05,
     MSGID_DB3_UNSUSPEND_STOP_ENTRY      = 0x06,
+    MSGID_DB3_CLIP_BROADCAST            = 0x07,
     MSGID_DB3_IMMEDIATE_HALT            = 0xF1,
     MSGID_DB3_RESTORE_STATE_AND_HALT    = 0xF2,
 };
