@@ -31,7 +31,8 @@ $(IMAGE)_LINK_SCRIPT=link.ld
 
 _PPE_TYPE=gpe
 
-$(IMAGE)_COMMONFLAGS = -DPK_TRACE_LEVEL=1
+$(IMAGE)_COMMONFLAGS = -DPK_TRACE_LEVEL=3
+$(IMAGE)_COMMONFLAGS = -DPK_TRACE_SZ=4096
 $(IMAGE)_COMMONFLAGS+= -DSIMICS_TUNING=0
 $(IMAGE)_COMMONFLAGS+= -DUSE_SIMICS_IO=0
 $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SUPPORT=1
@@ -65,16 +66,12 @@ PGPE_OBJS += pk_trace_core.o
 PGPE_OBJS += pk_trace_big.o
 PGPE_OBJS += pk_trace_binary.o
 
-# component objects
-#PGPE_OBJS += pgpe_main.o
-#PGPE_OBJS += pgpe_uih.o
-#PGPE_OBJS += pgpe_irq_priority_table.o
-
 
 # Add source code directories for the above objects
 PPE_SRCDIR=$(ROOTPATH)/chips/p10/common/ppe
 IOTA_SRCDIR=$(PPE_SRCDIR)/iota
 TRACE_SRCDIR=$(PPE_SRCDIR)/ppetrace
+HWP_SRCDIR=$(ROOTPATH)/chips/p10/procedures/hwp/
 
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(IOTA_SRCDIR))
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/boltonlib/$(_PPE_TYPE))
@@ -97,6 +94,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE), \
 	$(PPE_SRCDIR)/commonlib \
 	$(PPE_SRCDIR)/powmanlib \
 	$(OCC_SRCDIR)/registers \
+	$(HWP_SRCDIR)/lib \
 	$(TRACE_SRCDIR)/ \
 	)
 
