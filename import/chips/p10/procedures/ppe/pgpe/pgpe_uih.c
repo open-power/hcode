@@ -127,7 +127,7 @@ void __ext_irq_resume()
         // Restore the prty level tracker to the task that was interrupted, if any.
         g_current_prty_level = g_oimr_stack[g_oimr_stack_ctr];
         --g_oimr_stack_ctr;
-        // PK_TRACE("IRQ RS: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
+        PK_TRACE("IRQ RS: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
     }
     else
     {
