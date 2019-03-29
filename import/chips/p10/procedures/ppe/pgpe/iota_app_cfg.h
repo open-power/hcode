@@ -27,15 +27,24 @@
 
 // GPE2 is the irq route ownder
 #define OCCHW_IRQ_ROUTE_OWNER  2
-// This is GPE2 - see iota.mk
 
 #define PLATFORM_PANIC_CODES_H "pgpe_panic_codes.h"
 #include "iota_panic_codes.h"
 
 #include "ocb_register_addresses.h"
 
+#define ENABLE_FIT_TIMER             1
+#define ENABLE_DEC_TIMER             0
+#define ENABLE_WATCHDOG_TIMER        0
+
+#define NUM_TIMER_INTERRUPTS \
+    (ENABLE_WATCHDOG_TIMER ? 1:0 + \
+     ENABLE_DEC_TIMER ? 1:0 + \
+     ENABLE_FIT_TIMER ? 1:0)
+
+
 #define IOTA_NUM_EXT_IRQ_PRIORITIES 5
-#define IOTA_MAX_NESTED_INTERRUPTS  IOTA_NUM_EXT_IRQ_PRIORITIES + 2
+#define IOTA_MAX_NESTED_INTERRUPTS  IOTA_NUM_EXT_IRQ_PRIORITIES + NUM_TIMER_INTERRUPTS
 
 //An "idle" task is one that only runs when the ppe42 engine would otherwise
 //be idle and thus has the lowest priority and can be interrupted by anything.
@@ -59,11 +68,14 @@
 /// using the table defined in pk_app_irq_table.c.
 #define STATIC_IRQ_TABLE
 
+/// Use IPC and the application will define the IPC table statically
+#define GLOBAL_CFG_USE_IPC
+#define STATIC_IPC_TABLES
+
 /// Static configuration data for external interrupts:
 ///
 /// IRQ#, TYPE, POLARITY, ENABLE
 ///
-
 #define APPCFG_EXT_IRQS_CONFIG \
     OCCHW_IRQ_OCC_ERROR                   OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \
     OCCHW_IRQ_GPE3_ERROR                  OCCHW_IRQ_TYPE_EDGE  OCCHW_IRQ_POLARITY_RISING  OCCHW_IRQ_MASKED \

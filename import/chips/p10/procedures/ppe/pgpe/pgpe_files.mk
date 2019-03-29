@@ -25,7 +25,12 @@
 ifdef IMAGE
 PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_irq_priority_table.c \
-				pgpe_uih.c
+				pgpe_uih.c \
+				pgpe_event_manager.c \
+				pgpe_event_table.c \
+				pgpe_event_process.c \
+				pgpe_irq_handlers.c \
+				pgpe_occ.c
 
 PGPE_OBJECTS = $(PGPE-C-SOURCES:.c=.o) 
 endif
