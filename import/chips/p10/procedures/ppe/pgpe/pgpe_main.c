@@ -25,75 +25,23 @@
 #include "iota.h"
 #include "iota_trace.h"
 #include "ipc_async_cmd.h"
+#include "pgpe.h"
+#include "pgpe_event_manager.h"
+#include "pgpe_irq_handlers.h"
 
-
-void idle_task(uint32_t idle_task_idx)
-{
-    static uint32_t val = 1;
-    uint32_t i;
-
-    for(i = 0; i < 10; ++i)
-    {
-        asm volatile("mtspr 0x110, %0" : : "r" (val++));
-        iota_set_idle_task_state(IOTA_IDLE_ENABLED, idle_task_idx);
-    }
-}
-
-// IRQ handlers
-void irq_task()
-{
-    APPCFG_TRACE("high_priority_task");
-}
 
 IOTA_BEGIN_IDLE_TASK_TABLE
-{ IOTA_IDLE_DISABLED, IOTA_NO_TASK },
-{ IOTA_IDLE_DISABLED, IOTA_TASK(idle_task) }
+{ IOTA_IDLE_ENABLED, IOTA_TASK(pgpe_event_manager_run) }
 IOTA_END_IDLE_TASK_TABLE
-
-// IRQ handler table
-IOTA_BEGIN_TASK_TABLE
-IOTA_TASK(irq_task),
-          IOTA_TASK(irq_task),
-          IOTA_TASK(irq_task),
-          IOTA_TASK(irq_task),
-          IOTA_TASK(irq_task)
-          IOTA_END_TASK_TABLE;
-
-
-// IPC function table for single target functions
-IPC_ST_FUNC_TABLE_START
-//          (function, arg)
-IPC_HANDLER_DEFAULT    // 0
-IPC_HANDLER_DEFAULT    // 1
-IPC_HANDLER_DEFAULT    // 3
-IPC_HANDLER_DEFAULT    // 4
-IPC_HANDLER_DEFAULT    // 5
-IPC_HANDLER_DEFAULT    // 6
-IPC_HANDLER_DEFAULT    // 7
-IPC_HANDLER_DEFAULT    // 8
-IPC_HANDLER_DEFAULT    // 9
-IPC_HANDLER_DEFAULT    // 10
-IPC_HANDLER_DEFAULT    // 11
-IPC_HANDLER_DEFAULT    // 12
-IPC_HANDLER_DEFAULT    // 13
-IPC_HANDLER_DEFAULT    // 14
-IPC_HANDLER_DEFAULT    // 15
-IPC_ST_FUNC_TABLE_END
-
-void fit_handler()
-{
-    APPCFG_TRACE("FIT Handler");
-}
-
-void dec_handler()
-{
-    APPCFG_TRACE("DEC Handler");
-}
 
 int main()
 {
-    IOTA_DEC_HANDLER(dec_handler);
-    IOTA_FIT_HANDLER(fit_handler);
+
+    //Do all initialization here
+    pgpe_event_manager_init();
+    pgpe_irq_init();
+
+    PK_TRACE("PGPE Booted");
 
     iota_run();
     return 0;
