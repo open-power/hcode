@@ -22,12 +22,13 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-#include "iota.h"
-#include "iota_trace.h"
-#include "ipc_async_cmd.h"
 #include "pgpe.h"
 #include "pgpe_event_manager.h"
 #include "pgpe_irq_handlers.h"
+#include "pgpe_header.h"
+#include "pgpe_gppb.h"
+#include "pgpe_fake_boot.h"
+#include "pgpe_pstate.h"
 
 
 IOTA_BEGIN_IDLE_TASK_TABLE
@@ -37,9 +38,19 @@ IOTA_END_IDLE_TASK_TABLE
 int main()
 {
 
+#if USE_FAKE_BOOT == 1
+    PK_TRACE("PGPE FAKE Boot");
+    pgpe_fake_boot_gppb();
+    pgpe_fake_boot_pgpe_header();
+#endif
+
     //Do all initialization here
+    pgpe_header_init();
+    pgpe_gppb_init();
     pgpe_event_manager_init();
     pgpe_irq_init();
+    pgpe_pstate_init();
+
 
     PK_TRACE("PGPE Booted");
 
