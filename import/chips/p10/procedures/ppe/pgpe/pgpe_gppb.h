@@ -28,7 +28,16 @@
 
 #include "pgpe.h"
 
+extern GlobalPstateParmBlock_t* G_gppb;
+
 void pgpe_gppb_init();
-void pgpe_gppb_get();
+
+//Macro accessor function
+#define pgpe_gppb_get(x) G_gppb->x
+#define pgpe_gppb_get_psv_slope(rail, pt_set, region) G_gppb->ps_voltage_slopes[rail][pt_set][region]
+#define pgpe_gppb_get_vps_slope(rail, pt_set, region) G_gppb->voltage_ps_slopes[rail][pt_set][region]
+#define pgpe_gppb_get_ops_ps(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].pstate
+#define pgpe_gppb_get_ops_vdd(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].vdd_mv
+#define pgpe_gppb_get_ops_vcs(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].vcs_mv
 
 #endif
