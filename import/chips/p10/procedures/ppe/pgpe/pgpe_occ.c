@@ -40,7 +40,22 @@ void pgpe_occ_produce_wof_iddq_values()
 {
 }
 
-void pgpe_occ_send_ipc_ack(uint32_t ipc_type, uint32_t msg_rc)
+void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd)
+{
+    PK_TRACE("IPC ACK: cmd=0x%x", (uint32_t)cmd);
+    ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+}
+
+void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc)
+{
+    PK_TRACE("IPC ACK: rc=%d", msg_rc);
+    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
+    ipcmsg_base_t* args = (ipcmsg_base_t*)async_cmd->cmd_data;
+    args->rc = msg_rc;
+    ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+}
+
+void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc)
 {
     PK_TRACE("IPC ACK: type=%d, rc=%d", ipc_type, msg_rc);
     ipc_msg_t* cmd = (ipc_msg_t*)pgpe_event_tbl_get_args(ipc_type);
