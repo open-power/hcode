@@ -51,13 +51,13 @@ SECTIONS
     /*=====================================
      * IMAGE HEADER
      ======================================*/
-    _IMG_HEADER = _VECTOR_START +  PPE_HEADER_IMAGE_OFFSET;
-    PPE_HEADER_IMAGE_NAME _IMG_HEADER : { *(PPE_HEADER_IMAGE_NAME) } > sram
+    _PGPE_IMG_HEADER = _VECTOR_START +  PGPE_HEADER_IMAGE_OFFSET;
+    PGPE_HEADER_IMAGE_NAME _PGPE_IMG_HEADER : { *(PGPE_HEADER_IMAGE_NAME) } > sram
 
     /*====================================
      * Debug pointers table
      ====================================*/
-    _DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
+    _DEBUG_PTRS_START = _VECTOR_START + PGPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
 
     
