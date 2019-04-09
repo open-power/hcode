@@ -40,17 +40,17 @@ enum WOF_STATUS
     WOF_STATUS_ENABLED      =   0x00000001
 };
 
-enum WOF_STATUS
+enum WOV_STATUS
 {
-    WOF_STATUS_DISABLED             =   0xFFFFFFFF, //Not using zero
-    WOF_STATUS_OVERVOLT_ENABLED     =   0x00000001, //bit field. Over/Undervolt both can be enabled
-    WOF_STATUS_UNDERVOLT_ENABLED    =   0x00000002  //bit field. Over/Undervolt both can be enabled
+    WOV_STATUS_DISABLED             =   0xFFFFFFFF, //Not using zero
+    WOV_STATUS_OVERVOLT_ENABLED     =   0x00000001, //bit field. Over/Undervolt both can be enabled
+    WOV_STATUS_UNDERVOLT_ENABLED    =   0x00000002  //bit field. Over/Undervolt both can be enabled
 };
 
 typedef enum CLIP_TYPE
 {
-    CLIP_MAX        = 0x1;
-    CLIP_MAX        = 0x2;
+    CLIP_MAX        = 0x1,
+    CLIP_MIN        = 0x2,
 } clip_type_t;
 
 typedef struct pgpe_pstate
@@ -58,22 +58,48 @@ typedef struct pgpe_pstate
     uint32_t pstate_status;
     uint32_t wof_status;
     uint32_t wov_status;
-    uint32_t pmcr_owner
+    uint32_t pmcr_owner;
     uint32_t ps_request[32]; // \\TBD need to use MAX_CORES
     uint32_t pstate_computed, pstate_target, pstate_next, pstate_curr;
     uint32_t clip_min, clip_max, wof_clip;
-    uint32_t vdd_curr, vdd_next, vcs_curr, vcs_next;
+    uint32_t vdd_curr, vdd_next, vdd_curr_uplift, vdd_next_uplift, vdd_curr_ext, vdd_next_ext;
+    uint32_t vcs_curr, vcs_next, vcs_curr_uplift, vcs_next_uplift, vcs_curr_ext, vcs_next_ext;
     uint32_t vdd_bias, vcs_bias, vdd_bias_tgt, vcs_bias_tgt;
     uint32_t vratio, vindex;
+    uint32_t update_pgpe_beacon;
 } pgpe_pstate_t;
 
+extern pgpe_pstate_t G_pgpe_pstate;
+
 //Functions
+void pgpe_pstate_init();
 void pgpe_pstate_actuate_step();
+void pgpe_pstate_compute();
+void pgpe_pstate_apply_clips();
+
+//Macro accessor function
+#define pgpe_pstate_get(x) G_pgpe_pstate.x
+#define pgpe_pstate_get_ps_request(core) G_pgpe_pstate.ps_request[core]
+#define pgpe_pstate_get_clip(type) G_pgpe_pstate.##type
+#define pgpe_pstate_set(x,val) G_pgpe_pstate.x = val
+#define pgpe_pstate_set_ps_request(core,val) G_pgpe_pstate.ps_request[core] = val
+#define pgpe_pstate_set_clip(type,val) G_pgpe_pstate.##type = val
+#define pgpe_pstate_is_pstate_enabled() (G_pgpe_pstate.pstate_status == PSTATE_STATUS_ENABLED)
+
 //Interpolation
-uint32_t pgpe_pstate_intp_vdd_from_ps(Pstate ps, uint32_t vpd_pt_set);
-uint32_t pgpe_pstate_intp_vcs_from_ps(Pstate ps, uint32_t vpd_pt_set);
-uint32_t pgpe_pstate_intp_idd_from_ps(Pstate ps, uint32_t vpd_pt_set);
-uint32_t pgpe_pstate_intp_ps_from_ext_vdd(uint32_t vdd);
-uint32_t pgpe_pstate_intp_ps_from_ext_vcs(uint32_t vcs);
-uint32_t pgpe_pstate_intp_ps_from_ext_idd(uint32_t idd);
+uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_idd_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_ics_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_ics_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_ps_from_vdd(uint32_t vdd);
+uint32_t pgpe_pstate_intp_ps_from_vcs(uint32_t vcs);
+uint32_t pgpe_pstate_intp_ps_from_idd(uint32_t idd);
 uint32_t pgpe_pstate_freq_from_ps(uint32_t ps);
+uint32_t pgpe_pstate_is_at_target();
+
+
+#endif

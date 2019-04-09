@@ -30,7 +30,15 @@ PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_event_table.c \
 				pgpe_event_process.c \
 				pgpe_irq_handlers.c \
-				pgpe_occ.c
+				pgpe_occ.c \
+				pgpe_header.c \
+				pgpe_fake_boot.c \
+				pgpe_pstate.c \
+				pgpe_avsbus_driver.c \
+				pgpe_irq_handlers_fit.c \
+				pgpe_irq_handlers_ipc.c \
+				pgpe_gppb.c \
+				pgpe_dpll.c
 
 PGPE_OBJECTS = $(PGPE-C-SOURCES:.c=.o) 
 endif

@@ -25,31 +25,25 @@
 
 
 #include "pgpe_gppb.h"
+#include "pgpe_header.h"
 
+void pgpe_gppb_pstate_tbl();
+void pgpe_gppb_occ_tbl();
+
+GlobalPstateParmBlock_t* G_gppb;
 
 //
 //
 //
 void pgpe_gppb_init()
 {
-    //\\TBDGet GPPB pointer from PGPE Image header
-    //and Main Memory Address
+    PK_TRACE("PGP Init");
+    void* gppb_sram_offset = (void*)G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
+    G_gppb = (GlobalPstateParmBlock_t*)gppb_sram_offset;
 
 
     pgpe_gppb_pstate_tbl();
     pgpe_gppb_occ_tbl();
-}
-
-
-//
-//Get a field of GPPB
-//
-//\\TBD Make this a generic macro,so that any
-//GPPB field can be accessed. Or, just create a
-//number of #defines each of  which map a field name
-//to the specific GPPB field. Or, just use the P9 way
-void pgpe_gppb_get()
-{
 }
 
 //

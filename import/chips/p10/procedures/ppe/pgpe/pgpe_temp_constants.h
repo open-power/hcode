@@ -25,6 +25,125 @@
 #ifndef __PGPE_TEMP_CONSTANTS_H__
 #define __PGPE_TEMP_CONSTANTS_H__
 
-#define G_OCB_OCCFLG2           0xC0060590
+#define GPPB_SRAM_ADDR              0xfff2a000
+#define OCC_SHARED_SRAM_ADDR        0xfff2c000
+
+#define PGPE_AUX_TASK_SIZE          2*1024
+#define PGPE_OCC_SHARED_SRAM_SIZE   2*1024
+#define PGPE_IMAGE_SIZE             54*1024 - PGPE_AUX_TASK_SIZE - PGPE_OCC_SHARED_SRAM_SIZE
+
+#define OCC_SRAM_PGPE_BASE_ADDR     0xfff20000
+#define OCC_SRAM_PGPE_REGION_SIZE PGPE_IMAGE_SIZE + PGPE_AUX_TASK_SIZE + PGPE_OCC_SHARED_SRAM_SIZE
+
+//PGPE FLAGS
+#define PGPE_FLAG_RESCLK_ENABLE              0x8000
+#define PGPE_FLAG_IVRM_ENABLE                0x4000
+#define PGPE_FLAG_VDM_ENABLE                 0x2000
+#define PGPE_FLAG_WOF_ENABLE                 0x1000
+#define PGPE_FLAG_DPLL_DYNAMIC_FMAX_ENABLE   0x0800
+#define PGPE_FLAG_DPLL_DYNAMIC_FMIN_ENABLE   0x0400
+#define PGPE_FLAG_DPLL_DROOP_PROTECT_ENABLE  0x0200
+#define PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE     0x0080
+#define PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE     0x0040
+#define PGPE_FLAG_ENABLE_FRATIO              0x0020
+#define PGPE_FLAG_ENABLE_VRATIO              0x0010
+#define PGPE_FLAG_VRATIO_MODIFIER            0x0008
+#define PGPE_FLAG_WOV_UNDERVOLT_ENABLE       0x0004
+#define PGPE_FLAG_WOV_OVERVOLT_ENABLE        0x0002
+#define PGPE_FLAG_PHANTOM_HALT_ENABLE        0x0001
+
+#define MAX_PSTATE_TABLE_ENTRIES        128
+
+//REGISTERS
+#define G_OCB_OCCFLG2               0xC0060590
+#define TPC_DPLL_FREQ_CTRL_REG      0x01000051
+#define TPC_DPLL_CTRL_REG           0x01000052
+#define TPC_DPLL_CTRL_REG_CLR       0x01000053
+#define TPC_DPLL_CTRL_REG_OR        0x01000054
+#define TPC_DPLL_STAT_REG           0x01000055
+
+
+typedef union dpll_stat
+{
+
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint32_t high_order;
+        uint32_t low_order;
+#else
+        uint32_t low_order;
+        uint32_t high_order;
+#endif // _BIG_ENDIAN
+    } words;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t reserved1 : 1;
+        uint64_t freqout : 11;
+        uint64_t hires_freqout : 5;
+        uint64_t reserved2 : 43;
+        uint64_t update_complete : 1;
+        uint64_t freq_change : 1;
+        uint64_t block_active : 1;
+        uint64_t lock : 1;
+#else
+        uint64_t lock : 1;
+        uint64_t block_active : 1;
+        uint64_t freq_change : 1;
+        uint64_t update_complete : 1;
+        uint64_t reserved2 : 43;
+        uint64_t hires_freqout : 5;
+        uint64_t freqout : 11;
+        uint64_t reserved1 : 1;
+#endif // _BIG_ENDIAN
+    } fields;
+} dpll_stat_t;
+
+typedef union dpll_freq
+{
+
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint32_t high_order;
+        uint32_t low_order;
+#else
+        uint32_t low_order;
+        uint32_t high_order;
+#endif // _BIG_ENDIAN
+    } words;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t reserved1 : 1;
+        uint64_t fmax : 11;
+        uint64_t hires_fmax : 4;
+        uint64_t max_mult_frac7: 1;
+        uint64_t fmult : 11;
+        uint64_t hires_fmult : 4;
+        uint64_t mult_frac7: 1;
+        uint64_t fmin : 11;
+        uint64_t hires_fmin : 4;
+        uint64_t min_mult_frac7: 1;
+        uint64_t reserved4 : 15;
+#else
+        uint64_t reserved4 : 15;
+        uint64_t min_mult_frac7: 1;
+        uint64_t hires_fmin : 4;
+        uint64_t fmin : 11;
+        uint64_t mult_frac7: 1;
+        uint64_t hires_fmult : 4;
+        uint64_t fmult : 11;
+        uint64_t max_mult_frac7: 1;
+        uint64_t hires_fmax : 4;
+        uint64_t fmax : 11;
+        uint64_t reserved1 : 1;
+#endif // _BIG_ENDIAN
+    } fields;
+} dpll_freq_t;
+
 
 #endif //
