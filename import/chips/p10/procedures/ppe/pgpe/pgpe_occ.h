@@ -30,7 +30,9 @@
 void pgpe_occ_update_beacon();
 void pgpe_occ_produce_wof_values();
 void pgpe_occ_produce_wof_iddq_values();
-void pgpe_occ_send_ipc_ack(uint32_t ipc_type, uint32_t msg_rc);
+void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd);
+void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc);
+void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc);
 
 
 #endif//
