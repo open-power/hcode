@@ -31,10 +31,10 @@
 
 #define SRAM_START               0xfff20000
 #define SRAM_LENGTH              (64*1024)
-#define PPE_HEADER_IMAGE_OFFSET  0x0280
-#define PPE_HEADER_IMAGE_NAME    .iota_test_image_header
-#define PPE_DEBUG_PTRS_OFFSET    0x0180
-#define PPE_DEBUG_PTRS_SIZE      (PPE_HEADER_IMAGE_OFFSET-PPE_DEBUG_PTRS_OFFSET)
+#define PGPE_HEADER_IMAGE_OFFSET  0x0180
+#define PGPE_HEADER_IMAGE_NAME    .pgpe_image_header
+#define PGPE_DEBUG_PTRS_OFFSET    0x0200
+#define PGPE_DEBUG_PTRS_SIZE      (PPE_HEADER_IMAGE_OFFSET-PPE_DEBUG_PTRS_OFFSET)
 
 
 #endif
