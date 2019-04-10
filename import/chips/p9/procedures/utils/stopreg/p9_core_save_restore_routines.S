@@ -127,7 +127,7 @@
                 .set USRR0,                         506
                 .set USRR1,                         507
                 .set SMFCTRL,                       511 # Ultravisor
-                .set HID0,                          1008
+                .set HID,                           1008
                 .set PIR,                           1023
 
 #--------------------SPR definition ends---------------------------------------
@@ -168,6 +168,17 @@
                 .set SELF_REST_VER_INFO_OFFSET,     0x1C
                 .set SMF_SIGNATURE_OFFSET,          0x1300
                 .set SMF_SIGNATURE_CONST,           0x5f534d46 # '_SMF'
+                .set HILE_BIT_POS,                  4
+                .set LE_BIT_POS,                    63
+                .set MF_HRMOR_R1,                   0xa64a397c
+                .set CLEAR_MSR_LE,                  0xa407b57a
+                .set MT_SRR1,                       0xa603bb7e
+                .set ADDI_R1_32,                    0x20012138
+                .set MT_SRR0_R1,                    0xa6033a7c
+                .set RFID,                          0x2400004c
+                .set TRAP_LE,                       0x0800e07f
+                .set MFMSR_R21,                     0xa600a07e
+
 
                 .set SPR_SAVE_SCRATCH_REG,          r0
                 .set SPR_DATA_REG,                  r1
@@ -285,6 +296,34 @@ _start:
 
 _sreset_hndlr:
 
+b big_endian_start
+
+little_endian_start:
+.long MF_HRMOR_R1
+.long MFMSR_R21
+.long CLEAR_MSR_LE
+.long MT_SRR1
+.long ADDI_R1_32
+.long MT_SRR0_R1
+.long RFID
+
+#Note: below are instructions for swizzled machine code used above for
+#LE core entering STOP
+#mfspr   r1,        HRMOR
+#mfmsr    MSR_INIT_REG
+#clrrdi   MSR_INIT_REG, MSR_INIT_REG, 1
+#mtsrr1   MSR_INIT_REG
+#addi     r1, r1, 288
+#mtsrr0   r1
+#rfid
+
+
+
+big_endian_start:
+mfspr       SPR_DATA_REG,   HID
+li          TEMP_REG1,   0
+insrdi      SPR_DATA_REG,   TEMP_REG1,  1,  HILE_BIT_POS
+mtspr       HID,        SPR_DATA_REG                                        # Cleared HILE bit position
 mfmsr       MSR_INIT_REG
 ori         MSR_INIT_REG,    MSR_INIT_REG, MACHINE_CHECK_ENABLE_CONST       # Set the ME bit
 extrdi.     MSR_SECURITY_ENABLE_REG,   MSR_INIT_REG, 1, MSR_SECURITY_BIT    # read Secure Bit (S) of MSR
@@ -782,7 +821,10 @@ cmpwi       THREAD_ID_REG,  0               # if thread in question is 0, also, 
 bne         save_restore_done               # else saving of SPRs is done
 
 save_core_spr:
-addi        SELF_RESTORE_ADDR_REG,  CORE_SCOPE_RESTORE_ADDR_REG, 8
+# 8B  for mflr r30
+# 32B for skipping HRMOR restore entry
+# Self save should start at an offset 8B + 32B = 40B
+addi        SELF_RESTORE_ADDR_REG,  CORE_SCOPE_RESTORE_ADDR_REG, 40
 mtlr        CORE_SELF_SAVE_BASE_ADDR
 blrl
 
