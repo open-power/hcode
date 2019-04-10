@@ -8,38 +8,54 @@ Disassembly of section .selfRestore:
 	...
 
 0000000000000100 <_sreset_hndlr>:
-     100:	7e a0 00 a6 	mfmsr   r21
-     104:	62 b5 10 00 	ori     r21,r21,4096
-     108:	7a b7 57 e3 	rldicl. r23,r21,42,63
-     10c:	41 82 00 2c 	beq     138 <hv_core_init>
+     100:	48 00 00 20 	b       120 <big_endian_start>
 
-0000000000000110 <uv_core_check>:
-     110:	3a 20 00 01 	li      r17,1
-     114:	7e 1f 7a a6 	mfspr   r16,511
-     118:	7a 08 0f e1 	rldicl. r8,r16,1,63
-     11c:	41 82 00 14 	beq     130 <uv_init_error>
-     120:	3a 20 00 02 	li      r17,2
-     124:	7a 08 07 a0 	clrldi  r8,r16,62
-     128:	2c 08 00 02 	cmpwi   r8,2
-     12c:	41 82 00 20 	beq     14c <uv_core_init>
+0000000000000104 <little_endian_start>:
+     104:	a6 4a 39 7c 	lhzu    r18,14716(r10)
+     108:	a6 00 a0 7e 	lhzu    r16,-24450(0)
+     10c:	a4 07 b5 7a 	lhzu    r0,-19078(r7)
+     110:	a6 03 bb 7e 	lhzu    r16,-17538(r3)
+     114:	20 01 21 38 	subfic  r0,r1,8504
+     118:	a6 03 3a 7c 	lhzu    r16,14972(r3)
+     11c:	24 00 00 4c 	dozi    r0,r0,76
 
-0000000000000130 <uv_init_error>:
-     130:	7e 39 8b 78 	mr      r25,r17
-     134:	00 00 02 00 	attn
+0000000000000120 <big_endian_start>:
+     120:	7c 30 fa a6 	mfspr   r1,1008
+     124:	39 00 00 00 	li      r8,0
+     128:	79 01 d9 0e 	rldimi  r1,r8,59,4
+     12c:	7c 30 fb a6 	mtspr   1008,r1
+     130:	7e a0 00 a6 	mfmsr   r21
+     134:	62 b5 10 00 	ori     r21,r21,4096
+     138:	7a b7 57 e3 	rldicl. r23,r21,42,63
+     13c:	41 82 00 2c 	beq     168 <hv_core_init>
 
-0000000000000138 <hv_core_init>:
-     138:	7e 99 4a a6 	mfspr   r20,313
-     13c:	3a 34 20 00 	addi    r17,r20,8192
-     140:	7e 3a 03 a6 	mtsrr0  r17
-     144:	7e bb 03 a6 	mtsrr1  r21
-     148:	4c 00 00 24 	rfid
+0000000000000140 <uv_core_check>:
+     140:	3a 20 00 01 	li      r17,1
+     144:	7e 1f 7a a6 	mfspr   r16,511
+     148:	7a 08 0f e1 	rldicl. r8,r16,1,63
+     14c:	41 82 00 14 	beq     160 <uv_init_error>
+     150:	3a 20 00 02 	li      r17,2
+     154:	7a 08 07 a0 	clrldi  r8,r16,62
+     158:	2c 08 00 02 	cmpwi   r8,2
+     15c:	41 82 00 20 	beq     17c <uv_core_init>
 
-000000000000014c <uv_core_init>:
-     14c:	7e 99 7a a6 	mfspr   r20,505
-     150:	39 14 20 00 	addi    r8,r20,8192
-     154:	7d 1a 7b a6 	mtspr   506,r8
-     158:	7e bb 7b a6 	mtspr   507,r21
-     15c:	4c 00 02 64 	.long 0x4c000264
+0000000000000160 <uv_init_error>:
+     160:	7e 39 8b 78 	mr      r25,r17
+     164:	00 00 02 00 	attn
+
+0000000000000168 <hv_core_init>:
+     168:	7e 99 4a a6 	mfspr   r20,313
+     16c:	3a 34 20 00 	addi    r17,r20,8192
+     170:	7e 3a 03 a6 	mtsrr0  r17
+     174:	7e bb 03 a6 	mtsrr1  r21
+     178:	4c 00 00 24 	rfid
+
+000000000000017c <uv_core_init>:
+     17c:	7e 99 7a a6 	mfspr   r20,505
+     180:	39 14 20 00 	addi    r8,r20,8192
+     184:	7d 1a 7b a6 	mtspr   506,r8
+     188:	7e bb 7b a6 	mtspr   507,r21
+     18c:	4c 00 02 64 	.long 0x4c000264
 	...
      200:	00 00 02 00 	attn
 	...
@@ -262,7 +278,7 @@ Disassembly of section .selfRestore:
     219c:	40 82 f0 68 	bne     1204 <save_restore_done>
 
 00000000000021a0 <save_core_spr>:
-    21a0:	3b ec 00 08 	addi    r31,r12,8
+    21a0:	3b ec 00 28 	addi    r31,r12,40
     21a4:	7d e8 03 a6 	mtlr    r15
     21a8:	4e 80 00 21 	blrl
     21ac:	4b ff f0 58 	b       1204 <save_restore_done>
