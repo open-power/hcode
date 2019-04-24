@@ -22,7 +22,7 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-#if !defined(__IOTA_TRACE__)
+#ifndef __IOTA_TRACE__
 #define __IOTA_TRACE__
 
 #include "iota_app_cfg.h"
@@ -134,7 +134,7 @@
 #define PKTRACE0(...) pk_trace_tiny() //will fail at compile time
 
 #define PKTRACE1(str) \
-    pk_trace_tiny((trace_ppe_hash(str, PK_TRACE_HASH_PREFIX) << 16))
+    pk_trace_tiny(((uint32_t)trace_ppe_hash(str, PK_TRACE_HASH_PREFIX) << 16))
 
 #define PKTRACE2(str, parm0) \
     ((sizeof(parm0) <= 2)? \
@@ -167,6 +167,14 @@
 #define PKTRACE_BIN(str, bufp, buf_size)
 #endif //PK_TRACE_SUPPORT
 
+// For C++/Fapi procedure on platform support to use
+// PPE TRACE underneth FAPI_INF/FAPI_DBG with linkage
+// help to find external pk_trace functions
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 //Trace function prototypes
 void pk_trace_tiny(uint32_t i_parm);
 void pk_trace_big(uint32_t i_hash_and_count,
@@ -174,8 +182,8 @@ void pk_trace_big(uint32_t i_hash_and_count,
 void pk_trace_binary(uint32_t i_hash_and_size, void* bufp);
 void pk_trace_set_freq(uint32_t i_freq);
 
-
-
-
-
+#ifdef __cplusplus
+}
 #endif
+
+#endif //__IOTA_TRACE__
