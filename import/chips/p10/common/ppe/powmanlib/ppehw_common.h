@@ -42,41 +42,6 @@ typedef union
 #define UPPER32(variable) (uint32_t)((variable >> 32) & 0xFFFFFFFF)
 #define LOWER32(variable) (uint32_t)(variable & 0xFFFFFFFF)
 
-/// \defgroup be64_bits Bit manipulation for 64-bit Big-Endian values
-///
-/// \note These macros only work in the assembler context because we build our
-/// assemblers to do 64-bit arithmetic, which is required for PORE assembly.
-///
-/// @{
-
-/// Create a multi-bit mask of \a n bits starting at bit \a b
-#define BITS64(b, n) ((0xffffffffffffffffull << (64 - (n))) >> (b))
-#define BITS32(b, n) ((0xffffffff            << (32 - (n))) >> (b))
-#define BITS16(b, n) (((0xffff               << (16 - (n))) & 0xffff) >> (b))
-#define BITS8(b, n)  (((0xff                 << (8  - (n))) & 0xff) >> (b))
-
-/// Create a single bit mask at bit \a b
-#define BIT64(b) BITS64((b), 1)
-#define BIT32(b) BITS32((b), 1)
-#define BIT16(b) BITS16((b), 1)
-#define BIT8(b)  BITS8((b), 1)
-
-/// Create a amount of shift to bit location \a b
-#define SHIFT64(b) (63-(b))
-#define SHIFT32(b) (31-(b))
-#define SHIFT16(b) (15-(b))
-#define SHIFT8(b)  (7-(b))
-
-/// Macro used for second word operation
-#define BIT64SH(bit64)          BIT32((bit64-32))
-#define BITS64SH(bit64, size)   BITS32((bit64-32), size)
-#define SHIFT64SH(bit64)        SHIFT32((bit64-32))
-
-/// Second Half Local Register Access
-/// use in32/out32 for first half
-#define in32_sh(addr)           in32(addr+4)
-#define out32_sh(addr, data)    out32(addr+4, data)
-
 /// Mark and Tag
 
 // TAG = [18bits reserved][4bits targets][10bits code]
@@ -100,7 +65,21 @@ typedef union
     MARK_TRAP(code)
 
 
-#define WAIT_4_PPE_CYCLES          \
+/// Wait Macro
+
+#define PPE_CORE_CYCLE_RATIO       8 // core is 8 times faster than qme
+#define PPE_FOR_LOOP_CYCLES        4 // fused compare branch(3), addition(1)
+#define PPE_CORE_CYCLE_DIVIDER     (PPE_CORE_CYCLE_RATIO*PPE_FOR_LOOP_CYCLES)
+#ifdef USE_PPE_IMPRECISE_MODE
+#define PPE_WAIT_CORE_CYCLES(cc) \
+    {volatile uint32_t l;asm volatile ("sync");for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);}
+#else
+#define PPE_WAIT_CORE_CYCLES(cc) \
+    {volatile uint32_t l;for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);}
+#endif
+
+
+#define PPE_WAIT_4NOP_CYCLES       \
     asm volatile ("tw 0, 0, 0");   \
     asm volatile ("tw 0, 0, 0");   \
     asm volatile ("tw 0, 0, 0");   \
