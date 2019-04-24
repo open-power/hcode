@@ -27,28 +27,60 @@ ifdef IMAGE
 
 
 #IMG-S-SOURCES   = cpmr_header.S
-#QME-S-SOURCES   = qme_header.S
+
+QME-S-SOURCES   = qme_header.S
+
+QME-CPP-SOURCES = qme_main.C 
+         
 QME-C-SOURCES   = qme_addresses.c \
-                  qme_main.c \
                   qme_init.c \
-                  qme_irq_ppe_events.c
+                  qme_irq_timer_events.c \
+                  qme_irq_doorbell_events.c
 
-WOF-C-SOURCES   = qme_irq_wof_events.c
+STOP-C-SOURCES  = qme_irq_stop_events.c 
 
-STOP-C-SOURCES  = qme_irq_stop_events.c \
-                  qme_stop_exit.c \
-                  qme_stop_entry.c \
-                  qme_stop_entry_hwp.c \
-                  qme_stop_exit_hwp.c 
+STOP-CPP-SOURCES = qme_stop_entry.C \
+                   qme_stop_exit.C 
                    
+CORECACHE-CPP-SOURCES = p10_hcd_corecache_clock_control.C \
+                        p10_hcd_corecache_power_control.C
 
-#UTILS-C-SOURCES  = utils/p9_putringutils.c \
-		   utils/plat_ring_traverse.c
+CACHE-CPP-SOURCES = p10_hcd_cache_poweron.C \
+                    p10_hcd_cache_reset.C \
+                    p10_hcd_cache_gptr_time_initf.C \
+                    p10_hcd_cache_repair_initf.C \
+                    p10_hcd_cache_arrayinit.C \
+                    p10_hcd_cache_initf.C \
+                    p10_hcd_cache_startclocks.C \
+                    p10_hcd_cache_scominit.C \
+                    p10_hcd_cache_scom_customize.C \
+                    p10_hcd_cache_poweroff.C \
+                    p10_hcd_cache_stopclocks.C 
+                     
+CORE-CPP-SOURCES  = p10_hcd_core_poweron.C \
+                    p10_hcd_core_reset.C \
+                    p10_hcd_core_gptr_time_initf.C \
+                    p10_hcd_core_repair_initf.C \
+                    p10_hcd_core_arrayinit.C \
+                    p10_hcd_core_initf.C \
+                    p10_hcd_core_startclocks.C \
+                    p10_hcd_core_scominit.C \
+                    p10_hcd_core_scom_customize.C \
+                    p10_hcd_core_poweroff.C \
+                    p10_hcd_core_stopclocks.C \
+                    p10_hcd_core_stopgrid.C \
+                    p10_hcd_core_startgrid.C \
+                    p10_hcd_core_vmin_disable.C \
+                    p10_hcd_core_vmin_enable.C \
+                    p10_hcd_core_shadows_disable.C \
+                    p10_hcd_core_shadows_enable.C \
+                    p10_hcd_l2_purge.C \
+                    p10_hcd_ncu_purge.C \
+                    p10_hcd_l2_tlbie_quiesce.C 
 
-QME_OBJECTS    = $(QME-C-SOURCES:.c=.o) $(QME-S-SOURCES:.S=.o)
-WOF_OBJECTS    = $(WOF-C-SOURCES:.c=.o)
-STOP_OBJECTS   = $(STOP-C-SOURCES:.c=.o)
-UTILS_OBJECTS  = $(UTILS-C-SOURCES:.c=.o)
 IMG_OBJECTS    = $(IMG-C-SOURCES:.c=.o) $(IMG-S-SOURCES:.S=.o)
+QME_OBJECTS    = $(QME-CPP-SOURCES:.C=.o) $(QME-C-SOURCES:.c=.o) $(QME-S-SOURCES:.S=.o)
+STOP_OBJECTS   = $(STOP-CPP-SOURCES:.C=.o) $(STOP-C-SOURCES:.c=.o)
+HWP_OBJECTS    = $(CORECACHE-CPP-SOURCES:.C=.o) $(CACHE-CPP-SOURCES:.C=.o) $(CORE-CPP-SOURCES:.C=.o)
 
 endif

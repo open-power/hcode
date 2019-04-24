@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_core_startclocks.C $ */
+/* $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_core_vmin_disable.C $ */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
@@ -26,7 +26,7 @@
 
 
 ///
-/// @file  p10_hcd_core_startclocks.C
+/// @file  p10_hcd_core_vmin_disable.C
 /// @brief
 ///
 
@@ -43,19 +43,14 @@
 // Includes
 //------------------------------------------------------------------------------
 
-#include "p10_hcd_core_startclocks.H"
-#include "p10_hcd_corecache_clock_control.H"
+#include "p10_hcd_core_vmin_disable.H"
 #include "p10_hcd_common.H"
 
 #ifdef __PPE_QME
-    #include "p10_scom_eq.H"
     #include "p10_ppe_c.H"
-    using namespace scomt::eq;
     using namespace scomt::ppe_c;
 #else
-    #include "p10_scom_eq.H"
     #include "p10_scom_c.H"
-    using namespace scomt::eq;
     using namespace scomt::c;
 #endif
 
@@ -63,42 +58,39 @@
 // Constant Definitions
 //------------------------------------------------------------------------------
 
-enum P10_HCD_CORE_STARTCLOCKS_CONSTANTS
+enum P10_HCD_CORE_VMIN_DISABLE_CONSTANTS
 {
-    HCD_ECL2_CLK_SYNC_DONE_POLL_TIMEOUT_HW_NS        = 100000, // 10^5ns = 100us timeout
-    HCD_ECL2_CLK_SYNC_DONE_POLL_DELAY_HW_NS          = 1000,   // 1us poll loop delay
-    HCD_ECL2_CLK_SYNC_DONE_POLL_DELAY_SIM_CYCLE      = 32000,  // 32k sim cycle delay
+    HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS       = 100000, // 10^5ns = 100us timeout
+    HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_HW_NS         = 1000,   // 1us poll loop delay
+    HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_SIM_CYCLE     = 32000,  // 32k sim cycle delay
+    HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS   = 100000, // 10^5ns = 100us timeout
+    HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_DELAY_HW_NS     = 1000,   // 1us poll loop delay
+    HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_DELAY_SIM_CYCLE = 32000,  // 32k sim cycle delay
 };
 
 //------------------------------------------------------------------------------
-// Procedure: p10_hcd_core_startclocks
+// Procedure: p10_hcd_core_vmin_disable
 //------------------------------------------------------------------------------
 
 fapi2::ReturnCode
-p10_hcd_core_startclocks(
+p10_hcd_core_vmin_disable(
     const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > & i_target)
 {
-    fapi2::Target < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > eq_target =
-        i_target.getParent < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST > ();
-    uint32_t                l_regions  = i_target.getCoreSelect() << SHIFT32(8);
-    fapi2::buffer<uint64_t> l_scomData = 0;
     fapi2::buffer<buffer_t> l_mmioData = 0;
+    uint32_t                l_timeout  = 0;
 
-    FAPI_INF(">>p10_hcd_core_startclocks");
+    FAPI_INF(">>p10_hcd_core_vmin_disable");
 
-    FAPI_DBG("Enable ECL2 Skewadjust via CPMS_CGCSR[1:CL2_CLK_SYNC_DONE_ENABLE]");
-    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CGCSR_WO_OR, MMIO_1BIT(1) ) );
+    FAPI_DBG("Drop RVID_ENABLE via CPMS_RVCSR[0]");
+    FAPI_TRY( HCD_PUTMMIO_C(i_target, CPMS_RVCSR_WO_CLEAR, MMIO_1BIT(0) ) );
 
-#ifndef EQ_SKEW_ADJUST_DISABLE
-    uint32_t l_timeout = 0;
-
-    FAPI_DBG("Check ECL2 Skewadjust Sync Done via CPMS_CGCSR[33:CL2_CLK_SYNC_DONE_DONE]");
-    l_timeout = HCD_ECL2_CLK_SYNC_DONE_POLL_TIMEOUT_HW_NS /
-                HCD_ECL2_CLK_SYNC_DONE_POLL_DELAY_HW_NS;
+    FAPI_DBG("Wait for RVID_BYPASS via CPMS_RVCSR[33]");
+    l_timeout = HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS /
+                HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_HW_NS;
 
     do
     {
-        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CGCSR), l_mmioData ) );
+        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
 
         // use multicastAND to check 1
         if( MMIO_GET(MMIO_LOWBIT(33)) == 1 )
@@ -106,30 +98,53 @@ p10_hcd_core_startclocks(
             break;
         }
 
-        fapi2::delay(HCD_ECL2_CLK_SYNC_DONE_POLL_DELAY_HW_NS,
-                     HCD_ECL2_CLK_SYNC_DONE_POLL_DELAY_SIM_CYCLE);
+        fapi2::delay(HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_HW_NS,
+                     HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_SIM_CYCLE);
     }
     while( (--l_timeout) != 0 );
 
     FAPI_ASSERT((l_timeout != 0),
-                fapi2::ECL2_CLK_SYNC_DONE_TIMEOUT()
-                .set_ECL2_CLK_SYNC_DONE_POLL_TIMEOUT_HW_NS(HCD_ECL2_CLK_SYNC_DONE_POLL_TIMEOUT_HW_NS)
-                .set_CPMS_CGCSR(l_mmioData)
+                fapi2::VMIN_DIS_RVID_BYPASS_TIMEOUT()
+                .set_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS)
+                .set_CPMS_RVCSR(l_mmioData)
                 .set_CORE_TARGET(i_target),
-                "ECL2 Clock Sync Done Timeout");
-#endif
+                "Vmin Disable Rvid Bypass Timeout");
 
-    FAPI_TRY( p10_hcd_corecache_clock_control(eq_target, l_regions, HCD_CLK_START ) );
+    FAPI_DBG("Set VDD_PFET_SEQ_STATE to Von(0b11) via CPMS_CL2_PFETCNTL[0-1]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_OR,  MMIO_LOAD32H(BITS32(0, 2)) ) );
 
-    FAPI_DBG("Disable ECL2 Regional Fences via CPLT_CTRL1[5-8:ECL2_FENCES]");
-    FAPI_TRY( HCD_PUTSCOM_Q( eq_target, CPLT_CTRL1_WO_CLEAR, SCOM_LOAD32H(l_regions) ) );
+    FAPI_DBG("Drop VDD_PFET_REGULATION_FINGER_EN via CPMS_CL2_PFETCNTL[8]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR, MMIO_1BIT(8) ) );
 
-    FAPI_DBG("Enable ECL2 Regional PSCOMs via CPLT_CTRL3[5-8:ECL2_REGIONS]");
-    FAPI_TRY( HCD_PUTSCOM_Q( eq_target, CPLT_CTRL3_WO_OR,  SCOM_LOAD32H(l_regions) ) );
+    FAPI_DBG("Wait for VDD_PFETS_ENABLED_SENSE asserted via CPMS_CL2_PFETSTAT[0]");
+    l_timeout = HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS /
+                HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_DELAY_HW_NS;
+
+    do
+    {
+        FAPI_TRY( HCD_GETMMIO_C( i_target, CPMS_CL2_PFETSTAT, l_mmioData ) );
+
+        // use multicastAND to check 1
+        if( MMIO_GET(0) == 1 )
+        {
+            break;
+        }
+
+        fapi2::delay(HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_DELAY_HW_NS,
+                     HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_DELAY_SIM_CYCLE);
+    }
+    while( (--l_timeout) != 0 );
+
+    FAPI_ASSERT((l_timeout != 0),
+                fapi2::VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT()
+                .set_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS)
+                .set_CPMS_CL2_PFETSTAT(l_mmioData)
+                .set_CORE_TARGET(i_target),
+                "Vmin Disable VDD Pfet Enable Timeout");
 
 fapi_try_exit:
 
-    FAPI_INF("<<p10_hcd_core_startclocks");
+    FAPI_INF("<<p10_hcd_core_vmin_disable");
 
     return fapi2::current_err;
 
