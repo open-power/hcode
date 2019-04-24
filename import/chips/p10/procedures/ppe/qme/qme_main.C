@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/ppe/qme/qme_addresses.h $         */
+/* $Source: import/chips/p10/procedures/ppe/qme/qme_main.C $              */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2017,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -23,63 +23,59 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-// Core/Cache/PC SCOM Addresses:
+#include "qme.h"
+#include <fapi2.H>
+#include <fapi2_target.H>
 
-extern uint32_t EC_PC_TFX_SM;
+int main()
+{
+    PK_TRACE("Main: Configure Trace Timebase");
+    uint32_t trace_timebase = PPE_TIMEBASE_HZ;
+    pk_trace_set_freq(trace_timebase);
 
-// QME Local Addresses:
+    PK_TRACE("Main: Clear SPRG0");
+    ppe42_app_ctx_set(0);
 
-// QME Per-Quad
+#if defined(USE_QME_QUEUED_SCOM) || defined(USE_QME_QUEUED_SCAN)
+    PK_TRACE("Main: QME Enabling Queued Scom/Scan");
+    out32(QME_LCL_QMCR_OR, BITS32(12, 2));
+#endif
 
-extern uint32_t QME_LCL_PIG;
-extern uint32_t QME_LCL_QMCR;
-extern uint32_t QME_LCL_QMCR_OR;
-extern uint32_t QME_LCL_QMCR_CLR;
+    fapi2::ReturnCode fapiRc = fapi2::plat_TargetsInit();
 
-extern uint32_t QME_LCL_DB0;
-extern uint32_t QME_LCL_DB1;
-extern uint32_t QME_LCL_DB2;
+    if( fapiRc != fapi2::FAPI2_RC_SUCCESS )
+    {
+        PK_TRACE_ERR("ERROR: FAPI2 Init Failed. HALT QME!");
+        IOTA_PANIC(QME_MAIN_FAPI2_INIT_FAILED);
+    }
 
-extern uint32_t QME_LCL_FLAGS;
-extern uint32_t QME_LCL_FLAGS_OR;
-extern uint32_t QME_LCL_FLAGS_CLR;
-extern uint32_t QME_LCL_SCRA;
-extern uint32_t QME_LCL_SCRA_OR;
-extern uint32_t QME_LCL_SCRA_CLR;
-extern uint32_t QME_LCL_SCRB;
-extern uint32_t QME_LCL_SCRB_OR;
-extern uint32_t QME_LCL_SCRB_CLR;
-extern uint32_t QME_LCL_SSDR;
-extern uint32_t QME_LCL_SCDR;
-extern uint32_t QME_LCL_PLSR;
+    // Initialize the Stop state and Pstate tasks
+    qme_init();
 
-extern uint32_t QME_LCL_TSEL;
-extern uint32_t QME_LCL_TBR;
-extern uint32_t QME_LCL_EISR;
-extern uint32_t QME_LCL_EISR_OR;
-extern uint32_t QME_LCL_EISR_CLR;
-extern uint32_t QME_LCL_EIMR;
-extern uint32_t QME_LCL_EIMR_OR;
-extern uint32_t QME_LCL_EIMR_CLR;
-extern uint32_t QME_LCL_EIPR;
-extern uint32_t QME_LCL_EIPR_OR;
-extern uint32_t QME_LCL_EIPR_CLR;
-extern uint32_t QME_LCL_EITR;
-extern uint32_t QME_LCL_EITR_OR;
-extern uint32_t QME_LCL_EITR_CLR;
-extern uint32_t QME_LCL_EISTR;
-extern uint32_t QME_LCL_EINR;
+#if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)
 
-// QME Per-Core
+    uint32_t TCR_VAL = 0;
+    PK_TRACE("Main: Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
+    //out32(QME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
 
-extern uint32_t QME_SSH_SRC;
-extern uint32_t QME_PSCRS;
-extern uint32_t QME_DCSR;
+#if ENABLE_FIT_TIMER
+    PK_TRACE("Main: Register and Enable FIT Timer");
+    IOTA_FIT_HANDLER(qme_fit_handler);
+    TCR_VAL |= TCR_FIE;
+#endif
 
-extern uint32_t QME_SCSR;
-extern uint32_t QME_SCSR_WO_OR;
-extern uint32_t QME_SCSR_WO_CLEAR;
+#if ENABLE_DEC_TIMER
+    PK_TRACE("Main: Register and Enable DEC Timer");
+    IOTA_DEC_HANDLER(qme_dec_handler);
+    TCR_VAL |= TCR_DIE;
+#endif
 
-extern uint32_t QME_TFCSR;
-extern uint32_t QME_TFCSR_WO_OR;
-extern uint32_t QME_TFCSR_WO_CLEAR;
+    mtspr(SPRN_TCR, TCR_VAL);
+
+#endif
+
+    // start IOTA and never return!
+    iota_run();
+
+    return 0;
+}

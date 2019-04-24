@@ -25,11 +25,6 @@
 #ifndef __QMEHW_COMMON_H__
 #define __QMEHW_COMMON_H__
 
-enum QME_FLAGS
-{
-    QME_FLAGS_READY                 = 0
-};
-
 enum QME_CORE_MASKS
 {
     QME_MASK_C0                     = 0x8, // Just Core0 = 0b1000
@@ -39,33 +34,18 @@ enum QME_CORE_MASKS
     QME_MASK_ALL_CORES              = 0xF  // ALL  Cores = 0b1111
 };
 
-enum QME_MULTICAST_TYPES
-{
-    QME_READ_OR                     = 0,
-    QME_READ_AND                    = 1,
-    QME_READ_EQ                     = 4,
-    QME_WRITE                       = 5
-};
-
 enum QME_BCEBAR_INDEXES
 {
     QME_BCEBAR_0                    = 0,
     QME_BCEBAR_1                    = 1
 };
 
-/// Wait Macro
-
-#define PPE_CORE_CYCLE_RATIO       8 // core is 8 times faster than qme
-#define PPE_FOR_LOOP_CYCLES        4 // fused compare branch(3), addition(1)
-#define PPE_CORE_CYCLE_DIVIDER     (PPE_CORE_CYCLE_RATIO*PPE_FOR_LOOP_CYCLES)
-#ifdef USE_PPE_IMPRECISE_MODE
-#define PPE_WAIT_CORE_CYCLES(cc) \
-    {volatile uint32_t l;asm volatile ("sync");for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);}
-#else
-#define PPE_WAIT_CORE_CYCLES(cc) \
-    {volatile uint32_t l;for(l=0;l<cc/PPE_CORE_CYCLE_DIVIDER;l++);}
-#endif
-
+enum QME_MULTICAST_TYPES
+{
+    QME_READ_OR                     = 0,
+    QME_READ_AND                    = 1,
+    QME_READ_EQ                     = 4
+};
 
 
 /// Local and SCOM Macro
@@ -75,25 +55,10 @@ enum QME_BCEBAR_INDEXES
 // 0xC | MC=1 | MC_T | 0    | Regions | Per | Sat | SatSel | Addr  | Rsv | WSel | 0
 
 #define QME_LCL_CORE_ADDR_MC(type, core, addr)   (0x08000000 | (type << 24) | (core << 16) | (addr))
-#define QME_LCL_CORE_ADDR_WR(addr, core)         QME_LCL_CORE_ADDR_MC(QME_WRITE,    core, addr)
+#define QME_LCL_CORE_ADDR_WR(addr, core)         QME_LCL_CORE_ADDR_MC(QME_READ_OR,  core, addr)
 #define QME_LCL_CORE_ADDR_EQ(addr, core)         QME_LCL_CORE_ADDR_MC(QME_READ_EQ,  core, addr)
 #define QME_LCL_CORE_ADDR_OR(addr, core)         QME_LCL_CORE_ADDR_MC(QME_READ_OR,  core, addr)
 #define QME_LCL_CORE_ADDR_AND(addr, core)        QME_LCL_CORE_ADDR_MC(QME_READ_AND, core, addr)
-
-#ifdef __PPE_QME
-    typedef uint32_t buffer_t;
-    #define QME_PUTLOCAL(addr, offset, data)  out32( (addr+offset), data )
-    #define QME_GETLOCAL(addr, offset, data)  in32(  (addr+offset), data )
-    #define BITFH(b)                          ((0x80000000) >> (b))
-    #define BITSH(b)                          (1 << (63-(b)))
-#else
-    typedef uint64_t buffer_t;
-    #define QME_PUTLOCAL(addr, offset, data)  out64( addr, data )
-    #define QME_GETLOCAL(addr, offset, data)  in64(  addr, data )
-    #define BITFH(b)                          ((0x8000000000000000) >> (b))
-    #define BITSH(b)                          (1 << (63-(b)))
-#endif
-
 
 // 0     | 1    | 2-4  | 5-7      | 8 | 9-11  | 12-15  | 16-19  | 20-31
 // 0/pcb | MC=0 | baseId          | Q | 0     | EndSel | Region |
@@ -102,7 +67,7 @@ enum QME_BCEBAR_INDEXES
 // R/nW  | MC=1 | MC_T | 111/MC_G | 1111/PcbM | EndSel | Region | Addr
 
 #define QME_SCOM_CORE_ADDR_MC(type, core, addr)   (0x40000000 | (type << 27) | (core << 12) | (addr))
-#define QME_SCOM_CORE_ADDR_WR(addr, core)         QME_SCOM_CORE_ADDR_MC(QME_WRITE,    core, addr)
+#define QME_SCOM_CORE_ADDR_WR(addr, core)         QME_SCOM_CORE_ADDR_MC(QME_READ_OR,  core, addr)
 #define QME_SCOM_CORE_ADDR_EQ(addr, core)         QME_SCOM_CORE_ADDR_MC(QME_READ_EQ,  core, addr)
 #define QME_SCOM_CORE_ADDR_OR(addr, core)         QME_SCOM_CORE_ADDR_MC(QME_READ_OR,  core, addr)
 #define QME_SCOM_CORE_ADDR_AND(addr, core)        QME_SCOM_CORE_ADDR_MC(QME_READ_AND, core, addr)

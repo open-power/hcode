@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/ppe/qme/qme_addresses.h $         */
+/* $Source: import/chips/p10/procedures/ppe/hwpf/pool.H $                 */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -23,63 +23,37 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-// Core/Cache/PC SCOM Addresses:
+#ifndef SBE_VECTOR_POOL_H
+#define SBE_VECTOR_POOL_H
 
-extern uint32_t EC_PC_TFX_SM;
+namespace SBEVECTORPOOL
+{
 
-// QME Local Addresses:
+// Size of a block  for a vector
+static const size_t G_BLOCKSIZE = 256;
 
-// QME Per-Quad
+//Pool size
+static const size_t G_POOLSIZE = 6;
 
-extern uint32_t QME_LCL_PIG;
-extern uint32_t QME_LCL_QMCR;
-extern uint32_t QME_LCL_QMCR_OR;
-extern uint32_t QME_LCL_QMCR_CLR;
+typedef struct
+{
+    size_t refCount;
+    uint8_t data[G_BLOCKSIZE] __attribute__ ((aligned (8)));
+} vectorMemPool_t;
 
-extern uint32_t QME_LCL_DB0;
-extern uint32_t QME_LCL_DB1;
-extern uint32_t QME_LCL_DB2;
+/**
+  * @brief Returns memory pool block.
+  *
+  * @return  Memory block if available, NULL otherwise.
+  */
+vectorMemPool_t* allocMem();
 
-extern uint32_t QME_LCL_FLAGS;
-extern uint32_t QME_LCL_FLAGS_OR;
-extern uint32_t QME_LCL_FLAGS_CLR;
-extern uint32_t QME_LCL_SCRA;
-extern uint32_t QME_LCL_SCRA_OR;
-extern uint32_t QME_LCL_SCRA_CLR;
-extern uint32_t QME_LCL_SCRB;
-extern uint32_t QME_LCL_SCRB_OR;
-extern uint32_t QME_LCL_SCRB_CLR;
-extern uint32_t QME_LCL_SSDR;
-extern uint32_t QME_LCL_SCDR;
-extern uint32_t QME_LCL_PLSR;
+/**
+  * @brief Release memory pool block.
+  *
+  * @param[in] i_pool pool pointer.
+  */
+void releaseMem( vectorMemPool_t* i_pool );
 
-extern uint32_t QME_LCL_TSEL;
-extern uint32_t QME_LCL_TBR;
-extern uint32_t QME_LCL_EISR;
-extern uint32_t QME_LCL_EISR_OR;
-extern uint32_t QME_LCL_EISR_CLR;
-extern uint32_t QME_LCL_EIMR;
-extern uint32_t QME_LCL_EIMR_OR;
-extern uint32_t QME_LCL_EIMR_CLR;
-extern uint32_t QME_LCL_EIPR;
-extern uint32_t QME_LCL_EIPR_OR;
-extern uint32_t QME_LCL_EIPR_CLR;
-extern uint32_t QME_LCL_EITR;
-extern uint32_t QME_LCL_EITR_OR;
-extern uint32_t QME_LCL_EITR_CLR;
-extern uint32_t QME_LCL_EISTR;
-extern uint32_t QME_LCL_EINR;
-
-// QME Per-Core
-
-extern uint32_t QME_SSH_SRC;
-extern uint32_t QME_PSCRS;
-extern uint32_t QME_DCSR;
-
-extern uint32_t QME_SCSR;
-extern uint32_t QME_SCSR_WO_OR;
-extern uint32_t QME_SCSR_WO_CLEAR;
-
-extern uint32_t QME_TFCSR;
-extern uint32_t QME_TFCSR_WO_OR;
-extern uint32_t QME_TFCSR_WO_CLEAR;
+} // namespace SBEVECTORPOOL
+#endif //SBE_VECTOR_POOL_H

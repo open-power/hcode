@@ -37,7 +37,7 @@ QmeRecord G_qme_record __attribute__((section (".dump_ptr"))) =
     CURRENT_GIT_HEAD,
     0, //Timer_enabled
     ENABLED_HCODE_FUNCTIONS,
-    ( BIT32(STOP_LEVEL_2) | BIT32(STOP_LEVEL_5) ),
+    ( BIT32(STOP_LEVEL_2) | BIT32(STOP_LEVEL_3) ),
     0
 };
 
@@ -48,13 +48,15 @@ qme_init()
     // Initialize Software Scoreboard
     //--------------------------------------------------------------------------
 
-    uint32_t local_data = in32_sh(G_QME_LCL_QMCR);
+    uint32_t local_data = in32_sh(QME_LCL_QMCR);
 
     G_qme_record.c_configured       = local_data & BITS64SH(60, 4);
     G_qme_record.fused_core_enabled = ( local_data >> SHIFT64SH(47) ) & 0x1;
 
     // TODO attributes or flag bits
-    G_qme_record.stop_level_enabled = ( BIT32(STOP_LEVEL_2) | BIT32(STOP_LEVEL_5) );
+    // TODO assert pm_entry_limit when stop levels are all disabled
+    // However, cannot disable stop11 as gating the IPL, to be discussed with Greg
+    G_qme_record.stop_level_enabled = ( BIT32(STOP_LEVEL_2) | BIT32(STOP_LEVEL_3) );
     G_qme_record.mma_enabled        = 0;
     G_qme_record.pmcr_fwd_enabled   = 0;
     G_qme_record.throttle_enabled   = 0;
@@ -73,23 +75,25 @@ qme_init()
 
     // use SCDR[0:3] STOP_GATED to initialize core stop status
     // Note when QME is booted, either core is in stop11 or running
-    G_qme_record.c_stop11_reached   = ((in32(G_QME_LCL_SCDR) & BITS32(0, 4))  >> SHIFT32(3)) ;
+    G_qme_record.c_stop11_reached   = ((in32(QME_LCL_SCDR) & BITS32(0, 4))  >> SHIFT32(3)) ;
     G_qme_record.c_stop11_reached  |= (~G_qme_record.c_configured) & QME_MASK_ALL_CORES;
     G_qme_record.c_stop5_reached    = G_qme_record.c_stop11_reached;
+    G_qme_record.c_stop3_reached    = G_qme_record.c_stop11_reached;
     G_qme_record.c_stop2_reached    = G_qme_record.c_stop11_reached;
 
 #if EPM_TUNING
     // EPM Always have cores ready to enter first, aka cores are running when boot
     G_qme_record.c_stop2_reached  = 0;
+    G_qme_record.c_stop3_reached  = 0;
     G_qme_record.c_stop5_reached  = 0;
     G_qme_record.c_stop11_reached = 0;
 #endif
 
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
-    G_qme_record.c_special_wakeup_done = ((in32(G_QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
+    G_qme_record.c_special_wakeup_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
 
     // use SSDR[36:39] PM_BLOCK_INTERRUPTS to initalize block wakeup status
-    G_qme_record.c_block_wake_done = ((in32_sh(G_QME_LCL_SSDR) & BITS64SH(36, 4)) >> SHIFT64SH(39));
+    G_qme_record.c_block_wake_done = ((in32_sh(QME_LCL_SSDR) & BITS64SH(36, 4)) >> SHIFT64SH(39));
     G_qme_record.c_block_stop_done = 0;
 
     PK_TRACE_INF("Setup: Core Stop Gated[%x], Core in Special Wakeup[%d], Core in Block Wakeup[%x]",
@@ -130,31 +134,31 @@ qme_init()
     //--------------------------------------------------------------------------
 
     PK_TRACE("Drop STOP override mode and active mask via QMCR[6,7]");
-    out32(G_QME_LCL_QMCR_OR,  BITS32(16, 8)); //0xB=1011 (Lo-Pri Sel)
-    out32(G_QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2)));
+    out32( QME_LCL_QMCR_OR,  BITS32(16, 8) ); //0xB=1011 (Lo-Pri Sel)
+    out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2)) );
 
     if( G_qme_record.c_special_wakeup_done )
     {
         PK_TRACE_DBG("Setup: Special Wakeup Done[%d], Assert PM_EXIT", G_qme_record.c_special_wakeup_done);
         out32( QME_LCL_CORE_ADDR_WR(
-                   G_QME_SCSR_OR, G_qme_record.c_special_wakeup_done ), BIT32(1) );
+                   QME_SCSR_WO_OR, G_qme_record.c_special_wakeup_done ), BIT32(1) );
     }
 
     PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE/CTFS_DEC_WKUP_ENABLE via PCR_SCSR[20, 26, 27]");
     out32( QME_LCL_CORE_ADDR_WR(
-               G_QME_SCSR_OR, G_qme_record.c_configured ), ( BIT32(20) | BITS32(26, 2) ) );
+               QME_SCSR_WO_OR, G_qme_record.c_configured ), ( BIT32(20) | BITS32(26, 2) ) );
 
     //--------------------------------------------------------------------------
     // QME Init Completed, Enable Interrupts
     //--------------------------------------------------------------------------
 
     PK_TRACE_INF("Setup: QME STOP READY");
-    out32(G_QME_LCL_FLAGS_OR, BIT32(QME_FLAGS_READY));
+    out32( QME_LCL_FLAGS_OR, BIT32(QME_FLAGS_STOP_READY) );
 
 #if EPM_TUNING
     asm volatile ("tw 0, 31, 0");
 #endif
 
     PK_TRACE_DBG("Setup: Unmask STOP Interrupts Now with Reversing Initial Mask[%x]", G_qme_record.c_all_stop_mask);
-    out32_sh( G_QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & BITS64SH(32, 24) ) );
+    out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & BITS64SH(32, 24) ) );
 }
