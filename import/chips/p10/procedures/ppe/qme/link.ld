@@ -75,6 +75,13 @@ SECTIONS
      * Read only data
      *====================================*/
     .rodata . : { *(.rodata*) *(.got2) } > sram
+/*<eabi>
+    . = ALIGN(8);
+    .rodata . : { ctor_start_address = .;
+                  *(.ctors) *(.ctors.*)
+                  ctor_end_address = .;
+                  *(rodata*) *(.got2) } > sram
+*/
 
     /*===================================================
      * Small data area 2. Must be 8 byte aligned
@@ -87,7 +94,9 @@ SECTIONS
     . = ALIGN(8);
     _SDA2_BASE_ = . ;
     .sdata2  . : { *(.sdata2*) } > sram
+    /*<eabi> _sbss_start = .; */
     .sbss2   . : { *(.sbss2*)  } > sram
+    /*<eabi> _sbss_end = .; */
 
     /*================================================
      * The Small data area. Must by 8 byte aligned

@@ -23,6 +23,14 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include <p9_hcode_image_defines.H>
+#include "ppe_attribute_struct.H"
 
-.qme_header
+#.qme_header
+
+    // Create the .attrdata section
+    .ppe_attribute_system
+    .ppe_attribute_proc_chip
+    .ppe_attribute_perv
+    .ppe_attribute_core
+    .ppe_attribute_ex
+    .ppe_attribute_eq
