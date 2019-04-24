@@ -25,4 +25,8 @@
 PROCEDURE=p10_hcd_core_arrayinit
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
+$(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/perv)
+lib$(PROCEDURE)_COMMONFLAGS += -DP10_HCD_CORECACHE_SKIP_ARRAY
+lib$(PROCEDURE)_COMMONFLAGS += -DP10_HCD_CORECACHE_SKIP_FLUSH
+#OBJS+=p9_perv_sbe_cmn.o
 $(call BUILD_PROCEDURE)
