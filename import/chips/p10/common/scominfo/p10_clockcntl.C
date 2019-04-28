@@ -481,7 +481,6 @@ extern "C"
     }
         CHECKAXON(VITL)
         CHECKAXON(IOO)
-        CHECKAXON(ODL)
         CHECKAXON(NDL)
         CHECKAXON(PDL)
         CHECKAXON(PLL)
@@ -664,16 +663,18 @@ extern "C"
 
                     case P10_TPVITL_DOMAIN:
                         o_domainList.push_back(P10_TPSBEPIBOCCNET_DOMAIN);
+                        o_domainList.push_back(P10_TPDPLLPAU_DOMAIN);
+                        o_domainList.push_back(P10_TPDPLLNEST_DOMAIN);
                         o_domainList.push_back(P10_TPPLL_DOMAIN);
                         break;
 
                     case P10_N0VITL_DOMAIN:
-                        o_domainList.push_back(P10_N0NXVASINTNMMU0PE0_DOMAIN);
+                        o_domainList.push_back(P10_N0NXVASINTNMMU0PE1_DOMAIN);
                         break;
 
                     case P10_N1VITL_DOMAIN:
                         o_domainList.push_back(P10_N1NMMU1_DOMAIN);
-                        o_domainList.push_back(P10_N1MCDPE1FBC_DOMAIN);
+                        o_domainList.push_back(P10_N1MCDPE0FBCPSI_DOMAIN);
                         break;
 
                     case P10_PAU0VITL_DOMAIN:
@@ -700,7 +701,6 @@ extern "C"
 
                     case P10_AXON0VITL_DOMAIN:
                         o_domainList.push_back(P10_AXON0IOO_DOMAIN);
-                        o_domainList.push_back(P10_AXON0ODL_DOMAIN);
                         o_domainList.push_back(P10_AXON0NDL_DOMAIN);
                         o_domainList.push_back(P10_AXON0PDL_DOMAIN);
                         o_domainList.push_back(P10_AXON0PLL_DOMAIN);
@@ -742,7 +742,6 @@ extern "C"
     if (l_domain == P10_##P##VITL_DOMAIN)              \
     {                                                   \
         o_domainList.push_back(P10_##P##IOO_DOMAIN);    \
-        o_domainList.push_back(P10_##P##ODL_DOMAIN);    \
         o_domainList.push_back(P10_##P##NDL_DOMAIN);    \
         o_domainList.push_back(P10_##P##PDL_DOMAIN);    \
         o_domainList.push_back(P10_##P##PLL_DOMAIN);    \

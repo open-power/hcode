@@ -31,6 +31,7 @@
 /// HWP FW Maintainer:
 /// HWP Consumed by: CRONUS
 ///
+
 #ifndef P10_CLOCKCNTL_H
 #define P10_CLOCKCNTL_H
 
@@ -116,98 +117,74 @@ extern "C" {
     {
         //      Chiplet            RingID                 Clock domain
         //      -------        --------------       -----------------------------
-        {  PIB_CHIPLET_ID,     ALL_GOOD_ID,         P10_FSIVITL_DOMAIN            },  // FSI
-        {  PERV_CHIPLET_ID,    ALL_GOOD_ID,         P10_TPSBEPIBOCCNET_DOMAIN     },  // TP
+        {  PIB_CHIPLET_ID,     ALL_GOOD_ID,         P10_FSIVITL_DOMAIN            }, // FSI
+        {  PERV_CHIPLET_ID,    ALL_GOOD_ID,         P10_TPSBEPIBOCCNET_DOMAIN     }, // TP
 
-        {  N0_CHIPLET_ID,      ALL_GOOD_ID,         P10_N0NXVASINTNMMU0PE0_DOMAIN },
+        {  N0_CHIPLET_ID,      ALL_GOOD_ID,         P10_N0NXVASINTNMMU0PE1_DOMAIN },
 
         {  N1_CHIPLET_ID,      N1_MM1_RING_ID,      P10_N1NMMU1_DOMAIN            }, // RingId 0x3
-        {  N1_CHIPLET_ID,      ALL_GOOD_ID,         P10_N1MCDPE1FBC_DOMAIN        },
+        {  N1_CHIPLET_ID,      ALL_GOOD_ID,         P10_N1MCDPE0FBCPSI_DOMAIN     },
 
         {  PCI0_CHIPLET_ID,    PCI_RING_ID,         P10_PCI0PH5_DOMAIN            }, // RingId 0x2
         {  PCI0_CHIPLET_ID,    ALL_GOOD_ID,         P10_PCI0IOP_DOMAIN            },
         {  PCI1_CHIPLET_ID,    PCI_RING_ID,         P10_PCI1PH5_DOMAIN            }, // RingId 0x2
         {  PCI1_CHIPLET_ID,    ALL_GOOD_ID,         P10_PCI1IOP_DOMAIN            },
 
-        {  MC0_CHIPLET_ID,     MC_RING_ID,          P10_MC0MC_DOMAIN              }, // RingId 0x2
+        {  MC0_CHIPLET_ID,     MC_0_RING_ID,        P10_MC0MC_DOMAIN              }, // RingId 0x3
+        {  MC0_CHIPLET_ID,     MC_1_RING_ID,        P10_MC0MC_DOMAIN              }, // RingId 0x4
         {  MC0_CHIPLET_ID,     ALL_GOOD_ID,         P10_MC0ODLIOO_DOMAIN          },
-        {  MC1_CHIPLET_ID,     MC_RING_ID,          P10_MC1MC_DOMAIN              }, // RingId 0x2
+        {  MC1_CHIPLET_ID,     MC_0_RING_ID,        P10_MC1MC_DOMAIN              }, // RingId 0x3
+        {  MC1_CHIPLET_ID,     MC_1_RING_ID,        P10_MC1MC_DOMAIN              }, // RingId 0x4
         {  MC1_CHIPLET_ID,     ALL_GOOD_ID,         P10_MC1ODLIOO_DOMAIN          },
-        {  MC2_CHIPLET_ID,     MC_RING_ID,          P10_MC2MC_DOMAIN              }, // RingId 0x2
+        {  MC2_CHIPLET_ID,     MC_0_RING_ID,        P10_MC2MC_DOMAIN              }, // RingId 0x3
+        {  MC2_CHIPLET_ID,     MC_1_RING_ID,        P10_MC2MC_DOMAIN              }, // RingId 0x4
         {  MC2_CHIPLET_ID,     ALL_GOOD_ID,         P10_MC2ODLIOO_DOMAIN          },
-        {  MC3_CHIPLET_ID,     MC_RING_ID,          P10_MC3MC_DOMAIN              }, // RingId 0x2
+        {  MC3_CHIPLET_ID,     MC_0_RING_ID,        P10_MC3MC_DOMAIN              }, // RingId 0x3
+        {  MC3_CHIPLET_ID,     MC_1_RING_ID,        P10_MC3MC_DOMAIN              }, // RingId 0x4
         {  MC3_CHIPLET_ID,     ALL_GOOD_ID,         P10_MC3ODLIOO_DOMAIN          },
 
         {  PAU0_CHIPLET_ID,    PAU0346_0_RING_ID,   P10_PAU0PAU0NTLOTL_DOMAIN     }, // RingId 0x2
         {  PAU0_CHIPLET_ID,    PAU0346_1_RING_ID,   P10_PAU0PAU0NTLOTL_DOMAIN     }, // RingId 0x3
-        {  PAU0_CHIPLET_ID,    PBPAU0346_0_RING_ID, P10_PAU0PAU0NTLOTL_DOMAIN     }, // RingId 0x6
-        {  PAU0_CHIPLET_ID,    PBPAU0346_1_RING_ID, P10_PAU0PAU0NTLOTL_DOMAIN     }, // RingId 0x7
         {  PAU0_CHIPLET_ID,    ALL_GOOD_ID,         P10_PAU0TLPPE_DOMAIN          },
 
         {  PAU1_CHIPLET_ID,    PAU0346_0_RING_ID,   P10_PAU1PAU3NTLOTL_DOMAIN     }, // RingId 0x2
         {  PAU1_CHIPLET_ID,    PAU0346_1_RING_ID,   P10_PAU1PAU3NTLOTL_DOMAIN     }, // RingId 0x3
-        {  PAU1_CHIPLET_ID,    PBPAU0346_0_RING_ID, P10_PAU1PAU3NTLOTL_DOMAIN     }, // RingId 0x6
-        {  PAU1_CHIPLET_ID,    PBPAU0346_1_RING_ID, P10_PAU1PAU3NTLOTL_DOMAIN     }, // RingId 0x7
         {  PAU1_CHIPLET_ID,    ALL_GOOD_ID,         P10_PAU1TLPPE_DOMAIN          },
 
         {  PAU2_CHIPLET_ID,    PAU0346_0_RING_ID,   P10_PAU2PAU4NTLOTL_DOMAIN     }, // RingId 0x2
         {  PAU2_CHIPLET_ID,    PAU0346_1_RING_ID,   P10_PAU2PAU4NTLOTL_DOMAIN     }, // RingId 0x3
-        {  PAU2_CHIPLET_ID,    PBPAU0346_0_RING_ID, P10_PAU2PAU4NTLOTL_DOMAIN     }, // RingId 0x6
-        {  PAU2_CHIPLET_ID,    PBPAU0346_1_RING_ID, P10_PAU2PAU4NTLOTL_DOMAIN     }, // RingId 0x7
         {  PAU2_CHIPLET_ID,    PAU57_0_RING_ID,     P10_PAU2PAU5NTLOTL_DOMAIN     }, // RingId 0x4
         {  PAU2_CHIPLET_ID,    PAU57_1_RING_ID,     P10_PAU2PAU5NTLOTL_DOMAIN     }, // RingId 0x5
-        {  PAU2_CHIPLET_ID,    PBPAU57_0_RING_ID,   P10_PAU2PAU5NTLOTL_DOMAIN     }, // RingId 0x8
-        {  PAU2_CHIPLET_ID,    PBPAU57_1_RING_ID,   P10_PAU2PAU5NTLOTL_DOMAIN     }, // RingId 0x9
         {  PAU2_CHIPLET_ID,    ALL_GOOD_ID,         P10_PAU2TLPPE_DOMAIN          },
 
         {  PAU3_CHIPLET_ID,    PAU0346_0_RING_ID,   P10_PAU3PAU6NTLOTL_DOMAIN     }, // RingId 0x2
         {  PAU3_CHIPLET_ID,    PAU0346_1_RING_ID,   P10_PAU3PAU6NTLOTL_DOMAIN     }, // RingId 0x3
-        {  PAU3_CHIPLET_ID,    PBPAU0346_0_RING_ID, P10_PAU3PAU6NTLOTL_DOMAIN     }, // RingId 0x6
-        {  PAU3_CHIPLET_ID,    PBPAU0346_1_RING_ID, P10_PAU3PAU6NTLOTL_DOMAIN     }, // RingId 0x7
         {  PAU3_CHIPLET_ID,    PAU57_0_RING_ID,     P10_PAU3PAU7NTLOTL_DOMAIN     }, // RingId 0x4
         {  PAU3_CHIPLET_ID,    PAU57_1_RING_ID,     P10_PAU3PAU7NTLOTL_DOMAIN     }, // RingId 0x5
-        {  PAU3_CHIPLET_ID,    PBPAU57_0_RING_ID,   P10_PAU3PAU7NTLOTL_DOMAIN     }, // RingId 0x8
-        {  PAU3_CHIPLET_ID,    PBPAU57_1_RING_ID,   P10_PAU3PAU7NTLOTL_DOMAIN     }, // RingId 0x9
         {  PAU3_CHIPLET_ID,    ALL_GOOD_ID,         P10_PAU3TLPPE_DOMAIN          },
 
-        {  AXON0_CHIPLET_ID,   AXONE_ODL_RING_ID,   P10_AXON0ODL_DOMAIN           }, // RingId 0x3
-        {  AXON0_CHIPLET_ID,   AXONE_NDL_RING_ID,   P10_AXON0NDL_DOMAIN           }, // RingId 0x4
-        {  AXON0_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON0PDL_DOMAIN           }, // RingId 0x5
+        {  AXON0_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON0PDL_DOMAIN           }, // RingId 0x4
         {  AXON0_CHIPLET_ID,   ALL_GOOD_ID,         P10_AXON0IOO_DOMAIN           },
 
-        {  AXON1_CHIPLET_ID,   AXONE_ODL_RING_ID,   P10_AXON1ODL_DOMAIN           }, // RingId 0x3
-        {  AXON1_CHIPLET_ID,   AXONE_NDL_RING_ID,   P10_AXON1NDL_DOMAIN           }, // RingId 0x4
-        {  AXON1_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON1PDL_DOMAIN           }, // RingId 0x5
+        {  AXON1_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON1PDL_DOMAIN           }, // RingId 0x4
         {  AXON1_CHIPLET_ID,   ALL_GOOD_ID,         P10_AXON1IOO_DOMAIN           },
 
-        {  AXON2_CHIPLET_ID,   AXONE_ODL_RING_ID,   P10_AXON2ODL_DOMAIN           }, // RingId 0x3
-        {  AXON2_CHIPLET_ID,   AXONE_NDL_RING_ID,   P10_AXON2NDL_DOMAIN           }, // RingId 0x4
-        {  AXON2_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON2PDL_DOMAIN           }, // RingId 0x5
+        {  AXON2_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON2PDL_DOMAIN           }, // RingId 0x4
         {  AXON2_CHIPLET_ID,   ALL_GOOD_ID,         P10_AXON2IOO_DOMAIN           },
 
-        {  AXON3_CHIPLET_ID,   AXONE_ODL_RING_ID,   P10_AXON3ODL_DOMAIN           }, // RingId 0x3
-        {  AXON3_CHIPLET_ID,   AXONE_NDL_RING_ID,   P10_AXON3NDL_DOMAIN           }, // RingId 0x4
-        {  AXON3_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON3PDL_DOMAIN           }, // RingId 0x5
+        {  AXON3_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON3PDL_DOMAIN           }, // RingId 0x4
         {  AXON3_CHIPLET_ID,   ALL_GOOD_ID,         P10_AXON3IOO_DOMAIN           },
 
-        {  AXON4_CHIPLET_ID,   AXONE_ODL_RING_ID,   P10_AXON4ODL_DOMAIN           }, // RingId 0x3
-        {  AXON4_CHIPLET_ID,   AXONE_NDL_RING_ID,   P10_AXON4NDL_DOMAIN           }, // RingId 0x4
-        {  AXON4_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON4PDL_DOMAIN           }, // RingId 0x5
+        {  AXON4_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON4PDL_DOMAIN           }, // RingId 0x4
         {  AXON4_CHIPLET_ID,   ALL_GOOD_ID,         P10_AXON4IOO_DOMAIN           },
 
-        {  AXON5_CHIPLET_ID,   AXONE_ODL_RING_ID,   P10_AXON5ODL_DOMAIN           }, // RingId 0x3
-        {  AXON5_CHIPLET_ID,   AXONE_NDL_RING_ID,   P10_AXON5NDL_DOMAIN           }, // RingId 0x4
-        {  AXON5_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON5PDL_DOMAIN           }, // RingId 0x5
+        {  AXON5_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON5PDL_DOMAIN           }, // RingId 0x4
         {  AXON5_CHIPLET_ID,   ALL_GOOD_ID,         P10_AXON5IOO_DOMAIN           },
 
-        {  AXON6_CHIPLET_ID,   AXONE_ODL_RING_ID,   P10_AXON6ODL_DOMAIN           }, // RingId 0x3
-        {  AXON6_CHIPLET_ID,   AXONE_NDL_RING_ID,   P10_AXON6NDL_DOMAIN           }, // RingId 0x4
-        {  AXON6_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON6PDL_DOMAIN           }, // RingId 0x5
+        {  AXON6_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON6PDL_DOMAIN           }, // RingId 0x4
         {  AXON6_CHIPLET_ID,   ALL_GOOD_ID,         P10_AXON6IOO_DOMAIN           },
 
-        {  AXON7_CHIPLET_ID,   AXONE_ODL_RING_ID,   P10_AXON7ODL_DOMAIN           }, // RingId 0x3
-        {  AXON7_CHIPLET_ID,   AXONE_NDL_RING_ID,   P10_AXON7NDL_DOMAIN           }, // RingId 0x4
-        {  AXON7_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON7PDL_DOMAIN           }, // RingId 0x5
+        {  AXON7_CHIPLET_ID,   AXONE_PDL_RING_ID,   P10_AXON7PDL_DOMAIN           }, // RingId 0x4
         {  AXON7_CHIPLET_ID,   ALL_GOOD_ID,         P10_AXON7IOO_DOMAIN           },
     };
 
@@ -344,43 +321,45 @@ extern "C" {
 
         { "TPVITL",               P10_TPVITL_DOMAIN,             0x0000281A, 0x0000800000000000ULL },
         { "TPSBEPIBOCCNET",       P10_TPSBEPIBOCCNET_DOMAIN,     0x01030008, 0x0F80000000000000ULL }, // Regions 0,1,2,3,4; bits 4,5,6,7,8
+        { "TPDPLLPAU",            P10_TPDPLLPAU_DOMAIN,          0x01030008, 0x0008000000000000ULL }, // Region 8; bit 12
+        { "TPDPLLNEST",           P10_TPDPLLNEST_DOMAIN,         0x01030008, 0x0004000000000000ULL }, // Region 9; bit 13
         { "TPPLL",                P10_TPPLL_DOMAIN,              0x01030008, 0x0002000000000000ULL }, // Region 10; bit 14
 
         { "N0VITL",               P10_N0VITL_DOMAIN,             0x020F0040, 0x0000800000000000ULL }, // Mask: bit 16, VITL THOLD
-        { "N0NXVASINTNMMU0PE0",   P10_N0NXVASINTNMMU0PE0_DOMAIN, 0x02030008, 0x0C00000000000000ULL }, // Regions 0,1; bits 4,5
+        { "N0NXVASINTNMMU0PE1",   P10_N0NXVASINTNMMU0PE1_DOMAIN, 0x02030008, 0x0C80000000000000ULL }, // Regions 0,1,4; bits 4,5,8
 
         { "N1VITL",               P10_N1VITL_DOMAIN,             0x030F0040, 0x0000800000000000ULL },
         { "N1NMMU1",              P10_N1NMMU1_DOMAIN,            0x03030008, 0x0040000000000000ULL }, // Region 5; bit 9
-        { "N1MCDPE1FBC",          P10_N1MCDPE1FBC_DOMAIN,        0x03030008, 0x0E00000000000000ULL }, // Regions 0,1,2; bits 4,5,6
+        { "N1MCDPE0FBCPSI",       P10_N1MCDPE0FBCPSI_DOMAIN,     0x03030008, 0x0AA0000000000000ULL }, // Regions 0,2,4,6; bits 4,6,8,10
 
         { "PCI0VITL",             P10_PCI0VITL_DOMAIN,           0x080F0040, 0x0000800000000000ULL },
         { "PCI0PH5",              P10_PCI0PH5_DOMAIN,            0x08030008, 0x0400000000000000ULL }, // Region 1; bit 5
-        { "PCI0IOP",              P10_PCI0IOP_DOMAIN,            0x08030008, 0x0A00000000000000ULL }, // Regions 0,2; bits 4,6
+        { "PCI0IOP",              P10_PCI0IOP_DOMAIN,            0x08030008, 0x0BFE000000000000ULL }, // Regions 0,2,3,4,5,6,7,8,9,10; bits 4,6,7,8,9,10,11,12,13,14
         { "PCI0PLL",              P10_PCI0PLL_DOMAIN,            0x08030008, 0x0002000000000000ULL },
 
         { "PCI1VITL",             P10_PCI1VITL_DOMAIN,           0x090F0040, 0x0000800000000000ULL },
         { "PCI1PH5",              P10_PCI1PH5_DOMAIN,            0x09030008, 0x0400000000000000ULL },
-        { "PCI1IOP",              P10_PCI1IOP_DOMAIN,            0x09030008, 0x0A00000000000000ULL },
+        { "PCI1IOP",              P10_PCI1IOP_DOMAIN,            0x09030008, 0x0BFE000000000000ULL },
         { "PCI1PLL",              P10_PCI1PLL_DOMAIN,            0x09030008, 0x0002000000000000ULL },
 
         { "MC0VITL",              P10_MC0VITL_DOMAIN,            0x0C0F0040, 0x0000800000000000ULL },
         { "MC0MC",                P10_MC0MC_DOMAIN,              0x0C030008, 0x0400000000000000ULL }, // Region 1; bit 5
-        { "MC0ODLIOO",            P10_MC0ODLIOO_DOMAIN,          0x0C030008, 0x0A00000000000000ULL }, // Regions 0,2; bits 4,6
+        { "MC0ODLIOO",            P10_MC0ODLIOO_DOMAIN,          0x0C030008, 0x09E0000000000000ULL }, // Regions 0,3,4,5,6; bits 4,7,8,9,10
         { "MC0PLL",               P10_MC0PLL_DOMAIN,             0x0C030008, 0x0002000000000000ULL },
 
         { "MC1VITL",              P10_MC1VITL_DOMAIN,            0x0D0F0040, 0x0000800000000000ULL },
         { "MC1MC",                P10_MC1MC_DOMAIN,              0x0D030008, 0x0400000000000000ULL },
-        { "MC1ODLIOO",            P10_MC1ODLIOO_DOMAIN,          0x0D030008, 0x0A00000000000000ULL },
+        { "MC1ODLIOO",            P10_MC1ODLIOO_DOMAIN,          0x0D030008, 0x09E0000000000000ULL },
         { "MC1PLL",               P10_MC1PLL_DOMAIN,             0x0D030008, 0x0002000000000000ULL },
 
         { "MC2VITL",              P10_MC2VITL_DOMAIN,            0x0E0F0040, 0x0000800000000000ULL },
         { "MC2MC",                P10_MC2MC_DOMAIN,              0x0E030008, 0x0400000000000000ULL },
-        { "MC2ODLIOO",            P10_MC2ODLIOO_DOMAIN,          0x0E030008, 0x0A00000000000000ULL },
+        { "MC2ODLIOO",            P10_MC2ODLIOO_DOMAIN,          0x0E030008, 0x09E0000000000000ULL },
         { "MC2PLL",               P10_MC2PLL_DOMAIN,             0x0E030008, 0x0002000000000000ULL },
 
         { "MC3VITL",              P10_MC3VITL_DOMAIN,            0x0F0F0040, 0x0000800000000000ULL },
         { "MC3MC",                P10_MC3MC_DOMAIN,              0x0F030008, 0x0400000000000000ULL },
-        { "MC3ODLIOO",            P10_MC3ODLIOO_DOMAIN,          0x0F030008, 0x0A00000000000000ULL },
+        { "MC3ODLIOO",            P10_MC3ODLIOO_DOMAIN,          0x0F030008, 0x09E0000000000000ULL },
         { "MC3PLL",               P10_MC3PLL_DOMAIN,             0x0F030008, 0x0002000000000000ULL },
 
         { "PAU0VITL",             P10_PAU0VITL_DOMAIN,           0x100F0040, 0x0000800000000000ULL },
@@ -397,62 +376,54 @@ extern "C" {
         { "PAU2TLPPE",            P10_PAU2TLPPE_DOMAIN,          0x12030008, 0x0860000000000000ULL }, // Regions 0,5,6; bits 4,9,10
 
         { "PAU3VITL",             P10_PAU3VITL_DOMAIN,           0x130F0040, 0x0000800000000000ULL },
-        { "PAU3PAU6NTLOTL",       P10_PAU3PAU6NTLOTL_DOMAIN,     0x13030008, 0x0400000000000000ULL }, // Region 1; bits 5
-        { "PAU3PAU7NTLOTL",       P10_PAU3PAU7NTLOTL_DOMAIN,     0x13030008, 0x0200000000000000ULL }, // Region 2; bit  6
+        { "PAU3PAU6NTLOTL",       P10_PAU3PAU6NTLOTL_DOMAIN,     0x13030008, 0x0400000000000000ULL }, // Region 1; bit 5
+        { "PAU3PAU7NTLOTL",       P10_PAU3PAU7NTLOTL_DOMAIN,     0x13030008, 0x0200000000000000ULL }, // Region 2; bit 6
         { "PAU3TLPPE",            P10_PAU3TLPPE_DOMAIN,          0x13030008, 0x0860000000000000ULL }, // Regions 0,5,6; bits 4,9,10
 
         { "AXON0VITL",            P10_AXON0VITL_DOMAIN,          0x180F0040, 0x0000800000000000ULL },
         { "AXON0IOO",             P10_AXON0IOO_DOMAIN,           0x18030008, 0x0C00000000000000ULL }, // Regions 0,1; bits 4,5
-        { "AXON0ODL",             P10_AXON0ODL_DOMAIN,           0x18030008, 0x0100000000000000ULL }, // Region 3; bit 7
         { "AXON0NDL",             P10_AXON0NDL_DOMAIN,           0x18030008, 0x0080000000000000ULL }, // Region 4; bit 8
         { "AXON0PDL",             P10_AXON0PDL_DOMAIN,           0x18030008, 0x0040000000000000ULL }, // Region 5; bit 9
         { "AXON0PLL",             P10_AXON0PLL_DOMAIN,           0x18030008, 0x0002000000000000ULL },
 
         { "AXON1VITL",            P10_AXON1VITL_DOMAIN,          0x190F0040, 0x0000800000000000ULL },
         { "AXON1IOO",             P10_AXON1IOO_DOMAIN,           0x19030008, 0x0C00000000000000ULL },
-        { "AXON1ODL",             P10_AXON1ODL_DOMAIN,           0x19030008, 0x0100000000000000ULL },
         { "AXON1NDL",             P10_AXON1NDL_DOMAIN,           0x19030008, 0x0080000000000000ULL },
         { "AXON1PDL",             P10_AXON1PDL_DOMAIN,           0x19030008, 0x0040000000000000ULL },
         { "AXON1PLL",             P10_AXON1PLL_DOMAIN,           0x19030008, 0x0002000000000000ULL },
 
         { "AXON2VITL",            P10_AXON2VITL_DOMAIN,          0x1A0F0040, 0x0000800000000000ULL },
         { "AXON2IOO",             P10_AXON2IOO_DOMAIN,           0x1A030008, 0x0C00000000000000ULL },
-        { "AXON2ODL",             P10_AXON2ODL_DOMAIN,           0x1A030008, 0x0100000000000000ULL },
         { "AXON2NDL",             P10_AXON2NDL_DOMAIN,           0x1A030008, 0x0080000000000000ULL },
         { "AXON2PDL",             P10_AXON2PDL_DOMAIN,           0x1A030008, 0x0040000000000000ULL },
         { "AXON2PLL",             P10_AXON2PLL_DOMAIN,           0x1A030008, 0x0002000000000000ULL },
 
         { "AXON3VITL",            P10_AXON3VITL_DOMAIN,          0x1B0F0040, 0x0000800000000000ULL },
         { "AXON3IOO",             P10_AXON3IOO_DOMAIN,           0x1B030008, 0x0C00000000000000ULL },
-        { "AXON3ODL",             P10_AXON3ODL_DOMAIN,           0x1B030008, 0x0100000000000000ULL },
         { "AXON3NDL",             P10_AXON3NDL_DOMAIN,           0x1B030008, 0x0080000000000000ULL },
         { "AXON3PDL",             P10_AXON3PDL_DOMAIN,           0x1B030008, 0x0040000000000000ULL },
         { "AXON3PLL",             P10_AXON3PLL_DOMAIN,           0x1B030008, 0x0002000000000000ULL },
 
         { "AXON4VITL",            P10_AXON4VITL_DOMAIN,          0x1C0F0040, 0x0000800000000000ULL },
         { "AXON4IOO",             P10_AXON4IOO_DOMAIN,           0x1C030008, 0x0C00000000000000ULL },
-        { "AXON4ODL",             P10_AXON4ODL_DOMAIN,           0x1C030008, 0x0100000000000000ULL },
         { "AXON4NDL",             P10_AXON4NDL_DOMAIN,           0x1C030008, 0x0080000000000000ULL },
         { "AXON4PDL",             P10_AXON4PDL_DOMAIN,           0x1C030008, 0x0040000000000000ULL },
         { "AXON4PLL",             P10_AXON4PLL_DOMAIN,           0x1C030008, 0x0002000000000000ULL },
 
         { "AXON5VITL",            P10_AXON5VITL_DOMAIN,          0x1D0F0040, 0x0000800000000000ULL },
         { "AXON5IOO",             P10_AXON5IOO_DOMAIN,           0x1D030008, 0x0C00000000000000ULL },
-        { "AXON5ODL",             P10_AXON5ODL_DOMAIN,           0x1D030008, 0x0100000000000000ULL },
         { "AXON5NDL",             P10_AXON5NDL_DOMAIN,           0x1D030008, 0x0080000000000000ULL },
         { "AXON5PDL",             P10_AXON5PDL_DOMAIN,           0x1D030008, 0x0040000000000000ULL },
         { "AXON5PLL",             P10_AXON5PLL_DOMAIN,           0x1D030008, 0x0002000000000000ULL },
 
         { "AXON6VITL",            P10_AXON6VITL_DOMAIN,          0x1E0F0040, 0x0000800000000000ULL },
         { "AXON6IOO",             P10_AXON6IOO_DOMAIN,           0x1E030008, 0x0C00000000000000ULL },
-        { "AXON6ODL",             P10_AXON6ODL_DOMAIN,           0x1E030008, 0x0100000000000000ULL },
         { "AXON6NDL",             P10_AXON6NDL_DOMAIN,           0x1E030008, 0x0080000000000000ULL },
         { "AXON6PDL",             P10_AXON6PDL_DOMAIN,           0x1E030008, 0x0040000000000000ULL },
         { "AXON6PLL",             P10_AXON6PLL_DOMAIN,           0x1E030008, 0x0002000000000000ULL },
 
         { "AXON7VITL",            P10_AXON7VITL_DOMAIN,          0x1F0F0040, 0x0000800000000000ULL },
         { "AXON7IOO",             P10_AXON7IOO_DOMAIN,           0x1F030008, 0x0C00000000000000ULL },
-        { "AXON7ODL",             P10_AXON7ODL_DOMAIN,           0x1F030008, 0x0100000000000000ULL },
         { "AXON7NDL",             P10_AXON7NDL_DOMAIN,           0x1F030008, 0x0080000000000000ULL },
         { "AXON7PDL",             P10_AXON7PDL_DOMAIN,           0x1F030008, 0x0040000000000000ULL },
         { "AXON7PLL",             P10_AXON7PLL_DOMAIN,           0x1F030008, 0x0002000000000000ULL },
@@ -466,7 +437,7 @@ extern "C" {
         { "EQ0L31",               P10_EQ0L31_DOMAIN,             0x20030008, 0x0020000000000000ULL }, // Region 6; bit 10
         { "EQ0L32",               P10_EQ0L32_DOMAIN,             0x20030008, 0x0010000000000000ULL }, // Region 7: bit 11
         { "EQ0L33",               P10_EQ0L33_DOMAIN,             0x20030008, 0x0008000000000000ULL }, // Region 8; bit 12
-        { "EQ0QME",               P10_EQ0QME_DOMAIN,             0x20030008, 0x0804000000000000ULL }, // Regions 0,9; bits 4,13
+        { "EQ0QME",               P10_EQ0QME_DOMAIN,             0x20030008, 0x0806000000000000ULL }, // Regions 0,9,10; bits 4,13,14
         { "EQ0MMA0",              P10_EQ0MMA0_DOMAIN,            0x20030008, 0x0001000000000000ULL }, // Region 11; bit 15
         { "EQ0MMA1",              P10_EQ0MMA1_DOMAIN,            0x20030008, 0x0000800000000000ULL }, // Region 12; bit 16
         { "EQ0MMA2",              P10_EQ0MMA2_DOMAIN,            0x20030008, 0x0000400000000000ULL }, // Region 13; bit 17
@@ -481,7 +452,7 @@ extern "C" {
         { "EQ1L31",               P10_EQ1L31_DOMAIN,             0x21030008, 0x0020000000000000ULL },
         { "EQ1L32",               P10_EQ1L32_DOMAIN,             0x21030008, 0x0010000000000000ULL },
         { "EQ1L33",               P10_EQ1L33_DOMAIN,             0x21030008, 0x0008000000000000ULL },
-        { "EQ1QME",               P10_EQ1QME_DOMAIN,             0x21030008, 0x0804000000000000ULL },
+        { "EQ1QME",               P10_EQ1QME_DOMAIN,             0x21030008, 0x0806000000000000ULL },
         { "EQ1MMA0",              P10_EQ1MMA0_DOMAIN,            0x21030008, 0x0001000000000000ULL },
         { "EQ1MMA1",              P10_EQ1MMA1_DOMAIN,            0x21030008, 0x0000800000000000ULL },
         { "EQ1MMA2",              P10_EQ1MMA2_DOMAIN,            0x21030008, 0x0000400000000000ULL },
@@ -496,7 +467,7 @@ extern "C" {
         { "EQ2L31",               P10_EQ2L31_DOMAIN,             0x22030008, 0x0020000000000000ULL },
         { "EQ2L32",               P10_EQ2L32_DOMAIN,             0x22030008, 0x0010000000000000ULL },
         { "EQ2L33",               P10_EQ2L33_DOMAIN,             0x22030008, 0x0008000000000000ULL },
-        { "EQ2QME",               P10_EQ2QME_DOMAIN,             0x22030008, 0x0804000000000000ULL },
+        { "EQ2QME",               P10_EQ2QME_DOMAIN,             0x22030008, 0x0806000000000000ULL },
         { "EQ2MMA0",              P10_EQ2MMA0_DOMAIN,            0x22030008, 0x0001000000000000ULL },
         { "EQ2MMA1",              P10_EQ2MMA1_DOMAIN,            0x22030008, 0x0000800000000000ULL },
         { "EQ2MMA2",              P10_EQ2MMA2_DOMAIN,            0x22030008, 0x0000400000000000ULL },
@@ -511,7 +482,7 @@ extern "C" {
         { "EQ3L31",               P10_EQ3L31_DOMAIN,             0x23030008, 0x0020000000000000ULL },
         { "EQ3L32",               P10_EQ3L32_DOMAIN,             0x23030008, 0x0010000000000000ULL },
         { "EQ3L33",               P10_EQ3L33_DOMAIN,             0x23030008, 0x0008000000000000ULL },
-        { "EQ3QME",               P10_EQ3QME_DOMAIN,             0x23030008, 0x0804000000000000ULL },
+        { "EQ3QME",               P10_EQ3QME_DOMAIN,             0x23030008, 0x0806000000000000ULL },
         { "EQ3MMA0",              P10_EQ3MMA0_DOMAIN,            0x23030008, 0x0001000000000000ULL },
         { "EQ3MMA1",              P10_EQ3MMA1_DOMAIN,            0x23030008, 0x0000800000000000ULL },
         { "EQ3MMA2",              P10_EQ3MMA2_DOMAIN,            0x23030008, 0x0000400000000000ULL },
@@ -526,7 +497,7 @@ extern "C" {
         { "EQ4L31",               P10_EQ4L31_DOMAIN,             0x24030008, 0x0020000000000000ULL },
         { "EQ4L32",               P10_EQ4L32_DOMAIN,             0x24030008, 0x0010000000000000ULL },
         { "EQ4L33",               P10_EQ4L33_DOMAIN,             0x24030008, 0x0008000000000000ULL },
-        { "EQ4QME",               P10_EQ4QME_DOMAIN,             0x24030008, 0x0804000000000000ULL },
+        { "EQ4QME",               P10_EQ4QME_DOMAIN,             0x24030008, 0x0806000000000000ULL },
         { "EQ4MMA0",              P10_EQ4MMA0_DOMAIN,            0x24030008, 0x0001000000000000ULL },
         { "EQ4MMA1",              P10_EQ4MMA1_DOMAIN,            0x24030008, 0x0000800000000000ULL },
         { "EQ4MMA2",              P10_EQ4MMA2_DOMAIN,            0x24030008, 0x0000400000000000ULL },
@@ -541,7 +512,7 @@ extern "C" {
         { "EQ5L31",               P10_EQ5L31_DOMAIN,             0x25030008, 0x0020000000000000ULL },
         { "EQ5L32",               P10_EQ5L32_DOMAIN,             0x25030008, 0x0010000000000000ULL },
         { "EQ5L33",               P10_EQ5L33_DOMAIN,             0x25030008, 0x0008000000000000ULL },
-        { "EQ5QME",               P10_EQ5QME_DOMAIN,             0x25030008, 0x0804000000000000ULL },
+        { "EQ5QME",               P10_EQ5QME_DOMAIN,             0x25030008, 0x0806000000000000ULL },
         { "EQ5MMA0",              P10_EQ5MMA0_DOMAIN,            0x25030008, 0x0001000000000000ULL },
         { "EQ5MMA1",              P10_EQ5MMA1_DOMAIN,            0x25030008, 0x0000800000000000ULL },
         { "EQ5MMA2",              P10_EQ5MMA2_DOMAIN,            0x25030008, 0x0000400000000000ULL },
@@ -556,7 +527,7 @@ extern "C" {
         { "EQ6L31",               P10_EQ6L31_DOMAIN,             0x26030008, 0x0020000000000000ULL },
         { "EQ6L32",               P10_EQ6L32_DOMAIN,             0x26030008, 0x0010000000000000ULL },
         { "EQ6L33",               P10_EQ6L33_DOMAIN,             0x26030008, 0x0008000000000000ULL },
-        { "EQ6QME",               P10_EQ6QME_DOMAIN,             0x26030008, 0x0804000000000000ULL },
+        { "EQ6QME",               P10_EQ6QME_DOMAIN,             0x26030008, 0x0806000000000000ULL },
         { "EQ6MMA0",              P10_EQ6MMA0_DOMAIN,            0x26030008, 0x0001000000000000ULL },
         { "EQ6MMA1",              P10_EQ6MMA1_DOMAIN,            0x26030008, 0x0000800000000000ULL },
         { "EQ6MMA2",              P10_EQ6MMA2_DOMAIN,            0x26030008, 0x0000400000000000ULL },
@@ -571,7 +542,7 @@ extern "C" {
         { "EQ7L31",               P10_EQ7L31_DOMAIN,             0x27030008, 0x0020000000000000ULL },
         { "EQ7L32",               P10_EQ7L32_DOMAIN,             0x27030008, 0x0010000000000000ULL },
         { "EQ7L33",               P10_EQ7L33_DOMAIN,             0x27030008, 0x0008000000000000ULL },
-        { "EQ7QME",               P10_EQ7QME_DOMAIN,             0x27030008, 0x0804000000000000ULL },
+        { "EQ7QME",               P10_EQ7QME_DOMAIN,             0x27030008, 0x0806000000000000ULL },
         { "EQ7MMA0",              P10_EQ7MMA0_DOMAIN,            0x27030008, 0x0001000000000000ULL },
         { "EQ7MMA1",              P10_EQ7MMA1_DOMAIN,            0x27030008, 0x0000800000000000ULL },
         { "EQ7MMA2",              P10_EQ7MMA2_DOMAIN,            0x27030008, 0x0000400000000000ULL },
