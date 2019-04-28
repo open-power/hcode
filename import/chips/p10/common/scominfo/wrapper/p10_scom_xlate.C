@@ -247,9 +247,8 @@ usage(const std::string& i_prg_name)
     printf("      p10.eq, p10.c\n");
     printf("      p10.pec, p10.phb\n");
     printf("      p10.nmmu\n");
-    printf("      p10.pau, p10.iohs\n");
+    printf("      p10.pau, p10.pauc, p10.iohs\n");
     printf("      p10.mc, p10.mi, p10.mcc, p10.omic, p10.omi\n");
-    printf("      p10.ppe\n");
     printf("  <address> = SCOM address\n\n");
     printf("Optional parameter:\n");
     printf("  <chip unit #> = Chip unit instance number\n");
@@ -278,8 +277,8 @@ int main(int i_argc, char** i_argv)
 
         std::string l_chip_str;
         std::string l_chip_unit_str;
-        p10ChipUnits_t l_chip_target_type;
-        p10ChipUnits_t l_chip_unit_target_type;
+        p10ChipUnits_t l_chip_target_type = P10_NO_CU;
+        p10ChipUnits_t l_chip_unit_target_type = P10_NO_CU;
         p10TranslationMode_t l_tx_mode = P10_DEFAULT_MODE;
 
         // Get the arguments
