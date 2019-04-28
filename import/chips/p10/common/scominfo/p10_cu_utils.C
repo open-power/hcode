@@ -95,14 +95,38 @@ extern "C"
         printf("       Valid: %d\n", l_scom.isValid());
         printf("    Endpoint: 0x%02X\n", l_scom.getEndpoint());
 
-        // Print out Region select and QME per core for EQ/CORE chip unit
-        if ( (i_chipUnitType == PU_C_CHIPUNIT) || (i_chipUnitType == PU_EQ_CHIPUNIT) )
+        // Print out EQ chiplet SCOM layout depending on endpoint
+        if ( (i_chipUnitType == PU_C_CHIPUNIT) ||
+             (i_chipUnitType == PU_EQ_CHIPUNIT) ||
+             ((i_chipUnitType == P10_NO_CU) &&
+              (l_scom.getChipletId() >= EQ0_CHIPLET_ID) &&
+              (l_scom.getChipletId() <= EQ7_CHIPLET_ID)) )
         {
-            printf("   RegionSel: 0x%.1X\n", l_scom.getRegionSelect());
-            printf("    QME/core: 0x%.1X\n", l_scom.getQMEPerCore());
-            printf("   QME SatEn: 0x%.1X\n", l_scom.getQMESatEn());
-            printf("  QME SatSel: 0x%.1X\n", l_scom.getQMESatSel());
-            printf("     QME Reg: 0x%.2X\n", l_scom.getQMEReg());
+            // QME endpoint, show QME specific fields
+            if ( l_scom.getEndpoint() == QME_ENDPOINT )
+            {
+                printf("   RegionSel: 0x%.1X\n", l_scom.getRegionSelect());
+                printf("    QME/core: 0x%.1X\n", l_scom.getQMEPerCore());
+                printf("   QME SatEn: 0x%.1X\n", l_scom.getQMESatEn());
+                printf("  QME SatSel: 0x%.1X\n", l_scom.getQMESatSel());
+                printf("     QME Reg: 0x%.2X\n", l_scom.getQMEReg());
+            }
+            // PSCOM or PCB slave, RingId/SatId are limited
+            else if (( l_scom.getEndpoint() == PSCOM_ENDPOINT ) ||
+                     ( l_scom.getEndpoint() == PSCOM_2_ENDPOINT ) ||
+                     ( l_scom.getEndpoint() == PCBSLV_ENDPOINT) )
+            {
+                printf("EQ RegionSel: 0x%.1X\n", l_scom.getRegionSelect());
+                printf("   EQ RingId: 0x%.1X\n", l_scom.getEQRingId());
+                printf("    EQ SatId: 0x%.1X\n", l_scom.getEQSatId());
+                printf("      SatReg: 0x%.2X\n", l_scom.getSatOffset());
+            }
+            else
+            {
+                printf("      RingId: 0x%.1X\n", l_scom.getRingId());
+                printf("       SatId: 0x%.1X\n", l_scom.getSatId());
+                printf("      SatReg: 0x%.2X\n", l_scom.getSatOffset());
+            }
         }
         else
         {
@@ -153,17 +177,6 @@ extern "C"
                     if ( ((i_chipUnitNum > 3) && (i_chipUnitNum < 8)) ||
                          ((i_chipUnitNum > 9) && (i_chipUnitNum < 12)) ||
                          ((i_chipUnitNum > 19) && (i_chipUnitNum < 24)) )
-                    {
-                        l_rc = 1;
-                    }
-                }
-
-                // Additional check for PPE targets, where there are gaps between instances
-                else if (i_chipUnitType == PU_PPE_CHIPUNIT)
-                {
-                    if ( ((i_chipUnitNum > 0) && (i_chipUnitNum < 4))   ||
-                         ((i_chipUnitNum > 7) && (i_chipUnitNum < 16))  ||
-                         ((i_chipUnitNum > 19) && (i_chipUnitNum < 32)) )
                     {
                         l_rc = 1;
                     }
