@@ -26,10 +26,9 @@
 /// @file p10_scan_addr.C
 /// @brief P10 scan address utility functions for platforms
 ///
-/// HWP Owner: jmcgill@us.ibm.com
-/// HWP Team: NEST
-/// HWP Level: 1
-/// HWP Consumed by: FSP/HB
+/// *HWP HW Maintainer: Joe McGill <jmcgill@us.ibm.com>
+/// *HWP FW Maintainer:
+/// *HWP Consumed by: Cronus, HWSV, HB
 ///
 
 #ifndef P10_SCAN_ADDR_C
