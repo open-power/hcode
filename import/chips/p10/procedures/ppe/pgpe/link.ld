@@ -60,7 +60,13 @@ SECTIONS
     _DEBUG_PTRS_START = _VECTOR_START + PGPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
 
-    
+    . = ALIGN(16);
+	_DATA_STRUCT_TABLE_START = _DEBUG_PTRS_START + PGPE_DEBUG_PTRS_SIZE;
+	.data_struct_table _DATA_STRUCT_TABLE_START : { *(.data_struct_table) } > sram
+   
+	_DATA_STRUCT_START = _DATA_STRUCT_TABLE_START + PGPE_DATA_STRUCT_TABLE_SIZE;
+	.data_structs_ _DATA_STRUCT_START : { *(.data_structs) } > sram
+
     . = ALIGN(16);
     /*======================================
      * Code
