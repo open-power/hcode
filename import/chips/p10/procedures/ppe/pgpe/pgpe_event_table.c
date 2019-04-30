@@ -25,7 +25,7 @@
 #include "pgpe_event_table.h"
 
 //Static Event Table
-event_t pgpe_event_table[MAX_EVENT_TABLE_ENTRIES];
+event_t pgpe_event_table[MAX_EVENT_TABLE_ENTRIES] __attribute__((section (".data_structs")));
 
 
 void pgpe_event_tbl_init()
@@ -37,6 +37,11 @@ void pgpe_event_tbl_init()
         pgpe_event_table[i].status = EVENT_INACTIVE;
         pgpe_event_table[i].args = NULL;
     }
+}
+
+void* pgpe_event_tbl_data_addr()
+{
+    return &pgpe_event_table;
 }
 
 event_t* pgpe_event_tbl_get(uint32_t event_idx)
