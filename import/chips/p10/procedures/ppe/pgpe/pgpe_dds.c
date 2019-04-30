@@ -25,14 +25,18 @@
 #include "pgpe.h"
 #include "pgpe_dds.h"
 
+//\todo
 void pgpe_dds_init()
 {
 }
 
+
+//\todo
 void pgpe_dds_calculate_delay()
 {
 }
 
+//\todo
 void pgpe_dds_update_delay()
 {
 }
