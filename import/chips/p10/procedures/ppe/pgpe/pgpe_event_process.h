@@ -29,6 +29,7 @@
 void pgpe_process_pstate_start_stop(void* args);
 void pgpe_process_clip_update(void* args);
 void pgpe_process_clip_update_w_ack(void* args);
+void pgpe_process_clip_update_post_actuate();
 void pgpe_process_pmcr_request(void* args);
 void pgpe_process_wof_ctrl(void* args);
 void pgpe_process_wof_vrt(void* args);
