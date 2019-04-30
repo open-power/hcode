@@ -27,6 +27,7 @@
 #include "pgpe_gppb.h"
 #include "pgpe_header.h"
 #include "pgpe_pstate.h"
+#include "pgpe_occ.h"
 
 uint32_t G_beacon_count_threshold;
 uint32_t G_beacon_count;
@@ -44,9 +45,9 @@ void pgpe_irq_fit_handler();
 //
 void pgpe_irq_fit_init()
 {
-    uint16_t freq = pgpe_gppb_get(nest_frequency_mhz);
+    uint16_t freq = pgpe_gppb_get(occ_complex_frequency_mhz);
 
-    PK_TRACE("FIT: NestFreq=0x%dMhz", pgpe_gppb_get(nest_frequency_mhz));
+    PK_TRACE("FIT: OCCCmpFreq=0x%dMhz", pgpe_gppb_get(occ_complex_frequency_mhz));
 
     //Set PGPE beacon count threshold. PGPE beacon should be incremented
     //every 2ms. This is monitored by OCC
@@ -79,12 +80,8 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
 {
     if (G_beacon_count == G_beacon_count_threshold)
     {
-        if (pgpe_pstate_get(update_pgpe_beacon) == 1)
-        {
-            //write to SRAM
-            *((uint32_t*)(pgpe_header_get(g_pgpe_beacon_addr))) = *((uint32_t*)(pgpe_header_get(g_pgpe_beacon_addr))) + 1;
-            G_beacon_count = 0;
-        }
+        pgpe_occ_update_beacon();
+        G_beacon_count = 0;
     }
     else
     {

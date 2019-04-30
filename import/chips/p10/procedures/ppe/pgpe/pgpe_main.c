@@ -29,11 +29,18 @@
 #include "pgpe_gppb.h"
 #include "pgpe_fake_boot.h"
 #include "pgpe_pstate.h"
+#include "pgpe_avsbus_driver.h"
+#include "pgpe_event_table.h"
 
 
 IOTA_BEGIN_IDLE_TASK_TABLE
 { IOTA_IDLE_ENABLED, IOTA_TASK(pgpe_event_manager_run) }
 IOTA_END_IDLE_TASK_TABLE
+
+
+data_struct_table_t G_data_struct_table __attribute__((section (".data_struct_table")));
+
+void init_data_struct_table();
 
 int main()
 {
@@ -50,10 +57,23 @@ int main()
     pgpe_event_manager_init();
     pgpe_irq_init();
     pgpe_pstate_init();
-
+    pgpe_avsbus_init();
+    init_data_struct_table();
 
     PK_TRACE("PGPE Booted");
 
     iota_run();
     return 0;
+}
+
+void init_data_struct_table()
+{
+    G_data_struct_table.entry[DATA_EVENT_MANAGER].address = (uint32_t)pgpe_event_manager_data_addr();
+    G_data_struct_table.entry[DATA_EVENT_MANAGER].size = sizeof(pgpe_event_manager_t);
+
+    G_data_struct_table.entry[DATA_EVENT_TABLE].address = (uint32_t)pgpe_event_tbl_data_addr();
+    G_data_struct_table.entry[DATA_EVENT_TABLE].size = sizeof(event_t) * MAX_EVENT_TABLE_ENTRIES;
+
+    G_data_struct_table.entry[DATA_PSTATE].address = (uint32_t)pgpe_pstate_data_addr();
+    G_data_struct_table.entry[DATA_PSTATE].size = sizeof(pgpe_pstate_t);
 }
