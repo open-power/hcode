@@ -34,7 +34,8 @@
 #define PGPE_HEADER_IMAGE_OFFSET  0x0180
 #define PGPE_HEADER_IMAGE_NAME    .pgpe_image_header
 #define PGPE_DEBUG_PTRS_OFFSET    0x0200
-#define PGPE_DEBUG_PTRS_SIZE      (PPE_HEADER_IMAGE_OFFSET-PPE_DEBUG_PTRS_OFFSET)
+#define PGPE_DEBUG_PTRS_SIZE      0x24
+#define PGPE_DATA_STRUCT_TABLE_SIZE 16*8 //16 entries * 8 bytes/entry(4B address, 4B size)
 
 
 #endif
