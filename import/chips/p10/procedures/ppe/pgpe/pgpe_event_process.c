@@ -41,7 +41,7 @@ void pgpe_process_wof_disable();
 
 void pgpe_process_pstate_start_stop(void* eargs)
 {
-    PK_TRACE("PEP: PS Stop");
+    PK_TRACE("PEP: PS Start Stop");
 
     ipc_msg_t* cmd = (ipc_msg_t*)eargs;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
@@ -62,7 +62,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
             {
                 //If pstate is NOT enabled, run pstate start protocol.
                 //Otherwise, only update owner
-                if(pgpe_pstate_is_pstate_enabled())
+                if(!pgpe_pstate_is_pstate_enabled())
                 {
                     pgpe_process_pstate_start();
                 }
@@ -71,11 +71,13 @@ void pgpe_process_pstate_start_stop(void* eargs)
             }
             else
             {
+                PK_TRACE("PEP: Invalid PMCR Owner");
                 args->msg_cb.rc = PGPE_RC_INVALID_PMCR_OWNER;
             }
         }
         else
         {
+            PK_TRACE("PEP: PS Start Imm Mode");
             pgpe_pstate_set(pstate_status, PSTATE_STATUS_ENABLED);
         }
 
@@ -95,6 +97,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
         }
         else
         {
+            PK_TRACE("PEP: PS Stop Imm Mode");
             pgpe_pstate_set(pstate_status, PSTATE_STATUS_DISABLED);
         }
     }
@@ -106,7 +109,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
 
 void pgpe_process_pstate_start()
 {
-    PK_TRACE("PEP: PS Start");
+    PK_TRACE("PSS: PS Start");
     //Read DPLL frequency
     uint32_t sync_pstate;
     uint32_t voltage, move_frequency, vcs_before_vdd = 0;
@@ -131,14 +134,20 @@ void pgpe_process_pstate_start()
     if (sync_pstate < pgpe_pstate_get(clip_min))
     {
         sync_pstate = pgpe_pstate_get(clip_min);
+        PK_TRACE("PSS: sync_ps > clip_min=0x%x, setting sync_ps=0x%x", pgpe_pstate_get(clip_min), sync_pstate);
         move_frequency = -1;
     }
 
     if (sync_pstate > pgpe_pstate_get(clip_max))
     {
         sync_pstate = pgpe_pstate_get(clip_max);
+        PK_TRACE("PSS: sync_ps > clip_max=0x%x, setting sync_ps=0x%x", pgpe_pstate_get(clip_max), sync_pstate);
         move_frequency = 1;
     }
+
+    pgpe_pstate_set(pstate_target, sync_pstate);
+    pgpe_pstate_set(pstate_next, sync_pstate);
+
 
     //Read the external VDD and VCS
     pgpe_avsbus_voltage_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
@@ -150,20 +159,31 @@ void pgpe_process_pstate_start()
                              &voltage);
     pgpe_pstate_set(vcs_curr_ext, voltage);
 
+    PK_TRACE("PSS: vdd=%u vcs=%u", pgpe_pstate_get(vdd_curr_ext), pgpe_pstate_get(vcs_curr_ext));
+
     //If frequency moving down, then adjust frequency
     if (move_frequency < 0 )
     {
-        pgpe_dpll_write(sync_pstate);
+        pgpe_dpll_write(pgpe_pstate_get(pstate_next));
     }
 
     //Determine external VRM set points for sync pstate taking into account the
     //system design parameters
-    pgpe_pstate_set(vdd_next, pgpe_pstate_intp_vdd_from_ps(sync_pstate, VPD_PT_SET_BIASED));
-    pgpe_pstate_set(vcs_next, pgpe_pstate_intp_vcs_from_ps(sync_pstate, VPD_PT_SET_BIASED ));
-    pgpe_pstate_set(vdd_next_uplift, pgpe_pstate_intp_vddup_from_ps(sync_pstate, VPD_PT_SET_BIASED));
-    pgpe_pstate_set(vcs_next_uplift, pgpe_pstate_intp_vcsup_from_ps(sync_pstate, VPD_PT_SET_BIASED));
+    pgpe_pstate_set(vdd_next, pgpe_pstate_intp_vdd_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED));
+    pgpe_pstate_set(vcs_next, pgpe_pstate_intp_vcs_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED ));
+    pgpe_pstate_set(vdd_next_uplift, pgpe_pstate_intp_vddup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED));
+    pgpe_pstate_set(vcs_next_uplift, pgpe_pstate_intp_vcsup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED));
     pgpe_pstate_set(vdd_next_ext, pgpe_pstate_get(vdd_next) + pgpe_pstate_get(vdd_next_uplift));
     pgpe_pstate_set(vcs_next_ext, pgpe_pstate_get(vcs_next) + pgpe_pstate_get(vcs_next_uplift));
+
+    PK_TRACE("PSS: vdd_next=%u vdd_next_up=%u, vdd_next_ext=%u",
+             pgpe_pstate_get(vdd_next),
+             pgpe_pstate_get(vdd_next_uplift),
+             pgpe_pstate_get(vdd_next_ext));
+    PK_TRACE("PSS: vcs_next=%u vcs_next_up=%u, vcs_next_ext=%u",
+             pgpe_pstate_get(vcs_next),
+             pgpe_pstate_get(vcs_next_uplift),
+             pgpe_pstate_get(vcs_next_ext));
 
     //Perform voltage adjustment
     //If new external VRM(VDD and VCS) set points different from present value, then
@@ -173,18 +193,7 @@ void pgpe_process_pstate_start()
     {
         vcs_before_vdd = 0;
     }
-    else if ((pgpe_pstate_get(vdd_curr_ext) < pgpe_pstate_get(vdd_next_ext))
-             && (pgpe_pstate_get(vcs_curr_ext) < pgpe_pstate_get(vcs_next_ext)))
-    {
-        vcs_before_vdd = 1;
-    }
-    else if ((pgpe_pstate_get(vdd_curr_ext) > pgpe_pstate_get(vdd_next_ext))
-             && (pgpe_pstate_get(vcs_curr_ext) < pgpe_pstate_get(vcs_next_ext)))
-    {
-        vcs_before_vdd = 1;
-    }
-    else if ((pgpe_pstate_get(vdd_curr_ext) < pgpe_pstate_get(vdd_next_ext))
-             && (pgpe_pstate_get(vcs_curr_ext) > pgpe_pstate_get(vcs_next_ext)))
+    else
     {
         vcs_before_vdd = 1;
     }
@@ -211,12 +220,16 @@ void pgpe_process_pstate_start()
     //If frequency moving up, then adjust frequency
     if (move_frequency > 0 )
     {
-        pgpe_dpll_write(sync_pstate);
+        pgpe_dpll_write(pgpe_pstate_get(pstate_next));
     }
 
-    //Enable the resonant clocks
+    pgpe_pstate_update_vdd_vcs_ps(); //Set current equal to next
+
+    //Enable resonant clocks
+
     //Setup DDS delay values
     //Enable the DDS across all good cores
+
     //Change pstate status to START
     pgpe_pstate_set(pstate_status, PSTATE_STATUS_ENABLED);
 }
@@ -224,10 +237,13 @@ void pgpe_process_pstate_start()
 void pgpe_process_pstate_stop()
 {
     PK_TRACE("PEP: PS Stop");
+
+    //\todo
     //Disable resonant clocks
     //DDS left untouched
     //Disable WOF
     //Disable WOV(undervolting/overvolting)
+
     //Change pstate status to STOP
     pgpe_pstate_set(pstate_status, PSTATE_STATUS_DISABLED);
 }
@@ -235,7 +251,8 @@ void pgpe_process_pstate_stop()
 void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
 {
 
-    PK_TRACE("PEP: PS Owner");
+    PK_TRACE("PEP: PS Owner %d", owner);
+
     //Set the PMCR owner
     pgpe_pstate_set(pmcr_owner, owner);
 
@@ -262,6 +279,7 @@ void pgpe_process_clip_update(void* eargs)
 
         pgpe_pstate_compute();
         pgpe_pstate_apply_clips();
+        pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_PENDING_ACTUATION);
     }
     else
     {
@@ -290,6 +308,18 @@ void pgpe_process_clip_update_w_ack(void* eargs)
 
     pgpe_occ_send_ipc_ack_cmd(cmd);
     pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+}
+
+void pgpe_process_clip_update_post_actuate()
+{
+    PK_TRACE("PEP: Clip Updt Post Actuate");
+
+    if(pgpe_pstate_is_clip_bounded())
+    {
+        PK_TRACE("PEP: PS Clips Bounded");
+        pgpe_occ_send_ipc_ack_type_rc(EV_IPC_CLIP_UPDT, PGPE_RC_SUCCESS);
+        pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+    }
 }
 
 void pgpe_process_pmcr_request(void* eargs)
@@ -336,10 +366,12 @@ void pgpe_process_wof_ctrl(void* eargs)
 
 void pgpe_process_wof_enable()
 {
+    //\todo
 }
 
 void pgpe_process_wof_disable()
 {
+    //\todo
 }
 
 void pgpe_process_wof_vrt(void* eargs)
@@ -351,6 +383,7 @@ void pgpe_process_wof_vrt(void* eargs)
 
     if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
+        //\todo Do WOF VRT processing
     }
     else
     {
