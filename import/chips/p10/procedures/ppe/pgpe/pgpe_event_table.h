@@ -25,7 +25,11 @@
 #ifndef __PGPE_EVENT_TABLE_H__
 #define __PGPE_EVENT_TABLE_H__
 
-#include "pgpe.h"
+#ifndef __PARSER_TOOL__
+
+    #include "pgpe.h"
+
+#endif
 
 enum EVENT_TABLE_IDX
 {
@@ -44,6 +48,25 @@ enum EVENT_TABLE_IDX
     EV_PVREF_FAULT                      =   12,
     MAX_EVENT_TABLE_ENTRIES             =   13
 };
+
+#ifdef __PARSER_TOOL__
+const char* event_table_str[] =
+{
+    "PSTATE_START_STOP  ",
+    "CLIP_UPDT          ",
+    "WOF_CTRL           ",
+    "WOF_VRT            ",
+    "SET_PMCR           ",
+    "PMCR_REQ           ",
+    "PSTATE_STOP        ",
+    "SAFE_MODE          ",
+    "PM_COMPLEX_SUSPEND ",
+    "OCC_FAULT          ",
+    "QME_FAULT          ",
+    "XGPE_FAULT         ",
+    "PVREF_FAULT        "
+};
+#endif
 
 enum EVENT_STATE
 {
@@ -64,6 +87,7 @@ typedef struct event
 
 //
 void pgpe_event_tbl_init();
+void* pgpe_event_tbl_data_addr();
 event_t* pgpe_event_tbl_get(uint32_t event_idx);
 uint32_t  pgpe_event_tbl_get_status(uint32_t event_idx);
 void* pgpe_event_tbl_get_args(uint32_t event_idx);
