@@ -25,7 +25,11 @@
 #ifndef __PGPE_EVENT_MANAGER_H__
 #define __PGPE_EVENT_MANAGER_H__
 
-#include "iota.h"
+#ifndef __PARSER_TOOL__
+
+    #include "iota.h"
+
+#endif
 
 //
 //Data
@@ -52,5 +56,6 @@ typedef struct pgpe_event_manager
 //
 void pgpe_event_manager_init();
 void pgpe_event_manager_run();
+void* pgpe_event_manager_data_addr();
 
 #endif //

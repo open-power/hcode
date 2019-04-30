@@ -49,13 +49,17 @@ void pgpe_fake_boot_gppb()
         for (j = 0; j < NUM_OP_POINTS; j++)
         {
             gppb->operating_points_set[i][j].frequency_mhz = 2000 + j * 200;
-            gppb->operating_points_set[i][j].vdd_mv = 600 + j * 50;
-            gppb->operating_points_set[i][j].vcs_mv = 825 + j * 5;
+            gppb->operating_points_set[i][j].vdd_mv = 600 + j * 48;
+            gppb->operating_points_set[i][j].vcs_mv = 825 + j * 6;
             /*gppb->operating_points_set[i][j].pstate = ((gppb->reference_frequency_khz -
                     gppb->operating_points_set[i][j].frequency_mhz) *
                     1000) / gppb->frequency_step_khz;;*/
-            gppb->operating_points_set[i][j].ics_tdp_ac_10ma = 120 + j * 5;
-            gppb->operating_points_set[i][j].idd_tdp_ac_10ma = 1900 + j * 200;
+            gppb->operating_points_set[i][j].pstate = 84 - j * 12;
+            gppb->operating_points_set[i][j].idd_tdp_ac_10ma = 19000 + j * 1200;
+            gppb->operating_points_set[i][j].idd_tdp_dc_10ma = j * 600;
+
+            gppb->operating_points_set[i][j].ics_tdp_ac_10ma = 12000 + j * 600;
+            gppb->operating_points_set[i][j].ics_tdp_dc_10ma = j * 30;
         }
     }
 
@@ -65,10 +69,13 @@ void pgpe_fake_boot_gppb()
     {
         for( j = 0; j < VPD_NUM_SLOPES_REGION; j++)
         {
-            gppb->ps_voltage_slopes[RUNTIME_RAIL_VDD][i][j] = 0x2800;
-            gppb->voltage_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x0666;
-            gppb->ps_current_slopes[RUNTIME_RAIL_VDD][i][j] = 0xA000;
-            gppb->current_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x019a;
+            gppb->ps_voltage_slopes[RUNTIME_RAIL_VDD][i][j] = 0x4000;       //4
+            gppb->voltage_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x0400;       //0.25
+
+            gppb->ps_ac_current_slopes[RUNTIME_RAIL_VDD][i][j] = 0xC800;    //100
+            gppb->ps_dc_current_slopes[RUNTIME_RAIL_VDD][i][j] = 0x6400;    //50
+            gppb->ac_current_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x0005;    //0.01
+            gppb->dc_current_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x000A;    //0.02
         }
     }
 
@@ -77,10 +84,13 @@ void pgpe_fake_boot_gppb()
     {
         for( j = 0; j < VPD_NUM_SLOPES_REGION; j++)
         {
-            gppb->ps_voltage_slopes[RUNTIME_RAIL_VDD][i][j] = 0x1400;
-            gppb->voltage_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x0bbb;
-            gppb->ps_current_slopes[RUNTIME_RAIL_VDD][i][j] = 0x0400;
-            gppb->current_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x4000;
+            gppb->ps_voltage_slopes[RUNTIME_RAIL_VCS][i][j] = 0x0400;       //0.5
+            gppb->voltage_ps_slopes[RUNTIME_RAIL_VCS][i][j] = 0x2000;       //2
+
+            gppb->ps_ac_current_slopes[RUNTIME_RAIL_VCS][i][j] = 0x6400;    //50
+            gppb->ps_dc_current_slopes[RUNTIME_RAIL_VCS][i][j] = 0x0500;    //2.5
+            gppb->ac_current_ps_slopes[RUNTIME_RAIL_VCS][i][j] = 0x000A;    //0.02
+            gppb->dc_current_ps_slopes[RUNTIME_RAIL_VCS][i][j] = 0x00CD;    //0.4
         }
     }
 
@@ -103,6 +113,18 @@ void pgpe_fake_boot_gppb()
     gppb->safe_voltage_mv = 740;
     gppb->safe_frequency_khz = 2286000;
 
+    //vratio
+    gppb->core_on_ratio_vdd = 800;
+    gppb->l3_on_ratio_vdd = 100;
+    gppb->mma_on_ratio_vdd = 100;
+    gppb->core_on_ratio_vcs = 800;
+    gppb->l3_on_ratio_vcs = 200;
+    gppb->vdd_vratio_weight = 80;
+    gppb->vcs_vratio_weight = 20;
+
+    gppb->ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD] = 50;
+    gppb->ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS] = 50;
+
     PK_TRACE("PGPE Fake Boot Gppb End");
 }
 
@@ -119,6 +141,7 @@ void pgpe_fake_boot_pgpe_header()
     //build date
     //version
     //pgpe_flags
+    pgpe_header->g_pgpe_flags = 0;
 #if FAKE_BOOT_WOF_ENABLE == 1
     pgpe_header->g_pgpe_flags |= PGPE_FLAG_WOF_ENABLE;
 #endif

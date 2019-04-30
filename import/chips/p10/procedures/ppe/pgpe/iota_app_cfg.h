@@ -27,8 +27,8 @@
 
 
 #define GENERATE_HOMER_TABLES               1
-#define USE_FAKE_BOOT                       1
-#define FAKE_BOOT_IMMEDIATE_MODE            1
+#define USE_FAKE_BOOT                       1 //\todo Use real GPPB and PGPE Header Data
+#define FAKE_BOOT_IMMEDIATE_MODE            0
 #define FAKE_BOOT_WOF_ENABLE                1
 
 

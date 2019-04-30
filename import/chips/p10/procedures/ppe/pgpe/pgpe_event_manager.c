@@ -30,9 +30,7 @@
 #include "pgpe_dpll.h"
 
 //Data
-pgpe_event_manager_t G_pgpe_event_manager;
-uint32_t G_i;
-
+pgpe_event_manager_t G_pgpe_event_manager __attribute__((section (".data_structs")));
 
 //Local Functions
 void pgpe_event_manager_run_booted_or_stopped();
@@ -46,6 +44,11 @@ void pgpe_event_manager_init()
 {
     PK_TRACE("PEM: Init");
     G_pgpe_event_manager.pgpe_state_machine_status  = PGPE_SM_BOOTED;
+}
+
+inline void* pgpe_event_manager_data_addr()
+{
+    return &G_pgpe_event_manager;
 }
 
 void pgpe_event_manager_upd_state(uint32_t status)
@@ -65,21 +68,11 @@ void pgpe_event_manager_run()
     PK_TRACE("Event Manager Init");
     out32(G_OCB_OCCFLG2, 0x00008000);
 
-    /*pgpe_dpll_write(0);
-    uint64_t dpll = pgpe_dpll_get_dpll();
-    PK_TRACE("dpll=0x%08x%08x",dpll>>32,dpll);*/
-
     while(1)
     {
-        if(G_i == 0)
-        {
-            PK_TRACE("In while loop i=%d", G_i);
-            G_i++;
-        }
-
-        // \\TBD: Need way to avoid this switch. Better way might be to call
+        // \\ \todo: Need way to avoid this switch. Better way might be to call
         // a function pointer which is updated state transition
-        //  \\TBD: Need a way to better check for events. Perhaps, make use of cntlzw instruction.
+        //  \\ \todo: Need a way to better check for events. Perhaps, make use of cntlzw instruction.
         //  That way can support upto 32 events. Will need to come up with events priority. Events
         //  priority can also be dependent on state.
         switch(G_pgpe_event_manager.pgpe_state_machine_status)
@@ -106,7 +99,7 @@ void pgpe_event_manager_run()
                 break;
 
             default:
-                //TBD Most likely halt because PGPE data got corrupted
+                // \todo Most likely halt because PGPE data got corrupted
                 break;
         }
     }
@@ -286,7 +279,15 @@ void pgpe_event_manager_run_active()
 
         //Do post actuation
         //WOF_VRT
+
         //CLIP_UPDATE
+        e = pgpe_event_tbl_get(EV_IPC_CLIP_UPDT);
+
+        if (e->status == EVENT_PENDING_ACTUATION)
+        {
+            pgpe_process_clip_update_post_actuate();
+        }
+
     }
     while(0);
 }

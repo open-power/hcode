@@ -25,7 +25,13 @@
 #ifndef __PGPE_PSTATE_H__
 #define __PGPE_PSTATE_H__
 
-#include "pgpe.h"
+#ifndef __PARSER_TOOL__
+
+    #include "pgpe.h"
+
+#else
+    #define MAX_CORES  32
+#endif
 
 //Types
 enum PSTATE_STATUS
@@ -59,23 +65,29 @@ typedef struct pgpe_pstate
     uint32_t wof_status;
     uint32_t wov_status;
     uint32_t pmcr_owner;
-    uint32_t ps_request[32]; // \\TBD need to use MAX_CORES
+    uint32_t ps_request[MAX_CORES];
+    uint32_t sort_core_count;
     uint32_t pstate_computed, pstate_target, pstate_next, pstate_curr;
-    uint32_t clip_min, clip_max, wof_clip;
+    uint32_t clip_min, clip_max, clip_wof, dcm_sibling_ps;
     uint32_t vdd_curr, vdd_next, vdd_curr_uplift, vdd_next_uplift, vdd_curr_ext, vdd_next_ext;
     uint32_t vcs_curr, vcs_next, vcs_curr_uplift, vcs_next_uplift, vcs_curr_ext, vcs_next_ext;
     uint32_t vdd_bias, vcs_bias, vdd_bias_tgt, vcs_bias_tgt;
-    uint32_t vratio, vindex;
+    uint32_t vratio_inst, vratio_vcs_inst, vratio_vdd_inst, vindex;
     uint32_t update_pgpe_beacon;
 } pgpe_pstate_t;
+
 
 extern pgpe_pstate_t G_pgpe_pstate;
 
 //Functions
 void pgpe_pstate_init();
+void* pgpe_pstate_data_addr();
 void pgpe_pstate_actuate_step();
 void pgpe_pstate_compute();
 void pgpe_pstate_apply_clips();
+void pgpe_pstate_compute_vratio(uint32_t pstate, uint32_t vdd);
+uint32_t pgpe_pstate_is_at_target();
+uint32_t pgpe_pstate_is_clip_bounded();
 
 //Macro accessor function
 #define pgpe_pstate_get(x) G_pgpe_pstate.x
@@ -85,6 +97,7 @@ void pgpe_pstate_apply_clips();
 #define pgpe_pstate_set_ps_request(core,val) G_pgpe_pstate.ps_request[core] = val
 #define pgpe_pstate_set_clip(type,val) G_pgpe_pstate.##type = val
 #define pgpe_pstate_is_pstate_enabled() (G_pgpe_pstate.pstate_status == PSTATE_STATUS_ENABLED)
+void pgpe_pstate_update_vdd_vcs_ps();
 
 //Interpolation
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set);
@@ -99,7 +112,6 @@ uint32_t pgpe_pstate_intp_ps_from_vdd(uint32_t vdd);
 uint32_t pgpe_pstate_intp_ps_from_vcs(uint32_t vcs);
 uint32_t pgpe_pstate_intp_ps_from_idd(uint32_t idd);
 uint32_t pgpe_pstate_freq_from_ps(uint32_t ps);
-uint32_t pgpe_pstate_is_at_target();
 
 
 #endif

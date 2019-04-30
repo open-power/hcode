@@ -298,13 +298,13 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
 {
     uint32_t   rc = 0;
 
-    PK_TRACE("NestFreq=0x%x", pgpe_gppb_get(nest_frequency_mhz));
+    PK_TRACE("OCCCmpFreq=0x%x", pgpe_gppb_get(occ_complex_frequency_mhz));
     uint32_t  data = 0;
     uint32_t  O2SCTRLF_value = 0b10000010000011111100000000000000; //0x820FC000
     uint32_t  O2SCTRLS_value = 0b00000000000010000000000000000000; //0x00080000
     uint32_t  O2SCTRL2_value = 0b00000000000000000000000000000000; //0x00000000
-    uint32_t  O2SCTRL1_value = 0b10010000000000000100000000000000 |
-                               (pgpe_gppb_get(nest_frequency_mhz) / (8 * CLOCK_SPIVID_MHZ) - 1) << 18;
+    uint32_t  O2SCTRL1_value = 0b10000000000000000100000000000000 |
+                               (pgpe_gppb_get(occ_complex_frequency_mhz) / (8 * CLOCK_SPIVID_MHZ) - 1) << 18;
 
     // OCI to SPIPMBus (O2S) bridge initialization
     uint32_t bus_mask = bus_num << O2S_BUSNUM_OFFSET_SHIFT;

@@ -62,6 +62,11 @@
 #define TPC_DPLL_CTRL_REG_OR        0x01000054
 #define TPC_DPLL_STAT_REG           0x01000055
 
+#define OCB_OCI_CCSR                0xC0060480
+#define OCB_OCI_OPITASV0            0xC0062400
+#define OCB_OCI_OPITASV1            0xC0062401
+#define OCB_OCI_OPITASV2            0xC0062402
+#define OCB_OCI_OPITASV3            0xC0062403
 
 typedef union dpll_stat
 {
