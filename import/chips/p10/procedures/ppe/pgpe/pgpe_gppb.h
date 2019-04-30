@@ -39,5 +39,20 @@ void pgpe_gppb_init();
 #define pgpe_gppb_get_ops_ps(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].pstate
 #define pgpe_gppb_get_ops_vdd(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].vdd_mv
 #define pgpe_gppb_get_ops_vcs(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].vcs_mv
+#define pgpe_gppb_get_ops_idd_ac(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].idd_tdp_ac_10ma
+#define pgpe_gppb_get_ops_idd_dc(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].idd_tdp_dc_10ma
+#define pgpe_gppb_get_ops_ics_ac(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].ics_tdp_ac_10ma
+#define pgpe_gppb_get_ops_ics_dc(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].ics_tdp_dc_10ma
+#define pgpe_gppb_get_ps_iac_slope(rail, pt_set, region) G_gppb->ps_ac_current_slopes[rail][pt_set][region]
+#define pgpe_gppb_get_ps_idc_slope(rail, pt_set, region) G_gppb->ps_dc_current_slopes[rail][pt_set][region]
+#define pgpe_gppb_get_iac_ps_slope(rail, pt_set, region) G_gppb->current_ps_slopes[rail][pt_set][region]
+#define pgpe_gppb_get_idc_ps_slope(rail, pt_set, region) G_gppb->current_ps_slopes[rail][pt_set][region]
+#define pgpe_gppb_get_core_on_ratio_vdd() G_gppb->core_on_ratio_vdd
+#define pgpe_gppb_get_l3_on_ratio_vdd() G_gppb->l3_on_ratio_vdd
+#define pgpe_gppb_get_mma_on_ratio_vdd() G_gppb->mma_on_ratio_vdd
+#define pgpe_gppb_get_l3_on_ratio_vcs() G_gppb->l3_on_ratio_vcs
+#define pgpe_gppb_get_core_on_ratio_vcs() G_gppb->core_on_ratio_vcs
+#define pgpe_gppb_get_vdd_vratio_weight() G_gppb->vdd_vratio_weight
+#define pgpe_gppb_get_vcs_vratio_weight() G_gppb->vcs_vratio_weight
 
 #endif
