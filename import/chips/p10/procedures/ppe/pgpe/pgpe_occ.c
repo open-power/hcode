@@ -26,18 +26,70 @@
 #include "pgpe_occ.h"
 #include "pgpe_event_table.h"
 #include "pstate_pgpe_occ_api.h"
+#include "pgpe_header.h"
+#include "pgpe_pstate.h"
 
+/*
+typedef struct iddq_counters {
+    uint32_t core_off[MAX_CORES];
+    uint32_t core_vmin_off[MAX_CORES];
+    uint32_t core_mma_off[MAX_CORES];
+    uint32_t l3_off[MAX_CORES];
+} iddq_counters_t;*/
+
+//iddq_counters_t G_iddq;
+//uint32_t G_vratio_avg;
+
+void pgpe_occ_init()
+{
+    /*
+    uint32_t c;
+    for (c = 0; c < MAX_CORES; c++) {
+        if (in32(OCB_OCI_CCSR) & CORE_MASK(c)) {
+            G_iddq.core_off[c] = 0;
+            G_iddq.core_vmin_off[c] = 0;
+            G_iddq.core_mma_off[c] = 0;
+            G_iddq.l3_off[c] = 0;
+        }
+    }
+    G_vratio_avg = 0;*/
+}
 
 void pgpe_occ_update_beacon()
 {
+    if (pgpe_pstate_get(update_pgpe_beacon) == 1)
+    {
+        //write to SRAM
+        *((uint32_t*)(pgpe_header_get(g_pgpe_beacon_addr))) = *((uint32_t*)(pgpe_header_get(g_pgpe_beacon_addr))) + 1;
+    }
 }
 
 void pgpe_occ_produce_wof_values()
 {
 }
 
+void pgpe_occ_compute_wof_iddq_values()
+{
+    /*  uint32_t c;
+        for (c = 0; c < MAX_CORES; c++) {
+            if (in32(OCB_OCI_CCSR) & CORE_MASK(c)) {
+                //If core[c] is ON
+                    //sample core[c] MMA state
+                    //if core mma is OFF, g_core_mma_off[c]++
+                //else if core[c] is Vmin, g_core_vmin[c]++
+                //else if core[c] is OFF, g_core_off[c]++
+                //if L3 core is off, g_l3_off[c]++
+            } else {
+                //g_core_off[c]++;
+                //g_l3_off[c]++;
+            }
+        }*/
+}
+
 void pgpe_occ_produce_wof_iddq_values()
 {
+
+
 }
 
 void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd)
