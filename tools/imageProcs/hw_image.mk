@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2018
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -97,6 +97,9 @@ define VERIFY_SBE_RING_SECTION
 	$(eval $(call XIP_TOOL,check-sbe-ring-section,,$($(IMAGE)_PATH)/.$(IMAGE).report, $1 $2,$3))
 endef
 
-$(eval $(call BUILD_HW_IMAGE,hw,p9n))
+$(eval P9_CHIP=$(filter p9,$(CHIPS)))
 
+$(foreach chip,$(P9_CHIP),\
+	$(foreach chipId, $($(chip)_CHIPID),\
+	$(eval $(call BUILD_HW_IMAGE,hw,$(chipId)))))
 

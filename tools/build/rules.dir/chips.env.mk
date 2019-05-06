@@ -25,9 +25,12 @@
 
 # Lists of chip subdirectories.
 CHIPS += p9
+CHIPS += p9a
 
 p9_CHIPID += p9n
+p9_CHIPID += p9a
 
 p9n_EC += 20 21 22 23
+p9a_EC += 10
 
 HW_IMAGE_VARIATIONS = hw
