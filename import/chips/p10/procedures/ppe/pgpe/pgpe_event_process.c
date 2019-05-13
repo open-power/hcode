@@ -170,10 +170,12 @@ void pgpe_process_pstate_start()
 
     //Determine external VRM set points for sync pstate taking into account the
     //system design parameters
-    pgpe_pstate_set(vdd_next, pgpe_pstate_intp_vdd_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED));
-    pgpe_pstate_set(vcs_next, pgpe_pstate_intp_vcs_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED ));
-    pgpe_pstate_set(vdd_next_uplift, pgpe_pstate_intp_vddup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED));
-    pgpe_pstate_set(vcs_next_uplift, pgpe_pstate_intp_vcsup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED));
+    pgpe_pstate_set(vdd_next, pgpe_pstate_intp_vdd_from_ps(pgpe_pstate_get(pstate_next),
+                    VPD_PT_SET_BIASED) ); //\todo use correct format for scale
+    pgpe_pstate_set(vcs_next, pgpe_pstate_intp_vcs_from_ps(pgpe_pstate_get(pstate_next),
+                    VPD_PT_SET_BIASED) );//\todo use correct format for scale
+    pgpe_pstate_set(vdd_next_uplift, pgpe_pstate_intp_vddup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED, 1));
+    pgpe_pstate_set(vcs_next_uplift, pgpe_pstate_intp_vcsup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED, 1));
     pgpe_pstate_set(vdd_next_ext, pgpe_pstate_get(vdd_next) + pgpe_pstate_get(vdd_next_uplift));
     pgpe_pstate_set(vcs_next_ext, pgpe_pstate_get(vcs_next) + pgpe_pstate_get(vcs_next_uplift));
 
