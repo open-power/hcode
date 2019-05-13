@@ -97,4 +97,5 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
 void pgpe_irq_fit_handler()
 {
     handle_occ_beacon();
+    pgpe_pstate_sample_currents();
 }
