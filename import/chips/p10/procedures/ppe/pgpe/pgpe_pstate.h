@@ -73,6 +73,7 @@ typedef struct pgpe_pstate
     uint32_t vdd_curr, vdd_next, vdd_curr_uplift, vdd_next_uplift, vdd_curr_ext, vdd_next_ext;
     uint32_t vcs_curr, vcs_next, vcs_curr_uplift, vcs_next_uplift, vcs_curr_ext, vcs_next_ext;
     uint32_t vdd_bias, vcs_bias, vdd_bias_tgt, vcs_bias_tgt;
+    uint32_t idd, ics;
     uint32_t vratio_inst, vratio_vcs_inst, vratio_vdd_inst, vindex;
     uint32_t update_pgpe_beacon;
 } pgpe_pstate_t;
@@ -92,6 +93,7 @@ uint32_t pgpe_pstate_is_clip_bounded();
 void pgpe_pstate_pmsr_updt();
 void pgpe_pstate_pmsr_write();
 void pgpe_pstate_set_safe_mode();
+void pgpe_pstate_sample_currents();
 
 //Macro accessor function
 #define pgpe_pstate_get(x) G_pgpe_pstate.x
@@ -106,8 +108,8 @@ void pgpe_pstate_update_vdd_vcs_ps();
 //Interpolation
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set);
-uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set);
-uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t idd_scale);
+uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t ics_scale);
 uint32_t pgpe_pstate_intp_idd_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_ics_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);
