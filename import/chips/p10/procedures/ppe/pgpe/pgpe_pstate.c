@@ -133,9 +133,13 @@ void pgpe_pstate_actuate_step()
     G_pgpe_pstate.vcs_next = pgpe_pstate_intp_vcs_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
 
     //compute load line drop
-    //\\todo add scaling of current by vratio
-    G_pgpe_pstate.vdd_next_uplift = pgpe_pstate_intp_vddup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
-    G_pgpe_pstate.vcs_next_uplift = pgpe_pstate_intp_vcsup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
+    pgpe_pstate_compute_vratio(G_pgpe_pstate.pstate_next, G_pgpe_pstate.idd);
+
+    //\todo determine if vratio_inst to be used for both VCS and VDD
+    G_pgpe_pstate.vdd_next_uplift = pgpe_pstate_intp_vddup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED,
+                                    G_pgpe_pstate.vratio_inst);
+    G_pgpe_pstate.vcs_next_uplift = pgpe_pstate_intp_vcsup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED,
+                                    G_pgpe_pstate.vratio_inst);
 
     G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
     G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
@@ -313,6 +317,8 @@ void pgpe_pstate_compute_vratio(uint32_t pstate, uint32_t idd)
         }
     }
 
+    //\todo Come up with integer format/representions of the operands of the following
+    //divisions and multiplication
     G_pgpe_pstate.vratio_vdd_inst = vratio_vdd_accum / G_pgpe_pstate.sort_core_count;
     G_pgpe_pstate.vratio_vcs_inst = vratio_vcs_accum / G_pgpe_pstate.sort_core_count;
     G_pgpe_pstate.vratio_inst = G_pgpe_pstate.vratio_vdd_inst * pgpe_gppb_get_vdd_vratio_weight() +
@@ -356,15 +362,16 @@ uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set)
     return vcs;
 }
 
-uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set)
+uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t idd_scale)
 {
     //interpolate new current(AC and DC) based on pstate next
     uint32_t idd_ac = pgpe_pstate_intp_idd_ac_from_ps(ps, VPD_PT_SET_BIASED);
     uint32_t idd_dc = pgpe_pstate_intp_idd_dc_from_ps(ps, VPD_PT_SET_BIASED);
 
     //compute load line drop
-    //\\todo add scaling of current by vratio
-    uint32_t vdd_uplift = (((idd_ac + idd_dc) * (pgpe_gppb_get(vdd_sysparm.loadline_uohm) + pgpe_gppb_get(
+    //\\todo come up with correct idd_scale/vratio_format.
+    //idd_scale/vratio format is a number between 0.0 and 1.0, but we need to represent this using integers on PGPE
+    uint32_t vdd_uplift = ((((idd_ac + idd_dc) * idd_scale) * (pgpe_gppb_get(vdd_sysparm.loadline_uohm) + pgpe_gppb_get(
                                 vdd_sysparm.distloss_uohm))) / 1000
                            + pgpe_gppb_get(vdd_sysparm.distoffset_uv)) / 1000;
 
@@ -372,13 +379,14 @@ uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set)
     return vdd_uplift;
 }
 
-uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set)
+uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t ics_scale)
 {
     uint32_t ics_ac = pgpe_pstate_intp_ics_ac_from_ps(ps, VPD_PT_SET_BIASED);
     uint32_t ics_dc = pgpe_pstate_intp_ics_dc_from_ps(ps, VPD_PT_SET_BIASED);
 
-    //\\todo add scaling of current by vratio
-    uint32_t vcs_uplift = (((ics_ac + ics_dc) * (pgpe_gppb_get(vcs_sysparm.loadline_uohm) + pgpe_gppb_get(
+    //\\todo come up with correct ics_scale/vratio_format.
+    //idd_scale/vratio format is a number between 0.0 and 1.0, but we need to represent this using integers on PGPE
+    uint32_t vcs_uplift = ((((ics_ac + ics_dc) * ics_scale) *  (pgpe_gppb_get(vcs_sysparm.loadline_uohm) + pgpe_gppb_get(
                                 vcs_sysparm.distloss_uohm))) / 1000
                            + pgpe_gppb_get(vcs_sysparm.distoffset_uv)) / 1000;
 
@@ -834,6 +842,21 @@ void pgpe_pstate_pmsr_write()
             PPE_PUTSCOM(PPE_SCOM_ADDR_UC(QME_PMSRS, q, cs), G_pgpe_pstate.pmsr.value);
         }
     }
+}
+
+void pgpe_pstate_sample_currents()
+{
+    uint32_t current;
+
+    pgpe_avsbus_voltage_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
+                             pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+                             &current);
+    G_pgpe_pstate.idd = current;
+
+    pgpe_avsbus_voltage_read(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
+                             pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+                             &current);
+    G_pgpe_pstate.ics = current;
 }
 
 void pgpe_pstate_update_vdd_vcs_ps()
