@@ -1,0 +1,516 @@
+/* IBM_PROLOG_BEGIN_TAG                                                   */
+/* This is an automatically generated prolog.                             */
+/*                                                                        */
+/* $Source: import/chips/p10/common/include/p10_oci_proc_3.H $            */
+/*                                                                        */
+/* OpenPOWER EKB Project                                                  */
+/*                                                                        */
+/* COPYRIGHT 2019,2020                                                    */
+/* [+] International Business Machines Corp.                              */
+/*                                                                        */
+/*                                                                        */
+/* Licensed under the Apache License, Version 2.0 (the "License");        */
+/* you may not use this file except in compliance with the License.       */
+/* You may obtain a copy of the License at                                */
+/*                                                                        */
+/*     http://www.apache.org/licenses/LICENSE-2.0                         */
+/*                                                                        */
+/* Unless required by applicable law or agreed to in writing, software    */
+/* distributed under the License is distributed on an "AS IS" BASIS,      */
+/* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        */
+/* implied. See the License for the specific language governing           */
+/* permissions and limitations under the License.                         */
+/*                                                                        */
+/* IBM_PROLOG_END_TAG                                                     */
+
+#include "proc_scomt.H"
+
+#ifndef __p10_oci_proc_3_H_
+#define __p10_oci_proc_3_H_
+
+
+namespace scomt
+{
+namespace oci_proc
+{
+
+
+static const uint32_t TP_TPBR_PBA_PBAO_BCDE_SET = 0xc0040088ull;
+
+static const uint32_t TP_TPBR_PBA_PBAO_BCDE_SET_RESERVED_0_1 = 0;
+static const uint32_t TP_TPBR_PBA_PBAO_BCDE_SET_RESERVED_0_1_LEN = 2;
+static const uint32_t TP_TPBR_PBA_PBAO_BCDE_SET_COPY_LENGTH = 2;
+static const uint32_t TP_TPBR_PBA_PBAO_BCDE_SET_COPY_LENGTH_LEN = 6;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHBR0 = 0xc00401b0ull;
+
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHBR0_PBAXISHBR0_PUSH_START = 0;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHBR0_PBAXISHBR0_PUSH_START_LEN = 29;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1 = 0xc00401d8ull;
+
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_FULL = 0;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_EMPTY = 1;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_RESERVED_2_3 = 2;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_RESERVED_2_3_LEN = 2;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_INTR_ACTION_0_1 = 4;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_INTR_ACTION_0_1_LEN = 2;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_LENGTH = 6;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_LENGTH_LEN = 5;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_WRITE_PTR = 13;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_WRITE_PTR_LEN = 5;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_READ_PTR = 21;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_READ_PTR_LEN = 5;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXISHCS1_PUSH_ENABLE = 31;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHBR0 = 0xc0040130ull;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1 = 0xc0040158ull;
+
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_FULL = 0;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_EMPTY = 1;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_RESERVED_2_3 = 2;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_RESERVED_2_3_LEN = 2;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_INTR_ACTION_0_1 = 4;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_INTR_ACTION_0_1_LEN = 2;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_LENGTH = 6;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_LENGTH_LEN = 5;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_WRITE_PTR = 13;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_WRITE_PTR_LEN = 5;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_READ_PTR = 21;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_READ_PTR_LEN = 5;
+static const uint32_t TP_TPBR_PBA_PBAO_PBAXSHCS1_PUSH_ENABLE = 31;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE0_OCB_GPEXIGPR31 = 0xc0000278ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE0_OCB_GPEXIGPR31_OCB_OCI_GPEXIVDR30_GPR31 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE0_OCB_GPEXIGPR31_OCB_OCI_GPEXIVDR30_GPR31_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIGPR30 = 0xc0010270ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIGPR30_OCB_OCI_GPEXIVDR30_GPR30 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIGPR30_OCB_OCI_GPEXIVDR30_GPR30_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIGPR5 = 0xc0010228ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIGPR5_OCB_OCI_GPEXIVDR4_GPR5 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIGPR5_OCB_OCI_GPEXIVDR4_GPR5_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXILR = 0xc0010188ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXILR_OCB_OCI_GPEXIDBGINF_LR = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXILR_OCB_OCI_GPEXIDBGINF_LR_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXISPRG0 = 0xc0010110ull;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIVDR4 = 0xc0010410ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIVDR4_4 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIVDR4_4_LEN = 32;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIVDR4_5 = 32;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE1_OCB_GPEXIVDR4_5_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPETSEL = 0xc0020000ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPETSEL_WATCHDOG_SEL = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPETSEL_WATCHDOG_SEL_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPETSEL_FIT_SEL = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPETSEL_FIT_SEL_LEN = 4;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIDBGINF = 0xc00200f8ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIDBGINF_SRR0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIDBGINF_SRR0_LEN = 30;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIDBGINF_LR = 32;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIDBGINF_LR_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIGPR1 = 0xc0020208ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIGPR1_OCB_OCI_GPEXIVDR0_GPR1 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIGPR1_OCB_OCI_GPEXIVDR0_GPR1_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM = 0xc00200b8ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_ADDR = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_ADDR_LEN = 32;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_R_NW = 32;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_BUSY = 33;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_IMPRECISE_ERROR_PENDING = 34;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_BYTE_ENABLE = 35;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_BYTE_ENABLE_LEN = 8;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_LINE_MODE = 43;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_ERROR = 49;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_ERROR_LEN = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_IFETCH_PENDING = 62;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEM_DATAOP_PENDING = 63;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML = 0xc0020148ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML_BUSY = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML_IMPRECISE_ERROR_PENDING = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML_BYTE_ENABLE = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML_BYTE_ENABLE_LEN = 8;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML_LINE_MODE = 11;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML_ERROR = 17;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML_ERROR_LEN = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML_IFETCH_PENDING = 30;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEML_DATAOP_PENDING = 31;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEMU = 0xc0020140ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEMU_OCB_OCI_GPEXIMEM_MEM_ADDR = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIMEMU_OCB_OCI_GPEXIMEM_MEM_ADDR_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXISRR0 = 0xc0020180ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXISRR0_OCB_OCI_GPEXIDBGINF_SRR0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXISRR0_OCB_OCI_GPEXIDBGINF_SRR0_LEN = 30;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR0 = 0xc0020400ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR0_0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR0_0_LEN = 32;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR0_1 = 32;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR0_1_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR30 = 0xc0020438ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR30_0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR30_0_LEN = 32;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR30_1 = 32;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIVDR30_1_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE3_OCB_GPEOXIXCR = 0xc0030100ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE3_OCB_GPEOXIXCR_OCB_OCI_GPEOXIXCR_XCR = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE3_OCB_GPEOXIXCR_OCB_OCI_GPEOXIXCR_XCR_LEN = 3;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE3_OCB_GPEXIICAC = 0xc00300c8ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE3_OCB_GPEXIICAC_SIB_PIB_IFETCH_PENDING = 34;
+static const uint32_t TP_TPCHIP_OCC_OCI_GPE3_OCB_GPEXIICAC_MEM_IFETCH_PENDING = 35;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SST0A = 0xc0063830ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SST0A__ONGOING_0A = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SST0A_ST0A_RESERVED_1_4 = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SST0A_ST0A_RESERVED_1_4_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SST0A__WRITE_WHILE_BRIDGE_BUSY_ERR_0A = 5;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SST0A_ST0A_RESERVED_6 = 6;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SST0A__FSM_ERR_0A = 7;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWCR1 = 0xc00610c0ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWCR1_LINEAR_WINDOW_ENABLE = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWCR1_SPARE_0 = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWCR1_SPARE_0_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWCR1_LINEAR_WINDOW_BAR = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWCR1_LINEAR_WINDOW_BAR_LEN = 17;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWCR1_LINEAR_WINDOW_MASK = 20;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWCR1_LINEAR_WINDOW_MASK_LEN = 12;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWSR1 = 0xc00610d0ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWSR1_LINEAR_WINDOW_SCRESP = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWSR1_LINEAR_WINDOW_SCRESP_LEN = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWSR1_SPARE0 = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBLWSR1_SPARE0_LEN = 5;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLBR2 = 0xc0061100ull;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3 = 0xc0061188ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_FULL = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_EMPTY = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_SPARE = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_SPARE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_INTR_ACTION_0_1 = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_INTR_ACTION_0_1_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_LENGTH = 6;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_LENGTH_LEN = 5;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_WRITE_PTR = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_WRITE_PTR_LEN = 5;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_READ_PTR = 21;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_READ_PTR_LEN = 5;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSLCS3_PULL_ENABLE = 31;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCCS3_RW = 0xc0060548ull;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCCS3_WO_CLEAR = 0xc0060550ull;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCCS3_WO_OR = 0xc0060558ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCCS3_OCB_OCI_OCCS3_OCC_SCRATCH_3 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCCS3_OCB_OCI_OCCS3_OCC_SCRATCH_3_LEN = 32;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT1Q2 = 0xc0062050ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT1Q2_OCB_OCI_OPIT1Q2RR_PCB_INTR_PAYLOAD = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT1Q2_OCB_OCI_OPIT1Q2RR_PCB_INTR_PAYLOAD_LEN = 19;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2Q6 = 0xc00620b0ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2Q6_OCB_OCI_OPIT2Q6RR_PCB_INTR_PAYLOAD = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2Q6_OCB_OCI_OPIT2Q6RR_PCB_INTR_PAYLOAD_LEN = 19;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT5Q0 = 0xc0062140ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT5Q0_OCB_OCI_OPIT5Q0RR_PCB_INTR_PAYLOAD = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT5Q0_OCB_OCI_OPIT5Q0RR_PCB_INTR_PAYLOAD_LEN = 19;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_RO = 0xc0063180ull;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_WO_CLEAR = 0xc0063188ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_1 = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_2 = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_3 = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_4 = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_5 = 5;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_6 = 6;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6PRA_7 = 7;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6Q4 = 0xc00621a0ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6Q4_OCB_OCI_OPIT6Q4RR_PCB_INTR_PAYLOAD = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT6Q4_OCB_OCI_OPIT6Q4RR_PCB_INTR_PAYLOAD_LEN = 19;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C0 = 0xc0062200ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C0_SOURCE_CORE = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C0_SOURCE_CORE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C0_PAYLOAD = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C0_PAYLOAD_LEN = 17;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C12RR = 0xc0062a60ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C12RR_SOURCE_CORE = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C12RR_SOURCE_CORE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C12RR_PAYLOAD = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C12RR_PAYLOAD_LEN = 17;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C19 = 0xc0062298ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C19_SOURCE_CORE = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C19_SOURCE_CORE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C19_PAYLOAD = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C19_PAYLOAD_LEN = 17;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C20RR = 0xc0062aa0ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C20RR_SOURCE_CORE = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C20RR_SOURCE_CORE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C20RR_PAYLOAD = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C20RR_PAYLOAD_LEN = 17;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C31 = 0xc00622f8ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C31_SOURCE_CORE = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C31_SOURCE_CORE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C31_PAYLOAD = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT8C31_PAYLOAD_LEN = 17;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C15RR = 0xc0062b78ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C15RR_SOURCE_CORE = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C15RR_SOURCE_CORE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C15RR_PAYLOAD = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C15RR_PAYLOAD_LEN = 17;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C27RR = 0xc0062bd8ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C27RR_SOURCE_CORE = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C27RR_SOURCE_CORE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C27RR_PAYLOAD = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C27RR_PAYLOAD_LEN = 17;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C28 = 0xc00623e0ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C28_SOURCE_CORE = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C28_SOURCE_CORE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C28_PAYLOAD = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C28_PAYLOAD_LEN = 17;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C30RR = 0xc0062bf0ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C30RR_SOURCE_CORE = 13;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C30RR_SOURCE_CORE_LEN = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C30RR_PAYLOAD = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT9C30RR_PAYLOAD_LEN = 17;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2 = 0xc0062430ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_0_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_1 = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_1_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_2 = 8;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_2_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_3 = 12;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_3_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_4 = 16;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_4_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_5 = 20;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_5_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_6 = 24;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_6_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_7 = 28;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITBSV2_7_LEN = 4;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR = 0xc0062c40ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_0_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_1 = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_1_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_2 = 8;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_2_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_3 = 12;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_3_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_4 = 16;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_4_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_5 = 20;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_5_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_6 = 24;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_6_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_7 = 28;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITCSVRR_7_LEN = 4;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR = 0xc0062c60ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_0_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_1 = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_1_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_2 = 8;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_2_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_3 = 12;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_3_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_4 = 16;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_4_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_5 = 20;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_5_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_6 = 24;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_6_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_7 = 28;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITDSVRR_7_LEN = 4;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR = 0xc0062c80ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_0_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_1 = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_1_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_2 = 8;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_2_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_3 = 12;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_3_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_4 = 16;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_4_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_5 = 20;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_5_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_6 = 24;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_6_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_7 = 28;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITESVRR_7_LEN = 4;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR = 0xc0062ca0ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_0 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_0_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_1 = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_1_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_2 = 8;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_2_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_3 = 12;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_3_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_4 = 16;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_4_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_5 = 20;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_5_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_6 = 24;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_6_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_7 = 28;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFSVRR_7_LEN = 4;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL = 0xc0063c00ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_LINK_ENABLE = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_LINK_RESET = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_CPOL = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_CPHA = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_CLOCK_DIVIDER = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_CLOCK_DIVIDER_LEN = 10;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_RESERVED_14 = 14;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_WRAP_ENABLE = 15;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_INTERFACE_ENABLE_NORTH = 16;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_INTERFACE_ENABLE_SOUTH = 17;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_SYNC_EN = 18;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_RESERVED_19 = 19;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_ECC_GEN_EN = 20;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_ECC_CHECK_EN = 21;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_RX_FSM_FREEZE_ON_UE = 22;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICCTRL_INTERCHIP_RESET_ECC_ERR = 23;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICRD = 0xc0063c18ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICRD_OCB_OCI_WOFICRD_WOFCNTL_RDDATA = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICRD_OCB_OCI_WOFICRD_WOFCNTL_RDDATA_LEN = 64;
+// oci_proc/reg00004.H
+
+static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SRBV1 = 0xc0050028ull;
+
+static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SRBV1_SRAM_SRBV1_BOOT_VECTOR_WORD1 = 0;
+static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SRBV1_SRAM_SRBV1_BOOT_VECTOR_WORD1_LEN = 32;
+// oci_proc/reg00004.H
+
+}
+}
+#include "oci_proc/reg00004.H"
+#endif
