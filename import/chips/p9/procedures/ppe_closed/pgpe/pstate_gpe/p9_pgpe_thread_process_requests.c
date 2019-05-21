@@ -1034,7 +1034,7 @@ inline void p9_pgpe_process_wof_vfrt()
 //
 inline void p9_pgpe_process_set_pmcr_req()
 {
-    PK_TRACE_DBG("PTH: Set PMCR Enter");
+    PK_TRACE_INF("PTH: Set PMCR Enter");
 
     uint32_t q, c, bad_rc = 0;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SET_PMCR_REQ].cmd;
@@ -1092,7 +1092,7 @@ inline void p9_pgpe_process_set_pmcr_req()
     }
     else
     {
-        PK_TRACE_DBG("PTH: Upd coresPSReq");
+        PK_TRACE_INF("PTH: Upd coresPSReq");
 
         for (q = 0; q < MAX_QUADS; q++)
         {
@@ -1129,7 +1129,7 @@ inline void p9_pgpe_process_set_pmcr_req()
         PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_OCC_IPC_ACK_BAD_RC);
     }
 
-    PK_TRACE_DBG("PTH: Set PMCR Exit");
+    PK_TRACE_INF("PTH: Set PMCR Exit");
 }
 
 //

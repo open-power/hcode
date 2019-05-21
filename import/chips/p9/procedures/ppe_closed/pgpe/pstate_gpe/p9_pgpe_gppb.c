@@ -72,8 +72,8 @@ const uint8_t G_vdm_threshold_table[13] =
 
 //Globals and externs
 GlobalPstateParmBlock* G_gppb;//Global pointer to GlobalPstateParmBlock
-uint32_t G_ext_vrm_inc_rate_mult_usperus;
-uint32_t G_ext_vrm_dec_rate_mult_usperus;
+uint32_t G_ext_vrm_inc_rate_mult_usperv;
+uint32_t G_ext_vrm_dec_rate_mult_usperv;
 extern PgpeHeader_t* G_pgpe_header_data;
 
 //
@@ -94,11 +94,11 @@ void p9_pgpe_gppb_init()
     G_gppb = (GlobalPstateParmBlock*)gppb_sram_offset;
 
     //PK_TRACE_INF("INIT: DPLL0Value=0x%x", G_gppb->dpll_pstate0_value);
-    //External VRM increasing rate in us/uv
-    G_ext_vrm_inc_rate_mult_usperus = 1 / G_gppb->ext_vrm_transition_rate_inc_uv_per_us;
+    //External VRM increasing rate in us/v
+    G_ext_vrm_inc_rate_mult_usperv = (1000 * 1000) / G_gppb->ext_vrm_transition_rate_inc_uv_per_us;
 
-    //External VRM decreasing rate in us/uv
-    G_ext_vrm_dec_rate_mult_usperus = 1 / G_gppb->ext_vrm_transition_rate_dec_uv_per_us;
+    //External VRM decreasing rate in us/v
+    G_ext_vrm_dec_rate_mult_usperv = (1000 * 1000) / G_gppb->ext_vrm_transition_rate_dec_uv_per_us;
 }
 
 //

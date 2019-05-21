@@ -126,6 +126,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
                     (G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_CTRL].pending_processing == 0))
                 {
                     out32(G_OCB_OCCFLG_CLR, BIT32(PGPE_PM_RESET_SUPPRESS));
+                    PK_TRACE_INF("ACT_TH: PM_RESET_SUPP=0");
                 }
             }
 
@@ -291,7 +292,7 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
             //Check if IPC should be opened again
             if (restore_irq == 1)
             {
-                PK_TRACE_DBG("ACT_TH: IRQ Restore");
+                PK_TRACE_INF("ACT_TH: IRQ Restore");
                 restore_irq = 0;
                 pk_irq_vec_restore(&ctx);
             }

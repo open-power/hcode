@@ -49,8 +49,8 @@
 extern TraceData_t G_pgpe_optrace_data;
 extern PgpeHeader_t* G_pgpe_header_data;
 extern GlobalPstateParmBlock* G_gppb;
-extern uint32_t G_ext_vrm_inc_rate_mult_usperus;
-extern uint32_t G_ext_vrm_dec_rate_mult_usperus;
+extern uint32_t G_ext_vrm_inc_rate_mult_usperv;
+extern uint32_t G_ext_vrm_dec_rate_mult_usperv;
 extern PgpePstateRecord G_pgpe_pstate_record;
 extern void p9_pgpe_ipc_ack_sgpe_ctrl_stop_updt(ipc_msg_t* msg, void* arg);
 extern void p9_pgpe_ipc_ack_sgpe_suspend_stop(ipc_msg_t* msg, void* arg);
@@ -2065,7 +2065,7 @@ void p9_pgpe_pstate_updt_ext_volt()
         //to keep the math simple(use shift instead of multiply) we approximate
         //1us as (1024/32)=32 OTBR ticks
         delay_ticks = ((G_pgpe_pstate_record.extVrmCurr - G_pgpe_pstate_record.extVrmNext) *
-                       G_ext_vrm_dec_rate_mult_usperus) << 5;
+                       G_ext_vrm_dec_rate_mult_usperv) >> 5;
     }
     //Increasing
     else if (G_pgpe_pstate_record.extVrmNext > G_pgpe_pstate_record.extVrmCurr)
@@ -2074,7 +2074,7 @@ void p9_pgpe_pstate_updt_ext_volt()
         //to keep the math simple(use shift instead of multiply) we approximate
         //1us as (1024/32)=32 OTBR ticks
         delay_ticks  = ((G_pgpe_pstate_record.extVrmNext - G_pgpe_pstate_record.extVrmCurr) *
-                        G_ext_vrm_inc_rate_mult_usperus) << 5;
+                        G_ext_vrm_inc_rate_mult_usperv) >> 5;
     }
 
 #endif
@@ -2118,7 +2118,7 @@ void p9_pgpe_pstate_updt_ext_volt()
     if(G_pgpe_pstate_record.biasSyspExtVrmNext == p9_pgpe_gppb_intp_vdd_from_ps(G_pgpe_pstate_record.psNext.fields.glb,
             VPD_PT_SET_BIASED_SYSP))
     {
-        delay_ticks = G_gppb->ext_vrm_stabilization_time_us << 5;
+        delay_ticks = G_gppb->ext_vrm_stabilization_time_us >> 5;
 
         //Read TimebaseStart
         tbStart = in32(OCB_OTBR);
