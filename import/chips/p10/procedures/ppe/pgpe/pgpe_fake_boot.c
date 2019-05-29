@@ -72,10 +72,10 @@ void pgpe_fake_boot_gppb()
             gppb->ps_voltage_slopes[RUNTIME_RAIL_VDD][i][j] = 0x4000;       //4
             gppb->voltage_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x0400;       //0.25
 
-            gppb->ps_ac_current_slopes[RUNTIME_RAIL_VDD][i][j] = 0xC800;    //100
-            gppb->ps_dc_current_slopes[RUNTIME_RAIL_VDD][i][j] = 0x6400;    //50
-            gppb->ac_current_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x0005;    //0.01
-            gppb->dc_current_ps_slopes[RUNTIME_RAIL_VDD][i][j] = 0x000A;    //0.02
+            gppb->ps_ac_current_tdp[RUNTIME_RAIL_VDD][i][j] = 0xC800;    //100
+            gppb->ps_dc_current_tdp[RUNTIME_RAIL_VDD][i][j] = 0x6400;    //50
+            gppb->ac_current_ps_tdp[RUNTIME_RAIL_VDD][i][j] = 0x0005;    //0.01
+            gppb->dc_current_ps_tdp[RUNTIME_RAIL_VDD][i][j] = 0x000A;    //0.02
         }
     }
 
@@ -87,10 +87,10 @@ void pgpe_fake_boot_gppb()
             gppb->ps_voltage_slopes[RUNTIME_RAIL_VCS][i][j] = 0x0400;       //0.5
             gppb->voltage_ps_slopes[RUNTIME_RAIL_VCS][i][j] = 0x2000;       //2
 
-            gppb->ps_ac_current_slopes[RUNTIME_RAIL_VCS][i][j] = 0x6400;    //50
-            gppb->ps_dc_current_slopes[RUNTIME_RAIL_VCS][i][j] = 0x0500;    //2.5
-            gppb->ac_current_ps_slopes[RUNTIME_RAIL_VCS][i][j] = 0x000A;    //0.02
-            gppb->dc_current_ps_slopes[RUNTIME_RAIL_VCS][i][j] = 0x00CD;    //0.4
+            gppb->ps_ac_current_tdp[RUNTIME_RAIL_VCS][i][j] = 0x6400;    //50
+            gppb->ps_dc_current_tdp[RUNTIME_RAIL_VCS][i][j] = 0x0500;    //2.5
+            gppb->ac_current_ps_tdp[RUNTIME_RAIL_VCS][i][j] = 0x000A;    //0.02
+            gppb->dc_current_ps_tdp[RUNTIME_RAIL_VCS][i][j] = 0x00CD;    //0.4
         }
     }
 
