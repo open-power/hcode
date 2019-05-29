@@ -43,10 +43,10 @@ void pgpe_gppb_init();
 #define pgpe_gppb_get_ops_idd_dc(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].idd_tdp_dc_10ma
 #define pgpe_gppb_get_ops_ics_ac(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].ics_tdp_ac_10ma
 #define pgpe_gppb_get_ops_ics_dc(pt_set, idx) G_gppb->operating_points_set[pt_set][idx].ics_tdp_dc_10ma
-#define pgpe_gppb_get_ps_iac_slope(rail, pt_set, region) G_gppb->ps_ac_current_slopes[rail][pt_set][region]
-#define pgpe_gppb_get_ps_idc_slope(rail, pt_set, region) G_gppb->ps_dc_current_slopes[rail][pt_set][region]
-#define pgpe_gppb_get_iac_ps_slope(rail, pt_set, region) G_gppb->current_ps_slopes[rail][pt_set][region]
-#define pgpe_gppb_get_idc_ps_slope(rail, pt_set, region) G_gppb->current_ps_slopes[rail][pt_set][region]
+#define pgpe_gppb_get_ps_iac_slope(rail, pt_set, region) G_gppb->ps_ac_current_tdp[rail][pt_set][region]
+#define pgpe_gppb_get_ps_idc_slope(rail, pt_set, region) G_gppb->ps_dc_current_tdp[rail][pt_set][region]
+#define pgpe_gppb_get_iac_ps_slope(rail, pt_set, region) G_gppb->ac_current_ps_tdp[rail][pt_set][region]
+#define pgpe_gppb_get_idc_ps_slope(rail, pt_set, region) G_gppb->dc_current_ps_tdp[rail][pt_set][region]
 #define pgpe_gppb_get_dds_delay_ps_slope(pt_set, core, region) G_gppb->ps_dds_delay_slopes[pt_set][core][region]
 #define pgpe_gppb_get_dds_delay(core, idx) G_gppb->dds[core][idx].ddsc.fields.insrtn_dely
 #define pgpe_gppb_get_dds_cal_adj(core, idx) G_gppb->dds[core][idx].ddsc.fields.calb_adj
