@@ -28,7 +28,7 @@
 #include "pgpe.h"
 
 void pgpe_dds_init();
-void pgpe_dds_calculate_delay();
-void pgpe_dds_update_delay();
+void pgpe_dds_update(uint32_t pstate);
+void pgpe_dds_poll_done();
 
 #endif
