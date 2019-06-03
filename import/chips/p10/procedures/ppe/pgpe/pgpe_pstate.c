@@ -27,6 +27,7 @@
 #include "pgpe_gppb.h"
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_dpll.h"
+#include "pgpe_dds.h"
 
 //
 //Local function prototypes
@@ -35,7 +36,6 @@ uint32_t pgpe_pstate_is_at_target();
 uint32_t pgpe_pstate_get_vdd_region(uint32_t vdd);
 uint32_t pgpe_pstate_get_vcs_region(uint32_t vcs);
 uint32_t pgpe_pstate_get_idd_region(uint32_t idd);
-uint32_t pgpe_pstate_get_ps_region(uint32_t ps, uint32_t vpt_pt_set);
 uint32_t pgpe_pstate_get_idd_ac_region(uint32_t idd);
 uint32_t pgpe_pstate_get_idd_dc_region(uint32_t idd);
 uint32_t pgpe_pstate_get_ics_ac_region(uint32_t ics);
@@ -170,10 +170,12 @@ void pgpe_pstate_actuate_step()
         //multicast resclk controller
         //wait for acks from all QME
 
-        //write DPLL
+        //write DPLL(Update freq)
         pgpe_dpll_write(G_pgpe_pstate.pstate_next);
 
-        //DDS \todo
+        //DDS
+        pgpe_dds_update(G_pgpe_pstate.pstate_next);
+        pgpe_dds_poll_done();
 
         //lower VDD, then lower VCS
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
@@ -183,11 +185,9 @@ void pgpe_pstate_actuate_step()
                                   pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
                                   G_pgpe_pstate.vcs_next_ext);
     }
+    //else raising frequency
     else
     {
-        //else raising frequency
-        //DDS
-
         //raise VCS, then raise VDD
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
                                   pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
@@ -196,9 +196,11 @@ void pgpe_pstate_actuate_step()
                                   pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
                                   G_pgpe_pstate.vdd_next_ext);
 
-        //DDS \\todo determine the difference above and here for DDS
+        //DDS
+        pgpe_dds_update(G_pgpe_pstate.pstate_next);
+        pgpe_dds_poll_done();
 
-        //Write DPLL
+        //write DPLL(Update freq)
         pgpe_dpll_write(G_pgpe_pstate.pstate_next);
 
         //resclk\\todo
@@ -504,8 +506,13 @@ uint32_t pgpe_pstate_intp_ps_from_idd(uint32_t idd)
     return 0;
 }
 
+
+//
+//
+//
 uint32_t pgpe_pstate_get_ps_region(uint32_t ps, uint32_t vpt_pt_set)
 {
+    //We use binary search to deteremine the region
     if (ps <= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF3))
     {
         if (ps <= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF5))
@@ -542,6 +549,56 @@ uint32_t pgpe_pstate_get_ps_region(uint32_t ps, uint32_t vpt_pt_set)
             }
         }
     }
+}
+
+uint32_t pgpe_pstate_get_ps_vpd_pt(uint32_t ps)
+{
+
+    //We use binary search to determine the region
+    if (ps < ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF3) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
+               VPD_PV_CF4)) >> 1))
+    {
+        if (ps < ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF5) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
+                   VPD_PV_UT)) >> 1))
+        {
+            return ULTRA;
+        }
+        else if (ps > ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF4) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
+                        VPD_PV_CF5)) >> 1))
+        {
+            return CF4;
+        }
+
+        else
+        {
+            return CF5;
+        }
+    }
+    else if(ps > ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF3) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
+                   VPD_PV_CF2)) >> 1))
+    {
+        if (ps < ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF1) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
+                   VPD_PV_CF2)) >> 1))
+        {
+            return CF2;
+        }
+        else if (ps > ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF1) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
+                        VPD_PV_PSAV)) >> 1))
+        {
+            return POWERSAVE;
+        }
+
+        else
+        {
+            return CF1;
+        }
+    }
+    else
+    {
+        return CF3;
+    }
+
+
 }
 
 uint32_t pgpe_pstate_get_vdd_region(uint32_t vdd)
