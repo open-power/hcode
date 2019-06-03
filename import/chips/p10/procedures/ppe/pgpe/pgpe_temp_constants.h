@@ -69,4 +69,7 @@
 #define OCB_OCI_OPITASV3            0xC0062403
 
 #define QME_PMSRS                   0x200E0864
+#define QME_DUCR                    0x200e0170
+#define CPMS_CUCR                   0x200e0e3c
+
 #endif //

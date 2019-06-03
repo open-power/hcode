@@ -38,7 +38,8 @@ PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_irq_handlers_fit.c \
 				pgpe_irq_handlers_ipc.c \
 				pgpe_gppb.c \
-				pgpe_dpll.c
+				pgpe_dpll.c \
+				pgpe_dds.c
 
 PGPE_OBJECTS = $(PGPE-C-SOURCES:.c=.o) 
 endif

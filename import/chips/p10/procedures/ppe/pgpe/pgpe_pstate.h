@@ -106,6 +106,8 @@ void pgpe_pstate_sample_currents();
 void pgpe_pstate_update_vdd_vcs_ps();
 
 //Interpolation
+uint32_t pgpe_pstate_get_ps_region(uint32_t ps, uint32_t vpt_pt_set);
+uint32_t pgpe_pstate_get_ps_vpd_pt(uint32_t ps);
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t idd_scale);
