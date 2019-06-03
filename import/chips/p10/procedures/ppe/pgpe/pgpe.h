@@ -41,7 +41,7 @@
     #include "gpehw_common.h"
     #include "ppe42_scom.h"
     #include "ppehw_common.h"
-
+    #include "p10_hcd_common.H"
 #endif
 
 #define CORE_MASK(core) \
