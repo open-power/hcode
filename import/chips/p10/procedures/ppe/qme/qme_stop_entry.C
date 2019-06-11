@@ -303,7 +303,7 @@ qme_stop_entry()
 
         MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_CORE_STOPGRID )
 
-        p10_hcd_core_stopgrid(core_target);
+        //TODO Drop S Only//p10_hcd_core_stopgrid(core_target);
 
         //===============//
 
