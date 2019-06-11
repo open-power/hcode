@@ -211,7 +211,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_SKEWADJUST )
 
-        p10_hcd_core_startgrid(core_target);
+        //TODO Drop S Only//p10_hcd_core_startgrid(core_target);
 
         //===============//
 
@@ -312,7 +312,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CACHE_SCOMINIT )
 
-        p10_hcd_cache_scominit(core_target);
+        //TODO commit77948//p10_hcd_cache_scominit(core_target);
 
         //===============//
 
@@ -420,7 +420,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SKEWADJUST )
 
-        p10_hcd_core_startgrid(core_target);
+        //TODO Drop S Only//p10_hcd_core_startgrid(core_target);
 
         //===============//
 
@@ -447,7 +447,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SCOMINIT )
 
-        p10_hcd_core_scominit(core_target);
+        //TODO commit78401//p10_hcd_core_scominit(core_target);
 
         //===============//
 
