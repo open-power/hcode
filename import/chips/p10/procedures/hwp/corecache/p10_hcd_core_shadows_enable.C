@@ -148,10 +148,11 @@ p10_hcd_core_shadows_enable(
                 .set_QME_TFCSR(l_mmioData)
                 .set_CORE_TARGET(i_target),
                 "Shadow Enable Xfer Sent Done Timeout");
-#endif
 
     FAPI_DBG("Drop XFER_SENT_DONE via PCR_TFCSR[33]");
     FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_1BIT( MMIO_LOWBIT(33) ) ) );
+
+#endif
 
     FAPI_DBG("Drop CTFS_WKUP_ENABLE via PCR_SCSR[27]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_CLEAR, MMIO_1BIT(27) ) );
