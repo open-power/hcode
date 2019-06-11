@@ -52,10 +52,11 @@ CACHE-CPP-SOURCES = p10_hcd_cache_poweron.C \
                     p10_hcd_cache_arrayinit.C \
                     p10_hcd_cache_initf.C \
                     p10_hcd_cache_startclocks.C \
-                    p10_hcd_cache_scominit.C \
                     p10_hcd_cache_scom_customize.C \
                     p10_hcd_cache_poweroff.C \
                     p10_hcd_cache_stopclocks.C 
+
+#TODO p10_hcd_cache_scominit.C
                      
 CORE-CPP-SOURCES  = p10_hcd_core_poweron.C \
                     p10_hcd_core_reset.C \
@@ -64,7 +65,6 @@ CORE-CPP-SOURCES  = p10_hcd_core_poweron.C \
                     p10_hcd_core_arrayinit.C \
                     p10_hcd_core_initf.C \
                     p10_hcd_core_startclocks.C \
-                    p10_hcd_core_scominit.C \
                     p10_hcd_core_scom_customize.C \
                     p10_hcd_core_poweroff.C \
                     p10_hcd_core_stopclocks.C \
@@ -77,6 +77,8 @@ CORE-CPP-SOURCES  = p10_hcd_core_poweron.C \
                     p10_hcd_l2_purge.C \
                     p10_hcd_ncu_purge.C \
                     p10_hcd_l2_tlbie_quiesce.C 
+
+#TODO p10_hcd_core_scominit.C
 
 IMG_OBJECTS    = $(IMG-C-SOURCES:.c=.o) $(IMG-S-SOURCES:.S=.o)
 QME_OBJECTS    = $(QME-CPP-SOURCES:.C=.o) $(QME-C-SOURCES:.c=.o) $(QME-S-SOURCES:.S=.o)
