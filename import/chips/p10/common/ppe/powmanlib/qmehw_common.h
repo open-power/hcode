@@ -25,6 +25,7 @@
 #ifndef __QMEHW_COMMON_H__
 #define __QMEHW_COMMON_H__
 
+
 enum QME_CORE_MASKS
 {
     QME_MASK_C0                     = 0x8, // Just Core0 = 0b1000
@@ -42,71 +43,23 @@ enum QME_BCEBAR_INDEXES
 
 enum QME_MULTICAST_TYPES
 {
-    QME_READ_OR                     = 0,
-    QME_READ_AND                    = 1,
-    QME_READ_EQ                     = 4
+    QME_MC_RD_OR                     = 0,
+    QME_MC_RD_AND                    = 1,
+    QME_MC_RD_EQU                    = 4,
+    QME_MC_WR                        = 5
 };
 
 
-/// Local and SCOM Macro
+/// Local Macro (See SCOM macros in ppehw_common.h)
 
 // 0-3 | 4    | 5-7  | 8-11 | 12-15   | 16  | 17  | 18-19  | 20-27 | 28  | 29   | 30-31
 // 0xC | MC=0 | 0    | 0    | Regions | Addr                       | Rsv | WSel | 0
 // 0xC | MC=1 | MC_T | 0    | Regions | Per | Sat | SatSel | Addr  | Rsv | WSel | 0
 
 #define QME_LCL_CORE_ADDR_MC(type, core, addr)   (0x08000000 | (type << 24) | (core << 16) | (addr))
-#define QME_LCL_CORE_ADDR_WR(addr, core)         QME_LCL_CORE_ADDR_MC(QME_READ_OR,  core, addr)
-#define QME_LCL_CORE_ADDR_EQ(addr, core)         QME_LCL_CORE_ADDR_MC(QME_READ_EQ,  core, addr)
-#define QME_LCL_CORE_ADDR_OR(addr, core)         QME_LCL_CORE_ADDR_MC(QME_READ_OR,  core, addr)
-#define QME_LCL_CORE_ADDR_AND(addr, core)        QME_LCL_CORE_ADDR_MC(QME_READ_AND, core, addr)
-
-// 0     | 1    | 2-4  | 5-7      | 8 | 9-11  | 12-15  | 16-19  | 20-31
-// 0/pcb | MC=0 | baseId          | Q | 0     | EndSel | Region |
-// R/nW  | MC=0 | CpltId          | 1111/PcbM | EndSel | Region | Addr
-// 0/pcb | MC=1 | MC_T | 0        | Q | 0     | EndSel | Region |
-// R/nW  | MC=1 | MC_T | 111/MC_G | 1111/PcbM | EndSel | Region | Addr
-
-#define QME_SCOM_CORE_ADDR_MC(type, core, addr)   (0x40000000 | (type << 27) | (core << 12) | (addr))
-#define QME_SCOM_CORE_ADDR_WR(addr, core)         QME_SCOM_CORE_ADDR_MC(QME_READ_OR,  core, addr)
-#define QME_SCOM_CORE_ADDR_EQ(addr, core)         QME_SCOM_CORE_ADDR_MC(QME_READ_EQ,  core, addr)
-#define QME_SCOM_CORE_ADDR_OR(addr, core)         QME_SCOM_CORE_ADDR_MC(QME_READ_OR,  core, addr)
-#define QME_SCOM_CORE_ADDR_AND(addr, core)        QME_SCOM_CORE_ADDR_MC(QME_READ_AND, core, addr)
-
-#define QME_GETSCOM(addr, data)                              \
-    PPE_LVD(addr, data);
-
-// cme getscom default with 'eq' op
-#define QME_GETSCOM_EQ(addr, core, data)                     \
-    PPE_LVD(QME_SCOM_CORE_ADDR_EQ(addr, core), data);
-
-// cme getscom with 'and' op
-#define QME_GETSCOM_AND(addr, core, data)                    \
-    PPE_LVD(QME_SCOM_CORE_ADDR_AND(addr, core), data);
-
-// cme getscom with 'or' op
-#define QME_GETSCOM_OR(addr, core, data)                     \
-    PPE_LVD(QME_SCOM_CORE_ADDR_OR(addr, core), data);
-
-// use this to override cme getscom with user specified op
-#define QME_GETSCOM_TYPE(addr, core, type, data)             \
-    PPE_LVD(QME_SCOM_CORE_ADDR_MC(type, core, addr), data);
-
-
-// use this to override undesired queued cme putscom with nop
-#define QME_PUTSCOM_NOQ(addr, core, data)                    \
-    putscom_norc(QME_SCOM_CORE_ADDR_MC(addr, core), data);
-
-// queued cme putscom if enabled; otherwise default with nop
-#if defined(USE_QME_QUEUED_SCOM)
-#define QME_PUTSCOM(addr, data)                              \
-    putscom_norc((addr | 0x00800000), data);
-#define QME_PUTSCOM_C(addr, core, data)                      \
-    putscom_norc(QME_SCOM_CORE_ADDR_MC((addr | 0x00800000), core), data);
-#else
-#define QME_PUTSCOM(addr, data)                              \
-    putscom_norc(addr, data);
-#define QME_PUTSCOM_C(addr, core, data)                      \
-    putscom_norc(QME_SCOM_CORE_ADDR_MC(addr, core), data);
-#endif
+#define QME_LCL_CORE_ADDR_WR(addr, core)         QME_LCL_CORE_ADDR_MC(QME_MC_WR,     core, addr)
+#define QME_LCL_CORE_ADDR_OR(addr, core)         QME_LCL_CORE_ADDR_MC(QME_MC_RD_OR,  core, addr)
+#define QME_LCL_CORE_ADDR_AND(addr, core)        QME_LCL_CORE_ADDR_MC(QME_MC_RD_AND, core, addr)
+#define QME_LCL_CORE_ADDR_EQ(addr, core)         QME_LCL_CORE_ADDR_MC(QME_MC_RD_EQU, core, addr)
 
 #endif  /* __QMEHW_COMMON_H__ */
