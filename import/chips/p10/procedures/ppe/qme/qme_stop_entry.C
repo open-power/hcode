@@ -181,7 +181,7 @@ qme_stop2_abort_cleanup(uint32_t abort_targets)
     out32_sh( QME_LCL_CORE_ADDR_WR( QME_TFCSR_WO_CLEAR, abort_targets ), BIT64SH(32) );
 
     PK_TRACE("Reset the core timefac to INACTIVE via PC.COMMON.TFX[0]");
-    QME_PUTSCOM( QME_SCOM_CORE_ADDR_WR(EC_PC_TFX_SM, abort_targets), BIT64(0) );
+    PPE_PUTSCOM_MC( EC_PC_TFX_SM, abort_targets, BIT64(0) );
 
     //===============//
 
