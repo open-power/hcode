@@ -39,6 +39,7 @@
     #include "pstates_common.H"
     #include "gpehw_common.h"
     #include "ppe42_scom.h"
+    #include "ppehw_common.h"
 
 #endif
 
