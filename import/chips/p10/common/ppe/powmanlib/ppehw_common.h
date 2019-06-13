@@ -86,4 +86,128 @@ typedef union
     asm volatile ("tw 0, 0, 0");
 
 
+// PPE MULTICAST
+
+enum PPE_MULTICAST_TYPES
+{
+    PPE_MC_RD_OR                     = 0,
+    PPE_MC_RD_AND                    = 1,
+    PPE_MC_RD_EQU                    = 4,
+    PPE_MC_WR                        = 5
+};
+
+// 0     | 1    | 2-4  | 5-7      | 8 | 9-11  | 12-15  | 16-19  | 20-31
+// 0/pcb | MC=0 | baseId          | Q | 0     | EndSel | Region |
+// R/nW  | MC=0 | CpltId          | 1111/PcbM | EndSel | Region | Addr
+// 0/pcb | MC=1 | MC_T | 0        | Q | 0     | EndSel | Region |
+// R/nW  | MC=1 | MC_T | 111/MC_G | 1111/PcbM | EndSel | Region | Addr
+
+// Current MC GROUP for all Quads is 6
+#define PPE_MC_ENABLE_GROUP 0x46000000
+
+// base macros are for per-core
+#define PPE_SCOM_ADDR_MC(base_addr, mc_type, core_select) \
+    (PPE_MC_ENABLE_GROUP | (mc_type << 27) | (core_select << 12) | (base_addr))
+
+#define PPE_SCOM_ADDR_UC(base_addr, quad_select, core_select) \
+    ((quad_select << 24) | (core_select << 12) | (base_addr))
+
+// *_Q macros are for per-quad where core_select is 0
+// when you mc to quad level register(non-per-core/non-cpms)
+// feed core_select = 0
+#define PPE_SCOM_ADDR_MC_Q(base_addr, mc_type)        PPE_SCOM_ADDR_MC(base_addr, mc_type, 0)
+#define PPE_SCOM_ADDR_UC_Q(base_addr, quad_select)    PPE_SCOM_ADDR_UC(base_addr, quad_select, 0)
+
+// MC macros with MC_TYPEs, UC doesnt have MC_TYPEs
+
+// Per-Core:
+#define PPE_SCOM_ADDR_MC_WR(base_addr,  core_select)  PPE_SCOM_ADDR_MC(base_addr, PPE_MC_WR,     core_select)
+#define PPE_SCOM_ADDR_MC_OR(base_addr,  core_select)  PPE_SCOM_ADDR_MC(base_addr, PPE_MC_RD_OR,  core_select)
+#define PPE_SCOM_ADDR_MC_AND(base_addr, core_select)  PPE_SCOM_ADDR_MC(base_addr, PPE_MC_RD_AND, core_select)
+#define PPE_SCOM_ADDR_MC_EQU(base_addr, core_select)  PPE_SCOM_ADDR_MC(base_addr, PPE_MC_RD_EQU, core_select)
+
+// Per-Quad:
+#define PPE_SCOM_ADDR_MC_Q_WR(base_addr)              PPE_SCOM_ADDR_MC_Q(base_addr, PPE_MC_WR)
+#define PPE_SCOM_ADDR_MC_Q_OR(base_addr)              PPE_SCOM_ADDR_MC_Q(base_addr, PPE_MC_RD_OR)
+#define PPE_SCOM_ADDR_MC_Q_AND(base_addr)             PPE_SCOM_ADDR_MC_Q(base_addr, PPE_MC_RD_AND)
+#define PPE_SCOM_ADDR_MC_Q_EQU(base_addr)             PPE_SCOM_ADDR_MC_Q(base_addr, PPE_MC_RD_EQU)
+
+
+// GetScom
+
+#define PPE_GETSCOM(addr, data)                        \
+    PPE_LVD(addr, data);
+
+// UC Q
+#define PPE_GETSCOM_UC_Q(addr, quad_select, data)      \
+    PPE_LVD(PPE_SCOM_ADDR_UC_Q(addr, quad_select), data)
+
+// MC Q
+#define PPE_GETSCOM_MC_Q(addr, mc_type, data)          \
+    PPE_LVD(PPE_SCOM_ADDR_MC_Q(addr, mc_type), data)
+
+// MC Q OR
+#define PPE_GETSCOM_MC_Q_OR(addr, data)                \
+    PPE_LVD(PPE_SCOM_ADDR_MC_Q_OR(addr), data)
+
+// MC Q AND
+#define PPE_GETSCOM_MC_Q_AND(addr, data)               \
+    PPE_LVD(PPE_SCOM_ADDR_MC_Q_AND(addr), data)
+
+// MC Q EQU
+#define PPE_GETSCOM_MC_Q_EQU(addr, data)               \
+    PPE_LVD(PPE_SCOM_ADDR_MC_Q_EQU(addr), data)
+
+// UC C
+#define PPE_GETSCOM_UC(addr, quad_select, core_select, data)      \
+    PPE_LVD(PPE_SCOM_ADDR_UC(addr, quad_select, core_select), data)
+
+// MC C
+#define PPE_GETSCOM_MC(addr, mc_type, core_select, data)          \
+    PPE_LVD(PPE_SCOM_ADDR_MC(addr, mc_type, core_select), data)
+
+// MC C OR
+#define PPE_GETSCOM_MC_OR(addr, core_select, data)                \
+    PPE_LVD(PPE_SCOM_ADDR_MC_OR(addr, core_select), data)
+
+// MC C AND
+#define PPE_GETSCOM_MC_AND(addr, core_select, data)               \
+    PPE_LVD(PPE_SCOM_ADDR_MC_AND(addr, core_select), data)
+
+// MC C AND
+#define PPE_GETSCOM_MC_EQU(addr, core_select, data)               \
+    PPE_LVD(PPE_SCOM_ADDR_MC_EQU(addr, core_select), data)
+
+
+// PutScom
+
+// queued putscom if enabled; otherwise default with nop
+#if defined(USE_QME_QUEUED_SCOM)
+#define PPE_QUEUED_SCOM(addr)                                     \
+    (addr | 0x00800000)
+#else
+#define PPE_QUEUED_SCOM(addr)                                     \
+    (addr)
+#endif
+
+// use this to override undesired queued putscom with nop
+#define PPE_PUTSCOM_NOQ(addr, data)                               \
+    putscom_norc(addr, data);
+
+#define PPE_PUTSCOM(addr, data)                                   \
+    putscom_norc(PPE_QUEUED_SCOM(addr), data);
+
+#define PPE_PUTSCOM_UC(addr, quad_select, core_select, data)      \
+    putscom_norc(PPE_SCOM_ADDR_UC(PPE_QUEUED_SCOM(addr), quad_select, core_select), data)
+
+#define PPE_PUTSCOM_MC(addr, core_select, data)                   \
+    putscom_norc(PPE_SCOM_ADDR_MC_WR(PPE_QUEUED_SCOM(addr), core_select), data)
+
+#define PPE_PUTSCOM_UC_Q(addr, quad_select, data)                 \
+    putscom_norc(PPE_SCOM_ADDR_UC_Q(PPE_QUEUED_SCOM(addr), quad_select), data)
+
+#define PPE_PUTSCOM_MC_Q(addr, data)                              \
+    putscom_norc(PPE_SCOM_ADDR_MC_Q_WR(PPE_QUEUED_SCOM(addr)), data)
+
+
 #endif  /* __PPEHW_COMMON_H__ */
