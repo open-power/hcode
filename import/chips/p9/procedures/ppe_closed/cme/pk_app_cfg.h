@@ -58,7 +58,7 @@
 #define DISABLE_CME_DUAL_CAST            0
 
 // NDD22 Secure Memory Support: RAM URMOR
-#if NIMBUS_DD_LEVEL >= 22 || CUMULUS_DD_LEVEL >= 13
+#if NIMBUS_DD_LEVEL >= 22 || CUMULUS_DD_LEVEL >= 13 || AXONE_DD_LEVEL >= 10
 
     #define SMF_SUPPORT_ENABLE 1
 

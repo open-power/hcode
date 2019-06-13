@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -214,7 +214,7 @@ main(int argc, char** argv)
 #elif (CUMULUS_DD_LEVEL != 0)
 #define PVR_CONST (0x42090800 | (((CUMULUS_DD_LEVEL ) / 10) << 8) | (CUMULUS_DD_LEVEL % 10))
 #elif (AXONE_DD_LEVEL != 0)
-#define PVR_CONST (0x42091000 | (((AXONE_DD_LEVEL ) / 10) << 8) | (AXONE_DD_LEVEL % 10))
+#define PVR_CONST (0x42090000 | (((AXONE_DD_LEVEL ) / 10) << 8) | (AXONE_DD_LEVEL % 10))
 #else
 #define PVR_CONST 0
 #endif
