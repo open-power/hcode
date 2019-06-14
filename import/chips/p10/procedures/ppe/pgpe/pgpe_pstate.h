@@ -68,6 +68,7 @@ typedef struct pgpe_pstate
     uint32_t ps_request[MAX_CORES];
     uint32_t sort_core_count;
     uint32_t pstate_computed, pstate_target, pstate_next, pstate_curr;
+    pmsr_t   pmsr;
     uint32_t clip_min, clip_max, clip_wof, dcm_sibling_ps;
     uint32_t vdd_curr, vdd_next, vdd_curr_uplift, vdd_next_uplift, vdd_curr_ext, vdd_next_ext;
     uint32_t vcs_curr, vcs_next, vcs_curr_uplift, vcs_next_uplift, vcs_curr_ext, vcs_next_ext;
@@ -88,6 +89,9 @@ void pgpe_pstate_apply_clips();
 void pgpe_pstate_compute_vratio(uint32_t pstate, uint32_t vdd);
 uint32_t pgpe_pstate_is_at_target();
 uint32_t pgpe_pstate_is_clip_bounded();
+void pgpe_pstate_pmsr_updt();
+void pgpe_pstate_pmsr_write();
+void pgpe_pstate_set_safe_mode();
 
 //Macro accessor function
 #define pgpe_pstate_get(x) G_pgpe_pstate.x
