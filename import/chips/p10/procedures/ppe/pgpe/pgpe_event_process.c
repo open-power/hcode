@@ -223,6 +223,10 @@ void pgpe_process_pstate_start()
         pgpe_dpll_write(pgpe_pstate_get(pstate_next));
     }
 
+    //Write PMSR
+    pgpe_pstate_pmsr_updt();
+    pgpe_pstate_pmsr_write();
+
     pgpe_pstate_update_vdd_vcs_ps(); //Set current equal to next
 
     //Enable resonant clocks
@@ -336,7 +340,7 @@ void pgpe_process_pmcr_request(void* eargs)
     {
         for (i = 0; i < MAX_CORES; i++)
         {
-            pgpe_pstate_set_ps_request(i, args->pmcr);
+            pgpe_pstate_set_ps_request(i, ((args->pmcr >> 48) & 0x00FF));
         }
 
         pgpe_pstate_compute();
