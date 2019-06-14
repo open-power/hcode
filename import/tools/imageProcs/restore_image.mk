@@ -42,8 +42,7 @@ $(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,cpmr_hdr))
 
 # files to be appended to image
 $(eval $(IMAGE)_FILE_CPMR_HDR=$$($(IMAGE)_DD_CONT_cpmr_hdr))
-# FIXME - Update for p10 when bin available
-$(eval $(IMAGE)_FILE_SELF=$(ROOTPATH)/chips/p9/procedures/utils/stopreg/selfRest.bin)
+$(eval $(IMAGE)_FILE_SELF=$(ROOTPATH)/chips/p10/procedures/utils/stopreg/selfRest.bin)
 
 # dependencies for appending image sections in sequence:
 # - file to be appended
