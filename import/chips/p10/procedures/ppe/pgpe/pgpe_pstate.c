@@ -28,8 +28,6 @@
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_dpll.h"
 
-
-
 //
 //Local function prototypes
 //
@@ -173,7 +171,9 @@ void pgpe_pstate_actuate_step()
 
         //DDS \todo
 
-        //Multicast all the PMSR \\todo
+        //Write PMSR
+        pgpe_pstate_pmsr_updt();
+        pgpe_pstate_pmsr_write();
 
         //lower VDD, then lower VCS
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
@@ -205,7 +205,10 @@ void pgpe_pstate_actuate_step()
         //Multicast the resclk controller
         //wait for acks from all QME
 
-        //Multicast all the PMSR\\todo
+        //Write PMSR
+        pgpe_pstate_pmsr_updt();
+        pgpe_pstate_pmsr_write();
+
     }
 
     pgpe_pstate_update_vdd_vcs_ps();
@@ -799,6 +802,43 @@ uint32_t pgpe_pstate_is_clip_bounded()
     else
     {
         return 0;
+    }
+}
+
+void pgpe_pstate_pmsr_updt()
+{
+    G_pgpe_pstate.pmsr.fields.global_actual =  G_pgpe_pstate.pstate_curr;
+    G_pgpe_pstate.pmsr.fields.local_actual  =  G_pgpe_pstate.pstate_curr;
+    G_pgpe_pstate.pmsr.fields.pmin          =  G_pgpe_pstate.clip_min;
+    G_pgpe_pstate.pmsr.fields.pmax          =  G_pgpe_pstate.clip_max;
+}
+
+void pgpe_pstate_pmsr_set_safe_mode()
+{
+    G_pgpe_pstate.pmsr.fields.safe_mode = 1;
+}
+
+void pgpe_pstate_pmsr_write()
+{
+    //\todo Switch to Multicast when SIMICS is fixed
+    /*uint32_t addr = PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF);
+    PK_TRACE("PMSR = 0x%08x%08x, addr=0x%x", G_pgpe_pstate.pmsr.words.high_order,
+            G_pgpe_pstate.pmsr.words.low_order,
+            addr);
+    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value);*/
+
+    uint32_t q, c = 0;
+    uint32_t cs;
+    PK_TRACE("PMSR=0x%08x%08x", G_pgpe_pstate.pmsr.words.high_order,
+             G_pgpe_pstate.pmsr.words.low_order);
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        for (c = 0; c < CORES_PER_QUAD; c++)
+        {
+            cs = (0x8 >> c);
+            PPE_PUTSCOM(PPE_SCOM_ADDR_UC(QME_PMSRS, q, cs), G_pgpe_pstate.pmsr.value);
+        }
     }
 }
 
