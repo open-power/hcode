@@ -26,7 +26,7 @@
 ifdef IMAGE
 
 
-#IMG-S-SOURCES   = cpmr_header.S
+IMG-S-SOURCES   = cpmr_header.S
 
 QME-S-SOURCES   = qme_header.S
 
