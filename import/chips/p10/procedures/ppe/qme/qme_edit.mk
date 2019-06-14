@@ -32,8 +32,9 @@ $(call ADD_EXE_INCDIR, $(EXE), \
    $(IOTA_SRCDIR) \
    $(HCODE_COMMON_LIBDIR) \
    $(HCODE_LIBDIR) \
+   $(ROOTPATH)/chips/p10/procedures/hwp/lib/\
     )
 
-#IMAGE_DEPS+=qmeImgEdit
-#OBJS=qme_img_edit.o
-#$(call BUILD_EXE)
+IMAGE_DEPS+=qmeImgEdit
+OBJS=qme_img_edit.o
+$(call BUILD_EXE)
