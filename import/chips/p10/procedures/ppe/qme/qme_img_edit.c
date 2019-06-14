@@ -29,7 +29,7 @@
 #include <stddef.h>   /* offsetof  */
 
 #include <iota_debug_ptrs.h>
-//#include <p9_hcode_image_defines.H>
+#include <p10_hcode_image_defines.H>
 
 enum
 {
@@ -46,11 +46,11 @@ int main(int narg, char* argv[])
         return -1;
     }
 
-    qmeHeader_t  qmeHeader;
+    QmeHeader_t  qmeHeader;
 
     int imageType = QME_IMAGE;
-    long int hcodeLenPos    = QME_HEADER_IMAGE_OFFSET + offsetof(qmeHeader_t, g_qme_hcode_length);
-    long int hcodeOffsetPos = QME_HEADER_IMAGE_OFFSET + offsetof(qmeHeader_t, g_qme_hcode_offset);
+    long int hcodeLenPos    = QME_HEADER_IMAGE_OFFSET + offsetof(QmeHeader_t, g_qme_hcode_length);
+    long int hcodeOffsetPos = QME_HEADER_IMAGE_OFFSET + offsetof(QmeHeader_t, g_qme_hcode_offset);
 
     FILE* pImage = fopen( argv[1], "r+" );
 
@@ -84,8 +84,8 @@ int main(int narg, char* argv[])
         if(size < QME_HCODE_IMAGE_OFFSET)
         {
             imageType = CPMR_IMAGE;
-            hcodeLenPos    = offsetof(cpmrHeader_t, qmeImgLength);
-            hcodeOffsetPos = offsetof(cpmrHeader_t, qmeImgOffset);
+            hcodeLenPos    = offsetof( CpmrHeader_t, iv_qmeImgLength );
+            hcodeOffsetPos = offsetof( CpmrHeader_t, iv_qmeImgOffset );
             printf("                    CPMR size               : %d (0x%X)\n", size, size);
             FILE* pHcodeImage = fopen( argv[2], "r+" );
             fseek (pHcodeImage, 0, SEEK_END);
