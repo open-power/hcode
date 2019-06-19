@@ -23,7 +23,9 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include "proc_scomt.H"
+#ifndef __PPE_HCODE__
+    #include "proc_scomt.H"
+#endif
 
 #ifndef __p10_ppe_c_a_H_
 #define __p10_ppe_c_a_H_
@@ -37,5 +39,7 @@ namespace ppe_c
 
 }
 }
-#include "ppe_c/reg00010.H"
+#ifndef __PPE_HCODE__
+    #include "ppe_c/reg00010.H"
+#endif
 #endif

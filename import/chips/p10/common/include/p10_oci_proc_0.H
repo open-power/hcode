@@ -23,7 +23,9 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include "proc_scomt.H"
+#ifndef __PPE_HCODE__
+    #include "proc_scomt.H"
+#endif
 
 #ifndef __p10_oci_proc_0_H_
 #define __p10_oci_proc_0_H_
@@ -398,19 +400,39 @@ static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFPRD_6 = 6;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFPRD_7 = 7;
 // oci_proc/reg00000.H
 
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2SCR2 = 0xc0064210ull;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1 = 0xc0064208ull;
 
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2SCR2_OCB_OCI_P2SCR2_P2S_INTER_FRAME_DELAY = 0;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2SCR2_OCB_OCI_P2SCR2_P2S_INTER_FRAME_DELAY_LEN = 17;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__BRIDGE_ENABLE = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__DEVICE = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__CPOL = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__CPHA = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__CLOCK_DIVIDER = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__CLOCK_DIVIDER_LEN = 10;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_CR1_RESERVED_2 = 14;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_CR1_RESERVED_2_LEN = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__NR_OF_FRAMES = 17;
+// oci_proc/reg00000.H
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_STAT = 0xc0064218ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_STAT_P2S_ONGOING = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_STAT_RESERVED_1_4 = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_STAT_RESERVED_1_4_LEN = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_STAT_P2S_WRITE_WHILE_BRIDGE_BUSY_ERR = 5;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_STAT_RESERVED_6 = 6;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_STAT_P2S_FSM_ERR = 7;
 // oci_proc/reg00000.H
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICDCM1 = 0xc0063c28ull;
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICDCM1_OCB_OCI_WOFICDCM1_DCM_MESSAGE = 0;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICDCM1_OCB_OCI_WOFICDCM1_DCM_MESSAGE_LEN = 64;
-// oci_proc/reg00000.H
+// oci_proc/reg00001.H
 
 }
 }
-#include "oci_proc/reg00000.H"
+#ifndef __PPE_HCODE__
+    #include "oci_proc/reg00000.H"
+    #include "oci_proc/reg00001.H"
+#endif
 #endif
