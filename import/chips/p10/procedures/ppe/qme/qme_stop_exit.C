@@ -24,6 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "qme.h"
+
 #include "p10_hcd_cache_poweron.H"
 #include "p10_hcd_cache_reset.H"
 #include "p10_hcd_cache_gptr_time_initf.H"
@@ -448,7 +449,8 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SCOMINIT )
 
-        //TODO commit78401//p10_hcd_core_scominit(core_target);
+        //TODO commit78401//
+        p10_hcd_core_scominit(core_target);
 
         //===============//
 
