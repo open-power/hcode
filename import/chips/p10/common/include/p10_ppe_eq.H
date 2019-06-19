@@ -23,26 +23,28 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include "proc_scomt.H"
+#ifndef __PPE_HCODE__
+    #include "proc_scomt.H"
+#endif
 
 #ifndef __p10_ppe_eq_H_
-#define __p10_ppe_eq_H_
+    #define __p10_ppe_eq_H_
 
-#include "p10_ppe_eq_0.H"
-#include "p10_ppe_eq_1.H"
-#include "p10_ppe_eq_2.H"
-#include "p10_ppe_eq_3.H"
-#include "p10_ppe_eq_4.H"
-#include "p10_ppe_eq_5.H"
-#include "p10_ppe_eq_6.H"
-#include "p10_ppe_eq_7.H"
-#include "p10_ppe_eq_8.H"
-#include "p10_ppe_eq_9.H"
-#include "p10_ppe_eq_a.H"
-#include "p10_ppe_eq_b.H"
-#include "p10_ppe_eq_c.H"
-#include "p10_ppe_eq_d.H"
-#include "p10_ppe_eq_e.H"
-#include "p10_ppe_eq_f.H"
+    #include "p10_ppe_eq_0.H"
+    #include "p10_ppe_eq_1.H"
+    #include "p10_ppe_eq_2.H"
+    #include "p10_ppe_eq_3.H"
+    #include "p10_ppe_eq_4.H"
+    #include "p10_ppe_eq_5.H"
+    #include "p10_ppe_eq_6.H"
+    #include "p10_ppe_eq_7.H"
+    #include "p10_ppe_eq_8.H"
+    #include "p10_ppe_eq_9.H"
+    #include "p10_ppe_eq_a.H"
+    #include "p10_ppe_eq_b.H"
+    #include "p10_ppe_eq_c.H"
+    #include "p10_ppe_eq_d.H"
+    #include "p10_ppe_eq_e.H"
+    #include "p10_ppe_eq_f.H"
 
 #endif
