@@ -61,12 +61,12 @@
 
 /* global get uint8_t 1D array macro */
 #define PLAT_ATTR_GET_UINT8_1D_ARRAY(ID, PTARGET, VAL) \
-    _getAttributeArrayShort<ID##_Type, static_cast<fapi2::TargetType>(ID##TargetType), ID> \
+    _getAttributeArrayShort<static_cast<fapi2::TargetType>(ID##_TargetType), ID> \
     (ID, PTARGET, VAL)
 
 /* global set uint8_t 1D array macro */
 #define PLAT_ATTR_SET_UINT8_1D_ARRAY(ID, PTARGET, VAL) \
-    _setAttributeArrayShort<ID##_Type, static_cast<fapi2::TargetType>(ID##TargetType), ID> \
+    _setAttributeArrayShort<static_cast<fapi2::TargetType>(ID##_TargetType), ID> \
     (ID, PTARGET, VAL)
 
 /* global get uint8_t 2D array macro */
@@ -121,10 +121,10 @@
 
 /* global get uint64_t 1D array macro */
 #define PLAT_ATTR_GET_UINT64_1D_ARRAY(ID, PTARGET, VAL) \
-    _getAttributeArrayDoubleWord(ID, PTARGET, VAL)
+    _getAttributeArrayDoubleWord<static_cast<fapi2::TargetType>(ID##_TargetType), ID>(ID, PTARGET, VAL)
 /* global set uint64_t 1D array macro */
 #define PLAT_ATTR_SET_UINT64_1D_ARRAY(ID, PTARGET, VAL) \
-    _setAttributeArrayDoubleWord(ID, PTARGET, VAL)
+    _setAttributeArrayDoubleWord<static_cast<fapi2::TargetType>(ID##_TargetType), ID>(ID, PTARGET, VAL)
 
 /* global get uint64_t 2D array macro */
 #define PLAT_ATTR_GET_UINT64_2D_ARRAY(ID, PTARGET, VAL) \
@@ -540,66 +540,80 @@ AttributeRC _getEcFeatureOverride(const AttributeId i_id,
 //******************************************************************************
 // Get uint8_t array
 //******************************************************************************
-template<typename T, TargetType K, AttributeId A>
+template<TargetType K, AttributeId A>
 AttributeRC _getAttributeArrayShort(const AttributeId i_id,
                                     const Target<K>& i_pTarget,
                                     uint8_t* o_pValues)
 {
-//       fapi2::Attributeta o_data;
-//     fapi2::ReturnCode l_fapi_rc(FAPI2_RC_SUCCESS);
-//     uint32_t l_ecmd_rc = ECMD_SUCCESS;
-//
-//     ecmdChipTarget l_ecmd_target;
-//     fapiTargetPointerToEcmdTarget(i_pTarget, l_ecmd_target);
-//
-//     o_data.faValidMask = FAPI_ATTRIBUTE_TYPE_UINT8ARY;
-//     o_data.faUint8ary = o_pValues;
-//
-//     l_ecmd_rc = fapi2GetAttribute(l_ecmd_target, i_id, o_data);
-//     if (l_ecmd_rc)
-//     {
-//         l_fapi_rc = (ReturnCodes) l_ecmd_rc;
-//     }
-//     return l_fapi_rc;
+    if(K & TARGET_TYPE_SYSTEM)
+    {
+        __get<K, fapi2attr::SystemAttributes_t, uint8_t, A>( i_pTarget, G_system_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_PROC_CHIP)
+    {
+        __get<K, fapi2attr::ProcChipAttributes_t, uint8_t, A>( i_pTarget, G_proc_chip_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_PERV)
+    {
+        __get<K, fapi2attr::PervAttributes_t, uint8_t, A>( i_pTarget, G_perv_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_CORE)
+    {
+        __get<K, fapi2attr::CoreAttributes_t, uint8_t, A>( i_pTarget, G_core_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_EQ)
+    {
+        __get<K, fapi2attr::EQAttributes_t, uint8_t, A>( i_pTarget, G_eq_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_EX)
+    {
+        __get<K, fapi2attr::EXAttributes_t, uint8_t, A>( i_pTarget, G_ex_attributes_ptr, i_id, o_pValues );
+    }
+
     return FAPI2_RC_SUCCESS;
 }
 
 //******************************************************************************
 // Set uint8_t array
 //******************************************************************************
-template<typename T, TargetType K, AttributeId A>
+template<TargetType K, AttributeId A>
 AttributeRC _setAttributeArrayShort(const AttributeId i_id,
                                     const Target<K>& i_pTarget,
                                     uint8_t* i_pValues)
 {
     if(K & TARGET_TYPE_SYSTEM)
     {
-        __set<K, fapi2attr::SystemAttributes_t, T, A>( i_pTarget, G_system_attributes_ptr, i_id, *i_pValues );
+        __set<K, fapi2attr::SystemAttributes_t, uint8_t, A>( i_pTarget, G_system_attributes_ptr, i_id, *i_pValues );
     }
 
     if(K & TARGET_TYPE_PROC_CHIP)
     {
-        __set<K, fapi2attr::ProcChipAttributes_t, T, A>( i_pTarget, G_proc_chip_attributes_ptr, *i_pValues );
+        __set<K, fapi2attr::ProcChipAttributes_t, uint8_t, A>( i_pTarget, G_proc_chip_attributes_ptr, i_id, *i_pValues );
     }
 
     if(K & TARGET_TYPE_PERV)
     {
-        __set<K, fapi2attr::PervAttributes_t, T, A>( i_pTarget, G_perv_attributes_ptr, *i_pValues );
+        __set<K, fapi2attr::PervAttributes_t, uint8_t, A>( i_pTarget, G_perv_attributes_ptr, i_id, *i_pValues );
     }
 
     if(K & TARGET_TYPE_CORE)
     {
-        __set<K, fapi2attr::CoreAttributes_t, T, A>( i_pTarget, G_core_attributes_ptr, *i_pValues );
+        __set<K, fapi2attr::CoreAttributes_t, uint8_t, A>( i_pTarget, G_core_attributes_ptr, i_id, *i_pValues );
     }
 
     if(K & TARGET_TYPE_EQ)
     {
-        __set<K, fapi2attr::EQAttributes_t, T, A>( i_pTarget, G_eq_attributes_ptr, *i_pValues );
+        __set<K, fapi2attr::EQAttributes_t, uint8_t, A>( i_pTarget, G_eq_attributes_ptr, i_id, *i_pValues );
     }
 
     if(K & TARGET_TYPE_EX)
     {
-        __set<K, fapi2attr::EXAttributes_t, T, A>( i_pTarget, G_ex_attributes_ptr, *i_pValues );
+        __set<K, fapi2attr::EXAttributes_t, uint8_t, A>( i_pTarget, G_ex_attributes_ptr, i_id, *i_pValues );
     }
 
     return FAPI2_RC_SUCCESS;
@@ -653,22 +667,82 @@ AttributeRC _setAttributeArrayWord(const AttributeId i_id,
 //******************************************************************************
 // Get uint64_t array
 //******************************************************************************
-template<typename T, TargetType K, AttributeId A>
+template<TargetType K, AttributeId A>
 AttributeRC _getAttributeArrayDoubleWord(const AttributeId i_id,
         const Target<K>& i_pTarget,
         uint64_t* o_pValues)
 {
+    if(K & TARGET_TYPE_SYSTEM)
+    {
+        __get<K, fapi2attr::SystemAttributes_t, uint64_t, A>( i_pTarget, G_system_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_PROC_CHIP)
+    {
+        __get<K, fapi2attr::ProcChipAttributes_t, uint64_t, A>( i_pTarget, G_proc_chip_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_PERV)
+    {
+        __get<K, fapi2attr::PervAttributes_t, uint64_t, A>( i_pTarget, G_perv_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_CORE)
+    {
+        __get<K, fapi2attr::CoreAttributes_t, uint64_t, A>( i_pTarget, G_core_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_EQ)
+    {
+        __get<K, fapi2attr::EQAttributes_t, uint64_t, A>( i_pTarget, G_eq_attributes_ptr, i_id, o_pValues );
+    }
+
+    if(K & TARGET_TYPE_EX)
+    {
+        __get<K, fapi2attr::EXAttributes_t, uint64_t, A>( i_pTarget, G_ex_attributes_ptr, i_id, o_pValues );
+    }
+
     return FAPI2_RC_SUCCESS;
 }
 
 //******************************************************************************
 // Set uint64_t array
 //******************************************************************************
-template<typename T, TargetType K, AttributeId A>
+template<TargetType K, AttributeId A>
 AttributeRC _setAttributeArrayDoubleWord(const AttributeId i_id,
         const Target<K>& i_pTarget,
         uint64_t* i_pValues)
 {
+    if(K & TARGET_TYPE_SYSTEM)
+    {
+        __set<K, fapi2attr::SystemAttributes_t, uint64_t, A>( i_pTarget, G_system_attributes_ptr, i_id, *i_pValues );
+    }
+
+    if(K & TARGET_TYPE_PROC_CHIP)
+    {
+        __set<K, fapi2attr::ProcChipAttributes_t, uint64_t, A>( i_pTarget, G_proc_chip_attributes_ptr, i_id, *i_pValues );
+    }
+
+    if(K & TARGET_TYPE_PERV)
+    {
+        __set<K, fapi2attr::PervAttributes_t, uint64_t, A>( i_pTarget, G_perv_attributes_ptr, i_id, *i_pValues );
+    }
+
+    if(K & TARGET_TYPE_CORE)
+    {
+        __set<K, fapi2attr::CoreAttributes_t, uint64_t, A>( i_pTarget, G_core_attributes_ptr, i_id, *i_pValues );
+    }
+
+    if(K & TARGET_TYPE_EQ)
+    {
+        __set<K, fapi2attr::EQAttributes_t, uint64_t, A>( i_pTarget, G_eq_attributes_ptr, i_id, *i_pValues );
+    }
+
+    if(K & TARGET_TYPE_EX)
+    {
+        __set<K, fapi2attr::EXAttributes_t, uint64_t, A>( i_pTarget, G_ex_attributes_ptr, i_id, *i_pValues );
+    }
+
     return FAPI2_RC_SUCCESS;
 }
 
