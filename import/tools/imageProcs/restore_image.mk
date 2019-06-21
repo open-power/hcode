@@ -42,7 +42,7 @@ $(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,cpmr_hdr))
 
 # files to be appended to image
 $(eval $(IMAGE)_FILE_CPMR_HDR=$$($(IMAGE)_DD_CONT_cpmr_hdr))
-$(eval $(IMAGE)_FILE_SELF=$(ROOTPATH)/chips/p10/procedures/utils/stopreg/selfRest.bin)
+$(eval $(IMAGE)_FILE_SELF=$(ROOTPATH/output/images/utils/stopreg/p10_core_save_restore_routines/p10_core_save_restore_routines.bin)
 
 # dependencies for appending image sections in sequence:
 # - file to be appended
@@ -56,7 +56,7 @@ $(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_DEPS_CPMR_HDR))
 $(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_PATH)/.$(IMAGE).append.cpmr_hdr)
 
 $(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
-$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.self_restore)
+$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.self_save_restore)
 
 # image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.cpmr_hdr,$$($(IMAGE)_DEPS_CPMR_HDR),$$($(IMAGE)_FILE_CPMR_HDR) 1))
