@@ -41,8 +41,8 @@
   </entry>
 
   <entry>
-    <name>ATTR_SYSTEM_IPL_PHASE</name>
-    <value>0x1</value>
+    <name>ATTR_CHIP_UNIT_POS</name>
+    <value>0x0</value>
   </entry>
   <!-- ********************************************************************* -->
 </entries>
