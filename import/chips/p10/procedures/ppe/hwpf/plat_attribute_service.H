@@ -247,7 +247,7 @@ void __set( const Target<K>& i_ptarget, TAttrStruct* object, const AttributeId a
 template<TargetType K, typename TAttrStruct, typename TValue, AttributeId AId>
 void __get( const Target<K>& i_ptarget, const TAttrStruct* object, const AttributeId attrid, TValue* value );
 
-/*
+
 #define ATTR_CHIP_UNIT_POS_GETMACRO PLAT_ATTR_GET_CHIP_UNIT_POS
 
 #define PLAT_ATTR_GET_CHIP_UNIT_POS(ID, PTARGET, VAL) \
@@ -270,7 +270,7 @@ AttributeRC _getAttrChipUnitPos(const Target<TARGET_TYPE_PERV>& i_target,
     o_val = i_target.getChipletNumber();
     return FAPI2_RC_SUCCESS;
 }
-*/
+
 
 /* INSERT NEW GETTER AND SETTER FUNCTIONS HERE */
 
