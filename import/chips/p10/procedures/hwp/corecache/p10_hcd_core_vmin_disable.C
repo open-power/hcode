@@ -79,6 +79,10 @@ p10_hcd_core_vmin_disable(
     fapi2::buffer<buffer_t> l_mmioData = 0;
     uint32_t                l_timeout  = 0;
 
+    fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
+    fapi2::ATTR_RUNN_MODE_Type                  l_attr_runn_mode;
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE, l_sys, l_attr_runn_mode ) );
+
     FAPI_INF(">>p10_hcd_core_vmin_disable");
 
     FAPI_DBG("Drop RVID_ENABLE via CPMS_RVCSR[0]");
@@ -90,12 +94,15 @@ p10_hcd_core_vmin_disable(
 
     do
     {
-        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
-
-        // use multicastAND to check 1
-        if( MMIO_GET(MMIO_LOWBIT(33)) == 1 )
+        if (!l_attr_runn_mode)
         {
-            break;
+            FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
+
+            // use multicastAND to check 1
+            if( MMIO_GET(MMIO_LOWBIT(33)) == 1 )
+            {
+                break;
+            }
         }
 
         fapi2::delay(HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_HW_NS,
@@ -122,12 +129,15 @@ p10_hcd_core_vmin_disable(
 
     do
     {
-        FAPI_TRY( HCD_GETMMIO_C( i_target, CPMS_CL2_PFETSTAT, l_mmioData ) );
-
-        // use multicastAND to check 1
-        if( MMIO_GET(0) == 1 )
+        if (!l_attr_runn_mode)
         {
-            break;
+            FAPI_TRY( HCD_GETMMIO_C( i_target, CPMS_CL2_PFETSTAT, l_mmioData ) );
+
+            // use multicastAND to check 1
+            if( MMIO_GET(0) == 1 )
+            {
+                break;
+            }
         }
 
         fapi2::delay(HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_DELAY_HW_NS,

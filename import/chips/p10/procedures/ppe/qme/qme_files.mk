@@ -54,7 +54,11 @@ CACHE-CPP-SOURCES = p10_hcd_cache_poweron.C \
                     p10_hcd_cache_startclocks.C \
                     p10_hcd_cache_scom_customize.C \
                     p10_hcd_cache_poweroff.C \
-                    p10_hcd_cache_stopclocks.C 
+                    p10_hcd_cache_stopclocks.C \
+                    p10_hcd_l3_purge.C \
+                    p10_hcd_chtm_purge.C \
+                    p10_hcd_powerbus_purge.C 
+
 
 #TODO p10_hcd_cache_scominit.C
                      

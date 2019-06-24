@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_core_initf.C $ */
+/* $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_l3_purge.C $ */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2018,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -26,8 +26,8 @@
 
 
 ///
-/// @file  p10_hcd_core_initf.C
-/// @brief
+/// @file  p10_hcd_l3_purge.C
+/// @brief Purge the L3 cache
 ///
 
 
@@ -43,55 +43,71 @@
 // Includes
 //------------------------------------------------------------------------------
 
-#include "p10_ring_id.H"
-#include "p10_hcd_core_initf.H"
+#include "p10_hcd_l3_purge.H"
+#include "p10_hcd_common.H"
+
+#include "p10_scom_c.H"
+using namespace scomt::c;
 
 
 //------------------------------------------------------------------------------
 // Constant Definitions
 //------------------------------------------------------------------------------
 
+enum P10_HCD_L3_PURGE_CONSTANTS
+{
+    HCD_L3_PURGE_DONE_POLL_TIMEOUT_HW_NS    = 100000, // 10^5ns = 100us timeout
+    HCD_L3_PURGE_DONE_POLL_DELAY_HW_NS      = 1000,   // 1us poll loop delay
+    HCD_L3_PURGE_DONE_POLL_DELAY_SIM_CYCLE  = 32000,  // 32k sim cycle delay
+};
 
 //------------------------------------------------------------------------------
-// Procedure: p10_hcd_core_initf
+// Procedure: p10_hcd_l3_purge
 //------------------------------------------------------------------------------
-
 
 fapi2::ReturnCode
-p10_hcd_core_initf(
-    const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST > & i_target)
+p10_hcd_l3_purge(
+    const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_OR > & i_target)
 {
-    FAPI_INF(">>p10_hcd_core_initf");
+    fapi2::buffer<uint64_t> l_scomData = 0;
+    uint32_t                l_timeout  = 0;
 
-#ifndef P10_HCD_CORECACHE_SKIP_INITF
+    FAPI_INF(">>p10_hcd_l3_purge");
 
-    FAPI_DBG("Scan ec_cl2_fure ring");
-    FAPI_TRY(fapi2::putRing(i_target, ec_cl2_fure,
-                            fapi2::RING_MODE_HEADER_CHECK),
-             "Error from putRing (ec_cl2_fure)");
+    FAPI_DBG("Assert L3_PURGE_REQ via PM_PURGE_REG[0]");
+    FAPI_TRY( HCD_PUTSCOM_C( i_target, L3_MISC_L3CERRS_PM_PURGE_REG, SCOM_1BIT(0) ) );
+
+    FAPI_DBG("Wait for L3_PURGE_REQ to drop via PM_PURGE_REG[0]");
+    l_timeout = HCD_L3_PURGE_DONE_POLL_TIMEOUT_HW_NS /
+                HCD_L3_PURGE_DONE_POLL_DELAY_HW_NS;
+
+    do
+    {
+
+        FAPI_TRY( HCD_GETSCOM_C( i_target, L3_MISC_L3CERRS_PM_PURGE_REG, l_scomData ) );
+
+        // use multicastOR to check 0
+        if( SCOM_GET(0) == 0 )
+        {
+            break;
+        }
+
+        fapi2::delay(HCD_L3_PURGE_DONE_POLL_DELAY_HW_NS,
+                     HCD_L3_PURGE_DONE_POLL_DELAY_SIM_CYCLE);
+    }
+    while( (--l_timeout) != 0 );
+
+    FAPI_ASSERT((l_timeout != 0),
+                fapi2::L3_PURGE_DONE_TIMEOUT()
+                .set_L3_PURGE_DONE_POLL_TIMEOUT_HW_NS(HCD_L3_PURGE_DONE_POLL_TIMEOUT_HW_NS)
+                .set_PM_PURGE_REG(l_scomData)
+                .set_CORE_TARGET(i_target),
+                "L3 Purge Done Timeout");
 
 fapi_try_exit:
 
-#else
+    FAPI_INF("<<p10_hcd_l3_purge");
 
-#ifdef __PPE_QME
-
-#include "iota_panic_codes.h"
-
-    fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
-    fapi2::ATTR_QME_BROADSIDE_SCAN_Type         l_attr_qme_broadside_scan;
-    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_QME_BROADSIDE_SCAN, l_sys, l_attr_qme_broadside_scan ) );
-
-    if (l_attr_qme_broadside_scan)
-    {
-        FAPI_INF("QME TRAP FOR BROADSIDE SCAN");
-        IOTA_PANIC(CORECACHE_BROADSIDE_SCAN);
-    }
-
-#endif
-
-#endif
-
-    FAPI_INF("<<p10_hcd_core_initf");
     return fapi2::current_err;
+
 }

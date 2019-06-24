@@ -80,6 +80,10 @@ p10_hcd_core_vmin_enable(
     uint32_t                l_timeout  = 0;
     uint32_t                l_vdd_pfet_enable = 0;
 
+    fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
+    fapi2::ATTR_RUNN_MODE_Type                  l_attr_runn_mode;
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE, l_sys, l_attr_runn_mode ) );
+
     FAPI_INF(">>p10_hcd_core_vmin_enable");
 
     //TODO 1. Clock & Power off the MMA if not already.
@@ -96,12 +100,15 @@ p10_hcd_core_vmin_enable(
 
     do
     {
-        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CL2_PFETCNTL), l_mmioData ) );
-
-        // use multicastAND to check 1
-        if( MMIO_GET(MMIO_LOWBIT(42)) == 1 )
+        if (!l_attr_runn_mode)
         {
-            break;
+            FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CL2_PFETCNTL), l_mmioData ) );
+
+            // use multicastAND to check 1
+            if( MMIO_GET(MMIO_LOWBIT(42)) == 1 )
+            {
+                break;
+            }
         }
 
         fapi2::delay(HCD_VMIN_ENA_VDD_PG_STATE_POLL_DELAY_HW_NS,
@@ -135,12 +142,15 @@ p10_hcd_core_vmin_enable(
 
     do
     {
-        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
-
-        // use multicastAND to check 1
-        if( MMIO_GET(MMIO_LOWBIT(32)) == 1 && MMIO_GET(MMIO_LOWBIT(34)) == 1)
+        if (!l_attr_runn_mode)
         {
-            break;
+            FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
+
+            // use multicastAND to check 1
+            if( MMIO_GET(MMIO_LOWBIT(32)) == 1 && MMIO_GET(MMIO_LOWBIT(34)) == 1)
+            {
+                break;
+            }
         }
 
         fapi2::delay(HCD_VMIN_ENA_RVID_ACTIVE_POLL_DELAY_HW_NS,
