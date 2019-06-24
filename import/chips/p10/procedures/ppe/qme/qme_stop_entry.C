@@ -34,6 +34,9 @@
 #include "p10_hcd_core_vmin_enable.H"
 #include "p10_hcd_core_poweroff.H"
 
+#include "p10_hcd_chtm_purge.H"
+#include "p10_hcd_l3_purge.H"
+#include "p10_hcd_powerbus_purge.H"
 #include "p10_hcd_cache_stopclocks.H"
 #include "p10_hcd_cache_poweroff.H"
 
@@ -78,11 +81,9 @@ qme_stop_prepare()
 
 // called in p10_hcd_l2_purge()
 void
-qme_l2_purge_abort_detect()
+qme_l2_purge_catchup_detect(uint32_t& core_select)
 {
     uint32_t c_stop2  = 0;
-    uint32_t c_wakeup = 0;
-    uint32_t c_spwu   = 0;
 
     // Detect and Process L2 Purge Catchup
     if( G_qme_record.hcode_func_enabled & QME_L2_PURGE_CATCHUP_PATH_ENABLE )
@@ -100,8 +101,18 @@ qme_l2_purge_abort_detect()
             //===============//
 
             MARK_TAG(c_stop2, SE_L2_PURGE_CATCHUP);
+
+            core_select = G_qme_record.c_stop2_enter_targets;
         }
     }
+}
+
+// called in p10_hcd_l2_purge()
+void
+qme_l2_purge_abort_detect()
+{
+    uint32_t c_wakeup = 0;
+    uint32_t c_spwu   = 0;
 
     // Detect and Process L2 Purge Abort
     if( G_qme_record.hcode_func_enabled & QME_L2_PURGE_ABORT_PATH_ENABLE )
@@ -250,6 +261,10 @@ qme_stop_entry()
             return;
         }
 
+        //recreate target in case catchup/abort
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
+
         //===============//
 
         MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_L2_TLBIE_QUIESCE )
@@ -283,6 +298,10 @@ qme_stop_entry()
         {
             return;
         }
+
+        //recreate target in case abort
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
 
         //===============//
 
@@ -495,21 +514,24 @@ qme_stop_entry()
 
         //===============//
 
+        MARK_TAG(G_qme_record.c_stop11_enter_targets, SE_CHTM_PURGE)
+
+        p10_hcd_chtm_purge(core_target);
+
+        //===============//
+
         MARK_TAG(G_qme_record.c_stop11_enter_targets, SE_L3_PURGE)
 
-        //p10_hcd_l3_purge(core_target);
+        core_target_or = chip_target.getMulticast<fapi2::MULTICAST_OR>(fapi2::MCGROUP_GOOD_EQ,
+                         static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop11_enter_targets));
+
+        p10_hcd_l3_purge(core_target_or);
 
         //===============//
 
         MARK_TAG(G_qme_record.c_stop11_enter_targets, SE_POWERBUS_PURGE)
 
-        //p10_hcd_powerbus_purge(core_target);
-
-        //===============//
-
-        MARK_TAG(G_qme_record.c_stop11_enter_targets, SE_CACHE_QUIESCE)
-
-        //p10_hcd_cache_quiesce(core_target);
+        p10_hcd_powerbus_purge(core_target);
 
         //===============//
 
@@ -540,5 +562,8 @@ qme_stop_entry()
 
         G_qme_record.c_stop11_enter_targets = 0;
 
+        G_qme_record.hcode_func_enabled |= QME_L2_PURGE_ABORT_PATH_ENABLE;
+        G_qme_record.hcode_func_enabled |= QME_NCU_PURGE_ABORT_PATH_ENABLE;
+        G_qme_record.hcode_func_enabled |= QME_STOP3OR5_ABORT_PATH_ENABLE;
     }
 }

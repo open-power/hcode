@@ -55,10 +55,10 @@ enum QME_SE_MARKS
     SE_STOP3_DONE                  = 0x3f0      ,
     SE_CORE_POWEROFF               = 0x400      ,
     SE_STOP5_DONE                  = 0x410      ,
-    SE_L3_PURGE                    = 0x420      ,
-    SE_L3_PURGE_ABORT              = 0x430      ,
-    SE_POWERBUS_PURGE              = 0x440      ,
-    SE_CACHE_QUIESCE               = 0x450      ,
+    SE_CHTM_PURGE                  = 0x420      ,
+    SE_L3_PURGE                    = 0x430      ,
+    SE_L3_PURGE_ABORT              = 0x440      ,
+    SE_POWERBUS_PURGE              = 0x450      ,
     SE_CACHE_STOPCLOCKS            = 0x4e0      ,
     SE_CACHE_POWEROFF              = 0x4f0      ,
     SE_STOP11_DONE                 = 0x500
@@ -108,11 +108,11 @@ const std::vector<QME_SE_MARKS> MARKS =
     SE_STOP5_DONE,
     //IRQ_REGULAR_WAKEUP_FAST_EVENT, wakeup_detected
     //IRQ_SPECIAL_WAKEUP_RISE_EVENT, wakeup_detected
+    SE_CHTM_PURGE,
     SE_L3_PURGE,
     //SE_POWERBUS_PURGE,             l3_purge_done
     SE_L3_PURGE_ABORT,               //M2B_BRANCH_ONLY
     SE_POWERBUS_PURGE,
-    SE_CACHE_QUIESCE,
     SE_CACHE_STOPCLOCKS,
     SE_CACHE_POWEROFF,
     SE_STOP11_DONE                   //M2B_BRANCH_ONLY
@@ -142,10 +142,10 @@ const std::map<QME_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
         (SE_STOP3_DONE                 , "SE_STOP3_DONE                 ")
         (SE_CORE_POWEROFF              , "SE_CORE_POWEROFF              ")
         (SE_STOP5_DONE                 , "SE_STOP5_DONE                 ")
+        (SE_CHTM_PURGE                 , "SE_CHTM_PURGE                 ")
         (SE_L3_PURGE                   , "SE_L3_PURGE                   ")
         (SE_L3_PURGE_ABORT             , "SE_L3_PURGE_ABORT             ")
         (SE_POWERBUS_PURGE             , "SE_POWERBUS_PURGE             ")
-        (SE_CACHE_QUIESCE              , "SE_CACHE_QUIESCE              ")
         (SE_CACHE_STOPCLOCKS           , "SE_CACHE_STOPCLOCKS           ")
         (SE_CACHE_POWEROFF             , "SE_CACHE_POWEROFF             ")
         (SE_STOP11_DONE                , "SE_STOP11_DONE                ") ;
