@@ -244,7 +244,7 @@ typedef enum
     IOTA_UNUSED_0a1f = 0x0a1f,
 
 
-    IOTA_UNUSED_0d00 = 0x0d00,
+    CORECACHE_BROADSIDE_SCAN = 0x0d00,
     IOTA_UNUSED_0d01 = 0x0d01,
     IOTA_UNUSED_0d02 = 0x0d02,
     IOTA_UNUSED_0d03 = 0x0d03,
