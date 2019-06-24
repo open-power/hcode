@@ -26,6 +26,8 @@
 #include "qme.h"
 
 extern QmeRecord G_qme_record;
+extern uint64_t g_eimr_override;
+
 
 IOTA_BEGIN_TASK_TABLE
 IOTA_TASK(qme_top_priority_event),                   // 0 Top  (Debugger/HB_Loss/QuadXstop)
@@ -116,9 +118,51 @@ qme_dec_handler()
 void
 qme_fit_handler()
 {
-    G_qme_record.uih_status |= BIT32(IDX_TIMER_FIT);
+    uint32_t c_stop11 = 0;
+
     mtspr(SPRN_TSR, TSR_FIS);
-    PK_TRACE_INF("Timer: FIT");
+
+    G_qme_record.uih_status |= BIT32(IDX_TIMER_FIT);
+
+    PK_TRACE_INF("Timer: FIT, UIH Status[%x]",
+                 G_qme_record.uih_status);
+
+    if ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_STOP11_ENTRY_REQUESTED ) )
+    {
+        // Clear so that resampling will not occur.
+        out32( QME_LCL_FLAGS_CLR, BIT32( QME_FLAGS_STOP11_ENTRY_REQUESTED ) );
+
+        // Read stop11 request from scrb
+        c_stop11 = ( in32( QME_LCL_SCRB ) & BITS32(20, 4) ) >> SHIFT32(23) ;
+
+        PK_TRACE_INF("Event: Stop11 Requested via Flags and Scrb[%x]", c_stop11);
+
+        G_qme_record.c_stop2_enter_targets  |= c_stop11;
+        G_qme_record.c_stop5_enter_targets  |= c_stop11;
+        G_qme_record.c_stop11_enter_targets |= c_stop11;
+
+        MARK_TAG( G_qme_record.c_stop11_enter_targets, IRQ_PM_STATE_ACTIVE_SLOW_EVENT )
+
+        //===============//
+
+        G_qme_record.hcode_func_enabled &= ~QME_L2_PURGE_ABORT_PATH_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_NCU_PURGE_ABORT_PATH_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_STOP3OR5_ABORT_PATH_ENABLE;
+
+        // stop11 is expected not to be aborted
+        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+        g_eimr_override |= BITS64(32, 24);
+
+        wrteei(1);
+        qme_stop_entry();
+        wrteei(0);
+
+        // Stop Entry is lower priority than Wakeups and other events
+        // Thus not likely to interrupt other contexts; therefore
+        // Always re-evaluate eimr override masks is safe here
+        qme_eval_eimr_override();
+    }
+
     G_qme_record.uih_status &= ~BIT32(IDX_TIMER_FIT);
 }
 
