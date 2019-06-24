@@ -26,7 +26,6 @@
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_gppb.h"
 
-
 //Local Functions
 uint32_t pgpe_avsbus_calc_crc(uint32_t data);
 uint32_t pgpe_avsbus_poll_trans_done(uint32_t bus_num);
@@ -310,24 +309,24 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
     uint32_t bus_mask = bus_num << O2S_BUSNUM_OFFSET_SHIFT;
 
     // O2SCTRLF
-    data = in32(OCB_O2SCTRLF0A | bus_mask);
+    data = in32(OCB_O2SCTRLF0 | bus_mask);
     data = (0x000000FF & data) | O2SCTRLF_value;
-    out32(OCB_O2SCTRLF0A | bus_mask, data);
+    out32(OCB_O2SCTRLF0 | bus_mask, data);
 
     // O2SCTRLS
-    data = in32(OCB_O2SCTRLS0A | bus_mask);
+    data = in32(OCB_O2SCTRLS0 | bus_mask);
     data = (0x00003FFF & data) | O2SCTRLS_value;
-    out32(OCB_O2SCTRLS0A | bus_mask, data);
+    out32(OCB_O2SCTRLS0 | bus_mask, data);
 
     // O2SCTRL2
-    data = in32(OCB_O2SCTRL20A | bus_mask);
+    data = in32(OCB_O2SCTRL20 | bus_mask);
     data = (0x00007FFF & data) | O2SCTRL2_value;
-    out32(OCB_O2SCTRL20A | bus_mask, data);
+    out32(OCB_O2SCTRL20 | bus_mask, data);
 
     // O2SCTRL1
-    data = in32(OCB_O2SCTRL10A | bus_mask);
+    data = in32(OCB_O2SCTRL10 | bus_mask);
     data = (0x4FFCBFFF & data) | O2SCTRL1_value;
-    out32(OCB_O2SCTRL10A | bus_mask, data);
+    out32(OCB_O2SCTRL10 | bus_mask, data);
 
     //
     // AVS slave initialization
