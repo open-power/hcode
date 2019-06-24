@@ -37,7 +37,7 @@ QmeRecord G_qme_record __attribute__((section (".dump_ptr"))) =
     CURRENT_GIT_HEAD,
     0, //Timer_enabled
     ENABLED_HCODE_FUNCTIONS,
-    ( BIT32(STOP_LEVEL_2) | BIT32(STOP_LEVEL_3) ),
+    ( BIT32(STOP_LEVEL_2) | BIT32(STOP_LEVEL_3) | BIT32(STOP_LEVEL_11) ),
     0
 };
 
@@ -56,7 +56,7 @@ qme_init()
     // TODO attributes or flag bits
     // TODO assert pm_entry_limit when stop levels are all disabled
     // However, cannot disable stop11 as gating the IPL, to be discussed with Greg
-    G_qme_record.stop_level_enabled = ( BIT32(STOP_LEVEL_2) | BIT32(STOP_LEVEL_3) );
+    //G_qme_record.stop_level_enabled = TBD ATTRIBUTES
     G_qme_record.mma_enabled        = 0;
     G_qme_record.pmcr_fwd_enabled   = 0;
     G_qme_record.throttle_enabled   = 0;
@@ -160,5 +160,5 @@ qme_init()
 #endif
 
     PK_TRACE_DBG("Setup: Unmask STOP Interrupts Now with Reversing Initial Mask[%x]", G_qme_record.c_all_stop_mask);
-    out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & BITS64SH(32, 24) ) );
+    out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
 }

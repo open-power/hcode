@@ -214,7 +214,7 @@ typedef struct
     uint32_t    c_pm_state_active_fast_req;
     uint32_t    c_regular_wakeup_fast_req;
     uint32_t    c_pm_state_active_slow_req;
-    uint32_t    c_regular_wakeup_slow_reg;
+    uint32_t    c_regular_wakeup_slow_req;
 
     uint32_t    c_special_wakeup_rise_req;
     uint32_t    c_special_wakeup_fall_req;

@@ -33,6 +33,7 @@
 #include "p10_hcd_cache_startclocks.H"
 #include "p10_hcd_cache_scominit.H"
 #include "p10_hcd_cache_scom_customize.H"
+
 #include "p10_hcd_core_poweron.H"
 #include "p10_hcd_core_reset.H"
 #include "p10_hcd_core_gptr_time_initf.H"
@@ -86,7 +87,7 @@ qme_core_report_pls_srr1(uint32_t core_targets)
              pls_end += 4, srr1_end += 4 )
         {
             old_pls = ( in64(QME_LCL_PLSR) >> SHIFT64( (t_end + t_offset) ) ) & 0xF;
-            new_pls = old_pls + act_stop_level; // MAX( act_stop_level, old_pls );
+            new_pls = ( act_stop_level > old_pls ) ? (act_stop_level) : (old_pls);
 
             PK_TRACE_DBG("Core[%x] act_stop_level[%x] old_pls[%x] new_pls[%x]",
                          c_loop, act_stop_level, old_pls, new_pls);
