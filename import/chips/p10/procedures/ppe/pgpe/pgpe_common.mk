@@ -93,7 +93,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE), \
 	$(OCC_SRCDIR)/commonlib \
 	$(PPE_SRCDIR)/commonlib \
 	$(PPE_SRCDIR)/powmanlib \
-	$(OCC_SRCDIR)/registers \
+	$(PMLIB_INCDIR)/registers \
 	$(HWP_SRCDIR)/lib \
 	$(TRACE_SRCDIR)/ \
 	)
