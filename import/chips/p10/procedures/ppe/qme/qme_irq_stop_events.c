@@ -114,12 +114,14 @@ qme_parse_pm_state_active_fast()
             G_qme_record.c_pm_state[c_index] =
                 ( in32( QME_LCL_SSDR ) & BITS32(c_start, 4) ) >> SHIFT32( (c_start + 3) );
 
-            if( G_qme_record.c_pm_state[c_index] >= STOP_LEVEL_5 )
+            if( ( G_qme_record.stop_level_enabled & BIT32(STOP_LEVEL_5) ) &&
+                ( G_qme_record.c_pm_state[c_index] >= STOP_LEVEL_5 ) )
             {
                 G_qme_record.c_stop5_enter_targets |= c_loop;
             }
 
-            if( G_qme_record.c_pm_state[c_index] >= STOP_LEVEL_3 )
+            if( ( G_qme_record.stop_level_enabled & BIT32(STOP_LEVEL_3) ) &&
+                ( G_qme_record.c_pm_state[c_index] >= STOP_LEVEL_3 ) )
             {
                 if( !(G_qme_record.c_stop5_enter_targets & c_loop) )
                 {
@@ -130,16 +132,6 @@ qme_parse_pm_state_active_fast()
             if( G_qme_record.c_pm_state[c_index] >= STOP_LEVEL_2 )
             {
                 G_qme_record.c_stop2_enter_targets |= c_loop;
-            }
-
-            if( !( G_qme_record.stop_level_enabled & BIT32(STOP_LEVEL_5) ) )
-            {
-                G_qme_record.c_stop5_enter_targets = 0;
-            }
-
-            if( !( G_qme_record.stop_level_enabled & BIT32(STOP_LEVEL_3) ) )
-            {
-                G_qme_record.c_stop3_enter_targets = 0;
             }
 
             if( !( G_qme_record.stop_level_enabled & BIT32(STOP_LEVEL_2) ) )
@@ -458,10 +450,136 @@ qme_pm_state_active_fast_event()
 //==============================
 
 void
+qme_parse_pm_state_active_slow()
+{
+    uint32_t c_mask   = 0;
+    uint32_t c_loop   = 0;
+    uint32_t c_start  = 0;
+    uint32_t c_index  = 0;
+    uint32_t t_offset = 0;
+    uint32_t pscrs    = 0;
+
+    G_qme_record.c_pm_state_active_slow_req =
+        ( in32_sh(QME_LCL_EISR) & BITS64SH(52, 4) ) >> SHIFT64SH(55);
+
+    PK_TRACE_INF("Parse: PM State Active Slow on Cores[%x], Cores in STOP2+[%x], Partial Good Cores[%x], Block Entry on Cores[%x]",
+                 G_qme_record.c_pm_state_active_slow_req,
+                 G_qme_record.c_stop2_reached,
+                 G_qme_record.c_configured,
+                 G_qme_record.c_block_stop_done);
+
+    c_mask = G_qme_record.c_pm_state_active_slow_req &
+             G_qme_record.c_configured &
+             (~G_qme_record.c_stop2_reached) &
+             (~G_qme_record.c_block_stop_done);
+
+    for( c_start = 16, c_loop = 8,
+         c_index = 0;  c_index < 4; c_index++,
+         c_start += 4, c_loop = c_loop >> 1)
+    {
+        if( c_loop & c_mask )
+        {
+            G_qme_record.c_pm_state[c_index] =
+                ( in32( QME_LCL_SSDR ) & BITS32(c_start, 4) ) >> SHIFT32( (c_start + 3) );
+
+            if( ( G_qme_record.stop_level_enabled & BIT32(STOP_LEVEL_11) ) &&
+                ( G_qme_record.c_pm_state[c_index] >= STOP_LEVEL_11 ) )
+            {
+
+                // However, cannot do Power Loss State when esl is actually 0 that would be error
+                if( G_qme_record.hcode_func_enabled & QME_POWER_LOSS_ESL_CHECK_ENABLE )
+                {
+                    for( t_offset = 0; t_offset < 16; t_offset += 4 )
+                    {
+                        pscrs = in32( ( QME_PSCRS | (c_loop << 16) | (t_offset << 4) ) );
+
+                        // if either esl or ec bit is off with at least one thread
+                        if( (~pscrs) & BITS32(2, 2) )
+                        {
+                            PK_TRACE_ERR("ERROR: Core[%x] Thread[%x] Detected in Power Loss State while PSCRS[%x]. HALT QME!",
+                                         c_loop, t_offset, pscrs);
+                            IOTA_PANIC(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED);
+                        }
+                    }
+                }
+
+                G_qme_record.c_stop2_enter_targets  |= c_loop;
+                G_qme_record.c_stop5_enter_targets  |= c_loop;
+                G_qme_record.c_stop11_enter_targets |= c_loop;
+            }
+
+            //Func Error on else
+        }
+    }
+
+    PK_TRACE_DBG("Check: PM State Core0[%x], PM State Core1[%x], PM State Core2[%x], PM State Core3[%x]",
+                 G_qme_record.c_pm_state[0],
+                 G_qme_record.c_pm_state[1],
+                 G_qme_record.c_pm_state[2],
+                 G_qme_record.c_pm_state[3]);
+}
+
+
+
+void
+qme_parse_regular_wakeup_slow()
+{
+    G_qme_record.c_regular_wakeup_slow_req =
+        ( in32_sh(QME_LCL_EISR) & BITS64SH(44, 4) ) >> SHIFT64SH(47);
+
+    uint32_t c_mask = G_qme_record.c_regular_wakeup_slow_req &
+                      G_qme_record.c_configured &
+                      G_qme_record.c_stop11_reached &
+                      (~G_qme_record.c_block_wake_done);
+
+    G_qme_record.c_stop2_exit_targets  |= c_mask;
+    G_qme_record.c_stop5_exit_targets  |= c_mask;
+    G_qme_record.c_stop11_exit_targets |= c_mask;
+
+    PK_TRACE_INF("Parse: Regular Wakeup Slow on Cores[%x], Partial Good Cores[%x], Cores in STOP11[%x], Block Exit on Cores[%x]",
+                 G_qme_record.c_regular_wakeup_slow_req,
+                 G_qme_record.c_configured,
+                 G_qme_record.c_stop11_reached,
+                 G_qme_record.c_block_wake_done);
+}
+void
 qme_regular_wakeup_slow_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_RGWU_SLOW);
-    PK_TRACE("Event: Regular Wakeup Slow");
+
+    qme_parse_regular_wakeup_slow();
+
+    PK_TRACE_INF("Event: UIH Status[%x], Regular Wakeup Slow on Core[%x], Cores Waking up from STOP11[%x], Cores reached STOP11[%x]",
+                 G_qme_record.uih_status,
+                 G_qme_record.c_regular_wakeup_slow_req,
+                 G_qme_record.c_stop11_exit_targets,
+                 G_qme_record.c_stop11_reached);
+
+    if( G_qme_record.c_stop11_exit_targets )
+    {
+        MARK_TAG( G_qme_record.c_stop11_exit_targets, IRQ_REGULAR_WAKEUP_SLOW_EVENT );
+
+        //===============//
+
+        qme_parse_special_wakeup_rise();
+
+        // Stop11 is expected not to be aborted
+        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+        g_eimr_override |= BITS64(32, 24);
+
+        wrteei(1);
+        qme_stop_exit();
+        wrteei(0);
+    }
+
+    // If Stop Entry was aborted
+    // The retrun of this handler will be back to Stop Entry leftover,
+    // which will then re-evaluate eimr overrides, thus skip for now
+    if( (~G_qme_record.uih_status) & IDX_PRTY_LVL_STOP_FAST )
+    {
+        qme_eval_eimr_override();
+    }
+
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_RGWU_SLOW);
 }
 
@@ -469,24 +587,39 @@ void
 qme_pm_state_active_slow_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_STOP_SLOW);
-    PK_TRACE("Event: PM State Active Slow");
-    /*
-        uint32_t t_offset = 0;
-        uint32_t esl_ec   = 0;
 
-            for( t_offset = 0; t_offset < 16; t_offset += 4 )
-            {
-                pscrs = in32( ( G_QME_PSCRS | (c_loop << 16) | (t_offset << 4) ) );
+    qme_parse_pm_state_active_slow();
 
-                // if either esl or ec bit is off with at least one thread
-                if( (~pscrs) & BITS32(2, 2) )
-                {
+    PK_TRACE_INF("Event: UIH Status[%x], PM State Active Slow on Cores[%x], STOP11 Request on Cores[%x], STOP11 Reached on Cores[%x]",
+                 G_qme_record.uih_status,
+                 G_qme_record.c_pm_state_active_slow_req,
+                 G_qme_record.c_stop11_enter_targets,
+                 G_qme_record.c_stop11_reached);
 
-                    break;
-                }
-            }
+    if( G_qme_record.c_stop11_enter_targets )
+    {
+        MARK_TAG( G_qme_record.c_stop11_enter_targets, IRQ_PM_STATE_ACTIVE_SLOW_EVENT )
 
-    */
+        //===============//
+
+        G_qme_record.hcode_func_enabled &= ~QME_L2_PURGE_ABORT_PATH_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_NCU_PURGE_ABORT_PATH_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_STOP3OR5_ABORT_PATH_ENABLE;
+
+        // stop11 is expected not to be aborted
+        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+        g_eimr_override |= BITS64(32, 24);
+
+        wrteei(1);
+        qme_stop_entry();
+        wrteei(0);
+    }
+
+    // Stop Entry is lower priority than Wakeups and other events
+    // Thus not likely to interrupt other contexts; therefore
+    // Always re-evaluate eimr override masks is safe here
+    qme_eval_eimr_override();
 
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_STOP_SLOW);
+
 }

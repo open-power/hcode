@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_cache_gptr_time_initf.C $ */
+/* $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_chtm_purge.C $ */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2018,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -26,8 +26,8 @@
 
 
 ///
-/// @file  p10_hcd_cache_gptr_time_initf.C
-/// @brief
+/// @file  p10_hcd_chtm_purge.C
+/// @brief Purge the Core Hardware Trace Macro
 ///
 
 
@@ -43,59 +43,82 @@
 // Includes
 //------------------------------------------------------------------------------
 
-#include <p10_ring_id.H>
-#include "p10_hcd_cache_gptr_time_initf.H"
+#include "p10_hcd_chtm_purge.H"
+#include "p10_hcd_common.H"
+
+#ifdef __PPE_QME
+    #include "p10_ppe_c.H"
+    using namespace scomt::ppe_c;
+#else
+    #include "p10_scom_c.H"
+    using namespace scomt::c;
+#endif
+
 
 //------------------------------------------------------------------------------
 // Constant Definitions
 //------------------------------------------------------------------------------
 
+enum P10_HCD_CHTM_PURGE_CONSTANTS
+{
+    HCD_CHTM_PURGE_DONE_POLL_TIMEOUT_HW_NS    = 100000, // 10^5ns = 100us timeout
+    HCD_CHTM_PURGE_DONE_POLL_DELAY_HW_NS      = 1000,   // 1us poll loop delay
+    HCD_CHTM_PURGE_DONE_POLL_DELAY_SIM_CYCLE  = 32000,  // 32k sim cycle delay
+};
 
 //------------------------------------------------------------------------------
-// Procedure: p10_hcd_cache_gptr_time_initf
+// Procedure: p10_hcd_chtm_purge
 //------------------------------------------------------------------------------
-
 
 fapi2::ReturnCode
-p10_hcd_cache_gptr_time_initf(
-    const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST > & i_target)
+p10_hcd_chtm_purge(
+    const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > & i_target)
 {
-    FAPI_INF(">>p10_hcd_cache_gptr_time_initf");
+    fapi2::buffer<buffer_t> l_mmioData = 0;
+    uint32_t                l_timeout  = 0;
+    uint32_t                l_chtm_purge_done = 0;
 
-#ifndef P10_HCD_CORECACHE_SKIP_INITF
+    FAPI_INF(">>p10_hcd_chtm_purge");
 
-    FAPI_DBG("Scan ec_l3_gptr ring");
-    FAPI_TRY(fapi2::putRing(i_target, ec_l3_gptr,
-                            fapi2::RING_MODE_HEADER_CHECK),
-             "Error from putRing (ec_l3_gptr)");
+    FAPI_DBG("Assert CHTM_PURGE_REQ via PCR_SCSR[11]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_OR, MMIO_LOAD32H( BIT32(11) ) ) );
 
-    FAPI_DBG("Scan ec_l3_time ring");
-    FAPI_TRY(fapi2::putRing(i_target, ec_l3_time,
-                            fapi2::RING_MODE_HEADER_CHECK),
-             "Error from putRing (ec_l3_time)");
+    FAPI_DBG("Wait for CHTM_PURGE_DONE via PCR_SCSR[43]");
+    l_timeout = HCD_CHTM_PURGE_DONE_POLL_TIMEOUT_HW_NS /
+                HCD_CHTM_PURGE_DONE_POLL_DELAY_HW_NS;
+
+    do
+    {
+
+        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(QME_SCSR), l_mmioData ) );
+
+        // use multicastAND to check 1
+        MMIO_GET32L(l_chtm_purge_done);
+
+        if( ( l_chtm_purge_done & BIT64SH(43) ) == BIT64SH(43) )
+        {
+            break;
+        }
+
+        fapi2::delay(HCD_CHTM_PURGE_DONE_POLL_DELAY_HW_NS,
+                     HCD_CHTM_PURGE_DONE_POLL_DELAY_SIM_CYCLE);
+    }
+    while( (--l_timeout) != 0 );
+
+    FAPI_ASSERT((l_timeout != 0),
+                fapi2::CHTM_PURGE_DONE_TIMEOUT()
+                .set_CHTM_PURGE_DONE_POLL_TIMEOUT_HW_NS(HCD_CHTM_PURGE_DONE_POLL_TIMEOUT_HW_NS)
+                .set_QME_SCSR(l_mmioData)
+                .set_CORE_TARGET(i_target),
+                "CHTM Purge Done Timeout");
+
+    FAPI_DBG("Drop CHTM_PURGE_REQ via PCR_SCSR[11]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_CLEAR, MMIO_LOAD32H( BIT32(11) ) ) );
 
 fapi_try_exit:
 
-#else
+    FAPI_INF("<<p10_hcd_chtm_purge");
 
-#ifdef __PPE_QME
-
-#include "iota_panic_codes.h"
-
-    fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
-    fapi2::ATTR_QME_BROADSIDE_SCAN_Type         l_attr_qme_broadside_scan;
-    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_QME_BROADSIDE_SCAN, l_sys, l_attr_qme_broadside_scan ) );
-
-    if (l_attr_qme_broadside_scan)
-    {
-        FAPI_INF("QME TRAP FOR BROADSIDE SCAN");
-        IOTA_PANIC(CORECACHE_BROADSIDE_SCAN);
-    }
-
-#endif
-
-#endif
-
-    FAPI_INF("<<p10_hcd_cache_gptr_time_initf");
     return fapi2::current_err;
+
 }

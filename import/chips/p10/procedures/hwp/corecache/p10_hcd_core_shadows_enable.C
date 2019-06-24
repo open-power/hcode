@@ -82,9 +82,6 @@ p10_hcd_core_shadows_enable(
 
     FAPI_INF(">>p10_hcd_core_shadows_enable");
 
-    FAPI_DBG("Drop HBUS_DISABLE/L2RCMD_INTF_QUIESCE/NCU_TLBIE_QUIESCE/AUTO_PMSR_SHIFT_DIS via PCR_SCSR[4,7,8,22]");
-    FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_CLEAR, MMIO_LOAD32H( ( BIT32(4) | BITS32(7, 2) | BIT32(22) ) ) ) );
-
     FAPI_DBG("Assert REFRESH_PMSR via PCR_SCSR[23]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_OR, MMIO_1BIT(23) ) );
 
@@ -123,6 +120,7 @@ p10_hcd_core_shadows_enable(
                 "Shadow Enable FTC/PP/DPT Shadow State Timeout");
 
 #ifndef XFER_SENT_DONE_DISABLE
+
     FAPI_DBG("Wait on XFER_SENT_DONE via PCR_TFCSR[33]");
     l_timeout = HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS /
                 HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_DELAY_HW_NS;
