@@ -171,10 +171,6 @@ void pgpe_pstate_actuate_step()
 
         //DDS \todo
 
-        //Write PMSR
-        pgpe_pstate_pmsr_updt();
-        pgpe_pstate_pmsr_write();
-
         //lower VDD, then lower VCS
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
                                   pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
@@ -204,14 +200,12 @@ void pgpe_pstate_actuate_step()
         //resclk\\todo
         //Multicast the resclk controller
         //wait for acks from all QME
-
-        //Write PMSR
-        pgpe_pstate_pmsr_updt();
-        pgpe_pstate_pmsr_write();
-
     }
 
     pgpe_pstate_update_vdd_vcs_ps();
+    pgpe_pstate_pmsr_updt();
+    pgpe_pstate_pmsr_write();
+
 }
 
 
