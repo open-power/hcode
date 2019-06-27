@@ -78,11 +78,13 @@ CORE-CPP-SOURCES  = p10_hcd_core_poweron.C \
                     p10_hcd_ncu_purge.C \
                     p10_hcd_l2_tlbie_quiesce.C 
 
+SCAN-CPP-SOURCES  = p10_qme_putringutils.C \
+                    p10_qme_ring_traverse.C
 #TODO p10_hcd_core_scominit.C
 
 IMG_OBJECTS    = $(IMG-C-SOURCES:.c=.o) $(IMG-S-SOURCES:.S=.o)
 QME_OBJECTS    = $(QME-CPP-SOURCES:.C=.o) $(QME-C-SOURCES:.c=.o) $(QME-S-SOURCES:.S=.o)
 STOP_OBJECTS   = $(STOP-CPP-SOURCES:.C=.o) $(STOP-C-SOURCES:.c=.o)
-HWP_OBJECTS    = $(CORECACHE-CPP-SOURCES:.C=.o) $(CACHE-CPP-SOURCES:.C=.o) $(CORE-CPP-SOURCES:.C=.o)
+HWP_OBJECTS    = $(CORECACHE-CPP-SOURCES:.C=.o) $(CACHE-CPP-SOURCES:.C=.o) $(CORE-CPP-SOURCES:.C=.o) $(SCAN-CPP-SOURCES:.C=.o)
 
 endif
