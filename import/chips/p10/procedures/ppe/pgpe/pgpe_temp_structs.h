@@ -108,7 +108,7 @@ typedef union dpll_freq
 } dpll_freq_t;
 
 
-typedef union pmsr_t
+typedef union pmsr
 {
     uint64_t value;
     struct
