@@ -112,7 +112,8 @@ void pgpe_process_pstate_start()
     PK_TRACE("PSS: PS Start");
     //Read DPLL frequency
     uint32_t sync_pstate;
-    uint32_t voltage, move_frequency, vcs_before_vdd = 0;
+    uint32_t voltage, vcs_before_vdd = 0;
+    int32_t move_frequency;
     dpll_stat_t dpll;
     PPE_GETSCOM(TPC_DPLL_STAT_REG, dpll.value);
 
@@ -278,8 +279,8 @@ void pgpe_process_clip_update(void* eargs)
 
     if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
-        pgpe_pstate_set(clip_min, args->ps_val_clip_min);
-        pgpe_pstate_set(clip_max, args->ps_val_clip_max);
+        pgpe_pstate_set(clip_min, args->ps_val_clip_max);
+        pgpe_pstate_set(clip_max, args->ps_val_clip_min);
 
         pgpe_pstate_compute();
         pgpe_pstate_apply_clips();
@@ -303,8 +304,8 @@ void pgpe_process_clip_update_w_ack(void* eargs)
 
     if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
-        pgpe_pstate_set(clip_min, args->ps_val_clip_min);
-        pgpe_pstate_set(clip_max, args->ps_val_clip_max);
+        pgpe_pstate_set(clip_min, args->ps_val_clip_max);
+        pgpe_pstate_set(clip_max, args->ps_val_clip_min);
 
         pgpe_pstate_compute();
         pgpe_pstate_apply_clips();
