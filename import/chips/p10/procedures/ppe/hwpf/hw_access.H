@@ -39,6 +39,7 @@
 
 #include <plat_hw_access.H>
 #include <fapi2_hw_access.H>
+#include <p10_qme_ring_traverse.H>
 
 namespace fapi2
 {
@@ -359,12 +360,10 @@ ReturnCode putRing(const Target<K, M, V>& i_target,
 {
     ReturnCode l_rc = FAPI2_RC_SUCCESS;
 
-    // Find the RS4 string in the SEEPROM
-    l_rc = findRS4InImageAndApply(i_target, i_ringID, i_ringMode);
+    l_rc = putringQme( i_target, i_ringID, i_ringMode );
 
     return l_rc;
 }
-
 // variable_buffer isn't supported on PPE
 #ifndef __PPE__
     ///
