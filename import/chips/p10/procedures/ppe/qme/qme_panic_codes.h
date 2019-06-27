@@ -42,8 +42,8 @@
 
 // The following are reserved for instance specific use.
 
-QME_MAIN_FAPI2_INIT_FAILED          = 0x1c00,
-QME_STOP_NO_PARTIAL_GOOD_CORE       = 0x1c01,
+QME_MAIN_FAPI2_INIT_FAILED              = 0x1c00,
+QME_STOP_NO_PARTIAL_GOOD_CORE           = 0x1c01,
 //QME_UIH_DISABLED_NOT_LAST_LVL       = 0x1c00,
 //QME_UIH_NOT_ALL_IN_PRTY_GROUP       = 0x1c01,
 //QME_UIH_EIMR_STACK_UNDERFLOW        = 0x1c02,
@@ -76,9 +76,9 @@ QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED  = 0x1d02,
 //QME_STOP_ENTRY_XSTOP_ERROR          = 0x1d09, // NDD1
 //QME_STOP_ENTRY_TRAP_INJECT          = 0x1d0a,
 //QME_STOP_ENTRY_HANDOFF_LESSTHAN5    = 0x1d0d,
-//_UNUSED_1d1c                      = 0x1d1c,
-//_UNUSED_1d1d                      = 0x1d1d,
-//_UNUSED_1d1e                      = 0x1d1e,
+QME_STOP_PUTRING_HEADER_ERROR         = 0x1d1c,
+QME_STOP_PUTRING_HEADER_MISMATCH      = 0x1d1d,
+QME_STOP_PUTRING_PARALLEL_SCAN_ERR    = 0x1d1e,
 //_UNUSED_1d1f                      = 0x1d1f,
 
 QME_STOP_ENTRY_STOPCLK_FAILED       = 0x1e00,
