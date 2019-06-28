@@ -24,7 +24,7 @@
 # IBM_PROLOG_END_TAG
 EXE = ipl_image_tool
 OBJS += $(EXE).o
-$(EXE)_DEPLIBS += p10_ipl_image common_ringId p10_tor p10_ringId p9_scan_compression p10_ddco
+$(EXE)_DEPLIBS += p10_ipl_image common_ringId p10_tor p10_ringId p10_scan_compression p10_ddco
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/utils/imageProcs)
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p10/utils/imageProcs)
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/common/utils/imageProcs)
