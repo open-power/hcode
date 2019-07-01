@@ -483,9 +483,10 @@ inline void p9_pgpe_process_start_stop()
     {
         PK_TRACE_DBG("START_STOP: Imm");
         args->msg_cb.rc = PGPE_RC_SUCCESS;
-        G_pgpe_optrace_data.word[0] = (START_STOP_IPC << 24) |
-                                      (G_pgpe_pstate_record.psComputed.fields.glb << 16) |
-                                      (in32(G_OCB_QCSR) >> 16);
+        G_pgpe_optrace_data.word[0] =   (args->pmcr_owner << 25 ) |
+                                        (PSTATE_START << 24) |
+                                        (G_pgpe_pstate_record.psCurr.fields.glb << 16) |
+                                        (in32(G_OCB_QCSR) >> 16);
         p9_pgpe_optrace(PRC_START_STOP);
 
     }
@@ -545,7 +546,7 @@ inline void p9_pgpe_process_start_stop()
                 }
 
                 G_pgpe_optrace_data.word[0] = (args->pmcr_owner << 25 ) |
-                                              (1 << 24) |
+                                              (PSTATE_START << 24) |
                                               (G_pgpe_pstate_record.psCurr.fields.glb << 16) |
                                               (in32(G_OCB_QCSR) >> 16);
                 p9_pgpe_optrace(PRC_START_STOP);
@@ -1045,7 +1046,6 @@ inline void p9_pgpe_process_set_pmcr_req()
     if(G_pgpe_header_data->g_pgpe_flags & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE)
     {
         PK_TRACE_DBG("PTH: Set PMCR Imme");
-        p9_pgpe_optrace(PRC_SET_PMCR);
         args->msg_cb.rc = PGPE_RC_SUCCESS;
         G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.psTarget.fields.quads[0] << 24) |
                                       (G_pgpe_pstate_record.psTarget.fields.quads[1] << 16) |
@@ -1185,8 +1185,9 @@ inline void p9_pgpe_process_registration()
             PK_TRACE_INF("PTH: Quad %d Registration Processing. qActive=0x%x cActive=0x%x", q, G_pgpe_pstate_record.activeQuads,
                          G_pgpe_pstate_record.activeDB);
 
-            G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.psCurr.fields.glb << 16)
-                                          | (in32(G_OCB_QCSR) >> 16);
+            G_pgpe_optrace_data.word[0] =   (G_pgpe_pstate_record.activeQuads << 24)
+                                            | (G_pgpe_pstate_record.psCurr.fields.glb << 16)
+                                            | (in32(G_OCB_QCSR) >> 16);
             p9_pgpe_optrace(PRC_PCB_T4);
         }
     }

@@ -1237,10 +1237,6 @@ void p9_pgpe_pstate_stop()
     out32(G_OCB_OCCS2, occScr2);
     G_pgpe_pstate_record.pstatesStatus = PSTATE_STOPPED;
 
-    G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.psComputed.fields.glb << 16)
-                                  | (in32(G_OCB_QCSR) >> 16);
-    p9_pgpe_optrace(PRC_START_STOP);
-
     PK_TRACE_DBG("PSS: Stop Done");
 }
 
@@ -1665,15 +1661,15 @@ void p9_pgpe_pstate_safe_mode()
     pgpe_db0_glb_bcast_t db0;
 
     // Generate OPTRACE Process Start
-    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.psComputed.fields.glb <<
+    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) | (G_pgpe_pstate_record.psCurr.fields.glb <<
                                   16)
                                   | (G_pgpe_pstate_record.safePstate << 8) |
-                                  G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_OCC] ? 0x20 : 0  |
-                                  G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_SGPE] ? 0x10 : 0 |
-                                  G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_CME] ? 0x08 : 0  |
-                                  G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_PVREF] ? 0x04 : 0 |
-                                  safemode ? 0x2 : 0 |
-                                  suspend ? 0x1 : 0;
+                                  G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_PVREF] ? 0x20 : 0 |
+                                  G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_CME] ? 0x10 : 0  |
+                                  G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_SGPE] ? 0x8 : 0 |
+                                  G_pgpe_pstate_record.severeFault[SAFE_MODE_FAULT_OCC] ? 0x4 : 0  |
+                                  suspend ? 0x2 : 0 |
+                                  safemode ? 0x1 : 0;
 
     p9_pgpe_optrace(PRC_SAFE_MODE);
 
@@ -1870,6 +1866,7 @@ void p9_pgpe_pstate_handle_pending_occ_ack_on_fault()
         args_wof_vfrt->msg_cb.rc = PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_WOF_VFRT].cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_WOF_VFRT);
     }
 }
 
@@ -1895,6 +1892,7 @@ void p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault()
         args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_QUADS_UPDT].cmd, IPC_RC_SUCCESS);
+        p9_pgpe_optrace(ACK_QUAD_ACTV);
     }
 
     //ACK back to SGPE with "IPC_SGPE_PGPE_RC_SUCCESS"
@@ -1916,6 +1914,7 @@ void p9_pgpe_pstate_handle_pending_sgpe_ack_on_fault()
         G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].pending_ack = 0;
         ipc_send_rsp(G_pgpe_pstate_record.ipcPendTbl[IPC_PEND_SGPE_ACTIVE_CORES_UPDT].cmd, IPC_RC_SUCCESS);
         args->fields.return_code = IPC_SGPE_PGPE_RC_SUCCESS;
+        p9_pgpe_optrace(ACK_CORES_ACTV);
     }
 
 }
@@ -2527,8 +2526,8 @@ inline void p9_pgpe_droop_unthrottle()
     //5.  Write PK Trace and Optrace record that the Prolonged Throttle workaround was removed,
     //including the Total Retry Count and the most recent bit vector of Quads that provided the NACK(s) .
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.quadsNACKed << 24)  |
-                                  (G_pgpe_pstate_record.activeCores);
-    G_pgpe_optrace_data.word[0] = G_pgpe_pstate_record.cntNACKs;
+                                  (G_pgpe_pstate_record.activeCores >> 8);
+    G_pgpe_optrace_data.word[1] = G_pgpe_pstate_record.cntNACKs;
     p9_pgpe_optrace(PROLONGED_DROOP_RESOLVED);
 
     PK_TRACE_INF("DTH: Droop Unthrottle Done");

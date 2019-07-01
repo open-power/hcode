@@ -76,8 +76,10 @@ void p9_pgpe_thread_actuate_pstates(void* arg)
         //Mask all external interrupts. Timers are still enabled
         pk_irq_sub_critical_enter(&ctx);
         p9_pgpe_pstate_start(PSTATE_START_OCC_FLAG);
-        G_pgpe_optrace_data.word[0] = (START_STOP_FLAG << 24) | (G_pgpe_pstate_record.psComputed.fields.glb << 16) | (in32(
-                                          G_OCB_QCSR) >> 16);
+        G_pgpe_optrace_data.word[0] =   (G_pgpe_pstate_record.pmcrOwner << 25) |
+                                        (PSTATE_START << 24) |
+                                        (G_pgpe_pstate_record.psCurr.fields.glb << 16) |
+                                        (in32(G_OCB_QCSR) >> 16);
         p9_pgpe_optrace(PRC_START_STOP);
         pk_irq_sub_critical_exit(&ctx);
     }

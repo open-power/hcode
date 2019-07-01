@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -74,7 +74,7 @@ void p9_pgpe_optrace(uint32_t mark)
         if(G_lastDisable) //Place start trace mark at when first enabled
         {
             G_lastDisable = 0;
-            p9_pgpe_optrace(ACK_START_TRACE);
+            p9_pgpe_optrace(ACK_START_TRACE); //Note, recursive function call
         }
 
         uint32_t word_count = ((mark >> 4) & 0x3) + 1;

@@ -160,7 +160,7 @@ void p9_pgpe_irq_handler_ocb_err()
     {
 
         G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
-                                      (G_pgpe_pstate_record.activeCores << 8);
+                                      (G_pgpe_pstate_record.activeCores >> 8);
         G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
                                       (G_pgpe_pstate_record.extVrmCurr << 8) |
                                       PGPE_OP_TRACE_OCC_HB_FAULT;
@@ -200,12 +200,13 @@ void p9_pgpe_irq_handler_sgpe_err()
     out32(G_OCB_OISR0_CLR, BIT32(8));
 
     //Optrace
-    G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
-                                  (G_pgpe_pstate_record.activeCores << 8);
-    G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
-                                  (G_pgpe_pstate_record.extVrmCurr << 8) |
-                                  PGPE_OP_TRACE_SGPE_FAULT;
+    G_pgpe_optrace_data.word[0] =   (G_pgpe_pstate_record.activeQuads << 24) |
+                                    (G_pgpe_pstate_record.activeCores >> 8);
+    G_pgpe_optrace_data.word[1] =   (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
+                                    (G_pgpe_pstate_record.extVrmCurr << 8) |
+                                    PGPE_OP_TRACE_SGPE_FAULT;
     p9_pgpe_optrace(SEVERE_FAULT_DETECTED);
+
 
     //HALT if DEBUG_HALT is set
     PGPE_OPTIONAL_TRACE_AND_PANIC(PGPE_GPE3_ERROR);
@@ -241,7 +242,7 @@ void p9_pgpe_irq_handler_pvref_err()
 
     //Optrace
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
-                                  (G_pgpe_pstate_record.activeCores << 8);
+                                  (G_pgpe_pstate_record.activeCores >> 8);
     G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
                                   (G_pgpe_pstate_record.extVrmCurr << 8) |
                                   PGPE_OP_TRACE_PVREF_FAULT;
@@ -286,7 +287,7 @@ void p9_pgpe_irq_handler_system_xstop(void* arg, PkIrqId irq)
 
     //Optrace
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
-                                  (G_pgpe_pstate_record.activeCores << 8);
+                                  (G_pgpe_pstate_record.activeCores >> 8);
     G_pgpe_optrace_data.word[1] = (G_pgpe_pstate_record.psCurr.fields.glb << 24) |
                                   (G_pgpe_pstate_record.extVrmCurr << 8) |
                                   PGPE_OP_TRACE_SYS_XSTOP;

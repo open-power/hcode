@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -28,12 +28,12 @@
 
 enum PGPE_OP_TRACE_ENCODES
 {
-    START_STOP_IPC    =   0,
-    START_STOP_FLAG   =   1,
+    PSTATE_STOP     =   0,
+    PSTATE_START    =   1,
 
     //Without Timestamps
-    WOF_CALC_DONE     =  0x11,
     AUCTION_DONE      =  0x10,
+    WOF_CALC_DONE     =  0x11,
     FIT_TB_RESYNC     =  0x02,
 
     //ACKs
@@ -68,14 +68,18 @@ enum PGPE_OP_TRACE_ENCODES
     PRC_CORES_ACTV    =  0x5A,
     PRC_QUAD_ACTV     =  0x5B,
     FIT_TB_SYNC       =  0x5C,
-    SEVERE_FAULT_DETECTED   =  0x5D,
-    SYSTEM_XSTOP      =  0x4D,
+    SEVERE_FAULT_DETECTED   =  0x6D,
     PRC_PM_SUSP       =  0x4E,
-    PRC_SAFE_MODE     =  0x4F,
+    PRC_SAFE_MODE     =  0x5F,
 
     //Debug Markers
     PROLONGED_DROOP_EVENT       = 0x9E,
-    PROLONGED_DROOP_RESOLVED    = 0xAF
+    PROLONGED_DROOP_RESOLVED    = 0xAF,
+
+    //PMCR OWNER
+    OP_PMCR_HOST       = 0x0,
+    OP_PMCR_OCC        = 0x1,
+    OP_PMCR_CHAR       = 0x2,
 };
 
 enum PGPE_OP_TRACE_SEVERE_FAULTS
