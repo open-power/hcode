@@ -27,10 +27,12 @@
 #ifndef __PPE_EQ_REG00004_H_
 #define __PPE_EQ_REG00004_H_
 
+#ifndef __PPE_HCODE__
 namespace scomt
 {
 namespace ppe_eq
 {
+#endif
 
 
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
@@ -1175,7 +1177,9 @@ fapi_try_exit:
 }
 
 
+#ifndef __PPE_HCODE__
 }
 }
 
+#endif
 #endif

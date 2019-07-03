@@ -27,14 +27,18 @@
 #ifndef __PPE_C_REG00010_H_
 #define __PPE_C_REG00010_H_
 
+#ifndef __PPE_HCODE__
 namespace scomt
 {
 namespace ppe_c
 {
+#endif
 
 
 
+#ifndef __PPE_HCODE__
 }
 }
 
+#endif
 #endif

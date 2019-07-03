@@ -31,10 +31,12 @@
 #define __p10_ppe_c_2_H_
 
 
+#ifndef __PPE_HCODE__
 namespace scomt
 {
 namespace ppe_c
 {
+#endif
 
 
 static const uint32_t CPMS_DTIR = 0xc000e800ull;
@@ -89,9 +91,9 @@ static const uint32_t CPMS_FMMR_OVERRIDE_VECTOR_LIMIT = 61;
 static const uint32_t CPMS_FMMR_OVERRIDE_VECTOR_LIMIT_LEN = 3;
 // ppe_c/reg00002.H
 
-}
-}
 #ifndef __PPE_HCODE__
-    #include "ppe_c/reg00002.H"
+}
+}
+#include "ppe_c/reg00002.H"
 #endif
 #endif

@@ -31,15 +31,17 @@
 #define __p10_ppe_c_a_H_
 
 
+#ifndef __PPE_HCODE__
 namespace scomt
 {
 namespace ppe_c
 {
+#endif
 
 
-}
-}
 #ifndef __PPE_HCODE__
-    #include "ppe_c/reg00010.H"
+}
+}
+#include "ppe_c/reg00010.H"
 #endif
 #endif
