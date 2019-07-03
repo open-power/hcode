@@ -91,8 +91,11 @@ qme_parse_pm_state_active_fast()
     uint32_t c_start  = 0;
     uint32_t c_index  = 0;
 
-    G_qme_record.c_pm_state_active_fast_req =
-        ( in32_sh(QME_LCL_EISR) & BITS64SH(48, 4) ) >> SHIFT64SH(51);
+    G_qme_record.c_pm_state_active_fast_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(48, 4) );
+#ifdef QME_EDGE_TRIGGER_INTERRUPT
+    out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_pm_state_active_fast_req);
+#endif
+    G_qme_record.c_pm_state_active_fast_req = G_qme_record.c_pm_state_active_fast_req >> SHIFT64SH(51);
 
     PK_TRACE_INF("Parse: PM State Active Fast on Cores[%x], Cores in STOP2+[%x], Partial Good Cores[%x], Block Entry on Cores[%x]",
                  G_qme_record.c_pm_state_active_fast_req,
@@ -180,8 +183,11 @@ qme_parse_pm_state_active_fast()
 void
 qme_parse_regular_wakeup_fast()
 {
-    G_qme_record.c_regular_wakeup_fast_req =
-        ( in32_sh(QME_LCL_EISR) & BITS64SH(40, 4) ) >> SHIFT64SH(43);
+    G_qme_record.c_regular_wakeup_fast_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(40, 4) );
+#ifdef QME_EDGE_TRIGGER_INTERRUPT
+    out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_regular_wakeup_fast_req);
+#endif
+    G_qme_record.c_regular_wakeup_fast_req = G_qme_record.c_regular_wakeup_fast_req >> SHIFT64SH(43);
 
     uint32_t c_mask = G_qme_record.c_regular_wakeup_fast_req &
                       G_qme_record.c_configured &
@@ -203,8 +209,11 @@ qme_parse_regular_wakeup_fast()
 void
 qme_parse_special_wakeup_rise()
 {
-    G_qme_record.c_special_wakeup_rise_req =
-        ( in32_sh(QME_LCL_EISR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
+    G_qme_record.c_special_wakeup_rise_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(32, 4) );
+#ifdef QME_EDGE_TRIGGER_INTERRUPT
+    out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_special_wakeup_rise_req);
+#endif
+    G_qme_record.c_special_wakeup_rise_req = G_qme_record.c_special_wakeup_rise_req >> SHIFT64SH(35);
 
     uint32_t c_mask = G_qme_record.c_special_wakeup_rise_req &
                       G_qme_record.c_configured;
@@ -252,15 +261,17 @@ qme_parse_special_wakeup_rise()
 void
 qme_parse_special_wakeup_fall()
 {
-    G_qme_record.c_special_wakeup_fall_req =
-        ( in32_sh(QME_LCL_EISR) & BITS64SH(36, 4) ) >> SHIFT64SH(39);
+    G_qme_record.c_special_wakeup_fall_req =  ( in32_sh(QME_LCL_EISR) & BITS64SH(36, 4) );
+#ifdef QME_EDGE_TRIGGER_INTERRUPT
+    out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_special_wakeup_fall_req);
+#endif
+    G_qme_record.c_special_wakeup_fall_req = G_qme_record.c_special_wakeup_fall_req >> SHIFT64SH(39);
 
     PK_TRACE_INF("Parse: Special Wakeup Fall on Cores[%x], Cores in STOP2+[%x], Partial Good Cores[%x], Block Entry on Cores[%x]",
                  G_qme_record.c_special_wakeup_fall_req,
                  G_qme_record.c_stop2_reached,
                  G_qme_record.c_configured,
                  G_qme_record.c_block_stop_done);
-
 
     uint32_t c_mask = G_qme_record.c_special_wakeup_fall_req &
                       G_qme_record.c_configured;
@@ -459,8 +470,11 @@ qme_parse_pm_state_active_slow()
     uint32_t t_offset = 0;
     uint32_t pscrs    = 0;
 
-    G_qme_record.c_pm_state_active_slow_req =
-        ( in32_sh(QME_LCL_EISR) & BITS64SH(52, 4) ) >> SHIFT64SH(55);
+    G_qme_record.c_pm_state_active_slow_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(52, 4) );
+#ifdef QME_EDGE_TRIGGER_INTERRUPT
+    out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_pm_state_active_slow_req);
+#endif
+    G_qme_record.c_pm_state_active_slow_req = G_qme_record.c_pm_state_active_slow_req >> SHIFT64SH(55);
 
     PK_TRACE_INF("Parse: PM State Active Slow on Cores[%x], Cores in STOP2+[%x], Partial Good Cores[%x], Block Entry on Cores[%x]",
                  G_qme_record.c_pm_state_active_slow_req,
@@ -524,8 +538,11 @@ qme_parse_pm_state_active_slow()
 void
 qme_parse_regular_wakeup_slow()
 {
-    G_qme_record.c_regular_wakeup_slow_req =
-        ( in32_sh(QME_LCL_EISR) & BITS64SH(44, 4) ) >> SHIFT64SH(47);
+    G_qme_record.c_regular_wakeup_slow_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(44, 4) );
+#ifdef QME_EDGE_TRIGGER_INTERRUPT
+    out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_regular_wakeup_slow_req);
+#endif
+    G_qme_record.c_regular_wakeup_slow_req = G_qme_record.c_regular_wakeup_slow_req >> SHIFT64SH(47);
 
     uint32_t c_mask = G_qme_record.c_regular_wakeup_slow_req &
                       G_qme_record.c_configured &
