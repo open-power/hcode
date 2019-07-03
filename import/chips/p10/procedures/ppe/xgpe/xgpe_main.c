@@ -23,7 +23,15 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "xgpe.h"
+#include "ocb_register_addresses.h"
 
+uint32_t G_OCB_OIMR0_CLR = OCB_OIMR0_CLR;
+uint32_t G_OCB_OIMR1_CLR = OCB_OIMR1_CLR;
+uint32_t G_OCB_OIMR0_OR = OCB_OIMR0_OR;
+uint32_t G_OCB_OIMR1_OR = OCB_OIMR1_OR;
+uint32_t G_OCB_OCCFLG3  =  OCB_OCCFLG3;
+uint32_t G_OCB_OCCFLG3_OR =  OCB_OCCFLG3_OR;
+uint32_t G_OCB_OCCFLG3_CLR =  OCB_OCCFLG3_CLR;
 
 
 int main()
@@ -31,6 +39,8 @@ int main()
     PK_TRACE("XGPE Booted");
 
     xgpe_init();
+
+    xgpe_header_init ();
 
     iota_run();
     return 0;
@@ -42,7 +52,7 @@ int main()
 void xgpe_init()
 {
     //Bit 16 in OCCFLG3 indicates XGPE active
-    out32(G_OCB_OCCFLG3, 0x00008000);
+    out32(G_OCB_OCCFLG3, BIT32(XGPE_ACTIVE));
 
     IOTA_FIT_HANDLER(xgpe_irq_fit_handler);
 }

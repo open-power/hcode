@@ -31,11 +31,12 @@
 #include "ipc_api.h"
 #include "ipc_async_cmd.h"
 #include "p10_pm_hcd_flags.h"
+#include "p10_hcd_common.H"
 #include "gpehw_common.h"
 #include "ppe42_scom.h"
+#include "xgpe_header.h"
 
 
-#define G_OCB_OCCFLG3               0xC00605A8
 
 
 /// ----------------------------------------------
@@ -51,4 +52,11 @@ void xgpe_init();
 /// @return none
 /// ---------------------------------------------
 void xgpe_irq_fit_handler();
+
+/// ----------------------------------------------
+/// @brief Handle PM suspend request during mpipl
+/// @return none
+/// ---------------------------------------------
+void handle_pm_suspend();
+
 #endif //
