@@ -85,7 +85,7 @@ qme_core_report_pls_srr1(uint32_t core_targets)
 
         for( pls_end  = 3, srr1_end = 17,
              t_offset = 0; t_offset < 16; t_offset += 4,
-             pls_end += 4, srr1_end += 4 )
+             pls_end += 4, srr1_end += 2 )
         {
             old_pls = ( in64(QME_LCL_PLSR) >> SHIFT64( (t_end + t_offset) ) ) & 0xF;
             new_pls = ( act_stop_level > old_pls ) ? (act_stop_level) : (old_pls);
@@ -123,7 +123,7 @@ qme_core_report_pls_srr1(uint32_t core_targets)
 
 
 void
-qme_core_handoff_pc(uint32_t core_targets, uint32_t core_spwu)
+qme_core_handoff_pc(uint32_t core_targets, uint32_t& core_spwu)
 {
     PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_targets ), BIT32(1) );
@@ -172,6 +172,8 @@ qme_core_handoff_pc(uint32_t core_targets, uint32_t core_spwu)
         PK_TRACE_INF("SX.0B: Cores[%x] Drop PM_EXIT via PCR_SCSR[1]", core_targets);
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_targets ), BIT32(1) );
     }
+
+    core_spwu = 0;
 }
 
 
@@ -213,7 +215,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_SKEWADJUST )
 
-        //TODO Drop S Only//p10_hcd_core_startgrid(core_target);
+        //EPM FIXME TODO p10_hcd_core_startgrid(core_target);
 
         //===============//
 

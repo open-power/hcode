@@ -65,12 +65,13 @@
 #define PLAT_FAPI_ASSERT( __conditional__, __ffdc__, ... )      \
     if (! (__conditional__))                                    \
     {                                                           \
-        FAPI_ERR(__VA_ARGS__);                                  \
-        goto fapi_try_exit;                                     \
+        FAPI_ERR(__VA_ARGS__);while(1){};                       \
     }
 
 //        (__ffdc__).execute();
-
+//        goto fapi_try_exit;
+//
+//
 ///
 /// @brief Create an error log based on __conditional__,
 /// the FFDC gathering function is called and the

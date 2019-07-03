@@ -87,6 +87,7 @@ qme_init()
     G_qme_record.c_stop3_reached  = 0;
     G_qme_record.c_stop5_reached  = 0;
     G_qme_record.c_stop11_reached = 0;
+    out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, G_qme_record.c_configured ), 0 );
 #endif
 
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
@@ -160,5 +161,9 @@ qme_init()
 #endif
 
     PK_TRACE_DBG("Setup: Unmask STOP Interrupts Now with Reversing Initial Mask[%x]", G_qme_record.c_all_stop_mask);
+#ifdef QME_EDGE_TRIGGER_INTERRUPT
+    out32_sh( QME_LCL_EITR_OR,  0xFFFFFF00 );
+    out32_sh( QME_LCL_EISR_CLR, 0xFFFFFF00 );
+#endif
     out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
 }

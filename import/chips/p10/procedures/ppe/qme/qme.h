@@ -74,7 +74,8 @@ enum STOP_STATE_HISTORY_VECTORS
     SSH_EXIT_COMPLETE    = 0,
     SSH_EXIT_IN_SESSION  = (SSH_STOP_GATED  | SSH_TRANS_EXIT),
     SSH_ACT_LEVEL_UPDATE = (SSH_STOP_GATED  | SSH_ACT_ENABLE),
-    SSH_REQ_LEVEL_UPDATE = (SSH_TRANS_ENTRY | SSH_REQ_ENABLE),
+    SSH_REQ_LEVEL_UPDATE = (SSH_TRANS_ENTRY | SSH_REQ_ENABLE |
+                            SSH_ACT_ENABLE | BIT32(7)), // Update actual = 1
 
     SSH_REQ_LV2_UPDATE   = (SSH_REQ_LEVEL_UPDATE | BIT32(6)),
     SSH_ACT_LV2_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(10)),
@@ -279,7 +280,11 @@ void qme_send_pig_packet(uint32_t);
 void qme_stop_entry();
 void qme_stop_exit();
 void qme_parse_pm_state_active_fast();
-void qme_core_handoff_pc(uint32_t, uint32_t);
+#ifdef __cplusplus
+//only C++ supports passing by reference
+void qme_core_handoff_pc(uint32_t, uint32_t&);
+void qme_core_report_pls_srr1(uint32_t);
+#endif
 
 // QME Interrupt Events Handling
 void qme_top_priority_event();
