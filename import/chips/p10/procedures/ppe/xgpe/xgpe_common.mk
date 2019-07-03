@@ -72,6 +72,7 @@ PPE_SRCDIR=$(ROOTPATH)/chips/p10/common/ppe
 IOTA_SRCDIR=$(PPE_SRCDIR)/iota
 TRACE_SRCDIR=$(PPE_SRCDIR)/ppetrace
 HWP_SRCDIR=$(ROOTPATH)/chips/p10/procedures/hwp/
+REG_SRCDIR=$(ROOTPATH)/chips/p10/common/pmlib/include/registers
 
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(IOTA_SRCDIR))
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/boltonlib/$(_PPE_TYPE))
@@ -79,6 +80,7 @@ $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/ppetrace)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(OCC_SRCDIR)/occlib)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/baselib)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(TRACE_SRCDIR))
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(REG_SRCDIR))
 
 include $(XGPE_SRCDIR)/xgpe_files.mk
 
@@ -89,8 +91,9 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE), \
 	$(IOTA_SRCDIR) \
 	$(PPE_SRCDIR)/varietylib/$(_PPE_TYPE) \
 	$(PPE_SRCDIR)/ppetrace \
-	$(OCC_SRCDIR)/commonlib/include \
+	$(REG_SRCDIR)/ \
 	$(OCC_SRCDIR)/commonlib \
+	$(OCC_SRCDIR)/commonlib/include \
 	$(PPE_SRCDIR)/commonlib \
 	$(PPE_SRCDIR)/powmanlib \
 	$(PMLIB_INCDIR)/registers \
