@@ -180,7 +180,7 @@ qme_ncu_purge_abort_detect()
 }
 
 void
-qme_stop2_abort_cleanup(uint32_t abort_targets)
+qme_stop2_abort_cleanup(uint32_t& abort_targets)
 {
     //To avoid incurring the latency of shifting the Timefac back into the core,
     //on stop aborts that happen before clocking off the core, following is applied
@@ -192,11 +192,13 @@ qme_stop2_abort_cleanup(uint32_t abort_targets)
     out32_sh( QME_LCL_CORE_ADDR_WR( QME_TFCSR_WO_CLEAR, abort_targets ), BIT64SH(32) );
 
     PK_TRACE("Reset the core timefac to INACTIVE via PC.COMMON.TFX[0]");
-    PPE_PUTSCOM_MC( EC_PC_TFX_SM, abort_targets, BIT64(0) );
+    //EPM TODO FIXME PPE_PUTSCOM_MC( EC_PC_TFX_SM, abort_targets, BIT64(0) );
 
     //===============//
 
     MARK_TAG(abort_targets, SX_CORE_HANDOFF_PC);
+
+    qme_core_report_pls_srr1(abort_targets);
 
     qme_core_handoff_pc(abort_targets,
                         G_qme_record.c_special_wakeup_abort_pending);
@@ -208,6 +210,7 @@ qme_stop2_abort_cleanup(uint32_t abort_targets)
     G_qme_record.c_stop2_enter_targets &= (~abort_targets);
     G_qme_record.c_stop3_enter_targets &= (~abort_targets);
     G_qme_record.c_stop5_enter_targets &= (~abort_targets);
+    abort_targets = 0;
 }
 
 
@@ -250,7 +253,6 @@ qme_stop_entry()
                    ( BIT32(4) | BIT32(22) ) );
 
             qme_stop2_abort_cleanup(G_qme_record.c_l2_purge_abort_targets);
-
         }
 
         //===============//
@@ -322,7 +324,7 @@ qme_stop_entry()
 
         MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_CORE_STOPGRID )
 
-        //TODO Drop S Only//p10_hcd_core_stopgrid(core_target);
+        //EPM TODO FIXME p10_hcd_core_stopgrid(core_target);
 
         //===============//
 
