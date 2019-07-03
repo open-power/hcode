@@ -25,7 +25,6 @@
 #include "iota.h"
 #include "iota_trace.h"
 #include "xgpe_irq.h"
-#include "ocb_register_addresses.h"
 
 uint8_t   g_oimr_stack[IOTA_NUM_EXT_IRQ_PRIORITIES];
 int       g_oimr_stack_ctr = -1;
@@ -33,10 +32,10 @@ int       g_current_prty_level = IOTA_NUM_EXT_IRQ_PRIORITIES - 1;
 uint64_t  g_oimr_override = 0x0000000000000000ull;
 uint64_t  g_oimr_override_stack[IOTA_NUM_EXT_IRQ_PRIORITIES];
 
-uint32_t G_OCB_OIMR0_CLR = OCB_OIMR0_CLR;
-uint32_t G_OCB_OIMR1_CLR = OCB_OIMR1_CLR;
-uint32_t G_OCB_OIMR0_OR = OCB_OIMR0_OR;
-uint32_t G_OCB_OIMR1_OR = OCB_OIMR1_OR;
+extern uint32_t G_OCB_OIMR0_CLR;
+extern uint32_t G_OCB_OIMR1_CLR;
+extern uint32_t G_OCB_OIMR0_OR;
+extern uint32_t G_OCB_OIMR1_OR;
 
 uint32_t __ext_irq_handler(void)
 {
