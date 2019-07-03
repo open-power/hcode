@@ -31,10 +31,12 @@
 #define __p10_oci_proc_0_H_
 
 
+#ifndef __PPE_HCODE__
 namespace scomt
 {
 namespace oci_proc
 {
+#endif
 
 
 static const uint32_t TP_TPBR_PBA_PBAO_PBAOCR1 = 0xc00400d8ull;
@@ -429,10 +431,10 @@ static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICDCM1_OCB_OCI_WOFICDCM1_DCM_MESS
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_WOFICDCM1_OCB_OCI_WOFICDCM1_DCM_MESSAGE_LEN = 64;
 // oci_proc/reg00001.H
 
-}
-}
 #ifndef __PPE_HCODE__
-    #include "oci_proc/reg00000.H"
-    #include "oci_proc/reg00001.H"
+}
+}
+#include "oci_proc/reg00000.H"
+#include "oci_proc/reg00001.H"
 #endif
 #endif

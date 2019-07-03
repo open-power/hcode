@@ -31,10 +31,12 @@
 #define __p10_oci_proc_7_H_
 
 
+#ifndef __PPE_HCODE__
 namespace scomt
 {
 namespace oci_proc
 {
+#endif
 
 
 static const uint32_t TP_TPBR_PBA_PBAO_BCDE_PBADR = 0xc0040098ull;
@@ -396,9 +398,9 @@ static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SRCHSW_SO_SPARE = 8;
 static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SRCHSW_SO_SPARE_LEN = 2;
 // oci_proc/reg00010.H
 
-}
-}
 #ifndef __PPE_HCODE__
-    #include "oci_proc/reg00010.H"
+}
+}
+#include "oci_proc/reg00010.H"
 #endif
 #endif

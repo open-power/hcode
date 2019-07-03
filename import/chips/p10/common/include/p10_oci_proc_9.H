@@ -31,10 +31,12 @@
 #define __p10_oci_proc_9_H_
 
 
+#ifndef __PPE_HCODE__
 namespace scomt
 {
 namespace oci_proc
 {
+#endif
 
 
 static const uint32_t TP_TPCHIP_OCC_OCI_GPE0_OCB_GPESWPR0 = 0xc0000028ull;
@@ -384,9 +386,9 @@ static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SRBV2_SRAM_SRBV2_BOOT_VECTOR_WORD2 
 static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SRBV2_SRAM_SRBV2_BOOT_VECTOR_WORD2_LEN = 32;
 // oci_proc/reg00012.H
 
-}
-}
 #ifndef __PPE_HCODE__
-    #include "oci_proc/reg00012.H"
+}
+}
+#include "oci_proc/reg00012.H"
 #endif
 #endif

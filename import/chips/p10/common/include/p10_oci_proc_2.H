@@ -31,10 +31,12 @@
 #define __p10_oci_proc_2_H_
 
 
+#ifndef __PPE_HCODE__
 namespace scomt
 {
 namespace oci_proc
 {
+#endif
 
 
 static const uint32_t TP_TPBR_PBA_PBAO_BCUE_PBADR = 0xc00400c0ull;
@@ -456,10 +458,10 @@ static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SREAR_SRAM_SREAR_ERROR_ADDRESS = 0;
 static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SREAR_SRAM_SREAR_ERROR_ADDRESS_LEN = 17;
 // oci_proc/reg00004.H
 
-}
-}
 #ifndef __PPE_HCODE__
-    #include "oci_proc/reg00003.H"
-    #include "oci_proc/reg00004.H"
+}
+}
+#include "oci_proc/reg00003.H"
+#include "oci_proc/reg00004.H"
 #endif
 #endif

@@ -31,10 +31,12 @@
 #define __p10_oci_proc_6_H_
 
 
+#ifndef __PPE_HCODE__
 namespace scomt
 {
 namespace oci_proc
 {
+#endif
 
 
 static const uint32_t TP_TPBR_PBA_PBAO_BCDE_OCIBAR = 0xc00400a0ull;
@@ -455,10 +457,10 @@ static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SRMAP_DEST = 16;
 static const uint32_t TP_TPCHIP_OCC_SRAM_CTL_SRMAP_DEST_LEN = 14;
 // oci_proc/reg00009.H
 
-}
-}
 #ifndef __PPE_HCODE__
-    #include "oci_proc/reg00008.H"
-    #include "oci_proc/reg00009.H"
+}
+}
+#include "oci_proc/reg00008.H"
+#include "oci_proc/reg00009.H"
 #endif
 #endif
