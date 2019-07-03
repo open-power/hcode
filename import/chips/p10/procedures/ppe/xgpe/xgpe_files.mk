@@ -28,6 +28,7 @@ XGPE-C-SOURCES = xgpe_main.c \
 				xgpe_uih.c \
 				xgpe_irq_handlers.c \
 				xgpe_irq_handlers_fit.c \
+				xgpe_header.c         \
 
 XGPE_OBJECTS = $(XGPE-C-SOURCES:.c=.o) 
 endif
