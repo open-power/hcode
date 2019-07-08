@@ -26,6 +26,9 @@
 #include "pgpe_dds.h"
 #include "pgpe_pstate.h"
 #include "pgpe_gppb.h"
+#include "p10_scom_eq.H"
+#include "p10_scom_c.H"
+#include "p10_oci_proc.H"
 
 
 //Local Function Prototypes
@@ -52,7 +55,7 @@ void pgpe_dds_update(uint32_t pstate)
     uint32_t cfg_cnt;
     uint32_t ccsr;
 
-    ccsr = in32(OCB_OCI_CCSR);
+    ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
     for (q = 0; q < MAX_QUADS; q++)
     {

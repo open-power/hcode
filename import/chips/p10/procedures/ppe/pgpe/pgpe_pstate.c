@@ -28,6 +28,8 @@
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_dpll.h"
 #include "pgpe_dds.h"
+#include "p10_scom_c_1.H"
+#include "p10_oci_proc.H"
 
 //
 //Local function prototypes
@@ -54,7 +56,7 @@ void pgpe_pstate_init()
     G_pgpe_pstate.wov_status = WOV_STATUS_DISABLED;
     G_pgpe_pstate.pmcr_owner = 0xFFFFFFFF;
 
-    ccsr = in32(OCB_OCI_CCSR);
+    ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
     G_pgpe_pstate.sort_core_count = 0;
 
     for (c = 0; c < MAX_CORES; c++)
@@ -272,11 +274,11 @@ void pgpe_pstate_compute_vratio(uint32_t pstate, uint32_t idd)
     //Read PCB Type A1(Core Vmin)
     //Read PCB Type A2(MMA Off)
     //Read PCB Type A3(L3 Off)
-    opitasv0 = in32(OCB_OCI_OPITASV0);
-    opitasv1 = in32(OCB_OCI_OPITASV1);
-    opitasv2 = in32(OCB_OCI_OPITASV2);
+    opitasv0 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV0);
+    opitasv1 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV1);
+    opitasv2 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV2);
     //opitasv3 = in32(OCB_OCI_OPITASV3);
-    ccsr = in32(OCB_OCI_CCSR);
+    ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
     //\todo
     //read vmin
