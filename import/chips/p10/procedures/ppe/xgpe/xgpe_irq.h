@@ -32,20 +32,23 @@
 #define IRQ_VEC_PRTY1_GPE 0x0001000000000000ull
 // Group2: IPC(IPI3)
 #define IRQ_VEC_PRTY2_GPE 0x0040000000000000ull
-// Group3: PCB type F
-#define IRQ_VEC_PRTY3_GPE 0x0000000100000000ull
-// Group4: Other Engines IRQs
+// Group3: Direct GPE3 function trigger
+#define IRQ_VEC_PRTY3_GPE 0x0010000000000000ull
+// Group4: PCB type F
+#define IRQ_VEC_PRTY4_GPE 0x0000000100000000ull
+// Group5: Other Engines IRQs
 #ifdef _XGPE_STANDALONE_
-    #define IRQ_VEC_PRTY4_GPE 0xDBBEFFFEFFFFFFFFull
+    #define IRQ_VEC_PRTY5_GPE 0xDBAEFFFEFFFFFFFFull
 #else
-    #define IRQ_VEC_PRTY4_GPE 0x0000000000000000ull
+    #define IRQ_VEC_PRTY5_GPE 0x0000000000000000ull
 #endif
 
 #define IRQ_VEC_ALL_OUR_IRQS (IRQ_VEC_PRTY0_GPE | \
                               IRQ_VEC_PRTY1_GPE | \
                               IRQ_VEC_PRTY2_GPE | \
                               IRQ_VEC_PRTY3_GPE | \
-                              IRQ_VEC_PRTY4_GPE)
+                              IRQ_VEC_PRTY4_GPE | \
+                              IRQ_VEC_PRTY5_GPE)
 
 #define IDX_PRTY_VEC 0
 #define IDX_MASK_VEC 1
@@ -54,3 +57,4 @@ extern uint32_t G_OCB_OIMR0_CLR;
 extern uint32_t G_OCB_OIMR1_CLR;
 extern uint32_t G_OCB_OIMR0_OR;
 extern uint32_t G_OCB_OIMR1_OR;
+extern uint32_t G_OCB_OPITFSV;
