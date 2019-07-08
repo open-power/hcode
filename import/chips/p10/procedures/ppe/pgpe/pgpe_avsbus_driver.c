@@ -25,6 +25,7 @@
 
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_gppb.h"
+#include "p10_oci_proc.H"
 
 //Local Functions
 uint32_t pgpe_avsbus_calc_crc(uint32_t data);
@@ -78,7 +79,7 @@ uint32_t pgpe_avsbus_poll_trans_done(uint32_t bus_num)
     //PK_TRACE_INF("PV:OCB_O2SST0A =0x%x",OCB_O2SST0A | BusMask);
     while (ongoing || (count <= MAX_POLL_COUNT_AVS))
     {
-        ocb_o2sst0a = in32(OCB_O2SST0A | bus_mask);
+        ocb_o2sst0a = in32(TP_TPCHIP_OCC_OCI_OCB_O2SST0A | bus_mask);
         ocb_o2sst0a = ocb_o2sst0a & 0x80000000;
 
         if (!ocb_o2sst0a )
@@ -111,10 +112,10 @@ uint32_t pgpe_avsbus_drive_idle_frame(uint32_t bus_num)
     uint32_t bus_mask = bus_num << O2S_BUSNUM_OFFSET_SHIFT;
 
     // Clear sticky bits in o2s_status_reg
-    out32(OCB_O2SCMD0A | bus_mask, 0x40000000);
+    out32(TP_TPCHIP_OCC_OCI_OCB_O2SCMD0A | bus_mask, 0x40000000);
 
     // Compose and send frame
-    out32(OCB_O2SWD0A | bus_mask, idleframe);
+    out32(TP_TPCHIP_OCC_OCI_OCB_O2SWD0A  | bus_mask, idleframe);
 
     // Wait on o2s_ongoing = 0
     rc = pgpe_avsbus_poll_trans_done(bus_num);
@@ -140,7 +141,7 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
 
 
     // Clear sticky bits in o2s_status_reg
-    out32(OCB_O2SCMD0A | bus_mask, 0x40000000);
+    out32(TP_TPCHIP_OCC_OCI_OCB_O2SCMD0A  | bus_mask, 0x40000000);
 
     // Compose frame
     // CRC(31:29), CmdData(28:13), RailSelect(12:9), CmdDataType(8:5),
@@ -155,7 +156,7 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
     do
     {
         // Send frame
-        out32(OCB_O2SWD0A | bus_mask, cmd_frame);
+        out32(TP_TPCHIP_OCC_OCI_OCB_O2SWD0A | bus_mask, cmd_frame);
 
         // Wait on o2s_ongoing = 0
         rc = pgpe_avsbus_poll_trans_done(bus_num);
@@ -166,7 +167,7 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
         }
         else
         {
-            slave_ack = in32(OCB_O2SRD0A | bus_mask);
+            slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A | bus_mask);
             PK_TRACE_DBG("AVS_W:ReadData=0x%04x", slave_ack);
 
             //Non-zero SlaveAck
@@ -221,7 +222,7 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
     uint32_t bus_mask = bus_num << O2S_BUSNUM_OFFSET_SHIFT;
 
     // Clear sticky bits in o2s_status_reg
-    out32(OCB_O2SCMD0A | bus_mask, 0x40000000);
+    out32(TP_TPCHIP_OCC_OCI_OCB_O2SCMD0A  | bus_mask, 0x40000000);
 
     // Compose frame
     // CRC(31:29), Reserved(28:13), RailSelect(12:9), CmdDataType(8:5),
@@ -236,7 +237,7 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
     do
     {
         // Send frame
-        out32(OCB_O2SWD0A | bus_mask, cmd_frame);
+        out32(TP_TPCHIP_OCC_OCI_OCB_O2SWD0A  | bus_mask, cmd_frame);
 
         // Wait on o2s_ongoing = 0
         rc = pgpe_avsbus_poll_trans_done(bus_num);
@@ -248,7 +249,7 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
         else
         {
             // Read returned voltage value from Read frame
-            slave_ack = in32(OCB_O2SRD0A | bus_mask);
+            slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A  | bus_mask);
             PK_TRACE_DBG("AVS_READ: RegRead=0x%04x", slave_ack);
 
             //Non-zero SlaveAck
@@ -309,24 +310,24 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
     uint32_t bus_mask = bus_num << O2S_BUSNUM_OFFSET_SHIFT;
 
     // O2SCTRLF
-    data = in32(OCB_O2SCTRLF0 | bus_mask);
+    data = in32(TP_TPCHIP_OCC_OCI_OCB_O2SCTRLF0 | bus_mask);
     data = (0x000000FF & data) | O2SCTRLF_value;
-    out32(OCB_O2SCTRLF0 | bus_mask, data);
+    out32(TP_TPCHIP_OCC_OCI_OCB_O2SCTRLF0  | bus_mask, data);
 
     // O2SCTRLS
-    data = in32(OCB_O2SCTRLS0 | bus_mask);
+    data = in32(TP_TPCHIP_OCC_OCI_OCB_O2SCTRLS0 | bus_mask);
     data = (0x00003FFF & data) | O2SCTRLS_value;
-    out32(OCB_O2SCTRLS0 | bus_mask, data);
+    out32(TP_TPCHIP_OCC_OCI_OCB_O2SCTRLS0 | bus_mask, data);
 
     // O2SCTRL2
-    data = in32(OCB_O2SCTRL20 | bus_mask);
+    data = in32(TP_TPCHIP_OCC_OCI_OCB_O2SCTRL20 | bus_mask);
     data = (0x00007FFF & data) | O2SCTRL2_value;
-    out32(OCB_O2SCTRL20 | bus_mask, data);
+    out32(TP_TPCHIP_OCC_OCI_OCB_O2SCTRL20 | bus_mask, data);
 
     // O2SCTRL1
-    data = in32(OCB_O2SCTRL10 | bus_mask);
+    data = in32(TP_TPCHIP_OCC_OCI_OCB_O2SCTRL10 | bus_mask);
     data = (0x4FFCBFFF & data) | O2SCTRL1_value;
-    out32(OCB_O2SCTRL10 | bus_mask, data);
+    out32(TP_TPCHIP_OCC_OCI_OCB_O2SCTRL10 | bus_mask, data);
 
     //
     // AVS slave initialization

@@ -28,6 +28,7 @@
 #include "pgpe_pstate.h"
 #include "pgpe_occ.h"
 #include "pgpe_dpll.h"
+#include "p10_oci_proc.H"
 
 //Data
 pgpe_event_manager_t G_pgpe_event_manager __attribute__((section (".data_structs")));
@@ -66,7 +67,7 @@ void pgpe_event_manager_run()
     iota_set_idle_task_state(IOTA_IDLE_DISABLED, 0);
 
     PK_TRACE("Event Manager Init");
-    out32(G_OCB_OCCFLG2, 0x00008000);
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW, 0x00008000);
 
     while(1)
     {
