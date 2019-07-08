@@ -40,6 +40,7 @@ $(IMAGE)_COMMONFLAGS+= -DUSE_APP_CFG_H=1
 $(IMAGE)_COMMONFLAGS+= -DPK_TIMER_SUPPORT=0
 $(IMAGE)_COMMONFLAGS+= -D__IOTA__
 $(IMAGE)_COMMONFLAGS+= -D__PPE_PLAT
+$(IMAGE)_COMMONFLAGS+= -D__PPE_HCODE__
 $(IMAGE)_COMMONFLAGS+= -DAPPCFG_OCC_INSTANCE_ID=2
 $(IMAGE)_COMMONFLAGS+= -DUNIFIED_IRQ_HANDLER_GPE
 #$(IMAGE)_COMMONFLAGS+= -DSTATIC_IPC_TABLES
@@ -68,6 +69,7 @@ PGPE_OBJS += pk_trace_binary.o
 
 
 # Add source code directories for the above objects
+SCOM_SRCDIR=$(ROOTPATH)/chips/p10/common/include
 PPE_SRCDIR=$(ROOTPATH)/chips/p10/common/ppe
 IOTA_SRCDIR=$(PPE_SRCDIR)/iota
 TRACE_SRCDIR=$(PPE_SRCDIR)/ppetrace
@@ -96,6 +98,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE), \
 	$(PMLIB_INCDIR)/registers \
 	$(HWP_SRCDIR)/lib \
 	$(TRACE_SRCDIR)/ \
+	$(SCOM_SRCDIR)/ \
 	)
 
 $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
