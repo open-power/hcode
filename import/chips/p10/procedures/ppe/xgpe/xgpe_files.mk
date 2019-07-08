@@ -24,11 +24,15 @@
 # IBM_PROLOG_END_TAG
 ifdef IMAGE
 XGPE-C-SOURCES = xgpe_main.c \
-				xgpe_irq_priority_table.c \
+    xgpe_irq_priority_table.c \
 				xgpe_uih.c \
-				xgpe_irq_handlers.c \
-				xgpe_irq_handlers_fit.c \
 				xgpe_header.c         \
+				xgpe_irq_handlers.c  \
+				xgpe_irq_handlers_fit.c \
+				xgpe_irq_handlers_ipc.c \
 
-XGPE_OBJECTS = $(XGPE-C-SOURCES:.c=.o) 
+XGPE-CPP-SOURCES =
+                  
+
+XGPE_OBJECTS = $(XGPE-C-SOURCES:.c=.o) $(XGPE-CPP-SOURCES:.C=.o)
 endif
