@@ -25,13 +25,18 @@
 #include "xgpe.h"
 #include "ocb_register_addresses.h"
 
-uint32_t G_OCB_OIMR0_CLR = OCB_OIMR0_CLR;
-uint32_t G_OCB_OIMR1_CLR = OCB_OIMR1_CLR;
-uint32_t G_OCB_OIMR0_OR = OCB_OIMR0_OR;
-uint32_t G_OCB_OIMR1_OR = OCB_OIMR1_OR;
-uint32_t G_OCB_OCCFLG3  =  OCB_OCCFLG3;
-uint32_t G_OCB_OCCFLG3_OR =  OCB_OCCFLG3_OR;
-uint32_t G_OCB_OCCFLG3_CLR =  OCB_OCCFLG3_CLR;
+uint32_t G_OCB_OISR0_CLR     = OCB_OISR0_CLR;
+uint32_t G_OCB_OIMR0_CLR     = OCB_OIMR0_CLR;
+uint32_t G_OCB_OIMR1_CLR     = OCB_OIMR1_CLR;
+uint32_t G_OCB_OIMR0_OR      = OCB_OIMR0_OR;
+uint32_t G_OCB_OIMR1_OR      = OCB_OIMR1_OR;
+uint32_t G_OCB_OCCFLG3       = OCB_OCCFLG3;
+uint32_t G_OCB_OCCFLG3_OR    = OCB_OCCFLG3_OR;
+uint32_t G_OCB_OCCFLG3_CLR   = OCB_OCCFLG3_CLR;
+uint32_t G_OCB_CCSR          = OCB_CCSR;
+uint32_t G_OCB_OPITFSV       = OCB_OPITFSV;
+uint32_t G_OCB_OPITFPRD      = OCB_OPITFPRD;
+uint32_t G_OCB_OPITFSVRR     = OCB_OPITFSVRR;
 
 
 int main()
@@ -54,5 +59,25 @@ void xgpe_init()
     //Bit 16 in OCCFLG3 indicates XGPE active
     out32(G_OCB_OCCFLG3, BIT32(XGPE_ACTIVE));
 
+#if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)
+
+    uint32_t TCR_VAL = 0;
+    PK_TRACE("Main: Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
+    //out32(QME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
+
+#if ENABLE_FIT_TIMER
+    PK_TRACE("Main: Register and Enable FIT Timer");
     IOTA_FIT_HANDLER(xgpe_irq_fit_handler);
+    TCR_VAL |= TCR_FIE;
+#endif
+
+#if ENABLE_DEC_TIMER
+    PK_TRACE("Main: Register and Enable DEC Timer");
+    TCR_VAL |= TCR_DIE;
+#endif
+
+    mtspr(SPRN_TCR, TCR_VAL);
+
+#endif
+
 }

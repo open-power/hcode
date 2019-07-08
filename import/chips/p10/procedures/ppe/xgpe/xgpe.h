@@ -33,11 +33,34 @@
 #include "p10_pm_hcd_flags.h"
 #include "p10_hcd_common.H"
 #include "gpehw_common.h"
+#include "ppehw_common.h"
 #include "ppe42_scom.h"
 #include "xgpe_header.h"
 
 
+#define EQ_CORE_MASK   0xF
+#define PCB_TYPE_F_MASK 0xF0000000
 
+#define IS_QUAD_CONFIG(ccsr, num)     (ccsr & (EQ_CORE_MASK << SHIFT32(num-1)))
+#define MASK_CCSR(ccsr,num)           (ccsr  & ~(EQ_CORE_MASK << SHIFT32(num-1)))
+#define BLOCK_WAKEUP_MASK  0x33333333
+
+enum PCB_TYPE_F_MSG
+{
+    UNSUSPEND_STOP_ENTRY      = 0x01,
+    UNSUSPEND_STOP_EXIT       = 0x02,
+    UNSUSPEND_STOP_ENTRY_EXIT = 0x03,
+    SUSPEND_STOP_ENTRY        = 0x05,
+    SUSPEND_STOP_EXIT         = 0x06,
+    SUSPEND_STOP_ENTRY_EXIT   = 0x07,
+};
+
+enum PCB_TYPE_F_TASK
+{
+    PM_SUSPEND_NONE     = 0,
+    PM_SUSPEND_COMPLETE = 1,
+    PM_CCI_COMPLETE     = 2,
+};
 
 /// ----------------------------------------------
 /// @brief Starting point to initialize some of the
@@ -46,7 +69,9 @@
 /// ---------------------------------------------
 void xgpe_init();
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /// ----------------------------------------------
 /// @brief Fit handler which gets trigggered for every Xus
 /// @return none
@@ -58,5 +83,16 @@ void xgpe_irq_fit_handler();
 /// @return none
 /// ---------------------------------------------
 void handle_pm_suspend();
+
+/// ----------------------------------------------
+/// @brief Sends DB1 message to QME
+/// @param[in] i_db1_data DB1 msg data
+/// @return none
+/// ---------------------------------------------
+void xgpe_send_db1_to_qme(uint64_t i_db1_data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //

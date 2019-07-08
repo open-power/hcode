@@ -23,6 +23,7 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "xgpe.h"
+#include "xgpe_irq.h"
 
 /// ----------------------------------------------
 /// @brief Handles GPE2 fault and GPE3 XSTOP fault
@@ -31,13 +32,11 @@
 /// ---------------------------------------------
 void xgpe_irq_fault_handler();
 
-
 /// ----------------------------------------------
-/// @brief Handles IPC requests from GPE2/OCC
+/// @brief Handles external request to GPE3
 /// @return none
 /// ---------------------------------------------
-void xgpe_ipc_irq_handler();
-
+void xgpe_gpe3_func_handler();
 
 /// ----------------------------------------------
 /// @brief Handles PCB type F interrupt (QME->XGPE)
