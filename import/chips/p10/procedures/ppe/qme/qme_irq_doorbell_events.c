@@ -56,9 +56,10 @@ qme_doorbell1_event()
                  G_qme_record.doorbell1_msg,
                  scratchB);
 
-    // block msgs(0x5-0x7)
+    // block msgs(0x5-0x7) and scratchB register shouldn't be 0
     if ( (G_qme_record.doorbell1_msg > STOP_BLOCK_ACTION) &&
-         (G_qme_record.doorbell1_msg <= STOP_BLOCK_ENCODE) )
+         (G_qme_record.doorbell1_msg <= STOP_BLOCK_ENCODE) &&
+         scratchB)
     {
         // exit
         if (G_qme_record.doorbell1_msg & STOP_BLOCK_EXIT)
@@ -96,13 +97,14 @@ qme_doorbell1_event()
         // acknowledge the mode has been entered
         // This occurs even if no cores actually transtiion
         // as the XGPE does not have knowledge of the selected cores.
-        pig_data = ( PIG_TYPE_F << SHIFT32(4) ) &
+        pig_data = ( PIG_TYPE_F << SHIFT32(4) ) |
                    ( G_qme_record.doorbell1_msg << SHIFT32(23) );
         qme_send_pig_packet(pig_data);
     }
-    // unblock msgs(0x1-0x3)
+    // unblock msgs(0x1-0x3) and scratchB register shouldn't be 0
     else if ( (G_qme_record.doorbell1_msg < STOP_BLOCK_ACTION) &&
-              (G_qme_record.doorbell1_msg > 0) )
+              (G_qme_record.doorbell1_msg > 0) &&
+              scratchB )
     {
         // exit
         if (G_qme_record.doorbell1_msg & STOP_BLOCK_EXIT)
@@ -138,7 +140,7 @@ qme_doorbell1_event()
         // acknowledge the mode has been entered
         // This occurs even if no cores actually transtiion
         // as the XGPE does not have knowledge of the selected cores.
-        pig_data = ( PIG_TYPE_F << SHIFT32(4) ) &
+        pig_data = ( PIG_TYPE_F << SHIFT32(4) ) |
                    ( G_qme_record.doorbell1_msg << SHIFT32(23) );
         qme_send_pig_packet(pig_data);
     }
