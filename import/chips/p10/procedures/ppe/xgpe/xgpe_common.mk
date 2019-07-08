@@ -39,10 +39,11 @@ $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SUPPORT=1
 $(IMAGE)_COMMONFLAGS+= -DUSE_APP_CFG_H=1
 $(IMAGE)_COMMONFLAGS+= -DPK_TIMER_SUPPORT=0
 $(IMAGE)_COMMONFLAGS+= -D__IOTA__
+$(IMAGE)_COMMONFLAGS+= -D__PPE__
 $(IMAGE)_COMMONFLAGS+= -D__PPE_PLAT
+$(IMAGE)_COMMONFLAGS+= -D__PPE_HCODE__
 $(IMAGE)_COMMONFLAGS+= -DAPPCFG_OCC_INSTANCE_ID=3
 $(IMAGE)_COMMONFLAGS+= -DUNIFIED_IRQ_HANDLER_GPE
-#$(IMAGE)_COMMONFLAGS+= -DSTATIC_IPC_TABLES
 
 
 XGPE_OBJS := $(_PPE_TYPE)_init.o
@@ -58,8 +59,8 @@ XGPE_OBJS += ppe42_gcc.o
 XGPE_OBJS += ppe42_string.o
 
 # Include IPC support
-#XGPE_OBJS += ipc_core.o
-#XGPE_OBJS += ipc_init.o
+XGPE_OBJS += ipc_core.o
+XGPE_OBJS += ipc_init.o
 
 # Include PK trace support
 XGPE_OBJS += pk_trace_core.o
@@ -73,6 +74,8 @@ IOTA_SRCDIR=$(PPE_SRCDIR)/iota
 TRACE_SRCDIR=$(PPE_SRCDIR)/ppetrace
 HWP_SRCDIR=$(ROOTPATH)/chips/p10/procedures/hwp/
 REG_SRCDIR=$(ROOTPATH)/chips/p10/common/pmlib/include/registers
+SCOM_SRCDIR=$(ROOTPATH)/chips/p10/common/include
+PPE_SRCDIR=$(ROOTPATH)/chips/p10/common/ppe
 
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(IOTA_SRCDIR))
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/boltonlib/$(_PPE_TYPE))
@@ -80,7 +83,6 @@ $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/ppetrace)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(OCC_SRCDIR)/occlib)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/baselib)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(TRACE_SRCDIR))
-$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(REG_SRCDIR))
 
 include $(XGPE_SRCDIR)/xgpe_files.mk
 
@@ -88,18 +90,19 @@ XGPE_OBJS+=$(XGPE_OBJECTS)
 
 # Include paths
 $(call ADD_PPEIMAGE_INCDIR,$(IMAGE), \
-	$(IOTA_SRCDIR) \
-	$(PPE_SRCDIR)/varietylib/$(_PPE_TYPE) \
-	$(PPE_SRCDIR)/ppetrace \
-	$(REG_SRCDIR)/ \
-	$(OCC_SRCDIR)/commonlib \
-	$(OCC_SRCDIR)/commonlib/include \
-	$(PPE_SRCDIR)/commonlib \
-	$(PPE_SRCDIR)/powmanlib \
-	$(PMLIB_INCDIR)/registers \
-	$(HWP_SRCDIR)/lib \
-	$(TRACE_SRCDIR)/ \
-	)
+$(IOTA_SRCDIR) \
+$(PPE_SRCDIR)/varietylib/$(_PPE_TYPE) \
+$(PPE_SRCDIR)/ppetrace \
+$(OCC_SRCDIR)/commonlib/include \
+$(OCC_SRCDIR)/commonlib \
+$(PPE_SRCDIR)/commonlib \
+$(PPE_SRCDIR)/powmanlib \
+$(PMLIB_INCDIR)/registers \
+$(HWP_SRCDIR)/lib \
+$(TRACE_SRCDIR)/ \
+$(SCOM_SRCDIR)/ \
+)
+
 
 $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 	| xargs -i printf "%d" 0x{})
