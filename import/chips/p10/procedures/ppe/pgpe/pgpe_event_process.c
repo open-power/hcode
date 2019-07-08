@@ -30,6 +30,7 @@
 #include "pgpe_dpll.h"
 #include "pgpe_gppb.h"
 #include "pgpe_avsbus_driver.h"
+#include "p10_scom_proc.H"
 
 //Local Functions
 void pgpe_process_pstate_start();
@@ -115,7 +116,7 @@ void pgpe_process_pstate_start()
     uint32_t voltage, vcs_before_vdd = 0;
     int32_t move_frequency;
     dpll_stat_t dpll;
-    PPE_GETSCOM(TPC_DPLL_STAT_REG, dpll.value);
+    PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_PAU_REGS_STAT, dpll.value);
 
     //2. Determine the highest pstate that matches with the read DPLL frequency
     if (dpll.fields.freqout > pgpe_gppb_get(dpll_pstate0_value))
