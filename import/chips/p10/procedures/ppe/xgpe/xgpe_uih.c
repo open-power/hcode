@@ -79,13 +79,6 @@ uint32_t __ext_irq_handler(void)
             IOTA_PANIC(UIH_OIMR_STACK_OVERFLOW);
         }
 
-        // Write the new mask for this priority level.
-        // First, clear all those IRQs that could possibly interrupt this instance.
-        // This includes all those IRQs which belong to this instance as well as
-        // those high-prty IRQs shared with the other instances.
-        //
-        out32(G_OCB_OIMR0_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS >> 32));
-        out32(G_OCB_OIMR1_CLR, (uint32_t)IRQ_VEC_ALL_OUR_IRQS);
 
         // Second, mask IRQs belonging to this task and lower prty tasks.
         // Note, that we do not modify the permanently disabled IRQs, such as the
@@ -113,10 +106,6 @@ void __ext_irq_resume()
 {
     if (g_oimr_stack_ctr >= 0)
     {
-        out32( G_OCB_OIMR0_CLR, (uint32_t)((IRQ_VEC_ALL_OUR_IRQS |
-                                            g_oimr_override_stack[g_oimr_stack_ctr]) >> 32));
-        out32( G_OCB_OIMR1_CLR, (uint32_t)(IRQ_VEC_ALL_OUR_IRQS |
-                                           g_oimr_override_stack[g_oimr_stack_ctr]));
         out32( G_OCB_OIMR0_OR,
                (uint32_t)((ext_irq_vectors_gpe[g_oimr_stack[g_oimr_stack_ctr]][IDX_MASK_VEC] |
                            g_oimr_override) >> 32));
