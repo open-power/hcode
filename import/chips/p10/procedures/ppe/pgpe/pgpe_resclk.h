@@ -28,8 +28,28 @@
 
 #include "pgpe.h"
 
+enum PGPE_RESCLK_STATUS
+{
+    PGPE_RESCLK_DISABLED    = 0xFFFFFFFF,
+    PGPE_RESCLK_INIT        = 0x00000001,
+    PGPE_RESCLK_ENABLED     = 0x00000002,
+} ;
+
+enum PGPE_RESCLK_RCPTR_CMP
+{
+    PGPE_RESCLK_RCPTR_COMPARE       =  0,
+    PGPE_RESCLK_RCPTR_COMPARE_SKIP  =  1,
+};
+
+typedef struct pgpe_resclk
+{
+    uint32_t status;
+} pgpe_resclk_t;
+
+
 void pgpe_resclk_init();
-void pgpe_resclk_update_pstate_target();
-void pgpe_resclk_poll_done();
+void pgpe_resclk_enable(uint32_t pstate_target);
+void pgpe_resclk_disable();
+void pgpe_resclk_update(uint32_t pstate_target);
 
 #endif
