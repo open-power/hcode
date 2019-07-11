@@ -30,6 +30,7 @@
 #include "pgpe_dds.h"
 #include "p10_scom_c_1.H"
 #include "p10_oci_proc.H"
+#include "pgpe_resclk.h"
 
 //
 //Local function prototypes
@@ -168,16 +169,18 @@ void pgpe_pstate_actuate_step()
     //if lowering frequency
     if (G_pgpe_pstate.pstate_next > G_pgpe_pstate.pstate_curr)
     {
-        //resclk \\todo
-        //multicast resclk controller
-        //wait for acks from all QME
+        //resclk
+        pgpe_resclk_update(G_pgpe_pstate.pstate_next);
 
         //write DPLL(Update freq)
         pgpe_dpll_write(G_pgpe_pstate.pstate_next);
 
         //DDS
         pgpe_dds_update(G_pgpe_pstate.pstate_next);
+
+#if SIMICS_TUNING == 0
         pgpe_dds_poll_done();
+#endif
 
         //lower VDD, then lower VCS
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
@@ -200,14 +203,16 @@ void pgpe_pstate_actuate_step()
 
         //DDS
         pgpe_dds_update(G_pgpe_pstate.pstate_next);
+#if SIMICS_TUNING == 0
         pgpe_dds_poll_done();
+#endif
 
         //write DPLL(Update freq)
         pgpe_dpll_write(G_pgpe_pstate.pstate_next);
 
-        //resclk\\todo
-        //Multicast the resclk controller
-        //wait for acks from all QME
+        //resclk
+        pgpe_resclk_update(G_pgpe_pstate.pstate_next);
+
     }
 
     pgpe_pstate_update_vdd_vcs_ps();
@@ -846,6 +851,11 @@ uint32_t pgpe_pstate_get_ics_ac_region(uint32_t ics)
 uint32_t pgpe_pstate_freq_from_ps(uint32_t ps)
 {
     return  (G_gppb->reference_frequency_khz - ((ps) * G_gppb->frequency_step_khz)) / 1000;
+}
+
+uint32_t pgpe_pstate_ps_from_freq(uint32_t freq_khz)
+{
+    return  ((G_gppb->reference_frequency_khz - freq_khz) / G_gppb->frequency_step_khz);
 }
 
 uint32_t pgpe_pstate_is_at_target()
