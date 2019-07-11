@@ -31,6 +31,7 @@
 #include "pgpe_pstate.h"
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_event_table.h"
+#include "pgpe_resclk.h"
 
 
 IOTA_BEGIN_IDLE_TASK_TABLE
@@ -59,6 +60,7 @@ int main()
     pgpe_pstate_init();
     pgpe_avsbus_init();
     init_data_struct_table();
+    pgpe_resclk_init();
 
     PK_TRACE("PGPE Booted");
 
