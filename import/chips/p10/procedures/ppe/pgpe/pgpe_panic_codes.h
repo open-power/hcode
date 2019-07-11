@@ -45,7 +45,7 @@ UIH_OIMR_STACK_OVERFLOW             = 0x1c02,
 //_UNUSED_1c1e                      = 0x1c1e,
 //_UNUSED_1c1f                      = 0x1c1f,
 
-//_UNUSED_1d00                      = 0x1d00,
+CRITICAL_ERROR_LOG                  = 0x1d00,
 //_UNUSED_1d01                      = 0x1d01,
 //_UNUSED_1d02                      = 0x1d02,
 //_UNUSED_1d03                      = 0x1d03,
