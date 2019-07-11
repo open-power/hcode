@@ -31,6 +31,7 @@
 #include "pgpe_gppb.h"
 #include "pgpe_avsbus_driver.h"
 #include "p10_scom_proc.H"
+#include "pgpe_resclk.h"
 
 //Local Functions
 void pgpe_process_pstate_start();
@@ -116,7 +117,7 @@ void pgpe_process_pstate_start()
     uint32_t voltage, vcs_before_vdd = 0;
     int32_t move_frequency;
     dpll_stat_t dpll;
-    PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_PAU_REGS_STAT, dpll.value);
+    PPE_GETSCOM(TPC_DPLL_STAT_REG, dpll.value);
 
     //2. Determine the highest pstate that matches with the read DPLL frequency
     if (dpll.fields.freqout > pgpe_gppb_get(dpll_pstate0_value))
@@ -149,7 +150,6 @@ void pgpe_process_pstate_start()
 
     pgpe_pstate_set(pstate_target, sync_pstate);
     pgpe_pstate_set(pstate_next, sync_pstate);
-
 
     //Read the external VDD and VCS
     pgpe_avsbus_voltage_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
@@ -233,7 +233,8 @@ void pgpe_process_pstate_start()
 
     pgpe_pstate_update_vdd_vcs_ps(); //Set current equal to next
 
-    //Enable resonant clocks
+    //Enable resonant clocks //\todo Lookup PGPE_FLAGS[resclk_disable]
+    pgpe_resclk_enable(pgpe_pstate_get(pstate_curr));
 
     //Setup DDS delay values
     //Enable the DDS across all good cores
@@ -246,8 +247,10 @@ void pgpe_process_pstate_stop()
 {
     PK_TRACE("PEP: PS Stop");
 
-    //\todo
     //Disable resonant clocks
+    pgpe_resclk_disable();
+
+    //\todo
     //DDS left untouched
     //Disable WOF
     //Disable WOV(undervolting/overvolting)
