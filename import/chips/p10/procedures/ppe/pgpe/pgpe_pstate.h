@@ -120,6 +120,7 @@ uint32_t pgpe_pstate_intp_ps_from_vdd(uint32_t vdd);
 uint32_t pgpe_pstate_intp_ps_from_vcs(uint32_t vcs);
 uint32_t pgpe_pstate_intp_ps_from_idd(uint32_t idd);
 uint32_t pgpe_pstate_freq_from_ps(uint32_t ps);
+uint32_t pgpe_pstate_ps_from_freq(uint32_t freq_khz);
 
 
 #endif

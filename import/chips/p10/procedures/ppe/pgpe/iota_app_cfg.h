@@ -31,7 +31,6 @@
 #define FAKE_BOOT_IMMEDIATE_MODE            0
 #define FAKE_BOOT_WOF_ENABLE                1
 
-
 // GPE2 is the irq route ownder
 #define OCCHW_IRQ_ROUTE_OWNER  2
 

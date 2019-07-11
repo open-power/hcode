@@ -55,21 +55,11 @@
 #define MAX_PSTATE_TABLE_ENTRIES        128
 
 //REGISTERS
-/*#define G_OCB_OCCFLG2               0xC0060590
+//\todo Use Common Registers(but SIMICS is broken right now)
 #define TPC_DPLL_FREQ_CTRL_REG      0x01000051
 #define TPC_DPLL_CTRL_REG           0x01000052
 #define TPC_DPLL_CTRL_REG_CLR       0x01000053
 #define TPC_DPLL_CTRL_REG_OR        0x01000054
 #define TPC_DPLL_STAT_REG           0x01000055
-
-#define OCB_OCI_CCSR                0xC0060480
-#define OCB_OCI_OPITASV0            0xC0062400
-#define OCB_OCI_OPITASV1            0xC0062401
-#define OCB_OCI_OPITASV2            0xC0062402
-#define OCB_OCI_OPITASV3            0xC0062403
-
-#define QME_PMSRS                   0x200E0864
-#define QME_DUCR                    0x200e0170
-#define CPMS_CUCR                   0x200e0e3c*/
 
 #endif //
