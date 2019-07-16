@@ -223,19 +223,19 @@ Target<K, M, V>::getChildren(const TargetState i_state) const
                       (K != (T | TARGET_TYPE_MULTICAST) ) ),
                    "improper child of fapi2::TARGET_TYPE_MULTICAST");
 
-    static_assert( ( (K & TARGET_TYPE_EQ)   ) &&
-                   ( (T & TARGET_TYPE_CORE) ),
+    static_assert( (T & TARGET_TYPE_CORE),
                    "Invalid parent/child passed to getChildren");
 
     std::vector<Target<T> > l_children;
-    uint32_t l_childrenPerParent = 0;
-    uint32_t l_childTargetOffset = 0;
 
-    // EQ ==> EC
-    if( (K == TARGET_TYPE_EQ) && (T == TARGET_TYPE_CORE) )
+    // < EQ or Core | MC > ==> Cores
+    uint32_t l_childrenPerParent = PPE_CORE_TARGET_COUNT;
+    uint32_t l_childTargetOffset = PPE_CORE_TARGET_OFFSET;
+    uint32_t l_core_select       = 0;
+
+    if ( K & TARGET_TYPE_CORE )
     {
-        l_childrenPerParent = PPE_CORE_TARGET_COUNT;
-        l_childTargetOffset = PPE_CORE_TARGET_OFFSET;
+        l_core_select = this->iv_handle.getCoreSelect();
     }
 
     for(uint32_t i = 0; i < l_childrenPerParent; ++i)
@@ -243,19 +243,22 @@ Target<K, M, V>::getChildren(const TargetState i_state) const
         Target<T>* l_temp =
             reinterpret_cast< Target<T>* >(&G_vec_targets.at(l_childTargetOffset + i));
 
+        if ( ( K & TARGET_TYPE_CORE ) &&
+             (! ( l_core_select & ( 0x8 >> i ) ) ) )
+        {
+            continue;
+        }
+
         switch (i_state)
         {
+            //PLAT NOTE//
+            // combine present with functional
+            // in qme case, if unit is present but not functional
+            // we wont operate on it in any case anyways
             case TARGET_STATE_PRESENT:
-                if ((*l_temp).getPresent())
-                {
-                    l_children.push_back((*l_temp));
-                }
-
-                break;
-
             case TARGET_STATE_FUNCTIONAL:
             default:
-                if ((*l_temp).getFunctional())
+                if ((*l_temp).isFunctional())
                 {
                     l_children.push_back((*l_temp));
                 }
