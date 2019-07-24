@@ -50,6 +50,9 @@ typedef struct pgpe_header
     uint32_t g_pgpe_occ_pstables_sram_addr;
     uint32_t g_pgpe_occ_pstables_len;
     uint32_t g_pgpe_beacon_addr;
+    uint32_t reserved1;
+    uint32_t g_wof_state_addr;
+    uint32_t reserved2; //Not adding rest of fields as in future will use the common struct
 } pgpe_header_t;
 
 extern pgpe_header_t* G_pgpe_header_data;
