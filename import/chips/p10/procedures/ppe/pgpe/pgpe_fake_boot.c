@@ -27,6 +27,9 @@
 #include "pgpe_header.h"
 extern pgpe_header_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
 
+#define PGPE_FAKE_BOOT_CORE_ON_RATIO   0.8
+#define PGPE_FAKE_BOOT_L3_ON_RATIO     0.1
+#define PGPE_FAKE_BOOT_MMA_ON_RATIO    0.1
 
 void pgpe_fake_boot_gppb()
 {
@@ -114,9 +117,9 @@ void pgpe_fake_boot_gppb()
     gppb->safe_frequency_khz = 2286000;
 
     //vratio
-    gppb->core_on_ratio_vdd = 800;
-    gppb->l3_on_ratio_vdd = 100;
-    gppb->mma_on_ratio_vdd = 100;
+    gppb->core_on_ratio_vdd = PGPE_FAKE_BOOT_CORE_ON_RATIO * 65535  ;
+    gppb->l3_on_ratio_vdd = PGPE_FAKE_BOOT_L3_ON_RATIO * 65535;
+    gppb->mma_on_ratio_vdd = PGPE_FAKE_BOOT_MMA_ON_RATIO * 65535;
     gppb->core_on_ratio_vcs = 800;
     gppb->l3_on_ratio_vcs = 200;
     gppb->vdd_vratio_weight = 80;
@@ -158,9 +161,9 @@ void pgpe_fake_boot_pgpe_header()
     //GPPB length
     //Generated Pstate tbl memory offset
     //Generated pstate tbl length
+    //WOF state address
+    pgpe_header->g_wof_state_addr = 0xfff2d000;
     //WOF tables offset
-    //core throttle assertion count
-    //core throttle de-assertion count
     //PGPE op trace
     //PGPE deep op trace
     //PGPE deep op trace PPMR length

@@ -74,6 +74,7 @@ typedef struct pgpe_pstate
     uint32_t vcs_curr, vcs_next, vcs_curr_uplift, vcs_next_uplift, vcs_curr_ext, vcs_next_ext;
     uint32_t vdd_bias, vcs_bias, vdd_bias_tgt, vcs_bias_tgt;
     uint32_t idd, ics;
+    VRT_t*   vrt;
     uint32_t vratio_inst, vratio_vcs_inst, vratio_vdd_inst, vindex;
     uint32_t update_pgpe_beacon;
 } pgpe_pstate_t;
@@ -87,9 +88,11 @@ void* pgpe_pstate_data_addr();
 void pgpe_pstate_actuate_step();
 void pgpe_pstate_compute();
 void pgpe_pstate_apply_clips();
-void pgpe_pstate_compute_vratio(uint32_t pstate, uint32_t vdd);
+void pgpe_pstate_compute_vratio(uint32_t pstate);
+void pgpe_pstate_compute_vindex();
 uint32_t pgpe_pstate_is_at_target();
 uint32_t pgpe_pstate_is_clip_bounded();
+uint32_t pgpe_pstate_is_wof_clip_bounded();
 void pgpe_pstate_pmsr_updt();
 void pgpe_pstate_pmsr_write();
 void pgpe_pstate_set_safe_mode();
@@ -102,7 +105,9 @@ void pgpe_pstate_sample_currents();
 #define pgpe_pstate_set(x,val) G_pgpe_pstate.x = val
 #define pgpe_pstate_set_ps_request(core,val) G_pgpe_pstate.ps_request[core] = val
 #define pgpe_pstate_set_clip(type,val) G_pgpe_pstate.##type = val
+#define pgpe_pstate_set_vrt(ptr) G_pgpe_pstate.vrt = ptr
 #define pgpe_pstate_is_pstate_enabled() (G_pgpe_pstate.pstate_status == PSTATE_STATUS_ENABLED)
+#define pgpe_pstate_is_wof_enabled() (G_pgpe_pstate.wof_status == WOF_STATUS_ENABLED)
 void pgpe_pstate_update_vdd_vcs_ps();
 
 //Interpolation
@@ -111,7 +116,7 @@ uint32_t pgpe_pstate_get_ps_vpd_pt(uint32_t ps);
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t idd_scale);
-uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t ics_scale);
+uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_idd_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_ics_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);

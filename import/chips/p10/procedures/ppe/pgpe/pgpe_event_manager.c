@@ -234,7 +234,7 @@ void pgpe_event_manager_run_active()
             pgpe_process_clip_update(e->args);
         }
 
-        //WOF_CTRL,
+        //WOF_CTRL
         e = pgpe_event_tbl_get(EV_IPC_WOF_CTRL);
 
         if (e->status == EVENT_PENDING)
@@ -271,7 +271,6 @@ void pgpe_event_manager_run_active()
             pgpe_event_tbl_set_status(EV_PCB_SET_PMCR, EVENT_INACTIVE);
         }
 
-
         //Do actuation
         if(!pgpe_pstate_is_at_target())
         {
@@ -279,7 +278,21 @@ void pgpe_event_manager_run_active()
         }
 
         //Do post actuation
+        //WOF_CTRL
+        e = pgpe_event_tbl_get(EV_IPC_WOF_CTRL);
+
+        if (e->status == EVENT_PENDING_ACTUATION)
+        {
+            pgpe_process_wof_ctrl_post_actuate();
+        }
+
         //WOF_VRT
+        e = pgpe_event_tbl_get(EV_IPC_WOF_VRT);
+
+        if (e->status == EVENT_PENDING_ACTUATION)
+        {
+            pgpe_process_wof_vrt_post_actuate();
+        }
 
         //CLIP_UPDATE
         e = pgpe_event_tbl_get(EV_IPC_CLIP_UPDT);
