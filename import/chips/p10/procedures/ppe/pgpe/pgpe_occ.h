@@ -27,9 +27,24 @@
 
 #include "pgpe.h"
 
+
+typedef struct pgpe_occ
+{
+    pgpe_wof_values_t*  pwof_val;
+    uint32_t sample_cnt;
+    uint32_t vdd_accum, vcs_accum, idd_accum, ics_accum;
+    uint32_t prev_tb, present_tb;
+    uint32_t max_tb_delta, wof_tick, fit_tick;
+    uint32_t idd_tb_accum, ics_tb_accum, vdd_tb_accum, vcs_tb_accum;
+    uint32_t idd_fit_avg_ma, ics_fit_avg_ma, vdd_fit_avg_mv, vcs_fit_avg_mv;
+    uint32_t idd_wof_avg_accum_ma, ics_wof_avg_accum_ma, vdd_wof_avg_accum_mv, vcs_wof_avg_accum_mv;
+    uint32_t idd_avg_ma, ics_avg_ma, vdd_avg_mv, vcs_avg_mv;
+} pgpe_occ_t;
+
+void pgpe_occ_init();
 void pgpe_occ_update_beacon();
 void pgpe_occ_produce_wof_values();
-void pgpe_occ_produce_wof_iddq_values();
+void pgpe_occ_produce_wof_i_v_values();
 void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd);
 void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc);
 void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc);
