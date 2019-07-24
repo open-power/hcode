@@ -89,6 +89,11 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
     }
 }
 
+__attribute__((always_inline)) inline void handle_ocs()
+{
+    pgpe_occ_produce_wof_i_v_values();
+}
+
 //  p9_pgpe_fit_handler
 //
 //  This is a periodic FIT Handler which is called up at fixed period
@@ -97,5 +102,5 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
 void pgpe_irq_fit_handler()
 {
     handle_occ_beacon();
-    pgpe_pstate_sample_currents();
+    handle_ocs();
 }
