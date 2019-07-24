@@ -28,31 +28,32 @@
 #include "pstate_pgpe_occ_api.h"
 #include "pgpe_header.h"
 #include "pgpe_pstate.h"
+#include "pgpe_gppb.h"
+#include "pgpe_avsbus_driver.h"
+#include "p10_oci_proc.H"
 
-/*
-typedef struct iddq_counters {
-    uint32_t core_off[MAX_CORES];
-    uint32_t core_vmin_off[MAX_CORES];
-    uint32_t core_mma_off[MAX_CORES];
-    uint32_t l3_off[MAX_CORES];
-} iddq_counters_t;*/
-
-//iddq_counters_t G_iddq;
-//uint32_t G_vratio_avg;
+pgpe_occ_t G_pgpe_occ;
+void pgpe_occ_sample_i_v_values();
+void pgpe_occ_produce_fit_i_v_values();
 
 void pgpe_occ_init()
 {
-    /*
-    uint32_t c;
-    for (c = 0; c < MAX_CORES; c++) {
-        if (in32(OCB_OCI_CCSR) & CORE_MASK(c)) {
-            G_iddq.core_off[c] = 0;
-            G_iddq.core_vmin_off[c] = 0;
-            G_iddq.core_mma_off[c] = 0;
-            G_iddq.l3_off[c] = 0;
-        }
-    }
-    G_vratio_avg = 0;*/
+
+    G_pgpe_occ.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_wof_state_addr));
+
+    //\TODO: RTC: 214486 Scale this based on nest frequency and FIT TSEL.
+    //
+    //Currently, this number is based assuming FIT tick
+    //of 131us and nest frequency of 2Ghz
+    G_pgpe_occ.max_tb_delta = 4096;
+    G_pgpe_occ.prev_tb = 0;
+    G_pgpe_occ.present_tb = 0;
+    G_pgpe_occ.vdd_accum = 0;
+    G_pgpe_occ.vcs_accum = 0;
+    G_pgpe_occ.idd_accum = 0;
+    G_pgpe_occ.ics_accum = 0;
+    G_pgpe_occ.fit_tick = 0;
+    G_pgpe_occ.wof_tick = 4; //TODO RTC: 214486 This WOF_TICK_TIME/FIT_TICK_TIME. Should get it from somewhere else
 }
 
 void pgpe_occ_update_beacon()
@@ -64,32 +65,79 @@ void pgpe_occ_update_beacon()
     }
 }
 
-void pgpe_occ_produce_wof_values()
+void pgpe_occ_produce_wof_i_v_values()
 {
+    pgpe_occ_produce_fit_i_v_values();
+
+    if (G_pgpe_occ.fit_tick == G_pgpe_occ.wof_tick)
+    {
+        G_pgpe_occ.vdd_avg_mv = G_pgpe_occ.vdd_wof_avg_accum_mv / G_pgpe_occ.wof_tick;
+        G_pgpe_occ.vcs_avg_mv = G_pgpe_occ.vcs_wof_avg_accum_mv / G_pgpe_occ.wof_tick;
+        G_pgpe_occ.idd_avg_ma = G_pgpe_occ.idd_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
+        G_pgpe_occ.ics_avg_ma = G_pgpe_occ.ics_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
+
+        //Write to SRAM
+        G_pgpe_occ.pwof_val->dw1.fields.idd_avg_ma = G_pgpe_occ.idd_avg_ma;
+        G_pgpe_occ.pwof_val->dw1.fields.ics_avg_ma = G_pgpe_occ.ics_avg_ma;
+        G_pgpe_occ.pwof_val->dw2.fields.vdd_avg_mv = G_pgpe_occ.vdd_avg_mv;
+        G_pgpe_occ.pwof_val->dw2.fields.vcs_avg_mv = G_pgpe_occ.vcs_avg_mv;
+        G_pgpe_occ.fit_tick = 0;;
+    }
 }
 
-void pgpe_occ_compute_wof_iddq_values()
+void pgpe_occ_produce_fit_i_v_values()
 {
-    /*  uint32_t c;
-        for (c = 0; c < MAX_CORES; c++) {
-            if (in32(OCB_OCI_CCSR) & CORE_MASK(c)) {
-                //If core[c] is ON
-                    //sample core[c] MMA state
-                    //if core mma is OFF, g_core_mma_off[c]++
-                //else if core[c] is Vmin, g_core_vmin[c]++
-                //else if core[c] is OFF, g_core_off[c]++
-                //if L3 core is off, g_l3_off[c]++
-            } else {
-                //g_core_off[c]++;
-                //g_l3_off[c]++;
-            }
-        }*/
+    pgpe_occ_sample_i_v_values();
+
+    G_pgpe_occ.vdd_fit_avg_mv = G_pgpe_occ.vdd_tb_accum / G_pgpe_occ.max_tb_delta;
+    G_pgpe_occ.vcs_fit_avg_mv = G_pgpe_occ.vcs_tb_accum / G_pgpe_occ.max_tb_delta;
+    G_pgpe_occ.idd_fit_avg_ma = G_pgpe_occ.idd_tb_accum / G_pgpe_occ.max_tb_delta;
+    G_pgpe_occ.ics_fit_avg_ma = G_pgpe_occ.ics_tb_accum / G_pgpe_occ.max_tb_delta;
+
+    G_pgpe_occ.vdd_wof_avg_accum_mv += G_pgpe_occ.vdd_fit_avg_mv;
+    G_pgpe_occ.vcs_wof_avg_accum_mv += G_pgpe_occ.vcs_fit_avg_mv;
+    G_pgpe_occ.idd_wof_avg_accum_ma += G_pgpe_occ.idd_fit_avg_ma;
+    G_pgpe_occ.ics_wof_avg_accum_ma += G_pgpe_occ.ics_fit_avg_ma;
+
+    G_pgpe_occ.idd_tb_accum = 0;
+    G_pgpe_occ.ics_tb_accum = 0;
+    G_pgpe_occ.vdd_tb_accum = 0;
+    G_pgpe_occ.vcs_tb_accum = 0;
+
+    G_pgpe_occ.fit_tick++;
 }
 
-void pgpe_occ_produce_wof_iddq_values()
+void pgpe_occ_sample_i_v_values()
 {
+    //Read OTBR
+    G_pgpe_occ.present_tb = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
 
+    uint32_t idd_ma, ics_ma, delta_tb;
 
+    //Read IDD and ICS
+    pgpe_avsbus_current_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
+                             pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+                             &idd_ma);
+    pgpe_avsbus_current_read(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
+                             pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+                             &ics_ma);
+
+    //Calculate delta_tb while accounting for OTBR rollover
+    if(G_pgpe_occ.present_tb > G_pgpe_occ.prev_tb)
+    {
+        delta_tb = G_pgpe_occ.present_tb - G_pgpe_occ.prev_tb;
+    }
+    else
+    {
+        delta_tb = G_pgpe_occ.present_tb - G_pgpe_occ.prev_tb + 0xFFFFFFFF;
+    }
+
+    G_pgpe_occ.idd_tb_accum = idd_ma * delta_tb;
+    G_pgpe_occ.ics_tb_accum = ics_ma * delta_tb;
+    G_pgpe_occ.vdd_tb_accum = pgpe_pstate_get(vdd_curr) * delta_tb;
+    G_pgpe_occ.vcs_tb_accum = pgpe_pstate_get(vcs_curr) * delta_tb;
+
+    G_pgpe_occ.prev_tb = G_pgpe_occ.present_tb;
 }
 
 void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd)
