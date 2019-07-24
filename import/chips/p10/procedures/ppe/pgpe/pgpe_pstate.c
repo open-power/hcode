@@ -91,6 +91,7 @@ void pgpe_pstate_init()
     G_pgpe_pstate.vcs_curr_ext      = 0;
     G_pgpe_pstate.vcs_next_ext      = 0;
 
+    G_pgpe_pstate.vrt                = 0;
     G_pgpe_pstate.update_pgpe_beacon = 1;
 }
 
@@ -136,13 +137,11 @@ void pgpe_pstate_actuate_step()
     G_pgpe_pstate.vcs_next = pgpe_pstate_intp_vcs_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
 
     //compute load line drop
-    pgpe_pstate_compute_vratio(G_pgpe_pstate.pstate_next, G_pgpe_pstate.idd);
+    pgpe_pstate_compute_vratio(G_pgpe_pstate.pstate_next);
 
-    //\todo determine if vratio_inst to be used for both VCS and VDD
     G_pgpe_pstate.vdd_next_uplift = pgpe_pstate_intp_vddup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED,
                                     G_pgpe_pstate.vratio_inst);
-    G_pgpe_pstate.vcs_next_uplift = pgpe_pstate_intp_vcsup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED,
-                                    G_pgpe_pstate.vratio_inst);
+    G_pgpe_pstate.vcs_next_uplift = pgpe_pstate_intp_vcsup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
 
     G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
     G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
@@ -262,76 +261,58 @@ void pgpe_pstate_apply_clips()
     PK_TRACE("APC: ps_target=0x%x", G_pgpe_pstate.pstate_target);
 }
 
-void pgpe_pstate_compute_vratio(uint32_t pstate, uint32_t idd)
+void pgpe_pstate_compute_vratio(uint32_t pstate)
 {
-    uint32_t vratio_vdd_accum  = 0;
-    uint32_t vratio_vcs_accum  = 0;
-    uint32_t c;
+    uint32_t vmin_mv = pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, POWERSAVE);
+    uint32_t vdd = pgpe_pstate_intp_vdd_from_ps(pstate, VPD_PT_SET_BIASED); //non-uplifted
+    uint32_t vratio_accum = 0;
     uint32_t core_cnt = 0;
     uint32_t ccsr;
-
     uint32_t opitasv0;
     uint32_t opitasv1;
     uint32_t opitasv2;
-    //uint32_t opitasv3;
+    uint32_t c;
 
-    //Read PCB Type A0(Core off)
-    //Read PCB Type A1(Core Vmin)
-    //Read PCB Type A2(MMA Off)
-    //Read PCB Type A3(L3 Off)
-    opitasv0 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV0);
-    opitasv1 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV1);
-    opitasv2 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV2);
-    //opitasv3 = in32(OCB_OCI_OPITASV3);
+    opitasv0 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV0);//Read PCB Type A0(Core off)
+    opitasv1 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV1);//Read PCB Type A1(Core Vmin)
+    opitasv2 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV2);//Read PCB Type A2(MMA Off)
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
-    //\todo
-    //read vmin
-    //Calculate vdd_chip
-    uint32_t vdd_chip = pgpe_pstate_intp_vdd_from_ps(pstate, VPD_PT_SET_BIASED); //non-uplifted
-    uint32_t idd_ac = pgpe_pstate_intp_idd_ac_from_ps(pstate, VPD_PT_SET_BIASED);
-    uint32_t idd_dc = pgpe_pstate_intp_idd_dc_from_ps(pstate, VPD_PT_SET_BIASED);
-    uint32_t uplift = (((idd_ac + idd_dc - idd) * (pgpe_gppb_get(vdd_sysparm.loadline_uohm) + pgpe_gppb_get(
-                            vdd_sysparm.distloss_uohm))) / 1000
-                       + pgpe_gppb_get(vdd_sysparm.distoffset_uv)) / 1000; //\todo make sure distributed offset should be added here or not
-    vdd_chip += uplift;
-
-    uint32_t core_vdd_voltage_ratio = pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, VPD_PV_PSAV) / vdd_chip;
-
-    for (c = 0; c < MAX_CORES; c++)
+    for(c = 0; c < MAX_CORES; c++)
     {
         if (ccsr & CORE_MASK(c))
         {
             core_cnt++;
 
             //if core is ON
-            if (!(opitasv0 & CORE_MASK(c)) &&  !(opitasv1 & CORE_MASK(c)))
+            if (!(opitasv0 & CORE_MASK(c)))
             {
-                vratio_vdd_accum += (pgpe_gppb_get_core_on_ratio_vdd() + pgpe_gppb_get_l3_on_ratio_vdd());
-                vratio_vcs_accum += (pgpe_gppb_get_core_on_ratio_vcs() + pgpe_gppb_get_l3_on_ratio_vcs());
+                vratio_accum += pgpe_gppb_get_core_on_ratio_vdd();
 
                 //if core MMA is ON
                 if (!(opitasv2 & CORE_MASK(c)))
                 {
-                    vratio_vdd_accum += pgpe_gppb_get_mma_on_ratio_vdd();
+                    vratio_accum += pgpe_gppb_get_mma_on_ratio_vdd();
                 }
-
-                //if core c is Vmin
             }
+            //if core c is Vmin
             else if (!(opitasv0 & CORE_MASK(c)) &&  (opitasv1 & CORE_MASK(c)))
             {
-                vratio_vdd_accum += pgpe_gppb_get_core_on_ratio_vdd() * core_vdd_voltage_ratio + pgpe_gppb_get_l3_on_ratio_vdd();
-                vratio_vcs_accum += pgpe_gppb_get_core_on_ratio_vcs() + pgpe_gppb_get_l3_on_ratio_vcs();
+                vratio_accum += (pgpe_gppb_get_core_on_ratio_vdd() * vmin_mv) / vdd;
             }
         }
     }
 
-    //\todo Come up with integer format/representions of the operands of the following
-    //divisions and multiplication
-    G_pgpe_pstate.vratio_vdd_inst = vratio_vdd_accum / G_pgpe_pstate.sort_core_count;
-    G_pgpe_pstate.vratio_vcs_inst = vratio_vcs_accum / G_pgpe_pstate.sort_core_count;
-    G_pgpe_pstate.vratio_inst = G_pgpe_pstate.vratio_vdd_inst * pgpe_gppb_get_vdd_vratio_weight() +
-                                G_pgpe_pstate.vratio_vcs_inst * pgpe_gppb_get_vcs_vratio_weight();
+    PK_TRACE_INF("VRA: CoreCnt=%u, SortCnt=%u");
+    G_pgpe_pstate.vratio_inst = vratio_accum / G_pgpe_pstate.sort_core_count;
+}
+
+void pgpe_pstate_compute_vindex()
+{
+    uint32_t msd = ((G_pgpe_pstate.vratio_inst & 0xF000) >> 12);
+    uint32_t rem = (G_pgpe_pstate.vratio_inst & 0x0FFF);
+    uint32_t idx_rnd = (rem > 0x800) ? 1 : 0;
+    G_pgpe_pstate.vindex = (msd >= 5) ? (msd - 5 + idx_rnd) : 0;
 }
 
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set)
@@ -388,14 +369,12 @@ uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
     return vdd_uplift;
 }
 
-uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t ics_scale)
+uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 {
     uint32_t ics_ac = pgpe_pstate_intp_ics_ac_from_ps(ps, VPD_PT_SET_BIASED);
     uint32_t ics_dc = pgpe_pstate_intp_ics_dc_from_ps(ps, VPD_PT_SET_BIASED);
 
-    //\\todo come up with correct ics_scale/vratio_format.
-    //idd_scale/vratio format is a number between 0.0 and 1.0, but we need to represent this using integers on PGPE
-    uint32_t vcs_uplift = ((((ics_ac + ics_dc) * ics_scale) *  (pgpe_gppb_get(vcs_sysparm.loadline_uohm) + pgpe_gppb_get(
+    uint32_t vcs_uplift = ((((ics_ac + ics_dc)) *  (pgpe_gppb_get(vcs_sysparm.loadline_uohm) + pgpe_gppb_get(
                                 vcs_sysparm.distloss_uohm))) / 1000
                            + pgpe_gppb_get(vcs_sysparm.distoffset_uv)) / 1000;
 
@@ -867,6 +846,18 @@ uint32_t pgpe_pstate_is_clip_bounded()
 {
     if ((G_pgpe_pstate.pstate_curr >= G_pgpe_pstate.clip_min) &&
         (G_pgpe_pstate.pstate_curr <= G_pgpe_pstate.clip_max))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+uint32_t pgpe_pstate_is_wof_clip_bounded()
+{
+    if (G_pgpe_pstate.pstate_curr >= G_pgpe_pstate.clip_wof)
     {
         return 1;
     }

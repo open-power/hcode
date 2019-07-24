@@ -186,6 +186,7 @@ void pgpe_resclk_enable(uint32_t pstate_target)
                 //This should not be needed. Currently, only needed in SIMICS
                 //where multicast is broken right now. Otherwise, the
                 //multicast equ will result in MCHK
+                //todo RTC: 214435
                 IOTA_PANIC(CRITICAL_ERROR_LOG);
             }
         }
@@ -263,6 +264,7 @@ void pgpe_resclk_disable()
                 //This should not be needed in environments
                 //other than SIMICS(where multicast is broken right now)
                 //bc the multicast will result in MCHK
+                //todo RTC: 214435
                 IOTA_PANIC(CRITICAL_ERROR_LOG);
             }
         }
@@ -378,7 +380,8 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
     {
         if (rcptr.fields.target_pstate != pstate_target)
         {
-            IOTA_PANIC(CRITICAL_ERROR_LOG); //\todo take critical log and not halt
+            //\todo RTC:214435 take critical log and not halt
+            IOTA_PANIC(CRITICAL_ERROR_LOG);
         }
     }
 
