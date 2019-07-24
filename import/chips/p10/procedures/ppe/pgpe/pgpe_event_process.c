@@ -37,8 +37,11 @@
 void pgpe_process_pstate_start();
 void pgpe_process_pstate_stop();
 void pgpe_process_set_pmcr_owner();
+void pgpe_process_clip_update_post_actuate();
 void pgpe_process_wof_enable();
 void pgpe_process_wof_disable();
+void pgpe_process_wof_ctrl_post_actuate();
+void pgpe_process_wof_vrt_post_actuate();
 
 
 void pgpe_process_pstate_start_stop(void* eargs)
@@ -176,7 +179,7 @@ void pgpe_process_pstate_start()
     pgpe_pstate_set(vcs_next, pgpe_pstate_intp_vcs_from_ps(pgpe_pstate_get(pstate_next),
                     VPD_PT_SET_BIASED) );//\todo use correct format for scale
     pgpe_pstate_set(vdd_next_uplift, pgpe_pstate_intp_vddup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED, 1));
-    pgpe_pstate_set(vcs_next_uplift, pgpe_pstate_intp_vcsup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED, 1));
+    pgpe_pstate_set(vcs_next_uplift, pgpe_pstate_intp_vcsup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED));
     pgpe_pstate_set(vdd_next_ext, pgpe_pstate_get(vdd_next) + pgpe_pstate_get(vdd_next_uplift));
     pgpe_pstate_set(vcs_next_ext, pgpe_pstate_get(vcs_next) + pgpe_pstate_get(vcs_next_uplift));
 
@@ -250,9 +253,12 @@ void pgpe_process_pstate_stop()
     //Disable resonant clocks
     pgpe_resclk_disable();
 
-    //\todo
     //DDS left untouched
+
     //Disable WOF
+    pgpe_process_wof_disable();
+
+    //\todo RTC: 214485
     //Disable WOV(undervolting/overvolting)
 
     //Change pstate status to STOP
@@ -364,37 +370,137 @@ void pgpe_process_wof_ctrl(void* eargs)
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
     ipcmsg_wof_control_t* args = (ipcmsg_wof_control_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
+    uint32_t ack_now = 1;
 
-    if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+    if(args->action == PGPE_ACTION_WOF_ON)
     {
+        if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+        {
+            pgpe_process_wof_enable();
+            pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_PENDING_ACTUATION);
+            ack_now = 0;
+        }
+        else
+        {
+            pgpe_pstate_set(wof_status, WOF_STATUS_ENABLED);
+        }
+    }
+    else if(args->action == PGPE_ACTION_WOF_OFF)
+    {
+        pgpe_process_wof_disable();
+        pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
+        pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+        pgpe_pstate_set(wof_status, WOF_STATUS_DISABLED);
     }
     else
+    {
+        //todo RTC: 214435 ERROR
+    }
+
+    if(ack_now)
     {
         pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
     }
 }
 
-void pgpe_process_wof_enable()
+void pgpe_process_wof_enable(ipcmsg_wof_control_t* args)
 {
-    //\todo
+    if(!pgpe_pstate_is_pstate_enabled())
+    {
+        //\\todo RTC: 214435 INFO_ERROR
+        //PGPE_RC_PSTATES_NOT_STARTED
+    }
+
+    //if wof already enabled
+    if(pgpe_pstate_is_wof_enabled())
+    {
+        //\\todo RTC: 214435 INFO_ERROR
+    }
+
+    if(pgpe_pstate_get(vrt) == NULL)
+    {
+        //\\todo RTC: 214435 ERROR
+        //PGPE_RC_WOF_START_WITHOUT_VRT
+    }
+
+    //Do wof_calc
+    pgpe_pstate_compute_vratio(pgpe_pstate_get(pstate_curr));
+    pgpe_pstate_compute_vindex();
+    pgpe_pstate_set(clip_wof, pgpe_pstate_get(vrt)->data[pgpe_pstate_get(vindex)]);
+    PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_inst),
+             pgpe_pstate_get(vindex),
+             pgpe_pstate_get(clip_wof));
 }
 
 void pgpe_process_wof_disable()
 {
-    //\todo
+    if(!pgpe_pstate_is_wof_enabled())
+    {
+        //\\todo RTC: 214435 INFO_ERROR
+    }
+
+    if(!pgpe_pstate_is_pstate_enabled())
+    {
+        //\\todo RTC: 214435 INFO_ERROR
+    }
+
+    //Set WOF Clip used by pstate actuation to 0(remove clip)
+    pgpe_pstate_set(clip_wof, 0);
+
+}
+
+void pgpe_process_wof_ctrl_post_actuate()
+{
+    PK_TRACE("PEP: WOF CTRL Post Actuate");
+
+    if(pgpe_pstate_is_wof_clip_bounded())
+    {
+        PK_TRACE("PEP: WOF Clip Bounded");
+        pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_CTRL, PGPE_RC_SUCCESS);
+        pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+        pgpe_pstate_set(wof_status, WOF_STATUS_ENABLED);
+    }
 }
 
 void pgpe_process_wof_vrt(void* eargs)
 {
     PK_TRACE("PEP: WOF VRT");
+    ipc_msg_t* cmd = (ipc_msg_t*)eargs;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
     ipcmsg_wof_vrt_t* args = (ipcmsg_wof_vrt_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
 
     if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
-        //\todo Do WOF VRT processing
+        //Check that VRT pointer is not NULL
+        if (args->idd_vrt_ptr == NULL)
+        {
+            PK_TRACE("PEP: NULL VRT");
+            //\todo Error
+        }
+
+        pgpe_pstate_set_vrt(args->idd_vrt_ptr);
+        PK_TRACE("PEP: VRT_PTR=0x%x", (uint32_t)args->idd_vrt_ptr);
+
+        //If WOF is enabled
+        if(pgpe_pstate_is_wof_enabled())
+        {
+            //Do vratio instantaneous calculation
+            pgpe_pstate_compute_vratio(pgpe_pstate_get(pstate_curr));
+            pgpe_pstate_compute_vindex();
+            pgpe_pstate_set(clip_wof, args->idd_vrt_ptr->data[pgpe_pstate_get(vindex)]);
+            PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_inst),
+                     pgpe_pstate_get(vindex),
+                     pgpe_pstate_get(clip_wof));
+            pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_PENDING_ACTUATION);
+        }
+        else
+        {
+            //ACK back
+            pgpe_occ_send_ipc_ack_cmd(cmd);
+            pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+        }
     }
     else
     {
@@ -402,6 +508,18 @@ void pgpe_process_wof_vrt(void* eargs)
         pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
     }
 
+}
+
+void pgpe_process_wof_vrt_post_actuate()
+{
+    PK_TRACE("PEP: WOF VRT Post Actuate");
+
+    if(pgpe_pstate_is_wof_clip_bounded())
+    {
+        PK_TRACE("PEP: WOF Clip Bounded");
+        pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_VRT, PGPE_RC_SUCCESS);
+        pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+    }
 }
 
 void pgpe_process_safe_mode(void* args)
