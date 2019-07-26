@@ -198,9 +198,9 @@ qme_stop2_abort_cleanup(uint32_t& abort_targets)
 
     MARK_TAG(abort_targets, SX_CORE_HANDOFF_PC);
 
-    qme_core_report_pls_srr1(abort_targets);
+    qme_stop_report_pls_srr1(abort_targets);
 
-    qme_core_handoff_pc(abort_targets,
+    qme_stop_handoff_pc(abort_targets,
                         G_qme_record.c_special_wakeup_abort_pending);
 
     //===============//

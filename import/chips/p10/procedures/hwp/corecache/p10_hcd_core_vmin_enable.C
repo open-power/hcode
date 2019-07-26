@@ -110,15 +110,13 @@ p10_hcd_core_vmin_enable(
 
     do
     {
-        if (!l_attr_runn_mode)
-        {
-            FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CL2_PFETCNTL), l_mmioData ) );
+        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CL2_PFETCNTL), l_mmioData ) );
 
-            // use multicastAND to check 1
-            if( MMIO_GET(MMIO_LOWBIT(42)) == 1 )
-            {
-                break;
-            }
+        // use multicastAND to check 1
+        if( ( !l_attr_runn_mode ) &&
+            ( MMIO_GET(MMIO_LOWBIT(42)) == 1 ) )
+        {
+            break;
         }
 
         fapi2::delay(HCD_VMIN_ENA_VDD_PG_STATE_POLL_DELAY_HW_NS,
@@ -126,12 +124,12 @@ p10_hcd_core_vmin_enable(
     }
     while( (--l_timeout) != 0 );
 
-    FAPI_ASSERT((l_timeout != 0),
-                fapi2::VMIN_ENA_VDD_PG_STATE_TIMEOUT()
-                .set_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS(HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS)
-                .set_CPMS_CL2_PFETCNTL(l_mmioData)
-                .set_CORE_TARGET(i_target),
-                "Vmin Enable VDD_PG_STATE Timeout");
+    FAPI_ASSERT( ( l_attr_runn_mode ? ( MMIO_GET(MMIO_LOWBIT(42)) == 1 ) : (l_timeout != 0) ),
+                 fapi2::VMIN_ENA_VDD_PG_STATE_TIMEOUT()
+                 .set_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS(HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS)
+                 .set_CPMS_CL2_PFETCNTL(l_mmioData)
+                 .set_CORE_TARGET(i_target),
+                 "Vmin Enable VDD_PG_STATE Timeout");
 
     FAPI_DBG("Check VDD_PFET_ENABLE_ACTUAL == 0x80 via CPMS_CL2_PFETSTAT[16-23]");
     FAPI_TRY( HCD_GETMMIO_C( i_target, CPMS_CL2_PFETSTAT, l_mmioData ) );
@@ -152,15 +150,14 @@ p10_hcd_core_vmin_enable(
 
     do
     {
-        if (!l_attr_runn_mode)
-        {
-            FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
+        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
 
-            // use multicastAND to check 1
-            if( MMIO_GET(MMIO_LOWBIT(32)) == 1 && MMIO_GET(MMIO_LOWBIT(34)) == 1)
-            {
-                break;
-            }
+        // use multicastAND to check 1
+        if( ( !l_attr_runn_mode ) &&
+            ( ( MMIO_GET(MMIO_LOWBIT(32)) == 1 ) &&
+              ( MMIO_GET(MMIO_LOWBIT(34)) == 1 ) ) )
+        {
+            break;
         }
 
         fapi2::delay(HCD_VMIN_ENA_RVID_ACTIVE_POLL_DELAY_HW_NS,
@@ -168,12 +165,14 @@ p10_hcd_core_vmin_enable(
     }
     while( (--l_timeout) != 0 );
 
-    FAPI_ASSERT((l_timeout != 0),
-                fapi2::VMIN_ENA_RVID_ACTIVE_TIMEOUT()
-                .set_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS)
-                .set_CPMS_RVCSR(l_mmioData)
-                .set_CORE_TARGET(i_target),
-                "Vmin Enable Rvid Active/Enabled Timeout");
+    FAPI_ASSERT( ( l_attr_runn_mode ?
+                   ( ( MMIO_GET(MMIO_LOWBIT(32)) == 1 ) &&
+                     ( MMIO_GET(MMIO_LOWBIT(34)) == 1 ) ) : (l_timeout != 0) ),
+                 fapi2::VMIN_ENA_RVID_ACTIVE_TIMEOUT()
+                 .set_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS)
+                 .set_CPMS_RVCSR(l_mmioData)
+                 .set_CORE_TARGET(i_target),
+                 "Vmin Enable Rvid Active/Enabled Timeout");
 
 fapi_try_exit:
 

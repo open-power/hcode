@@ -32,13 +32,15 @@ QME-S-SOURCES   = qme_header.S
 
 QME-CPP-SOURCES = qme_main.C       \
                   qme_stop_entry.C \
-                  qme_stop_exit.C 
+                  qme_stop_exit.C  
          
 QME-C-SOURCES   = qme_addresses.c           \
                   qme_init.c                \
                   qme_irq_timer_events.c    \
                   qme_irq_doorbell_events.c \
-                  qme_irq_stop_events.c 
+                  qme_irq_stop_events.c     \
+                  qme_block_copy.c          \
+                  qme_stop_self_execute.c
 
 SUBMODULE-CPP-SOURCES = p10_hcd_corecache_clock_control.C \
                         p10_hcd_corecache_power_control.C \
