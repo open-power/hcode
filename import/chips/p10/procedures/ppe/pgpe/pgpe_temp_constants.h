@@ -56,10 +56,10 @@
 
 //REGISTERS
 //\todo Use Common Registers(but SIMICS is broken right now)
-#define TPC_DPLL_FREQ_CTRL_REG      0x01000051
+/*#define TPC_DPLL_FREQ_CTRL_REG      0x01000051
 #define TPC_DPLL_CTRL_REG           0x01000052
 #define TPC_DPLL_CTRL_REG_CLR       0x01000053
 #define TPC_DPLL_CTRL_REG_OR        0x01000054
-#define TPC_DPLL_STAT_REG           0x01000055
+#define TPC_DPLL_STAT_REG           0x01000055*/
 
 #endif //
