@@ -52,7 +52,7 @@ namespace fapi2
 //PLAT NOTE// prototypes in target.C listed here
 /// @brief Function to initialize the G_targets vector
 ///        based on partial good attributes
-ReturnCode                    plat_TargetsInit();
+ReturnCode                    plat_TargetsInit(uint32_t);
 Target<TARGET_TYPE_PROC_CHIP> plat_getChipTarget();
 
 //PLAT END//

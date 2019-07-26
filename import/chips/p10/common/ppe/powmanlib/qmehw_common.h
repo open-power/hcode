@@ -35,6 +35,26 @@ enum QME_CORE_MASKS
     QME_MASK_ALL_CORES              = 0xF  // ALL  Cores = 0b1111
 };
 
+enum QME_PIG_TYPES
+{
+    PIG_TYPE_0                      = 0x0,
+    PIG_TYPE_1                      = 0x1,
+    PIG_TYPE_2                      = 0x2,
+    PIG_TYPE_3                      = 0x3,
+    PIG_TYPE_4                      = 0x4,
+    PIG_TYPE_5                      = 0x5,
+    PIG_TYPE_6                      = 0x6,
+    PIG_TYPE_7                      = 0x7,
+    PIG_TYPE_8                      = 0x8,
+    PIG_TYPE_9                      = 0x9,
+    PIG_TYPE_A                      = 0xA,
+    PIG_TYPE_B                      = 0xB,
+    PIG_TYPE_C                      = 0xC,
+    PIG_TYPE_D                      = 0xD,
+    PIG_TYPE_E                      = 0xE,
+    PIG_TYPE_F                      = 0xF
+};
+
 enum QME_BCEBAR_INDEXES
 {
     QME_BCEBAR_0                    = 0,
@@ -43,10 +63,10 @@ enum QME_BCEBAR_INDEXES
 
 enum QME_MULTICAST_TYPES
 {
-    QME_MC_RD_OR                     = 0,
-    QME_MC_RD_AND                    = 1,
-    QME_MC_RD_EQU                    = 4,
-    QME_MC_WR                        = 5
+    QME_MC_RD_OR                    = 0,
+    QME_MC_RD_AND                   = 1,
+    QME_MC_RD_EQU                   = 4,
+    QME_MC_WR                       = 5
 };
 
 

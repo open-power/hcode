@@ -37,7 +37,8 @@
 
 #include "p10_qme_putringutils.H"
 #include "p10_hcd_common.H"
-
+#include "p10_hcode_image_defines.H"
+/*
 //FIXME added to be able to compile the commit standalone.
 //Eventually it needs to be removed. We need use definition in
 //p10_hcode_image_defines.H
@@ -63,7 +64,7 @@ struct  __attribute__((packed, aligned(64))) QmeHeader_t
     uint64_t    g_qme_unsec_cpmr_PhyAddr;
     uint32_t    g_qme_custom_length;
 };
-
+*/
 /// @brief This structure represents the layout of the Section-TOR
 ///        Section-TOR has the offsets to the different chiplet's
 ///        Common Ring section and Instance Ring section

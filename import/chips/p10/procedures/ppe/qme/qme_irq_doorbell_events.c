@@ -98,6 +98,7 @@ qme_doorbell1_event()
         // This occurs even if no cores actually transtiion
         // as the XGPE does not have knowledge of the selected cores.
         pig_data = ( PIG_TYPE_F << SHIFT32(4) ) |
+                   ( G_qme_record.quad_id       << SHIFT32(19) ) |
                    ( G_qme_record.doorbell1_msg << SHIFT32(23) );
         qme_send_pig_packet(pig_data);
     }
@@ -141,6 +142,7 @@ qme_doorbell1_event()
         // This occurs even if no cores actually transtiion
         // as the XGPE does not have knowledge of the selected cores.
         pig_data = ( PIG_TYPE_F << SHIFT32(4) ) |
+                   ( G_qme_record.quad_id       << SHIFT32(19) ) |
                    ( G_qme_record.doorbell1_msg << SHIFT32(23) );
         qme_send_pig_packet(pig_data);
     }

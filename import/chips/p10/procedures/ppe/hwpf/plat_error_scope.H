@@ -30,6 +30,8 @@
 #ifndef __FAPI2_PLAT_ERROR_SCOPE__
 #define __FAPI2_PLAT_ERROR_SCOPE__
 
+//PLAT NOTE// for IOTA_PANIC in iota.h included
+#include "assert.h"
 
 //PLAT NOTE// bypass FAPI_TRY to speed process ppe scoms
 
@@ -65,13 +67,15 @@
 #define PLAT_FAPI_ASSERT( __conditional__, __ffdc__, ... )      \
     if (! (__conditional__))                                    \
     {                                                           \
-        FAPI_ERR(__VA_ARGS__);while(1){};                       \
+        FAPI_ERR(__VA_ARGS__);                                  \
+        IOTA_PANIC(0);                                          \
     }
 
+// PLAT NOTE// not taking this as part of macro above but just halt
 //        (__ffdc__).execute();
 //        goto fapi_try_exit;
-//
-//
+
+
 ///
 /// @brief Create an error log based on __conditional__,
 /// the FFDC gathering function is called and the

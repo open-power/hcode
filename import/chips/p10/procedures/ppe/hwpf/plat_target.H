@@ -345,6 +345,7 @@ createPlatTargetHandle(const uint32_t i_plat_argument)
     else if( K & TARGET_TYPE_EQ )
     {
         l_handle.fields.functional = 1;
+        l_handle.fields.target_num = i_plat_argument;
         l_handle.fields.target_type = PPE_TARGET_TYPE_EQ;
     }
     else if( K & TARGET_TYPE_CORE )

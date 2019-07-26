@@ -56,7 +56,7 @@ namespace fapi2
 /// @brief Function to initialize the G_targets vector
 ///        based on partial good attributes
 ///  this will move to plat_target.H formally
-ReturnCode plat_TargetsInit()
+ReturnCode plat_TargetsInit(uint32_t i_quad_id)
 {
     // Initialise global attribute pointers
     G_system_attributes_ptr    = &(G_system_attributes);
@@ -94,7 +94,7 @@ ReturnCode plat_TargetsInit()
         revle32((plat_target_handle_t)(perv_target.get()));
 
     // Cache (EQ) Target, again only one for one qme
-    Target<TARGET_TYPE_EQ> eq_target(createPlatTargetHandle<TARGET_TYPE_EQ>(0));
+    Target<TARGET_TYPE_EQ> eq_target(createPlatTargetHandle<TARGET_TYPE_EQ>(i_quad_id));
     G_vec_targets.at(PPE_EQ_TARGET_OFFSET) =
         revle32((plat_target_handle_t)(eq_target.get()));
 

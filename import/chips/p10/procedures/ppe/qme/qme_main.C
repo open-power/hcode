@@ -27,6 +27,8 @@
 #include <fapi2.H>
 #include <fapi2_target.H>
 
+extern QmeRecord G_qme_record;
+
 int main()
 {
     PK_TRACE("Main: Configure Trace Timebase");
@@ -41,7 +43,11 @@ int main()
     out32(QME_LCL_QMCR_OR, BITS32(12, 2));
 #endif
 
-    fapi2::ReturnCode fapiRc = fapi2::plat_TargetsInit();
+    uint32_t pir = 0;
+    asm volatile ( "mfspr %0, %1 \n\t" : "=r" (pir) : "i" (SPRN_PIR));
+    G_qme_record.quad_id = pir & 0xF;
+
+    fapi2::ReturnCode fapiRc = fapi2::plat_TargetsInit(G_qme_record.quad_id);
 
     if( fapiRc != fapi2::FAPI2_RC_SUCCESS )
     {

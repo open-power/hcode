@@ -46,7 +46,9 @@ extern "C" {
 #include "p10_pm_hcd_flags.h"
 #define   QME_IMAGE_SOURCE
 #include "p10_hcd_common.H"
-//#include "p9_hcode_image_defines.H"
+
+#include "p10_hcode_image_defines.H"
+#include "p10_hcd_memmap_qme_sram.H"
 
 
 enum STOP_LEVELS
@@ -93,7 +95,7 @@ enum STOP_STATE_HISTORY_VECTORS
     SSH_ACT_LV11_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(8) | BITS32(10, 2))
 };
 
-enum QME_BLOCK_ENTRY_EXIT
+enum STOP_BLOCK_ENTRY_EXIT
 {
     STOP_BLOCK_ENCODE                 = 0x7, //0bxxx for message encodings of (un)block
     STOP_BLOCK_ACTION                 = 0x4, //0b1xx for block, 0b0xx for unblock
@@ -101,32 +103,26 @@ enum QME_BLOCK_ENTRY_EXIT
     STOP_BLOCK_ENTRY                  = 0x1  //0bY01 for (un)block entry
 };
 
-enum QME_PIG_TYPES
-{
-    PIG_TYPE_0                        = 0x0,
-    PIG_TYPE_1                        = 0x1,
-    PIG_TYPE_2                        = 0x2,
-    PIG_TYPE_3                        = 0x3,
-    PIG_TYPE_4                        = 0x4,
-    PIG_TYPE_5                        = 0x5,
-    PIG_TYPE_6                        = 0x6,
-    PIG_TYPE_7                        = 0x7,
-    PIG_TYPE_8                        = 0x8,
-    PIG_TYPE_9                        = 0x9,
-    PIG_TYPE_A                        = 0xA,
-    PIG_TYPE_B                        = 0xB,
-    PIG_TYPE_C                        = 0xC,
-    PIG_TYPE_D                        = 0xD,
-    PIG_TYPE_E                        = 0xE,
-    PIG_TYPE_F                        = 0xF
-};
-
-enum QME_STOP_SRR1
+enum STOP_REPORT_SRR1
 {
     MOST_STATE_LOSS                   = 3,
     SOME_STATE_LOSS_BUT_NOT_TIMEBASE  = 2,
     NO_STATE_LOSS                     = 1
 };
+
+enum SPR_SELF_ACTIONS
+{
+    SPR_SELF_SAVE       =   0x00,
+    SPR_SELF_RESTORE    =   0x01,
+};
+
+//Return codes associated with Block Copy Engine.
+typedef enum
+{
+    BLOCK_COPY_SUCCESS      = 0,
+    BLOCK_COPY_FAILED       = 1,
+    BLOCK_COPY_BUSY         = 2
+} BceReturnCode_t;
 
 enum QME_HCODE_FUNCTIONAL_ENABLES
 {
@@ -137,7 +133,11 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
     QME_L2_PURGE_ABORT_PATH_ENABLE    = BIT32(4),
     QME_NCU_PURGE_ABORT_PATH_ENABLE   = BIT32(5),
     QME_STOP3OR5_CATCHUP_PATH_ENABLE  = BIT32(6),
-    QME_STOP3OR5_ABORT_PATH_ENABLE    = BIT32(7)
+    QME_STOP3OR5_ABORT_PATH_ENABLE    = BIT32(7),
+    QME_SELF_RESTORE_ENABLE           = BIT32(8),
+    QME_SMF_SUPPORT_ENABLE            = BIT32(9),
+    QME_BLOCK_COPY_SCAN_ENABLE        = BIT32(10),
+    QME_BLOCK_COPY_SCOM_ENABLE        = BIT32(11),
 };
 
 #define ENABLED_HCODE_FUNCTIONS 0xFF000000
@@ -157,10 +157,10 @@ typedef struct
     uint32_t    stop_level_enabled; // Stop2:bit2, Stop5:bit5, Stop11:bit11
     uint32_t    fused_core_enabled; // HwFused:0b01, HcodePaired:0b10
 
+    uint32_t    tbd;
     uint32_t    mma_enabled;        // POff:0b001, POff_Delay:0b010, POn:0b100
     uint32_t    throttle_enabled;   // Enable Hcode Core Throttling
     uint32_t    pmcr_fwd_enabled;   // Enable QMCR and PMCRS auto updates
-    uint32_t    wof_control_status;
 
     // Wof and Pstate and Doorbells
     //   Note: PMCR is handled by HW
@@ -168,20 +168,20 @@ typedef struct
     //   if profile/debug is needed
     //   Same with DB1 reserved by XGPE
 
+    uint32_t    wof_control_status;
     uint32_t    safe_mode_status;
-    uint32_t    doorbell2_msg;
-    uint32_t    doorbell1_msg;
-    uint32_t    doorbell0_msg;
+    uint32_t    c_throttle_done;
+    uint32_t    c_throttle_req;
 
     uint32_t    c_doorbella_req;
     uint32_t    c_doorbella_msg;
     uint32_t    c_doorbellb_reg;
     uint32_t    c_doorbellb_msg;
 
-    uint32_t    c_throttle_done;
-    uint32_t    c_throttle_req;
-    uint32_t    c_mma_poweron_done;
-    uint32_t    c_mma_poweron_req;
+    uint32_t    doorbell2_msg;
+    uint32_t    doorbell1_msg;
+    uint32_t    doorbell0_msg;
+    uint32_t    quad_id;            // PIR[28:31]
 
     // State of Cores
 
@@ -229,10 +229,10 @@ typedef struct
     uint32_t    c_stop5_enter_targets;
     uint32_t    c_stop11_enter_targets;
 
+    uint32_t    c_mma_poweron_done;
+    uint32_t    c_mma_poweron_req;
     uint32_t    c_l2_purge_catchup_targets;
     uint32_t    c_stop3or5_catchup_targets;
-    uint32_t    tbd0;
-    uint32_t    tbd1;
 
     uint32_t    c_l2_purge_abort_targets;
     uint32_t    c_ncu_purge_abort_targets;
@@ -275,15 +275,20 @@ typedef struct
 void qme_init();
 void qme_eval_eimr_override();
 void qme_send_pig_packet(uint32_t);
+void qme_block_copy_start(uint32_t, uint32_t, uint32_t, uint32_t);
+BceReturnCode_t qme_block_copy_check();
 
 // QME Stop Functions
+void qme_parse_pm_state_active_fast();
 void qme_stop_entry();
 void qme_stop_exit();
-void qme_parse_pm_state_active_fast();
+void qme_stop_self_execute(uint32_t, uint32_t);
+void qme_stop_self_complete(uint32_t);
+void qme_stop_report_pls_srr1(uint32_t);
+
 #ifdef __cplusplus
 //only C++ supports passing by reference
-void qme_core_handoff_pc(uint32_t, uint32_t&);
-void qme_core_report_pls_srr1(uint32_t);
+void qme_stop_handoff_pc(uint32_t, uint32_t&);
 #endif
 
 // QME Interrupt Events Handling

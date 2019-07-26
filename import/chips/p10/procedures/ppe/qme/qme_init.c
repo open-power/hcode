@@ -27,6 +27,9 @@
 //#include "p9_qme_copy_scan_ring.h"
 //#include "p9_hcode_image_defines.H"
 
+
+#define QME_INIT_ENABLE_INTERRUPT_VECTOR
+
 // QME Stop Header and Structure
 QmeRecord G_qme_record __attribute__((section (".dump_ptr"))) =
 {
@@ -49,7 +52,6 @@ qme_init()
     //--------------------------------------------------------------------------
 
     uint32_t local_data = in32_sh(QME_LCL_QMCR);
-
     G_qme_record.c_configured       = local_data & BITS64SH(60, 4);
     G_qme_record.fused_core_enabled = ( local_data >> SHIFT64SH(47) ) & 0x1;
 
@@ -106,29 +108,29 @@ qme_init()
     //--------------------------------------------------------------------------
     // BCE Core Specific Scan Ring
     //--------------------------------------------------------------------------
-    /*
-    #if !SKIP_BCE_SCAN_RING
 
+    if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCAN_ENABLE )
+    {
         PK_TRACE_DBG("Setup: BCE Setup Kickoff to Copy Core Specific Scan Ring");
 
-        cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
+        QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
 
         //right now a blocking call. Need to confirm this.
-        start_cme_block_copy(CME_BCEBAR_1,
-                             (CME_IMAGE_CPMR_OFFSET + (pCmeImgHdr->g_cme_core_spec_ring_offset << 5)),
-                             pCmeImgHdr->g_cme_core_spec_ring_offset,
-                             pCmeImgHdr->g_cme_max_spec_ring_length);
+        qme_block_copy_start(QME_BCEBAR_1,
+                             (QME_IMAGE_CPMR_OFFSET + (pQmeImgHdr->g_qme_inst_spec_ring_offset << 5)),
+                             pQmeImgHdr->g_qme_inst_spec_ring_offset,
+                             pQmeImgHdr->g_qme_max_spec_ring_length);
+
 
         PK_TRACE_DBG("Setup: BCE Check for Copy Completed");
 
-        if( BLOCK_COPY_SUCCESS != check_cme_block_copy() )
+        if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
         {
-            PK_TRACE_DBG("ERROR: BCE Copy of Core Specific Scan Ring Failed. HALT CME!");
-            IOTA_PANIC(CME_STOP_BCE_CORE_RING_FAILED);
+            PK_TRACE_DBG("ERROR: BCE Copy of Core Specific Scan Ring Failed. HALT QME!");
+            IOTA_PANIC(QME_STOP_BLOCK_COPY_SCAN_FAILED);
         }
+    }
 
-    #endif
-    */
     //--------------------------------------------------------------------------
     // Initialize Hardware Settings
     //--------------------------------------------------------------------------

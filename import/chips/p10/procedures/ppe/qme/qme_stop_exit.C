@@ -53,8 +53,9 @@
 extern QmeRecord G_qme_record;
 
 
+
 void
-qme_core_report_pls_srr1(uint32_t core_targets)
+qme_stop_report_pls_srr1(uint32_t core_target)
 {
     uint32_t c_loop         = 0;
     uint32_t c_end          = 0;
@@ -75,7 +76,7 @@ qme_core_report_pls_srr1(uint32_t core_targets)
          c_loop = 8; c_loop > 0; c_loop = c_loop >> 1,
          c_end += 4, t_end += 16 )
     {
-        if ( ! (c_loop & core_targets) )
+        if ( ! (c_loop & core_target) )
         {
             continue;
         }
@@ -123,10 +124,10 @@ qme_core_report_pls_srr1(uint32_t core_targets)
 
 
 void
-qme_core_handoff_pc(uint32_t core_targets, uint32_t& core_spwu)
+qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 {
     PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
-    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_targets ), BIT32(1) );
+    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(1) );
 
 #if !EPM_TUNING
     PPE_WAIT_4NOP_CYCLES
@@ -134,15 +135,15 @@ qme_core_handoff_pc(uint32_t core_targets, uint32_t& core_spwu)
 
     PK_TRACE("Polling for Core Waking up(pm_active=0) via QME_SSDR[12-15]");
 
-    while( ( ( (~in32(QME_LCL_SSDR)) >> SHIFT32(15) ) & core_targets ) != core_targets );
+    while( ( ( (~in32(QME_LCL_SSDR)) >> SHIFT32(15) ) & core_target ) != core_target );
 
     //===============//
 
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
-    out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, core_targets ), SSH_EXIT_COMPLETE );
+    out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, core_target ), SSH_EXIT_COMPLETE );
 
     PK_TRACE("Drop halt STOP override disable via PCR_SCSR[21]");
-    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_targets ), BIT32(21) );
+    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(21) );
 
     //===============//
 
@@ -167,10 +168,10 @@ qme_core_handoff_pc(uint32_t core_targets, uint32_t& core_spwu)
         G_qme_record.c_special_wakeup_done |= core_spwu;
     }
 
-    if( ( core_targets = ( core_targets & (~core_spwu) ) ) )
+    if( ( core_target = ( core_target & (~core_spwu) ) ) )
     {
-        PK_TRACE_INF("SX.0B: Cores[%x] Drop PM_EXIT via PCR_SCSR[1]", core_targets);
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_targets ), BIT32(1) );
+        PK_TRACE_INF("SX.0B: Cores[%x] Drop PM_EXIT via PCR_SCSR[1]", core_target);
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(1) );
     }
 
     core_spwu = 0;
@@ -181,7 +182,7 @@ qme_core_handoff_pc(uint32_t core_targets, uint32_t& core_spwu)
 void
 qme_stop_exit()
 {
-
+    QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
     fapi2::Target < fapi2::TARGET_TYPE_PROC_CHIP > chip_target;
     fapi2::Target < fapi2::TARGET_TYPE_CORE |
     fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_target;
@@ -235,11 +236,11 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_HANDOFF_PC )
 
-        qme_core_report_pls_srr1(G_qme_record.c_stop2_exit_express);
+        qme_stop_report_pls_srr1(G_qme_record.c_stop2_exit_express);
 
         //===============//
 
-        qme_core_handoff_pc(G_qme_record.c_stop2_exit_express,
+        qme_stop_handoff_pc(G_qme_record.c_stop2_exit_express,
                             G_qme_record.c_special_wakeup_exit_pending);
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_AWAKE )
@@ -259,6 +260,16 @@ qme_stop_exit()
 
     if( G_qme_record.c_stop11_exit_targets )
     {
+
+        if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
+        {
+            PK_TRACE("BCE Runtime Kickoff to Copy Scom Restore core");
+            qme_block_copy_start(QME_BCEBAR_0,
+                                 SCOM_RESTORE_CPMR_OFFSET,
+                                 pQmeImgHdr->g_qme_scom_offset,
+                                 (pQmeImgHdr->g_qme_scom_length >> 5));
+        }
+
         PK_TRACE_INF("WAKE11: Waking up Cores in STOP11[%x]", G_qme_record.c_stop11_exit_targets);
 
         core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
@@ -319,6 +330,17 @@ qme_stop_exit()
         //TODO commit77948//p10_hcd_cache_scominit(core_target);
 
         //===============//
+
+        if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
+        {
+            PK_TRACE_DBG("BCE Runtime Check Scom Restore Copy Completed");
+
+            if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
+            {
+                PK_TRACE_DBG("ERROR: BCE Scom Restore Copy Failed. HALT QME!");
+                IOTA_PANIC(QME_STOP_BLOCK_COPY_SCOM_FAILED);
+            }
+        }
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
 
@@ -462,7 +484,20 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SCOMED )
 
-        //TODO SELF RESTORE
+        //===============//
+
+        if( G_qme_record.hcode_func_enabled & QME_SELF_RESTORE_ENABLE )
+        {
+            MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SELF_RESTORE )
+
+            qme_stop_self_execute(G_qme_record.c_stop2_exit_targets, SPR_SELF_RESTORE);
+
+            MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SRESET_THREADS )
+
+            qme_stop_self_complete(G_qme_record.c_stop2_exit_targets);
+
+            MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_RESTORED )
+        }
 
         //===============//
 
@@ -479,11 +514,11 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_HANDOFF_PC )
 
-        qme_core_report_pls_srr1(G_qme_record.c_stop2_exit_targets);
+        qme_stop_report_pls_srr1(G_qme_record.c_stop2_exit_targets);
 
         //===============//
 
-        qme_core_handoff_pc(G_qme_record.c_stop2_exit_targets,
+        qme_stop_handoff_pc(G_qme_record.c_stop2_exit_targets,
                             G_qme_record.c_special_wakeup_exit_pending);
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_AWAKE )

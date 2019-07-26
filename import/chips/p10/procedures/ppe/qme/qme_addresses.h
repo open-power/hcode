@@ -25,6 +25,11 @@
 
 // Core/Cache/PC SCOM Addresses:
 
+extern uint32_t IMA_EVENT_MASK;
+extern uint32_t CORE_FIR_OR;
+extern uint32_t DIRECT_CONTROLS;
+extern uint32_t SCRATCH0;
+extern uint32_t SPATTN_MASK;
 extern uint32_t EC_PC_TFX_SM;
 
 // QME Local Addresses:
@@ -32,6 +37,7 @@ extern uint32_t EC_PC_TFX_SM;
 // QME Per-Quad
 
 extern uint32_t QME_LCL_PIG;
+extern uint32_t QME_LCL_BCECSR;
 extern uint32_t QME_LCL_QMCR;
 extern uint32_t QME_LCL_QMCR_OR;
 extern uint32_t QME_LCL_QMCR_CLR;
@@ -74,6 +80,7 @@ extern uint32_t QME_LCL_EINR;
 
 extern uint32_t QME_SSH_SRC;
 extern uint32_t QME_PSCRS;
+extern uint32_t QME_RMOR;
 extern uint32_t QME_DCSR;
 
 extern uint32_t QME_SCSR;
