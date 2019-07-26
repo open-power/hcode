@@ -117,7 +117,7 @@ void pgpe_process_pstate_start()
     uint32_t voltage, vcs_before_vdd = 0;
     int32_t move_frequency;
     dpll_stat_t dpll;
-    PPE_GETSCOM(TPC_DPLL_STAT_REG, dpll.value);
+    dpll.value = pgpe_dpll_get_dpll();
 
     //2. Determine the highest pstate that matches with the read DPLL frequency
     if (dpll.fields.freqout > pgpe_gppb_get(dpll_pstate0_value))
