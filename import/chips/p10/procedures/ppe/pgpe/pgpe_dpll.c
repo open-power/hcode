@@ -35,8 +35,7 @@ uint64_t pgpe_dpll_get_dpll()
 {
     uint64_t dpll_freq;
 
-    //PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_freq); //\todo Use Common Reg Addr, but SIMICS is broken
-    PPE_GETSCOM(TPC_DPLL_STAT_REG, dpll_freq);
+    PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_freq);
     PK_TRACE("dpll=0x%08x%08x", dpll_freq >> 32, dpll_freq);
 
     return dpll_freq;
@@ -44,16 +43,14 @@ uint64_t pgpe_dpll_get_dpll()
 
 void pgpe_dpll_write_dpll(uint64_t value)
 {
-    //PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_FREQ, value);//\todo Use Common Reg Addr, but SIMICS is broken
-    PPE_PUTSCOM(TPC_DPLL_FREQ_CTRL_REG, value);
+    PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_FREQ, value);
 }
 
 uint32_t pgpe_dpll_get_pstate()
 {
     dpll_freq_t dpll_freq;
 
-    //PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_freq.value); //\todo Use Common Reg Addr, but SIMICS is broken
-    PPE_GETSCOM(TPC_DPLL_STAT_REG, dpll_freq.value);
+    PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_freq.value);
 
     uint32_t pstate = pgpe_gppb_get(dpll_pstate0_value) - dpll_freq.fields.fmax;
 
@@ -70,6 +67,5 @@ void pgpe_dpll_write(uint32_t pstate)
 
 
     PK_TRACE("dpll=0x%08x%08x", dpll_freq.value >> 32, dpll_freq.value);
-    //PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_FREQ, dpll_freq.value);//\todo Use Common Reg Addr, but SIMICS is broken
-    PPE_PUTSCOM(TPC_DPLL_FREQ_CTRL_REG, dpll_freq.value);
+    PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_FREQ, dpll_freq.value);
 }
