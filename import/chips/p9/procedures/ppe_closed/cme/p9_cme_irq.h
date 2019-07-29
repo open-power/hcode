@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -47,6 +47,19 @@
 //   definitions in cme_irq_common.c
 
 #include <stdint.h>
+
+//CME_TSEL is set to 8 which means FIT has period of 1.04ms when
+//Nest Freq is 2000Mhz. Ideally, should calculate period of FIT based
+//on nest frequency, but nest frequency is NOT plumbed to CME and we
+//don't need to be highly accurate here.
+//Note, from PGPE perspective, the latency of the DB0 operation depends
+//on the amount of time DB0 is pending on Quad Manager plus COMM_RECV is pending
+//on sibling. This is because COMM_RECV interrupt is triggered by the DB0
+//handler on the quad manager. Therefore, we must set the COMM_RECV_TICK_THRESHOLD
+//to be smaller.
+#define DB0_FIT_TICK_THRESHOLD          1 //Threshold for DB0 pending count(2ms)
+#define COMM_RECV_FIT_TICK_THRESHOLD    1 //Threshold for COMM_RECV pending countr(2ms)
+#define INTERCME_IN0_FIT_TICK_THRESHOLD 1 //Threshold for COMM_RECV pending countr(2ms)
 
 // Priority Levels
 #define IDX_PRTY_LVL_HIPRTY         0

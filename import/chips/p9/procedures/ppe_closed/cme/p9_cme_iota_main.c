@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017,2018                                                    */
+/* COPYRIGHT 2017,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -45,6 +45,8 @@ CmeStopRecord G_cme_stop_record __attribute__((section (".dump_ptr_stop"))) = {{
 CmeFitRecord G_cme_fit_record = {0, 0, 0, 0, 0xFFFFFFFF, 0};
 #endif
 
+
+void p9_cme_pstate_db0_comm_recv_intercme_in0_pending_counter();
 
 uint32_t G_CME_LCL_EINR      = CME_LCL_EINR;
 uint32_t G_CME_LCL_EISR      = CME_LCL_EISR;
@@ -102,6 +104,8 @@ void fit_handler()
     p9_cme_core_livelock_buster();
 #endif
 
+    //Handle DB0/Comm_Recv starvation case
+    p9_cme_pstate_db0_comm_recv_intercme_in0_pending_counter();
 }
 #endif //fit handler
 

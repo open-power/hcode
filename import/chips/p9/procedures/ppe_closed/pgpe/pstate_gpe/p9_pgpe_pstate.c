@@ -2542,7 +2542,7 @@ void p9_pgpe_pstate_wov_init()
     G_pgpe_pstate_record.wov.avg_freq_gt_target_freq = 0;
     G_pgpe_pstate_record.wov.freq_loss_tenths_gt_max_droop_tenths = 0;
     G_pgpe_pstate_record.wov.status = WOV_DISABLED;
-    G_pgpe_pstate_record.wov.info = 0xdeadbeef;
+    G_pgpe_pstate_record.wov.info = 0xdeadde04;
 }
 
 //

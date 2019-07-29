@@ -56,6 +56,9 @@ extern CmePstateRecord G_cme_pstate_record;
 extern cmeHeader_t* G_cmeHeader;
 extern LocalPstateParmBlock* G_lppb;
 extern uint8_t G_vdm_threshold_table[];
+extern uint32_t g_db0_pending_fit_tick_count;
+extern uint32_t g_comm_recv_pending_fit_tick_count;
+extern uint32_t g_intercme_in0_pending_tick_count;
 cppm_cmedb0_t G_dbData;
 
 
@@ -75,6 +78,7 @@ void p9_cme_pstate_db0_start();
 void p9_cme_pstate_db0_glb_bcast();
 void p9_cme_pstate_db0_clip_bcast();
 void p9_cme_pstate_update();
+void p9_cme_pstate_db0_comm_recv_intercme_in0_pending_counter();
 
 //
 //Doorbell0 interrupt handler
@@ -164,6 +168,67 @@ void p9_cme_pstate_db0_handler(void)
     p9_cme_pstate_process_db0();
 
     g_eimr_override &= ~BIT64(4);
+}
+
+//
+//Doorbell0/Comm Recv pending counter(called every FIT tick)
+//
+void p9_cme_pstate_db0_comm_recv_intercme_in0_pending_counter()
+{
+    //Note: Special handling of DB0/COMM_RECV to handle the db0/comm_recv
+    //starvation case.
+    //
+    //Reason: DB0(Quad Manager CME) and COMM_RECV(Sibling CME) are lower priority
+    //than the STOP related interrupts,
+    //and can stay pending for very long time(~ms scale) on systems with
+    //high frequency of STOP requests. This can then prevent PGPE from
+    //completing OCC directed IPC operations within the expected
+    //time bounds(< 8ms)
+    //
+    //Mechanism:
+    //1)In FIT: Every FIT tick, we check if DB0(on Quad manager)/COMM_RECV(on Sibling CME)
+    //is pending. If DB0(on Quad manager)/COMM_RECV(on Sibling CME) is seen pending for
+    //more than DB0_FIT_TICK_THRESHOLD/COMM_RECV_FIT_TICK_THRESHOLD FIT ticks,
+    //then we take action in UIH
+    //
+    //2)In UIH: We set priority level to IDX_PRTY_LVL_DB0/IDX_PRTY_LVL_COMM_RECVD, and  mask
+    //everything except Priority 0(xstop, exceptions, etc). This then allows a
+    //pending DB0 to complete
+    uint32_t cme_flags = in32(G_CME_LCL_FLAGS);
+
+    if (cme_flags & BIT32(CME_FLAGS_DB0_COMM_RECV_STARVATION_CNT_ENABLED))
+    {
+        if(G_cme_pstate_record.qmFlag)
+        {
+
+            if (cme_flags & BIT32(CME_FLAGS_CORE0_GOOD))
+            {
+                if (in32_sh(CME_LCL_EISR) & BIT64SH(36))
+                {
+                    g_db0_pending_fit_tick_count++;
+                }
+            }
+            else
+            {
+                if (in32_sh(CME_LCL_EISR) & BIT64SH(37))
+                {
+                    g_db0_pending_fit_tick_count++;
+                }
+            }
+        }
+        else
+        {
+            if (in32(CME_LCL_EISR) & BIT32(29))
+            {
+                g_comm_recv_pending_fit_tick_count++;
+            }
+
+            if(in32(CME_LCL_EISR) & BIT32(7))
+            {
+                g_intercme_in0_pending_tick_count++;
+            }
+        }
+    }
 }
 
 //
@@ -660,6 +725,9 @@ void p9_cme_pstate_process_db0()
     G_cme_pstate_record.updateAnalogError = 0;
     uint64_t scom_data;
 
+    //Clear out db0_pending_tick_count
+    g_db0_pending_fit_tick_count = 0;
+
     PK_TRACE_INF("PSTATE: Process DB0 Enter");
 
     //Clear EISR and read DB0 register
@@ -856,7 +924,7 @@ inline void p9_cme_pstate_register()
                     }
                 }
 
-                PK_TRACE_INF("PSTATE: Sib Register MsgCnt=%d", msgCnt);
+                PK_TRACE_DBG("PSTATE: Sib Register MsgCnt=%d", msgCnt);
             }
         }
     }
@@ -894,6 +962,7 @@ void p9_cme_pstate_db0_start()
         ack = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
 
         out32(G_CME_LCL_FLAGS_OR, BIT32(24));//Set Pstates Enabled
+        out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_DB0_COMM_RECV_STARVATION_CNT_ENABLED));//Set Starvation Count enabled
 
         //Enable PMCR Interrupts (for good cores) when this task is done
         g_eimr_override &= ~(uint64_t)(G_cme_record.core_enabled << SHIFT64(35));
@@ -1035,7 +1104,7 @@ inline void p9_cme_pstate_db0_pmsr_updt()
     //Set Core GPMMR RESET_STATE_INDICATOR bit to show pstates have stopped
     CME_PUTSCOM(PPM_GPMMR_OR, G_cme_record.core_enabled, BIT64(15));
 
-    PK_TRACE_INF("PSTATE: DB0 Safe Mode Exit");
+    PK_TRACE_INF("PSTATE: DB0 PMSR Updt Exit");
 }
 
 void p9_cme_pstate_notify_sib(INTERCME_DIRECT_INTF intf)
@@ -1058,7 +1127,7 @@ inline void p9_cme_pstate_freq_update(uint32_t cme_flags)
     else
     {
         PK_TRACE_INF("PSTATE: Freq Updt Enter");
-        PK_TRACE_INF("PSTATE: Dpll0=0x%x", G_lppb->dpll_pstate0_value);
+        PK_TRACE_DBG("PSTATE: Dpll0=0x%x", G_lppb->dpll_pstate0_value);
 
         //Adjust DPLL
         qppm_dpll_freq_t dpllFreq;

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -43,17 +43,21 @@
 //
 extern CmePstateRecord G_cme_pstate_record;
 extern CmeRecord G_cme_record;
+extern uint32_t g_comm_recv_pending_fit_tick_count;
+extern uint32_t g_intercme_in0_pending_tick_count;
 
 //
 //InterCME_IN0 handler
 //
 void p9_cme_pstate_intercme_in0_irq_handler(void)
 {
+    g_intercme_in0_pending_tick_count = 0;
     p9_cme_pstate_process_db0_sibling();
 }
 
 void p9_cme_pstate_intercme_msg_handler(void)
 {
+    g_comm_recv_pending_fit_tick_count = 0;
     p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_WAIT_ON_RECV);
 }
 
@@ -118,6 +122,8 @@ void p9_cme_pstate_process_db0_sibling()
 
         //Unmask EIMR[OCC_HEARTBEAT_LOST/4]
         g_eimr_override &= ~BIT64(4);
+
+        out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_DB0_COMM_RECV_STARVATION_CNT_ENABLED));//Set Starvation Count enabled
 
         //Clear Core GPMMR RESET_STATE_INDICATOR bit to show pstates have started
         CME_PUTSCOM(PPM_GPMMR_CLR, G_cme_record.core_enabled, BIT64(15));
