@@ -339,9 +339,14 @@ fapi2::ReturnCode p10_putRingUtils(
     opType_t l_opType       =   ROTATE;
     uint64_t l_scanRegion   =   0;
     const uint32_t l_maxRotate      =   4095;
-    std::vector< fapi2::Target<fapi2::TARGET_TYPE_CORE>> l_coreTgt  =  i_target.getChildren<fapi2::TARGET_TYPE_CORE>();
-    fapi2::Target<fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST,
-                    fapi2::MULTICAST_COMPARE > l_coreMcCompTgt      =    i_target;
+    std::vector< fapi2::Target < fapi2::TARGET_TYPE_CORE >> l_coreTgt  =
+                                        i_target.getChildren< fapi2::TARGET_TYPE_CORE >();
+    fapi2::Target< fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST > l_eqMcTgt  =
+                    i_target.getParent< fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST >();
+    fapi2::Target<fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST,
+                    fapi2::MULTICAST_COMPARE > l_eqMcCompTgt    =    l_eqMcTgt;
+    fapi2::Target<fapi2::TARGET_TYPE_EQ> l_eqTgt    =
+                                        l_coreTgt[0].getParent< fapi2::TARGET_TYPE_EQ >();
 #endif
 
     do
@@ -439,16 +444,8 @@ fapi2::ReturnCode p10_putRingUtils(
         // Set up the scan region for the ring.
         // Write a 64 bit value for header.
 
-        if( l_coreCommon )
-        {
-            FAPI_TRY(fapi2::putScom( i_target, SCAN_REGION_TYPE, l_scomData ) );
-            FAPI_TRY(fapi2::putScom( i_target, SCAN64, HEADER_CHECK_PATTERN ) );
-        }
-        else
-        {
-            FAPI_TRY(fapi2::putScom( l_coreTgt[0], SCAN_REGION_TYPE, l_scomData ) );
-            FAPI_TRY(fapi2::putScom( l_coreTgt[0], SCAN64, HEADER_CHECK_PATTERN ) );
-        }
+        FAPI_TRY(fapi2::putScom( l_eqTgt, SCAN_REGION_TYPE, l_scomData ) );
+        FAPI_TRY(fapi2::putScom( l_eqTgt, SCAN64, HEADER_CHECK_PATTERN ) );
 
         // Decompress the RS4 string and scan
         do
@@ -480,14 +477,7 @@ fapi2::ReturnCode p10_putRingUtils(
                     for ( ; (l_bitRotates > l_maxRotate) || (fakenumber == 0); )
                     {
                         l_bitRotates -= l_maxRotate;
-                        if( l_coreCommon )
-                        {
-                            FAPI_TRY(fapi2::getScom( l_coreMcCompTgt, (SCAN32 | l_maxRotate), l_scomData ) );
-                        }
-                        else
-                        {
-                            FAPI_TRY(fapi2::getScom( l_coreTgt[0], (SCAN32 | l_maxRotate), l_scomData ) );
-                        }
+                        FAPI_TRY(fapi2::getScom( l_eqTgt, (SCAN32 | l_maxRotate), l_scomData ) );
 
                         if ( ( fakenumber -= 7 ) < 15 )
                         {
@@ -496,14 +486,7 @@ fapi2::ReturnCode p10_putRingUtils(
                     }
                 }
 
-                if( l_coreCommon )
-                {
-                    FAPI_TRY(fapi2::getScom( l_coreMcCompTgt, (SCAN32 | l_bitRotates), l_scomData ));
-                }
-                else
-                {
-                    FAPI_TRY(fapi2::getScom( l_coreTgt[0], (SCAN32 | l_bitRotates), l_scomData ));
-                }
+                FAPI_TRY(fapi2::getScom( l_eqTgt, (SCAN32 | l_bitRotates), l_scomData ));
 
                 l_opType = SCAN;
             }
@@ -528,14 +511,7 @@ fapi2::ReturnCode p10_putRingUtils(
                                                             l_nibbleIndx,
                                                             l_scanCount );
 
-                        if( l_coreCommon )
-                        {
-                            FAPI_TRY( fapi2::putScom( i_target, (SCAN64 | l_count), l_scomData ));
-                        }
-                        else
-                        {
-                            FAPI_TRY( fapi2::putScom( l_coreTgt[0], (SCAN64 | l_count), l_scomData ));
-                        }
+                        FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | l_count), l_scomData ));
                     }
                     else
                     {
@@ -545,15 +521,7 @@ fapi2::ReturnCode p10_putRingUtils(
                         l_scomData  =   ( l_nibbleIndx & 0x01 ) ? ( l_spyData & 0x0f ) : ( l_spyData >> 4 );
                         l_scomData  <<= 28;
                         l_scomData  =   l_scomData << 32;
-
-                        if( l_coreCommon )
-                        {
-                            FAPI_TRY( fapi2::putScom( i_target, (SCAN64 | l_count), l_scomData ));
-                        }
-                        else
-                        {
-                            FAPI_TRY( fapi2::putScom( l_coreTgt[0], (SCAN64 | l_count), l_scomData ));
-                        }
+                        FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | l_count), l_scomData ));
                     }
 
                     l_nibbleIndx   +=   l_scanCount;
@@ -576,26 +544,11 @@ fapi2::ReturnCode p10_putRingUtils(
                             if( l_careMask & l_data )
                             {
                                 l_scomData  =   l_spyData & l_data ? 0xFFFFFFFFFFFFFFFF : 0;
-
-                                if( l_coreCommon )
-                                {
-                                    FAPI_TRY( fapi2::putScom( i_target, (SCAN64 | 0x01), l_scomData ));
-                                }
-                                else
-                                {
-                                    FAPI_TRY( fapi2::putScom( l_coreTgt[0], (SCAN64 | 0x01), l_scomData ));
-                                }
+                                FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | 0x01), l_scomData ));
                             }
                             else
                             {
-                                if( l_coreCommon )
-                                {
-                                    FAPI_TRY( fapi2::getScom( l_coreMcCompTgt, (SCAN32 | 0x01), l_scomData ));
-                                }
-                                else
-                                {
-                                    FAPI_TRY( fapi2::getScom( l_coreTgt[0], (SCAN32 | 0x01), l_scomData ));
-                                }
+                                FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN32 | 0x01), l_scomData ));
                             }
                         }
                     }
@@ -617,25 +570,11 @@ fapi2::ReturnCode p10_putRingUtils(
                                 {
                                     l_scomData = 0xFFFFFFFFFFFFFFFF;
 
-                                    if( l_coreCommon )
-                                    {
-                                        FAPI_TRY( fapi2::putScom( i_target, (SCAN64 | 0x01), l_scomData ));
-                                    }
-                                    else
-                                    {
-                                        FAPI_TRY( fapi2::putScom( l_coreTgt[0], (SCAN64 | 0x01), l_scomData ));
-                                    }
+                                    FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | 0x01), l_scomData ));
                                 }
                                 else
                                 {
-                                    if( l_coreCommon )
-                                    {
-                                        FAPI_TRY( fapi2::getScom( l_coreMcCompTgt, (SCAN32 | 0x01), l_scomData ));
-                                    }
-                                    else
-                                    {
-                                        FAPI_TRY( fapi2::getScom( l_coreTgt[0], (SCAN32 | 0x01), l_scomData ));
-                                    }
+                                    FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN32 | 0x01), l_scomData ));
                                 }
                             }//end of for loop
                         }
@@ -662,15 +601,7 @@ fapi2::ReturnCode p10_putRingUtils(
                 l_scomData    <<=   28;
                 l_scomData      =   l_scomData << 32;
 
-                if( l_coreCommon )
-                {
-                    FAPI_TRY( fapi2::putScom( i_target, (SCAN64 | (l_nibble & 0x3)), l_scomData ) );
-
-                }
-                else
-                {
-                    FAPI_TRY( fapi2::putScom( l_coreTgt[0], (SCAN64 | (l_nibble & 0x3)), l_scomData ));
-                }
+                FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | (l_nibble & 0x3)), l_scomData ));
             }
             else // Process override ring (plus occasional flush ring with '0'-write bits)
             {
@@ -691,27 +622,11 @@ fapi2::ReturnCode p10_putRingUtils(
                         {
                             l_scomData  =   l_spyData & l_data ? 0xFFFFFFFFFFFFFFFF : 0;
 
-                            if( l_coreCommon )
-                            {
-                                FAPI_TRY( fapi2::putScom( i_target, (SCAN64 | (l_nibble & 0x1)), l_scomData ));
-
-                            }
-                            else
-                            {
-                                FAPI_TRY( fapi2::putScom( l_coreTgt[0], (SCAN64 | (l_nibble & 0x1)), l_scomData ));
-
-                            }
+                            FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | (l_nibble & 0x1)), l_scomData ));
                         }
                         else
                         {
-                            if( l_coreCommon )
-                            {
-                                FAPI_TRY( fapi2::getScom( l_coreMcCompTgt, (SCAN32 | 0x01), l_scomData ));
-                            }
-                            else
-                            {
-                                FAPI_TRY( fapi2::getScom( l_coreTgt[0], (SCAN32 | 0x01), l_scomData ));
-                            }
+                            FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN32 | 0x01), l_scomData ));
                         }
                     }
                 }
@@ -729,25 +644,11 @@ fapi2::ReturnCode p10_putRingUtils(
                         if( ( l_data & ( l_mask >> l_nibbleCnt ) ) )
                         {
                             l_scomData  =   0xFFFFFFFFFFFFFFFF;
-                            if( l_coreCommon )
-                            {
-                                FAPI_TRY( fapi2::putScom( i_target, (SCAN64 | 0x01), l_scomData ));
-                            }
-                            else
-                            {
-                                FAPI_TRY( fapi2::putScom( l_coreTgt[0], (SCAN64 | 0x01), l_scomData ));
-                            }
+                            FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | 0x01), l_scomData ));
                         }
                         else
                         {
-                            if( l_coreCommon )
-                            {
-                                FAPI_TRY( fapi2::getScom( l_coreMcCompTgt, (SCAN32 | 0x01), l_scomData ));
-                            }
-                            else
-                            {
-                                FAPI_TRY( fapi2::getScom( l_coreTgt[0], (SCAN32 | 0x01), l_scomData ));
-                            }
+                            FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN32 | 0x01), l_scomData ));
                         }
                     } //end of for
                 }
@@ -758,13 +659,12 @@ fapi2::ReturnCode p10_putRingUtils(
         fapi2::buffer<uint64_t> l_readHeader;
         if( l_coreCommon )
         {
-            FAPI_TRY( fapi2::getScom( l_coreMcCompTgt, (SCAN64 | 0x1), l_readHeader) );
+            FAPI_TRY( fapi2::getScom( l_eqMcCompTgt, (SCAN64 | 0x1), l_readHeader) );
         }
         else
         {
-            FAPI_TRY( fapi2::getScom( l_coreTgt[0], (SCAN64 | 0x1), l_readHeader) );
+            FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN64 | 0x1), l_readHeader) );
         }
-
         if( l_readHeader != HEADER_CHECK_PATTERN )
         {
             FAPI_INF("l_readHeader %08X %08X", l_readHeader >> 32, l_readHeader);
@@ -782,14 +682,7 @@ fapi2::ReturnCode p10_putRingUtils(
 
         if( ( l_scanRegion >> 32 ) & ENABLE_PARALLEL_SCAN )
         {
-            if( l_coreCommon )
-            {
-                FAPI_TRY( fapi2::putScom( i_target, CPLT_STAT0, l_scomData ) );
-            }
-            else
-            {
-                FAPI_TRY( fapi2::putScom( l_coreTgt[0], CPLT_STAT0, l_scomData ) );
-            }
+            FAPI_TRY( fapi2::getScom( l_eqTgt, CPLT_STAT0, l_scomData ) );
 
             if( l_scomData.getBit<CPLT_STAT0_CC_CTRL_PARALLEL_SCAN_COMPARE_ERR>() )
             {
@@ -798,19 +691,11 @@ fapi2::ReturnCode p10_putRingUtils(
         }
 
         // Clean scan region and type data
-        if( l_coreCommon )
-        {
-            FAPI_TRY( fapi2::putScom( i_target, SCAN_REGION_TYPE, 0 ));
-        }
-        else
-        {
-            FAPI_TRY( fapi2::putScom( l_coreTgt[0], SCAN_REGION_TYPE, 0 ));
-        }
+        FAPI_TRY( fapi2::putScom( l_eqTgt, SCAN_REGION_TYPE, 0 ));
 #else
 
-        FAPI_INF( "Scan Region Type 0x%016lx Override : %s Common Ring : %s ",
-                  l_scomData, l_bOverride ? "TRUE" : "FALSE",
-                  l_coreCommon ? "TRUE" : "FALSE" );
+        FAPI_INF( "Scan Region Type 0x%016lx Override : %s ",
+                  l_scomData, l_bOverride ? "TRUE" : "FALSE" );
 
 #endif //__UNIT_TEST_
 
