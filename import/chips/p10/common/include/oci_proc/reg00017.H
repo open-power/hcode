@@ -942,92 +942,92 @@ fapi_try_exit:
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(TP_TPBR_PBA_PBAO_PBAMODE));
 #endif
-    return o_data.insertFromRight<TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE,
-           TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE_LEN>(i_data);
+    return o_data.insertFromRight<TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13,
+           TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE(const uint64_t i_data,
+static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(TP_TPBR_PBA_PBAO_PBAMODE));
 #endif
-    return o_data.insertFromRight<TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE,
-           TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE_LEN>(i_data);
+    return o_data.insertFromRight<TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13,
+           TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(TP_TPBR_PBA_PBAO_PBAMODE));
 #endif
-    return i_data.extractToRight<TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE,
-           TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE_LEN>(o_data);
+    return i_data.extractToRight<TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13,
+           TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_INJECT_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_12_13 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(TP_TPBR_PBA_PBAO_PBAMODE));
 #endif
-    return o_data.insertFromRight<TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE,
-           TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE_LEN>(i_data);
+    return o_data.insertFromRight<TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15,
+           TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE(const uint64_t i_data,
+static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(TP_TPBR_PBA_PBAO_PBAMODE));
 #endif
-    return o_data.insertFromRight<TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE,
-           TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE_LEN>(i_data);
+    return o_data.insertFromRight<TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15,
+           TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(TP_TPBR_PBA_PBAO_PBAMODE));
 #endif
-    return i_data.extractToRight<TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE,
-           TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE_LEN>(o_data);
+    return i_data.extractToRight<TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15,
+           TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_INJECT_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access TP_TPBR_PBA_PBAO_PBAMODE_RESERVED_14_15 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
