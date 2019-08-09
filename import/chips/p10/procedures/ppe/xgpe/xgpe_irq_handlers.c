@@ -42,6 +42,7 @@ extern uint32_t G_OCB_OCCFLG3_CLR;
 extern uint32_t G_OCB_CCSR;
 extern uint32_t G_OCB_OPITFSV;
 extern uint32_t G_OCB_OISR0_CLR;
+extern void xgpe_irq_fit_init();
 
 //This task gets triggered when OISR bits are
 //set as mentioned below

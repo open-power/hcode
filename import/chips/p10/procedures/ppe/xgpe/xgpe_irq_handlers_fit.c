@@ -29,6 +29,25 @@
 //#include "p10_scom_eq_2.H"
 
 //using namespace scomt::eq;
+#include "p10_oci_proc_1.H"
+#include "p10_oci_proc_5.H"
+#include "p10_oci_proc_7.H"
+#include "p10_oci_proc_b.H"
+#include "p10_oci_proc_d.H"
+#include "pstates_common.H"
+#include "pstate_pgpe_occ_api.h"
+
+#define IDDQ_FIT_SAMPLE_TICKS   8
+
+typedef struct iddq_state
+{
+    iddq_activity_t* p_act_val; //OCC Shared SRAM Location
+    pgpe_wof_values_t* p_wof_val; //OCC Shared SRAM Location
+    iddq_activity_t curr_cnts;
+    uint32_t tick_cnt;
+    uint32_t vratio_accum;
+    uint32_t vratio_inst;
+} iddq_state_t;
 
 extern uint32_t G_OCB_OCCFLG3_OR;
 extern uint32_t G_OCB_OCCFLG3_CLR;
@@ -37,7 +56,18 @@ extern uint32_t G_OCB_OPITFSV;
 extern uint32_t G_OCB_CCSR;
 extern uint32_t G_OCB_OPITFPRD;
 extern uint32_t G_OCB_OPITFSVRR;
+extern xgpe_header_t* G_xgpe_header_data;
 
+iddq_state_t G_iddq;
+
+void xgpe_irq_fit_init()
+{
+    //Todo: Determine if XGPE should read OCC Shared SRAM from PGPE header
+    HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)G_xgpe_header_data->g_xgpe_shared_sram_addr;
+    G_iddq.p_act_val =  (iddq_activity_t*)(G_xgpe_header_data->g_xgpe_shared_sram_addr + occ_shared_data->iddq_data_offset);
+    G_iddq.p_wof_val =  (pgpe_wof_values_t*)(G_xgpe_header_data->g_xgpe_shared_sram_addr +
+                        occ_shared_data->iddq_data_offset);
+}
 
 //
 //  This is a periodic FIT Handler which is called up at fixed period
@@ -47,6 +77,7 @@ void xgpe_irq_fit_handler()
 {
     mtspr(SPRN_TSR, TSR_FIS);
     handle_pm_suspend();
+    handle_wof_iddq_values();
 }
 
 
@@ -162,4 +193,87 @@ void handle_pm_suspend()
         }
 
     }
+}
+
+void handle_wof_iddq_values()
+{
+    uint32_t c;
+    uint32_t opitasv0;
+    uint32_t opitasv1;
+    uint32_t opitasv2;
+    uint32_t opitasv3;
+
+    opitasv0 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV0);//Read PCB Type A0(Core off)
+    opitasv1 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV1);//Read PCB Type A1(Core Vmin)
+    opitasv2 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV2);//Read PCB Type A2(MMA Off)
+    opitasv3 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV3);//Read PCB Type A3(L3 Off)
+
+    for (c = 0; c < MAX_CORES; c++)
+    {
+        if (in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW) & CORE_MASK(c))
+        {
+            //if core is ON/VMIN(0) and VMIN(0))
+            if ( (!(opitasv0 & CORE_MASK(c))) && !(opitasv1 & CORE_MASK(c)))
+            {
+                //if core MMA is OFF(1)
+                if (opitasv2 & CORE_MASK(c))
+                {
+                    G_iddq.curr_cnts.core_mma_off[c]++;
+                }
+            }
+            //if core c is Vmin(1)
+            else if ((opitasv1 & CORE_MASK(c)))
+            {
+                G_iddq.curr_cnts.core_vmin[c]++;
+            }
+            else if (opitasv0 & CORE_MASK(c))
+            {
+                G_iddq.curr_cnts.core_off[c]++;
+            }
+
+            if (opitasv3 & CORE_MASK(c))
+            {
+                G_iddq.curr_cnts.l3_off[c]++;
+            }
+        }
+        else
+        {
+            G_iddq.curr_cnts.core_off[c]++;
+            G_iddq.curr_cnts.l3_off[c]++;
+        }
+    }
+
+    G_iddq.vratio_accum += G_iddq.vratio_inst; //Accumulate the present vratios
+    G_iddq.tick_cnt++;
+
+    if(G_iddq.tick_cnt == IDDQ_FIT_SAMPLE_TICKS)
+    {
+        while(in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW) & BIT32(PGPE_EX_RATIOS_ATOMIC_FLAG))
+        {
+            //TODO add busy-wait timeout(20us)
+            //Determine what XGPE needs to do here.
+        }
+
+        for (c = 0; c < MAX_CORES; c++)
+        {
+            if (in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW) & CORE_MASK(c))
+            {
+                G_iddq.p_act_val->core_off[c]       = G_iddq.curr_cnts.core_off[c];
+                G_iddq.p_act_val->core_vmin[c]      = G_iddq.curr_cnts.core_vmin[c];
+                G_iddq.p_act_val->core_mma_off[c]   = G_iddq.curr_cnts.core_mma_off[c];
+                G_iddq.p_act_val->l3_off[c]         = G_iddq.curr_cnts.l3_off[c];
+
+                G_iddq.curr_cnts.core_off[c] = 0;
+                G_iddq.curr_cnts.core_vmin[c] = 0;
+                G_iddq.curr_cnts.core_mma_off[c] = 0;
+                G_iddq.curr_cnts.l3_off[c] = 0;
+            }
+        }
+
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_EX_RATIOS_ATOMIC_FLAG));
+        G_iddq.p_wof_val->dw0.fields.vratio_avg = G_iddq.vratio_accum / G_iddq.tick_cnt;
+        G_iddq.vratio_accum = 0;
+        G_iddq.tick_cnt = 0;
+    }
+
 }

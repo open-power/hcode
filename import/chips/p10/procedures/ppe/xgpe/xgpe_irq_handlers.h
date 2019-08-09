@@ -26,6 +26,12 @@
 #include "xgpe_irq.h"
 
 /// ----------------------------------------------
+/// @brief Initializes FIT
+/// @return none
+/// ----------------------------------------------
+void  xgpe_irq_fit_init();
+
+/// ----------------------------------------------
 /// @brief Handles GPE2 fault and GPE3 XSTOP fault
 //         error.
 /// @return none

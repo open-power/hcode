@@ -44,6 +44,8 @@
 #define IS_QUAD_CONFIG(ccsr, num)     (ccsr & (EQ_CORE_MASK << SHIFT32(num-1)))
 #define MASK_CCSR(ccsr,num)           (ccsr  & ~(EQ_CORE_MASK << SHIFT32(num-1)))
 #define BLOCK_WAKEUP_MASK  0x33333333
+#define CORE_MASK(core) \
+    (0x80000000 >> core)
 
 enum PCB_TYPE_F_MSG
 {
@@ -83,6 +85,12 @@ void xgpe_irq_fit_handler();
 /// @return none
 /// ---------------------------------------------
 void handle_pm_suspend();
+
+/// ----------------------------------------------
+/// @brief Generates WOF Iddq values in OCC Shared SRAM
+/// @return none
+/// ---------------------------------------------
+void handle_wof_iddq_values();
 
 /// ----------------------------------------------
 /// @brief Sends DB1 message to QME

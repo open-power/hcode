@@ -24,6 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include "xgpe.h"
 #include "ocb_register_addresses.h"
+#include "xgpe_irq_handlers.h"
 
 uint32_t G_OCB_OISR0_CLR     = OCB_OISR0_CLR;
 uint32_t G_OCB_OIMR0_CLR     = OCB_OIMR0_CLR;
@@ -76,6 +77,7 @@ void xgpe_init()
     PK_TRACE("Main: Register and Enable FIT Timer");
     IOTA_FIT_HANDLER(xgpe_irq_fit_handler);
     TCR_VAL |= TCR_FIE;
+    xgpe_irq_fit_init();
 #endif
 
 #if ENABLE_DEC_TIMER
