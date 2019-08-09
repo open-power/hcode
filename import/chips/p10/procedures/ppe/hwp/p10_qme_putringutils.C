@@ -41,17 +41,17 @@
 #include <p10_scom_eq_8.H>
 #include <p10_scom_perv_2.H>
 //#include <iota_app_cfg.h>
+
 #ifndef __UNIT_TEST_
 #include <qme_panic_codes.h>
 #include <p10_hcd_common.H>
 #include <iota.h>
 #endif
 
-
-
 #ifdef __UNIT_TEST_
 
-std::map <uint8_t, uint64_t> g_ringScanRegionMap;
+std::map <uint16_t, uint64_t> g_ringScanRegionMap;
+
 void initScanRegionTest()
 {
     g_ringScanRegionMap[ec_cl2_fure]   =   0x4780000000009000ul;
@@ -326,6 +326,7 @@ fapi2::ReturnCode p10_putRingUtils(
     bool l_bOverride                =   UNDEFINED_BOOLEAN;
     uint32_t l_ringId               =   0;
     bool     l_coreCommon           =   true;
+    uint64_t l_scanRegion   =   0;
 
 #ifndef __UNIT_TEST_
     uint32_t l_nibbleIndx   =   0;
@@ -337,7 +338,6 @@ fapi2::ReturnCode p10_putRingUtils(
     uint32_t l_data         =   0;
     uint32_t l_spyData      =   0;
     opType_t l_opType       =   ROTATE;
-    uint64_t l_scanRegion   =   0;
     const uint32_t l_maxRotate      =   4095;
     std::vector< fapi2::Target < fapi2::TARGET_TYPE_CORE >> l_coreTgt  =
                                         i_target.getChildren< fapi2::TARGET_TYPE_CORE >();
@@ -694,8 +694,9 @@ fapi2::ReturnCode p10_putRingUtils(
         FAPI_TRY( fapi2::putScom( l_eqTgt, SCAN_REGION_TYPE, 0 ));
 #else
 
-        FAPI_INF( "Scan Region Type 0x%016lx Override : %s ",
-                  l_scomData, l_bOverride ? "TRUE" : "FALSE" );
+        FAPI_INF( "Scan Region  0x%016lx Type 0x%016lx Override : %s Coomon %s",
+                  l_scanRegion, l_scomData, l_bOverride ? "TRUE" : "FALSE",
+                  l_coreCommon ? "TRUE" : "FALSE"  );
 
 #endif //__UNIT_TEST_
 

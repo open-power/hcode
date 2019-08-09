@@ -22,6 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
+
 ifeq ($(SCAN_TEST),1)
 PROCEDURE=p10_qme_ring_traverse
 INC+=$(ROOTPATH)/chips/p10/procedures/ppe/hwp/
