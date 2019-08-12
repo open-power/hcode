@@ -33,7 +33,7 @@ EKB_BUILD=1
 $(IMAGE)_TARGET=PPE
 
 ## PPE_TYPE can be std or gpe
-_PPE_TYPE_LONG=standard
+_PPE_BOLTON_CFG=standard
 _PPE_TYPE=std
 
 $(IMAGE)_LINK_SCRIPT=link_ioo.cmd
@@ -48,6 +48,7 @@ OBJS += eabi.o
 # used to build them
 $(IMAGE)_COMMONFLAGS+= -DPK_TIMER_SUPPORT=1
 $(IMAGE)_COMMONFLAGS+= -DPK_THREAD_SUPPORT=1
+$(IMAGE)_COMMMOFLAGS+= -DPK_STACK_CHECK=0
 $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SUPPORT=0
 $(IMAGE)_COMMONFLAGS+= -DUSE_PK_APP_CFG_H=1
 $(IMAGE)_COMMONFLAGS+= -D__PK__=1
@@ -76,9 +77,9 @@ OBJS += $(PPE42_THREAD_OBJECTS)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PK_SRCDIR)/ppe42)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/baselib)
 
-include $(PPE_SRCDIR)/boltonlib/$(_PPE_TYPE_LONG)/pk$(_PPE_TYPE)files.mk
+include $(PPE_SRCDIR)/boltonlib/$(_PPE_BOLTON_CFG)/pk$(_PPE_TYPE)files.mk
 OBJS += $(STD_OBJECTS)
-$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/boltonlib/$(_PPE_TYPE_LONG))
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/boltonlib/$(_PPE_BOLTON_CFG))
 
 # It's important that the final included *.mk is in the $(IOHS_SRCDIR)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(IOHS_SRCDIR))
@@ -92,7 +93,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),\
         $(PK_SRCDIR)/ppe42 \
         $(PPE_SRCDIR)/baselib \
         $(PPE_SRCDIR)/ppetrace \
-        $(PPE_SRCDIR)/boltonlib/$(_PPE_TYPE_LONG) \
+        $(PPE_SRCDIR)/boltonlib/$(_PPE_BOLTON_CFG) \
         )
 
 $(IMAGE)_LDFLAGS=-gc-sections --nostdlib --sort-common -EB -Os -e __system_reset -N -gc-sections -Bstatic

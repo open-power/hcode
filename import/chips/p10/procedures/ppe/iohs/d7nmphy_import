@@ -29,10 +29,16 @@ D7NMPHY_SRC_PATH="ppe/images/ppe_eyeopt"
 D7NMPHY_REG_PATH="logic/createregs"
 
 EKB_ROOT=${PROJECT_ROOT}
-EKB_DST_PATH="chips/p10/procedures/ppe/iohs"
+EKB_PPE_DST_PATH="chips/p10/procedures/ppe/iohs"
+EKB_HWP_DST_PATH="chips/p10/procedures/hwp/io"
 
+EKB_HWP_HDR="p10_io_ppe_regs.H"
+EKB_HWP_SRC="p10_io_ppe_regs.C"
+
+echo ""
 echo "D7NMPHY root: $D7NMPHY_ROOT"
-echo "EKB destination directory: ${EKB_DEST}/${EKB_DST_PATH}"
+echo "EKB PPE destination directory: ${EKB_ROOT}/${EKB_PPE_DST_PATH}"
+echo "EKB HWP destination directory: ${EKB_ROOT}/${EKB_HWP_DST_PATH}"
 echo ""
 
 
@@ -109,8 +115,8 @@ ioo_lnk_files+=("link_ioo.cmd")
 
 for i in "${src_files[@]}"; do
   echo "Importing ${D7NMPHY_SRC_PATH}/$i"
-  cp "${D7NMPHY_ROOT}/${D7NMPHY_SRC_PATH}/$i" "${EKB_ROOT}/${EKB_DST_PATH}/$i"
-  src_file_list+=("${EKB_DST_PATH}/$i")
+  cp "${D7NMPHY_ROOT}/${D7NMPHY_SRC_PATH}/$i" "${EKB_ROOT}/${EKB_PPE_DST_PATH}/$i"
+  beautify_file_list+=("${EKB_PPE_DST_PATH}/$i")
 done
 
 
@@ -120,8 +126,8 @@ done
 
 for i in "${reg_files[@]}"; do
   echo "Importing ${D7NMPHY_REG_PATH}/$i"
-  cp "${D7NMPHY_ROOT}/${D7NMPHY_REG_PATH}/$i" "${EKB_ROOT}/${EKB_DST_PATH}/$i"
-  src_file_list+=("${EKB_DST_PATH}/$i")
+  cp "${D7NMPHY_ROOT}/${D7NMPHY_REG_PATH}/$i" "${EKB_ROOT}/${EKB_PPE_DST_PATH}/$i"
+  beautify_file_list+=("${EKB_PPE_DST_PATH}/$i")
 done
 
 
@@ -131,22 +137,92 @@ done
 
 for i in "${nv_lnk_files[@]}"; do
   echo "Importing ${D7NMPHY_SRC_PATH}/$i"
-  cp "${D7NMPHY_ROOT}/${D7NMPHY_SRC_PATH}/$i" "${EKB_ROOT}/${EKB_DST_PATH}/nv/$i"
-  src_file_list+=("${EKB_DST_PATH}/nv/$i")
+  cp "${D7NMPHY_ROOT}/${D7NMPHY_SRC_PATH}/$i" "${EKB_ROOT}/${EKB_PPE_DST_PATH}/nv/$i"
+  beautify_file_list+=("${EKB_PPE_DST_PATH}/nv/$i")
 done
 
 for i in "${ioo_lnk_files[@]}"; do
   echo "Importing ${D7NMPHY_SRC_PATH}/$i"
-  cp "${D7NMPHY_ROOT}/${D7NMPHY_SRC_PATH}/$i" "${EKB_ROOT}/${EKB_DST_PATH}/ioo/$i"
-  src_file_list+=("${EKB_DST_PATH}/ioo/$i")
+  cp "${D7NMPHY_ROOT}/${D7NMPHY_SRC_PATH}/$i" "${EKB_ROOT}/${EKB_PPE_DST_PATH}/ioo/$i"
+  beautify_file_list+=("${EKB_PPE_DST_PATH}/ioo/$i")
 done
 
 
 #
-# run code-beautfier and add copyright header
+# build HWP header file content
+#
+
+echo ""
+echo "Generating ${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}"
+echo "Generating ${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}"
+
+include_str="__${EKB_HWP_HDR^^}_"
+include_str=${include_str/./_};
+
+echo "///"                                                                               >  ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "/// @file ${EKB_HWP_HDR}"                                                          >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "/// @brief GENERTED DO NOT EDIT - Objects for manipulating PPE SRAM registers"     >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "///"                                                                               >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "/// *HWP HW Maintainer: Chris Steffen <cwsteffen@us.ibm.com>"                      >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "/// *HWP FW Maintainer: Ilya Smirnov <ismirno@us.ibm.com>"                         >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "/// *HWP Consumed by: HB"                                                          >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "///"                                                                               >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "#ifndef ${include_str}"                                                            >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "#define ${include_str}"                                                            >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "#include <p10_io_ppe_lib.H>"                                                       >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+
+echo "///"                                                                               >  ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo "/// @file p10_io_ppe_regs.C"                                                       >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo "/// @brief GENERTED DO NOT EDIT - Objects for manipulating PPE SRAM registers"     >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo "///"                                                                               >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo "/// *HWP HW Maintainer: Chris Steffen <cwsteffen@us.ibm.com>"                      >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo "/// *HWP FW Maintainer: Ilya Smirnov <ismirno@us.ibm.com>"                         >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo "/// *HWP Consumed by: HB"                                                          >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo "///"                                                                               >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo "#include <${EKB_HWP_HDR}>"                                                         >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+
+${EKB_ROOT}/${EKB_PPE_DST_PATH}/generate_sections_header.pl < ${EKB_ROOT}/${EKB_PPE_DST_PATH}/ioo/link_ioo.cmd >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+
+${EKB_ROOT}/${EKB_PPE_DST_PATH}/generate_regs.pl           \
+  ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}           \
+  ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}           \
+  p10_io_ppe_img_regs                                      \
+  ${EKB_ROOT}/${EKB_PPE_DST_PATH}/ppe_img_reg_const_pkg.h
+
+${EKB_ROOT}/${EKB_PPE_DST_PATH}/generate_reg_arrays.pl                                                       \
+  ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}                                                             \
+  ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}                                                             \
+  ${EKB_ROOT}/${EKB_PPE_DST_PATH}/ppe_fw_reg_const_pkg.h                                                     \
+  5                                                                                                          \
+  p10_io_ppe_fw_regs                                                                                         \
+  "p10_io_ppe_fw_regs0,p10_io_ppe_fw_regs1,p10_io_ppe_fw_regs2,p10_io_ppe_fw_regs3,p10_io_ppe_fw_regs4"
+
+${EKB_ROOT}/${EKB_PPE_DST_PATH}/generate_reg_arrays.pl                                                       \
+  ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}                                                             \
+  ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}                                                             \
+  ${EKB_ROOT}/${EKB_PPE_DST_PATH}/ppe_mem_reg_const_pkg.h                                                    \
+  5                                                                                                          \
+  p10_io_ppe_mem_regs                                                                                        \
+  "p10_io_ppe_mem_regs0,p10_io_ppe_mem_regs1,p10_io_ppe_mem_regs2,p10_io_ppe_mem_regs3,p10_io_ppe_mem_regs4"
+
+echo ""       >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "#endif" >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+
+beautify_file_list+=("${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}")
+beautify_file_list+=("${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}")
+
+
+#
+# run code-beautfier and add copyright header to all copied/generated files
 #
 
 echo ""
 echo "Running EKB pre-commit-actions"
 echo ""
-cd ${PROJECT_ROOT} && ${PROJECT_ROOT}/tools/hooks/tools/pre-commit-actions ${src_file_list[*]}
+cd ${PROJECT_ROOT} && ${PROJECT_ROOT}/tools/hooks/tools/pre-commit-actions ${beautify_file_list[*]}
