@@ -35,6 +35,7 @@ $(IMAGE)_COMMONFLAGS = -DPK_TRACE_SZ=4096
 $(IMAGE)_COMMONFLAGS+= -DSIMICS_TUNING=1
 $(IMAGE)_COMMONFLAGS+= -DUSE_SIMICS_IO=0
 $(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SUPPORT=1
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_VERSION=3
 $(IMAGE)_COMMONFLAGS+= -DUSE_APP_CFG_H=1
 $(IMAGE)_COMMONFLAGS+= -DPK_TIMER_SUPPORT=0
 $(IMAGE)_COMMONFLAGS+= -D__IOTA__
@@ -63,8 +64,10 @@ PGPE_OBJS += ipc_init.o
 
 # Include PK trace support
 PGPE_OBJS += pk_trace_core.o
-PGPE_OBJS += pk_trace_big.o
-PGPE_OBJS += pk_trace_binary.o
+PGPE_OBJS += ppe_trace_op.o
+
+#PGPE_OBJS += pk_trace_big.o
+#PGPE_OBJS += pk_trace_binary.o
 
 
 # Add source code directories for the above objects
