@@ -22,7 +22,10 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-#ifdef IMAGE
+
+# The following ifdef prevents this file from being included more than once
+# during ekb build
+ifdef IMAGE
 IMG-S-SOURCES  = ppmr_header.S
 PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_irq_priority_table.c \
@@ -43,6 +46,9 @@ PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_dds.c \
 				pgpe_resclk.c
 
+PGPE-CXX-SOURCES = pgpe_opCodes.C
+
 PGPE_OBJECTS = $(PGPE-C-SOURCES:.c=.o) 
+PGPE_OBJECTS += $(PGPE-CXX-SOURCES:.C=.o)
 IMG_OBJECTS  = $(IMG-C-SOURCES:.c=.o) $(IMG-S-SOURCES:.S=.o)
-#endif
+endif
