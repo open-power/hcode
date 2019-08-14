@@ -24,6 +24,7 @@
 # IBM_PROLOG_END_TAG
 XGPE_TARGET := xgpe_p10dd10
 IMAGE:=$(XGPE_TARGET)
+IMAGE_EDITOR=xgpeImgEdit.exe
 
 #Select KERNEL
 $(IMAGE)_KERNEL:=__IOTA__
@@ -42,16 +43,13 @@ OBJS := $(XGPE_OBJS)
 $(call BUILD_PPEIMAGE)
 
 ## ## Bin header
-# IMAGE=xpmr_hdr_p10dd10
-# IMAGE_EDITOR=xgpeImgEdit.exe
-##
-## # Target tool chain
-# $(IMAGE)_TARGET=PPE
-
-## #linkscript to use
-#$(IMAGE)_LINK_SCRIPT=linkppmr.cmd
-
-#OBJS := xpmr_header.o
+IMAGE=xpmr_hdr_p10dd10
+IMAGE_EDITOR=xgpeImgEdit.exe
+# Target tool chain
+$(IMAGE)_TARGET=PPE
+#linkscript to use
+$(IMAGE)_LINK_SCRIPT=linkxpmr.cmd
+OBJS:= xpmr_header.o
 
 $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
 	$(IOTA_SRCDIR) \
@@ -65,4 +63,4 @@ $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
 	$(ROOTPATH)/chips/p10/utils/imageProcs/ \
 	)
 
-$(call $(IMAGEPATH)/$(XGPE_TARGET)/$(XGPE_TARGET).bin)
+$(call BUILD_BINHEADER, $(IMAGEPATH)/$(IMAGE)/$(IMAGE).bin)
