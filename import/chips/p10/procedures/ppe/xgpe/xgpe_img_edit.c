@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/ppe/qme/qme_img_edit.c $          */
+/* $Source: import/chips/p10/procedures/ppe/xgpe/xgpe_img_edit.c $        */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
@@ -34,23 +34,23 @@
 
 enum
 {
-    QME_IMAGE   =   1,
-    CPMR_IMAGE  =   2,
+    XGPE_IMAGE  =   1,
+    XPMR_IMAGE  =   2,
 };
 
-uint32_t updateQmeImage( FILE* i_fpQmeImg, uint32_t i_imgSize );
-uint32_t updateCpmrImage( FILE* i_fpCpmrHdrImg, uint32_t i_imgSize );
+uint32_t updateXgpeImage( FILE* i_fpXgpeImg, uint32_t i_imgSize );
+uint32_t updateXpmrImage( FILE* i_fpXpmrHdrImg, uint32_t i_imgSize );
 
 int main(int narg, char* argv[])
 {
     if (narg < 2)
     {
-        printf("QME Img Edit Usage: %s <full path to image>\n",
+        printf("XGPE Img Edit Usage: %s <full path to image>\n",
                argv[0]);
         return -1;
     }
 
-    int imageType           =   QME_IMAGE;
+    int imageType           =   XGPE_IMAGE;
     FILE* fpImage           =   NULL;
     uint32_t size           =   0;
     uint8_t   arg           =   0;
@@ -59,7 +59,7 @@ int main(int narg, char* argv[])
 
     if( !fpImage )
     {
-        printf("\n QME Img Edit: Could not open %s", argv[arg] );
+        printf("\n XGPE Img Edit: Could not open %s", argv[arg] );
         return -1;
     }
 
@@ -67,17 +67,17 @@ int main(int narg, char* argv[])
     size = ftell ( fpImage );
     rewind ( fpImage );
 
-    if( CPMR_HEADER_SIZE == size )
+    if( XPMR_HEADER_SIZE == size )
     {
-        imageType      =    CPMR_IMAGE;
-        printf("\nCPMR edit" );
-        updateCpmrImage( fpImage, size );
+        imageType      =    XPMR_IMAGE;
+        printf("\nXPMR edit" );
+        updateXpmrImage( fpImage, size );
     }
 
-    if( QME_IMAGE  ==  imageType )
+    if( XGPE_IMAGE  ==  imageType )
     {
-        printf("\nQME edit" );
-        updateQmeImage( fpImage, size );
+        printf("\nXGPE edit" );
+        updateXgpeImage( fpImage, size );
     }
 
     fclose( fpImage );
@@ -103,43 +103,51 @@ uint32_t getTime()
 
 //---------------------------------------------------------------------------------------------
 
-uint32_t updateQmeImage( FILE* i_fpQmeImg, uint32_t i_imgSize )
+uint32_t updateXgpeImage( FILE* i_fpXgpeImg, uint32_t i_imgSize )
 {
     uint32_t l_rc       =   0;
     uint32_t l_tempVal  =   0;
     uint32_t headerFieldPos =
-        QME_HEADER_IMAGE_OFFSET + offsetof(QmeHeader_t, g_qme_hcode_length);
-    fseek( i_fpQmeImg, headerFieldPos, SEEK_SET);
+        XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_xgpeHcodeLength);
+    fseek( i_fpXgpeImg, headerFieldPos, SEEK_SET);
     l_tempVal       =   htonl(i_imgSize);
-    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpQmeImg );
-    printf( "                    QME Hcode Size              : %X -> %04d\n",
-            i_imgSize, i_imgSize );
+    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXgpeImg );
+
+    headerFieldPos  =   XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_buildDate );
+    fseek( i_fpXgpeImg, headerFieldPos, SEEK_SET);
+    l_tempVal       =   htonl(getTime());
+    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXgpeImg );
+
+    headerFieldPos  =   XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_buildVer );
+    fseek( i_fpXgpeImg, headerFieldPos, SEEK_SET);
+    l_tempVal       =   htonl(XGPE_BUILD_VER);
+    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXgpeImg );
 
     return l_rc;
 }
 
 //---------------------------------------------------------------------------------------------
 
-uint32_t updateCpmrImage( FILE* i_fpCpmrHdrImg, uint32_t i_imgSize )
+uint32_t updateXpmrImage( FILE* i_fpXpmrHdrImg, uint32_t i_imgSize )
 {
     uint32_t l_rc       =   0;
     uint32_t l_tempVal  =   0;
     uint32_t headerFieldPos =  0;
 
-    headerFieldPos  =   offsetof( CpmrHeader_t, iv_buildDate );
+    headerFieldPos  =   offsetof( XpmrHeader_t, iv_buildDate );
     l_tempVal       =   htonl(getTime());
-    fseek( i_fpCpmrHdrImg, headerFieldPos, SEEK_SET);
-    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpCpmrHdrImg );
+    fseek( i_fpXpmrHdrImg, headerFieldPos, SEEK_SET);
+    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXpmrHdrImg );
 
-    headerFieldPos  =   offsetof( CpmrHeader_t, iv_version );
-    l_tempVal       =   htonl(CPMR_BUILD_VER);
-    fseek( i_fpCpmrHdrImg, headerFieldPos, SEEK_SET);
-    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpCpmrHdrImg );
+    headerFieldPos  =   offsetof( XpmrHeader_t, iv_version );
+    l_tempVal       =   htonl(XPMR_BUILD_VER);
+    fseek( i_fpXpmrHdrImg, headerFieldPos, SEEK_SET);
+    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXpmrHdrImg );
 
-    headerFieldPos  =    offsetof( CpmrHeader_t, iv_qmeImgOffset );
-    fseek( i_fpCpmrHdrImg, headerFieldPos, SEEK_SET);
-    l_tempVal   =  QME_HCODE_OFFSET;
-    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpCpmrHdrImg );
+    headerFieldPos  =    offsetof( XpmrHeader_t, iv_xgpeHcodeOffset );
+    fseek( i_fpXpmrHdrImg, headerFieldPos, SEEK_SET);
+    l_tempVal   =  XGPE_HCODE_OFFSET;
+    fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXpmrHdrImg );
 
     return l_rc;
 }
