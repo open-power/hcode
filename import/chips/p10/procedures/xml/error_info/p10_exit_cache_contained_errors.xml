@@ -25,30 +25,6 @@
 <hwpErrors>
   <!-- ********************************************************************* -->
   <hwpError>
-    <rc>RC_P10_EXIT_CACHE_CONTAINED_UNSUPPORTED_SCOM_ERR</rc>
-    <ffdc>TARGET</ffdc>
-    <ffdc>CU_TYPE</ffdc>
-    <ffdc>EC</ffdc>
-    <ffdc>CU_NUM</ffdc>
-    <ffdc>ADDR</ffdc>
-    <description>
-      Error translating chip unit relative SCOM address
-    </description>
-  </hwpError>
-  <!-- ********************************************************************* -->
-  <hwpError>
-    <rc>RC_P10_EXIT_CACHE_CONTAINED_SCOM_XLATE_ERR</rc>
-    <ffdc>TARGET</ffdc>
-    <ffdc>CU_TYPE</ffdc>
-    <ffdc>EC</ffdc>
-    <ffdc>CU_NUM</ffdc>
-    <ffdc>ADDR</ffdc>
-    <description>
-      Error translating chip unit relative SCOM address
-    </description>
-  </hwpError>
-  <!-- ********************************************************************* -->
-  <hwpError>
     <rc>RC_P10_EXIT_CACHE_CONTAINED_MULTIPLE_MASTER_ERR</rc>
     <ffdc>MASTER_CHIP1</ffdc>
     <ffdc>MASTER_CHIP2</ffdc>
@@ -66,4 +42,19 @@
     </description>
   </hwpError>
   <!-- ********************************************************************* -->
+  <hwpError>
+    <rc>RC_P10_EXIT_CACHE_CONTAINED_INVALID_MCD_GROUP_SIZE_ERR</rc>
+    <description>
+      Unsupported MCD group size
+    </description>
+    <ffdc>TARGET</ffdc>
+    <ffdc>RANGE_BASE_ADDR</ffdc>
+    <ffdc>RANGE_SIZE</ffdc>
+    <ffdc>MCD_RANGE_REG</ffdc>
+    <callout>
+      <procedure>CODE</procedure>
+      <priority>HIGH</priority>
+    </callout>
+  </hwpError>
+  <!-- ******************************************************************** -->
 </hwpErrors>
