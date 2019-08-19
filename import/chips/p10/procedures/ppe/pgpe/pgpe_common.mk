@@ -91,6 +91,7 @@ PGPE_OBJS+=$(PGPE_OBJECTS)
 # Include paths
 $(call ADD_PPEIMAGE_INCDIR,$(IMAGE), \
 	$(IOTA_SRCDIR) \
+	$(PPE_SRCDIR)/boltonlib/$(_PPE_TYPE) \
 	$(PPE_SRCDIR)/varietylib/$(_PPE_TYPE) \
 	$(PPE_SRCDIR)/ppetrace \
 	$(OCC_SRCDIR)/commonlib/include \
