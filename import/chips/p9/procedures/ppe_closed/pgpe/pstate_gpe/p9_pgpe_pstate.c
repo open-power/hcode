@@ -769,8 +769,23 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
     p.waitForAcks = PGPE_DB_ACK_WAIT_CME;
     p.checkNACKs = PGPE_DB3_SKIP_CHECK_NACKS;
 
-    G_pgpe_pstate_record.wov.target_pct = 0;
-    p9_pgpe_pstate_updt_ext_volt();
+    //IF WOV-Undervolting is enabled, then remove WOV bias
+    if (G_pgpe_pstate_record.wov.status & WOV_UNDERVOLT_ENABLED)
+    {
+        G_pgpe_pstate_record.wov.target_pct = 0; //Clear any WOV bias
+        uint32_t tmpBiasSyspExtVrmNext = G_pgpe_pstate_record.biasSyspExtVrmNext; //Save Next Voltage
+
+        //If Current Voltage != Next Voltage, then we are moving to lower pstate(low frequency/low voltage)
+        //and votlage hasn't been updated yet. To remove WOV bias, we use the current voltage because
+        //the p9_pgpe_pstate_updt_ext_volt function uses next voltage to write the VRMs
+        if (G_pgpe_pstate_record.biasSyspExtVrmCurr != G_pgpe_pstate_record.biasSyspExtVrmNext)
+        {
+            G_pgpe_pstate_record.biasSyspExtVrmNext = G_pgpe_pstate_record.biasSyspExtVrmCurr;
+        }
+
+        p9_pgpe_pstate_updt_ext_volt(); //Do voltage update that is remove any WOV bias
+        G_pgpe_pstate_record.biasSyspExtVrmNext = tmpBiasSyspExtVrmNext; //Restore Next voltage
+    }
 
     //c) Send DB3 (Replay Previous DB0 Operation) to only the CME Quad Managers, and
     //their Sibling CME (if present), that responded with a NACK.
