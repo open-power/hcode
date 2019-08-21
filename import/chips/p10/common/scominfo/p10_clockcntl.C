@@ -412,7 +412,7 @@ extern "C"
         io_domain == P10_EQ5##P##_DOMAIN ||  \
         io_domain == P10_EQ6##P##_DOMAIN ||  \
         io_domain == P10_EQ7##P##_DOMAIN) {  \
-        switch (i_chipUnitNum) { \
+        switch ((i_p10CU == PU_C_CHIPUNIT)?(i_chipUnitNum/4):(i_chipUnitNum)) { \
             case 0 : io_domain = P10_EQ0##P##_DOMAIN; break; \
             case 1 : io_domain = P10_EQ1##P##_DOMAIN; break; \
             case 2 : io_domain = P10_EQ2##P##_DOMAIN; break; \
@@ -428,6 +428,7 @@ extern "C"
         CHECKEQ(ECL20)
         CHECKEQ(ECL21)
         CHECKEQ(ECL22)
+        CHECKEQ(ECL23)
         CHECKEQ(L30)
         CHECKEQ(L31)
         CHECKEQ(L32)
