@@ -40,6 +40,16 @@ namespace ppe_c
 
 
 static const uint32_t CPMS_DTIR = 0xc000e800ull;
+
+static const uint32_t CPMS_DTIR_VALID = 0;
+static const uint32_t CPMS_DTIR_THREAD_SEL = 1;
+static const uint32_t CPMS_DTIR_THREAD_SEL_LEN = 3;
+static const uint32_t CPMS_DTIR_MODE_SEL = 6;
+static const uint32_t CPMS_DTIR_MODE_SEL_LEN = 2;
+static const uint32_t CPMS_DTIR_VALUE = 8;
+static const uint32_t CPMS_DTIR_VALUE_LEN = 8;
+static const uint32_t CPMS_DTIR_WINDOW_SEL = 17;
+static const uint32_t CPMS_DTIR_WINDOW_SEL_LEN = 3;
 // ppe_c/reg00002.H
 
 static const uint32_t CPMS_FMMR = 0xc000e4c0ull;

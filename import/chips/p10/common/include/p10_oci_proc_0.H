@@ -218,9 +218,15 @@ static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCBSES2_LL_WRITE_OVERFLOW = 1;
 // oci_proc/reg00000.H
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCISR1 = 0xc0060388ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCISR1_INTERRUPT_CRIT_STATUS_1 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OCISR1_INTERRUPT_CRIT_STATUS_1_LEN = 32;
 // oci_proc/reg00000.H
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_ODISR1 = 0xc0060398ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_ODISR1_INTERRUPT_DEBUG_STATUS_1 = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_ODISR1_INTERRUPT_DEBUG_STATUS_1_LEN = 32;
 // oci_proc/reg00000.H
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OIEPR1_RW = 0xc0060160ull;
@@ -404,15 +410,15 @@ static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPITFPRD_7 = 7;
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1 = 0xc0064208ull;
 
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__BRIDGE_ENABLE = 0;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__DEVICE = 1;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__CPOL = 2;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__CPHA = 3;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__CLOCK_DIVIDER = 4;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__CLOCK_DIVIDER_LEN = 10;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_BRIDGE_ENABLE = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_DEVICE = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_CPOL = 2;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_CPHA = 3;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_CLOCK_DIVIDER = 4;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_CLOCK_DIVIDER_LEN = 10;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_CR1_RESERVED_2 = 14;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_CR1_RESERVED_2_LEN = 3;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1__NR_OF_FRAMES = 17;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_CR1_NR_OF_FRAMES = 17;
 // oci_proc/reg00000.H
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_STAT = 0xc0064218ull;

@@ -208,7 +208,7 @@ static const uint32_t TP_TPCHIP_OCC_OCI_OCB_DERP2_SOR_LEN = 32;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SCMD2B = 0xc0063ab8ull;
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SCMD2B_CMD2B_RESERVED_0 = 0;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SCMD2B__CLEAR_STICKY_BITS_2B = 1;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SCMD2B_CLEAR_STICKY_BITS_2B = 1;
 // oci_proc/reg00016.H
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_O2SRD0B = 0xc00638c8ull;

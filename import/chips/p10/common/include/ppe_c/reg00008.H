@@ -78,6 +78,528 @@ fapi_try_exit:
 }
 
 
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_A_SCALE(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_A_SCALE,
+           CPMS_ACDR_A_SCALE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_SCALE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_A_SCALE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_A_SCALE,
+           CPMS_ACDR_A_SCALE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_SCALE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& GET_CPMS_ACDR_A_SCALE(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.extractToRight<CPMS_ACDR_A_SCALE,
+           CPMS_ACDR_A_SCALE_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_SCALE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_A_VALUE(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_A_VALUE,
+           CPMS_ACDR_A_VALUE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_VALUE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_A_VALUE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_A_VALUE,
+           CPMS_ACDR_A_VALUE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_VALUE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& GET_CPMS_ACDR_A_VALUE(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.extractToRight<CPMS_ACDR_A_VALUE,
+           CPMS_ACDR_A_VALUE_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_VALUE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_B_SCALE(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_B_SCALE,
+           CPMS_ACDR_B_SCALE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_SCALE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_B_SCALE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_B_SCALE,
+           CPMS_ACDR_B_SCALE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_SCALE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& GET_CPMS_ACDR_B_SCALE(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.extractToRight<CPMS_ACDR_B_SCALE,
+           CPMS_ACDR_B_SCALE_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_SCALE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_B_VALUE(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_B_VALUE,
+           CPMS_ACDR_B_VALUE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_VALUE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_B_VALUE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_B_VALUE,
+           CPMS_ACDR_B_VALUE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_VALUE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& GET_CPMS_ACDR_B_VALUE(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.extractToRight<CPMS_ACDR_B_VALUE,
+           CPMS_ACDR_B_VALUE_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_VALUE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_C_SCALE(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_C_SCALE,
+           CPMS_ACDR_C_SCALE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_SCALE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_C_SCALE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_C_SCALE,
+           CPMS_ACDR_C_SCALE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_SCALE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& GET_CPMS_ACDR_C_SCALE(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.extractToRight<CPMS_ACDR_C_SCALE,
+           CPMS_ACDR_C_SCALE_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_SCALE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_C_VALUE(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_C_VALUE,
+           CPMS_ACDR_C_VALUE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_VALUE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_C_VALUE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_C_VALUE,
+           CPMS_ACDR_C_VALUE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_VALUE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& GET_CPMS_ACDR_C_VALUE(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.extractToRight<CPMS_ACDR_C_VALUE,
+           CPMS_ACDR_C_VALUE_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_VALUE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_A_MOD(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_A_MOD,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_A_MOD(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_A_MOD,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_A_MOD(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.setBit<CPMS_ACDR_A_MOD>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_ACDR_A_MOD(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.clearBit<CPMS_ACDR_A_MOD>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& GET_CPMS_ACDR_A_MOD(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.extractToRight<CPMS_ACDR_A_MOD,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline bool GET_CPMS_ACDR_A_MOD(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.getBit<CPMS_ACDR_A_MOD>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_A_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_B_MOD(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_B_MOD,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_B_MOD(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_B_MOD,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_B_MOD(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.setBit<CPMS_ACDR_B_MOD>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_ACDR_B_MOD(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.clearBit<CPMS_ACDR_B_MOD>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& GET_CPMS_ACDR_B_MOD(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.extractToRight<CPMS_ACDR_B_MOD,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline bool GET_CPMS_ACDR_B_MOD(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.getBit<CPMS_ACDR_B_MOD>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_B_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_C_MOD(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_C_MOD,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_C_MOD(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.insertFromRight<CPMS_ACDR_C_MOD,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& SET_CPMS_ACDR_C_MOD(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.setBit<CPMS_ACDR_C_MOD>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_ACDR_C_MOD(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return o_data.clearBit<CPMS_ACDR_C_MOD>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+
+static inline fapi2::buffer<uint64_t>& GET_CPMS_ACDR_C_MOD(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.extractToRight<CPMS_ACDR_C_MOD,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
+static inline bool GET_CPMS_ACDR_C_MOD(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CPMS_ACDR));
+#endif
+    return i_data.getBit<CPMS_ACDR_C_MOD>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("Invalid dial access CPMS_ACDR_C_MOD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_CPMS_CL2_PFETSTAT(const fapi2::Target<K, M, V>& i_target)
 {
