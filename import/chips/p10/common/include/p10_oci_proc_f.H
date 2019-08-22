@@ -449,6 +449,12 @@ static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_RDATA_OCB_OCI_P2S_RDATA = 0;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_RDATA_OCB_OCI_P2S_RDATA_LEN = 32;
 // oci_proc/reg00019.H
 
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_RESET = 0xc0064228ull;
+
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_RESET_OCB_OCI_P2S_RESET = 0;
+static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_RESET_OCB_OCI_P2S_RESET_LEN = 2;
+// oci_proc/reg00019.H
+
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_WDATA = 0xc0064280ull;
 
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_P2S_WDATA_OCB_OCI_P2S_WDATA = 0;
