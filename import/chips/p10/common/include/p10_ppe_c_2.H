@@ -101,6 +101,12 @@ static const uint32_t CPMS_FMMR_OVERRIDE_VECTOR_LIMIT = 61;
 static const uint32_t CPMS_FMMR_OVERRIDE_VECTOR_LIMIT_LEN = 3;
 // ppe_c/reg00002.H
 
+static const uint32_t CPMS_WOXR = 0xc000e8c0ull;
+
+static const uint32_t CPMS_WOXR_THROTTLE_INDEX = 2;
+static const uint32_t CPMS_WOXR_THROTTLE_INDEX_LEN = 6;
+// ppe_c/reg00002.H
+
 #ifndef __PPE_HCODE__
 }
 }

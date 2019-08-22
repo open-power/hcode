@@ -469,86 +469,86 @@ fapi_try_exit:
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_QME_RCPTR_PSTATE_ACK_PENDING(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& SET_QME_RCPTR_PSTATE_CHANGE_PENDING(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(QME_RCPTR));
 #endif
-    return o_data.insertFromRight<QME_RCPTR_PSTATE_ACK_PENDING,
+    return o_data.insertFromRight<QME_RCPTR_PSTATE_CHANGE_PENDING,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_ACK_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_CHANGE_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_QME_RCPTR_PSTATE_ACK_PENDING(const uint64_t i_data,
+static inline fapi2::buffer<uint64_t>& SET_QME_RCPTR_PSTATE_CHANGE_PENDING(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(QME_RCPTR));
 #endif
-    return o_data.insertFromRight<QME_RCPTR_PSTATE_ACK_PENDING,
+    return o_data.insertFromRight<QME_RCPTR_PSTATE_CHANGE_PENDING,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_ACK_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_CHANGE_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_QME_RCPTR_PSTATE_ACK_PENDING(fapi2::buffer<uint64_t>& o_data)
+static inline fapi2::buffer<uint64_t>& SET_QME_RCPTR_PSTATE_CHANGE_PENDING(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(QME_RCPTR));
 #endif
-    return o_data.setBit<QME_RCPTR_PSTATE_ACK_PENDING>();
+    return o_data.setBit<QME_RCPTR_PSTATE_CHANGE_PENDING>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_ACK_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_CHANGE_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& CLEAR_QME_RCPTR_PSTATE_ACK_PENDING(fapi2::buffer<uint64_t>& o_data)
+static inline fapi2::buffer<uint64_t>& CLEAR_QME_RCPTR_PSTATE_CHANGE_PENDING(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(QME_RCPTR));
 #endif
-    return o_data.clearBit<QME_RCPTR_PSTATE_ACK_PENDING>();
+    return o_data.clearBit<QME_RCPTR_PSTATE_CHANGE_PENDING>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_ACK_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_CHANGE_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& GET_QME_RCPTR_PSTATE_ACK_PENDING(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& GET_QME_RCPTR_PSTATE_CHANGE_PENDING(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(QME_RCPTR));
 #endif
-    return i_data.extractToRight<QME_RCPTR_PSTATE_ACK_PENDING,
+    return i_data.extractToRight<QME_RCPTR_PSTATE_CHANGE_PENDING,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_ACK_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_CHANGE_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
 
-static inline bool GET_QME_RCPTR_PSTATE_ACK_PENDING(fapi2::buffer<uint64_t>& i_data)
+static inline bool GET_QME_RCPTR_PSTATE_CHANGE_PENDING(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(QME_RCPTR));
 #endif
-    return i_data.getBit<QME_RCPTR_PSTATE_ACK_PENDING>();
+    return i_data.getBit<QME_RCPTR_PSTATE_CHANGE_PENDING>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_ACK_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access QME_RCPTR_PSTATE_CHANGE_PENDING chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
