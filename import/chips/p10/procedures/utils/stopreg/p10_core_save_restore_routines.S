@@ -178,6 +178,7 @@
                 .set RFID,                          0x2400004c
                 .set TRAP_LE,                       0x0800e07f
                 .set MFMSR_R21,                     0xa600a07e
+                .set SHIFT_ATTN_ENABLE_BIT_POS,     60  #HID[3]
 
 
                 .set SPR_SAVE_SCRATCH_REG,          r0
@@ -373,79 +374,98 @@ mtspr       USRR1,           MSR_INIT_REG            # Save MSR to USRR1
 #       Machine Check
 #--------------------------------------------------------------------#
 .org _start + 0x0200
+
+enable_attn:
+li          TEMP_REG1,    0x01
+sldi        TEMP_REG1,    TEMP_REG1, SHIFT_ATTN_ENABLE_BIT_POS
+mfspr       TEMP_REG2,    HID
+ori         TEMP_REG2,    TEMP_REG2, TEMP_REG1
+mtspr       HID,          TEMP_REG2
 .long ATTN
 
 #--------------------------------------------------------------------#
 #       Data Storage
 #--------------------------------------------------------------------#
 .org _start + 0x0300
-.long ATTN
+li SELF_REST_ERR_REG, 0x300
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Data Segment
 #--------------------------------------------------------------------#
 .org _start + 0x0380
-.long ATTN
+li SELF_REST_ERR_REG, 0x380
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Instruction Storage
 #--------------------------------------------------------------------#
 .org _start + 0x0400
-.long ATTN
+li SELF_REST_ERR_REG, 0x400
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Instruction Segment
 #--------------------------------------------------------------------#
 .org _start + 0x0480
-.long ATTN
+li SELF_REST_ERR_REG, 0x480
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       External
 #--------------------------------------------------------------------#
 .org _start + 0x0500
-.long ATTN
+li SELF_REST_ERR_REG, 0x500
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Alignment
 #--------------------------------------------------------------------#
 .org _start + 0x0600
-.long ATTN
+li SELF_REST_ERR_REG, 0x600
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Program
 #--------------------------------------------------------------------#
 .org _start + 0x0700
-.long ATTN
+li SELF_REST_ERR_REG, 0x700
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Floating Point Unavailable
 #--------------------------------------------------------------------#
 .org _start + 0x0800
-.long ATTN
+li SELF_REST_ERR_REG, 0x800
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Decrementer
 #--------------------------------------------------------------------#
 .org _start + 0x0900
-.long ATTN
+li SELF_REST_ERR_REG, 0x900
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Ultravisor Decrementer
 #--------------------------------------------------------------------#
 .org _start + 0x0980
-.long ATTN
+li SELF_REST_ERR_REG, 0x980
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Directed Priviledged Doorbell
 #--------------------------------------------------------------------#
 .org _start + 0x0A00
-.long ATTN
+li SELF_REST_ERR_REG, 0xA00
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Reserved
 #--------------------------------------------------------------------#
 .org _start + 0x0B00
-.long ATTN
+li SELF_REST_ERR_REG, 0xB00
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       System Call
@@ -457,85 +477,98 @@ b _sreset_hndlr
 #       Trace
 #--------------------------------------------------------------------#
 .org _start + 0x0D00
-.long ATTN
+li SELF_REST_ERR_REG, 0xD00
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Ultravisor Data Storage
 #--------------------------------------------------------------------#
 .org _start + 0x0E00
-.long ATTN
+li SELF_REST_ERR_REG, 0xE00
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Ultravisor Instruction Storage
 #--------------------------------------------------------------------#
 .org _start + 0x0E20
-.long ATTN
+li SELF_REST_ERR_REG, 0xE20
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Ultravisor Emulation Assistance
 #--------------------------------------------------------------------#
 .org _start + 0x0E40
-.long ATTN
+li SELF_REST_ERR_REG, 0xE40
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Ultravisor Maintenance
 #--------------------------------------------------------------------#
 .org _start + 0x0E60
-.long ATTN
+li SELF_REST_ERR_REG, 0xE60
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Directed Ultravisor Doorbell
 #--------------------------------------------------------------------#
 .org _start + 0x0E80
-.long ATTN
-
+li SELF_REST_ERR_REG, 0x0E80
+b   enable_attn
 #--------------------------------------------------------------------#
 #       Reserved
 #--------------------------------------------------------------------#
 .org _start + 0x0EA0
-.long ATTN
+li SELF_REST_ERR_REG, 0xEA0
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Reserved
 #--------------------------------------------------------------------#
 .org _start + 0x0EC0
-.long ATTN
+li SELF_REST_ERR_REG, 0x0EC0
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Reserved
 #--------------------------------------------------------------------#
 .org _start + 0x0EE0
-.long ATTN
+li SELF_REST_ERR_REG, 0xEE0
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Performance Monitoring
 #--------------------------------------------------------------------#
 .org _start + 0x0F00
-.long ATTN
+li SELF_REST_ERR_REG, 0xF00
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Vector Unavailable
 #--------------------------------------------------------------------#
 .org _start + 0x0F20
-.long ATTN
+li SELF_REST_ERR_REG, 0xF20
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       VSX Unavailable
 #--------------------------------------------------------------------#
 .org _start + 0x0F40
-.long ATTN
+li SELF_REST_ERR_REG, 0xF40
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Facility Unavailable
 #--------------------------------------------------------------------#
 .org _start + 0x0F60
-.long ATTN
+li SELF_REST_ERR_REG, 0xF60
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Ultravisor Facility Unavailable
 #--------------------------------------------------------------------#
 .org _start + 0x0F80
-.long ATTN
+li SELF_REST_ERR_REG, 0xF80
+b   enable_attn
 
 
 #--------------------------------------------------------------------#
@@ -579,6 +612,7 @@ slbia
 .org _start + THREAD_LAUNCHER_START_OFFSET
 
 thread_launcher_start:
+
 mfspr PIR_VAL_REG, PIR       #Processor Identification Register
 #Select to read the Thread State Status register in PC using SPRC & SPRD
 li          TEMP_REG1,          CORE_THREAD_STATE_REG_ID
@@ -701,6 +735,7 @@ li          TEMP_REG2,   0x01
 and         TEMP_REG1,   THREAD_SCRATCH_VAL_REG, TEMP_REG2
 cmpwi       TEMP_REG1,   0x00
 bne         find_self_save
+
 
 thread_restore_base:
 li          TEMP_REG1,   CORE_THREAD_STATE_REG_ID
