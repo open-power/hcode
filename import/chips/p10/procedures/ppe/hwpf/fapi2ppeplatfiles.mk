@@ -45,8 +45,6 @@
 FAPI2PLAT-CPP-SOURCES +=  pool.C
 FAPI2PLAT-CPP-SOURCES +=  target.C
 FAPI2PLAT-CPP-SOURCES +=  plat_utils.C
-#FAPI2PLAT-CPP-SOURCES +=  plat_ring_utils.C
-#FAPI2PLAT-CPP-SOURCES +=  plat_ring_traverse.C
 
 FAPI2PLAT-S-SOURCES =
 
