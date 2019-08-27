@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap19052100 |gap     | Removed high speed post test
 // mwh19043000 |mwh     | Add set_fir(fir_code_dft_error) to fail if's
 // bja19040400 |bja     | Set DFT FIR bit on fail
 // gap19031200 |gap     | Changed i_tune, q_tune and iq_tune to customized gray code
@@ -231,14 +232,12 @@ void txbist_main_hs_pat(t_gcr_addr* gcr_addr_i, uint8_t clk_pattern_i)
     put_ptr_field(gcr_addr_i, tx_pattern_32_47,  clk_pattern_16_bit,  fast_write);
     put_ptr_field(gcr_addr_i, tx_pattern_48_63,  clk_pattern_16_bit,  fast_write);
 
-    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b000);
-    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b001);
-    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b010);
-    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b011);
-    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b100);
-    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b101);
-    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b110);
-    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b111);
+    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b000); // Main N
+    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b001); // Main P
+    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b100); // Pre1 N
+    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b101); // Pre1 P
+    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b110); // Pre2 N
+    txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b111); // Pre2 P
 
     set_debug_state(0x015F); // txbist_main_hs_pat end
 } //txbist_main_hs_pat

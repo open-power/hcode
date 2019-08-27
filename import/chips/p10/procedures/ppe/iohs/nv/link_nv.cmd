@@ -22,6 +22,25 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
+// *!---------------------------------------------------------------------------
+// *! (C) Copyright International Business Machines Corp. 2019
+// *! All Rights Reserved -- Property of IBM
+// *! *** IBM Confidential ***
+// *!---------------------------------------------------------------------------
+// *! FILENAME    : link_nv.cmd
+// *! TITLE       :
+// *! DESCRIPTION : Linker command script for NV PPE image
+// *!
+// *! OWNER NAME  : Vikram Raj          Email: vbraj@us.ibm.com
+// *! BACKUP NAME : Mike Spear          Email: mspear@us.ibm.com
+// *!
+// *!---------------------------------------------------------------------------
+// CHANGE HISTORY:
+//------------------------------------------------------------------------------
+// Version ID: |Author: | Comment:
+//-------------|--------|-------------------------------------------------------
+// vbr19072400 |vbr     | Increase SRAM from 64K to 80K and add 1K debug log
+//------------------------------------------------------------------------------
 
 // Need to do this so that elf32-powerpc is not modified!
 #undef powerpc
@@ -33,14 +52,14 @@ OUTPUT_FORMAT(elf32-powerpc);
 
 MEMORY
 {
- // 64KB RAM on IOO
- sram : ORIGIN = 0xFFFF0000, LENGTH = 0x10000
+ // 80KB RAM on IOO
+ sram : ORIGIN = 0xFFFE0000, LENGTH = 0x14000
 }
 
 SECTIONS
 {
     // '.' is the current output location counter
-    . = 0xffff0000;
+    . = 0xfffe0000;
 
     // Code
     .text          : {. = ALIGN(512); *(.vectors) *(.text)} > sram
@@ -95,28 +114,30 @@ SECTIONS
    // The sizes of the following statically allocated sections must match the sizes defined in the c code.
 
    // Reserve 32B for general configuration and status of the image
-   .imgdata     0xffffd590: {  _img_regs_start = .; . = . + 0x20; _img_regs_end = .; } > sram = 0
+   .imgdata     0xffff1190: {  _img_regs_start = .; . = . + 0x20; _img_regs_end = .; } > sram = 0
 
    // Reserve 16B per thread of data for interaction with firmware
-   .iodatafw0   0xffffd5b0: {  _fw_regs0_start = .; . = . + 0x10; _fw_regs0_end = .; } > sram = 0
-   .iodatafw1   0xffffd5c0: {  _fw_regs1_start = .; . = . + 0x10; _fw_regs1_end = .; } > sram = 0
-   .iodatafw2   0xffffd5d0: {  _fw_regs2_start = .; . = . + 0x10; _fw_regs2_end = .; } > sram = 0
-   .iodatafw3   0xffffd5e0: {  _fw_regs3_start = .; . = . + 0x10; _fw_regs3_end = .; } > sram = 0
-   .iodatafw4   0xffffd5f0: {  _fw_regs4_start = .; . = . + 0x10; _fw_regs4_end = .; } > sram = 0
+   .iodatafw0   0xffff11b0: {  _fw_regs0_start = .; . = . + 0x10; _fw_regs0_end = .; } > sram = 0
+   .iodatafw1   0xffff11c0: {  _fw_regs1_start = .; . = . + 0x10; _fw_regs1_end = .; } > sram = 0
+   .iodatafw2   0xffff11d0: {  _fw_regs2_start = .; . = . + 0x10; _fw_regs2_end = .; } > sram = 0
+   .iodatafw3   0xffff11e0: {  _fw_regs3_start = .; . = . + 0x10; _fw_regs3_end = .; } > sram = 0
+   .iodatafw4   0xffff11f0: {  _fw_regs4_start = .; . = . + 0x10; _fw_regs4_end = .; } > sram = 0
 
    // Reserve 512B for the kernel and 1KB sections for the IO thread stacks at the end of the SRAM (before the mem_regs)
-   .pkstack     0xffffd600: {  _kernel_stack_start = .;      . = . + 0x200; _kernel_stack_end = .; } > sram = 0
-   .iostack0    0xffffd800: {  _io_thread_stack0_start = .;  . = . + 0x400; _io_thread_stack0_end = .; } > sram = 0
-   .iostack1    0xffffdc00: {  _io_thread_stack1_start = .;  . = . + 0x400; _io_thread_stack1_end = .; } > sram = 0
-   .iostack2    0xffffe000: {  _io_thread_stack2_start = .;  . = . + 0x400; _io_thread_stack2_end = .; } > sram = 0
-   .iostack3    0xffffe400: {  _io_thread_stack3_start = .;  . = . + 0x400; _io_thread_stack3_end = .; } > sram = 0
-   .iostack4    0xffffe800: {  _io_thread_stack4_start = .;  . = . + 0x400; _io_thread_stack4_end = .; } > sram = 0
+   .pkstack     0xffff1200: {  _kernel_stack_start = .;      . = . + 0x200; _kernel_stack_end = .; } > sram = 0
+   .iostack0    0xffff1400: {  _io_thread_stack0_start = .;  . = . + 0x400; _io_thread_stack0_end = .; } > sram = 0
+   .iostack1    0xffff1800: {  _io_thread_stack1_start = .;  . = . + 0x400; _io_thread_stack1_end = .; } > sram = 0
+   .iostack2    0xffff1c00: {  _io_thread_stack2_start = .;  . = . + 0x400; _io_thread_stack2_end = .; } > sram = 0
+   .iostack3    0xffff2000: {  _io_thread_stack3_start = .;  . = . + 0x400; _io_thread_stack3_end = .; } > sram = 0
+   .iostack4    0xffff2400: {  _io_thread_stack4_start = .;  . = . + 0x400; _io_thread_stack4_end = .; } > sram = 0
 
-   // Reserve the mem_regs at the last 1KB, fill with 0. Duplicate for up to 5 threads where the last thread is at the end.
-   .iodata0     0xffffec00: {  _mem_regs0_start = .; . = . + 0x400; _mem_regs0_end = .; } > sram = 0
-   .iodata1     0xfffff000: {  _mem_regs1_start = .; . = . + 0x400; _mem_regs1_end = .; } > sram = 0
-   .iodata2     0xfffff400: {  _mem_regs2_start = .; . = . + 0x400; _mem_regs2_end = .; } > sram = 0
-   .iodata3     0xfffff800: {  _mem_regs3_start = .; . = . + 0x400; _mem_regs3_end = .; } > sram = 0
-   .iodata4     0xfffffc00: {  _mem_regs4_start = .; . = . + 0x400; _mem_regs4_end = .; } > sram = 0
+   // Reserve the 1KB mem_regs at the end, fill with 0. Duplicate for up to 5 threads where the last thread is at the end.
+   .iodata0     0xffff2800: {  _mem_regs0_start = .; . = . + 0x400; _mem_regs0_end = .; } > sram = 0
+   .iodata1     0xffff2c00: {  _mem_regs1_start = .; . = . + 0x400; _mem_regs1_end = .; } > sram = 0
+   .iodata2     0xffff3000: {  _mem_regs2_start = .; . = . + 0x400; _mem_regs2_end = .; } > sram = 0
+   .iodata3     0xffff3400: {  _mem_regs3_start = .; . = . + 0x400; _mem_regs3_end = .; } > sram = 0
+   .iodata4     0xffff3800: {  _mem_regs4_start = .; . = . + 0x400; _mem_regs4_end = .; } > sram = 0
 
+   // Reserve the last 1KB for a debug log file.
+   .debuglog    0xffff3c00: {  _debug_log_start = .; . = . + 0x400; _debug_log_end = .; } > sram = 0
 }

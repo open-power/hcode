@@ -57,7 +57,8 @@ src_files+=("nv_main.c")
 
 # IOO image files
 src_files+=("config_ioo.h")
-src_files+=("dcc_main.c" "dcc_main.h")
+src_files+=("tx_dcc_main.c" "tx_dcc_main.h")
+src_files+=("tx_zcal_tdr.c" "tx_zcal_tdr.h")
 src_files+=("eo_bank_sync.c" "eo_bank_sync.h")
 src_files+=("eo_bist_init_ovride.c" "eo_bist_init_ovride.h")
 src_files+=("eo_common.c" "eo_common.h")

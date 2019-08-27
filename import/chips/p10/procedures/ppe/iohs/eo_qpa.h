@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr19061200 |vbr     | Added wrapper around nedge_seek_step() to limit step size
 // jfg19040800 |jfg     | Comment updates and remove ber_lim from edge_seek
 // jfg19030500 |jfg     | Rename recal_1strun as recal_2ndrun to match usage in main
 // jfg19022800 |jfg     | Add result hysteresis and restore
@@ -82,6 +83,10 @@ typedef enum  {noseek, doseek, noseekNS, noseekEW} t_seek;
 //   -- A constant == "max_eye" if the mini-PR extents will be violated
 int nedge_seek_step (t_gcr_addr* gcr_addr, t_bank bank, unsigned int Dstep, unsigned int Estep, bool dirL1R0,
                      bool noBER, t_seek seek_edge, int* pr_vals);//, int ber_lim
+
+// Wrapper aroung nedge_seek_step for stepping multiple times at a single step a time so don't violate Mini PR step limitations
+int nedge_seek_multistep (t_gcr_addr* gcr_addr, t_bank bank, unsigned int Dstep, unsigned int Estep, bool dirL1R0,
+                          bool noBER, t_seek seek_edge, int* pr_vals);//, int ber_lim
 
 
 // Run QPA on a lane
