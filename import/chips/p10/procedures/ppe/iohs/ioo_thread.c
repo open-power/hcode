@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// cws19051300 |cws     | Changed API to Software
 // mwh19042600 |mwh     | HW490057 Change order of excution put "lane power up" after DCcal -- meeting
 // vbr19040200 |vbr     | HW487712: Remove ucontroller_test from primary image.
 // vbr18121400 |vbr     | HW474927: Add config to enable/disable lane copy in init.
@@ -117,455 +118,763 @@
 #include "ppe_com_reg_const_pkg.h"
 #include "config_ioo.h"
 
-#include "eo_bist_init_ovride.h"
+//#if IO_DISABLE_DEBUG == 1
+//  #define FW_DEBUG(i_data) {}
+//#else
+//  #define FW_DEBUG(i_data) { fw_regs_u16[fw_addr(fw_debug_addr)] = (i_data); }
+//#endif
 
-// Assumption Checking
-PK_STATIC_ASSERT(io_reset_lane_done_16_23_startbit == 0);
-PK_STATIC_ASSERT(rx_dccal_done_16_23_startbit == 0);
-PK_STATIC_ASSERT(rx_recal_run_or_unused_16_23_startbit == 0);
+//-----------------------------------------------------------------------------
+// Function Declarations
+//-----------------------------------------------------------------------------
+static void dl_init_req (t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes, int* io_last_init_lane);
+static void dl_recal_req(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes, const uint32_t i_recal_req_vec);
+static void set_recal_or_unused(const uint32_t i_lane, const uint32_t i_value);
+static uint32_t get_dl_recal_req_vec(t_gcr_addr* io_gcr_addr);
+static void auto_recal(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes);
+
+static void cmd_hw_reg_init_pg  (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_ioreset_pl      (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_dccal_pl        (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_tx_zcal_pl      (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_tx_ffe_pl       (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_tx_fifo_init_pl (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_power_on_pl     (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_power_off_pl    (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_rx_bist_tests_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_tx_bist_tests_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_train_pl        (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_recal_pl        (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_rx_detect_pl    (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+static void cmd_nop             (t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask);
+
+static const uint32_t G_NUM_LANES  = 24;
+static const uint32_t EXT_CMD_SIZE = 16;
+
+// Registers: EXT_CMD_REQ_REG / EXT_CMD_DONE_REG
+void (*EXT_CMD_FUNCTIONS[16])(t_gcr_addr* i_gcr_addr, uint32_t i_lane_mask) =
+{
+    &cmd_hw_reg_init_pg   , // [00]: TODO Check Rx/Tx Bist Flags & setup bist + hold if perv registers say so
+    &cmd_ioreset_pl       , // [01]: TODO Reset all Bist Flags if not in bist mode, otherwise setup pl regs
+    &cmd_rx_detect_pl     , // [02]: TODO Is this the right place?
+    &cmd_dccal_pl         , // [03]: TODO Remove power down at the end.
+    &cmd_tx_zcal_pl       , // [04]: TODO Add check to see which method to use(HW v TDR). For HW add Lock bit for zcal
+    &cmd_tx_ffe_pl        , // [05]: TODO Create interface to pass data bits in
+    &cmd_power_off_pl     , // [06]:
+    &cmd_power_on_pl      , // [07]:
+    &cmd_tx_fifo_init_pl  , // [08]: *RUN IN DCCAL, ONLY NEED TO RERUN AFTER POWER CYCLE(OFF/ON)
+    &cmd_rx_bist_tests_pl , // [09]: Rx Dac Test, TODO Needs to be non-destructive
+    &cmd_tx_bist_tests_pl , // [10]: Tx Seg Test, TODO Needs to be non-destructive
+    &cmd_train_pl         , // [11]: TODO Check if lanes are powered up, if not power them up
+    &cmd_recal_pl         , // [12]: TODO Add min_recal_cnt
+    &cmd_nop              , // [13]:
+    &cmd_nop              , // [14]:
+    &cmd_nop                // [15]:
+};
+
+//-----------------------------------------------------------------------------
+// Function Definintions
+//-----------------------------------------------------------------------------
+
+/**
+ * @brief Run External Command from API Registers
+ * @param[in] i_gcr_addr  Target Information
+ * @retval void
+ */
+static void run_external_command(t_gcr_addr* i_gcr_addr)
+{
+    ///set_debug_state(0x0002);
+
+    uint32_t l_cmd_req  = fw_field_get(ext_cmd_req );
+    uint32_t l_cmd_done = fw_field_get(ext_cmd_done);
+
+    if (l_cmd_req ^ l_cmd_done && l_cmd_req != 0x0)
+    {
+        uint32_t l_new_cmd_req = l_cmd_req & ~l_cmd_done;
+        uint32_t l_cmd_num = 0;
+        uint32_t l_lane_mask = (fw_field_get(ext_cmd_lanes_00_15) << 16) |
+                               (fw_field_get(ext_cmd_lanes_16_31) <<  0);
+
+        for (; l_cmd_num < EXT_CMD_SIZE; ++l_cmd_num)
+        {
+            uint32_t l_cmd_mask = 0x8000 >> l_cmd_num;
+
+            // Skip the command if it is not a new request
+            if (!(l_new_cmd_req & l_cmd_mask))
+            {
+                continue;
+            }
+
+            // Execute the external command function
+            EXT_CMD_FUNCTIONS[l_cmd_num](i_gcr_addr, l_lane_mask);
+
+            // Write the Command Done Bit
+            l_cmd_done |= l_cmd_mask;
+            fw_field_put(ext_cmd_done, l_cmd_done);
+        }
+    }
+
+    //set_debug_state(0x0003);
+    return;
+}
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  IOO thread for RX IO Cal
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Polling loop for each thread
+ * @param[in] arg   Contains thread ID
+ * @retval void
+ */
 void ioo_thread(void* arg)
 {
     // Parse input parameters
-    int* config = (int*)arg;
-    int thread = config[0]; // config parameter 0 - the thread_id
+    const int* l_config = (int*)arg;
+    const int l_thread = l_config[0]; // config parameter 0 - the thread_id
 
     // Set the pointers for mem_regs and fw_regs to this thread's section
-    set_pointers(thread);
+    set_pointers(l_thread);
 
 #if IO_DISABLE_DEBUG == 0
     // Debug info on the current thread running
-    img_field_put(ppe_current_thread, thread);
+    img_field_put(ppe_current_thread, l_thread);
 #endif
 
     // Read bus_id from fw_regs - must match the hardware rx_bus_id & tx_bus_id (they must be the same).
-    int bus_id   = fw_field_get(fw_gcr_bus_id);
+    const int l_bus_id = fw_field_get(fw_gcr_bus_id);
+    const uint32_t l_num_lanes  = fw_field_get(fw_num_lanes);
 
     // Form gcr_addr structure
-    t_gcr_addr gcr_addr;
-    set_gcr_addr(&gcr_addr, thread, bus_id, rx_group, 0); // RX lane 0
+    t_gcr_addr l_gcr_addr;
+    set_gcr_addr(&l_gcr_addr, l_thread, l_bus_id, rx_group, 0); // RX lane 0
 
+    int l_last_init_lane = -1; // Init not run on any lane as yet
+    uint32_t l_thread_loop_cnt = mem_pg_field_get(ppe_thread_loop_count);
+    uint32_t l_stop_thread = 0;
 
-    //////////////
-    // IOO Loop //
-    //////////////
-    int num_lanes = fw_field_get(fw_num_lanes);
-    int last_init_lane = -1; // Init not run on any lane as yet
-
-    while (true)
+    do
     {
         // Do not run loop  while fw_stop_thread is set; this may be done when in an error condition and need to reset.
         // Also, mirror the setting as the status/handshake.
-        int stop_thread = fw_field_get(fw_stop_thread);
-        fw_field_put(fw_thread_stopped, stop_thread);
+        l_stop_thread = fw_field_get(fw_stop_thread);
 
-        if (stop_thread)
+        if (l_stop_thread)
         {
             set_debug_state(0x00FF); // DEBUG - Thread Stopped
 
+            //fw_field_put(fw_thread_stopped, l_stop_thread);
             // Reset last_init_lane when stopping the thread (assume bus is being reset)
-            last_init_lane = -1;
+            l_last_init_lane = -1;
         }
-        else     //!fw_stop_thread
+        else
         {
+            //!fw_stop_thread
             set_debug_state(0x0001); // DEBUG - Thread Loop Start
 
-            // Will be looping through each lane checking for DL commands
-            int lane;
-            uint32_t lane_mask;
+            // Checks if any new command requests need to be run
+            run_external_command(&l_gcr_addr);
 
-            /////////////////////////////////////////////////
-            // INIT AND RUN BIST SEQ
-            // Only initiated through correct work reg 1 setting
-            /////////////////////////////////////////////////
-            int hw_bist_init = lcl_get(scom_ppe_work1_lcl_addr, scom_ppe_work1_width);
+            // DL Intial Training
+            dl_init_req(&l_gcr_addr, l_num_lanes, &l_last_init_lane);
 
-            if ( hw_bist_init == 0x000CAFE)
+            // DL Recalibration Request
+            uint32_t l_recal_req_vec = get_dl_recal_req_vec(&l_gcr_addr);
+
+            if (l_recal_req_vec)
             {
-                eo_bist_init_ovride(&gcr_addr);
+                dl_recal_req(&l_gcr_addr, l_num_lanes, l_recal_req_vec);
             }
 
-            /////////////////////////////////////////////////
-            // INIT the Hw Regs
-            // Only initiated through mem_regs.
-            /////////////////////////////////////////////////
-            int hw_reg_init_req  = mem_pg_field_get(hw_reg_init_req);
-            int hw_reg_init_done = mem_pg_field_get(hw_reg_init_done);
+            auto_recal(&l_gcr_addr, l_num_lanes);
 
-            if ( hw_reg_init_req && !hw_reg_init_done )
-            {
-                // Run init when have a request
-                io_hw_reg_init(&gcr_addr);
-                mem_pg_bit_set(hw_reg_init_done);
-            }
-
-            // If done is set but no longer seeing a request, clear the done bit (completes the handshake)
-            if ( hw_reg_init_done && !hw_reg_init_req )
-            {
-                mem_pg_bit_clr(hw_reg_init_done);
-            }
-
-
-            /////////////////////////////////////////////////
-            // Lane Reset
-            // Only initiated through mem_regs.
-            // Run on requested lanes that haven't run on.
-            ////////////////////////////////////////////////
-            set_debug_state(0x0007); // DEBUG - Lane Reset Loop Start
-            uint32_t reset_lane_0_23 =
-                (mem_pg_field_get(io_reset_lane_req_0_15)  << 16) |
-                (mem_pg_field_get(io_reset_lane_req_16_23) << (16 - io_reset_lane_req_16_23_width));
-            lane_mask = 0x80000000;
-
-            for (lane = 0; lane < num_lanes; lane++)
-            {
-                // Check both request registers
-                int reset_lane_enable = mem_pl_field_get(io_reset_lane_req,  lane) | (reset_lane_0_23 & lane_mask);
-                int reset_lane_done   = mem_pl_field_get(io_reset_lane_done, lane);
-
-                if ( reset_lane_enable && !reset_lane_done )
-                {
-                    // Set the current lane in the gcr_addr
-                    set_gcr_addr_lane(&gcr_addr, lane);
-
-                    // Run lane reset
-                    io_reset_lane(&gcr_addr);
-
-                    // Set done in both registers
-                    mem_pl_bit_set(io_reset_lane_done, lane);
-
-                    if (lane < 16)
-                    {
-                        mem_regs_u16_bit_set(pg_addr(io_reset_lane_done_0_15_addr), (lane_mask >> 16));
-                    }
-                    else     // lane>=16
-                    {
-                        mem_regs_u16_bit_set(pg_addr(io_reset_lane_done_16_23_addr), lane_mask);
-                    }
-                }
-
-                // If done is set but no longer seeing a request, clear the done bit (completes the handshake)
-                if ( reset_lane_done && !reset_lane_enable )
-                {
-                    mem_pl_bit_clr(io_reset_lane_done, lane);
-
-                    if (lane < 16)
-                    {
-                        mem_regs_u16_bit_clr(pg_addr(io_reset_lane_done_0_15_addr), (lane_mask >> 16));
-                    }
-                    else     // lane>=16
-                    {
-                        mem_regs_u16_bit_clr(pg_addr(io_reset_lane_done_16_23_addr), lane_mask);
-                    }
-                }
-
-                // Shift the lane mask for the next lane
-                lane_mask = (lane_mask >> 1);
-            } //for lane
-
-
-            /////////////////////////////////////////////////
-            // DC Cal
-            // Only initiated through mem_regs.
-            // Run on requested lanes that haven't run on.
-            ////////////////////////////////////////////////
-            set_debug_state(0x0002); // DEBUG - DC Cal Loop Start
-            uint32_t run_dccal_0_23 =
-                (mem_pg_field_get(rx_run_dccal_0_15)  << 16) |
-                (mem_pg_field_get(rx_run_dccal_16_23) << (16 - rx_run_dccal_16_23_width));
-            lane_mask = 0x80000000;
-
-            for (lane = 0; lane < num_lanes; lane++)
-            {
-                // Check both request registers
-                int dccal_enable = mem_pl_field_get(rx_run_dccal,  lane) | (run_dccal_0_23 & lane_mask);
-                int dccal_done   = mem_pl_field_get(rx_dccal_done, lane);
-
-                if ( dccal_enable && !dccal_done )
-                {
-                    // Set the current lane in the gcr_addr
-                    set_gcr_addr_lane(&gcr_addr, lane);
-
-                    // Run cal.  Also set and clear busy.
-                    mem_pl_bit_set(rx_lane_busy, lane);
-                    eo_main_dccal(&gcr_addr);
-                    mem_pl_bit_clr(rx_lane_busy, lane);
-
-                    // Set done in both registers
-                    mem_pl_bit_set(rx_dccal_done, lane);
-
-                    if (lane < 16)
-                    {
-                        mem_regs_u16_bit_set(pg_addr(rx_dccal_done_0_15_addr), (lane_mask >> 16));
-                    }
-                    else     // lane>=16
-                    {
-                        mem_regs_u16_bit_set(pg_addr(rx_dccal_done_16_23_addr), lane_mask);
-                    }
-                }
-
-                // If done is set but no longer seeing a request, clear the done bit (completes the handshake)
-                if ( dccal_done && !dccal_enable )
-                {
-                    mem_pl_bit_clr(rx_dccal_done, lane);
-
-                    if (lane < 16)
-                    {
-                        mem_regs_u16_bit_clr(pg_addr(rx_dccal_done_0_15_addr), (lane_mask >> 16));
-                    }
-                    else     // lane>=16
-                    {
-                        mem_regs_u16_bit_clr(pg_addr(rx_dccal_done_16_23_addr), lane_mask);
-                    }
-                }
-
-                // Shift the lane mask for the next lane
-                lane_mask = (lane_mask >> 1);
-            } //for lane
-
-
-            /////////////////////////////////////////////////
-            // Lane Power Up
-            // Only initiated through mem_regs.
-            // Run on requested lanes that haven't run on.
-            /////////////////////////////////////////////////
-            set_debug_state(0x0008); // DEBUG - Lane Power Up Loop Start
-
-            for (lane = 0; lane < num_lanes; lane++)
-            {
-                // Check request register
-                int power_up_lane_enable = mem_pl_field_get(io_power_up_lane_req,  lane);
-                int power_up_lane_done   = mem_pl_field_get(io_power_up_lane_done, lane);
-
-                if ( power_up_lane_enable && !power_up_lane_done )
-                {
-                    // Set the current lane in the gcr_addr
-                    set_gcr_addr_lane(&gcr_addr, lane);
-
-                    // Power up the group and lane
-                    io_group_power_on(&gcr_addr);
-                    io_lane_power_on(&gcr_addr);
-
-                    // Set done in register
-                    mem_pl_bit_set(io_power_up_lane_done, lane);
-                }
-
-                // If done is set but no longer seeing a request, clear the done bit (completes the handshake)
-                if ( power_up_lane_done && !power_up_lane_enable )
-                {
-                    mem_pl_bit_clr(io_power_up_lane_done, lane);
-                }
-            } //for lane
-
-            /////////////////////////////////////////////////
-            // INIT Cal
-            // Initiated through mem_regs or DL signals.
-            // Assume DL/mem_regs are mutually exclusive.
-            // Run on requested lanes that haven't run on.
-            /////////////////////////////////////////////////
-            set_debug_state(0x0003); // DEBUG - Init Cal Loop Start
-            uint32_t run_lane_0_23 =
-                (get_ptr_field(&gcr_addr, rx_dl_phy_run_lane_0_15)  << 16) |
-                (get_ptr_field(&gcr_addr, rx_dl_phy_run_lane_16_23) << (16 - rx_dl_phy_run_lane_16_23_width));
-            lane_mask = 0x80000000;
-
-            for (lane = 0; lane < num_lanes; lane++)
-            {
-                int dl_run_lane = (run_lane_0_23 & lane_mask);
-                int init_enable = mem_pl_field_get(rx_run_lane, lane) | dl_run_lane;
-                int init_done   = mem_pl_field_get(rx_init_done, lane);
-
-                if ( init_enable && !init_done )
-                {
-                    // Set the current lane in the gcr_addr
-                    set_gcr_addr_lane(&gcr_addr, lane);
-
-                    // Copy results from previously INIT lane to current lane to use as a starting point for initial calibration.
-                    int enable_lane_cal_copy = mem_pg_field_get(rx_enable_lane_cal_copy);
-
-                    if ( enable_lane_cal_copy && (last_init_lane != -1) )
-                    {
-                        eo_copy_lane_cal(&gcr_addr, last_init_lane, lane);
-                    }
-
-                    last_init_lane = lane;
-
-                    // Run cal.  Also set and clear busy.
-                    mem_pl_bit_set(rx_lane_busy, lane);
-                    eo_main_init(&gcr_addr);
-                    mem_pl_bit_clr(rx_lane_busy, lane);
-
-                    // Set done in mem_regs and in DL (only if initiated by DL)
-                    mem_pl_bit_set(rx_init_done, lane);
-
-                    if (dl_run_lane)
-                    {
-                        put_ptr_field(&gcr_addr, rx_phy_dl_init_done_set, 0b1, fast_write); // strobe bit
-                    }
-                }
-
-                // If done is set but no longer seeing a request, clear the done bit (completes the handshake)
-                if ( init_done && !init_enable )
-                {
-                    set_gcr_addr_lane(&gcr_addr, lane);
-                    put_ptr_field(&gcr_addr, rx_phy_dl_init_done_clr, 0b1, fast_write); // strobe bit
-                    mem_pl_bit_clr(rx_init_done, lane);
-                }
-
-                // Shift the lane mask for the next lane
-                lane_mask = (lane_mask >> 1);
-            } //for lane
-
-
-            //////////////////////////////////////////////////////////////////////////////////////////////////
-            // Recal
-            // Initiated through mem_regs or DL signals.
-            // Assume DL/mem_regs are mutually exclusive.
-            // It is possible to run recal on some lanes while others are still waiting on init depending
-            // on when the enables are written.
-            // This is desired for when the bus is split into bricks which could be in different states.
-            //////////////////////////////////////////////////////////////////////////////////////////////////
-            set_debug_state(0x0004); // DEBUG - Recal Loop Start
-            uint32_t recal_req_0_23 =
-                (get_ptr_field(&gcr_addr, rx_dl_phy_recal_req_0_15)  << 16) |
-                (get_ptr_field(&gcr_addr, rx_dl_phy_recal_req_16_23) << (16 - rx_dl_phy_recal_req_16_23_width));
-            lane_mask = 0x80000000;
-
-            for (lane = 0; lane < num_lanes; lane++)
-            {
-                // Clear recal counter when requested, then clear request bit (treat as a pulse)
-                int clr_recal_cnt = mem_pl_field_get(rx_clr_lane_recal_cnt, lane);
-
-                if (clr_recal_cnt)
-                {
-                    mem_pl_field_put(rx_lane_recal_cnt, lane, 0);
-                    mem_pl_bit_clr(rx_clr_lane_recal_cnt, lane);
-                }
-
-                // If auto-recal is enabled for a lane, automatically run recal on it once it has completed init.
-                // Also run on requested lanes that haven't run recal on (but have completed init).
-                int auto_recal_en = mem_pl_field_get(rx_enable_auto_recal, lane);
-                int dl_recal_req  = (recal_req_0_23 & lane_mask);
-                int recal_req     = mem_pl_field_get(rx_recal_req, lane) | dl_recal_req;
-                int recal_done    = mem_pl_field_get(rx_recal_done, lane);
-                int init_done     = mem_pl_field_get(rx_init_done, lane);
-                bool recal_run_or_unused = !init_done; // lane is unused if init training not run
-
-                if ( init_done && (auto_recal_en || (recal_req && !recal_done)) )
-                {
-                    // Check if any lanes are waiting for initial calibration or a reset (and retrain).
-                    // Exit this loop if there is. This gives priority to DC Cal and INIT over Recal.
-                    // We do not interrupt a recal that is already in progress.
-                    int any_init_req_or_reset = get_ptr_field(&gcr_addr, rx_any_init_req_or_reset);
-
-                    if (any_init_req_or_reset)
-                    {
-                        break;
-                    }
-
-                    // Set the current lane in the gcr_addr
-                    set_gcr_addr_lane(&gcr_addr, lane);
-
-                    // Run recal. Also set and clear busy.
-                    recal_run_or_unused = true;
-                    mem_pl_bit_set(rx_lane_busy, lane);
-                    bool run_recal = true;
-
-                    while (run_recal)
-                    {
-                        eo_main_recal(&gcr_addr);
-                        // Continue to run until the min recal count is reached.
-                        int min_recal_cnt_reached = mem_pl_field_get(rx_min_recal_cnt_reached, lane);
-                        run_recal = !min_recal_cnt_reached;
-                    }
-
-                    mem_pl_bit_clr(rx_lane_busy, lane);
-
-                    // Only continue the handhake if this was a requested external recal (rather than an internal auto-recal)
-                    if (recal_req)
-                    {
-                        set_debug_state(0x0005); // DEBUG - Recal Done Handshake
-
-                        // Set done in mem_regs and in DL (only if initiated by DL)
-                        recal_done = 1;
-                        mem_pl_bit_set(rx_recal_done, lane);
-
-                        if (dl_recal_req)
-                        {
-                            put_ptr_field(&gcr_addr, rx_phy_dl_recal_done_set, 0b1, fast_write); // strobe bit
-                        }
-
-                        // Wait forever (no sleeping) on recal_req and recal_abort to unassert as acknowledgement of recal_done.
-                        // Also check fw_stop_thread as a way to break out of a potential hang on waiting for a DL signal.
-                        int recal_abort;
-
-                        do
-                        {
-                            recal_req =
-                                get_ptr_field(&gcr_addr, rx_dl_phy_recal_req) |
-                                mem_pl_field_get(rx_recal_req, lane);
-                            recal_abort =
-                                get_ptr_field(&gcr_addr, rx_dl_phy_recal_abort) |
-                                mem_pl_field_get(rx_recal_abort, lane);
-                            stop_thread = fw_field_get(fw_stop_thread);
-                        }
-                        while ( (recal_req || recal_abort) && !stop_thread );
-                    } //if recal_req
-
-                    // Clear the recal_abort sticky bit now that recal_abort should be unasserted (in both external and internal recal modes)
-                    put_ptr_field(&gcr_addr, rx_dl_phy_recal_abort_sticky_clr, 0b1, fast_write); // strobe bit
-                } //if (init_done && ...)
-
-                // If done is set but no longer seeing a request, clear the done bit (completes the handshake)
-                if ( recal_done && !recal_req )
-                {
-                    set_debug_state(0x0006); // DEBUG - Recal Done Handshake Complete
-                    set_gcr_addr_lane(&gcr_addr, lane);
-                    put_ptr_field(&gcr_addr, rx_phy_dl_recal_done_clr, 0b1, fast_write); // strobe bit
-                    mem_pl_bit_clr(rx_recal_done, lane);
-                }
-
-                // Set the status bit if the lane is unused (!init_done) or we just ran recal
-                if (recal_run_or_unused)
-                {
-                    if (lane < 16)
-                    {
-                        mem_regs_u16_bit_set(pg_addr(rx_recal_run_or_unused_0_15_addr), (lane_mask >> 16));
-                    }
-                    else     // lane>=16
-                    {
-                        mem_regs_u16_bit_set(pg_addr(rx_recal_run_or_unused_16_23_addr), lane_mask);
-                    }
-                }
-
-                // Shift the lane mask for the next lane
-                lane_mask = (lane_mask >> 1);
-            } //for (lane)
-
-
-            ///////////////////////////////////////////////////
-            // End of Thread Loop
-            ///////////////////////////////////////////////////
             set_debug_state(0x000F); // DEBUG - Thread Loop End
         } //!fw_stop_thread
 
 
-        ////////////////////////////////////////////////////////////////////////
         // Increment the thread loop count (for both active and stopped)
-        ////////////////////////////////////////////////////////////////////////
-        unsigned int thread_loop_cnt = mem_pg_field_get(ppe_thread_loop_count);
-        thread_loop_cnt = thread_loop_cnt + 1;
-        mem_pg_field_put(ppe_thread_loop_count, thread_loop_cnt);
+        mem_pg_field_put(ppe_thread_loop_count, ++l_thread_loop_cnt);
 
-
-        ////////////////////////////////////////////////////////////////////////
         // Yield to other threads at least once per thread loop
-        ////////////////////////////////////////////////////////////////////////
-        io_sleep(get_gcr_addr_thread(&gcr_addr));
-    } //while (true)
+        io_sleep(get_gcr_addr_thread(&l_gcr_addr));
+    }
+    while(1);
 
-} //ioo_thread
+}
+
+/**
+ * @brief Calls HW REG INIT Per-Group
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_hw_reg_init_pg(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x0008);
+    io_hw_reg_init(io_gcr_addr);
+    //set_debug_state(0x0009);
+    return;
+}
+
+/**
+ * @brief Calls I/O Reset Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_ioreset_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x000A);
+    uint32_t l_lane = 0;
+
+    for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_mask = i_lane_mask << 1)
+    {
+        if ((i_lane_mask & 0x80000000) == 0x0)
+        {
+            continue;
+        }
+
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+        io_reset_lane(io_gcr_addr);
+    }
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    //set_debug_state(0x000B);
+    return;
+}
+
+/**
+ * @brief Calls Lane Power On Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_power_on_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x0014);
+
+    // Group Power On If Needed
+    // - Check if there are any lanes currently powered on
+    // - Check if the current command is powering on any lanes
+    uint32_t l_lanes_power_on = (mem_pg_field_get(lanes_pon_00_15) << 16) |
+                                (mem_pg_field_get(lanes_pon_16_23) << (16 - lanes_pon_16_23_width));
+
+    if (l_lanes_power_on == 0x0 && i_lane_mask > 0x0)
+    {
+        io_group_power_on(io_gcr_addr);
+    }
+
+    l_lanes_power_on |= i_lane_mask;
+    mem_pg_field_put(lanes_pon_00_15, (l_lanes_power_on >> 16) & 0xFFFF);
+    mem_pg_field_put(lanes_pon_16_23, (l_lanes_power_on >>  8) & 0x00FF);
+
+    // Power on specific lanes
+    uint32_t l_lane = 0;
+
+    for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_mask = i_lane_mask << 1)
+    {
+        if ((i_lane_mask & 0x80000000) == 0x0)
+        {
+            continue;
+        }
+
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+        io_lane_power_on(io_gcr_addr);
+    }
+
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    //set_debug_state(0x0015);
+    return;
+}
+
+/**
+ * @brief Calls Lane Power Off Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_power_off_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x0016);
+
+    // Power off specific lanes
+    uint32_t l_lane = 0;
+
+    for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_mask = i_lane_mask << 1)
+    {
+        if ((i_lane_mask & 0x80000000) == 0x0)
+        {
+            continue;
+        }
+
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+        io_lane_power_off(io_gcr_addr);
+    }
+
+    // Group Power Off If Needed
+    // - Check if any lanes are powered on
+    uint32_t l_lanes_power_on = (mem_pg_field_get(lanes_pon_00_15) << 16) |
+                                (mem_pg_field_get(lanes_pon_16_23) << (16 - lanes_pon_16_23_width));
+    l_lanes_power_on &= ~i_lane_mask;
+
+    if (l_lanes_power_on == 0x0)
+    {
+        io_group_power_off(io_gcr_addr);
+    }
+
+    mem_pg_field_put(lanes_pon_00_15, (l_lanes_power_on >> 16) & 0xFFFF);
+    mem_pg_field_put(lanes_pon_16_23, (l_lanes_power_on >>  8) & 0x00FF);
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    //set_debug_state(0x0017);
+    return;
+}
+
+/**
+ * @brief Calls NOP Command Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_nop(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x0022);
+    // TODO Log Error Here
+    //set_debug_state(0x0023);
+    return;
+}
+
+/**
+ * @brief Calls Tx FFE Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_tx_ffe_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x0012);
+    uint32_t l_lane = 0;
+
+    for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_mask = i_lane_mask << 1)
+    {
+        if ((i_lane_mask & 0x80000000) == 0x0)
+        {
+            continue;
+        }
+
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+
+        // TODO Set FFE Settings
+    }
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    //set_debug_state(0x0013);
+    return;
+}
+
+/**
+ * @brief Calls Rx/Tx DC Calibration Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_dccal_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x000E);
+    uint32_t l_lane = 0;
+
+    for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_mask = i_lane_mask << 1)
+    {
+        if ((i_lane_mask & 0x80000000) == 0x0)
+        {
+            continue;
+        }
+
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+
+        mem_pl_bit_set(rx_lane_busy, l_lane);
+        eo_main_dccal(io_gcr_addr);
+        mem_pl_bit_clr(rx_lane_busy, l_lane);
+        mem_pl_bit_set(rx_dccal_done, l_lane);
+    }
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    //set_debug_state(0x000D);
+    return;
+}
+
+/**
+ * @brief Calls Tx ZCAL Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_tx_zcal_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x0010);
+    // TODO Write Code
+    //set_debug_state(0x0011);
+    return;
+}
+
+/**
+ * @brief Calls Tx Fifo Initialization Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_tx_fifo_init_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x0018);
+    set_gcr_addr_reg_id(io_gcr_addr, tx_group);
+    uint32_t l_lane = 0;
+
+    for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_mask = i_lane_mask << 1)
+    {
+        if ((i_lane_mask & 0x80000000) == 0x0)
+        {
+            continue;
+        }
+
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+
+        //enable tx clock synchronization latch
+        put_ptr_field(io_gcr_addr, tx_unload_clk_disable, 0, read_modify_write);
+
+        //init fifo
+        put_ptr_field(io_gcr_addr, tx_fifo_init, 1, read_modify_write);
+
+        //disable tx clock synchronization latch
+        put_ptr_field(io_gcr_addr, tx_unload_clk_disable, 1, read_modify_write);
+    }
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    set_gcr_addr_reg_id(io_gcr_addr, rx_group);
+    //set_debug_state(0x0019);
+    return;
+}
+
+/**
+ * @brief Calls Rx Bist Tests Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_rx_bist_tests_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x001A);
+    // TODO Write Code
+    //set_debug_state(0x001B);
+    return;
+}
+
+/**
+ * @brief Calls Tx Bist Tests Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_tx_bist_tests_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x001C);
+    // TODO Write Code
+    //set_debug_state(0x001D);
+    return;
+}
+
+/**
+ * @brief Runs Rx Initial Training Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane        Lane to Train
+ * @retval void
+ */
+static void run_initial_training(t_gcr_addr* io_gcr_addr, const uint32_t i_lane)
+{
+    set_gcr_addr_lane(io_gcr_addr, i_lane);
+    mem_pl_bit_set(rx_lane_busy, i_lane);
+    eo_main_init(io_gcr_addr);
+    mem_pl_bit_set(rx_init_done, i_lane);
+    mem_pl_bit_clr(rx_lane_busy, i_lane);
+    set_recal_or_unused(i_lane, 0x0);
+    return;
+}
+
+/**
+ * @brief Runs Rx Recalibration Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane        Lane to recalibrate
+ * @retval void
+ */
+static void run_recalibration(t_gcr_addr* io_gcr_addr, const uint32_t i_lane)
+{
+    set_gcr_addr_lane(io_gcr_addr, i_lane);
+    // Run recal. Also set and clear busy.
+    mem_pl_bit_clr(rx_recal_done, i_lane);
+    mem_pl_bit_set(rx_lane_busy, i_lane);
+
+    do
+    {
+        eo_main_recal(io_gcr_addr);
+    }
+    while (!mem_pl_field_get(rx_min_recal_cnt_reached, i_lane) &&
+           !mem_pl_field_get(rx_recal_abort, i_lane) &&
+           !fw_field_get(fw_stop_thread));
+
+    mem_pl_bit_clr(rx_lane_busy, i_lane);
+    mem_pl_bit_set(rx_recal_done, i_lane);
+    set_recal_or_unused(i_lane, 0x1);
+    return;
+}
+
+/**
+ * @brief Calls Rx Train Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_train_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x001E);
+    uint32_t l_lane = 0;
+
+    for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_mask = i_lane_mask << 1)
+    {
+        if ((i_lane_mask & 0x80000000) == 0x0)
+        {
+            continue;
+        }
+
+        run_initial_training(io_gcr_addr, l_lane);
+        mem_pl_bit_set(rx_cmd_init_done, l_lane);
+    }
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    //set_debug_state(0x001F);
+    return;
+}
+
+/**
+ * @brief Calls Recalibration Test Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in]    i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_recal_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x0020);
+    uint32_t l_lane = 0;
+
+    for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_mask = i_lane_mask << 1)
+    {
+        if ((i_lane_mask & 0x80000000) == 0x0)
+        {
+            continue;
+        }
+
+        run_recalibration(io_gcr_addr, l_lane);
+    }
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    //set_debug_state(0x0021);
+    return;
+}
+
+/**
+ * @brief Calls Tx Rx Detect Per-Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in]    i_lane_mask   Lane Mask
+ * @retval void
+ */
+static void cmd_rx_detect_pl(t_gcr_addr* io_gcr_addr, uint32_t i_lane_mask)
+{
+    //set_debug_state(0x000C);
+    uint32_t l_lane = 0;
+
+    for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_mask = i_lane_mask << 1)
+    {
+        if ((i_lane_mask & 0x80000000) == 0x0)
+        {
+            continue;
+        }
+
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+
+        // TODO Run Rx Detect
+        // - Where do we store results
+    }
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    //set_debug_state(0x000D);
+    return;
+}
+
+/**
+ * @brief Assert Lane Mask for Recal or Unused Lanes
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_lane        Lane to Target
+ * @param[in   ] i_value       Value to Set
+ * @retval void
+ */
+static void set_recal_or_unused(const uint32_t i_lane, const uint32_t i_value)
+{
+    uint32_t l_data = (mem_pg_field_get(rx_recal_run_or_unused_0_15) << 16) |
+                      (mem_pg_field_get(rx_recal_run_or_unused_16_23) << (16 - rx_recal_run_or_unused_16_23_width));
+    l_data &= ~(0x80000000 >> i_lane);
+    l_data |= ((i_value & 0x1) << (31 - i_lane));
+
+    mem_pg_field_put(rx_recal_run_or_unused_0_15, (l_data >> 16) & 0xFFFF);
+    mem_pg_field_put(rx_recal_run_or_unused_16_23, (l_data >>  8) & 0x00FF);
+
+    return;
+}
+
+/**
+ * @brief Service DL Initialize Request
+ * @param[inout] io_gcr_addr        Target Information
+ * @param[in   ] i_num_lanes     Total Number of Lanes
+ * @param[inout] io_last_init_lane  Last lane that was initilized.  This is needed to copy lane information
+ * @retval void
+ */
+static void dl_init_req(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes, int* io_last_init_lane)
+{
+    set_debug_state(0x0004);
+
+    uint32_t l_run_lane_mask = (get_ptr_field(io_gcr_addr, rx_dl_phy_run_lane_0_15)  << 16) |
+                               (get_ptr_field(io_gcr_addr, rx_dl_phy_run_lane_16_23) << (16 - rx_dl_phy_run_lane_16_23_width));
+    uint32_t l_lane          = 0;
+
+    for (; l_lane < i_num_lanes; ++l_lane)
+    {
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+
+        uint32_t l_init_done = mem_pl_field_get(rx_init_done, l_lane);
+        uint32_t l_dl_init_req = ((0x80000000 >> l_lane) & l_run_lane_mask);
+
+        if (l_dl_init_req && !l_init_done)
+        {
+            // todo here is where we would add power on if the lane is not already powered up.
+
+            // copy results from previously init lane to current lane to use as a starting point for initial calibration.
+            if (mem_pg_field_get(rx_enable_lane_cal_copy) && ((*io_last_init_lane) != -1))
+            {
+                eo_copy_lane_cal(io_gcr_addr, (*io_last_init_lane), l_lane);
+            }
+
+            (*io_last_init_lane) = (int)l_lane;
+
+            run_initial_training(io_gcr_addr, l_lane);
+
+            put_ptr_field(io_gcr_addr, rx_phy_dl_init_done_set, 0b1, fast_write);
+        }
+        else if (!l_dl_init_req && l_init_done && !mem_pl_field_get(rx_cmd_init_done, l_lane))
+        {
+            put_ptr_field(io_gcr_addr, rx_phy_dl_init_done_clr, 0b1, fast_write);
+            mem_pl_bit_clr(rx_init_done, l_lane); // We need to leave init_done asserted after initial training.
+        }
+    }
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    set_debug_state(0x0005);
+    return;
+}
+
+/**
+ * @brief Gets DL Recalibration Request Vector
+ * @param[inout] io_gcr_addr     Target Information
+ * @retval void
+ */
+static uint32_t get_dl_recal_req_vec(t_gcr_addr* io_gcr_addr)
+{
+    return (get_ptr_field(io_gcr_addr, rx_dl_phy_recal_req_0_15)  << 16) |
+           (get_ptr_field(io_gcr_addr, rx_dl_phy_recal_req_16_23) << (16 - rx_dl_phy_recal_req_16_23_width));
+}
+
+
+/**
+ * @brief Calls Service DL Recalibration Request
+ * @param[inout] io_gcr_addr     Target Information
+ * @param[in   ] i_num_lanes     Total Number of Lanes
+ * @param[in   ] i_recal_req_vec DL Recalibration Request Vector
+ * @retval void
+ */
+static void dl_recal_req(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes, const uint32_t i_recal_req_vec)
+{
+    set_debug_state(0x0006);
+
+    uint32_t l_lane = 0;
+
+    for (; l_lane < i_num_lanes; ++l_lane)
+    {
+        // Set the current lane in the io_gcr_addr
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+
+        if ((0x80000000 >> l_lane) & i_recal_req_vec)
+        {
+            if (!mem_pl_field_get(rx_init_done, l_lane))
+            {
+                mem_pl_field_put(rx_recal_before_init, l_lane, 1);
+            }
+            else if (!get_ptr_field(io_gcr_addr, rx_any_init_req_or_reset))
+            {
+                run_recalibration(io_gcr_addr, l_lane);
+
+                set_debug_state(0x0005); // DEBUG - Recal Done Handshake
+                put_ptr_field(io_gcr_addr, rx_phy_dl_recal_done_set, 0b1, fast_write); // strobe bit
+
+                while ((get_ptr_field(io_gcr_addr, rx_dl_phy_recal_req) ||
+                        get_ptr_field(io_gcr_addr, rx_dl_phy_recal_abort)) &&
+                       !fw_field_get(fw_stop_thread));
+
+                set_debug_state(0x0006); // DEBUG - Recal Done Handshake Complete
+                put_ptr_field(io_gcr_addr, rx_phy_dl_recal_done_clr, 0b1, fast_write); // strobe bit
+                mem_pl_bit_clr(rx_recal_done, l_lane);
+
+                // Clear the recal_abort sticky bit now that recal_abort should be unasserted (in both external and internal recal modes)
+                put_ptr_field(io_gcr_addr, rx_dl_phy_recal_abort_sticky_clr, 0b1, fast_write); // strobe bit
+            }
+        }
+    }
+
+    set_debug_state(0x0007);
+    return;
+}
+
+/**
+ * @brief Auto-Recalibration
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_num_lanes   Number of lanes to iterate over
+ * @retval void
+ */
+static void auto_recal(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes)
+{
+    set_debug_state(0x0024);
+    uint32_t l_lane = 0;
+
+    for (; l_lane < i_num_lanes; ++l_lane)
+    {
+        set_gcr_addr_lane(io_gcr_addr, l_lane);
+
+        // Clear recal counter when requested, then clear request bit (treat as a pulse)
+        int clr_recal_cnt = mem_pl_field_get(rx_clr_lane_recal_cnt, l_lane);
+
+        if (clr_recal_cnt)
+        {
+            mem_pl_field_put(rx_lane_recal_cnt, l_lane, 0);
+            mem_pl_bit_clr(rx_clr_lane_recal_cnt, l_lane);
+        }
+
+        // Run Auto Recalibration if necessary
+        if (mem_pl_field_get(rx_enable_auto_recal, l_lane))
+        {
+            if (mem_pl_field_get(rx_init_done, l_lane))
+            {
+                if (!get_ptr_field(io_gcr_addr, rx_any_init_req_or_reset))
+                {
+                    run_recalibration(io_gcr_addr, l_lane);
+                }
+            }
+        }
+    }
+
+    //set_gcr_addr_lane(io_gcr_addr, 0);
+    set_debug_state(0x0025);
+    return;
+}

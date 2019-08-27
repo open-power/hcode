@@ -41,6 +41,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// cws19053000 |cws     | Removed hw_reg_init, dccal, run_lane calls
+// mwh19052200 |mwh     | updated rx_bist_cir_alias
 // mwh19042600 |mwh     | Initial Rev 51yy debug state
 // jfg19050101 |jfg     | change peak_done to peak1_done by Mike Harper's request
 // vbr19041500 |vbr     | Updated register names
@@ -90,13 +92,6 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
     //trun off alt bank powerdown
     mem_pg_field_put(rx_disable_bank_pdwn, 0b1);//pg
 
-    //trun on hw_reg_init -- does serdes_16_to_1_mode stuff and
-    mem_pg_field_put(hw_reg_init_req, 0b1 );//pg
-
-    //Setting number of lane to do dccal on 18 is max "16 taken care of in thread code"
-    mem_pg_field_put(rx_run_dccal_0_15, 0b1111111111111111);//pg
-    mem_pg_field_put(rx_run_dccal_16_23, 0b11000000); //pg
-
     //turning on all init steps
     mem_pg_field_put(rx_eo_step_cntl_opt_alias, 0b111111111); //pg
 
@@ -109,14 +104,14 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
         //begin for
         //turn on circuit components for bist
         set_gcr_addr_lane(gcr_addr, lane);
-        put_ptr_field(gcr_addr, rx_bist_cir_alias, 0b111100000000, read_modify_write); //pl
+        put_ptr_field(gcr_addr, rx_bist_cir_alias, 0b100000, read_modify_write); //pl
 
         //doing lane power up
-        mem_pl_field_put(io_power_up_lane_req, lane, 0b1); //pl
+        //mem_pl_field_put(io_power_up_lane_req,lane,0b1);//pl
 
         //enabling init and recal with two below
         mem_pl_field_put(rx_enable_auto_recal, lane, 0b1); //pl
-        mem_pl_field_put(rx_run_lane, lane, 0b1); //pl
+        //mem_pl_field_put(rx_run_lane,lane,0b1);//pl
     }//end for
 
     //system vs manu setting specific stuff

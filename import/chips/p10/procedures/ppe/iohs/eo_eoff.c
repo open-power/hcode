@@ -41,6 +41,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mbs19072500 |mbs     | Added loff_setting_ovr_enb
+// mwh19051700 |mwh     | HW492097 Change inc/dec for loff and eoff for change in step 4.6
+// vbr19051400 |vbr     | HW491892: Change VDAC from 9-bit SM to 8-bit twos_comp
 // mwh19043000 |mwh     | add set_fir(fir_code_dft_error);
 // mwh19012100 |mwh     | Add rx_bist fail flag
 // mwh19032100 |mwh     | Add in vga_loop_count so that we do not do the latch offset check more than once
@@ -97,12 +100,12 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
     int lane = get_gcr_addr_lane(gcr_addr);
 
     int end_address;
-    int edge_n_sm, edge_e_sm, edge_s_sm, edge_w_sm;
+    int edge_n_dac, edge_e_dac, edge_s_dac, edge_w_dac;
 
     int edge_before_n, edge_before_e, edge_before_s, edge_before_w;
     int edge_after_n, edge_after_e, edge_after_s, edge_after_w;
 
-    int new_latch, new_latch_sm;
+    int new_latch, new_latch_dac;
     int loff_fail = 0;
     int eoff_fail = 0;
     int delta_fail = 0;
@@ -114,14 +117,14 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
     int rx_eoff_poff_check_en_int =  get_ptr(gcr_addr, rx_eoff_poff_check_en_addr, rx_eoff_poff_check_en_startbit,
                                      rx_eoff_poff_check_en_endbit);//pg
 
-    int check_latchoff_min       =  SignedMagToInt(mem_pg_field_get(rx_latchoff_min_check),
+    int check_latchoff_min       =  TwosCompToInt(mem_pg_field_get(rx_latchoff_min_check),
                                     rx_latchoff_min_check_width); //ppe pg
-    int check_latchoff_max       =  SignedMagToInt(mem_pg_field_get(rx_latchoff_max_check),
+    int check_latchoff_max       =  TwosCompToInt(mem_pg_field_get(rx_latchoff_max_check),
                                     rx_latchoff_max_check_width); //ppe pg
-    int check_eoff_min           =  SignedMagToInt(mem_pg_field_get(rx_eoff_min_check), rx_eoff_min_check_width); //ppe pg
-    int check_eoff_max           =  SignedMagToInt(mem_pg_field_get(rx_eoff_max_check), rx_eoff_max_check_width); //ppe pg
-    int check_poff_min           =  SignedMagToInt(mem_pg_field_get(rx_epoff_min_check), rx_epoff_min_check_width); //ppe pg
-    int check_poff_max           =  SignedMagToInt(mem_pg_field_get(rx_epoff_max_check), rx_epoff_max_check_width); //ppe pg
+    int check_eoff_min           =  TwosCompToInt(mem_pg_field_get(rx_eoff_min_check), rx_eoff_min_check_width); //ppe pg
+    int check_eoff_max           =  TwosCompToInt(mem_pg_field_get(rx_eoff_max_check), rx_eoff_max_check_width); //ppe pg
+    int check_poff_min           =  TwosCompToInt(mem_pg_field_get(rx_epoff_min_check), rx_epoff_min_check_width); //ppe pg
+    int check_poff_max           =  TwosCompToInt(mem_pg_field_get(rx_epoff_max_check), rx_epoff_max_check_width); //ppe pg
 
     int status;
 
@@ -141,46 +144,54 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
         //turn on her but turned off in dccal latch offset code
         put_ptr_field(gcr_addr, rx_loff_livedge_mode, 0b1, read_modify_write);//livedge off mode
 
-        if (recal)
+
+        // Switch for sim or lab to disable settings overrides
+        int loff_setting_ovr = mem_regs_u16_get(pg_addr(loff_setting_ovr_enb_addr), loff_setting_ovr_enb_mask,
+                                                loff_setting_ovr_enb_shift);
+
+        if ( loff_setting_ovr == 0)
         {
-            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b000, read_modify_write);
-            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b000, read_modify_write);
-            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b000, read_modify_write);
-            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);
-            set_debug_state(0xA002);
+            if (recal)
+            {
+                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b000, read_modify_write);
+                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b000, read_modify_write);
+                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b000, read_modify_write);
+                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);
+                set_debug_state(0xA002);
+            }
+            else
+            {
+                //eoff loff
+                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b011, read_modify_write);  // 3    4
+                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b010, read_modify_write);  // 2    2
+                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b001, read_modify_write);  // 1    2
+                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);  // 0    0
+                set_debug_state(0xA003);
+            }
+
+
+            //old filter failing 1,4,5,7                                                 //eoff loff
+            put_ptr_field(gcr_addr, rx_loff_filter_depth0, 0b0001, read_modify_write);// 3    3
+            put_ptr_field(gcr_addr, rx_loff_filter_depth1, 0b0100, read_modify_write);// 4    3
+            put_ptr_field(gcr_addr, rx_loff_filter_depth2, 0b0101, read_modify_write);// 5    3
+            put_ptr_field(gcr_addr, rx_loff_filter_depth3, 0b1000, read_modify_write);// 8    4
+
+            //change vs dccal latch offset = 5
+            put_ptr_field(gcr_addr, rx_loff_hyst_start, 0b00100, read_modify_write);
+
+
+            put_ptr_field(gcr_addr, rx_loff_timeout, 0b0110, read_modify_write);
         }
-        else
-        {
-            //eoff loff
-            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b100, read_modify_write);  // 4    6
-            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b011, read_modify_write);  // 3    3
-            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b001, read_modify_write);  // 1    3
-            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);  // 0    0
-            set_debug_state(0xA003);
-        }
-
-
-        //old filter failing 1,4,5,7                                                 //eoff loff
-        put_ptr_field(gcr_addr, rx_loff_filter_depth0, 0b0001, read_modify_write);// 3    3
-        put_ptr_field(gcr_addr, rx_loff_filter_depth1, 0b0100, read_modify_write);// 4    3
-        put_ptr_field(gcr_addr, rx_loff_filter_depth2, 0b0101, read_modify_write);// 5    3
-        put_ptr_field(gcr_addr, rx_loff_filter_depth3, 0b1000, read_modify_write);// 8    4
-
-        //change vs dccal latch offset = 5
-        put_ptr_field(gcr_addr, rx_loff_hyst_start, 0b00100, read_modify_write);
-
-
-        put_ptr_field(gcr_addr, rx_loff_timeout, 0b0110, read_modify_write);
 
         if (bank == bank_a )
         {
             //bank A is alt B is main
             set_debug_state(0xA004); // DEBUG
             mem_pl_field_put(rx_a_eoff_done, lane, 0b0);//ppe pl
-            edge_n_sm = get_ptr(gcr_addr, rx_ae_latch_dac_n_addr, rx_ae_latch_dac_n_startbit, rx_ae_latch_dac_n_endbit);//pl
-            edge_e_sm = get_ptr(gcr_addr, rx_ae_latch_dac_e_addr, rx_ae_latch_dac_e_startbit, rx_ae_latch_dac_e_endbit);//pl
-            edge_s_sm = get_ptr(gcr_addr, rx_ae_latch_dac_s_addr, rx_ae_latch_dac_s_startbit, rx_ae_latch_dac_s_endbit);//pl
-            edge_w_sm = get_ptr(gcr_addr, rx_ae_latch_dac_w_addr, rx_ae_latch_dac_w_startbit, rx_ae_latch_dac_w_endbit);//pl
+            edge_n_dac = get_ptr(gcr_addr, rx_ae_latch_dac_n_addr, rx_ae_latch_dac_n_startbit, rx_ae_latch_dac_n_endbit);//pl
+            edge_e_dac = get_ptr(gcr_addr, rx_ae_latch_dac_e_addr, rx_ae_latch_dac_e_startbit, rx_ae_latch_dac_e_endbit);//pl
+            edge_s_dac = get_ptr(gcr_addr, rx_ae_latch_dac_s_addr, rx_ae_latch_dac_s_startbit, rx_ae_latch_dac_s_endbit);//pl
+            edge_w_dac = get_ptr(gcr_addr, rx_ae_latch_dac_w_addr, rx_ae_latch_dac_w_startbit, rx_ae_latch_dac_w_endbit);//pl
             servo_ops = servo_ops_eoff_a;
         }//bank A is alt B is main
         else
@@ -188,17 +199,17 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
             //bank B is alt A is main
             set_debug_state(0xA005); // DEBUG
             mem_pl_field_put(rx_b_eoff_done, lane, 0b0);//ppe pl
-            edge_n_sm = get_ptr(gcr_addr, rx_be_latch_dac_n_addr, rx_be_latch_dac_n_startbit, rx_be_latch_dac_n_endbit);//pl
-            edge_e_sm = get_ptr(gcr_addr, rx_be_latch_dac_e_addr, rx_be_latch_dac_e_startbit, rx_be_latch_dac_e_endbit);//pl
-            edge_s_sm = get_ptr(gcr_addr, rx_be_latch_dac_s_addr, rx_be_latch_dac_s_startbit, rx_be_latch_dac_s_endbit);//pl
-            edge_w_sm = get_ptr(gcr_addr, rx_be_latch_dac_w_addr, rx_be_latch_dac_w_startbit, rx_be_latch_dac_w_endbit);//pl
+            edge_n_dac = get_ptr(gcr_addr, rx_be_latch_dac_n_addr, rx_be_latch_dac_n_startbit, rx_be_latch_dac_n_endbit);//pl
+            edge_e_dac = get_ptr(gcr_addr, rx_be_latch_dac_e_addr, rx_be_latch_dac_e_startbit, rx_be_latch_dac_e_endbit);//pl
+            edge_s_dac = get_ptr(gcr_addr, rx_be_latch_dac_s_addr, rx_be_latch_dac_s_startbit, rx_be_latch_dac_s_endbit);//pl
+            edge_w_dac = get_ptr(gcr_addr, rx_be_latch_dac_w_addr, rx_be_latch_dac_w_startbit, rx_be_latch_dac_w_endbit);//pl
             servo_ops = servo_ops_eoff_b;
         }//bank B is alt A is main
 
-        edge_before_n = SignedMagToInt(edge_n_sm, rx_bd_latch_dac_n000_width); //pl
-        edge_before_e = SignedMagToInt(edge_e_sm, rx_bd_latch_dac_n000_width); //pl
-        edge_before_s = SignedMagToInt(edge_s_sm, rx_bd_latch_dac_n000_width); //pl
-        edge_before_w = SignedMagToInt(edge_w_sm, rx_bd_latch_dac_n000_width); //pl
+        edge_before_n = LatchDacToInt(edge_n_dac);//pl
+        edge_before_e = LatchDacToInt(edge_e_dac);//pl
+        edge_before_s = LatchDacToInt(edge_s_dac);//pl
+        edge_before_w = LatchDacToInt(edge_w_dac);//pl
 
         set_debug_state(0xA006);// DEBUG
 
@@ -248,18 +259,16 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
     int poff_w =  (edge_after_w - edge_before_w );
 
     int poff_avg_int = ( poff_n +  poff_e + poff_s + poff_w) / 4;
-    int poff_avg_sm = IntToSignedMag(poff_avg_int, poff_avg_sm_a_width); //pl
 
-    //int poff_avg_int_sm = IntToSignedMag(poff_avg_int,poff_avg_int_width);
     if (bank == bank_a )
     {
         //bank A is alt B is main
-        mem_pl_field_put(poff_avg_sm_a, lane, poff_avg_sm );//pl
+        mem_pl_field_put(poff_avg_a, lane, poff_avg_int );//pl
     }
     else
     {
         //bank B is alt A is main
-        mem_pl_field_put(poff_avg_sm_b, lane, poff_avg_sm );//pl
+        mem_pl_field_put(poff_avg_b, lane, poff_avg_int );//pl
     }
 
     int poff_n_delta = poff_n - poff_avg_int;
@@ -282,9 +291,8 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
 
         for (; l_dac_addr <= end_address; ++l_dac_addr)
         {
-            //begin1                                       a or b bank             7                         15                             9
-            loff_before = SignedMagToInt(get_ptr(gcr_addr, l_dac_addr, rx_ad_latch_dac_n000_startbit, rx_ad_latch_dac_n000_endbit),
-                                         rx_ad_latch_dac_n000_width) ;
+            //begin1                                       a or b bank             7                         15
+            loff_before = LatchDacToInt(get_ptr(gcr_addr, l_dac_addr, rx_ad_latch_dac_n000_startbit, rx_ad_latch_dac_n000_endbit)) ;
 
             if(rx_latchoff_check_en_int)
             {
@@ -299,8 +307,8 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
             }//end2
 
             new_latch = loff_before + poff_avg_int;
-            new_latch_sm = IntToSignedMag(new_latch, rx_ad_latch_dac_n000_width);
-            put_ptr_fast(gcr_addr, l_dac_addr, rx_ad_latch_dac_n000_endbit, new_latch_sm);//pl
+            new_latch_dac = IntToLatchDac(new_latch);
+            put_ptr_fast(gcr_addr, l_dac_addr, rx_ad_latch_dac_n000_endbit, new_latch_dac);//pl
         }//end1
 
         set_debug_state(0xA00C); // DEBUG
@@ -390,22 +398,22 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
         //bank A is alt B is main
         if (restore_n)
         {
-            put_ptr_field(gcr_addr, rx_ae_latch_dac_n, edge_n_sm, fast_write);   //pl
+            put_ptr_field(gcr_addr, rx_ae_latch_dac_n, edge_n_dac, fast_write);   //pl
         }
 
         if (restore_e)
         {
-            put_ptr_field(gcr_addr, rx_ae_latch_dac_e, edge_e_sm, fast_write);   //pl
+            put_ptr_field(gcr_addr, rx_ae_latch_dac_e, edge_e_dac, fast_write);   //pl
         }
 
         if (restore_s)
         {
-            put_ptr_field(gcr_addr, rx_ae_latch_dac_s, edge_s_sm, fast_write);   //pl
+            put_ptr_field(gcr_addr, rx_ae_latch_dac_s, edge_s_dac, fast_write);   //pl
         }
 
         if (restore_w)
         {
-            put_ptr_field(gcr_addr, rx_ae_latch_dac_w, edge_w_sm, fast_write);   //pl
+            put_ptr_field(gcr_addr, rx_ae_latch_dac_w, edge_w_dac, fast_write);   //pl
         }
 
         set_debug_state(0xA00D); // DEBUG
@@ -415,22 +423,22 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
         //bank B is alt A is main
         if (restore_n)
         {
-            put_ptr_field(gcr_addr, rx_be_latch_dac_n, edge_n_sm, fast_write);   //pl
+            put_ptr_field(gcr_addr, rx_be_latch_dac_n, edge_n_dac, fast_write);   //pl
         }
 
         if (restore_e)
         {
-            put_ptr_field(gcr_addr, rx_be_latch_dac_e, edge_e_sm, fast_write);   //pl
+            put_ptr_field(gcr_addr, rx_be_latch_dac_e, edge_e_dac, fast_write);   //pl
         }
 
         if (restore_s)
         {
-            put_ptr_field(gcr_addr, rx_be_latch_dac_s, edge_s_sm, fast_write);   //pl
+            put_ptr_field(gcr_addr, rx_be_latch_dac_s, edge_s_dac, fast_write);   //pl
         }
 
         if (restore_w)
         {
-            put_ptr_field(gcr_addr, rx_be_latch_dac_w, edge_w_sm, fast_write);   //pl
+            put_ptr_field(gcr_addr, rx_be_latch_dac_w, edge_w_dac, fast_write);   //pl
         }
 
         set_debug_state(0xA00E); // DEBUG

@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr19060300 |vbr     | HW486157/HW492011: Switch to set_cal_bank() so set DL/RLM clock_sel; gate DL clock.
 // mwh19041700 |mwh     | Below works --
 // mwh19040100 |mwh     | Made fixed that were noted by review
 // mwh19032800 |mwh     | Updated code -- no jump going down to 0 by step of 1.
@@ -295,17 +296,9 @@ void eo_rxbist_ber(t_gcr_addr* gcr_addr, t_bank bank)
         //Turn off slave mode and make sure CDR are on
         put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias, 0b100100, read_modify_write); //pl
 
-
-
-        if (bank == bank_a)
-        {
-            put_ptr_field(gcr_addr, rx_bank_sel_a, 0b0, read_modify_write);
-        }
-        else
-        {
-            put_ptr_field(gcr_addr, rx_bank_sel_a, 0b1, read_modify_write);
-        }
-
+        // Disable the DL clock and set the Cal (Alt) bank
+        put_ptr_field(gcr_addr, rx_dl_clk_en, 0b0, read_modify_write);
+        set_cal_bank(gcr_addr, bank);
 
         int rx_a_pr_ns_data_int = get_ptr(gcr_addr, rx_a_pr_ns_data_addr , rx_a_pr_ns_data_startbit ,
                                           rx_a_pr_ns_data_endbit); //pl

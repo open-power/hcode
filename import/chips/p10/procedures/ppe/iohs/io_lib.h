@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19051700 |vbr     | HW491895: Change latch_dac reverse from twos complement to ones complement negation (match HW).
+// vbr19051400 |vbr     | HW491892: Change VDAC from 9-bit SM to 8-bit twos_comp (added new conversion wrappers)
 // vbr19031300 |vbr     | Removed inlining on some set_gcr_addr_* functions.  Added new zcal_group and removed unused fir_group.
 // gap19031300 |gap     | Rename TwosCompTo* to IntTo*, simplify IntToGray6 and Gray6ToInt
 // gap19031200 |gap     | Added Gray5IQToInt, Gray6ToInt, TwosCompToGray5IQ, and TwosCompToGray6
@@ -187,18 +189,18 @@ static inline int limit(int val, int min_val, int max_val)
     return min(floor_val, max_val);
 }
 
-//Convert a two's complement value to an integer, length is number of bits of input (two's complement) value
+// Convert a two's complement value to an integer, length is number of bits of input (two's complement) value
 static inline int TwosCompToInt(int val, int length)
 {
     return (val << (32 - length) >> (32 - length));
 }
 
-//Convert a signed-magnitude value to an integer, length is number of bits of input (signed-magnitude) value
+// Convert a signed-magnitude value to an integer, length is number of bits of input (signed-magnitude) value
 static inline int SignedMagToInt(int val, int length)
 {
     int mask = (1 << (length - 1)) - 1;
     int ret_val = val & mask;
-#ifdef INVERT_DACS
+#ifdef INVERT_SM
 
     // Inverted polarity
     if (val == ret_val)
@@ -218,11 +220,11 @@ static inline int SignedMagToInt(int val, int length)
     return ret_val;
 }
 
-//Convert an integer to a signed-magnitude value, length is number of bits of output (signed-magnitude) value
+// Convert an integer to a signed-magnitude value, length is number of bits of output (signed-magnitude) value
 static inline int IntToSignedMag(int val, int length)
 {
     int mag = (val < 0) ? -val : val; //abs(val);
-#ifdef INVERT_DACS
+#ifdef INVERT_SM
     // Inverted polarity
     int sign = (val > 0) ? (1 << (length - 1)) : 0;
 #else
@@ -230,6 +232,27 @@ static inline int IntToSignedMag(int val, int length)
     int sign = (val < 0) ? (1 << (length - 1)) : 0;
 #endif
     return (sign | mag);
+}
+
+// Convert a rx_*_latch_dac_* value to an integer
+static inline int LatchDacToInt(int val)
+{
+#ifdef INVERT_DACS
+    return ( ~TwosCompToInt(val, rx_ad_latch_dac_n000_width) );
+#else
+    return ( TwosCompToInt(val, rx_ad_latch_dac_n000_width) );
+#endif
+}
+
+// Convert an integer to a rx_*_latch_dac_* value
+static inline int IntToLatchDac(int val)
+{
+    const int mask = (1 << rx_ad_latch_dac_n000_width) - 1;
+#ifdef INVERT_DACS
+    return (~val & mask);
+#else
+    return (val & mask);
+#endif
 }
 
 // Convert a 5-bit gray code to int for dcc IQ usage

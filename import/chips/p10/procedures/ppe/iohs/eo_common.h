@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19080900 |vbr     | Added macro to return just the bank_sel_a/rlm_clk_sel_a values
+// vbr19060300 |vbr     | HW486157/HW492011: Added DL/RLM clock_sel to set_cal_bank()
 // mbs10051600 |mbs     | HW491617: Separated servo setup for dfe_fast and dfe_full
 // vbr19012200 |vbr     | Only check recal abort when init_done.
 // vbr18100200 |vbr     | wait_for_cdr_lock() now has an option to set the fir on a lock fail.
@@ -118,18 +120,20 @@
 #define warning_code  rc_warning   //0x02
 #define abort_code    0x04         //0x04
 
-// Banks, t_cal_bank variable type and values (chosen to emprically minimize code size); macros must match.
+// Banks, t_cal_bank variable type and values (chosen to minimize code size); macros must match.
 typedef enum
 {
-    bank_a = 0b0,
-    bank_b = 0b1
+    bank_a = 0b010,
+    bank_b = 0b101
 } t_bank;
 // Macro to convert bank value to the opposite bank value (A->B or B->A)
-#define opposite_bank(input_bank) ((input_bank) ^ bank_b)
-// Macro to convert cal_bank to the bank_sel_a register value without using IF statements.
-// When Cal A: use B for main data, A for alt data (bank_sel_a=0).
-// When Cal B: use A for main data, B for alt data (bank_sel_a=1).
-#define cal_bank_to_bank_sel_a(cal_bank) ((cal_bank))
+#define opposite_bank(input_bank) ((input_bank) ^ 0b111)
+// Macro to convert cal_bank to the bank_sel_a/rlm_clk_sel_a/dl_clk_sel_a register values without using IF statements (branches).
+//   The DL clock always comes from the Main bank and the RLM clock always comes from the Alt bank.
+//   When Cal A: use B for main data, A for alt data. bank_sel_a=0; rlm_clk_sel_a=1; dl_clk_sel_a=0.
+//   When Cal B: use A for main data, B for alt data. bank_sel_a=1; rlm_clk_sel_a=0; dl_clk_sel_a=1.
+#define cal_bank_to_bank_rlmclk_dlclk_sel_a(cal_bank) ((cal_bank))
+#define cal_bank_to_bank_rlmclk_sel_a(cal_bank) ((cal_bank) >> 1)
 
 // Phase rotator size constants
 #define pr_mini_min 0x00
@@ -148,11 +152,11 @@ typedef enum
 // These all get used a fair amount so they should only be inline if they are very simple/short.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Set the bank to cal for IOO (A or B). Only controls bank_sel_a.
+// Set the bank to cal for IOO (A or B). Controls data and clock selects.
 static inline void set_cal_bank(t_gcr_addr* gcr_addr, t_bank new_cal_bank)
 {
-    unsigned int bank_sel_a = cal_bank_to_bank_sel_a(new_cal_bank);
-    put_ptr_field(gcr_addr, rx_bank_sel_a, bank_sel_a, read_modify_write);
+    unsigned int bank_rlmclk_dlclk_sel_a = cal_bank_to_bank_rlmclk_dlclk_sel_a(new_cal_bank);
+    put_ptr_field(gcr_addr, rx_bank_rlmclk_dlclk_sel_a_alias, bank_rlmclk_dlclk_sel_a, read_modify_write);
 }
 
 // Switch the bank between A & B (IOO Only). Does so little that inline makes sense.

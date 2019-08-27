@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// bja19052900 |bja     | Add EOL toggling
 // mbs19021900 |mbs     | Updated p10 dl ppe code to set work1 regs
 // mbs19021800 |mbs     | Added test function for new p10 dl ppe
 // vbr18020100 |vbr     | HW478618: Added zcal error status and updated handshakes to clear it.
@@ -70,6 +71,8 @@
 /////////////////////////////////////////////////
 #define THREAD_LOCK_CHECK_PERIOD    PK_MILLISECONDS(100)
 #define RECAL_NOT_RUN_CHECK_PERIOD  PK_MILLISECONDS(500)
+#define FAST_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)43200) // 12 hrs
+#define SLOW_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)86400) // 24 hrs
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,10 +108,14 @@ void supervisor_thread(void* arg)
     // Calculate intervals and set the time for the first error checks
     PkInterval thread_locked_check_interval = PK_INTERVAL_SCALE(THREAD_LOCK_CHECK_PERIOD);
     PkInterval recal_not_run_check_interval = PK_INTERVAL_SCALE(RECAL_NOT_RUN_CHECK_PERIOD);
+    PkInterval fast_eol_toggle_interval     = PK_INTERVAL_SCALE(FAST_EOL_TOGGLE_PERIOD);
+    PkInterval slow_eol_toggle_interval     = PK_INTERVAL_SCALE(SLOW_EOL_TOGGLE_PERIOD);
 
     PkTimebase current_time = pk_timebase_get();
     PkTimebase thread_locked_check_time = current_time + thread_locked_check_interval;
     PkTimebase recal_not_run_check_time = current_time + recal_not_run_check_interval;
+    PkTimebase fast_eol_toggle_time     = current_time + fast_eol_toggle_interval;
+    PkTimebase slow_eol_toggle_time     = current_time + slow_eol_toggle_interval;
 
 
     /////////////////////
@@ -288,6 +295,43 @@ void supervisor_thread(void* arg)
                 } //for(thread)
             } //if(time>check_time)
 
+            ////////////////////////////////
+            // Toggle fast EOL register
+            ////////////////////////////////
+            if (current_time > fast_eol_toggle_time )
+            {
+                set_debug_state(0xF00B); // DEBUG - toggle fast EOL register
+
+                // Update the time for the next check
+                fast_eol_toggle_time = current_time + fast_eol_toggle_interval;
+
+                // RMW the local scom_ppe_func reg
+                // Read the full func reg
+                uint32_t scom_ppe_func_reg = lcl_get(scom_ppe_func_lcl_addr, scom_ppe_func_full_reg_width);
+                // Invert the EOL bit
+                scom_ppe_func_reg = scom_ppe_func_reg ^ eol_fast_toggle_mask;
+                // Write the inverted value to toggle
+                lcl_put(scom_ppe_func_lcl_addr, scom_ppe_func_full_reg_width, scom_ppe_func_reg);
+            } //if(time>check_time)
+
+            ////////////////////////////////
+            // Toggle slow EOL register
+            ////////////////////////////////
+            if (current_time > slow_eol_toggle_time )
+            {
+                set_debug_state(0xF00C); // DEBUG - toggle slow EOL register
+
+                // Update the time for the next check
+                slow_eol_toggle_time = current_time + slow_eol_toggle_interval;
+
+                // RMW the local scom_ppe_func reg
+                // Read the full func reg
+                uint32_t scom_ppe_func_reg = lcl_get(scom_ppe_func_lcl_addr, scom_ppe_func_full_reg_width);
+                // Invert the EOL bit
+                scom_ppe_func_reg = scom_ppe_func_reg ^ eol_slow_toggle_mask;
+                // Write the inverted value to toggle
+                lcl_put(scom_ppe_func_lcl_addr, scom_ppe_func_full_reg_width, scom_ppe_func_reg);
+            } //if(time>check_time)
 
             ///////////////////////////////////////////////////
             // Clear the Watchdog Timer (TSR[WIS])

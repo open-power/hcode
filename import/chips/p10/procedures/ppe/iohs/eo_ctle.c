@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// jfg19052002 |jfg     | REAPPLY: Fix ctle_mode conditional which tried to cast an int into bool and was not working (nor flagged as error)
 // jfg19050101 |jfg     | change peak_done to peak1_done by Mike Harper's request
 // vbr19041500 |vbr     | Updated register names
 // mwh19041719 |mwh     | change peak to peak1 -- bist stuff
@@ -123,7 +124,7 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
     put_ptr_field(gcr_addr, rx_servo_status_error_en, 0b0011, read_modify_write);
 
     // ctle quadrant mode: 0=Run on each quadrant, 1=Run on North quad only
-    bool ctle_mode_setup = mem_pg_field_get(rx_ctle_mode);
+    bool ctle_mode_setup = mem_pg_field_get(rx_ctle_mode) == 0b1;
     int num_servo_ops_ctle = ctle_mode_setup ? 1 : 4;
 
     // Run the servo ops

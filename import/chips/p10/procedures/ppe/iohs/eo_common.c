@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs19072500 |mbs     | Added amp_setting_ovr_enb
 // mbs19051600 |mbs     | HW491617: Separated servo setup for dfe_fast and dfe_full
 // vbr19050500 |vbr     | Copy LTE settings between lanes
 // vbr19041500 |vbr     | Updated register names
@@ -208,50 +209,68 @@ void eo_copy_lane_cal(t_gcr_addr* gcr_addr, int lane_src, int lane_dst)
 
 void rx_eo_servo_setup(t_gcr_addr* i_tgt, const t_servo_setup i_servo_setup)
 {
+    // Switch for sim or lab to disable settings overrides
+    int amp_setting_ovr = mem_regs_u16_get(pg_addr(amp_setting_ovr_enb_addr), amp_setting_ovr_enb_mask,
+                                           amp_setting_ovr_enb_shift);
+
     switch(i_servo_setup)
     {
         case SERVO_SETUP_VGA:
             put_ptr_field(i_tgt, rx_amp_servo_mask_h0      , 0x00, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_dec, 0x00, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_inc, 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x06, read_modify_write);
+
+            if ( amp_setting_ovr == 0 )
+            {
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x06, read_modify_write);
+            }
+
             break;
 
         case SERVO_SETUP_DFE_FAST:
             put_ptr_field(i_tgt, rx_amp_servo_mask_h0      , 0x01, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_dec, 0x00, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_inc, 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x02, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x02, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x04, read_modify_write);
+
+            if ( amp_setting_ovr == 0 )
+            {
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x01, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x01, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x01, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x01, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x02, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x02, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x04, read_modify_write);
+            }
+
             break;
 
         case SERVO_SETUP_DFE_FULL:
             put_ptr_field(i_tgt, rx_amp_servo_mask_h0      , 0x01, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_inc, 0x00, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_dec, 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x06, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x00, read_modify_write);
-            break;
 
+            if ( amp_setting_ovr == 0 )
+            {
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x06, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x00, read_modify_write);
+            }
+
+            break;
     }
 
     return;

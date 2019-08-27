@@ -39,6 +39,20 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jfg19070801 |jfg     | typo
+// jfg19070800 |jfg     | fixed prior bug in edge_seek loop which skipped 0 step check for ending while loop
+// jfg19070200 |jfg     | Error in step movement caused by switch to multi-step. Replace hardcoded 1 with variable.
+// jfg19062400 |jfg     | finalize prior bad commit
+// jfg19061701 |jfg     | moved single stepping wrapper function down into nedge_seek_step
+// vbr19061200 |vbr     | Added wrapper around nedge_seek_step() to limit step size
+// jfg19062400 |jfg     | Replace final calculations and windage adjust with a simpler difference pre-absolute value
+// jfg19061900 |jfg     | Remove overpeaking since it is too aggressive.
+// jfg19061600 |jfg     | Add rx_qpa_overpeak_disable and peak override during servo searches. Rename windage.
+// jfg19061300 |jfg     | QPA servos are identified as biased early due to lower count of late edges compared to CDR. Move rx_qpa_ns_windage to raw results array.
+// jfg19060100 |jfg     | Correct same sign offset bias adjust by averaging both results and taking a 1/4
+// jfg19060600 |jfg     | Update doseek behavior of nedge_seek so that aligned edges are not disturbed
+// jfg19053001 |jfg     | HW490617 & HW490631 wide ranging servo results showed the NS has a 1 step bias compared to EW when measuring. Added rx_qpa_ns_windage as a correction.
+// jfg19052200 |jfg     | HW490617 & HW490631 Remove 1 of 2 1/2-step rounding in final divisions due to error accumulating
 // jfg19052000 |jfg     | Remove lock sticky check as not intended. Simplify division bias for smaller code size.
 // jfg19051703 |jfg     | typo2. no coffee today.
 // jfg19051702 |jfg     | typo
@@ -101,7 +115,8 @@
 
 
 
-void set_qpa_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, uint32_t* bank_pr, int* pr_active)
+void set_qpa_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, uint32_t* bank_pr,
+                  int* pr_active)//uint32_t peak1_restore, uint32_t peak2_restore
 {
     mem_pl_bit_set(rx_quad_phase_fail, lane);
     // mem_pg_field_put(rx_lane_bad_16_23, new_lane_bad);
@@ -125,12 +140,24 @@ void set_qpa_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, uint32_t* bank_pr
         nedge_seek_step(gcr_addr, bank, 0, 1, dirL1R0, true, noseekEW, pr_active);
         tgt--;
     }
+
+    /*
+    if (bank == bank_a) {
+    put_ptr(gcr_addr, rx_a_ctle_peak1_addr,  rx_a_ctle_peak1_startbit, rx_a_ctle_peak1_endbit, peak1_restore, read_modify_write);
+    put_ptr(gcr_addr, rx_a_ctle_peak2_addr,  rx_a_ctle_peak2_startbit, rx_a_ctle_peak2_endbit, peak2_restore, read_modify_write);
+    }
+    else {
+    put_ptr(gcr_addr, rx_b_ctle_peak1_addr,  rx_b_ctle_peak1_startbit, rx_b_ctle_peak1_endbit, peak1_restore, read_modify_write);
+    put_ptr(gcr_addr, rx_b_ctle_peak2_addr,  rx_b_ctle_peak2_startbit, rx_b_ctle_peak2_endbit, peak2_restore, read_modify_write);
+    }
+    */
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////
 // FUNCDOC: nedge_seek_step
 // multi-purpose eye sample position shifting and testing
+// Implements single step iterations to satisfy phase rotator gray code
 // Note: There's an engineering decision here to check the BER count *after* the PR movement. Yes after.
 //       The motivation is to return a value which encompases the post-movement position. It should be understood
 //       that this value may include a longer term measurement from the last PR position depending on the time
@@ -157,113 +184,144 @@ int nedge_seek_step (t_gcr_addr* gcr_addr, t_bank bank, unsigned int Dstep, unsi
                      bool noBER, t_seek seek_edge, int* pr_vals)
 {
 
-    int ns_edge_step = (seek_edge != noseekEW) ? Estep :
-                       0; //((pr_vals[prEns_i] > edge_half_left) && (pr_vals[prEns_i] < edge_half_right)) ? (2) : (1);
-    int ns_data_step = (seek_edge != noseekEW) ? Dstep : 0; //stepsize-1;
-    int ew_edge_step = (seek_edge != noseekNS) ? Estep :
-                       0; //((pr_vals[prEns_i] > edge_half_left) && (pr_vals[prEns_i] < edge_half_right)) ? (2) : (1);
-    int ew_data_step = (seek_edge != noseekNS) ? Dstep : 0; //stepsize-1;
     int ber_count = 0;
     int pr_temp[4];
+    bool dirL = dirL1R0 ^ (seek_edge != doseek);
+    pr_temp[prDns_i] = pr_vals[prDns_i];
+    pr_temp[prDew_i] = pr_vals[prDew_i];
+    pr_temp[prEns_i] = pr_vals[prEns_i];
+    pr_temp[prEew_i] = pr_vals[prEew_i];
 
-    if (!dirL1R0)
+    int ns_edge_go = (seek_edge != noseekEW) ? Estep : 0;
+    int ns_data_go = (seek_edge != noseekEW) ? Dstep : 0;
+    int ew_edge_go = (seek_edge != noseekNS) ? Estep : 0;
+    int ew_data_go = (seek_edge != noseekNS) ? Dstep : 0;
+    int ns_edge_step = 1;
+    int ns_data_step = 1;
+    int ew_edge_step = 1;
+    int ew_data_step = 1;
+
+    do
     {
-        if (seek_edge == doseek)
+        if  (ns_edge_go == 0)
         {
-            pr_temp[prDns_i] = pr_vals[prDns_i] + ns_data_step;
-            pr_temp[prDew_i] = pr_vals[prDew_i] + ew_data_step;
-            pr_temp[prEns_i] = pr_vals[prEns_i] - ns_edge_step;
-            pr_temp[prEew_i] = pr_vals[prEew_i] - ew_edge_step;
-        } // if seek_edge
+            ns_edge_step = 0;
+        }
+
+        if  (ns_data_go == 0)
+        {
+            ns_data_step = 0;
+        }
+
+        if  (ew_edge_go == 0)
+        {
+            ew_edge_step = 0;
+        }
+
+        if  (ew_data_go == 0)
+        {
+            ew_data_step = 0;
+        }
+
+        ns_edge_go--;
+        ns_data_go--;
+        ew_edge_go--;
+        ew_data_go--;
+
+        if (dirL)
+        {
+            // if dir LEFT
+            pr_temp[prDns_i] = pr_temp[prDns_i] - ns_data_step;//
+            pr_temp[prDew_i] = pr_temp[prDew_i] - ew_data_step;//
+            pr_temp[prEns_i] = pr_temp[prEns_i] + ns_edge_step;//
+            pr_temp[prEew_i] = pr_temp[prEew_i] + ew_edge_step;//
+        }
         else
         {
-            //edge_step = stepsize-1;
-            pr_temp[prDns_i] = pr_vals[prDns_i] - ns_data_step;//1;
-            pr_temp[prDew_i] = pr_vals[prDew_i] - ew_data_step;//1;
-            pr_temp[prEns_i] = pr_vals[prEns_i] + ns_edge_step;
-            pr_temp[prEew_i] = pr_vals[prEew_i] + ew_edge_step;
-        }
-    } // if dir LEFT
-    else
-    {
-        if (seek_edge == doseek)
+            pr_temp[prDns_i] = pr_temp[prDns_i] + ns_data_step;//
+            pr_temp[prDew_i] = pr_temp[prDew_i] + ew_data_step;//
+            pr_temp[prEns_i] = pr_temp[prEns_i] - ns_edge_step;//
+            pr_temp[prEew_i] = pr_temp[prEew_i] - ew_edge_step;//
+        } // else dir RIGHT
+
+        // Bounds Checking
+        if ((((pr_temp[prDns_i] > pr_mini_max) || (pr_temp[prDew_i] > pr_mini_max) || (Dstep == 0)) &&
+             ((pr_temp[prEns_i] < pr_mini_min) || (pr_temp[prEew_i] < pr_mini_min) || (Estep == 0))) ||
+            (((pr_temp[prDns_i] < pr_mini_min) || (pr_temp[prDew_i] < pr_mini_min) || (Dstep == 0)) &&
+             ((pr_temp[prEns_i] > pr_mini_max) || (pr_temp[prEew_i] > pr_mini_max)
+              || (Estep == 0)))) // Coverage may require an initial pr_*_edge offset > 1/2 max
         {
-            pr_temp[prDns_i] = pr_vals[prDns_i] - ns_data_step;
-            pr_temp[prDew_i] = pr_vals[prDew_i] - ew_data_step;
-            pr_temp[prEns_i] = pr_vals[prEns_i] + ns_edge_step;
-            pr_temp[prEew_i] = pr_vals[prEew_i] + ew_edge_step;
-        } // if seek_edge
+            return max_eye; // New position has exceeded the PR max/min. Return error value.
+            // NOTES:
+            // This looks like it prevents full utilization of PR space by combining NS and EW checks. It works with these two case
+            // A - When stepping by >1 step then seek is expected and both data phases must move in sync or risk wiping out prior alignment work.
+            // B - When a non-seek phase mode is enabled then the conditionals for *_step variable will truncate an unmovable phase step so the other can reach max
+        }
         else
         {
-            //edge_step = stepsize-1;
-            pr_temp[prDns_i] = pr_vals[prDns_i] + ns_data_step;//1;
-            pr_temp[prDew_i] = pr_vals[prDew_i] + ew_data_step;//1;
-            pr_temp[prEns_i] = pr_vals[prEns_i] - ns_edge_step;
-            pr_temp[prEew_i] = pr_vals[prEew_i] - ew_edge_step;
-        }
-    } // else dir RIGHT
+            int i;
 
-    // Bounds Checking
-    if ((((pr_temp[prDns_i] > pr_mini_max) || (pr_temp[prDew_i] > pr_mini_max) || (Dstep == 0)) &&
-         ((pr_temp[prEns_i] < pr_mini_min) || (pr_temp[prEew_i] < pr_mini_min) || (Estep == 0))) ||
-        (((pr_temp[prDns_i] < pr_mini_min) || (pr_temp[prDew_i] < pr_mini_min) || (Dstep == 0)) &&
-         ((pr_temp[prEns_i] > pr_mini_max) || (pr_temp[prEew_i] > pr_mini_max)
-          || (Estep == 0)))) // Coverage may require an initial pr_*_edge offset > 1/2 max
-    {
-        return max_eye; // New position has exceeded the PR max/min. Return error value.
-    }
-    else
-    {
-        int i;
-
-        for ( i = 0; i < 4; i++)
-        {
-            if (pr_temp[i] > pr_mini_max)
+            if ((seek_edge == doseek) && ((pr_temp[prEns_i] < pr_mini_min) || (pr_temp[prEew_i] < pr_mini_min) ||
+                                          (pr_temp[prEns_i] > pr_mini_max) || (pr_temp[prEew_i] > pr_mini_max)))
             {
-                pr_vals[i] = pr_mini_max;
+                // During doseek, it is assumed that this is DDC and edges are already aligned. Make sure that alignment does not change.
+                pr_temp[prEns_i] = pr_vals[prEns_i];
+                pr_temp[prEew_i] = pr_vals[prEew_i];
             }
-            else if (pr_temp[i] < pr_mini_min)
+
+            for ( i = 0; i < 4; i++)
             {
-                pr_vals[i] = pr_mini_min;
+                if (pr_temp[i] > pr_mini_max)
+                {
+                    pr_vals[i] = pr_mini_max;
+                }
+                else if (pr_temp[i] < pr_mini_min)
+                {
+                    pr_vals[i] = pr_mini_min;
+                }
+                else
+                {
+                    pr_vals[i] = pr_temp[i];
+                }
+            }
+        }
+
+        // Now pack the four PR values into two ints and fast-write them into the PR regs.
+        uint32_t bank_pr[2];
+
+        if (seek_edge != noseekEW)
+        {
+            bank_pr[0] = (pr_vals[prDns_i] << (rx_a_pr_ns_data_shift - rx_a_pr_ns_edge_shift)) | pr_vals[prEns_i];
+
+            if (bank == bank_a)
+            {
+                put_ptr_fast(gcr_addr, rx_a_pr_ns_data_addr, rx_a_pr_ns_edge_endbit, bank_pr[0]);
             }
             else
             {
-                pr_vals[i] = pr_temp[i];
+                put_ptr_fast(gcr_addr, rx_b_pr_ns_data_addr, rx_b_pr_ns_edge_endbit, bank_pr[0]);
+            }
+
+        }
+
+        if (seek_edge != noseekNS)
+        {
+            bank_pr[1] = (pr_vals[prDew_i] << (rx_a_pr_ew_data_shift - rx_a_pr_ew_edge_shift)) | pr_vals[prEew_i];
+
+            if (bank == bank_a)
+            {
+                put_ptr_fast(gcr_addr, rx_a_pr_ew_data_addr, rx_a_pr_ew_edge_endbit, bank_pr[1]);
+            }
+            else
+            {
+                put_ptr_fast(gcr_addr, rx_b_pr_ew_data_addr, rx_b_pr_ew_edge_endbit, bank_pr[1]);
             }
         }
-    }
-
-    // Now pack the four PR values into two ints and fast-write them into the PR regs.
-    uint32_t bank_pr[2];
-
-    if (seek_edge != noseekEW)
-    {
-        bank_pr[0] = (pr_vals[prDns_i] << (rx_a_pr_ns_data_shift - rx_a_pr_ns_edge_shift)) | pr_vals[prEns_i];
-
-        if (bank == bank_a)
-        {
-            put_ptr_fast(gcr_addr, rx_a_pr_ns_data_addr, rx_a_pr_ns_edge_endbit, bank_pr[0]);
-        }
-        else
-        {
-            put_ptr_fast(gcr_addr, rx_b_pr_ns_data_addr, rx_b_pr_ns_edge_endbit, bank_pr[0]);
-        }
 
     }
+    while ((ns_edge_go > 0) || (ns_data_go > 0) ||
+           (ew_edge_go > 0) || (ew_data_go > 0));
 
-    if (seek_edge != noseekNS)
-    {
-        bank_pr[1] = (pr_vals[prDew_i] << (rx_a_pr_ew_data_shift - rx_a_pr_ew_edge_shift)) | pr_vals[prEew_i];
-
-        if (bank == bank_a)
-        {
-            put_ptr_fast(gcr_addr, rx_a_pr_ew_data_addr, rx_a_pr_ew_edge_endbit, bank_pr[1]);
-        }
-        else
-        {
-            put_ptr_fast(gcr_addr, rx_b_pr_ew_data_addr, rx_b_pr_ew_edge_endbit, bank_pr[1]);
-        }
-    }
 
     if (!noBER)
     {
@@ -302,8 +360,31 @@ int nedge_seek_step (t_gcr_addr* gcr_addr, t_bank bank, unsigned int Dstep, unsi
     }
 
     return ber_count;
-}
+} //nedge_seek_step()
 
+// Wrapper aroung nedge_seek_step for stepping multiple times at a single step a time so don't violate Mini PR step limitations
+// NOTE: Obsolete but good reference for future backup
+/*
+int nedge_seek_multistep (t_gcr_addr *gcr_addr, t_bank bank, unsigned int Dstep, unsigned int Estep, bool dirL1R0, bool noBER, t_seek seek_edge, int *pr_vals) {
+  int ber_count;
+  unsigned int Dstep_int = Dstep;
+  unsigned int Estep_int = Estep;
+
+  // Loop through doing single steps until have stepped the required amount on Edge and Data.
+  // Only do the BER (if requested) on the last iteration.
+  do {
+    unsigned int Dstep_val = 0;
+    unsigned int Estep_val = 0;
+    bool noBER_val = false;
+    if (Dstep_int != 0) { Dstep_val = 1; Dstep_int--; }
+    if (Estep_int != 0) { Estep_val = 1; Estep_int--; }
+    if ( (Dstep_int == 0) &&  (Estep_int == 0) ) { noBER_val = noBER; }
+    ber_count = nedge_seek_step (gcr_addr, bank, Dstep_val, Estep_val, dirL1R0, noBER_val, seek_edge, pr_vals);
+  } while ( (Dstep_int != 0) ||  (Estep_int != 0) );
+
+  return ber_count;
+} //nedge_seek_multistep()
+*/
 
 ////////////////////////////////////////////////////////////////////////////
 // Run QPA on a lane and update historical width
@@ -323,7 +404,9 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     uint32_t bank_pr_save[2];
     int pr_active[4]; // All four PR positions packed in as: {Data NS, Edge NS, Data EW, Edge EW}
     int cdr_status = 1;
-
+    //uint32_t peak1_restore;
+    //uint32_t peak2_restore;
+    //bool disable_overpeak = mem_pg_field_get(rx_qpa_overpeak_disable) == 1;
 
     // 2: Set initial values
     // Load ****both**** data and edge values on read. Assumes in same reg address in data + edge order
@@ -331,11 +414,27 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     {
         bank_pr_save[0] = get_ptr(gcr_addr, rx_a_pr_ns_data_addr,  rx_a_pr_ns_data_startbit, rx_a_pr_ns_edge_endbit);
         bank_pr_save[1] = get_ptr(gcr_addr, rx_a_pr_ew_data_addr,  rx_a_pr_ew_data_startbit, rx_a_pr_ew_edge_endbit);
+        /*
+        peak1_restore = get_ptr(gcr_addr, rx_a_ctle_peak1_addr,  rx_a_ctle_peak1_startbit, rx_a_ctle_peak1_endbit);
+        peak2_restore = get_ptr(gcr_addr, rx_a_ctle_peak2_addr,  rx_a_ctle_peak2_startbit, rx_a_ctle_peak2_endbit);
+        if (!disable_overpeak) {
+          put_ptr(gcr_addr, rx_a_ctle_peak1_addr,  rx_a_ctle_peak1_startbit, rx_a_ctle_peak1_endbit, (1<<rx_a_ctle_peak1_width)-1, read_modify_write);
+          put_ptr(gcr_addr, rx_a_ctle_peak2_addr,  rx_a_ctle_peak2_startbit, rx_a_ctle_peak2_endbit, (1<<rx_a_ctle_peak2_width)-1, read_modify_write);
+        }
+        */
     }
     else
     {
         bank_pr_save[0] = get_ptr(gcr_addr, rx_b_pr_ns_data_addr,  rx_b_pr_ns_data_startbit, rx_b_pr_ns_edge_endbit);
         bank_pr_save[1] = get_ptr(gcr_addr, rx_b_pr_ew_data_addr,  rx_b_pr_ew_data_startbit, rx_b_pr_ew_edge_endbit);
+        /*
+        peak1_restore = get_ptr(gcr_addr, rx_b_ctle_peak1_addr,  rx_b_ctle_peak1_startbit, rx_b_ctle_peak1_endbit);
+        peak2_restore = get_ptr(gcr_addr, rx_b_ctle_peak2_addr,  rx_b_ctle_peak2_startbit, rx_b_ctle_peak2_endbit);;
+        if (!disable_overpeak) {
+          put_ptr(gcr_addr, rx_b_ctle_peak1_addr,  rx_b_ctle_peak1_startbit, rx_b_ctle_peak1_endbit, (1<<rx_b_ctle_peak1_width)-1, read_modify_write);
+          put_ptr(gcr_addr, rx_b_ctle_peak2_addr,  rx_b_ctle_peak2_startbit, rx_b_ctle_peak2_endbit, (1<<rx_b_ctle_peak2_width)-1, read_modify_write);
+        }
+        */
     }
 
     pr_active[prDns_i] = prmask_Dns(bank_pr_save[0]);
@@ -422,6 +521,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     // Disable servo status for result at min/max
     PK_STATIC_ASSERT(rx_servo_status_error_en_width == 4); // Write values need to be updated if field width changes
     put_ptr_field(gcr_addr, rx_servo_status_error_en, 0b0011, read_modify_write);
+    //int qpa_windage = SignedMagToInt(mem_pg_field_get(rx_qpa_windage), rx_qpa_windage_width);
 
     do
     {
@@ -464,6 +564,8 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
         }
 
         int Ediff = servo_results[quad];
+        //servo_results[quad] = servo_results[quad]  +  qpa_windage;
+        servo_results[quad] = servo_results[quad];
         // Range checking is not neccessary here because the servo is limited in it's excursions and will only return the amount of change actually applied to the PR
         pr_active[pridx] += Ediff;
 
@@ -510,56 +612,55 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     bool dirL1R0NS = (EsumNS) < 0;
     bool dirL1R0EW = (EsumEW) < 0;
 
-    uint32_t EsumNS_abs = abs(EsumNS);
-    uint32_t EsumEW_abs = abs(EsumEW);
-    EsumNS = (EsumNS_abs + 1)  >> 1;
-    EsumEW = (EsumEW_abs + 1)  >> 1;
-    /* if (EsumNS_abs != 3) { */
-    /*   EsumNS = EsumNS + (EsumNS_abs & 0b1); */
-    /* } */
-    /* if (EsumEW_abs != 3) { */
-    /*   EsumEW = EsumEW + (EsumEW_abs & 0b1); */
-    /* } */
+    /* uint32_t EsumNS_abs = abs(EsumNS); */
+    /* uint32_t EsumEW_abs = abs(EsumEW); */
+    /* EsumNS = ((EsumNS_abs)  >> 1); */
+    /* EsumEW = (EsumEW_abs)  >> 1; */
 
-    uint32_t OffsetNS;
-    uint32_t OffsetEW;
+    int OffsetNS;
+    int OffsetEW;
     bool hysteresis_en = mem_pg_field_get(rx_qpa_hysteresis_enable) == 1;
 
+    /*
     // Eliminate potential bias.
     // If the average value of each pair appear skewed to one side
     // then find their difference as the phase offset.
     // However, if the center is still between the pairs then treat as if opposite to correct CDR track offset
-    if (! (dirL1R0NS ^ dirL1R0EW) )
-    {
-        OffsetNS = abs(EsumNS - EsumEW); // Divide offset between the pairs later on.
-        //int offset_half_temp = OffsetNS >> 1;
-        // Since a larger bias expands the offset remove it. Smaller bias's don't affect it.
-        int offset_bias_temp = OffsetNS >> 2;
-        OffsetNS = OffsetNS - offset_bias_temp;
-        // Now correct the signs for a balanced movement
-        // Same sign results worked servo harder to move out of a skewed eye
-        // The quadrant closest to that skewed eye moved more and will be the larger.
-        // ---> Therefore the smaller quadrant measurement moves against it's measured sign. <---
-        dirL1R0NS = dirL1R0NS ^ (EsumNS < EsumEW);
-        dirL1R0EW = !dirL1R0NS;
-        //// If predicted offset is still between pairs, correct CDR dead space.
-        //if ((EsumNS < offset_half_temp) || (EsumEW < offset_half_temp)) {
-        //  OffsetNS = (OffsetNS >> 1) + (OffsetNS & 0b1);
-        //}
+    if (! (dirL1R0NS ^ dirL1R0EW) ) {
+      OffsetNS = abs(EsumNS - EsumEW); // Divide offset between the pairs later on.
+      //int offset_half_temp = OffsetNS >> 1;
+      // Since a larger bias expands the offset remove it. Smaller bias's don't affect it.
+      int offset_bias_temp = (EsumNS + EsumEW) >> 3;
+      OffsetNS = OffsetNS - offset_bias_temp;
+      // Now correct the signs for a balanced movement
+      // Same sign results worked servo harder to move out of a skewed eye
+      // The quadrant closest to that skewed eye moved more and will be the larger.
+      // ---> Therefore the smaller quadrant measurement moves against it's measured sign. <---
+      dirL1R0NS = dirL1R0NS ^ (EsumNS < EsumEW);
+      dirL1R0EW = !dirL1R0NS;
+      //// If predicted offset is still between pairs, correct CDR dead space.
+      //if ((EsumNS < offset_half_temp) || (EsumEW < offset_half_temp)) {
+      //  OffsetNS = (OffsetNS >> 1) + (OffsetNS & 0b1);
+      //}
     }
-    else
-    {
-        // Otherwise EW and NS are opposite in sign (previously sign stripped of course)
-        OffsetNS = EsumNS + EsumEW;
+    else {
+      // Otherwise EW and NS are opposite in sign (previously sign stripped of course)
+      OffsetNS = EsumNS + EsumEW;
     }
+    */
 
+    OffsetNS = EsumEW - EsumNS;
     // Divide to compensate CDR track offset (dead space) but only when signs differ.
     //OffsetNS = (OffsetNS >> 1) + (OffsetNS & 0b1);
-    OffsetNS = (OffsetNS + 1) >> 1;
+    dirL1R0NS = (OffsetNS) > 0;
+    dirL1R0EW = !dirL1R0NS;
+    OffsetNS = abs(OffsetNS);
+    OffsetNS = (OffsetNS + 2) >> 2;
     // Split difference in shifts evenly between phases
     OffsetEW = OffsetNS;
-    int ENavg_tgt;
-    int EEavg_tgt;
+    uint32_t ENavg_tgt;
+    uint32_t EEavg_tgt;
+    set_debug_state(0xE800 | (0x07FF & OffsetNS));
 
     if (centerskew_ns && (centerdir_ns ^ dirL1R0NS))
     {
@@ -584,6 +685,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
         // Indicate if the PR value changed
         *pr_changed = (EEavg_tgt != 0) || (ENavg_tgt != 0);
 
+        set_debug_state(0xE800 | (0x07FF & ENavg_tgt));
 
         while ((ENavg_tgt != 0))
         {
@@ -608,19 +710,22 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
 
     set_debug_state(0xE031); // DEBUG - Phase adjust done
 
-
     // qpa passed
     mem_pl_bit_clr(rx_quad_phase_fail, lane);
 
     //Checking done
     if (bank == bank_a)
     {
-        mem_pl_field_put(rx_a_quad_phase_done , lane, 0b1);   //ppe pl
+        mem_pl_field_put(rx_a_quad_phase_done , lane, 0b1);
+        //put_ptr(gcr_addr, rx_a_ctle_peak1_addr,  rx_a_ctle_peak1_startbit, rx_a_ctle_peak1_endbit, peak1_restore, read_modify_write);
+        //put_ptr(gcr_addr, rx_a_ctle_peak2_addr,  rx_a_ctle_peak2_startbit, rx_a_ctle_peak2_endbit, peak2_restore, read_modify_write);
     }
     else
     {
         mem_pl_field_put(rx_b_quad_phase_done , lane, 0b1);
-    }
+        //put_ptr(gcr_addr, rx_b_ctle_peak1_addr,  rx_b_ctle_peak1_startbit, rx_b_ctle_peak1_endbit, peak1_restore, read_modify_write);
+        //put_ptr(gcr_addr, rx_b_ctle_peak2_addr,  rx_b_ctle_peak2_startbit, rx_b_ctle_peak2_endbit, peak2_restore, read_modify_write);
+    }//ppe pl
 
     set_debug_state(0xE0FF); // DEBUG: 10: exit pass
 

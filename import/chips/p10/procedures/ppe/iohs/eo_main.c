@@ -39,6 +39,17 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19080900 |vbr     | HW499874: Move EOFF to back before bank sync in init.
+// mbs19072500 |mbs     | Modified vga loop so that it will quit after the first iteration if rx_eo_converged_end_count is 0 or 1
+// vbr19072202 |vbr     | Fix setting of tx_group in recal.
+// vbr19072201 |vbr     | Minor refactoring and potential hang fix.
+// vbr19072200 |vbr     | HW493618: Split recal into RX/TX functions and only run each when not in psave.
+// vbr19062800 |vbr     | Need DL clock to remain on in INIT Cal.
+// vbr19060700 |vbr     | Remove unnecessary pr_phase_force
+// vbr19060601 |vbr     | In recal only set cal_lane_sel after powering up the Alt bank (to avoid clock glitches)
+// vbr19060600 |vbr     | Put DL clock disable in correct location (after lane power up since it enables the DL clock)
+// vbr19060300 |vbr     | HW486157/HW492011: Enable DL clock only at end of DC Cal. Remove power down at end of DC Cal. Move CDR Init to DC Cal.
+// gap19041700 |gap     | Add tdr zcal; rename dcc_main to tx_dcc_main
 // mbs19051600 |mbs     | HW491617: Added second run of dfe_full after ddc, if enabled
 // mwh19050100 |mwh     | cq485000 moved b_bank eoff after bank sync in init
 // mwh19042300 |mwh     | removed eo_bist_init_ovride function and put into ioo_thread.c
@@ -171,7 +182,8 @@
 #include "eo_bank_sync.h"
 #include "eo_qpa.h"
 
-#include "dcc_main.h"
+#include "tx_zcal_tdr.h"
+#include "tx_dcc_main.h"
 #include "txbist_main.h"
 #include "eo_vclq_checks.h"
 #include "eo_rxbist_ber.h"
@@ -185,6 +197,10 @@
 #include "ppe_fw_reg_const_pkg.h"
 #include "ppe_img_reg_const_pkg.h"
 #include "config_ioo.h"
+
+// Local Functions
+static int eo_main_recal_rx(t_gcr_addr* gcr_addr);
+static int eo_main_recal_tx(t_gcr_addr* gcr_addr);
 
 
 // Assumption Checking
@@ -217,12 +233,22 @@ void eo_main_dccal(t_gcr_addr* gcr_addr)
 {
     CAL_TIMER_START;
     set_debug_state(0x1000); // Debug - DC Cal Start
+    int lane = get_gcr_addr_lane(gcr_addr);
+#if IO_DISABLE_DEBUG == 0
+    mem_pg_field_put(rx_current_cal_lane, lane);
+#endif
 
     /////////////////////////////
     // Power up group and lane //
     /////////////////////////////
     io_group_power_on(gcr_addr);
     io_lane_power_on(gcr_addr);
+
+
+    //////////////////////////////////////////////////////////////
+    // Disable Clock to RX DL During DC Cal to prevent glitches //
+    //////////////////////////////////////////////////////////////
+    put_ptr_field(gcr_addr, rx_dl_clk_en, 0b0, read_modify_write);
 
 
     //////////
@@ -237,52 +263,60 @@ void eo_main_dccal(t_gcr_addr* gcr_addr)
         psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
     }
 
-    // Make sure the CDR is disabled
+    // Prior to asserting cal_lane_sel:
+    //   Initialize/Reset CDR by clearing FW; Phase accumulator not cleared since that can cause a glitch.
+    //   Make sure the CDR is disabled.
     put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias, 0b000000, read_modify_write);
+    put_ptr_field(gcr_addr, rx_pr_fw_reset_ab_alias,        0b11,     read_modify_write);
+    //put_ptr_field(gcr_addr, rx_pr_phase_force_cmd_ab_alias, 0x8080,   fast_write);
+    put_ptr_field(gcr_addr, rx_pr_fw_reset_ab_alias,        0b00,     read_modify_write);
 
-    // Select the cal lane
-    int lane = get_gcr_addr_lane(gcr_addr);
+    // Select the cal lane (servo logic) but do not assert cal_lane_sel as yet
     put_ptr_field(gcr_addr, rx_cal_lane_pg_phy_gcrmsg, lane, read_modify_write);
-#if IO_DISABLE_DEBUG == 0
-    mem_pg_field_put(rx_current_cal_lane, lane);
-#endif
-
 
     // Cal Step: Latch Offset
     int loff_enable = mem_pg_field_get(rx_dc_enable_latch_offset_cal);
 
     if (loff_enable)
     {
+        // Safely switch to bank_a and run LOFF (assumes cal_lane_sel is unasserted)
         set_cal_bank(gcr_addr, bank_a);// Set Bank B as Main, Bank A as Alt (cal_bank)
         put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
         eo_loff_fenced(gcr_addr, bank_a);
+
+        // Safely switch to bank_b and run LOFF
         put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // turn off cal lane sel
         set_cal_bank(gcr_addr, bank_b);// Set Bank A as Main, Bank B as Alt (cal_bank)
         put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
         eo_loff_fenced(gcr_addr, bank_b);
     }
 
-    // Clear cal lane sel
+    // Clear cal lane sel and switch back to Bank B as Main, Bank A as Alt (cal_bank)
     put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // strobe bit
+    set_cal_bank(gcr_addr, bank_a);
+
+    // Enable Clock to RX DL
+    put_ptr_field(gcr_addr, rx_dl_clk_en, 0b1, read_modify_write);
 
 
     //////////
     //  TX  //
     //////////
 
-    // run tx_fifo_init; needs to be run before dcc or bist
     set_gcr_addr_reg_id(gcr_addr, tx_group); // set to tx gcr address
+
+    // run tx_fifo_init; needs to be run before dcc or bist or Zcal
 
     put_ptr_field_fast(gcr_addr, tx_clr_unload_clk_disable,   0b1);
     put_ptr_field_fast(gcr_addr, tx_fifo_init,   0b1);
     put_ptr_field_fast(gcr_addr, tx_set_unload_clk_disable,   0b1);
 
-    // Cal Step: TX Duty Cycle Correction
+    // Cal Step: TX Duty Cycle Correction; needs to be run before tx_bist_dcc
     int tx_dcc_enable = mem_pg_field_get(rx_dc_enable_dcc);
 
     if (tx_dcc_enable)
     {
-        dcc_main_init(gcr_addr);
+        tx_dcc_main_init(gcr_addr);
     }
 
     // call txbist if requested
@@ -293,13 +327,16 @@ void eo_main_dccal(t_gcr_addr* gcr_addr)
         txbist_main(gcr_addr);
     }
 
+    // Cal Step: TX Zcal
+    int tx_zcal_enable = mem_pg_field_get(rx_dc_enable_zcal);
+
+    if (tx_zcal_enable)
+    {
+        tx_zcal_tdr(gcr_addr);
+    }
+
     set_gcr_addr_reg_id(gcr_addr, rx_group); // set to rx gcr address
 
-    ///////////////////////////////
-    // Power down lane and group //
-    ///////////////////////////////
-    io_lane_power_off(gcr_addr);
-    io_group_power_off(gcr_addr);
 
     set_debug_state(0x102F); // DEBUG - DC Cal Done
     CAL_TIMER_STOP;
@@ -318,6 +355,10 @@ void eo_main_init(t_gcr_addr* gcr_addr)
 {
     CAL_TIMER_START;
     set_debug_state(0x2000); // Debug - INIT Cal Start
+    int lane = get_gcr_addr_lane(gcr_addr);
+#if IO_DISABLE_DEBUG == 0
+    mem_pg_field_put(rx_current_cal_lane, lane);
+#endif
 
     // Make sure the ALT bank is powered up
     put_ptr_field(gcr_addr, rx_psave_req_alt, 0b0, read_modify_write);
@@ -328,22 +369,16 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
     }
 
-    // Set Bank B as Main, Bank A as Alt (cal_bank)
+    // Prior to asserting cal_lane_sel: Set Bank B as Main, Bank A as Alt (cal_bank)
+    // This may cause a DL clock glitch if the lane was not already in this state (HW496723)
     set_cal_bank(gcr_addr, bank_a);
 
     // Select the cal lane
-    int lane = get_gcr_addr_lane(gcr_addr);
     put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // strobe bit
     put_ptr_field(gcr_addr, rx_cal_lane_pg_phy_gcrmsg, lane, read_modify_write);
-#if IO_DISABLE_DEBUG == 0
-    mem_pg_field_put(rx_current_cal_lane, lane);
-#endif
 
-    // Initialize/Reset CDR by clearing FW and Phase accumulators.
+    // Make sure the CDR is disabled.
     put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias, 0b000000, read_modify_write);
-    put_ptr_field(gcr_addr, rx_pr_fw_reset_ab_alias,        0b11,     read_modify_write);
-    put_ptr_field(gcr_addr, rx_pr_phase_force_cmd_ab_alias, 0x8080,   fast_write);
-    put_ptr_field(gcr_addr, rx_pr_fw_reset_ab_alias,        0b00,     read_modify_write);
 
 
     // Loop for VGA + EOF + CTLE + LTE
@@ -437,11 +472,7 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         // Keep running if settings (gain/peak/lte) changed, but limit the number of loops.
         vga_loop_count = vga_loop_count + 1;
 
-        if (first_loop_iteration)
-        {
-            run_vga_loop = true;
-        }
-        else if (gain_changed || peak_changed || lte_changed || quad_adjust_changed)
+        if (first_loop_iteration || gain_changed || peak_changed || lte_changed || quad_adjust_changed)
         {
             unsigned int converged_cnt_max = mem_pg_field_get(rx_eo_converged_end_count);
 
@@ -467,6 +498,25 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     // Perorm Check of VGA, CTLE, LTE, and QPA values--part of bist
     eo_vclq_checks(gcr_addr, bank_a);
 
+    // Cal Step: Edge Offset (Live Data) on Bank B
+    int eoff_enable = mem_pg_field_get(rx_eo_enable_edge_offset_cal);
+
+    if (eoff_enable)
+    {
+        // Safely switch to bank_b without changing dl_clk_sel_a to avoid DL clock chopping (HW485000)
+        put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // turn off cal lane sel
+        put_ptr_field(gcr_addr, rx_bank_rlmclk_sel_a_alias, cal_bank_to_bank_rlmclk_sel_a(bank_b), read_modify_write);
+        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
+
+        bool recal = false;
+        eo_eoff(gcr_addr, recal, 0, bank_b); // vga_loop_count = 0
+
+        // Safely switch to bank_a
+        put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // turn off cal lane sel
+        set_cal_bank(gcr_addr, bank_a);// Set Bank B as Main, Bank A as Alt (cal_bank)
+        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
+    }
+
     // Perform Bank A/B UI Alignment by bumping alt bank
     // Requires edge tracking (master mode)
     int bank_sync_enable = mem_pg_field_get(rx_eo_enable_bank_sync);
@@ -475,26 +525,6 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     {
         align_bank_ui(gcr_addr, bank_a);
     }
-
-    //see cq485000 moved here to avoid chopping clock
-    int eoff_enable = mem_pg_field_get(rx_eo_enable_edge_offset_cal);
-
-    if (eoff_enable)
-    {
-        //begin if
-        put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // turn off cal lane sel
-        set_cal_bank(gcr_addr, bank_b); // Set Bank A as Main, Bank B as Alt (cal_bank)
-        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
-
-        //hardcoding input to match init.  recal=false vga_loop_count = 0
-        eo_eoff(gcr_addr, false, 0, bank_b);
-
-        put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // turn off cal lane sel
-        set_cal_bank(gcr_addr, bank_a);// Set Bank B as Main, Bank A as Alt (cal_bank)
-        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
-    }//end if
-
-
 
     // Put Alt (Cal) bank into CDR Slave mode for DFE Amp Measurements and DDC
     put_ptr_field(gcr_addr, rx_pr_slave_mode_a, 0b1, read_modify_write);
@@ -570,6 +600,59 @@ int eo_main_recal(t_gcr_addr* gcr_addr)
     CAL_TIMER_START;
     set_debug_state(0x3000); // Debug - Recal Start
     int lane = get_gcr_addr_lane(gcr_addr);
+#if IO_DISABLE_DEBUG == 0
+    mem_pg_field_put(rx_current_cal_lane, lane);
+#endif
+
+    // Run RX Recal
+    int status = rc_no_error;
+
+    if (status == rc_no_error)
+    {
+        // HW493618: Skip RX Recal when DL has powered down RX (bad lane)
+        int dl_phy_rx_psave_req = get_ptr_field(gcr_addr, rx_psave_req_dl);
+
+        if (!dl_phy_rx_psave_req)
+        {
+            status |= eo_main_recal_rx(gcr_addr);
+        }
+        else
+        {
+            // Avoid hang condition by setting min_recal_cnt_reached when RX recal not run
+            mem_pl_bit_set(rx_min_recal_cnt_reached, lane);
+        }
+    }
+
+    // Run TX Recal if no RX status
+    if (status == rc_no_error)
+    {
+        // HW493618: Skip TX Recal when DL has powered down TX (bad lane)
+        set_gcr_addr_reg_id(gcr_addr, tx_group); // set to tx gcr address
+        int dl_phy_tx_psave_req_0_23 =
+            (get_ptr_field(gcr_addr, tx_psave_req_dl_0_15_sts)  << 16) |
+            (get_ptr_field(gcr_addr, tx_psave_req_dl_16_23_sts) << (16 - tx_psave_req_dl_16_23_sts_width));
+        set_gcr_addr_reg_id(gcr_addr, rx_group); // set back to rx gcr address
+        int lane_mask = (0x80000000 >> lane);
+        int dl_phy_tx_psave_req = dl_phy_tx_psave_req_0_23 & lane_mask;
+
+        if (!dl_phy_tx_psave_req)
+        {
+            status |= eo_main_recal_tx(gcr_addr);
+        }
+    }
+
+    set_debug_state(0x302F); // DEBUG - Recal Done
+    CAL_TIMER_STOP;
+    return status;
+} //eo_main_recal
+
+
+//////////////
+// RX Recal //
+//////////////
+static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
+{
+    int lane = get_gcr_addr_lane(gcr_addr);
 
     // Check for abort and exit with abort code if detected
     int status = check_rx_abort(gcr_addr);
@@ -585,27 +668,17 @@ int eo_main_recal(t_gcr_addr* gcr_addr)
         return status;
     }
 
-    //////////
-    //  RX  //
-    //////////
-    // Select the cal lane
-    put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // strobe bit
-    put_ptr_field(gcr_addr, rx_cal_lane_pg_phy_gcrmsg, lane, read_modify_write);
-#if IO_DISABLE_DEBUG == 0
-    mem_pg_field_put(rx_current_cal_lane, lane);
-#endif
-
     // Use bank_sel_a (HW latch) to tell which is the Main Bank so can calibrate the Alternate Bank. Could improve the speed of this by storing
     // this info in the mem_regs for each lane; however, reading it once per-recal from HW is less prone to errors and does not significantly hurt speed.
     int bank_sel_a  = get_ptr_field(gcr_addr, rx_bank_sel_a);
     t_bank cal_bank = (bank_sel_a == 0) ? bank_a : bank_b;
 
     // Wait for the lane to be powered up (controlled by DL)
-    int phy_dl_psave_sts = 1;
+    int phy_dl_rx_psave_sts = 1;
 
-    while (phy_dl_psave_sts)
+    while (phy_dl_rx_psave_sts)
     {
-        phy_dl_psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_phy);
+        phy_dl_rx_psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_phy);
     }
 
     // Power up the ALT bank (if configured to power it up/down)
@@ -622,6 +695,10 @@ int eo_main_recal(t_gcr_addr* gcr_addr)
             psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
         }
     }
+
+    // Select the cal lane after powering up the ALT bank
+    put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // strobe bit
+    put_ptr_field(gcr_addr, rx_cal_lane_pg_phy_gcrmsg, lane, read_modify_write);
 
     // See if this is the very first recal on un-initialized bank B.
     // Check both recal_cnt and min_recal_cnt_reached in case recal_cnt was cleared (or rolled over).
@@ -821,7 +898,7 @@ int eo_main_recal(t_gcr_addr* gcr_addr)
             disable_bank_powerdown = 1;
         }
     }
-    else     // some status needs to be handled
+    else     // status!=rc_no_error - some status needs to be handled
     {
         // Recal Abort FIR
         if (status & abort_code)
@@ -845,9 +922,7 @@ int eo_main_recal(t_gcr_addr* gcr_addr)
 
             set_fir(fir_code_warning);
         }
-    }
-
-
+    } //if(status==rc_no_error)
 
 
     // Power Down the Alternate Bank (new cal_bank)
@@ -857,21 +932,39 @@ int eo_main_recal(t_gcr_addr* gcr_addr)
         put_ptr_field(gcr_addr, rx_psave_req_alt, 0b1, read_modify_write);
     }
 
+    return status;
+} //eo_main_recal_rx
 
-    //////////
-    //  TX  //
-    //////////
+
+//////////////
+// TX Recal //
+//////////////
+static int eo_main_recal_tx(t_gcr_addr* gcr_addr)
+{
+    int status = rc_no_error;
+    set_gcr_addr_reg_id(gcr_addr, tx_group); // set to tx gcr address
+
+    // Wait for the lane to be powered up (controlled by DL)
+    int lane = get_gcr_addr_lane(gcr_addr);
+    int lane_mask = (0x80000000 >> lane);
+    int phy_dl_tx_psave_sts = 1;
+
+    while (phy_dl_tx_psave_sts)
+    {
+        int phy_dl_tx_psave_sts_0_23 =
+            (get_ptr_field(gcr_addr, tx_psave_sts_phy_0_15_sts)  << 16) |
+            (get_ptr_field(gcr_addr, tx_psave_sts_phy_16_23_sts) << (16 - tx_psave_sts_phy_16_23_sts_width));
+        phy_dl_tx_psave_sts = phy_dl_tx_psave_sts_0_23 & lane_mask;
+    }
+
     // Cal Step: TX DCC
     int tx_dcc_enable = mem_pg_field_get(rx_rc_enable_dcc);
 
     if (tx_dcc_enable && (status == rc_no_error))
     {
-        set_gcr_addr_reg_id(gcr_addr, tx_group); // set to tx gcr address
-        status |= dcc_main_adjust(gcr_addr);
-        set_gcr_addr_reg_id(gcr_addr, rx_group); // set back to rx gcr address
+        status |= tx_dcc_main_adjust(gcr_addr);
     }
 
-    set_debug_state(0x302F); // DEBUG - Recal Done
-    CAL_TIMER_STOP;
+    set_gcr_addr_reg_id(gcr_addr, rx_group); // set back to rx gcr address
     return status;
-} //eo_main_recal
+} //eo_main_recal_tx
