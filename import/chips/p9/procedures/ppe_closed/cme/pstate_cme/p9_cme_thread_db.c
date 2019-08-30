@@ -120,7 +120,7 @@ p9_cme_pgpe_hb_loss_handler(void* arg, PkIrqId irq)
 
         if(FSafe)
         {
-            PK_TRACE_INF("Fsafe=0x%x", FSafe);
+            PK_TRACE_DBG("Fsafe=0x%x", FSafe);
             G_cme_pstate_record.nextPstate = G_lppb->dpll_pstate0_value - FSafe;
             G_cme_pstate_record.globalPstate = G_lppb->dpll_pstate0_value - FSafe;
             p9_cme_pstate_update_analog();
@@ -139,7 +139,7 @@ p9_cme_pgpe_hb_loss_handler(void* arg, PkIrqId irq)
 
         intercme_direct(INTERCME_DIRECT_IN2, INTERCME_DIRECT_ACK, 0);
 
-        PK_TRACE_INF("RCVed Notify and ACKed");
+        PK_TRACE_DBG("RCVed Notify and ACKed");
 
         out32(G_CME_LCL_FLAGS_CLR, BIT32(CME_FLAGS_PSTATES_ENABLED));
         out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_SAFE_MODE) |
@@ -428,7 +428,7 @@ void p9_cme_pstate_db3_handler(void)
             intercme_direct(INTERCME_DIRECT_IN2, INTERCME_DIRECT_ACK, 0);
         }
 
-        PK_TRACE_INF("PSTATE: DB3 Clip Exit");
+        PK_TRACE_DBG("PSTATE: DB3 Clip Exit");
     }
 
     else
@@ -463,7 +463,7 @@ void p9_cme_pstate_init()
 
     G_lppb = (LocalPstateParmBlock*)(pstate_offset + CME_SRAM_BASE_ADDR);
 
-    PK_TRACE_INF("PSTATE: Hdr=0x%x, LPPB=0x%x, Nominal_Freq_Mhz=%d ", (uint32_t)G_cmeHeader, (uint32_t)G_lppb,
+    PK_TRACE_DBG("PSTATE: Hdr=0x%x, LPPB=0x%x, Nominal_Freq_Mhz=%d ", (uint32_t)G_cmeHeader, (uint32_t)G_lppb,
                  G_lppb->operating_points[NOMINAL].frequency_mhz);
 
     // Pre-compute the value to be used as the SPURR reference during CME Boot and
@@ -848,7 +848,7 @@ inline void p9_cme_pstate_register()
 
         if(register_enable)
         {
-            PK_TRACE_INF("PSTATE: DB0 Processing is Enabled");
+            PK_TRACE_DBG("PSTATE: DB0 Processing is Enabled");
 
             //PGPE sends MSGID_DB0_REGISTER_DONE, if Pstates aren't active anymore.
             //Otherwise, PGPE sends DB0 in the following order
@@ -899,7 +899,7 @@ inline void p9_cme_pstate_register()
     {
         if (register_enable)
         {
-            PK_TRACE_INF("PSTATE: Wait on Pstate Start");
+            PK_TRACE_DBG("PSTATE: Wait on Pstate Start");
 
             //PGPE sends MSGID_DB0_REGISTER_DONE, if Pstates aren't active anymore.
             //Otherwise, PGPE sends DB0 in the following order
@@ -1109,7 +1109,7 @@ inline void p9_cme_pstate_db0_pmsr_updt()
 
 void p9_cme_pstate_notify_sib(INTERCME_DIRECT_INTF intf)
 {
-    PK_TRACE_INF("PSTATE: Notify Enter");
+    PK_TRACE_INF("PSTATE: Notify");
 
     //Notify sibling CME(if any)
     if(G_cme_pstate_record.siblingCMEFlag)

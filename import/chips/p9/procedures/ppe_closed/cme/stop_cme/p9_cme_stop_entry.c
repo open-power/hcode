@@ -293,7 +293,7 @@ p9_cme_stop_entry()
     if (!core)
     {
         // PM_ACTIVE can be phantom, only gives warning
-        PK_TRACE_INF("WARNING: Only Phantom PM_ACTIVE to be Ignored. Return");
+        //PK_TRACE_INF("WARNING: Only Phantom PM_ACTIVE to be Ignored. Return");
         return;
     }
 
@@ -304,7 +304,7 @@ p9_cme_stop_entry()
     if (((core & CME_MASK_C0) && (in32(G_CME_LCL_SISR)    & BITS32(13, 2))) ||
         ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS64SH(61, 2))))
     {
-        PK_TRACE_INF("WARNING: Attn/Recov Present, Abort Entry and Return");
+        //PK_TRACE_INF("WARNING: Attn/Recov Present, Abort Entry and Return");
         return;
     }
 
@@ -432,7 +432,7 @@ p9_cme_stop_entry()
 
             if (!core)
             {
-                PK_TRACE_INF("WARNING: STOP1 PM_ACTIVE to be Ignored. Return");
+                //PK_TRACE_INF("WARNING: STOP1 PM_ACTIVE to be Ignored. Return");
                 return;
             }
 
@@ -678,13 +678,13 @@ p9_cme_stop_entry()
             if (core & CME_MASK_C0)
             {
                 CME_GETSCOM(RAS_STATUS, CME_MASK_C0, scom_data.value);
-                PKTRACE("CheckA RAS_STATUS_UPPER Core0 %X", scom_data.words.upper);
+                //PKTRACE("CheckA RAS_STATUS_UPPER Core0 %X", scom_data.words.upper);
             }
 
             if (core & CME_MASK_C1)
             {
                 CME_GETSCOM(RAS_STATUS, CME_MASK_C1, scom_data.value);
-                PKTRACE("CheckA RAS_STATUS_UPPER Core1 %X", scom_data.words.upper);
+                //PKTRACE("CheckA RAS_STATUS_UPPER Core1 %X", scom_data.words.upper);
             }
 
 #endif
@@ -701,7 +701,7 @@ p9_cme_stop_entry()
 
                 CME_GETSCOM_AND(RAS_STATUS, core, scom_data.value);
 #ifdef PLS_DEBUG
-                PKTRACE("CheckB RAS_STATUS_AND_UPPER %X", scom_data.words.upper);
+                //PKTRACE("CheckB RAS_STATUS_AND_UPPER %X", scom_data.words.upper);
 #endif
             }
             while((scom_data.words.upper & (BIT32(1) | BIT32(3) | BIT32(9) | BIT32(11) | BIT32(17) | BIT32(19) | BIT32(25) | BIT32(
@@ -715,7 +715,7 @@ p9_cme_stop_entry()
 
                 CME_GETSCOM_OR(RAS_STATUS, core, scom_data.value);
 #ifdef PLS_DEBUG
-                PKTRACE("CheckC RAS_STATUS_OR_LOWER[0] %X", scom_data.words.lower);
+                //PKTRACE("CheckC RAS_STATUS_OR_LOWER[0] %X", scom_data.words.lower);
 #endif
             }
             while(scom_data.words.lower & BIT32(0));
@@ -727,7 +727,7 @@ p9_cme_stop_entry()
 
                 CME_GETSCOM_OR(THREAD_INFO, core, scom_data.value);
 #ifdef PLS_DEBUG
-                PKTRACE("CheckD THREAD_INFO_OR_UPPER[23] %X", scom_data.words.upper);
+                //PKTRACE("CheckD THREAD_INFO_OR_UPPER[23] %X", scom_data.words.upper);
 #endif
             }
             while(scom_data.words.upper & BIT32(23));
@@ -739,13 +739,13 @@ p9_cme_stop_entry()
             if (core & CME_MASK_C0)
             {
                 CME_GETSCOM(THREAD_INFO, CME_MASK_C0, scom_data.value);
-                PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core0 %X", scom_data.words.upper);
+                //PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core0 %X", scom_data.words.upper);
             }
 
             if (core & CME_MASK_C1)
             {
                 CME_GETSCOM(THREAD_INFO, CME_MASK_C1, scom_data.value);
-                PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core1 %X", scom_data.words.upper);
+                //PKTRACE("CheckE THREAD_INFO_UPPER[0:3] Core1 %X", scom_data.words.upper);
             }
 
             PK_TRACE("RAMMING Read CORE_THREAD_STATE[56:59] to find out which threads are stopped");
@@ -753,13 +753,13 @@ p9_cme_stop_entry()
             if (core & CME_MASK_C0)
             {
                 CME_GETSCOM(CORE_THREAD_STATE, CME_MASK_C0, scom_data.value);
-                PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core0 %X %X", scom_data.words.upper, scom_data.words.lower);
+                //PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core0 %X %X", scom_data.words.upper, scom_data.words.lower);
             }
 
             if (core & CME_MASK_C1)
             {
                 CME_GETSCOM(CORE_THREAD_STATE, CME_MASK_C1, scom_data.value);
-                PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core1 %X %X", scom_data.words.upper, scom_data.words.lower);
+                //PKTRACE("CheckF CORE_THREAD_STATE[56:59] Core1 %X %X", scom_data.words.upper, scom_data.words.lower);
             }
 
 #endif
@@ -772,7 +772,7 @@ p9_cme_stop_entry()
 
                 CME_GETSCOM_AND(THREAD_INFO, core, scom_data.value);
 #ifdef PLS_DEBUG
-                PKTRACE("CheckG THREAD_INFO_AND_UPPER[0:3] %X", scom_data.words.upper);
+                //PKTRACE("CheckG THREAD_INFO_AND_UPPER[0:3] %X", scom_data.words.upper);
 #endif
             }
             while((scom_data.words.upper & BITS32(0, 4)) != BITS32(0, 4));
@@ -841,8 +841,9 @@ p9_cme_stop_entry()
                         }
 
 #ifdef PLS_DEBUG
-                        PKTRACE("cXtX PSSCR %X %X G_pls %x core %d",
-                                scom_data.words.upper, scom_data.words.lower, G_pls[core_mask & 1][thread], core);
+                        /*                        PKTRACE("cXtX PSSCR %X %X G_pls %x core %d",
+                                                        scom_data.words.upper, scom_data.words.lower, G_pls[core_mask & 1][thread], core);
+                        */
 #endif
 
                     }
@@ -862,7 +863,7 @@ p9_cme_stop_entry()
             if (core & CME_MASK_C0)
             {
 #ifdef PLS_DEBUG
-                PKTRACE("SCRATCH1 %x %x", (G_scratch[0] >> 32), (G_scratch[0] & 0xffffffff));
+                //PKTRACE("SCRATCH1 %x %x", (G_scratch[0] >> 32), (G_scratch[0] & 0xffffffff));
 #endif
                 CME_PUTSCOM(SCRATCH1, CME_MASK_C0, G_scratch[0]);
             }
@@ -870,7 +871,7 @@ p9_cme_stop_entry()
             if (core & CME_MASK_C1)
             {
 #ifdef PLS_DEBUG
-                PKTRACE("SCRATCH1 %x %x", (G_scratch[1] >> 32), (G_scratch[1] & 0xffffffff));
+                //PKTRACE("SCRATCH1 %x %x", (G_scratch[1] >> 32), (G_scratch[1] & 0xffffffff));
 #endif
                 CME_PUTSCOM(SCRATCH1, CME_MASK_C1, G_scratch[1]);
             }
@@ -1383,13 +1384,13 @@ p9_cme_stop_entry()
 
             if ((core & CME_MASK_C0) && (in32(G_CME_LCL_SISR) & BITS32(12, 4)))
             {
-                PK_TRACE_INF("WARNING: Core0 Xstop/Attn/Recov Present, Abort Entry");
+                //PK_TRACE_INF("WARNING: Core0 Xstop/Attn/Recov Present, Abort Entry");
                 core -= CME_MASK_C0;
             }
 
             if ((core & CME_MASK_C1) && (in32_sh(CME_LCL_SISR) & BITS64SH(60, 4)))
             {
-                PK_TRACE_INF("WARNING: Core1 Xstop/Attn/Recov Present, Abort Entry");
+                //PK_TRACE_INF("WARNING: Core1 Xstop/Attn/Recov Present, Abort Entry");
                 core -= CME_MASK_C1;
             }
 
@@ -1599,7 +1600,7 @@ p9_cme_stop_entry()
                             MARK_TAG(SE_PURGE_L2_ABORT, core_aborted)
                             //=======================================
 
-                            PK_TRACE_INF("Abort: L2+NCU purge aborted by core[%d]", core_aborted);
+                            //PK_TRACE_INF("Abort: L2+NCU purge aborted by core[%d]", core_aborted);
                             out32(G_CME_LCL_SICR_OR, BIT32(19) | BIT32(23));
                         }
                     }
@@ -1645,7 +1646,7 @@ p9_cme_stop_entry()
 
             if (G_cme_record.disableSGPEHandoff)
             {
-                PK_TRACE_INF("SE.4+: Disable SGPE Handoff due to SGPE Halt");
+                //PK_TRACE_INF("SE.4+: Disable SGPE Handoff due to SGPE Halt");
                 break;
             }
 

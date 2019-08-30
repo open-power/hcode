@@ -92,7 +92,7 @@ void fit_handler()
 
     if(BIT32(CPPM_CSAR_FIT_HCODE_ERROR_INJECT) & scom_data.words.upper)
     {
-        PKTRACE("CME FIT ERROR INJECT TRAP");
+        //PKTRACE("CME FIT ERROR INJECT TRAP");
         PK_PANIC(CME_STOP_ENTRY_TRAP_INJECT);
     }
 

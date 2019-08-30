@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -83,7 +83,7 @@ p9_cme_stop_pcwu_handler(void)
     // if still wakeup for core with notify_select == cme, go exit
     if (core)
     {
-        PK_TRACE_INF("PCWU Launching exit thread");
+        //PK_TRACE_INF("PCWU Launching exit thread");
 
         out32(G_CME_LCL_EIMR_OR, BITS32(12, 10));
         g_eimr_override |= BITS64(12, 10);
@@ -148,7 +148,7 @@ p9_cme_stop_spwu_handler(void)
                     }
                 }
 
-                PK_TRACE_INF("Falling edge of SPWU, now clear spwu_done, eisr and flip eipr");
+                //PK_TRACE_INF("Falling edge of SPWU, now clear spwu_done, eisr and flip eipr");
                 out32(G_CME_LCL_SICR_CLR, BIT32((16 + core_index)));
                 out32(G_CME_LCL_EISR_CLR, BIT32((14 + core_index)));
                 out32(G_CME_LCL_EIPR_OR,  BIT32((14 + core_index)));
@@ -159,7 +159,7 @@ p9_cme_stop_spwu_handler(void)
                     out32(G_CME_LCL_EISR_CLR, BIT32((14 + core_index)));
                     out32(G_CME_LCL_EIPR_CLR, BIT32((14 + core_index)));
                     out32(G_CME_LCL_SICR_OR,  BIT32((16 + core_index)));
-                    PK_TRACE_INF("SPWU asserts again, clear eisr, flip eipr, re-assert spwu_done");
+                    //PK_TRACE_INF("SPWU asserts again, clear eisr, flip eipr, re-assert spwu_done");
                 }
                 // if spwu truly dropped:
                 else
@@ -192,7 +192,7 @@ p9_cme_stop_spwu_handler(void)
 
     if (spwu_rise)
     {
-        PK_TRACE_INF("SPWU Launching exit thread");
+        //PK_TRACE_INF("SPWU Launching exit thread");
 
         out32(G_CME_LCL_EIMR_OR, BITS32(12, 10));
         g_eimr_override |= BITS64(12, 10);
@@ -218,7 +218,7 @@ void
 p9_cme_stop_rgwu_handler(void)
 {
     MARK_TRAP(STOP_RGWU_HANDLER)
-    PK_TRACE_INF("RGWU Handler Trigger");
+    //PK_TRACE_INF("RGWU Handler Trigger");
 
     out32(G_CME_LCL_EIMR_OR, BITS32(12, 10));
     g_eimr_override |= BITS64(12, 10);
@@ -244,7 +244,7 @@ void
 p9_cme_stop_enter_handler(void)
 {
     MARK_TRAP(STOP_ENTER_HANDLER)
-    PK_TRACE_INF("PM_ACTIVE Handler Trigger");
+    //PK_TRACE_INF("PM_ACTIVE Handler Trigger");
 
     // Abort Protection
     out32(G_CME_LCL_EIMR_OR, BITS32(12, 10));
@@ -373,7 +373,7 @@ p9_cme_stop_db1_handler(void)
     uint32_t         suspend_ack = 0;
 
     MARK_TRAP(STOP_DB1_HANDLER)
-    PK_TRACE_INF("DB1 Handler Trigger");
+    //PK_TRACE_INF("DB1 Handler Trigger");
 
     // Suspend DB should only come from the first good core
     core = G_cme_pstate_record.firstGoodCoreMask;

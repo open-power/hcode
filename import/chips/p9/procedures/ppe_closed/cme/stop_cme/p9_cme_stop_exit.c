@@ -661,7 +661,7 @@ p9_cme_stop_exit()
 
         if (core_stop1)
         {
-            PK_TRACE_INF("SX.1A: Core[%d] Requested Stop1 Exit", core_stop1);
+            //PK_TRACE_INF("SX.1A: Core[%d] Requested Stop1 Exit", core_stop1);
             p9_cme_stop_exit_end(core_stop1, spwu_stop);
 
             core = core - core_stop1;
@@ -1297,7 +1297,7 @@ p9_cme_stop_self_execute(uint32_t core, uint32_t i_saveRestore )
 
             if (scom_data.words.upper & BIT32(8))
             {
-                PK_TRACE_INF("WARNING: Injecting a core[%d] xstop via C_LFIR[11]", core);
+                //PK_TRACE_INF("WARNING: Injecting a core[%d] xstop via C_LFIR[11]", core);
                 CME_PUTSCOM(C_LFIR_OR, core_mask, BIT64(11));
             }
 
