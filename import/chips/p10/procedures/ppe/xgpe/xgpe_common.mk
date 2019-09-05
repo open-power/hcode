@@ -22,9 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-IMAGE := xgpe
 
-$(IMAGE)_KERNEL:=__IOTA__
 $(IMAGE)_TARGET=PPE
 $(IMAGE)_LINK_SCRIPT=link.ld
 
