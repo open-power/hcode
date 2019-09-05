@@ -23,7 +23,6 @@
 #
 # IBM_PROLOG_END_TAG
 
-IMAGE := pgpe
 
 $(IMAGE)_KERNEL:=__IOTA__
 $(IMAGE)_TARGET=PPE
