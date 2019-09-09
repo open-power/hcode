@@ -49,7 +49,7 @@ IMAGE_EDITOR=xgpeImgEdit.exe
 $(IMAGE)_TARGET=PPE
 #linkscript to use
 $(IMAGE)_LINK_SCRIPT=linkxpmr.cmd
-OBJS:= xpmr_header.o
+OBJS := xpmr_header.o
 
 $(call ADD_BINHEADER_INCDIR,$(IMAGE),\
 	$(IOTA_SRCDIR) \
