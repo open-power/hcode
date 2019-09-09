@@ -22,7 +22,8 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-ifdef IMAGE
+#ifdef IMAGE
+IMG-S-SOURCES  = ppmr_header.S
 PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_irq_priority_table.c \
 				pgpe_uih.c \
@@ -43,4 +44,5 @@ PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_resclk.c
 
 PGPE_OBJECTS = $(PGPE-C-SOURCES:.c=.o) 
-endif
+IMG_OBJECTS  = $(IMG-C-SOURCES:.c=.o) $(IMG-S-SOURCES:.S=.o)
+#endif
