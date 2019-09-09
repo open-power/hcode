@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -250,6 +250,7 @@ typedef struct db3_parms
     uint32_t expectedAckFrom;
     uint32_t expectedAckValue;
     uint32_t checkNACKs;
+    uint32_t useDB3ValForNacks;
 } db3_parms_t;
 
 //
