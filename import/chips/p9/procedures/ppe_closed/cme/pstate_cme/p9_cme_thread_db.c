@@ -276,7 +276,11 @@ void p9_cme_pstate_db3_handler(void)
 
         if (db3.fields.cme_message_numbern == MSGID_DB3_ENTER_SAFE_MODE)
         {
-            out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_SAFE_MODE));
+            if (G_cme_pstate_record.updateAnalogError == 0)
+            {
+                out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_SAFE_MODE));
+            }
+
         }
 
         G_cme_pstate_record.skipSiblingLock = 0;
@@ -1003,7 +1007,6 @@ void p9_cme_pstate_db0_glb_bcast()
 
     //Send type4(ack doorbell)
     send_ack_to_pgpe(ack);
-    G_cme_pstate_record.updateAnalogError = 0;
     PK_TRACE_INF("PSTATE: DB0 GlbBcast Exit\n");
 }
 

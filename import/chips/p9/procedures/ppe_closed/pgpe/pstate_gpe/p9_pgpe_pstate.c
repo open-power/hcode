@@ -63,7 +63,7 @@ GPE_BUFFER(ipcmsg_p2s_ctrl_stop_updates_t G_sgpe_control_updt);
 GPE_BUFFER(ipcmsg_p2s_suspend_stop_t G_sgpe_suspend_stop);
 
 //Local Functions
-void p9_pgpe_handle_nacks(uint32_t origCoreVector, uint32_t origAckVector, uint32_t expectedAcks);
+void p9_pgpe_handle_nacks(uint32_t origCoreVector, uint32_t origAckVector, uint32_t expectedAcks, uint64_t db3val);
 void p9_pgpe_pstate_freq_updt();
 void p9_pgpe_pstate_wov_init();
 inline void p9_pgpe_droop_throttle() __attribute__((always_inline));
@@ -579,7 +579,8 @@ void p9_pgpe_send_db0(db0_parms_t p)
 
         if(G_pgpe_pstate_record.quadsNACKed)
         {
-            p9_pgpe_handle_nacks(p.targetCores, p.expectedAckFrom, p.expectedAckValue);
+            uint64_t val = (uint64_t)MSGID_DB3_REPLAY_DB0 << 56;
+            p9_pgpe_handle_nacks(p.targetCores, p.expectedAckFrom, p.expectedAckValue, val);
         }
     }
 }
@@ -619,7 +620,15 @@ void p9_pgpe_send_db3(db3_parms_t p)
 
         if(G_pgpe_pstate_record.quadsNACKed && (p.checkNACKs == PGPE_DB3_CHECK_NACKS))
         {
-            p9_pgpe_handle_nacks(p.targetCores, p.expectedAckFrom, p.expectedAckValue);
+            if(p.useDB3ValForNacks)
+            {
+                p9_pgpe_handle_nacks(p.targetCores, p.expectedAckFrom, p.expectedAckValue, p.db3val);
+            }
+            else
+            {
+                uint64_t val = (uint64_t)MSGID_DB3_REPLAY_DB0 << 56;
+                p9_pgpe_handle_nacks(p.targetCores, p.expectedAckFrom, p.expectedAckValue, val);
+            }
         }
     }
 
@@ -757,13 +766,14 @@ void p9_pgpe_pstate_send_pmsr_updt(uint32_t command, uint32_t targetCoresVector,
 //  In case a prolonged droop event happens, CME will detect a timeout and send nack.
 //  This function handles the nacks from CME
 //
-void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom, uint32_t expectedAckVal)
+void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom, uint32_t expectedAckVal,
+                          uint64_t db3val)
 {
     uint32_t q;
     uint32_t expectedAckFrom = origExpectedAckFrom;
     uint32_t targetCores = origTargetCores;
     db3_parms_t p;
-    p.db3val = (uint64_t)MSGID_DB3_REPLAY_DB0 << 56;
+    p.db3val = db3val;
     p.db0val = 0;
     p.writeDB0 = PGPE_DB3_SKIP_WRITE_DB0;
     p.waitForAcks = PGPE_DB_ACK_WAIT_CME;
@@ -787,9 +797,21 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
         G_pgpe_pstate_record.biasSyspExtVrmNext = tmpBiasSyspExtVrmNext; //Restore Next voltage
     }
 
+    //a) If OCC Scratch2 Core Throttle Continuous Change Enable
+    if ((in32(G_OCB_OCCS2) & BIT32(CORE_THROTTLE_CONTINUOUS_CHANGE_ENABLE)))
+    {
+        PGPE_TRACE_AND_PANIC(PGPE_DROOP_AND_CORE_THROTTLE_ENABLED);
+    }
+
+    //b) If  OCC flag PGPE Prolonged Droop Workaround Active bit is not set,
+    //    call droop_throttle()
+    if (!(in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
+    {
+        p9_pgpe_droop_throttle();
+    }
+
     //c) Send DB3 (Replay Previous DB0 Operation) to only the CME Quad Managers, and
     //their Sibling CME (if present), that responded with a NACK.
-
     while(G_pgpe_pstate_record.quadsNACKed)
     {
         G_pgpe_pstate_record.cntNACKs++;
@@ -811,14 +833,6 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
         //If a NACK received was in response to the first retry (i.e. second failed attempt):
         if (G_pgpe_pstate_record.cntNACKs == 2)
         {
-
-            //b) If  OCC flag PGPE Prolonged Droop Workaround Active bit is not set,
-            //    call droop_throttle()
-            if (!(in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE)))
-            {
-                p9_pgpe_droop_throttle();
-            }
-
             // 1 SCOM Write to OCC FIR[prolonged_droop_detected] bit.   This FIR bit is set to recoverable so that it will create an informational error log.
             GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(OCCLFIR_PROLONGED_DROOP_DETECTED));
 
@@ -826,6 +840,7 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
             //  will read to tell OCC not to attempt a PM Complex reset on
             //  PGPE timeouts in the meantime.
             out32(G_OCB_OCCFLG_OR, BIT32(PGPE_PM_RESET_SUPPRESS));
+            PK_TRACE_INF("NACK: PM_RESET_SUPPRESS SET");
 
             // 3 Send DB0 PMSR Update with message Set Pstates Suspended only
             // to the CME QM (and their Siblings) that provided an ACK
@@ -846,7 +861,10 @@ void p9_pgpe_handle_nacks(uint32_t origTargetCores, uint32_t origExpectedAckFrom
     }//End while(quadNACked) loop
 
     //if OCC Flag Register PGPE Prolonged Droop Workaround Active bit is set and all CME QMs respond with ACK
-    p9_pgpe_droop_unthrottle();
+    if (in32(G_OCB_OCCFLG) & BIT32(PGPE_PROLONGED_DROOP_WORKAROUND_ACTIVE))
+    {
+        p9_pgpe_droop_unthrottle();
+    }
 }
 
 //
@@ -1702,6 +1720,7 @@ void p9_pgpe_pstate_safe_mode()
     p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;
     p.expectedAckValue  = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
     p.checkNACKs        = PGPE_DB3_CHECK_NACKS;
+    p.useDB3ValForNacks = 1;
     p9_pgpe_send_db3(p);
 
     PK_TRACE_INF("SAF: Safe Mode Actuation Done!");
@@ -1784,6 +1803,7 @@ void p9_pgpe_pstate_sgpe_fault()
     p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;
     p.expectedAckValue  = MSGID_PCB_TYPE4_ACK_PSTATE_PROTO_ACK;
     p.checkNACKs        = PGPE_DB3_CHECK_NACKS;
+    p.useDB3ValForNacks = 0;
     p9_pgpe_send_db3(p);
 
     //3. PGPE performs STOP Recovery Trigger to set a malfunction alert to the
@@ -2363,6 +2383,7 @@ void p9_pgpe_pstate_freq_updt(uint32_t freq_change_dir)
                          PGPE_DB3_CHECK_NACKS
                         };
         p.db3val = (uint64_t)(MSGID_DB3_HIGH_PRIORITY_PSTATE) << 56;
+        p.useDB3ValForNacks = 0;
         p9_pgpe_send_db3(p);
     }
     //Otherwise, send regular DB0
@@ -2441,7 +2462,7 @@ inline void p9_pgpe_droop_throttle()
     p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;
     p.expectedAckValue  = MSGID_PCB_TYPE4_SUSPEND_ENTRY_ACK;
     p.checkNACKs        = PGPE_DB3_SKIP_CHECK_NACKS;
-
+    p.useDB3ValForNacks = 0;
     p9_pgpe_send_db3(p);
 
     //We poll on CME_FLAGS[] here. The CME doesn't send an ACK for SUSPEND_ENTRY DB3.
@@ -2526,7 +2547,7 @@ inline void p9_pgpe_droop_unthrottle()
     p.expectedAckFrom   = G_pgpe_pstate_record.activeQuads;
     p.expectedAckValue  = MSGID_PCB_TYPE4_UNSUSPEND_ENTRY_ACK;
     p.checkNACKs        = PGPE_DB3_SKIP_CHECK_NACKS;
-
+    p.useDB3ValForNacks = 0;
     p9_pgpe_send_db3(p);
 
     //3.  Send Doorbell0 PMSR Update with message Clear Pstates Suspended to all configured cores in the active Quads.
