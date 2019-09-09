@@ -35,6 +35,6 @@ XGPE-C-SOURCES = xgpe_main.c \
 XGPE-CPP-SOURCES =
                   
 
-XGPE_OBJECTS = $(XGPE-C-SOURCES:.c=.o) $(XGPE-CPP-SOURCES:.C=.o)
-IMG_OBJECTS  = $(IMG-C-SOURCES:.c=.o) $(IMG-S-SOURCES:.S=.o)
+XGPE_OBJECTS = $(XGPE-C-SOURCES:.c=.o) $(XGPE-CPP-SOURCES:.C=.o) $(IMG-S-SOURCES:.S=.o)
+IMG_OBJECTS  = $(IMG-C-SOURCES:.c=.o)
 #endif
