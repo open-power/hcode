@@ -24,11 +24,7 @@
 # IBM_PROLOG_END_TAG
 
 # $1 == chipId
-# FIXME -
-# The following define has the full P10 build image sections. However, since
-# some of the PPE binaries are not yet getting built, we will use the define
-# BUILD_PGPE_IMAGE_TEMP at the end instead as the binaries become incrementally
-# available.
+#
 define BUILD_PGPE_IMAGE
 $(eval IMAGE=$1.pgpe_image)
 
@@ -38,8 +34,8 @@ $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/pgpe_image/pgpe_image.o)
 $(eval pgpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
 # Files with multiple DD level content to be generated
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,ppmr_hdr))
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,pgpe))
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,ppmr_hdr))
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,pgpe))
 
 # Files to be appended to image
 $(eval $(IMAGE)_FILE_PPMR_HDR=$$($(IMAGE)_DD_CONT_ppmr_hdr))
@@ -47,27 +43,33 @@ $(eval $(IMAGE)_FILE_LVL1_BL=$(IMAGEPATH)/pgpe_lvl1_copier/pgpe_lvl1_copier.bin)
 $(eval $(IMAGE)_FILE_LVL2_BL=$(IMAGEPATH)/pgpe_lvl2_loader/pgpe_lvl2_loader.bin)
 $(eval $(IMAGE)_FILE_HCODE=$$($(IMAGE)_DD_CONT_pgpe))
 
-# Dependencies for appending image sections in sequence:
-# - file to be appended
-# - all dependencies of previously appended sections or on raw image
-# - append operation as to other section that has to be finished first
-$(eval $(IMAGE)_DEPS_PPMR_HDR =$$($(IMAGE)_FILE_PPMR_HDR))
-$(eval $(IMAGE)_DEPS_PPMR_HDR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+# Setup dependencies for
+# - building image ( $(IMAGE)_DEPS_IMAGE )
+# - appending image sections in sequence ( $(IMAGE)_DEPS_{<section>,REPORT} )
+#   - file to be appended
+#   - all dependencies of previously appended sections or on raw image
+#   - append operation as to other section that has to be finished first
+$(eval $(IMAGE)_DEPS_IMAGE     = $$($(IMAGE)_FILE_PPMR_HDR))
+$(eval $(IMAGE)_DEPS_PPMR_HDR  = $$($(IMAGE)_FILE_PPMR_HDR))
+$(eval $(IMAGE)_DEPS_PPMR_HDR += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
 
-$(eval $(IMAGE)_DEPS_LVL1_BL =$$($(IMAGE)_FILE_LVL1_BL))
-$(eval $(IMAGE)_DEPS_LVL1_BL+=$$($(IMAGE)_DEPS_PPMR_HDR))
-$(eval $(IMAGE)_DEPS_LVL1_BL+=$$($(IMAGE)_PATH)/.$(IMAGE).append.ppmr_hdr)
+$(eval $(IMAGE)_DEPS_IMAGE    += $$($(IMAGE)_FILE_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL1_BL   = $$($(IMAGE)_FILE_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL1_BL  += $$($(IMAGE)_DEPS_PPMR_HDR))
+$(eval $(IMAGE)_DEPS_LVL1_BL  += $$($(IMAGE)_PATH)/.$(IMAGE).append.ppmr_hdr)
 
-$(eval $(IMAGE)_DEPS_LVL2_BL =$$($(IMAGE)_FILE_LVL2_BL))
-$(eval $(IMAGE)_DEPS_LVL2_BL+=$$($(IMAGE)_DEPS_LVL1_BL))
-$(eval $(IMAGE)_DEPS_LVL2_BL+=$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl)
+$(eval $(IMAGE)_DEPS_IMAGE    += $$($(IMAGE)_FILE_LVL2_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL   = $$($(IMAGE)_FILE_LVL2_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL  += $$($(IMAGE)_DEPS_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL  += $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl)
 
-$(eval $(IMAGE)_DEPS_HCODE =$$($(IMAGE)_FILE_HCODE))
-$(eval $(IMAGE)_DEPS_HCODE+=$$($(IMAGE)_DEPS_LVL2_BL))
-$(eval $(IMAGE)_DEPS_HCODE+=$$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl)
+$(eval $(IMAGE)_DEPS_IMAGE    += $$($(IMAGE)_FILE_HCODE))
+$(eval $(IMAGE)_DEPS_HCODE     = $$($(IMAGE)_FILE_HCODE))
+$(eval $(IMAGE)_DEPS_HCODE    += $$($(IMAGE)_DEPS_LVL2_BL))
+$(eval $(IMAGE)_DEPS_HCODE    += $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl)
 
-$(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
-$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
+$(eval $(IMAGE)_DEPS_REPORT    = $$($(IMAGE)_DEPS_HCODE))
+$(eval $(IMAGE)_DEPS_REPORT   += $$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
 
 # image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.ppmr_hdr,$$($(IMAGE)_DEPS_PPMR_HDR),$$($(IMAGE)_FILE_PPMR_HDR) 1))
@@ -78,35 +80,11 @@ $(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HC
 # create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 
-$(eval $(call BUILD_XIPIMAGE))
-endef
-
-define BUILD_PGPE_IMAGE_TEMP
-$(eval IMAGE=$1.pgpe_image)
-
-$(eval $(IMAGE)_PATH=$(IMAGEPATH)/pgpe_image)
-$(eval $(IMAGE)_LINK_SCRIPT=pgpe_image.cmd)
-$(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/pgpe_image/pgpe_image.o)
-$(eval pgpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
-
-# Files with multiple DD level content to be generated
-
-# Files to be appended to image
-
-# Dependencies for appending image sections in sequence:
-# - file to be appended
-# - all dependencies of previously appended sections or on raw image
-# - append operation as to other section that has to be finished first
-
-# image build using all files and serialised by dependencies
-
-# create image report for image with all files appended
-
-$(eval $(call BUILD_XIPIMAGE))
+$(eval $(call BUILD_XIPIMAGE,$$($(IMAGE)_DEPS_IMAGE)))
 endef
 
 $(eval MYCHIPS := $(filter-out ocmb,$(CHIPS)))
 
 $(foreach chip,$(MYCHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
-		$(eval $(call BUILD_PGPE_IMAGE_TEMP,$(chipId)))))
+		$(eval $(call BUILD_PGPE_IMAGE,$(chipId)))))
