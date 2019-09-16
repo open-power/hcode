@@ -108,17 +108,17 @@ uint32_t updateXgpeImage( FILE* i_fpXgpeImg, uint32_t i_imgSize )
     uint32_t l_rc       =   0;
     uint32_t l_tempVal  =   0;
     uint32_t headerFieldPos =
-        XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_xgpeHcodeLength);
+        XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_xgpe_hcodeLength);
     fseek( i_fpXgpeImg, headerFieldPos, SEEK_SET);
     l_tempVal       =   htonl(i_imgSize);
     fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXgpeImg );
 
-    headerFieldPos  =   XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_buildDate );
+    headerFieldPos  =   XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_xgpe_buildDate );
     fseek( i_fpXgpeImg, headerFieldPos, SEEK_SET);
     l_tempVal       =   htonl(getTime());
     fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXgpeImg );
 
-    headerFieldPos  =   XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_buildVer );
+    headerFieldPos  =   XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_xgpe_buildVer );
     fseek( i_fpXgpeImg, headerFieldPos, SEEK_SET);
     l_tempVal       =   htonl(XGPE_BUILD_VER);
     fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXgpeImg );
