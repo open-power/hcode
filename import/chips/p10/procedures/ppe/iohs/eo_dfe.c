@@ -39,7 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
-// mbs19072500 |mbs     | Removed several calls to set_debug_state to reduce code size
 // mbs19062700 |mbs     | HW493492 - Set DFE hysteresis values from 3/6 to 1/3 due to VDAC change
 // mbs19062500 |mbs     | HW493492 - Set DFE_FULL_H1_ADJ to 1 due to VDAC change
 // mbs19062000 |mbs     | HW493492 - Set DFE_FULL_H1_ADJ to 2
@@ -295,10 +294,9 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
     int32_t       l_ap          = eo_dfe_round(i_ap1 + i_ap0); // Average AP1 & AP0 = AP
     int32_t       l_new_clk_adj = 0;
     uint32_t      l_rc          = pass_code;
-    SET_DFE_DEBUG(0x7030);
-    //SET_DFE_DEBUG(0x7030, i_h1); // Enter DFE Calc Clk Adj
-    //SET_DFE_DEBUG(0x7030, i_ap1); // Enter DFE Calc Clk Adj
-    //SET_DFE_DEBUG(0x7030, i_ap0); // Enter DFE Calc Clk Adj
+    SET_DFE_DEBUG(0x7030, i_h1); // Enter DFE Calc Clk Adj
+    SET_DFE_DEBUG(0x7030, i_ap1); // Enter DFE Calc Clk Adj
+    SET_DFE_DEBUG(0x7030, i_ap0); // Enter DFE Calc Clk Adj
 
     // Never divide by ZERO
     if (l_ap == 0)
@@ -312,9 +310,9 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
         // Only allow the clock adjust to grow.
         // - This will prevent the DFE Values + Clk Adjust from oscillating
         l_new_clk_adj = div_uint32(mult_int16(K, i_h1), l_ap); // (K * i_h1) / l_ap
+        SET_DFE_DEBUG(0x7031, l_new_clk_adj); // Grow DFE Clock Adjust
+        SET_DFE_DEBUG(0x7031, *io_clk_adj); // Grow DFE Clock Adjust
 
-        //SET_DFE_DEBUG(0x7031, l_new_clk_adj); // Grow DFE Clock Adjust
-        //SET_DFE_DEBUG(0x7031, *io_clk_adj); // Grow DFE Clock Adjust
         if (l_new_clk_adj > *io_clk_adj)
         {
             *io_clk_adj = l_new_clk_adj;
@@ -340,7 +338,7 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
     mem_pl_field_put(rx_a_dfe_h1_done, lane, 0b1);//ppe pl
     mem_pl_field_put(rx_b_dfe_h1_done, lane, 0b1);//ppe pl
 
-    SET_DFE_DEBUG(0x7032);
+    SET_DFE_DEBUG(0x7302);
     return l_rc;
 }
 
@@ -357,8 +355,7 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
 static inline void rx_eo_dfe_set_clock_adj(t_gcr_addr* i_tgt, uint32_t i_pr_data[PR_DATA_SIZE], int32_t i_prev_clk_adj,
         int32_t i_new_clk_adj)
 {
-    SET_DFE_DEBUG(0x7040);
-    //SET_DFE_DEBUG(0x7040, i_new_clk_adj);
+    SET_DFE_DEBUG(0x7040, i_new_clk_adj);
 
     // Only apply new clock adjust if it has increased (never go smaller to prevent oscillations)
     if (i_new_clk_adj > i_prev_clk_adj)
@@ -437,14 +434,14 @@ static uint32_t rx_eo_dfe_fast_servo(t_gcr_addr* i_tgt, int32_t i_loff[4], int32
     SET_DFE_DEBUG(0x7020); // Enter DFE Fast Looper
 
     // Run Servo Ops
-    //SET_DFE_DEBUG(0x7021); // Run Servo Ops
+    SET_DFE_DEBUG(0x7021); // Run Servo Ops
 
     uint32_t servo_op_queue_empty         = get_ptr_field(i_tgt, rx_servo_op_queue_empty);
     uint32_t servo_op_queue_results_empty = get_ptr_field(i_tgt, rx_servo_result_queue_empty);
 
     if (servo_op_queue_empty == 0 || servo_op_queue_results_empty == 0 )
     {
-        //set_debug_state(0x702F);
+        set_debug_state(0x702F);
         set_fir(fir_code_warning);
         l_rc = warning_code;
         goto function_exit;
@@ -463,22 +460,22 @@ static uint32_t rx_eo_dfe_fast_servo(t_gcr_addr* i_tgt, int32_t i_loff[4], int32
     }
 
     // Remove latch offset from the measurements
-    //SET_DFE_DEBUG(0x7022); // Remove Latch Offsets from Servo Ops
+    SET_DFE_DEBUG(0x7022); // Remove Latch Offsets from Servo Ops
     l_servo_results[AP01010] -= i_loff[AP01010];
     l_servo_results[AP10010] -= i_loff[AP10010];
     l_servo_results[AP10110] -= i_loff[AP10110];
     l_servo_results[AP11010] -= i_loff[AP11010];
 
     // Use the AP measurements to pull out DFE coefficients
-    //SET_DFE_DEBUG(0x7023); // Calculate H1/H2/H3
+    SET_DFE_DEBUG(0x7023); // Calculate H1/H2/H3
     o_hvals[0] = eo_dfe_round(l_servo_results[AP10110] - l_servo_results[AP10010]);
     o_hvals[1] = eo_dfe_round(l_servo_results[AP11010] - l_servo_results[AP10010]);
     o_hvals[2] = eo_dfe_round(l_servo_results[AP11010] - l_servo_results[AP01010]);
-    //SET_DFE_DEBUG(0x7023, o_hvals[0]); // Calculate H1/H2/H3
-    //SET_DFE_DEBUG(0x7023, o_hvals[1]); // Calculate H1/H2/H3
-    //SET_DFE_DEBUG(0x7023, o_hvals[2]); // Calculate H1/H2/H3
+    SET_DFE_DEBUG(0x7023, o_hvals[0]); // Calculate H1/H2/H3
+    SET_DFE_DEBUG(0x7023, o_hvals[1]); // Calculate H1/H2/H3
+    SET_DFE_DEBUG(0x7023, o_hvals[2]); // Calculate H1/H2/H3
 
-    //SET_DFE_DEBUG(0x7024); // Calculate DFE Clock Adjust
+    SET_DFE_DEBUG(0x7024); // Calculate DFE Clock Adjust
     l_rc = rx_eo_dfe_calc_clk_adj(i_tgt, o_hvals[0], l_servo_results[AP10110], l_servo_results[AP10010], io_clk_adj);
 
 function_exit:
@@ -615,7 +612,7 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
 
     SET_DFE_DEBUG(0x7010); // Enter Full DFE
 
-    //SET_DFE_DEBUG(0x7011); // Initialize Settings
+    SET_DFE_DEBUG(0x7011); // Initialize Settings
     rx_eo_servo_setup(i_tgt, SERVO_SETUP_DFE_FULL);
 
     // Quadrant Loop
@@ -623,7 +620,7 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
 
     for (; l_quad <= QUAD_WEST; l_quad += 8)
     {
-        //SET_DFE_DEBUG(0x7012, l_quad); // Quadrant Loop
+        SET_DFE_DEBUG(0x7012, l_quad); // Quadrant Loop
         l_dac_addr = DAC_BASE_ADDR + (l_bank << 5) + l_quad;
 
         // Customize Servo Ops for Specific Quadrant and Bank
@@ -664,33 +661,33 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
 
         if (l_rc)
         {
-            //SET_DFE_DEBUG(0x701F); // DFE Recal Abort
+            SET_DFE_DEBUG(0x701F); // DFE Recal Abort
             goto function_exit;
         }
 
         // Calculate Result
         for (l_latch = L000; l_latch <= L111; ++l_latch)
         {
-            //SET_DFE_DEBUG(0x7014, l_latch); // Latch Loop
+            SET_DFE_DEBUG(0x7014, l_latch); // Latch Loop
 
             // Calculate Results :: DAC Value = (AP???10 - AN???01) / 2
-            //SET_DFE_DEBUG(0x7015, l_ap_results[l_latch]); // Calcualte DAC Value
-            //SET_DFE_DEBUG(0x7015, l_an_results[l_latch]); // Calcualte DAC Value
+            SET_DFE_DEBUG(0x7015, l_ap_results[l_latch]); // Calcualte DAC Value
+            SET_DFE_DEBUG(0x7015, l_an_results[l_latch]); // Calcualte DAC Value
             int32_t l_new_val = eo_dfe_round((int32_t)l_ap_results[l_latch] + (int32_t)l_an_results[l_latch]);
 
             // HW493492: This dfe full method tends to set DFE H1 a couple steps low.  So for LXX1 latches, add DFE_FULL_H1_ADJ,
             //           and for LXX0 latches, subtract DFE_FULL_H1_ADJ
             l_new_val = (l_latch & LXX1_MASK) ? (l_new_val + DFE_FULL_H1_ADJ) : (l_new_val - DFE_FULL_H1_ADJ);
 
-            //SET_DFE_DEBUG(0x7015, l_new_val); // Calcualte DAC Value
+            SET_DFE_DEBUG(0x7015, l_new_val); // Calcualte DAC Value
 
             // Get the previous value of the hw dac
             int32_t l_prev_val = (int32_t)l_dac_array[l_latch];
 
             // Apply a hysteresis to account for uncertainty of servo ops
-            //SET_DFE_DEBUG(0x7016, l_prev_val); // Apply Hysteresis
+            SET_DFE_DEBUG(0x7016, l_prev_val); // Apply Hysteresis
             l_new_val = rx_eo_dfe_hysteresis(l_new_val, l_prev_val, recal);
-            //SET_DFE_DEBUG(0x7016, l_new_val); // Apply Hysteresis
+            SET_DFE_DEBUG(0x7016, l_new_val); // Apply Hysteresis
 
             l_new_val = rx_eo_dfe_check_dac_limits(i_tgt, (l_dac_addr + l_latch), l_new_val);
 
@@ -698,12 +695,12 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
             {
                 // Convert to dac format
                 int32_t l_dac_val = IntToLatchDac(l_new_val);
-                //SET_DFE_DEBUG(0x7017, l_dac_val); // Update Latch Dac
+                SET_DFE_DEBUG(0x7017, l_dac_val); // Update Latch Dac
                 put_ptr_fast(i_tgt, (l_dac_addr + l_latch), DAC_ENDBIT, l_dac_val);
             }
             else
             {
-                //SET_DFE_DEBUG(0x7018, 0x0); // Update Latch Dac
+                SET_DFE_DEBUG(0x7018, 0x0); // Update Latch Dac
             }
 
             //
@@ -738,7 +735,7 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
 
     }
 
-    //SET_DFE_DEBUG(0x7019); // Restore Settings
+    SET_DFE_DEBUG(0x7019); // Restore Settings
 
 function_exit:
     SET_DFE_DEBUG(0x701A); // Exit Full DFE
@@ -771,10 +768,10 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
     SET_DFE_DEBUG(0x7000); // Enter DFE Fast
 
 
-    //SET_DFE_DEBUG(0x7001); // Set Initialize Settings
+    SET_DFE_DEBUG(0x7001); // Set Initialize Settings
     rx_eo_servo_setup(i_tgt, SERVO_SETUP_DFE_FAST);
 
-    //SET_DFE_DEBUG(0x7002); // Read Prior PR & Latch DAC Loff Data
+    SET_DFE_DEBUG(0x7002); // Read Prior PR & Latch DAC Loff Data
     rx_eo_dfe_get_mini_pr(i_tgt, l_pr_data);
     rx_eo_dfe_read_loff(i_tgt, l_loff_array);
     l_loff_servo[0] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L010)];
@@ -785,9 +782,9 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
 
     for (l_iter = 0; l_iter < MAX_ITERATIONS; ++l_iter)
     {
-        //SET_DFE_DEBUG(0x7003, l_iter); // Iteration Loop
+        SET_DFE_DEBUG(0x7003, l_iter); // Iteration Loop
 
-        //SET_DFE_DEBUG(0x7004); // DFE Fast Loop
+        SET_DFE_DEBUG(0x7004); // DFE Fast Loop
         l_h1_vals[1] = l_h1_vals[0]; // [1] is previous H1 value calculation
         l_clk_adj[1] = l_clk_adj[0];
         l_rc = rx_eo_dfe_fast_servo(i_tgt, l_loff_servo, l_hvals, &l_clk_adj[0]);
@@ -801,24 +798,25 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
         rx_eo_dfe_check_hvals(i_tgt, l_hvals);
         rx_eo_dfe_fast_apply(i_tgt, l_loff_array, l_hvals);
 
-        //SET_DFE_DEBUG(0x7005); // Set DFE Clock Adjust
+        SET_DFE_DEBUG(0x7005); // Set DFE Clock Adjust
         rx_eo_dfe_set_clock_adj(i_tgt, l_pr_data, l_clk_adj[1], l_clk_adj[0]);
 
         // DFE convergence criteria
         // - Skip on the first iteration as there is no previous data to compare to.
         // - Break if DFE H1 Coefs are within bounds on back to back iterations
-        //SET_DFE_DEBUG(0x7006, l_h1_vals[0]); // DFE Convergence
-        //SET_DFE_DEBUG(0x7006, l_h1_vals[1]); // DFE Convergence
+        SET_DFE_DEBUG(0x7006, l_h1_vals[0]); // DFE Convergence
+        SET_DFE_DEBUG(0x7006, l_h1_vals[1]); // DFE Convergence
+
         if (l_iter != 0 && (abs(l_h1_vals[0] - l_h1_vals[1]) <= CONVERGENCE_LIMIT))
         {
-            //SET_DFE_DEBUG(0x7007); // DFE Converged
+            SET_DFE_DEBUG(0x7007); // DFE Converged
             break;
         }
     }
 
     if (l_iter >= MAX_ITERATIONS)
     {
-        //SET_DFE_DEBUG(0x7008); // DFE Max Iterations
+        SET_DFE_DEBUG(0x7008); // DFE Max Iterations
 
         // TODO Log this error and we can save the bad_dfe_conv bits
         mem_pl_field_put(rx_a_bad_dfe_conv, get_gcr_addr_lane(i_tgt), 1);
@@ -828,7 +826,7 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
     }
 
 function_exit:
-    //SET_DFE_DEBUG(0x7009); // Restore Settings
+    SET_DFE_DEBUG(0x7009); // Restore Settings
     //rx_eo_dfe_restore_mini_pr(i_tgt, l_pr_data);
 
     SET_DFE_DEBUG(0x700A); // Exit DFE Fast

@@ -39,8 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
-// mwh19073000 |mwh     | removed todo commints related to psave
-// mwh19072600 |mwh     | removed tx_lane_pdwn and replaced with tx_bank_controls
 // mwh19062100 | mwh    | Corrected spell error in rx_ab_bank_controls_alias
 // mwh19062100 | mwh    | changed io_lane_power_off/on back to non-inline function
 // cws19061800 |cws     | Updated PPE FW API
@@ -201,11 +199,13 @@ void io_lane_power_on(t_gcr_addr* gcr_addr)
 {
     // TX Registers
     set_gcr_addr_reg_id(gcr_addr, tx_group);
-    put_ptr_field(gcr_addr, tx_bank_controls,        0b000000, read_modify_write); //pl  power up circuit all
+    put_ptr_field(gcr_addr, tx_lane_pdwn,        0b0,
+                  read_modify_write); //pl  // TODO: Replace with bank_controls? MBS 052319
 
     // RX Registers
     set_gcr_addr_reg_id(gcr_addr, rx_group);
-    put_ptr_field(gcr_addr, rx_ab_bank_controls_alias , 0b0000000000000000,  fast_write); //pl power up circuit all
+    put_ptr_field(gcr_addr, rx_ab_bank_controls_alias , 0b0000000000000000,
+                  fast_write); //pl  // TODO: Replace with bank_controls? MBS 052319
     put_ptr_field(gcr_addr, rx_hold_div_clks_ab_alias,  0b00,
                   read_modify_write); //pl Deassert to sync c16 and c32 clocks (initializes to 1)
     put_ptr_field(gcr_addr, rx_dl_clk_en,               0b1,  read_modify_write); //pl Enable clock to DL
@@ -216,12 +216,14 @@ void io_lane_power_off(t_gcr_addr* gcr_addr)
 {
     // TX Registers
     set_gcr_addr_reg_id(gcr_addr, tx_group);
-    put_ptr_field(gcr_addr, tx_bank_controls,        0b111111, read_modify_write); //pl power down circuit all
+    put_ptr_field(gcr_addr, tx_lane_pdwn,        0b1,
+                  read_modify_write); //pl  // TODO: Replace with bank_controls? MBS 052319
 
     // RX Registers
     set_gcr_addr_reg_id(gcr_addr, rx_group);
     put_ptr_field(gcr_addr, rx_dl_clk_en,               0b0,  read_modify_write); //pl Disable clock to DL
     put_ptr_field(gcr_addr, rx_hold_div_clks_ab_alias,  0b11,
                   read_modify_write); //pl Assert hold_div_clock to freeze c16 and c32
-    put_ptr_field(gcr_addr, rx_ab_bank_controls_alias , 0b1111111111110000,  fast_write); //pl  power down circuit all
+    put_ptr_field(gcr_addr, rx_ab_bank_controls_alias , 0b1111111111110000,
+                  fast_write); //pl  // TODO: Replace with bank_controls? MBS 052319
 } //io_lane_power_off

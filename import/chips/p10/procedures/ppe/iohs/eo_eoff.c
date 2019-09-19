@@ -41,7 +41,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
-// mbs19072500 |mbs     | Added loff_setting_ovr_enb
 // mwh19051700 |mwh     | HW492097 Change inc/dec for loff and eoff for change in step 4.6
 // vbr19051400 |vbr     | HW491892: Change VDAC from 9-bit SM to 8-bit twos_comp
 // mwh19043000 |mwh     | add set_fir(fir_code_dft_error);
@@ -144,44 +143,36 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
         //turn on her but turned off in dccal latch offset code
         put_ptr_field(gcr_addr, rx_loff_livedge_mode, 0b1, read_modify_write);//livedge off mode
 
-
-        // Switch for sim or lab to disable settings overrides
-        int loff_setting_ovr = mem_regs_u16_get(pg_addr(loff_setting_ovr_enb_addr), loff_setting_ovr_enb_mask,
-                                                loff_setting_ovr_enb_shift);
-
-        if ( loff_setting_ovr == 0)
+        if (recal)
         {
-            if (recal)
-            {
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b000, read_modify_write);
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b000, read_modify_write);
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b000, read_modify_write);
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);
-                set_debug_state(0xA002);
-            }
-            else
-            {
-                //eoff loff
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b011, read_modify_write);  // 3    4
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b010, read_modify_write);  // 2    2
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b001, read_modify_write);  // 1    2
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);  // 0    0
-                set_debug_state(0xA003);
-            }
-
-
-            //old filter failing 1,4,5,7                                                 //eoff loff
-            put_ptr_field(gcr_addr, rx_loff_filter_depth0, 0b0001, read_modify_write);// 3    3
-            put_ptr_field(gcr_addr, rx_loff_filter_depth1, 0b0100, read_modify_write);// 4    3
-            put_ptr_field(gcr_addr, rx_loff_filter_depth2, 0b0101, read_modify_write);// 5    3
-            put_ptr_field(gcr_addr, rx_loff_filter_depth3, 0b1000, read_modify_write);// 8    4
-
-            //change vs dccal latch offset = 5
-            put_ptr_field(gcr_addr, rx_loff_hyst_start, 0b00100, read_modify_write);
-
-
-            put_ptr_field(gcr_addr, rx_loff_timeout, 0b0110, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b000, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b000, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b000, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);
+            set_debug_state(0xA002);
         }
+        else
+        {
+            //eoff loff
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b011, read_modify_write);  // 3    4
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b010, read_modify_write);  // 2    2
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b001, read_modify_write);  // 1    2
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);  // 0    0
+            set_debug_state(0xA003);
+        }
+
+
+        //old filter failing 1,4,5,7                                                 //eoff loff
+        put_ptr_field(gcr_addr, rx_loff_filter_depth0, 0b0001, read_modify_write);// 3    3
+        put_ptr_field(gcr_addr, rx_loff_filter_depth1, 0b0100, read_modify_write);// 4    3
+        put_ptr_field(gcr_addr, rx_loff_filter_depth2, 0b0101, read_modify_write);// 5    3
+        put_ptr_field(gcr_addr, rx_loff_filter_depth3, 0b1000, read_modify_write);// 8    4
+
+        //change vs dccal latch offset = 5
+        put_ptr_field(gcr_addr, rx_loff_hyst_start, 0b00100, read_modify_write);
+
+
+        put_ptr_field(gcr_addr, rx_loff_timeout, 0b0110, read_modify_write);
 
         if (bank == bank_a )
         {

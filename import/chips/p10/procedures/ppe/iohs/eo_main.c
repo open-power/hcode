@@ -39,8 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
-// vbr19080900 |vbr     | HW499874: Move EOFF to back before bank sync in init.
-// mbs19072500 |mbs     | Modified vga loop so that it will quit after the first iteration if rx_eo_converged_end_count is 0 or 1
 // vbr19072202 |vbr     | Fix setting of tx_group in recal.
 // vbr19072201 |vbr     | Minor refactoring and potential hang fix.
 // vbr19072200 |vbr     | HW493618: Split recal into RX/TX functions and only run each when not in psave.
@@ -472,7 +470,11 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         // Keep running if settings (gain/peak/lte) changed, but limit the number of loops.
         vga_loop_count = vga_loop_count + 1;
 
-        if (first_loop_iteration || gain_changed || peak_changed || lte_changed || quad_adjust_changed)
+        if (first_loop_iteration)
+        {
+            run_vga_loop = true;
+        }
+        else if (gain_changed || peak_changed || lte_changed || quad_adjust_changed)
         {
             unsigned int converged_cnt_max = mem_pg_field_get(rx_eo_converged_end_count);
 
@@ -498,25 +500,6 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     // Perorm Check of VGA, CTLE, LTE, and QPA values--part of bist
     eo_vclq_checks(gcr_addr, bank_a);
 
-    // Cal Step: Edge Offset (Live Data) on Bank B
-    int eoff_enable = mem_pg_field_get(rx_eo_enable_edge_offset_cal);
-
-    if (eoff_enable)
-    {
-        // Safely switch to bank_b without changing dl_clk_sel_a to avoid DL clock chopping (HW485000)
-        put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // turn off cal lane sel
-        put_ptr_field(gcr_addr, rx_bank_rlmclk_sel_a_alias, cal_bank_to_bank_rlmclk_sel_a(bank_b), read_modify_write);
-        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
-
-        bool recal = false;
-        eo_eoff(gcr_addr, recal, 0, bank_b); // vga_loop_count = 0
-
-        // Safely switch to bank_a
-        put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // turn off cal lane sel
-        set_cal_bank(gcr_addr, bank_a);// Set Bank B as Main, Bank A as Alt (cal_bank)
-        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
-    }
-
     // Perform Bank A/B UI Alignment by bumping alt bank
     // Requires edge tracking (master mode)
     int bank_sync_enable = mem_pg_field_get(rx_eo_enable_bank_sync);
@@ -525,6 +508,25 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     {
         align_bank_ui(gcr_addr, bank_a);
     }
+
+    //see cq485000 moved here to avoid chopping clock
+    int eoff_enable = mem_pg_field_get(rx_eo_enable_edge_offset_cal);
+
+    if (eoff_enable)
+    {
+        // Safely switch to bank_b
+        put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // turn off cal lane sel
+        set_cal_bank(gcr_addr, bank_b); // Set Bank A as Main, Bank B as Alt (cal_bank)
+        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
+
+        //hardcoding input to match init.  recal=false vga_loop_count = 0
+        eo_eoff(gcr_addr, false, 0, bank_b);
+
+        // Safely switch to bank_a
+        put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write); // turn off cal lane sel
+        set_cal_bank(gcr_addr, bank_a);// Set Bank B as Main, Bank A as Alt (cal_bank)
+        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
+    }//if eoff_enable
 
     // Put Alt (Cal) bank into CDR Slave mode for DFE Amp Measurements and DDC
     put_ptr_field(gcr_addr, rx_pr_slave_mode_a, 0b1, read_modify_write);

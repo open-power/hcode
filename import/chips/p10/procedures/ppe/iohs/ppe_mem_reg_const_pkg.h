@@ -38,14 +38,6 @@
 
 
 
-#define amp_setting_ovr_enb_addr                   0b110100000
-#define amp_setting_ovr_enb_startbit               10
-#define amp_setting_ovr_enb_width                  1
-#define amp_setting_ovr_enb_endbit                 10
-#define amp_setting_ovr_enb_shift                  5
-#define amp_setting_ovr_enb_mask                   0x20
-
-
 #define dac_test_ppe_done_addr                     0b110110100
 #define dac_test_ppe_done_startbit                 8
 #define dac_test_ppe_done_width                    1
@@ -820,14 +812,6 @@
 #define rx_ddc_last_right_edge_endbit              14
 #define rx_ddc_last_right_edge_shift               1
 #define rx_ddc_last_right_edge_mask                0x3e
-
-
-#define rx_ddc_measure_limited_addr                0b000000100
-#define rx_ddc_measure_limited_startbit            12
-#define rx_ddc_measure_limited_width               1
-#define rx_ddc_measure_limited_endbit              12
-#define rx_ddc_measure_limited_shift               3
-#define rx_ddc_measure_limited_mask                0x8
 
 
 #define rx_ddc_min_err_lim_addr                    0b110001110

@@ -40,8 +40,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
-// jfg19071800 |jfg     | HW497599 prevent async hazard when changing berpl_thresh
-// jfg19071800 |jfg     | HW496621 Add status indicator for lack of mini-PR steps when seeking edges.
 // jfg19062400 |jfg     | moved single stepping wrapper function down into nedge_seek_step so use original
 // vbr19061200 |vbr     | HW492354/HW492202 - With Mini PR gray coding, can only move Mini PR 1 step at at time.
 // jfg19061700 |jfg     | Enhance Eye search with extra double step correction into error free window if too many errors
@@ -298,15 +296,10 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
     bool revSeekDir = !seekdir;
     int ber_status;
     int ber_lim = (ber_count == 1) ? 1 : ber_count >> 1;
-    int lane = get_gcr_addr_lane(gcr_addr);
 
     *ber_reported = 0;
-    //Disable then enable BER
-    put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 0, read_modify_write);
     //Initialize sat_thresh to max value to begin error search
     put_ptr_fast(gcr_addr, rx_berpl_sat_thresh_addr, rx_berpl_sat_thresh_endbit, ber_lim);
-    put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 1, read_modify_write);
-
     // Reset the timer to long timeout and start edge search
     put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_long,
             read_modify_write);
@@ -325,7 +318,6 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
     {
         // If MAX EYE is reached while < ber_count it means that quad phase balancing is not possible nor required due to huge eye or other error.
         //TODO-SKIP put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_final, read_modify_write);
-        mem_pl_field_put(rx_ddc_measure_limited, 1, lane);
         set_debug_state(0x8012 ); // DEBUG max eye check
     }
     else
@@ -345,15 +337,11 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
 
         t_seek seek_quad = noseekEW;
 
-        //Disable then enable BER
-        put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 0, read_modify_write);
-
         // The threshold reset is placed here to allow for the previous step reduction to move the sample out of the fuzz
         // It also keeps the register write outside of the phase loop
         put_ptr_fast(gcr_addr, rx_berpl_sat_thresh_addr, rx_berpl_sat_thresh_endbit, (0x1 << rx_berpl_sat_thresh_width) - 1 );
         put_ptr(gcr_addr, rx_berpl_mask_mode_addr, rx_berpl_mask_mode_startbit, rx_berpl_mask_mode_endbit, 1,
                 read_modify_write);
-        put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 1, read_modify_write);
 
         do
         {
@@ -388,7 +376,6 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
             {
                 // In this case, simply remove one step for margin to ensure no errors and exit with a large eye measurement.
                 *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, seek_quad, pr_vals);//, ber_count
-                mem_pl_field_put(rx_ddc_measure_limited, 1, lane);
             }
             else
             {
@@ -561,7 +548,6 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
     //put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_endbit, ber_sel,);
     // WO kickoff for checker A reset
     put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
-    mem_pl_field_put(rx_ddc_measure_limited, 0, lane); //Clear out any prior bad measurement indicator.
 
     set_debug_state(0x8001); // DEBUG - DDC Setup
 

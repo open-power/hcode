@@ -39,7 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
-// vbr19080900 |vbr     | Added macro to return just the bank_sel_a/rlm_clk_sel_a values
 // vbr19060300 |vbr     | HW486157/HW492011: Added DL/RLM clock_sel to set_cal_bank()
 // mbs10051600 |mbs     | HW491617: Separated servo setup for dfe_fast and dfe_full
 // vbr19012200 |vbr     | Only check recal abort when init_done.
@@ -133,7 +132,6 @@ typedef enum
 //   When Cal A: use B for main data, A for alt data. bank_sel_a=0; rlm_clk_sel_a=1; dl_clk_sel_a=0.
 //   When Cal B: use A for main data, B for alt data. bank_sel_a=1; rlm_clk_sel_a=0; dl_clk_sel_a=1.
 #define cal_bank_to_bank_rlmclk_dlclk_sel_a(cal_bank) ((cal_bank))
-#define cal_bank_to_bank_rlmclk_sel_a(cal_bank) ((cal_bank) >> 1)
 
 // Phase rotator size constants
 #define pr_mini_min 0x00
