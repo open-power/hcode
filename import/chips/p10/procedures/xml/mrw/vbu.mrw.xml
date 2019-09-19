@@ -1,0 +1,3089 @@
+<!-- IBM_PROLOG_BEGIN_TAG                                                   -->
+<!-- This is an automatically generated prolog.                             -->
+<!--                                                                        -->
+<!-- $Source: import/chips/p10/procedures/xml/mrw/vbu.mrw.xml $             -->
+<!--                                                                        -->
+<!-- OpenPOWER EKB Project                                                  -->
+<!--                                                                        -->
+<!-- COPYRIGHT 2019                                                         -->
+<!-- [+] International Business Machines Corp.                              -->
+<!--                                                                        -->
+<!--                                                                        -->
+<!-- Licensed under the Apache License, Version 2.0 (the "License");        -->
+<!-- you may not use this file except in compliance with the License.       -->
+<!-- You may obtain a copy of the License at                                -->
+<!--                                                                        -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                         -->
+<!--                                                                        -->
+<!-- Unless required by applicable law or agreed to in writing, software    -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,      -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        -->
+<!-- implied. See the License for the specific language governing           -->
+<!-- permissions and limitations under the License.                         -->
+<!--                                                                        -->
+<!-- IBM_PROLOG_END_TAG                                                     -->
+<!-- =================================================================
+     MRW values for P10 VBU system.
+     ================================================================= -->
+
+<attributes>
+
+<!-- Version -->
+<version>1.0.0</version>
+
+<!-- ####################################################### -->
+<!--                         System                          -->
+<!-- ####################################################### -->
+<targetInstance>
+  <id>sys0</id>
+  <type>sys-sys-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>k0</default>
+	</attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_PAU_MHZ</id>
+     <default>0x960</default>
+  </attribute>
+  <attribute>
+     <id>MAX_ALLOWED_DIMM_FREQ</id>
+     <default>0xC80,0xC80,0xC80,0xC80,0xC80</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_SYSTEM_CORE_FLOOR_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_SYSTEM_CORE_CEILING_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CYCLE_COUNT</id>
+     <default>1024</default>
+  </attribute>
+  <attribute>
+     <id>PROC_FABRIC_TOPOLOGY_MODE</id>
+     <default>MODE0</default>
+  </attribute>
+  <attribute>
+     <id>PROC_FABRIC_BROADCAST_MODE</id>
+     <default>1HOP_CHIP_IS_GROUP</default>
+  </attribute>
+  <attribute>
+     <id>MRW_HW_MIRRORING_ENABLE</id>
+     <default>REQUIRED</default>
+  </attribute>
+  <attribute>
+     <id>PROC_EPS_TABLE_TYPE</id>
+     <default>EPS_TYPE_LE</default>
+  </attribute>
+</targetInstance>
+
+<!-- ####################################################### -->
+<!--                         Nodes                           -->
+<!-- ####################################################### -->
+<!-- System/Node0 -->
+<targetInstance>
+  <id>sys0node0</id>
+  <type>enc-node-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>k0:n0</default>
+	</attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>0</default>
+  </attribute>
+  <attribute>
+     <id>INSTANCE_PATH</id>
+     <default>instance:sys</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0</default>
+  </attribute>
+  <attribute>
+     <id>TYPE</id>
+     <default>NODE</default>
+  </attribute>
+</targetInstance>
+
+<!-- ####################################################### -->
+<!--                    Processor chips                      -->
+<!-- ####################################################### -->
+<!-- System/Node0/proc0 -->
+<targetInstance>
+  <id>sys0node0proc0</id>
+  <type>chip-processor-p10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu:k0:n0:s0:p00</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>0</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_CORE_CEILING_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_CORE_FLOOR_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_CORE_BOOT_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>I2C_BUS_DIV_REF</id>
+     <default>0x01</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_OMI_MHZ</id>
+     <default>0x6400</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CHIP_CYCLE_OFFSET</id>
+     <default>51200</default>
+  </attribute>
+  <attribute>
+     <id>PROC_FABRIC_TOPOLOGY_ID</id>
+     <default>0x0</default>
+  </attribute>
+  <attribute>
+     <id>PROC_FABRIC_EFF_TOPOLOGY_ID</id>
+     <default>0x0</default>
+  </attribute>
+  <attribute>
+     <id>PROC_FABRIC_SL_DOMAIN</id>
+     <default>CHIP</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1 -->
+<targetInstance>
+  <id>sys0node0proc1</id>
+  <type>chip-processor-p10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu:k0:n0:s0:p01</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1</default>
+  </attribute>  <attribute>
+     <id>FAPI_POS</id>
+     <default>1</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_CORE_CEILING_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_CORE_FLOOR_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_CORE_BOOT_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>I2C_BUS_DIV_REF</id>
+     <default>0x01</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_OMI_MHZ</id>
+     <default>0x6400</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CHIP_CYCLE_OFFSET</id>
+     <default>51200</default>
+  </attribute>
+  <attribute>
+     <id>PROC_FABRIC_TOPOLOGY_ID</id>
+     <default>0x0</default>
+  </attribute>
+  <attribute>
+     <id>PROC_FABRIC_EFF_TOPOLOGY_ID</id>
+     <default>0x0</default>
+  </attribute>
+  <attribute>
+     <id>PROC_FABRIC_SL_DOMAIN</id>
+     <default>CHIP</default>
+  </attribute>
+</targetInstance>
+
+<!-- ####################################################### -->
+<!--                 Memory controllers (MCs)                -->
+<!-- ####################################################### -->
+<!-- System/Node0/proc0/mc0 -->
+<targetInstance>
+  <id>sys0node0proc0mc0</id>
+  <type>unit-mc-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.mc:k0:n0:s0:p00:c0</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/mc-0</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/mc-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>0</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_MC_MHZ</id>
+     <default>0x640</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/mc1 -->
+<targetInstance>
+  <id>sys0node0proc0mc1</id>
+  <type>unit-mc-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.mc:k0:n0:s0:p00:c1</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/mc-1</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/mc-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>1</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_MC_MHZ</id>
+     <default>0x640</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/mc2 -->
+<targetInstance>
+  <id>sys0node0proc0mc2</id>
+  <type>unit-mc-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.mc:k0:n0:s0:p00:c2</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/mc-2</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/mc-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>2</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_MC_MHZ</id>
+     <default>0x640</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/mc3 -->
+<targetInstance>
+  <id>sys0node0proc0mc3</id>
+  <type>unit-mc-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.mc:k0:n0:s0:p00:c3</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/mc-3</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/mc-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>3</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_MC_MHZ</id>
+     <default>0x640</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/mc0 -->
+<targetInstance>
+  <id>sys0node0proc1mc0</id>
+  <type>unit-mc-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.mc:k0:n0:s0:p01:c0</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/mc-0</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/mc-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>4</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_MC_MHZ</id>
+     <default>0x640</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/mc1 -->
+<targetInstance>
+  <id>sys0node0proc1mc1</id>
+  <type>unit-mc-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.mc:k0:n0:s0:p01:c1</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/mc-1</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/mc-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>5</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_MC_MHZ</id>
+     <default>0x640</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/mc2 -->
+<targetInstance>
+  <id>sys0node0proc1mc2</id>
+  <type>unit-mc-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.mc:k0:n0:s0:p01:c2</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/mc-2</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/mc-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>6</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_MC_MHZ</id>
+     <default>0x640</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/mc3 -->
+<targetInstance>
+  <id>sys0node0proc1mc3</id>
+  <type>unit-mc-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.mc:k0:n0:s0:p01:c3</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/mc-3</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/mc-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>7</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_MC_MHZ</id>
+     <default>0x640</default>
+  </attribute>
+</targetInstance>
+
+<!-- ####################################################### -->
+<!--                 IO High Speed (IOHS)                    -->
+<!-- ####################################################### -->
+<!-- System/Node0/proc0/iohs0 -->
+<targetInstance>
+  <id>sys0node0proc0iohs0</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p00:c0</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/iohs-0</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/iohs-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>0</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/iohs1 -->
+<targetInstance>
+  <id>sys0node0proc0iohs1</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p00:c1</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/iohs-1</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/iohs-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>1</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/iohs2 -->
+<targetInstance>
+  <id>sys0node0proc0iohs2</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p00:c2</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/iohs-2</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/iohs-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>2</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/iohs3 -->
+<targetInstance>
+  <id>sys0node0proc0iohs3</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p00:c3</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/iohs-3</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/iohs-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>3</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/iohs4 -->
+<targetInstance>
+  <id>sys0node0proc0iohs4</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p00:c4</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/iohs-4</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/iohs-4</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>4</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/iohs5 -->
+<targetInstance>
+  <id>sys0node0proc0iohs5</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p00:c5</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/iohs-5</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/iohs-5</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>5</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/iohs6 -->
+<targetInstance>
+  <id>sys0node0proc0iohs6</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p00:c6</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/iohs-6</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/iohs-6</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>6</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/iohs7 -->
+<targetInstance>
+  <id>sys0node0proc0iohs7</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p00:c7</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/iohs-7</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/iohs-7</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>7</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/iohs0 -->
+<targetInstance>
+  <id>sys0node0proc1iohs0</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p01:c0</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/iohs-0</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/iohs-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>8</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/iohs1 -->
+<targetInstance>
+  <id>sys0node0proc1iohs1</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p01:c1</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/iohs-1</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/iohs-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>9</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/iohs2 -->
+<targetInstance>
+  <id>sys0node0proc1iohs2</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p01:c2</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/iohs-2</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/iohs-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>10</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/iohs3 -->
+<targetInstance>
+  <id>sys0node0proc1iohs3</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p01:c3</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/iohs-3</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/iohs-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>11</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/iohs4 -->
+<targetInstance>
+  <id>sys0node0proc1iohs4</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p01:c4</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/iohs-4</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/iohs-4</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>12</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/iohs5 -->
+<targetInstance>
+  <id>sys0node0proc1iohs5</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p01:c5</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/iohs-5</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/iohs-5</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>13</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/iohs6 -->
+<targetInstance>
+  <id>sys0node0proc1iohs6</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p01:c6</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/iohs-6</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/iohs-6</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>14</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/iohs7 -->
+<targetInstance>
+  <id>sys0node0proc1iohs7</id>
+  <type>unit-iohs-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.iohs:k0:n0:s0:p01:c7</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/iohs-7</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/iohs-7</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>15</default>
+  </attribute>
+  <attribute>
+     <id>FREQ_IOHS_MHZ</id>
+     <default>0x7D0</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_CONFIG_MODE</id>
+     <default>NV</default>
+  </attribute>
+  <attribute>
+     <id>IOHS_DRAWER_INTERCONNECT</id>
+     <default>FALSE</default>
+  </attribute>
+</targetInstance>
+
+<!-- ####################################################### -->
+<!--                    Quads (EQs)                          -->
+<!-- ####################################################### -->
+<!-- System/Node0/proc0/eq0 -->
+<targetInstance>
+  <id>sys0node0proc0eq0</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p00:c0</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-0</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/eq-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>0</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq1 -->
+<targetInstance>
+  <id>sys0node0proc0eq1</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p00:c1</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-1</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/eq-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>1</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq2 -->
+<targetInstance>
+  <id>sys0node0proc0eq2</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p00:c2</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-2</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/eq-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>2</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq3 -->
+<targetInstance>
+  <id>sys0node0proc0eq3</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p00:c3</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-3</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/eq-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>3</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq4 -->
+<targetInstance>
+  <id>sys0node0proc0eq4</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p00:c4</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-4</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/eq-4</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>4</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq5 -->
+<targetInstance>
+  <id>sys0node0proc0eq5</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p00:c5</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/eq-5</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-5</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>5</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq6 -->
+<targetInstance>
+  <id>sys0node0proc0eq6</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p00:c6</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-6</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/eq-6</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>6</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq7 -->
+<targetInstance>
+  <id>sys0node0proc0eq7</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p00:c7</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-7</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-0/eq-7</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>7</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq0 -->
+<targetInstance>
+  <id>sys0node0proc1eq0</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p01:c0</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-0</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/eq-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>8</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq1 -->
+<targetInstance>
+  <id>sys0node0proc1eq1</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p01:c1</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-1</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/eq-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>9</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq2 -->
+<targetInstance>
+  <id>sys0node0proc1eq2</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p01:c2</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-2</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/eq-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>10</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq3 -->
+<targetInstance>
+  <id>sys0node0proc1eq3</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p01:c3</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-3</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/eq-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>11</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq4 -->
+<targetInstance>
+  <id>sys0node0proc1eq4</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p01:c4</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-4</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/eq-4</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>12</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq5 -->
+<targetInstance>
+  <id>sys0node0proc1eq5</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p01:c5</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/eq-5</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-5</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>13</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq6 -->
+<targetInstance>
+  <id>sys0node0proc1eq6</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p01:c6</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-6</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/eq-6</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>14</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq7 -->
+<targetInstance>
+  <id>sys0node0proc1eq7</id>
+  <type>unit-eq-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.eq:k0:n0:s0:p01:c7</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-7</default>
+  </attribute>
+  <attribute>
+     <id>AFFINITY_PATH</id>
+     <default>affinity:sys-0/node-0/proc-1/eq-7</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>15</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_QUAD_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- ####################################################### -->
+<!--                     Cores                               -->
+<!-- ####################################################### -->
+<!-- System/Node0/proc0/eq0/core0 -->
+<targetInstance>
+  <id>sys0node0proc0eq0core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c0</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-0/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-0/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>0</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq0/core1 -->
+<targetInstance>
+  <id>sys0node0proc0eq0core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c1</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-0/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-0/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>1</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq0/core2 -->
+<targetInstance>
+  <id>sys0node0proc0eq0core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c2</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-0/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-0/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>2</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq0/core3 -->
+<targetInstance>
+  <id>sys0node0proc0eq0core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c3</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-0/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-0/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>3</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq1/core0 -->
+<targetInstance>
+  <id>sys0node0proc0eq1core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c4</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-1/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-1/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>4</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq1/core1 -->
+<targetInstance>
+  <id>sys0node0proc0eq1core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c5</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-1/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-1/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>5</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq1/core2 -->
+<targetInstance>
+  <id>sys0node0proc0eq1core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c6</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-1/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-1/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>6</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq1/core3 -->
+<targetInstance>
+  <id>sys0node0proc0eq1core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c7</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-1/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-1/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>7</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq2/core0 -->
+<targetInstance>
+  <id>sys0node0proc0eq2core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c8</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-2/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-2/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>8</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq2/core1 -->
+<targetInstance>
+  <id>sys0node0proc0eq2core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c9</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-2/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-2/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>9</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq2/core2 -->
+<targetInstance>
+  <id>sys0node0proc0eq2core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c10</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-2/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-2/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>10</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq2/core3 -->
+<targetInstance>
+  <id>sys0node0proc0eq2core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c11</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-2/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-2/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>11</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq3/core0 -->
+<targetInstance>
+  <id>sys0node0proc0eq3core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c12</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-3/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-3/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>12</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq3/core1 -->
+<targetInstance>
+  <id>sys0node0proc0eq3core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c13</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-3/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-3/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>13</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq3/core2 -->
+<targetInstance>
+  <id>sys0node0proc0eq3core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c14</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-3/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-3/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>14</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq3/core3 -->
+<targetInstance>
+  <id>sys0node0proc0eq3core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c15</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-3/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-3/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>15</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq4/core0 -->
+<targetInstance>
+  <id>sys0node0proc0eq4core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c16</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-4/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-4/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>16</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq4/core1 -->
+<targetInstance>
+  <id>sys0node0proc0eq4core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c17</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-4/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-4/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>17</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq4/core2 -->
+<targetInstance>
+  <id>sys0node0proc0eq4core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c18</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-4/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-4/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>18</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq4/core3 -->
+<targetInstance>
+  <id>sys0node0proc0eq4core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c19</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-4/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-4/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>19</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq5/core0 -->
+<targetInstance>
+  <id>sys0node0proc0eq5core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c20</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-5/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-5/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>20</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq5/core1 -->
+<targetInstance>
+  <id>sys0node0proc0eq5core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c21</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-5/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-5/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>21</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq5/core2 -->
+<targetInstance>
+  <id>sys0node0proc0eq5core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c22</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-5/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-5/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>22</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq5/core3 -->
+<targetInstance>
+  <id>sys0node0proc0eq5core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c23</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-5/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-5/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>23</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq6/core0 -->
+<targetInstance>
+  <id>sys0node0proc0eq6core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c24</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-6/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-6/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>24</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq6/core1 -->
+<targetInstance>
+  <id>sys0node0proc0eq6core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c25</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-6/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-6/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>25</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq6/core2 -->
+<targetInstance>
+  <id>sys0node0proc0eq6core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c26</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-6/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-6/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>26</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq6/core3 -->
+<targetInstance>
+  <id>sys0node0proc0eq6core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c27</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-6/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-6/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>27</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq7/core0 -->
+<targetInstance>
+  <id>sys0node0proc0eq7core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c28</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-7/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-7/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>28</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq7/core1 -->
+<targetInstance>
+  <id>sys0node0proc0eq7core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c29</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-7/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-7/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>29</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq7/core2 -->
+<targetInstance>
+  <id>sys0node0proc0eq7core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c30</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-7/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-7/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>30</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc0/eq7/core3 -->
+<targetInstance>
+  <id>sys0node0proc0eq7core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p00:c31</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-0/eq-7/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-0/eq-7/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>31</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq0/core0 -->
+<targetInstance>
+  <id>sys0node0proc1eq0core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c0</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-0/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-0/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>32</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq0/core1 -->
+<targetInstance>
+  <id>sys0node0proc1eq0core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c1</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-0/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-0/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>33</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq0/core2 -->
+<targetInstance>
+  <id>sys0node0proc1eq0core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c2</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-0/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-0/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>34</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq0/core3 -->
+<targetInstance>
+  <id>sys0node0proc1eq0core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c3</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-0/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-0/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>35</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq1/core0 -->
+<targetInstance>
+  <id>sys0node0proc1eq1core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c4</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-1/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-1/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>36</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq1/core1 -->
+<targetInstance>
+  <id>sys0node0proc1eq1core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c5</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-1/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-1/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>37</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq1/core2 -->
+<targetInstance>
+  <id>sys0node0proc1eq1core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c6</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-1/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-1/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>38</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq1/core3 -->
+<targetInstance>
+  <id>sys0node0proc1eq1core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c7</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-1/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-1/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>39</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq2/core0 -->
+<targetInstance>
+  <id>sys0node0proc1eq2core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c8</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-2/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-2/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>40</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq2/core1 -->
+<targetInstance>
+  <id>sys0node0proc1eq2core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c9</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-2/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-2/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>41</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq2/core2 -->
+<targetInstance>
+  <id>sys0node0proc1eq2core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c10</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-2/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-2/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>42</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq2/core3 -->
+<targetInstance>
+  <id>sys0node0proc1eq2core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c11</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-2/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-2/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>43</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq3/core0 -->
+<targetInstance>
+  <id>sys0node0proc1eq3core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c12</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-3/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-3/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>44</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq3/core1 -->
+<targetInstance>
+  <id>sys0node0proc1eq3core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c13</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-3/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-3/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>45</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq3/core2 -->
+<targetInstance>
+  <id>sys0node0proc1eq3core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c14</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-3/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-3/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>46</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq3/core3 -->
+<targetInstance>
+  <id>sys0node0proc1eq3core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c15</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-3/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-3/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>47</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq4/core0 -->
+<targetInstance>
+  <id>sys0node0proc1eq4core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c16</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-4/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-4/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>48</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq4/core1 -->
+<targetInstance>
+  <id>sys0node0proc1eq4core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c17</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-4/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-4/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>49</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq4/core2 -->
+<targetInstance>
+  <id>sys0node0proc1eq4core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c18</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-4/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-4/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>50</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq4/core3 -->
+<targetInstance>
+  <id>sys0node0proc1eq4core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c19</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-4/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-4/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>51</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq5/core0 -->
+<targetInstance>
+  <id>sys0node0proc1eq5core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c20</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-5/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-5/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>52</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq5/core1 -->
+<targetInstance>
+  <id>sys0node0proc1eq5core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c21</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-5/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-5/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>53</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq5/core2 -->
+<targetInstance>
+  <id>sys0node0proc1eq5core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c22</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-5/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-5/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>54</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq5/core3 -->
+<targetInstance>
+  <id>sys0node0proc1eq5core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c23</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-5/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-5/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>55</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq6/core0 -->
+<targetInstance>
+  <id>sys0node0proc1eq6core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c24</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-6/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-6/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>56</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq6/core1 -->
+<targetInstance>
+  <id>sys0node0proc1eq6core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c25</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-6/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-6/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>57</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq6/core2 -->
+<targetInstance>
+  <id>sys0node0proc1eq6core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c26</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-6/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-6/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>58</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq6/core3 -->
+<targetInstance>
+  <id>sys0node0proc1eq6core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c27</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-6/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-6/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>59</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq7/core0 -->
+<targetInstance>
+  <id>sys0node0proc1eq7core0</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c28</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-7/core-0</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-7/core-0</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>60</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq7/core1 -->
+<targetInstance>
+  <id>sys0node0proc1eq7core1</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c29</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-7/core-1</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-7/core-1</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>61</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq7/core2 -->
+<targetInstance>
+  <id>sys0node0proc1eq7core2</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c30</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-7/core-2</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-7/core-2</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>62</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+<!-- System/Node0/proc1/eq7/core3 -->
+<targetInstance>
+  <id>sys0node0proc1eq7core3</id>
+  <type>unit-core-power10</type>
+  <attribute>
+     <id>FAPI_NAME</id>
+     <default>pu.c:k0:n0:s0:p01:c31</default>
+  </attribute>
+  <attribute>
+     <id>PHYS_PATH</id>
+     <default>physical:sys-0/node-0/proc-1/eq-7/core-3</default>
+  </attribute>
+  <attribute>
+    <id>AFFINITY_PATH</id>
+    <default>affinity:sys-0/node-0/proc-1/eq-7/core-3</default>
+  </attribute>
+  <attribute>
+     <id>FAPI_POS</id>
+     <default>63</default>
+  </attribute>
+  <attribute>
+     <id>RUNN_CORE_CYCLE_OFFSET</id>
+     <default>0x0</default>
+  </attribute>
+</targetInstance>
+
+</attributes>
