@@ -82,8 +82,8 @@ p10_hcd_core_shadows_enable(
 
     FAPI_INF(">>p10_hcd_core_shadows_enable");
 
-    FAPI_DBG("Assert REFRESH_PMSR via PCR_SCSR[23]");
-    FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_OR, MMIO_1BIT(23) ) );
+    FAPI_DBG("Assert CORE_INTR_SAMPLE/REFRESH_PMSR via PCR_SCSR[18/23]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_OR, MMIO_LOAD32H( BIT32(18) | BIT32(23) ) ) );
 
     FAPI_DBG("Assert XFER_START via PCR_TFCSR[0]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_TFCSR_WO_OR, MMIO_1BIT(0) ) );
@@ -117,9 +117,7 @@ p10_hcd_core_shadows_enable(
                 .set_SHADOW_ENA_CORE_SHADOW_STATE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_CORE_SHADOW_STATE_POLL_TIMEOUT_HW_NS)
                 .set_CPMS_CUCR(l_mmioData)
                 .set_CORE_TARGET(i_target),
-                "Shadow Enable FTC/PP/DPT Shadow State Timeout");
-
-#ifndef XFER_SENT_DONE_DISABLE
+                "ERROR: Shadow Enable FTC/PP/DPT Shadow State Timeout");
 
     FAPI_DBG("Wait on XFER_SENT_DONE via PCR_TFCSR[33]");
     l_timeout = HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS /
@@ -145,12 +143,10 @@ p10_hcd_core_shadows_enable(
                 .set_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS)
                 .set_QME_TFCSR(l_mmioData)
                 .set_CORE_TARGET(i_target),
-                "Shadow Enable Xfer Sent Done Timeout");
+                "ERROR: Shadow Enable Xfer Sent Done Timeout");
 
     FAPI_DBG("Drop XFER_SENT_DONE via PCR_TFCSR[33]");
-    FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_1BIT( MMIO_LOWBIT(33) ) ) );
-
-#endif
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_1BIT( MMIO_LOWBIT(33) ) ) );
 
     FAPI_DBG("Drop CTFS_WKUP_ENABLE via PCR_SCSR[27]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_CLEAR, MMIO_1BIT(27) ) );
@@ -160,6 +156,11 @@ p10_hcd_core_shadows_enable(
     // Extra poll loop above for XFER_SENT_DONE will be enough for 4 cycles
     FAPI_DBG("Enable CORE_SAMPLE via CUCR[1]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_OR, MMIO_1BIT(1) ) );
+
+    //TODO Program calibrated DDS delay
+
+    FAPI_DBG("Enable Droop Detection via FDCR[0]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_FDCR_WO_CLEAR, MMIO_LOAD32H(BIT32(0)) ) );
 
 fapi_try_exit:
 

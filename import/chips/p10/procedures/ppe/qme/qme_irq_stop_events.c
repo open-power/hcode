@@ -117,6 +117,9 @@ qme_parse_pm_state_active_fast()
             G_qme_record.c_pm_state[c_index] =
                 ( in32( QME_LCL_SSDR ) & BITS32(c_start, 4) ) >> SHIFT32( (c_start + 3) );
 
+            out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_loop ),
+                   ( SSH_REQ_LEVEL_UPDATE | ( G_qme_record.c_pm_state[c_index] << SHIFT32(7) ) ) );
+
             if( ( G_qme_record.stop_level_enabled & BIT32(STOP_LEVEL_5) ) &&
                 ( G_qme_record.c_pm_state[c_index] >= STOP_LEVEL_5 ) )
             {
@@ -184,9 +187,7 @@ void
 qme_parse_regular_wakeup_fast()
 {
     G_qme_record.c_regular_wakeup_fast_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(40, 4) );
-#ifdef QME_EDGE_TRIGGER_INTERRUPT
     out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_regular_wakeup_fast_req);
-#endif
     G_qme_record.c_regular_wakeup_fast_req = G_qme_record.c_regular_wakeup_fast_req >> SHIFT64SH(43);
 
     uint32_t c_mask = G_qme_record.c_regular_wakeup_fast_req &
@@ -210,9 +211,7 @@ void
 qme_parse_special_wakeup_rise()
 {
     G_qme_record.c_special_wakeup_rise_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(32, 4) );
-#ifdef QME_EDGE_TRIGGER_INTERRUPT
     out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_special_wakeup_rise_req);
-#endif
     G_qme_record.c_special_wakeup_rise_req = G_qme_record.c_special_wakeup_rise_req >> SHIFT64SH(35);
 
     uint32_t c_mask = G_qme_record.c_special_wakeup_rise_req &
@@ -262,9 +261,7 @@ void
 qme_parse_special_wakeup_fall()
 {
     G_qme_record.c_special_wakeup_fall_req =  ( in32_sh(QME_LCL_EISR) & BITS64SH(36, 4) );
-#ifdef QME_EDGE_TRIGGER_INTERRUPT
     out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_special_wakeup_fall_req);
-#endif
     G_qme_record.c_special_wakeup_fall_req = G_qme_record.c_special_wakeup_fall_req >> SHIFT64SH(39);
 
     PK_TRACE_INF("Parse: Special Wakeup Fall on Cores[%x], Cores in STOP2+[%x], Partial Good Cores[%x], Block Entry on Cores[%x]",
@@ -274,6 +271,7 @@ qme_parse_special_wakeup_fall()
                  G_qme_record.c_block_stop_done);
 
     uint32_t c_mask = G_qme_record.c_special_wakeup_fall_req &
+                      G_qme_record.c_special_wakeup_done &
                       G_qme_record.c_configured;
 
     if( c_mask )
@@ -282,12 +280,10 @@ qme_parse_special_wakeup_fall()
         {
             uint32_t scdr = in32(QME_LCL_SCDR);
 
-            if( c_mask &
-                ( (   scdr  >> SHIFT32(3) ) |
-                  ( (~scdr) >> SHIFT32(15) ) ) )
+            if( c_mask & ( scdr >> SHIFT32(3) ) )
             {
                 G_qme_record.c_special_wakeup_error |= c_mask << 16;
-                PK_TRACE_ERR("ERROR: Cores[%x] SPWU Dropped when STOP_GATED=1/SPWU_DONE=0 with SCDR[%x]. HALT QME!",
+                PK_TRACE_ERR("ERROR: Cores[%x] SPWU/Done Dropped when STOP_GATED=1 with SCDR[%x]. HALT QME!",
                              c_mask, scdr);
                 IOTA_PANIC(QME_STOP_SPWU_PROTOCOL_ERROR);
             }
@@ -341,7 +337,7 @@ qme_special_wakeup_rise_event()
     // If Stop Entry was aborted
     // The retrun of this handler will be back to Stop Entry leftover,
     // which will then re-evaluate eimr overrides, thus skip for now
-    if( (~G_qme_record.uih_status) & IDX_PRTY_LVL_STOP_FAST )
+    if( (~G_qme_record.uih_status) & BIT32(IDX_PRTY_LVL_STOP_FAST) )
     {
         qme_eval_eimr_override();
     }
@@ -412,7 +408,7 @@ qme_regular_wakeup_fast_event()
     // If Stop Entry was aborted
     // The retrun of this handler will be back to Stop Entry leftover,
     // which will then re-evaluate eimr overrides, thus skip for now
-    if( (~G_qme_record.uih_status) & IDX_PRTY_LVL_STOP_FAST )
+    if( (~G_qme_record.uih_status) & BIT32(IDX_PRTY_LVL_STOP_FAST) )
     {
         qme_eval_eimr_override();
     }
@@ -468,6 +464,7 @@ qme_parse_pm_state_active_slow()
     uint32_t c_start  = 0;
     uint32_t c_index  = 0;
     uint32_t t_offset = 0;
+    uint32_t esl_ec   = 0;
     uint32_t pscrs    = 0;
 
     G_qme_record.c_pm_state_active_slow_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(52, 4) );
@@ -496,24 +493,30 @@ qme_parse_pm_state_active_slow()
             G_qme_record.c_pm_state[c_index] =
                 ( in32( QME_LCL_SSDR ) & BITS32(c_start, 4) ) >> SHIFT32( (c_start + 3) );
 
+            out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_loop ),
+                   ( SSH_REQ_LEVEL_UPDATE | ( G_qme_record.c_pm_state[c_index] << SHIFT32(7) ) ) );
+
             if( ( G_qme_record.stop_level_enabled & BIT32(STOP_LEVEL_11) ) &&
                 ( G_qme_record.c_pm_state[c_index] >= STOP_LEVEL_11 ) )
             {
-
                 // However, cannot do Power Loss State when esl is actually 0 that would be error
                 if( G_qme_record.hcode_func_enabled & QME_POWER_LOSS_ESL_CHECK_ENABLE )
                 {
-                    for( t_offset = 0; t_offset < 16; t_offset += 4 )
-                    {
-                        pscrs = in32( ( QME_PSCRS | (c_loop << 16) | (t_offset << 4) ) );
+                    // if either esl or ec bit is off with at least one thread
+                    esl_ec = in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_loop ) ) & BITS64SH(50, 2);
 
-                        // if either esl or ec bit is off with at least one thread
-                        if( (~pscrs) & BITS32(2, 2) )
+                    if( esl_ec != BITS64SH(50, 2) )
+                    {
+                        PK_TRACE_ERR("ERROR: Core[%x] Requested to enter Power Loss State while PSSCR_POWEROFF_ALLOWED[%X]. HALT QME!",
+                                     c_loop, esl_ec);
+
+                        for( t_offset = 0; t_offset < 16; t_offset += 4 )
                         {
-                            PK_TRACE_ERR("ERROR: Core[%x] Thread[%x] Detected in Power Loss State while PSCRS[%x]. HALT QME!",
-                                         c_loop, t_offset, pscrs);
-                            IOTA_PANIC(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED);
+                            pscrs = in32( ( QME_PSCRS | (c_loop << 16) | (t_offset << 4) ) );
+                            PK_TRACE_ERR("DEBUG: PSCRS[%d] = %x", t_offset, pscrs);
                         }
+
+                        IOTA_PANIC(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED);
                     }
                 }
 
@@ -539,9 +542,7 @@ void
 qme_parse_regular_wakeup_slow()
 {
     G_qme_record.c_regular_wakeup_slow_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(44, 4) );
-#ifdef QME_EDGE_TRIGGER_INTERRUPT
     out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_regular_wakeup_slow_req);
-#endif
     G_qme_record.c_regular_wakeup_slow_req = G_qme_record.c_regular_wakeup_slow_req >> SHIFT64SH(47);
 
     uint32_t c_mask = G_qme_record.c_regular_wakeup_slow_req &
@@ -592,7 +593,7 @@ qme_regular_wakeup_slow_event()
     // If Stop Entry was aborted
     // The retrun of this handler will be back to Stop Entry leftover,
     // which will then re-evaluate eimr overrides, thus skip for now
-    if( (~G_qme_record.uih_status) & IDX_PRTY_LVL_STOP_FAST )
+    if( (~G_qme_record.uih_status) & BIT32(IDX_PRTY_LVL_STOP_FAST) )
     {
         qme_eval_eimr_override();
     }

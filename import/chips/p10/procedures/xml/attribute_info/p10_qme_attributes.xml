@@ -84,7 +84,7 @@
   </entry>
   <!-- needed for qme sim -->
   <entry>
-          <name>ATTR_QME_BROADSIDE_SCAN</name>
+          <name>ATTR_QME_RUNTIME_MODE</name>
           <value>0x0</value>
   </entry>
   <!-- ********************************************************************* -->
