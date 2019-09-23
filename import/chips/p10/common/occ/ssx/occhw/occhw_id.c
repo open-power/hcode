@@ -48,17 +48,25 @@ void
 _occhw_get_ids(void)
 {
     tpc_cplt_conf0_t conf0;
-    tpc_device_id_t deviceId;
-    cfam_id_t cfamId;
 
     getscom(TPC_CPLT_CONF0, &(conf0.value));
-    G_node_id = conf0.fields.tc_unit_group_id_dc;
-    G_chip_id = conf0.fields.tc_unit_chip_id_dc;
 
-    getscom(TPC_DEVICE_ID, &(deviceId.value));
-    G_cfam_id = cfamId.value = deviceId.fields.cfam_id;
-    G_cfam_chip_type = cfamId.chipType;
-    G_cfam_ec_level = (cfamId.majorEc << 4) | cfamId.minorEc;
+    uint32_t topology_id = conf0.fields.topology_id;
+
+    if(conf0.fields.topology_mode == 0)
+    {
+        // topology_id is GGG C
+        // TODO Chip=group or chip=node are both possible.
+        // Need to know how to determine!
+        G_chip_id = topology_id >> 1;
+        G_node_id = topology_id & 0x01;
+    }
+    else // topology mode is 1 chip=node
+    {
+        // topology_id is GG CC
+        G_chip_id = topology_id & 0x3;
+        G_node_id = topology_id >> 2;
+    }
 }
 
 
@@ -127,7 +135,6 @@ _occhw_get_chip_configuration(void)
     }
     else
     {
-
         uint64_t select, configuration;
         int rc;
 

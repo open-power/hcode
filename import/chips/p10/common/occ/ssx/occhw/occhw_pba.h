@@ -44,35 +44,6 @@
 #define POWERBUS_CACHE_LINE_SIZE 128
 #define LOG_POWERBUS_CACHE_LINE_SIZE 7
 
-/// The PBA OCI region is always either 0 or 3
-#define PBA_OCI_REGION 0
-
-// It is assumed the the PBA BAR sets will be assigned according to the
-// following scheme.  There are still many open questions concerning PBA
-// setup.
-
-/// The number of PBA Base Address Registers (BARS)
-#define PBA_BARS 4
-
-#define PBA_BAR_CHIP    0
-#define PBA_BAR_NODE    2
-#define PBA_BAR_SYSTEM  3
-#define PBA_BAR_CENTAUR 1
-
-#define PBA_BAR_OCC      0    /* OCC image (HOMER) */
-#define PBA_BAR_PORE_SLW 2    /* Redundant mapping for SLW offset into HOMER */
-
-// Standard PBA slave assignments, set up by FAPI procedure prior to releasing
-// OCC from reset.
-
-/// The number of PBA slaves
-#define PBA_SLAVES 4
-
-#define PBA_SLAVE_PORE_GPE 0    /* GPE0/1, but only 1 can access mainstore */
-#define PBA_SLAVE_OCC      1    /* 405 I- and D-cache */
-#define PBA_SLAVE_PORE_SLW 2
-#define PBA_SLAVE_OCB      3
-
 /// The maximum number of bytes a PBA block-copy engine can transfer at once
 #define PBA_BCE_SIZE_MAX 4096
 

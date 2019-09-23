@@ -141,6 +141,10 @@ pba_barset_initialize(int idx, uint64_t base, int log_size)
 // done.  This should guarantee that the slave will go to reset status as soon
 // as any PowerBus blockages (if any) clear and the master stops either
 // reading or writing the slave port. For details see HW228485.
+//
+// Writing SLVRST bits 32:63 using 4 byte write will zero out bits 0:31
+// Since the 405 can only do 4 byte writes,
+//  only the high order word need be read/written.
 int
 _pba_slave_reset_poll(void* arg, int* done) ALIGNED_ATTRIBUTE(128);
 
@@ -154,9 +158,9 @@ _pba_slave_reset_poll(void* arg, int* done)
 
     psr.value = 0;
     psr.fields.set = PBA_SLVRST_SET(id);
-    out64(PBA_SLVRST, psr.value);
+    out32(PBA_SLVRST, psr.words.high_order);
 
-    psr.value = in64(PBA_SLVRST);
+    psr.words.high_order = in32(PBA_SLVRST);
     *done = !(psr.fields.in_prog & PBA_SLVRST_IN_PROG(id));
 
     return 0;

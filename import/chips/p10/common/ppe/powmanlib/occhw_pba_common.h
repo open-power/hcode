@@ -28,6 +28,25 @@
 #include "pba_register_addresses.h"
 #include "pba_firmware_registers.h"
 
+/// The number of PBA Base Address Registers (BARS)
+#define PBA_BARS 4
+
+#define PBA_BAR_HOMER    0    /* OCC image (HOMER)/HTMGT/OPAL */
+#define PBA_BAR_OCMB     1    /* OCMB sensor cache */
+#define PBA_BAR_GPU      2    /* GPU Sensor Data and OCC to OCC communication*/
+#define PBA_BAR_SBE      3    /* SBE communication (get|put)(pba|sram)*/
+
+// Standard PBA slave assignments, set up by FAPI procedure prior to releasing
+// OCC from reset.
+
+/// The number of PBA slaves
+#define PBA_SLAVES 4
+
+#define PBA_SLAVE_XGPE     0    /* XGPE */
+#define PBA_SLAVE_OCC      1    /* 405 (read) */
+#define PBA_SLAVE_PGPE     2    /* PGPE (read then write) */
+#define PBA_SLAVE_OCB      3    /* SBE */
+
 // Abstract fields of the PBA Slave Reset register used in pba_slave_reset(),
 // which checks 'n' for validity.p
 

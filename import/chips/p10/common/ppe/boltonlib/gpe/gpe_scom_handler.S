@@ -93,8 +93,8 @@ _get_scom_status:
         ## first, load the bit we want to clear into a register
         _liwa   %r3, OCCHW_IRQ_MASK32(OCCHW_IRQ_IPI_SCOM)
 
-        ## then, store it to the OISR0_CLR address
-        _stwi   %r3, %r4, OCB_OISR0_CLR
+        ## then, store it to the OISR1_CLR address
+        _stwi   %r3, %r4, OCB_OISR1_CLR
 
         ## restore the MSR as it was before we changed it
         mtmsr   %r7

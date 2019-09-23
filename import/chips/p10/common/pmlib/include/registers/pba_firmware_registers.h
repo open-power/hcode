@@ -782,11 +782,11 @@ typedef union pba_xrcvstat
         uint64_t rcv_error : 1;
         uint64_t rcv_write_in_progress : 1;
         uint64_t rcv_reservation_set : 1;
-        uint64_t rcv_capture : 16;
-        uint64_t reserved1 : 44;
+        uint64_t rcv_capture : 18;
+        uint64_t reserved1 : 42;
 #else
-        uint64_t reserved1 : 44;
-        uint64_t rcv_capture : 16;
+        uint64_t reserved1 : 42;
+        uint64_t rcv_capture : 18;
         uint64_t rcv_reservation_set : 1;
         uint64_t rcv_write_in_progress : 1;
         uint64_t rcv_error : 1;
@@ -1084,11 +1084,11 @@ typedef union pba_xircvstat
         uint64_t rcv_error : 1;
         uint64_t rcv_write_in_progress : 1;
         uint64_t rcv_reservation_set : 1;
-        uint64_t rcv_capture : 16;
-        uint64_t reserved1 : 44;
+        uint64_t rcv_capture : 18;
+        uint64_t reserved1 : 42;
 #else
-        uint64_t reserved1 : 44;
-        uint64_t rcv_capture : 16;
+        uint64_t reserved1 : 42;
+        uint64_t rcv_capture : 18;
         uint64_t rcv_reservation_set : 1;
         uint64_t rcv_write_in_progress : 1;
         uint64_t rcv_error : 1;

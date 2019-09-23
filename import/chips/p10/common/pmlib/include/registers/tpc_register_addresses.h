@@ -28,18 +28,8 @@
 /// \file tpc_register_addresses.h
 /// \brief Symbolic addresses for the TPC unit
 
-// *** WARNING *** - This file is generated automatically, do not edit.
-
-
-#define TPC_PERVPIB_BASE 0x00050000
-#define TPC_PERV_CTRL0 0x0005001a
-#define TPC_PIB_BASE 0x01000000
 #define TPC_CPLT_CONF0 0x01000008
-#define TPC_CPLT_CONF0_AND 0x0100000c
-#define TPC_CPLT_CONF0_OR 0x0100000d
-#define TPC_MISCPIB_BASE 0x010f0000
-#define TPC_HPR2 0x010f0022
-#define TPC_TPCHIP_BASE 0x000f0000
-#define TPC_DEVICE_ID 0x000f000f
+#define TPC_CPLT_CONF0_CLR 0x01000028
+#define TPC_CPLT_CONF0_OR 0x01000018
 
 #endif // __TPC_REGISTER_ADDRESSES_H__

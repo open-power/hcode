@@ -96,15 +96,15 @@ typedef union tpc_cplt_conf0
     struct
     {
 #ifdef _BIG_ENDIAN
-        uint64_t put_in_later0 : 48;
-        uint64_t tc_unit_group_id_dc : 4;
-        uint64_t tc_unit_chip_id_dc : 3;
-        uint64_t put_in_later1 : 9;
+        uint64_t dont_care0 : 47;
+        uint64_t topology_mode : 1;
+        uint64_t topology_id : 4;
+        uint64_t dont_care1 : 12;
 #else
-        uint64_t put_in_later1 : 9;
-        uint64_t tc_unit_chip_id_dc : 3;
-        uint64_t tc_unit_group_id_dc : 4;
-        uint64_t put_in_later0 : 48;
+        uint64_t dont_care1 : 12;
+        uint64_t topology_id : 4;
+        uint64_t topology_mode : 1;
+        uint64_t dont_care0 : 47;
 #endif // _BIG_ENDIAN
     } fields;
 } tpc_cplt_conf0_t;
@@ -202,57 +202,6 @@ typedef union tpc_hpr2
 #endif // _BIG_ENDIAN
     } fields;
 } tpc_hpr2_t;
-
-
-
-typedef union tpc_device_id
-{
-
-    uint64_t value;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint32_t high_order;
-        uint32_t low_order;
-#else
-        uint32_t low_order;
-        uint32_t high_order;
-#endif // _BIG_ENDIAN
-    } words;
-    struct
-    {
-#ifdef _BIG_ENDIAN
-        uint64_t cfam_id : 32;
-        uint64_t constant : 4;
-        uint64_t socket_id : 3;
-        uint64_t chippos_id : 1;
-        uint64_t io_tp_vsb_chip_pos : 1;
-        uint64_t constant1 : 7;
-        uint64_t fuse_nx_allow_crypto : 1;
-        uint64_t fuse_vmx_crypto_dis : 1;
-        uint64_t fuse_fp_throttle_en : 1;
-        uint64_t tp_np_nvlink_disable : 1;
-        uint64_t fuse_topology_2chip : 1;
-        uint64_t fuse_topology_group : 2;
-        uint64_t constant2 : 9;
-#else
-        uint64_t constant2 : 9;
-        uint64_t fuse_topology_group : 2;
-        uint64_t fuse_topology_2chip : 1;
-        uint64_t tp_np_nvlink_disable : 1;
-        uint64_t fuse_fp_throttle_en : 1;
-        uint64_t fuse_vmx_crypto_dis : 1;
-        uint64_t fuse_nx_allow_crypto : 1;
-        uint64_t constant1 : 7;
-        uint64_t io_tp_vsb_chip_pos : 1;
-        uint64_t chippos_id : 1;
-        uint64_t socket_id : 3;
-        uint64_t constant : 4;
-        uint64_t cfam_id : 32;
-#endif // _BIG_ENDIAN
-    } fields;
-} tpc_device_id_t;
-
 
 #endif // __ASSEMBLER__
 #endif // __TPC_FIRMWARE_REGISTERS_H__
