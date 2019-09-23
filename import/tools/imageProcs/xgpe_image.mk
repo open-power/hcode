@@ -30,6 +30,7 @@
 # some of the PPE binaries are not yet getting built, we will use the define
 # BUILD_XGPE_IMAGE_TEMP at the end instead as the binaries become incrementally
 # available.
+#TODO RTC 244611 Auxiliary Task:  pull from EKB and install in hw_image.
 define BUILD_XGPE_IMAGE
 $(eval IMAGE=$2.$1.xgpe_image)
 
@@ -49,10 +50,12 @@ $(eval $(IMAGE)_FILE_LVL2_BL=$(IMAGEPATH)/xgpe_lvl2_loader/xgpe_lvl2_loader.bin)
 $(eval $(IMAGE)_FILE_HCODE=$$($(IMAGE)_DD_CONT_xgpe))
 $(eval $(IMAGE)_FILE_AUX_TASK=$(IMAGEPATH)/xgpe_aux_task/xgpe_aux_task.bin)
 
-# Dependencies for appending image sections in sequence:
-# - file to be appended
-# - all dependencies of previously appended sections or on raw image
-# - append operation as to other section that has to be finished first
+# Setup dependencies for
+# - building image ( $(IMAGE)_DEPS_IMAGE )
+# - appending image sections in sequence ( $(IMAGE)_DEPS_{<section>,REPORT} )
+#   - file to be appended
+#   - all dependencies of previously appended sections or on raw image
+#   - append operation as to other section that has to be finished first
 $(eval $(IMAGE)_DEPS_XPMR_HDR =$$($(IMAGE)_FILE_XPMR_HDR))
 $(eval $(IMAGE)_DEPS_XPMR_HDR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
 
@@ -97,19 +100,53 @@ $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/xgpe_image/xgpe_image.o)
 $(eval xgpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
 # Files with multiple DD level content to be generated
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$2,$1,xpmr_hdr))
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$2,$1,xgpe))
 
 # Files to be appended to image
+$(eval $(IMAGE)_FILE_XPMR_HDR=$$($(IMAGE)_DD_CONT_xpmr_hdr))
+$(eval $(IMAGE)_FILE_LVL1_BL=$(IMAGEPATH)/xgpe_lvl1_copier/xgpe_lvl1_copier.bin)
+$(eval $(IMAGE)_FILE_LVL2_BL=$(IMAGEPATH)/xgpe_lvl2_loader/xgpe_lvl2_loader.bin)
+$(eval $(IMAGE)_FILE_HCODE=$$($(IMAGE)_DD_CONT_xgpe))
 
-# Dependencies for appending image sections in sequence:
-# - file to be appended
-# - all dependencies of previously appended sections or on raw image
-# - append operation as to other section that has to be finished first
+# Setup dependencies for
+# - building image ( $(IMAGE)_DEPS_IMAGE )
+# - appending image sections in sequence ( $(IMAGE)_DEPS_{<section>,REPORT} )
+#   - file to be appended
+#   - all dependencies of previously appended sections or on raw image
+#   - append operation as to other section that has to be finished first
+$(eval $(IMAGE)_DEPS_IMAGE     = $$($(IMAGE)_FILE_XPMR_HDR))
+$(eval $(IMAGE)_DEPS_XPMR_HDR  = $$($(IMAGE)_FILE_XPMR_HDR))
+$(eval $(IMAGE)_DEPS_XPMR_HDR += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+
+$(eval $(IMAGE)_DEPS_IMAGE    += $$($(IMAGE)_FILE_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL1_BL   = $$($(IMAGE)_FILE_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL1_BL  += $$($(IMAGE)_DEPS_XPMR_HDR))
+$(eval $(IMAGE)_DEPS_LVL1_BL  += $$($(IMAGE)_PATH)/.$(IMAGE).append.xpmr_hdr)
+
+$(eval $(IMAGE)_DEPS_IMAGE    += $$($(IMAGE)_FILE_LVL2_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL   = $$($(IMAGE)_FILE_LVL2_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL  += $$($(IMAGE)_DEPS_LVL1_BL))
+$(eval $(IMAGE)_DEPS_LVL2_BL  += $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl1_bl)
+
+$(eval $(IMAGE)_DEPS_IMAGE    += $$($(IMAGE)_FILE_HCODE))
+$(eval $(IMAGE)_DEPS_HCODE     = $$($(IMAGE)_FILE_HCODE))
+$(eval $(IMAGE)_DEPS_HCODE    += $$($(IMAGE)_DEPS_LVL2_BL))
+$(eval $(IMAGE)_DEPS_HCODE    += $$($(IMAGE)_PATH)/.$(IMAGE).append.lvl2_bl)
+
+$(eval $(IMAGE)_DEPS_REPORT    = $$($(IMAGE)_DEPS_HCODE))
+$(eval $(IMAGE)_DEPS_REPORT   += $$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
 
 # Image build using all files and serialized by dependencies
+$(eval $(call XIP_TOOL,append,.xpmr_hdr,$$($(IMAGE)_DEPS_XPMR_HDR),$$($(IMAGE)_FILE_XPMR_HDR) 1))
+$(eval $(call XIP_TOOL,append,.lvl1_bl,$$($(IMAGE)_DEPS_LVL1_BL),$$($(IMAGE)_FILE_LVL1_BL)))
+$(eval $(call XIP_TOOL,append,.lvl2_bl,$$($(IMAGE)_DEPS_LVL2_BL),$$($(IMAGE)_FILE_LVL2_BL)))
+$(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE), $$($(IMAGE)_FILE_HCODE) 1))
 
 # Create image report for image with all files appended
+$(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 
-$(eval $(call BUILD_XIPIMAGE))
+$(eval $(call BUILD_XIPIMAGE,$$($(IMAGE)_DEPS_IMAGE)))
 endef
 
 $(eval MYCHIPS := $(filter-out ocmb,$(CHIPS)))
