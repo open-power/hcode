@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2019                                                    */
+/* COPYRIGHT 2018,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -116,13 +116,12 @@ p10_hcd_core_vmin_disable(
                  .set_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS)
                  .set_CPMS_RVCSR(l_mmioData)
                  .set_CORE_TARGET(i_target),
-                 "Vmin Disable Rvid Bypass Timeout");
+                 "ERROR: Vmin Disable Rvid Bypass Timeout");
 
     FAPI_DBG("Set VDD_PFET_SEQ_STATE to Von(0b11) via CPMS_CL2_PFETCNTL[0-1]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_OR,  MMIO_LOAD32H(BITS32(0, 2)) ) );
 
-    FAPI_DBG("Drop VDD_PFET_REGULATION_FINGER_EN via CPMS_CL2_PFETCNTL[8]");
-    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR, MMIO_1BIT(8) ) );
+#ifndef PFET_SENSE_POLL_DISABLE
 
     FAPI_DBG("Wait for VDD_PFETS_ENABLED_SENSE asserted via CPMS_CL2_PFETSTAT[0]");
     l_timeout = HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS /
@@ -149,16 +148,23 @@ p10_hcd_core_vmin_disable(
                  .set_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS)
                  .set_CPMS_CL2_PFETSTAT(l_mmioData)
                  .set_CORE_TARGET(i_target),
-                 "Vmin Disable VDD Pfet Enable Timeout");
+                 "ERROR: Vmin Disable VDD Pfet Enable Timeout");
+
+#endif
+
+    FAPI_DBG("Reset VDD_PFET_SEQ_STATE to No-Op(0b00) via CPMS_CL2_PFETCNTL[0-1]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR,  MMIO_LOAD32H(BITS32(0, 2)) ) );
 
 #ifndef POWER_LOSS_DISABLE
 
+    // MMA PFET Power On/Off sequence requires CL2 PFET[ON] + CL2 RegulationFinger[ON]
+    // Stop3: Set RF -> MMA PFET[OFF] -> CL2 PFET[Vmin]
+    // Exit3:                            CL2 PFET[ON] -> MMA PFET[ON] (keep RF on)
     FAPI_DBG("Power On MMA after disabling Vmin");
     FAPI_TRY( p10_hcd_mma_poweron( i_target ) );
 
     FAPI_DBG("Scaninit MMA after disabling Vmin");
     FAPI_TRY( p10_hcd_mma_scaninit( i_target ) );
-
 
 #endif
 

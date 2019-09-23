@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2019
+# COPYRIGHT 2015,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -54,6 +54,7 @@ CACHE-CPP-SOURCES = p10_hcd_l3_purge.C              \
                     p10_hcd_chtm_purge.C            \
                     p10_hcd_powerbus_purge.C        \
                     p10_hcd_cache_stopclocks.C      \
+                    p10_hcd_cache_stopgrid.C        \
                     p10_hcd_cache_poweroff.C        \
                     p10_hcd_cache_poweron.C         \
                     p10_hcd_cache_reset.C           \

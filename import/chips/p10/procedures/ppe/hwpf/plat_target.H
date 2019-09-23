@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2012,2019                                                    */
+/* COPYRIGHT 2012,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -171,7 +171,7 @@ typedef union plat_target_handle
     ///
     /// @return The fapi2::TargetType for this target
     ///
-    //F2//TargetType getFapiTargetType() const;
+    TargetType getFapiTargetType() const;
 
     //PLAT NOTE//
     //Only three reason to overlay an address

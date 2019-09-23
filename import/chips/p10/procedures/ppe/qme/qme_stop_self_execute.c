@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -49,8 +49,8 @@ qme_stop_self_complete(uint32_t core_target)
     PPE_GETSCOM_MC_EQU( IMA_EVENT_MASK, core_target, scom_data.value);
     PPE_PUTSCOM_MC    ( IMA_EVENT_MASK, core_target, scom_data.value & ~BIT64(34));
 
-    PK_TRACE("Drop block interrupt to PC via SCSR[0]");
-    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(0) );
+    PK_TRACE("Drop BLOCK_INTERRUPT to PC and IGNORE_RECENT_PMCR via SCSR[0/19]");
+    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), ( BIT32(0) | BIT32(19) ) );
 
     PK_TRACE("Clear pm_active status via EISR[52:55]");
     out32( QME_LCL_EISR_CLR, core_target << SHIFT64SH(55));
@@ -65,8 +65,8 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 
     // ===============================
 
-    PK_TRACE("Assert block interrupt to PC via SCSR[0]");
-    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(0) );
+    PK_TRACE("Assert BLOCK_INTERRUPT to PC and IGNORE_RECENT_PMCR via SCSR[0/19]");
+    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), ( BIT32(0) | BIT32(19) ) );
 
     PK_TRACE_INF("SF.RS: Self Restore Prepare, Core Waking up(pm_exit=1) via SCSR[1]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(1) );

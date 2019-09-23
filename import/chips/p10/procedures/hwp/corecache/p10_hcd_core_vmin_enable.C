@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2019                                                    */
+/* COPYRIGHT 2018,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -80,7 +80,9 @@ p10_hcd_core_vmin_enable(
 {
     fapi2::buffer<buffer_t> l_mmioData = 0;
     uint32_t                l_timeout  = 0;
+#ifndef PFET_SENSE_POLL_DISABLE
     uint32_t                l_vdd_pfet_enable = 0;
+#endif
 
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
     fapi2::ATTR_RUNN_MODE_Type                  l_attr_runn_mode;
@@ -91,6 +93,12 @@ p10_hcd_core_vmin_enable(
     FAPI_DBG("Clock Off MMA before enabling Vmin");
     FAPI_TRY( p10_hcd_mma_stopclocks( i_target ) );
 
+    // MMA PFET Power On/Off sequence requires CL2 PFET[ON] + CL2 RegulationFinger[ON]
+    // Stop3: Set RF -> MMA PFET[OFF] -> CL2 PFET[Vmin]
+    // Exit3:                            CL2 PFET[ON] -> MMA PFET[ON] (keep RF on)
+    FAPI_DBG("Assert VDD_PFET_REGULATION_FINGER_EN via CPMS_CL2_PFETCNTL[8]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_OR, MMIO_1BIT(8) ) );
+
 #ifndef POWER_LOSS_DISABLE
 
     FAPI_DBG("Power Off MMA before enabling Vmin");
@@ -98,11 +106,10 @@ p10_hcd_core_vmin_enable(
 
 #endif
 
-    FAPI_DBG("Assert VDD_PFET_REGULATION_FINGER_EN via CPMS_CL2_PFETCNTL[8]");
-    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_OR, MMIO_1BIT(8) ) );
-
     FAPI_DBG("Set VDD_PFET_SEQ_STATE to Voff(0b01) via CPMS_CL2_PFETCNTL[0-1]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_OR, MMIO_1BIT(1) ) );
+
+#ifndef PFET_SENSE_POLL_DISABLE
 
     FAPI_DBG("Wait for VDD_PG_STATE == 0x8 via CPMS_CL2_PFETCNTL[42-45]");
     l_timeout = HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS /
@@ -129,7 +136,7 @@ p10_hcd_core_vmin_enable(
                  .set_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS(HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS)
                  .set_CPMS_CL2_PFETCNTL(l_mmioData)
                  .set_CORE_TARGET(i_target),
-                 "Vmin Enable VDD_PG_STATE Timeout");
+                 "ERROR: Vmin Enable VDD_PG_STATE Timeout");
 
     FAPI_DBG("Check VDD_PFET_ENABLE_ACTUAL == 0x80 via CPMS_CL2_PFETSTAT[16-23]");
     FAPI_TRY( HCD_GETMMIO_C( i_target, CPMS_CL2_PFETSTAT, l_mmioData ) );
@@ -139,7 +146,12 @@ p10_hcd_core_vmin_enable(
                 fapi2::VMIN_ENA_VDD_PFET_ENABLE_FAILED()
                 .set_CPMS_CL2_PFETSTAT(l_mmioData)
                 .set_CORE_TARGET(i_target),
-                "Vmin Enable VDD_PFET_ENABLE Failed");
+                "ERROR: Vmin Enable VDD_PFET_ENABLE Failed");
+
+#endif
+
+    FAPI_DBG("Reset VDD_PFET_SEQ_STATE to No-Op(0b00) via CPMS_CL2_PFETCNTL[0-1]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR, MMIO_1BIT(1) ) );
 
     FAPI_DBG("Assert RVID_ENABLE via CPMS_RVCSR[0]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_RVCSR_WO_OR, MMIO_1BIT(0) ) );
@@ -172,7 +184,7 @@ p10_hcd_core_vmin_enable(
                  .set_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS)
                  .set_CPMS_RVCSR(l_mmioData)
                  .set_CORE_TARGET(i_target),
-                 "Vmin Enable Rvid Active/Enabled Timeout");
+                 "ERROR: Vmin Enable Rvid Active/Enabled Timeout");
 
 fapi_try_exit:
 

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2019                                                    */
+/* COPYRIGHT 2017,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -75,9 +75,10 @@ enum STOP_STATE_HISTORY_VECTORS
 {
     SSH_EXIT_COMPLETE    = 0,
     SSH_EXIT_IN_SESSION  = (SSH_STOP_GATED  | SSH_TRANS_EXIT),
+    SSH_ENTRY_IN_SESSION = (SSH_STOP_GATED  | SSH_TRANS_ENTRY),
     SSH_ACT_LEVEL_UPDATE = (SSH_STOP_GATED  | SSH_ACT_ENABLE),
     SSH_REQ_LEVEL_UPDATE = (SSH_TRANS_ENTRY | SSH_REQ_ENABLE |
-                            SSH_ACT_ENABLE | BIT32(7)), // Update actual = 1
+                            SSH_ACT_ENABLE | BIT32(11)), // Update actual = 1
 
     SSH_REQ_LV2_UPDATE   = (SSH_REQ_LEVEL_UPDATE | BIT32(6)),
     SSH_ACT_LV2_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(10)),
@@ -126,9 +127,9 @@ typedef enum
 
 enum QME_HCODE_FUNCTIONAL_ENABLES
 {
-    QME_SPWU_PROTOCOL_CHECK_ENABLE    = BIT32(0),
-    QME_CLOCK_STATUS_CHECK_ENABLE     = BIT32(1),
-    QME_POWER_LOSS_ESL_CHECK_ENABLE   = BIT32(2),
+    QME_CLOCK_STATUS_CHECK_ENABLE     = BIT32(0),
+    QME_POWER_LOSS_ESL_CHECK_ENABLE   = BIT32(1),
+    QME_SPWU_PROTOCOL_CHECK_ENABLE    = BIT32(2),
     QME_L2_PURGE_CATCHUP_PATH_ENABLE  = BIT32(3),
     QME_L2_PURGE_ABORT_PATH_ENABLE    = BIT32(4),
     QME_NCU_PURGE_ABORT_PATH_ENABLE   = BIT32(5),
@@ -140,7 +141,7 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
     QME_BLOCK_COPY_SCOM_ENABLE        = BIT32(11),
 };
 
-#define ENABLED_HCODE_FUNCTIONS 0xFF000000
+#define ENABLED_HCODE_FUNCTIONS 0x3F000000
 #define QME_SCOREBOARD_VERSION  0x514d4531 //QME1
 
 typedef struct
@@ -157,10 +158,10 @@ typedef struct
     uint32_t    stop_level_enabled; // Stop2:bit2, Stop5:bit5, Stop11:bit11
     uint32_t    fused_core_enabled; // HwFused:0b01, HcodePaired:0b10
 
-    uint32_t    tbd;
     uint32_t    mma_enabled;        // POff:0b001, POff_Delay:0b010, POn:0b100
     uint32_t    throttle_enabled;   // Enable Hcode Core Throttling
     uint32_t    pmcr_fwd_enabled;   // Enable QMCR and PMCRS auto updates
+    uint32_t    uih_status;         // upper 16b actual irq, lower 16b phantom
 
     // Wof and Pstate and Doorbells
     //   Note: PMCR is handled by HW
@@ -188,7 +189,7 @@ typedef struct
     uint32_t    c_configured;       // Configured Cores
     uint32_t    c_in_error;         // Core encountered error and garded
     uint32_t    c_all_stop_mask;    // stop masks that applying to the uih override
-    uint32_t    uih_status;         // upper 16b actual irq, lower 16b phantom
+    uint32_t    c_stop0_targets;
 
     uint32_t    c_special_wakeup_rise_mask;
     uint32_t    c_special_wakeup_fall_mask;
@@ -203,7 +204,7 @@ typedef struct
     uint32_t    c_special_wakeup_source;
     uint32_t    c_special_wakeup_error; //2nd 8bits spwu_drop, 3rd 8bits spwu_on_active, 4th 8bits spwu_on_stop
     uint32_t    c_special_wakeup_done;
-    uint32_t    c_stop0_targets;
+    uint32_t    c_hostboot_master;
 
     uint32_t    c_stop2_reached;
     uint32_t    c_stop3_reached;

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2012,2019                                                    */
+/* COPYRIGHT 2012,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -73,8 +73,6 @@
 
 // PLAT NOTE// not taking this as part of macro above but just halt
 //        (__ffdc__).execute();
-//        goto fapi_try_exit;
-
 
 ///
 /// @brief Create an error log based on __conditional__,

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2019                                                    */
+/* COPYRIGHT 2017,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -40,6 +40,11 @@ uint32_t EC_PC_TFX_SM                   = 0x2002049b;
 
 uint32_t QME_LCL_PIG                    = 0xC0000300;
 uint32_t QME_LCL_BCECSR                 = 0xC0000680;
+
+uint32_t QME_LCL_QSCR                   = 0xC0000700;
+uint32_t QME_LCL_QSCR_OR                = 0xC0000720;
+uint32_t QME_LCL_QSCR_CLR               = 0xC0000730;
+
 uint32_t QME_LCL_QMCR                   = 0xC0000880;
 uint32_t QME_LCL_QMCR_OR                = 0xC00008A0;
 uint32_t QME_LCL_QMCR_CLR               = 0xC00008B0;
@@ -88,6 +93,7 @@ uint32_t QME_LCL_EINR                   = 0xC0002740;
 // QME Per-Core
 
 uint32_t QME_SSH_SRC                    = 0xC00081C0;
+uint32_t QME_SPWU_OTR                   = 0xC0008300;
 uint32_t QME_PSCRS                      = 0xC0008500;
 uint32_t QME_RMOR                       = 0xC0008680;
 uint32_t QME_DCSR                       = 0xC0008700;

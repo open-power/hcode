@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2019                                                    */
+/* COPYRIGHT 2017,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -55,18 +55,23 @@ int main()
         IOTA_PANIC(QME_MAIN_FAPI2_INIT_FAILED);
     }
 
+#if EPM_TUNING
+
+    uint32_t qme_runtime = 1;
+    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_chip;
+    FAPI_TRY( FAPI_ATTR_SET( fapi2::ATTR_QME_RUNTIME_MODE, l_chip, qme_runtime ) );
+
+#endif
+
+    // Need to do this regardless the timer enablement for scrub engine to work
+    uint32_t TCR_VAL = 0;
+    PK_TRACE("Main: Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
+    out32(QME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
+
     // Initialize the Stop state and Pstate tasks
     qme_init();
 
-    // TODO:  Temporary disablement
-    PK_TRACE("Workaround: disable QME_POWER_LOSS_ESL_CHECK_ENABLE" );
-    G_qme_record.hcode_func_enabled &= ~QME_POWER_LOSS_ESL_CHECK_ENABLE;
-
 #if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)
-
-    uint32_t TCR_VAL = 0;
-    PK_TRACE("Main: Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
-    //out32(QME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
 
 #if ENABLE_FIT_TIMER
     PK_TRACE("Main: Register and Enable FIT Timer");

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2012,2019                                                    */
+/* COPYRIGHT 2012,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -125,6 +125,43 @@ Target<TARGET_TYPE_PROC_CHIP> plat_getChipTarget()
 {
     return ((Target<TARGET_TYPE_PROC_CHIP>)G_vec_targets.at(0));
 }
+
+TargetType plat_target_handle_t::getFapiTargetType() const
+{
+    TargetType l_targetType = TARGET_TYPE_NONE;
+
+    switch(fields.target_type)
+    {
+        case PPE_TARGET_TYPE_PROC_CHIP:
+            l_targetType = TARGET_TYPE_PROC_CHIP;
+            break;
+
+        case PPE_TARGET_TYPE_CORE:
+            l_targetType = TARGET_TYPE_CORE;
+            break;
+
+        case PPE_TARGET_TYPE_EQ:
+            l_targetType = TARGET_TYPE_EQ;
+            break;
+
+        case PPE_TARGET_TYPE_PERV:
+            l_targetType = TARGET_TYPE_PERV;
+            break;
+
+        case PPE_TARGET_TYPE_SYSTEM:
+            l_targetType = TARGET_TYPE_SYSTEM;
+            break;
+
+        case PPE_TARGET_TYPE_NONE:
+        case PPE_TARGET_TYPE_ALL:
+        default:
+            assert(false);
+            break;
+    }
+
+    return l_targetType;
+}
+
 
 } // fapi2 namespace
 

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2019                                                    */
+/* COPYRIGHT 2018,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -38,45 +38,17 @@
 #include "p10_hcd_l3_purge.H"
 #include "p10_hcd_powerbus_purge.H"
 #include "p10_hcd_cache_stopclocks.H"
+#include "p10_hcd_cache_stopgrid.H"
 #include "p10_hcd_cache_poweroff.H"
 
 extern QmeRecord G_qme_record;
 
-void
+inline void
 qme_stop_prepare()
 {
-    uint32_t c_mask = G_qme_record.c_stop11_enter_targets;
-
-    if( c_mask )
-    {
-        out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_mask ), SSH_REQ_LV11_UPDATE );
-    }
-
-    c_mask = G_qme_record.c_stop5_enter_targets & (~c_mask);
-
-    if( c_mask )
-    {
-        out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_mask ), SSH_REQ_LV5_UPDATE );
-    }
-
-    c_mask = G_qme_record.c_stop3_enter_targets & (~c_mask);
-
-    if( c_mask )
-    {
-        out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_mask ), SSH_REQ_LV3_UPDATE );
-    }
-
-    c_mask = G_qme_record.c_stop2_enter_targets & (~c_mask);
-
-    if( c_mask )
-    {
-        out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_mask ), SSH_REQ_LV2_UPDATE );
-    }
-
     PK_TRACE("Assert HALTED_STOP_OVERRIDE_DISABLE via PCR_SCSR[21]");
     out32( QME_LCL_CORE_ADDR_WR(
                QME_SCSR_WO_OR, G_qme_record.c_stop2_enter_targets ), BIT32(21) );
-
 }
 
 // called in p10_hcd_l2_purge()
@@ -94,15 +66,17 @@ qme_l2_purge_catchup_detect(uint32_t& core_select)
 
         if( c_stop2 )
         {
-            qme_stop_prepare();
-            out32( QME_LCL_CORE_ADDR_WR(
-                       QME_SCSR_WO_OR, c_stop2 ), ( BITS32(4, 2) | BIT32(22) ) );
+            MARK_TAG(c_stop2, SE_L2_PURGE_CATCHUP);
 
             //===============//
 
-            MARK_TAG(c_stop2, SE_L2_PURGE_CATCHUP);
+            qme_stop_prepare();
+
+            out32( QME_LCL_CORE_ADDR_WR(
+                       QME_SCSR_WO_OR, c_stop2 ), ( BITS32(4, 2) | BIT32(22) ) );
 
             core_select = G_qme_record.c_stop2_enter_targets;
+            G_qme_record.c_l2_purge_catchup_targets |= c_stop2;
         }
     }
 }
@@ -117,10 +91,11 @@ qme_l2_purge_abort_detect()
     // Detect and Process L2 Purge Abort
     if( G_qme_record.hcode_func_enabled & QME_L2_PURGE_ABORT_PATH_ENABLE )
     {
-        c_wakeup = ( in32_sh(QME_LCL_EISR) &
-                     (BITS64SH(32, 4) | BITS64SH(40, 4)) ) >> SHIFT64SH(43);
+        c_wakeup = ( in32_sh(QME_LCL_EISR) & (BITS64SH(32, 4) | BITS64SH(40, 4)) );
+        out32_sh(QME_LCL_EISR_CLR, c_wakeup);
 
-        c_spwu = c_wakeup >> 8;
+        c_wakeup = c_wakeup >> SHIFT64SH(43);
+        c_spwu   = c_wakeup >> 8;
 
         c_wakeup = (c_wakeup | c_spwu) &
                    G_qme_record.c_stop2_enter_targets &
@@ -132,6 +107,7 @@ qme_l2_purge_abort_detect()
         {
             G_qme_record.c_l2_purge_abort_targets        |= c_wakeup;
             G_qme_record.c_special_wakeup_abort_pending  |= c_wakeup & c_spwu;
+            G_qme_record.c_l2_purge_catchup_targets      &= (~c_wakeup);
 
             PK_TRACE("Assert L2_PURGE_ABORT via PCR_SCSR[6]");
             out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_wakeup ), BIT32(6) );
@@ -153,9 +129,10 @@ qme_ncu_purge_abort_detect()
     // Detect and Process NCU Purge Abort
     if( G_qme_record.hcode_func_enabled & QME_NCU_PURGE_ABORT_PATH_ENABLE )
     {
-        c_wakeup = ( in32_sh(QME_LCL_EISR) &
-                     (BITS64SH(32, 4) | BITS64SH(40, 4)) ) >> SHIFT64SH(43);
+        c_wakeup = ( in32_sh(QME_LCL_EISR) & (BITS64SH(32, 4) | BITS64SH(40, 4)) );
+        out32_sh(QME_LCL_EISR_CLR, c_wakeup);
 
+        c_wakeup = c_wakeup >> SHIFT64SH(43);
         c_spwu = c_wakeup >> 8;
 
         c_wakeup = (c_wakeup | c_spwu) &
@@ -180,19 +157,21 @@ qme_ncu_purge_abort_detect()
 }
 
 void
-qme_stop2_abort_cleanup(uint32_t& abort_targets)
+qme_stop2_abort_cleanup(uint32_t abort_targets)
 {
     //To avoid incurring the latency of shifting the Timefac back into the core,
     //on stop aborts that happen before clocking off the core, following is applied
     //(P.S. this same thing is done when aborting stop entry due to TFAC error being
     //reported in TFSCR (34:36) and the ERR register and maybe in avoid false errorEISR)
 
-    PK_TRACE("Drop TFAC_RESET and XFR_RECEIVE_DONE via PCR_TFCSR[1/32]");
-    out32(    QME_LCL_CORE_ADDR_WR( QME_TFCSR_WO_CLEAR, abort_targets ), BIT32(1) );
+    PK_TRACE("Drop XFR_RECEIVE_DONE via PCR_TFCSR[32]");
     out32_sh( QME_LCL_CORE_ADDR_WR( QME_TFCSR_WO_CLEAR, abort_targets ), BIT64SH(32) );
 
-    PK_TRACE("Reset the core timefac to INACTIVE via PC.COMMON.TFX[0]");
-    //EPM TODO FIXME PPE_PUTSCOM_MC( EC_PC_TFX_SM, abort_targets, BIT64(0) );
+    PK_TRACE("Assert TFAC_RESET via PCR_TFCSR[1]");
+    out32(    QME_LCL_CORE_ADDR_WR( QME_TFCSR_WO_OR, abort_targets ), BIT32(1) );
+
+    PK_TRACE("Reset the core timefac to INACTIVE via PC.COMMON.TFX[1]");
+    PPE_PUTSCOM_MC( EC_PC_TFX_SM, abort_targets, BIT64(1) );
 
     //===============//
 
@@ -210,7 +189,6 @@ qme_stop2_abort_cleanup(uint32_t& abort_targets)
     G_qme_record.c_stop2_enter_targets &= (~abort_targets);
     G_qme_record.c_stop3_enter_targets &= (~abort_targets);
     G_qme_record.c_stop5_enter_targets &= (~abort_targets);
-    abort_targets = 0;
 }
 
 
@@ -254,7 +232,7 @@ qme_stop_entry()
 
             qme_stop2_abort_cleanup(G_qme_record.c_l2_purge_abort_targets);
 
-//            MARK_TAG( G_qme_record.c_l2_purge_abort_targets, SE_L2_PURGE_ABORT_DONE )
+            MARK_TAG( G_qme_record.c_l2_purge_abort_targets, SE_L2_PURGE_ABORT_DONE )
             G_qme_record.c_l2_purge_abort_targets = 0;
         }
 
@@ -276,7 +254,7 @@ qme_stop_entry()
 
         if (G_qme_record.c_l2_purge_catchup_targets)
         {
-//            MARK_TAG( G_qme_record.c_l2_purge_catchup_targets, SE_L2_TLBIE_QUIESCE_CATCHUP )
+            MARK_TAG( G_qme_record.c_l2_purge_catchup_targets, SE_L2_TLBIE_QUIESCE_CATCHUP )
 
             G_qme_record.c_l2_purge_catchup_targets = 0;
         }
@@ -301,7 +279,8 @@ qme_stop_entry()
                    ( BIT32(4) | BITS32(7, 2) | BIT32(22) ) );
 
             qme_stop2_abort_cleanup(G_qme_record.c_ncu_purge_abort_targets);
-//            MARK_TAG( G_qme_record.c_ncu_purge_abort_targets, SE_NCU_PURGE_ABORT_DONE )
+
+            MARK_TAG( G_qme_record.c_ncu_purge_abort_targets, SE_NCU_PURGE_ABORT_DONE )
             G_qme_record.c_ncu_purge_abort_targets = 0;
         }
 
@@ -323,6 +302,10 @@ qme_stop_entry()
 
         p10_hcd_core_shadows_disable(core_target);
 
+        // Assert STOP_GATED before Assert regional fence which will block pm_active
+        out32( QME_LCL_CORE_ADDR_WR(
+                   QME_SSH_SRC, G_qme_record.c_stop2_enter_targets ), SSH_ENTRY_IN_SESSION );
+
         //===============//
 
         MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_CORE_STOPCLOCKS )
@@ -336,7 +319,11 @@ qme_stop_entry()
 
         MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_CORE_STOPGRID )
 
-        //EPM TODO FIXME p10_hcd_core_stopgrid(core_target);
+#ifndef EQ_SKEW_ADJUST_DISABLE
+
+        p10_hcd_core_stopgrid(core_target);
+
+#endif
 
         //===============//
 
@@ -370,6 +357,8 @@ qme_stop_entry()
             if( G_qme_record.c_stop3or5_catchup_targets )
             {
                 G_qme_record.c_stop3or5_catchup_targets = 0;
+                G_qme_record.hcode_func_enabled |= QME_L2_PURGE_ABORT_PATH_ENABLE;
+                G_qme_record.hcode_func_enabled |= QME_NCU_PURGE_ABORT_PATH_ENABLE;
                 break;
             }
 
@@ -389,6 +378,8 @@ qme_stop_entry()
                              G_qme_record.c_stop5_enter_targets);
 
                 G_qme_record.c_stop3or5_catchup_targets = G_qme_record.c_stop2_enter_targets;
+                G_qme_record.hcode_func_enabled &= ~QME_L2_PURGE_ABORT_PATH_ENABLE;
+                G_qme_record.hcode_func_enabled &= ~QME_NCU_PURGE_ABORT_PATH_ENABLE;
             }
         }
     }
@@ -401,9 +392,11 @@ qme_stop_entry()
     {
         ///// [STOP3/5_ABORT] /////
 
-        PK_TRACE("STOP3/5: Umasking Regular and Special Wakeup for Abort Detection");
+        PK_TRACE("STOP3/5: Umasking Regular and Special Wakeup for Abort Detection, IS0: %x, %x, %x",
+                 G_qme_record.c_stop3_enter_targets,  G_qme_record.c_stop5_enter_targets,
+                 (G_qme_record.c_stop3_enter_targets | G_qme_record.c_stop5_enter_targets) );
 
-        MARK_TAG( G_qme_record.c_stop3_enter_targets | G_qme_record.c_stop5_enter_targets, SE_IS0_BEGIN )
+        MARK_TAG( (G_qme_record.c_stop3_enter_targets | G_qme_record.c_stop5_enter_targets), SE_IS0_BEGIN )
 
         //===============//
 
@@ -418,12 +411,12 @@ qme_stop_entry()
         sync();
 
         wrteei(0);
-        out32_sh( QME_LCL_EIMR_OR, ( BITS64SH(35, 4) | BITS64SH(40, 4) ) );
+        out32_sh( QME_LCL_EIMR_OR, ( BITS64SH(32, 4) | BITS64SH(40, 4) ) );
         wrteei(1);
 
         //===============//
 
-        MARK_TAG( G_qme_record.c_stop3_enter_targets | G_qme_record.c_stop5_enter_targets, SE_IS0_END )
+        MARK_TAG( (G_qme_record.c_stop3_enter_targets | G_qme_record.c_stop5_enter_targets), SE_IS0_END )
 
         G_qme_record.c_stop3or5_abort_targets &= (~G_qme_record.c_stop2_reached);
         G_qme_record.c_stop3_enter_targets &= G_qme_record.c_stop2_reached;
@@ -493,7 +486,11 @@ qme_stop_entry()
 
         MARK_TAG(G_qme_record.c_stop5_enter_targets, SE_CORE_POWEROFF)
 
+#ifndef POWER_LOSS_DISABLE
+
         p10_hcd_core_poweroff(core_target);
+
+#endif
 
         //===============//
 
@@ -557,13 +554,17 @@ qme_stop_entry()
 
         MARK_TAG( G_qme_record.c_stop11_enter_targets, SE_CACHE_STOPGRID )
 
-        //EPM TODO FIXME p10_hcd_cache_stopgrid(core_target);
+        p10_hcd_cache_stopgrid(core_target);
 
         //===============//
 
         MARK_TAG(G_qme_record.c_stop11_enter_targets, SE_CACHE_POWEROFF)
 
+#ifndef POWER_LOSS_DISABLE
+
         p10_hcd_cache_poweroff(core_target);
+
+#endif
 
         //===============//
 

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -38,6 +38,11 @@ extern uint32_t EC_PC_TFX_SM;
 
 extern uint32_t QME_LCL_PIG;
 extern uint32_t QME_LCL_BCECSR;
+
+extern uint32_t QME_LCL_QSCR;
+extern uint32_t QME_LCL_QSCR_OR;
+extern uint32_t QME_LCL_QSCR_CLR;
+
 extern uint32_t QME_LCL_QMCR;
 extern uint32_t QME_LCL_QMCR_OR;
 extern uint32_t QME_LCL_QMCR_CLR;
@@ -79,6 +84,7 @@ extern uint32_t QME_LCL_EINR;
 // QME Per-Core
 
 extern uint32_t QME_SSH_SRC;
+extern uint32_t QME_SPWU_OTR;
 extern uint32_t QME_PSCRS;
 extern uint32_t QME_RMOR;
 extern uint32_t QME_DCSR;

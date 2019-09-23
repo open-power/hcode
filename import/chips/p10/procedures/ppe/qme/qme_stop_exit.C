@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2019                                                    */
+/* COPYRIGHT 2018,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -24,6 +24,8 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "qme.h"
+#include <fapi2.H>
+#include <fapi2_target.H>
 
 #include "p10_hcd_cache_poweron.H"
 #include "p10_hcd_cache_reset.H"
@@ -69,6 +71,8 @@ qme_stop_report_pls_srr1(uint32_t core_target)
     uint32_t srr1           = 0;
     uint32_t esl            = 1;
     uint32_t local_data     = 0;
+    uint32_t qme_runtime    = 1;
+    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_chip;
 
     PK_TRACE("Restore PSCDR.PLS+SRR1 back to actual level");
 
@@ -113,6 +117,13 @@ qme_stop_report_pls_srr1(uint32_t core_target)
                     IOTA_PANIC(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED);
                 }
             }
+            else
+            {
+                // Turn this option on after cold core starts, which wont have esl setup yet.
+                G_qme_record.hcode_func_enabled |= QME_POWER_LOSS_ESL_CHECK_ENABLE;
+                // also set runtime mode
+                FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_QME_RUNTIME_MODE, l_chip, qme_runtime));
+            }
 
             local_data |= ( new_pls << SHIFT32( pls_end  ) );
             local_data |= ( srr1    << SHIFT32( srr1_end ) );
@@ -120,12 +131,20 @@ qme_stop_report_pls_srr1(uint32_t core_target)
 
         out32( QME_LCL_CORE_ADDR_WR( QME_DCSR, c_loop ), local_data );
     }
+
+    PK_TRACE("Polling for STOP_SHIFT_ACTIVE == 0 via QME_SCSR[47]");
+
+    while( in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_target ) ) & BIT64SH(47) );
+
 }
 
 
 void
 qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 {
+    uint32_t scdr      = 0;
+    uint32_t core_done = 0;
+
     PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(1) );
 
@@ -147,34 +166,38 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
     //===============//
 
-    if( core_spwu )
+    if( ( core_done = ( core_spwu & core_target ) ) )
     {
         if( G_qme_record.hcode_func_enabled & QME_SPWU_PROTOCOL_CHECK_ENABLE )
         {
-            uint32_t sscr = in32(QME_LCL_SCDR);
+            scdr = in32(QME_LCL_SCDR);
 
-            if( core_spwu & ( sscr >> SHIFT32(3) ) )
+            if( core_done & ( scdr >> SHIFT32(3) ) )
             {
-                G_qme_record.c_special_wakeup_error |= core_spwu;
-                PK_TRACE_ERR("ERROR: Cores[%x] Waking while Assert SPWU_Done when STOP_GATED=1 with SCDR[%x]. HALT QME!",
-                             core_spwu, sscr);
+                G_qme_record.c_special_wakeup_error |= core_done;
+                PK_TRACE_ERR("ERROR: Cores[%x] from Spwu[%x] Waking while Assert SPWU_Done when STOP_GATED=1 with SCDR[%x]. HALT QME!",
+                             core_target, core_spwu, scdr);
                 IOTA_PANIC(QME_STOP_SPWU_PROTOCOL_ERROR);
             }
         }
 
         PK_TRACE_INF("SX.0A: Cores[%x] Assert Special_Wakeup_Done via PCR_SCSR[16]",
-                     core_spwu);
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_spwu ), BIT32(16) );
-        G_qme_record.c_special_wakeup_done |= core_spwu;
+                     core_done);
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_done ), BIT32(16) );
+        G_qme_record.c_special_wakeup_done |= core_done;
     }
 
     if( ( core_target = ( core_target & (~core_spwu) ) ) )
     {
+        PK_TRACE("Polling for Core Instruction Running via QME_SSDR[4-7]");
+
+        while( ( ( (in32(QME_LCL_SSDR)) >> SHIFT32(7) ) & core_target ) != core_target );
+
         PK_TRACE_INF("SX.0B: Cores[%x] Drop PM_EXIT via PCR_SCSR[1]", core_target);
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(1) );
     }
 
-    core_spwu = 0;
+    core_spwu &= ~core_done;
 }
 
 
@@ -216,7 +239,11 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_SKEWADJUST )
 
-        //EPM FIXME TODO p10_hcd_core_startgrid(core_target);
+#ifndef EQ_SKEW_ADJUST_DISABLE
+
+        p10_hcd_core_startgrid(core_target);
+
+#endif
 
         //===============//
 
@@ -279,7 +306,11 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CACHE_POWERON )
 
+#ifndef POWER_LOSS_DISABLE
+
         p10_hcd_cache_poweron(core_target);
+
+#endif
 
         //===============//
 
@@ -344,7 +375,11 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
 
+#ifndef BLOCK_COPY_DISABLE
+
         p10_hcd_cache_scom_customize(core_target);
+
+#endif
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CACHE_SCOMED )
 
@@ -367,7 +402,11 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CORE_POWERON )
 
+#ifndef POWER_LOSS_DISABLE
+
         p10_hcd_core_poweron(core_target);
+
+#endif
 
         //===============//
 
@@ -446,7 +485,11 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SKEWADJUST )
 
-        //TODO Drop S Only//p10_hcd_core_startgrid(core_target);
+#ifndef EQ_SKEW_ADJUST_DISABLE
+
+        p10_hcd_core_startgrid(core_target);
+
+#endif
 
         //===============//
 
@@ -473,14 +516,17 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SCOMINIT )
 
-        //TODO commit78401//
-        p10_hcd_core_scominit(core_target);
+        //TODO commit78401//p10_hcd_core_scominit(core_target);
 
         //===============//
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SCOM_CUSTOMIZE )
 
+#ifndef BLOCK_COPY_DISABLE
+
         p10_hcd_core_scom_customize(core_target);
+
+#endif
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SCOMED )
 

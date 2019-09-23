@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -78,6 +78,7 @@ qme_init()
     G_qme_record.c_stop2_reached    = G_qme_record.c_stop11_reached;
 
 #if EPM_TUNING
+
     PK_TRACE_INF("EPM Always have cores ready to enter first, aka cores are running when boot");
     G_qme_record.c_stop2_reached  = 0;
     G_qme_record.c_stop3_reached  = 0;
@@ -93,6 +94,14 @@ qme_init()
 
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
     G_qme_record.c_special_wakeup_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
+    G_qme_record.c_hostboot_master = G_qme_record.c_special_wakeup_done & G_qme_record.c_configured;
+    G_qme_record.c_special_wakeup_done = 0;
+
+    if( G_qme_record.c_hostboot_master )
+    {
+        PK_TRACE_DBG("Setup: Remove Hostboot Master[%x] from Istep4 Special Wakeup", G_qme_record.c_hostboot_master);
+        out32( QME_LCL_CORE_ADDR_WR( QME_SPWU_OTR, G_qme_record.c_hostboot_master ), 0 );
+    }
 
     // use SSDR[36:39] PM_BLOCK_INTERRUPTS to initalize block wakeup status
     G_qme_record.c_block_wake_done = ((in32_sh(QME_LCL_SSDR) & BITS64SH(36, 4)) >> SHIFT64SH(39));
@@ -108,6 +117,11 @@ qme_init()
     //--------------------------------------------------------------------------
     // BCE Core Specific Scan Ring
     //--------------------------------------------------------------------------
+    /*
+    // via qme_flags:
+    // know in either cache/chip-contain mode then skip this step after the first boot
+    // if the flag is set by ChrisR
+    #if !SKIP_BCE_SCAN_RING
 
     if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCAN_ENABLE )
     {
@@ -131,25 +145,22 @@ qme_init()
         }
     }
 
+    #endif
+    */
+
     //--------------------------------------------------------------------------
     // Initialize Hardware Settings
     //--------------------------------------------------------------------------
 
-    PK_TRACE("Drop STOP override mode and active mask via QMCR[6,7]");
+    PK_TRACE("Assert SRAM_SCRUB_ENABLE via QSCR[1]");
+    out32( QME_LCL_QSCR_OR, BIT32(1) );
+
+    PK_TRACE("Drop BCECSR_OVERRIDE_EN/STOP_OVERRIDE_MODE/STOP_ACTIVE_MASK/STOP_SHIFTREG_OVERRIDE_EN via QMCR[3,6,7,29]");
     out32( QME_LCL_QMCR_OR,  BITS32(16, 8) ); //0xB=1011 (Lo-Pri Sel)
-    out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2)) );
-
-
+    out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2) | BIT32(3) | BIT32(29)) );
 
     if (G_qme_record.c_configured)
     {
-        if( G_qme_record.c_special_wakeup_done )
-        {
-            PK_TRACE_DBG("Setup: Special Wakeup Done[%d], Assert PM_EXIT", G_qme_record.c_special_wakeup_done);
-            out32( QME_LCL_CORE_ADDR_WR(
-                       QME_SCSR_WO_OR, G_qme_record.c_special_wakeup_done ), BIT32(1) );
-        }
-
         PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE/CTFS_DEC_WKUP_ENABLE via PCR_SCSR[20, 26, 27]");
         out32( QME_LCL_CORE_ADDR_WR(
                    QME_SCSR_WO_OR, G_qme_record.c_configured ), ( BIT32(20) | BITS32(26, 2) ) );
@@ -166,13 +177,14 @@ qme_init()
     asm volatile ("tw 0, 31, 0");
 #endif
 
+    //TODO If there are no valid cores, the Resclk bits in EISR should remain masked since no workarounds are needed.
+    //By the way, this is true for many EISR bits, the QME Hcode does not unmask them if there are no good cores in the Quad.
+
     PK_TRACE_DBG("Setup: Unmask STOP Interrupts Now with Reversing Initial Mask[%x]", G_qme_record.c_all_stop_mask);
 #ifdef QME_EDGE_TRIGGER_INTERRUPT
-    out32_sh( QME_LCL_EITR_OR,  0xFFFFFF00 );
-    out32_sh( QME_LCL_EISR_CLR, 0xFFFFFF00 );
+    out32_sh( QME_LCL_EITR_OR,  0x0000FF00 );
+    out32_sh( QME_LCL_EISR_CLR, 0x0000FF00 );
 #endif
-    // TODO until David does this formally: set special wake-up falling to negative active
-    out32_sh(QME_LCL_EIPR_CLR, BITS64SH(36, 4));
 
     out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( IRQ_VEC_PRTY12_QME >> 32 ) ) ) );
     out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
