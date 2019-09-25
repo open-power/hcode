@@ -195,7 +195,7 @@ enum PPE_MULTICAST_TYPES
 
 // use this to override undesired queued putscom with nop
 #define PPE_PUTSCOM_NOQ(addr, data)                               \
-    putscom_norc(addr, data);
+    putscom_norc((uint32_t)addr, data);
 
 #define PPE_PUTSCOM(addr, data)                                   \
     putscom_norc(PPE_QUEUED_SCOM(addr), data);
