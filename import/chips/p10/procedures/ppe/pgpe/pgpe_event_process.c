@@ -30,7 +30,7 @@
 #include "pgpe_dpll.h"
 #include "pgpe_gppb.h"
 #include "pgpe_avsbus_driver.h"
-#include "p10_scom_proc.H"
+#include "p10_oci_proc_6.H"
 #include "pgpe_resclk.h"
 
 //Local Functions
@@ -250,6 +250,9 @@ void pgpe_process_pstate_stop()
 {
     PK_TRACE("PEP: PS Stop");
 
+    //Disable PCB Type1(PMCR)
+    out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(17));//Disable PCB_Type1
+
     //Disable resonant clocks
     pgpe_resclk_disable();
 
@@ -272,6 +275,16 @@ void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
 
     //Set the PMCR owner
     pgpe_pstate_set(pmcr_owner, owner);
+
+    //Enable/Disable PCB_Type1(PMCR Request Processing)
+    if ((owner == PMCR_OWNER_HOST) || (owner == PMCR_OWNER_CHAR))
+    {
+        out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_CLEAR, BIT32(17));//Enable PCB_Type1
+    }
+    else
+    {
+        out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(17));//Disable PCB_Type1
+    }
 
     //\todo
     //If PMCR owner CHAR or HOST
