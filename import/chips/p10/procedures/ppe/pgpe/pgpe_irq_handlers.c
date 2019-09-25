@@ -25,6 +25,8 @@
 #include "pgpe.h"
 #include "pgpe_irq_handlers.h"
 #include "pgpe_event_table.h"
+#include "p10_oci_proc_c.H"
+#include "p10_oci_proc_6.H"
 
 //Local Functions
 
@@ -44,7 +46,7 @@ IOTA_BEGIN_TASK_TABLE
 IOTA_TASK(pgpe_irq_fault_handler),
           IOTA_TASK(pgpe_irq_pbax_handler),
           IOTA_TASK(ipc_irq_handler),
-          IOTA_TASK(pgpe_irq_pcb1_handler),
+          IOTA_TASK(pgpe_irq_pcb_handler),
           IOTA_TASK(IOTA_NO_TASK)
           IOTA_END_TASK_TABLE;
 
@@ -59,12 +61,48 @@ void pgpe_irq_init()
     pgpe_irq_fit_init();
 
     //Init OCC Heartbeatloss //TBD
+
+    //Clear all PGPE interrupts except IPI2.
+    //IPI2 is cleared and setup by ipc_init call above
+    uint32_t oisr0 = 0x590EE000;
+    out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, oisr0);
+
+    //Unmask all error PGPE interrupts.
+    //PCB interrupts are masked(and some are never unmasked)
+    //later when pstates are enabled
+    uint32_t oimr0 = 0x59000000;
+    out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_CLEAR, oimr0);
 }
 
 
 
-void pgpe_irq_pcb1_handler()
+void pgpe_irq_pcb_handler()
 {
+    PK_TRACE("PCB: Enter");
+
+    uint32_t oisr = in32(TP_TPCHIP_OCC_OCI_OCB_OISR0_RO);
+
+    if(oisr & BIT32(16))
+    {
+        PK_TRACE("PCB: Type0");
+        out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(16));
+    }
+
+    if(oisr & BIT32(17))
+    {
+        PK_TRACE("PCB: Type1");
+        out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(17));
+
+        //\todo Correct Handle PCB Type1 interrupt
+    }
+
+    if(oisr & BIT32(18))
+    {
+        PK_TRACE("PCB: Type2");
+        out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(18));
+    }
+
+    PK_TRACE("PCB: Exit");
 }
 
 void pgpe_irq_fault_handler()
