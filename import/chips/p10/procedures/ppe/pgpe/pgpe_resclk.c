@@ -74,7 +74,7 @@ void pgpe_resclk_init()
     //Write RCIMR(Index Map Register) with the pstate values for the 4-inflection points
     rcimr_t rcimr;
     uint32_t i;
-#if SIMICS_TUNING == 1
+#if USE_MC == 0
     uint32_t q;
 #endif
 
@@ -109,7 +109,7 @@ void pgpe_resclk_init()
     PK_TRACE("RCK: Init Write rp1=0x%x rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
     PK_TRACE("RCK: Init Write rp2=0x%x rx2=0x%x", rcimr.fields.rp2, rcimr.fields.rx2);
     PK_TRACE("RCK: Init Write rp3=0x%x rx3=0x%x", rcimr.fields.rp3, rcimr.fields.rx3);
-#if SIMICS_TUNING == 1
+#if USE_MC == 0
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -129,15 +129,15 @@ void pgpe_resclk_init()
         rctar.value = RESCLK_TABLE[i];
 
         PK_TRACE("RCK: Init Write RCTAR[%u]=0x%08x%08x", i, rctar.words.high_order, rctar.words.low_order);
-#if SIMICS_TUNING == 1
+#if USE_MC == 0
 
         for (q = 0; q < MAX_QUADS; q++)
         {
-            PPE_PUTSCOM_UC_Q(QME_RCTAR0 + (i << 2), q, rctar.value);
+            PPE_PUTSCOM_UC_Q((QME_RCTAR0 + (i << 2)), q, rctar.value);
         }
 
 #else
-        PPE_PUTSCOM_MC_Q(QME_RCTAR0 + (i << 2), rctar.value);
+        PPE_PUTSCOM_MC_Q((QME_RCTAR0 + (i << 2)), rctar.value);
 #endif
     }
 
@@ -145,7 +145,7 @@ void pgpe_resclk_init()
     rcmr.value = 0;
     rcmr.fields.step_delay = 2; //todo Not use this hardcoded value
     PK_TRACE("RCK: Init RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
-#if SIMICS_TUNING == 1
+#if USE_MC == 0
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -167,8 +167,9 @@ void pgpe_resclk_enable(uint32_t pstate_target)
     rcimr_t rcimr;
     rcimr.value = 0;
     uint64_t data;
+    PK_TRACE("RCK: Rclk Enable PS=0x%x"pstate_target);
     //Multicast Read-compare RCIMR[RP1]
-#if SIMICS_TUNING == 1
+#if USE_MC == 0
     uint32_t q;
 
     for (q = 0; q < MAX_QUADS; q++)
@@ -193,7 +194,8 @@ void pgpe_resclk_enable(uint32_t pstate_target)
     }
 
 #else
-    PPE_GETSCOM_MC_Q_EQU(QME_RCIMR, &data);
+    PK_TRACE("RCK:addr=0x%08x", PPE_SCOM_ADDR_MC_Q_EQU((uint32_t)QME_RCIMR));
+    PPE_GETSCOM_MC_Q_EQU(QME_RCIMR, data);
     rcimr.value = data;
 #endif
 
@@ -203,13 +205,11 @@ void pgpe_resclk_enable(uint32_t pstate_target)
 
     //Multicast write RMCR_OR
     //STEP_ENABLE = 1
-    //AUTO_ACK_ENABLE = 1
     rcmr_t rcmr;
     rcmr.value = 0;
     rcmr.fields.step_enable = 1;
-    rcmr.fields.auto_ack_enable = 1;
     PK_TRACE("RCK: Enable Write RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
-#if SIMICS_TUNING == 1
+#if USE_MC == 0
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -246,7 +246,7 @@ void pgpe_resclk_disable()
     uint64_t data;
 
     //Multicast Read-compare RCIMR[RP1]
-#if SIMICS_TUNING == 1
+#if USE_MC == 0
     uint32_t q;
 
     for (q = 0; q < MAX_QUADS; q++)
@@ -271,7 +271,7 @@ void pgpe_resclk_disable()
     }
 
 #else
-    PPE_GETSCOM_MC_Q_EQU(QME_RCIMR, &data);
+    PPE_GETSCOM_MC_Q_EQU(QME_RCIMR, data);
     rcimr.value = data;
 #endif
 
@@ -286,7 +286,7 @@ void pgpe_resclk_disable()
     rcmr.value = 0;
     rcmr.fields.step_enable = 1;
     rcmr.fields.auto_ack_enable = 1;
-#if SIMICS_TUNING == 1
+#if USE_MC == 0
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -319,9 +319,10 @@ void pgpe_resclk_rcptr_write(uint32_t target_pstate)
 
     //Multicast write to all QMEs, RCPTR[target_pstate] with target pstate
     rcptr.fields.target_pstate = target_pstate;
+    PK_TRACE("RCK: RCPTR[tgtPS]=0x%x psTgt=0x%x", rcptr.fields.target_pstate, target_pstate);
     PK_TRACE("RCK: Upd Write RCPTR=0x%08x%08x", rcptr.words.high_order, rcptr.words.low_order);
 
-#if SIMICS_TUNING == 1
+#if USE_MC == 0
     uint32_t q;
 
     for (q = 0; q < MAX_QUADS; q++)
@@ -330,6 +331,7 @@ void pgpe_resclk_rcptr_write(uint32_t target_pstate)
     }
 
 #else
+    PK_TRACE("RCK: addr=0x%08x", PPE_SCOM_ADDR_MC_Q_WR(PPE_QUEUED_SCOM(QME_RCPTR & PPE_MC_BASE_ADDR_MASK)));
     PPE_PUTSCOM_MC_Q(QME_RCPTR, rcptr.value);
 #endif
 
@@ -343,8 +345,9 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
     rcptr_t rcptr;
     rcptr.value = 0;
 
-#if SIMICS_TUNING == 1
     PK_TRACE("RCK: RCPTR Poll");
+
+#if USE_MC == 0
     uint32_t q;
     uint32_t acks_rcvd = 0; //\Todo: Base this on Configured Quads/Cores
 
@@ -359,7 +362,7 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
                 if (!rcptr.fields.pstate_ack_pending)
                 {
                     acks_rcvd   |= (1 << q);
-                    PK_TRACE("RCK: Acks_Rcvd=0x%x", acks_rcvd);
+                    PK_TRACE("RCK: RCPTR[%u]=0x%08x%08x Acks_Rcvd=0x%x", q, rcptr.words.high_order, rcptr.words.low_order, acks_rcvd);
                 }
             }
         }
@@ -371,7 +374,13 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
     while(rcptr.fields.pstate_ack_pending) //\Todo Timeout: 50us, critical error
     {
         PPE_GETSCOM_MC_Q_AND(QME_RCPTR, rcptr.value);
+        PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
+                 rcptr.words.low_order);
     }
+
+
+    PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
+             rcptr.words.low_order);
 
     //Check that the pstate in 16:23 from every QME matches the RCPTR target value
     //Check is only done upon the first enablement to ensure that the HW and hcode are in sync
@@ -381,6 +390,7 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
         if (rcptr.fields.target_pstate != pstate_target)
         {
             //\todo RTC:214435 take critical log and not halt
+            PK_TRACE("RCK: RCPTR[tgtPS]=0x%x psTgt=0x%x", rcptr.fields.target_pstate, pstate_target);
             IOTA_PANIC(CRITICAL_ERROR_LOG);
         }
     }

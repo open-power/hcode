@@ -177,7 +177,7 @@ void pgpe_pstate_actuate_step()
         //DDS
         pgpe_dds_update(G_pgpe_pstate.pstate_next);
 
-#if SIMICS_TUNING == 0
+#if USE_MC == 1
         pgpe_dds_poll_done();
 #endif
 
@@ -202,7 +202,7 @@ void pgpe_pstate_actuate_step()
 
         //DDS
         pgpe_dds_update(G_pgpe_pstate.pstate_next);
-#if SIMICS_TUNING == 0
+#if USE_MC == 1
         pgpe_dds_poll_done();
 #endif
 
@@ -882,17 +882,12 @@ void pgpe_pstate_pmsr_set_safe_mode()
 
 void pgpe_pstate_pmsr_write()
 {
-    //\todo Switch to Multicast when SIMICS is fixed
-    /*uint32_t addr = PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF);
-    PK_TRACE("PMSR = 0x%08x%08x, addr=0x%x", G_pgpe_pstate.pmsr.words.high_order,
-            G_pgpe_pstate.pmsr.words.low_order,
-            addr);
-    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value);*/
+    PK_TRACE("PMSR=0x%08x%08x", G_pgpe_pstate.pmsr.words.high_order,
+             G_pgpe_pstate.pmsr.words.low_order);
+#if USE_MC == 0
 
     uint32_t q, c = 0;
     uint32_t cs;
-    PK_TRACE("PMSR=0x%08x%08x", G_pgpe_pstate.pmsr.words.high_order,
-             G_pgpe_pstate.pmsr.words.low_order);
 
     for (q = 0; q < MAX_QUADS; q++)
     {
@@ -902,6 +897,11 @@ void pgpe_pstate_pmsr_write()
             PPE_PUTSCOM(PPE_SCOM_ADDR_UC(QME_PMSRS, q, cs), G_pgpe_pstate.pmsr.value);
         }
     }
+
+#else
+    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value);
+    PK_TRACE("PMSR WRAddr=0x%x, RdAddr=0x%x", PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), PPE_SCOM_ADDR_MC_OR(QME_PMSRS, 0xF));
+#endif
 }
 
 void pgpe_pstate_sample_currents()
