@@ -64,7 +64,10 @@ void pgpe_irq_fit_init()
     G_beacon_count = 0;
 
     //Set FIT handler which is called on every FIT interrupt tick
+    uint32_t tcr_val = mfspr(SPRN_TCR);
+    tcr_val |= TCR_FIE;
     IOTA_FIT_HANDLER(pgpe_irq_fit_handler);
+    mtspr(SPRN_TCR, tcr_val);
 }
 
 //
