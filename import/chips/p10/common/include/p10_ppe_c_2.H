@@ -52,11 +52,14 @@ static const uint32_t CPMS_DTIR_WINDOW_SEL = 17;
 static const uint32_t CPMS_DTIR_WINDOW_SEL_LEN = 3;
 // ppe_c/reg00002.H
 
-static const uint32_t CPMS_FMMR = 0xc000e4c0ull;
+static const uint32_t CPMS_FMMR_RW = 0xc000e4c0ull;
+static const uint32_t CPMS_FMMR_WO_CLEAR = 0xc000e4f0ull;
+static const uint32_t CPMS_FMMR_WO_OR = 0xc000e4e0ull;
 
-static const uint32_t CPMS_FMMR_ADJ_WARN_STAGGER_DISABLE = 0;
-static const uint32_t CPMS_FMMR_ADJ_WARN_STAGGER_CYCLES = 1;
-static const uint32_t CPMS_FMMR_ADJ_WARN_STAGGER_CYCLES_LEN = 3;
+static const uint32_t CPMS_FMMR_SMALL_STAGGER_ENABLE = 0;
+static const uint32_t CPMS_FMMR_SMALL_STAGGER_SELECT = 1;
+static const uint32_t CPMS_FMMR_SMALL_STAGGER_CYCLES = 2;
+static const uint32_t CPMS_FMMR_SMALL_STAGGER_CYCLES_LEN = 2;
 static const uint32_t CPMS_FMMR_ADJ_WARN_WEIGHT = 4;
 static const uint32_t CPMS_FMMR_ADJ_WARN_RESPONSE = 5;
 static const uint32_t CPMS_FMMR_ADJ_WARN_OUTPUT_SELECT = 6;
@@ -99,12 +102,6 @@ static const uint32_t CPMS_FMMR_SMALL_RESPONSE_DISABLE = 59;
 static const uint32_t CPMS_FMMR_SLOPE_REPORT_SEL = 60;
 static const uint32_t CPMS_FMMR_OVERRIDE_VECTOR_LIMIT = 61;
 static const uint32_t CPMS_FMMR_OVERRIDE_VECTOR_LIMIT_LEN = 3;
-// ppe_c/reg00002.H
-
-static const uint32_t CPMS_WOXR = 0xc000e8c0ull;
-
-static const uint32_t CPMS_WOXR_THROTTLE_INDEX = 2;
-static const uint32_t CPMS_WOXR_THROTTLE_INDEX_LEN = 6;
 // ppe_c/reg00002.H
 
 #ifndef __PPE_HCODE__

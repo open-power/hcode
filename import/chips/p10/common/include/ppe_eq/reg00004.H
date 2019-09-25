@@ -480,47 +480,47 @@ fapi_try_exit:
 }
 
 
-static inline fapi2::buffer<uint64_t>& SET_QME_LFIRACT0_FIR_ACTION1(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& SET_QME_LFIRACT0_FIR_ACTION0(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(QME_LFIRACT0));
 #endif
-    return o_data.insertFromRight<QME_LFIRACT0_FIR_ACTION1,
-           QME_LFIRACT0_FIR_ACTION1_LEN>(i_data);
+    return o_data.insertFromRight<QME_LFIRACT0_FIR_ACTION0,
+           QME_LFIRACT0_FIR_ACTION0_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access QME_LFIRACT0_FIR_ACTION1 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access QME_LFIRACT0_FIR_ACTION0 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_QME_LFIRACT0_FIR_ACTION1(const uint64_t i_data,
+static inline fapi2::buffer<uint64_t>& SET_QME_LFIRACT0_FIR_ACTION0(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(QME_LFIRACT0));
 #endif
-    return o_data.insertFromRight<QME_LFIRACT0_FIR_ACTION1,
-           QME_LFIRACT0_FIR_ACTION1_LEN>(i_data);
+    return o_data.insertFromRight<QME_LFIRACT0_FIR_ACTION0,
+           QME_LFIRACT0_FIR_ACTION0_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access QME_LFIRACT0_FIR_ACTION1 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access QME_LFIRACT0_FIR_ACTION0 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& GET_QME_LFIRACT0_FIR_ACTION1(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& GET_QME_LFIRACT0_FIR_ACTION0(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(QME_LFIRACT0));
 #endif
-    return i_data.extractToRight<QME_LFIRACT0_FIR_ACTION1,
-           QME_LFIRACT0_FIR_ACTION1_LEN>(o_data);
+    return i_data.extractToRight<QME_LFIRACT0_FIR_ACTION0,
+           QME_LFIRACT0_FIR_ACTION0_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access QME_LFIRACT0_FIR_ACTION1 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access QME_LFIRACT0_FIR_ACTION0 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
