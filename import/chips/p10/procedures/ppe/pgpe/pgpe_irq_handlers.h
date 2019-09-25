@@ -38,7 +38,7 @@ void pgpe_irq_ipc_405_wof_control(ipc_msg_t* cmd, void* arg);
 void pgpe_irq_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg);
 
 
-void pgpe_irq_pcb1_handler();
+void pgpe_irq_pcb_handler();
 void pgpe_irq_fault_handler();
 void pgpe_irq_pbax_handler();
 
