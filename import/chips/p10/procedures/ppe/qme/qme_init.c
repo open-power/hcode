@@ -67,12 +67,6 @@ qme_init()
                  G_qme_record.stop_level_enabled,
                  G_qme_record.c_configured);
 
-    if (!G_qme_record.c_configured)
-    {
-        PK_TRACE_ERR("ERROR: Not a single core is configured to this QME. HALT QME!");
-        IOTA_PANIC(QME_STOP_NO_PARTIAL_GOOD_CORE);
-    }
-
     // use SCDR[0:3] STOP_GATED to initialize core stop status
     // Note when QME is booted, either core is in stop11 or running
     G_qme_record.c_stop11_reached   = ((in32(QME_LCL_SCDR) & BITS32(0, 4))  >> SHIFT32(3)) ;
@@ -87,7 +81,12 @@ qme_init()
     G_qme_record.c_stop3_reached  = 0;
     G_qme_record.c_stop5_reached  = 0;
     G_qme_record.c_stop11_reached = 0;
-    out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, G_qme_record.c_configured ), 0 );
+
+    if (G_qme_record.c_configured)
+    {
+        out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, G_qme_record.c_configured ), 0 );
+    }
+
 #endif
 
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
@@ -138,16 +137,21 @@ qme_init()
     out32( QME_LCL_QMCR_OR,  BITS32(16, 8) ); //0xB=1011 (Lo-Pri Sel)
     out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2)) );
 
-    if( G_qme_record.c_special_wakeup_done )
-    {
-        PK_TRACE_DBG("Setup: Special Wakeup Done[%d], Assert PM_EXIT", G_qme_record.c_special_wakeup_done);
-        out32( QME_LCL_CORE_ADDR_WR(
-                   QME_SCSR_WO_OR, G_qme_record.c_special_wakeup_done ), BIT32(1) );
-    }
 
-    PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE/CTFS_DEC_WKUP_ENABLE via PCR_SCSR[20, 26, 27]");
-    out32( QME_LCL_CORE_ADDR_WR(
-               QME_SCSR_WO_OR, G_qme_record.c_configured ), ( BIT32(20) | BITS32(26, 2) ) );
+
+    if (G_qme_record.c_configured)
+    {
+        if( G_qme_record.c_special_wakeup_done )
+        {
+            PK_TRACE_DBG("Setup: Special Wakeup Done[%d], Assert PM_EXIT", G_qme_record.c_special_wakeup_done);
+            out32( QME_LCL_CORE_ADDR_WR(
+                       QME_SCSR_WO_OR, G_qme_record.c_special_wakeup_done ), BIT32(1) );
+        }
+
+        PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE/CTFS_DEC_WKUP_ENABLE via PCR_SCSR[20, 26, 27]");
+        out32( QME_LCL_CORE_ADDR_WR(
+                   QME_SCSR_WO_OR, G_qme_record.c_configured ), ( BIT32(20) | BITS32(26, 2) ) );
+    }
 
     //--------------------------------------------------------------------------
     // QME Init Completed, Enable Interrupts
@@ -165,5 +169,6 @@ qme_init()
     out32_sh( QME_LCL_EITR_OR,  0xFFFFFF00 );
     out32_sh( QME_LCL_EISR_CLR, 0xFFFFFF00 );
 #endif
+    out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( IRQ_VEC_PRTY12_QME >> 32 ) ) ) );
     out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
 }
