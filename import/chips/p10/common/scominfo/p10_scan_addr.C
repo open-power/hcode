@@ -122,22 +122,6 @@ extern "C"
         return (setChiplet(0x0C + i_inst, i_addr));
     }
 
-// IOHS
-    bool p10_scan_addr::isIOHSRing(uint32_t i_chiplet)
-    {
-        return ((0x18 <= i_chiplet) & (i_chiplet <= 0x1F));
-    }
-
-    uint8_t p10_scan_addr::getIOHSInstance(uint32_t i_chiplet)
-    {
-        return (i_chiplet - 0x18);
-    }
-
-    uint32_t p10_scan_addr::setIOHSInst(uint32_t i_inst, uint32_t i_addr)
-    {
-        return (setChiplet(0x18 + i_inst, i_addr));
-    }
-
 // EQ
     bool p10_scan_addr::isEQRing(uint32_t i_chiplet, uint32_t i_region)
     {
