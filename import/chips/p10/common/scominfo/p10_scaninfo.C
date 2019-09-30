@@ -69,14 +69,6 @@ extern "C"
                 p10_scan_addr::getMCInstance(l_chiplet);
             o_chipUnitPairing.push_back(l_singleChipUnitPairing);
         }
-        else if (p10_scan_addr::isIOHSRing(l_chiplet))
-        {
-            o_chipUnitRelated = true;
-            l_singleChipUnitPairing.chipUnitType = PU_IOHS_CHIPUNIT;
-            l_singleChipUnitPairing.chipUnitNum =
-                p10_scan_addr::getIOHSInstance(l_chiplet);
-            o_chipUnitPairing.push_back(l_singleChipUnitPairing);
-        }
         else if (p10_scan_addr::isEQRing(l_chiplet, l_region))
         {
             o_chipUnitRelated = true;
@@ -120,14 +112,6 @@ extern "C"
                 if (p10_scan_addr::isMCRing(l_chiplet))
                 {
                     o_scanAddr = p10_scan_addr::setMCInst(i_ChipUnitNum, i_scanAddr);
-                }
-
-                break;
-
-            case PU_IOHS_CHIPUNIT:
-                if (p10_scan_addr::isIOHSRing(l_chiplet))
-                {
-                    o_scanAddr = p10_scan_addr::setIOHSInst(i_ChipUnitNum, i_scanAddr);
                 }
 
                 break;
