@@ -67,7 +67,7 @@ void pgpe_event_manager_run()
     iota_set_idle_task_state(IOTA_IDLE_DISABLED, 0);
 
     PK_TRACE("Event Manager Init");
-    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW, 0x00008000);
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_ACTIVE));
 
     while(1)
     {
