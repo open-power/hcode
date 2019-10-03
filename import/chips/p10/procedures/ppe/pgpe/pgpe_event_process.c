@@ -31,6 +31,7 @@
 #include "pgpe_gppb.h"
 #include "pgpe_avsbus_driver.h"
 #include "p10_oci_proc_6.H"
+#include "p10_oci_proc_7.H"
 #include "pgpe_resclk.h"
 
 //Local Functions
@@ -230,11 +231,11 @@ void pgpe_process_pstate_start()
         pgpe_dpll_write(pgpe_pstate_get(pstate_next));
     }
 
+    pgpe_pstate_update_vdd_vcs_ps(); //Set current equal to next
+
     //Write PMSR
     pgpe_pstate_pmsr_updt();
     pgpe_pstate_pmsr_write();
-
-    pgpe_pstate_update_vdd_vcs_ps(); //Set current equal to next
 
     //Enable resonant clocks //\todo Lookup PGPE_FLAGS[resclk_disable]
     pgpe_resclk_enable(pgpe_pstate_get(pstate_curr));
@@ -244,6 +245,9 @@ void pgpe_process_pstate_start()
 
     //Change pstate status to START
     pgpe_pstate_set(pstate_status, PSTATE_STATUS_ENABLED);
+
+    //Set OCCFLG2[PSTATE_PROTOCOL_ACTIVE]
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE));
 }
 
 void pgpe_process_pstate_stop()
@@ -266,6 +270,9 @@ void pgpe_process_pstate_stop()
 
     //Change pstate status to STOP
     pgpe_pstate_set(pstate_status, PSTATE_STATUS_DISABLED);
+
+    //Clear OCCFLG2[PSTATE_PROTOCOL_ACTIVE]
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE));
 }
 
 void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
@@ -349,6 +356,11 @@ void pgpe_process_clip_update_post_actuate()
         PK_TRACE("PEP: PS Clips Bounded");
         pgpe_occ_send_ipc_ack_type_rc(EV_IPC_CLIP_UPDT, PGPE_RC_SUCCESS);
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+
+
+        //Update PMSR
+        pgpe_pstate_pmsr_updt();
+        pgpe_pstate_pmsr_write();
     }
 }
 
