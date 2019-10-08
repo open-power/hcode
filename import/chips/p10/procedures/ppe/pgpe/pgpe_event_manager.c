@@ -152,16 +152,13 @@ void pgpe_event_manager_run_booted_or_stopped()
         }
 
         //PMCR_PCB
-        //Just mark event complete
-        //\\todo need to determine whether to do processing here
-        //or in interrupt
         e = pgpe_event_tbl_get(EV_PCB_SET_PMCR);
 
         if (e->status == EVENT_PENDING)
         {
+            //\todo This should never happen. TBD Should this be an error??
             pgpe_event_tbl_set_status(EV_PCB_SET_PMCR, EVENT_INACTIVE);
         }
-
 
         //CLIP_UPDT
         e = pgpe_event_tbl_get(EV_IPC_CLIP_UPDT);
@@ -261,13 +258,11 @@ void pgpe_event_manager_run_active()
 
         //PMCR_PCB
         //Process
-        //Just mark event complete
-        //\\todo need to determine whether to do processing here
-        //or in interrupt
         e = pgpe_event_tbl_get(EV_PCB_SET_PMCR);
 
         if (e->status == EVENT_PENDING)
         {
+            pgpe_process_pcb_pmcr_request(e->args);
             pgpe_event_tbl_set_status(EV_PCB_SET_PMCR, EVENT_INACTIVE);
         }
 

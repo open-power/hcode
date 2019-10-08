@@ -65,7 +65,7 @@ typedef struct pgpe_pstate
     uint32_t wof_status;
     uint32_t wov_status;
     uint32_t pmcr_owner;
-    uint32_t ps_request[MAX_CORES];
+    uint32_t ps_request[MAX_QUADS];
     uint32_t sort_core_count;
     uint32_t pstate_computed, pstate_target, pstate_next, pstate_curr;
     pmsr_t   pmsr;
