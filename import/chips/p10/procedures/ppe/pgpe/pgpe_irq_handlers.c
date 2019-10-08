@@ -25,8 +25,11 @@
 #include "pgpe.h"
 #include "pgpe_irq_handlers.h"
 #include "pgpe_event_table.h"
-#include "p10_oci_proc_c.H"
+#include "p10_oci_proc_5.H"
 #include "p10_oci_proc_6.H"
+#include "p10_oci_proc_a.H"
+#include "p10_oci_proc_c.H"
+#include "p10_oci_proc_f.H"
 
 //Local Functions
 
@@ -50,6 +53,7 @@ IOTA_TASK(pgpe_irq_fault_handler),
           IOTA_TASK(IOTA_NO_TASK)
           IOTA_END_TASK_TABLE;
 
+pcb_set_pmcr_args_t G_pcb_set_pmcr_args;
 
 void pgpe_irq_init()
 {
@@ -91,9 +95,27 @@ void pgpe_irq_pcb_handler()
     if(oisr & BIT32(17))
     {
         PK_TRACE("PCB: Type1");
-        out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(17));
 
-        //\todo Correct Handle PCB Type1 interrupt
+        //Read Pending bits
+        uint32_t opit1pra = in32(TP_TPCHIP_OCC_OCI_OCB_OPIT1PRA_RO);
+        uint32_t q;
+
+        PK_TRACE("PCB: opit1pra=0x%x", opit1pra);
+
+        //Loop through quads
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            //Read payload
+            if (opit1pra & QUAD_MASK(q))
+            {
+                uint32_t data  = in32(TP_TPCHIP_OCC_OCI_OCB_OPIT1Q0RR + (q << 3));
+                //Save into the args
+                G_pcb_set_pmcr_args.ps_request[q] = data;
+                G_pcb_set_pmcr_args.ps_valid[q] = 1;
+            }
+        }
+
+        pgpe_event_tbl_set(EV_PCB_SET_PMCR, EVENT_PENDING, (void*)&G_pcb_set_pmcr_args);
     }
 
     if(oisr & BIT32(18))
