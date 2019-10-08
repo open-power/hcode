@@ -101,7 +101,7 @@ extern "C" {
     };
 
     // #################################################################
-    // Chiplet ring clock domain table
+    // Chiplet SCOM ring clock domain table
     // Clock domain look up table for all chiplets except EQ.
     // ALL_GOOD_ID is the 'common' region for the chiplet if specific
     // region is not found.
@@ -125,22 +125,12 @@ extern "C" {
         {  N1_CHIPLET_ID,      N1_MM1_RING_ID,      P10_N1NMMU1_DOMAIN            }, // RingId 0x3
         {  N1_CHIPLET_ID,      ALL_GOOD_ID,         P10_N1MCDPE0FBCPSI_DOMAIN     },
 
-        {  PCI0_CHIPLET_ID,    PCI_RING_ID,         P10_PCI0PH5_DOMAIN            }, // RingId 0x2
         {  PCI0_CHIPLET_ID,    ALL_GOOD_ID,         P10_PCI0IOP_DOMAIN            },
-        {  PCI1_CHIPLET_ID,    PCI_RING_ID,         P10_PCI1PH5_DOMAIN            }, // RingId 0x2
         {  PCI1_CHIPLET_ID,    ALL_GOOD_ID,         P10_PCI1IOP_DOMAIN            },
 
-        {  MC0_CHIPLET_ID,     MC_0_RING_ID,        P10_MC0MC_DOMAIN              }, // RingId 0x3
-        {  MC0_CHIPLET_ID,     MC_1_RING_ID,        P10_MC0MC_DOMAIN              }, // RingId 0x4
         {  MC0_CHIPLET_ID,     ALL_GOOD_ID,         P10_MC0ODLIOO_DOMAIN          },
-        {  MC1_CHIPLET_ID,     MC_0_RING_ID,        P10_MC1MC_DOMAIN              }, // RingId 0x3
-        {  MC1_CHIPLET_ID,     MC_1_RING_ID,        P10_MC1MC_DOMAIN              }, // RingId 0x4
         {  MC1_CHIPLET_ID,     ALL_GOOD_ID,         P10_MC1ODLIOO_DOMAIN          },
-        {  MC2_CHIPLET_ID,     MC_0_RING_ID,        P10_MC2MC_DOMAIN              }, // RingId 0x3
-        {  MC2_CHIPLET_ID,     MC_1_RING_ID,        P10_MC2MC_DOMAIN              }, // RingId 0x4
         {  MC2_CHIPLET_ID,     ALL_GOOD_ID,         P10_MC2ODLIOO_DOMAIN          },
-        {  MC3_CHIPLET_ID,     MC_0_RING_ID,        P10_MC3MC_DOMAIN              }, // RingId 0x3
-        {  MC3_CHIPLET_ID,     MC_1_RING_ID,        P10_MC3MC_DOMAIN              }, // RingId 0x4
         {  MC3_CHIPLET_ID,     ALL_GOOD_ID,         P10_MC3ODLIOO_DOMAIN          },
 
         {  PAU0_CHIPLET_ID,    PAU0346_0_RING_ID,   P10_PAU0PAU0NTLOTL_DOMAIN     }, // RingId 0x2
@@ -333,33 +323,27 @@ extern "C" {
         { "N1MCDPE0FBCPSI",       P10_N1MCDPE0FBCPSI_DOMAIN,     0x03030008, 0x0AA0000000000000ULL }, // Regions 0,2,4,6; bits 4,6,8,10
 
         { "PCI0VITL",             P10_PCI0VITL_DOMAIN,           0x080F0040, 0x0000800000000000ULL },
-        { "PCI0PH5",              P10_PCI0PH5_DOMAIN,            0x08030008, 0x0400000000000000ULL }, // Region 1; bit 5
-        { "PCI0IOP",              P10_PCI0IOP_DOMAIN,            0x08030008, 0x0BFE000000000000ULL }, // Regions 0,2,3,4,5,6,7,8,9,10; bits 4,6,7,8,9,10,11,12,13,14
+        { "PCI0IOP",              P10_PCI0IOP_DOMAIN,            0x08030008, 0x0FF1E00000000000ULL }, // Regions 0-7,11-14; bits 4-11,15-18
         { "PCI0PLL",              P10_PCI0PLL_DOMAIN,            0x08030008, 0x0002000000000000ULL },
 
         { "PCI1VITL",             P10_PCI1VITL_DOMAIN,           0x090F0040, 0x0000800000000000ULL },
-        { "PCI1PH5",              P10_PCI1PH5_DOMAIN,            0x09030008, 0x0400000000000000ULL },
-        { "PCI1IOP",              P10_PCI1IOP_DOMAIN,            0x09030008, 0x0BFE000000000000ULL },
+        { "PCI1IOP",              P10_PCI1IOP_DOMAIN,            0x09030008, 0x0FF1E00000000000ULL }, // Regions 0-7,11-14; bits 4-11,15-18
         { "PCI1PLL",              P10_PCI1PLL_DOMAIN,            0x09030008, 0x0002000000000000ULL },
 
         { "MC0VITL",              P10_MC0VITL_DOMAIN,            0x0C0F0040, 0x0000800000000000ULL },
-        { "MC0MC",                P10_MC0MC_DOMAIN,              0x0C030008, 0x0400000000000000ULL }, // Region 1; bit 5
-        { "MC0ODLIOO",            P10_MC0ODLIOO_DOMAIN,          0x0C030008, 0x09E0000000000000ULL }, // Regions 0,3,4,5,6; bits 4,7,8,9,10
+        { "MC0ODLIOO",            P10_MC0ODLIOO_DOMAIN,          0x0C030008, 0x0DE0000000000000ULL }, // Regions 0-1,3-6; bits 4-5,7-10
         { "MC0PLL",               P10_MC0PLL_DOMAIN,             0x0C030008, 0x0002000000000000ULL },
 
         { "MC1VITL",              P10_MC1VITL_DOMAIN,            0x0D0F0040, 0x0000800000000000ULL },
-        { "MC1MC",                P10_MC1MC_DOMAIN,              0x0D030008, 0x0400000000000000ULL },
-        { "MC1ODLIOO",            P10_MC1ODLIOO_DOMAIN,          0x0D030008, 0x09E0000000000000ULL },
+        { "MC1ODLIOO",            P10_MC1ODLIOO_DOMAIN,          0x0D030008, 0x0DE0000000000000ULL }, // Regions 0-1,3-6; bits 4-5,7-10
         { "MC1PLL",               P10_MC1PLL_DOMAIN,             0x0D030008, 0x0002000000000000ULL },
 
         { "MC2VITL",              P10_MC2VITL_DOMAIN,            0x0E0F0040, 0x0000800000000000ULL },
-        { "MC2MC",                P10_MC2MC_DOMAIN,              0x0E030008, 0x0400000000000000ULL },
-        { "MC2ODLIOO",            P10_MC2ODLIOO_DOMAIN,          0x0E030008, 0x09E0000000000000ULL },
+        { "MC2ODLIOO",            P10_MC2ODLIOO_DOMAIN,          0x0E030008, 0x0DE0000000000000ULL }, // Regions 0-1,3-6; bits 4-5,7-10
         { "MC2PLL",               P10_MC2PLL_DOMAIN,             0x0E030008, 0x0002000000000000ULL },
 
         { "MC3VITL",              P10_MC3VITL_DOMAIN,            0x0F0F0040, 0x0000800000000000ULL },
-        { "MC3MC",                P10_MC3MC_DOMAIN,              0x0F030008, 0x0400000000000000ULL },
-        { "MC3ODLIOO",            P10_MC3ODLIOO_DOMAIN,          0x0F030008, 0x09E0000000000000ULL },
+        { "MC3ODLIOO",            P10_MC3ODLIOO_DOMAIN,          0x0F030008, 0x0DE0000000000000ULL }, // Regions 0-1,3-6; bits 4-5,7-10
         { "MC3PLL",               P10_MC3PLL_DOMAIN,             0x0F030008, 0x0002000000000000ULL },
 
         { "PAU0VITL",             P10_PAU0VITL_DOMAIN,           0x100F0040, 0x0000800000000000ULL },

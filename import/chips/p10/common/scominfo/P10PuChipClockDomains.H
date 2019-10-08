@@ -60,37 +60,31 @@
 
     // PCI0 chiplet
     #define P10_PCI0VITL_DOMAIN                  CLOCK_DOMAIN_45
-    #define P10_PCI0PH5_DOMAIN                   CLOCK_DOMAIN_46
     #define P10_PCI0IOP_DOMAIN                   CLOCK_DOMAIN_47
     #define P10_PCI0PLL_DOMAIN                   CLOCK_DOMAIN_48  // PLL (SCAN only)
 
     // PCI1 chiplet
     #define P10_PCI1VITL_DOMAIN                  CLOCK_DOMAIN_49
-    #define P10_PCI1PH5_DOMAIN                   CLOCK_DOMAIN_50
     #define P10_PCI1IOP_DOMAIN                   CLOCK_DOMAIN_51
     #define P10_PCI1PLL_DOMAIN                   CLOCK_DOMAIN_52
 
     // MC0 chiplet
     #define P10_MC0VITL_DOMAIN                   CLOCK_DOMAIN_53
-    #define P10_MC0MC_DOMAIN                     CLOCK_DOMAIN_54
     #define P10_MC0ODLIOO_DOMAIN                 CLOCK_DOMAIN_55  // ODL + IOO
     #define P10_MC0PLL_DOMAIN                    CLOCK_DOMAIN_56
 
     // MC1 chiplet
     #define P10_MC1VITL_DOMAIN                   CLOCK_DOMAIN_57
-    #define P10_MC1MC_DOMAIN                     CLOCK_DOMAIN_58
     #define P10_MC1ODLIOO_DOMAIN                 CLOCK_DOMAIN_59  // ODL + IOO
     #define P10_MC1PLL_DOMAIN                    CLOCK_DOMAIN_60
 
     // MC2 chiplet
     #define P10_MC2VITL_DOMAIN                   CLOCK_DOMAIN_61
-    #define P10_MC2MC_DOMAIN                     CLOCK_DOMAIN_62
     #define P10_MC2ODLIOO_DOMAIN                 CLOCK_DOMAIN_63  // ODL + IOO
     #define P10_MC2PLL_DOMAIN                    CLOCK_DOMAIN_64
 
     // MC3 chiplet
     #define P10_MC3VITL_DOMAIN                   CLOCK_DOMAIN_65
-    #define P10_MC3MC_DOMAIN                     CLOCK_DOMAIN_66
     #define P10_MC3ODLIOO_DOMAIN                 CLOCK_DOMAIN_67  // ODL + IOO
     #define P10_MC3PLL_DOMAIN                    CLOCK_DOMAIN_68
 
