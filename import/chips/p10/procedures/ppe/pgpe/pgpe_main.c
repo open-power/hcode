@@ -32,7 +32,7 @@
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_event_table.h"
 #include "pgpe_resclk.h"
-
+#include "pgpe_thr_ctrl.h"
 
 IOTA_BEGIN_IDLE_TASK_TABLE
 { IOTA_IDLE_ENABLED, IOTA_TASK(pgpe_event_manager_run) }
@@ -61,6 +61,7 @@ int main()
     pgpe_avsbus_init();
     init_data_struct_table();
     pgpe_resclk_init();
+    pgpe_thr_ctrl_init();
 
     PK_TRACE("PGPE Booted");
 
