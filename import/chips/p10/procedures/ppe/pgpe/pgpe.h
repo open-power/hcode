@@ -47,6 +47,10 @@
 #define CORE_MASK(core) \
     (0x80000000 >> core)
 
+#define QUAD_MASK(quad) \
+    (0x80000000 >> quad)
+
+
 
 #define MAX_DATA_STRUCT 16
 
@@ -67,6 +71,12 @@ typedef struct data_struct_table
 {
     data_struct_entry_t entry[MAX_DATA_STRUCT];
 } data_struct_table_t;
+
+typedef struct pcb_set_pmcr_arg
+{
+    uint32_t ps_request[MAX_QUADS];
+    uint32_t ps_valid[MAX_QUADS];
+} pcb_set_pmcr_args_t;
 
 
 
