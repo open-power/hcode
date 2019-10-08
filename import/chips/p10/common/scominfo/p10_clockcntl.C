@@ -396,7 +396,6 @@ extern "C"
         } \
     }
         CHECKMC(VITL)
-        CHECKMC(MC)
         CHECKMC(ODLIOO)
         CHECKMC(PLL)
 
@@ -452,112 +451,8 @@ extern "C"
         } \
     }
         CHECKPCI(VITL)
-        CHECKPCI(PH5)
         CHECKPCI(IOP)
         CHECKPCI(PLL)
-
-        // -------------------------------
-        // AXON chiplets
-        // -------------------------------
-#define CHECKAXON(P)                            \
-    if (io_domain == P10_AXON0##P##_DOMAIN ||  \
-        io_domain == P10_AXON1##P##_DOMAIN ||  \
-        io_domain == P10_AXON2##P##_DOMAIN ||  \
-        io_domain == P10_AXON3##P##_DOMAIN ||  \
-        io_domain == P10_AXON4##P##_DOMAIN ||  \
-        io_domain == P10_AXON5##P##_DOMAIN ||  \
-        io_domain == P10_AXON6##P##_DOMAIN ||  \
-        io_domain == P10_AXON7##P##_DOMAIN) {   \
-        switch (i_chipUnitNum) { \
-            case 0 : io_domain = P10_AXON0##P##_DOMAIN; break; \
-            case 1 : io_domain = P10_AXON1##P##_DOMAIN; break; \
-            case 2 : io_domain = P10_AXON2##P##_DOMAIN; break; \
-            case 3 : io_domain = P10_AXON3##P##_DOMAIN; break; \
-            case 4 : io_domain = P10_AXON4##P##_DOMAIN; break; \
-            case 5 : io_domain = P10_AXON5##P##_DOMAIN; break; \
-            case 6 : io_domain = P10_AXON6##P##_DOMAIN; break; \
-            case 7 : io_domain = P10_AXON7##P##_DOMAIN; break; \
-            default : l_rc = 1; \
-        } \
-    }
-        CHECKAXON(VITL)
-        CHECKAXON(IOO)
-        CHECKAXON(NDL)
-        CHECKAXON(PDL)
-        CHECKAXON(PLL)
-
-        // -------------------------------
-        // PAU chiplets
-        // -------------------------------
-#define CHECKPAU(P)                            \
-    if (io_domain == P10_PAU0##P##_DOMAIN ||  \
-        io_domain == P10_PAU1##P##_DOMAIN ||  \
-        io_domain == P10_PAU2##P##_DOMAIN ||  \
-        io_domain == P10_PAU3##P##_DOMAIN) {   \
-        switch (i_chipUnitNum) { \
-            case 0 : io_domain = P10_PAU0##P##_DOMAIN; break; \
-            case 1 : io_domain = P10_PAU1##P##_DOMAIN; break; \
-            case 2 : io_domain = P10_PAU2##P##_DOMAIN; break; \
-            case 3 : io_domain = P10_PAU3##P##_DOMAIN; break; \
-            default : l_rc = 1; \
-        } \
-    }
-        CHECKPAU(VITL)
-        CHECKPAU(TLPPE)
-
-        // PAU NTLOTL domain is special case
-        if ( (io_domain == P10_PAU0PAU0NTLOTL_DOMAIN) ||
-             (io_domain == P10_PAU1PAU3NTLOTL_DOMAIN) ||
-             (io_domain == P10_PAU2PAU4NTLOTL_DOMAIN) ||
-             (io_domain == P10_PAU3PAU6NTLOTL_DOMAIN) )
-        {
-            switch (i_chipUnitNum)
-            {
-                case 0 :
-                    io_domain = P10_PAU0PAU0NTLOTL_DOMAIN;
-                    break;
-
-                case 1 :
-                    io_domain = P10_PAU1PAU3NTLOTL_DOMAIN;
-                    break;
-
-                case 2 :
-                    io_domain = P10_PAU2PAU4NTLOTL_DOMAIN;
-                    break;
-
-                case 3 :
-                    io_domain = P10_PAU3PAU6NTLOTL_DOMAIN;
-                    break;
-
-                default :
-                    l_rc = 1;
-            }
-        }
-        else if ( (io_domain == P10_PAU2PAU5NTLOTL_DOMAIN) ||
-                  (io_domain == P10_PAU3PAU7NTLOTL_DOMAIN) )
-        {
-            switch (i_chipUnitNum)
-            {
-                case 0 :
-                    l_rc = 1;
-                    break;  // No equivalent domain for PAU0
-
-                case 1 :
-                    l_rc = 1;
-                    break;  // No equivalent domain for PAU1
-
-                case 2 :
-                    io_domain = P10_PAU2PAU5NTLOTL_DOMAIN;
-                    break;
-
-                case 3 :
-                    io_domain = P10_PAU3PAU7NTLOTL_DOMAIN;
-                    break;
-
-                default :
-                    l_rc = 1;
-            }
-        }
 
         return l_rc;
     }
@@ -700,14 +595,6 @@ extern "C"
                         o_domainList.push_back(P10_PAU3TLPPE_DOMAIN);
                         break;
 
-                    case P10_AXON0VITL_DOMAIN:
-                        o_domainList.push_back(P10_AXON0IOO_DOMAIN);
-                        o_domainList.push_back(P10_AXON0NDL_DOMAIN);
-                        o_domainList.push_back(P10_AXON0PDL_DOMAIN);
-                        o_domainList.push_back(P10_AXON0PLL_DOMAIN);
-                        break;
-
-
                     default:
                         break;
                 }
@@ -718,7 +605,6 @@ extern "C"
 #define SCREENPCI(P)                                             \
     if (l_domain == P10_##P##VITL_DOMAIN)           \
     {                                                \
-        o_domainList.push_back(P10_##P##PH5_DOMAIN); \
         o_domainList.push_back(P10_##P##IOP_DOMAIN); \
         o_domainList.push_back(P10_##P##PLL_DOMAIN); \
     }
@@ -729,7 +615,6 @@ extern "C"
 #define SCREENMC(P)                                                 \
     if (l_domain == P10_##P##VITL_DOMAIN)              \
     {                                                   \
-        o_domainList.push_back(P10_##P##MC_DOMAIN);     \
         o_domainList.push_back(P10_##P##ODLIOO_DOMAIN); \
         o_domainList.push_back(P10_##P##PLL_DOMAIN);    \
     }
