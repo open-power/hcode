@@ -33,6 +33,7 @@
 #include "p10_oci_proc_6.H"
 #include "p10_oci_proc_7.H"
 #include "pgpe_resclk.h"
+#include "pgpe_thr_ctrl.h"
 
 //Local Functions
 void pgpe_process_pstate_start();
@@ -519,6 +520,8 @@ void pgpe_process_wof_vrt(void* eargs)
                      pgpe_pstate_get(vindex),
                      pgpe_pstate_get(clip_wof));
             pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_PENDING_ACTUATION);
+
+
         }
         else
         {
@@ -544,6 +547,11 @@ void pgpe_process_wof_vrt_post_actuate()
         PK_TRACE("PEP: WOF Clip Bounded");
         pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_VRT, PGPE_RC_SUCCESS);
         pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+
+        if(pgpe_pstate_get(clip_wof) >= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE))
+        {
+            pgpe_thr_ctrl_update(pgpe_pstate_get(clip_wof));
+        }
     }
 }
 
