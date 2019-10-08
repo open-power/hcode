@@ -32,6 +32,7 @@
 #include "pgpe_avsbus_driver.h"
 #include "p10_oci_proc_6.H"
 #include "p10_oci_proc_7.H"
+#include "p10_scom_eq_7.H"
 #include "pgpe_resclk.h"
 #include "pgpe_thr_ctrl.h"
 
@@ -280,7 +281,6 @@ void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
 {
 
     PK_TRACE("PEP: PS Owner %d", owner);
-
     //Set the PMCR owner
     pgpe_pstate_set(pmcr_owner, owner);
 
@@ -288,18 +288,18 @@ void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
     if ((owner == PMCR_OWNER_HOST) || (owner == PMCR_OWNER_CHAR))
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_CLEAR, BIT32(17));//Enable PCB_Type1
+        PPE_PUTSCOM_MC_Q(QME_QMCR_WO_OR, BIT64(8)); //Enable AUTO_PMCR_UPDATE
     }
     else
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(17));//Disable PCB_Type1
     }
 
-    //\todo
-    //If PMCR owner CHAR or HOST
-    //Check that PMCR HW assist is enabled
-    //if assist not enabled,
-    //PGPE checks all the QME Flag[PMCR Ready] bits
-    //If check fails, critical error log, and give fail rc back to OCC
+    //Enable SCOM writes to PMCR if characterization mode
+    if ((owner == PMCR_OWNER_CHAR))
+    {
+        PPE_PUTSCOM_MC_Q(QME_QMCR_WO_OR, BIT64(0));
+    }
 }
 
 void pgpe_process_clip_update(void* eargs)
@@ -377,7 +377,7 @@ void pgpe_process_pmcr_request(void* eargs)
 
     if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
-        for (i = 0; i < MAX_CORES; i++)
+        for (i = 0; i < MAX_QUADS; i++)
         {
             pgpe_pstate_set_ps_request(i, ((args->pmcr >> 48) & 0x00FF));
         }
@@ -388,6 +388,34 @@ void pgpe_process_pmcr_request(void* eargs)
 
     pgpe_occ_send_ipc_ack_cmd(cmd);
     pgpe_event_tbl_set_status(EV_IPC_SET_PMCR, EVENT_INACTIVE);
+}
+
+void pgpe_process_pcb_pmcr_request(void* eargs)
+{
+    PK_TRACE("PEP: PCB PMCR");
+    pcb_set_pmcr_args_t* args = (pcb_set_pmcr_args_t*)eargs;
+    PkMachineContext ctx;
+    uint32_t q;
+
+    //This is make sure that PCB Type1 interrupt can't
+    //come in between and overwrite the PCB args.
+    pk_critical_section_enter(&ctx);
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        if(args->ps_valid[q])
+        {
+            pgpe_pstate_set_ps_request(q, (args->ps_request[q] & 0xFF));
+            args->ps_valid[q] = 0;
+        }
+    }
+
+    pk_critical_section_exit(&ctx);
+
+    pgpe_pstate_compute();
+    pgpe_pstate_apply_clips();
+
+    pgpe_event_tbl_set_status(EV_PCB_SET_PMCR, EVENT_INACTIVE);
 }
 
 void pgpe_process_wof_ctrl(void* eargs)
