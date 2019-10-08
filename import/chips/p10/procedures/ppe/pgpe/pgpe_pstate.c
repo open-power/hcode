@@ -49,7 +49,7 @@ pgpe_pstate_t G_pgpe_pstate __attribute__((section (".data_structs")));
 void pgpe_pstate_init()
 {
     PK_TRACE("PS: Init");
-    uint32_t c;
+    uint32_t i;
     uint32_t ccsr;
 
     G_pgpe_pstate.pstate_status = PSTATE_STATUS_DISABLED;
@@ -60,11 +60,14 @@ void pgpe_pstate_init()
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
     G_pgpe_pstate.sort_core_count = 0;
 
-    for (c = 0; c < MAX_CORES; c++)
+    for (i = 0; i < MAX_QUADS; i++)
     {
-        G_pgpe_pstate.ps_request[c] = 0xFF;
+        G_pgpe_pstate.ps_request[i] = 0xFF;
+    }
 
-        if (ccsr & CORE_MASK(c))
+    for (i = 0; i < MAX_CORES; i++)
+    {
+        if (ccsr & CORE_MASK(i))
         {
             G_pgpe_pstate.sort_core_count++;
         }
@@ -227,14 +230,14 @@ void pgpe_pstate_actuate_step()
 //is updated
 void pgpe_pstate_compute()
 {
-    uint32_t c;
+    uint32_t q;
     uint32_t min = 0xFF;
 
-    for (c = 0; c < MAX_CORES; c++)
+    for (q = 0; q < MAX_QUADS; q++)
     {
-        if ((G_pgpe_pstate.ps_request[c]) < min)
+        if ((G_pgpe_pstate.ps_request[q]) < min)
         {
-            min = G_pgpe_pstate.ps_request[c];
+            min = G_pgpe_pstate.ps_request[q];
         }
     }
 
@@ -303,7 +306,7 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
         }
     }
 
-    PK_TRACE_INF("VRA: CoreCnt=%u, SortCnt=%u");
+    PK_TRACE("VRA: CoreCnt=%u, SortCnt=%u", core_cnt, G_pgpe_pstate.sort_core_count);
     G_pgpe_pstate.vratio_inst = vratio_accum / G_pgpe_pstate.sort_core_count;
 }
 
