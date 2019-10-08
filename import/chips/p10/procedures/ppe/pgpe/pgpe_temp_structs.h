@@ -369,5 +369,52 @@ typedef union opitnpra
     } fields;
 } opitnpra_t;
 
+typedef union qme_wcor
+{
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint32_t high_order;
+        uint32_t low_order;
+#else
+        uint32_t low_order;
+        uint32_t high_order;
+#endif
+    } words;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t reserved0: 1;
+        uint64_t c0_ovr_throttled: 1;
+        uint64_t c0_thr_idx: 6;
+        uint64_t reserved1: 1;
+        uint64_t c1_ovr_throttled: 1;
+        uint64_t c1_thr_idx: 6;
+        uint64_t reserved2: 1;
+        uint64_t c2_ovr_throttled: 1;
+        uint64_t c2_thr_idx: 6;
+        uint64_t reserved3: 1;
+        uint64_t c3_ovr_throttled: 1;
+        uint64_t c3_thr_idx: 6;
+        uint64_t reserved4 : 32;
+#else
+        uint64_t reserved4 : 32;
+        uint64_t c3_thr_idx: 6;
+        uint64_t c3_ovr_throttled: 1;
+        uint64_t reserved3: 1;
+        uint64_t c2_thr_idx: 6;
+        uint64_t c2_ovr_throttled: 1;
+        uint64_t reserved2: 1;
+        uint64_t c1_thr_idx: 6;
+        uint64_t c1_ovr_throttled: 1;
+        uint64_t reserved1: 1;
+        uint64_t c0_thr_idx: 6;
+        uint64_t c0_ovr_throttled: 1;
+        uint64_t reserved0: 1;
+#endif
+    } fields;
+
+} qme_wcor_t;
 
 #endif
