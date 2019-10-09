@@ -585,67 +585,6 @@ p9_cme_stop_entry()
 
 #endif
 
-#if SMF_SUPPORT_ENABLE
-
-            if (G_cme_stop_record.req_level[0] >= STOP_LEVEL_4)
-            {
-                self_save_core  |=   CME_MASK_C0;
-            }
-
-            if (G_cme_stop_record.req_level[1] >= STOP_LEVEL_4)
-            {
-                self_save_core  |=   CME_MASK_C1;
-            }
-
-            self_save_core = self_save_core & core;
-
-            if ( self_save_core )
-            {
-
-                p9_cme_stop_self_execute(self_save_core, SPR_SELF_SAVE);
-
-                PK_TRACE("Poll for core stop again(pm_active=1)");
-
-                while((~(in32(G_CME_LCL_EINR))) & (self_save_core << SHIFT32(21)))
-                {
-                    core_spattn = (in32_sh(CME_LCL_SISR) >> SHIFT64SH(33)) & self_save_core;
-
-                    if (core_spattn)
-                    {
-                        PK_TRACE_ERR("ERROR: Core[%d] Special Attention Detected. Gard Core!", core_spattn);
-                        CME_STOP_CORE_ERROR_HANDLER(self_save_core, core_spattn, CME_STOP_EXIT_SELF_RES_SPATTN);
-
-                        PK_TRACE("Release PCB Mux back on Core via SICR[10/11]");
-                        out32(G_CME_LCL_SICR_CLR, core_spattn << SHIFT32(11));
-
-                        while((core_spattn & ~(in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core_spattn);
-
-                        PK_TRACE("PCB Mux Released on Core[%d]", core_spattn);
-                    }
-
-                    if (!self_save_core)
-                    {
-
-#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
-
-                        continue;
-
-#else
-
-                        return;
-
-#endif
-
-                    }
-                }
-
-                PK_TRACE("SF.RS: Self Save Completed, Core Stopped Again(pm_exit=0/pm_active=1)");
-
-                p9_cme_stop_self_cleanup(self_save_core);
-
-            }// if self_save_core
-
-#endif
             // ---------------------------------
             // Permanent workaround for HW407385
 
@@ -883,6 +822,67 @@ p9_cme_stop_entry()
 
 #endif
 
+#if SMF_SUPPORT_ENABLE
+
+            if (G_cme_stop_record.req_level[0] >= STOP_LEVEL_4)
+            {
+                self_save_core  |=   CME_MASK_C0;
+            }
+
+            if (G_cme_stop_record.req_level[1] >= STOP_LEVEL_4)
+            {
+                self_save_core  |=   CME_MASK_C1;
+            }
+
+            self_save_core = self_save_core & core;
+
+            if ( self_save_core )
+            {
+
+                p9_cme_stop_self_execute(self_save_core, SPR_SELF_SAVE);
+
+                PK_TRACE("Poll for core stop again(pm_active=1)");
+
+                while((~(in32(G_CME_LCL_EINR))) & (self_save_core << SHIFT32(21)))
+                {
+                    core_spattn = (in32_sh(CME_LCL_SISR) >> SHIFT64SH(33)) & self_save_core;
+
+                    if (core_spattn)
+                    {
+                        PK_TRACE_ERR("ERROR: Core[%d] Special Attention Detected. Gard Core!", core_spattn);
+                        CME_STOP_CORE_ERROR_HANDLER(self_save_core, core_spattn, CME_STOP_EXIT_SELF_RES_SPATTN);
+
+                        PK_TRACE("Release PCB Mux back on Core via SICR[10/11]");
+                        out32(G_CME_LCL_SICR_CLR, core_spattn << SHIFT32(11));
+
+                        while((core_spattn & ~(in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core_spattn);
+
+                        PK_TRACE("PCB Mux Released on Core[%d]", core_spattn);
+                    }
+
+                    if (!self_save_core)
+                    {
+
+#if NIMBUS_DD_LEVEL == 20 || DISABLE_CME_DUAL_CAST == 1
+
+                        continue;
+
+#else
+
+                        return;
+
+#endif
+
+                    }
+                }
+
+                PK_TRACE("SF.RS: Self Save Completed, Core Stopped Again(pm_exit=0/pm_active=1)");
+
+                p9_cme_stop_self_cleanup(self_save_core);
+
+            }// if self_save_core
+
+#endif
 
 
 // ====================================
