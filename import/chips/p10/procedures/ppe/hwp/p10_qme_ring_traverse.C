@@ -50,21 +50,19 @@ enum
 
 fapi2::ReturnCode getRS4ImageFromTor(
                     const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST > & i_target,
-                    uint8_t* i_pChipletSectn,
+                    uint8_t* i_pRingSectn, // Pts to the beginning of the TOR ring section hdr
                     const RingId_t i_ringId,
                     QME_SCOM_CONTROLS i_scomOp,
                     const fapi2::RingMode i_ringMode )
 {
     FAPI_INF( ">> getRS4ImageFromTor" );
-    uint32_t l_torHdrSize       =   sizeof( TorHeader_t );
-    uint32_t l_torVersion       =   ((TorHeader_t*)i_pChipletSectn)->version;
-    uint32_t* l_pSectnTor       =   (uint32_t *)( i_pChipletSectn + l_torHdrSize );
-    uint32_t l_torOffset        =   0;
+    uint32_t l_torVersion       =   ((TorHeader_t*)i_pRingSectn)->version;
+    TorOffset_t* l_pSectnTor    =   (TorOffset_t *)( i_pRingSectn + sizeof( TorHeader_t ) );
+    uint8_t   l_torIndex        =   0;
     RingType_t l_ringType       =   COMMON_RING;
     uint8_t l_corePos           =   0;
     ChipletData_t* l_pChipletData;
-    uint16_t* l_pRingTor        =   NULL;
-    uint8_t* l_pRs4             =   NULL;
+    TorOffset_t* l_pRingTor        =   NULL;
     rs4Type_t l_rs4Type         =   REGULAR;
     std::vector < fapi2::Target < fapi2::TARGET_TYPE_CORE >> l_ucCoreTgt =
                                 i_target.getChildren< fapi2::TARGET_TYPE_CORE > ();
@@ -81,8 +79,8 @@ fapi2::ReturnCode getRS4ImageFromTor(
                  .set_RING_ID( i_ringId ),
                  "Invalid Ring Id 0x%04x", i_ringId );
 
-    l_torOffset     =   ( INSTANCE_RING_MASK    &  ( RING_PROPERTIES[(uint16_t)i_ringId].idxRing ) );
-    l_ringType      =   ( INSTANCE_RING_MARK    &  ( RING_PROPERTIES[(uint16_t)i_ringId].idxRing ) ) ?
+    l_torIndex      =   ( INSTANCE_RING_MASK    &  ( RING_PROPERTIES[i_ringId].idxRing ) );
+    l_ringType      =   ( INSTANCE_RING_MARK    &  ( RING_PROPERTIES[i_ringId].idxRing ) ) ?
                         INSTANCE_RING : COMMON_RING;
 
     l_pChipletData  =   (ChipletData_t*)&EQ::g_chipletData;
@@ -92,11 +90,10 @@ fapi2::ReturnCode getRS4ImageFromTor(
         l_pSectnTor++;
     }
 
-    l_pRs4          =   i_pChipletSectn + l_torHdrSize + rev_32( *l_pSectnTor );
-    l_pRingTor      =  (uint16_t *)l_pRs4;
+    l_pRingTor      =  (TorOffset_t *)( i_pRingSectn + rev_16( *l_pSectnTor ) );
 
-    FAPI_INF( "TOR Traversal: Ring Id 0x%08x Sectn Offset 0x%08x Ring offset 0x%08x",
-              i_ringId, rev_32(*((uint32_t*)i_pChipletSectn)), l_torOffset );
+    FAPI_INF( "TOR Traversal: Ring Id 0x%04x Sectn TOR 0x%08x Ring offset 0x%02x",
+              i_ringId, rev_32(*((uint32_t*)i_pRingSectn)), l_torIndex );
 
     if( INSTANCE_RING == l_ringType )
     {
@@ -106,20 +103,20 @@ fapi2::ReturnCode getRS4ImageFromTor(
        // each ring slot in TOR takes 2bytes
        // So offset to given chiplet specific ring is
        // Offset = (1) * 2
-       l_pRingTor   +=   ( ( l_pChipletData->numInstanceRings * ( l_corePos >> 2 ) ) + l_torOffset );
        FAPI_INF( "Core Position 0x%04", l_corePos );
+       l_pRingTor   +=   ( ( l_pChipletData->numInstanceRings * ( l_corePos >> 2 ) ) + l_torIndex );
     }
     else
     {
-        l_pRingTor +=  l_torOffset;
+        l_pRingTor +=  l_torIndex;
     }
 
-    FAPI_INF( "Ring TOR Slot Offset : 0x%08x TOR Offset : 0x%04x",
-              (uint32_t) ( l_pRs4 - i_pChipletSectn ), rev_16(*l_pRingTor) );
+    FAPI_INF( "Ring TOR Slot Offset : 0x%04x TOR Offset : 0x%04x",
+              rev_16(*l_pSectnTor), rev_16(*l_pRingTor) );
 
     if( *l_pRingTor )
     {
-        l_pRs4  +=  rev_16(*l_pRingTor);
+        uint8_t* l_pRs4  =  i_pRingSectn + rev_16(*l_pRingTor);
         CompressedScanData* l_pRingHdr     =   (CompressedScanData*) l_pRs4;
 
         FAPI_INF( "Ring Id 0x%04x Type 0x%02x", rev_16(l_pRingHdr->iv_ringId), l_pRingHdr->iv_type );
