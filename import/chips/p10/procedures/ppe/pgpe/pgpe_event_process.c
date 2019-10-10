@@ -60,7 +60,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
     if (args->action == PGPE_ACTION_PSTATE_START)
     {
         //If NOT immediate mode, then process this IPC. Otherwise, we ACK back with success
-        if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+        if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
         {
 
             //Check for PMCR onwer validity
@@ -94,7 +94,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
     else
     {
         //If NOT immediate mode, then process this IPC. Otherwise, we ACK back with success
-        if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+        if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
         {
             //Only run Pstate Stop protocol if Pstate is enabled.
             //Otherwise, just ACK back
@@ -310,7 +310,7 @@ void pgpe_process_clip_update(void* eargs)
 
     PK_TRACE("PEP: Clip Updt");
 
-    if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+    if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
         pgpe_pstate_set(clip_min, args->ps_val_clip_max);
         pgpe_pstate_set(clip_max, args->ps_val_clip_min);
@@ -335,7 +335,7 @@ void pgpe_process_clip_update_w_ack(void* eargs)
 
     PK_TRACE("PEP: Clip Updt w/ack");
 
-    if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+    if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
         pgpe_pstate_set(clip_min, args->ps_val_clip_max);
         pgpe_pstate_set(clip_max, args->ps_val_clip_min);
@@ -375,7 +375,7 @@ void pgpe_process_pmcr_request(void* eargs)
 
     uint32_t i = 0;
 
-    if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+    if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
         for (i = 0; i < MAX_QUADS; i++)
         {
@@ -428,7 +428,7 @@ void pgpe_process_wof_ctrl(void* eargs)
 
     if(args->action == PGPE_ACTION_WOF_ON)
     {
-        if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+        if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE) == 0)
         {
             pgpe_process_wof_enable();
             pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_PENDING_ACTUATION);
@@ -525,7 +525,7 @@ void pgpe_process_wof_vrt(void* eargs)
     ipcmsg_wof_vrt_t* args = (ipcmsg_wof_vrt_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
 
-    if((pgpe_header_get(g_pgpe_flags) & PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+    if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
         //Check that VRT pointer is not NULL
         if (args->idd_vrt_ptr == NULL)
