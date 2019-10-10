@@ -57,5 +57,6 @@ void pgpe_gppb_init();
 #define pgpe_gppb_get_core_on_ratio_vcs() G_gppb->core_on_ratio_vcs
 #define pgpe_gppb_get_vdd_vratio_weight() G_gppb->vdd_vratio_weight
 #define pgpe_gppb_get_vcs_vratio_weight() G_gppb->vcs_vratio_weight
+#define pgpe_gppb_get_pgpe_flags(x) G_gppb->pgpe_flags[x]
 
 #endif
