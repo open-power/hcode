@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr19100300 |vbr     | Removing old P9 IRQ handlers.
 // vbr17010600 |vbr     | Initial Rev
 // -----------------------------------------------------------------------------
 
@@ -48,14 +49,8 @@
 #include "pk.h"
 #include "io_lib.h"
 
-#define GCR_IRQ_EOSM_MASK    0x0400
-#define GCR_IRQ_RPRSM_MASK   0x0200
-#define GCR_IRQ_MAINSM_MASK  0x0100
+// Example IRQ Handler
+void io_example_irq_handler(void* arg, PkIrqId irq);
 
-// Handles a GCR IRQ
-void io_gcr_irq_handler(void* arg, PkIrqId irq);
-
-void irq_bank_power_up(t_gcr_addr* gcr_addr);
-void irq_bank_power_down(t_gcr_addr* gcr_addr);
 
 #endif //_IO_IRQ_HANDLERS_H_

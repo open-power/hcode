@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr19100301 |vbr     | Removed dl ppe test code from supervisor thread.
 // vbr18091200 |vbr     | Initial Rev
 // -----------------------------------------------------------------------------
 
@@ -46,5 +47,7 @@
 #define _SUPERVISOR_THREAD_H_
 
 void supervisor_thread(void* arg);
+
+void dl_ppe_test(void);
 
 #endif //_SUPERVISOR_THREAD_H_

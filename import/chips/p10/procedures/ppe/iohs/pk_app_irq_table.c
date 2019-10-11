@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr19100300 |vbr     | Removing old P9 IRQ handlers.
 // vbr17051800 |vbr     | Remove IOF code.
 // vbr17020800 |vbr     | Disabled GCR interrupt since registers no loner exist.
 // vbr16061000 |vbr     | Initial Rev
@@ -50,11 +51,24 @@
 #include "io_irq_handlers.h"
 
 
-uint32_t GCR0 = 0;
+//Example parameter list for passing to an IRQ handler
+//uint32_t params[2] = {0, 1};
+
+
+/////////////////////////////////
+// P10 PHY PPE IRQ Map
+/////////////////////////////////
+// 00     ioo0_ioppe_servo_intr
+// 01     ioo1_ioppe_servo_intr
+// 02     omi0_ioppe_servo_intr
+// 03     omi1_ioppe_servo_intr
+// 23     dl2phy_ppe_data_valid (incoming message request from dl to phy)
+// 24     scom_ppe_func ppe_interrupt register
+// Other  Unconnected
 
 EXTERNAL_IRQ_TABLE_START
-IRQ_HANDLER(io_gcr_irq_handler, &GCR0)           // 00 GCR0 IRQ
-//IRQ_HANDLER_DEFAULT                              // 00
+//IRQ_HANDLER(io_example_irq_handler, &params[0])  // 00 Example IRQ Handler - replaces the appropriate default handler (by position)
+IRQ_HANDLER_DEFAULT                              // 00
 IRQ_HANDLER_DEFAULT                              // 01
 IRQ_HANDLER_DEFAULT                              // 02
 IRQ_HANDLER_DEFAULT                              // 03

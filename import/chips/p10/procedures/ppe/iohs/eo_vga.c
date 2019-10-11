@@ -40,6 +40,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mwh19101000 |mwh     | Change servo to get servo result with error, and put in if statement to turn
+//             |        | off max and min for first loop -- than get turn back on --CQ507994
+// mwh19093000 |mwh     | Change jumpt table to do 50% of target.
+// vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
 // mwh19022000 |mwh     | debug value had wrong value used for rxbist now
 // vbr19012200 |vbr     | Added recal abort handling
 // mwh18120700 |mwh     | Add in done bit
@@ -91,20 +95,22 @@ static uint16_t servo_ops_gain_b[2] = { c_ap_xxx1x_bd_n000, c_an_xxx0x_bd_n000 }
 ///////////////////////////////////
 // VGA Jump Table (0.9 of target)
 ///////////////////////////////////
-#define vga_jump_table_size  10
+#define vga_jump_table_size  9
 #define vga_jump_table_max   (vga_jump_table_size - 1)
 const uint8_t vga_jump_table[vga_jump_table_size] =
 {
-    15, // ratio <= 0.3750
-    12, // ratio <= 0.4375
-    10, // ratio <= 0.5000
-    8,  // ratio <= 0.5625
-    7,  // ratio <= 0.6250
-    5,  // ratio <= 0.6875
-    4,  // ratio <= 0.7500
-    3,  // ratio <= 0.8125
-    2,  // ratio <= 0.8750
-    1   // ratio <  1.0000
+//Jumptable was 10 but moving down to 50% we only need 8 place
+//target 50%                            90%    80%  70%  60%  50%
+    //8,   // ratio <= 0.3750        15,    13,  11,  10    ,
+    8,   // ratio <= 0.4375        12,    11,  9,   8    8,
+    7,   // ratio <= 0.5000        10,    9,   8,   7    7,
+    6,   // ratio <= 0.5625         8,    7,   6,   5    6,
+    5,   // ratio <= 0.6250         7,    6,   5,   4    5,
+    4,   // ratio <= 0.6875         5,    5,   4,   3    4,
+    3,   // ratio <= 0.7500         4,    4,   3,   2    3,
+    2,   // ratio <= 0.8125         3,    3,   2,   2    2,
+    1,   // ratio <= 0.8750         2,    2,   1,   1    1,
+    0    // ratio <  1.0000         1     1    0    0    0
 };
 
 
@@ -238,21 +244,34 @@ int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, bool* gain_changed, bool recal, bo
     //
 //Convergence loop -----------------------------------------------------------------------------------------------------------------------//
     mem_regs_u16_put(pg_addr(rx_vga_converged_addr), rx_vga_converged_mask, rx_vga_converged_shift,
-                     0 );                                 //
+                     0 );                                     //
 
-    while (run_loop)                                                                                                                    //Pg1-5
+    while (run_loop)                                                                                                                        //Pg1-5
     {
-        //begin while                                                                                                                       //
+        //begin while                                                                                                                           //
         set_debug_state(
             0x5004);                                                                                                          //
         //loop_count++;                                                                                                                     //Pg1-6
         mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift,
                          loop_count);                                    //
         // Run the servo ops results are two's complement                                                                                 //
-        int32_t results[2];                                                                                                               //Pg1-6
+        int32_t results[2];
+
+        // Disable servo status for result at min/max fpr first loop only
+        PK_STATIC_ASSERT(rx_servo_status_error_en_width == 4); // Write values need to be updated if field width changes
+
+        if(first_loop_iteration) // Disable servo status for result at min/max
+        {
+            put_ptr_field(gcr_addr, rx_servo_status_error_en, 0b0011, read_modify_write);
+        }
+
+        //Pg1-6
         //TwosCompToInt                                                                                                                   //
-        run_servo_ops_and_get_results_no_fir_on_error(gcr_addr, c_servo_queue_amp_meas, 2, servo_ops,
-                results);                           //Pg1-7
+        run_servo_ops_and_get_results(gcr_addr, c_servo_queue_amp_meas, 2, servo_ops,
+                                      results);                                           //Pg1-7
+
+        // Re-enable servo status for result at min/max
+        put_ptr_field(gcr_addr, rx_servo_status_error_en, 0b1111, read_modify_write);
 
         // Ignore servo errors (could rail due to incorrect gain).
         // Check for recal abort and return without changing gain on an abort.
@@ -361,8 +380,8 @@ int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, bool* gain_changed, bool recal, bo
                 //int ratio_target = low_target / 2;                                                                              //
                 int ratio_step =   jump_target >>
                                    4;//11.25                                                                       //Pg3-2
-                int ratio_target_mult = (mult_int16 (6,
-                                                     jump_target));                                                            //Pg3-2
+                int ratio_target_mult = 6 *
+                                        jump_target;                                                                          //Pg3-2
                 int ratio_target = (ratio_target_mult) >> 4
                                    ;//67.5                                                               //Pg3-2
                 int ratio_index =

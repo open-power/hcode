@@ -41,6 +41,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// bja19082100 |bja     | Set rx_fail_flag on error
+// bja19081900 |bja     | Set FIR when bist error conditions are met
+// bja19081400 |bja     | Remove while loops. Use longer spins instead.
 // vbr19060300 |vbr     | HW486157/HW492011: Switch to set_cal_bank() so set DL/RLM clock_sel; gate DL clock.
 // mwh19041700 |mwh     | Below works --
 // mwh19040100 |mwh     | Made fixed that were noted by review
@@ -206,10 +209,13 @@ void min_pr_shift(t_gcr_addr* gcr_addr, int stop_value, int all_zero_ones, t_ban
 
             if(rx_berpl_count_int != 0 )
             {
-                mem_pl_field_put(rx_ber_fail, lane, 0b1);    //pl set pl error
                 set_debug_state(0x510E);
-            }
+                mem_pl_field_put(rx_ber_fail, lane, 0b1);
+                mem_pg_field_put(rx_fail_flag, 0b1);
+                set_fir(fir_code_dft_error);
+            }//pl set pl error
 
+            // TODO - BJA - is BER really done for each lane at this point? What about all the rest of the phase rotator positions/bumps?
             if (bank == bank_a)
             {
                 mem_pl_field_put(rx_a_ber_done, lane, 0b1);   //ppe pl
@@ -277,8 +283,6 @@ void eo_rxbist_ber(t_gcr_addr* gcr_addr, t_bank bank)
     set_debug_state(ber_num_lanes);//max number of lanes ??
     //int ber_num_lanes = 1;
     int lane;// = get_gcr_addr_lane(gcr_addr);
-    int count_loop = 5; //
-
 
     //Enable the ber counter and timer
     put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 0b1, read_modify_write);//pg
@@ -389,15 +393,8 @@ void eo_rxbist_ber(t_gcr_addr* gcr_addr, t_bank bank)
     }//end for
 
 
-    //Strait timer used to let cdrs lock
-    while (count_loop > 1)//given time for CDR to lock since doing big jump
-    {
-        //while loop
-        set_debug_state(0x5106);
-        io_spin_us(1);//1 micro-sec
-        count_loop--;
-    }//end while
-
+    set_debug_state(0x5106);
+    io_spin_us(4);
 
     int num_of_bumps = 0;//0,1,2,3 = 128 steps
 

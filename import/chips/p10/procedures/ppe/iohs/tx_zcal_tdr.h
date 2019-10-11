@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap19091000 |gap     | Change rx_dcc_debug to tx_dcc_debug HW503432
 // gap19041000 |gap     | Created
 // -----------------------------------------------------------------------------
 
@@ -48,11 +49,19 @@
 // Design parameters
 #define tx_zcal_tdr_dac_75percent_vio_c    192 /* assumes 255 step dac                                     */
 #define tx_zcal_tdr_dac_25percent_vio_c     64 /* assumes 255 step dac                                     */
-#define tx_zcal_tdr_pulse_width_c      100
-#define tx_zcal_tdr_sample_into_pulse_c      2 /* 2 --> 1/2 into pulse; 4 1/4 into pulse                   */
+
+/* at 16 ui/grid clk, 32G, a value of 100 gives a 100nS pulse width                                        */
+#define tx_zcal_tdr_pulse_width_c          100 /* width of tdr pulse; period is 4*grid clk period * this   */
+
+/* want the sample after the pulse settling time; the later in the pulse, the better, though we don't want */
+/* to hit the trailing edge; arbitrarily choosing 10 from the end                                          */
+#define tx_zcal_tdr_sample_position_c      190 /* grid clocks from start of pulse to sample                */
 #define tx_zcal_tdr_16to1_grid_clk_ratio_c  16 /* ui's/pulse_width value for 16:1                          */
 #define tx_zcal_tdr_matches_needed_c         2 /* # compare reads that must match before removing segments */
 
+/* 20 tdr pulses to settle; at 50G, 32:1, pw=100; a period is 12800/50 = 256nS; x 20 = 5.12 uS; assume at  */
+/* least 0.12 us due to pepe put/get --> 5uS wait time                                                     */
+#define tx_zcal_tdr_th_wait_us_c             5 /* wait time for track and hold to settle                   */
 
 // types of sst segments
 typedef enum
@@ -70,6 +79,8 @@ void tx_zcal_tdr_write_en (t_gcr_addr* gcr_addr_i, uint8_t num_2r_equiv_i, t_seg
 bool tx_zcal_tdr_decrement_bank(t_gcr_addr* gcr_addr_i, t_segtype segtype_i, uint8_t* current_pre2_io,
                                 uint8_t* current_pre1_io, uint8_t* current_main_io);
 bool tx_zcal_tdr_capt_match_mult_rds(t_gcr_addr* gcr_addr_i, uint8_t match_value_i, uint8_t times_i);
+bool tx_zcal_tdr_split_main_therm (const uint32_t num_2r_equiv_i, uint8_t high_width_i, uint8_t low_width_i,
+                                   uint32_t* high_bits_io, uint32_t* low_bits_io);
 uint32_t tx_zcal_tdr_toTherm( const uint32_t i_dec );
 uint32_t tx_zcal_tdr_toThermWithHalf( const uint32_t i_dec, const uint8_t i_width );
 
@@ -81,9 +92,9 @@ uint32_t tx_zcal_tdr_toThermWithHalf( const uint32_t i_dec, const uint8_t i_widt
 ////////////////////////////////////////////////////////////////////////////////////////////
 // share with dcc since these are not run at the same time
 #if IO_DISABLE_DEBUG == 1
-    #define set_rx_dcc_debug_tx_zcal_tdr(marker, value) {}
+    #define set_tx_dcc_debug_tx_zcal_tdr(marker, value) {}
 #else
     // This writes a "marker" followed by a value "value" to the mem_regs which can be used for tracking execution value.
-    #define set_rx_dcc_debug_tx_zcal_tdr(marker, value) { mem_regs_u16[pg_addr(rx_dcc_debug_addr)] = (marker);  mem_regs_u16[pg_addr(rx_dcc_debug_addr)] = (value); }
+    #define set_tx_dcc_debug_tx_zcal_tdr(marker, value) { mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (marker);  mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (value); }
 #endif //DISABLE_IO_DEBUG
 #endif // _TX_ZCAL_TDR_H_

@@ -41,6 +41,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// bja19082200 |bja     | add bits to rx_bist_cir_alias
+// bja19081900 |bja     | Switch addr to tx_group before setting tx_bist_en
 // cws19053000 |cws     | Removed hw_reg_init, dccal, run_lane calls
 // mwh19052200 |mwh     | updated rx_bist_cir_alias
 // mwh19042600 |mwh     | Initial Rev 51yy debug state
@@ -83,8 +85,15 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
     //enabling all rx bist checks
     put_ptr_field(gcr_addr, rx_check_en_alias, 0xFFFE, fast_write); //pg
 
+    // switch to tx address
+    int saved_gcr_reg_id = get_gcr_addr_reg_id(gcr_addr);
+    set_gcr_addr_reg_id(gcr_addr, tx_group);
+
     //enabling all tx bist checks
     put_ptr_field(gcr_addr, tx_bist_en_alias, 0b111, read_modify_write ); //pg
+
+    // switch gcr address back
+    set_gcr_addr_reg_id(gcr_addr, saved_gcr_reg_id);
 
     //turn on pervasive_capt see what pervasive signs are set scan only observ
     put_ptr_field(gcr_addr, rx_pervasive_capt, 0b1, read_modify_write ); //pg
@@ -104,7 +113,7 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
         //begin for
         //turn on circuit components for bist
         set_gcr_addr_lane(gcr_addr, lane);
-        put_ptr_field(gcr_addr, rx_bist_cir_alias, 0b100000, read_modify_write); //pl
+        put_ptr_field(gcr_addr, rx_bist_cir_alias, 0x8000, read_modify_write); //pl
 
         //doing lane power up
         //mem_pl_field_put(io_power_up_lane_req,lane,0b1);//pl

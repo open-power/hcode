@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19100300 |vbr     | Changing duplicate debug states.
+// vbr19092000 |vbr     | HW506463: Added back in writing to fw_thread_stopped.
 // cws19051300 |cws     | Changed API to Software
 // mwh19042600 |mwh     | HW490057 Change order of excution put "lane power up" after DCcal -- meeting
 // vbr19040200 |vbr     | HW487712: Remove ucontroller_test from primary image.
@@ -255,12 +257,12 @@ void ioo_thread(void* arg)
         // Do not run loop  while fw_stop_thread is set; this may be done when in an error condition and need to reset.
         // Also, mirror the setting as the status/handshake.
         l_stop_thread = fw_field_get(fw_stop_thread);
+        fw_field_put(fw_thread_stopped, l_stop_thread);
 
         if (l_stop_thread)
         {
             set_debug_state(0x00FF); // DEBUG - Thread Stopped
 
-            //fw_field_put(fw_thread_stopped, l_stop_thread);
             // Reset last_init_lane when stopping the thread (assume bus is being reset)
             l_last_init_lane = -1;
         }
@@ -772,7 +774,7 @@ static void dl_init_req(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes, int
     }
 
     //set_gcr_addr_lane(io_gcr_addr, 0);
-    set_debug_state(0x0005);
+    set_debug_state(0x0027);
     return;
 }
 
@@ -797,7 +799,7 @@ static uint32_t get_dl_recal_req_vec(t_gcr_addr* io_gcr_addr)
  */
 static void dl_recal_req(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes, const uint32_t i_recal_req_vec)
 {
-    set_debug_state(0x0006);
+    set_debug_state(0x0026);
 
     uint32_t l_lane = 0;
 

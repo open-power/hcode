@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jgr19102300 |jgr     | HW509784: updated put/get functions to wait for echo flag independent of read valid
 // vbr19031300 |vbr     | Removed inlining on some set_gcr_addr_* functions.
 // mbs19021900 |mbs     | Updated polling loop in ll_put
 // mbs19021800 |mbs     | Replaced mmio functions with ll and msg functions for the dl ppe to use
@@ -462,7 +463,7 @@ void gcr_wr_raw(t_gcr_addr* gcr_addr, uint64_t packet)
     uint64_t volatile* lclmem_addr = (uint64_t*)gcr_port_addr;
 
     // wait on previous op while start bit is set but echo flag is not set
-    while (((*lclmem_addr) & 0xF000000000000000) == 0x8000000000000000 );
+    while (((*lclmem_addr) & 0x9000000000000000) == 0x8000000000000000 );
 
     // send write op and exit
     (*lclmem_addr) = packet;
@@ -477,8 +478,8 @@ void put_ptr_fast_int(t_gcr_addr* gcr_addr, uint32_t reg_addr, uint32_t data)
     uint64_t volatile* lclmem_addr64 = (uint64_t*)gcr_port_addr;
     uint32_t volatile* lclmem_addr32 = (uint32_t*)gcr_port_addr;
 
-    // Wait on previous op while start bit is set but echo flag or read response flag is not set. Satus bits are in upper word.
-    while (((*lclmem_addr32) & 0xF0000000) == 0x80000000);
+    // Wait on previous op while start bit is set but echo flag is not set. Status bits are in upper word.
+    while (((*lclmem_addr32) & 0x90000000) == 0x80000000); // Bit 0 is start, bit 3 is echo
 
     // Data field is already shifted into correct bit position by wrapper function.
     uint32_t w_addr_data = reg_addr | data;
@@ -507,8 +508,8 @@ void put_ptr_int(t_gcr_addr* gcr_addr, uint32_t reg_addr, uint32_t and_mask, uin
     uint64_t volatile* lclmem_addr64 = (uint64_t*)gcr_port_addr;
     uint32_t volatile* lclmem_addr32 = (uint32_t*)gcr_port_addr;
 
-    // Wait on previous op while start bit is set but echo flag or read response flag is not set. Satus bits are in upper word.
-    while (((*lclmem_addr32) & 0xF0000000) == 0x80000000);
+    // Wait on previous op while start bit is set but echo flag is not set. Status bits are in upper word.
+    while (((*lclmem_addr32) & 0x90000000) == 0x80000000); // Bit 0 is start, bit 3 is echo
 
     // Send Read Req packet
     (*lclmem_addr64) = rd_packet;
@@ -524,12 +525,15 @@ void put_ptr_int(t_gcr_addr* gcr_addr, uint32_t reg_addr, uint32_t and_mask, uin
     {
         resp_packet = (*lclmem_addr64);
     }
-    while ( (resp_packet & 0x4000000000000000) == 0x0);
+    while ( (resp_packet & 0x2000000000000000) == 0x0);   // Bit 2 is read data valid
 
     // Mask out old data field and or in new data, then finish forming the packet.
     // Data field is already shifted into correct bit position by wrapper function.
     uint32_t w_data = (resp_packet & and_mask) | data;
     wr_packet = wr_packet | w_data;
+
+    // Wait on previous op while start bit is set but echo flag is not set. Status bits are in upper word.
+    while (((*lclmem_addr32) & 0x90000000) == 0x80000000);
 
     // write data back and exit
     (*lclmem_addr64) = wr_packet;
@@ -544,8 +548,8 @@ uint32_t get_ptr_int(t_gcr_addr* gcr_addr, uint32_t reg_addr, uint32_t and_mask,
     uint64_t volatile* lclmem_addr64 = (uint64_t*)gcr_port_addr;
     uint32_t volatile* lclmem_addr32 = (uint32_t*)gcr_port_addr;
 
-    // Wait on previous op while start bit is set but echo flag or read response flag is not set. Satus bits are in upper word.
-    while (((*lclmem_addr32) & 0xF0000000) == 0x80000000);
+    // Wait on previous op while start bit is set but echo flag is not set. Status bits are in upper word.
+    while (((*lclmem_addr32) & 0x90000000) == 0x80000000);
 
     // Form the Read Req packet
     uint64_t packet =
@@ -562,7 +566,7 @@ uint32_t get_ptr_int(t_gcr_addr* gcr_addr, uint32_t reg_addr, uint32_t and_mask,
     {
         result = (*lclmem_addr64);
     }
-    while ( (result & 0x4000000000000000) == 0x0);
+    while ( (result & 0x2000000000000000) == 0x0);   // Bit 2 is read data valid
 
     uint32_t r_data = ((uint32_t)(result & and_mask)) >> shift_amt;
 

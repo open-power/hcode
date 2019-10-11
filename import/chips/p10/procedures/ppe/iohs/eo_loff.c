@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mbs19072500 |mbs     | Moved live_edgeoff_mode out of loff_setting_ovr_enb umbrella
 // mwh19051700 |mwh     | HW492097 changed inc/dec for change in step size
 // mwh19040200 |mwh     | add a put of rx_loff_hyst_start to 5, to reset for loff
 // mwh19020601 |mwh     | Combined abort and hyst
@@ -131,6 +132,7 @@ int eo_loff_fenced(t_gcr_addr* gcr_addr, t_bank bank)
     else
     {
         //run servo start and set default filter and inc/dec
+        put_ptr_field(gcr_addr, rx_loff_livedge_mode, 0b0, read_modify_write);//livedge off mode
 
         int loff_setting_ovr = mem_regs_u16_get(pg_addr(loff_setting_ovr_enb_addr), loff_setting_ovr_enb_mask,
                                                 loff_setting_ovr_enb_shift);
@@ -139,8 +141,6 @@ int eo_loff_fenced(t_gcr_addr* gcr_addr, t_bank bank)
 
         if ( loff_setting_ovr == 0)
         {
-            put_ptr_field(gcr_addr, rx_loff_livedge_mode, 0b0, read_modify_write);//livedge off mode
-
             put_ptr_field(gcr_addr, rx_loff_filter_depth0, 0b0011, read_modify_write);// 3    3
             put_ptr_field(gcr_addr, rx_loff_filter_depth1, 0b0011, read_modify_write);// 4    3
             put_ptr_field(gcr_addr, rx_loff_filter_depth2, 0b0011, read_modify_write);// 5    3

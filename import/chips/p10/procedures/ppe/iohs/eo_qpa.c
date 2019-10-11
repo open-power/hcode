@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jfg19090900 |jfg     | HW503330 Remove default FIR action (true parm) in wait_for_cdr
 // jfg19070801 |jfg     | typo
 // jfg19070800 |jfg     | fixed prior bug in edge_seek loop which skipped 0 step check for ending while loop
 // jfg19070200 |jfg     | Error in step movement caused by switch to multi-step. Replace hardcoded 1 with variable.
@@ -347,6 +348,12 @@ int nedge_seek_step (t_gcr_addr* gcr_addr, t_bank bank, unsigned int Dstep, unsi
 
             do
             {
+                if ( seek_edge != doseek )
+                {
+                    // Sleep the thread here unless we're doing a fast outward seek of the edge
+                    io_sleep(get_gcr_addr_thread(gcr_addr));
+                }
+
                 ber_status = get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit, rx_ber_timer_running_endbit);
             }
             while (ber_status != 0);
@@ -461,7 +468,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
 
     // Check CDR lock status before clearing sticky bit to start test.
     int cdrlock_ignore = mem_pg_field_get(rx_qpa_cdrlock_ignore);
-    cdr_status = wait_for_cdr_lock(gcr_addr, true);
+    cdr_status = wait_for_cdr_lock(gcr_addr, false);
 
     //cdr_status = (bank == bank_a) ? (cdr_status & 0x2) : (cdr_status & 0x1);
     if ((cdr_status != pass_code) && (cdrlock_ignore != 1))

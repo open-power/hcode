@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap19091000 |gap     | Change rx_dcc_debug to tx_dcc_debug HW503432
 // gap18112700 |gap     | Remove min and max defines
 // gap18101100 |gap     | Created
 // -----------------------------------------------------------------------------
@@ -62,9 +63,9 @@ void txbist_main_set_bist_fail(t_gcr_addr* gcr_addr_i);
 ////////////////////////////////////////////////////////////////////////////////////////////
 // share with dcc since these are not run at the same time
 #if IO_DISABLE_DEBUG == 1
-    #define set_rx_dcc_debug_txbist(marker, value) {}
+    #define set_tx_dcc_debug_txbist(marker, value) {}
 #else
     // This writes a "marker" followed by a value "value" to the mem_regs which can be used for tracking execution value.
-    #define set_rx_dcc_debug_txbist(marker, value) { mem_regs_u16[pg_addr(rx_dcc_debug_addr)] = (marker);  mem_regs_u16[pg_addr(rx_dcc_debug_addr)] = (value); }
+    #define set_tx_dcc_debug_txbist(marker, value) { mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (marker);  mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (value); }
 #endif //DISABLE_IO_DEBUG
 #endif //_TXBIST_MAIN_H_

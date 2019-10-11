@@ -39,7 +39,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
-// gap19062600 |gap     | Added call to adjust in init, HW496354
+// gap19091000 |gap     | Change rx_dcc_debug to tx_dcc_debug HW503432
+// mbs19090500 |mbs     | Updated tx_dcc_main_min_samples mem_reg for sim speedup
+// vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
+// gap19073000 |gap     | Updated to use modified dcdet circuitry and associated state machine
 // gap19061800 |gap     | Changed from tx_dcc_out bit to tx_dcc_out_vec, still using one bit
 // vbr19051700 |vbr     | Updated multiply by -1 to not use multiplier.
 // gap19061300 |gap     | Changed from io_wait to io_wait_us
@@ -51,13 +54,10 @@
 // -----------------------------------------------------------------------------
 
 #include <stdbool.h>
-
 #include "io_lib.h"
 #include "pk.h"
-
 #include "eo_common.h"
 #include "tx_dcc_main.h"
-
 #include "ppe_com_reg_const_pkg.h"
 #include "config_ioo.h"
 
@@ -69,23 +69,18 @@ void tx_dcc_main_init(t_gcr_addr* gcr_addr_i)
 {
     set_debug_state(0xD010); // init start
 
-    int thread_l = get_gcr_addr_thread(gcr_addr_i);
+    uint32_t tx_dcc_main_min_samples_int = mem_pg_field_get(tx_dcc_main_min_samples);
 
-    put_ptr_field(gcr_addr_i, tx_dcc_i_tune,   IntToGray6(0),    read_modify_write);
-    put_ptr_field(gcr_addr_i, tx_dcc_q_tune,   IntToGray6(0),    read_modify_write);
+    put_ptr_field(gcr_addr_i, tx_dcc_i_tune,   IntToGray6(0),   read_modify_write);
+    put_ptr_field(gcr_addr_i, tx_dcc_q_tune,   IntToGray6(0),   read_modify_write);
     put_ptr_field(gcr_addr_i, tx_dcc_iq_tune,  IntToGray5IQ(0), read_modify_write);
 
-    // this needs to be a separate write
-    put_ptr_field(gcr_addr_i, tx_dcc_az, 0b1, read_modify_write);
-    io_wait_us(thread_l, tx_dcc_main_az_wait_init_us_c);
-
-    tx_dcc_main_servo(gcr_addr_i, (tx_dcc_max_i_c + 1) / 2, tx_dcc_dir_i_c,   SERVOOP_I,  tx_dcc_min_i_c,  tx_dcc_max_i_c);
-    tx_dcc_main_servo(gcr_addr_i, (tx_dcc_max_q_c + 1) / 2, tx_dcc_dir_q_c,   SERVOOP_Q,  tx_dcc_min_q_c,  tx_dcc_max_q_c);
-    tx_dcc_main_servo(gcr_addr_i, (tx_dcc_max_iq_c + 1) / 2, tx_dcc_dir_iq_c, SERVOOP_IQ, tx_dcc_min_iq_c, tx_dcc_max_iq_c);
-
-    // this extra servo with a step of 1 allows hitting extreme of range; binary search hits starting_value +- (2*starting_step - 1)
-    // for iq, this is -15 to +15; in the case of the ideal result being 17, we want an answer of 16 to reduce the error
-    tx_dcc_main_adjust(gcr_addr_i);
+    tx_dcc_main_servo(gcr_addr_i, tx_dcc_main_max_step_i_c,  tx_dcc_main_dir_i_c,  SERVOOP_I, tx_dcc_main_min_i_c,
+                      tx_dcc_main_max_i_c,  tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
+    tx_dcc_main_servo(gcr_addr_i, tx_dcc_main_max_step_q_c,  tx_dcc_main_dir_q_c,  SERVOOP_Q, tx_dcc_main_min_q_c,
+                      tx_dcc_main_max_q_c,  tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
+    tx_dcc_main_servo(gcr_addr_i, tx_dcc_main_max_step_iq_c, tx_dcc_main_dir_iq_c, SERVOOP_IQ, tx_dcc_main_min_iq_c,
+                      tx_dcc_main_max_iq_c, tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
 
     set_debug_state(0xD01F); // init end
 } //tx_dcc_main_init
@@ -98,9 +93,14 @@ int tx_dcc_main_adjust(t_gcr_addr* gcr_addr_i)
 {
     set_debug_state(0xD020); // adjust start
 
-    tx_dcc_main_servo(gcr_addr_i, 1, tx_dcc_dir_i_c,  SERVOOP_I,  tx_dcc_min_i_c,  tx_dcc_max_i_c);
-    tx_dcc_main_servo(gcr_addr_i, 1, tx_dcc_dir_q_c,  SERVOOP_Q,  tx_dcc_min_q_c,  tx_dcc_max_q_c);
-    tx_dcc_main_servo(gcr_addr_i, 1, tx_dcc_dir_iq_c, SERVOOP_IQ, tx_dcc_min_iq_c, tx_dcc_max_iq_c);
+    uint32_t tx_dcc_main_min_samples_int = mem_pg_field_get(tx_dcc_main_min_samples);
+
+    tx_dcc_main_servo(gcr_addr_i, 1, tx_dcc_main_dir_i_c,  SERVOOP_I,  tx_dcc_main_min_i_c,  tx_dcc_main_max_i_c,
+                      tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
+    tx_dcc_main_servo(gcr_addr_i, 1, tx_dcc_main_dir_q_c,  SERVOOP_Q,  tx_dcc_main_min_q_c,  tx_dcc_main_max_q_c,
+                      tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
+    tx_dcc_main_servo(gcr_addr_i, 1, tx_dcc_main_dir_iq_c, SERVOOP_IQ, tx_dcc_main_min_iq_c, tx_dcc_main_max_iq_c,
+                      tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
 
     int status_l = pass_code;
 
@@ -114,33 +114,30 @@ int tx_dcc_main_adjust(t_gcr_addr* gcr_addr_i)
 // Run Duty cycle servo to move towards or over edge with finer steps downto a step size of 1
 ////////////////////////////////////////////////////////////////////////////////////
 void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir_i, t_servoop op_i, int32_t min_tune_i,
-                       int32_t max_tune_i)
+                       int32_t max_tune_i, uint32_t min_samples_i,
+                       int32_t ratio_thresh_i)
 {
     set_debug_state(0xD030); // servo start
 
-    set_rx_dcc_debug(0xD051, step_size_i); //step_size_i
-    set_rx_dcc_debug(0xD052, dir_i); //temp debug
-    set_rx_dcc_debug(0xD053, min_tune_i); //temp debug
-    set_rx_dcc_debug(0xD054, max_tune_i); //temp debug
-    set_rx_dcc_debug(0xD055, op_i); //temp debug
-    set_rx_dcc_debug(0xD056, SERVOOP_I); //temp debug
-    set_rx_dcc_debug(0xD057, SERVOOP_Q); //temp debug
-    set_rx_dcc_debug(0xD058, SERVOOP_IQ); //temp debug
+    set_tx_dcc_debug(0xD071, step_size_i); //step_size_i
+    set_tx_dcc_debug(0xD072, dir_i); //temp debug
+    set_tx_dcc_debug(0xD073, min_tune_i); //temp debug
+    set_tx_dcc_debug(0xD074, max_tune_i); //temp debug
+    set_tx_dcc_debug(0xD075, op_i); //temp debug
+    set_tx_dcc_debug(0xD076, SERVOOP_I); //temp debug
+    set_tx_dcc_debug(0xD077, SERVOOP_Q); //temp debug
+    set_tx_dcc_debug(0xD078, SERVOOP_IQ); //temp debug
 
-    uint8_t dccout_l = 0;
+    t_comp_result comp_decision_l = COMP_RESULT_P_NEAR_N;
+    t_comp_result initial_comp_decision_l = COMP_RESULT_P_NEAR_N;
     int dcc_next_tune_l = 0;
-//    int dcc_next_tune_reg_l = 0;
     int dcc_last_tune_l = 0;
     int adj_l = 0;
     int step_l = 0;
-    bool at_max_limit_l = false;
-    bool at_min_limit_l = false;
-    bool would_overflow_l = false;
-    bool would_underflow_l = false;
-
-    int thread_l = get_gcr_addr_thread(gcr_addr_i);
-    io_wait_us(thread_l, tx_dcc_main_az_wait_servo_us_c);
-    put_ptr_field(gcr_addr_i, tx_dcc_az, 0, read_modify_write);
+    int step_size_l = 0;
+    bool done = false;
+    bool saved_compare = false;
+    int thread_l = 0;
 
     switch(op_i)
     {
@@ -163,97 +160,183 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir
             break;
     }
 
+    thread_l = get_gcr_addr_thread(gcr_addr_i);
+    step_size_l = step_size_i;
+    saved_compare = false;
+    done = false;
+
     do
     {
-        set_debug_state(0xD034); // servo read dcc out
-        dccout_l = get_ptr_field(gcr_addr_i, tx_dcc_out_vec) & 0b1 ; // look at lsb until filter algorithm in place
-        step_l = mult_int16(step_size_i, dir_i);
+        set_debug_state(0xD041); // servo do loop start
+        io_wait_us(thread_l, tx_dcc_main_wait_tune_us_c);
+        comp_decision_l = tx_dcc_main_compare_result(gcr_addr_i, min_samples_i, ratio_thresh_i);
 
-        if (dccout_l > 0)
+        if (!saved_compare)
         {
-            set_debug_state(0xD035); // servo prelim reduce
-            adj_l = -1 * step_l;
-        }
-        else
-        {
-            set_debug_state(0xD036); // servo prelim increase
-            adj_l = step_l;
+            initial_comp_decision_l = comp_decision_l;
+            saved_compare = true;
         }
 
-        set_rx_dcc_debug(0xD059, adj_l);
-        set_rx_dcc_debug(0xD05A, dcc_last_tune_l);
-        set_rx_dcc_debug(0xD05B, max_tune_i);
-        set_rx_dcc_debug(0xD05C, min_tune_i);
-        set_rx_dcc_debug(0xD05D, step_l);
-        set_rx_dcc_debug(0xD05E, dccout_l);
+        step_l = step_size_l * dir_i;
 
-        at_max_limit_l    = (dcc_last_tune_l == max_tune_i);
-        would_overflow_l  = (adj_l + dcc_last_tune_l > max_tune_i);
-        at_min_limit_l    = (dcc_last_tune_l == min_tune_i);
-        would_underflow_l = (adj_l + dcc_last_tune_l < min_tune_i);
-
-        if (would_overflow_l)
+        switch(comp_decision_l)
         {
-            if (at_max_limit_l)
-            {
-                set_debug_state(0xD037); // servo at max limit
+            case COMP_RESULT_P_GT_N:
+                set_debug_state(0xD034); // servo prelim reduce
+                adj_l = -1 * step_l;
                 break;
+
+            case COMP_RESULT_P_LT_N:
+                set_debug_state(0xD035); // servo prelim increase
+                adj_l = step_l;
+                break;
+
+            case COMP_RESULT_P_NEAR_N:
+                set_debug_state(0xD036); // servo no change - done
+                done = true;
+                break;
+        }
+
+        set_tx_dcc_debug(0xD089, adj_l);
+        set_tx_dcc_debug(0xD08A, dcc_last_tune_l);
+        set_tx_dcc_debug(0xD08B, max_tune_i);
+        set_tx_dcc_debug(0xD08C, min_tune_i);
+        set_tx_dcc_debug(0xD08D, step_l);
+
+        if (!done)
+        {
+            if ((adj_l + dcc_last_tune_l) > max_tune_i)
+            {
+                if (dcc_last_tune_l == max_tune_i)
+                {
+                    set_debug_state(0xD037); // servo at max limit - done
+                    done = true;
+                }
+                else
+                {
+                    set_debug_state(0xD038); // servo tune to max
+                    // there is a suboptimization issue with this
+                    // in normal scenarios, one could see, with a step_size_i of 4,
+                    // for example, this sequence of tune values:
+                    //   max_tune_i - 1; max_tune_i; max_tune_i - 2; max_tune_i - 1
+                    // With some work adjusting step_size_l, we could avoid this
+                    //   though adjusting properly and generally, may be non-trivial
+                    //   that approach needs to consider the possibilty that
+                    //   dcc_last_tune_l may have started out of range
+                    dcc_next_tune_l = max_tune_i;
+                }
+            }
+            else if ((adj_l + dcc_last_tune_l) < min_tune_i)
+            {
+                if (dcc_last_tune_l == min_tune_i)
+                {
+                    set_debug_state(0xD039); // servo at min limit - done
+                    done = true;
+                }
+                else
+                {
+                    set_debug_state(0xD03A); // servo tune to min
+                    // see above for a suboptimization issue that is also present here
+                    dcc_next_tune_l = min_tune_i;
+                }
             }
             else
             {
-                set_debug_state(0xD038); // servo tune to max
-                dcc_next_tune_l = max_tune_i;
+                set_debug_state(0xD03B); // servo use prelim adj
+                dcc_next_tune_l = dcc_last_tune_l + adj_l;
             }
         }
-        else if (would_underflow_l)
+
+        if (!done)
         {
-            if (at_min_limit_l)
+            set_tx_dcc_debug(0xD090, dcc_next_tune_l);
+
+            switch(op_i)
             {
-                set_debug_state(0xD039); // servo at min limit
-                break;
+                case SERVOOP_I:
+                    set_debug_state(0xD03C); // servo update i
+                    put_ptr_field(gcr_addr_i, tx_dcc_i_tune,   IntToGray6(dcc_next_tune_l),    read_modify_write);
+                    break;
+
+                case SERVOOP_Q:
+                    set_debug_state(0xD03D); // servo update q
+                    put_ptr_field(gcr_addr_i, tx_dcc_q_tune,   IntToGray6(dcc_next_tune_l),    read_modify_write);
+                    break;
+
+                case SERVOOP_IQ:
+                    set_debug_state(0xD03E); // servo update iq
+                    put_ptr_field(gcr_addr_i, tx_dcc_iq_tune,   IntToGray5IQ(dcc_next_tune_l),    read_modify_write);
+                    break;
             }
-            else
+
+            if((initial_comp_decision_l != comp_decision_l) | (step_size_l < step_size_i) | (step_size_l <= 1))
             {
-                set_debug_state(0xD03A); // servo tune to min
-                dcc_next_tune_l = min_tune_i;
+                step_size_l = step_size_l >> 1;
+                set_tx_dcc_debug(0xD091, step_size_l); //temp debug
             }
+
+            dcc_last_tune_l = dcc_next_tune_l;
         }
-        else
-        {
-            set_debug_state(0xD03B); // servo use prelim adj
-            dcc_next_tune_l = dcc_last_tune_l + adj_l;
-        }
-
-        set_rx_dcc_debug(0xD05F, dcc_next_tune_l);
-
-        switch(op_i)
-        {
-            case SERVOOP_I:
-                set_debug_state(0xD03C); // servo update i
-                put_ptr_field(gcr_addr_i, tx_dcc_i_tune,   IntToGray6(dcc_next_tune_l),    read_modify_write);
-                break;
-
-            case SERVOOP_Q:
-                set_debug_state(0xD03D); // servo update q
-                put_ptr_field(gcr_addr_i, tx_dcc_q_tune,   IntToGray6(dcc_next_tune_l),    read_modify_write);
-                break;
-
-            case SERVOOP_IQ:
-                set_debug_state(0xD03E); // servo update iq
-                put_ptr_field(gcr_addr_i, tx_dcc_iq_tune,   IntToGray5IQ(dcc_next_tune_l),    read_modify_write);
-                break;
-        }
-
-        set_debug_state(0xD041); // servo prep next trial
-        set_rx_dcc_debug(0xD060, step_size_i); //temp debug
-        dcc_last_tune_l = dcc_next_tune_l;
-        step_size_i = step_size_i >> 1;
-
     }
-    while (step_size_i > 0);
-
-    set_debug_state(0xD042); // servo reenable autozero
-    put_ptr_field(gcr_addr_i, tx_dcc_az, 1, read_modify_write);
+    while ((step_size_l > 0) & !done);
 
     set_debug_state(0xD04F); // servo end
 } //tx_dcc_main_servo
+
+////////////////////////////////////////////////////////////////////////////////////
+// DCC compare result
+// Run compare state machine and return whether P >, <, or near N
+////////////////////////////////////////////////////////////////////////////////////
+t_comp_result tx_dcc_main_compare_result(t_gcr_addr* gcr_addr_i, uint32_t min_samples_i, int32_t ratio_thresh_i)
+{
+    set_debug_state(0xD050); // compare_result_start
+
+    t_comp_result comp_result_l = COMP_RESULT_P_NEAR_N;
+    uint32_t vote_p_gt_n_l = 0;
+    uint32_t vote_p_lt_n_l = 0;
+    uint32_t vote_l = 0;
+    uint32_t vote_total_l = 0;
+
+    put_ptr_field(gcr_addr_i, tx_dcc_cmp_run, 1, read_modify_write);
+
+    do
+    {
+        set_debug_state(0xD051); // compare_result loop begin
+
+        vote_l = get_ptr_field(gcr_addr_i, tx_dcc_cmp_cnt_alias) ; // up followed by down
+
+        vote_p_gt_n_l = vote_l >> tx_dcc_cmp_down_cnt_width; // assumes alias will only contain up and down
+        vote_p_lt_n_l = vote_l & ((0x1 << tx_dcc_cmp_down_cnt_width) - 1);
+        vote_total_l = vote_p_lt_n_l + vote_p_gt_n_l;
+
+        set_tx_dcc_debug(0xD099, vote_l);
+        set_tx_dcc_debug(0xD09A, vote_p_lt_n_l);
+        set_tx_dcc_debug(0xD09B, vote_p_gt_n_l);
+        set_tx_dcc_debug(0xD09C, vote_total_l);
+        set_tx_dcc_debug(0xD09D, min_samples_i);
+        set_tx_dcc_debug(0xD09E, ratio_thresh_i);
+
+    }
+    while (vote_total_l < min_samples_i);
+
+    if ((vote_p_lt_n_l >> ratio_thresh_i) > vote_p_gt_n_l)
+    {
+        set_debug_state(0xD052); // compare_result p_lt_n
+        comp_result_l = COMP_RESULT_P_LT_N;
+    }
+    else if ((vote_p_gt_n_l >> ratio_thresh_i) > vote_p_lt_n_l)
+    {
+        set_debug_state(0xD053); // compare_result p_gt_n
+        comp_result_l = COMP_RESULT_P_GT_N;
+    }
+    else
+    {
+        set_debug_state(0xD054); // compare_result p_near_n
+        comp_result_l = COMP_RESULT_P_NEAR_N;
+    }
+
+    put_ptr_field(gcr_addr_i, tx_dcc_cmp_run, 0, read_modify_write);
+
+    set_debug_state(0xD06F); // compare_result end
+    return comp_result_l;
+} //tx_dcc_main_compare_result

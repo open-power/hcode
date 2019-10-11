@@ -41,10 +41,11 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// bja19082100 |bja     | Set rx_fail_flag on fail
+// bja19081900 |bja     | Set FIR on fail
+// bja19081400 |bja     | Remove while loops. Use longer spins instead.
 // mwh19040900 |mwh     | Initial Rev 51yy debug state
 //------------------------------------------------------------------------------
-
-
 
 #include <stdbool.h>
 
@@ -60,60 +61,35 @@
 #include "ppe_com_reg_const_pkg.h"
 #include "config_ioo.h"
 
-
-
-
-
-//rx_link_layer_check_en        scom pg
-//rx_io_pb_nv_iobist_reset      scom pg
-//rx_pb_io_nv_iobist_prbs_error scom rox pg
-//rx_linklayer_done             ppe pg
-//rx_linklayer_fail             ppe pg
-
-
 void eo_llbist(t_gcr_addr* gcr_addr)
 {
-    //start eo_rxbist_ber
+    //start eo_llbist
     set_debug_state(0x51E0); // DEBUG
-
-
-    //int ber_num_lanes = fw_field_get(fw_num_lanes); set_debug_state(ber_num_lanes);//max number of lanes ??
-    //int ber_num_lanes = 1;
-    //int lane;// = get_gcr_addr_lane(gcr_addr);
-    int count_loop = 3; //
-
 
     //turn on seed mode and turn off rx_berpl_timer_run_slow
     put_ptr_field(gcr_addr, rx_io_pb_nv_iobist_reset, 0b1, read_modify_write);
 
     //Wait for prbs 15 to sink
-    while (count_loop > 1)//given time for CDR to lock since doing big jump
-    {
-        //while loop
-        set_debug_state(0x51E1);
-        io_spin_us(1);//1 micro-sec
-        count_loop--;
-    }//end while
+    set_debug_state(0x51E1);
+    io_spin_us(2);//2 micro-sec
 
     //turn off seed mode and turn on rx_berpl_timer_run_slow
     put_ptr_field(gcr_addr, rx_io_pb_nv_iobist_reset, 0b0, read_modify_write);
 
-    while (count_loop > 2)//given time for CDR to lock since doing big jump
+    //let comparison run
+    set_debug_state(0x51E2);
+    io_spin_us(1);//1 micro-sec
+
+    int error = get_ptr_field(gcr_addr, rx_pb_io_nv_iobist_prbs_error);//pg
+
+    if ( error )
     {
-        //while loop
-        set_debug_state(0x51E2);
-        io_spin_us(1);//1 micro-sec
-        count_loop--;
-    }//end while
-
-
-    int error = get_ptr(gcr_addr, rx_pb_io_nv_iobist_prbs_error_addr , rx_pb_io_nv_iobist_prbs_error_startbit  ,
-                        rx_pb_io_nv_iobist_prbs_error_endbit);//pg
+        set_fir(fir_code_dft_error);
+    }
 
     mem_pg_field_put(rx_linklayer_done, 0b1);//pg
-    mem_pg_field_put(rx_linklayer_fail, error); //pg
-
+    mem_pg_field_put(rx_linklayer_fail, error);//pg
+    mem_pg_field_put(rx_fail_flag, error);
 
     set_debug_state(0x51E3); // DEBUG
-    //return pass_code;
-}//end eo_rxbist_ber
+}//end eo_llbist

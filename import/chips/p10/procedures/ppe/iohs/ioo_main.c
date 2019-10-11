@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
 // vbr19040200 |vbr     | HW487712: Support to use uct_thread or ioo_thread.
 // vbr19011500 |vbr     | Max number of threads changed from 8 to 5. Kernel stack size increased from 128B to 512B.
 // vbr18120400 |vbr     | Set watchdog_select to correct value.
@@ -193,11 +194,9 @@ int main(int argc, char** argv)
 
     // Initialize the thread control block for each IO thread.
     // Threads are created runnable but unmapped. resume() maps the thread so it is runnable.
-    // Indexing G_io_thread requires a multiply (not a power-of-2 size: 48B), so use mult_int16 and pointer manipulation to avoid using __mulsi3.
     for (thread = 0; thread < io_threads; thread++)
     {
-        int thread_offset = mult_int16(thread, sizeof(PkThread));
-        pk_thread_create((PkThread*)((int)G_io_thread + thread_offset),
+        pk_thread_create((PkThread*)&G_io_thread[thread],
 #ifdef UCT
                          (PkThreadRoutine)uct_thread,
 #else
@@ -207,18 +206,17 @@ int main(int argc, char** argv)
                          (PkAddress)&G_io_thread_stack[thread * IO_THREAD_STACK_SIZE],
                          (size_t)IO_THREAD_STACK_SIZE,
                          (PkThreadPriority)thread);
-        pk_thread_resume((PkThread*)((int)G_io_thread + thread_offset));
+        pk_thread_resume((PkThread*)&G_io_thread[thread]);
     }
 
     // Initialize the Supervisor thread after the IO threads (lowest priority)
-    int thread_offset = mult_int16(thread, sizeof(PkThread));
-    pk_thread_create((PkThread*)((int)G_io_thread + thread_offset),
+    pk_thread_create((PkThread*)&G_io_thread[thread],
                      (PkThreadRoutine)supervisor_thread,
                      (void*)&thread_id[thread],
                      (PkAddress)&G_io_thread_stack[thread * IO_THREAD_STACK_SIZE],
                      (size_t)IO_THREAD_STACK_SIZE,
                      (PkThreadPriority)thread);
-    pk_thread_resume((PkThread*)((int)G_io_thread + thread_offset));
+    pk_thread_resume((PkThread*)&G_io_thread[thread]);
 
     // Start running the highest priority thread. This function never returns.
     pk_start_threads();

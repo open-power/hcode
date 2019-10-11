@@ -40,6 +40,12 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jfg19090900 |jfg     | HW499875 As described in Verif Forum All Eye Opt remove the max_eye condition on the
+//             |        | initial edge search in 8002 (still relies on the one in 8023).
+//             |        | In state 8002 the step jump-back of data/edge will now use all data steps to avoid running out.
+// jfg19071800 |jfg     | HW502715 Restore quads to original position in 8023 pre edge tune
+// jfg19071800 |jfg     | HW497599 prevent async hazard when changing berpl_thresh
+// jfg19071800 |jfg     | HW496621 Add status indicator for lack of mini-PR steps when seeking edges.
 // jfg19062400 |jfg     | moved single stepping wrapper function down into nedge_seek_step so use original
 // vbr19061200 |vbr     | HW492354/HW492202 - With Mini PR gray coding, can only move Mini PR 1 step at at time.
 // jfg19061700 |jfg     | Enhance Eye search with extra double step correction into error free window if too many errors
@@ -179,16 +185,13 @@ const int ber_sel_final = 0x9 + 0x1; // Selects 262K@des16 or 524K@des32. Divide
 // Note: For simplicity, the Edge position is assumed to be 0 if it has an offset which is on the same side as the data when
 // compared to the original position. The nedge seek function assumes data and edge both move in concert or one is set to 0.
 // parms:
-// - estep   : Step size for edge mini-PR to take
-// - dstep   : Step size for data mini-PR to take
 // - pr_vals: 4 uint array containing values of MINI-PR in order of NS Data; NS Edge; EW Data; EW Edge
 // - Esave  : 2 uint array containing original PR position packed into NS / EW format
 // - Dsave  : 2 uint array containing original PR position packed into NS / EW format
-// - Doff   : int containing signed offset from orignal start if desired. Otherwise set = 0
+// - Doff   : 2 int array containing signed offset from orignal start if desired. Otherwise set = 0
 // Return value:
 //  False   : Edge value was not on the opposite side of the data compared to the original target position. It must be dealt with separately.
-bool  pr_recenter(t_gcr_addr* gcr_addr, t_bank bank, uint32_t dstep, uint32_t estep, int* pr_vals, uint32_t* Esave,
-                  uint32_t* Dsave, int* Doffset)
+bool  pr_recenter(t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, uint32_t* Esave, uint32_t* Dsave, int* Doffset)
 {
     int i;
     bool status = true;
@@ -247,8 +250,8 @@ bool  pr_recenter(t_gcr_addr* gcr_addr, t_bank bank, uint32_t dstep, uint32_t es
         while ((Eleft > 0) || (Dleft > 0))
         {
             //calling edge_seek_step with L1 move, using noBER, and no seek with step=X to move Edge/Data back to new center
-            ds = (Dleft > 0) ? dstep : 0;
-            es = (Eleft > 0) ? estep : 0;
+            ds = (Dleft > 0) ? 1 : 0;
+            es = (Eleft > 0) ? 1 : 0;
             // make X steps until each individual phase is at 0
             nedge_seek_step(gcr_addr, bank, ds, es, dirL1R0, true, seek_quad, pr_vals);//, 0
             Eleft -= es;
@@ -282,9 +285,9 @@ void set_ddc_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, uint32_t new_lane
     /* // make 1 data step */
     /* ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, false, false, noseek, pr_active, ber_count); */
     int offsets[2] = {0, 0};
-    pr_recenter(gcr_addr, bank, 1, 1, pr_vals, Esave, Dsave, offsets);
+    pr_recenter(gcr_addr, bank, pr_vals, Esave, Dsave, offsets);
     // Run this twice in case D/E get out of whack and need to restore in opposite directions
-    pr_recenter(gcr_addr, bank, 1, 1, pr_vals, Esave, Dsave, offsets);
+    pr_recenter(gcr_addr, bank, pr_vals, Esave, Dsave, offsets);
 
 }
 
@@ -296,10 +299,15 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
     bool revSeekDir = !seekdir;
     int ber_status;
     int ber_lim = (ber_count == 1) ? 1 : ber_count >> 1;
+    int lane = get_gcr_addr_lane(gcr_addr);
 
     *ber_reported = 0;
+    //Disable then enable BER
+    put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 0, read_modify_write);
     //Initialize sat_thresh to max value to begin error search
     put_ptr_fast(gcr_addr, rx_berpl_sat_thresh_addr, rx_berpl_sat_thresh_endbit, ber_lim);
+    put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 1, read_modify_write);
+
     // Reset the timer to long timeout and start edge search
     put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_long,
             read_modify_write);
@@ -313,117 +321,141 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
         *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, doseek, pr_vals);//, ber_count
     }
 
-    // Paranoia check that max_eye was actually reached under low BER condition
-    if (*ber_reported == max_eye)
+    // Paranoia check that max_eye was actually reached under low BER condition is not needed here
+    // and in fact can have the detrimental effect of mis-representing a step or two edge tuning when
+    // this max is borderline bad
+    put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_short,
+            read_modify_write);
+
+    // Reduce last step movement for margin before continuing Rightward seek.
+    ds = 4;
+    es = 0;
+    *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, noseek, pr_vals);//, ber_count
+
+    if (*ber_reported > ber_count)   //This is pure paranoia and may not be coverable except on really bad channel
     {
-        // If MAX EYE is reached while < ber_count it means that quad phase balancing is not possible nor required due to huge eye or other error.
-        //TODO-SKIP put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_final, read_modify_write);
-        set_debug_state(0x8012 ); // DEBUG max eye check
+        nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, noseek, pr_vals);
     }
-    else
+
+    set_debug_state(0x8002); // DEBUG - 3: Search RIGHT
+
+    t_seek seek_quad = noseekEW;
+
+    //Disable then enable BER
+    put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 0, read_modify_write);
+
+    // The threshold reset is placed here to allow for the previous step reduction to move the sample out of the fuzz
+    // It also keeps the register write outside of the phase loop
+    put_ptr_fast(gcr_addr, rx_berpl_sat_thresh_addr, rx_berpl_sat_thresh_endbit, (0x1 << rx_berpl_sat_thresh_width) - 1 );
+    put_ptr(gcr_addr, rx_berpl_mask_mode_addr, rx_berpl_mask_mode_startbit, rx_berpl_mask_mode_endbit, 1,
+            read_modify_write);
+    put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 1, read_modify_write);
+    // Save original position for returning a quad to ensure same edge dynamics for all other quad searches
+    uint32_t Esave[2];
+    Esave[0] = pr_vals[prEns_i];
+    Esave[1] = pr_vals[prEew_i];
+    uint32_t Dsave[2];
+    Dsave[0] = pr_vals[prDns_i];
+    Dsave[1] = pr_vals[prDew_i];
+    uint32_t Dedge[2];
+    int Doffset[2] = {0, 0};
+
+    do
     {
-        put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_short,
+        // quad_mask assumes N samples aligned to data_pipe(0) and counts N and S together. Smaller granularity is not practical since they can't be aligned independently
+        quad_mask = (seek_quad == noseekEW) ? 0xA : 0x5;
+        put_ptr(gcr_addr, rx_err_trap_mask_addr, rx_err_trap_mask_startbit, rx_err_trap_mask_endbit, quad_mask ,
                 read_modify_write);
+        put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
+        set_debug_state(0x8023); // DEBUG - Set Quadrant mask
 
-        // Reduce a step for margin before continuing Rightward seek.
-        *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, noseek, pr_vals);//, ber_count
+        // 4: Search RIGHT until above below threshold ///////////////////////////////////////////////////
+        ds = 1;
 
-        if (*ber_reported > ber_count)
-        {
-            nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, noseek, pr_vals);
-        }
-
-        set_debug_state(0x8002); // DEBUG - 3: Search RIGHT
-
-        t_seek seek_quad = noseekEW;
-
-        // The threshold reset is placed here to allow for the previous step reduction to move the sample out of the fuzz
-        // It also keeps the register write outside of the phase loop
-        put_ptr_fast(gcr_addr, rx_berpl_sat_thresh_addr, rx_berpl_sat_thresh_endbit, (0x1 << rx_berpl_sat_thresh_width) - 1 );
-        put_ptr(gcr_addr, rx_berpl_mask_mode_addr, rx_berpl_mask_mode_startbit, rx_berpl_mask_mode_endbit, 1,
-                read_modify_write);
-
+        //es = 0;
         do
         {
-            // quad_mask assumes N samples aligned to data_pipe(0) and counts N and S together. Smaller granularity is not practical since they can't be aligned independently
-            quad_mask = (seek_quad == noseekEW) ? 0xA : 0x5;
-            put_ptr(gcr_addr, rx_err_trap_mask_addr, rx_err_trap_mask_startbit, rx_err_trap_mask_endbit, quad_mask ,
+            io_sleep(get_gcr_addr_thread(gcr_addr));
+            ber_status = get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit, rx_ber_timer_running_endbit);
+        }
+        while (ber_status != 0);
+
+        *ber_reported = get_ptr(gcr_addr, rx_berpl_count_addr, rx_berpl_count_startbit, rx_berpl_count_endbit);
+
+        while ((*ber_reported <= ber_count) && (*ber_reported != max_eye))
+        {
+            // make 1 data step to get into fuzz
+            *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, revSeekDir, false, seek_quad, pr_vals);//, ber_count
+        }
+
+        // If MAX EYE is reached while < ber_count it means that quad phase balancing is not possible nor required due to huge eye or other error.
+        if (*ber_reported == max_eye)
+        {
+            // In this case, simply remove one step for margin to ensure no errors and exit with a large eye measurement.
+            *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, seek_quad, pr_vals);//, ber_count
+            mem_pl_field_put(rx_ddc_measure_limited, 1, lane);
+            set_debug_state(0x8012 ); // DEBUG max eye check
+        }
+        else
+        {
+
+            //An extra step for margin.
+            *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, revSeekDir, false, seek_quad, pr_vals);//, ber_count
+
+            ///////DEBUG
+            set_debug_state(0x8013); // DEBUG - 4: Search LEFT to return to ber_count limit
+            put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_final,
                     read_modify_write);
             put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
-            set_debug_state(0x8023); // DEBUG - Set Quadrant mask
-
-            // 4: Search RIGHT until above below threshold ///////////////////////////////////////////////////
-            ds = 1;
-            es = 0;
+            get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit,
+                    rx_ber_timer_running_endbit); // throwaway to sync up BER status
 
             do
             {
+                io_sleep(get_gcr_addr_thread(gcr_addr));
                 ber_status = get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit, rx_ber_timer_running_endbit);
             }
             while (ber_status != 0);
 
             *ber_reported = get_ptr(gcr_addr, rx_berpl_count_addr, rx_berpl_count_startbit, rx_berpl_count_endbit);
 
-            while ((*ber_reported <= ber_count) && (*ber_reported != max_eye))
+            while ((*ber_reported >= ber_count) && (*ber_reported != max_eye))
             {
-                // make 1 data step to get into fuzz
-                *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, revSeekDir, false, seek_quad, pr_vals);//, ber_count
-            }
+                // make 1 data step
+                *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, seek_quad, pr_vals);//, ber_count
+            } ;
 
-            // If MAX EYE is reached while < ber_count it means that quad phase balancing is not possible nor required due to huge eye or other error.
-            // TODO-JG: This is a bit of a headroom problem . Edge could be added to make sure the extent is reached??? but then other data would have to move too.
+            // Paranoia check for an idiosyncratic lane failure during search. This prevents a PPE hang.
+            //       The result could be a shift all the way over to the LEFT extreme and could goof up the centering math.
             if (*ber_reported == max_eye)
             {
-                // In this case, simply remove one step for margin to ensure no errors and exit with a large eye measurement.
-                *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, seek_quad, pr_vals);//, ber_count
+                //set_ddc_err (gcr_addr, bank, lane, new_lane_bad, pr_vals, Esave, Dsave);
+                //set_debug_state(0x8087); // DEBUG: Algorithm error. Lane broke during measure
+                //set_fir(fir_code_warning);
+                return warning_code;
             }
-            else
-            {
+        } // Max Eye reported during phase-based fuzz seek.
 
-                //An extra step for margin.
-                *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, revSeekDir, false, seek_quad, pr_vals);//, ber_count
+        /////////DEBUG
+        //uint32_t stat = (seek_quad == noseekNS) << 8;
+        set_debug_state(0x8003); // DEBUG - 4: Search LEFT
 
-                ///////DEBUG
-                set_debug_state(0x8013); // DEBUG - 4: Search LEFT to return to ber_count limit
-                put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_final,
-                        read_modify_write);
-                put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
-                get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit,
-                        rx_ber_timer_running_endbit); // throwaway to sync up BER status
-
-                do
-                {
-                    ber_status = get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit, rx_ber_timer_running_endbit);
-                }
-                while (ber_status != 0);
-
-                *ber_reported = get_ptr(gcr_addr, rx_berpl_count_addr, rx_berpl_count_startbit, rx_berpl_count_endbit);
-
-                while ((*ber_reported >= ber_count) && (*ber_reported != max_eye))
-                {
-                    // make 1 data step
-                    *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, seek_quad, pr_vals);//, ber_count
-                } ;
-
-                // Paranoia check for an idiosyncratic lane failure during search. This prevents a PPE hang.
-                //       The result could be a shift all the way over to the LEFT extreme and could goof up the centering math.
-                if (*ber_reported == max_eye)
-                {
-                    //set_ddc_err (gcr_addr, bank, lane, new_lane_bad, pr_vals, Esave, Dsave);
-                    //set_debug_state(0x8087); // DEBUG: Algorithm error. Lane broke during measure
-                    //set_fir(fir_code_warning);
-                    return warning_code;
-                }
-            } // Max Eye reported during phase-based fuzz seek.
-
-            /////////DEBUG
-            //uint32_t stat = (seek_quad == noseekNS) << 8;
-            set_debug_state(0x8003); // DEBUG - 4: Search LEFT
-            seek_quad--;
+        if (seek_quad == noseekEW)
+        {
+            Dedge[1] = pr_vals[prDew_i];
         }
-        while (seek_quad != doseek);
-    } // if max_eye during initial edge seek. Means QPA adjust = 0 on this side. Continue to Left Edge for DDC
+        else
+        {
+            Dedge[0] = pr_vals[prDns_i];
+        }
 
+        pr_recenter(gcr_addr, bank, pr_vals, Esave, Dsave, Doffset);
+
+        seek_quad--;
+    }
+    while (seek_quad != doseek);
+
+    pr_recenter(gcr_addr, bank, pr_vals, Esave, Dedge, Doffset);
     put_ptr(gcr_addr, rx_berpl_mask_mode_addr, rx_berpl_mask_mode_startbit, rx_berpl_mask_mode_endbit, 0,
             read_modify_write);
     put_ptr(gcr_addr, rx_err_trap_mask_addr, rx_err_trap_mask_startbit, rx_err_trap_mask_endbit, 0 , read_modify_write);
@@ -548,6 +580,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
     //put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_endbit, ber_sel,);
     // WO kickoff for checker A reset
     put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
+    mem_pl_field_put(rx_ddc_measure_limited, 0, lane); //Clear out any prior bad measurement indicator.
 
     set_debug_state(0x8001); // DEBUG - DDC Setup
 
@@ -562,6 +595,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
     ////////
     do
     {
+        io_sleep(get_gcr_addr_thread(gcr_addr));
         ber_status = get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit, rx_ber_timer_running_endbit);
     }
     while (ber_status != 0);
@@ -776,7 +810,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
     ds = 1;
     es = 1;
-    pr_recenter(gcr_addr, bank, ds, es, pr_active, Esave, Dsave, ddc_offset_w_hyst);
+    pr_recenter(gcr_addr, bank, pr_active, Esave, Dsave, ddc_offset_w_hyst);
 
     set_debug_state(0x801F); // DEBUG: 8: Shift back to sample position done
 
@@ -817,6 +851,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
         do
         {
+            io_sleep(get_gcr_addr_thread(gcr_addr));
             ber_status = get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit, rx_ber_timer_running_endbit);
         }
         while (ber_status == 1);

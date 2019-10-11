@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// bja19081900 |bja     | Remove immediate return on fail. Fail is noted and function finishes.
 // mwh19040119 |mwh     | removed the rx_fail_flag code -- code size hit and taking out reduce sim
 // mwh19012100 |mwh     | Add in fail flag
 // jgr19032000 |jgr     | Reduced bank sync error threshold
@@ -91,7 +92,7 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
     bool aligned;
 
     int lane = get_gcr_addr_lane(gcr_addr);
-
+    int status = pass_code;
 
     // if running in in 16:1 mode
     if ( fw_field_get(fw_serdes_16_to_1_mode) )   // 16:1
@@ -122,7 +123,6 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
         put_ptr_field(gcr_addr, rx_ber_reset, 0b1, fast_write);
         set_debug_state(0xB001); // BERM running
 
-        // TODO: worth putting a sleep in now that it takes 32 or 64 slow cycles?
         // wait for BERM operation to finish
         do
         {
@@ -142,16 +142,16 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
             // and if the banks haven't synced after bumping through all UI's
             if (bump_count >= max_bumps)
             {
-                int rx_bank_sync_check_en_int = get_ptr(gcr_addr, rx_bank_sync_check_en_addr  , rx_bank_sync_check_en_startbit  ,
-                                                        rx_bank_sync_check_en_endbit);//ppe pl
+                set_debug_state(0xB005); // fail
 
-                if (rx_bank_sync_check_en_int)
+                if (get_ptr_field(gcr_addr, rx_bank_sync_check_en))
                 {
-                    mem_pl_field_put(rx_bank_sync_fail, lane, 0b1);   //pl
+                    mem_pl_field_put(rx_bank_sync_fail, lane, 0b1);
                 }
 
+                status = warning_code;
                 set_fir(fir_code_warning);
-                return warning_code;
+                break; //while(!aligned)
             }
             // otherwise bump the cal bank
             else
@@ -180,14 +180,17 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
     }
     while ( !aligned );
 
-    set_debug_state(0xB004); // aligned
+    if (aligned)
+    {
+        set_debug_state(0xB004);
+    }
 
     // turn off BERM logic
     put_ptr_field(gcr_addr, rx_berpl_count_en, 0b0, read_modify_write);
     put_ptr_field(gcr_addr, rx_ber_en, 0b0, read_modify_write);
 
     // Check for abort status
-    int status = check_rx_abort(gcr_addr);
+    status |= check_rx_abort(gcr_addr);
 
     if (status)
     {

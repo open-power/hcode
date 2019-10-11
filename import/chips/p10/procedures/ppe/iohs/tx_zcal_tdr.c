@@ -57,20 +57,21 @@
 void tx_zcal_tdr (t_gcr_addr* gcr_addr_i)
 {
     set_debug_state(0xC100); // tx_zcal_tdr begin
+    int thread_l = 0;
+    thread_l = get_gcr_addr_thread(gcr_addr_i);
 
     // setup tdr; offset in ui is a function of the grid to interface ratio
-    // offset some ratio into pulse; pulse is 2 * grid clock * pulse_width wide
-    uint16_t tdr_offset_l = 2 * tx_zcal_tdr_pulse_width_c / tx_zcal_tdr_sample_into_pulse_c;
+    uint16_t tdr_offset_l = 0;
 
     if ( fw_field_get(fw_serdes_16_to_1_mode) )   // 16:1
     {
         set_debug_state(0xC101); // tx_zcal_tdr 16:1
-        tdr_offset_l = 16 * tdr_offset_l;
+        tdr_offset_l = 16 * tx_zcal_tdr_sample_position_c;
     }
     else   // 32:1
     {
         set_debug_state(0xC102); // tx_zcal_tdr 32:1
-        tdr_offset_l = 32 * tdr_offset_l;
+        tdr_offset_l = 32 * tx_zcal_tdr_sample_position_c;
     }
 
     put_ptr_field(gcr_addr_i, tx_tdr_pulse_offset, tdr_offset_l, read_modify_write);
@@ -112,11 +113,13 @@ void tx_zcal_tdr (t_gcr_addr* gcr_addr_i)
         //       if(tx_zcal_tdr_decrement_bank()), updated_pu_or_pd = 1
         //       else done = 1
         //     else done = 1
-        //   set initial dac level
         //   set p phase
+        //   set initial dac level
+        //
+        // written to 0 below put_ptr_field(gcr_addr_i, tx_tdr_phase_sel, 0, read_modify_write);
         put_ptr_field(gcr_addr_i, tx_tdr_dac_cntl, tx_zcal_tdr_dac_75percent_vio_c,
                       fast_write); // only other field in reg is tx_ , which we want 0 == P
-        put_ptr_field(gcr_addr_i, tx_tdr_phase_sel, 0, read_modify_write);
+        io_wait_us(thread_l, tx_zcal_tdr_th_wait_us_c);
         done_l = false;
 
         do
@@ -149,17 +152,20 @@ void tx_zcal_tdr (t_gcr_addr* gcr_addr_i)
 
         while (!done_l);
 
-        //   set lower dac level
         //   set n phase
+        //   set lower dac level
         //   done = false
         //   do until done
         //     if comparator matches 0 required number of times,
         //       if(tx_zcal_tdr_decrement_bank()), updated_pu_or_pd = 1
         //       else done = 1
         //     else done = 1
-        put_ptr_field(gcr_addr_i, tx_tdr_dac_cntl, tx_zcal_tdr_dac_25percent_vio_c,
-                      fast_write); // only other field in reg is tx_tdr_phase_sel , which we write below
-        put_ptr_field(gcr_addr_i, tx_tdr_phase_sel, 1, read_modify_write);
+        //
+        //     writing phase_sel first because it gives track and hold more time to track after the large change in level
+        put_ptr_field(gcr_addr_i, tx_tdr_phase_sel, 1,
+                      fast_write); // only other field in reg is tx_tdr_dac_cntl, which we write below
+        put_ptr_field(gcr_addr_i, tx_tdr_dac_cntl, tx_zcal_tdr_dac_25percent_vio_c, read_modify_write);
+        io_wait_us(thread_l, tx_zcal_tdr_th_wait_us_c);
         done_l = false;
 
         do
@@ -216,65 +222,57 @@ void tx_zcal_tdr (t_gcr_addr* gcr_addr_i)
 void tx_zcal_tdr_write_en (t_gcr_addr* gcr_addr_i, uint8_t num_2r_equiv_i, t_segtype segtype_i)
 {
     set_debug_state(0xC140); // tx_zcal_tdr_write_en begin
+    uint32_t high_bits_l = 0;
+    uint32_t low_bits_l = 0;
 
     switch(segtype_i)
     {
         case SEGTYPE_MAIN_PSEG:
-            set_debug_state(0xC141); // write main pseg
+            set_debug_state(0xC141); // write main_pseg
 
-            // we only support setting all segments, or decreasing the number of segments set
-            // these segments are split into 0_15; where the high level bit is a 2R and the rest
-            // are 1R; and 16_24, where all are 1R; we will treat 16_24 as the MSB's. We need to
-            // write this to 0 when the total is (15 * 2) + 1 == 31 decimal
-            // Above this value, we need to write this when setting all segments to 1 or when
-            // value is odd (when value is even, we simply clear the single 2R bit
-            // So, we have 2 ranges:
-            //     < 31 only write 0_15
-            //     >= 31 write 0_15 and write 16_24 when value is odd
-            if ((num_2r_equiv_i >= 31) && (num_2r_equiv_i % 2 > 0))  // write 16_24
+            if (tx_zcal_tdr_split_main_therm (num_2r_equiv_i, tx_pseg_main_0_15_hs_en_width, tx_pseg_main_16_24_hs_en_width,
+                                              &high_bits_l, &low_bits_l))  // write 16_24
             {
-                set_debug_state(0xC142); // write main pseg msbs
-                put_ptr_field(gcr_addr_i, tx_pseg_main_16_24_hs_en, tx_zcal_tdr_toTherm(num_2r_equiv_i >> 5),
-                              fast_write); // 1R segs passed
+                set_debug_state(0xC142); // write main_pseg 16_24
+                put_ptr_field(gcr_addr_i, tx_pseg_main_16_24_hs_en, low_bits_l, fast_write);
             }
 
-            put_ptr_field(gcr_addr_i, tx_pseg_main_0_15_hs_en, tx_zcal_tdr_toThermWithHalf(num_2r_equiv_i % 32, 16 ), fast_write);
+            put_ptr_field(gcr_addr_i, tx_pseg_main_0_15_hs_en, high_bits_l, fast_write);
             break;
 
         case SEGTYPE_MAIN_NSEG:
-            set_debug_state(0xC143); // write main nseg
+            set_debug_state(0xC143); // write main_nseg
 
-            // see comment above
-            if ((num_2r_equiv_i >= 31) && (num_2r_equiv_i % 2 > 0))  // write 16_24
+            if (tx_zcal_tdr_split_main_therm (num_2r_equiv_i, tx_nseg_main_0_15_hs_en_width, tx_nseg_main_16_24_hs_en_width,
+                                              &high_bits_l, &low_bits_l))  // write 16_24
             {
-                set_debug_state(0xC144); // write main nseg msbs
-                put_ptr_field(gcr_addr_i, tx_nseg_main_16_24_hs_en, tx_zcal_tdr_toTherm(num_2r_equiv_i >> 5),
-                              fast_write); // 1R segs passed
+                set_debug_state(0xC144); // write main_nseg 16_24
+                put_ptr_field(gcr_addr_i, tx_nseg_main_16_24_hs_en, low_bits_l, fast_write);
             }
 
-            put_ptr_field(gcr_addr_i, tx_nseg_main_0_15_hs_en, tx_zcal_tdr_toThermWithHalf(num_2r_equiv_i % 32, 16), fast_write);
+            put_ptr_field(gcr_addr_i, tx_nseg_main_0_15_hs_en, high_bits_l, fast_write);
             break;
 
         case SEGTYPE_PRE2_PSEG:
-            set_debug_state(0xC145); // write pre2 pseg
+            set_debug_state(0xC149); // write pre2 pseg
             put_ptr_field(gcr_addr_i, tx_pseg_pre2_hs_en, tx_zcal_tdr_toThermWithHalf(num_2r_equiv_i, tx_pseg_pre2_hs_en_width),
                           fast_write);
             break;
 
         case SEGTYPE_PRE2_NSEG:
-            set_debug_state(0xC146); // write pre2 nseg
+            set_debug_state(0xC14A); // write pre2 nseg
             put_ptr_field(gcr_addr_i, tx_nseg_pre2_hs_en, tx_zcal_tdr_toThermWithHalf(num_2r_equiv_i, tx_nseg_pre2_hs_en_width),
                           fast_write);
             break;
 
         case SEGTYPE_PRE1_PSEG:
-            set_debug_state(0xC147); // write pre1 pseg
+            set_debug_state(0xC14B); // write pre1 pseg
             put_ptr_field(gcr_addr_i, tx_pseg_pre1_hs_en, tx_zcal_tdr_toThermWithHalf(num_2r_equiv_i, tx_pseg_pre1_hs_en_width),
                           fast_write);
             break;
 
         case SEGTYPE_PRE1_NSEG:
-            set_debug_state(0xC148); // write pre1 nseg
+            set_debug_state(0xC14C); // write pre1 nseg
             put_ptr_field(gcr_addr_i, tx_nseg_pre1_hs_en, tx_zcal_tdr_toThermWithHalf(num_2r_equiv_i, tx_nseg_pre1_hs_en_width),
                           fast_write);
             break;
@@ -342,6 +340,30 @@ bool tx_zcal_tdr_capt_match_mult_rds(t_gcr_addr* gcr_addr_i, uint8_t match_value
 
     return value_matched_l;
 } // tx_zcal_tdr_capt_match_mult_rds
+
+/**
+ * helper routine that determines whether to write to both main therm-code seg enable fields
+ *   and the values to write
+ * Assumes two fields, when concatenated, form a therm code with msb a value of '1',
+ * all other bits a value of 2 with msb first cleared/last set.
+ * As currently implemented, the first field is *_0_15_* and second is *_16_24_*
+ * Returns true if second field is to be written
+ *
+ * This assumes we are either enabling all segments or decrementing segments
+ * with this assumption, we only need to write the lsb's when we are writing
+ * all segments or when some of the low order segments are disabled and the
+ * value is odd.
+ */
+bool tx_zcal_tdr_split_main_therm (const uint32_t num_2r_equiv_i, uint8_t high_width_i, uint8_t low_width_i,
+                                   uint32_t* high_bits_io, uint32_t* low_bits_io)
+{
+    uint32_t full_therm_l = 0;
+    full_therm_l = tx_zcal_tdr_toThermWithHalf(num_2r_equiv_i, low_width_i + high_width_i);
+    *high_bits_io = full_therm_l >> low_width_i;
+    *low_bits_io = full_therm_l & ((0x1 << low_width_i) - 1);
+    return (num_2r_equiv_i == ((high_width_i + low_width_i) * 2) - 1) || ((num_2r_equiv_i < low_width_i)
+            && ((num_2r_equiv_i & 0x1) == 1)) ;
+} //tx_zcal_tdr_split_main_therm
 
 /**
  * @brief Converts a decimal value to a thermometer code after dividing by 2

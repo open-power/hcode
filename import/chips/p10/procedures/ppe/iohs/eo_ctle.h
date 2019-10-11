@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// jfg19091100 |jfg     | Add first_run parm to eo_ctle
 // vbr19011600 |vbr     | HW473413: Do not use CDR quad mode tracking.
 // jfg16042300 |jfg     | Initial Rev
 // -----------------------------------------------------------------------------
@@ -50,6 +51,6 @@
 #include "eo_common.h"
 
 
-int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_changed);
+int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_changed, bool first_run);
 
 #endif //_EO_CTLE_H_

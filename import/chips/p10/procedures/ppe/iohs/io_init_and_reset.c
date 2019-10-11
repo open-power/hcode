@@ -39,6 +39,13 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19102400 |vbr     | Increased 32:1 peak timeout for mesa fails after dpipe changes
+// mwh19101400 |mwh     | Change stagger for tx lanes per cq5090000
+// mwh19100800 |mwh     | change stagger order per Glen, and put in if to prevent powering on/off
+//             |        | same lane back to back (HW506505)
+// mbs19091000 |mbs     | Added rx and tx iodom reset after power up (HW504112)
+// mwh19073000 |mwh     | removed todo commints related to psave
+// mwh19072600 |mwh     | removed tx_lane_pdwn and replaced with tx_bank_controls
 // mwh19062100 | mwh    | Corrected spell error in rx_ab_bank_controls_alias
 // mwh19062100 | mwh    | changed io_lane_power_off/on back to non-inline function
 // cws19061800 |cws     | Updated PPE FW API
@@ -108,8 +115,8 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     {
         put_ptr_field(gcr_addr, rx_16to1,         0b0, read_modify_write); //pg
         put_ptr_field(gcr_addr, rx_amp_timeout,     6, read_modify_write); //pg
-        put_ptr_field(gcr_addr, rx_ctle_timeout,    6, read_modify_write); //pg
-        put_ptr_field(gcr_addr, rx_lte_timeout,     7, read_modify_write); //pg
+        put_ptr_field(gcr_addr, rx_ctle_timeout,    7, read_modify_write); //pg
+        put_ptr_field(gcr_addr, rx_lte_timeout,     8, read_modify_write); //pg
         put_ptr_field(gcr_addr, rx_bo_time,        11, read_modify_write); //pg
     }
 
@@ -198,17 +205,68 @@ void io_group_power_off(t_gcr_addr* gcr_addr)
 void io_lane_power_on(t_gcr_addr* gcr_addr)
 {
     // TX Registers
+    //"Power down pins, 0=dcc_comp, 1=tx_pdwn, 2=d2, 3=unused, 4=unused, 5=unused"
+    //Need to be staggered
     set_gcr_addr_reg_id(gcr_addr, tx_group);
-    put_ptr_field(gcr_addr, tx_lane_pdwn,        0b0,
-                  read_modify_write); //pl  // TODO: Replace with bank_controls? MBS 052319
+
+    int tx_bank_controls_zero = get_ptr_field (gcr_addr, tx_bank_controls);
+
+    if(tx_bank_controls_zero != 0)
+    {
+        //tx_psave_subset5 111110 //= not used
+        //tx_psave_subset4 111100 //= not used
+        put_ptr_field(gcr_addr, tx_bank_controls,        0b110100, read_modify_write); //pl tx_bank_controls_dc(2) = d2_en_dc
+        put_ptr_field(gcr_addr, tx_bank_controls,        0b100100,
+                      read_modify_write); //pl tx_bank_controls_dc(1) = txc_pwrdwn_dc
+        put_ptr_field(gcr_addr, tx_bank_controls,        0b000100,
+                      read_modify_write); //pl tx_bank_controls_dc(0) = dcc_comp_en_dc
+        put_ptr_field(gcr_addr, tx_bank_controls,        0b000000,
+                      read_modify_write); //pl tx_bank_controls_dc(3) = txr_txc_drv_en_p/n_dc
+    }
+
+
+    // reset tx io domain - HW504112
+    put_ptr_field(gcr_addr, tx_iodom_ioreset,        0b1, read_modify_write); //pl  reset tx io domain
+    put_ptr_field(gcr_addr, tx_iodom_ioreset,        0b0, read_modify_write); //pl  reset tx io domain
 
     // RX Registers
+    //power down pins, 0=PR64 and C2DIV, 1=CML2CMOS_NBIAS and MINI_PR and IQGEN, 2=CML2CMOS_EDG, 3=CML2CMOS_DAT, 4=PR64 and C2DIV, 5=VDAC"
+    //Bank A and B have be staggered also
     set_gcr_addr_reg_id(gcr_addr, rx_group);
-    put_ptr_field(gcr_addr, rx_ab_bank_controls_alias , 0b0000000000000000,
-                  fast_write); //pl  // TODO: Replace with bank_controls? MBS 052319
+
+    int rx_b_controls_zero = get_ptr_field (gcr_addr, rx_b_bank_controls);
+
+    if(rx_b_controls_zero != 0)
+    {
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b011111, read_modify_write); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001111, read_modify_write); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001011, read_modify_write); //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001001, read_modify_write); //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001000, read_modify_write); //pl.CTLE_PDWN( ABANK_DATA_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b000000, read_modify_write); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
+    }
+
+    int rx_a_controls_zero = get_ptr_field (gcr_addr, rx_a_bank_controls);
+
+    if(rx_a_controls_zero != 0)
+    {
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b011111, read_modify_write); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001111, read_modify_write); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001011, read_modify_write); //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001001, read_modify_write); //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001000, read_modify_write); //pl.CTLE_PDWN( ABANK_DATA_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b000000, read_modify_write); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
+    }
+
+
     put_ptr_field(gcr_addr, rx_hold_div_clks_ab_alias,  0b00,
                   read_modify_write); //pl Deassert to sync c16 and c32 clocks (initializes to 1)
     put_ptr_field(gcr_addr, rx_dl_clk_en,               0b1,  read_modify_write); //pl Enable clock to DL
+
+    // reset rx io domain  - HW504112
+    put_ptr_field(gcr_addr, rx_iodom_ioreset,        0b1, read_modify_write); //pl  reset rx io domain
+    put_ptr_field(gcr_addr, rx_iodom_ioreset,        0b0, read_modify_write); //pl  reset rx io domain
+
 } //io_lane_power_on
 
 // Power down a lane (both RX and TX)
@@ -216,14 +274,51 @@ void io_lane_power_off(t_gcr_addr* gcr_addr)
 {
     // TX Registers
     set_gcr_addr_reg_id(gcr_addr, tx_group);
-    put_ptr_field(gcr_addr, tx_lane_pdwn,        0b1,
-                  read_modify_write); //pl  // TODO: Replace with bank_controls? MBS 052319
+
+    int tx_bank_controls_ones = get_ptr_field (gcr_addr, tx_bank_controls);
+
+    if(tx_bank_controls_ones != 0x3F)
+    {
+        put_ptr_field(gcr_addr, tx_bank_controls,        0b000100,
+                      read_modify_write); //pl tx_bank_controls_dc(3) = txr_txc_drv_en_p/n_dc
+        put_ptr_field(gcr_addr, tx_bank_controls,        0b100100,
+                      read_modify_write); //pl tx_bank_controls_dc(0) = dcc_comp_en_dc
+        put_ptr_field(gcr_addr, tx_bank_controls,        0b110100,
+                      read_modify_write); //pl tx_bank_controls_dc(1) = txc_pwrdwn_dc
+        put_ptr_field(gcr_addr, tx_bank_controls,        0b111111, read_modify_write); //pl tx_bank_controls_dc(2) = d2_en_dc
+        //tx_psave_subset5 111110 //= not used
+        //tx_psave_subset6 111111 //= iot used
+    }
 
     // RX Registers
     set_gcr_addr_reg_id(gcr_addr, rx_group);
     put_ptr_field(gcr_addr, rx_dl_clk_en,               0b0,  read_modify_write); //pl Disable clock to DL
     put_ptr_field(gcr_addr, rx_hold_div_clks_ab_alias,  0b11,
                   read_modify_write); //pl Assert hold_div_clock to freeze c16 and c32
-    put_ptr_field(gcr_addr, rx_ab_bank_controls_alias , 0b1111111111110000,
-                  fast_write); //pl  // TODO: Replace with bank_controls? MBS 052319
+
+    int rx_b_bank_controls_ones = get_ptr_field (gcr_addr, rx_b_bank_controls);
+
+    if(rx_b_bank_controls_ones != 0x3F)
+    {
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001000, read_modify_write ); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001001, read_modify_write ); //pl.CTLE_PDWN( ABANK_DATA_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001011, read_modify_write ); //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001111, read_modify_write ); //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b011111, read_modify_write ); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b111111, read_modify_write ); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
+    }
+
+    int rx_a_bank_controls_ones = get_ptr_field (gcr_addr, rx_a_bank_controls);
+
+    if(rx_a_bank_controls_ones != 0x3F)
+    {
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001000, read_modify_write ); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001001, read_modify_write ); //pl.CTLE_PDWN( ABANK_DATA_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001011, read_modify_write ); //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001111, read_modify_write ); //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b011111, read_modify_write ); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b111111, read_modify_write ); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
+    }
+
+
 } //io_lane_power_off

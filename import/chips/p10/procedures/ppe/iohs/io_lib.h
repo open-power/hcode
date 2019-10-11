@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
+// bja19081900 |bja     | ptr_ary macros save reg access info in an array, which is smaller than making many get/set_ptr calls
 // vbr19051700 |vbr     | HW491895: Change latch_dac reverse from twos complement to ones complement negation (match HW).
 // vbr19051400 |vbr     | HW491892: Change VDAC from 9-bit SM to 8-bit twos_comp (added new conversion wrappers)
 // vbr19031300 |vbr     | Removed inlining on some set_gcr_addr_* functions.  Added new zcal_group and removed unused fir_group.
@@ -322,25 +324,6 @@ static inline uint32_t div_uint32(uint32_t a, uint32_t b)
     while (val > 0);
 
     return ((uint32_t)count);
-}
-
-// Simple signed 16x16 multiply (with a 32-bit result) that is meant to take advantage of the PPE's 16x16 multiplier.
-// Do not pass in inputs as int16 because that causes the compiler to include extra instructions as it promotes everything to 32-bits.
-// This function only looks at the bottom 16 bits of the value passed in, so it does not matter if it is a 32-bit input.
-// Much more efficient that the emulated __mulsi3 function used for the '*' operator when non-power-of-2 multiply.
-// Inline since it reduces to a single instruction.
-static inline int mult_int16(int a, int b)
-{
-    int val;
-    // mullhw - Multiply Low Halfword to Word Signed
-    // (RT)0:31 <- (RA)16:31 x (RB)16:31 signed
-    // The low-order halfword of RA is multiplied by the low-order halfword of RB. The resulting signed product replaces the contents of RT.
-    asm(
-        "mullhw %[RT], %[RA], %[RB]"
-        : [RT] "=r" (val)
-        : [RA] "r"  (a), [RB] "r"  (b)
-    );
-    return val;
 }
 
 
@@ -726,6 +709,11 @@ void put_ptr_int     (t_gcr_addr* gcr_addr, uint32_t reg_addr, uint32_t and_mask
                       uint32_t data); // always does read-modify-write
 uint32_t get_ptr_int (t_gcr_addr* gcr_addr, uint32_t reg_addr, uint32_t and_mask, uint32_t shift_amt);
 
+#define mk_ptr_ary(ary) uint32_t ary[3]
+#define asn_ptr_ary(ary, reg) ary[0] = reg##_addr; ary[1] = reg##_startbit; ary[2] = reg##_endbit
+#define init_ptr_ary(ary, reg)  mk_ptr_ary(ary); asn_ptr_ary(ary, reg)
+//#define init_ptr_ary(ary, reg)  mk_ptr_ary(ary) = { reg##_addr, reg##_startbit, reg##_endbit }
+
 // Macro the pre-shift constant inputs (compiler should dissolve these)
 #define put_ptr_fast(gcr_addr, reg_addr, endbit, data) { \
         put_ptr_fast_int( \
@@ -754,6 +742,8 @@ uint32_t get_ptr_int (t_gcr_addr* gcr_addr, uint32_t reg_addr, uint32_t and_mask
     }
 #define put_ptr_field(gcr_addr, reg, data, rmw) put_ptr(gcr_addr, reg##_addr, reg##_startbit, reg##_endbit, data, rmw)
 
+#define put_ptr_ary(gcr_addr, ary, data, rmw) put_ptr(gcr_addr, ary[0], ary[1], ary[2], data, rmw)
+
 #define get_ptr(gcr_addr, reg_addr, startbit, endbit) ({ \
         get_ptr_int ( \
                       (gcr_addr), \
@@ -763,6 +753,8 @@ uint32_t get_ptr_int (t_gcr_addr* gcr_addr, uint32_t reg_addr, uint32_t and_mask
                     ); \
     })
 #define get_ptr_field(gcr_addr, reg) get_ptr(gcr_addr, reg##_addr, reg##_startbit, reg##_endbit)
+
+#define get_ptr_ary(gcr_addr, ary) get_ptr(gcr_addr, ary[0], ary[1], ary[2])
 
 // The *_id functions are for switching between RX and TX groups before the access and thus add some overhead.
 #define put_ptr_fast_id(gcr_addr, reg_id, reg_addr, endbit, data) { \

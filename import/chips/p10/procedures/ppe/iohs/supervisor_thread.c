@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19100301 |vbr     | Removed dl ppe test code from supervisor thread.
 // bja19052900 |bja     | Add EOL toggling
 // mbs19021900 |mbs     | Updated p10 dl ppe code to set work1 regs
 // mbs19021800 |mbs     | Added test function for new p10 dl ppe
@@ -157,22 +158,11 @@ void supervisor_thread(void* arg)
                 img_field_put(ppe_tx_zcal_busy_done_error_alias, 0b000);
             }
 
-            /////////////////////////////////////////////////
-            // Check for DL PPE Requests
-            /////////////////////////////////////////////////
-            // TODO: This is a placeholder
-            lcl_put(scom_ppe_work1_lcl_addr, scom_ppe_work1_width, 0x00000001);
 
-            if ( pk_irq_status_get(23) == 1 )
-            {
-                lcl_put(scom_ppe_work1_lcl_addr, scom_ppe_work1_width, 0x00000002);
-                msg_put(0xdeadbeef00070007);
-                set_debug_state(0xF00A); // DEBUG - Message sent
-            }
-            else
-            {
-                lcl_put(scom_ppe_work1_lcl_addr, scom_ppe_work1_width, 0xF0000002);
-            }
+            /////////////////////////////////////////////////
+            // Placeholder for DL PPE Requests
+            /////////////////////////////////////////////////
+            //dl_ppe_test();
 
 
             /////////////////////////////////////////////////
@@ -295,6 +285,7 @@ void supervisor_thread(void* arg)
                 } //for(thread)
             } //if(time>check_time)
 
+
             ////////////////////////////////
             // Toggle fast EOL register
             ////////////////////////////////
@@ -314,6 +305,7 @@ void supervisor_thread(void* arg)
                 lcl_put(scom_ppe_func_lcl_addr, scom_ppe_func_full_reg_width, scom_ppe_func_reg);
             } //if(time>check_time)
 
+
             ////////////////////////////////
             // Toggle slow EOL register
             ////////////////////////////////
@@ -332,6 +324,7 @@ void supervisor_thread(void* arg)
                 // Write the inverted value to toggle
                 lcl_put(scom_ppe_func_lcl_addr, scom_ppe_func_full_reg_width, scom_ppe_func_reg);
             } //if(time>check_time)
+
 
             ///////////////////////////////////////////////////
             // Clear the Watchdog Timer (TSR[WIS])
@@ -360,4 +353,25 @@ void supervisor_thread(void* arg)
         io_sleep(get_gcr_addr_thread(&gcr_addr));
     } //while (true)
 
-} //ioo_thread
+} //supervisor_thread
+
+
+
+// DL PPE Test Code
+// This includes the behavior expected by p10_bypass_mode in the super wrapper.
+// This needs to be called in the supervisor thread if that testing is enabled.
+void dl_ppe_test(void)
+{
+    lcl_put(scom_ppe_work1_lcl_addr, scom_ppe_work1_width, 0x00000001);
+
+    if ( pk_irq_status_get(23) == 1 )
+    {
+        lcl_put(scom_ppe_work1_lcl_addr, scom_ppe_work1_width, 0x00000002);
+        msg_put(0xdeadbeef00070007);
+        set_debug_state(0xF00A); // DEBUG - Message sent
+    }
+    else
+    {
+        lcl_put(scom_ppe_work1_lcl_addr, scom_ppe_work1_width, 0xF0000002);
+    }
+} //dl_ppe_test

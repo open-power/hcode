@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19092601 |vbr     | Added option to enable/disable copying of LTE settings between lanes
+// mbs19072500 |mbs     | Added amp_setting_ovr_enb
 // mbs19051600 |mbs     | HW491617: Separated servo setup for dfe_fast and dfe_full
 // vbr19050500 |vbr     | Copy LTE settings between lanes
 // vbr19041500 |vbr     | Updated register names
@@ -192,67 +194,111 @@ PK_STATIC_ASSERT(rx_b_ctle_gain_peak_full_reg_alias_width == 16);
 PK_STATIC_ASSERT(rx_a_lte_gain_zero_alias_width == rx_b_lte_gain_zero_alias_width);
 void eo_copy_lane_cal(t_gcr_addr* gcr_addr, int lane_src, int lane_dst)
 {
+    bool lte_copy_en = mem_pg_field_get(rx_enable_lane_cal_lte_copy);
+
     // Read from source lane
     set_gcr_addr_lane(gcr_addr, lane_src);
     int gain_and_peak = get_ptr_field(gcr_addr, rx_a_ctle_gain_peak_full_reg_alias); // ctle_gain and ctle_peak1/2
-    int lte_gain_zero = get_ptr_field(gcr_addr, rx_a_lte_gain_zero_alias); // lte_gain and lte_zero
+    int lte_gain_zero = 0;
+
+    if (lte_copy_en)
+    {
+        lte_gain_zero = get_ptr_field(gcr_addr, rx_a_lte_gain_zero_alias); // lte_gain and lte_zero
+    }
 
     // Write to destination lane
     set_gcr_addr_lane(gcr_addr, lane_dst);
     put_ptr_field(gcr_addr, rx_a_ctle_gain_peak_full_reg_alias, gain_and_peak, fast_write);
     put_ptr_field(gcr_addr, rx_b_ctle_gain_peak_full_reg_alias, gain_and_peak, fast_write);
-    put_ptr_field(gcr_addr, rx_a_lte_gain_zero_alias,           lte_gain_zero, read_modify_write);
-    put_ptr_field(gcr_addr, rx_b_lte_gain_zero_alias,           lte_gain_zero, read_modify_write);
+
+    if (lte_copy_en)
+    {
+        put_ptr_field(gcr_addr, rx_a_lte_gain_zero_alias, lte_gain_zero, read_modify_write);
+        put_ptr_field(gcr_addr, rx_b_lte_gain_zero_alias, lte_gain_zero, read_modify_write);
+    }
 } //eo_copy_lane_cal
 
 
 void rx_eo_servo_setup(t_gcr_addr* i_tgt, const t_servo_setup i_servo_setup)
 {
+    // Switch for sim or lab to disable settings overrides
+    int amp_setting_ovr = mem_regs_u16_get(pg_addr(amp_setting_ovr_enb_addr), amp_setting_ovr_enb_mask,
+                                           amp_setting_ovr_enb_shift);
+
     switch(i_servo_setup)
     {
         case SERVO_SETUP_VGA:
             put_ptr_field(i_tgt, rx_amp_servo_mask_h0      , 0x00, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_dec, 0x00, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_inc, 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x06, read_modify_write);
+
+            if ( amp_setting_ovr == 0 )
+            {
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x06, read_modify_write);
+            }
+
             break;
 
         case SERVO_SETUP_DFE_FAST:
             put_ptr_field(i_tgt, rx_amp_servo_mask_h0      , 0x01, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_dec, 0x00, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_inc, 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x02, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x02, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x04, read_modify_write);
+
+            if ( amp_setting_ovr == 0 )
+            {
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x01, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x01, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x01, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x01, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x02, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x02, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x04, read_modify_write);
+            }
+
             break;
 
         case SERVO_SETUP_DFE_FULL:
             put_ptr_field(i_tgt, rx_amp_servo_mask_h0      , 0x01, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_inc, 0x00, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_dec, 0x01, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x04, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x06, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x00, read_modify_write);
-            break;
 
+            if ( amp_setting_ovr == 0 )
+            {
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x06, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x00, read_modify_write);
+            }
+
+            break;
     }
 
+    return;
+}
+
+// Broadcast write pulse to rx_clr_cal_lane_sel.
+// Activates data pipe clocks, allowing lingering data to clear.
+void clear_all_cal_lane_sel(t_gcr_addr* gcr_addr)
+{
+    // save currently active lane
+    int saved_lane = get_gcr_addr_lane(gcr_addr);
+    // use broadcast lane num
+    set_gcr_addr_lane(gcr_addr, bcast_all_lanes);
+    // broadcast write pulse to clr reg
+    put_ptr_field(gcr_addr, rx_clr_cal_lane_sel, 0b1, fast_write);
+    // restore active lane
+    set_gcr_addr_lane(gcr_addr, saved_lane);
     return;
 }

@@ -46,6 +46,110 @@
 #define ext_cmd_done_mask                          0xffff
 
 
+#define ext_cmd_done_dccal_pl_addr                 0b000000101
+#define ext_cmd_done_dccal_pl_startbit             3
+#define ext_cmd_done_dccal_pl_width                1
+#define ext_cmd_done_dccal_pl_endbit               3
+#define ext_cmd_done_dccal_pl_shift                12
+#define ext_cmd_done_dccal_pl_mask                 0x1000
+
+
+#define ext_cmd_done_hw_reg_init_pg_addr           0b000000101
+#define ext_cmd_done_hw_reg_init_pg_startbit       0
+#define ext_cmd_done_hw_reg_init_pg_width          1
+#define ext_cmd_done_hw_reg_init_pg_endbit         0
+#define ext_cmd_done_hw_reg_init_pg_shift          15
+#define ext_cmd_done_hw_reg_init_pg_mask           0x8000
+
+
+#define ext_cmd_done_ioreset_pl_addr               0b000000101
+#define ext_cmd_done_ioreset_pl_startbit           1
+#define ext_cmd_done_ioreset_pl_width              1
+#define ext_cmd_done_ioreset_pl_endbit             1
+#define ext_cmd_done_ioreset_pl_shift              14
+#define ext_cmd_done_ioreset_pl_mask               0x4000
+
+
+#define ext_cmd_done_power_off_pl_addr             0b000000101
+#define ext_cmd_done_power_off_pl_startbit         6
+#define ext_cmd_done_power_off_pl_width            1
+#define ext_cmd_done_power_off_pl_endbit           6
+#define ext_cmd_done_power_off_pl_shift            9
+#define ext_cmd_done_power_off_pl_mask             0x200
+
+
+#define ext_cmd_done_power_on_pl_addr              0b000000101
+#define ext_cmd_done_power_on_pl_startbit          7
+#define ext_cmd_done_power_on_pl_width             1
+#define ext_cmd_done_power_on_pl_endbit            7
+#define ext_cmd_done_power_on_pl_shift             8
+#define ext_cmd_done_power_on_pl_mask              0x100
+
+
+#define ext_cmd_done_recal_pl_addr                 0b000000101
+#define ext_cmd_done_recal_pl_startbit             12
+#define ext_cmd_done_recal_pl_width                1
+#define ext_cmd_done_recal_pl_endbit               12
+#define ext_cmd_done_recal_pl_shift                3
+#define ext_cmd_done_recal_pl_mask                 0x8
+
+
+#define ext_cmd_done_rx_bist_tests_pl_addr         0b000000101
+#define ext_cmd_done_rx_bist_tests_pl_startbit     9
+#define ext_cmd_done_rx_bist_tests_pl_width        1
+#define ext_cmd_done_rx_bist_tests_pl_endbit       9
+#define ext_cmd_done_rx_bist_tests_pl_shift        6
+#define ext_cmd_done_rx_bist_tests_pl_mask         0x40
+
+
+#define ext_cmd_done_rx_detect_pl_addr             0b000000101
+#define ext_cmd_done_rx_detect_pl_startbit         2
+#define ext_cmd_done_rx_detect_pl_width            1
+#define ext_cmd_done_rx_detect_pl_endbit           2
+#define ext_cmd_done_rx_detect_pl_shift            13
+#define ext_cmd_done_rx_detect_pl_mask             0x2000
+
+
+#define ext_cmd_done_train_pl_addr                 0b000000101
+#define ext_cmd_done_train_pl_startbit             11
+#define ext_cmd_done_train_pl_width                1
+#define ext_cmd_done_train_pl_endbit               11
+#define ext_cmd_done_train_pl_shift                4
+#define ext_cmd_done_train_pl_mask                 0x10
+
+
+#define ext_cmd_done_tx_bist_tests_pl_addr         0b000000101
+#define ext_cmd_done_tx_bist_tests_pl_startbit     10
+#define ext_cmd_done_tx_bist_tests_pl_width        1
+#define ext_cmd_done_tx_bist_tests_pl_endbit       10
+#define ext_cmd_done_tx_bist_tests_pl_shift        5
+#define ext_cmd_done_tx_bist_tests_pl_mask         0x20
+
+
+#define ext_cmd_done_tx_ffe_pl_addr                0b000000101
+#define ext_cmd_done_tx_ffe_pl_startbit            5
+#define ext_cmd_done_tx_ffe_pl_width               1
+#define ext_cmd_done_tx_ffe_pl_endbit              5
+#define ext_cmd_done_tx_ffe_pl_shift               10
+#define ext_cmd_done_tx_ffe_pl_mask                0x400
+
+
+#define ext_cmd_done_tx_fifo_init_pl_addr          0b000000101
+#define ext_cmd_done_tx_fifo_init_pl_startbit      8
+#define ext_cmd_done_tx_fifo_init_pl_width         1
+#define ext_cmd_done_tx_fifo_init_pl_endbit        8
+#define ext_cmd_done_tx_fifo_init_pl_shift         7
+#define ext_cmd_done_tx_fifo_init_pl_mask          0x80
+
+
+#define ext_cmd_done_tx_zcal_pl_addr               0b000000101
+#define ext_cmd_done_tx_zcal_pl_startbit           4
+#define ext_cmd_done_tx_zcal_pl_width              1
+#define ext_cmd_done_tx_zcal_pl_endbit             4
+#define ext_cmd_done_tx_zcal_pl_shift              11
+#define ext_cmd_done_tx_zcal_pl_mask               0x800
+
+
 #define ext_cmd_lanes_00_15_addr                   0b000000000
 #define ext_cmd_lanes_00_15_startbit               0
 #define ext_cmd_lanes_00_15_width                  16
@@ -68,6 +172,110 @@
 #define ext_cmd_req_endbit                         15
 #define ext_cmd_req_shift                          0
 #define ext_cmd_req_mask                           0xffff
+
+
+#define ext_cmd_req_dccal_pl_addr                  0b000000010
+#define ext_cmd_req_dccal_pl_startbit              3
+#define ext_cmd_req_dccal_pl_width                 1
+#define ext_cmd_req_dccal_pl_endbit                3
+#define ext_cmd_req_dccal_pl_shift                 12
+#define ext_cmd_req_dccal_pl_mask                  0x1000
+
+
+#define ext_cmd_req_hw_reg_init_pg_addr            0b000000010
+#define ext_cmd_req_hw_reg_init_pg_startbit        0
+#define ext_cmd_req_hw_reg_init_pg_width           1
+#define ext_cmd_req_hw_reg_init_pg_endbit          0
+#define ext_cmd_req_hw_reg_init_pg_shift           15
+#define ext_cmd_req_hw_reg_init_pg_mask            0x8000
+
+
+#define ext_cmd_req_ioreset_pl_addr                0b000000010
+#define ext_cmd_req_ioreset_pl_startbit            1
+#define ext_cmd_req_ioreset_pl_width               1
+#define ext_cmd_req_ioreset_pl_endbit              1
+#define ext_cmd_req_ioreset_pl_shift               14
+#define ext_cmd_req_ioreset_pl_mask                0x4000
+
+
+#define ext_cmd_req_power_off_pl_addr              0b000000010
+#define ext_cmd_req_power_off_pl_startbit          6
+#define ext_cmd_req_power_off_pl_width             1
+#define ext_cmd_req_power_off_pl_endbit            6
+#define ext_cmd_req_power_off_pl_shift             9
+#define ext_cmd_req_power_off_pl_mask              0x200
+
+
+#define ext_cmd_req_power_on_pl_addr               0b000000010
+#define ext_cmd_req_power_on_pl_startbit           7
+#define ext_cmd_req_power_on_pl_width              1
+#define ext_cmd_req_power_on_pl_endbit             7
+#define ext_cmd_req_power_on_pl_shift              8
+#define ext_cmd_req_power_on_pl_mask               0x100
+
+
+#define ext_cmd_req_recal_pl_addr                  0b000000010
+#define ext_cmd_req_recal_pl_startbit              12
+#define ext_cmd_req_recal_pl_width                 1
+#define ext_cmd_req_recal_pl_endbit                12
+#define ext_cmd_req_recal_pl_shift                 3
+#define ext_cmd_req_recal_pl_mask                  0x8
+
+
+#define ext_cmd_req_rx_bist_tests_pl_addr          0b000000010
+#define ext_cmd_req_rx_bist_tests_pl_startbit      9
+#define ext_cmd_req_rx_bist_tests_pl_width         1
+#define ext_cmd_req_rx_bist_tests_pl_endbit        9
+#define ext_cmd_req_rx_bist_tests_pl_shift         6
+#define ext_cmd_req_rx_bist_tests_pl_mask          0x40
+
+
+#define ext_cmd_req_rx_detect_pl_addr              0b000000010
+#define ext_cmd_req_rx_detect_pl_startbit          2
+#define ext_cmd_req_rx_detect_pl_width             1
+#define ext_cmd_req_rx_detect_pl_endbit            2
+#define ext_cmd_req_rx_detect_pl_shift             13
+#define ext_cmd_req_rx_detect_pl_mask              0x2000
+
+
+#define ext_cmd_req_train_pl_addr                  0b000000010
+#define ext_cmd_req_train_pl_startbit              11
+#define ext_cmd_req_train_pl_width                 1
+#define ext_cmd_req_train_pl_endbit                11
+#define ext_cmd_req_train_pl_shift                 4
+#define ext_cmd_req_train_pl_mask                  0x10
+
+
+#define ext_cmd_req_tx_bist_tests_pl_addr          0b000000010
+#define ext_cmd_req_tx_bist_tests_pl_startbit      10
+#define ext_cmd_req_tx_bist_tests_pl_width         1
+#define ext_cmd_req_tx_bist_tests_pl_endbit        10
+#define ext_cmd_req_tx_bist_tests_pl_shift         5
+#define ext_cmd_req_tx_bist_tests_pl_mask          0x20
+
+
+#define ext_cmd_req_tx_ffe_pl_addr                 0b000000010
+#define ext_cmd_req_tx_ffe_pl_startbit             5
+#define ext_cmd_req_tx_ffe_pl_width                1
+#define ext_cmd_req_tx_ffe_pl_endbit               5
+#define ext_cmd_req_tx_ffe_pl_shift                10
+#define ext_cmd_req_tx_ffe_pl_mask                 0x400
+
+
+#define ext_cmd_req_tx_fifo_init_pl_addr           0b000000010
+#define ext_cmd_req_tx_fifo_init_pl_startbit       8
+#define ext_cmd_req_tx_fifo_init_pl_width          1
+#define ext_cmd_req_tx_fifo_init_pl_endbit         8
+#define ext_cmd_req_tx_fifo_init_pl_shift          7
+#define ext_cmd_req_tx_fifo_init_pl_mask           0x80
+
+
+#define ext_cmd_req_tx_zcal_pl_addr                0b000000010
+#define ext_cmd_req_tx_zcal_pl_startbit            4
+#define ext_cmd_req_tx_zcal_pl_width               1
+#define ext_cmd_req_tx_zcal_pl_endbit              4
+#define ext_cmd_req_tx_zcal_pl_shift               11
+#define ext_cmd_req_tx_zcal_pl_mask                0x800
 
 
 #define fw_bist_en_addr                            0b000000011

@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr19100300 |vbr     | Removing old P9 IRQ handlers.
 // vbr18112900 |vbr     | Debug state cleanup.
 // vbr17110100 |vbr     | Removed fw_gcr_port (only 1 port).
 // vbr17082500 |vbr     | Moved bus_id and gcr_port to fw_regs.
@@ -66,165 +67,21 @@
 
 
 ////////////////////////////////////////////////////////////////
-// Handle a GCR Interrupt
+// Example IRQ Handler
 ////////////////////////////////////////////////////////////////
-void io_gcr_irq_handler(void* arg, PkIrqId irq)
+void io_example_irq_handler(void* arg, PkIrqId irq)
 {
-    set_debug_state(0xFE00); // DEBUG - GCR IRQ Start
+    set_debug_state(0xFE00); // DEBUG - Example IRQ Handler Start
 
     // Clear the IRQ Status (not a level interrupt) to allow another IRQ to be queued up
     pk_irq_status_clear(irq);
 
-    // Neeed to cycle through all groups starting with bus_id for thread 0
-    int thread = 0;
-    int bus_id = fw_regs_u16_base_get(fw_base_addr(fw_gcr_bus_id_addr, thread), fw_gcr_bus_id_mask, fw_gcr_bus_id_shift);
-#ifdef PK_THREAD_SUPPORT
-    int io_threads = img_regs_u16_get(img_addr(ppe_num_threads_addr), ppe_num_threads_mask, ppe_num_threads_shift);
-#else
-    int io_threads = 1; // single threaded
-#endif
+    // Parse input arg to get passed in parameters
+    //int *config = (int*)arg;
+    //int param0 = config[0]; // configuration parameter 0
+    //int param1 = config[1]; // configuration parameter 1
 
-    // Create gcr_addr struct
-    t_gcr_addr gcr_addr;
-#if PK_THREAD_SUPPORT
-    set_gcr_addr(&gcr_addr, thread, bus_id, rx_group, 0); // RX lane 0
-#else
-    set_gcr_addr(&gcr_addr, bus_id, rx_group, 0); // RX lane 0
-#endif
+    // Do Stuff Here
 
-    // Read the interrupt vectors and call the appropriate handler
-    for (thread = 0; thread < io_threads; thread++)
-    {
-#if PK_THREAD_SUPPORT
-        // Set the bus_id
-        bus_id = fw_regs_u16_base_get(fw_base_addr(fw_gcr_bus_id_addr, thread), fw_gcr_bus_id_mask, fw_gcr_bus_id_shift);
-        set_gcr_addr_bus_id(&gcr_addr, bus_id);
-#endif
-
-        // Send a gcr interrupt echo packet to work around HW400250
-        uint64_t echo_packet = 0x98077F8000000001 | ((uint64_t)bus_id << (63 - 10)) | ((uint64_t)bus_id << (63 - 37));
-        gcr_wr_raw(&gcr_addr, echo_packet);
-
-        // Read the 16-bit interrupt vector (RO register)
-        int irq_vec = 0x00; //TODO get_ptr(&gcr_addr, rx_int_req_addr, rx_int_req_startbit, rx_int_req_endbit);
-        //put_ptr(&gcr_addr, rx_int_req_addr, rx_int_req_startbit, rx_int_req_endbit, 0, fast_write);
-
-        // Check for set bits to call the appropriate handlers
-        if (irq_vec & GCR_IRQ_EOSM_MASK)
-        {
-            // Assume that the EOSM interrupt was correctly enabled to stop at the correct state
-            //irq_bank_power_up(&gcr_addr);
-            irq_bank_power_down(&gcr_addr);
-        }
-    } //for
-
-    set_debug_state(0xFEFF); // DEBUG - GCR IRQ Done
-} //io_gcr_irq_handler
-
-
-//////////////////////////////////////////////////////////////////////////
-// IOO BANK POWER UP WORKAROUND
-// Steps through the bank power up sequence slower than hardware.
-// rx_int_current_state = 0x003
-// rx_int_next_state    = 0x004
-// rx_int_goto_state    = 0x008
-// rx_int_return_state  = 0x008
-// rx_int_enable_enc    = 0x5   EOSM
-// rx_int_mode          = 0xF   bits [0]=1 => generate irq, [3]=1 => hold in goto state, [1:2]=11 => match current & next states
-//////////////////////////////////////////////////////////////////////////
-void irq_bank_power_up(t_gcr_addr* gcr_addr)
-{
-    set_debug_state(0xFE10); // DEBUG - Bank Power Up Start
-
-    // Get the cal lane
-    int lane = get_ptr(gcr_addr, rx_cal_lane_pg_phy_gcrmsg_addr, rx_cal_lane_pg_phy_gcrmsg_startbit,
-                       rx_cal_lane_pg_phy_gcrmsg_endbit);
-    set_gcr_addr_lane(gcr_addr, lane);
-
-    // Run through the bank power up sequence for the ALT bank
-    int bank_sel_a = get_ptr(gcr_addr, rx_bank_sel_a_addr, rx_bank_sel_a_startbit, rx_bank_sel_a_endbit);
-
-    if (bank_sel_a == 0)
-    {
-        // Bank A is Alt Bank
-        put_ptr(gcr_addr, rx_a_bank_controls_addr, rx_a_bank_controls_startbit, rx_a_bank_controls_endbit, 0b110111,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_a_bank_controls_addr, rx_a_bank_controls_startbit, rx_a_bank_controls_endbit, 0b010110,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_a_bank_controls_addr, rx_a_bank_controls_startbit, rx_a_bank_controls_endbit, 0b000100,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_a_bank_controls_addr, rx_a_bank_controls_startbit, rx_a_bank_controls_endbit, 0b000000,
-                read_modify_write);
-    }
-    else
-    {
-        // Bank B is Alt Bank
-        put_ptr(gcr_addr, rx_b_bank_controls_addr, rx_b_bank_controls_startbit, rx_b_bank_controls_endbit, 0b110111,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_b_bank_controls_addr, rx_b_bank_controls_startbit, rx_b_bank_controls_endbit, 0b010110,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_b_bank_controls_addr, rx_b_bank_controls_startbit, rx_b_bank_controls_endbit, 0b000100,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_b_bank_controls_addr, rx_b_bank_controls_startbit, rx_b_bank_controls_endbit, 0b000000,
-                read_modify_write);
-    }
-
-    // Resume the EOSM
-    //TODO put_ptr(gcr_addr, rx_int_return_addr, rx_int_return_startbit, rx_int_return_endbit, 0b1, fast_write); // strobe register
-
-    set_debug_state(0xFE1F); // DEBUG - Bank Power Up Done
-} //irq_bank_power_up
-
-
-//////////////////////////////////////////////////////////////////////////
-// IOO BANK POWER DOWN WORKAROUND
-// Steps through the bank power down sequence slower than hardware.
-// rx_int_current_state = 0x031
-// rx_int_next_state    = 0x01A
-// rx_int_goto_state    = 0x01E
-// rx_int_return_state  = 0x01E
-// rx_int_enable_enc    = 0x5   EOSM
-// rx_int_mode          = 0xF   bits [0]=1 => generate irq, [3]=1 => hold in goto state, [1:2]=11 => match current & next states
-//////////////////////////////////////////////////////////////////////////
-void irq_bank_power_down(t_gcr_addr* gcr_addr)
-{
-    set_debug_state(0xFE20); // DEBUG - Bank Power Down Start
-
-    // Get the cal lane
-    int lane = get_ptr(gcr_addr, rx_cal_lane_pg_phy_gcrmsg_addr, rx_cal_lane_pg_phy_gcrmsg_startbit,
-                       rx_cal_lane_pg_phy_gcrmsg_endbit);
-    set_gcr_addr_lane(gcr_addr, lane);
-
-    // Run through the bank power up sequence for the ALT bank
-    int bank_sel_a = get_ptr(gcr_addr, rx_bank_sel_a_addr, rx_bank_sel_a_startbit, rx_bank_sel_a_endbit);
-
-    if (bank_sel_a == 0)
-    {
-        // Bank A is Alt Bank
-        put_ptr(gcr_addr, rx_a_bank_controls_addr, rx_a_bank_controls_startbit, rx_a_bank_controls_endbit, 0b000100,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_a_bank_controls_addr, rx_a_bank_controls_startbit, rx_a_bank_controls_endbit, 0b010110,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_a_bank_controls_addr, rx_a_bank_controls_startbit, rx_a_bank_controls_endbit, 0b110111,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_a_bank_controls_addr, rx_a_bank_controls_startbit, rx_a_bank_controls_endbit, 0b111111,
-                read_modify_write);
-    }
-    else
-    {
-        // Bank B is Alt Bank
-        put_ptr(gcr_addr, rx_b_bank_controls_addr, rx_b_bank_controls_startbit, rx_b_bank_controls_endbit, 0b000100,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_b_bank_controls_addr, rx_b_bank_controls_startbit, rx_b_bank_controls_endbit, 0b010110,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_b_bank_controls_addr, rx_b_bank_controls_startbit, rx_b_bank_controls_endbit, 0b110111,
-                read_modify_write);
-        put_ptr(gcr_addr, rx_b_bank_controls_addr, rx_b_bank_controls_startbit, rx_b_bank_controls_endbit, 0b111111,
-                read_modify_write);
-    }
-
-    // Resume the EOSM
-    //TODO put_ptr(gcr_addr, rx_int_return_addr, rx_int_return_startbit, rx_int_return_endbit, 0b1, fast_write); // strobe register
-
-    set_debug_state(0xFE2F); // DEBUG - Bank Power Down Done
-} //irq_bank_power_down
+    set_debug_state(0xFEFF); // DEBUG - Example IRQ Handler Done
+} //io_example_irq_handler()

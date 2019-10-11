@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19091200 |vbr     | HW503535: Added sub-step disables so can turn off just LTE Gain or Zero.
 // vbr19041500 |vbr     | Updated register names
 // vbr19022500 |vbr     | Disable servo_status for result min/max
 // vbr19012500 |vbr     | Added more assumption checking.
@@ -85,7 +86,7 @@ static uint16_t servo_ops_lte_a[num_servo_ops_lte] = { c_lte_gain_ae_n000, c_lte
 static uint16_t servo_ops_lte_b[num_servo_ops_lte] = { c_lte_gain_be_n000, c_lte_zero_be_n000 };
 
 
-// Always have hysteresis enabled
+// Always have hysteresis enabled; this could be turned into an input if want to disable hysteresis on first run
 #define hysteresis_en true
 
 
@@ -132,27 +133,49 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
     }
 
     // Select the servo ops.
-    // Save previous LTE settings for possible restoring (recal abort or hysteresis).
+    // Save previous LTE settings for possible restoring (recal abort, hysteresis, copying to main with sub-steps disabled).
     uint16_t* servo_ops;
-    int prev_gain_zero = 0;
+    int prev_gain_zero;
 
     if (cal_bank == bank_a)
     {
         servo_ops = servo_ops_lte_a;
-
-        if (hysteresis_en || recal)
-        {
-            prev_gain_zero = get_ptr_field(gcr_addr, rx_a_lte_gain_zero_alias);
-        }
+        prev_gain_zero = get_ptr_field(gcr_addr, rx_a_lte_gain_zero_alias);
     }
     else     //bank_b
     {
         servo_ops = servo_ops_lte_b;
+        prev_gain_zero = get_ptr_field(gcr_addr, rx_b_lte_gain_zero_alias);
+    }
 
-        if (hysteresis_en || recal)
-        {
-            prev_gain_zero = get_ptr_field(gcr_addr, rx_b_lte_gain_zero_alias);
-        }
+    int gain_prev = prev_gain_zero >> (rx_a_lte_gain_shift - rx_a_lte_zero_shift);
+    int zero_prev = prev_gain_zero & (rx_a_lte_zero_mask >> rx_a_lte_zero_shift);
+
+    // Get configuration on which sub-steps are disabled and return if both are disabled for some reason.
+    int gain_zero_disable = mem_pg_field_get(ppe_lte_gain_zero_disable_alias);
+
+    if (gain_zero_disable == 0b11)
+    {
+        return rc_no_error;
+    }
+
+    bool gain_disable = gain_zero_disable & 0b10;
+    bool zero_disable = gain_zero_disable & 0b01;
+
+    // Adjust servo pointers and number to run based on which (if any) sub-steps are disabled.
+    PK_STATIC_ASSERT((num_servo_ops_lte % 2) == 0);
+    int servo_array_start    = 0;
+    int num_servo_ops_to_run = num_servo_ops_lte;
+
+    if (gain_disable)
+    {
+        servo_array_start    = zero_op;
+        num_servo_ops_to_run = num_servo_ops_to_run / 2;
+    }
+    else if (zero_disable)
+    {
+        servo_array_start    = gain_op;
+        num_servo_ops_to_run = num_servo_ops_to_run / 2;
     }
 
     // Disable servo status for result at min/max
@@ -163,8 +186,8 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
     // The run_servo_op function checks for servo_status errors and returns warning_code/rc_warning on an error.
     set_debug_state(0x9008); // DEBUG - LTE Run Servo ops
     int32_t servo_results[num_servo_ops_lte];
-    int status = run_servo_ops_and_get_results(gcr_addr, c_servo_queue_general, num_servo_ops_lte, servo_ops,
-                 servo_results);
+    int status = run_servo_ops_and_get_results(gcr_addr, c_servo_queue_general, num_servo_ops_to_run,
+                 &servo_ops[servo_array_start], &servo_results[servo_array_start]);
     status |= check_rx_abort(gcr_addr);
 
     // Re-enable servo status for result at min/max
@@ -188,12 +211,8 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
             // Check the hysteresis. If the change in BOTH lte_gain and lte_zero is less than or equal to the limit,
             // the previous values are restored. The change of at least one must be larger than the limit to be allowed.
             int hyst_limit  = mem_pg_field_get(ppe_lte_hysteresis);
-            int gain_result = servo_results[gain_op];
-            int zero_result = servo_results[zero_op];
-            int gain_prev   = prev_gain_zero >> (rx_a_lte_gain_shift - rx_a_lte_zero_shift);
-            int zero_prev   = prev_gain_zero & (rx_a_lte_zero_mask >> rx_a_lte_zero_shift);
-            int gain_diff   = gain_result - gain_prev;
-            int zero_diff   = zero_result - zero_prev;
+            int gain_diff   = gain_disable ? 0 : (servo_results[gain_op] - gain_prev);
+            int zero_diff   = zero_disable ? 0 : (servo_results[zero_op] - zero_prev);
 
             if ( (abs(gain_diff) <= hyst_limit) && (abs(zero_diff) <= hyst_limit) )
             {
@@ -227,8 +246,8 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
         if (!recal && copy_to_main)
         {
             set_debug_state(0x900A); // DEBUG - LTE Copy Result to Main
-            int gain_result = servo_results[gain_op];
-            int zero_result = servo_results[zero_op];
+            int gain_result = gain_disable ? gain_prev : servo_results[gain_op];
+            int zero_result = zero_disable ? zero_prev : servo_results[zero_op];
             int write_val   = (gain_result << (rx_a_lte_gain_shift - rx_a_lte_zero_shift)) | zero_result;
 
             if (cal_bank == bank_a)
@@ -243,22 +262,28 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
     } //if(restore)...else...
 
     //rxbist
-    if (cal_bank == bank_a)
+    if (!gain_disable)
     {
-        mem_pl_field_put(rx_a_lte_gain_done, lane, 0b1);   //ppe pl
-    }
-    else
-    {
-        mem_pl_field_put(rx_b_lte_gain_done, lane, 0b1);
+        if (cal_bank == bank_a)
+        {
+            mem_pl_field_put(rx_a_lte_gain_done, lane, 0b1);   //ppe pl
+        }
+        else
+        {
+            mem_pl_field_put(rx_b_lte_gain_done, lane, 0b1);
+        }
     }
 
-    if (cal_bank == bank_a)
+    if (!zero_disable)
     {
-        mem_pl_field_put(rx_a_lte_zero_done, lane, 0b1);   //ppe pl
-    }
-    else
-    {
-        mem_pl_field_put(rx_b_lte_zero_done, lane, 0b1);
+        if (cal_bank == bank_a)
+        {
+            mem_pl_field_put(rx_a_lte_zero_done, lane, 0b1);   //ppe pl
+        }
+        else
+        {
+            mem_pl_field_put(rx_b_lte_zero_done, lane, 0b1);
+        }
     }
 
     // End of cal step - return status
