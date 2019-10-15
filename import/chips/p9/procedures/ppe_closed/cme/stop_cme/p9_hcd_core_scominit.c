@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -78,8 +78,8 @@ p9_hcd_core_scominit(uint32_t core)
     CME_PUTSCOM(CORE_ACTION1, core, 0xA854009775100000);
     CME_PUTSCOM(CORE_FIRMASK, core, 0x0301D70000AB76FE);
 #else
-    CME_PUTSCOM(CORE_ACTION0, core, 0x14A800408A000040);
-    CME_PUTSCOM(CORE_ACTION1, core, 0xBCFC00D7FF100040);
+    CME_PUTSCOM(CORE_ACTION0, core, 0x14A800408A000041);
+    CME_PUTSCOM(CORE_ACTION1, core, 0xBCFC00D7FF100041);
     CME_PUTSCOM(CORE_FIRMASK, core, 0x0301D70000AB76BE);
 
     // set mask for core_cs_recovery_handshake
