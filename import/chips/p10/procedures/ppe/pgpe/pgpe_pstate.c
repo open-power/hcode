@@ -248,12 +248,25 @@ void pgpe_pstate_compute()
 
 void pgpe_pstate_apply_clips()
 {
-    //\todo use WOF Clip, sibling pstate(DCM), and safe pstate
+    //\todo Use sibling pstate(DCM), and safe pstate
     G_pgpe_pstate.pstate_target = G_pgpe_pstate.pstate_computed;
 
-    if (G_pgpe_pstate.pstate_computed < G_pgpe_pstate.clip_min)
+    uint32_t clip_min;
+
+    clip_min = G_pgpe_pstate.clip_min;
+
+    if (G_pgpe_pstate.wof_status == WOF_STATUS_ENABLED)
     {
-        G_pgpe_pstate.pstate_target = G_pgpe_pstate.clip_min;
+        //Check if wof_clip is lower(freq) than clip_min, and clip_wof is not lower(freq) than clip_max
+        if (G_pgpe_pstate.clip_wof > clip_min && G_pgpe_pstate.clip_wof <= G_pgpe_pstate.clip_max)
+        {
+            clip_min = G_pgpe_pstate.clip_wof;
+        }
+    }
+
+    if (G_pgpe_pstate.pstate_computed < clip_min)
+    {
+        G_pgpe_pstate.pstate_target = clip_min;
     }
 
     if (G_pgpe_pstate.pstate_computed > G_pgpe_pstate.clip_max)
@@ -308,6 +321,7 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
 
     PK_TRACE("VRA: CoreCnt=%u, SortCnt=%u", core_cnt, G_pgpe_pstate.sort_core_count);
     G_pgpe_pstate.vratio_inst = vratio_accum / G_pgpe_pstate.sort_core_count;
+    PK_TRACE("VRA: vratio_inst=%u, vratio_accum=%u", G_pgpe_pstate.vratio_inst, vratio_accum);
 }
 
 void pgpe_pstate_compute_vindex()
@@ -316,6 +330,7 @@ void pgpe_pstate_compute_vindex()
     uint32_t rem = (G_pgpe_pstate.vratio_inst & 0x0FFF);
     uint32_t idx_rnd = (rem > 0x800) ? 1 : 0;
     G_pgpe_pstate.vindex = (msd >= 5) ? (msd - 5 + idx_rnd) : 0;
+    PK_TRACE("VIX: Vindex=0x%u", G_pgpe_pstate.vindex);
 }
 
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set)
