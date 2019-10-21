@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -70,6 +70,7 @@ void wait_ns(uint32_t i_ns);
 void rxEnableAmpdac(t_gcr_addr* gcr_addr, const bool iEnable);
 void powerDownBank(t_gcr_addr* gcr_addr, uint32_t iBankPowerDown);
 void disableBank(t_gcr_addr* gcr_addr, uint32_t iBankPowerDown);
+void powerUpAll(t_gcr_addr* gcr_addr);
 
 // The main function is called by the boot code
 int main(int argc, char** argv)
@@ -96,6 +97,8 @@ int main(int argc, char** argv)
     uint32_t currentRecalAbort = 0x0;
     uint32_t count             = 0x0;
     uint32_t state             = 0x0;
+    uint32_t resetCount        = 0x0;
+    uint32_t waitCount         = 0x0;
     uint64_t work1Data         = 0x0;
     uint64_t work2Data         = 0x0;
     uint32_t workDoneCnt       = 0x0;
@@ -148,10 +151,10 @@ int main(int argc, char** argv)
             do
             {
                 powerDownBank(&gcr_addr, bankPowerDown);
-                //wait_ns(20000); // Wait for 20us
 
+                //wait_ns(20000); // Wait for 20us
                 // Write(530.67ns), RMW(1101ns), Read(1132ns)
-                for (count = 0; ((count < 40000) && (recalAbortCnt[bankPowerDown] < 2)); ++count)
+                for (count = 0; ((count < 15000) && (recalAbortCnt[bankPowerDown] < 2)); ++count)
                 {
                     // Read rx_recal_abort_active (Returns a 0 or 1)
                     // - The DL sources this signal
@@ -161,12 +164,25 @@ int main(int argc, char** argv)
 
                 ++loopCount;
                 bankPowerDown = (bankPowerDown == BANK_EVEN) ? BANK_ODD : BANK_EVEN;
+
+                // At the end of second loop we will wait and check to see if recal abort so traffic continues
+                if ((bankPowerDown == BANK_EVEN) && (count == 15000))
+                {
+                    powerUpAll(&gcr_addr); //powerup all the lanes back
+                    wait_ns(1000); // wait 1ms before we start to look for recal abort
+
+                    do
+                    {
+                        currentRecalAbort = get_ptr_field(&gcr_addr, rx_recal_abort_active); // DL
+                        ++waitCount;
+                    }
+                    while (currentRecalAbort == 0 );   //wait until the recal abort is seen to start powering off again
+                }
             }
             while((recalAbortCnt[BANK_EVEN] < 2) && (recalAbortCnt[BANK_ODD] < 2));
 
             // Power down the bank with the bad lane/lanes
             powerDownBank(&gcr_addr, bankPowerDown);
-
             // Disable the ampdac for all lanes
             rxEnableAmpdac(&gcr_addr, false);
 
@@ -182,9 +198,12 @@ int main(int argc, char** argv)
             }
 
             work1Data = (work1Data & 0x0FFFFFFF00000000) | (((uint64_t)workDoneCnt       << 60) & 0xF000000000000000);
-            work1Data = (work1Data & 0xFFFF000000000000) | (((uint64_t)(mfspr(SPRN_DEC)) << 32) & 0x0000FFFF00000000);
-            work2Data = (((uint64_t)loopCount << 32) & 0xFFFFFFFF00000000);
-            work2Data |= (bankPowerDown == BANK_EVEN) ? 0xAAAA000000000000 : 0x5555000000000000;
+            work1Data = (work1Data & 0xF000FFFF00000000) | (((uint64_t)resetCount        << 48) & 0x0FFF000000000000);
+            work1Data = (work1Data & 0xFFFF000000000000) | (((uint64_t)loopCount         << 32) & 0x0000FFFF00000000);
+            // work1Data = (work1Data & 0xFFFF000000000000) | (((uint64_t)(mfspr(SPRN_DEC)) << 32) & 0x0000FFFF00000000);
+            work2Data = (((uint64_t)waitCount << 32) & 0xFFFFFFFF00000000);
+            work2Data = (work2Data & 0x0000FFFF00000000) | (((uint64_t)count         << 48) & 0xFFFF000000000000);
+            work2Data |= (bankPowerDown == BANK_EVEN) ? 0xE000000000000000 : 0x0000000000000000;
             localPut(WORK1_REG, work1Data);
             localPut(WORK2_REG, work2Data);
 
@@ -192,13 +211,15 @@ int main(int argc, char** argv)
             count             = 0x0;
             state             = 0x0;
         }
-        else if((count > 26500) && (state == 0x01) ) // 30ms
+        else if((count > 6000) && (state == 0x01)) // 3ms
         {
             currentRecalAbort = 0x0;
             state             = 0x0;
             count             = 0x0;
+            ++resetCount;
 
             work1Data = (work1Data & 0xFFF0FFFF00000000) | (0x0001000000000000);
+            work1Data = (work1Data & 0xF000FFFF00000000) | (((uint64_t)resetCount        << 48) & 0x0FFF000000000000);
             localPut(WORK1_REG, work1Data);
         }
         else if(state == 0x01)
@@ -208,10 +229,10 @@ int main(int argc, char** argv)
 
         // After we complete the workaround once, we will break out of the
         //   while loop and halt the ppe execution.
-        if (workDoneCnt > 0x0)
-        {
-            break;
-        }
+        //if (workDoneCnt > 0x0)
+        // {
+        //    break;
+        // }
     }
 
     return 0;
@@ -278,6 +299,19 @@ void rxEnableAmpdac(t_gcr_addr* gcr_addr, const bool iEnable)
     set_gcr_addr_lane(gcr_addr, 0);
     return;
 }
+// Power up all the banks
+void powerUpAll(t_gcr_addr* gcr_addr)
+{
+    set_gcr_addr_lane(gcr_addr, 0x1F);
+    put_ptr_field(gcr_addr, rx_lane_ana_pdwn, 0x00, fast_write);
+    wait_ns(20000);
+    put_ptr_field(gcr_addr, rx_amp_val, 0x0, fast_write);
+    set_gcr_addr_lane(gcr_addr, 0x00);
+
+    set_gcr_addr_lane(gcr_addr, 0);
+    return;
+}
+
 
 // The bank that is passed in, is the bank that we want to power down
 void powerDownBank(t_gcr_addr* gcr_addr, uint32_t iTargetBank)
@@ -288,7 +322,7 @@ void powerDownBank(t_gcr_addr* gcr_addr, uint32_t iTargetBank)
     // Bias and Power Down all the Lanes
     set_gcr_addr_lane(gcr_addr, 0x1F);
     put_ptr_field(gcr_addr, rx_amp_val, 0x7F, fast_write);
-    wait_ns(20000); // Wait for 20us to allow values to propogate
+    wait_ns(40000); // Wait for 20us to allow values to propogate
     put_ptr_field(gcr_addr, rx_lane_ana_pdwn, 0x01, fast_write);
     set_gcr_addr_lane(gcr_addr, 0x00);
 
