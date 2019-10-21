@@ -485,6 +485,9 @@ void pgpe_process_wof_enable(ipcmsg_wof_control_t* args)
     PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_inst),
              pgpe_pstate_get(vindex),
              pgpe_pstate_get(clip_wof));
+
+    pgpe_pstate_compute();
+    pgpe_pstate_apply_clips();
 }
 
 void pgpe_process_wof_disable()
