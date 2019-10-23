@@ -96,6 +96,19 @@ void pgpe_pstate_init()
 
     G_pgpe_pstate.vrt                = 0;
     G_pgpe_pstate.update_pgpe_beacon = 1;
+
+    if (pgpe_gppb_get_safe_frequency())
+    {
+        G_pgpe_pstate.pstate_safe = (pgpe_gppb_get_reference_frequency() -
+                                     pgpe_gppb_get_safe_frequency()) / pgpe_gppb_get_frequency_step();
+
+    }
+    else
+    {
+        G_pgpe_pstate.pstate_safe = pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE);
+    }
+
+    PK_TRACE("PS: Psafe=0x%x", G_pgpe_pstate.pstate_safe);
 }
 
 void* pgpe_pstate_data_addr()
@@ -248,10 +261,10 @@ void pgpe_pstate_compute()
 
 void pgpe_pstate_apply_clips()
 {
-    //\todo Use sibling pstate(DCM), and safe pstate
+    //\todo Use sibling pstate(DCM)
     G_pgpe_pstate.pstate_target = G_pgpe_pstate.pstate_computed;
 
-    uint32_t clip_min;
+    uint32_t clip_min, clip_max;
 
     clip_min = G_pgpe_pstate.clip_min;
 
@@ -264,14 +277,18 @@ void pgpe_pstate_apply_clips()
         }
     }
 
+    //Max Pstate(lower freq) should not be higher(lower freq) than pstate_safe
+    clip_max = G_pgpe_pstate.clip_max < G_pgpe_pstate.pstate_safe ?
+               G_pgpe_pstate.clip_max : G_pgpe_pstate.pstate_safe;
+
     if (G_pgpe_pstate.pstate_computed < clip_min)
     {
         G_pgpe_pstate.pstate_target = clip_min;
     }
 
-    if (G_pgpe_pstate.pstate_computed > G_pgpe_pstate.clip_max)
+    if (G_pgpe_pstate.pstate_computed > clip_max)
     {
-        G_pgpe_pstate.pstate_target = G_pgpe_pstate.clip_max;
+        G_pgpe_pstate.pstate_target = clip_max;
     }
 
     PK_TRACE("APC: ps_target=0x%x", G_pgpe_pstate.pstate_target);
@@ -862,7 +879,10 @@ uint32_t pgpe_pstate_is_at_target()
 
 uint32_t pgpe_pstate_is_clip_bounded()
 {
-    if ((G_pgpe_pstate.pstate_curr >= G_pgpe_pstate.clip_min) &&
+    uint32_t clip_min = G_pgpe_pstate.clip_min > G_pgpe_pstate.pstate_safe ? G_pgpe_pstate.pstate_safe :
+                        G_pgpe_pstate.clip_min;
+
+    if ((G_pgpe_pstate.pstate_curr >= clip_min) &&
         (G_pgpe_pstate.pstate_curr <= G_pgpe_pstate.clip_max))
     {
         return 1;
@@ -875,7 +895,32 @@ uint32_t pgpe_pstate_is_clip_bounded()
 
 uint32_t pgpe_pstate_is_wof_clip_bounded()
 {
-    if (G_pgpe_pstate.pstate_curr >= G_pgpe_pstate.clip_wof)
+    uint32_t clip_bound;
+
+
+    //If wof clip is between thermal clips, then the wof_clip becomes the bound
+    //Note: It's a min bound in terms of pstate, and max bound in terms of freq
+    if (G_pgpe_pstate.clip_wof < G_pgpe_pstate.clip_max)
+    {
+        clip_bound = G_pgpe_pstate.clip_wof;
+    }
+    else
+    {
+        clip_bound =  G_pgpe_pstate.clip_max;
+    }
+
+    //Now make sure bound is lower pstate(higher freq) than psafe
+    if (clip_bound <= G_pgpe_pstate.pstate_safe)
+    {
+        clip_bound = G_pgpe_pstate.clip_wof;
+    }
+    else
+    {
+        clip_bound = G_pgpe_pstate.pstate_safe;
+    }
+
+    //Now, check if current pstate is within bound
+    if (G_pgpe_pstate.pstate_curr >= clip_bound)
     {
         return 1;
     }
