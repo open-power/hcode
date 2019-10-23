@@ -69,4 +69,14 @@ void pgpe_dpll_write(uint32_t pstate)
     PK_TRACE("dpll=0x%08x%08x", dpll_freq.value >> 32, dpll_freq.value);
     PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_FREQ, dpll_freq.value);
 
+    dpll_stat_t dpll_stat;
+    dpll_stat.value = 0;
+    PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);
+    PK_TRACE("dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
+
+    //\todo Add timeout and critical error log
+    while(!dpll_stat.fields.update_complete)
+    {
+        PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);
+    }
 }
