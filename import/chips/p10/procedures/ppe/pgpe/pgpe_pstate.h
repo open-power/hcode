@@ -68,6 +68,7 @@ typedef struct pgpe_pstate
     uint32_t ps_request[MAX_QUADS];
     uint32_t sort_core_count;
     uint32_t pstate_computed, pstate_target, pstate_next, pstate_curr;
+    uint32_t pstate_safe;
     pmsr_t   pmsr;
     uint32_t clip_min, clip_max, clip_wof, dcm_sibling_ps;
     uint32_t vdd_curr, vdd_next, vdd_curr_uplift, vdd_next_uplift, vdd_curr_ext, vdd_next_ext;

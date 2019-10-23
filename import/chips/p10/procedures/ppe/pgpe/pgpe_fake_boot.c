@@ -114,7 +114,7 @@ void pgpe_fake_boot_gppb()
     gppb->vdn_sysparm.distoffset_uv = 0;
 
     gppb->safe_voltage_mv = 740;
-    gppb->safe_frequency_khz = 2286000;
+    gppb->safe_frequency_khz = 2000000;
 
     //vratio
     gppb->core_on_ratio_vdd = PGPE_FAKE_BOOT_CORE_ON_RATIO * 65535  ;
