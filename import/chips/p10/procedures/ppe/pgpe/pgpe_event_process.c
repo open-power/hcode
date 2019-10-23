@@ -552,7 +552,8 @@ void pgpe_process_wof_vrt(void* eargs)
                      pgpe_pstate_get(clip_wof));
             pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_PENDING_ACTUATION);
 
-
+            pgpe_pstate_compute();
+            pgpe_pstate_apply_clips();
         }
         else
         {
@@ -582,6 +583,10 @@ void pgpe_process_wof_vrt_post_actuate()
         if(pgpe_pstate_get(clip_wof) >= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE))
         {
             pgpe_thr_ctrl_update(pgpe_pstate_get(clip_wof));
+        }
+        else
+        {
+            pgpe_thr_ctrl_update(pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE));
         }
     }
 }
