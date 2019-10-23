@@ -43,6 +43,8 @@ void pgpe_thr_ctrl_update(uint32_t pstate)
     {
         uint32_t vrt_overage =  pstate - pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE);
 
+        PK_TRACE("THR: vrt_over=0x%x, curr_ceff_ovr_idx=0x%x", vrt_overage, G_pgpe_thr_ctrl.curr_ceff_ovr_idx);
+
         //if  VRT overage == 0 && present_ceff_overage_index == 0
         if ((vrt_overage == 0) && (G_pgpe_thr_ctrl.curr_ceff_ovr_idx == 0))
         {
@@ -55,7 +57,7 @@ void pgpe_thr_ctrl_update(uint32_t pstate)
         }
         else if ((vrt_overage > 0) &&  (vrt_overage < G_pgpe_thr_ctrl.curr_ceff_ovr_idx))
         {
-            G_pgpe_thr_ctrl.curr_ceff_ovr_idx = (G_pgpe_thr_ctrl.curr_ceff_ovr_idx - vrt_overage) / 2;
+            G_pgpe_thr_ctrl.curr_ceff_ovr_idx = (G_pgpe_thr_ctrl.curr_ceff_ovr_idx - vrt_overage) / 2 + vrt_overage;
             pgpe_thr_ctrl_write_wcor();
         }
         else if ((vrt_overage == 0) && (G_pgpe_thr_ctrl.curr_ceff_ovr_idx != 0))
@@ -67,6 +69,8 @@ void pgpe_thr_ctrl_update(uint32_t pstate)
         {
             //ERROR \\todo
         }
+
+        PK_TRACE("THR: vrt_over=0x%x, curr_ceff_ovr_idx=0x%x", vrt_overage, G_pgpe_thr_ctrl.curr_ceff_ovr_idx);
     }
 }
 
