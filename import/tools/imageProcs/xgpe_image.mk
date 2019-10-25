@@ -23,25 +23,26 @@
 #
 # IBM_PROLOG_END_TAG
 
-# $1 == type
-# $2 == chipId
-# FIXMI -
+# $1 == chipId
+#
+# FIXME -
 # The following define has the full P10 build image sections. However, since
 # some of the PPE binaries are not yet getting built, we will use the define
 # BUILD_XGPE_IMAGE_TEMP at the end instead as the binaries become incrementally
 # available.
 #TODO RTC 244611 Auxiliary Task:  pull from EKB and install in hw_image.
 define BUILD_XGPE_IMAGE
-$(eval IMAGE=$2.$1.xgpe_image)
+$(eval IMAGE=$1.xgpe_image)
 
 $(eval $(IMAGE)_PATH=$(IMAGEPATH)/xgpe_image)
 $(eval $(IMAGE)_LINK_SCRIPT=xgpe_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/xgpe_image/xgpe_image.o)
 $(eval xgpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
-# Files with multiple DD level content to be generated
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$2,xpmr_hdr))
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$2,xgpe))
+# Files with multiple DD level content to be generated (arg2=empty since
+# there is no hw/sim variations)
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,xpmr_hdr))
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,xgpe))
 
 # Files to be appended to image
 $(eval $(IMAGE)_FILE_XPMR_HDR=$$($(IMAGE)_DD_CONT_xpmr_hdr))
@@ -92,16 +93,17 @@ $(eval $(call BUILD_XIPIMAGE))
 endef
 
 define BUILD_XGPE_IMAGE_TEMP
-$(eval IMAGE=$2.$1.xgpe_image)
+$(eval IMAGE=$1.xgpe_image)
 
 $(eval $(IMAGE)_PATH=$(IMAGEPATH)/xgpe_image)
 $(eval $(IMAGE)_LINK_SCRIPT=xgpe_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/xgpe_image/xgpe_image.o)
 $(eval xgpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
-# Files with multiple DD level content to be generated
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$2,$1,xpmr_hdr))
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$2,$1,xgpe))
+# Files with multiple DD level content to be generated (arg2=empty since
+# there is no hw/sim variations)
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,xpmr_hdr))
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,xgpe))
 
 # Files to be appended to image
 $(eval $(IMAGE)_FILE_XPMR_HDR=$$($(IMAGE)_DD_CONT_xpmr_hdr))
@@ -153,5 +155,4 @@ $(eval MYCHIPS := $(filter-out ocmb,$(CHIPS)))
 
 $(foreach chip,$(MYCHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
-		$(foreach type, $(HW_IMAGE_VARIATIONS),\
-			$(eval $(call BUILD_XGPE_IMAGE_TEMP,$(type),$(chipId))))))
+		$(eval $(call BUILD_XGPE_IMAGE_TEMP,$(chipId)))))

@@ -33,7 +33,8 @@ $(eval $(IMAGE)_LINK_SCRIPT=pgpe_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/pgpe_image/pgpe_image.o)
 $(eval pgpe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
-# Files with multiple DD level content to be generated
+# Files with multiple DD level content to be generated (arg2=empty since
+# there is no hw/sim variations)
 $(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,ppmr_hdr))
 $(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,pgpe))
 
