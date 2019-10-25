@@ -37,10 +37,11 @@ $(eval $(IMAGE)_LINK_SCRIPT=restore_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/restore_image/restore_image.o)
 $(eval restore_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
-# files with multiple DD level content to be generated
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,cpmr_hdr))
+# Files with multiple DD level content to be generated (arg2=empty since
+# there is no hw/sim variations)
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,cpmr_hdr))
 
-# files to be appended to image
+# Files to be appended to image
 $(eval $(IMAGE)_FILE_CPMR_HDR=$$($(IMAGE)_DD_CONT_cpmr_hdr))
 $(eval $(IMAGE)_FILE_SELF=$(ROOTPATH/output/images/utils/stopreg/p10_core_save_restore_routines/p10_core_save_restore_routines.bin)
 
@@ -58,11 +59,11 @@ $(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_PATH)/.$(IMAGE).append.cpmr_hdr)
 $(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
 $(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.self_save_restore)
 
-# image build using all files and serialised by dependencies
+# Image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.cpmr_hdr,$$($(IMAGE)_DEPS_CPMR_HDR),$$($(IMAGE)_FILE_CPMR_HDR) 1))
 $(eval $(call XIP_TOOL,append,.self_restore,$$($(IMAGE)_DEPS_SELF),$$($(IMAGE)_FILE_SELF)))
 
-# create image report for image with all files appended
+# Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 
 $(eval $(call BUILD_XIPIMAGE))
@@ -76,18 +77,18 @@ $(eval $(IMAGE)_LINK_SCRIPT=restore_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/restore_image/restore_image.o)
 $(eval restore_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
-# files with multiple DD level content to be generated
+# Files with multiple DD level content to be generated
 
-# files to be appended to image
+# Files to be appended to image
 
-# dependencies for appending image sections in sequence:
+# Dependencies for appending image sections in sequence:
 # - file to be appended
 # - all dependencies of previously appended sections or on raw image
 # - append operation as to other section that has to be finished first
 
-# image build using all files and serialised by dependencies
+# Image build using all files and serialised by dependencies
 
-# create image report for image with all files appended
+# Create image report for image with all files appended
 
 $(eval $(call BUILD_XIPIMAGE))
 endef
