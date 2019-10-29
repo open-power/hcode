@@ -135,14 +135,27 @@ extern "C"
             printf("      SatReg: 0x%.2X\n", l_scom.getSatOffset());
         }
 
-        // Display values of the OBUS Super Wrapper (upper 32-bit)
+        // Additional display for indirect SCOM
         if ( l_scom.isIndirect() )
         {
-            printf("\nOBUS Super Wrapper:\n");
-            printf("    Reg addr: 0x%.3X\n", l_scom.getIoRegAddr());
-            printf("TX/RX select: 0x%.1X\n", l_scom.getIoTxRxBit());
-            printf("  Group Addr: 0x%.2X\n", l_scom.getIoGroupAddr());
-            printf("        Lane: 0x%.2X\n", l_scom.getIoLane());
+            // Display  values of the OBUS Super Wrapper (upper 32-bit)
+            if ( l_scom.isIoHsTarget() )
+            {
+                printf("\nOBUS Super Wrapper:\n");
+                printf("    Reg addr: 0x%.3X\n", l_scom.getIoRegAddr());
+                printf("TX/RX select: 0x%.1X\n", l_scom.getIoTxRxBit());
+                printf("  Group Addr: 0x%.2X\n", l_scom.getIoGroupAddr());
+                printf("        Lane: 0x%.2X\n", l_scom.getIoLane());
+            }
+
+            // Display  values of IOP
+            else if ( l_scom.isPecTarget() )
+            {
+                printf("\nIOP Indirect:\n");
+                printf("    Indirect CR register (12:31): 0x%.5X\n", l_scom.getIopIndCRreg());
+                printf("    Top (53): %d\n", l_scom.getIopTop());
+                printf("    PMA (15): %d\n", l_scom.getPMA());
+            }
         }
 
         return;
