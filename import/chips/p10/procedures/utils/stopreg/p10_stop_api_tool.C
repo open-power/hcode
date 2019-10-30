@@ -122,7 +122,7 @@ map< uint32_t, string > g_stopErrCode;
 
 }
 
-const float TOOL_VERSION = 2.03;
+const float TOOL_VERSION = 1.00;
 FILE* g_pErrTrace = NULL;
 
 uint32_t launchBasedOnPir( void* i_pfakeHomer, std::string&   i_testHomerDesc,
@@ -138,7 +138,8 @@ uint32_t launchForScom( void* i_pfakeHomer, string& i_testHomerDesc,
                         int32_t& o_posStart );
 void printToolHelp();
 void printErrorHint( uint8_t* i_argList );
-void populateFakeCpmr( void* pfakeHomer, bool i_fuseMode );
+void populateFakeCpmr( void* pfakeCpmr, bool i_fuseMode );
+void initSelfRestoreRegion( void* pfakeHomer );
 
 
 
@@ -151,40 +152,55 @@ void populateFakeCpmr( void* pfakeHomer, bool i_fuseMode );
 int main( int argc, char* argv[])
 {
     using namespace stopImageSection;
-    int       rc = SUCCESS;
-    FILE*      fpImageIn = NULL ;
-    FILE*      fpImageOutDma = NULL;
-    FILE*      fpImageOutBin = NULL;
-    FILE*      fpRegInput = NULL;
-    char*    pfakeHomer = NULL;
-    bool fuseMode = false;
-    uint32_t outputType = BIN_OUTPUT;
-    uint32_t inputType  = BIN_INPUT;
+    int   rc = SUCCESS;
+    FILE* fpImageIn     =   NULL;
+    FILE* fpImageOutDma =   NULL;
+    FILE* fpImageOutBin =   NULL;
+    FILE* fpRegInput    =   NULL;
+    char* pfakeHomer    =   NULL;
+    bool fuseMode       =   false;
+    uint32_t outputType =   BIN_OUTPUT;
+    uint32_t inputType  =   BIN_INPUT;
     g_pErrTrace = fopen("error_trace.txt", "w+" );
     assert( g_pErrTrace != NULL );
 
-    g_sprRegisterTest[PROC_STOP_SPR_HSPRG0] = true;
-    g_sprRegisterTest[PROC_STOP_SPR_HRMOR]  = false;
-    g_sprRegisterTest[PROC_STOP_SPR_LPCR]   = true;
-    g_sprRegisterTest[PROC_STOP_SPR_HMEER]  = false;
-    g_sprRegisterTest[PROC_STOP_SPR_LDBAR]  = true;
-    g_sprRegisterTest[PROC_STOP_SPR_PSSCR]  = true;
-    g_sprRegisterTest[PROC_STOP_SPR_PMCR]   = false;
-    g_sprRegisterTest[PROC_STOP_SPR_HID]    = false;
-    g_sprRegisterTest[PROC_STOP_SPR_MSR]    = true;
-    g_sprRegisterTest[PROC_STOP_SPR_DAWR]   = true;
+    g_sprRegisterTest[PROC_STOP_SPR_CIABR]   =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_DAWR]    =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_DAWRX]   =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_HSPRG0]  =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_LDBAR]   =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_LPCR]    =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_PSSCR]   =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_MSR]     =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_HRMOR]   =  false;
+    g_sprRegisterTest[PROC_STOP_SPR_HID]     =  false;
+    g_sprRegisterTest[PROC_STOP_SPR_HMEER]   =  false;
+    g_sprRegisterTest[PROC_STOP_SPR_PMCR]    =  false;
+    g_sprRegisterTest[PROC_STOP_SPR_PTCR]    =  false;
+    g_sprRegisterTest[PROC_STOP_SPR_SMFCTRL] =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_USPRG0]  =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_USPRG1]  =  true;
+    g_sprRegisterTest[PROC_STOP_SPR_URMOR]   =  false;
+
 
     fprintf( g_pErrTrace, "%s", "Processing Input Parameters...\n");
-    g_sprMap["HSPRG0"] = PROC_STOP_SPR_HSPRG0;
-    g_sprMap["HRMOR"] = PROC_STOP_SPR_HRMOR;
-    g_sprMap["LPCR"]  = PROC_STOP_SPR_LPCR;
-    g_sprMap["HMEER"] = PROC_STOP_SPR_HMEER;
-    g_sprMap["LDBAR"] = PROC_STOP_SPR_LDBAR;
-    g_sprMap["PSSCR"] = PROC_STOP_SPR_PSSCR;
-    g_sprMap["PMCR"]  = PROC_STOP_SPR_PMCR;
-    g_sprMap["HID"]   = PROC_STOP_SPR_HID;
-    g_sprMap["MSR"]   = PROC_STOP_SPR_MSR;
-    g_sprMap["DAWR"]  = PROC_STOP_SPR_DAWR;
+    g_sprMap["CIABR"]   =   PROC_STOP_SPR_CIABR;
+    g_sprMap["DAWR" ]   =   PROC_STOP_SPR_DAWR;
+    g_sprMap["DAWRX"]   =   PROC_STOP_SPR_DAWRX;
+    g_sprMap["HSPRG0"]  =   PROC_STOP_SPR_HSPRG0;
+    g_sprMap["LDBAR"]   =   PROC_STOP_SPR_LDBAR;
+    g_sprMap["LPCR" ]   =   PROC_STOP_SPR_LPCR;
+    g_sprMap["PSSCR"]   =   PROC_STOP_SPR_PSSCR;
+    g_sprMap["MSR"]     =   PROC_STOP_SPR_MSR;
+    g_sprMap["HRMOR"]   =   PROC_STOP_SPR_HRMOR;
+    g_sprMap["HID"  ]   =   PROC_STOP_SPR_HID;
+    g_sprMap["HMEER"]   =   PROC_STOP_SPR_HMEER;
+    g_sprMap["PMCR"]    =   PROC_STOP_SPR_PMCR;
+    g_sprMap["PTCR"]    =   PROC_STOP_SPR_PTCR;
+    g_sprMap["SMFCTRL"] =   PROC_STOP_SPR_SMFCTRL;
+    g_sprMap["USPRG0"]  =   PROC_STOP_SPR_USPRG0;
+    g_sprMap["USPRG1"]  =   PROC_STOP_SPR_USPRG1;
+    g_sprMap["URMOR"]   =   PROC_STOP_SPR_URMOR;
 
     g_scomOp["APPEND"]      =   PROC_STOP_SCOM_APPEND;
     g_scomOp["REPLACE"]     =   PROC_STOP_SCOM_REPLACE;
@@ -438,6 +454,7 @@ int main( int argc, char* argv[])
                 {
                     fprintf( g_pErrTrace, "\nERR:could not open the output file %s\n",
                              argv[argNum + 1] );
+                    printf( "\nCould not open the outputfile %s\n", argv[argNum + 1] );
                     rcTemp = -1;
                     break;
                 }
@@ -453,7 +470,8 @@ int main( int argc, char* argv[])
                 if( std::string::npos == shortSelfRestFileName.find( ".bin", 0 ) )
                 {
                     rcTemp = -1;
-                    fprintf( g_pErrTrace, "\n ERR:.bin extension expected in SR output file");
+                    fprintf( g_pErrTrace, "\n ERR:.bin extension expected in SR output file" );
+                    printf( "\nMissing 'bin' extension in output file name\n" );
                     break;
                 }
 
@@ -464,6 +482,7 @@ int main( int argc, char* argv[])
                 {
                     fprintf( g_pErrTrace, "\nERR:could not open the output file %s\n",
                              argv[argNum + 1] );
+                    printf( "\nCould not open the output file %s\n", argv[argNum + 1] );
                     rcTemp = -1;
                     break;
                 }
@@ -480,6 +499,7 @@ int main( int argc, char* argv[])
                 if(!fpRegInput )
                 {
                     fprintf( g_pErrTrace, "\nERR:could not open register description file");
+                    printf( "\nERR:could not open register description file\n" );
                     rcTemp = -1;
                     break;
                 }
@@ -501,6 +521,8 @@ int main( int argc, char* argv[])
                 }
                 else
                 {
+                    fprintf( g_pErrTrace, "\nERR: Unsupported option for fused mode setting");
+                    printf( "\nUnsupported option\n" );
                     rcTemp = -1;
                     break;
                 }
@@ -530,14 +552,12 @@ int main( int argc, char* argv[])
         }
 
         pfakeHomer = (char*)malloc( STOP_IMAGE_TEST_SIZE );
-        uint32_t* ptempHomer = (uint32_t*) pfakeHomer;
-        uint32_t attnOpcode = SWIZZLE_4_BYTE(ATTN_OPCODE);
-        uint32_t blrOpcode  = SWIZZLE_4_BYTE(BLR_INST);
+        uint32_t* ptempHomer    =   (uint32_t*) pfakeHomer;
+        uint32_t count          =   0;
         fseek( fpImageIn, 0, SEEK_END );
-        uint32_t inputBinSize = ftell( fpImageIn );
+        uint32_t inputBinSize   =   ftell( fpImageIn );
         rewind(fpImageIn);
         fprintf(g_pErrTrace, "\n Input binary size 0x%08x", inputBinSize );
-        uint32_t count = 0;
 
         if( SELF_REST_BIN_APPEND_CPMR_OUTPUT == outputType )
         {
@@ -550,7 +570,6 @@ int main( int argc, char* argv[])
             break;
         }
 
-
         fseek( fpRegInput, 0, SEEK_END );
         uint32_t regInputSize = ftell( fpRegInput );
         rewind (fpRegInput);
@@ -562,19 +581,6 @@ int main( int argc, char* argv[])
 
         do
         {
-            uint32_t homerSzInWord = (STOP_IMAGE_TEST_SIZE >> 2);
-
-            for( ; count < homerSzInWord; count++ )
-            {
-                memcpy( (ptempHomer + count), &attnOpcode, sizeof( uint32_t) );
-            }
-
-            // for simplicity, just fill BLR instruction in a separate loop
-            for( count = THREAD_LAUNCH_START_WORD; count < SELF_REST_SIZE_END_WORD; count++ )
-            {
-                memcpy( (ptempHomer + count), &blrOpcode, sizeof( uint32_t) );
-                count += (THREAD_AREA_END_WORD - 1);
-            }
 
             if( SR_INPUT == inputType )
             {
@@ -587,6 +593,9 @@ int main( int argc, char* argv[])
                 count = fread( ptempHomer, sizeof(uint8_t), inputBinSize, fpImageIn );
                 fprintf( g_pErrTrace, "\nread 0x%08x bytes from HOMER bin", count );
             }
+
+            initSelfRestoreRegion( pfakeHomer );
+            populateFakeCpmr( ((uint8_t*)pfakeHomer + TWO_MB), fuseMode );
 
             rc = launchBasedOnCoreAndThread( pfakeHomer, testHomerDesc, fuseMode,
                                              posStart,  cpuRegEntryCnt );
@@ -643,7 +652,6 @@ int main( int argc, char* argv[])
                 fwrite( pfakeHomer + TWO_MB, sizeof(uint8_t), SELF_RESTORE_BIN_SIZE, fpImageOutBin );
             }
         }
-
     }
     while(0);
 
@@ -947,6 +955,7 @@ uint32_t launchBasedOnCoreAndThread( void* i_pfakeHomer,
             {
                 fprintf( g_pErrTrace, "\nERR:proc_stop_save_cpureg failed RC %s",
                          g_stopErrCode[rc].c_str() );
+                printf( "\n Failed to create SPR restore entries\n" );
                 rc = -1;
                 break;
             }
@@ -1109,8 +1118,8 @@ void generateDmaOutput( void* pfakeHomer, FILE* fpImageOut, uint32_t i_offSet )
             fprintf( fpImageOut, "%c", ' ' );
             fprintf( fpImageOut, "%08X", i_offSet );
             fprintf( fpImageOut, "%c", ' ' );
-            fprintf( fpImageOut, "0x%08x", SWIZZLE_4_BYTE(*pHomerDword ));
-            fprintf( fpImageOut, "%08x", SWIZZLE_4_BYTE(*(pHomerDword + 1) ));
+            fprintf( fpImageOut, "0x%08x", htobe32(*pHomerDword ));
+            fprintf( fpImageOut, "%08x", htobe32(*(pHomerDword + 1) ));
             fprintf( fpImageOut, "%c", '\n' );
             pHomerDword++;
             pHomerDword++;
@@ -1327,19 +1336,19 @@ void printErrorHint( uint8_t* i_argList )
     }
 }
 
-void populateFakeCpmr ( void* i_pfakeHomer, bool i_fuseStatus )
+void populateFakeCpmr ( void* i_pfakeCpmr, bool i_fuseStatus )
 {
     using namespace hcodeImageBuild;
-    time_t buildTime = time(NULL);
-    struct tm* headerTime = localtime(&buildTime);
-    uint64_t* i_cpmrWord = (uint64_t*) i_pfakeHomer;
-    uint64_t tempDwWord = stopImageSection::ATTN_OPCODE;
+    time_t buildTime        =   time(NULL);
+    struct tm* headerTime   =   localtime(&buildTime);
+    uint64_t* i_cpmrWord    =   (uint64_t*) i_pfakeCpmr;
+    uint64_t tempDwWord     =   stopImageSection::ATTN_OPCODE;
     tempDwWord = tempDwWord << 32;
     tempDwWord |= stopImageSection::ATTN_OPCODE;
-    tempDwWord = SWIZZLE_8_BYTE( tempDwWord);
+    tempDwWord = htobe64( tempDwWord);
     memcpy( i_cpmrWord, &tempDwWord, sizeof(uint64_t) );
     i_cpmrWord++;
-    tempDwWord = SWIZZLE_8_BYTE(CPMR_MAGIC_NUMBER);
+    tempDwWord = htobe64(CPMR_MAGIC_NUMBER);
     memcpy( i_cpmrWord, &tempDwWord, sizeof(uint64_t) );
     i_cpmrWord++;
     tempDwWord = ((headerTime->tm_year + 1900) << 16) |
@@ -1347,10 +1356,48 @@ void populateFakeCpmr ( void* i_pfakeHomer, bool i_fuseStatus )
                  (headerTime->tm_mday);
     tempDwWord  = tempDwWord << 32;
     tempDwWord |= 0x0001;
-    tempDwWord = SWIZZLE_8_BYTE(tempDwWord);
+    tempDwWord = htobe64(tempDwWord);
     memcpy( i_cpmrWord, &tempDwWord, sizeof(uint64_t) );
     i_cpmrWord++;
     tempDwWord = i_fuseStatus ? uint32_t(FUSED_CORE_MODE) : uint32_t(NONFUSED_CORE_MODE);
-    tempDwWord = SWIZZLE_8_BYTE(tempDwWord);
+    tempDwWord = htobe64(tempDwWord);
     memcpy( i_cpmrWord, &tempDwWord, sizeof(uint64_t) );
+    fprintf( g_pErrTrace, "\nPopulated CPMR Header of HOMER\n" );
+}
+
+
+void initSelfRestoreRegion( void* i_fakeHomer )
+{
+    hcodeImageBuild::Homerlayout_t*  l_pChipHomer    =   ( hcodeImageBuild::Homerlayout_t* )i_fakeHomer;
+    uint32_t l_fillBlr          =   htobe32(SELF_RESTORE_BLR_INST);
+    uint32_t l_fillAttn         =   htobe32(CORE_RESTORE_PAD_OPCODE);
+    uint32_t l_byteCnt          =   0;
+    uint32_t* l_pSelfRestLoc   =
+        (uint32_t*)&l_pChipHomer->iv_cpmrRegion.iv_selfRestoreRegion.iv_coreSelfRestore[0];
+
+    hcodeImageBuild::SmfSprRestoreRegion_t* l_pSaveRestore   =
+        (hcodeImageBuild::SmfSprRestoreRegion_t*)&l_pChipHomer->iv_cpmrRegion.iv_selfRestoreRegion.iv_coreSelfRestore[0];
+
+    while( l_byteCnt < SMF_SELF_RESTORE_CORE_REGS_SIZE )
+    {
+        memcpy( l_pSelfRestLoc, &l_fillAttn, sizeof( uint32_t ) );
+        l_byteCnt += 4;
+        l_pSelfRestLoc++;
+    }
+
+    //Initialize Core SPR and Thread SPR start boundary with BLR instruction.
+
+    for( size_t l_coreId = 0; l_coreId < MAX_CORES_PER_CHIP; l_coreId++ )
+    {
+        memcpy( (uint32_t*)&l_pSaveRestore->iv_coreRestoreArea[0], &l_fillBlr, sizeof(uint32_t) );
+
+        for( size_t l_threadId = 0; l_threadId < MAX_THREADS_PER_CORE; l_threadId++ )
+        {
+            memcpy( &l_pSaveRestore->iv_threadRestoreArea[l_threadId][0],
+                    &l_fillBlr,
+                    sizeof(uint32_t) );
+        }
+
+        l_pSaveRestore++;
+    }
 }
