@@ -315,6 +315,7 @@ void pgpe_process_clip_update(void* eargs)
         pgpe_pstate_set(clip_min, args->ps_val_clip_max);
         pgpe_pstate_set(clip_max, args->ps_val_clip_min);
 
+        PK_TRACE("PEP: Clip Min=0x%x Clip_Max=0x%x,clip_min,clip_max");
         pgpe_pstate_compute();
         pgpe_pstate_apply_clips();
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_PENDING_ACTUATION);
