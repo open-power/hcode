@@ -31,6 +31,9 @@
 #include "p10_scom_c_1.H"
 #include "p10_oci_proc.H"
 #include "pgpe_resclk.h"
+#include "p10_hcd_common.H"
+#include "pstate_pgpe_occ_api.h"
+#include "pgpe_header.h"
 
 //
 //Local function prototypes
@@ -312,17 +315,13 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
 {
     uint32_t vmin_mv = pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, POWERSAVE);
     uint32_t vdd = pgpe_pstate_intp_vdd_from_ps(pstate, VPD_PT_SET_BIASED); //non-uplifted
-    uint32_t vratio_accum = 0;
+    uint32_t vratio_vdd_accum = 0;
     uint32_t core_cnt = 0;
     uint32_t ccsr;
-    uint32_t opitasv0;
-    uint32_t opitasv1;
-    uint32_t opitasv2;
     uint32_t c;
+    HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)OCC_SHARED_SRAM_ADDR_START;
+    iddq_activity_t* G_p_iddq_act_val =  (iddq_activity_t*)(OCC_SHARED_SRAM_ADDR_START + occ_shared_data->iddq_data_offset);
 
-    opitasv0 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV0);//Read PCB Type A0(Core off)
-    opitasv1 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV1);//Read PCB Type A1(Core Vmin)
-    opitasv2 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV2);//Read PCB Type A2(MMA Off)
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
     for(c = 0; c < MAX_CORES; c++)
@@ -332,27 +331,29 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
             core_cnt++;
 
             //if core is ON
-            if (!(opitasv0 & CORE_MASK(c)))
+            if (G_p_iddq_act_val->core_off[c] == 0)
             {
-                vratio_accum += pgpe_gppb_get_core_on_ratio_vdd();
+                vratio_vdd_accum += pgpe_gppb_get_core_on_ratio_vdd();
 
                 //if core MMA is ON
-                if (!(opitasv2 & CORE_MASK(c)))
+                if (G_p_iddq_act_val->core_mma_off[c] == 0)
                 {
-                    vratio_accum += pgpe_gppb_get_mma_on_ratio_vdd();
+                    vratio_vdd_accum += pgpe_gppb_get_mma_on_ratio_vdd();
                 }
             }
             //if core c is Vmin
-            else if (!(opitasv0 & CORE_MASK(c)) &&  (opitasv1 & CORE_MASK(c)))
+            else if (G_p_iddq_act_val->core_vmin[c])
             {
-                vratio_accum += (pgpe_gppb_get_core_on_ratio_vdd() * vmin_mv) / vdd;
+                vratio_vdd_accum += (pgpe_gppb_get_core_on_ratio_vdd() * vmin_mv) / vdd;
             }
         }
     }
 
     PK_TRACE("VRA: CoreCnt=%u, SortCnt=%u", core_cnt, G_pgpe_pstate.sort_core_count);
-    G_pgpe_pstate.vratio_inst = vratio_accum / G_pgpe_pstate.sort_core_count;
-    PK_TRACE("VRA: vratio_inst=%u, vratio_accum=%u", G_pgpe_pstate.vratio_inst, vratio_accum);
+    G_pgpe_pstate.vratio_vdd_inst = vratio_vdd_accum / G_pgpe_pstate.sort_core_count;
+    G_pgpe_pstate.vratio_inst = G_pgpe_pstate.vratio_vdd_inst;
+    PK_TRACE("VRA: vratio_inst_vdd=%u, vratio_vdd_accum=%u", G_pgpe_pstate.vratio_vdd_inst, vratio_vdd_accum);
+    PK_TRACE("VRA: vratio_inst=%u", G_pgpe_pstate.vratio_inst);
 }
 
 void pgpe_pstate_compute_vindex()
