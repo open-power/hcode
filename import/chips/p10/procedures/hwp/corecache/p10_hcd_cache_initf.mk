@@ -25,5 +25,4 @@
 PROCEDURE=p10_hcd_cache_initf
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
-lib$(PROCEDURE)_COMMONFLAGS += -DP10_HCD_CORECACHE_SKIP_INITF
 $(call BUILD_PROCEDURE)
