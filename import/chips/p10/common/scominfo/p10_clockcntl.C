@@ -565,7 +565,7 @@ extern "C"
                         break;
 
                     case P10_TPVITL_DOMAIN:
-                        o_domainList.push_back(P10_TPSBEPIBOCCNET_DOMAIN);
+                        o_domainList.push_back(P10_TPSBEPIBOCCNETPSI_DOMAIN);
                         o_domainList.push_back(P10_TPDPLLPAU_DOMAIN);
                         o_domainList.push_back(P10_TPDPLLNEST_DOMAIN);
                         o_domainList.push_back(P10_TPPLL_DOMAIN);
@@ -577,7 +577,7 @@ extern "C"
 
                     case P10_N1VITL_DOMAIN:
                         o_domainList.push_back(P10_N1NMMU1_DOMAIN);
-                        o_domainList.push_back(P10_N1MCDPE0FBCPSI_DOMAIN);
+                        o_domainList.push_back(P10_N1MCDPE0FBC_DOMAIN);
                         break;
 
                     case P10_PAU0VITL_DOMAIN:

@@ -118,12 +118,12 @@ extern "C" {
         //      Chiplet            RingID                 Clock domain
         //      -------        --------------       -----------------------------
         {  PIB_CHIPLET_ID,     ALL_GOOD_ID,         P10_FSIVITL_DOMAIN            }, // FSI
-        {  PERV_CHIPLET_ID,    ALL_GOOD_ID,         P10_TPSBEPIBOCCNET_DOMAIN     }, // TP
+        {  PERV_CHIPLET_ID,    ALL_GOOD_ID,         P10_TPSBEPIBOCCNETPSI_DOMAIN  }, // TP
 
         {  N0_CHIPLET_ID,      ALL_GOOD_ID,         P10_N0NXVASINTNMMU0PE1_DOMAIN },
 
         {  N1_CHIPLET_ID,      N1_MM1_RING_ID,      P10_N1NMMU1_DOMAIN            }, // RingId 0x3
-        {  N1_CHIPLET_ID,      ALL_GOOD_ID,         P10_N1MCDPE0FBCPSI_DOMAIN     },
+        {  N1_CHIPLET_ID,      ALL_GOOD_ID,         P10_N1MCDPE0FBC_DOMAIN        },
 
         {  PCI0_CHIPLET_ID,    ALL_GOOD_ID,         P10_PCI0IOP_DOMAIN            },
         {  PCI1_CHIPLET_ID,    ALL_GOOD_ID,         P10_PCI1IOP_DOMAIN            },
@@ -310,7 +310,7 @@ extern "C" {
         { "FSIALL",               P10_FSIALL_DOMAIN,             0x0000281A, 0x0000800000000000ULL },
 
         { "TPVITL",               P10_TPVITL_DOMAIN,             0x0000281A, 0x0000800000000000ULL },
-        { "TPSBEPIBOCCNET",       P10_TPSBEPIBOCCNET_DOMAIN,     0x01030008, 0x0F80000000000000ULL }, // Regions 0,1,2,3,4; bits 4,5,6,7,8
+        { "TPSBEPIBOCCNETPSI",    P10_TPSBEPIBOCCNETPSI_DOMAIN,  0x01030008, 0x0FA0000000000000ULL }, // Regions 0,1,2,3,4,6; bits 4,5,6,7,8,10
         { "TPDPLLPAU",            P10_TPDPLLPAU_DOMAIN,          0x01030008, 0x0008000000000000ULL }, // Region 8; bit 12
         { "TPDPLLNEST",           P10_TPDPLLNEST_DOMAIN,         0x01030008, 0x0004000000000000ULL }, // Region 9; bit 13
         { "TPPLL",                P10_TPPLL_DOMAIN,              0x01030008, 0x0002000000000000ULL }, // Region 10; bit 14
@@ -320,7 +320,7 @@ extern "C" {
 
         { "N1VITL",               P10_N1VITL_DOMAIN,             0x030F0040, 0x0000800000000000ULL },
         { "N1NMMU1",              P10_N1NMMU1_DOMAIN,            0x03030008, 0x0040000000000000ULL }, // Region 5; bit 9
-        { "N1MCDPE0FBCPSI",       P10_N1MCDPE0FBCPSI_DOMAIN,     0x03030008, 0x0AA0000000000000ULL }, // Regions 0,2,4,6; bits 4,6,8,10
+        { "N1MCDPE0FBC",          P10_N1MCDPE0FBC_DOMAIN,        0x03030008, 0x0A80000000000000ULL }, // Regions 0,2,4; bits 4,6,8
 
         { "PCI0VITL",             P10_PCI0VITL_DOMAIN,           0x080F0040, 0x0000800000000000ULL },
         { "PCI0IOP",              P10_PCI0IOP_DOMAIN,            0x08030008, 0x0FF1E00000000000ULL }, // Regions 0-7,11-14; bits 4-11,15-18
