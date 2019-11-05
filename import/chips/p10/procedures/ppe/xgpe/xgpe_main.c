@@ -59,6 +59,13 @@ void xgpe_init()
     //Bit 16 in OCCFLG3 indicates XGPE active
     out32(G_OCB_OCCFLG3, BIT32(XGPE_ACTIVE));
 
+    //Unmask
+    //PCBtype F(31)
+    //ipi3(9)
+    //GPE2 error (2) notify
+    //XSTOP GPE3 (5)interrupts
+    out32(G_OCB_OIMR0_CLR, BIT32(31) | BIT32(11) | BIT32(9) | BIT32(2) | BIT32(5));
+
 #if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)
 
     uint32_t TCR_VAL = 0;

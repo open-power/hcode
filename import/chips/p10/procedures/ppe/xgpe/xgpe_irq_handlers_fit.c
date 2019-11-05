@@ -45,6 +45,7 @@ extern uint32_t G_OCB_OPITFSVRR;
 //
 void xgpe_irq_fit_handler()
 {
+    mtspr(SPRN_TSR, TSR_FIS);
     handle_pm_suspend();
 }
 
