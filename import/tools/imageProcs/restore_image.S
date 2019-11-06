@@ -66,7 +66,7 @@ __header_64_reserved:
         .xip_section strings
 
         .xip_section cpmr,              8
-        .xip_section self_restore,      8
+        .xip_section self_save_restore, 8
 
         .xip_section
         .xip_section
