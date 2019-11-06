@@ -24,11 +24,6 @@
 # IBM_PROLOG_END_TAG
 
 # $1 == chipId
-# FIXME -
-# The following define has the full P10 build image sections. However, since
-# some of the PPE binaries are not yet getting built, we will use the define
-# BUILD_RESTORE_IMAGE_TEMP at the end instead as the binaries become incrementally
-# available.
 define BUILD_RESTORE_IMAGE
 $(eval IMAGE=$1.restore_image)
 
@@ -43,58 +38,38 @@ $(eval $(call BUILD_DD_LEVEL_CONTAINER,$1,,cpmr_hdr))
 
 # Files to be appended to image
 $(eval $(IMAGE)_FILE_CPMR_HDR=$$($(IMAGE)_DD_CONT_cpmr_hdr))
-$(eval $(IMAGE)_FILE_SELF=$(ROOTPATH/output/images/utils/stopreg/p10_core_save_restore_routines/p10_core_save_restore_routines.bin)
+$(eval $(IMAGE)_FILE_SELF_SAVE_RESTORE=$(IMAGEPATH)/self_save_restore/self_save_restore.bin)
 
-# dependencies for appending image sections in sequence:
-# - file to be appended
-# - all dependencies of previously appended sections or on raw image
-# - append operation as to other section that has to be finished first
-$(eval $(IMAGE)_DEPS_CPMR_HDR =$$($(IMAGE)_FILE_CPMR_HDR))
-$(eval $(IMAGE)_DEPS_CPMR_HDR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+# Setup dependencies for
+# - building image ( $(IMAGE)_DEPS_IMAGE )
+# - appending image sections in sequence ( $(IMAGE)_DEPS_{<section>,REPORT} )
+#   - file to be appended
+#   - all dependencies of previously appended sections or on raw image
+#   - append operation as to other section that has to be finished first
+$(eval $(IMAGE)_DEPS_IMAGE              = $$($(IMAGE)_FILE_CPMR_HDR))
+$(eval $(IMAGE)_DEPS_CPMR_HDR           = $$($(IMAGE)_FILE_CPMR_HDR))
+$(eval $(IMAGE)_DEPS_CPMR_HDR          += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
 
-$(eval $(IMAGE)_DEPS_SELF =$$($(IMAGE)_FILE_SELF))
-$(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_DEPS_CPMR_HDR))
-$(eval $(IMAGE)_DEPS_SELF+=$$($(IMAGE)_PATH)/.$(IMAGE).append.cpmr_hdr)
+$(eval $(IMAGE)_DEPS_IMAGE             += $$($(IMAGE)_FILE_SELF_SAVE_RESTORE))
+$(eval $(IMAGE)_DEPS_SELF_SAVE_RESTORE  = $$($(IMAGE)_FILE_SELF_SAVE_RESTORE))
+$(eval $(IMAGE)_DEPS_SELF_SAVE_RESTORE += $$($(IMAGE)_DEPS_CPMR_HDR))
+$(eval $(IMAGE)_DEPS_SELF_SAVE_RESTORE += $$($(IMAGE)_PATH)/.$(IMAGE).append.cpmr_hdr)
 
-$(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_HCODE))
-$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.self_save_restore)
+$(eval $(IMAGE)_DEPS_REPORT             = $$($(IMAGE)_DEPS_SELF_SAVE_RESTORE))
+$(eval $(IMAGE)_DEPS_REPORT            += $$($(IMAGE)_PATH)/.$(IMAGE).append.self_save_restore)
 
 # Image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.cpmr_hdr,$$($(IMAGE)_DEPS_CPMR_HDR),$$($(IMAGE)_FILE_CPMR_HDR) 1))
-$(eval $(call XIP_TOOL,append,.self_restore,$$($(IMAGE)_DEPS_SELF),$$($(IMAGE)_FILE_SELF)))
+$(eval $(call XIP_TOOL,append,.self_save_restore,$$($(IMAGE)_DEPS_SELF_SAVE_RESTORE),$$($(IMAGE)_FILE_SELF_SAVE_RESTORE)))
 
 # Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 
-$(eval $(call BUILD_XIPIMAGE))
-endef
-
-define BUILD_RESTORE_IMAGE_TEMP
-$(eval IMAGE=$1.restore_image)
-
-$(eval $(IMAGE)_PATH=$(IMAGEPATH)/restore_image)
-$(eval $(IMAGE)_LINK_SCRIPT=restore_image.cmd)
-$(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/restore_image/restore_image.o)
-$(eval restore_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
-
-# Files with multiple DD level content to be generated
-
-# Files to be appended to image
-
-# Dependencies for appending image sections in sequence:
-# - file to be appended
-# - all dependencies of previously appended sections or on raw image
-# - append operation as to other section that has to be finished first
-
-# Image build using all files and serialised by dependencies
-
-# Create image report for image with all files appended
-
-$(eval $(call BUILD_XIPIMAGE))
+$(eval $(call BUILD_XIPIMAGE,$$($(IMAGE)_DEPS_IMAGE)))
 endef
 
 $(eval MYCHIPS := $(filter-out ocmb,$(CHIPS)))
 
 $(foreach chip,$(MYCHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
-		$(eval $(call BUILD_RESTORE_IMAGE_TEMP,$(chipId)))))
+		$(eval $(call BUILD_RESTORE_IMAGE,$(chipId)))))

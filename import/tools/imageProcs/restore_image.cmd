@@ -70,13 +70,13 @@ SECTIONS
     _cpmr_size = . - _cpmr_origin;
 
     ////////////////////////////////
-    // Self-Restore
+    // Self-Save-Restore
     ////////////////////////////////
     . = ALIGN(8);
-    _self_restore_origin = .;
-    _self_restore_offset = . - _restore_image_origin;
-    .self_restore . : { *(.self_restore) }
-    _self_restore_size = . - _self_restore_origin;
+    _self_save_restore_origin = .;
+    _self_save_restore_offset = . - _restore_image_origin;
+    .self_save_restore . : { *(.self_save_restore) }
+    _self_save_restore_size = . - _self_save_restore_origin;
 
     ////////////////////////////////
     // end of the image
