@@ -3,9 +3,9 @@
 /*                                                                        */
 /* $Source: tools/imageProcs/hw_image.cmd $                               */
 /*                                                                        */
-/* OpenPOWER HCODE Project                                                */
+/* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -33,7 +33,7 @@ SECTIONS
     . = HW_IMAGE_ORIGIN;
      _hw_image_origin = . - 0;
     ////////////////////////////////
-    // Header
+    // HEADER
     ////////////////////////////////
     . = ALIGN(1);
     _header_origin = .;
@@ -51,7 +51,7 @@ SECTIONS
     _toc_size = . - _toc_origin;
 
     ////////////////////////////////
-    // STRING
+    // STRINGS
     ////////////////////////////////
     . = ALIGN(1);
     _strings_origin = .;
@@ -60,31 +60,31 @@ SECTIONS
     _strings_size = . - _strings_origin;
 
     ////////////////////////////////
-    // SGPE
+    // SBE
     ////////////////////////////////
     . = ALIGN(8);
-    _sgpe_origin = .;
-    _sgpe_offset = . - _hw_image_origin;
-    .sgpe . : { *(.sgpe) }
-    _sgpe_size = . - _sgpe_origin;
+    _sbe_origin = .;
+    _sbe_offset = . - _hw_image_origin;
+    .sbe . : { *(.sbe) }
+    _sbe_size = . - _sbe_origin;
 
     ////////////////////////////////
-    // CORE RESTORE
+    // QME
     ////////////////////////////////
     . = ALIGN(8);
-    _core_restore_origin = .;
-    _core_restore_offset = . - _hw_image_origin;
-    .core_restore . : { *(.core_restore) }
-    _core_restore_size = . - _core_restore_origin;
+    _qme_origin = .;
+    _qme_offset = . - _hw_image_origin;
+    .qme . : { *(.qme) }
+    _qme_size = . - _qme_origin;
 
     ////////////////////////////////
-    // CME
+    // XGPE
     ////////////////////////////////
     . = ALIGN(8);
-    _cme_origin = .;
-    _cme_offset = . - _hw_image_origin;
-    .cme . : { *(.cme) }
-    _cme_size = . - _cme_origin;
+    _xgpe_origin = .;
+    _xgpe_offset = . - _hw_image_origin;
+    .xgpe . : { *(.xgpe) }
+    _xgpe_size = . - _xgpe_origin;
 
     ////////////////////////////////
     // PGPE
@@ -96,6 +96,15 @@ SECTIONS
     _pgpe_size = . - _pgpe_origin;
 
     ////////////////////////////////
+    // CORE RESTORE
+    ////////////////////////////////
+    . = ALIGN(8);
+    _core_restore_origin = .;
+    _core_restore_offset = . - _hw_image_origin;
+    .core_restore . : { *(.core_restore) }
+    _core_restore_size = . - _core_restore_origin;
+
+    ////////////////////////////////
     // IOPPE
     ////////////////////////////////
     . = ALIGN(8);
@@ -104,23 +113,14 @@ SECTIONS
     .ioppe . : { *(.ioppe) }
     _ioppe_size = . - _ioppe_origin;
 
-    ////////////////////////////////
-    // FPPE
-    ////////////////////////////////
-    . = ALIGN(8);
-    _fppe_origin = .;
-    _fppe_offset = . - _hw_image_origin;
-    .fppe . : { *(.fppe) }
-    _fppe_size = . - _fppe_origin;
-
-    ////////////////////////////////
-    // RINGS
+    ///////////////////////////////
+    // IOPXRAM
     ////////////////////////////////
     . = ALIGN(8);
-    _rings_origin = .;
-    _rings_offset = . - _hw_image_origin;
-    .rings . : { *(.rings) }
-    _rings_size = . - _rings_origin;
+    _iopxram_origin = .;
+    _iopxram_offset = . - _hw_image_origin;
+    .iopxram . : { *(.iopxram) }
+    _iopxram_size = . - _iopxram_origin;
 
     ////////////////////////////////
     // OVERLAYS
@@ -130,6 +130,15 @@ SECTIONS
     _overlays_offset = . - _hw_image_origin;
     .overlays . : { *(.overlays) }
     _overlays_size = . - _overlays_origin;
+
+    ////////////////////////////////
+    // DYNINITS
+    ////////////////////////////////
+    . = ALIGN(8);
+    _dynamic_origin = .;
+    _dynamic_offset = . - _hw_image_origin;
+    .dynamic . : { *(.dynamic) }
+    _dynamic_size = . - _dynamic_origin;
 
     ////////////////////////////////
     // end of the image

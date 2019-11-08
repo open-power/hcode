@@ -3,9 +3,9 @@
 #
 # $Source: env.bash $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2018
+# COPYRIGHT 2015,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -30,7 +30,7 @@ if [ -e ./customrc ]; then
 fi
 
 # Setup some global variables
-export PROJECT_NAME=HCODE
+export PROJECT_NAME=p10
 export PROJECT_ROOT=$ROOTDIR
 export TOOLSDIR=$PROJECT_ROOT/tools
 export PERLMODULES=$TOOLSDIR/perl.modules
@@ -58,7 +58,7 @@ export PATH=${PATH}:$TOOLSDIR:"$TOOLSDIR/test"
 
 # make sure ECMD_RELEASE is set
 if [ -z "${ECMD_RELEASE}" ]; then
-    export ECMD_RELEASE=ver-14-7
+    export ECMD_RELEASE=ver-14-18
 fi
 ECMD_LIB_PATH=${CTEPATH}/tools/ecmd/${ECMD_RELEASE}/x86_64/lib
 

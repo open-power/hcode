@@ -3,9 +3,9 @@
 #
 # $Source: tools/build/rules.dir/fapi2.env.mk $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -36,25 +36,25 @@ FAPI2_ATTR_XML += $(wildcard $(addsuffix /procedures/xml/attribute_info/*.xml, \
 FAPI2_ATTR_XML += $(filter-out \
         $(ROOTPATH)/hwpf/fapi2/xml/attribute_info/hb_temp_defaults.xml, \
         $(wildcard $(ROOTPATH)/hwpf/fapi2/xml/attribute_info/*.xml))
+FAPI2_ATTR_XML += $(wildcard $(ROOTPATH)/generic/procedures/xml/attribute_info/*.xml)
 
 # Error XML files.
 FAPI2_ERROR_XML += $(wildcard $(addsuffix /procedures/xml/error_info/*.xml, \
 	$(addprefix $(ROOTPATH)/chips/,$(CHIPS))))
 FAPI2_ERROR_XML += $(wildcard $(ROOTPATH)/hwpf/fapi2/xml/error_info/*.xml)
+FAPI2_ERROR_XML += $(wildcard $(ROOTPATH)/generic/procedures/xml/error_info/*.xml)
+
+# MRW XML files.
+FAPI2_MRW_XML += $(wildcard $(addsuffix /procedures/xml/mrw/*.xml, \
+	$(addprefix $(ROOTPATH)/chips/,$(CHIPS))))
 
 # Chip SCOM address header files.
 FAPI2_PLAT_INCLUDE += $(addsuffix /common/include, \
 	$(addprefix $(ROOTPATH)/chips/,$(CHIPS)))
 
 # HW Init header files.
-FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/p9/utils/
-FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/common/utils/
-FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/centaur/utils/
-
-
-FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/p9/utils/imageProcs
-FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/common/utils/imageProcs
-FAPI2_PLAT_INCLUDE += $(ROOTPATH)/chips/centaur/utils/imageProcs
+FAPI2_PLAT_INCLUDE += $(addsuffix /procedures/hwp/initfiles, \
+	$(addprefix $(ROOTPATH)/chips/,$(CHIPS)))
 
 # Utils header files
 FAPI2_PLAT_INCLUDE += $(addsuffix /utils, \
@@ -84,4 +84,3 @@ FAPI2_SCRIPT_PATH += \
 FAPI2_REQUIRED_LIBS += $(ECMD_REQUIRED_LIBS)
 FAPI2_REQUIRED_LIBS += $(FAPI2_PLAT_LIB)/fapi2ClientCapi.a
 FAPI2_REQUIRED_LIBS += $(FAPI2_PLAT_LIB)/libfapi2.so
-

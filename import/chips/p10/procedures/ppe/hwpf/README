@@ -1,0 +1,133 @@
+
+Power Management Fapi2-PPE platform implementation notes
+
+0) Memo for addressing powman ppe plat implementation of fapi2 concerns
+
+Conclusion first:
+VERY VERY VERY MUCH depends on whether architecture makes sense for doing platform support of powman ppe
+
+It was attempted briefly on p9 project, here is its historical limits and reasons:
+a) Multicast with ex abomination caused support of multicast going left and right with extra cost
+b) Sbe plat code was borrowed and hacked, which had getEffectiveAddress() called on each scom.
+The function is necessary for sbe to address various targeting and address overlay situations.
+If it is being inlined, then code blows up, or if it is called as function, 
+still cost on being efficient scom, as handling error return code on each scom. 
+
+This time for p10 project, quad chiplet layout and qme addressing are simplied as number of 
+chiplets and targets and address overlay that it has to process are far less and straightforard
+compare to p9; thus it does make sense to be possible to implement efficient code.
+
+Moreoever, borrowing sbe plat code is never going to meet powman ppe plat requirement, this time
+having this implemented from scratch provided code can be as good as conventional c implementation.
+
+So the conclusion or suggestion for future project is this: first whether architecture makes sense,
+as core+cache units v.s. cme/qme v.s. perv chiplets layout makes targeting a very complex case 
+as well as multicast group and addressing are made convenience for ppe plat to utilize via fapi2.
+
+Second, it would cost resources to implement the plat code from scratch or modify from 
+my current methods based on real need of qme/cme plat of targeting from given project. 
+It wont work just copy old code over, even from this code of mine for p11. Again, because it is 
+very architecture dependant requiring customization as well as optimization based on 
+the advantage and disadvantage of whatever architecture as well.
+
+Btw, it would be very similar situation that if a gpe i.e. sgpe if asked to support fapi2 to 
+what sbe would arrive at plat implementation; however full customization is still advised as the 
+disadvantage of sbe platform will still likely to be obstacle for gpe support to address.
+
+In my vision, only support the targets that really is needed is the key, and design 
+plat_handle accordingly. Never support the same numbers of targets that sbe had to, which will
+result similar inefficiency that you are forced into. Another reason for not just copying 
+code over or try to modify slightly to get a pass(I tried the first time but failed miserablely) 
+but design thoughtfully respectively based on architecture and fapi2 code at the time.
+
+
+1) Plat files are originally copied from <ekb root>/hwpf/fapi2/include/plat and <ekb root>/hwpf/fapi2/src/plat
+This implementation will avoid changing any fapi2 base files in <ekb root>/hwpf/fapi2/include and 
+<ekb root>/hwpf/fapi2/src. The former will be included as it is by plat code, the latter is not compiled.
+Therefore, those fapi2 files are not copied and the original fapi2/plat directory structure isnt followed. 
+Moreover, the filenames arent changed and shouldnt be changed for easy reference to orginal plat files.
+
+
+2) There are really only these functions that actually need support:
+a) <plan_target.H> --> define iv_handle struct/class, included by fapi2_target.H
+   <target.H>      --> implement class functions declared in fapi2_target.H
+   <target.C>      --> plat code to init and interface with targets
+b) <hw_access.H> getScom, putScom --> <plat_hw_access.H> --> ppe inline load/store macros 
+   <hw_access.H> putRing --> plat_ring_traverse.C/H --> plat_ring_untils.C/H
+c) <plat_utils.C> delay --> ppe apis to count timebase
+d) <plat_trace.H> FAPI_INF/DBG/ERR --> PK_TRACE_INF/DBG/ERR
+e) <plat_error_scope.H> FAPI_TRY --> no-op
+f) pool.C/H and assert.h are supporting utilities that you cannot miss, unless no usage of vectors
+g) there are files you need to create to satisfy fapi2 base includes but no need to implement anything
+
+
+3) FAPI_EXEC_HWP isnt supported by this plat, its plat files are deleted, because two reasons:
+a) It is pretty much the same as how FAPI_TRY does things, which we bypass to speed up scoms
+b) User needs to create RC to use the macro, however, ppe code isnt designed to pass RC also due to speed/size.
+Btw, the deleted files are plat_subroutine_executor.H, plat_hwp_executor.H remained for meeting fapi2 includes 
+Also, plat_target_filter file is also deleted, because we are not support getChildren via filter
+Moreoever, spd/vpd/mmio/i2c_access files are also deleted as plat doesnt have need to support at all.
+only hw_access is supported to handle all ppe plat IOs.
+Note the above deleted files can be absent because there is no base fapi2 includes them by default.
+
+
+4) putRing files
+hw_access.H.putRing --> plat_ring_traverse.C/H.findRS4InImageAndApply --> plat_ring.utils.C/H.*
+includes plat_ring_ids.H
+
+
+5) Attribute and Error XML Parse Support:
+
+ppe/tools/platXML/ppeParseAttributeInfo.pl generates:
+attribute_ids.H         
+fapi2_chip_ec_feature.H 
+
+ppe/tools/platXML/ppeCreateAttrGetSetMacros.pl modifies:
+plat_attribute_service.H 
+
+ppe/tools/platXML/parseErrorInfo.pl generates:
+hwp_ffdc_classes.H       
+hwp_error_info.H
+hwp_return_codes.H
+
+non-fapi2 files to create image data section where attributes are stored:
+ppe/tools/platXML/ppeParseAttributeStruct.pl generates
+ppe_attribute_struct.H   
+which includes:
+ppe_attribute_macro.H
+ppe_attribute_const.H
+
+
+6) Special comments used
+a) //PLAT NOTE// comments added to explain why or how plat code is implemented
+b) //PLAT EXTRA// and //PLAT END// are used to indicate the code section, 
+which is completely newly added as from the original files. However, 
+single case of already declared function implementation isnt indicated, but inline implemented
+
+
+7) Certain functions, that are declared in base fapi2 class or as prototypes in generic fapi2 headers,
+are not going to be supported on ppe platform, like ever. Previous methods to handle are the following two:
+
+A) Use __PPE__ compiler flag to compile out the pseduo plat implementation by native fapi2.
+This method creates several long skip-build block in the source,
+that is hard to keep tracking which functions are supported while reading the source,
+also makes it difficult to change one function back to be supported(more local compile flags to be created),
+and seriously, this is __PPE__ platform code created separately from other platform code, 
+so there is no way ifndef __PPE__ is ever going to be true. So may as well delete the code instead of flag
+
+B) Actually implement the function, but use static_assert to generate error for non-supported.
+this is ok but seriously, why bother to implement never supported functions just to print an error message.
+Again, If I delete the code block and user accidently called it, it will also cause build fail.
+
+I decided to go with the approach that uses special comment mark "//F2//" to comment out every line 
+from native pseduo fapi2 plat implementation that is not supported on these powman ppe platform code. 
+
+The advantage of this is whoever read the source can obvious see what is actually used by the code.
+Also not to mix-use option A and B together as effort wasted and unclean maintainance
+They are not simply deleted for two reasons: 
+i)  quick adding support in the future should it ever needs, as from using compiler flag from option A
+ii) easy for reader to compare with original fapi2 files side-by-side to track any late changes to fapi2
+
+By doing this, user will also find out by failing the build right away if 
+non-supported function is used in user code. Otherwise, linker will never try to track down any 
+declared but not defined function if it is never used.

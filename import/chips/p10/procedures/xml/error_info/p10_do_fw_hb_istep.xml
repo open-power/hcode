@@ -1,0 +1,53 @@
+<!-- IBM_PROLOG_BEGIN_TAG                                                   -->
+<!-- This is an automatically generated prolog.                             -->
+<!--                                                                        -->
+<!-- $Source: import/chips/p10/procedures/xml/error_info/p10_do_fw_hb_istep.xml $ -->
+<!--                                                                        -->
+<!-- OpenPOWER EKB Project                                                  -->
+<!--                                                                        -->
+<!-- COPYRIGHT 2019                                                         -->
+<!-- [+] International Business Machines Corp.                              -->
+<!--                                                                        -->
+<!--                                                                        -->
+<!-- Licensed under the Apache License, Version 2.0 (the "License");        -->
+<!-- you may not use this file except in compliance with the License.       -->
+<!-- You may obtain a copy of the License at                                -->
+<!--                                                                        -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                         -->
+<!--                                                                        -->
+<!-- Unless required by applicable law or agreed to in writing, software    -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,      -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        -->
+<!-- implied. See the License for the specific language governing           -->
+<!-- permissions and limitations under the License.                         -->
+<!--                                                                        -->
+<!-- IBM_PROLOG_END_TAG                                                     -->
+<hwpErrors>
+    <!-- ******************************************************************* -->
+    <hwpError>
+        <rc>P10_DO_FW_HB_ISTEP_NOT_READY</rc>
+        <description>The ready bit that indicates IStep Dispatcher is ready to run individual isteps was not set.</description>
+        <ffdc>TARGET</ffdc>
+        <ffdc>KEY</ffdc>
+    </hwpError>
+    <!-- ******************************************************************* -->
+    <hwpError>
+        <rc>P10_DO_FW_HB_ISTEP_BAD_HOSTBOOT_STATUS</rc>
+        <description>Non-zero value from hostboot istep status reg</description>
+        <ffdc>TARGET</ffdc>
+        <ffdc>STATUS</ffdc>
+    </hwpError>
+    <!-- ******************************************************************* -->
+    <hwpError>
+        <rc>P10_DO_FW_HB_ISTEP_COMMAND_COMPLETION_TIMEOUT</rc>
+        <description>The requested IStep took too long to complete.</description>
+        <ffdc>TARGET</ffdc>
+        <ffdc>KEY</ffdc>
+        <ffdc>HB_STATUS</ffdc>
+        <ffdc>ISTEP_MAJOR</ffdc>
+        <ffdc>ISTEP_MINOR</ffdc>
+        <ffdc>MAX_RETRY_TIME_MS</ffdc>
+        <ffdc>DELAY_MS</ffdc>
+        <ffdc>SIM_CYCLES_DELAY_MS</ffdc>
+    </hwpError>
+</hwpErrors>

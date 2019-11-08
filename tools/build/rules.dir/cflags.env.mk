@@ -3,9 +3,9 @@
 #
 # $Source: tools/build/rules.dir/cflags.env.mk $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2019
 # [+] International Business Machines Corp.
 #
 #

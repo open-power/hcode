@@ -3,9 +3,9 @@
 /*                                                                        */
 /* $Source: import/tools/imageProcs/restore_image.S $                     */
 /*                                                                        */
-/* OpenPOWER HCODE Project                                                */
+/* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,7 +25,7 @@
 
 // *INDENT-OFF*
 
-#include <p9_xip_image.h>
+#include <p10_ipl_image.H>
 
     .macro P9XipHeader, magic, link_address, image_size
 
@@ -98,7 +98,7 @@ __build_tag:
         ////////////////////////////////////////////////////////////////////
 
 __header_version:
-        .byte P9_XIP_HEADER_VERSION
+        .byte IPL_IMAGE_HEADER_VERSION
 __toc_normalized:
         .byte 0
 __toc_sorted:

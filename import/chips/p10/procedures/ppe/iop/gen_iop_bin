@@ -1,0 +1,78 @@
+#!/usr/bin/perl
+# IBM_PROLOG_BEGIN_TAG
+# This is an automatically generated prolog.
+#
+# $Source: import/chips/p10/procedures/ppe/iop/gen_iop_bin $
+#
+# OpenPOWER EKB Project
+#
+# COPYRIGHT 2019
+# [+] International Business Machines Corp.
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
+#
+# IBM_PROLOG_END_TAG
+
+# Generates iop raw binary data file from iop.fw
+
+use warnings;
+use strict;
+use Getopt::Long;
+
+my $iop_bin_output = undef;
+GetOptions("output-file=s" => \$iop_bin_output);
+
+my $num_args = $#ARGV + 1;
+if (($num_args < 1) || (!defined($iop_bin_output)))
+{
+    print("Usage: gen_iop_bin --output-file=<output file> <IOP fw file>\n");
+    printf(" ${num_args}\n");
+    printf(" $iop_bin_output\n");
+    print("  This perl script will generate the IOP fw binary file.\n");
+    exit(1);
+}
+
+# Set input/output fies
+my $iop_fw_file  = $ARGV[0];
+printf("Input file : $iop_fw_file\n");
+printf("Output file: $iop_bin_output\n");
+
+# Read input file
+my @input_lines;
+open(INFILE, $iop_fw_file) || die "\n\nERROR: Could not open $iop_fw_file.\n$!\n\n";
+@input_lines = <INFILE>;
+close(INFILE);
+
+# Open output file
+open(OUTFILE, '>:raw', $iop_bin_output) || die "\n\nERROR: Could not open $iop_bin_output\n$!\n\n";
+
+# For each line from input file
+foreach (@input_lines)
+{
+  # Get lines start with at least 1 empty space then '0x'
+  if ($_ =~ /^ +0x/i)
+  {
+      # Get data value in line
+      my @line = split(/ +/,$_);
+
+      # Note:
+      #   line[0] = begin blank space (" ")
+      #   line[1] = address           ("0xC000")
+      #   line[2] = data              ("0x081D")
+      # Convert to HEX
+      chomp(my $data = $line[2]);
+      print OUTFILE pack('s>', hex($data)) ; #'s'=short, '>'=big-endian
+  }
+}
+close(OUTFILE);

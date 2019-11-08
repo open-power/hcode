@@ -3,9 +3,9 @@
 #
 # $Source: tools/imageProcs/ioppe_image.mk $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -22,57 +22,59 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
+
 # $1 == chipId
+
 define BUILD_IOPPE_IMAGE
 $(eval IMAGE=$1.ioppe_image)
 
 $(eval $(IMAGE)_PATH=$(IMAGEPATH)/ioppe_image)
 $(eval $(IMAGE)_LINK_SCRIPT=ioppe_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/ioppe_image/ioppe_image.o)
-$(eval ioppe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p9/xip/)
+$(eval ioppe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
-# files to be appended to image
-$(eval $(IMAGE)_FILE_IOF=$(IMAGEPATH)/iox/iox.bin)
-$(eval $(IMAGE)_FILE_IOO_ABUS=$(IMAGEPATH)/ioa/ioa.bin)
+# Files to be appended to image
+$(eval $(IMAGE)_FILE_IOO=$(IMAGEPATH)/ioo/ioo.bin)
+$(eval $(IMAGE)_FILE_MEMREGS=$(IMAGEPATH)/memregs/memregs.bin)
+$(eval $(IMAGE)_FILE_NV=$(IMAGEPATH)/nv/nv.bin)
 
-$(eval $(IMAGE)_FILE_IOO_NV=$(CONFIG_IONV_FILE_LOCATION))
+# Setup dependencies for
+# - building image ( $(IMAGE)_DEPS_IMAGE )
+# - appending image sections in sequence ( $(IMAGE)_DEPS_{<section>,REPORT} )
+#   - file to be appended
+#   - all dependencies of previously appended sections or on raw image
+#   - append operation as to other section that has to be finished first
+$(eval $(IMAGE)_DEPS_IMAGE    = $$($(IMAGE)_FILE_IOO))
+$(eval $(IMAGE)_DEPS_IOO      = $$($(IMAGE)_FILE_IOO))
+$(eval $(IMAGE)_DEPS_IOO     += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
 
-# dependencies for appending image sections in sequence:
-# - file to be appended
-# - all dependencies of previously appended sections or on raw image
-# - append operation as to other section that has to be finished first
-$(eval $(IMAGE)_DEPS_IOF =$$($(IMAGE)_FILE_IOF))
-$(eval $(IMAGE)_DEPS_IOF+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_IMAGE   += $$($(IMAGE)_FILE_MEMREGS))
+$(eval $(IMAGE)_DEPS_MEMREGS  = $$($(IMAGE)_FILE_MEMREGS))
+$(eval $(IMAGE)_DEPS_MEMREGS += $$($(IMAGE)_DEPS_IOO))
+$(eval $(IMAGE)_DEPS_MEMREGS += $$($(IMAGE)_PATH)/.$(IMAGE).append.ioo)
 
-$(eval $(IMAGE)_DEPS_IOO_ABUS =$$($(IMAGE)_FILE_IOO_ABUS))
-$(eval $(IMAGE)_DEPS_IOO_ABUS+=$$($(IMAGE)_DEPS_IOF))
-$(eval $(IMAGE)_DEPS_IOO_ABUS+=$$($(IMAGE)_PATH)/.$(IMAGE).append.iof)
+$(eval $(IMAGE)_DEPS_IMAGE   += $$($(IMAGE)_FILE_NV))
+$(eval $(IMAGE)_DEPS_NV       = $$($(IMAGE)_FILE_NV))
+$(eval $(IMAGE)_DEPS_NV      += $$($(IMAGE)_DEPS_MEMREGS))
+$(eval $(IMAGE)_DEPS_NV      += $$($(IMAGE)_PATH)/.$(IMAGE).append.memregs)
 
-$(eval $(IMAGE)_DEPS_IOO_NV =$$($(IMAGE)_FILE_IOO_NV))
-$(eval $(IMAGE)_DEPS_IOO_NV+=$$($(IMAGE)_DEPS_IOO_ABUS))
-$(eval $(IMAGE)_DEPS_IOO_NV+=$$($(IMAGE)_PATH)/.$(IMAGE).append.ioo_abus)
+$(eval $(IMAGE)_DEPS_REPORT   = $$($(IMAGE)_DEPS_NV))
+$(eval $(IMAGE)_DEPS_REPORT  += $$($(IMAGE)_PATH)/.$(IMAGE).append.nv)
 
-$(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_IOO_NV))
+# Image build using all files and serialised by dependencies
+$(eval $(call XIP_TOOL,append,.ioo,$$($(IMAGE)_DEPS_IOO),$$($(IMAGE)_FILE_IOO)))
+$(eval $(call XIP_TOOL,append,.memregs,$$($(IMAGE)_DEPS_MEMREGS),$$($(IMAGE)_FILE_MEMREGS)))
+$(eval $(call XIP_TOOL,append,.nv,$$($(IMAGE)_DEPS_NV),$$($(IMAGE)_FILE_NV)))
 
-#fix up the dependancies if we include the ionv.bin file
-$(if $(findstring y,$(CONFIG_INCLUDE_IONV)),\
-$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.ioo_nv),\
-$(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.ioo_abus))
-
-# image build using all files and serialised by dependencies
-$(eval $(call XIP_TOOL,append,.iof,$$($(IMAGE)_DEPS_IOF),$$($(IMAGE)_FILE_IOF)))
-$(eval $(call XIP_TOOL,append,.ioo_abus,$$($(IMAGE)_DEPS_IOO_ABUS),$$($(IMAGE)_FILE_IOO_ABUS)))
-
-$(if $(findstring y,$(CONFIG_INCLUDE_IONV)),\
-$(eval $(call XIP_TOOL,append,.ioo_nv,$$($(IMAGE)_DEPS_IOO_NV),$$($(IMAGE)_FILE_IOO_NV))))
-
-# create image report for image with all files appended
+# Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 
-$(eval $(call BUILD_XIPIMAGE))
+$(eval $(call BUILD_XIPIMAGE,$$($(IMAGE)_DEPS_IMAGE)))
 endef
 
-$(foreach chip,$(CHIPS),\
+$(eval MYCHIPS := $(filter-out ocmb,$(CHIPS)))
+
+$(foreach chip,$(MYCHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
-	$(eval $(call BUILD_IOPPE_IMAGE,$(chipId)))))
+		$(eval $(call BUILD_IOPPE_IMAGE,$(chipId)))))
 

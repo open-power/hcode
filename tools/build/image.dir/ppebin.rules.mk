@@ -3,17 +3,23 @@
 #
 # $Source: tools/build/image.dir/ppebin.rules.mk $
 #
-# IBM CONFIDENTIAL
+# OpenPOWER EKB Project
 #
-# EKB Project
-#
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
-# The source code for this program is not published or otherwise
-# divested of its trade secrets, irrespective of what has been
-# deposited with the U.S. Copyright Office.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
 # Makefile that defines how we generate binaries for a specific source
@@ -34,15 +40,15 @@
 #    Run trace hash to generate the trexStringFile
 
 define GEN_PPEIMAGE_BINARY
-$2/$1.bin : $2/$1.out
+$2/$1.bin : $2/$1.out | $(IMAGE_DEPS)
 		$(C2) "    GEN        $$(@F)"
 		$(C1) mkdir -p $$(@D)
+ifdef IMAGE_EDITOR		
+		$(C1) $$($(3)_PREFIX)$$(OBJCOPY) -O binary $$^ $2/$1_temp.bin && \
+		$(EXEPATH)/$(IMAGE_EDITOR) $2/$1_temp.bin
+else
 		$(C1) $$($(3)_PREFIX)$$(OBJCOPY) -O binary $$^ $2/$1_temp.bin
-ifdef IMAGE_EDITOR
-ifneq ("$(wildcard $(EXEPATH)/$(IMAGE_EDITOR))", "")
-		$(C1) $(EXEPATH)/$(IMAGE_EDITOR) $2/$1_temp.bin;
-endif
-endif
+endif			
 		$(C1) mv $2/$1_temp.bin $$@
 		$(C2) "    GEN        $$(@F).dis"
 		$(C1) $$($(3)_PREFIX)$$(OBJDUMP) -S $$^ > $2/$1.dis
@@ -57,4 +63,3 @@ $(call __CLEAN_TARGET,$2/$1.dis)
 $(call __CLEAN_TARGET,$(OBJPATH)/$(1)/trexStringFile)
 IMAGE_EDITOR=
 endef
-

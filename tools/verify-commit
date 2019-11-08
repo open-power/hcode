@@ -4,9 +4,9 @@
 #
 # $Source: tools/verify-commit $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -273,12 +273,6 @@ sub verifyCommitMsg
         # Verify format of RTC message.
         if ($line =~ m/^\s*RTC:\s*[0-9]+(.*)/)
         {
-            if ("" ne $rtcTag)
-            {
-                error("Commit Message",$line,$lineCount,
-                      "Duplicate RTC tag found.");
-            }
-
             $rtcTag = $line;
             if ("" ne $1)
             {
@@ -287,14 +281,9 @@ sub verifyCommitMsg
             }
         }
 
+        # Verify format of CQ message. "CQ: SW123456"
         if ($line =~ m/^\s*CQ:\s*[A-Z][A-Z][0-9]+(.*)/)
         {
-            if ("" ne $cqTag)
-            {
-                error("Commit Message",$line,$lineCount,
-                      "Duplicate CQ tag found.");
-            }
-
             $cqTag = $line;
             if ("" ne $1)
             {
@@ -303,6 +292,18 @@ sub verifyCommitMsg
             }
         }
 
+        # Verify format of Github message. "Resolves somerepo/#12345"
+        #  See https://help.github.com/articles/closing-issues-via-commit-messages
+        if ($line =~ m/^\s*Resolves \s*.*#[0-9]+(.*)/)
+        {
+            if ("" ne $1)
+            {
+                error("Commit Message",$line,$lineCount,
+                        (sprintf "Github tag format incorrect (%s).", $1));
+            }
+        }
+
+        # Change-Id: 123456789ABCDEF
         if ($line =~ m/^\s*Change-Id:\s*[I][\w]+(.*)/)
         {
             if ("" ne $changeId)
@@ -321,7 +322,9 @@ sub verifyCommitMsg
 
         # Identify if this is a tagged line or a non-tagged line and store
         # away.
-        if ($line =~ m/^\s*[A-Za-z0-9\-_]+:[^:]/)
+        if ( (($line =~ m/^\s*[A-Za-z0-9\-_]+:[^:]/)
+              && !($line =~ m/http/)) ||
+              (($line =~ m/http/) && ($line =~ m/Reviewed-on:/)) )
         {
             # We allow lines that look like tags in the topic like...
             # "FOO: Adding support for BAR."
@@ -330,6 +333,10 @@ sub verifyCommitMsg
             {
                 $taggedLine = $line;
             }
+        }
+        elsif( ($line =~ "Resolves") )
+        {
+            # allow 'Resolves' in body and footer
         }
         else
         {

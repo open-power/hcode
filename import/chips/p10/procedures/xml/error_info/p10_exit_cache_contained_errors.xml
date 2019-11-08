@@ -1,0 +1,60 @@
+<!-- IBM_PROLOG_BEGIN_TAG                                                   -->
+<!-- This is an automatically generated prolog.                             -->
+<!--                                                                        -->
+<!-- $Source: import/chips/p10/procedures/xml/error_info/p10_exit_cache_contained_errors.xml $ -->
+<!--                                                                        -->
+<!-- OpenPOWER EKB Project                                                  -->
+<!--                                                                        -->
+<!-- COPYRIGHT 2019                                                         -->
+<!-- [+] International Business Machines Corp.                              -->
+<!--                                                                        -->
+<!--                                                                        -->
+<!-- Licensed under the Apache License, Version 2.0 (the "License");        -->
+<!-- you may not use this file except in compliance with the License.       -->
+<!-- You may obtain a copy of the License at                                -->
+<!--                                                                        -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                         -->
+<!--                                                                        -->
+<!-- Unless required by applicable law or agreed to in writing, software    -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,      -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        -->
+<!-- implied. See the License for the specific language governing           -->
+<!-- permissions and limitations under the License.                         -->
+<!--                                                                        -->
+<!-- IBM_PROLOG_END_TAG                                                     -->
+<hwpErrors>
+  <!-- ********************************************************************* -->
+  <hwpError>
+    <rc>RC_P10_EXIT_CACHE_CONTAINED_MULTIPLE_MASTER_ERR</rc>
+    <ffdc>MASTER_CHIP1</ffdc>
+    <ffdc>MASTER_CHIP2</ffdc>
+    <description>
+      Multiple chips found with ATTR_PROC_SBE_MASTER_CHIP set
+    </description>
+  </hwpError>
+  <!-- ********************************************************************* -->
+  <hwpError>
+    <rc>RC_P10_EXIT_CACHE_CONTAINED_NO_MASTER_ERR</rc>
+    <ffdc>MASTER_CHIP1</ffdc>
+    <ffdc>MASTER_CHIP2</ffdc>
+    <description>
+      No chips were found with ATTR_PROC_SBE_MASTER_CHIP set
+    </description>
+  </hwpError>
+  <!-- ********************************************************************* -->
+  <hwpError>
+    <rc>RC_P10_EXIT_CACHE_CONTAINED_INVALID_MCD_GROUP_SIZE_ERR</rc>
+    <description>
+      Unsupported MCD group size
+    </description>
+    <ffdc>TARGET</ffdc>
+    <ffdc>RANGE_BASE_ADDR</ffdc>
+    <ffdc>RANGE_SIZE</ffdc>
+    <ffdc>MCD_RANGE_REG</ffdc>
+    <callout>
+      <procedure>CODE</procedure>
+      <priority>HIGH</priority>
+    </callout>
+  </hwpError>
+  <!-- ******************************************************************** -->
+</hwpErrors>

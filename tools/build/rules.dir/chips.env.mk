@@ -3,7 +3,7 @@
 #
 # $Source: tools/build/rules.dir/chips.env.mk $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
 # COPYRIGHT 2015,2019
 # [+] International Business Machines Corp.
@@ -24,13 +24,34 @@
 # IBM_PROLOG_END_TAG
 
 # Lists of chip subdirectories.
+ifeq ($(PROJECT_NAME),p9)
 CHIPS += p9
-CHIPS += p9a
+CHIPS += ocmb
+CHIPS += common
+CHIPS += ocmb/explorer
+CHIPS += p10
 
 p9_CHIPID += p9n
+p9_CHIPID += p9c
 p9_CHIPID += p9a
+ocmb_CHIPID += explorer
 
-p9n_EC += 20 21 22 23
+p9n_EC += 10 20 21 22 23
+p9c_EC += 10 11 12 13
 p9a_EC += 10
+explorer_EC += 10
+endif
 
-HW_IMAGE_VARIATIONS = hw
+ifeq ($(PROJECT_NAME),p10)
+CHIPS += common
+CHIPS += p10
+CHIPS += ocmb
+CHIPS += ocmb/common
+CHIPS += ocmb/explorer
+p10_CHIPID += p10
+ocmb_CHIPID += explorer
+p10_EC += 10
+explorer_EC += 10
+endif
+
+HW_IMAGE_VARIATIONS = hw sim

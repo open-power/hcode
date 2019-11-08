@@ -3,9 +3,9 @@
 /*                                                                        */
 /* $Source: import/hwpf/fapi2/include/hw_access_def.H $                   */
 /*                                                                        */
-/* OpenPOWER HCODE Project                                                */
+/* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2012,2017                                                    */
+/* COPYRIGHT 2012,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */

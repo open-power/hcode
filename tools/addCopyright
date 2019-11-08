@@ -64,7 +64,7 @@ my $copyrightSymbol = "";
 # my $copyrightSymbol = "(C)";  # Uncomment if unable to use  character.
 
 # set by environment variable in project env.bash
-my $projectName = $ENV{'PROJECT_NAME'};
+my $projectName = "EKB";
 my $copyrightStr = "COPYRIGHT";
 my $projectRoot = $ENV{'PROJECT_ROOT'};
 
@@ -88,6 +88,9 @@ use constant LICENSE_PROLOG => "LICENSE_PROLOG";
 # When adding a new company add constant here and to %fileContributorsCompany
 use constant IBM => 'International Business Machines Corp.';
 use constant GOOGLE => 'Google Inc.';
+use constant INSPUR => 'Inspur Power Systems Corp.';
+use constant SUPERMICRO => 'Super Micro Computer, Inc.';
+use constant YADRO => 'YADRO';
 
 # Create mapping for git contrubitors to companies
 my %fileContributorsCompany = (
@@ -95,6 +98,9 @@ my %fileContributorsCompany = (
     "ozlabs.org" => IBM,
     "google.com" => GOOGLE,
     "Google Shared Technology" => GOOGLE,
+    "inspur.com" => INSPUR,
+    "supermicro.com" => SUPERMICRO,
+    "yadro.com" => YADRO,
 );
 
 #------------------------------------------------------------------------------
@@ -250,6 +256,17 @@ foreach ( @Files )
     }
 
     ##
+    ##  Special case for imported EOA tools
+    ##
+    if  ( m/eoatools\/triage/ )
+    {
+        print STDOUT    "---------------------------------------------------------\n";
+        print STDOUT    "Skipping imported EOA tools file: $_\n";
+        print STDOUT    "---------------------------------------------------------\n";
+        next;
+    }
+
+    ##
     ##  Special case for common-tools project, just return 0 and add
     ##  copyright manually.
     ##
@@ -271,6 +288,18 @@ foreach ( @Files )
     {
         print STDOUT    "---------------------------------------------------------\n";
         print STDOUT    "Skipping deleted file: $_\n";
+        print STDOUT    "---------------------------------------------------------\n";
+        next;
+    }
+
+    ##
+    ##  If a file is a symlink to another file, it's going to have a "wrong" filename
+    ##  in its copyright header, and the link target should have gone through copyright
+    ##  checks anyway, so skip it.
+    if  ( -l $_ )
+    {
+        print STDOUT    "---------------------------------------------------------\n";
+        print STDOUT    "Skipping symbolic link: $_\n";
         print STDOUT    "---------------------------------------------------------\n";
         next;
     }
@@ -476,6 +505,11 @@ sub filetype
     {
         return "Initfile"
     }
+    if (($filename =~ m/Makefile$/i) or
+        ($filename =~ m/\.mk$/i))
+    {
+        return "Makefile";
+    }
     if ( ( $filename =~ m/\.[cht]$/i )
        ||( $filename =~ m/\.[cht]\+\+$/i )
        ||( $filename =~ m/\.[cht]pp$/i )
@@ -500,11 +534,6 @@ sub filetype
     if ($filename =~ m/\.s$/i)
     {
         return "Assembly";
-    }
-    if (($filename =~ m/Makefile$/i) or
-        ($filename =~ m/\.mk$/i))
-    {
-        return "Makefile";
     }
     if ( $filename =~ m/\.am$/i )
     {
@@ -684,7 +713,23 @@ sub createYearString
     {
         @years = ( $CopyRightString =~ /([0-9]{4})/g );
     }
-    push @years, $ReleaseYear; # Add the current year.
+
+    ## Get size of array @years
+    my $size = @years;
+    if ( $size == 1 )    ## If size is 1 then date entry has only a year mentioned i.e. begin-end year is same
+    {
+        my $CurrentYear = `date +%Y`;
+        chomp( $CurrentYear );
+        if ( defined $years[0] and $years[0] != $CurrentYear )
+        {
+            ## Add the current year
+            push @years, $CurrentYear; 
+        }
+    }
+    else
+    {
+        push @years, $ReleaseYear; ## Add the release year
+    }
 
     ##
     ##  Make a call to git to find the earliest commit date of the file
@@ -1138,13 +1183,23 @@ sub getFileContributors
     my @gitAuthors = split('\n', $gitAuthors);
 
     # Add current commiter.
-    # If running copyright_check run 'git log' as a commit is not taking place
-    # Otherwise check using 'git config' as this is a pre-commit hook
+    # If running copyright_check run 'git log' as a commit is not taking place,
+    # else we currently have no way of getting the current author when plan to 
+    # mirror over other CI (FSP here). Because this is a pre-commit hook, 
+    # the commit staged to be committed does not show up in 'git log' until 
+    # commit has completed. We cannot look up current user's info because the 
+    # user pushing the commit may not be the author. 
+    # Otherwise check using 'git config'.
     my $curAuthorEmail = "";
     if ($copyright_check)
     {
         $curAuthorEmail = `git log -n1 --pretty=format:"%aN <%aE>"`;
         chomp($curAuthorEmail);
+    }
+    # Internal mirror, add IBM as contributor
+    elsif (defined $ENV{'MIRROR'})
+    {
+        $curAuthorEmail = "\@ibm.com>";
     }
     else
     {

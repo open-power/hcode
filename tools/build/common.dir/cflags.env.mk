@@ -3,9 +3,9 @@
 #
 # $Source: tools/build/common.dir/cflags.env.mk $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2018
+# COPYRIGHT 2015,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -25,9 +25,17 @@
 
 # Makefile to define useful common flags for all environments.
 
-LOCALCOMMONFLAGS += -O3 -fPIC -Wall -Wformat=0
+LOCALCOMMONFLAGS += -O3 -fPIC -Wall -Werror
+LOCALCOMMONFLAGS += -Wno-unused-label
+LOCALCOMMONFLAGS += -fsigned-char
+LOCALCOMMONFLAGS += -fno-inline-functions-called-once
 LOCALLDFLAGS += --std=gnu++11
 ifeq ($(UNAME),Linux)
 LOCALLDFLAGS += -rdynamic
 endif
 LOCALCXXFLAGS += --std=gnu++11
+LOCALCXXFLAGS += -fexceptions
+LOCALCXXFLAGS += -Wno-conversion-null
+
+LOCALCFLAGS += -fno-strict-aliasing
+LOCALCFLAGS += -pipe

@@ -3,17 +3,23 @@
 #
 # $Source: tools/build/image.dir/binheader.rules.mk $
 #
-# IBM CONFIDENTIAL
+# OpenPOWER EKB Project
 #
-# EKB Project
-#
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
-# The source code for this program is not published or otherwise
-# divested of its trade secrets, irrespective of what has been
-# deposited with the U.S. Copyright Office.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
 #
@@ -151,14 +157,13 @@ define GEN_HEADER_BINARY
 $2/$1.bin : $(OBJPATH)/$1/link_$1_script $$($1_OBJS) $4
 		$(C2) "    GEN        $$(@F)"
 		$(C1) mkdir -p $(2) && \
-		 $$($3_PREFIX)$$(LD) $$(LOCALLDFLAGS) \
+		$$($3_PREFIX)$$(LD) $$(LOCALLDFLAGS) \
 			-T$$< -Map $2/$1.map -o $2/$1_temp.bin \
 			-s $$($1_OBJS) && \
-		 $$(EXEPATH)/$(IMAGE_EDITOR) $2/$1_temp.bin $(4) $(5) && \
+		$$(EXEPATH)/$(IMAGE_EDITOR) $2/$1_temp.bin $(4) $(5) && \
 		mv $2/$1_temp.bin $$@
 
 $(call __CLEAN_TARGET,$2/$1.bin)
 $(call __CLEAN_TARGET,$2/$1.map)
 IMAGE_EDITOR=
 endef
-

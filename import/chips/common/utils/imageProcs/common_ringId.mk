@@ -3,9 +3,9 @@
 #
 # $Source: import/chips/common/utils/imageProcs/common_ringId.mk $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2017,2018
+# COPYRIGHT 2017,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -23,8 +23,8 @@
 #
 # IBM_PROLOG_END_TAG
 PROCEDURE=common_ringId
-lib$(PROCEDURE)_DEPLIBS += p9_ringId
-lib$(PROCEDURE)_DEPLIBS += cen_ringId
+lib$(PROCEDURE)_DEPLIBS += p10_ringId
 $(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p9/utils/imageProcs)
-$(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/centaur/utils/imageProcs)
+$(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/utils/imageProcs)
 $(call BUILD_PROCEDURE)
+

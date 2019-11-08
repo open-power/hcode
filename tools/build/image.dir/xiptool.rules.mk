@@ -3,22 +3,28 @@
 #
 # $Source: tools/build/image.dir/xiptool.rules.mk $
 #
-# IBM CONFIDENTIAL
+# OpenPOWER EKB Project
 #
-# EKB Project
-#
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
-# The source code for this program is not published or otherwise
-# divested of its trade secrets, irrespective of what has been
-# deposited with the U.S. Copyright Office.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
 
-# Makefile that automatically define the recipies for all the p9_xip_tool
-# commands
+# Makefile that automatically defines the recipies for all the ipl_image_tool
+# (formerly, p9_xip_tool) commands
 #
 # Macro:
 #    XIP_TOOL: Defines a generic recipie to run any xip_tool command
@@ -27,7 +33,7 @@
 #    $2 <- section name <optional>
 #    $3 <- any option that we need to pass to the XIP command and NEED to set a
 #          dependency on <optional>
-#    $4 <- any options that needs to be passed to the XIP command that we don't
+#    $4 <- any options that need to be passed to the XIP command that we don't
 #          need to set a dependency on <optional>
 #    $5 <- optional target file diferentiator (eg. ec level)
 # Usage: $(call XIP_TOOL, append, .sgpe, path/to/sgpe.bin)
@@ -37,9 +43,9 @@ XIP_TOOL = $(eval $(call _XIP_TOOL,$1,$2,$3,$4,$5))
 define _XIP_TOOL
 $(IMAGE)_PATH ?= $(IMAGEPATH)/$(IMAGE)
 
-$$($(IMAGE)_PATH)/.$(IMAGE).$(1)$(2)$(5) : $(EXEPATH)/p9_xip_tool.exe $3
+$$($(IMAGE)_PATH)/.$(IMAGE).$(1)$(2)$(5) : $(EXEPATH)/ipl_image_tool.exe $3
 		$(C2) "    GEN        $$(@F)"
-		$(C1)  $(EXEPATH)/p9_xip_tool.exe $$($(IMAGE)_PATH)/$(IMAGE).bin \
+		$(C1)  $(EXEPATH)/ipl_image_tool.exe $$($(IMAGE)_PATH)/$(IMAGE).bin \
 			$1 $2 $4 > $$($(IMAGE)_PATH)/$(IMAGE).$(1)$(2)$(5) && touch $$@
 
 
@@ -56,7 +62,7 @@ endef
 # NORMALIZE. If we use the generic XIP_TOOL, then we will end up with circular
 # dependency
 define XIP_NORMALIZE
-	$(C1) $(EXEPATH)/p9_xip_tool.exe $1  normalize
+	$(C1) $(EXEPATH)/ipl_image_tool.exe $1  normalize
 endef
 
 # Macros:

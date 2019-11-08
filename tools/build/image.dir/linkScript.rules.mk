@@ -3,17 +3,23 @@
 #
 # $Source: tools/build/image.dir/linkScript.rules.mk $
 #
-# IBM CONFIDENTIAL
+# OpenPOWER EKB Project
 #
-# EKB Project
-#
-# COPYRIGHT 2016,2017
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
-# The source code for this program is not published or otherwise
-# divested of its trade secrets, irrespective of what has been
-# deposited with the U.S. Copyright Office.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
 
@@ -36,6 +42,7 @@ $2/link_$1_script : $(addprefix $(dir $(lastword $(MAKEFILE_LIST))),$3)
 		$(C1) $$($(4)_PREFIX)$$(CPP) -E -x c++ -P $$($1_COMMONFLAGS) -Upowerpc $2/link_$1_script_temp.cmd -o $$@
  
 $(call __CLEAN_TARGET,$2/link_$1_script)
+$(call __CLEAN_TARGET,$2/link_$1_script_temp.cmd)
 
 endef
 

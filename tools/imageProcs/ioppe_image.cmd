@@ -3,9 +3,9 @@
 /*                                                                        */
 /* $Source: tools/imageProcs/ioppe_image.cmd $                            */
 /*                                                                        */
-/* OpenPOWER HCODE Project                                                */
+/* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -52,7 +52,7 @@ SECTIONS
     _toc_size = . - _toc_origin;
 
     ////////////////////////////////
-    // STRING
+    // STRINGS
     ////////////////////////////////
     . = ALIGN(1);
     _strings_origin = .;
@@ -61,31 +61,31 @@ SECTIONS
     _strings_size = . - _strings_origin;
 
     ////////////////////////////////
-    // IOF
+    // IOO
     ////////////////////////////////
     . = ALIGN(8);
-    _iof_origin = .;
-    _iof_offset = . - _ioppe_image_origin;
-    .iof . : { *(.iof) }
-    _iof_size = . - _iof_origin;
+    _ioo_origin = .;
+    _ioo_offset = . - _ioppe_image_origin;
+    .ioo . : { *(.ioo) }
+    _ioo_size = . - _ioo_origin;
 
     ////////////////////////////////
-    // IOO ABUS
+    // MEMREGS
     ////////////////////////////////
     . = ALIGN(8);
-    _ioo_abus_origin = .;
-    _ioo_abus_offset = . - _ioppe_image_origin;
-    .ioo_abus . : { *(.ioo_abus) }
-    _ioo_abus_size = . - _ioo_abus_origin;
+    _memregs_origin = .;
+    _memregs_offset = . - _ioppe_image_origin;
+    .memregs . : { *(.memregs) }
+    _memregs_size = . - _memregs_origin;
 
     ////////////////////////////////
-    // IOO NV
+    // NV
     ////////////////////////////////
     . = ALIGN(8);
-    _ioo_nv_origin = .;
-    _ioo_nv_offset = . - _ioppe_image_origin;
-    .ioo_nv . : { *(.ioo_nv) }
-    _ioo_nv_size = . - _ioo_nv_origin;
+    _nv_origin = .;
+    _nv_offset = . - _ioppe_image_origin;
+    .nv . : { *(.nv) }
+    _nv_size = . - _nv_origin;
 
     ////////////////////////////////
     // end of the image

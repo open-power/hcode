@@ -3,17 +3,23 @@
 #
 # $Source: tools/build/image.dir/xipimage.rules.mk $
 #
-# IBM CONFIDENTIAL
+# OpenPOWER EKB Project
 #
-# EKB Project
-#
-# COPYRIGHT 2016
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
-# The source code for this program is not published or otherwise
-# divested of its trade secrets, irrespective of what has been
-# deposited with the U.S. Copyright Office.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
 #
@@ -35,7 +41,10 @@
 #   image. Requires that the following variables are defined:
 #      - IMAGE=name - name of the image to generate
 #   As a result, this macro will define how to build $(IMAGE).bin
-BUILD_XIPIMAGE = $(eval $(call __BUILD_XIPIMAGE))
+#   Inputs:
+#     $1 <- The IPL section dependency report, $(IMAGE)_DEPS_REPORT
+#
+BUILD_XIPIMAGE = $(eval $(call __BUILD_XIPIMAGE,,$(1)))
 
 # Order of operation:
 #    Define default output path and linker script
@@ -44,30 +53,47 @@ BUILD_XIPIMAGE = $(eval $(call __BUILD_XIPIMAGE))
 #    Create phony target to allow "make $(IMAGE)"
 #    Call helper macros to generate .bin file
 #    Erase IMAGE and OBJS variable
+#   Inputs:
+#     $1 <- What is this? It's referenced in macro calls at end of macro def.
+#     $2 <- The IPL section dependency report, $(IMAGE)_DEPS_REPORT
+#
 define __BUILD_XIPIMAGE
 $(IMAGE)_PATH ?= $(IMAGEPATH)/$(IMAGE)
 $(IMAGE)_LINK_SCRIPT ?= $(IMAGE).cmd
 $(IMAGE)_LAYOUT ?= $(IMAGEPATH)/$(IMAGE)/$(IMAGE).o
 
-XIPPATH=$(ROOTPATH)/chips/p9/xip
+XIPPATH=$(ROOTPATH)/chips/p10/utils/imageProcs
 
 $(call ADD_XIPIMAGE_INCDIR,$(IMAGE),$(XIPPATH))
 $(call ADD_XIPIMAGE_SRCDIR,$(IMAGE),$(dir $(lastword $(MAKEFILE_LIST))))
 $$($(IMAGE)_PATH)/$(IMAGE).bin : LOCALCOMMONFLAGS += $$($(IMAGE)_COMMONFLAGS)
 
 .PHONY: $(IMAGE)
-$(IMAGE) : _BUILD/GEN_TARGETS | $(IMAGE_DEPS)
+$(IMAGE) : $(IMAGE).pre_image_targets
 		$(C1) mkdir -p $$($(IMAGE)_PATH)
 		@$$(MAKE) $$($(IMAGE)_PATH)/$(IMAGE).bin
-		$(C1) mkdir -p $$($(IMAGE)_PATH)/p9n/ec_10
-		$(C1) ln -sf ../../$(IMAGE).bin $$($(IMAGE)_PATH)/p9n/ec_10/$(IMAGE).bin
+
+PHONY: $(IMAGE).modules
+$(IMAGE).modules:  _BUILD/GEN_TARGETS
+	@$$(MAKE)  $(sort $$($(IMAGE)_MODULE_TARGETS)) suppress_nothing_to_do
+
+PHONY: $(IMAGE).exes
+$(IMAGE).exes :  $(IMAGE).modules
+	@$$(MAKE)  $(sort $( $$($(IMAGE)_EXE_TARGETS))) suppress_nothing_to_do
+
+PHONY: $(IMAGE).pre_image_targets
+$(IMAGE).pre_image_targets : $(IMAGE).exes
+	@$$(MAKE)  $(sort $$($(IMAGE)_PRE_IMAGE_TARGETS)) suppress_nothing_to_do
 
 IMAGE_TARGETS += $$($(IMAGE)_PATH)/$(IMAGE).bin
 
-$(call GEN_IMAGE_BINARY,$(IMAGE),$$($(IMAGE)_PATH),$$(or $$($(1)_TARGET),PPE))
+$(call GEN_IMAGE_BINARY,$(IMAGE),$$($(IMAGE)_PATH),$$(or $$($(1)_TARGET),PPE),$(2))
 $(call GEN_ELF_EXE,$(IMAGE),$$($(IMAGE)_PATH),$$(or $$($(1)_TARGET),PPE),$$($(IMAGE)_LAYOUT))
 $(call PROCESS_LINK_SCRIPT,$(IMAGE),$$($(IMAGE)_PATH), \
 		$$($(IMAGE)_LINK_SCRIPT),$$(or $$($(1)_TARGET),PPE))
+
+$(call __CLEAN_TARGET, $($(IMAGE)_LAYOUT))
+$(call __CLEAN_TARGET, $(patsubst %.o,%.s,$($(IMAGE)_LAYOUT)))
 
 IMAGE:=
 OBJS:=

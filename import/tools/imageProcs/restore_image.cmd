@@ -3,9 +3,9 @@
 /*                                                                        */
 /* $Source: import/tools/imageProcs/restore_image.cmd $                   */
 /*                                                                        */
-/* OpenPOWER HCODE Project                                                */
+/* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -52,7 +52,7 @@ SECTIONS
     _toc_size = . - _toc_origin;
 
     ////////////////////////////////
-    // STRING
+    // STRINGS
     ////////////////////////////////
     . = ALIGN(1);
     _strings_origin = .;

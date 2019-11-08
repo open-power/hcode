@@ -3,9 +3,9 @@
 #
 # $Source: tools/build/rules.dir/mflags.env.mk $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2019
 # [+] International Business Machines Corp.
 #
 #
@@ -33,7 +33,9 @@ EXEPATH?=$(OUTPUTPATH)/bin
 OBJPATH?=$(OUTPUTPATH)/obj
 GENPATH?=$(OUTPUTPATH)/gen
 IMAGEPATH?=$(OUTPUTPATH)/images
+ifeq ($(PROJECT_NAME),p9)
 XIPPATH?=$(ROOTPATH)/chips/p9/xip
+endif
 
 # Location of the cross-compiler toolchain.
 UNAME = $(shell uname)
@@ -47,12 +49,18 @@ HOST_PREFIX?=$(__EKB_PREFIX)
 TARGET_PREFIX?=$(__EKB_PREFIX)
 
 # Location of PPE42 cross-compiler toolchain
+ifeq ($(PROJECT_NAME),p9)
 PPE_TOOL_PATH ?= $(CTEPATH)/tools/ppetools/prod
+else
+PPE_TOOL_PATH ?= $(CTEPATH)/tools/ppetools/test
+endif
+
 PPE_PREFIX    ?= $(PPE_TOOL_PATH)/bin/powerpc-eabi-
 PPE_BINUTILS_PREFIX ?= $(PPE_TOOL_PATH)/powerpc-eabi/bin/
-
+SELF_REST_PREFIX ?= $(CTEPATH)/tools/p9_ppc64/prod/bin/powerpc64le-buildroot-linux-gnu-
 # Default compiler tools to use.
 CC?=gcc
 CXX?=g++
 AR?=ar
 LD?=ld
+OBJDUMP?=objdump

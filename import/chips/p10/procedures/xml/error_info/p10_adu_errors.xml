@@ -1,0 +1,219 @@
+<!-- IBM_PROLOG_BEGIN_TAG                                                   -->
+<!-- This is an automatically generated prolog.                             -->
+<!--                                                                        -->
+<!-- $Source: import/chips/p10/procedures/xml/error_info/p10_adu_errors.xml $ -->
+<!--                                                                        -->
+<!-- OpenPOWER EKB Project                                                  -->
+<!--                                                                        -->
+<!-- COPYRIGHT 2019                                                         -->
+<!-- [+] International Business Machines Corp.                              -->
+<!--                                                                        -->
+<!--                                                                        -->
+<!-- Licensed under the Apache License, Version 2.0 (the "License");        -->
+<!-- you may not use this file except in compliance with the License.       -->
+<!-- You may obtain a copy of the License at                                -->
+<!--                                                                        -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                         -->
+<!--                                                                        -->
+<!-- Unless required by applicable law or agreed to in writing, software    -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,      -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        -->
+<!-- implied. See the License for the specific language governing           -->
+<!-- permissions and limitations under the License.                         -->
+<!--                                                                        -->
+<!-- IBM_PROLOG_END_TAG                                                     -->
+<hwpErrors>
+<!-- ******************************************************************** -->
+<!-- This has all of the ADU registers that we need to collect for other errors -->
+<registerFfdc>
+  <id>REG_FFDC_ADU_STATUS_REGISTER</id>
+  <scomRegister>scomt::proc::TP_TPBR_AD_ALTD_STATUS_REG</scomRegister>
+  <scomRegister>scomt::proc::TP_TPBR_AD_ALTD_CMD_REG</scomRegister>
+  <scomRegister>scomt::proc::TP_TPBR_AD_ALTD_DATA_REG</scomRegister>
+  <scomRegister>scomt::proc::TP_TPBR_AD_ALTD_OPTION_REG</scomRegister>
+  <scomRegister>scomt::proc::TP_TPBR_AD_ALTD_ADDR_REG</scomRegister>
+  <scomRegister>scomt::proc::TP_TPBR_AD_FORCE_ECC_REG</scomRegister>
+</registerFfdc>
+<!-- ******************************************************************** -->
+<registerFfdc>
+  <id>REG_FFDC_ADU_FBC_NOT_INITIALIZED</id>
+  <scomRegister>scomt::proc::TP_TPBR_AD_SND_MODE_REG</scomRegister>
+  <scomRegister>scomt::proc::PB_COM_SCOM_ES3_STATION_MODE</scomRegister>
+  <scomRegister>scomt::perv::ATTN_INTERRUPT_REG</scomRegister>
+</registerFfdc>
+<!-- ******************************************************************** -->
+<hwpError>
+  <sbeError/>
+  <rc>RC_P10_ADU_UTILS_INVALID_FLAG</rc>
+  <description>
+    There was an invalid argument passed in when building flag.
+    It could be either Transaction size or Operation type. Check error trace.
+    Procedure: p10_adu_utils
+  </description>
+  <ffdc>FLAGS</ffdc>
+  <callout>
+    <procedure>CODE</procedure>
+    <priority>HIGH</priority>
+  </callout>
+</hwpError>
+<!-- ******************************************************************** -->
+<hwpError>
+  <sbeError/>
+  <rc>RC_P10_ADU_UTILS_INVALID_ARGS</rc>
+  <description>
+    There is an invalid argument (misaligned address or address out of the
+    fabric address range) passed to the adu access or adu setup procedure
+    Procedure: p10_adu_utils
+  </description>
+  <ffdc>TARGET</ffdc>
+  <ffdc>ADDRESS</ffdc>
+  <ffdc>MAXADDRESS</ffdc>
+  <ffdc>TSIZE</ffdc>
+  <ffdc>FLAGS</ffdc>
+  <callout>
+    <procedure>CODE</procedure>
+    <priority>HIGH</priority>
+  </callout>
+</hwpError>
+<!-- ******************************************************************** -->
+<hwpError>
+  <sbeError/>
+  <rc>RC_P10_ADU_FBC_NOT_INITIALIZED</rc>
+  <description>
+    The fabric was not initialized or not running
+    Procedure: p10_adu_utils
+  </description>
+  <ffdc>TARGET</ffdc>
+  <collectRegisterFfdc>
+    <id>REG_FFDC_ADU_FBC_NOT_INITIALIZED</id>
+    <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+    <target>TARGET</target>
+  </collectRegisterFfdc>
+  <callout>
+    <target>TARGET</target>
+    <priority>HIGH</priority>
+  </callout>
+  <deconfigure>
+    <target>TARGET</target>
+  </deconfigure>
+  <gard>
+    <target>TARGET</target>
+  </gard>
+</hwpError>
+<!-- ******************************************************************** -->
+<hwpError>
+  <sbeError/>
+  <rc>RC_P10_ADU_STATUS_REG_UNEXPECTED_ERR</rc>
+  <description>
+    The ALTD_STATUS_REGISTER contains unexpected status with no indication
+    of a combined response address error
+    Procedure: p10_adu_utils
+  </description>
+  <ffdc>TARGET</ffdc>
+  <ffdc>ADDRESS</ffdc>
+  <ffdc>STATUSREG</ffdc>
+  <collectRegisterFfdc>
+    <id>REG_FFDC_ADU_STATUS_REGISTER</id>
+    <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+    <target>TARGET</target>
+  </collectRegisterFfdc>
+  <callout>
+    <target>TARGET</target>
+    <priority>HIGH</priority>
+  </callout>
+  <callout>
+    <procedure>CODE</procedure>
+    <priority>MEDIUM</priority>
+  </callout>
+</hwpError>
+<!-- ******************************************************************** -->
+<hwpError>
+  <sbeError/>
+  <rc>RC_P10_ADU_STATUS_REG_ADDRESS_ERR</rc>
+  <description>
+    The ALTD_STATUS_REGISTER contains unexpected status with an indication
+    of a combined response address error
+    Procedure: p10_adu_utils
+  </description>
+  <ffdc>TARGET</ffdc>
+  <ffdc>ADDRESS</ffdc>
+  <ffdc>STATUSREG</ffdc>
+  <collectRegisterFfdc>
+    <id>REG_FFDC_ADU_STATUS_REGISTER</id>
+    <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+    <target>TARGET</target>
+  </collectRegisterFfdc>
+  <callout>
+    <procedure>CODE</procedure>
+    <priority>HIGH</priority>
+  </callout>
+  <callout>
+    <target>TARGET</target>
+    <priority>MEDIUM</priority>
+  </callout>
+</hwpError>
+<!-- ******************************************************************** -->
+<hwpError>
+  <sbeError/>
+  <rc>RC_P10_ADU_STATUS_REG_BAD_BUSY_STATE</rc>
+  <description>
+    The ALTD_STATUS_REGISTER contains an unexpected busy state after waiting
+    a sufficient amount of time; either the busy bit is still set when the
+    handler expects it to be clear, or the busy bit remained clear when the
+    handler expects it to be set.
+    Procedure: p10_adu_utils
+  </description>
+  <ffdc>TARGET</ffdc>
+  <ffdc>EXPBUSYBIT</ffdc>
+  <ffdc>ACTBUSYBIT</ffdc>
+  <collectRegisterFfdc>
+    <id>REG_FFDC_ADU_STATUS_REGISTER</id>
+    <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+    <target>TARGET</target>
+  </collectRegisterFfdc>
+  <callout>
+    <procedure>CODE</procedure>
+    <priority>HIGH</priority>
+  </callout>
+  <callout>
+    <target>TARGET</target>
+    <priority>MEDIUM</priority>
+  </callout>
+</hwpError>
+<!-- ******************************************************************** -->
+<hwpError>
+  <sbeError/>
+  <rc>RC_P10_ADU_UTILS_LOCK_ERR</rc>
+  <description>
+    Number of lock attempts exceeded when attempting to acquire the ADU lock or
+    error occured when attempting to pick the ADU lock
+    Procedure: p10_adu_utils
+  </description>
+  <ffdc>TARGET</ffdc>
+  <ffdc>LOCK_PICK</ffdc>
+  <ffdc>LOCK</ffdc>
+  <ffdc>NUM_ATTEMPTS</ffdc>
+  <collectRegisterFfdc>
+    <id>REG_FFDC_ADU_STATUS_REGISTER</id>
+    <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+    <target>TARGET</target>
+  </collectRegisterFfdc>
+  <callout>
+    <target>TARGET</target>
+    <priority>HIGH</priority>
+  </callout>
+</hwpError>
+<!-- ******************************************************************** -->
+<hwpError>
+  <sbeError/>
+  <rc>RC_P10_ADU_UTILS_EXTRA_INPUT_DATA</rc>
+  <description>
+    Error code used to collect HWP input arguments
+    Procedure:p10_adu_utils
+  </description>
+  <ffdc>ADDRESS</ffdc>
+  <ffdc>RNW</ffdc>
+  <ffdc>FLAGS</ffdc>
+</hwpError>
+<!-- ******************************************************************** -->
+</hwpErrors>

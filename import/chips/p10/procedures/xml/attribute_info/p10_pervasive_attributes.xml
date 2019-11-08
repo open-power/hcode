@@ -1,0 +1,318 @@
+<!-- IBM_PROLOG_BEGIN_TAG                                                   -->
+<!-- This is an automatically generated prolog.                             -->
+<!--                                                                        -->
+<!-- $Source: import/chips/p10/procedures/xml/attribute_info/p10_pervasive_attributes.xml $ -->
+<!--                                                                        -->
+<!-- OpenPOWER EKB Project                                                  -->
+<!--                                                                        -->
+<!-- COPYRIGHT 2015,2019                                                    -->
+<!-- [+] International Business Machines Corp.                              -->
+<!--                                                                        -->
+<!--                                                                        -->
+<!-- Licensed under the Apache License, Version 2.0 (the "License");        -->
+<!-- you may not use this file except in compliance with the License.       -->
+<!-- You may obtain a copy of the License at                                -->
+<!--                                                                        -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                         -->
+<!--                                                                        -->
+<!-- Unless required by applicable law or agreed to in writing, software    -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,      -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        -->
+<!-- implied. See the License for the specific language governing           -->
+<!-- permissions and limitations under the License.                         -->
+<!--                                                                        -->
+<!-- IBM_PROLOG_END_TAG                                                     -->
+<attributes>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_PG_MVPD</id>
+  <targetType>TARGET_TYPE_PERV</targetType>
+  <description>
+    Chiplet partial good information, direct from module VPD PG keyword
+  </description>
+  <valueType>uint32</valueType>
+  <platInit/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_PG</id>
+  <targetType>TARGET_TYPE_PERV</targetType>
+  <description>
+    Chiplet partial good information to be consumed by IPL HWP code.
+    This attribute logically represents the combination of VPD PG plus
+    any additional runtime deconfiguration to be applied on the current IPL.
+  </description>
+  <valueType>uint32</valueType>
+  <default>0xFFFFFFFF</default>
+  <writeable/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_PROC_SBE_MASTER_CHIP</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Indicates if SBE on this chip is serving as hostboot drawer master
+  </description>
+  <valueType>uint8</valueType>
+  <enum>FALSE = 0x0,TRUE = 0x1</enum>
+  <writeable/>
+  <platInit/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_SECTOR_BUFFER_STRENGTH</id>
+  <targetType>TARGET_TYPE_SYSTEM</targetType>
+  <description>Sector buffer strength</description>
+  <valueType>uint8</valueType>
+  <platInit/>
+  <default>0</default>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_PULSE_MODE_ENABLE</id>
+  <targetType>TARGET_TYPE_SYSTEM</targetType>
+  <description>enable the pulse mode</description>
+  <valueType>uint8</valueType>
+  <enum>ENABLE = 0x1, DISABLE = 0x0</enum>
+  <platInit/>
+  <default>DISABLE</default>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_PULSE_MODE_VALUE</id>
+  <targetType>TARGET_TYPE_SYSTEM</targetType>
+  <description>value for pulse mode</description>
+  <valueType>uint8</valueType>
+  <platInit/>
+  <default>0</default>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_NDL_MESHCTRL_SETUP</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>Control NDL training:meshctrl setup</description>
+  <valueType>uint8</valueType>
+  <writeable/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_MC_PLL_BUCKET</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>MC0, MC1, MC2, MC3 pll bucket selection</description>
+  <valueType>uint8</valueType>
+  <array>4</array>
+  <writeable/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_IOHS_PLL_BUCKET</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>IOHS pll bucket selection</description>
+  <valueType>uint8</valueType>
+  <array>8</array>
+  <writeable/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_CP_PLLTODFLT_BYPASS</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    To skip the locking sequence and check for lock of CP TOD Filter PLL
+  </description>
+  <valueType>uint8</valueType>
+  <enum>BYPASS = 0x1, NO_BYPASS = 0x0</enum>
+  <writeable/>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_CP_PLLNESTFLT_BYPASS</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    To skip the locking sequence and check for lock of CP Nest Filter PLL
+  </description>
+  <valueType>uint8</valueType>
+  <enum>BYPASS = 0x1, NO_BYPASS = 0x0</enum>
+  <writeable/>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_CP_PLLIOFLT_BYPASS</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    To skip the locking sequence and check for lock of CP IO Filter PLL
+  </description>
+  <valueType>uint8</valueType>
+  <enum>BYPASS = 0x1, NO_BYPASS = 0x0</enum>
+  <writeable/>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_CP_PLLIOSSFLT_BYPASS</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    To skip the locking sequence and check for lock of CP IO Spread Spectrum Filter PLL
+  </description>
+  <valueType>uint8</valueType>
+  <enum>BYPASS = 0x1, NO_BYPASS = 0x0</enum>
+  <writeable/>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_PAU_DPLL_BYPASS</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Skip locking sequence and check for lock of PAU DPLL
+  </description>
+  <valueType>uint8</valueType>
+  <enum>BYPASS = 0x1, NO_BYPASS = 0x0</enum>
+  <writeable/>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_NEST_DPLL_BYPASS</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Skip locking sequence and check for lock of NEST DPLL
+  </description>
+  <valueType>uint8</valueType>
+  <enum>BYPASS = 0x1, NO_BYPASS = 0x0</enum>
+  <writeable/>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_IO_TANK_PLL_BYPASS</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Skip locking sequence and check for lock of IO PLLs
+  </description>
+  <valueType>uint8</valueType>
+  <enum>BYPASS = 0x1, NO_BYPASS = 0x0</enum>
+  <writeable/>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_SKEWADJ_BYPASS</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Keep skew adjust logic between nest, cores and caches bypassed
+  </description>
+  <valueType>uint8</valueType>
+  <enum>BYPASS = 0x1, NO_BYPASS = 0x0</enum>
+  <platInit/>
+  <initToZero/>
+  <writeable/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_SKEWADJ_CORE_PDLY_OVERRIDE</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Skew Adjust: Set fixed value for core-cache delay
+    bit 0: override enabled
+    bits 12:15: override value
+    Taken from CP00 MK keyword in VPD
+  </description>
+  <valueType>uint16</valueType>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_SKEWADJ_CACHE_PDLY_OVERRIDE</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Skew Adjust: Set fixed value for cache-nest delay
+    bit 0: override enabled
+    bits 12:15: override value
+    Taken from CP00 MK keyword in VPD
+  </description>
+  <valueType>uint16</valueType>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_DCADJ_BYPASS</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Keep core duty cycle adjust logic bypassed
+  </description>
+  <valueType>uint8</valueType>
+  <enum>BYPASS = 0x1, NO_BYPASS = 0x0</enum>
+  <platInit/>
+  <initToZero/>
+  <writeable/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_DCADJ_DCC_OVERRIDE</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Duty Cycle Adjust: Set fixed value for duty cycle control
+    bit 0: override enabled
+    bits 8:15: override value
+    Taken from CP00 MK keyword in VPD
+  </description>
+  <valueType>uint16</valueType>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_DCADJ_TARGET_OVERRIDE</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>
+    Duty Cycle Adjust: Set duty cycle target different from 50%
+    bit 0: override enabled
+    bits 8:15: override value (signed integer, delta from 50%)
+    Taken from CP00 MK keyword in VPD
+  </description>
+  <valueType>uint16</valueType>
+  <platInit/>
+  <initToZero/>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_ECID</id>
+  <targetType>TARGET_TYPE_PROC_CHIP, TARGET_TYPE_MEMBUF_CHIP, TARGET_TYPE_OCMB_CHIP</targetType>
+  <description>Populated by HWP called during IPL.
+  PROC, MEMBUF: Bits 0 to 63 of the ECID in array entry 0 and bits 64 to 127 in ECID array entry 1
+  OCMB: Explorer: Data Inserted HIGH:LOW, ex. ATTR_ECID[0] = [PE_DATA_3:PE_DATA_2:PE_DATA_1:PE_DATA_0]
+  OCMB: Gemini: 64-bit ECID inserted in ATTR_ECID[0]
+  TK/FIXME/TODO: This needs to be made larger to support the entire Explorer ECID.
+  </description>
+  <valueType>uint64</valueType>
+  <writeable/>
+  <odmVisable/>
+  <odmChangeable/>
+  <array>2</array>
+</attribute>
+<!-- ********************************************************************** -->
+<attribute>
+  <id>ATTR_LPC_CONSOLE_CNFG</id>
+  <targetType>TARGET_TYPE_PROC_CHIP</targetType>
+  <description>Indicates if LPC console is enabled on system</description>
+  <valueType>uint8</valueType>
+  <enum>ENABLE = 0x1,DISABLE = 0x0</enum>
+  <default>ENABLE</default>
+  <platInit/>
+  </attribute>
+<!-- ********************************************************************** -->
+</attributes>

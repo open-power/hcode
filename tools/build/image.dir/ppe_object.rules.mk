@@ -3,17 +3,23 @@
 #
 # $Source: tools/build/image.dir/ppe_object.rules.mk $
 #
-# IBM CONFIDENTIAL
+# OpenPOWER EKB Project
 #
-# EKB Project
-#
-# COPYRIGHT 2016
+# COPYRIGHT 2016,2019
 # [+] International Business Machines Corp.
 #
 #
-# The source code for this program is not published or otherwise
-# divested of its trade secrets, irrespective of what has been
-# deposited with the U.S. Copyright Office.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
 
@@ -39,21 +45,21 @@
 define __GENERATE_PPE_OBJECTRULES
 .PRECIOUS: $(1)/%.s
 
-$1/%.s : $(2)/%.S
+$1/%.s : $(2)/%.S | ppetracepp
 		$(C2) "    GEN        $$(@F)"
 		$(C1) mkdir -p $$(@D)
 		$(C1) $$(PK_TRACEPP) $$($(3)_PREFIX)$$(CC) -E $$(LOCALCOMMONFLAGS) \
 			-o $$@ $$^
 
-$(1)/%.s: $(2)/%.c
-		$(C2) "    DEP    $$(@F:.s=.dep)"
+$(1)/%.s: $(2)/%.c | ppetracepp
+		$(C2) "    DEP        $$(@F:.s=.dep)"
 		$(C1) mkdir -p $$(@D)
 		$(C1) $$($(3)_PREFIX)$$(CC) -M -MP -MT $$@ \
 			$$(COMMONFLAGS) $$(CFLAGS) \
 			$$(LOCALCOMMONFLAGS) $$(LOCALCFLAGS) \
 			$$< -o $$(subst .s,.dep,$$@)
 
-		$(C2) "    CC$(3)     $$(@F)"
+		$(C2) "    CC$(3)      $$(@F)"
 		$(C1) $$(PK_TRACEPP) $$($(3)_PREFIX)$$(CC) $$(COMMONFLAGS) \
 			$$(CFLAGS) $$(LOCALCOMMONFLAGS) $$(LOCALCFLAGS) \
 			$$< -S -o $$@
@@ -65,8 +71,8 @@ $1/%.o : $1/%.s
 		$(C1) mkdir -p $$(@D)
 		$(C1) $$($(3)_PREFIX)$$(AS) $$(ASFLAGS) -o $$@ $$^
 
-$(1)/%.s: $(2)/%.C
-		$(C2) "    DEP    $$(@F:.s=.dep)"
+$(1)/%.s: $(2)/%.C | ppetracepp
+		$(C2) "    DEP        $$(@F:.s=.dep)"
 		$(C1) mkdir -p $$(@D)
 		$(C1) $$($(3)_PREFIX)$$(CXX) -M -MP -MT $$@ \
 			$$(COMMONFLAGS) $$(CFLAGS) \
@@ -83,11 +89,11 @@ else
 .PRECIOUS: $(1)/%.es
 
 $(1)/%.es: $(1)/%.s
-		$(C2) "    PCP     $$(@F)"
+		$(C2) "    PCP        $$(@F)"
 		$(C1) $(PCP) -e -b -f $$< > /dev/null
 
 $(1)/%.o: $(1)/%.es
-		$(C2) "   GEN      $$(@F)"
+		$(C2) "    GEN        $$(@F)"
 		$(C1) $$(PPE_BINUTILS_PREFIX)$$(AS) $$(ASFLAGS) -o $$@ $$<
 
 endif

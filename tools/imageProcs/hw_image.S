@@ -3,9 +3,9 @@
 /*                                                                        */
 /* $Source: tools/imageProcs/hw_image.S $                                 */
 /*                                                                        */
-/* OpenPOWER HCODE Project                                                */
+/* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2019                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,7 +25,7 @@
 
 // *INDENT-OFF*
 
-#include <p9_xip_image.h>
+#include <p10_ipl_image.H>
 
     .macro P9XipHeader, magic, link_address, image_size
 
@@ -62,16 +62,16 @@ __header_64_reserved:
         .xip_section toc,          4
         .xip_section strings
 
-        .xip_section sgpe,         8
-        .xip_section core_restore, 8
-        .xip_section cme,          8
+        .xip_section sbe,          8
+        .xip_section qme,          8
+        .xip_section xgpe,         8
         .xip_section pgpe,         8
+        .xip_section core_restore, 8
         .xip_section ioppe,        8
-        .xip_section fppe,         8
-        .xip_section rings,        8
+        .xip_section iopxram,      8
         .xip_section overlays,     8
+        .xip_section dynamic,      8
 
-        .xip_section
         .xip_section
 
         ////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ __build_tag:
         ////////////////////////////////////////////////////////////////////
 
 __header_version:
-        .byte P9_XIP_HEADER_VERSION
+        .byte IPL_IMAGE_HEADER_VERSION
 __toc_normalized:
         .byte 0
 __toc_sorted:
