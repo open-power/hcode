@@ -67,7 +67,7 @@ void pgpe_dds_update(uint32_t pstate)
 
         for (c = 0; c < CORES_PER_QUAD; c++)
         {
-            if (ccsr & CORE_MASK(c))
+            if (ccsr & CORE_MASK(c >> (q * 4)))
             {
                 ducr |= (((uint64_t)pgpe_dds_intp_ins_delay_from_ps(pgpe_pstate_get(pstate_next), c) & 0x000000FF) << delay_shift);
                 ducr |= (pgpe_dds_intp_cal_adj_from_ps(pgpe_pstate_get(pstate_next), c) & 0x00000003) << (cal_shift);

@@ -36,7 +36,7 @@ ResClkFreqIdx_t RESCLK_INDEX[RESCLK_FREQ_REGIONS] =
     {0, 3},         //Freq, Index
     {1500, 3},      //Freq, Index
     {2000, 21},     //Freq, Index
-    {3000, 23}      //Freq, Index
+    {3400, 23}      //Freq, Index
 };
 
 //\todo Review if defining this table as array of 8 bytes is ok or not. Spec
