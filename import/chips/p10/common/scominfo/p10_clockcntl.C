@@ -126,8 +126,15 @@ extern "C"
                    (l_xlatedAddr >> 32), (l_xlatedAddr & 0xFFFFFFFFULL), l_chipletId, l_ringId);
 #endif
 
-            // Set to P10_TP_VITL_DOMAIN if multicast
-            if (l_addr.isMulticast())
+            // Set to P10_TP_VITL_DOMAIN if:
+            // - multicast
+            // - PCB slave endpoint is targeted (any chiplet outside of ID=0)
+            // - DPLL endpoint is targeted
+            if (l_addr.isMulticast() ||
+                (l_endPoint == DPLL_ENDPOINT) ||
+                (l_endPoint == PCBSLV_ENDPOINT &&
+                 (i_chipUnitNum != 0 || i_p10CU != PU_PERV_CHIPUNIT) &&
+                 !((i_p10CU == P10_NO_CU && l_chipletId == 0))))
             {
                 o_domain = P10_TPVITL_DOMAIN;
                 break;
@@ -241,7 +248,7 @@ extern "C"
 
                 // Get the CORE number in the EQ chiplet (0-3)
                 if ( (l_region == COREL2_REGION) ||
-                     (l_region = L3_REGION) )
+                     (l_region == L3_REGION) )
                 {
                     l_coreNum = l_addr.getCoreTargetInstance() - ( (l_chipletId - EQ0_CHIPLET_ID) * 4 );
                 }
