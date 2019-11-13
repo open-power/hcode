@@ -22,10 +22,14 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-EXE = ipl_image_tool
-OBJS += $(EXE).o
-$(EXE)_DEPLIBS += p10_ipl_image common_ringId p10_tor p10_ringId p10_scan_compression p10_ddco
-$(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p9/utils/imageProcs)
-$(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p10/utils/imageProcs)
-$(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/common/utils/imageProcs)
-$(call BUILD_EXE)
+WRAPPER = ipl_image_tool
+$(WRAPPER)_DEPLIBS+=p10_ipl_image
+$(WRAPPER)_DEPLIBS+=common_ringId
+$(WRAPPER)_DEPLIBS+=p10_tor
+$(WRAPPER)_DEPLIBS+=p10_ringId
+$(WRAPPER)_DEPLIBS+=p10_scan_compression
+$(WRAPPER)_DEPLIBS+=p10_ddco
+$(call ADD_EXE_INCDIR,$(WRAPPER),$(ROOTPATH)/chips/common/utils/imageProcs)
+$(call ADD_EXE_INCDIR,$(WRAPPER),$(ROOTPATH)/chips/p10/utils/imageProcs)
+$(call ADD_EXE_INCDIR,$(WRAPPER),$(ROOTPATH)/hwpf/fapi2/include)
+$(call BUILD_WRAPPER)
