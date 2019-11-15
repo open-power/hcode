@@ -106,4 +106,5 @@ void pgpe_irq_fit_handler()
 {
     handle_occ_beacon();
     handle_ocs();
+    mtspr(SPRN_TSR, TSR_FIS);
 }
