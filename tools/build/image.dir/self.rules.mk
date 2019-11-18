@@ -45,13 +45,13 @@ endef
 
 define __BUILD_SELF_PROCEDURE
 $(eval SRCS:= $(ROOTPATH)/chips/p10/procedures/utils/stopreg)
-$(eval SELF_REST_IMG_PATH := $(addprefix $(ROOTPATH)/output/images/utils/stopreg/, $(SELF_PROCEDURE)))
-$(eval SELF_REST_IMG := $(ROOTPATH)/output/images/utils/stopreg/$(SELF_PROCEDURE))
+$(eval SELF_REST_IMG_PATH := $(addprefix $(OUTPUTPATH)/images/, self_save_restore))
+$(eval SELF_REST_IMG := $(OUTPUTPATH)/images/self_save_restore)
 $(eval SELF_LINK := $(SRCS)/link.c)
 $(eval LINK_SCRIPT := $(SELF_REST_IMG_PATH)/selfLink)
 $(eval SELF_ASFLAGS := -std=c99 -c -O3 -nostdlib -mcpu=power7 -mbig-endian -ffreestanding -mabi=elfv1)
 $(eval SELF_REST_PREFIX := $(CTEPATH)/tools/p9_ppc64/prod/bin/powerpc64le-buildroot-linux-gnu-)
-$(eval SELF_PROCEDURE_OBJ_PATH := $(addprefix $(ROOTPATH)/output/obj/utils/stopreg/, $(SELF_PROCEDURE)))
+$(eval SELF_PROCEDURE_OBJ_PATH := $(addprefix $(OUTPUTPATH)/obj/, self_save_restore))
 $(eval $(call __CLEAN_TARGET, $(SELF_PROCEDURE_OBJ_PATH)))
 $(eval $(call __CLEAN_TARGET, $(SELF_REST_IMG_PATH)))
 $(call SELF_ASM_OBJECTRULES,$(SELF_PROCEDURE_OBJ_PATH),$(SRCS),SELF_REST)
@@ -65,11 +65,11 @@ $(LINK_SCRIPT) :
 
 $(SELF_PROCEDURE) :
 	$(C1)mkdir -p $(SELF_REST_IMG_PATH)
-	$(C1)$$(MAKE) $(SELF_REST_IMG_PATH)/$(SELF_PROCEDURE).bin
+	$(C1)$$(MAKE) $(SELF_REST_IMG_PATH)/self_save_restore.bin
 
-$(SELF_REST_IMG_PATH)/$(SELF_PROCEDURE).bin:  $(SELF_PROCEDURE_OBJ_PATH)/$(SELF_PROCEDURE).o $(LINK_SCRIPT)
-	$(C1)mkdir -p $(SELF_REST_IMG_PATH) && $(SELF_REST_PREFIX)ld -T$(LINK_SCRIPT) -Map $(SELF_REST_IMG_PATH)/$(SELF_PROCEDURE).map \
-		-Bstatic -o $(SELF_REST_IMG_PATH)/$(SELF_PROCEDURE).bin $(SELF_PROCEDURE_OBJ_PATH)/$(SELF_PROCEDURE).o\
-		&& $(SELF_REST_PREFIX)$(OBJDUMP) -d $(SELF_PROCEDURE_OBJ_PATH)/$(SELF_PROCEDURE).o > $(SELF_REST_IMG_PATH)/$(SELF_PROCEDURE).list
+$(SELF_REST_IMG_PATH)/self_save_restore.bin:  $(SELF_PROCEDURE_OBJ_PATH)/p10_core_save_restore_routines.o $(LINK_SCRIPT)
+	$(C1)mkdir -p $(SELF_REST_IMG_PATH) && $(SELF_REST_PREFIX)ld -T$(LINK_SCRIPT) -Map $(SELF_REST_IMG_PATH)/self_save_restore.map \
+		-Bstatic -o $(SELF_REST_IMG_PATH)/self_save_restore.bin $(SELF_PROCEDURE_OBJ_PATH)/p10_core_save_restore_routines.o\
+		&& $(SELF_REST_PREFIX)$(OBJDUMP) -d $(SELF_PROCEDURE_OBJ_PATH)/p10_core_save_restore_routines.o > $(SELF_REST_IMG_PATH)/self_save_restore.list
 SELF_PROCEDURE:=
 endef
