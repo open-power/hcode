@@ -55,6 +55,22 @@ int main()
         IOTA_PANIC(QME_MAIN_FAPI2_INIT_FAILED);
     }
 
+    // RTC 245890: Topology ID setup until QME attribute initialization works
+    {
+        const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_chip_target;
+        fapi2::ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE_Type l_topo_tbl;
+
+        l_topo_tbl[0] = 0x00;
+
+        for (auto i = 1; i < 32; ++i)
+        {
+            l_topo_tbl[i] = 0xFF;
+        }
+
+        PK_TRACE("Workaround: Set Topo Table Array Attribute" );
+        FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE, l_chip_target, l_topo_tbl));
+    }
+
 #if EPM_TUNING
 
     uint32_t qme_runtime = 1;
