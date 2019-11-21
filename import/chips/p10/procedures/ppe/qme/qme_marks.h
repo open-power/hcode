@@ -41,27 +41,30 @@ enum QME_SE_MARKS
     SE_L2_PURGE_HBUS_DIS           = 0x210      ,
     SE_L2_PURGE_CATCHUP            = 0x220      ,
     SE_L2_PURGE_ABORT              = 0x230      ,
-    SE_L2_TLBIE_QUIESCE            = 0x240      ,
-    SE_NCU_PURGE                   = 0x250      ,
-    SE_NCU_PURGE_ABORT             = 0x2e0      ,
-    SE_CORE_DISABLE_SHADOWS        = 0x2f0      ,
-    SE_CORE_STOPCLOCKS             = 0x300      ,
-    SE_CORE_STOPGRID               = 0x310      ,
-    SE_STOP2_DONE                  = 0x320      ,
-    SE_STOP3OR5_CATCHUP            = 0x330      ,
-    SE_IS0_BEGIN                   = 0x340      ,
-    SE_IS0_END                     = 0x350      ,
-    SE_CORE_VMIN_ENABLE            = 0x3e0      ,
-    SE_STOP3_DONE                  = 0x3f0      ,
-    SE_CORE_POWEROFF               = 0x400      ,
-    SE_STOP5_DONE                  = 0x410      ,
-    SE_CHTM_PURGE                  = 0x420      ,
-    SE_L3_PURGE                    = 0x430      ,
-    SE_L3_PURGE_ABORT              = 0x440      ,
-    SE_POWERBUS_PURGE              = 0x450      ,
-    SE_CACHE_STOPCLOCKS            = 0x4e0      ,
-    SE_CACHE_POWEROFF              = 0x4f0      ,
-    SE_STOP11_DONE                 = 0x500
+    SE_L2_PURGE_ABORT_DONE         = 0x240      ,
+    SE_L2_TLBIE_QUIESCE            = 0x250      ,
+    SE_L2_TLBIE_QUIESCE_CATCHUP    = 0x2e0      ,
+    SE_NCU_PURGE                   = 0x2f0      ,
+    SE_NCU_PURGE_ABORT             = 0x300      ,
+    SE_NCU_PURGE_ABORT_DONE        = 0x310      ,
+    SE_CORE_DISABLE_SHADOWS        = 0x320      ,
+    SE_CORE_STOPCLOCKS             = 0x330      ,
+    SE_CORE_STOPGRID               = 0x340      ,
+    SE_STOP2_DONE                  = 0x350      ,
+    SE_STOP3OR5_CATCHUP            = 0x3e0      ,
+    SE_IS0_BEGIN                   = 0x3f0      ,
+    SE_IS0_END                     = 0x400      ,
+    SE_CORE_VMIN_ENABLE            = 0x410      ,
+    SE_STOP3_DONE                  = 0x420      ,
+    SE_CORE_POWEROFF               = 0x430      ,
+    SE_STOP5_DONE                  = 0x440      ,
+    SE_CHTM_PURGE                  = 0x450      ,
+    SE_L3_PURGE                    = 0x4e0      ,
+    SE_POWERBUS_PURGE              = 0x4f0      ,
+    SE_CACHE_STOPCLOCKS            = 0x500      ,
+    SE_CACHE_STOPGRID              = 0x510      ,
+    SE_CACHE_POWEROFF              = 0x520      ,
+    SE_STOP11_DONE                 = 0x530
 };
 
 
@@ -71,20 +74,24 @@ const std::vector<QME_SE_MARKS> MARKS =
 {
 //M2B_START_SE
     IRQ_PM_STATE_ACTIVE_FAST_EVENT, //M2B_BRANCH_ONLY
-    //SE_L2_PURGE_HBUS_DIS,         stop2/3/5
+    //SE_L2_PURGE_HBUS_DIS,         stop2/3
     IRQ_PM_STATE_ACTIVE_SLOW_EVENT,
     SE_L2_PURGE_HBUS_DIS,
     //SE_L2_PURGE_ABORT,             wakeup_pending
     //SE_L2_TLBIE_QUIESCE,           l2_purge_done_hbus_disabled
     SE_L2_PURGE_CATCHUP,             //M2B_BRANCH_ONLY
-    //SE_L2_PURGE_HBUS_DIS,          catchup_detected
-    SE_L2_PURGE_ABORT,               //M2B_BRANCH_ONLY
+    //SE_L2_TLBIE_QUIESCE_CATCHUP,   catchup_detected
+    SE_L2_PURGE_ABORT,
+    SE_L2_PURGE_ABORT_DONE,          //M2B_BRANCH_ONLY
     //SX_CORE_HANDOFF_PC,            wakeup_stop0
-    SE_L2_TLBIE_QUIESCE,
+    SE_L2_TLBIE_QUIESCE,             //M2B_BRANCH_ONLY
+    //SE_NCU_PURGE,                  no catchup path
+    SE_L2_TLBIE_QUIESCE_CATCHUP,
     SE_NCU_PURGE,                    //M2B_BRANCH_ONLY
     //SE_CORE_DISABLE_SHADOWS,       ncu_purge_done
     //SE_NCU_PURGE_ABORT,            wakeup_pending
-    SE_NCU_PURGE_ABORT,              //M2B_BRANCH_ONLY
+    SE_NCU_PURGE_ABORT,
+    SE_NCU_PURGE_ABORT_DONE,         //M2B_BRANCH_ONLY
     //SX_CORE_HANDOFF_PC,            wakeup_stop0
     SE_CORE_DISABLE_SHADOWS,
     SE_CORE_STOPCLOCKS,
@@ -110,16 +117,14 @@ const std::vector<QME_SE_MARKS> MARKS =
     //IRQ_SPECIAL_WAKEUP_RISE_EVENT, wakeup_detected
     SE_CHTM_PURGE,
     SE_L3_PURGE,
-    //SE_POWERBUS_PURGE,             l3_purge_done
-    SE_L3_PURGE_ABORT,               //M2B_BRANCH_ONLY
     SE_POWERBUS_PURGE,
     SE_CACHE_STOPCLOCKS,
+    SE_CACHE_STOPGRID,
     SE_CACHE_POWEROFF,
     SE_STOP11_DONE                   //M2B_BRANCH_ONLY
     //IRQ_REGULAR_WAKEUP_FAST_EVENT, wakeup_detected
     //IRQ_SPECIAL_WAKEUP_RISE_EVENT, wakeup_detected
 //M2B_END_SE
-
 };
 
 const std::map<QME_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
@@ -128,9 +133,12 @@ const std::map<QME_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
         (SE_L2_PURGE_HBUS_DIS          , "SE_L2_PURGE_HBUS_DIS          ")
         (SE_L2_PURGE_CATCHUP           , "SE_L2_PURGE_CATCHUP           ")
         (SE_L2_PURGE_ABORT             , "SE_L2_PURGE_ABORT             ")
+        (SE_L2_PURGE_ABORT_DONE        , "SE_L2_PURGE_ABORT_DONE        ")
         (SE_L2_TLBIE_QUIESCE           , "SE_L2_TLBIE_QUIESCE           ")
+        (SE_L2_TLBIE_QUIESCE_CATCHUP   , "SE_L2_TLBIE_QUIESCE_CATCHUP   ")
         (SE_NCU_PURGE                  , "SE_NCU_PURGE                  ")
         (SE_NCU_PURGE_ABORT            , "SE_NCU_PURGE_ABORT            ")
+        (SE_NCU_PURGE_ABORT_DONE       , "SE_NCU_PURGE_ABORT_DONE       ")
         (SE_CORE_DISABLE_SHADOWS       , "SE_CORE_DISABLE_SHADOWS       ")
         (SE_CORE_STOPCLOCKS            , "SE_CORE_STOPCLOCKS            ")
         (SE_CORE_STOPGRID              , "SE_CORE_STOPGRID              ")
@@ -144,9 +152,9 @@ const std::map<QME_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
         (SE_STOP5_DONE                 , "SE_STOP5_DONE                 ")
         (SE_CHTM_PURGE                 , "SE_CHTM_PURGE                 ")
         (SE_L3_PURGE                   , "SE_L3_PURGE                   ")
-        (SE_L3_PURGE_ABORT             , "SE_L3_PURGE_ABORT             ")
         (SE_POWERBUS_PURGE             , "SE_POWERBUS_PURGE             ")
         (SE_CACHE_STOPCLOCKS           , "SE_CACHE_STOPCLOCKS           ")
+        (SE_CACHE_STOPGRID             , "SE_CACHE_STOPGRID             ")
         (SE_CACHE_POWEROFF             , "SE_CACHE_POWEROFF             ")
         (SE_STOP11_DONE                , "SE_STOP11_DONE                ") ;
 
@@ -215,14 +223,12 @@ const std::vector<QME_SX_MARKS> MARKS =
 {
 //M2B_START_SX
     IRQ_REGULAR_WAKEUP_FAST_EVENT,    //M2B_BRANCH_ONLY
-    //SX_CORE_POWERON,                stop5_exit
     //SX_CORE_VMIN_DISABLE,           stop3_exit
     //SX_CORE_SKEWADJUST,             stop2_exit
     IRQ_REGULAR_WAKEUP_SLOW_EVENT,    //M2B_BRANCH_ONLY
     //SX_CACHE_POWERON,               stop11_exit
     IRQ_SPECIAL_WAKEUP_RISE_EVENT,
     //SX_CACHE_POWERON,               stop11_exit
-    //SX_CORE_POWERON,                stop5_exit
     //SX_CORE_VMIN_DISABLE,           stop3_exit
     //SX_CORE_SKEWADJUST,             stop2_exit
     IRQ_SPECIAL_WAKEUP_FALL_EVENT,    //M2B_BRANCH_ONLY
@@ -248,16 +254,14 @@ const std::vector<QME_SX_MARKS> MARKS =
     SX_CORE_REPAIR_INITF,
     SX_CORE_ARRAYINIT,
     SX_CORE_INITF,
-    SX_CORE_SCANED,         //M2B_BRANCH_ONLY
-    //SX_CORE_STARTCLOCKS,  stop5_exit
+    SX_CORE_SCANED,
     SX_CORE_VMIN_DISABLE,
     SX_CORE_VOLT_RESTORED,
     SX_CORE_SKEWADJUST,
     SX_CORE_STARTCLOCKS,
     SX_CORE_ENABLE_SHADOWS,
     SX_CORE_CLOCKED,
-    //SX_CORE_HANDOFF_PC,   stop2_exit
-    //SX_CORE_SELF_RESTORE, stop5_exit
+    //SX_CORE_HANDOFF_PC,             stop2/3_exit
     SX_CORE_SCOMINIT,
     SX_CORE_SCOM_CUSTOMIZE,
     SX_CORE_SCOMED,
@@ -265,7 +269,9 @@ const std::vector<QME_SX_MARKS> MARKS =
     SX_CORE_SRESET_THREADS,
     SX_CORE_RESTORED,
     SX_CORE_HANDOFF_PC,
-    SX_CORE_AWAKE
+    SX_CORE_AWAKE                     //M2B_BRANCH_ONLY
+    //IRQ_PM_STATE_ACTIVE_FAST_EVENT, another entry
+    //IRQ_PM_STATE_ACTIVE_SLOW_EVENT, another entry
 //M2B_END_SX
 };
 

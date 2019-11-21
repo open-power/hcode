@@ -74,7 +74,7 @@ p10_hcd_core_startgrid(
 
     FAPI_INF(">>p10_hcd_core_startgrid");
 
-    FAPI_DBG("Switch glsmux to DPLL via CPMS_CGCSR[11]");
+    FAPI_DBG("Switch CL2 Glsmux to DPLL via CPMS_CGCSR[11:L2_CLKGLM_SEL]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CGCSR_WO_OR, MMIO_1BIT(11) ) );
 
 fapi_try_exit:

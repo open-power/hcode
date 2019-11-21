@@ -543,6 +543,12 @@ qme_stop_entry()
 
         //===============//
 
+        MARK_TAG( G_qme_record.c_stop11_enter_targets, SE_CACHE_STOPGRID )
+
+        //EPM TODO FIXME p10_hcd_cache_stopgrid(core_target);
+
+        //===============//
+
         MARK_TAG(G_qme_record.c_stop11_enter_targets, SE_CACHE_POWEROFF)
 
         p10_hcd_cache_poweroff(core_target);
