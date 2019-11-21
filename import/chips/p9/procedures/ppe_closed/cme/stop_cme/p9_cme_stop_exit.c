@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2019                                                    */
+/* COPYRIGHT 2015,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1162,6 +1162,8 @@ p9_cme_stop_self_execute(uint32_t core, uint32_t i_saveRestore )
 {
     uint32_t core_mask;
     data64_t scom_data;
+    data64_t stop_exit_privilege;
+    stop_exit_privilege.value = 0;
     cmeHeader_t* pCmeImgHdr = (cmeHeader_t*)(CME_SRAM_HEADER_ADDR);
     scom_data.value = pCmeImgHdr->g_cme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
 
@@ -1254,11 +1256,8 @@ p9_cme_stop_self_execute(uint32_t core, uint32_t i_saveRestore )
     PK_TRACE_INF("SMF core wakes up, write URMOR with HOMER address" );
     scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
 
-    if( SPR_SELF_SAVE == i_saveRestore )
-    {
-        scom_data.value = pCmeImgHdr->g_cme_unsec_cpmr_PhyAddr & BITS64(13, 30); //Unsecure HOMER
-        PKTRACE("SMF core self save, write un-secure HOMER address");
-    }
+    scom_data.value = pCmeImgHdr->g_cme_unsec_cpmr_PhyAddr & BITS64(13, 30); //Unsecure HOMER
+    PKTRACE("SMF core self save, write un-secure HOMER address");
 
     CME_PUTSCOM(HRMOR, core, scom_data.value);
 
@@ -1305,33 +1304,37 @@ p9_cme_stop_self_execute(uint32_t core, uint32_t i_saveRestore )
             {
                 //Writing thread scratch register to
                 //Signal Self Save Restore code for save operation.
-                scom_data.words.upper     =   0;
-                scom_data.words.lower     =   1;
+                stop_exit_privilege.words.upper     =   0;
+                stop_exit_privilege.words.lower     =   1;
             }
             else
             {
                 //Writing thread scratch register to
                 // 1. Init Runtime wakeup mode for core.
-                // 2. Signal Self Save Restore code for restore operation.
+                // 2. HV Exit with SMF enable or Disable
+                // 3. Signal Self Save Restore code for restore operation.
+
 
                 if (scom_data.words.upper & BIT32(3))
                 {
-                    scom_data.value = BIT64(59);
+                    stop_exit_privilege.value = BIT64(59);
                 }
-                else
+
+                if (scom_data.words.upper &  BIT32(4))
                 {
-                    scom_data.value = 0;
+                    stop_exit_privilege.value |= BIT64(58);
                 }
+
             }
 
             if( CME_MASK_C0 & core_mask )
             {
-                CME_PUTSCOM(SCRATCH0, CME_MASK_C0, scom_data.value);
+                CME_PUTSCOM(SCRATCH0, CME_MASK_C0, stop_exit_privilege.value);
             }
 
             if( CME_MASK_C1 & core_mask )
             {
-                CME_PUTSCOM(SCRATCH1, CME_MASK_C1, scom_data.value);
+                CME_PUTSCOM(SCRATCH1, CME_MASK_C1, stop_exit_privilege.value);
             }
         }
     }

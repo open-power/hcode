@@ -22,10 +22,10 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-# 1 "/esw/san2/premjha2/ekbTest/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.S"
+# 1 "/esw/san2/premjha2/ekbTest/p9_ekb/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.S"
 # 1 "<built-in>"
 # 1 "<command-line>"
-# 1 "/esw/san2/premjha2/ekbTest/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.S"
+# 1 "/esw/san2/premjha2/ekbTest/p9_ekb/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.S"
 
                 .set r0, 0
                 .set r1, 1
@@ -160,6 +160,8 @@
                 .set SMFCTRL_ENABLE_BIT, 0
                 .set MSR_SECURITY_BIT, 41
                 .set SCRATCH_RUNTIME_MODE_BIT, 59
+                .set HV_EXIT_WITH_SMF_ENABLE_BIT, 58 #0 : HV exit with SMFCTRL[E] bit SET to 0b01
+                                                        #1 : HV exit with SMFCTRL[E] bit SET to 0b00
 
                 .set OTHER_THREADS_STOPPED, 0x07
                 .set CORE_THREAD_STATE_REG_ID, 0x01E0
@@ -182,6 +184,8 @@
                 .set RFID, 0x2400004c
                 .set TRAP_LE, 0x0800e07f
                 .set MFMSR_R21, 0xa600a07e
+                .set OFFSET_SMF_EN_SLAVE_THREADS, 0x04
+                .set SECURE_ADDR_BIT, 0x0f
 
 
                 .set SPR_SAVE_SCRATCH_REG, r0
@@ -763,24 +767,53 @@ mtsrr1 TEMP_REG2
 mfspr TEMP_REG2, HSRR1
 insrdi TEMP_REG2, TEMP_REG1, 1, MSR_SECURITY_BIT
 mtspr HSRR1, TEMP_REG2
-mfspr SMF_VAL_REG, SMFCTRL
-insrdi SMF_VAL_REG, TEMP_REG1, 1, SMFCTRL_ENABLE_BIT
 insrdi MSR_INIT_REG, TEMP_REG1, 1, MSR_SECURITY_BIT
 
-addi TEMP_REG1, RMOR_INIT_REG, HRMOR_RESTORE_OFFSET
+extrdi. TEMP_REG2, THREAD_SCRATCH_VAL_REG, 1, HV_EXIT_WITH_SMF_ENABLE_BIT
+beq wakeup_hv_smf_enable_mode
+
+wakeup_hv_smf_disable_mode:
+insrdi SMF_VAL_REG, TEMP_REG1, 1, SMFCTRL_ENABLE_BIT
+mtspr SMFCTRL, SMF_VAL_REG #SMFCTRL[E] is cleared
+
+#In this case HOMER is expected in regular unsecure region.
+li TEMP_REG2, HRMOR_RESTORE_OFFSET
+cmplwi THREAD_ID_REG, 0
+bne update_usrrx
+addi TEMP_REG2, TEMP_REG2, SKIP_HRMOR_UPDATE_OFFSET # branch where slave threads STOPs
+b update_usrrx
+
+wakeup_hv_smf_enable_mode:
+mfspr TEMP_REG2, URMOR #Check if Un-Secure HOMER location
+extrdi. TEMP_REG1, TEMP_REG2, 1, SECURE_ADDR_BIT
+cmplwi TEMP_REG1, 0
+beq ipl_stop_exit
+
+runtime_stop_exit:
+mfspr TEMP_REG2, HRMOR #Get Un-Secure HOMER location
+ori TEMP_REG2, TEMP_REG2, 0x200 #Exit Routine Offset
+mtspr HRMOR, TEMP_REG2
+b hrmor_restore_hv
+
+#In an SMF enabled system, for compatbility reasons, during IPL HOMER is built in regular memory
+#and gets moved to secure memory later during HOMER rebuild pahse. However, in istep 16 cores exits STOP
+#in UV mode. Code below support HV exit just in case it is useful.
+
+ipl_stop_exit:
+li TEMP_REG2, HRMOR_RESTORE_OFFSET
+
+hrmor_restore_hv:
+
 cmplwi THREAD_ID_REG, 0
 beq update_usrrx
-addi TEMP_REG1, TEMP_REG1, SKIP_HRMOR_UPDATE_OFFSET # restore HRMOR only if thread0
+addi TEMP_REG2, TEMP_REG2, OFFSET_SMF_EN_SLAVE_THREADS # branch where slave threads STOPs
 
 update_usrrx:
-mtspr USRR0, TEMP_REG1
+mtspr USRR0, TEMP_REG2
 mtspr USRR1, MSR_INIT_REG
-cmpwi THREAD_ID_REG, 0
-bne exit_to_thread_stop
+mtspr SRR1, MSR_INIT_REG
 
 #------------------------------ Trampoline Sequence Start -------------------------------
-
-mtspr SMFCTRL, SMF_VAL_REG #SMFCTRL[E] = 0b0 for HV exit and 0b1 for UV exit
 
 exit_to_thread_stop:
 isync
@@ -813,6 +846,7 @@ mtspr USRR0, TEMP_REG1
 mtspr USRR1, MSR_INIT_REG
 .long urfid
 .long ATTN
+
 
 # THREAD_LAUNCHER_SIZE_OFFSET must be >= (4 * number of instructions between
 # here and thread_launcher_start)

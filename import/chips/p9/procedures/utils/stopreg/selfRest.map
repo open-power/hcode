@@ -13,16 +13,16 @@ Linker script and memory map
 
 .selfRestore    0x0000000000000000     0x2338
  *(.selfRestore)
- .selfRestore   0x0000000000000000     0x2338 /esw/san2/premjha2/ekbTest/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
+ .selfRestore   0x0000000000000000     0x2338 /esw/san2/premjha2/ekbTest/p9_ekb/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
                 0x0000000000000000                _start
-LOAD /esw/san2/premjha2/ekbTest/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
-OUTPUT(/esw/san2/premjha2/ekbTest/ekb/chips/p9/procedures/utils/stopreg/selfRest.bin binary)
+LOAD /esw/san2/premjha2/ekbTest/p9_ekb/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
+OUTPUT(/esw/san2/premjha2/ekbTest/p9_ekb/ekb/chips/p9/procedures/utils/stopreg/selfRest.bin binary)
 
 .text           0x0000000000002338        0x0
- .text          0x0000000000002338        0x0 /esw/san2/premjha2/ekbTest/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
+ .text          0x0000000000002338        0x0 /esw/san2/premjha2/ekbTest/p9_ekb/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
 
 .data           0x0000000000002338        0x0
- .data          0x0000000000002338        0x0 /esw/san2/premjha2/ekbTest/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
+ .data          0x0000000000002338        0x0 /esw/san2/premjha2/ekbTest/p9_ekb/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
 
 .bss            0x0000000000002338        0x0
- .bss           0x0000000000002338        0x0 /esw/san2/premjha2/ekbTest/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
+ .bss           0x0000000000002338        0x0 /esw/san2/premjha2/ekbTest/p9_ekb/ekb/chips/p9/procedures/utils/stopreg/p9_core_save_restore_routines.o
