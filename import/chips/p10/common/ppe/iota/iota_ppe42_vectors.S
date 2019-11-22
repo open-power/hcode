@@ -79,9 +79,8 @@ __program_exception:
 .global __dec_interrupt
 .org    __vectors + 0x0100
 __dec_interrupt:
-    _pk_panic IOTA_DEC_NOT_SUPPORTED
-/*  Instead of trap above, Enable the following if reenable DEC timer:  */
-/*  __m_iota_interrupt_and_exception_handler _IOTA_SCHEDULE_REASON_DEC  */
+/*    _pk_panic IOTA_DEC_NOT_SUPPORTED */
+    __m_iota_interrupt_and_exception_handler _IOTA_SCHEDULE_REASON_DEC
 
 .global __fit_interrupt
 .org    __vectors + 0x0120
