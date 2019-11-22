@@ -40,6 +40,10 @@ IOTA_BEGIN_IDLE_TASK_TABLE
 { IOTA_IDLE_ENABLED, IOTA_TASK(pgpe_event_manager_run) }
 IOTA_END_IDLE_TASK_TABLE
 
+IOTA_BEGIN_INIT_TASK_TABLE
+IOTA_TASK(pgpe_event_manager_task_init)
+IOTA_END_INIT_TASK_TABLE
+
 
 data_struct_table_t G_data_struct_table __attribute__((section (".data_struct_table")));
 
@@ -57,6 +61,7 @@ int main()
     //Do all initialization here
     pgpe_header_init();
     pgpe_gppb_init();
+    pgpe_event_tbl_init();
     pgpe_event_manager_init();
     pgpe_irq_init();
     pgpe_pstate_init();
