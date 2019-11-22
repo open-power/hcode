@@ -25,11 +25,8 @@
 #ifndef __IOTA_PPE42_H__
 #define __IOTA_PPE42_H__
 
-// If not using the PPE42X compiler then don't use PPE42X instructions.
-// __PPE42A__ and __PPE42X__ are defined by the ppe42 compiler. Earlier
-// versions of the compiler don't define them.
-#if !defined(__PPE42X__) && !defined(__PPE42A__)
-    #define __PPE42A__
+#if !defined(__PPE42X__)
+    #error P10 IOTA requires PPE42X instruction set.
 #endif
 
 #ifndef __ASSEMBLER__
@@ -102,6 +99,37 @@
 
 #ifdef __ASSEMBLER__
 // *INDENT-OFF*
+
+    ## ----------------------------------------------------------------------
+    ## The Interrupt Stack Conext layout for IOTA interrupts @see stcxcu/lcxu
+    ## ----------------------------------------------------------------------
+        .set    IOTA_CTX_BACK_CHAIN,  0x00 # Pointer to previous frame
+        .set    IOTA_CTX_LINKAGE,     0x04 # LR slot for called function
+        .set    IOTA_CTX_SIZE,        0x58 # Context size (88)
+    ## Additional IOTA context would go here if ever needed
+        .set    IOTA_CTX_CR,          IOTA_CTX_SIZE - 0x50
+        .set    IOTA_CTX_KERNEL_CTX,  IOTA_CTX_SIZE - 0x4c // SPRG0
+        .set    IOTA_CTX_GPR0,        IOTA_CTX_SIZE - 0x48
+        .set    IOTA_CTX_GPR1,        IOTA_CTX_SIZE - 0x44
+        .set    IOTA_CTX_GPR3,        IOTA_CTX_SIZE - 0x40
+        .set    IOTA_CTX_GPR4,        IOTA_CTX_SIZE - 0x3c
+        .set    IOTA_CTX_GPR5,        IOTA_CTX_SIZE - 0x38
+        .set    IOTA_CTX_GPR6,        IOTA_CTX_SIZE - 0x34
+        .set    IOTA_CTX_GPR7,        IOTA_CTX_SIZE - 0x30
+        .set    IOTA_CTX_GPR8,        IOTA_CTX_SIZE - 0x2c
+        .set    IOTA_CTX_GPR9,        IOTA_CTX_SIZE - 0x28
+        .set    IOTA_CTX_GPR10,       IOTA_CTX_SIZE - 0x24
+        .set    IOTA_CTX_XER,         IOTA_CTX_SIZE - 0x20
+        .set    IOTA_CTX_CTR,         IOTA_CTX_SIZE - 0x1c
+        .set    IOTA_CTX_SRR0,        IOTA_CTX_SIZE - 0x18
+        .set    IOTA_CTX_SRR1,        IOTA_CTX_SIZE - 0x14
+        .set    IOTA_CTX_GPR28,       IOTA_CTX_SIZE - 0x10
+        .set    IOTA_CTX_GPR29,       IOTA_CTX_SIZE - 0x0c
+        .set    IOTA_CTX_GPR30,       IOTA_CTX_SIZE - 0x08
+        .set    IOTA_CTX_GPR31,       IOTA_CTX_SIZE - 0x04
+        .set    IOTA_CTX_PREV_FRAME,  IOTA_CTX_SIZE - 0x00 // Don't touch
+        .set    IOTA_CTX_LR,          IOTA_CTX_SIZE + 0x04
+
 # halt ppe with panic code macro
 .macro _pk_panic, code
     tw  31,(\code)/256, (\code)%256
@@ -125,29 +153,18 @@
 # prior to setting up the call to and calling __iota_save_interrupt_state_and_schedule
 # Note: must be <=8 instructions!
 
-#ifdef __PPE42X__
 .macro __m_iota_interrupt_and_exception_handler, iota_schedule_reason
 # Creates Stack frame and saves CR,SPRG0,R0,R1,R3-R10,XER,CTR,SRR0,SRR1,R28-R31
-stcxtu  %r1,-88(%r1)
+stcxtu  %r1,-IOTA_CTX_SIZE(%r1)
 li      %r3, \iota_schedule_reason
 bl      _iota_schedule
-lcxu    %r1, 88(%r1)
+# modify stack copy of SRR1 (MSR), turn off WE
+lwz     %r3, IOTA_CTX_SRR1(%r1)
+rlwinm  %r3,%r3,0,14,12
+stw     %r3, IOTA_CTX_SRR1(%r1)
+lcxu    %r1, IOTA_CTX_SIZE(%r1)
 rfi
 .endm
-#else
-.macro __m_iota_interrupt_and_exception_handler, iota_schedule_reason
-# temporarily place r3 on the stack, without incrementing sp
-stw     %r3, _IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
-# load the pointer to the location of where to save machine state
-lwz     %r3, g_iota_curr_machine_state_ptr@sda21(0)
-# save d8
-stvd    %d8, _IOTA_SAVE_D8_OFFSET(%r3)
-mr      %r9, %r3
-li      %r3, \iota_schedule_reason
-b      __iota_save_interrupt_state_and_schedule
-.endm
-#endif //__PPE42X__
-
 
 // *INDENT-ON*
 #else
@@ -155,9 +172,9 @@ b      __iota_save_interrupt_state_and_schedule
 /// CouNT Leading Zeros Word
 #define cntlzw(x) \
     ({uint32_t __x = (x); \
-        uint32_t __lzw; \
-        asm volatile ("cntlzw %0, %1" : "=r" (__lzw) : "r" (__x)); \
-        __lzw;})
+    uint32_t __lzw; \
+    asm volatile ("cntlzw %0, %1" : "=r" (__lzw) : "r" (__x)); \
+    __lzw;})
 
 /// CouNT Leading Zeros : uint32_t
 static inline int

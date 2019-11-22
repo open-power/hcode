@@ -57,5 +57,6 @@ typedef struct pgpe_event_manager
 void pgpe_event_manager_init();
 void pgpe_event_manager_run();
 void* pgpe_event_manager_data_addr();
+void pgpe_event_manager_task_init();
 
 #endif //

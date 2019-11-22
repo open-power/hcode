@@ -65,24 +65,29 @@ __attribute__((weak)) void ext_handler(uint32_t task_idx)
     iota_uih_irq_vec_restore();
 }
 
-IOTA_BEGIN_IDLE_TASK_TABLE
+IOTA_BEGIN_INIT_TASK_TABLE
+IOTA_TASK(init_func0),
+          IOTA_TASK(init_func1)
+          IOTA_END_INIT_TASK_TABLE
+
+          IOTA_BEGIN_IDLE_TASK_TABLE
 { IOTA_IDLE_DISABLED, IOTA_NO_TASK },
 { IOTA_IDLE_DISABLED, IOTA_TASK(func0) }
 IOTA_END_IDLE_TASK_TABLE
 
 IOTA_BEGIN_TASK_TABLE
 IOTA_TASK(ext_handler),
-          IOTA_NO_TASK,
-          IOTA_NO_TASK,
-          IOTA_NO_TASK,
-          IOTA_NO_TASK,
-          IOTA_NO_TASK,
-          IOTA_NO_TASK,
-          IOTA_NO_TASK,
-          IOTA_NO_TASK,
-          IOTA_NO_TASK,
-          IOTA_NO_TASK
-          IOTA_END_TASK_TABLE;
+IOTA_NO_TASK,
+IOTA_NO_TASK,
+IOTA_NO_TASK,
+IOTA_NO_TASK,
+IOTA_NO_TASK,
+IOTA_NO_TASK,
+IOTA_NO_TASK,
+IOTA_NO_TASK,
+IOTA_NO_TASK,
+IOTA_NO_TASK
+IOTA_END_TASK_TABLE;
 
 __attribute__((weak)) int main()
 {

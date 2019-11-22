@@ -57,6 +57,10 @@ void pgpe_event_manager_upd_state(uint32_t status)
     G_pgpe_event_manager.pgpe_state_machine_status  = status;
 }
 
+void pgpe_event_manager_task_init()
+{
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_ACTIVE));
+}
 
 //
 //
@@ -64,18 +68,18 @@ void pgpe_event_manager_upd_state(uint32_t status)
 void pgpe_event_manager_run()
 {
 
-    iota_set_idle_task_state(IOTA_IDLE_DISABLED, 0);
 
-    PK_TRACE("Event Manager Init");
-    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_ACTIVE));
+    uint32_t done;
 
-    while(1)
+    do
     {
         // \\ \todo: Need way to avoid this switch. Better way might be to call
         // a function pointer which is updated state transition
         //  \\ \todo: Need a way to better check for events. Perhaps, make use of cntlzw instruction.
         //  That way can support upto 32 events. Will need to come up with events priority. Events
         //  priority can also be dependent on state.
+        done = 1;
+
         switch(G_pgpe_event_manager.pgpe_state_machine_status)
         {
             case PGPE_SM_INIT:
@@ -85,6 +89,12 @@ void pgpe_event_manager_run()
 
             case PGPE_SM_ACTIVE:
                 pgpe_event_manager_run_active();
+
+                if(!pgpe_pstate_is_at_target())
+                {
+                    done = 0;
+                }
+
                 break;
 
             case PGPE_SM_STOPPED:
@@ -104,6 +114,7 @@ void pgpe_event_manager_run()
                 break;
         }
     }
+    while(!done);
 }
 
 

@@ -57,6 +57,8 @@
 //To automatically disable an "IDLE" task after executing, set this to 1. (OPT)
 #define IOTA_AUTO_DISABLE_IDLE_TASKS  0
 
+#define IOTA_INIT_TASKS_ENABLE 1
+
 // Main "execution" stack size in bytes, must be multiple of 8
 #define IOTA_EXECUTION_STACK_SIZE  2048
 

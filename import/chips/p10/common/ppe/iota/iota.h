@@ -53,6 +53,10 @@
     #define IOTA_IDLE_TASKS_ENABLE 0
 #endif
 
+#if !defined(IOTA_INIT_TASKS_ENABLE)
+    #define IOTA_INIT_TASKS_ENABLE 0
+#endif
+
 /**
  * Run the main IOTA kernel loop
  * @note does not return
@@ -131,6 +135,20 @@ void iota_run()  __attribute__((noreturn));
 #define IOTA_FIT_HANDLER(function) g_iota_fit_handler \
         = IOTA_TIMER_HANDLER(function);
 
+//========== IOTA INIT TASKS ===================
+#if IOTA_INIT_TASKS_ENABLE
+
+#define IOTA_BEGIN_INIT_TASK_TABLE \
+    iotaInitTask g_iota_init_task_list[] \
+    SECTION(".sdata.g_iota_init_task_list") = {
+
+#define IOTA_END_INIT_TASK_TABLE \
+    }; \
+    uint32_t const g_iota_init_task_list_size \
+        = (uint32_t)(sizeof(g_iota_init_task_list)/sizeof(iotaInitTask));
+#endif
+
+//========== IOTA_ IDLE TASKS ================
 #if IOTA_IDLE_TASKS_ENABLE
 
 #define IOTA_BEGIN_IDLE_TASK_TABLE \
@@ -142,6 +160,7 @@ void iota_run()  __attribute__((noreturn));
         = (uint32_t)(sizeof(g_iota_idle_task_list)/sizeof(iotaIdleTask));
 #endif
 
+//======== IOTA EXTERNAL IRQ INTERRUPT TASKS =============
 #define IOTA_BEGIN_TASK_TABLE \
     iotaTaskFuncPtr g_iota_task_list[] SECTION(".sdata.g_iota_task_list") = {
 #define IOTA_END_TASK_TABLE \
@@ -177,28 +196,6 @@ void iota_run()  __attribute__((noreturn));
 
 typedef struct
 {
-#if defined(__PPE42A__)
-    uint32_t GPR0;
-    uint32_t GPR1;
-    uint32_t GPR4;
-    uint32_t GPR5;
-    uint32_t GPR6;
-    uint32_t GPR7;
-    uint32_t GPR8;
-    uint32_t GPR9;
-    uint32_t GPR28;
-    uint32_t GPR29;
-    uint32_t GPR30;
-    uint32_t GPR31;
-    uint32_t SRR0;
-    uint32_t SRR1;
-    uint32_t LR;
-    uint32_t CR;
-    uint32_t GPR3;
-    uint32_t GPR10;
-    uint32_t CTR;
-    uint32_t XER; // needs to be 8B aligned
-#else
     uint32_t back_chain;
     uint32_t next_lr;
     uint32_t CR;
@@ -221,7 +218,6 @@ typedef struct
     uint32_t GPR29;
     uint32_t GPR30;
     uint32_t GPR31;
-#endif
 } iotaMachineState;
 
 typedef void (*iotaTaskFuncPtr )( );
@@ -233,21 +229,13 @@ typedef struct
     iotaTaskFuncPtr function;
 } iotaIdleTask;
 
-#if defined(__PPE42A__)
+typedef iotaTaskFuncPtr iotaInitTask;
 
-    #define IOTA_STACK_DWORD_SIZE ((IOTA_EXECUTION_STACK_SIZE/8)+1)
-    extern iotaMachineState   g_iota_machine_state_stack[];
-    extern iotaMachineState* g_iota_curr_machine_state_ptr;
+#define MACHINE_STATE_CONTEXT_SIZE  sizeof(iotaMachineState)
+#define MACHINE_STATE_STACK_SIZE (IOTA_MAX_NESTED_INTERRUPTS * MACHINE_STATE_CONTEXT_SIZE)
+#define IOTA_STACK_DWORD_SIZE ((IOTA_EXECUTION_STACK_SIZE + MACHINE_STATE_STACK_SIZE)/8 + 1)
 
-#else
-
-    #define MACHINE_STATE_CONTEXT_SIZE  sizeof(iotaMachineState)
-    #define MACHINE_STATE_STACK_SIZE (IOTA_MAX_NESTED_INTERRUPTS * MACHINE_STATE_CONTEXT_SIZE)
-    #define IOTA_STACK_DWORD_SIZE ((IOTA_EXECUTION_STACK_SIZE + MACHINE_STATE_STACK_SIZE)/8 + 1)
-
-    extern uint32_t g_iota_curr_machine_state_ptr;
-
-#endif
+extern uint32_t g_iota_intr_depth_count;
 
 // IF IOTA_IDLE_TASKS_ENABLE,
 // This variable just becomes an interrupt level count to
@@ -258,18 +246,23 @@ extern uint64_t           g_iota_execution_stack[];
 extern uint64_t           g_iota_execution_stack_end;
 
 #if IOTA_IDLE_TASKS_ENABLE
+
     extern iotaIdleTask       g_iota_idle_task_list[];
     extern uint32_t const     g_iota_idle_task_list_size;
-    #if !defined(__PPE42A__)
-        // This variable just becomes an interrupt level count to determine when
-        // idle tasks can run.
-        extern uint32_t g_iota_curr_machine_state_ptr;
-    #endif
+
+#endif
+
+#if IOTA_INIT_TASKS_ENABLE
+
+    extern iotaInitTask     g_iota_init_task_list[];
+    extern uint32_t const   g_iota_init_task_list_size;
+
 #endif
 
 void _iota_boot();
 void _iota_schedule(uint32_t schedule_reason);
 void _iota_evaluate_idle_tasks();
+void  iota_run_init_tasks();
 
 extern void __iota_halt() __attribute__((noreturn));
 

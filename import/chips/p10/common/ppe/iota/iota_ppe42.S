@@ -39,73 +39,7 @@
 # This routine sets up and calls _zbm_schedule (C-function), upon which's
 # return the prior machine state is restored.
 
-.global g_iota_curr_machine_state_ptr
 .global _iota_schedule
-
-#if defined(__PPE42A__)
-.global __iota_save_interrupt_state_and_schedule
-__iota_save_interrupt_state_and_schedule:
-    # First, save off the original value of r3
-    lwz     %r8, _IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
-    stw     %r8, _IOTA_SAVE_R3_OFFSET(%r9)
-    # Save r10
-    stw     %r10, _IOTA_SAVE_R10_OFFSET(%r9)
-    # Save d0, d4, d6, d28, and d31
-    stvd    %d0, _IOTA_SAVE_D0_OFFSET(%r9)
-    stvd    %d4, _IOTA_SAVE_D4_OFFSET(%r9)
-    stvd    %d6, _IOTA_SAVE_D6_OFFSET(%r9)
-    stvd    %d28, _IOTA_SAVE_D28_OFFSET(%r9)
-    stvd    %d30, _IOTA_SAVE_D30_OFFSET(%r9)
-    # Piecemeal save srr0+srr1 and lr+cr
-    mfsrr0  %r4
-    mfsrr1  %r5
-    stvd    %d4, _IOTA_SAVE_SRR0_OFFSET(%r9)
-    mflr    %r4
-    mfcr    %r5
-    stvd    %d4, _IOTA_SAVE_LR_OFFSET(%r9)
-    mfctr   %r4
-    mfxer   %r5
-    stvd    %d4, _IOTA_SAVE_CTR_OFFSET(%r9)
-
-    # All state is saved, sp(r1) intact pointing to "Execution Stack"
-
-    # _iota_schedule(uint32_t schedule_reason)
-    # - schedule_reason is already in r3
-
-    bl      _iota_schedule
-
-    # Task completed, need to restore machine state now
-    # Get pointer to machine state
-    lwz      %r3, g_iota_curr_machine_state_ptr@sda21(0)
-    # Restore d0 first (need sp in r1)
-    lvd     %d0, _IOTA_SAVE_D0_OFFSET(%r3)
-    # Save the restore value of r3 to _IOTA_TEMPORARY_R3_STACK_OFFSET(sp)
-    lwz     %r4, _IOTA_SAVE_R3_OFFSET(%r3)
-    stw     %r4, _IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
-    # Restore d4, d6, d28, and d30
-    lvd     %d4, _IOTA_SAVE_D4_OFFSET(%r3)
-    lvd     %d6, _IOTA_SAVE_D6_OFFSET(%r3)
-    lvd     %d28, _IOTA_SAVE_D28_OFFSET(%r3)
-    lvd     %d30, _IOTA_SAVE_D30_OFFSET(%r3)
-    # Restore r10
-    lwz     %r10, _IOTA_SAVE_R10_OFFSET(%r3)
-    # Restore lr and cr
-    lvd     %d8, _IOTA_SAVE_LR_OFFSET(%r3)
-    mtlr    %r8
-    mtcr0   %r9
-    lvd     %d8, _IOTA_SAVE_CTR_OFFSET(%r3)
-    mtctr   %r8
-    mtxer   %r9
-    lvd     %d8, _IOTA_SAVE_SRR0_OFFSET(%r3)
-    mtsrr0  %r8
-    mtsrr1  %r9
-    # Restore d8
-    lvd     %d8, _IOTA_SAVE_D8_OFFSET(%r3)
-    # Restore r3
-    lwz     %r3, _IOTA_TEMPORARY_R3_STACK_OFFSET(%r1)
-
-    rfi
-#endif
 
 .global __iota_halt
 __iota_halt:
