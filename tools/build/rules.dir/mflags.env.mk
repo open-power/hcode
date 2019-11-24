@@ -39,11 +39,10 @@ endif
 
 # Location of the cross-compiler toolchain.
 UNAME = $(shell uname)
-DEVTOOL = $(shell cat /etc/redhat-release | grep "release 7")
-ifeq ($(DEVTOOL),)
-__EKB_PREFIX?=/opt/rh/devtoolset-2/root/usr/bin/
-else
+ifneq ($(wildcard /opt/rh/devtoolset-8/root/usr/bin),)
 __EKB_PREFIX?=/opt/rh/devtoolset-8/root/usr/bin/
+else
+__EKB_PREFIX?=/opt/rh/devtoolset-2/root/usr/bin/
 endif
 
 ifeq ($(UNAME),AIX)

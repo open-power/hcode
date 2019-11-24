@@ -61,6 +61,7 @@ P2P_SRCDIR=$(ROOTPATH)/chips/p9/procedures/ppe/tools/PowerPCtoPPE
 PK_TRACEPP=$(EXEPATH)/ppetracepp.exe
 THASH = $(ROOTPATH)/chips/p10/common/ppe/ppetrace/ppetracepp/tracehash.pl
 
+QME_CMNDIR=$(ROOTPATH)/../tools/imageProcs
 QME_SRCDIR=$(ROOTPATH)/chips/p10/procedures/ppe/qme
 PGPE_SRCDIR=$(ROOTPATH)/chips/p10/procedures/ppe/pgpe
 XGPE_SRCDIR=$(ROOTPATH)/chips/p10/procedures/ppe/xgpe

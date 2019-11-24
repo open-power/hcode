@@ -40,7 +40,7 @@ export EKBENVDIR=$TOOLSDIR/envsetup
 
 export UNAME=`uname -s`
 
-if [ "${OPENPOWER_BUILD}" = "" ]; then
+if [ "${OPENPOWER_BUILD}" == "" ]; then
 
 export CTEPATH=/afs/awd.austin.ibm.com/projects/cte
 
