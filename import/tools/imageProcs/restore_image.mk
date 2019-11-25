@@ -48,7 +48,7 @@ $(eval $(IMAGE)_FILE_SELF_SAVE_RESTORE=$(IMAGEPATH)/self_save_restore/self_save_
 #   - append operation as to other section that has to be finished first
 $(eval $(IMAGE)_DEPS_IMAGE              = $$($(IMAGE)_FILE_CPMR_HDR))
 $(eval $(IMAGE)_DEPS_CPMR_HDR           = $$($(IMAGE)_FILE_CPMR_HDR))
-$(eval $(IMAGE)_DEPS_CPMR_HDR          += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_CPMR_HDR          += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
 
 $(eval $(IMAGE)_DEPS_IMAGE             += $$($(IMAGE)_FILE_SELF_SAVE_RESTORE))
 $(eval $(IMAGE)_DEPS_SELF_SAVE_RESTORE  = $$($(IMAGE)_FILE_SELF_SAVE_RESTORE))
