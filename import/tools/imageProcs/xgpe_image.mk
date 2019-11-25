@@ -58,7 +58,7 @@ $(eval $(IMAGE)_FILE_AUX_TASK=$(IMAGEPATH)/xgpe_aux_task/xgpe_aux_task.bin)
 #   - all dependencies of previously appended sections or on raw image
 #   - append operation as to other section that has to be finished first
 $(eval $(IMAGE)_DEPS_XPMR_HDR =$$($(IMAGE)_FILE_XPMR_HDR))
-$(eval $(IMAGE)_DEPS_XPMR_HDR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_XPMR_HDR+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
 
 $(eval $(IMAGE)_DEPS_LVL1_BL =$$($(IMAGE)_FILE_LVL1_BL))
 $(eval $(IMAGE)_DEPS_LVL1_BL+=$$($(IMAGE)_DEPS_XPMR_HDR))
@@ -119,7 +119,7 @@ $(eval $(IMAGE)_FILE_HCODE=$$($(IMAGE)_DD_CONT_xgpe))
 #   - append operation as to other section that has to be finished first
 $(eval $(IMAGE)_DEPS_IMAGE     = $$($(IMAGE)_FILE_XPMR_HDR))
 $(eval $(IMAGE)_DEPS_XPMR_HDR  = $$($(IMAGE)_FILE_XPMR_HDR))
-$(eval $(IMAGE)_DEPS_XPMR_HDR += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_XPMR_HDR += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
 
 $(eval $(IMAGE)_DEPS_IMAGE    += $$($(IMAGE)_FILE_LVL1_BL))
 $(eval $(IMAGE)_DEPS_LVL1_BL   = $$($(IMAGE)_FILE_LVL1_BL))

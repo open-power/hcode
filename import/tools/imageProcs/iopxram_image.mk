@@ -44,7 +44,7 @@ $(eval $(IMAGE)_FILE_IOPFW=$(IMAGEPATH)/gen_iop_bin/iop_fw.bin)
 #   - append operation as to other section that has to be finished first
 $(eval $(IMAGE)_DEPS_IMAGE    = $$($(IMAGE)_FILE_IOPFW))
 $(eval $(IMAGE)_DEPS_IOPFW  = $$($(IMAGE)_FILE_IOPFW))
-$(eval $(IMAGE)_DEPS_IOPFW += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_IOPFW += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
 $(eval $(IMAGE)_DEPS_REPORT   = $$($(IMAGE)_DEPS_IOPFW))
 $(eval $(IMAGE)_DEPS_REPORT  += $$($(IMAGE)_PATH)/.$(IMAGE).append.iop_fw)
 
