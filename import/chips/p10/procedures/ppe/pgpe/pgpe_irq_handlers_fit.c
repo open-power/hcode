@@ -28,6 +28,7 @@
 #include "pgpe_header.h"
 #include "pgpe_pstate.h"
 #include "pgpe_occ.h"
+#include "pgpe_wov_ocs.h"
 
 uint32_t G_beacon_count_threshold;
 uint32_t G_beacon_count;
@@ -92,9 +93,15 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
     }
 }
 
-__attribute__((always_inline)) inline void handle_ocs()
+__attribute__((always_inline)) inline void handle_produce_wof()
 {
     pgpe_occ_produce_wof_i_v_values();
+}
+
+__attribute__((always_inline)) inline void handle_wov_ocs()
+{
+    pgpe_wov_ocs_determine_perf_loss();
+    pgpe_wov_ocs_update_dirty();
 }
 
 //  p9_pgpe_fit_handler
@@ -105,6 +112,13 @@ __attribute__((always_inline)) inline void handle_ocs()
 void pgpe_irq_fit_handler()
 {
     handle_occ_beacon();
-    handle_ocs();
+    handle_produce_wof();
+
+    if (pgpe_wov_ocs_is_ocs_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() || pgpe_wov_ocs_is_wov_overv_enabled())
+    {
+        handle_wov_ocs();
+
+    }
+
     mtspr(SPRN_TSR, TSR_FIS);
 }

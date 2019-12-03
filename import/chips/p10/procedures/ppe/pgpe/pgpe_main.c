@@ -34,6 +34,7 @@
 #include "pgpe_resclk.h"
 #include "pgpe_thr_ctrl.h"
 #include "pgpe_occ.h"
+#include "pgpe_wov_ocs.h"
 
 IOTA_BEGIN_IDLE_TASK_TABLE
 { IOTA_IDLE_ENABLED, IOTA_TASK(pgpe_event_manager_run) }
@@ -64,6 +65,7 @@ int main()
     pgpe_resclk_init();
     pgpe_thr_ctrl_init();
     pgpe_occ_init();
+    pgpe_wov_ocs_init();
 
     PK_TRACE("PGPE Booted");
 

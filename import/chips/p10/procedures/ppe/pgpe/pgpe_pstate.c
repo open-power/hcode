@@ -57,7 +57,6 @@ void pgpe_pstate_init()
 
     G_pgpe_pstate.pstate_status = PSTATE_STATUS_DISABLED;
     G_pgpe_pstate.wof_status = WOF_STATUS_DISABLED;
-    G_pgpe_pstate.wov_status = WOV_STATUS_DISABLED;
     G_pgpe_pstate.pmcr_owner = 0xFFFFFFFF;
 
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);

@@ -35,6 +35,7 @@
 #include "p10_scom_eq_7.H"
 #include "pgpe_resclk.h"
 #include "pgpe_thr_ctrl.h"
+#include "pgpe_wov_ocs.h"
 
 //Local Functions
 void pgpe_process_pstate_start();
@@ -245,6 +246,9 @@ void pgpe_process_pstate_start()
     //Setup DDS delay values
     //Enable the DDS across all good cores
 
+    //Enable WOV OCS
+    pgpe_wov_ocs_enable();
+
     //Change pstate status to START
     pgpe_pstate_set(pstate_status, PSTATE_STATUS_ENABLED);
 
@@ -267,8 +271,8 @@ void pgpe_process_pstate_stop()
     //Disable WOF
     pgpe_process_wof_disable();
 
-    //\todo RTC: 214485
-    //Disable WOV(undervolting/overvolting)
+    //Disable WOV and OCS
+    pgpe_wov_ocs_disable();
 
     //Change pstate status to STOP
     pgpe_pstate_set(pstate_status, PSTATE_STATUS_DISABLED);
