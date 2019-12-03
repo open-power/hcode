@@ -46,13 +46,6 @@ enum WOF_STATUS
     WOF_STATUS_ENABLED      =   0x00000001
 };
 
-enum WOV_STATUS
-{
-    WOV_STATUS_DISABLED             =   0xFFFFFFFF, //Not using zero
-    WOV_STATUS_OVERVOLT_ENABLED     =   0x00000001, //bit field. Over/Undervolt both can be enabled
-    WOV_STATUS_UNDERVOLT_ENABLED    =   0x00000002  //bit field. Over/Undervolt both can be enabled
-};
-
 typedef enum CLIP_TYPE
 {
     CLIP_MAX        = 0x1,
@@ -63,7 +56,6 @@ typedef struct pgpe_pstate
 {
     uint32_t pstate_status;
     uint32_t wof_status;
-    uint32_t wov_status;
     uint32_t pmcr_owner;
     uint32_t ps_request[MAX_QUADS];
     uint32_t sort_core_count;

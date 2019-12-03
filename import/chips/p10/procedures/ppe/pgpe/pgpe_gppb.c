@@ -37,10 +37,11 @@ GlobalPstateParmBlock_t* G_gppb;
 //
 void pgpe_gppb_init()
 {
-    PK_TRACE("PGP Init");
+    PK_TRACE("GPPB Init");
+
     void* gppb_sram_offset = (void*)G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
     G_gppb = (GlobalPstateParmBlock_t*)gppb_sram_offset;
-
+    PK_TRACE("GPPB: Init G_gppb=0x%x", (uint32_t)G_gppb);
 
     pgpe_gppb_pstate_tbl();
     pgpe_gppb_occ_tbl();

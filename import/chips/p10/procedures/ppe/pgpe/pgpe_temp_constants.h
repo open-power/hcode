@@ -25,7 +25,7 @@
 #ifndef __PGPE_TEMP_CONSTANTS_H__
 #define __PGPE_TEMP_CONSTANTS_H__
 
-#define GPPB_SRAM_ADDR              0xfff2a000
+#define GPPB_SRAM_ADDR              0xfff29000
 #define OCC_SHARED_SRAM_ADDR        0xfff2c000
 
 #define PGPE_AUX_TASK_SIZE          2*1024

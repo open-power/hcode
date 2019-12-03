@@ -287,11 +287,15 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
 
 void pgpe_avsbus_init()
 {
-    //Initialize VDD
+    PK_TRACE("VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
+             pgpe_gppb_get(avs_bus_topology.vdn_avsbus_num), pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num));
     pgpe_avsbus_init_bus(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num));
 
     //Initialize VDN
     pgpe_avsbus_init_bus(pgpe_gppb_get(avs_bus_topology.vdn_avsbus_num));
+
+    //Initialize VCS
+    pgpe_avsbus_init_bus(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num));
 }
 
 void pgpe_avsbus_init_bus(uint32_t bus_num)
@@ -341,6 +345,8 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
         PK_TRACE_ERR("AVS_INIT: DriveIdleFrame FAIL");
         //\todo Determine what to do here in P10. In P9, we would just halt PGPE
     }
+
+    PK_TRACE("AVS_INIT: Initialized bus_num=0x%x", bus_num);
 }
 
 void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv)

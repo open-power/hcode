@@ -45,7 +45,9 @@ PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_dpll.c \
 				pgpe_dds.c \
 				pgpe_resclk.c \
-				pgpe_thr_ctrl.c 
+				pgpe_thr_ctrl.c \
+				pgpe_wov_ocs.c
+
 
 PGPE-CXX-SOURCES = pgpe_opCodes.C
 

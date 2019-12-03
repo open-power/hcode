@@ -40,6 +40,7 @@ void pgpe_fake_boot_gppb()
     uint32_t i, j = 0;
     void* gppb_sram_offset = (void*)GPPB_SRAM_ADDR;
     gppb = (GlobalPstateParmBlock_t*)gppb_sram_offset;
+    PK_TRACE("FK_BOOT:G_gppb=0x%x", (uint32_t)gppb);
 
     gppb->magic.value  = 0x46414b4500000000ULL;
     gppb->reference_frequency_khz = 3400000;
@@ -128,6 +129,11 @@ void pgpe_fake_boot_gppb()
     gppb->ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD] = 50;
     gppb->ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS] = 50;
 
+    gppb->avs_bus_topology.vdd_avsbus_num = 0;
+    gppb->avs_bus_topology.vdn_avsbus_num = 1;
+    gppb->avs_bus_topology.vcs_avsbus_num = 2;
+    gppb->avs_bus_topology.vio_avsbus_num = 3;
+
     PK_TRACE("PGPE Fake Boot Gppb End");
 }
 
@@ -156,7 +162,7 @@ void pgpe_fake_boot_pgpe_header()
 #endif
     //timebase_hz
     //pgpe_hcode_length
-    pgpe_header->g_pgpe_hcode_length = 0xA000;
+    pgpe_header->g_pgpe_hcode_length = 0x9000;
     //GPPB memory offset
     //GPPB length
     //Generated Pstate tbl memory offset
