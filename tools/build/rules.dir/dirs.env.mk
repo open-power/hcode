@@ -27,9 +27,6 @@
 
 # Pick up fapi2 makefiles.
 ifeq ($(UNAME),Linux)
-MAKEFILE_PATH += $(ROOTPATH)/hwpf/fapi2/src
-MAKEFILE_PATH += $(ROOTPATH)/hwpf/fapi2/tools
-
 # Include proc_scomt
 MAKEFILE_PATH += $(ROOTPATH)/chips/common/utils/scomt
 
@@ -42,25 +39,10 @@ MAKEFILE_PATH += $(ROOTPATH)/tools/genOverrideImage/test/wrapper
 MAKEFILE_PATH += $(ROOTPATH)/generic/memory/lib
 endif
 
-# Pick up procedure, test, wrapper makefiles.
-EKB_CHIP_UNITS = $(foreach chip,$(CHIPS),$(wildcard $(ROOTPATH)/chips/$(chip)/procedures/hwp/*))
-
-
-MAKEFILE_PATH += $(EKB_CHIP_UNITS)
-MAKEFILE_PATH += $(addsuffix /tests,$(EKB_CHIP_UNITS))
-MAKEFILE_PATH += $(addsuffix /wrapper,$(EKB_CHIP_UNITS))
-MAKEFILE_PATH += $(addsuffix /lib,$(EKB_CHIP_UNITS))
-
 # Pick up core IPL image APIs and core IPL image build tools
 MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(wildcard $(ROOTPATH)/chips/$(chip)/utils/imageProcs))
 MAKEFILE_PATH += $(ROOTPATH)/tools/imageProcs
 MAKEFILE_PATH += $(ROOTPATH)/../tools/imageProcs
-
-# Pick up utility, wrapper makefiles
-MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(ROOTPATH)/chips/$(chip)/utils)
-#MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(ROOTPATH)/chips/$(chip)/utils/sbeUtils)
-#MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(ROOTPATH)/chips/$(chip)/utils/wrapper)
-#MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(ROOTPATH)/chips/$(chip)/utils/FabricTraceFormatter)
 
 ifeq ($(PROJECT_NAME),p9)
 # Pick up VBU specific procedure makefiles
@@ -69,7 +51,6 @@ endif
 
 ifeq ($(PROJECT_NAME),p10)
 MAKEFILE_PATH += $(ROOTPATH)/chips/p10/common/ppe/ppetrace/ppetracepp
-#MAKEFILE_PATH += $(ROOTPATH)/generic/memory/lib
 endif
 
 # Pick up scominfo code
@@ -107,14 +88,4 @@ MAKEFILE_PATH += $(ROOTPATH)/chips/p10/procedures/ppe/xgpe/boot
 MAKEFILE_PATH += $(ROOTPATH)/chips/p10/procedures/utils/stopreg/
 endif
 
-# Pick up core IPL image APIs and core IPL image build tools
-#MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(wildcard $(ROOTPATH)/chips/$(chip)/utils/imageProcs))
-#MAKEFILE_PATH += $(ROOTPATH)/tools/imageProcs
-
 endif
-
-#We intend to build only STOP API Tool on AIX. Code in any other path should not compile.
-#MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(ROOTPATH)/chips/$(chip)/procedures/hwp/pm/tools/stopApi)
-#MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(ROOTPATH)/chips/$(chip)/procedures/hwp/pm/tools/stop_recovery/)
-#MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(ROOTPATH)/chips/$(chip)/procedures/hwp/pm/tools/extHom)
-#MAKEFILE_PATH += $(foreach chip,$(CHIPS),$(ROOTPATH)/chips/$(chip)/procedures/hwp/pm/tools/err_Injector)
