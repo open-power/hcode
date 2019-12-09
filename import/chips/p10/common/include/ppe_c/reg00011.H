@@ -2151,86 +2151,86 @@ fapi_try_exit:
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& SET_CPMS_WPMR_PITCH_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(CPMS_WPMR));
 #endif
-    return o_data.insertFromRight<CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE,
+    return o_data.insertFromRight<CPMS_WPMR_PITCH_INTERRUPT_ENABLE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE(const uint64_t i_data,
+static inline fapi2::buffer<uint64_t>& SET_CPMS_WPMR_PITCH_INTERRUPT_ENABLE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(CPMS_WPMR));
 #endif
-    return o_data.insertFromRight<CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE,
+    return o_data.insertFromRight<CPMS_WPMR_PITCH_INTERRUPT_ENABLE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& SET_CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& o_data)
+static inline fapi2::buffer<uint64_t>& SET_CPMS_WPMR_PITCH_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(CPMS_WPMR));
 #endif
-    return o_data.setBit<CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE>();
+    return o_data.setBit<CPMS_WPMR_PITCH_INTERRUPT_ENABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& o_data)
+static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_WPMR_PITCH_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(CPMS_WPMR));
 #endif
-    return o_data.clearBit<CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE>();
+    return o_data.clearBit<CPMS_WPMR_PITCH_INTERRUPT_ENABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
 
-static inline fapi2::buffer<uint64_t>& GET_CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& i_data,
+static inline fapi2::buffer<uint64_t>& GET_CPMS_WPMR_PITCH_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(CPMS_WPMR));
 #endif
-    return i_data.extractToRight<CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE,
+    return i_data.extractToRight<CPMS_WPMR_PITCH_INTERRUPT_ENABLE,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
 
-static inline bool GET_CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& i_data)
+static inline bool GET_CPMS_WPMR_PITCH_INTERRUPT_ENABLE(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::chkReg(CPMS_WPMR));
 #endif
-    return i_data.getBit<CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE>();
+    return i_data.getBit<CPMS_WPMR_PITCH_INTERRUPT_ENABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_DONE_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("Invalid dial access CPMS_WPMR_PITCH_INTERRUPT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
