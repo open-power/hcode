@@ -44,6 +44,8 @@
 //------------------------------------------------------------------------------
 
 #include "p10_hcd_core_vmin_enable.H"
+#include "p10_hcd_mma_poweroff.H"
+#include "p10_hcd_mma_stopclocks.H"
 #include "p10_hcd_common.H"
 
 #ifdef __PPE_QME
@@ -86,7 +88,15 @@ p10_hcd_core_vmin_enable(
 
     FAPI_INF(">>p10_hcd_core_vmin_enable");
 
-    //TODO 1. Clock & Power off the MMA if not already.
+    FAPI_DBG("Clock Off MMA before enabling Vmin");
+    FAPI_TRY( p10_hcd_mma_stopclocks( i_target ) );
+
+#ifndef POWER_LOSS_DISABLE
+
+    FAPI_DBG("Power Off MMA before enabling Vmin");
+    FAPI_TRY( p10_hcd_mma_poweroff( i_target ) );
+
+#endif
 
     FAPI_DBG("Assert VDD_PFET_REGULATION_FINGER_EN via CPMS_CL2_PFETCNTL[8]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_OR, MMIO_1BIT(8) ) );

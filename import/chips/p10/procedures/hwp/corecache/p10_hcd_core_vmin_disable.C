@@ -44,6 +44,9 @@
 //------------------------------------------------------------------------------
 
 #include "p10_hcd_core_vmin_disable.H"
+#include "p10_hcd_mma_poweron.H"
+#include "p10_hcd_mma_scaninit.H"
+#include "p10_hcd_mma_startclocks.H"
 #include "p10_hcd_common.H"
 
 #ifdef __PPE_QME
@@ -151,6 +154,20 @@ p10_hcd_core_vmin_disable(
                 .set_CPMS_CL2_PFETSTAT(l_mmioData)
                 .set_CORE_TARGET(i_target),
                 "Vmin Disable VDD Pfet Enable Timeout");
+
+#ifndef POWER_LOSS_DISABLE
+
+    FAPI_DBG("Power On MMA after disabling Vmin");
+    FAPI_TRY( p10_hcd_mma_poweron( i_target ) );
+
+    FAPI_DBG("Scaninit MMA after disabling Vmin");
+    FAPI_TRY( p10_hcd_mma_scaninit( i_target ) );
+
+
+#endif
+
+    FAPI_DBG("Clock On MMA after disabling Vmin");
+    FAPI_TRY( p10_hcd_mma_startclocks( i_target ) );
 
 fapi_try_exit:
 

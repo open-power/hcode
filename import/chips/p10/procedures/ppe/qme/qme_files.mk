@@ -84,6 +84,12 @@ CORE-CPP-SOURCES  = p10_hcd_l2_purge.C             \
                     p10_hcd_core_scominit.C        \
                     p10_hcd_core_scom_customize.C  
 
+MMA-CPP-SOURCES = p10_hcd_mma_poweroff.C           \
+                  p10_hcd_mma_poweron.C            \
+                  p10_hcd_mma_stopclocks.C         \
+                  p10_hcd_mma_startclocks.C        \
+                  p10_hcd_mma_scaninit.C           
+
 
 QME_OBJECTS    = $(QME-CPP-SOURCES:.C=.o) \
                  $(QME-C-SOURCES:.c=.o)   \
@@ -93,6 +99,7 @@ QME_OBJECTS    = $(QME-CPP-SOURCES:.C=.o) \
 HWP_OBJECTS    = $(SUBMODULE-CPP-SOURCES:.C=.o) \
                  $(SCAN-CPP-SOURCES:.C=.o)      \
                  $(CACHE-CPP-SOURCES:.C=.o)     \
-                 $(CORE-CPP-SOURCES:.C=.o)      
+                 $(CORE-CPP-SOURCES:.C=.o)      \
+                 $(MMA-CPP-SOURCES:.C=.o) 
 
 endif
