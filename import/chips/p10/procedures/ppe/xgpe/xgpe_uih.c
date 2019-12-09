@@ -112,6 +112,11 @@ void __ext_irq_resume()
         out32( G_OCB_OIMR1_OR,
                (uint32_t)(ext_irq_vectors_gpe[g_oimr_stack[g_oimr_stack_ctr]][IDX_MASK_VEC] |
                           g_oimr_override));
+        out32( G_OCB_OIMR0_CLR,
+               g_oimr_override >> 32);
+        out32( G_OCB_OIMR1_CLR,
+               g_oimr_override);
+
         // Restore the prty level tracker to the task that was interrupted, if any.
         g_current_prty_level = g_oimr_stack[g_oimr_stack_ctr];
         --g_oimr_stack_ctr;
