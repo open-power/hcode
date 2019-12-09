@@ -42,7 +42,7 @@ extern uint32_t G_OCB_OCCFLG3_CLR;
 extern uint32_t G_OCB_CCSR;
 extern uint32_t G_OCB_OPITFSV;
 extern uint32_t G_OCB_OISR0_CLR;
-extern void xgpe_irq_fit_init();
+extern uint64_t g_oimr_override;
 
 //This task gets triggered when OISR bits are
 //set as mentioned below
@@ -118,6 +118,8 @@ void xgpe_gpe3_func_handler()
     }
 
     xgpe_send_db1_to_qme(l_db1_data);
+    g_oimr_override |= BIT64(11);
+    g_oimr_override |= BIT64(31);
 }
 
 ///////////////////////////////////////////////
@@ -206,7 +208,10 @@ void xgpe_irq_pcb_typef_handler()
 
     //Clear OISR0[PCB_TYPE_F]
     out32(G_OCB_OISR0_CLR, BIT32(31));
+    g_oimr_override |= BIT64(31);
+    g_oimr_override |= BIT64(11);
 }
+
 
 void xgpe_send_db1_to_qme(uint64_t i_db1_data)
 {
