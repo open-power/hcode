@@ -58,6 +58,10 @@ int main()
     // Initialize the Stop state and Pstate tasks
     qme_init();
 
+    // TODO:  Temporary disablement
+    PK_TRACE("Workaround: disable QME_POWER_LOSS_ESL_CHECK_ENABLE" );
+    G_qme_record.hcode_func_enabled &= ~QME_POWER_LOSS_ESL_CHECK_ENABLE;
+
 #if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)
 
     uint32_t TCR_VAL = 0;
