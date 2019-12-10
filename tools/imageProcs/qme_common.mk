@@ -169,7 +169,7 @@ $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 	| xargs -i printf "%d" 0x{})
 
 GIT_HEAD := $(ROOTPATH)/../tools/build/head_commit.txt
-GIT_HEAD_HASH := $(shell git log -n1 --pretty=format:%b | egrep Change-Id \
+GIT_HEAD_HASH := $(shell git log -n1 --pretty=format:%b | egrep Change-Id | head -1 \
         | cut -f2 -d' ' | cut -c2-6)
 ifeq ($(GIT_HEAD_HASH),)
 	GIT_HEAD_HASH := $(shell cat ${GIT_HEAD})
