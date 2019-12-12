@@ -46,7 +46,7 @@ $(eval $(IMAGE)_FILE_RINGS=$(RINGFILEPATH)/$3.$1.sbe.rings.bin)
 # We only need to add the .rings section here (the rest will come from PPE repo side)
 $(eval $(IMAGE)_DEPS_IMAGE   = $$($(IMAGE)_FILE_RINGS))
 $(eval $(IMAGE)_DEPS_RINGS   = $$($(IMAGE)_FILE_RINGS))
-$(eval $(IMAGE)_DEPS_RINGS  += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_RINGS  += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
 $(eval $(IMAGE)_DEPS_REPORT  = $$($(IMAGE)_DEPS_RINGS))
 $(eval $(IMAGE)_DEPS_REPORT += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
 

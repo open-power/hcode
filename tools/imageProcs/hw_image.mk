@@ -59,7 +59,7 @@ $(eval $(IMAGE)_FILE_DYNAMIC = $(RINGFILEPATH)/$3.$1.dynamic.bin)
 #   - append operation as to other section that has to be finished first
 $(eval $(IMAGE)_DEPS_IMAGE     = $(IMAGEPATH)/sbe_image/.$3.$1.sbe_image.bin.built)
 $(eval $(IMAGE)_DEPS_SBE       = $(IMAGEPATH)/sbe_image/.$3.$1.sbe_image.bin.built)
-$(eval $(IMAGE)_DEPS_SBE      += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_SBE      += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
 
 $(eval $(IMAGE)_DEPS_IMAGE    += $(IMAGEPATH)/qme_image/.$3.$1.qme_image.bin.built)
 $(eval $(IMAGE)_DEPS_QME       = $(IMAGEPATH)/qme_image/.$3.$1.qme_image.bin.built)

@@ -54,7 +54,7 @@ $(eval $(IMAGE)_FILE_RINGS=$(RINGFILEPATH)/$3.$1.qme.rings.bin)
 # - all dependencies of previously appended sections or on raw image
 # - append operation as to other section that has to be finished first
 $(eval $(IMAGE)_DEPS_LVL1_BL =$$($(IMAGE)_FILE_LVL1_BL))
-$(eval $(IMAGE)_DEPS_LVL1_BL+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_LVL1_BL+=$$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
 
 $(eval $(IMAGE)_DEPS_LVL2_BL =$$($(IMAGE)_FILE_LVL2_BL))
 $(eval $(IMAGE)_DEPS_LVL2_BL+=$$($(IMAGE)_DEPS_LVL1_BL))

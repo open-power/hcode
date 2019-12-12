@@ -46,7 +46,7 @@ $(eval $(IMAGE)_FILE_NV=$(IMAGEPATH)/nv/nv.bin)
 #   - append operation as to other section that has to be finished first
 $(eval $(IMAGE)_DEPS_IMAGE    = $$($(IMAGE)_FILE_IOO))
 $(eval $(IMAGE)_DEPS_IOO      = $$($(IMAGE)_FILE_IOO))
-$(eval $(IMAGE)_DEPS_IOO     += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
+$(eval $(IMAGE)_DEPS_IOO     += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
 
 $(eval $(IMAGE)_DEPS_IMAGE   += $$($(IMAGE)_FILE_MEMREGS))
 $(eval $(IMAGE)_DEPS_MEMREGS  = $$($(IMAGE)_FILE_MEMREGS))

@@ -53,10 +53,11 @@ $2/.$1.normalize.bin.built : $2/$1_temp.bin $(EXEPATH)/ipl_image_tool.exe
 		$(call XIP_NORMALIZE,$2/$1_temp.bin) && \
 		cp $2/$1_temp.bin $2/$1.bin && touch $$@
 
-$(call XIP_TOOL,set,build_date,$2/.$1.normalize.bin.built,`date +%Y%m%d`)
-$(call XIP_TOOL,set,build_time,$2/.$1.setbuild_date,`date +%H%M`)
-$(call XIP_TOOL,set,build_user,$2/.$1.setbuild_time,`id -un`)
-$(call XIP_TOOL,set,build_host,$2/.$1.setbuild_user,`hostname`)
+$(call XIP_TOOL,set,build_date,       $2/.$1.normalize.bin.built,`date +%Y%m%d`)
+$(call XIP_TOOL,set,build_time,       $2/.$1.setbuild_date,`date +%H%M`)
+$(call XIP_TOOL,set,build_user,       $2/.$1.setbuild_time,`id -un`)
+$(call XIP_TOOL,set,build_host,       $2/.$1.setbuild_user,`hostname`)
+$(call XIP_TOOL,set,build_head_commit,$2/.$1.setbuild_host,`cat $(ROOTPATH)/../tools/build/head_commit.txt | grep Commit-Id: | cut -c11-`)
 
 $2/.$1.bin.built : $2/.$1.normalize.bin.built $$($1_TARGETS)
 		$(C2) "    GEN        $$(@F)"
