@@ -253,6 +253,9 @@ qme_stop_entry()
                    ( BIT32(4) | BIT32(22) ) );
 
             qme_stop2_abort_cleanup(G_qme_record.c_l2_purge_abort_targets);
+
+//            MARK_TAG( G_qme_record.c_l2_purge_abort_targets, SE_L2_PURGE_ABORT_DONE )
+            G_qme_record.c_l2_purge_abort_targets = 0;
         }
 
         //===============//
@@ -269,7 +272,14 @@ qme_stop_entry()
 
         //===============//
 
-        MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_L2_TLBIE_QUIESCE )
+        MARK_TAG( (G_qme_record.c_stop2_enter_targets & (~G_qme_record.c_l2_purge_catchup_targets)), SE_L2_TLBIE_QUIESCE )
+
+        if (G_qme_record.c_l2_purge_catchup_targets)
+        {
+//            MARK_TAG( G_qme_record.c_l2_purge_catchup_targets, SE_L2_TLBIE_QUIESCE_CATCHUP )
+
+            G_qme_record.c_l2_purge_catchup_targets = 0;
+        }
 
         p10_hcd_l2_tlbie_quiesce(core_target);
 
@@ -291,6 +301,8 @@ qme_stop_entry()
                    ( BIT32(4) | BITS32(7, 2) | BIT32(22) ) );
 
             qme_stop2_abort_cleanup(G_qme_record.c_ncu_purge_abort_targets);
+//            MARK_TAG( G_qme_record.c_ncu_purge_abort_targets, SE_NCU_PURGE_ABORT_DONE )
+            G_qme_record.c_ncu_purge_abort_targets = 0;
         }
 
         //===============//
