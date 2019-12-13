@@ -27,8 +27,6 @@
 
 # Pick up fapi2 makefiles.
 ifeq ($(UNAME),Linux)
-# Include proc_scomt
-MAKEFILE_PATH += $(ROOTPATH)/chips/common/utils/scomt
 
 ifeq ($(PROJECT_NAME),p9)
 MAKEFILE_PATH += $(ROOTPATH)/chips/p9/procedures/utils/fir_checking

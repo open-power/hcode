@@ -73,14 +73,14 @@ FAPI2_PATH = $(ROOTPATH)/hwpf/fapi2
 FAPI2_PLAT_INCLUDE += $(FAPI2_PATH)/include
 
 # FAPI2 paths from Cronus.
-FAPI2_PLAT_INCLUDE += $(ECMD_PLAT_INCLUDE)
-FAPI2_PLAT_INCLUDE += $(CTEPATH)/tools/ecmd/$(ECMD_RELEASE)/ext/fapi2/capi
-FAPI2_PLAT_INCLUDE += $(FAPI2_PATH)/include/plat
-FAPI2_PLAT_LIB = $(ECMD_PLAT_LIB)
-FAPI2_SCRIPT_PATH += \
-	$(CTEPATH)/tools/ecmd/$(ECMD_RELEASE)/ext/fapi2/capi/scripts
+#FAPI2_PLAT_INCLUDE += $(ECMD_PLAT_INCLUDE)
+#FAPI2_PLAT_INCLUDE += $(CTEPATH)/tools/ecmd/$(ECMD_RELEASE)/ext/fapi2/capi
+#FAPI2_PLAT_INCLUDE += $(FAPI2_PATH)/include/plat
+#FAPI2_PLAT_LIB = $(ECMD_PLAT_LIB)
+#FAPI2_SCRIPT_PATH += \
+#	$(CTEPATH)/tools/ecmd/$(ECMD_RELEASE)/ext/fapi2/capi/scripts
 
 # Extra libraries to link against for Cronus.
-FAPI2_REQUIRED_LIBS += $(ECMD_REQUIRED_LIBS)
-FAPI2_REQUIRED_LIBS += $(FAPI2_PLAT_LIB)/fapi2ClientCapi.a
-FAPI2_REQUIRED_LIBS += $(FAPI2_PLAT_LIB)/libfapi2.so
+#FAPI2_REQUIRED_LIBS += $(ECMD_REQUIRED_LIBS)
+#FAPI2_REQUIRED_LIBS += $(FAPI2_PLAT_LIB)/fapi2ClientCapi.a
+#FAPI2_REQUIRED_LIBS += $(FAPI2_PLAT_LIB)/libfapi2.so
