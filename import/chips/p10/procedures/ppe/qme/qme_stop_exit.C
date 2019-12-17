@@ -114,7 +114,7 @@ qme_stop_report_pls_srr1(uint32_t core_target)
                 {
                     PK_TRACE_ERR("ERROR: Core[%x] Thread[%x] Detected in Power Loss State while ESL=0. HALT QME!",
                                  c_loop, t_offset);
-                    IOTA_PANIC(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED);
+                    //IOTA_PANIC(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED);
                 }
             }
             else
@@ -341,6 +341,7 @@ qme_stop_exit()
         p10_hcd_cache_initf(core_target);
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CACHE_SCANED )
+
 
         //===============//
 

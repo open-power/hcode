@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -55,7 +55,7 @@ fapi2::ReturnCode getRS4ImageFromTor(
                     QME_SCOM_CONTROLS i_scomOp,
                     const fapi2::RingMode i_ringMode )
 {
-    FAPI_DBG( ">> getRS4ImageFromTor" );
+    FAPI_INF( ">> getRS4ImageFromTor" );
     uint32_t l_torHdrSize       =   sizeof( TorHeader_t );
     uint32_t l_torVersion       =   ((TorHeader_t*)i_pChipletSectn)->version;
     uint32_t* l_pSectnTor       =   (uint32_t *)( i_pChipletSectn + l_torHdrSize );
@@ -81,8 +81,8 @@ fapi2::ReturnCode getRS4ImageFromTor(
                  .set_RING_ID( i_ringId ),
                  "Invalid Ring Id 0x%04x", i_ringId );
 
-    l_torOffset     =   ( INSTANCE_RING_MASK    &  ( RING_PROPERTIES[(uint8_t)i_ringId].idxRing ) );
-    l_ringType      =   ( INSTANCE_RING_MARK    &  ( RING_PROPERTIES[(uint8_t)i_ringId].idxRing ) ) ?
+    l_torOffset     =   ( INSTANCE_RING_MASK    &  ( RING_PROPERTIES[(uint16_t)i_ringId].idxRing ) );
+    l_ringType      =   ( INSTANCE_RING_MARK    &  ( RING_PROPERTIES[(uint16_t)i_ringId].idxRing ) ) ?
                         INSTANCE_RING : COMMON_RING;
 
     l_pChipletData  =   (ChipletData_t*)&EQ::g_chipletData;
@@ -107,6 +107,7 @@ fapi2::ReturnCode getRS4ImageFromTor(
        // So offset to given chiplet specific ring is
        // Offset = (1) * 2
        l_pRingTor   +=   ( ( l_pChipletData->numInstanceRings * ( l_corePos >> 2 ) ) + l_torOffset );
+       FAPI_INF( "Core Position 0x%04", l_corePos );
     }
     else
     {
@@ -121,7 +122,7 @@ fapi2::ReturnCode getRS4ImageFromTor(
         l_pRs4  +=  rev_16(*l_pRingTor);
         CompressedScanData* l_pRingHdr     =   (CompressedScanData*) l_pRs4;
 
-        FAPI_INF( "Ring Id 0x%04x", rev_16(l_pRingHdr->iv_ringId) );
+        FAPI_INF( "Ring Id 0x%04x Type 0x%02x", rev_16(l_pRingHdr->iv_ringId), l_pRingHdr->iv_type );
 
         if ( RS4_IV_TYPE_CMSK_CMSK  == ( l_pRingHdr->iv_type & RS4_IV_TYPE_CMSK_MASK ))
         {
@@ -129,19 +130,17 @@ fapi2::ReturnCode getRS4ImageFromTor(
         }
         else if( RS4_IV_TYPE_CMSK_NON_CMSK == ( l_pRingHdr->iv_type & RS4_IV_TYPE_CMSK_MASK ))
         {
-            l_rs4Type   =   STUMPED_RING;
-        }
-        else
-        {
             l_rs4Type   =   REGULAR;
         }
+
+        //TODO Need clarification on STUMP rings
 
         FAPI_TRY( p10_putRingUtils( i_target, l_pRs4, i_scomOp, l_rs4Type, i_ringMode ),
                   "QME Putring Failed For Ring 0x%04x",  i_ringId );
     }
 
 fapi_try_exit:
-    FAPI_DBG( "<< getRS4ImageFromTor" );
+    FAPI_INF( "<< getRS4ImageFromTor" );
     return fapi2::current_err;
 }
 

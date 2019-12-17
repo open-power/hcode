@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -38,15 +38,19 @@
 #include <p10_hcd_common.H>
 #include <p10_ringId.H>
 #include <p10_scom_eq_1.H>
+#include <p10_scom_eq_2.H>
+#include <p10_scom_eq_3.H>
 #include <p10_scom_eq_8.H>
+#include <p10_scom_eq_5.H>
 #include <p10_scom_perv_2.H>
-//#include <iota_app_cfg.h>
+#include <p10_scom_eq_c.H>
 
 #ifndef __UNIT_TEST_
 #include <qme_panic_codes.h>
 #include <p10_hcd_common.H>
 #include <iota.h>
 #endif
+
 
 #ifdef __UNIT_TEST_
 
@@ -79,9 +83,7 @@ void initScanRegionTest()
 enum
 {
     HEADER_CHECK_PATTERN    =   0xa5a5a5a5a5a5a5a5ull,
-    ENABLE_PARALLEL_SCAN    =   0x40000000,
-    SELECT_ALL_ECL          =   0x07800000,
-    SELECT_ALL_L3           =   0x00780000,
+    ENABLE_PARALLEL_SCAN    =   0x40000000, // enable Parallel scan with OR operation
     SHIFT_TO_ECL            =   8,
     SHIFT_TO_L3             =   12,
     SHIFT_TO_MMA            =   18,
@@ -154,7 +156,13 @@ inline uint32_t stop_decode( const uint8_t* i_rs4Str,
 
 //------------------------------------------------------------------------------------------
 
-
+///
+/// @brief determines clock controller settings associated with a scan ring.
+/// @param[in]  i_target        multicast core target
+/// @param[in]  i_ringAddress   scan address of the ring
+/// @param[out] i_ringId        ring id associated with ring to be scanned.
+/// @return     clock controller settings as uint64_t buffer.
+///
 inline uint64_t decodeScanRegionData(
                     const fapi2::Target<fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST >& i_target,
                     const uint32_t i_ringAddress,
@@ -178,12 +186,12 @@ inline uint64_t decodeScanRegionData(
     }
     else if ( SCAN_REGION_ECL0 & l_scan_region )
     {
-        l_scan_region   |=  SELECT_ALL_ECL;
-        l_scan_region   |=  ENABLE_PARALLEL_SCAN; //Enabling parallel scan for Core
+        l_scan_region   = (i_target.getCoreSelect( ) << SHIFT32(SHIFT_TO_ECL));
+        l_scan_region  |=  ENABLE_PARALLEL_SCAN; //Enabling parallel scan for Core
     }
     else if ( SCAN_REGION_L30 & l_scan_region )
     {
-        l_scan_region   |=  SELECT_ALL_L3;
+        l_scan_region    =  (i_target.getCoreSelect( ) << SHIFT32(SHIFT_TO_L3));
         l_scan_region   |=  ENABLE_PARALLEL_SCAN; //Enabling parallel scan for L3
     }
     else if( SCAN_REGION_MMA0 & l_scan_region )
@@ -203,6 +211,9 @@ inline uint64_t decodeScanRegionData(
 
      l_value             =   l_scan_region;
      l_value             =   ( l_value << 32 ) |  l_scan_type;
+
+     PKTRACE( "Scan-Region Type 0x%08x %08x",
+               (l_value >> 32), (uint32_t)l_value );
 
      #ifdef  __UNIT_TEST_
      initScanRegionTest();
@@ -309,6 +320,204 @@ inline uint64_t rs4_get_verbatim_word( const uint8_t* i_rs4Str,
 
 //------------------------------------------------------------------------------------------
 
+///
+/// @brief      determines if rotate operation is complete.
+/// @param[in]  i_eqTgt     fapi2 target associated with a superchiplet
+/// @return     big-endian-indexed double word
+///
+fapi2::ReturnCode isRotateDone( fapi2::Target<fapi2::TARGET_TYPE_EQ> i_eqTgt )
+{
+    uint32_t l_waitCnt      =   1000;
+    uint32_t l_rotateDone   =   0;
+    fapi2::buffer<uint64_t> l_opcgData;
+
+    do
+    {
+        FAPI_TRY( fapi2::getScom( i_eqTgt, scomt::eq::CPLT_STAT0, l_opcgData ) );
+        fapi2::delay( 1000, 100000 );
+
+        if( l_opcgData.getBit<8>() )
+        {
+            l_rotateDone    =   1;
+            break;
+        }
+
+        l_waitCnt--;
+
+    //}while(( l_waitCnt > 0 ) && !l_rotateDone ); //FIXME commented for AWAN
+    }while( 1 );
+
+
+    if( !l_rotateDone )
+    {
+        fapi2::current_err  =   fapi2::RC_ROTATE_OP_FAILED;
+    }
+
+fapi_try_exit:
+    return fapi2::current_err;
+
+}
+
+//------------------------------------------------------------------------------------------
+///
+/// @brief      determines if clock controller found a parallel scan error
+/// @param[in]  i_eqTgt     fapi2 target associated with a superchiplet
+/// @return     fapi2 return code
+///
+fapi2::ReturnCode checkParallelScanErr( fapi2::Target<fapi2::TARGET_TYPE_EQ> i_eqTgt )
+{
+    uint32_t l_scomaddress   =   scomt::eq::CPLT_STAT0;
+    fapi2::buffer<uint64_t> l_scomData;
+    FAPI_TRY( fapi2::getScom( i_eqTgt, l_scomaddress, l_scomData ) );
+
+    if( l_scomData.getBit<scomt::eq::CPLT_STAT0_CC_CTRL_PARALLEL_SCAN_COMPARE_ERR>() )
+    {
+        PKTRACE( "Err: Parallel Scan Error" );
+        IOTA_PANIC(QME_STOP_PUTRING_PARALLEL_SCAN_ERR);
+    }
+fapi_try_exit:
+    return fapi2::current_err;
+
+}
+//------------------------------------------------------------------------------------------
+
+///
+/// @brief      accomplishes a rotate operation
+/// @param[in]  i_eqTgt         fapi2 target associated with a superchiplet
+/// @param[in]  i_rotateCount   number of bit position to be rotated
+/// @param[in]  i_ringId        id associated with scan ring
+/// @return     fapi2 return code
+///
+fapi2::ReturnCode doRotateOp( fapi2::Target<fapi2::TARGET_TYPE_EQ> i_eqTgt, uint32_t i_rotateCount, uint16_t i_ringId )
+{
+    uint32_t l_maxRotate        =   0xFFFFF;
+    uint32_t l_rotateLoopCnt    =   i_rotateCount / l_maxRotate;
+    uint32_t l_balanceRotate    =   i_rotateCount % l_maxRotate;
+    fapi2::buffer<uint64_t> l_scomData;
+    l_scomData  =  l_maxRotate;
+    l_scomData  =  l_scomData << 32;
+
+    for( uint32_t count = 0; count < l_rotateLoopCnt; count++ )
+    {
+        FAPI_TRY( fapi2::putScom( i_eqTgt, ( scomt::eq::SCAN_LONG_ROTATE | ( i_eqTgt.getChipletNumber() << 24 ) ), l_scomData ) );
+        FAPI_TRY( isRotateDone( i_eqTgt ),
+                  "Rotate Failed For Max Value 0x%08x", i_rotateCount );
+    }
+
+    if( l_balanceRotate > 0 )
+    {
+        l_scomData  =   l_balanceRotate;
+        l_scomData  =  l_scomData << 32;
+        FAPI_TRY( fapi2::putScom( i_eqTgt, ( scomt::eq::SCAN_LONG_ROTATE | ( i_eqTgt.getChipletNumber() << 24 ) ), l_scomData ) );
+        FAPI_TRY( isRotateDone( i_eqTgt ),
+                  "Rotate Failed For Value 0x%08x", i_rotateCount );
+    }
+
+fapi_try_exit:
+    return fapi2::current_err;
+}
+
+//------------------------------------------------------------------------------------------
+
+///
+/// @brief      cleans up clock controller region
+/// @param[in]  i_eqTgt         fapi2 target associated with a superchiplet
+/// @param[in]  i_scanRegion    clock controller setting
+/// @return     fapi2 return code
+///
+fapi2::ReturnCode cleanUpClockController( const fapi2::Target<fapi2::TARGET_TYPE_EQ> & i_eqTgt, const uint32_t i_scanRegion )
+{
+
+    uint32_t l_scomaddress  =   0;
+    fapi2::buffer <uint64_t> l_scomData;
+
+    if( ( i_scanRegion & ENABLE_PARALLEL_SCAN ) == ENABLE_PARALLEL_SCAN )
+    {
+        // disable vital clock gating to permit scan region type clearing to reset parallel scan error bits
+        l_scomData      =   0x0002000000000000ULL;
+        l_scomaddress   =   scomt::eq::NET_CTRL0_RW_WOR;
+
+        FAPI_TRY( fapi2::putScom( i_eqTgt, l_scomaddress, l_scomData ));
+        PKTRACE("Inside cleanUpClockController" );
+    }
+
+    //cleaning up clock control region
+    l_scomaddress   =   scomt::eq::SCAN_REGION_TYPE;
+    l_scomData.flush<0>();
+    FAPI_TRY( fapi2::putScom( i_eqTgt, l_scomaddress, l_scomData ));
+
+    if( ( i_scanRegion & ENABLE_PARALLEL_SCAN ) == ENABLE_PARALLEL_SCAN )
+    {
+        l_scomData      =   ~(0x0002000000000000ULL);
+        l_scomaddress   =   scomt::eq::NET_CTRL0_RW_WAND;
+        FAPI_TRY( fapi2::putScom( i_eqTgt, l_scomaddress, l_scomData ));
+    }
+
+fapi_try_exit:
+    return fapi2::current_err;
+
+}
+
+//------------------------------------------------------------------------------------------
+
+///
+/// @brief      cleans up RTIM latches
+/// @param[in]  i_eqTgt         fapi2 target associated with a superchiplet
+/// @param[in]  i_scanRegion    clock controller setting
+/// @return     fapi2 return code
+///
+fapi2::ReturnCode flushRTIMs( const fapi2::Target<fapi2::TARGET_TYPE_EQ> & i_eqTgt,
+                              const uint64_t i_scanRegion )
+{
+    //HW520842
+    //Writing to unused scan type inorder to clear RTIM latches.
+    //This used to generate parallel scan error. Inorder to clear it ,
+    //disable Vital Clock Gating, clear RTIMs. re-enable Vital Clock Gating.
+    //
+    fapi2::buffer <uint64_t> l_scomData;
+    uint64_t l_scanRegion   =   0;
+    uint32_t l_scomaddress  =   0;
+
+    l_scanRegion    =   (i_scanRegion >> 32);
+
+    if( ( l_scanRegion & ENABLE_PARALLEL_SCAN ) == ENABLE_PARALLEL_SCAN )
+    {
+        PKTRACE( "Flushing RTIMs" );
+        l_scanRegion     =   i_scanRegion;
+        l_scanRegion    &=   0xFFFFFFFFFFFF0000ULL;
+        l_scanRegion    |=   0x0000000000000080ULL;
+        l_scomaddress    =   scomt::eq::SCAN_REGION_TYPE;
+
+        FAPI_TRY( fapi2::putScom( i_eqTgt, l_scomaddress, l_scanRegion ));
+
+        l_scomData.flush<0>();
+        l_scomaddress   =   scomt::eq::SCAN64 | 0x40;
+
+        for( uint8_t count = 0; count < 4; count++ )
+        {
+            FAPI_TRY( fapi2::putScom( i_eqTgt, l_scomaddress, l_scomData ));
+        }
+
+        FAPI_TRY( cleanUpClockController( i_eqTgt, (i_scanRegion >> 32) ) );
+
+        l_scomaddress   =   scomt::eq::CPLT_STAT0;
+        FAPI_TRY( fapi2::getScom( i_eqTgt, l_scomaddress, l_scomData ) );
+
+        if( l_scomData.getBit<scomt::eq::CPLT_STAT0_CC_CTRL_PARALLEL_SCAN_COMPARE_ERR>() )
+        {
+            PKTRACE( "Parallel Scan Error Found Before Scanning" );
+            PKTRACE( "Halting Now" );
+            IOTA_PANIC(QME_STOP_PUTRING_PARALLEL_SCAN_ERR);
+        }
+
+    }
+
+fapi_try_exit:
+    return fapi2::current_err;
+}
+
+//------------------------------------------------------------------------------------------
+
 fapi2::ReturnCode p10_putRingUtils(
     const fapi2::Target<fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST>& i_target,
     uint8_t* i_rs4,
@@ -318,17 +527,16 @@ fapi2::ReturnCode p10_putRingUtils(
 {
     using namespace scomt;
     using namespace eq;
-    using namespace perv;
-
-    fapi2::buffer<uint64_t> l_scomData     =   0;
+    fapi2::buffer<uint64_t> l_scomData;
+    fapi2::buffer<uint64_t> l_scanRegion;
     uint8_t* l_rs4Str               =   0;
     CompressedScanData* l_rs4Header =   NULL;
     bool l_bOverride                =   UNDEFINED_BOOLEAN;
     uint32_t l_ringId               =   0;
-    bool     l_coreCommon           =   true;
-    uint64_t l_scanRegion   =   0;
+    uint32_t l_regAddress   =   0;
 
 #ifndef __UNIT_TEST_
+    PKTRACE( ">> p10_putRingUtils" );
     uint32_t l_nibbleIndx   =   0;
     uint32_t l_bitsDecoded  =   0;
     uint32_t l_mask         =   0x08;
@@ -338,15 +546,11 @@ fapi2::ReturnCode p10_putRingUtils(
     uint32_t l_data         =   0;
     uint32_t l_spyData      =   0;
     opType_t l_opType       =   ROTATE;
-    const uint32_t l_maxRotate      =   4095;
     std::vector< fapi2::Target < fapi2::TARGET_TYPE_CORE >> l_coreTgt  =
                                         i_target.getChildren< fapi2::TARGET_TYPE_CORE >();
-    fapi2::Target< fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST > l_eqMcTgt  =
-                    i_target.getParent< fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST >();
-    fapi2::Target<fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST,
-                    fapi2::MULTICAST_COMPARE > l_eqMcCompTgt    =    l_eqMcTgt;
     fapi2::Target<fapi2::TARGET_TYPE_EQ> l_eqTgt    =
                                         l_coreTgt[0].getParent< fapi2::TARGET_TYPE_EQ >();
+
 #endif
 
     do
@@ -371,6 +575,7 @@ fapi2::ReturnCode p10_putRingUtils(
         //-------------------------------------------  D  --
         //          Stumped Ring Payload
         //-------------------------------------------
+        //
 
         if( REGULAR == i_rs4Type )
         {
@@ -396,11 +601,6 @@ fapi2::ReturnCode p10_putRingUtils(
 
         l_ringId        =   rev_16(l_rs4Header->iv_ringId);
 
-        if(( ec_cl2_repr ==  l_ringId ) || ( ec_mma_repr == l_ringId ) || ( ec_l3_repr == l_ringId ))
-        {
-            l_coreCommon    =   false;
-        }
-
         FAPI_INF( "Ring Id is 0x%04x magic 0x%04x",
                   (uint16_t)l_ringId , (uint32_t) rev_16(l_rs4Header->iv_magic) );
 
@@ -408,6 +608,7 @@ fapi2::ReturnCode p10_putRingUtils(
         if ( ( l_rs4Header->iv_type & RS4_IV_TYPE_OVRD_MASK ) == RS4_IV_TYPE_OVRD_OVRD )
         {
             l_bOverride = true;
+            PKTRACE( "Override Ring" );
         }
         else if ( ( l_rs4Header->iv_type & RS4_IV_TYPE_OVRD_MASK ) == RS4_IV_TYPE_OVRD_FLUSH )
         {
@@ -426,10 +627,12 @@ fapi2::ReturnCode p10_putRingUtils(
         }
 
         // Get scan region and type value
-        l_scomData      =   decodeScanRegionData( i_target, rev_32( l_rs4Header->iv_scanAddr ), l_ringId );
-        l_scanRegion    =   l_scomData;
+        l_scanRegion    =   decodeScanRegionData( i_target, rev_32( l_rs4Header->iv_scanAddr ), l_ringId );
 
 #ifndef __UNIT_TEST_
+
+        FAPI_TRY( flushRTIMs( l_eqTgt, l_scanRegion ),
+                  "Failed To Flush RTIM" );
 
         if( STUMPED_RING == i_rs4Type )
         {
@@ -441,15 +644,23 @@ fapi2::ReturnCode p10_putRingUtils(
             l_scomData     |=   temp;
         }
 
+        l_regAddress    =   eq::SCAN_REGION_TYPE;
+
+        FAPI_TRY(fapi2::putScom( l_eqTgt, l_regAddress, l_scanRegion ) );
+
         // Set up the scan region for the ring.
         // Write a 64 bit value for header.
-
-        FAPI_TRY(fapi2::putScom( l_eqTgt, SCAN_REGION_TYPE, l_scomData ) );
-        FAPI_TRY(fapi2::putScom( l_eqTgt, SCAN64, HEADER_CHECK_PATTERN ) );
+        l_scomData      =   HEADER_CHECK_PATTERN;
+        l_regAddress    =   eq::SCAN64CONTSCAN;
+        FAPI_TRY(fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ) );
 
         // Decompress the RS4 string and scan
+        PKTRACE( "RS4 Str 0x%08x  Offset 0x%08x Ring Base %08x",
+                  *(uint32_t*)l_rs4Str, (uint32_t)(l_rs4Str - i_rs4), i_rs4 );
+
         do
         {
+
             if ( l_opType == ROTATE )
             {
                 // Determine the no.of ROTATE operations encoded in stop-code
@@ -462,31 +673,9 @@ fapi2::ReturnCode p10_putRingUtils(
                 l_bitsDecoded += l_bitRotates;
 
                 // Do the ROTATE operation
-                if ( l_bitRotates > l_maxRotate )
-                {
 
-                    // Prevent PPE compiler from using a software divide
-                    // (l_bitRotates/l_maxRotate) to pre-calculate number of loop iterations
-                    // this saves 128 Bytes and takes less time than a software divide
-                    // (hide behind the getscoms)
-                    uint32_t primenum       =   32749; //largest 15-bit prime
-                    uint32_t fakenumber     =   primenum;
-
-                    // fakenumber can never be zero
-
-                    for ( ; (l_bitRotates > l_maxRotate) || (fakenumber == 0); )
-                    {
-                        l_bitRotates -= l_maxRotate;
-                        FAPI_TRY(fapi2::getScom( l_eqTgt, (SCAN32 | l_maxRotate), l_scomData ) );
-
-                        if ( ( fakenumber -= 7 ) < 15 )
-                        {
-                            fakenumber = primenum;    // ensure always >0
-                        }
-                    }
-                }
-
-                FAPI_TRY(fapi2::getScom( l_eqTgt, (SCAN32 | l_bitRotates), l_scomData ));
+                FAPI_TRY( doRotateOp( l_eqTgt, l_bitRotates, l_ringId ),
+                          "Rotate Operation Failed %08x", l_bitRotates );
 
                 l_opType = SCAN;
             }
@@ -510,8 +699,8 @@ fapi2::ReturnCode p10_putRingUtils(
                         l_scomData = rs4_get_verbatim_word( l_rs4Str,
                                                             l_nibbleIndx,
                                                             l_scanCount );
-
-                        FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | l_count), l_scomData ));
+                        l_regAddress    =   (SCAN64CONTSCAN | l_count);
+                        FAPI_TRY( fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ));
                     }
                     else
                     {
@@ -521,7 +710,8 @@ fapi2::ReturnCode p10_putRingUtils(
                         l_scomData  =   ( l_nibbleIndx & 0x01 ) ? ( l_spyData & 0x0f ) : ( l_spyData >> 4 );
                         l_scomData  <<= 28;
                         l_scomData  =   l_scomData << 32;
-                        FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | l_count), l_scomData ));
+                        l_regAddress    =   (SCAN64CONTSCAN | l_count);
+                        FAPI_TRY( fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ));
                     }
 
                     l_nibbleIndx   +=   l_scanCount;
@@ -544,11 +734,13 @@ fapi2::ReturnCode p10_putRingUtils(
                             if( l_careMask & l_data )
                             {
                                 l_scomData  =   l_spyData & l_data ? 0xFFFFFFFFFFFFFFFF : 0;
-                                FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | 0x01), l_scomData ));
+                                l_regAddress    =   (eq::SCAN64CONTSCAN | 0x01);
+                                FAPI_TRY( fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ));
                             }
                             else
                             {
-                                FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN32 | 0x01), l_scomData ));
+                                l_regAddress    =  (eq::SCAN32 | 0x01);
+                                FAPI_TRY( fapi2::getScom( l_eqTgt, l_regAddress, l_scomData ));
                             }
                         }
                     }
@@ -570,11 +762,13 @@ fapi2::ReturnCode p10_putRingUtils(
                                 {
                                     l_scomData = 0xFFFFFFFFFFFFFFFF;
 
-                                    FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | 0x01), l_scomData ));
+                                    l_regAddress    =   (eq::SCAN64CONTSCAN | 0x01);
+                                    FAPI_TRY( fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ));
                                 }
                                 else
                                 {
-                                    FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN32 | 0x01), l_scomData ));
+                                    l_regAddress    =  (eq::SCAN32 | 0x01);
+                                    FAPI_TRY( fapi2::getScom( l_eqTgt, l_regAddress, l_scomData ));
                                 }
                             }//end of for loop
                         }
@@ -601,7 +795,10 @@ fapi2::ReturnCode p10_putRingUtils(
                 l_scomData    <<=   28;
                 l_scomData      =   l_scomData << 32;
 
-                FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | (l_nibble & 0x3)), l_scomData ));
+                l_regAddress  = (eq::SCAN64CONTSCAN | (l_nibble & 0x3));
+                FAPI_TRY( fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ));
+                PKTRACE( "Flush Scan Data 0x%08x %08x Nibble 0x%02x",
+                         (l_scomData >> 32), (uint32_t) l_scomData, l_nibble );
             }
             else // Process override ring (plus occasional flush ring with '0'-write bits)
             {
@@ -622,11 +819,16 @@ fapi2::ReturnCode p10_putRingUtils(
                         {
                             l_scomData  =   l_spyData & l_data ? 0xFFFFFFFFFFFFFFFF : 0;
 
-                            FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | (l_nibble & 0x1)), l_scomData ));
+                            PKTRACE( "Care Mask 0 Write Scan Data 0x%08x %08x",
+                                     (l_scomData >> 32), (uint32_t) l_scomData );
+                            l_regAddress   =   eq::SCAN64CONTSCAN;
+                            l_regAddress  |=  (l_nibble & 0x1);
+                            FAPI_TRY( fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ));
                         }
                         else
                         {
-                            FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN32 | 0x01), l_scomData ));
+                            l_regAddress    =   (eq::SCAN32 | 0x01);
+                            FAPI_TRY( fapi2::getScom( l_eqTgt, l_regAddress, l_scomData ));
                         }
                     }
                 }
@@ -644,11 +846,15 @@ fapi2::ReturnCode p10_putRingUtils(
                         if( ( l_data & ( l_mask >> l_nibbleCnt ) ) )
                         {
                             l_scomData  =   0xFFFFFFFFFFFFFFFF;
-                            FAPI_TRY( fapi2::putScom( l_eqTgt, (SCAN64 | 0x01), l_scomData ));
+                            PKTRACE( "Care Mask 1 Write Scan Data 0x%08x %08x",
+                                     (l_scomData >> 32), (uint32_t) l_scomData );
+                            l_regAddress = (eq::SCAN64CONTSCAN | 0x01);
+                            FAPI_TRY( fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ));
                         }
                         else
                         {
-                            FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN32 | 0x01), l_scomData ));
+                            l_regAddress = (eq::SCAN32 | 0x01);
+                            FAPI_TRY( fapi2::getScom( l_eqTgt, l_regAddress, l_scomData ));
                         }
                     } //end of for
                 }
@@ -657,17 +863,13 @@ fapi2::ReturnCode p10_putRingUtils(
 
         // Verify header
         fapi2::buffer<uint64_t> l_readHeader;
-        if( l_coreCommon )
-        {
-            FAPI_TRY( fapi2::getScom( l_eqMcCompTgt, (SCAN64 | 0x1), l_readHeader) );
-        }
-        else
-        {
-            FAPI_TRY( fapi2::getScom( l_eqTgt, (SCAN64 | 0x1), l_readHeader) );
-        }
+        l_regAddress    =   eq::SCAN64CONTSCAN;
+        FAPI_TRY( fapi2::getScom( l_eqTgt, l_regAddress, l_readHeader) );
+
         if( l_readHeader != HEADER_CHECK_PATTERN )
         {
-            FAPI_INF("l_readHeader %08X %08X", l_readHeader >> 32, l_readHeader);
+            PKTRACE("Ring Header Mismatch ");
+            PKTRACE("Header  Value %08X %08X", (l_readHeader >> 32), l_readHeader);
 
             //In EDR: ring Id (8b),core value(4b) and number of latches that went thru rotate
             //and scan.
@@ -679,24 +881,23 @@ fapi2::ReturnCode p10_putRingUtils(
             asm volatile ("mtspr %0, %1" : : "i" (272), "r" (debug_data_1) : "memory");
             IOTA_PANIC(QME_STOP_PUTRING_HEADER_MISMATCH);
         }
+        else
+        {
+            PKTRACE( "Scanning Success 0x%08x%08x", (l_readHeader >> 32), (uint32_t)l_readHeader );
+        }
 
         if( ( l_scanRegion >> 32 ) & ENABLE_PARALLEL_SCAN )
         {
-            FAPI_TRY( fapi2::getScom( l_eqTgt, CPLT_STAT0, l_scomData ) );
-
-            if( l_scomData.getBit<CPLT_STAT0_CC_CTRL_PARALLEL_SCAN_COMPARE_ERR>() )
-            {
-                IOTA_PANIC(QME_STOP_PUTRING_PARALLEL_SCAN_ERR);
-            }
+            FAPI_TRY( checkParallelScanErr( l_eqTgt ) );
         }
 
         // Clean scan region and type data
-        FAPI_TRY( fapi2::putScom( l_eqTgt, SCAN_REGION_TYPE, 0 ));
+        FAPI_TRY( cleanUpClockController( l_eqTgt, (l_scanRegion >> 32) ) );
+        PKTRACE( "<< p10_putRingUtils" );
 #else
 
         FAPI_INF( "Scan Region  0x%016lx Type 0x%016lx Override : %s Coomon %s",
-                  l_scanRegion, l_scomData, l_bOverride ? "TRUE" : "FALSE",
-                  l_coreCommon ? "TRUE" : "FALSE"  );
+                  l_scanRegion, l_scomData, l_bOverride ? "TRUE" : "FALSE" );
 
 #endif //__UNIT_TEST_
 

@@ -373,14 +373,14 @@ inline ReturnCode putScom(const Target<K, M, V>& i_target,
 /// @param[in] i_ringMode Ring operation mode.
 /// @return fapi::ReturnCode. FAPI2_RC_SUCCESS if success, else error code.
 template< TargetType K, MulticastType M, typename V >
-__attribute__((always_inline))
+//__attribute__((always_inline))
 ReturnCode putRing(const Target<K, M, V>& i_target,
                    const RingId_t i_ringID,
                    const RingMode i_ringMode)
 {
     ReturnCode l_rc = FAPI2_RC_SUCCESS;
 
-    l_rc = putringQme( i_target, i_ringID, i_ringMode );
+    l_rc = putRingQme( i_target, i_ringID, i_ringMode );
 
     return l_rc;
 }

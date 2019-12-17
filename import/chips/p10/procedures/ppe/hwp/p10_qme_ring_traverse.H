@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -129,7 +129,7 @@ fapi2::ReturnCode getRS4ImageFromTor(
 /// @param[in]   i_ringId    The Ring ID that identifies the ring to be scanned.
 /// @param[in]   i_ringMode  different ring access operation mode
 /// @return FAPI2_RC_SUCCESS on success, else error code.
-fapi2::ReturnCode putringQme(
+fapi2::ReturnCode putRingQme(
             const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST > & i_target,
             const RingId_t i_ringId,
             const fapi2::RingMode i_ringMode = fapi2::RING_MODE_HEADER_CHECK );
