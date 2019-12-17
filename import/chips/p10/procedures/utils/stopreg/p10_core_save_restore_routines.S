@@ -148,13 +148,15 @@
 
                 .set STOP,                          0x4C0002E4
                 .set ATTN,                          0x00000200
+                .set TRAP,                          0x7FE00008
                 .set urfid,                         0x4C000264
                 .set SECURE_MODE_CONST,             0x0040  # bit 41, note: must be shifted left 16 bits
                 .set MACHINE_CHECK_ENABLE_CONST,    0x1000  # bit 51
                 .set ERR_CODE_SMF_E_NOT_SET,        0x0001  # Core is SMF capable but SMF[E] not SET
-                .set ERR_CODE_SMF_BAD_B62_63_CFG,   0x0002  # Core is not configured to exit UV mode
+#                .set ERR_CODE_SMF_BAD_B62_63_CFG,   0x0002  # Core is not configured to exit UV mode
                 .set SMFCTRL_ENABLE_BIT,            0
                 .set MSR_SECURITY_BIT,              41
+                .set SCRATCH_SLV_THDS_COMPLETE_BIT, 56
                 .set SCRATCH_RUNTIME_MODE_BIT,      59
 
                 .set OTHER_THREADS_STOPPED,         0x07
@@ -200,6 +202,7 @@
                 .set SMF_VAL_REG,                   r16
                 .set TEMP_REG2,                     r17
                 .set THREAD_SCRATCH_VAL_REG,        r18
+                .set TEMP_REG3,                     r19
                 .set RMOR_INIT_REG,                 r20
                 .set MSR_INIT_REG,                  r21
                 .set MSR_SECURITY_ENABLE_REG,       r23
@@ -337,15 +340,9 @@ uv_core_check:
 li          TEMP_REG2,      ERR_CODE_SMF_E_NOT_SET
 mfspr       SMF_VAL_REG,    SMFCTRL
 extrdi.     TEMP_REG1,      SMF_VAL_REG, 1, SMFCTRL_ENABLE_BIT
-beq         uv_init_error                          # Core is initialization is not consistent
-
-li          TEMP_REG2,      ERR_CODE_SMF_BAD_B62_63_CFG
-extrdi      TEMP_REG1,      SMF_VAL_REG, 2, 62
-cmpwi       TEMP_REG1,      0x02
-beq         uv_core_init
+bne         uv_core_init                          # Core is initialization is not consistent
 
 uv_init_error:
-
 #Put error code in a specific GPR
 #SPATTN to halt as the inits and the mode are not consistent
 
@@ -376,8 +373,8 @@ mtspr       USRR1,           MSR_INIT_REG            # Save MSR to USRR1
 .org _start + 0x0200
 
 enable_attn:
-li          TEMP_REG1,    0x01
-sldi        TEMP_REG1,    TEMP_REG1, SHIFT_ATTN_ENABLE_BIT_POS
+li          TEMP_REG3,    0x01
+sldi        TEMP_REG3,    TEMP_REG1, SHIFT_ATTN_ENABLE_BIT_POS
 mfspr       TEMP_REG2,    HID
 ori         TEMP_REG2,    TEMP_REG2, TEMP_REG1
 mtspr       HID,          TEMP_REG2
@@ -613,13 +610,11 @@ slbia
 
 thread_launcher_start:
 
-mfspr PIR_VAL_REG, PIR       #Processor Identification Register
-#Select to read the Thread State Status register in PC using SPRC & SPRD
-li          TEMP_REG1,          CORE_THREAD_STATE_REG_ID
-mtspr       SPRC,               TEMP_REG1
-mfspr       FUSED_STATUS_REG,   SPRD
-extrdi.     FUSED_STATUS_REG,   FUSED_STATUS_REG, 1, 63
-beq         core_is_not_fused
+mfspr       PIR_VAL_REG, PIR       #Processor Identification Register
+mfspr       FUSED_STATUS_REG,   PVR
+extrdi.     FUSED_STATUS_REG,   FUSED_STATUS_REG, 1, 51
+# Bit 51 is 0 if fused; 1 if non-fused
+bne         core_is_not_fused
 
 core_is_fused:
 #core is fused. Find physical core number from PIR bits.
@@ -738,8 +733,8 @@ bne         find_self_save
 
 
 thread_restore_base:
-li          TEMP_REG1,   CORE_THREAD_STATE_REG_ID
-mtspr       SPRC,        TEMP_REG1
+# li          TEMP_REG1,   CORE_THREAD_STATE_REG_ID
+# mtspr       SPRC,        TEMP_REG1
 mtlr        THREAD_SCOPE_RESTORE_ADDR_REG
 blrl                               ## branch to thread register restore area
 
@@ -750,9 +745,9 @@ bne         restore_done                # else wait for other threads to be stop
 
 
 wait_until_single_thread:
-mfspr       TEMP_REG1,    SPRD
-extrdi      TEMP_REG1,    TEMP_REG1,    4, 56
-cmpwi       TEMP_REG1,    OTHER_THREADS_STOPPED
+mfspr       THREAD_SCRATCH_VAL_REG,   SPRD
+extrdi.     TEMP_REG1,    THREAD_SCRATCH_VAL_REG, 1, SCRATCH_SLV_THDS_COMPLETE_BIT    # Check Slave Thread STOP bit
+cmpwi       TEMP_REG1,    1
 bne         wait_until_single_thread       # wait until all threads are done restoring
 
 mtlr        CORE_SCOPE_RESTORE_ADDR_REG
@@ -769,7 +764,7 @@ restore_done:                      # now all regs are restored except URMOR & MS
 # systems, since the Hypervisor cannot set the Secure bit and Linux will set LE)
 # Note: SRESET on the eventual wakeup will properly configure the LE and S bits in the MSR
 
-addi        TEMP_REG1,      0,  -2  # = 0xF...FFFE, create a mask excluding bit 63
+addi        TEMP_REG1,      0,  -2  # = 0xF...FFFE, create a mask excluding bit 63until
 and.        MSR_INIT_REG,   MSR_INIT_REG, TEMP_REG1           # to clear LE bit
 cmplwi      MSR_SECURITY_ENABLE_REG,    0
 beq         initiate_hv_compatibility_mode                              # HV compatibility mode , SMCTRL[E] is 0b0
