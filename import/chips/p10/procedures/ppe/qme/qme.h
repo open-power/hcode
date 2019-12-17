@@ -270,6 +270,8 @@ typedef struct
     uint32_t    c_scan_failed;
     uint32_t    c_self_failed;
 
+    uint32_t    cts_timeout_count;
+
 } QmeRecord __attribute__ ((aligned (4)));
 
 // QME Generic Functions

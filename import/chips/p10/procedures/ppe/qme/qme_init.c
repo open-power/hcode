@@ -77,6 +77,9 @@ qme_init()
     G_qme_record.c_stop3_reached    = G_qme_record.c_stop11_reached;
     G_qme_record.c_stop2_reached    = G_qme_record.c_stop11_reached;
 
+    // Enable self restore
+    G_qme_record.hcode_func_enabled |= QME_SELF_RESTORE_ENABLE;
+
 #if EPM_TUNING
 
     PK_TRACE_INF("EPM Always have cores ready to enter first, aka cores are running when boot");

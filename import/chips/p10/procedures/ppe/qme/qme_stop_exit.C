@@ -354,7 +354,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CACHE_SCOMINIT )
 
-        //TODO commit77948//p10_hcd_cache_scominit(core_target);
+        p10_hcd_cache_scominit(core_target);
 
         //===============//
 
@@ -512,7 +512,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SCOMINIT )
 
-        //TODO commit78401//p10_hcd_core_scominit(core_target);
+        p10_hcd_core_scominit(core_target);
 
         //===============//
 
@@ -527,9 +527,12 @@ qme_stop_exit()
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SCOMED )
 
         //===============//
+        PK_TRACE_INF("WAKE11: self restore STOP11[%x] 0x%08x", G_qme_record.c_stop11_exit_targets,
+                     G_qme_record.hcode_func_enabled);
 
         if( G_qme_record.hcode_func_enabled & QME_SELF_RESTORE_ENABLE )
         {
+            PK_TRACE_INF("WAKE11: self restore going");
             MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SELF_RESTORE )
 
             qme_stop_self_execute(G_qme_record.c_stop2_exit_targets, SPR_SELF_RESTORE);

@@ -28,9 +28,11 @@
 // Core/Cache/PC SCOM Addresses:
 
 uint32_t IMA_EVENT_MASK                 = 0x20020400;
+uint32_t CORE_THREAD_STATE              = 0x20020412;
 uint32_t CORE_FIR_OR                    = 0x20020442;
 uint32_t DIRECT_CONTROLS                = 0x20020449;
 uint32_t SCRATCH0                       = 0x20020486;
+uint32_t SCRATCH1                       = 0x20020487;
 uint32_t SPATTN_MASK                    = 0x2002049A;
 uint32_t EC_PC_TFX_SM                   = 0x2002049b;
 
@@ -39,6 +41,8 @@ uint32_t EC_PC_TFX_SM                   = 0x2002049b;
 // QME Per-Quad
 
 uint32_t QME_LCL_PIG                    = 0xC0000300;
+uint32_t QME_LCL_BCEBAR0                = 0xC0000600;
+uint32_t QME_LCL_BCEBAR1                = 0xC0000640;
 uint32_t QME_LCL_BCECSR                 = 0xC0000680;
 
 uint32_t QME_LCL_QSCR                   = 0xC0000700;
@@ -105,3 +109,7 @@ uint32_t QME_SCSR_WO_OR                 = 0xC0008420;
 uint32_t QME_TFCSR                      = 0xC0008800;
 uint32_t QME_TFCSR_WO_CLEAR             = 0xC0008830;
 uint32_t QME_TFCSR_WO_OR                = 0xC0008820;
+
+uint32_t QME_LCL_SCR                    = 0xC00880C0;
+uint32_t QME_LCL_SCR_OR                 = 0xC00880E0;
+uint32_t QME_LCL_SCR_CLEAR              = 0xC00880F0;

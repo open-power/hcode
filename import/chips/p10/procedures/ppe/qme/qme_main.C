@@ -31,6 +31,11 @@ extern QmeRecord G_qme_record;
 
 int main()
 {
+    fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
+    // RTC 24898 change to different type.
+    // fapi2::ATTR_SMF_CONFIG_Type l_attr_smf_config;
+    uint32_t l_attr_smf_config;
+
     PK_TRACE("Main: Configure Trace Timebase");
     uint32_t trace_timebase = PPE_TIMEBASE_HZ;
     pk_trace_set_freq(trace_timebase);
@@ -69,6 +74,25 @@ int main()
 
         PK_TRACE("Workaround: Set Topo Table Array Attribute" );
         FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE, l_chip_target, l_topo_tbl));
+    }
+
+    // Deal with SMF enablement
+
+    // Start workaround RTC 24898: move to using ATTR_SMF_CONFIG directly and use the QME flag bit
+    uint32_t l_smf_config;
+    l_smf_config = (in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_RUNTIME_WAKEUP_MODE ));
+    // Note: polarity is UV=0, HV=1 as UV is the default
+    l_attr_smf_config = l_smf_config ? 0 : 1;
+    // End workaround
+
+    // Enable secure memory facility
+    // RTC 24898: uncomment the following line.  Couldn't be used as the
+    // attribute is not writable.
+    // FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_SMF_CONFIG, FAPI_SYSTEM, l_attr_smf_config));
+
+    if (l_attr_smf_config)
+    {
+        G_qme_record.hcode_func_enabled |= QME_SMF_SUPPORT_ENABLE;
     }
 
 #if EPM_TUNING

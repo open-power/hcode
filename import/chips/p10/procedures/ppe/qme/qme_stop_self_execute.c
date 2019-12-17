@@ -31,16 +31,81 @@ void
 qme_stop_self_complete(uint32_t core_target)
 {
     data64_t scom_data;
+    uint32_t core_mask;
 
-    PK_TRACE("Poll for core stop again(pm_active=1)");
+    // RTC 248150: value needs to be reviewed post hardware
+    // the timeout needs to cover the worst case save or
+    // restore operation for all the slave threads
+    static uint32_t CTS_TIMEOUT_COUNT = 100000;
+
+    PK_TRACE("Core Target %08X", core_target );
+
+    // check pm_active_lopri to be low
+    // RTC 248149: needs timout for logging!!!
+    while(((in32_sh(QME_LCL_EINR))) & (core_target << SHIFT64SH(55)));
+
+    PK_TRACE("Poll for slave threads (1,2,3) to complete via Core Thread State");
+
+    for (core_mask = 8; core_mask; core_mask = core_mask >> 1)
+    {
+
+        PK_TRACE("CORE_THREAD_STATE Loop Core %d", core_mask);
+
+
+        if (core_target & core_mask)
+        {
+
+            G_qme_record.cts_timeout_count = 0;
+
+            do
+            {
+                PPE_WAIT_4NOP_CYCLES;
+                PPE_GETSCOM_UC ( CORE_THREAD_STATE, 0, core_mask, scom_data.value);
+// debug        PK_TRACE("CORE_THREAD_STATE UC lower Core %d %08X", core_mask, scom_data.words.lower );
+                scom_data.words.lower &= BITS64SH(56, 4); // vt[1,2,3]_stop_state
+            }
+            while( scom_data.words.lower >> 4 != 0x7 && ++G_qme_record.cts_timeout_count < CTS_TIMEOUT_COUNT );
+
+            if (G_qme_record.cts_timeout_count == CTS_TIMEOUT_COUNT)
+            {
+                PK_TRACE("Timout polling for slave threads stopping on core mask %X", core_mask);
+                //  RTC 214437 Add logging
+            }
+            else
+            {
+                PK_TRACE("Slave threads (1,2,3) completed on core mask %X  count = %d",
+                         core_mask, G_qme_record.cts_timeout_count );
+
+                if (core_mask & 0xA) // Even cores
+                {
+                    PK_TRACE("Setting Slave Threads Complete in SCRATCH 0.");
+                    PPE_GETSCOM_UC ( SCRATCH0, 0, core_mask, scom_data.value);
+                    scom_data.words.lower |= BIT64SH(56);
+                    PPE_PUTSCOM_UC( SCRATCH0, 0, core_mask, scom_data.value );
+                }
+
+                if (core_mask & 0x5) // Odd cores
+                {
+                    PK_TRACE("Setting Slave Threads Complete in SCRATCH 1.");
+                    PPE_GETSCOM_UC ( SCRATCH1, 0, core_mask, scom_data.value);
+                    scom_data.words.lower |= BIT64SH(56);
+                    PPE_PUTSCOM_UC( SCRATCH1, 0, core_mask, scom_data.value );
+                }
+            }
+        }
+    }
+
+    PK_TRACE("Poll for core(s) stop again(pm_active=1)");
 
     // check pm_active_lopri for stop11
+    // RTC 248149: needs timout for logging!!!
     while((~(in32_sh(QME_LCL_EINR))) & (core_target << SHIFT64SH(55)));
 
     PK_TRACE_INF("SF.RS: Self Save/Restore Completed, Core Stopped Again(pm_exit=0/pm_active=1)");
 
-    PK_TRACE("Cleaning up thread scratch register after self restore.");
+    PK_TRACE("Cleaning up thread scratch registers after self restore.");
     PPE_PUTSCOM_MC( SCRATCH0, core_target, 0 );
+    PPE_PUTSCOM_MC( SCRATCH1, core_target, 0 );
 
     PK_TRACE("Restore SPATTN after self-restore");
     PPE_PUTSCOM_MC( SPATTN_MASK, core_target, G_spattn_mask );
@@ -54,6 +119,7 @@ qme_stop_self_complete(uint32_t core_target)
 
     PK_TRACE("Clear pm_active status via EISR[52:55]");
     out32( QME_LCL_EISR_CLR, core_target << SHIFT64SH(55));
+
 }
 
 void
@@ -75,6 +141,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 
     PK_TRACE("Polling for core wakeup(pm_active=0) via EINR[52:55]");
 
+    // RTC 248149: needs timout for logging!!!
     while((in32_sh(QME_LCL_EINR)) & (core_target << SHIFT64SH(55)));
 
     // ===============================
@@ -86,20 +153,25 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
         if( G_qme_record.hcode_func_enabled & QME_SMF_SUPPORT_ENABLE )
         {
             // set bit 63:QME_RMOR_URMOR_SELECT
-            scom_data.value |= 1;
+            scom_data.value |= 1//#endif;
         }
 
         out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
 
     #else
     */
-    scom_data.value = pQmeImgHdr->g_qme_cpmr_PhyAddr & BITS64(13, 30); //HRMOR[13:42]
+
+    scom_data.value = in64( QME_LCL_BCEBAR0 ) & BITS64(13, 30); //HRMOR[13:42]
+    PK_TRACE("*RMOR HOMER address: 0x%08lX %08lX",
+             scom_data.words.upper, scom_data.words.lower);
 
     if( G_qme_record.hcode_func_enabled & QME_SMF_SUPPORT_ENABLE )
     {
-        PK_TRACE("SMF core self save/restore, write URMOR with HOMER address" );
-        scom_data.value |= 1;
+        // UV Mode
+        PK_TRACE("SMF core self save/restore, write URMOR with HOMER address");
+        scom_data.value |= BIT64(63);
         out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
+        scom_data.value &= ~BIT64(63);
 
         if( SPR_SELF_SAVE == i_saveRestore )
         {
@@ -114,10 +186,12 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     }
     else
     {
+        // HV Mode
         PK_TRACE_INF("Non SMF core wakes up, write HRMOR with HOMER address");
         scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
     }
 
+    // Write HRMOR
     out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
 
 //#endif
@@ -132,9 +206,6 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     {
         if (core_target & core_mask)
         {
-//            PK_TRACE("Read WKUP_ERR_INJECT_MODE via CPMMR[8]");
-//            PPE_GETSCOM_UC(CPPM_CPMMR, 0, core_mask, scom_data.value);
-
             if (scom_data.words.upper & BIT32(8))
             {
                 PK_TRACE_INF("WARNING: Injecting a core[%d] xstop via C_LFIR[1]", core_mask);
