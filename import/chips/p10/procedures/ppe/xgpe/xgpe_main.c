@@ -44,9 +44,9 @@ int main()
 {
     PK_TRACE("XGPE Booted");
 
+    xgpe_header_init ();
     xgpe_init();
 
-    xgpe_header_init ();
 
     iota_run();
     return 0;
