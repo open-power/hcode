@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -98,7 +98,8 @@ p10_hcd_core_arrayinit(
     FAPI_TRY(p10_perv_sbe_cmn_array_init_module(perv_target,
              ((l_regions << SHIFT16(5)) | (l_regions << SHIFT16(15))),
              LOOP_COUNTER,
-             START_ABIST_MATCH_VALUE));
+             START_ABIST_MATCH_VALUE,
+             false));
 
     /*#ifndef __PPE_QME
 
