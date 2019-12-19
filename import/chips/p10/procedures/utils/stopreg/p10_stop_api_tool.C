@@ -574,7 +574,7 @@ int main( int argc, char* argv[])
         uint32_t regInputSize = ftell( fpRegInput );
         rewind (fpRegInput);
         char* pRegInput = (char*) malloc(regInputSize);
-        fread ( pRegInput, sizeof(char), regInputSize, fpRegInput );
+        count = fread ( pRegInput, sizeof(char), regInputSize, fpRegInput );
         string testHomerDesc(pRegInput, regInputSize );
         uint32_t cpuRegEntryCnt = 0;
         int32_t posStart = 0;
