@@ -494,15 +494,15 @@ int32_t trexMyVsnprintf(char* io_dest, size_t dest_size,
     memset(tmpdata, 0, dest_size);
     memcpy(tmpdata, &fmtstring[prev_size], dest_size - prev_size);
 
-    size = snprintf(NULL, 0, tmpdata);
+    size = snprintf(NULL, 0, "%s", tmpdata);
 
     if ((prev_size_fmtd + size + 1) > dest_size)
     {
-        snprintf(&io_dest[prev_size_fmtd], dest_size - prev_size_fmtd, tmpdata);
+        snprintf(&io_dest[prev_size_fmtd], dest_size - prev_size_fmtd, "%s", tmpdata);
         goto out;
     }
 
-    snprintf(&io_dest[prev_size_fmtd], dest_size - prev_size, tmpdata);
+    snprintf(&io_dest[prev_size_fmtd], dest_size - prev_size, "%s", tmpdata);
 
 out:
     return (strlen(io_dest));
