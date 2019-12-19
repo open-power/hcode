@@ -133,7 +133,7 @@ qme_fit_handler()
         out32( QME_LCL_FLAGS_CLR, BIT32( QME_FLAGS_STOP11_ENTRY_REQUESTED ) );
 
         // Read stop11 request from scrb
-        c_stop11 = ( in32( QME_LCL_SCRB ) & BITS32(20, 4) ) >> SHIFT32(23) ;
+        c_stop11 = ( in32( QME_LCL_SCRB ) & BITS32(24, 4) ) >> SHIFT32(27) ;
 
         PK_TRACE_INF("Event: Stop11 Requested via Flags and Scrb[%x]", c_stop11);
 
