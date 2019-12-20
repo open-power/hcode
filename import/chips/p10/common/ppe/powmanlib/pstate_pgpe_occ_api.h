@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2019                                                    */
+/* COPYRIGHT 2015,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -134,7 +134,9 @@ typedef struct ipcmsg_wof_control
 typedef struct ipcmsg_wof_vrt
 {
     ipcmsg_base_t   msg_cb;
-    uint8_t         pad[3];
+    uint8_t         vratio_mode;         // 0 = variable; 1 = fixed
+    uint8_t         fixed_vratio_index;  // if vratio_mode = fixed, index to suse
+    uint8_t         pad[1];
     VRT_t*          idd_vrt_ptr; // VDD Voltage Ratio Table
     uint32_t        vdd_ceff_ratio; // Used for VDD
     uint32_t        vcs_ceff_ratio; // Used for VCS
