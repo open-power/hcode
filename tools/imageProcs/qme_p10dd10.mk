@@ -1,7 +1,7 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p10/procedures/ppe/qme/qme_p10dd10.mk $
+# $Source: tools/imageProcs/qme_p10dd10.mk $
 #
 # OpenPOWER EKB Project
 #
