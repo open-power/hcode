@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -181,118 +181,126 @@
     #define P10_EQ0MMA2_DOMAIN                   CLOCK_DOMAIN_134   // SCAN only
     #define P10_EQ0MMA3_DOMAIN                   CLOCK_DOMAIN_135   // SCAN only
     #define P10_EQ0QME_DOMAIN                    CLOCK_DOMAIN_136
+    #define P10_EQ0CLKADJ_DOMAIN                 CLOCK_DOMAIN_137
 
     // EQ1 chiplet
-    #define P10_EQ1VITL_DOMAIN                   CLOCK_DOMAIN_137
-    #define P10_EQ1ECL20_DOMAIN                  CLOCK_DOMAIN_138
-    #define P10_EQ1ECL21_DOMAIN                  CLOCK_DOMAIN_139
-    #define P10_EQ1ECL22_DOMAIN                  CLOCK_DOMAIN_140
-    #define P10_EQ1ECL23_DOMAIN                  CLOCK_DOMAIN_141
-    #define P10_EQ1L30_DOMAIN                    CLOCK_DOMAIN_142
-    #define P10_EQ1L31_DOMAIN                    CLOCK_DOMAIN_143
-    #define P10_EQ1L32_DOMAIN                    CLOCK_DOMAIN_144
-    #define P10_EQ1L33_DOMAIN                    CLOCK_DOMAIN_145
-    #define P10_EQ1MMA0_DOMAIN                   CLOCK_DOMAIN_146   // SCAN only
-    #define P10_EQ1MMA1_DOMAIN                   CLOCK_DOMAIN_147   // SCAN only
-    #define P10_EQ1MMA2_DOMAIN                   CLOCK_DOMAIN_148   // SCAN only
-    #define P10_EQ1MMA3_DOMAIN                   CLOCK_DOMAIN_149   // SCAN only
-    #define P10_EQ1QME_DOMAIN                    CLOCK_DOMAIN_150
+    #define P10_EQ1VITL_DOMAIN                   CLOCK_DOMAIN_138
+    #define P10_EQ1ECL20_DOMAIN                  CLOCK_DOMAIN_139
+    #define P10_EQ1ECL21_DOMAIN                  CLOCK_DOMAIN_140
+    #define P10_EQ1ECL22_DOMAIN                  CLOCK_DOMAIN_141
+    #define P10_EQ1ECL23_DOMAIN                  CLOCK_DOMAIN_142
+    #define P10_EQ1L30_DOMAIN                    CLOCK_DOMAIN_143
+    #define P10_EQ1L31_DOMAIN                    CLOCK_DOMAIN_144
+    #define P10_EQ1L32_DOMAIN                    CLOCK_DOMAIN_145
+    #define P10_EQ1L33_DOMAIN                    CLOCK_DOMAIN_146
+    #define P10_EQ1MMA0_DOMAIN                   CLOCK_DOMAIN_147   // SCAN only
+    #define P10_EQ1MMA1_DOMAIN                   CLOCK_DOMAIN_148   // SCAN only
+    #define P10_EQ1MMA2_DOMAIN                   CLOCK_DOMAIN_149   // SCAN only
+    #define P10_EQ1MMA3_DOMAIN                   CLOCK_DOMAIN_150   // SCAN only
+    #define P10_EQ1QME_DOMAIN                    CLOCK_DOMAIN_151
+    #define P10_EQ1CLKADJ_DOMAIN                 CLOCK_DOMAIN_152
 
     // EQ2 chiplet
-    #define P10_EQ2VITL_DOMAIN                   CLOCK_DOMAIN_151
-    #define P10_EQ2ECL20_DOMAIN                  CLOCK_DOMAIN_152
-    #define P10_EQ2ECL21_DOMAIN                  CLOCK_DOMAIN_153
-    #define P10_EQ2ECL22_DOMAIN                  CLOCK_DOMAIN_154
-    #define P10_EQ2ECL23_DOMAIN                  CLOCK_DOMAIN_155
-    #define P10_EQ2L30_DOMAIN                    CLOCK_DOMAIN_156
-    #define P10_EQ2L31_DOMAIN                    CLOCK_DOMAIN_157
-    #define P10_EQ2L32_DOMAIN                    CLOCK_DOMAIN_158
-    #define P10_EQ2L33_DOMAIN                    CLOCK_DOMAIN_159
-    #define P10_EQ2MMA0_DOMAIN                   CLOCK_DOMAIN_160   // SCAN only
-    #define P10_EQ2MMA1_DOMAIN                   CLOCK_DOMAIN_161   // SCAN only
-    #define P10_EQ2MMA2_DOMAIN                   CLOCK_DOMAIN_162   // SCAN only
-    #define P10_EQ2MMA3_DOMAIN                   CLOCK_DOMAIN_163   // SCAN only
-    #define P10_EQ2QME_DOMAIN                    CLOCK_DOMAIN_164
+    #define P10_EQ2VITL_DOMAIN                   CLOCK_DOMAIN_153
+    #define P10_EQ2ECL20_DOMAIN                  CLOCK_DOMAIN_154
+    #define P10_EQ2ECL21_DOMAIN                  CLOCK_DOMAIN_155
+    #define P10_EQ2ECL22_DOMAIN                  CLOCK_DOMAIN_156
+    #define P10_EQ2ECL23_DOMAIN                  CLOCK_DOMAIN_157
+    #define P10_EQ2L30_DOMAIN                    CLOCK_DOMAIN_158
+    #define P10_EQ2L31_DOMAIN                    CLOCK_DOMAIN_159
+    #define P10_EQ2L32_DOMAIN                    CLOCK_DOMAIN_160
+    #define P10_EQ2L33_DOMAIN                    CLOCK_DOMAIN_161
+    #define P10_EQ2MMA0_DOMAIN                   CLOCK_DOMAIN_162   // SCAN only
+    #define P10_EQ2MMA1_DOMAIN                   CLOCK_DOMAIN_163   // SCAN only
+    #define P10_EQ2MMA2_DOMAIN                   CLOCK_DOMAIN_164   // SCAN only
+    #define P10_EQ2MMA3_DOMAIN                   CLOCK_DOMAIN_165   // SCAN only
+    #define P10_EQ2QME_DOMAIN                    CLOCK_DOMAIN_166
+    #define P10_EQ2CLKADJ_DOMAIN                 CLOCK_DOMAIN_167
 
     // EQ3 chiplet
-    #define P10_EQ3VITL_DOMAIN                   CLOCK_DOMAIN_165
-    #define P10_EQ3ECL20_DOMAIN                  CLOCK_DOMAIN_166
-    #define P10_EQ3ECL21_DOMAIN                  CLOCK_DOMAIN_167
-    #define P10_EQ3ECL22_DOMAIN                  CLOCK_DOMAIN_168
-    #define P10_EQ3ECL23_DOMAIN                  CLOCK_DOMAIN_169
-    #define P10_EQ3L30_DOMAIN                    CLOCK_DOMAIN_170
-    #define P10_EQ3L31_DOMAIN                    CLOCK_DOMAIN_171
-    #define P10_EQ3L32_DOMAIN                    CLOCK_DOMAIN_172
-    #define P10_EQ3L33_DOMAIN                    CLOCK_DOMAIN_173
-    #define P10_EQ3MMA0_DOMAIN                   CLOCK_DOMAIN_174   // SCAN only
-    #define P10_EQ3MMA1_DOMAIN                   CLOCK_DOMAIN_175   // SCAN only
-    #define P10_EQ3MMA2_DOMAIN                   CLOCK_DOMAIN_176   // SCAN only
-    #define P10_EQ3MMA3_DOMAIN                   CLOCK_DOMAIN_177   // SCAN only
-    #define P10_EQ3QME_DOMAIN                    CLOCK_DOMAIN_178
+    #define P10_EQ3VITL_DOMAIN                   CLOCK_DOMAIN_168
+    #define P10_EQ3ECL20_DOMAIN                  CLOCK_DOMAIN_169
+    #define P10_EQ3ECL21_DOMAIN                  CLOCK_DOMAIN_170
+    #define P10_EQ3ECL22_DOMAIN                  CLOCK_DOMAIN_171
+    #define P10_EQ3ECL23_DOMAIN                  CLOCK_DOMAIN_172
+    #define P10_EQ3L30_DOMAIN                    CLOCK_DOMAIN_173
+    #define P10_EQ3L31_DOMAIN                    CLOCK_DOMAIN_174
+    #define P10_EQ3L32_DOMAIN                    CLOCK_DOMAIN_175
+    #define P10_EQ3L33_DOMAIN                    CLOCK_DOMAIN_176
+    #define P10_EQ3MMA0_DOMAIN                   CLOCK_DOMAIN_177   // SCAN only
+    #define P10_EQ3MMA1_DOMAIN                   CLOCK_DOMAIN_178   // SCAN only
+    #define P10_EQ3MMA2_DOMAIN                   CLOCK_DOMAIN_179   // SCAN only
+    #define P10_EQ3MMA3_DOMAIN                   CLOCK_DOMAIN_180   // SCAN only
+    #define P10_EQ3QME_DOMAIN                    CLOCK_DOMAIN_181
+    #define P10_EQ3CLKADJ_DOMAIN                 CLOCK_DOMAIN_182
 
     // EQ4 chiplet
-    #define P10_EQ4VITL_DOMAIN                   CLOCK_DOMAIN_179
-    #define P10_EQ4ECL20_DOMAIN                  CLOCK_DOMAIN_180
-    #define P10_EQ4ECL21_DOMAIN                  CLOCK_DOMAIN_181
-    #define P10_EQ4ECL22_DOMAIN                  CLOCK_DOMAIN_182
-    #define P10_EQ4ECL23_DOMAIN                  CLOCK_DOMAIN_183
-    #define P10_EQ4L30_DOMAIN                    CLOCK_DOMAIN_184
-    #define P10_EQ4L31_DOMAIN                    CLOCK_DOMAIN_185
-    #define P10_EQ4L32_DOMAIN                    CLOCK_DOMAIN_186
-    #define P10_EQ4L33_DOMAIN                    CLOCK_DOMAIN_187
-    #define P10_EQ4MMA0_DOMAIN                   CLOCK_DOMAIN_188   // SCAN only
-    #define P10_EQ4MMA1_DOMAIN                   CLOCK_DOMAIN_189   // SCAN only
-    #define P10_EQ4MMA2_DOMAIN                   CLOCK_DOMAIN_190   // SCAN only
-    #define P10_EQ4MMA3_DOMAIN                   CLOCK_DOMAIN_191   // SCAN only
-    #define P10_EQ4QME_DOMAIN                    CLOCK_DOMAIN_192
+    #define P10_EQ4VITL_DOMAIN                   CLOCK_DOMAIN_183
+    #define P10_EQ4ECL20_DOMAIN                  CLOCK_DOMAIN_184
+    #define P10_EQ4ECL21_DOMAIN                  CLOCK_DOMAIN_185
+    #define P10_EQ4ECL22_DOMAIN                  CLOCK_DOMAIN_186
+    #define P10_EQ4ECL23_DOMAIN                  CLOCK_DOMAIN_187
+    #define P10_EQ4L30_DOMAIN                    CLOCK_DOMAIN_188
+    #define P10_EQ4L31_DOMAIN                    CLOCK_DOMAIN_189
+    #define P10_EQ4L32_DOMAIN                    CLOCK_DOMAIN_190
+    #define P10_EQ4L33_DOMAIN                    CLOCK_DOMAIN_191
+    #define P10_EQ4MMA0_DOMAIN                   CLOCK_DOMAIN_192   // SCAN only
+    #define P10_EQ4MMA1_DOMAIN                   CLOCK_DOMAIN_193   // SCAN only
+    #define P10_EQ4MMA2_DOMAIN                   CLOCK_DOMAIN_194   // SCAN only
+    #define P10_EQ4MMA3_DOMAIN                   CLOCK_DOMAIN_195   // SCAN only
+    #define P10_EQ4QME_DOMAIN                    CLOCK_DOMAIN_196
+    #define P10_EQ4CLKADJ_DOMAIN                 CLOCK_DOMAIN_197
 
     // EQ5 chiplet
-    #define P10_EQ5VITL_DOMAIN                   CLOCK_DOMAIN_193
-    #define P10_EQ5ECL20_DOMAIN                  CLOCK_DOMAIN_194
-    #define P10_EQ5ECL21_DOMAIN                  CLOCK_DOMAIN_195
-    #define P10_EQ5ECL22_DOMAIN                  CLOCK_DOMAIN_196
-    #define P10_EQ5ECL23_DOMAIN                  CLOCK_DOMAIN_197
-    #define P10_EQ5L30_DOMAIN                    CLOCK_DOMAIN_198
-    #define P10_EQ5L31_DOMAIN                    CLOCK_DOMAIN_199
-    #define P10_EQ5L32_DOMAIN                    CLOCK_DOMAIN_200
-    #define P10_EQ5L33_DOMAIN                    CLOCK_DOMAIN_201
-    #define P10_EQ5MMA0_DOMAIN                   CLOCK_DOMAIN_202   // SCAN only
-    #define P10_EQ5MMA1_DOMAIN                   CLOCK_DOMAIN_203   // SCAN only
-    #define P10_EQ5MMA2_DOMAIN                   CLOCK_DOMAIN_204   // SCAN only
-    #define P10_EQ5MMA3_DOMAIN                   CLOCK_DOMAIN_205   // SCAN only
-    #define P10_EQ5QME_DOMAIN                    CLOCK_DOMAIN_206
+    #define P10_EQ5VITL_DOMAIN                   CLOCK_DOMAIN_198
+    #define P10_EQ5ECL20_DOMAIN                  CLOCK_DOMAIN_199
+    #define P10_EQ5ECL21_DOMAIN                  CLOCK_DOMAIN_200
+    #define P10_EQ5ECL22_DOMAIN                  CLOCK_DOMAIN_201
+    #define P10_EQ5ECL23_DOMAIN                  CLOCK_DOMAIN_202
+    #define P10_EQ5L30_DOMAIN                    CLOCK_DOMAIN_203
+    #define P10_EQ5L31_DOMAIN                    CLOCK_DOMAIN_204
+    #define P10_EQ5L32_DOMAIN                    CLOCK_DOMAIN_205
+    #define P10_EQ5L33_DOMAIN                    CLOCK_DOMAIN_206
+    #define P10_EQ5MMA0_DOMAIN                   CLOCK_DOMAIN_207   // SCAN only
+    #define P10_EQ5MMA1_DOMAIN                   CLOCK_DOMAIN_208   // SCAN only
+    #define P10_EQ5MMA2_DOMAIN                   CLOCK_DOMAIN_209   // SCAN only
+    #define P10_EQ5MMA3_DOMAIN                   CLOCK_DOMAIN_210   // SCAN only
+    #define P10_EQ5QME_DOMAIN                    CLOCK_DOMAIN_211
+    #define P10_EQ5CLKADJ_DOMAIN                 CLOCK_DOMAIN_212
 
     // EQ6 chiplet
-    #define P10_EQ6VITL_DOMAIN                   CLOCK_DOMAIN_207
-    #define P10_EQ6ECL20_DOMAIN                  CLOCK_DOMAIN_208
-    #define P10_EQ6ECL21_DOMAIN                  CLOCK_DOMAIN_209
-    #define P10_EQ6ECL22_DOMAIN                  CLOCK_DOMAIN_210
-    #define P10_EQ6ECL23_DOMAIN                  CLOCK_DOMAIN_211
-    #define P10_EQ6L30_DOMAIN                    CLOCK_DOMAIN_212
-    #define P10_EQ6L31_DOMAIN                    CLOCK_DOMAIN_213
-    #define P10_EQ6L32_DOMAIN                    CLOCK_DOMAIN_214
-    #define P10_EQ6L33_DOMAIN                    CLOCK_DOMAIN_215
-    #define P10_EQ6MMA0_DOMAIN                   CLOCK_DOMAIN_216   // SCAN only
-    #define P10_EQ6MMA1_DOMAIN                   CLOCK_DOMAIN_217   // SCAN only
-    #define P10_EQ6MMA2_DOMAIN                   CLOCK_DOMAIN_218   // SCAN only
-    #define P10_EQ6MMA3_DOMAIN                   CLOCK_DOMAIN_219   // SCAN only
-    #define P10_EQ6QME_DOMAIN                    CLOCK_DOMAIN_220
+    #define P10_EQ6VITL_DOMAIN                   CLOCK_DOMAIN_213
+    #define P10_EQ6ECL20_DOMAIN                  CLOCK_DOMAIN_214
+    #define P10_EQ6ECL21_DOMAIN                  CLOCK_DOMAIN_215
+    #define P10_EQ6ECL22_DOMAIN                  CLOCK_DOMAIN_216
+    #define P10_EQ6ECL23_DOMAIN                  CLOCK_DOMAIN_217
+    #define P10_EQ6L30_DOMAIN                    CLOCK_DOMAIN_218
+    #define P10_EQ6L31_DOMAIN                    CLOCK_DOMAIN_219
+    #define P10_EQ6L32_DOMAIN                    CLOCK_DOMAIN_220
+    #define P10_EQ6L33_DOMAIN                    CLOCK_DOMAIN_221
+    #define P10_EQ6MMA0_DOMAIN                   CLOCK_DOMAIN_222   // SCAN only
+    #define P10_EQ6MMA1_DOMAIN                   CLOCK_DOMAIN_223   // SCAN only
+    #define P10_EQ6MMA2_DOMAIN                   CLOCK_DOMAIN_224   // SCAN only
+    #define P10_EQ6MMA3_DOMAIN                   CLOCK_DOMAIN_225   // SCAN only
+    #define P10_EQ6QME_DOMAIN                    CLOCK_DOMAIN_226
+    #define P10_EQ6CLKADJ_DOMAIN                 CLOCK_DOMAIN_227
 
     // EQ7 chiplet
-    #define P10_EQ7VITL_DOMAIN                   CLOCK_DOMAIN_221
-    #define P10_EQ7ECL20_DOMAIN                  CLOCK_DOMAIN_222
-    #define P10_EQ7ECL21_DOMAIN                  CLOCK_DOMAIN_223
-    #define P10_EQ7ECL22_DOMAIN                  CLOCK_DOMAIN_224
-    #define P10_EQ7ECL23_DOMAIN                  CLOCK_DOMAIN_225
-    #define P10_EQ7L30_DOMAIN                    CLOCK_DOMAIN_226
-    #define P10_EQ7L31_DOMAIN                    CLOCK_DOMAIN_227
-    #define P10_EQ7L32_DOMAIN                    CLOCK_DOMAIN_228
-    #define P10_EQ7L33_DOMAIN                    CLOCK_DOMAIN_229
-    #define P10_EQ7MMA0_DOMAIN                   CLOCK_DOMAIN_230   // SCAN only
-    #define P10_EQ7MMA1_DOMAIN                   CLOCK_DOMAIN_231   // SCAN only
-    #define P10_EQ7MMA2_DOMAIN                   CLOCK_DOMAIN_232   // SCAN only
-    #define P10_EQ7MMA3_DOMAIN                   CLOCK_DOMAIN_233   // SCAN only
-    #define P10_EQ7QME_DOMAIN                    CLOCK_DOMAIN_234
+    #define P10_EQ7VITL_DOMAIN                   CLOCK_DOMAIN_228
+    #define P10_EQ7ECL20_DOMAIN                  CLOCK_DOMAIN_229
+    #define P10_EQ7ECL21_DOMAIN                  CLOCK_DOMAIN_230
+    #define P10_EQ7ECL22_DOMAIN                  CLOCK_DOMAIN_231
+    #define P10_EQ7ECL23_DOMAIN                  CLOCK_DOMAIN_232
+    #define P10_EQ7L30_DOMAIN                    CLOCK_DOMAIN_233
+    #define P10_EQ7L31_DOMAIN                    CLOCK_DOMAIN_234
+    #define P10_EQ7L32_DOMAIN                    CLOCK_DOMAIN_235
+    #define P10_EQ7L33_DOMAIN                    CLOCK_DOMAIN_236
+    #define P10_EQ7MMA0_DOMAIN                   CLOCK_DOMAIN_237   // SCAN only
+    #define P10_EQ7MMA1_DOMAIN                   CLOCK_DOMAIN_238   // SCAN only
+    #define P10_EQ7MMA2_DOMAIN                   CLOCK_DOMAIN_239   // SCAN only
+    #define P10_EQ7MMA3_DOMAIN                   CLOCK_DOMAIN_240   // SCAN only
+    #define P10_EQ7QME_DOMAIN                    CLOCK_DOMAIN_241
+    #define P10_EQ7CLKADJ_DOMAIN                 CLOCK_DOMAIN_242
 
     #define P10_MAXCLOCK_DOMAIN                  CLOCK_DOMAIN_299 // Need to contact Cronus if more is needed.
 

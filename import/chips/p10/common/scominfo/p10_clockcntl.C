@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -253,6 +253,16 @@ extern "C"
                     l_coreNum = l_addr.getCoreTargetInstance() - ( (l_chipletId - EQ0_CHIPLET_ID) * 4 );
                 }
             }
+            else
+            {
+                // clkadj
+                if ((l_endPoint == PSCOM_ENDPOINT) &&
+                    (l_addr.getEQRingId() == PERV_RING_ID) &&
+                    (l_addr.getEQSatId() == 0x4))
+                {
+                    l_region = CLKADJ_REGION;
+                }
+            }
 
             // Look up the domain from the EQ clock domain table
 
@@ -444,6 +454,7 @@ extern "C"
         CHECKEQ(MMA2)
         CHECKEQ(MMA3)
         CHECKEQ(QME)
+        CHECKEQ(CLKADJ)
 
         // -------------------------------
         // PCI chiplets
@@ -665,6 +676,7 @@ extern "C"
         o_domainList.push_back(P10_##P##MMA2_DOMAIN);    \
         o_domainList.push_back(P10_##P##MMA3_DOMAIN);    \
         o_domainList.push_back(P10_##P##QME_DOMAIN);    \
+        o_domainList.push_back(P10_##P##CLKADJ_DOMAIN);    \
     }
                 SCREENEQ(EQ0)
                 SCREENEQ(EQ1)

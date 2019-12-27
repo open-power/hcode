@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -191,6 +191,7 @@ extern "C" {
     const uint8_t QUAD_REGION          = 0;
     const uint8_t COREL2_REGION        = 1;
     const uint8_t L3_REGION            = 2;
+    const uint8_t CLKADJ_REGION        = 3;
 
     // coreNum value
     const uint8_t DONT_CARE            = 0xFF;
@@ -198,7 +199,7 @@ extern "C" {
     struct EQ_ClockDomain_t
     {
         const uint8_t       chipletId;    // ChipletId
-        const uint8_t       region;       // QUAD_REGION, COREL2_REGION, or L3_REGION
+        const uint8_t       region;       // QUAD_REGION, COREL2_REGION, L3_REGION, or CLKADJ_REGION
         const uint8_t       coreNum;      // If COREL2_REGION or L3_REGION, ref core num (in EQ, 0-3); DONT_CARE otherwise.
         const CLOCK_DOMAIN  domain;       // Domain
     };
@@ -207,85 +208,93 @@ extern "C" {
     {
         //    Chiplet            Target type       Core number       Clock domain
         //    -------          ----------------    -------------     ------------
-        {  EQ0_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ0QME_DOMAIN   },
-        {  EQ0_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ0ECL20_DOMAIN },
-        {  EQ0_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ0ECL21_DOMAIN },
-        {  EQ0_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ0ECL22_DOMAIN },
-        {  EQ0_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ0ECL23_DOMAIN },
-        {  EQ0_CHIPLET_ID,     L3_REGION,          0,                P10_EQ0L30_DOMAIN   },
-        {  EQ0_CHIPLET_ID,     L3_REGION,          1,                P10_EQ0L31_DOMAIN   },
-        {  EQ0_CHIPLET_ID,     L3_REGION,          2,                P10_EQ0L32_DOMAIN   },
-        {  EQ0_CHIPLET_ID,     L3_REGION,          3,                P10_EQ0L33_DOMAIN   },
+        {  EQ0_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ0QME_DOMAIN    },
+        {  EQ0_CHIPLET_ID,     CLKADJ_REGION,      DONT_CARE,        P10_EQ0CLKADJ_DOMAIN },
+        {  EQ0_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ0ECL20_DOMAIN  },
+        {  EQ0_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ0ECL21_DOMAIN  },
+        {  EQ0_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ0ECL22_DOMAIN  },
+        {  EQ0_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ0ECL23_DOMAIN  },
+        {  EQ0_CHIPLET_ID,     L3_REGION,          0,                P10_EQ0L30_DOMAIN    },
+        {  EQ0_CHIPLET_ID,     L3_REGION,          1,                P10_EQ0L31_DOMAIN    },
+        {  EQ0_CHIPLET_ID,     L3_REGION,          2,                P10_EQ0L32_DOMAIN    },
+        {  EQ0_CHIPLET_ID,     L3_REGION,          3,                P10_EQ0L33_DOMAIN    },
 
-        {  EQ1_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ1QME_DOMAIN   },
-        {  EQ1_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ1ECL20_DOMAIN },
-        {  EQ1_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ1ECL21_DOMAIN },
-        {  EQ1_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ1ECL22_DOMAIN },
-        {  EQ1_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ1ECL23_DOMAIN },
-        {  EQ1_CHIPLET_ID,     L3_REGION,          0,                P10_EQ1L30_DOMAIN   },
-        {  EQ1_CHIPLET_ID,     L3_REGION,          1,                P10_EQ1L31_DOMAIN   },
-        {  EQ1_CHIPLET_ID,     L3_REGION,          2,                P10_EQ1L32_DOMAIN   },
-        {  EQ1_CHIPLET_ID,     L3_REGION,          3,                P10_EQ1L33_DOMAIN   },
+        {  EQ1_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ1QME_DOMAIN    },
+        {  EQ1_CHIPLET_ID,     CLKADJ_REGION,      DONT_CARE,        P10_EQ1CLKADJ_DOMAIN },
+        {  EQ1_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ1ECL20_DOMAIN  },
+        {  EQ1_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ1ECL21_DOMAIN  },
+        {  EQ1_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ1ECL22_DOMAIN  },
+        {  EQ1_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ1ECL23_DOMAIN  },
+        {  EQ1_CHIPLET_ID,     L3_REGION,          0,                P10_EQ1L30_DOMAIN    },
+        {  EQ1_CHIPLET_ID,     L3_REGION,          1,                P10_EQ1L31_DOMAIN    },
+        {  EQ1_CHIPLET_ID,     L3_REGION,          2,                P10_EQ1L32_DOMAIN    },
+        {  EQ1_CHIPLET_ID,     L3_REGION,          3,                P10_EQ1L33_DOMAIN    },
 
-        {  EQ2_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ2QME_DOMAIN   },
-        {  EQ2_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ2ECL20_DOMAIN },
-        {  EQ2_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ2ECL21_DOMAIN },
-        {  EQ2_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ2ECL22_DOMAIN },
-        {  EQ2_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ2ECL23_DOMAIN },
-        {  EQ2_CHIPLET_ID,     L3_REGION,          0,                P10_EQ2L30_DOMAIN   },
-        {  EQ2_CHIPLET_ID,     L3_REGION,          1,                P10_EQ2L31_DOMAIN   },
-        {  EQ2_CHIPLET_ID,     L3_REGION,          2,                P10_EQ2L32_DOMAIN   },
-        {  EQ2_CHIPLET_ID,     L3_REGION,          3,                P10_EQ2L33_DOMAIN   },
+        {  EQ2_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ2QME_DOMAIN    },
+        {  EQ2_CHIPLET_ID,     CLKADJ_REGION,      DONT_CARE,        P10_EQ2CLKADJ_DOMAIN },
+        {  EQ2_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ2ECL20_DOMAIN  },
+        {  EQ2_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ2ECL21_DOMAIN  },
+        {  EQ2_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ2ECL22_DOMAIN  },
+        {  EQ2_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ2ECL23_DOMAIN  },
+        {  EQ2_CHIPLET_ID,     L3_REGION,          0,                P10_EQ2L30_DOMAIN    },
+        {  EQ2_CHIPLET_ID,     L3_REGION,          1,                P10_EQ2L31_DOMAIN    },
+        {  EQ2_CHIPLET_ID,     L3_REGION,          2,                P10_EQ2L32_DOMAIN    },
+        {  EQ2_CHIPLET_ID,     L3_REGION,          3,                P10_EQ2L33_DOMAIN    },
 
-        {  EQ3_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ3QME_DOMAIN   },
-        {  EQ3_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ3ECL20_DOMAIN },
-        {  EQ3_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ3ECL21_DOMAIN },
-        {  EQ3_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ3ECL22_DOMAIN },
-        {  EQ3_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ3ECL23_DOMAIN },
-        {  EQ3_CHIPLET_ID,     L3_REGION,          0,                P10_EQ3L30_DOMAIN   },
-        {  EQ3_CHIPLET_ID,     L3_REGION,          1,                P10_EQ3L31_DOMAIN   },
-        {  EQ3_CHIPLET_ID,     L3_REGION,          2,                P10_EQ3L32_DOMAIN   },
-        {  EQ3_CHIPLET_ID,     L3_REGION,          3,                P10_EQ3L33_DOMAIN   },
+        {  EQ3_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ3QME_DOMAIN    },
+        {  EQ3_CHIPLET_ID,     CLKADJ_REGION,      DONT_CARE,        P10_EQ3CLKADJ_DOMAIN },
+        {  EQ3_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ3ECL20_DOMAIN  },
+        {  EQ3_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ3ECL21_DOMAIN  },
+        {  EQ3_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ3ECL22_DOMAIN  },
+        {  EQ3_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ3ECL23_DOMAIN  },
+        {  EQ3_CHIPLET_ID,     L3_REGION,          0,                P10_EQ3L30_DOMAIN    },
+        {  EQ3_CHIPLET_ID,     L3_REGION,          1,                P10_EQ3L31_DOMAIN    },
+        {  EQ3_CHIPLET_ID,     L3_REGION,          2,                P10_EQ3L32_DOMAIN    },
+        {  EQ3_CHIPLET_ID,     L3_REGION,          3,                P10_EQ3L33_DOMAIN    },
 
-        {  EQ4_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ4QME_DOMAIN   },
-        {  EQ4_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ4ECL20_DOMAIN },
-        {  EQ4_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ4ECL21_DOMAIN },
-        {  EQ4_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ4ECL22_DOMAIN },
-        {  EQ4_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ4ECL23_DOMAIN },
-        {  EQ4_CHIPLET_ID,     L3_REGION,          0,                P10_EQ4L30_DOMAIN   },
-        {  EQ4_CHIPLET_ID,     L3_REGION,          1,                P10_EQ4L31_DOMAIN   },
-        {  EQ4_CHIPLET_ID,     L3_REGION,          2,                P10_EQ4L32_DOMAIN   },
-        {  EQ4_CHIPLET_ID,     L3_REGION,          3,                P10_EQ4L33_DOMAIN   },
+        {  EQ4_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ4QME_DOMAIN    },
+        {  EQ4_CHIPLET_ID,     CLKADJ_REGION,      DONT_CARE,        P10_EQ4CLKADJ_DOMAIN },
+        {  EQ4_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ4ECL20_DOMAIN  },
+        {  EQ4_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ4ECL21_DOMAIN  },
+        {  EQ4_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ4ECL22_DOMAIN  },
+        {  EQ4_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ4ECL23_DOMAIN  },
+        {  EQ4_CHIPLET_ID,     L3_REGION,          0,                P10_EQ4L30_DOMAIN    },
+        {  EQ4_CHIPLET_ID,     L3_REGION,          1,                P10_EQ4L31_DOMAIN    },
+        {  EQ4_CHIPLET_ID,     L3_REGION,          2,                P10_EQ4L32_DOMAIN    },
+        {  EQ4_CHIPLET_ID,     L3_REGION,          3,                P10_EQ4L33_DOMAIN    },
 
-        {  EQ5_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ5QME_DOMAIN   },
-        {  EQ5_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ5ECL20_DOMAIN },
-        {  EQ5_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ5ECL21_DOMAIN },
-        {  EQ5_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ5ECL22_DOMAIN },
-        {  EQ5_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ5ECL23_DOMAIN },
-        {  EQ5_CHIPLET_ID,     L3_REGION,          0,                P10_EQ5L30_DOMAIN   },
-        {  EQ5_CHIPLET_ID,     L3_REGION,          1,                P10_EQ5L31_DOMAIN   },
-        {  EQ5_CHIPLET_ID,     L3_REGION,          2,                P10_EQ5L32_DOMAIN   },
-        {  EQ5_CHIPLET_ID,     L3_REGION,          3,                P10_EQ5L33_DOMAIN   },
+        {  EQ5_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ5QME_DOMAIN    },
+        {  EQ5_CHIPLET_ID,     CLKADJ_REGION,      DONT_CARE,        P10_EQ5CLKADJ_DOMAIN },
+        {  EQ5_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ5ECL20_DOMAIN  },
+        {  EQ5_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ5ECL21_DOMAIN  },
+        {  EQ5_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ5ECL22_DOMAIN  },
+        {  EQ5_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ5ECL23_DOMAIN  },
+        {  EQ5_CHIPLET_ID,     L3_REGION,          0,                P10_EQ5L30_DOMAIN    },
+        {  EQ5_CHIPLET_ID,     L3_REGION,          1,                P10_EQ5L31_DOMAIN    },
+        {  EQ5_CHIPLET_ID,     L3_REGION,          2,                P10_EQ5L32_DOMAIN    },
+        {  EQ5_CHIPLET_ID,     L3_REGION,          3,                P10_EQ5L33_DOMAIN    },
 
-        {  EQ6_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ6QME_DOMAIN   },
-        {  EQ6_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ6ECL20_DOMAIN },
-        {  EQ6_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ6ECL21_DOMAIN },
-        {  EQ6_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ6ECL22_DOMAIN },
-        {  EQ6_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ6ECL23_DOMAIN },
-        {  EQ6_CHIPLET_ID,     L3_REGION,          0,                P10_EQ6L30_DOMAIN   },
-        {  EQ6_CHIPLET_ID,     L3_REGION,          1,                P10_EQ6L31_DOMAIN   },
-        {  EQ6_CHIPLET_ID,     L3_REGION,          2,                P10_EQ6L32_DOMAIN   },
-        {  EQ6_CHIPLET_ID,     L3_REGION,          3,                P10_EQ6L33_DOMAIN   },
+        {  EQ6_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ6QME_DOMAIN    },
+        {  EQ6_CHIPLET_ID,     CLKADJ_REGION,      DONT_CARE,        P10_EQ6CLKADJ_DOMAIN },
+        {  EQ6_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ6ECL20_DOMAIN  },
+        {  EQ6_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ6ECL21_DOMAIN  },
+        {  EQ6_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ6ECL22_DOMAIN  },
+        {  EQ6_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ6ECL23_DOMAIN  },
+        {  EQ6_CHIPLET_ID,     L3_REGION,          0,                P10_EQ6L30_DOMAIN    },
+        {  EQ6_CHIPLET_ID,     L3_REGION,          1,                P10_EQ6L31_DOMAIN    },
+        {  EQ6_CHIPLET_ID,     L3_REGION,          2,                P10_EQ6L32_DOMAIN    },
+        {  EQ6_CHIPLET_ID,     L3_REGION,          3,                P10_EQ6L33_DOMAIN    },
 
-        {  EQ7_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ7QME_DOMAIN   },
-        {  EQ7_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ7ECL20_DOMAIN },
-        {  EQ7_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ7ECL21_DOMAIN },
-        {  EQ7_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ7ECL22_DOMAIN },
-        {  EQ7_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ7ECL23_DOMAIN },
-        {  EQ7_CHIPLET_ID,     L3_REGION,          0,                P10_EQ7L30_DOMAIN   },
-        {  EQ7_CHIPLET_ID,     L3_REGION,          1,                P10_EQ7L31_DOMAIN   },
-        {  EQ7_CHIPLET_ID,     L3_REGION,          2,                P10_EQ7L32_DOMAIN   },
-        {  EQ7_CHIPLET_ID,     L3_REGION,          3,                P10_EQ7L33_DOMAIN   },
+        {  EQ7_CHIPLET_ID,     QUAD_REGION,        DONT_CARE,        P10_EQ7QME_DOMAIN    },
+        {  EQ7_CHIPLET_ID,     CLKADJ_REGION,      DONT_CARE,        P10_EQ7CLKADJ_DOMAIN },
+        {  EQ7_CHIPLET_ID,     COREL2_REGION,      0,                P10_EQ7ECL20_DOMAIN  },
+        {  EQ7_CHIPLET_ID,     COREL2_REGION,      1,                P10_EQ7ECL21_DOMAIN  },
+        {  EQ7_CHIPLET_ID,     COREL2_REGION,      2,                P10_EQ7ECL22_DOMAIN  },
+        {  EQ7_CHIPLET_ID,     COREL2_REGION,      3,                P10_EQ7ECL23_DOMAIN  },
+        {  EQ7_CHIPLET_ID,     L3_REGION,          0,                P10_EQ7L30_DOMAIN    },
+        {  EQ7_CHIPLET_ID,     L3_REGION,          1,                P10_EQ7L31_DOMAIN    },
+        {  EQ7_CHIPLET_ID,     L3_REGION,          2,                P10_EQ7L32_DOMAIN    },
+        {  EQ7_CHIPLET_ID,     L3_REGION,          3,                P10_EQ7L33_DOMAIN    },
     };
 
     // #################################################################
@@ -421,7 +430,8 @@ extern "C" {
         { "EQ0L31",               P10_EQ0L31_DOMAIN,             0x20030008, 0x0020000000000000ULL }, // Region 6; bit 10
         { "EQ0L32",               P10_EQ0L32_DOMAIN,             0x20030008, 0x0010000000000000ULL }, // Region 7: bit 11
         { "EQ0L33",               P10_EQ0L33_DOMAIN,             0x20030008, 0x0008000000000000ULL }, // Region 8; bit 12
-        { "EQ0QME",               P10_EQ0QME_DOMAIN,             0x20030008, 0x0806000000000000ULL }, // Regions 0,9,10; bits 4,13,14
+        { "EQ0QME",               P10_EQ0QME_DOMAIN,             0x20030008, 0x0804000000000000ULL }, // Regions 0,9; bits 4,13
+        { "EQ0CLKADJ",            P10_EQ0CLKADJ_DOMAIN,          0x20030008, 0x0002000000000000ULL }, // Region 10; bit 14
         { "EQ0MMA0",              P10_EQ0MMA0_DOMAIN,            0x20030008, 0x0001000000000000ULL }, // Region 11; bit 15
         { "EQ0MMA1",              P10_EQ0MMA1_DOMAIN,            0x20030008, 0x0000800000000000ULL }, // Region 12; bit 16
         { "EQ0MMA2",              P10_EQ0MMA2_DOMAIN,            0x20030008, 0x0000400000000000ULL }, // Region 13; bit 17
@@ -436,7 +446,8 @@ extern "C" {
         { "EQ1L31",               P10_EQ1L31_DOMAIN,             0x21030008, 0x0020000000000000ULL },
         { "EQ1L32",               P10_EQ1L32_DOMAIN,             0x21030008, 0x0010000000000000ULL },
         { "EQ1L33",               P10_EQ1L33_DOMAIN,             0x21030008, 0x0008000000000000ULL },
-        { "EQ1QME",               P10_EQ1QME_DOMAIN,             0x21030008, 0x0806000000000000ULL },
+        { "EQ1QME",               P10_EQ1QME_DOMAIN,             0x21030008, 0x0804000000000000ULL },
+        { "EQ1CLKADJ",            P10_EQ1CLKADJ_DOMAIN,          0x21030008, 0x0002000000000000ULL },
         { "EQ1MMA0",              P10_EQ1MMA0_DOMAIN,            0x21030008, 0x0001000000000000ULL },
         { "EQ1MMA1",              P10_EQ1MMA1_DOMAIN,            0x21030008, 0x0000800000000000ULL },
         { "EQ1MMA2",              P10_EQ1MMA2_DOMAIN,            0x21030008, 0x0000400000000000ULL },
@@ -451,7 +462,8 @@ extern "C" {
         { "EQ2L31",               P10_EQ2L31_DOMAIN,             0x22030008, 0x0020000000000000ULL },
         { "EQ2L32",               P10_EQ2L32_DOMAIN,             0x22030008, 0x0010000000000000ULL },
         { "EQ2L33",               P10_EQ2L33_DOMAIN,             0x22030008, 0x0008000000000000ULL },
-        { "EQ2QME",               P10_EQ2QME_DOMAIN,             0x22030008, 0x0806000000000000ULL },
+        { "EQ2QME",               P10_EQ2QME_DOMAIN,             0x22030008, 0x0804000000000000ULL },
+        { "EQ2CLKADJ",            P10_EQ2CLKADJ_DOMAIN,          0x22030008, 0x0002000000000000ULL },
         { "EQ2MMA0",              P10_EQ2MMA0_DOMAIN,            0x22030008, 0x0001000000000000ULL },
         { "EQ2MMA1",              P10_EQ2MMA1_DOMAIN,            0x22030008, 0x0000800000000000ULL },
         { "EQ2MMA2",              P10_EQ2MMA2_DOMAIN,            0x22030008, 0x0000400000000000ULL },
@@ -466,7 +478,8 @@ extern "C" {
         { "EQ3L31",               P10_EQ3L31_DOMAIN,             0x23030008, 0x0020000000000000ULL },
         { "EQ3L32",               P10_EQ3L32_DOMAIN,             0x23030008, 0x0010000000000000ULL },
         { "EQ3L33",               P10_EQ3L33_DOMAIN,             0x23030008, 0x0008000000000000ULL },
-        { "EQ3QME",               P10_EQ3QME_DOMAIN,             0x23030008, 0x0806000000000000ULL },
+        { "EQ3QME",               P10_EQ3QME_DOMAIN,             0x23030008, 0x0804000000000000ULL },
+        { "EQ3CLKADJ",            P10_EQ3CLKADJ_DOMAIN,          0x23030008, 0x0002000000000000ULL },
         { "EQ3MMA0",              P10_EQ3MMA0_DOMAIN,            0x23030008, 0x0001000000000000ULL },
         { "EQ3MMA1",              P10_EQ3MMA1_DOMAIN,            0x23030008, 0x0000800000000000ULL },
         { "EQ3MMA2",              P10_EQ3MMA2_DOMAIN,            0x23030008, 0x0000400000000000ULL },
@@ -481,7 +494,8 @@ extern "C" {
         { "EQ4L31",               P10_EQ4L31_DOMAIN,             0x24030008, 0x0020000000000000ULL },
         { "EQ4L32",               P10_EQ4L32_DOMAIN,             0x24030008, 0x0010000000000000ULL },
         { "EQ4L33",               P10_EQ4L33_DOMAIN,             0x24030008, 0x0008000000000000ULL },
-        { "EQ4QME",               P10_EQ4QME_DOMAIN,             0x24030008, 0x0806000000000000ULL },
+        { "EQ4QME",               P10_EQ4QME_DOMAIN,             0x24030008, 0x0804000000000000ULL },
+        { "EQ4CLKADJ",            P10_EQ4CLKADJ_DOMAIN,          0x24030008, 0x0002000000000000ULL },
         { "EQ4MMA0",              P10_EQ4MMA0_DOMAIN,            0x24030008, 0x0001000000000000ULL },
         { "EQ4MMA1",              P10_EQ4MMA1_DOMAIN,            0x24030008, 0x0000800000000000ULL },
         { "EQ4MMA2",              P10_EQ4MMA2_DOMAIN,            0x24030008, 0x0000400000000000ULL },
@@ -496,7 +510,8 @@ extern "C" {
         { "EQ5L31",               P10_EQ5L31_DOMAIN,             0x25030008, 0x0020000000000000ULL },
         { "EQ5L32",               P10_EQ5L32_DOMAIN,             0x25030008, 0x0010000000000000ULL },
         { "EQ5L33",               P10_EQ5L33_DOMAIN,             0x25030008, 0x0008000000000000ULL },
-        { "EQ5QME",               P10_EQ5QME_DOMAIN,             0x25030008, 0x0806000000000000ULL },
+        { "EQ5QME",               P10_EQ5QME_DOMAIN,             0x25030008, 0x0804000000000000ULL },
+        { "EQ5CLKADJ",            P10_EQ5CLKADJ_DOMAIN,          0x25030008, 0x0002000000000000ULL },
         { "EQ5MMA0",              P10_EQ5MMA0_DOMAIN,            0x25030008, 0x0001000000000000ULL },
         { "EQ5MMA1",              P10_EQ5MMA1_DOMAIN,            0x25030008, 0x0000800000000000ULL },
         { "EQ5MMA2",              P10_EQ5MMA2_DOMAIN,            0x25030008, 0x0000400000000000ULL },
@@ -511,7 +526,8 @@ extern "C" {
         { "EQ6L31",               P10_EQ6L31_DOMAIN,             0x26030008, 0x0020000000000000ULL },
         { "EQ6L32",               P10_EQ6L32_DOMAIN,             0x26030008, 0x0010000000000000ULL },
         { "EQ6L33",               P10_EQ6L33_DOMAIN,             0x26030008, 0x0008000000000000ULL },
-        { "EQ6QME",               P10_EQ6QME_DOMAIN,             0x26030008, 0x0806000000000000ULL },
+        { "EQ6QME",               P10_EQ6QME_DOMAIN,             0x26030008, 0x0804000000000000ULL },
+        { "EQ6CLKADJ",            P10_EQ6CLKADJ_DOMAIN,          0x26030008, 0x0002000000000000ULL },
         { "EQ6MMA0",              P10_EQ6MMA0_DOMAIN,            0x26030008, 0x0001000000000000ULL },
         { "EQ6MMA1",              P10_EQ6MMA1_DOMAIN,            0x26030008, 0x0000800000000000ULL },
         { "EQ6MMA2",              P10_EQ6MMA2_DOMAIN,            0x26030008, 0x0000400000000000ULL },
@@ -526,7 +542,8 @@ extern "C" {
         { "EQ7L31",               P10_EQ7L31_DOMAIN,             0x27030008, 0x0020000000000000ULL },
         { "EQ7L32",               P10_EQ7L32_DOMAIN,             0x27030008, 0x0010000000000000ULL },
         { "EQ7L33",               P10_EQ7L33_DOMAIN,             0x27030008, 0x0008000000000000ULL },
-        { "EQ7QME",               P10_EQ7QME_DOMAIN,             0x27030008, 0x0806000000000000ULL },
+        { "EQ7QME",               P10_EQ7QME_DOMAIN,             0x27030008, 0x0804000000000000ULL },
+        { "EQ7CLKADJ",            P10_EQ7CLKADJ_DOMAIN,          0x27030008, 0x0002000000000000ULL },
         { "EQ7MMA0",              P10_EQ7MMA0_DOMAIN,            0x27030008, 0x0001000000000000ULL },
         { "EQ7MMA1",              P10_EQ7MMA1_DOMAIN,            0x27030008, 0x0000800000000000ULL },
         { "EQ7MMA2",              P10_EQ7MMA2_DOMAIN,            0x27030008, 0x0000400000000000ULL },
