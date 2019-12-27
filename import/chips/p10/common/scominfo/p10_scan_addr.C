@@ -126,7 +126,7 @@ extern "C"
     bool p10_scan_addr::isEQRing(uint32_t i_chiplet, uint32_t i_region)
     {
         return (((0x20 <= i_chiplet) && (i_chiplet <= 0x27)) &&
-                (i_region & 0xC00UL));
+                (i_region & 0xC03UL));
     }
 
     uint8_t p10_scan_addr::getEQInstance(uint32_t i_chiplet)
@@ -143,7 +143,7 @@ extern "C"
     bool p10_scan_addr::isECRing(uint32_t i_chiplet, uint32_t i_region)
     {
         return (((0x20 <= i_chiplet) && (i_chiplet <= 0x27)) &&
-                ((i_region & 0xC00UL) == 0x0UL));
+                ((i_region & 0xC03UL) == 0x0UL));
     }
 
     uint8_t p10_scan_addr::getECInstance(uint32_t i_chiplet, uint32_t i_region, uint32_t i_ext_region)
