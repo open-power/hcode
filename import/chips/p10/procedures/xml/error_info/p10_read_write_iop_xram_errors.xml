@@ -51,4 +51,17 @@
   </callout>
 </hwpError>
 <!-- ******************************************************************** -->
+<hwpError>
+  <sbeError/>
+  <rc>RC_P10_IOP_XRAM_ACCESS_SIZE_ERROR</rc>
+  <description>
+   Invalid IOP XRAM access size. Must access full 32K bytes.
+  </description>
+  <ffdc>ACCESS_SIZE</ffdc>
+  <callout>
+    <target>CODE</target>
+    <priority>HIGH</priority>
+  </callout>
+</hwpError>
+<!-- ******************************************************************** -->
 </hwpErrors>
