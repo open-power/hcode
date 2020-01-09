@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2018,2019                                                    -->
+<!-- COPYRIGHT 2018,2020                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -1291,6 +1291,7 @@
     <valueType>uint32</valueType>
     <array>4</array>
     <platInit/>
+    <initToZero/>    
     <group>vrm</group>
   </attribute>
 
