@@ -55,12 +55,22 @@
     _m_mask = (uint8_t)((_sem & MSR_SEM) >> (32-(MSR_SEM_START_BIT + MSR_SEM_LEN)));
 
 /// GetScom
-#define PLAT_GETSCOM(_m_rc, _m_target, _m_addr, _m_data) \
-    PPE_LVD(_m_target.get().getScomAddressOverlay(_m_addr), _m_data)
+#define PLAT_GETSCOM(_m_rc, _m_target, _m_addr, _m_data)                 \
+    if (_m_target.get().getPlatTargetType() & PPE_TARGET_TYPE_MULTICAST) \
+    {                                                                    \
+        PPE_LVD(_m_target.get().getScomAddressOverlay((uint32_t)_m_addr), _m_data);\
+    } else {                                                             \
+        PPE_LVD((uint32_t)_m_addr, _m_data);                                       \
+    }
 
 /// PutScom
-#define PLAT_PUTSCOM(_m_rc, _m_target, _m_addr, _m_data) \
-    PPE_STVD(_m_target.get().getScomAddressOverlay(_m_addr), _m_data)
+#define PLAT_PUTSCOM(_m_rc, _m_target, _m_addr, _m_data)                  \
+    if (_m_target.get().getPlatTargetType() & PPE_TARGET_TYPE_MULTICAST)  \
+    {                                                                     \
+        PPE_STVD(_m_target.get().getScomAddressOverlay((uint32_t)_m_addr), _m_data);\
+    } else {                                                              \
+        PPE_STVD((uint32_t)_m_addr, _m_data);                                       \
+    }
 
 //PLAT END//
 

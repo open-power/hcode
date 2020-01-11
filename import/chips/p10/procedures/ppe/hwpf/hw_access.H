@@ -226,7 +226,17 @@ inline ReturnCode getScom(const Target<K, M, V>& i_target,
                           buffer<uint64_t>& o_data)
 {
     uint64_t l_data = 0;
-    PLAT_GETSCOM(current_err, i_target, i_address, l_data);
+    uint32_t l_addr = (uint32_t)i_address;
+
+    if (i_target.get().getPlatTargetType() & PPE_TARGET_TYPE_MULTICAST)
+    {
+        PPE_LVD(i_target.get().getScomAddressOverlay(l_addr), l_data);
+    }
+    else
+    {
+        PPE_LVD(l_addr, l_data);
+    }
+
     o_data = l_data;
     return current_err;
 }
@@ -244,7 +254,17 @@ inline ReturnCode putScom(const Target<K, M, V>& i_target,
                           const buffer<uint64_t> i_data)
 {
     uint64_t l_data = i_data;
-    PLAT_PUTSCOM(current_err, i_target, i_address, l_data);
+    uint32_t l_addr = (uint32_t)i_address;
+
+    if (i_target.get().getPlatTargetType() & PPE_TARGET_TYPE_MULTICAST)
+    {
+        PPE_STVD(i_target.get().getScomAddressOverlay(l_addr), l_data);
+    }
+    else
+    {
+        PPE_STVD(l_addr, l_data);
+    }
+
     return current_err;
 }
 
