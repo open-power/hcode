@@ -114,7 +114,6 @@ int P10_RID::ringid_get_chiplet_properties(
             break;
 
         default :
-            MY_ERR("Invalid chipletType(=%d)\n", i_chipletType);
             return TOR_INVALID_CHIPLET_TYPE;
     }
 
