@@ -1,7 +1,7 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_core_startgrid.mk $
+# $Source: import/chips/p10/procedures/hwp/corecache/p10_hcd_corecache_realign.mk $
 #
 # OpenPOWER EKB Project
 #
@@ -22,8 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-PROCEDURE=p10_hcd_core_startgrid
+PROCEDURE=p10_hcd_corecache_realign
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
-OBJS+=p10_hcd_corecache_realign.o
 $(call BUILD_PROCEDURE)

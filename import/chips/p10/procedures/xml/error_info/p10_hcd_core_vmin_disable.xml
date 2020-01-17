@@ -27,6 +27,37 @@
   <!-- ********************************************************************* -->
   <hwpError>
     <sbeError/>
+    <rc>RC_VMIN_DIS_RVID_ENABLED_TIMEOUT</rc>
+    <description>Vmin Disable Rvid Enabled Timeout.</description>
+    <ffdc>VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS</ffdc>
+    <ffdc>CPMS_RVCSR</ffdc>
+    <ffdc>CORE_TARGET</ffdc>
+    <callout>
+      <childTargets>
+        <parent>PROC_CHIP_IN_ERROR</parent>
+        <childType>TARGET_TYPE_CORE</childType>
+        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
+      </childTargets>
+      <priority>HIGH</priority>
+    </callout>
+    <deconfigure>
+      <childTargets>
+        <parent>PROC_CHIP_IN_ERROR</parent>
+        <childType>TARGET_TYPE_CORE</childType>
+        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
+      </childTargets>
+    </deconfigure>
+    <gard>
+      <childTargets>
+        <parent>PROC_CHIP_IN_ERROR</parent>
+        <childType>TARGET_TYPE_CORE</childType>
+        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
+      </childTargets>
+    </gard>
+  </hwpError>
+  <!-- ********************************************************************* -->
+  <hwpError>
+    <sbeError/>
     <rc>RC_VMIN_DIS_RVID_BYPASS_TIMEOUT</rc>
     <description>Vmin Disable Rvid Bypass Timeout.</description>
     <ffdc>VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS</ffdc>

@@ -51,14 +51,10 @@ typedef union
 #define CODE2TAG(targets, code)  ((targets << 10) | (code >> 3))
 #define TAG_SPRG0(tag)           {ppe42_app_ctx_set(tag);}
 
-#if EPM_TUNING
 #define MARK_TRAP(code) \
     {asm volatile ("tw 0, %0, %1" : : \
                    "i" (CODE2REGA(code)), \
                    "i" (CODE2REGB(code)));}
-#else
-#define MARK_TRAP(code)
-#endif
 
 #define MARK_TAG(targets, code) \
     TAG_SPRG0(CODE2TAG(targets, code)) \

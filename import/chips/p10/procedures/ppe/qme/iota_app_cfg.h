@@ -29,23 +29,14 @@
  * @brief IOTA CONFIGURATION SETTINGS
  */
 
-// the following functions are always enabled once working
-// (unless earlier DD level condition undef them below)
-
-#define USE_PPE_IMPRECISE_MODE
-#define USE_QME_QUEUED_SCOM
-#define USE_QME_QUEUED_SCAN
-
 #if !defined(USE_PPE_IMPRECISE_MODE) && (defined(USE_QME_QUEUED_SCOM) || defined(USE_QME_QUEUED_SCAN))
     #error "USE_PPE_IMPRECISE_MODE must be defined in order to enable USE_QME_QUEUED_SCOM or USE_QME_QUEUED_SCAN"
 #endif
 
 // --------------------
 
-#if EPM_TUNING
-    #define PK_TRACE_BUFFER_WRAP_MARKER 1
-    #define __FAPI_DELAY_SIM__
-#endif
+//EPM SPECIFIC
+#define PK_TRACE_BUFFER_WRAP_MARKER 1
 
 // --------------------
 #define VALUE_TO_STRING(x) #x

@@ -1,7 +1,7 @@
 <!-- IBM_PROLOG_BEGIN_TAG                                                   -->
 <!-- This is an automatically generated prolog.                             -->
 <!--                                                                        -->
-<!-- $Source: import/chips/p10/procedures/xml/error_info/p10_hcd_core_shadows_enable.xml $ -->
+<!-- $Source: import/chips/p10/procedures/xml/error_info/p10_hcd_corecache_realign_errors.xml $ -->
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
@@ -27,75 +27,14 @@
   <!-- ********************************************************************* -->
   <hwpError>
     <sbeError/>
-    <rc>RC_SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT</rc>
-    <description>FDCR Update Timeout.</description>
-    <ffdc>SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS</ffdc>
-    <ffdc>CPMS_CUCR</ffdc>
-    <ffdc>CORE_TARGET</ffdc>
-    <callout>
-      <childTargets>
-        <parent>PROC_CHIP_IN_ERROR</parent>
-        <childType>TARGET_TYPE_CORE</childType>
-        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
-      </childTargets>
-      <priority>HIGH</priority>
-    </callout>
-    <deconfigure>
-      <childTargets>
-        <parent>PROC_CHIP_IN_ERROR</parent>
-        <childType>TARGET_TYPE_CORE</childType>
-        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
-      </childTargets>
-    </deconfigure>
-    <gard>
-      <childTargets>
-        <parent>PROC_CHIP_IN_ERROR</parent>
-        <childType>TARGET_TYPE_CORE</childType>
-        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
-      </childTargets>
-    </gard>
-  </hwpError>
-  <!-- ********************************************************************* -->
-  <hwpError>
-    <sbeError/>
-    <rc>RC_SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT</rc>
-    <description>Core Refresh Active Timeout.</description>
-    <ffdc>SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS</ffdc>
-    <ffdc>CPMS_CUCR</ffdc>
-    <ffdc>CORE_TARGET</ffdc>
-    <callout>
-      <childTargets>
-        <parent>PROC_CHIP_IN_ERROR</parent>
-        <childType>TARGET_TYPE_CORE</childType>
-        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
-      </childTargets>
-      <priority>HIGH</priority>
-    </callout>
-    <deconfigure>
-      <childTargets>
-        <parent>PROC_CHIP_IN_ERROR</parent>
-        <childType>TARGET_TYPE_CORE</childType>
-        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
-      </childTargets>
-    </deconfigure>
-    <gard>
-      <childTargets>
-        <parent>PROC_CHIP_IN_ERROR</parent>
-        <childType>TARGET_TYPE_CORE</childType>
-        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
-      </childTargets>
-    </gard>
-  </hwpError>
-  <!-- ********************************************************************* -->
-  <hwpError>
-    <sbeError/>
-    <rc>RC_SHADOW_ENA_XFER_SENT_DONE_TIMEOUT</rc>
+    <rc>RC_CORECACHE_REALIGN_TIMEOUT</rc>
     <description>
-        Shadow Enable Xfer Sent Done Timeout.
+        core/cache realign timed out.
     </description>
-    <ffdc>SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS</ffdc>
-    <ffdc>QME_TFCSR</ffdc>
-    <ffdc>CORE_TARGET</ffdc>
+    <ffdc>REALIGN_POLL_TIMEOUT_HW_NS</ffdc>
+    <ffdc>CPLT_STAT0</ffdc>
+    <ffdc>CLK_REGIONS</ffdc>
+    <ffdc>QUAD_TARGET</ffdc>
     <callout>
       <childTargets>
         <parent>PROC_CHIP_IN_ERROR</parent>

@@ -91,9 +91,44 @@
   <!-- ********************************************************************* -->
   <hwpError>
     <sbeError/>
-    <rc>RC_VMIN_ENA_VDD_PFET_ENABLE_FAILED</rc>
+    <rc>RC_VMIN_ENA_VDD_PFET_ENABLED_SENSE_TIMEOUT</rc>
     <description>
-        Vmin Enable VDD_PFET_ENABLE Failed.
+        Vmin Enable VDD_PFET_ENABLED_SENSE Timeout.
+    </description>
+    <ffdc>VMIN_ENA_VDD_PFET_ENABLED_SENSE_POLL_TIMEOUT_HW_NS</ffdc>
+    <ffdc>CPMS_CL2_PFETSTAT</ffdc>
+    <ffdc>CORE_TARGET</ffdc>
+    <callout>
+      <childTargets>
+        <parent>PROC_CHIP_IN_ERROR</parent>
+        <childType>TARGET_TYPE_CORE</childType>
+        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
+      </childTargets>
+      <priority>HIGH</priority>
+    </callout>
+    <deconfigure>
+      <childTargets>
+        <parent>PROC_CHIP_IN_ERROR</parent>
+        <childType>TARGET_TYPE_CORE</childType>
+        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
+      </childTargets>
+    </deconfigure>
+    <gard>
+      <childTargets>
+        <parent>PROC_CHIP_IN_ERROR</parent>
+        <childType>TARGET_TYPE_CORE</childType>
+        <childNumber>CORE_NUMBER_IN_ERROR</childNumber>
+      </childTargets>
+    </gard>
+  </hwpError>
+  <!-- ********************************************************************* -->
+
+  <!-- ********************************************************************* -->
+  <hwpError>
+    <sbeError/>
+    <rc>RC_VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED</rc>
+    <description>
+        Vmin Enable VDD_PFET_ENABLE_ACTUAL Failed.
     </description>
     <ffdc>CPMS_CL2_PFETSTAT</ffdc>
     <ffdc>CORE_TARGET</ffdc>
