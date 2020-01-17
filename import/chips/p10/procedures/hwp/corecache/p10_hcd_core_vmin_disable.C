@@ -46,7 +46,6 @@
 #include "p10_hcd_core_vmin_disable.H"
 #include "p10_hcd_mma_poweron.H"
 #include "p10_hcd_mma_scaninit.H"
-#include "p10_hcd_mma_startclocks.H"
 #include "p10_hcd_common.H"
 
 #ifdef __PPE_QME
@@ -63,6 +62,9 @@
 
 enum P10_HCD_CORE_VMIN_DISABLE_CONSTANTS
 {
+    HCD_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS    = 100000, // 10^5ns = 100us timeout
+    HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_HW_NS      = 1000,   // 1us poll loop delay
+    HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_SIM_CYCLE  = 32000,  // 32k sim cycle delay
     HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS       = 100000, // 10^5ns = 100us timeout
     HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_HW_NS         = 1000,   // 1us poll loop delay
     HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_SIM_CYCLE     = 32000,  // 32k sim cycle delay
@@ -87,6 +89,34 @@ p10_hcd_core_vmin_disable(
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE, l_sys, l_attr_runn_mode ) );
 
     FAPI_INF(">>p10_hcd_core_vmin_disable");
+
+    FAPI_DBG("Wait for RVID_ENABLED via CPMS_RVCSR[34]");
+    l_timeout = HCD_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS /
+                HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_HW_NS;
+
+    do
+    {
+        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
+
+        // use multicastAND to check 1
+        if( ( !l_attr_runn_mode ) &&
+            ( MMIO_GET(MMIO_LOWBIT(34)) == 1 ) )
+        {
+            break;
+        }
+
+        fapi2::delay(HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_HW_NS,
+                     HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_SIM_CYCLE);
+    }
+    while( (--l_timeout) != 0 );
+
+    FAPI_ASSERT( ( l_attr_runn_mode ?
+                   ( MMIO_GET(MMIO_LOWBIT(34)) == 1 ) : (l_timeout != 0) ),
+                 fapi2::VMIN_DIS_RVID_ENABLED_TIMEOUT()
+                 .set_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS)
+                 .set_CPMS_RVCSR(l_mmioData)
+                 .set_CORE_TARGET(i_target),
+                 "ERROR: Vmin Disable Rvid Enabled Timeout");
 
     FAPI_DBG("Drop RVID_ENABLE via CPMS_RVCSR[0]");
     FAPI_TRY( HCD_PUTMMIO_C(i_target, CPMS_RVCSR_WO_CLEAR, MMIO_1BIT(0) ) );
@@ -166,10 +196,9 @@ p10_hcd_core_vmin_disable(
     FAPI_DBG("Scaninit MMA after disabling Vmin");
     FAPI_TRY( p10_hcd_mma_scaninit( i_target ) );
 
-#endif
+    // MMA clocks will be turned on along with core_startclocks in stop2
 
-    FAPI_DBG("Clock On MMA after disabling Vmin");
-    FAPI_TRY( p10_hcd_mma_startclocks( i_target ) );
+#endif
 
 fapi_try_exit:
 

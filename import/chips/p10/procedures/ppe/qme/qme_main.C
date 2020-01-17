@@ -30,29 +30,13 @@
 extern QmeRecord G_qme_record;
 uint32_t G_IsSimics = 0; // extern declared in qme.h
 
-int main()
+
+void
+qme_attr_init()
 {
-    fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
-    // RTC 24898 change to different type.
-    // fapi2::ATTR_SMF_CONFIG_Type l_attr_smf_config;
-    uint32_t l_attr_smf_config;
-
-    PK_TRACE("Main: Configure Trace Timebase");
-    uint32_t trace_timebase = PPE_TIMEBASE_HZ;
-    pk_trace_set_freq(trace_timebase);
-
-    PK_TRACE("Main: Clear SPRG0");
-    ppe42_app_ctx_set(0);
-
-#if defined(USE_QME_QUEUED_SCOM) || defined(USE_QME_QUEUED_SCAN)
-    PK_TRACE("Main: QME Enabling Queued Scom/Scan");
-    out32(QME_LCL_QMCR_OR, BITS32(12, 2));
-#endif
-
     uint32_t pir = 0;
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (pir) : "i" (SPRN_PIR));
     G_qme_record.quad_id = pir & 0xF;
-
     fapi2::ReturnCode fapiRc = fapi2::plat_TargetsInit(G_qme_record.quad_id);
 
     if( fapiRc != fapi2::FAPI2_RC_SUCCESS )
@@ -60,6 +44,8 @@ int main()
         PK_TRACE_ERR("ERROR: FAPI2 Init Failed. HALT QME!");
         IOTA_PANIC(QME_MAIN_FAPI2_INIT_FAILED);
     }
+
+    //===============
 
     // RTC 245890: Topology ID setup until QME attribute initialization works
     {
@@ -77,7 +63,12 @@ int main()
         FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE, FAPI_SYSTEM, l_topo_tbl));
     }
 
+    //===============
+
     // Deal with SMF enablement
+    // RTC 24898 change to different type.
+    // fapi2::ATTR_SMF_CONFIG_Type l_attr_smf_config;
+    uint32_t l_attr_smf_config;
 
     // Start workaround RTC 24898: move to using ATTR_SMF_CONFIG directly and use the QME flag bit
     uint32_t l_smf_config;
@@ -89,6 +80,7 @@ int main()
     // Enable secure memory facility
     // RTC 24898: uncomment the following line.  Couldn't be used as the
     // attribute is not writable.
+    // fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
     // FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_SMF_CONFIG, FAPI_SYSTEM, l_attr_smf_config));
 
     if (l_attr_smf_config)
@@ -96,12 +88,57 @@ int main()
         G_qme_record.hcode_func_enabled |= QME_SMF_SUPPORT_ENABLE;
     }
 
-#if EPM_TUNING
+    //===============
 
-    uint32_t qme_runtime = 1;
-    fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_chip;
-    FAPI_TRY( FAPI_ATTR_SET( fapi2::ATTR_QME_RUNTIME_MODE, l_chip, qme_runtime ) );
+    uint8_t runn_mode      = 0;
+    uint8_t contained_type = 0;
+    fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>                 l_sys;
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE,          l_sys,  runn_mode ) );
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_CONTAINED_IPL_TYPE, l_sys,  contained_type ) );
 
+    if( runn_mode )
+    {
+        G_qme_record.hcode_func_enabled |= QME_RUNN_MODE_ENABLE;
+    }
+
+    if( contained_type != 0)
+    {
+        G_qme_record.hcode_func_enabled |= QME_CONTAINED_MODE_ENABLE;
+    }
+}
+
+
+
+int
+main()
+{
+#if (POWER10_DD_LEVEL != 0)
+#define PVR_CONST (0x421A0000 | (((POWER10_DD_LEVEL ) / 10) << 8) | (POWER10_DD_LEVEL % 10))
+#else
+#define PVR_CONST 0
+#endif
+
+    if(mfspr(287) != PVR_CONST)
+    {
+        IOTA_PANIC(QME_BAD_DD_LEVEL);
+    }
+
+    if (in32(QME_LCL_FLAGS) & BIT32(QME_FLAGS_DEBUG_TRAP_ENABLE))
+    {
+        PK_TRACE_INF("BREAK: Trap at QME Booted");
+        asm volatile ("trap");
+    }
+
+    PK_TRACE("Main: Configure Trace Timebase");
+    uint32_t trace_timebase = PPE_TIMEBASE_HZ;
+    pk_trace_set_freq(trace_timebase);
+
+    PK_TRACE("Main: Clear SPRG0");
+    ppe42_app_ctx_set(0);
+
+#if defined(USE_QME_QUEUED_SCOM) || defined(USE_QME_QUEUED_SCAN)
+    PK_TRACE("Main: QME Enabling Queued Scom/Scan");
+    out32(QME_LCL_QMCR_OR, BITS32(12, 2));
 #endif
 
     // Need to do this regardless the timer enablement for scrub engine to work
@@ -117,6 +154,7 @@ int main()
     }
 
     // Initialize the Stop state and Pstate tasks
+    qme_attr_init();
     qme_init();
 
 #if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)

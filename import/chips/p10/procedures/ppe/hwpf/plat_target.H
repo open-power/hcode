@@ -213,8 +213,11 @@ typedef union plat_target_handle
     {
         return ((target_info & 0x0F000000) << 3) |
                (target_info & 0x0000F000)       |
+#ifdef USE_QME_QUEUED_SCOM
+               ((addr | 0x07800000) & 0x0FFFFFFF);
+#else
                ((addr | 0x07000000) & 0x0FFFFFFF);
-        //todo add bit8 as queued_scom
+#endif
     }
 
     ///

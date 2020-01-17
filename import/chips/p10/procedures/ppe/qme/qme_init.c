@@ -76,21 +76,6 @@ qme_init()
     G_qme_record.c_stop5_reached    = G_qme_record.c_stop11_reached;
     G_qme_record.c_stop2_reached    = G_qme_record.c_stop11_reached;
 
-#if EPM_TUNING
-
-    PK_TRACE_INF("EPM Always have cores ready to enter first, aka cores are running when boot");
-    G_qme_record.c_stop2_reached  = 0;
-    G_qme_record.c_stop3_reached  = 0;
-    G_qme_record.c_stop5_reached  = 0;
-    G_qme_record.c_stop11_reached = 0;
-
-    if (G_qme_record.c_configured)
-    {
-        out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, G_qme_record.c_configured ), 0 );
-    }
-
-#endif
-
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
     G_qme_record.c_special_wakeup_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
     G_qme_record.c_hostboot_master = G_qme_record.c_special_wakeup_done & G_qme_record.c_configured;
@@ -111,22 +96,67 @@ qme_init()
                  G_qme_record.c_special_wakeup_done,
                  G_qme_record.c_block_wake_done);
 
-    qme_eval_eimr_override();
+    if( in32_sh( QME_LCL_FLAGS ) & BIT64SH( QME_FLAGS_RUNNING_EPM ) )
+    {
+        PK_TRACE_INF("EPM Always have cores ready to enter first, aka cores are running when boot");
+        G_qme_record.c_stop2_reached  = 0;
+        G_qme_record.c_stop3_reached  = 0;
+        G_qme_record.c_stop5_reached  = 0;
+        G_qme_record.c_stop11_reached = 0;
+
+        if (G_qme_record.c_configured)
+        {
+            out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, G_qme_record.c_configured ), 0 );
+        }
+
+        // Always test shadows as well as DDS
+        out32( QME_LCL_FLAGS_OR, ( BIT32(QME_FLAGS_TOD_SETUP_COMPLETE) | BIT32(QME_FLAGS_DDS_OPERABLE) ) );
+
+        //EPM can turn PFET off, but no Scanning or BCE or self restore
+        G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCAN_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCOM_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCAN_INIT_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
+    }
+
+    //technically contained mode implies stop11 is not supported with it
+    if( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE )
+    {
+        G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCAN_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCOM_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCAN_INIT_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_PFET_CTRL_ENABLE;
+    }
 
     //--------------------------------------------------------------------------
-    // BCE Core Specific Scan Ring
+    // Initialize Hardware Settings
     //--------------------------------------------------------------------------
+
+    PK_TRACE("Assert SRAM_SCRUB_ENABLE via QSCR[1]");
+    out32( QME_LCL_QSCR_OR, BIT32(1) );
 
     PK_TRACE("Drop BCECSR_OVERRIDE_EN/STOP_OVERRIDE_MODE/STOP_ACTIVE_MASK/STOP_SHIFTREG_OVERRIDE_EN via QMCR[3,6,7,29]");
     out32( QME_LCL_QMCR_OR,  BITS32(16, 8) ); //0xB=1011 (Lo-Pri Sel)
     out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2) | BIT32(3) | BIT32(29)) );
-    out32( QME_LCL_QMCR_CLR, (BIT32(3) | BIT32(29)) );
+    PK_TRACE_DBG( "DEBUG: QMCR value 0x%08x%08x", in32(QME_LCL_QMCR ));
 
-    PKTRACE( "QMCR value 0x%08x%08x", in32(QME_LCL_QMCR ));
-    // via qme_flags:
-    // know in either cache/chip-contain mode then skip this step after the first boot
-    // if the flag is set by ChrisR
-#if !SKIP_BCE_SCAN_RING
+    if (G_qme_record.c_configured)
+    {
+        PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE via PCR_SCSR[20, 26]");
+        out32( QME_LCL_CORE_ADDR_WR(
+                   QME_SCSR_WO_OR, G_qme_record.c_configured ), ( BIT32(20) | BIT32(26) ) );
+    }
+
+    //--------------------------------------------------------------------------
+    // BCE Core Specific Scan Ring
+    //--------------------------------------------------------------------------
 
     if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCAN_ENABLE )
     {
@@ -140,7 +170,6 @@ qme_init()
                              ( pQmeImgHdr->g_qme_inst_spec_ring_offset >> 5 ),
                              ( pQmeImgHdr->g_qme_max_spec_ring_length >> 5) );
 
-
         PK_TRACE_DBG("Setup: BCE Check for Copy Completed");
 
         if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
@@ -150,51 +179,37 @@ qme_init()
         }
     }
 
-#endif
-
     //--------------------------------------------------------------------------
-    // Initialize Hardware Settings
-    //--------------------------------------------------------------------------
-
-    PK_TRACE("Assert SRAM_SCRUB_ENABLE via QSCR[1]");
-    out32( QME_LCL_QSCR_OR, BIT32(1) );
-
-    PK_TRACE("Drop BCECSR_OVERRIDE_EN/STOP_OVERRIDE_MODE/STOP_ACTIVE_MASK/STOP_SHIFTREG_OVERRIDE_EN via QMCR[3,6,7,29]");
-    out32( QME_LCL_QMCR_OR,  BITS32(16, 8) ); //0xB=1011 (Lo-Pri Sel)
-    out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2) | BIT32(3) | BIT32(29)) );
-
-    if (G_qme_record.c_configured)
-    {
-        PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE/CTFS_DEC_WKUP_ENABLE via PCR_SCSR[20, 26, 27]");
-        out32( QME_LCL_CORE_ADDR_WR(
-                   QME_SCSR_WO_OR, G_qme_record.c_configured ), ( BIT32(20) | BITS32(26, 2) ) );
-    }
-
-    //--------------------------------------------------------------------------
-    // QME Init Completed, Enable Interrupts
+    // QME Init Completed
     //--------------------------------------------------------------------------
 
     PK_TRACE_INF("Setup: QME STOP READY");
     out32( QME_LCL_FLAGS_OR, BIT32(QME_FLAGS_STOP_READY) );
+    asm volatile ("tw 0, 31, 0"); // Marker for EPM
 
-#if EPM_TUNING
-    asm volatile ("tw 0, 31, 0");
-#endif
+    //--------------------------------------------------------------------------
+    // Enable Interrupts
+    //--------------------------------------------------------------------------
+
+    qme_eval_eimr_override();
 
     //TODO If there are no valid cores, the Resclk bits in EISR should remain masked since no workarounds are needed.
     //By the way, this is true for many EISR bits, the QME Hcode does not unmask them if there are no good cores in the Quad.
 
     PK_TRACE_DBG("Setup: Unmask STOP Interrupts Now with Reversing Initial Mask[%x]", G_qme_record.c_all_stop_mask);
+
 #ifdef QME_EDGE_TRIGGER_INTERRUPT
     out32_sh( QME_LCL_EITR_OR,  0x0000FF00 );
     out32_sh( QME_LCL_EISR_CLR, 0x0000FF00 );
 #endif
+
+    // HW525040
+    // Re-enable this for DD2
+    // out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( IRQ_VEC_PRTY12_QME >> 32 ) ) ) );
+    // out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
     {
-        uint64_t eimr = ( ( (~IRQ_VEC_PRTY12_QME) & (~BITS64(32,
-                            24)) ) | ( ( ~( (uint64_t)G_qme_record.c_all_stop_mask ) ) & ( BITS64(32, 24) ) ) );
+        uint64_t eimr = ( ( (~IRQ_VEC_PRTY12_QME) & (~BITS64(32, 24)) ) |
+                          ( ( ~( (uint64_t)G_qme_record.c_all_stop_mask ) ) & ( BITS64(32, 24) ) ) );
         out64( QME_LCL_EIMR_CLR, eimr );
     }
-//    HW525040
-//    out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( IRQ_VEC_PRTY12_QME >> 32 ) ) ) );
-//    out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
 }

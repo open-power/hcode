@@ -42,7 +42,8 @@ QME-C-SOURCES   = qme_addresses.c           \
                   qme_block_copy.c          \
                   qme_stop_self_execute.c
 
-SUBMODULE-CPP-SOURCES = p10_hcd_corecache_clock_control.C \
+SUBMODULE-CPP-SOURCES = p10_hcd_corecache_realign.C       \
+                        p10_hcd_corecache_clock_control.C \
                         p10_hcd_corecache_power_control.C \
                         p10_fbc_utils.C                   \
                         p10_perv_sbe_cmn.C

@@ -66,6 +66,7 @@ qme_l2_purge_catchup_detect(uint32_t& core_select)
 
         if( c_stop2 )
         {
+            PK_TRACE_DBG("Event: Detected L2 Purge Catchup on Cores[%x]", c_stop2);
             MARK_TAG(c_stop2, SE_L2_PURGE_CATCHUP);
 
             //===============//
@@ -91,12 +92,8 @@ qme_l2_purge_abort_detect()
     // Detect and Process L2 Purge Abort
     if( G_qme_record.hcode_func_enabled & QME_L2_PURGE_ABORT_PATH_ENABLE )
     {
-        c_wakeup = ( in32_sh(QME_LCL_EISR) & (BITS64SH(32, 4) | BITS64SH(40, 4)) );
-        out32_sh(QME_LCL_EISR_CLR, c_wakeup);
-
-        c_wakeup = c_wakeup >> SHIFT64SH(43);
+        c_wakeup = ( in32_sh(QME_LCL_EISR) & (BITS64SH(32, 4) | BITS64SH(40, 4)) ) >> SHIFT64SH(43);
         c_spwu   = c_wakeup >> 8;
-
         c_wakeup = (c_wakeup | c_spwu) &
                    G_qme_record.c_stop2_enter_targets &
                    ( ~G_qme_record.c_block_wake_done ) &
@@ -105,6 +102,9 @@ qme_l2_purge_abort_detect()
 
         if( c_wakeup )
         {
+            PK_TRACE_DBG("Event: Detected L2 Purge Abort on Cores[%x]", c_wakeup);
+            out32_sh( QME_LCL_EISR_CLR, ( (c_wakeup << SHIFT64SH(35)) | (c_wakeup << SHIFT64SH(43)) ) );
+
             G_qme_record.c_l2_purge_abort_targets        |= c_wakeup;
             G_qme_record.c_special_wakeup_abort_pending  |= c_wakeup & c_spwu;
             G_qme_record.c_l2_purge_catchup_targets      &= (~c_wakeup);
@@ -129,12 +129,8 @@ qme_ncu_purge_abort_detect()
     // Detect and Process NCU Purge Abort
     if( G_qme_record.hcode_func_enabled & QME_NCU_PURGE_ABORT_PATH_ENABLE )
     {
-        c_wakeup = ( in32_sh(QME_LCL_EISR) & (BITS64SH(32, 4) | BITS64SH(40, 4)) );
-        out32_sh(QME_LCL_EISR_CLR, c_wakeup);
-
-        c_wakeup = c_wakeup >> SHIFT64SH(43);
-        c_spwu = c_wakeup >> 8;
-
+        c_wakeup = ( in32_sh(QME_LCL_EISR) & (BITS64SH(32, 4) | BITS64SH(40, 4)) ) >> SHIFT64SH(43);
+        c_spwu   = c_wakeup >> 8;
         c_wakeup = (c_wakeup | c_spwu) &
                    G_qme_record.c_stop2_enter_targets &
                    ( ~G_qme_record.c_block_wake_done ) &
@@ -143,6 +139,9 @@ qme_ncu_purge_abort_detect()
 
         if( c_wakeup )
         {
+            PK_TRACE_DBG("Event: Detected NCU Purge Abort on Cores[%x]", c_wakeup);
+            out32_sh( QME_LCL_EISR_CLR, ( (c_wakeup << SHIFT64SH(35)) | (c_wakeup << SHIFT64SH(43)) ) );
+
             G_qme_record.c_ncu_purge_abort_targets       |= c_wakeup;
             G_qme_record.c_special_wakeup_abort_pending  |= c_wakeup & c_spwu;
 
@@ -164,13 +163,13 @@ qme_stop2_abort_cleanup(uint32_t abort_targets)
     //(P.S. this same thing is done when aborting stop entry due to TFAC error being
     //reported in TFSCR (34:36) and the ERR register and maybe in avoid false errorEISR)
 
-    PK_TRACE("Drop XFR_RECEIVE_DONE via PCR_TFCSR[32]");
+    PK_TRACE("Clear XFR_RECEIVE_DONE via PCR_TFCSR[32]");
     out32_sh( QME_LCL_CORE_ADDR_WR( QME_TFCSR_WO_CLEAR, abort_targets ), BIT64SH(32) );
 
     PK_TRACE("Assert TFAC_RESET via PCR_TFCSR[1]");
     out32(    QME_LCL_CORE_ADDR_WR( QME_TFCSR_WO_OR, abort_targets ), BIT32(1) );
 
-    PK_TRACE("Reset the core timefac to INACTIVE via PC.COMMON.TFX[1]");
+    PK_TRACE("Reset the core timefac to ACTIVE via PC.COMMON.TFX[0,1]=0b01");
     PPE_PUTSCOM_MC( EC_PC_TFX_SM, abort_targets, BIT64(1) );
 
     //===============//
@@ -583,8 +582,10 @@ qme_stop_entry()
 
         G_qme_record.c_stop11_enter_targets = 0;
 
+        G_qme_record.hcode_func_enabled |= QME_L2_PURGE_CATCHUP_PATH_ENABLE;
         G_qme_record.hcode_func_enabled |= QME_L2_PURGE_ABORT_PATH_ENABLE;
         G_qme_record.hcode_func_enabled |= QME_NCU_PURGE_ABORT_PATH_ENABLE;
+        G_qme_record.hcode_func_enabled |= QME_STOP3OR5_CATCHUP_PATH_ENABLE;
         G_qme_record.hcode_func_enabled |= QME_STOP3OR5_ABORT_PATH_ENABLE;
     }
 }

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2019                                                    */
+/* COPYRIGHT 2018,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -44,6 +44,7 @@
 //------------------------------------------------------------------------------
 
 #include "p10_hcd_core_startgrid.H"
+#include "p10_hcd_corecache_realign.H"
 #include "p10_hcd_common.H"
 
 #ifdef __PPE_QME
@@ -71,11 +72,16 @@ p10_hcd_core_startgrid(
     const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > & i_target)
 {
     fapi2::buffer<buffer_t> l_mmioData = 0;
+    uint32_t                l_regions  = i_target.getCoreSelect();
+    fapi2::Target < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > eq_target =
+        i_target.getParent < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST > ();
 
     FAPI_INF(">>p10_hcd_core_startgrid");
 
     FAPI_DBG("Switch CL2 Glsmux to DPLL via CPMS_CGCSR[11:L2_CLKGLM_SEL]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CGCSR_WO_OR, MMIO_1BIT(11) ) );
+
+    FAPI_TRY( p10_hcd_corecache_realign(eq_target, ( l_regions << SHIFT32(8) ) ) );
 
 fapi_try_exit:
 

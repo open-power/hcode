@@ -65,33 +65,39 @@ qme_doorbell1_event()
         if (G_qme_record.doorbell1_msg & STOP_BLOCK_EXIT)
         {
             G_qme_record.c_block_wake_req   = (scratchB & BITS32(0, 4)) >> SHIFT32(3);
-            G_qme_record.c_block_wake_done |= G_qme_record.c_block_wake_req;
 
-            // Set PM_BLOCK_INTERRUPTS
-            // prevent the core from waking on any interrupts
-            // (including Decrementer and Hypervisor Decrementer).
-            out32( QME_LCL_CORE_ADDR_WR(
-                       QME_SCSR_WO_OR, G_qme_record.c_block_wake_req ),
-                   BIT32(0) );
+            if( G_qme_record.c_block_wake_req )
+            {
+                // Set PM_BLOCK_INTERRUPTS
+                // prevent the core from waking on any interrupts
+                // (including Decrementer and Hypervisor Decrementer).
+                out32( QME_LCL_CORE_ADDR_WR(
+                           QME_SCSR_WO_OR, G_qme_record.c_block_wake_req ),
+                       BIT32(0) );
 
-            // Block Exit Enabled
-            out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_wake_req << SHIFT32(11) ));
+                // Block Exit Enabled
+                out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_wake_req << SHIFT32(11) ));
+                G_qme_record.c_block_wake_done |= G_qme_record.c_block_wake_req;
+            }
         }
 
         // entry
         if (G_qme_record.doorbell1_msg & STOP_BLOCK_ENTRY)
         {
             G_qme_record.c_block_stop_req   = (scratchB & BITS32(4, 4)) >> SHIFT32(7);
-            G_qme_record.c_block_stop_done |= G_qme_record.c_block_stop_req;
 
-            // Set PM_EXIT
-            // prevent the core from entering any STOP state.
-            out32( QME_LCL_CORE_ADDR_WR(
-                       QME_SCSR_WO_OR, G_qme_record.c_block_stop_req ),
-                   BIT32(1) );
+            if( G_qme_record.c_block_stop_req )
+            {
+                // Set PM_EXIT
+                // prevent the core from entering any STOP state.
+                out32( QME_LCL_CORE_ADDR_WR(
+                           QME_SCSR_WO_OR, G_qme_record.c_block_stop_req ),
+                       BIT32(1) );
 
-            // Block Entry Enabled
-            out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_stop_req << SHIFT32(15) ));
+                // Block Entry Enabled
+                out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_stop_req << SHIFT32(15) ));
+                G_qme_record.c_block_stop_done |= G_qme_record.c_block_stop_req;
+            }
         }
 
         // acknowledge the mode has been entered
@@ -111,31 +117,37 @@ qme_doorbell1_event()
         if (G_qme_record.doorbell1_msg & STOP_BLOCK_EXIT)
         {
             G_qme_record.c_block_wake_req   = (scratchB & BITS32(0, 4)) >> SHIFT32(3);
-            G_qme_record.c_block_wake_done &= ~( G_qme_record.c_block_wake_req );
 
-            // Clear PM_BLOCK_INTERRUPTS
-            out32( QME_LCL_CORE_ADDR_WR(
-                       QME_SCSR_WO_CLEAR, G_qme_record.c_block_wake_req ),
-                   BIT32(0) );
+            if( G_qme_record.c_block_wake_req )
+            {
+                // Clear PM_BLOCK_INTERRUPTS
+                out32( QME_LCL_CORE_ADDR_WR(
+                           QME_SCSR_WO_CLEAR, G_qme_record.c_block_wake_req ),
+                       BIT32(0) );
 
-            // Block Exit Disabled
-            out32(QME_LCL_SCRB_CLR, ( G_qme_record.c_block_wake_req << SHIFT32(11) ));
+                // Block Exit Disabled
+                out32(QME_LCL_SCRB_CLR, ( G_qme_record.c_block_wake_req << SHIFT32(11) ));
+                G_qme_record.c_block_wake_done &= ~( G_qme_record.c_block_wake_req );
+            }
         }
 
         // entry
         if (G_qme_record.doorbell1_msg & STOP_BLOCK_ENTRY)
         {
             G_qme_record.c_block_stop_req   = (scratchB & BITS32(4, 4)) >> SHIFT32(7);
-            G_qme_record.c_block_stop_done &= ~( G_qme_record.c_block_stop_req );
 
-            // Clear PM_EXIT
-            // prevent the core from entering any STOP state.
-            out32( QME_LCL_CORE_ADDR_WR(
-                       QME_SCSR_WO_CLEAR, G_qme_record.c_block_stop_req ),
-                   BIT32(1) );
+            if( G_qme_record.c_block_stop_req )
+            {
+                // Clear PM_EXIT
+                // prevent the core from entering any STOP state.
+                out32( QME_LCL_CORE_ADDR_WR(
+                           QME_SCSR_WO_CLEAR, G_qme_record.c_block_stop_req ),
+                       BIT32(1) );
 
-            // Block Entry Disabled
-            out32(QME_LCL_SCRB_CLR, ( G_qme_record.c_block_stop_req << SHIFT32(15) ));
+                // Block Entry Disabled
+                out32(QME_LCL_SCRB_CLR, ( G_qme_record.c_block_stop_req << SHIFT32(15) ));
+                G_qme_record.c_block_stop_done &= ~( G_qme_record.c_block_stop_req );
+            }
         }
 
         // acknowledge the mode has been entered
@@ -153,7 +165,11 @@ qme_doorbell1_event()
                  G_qme_record.c_block_stop_req,
                  G_qme_record.c_block_stop_done);
 
-    qme_eval_eimr_override();
+    if( !( G_qme_record.uih_status & UIH_STOP_EVENT_MASKING ) )
+    {
+        qme_eval_eimr_override();
+    }
+
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_DB1);
 }
 
@@ -179,8 +195,6 @@ qme_send_pig_packet(uint32_t data)
 {
     uint32_t temp = 0;
 
-    wrteei(0);
-
     // First make sure no interrupt request is currently granted
     do
     {
@@ -190,8 +204,10 @@ qme_send_pig_packet(uint32_t data)
     while ( temp & BIT32(24) );
 
     // Send PIG packet
-    out32(QME_LCL_PIG, data);
-    PK_TRACE_DBG("PIG: Sending[%x]", data);
+    if( !(G_qme_record.hcode_func_enabled & QME_RUNN_MODE_ENABLE) )
+    {
+        out32(QME_LCL_PIG, data);
+    }
 
-    wrteei(1);
+    PK_TRACE_DBG("PIG: Sending[%x]", data);
 }

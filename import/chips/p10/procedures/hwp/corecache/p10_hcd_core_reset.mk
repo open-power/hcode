@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019
+# COPYRIGHT 2019,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -28,5 +28,6 @@ $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p9/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/perv)
 OBJS+=p10_perv_sbe_cmn.o
+OBJS+=p10_hcd_corecache_realign.o
 #lib$(PROCEDURE)_COMMONFLAGS += -DP10_HCD_CORECACHE_SKIP_FLUSH
 $(call BUILD_PROCEDURE)

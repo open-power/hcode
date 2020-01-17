@@ -45,7 +45,6 @@
 
 #include "p10_hcd_core_vmin_enable.H"
 #include "p10_hcd_mma_poweroff.H"
-#include "p10_hcd_mma_stopclocks.H"
 #include "p10_hcd_common.H"
 
 #ifdef __PPE_QME
@@ -68,6 +67,8 @@ enum P10_HCD_CORE_VMIN_ENABLE_CONSTANTS
     HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS   = 100000, // 10^5ns = 100us timeout
     HCD_VMIN_ENA_VDD_PG_STATE_POLL_DELAY_HW_NS     = 1000,   // 1us poll loop delay
     HCD_VMIN_ENA_VDD_PG_STATE_POLL_DELAY_SIM_CYCLE = 32000,  // 32k sim cycle delay
+    HCD_VMIN_ENA_PFET_ENABLE_DELAY_HW_NS           = 50,     // 50ns quiesce delay
+    HCD_VMIN_ENA_PFET_ENABLE_DELAY_SIM_CYCLE       = 250     // 250 sim cycle delay
 };
 
 //------------------------------------------------------------------------------
@@ -81,7 +82,7 @@ p10_hcd_core_vmin_enable(
     fapi2::buffer<buffer_t> l_mmioData = 0;
     uint32_t                l_timeout  = 0;
 #ifndef PFET_SENSE_POLL_DISABLE
-    uint32_t                l_vdd_pfet_enable = 0;
+    uint32_t                l_vdd_pfet_enable_actual = 0;
 #endif
 
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
@@ -90,8 +91,7 @@ p10_hcd_core_vmin_enable(
 
     FAPI_INF(">>p10_hcd_core_vmin_enable");
 
-    FAPI_DBG("Clock Off MMA before enabling Vmin");
-    FAPI_TRY( p10_hcd_mma_stopclocks( i_target ) );
+    // MMA clock would already be turned off by stop2 with core clocks
 
     // MMA PFET Power On/Off sequence requires CL2 PFET[ON] + CL2 RegulationFinger[ON]
     // Stop3: Set RF -> MMA PFET[OFF] -> CL2 PFET[Vmin]
@@ -141,12 +141,20 @@ p10_hcd_core_vmin_enable(
     FAPI_DBG("Check VDD_PFET_ENABLE_ACTUAL == 0x80 via CPMS_CL2_PFETSTAT[16-23]");
     FAPI_TRY( HCD_GETMMIO_C( i_target, CPMS_CL2_PFETSTAT, l_mmioData ) );
 
-    MMIO_EXTRACT(16, 8, l_vdd_pfet_enable);
-    FAPI_ASSERT((l_vdd_pfet_enable == 0x80),
-                fapi2::VMIN_ENA_VDD_PFET_ENABLE_FAILED()
+    MMIO_EXTRACT(16, 8, l_vdd_pfet_enable_actual);
+    FAPI_ASSERT((l_vdd_pfet_enable_actual == 0x80),
+                fapi2::VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED()
                 .set_CPMS_CL2_PFETSTAT(l_mmioData)
                 .set_CORE_TARGET(i_target),
-                "ERROR: Vmin Enable VDD_PFET_ENABLE Failed");
+                "ERROR: Vmin Enable VDD_PFET_ENABLE_ACTUAL Failed");
+
+    FAPI_DBG("Delay 50ns");
+    fapi2::delay(HCD_VMIN_ENA_PFET_ENABLE_DELAY_HW_NS,
+                 HCD_VMIN_ENA_PFET_ENABLE_DELAY_SIM_CYCLE);
+
+#ifdef __PPE_PLAT
+    asm("sync");
+#endif
 
 #endif
 

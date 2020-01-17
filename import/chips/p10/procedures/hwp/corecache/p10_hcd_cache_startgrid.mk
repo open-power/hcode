@@ -25,4 +25,5 @@
 PROCEDURE=p10_hcd_cache_startgrid
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
+OBJS+=p10_hcd_corecache_realign.o
 $(call BUILD_PROCEDURE)

@@ -128,21 +128,32 @@ typedef enum
 
 enum QME_HCODE_FUNCTIONAL_ENABLES
 {
+    // Software Checks
     QME_CLOCK_STATUS_CHECK_ENABLE     = BIT32(0),
     QME_POWER_LOSS_ESL_CHECK_ENABLE   = BIT32(1),
     QME_SPWU_PROTOCOL_CHECK_ENABLE    = BIT32(2),
+    // Stop Catchup/Abort Path Switches
     QME_L2_PURGE_CATCHUP_PATH_ENABLE  = BIT32(3),
     QME_L2_PURGE_ABORT_PATH_ENABLE    = BIT32(4),
     QME_NCU_PURGE_ABORT_PATH_ENABLE   = BIT32(5),
     QME_STOP3OR5_CATCHUP_PATH_ENABLE  = BIT32(6),
     QME_STOP3OR5_ABORT_PATH_ENABLE    = BIT32(7),
+    // HWP Switches
     QME_SELF_RESTORE_ENABLE           = BIT32(8),
-    QME_SMF_SUPPORT_ENABLE            = BIT32(9),
+    QME_SELF_SAVE_ENABLE              = BIT32(9),
     QME_BLOCK_COPY_SCAN_ENABLE        = BIT32(10),
     QME_BLOCK_COPY_SCOM_ENABLE        = BIT32(11),
+    QME_HWP_SCOM_CUST_ENABLE          = BIT32(12),
+    QME_HWP_SCOM_INIT_ENABLE          = BIT32(13),
+    QME_HWP_SCAN_INIT_ENABLE          = BIT32(14),
+    QME_HWP_PFET_CTRL_ENABLE          = BIT32(15),
+    // Modes Switches
+    QME_SMF_SUPPORT_ENABLE            = BIT32(16),
+    QME_RUNN_MODE_ENABLE              = BIT32(17),
+    QME_CONTAINED_MODE_ENABLE         = BIT32(18)
 };
 
-#define ENABLED_HCODE_FUNCTIONS 0x3FA00000
+#define ENABLED_HCODE_FUNCTIONS 0x3FEF0000
 #define QME_SCOREBOARD_VERSION  0x514d4531 //QME1
 
 typedef struct
@@ -159,7 +170,7 @@ typedef struct
     uint32_t    stop_level_enabled; // Stop2:bit2, Stop5:bit5, Stop11:bit11
     uint32_t    fused_core_enabled; // HwFused:0b01, HcodePaired:0b10
 
-    uint32_t    mma_enabled;        // POff:0b001, POff_Delay:0b010, POn:0b100
+    uint32_t    mma_enabled;        // POff:0b001, POff_Delay:0b010(Dynamic), POn:0b100(Static)
     uint32_t    throttle_enabled;   // Enable Hcode Core Throttling
     uint32_t    pmcr_fwd_enabled;   // Enable QMCR and PMCRS auto updates
     uint32_t    uih_status;         // upper 16b actual irq, lower 16b phantom
@@ -190,7 +201,7 @@ typedef struct
     uint32_t    c_configured;       // Configured Cores
     uint32_t    c_in_error;         // Core encountered error and garded
     uint32_t    c_all_stop_mask;    // stop masks that applying to the uih override
-    uint32_t    c_stop0_targets;
+    uint32_t    c_stop1_targets;
 
     uint32_t    c_special_wakeup_rise_mask;
     uint32_t    c_special_wakeup_fall_mask;

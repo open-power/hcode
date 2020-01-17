@@ -169,6 +169,7 @@ ReturnCode delay(uint64_t i_nanoSeconds, uint64_t i_simCycles, bool i_fixed = fa
     static_cast<void>(i_simCycles);
 
 //TODO REMOVE LINE BELOW DAVID PK TO IOTA
+//TODO need to make this perfermance friendly simics
 //Currently this function is doing NOP
 //Need to study and implement how QME timebase converts to delay with iota instead of pk
 #define __FAPI_DELAY_SIM__
@@ -259,9 +260,9 @@ ReturnCode delay(uint64_t i_nanoSeconds, uint64_t i_simCycles, bool i_fixed = fa
         ((l_adjusted_simcycles - (NUM_OVERHEAD_INSTRS * __FAPI_DELAY_PPE_SIM_CYCLES__)) /
          (NUM_LOOP_INSTRS * __FAPI_DELAY_PPE_SIM_CYCLES__));
 
-
     for (auto i = delay_loop_count; i > 0; --i)
     {
+        // Force compiler not to optimize for loop
         asm("");
     }
 
