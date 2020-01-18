@@ -24,6 +24,7 @@
 # IBM_PROLOG_END_TAG
 PROCEDURE=p10_hcd_core_initf
 OBJS += p10_hcd_mma_startclocks.o
+OBJS += p10_hcd_corecache_clock_control.o
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
 $(call BUILD_PROCEDURE)
