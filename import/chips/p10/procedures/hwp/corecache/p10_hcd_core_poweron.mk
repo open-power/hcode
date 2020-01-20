@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019
+# COPYRIGHT 2019,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -25,7 +25,7 @@
 PROCEDURE=p10_hcd_core_poweron
 OBJS += p10_hcd_corecache_power_control.o
 OBJS += p10_hcd_mma_poweron.o
-lib$(PROCEDURE)_COMMONFLAGS += -DPFET_SENSE_POLL_DISABLE
+#lib$(PROCEDURE)_COMMONFLAGS += -DPFET_SENSE_POLL_DISABLE
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
 $(call BUILD_PROCEDURE)
