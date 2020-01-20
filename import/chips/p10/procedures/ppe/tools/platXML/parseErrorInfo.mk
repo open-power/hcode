@@ -29,7 +29,8 @@ GENERATED=parseErrorInfo_qme
 $(GENERATED)_COMMAND_PATH=$(XMLTOOL_DIR)
 COMMAND=parseErrorInfo.pl
 
-SOURCES+=$(ERRORFILES)
+SOURCES+=$(ERRORFILES_HCD)
+SOURCES+=$(ERRORFILES_SBE)
 TARGETS+=hwp_return_codes.H 
 TARGETS+=hwp_error_info.H 
 TARGETS+=collect_reg_ffdc_regs.H 
@@ -38,6 +39,6 @@ TARGETS+=set_sbe_error.H
 $(GENERATED)_PATH=$(GENPATH)/qme
 
 define parseErrorInfo_qme_RUN
-                $(C1) $$< --local-ffdc --output-dir=$$($(GENERATED)_PATH) $(ERRORFILES);
+                $(C1) $$< --local-ffdc --output-dir=$$($(GENERATED)_PATH) $(ERRORFILES_HCD) $(ERRORFILES_SBE);
 endef
 $(call BUILD_GENERATED)
