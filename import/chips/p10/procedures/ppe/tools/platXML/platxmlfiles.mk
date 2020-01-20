@@ -37,6 +37,6 @@ ATTRFILES += $(ATTRINFO_DIR)/pm_hwp_attributes.xml
 ATTRFILES += $(ATTRFAPI_DIR)/unit_attributes.xml
 ATTRFILES += $(ATTRFAPI_DIR)/chip_attributes.xml
 ATTRFILES += $(ATTRFAPI_DIR)/system_attributes.xml
-ERRORFILES:=$(sort $(ERRORFILES) $(wildcard $(ERRORINFO_DIR)/p10_hcd_*.xml))
+ERRORFILES_HCD:=$(sort $(ERRORFILES) $(wildcard $(ERRORINFO_DIR)/p10_hcd_*.xml))
 #add this for ffdc in ring library
-ERRORFILES+=$(ERRORINFO_DIR)/p10_sbe_ring_errors.xml
+ERRORFILES_SBE:=$(ERRORINFO_DIR)/p10_sbe_ring_errors.xml
