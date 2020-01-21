@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/opt/xsite/cte/tools/python/bin/python3 
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
