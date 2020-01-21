@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -55,7 +55,7 @@ __header_64_reserved:
         .xip_toc link_address, P9_XIP_UINT64, __link_address
 
         ////////////////////////////////////////////////////////////////////
-        // Section Table - 8-byte aligned; 15 entries; Not TOC-Indexed
+        // Section Table - 8-byte aligned; 24 entries; Not TOC-Indexed
         ////////////////////////////////////////////////////////////////////
 
         .xip_section header
@@ -65,7 +65,15 @@ __header_64_reserved:
         .xip_section strings
 
         .xip_section iop_fw,           8
-
+        .xip_section
+        .xip_section
+        .xip_section
+        .xip_section
+        .xip_section
+        .xip_section
+        .xip_section
+        .xip_section
+        .xip_section
         .xip_section
         .xip_section
         .xip_section
