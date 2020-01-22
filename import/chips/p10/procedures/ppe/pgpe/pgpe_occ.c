@@ -39,6 +39,11 @@ void pgpe_occ_produce_fit_i_v_values();
 void pgpe_occ_init()
 {
 
+    HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)
+                                            (pgpe_header_get(g_pgpe_shared_sram_addr));
+
+    occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2;
+
     G_pgpe_occ.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_wof_state_addr));
 
     //\TODO: RTC: 214486 Scale this based on nest frequency and FIT TSEL.
