@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2019                                                    */
+/* COPYRIGHT 2018,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -27,7 +27,7 @@
 
 
 #define GENERATE_HOMER_TABLES               1
-#define USE_FAKE_BOOT                       1 //\todo Use real GPPB and PGPE Header Data
+#define USE_FAKE_BOOT                       0 //\todo Use real GPPB and PGPE Header Data
 #define FAKE_BOOT_IMMEDIATE_MODE            0
 #define FAKE_BOOT_WOF_ENABLE                1
 
