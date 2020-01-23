@@ -190,7 +190,7 @@ Disassembly of section .selfRestore:
     209c:	3a 20 00 01 	li      r17,1
     20a0:	7e 48 88 38 	and     r8,r18,r17
     20a4:	2c 08 00 00 	cmpwi   r8,0
-    20a8:	40 82 01 18 	bne     21c0 <find_self_save>
+    20a8:	40 82 00 e4 	bne     218c <find_self_save>
 
 00000000000020ac <thread_restore_base>:
     20ac:	39 00 01 e0 	li      r8,480
@@ -214,9 +214,9 @@ Disassembly of section .selfRestore:
     20dc:	39 00 ff fe 	li      r8,-2
     20e0:	7e b5 40 39 	and.    r21,r21,r8
     20e4:	28 17 00 00 	cmplwi  r23,0
-    20e8:	41 82 00 98 	beq     2180 <initiate_hv_compatibility_mode>
+    20e8:	41 82 00 64 	beq     214c <initiate_hv_compatibility_mode>
     20ec:	7a 51 e7 e3 	rldicl. r17,r18,60,63
-    20f0:	41 82 00 b0 	beq     21a0 <initiate_urmor_restore>
+    20f0:	41 82 00 7c 	beq     216c <initiate_urmor_restore>
 
 00000000000020f4 <initiate_runtime_hv_wakeup>:
     20f4:	39 00 00 00 	li      r8,0
@@ -226,85 +226,62 @@ Disassembly of section .selfRestore:
     2104:	7e 3b 4a a6 	mfspr   r17,315
     2108:	79 11 b2 6c 	rldimi  r17,r8,22,41
     210c:	7e 3b 4b a6 	mtspr   315,r17
-    2110:	79 15 b2 6c 	rldimi  r21,r8,22,41
-    2114:	7a 51 df e3 	rldicl. r17,r18,59,63
-    2118:	41 82 00 20 	beq     2138 <wakeup_hv_smf_enable_mode>
+    2110:	7e 1f 7a a6 	mfspr   r16,511
+    2114:	79 10 f8 0e 	rldimi  r16,r8,63,0
+    2118:	79 15 b2 6c 	rldimi  r21,r8,22,41
+    211c:	39 14 12 00 	addi    r8,r20,4608
+    2120:	28 06 00 00 	cmplwi  r6,0
+    2124:	41 82 00 08 	beq     212c <update_usrrx>
+    2128:	39 08 00 04 	addi    r8,r8,4
 
-000000000000211c <wakeup_hv_smf_disable_mode>:
-    211c:	79 10 f8 0e 	rldimi  r16,r8,63,0
-    2120:	7e 1f 7b a6 	mtspr   511,r16
-    2124:	3a 20 12 00 	li      r17,4608
-    2128:	28 06 00 00 	cmplwi  r6,0
-    212c:	40 82 00 3c 	bne     2168 <update_usrrx>
-    2130:	3a 31 00 04 	addi    r17,r17,4
-    2134:	48 00 00 34 	b       2168 <update_usrrx>
+000000000000212c <update_usrrx>:
+    212c:	7d 1a 7b a6 	mtspr   506,r8
+    2130:	7e bb 7b a6 	mtspr   507,r21
+    2134:	2c 06 00 00 	cmpwi   r6,0
+    2138:	40 82 00 08 	bne     2140 <exit_to_thread_stop>
+    213c:	7e 1f 7b a6 	mtspr   511,r16
 
-0000000000002138 <wakeup_hv_smf_enable_mode>:
-    2138:	7e 39 7a a6 	mfspr   r17,505
-    213c:	7a 28 87 e1 	rldicl. r8,r17,16,63
-    2140:	28 08 00 00 	cmplwi  r8,0
-    2144:	41 82 00 14 	beq     2158 <ipl_stop_exit>
+0000000000002140 <exit_to_thread_stop>:
+    2140:	4c 00 01 2c 	isync
+    2144:	4c 00 02 64 	.long 0x4c000264
+    2148:	00 00 02 00 	attn
 
-0000000000002148 <runtime_stop_exit>:
-    2148:	7e 39 4a a6 	mfspr   r17,313
-    214c:	62 31 02 00 	ori     r17,r17,512
-    2150:	7e 39 4b a6 	mtspr   313,r17
-    2154:	48 00 00 08 	b       215c <hrmor_restore_hv>
+000000000000214c <initiate_hv_compatibility_mode>:
+    214c:	39 14 12 00 	addi    r8,r20,4608
+    2150:	28 06 00 00 	cmplwi  r6,0
+    2154:	41 82 00 08 	beq     215c <update_srrx>
+    2158:	39 08 00 04 	addi    r8,r8,4
 
-0000000000002158 <ipl_stop_exit>:
-    2158:	3a 20 12 00 	li      r17,4608
+000000000000215c <update_srrx>:
+    215c:	7d 1a 03 a6 	mtsrr0  r8
+    2160:	7e bb 03 a6 	mtsrr1  r21
+    2164:	4c 00 00 24 	rfid
+    2168:	00 00 02 00 	attn
 
-000000000000215c <hrmor_restore_hv>:
-    215c:	28 06 00 00 	cmplwi  r6,0
-    2160:	41 82 00 08 	beq     2168 <update_usrrx>
-    2164:	3a 31 00 04 	addi    r17,r17,4
+000000000000216c <initiate_urmor_restore>:
+    216c:	39 14 12 80 	addi    r8,r20,4736
+    2170:	28 06 00 00 	cmplwi  r6,0
+    2174:	41 82 00 08 	beq     217c <update_uv_exit>
+    2178:	39 08 00 08 	addi    r8,r8,8
 
-0000000000002168 <update_usrrx>:
-    2168:	7e 3a 7b a6 	mtspr   506,r17
-    216c:	7e bb 7b a6 	mtspr   507,r21
-    2170:	7e bb 03 a6 	mtsrr1  r21
+000000000000217c <update_uv_exit>:
+    217c:	7d 1a 7b a6 	mtspr   506,r8
+    2180:	7e bb 7b a6 	mtspr   507,r21
+    2184:	4c 00 02 64 	.long 0x4c000264
+    2188:	00 00 02 00 	attn
 
-0000000000002174 <exit_to_thread_stop>:
-    2174:	4c 00 01 2c 	isync
-    2178:	4c 00 02 64 	.long 0x4c000264
-    217c:	00 00 02 00 	attn
+000000000000218c <find_self_save>:
+    218c:	3b ed 00 08 	addi    r31,r13,8
+    2190:	7d c8 03 a6 	mtlr    r14
+    2194:	4e 80 00 21 	blrl
+    2198:	2c 06 00 00 	cmpwi   r6,0
+    219c:	40 82 f0 68 	bne     1204 <save_restore_done>
 
-0000000000002180 <initiate_hv_compatibility_mode>:
-    2180:	39 14 12 00 	addi    r8,r20,4608
-    2184:	28 06 00 00 	cmplwi  r6,0
-    2188:	41 82 00 08 	beq     2190 <update_srrx>
-    218c:	39 08 00 04 	addi    r8,r8,4
-
-0000000000002190 <update_srrx>:
-    2190:	7d 1a 03 a6 	mtsrr0  r8
-    2194:	7e bb 03 a6 	mtsrr1  r21
-    2198:	4c 00 00 24 	rfid
-    219c:	00 00 02 00 	attn
-
-00000000000021a0 <initiate_urmor_restore>:
-    21a0:	39 14 12 80 	addi    r8,r20,4736
-    21a4:	28 06 00 00 	cmplwi  r6,0
-    21a8:	41 82 00 08 	beq     21b0 <update_uv_exit>
-    21ac:	39 08 00 08 	addi    r8,r8,8
-
-00000000000021b0 <update_uv_exit>:
-    21b0:	7d 1a 7b a6 	mtspr   506,r8
-    21b4:	7e bb 7b a6 	mtspr   507,r21
-    21b8:	4c 00 02 64 	.long 0x4c000264
-    21bc:	00 00 02 00 	attn
-
-00000000000021c0 <find_self_save>:
-    21c0:	3b ed 00 08 	addi    r31,r13,8
-    21c4:	7d c8 03 a6 	mtlr    r14
-    21c8:	4e 80 00 21 	blrl
-    21cc:	2c 06 00 00 	cmpwi   r6,0
-    21d0:	40 82 f0 34 	bne     1204 <save_restore_done>
-
-00000000000021d4 <save_core_spr>:
-    21d4:	3b ec 00 28 	addi    r31,r12,40
-    21d8:	7d e8 03 a6 	mtlr    r15
-    21dc:	4e 80 00 21 	blrl
-    21e0:	4b ff f0 24 	b       1204 <save_restore_done>
+00000000000021a0 <save_core_spr>:
+    21a0:	3b ec 00 28 	addi    r31,r12,40
+    21a4:	7d e8 03 a6 	mtlr    r15
+    21a8:	4e 80 00 21 	blrl
+    21ac:	4b ff f0 58 	b       1204 <save_restore_done>
 	...
     2300:	38 00 02 78 	li      r0,632
     2304:	64 00 7c 00 	oris    r0,r0,31744
