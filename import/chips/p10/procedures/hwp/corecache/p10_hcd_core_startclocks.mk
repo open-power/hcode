@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019
+# COPYRIGHT 2019,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -27,8 +27,4 @@ OBJS += p10_hcd_corecache_clock_control.o
 OBJS += p10_hcd_mma_startclocks.o
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
-# TODO:  remove when skew adjust works.
-lib$(PROCEDURE)_COMMONFLAGS += -DEQ_SKEW_ADJUST_DISABLE
-# TODO:  remove when clock stat works.
-lib$(PROCEDURE)_COMMONFLAGS += -DEQ_CLOCK_STAT_DISABLE
 $(call BUILD_PROCEDURE)
