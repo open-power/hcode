@@ -38,6 +38,7 @@
 #define _P10_PUTRINGUTILS_H_
 
 #include <p10_ringId.H>
+#include <stdint.h>
 #include <common_ringId.H>
 #include <fapi2.H>
 #include <hw_access_def.H>
@@ -72,8 +73,7 @@
       (((WORD) <<  8) & 0x000000FF00000000) |  \
       (((WORD) << 24) & 0x0000FF0000000000) |  \
       (((WORD) << 40) & 0x00FF000000000000) |  \
-      (((WORD) << 56) & 0xFF00000000000000) )
-
+      (((WORD) << 56) & 0xFF00000000000000) )  
 #endif
 //
 // Constants and Structures
