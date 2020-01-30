@@ -72,6 +72,12 @@ class _Array(object):
     def nbits(self):
         return self.cols * self.rows
 
+def _u32tobytes(value):
+    return (value >> 24, (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF)
+
+def _u16tobytes(value):
+    return ((value >> 8) & 0xFF, value & 0xFF)
+
 class FastArrayDef(object):
     """
     Encapsulates a fast array definition and provides methods to set up a dump and extract data.
@@ -157,7 +163,7 @@ class FastArrayDef(object):
         for pattern in patterns:
             rex = re.compile(pattern.upper().replace("*", ".*"))
             found = False
-            for array in fastarray_defs:
+            for array in self.fastarray_defs:
                 if rex.match(array.name):
                     found = True
                     selected.add(array)
@@ -166,9 +172,9 @@ class FastArrayDef(object):
                 raise ArrayDefError("Pattern '%s' did not select any arrays" % pattern)
 
         # Preserve array order
-        arrays = [array for array in fastarray_defs if array in selected]
+        return [array for array in self.fastarray_defs if array in selected]
 
-    def generate_control_data(self, arrays, opt_limit=DEFAULT_OPT_LIMIT, print_progress=False):
+    def generate_control_data(self, arrays, ring_ids=[], opt_limit=DEFAULT_OPT_LIMIT, print_progress=False):
         """
         Generate control data for a given set of arrays. Returns a bytearray containing the control data.
 
@@ -196,11 +202,12 @@ class FastArrayDef(object):
 
         prev_row = 0
 
-        # Seed control data with the ring address
-        control_data = bytearray([
-            self.ring_info.address >> 24, (self.ring_info.address >> 16) & 0xFF,
-            (self.ring_info.address >> 8) & 0xFF, self.ring_info.address & 0xFF
-        ])
+        # Seed control data with the ring address and number of ring ids
+        control_data = bytearray(_u32tobytes(self.ring_info.address) + _u32tobytes(len(ring_ids)))
+
+        # Add ring IDs
+        for ring_id in ring_ids:
+            control_data.extend(_u32tobytes(ring_id))
 
         # We only need to look at ABIST cycles where the set of arrays to be dumped might be changing
         for row in sorted(change_rows):
@@ -404,7 +411,7 @@ class FastArrayDef(object):
 def _cmd_setup(array_def, arrays, args):
     print(list(array.name for array in arrays))
 
-    control_data = array_def.generate_control_data(arrays, opt_limit = args.optlimit, print_progress = True)
+    control_data = array_def.generate_control_data(arrays, ring_ids = args.putring, opt_limit = args.optlimit, print_progress = True)
 
     if args.ctable:
         with open(args.outfile, "w") as f:
@@ -480,6 +487,8 @@ if __name__ == "__main__":
     sub = parsers.add_parser("setup", description="Create setup data for the SBE based on a set of arrays to be dumped")
     sub.add_argument("def_file", help="Array definition file to use")
     sub.add_argument("arrays", metavar="array", nargs="*", help="Arrays to dump. May contain the wildcard character '*' to match multiple arrays. Defaults to all.")
+    sub.add_argument("--putring", "-r", action="append", type=lambda x: int(x, 0), default=[], help="Perform a putRing for the supplied ring ID before starting dump. "
+                     "Multiple rings may be specified this way and will be applied in order.")
     sub.add_argument("--outfile", "-o", default="fastarray.control", help="Name of control file to write, defaults to fastarray.control")
     sub.add_argument("--optlimit", type=int, default=DEFAULT_OPT_LIMIT, help="Optimize care data by eliminating don't-care runs of this many bits or less. Defaults to 6.")
     sub.add_argument("--ctable", "-c", action="store_true", help="Output a C table instead of a binary file")
