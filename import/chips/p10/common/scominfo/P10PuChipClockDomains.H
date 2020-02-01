@@ -45,21 +45,22 @@
     // TP chiplet
     #define P10_TPVITL_DOMAIN                    CLOCK_DOMAIN_35
     #define P10_TPSBEPIBOCCNETPSI_DOMAIN         CLOCK_DOMAIN_36  // SBE + PIB + OCC + NET + PSI
-    #define P10_TPDPLLPAU_DOMAIN                 CLOCK_DOMAIN_37  // PLL (SCAN only)
-    #define P10_TPDPLLNEST_DOMAIN                CLOCK_DOMAIN_38  // PLL (SCAN only)
-    #define P10_TPPLL_DOMAIN                     CLOCK_DOMAIN_39  // PLL (SCAN only)
+    #define P10_TPOCC_DOMAIN                     CLOCK_DOMAIN_37  // OCC
+    #define P10_TPDPLLPAU_DOMAIN                 CLOCK_DOMAIN_38  // PLL (SCAN only)
+    #define P10_TPDPLLNEST_DOMAIN                CLOCK_DOMAIN_39  // PLL (SCAN only)
+    #define P10_TPPLL_DOMAIN                     CLOCK_DOMAIN_40  // PLL (SCAN only)
 
     // NEST N0 chiplet
-    #define P10_N0VITL_DOMAIN                    CLOCK_DOMAIN_40
-    #define P10_N0NXVASINTNMMU0PE1_DOMAIN        CLOCK_DOMAIN_41  // NX + VAS + INT + NMMU0 + PE1
+    #define P10_N0VITL_DOMAIN                    CLOCK_DOMAIN_41
+    #define P10_N0NXVASINTNMMU0PE1_DOMAIN        CLOCK_DOMAIN_42  // NX + VAS + INT + NMMU0 + PE1
 
     // NEST N1 chiplet
-    #define P10_N1VITL_DOMAIN                    CLOCK_DOMAIN_42
-    #define P10_N1NMMU1_DOMAIN                   CLOCK_DOMAIN_43
-    #define P10_N1MCDPE0FBC_DOMAIN               CLOCK_DOMAIN_44  // MCD + PE0 + FBC
+    #define P10_N1VITL_DOMAIN                    CLOCK_DOMAIN_43
+    #define P10_N1NMMU1_DOMAIN                   CLOCK_DOMAIN_44
+    #define P10_N1MCDPE0FBC_DOMAIN               CLOCK_DOMAIN_45  // MCD + PE0 + FBC
 
     // PCI0 chiplet
-    #define P10_PCI0VITL_DOMAIN                  CLOCK_DOMAIN_45
+    #define P10_PCI0VITL_DOMAIN                  CLOCK_DOMAIN_46
     #define P10_PCI0IOP_DOMAIN                   CLOCK_DOMAIN_47
     #define P10_PCI0PLL_DOMAIN                   CLOCK_DOMAIN_48  // PLL (SCAN only)
 

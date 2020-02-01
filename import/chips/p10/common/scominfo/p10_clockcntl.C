@@ -577,6 +577,7 @@ extern "C"
 
                     case P10_TPVITL_DOMAIN:
                         o_domainList.push_back(P10_TPSBEPIBOCCNETPSI_DOMAIN);
+                        o_domainList.push_back(P10_TPOCC_DOMAIN);
                         o_domainList.push_back(P10_TPDPLLPAU_DOMAIN);
                         o_domainList.push_back(P10_TPDPLLNEST_DOMAIN);
                         o_domainList.push_back(P10_TPPLL_DOMAIN);
