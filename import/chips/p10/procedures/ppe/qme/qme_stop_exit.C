@@ -189,10 +189,6 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
     if( ( core_target = ( core_target & (~core_spwu) ) ) )
     {
-        PK_TRACE("Polling for Core Instruction Running via QME_SSDR[4-7]");
-
-        while( ( ( (in32(QME_LCL_SSDR)) >> SHIFT32(7) ) & core_target ) != core_target );
-
         PK_TRACE_INF("SX.0B: Cores[%x] Drop PM_EXIT via PCR_SCSR[1]", core_target);
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(1) );
     }
