@@ -37,7 +37,6 @@ void pgpe_process_wof_ctrl_post_actuate();
 void pgpe_process_wof_vrt(void* args);
 void pgpe_process_wof_vrt_post_actuate();
 void pgpe_process_safe_mode(void* args);
-void pgpe_process_complex_suspend(void* args);
 void pgpe_process_occ_fault();
 void pgpe_process_qme_fault();
 void pgpe_process_xgpe_fault();
