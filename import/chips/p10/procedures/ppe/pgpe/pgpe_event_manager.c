@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -37,7 +37,6 @@ pgpe_event_manager_t G_pgpe_event_manager __attribute__((section (".data_structs
 void pgpe_event_manager_run_booted_or_stopped();
 void pgpe_event_manager_run_active();
 void pgpe_event_manager_run_safe_mode();
-void pgpe_event_manager_run_pm_suspend();
 void pgpe_event_manager_upd_state(uint32_t status);
 
 
@@ -105,10 +104,6 @@ void pgpe_event_manager_run()
                 pgpe_event_manager_run_safe_mode();
                 break;
 
-            case PGPE_SM_PM_SUSPEND:
-                pgpe_event_manager_run_pm_suspend();
-                break;
-
             default:
                 // \todo Most likely halt because PGPE data got corrupted
                 break;
@@ -128,13 +123,17 @@ void pgpe_event_manager_run_booted_or_stopped()
         //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
         //If any fault, then mark next state as SAFE_MODE and break
 
-        //PM Complex Suspend \\todo
-        //Skip Safe Mode processing. Only PM Complex Suspend
-        //mark next state PM_COMPLEX_SUSPEND and break
-
-        //Safe Mode \\todo
+        //Safe Mode
         //Process Safe Mode, but mark error no actuation can be done)
         //mark next state as SAFE_MODE and break
+        e = pgpe_event_tbl_get(EV_SAFE_MODE);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_safe_mode(e->args);
+            pgpe_event_manager_upd_state(PGPE_SM_SAFE_MODE);
+            break; //Don't process any other pending requests
+        }
 
         //WOF_CTRL
         //Ack with bad rc
@@ -143,6 +142,7 @@ void pgpe_event_manager_run_booted_or_stopped()
         if (e->status == EVENT_PENDING)
         {
             pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PSTATES_NOT_STARTED);
+            pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
         }
 
         //WOF_VRT
@@ -151,6 +151,7 @@ void pgpe_event_manager_run_booted_or_stopped()
         if (e->status == EVENT_PENDING)
         {
             pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PSTATES_NOT_STARTED);
+            pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
         }
 
         //SET_PMCR IPC
@@ -160,6 +161,7 @@ void pgpe_event_manager_run_booted_or_stopped()
         if (e->status == EVENT_PENDING)
         {
             pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PSTATES_NOT_STARTED);
+            pgpe_event_tbl_set_status(EV_IPC_SET_PMCR, EVENT_INACTIVE);
         }
 
         //PMCR_PCB
@@ -207,13 +209,17 @@ void pgpe_event_manager_run_active()
         //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
         //If any fault, then mark next state as SAFE_MODE and break
 
-        //PM Complex Suspend \\todo
-        //Do Safe Mode Processing
-        //Mark next state as SAFE_MODE and keep PM_COMPLEX_SUSPEND event active and break
-
         //Safe Mode \\todo
         //Process Safe Mode
         //mark next state as SAFE_MODE and break
+        e = pgpe_event_tbl_get(EV_SAFE_MODE);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_safe_mode(e->args);
+            pgpe_event_manager_upd_state(PGPE_SM_SAFE_MODE);
+            break; //Don't process any other pending requests
+        }
 
         //PSTATE_STOP(SCOM) \\todo
         //If pstate stopped, then mark next state as STOPPED and break
@@ -315,50 +321,82 @@ void pgpe_event_manager_run_active()
 void pgpe_event_manager_run_safe_mode()
 {
     //Process
-    //PM_COMPLEX_SUSPEND
     //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
-    //event_t* e;
+    event_t* e;
 
     do
     {
         //Process
         //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
 
-        //PM Complex Suspend
-        //Do PM Complex Suspend
-        //Mark next state PM_COMPLEX_SUSPEND and break
-
         //Safe Mode
         //Do nothing
+        e = pgpe_event_tbl_get(EV_SAFE_MODE);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_SAFE_MODE, EVENT_INACTIVE);
+        }
 
         //WOF_CTRL, PMCR_REQUEST, PMCR_PCB, CLIP_UPDATE, PSTATE_START_STOP
         //Ack with bad rc
-
-    }
-    while(0);
-
-}
-
-void pgpe_event_manager_run_pm_suspend()
-{
-    //event_t* e;
-
-    do
-    {
-        //Process
-        //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
-
-        //PM Complex Suspend
-        //Do nothing
-
-        //Safe Mode
-        //Do nothing
-
-        //WOF_CTRL, PMCR_REQUEST, PMCR_PCB, CLIP_UPDATE, PSTATE_START_STOP
+        //WOF_CTRL
         //Ack with bad rc
+        e = pgpe_event_tbl_get(EV_IPC_WOF_CTRL);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+            pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+        }
+
+        //WOF_VRT
+        e = pgpe_event_tbl_get(EV_IPC_WOF_VRT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+            pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+        }
+
+        //SET_PMCR IPC
+        //Ack with bad rc
+        e = pgpe_event_tbl_get(EV_IPC_SET_PMCR);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+            pgpe_event_tbl_set_status(EV_IPC_SET_PMCR, EVENT_INACTIVE);
+        }
+
+        //PMCR_PCB
+        e = pgpe_event_tbl_get(EV_PCB_SET_PMCR);
+
+        if (e->status == EVENT_PENDING)
+        {
+            //\todo This should never happen. TBD Should this be an error??
+            pgpe_event_tbl_set_status(EV_PCB_SET_PMCR, EVENT_INACTIVE);
+        }
+
+        //CLIP_UPDT
+        e = pgpe_event_tbl_get(EV_IPC_CLIP_UPDT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+            pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+        }
+
+        //PSTART_START_STOP
+        e = pgpe_event_tbl_get(EV_IPC_PSTATE_START_STOP);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+            pgpe_event_tbl_set_status(EV_IPC_PSTATE_START_STOP, EVENT_INACTIVE);
+        }
 
     }
     while(0);
-
 
 }

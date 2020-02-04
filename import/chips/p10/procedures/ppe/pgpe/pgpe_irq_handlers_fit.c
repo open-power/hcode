@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -29,6 +29,9 @@
 #include "pgpe_pstate.h"
 #include "pgpe_occ.h"
 #include "pgpe_wov_ocs.h"
+#include "pgpe_event_table.h"
+#include "p10_oci_proc_6.H"
+#include "p10_oci_proc_7.H"
 
 uint32_t G_beacon_count_threshold;
 uint32_t G_beacon_count;
@@ -93,6 +96,21 @@ __attribute__((always_inline)) inline void handle_occ_beacon()
     }
 }
 
+__attribute__((always_inline)) inline void handle_occflg_requests()
+{
+    uint32_t occFlag;
+    //Read OCC_FLAGS
+    occFlag = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW);
+
+    //PK_TRACE("FIT: OCCFLG=0x%08x",occFlag);
+    if(occFlag & BIT32(PGPE_SAFE_MODE))
+    {
+        //Mark event
+        pgpe_event_tbl_set_status(EV_SAFE_MODE, EVENT_PENDING);
+    }
+}
+
+
 __attribute__((always_inline)) inline void handle_produce_wof()
 {
     pgpe_occ_produce_wof_i_v_values();
@@ -111,6 +129,7 @@ __attribute__((always_inline)) inline void handle_wov_ocs()
 //
 void pgpe_irq_fit_handler()
 {
+    handle_occflg_requests();
     handle_occ_beacon();
     handle_produce_wof();
 

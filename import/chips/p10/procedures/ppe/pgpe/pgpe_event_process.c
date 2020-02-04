@@ -598,10 +598,10 @@ void pgpe_process_wof_vrt_post_actuate()
 
 void pgpe_process_safe_mode(void* args)
 {
-}
-
-void pgpe_process_complex_suspend(void* args)
-{
+    //\todo Finish the rest of Safe Mode
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE));
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_SAFE_MODE_ACTIVE));
+    PK_TRACE("PEP: Process Safe Mode");
 }
 
 void pgpe_process_occ_fault()
