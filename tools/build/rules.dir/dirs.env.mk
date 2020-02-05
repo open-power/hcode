@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2019
+# COPYRIGHT 2015,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -49,6 +49,8 @@ endif
 
 ifeq ($(PROJECT_NAME),p10)
 MAKEFILE_PATH += $(ROOTPATH)/chips/p10/common/ppe/ppetrace/ppetracepp
+# Include fastarray control data dump
+MAKEFILE_PATH += $(ROOTPATH)/chips/p10/procedures/utils/fastarray
 endif
 
 # Pick up scominfo code

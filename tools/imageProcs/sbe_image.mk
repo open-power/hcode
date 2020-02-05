@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2016,2019
+# COPYRIGHT 2016,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -34,33 +34,60 @@ $(eval $(IMAGE)_LINK_SCRIPT=sbe_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/sbe_image/sbe_image.o)
 $(eval sbe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
+# Files with multiple DD level content to be generated (arg2=empty since
+# there is no hw/sim variations)
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$3,$1,fa_ec_cl2_far))
+$(eval $(call BUILD_DD_LEVEL_CONTAINER,$3,$1,fa_ec_mma_far))
+
 # Files to be appended to image
 $(eval $(IMAGE)_FILE_RINGS=$(RINGFILEPATH)/$3.$1.sbe.rings.bin)
+$(eval $(IMAGE)_FILE_FA_EC_CL2_FAR=$$($(IMAGE)_DD_CONT_fa_ec_cl2_far))
+$(eval $(IMAGE)_FILE_FA_EC_MMA_FAR=$$($(IMAGE)_DD_CONT_fa_ec_mma_far))
 
-# Setup dependencies for
-# - building image ( $(IMAGE)_DEPS_IMAGE )
-# - appending image sections in sequence ( $(IMAGE)_DEPS_{<section>,REPORT} )
+# Dependencies for appending image sections in sequence:
 #   - file to be appended
 #   - all dependencies of previously appended sections or on raw image
 #   - append operation as to other section that has to be finished first
-# We only need to add the .rings section here (the rest will come from PPE repo side)
-$(eval $(IMAGE)_DEPS_IMAGE   = $$($(IMAGE)_FILE_RINGS))
-$(eval $(IMAGE)_DEPS_RINGS   = $$($(IMAGE)_FILE_RINGS))
-$(eval $(IMAGE)_DEPS_RINGS  += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
-$(eval $(IMAGE)_DEPS_REPORT  = $$($(IMAGE)_DEPS_RINGS))
-$(eval $(IMAGE)_DEPS_REPORT += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
+$(eval $(IMAGE)_DEPS_IMAGE          = $$($(IMAGE)_FILE_FA_EC_CL2_FAR))
+$(eval $(IMAGE)_DEPS_FA_EC_CL2_FAR  = $$($(IMAGE)_FILE_FA_EC_CL2_FAR))
+$(eval $(IMAGE)_DEPS_FA_EC_CL2_FAR += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
 
-# Append the rings section
-$(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1))
+$(eval $(IMAGE)_DEPS_IMAGE         += $$($(IMAGE)_FILE_FA_EC_MMA_FAR))
+$(eval $(IMAGE)_DEPS_FA_EC_MMA_FAR  = $$($(IMAGE)_FILE_FA_EC_MMA_FAR))
+$(eval $(IMAGE)_DEPS_FA_EC_MMA_FAR += $$($(IMAGE)_DEPS_FA_EC_CL2_FAR))
+$(eval $(IMAGE)_DEPS_FA_EC_MMA_FAR += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ec_cl2_far)
+
+# Here we only attempt to add rings if ENGD exists (done via CHIP_EC_PAIRS check).
+# Otherwise the build will fail later because the p10.hw.sbe.rings.bin cant be found
+# Note the else-',' after "*.append.rings".
+$(if $(findstring $(2):$(3), $(CHIP_EC_PAIRS)),\
+	$(eval $(IMAGE)_DEPS_IMAGE         += $$($(IMAGE)_FILE_RINGS))
+	$(eval $(IMAGE)_DEPS_RINGS          = $$($(IMAGE)_FILE_RINGS))
+	$(eval $(IMAGE)_DEPS_RINGS         += $$($(IMAGE)_DEPS_FA_EC_MMA_FAR))
+	$(eval $(IMAGE)_DEPS_RINGS         += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ec_mma_far)
+	$(eval $(IMAGE)_DEPS_REPORT         = $$($(IMAGE)_DEPS_RINGS))
+	$(eval $(IMAGE)_DEPS_REPORT        += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings),\
+
+	$(eval $(IMAGE)_DEPS_REPORT         = $$($(IMAGE)_DEPS_FA_EC_MMA_FAR))
+	$(eval $(IMAGE)_DEPS_REPORT        += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ec_mma_far))
+
+# Image build using all files and serialised by dependencies
+$(eval $(call XIP_TOOL,append,.fa_ec_cl2_far,$$($(IMAGE)_DEPS_FA_EC_CL2_FAR),$$($(IMAGE)_FILE_FA_EC_CL2_FAR) 1))
+$(eval $(call XIP_TOOL,append,.fa_ec_mma_far,$$($(IMAGE)_DEPS_FA_EC_MMA_FAR),$$($(IMAGE)_FILE_FA_EC_MMA_FAR) 1))
+$(if $(findstring $(2):$(3), $(CHIP_EC_PAIRS)),\
+	$(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1)))
 
 # Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 
 $(eval $(call BUILD_XIPIMAGE,$$($(IMAGE)_DEPS_IMAGE)))
+
+
 endef
 
 $(eval MYCHIPS := $(filter-out ocmb,$(CHIPS)))
 
 $(foreach chip,$(MYCHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
-				$(eval $(call BUILD_SBE_IMAGE,hw,$(chip),$(chipId)))))
+		$(foreach type, $(HW_IMAGE_VARIATIONS),\
+				$(eval $(call BUILD_SBE_IMAGE,$(type),$(chip),$(chipId))))))

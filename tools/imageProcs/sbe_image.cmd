@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -67,6 +67,24 @@ SECTIONS
     _rings_offset = . - _sbe_image_origin;
     .rings . : { *(.rings) }
     _rings_size = . - _rings_origin;
+
+    ////////////////////////////////
+    // FA_EC_CL2_FAR
+    ////////////////////////////////
+    . = ALIGN(8);
+    _fa_ec_cl2_far_origin = .;
+    _fa_ec_cl2_far_offset = . - _sbe_image_origin;
+    .fa_ec_cl2_far . : { *(.fa_ec_cl2_far) }
+    _fa_ec_cl2_far_size = . - _fa_ec_cl2_far_origin;
+
+    ////////////////////////////////
+    // FA_EC_MMA_FAR
+    ////////////////////////////////
+    . = ALIGN(8);
+    _fa_ec_mma_far_origin = .;
+    _fa_ec_mma_far_offset = . - _sbe_image_origin;
+    .fa_ec_mma_far . : { *(.fa_ec_mma_far) }
+    _fa_ec_mma_far_size = . - _fa_ec_mma_far_origin;
 
     ////////////////////////////////
     // end of the image

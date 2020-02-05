@@ -70,11 +70,11 @@ __header_64_reserved:
         .xip_section
         .xip_section
         .xip_section
-        .xip_section rings,        8
+        .xip_section rings,         8
         .xip_section
         .xip_section
-        .xip_section
-        .xip_section
+        .xip_section fa_ec_cl2_far, 8
+        .xip_section fa_ec_mma_far, 8
         .xip_section
         .xip_section
         .xip_section
