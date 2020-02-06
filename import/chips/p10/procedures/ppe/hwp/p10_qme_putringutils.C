@@ -935,7 +935,7 @@ else
             //and scan.
             //In SPRG0: First 32 bits of header data read from the hw
             uint32_t l_ringId       =   l_rs4Header->iv_ringId;
-            uint32_t debug_data_0   =   (l_ringId << 24) | (l_bitsDecoded & 0x000FFFFF);
+            uint32_t debug_data_0   =   (l_ringId << 16) | (l_bitsDecoded & 0x000FFFFF);
             uint32_t debug_data_1   =   (uint32_t)(l_readHeader >> 32);
             asm volatile ("mtspr %0, %1" : : "i" (61), "r" (debug_data_0) : "memory");
             asm volatile ("mtspr %0, %1" : : "i" (272), "r" (debug_data_1) : "memory");
