@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -118,7 +118,7 @@ void handle_pm_suspend()
                 if (IS_QUAD_CONFIG(l_ccsr, (l_quad << 2)))
                 {
                     //Change the PMCR ownership to scom
-                    PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_QMCR_WO_OR, (l_quad - 1)),
+                    PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_QMCR_SCOM2, (l_quad - 1)),
                                 BIT64(QME_QMCR_PMCR_OVERRIDE_EN));
 
                     //Multicast QME_Scratch_B_CLEAR(q, 0xFFFF000000000000)
@@ -139,7 +139,7 @@ void handle_pm_suspend()
 #else
             //Send request to QME to suspend all its stop states
             //Change the PMCR ownership to scom
-            PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_QMCR_WO_OR, 0xF),
+            PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_QMCR_SCOM2, 0xF),
                         BIT64(QME_QMCR_PMCR_OVERRIDE_EN));
 
             //Multicast QME_Scratch_B_CLEAR(q, 0xFFFF000000000000)

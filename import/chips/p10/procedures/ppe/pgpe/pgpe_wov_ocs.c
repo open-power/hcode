@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -44,7 +44,7 @@ void pgpe_wov_ocs_init()
     uint64_t data  = 0x1F01F01480000000ULL;
     PPE_PUTSCOM_MC(CPMS_DCCR, 0xF, data);
 
-    PPE_PUTSCOM_MC_Q(QME_QMCR_WO_OR, BIT64(25)); //Enable TTSR
+    PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(25)); //Enable TTSR
 
     G_pgpe_wov_ocs.wov_status = WOV_STATUS_DISABLED;
     G_pgpe_wov_ocs.ocs_status = OCS_STATUS_DISABLED;

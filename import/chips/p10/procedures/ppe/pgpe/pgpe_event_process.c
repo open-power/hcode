@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -292,7 +292,7 @@ void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
     if ((owner == PMCR_OWNER_HOST) || (owner == PMCR_OWNER_CHAR))
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_CLEAR, BIT32(17));//Enable PCB_Type1
-        PPE_PUTSCOM_MC_Q(QME_QMCR_WO_OR, BIT64(8)); //Enable AUTO_PMCR_UPDATE
+        PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(8)); //Enable AUTO_PMCR_UPDATE
     }
     else
     {
@@ -302,7 +302,7 @@ void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
     //Enable SCOM writes to PMCR if characterization mode
     if ((owner == PMCR_OWNER_CHAR))
     {
-        PPE_PUTSCOM_MC_Q(QME_QMCR_WO_OR, BIT64(0));
+        PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(0));
     }
 }
 
