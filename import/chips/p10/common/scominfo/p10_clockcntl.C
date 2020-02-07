@@ -550,6 +550,25 @@ extern "C"
             // control for each chiplet (i.e. 0x30006)
             if ( (i_address & 0x0000000000FFFFFFULL) == 0x00030006ULL)
             {
+                // check for multicast group
+                if (i_address & 0x0000000040000000ULL)
+                {
+                    uint8_t l_multicast_group = ((i_address >> 24) & 0x07);
+
+                    for (uint8_t l_index = 0;
+                         l_index < (sizeof(ClockDomainStrAddrMaskTable) / sizeof(ClockDomainStrAddrMask_t));
+                         l_index++)
+                    {
+                        if ((ClockDomainStrAddrMaskTable[l_index].inMulticastGroup >> (7 - l_multicast_group)) & 0x01)
+                        {
+                            o_domainList.push_back(ClockDomainStrAddrMaskTable[l_index].domainEnum);
+                        }
+                    }
+
+                    break;
+                }
+
+
                 // If it is, get the clock domain of the given address/instance
 #ifndef P10
                 l_rc = p10_clockcntl_getScomClockDomain_INTERNAL(i_p10CU,
