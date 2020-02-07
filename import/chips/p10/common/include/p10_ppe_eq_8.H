@@ -62,37 +62,6 @@ static const uint32_t QME_RVCR_RVID_VALUE_LEN = 7;
 //ERRCODE: // Some of the name targets not found in address targets: eq
 // No targets could be determined from the address.
 
-static const uint32_t QME_SCOM_XIRAMRA = 0xc0002040ull;
-
-static const uint32_t QME_SCOM_XIRAMRA_SPRG0 = 32;
-static const uint32_t QME_SCOM_XIRAMRA_SPRG0_LEN = 32;
-// ppe_eq/reg00008.H
-
-//ERRCODE: // Some of the name targets not found in address targets: eq
-// No targets could be determined from the address.
-
-static const uint32_t QME_SCOM_XIVDR28 = 0xc0002980ull;
-
-static const uint32_t QME_SCOM_XIVDR28_8 = 0;
-static const uint32_t QME_SCOM_XIVDR28_8_LEN = 32;
-static const uint32_t QME_SCOM_XIVDR28_9 = 32;
-static const uint32_t QME_SCOM_XIVDR28_9_LEN = 32;
-// ppe_eq/reg00008.H
-
-//ERRCODE: // Some of the name targets not found in address targets: eq
-// No targets could be determined from the address.
-
-static const uint32_t QME_SCOM_XIVDR8 = 0xc0002900ull;
-
-static const uint32_t QME_SCOM_XIVDR8_8 = 0;
-static const uint32_t QME_SCOM_XIVDR8_8_LEN = 32;
-static const uint32_t QME_SCOM_XIVDR8_9 = 32;
-static const uint32_t QME_SCOM_XIVDR8_9_LEN = 32;
-// ppe_eq/reg00008.H
-
-//ERRCODE: // Some of the name targets not found in address targets: eq
-// No targets could be determined from the address.
-
 static const uint32_t QME_SCRA_RW = 0xc0001240ull;
 static const uint32_t QME_SCRA_WO_CLEAR = 0xc0001270ull;
 static const uint32_t QME_SCRA_WO_OR = 0xc0001260ull;

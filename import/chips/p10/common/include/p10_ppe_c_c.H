@@ -57,14 +57,6 @@ static const uint32_t CPMS_CGCSR_L3_CLK_SYNC_DONE = 32;
 static const uint32_t CPMS_CGCSR_CL2_CLK_SYNC_DONE = 33;
 // ppe_c/reg00012.H
 
-static const uint32_t CPMS_DCSR = 0xc000e640ull;
-
-static const uint32_t CPMS_DCSR_0_COUNT = 0;
-static const uint32_t CPMS_DCSR_0_COUNT_LEN = 24;
-static const uint32_t CPMS_DCSR_1_COUNT = 32;
-static const uint32_t CPMS_DCSR_1_COUNT_LEN = 24;
-// ppe_c/reg00012.H
-
 static const uint32_t CPMS_DHCR = 0xc000e540ull;
 
 static const uint32_t CPMS_DHCR_FREEZE_HISTORY_ON_LARGE = 0;
