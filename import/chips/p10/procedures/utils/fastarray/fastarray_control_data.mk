@@ -42,8 +42,9 @@ $(eval TARGETS+=$(GENERATED))
 $(eval $(GENERATED)_RUN=$(call RUN_FASTARRAY,$(1),$($(GENERATED)_PATH)/$(CONTROL_FILE)))
 $(call BUILD_GENERATED)
 endef
+
 define RUN_FASTARRAY
-     $(C1) $$$$< setup $(1) -o $(2)
+    $(C1) $(PATH_PYTHON3) $$$$< setup $(1) -o $(2)
 endef
 
 ######################################################################################
