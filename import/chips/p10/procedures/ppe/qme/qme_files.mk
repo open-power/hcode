@@ -44,8 +44,8 @@ QME-C-SOURCES   = qme_addresses.c           \
 
 SUBMODULE-CPP-SOURCES = p10_hcd_corecache_clock_control.C \
                         p10_hcd_corecache_power_control.C \
-                        p10_fbc_utils.C 
-#                        p10_perv_sbe_cmn.C
+                        p10_fbc_utils.C                   \
+                        p10_perv_sbe_cmn.C
 
 SCAN-CPP-SOURCES  = p10_qme_putringutils.C \
                     p10_qme_ring_traverse.C
