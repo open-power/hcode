@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -149,17 +149,6 @@ void pgpe_fake_boot_pgpe_header()
     //ivpr_address
     //build date
     //version
-    //pgpe_flags
-    pgpe_header->g_pgpe_flags = 0;
-#if FAKE_BOOT_WOF_ENABLE == 1
-    //pgpe_header->g_pgpe_flags |= PGPE_FLAG_WOF_ENABLE;
-#endif
-#if FAKE_BOOT_IMMEDIATE_MODE == 1
-    //pgpe_header->g_pgpe_flags |= PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE;
-#if FAKE_BOOT_WOF_ENABLE == 1
-    //pgpe_header->g_pgpe_flags |= PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE;
-#endif
-#endif
     //timebase_hz
     //pgpe_hcode_length
     pgpe_header->g_pgpe_hcode_length = 0x9000;
