@@ -260,7 +260,10 @@ ReturnCode delay(uint64_t i_nanoSeconds, uint64_t i_simCycles, bool i_fixed = fa
          (NUM_LOOP_INSTRS * __FAPI_DELAY_PPE_SIM_CYCLES__));
 
 
-    for (auto i = delay_loop_count; i > 0; --i) {}
+    for (auto i = delay_loop_count; i > 0; --i)
+    {
+        asm("");
+    }
 
 #endif
 
