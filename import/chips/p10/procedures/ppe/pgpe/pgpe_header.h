@@ -40,13 +40,14 @@ typedef struct pgpe_header
     uint32_t g_pgpe_shared_sram_len;
     uint32_t g_pgpe_build_date;
     uint32_t g_pgpe_version;
-    uint16_t g_pgpe_flags;
-    uint16_t reserved;
+    uint32_t reserved;
     uint32_t g_pgpe_timebase_hz;
     uint32_t g_pgpe_gppb_sram_addr;
     uint32_t g_pgpe_hcode_length;
     uint32_t g_pgpe_gppb_mem_offset;
     uint32_t g_pgpe_gppb_length;
+    uint32_t g_pgpe_genPsTableMemOffset;
+    uint32_t g_pgpe_genPsTableMemLength;
     uint32_t g_pgpe_occ_pstables_sram_addr;
     uint32_t g_pgpe_occ_pstables_len;
     uint32_t g_pgpe_beacon_addr;
