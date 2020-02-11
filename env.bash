@@ -40,6 +40,14 @@ export EKBENVDIR=$TOOLSDIR/envsetup
 
 export UNAME=`uname -s`
 
+# set path for Python 3
+if [ -f /opt/xsite/cte/tools/python/bin/python3 ]; then
+    export PATH_PYTHON3=/opt/xsite/cte/tools/python/bin/python3
+else
+    export PATH_PYTHON3=/usr/bin/python3
+fi
+
+# Check for env variable OPENPOWER_BUILD
 if [ "${OPENPOWER_BUILD}" == "" ]; then
 
 export CTEPATH=/afs/awd.austin.ibm.com/projects/cte
@@ -69,13 +77,6 @@ if [ -n "${LD_LIBRARY_PATH}" ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${ECMD_LIB_PATH}:${PPE_LIB_PATH}
 else
     export LD_LIBRARY_PATH=${ECMD_LIB_PATH}:${PPE_LIB_PATH}
-fi
-
-# set path for Python 3
-if [ -f /opt/xsite/cte/tools/python/bin/python3 ]; then
-    export PATH_PYTHON3=/opt/xsite/cte/tools/python/bin/python3
-else
-    export PATH_PYTHON3=/usr/bin/python3
 fi
 
 # This is done for ipl_image_tool to get build in OP env.
