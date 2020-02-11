@@ -87,6 +87,15 @@ SECTIONS
     _fa_ec_mma_far_size = . - _fa_ec_mma_far_origin;
 
     ////////////////////////////////
+    // RINGIDFEATLIST
+    ////////////////////////////////
+    . = ALIGN(8);
+    _ringidfeatlist_origin = .;
+    _ringidfeatlist_offset = . - _sbe_image_origin;
+    .ringidfeatlist . : { *(.ringidfeatlist) }
+    _ringidfeatlist_size = . - _ringidfeatlist_origin;
+
+    ////////////////////////////////
     // end of the image
     ////////////////////////////////
     . = ALIGN(8);

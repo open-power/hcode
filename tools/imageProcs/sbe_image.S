@@ -61,7 +61,7 @@ __header_64_reserved:
         .xip_section header
         .xip_section
         .xip_section
-        .xip_section toc,          4
+        .xip_section toc,            4
         .xip_section strings
 
         .xip_section
@@ -70,12 +70,12 @@ __header_64_reserved:
         .xip_section
         .xip_section
         .xip_section
-        .xip_section rings,         8
+        .xip_section rings,          8
         .xip_section
         .xip_section
-        .xip_section fa_ec_cl2_far, 8
-        .xip_section fa_ec_mma_far, 8
-        .xip_section
+        .xip_section fa_ec_cl2_far,  8
+        .xip_section fa_ec_mma_far,  8
+        .xip_section ringidfeatlist, 8
         .xip_section
         .xip_section
         .xip_section
