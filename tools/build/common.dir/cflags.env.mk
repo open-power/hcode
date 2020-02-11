@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2019
+# COPYRIGHT 2015,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -36,6 +36,7 @@ endif
 LOCALCXXFLAGS += --std=gnu++11
 LOCALCXXFLAGS += -fexceptions
 LOCALCXXFLAGS += -Wno-conversion-null
+LOCALCXXFLAGS += -DOPENPOWER_BUILD=1
 
 LOCALCFLAGS += -fno-strict-aliasing
 LOCALCFLAGS += -pipe

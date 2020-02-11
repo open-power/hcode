@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2019
+# COPYRIGHT 2015,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -71,6 +71,15 @@ else
     export LD_LIBRARY_PATH=${ECMD_LIB_PATH}:${PPE_LIB_PATH}
 fi
 
+# set path for Python 3
+if [ -f /opt/xsite/cte/tools/python/bin/python3 ]; then
+    export PATH_PYTHON3=/opt/xsite/cte/tools/python/bin/python3
+else
+    export PATH_PYTHON3=/usr/bin/python3
+fi
+
+# This is done for ipl_image_tool to get build in OP env.
+export OPENPOWER_BUILD=1
 
 if [ -n "${SANDBOXROOT}" ]; then
     if [ -n "${SANDBOXNAME}" ]; then
