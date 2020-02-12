@@ -74,11 +74,7 @@ qme_init()
     G_qme_record.c_stop11_reached   = ((in32(QME_LCL_SCDR) & BITS32(0, 4))  >> SHIFT32(3)) ;
     G_qme_record.c_stop11_reached  |= (~G_qme_record.c_configured) & QME_MASK_ALL_CORES;
     G_qme_record.c_stop5_reached    = G_qme_record.c_stop11_reached;
-    G_qme_record.c_stop3_reached    = G_qme_record.c_stop11_reached;
     G_qme_record.c_stop2_reached    = G_qme_record.c_stop11_reached;
-
-    // Enable self restore
-    G_qme_record.hcode_func_enabled |= QME_SELF_RESTORE_ENABLE;
 
 #if EPM_TUNING
 

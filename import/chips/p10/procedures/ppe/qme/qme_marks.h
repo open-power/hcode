@@ -26,6 +26,16 @@
 #ifndef __QME_MARKS_H__
 #define __QME_MARKS_H__
 
+//----------------------
+
+#ifdef EPM_SIM_ENV
+    #define FOOBAR(foo, bar) (foo, bar)
+#else
+    #define FOOBAR(foo, bar) {foo, bar},
+#endif
+
+//----------------------
+
 #ifdef EPM_SIM_ENV
 
 #include <vector>
@@ -34,6 +44,7 @@ namespace QME_STOP_ENTRY_MARKS
 
 #endif
 
+//----------------------
 
 enum QME_SE_MARKS
 {
@@ -68,6 +79,7 @@ enum QME_SE_MARKS
     SE_STOP11_DONE                 = 0x530
 };
 
+//----------------------
 
 #ifdef EPM_SIM_ENV
 
@@ -128,41 +140,64 @@ const std::vector<QME_SE_MARKS> MARKS =
 //M2B_END_SE
 };
 
-const std::map<QME_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
-        (IRQ_PM_STATE_ACTIVE_FAST_EVENT, "IRQ_PM_STATE_ACTIVE_FAST_EVENT")
-        (IRQ_PM_STATE_ACTIVE_SLOW_EVENT, "IRQ_PM_STATE_ACTIVE_SLOW_EVENT")
-        (SE_L2_PURGE_HBUS_DIS          , "SE_L2_PURGE_HBUS_DIS          ")
-        (SE_L2_PURGE_CATCHUP           , "SE_L2_PURGE_CATCHUP           ")
-        (SE_L2_PURGE_ABORT             , "SE_L2_PURGE_ABORT             ")
-        (SE_L2_PURGE_ABORT_DONE        , "SE_L2_PURGE_ABORT_DONE        ")
-        (SE_L2_TLBIE_QUIESCE           , "SE_L2_TLBIE_QUIESCE           ")
-        (SE_L2_TLBIE_QUIESCE_CATCHUP   , "SE_L2_TLBIE_QUIESCE_CATCHUP   ")
-        (SE_NCU_PURGE                  , "SE_NCU_PURGE                  ")
-        (SE_NCU_PURGE_ABORT            , "SE_NCU_PURGE_ABORT            ")
-        (SE_NCU_PURGE_ABORT_DONE       , "SE_NCU_PURGE_ABORT_DONE       ")
-        (SE_CORE_DISABLE_SHADOWS       , "SE_CORE_DISABLE_SHADOWS       ")
-        (SE_CORE_STOPCLOCKS            , "SE_CORE_STOPCLOCKS            ")
-        (SE_CORE_STOPGRID              , "SE_CORE_STOPGRID              ")
-        (SE_STOP2_DONE                 , "SE_STOP2_DONE                 ")
-        (SE_STOP3OR5_CATCHUP           , "SE_STOP3OR5_CATCHUP           ")
-        (SE_IS0_BEGIN                  , "SE_IS0_BEGIN                  ")
-        (SE_IS0_END                    , "SE_IS0_END                    ")
-        (SE_CORE_VMIN_ENABLE           , "SE_CORE_VMIN_ENABLE           ")
-        (SE_STOP3_DONE                 , "SE_STOP3_DONE                 ")
-        (SE_CORE_POWEROFF              , "SE_CORE_POWEROFF              ")
-        (SE_STOP5_DONE                 , "SE_STOP5_DONE                 ")
-        (SE_CHTM_PURGE                 , "SE_CHTM_PURGE                 ")
-        (SE_L3_PURGE                   , "SE_L3_PURGE                   ")
-        (SE_POWERBUS_PURGE             , "SE_POWERBUS_PURGE             ")
-        (SE_CACHE_STOPCLOCKS           , "SE_CACHE_STOPCLOCKS           ")
-        (SE_CACHE_STOPGRID             , "SE_CACHE_STOPGRID             ")
-        (SE_CACHE_POWEROFF             , "SE_CACHE_POWEROFF             ")
-        (SE_STOP11_DONE                , "SE_STOP11_DONE                ") ;
-
-
-}
 #endif
 
+//----------------------
+
+#ifndef __PPE_QME
+
+#ifdef EPM_SIM_ENV
+const std::map<QME_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
+#else
+//used by p10_qme_mark_decoder
+std::map<uint32_t, std::string> g_QME_SE_MARKS_MAP =
+{
+#endif
+
+        FOOBAR (IRQ_PM_STATE_ACTIVE_FAST_EVENT, "IRQ_PM_STATE_ACTIVE_FAST_EVENT")
+        FOOBAR (IRQ_PM_STATE_ACTIVE_SLOW_EVENT, "IRQ_PM_STATE_ACTIVE_SLOW_EVENT")
+        FOOBAR (SE_L2_PURGE_HBUS_DIS          , "SE_L2_PURGE_HBUS_DIS          ")
+        FOOBAR (SE_L2_PURGE_CATCHUP           , "SE_L2_PURGE_CATCHUP           ")
+        FOOBAR (SE_L2_PURGE_ABORT             , "SE_L2_PURGE_ABORT             ")
+        FOOBAR (SE_L2_PURGE_ABORT_DONE        , "SE_L2_PURGE_ABORT_DONE        ")
+        FOOBAR (SE_L2_TLBIE_QUIESCE           , "SE_L2_TLBIE_QUIESCE           ")
+        FOOBAR (SE_L2_TLBIE_QUIESCE_CATCHUP   , "SE_L2_TLBIE_QUIESCE_CATCHUP   ")
+        FOOBAR (SE_NCU_PURGE                  , "SE_NCU_PURGE                  ")
+        FOOBAR (SE_NCU_PURGE_ABORT            , "SE_NCU_PURGE_ABORT            ")
+        FOOBAR (SE_NCU_PURGE_ABORT_DONE       , "SE_NCU_PURGE_ABORT_DONE       ")
+        FOOBAR (SE_CORE_DISABLE_SHADOWS       , "SE_CORE_DISABLE_SHADOWS       ")
+        FOOBAR (SE_CORE_STOPCLOCKS            , "SE_CORE_STOPCLOCKS            ")
+        FOOBAR (SE_CORE_STOPGRID              , "SE_CORE_STOPGRID              ")
+        FOOBAR (SE_STOP2_DONE                 , "SE_STOP2_DONE                 ")
+        FOOBAR (SE_STOP3OR5_CATCHUP           , "SE_STOP3OR5_CATCHUP           ")
+        FOOBAR (SE_IS0_BEGIN                  , "SE_IS0_BEGIN                  ")
+        FOOBAR (SE_IS0_END                    , "SE_IS0_END                    ")
+        FOOBAR (SE_CORE_VMIN_ENABLE           , "SE_CORE_VMIN_ENABLE           ")
+        FOOBAR (SE_STOP3_DONE                 , "SE_STOP3_DONE                 ")
+        FOOBAR (SE_CORE_POWEROFF              , "SE_CORE_POWEROFF              ")
+        FOOBAR (SE_STOP5_DONE                 , "SE_STOP5_DONE                 ")
+        FOOBAR (SE_CHTM_PURGE                 , "SE_CHTM_PURGE                 ")
+        FOOBAR (SE_L3_PURGE                   , "SE_L3_PURGE                   ")
+        FOOBAR (SE_POWERBUS_PURGE             , "SE_POWERBUS_PURGE             ")
+        FOOBAR (SE_CACHE_STOPCLOCKS           , "SE_CACHE_STOPCLOCKS           ")
+        FOOBAR (SE_CACHE_STOPGRID             , "SE_CACHE_STOPGRID             ")
+        FOOBAR (SE_CACHE_POWEROFF             , "SE_CACHE_POWEROFF             ")
+        FOOBAR (SE_STOP11_DONE                , "SE_STOP11_DONE                ")
+
+#ifdef EPM_SIM_ENV
+//map
+        ;
+//namespace
+}
+#else
+//map
+};
+#endif
+
+//__PPE_QME
+#endif
+
+//----------------------
 
 #ifdef EPM_SIM_ENV
 
@@ -172,6 +207,7 @@ namespace QME_STOP_EXIT_MARKS
 
 #endif
 
+//----------------------
 
 enum QME_SX_MARKS
 {
@@ -217,6 +253,7 @@ enum QME_SX_MARKS
     SX_CORE_AWAKE                  = 0x1c00
 };
 
+//----------------------
 
 #ifdef EPM_SIM_ENV
 
@@ -276,52 +313,75 @@ const std::vector<QME_SX_MARKS> MARKS =
 //M2B_END_SX
 };
 
-const std::map<QME_SX_MARKS, std::string> mMARKS = boost::assign::map_list_of
-        (IRQ_REGULAR_WAKEUP_FAST_EVENT , "IRQ_REGULAR_WAKEUP_FAST_EVENT ")
-        (IRQ_REGULAR_WAKEUP_SLOW_EVENT , "IRQ_REGULAR_WAKEUP_SLOW_EVENT ")
-        (IRQ_SPECIAL_WAKEUP_RISE_EVENT , "IRQ_SPECIAL_WAKEUP_RISE_EVENT ")
-        (IRQ_SPECIAL_WAKEUP_FALL_EVENT , "IRQ_SPECIAL_WAKEUP_FALL_EVENT ")
-        (SX_CACHE_POWERON              , "SX_CACHE_POWERON              ")
-        (SX_CACHE_RESET                , "SX_CACHE_RESET                ")
-        (SX_CACHE_POWERED              , "SX_CACHE_POWERED              ")
-        (SX_CACHE_GPTR_TIME_INITF      , "SX_CACHE_GPTR_TIME_INITF      ")
-        (SX_CACHE_REPAIR_INITF         , "SX_CACHE_REPAIR_INITF         ")
-        (SX_CACHE_ARRAYINIT            , "SX_CACHE_ARRAYINIT            ")
-        (SX_CACHE_INITF                , "SX_CACHE_INITF                ")
-        (SX_CACHE_SCANED               , "SX_CACHE_SCANED               ")
-        (SX_CACHE_SKEWADJUST           , "SX_CACHE_SKEWADJUST           ")
-        (SX_CACHE_STARTCLOCKS          , "SX_CACHE_STARTCLOCKS          ")
-        (SX_CACHE_CLOCKED              , "SX_CACHE_CLOCKED              ")
-        (SX_CACHE_SCOMINIT             , "SX_CACHE_SCOMINIT             ")
-        (SX_CACHE_SCOM_CUSTOMIZE       , "SX_CACHE_SCOM_CUSTOMIZE       ")
-        (SX_CACHE_SCOMED               , "SX_CACHE_SCOMED               ")
-        (SX_CORE_POWERON               , "SX_CORE_POWERON               ")
-        (SX_CORE_RESET                 , "SX_CORE_RESET                 ")
-        (SX_CORE_POWERED               , "SX_CORE_POWERED               ")
-        (SX_CORE_GPTR_TIME_INITF       , "SX_CORE_GPTR_TIME_INITF       ")
-        (SX_CORE_REPAIR_INITF          , "SX_CORE_REPAIR_INITF          ")
-        (SX_CORE_ARRAYINIT             , "SX_CORE_ARRAYINIT             ")
-        (SX_CORE_INITF                 , "SX_CORE_INITF                 ")
-        (SX_CORE_SCANED                , "SX_CORE_SCANED                ")
-        (SX_CORE_VMIN_DISABLE          , "SX_CORE_VMIN_DISABLE          ")
-        (SX_CORE_VOLT_RESTORED         , "SX_CORE_VOLT_RESTORED         ")
-        (SX_CORE_SKEWADJUST            , "SX_CORE_SKEWADJUST            ")
-        (SX_CORE_STARTCLOCKS           , "SX_CORE_STARTCLOCKS           ")
-        (SX_CORE_ENABLE_SHADOWS        , "SX_CORE_ENABLE_SHADOWS        ")
-        (SX_CORE_CLOCKED               , "SX_CORE_CLOCKED               ")
-        (SX_CORE_SCOMINIT              , "SX_CORE_SCOMINIT              ")
-        (SX_CORE_SCOM_CUSTOMIZE        , "SX_CORE_SCOM_CUSTOMIZE        ")
-        (SX_CORE_SCOMED                , "SX_CORE_SCOMED                ")
-        (SX_CORE_SELF_RESTORE          , "SX_CORE_SELF_RESTORE          ")
-        (SX_CORE_SRESET_THREADS        , "SX_CORE_SRESET_THREADS        ")
-        (SX_CORE_RESTORED              , "SX_CORE_RESTORED              ")
-        (SX_CORE_HANDOFF_PC            , "SX_CORE_HANDOFF_PC            ")
-        (SX_CORE_AWAKE                 , "SX_CORE_AWAKE                 ") ;
-
-
-}
 #endif
 
+//----------------------
+
+#ifndef __PPE_QME
+
+#ifdef EPM_SIM_ENV
+const std::map<QME_SX_MARKS, std::string> mMARKS = boost::assign::map_list_of
+#else
+//used by p10_qme_mark_decoder
+std::map<uint32_t, std::string> g_QME_SX_MARKS_MAP =
+{
+#endif
+
+        FOOBAR (IRQ_REGULAR_WAKEUP_FAST_EVENT , "IRQ_REGULAR_WAKEUP_FAST_EVENT ")
+        FOOBAR (IRQ_REGULAR_WAKEUP_SLOW_EVENT , "IRQ_REGULAR_WAKEUP_SLOW_EVENT ")
+        FOOBAR (IRQ_SPECIAL_WAKEUP_RISE_EVENT , "IRQ_SPECIAL_WAKEUP_RISE_EVENT ")
+        FOOBAR (IRQ_SPECIAL_WAKEUP_FALL_EVENT , "IRQ_SPECIAL_WAKEUP_FALL_EVENT ")
+        FOOBAR (SX_CACHE_POWERON              , "SX_CACHE_POWERON              ")
+        FOOBAR (SX_CACHE_RESET                , "SX_CACHE_RESET                ")
+        FOOBAR (SX_CACHE_POWERED              , "SX_CACHE_POWERED              ")
+        FOOBAR (SX_CACHE_GPTR_TIME_INITF      , "SX_CACHE_GPTR_TIME_INITF      ")
+        FOOBAR (SX_CACHE_REPAIR_INITF         , "SX_CACHE_REPAIR_INITF         ")
+        FOOBAR (SX_CACHE_ARRAYINIT            , "SX_CACHE_ARRAYINIT            ")
+        FOOBAR (SX_CACHE_INITF                , "SX_CACHE_INITF                ")
+        FOOBAR (SX_CACHE_SCANED               , "SX_CACHE_SCANED               ")
+        FOOBAR (SX_CACHE_SKEWADJUST           , "SX_CACHE_SKEWADJUST           ")
+        FOOBAR (SX_CACHE_STARTCLOCKS          , "SX_CACHE_STARTCLOCKS          ")
+        FOOBAR (SX_CACHE_CLOCKED              , "SX_CACHE_CLOCKED              ")
+        FOOBAR (SX_CACHE_SCOMINIT             , "SX_CACHE_SCOMINIT             ")
+        FOOBAR (SX_CACHE_SCOM_CUSTOMIZE       , "SX_CACHE_SCOM_CUSTOMIZE       ")
+        FOOBAR (SX_CACHE_SCOMED               , "SX_CACHE_SCOMED               ")
+        FOOBAR (SX_CORE_POWERON               , "SX_CORE_POWERON               ")
+        FOOBAR (SX_CORE_RESET                 , "SX_CORE_RESET                 ")
+        FOOBAR (SX_CORE_POWERED               , "SX_CORE_POWERED               ")
+        FOOBAR (SX_CORE_GPTR_TIME_INITF       , "SX_CORE_GPTR_TIME_INITF       ")
+        FOOBAR (SX_CORE_REPAIR_INITF          , "SX_CORE_REPAIR_INITF          ")
+        FOOBAR (SX_CORE_ARRAYINIT             , "SX_CORE_ARRAYINIT             ")
+        FOOBAR (SX_CORE_INITF                 , "SX_CORE_INITF                 ")
+        FOOBAR (SX_CORE_SCANED                , "SX_CORE_SCANED                ")
+        FOOBAR (SX_CORE_VMIN_DISABLE          , "SX_CORE_VMIN_DISABLE          ")
+        FOOBAR (SX_CORE_VOLT_RESTORED         , "SX_CORE_VOLT_RESTORED         ")
+        FOOBAR (SX_CORE_SKEWADJUST            , "SX_CORE_SKEWADJUST            ")
+        FOOBAR (SX_CORE_STARTCLOCKS           , "SX_CORE_STARTCLOCKS           ")
+        FOOBAR (SX_CORE_ENABLE_SHADOWS        , "SX_CORE_ENABLE_SHADOWS        ")
+        FOOBAR (SX_CORE_CLOCKED               , "SX_CORE_CLOCKED               ")
+        FOOBAR (SX_CORE_SCOMINIT              , "SX_CORE_SCOMINIT              ")
+        FOOBAR (SX_CORE_SCOM_CUSTOMIZE        , "SX_CORE_SCOM_CUSTOMIZE        ")
+        FOOBAR (SX_CORE_SCOMED                , "SX_CORE_SCOMED                ")
+        FOOBAR (SX_CORE_SELF_RESTORE          , "SX_CORE_SELF_RESTORE          ")
+        FOOBAR (SX_CORE_SRESET_THREADS        , "SX_CORE_SRESET_THREADS        ")
+        FOOBAR (SX_CORE_RESTORED              , "SX_CORE_RESTORED              ")
+        FOOBAR (SX_CORE_HANDOFF_PC            , "SX_CORE_HANDOFF_PC            ")
+        FOOBAR (SX_CORE_AWAKE                 , "SX_CORE_AWAKE                 ")
+
+#ifdef EPM_SIM_ENV
+//boost map
+        ;
+//namespace
+}
+#else
+//std map
+};
+#endif
+
+//__PPE_QME
+#endif
+
+//----------------------
 
 #ifdef EPM_SIM_ENV
 
@@ -354,7 +414,5 @@ const std::map<GLOBAL_MARKS, std::string> mMARKS = boost::assign::map_list_of
 
 }
 #endif
-
-
 
 #endif // __QME_MARKS_H__
