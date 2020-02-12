@@ -78,6 +78,9 @@ def _u32tobytes(value):
 def _u16tobytes(value):
     return ((value >> 8) & 0xFF, value & 0xFF)
 
+def get_def_fname(ring_name, chip_ec):
+    return path.join(path.dirname(path.abspath(__file__)), f"dd{chip_ec:02X}", ring_name+".fad")
+
 class FastArrayDef(object):
     """
     Encapsulates a fast array definition and provides methods to set up a dump and extract data.
@@ -342,12 +345,14 @@ class FastArrayDef(object):
             # Align read pointer to the next 32-bit boundary
             dump_data.pos += -dump_data.pos & 31
 
-    def extract_fastarray_dump(self, arrays, dump_data, debug=False):
+    def extract_fastarray_dump(self, dump_data, arrays=None, debug=False):
         """
         Extract a fast array dump.
 
-        @param arrays Set of arrays to extract; should be the same set that was used with generate_control_data earlier
-        @param dump_data Generator for dump data, usually returned by load_sbe_dump
+        @param dump_data Generator for dump data, usually returned by load_sbe_dump,
+                         OR a bytes or bytearray object containing a raw SBE dump
+        @param arrays Set of arrays to extract; if omitted, defaults to all arrays.
+                      This should be the same set that was used with generate_control_data earlier.
         @param debug Print debug information
 
         @return array_contents, fakering, incomplete_arrays
@@ -355,6 +360,13 @@ class FastArrayDef(object):
                 fakering:          A BitArray containing the full fakering data.
                 incomplete_arrays: A list with names of arrays for which data was missing in the dump.
         """
+
+        if isinstance(dump_data, (bytes, bytearray)):
+            dump_data = self.load_sbe_dump(dump_data)
+
+        if arrays is None:
+            arrays = self.fastarray_defs
+
         # Figure out the set of rows where care information changes
         lower_limits, upper_limits = self._get_row_ranges(arrays)
         change_rows = set(lower_limits + upper_limits)
@@ -461,7 +473,7 @@ def _cmd_extract(array_def, arrays, args):
         with open(args.dump, "rb") as f:
             dump_data = array_def.load_sbe_dump(f.read())
 
-    array_contents, fakering, incomplete_arrays = array_def.extract_fastarray_dump(arrays, dump_data, debug=args.debug)
+    array_contents, fakering, incomplete_arrays = array_def.extract_fastarray_dump(dump_data, arrays, debug=args.debug)
 
     if args.split:
         try:
