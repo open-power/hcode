@@ -79,6 +79,12 @@ fapi2::ReturnCode p10_l2_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
                 l_scom_buffer.insert<21, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L3_ADDR_EN_ON );
             }
 
+            if ((l_TGT1_ATTR_SYSTEM_IPL_PHASE == fapi2::ENUM_ATTR_SYSTEM_IPL_PHASE_HB_RUNTIME))
+            {
+                constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L2_ADDR_EN_ON = 0x1;
+                l_scom_buffer.insert<28, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L2_ADDR_EN_ON );
+            }
+
             if ((l_TGT1_ATTR_SYSTEM_IPL_PHASE == ENUM_ATTR_SYSTEM_IPL_PHASE_HB_RUNTIME))
             {
                 constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_CAC_ERR_REPAIR_EN_ON = 0x1;
