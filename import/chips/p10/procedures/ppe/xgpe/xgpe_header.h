@@ -27,6 +27,7 @@
 
 #include "xgpe.h"
 
+#if 0
 #define OCC_SRAM_XGPE_BASE_ADDR     0xfff30000
 #define XGPE_IMAGE_SIZE             64*1024
 
@@ -60,6 +61,7 @@ typedef struct xgpe_header
 
 extern xgpe_header_t* G_xgpe_header_data;
 
+#endif
 //
 //  xgpe_header_init
 //

@@ -24,8 +24,8 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include "xgpe_header.h"
 
-xgpe_header_t* G_xgpe_header_data;
-extern xgpe_header_t* _XGPE_IMG_HEADER __attribute__ ((section (".xgpe_image_header")));
+XgpeHeader_t* G_xgpe_header_data;
+extern XgpeHeader_t* _XGPE_IMG_HEADER __attribute__ ((section (".xgpe_image_header")));
 
 //TODO  RTC 212641
 #define PGPE_BASE_ADDRESS 0xfff20000
@@ -45,23 +45,18 @@ void xgpe_header_init()
 {
     PK_TRACE("HDR: Init");
 
-    G_xgpe_header_data = (xgpe_header_t*)&_XGPE_IMG_HEADER;
+    G_xgpe_header_data = (XgpeHeader_t*)&_XGPE_IMG_HEADER;
 
     //OCC Shared SRAM address and length
-    G_xgpe_header_data->g_xgpe_shared_sram_addr = (uint32_t) (PGPE_BASE_ADDRESS +
-            PGPE_HCODE_HEADER_OFFSET + PGPE_HCODE_HEADER_SHARED_SRAM_ADDR_OFFSET);
-    G_xgpe_header_data->g_xgpe_shared_sram_len = (uint32_t)(PGPE_BASE_ADDRESS +
-            PGPE_HCODE_HEADER_OFFSET + PGPE_HCODE_HEADER_SHARED_SRAM_LENGTH_OFFSET);
+    G_xgpe_header_data->g_xgpe_sharedSramAddress = (uint32_t)OCC_SHARED_SRAM_ADDR_START;;
+    G_xgpe_header_data->g_xgpe_sharedSramLength = PGPE_OCC_SHARED_SRAM_SIZE;
+
+    G_xgpe_header_data->g_xgpe_ivprAddress = OCC_SRAM_XGPE_IVPR_ADDR;
+    G_xgpe_header_data->g_xgpe_sysResetAddress = OCC_SRAM_XGPE_SYSTEM_RESET_ADDR;
 
     //GPPB SRAM Address
-    G_xgpe_header_data->g_xgpe_gppb_sram_addr = (uint32_t)(PGPE_BASE_ADDRESS +
-            PGPE_HCODE_HEADER_OFFSET + PGPE_HCODE_HEADER_GPPB_SRAM_ADDR);
-
-    //TODO
-    G_xgpe_header_data->g_xgpe_hcode_length = 0x10000;
-    G_xgpe_header_data->g_xgpe_gppb_length  = 0x800;
+    G_xgpe_header_data->g_xgpe_gpspbSramAddress = OCC_SRAM_XGPE_GPPB_ADDR;
+    G_xgpe_header_data->g_xgpe_gpspbLength =  OCC_SRAM_XGPE_GPPB_LEN;
     //TODO until hcode image build is fixed
-    G_xgpe_header_data->g_xgpe_flags = XGPE_OCC_PM_SUSPEND_IMMEDIATE_MODE;
-
-
+    G_xgpe_header_data->g_xgpe_xgpeFlags = 0;
 }
