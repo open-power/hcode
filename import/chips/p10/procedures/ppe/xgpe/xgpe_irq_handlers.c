@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -35,6 +35,7 @@
 
 //using namespace scomt::eq;
 
+extern XgpeHeader_t* G_xgpe_header_data;
 
 extern uint32_t G_OCB_OCCFLG3_OR;
 extern uint32_t G_OCB_OCCFLG3;
@@ -42,6 +43,8 @@ extern uint32_t G_OCB_OCCFLG3_CLR;
 extern uint32_t G_OCB_CCSR;
 extern uint32_t G_OCB_OPITFSV;
 extern uint32_t G_OCB_OISR0_CLR;
+extern uint32_t G_OCB_OPITFPRD;
+extern uint32_t G_OCB_OPITFSVRR;
 extern uint64_t g_oimr_override;
 
 //This task gets triggered when OISR bits are
@@ -134,6 +137,9 @@ void xgpe_irq_pcb_typef_handler()
     uint32_t l_pcb_type_f_msg = 0;
     uint32_t l_cci_data = BITS32(XGPE_IGNORE_STOP_CONTROL, XGPE_IGNORE_STOP_LEN);
 
+    //Clear OISR0[PCB_TYPE_F]
+    out32(G_OCB_OISR0_CLR, BIT32(31));
+
     PK_TRACE("PCB TYPE F interrupt handler %08x", l_occflg3);
 
     //RTC 214436
@@ -143,7 +149,7 @@ void xgpe_irq_pcb_typef_handler()
         l_opitf_data = in32(G_OCB_OPITFSV);
 
         //If we are in mpipl/PM suspend mode
-        if (G_xgpe_header_data->g_xgpe_flags & XGPE_PM_SUSPEND_MODE)
+        if (G_xgpe_header_data->g_xgpe_xgpeFlags & XGPE_PM_SUSPEND_MODE)
         {
             //Loop through the quad
             for (l_quad = 1; l_quad <= MAX_QUADS; ++l_quad)
@@ -195,7 +201,7 @@ void xgpe_irq_pcb_typef_handler()
     {
         //PM Suspend process is done
         out32(G_OCB_OCCFLG3_OR, BIT32(XGPE_PM_COMPLEX_SUSPENDED));
-        G_xgpe_header_data->g_xgpe_flags &= ~XGPE_PM_SUSPEND_MODE;
+        G_xgpe_header_data->g_xgpe_xgpeFlags &= ~XGPE_PM_SUSPEND_MODE;
         PK_TRACE("XGPE_PM_COMPLEX_SUSPENDED successful");
     }
 
@@ -206,8 +212,19 @@ void xgpe_irq_pcb_typef_handler()
         PK_TRACE("XGPE_IGNORE_STOP_CONTROL is successful");
     }
 
-    //Clear OISR0[PCB_TYPE_F]
-    out32(G_OCB_OISR0_CLR, BIT32(31));
+    //Check any pcb type f interrupt is pending
+    //If there are any pending bits...then read the summary vector reset
+    //register which clears the pending register bits and continue
+    uint32_t l_intr_pen = in32(G_OCB_OPITFPRD);
+
+    if (l_intr_pen & BITS32(0, 8))
+    {
+        PK_TRACE("PCB type F interrupt pending"
+                 "G_OCB_OPITFPRD %8x G_OCB_OPITFSVRR %08X",
+                 l_intr_pen, in32(G_OCB_OPITFSVRR));
+    }
+
+
     g_oimr_override |= BIT64(31);
     g_oimr_override |= BIT64(11);
 }

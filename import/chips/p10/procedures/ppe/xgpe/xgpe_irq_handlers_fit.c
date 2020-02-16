@@ -38,6 +38,7 @@
 #include "pstate_pgpe_occ_api.h"
 
 #define IDDQ_FIT_SAMPLE_TICKS   8
+extern XgpeHeader_t* G_xgpe_header_data;
 
 typedef struct iddq_state
 {
@@ -56,16 +57,16 @@ extern uint32_t G_OCB_OPITFSV;
 extern uint32_t G_OCB_CCSR;
 extern uint32_t G_OCB_OPITFPRD;
 extern uint32_t G_OCB_OPITFSVRR;
-extern xgpe_header_t* G_xgpe_header_data;
 
 iddq_state_t G_iddq;
 
 void xgpe_irq_fit_init()
 {
     //Todo: Determine if XGPE should read OCC Shared SRAM from PGPE header
-    HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)G_xgpe_header_data->g_xgpe_shared_sram_addr;
-    G_iddq.p_act_val =  (iddq_activity_t*)(G_xgpe_header_data->g_xgpe_shared_sram_addr + occ_shared_data->iddq_data_offset);
-    G_iddq.p_wof_val =  (pgpe_wof_values_t*)(G_xgpe_header_data->g_xgpe_shared_sram_addr +
+    HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)G_xgpe_header_data->g_xgpe_sharedSramAddress;
+    G_iddq.p_act_val =  (iddq_activity_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +
+                                           occ_shared_data->iddq_data_offset);
+    G_iddq.p_wof_val =  (pgpe_wof_values_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +
                         occ_shared_data->iddq_data_offset);
 }
 
@@ -104,13 +105,13 @@ void handle_pm_suspend()
 
         //if this is set.. then just set pm suspended is done(useful to test the
         //procedure unit test)
-        if (G_xgpe_header_data->g_xgpe_flags & XGPE_OCC_PM_SUSPEND_IMMEDIATE_MODE)
+        if (G_xgpe_header_data->g_xgpe_xgpeFlags & XGPE_OCC_PM_SUSPEND_IMMEDIATE_MODE)
         {
             out32(G_OCB_OCCFLG3_OR, BIT32(XGPE_PM_COMPLEX_SUSPENDED));
         }
         else
         {
-            G_xgpe_header_data->g_xgpe_flags = XGPE_PM_SUSPEND_MODE;
+            G_xgpe_header_data->g_xgpe_xgpeFlags = XGPE_PM_SUSPEND_MODE;
 #ifdef SIMICS_TUNING
 
             for (l_quad = 1; l_quad <= MAX_QUADS; ++l_quad)

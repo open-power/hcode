@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -36,6 +36,7 @@
 #include "ppehw_common.h"
 #include "ppe42_scom.h"
 #include "xgpe_header.h"
+#include "p10_hcode_image_defines.H"
 
 
 #define EQ_CORE_MASK   0xF
