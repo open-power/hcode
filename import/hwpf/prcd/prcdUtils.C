@@ -58,6 +58,7 @@
 //  eCMD Includes
 //----------------------------------------------------------------------
 #include <ecmdClientCapi.H>
+#include <simClientCapi.H>
 #include <ecmdDataBuffer.H>
 #include <ecmdUtils.H>
 #include <ecmdSharedUtils.H>
