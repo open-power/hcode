@@ -43,6 +43,15 @@ void pgpe_occ_init()
                                             (pgpe_header_get(g_pgpe_shared_sram_addr));
 
     occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2;
+    occ_shared_data->occ_data_offset = offsetof(HcodeOCCSharedData_t, occ_wof_values);
+    occ_shared_data->xgpe_data_offset = offsetof(HcodeOCCSharedData_t, xgpe_wof_values);
+    occ_shared_data->pgpe_data_offset = offsetof(HcodeOCCSharedData_t, pgpe_wof_values);
+    occ_shared_data->iddq_data_offset = offsetof(HcodeOCCSharedData_t, iddq_activity_values);
+    occ_shared_data->error_log_offset = offsetof(HcodeOCCSharedData_t, errlog_idx);
+    occ_shared_data->pstate_table_offset = offsetof(HcodeOCCSharedData_t, pstate_table);
+    occ_shared_data->iddq_activity_sample_depth =
+        8; //TODO RTC: 214486 Determine if this should be an attribute or hard-coded like this
+
 
     G_pgpe_occ.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_wof_state_addr));
 
@@ -81,12 +90,17 @@ void pgpe_occ_produce_wof_i_v_values()
         G_pgpe_occ.idd_avg_ma = G_pgpe_occ.idd_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
         G_pgpe_occ.ics_avg_ma = G_pgpe_occ.ics_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
 
+        //PK_TRACE("OCC: woftick vdd_wof=0x%x,vcs_wof=%u,idd_wof=%u,ics_wof=%u",G_pgpe_occ.vdd_wof_avg_accum_mv,G_pgpe_occ.vcs_wof_avg_accum_mv,G_pgpe_occ.idd_wof_avg_accum_ma,G_pgpe_occ.ics_wof_avg_accum_ma);
         //Write to SRAM
         G_pgpe_occ.pwof_val->dw1.fields.idd_avg_ma = G_pgpe_occ.idd_avg_ma;
         G_pgpe_occ.pwof_val->dw1.fields.ics_avg_ma = G_pgpe_occ.ics_avg_ma;
         G_pgpe_occ.pwof_val->dw2.fields.vdd_avg_mv = G_pgpe_occ.vdd_avg_mv;
         G_pgpe_occ.pwof_val->dw2.fields.vcs_avg_mv = G_pgpe_occ.vcs_avg_mv;
         G_pgpe_occ.fit_tick = 0;;
+        G_pgpe_occ.vdd_wof_avg_accum_mv = 0;
+        G_pgpe_occ.vcs_wof_avg_accum_mv = 0;
+        G_pgpe_occ.idd_wof_avg_accum_ma = 0;
+        G_pgpe_occ.ics_wof_avg_accum_ma = 0;
     }
 }
 
@@ -98,18 +112,26 @@ void pgpe_occ_produce_fit_i_v_values()
     G_pgpe_occ.vcs_fit_avg_mv = G_pgpe_occ.vcs_tb_accum / G_pgpe_occ.max_tb_delta;
     G_pgpe_occ.idd_fit_avg_ma = G_pgpe_occ.idd_tb_accum / G_pgpe_occ.max_tb_delta;
     G_pgpe_occ.ics_fit_avg_ma = G_pgpe_occ.ics_tb_accum / G_pgpe_occ.max_tb_delta;
+    G_pgpe_occ.ps_fit_avg     = G_pgpe_occ.ps_tb_accum / G_pgpe_occ.max_tb_delta;
+    G_pgpe_occ.ps_freq_fit_avg = G_pgpe_occ.ps_freq_tb_accum / G_pgpe_occ.max_tb_delta;
 
     G_pgpe_occ.vdd_wof_avg_accum_mv += G_pgpe_occ.vdd_fit_avg_mv;
     G_pgpe_occ.vcs_wof_avg_accum_mv += G_pgpe_occ.vcs_fit_avg_mv;
     G_pgpe_occ.idd_wof_avg_accum_ma += G_pgpe_occ.idd_fit_avg_ma;
     G_pgpe_occ.ics_wof_avg_accum_ma += G_pgpe_occ.ics_fit_avg_ma;
+    G_pgpe_occ.ps_wof_avg_accum += G_pgpe_occ.ps_fit_avg;
+    G_pgpe_occ.ps_freq_wof_avg_accum += G_pgpe_occ.ps_freq_fit_avg;
 
     G_pgpe_occ.idd_tb_accum = 0;
     G_pgpe_occ.ics_tb_accum = 0;
     G_pgpe_occ.vdd_tb_accum = 0;
     G_pgpe_occ.vcs_tb_accum = 0;
+    G_pgpe_occ.ps_tb_accum  = 0;
+    G_pgpe_occ.ps_freq_tb_accum = 0;
 
     G_pgpe_occ.fit_tick++;
+    //PK_TRACE("OCC: fit vdd_fit=0x%x,vcs_fit=%u,idd_fit=%u,ics_fit=%u",G_pgpe_occ.vdd_fit_avg_mv,G_pgpe_occ.vcs_fit_avg_mv,G_pgpe_occ.idd_fit_avg_ma,G_pgpe_occ.ics_fit_avg_ma);
+    //PK_TRACE("OCC: fit vdd_wof=0x%x,vcs_wof=%u,idd_wof=%u,ics_wof=%u",G_pgpe_occ.vdd_wof_avg_accum_mv,G_pgpe_occ.vcs_wof_avg_accum_mv,G_pgpe_occ.idd_wof_avg_accum_ma,G_pgpe_occ.ics_wof_avg_accum_ma);
 }
 
 void pgpe_occ_sample_i_v_values()
@@ -141,8 +163,13 @@ void pgpe_occ_sample_i_v_values()
     G_pgpe_occ.ics_tb_accum = ics_ma * delta_tb;
     G_pgpe_occ.vdd_tb_accum = pgpe_pstate_get(vdd_curr) * delta_tb;
     G_pgpe_occ.vcs_tb_accum = pgpe_pstate_get(vcs_curr) * delta_tb;
+    G_pgpe_occ.ps_tb_accum = pgpe_pstate_get(pstate_curr) * delta_tb;
+    G_pgpe_occ.ps_freq_tb_accum = pgpe_pstate_get(pstate_curr) * delta_tb;
 
     G_pgpe_occ.prev_tb = G_pgpe_occ.present_tb;
+    //PK_TRACE("OCC: siv vdd=%u,vcsa=%u,idd=%u,ics=%u",pgpe_pstate_get(vdd_curr),pgpe_pstate_get(vcs_curr),idd_ma,ics_ma);
+    //PK_TRACE("OCC: delta_tb=%u, tb=%u",delta_tb,G_pgpe_occ.prev_tb);
+    //PK_TRACE("OCC: siv acvdd=%u,acvcsa=%u,acidd=%u,acics=%u",G_pgpe_occ.vdd_tb_accum,G_pgpe_occ.vcs_tb_accum,G_pgpe_occ.idd_tb_accum,G_pgpe_occ.ics_tb_accum);
 }
 
 void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd)
