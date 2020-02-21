@@ -87,6 +87,15 @@ SECTIONS
     _fa_ec_mma_far_size = . - _fa_ec_mma_far_origin;
 
     ////////////////////////////////
+    // FA_RING_OVRD
+    ////////////////////////////////
+    . = ALIGN(8);
+    _fa_ring_ovrd_origin = .;
+    _fa_ring_ovrd_offset = . - _sbe_image_origin;
+    _fa_ring_ovrd . : { *(.fa_ring_ovrd) }
+    _fa_ring_ovrd_size = . - _fa_ring_ovrd_origin;
+
+    ////////////////////////////////
     // RINGIDFEATLIST
     ////////////////////////////////
     . = ALIGN(8);
