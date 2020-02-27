@@ -52,6 +52,7 @@ extern "C"
         uint32_t l_chiplet = p10_scan_addr::getChiplet(i_scanAddr);
         uint32_t l_region = p10_scan_addr::getRegion(i_scanAddr);
         uint32_t l_ext_region = p10_scan_addr::getExtendedRegion(i_scanAddr);
+        bool l_is_vitl = p10_scan_addr::isVitlRing(i_scanAddr);
 
         if (p10_scan_addr::isPCIRing(l_chiplet))
         {
@@ -61,7 +62,8 @@ extern "C"
                 p10_scan_addr::getPCIInstance(l_chiplet);
             o_chipUnitPairing.push_back(l_singleChipUnitPairing);
         }
-        else if (p10_scan_addr::isMCRing(l_chiplet))
+        else if (!l_is_vitl && // HW518591 -- MC vitl rings not common
+                 p10_scan_addr::isMCRing(l_chiplet))
         {
             o_chipUnitRelated = true;
             l_singleChipUnitPairing.chipUnitType = PU_MC_CHIPUNIT;
