@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
@@ -79,7 +79,7 @@ def _u16tobytes(value):
     return ((value >> 8) & 0xFF, value & 0xFF)
 
 def get_def_fname(ring_name, chip_ec):
-    return path.join(path.dirname(path.abspath(__file__)), f"dd{chip_ec:02X}", ring_name+".fad")
+    return path.join(path.dirname(path.abspath(__file__)), "dd%02X"%chip_ec, ring_name+".fad")
 
 class FastArrayDef(object):
     """

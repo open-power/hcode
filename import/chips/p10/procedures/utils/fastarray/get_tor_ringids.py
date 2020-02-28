@@ -39,7 +39,7 @@ ring_id = ring_name = None
 
 for line in sys.stdin:
     if line.startswith("ringId"):
-        ring_id = line.split("=")[1].strip()
+        ring_id = line.split("=")[1].strip().split()[0]
     elif line.startswith("ringName"):
         ring_name = line.split("=")[1].strip()
     elif line.startswith("-----"):
