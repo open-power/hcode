@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2019                                                    */
+/* COPYRIGHT 2018,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -28,8 +28,6 @@
 extern QmeRecord G_qme_record;
 
 
-
-
 //wof interlock, safe mode
 void
 qme_doorbell2_event()
@@ -47,7 +45,9 @@ qme_doorbell1_event()
 
     G_qme_record.doorbell1_msg = in32(QME_LCL_DB1) >> SHIFT32(7);
     out32(QME_LCL_DB1,  0);
-    out32(QME_LCL_EISR_CLR, BIT32(17));
+    //HW525040
+    //out32(QME_LCL_EISR_CLR, BIT32(17));
+    out64( QME_LCL_EISR_CLR, BIT64(17) );
     uint32_t scratchB = in32(QME_LCL_SCRB);
     uint32_t pig_data = 0;
 

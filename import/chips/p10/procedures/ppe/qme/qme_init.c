@@ -184,7 +184,12 @@ qme_init()
     out32_sh( QME_LCL_EITR_OR,  0x0000FF00 );
     out32_sh( QME_LCL_EISR_CLR, 0x0000FF00 );
 #endif
-
-    out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( IRQ_VEC_PRTY12_QME >> 32 ) ) ) );
-    out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
+    {
+        uint64_t eimr = ( ( (~IRQ_VEC_PRTY12_QME) & (~BITS64(32,
+                            24)) ) | ( ( ~( (uint64_t)G_qme_record.c_all_stop_mask ) ) & ( BITS64(32, 24) ) ) );
+        out64( QME_LCL_EIMR_CLR, eimr );
+    }
+//    HW525040
+//    out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( IRQ_VEC_PRTY12_QME >> 32 ) ) ) );
+//    out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
 }
