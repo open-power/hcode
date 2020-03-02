@@ -28,6 +28,7 @@
 #include <fapi2_target.H>
 
 extern QmeRecord G_qme_record;
+uint32_t G_IsSimics = 0; // extern declared in qme.h
 
 int main()
 {
@@ -107,6 +108,13 @@ int main()
     uint32_t TCR_VAL = 0;
     PK_TRACE("Main: Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
     out32(QME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
+
+    // @note If QME_FLAGS[63] is set .. execution environment is Simics
+    if (in64 (QME_LCL_FLAGS) & QME_FLAGS_RUNNING_SIMICS)
+    {
+        PK_TRACE ("QME running on Simics");
+        G_IsSimics = 1;
+    }
 
     // Initialize the Stop state and Pstate tasks
     qme_init();

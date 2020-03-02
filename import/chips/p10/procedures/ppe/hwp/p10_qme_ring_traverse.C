@@ -33,6 +33,7 @@
 // *HWP Consumed by:    QME
 // *INDENT-OFF*
 
+#include <qme.h>
 #include <p10_qme_ring_traverse.H>
 #include <p10_ipl_image.H>
 #include <p10_scan_compression.H>
@@ -148,6 +149,12 @@ fapi2::ReturnCode putRingQme(
                     const RingId_t i_ringId , const fapi2::RingMode i_ringMode )
 
 {
+    if (G_IsSimics)
+    {
+        FAPI_INF ("putRingQme: NOP on SImics!!");
+        return fapi2::FAPI2_RC_SUCCESS;
+    }
+
     RingType_t l_ringType       =   COMMON_RING;
     uint8_t * i_pRing           =   (uint8_t *)SRAM_START;
     QmeHeader_t * l_pQmeHdr     =   (QmeHeader_t*)( i_pRing + QME_INT_VECTOR );
