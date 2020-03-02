@@ -598,7 +598,48 @@ void pgpe_process_wof_vrt_post_actuate()
 
 void pgpe_process_safe_mode(void* args)
 {
-    //\todo Finish the rest of Safe Mode
+    if(pgpe_pstate_is_pstate_enabled())
+    {
+        //Move throttling to ATTR_SAFE_MODE_THROTTLE_IDX
+        pgpe_thr_ctrl_set_ceff_ovr_idx(pgpe_gppb_get(safe_throttle_idx));
+        pgpe_thr_ctrl_write_wcor();
+
+        //VDD above ATTR_SAFE_MODE_MV[VDD]
+        if (pgpe_pstate_get(vdd_curr) > pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD]))
+        {
+            //Move frequency to Safe Frequency
+            pgpe_pstate_actuate_pstate(pgpe_pstate_get(pstate_safe));
+
+            //Move VDD voltage to ATTR_SAFE_MODE_MV[VDD]
+            pgpe_pstate_actuate_safe_voltage_vdd();
+
+            //Move VCS voltage to ATTR_SAFE_MODE_MV[VCS]
+            pgpe_pstate_actuate_safe_voltage_vcs();
+        }
+        else     //VDD is at or below ATTR_SAFE_MODE_MV[VDD]
+        {
+            //Move VCS voltage to ATTR_SAFE_MODE_MV[VCS]
+            pgpe_pstate_actuate_safe_voltage_vcs();
+
+            //Move VDD voltage to ATTR_SAFE_MODE_MV[VDD]
+            pgpe_pstate_actuate_safe_voltage_vdd();
+
+            //Move frequency to PowerSave frequency \\todo clarify if this should be powersave
+            pgpe_pstate_actuate_pstate(pgpe_pstate_get(pstate_safe));
+
+        }
+    }
+    else
+    {
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_SAFE_MODE_ERROR));
+    }
+
+    //Update PMSR
+    pgpe_pstate_update_vdd_vcs_ps();
+    pgpe_pstate_pmsr_set_safe_mode();
+    pgpe_pstate_pmsr_write();
+
+    //Set Status Bits
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE));
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_SAFE_MODE_ACTIVE));
     PK_TRACE("PEP: Process Safe Mode");

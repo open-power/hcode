@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -79,6 +79,9 @@ extern pgpe_pstate_t G_pgpe_pstate;
 void pgpe_pstate_init();
 void* pgpe_pstate_data_addr();
 void pgpe_pstate_actuate_step();
+void pgpe_pstate_actuate_pstate(uint32_t pstate);
+void pgpe_pstate_actuate_safe_voltage_vdd();
+void pgpe_pstate_actuate_safe_voltage_vcs();
 void pgpe_pstate_compute();
 void pgpe_pstate_apply_clips();
 void pgpe_pstate_compute_vratio(uint32_t pstate);
@@ -87,6 +90,7 @@ uint32_t pgpe_pstate_is_at_target();
 uint32_t pgpe_pstate_is_clip_bounded();
 uint32_t pgpe_pstate_is_wof_clip_bounded();
 void pgpe_pstate_pmsr_updt();
+void pgpe_pstate_pmsr_set_safe_mode();
 void pgpe_pstate_pmsr_write();
 void pgpe_pstate_set_safe_mode();
 void pgpe_pstate_sample_currents();

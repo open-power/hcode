@@ -114,7 +114,8 @@ void pgpe_fake_boot_gppb()
     gppb->vdn_sysparm.distloss_uohm = 0;
     gppb->vdn_sysparm.distoffset_uv = 0;
 
-    gppb->safe_voltage_mv = 740;
+    gppb->safe_voltage_mv[SAFE_VOLTAGE_VDD] = 740;
+    gppb->safe_voltage_mv[SAFE_VOLTAGE_VCS] = 720;
     gppb->safe_frequency_khz = 2000000;
 
     //vratio

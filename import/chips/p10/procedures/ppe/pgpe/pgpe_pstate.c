@@ -238,6 +238,41 @@ void pgpe_pstate_actuate_step()
 
 }
 
+void pgpe_pstate_actuate_pstate(uint32_t pstate)
+{
+    uint32_t q;
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        G_pgpe_pstate.ps_request[q] = pstate;
+    }
+
+    pgpe_pstate_compute();
+    pgpe_pstate_apply_clips();
+    G_pgpe_pstate.pstate_next = G_pgpe_pstate.pstate_target;
+    pgpe_dpll_write(G_pgpe_pstate.pstate_next);
+    pgpe_pstate_pmsr_updt();
+}
+
+void pgpe_pstate_actuate_safe_voltage_vdd()
+{
+    G_pgpe_pstate.vdd_next = pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD]);
+    G_pgpe_pstate.vdd_next_uplift = 0;
+    G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
+    pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
+                              pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+                              G_pgpe_pstate.vdd_next_ext);
+}
+
+void pgpe_pstate_actuate_safe_voltage_vcs()
+{
+    G_pgpe_pstate.vcs_next = pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VCS]);
+    G_pgpe_pstate.vcs_next_uplift = 0;
+    G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
+    pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
+                              pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+                              G_pgpe_pstate.vcs_next_ext);
+}
 
 //\todo Determine if this is really needed. One optimization
 //is to keep a minimum value which is updated whenever a set_pmcr IPC comes in
