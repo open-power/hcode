@@ -74,6 +74,11 @@ void pgpe_thr_ctrl_update(uint32_t pstate)
     }
 }
 
+void pgpe_thr_ctrl_set_ceff_ovr_idx(uint32_t idx)
+{
+    G_pgpe_thr_ctrl.curr_ceff_ovr_idx = idx;
+}
+
 void pgpe_thr_ctrl_write_wcor()
 {
     qme_wcor_t wcor;
