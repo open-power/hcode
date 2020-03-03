@@ -42,6 +42,8 @@
     #include "ppe42_scom.h"
     #include "ppehw_common.h"
     #include "p10_hcd_common.H"
+#else
+    #define MAX_QUADS   8
 #endif
 
 #define CORE_MASK(core) \
