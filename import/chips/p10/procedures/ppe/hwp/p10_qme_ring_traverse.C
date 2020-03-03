@@ -64,7 +64,6 @@ fapi2::ReturnCode getRS4ImageFromTor(
     uint8_t l_corePos           =   0;
     ChipletData_t* l_pChipletData;
     TorOffset_t* l_pRingTor        =   NULL;
-    rs4Type_t l_rs4Type         =   REGULAR;
     std::vector < fapi2::Target < fapi2::TARGET_TYPE_CORE >> l_ucCoreTgt =
                                 i_target.getChildren< fapi2::TARGET_TYPE_CORE > ();
 
@@ -122,18 +121,7 @@ fapi2::ReturnCode getRS4ImageFromTor(
 
         FAPI_INF( "Ring Id 0x%04x Type 0x%02x", rev_16(l_pRingHdr->iv_ringId), l_pRingHdr->iv_type );
 
-        if ( RS4_IV_TYPE_CMSK_CMSK  == ( l_pRingHdr->iv_type & RS4_IV_TYPE_CMSK_MASK ))
-        {
-            l_rs4Type   =   CMSK;
-        }
-        else if( RS4_IV_TYPE_CMSK_NON_CMSK == ( l_pRingHdr->iv_type & RS4_IV_TYPE_CMSK_MASK ))
-        {
-            l_rs4Type   =   REGULAR;
-        }
-
-        //TODO Need clarification on STUMP rings
-
-        FAPI_TRY( p10_putRingUtils( i_target, l_pRs4, i_scomOp, l_rs4Type, i_ringMode ),
+        FAPI_TRY( p10_putRingUtils( i_target, l_pRs4, i_scomOp, REGULAR, i_ringMode ),
                   "QME Putring Failed For Ring 0x%04x",  i_ringId );
     }
 
