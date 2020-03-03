@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -361,7 +361,7 @@ void pgpe_pstate_compute_vindex()
     uint32_t rem = (G_pgpe_pstate.vratio_inst & 0x0FFF);
     uint32_t idx_rnd = (rem > 0x800) ? 1 : 0;
     G_pgpe_pstate.vindex = (msd >= 5) ? (msd - 5 + idx_rnd) : 0;
-    PK_TRACE("VIX: Vindex=0x%u", G_pgpe_pstate.vindex);
+    PK_TRACE("VIX: Vindex=0x%x", G_pgpe_pstate.vindex);
 }
 
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set)

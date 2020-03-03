@@ -319,7 +319,7 @@ void pgpe_process_clip_update(void* eargs)
         pgpe_pstate_set(clip_min, args->ps_val_clip_max);
         pgpe_pstate_set(clip_max, args->ps_val_clip_min);
 
-        PK_TRACE("PEP: Clip Min=0x%x Clip_Max=0x%x,clip_min,clip_max");
+        PK_TRACE("PEP: Clip Min(high_freq)=0x%x Clip_Max(low_freq)=0x%x", args->ps_val_clip_max, args->ps_val_clip_min);
         pgpe_pstate_compute();
         pgpe_pstate_apply_clips();
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_PENDING_ACTUATION);
@@ -533,7 +533,7 @@ void pgpe_process_wof_vrt(void* eargs)
     ipcmsg_wof_vrt_t* args = (ipcmsg_wof_vrt_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
 
-    if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
+    if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE) == 0)
     {
         //Check that VRT pointer is not NULL
         if (args->idd_vrt_ptr == NULL)
