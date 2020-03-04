@@ -53,7 +53,15 @@ typedef struct pgpe_header
     uint32_t g_pgpe_beacon_addr;
     uint32_t reserved1;
     uint32_t g_wof_state_addr;
-    uint32_t reserved2; //Not adding rest of fields as in future will use the common struct
+    uint32_t reserved2;
+    uint32_t g_wof_tables_offset;
+    uint32_t g_wof_tables_length;
+    uint64_t reserved3;
+    uint32_t reserved4;
+    uint32_t g_pgpe_op_trace_ptr;
+    uint32_t g_pgpe_op_trace_ppmr_addr;
+    uint32_t g_pgpe_op_trace_ppmr_length;
+    uint64_t reserved5;
 } pgpe_header_t;
 
 extern pgpe_header_t* G_pgpe_header_data;
