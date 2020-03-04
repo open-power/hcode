@@ -58,16 +58,22 @@ void pgpe_header_init()
         occ_shared_data_indx++;
     }
 
-    //OCC Pstate table address and length
-    G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr = (uint32_t)
-            &occ_shared_data->pstate_table; //OCC Pstate table address
-    G_pgpe_header_data->g_pgpe_occ_pstables_len  = MAX_PSTATE_TABLE_ENTRIES; //OCC Pstate table length
-
-    //PGPE Beacon Address
-    G_pgpe_header_data->g_pgpe_beacon_addr = (uint32_t)&occ_shared_data->pgpe_beacon;//Beacon
-
     //GPPB SRAM Address
     G_pgpe_header_data->g_pgpe_gppb_sram_addr = (uint32_t)(OCC_SRAM_PGPE_BASE_ADDR +
             G_pgpe_header_data->g_pgpe_hcode_length);
 
+    //OCC Pstate table address and length
+    G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr = (uint32_t)
+            &occ_shared_data->pstate_table; //OCC Pstate table address
+    G_pgpe_header_data->g_pgpe_occ_pstables_len  = MAX_OCC_PSTATE_TABLE_ENTRIES * sizeof(
+                OCCPstateTable_entry_t); //OCC Pstate table length
+
+    //PGPE Beacon Address
+    G_pgpe_header_data->g_pgpe_beacon_addr = (uint32_t)&occ_shared_data->pgpe_beacon;//Beacon
+
+    //PGPE WOF State Address
+    G_pgpe_header_data->g_wof_state_addr = (uint32_t)&occ_shared_data->pgpe_wof_values; //PGPE Produced WOF values
+
+    //PGPE WOF Tables Length
+    G_pgpe_header_data->g_wof_tables_length = sizeof(HomerVRTLayout_t);
 }
