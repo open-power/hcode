@@ -90,6 +90,7 @@ enum
     SCAN_REGION_ECL0        =   0x04000000,
     SCAN_REGION_L30         =   0x00400000,
     SCAN_REGION_MMA0        =   0x00010000,
+    HEADER_PATTERN_SIZE     =   0x40,
 };
 
 //
@@ -176,28 +177,31 @@ inline uint64_t decodeScanRegionData(
     uint32_t l_scan_region  =   ( ( i_ringAddress & 0x0000FFF0 ) |
                                    ( ( i_ringAddress & 0x00F00000 ) >> 20 ) ) << 13;
 
-    if( ec_cl2_repr == i_ringId )
+    uint32_t l_num_chiplet  =   __builtin_popcount( i_target.getCoreSelect( ) );
+
+    if ( SCAN_REGION_ECL0 & l_scan_region )
     {
+        l_scan_region  &= ~SCAN_REGION_ECL0;
         l_scan_region  |= (i_target.getCoreSelect( ) << SHIFT32(SHIFT_TO_ECL));
-    }
-    else if ( ec_l3_repr == i_ringId )
-    {
-        l_scan_region  |=   (i_target.getCoreSelect( ) << SHIFT32(SHIFT_TO_L3));
-    }
-    else if ( SCAN_REGION_ECL0 & l_scan_region )
-    {
-        l_scan_region   = (i_target.getCoreSelect( ) << SHIFT32(SHIFT_TO_ECL));
-        l_scan_region  |=  ENABLE_PARALLEL_SCAN; //Enabling parallel scan for Core
+
     }
     else if ( SCAN_REGION_L30 & l_scan_region )
     {
-        l_scan_region    =  (i_target.getCoreSelect( ) << SHIFT32(SHIFT_TO_L3));
-        l_scan_region   |=  ENABLE_PARALLEL_SCAN; //Enabling parallel scan for L3
+        l_scan_region   &=  ~SCAN_REGION_L30;
+        l_scan_region   |=  (i_target.getCoreSelect( ) << SHIFT32(SHIFT_TO_L3));
     }
     else if( SCAN_REGION_MMA0 & l_scan_region )
     {
+        l_scan_region  &= ~(SCAN_REGION_MMA0);
         l_scan_region |= (i_target.getCoreSelect( ) << SHIFT32(SHIFT_TO_MMA));
     }
+
+    if( l_num_chiplet > 1 )
+    {
+        //Enable parallel scan for core common and cache common rings.
+        l_scan_region  |=  ENABLE_PARALLEL_SCAN;
+    }
+
 
     //Inserting scan type value starting from bit position 48
     uint32_t l_scan_type    =   0x00008000 >> ( i_ringAddress & 0x0000000F );
@@ -546,6 +550,7 @@ fapi2::ReturnCode p10_putRingUtils(
     uint32_t l_data         =   0;
     uint32_t l_spyData      =   0;
     opType_t l_opType       =   ROTATE;
+    bool     l_skipHeader   =   true;
     std::vector< fapi2::Target < fapi2::TARGET_TYPE_CORE >> l_coreTgt  =
                                         i_target.getChildren< fapi2::TARGET_TYPE_CORE >();
     fapi2::Target<fapi2::TARGET_TYPE_EQ> l_eqTgt    =
@@ -651,7 +656,7 @@ fapi2::ReturnCode p10_putRingUtils(
         // Set up the scan region for the ring.
         // Write a 64 bit value for header.
         l_scomData      =   HEADER_CHECK_PATTERN;
-        l_regAddress    =   eq::SCAN64CONTSCAN;
+        l_regAddress    =   eq::SCAN64CONTSCAN | HEADER_PATTERN_SIZE;
         FAPI_TRY(fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ) );
 
         // Decompress the RS4 string and scan
@@ -669,6 +674,14 @@ fapi2::ReturnCode p10_putRingUtils(
 
                 // Determine the no.of rotates in bits
                 l_bitRotates  =  l_bitRotates << 2;
+
+                //Workaround to handle fake MVPD rings for sim environment
+                if( l_skipHeader && ( l_bitRotates >= HEADER_PATTERN_SIZE ) )
+                {
+                    l_bitRotates  =  l_bitRotates - HEADER_PATTERN_SIZE;
+                }
+
+                l_skipHeader  =  false;
 
                 l_bitsDecoded += l_bitRotates;
 
