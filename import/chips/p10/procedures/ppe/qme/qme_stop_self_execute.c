@@ -145,21 +145,6 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     while((in32_sh(QME_LCL_EINR)) & (core_target << SHIFT64SH(55)));
 
     // ===============================
-    /*
-    #if EPM_TUNING
-
-        scom_data.value = 0xA200000;
-
-        if( G_qme_record.hcode_func_enabled & QME_SMF_SUPPORT_ENABLE )
-        {
-            // set bit 63:QME_RMOR_URMOR_SELECT
-            scom_data.value |= 1//#endif;
-        }
-
-        out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
-
-    #else
-    */
 
     scom_data.value = in64( QME_LCL_BCEBAR0 ) & BITS64(13, 30); //HRMOR[13:42]
     PK_TRACE("*RMOR HOMER address: 0x%08lX %08lX",
@@ -169,9 +154,10 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     {
         // UV Mode
         PK_TRACE("SMF core self save/restore, write URMOR with HOMER address");
+
+        // Write URMOR
         scom_data.value |= BIT64(63);
         out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
-        scom_data.value &= ~BIT64(63);
 
         if( SPR_SELF_SAVE == i_saveRestore )
         {
@@ -183,16 +169,26 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
             PK_TRACE_INF("SMF core wakeup, write HRMOR un-secure HOMER address");
             scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
         }
+
+        // Write HRMOR
+        // Clear the steering bit for HRMOR
+        scom_data.value &= ~BIT64(63);
+        out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
     }
     else
     {
         // HV Mode
-        PK_TRACE_INF("Non SMF core wakes up, write HRMOR with HOMER address");
+        PK_TRACE_INF("HV mode: write HRMOR and URMOR with HOMER address");
         scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
+        // Write HRMOR
+        out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
+
+        // Write URMOR
+        scom_data.value |= BIT64(63);
+        out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
     }
 
-    // Write HRMOR
-    out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
+
 
 //#endif
 
@@ -206,7 +202,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     {
         if (core_target & core_mask)
         {
-            if (scom_data.words.upper & BIT32(8))
+            if ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_CORE_WKUP_ERR_INJECT ) )
             {
                 PK_TRACE_INF("WARNING: Injecting a core[%d] xstop via C_LFIR[1]", core_mask);
                 PPE_PUTSCOM_UC( CORE_FIR_OR, 0, core_mask, BIT64(1));
@@ -225,7 +221,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
                 // 1. Init Runtime wakeup mode for core.
                 // 2. Signal Self Save Restore code for restore operation.
 
-                if (scom_data.words.upper & BIT32(3))
+                if ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_RUNTIME_WAKEUP_MODE ) )
                 {
                     scom_data.value = BIT64(59);
                 }
@@ -235,7 +231,17 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
                 }
             }
 
-            PPE_PUTSCOM_UC( SCRATCH0, 0, core_mask, scom_data.value);
+            if (core_mask & 0xA) // Even cores
+            {
+                PK_TRACE("Setting self-restore function mode in SCRATCH 0.");
+                PPE_PUTSCOM_UC( SCRATCH0, 0, core_mask, scom_data.value );
+            }
+
+            if (core_mask & 0x5) // Odd cores
+            {
+                PK_TRACE("Setting self-restore function mode in SCRATCH 1.");
+                PPE_PUTSCOM_UC( SCRATCH1, 0, core_mask, scom_data.value );
+            }
         }
     }
 
