@@ -116,11 +116,17 @@ qme_init()
     //--------------------------------------------------------------------------
     // BCE Core Specific Scan Ring
     //--------------------------------------------------------------------------
-    /*
+
+    PK_TRACE("Drop BCECSR_OVERRIDE_EN/STOP_OVERRIDE_MODE/STOP_ACTIVE_MASK/STOP_SHIFTREG_OVERRIDE_EN via QMCR[3,6,7,29]");
+    out32( QME_LCL_QMCR_OR,  BITS32(16, 8) ); //0xB=1011 (Lo-Pri Sel)
+    out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2) | BIT32(3) | BIT32(29)) );
+    out32( QME_LCL_QMCR_CLR, (BIT32(3) | BIT32(29)) );
+
+    PKTRACE( "QMCR value 0x%08x%08x", in32(QME_LCL_QMCR ));
     // via qme_flags:
     // know in either cache/chip-contain mode then skip this step after the first boot
     // if the flag is set by ChrisR
-    #if !SKIP_BCE_SCAN_RING
+#if !SKIP_BCE_SCAN_RING
 
     if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCAN_ENABLE )
     {
@@ -130,9 +136,9 @@ qme_init()
 
         //right now a blocking call. Need to confirm this.
         qme_block_copy_start(QME_BCEBAR_1,
-                             (QME_IMAGE_CPMR_OFFSET + (pQmeImgHdr->g_qme_inst_spec_ring_offset << 5)),
-                             pQmeImgHdr->g_qme_inst_spec_ring_offset,
-                             pQmeImgHdr->g_qme_max_spec_ring_length);
+                             ((QME_IMAGE_CPMR_OFFSET + (pQmeImgHdr->g_qme_inst_spec_ring_offset)) >> 5),
+                             ( pQmeImgHdr->g_qme_inst_spec_ring_offset >> 5 ),
+                             ( pQmeImgHdr->g_qme_max_spec_ring_length >> 5) );
 
 
         PK_TRACE_DBG("Setup: BCE Check for Copy Completed");
@@ -144,8 +150,7 @@ qme_init()
         }
     }
 
-    #endif
-    */
+#endif
 
     //--------------------------------------------------------------------------
     // Initialize Hardware Settings

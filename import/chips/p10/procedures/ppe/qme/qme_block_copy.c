@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -38,7 +38,7 @@ enum QME_BCE_CONTROL_STATUS
     SEL_BCEBAR0             = 0,
     SEL_BCEBAR1             = BIT64(5),
     SET_RD_PRIORITY_0       = 0,
-    SBASE_SHIFT_POS         = 24,
+    SBASE_SHIFT_POS         = 23, //change wrt to P9 due to change in SRAM size
     NUM_BLK_SHIFT_POS       = 36
 };
 
@@ -47,26 +47,28 @@ qme_block_copy_start(uint32_t barIndex, uint32_t bcMembase, uint32_t bcSrambase,
 {
     //let us find out HOMER address where core specific scan rings reside.
     // use native 16-bit PPE multiply instruction
-    bcMembase = bcMembase + (mulu16( G_qme_record.quad_id , bcLength ) << 5 );
-    bcMembase = bcMembase >> 5;
-
+    uint64_t l_tempData = 0;
+    uint64_t l_bceControlData = 0;
+    bcMembase = bcMembase + (mulu16( G_qme_record.quad_id , bcLength ));
     PK_TRACE_DBG("Start qme block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  QME Ist %d",
                  bcMembase, bcSrambase, bcLength, G_qme_record.quad_id);
 
-    uint64_t l_bceControlData = (// starts block copy operation
-                                    (START_BLOCK_COPY)                                        |
-                                    // sets direction of copy HOMER to CME SRAM
-                                    (RD_FROM_HOMER_TO_SRAM)                                   |
-                                    // BAR register to be used for accessing main memory base
-                                    ((barIndex == 0) ? SEL_BCEBAR0 : SEL_BCEBAR1)             |
-                                    // No priority set
-                                    (SET_RD_PRIORITY_0)                                       |
-                                    //copy page to this SRAM Block.
-                                    ((bcSrambase & 0x0000FFF ) << SBASE_SHIFT_POS)            |
-                                    // number of blocks to be copied
-                                    (((uint64_t) bcLength & 0x00007FF) << NUM_BLK_SHIFT_POS ) |
-                                    (((uint64_t) bcMembase & 0x00000000003FFFFF) ));
+    l_tempData  =  bcSrambase;
+    l_bceControlData  =  l_tempData << SBASE_SHIFT_POS;
 
+    l_tempData  =  bcLength;
+    l_bceControlData  |=  l_tempData << NUM_BLK_SHIFT_POS;
+
+    l_tempData =  bcMembase;
+    l_bceControlData |= l_tempData;
+
+    l_bceControlData  =  l_bceControlData |
+                         START_BLOCK_COPY |
+                         RD_FROM_HOMER_TO_SRAM |
+                         ((barIndex == 0) ? SEL_BCEBAR0 : SEL_BCEBAR1) |
+                         (SET_RD_PRIORITY_0);
+
+    PKTRACE( "Control Data 0x%08x%08x", (l_bceControlData >> 32), (uint32_t)l_bceControlData );
     out64(QME_LCL_BCECSR, l_bceControlData);
 }
 
