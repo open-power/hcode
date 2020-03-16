@@ -132,22 +132,6 @@ static const uint32_t PB_PMU2_CNPM_COUNTER_3_LEN = 16;
 //<< [PB_PMU2_CNPM_COUNTER]
 // pauc/reg00014.H
 
-//>> [PHY_SCOM_MAC_FIR_ACTION0_REG]
-static const uint64_t PHY_SCOM_MAC_FIR_ACTION0_REG = 0x10012c06ull;
-
-static const uint32_t PHY_SCOM_MAC_FIR_ACTION0_REG_FIR_ACTION0 = 0;
-static const uint32_t PHY_SCOM_MAC_FIR_ACTION0_REG_FIR_ACTION0_LEN = 26;
-//<< [PHY_SCOM_MAC_FIR_ACTION0_REG]
-// pauc/reg00014.H
-
-//>> [PHY_SCOM_MAC_FIR_ACTION1_REG]
-static const uint64_t PHY_SCOM_MAC_FIR_ACTION1_REG = 0x10012c07ull;
-
-static const uint32_t PHY_SCOM_MAC_FIR_ACTION1_REG_FIR_ACTION1 = 0;
-static const uint32_t PHY_SCOM_MAC_FIR_ACTION1_REG_FIR_ACTION1_LEN = 26;
-//<< [PHY_SCOM_MAC_FIR_ACTION1_REG]
-// pauc/reg00014.H
-
 //>> [RCMD_RATE_CFG]
 static const uint64_t RCMD_RATE_CFG = 0x1001180cull;
 
