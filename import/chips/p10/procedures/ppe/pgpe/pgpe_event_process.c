@@ -624,7 +624,7 @@ void pgpe_process_safe_mode(void* args)
             //Move VDD voltage to ATTR_SAFE_MODE_MV[VDD]
             pgpe_pstate_actuate_safe_voltage_vdd();
 
-            //Move frequency to PowerSave frequency \\todo clarify if this should be powersave
+            //Move frequency to Safe frequency
             pgpe_pstate_actuate_pstate(pgpe_pstate_get(pstate_safe));
 
         }

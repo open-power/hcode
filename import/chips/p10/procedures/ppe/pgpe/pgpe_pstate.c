@@ -256,22 +256,56 @@ void pgpe_pstate_actuate_pstate(uint32_t pstate)
 
 void pgpe_pstate_actuate_safe_voltage_vdd()
 {
-    G_pgpe_pstate.vdd_next = pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD]);
-    G_pgpe_pstate.vdd_next_uplift = 0;
-    G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
-    pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                              pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
-                              G_pgpe_pstate.vdd_next_ext);
+    while (G_pgpe_pstate.vdd_curr != pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD]))
+    {
+        if (((int16_t)G_pgpe_pstate.vdd_curr - (int16_t)pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD])) >
+            (int16_t)pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]))
+        {
+            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr - pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]);
+        }
+        else if (((int16_t)pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD]) - (int16_t)G_pgpe_pstate.vdd_curr ) >
+                 (int16_t)pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]))
+        {
+            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr + pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]);
+        }
+        else
+        {
+            G_pgpe_pstate.vdd_next = pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]);
+        }
+
+        G_pgpe_pstate.vdd_next_uplift = 0;
+        G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
+        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
+                                  pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+                                  G_pgpe_pstate.vdd_next_ext);
+    }
 }
 
 void pgpe_pstate_actuate_safe_voltage_vcs()
 {
-    G_pgpe_pstate.vcs_next = pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VCS]);
-    G_pgpe_pstate.vcs_next_uplift = 0;
-    G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
-    pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                              pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
-                              G_pgpe_pstate.vcs_next_ext);
+    while (G_pgpe_pstate.vcs_curr != pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VCS]))
+    {
+        if (((int16_t)G_pgpe_pstate.vcs_curr - (int16_t)pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VCS])) >
+            (int16_t)pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]))
+        {
+            G_pgpe_pstate.vcs_next = G_pgpe_pstate.vcs_curr - pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]);
+        }
+        else if (((int16_t)pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VCS]) - (int16_t)G_pgpe_pstate.vcs_curr ) >
+                 (int16_t)pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]))
+        {
+            G_pgpe_pstate.vcs_next = G_pgpe_pstate.vcs_curr + pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]);
+        }
+        else
+        {
+            G_pgpe_pstate.vcs_next = pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]);
+        }
+
+        G_pgpe_pstate.vcs_next_uplift = 0;
+        G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
+        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
+                                  pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+                                  G_pgpe_pstate.vcs_next_ext);
+    }
 }
 
 //\todo Determine if this is really needed. One optimization
