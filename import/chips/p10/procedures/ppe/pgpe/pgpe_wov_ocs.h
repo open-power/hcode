@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -44,6 +44,12 @@ enum OCS_STATUS
     OCS_STATUS_ENABLED      = 0x1
 };
 
+enum OCS_THRESH
+{
+    OCS_UNDER_THRESH   = 0xFFFFFFFF,
+    OCS_OVER_THRESH    = 0x1
+};
+
 enum DROOP_LEVEL
 {
     DROOP_LVL_HEAVY  =       0x1,
@@ -76,6 +82,7 @@ typedef struct pgpe_wov_ocs
     uint32_t curr_mv, target_mv;
     uint32_t hysteresis_cnt;
     uint32_t idd_current_thresh;
+    uint32_t overcurrent_flag;
     uint32_t cnt_droop_ok;
     uint32_t cnt_droop_ok_oc;
     uint32_t cnt_droop_light;
@@ -94,5 +101,5 @@ void pgpe_wov_ocs_update_dirty();
 #define pgpe_wov_ocs_is_wov_overv_enabled() (G_pgpe_wov_ocs.wov_status & WOV_STATUS_OVERVOLT_ENABLED)
 #define pgpe_wov_ocs_is_wov_underv_enabled() (G_pgpe_wov_ocs.wov_status & WOV_STATUS_UNDERVOLT_ENABLED)
 #define pgpe_wov_ocs_is_ocs_enabled() (G_pgpe_wov_ocs.ocs_status == OCS_STATUS_ENABLED)
-
+#define pgpe_wov_ocs_is_overcurrent() (G_pgpe_wov_ocs.overcurrent_flag == OCS_OVER_THRESH)
 #endif

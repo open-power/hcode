@@ -45,5 +45,8 @@ void pgpe_thr_ctrl_update(uint32_t pstate);
 void pgpe_thr_ctrl_set_ceff_ovr_idx(uint32_t idx);
 void pgpe_thr_ctrl_write_wcor();
 
+extern pgpe_thr_ctrl_t G_pgpe_thr_ctrl;
+
+#define pgpe_thr_ctrl_get_thr_idx() (G_pgpe_thr_ctrl.curr_ceff_ovr_idx)
 
 #endif

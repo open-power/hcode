@@ -30,11 +30,13 @@
 #include "pgpe_pstate.h"
 #include "pgpe_gppb.h"
 #include "pgpe_avsbus_driver.h"
+#include "pgpe_thr_ctrl.h"
+#include "pgpe_wov_ocs.h"
 #include "p10_oci_proc.H"
 
 pgpe_occ_t G_pgpe_occ;
-void pgpe_occ_sample_i_v_values();
-void pgpe_occ_produce_fit_i_v_values();
+void pgpe_occ_sample_values();
+void pgpe_occ_produce_fit_values();
 
 void pgpe_occ_init()
 {
@@ -79,75 +81,88 @@ void pgpe_occ_update_beacon()
     }
 }
 
-void pgpe_occ_produce_wof_i_v_values()
+void pgpe_occ_produce_wof_values()
 {
-    pgpe_occ_produce_fit_i_v_values();
+    pgpe_occ_produce_fit_values();
 
     if (G_pgpe_occ.fit_tick == G_pgpe_occ.wof_tick)
     {
-        G_pgpe_occ.vdd_avg_mv = G_pgpe_occ.vdd_wof_avg_accum_mv / G_pgpe_occ.wof_tick;
-        G_pgpe_occ.vcs_avg_mv = G_pgpe_occ.vcs_wof_avg_accum_mv / G_pgpe_occ.wof_tick;
-        G_pgpe_occ.idd_avg_ma = G_pgpe_occ.idd_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
-        G_pgpe_occ.ics_avg_ma = G_pgpe_occ.ics_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
+        if (pgpe_pstate_is_pstate_enabled())
+        {
+            G_pgpe_occ.pwof_val->dw0.fields.average_pstate = G_pgpe_occ.ps_wof_avg_accum / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw0.fields.average_frequency_pstate = G_pgpe_occ.ps_freq_wof_avg_accum / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw0.fields.average_throttle_idx = G_pgpe_occ.thr_idx_wof_avg_accum / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw2.fields.vdd_avg_mv = G_pgpe_occ.vdd_wof_avg_accum_mv / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw2.fields.vcs_avg_mv = G_pgpe_occ.vcs_wof_avg_accum_mv / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.ps_wof_avg_accum = 0;
+            G_pgpe_occ.ps_freq_wof_avg_accum = 0;
+            G_pgpe_occ.thr_idx_wof_avg_accum = 0;
+            G_pgpe_occ.vdd_wof_avg_accum_mv = 0;
+            G_pgpe_occ.vcs_wof_avg_accum_mv = 0;
+        }
+
+        if (pgpe_wov_ocs_is_ocs_enabled())
+        {
+            G_pgpe_occ.pwof_val->dw1.fields.idd_avg_ma =  G_pgpe_occ.idd_wof_avg_accum_ma / G_pgpe_occ.wof_tick;;
+            G_pgpe_occ.pwof_val->dw1.fields.ics_avg_ma = G_pgpe_occ.ics_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw3.fields.ocs_avg_0p01pct = G_pgpe_occ.ocs_avg_pct_wof_accum / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.idd_wof_avg_accum_ma = 0;
+            G_pgpe_occ.ics_wof_avg_accum_ma = 0;
+            G_pgpe_occ.ocs_avg_pct_wof_accum = 0;
+        }
 
         //PK_TRACE("OCC: woftick vdd_wof=0x%x,vcs_wof=%u,idd_wof=%u,ics_wof=%u",G_pgpe_occ.vdd_wof_avg_accum_mv,G_pgpe_occ.vcs_wof_avg_accum_mv,G_pgpe_occ.idd_wof_avg_accum_ma,G_pgpe_occ.ics_wof_avg_accum_ma);
         //Write to SRAM
-        G_pgpe_occ.pwof_val->dw1.fields.idd_avg_ma = G_pgpe_occ.idd_avg_ma;
-        G_pgpe_occ.pwof_val->dw1.fields.ics_avg_ma = G_pgpe_occ.ics_avg_ma;
-        G_pgpe_occ.pwof_val->dw2.fields.vdd_avg_mv = G_pgpe_occ.vdd_avg_mv;
-        G_pgpe_occ.pwof_val->dw2.fields.vcs_avg_mv = G_pgpe_occ.vcs_avg_mv;
-        G_pgpe_occ.fit_tick = 0;;
-        G_pgpe_occ.vdd_wof_avg_accum_mv = 0;
-        G_pgpe_occ.vcs_wof_avg_accum_mv = 0;
-        G_pgpe_occ.idd_wof_avg_accum_ma = 0;
-        G_pgpe_occ.ics_wof_avg_accum_ma = 0;
+        G_pgpe_occ.fit_tick = 0;
     }
 }
 
-void pgpe_occ_produce_fit_i_v_values()
+void pgpe_occ_produce_fit_values()
 {
-    pgpe_occ_sample_i_v_values();
+    pgpe_occ_sample_values();
 
-    G_pgpe_occ.vdd_fit_avg_mv = G_pgpe_occ.vdd_tb_accum / G_pgpe_occ.max_tb_delta;
-    G_pgpe_occ.vcs_fit_avg_mv = G_pgpe_occ.vcs_tb_accum / G_pgpe_occ.max_tb_delta;
-    G_pgpe_occ.idd_fit_avg_ma = G_pgpe_occ.idd_tb_accum / G_pgpe_occ.max_tb_delta;
-    G_pgpe_occ.ics_fit_avg_ma = G_pgpe_occ.ics_tb_accum / G_pgpe_occ.max_tb_delta;
-    G_pgpe_occ.ps_fit_avg     = G_pgpe_occ.ps_tb_accum / G_pgpe_occ.max_tb_delta;
-    G_pgpe_occ.ps_freq_fit_avg = G_pgpe_occ.ps_freq_tb_accum / G_pgpe_occ.max_tb_delta;
+    if (pgpe_pstate_is_pstate_enabled())
+    {
+        G_pgpe_occ.ps_fit_avg       = G_pgpe_occ.ps_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.ps_freq_fit_avg  = G_pgpe_occ.ps_freq_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.ps_wof_avg_accum += G_pgpe_occ.ps_fit_avg;
+        G_pgpe_occ.ps_freq_wof_avg_accum += G_pgpe_occ.ps_freq_fit_avg;
+        G_pgpe_occ.thr_idx_fit_avg  = G_pgpe_occ.thr_idx_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.thr_idx_wof_avg_accum += G_pgpe_occ.thr_idx_fit_avg;
+        G_pgpe_occ.vdd_fit_avg_mv = G_pgpe_occ.vdd_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.vcs_fit_avg_mv = G_pgpe_occ.vcs_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.vdd_wof_avg_accum_mv += G_pgpe_occ.vdd_fit_avg_mv;
+        G_pgpe_occ.vcs_wof_avg_accum_mv += G_pgpe_occ.vcs_fit_avg_mv;
+        G_pgpe_occ.ps_tb_accum  = 0;
+        G_pgpe_occ.ps_freq_tb_accum = 0;
+        G_pgpe_occ.vdd_tb_accum = 0;
+        G_pgpe_occ.vcs_tb_accum = 0;
+        G_pgpe_occ.thr_idx_tb_accum = 0;
+    }
 
-    G_pgpe_occ.vdd_wof_avg_accum_mv += G_pgpe_occ.vdd_fit_avg_mv;
-    G_pgpe_occ.vcs_wof_avg_accum_mv += G_pgpe_occ.vcs_fit_avg_mv;
-    G_pgpe_occ.idd_wof_avg_accum_ma += G_pgpe_occ.idd_fit_avg_ma;
-    G_pgpe_occ.ics_wof_avg_accum_ma += G_pgpe_occ.ics_fit_avg_ma;
-    G_pgpe_occ.ps_wof_avg_accum += G_pgpe_occ.ps_fit_avg;
-    G_pgpe_occ.ps_freq_wof_avg_accum += G_pgpe_occ.ps_freq_fit_avg;
-
-    G_pgpe_occ.idd_tb_accum = 0;
-    G_pgpe_occ.ics_tb_accum = 0;
-    G_pgpe_occ.vdd_tb_accum = 0;
-    G_pgpe_occ.vcs_tb_accum = 0;
-    G_pgpe_occ.ps_tb_accum  = 0;
-    G_pgpe_occ.ps_freq_tb_accum = 0;
+    if (pgpe_wov_ocs_is_ocs_enabled())
+    {
+        G_pgpe_occ.idd_fit_avg_ma = G_pgpe_occ.idd_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.ics_fit_avg_ma = G_pgpe_occ.ics_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.ocs_avg_pct_fit =  G_pgpe_occ.ocs_avg_pct_tb_accum;
+        G_pgpe_occ.idd_wof_avg_accum_ma += G_pgpe_occ.idd_fit_avg_ma;
+        G_pgpe_occ.ics_wof_avg_accum_ma += G_pgpe_occ.ics_fit_avg_ma;
+        G_pgpe_occ.ocs_avg_pct_wof_accum += G_pgpe_occ.ocs_avg_pct_fit;
+        G_pgpe_occ.idd_tb_accum = 0;
+        G_pgpe_occ.ics_tb_accum = 0;
+        G_pgpe_occ.ocs_avg_pct_tb_accum = 0;
+    }
 
     G_pgpe_occ.fit_tick++;
     //PK_TRACE("OCC: fit vdd_fit=0x%x,vcs_fit=%u,idd_fit=%u,ics_fit=%u",G_pgpe_occ.vdd_fit_avg_mv,G_pgpe_occ.vcs_fit_avg_mv,G_pgpe_occ.idd_fit_avg_ma,G_pgpe_occ.ics_fit_avg_ma);
     //PK_TRACE("OCC: fit vdd_wof=0x%x,vcs_wof=%u,idd_wof=%u,ics_wof=%u",G_pgpe_occ.vdd_wof_avg_accum_mv,G_pgpe_occ.vcs_wof_avg_accum_mv,G_pgpe_occ.idd_wof_avg_accum_ma,G_pgpe_occ.ics_wof_avg_accum_ma);
 }
 
-void pgpe_occ_sample_i_v_values()
+void pgpe_occ_sample_values()
 {
     //Read OTBR
     G_pgpe_occ.present_tb = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
-
-    uint32_t idd_ma, ics_ma, delta_tb;
-
-    //Read IDD and ICS
-    pgpe_avsbus_current_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                             pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
-                             &idd_ma);
-    pgpe_avsbus_current_read(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                             pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
-                             &ics_ma);
+    uint32_t delta_tb;
 
     //Calculate delta_tb while accounting for OTBR rollover
     if(G_pgpe_occ.present_tb > G_pgpe_occ.prev_tb)
@@ -159,18 +174,41 @@ void pgpe_occ_sample_i_v_values()
         delta_tb = G_pgpe_occ.present_tb - G_pgpe_occ.prev_tb + 0xFFFFFFFF;
     }
 
-    G_pgpe_occ.idd_tb_accum = idd_ma * delta_tb;
-    G_pgpe_occ.ics_tb_accum = ics_ma * delta_tb;
-    G_pgpe_occ.vdd_tb_accum = pgpe_pstate_get(vdd_curr) * delta_tb;
-    G_pgpe_occ.vcs_tb_accum = pgpe_pstate_get(vcs_curr) * delta_tb;
-    G_pgpe_occ.ps_tb_accum = pgpe_pstate_get(pstate_curr) * delta_tb;
-    G_pgpe_occ.ps_freq_tb_accum = pgpe_pstate_get(pstate_curr) * delta_tb;
+    //Read IDD and ICS
+    uint32_t idd_ma, ics_ma;
+
+    if (pgpe_wov_ocs_is_ocs_enabled())
+    {
+        pgpe_avsbus_current_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
+                                 pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+                                 &idd_ma);
+        pgpe_avsbus_current_read(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
+                                 pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+                                 &ics_ma);
+
+        G_pgpe_occ.idd_tb_accum = idd_ma * delta_tb;
+        G_pgpe_occ.ics_tb_accum = ics_ma * delta_tb;
+        G_pgpe_occ.ocs_avg_pct_tb_accum = pgpe_wov_ocs_is_overcurrent();
+    }
+
+    //Pstate, Pstate_Freq, Vdd, Vcs, and throttle index
+    if (pgpe_pstate_is_pstate_enabled())
+    {
+        G_pgpe_occ.ps_tb_accum = (pgpe_pstate_get(pstate_curr) + pgpe_thr_ctrl_get_thr_idx()) * delta_tb;
+        G_pgpe_occ.ps_freq_tb_accum = pgpe_pstate_get(pstate_curr) *
+                                      delta_tb; //Pstate written to DPLL(no throttle value included)
+        G_pgpe_occ.vdd_tb_accum = pgpe_pstate_get(vdd_curr) * delta_tb;
+        G_pgpe_occ.vcs_tb_accum = pgpe_pstate_get(vcs_curr) * delta_tb;
+        G_pgpe_occ.thr_idx_tb_accum = pgpe_thr_ctrl_get_thr_idx();
+    }
 
     G_pgpe_occ.prev_tb = G_pgpe_occ.present_tb;
     //PK_TRACE("OCC: siv vdd=%u,vcsa=%u,idd=%u,ics=%u",pgpe_pstate_get(vdd_curr),pgpe_pstate_get(vcs_curr),idd_ma,ics_ma);
     //PK_TRACE("OCC: delta_tb=%u, tb=%u",delta_tb,G_pgpe_occ.prev_tb);
     //PK_TRACE("OCC: siv acvdd=%u,acvcsa=%u,acidd=%u,acics=%u",G_pgpe_occ.vdd_tb_accum,G_pgpe_occ.vcs_tb_accum,G_pgpe_occ.idd_tb_accum,G_pgpe_occ.ics_tb_accum);
 }
+
+
 
 void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd)
 {

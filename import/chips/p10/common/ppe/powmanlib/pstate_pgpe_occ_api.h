@@ -193,8 +193,8 @@ typedef struct
         {
             uint64_t average_pstate             : 8;
             uint64_t average_frequency_pstate   : 8;
-            uint64_t clip_pstate                : 8;
-            uint64_t reserved                   : 8;
+            uint64_t wof_clip_pstate            : 8;
+            uint64_t average_throttle_idx       : 8;
             uint64_t vratio_inst                : 16;
             uint64_t vratio_avg                 : 16;
         } fields;

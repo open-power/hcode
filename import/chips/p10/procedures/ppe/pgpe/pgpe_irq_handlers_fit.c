@@ -113,7 +113,7 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
 
 __attribute__((always_inline)) inline void handle_produce_wof()
 {
-    pgpe_occ_produce_wof_i_v_values();
+    pgpe_occ_produce_wof_values();
 }
 
 __attribute__((always_inline)) inline void handle_wov_ocs()
