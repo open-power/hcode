@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -27,6 +27,7 @@
 #include "pgpe_pstate.h"
 #include "pstate_pgpe_qme_api.h"
 #include "p10_scom_eq.H"
+#include "pgpe_gppb.h"
 
 //
 //Globals
@@ -71,6 +72,7 @@ void* pgpe_resclk_data_addr()
 //
 void pgpe_resclk_init()
 {
+
     //Write RCIMR(Index Map Register) with the pstate values for the 4-inflection points
     rcimr_t rcimr;
     uint32_t i;
@@ -78,85 +80,88 @@ void pgpe_resclk_init()
     uint32_t q;
 #endif
 
-    for (i = 0; i < RESCLK_FREQ_REGIONS; i++)
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RESCLK_ENABLE))
     {
-        switch(i)
+        for (i = 0; i < RESCLK_FREQ_REGIONS; i++)
         {
-            case(0):
-                rcimr.fields.rp0 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
-                rcimr.fields.rx0 = RESCLK_INDEX[i].idx;
-                break;
+            switch(i)
+            {
+                case(0):
+                    rcimr.fields.rp0 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
+                    rcimr.fields.rx0 = RESCLK_INDEX[i].idx;
+                    break;
 
-            case(1):
-                rcimr.fields.rp1 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
-                rcimr.fields.rx1 = RESCLK_INDEX[i].idx;
-                break;
+                case(1):
+                    rcimr.fields.rp1 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
+                    rcimr.fields.rx1 = RESCLK_INDEX[i].idx;
+                    break;
 
-            case(2):
-                rcimr.fields.rp2 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
-                rcimr.fields.rx2 = RESCLK_INDEX[i].idx;
-                break;
+                case(2):
+                    rcimr.fields.rp2 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
+                    rcimr.fields.rx2 = RESCLK_INDEX[i].idx;
+                    break;
 
-            case(3):
-                rcimr.fields.rp3 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
-                rcimr.fields.rx3 = RESCLK_INDEX[i].idx;
-                break;
+                case(3):
+                    rcimr.fields.rp3 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
+                    rcimr.fields.rx3 = RESCLK_INDEX[i].idx;
+                    break;
+            }
         }
-    }
 
-    PK_TRACE("RCK: Init Write RCIMR=0x%08x%08x", rcimr.words.high_order, rcimr.words.low_order);
-    PK_TRACE("RCK: Init Write rp0=0x%x rx0=0x%x", rcimr.fields.rp0, rcimr.fields.rx0);
-    PK_TRACE("RCK: Init Write rp1=0x%x rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
-    PK_TRACE("RCK: Init Write rp2=0x%x rx2=0x%x", rcimr.fields.rp2, rcimr.fields.rx2);
-    PK_TRACE("RCK: Init Write rp3=0x%x rx3=0x%x", rcimr.fields.rp3, rcimr.fields.rx3);
-#if USE_MC == 0
-
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        PPE_PUTSCOM_UC_Q(QME_RCIMR, q, rcimr.value);
-    }
-
-#else
-    PPE_PUTSCOM_MC_Q(QME_RCIMR, rcimr.value);
-#endif
-
-    //Write RCTARn with the resonant clock table values
-    //Set configuration values before enabling the hardware
-    rctar_t rctar;
-
-    for (i = 0; i < RESCLK_STEPS / 8; i++)
-    {
-        rctar.value = RESCLK_TABLE[i];
-
-        PK_TRACE("RCK: Init Write RCTAR[%u]=0x%08x%08x", i, rctar.words.high_order, rctar.words.low_order);
+        PK_TRACE("RCK: Init Write RCIMR=0x%08x%08x", rcimr.words.high_order, rcimr.words.low_order);
+        PK_TRACE("RCK: Init Write rp0=0x%x rx0=0x%x", rcimr.fields.rp0, rcimr.fields.rx0);
+        PK_TRACE("RCK: Init Write rp1=0x%x rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
+        PK_TRACE("RCK: Init Write rp2=0x%x rx2=0x%x", rcimr.fields.rp2, rcimr.fields.rx2);
+        PK_TRACE("RCK: Init Write rp3=0x%x rx3=0x%x", rcimr.fields.rp3, rcimr.fields.rx3);
 #if USE_MC == 0
 
         for (q = 0; q < MAX_QUADS; q++)
         {
-            PPE_PUTSCOM_UC_Q((QME_RCTAR0 + (i << 2)), q, rctar.value);
+            PPE_PUTSCOM_UC_Q(QME_RCIMR, q, rcimr.value);
         }
 
 #else
-        PPE_PUTSCOM_MC_Q((QME_RCTAR0 + (i << 2)), rctar.value);
+        PPE_PUTSCOM_MC_Q(QME_RCIMR, rcimr.value);
 #endif
-    }
 
-    rcmr_t rcmr;
-    rcmr.value = 0;
-    rcmr.fields.step_delay = 2; //todo Not use this hardcoded value
-    PK_TRACE("RCK: Init RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
+        //Write RCTARn with the resonant clock table values
+        //Set configuration values before enabling the hardware
+        rctar_t rctar;
+
+        for (i = 0; i < RESCLK_STEPS / 8; i++)
+        {
+            rctar.value = RESCLK_TABLE[i];
+
+            PK_TRACE("RCK: Init Write RCTAR[%u]=0x%08x%08x", i, rctar.words.high_order, rctar.words.low_order);
 #if USE_MC == 0
 
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        PPE_PUTSCOM_UC_Q(QME_RCMR, q, rcmr.value);
-    }
+            for (q = 0; q < MAX_QUADS; q++)
+            {
+                PPE_PUTSCOM_UC_Q((QME_RCTAR0 + (i << 2)), q, rctar.value);
+            }
 
 #else
-    PPE_PUTSCOM_MC_Q(QME_RCMR, rcmr.value);
+            PPE_PUTSCOM_MC_Q((QME_RCTAR0 + (i << 2)), rctar.value);
+#endif
+        }
+
+        rcmr_t rcmr;
+        rcmr.value = 0;
+        rcmr.fields.step_delay = 2; //todo Not use this hardcoded value
+        PK_TRACE("RCK: Init RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
+#if USE_MC == 0
+
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            PPE_PUTSCOM_UC_Q(QME_RCMR, q, rcmr.value);
+        }
+
+#else
+        PPE_PUTSCOM_MC_Q(QME_RCMR, rcmr.value);
 #endif
 
-    G_pgpe_resclk.status = PGPE_RESCLK_INIT;
+        G_pgpe_resclk.status = PGPE_RESCLK_INIT;
+    }
 }
 
 //
@@ -164,75 +169,78 @@ void pgpe_resclk_init()
 //
 void pgpe_resclk_enable(uint32_t pstate_target)
 {
-    rcimr_t rcimr;
-    rcimr.value = 0;
-    uint64_t data;
-    PK_TRACE("RCK: Rclk Enable PS=0x%x"pstate_target);
-    //Multicast Read-compare RCIMR[RP1]
-#if USE_MC == 0
-    uint32_t q;
-
-    for (q = 0; q < MAX_QUADS; q++)
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RESCLK_ENABLE))
     {
-        PPE_GETSCOM_UC_Q(QME_RCIMR, q, data);
+        rcimr_t rcimr;
+        rcimr.value = 0;
+        uint64_t data;
+        PK_TRACE("RCK: Rclk Enable PS=0x%x"pstate_target);
+        //Multicast Read-compare RCIMR[RP1]
+#if USE_MC == 0
+        uint32_t q;
 
-        if (q == 0)
+        for (q = 0; q < MAX_QUADS; q++)
         {
-            rcimr.value = data;
+            PPE_GETSCOM_UC_Q(QME_RCIMR, q, data);
+
+            if (q == 0)
+            {
+                rcimr.value = data;
+            }
+            else
+            {
+                if(rcimr.value != data)
+                {
+                    //This should not be needed. Currently, only needed in SIMICS
+                    //where multicast is broken right now. Otherwise, the
+                    //multicast equ will result in MCHK
+                    //todo RTC: 214435
+                    IOTA_PANIC(CRITICAL_ERROR_LOG);
+                }
+            }
+        }
+
+#else
+        PK_TRACE("RCK:addr=0x%08x", PPE_SCOM_ADDR_MC_Q_EQU((uint32_t)QME_RCIMR));
+        PPE_GETSCOM_MC_Q_EQU(QME_RCIMR, data);
+        rcimr.value = data;
+#endif
+
+        //Multicast write the RP1+1 Pstate to the RCPTR
+        PK_TRACE("RCK: Enable Write rp1=0x%x, rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
+        pgpe_resclk_rcptr_write(rcimr.fields.rp1 + 1);
+
+        //Multicast write RMCR_OR
+        //STEP_ENABLE = 1
+        rcmr_t rcmr;
+        rcmr.value = 0;
+        rcmr.fields.step_enable = 1;
+        PK_TRACE("RCK: Enable Write RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
+#if USE_MC == 0
+
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            PPE_PUTSCOM_UC_Q(QME_RCMR_WO_OR, q, rcmr.value);
+        }
+
+#else
+        PPE_PUTSCOM_MC_Q(QME_RCMR_WO_OR, rcmr.value);
+#endif
+
+        //Multicast write the actual Pstate to the RCPTR
+        pgpe_resclk_rcptr_write(pstate_target);
+
+        if (G_pgpe_resclk.status == PGPE_RESCLK_INIT)
+        {
+            pgpe_resclk_rcptr_poll_done(PGPE_RESCLK_RCPTR_COMPARE, pstate_target);
         }
         else
         {
-            if(rcimr.value != data)
-            {
-                //This should not be needed. Currently, only needed in SIMICS
-                //where multicast is broken right now. Otherwise, the
-                //multicast equ will result in MCHK
-                //todo RTC: 214435
-                IOTA_PANIC(CRITICAL_ERROR_LOG);
-            }
+            pgpe_resclk_rcptr_poll_done(PGPE_RESCLK_RCPTR_COMPARE_SKIP, 0);
         }
+
+        G_pgpe_resclk.status = PGPE_RESCLK_ENABLED;
     }
-
-#else
-    PK_TRACE("RCK:addr=0x%08x", PPE_SCOM_ADDR_MC_Q_EQU((uint32_t)QME_RCIMR));
-    PPE_GETSCOM_MC_Q_EQU(QME_RCIMR, data);
-    rcimr.value = data;
-#endif
-
-    //Multicast write the RP1+1 Pstate to the RCPTR
-    PK_TRACE("RCK: Enable Write rp1=0x%x, rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
-    pgpe_resclk_rcptr_write(rcimr.fields.rp1 + 1);
-
-    //Multicast write RMCR_OR
-    //STEP_ENABLE = 1
-    rcmr_t rcmr;
-    rcmr.value = 0;
-    rcmr.fields.step_enable = 1;
-    PK_TRACE("RCK: Enable Write RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
-#if USE_MC == 0
-
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        PPE_PUTSCOM_UC_Q(QME_RCMR_WO_OR, q, rcmr.value);
-    }
-
-#else
-    PPE_PUTSCOM_MC_Q(QME_RCMR_WO_OR, rcmr.value);
-#endif
-
-    //Multicast write the actual Pstate to the RCPTR
-    pgpe_resclk_rcptr_write(pstate_target);
-
-    if (G_pgpe_resclk.status == PGPE_RESCLK_INIT)
-    {
-        pgpe_resclk_rcptr_poll_done(PGPE_RESCLK_RCPTR_COMPARE, pstate_target);
-    }
-    else
-    {
-        pgpe_resclk_rcptr_poll_done(PGPE_RESCLK_RCPTR_COMPARE_SKIP, 0);
-    }
-
-    G_pgpe_resclk.status = PGPE_RESCLK_ENABLED;
 }
 
 
@@ -241,63 +249,66 @@ void pgpe_resclk_enable(uint32_t pstate_target)
 //
 void pgpe_resclk_disable()
 {
-    rcimr_t rcimr;
-    rcimr.value = 0;
-    uint64_t data;
-
-    //Multicast Read-compare RCIMR[RP1]
-#if USE_MC == 0
-    uint32_t q;
-
-    for (q = 0; q < MAX_QUADS; q++)
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RESCLK_ENABLE))
     {
-        PPE_GETSCOM_UC_Q(QME_RCIMR, q, data);
+        rcimr_t rcimr;
+        rcimr.value = 0;
+        uint64_t data;
 
-        if (q == 0)
+        //Multicast Read-compare RCIMR[RP1]
+#if USE_MC == 0
+        uint32_t q;
+
+        for (q = 0; q < MAX_QUADS; q++)
         {
-            rcimr.value = data;
-        }
-        else
-        {
-            if(rcimr.value != data)
+            PPE_GETSCOM_UC_Q(QME_RCIMR, q, data);
+
+            if (q == 0)
             {
-                //This should not be needed in environments
-                //other than SIMICS(where multicast is broken right now)
-                //bc the multicast will result in MCHK
-                //todo RTC: 214435
-                IOTA_PANIC(CRITICAL_ERROR_LOG);
+                rcimr.value = data;
+            }
+            else
+            {
+                if(rcimr.value != data)
+                {
+                    //This should not be needed in environments
+                    //other than SIMICS(where multicast is broken right now)
+                    //bc the multicast will result in MCHK
+                    //todo RTC: 214435
+                    IOTA_PANIC(CRITICAL_ERROR_LOG);
+                }
             }
         }
-    }
 
 #else
-    PPE_GETSCOM_MC_Q_EQU(QME_RCIMR, data);
-    rcimr.value = data;
+        PPE_GETSCOM_MC_Q_EQU(QME_RCIMR, data);
+        rcimr.value = data;
 #endif
 
-    PK_TRACE("RCK: Disable Write rp1=0x%x, rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
-    pgpe_resclk_rcptr_write(rcimr.fields.rp1 + 1);
-    pgpe_resclk_rcptr_poll_done(PGPE_RESCLK_RCPTR_COMPARE, rcimr.fields.rp1 + 1);
+        PK_TRACE("RCK: Disable Write rp1=0x%x, rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
+        pgpe_resclk_rcptr_write(rcimr.fields.rp1 + 1);
+        pgpe_resclk_rcptr_poll_done(PGPE_RESCLK_RCPTR_COMPARE, rcimr.fields.rp1 + 1);
 
-    //Multicast write RMCR_CLEAR
-    //STEP_ENABLE = 0
-    //AUTO_ACK_ENABLE = 0
-    rcmr_t rcmr;
-    rcmr.value = 0;
-    rcmr.fields.step_enable = 1;
-    rcmr.fields.auto_ack_enable = 1;
+        //Multicast write RMCR_CLEAR
+        //STEP_ENABLE = 0
+        //AUTO_ACK_ENABLE = 0
+        rcmr_t rcmr;
+        rcmr.value = 0;
+        rcmr.fields.step_enable = 1;
+        rcmr.fields.auto_ack_enable = 1;
 #if USE_MC == 0
 
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        PPE_PUTSCOM_UC_Q(QME_RCMR_WO_CLEAR, q, rcmr.value);
-    }
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            PPE_PUTSCOM_UC_Q(QME_RCMR_WO_CLEAR, q, rcmr.value);
+        }
 
 #else
-    PPE_PUTSCOM_MC_Q(QME_RCMR_WO_CLEAR, rcmr.value);
+        PPE_PUTSCOM_MC_Q(QME_RCMR_WO_CLEAR, rcmr.value);
 #endif
 
-    G_pgpe_resclk.status = PGPE_RESCLK_DISABLED;
+        G_pgpe_resclk.status = PGPE_RESCLK_DISABLED;
+    }
 }
 
 //
@@ -305,8 +316,11 @@ void pgpe_resclk_disable()
 //
 void pgpe_resclk_update(uint32_t pstate)
 {
-    pgpe_resclk_rcptr_write(pstate);
-    pgpe_resclk_rcptr_poll_done(PGPE_RESCLK_RCPTR_COMPARE_SKIP, 0);
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RESCLK_ENABLE))
+    {
+        pgpe_resclk_rcptr_write(pstate);
+        pgpe_resclk_rcptr_poll_done(PGPE_RESCLK_RCPTR_COMPARE_SKIP, 0);
+    }
 }
 
 //

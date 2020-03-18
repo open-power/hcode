@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2019                                                    */
+/* COPYRIGHT 2018,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -63,7 +63,6 @@ int main()
     pgpe_gppb_init();
     pgpe_event_tbl_init();
     pgpe_event_manager_init();
-    pgpe_irq_init();
     pgpe_pstate_init();
     pgpe_avsbus_init();
     init_data_struct_table();
@@ -71,6 +70,7 @@ int main()
     pgpe_thr_ctrl_init();
     pgpe_occ_init();
     pgpe_wov_ocs_init();
+    pgpe_irq_init();
 
     PK_TRACE("PGPE Booted");
 
