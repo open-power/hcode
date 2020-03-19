@@ -35,7 +35,6 @@
 #ifndef __STOP_DATA_STRUCT_
 #define __STOP_DATA_STRUCT_
 
-#include <stdio.h>
 #include "p10_hcd_memmap_base.H"
 
 #ifdef __SKIBOOT__
@@ -55,6 +54,7 @@
     #define STATIC static
 
 #endif
+
 
 #ifdef __DEBUG_
     #include<stdio.h>
