@@ -34,17 +34,11 @@ $(eval $(IMAGE)_LINK_SCRIPT=sbe_image.cmd)
 $(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/sbe_image/sbe_image.o)
 $(eval sbe_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
-# Files with multiple DD level content to be generated (arg2=empty since
-# there is no hw/sim variations)
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$3,$1,fa_ec_cl2_far))
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$3,$1,fa_ec_mma_far))
-$(eval $(call BUILD_DD_LEVEL_CONTAINER,$3,$1,fa_ring_ovrd))
-
 # Files to be appended to image
 $(eval $(IMAGE)_FILE_RINGS=$(RINGFILEPATH)/$3.$1.sbe.rings.bin)
-$(eval $(IMAGE)_FILE_FA_EC_CL2_FAR=$$($(IMAGE)_DD_CONT_fa_ec_cl2_far))
-$(eval $(IMAGE)_FILE_FA_EC_MMA_FAR=$$($(IMAGE)_DD_CONT_fa_ec_mma_far))
-$(eval $(IMAGE)_FILE_FA_RING_OVRD=$$($(IMAGE)_DD_CONT_fa_ring_ovrd))
+$(eval $(IMAGE)_FILE_FA_EC_CL2_FAR=$(RINGFILEPATH)/$3.$1.fa_ec_cl2_far.bin)
+$(eval $(IMAGE)_FILE_FA_EC_MMA_FAR=$(RINGFILEPATH)/$3.$1.fa_ec_mma_far.bin)
+$(eval $(IMAGE)_FILE_FA_RING_OVRD=$(RINGFILEPATH)/$3.$1.fa_ring_ovrd.bin)
 
 # Dependencies for appending image sections in sequence:
 #   - file to be appended
@@ -64,26 +58,18 @@ $(eval $(IMAGE)_DEPS_FA_RING_OVRD    = $$($(IMAGE)_FILE_FA_RING_OVRD))
 $(eval $(IMAGE)_DEPS_FA_RING_OVRD   += $$($(IMAGE)_DEPS_FA_EC_MMA_FAR))
 $(eval $(IMAGE)_DEPS_FA_RING_OVRD   += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ec_mma_far)
 
-# Here we only attempt to add rings if ENGD exists (done via CHIP_EC_PAIRS check).
-# Otherwise the build will fail later because the p10.hw.sbe.rings.bin cant be found
-# Note the else-',' after "*.append.rings".
-$(if $(findstring $(2):$(3), $(CHIP_EC_PAIRS)),\
-	$(eval $(IMAGE)_DEPS_IMAGE         += $$($(IMAGE)_FILE_RINGS))
-	$(eval $(IMAGE)_DEPS_RINGS          = $$($(IMAGE)_FILE_RINGS))
-	$(eval $(IMAGE)_DEPS_RINGS         += $$($(IMAGE)_DEPS_FA_RING_OVRD))
-	$(eval $(IMAGE)_DEPS_RINGS         += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ring_ovrd)
-	$(eval $(IMAGE)_DEPS_REPORT         = $$($(IMAGE)_DEPS_RINGS))
-	$(eval $(IMAGE)_DEPS_REPORT        += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings),\
-
-	$(eval $(IMAGE)_DEPS_REPORT         = $$($(IMAGE)_DEPS_FA_RING_OVRD))
-	$(eval $(IMAGE)_DEPS_REPORT        += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ring_ovrd))
+$(eval $(IMAGE)_DEPS_IMAGE         += $$($(IMAGE)_FILE_RINGS))
+$(eval $(IMAGE)_DEPS_RINGS          = $$($(IMAGE)_FILE_RINGS))
+$(eval $(IMAGE)_DEPS_RINGS         += $$($(IMAGE)_DEPS_FA_RING_OVRD))
+$(eval $(IMAGE)_DEPS_RINGS         += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ring_ovrd)
+$(eval $(IMAGE)_DEPS_REPORT         = $$($(IMAGE)_DEPS_RINGS))
+$(eval $(IMAGE)_DEPS_REPORT        += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
 
 # Image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.fa_ec_cl2_far,$$($(IMAGE)_DEPS_FA_EC_CL2_FAR),$$($(IMAGE)_FILE_FA_EC_CL2_FAR) 1))
 $(eval $(call XIP_TOOL,append,.fa_ec_mma_far,$$($(IMAGE)_DEPS_FA_EC_MMA_FAR),$$($(IMAGE)_FILE_FA_EC_MMA_FAR) 1))
 $(eval $(call XIP_TOOL,append,.fa_ring_ovrd,$$($(IMAGE)_DEPS_FA_RING_OVRD),$$($(IMAGE)_FILE_FA_RING_OVRD) 1))
-$(if $(findstring $(2):$(3), $(CHIP_EC_PAIRS)),\
-	$(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1)))
+$(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1))
 
 # Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
@@ -97,5 +83,4 @@ $(eval MYCHIPS := $(filter-out ocmb,$(CHIPS)))
 
 $(foreach chip,$(MYCHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
-		$(foreach type, $(HW_IMAGE_VARIATIONS),\
-				$(eval $(call BUILD_SBE_IMAGE,$(type),$(chip),$(chipId))))))
+			$(eval $(call BUILD_SBE_IMAGE,hw,$(chip),$(chipId)))))
