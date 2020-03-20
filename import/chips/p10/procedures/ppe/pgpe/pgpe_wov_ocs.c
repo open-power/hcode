@@ -50,7 +50,7 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.ocs_status = OCS_STATUS_DISABLED;
     G_pgpe_wov_ocs.wov_thr_loss_enable = WOV_THR_LOSS_STATUS_DISABLED;
     G_pgpe_wov_ocs.wov_freq_loss_enable = WOV_FREQ_LOSS_STATUS_DISABLED;
-    G_pgpe_wov_ocs.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_wof_state_addr));
+    G_pgpe_wov_ocs.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_pgpe_pgpeWofStateAddress));
     G_pgpe_wov_ocs.overcurrent_flag = OCS_UNDER_THRESH;
 }
 

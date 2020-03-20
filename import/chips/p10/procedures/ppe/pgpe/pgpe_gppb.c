@@ -45,21 +45,23 @@ void pgpe_gppb_init()
 {
     PK_TRACE("GPPB Init");
 
-    void* gppb_sram_offset = (void*)G_pgpe_header_data->g_pgpe_gppb_sram_addr;//GPPB Sram Offset
+    void* gppb_sram_offset = (void*)pgpe_header_get(g_pgpe_gpspbSramAddress);//GPPB Sram Offset
     G_gppb = (GlobalPstateParmBlock_t*)gppb_sram_offset;
     PK_TRACE("GPPB: Init G_gppb=0x%x", (uint32_t)G_gppb);
     PK_TRACE("GPPB: Init occ_cmpl_freq=0x%x", (uint32_t)G_gppb->occ_complex_frequency_mhz);
 
 #if GENERATE_HOMER_TABLES == 1
     //Fill out GeneratedPstateInfo structure
-    PK_TRACE("GPPB: genPsTblMemOff=0x%08x", (uint32_t)G_pgpe_header_data->g_pgpe_genPsTableMemOffset);
-    G_gpi = (GeneratedPstateInfo_t*)G_pgpe_header_data->g_pgpe_genPsTableMemOffset;
+    PK_TRACE("GPPB: genPsTblMemOff=0x%08x", (uint32_t)pgpe_header_get(g_pgpe_gpspbMemOffset));
+    G_gpi = (GeneratedPstateInfo_t*)pgpe_header_get(g_pgpe_gpspbMemOffset);
     G_gpi->magic = GEN_PSTATES_TBL_MAGIC;
     G_gpi->marker_gppb_end = 0xdead0000;
     G_gpi->globalppb = *G_gppb;
     G_gpi->pstate0_frequency_khz = G_gppb->reference_frequency_khz;
     G_gpi->highest_pstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
     G_gpi->marker_raw_pstates_end = 0xdead0001;
+
+    G_gpi->pgpe_header  = *(pgpe_header_get_ptr());
 
     //Clear the IPE bit because we are about to do 1B and 2B operations to main memory
     uint32_t msr = mfmsr();
@@ -119,8 +121,8 @@ void pgpe_gppb_occ_tbl()
 {
     int p;
 
-    OCCPstateTable_t* opst = (OCCPstateTable_t*)G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr;
-    opst->entries = (G_pgpe_header_data->g_pgpe_occ_pstables_len) / sizeof(OCCPstateTable_entry_t);
+    OCCPstateTable_t* opst = (OCCPstateTable_t*)pgpe_header_get(g_pgpe_opspbTableAddress);
+    opst->entries = pgpe_header_get(g_pgpe_opspbTableLength) / sizeof(OCCPstateTable_entry_t);
 
     for (p = 0; p < opst->entries; p++)
     {

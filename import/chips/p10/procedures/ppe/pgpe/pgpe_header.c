@@ -24,8 +24,8 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include "pgpe_header.h"
 
-pgpe_header_t* G_pgpe_header_data;
-extern pgpe_header_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
+PgpeHeader_t* G_pgpe_header_data;
+extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
 
 
 //
@@ -40,14 +40,14 @@ void pgpe_header_init()
     PK_TRACE("HDR: Init");
     uint32_t i = 0;
 
-    G_pgpe_header_data = (pgpe_header_t*)&_PGPE_IMG_HEADER;
+    G_pgpe_header_data = (PgpeHeader_t*)&_PGPE_IMG_HEADER;
 
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)
                                             OCC_SHARED_SRAM_ADDR_START; //Bottom 2K of PGPE OCC Sram Space
 
     //OCC Shared SRAM address and length
-    G_pgpe_header_data->g_pgpe_shared_sram_addr = (uint32_t)OCC_SHARED_SRAM_ADDR_START;
-    G_pgpe_header_data->g_pgpe_shared_sram_len = PGPE_OCC_SHARED_SRAM_SIZE;
+    G_pgpe_header_data->g_pgpe_sharedSramAddress = (uint32_t)OCC_SHARED_SRAM_ADDR_START;
+    G_pgpe_header_data->g_pgpe_sharedLength = PGPE_OCC_SHARED_SRAM_SIZE;
 
     //Clear out the OCC Shared SRAM region by setting everything to zero
     uint64_t* occ_shared_data_indx = (uint64_t*)OCC_SHARED_SRAM_ADDR_START;
@@ -59,21 +59,21 @@ void pgpe_header_init()
     }
 
     //GPPB SRAM Address
-    G_pgpe_header_data->g_pgpe_gppb_sram_addr = (uint32_t)(OCC_SRAM_PGPE_BASE_ADDR +
-            G_pgpe_header_data->g_pgpe_hcode_length);
+    G_pgpe_header_data->g_pgpe_gpspbSramAddress = (uint32_t)(OCC_SRAM_PGPE_BASE_ADDR +
+            G_pgpe_header_data->g_pgpe_hcodeLength);
 
     //OCC Pstate table address and length
-    G_pgpe_header_data->g_pgpe_occ_pstables_sram_addr = (uint32_t)
+    G_pgpe_header_data->g_pgpe_opspbTableAddress = (uint32_t)
             &occ_shared_data->pstate_table; //OCC Pstate table address
-    G_pgpe_header_data->g_pgpe_occ_pstables_len  = MAX_OCC_PSTATE_TABLE_ENTRIES * sizeof(
+    G_pgpe_header_data->g_pgpe_opspbTableAddress = MAX_OCC_PSTATE_TABLE_ENTRIES * sizeof(
                 OCCPstateTable_entry_t); //OCC Pstate table length
 
     //PGPE Beacon Address
-    G_pgpe_header_data->g_pgpe_beacon_addr = (uint32_t)&occ_shared_data->pgpe_beacon;//Beacon
+    G_pgpe_header_data->g_pgpe_beaconAddress = (uint32_t)&occ_shared_data->pgpe_beacon;//Beacon
 
     //PGPE WOF State Address
-    G_pgpe_header_data->g_wof_state_addr = (uint32_t)&occ_shared_data->pgpe_wof_values; //PGPE Produced WOF values
+    G_pgpe_header_data->g_pgpe_pgpeWofStateAddress = (uint32_t)&occ_shared_data->pgpe_wof_values; //PGPE Produced WOF values
 
     //PGPE WOF Tables Length
-    G_pgpe_header_data->g_wof_tables_length = sizeof(HomerVRTLayout_t);
+    G_pgpe_header_data->g_pgpe_wofTableLength = sizeof(HomerVRTLayout_t);
 }

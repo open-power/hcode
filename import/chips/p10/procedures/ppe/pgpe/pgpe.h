@@ -34,7 +34,6 @@
     #include "ipc_async_cmd.h"
     #include "pstate_pgpe_occ_api.h"
     #include "p10_pm_hcd_flags.h"
-    #include "pgpe_temp_constants.h"
     #include "pgpe_temp_structs.h"
     #include "pstates_pgpe.H"
     #include "pstates_common.H"
@@ -42,6 +41,8 @@
     #include "ppe42_scom.h"
     #include "ppehw_common.h"
     #include "p10_hcd_common.H"
+    #include "p10_hcd_memmap_occ_sram.H"
+    #include "p10_hcode_image_defines.H"
 #else
     #define MAX_QUADS   8
 #endif

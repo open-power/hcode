@@ -25,12 +25,13 @@
 #include "pgpe_fake_boot.h"
 #include "pstates_pgpe.H"
 #include "pgpe_header.h"
-extern pgpe_header_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
+extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
 
 #define PGPE_FAKE_BOOT_CORE_ON_RATIO   0.8
 #define PGPE_FAKE_BOOT_L3_ON_RATIO     0.1
 #define PGPE_FAKE_BOOT_MMA_ON_RATIO    0.1
 
+#define GPPB_SRAM_ADDR              0xfff2a000
 void pgpe_fake_boot_gppb()
 {
     //Fill in GPPB values
@@ -142,9 +143,9 @@ void pgpe_fake_boot_gppb()
 void pgpe_fake_boot_pgpe_header()
 {
     PK_TRACE("PGPE Fake Boot Header Start");
-    pgpe_header_t* pgpe_header = (pgpe_header_t*)&_PGPE_IMG_HEADER;
+    PgpeHeader_t* pgpe_header = (PgpeHeader_t*)&_PGPE_IMG_HEADER;
     //magic number
-    pgpe_header->g_pgpe_magic_number = 0x46414b455f484452ULL;
+    pgpe_header->g_pgpe_magicWord = 0x46414b455f484452ULL;
 
     //system_reset_address
     //ivpr_address
@@ -152,13 +153,13 @@ void pgpe_fake_boot_pgpe_header()
     //version
     //timebase_hz
     //pgpe_hcode_length
-    pgpe_header->g_pgpe_hcode_length = 0x9000;
+    pgpe_header->g_pgpe_hcodeLength = 0xa000;
     //GPPB memory offset
     //GPPB length
     //Generated Pstate tbl memory offset
     //Generated pstate tbl length
     //WOF state address
-    pgpe_header->g_wof_state_addr = 0xfff2d000;
+    pgpe_header->g_pgpe_pgpeWofStateAddress = 0xfff2d000;
     //WOF tables offset
     //PGPE op trace
     //PGPE deep op trace

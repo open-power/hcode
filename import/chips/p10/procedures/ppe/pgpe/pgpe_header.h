@@ -26,45 +26,10 @@
 #define _PGPE_HEADER_H_
 
 #include "pgpe.h"
+#include "pstates_table.H"
 
-#define OCC_SHARED_SRAM_ADDR_START \
-    (OCC_SRAM_PGPE_BASE_ADDR + OCC_SRAM_PGPE_REGION_SIZE - PGPE_OCC_SHARED_SRAM_SIZE)
 
-//\todo use the common definition in the hwplib/pm
-typedef struct pgpe_header
-{
-    uint64_t g_pgpe_magic_number;
-    uint32_t g_pgpe_sys_reset_addr;
-    uint32_t g_pgpe_shared_sram_addr;
-    uint32_t g_pgpe_ivpr_address;
-    uint32_t g_pgpe_shared_sram_len;
-    uint32_t g_pgpe_build_date;
-    uint32_t g_pgpe_version;
-    uint32_t reserved;
-    uint32_t g_pgpe_timebase_hz;
-    uint32_t g_pgpe_gppb_sram_addr;
-    uint32_t g_pgpe_hcode_length;
-    uint32_t g_pgpe_gppb_mem_offset;
-    uint32_t g_pgpe_gppb_length;
-    uint32_t g_pgpe_genPsTableMemOffset;
-    uint32_t g_pgpe_genPsTableMemLength;
-    uint32_t g_pgpe_occ_pstables_sram_addr;
-    uint32_t g_pgpe_occ_pstables_len;
-    uint32_t g_pgpe_beacon_addr;
-    uint32_t reserved1;
-    uint32_t g_wof_state_addr;
-    uint32_t reserved2;
-    uint32_t g_wof_tables_offset;
-    uint32_t g_wof_tables_length;
-    uint64_t reserved3;
-    uint32_t reserved4;
-    uint32_t g_pgpe_op_trace_ptr;
-    uint32_t g_pgpe_op_trace_ppmr_addr;
-    uint32_t g_pgpe_op_trace_ppmr_length;
-    uint64_t reserved5;
-} pgpe_header_t;
-
-extern pgpe_header_t* G_pgpe_header_data;
+extern PgpeHeader_t* G_pgpe_header_data;
 
 //
 //  pgpe_header_init
@@ -76,5 +41,6 @@ extern pgpe_header_t* G_pgpe_header_data;
 void pgpe_header_init();
 
 #define pgpe_header_get(x) G_pgpe_header_data->x
+#define pgpe_header_get_ptr() G_pgpe_header_data
 
 #endif //_PGPE_HEADER_H_

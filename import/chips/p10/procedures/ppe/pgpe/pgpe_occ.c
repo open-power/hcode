@@ -42,7 +42,7 @@ void pgpe_occ_init()
 {
 
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)
-                                            (pgpe_header_get(g_pgpe_shared_sram_addr));
+                                            (pgpe_header_get(g_pgpe_sharedSramAddress));
 
     occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2;
     occ_shared_data->occ_data_offset = offsetof(HcodeOCCSharedData_t, occ_wof_values);
@@ -55,7 +55,7 @@ void pgpe_occ_init()
         8; //TODO RTC: 214486 Determine if this should be an attribute or hard-coded like this
 
 
-    G_pgpe_occ.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_wof_state_addr));
+    G_pgpe_occ.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_pgpe_pgpeWofStateAddress));
 
     //\TODO: RTC: 214486 Scale this based on nest frequency and FIT TSEL.
     //
@@ -77,7 +77,7 @@ void pgpe_occ_update_beacon()
     if (pgpe_pstate_get(update_pgpe_beacon) == 1)
     {
         //write to SRAM
-        *((uint32_t*)(pgpe_header_get(g_pgpe_beacon_addr))) = *((uint32_t*)(pgpe_header_get(g_pgpe_beacon_addr))) + 1;
+        *((uint32_t*)(pgpe_header_get(g_pgpe_beaconAddress))) = *((uint32_t*)(pgpe_header_get(g_pgpe_beaconAddress))) + 1;
     }
 }
 
