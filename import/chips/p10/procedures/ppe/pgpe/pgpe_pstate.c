@@ -34,6 +34,7 @@
 #include "p10_hcd_common.H"
 #include "pstate_pgpe_occ_api.h"
 #include "pgpe_header.h"
+#include "p10_scom_eq_3.H"
 
 //
 //Local function prototypes
@@ -183,6 +184,11 @@ void pgpe_pstate_actuate_step()
     PK_TRACE("ACT: vdd_del=0x%x, vdd_next=0x%x,ps_next=0x%x ,vcs_next=0x%x", vdd_delta, G_pgpe_pstate.vdd_next,
              G_pgpe_pstate.pstate_next, G_pgpe_pstate.vcs_next);
 
+    if (G_pgpe_pstate.vdd_next_ext <= pgpe_gppb_get(array_write_vdd_mv))
+    {
+        PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WOR, BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
+    }
+
     //if lowering frequency
     if (G_pgpe_pstate.pstate_next > G_pgpe_pstate.pstate_curr)
     {
@@ -230,6 +236,11 @@ void pgpe_pstate_actuate_step()
         //resclk
         pgpe_resclk_update(G_pgpe_pstate.pstate_next);
 
+    }
+
+    if (G_pgpe_pstate.vdd_next_ext > pgpe_gppb_get(array_write_vdd_mv))
+    {
+        PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WAND, ~BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
     }
 
     pgpe_pstate_update_vdd_vcs_ps();

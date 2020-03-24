@@ -33,6 +33,7 @@
 #include "p10_oci_proc_6.H"
 #include "p10_oci_proc_7.H"
 #include "p10_scom_eq_7.H"
+#include "p10_scom_eq_3.H"
 #include "pgpe_resclk.h"
 #include "pgpe_thr_ctrl.h"
 #include "pgpe_wov_ocs.h"
@@ -209,6 +210,11 @@ void pgpe_process_pstate_start()
         vcs_before_vdd = 1;
     }
 
+    if (pgpe_pstate_get(vdd_next_ext) <= pgpe_gppb_get(array_write_vdd_mv))
+    {
+        PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WOR, BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
+    }
+
     if(vcs_before_vdd)
     {
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
@@ -226,6 +232,11 @@ void pgpe_process_pstate_start()
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
                                   pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
                                   pgpe_pstate_get(vcs_next_ext));
+    }
+
+    if (pgpe_pstate_get(vdd_next_ext) > pgpe_gppb_get(array_write_vdd_mv))
+    {
+        PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WAND, ~BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
     }
 
     //If frequency moving up, then adjust frequency
