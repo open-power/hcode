@@ -107,6 +107,60 @@ typedef union dpll_freq
     } fields;
 } dpll_freq_t;
 
+typedef union dpll_ctrl
+{
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t dpll_lock_sel : 1;
+        uint64_t enable_jump_protect : 1;
+        uint64_t ff_bypass : 1;
+        uint64_t dco_override : 1;
+        uint64_t dco_incr : 1;
+        uint64_t dco_decr : 1;
+        uint64_t spare : 2;
+        uint64_t ff_slewrate_up : 8;
+        uint64_t ff_slewrate_dn : 8;
+        uint64_t spare2 : 1;
+        uint64_t dynamic_slew_mode : 1;
+        uint64_t fast_fmax_disable : 1;
+        uint64_t fast_fmin_disable : 1;
+        uint64_t ro: 5;
+        uint64_t jump_value_n_l : 3;
+        uint64_t ro1: 1;
+        uint64_t jump_value_n_s : 3;
+        uint64_t ro2: 1;
+        uint64_t jump_values_l_s : 3;
+        uint64_t ro3: 1;
+        uint64_t jump_value_s_n : 3;
+        uint64_t ro4 : 16;
+#else
+        uint64_t ro4 : 16;
+        uint64_t jump_value_s_n : 3;
+        uint64_t ro3: 1;
+        uint64_t jump_values_l_s : 3;
+        uint64_t ro2: 1;
+        uint64_t jump_value_n_s : 3;
+        uint64_t ro1: 1;
+        uint64_t jump_value_n_l : 3;
+        uint64_t ro: 5;
+        uint64_t fast_fmin_disable : 1;
+        uint64_t fast_fmax_disable : 1;
+        uint64_t dynamic_slew_mode : 1;
+        uint64_t spare2 : 1;
+        uint64_t ff_slewrate_dn : 8;
+        uint64_t ff_slewrate_up : 8;
+        uint64_t spare : 2;
+        uint64_t dco_decr : 1;
+        uint64_t dco_incr : 1;
+        uint64_t dco_override : 1;
+        uint64_t ff_bypass : 1;
+        uint64_t enable_jump_protect : 1;
+        uint64_t dpll_lock_sel : 1;
+#endif // _BIG_ENDIAN
+    } fields;
+} dpll_ctrl_t;
 
 typedef union pmsr
 {

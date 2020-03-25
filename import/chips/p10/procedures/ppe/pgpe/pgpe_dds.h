@@ -27,6 +27,13 @@
 
 #include "pgpe.h"
 
+enum DDS_MODE
+{
+    DDS_MODE_NONE   =   0x0,
+    DDS_MODE_JUMP   =   0x1,
+    DDS_MODE_SLEW   =   0x2
+};
+
 void pgpe_dds_init();
 void pgpe_dds_update(uint32_t pstate);
 void pgpe_dds_poll_done();

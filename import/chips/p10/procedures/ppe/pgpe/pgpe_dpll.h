@@ -27,10 +27,23 @@
 
 #include "pgpe.h"
 
+typedef enum DPLL_MODE
+{
+    DPLL_MODE_1         = 0x1,
+    DPLL_MODE_2         = 0x2,
+    DPLL_MODE_3         = 0x3,
+    DPLL_MODE_4         = 0x4,
+    DPLL_MODE_6         = 0x6,
+    DPLL_MODE_INVALID   = -0x1
+} dpll_mode_t;
+
 void pgpe_dpll_init();
-uint64_t pgpe_dpll_get_dpll();
-void pgpe_dpll_write_dpll(uint64_t value);
+uint64_t pgpe_dpll_get_dpll_stat();
+dpll_mode_t pgpe_dpll_get_mode();
 uint32_t pgpe_dpll_get_pstate();
-void pgpe_dpll_write(uint32_t pstate);
+void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate);
+void pgpe_dpll_write_dpll_freq(uint64_t value);
+void pgpe_dpll_write_dpll_ctrl_or(uint64_t value);
+void pgpe_dpll_set_mode(dpll_mode_t mode);
 
 #endif
