@@ -196,7 +196,7 @@ void pgpe_pstate_actuate_step()
         pgpe_resclk_update(G_pgpe_pstate.pstate_next);
 
         //write DPLL(Update freq)
-        pgpe_dpll_write(G_pgpe_pstate.pstate_next);
+        pgpe_dpll_write_dpll_freq_ps(G_pgpe_pstate.pstate_next);
 
         //DDS
         pgpe_dds_update(G_pgpe_pstate.pstate_next);
@@ -231,7 +231,7 @@ void pgpe_pstate_actuate_step()
 #endif
 
         //write DPLL(Update freq)
-        pgpe_dpll_write(G_pgpe_pstate.pstate_next);
+        pgpe_dpll_write_dpll_freq_ps(G_pgpe_pstate.pstate_next);
 
         //resclk
         pgpe_resclk_update(G_pgpe_pstate.pstate_next);
@@ -261,7 +261,7 @@ void pgpe_pstate_actuate_pstate(uint32_t pstate)
     pgpe_pstate_compute();
     pgpe_pstate_apply_clips();
     G_pgpe_pstate.pstate_next = G_pgpe_pstate.pstate_target;
-    pgpe_dpll_write(G_pgpe_pstate.pstate_next);
+    pgpe_dpll_write_dpll_freq_ps(G_pgpe_pstate.pstate_next);
     pgpe_pstate_pmsr_updt();
 }
 

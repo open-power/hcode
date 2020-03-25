@@ -34,9 +34,12 @@
 #include "p10_oci_proc_7.H"
 #include "p10_scom_eq_7.H"
 #include "p10_scom_eq_3.H"
+#include "p10_scom_proc_a.H"
+#include "p10_scom_proc_b.H"
 #include "pgpe_resclk.h"
 #include "pgpe_thr_ctrl.h"
 #include "pgpe_wov_ocs.h"
+#include "pgpe_dds.h"
 
 //Local Functions
 void pgpe_process_pstate_start();
@@ -120,14 +123,27 @@ void pgpe_process_pstate_start_stop(void* eargs)
 void pgpe_process_pstate_start()
 {
     PK_TRACE("PSS: PS Start");
-    //Read DPLL frequency
     uint32_t sync_pstate;
     uint32_t voltage, vcs_before_vdd = 0;
     int32_t move_frequency;
-    dpll_stat_t dpll;
-    dpll.value = pgpe_dpll_get_dpll();
+    dpll_mode_t dpll_mode;
 
-    //2. Determine the highest pstate that matches with the read DPLL frequency
+    //1. Write NEST.REGS.DPLL_CTRL [DPLL_CTRL_FF_SLEWRATE_DOWN] and
+    //NEST.REGS.DPLL_CTRL [DPLL_CTRL_FF_SLEWRATE_UP] fields (10bits each) with 0x1
+    //hardcoded for both.
+    dpll_ctrl_t dpll_ctrl;
+    dpll_ctrl.fields.ff_slewrate_dn = 0x1;
+    dpll_ctrl.fields.ff_slewrate_up = 0x1;
+    pgpe_dpll_write_dpll_ctrl_or(dpll_ctrl.value);
+
+    //2. If DDS_ENABLE, write DCCR, FLMR and FMMR
+    //\TODO RTC: 248612. Commit: 93628
+
+    //3. Determine the highest pstate that matches with the read DPLL frequency
+    //Read DPLL frequency
+    dpll_stat_t dpll;
+    dpll.value = pgpe_dpll_get_dpll_stat();
+
     if (dpll.fields.freqout > pgpe_gppb_get(dpll_pstate0_value))
     {
         sync_pstate = 0;
@@ -139,27 +155,32 @@ void pgpe_process_pstate_start()
         move_frequency = 0;
     }
 
-    PK_TRACE("PSS: DPLL=0x%x DPLL0=0x%x syncPS=0x%x", dpll.fields.freqout, pgpe_gppb_get(dpll_pstate0_value), sync_pstate);
+    dpll_mode = pgpe_dpll_get_mode();
+    PK_TRACE("PSS: DPLL=0x%x DPLL0=0x%x Mode=%u, syncPS=0x%x", dpll.fields.freqout,
+             pgpe_gppb_get(dpll_pstate0_value), dpll_mode, sync_pstate);
 
-    //3. Clip the pstate
+    //4. Clip the pstate and determine the pstate closest to the frequency read
     if (sync_pstate < pgpe_pstate_get(clip_min))
     {
         sync_pstate = pgpe_pstate_get(clip_min);
-        PK_TRACE("PSS: sync_ps > clip_min=0x%x, setting sync_ps=0x%x", pgpe_pstate_get(clip_min), sync_pstate);
+        PK_TRACE("PSS: sync_ps < clip_min=0x%x, setting sync_ps=0x%x", pgpe_pstate_get(clip_min), sync_pstate);
         move_frequency = -1;
     }
 
-    if (sync_pstate > pgpe_pstate_get(clip_max))
+    uint32_t clip_max = pgpe_pstate_get(clip_max) < pgpe_pstate_get(pstate_safe) ?
+                        pgpe_pstate_get(clip_max) : pgpe_pstate_get(pstate_safe);
+
+    if (sync_pstate > clip_max)
     {
-        sync_pstate = pgpe_pstate_get(clip_max);
-        PK_TRACE("PSS: sync_ps > clip_max=0x%x, setting sync_ps=0x%x", pgpe_pstate_get(clip_max), sync_pstate);
+        sync_pstate = clip_max;
+        PK_TRACE("PSS: sync_ps > clip_max=0x%x, setting sync_ps=0x%x", clip_max, sync_pstate);
         move_frequency = 1;
     }
 
     pgpe_pstate_set(pstate_target, sync_pstate);
     pgpe_pstate_set(pstate_next, sync_pstate);
 
-    //Read the external VDD and VCS
+    //5. Read the external VDD and VCS
     pgpe_avsbus_voltage_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
                              pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
                              &voltage);
@@ -169,15 +190,23 @@ void pgpe_process_pstate_start()
                              &voltage);
     pgpe_pstate_set(vcs_curr_ext, voltage);
 
-    PK_TRACE("PSS: vdd=%u vcs=%u", pgpe_pstate_get(vdd_curr_ext), pgpe_pstate_get(vcs_curr_ext));
+    PK_TRACE("PSS: Read vdd=%u vcs=%u", pgpe_pstate_get(vdd_curr_ext), pgpe_pstate_get(vcs_curr_ext));
 
-    //If frequency moving down, then adjust frequency
+    //6. If frequency moving down, then adjust frequency
     if (move_frequency < 0 )
     {
-        pgpe_dpll_write(pgpe_pstate_get(pstate_next));
+        //Write new frequency
+        pgpe_dpll_write_dpll_freq_ps(pgpe_pstate_get(pstate_next));
+
+        //Switch DPLL mode to 2
+        if (dpll_mode == DPLL_MODE_1)
+        {
+            pgpe_dpll_set_mode(DPLL_MODE_2);
+        }
     }
 
-    //Determine external VRM set points for sync pstate taking into account the
+
+    //7. Determine external VRM set points for sync pstate taking into account the
     //system design parameters
     pgpe_pstate_set(vdd_next, pgpe_pstate_intp_vdd_from_ps(pgpe_pstate_get(pstate_next),
                     VPD_PT_SET_BIASED) ); //\todo use correct format for scale
@@ -197,7 +226,7 @@ void pgpe_process_pstate_start()
              pgpe_pstate_get(vcs_next_uplift),
              pgpe_pstate_get(vcs_next_ext));
 
-    //Perform voltage adjustment
+    //8. Perform voltage adjustment
     //If new external VRM(VDD and VCS) set points different from present value, then
     //move VDD and/or VCS
     if ((pgpe_pstate_get(vdd_curr_ext) > pgpe_pstate_get(vdd_next_ext))
@@ -239,10 +268,16 @@ void pgpe_process_pstate_start()
         PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WAND, ~BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
     }
 
-    //If frequency moving up, then adjust frequency
+    //9. If frequency moving up, then adjust frequency
     if (move_frequency > 0 )
     {
-        pgpe_dpll_write(pgpe_pstate_get(pstate_next));
+        pgpe_dpll_write_dpll_freq_ps(pgpe_pstate_get(pstate_next));
+
+        //Switch DPLL mode to 2
+        if (dpll_mode == DPLL_MODE_1)
+        {
+            pgpe_dpll_set_mode(DPLL_MODE_2);
+        }
     }
 
     pgpe_pstate_update_vdd_vcs_ps(); //Set current equal to next
@@ -251,11 +286,52 @@ void pgpe_process_pstate_start()
     pgpe_pstate_pmsr_updt();
     pgpe_pstate_pmsr_write();
 
-    //Enable resonant clocks //\todo Lookup PGPE_FLAGS[resclk_disable]
+    //10. Enable resonant clocks
     pgpe_resclk_enable(pgpe_pstate_get(pstate_curr));
 
-    //Setup DDS delay values
-    //Enable the DDS across all good cores
+    //11. Switch to DPLL Mode 4 if DDS is enabled
+    //\TODO Determine how to check for DDS enabled
+    if ((pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_SLEW_MODE) == DDS_MODE_SLEW) && dpll_mode == DPLL_MODE_2)
+    {
+        //1. Checks that flock is asserted (NEST_DPLL_STAT(lock)[bit 63].
+        // Poll for 1ms; if timeout, critical error log
+        while ( (pgpe_dpll_get_dpll_stat() & BIT64(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT_LOCK)) == 0)
+        {
+            //\TODO add timeout
+        }
+
+        //2. Write NEST.REGS.DPLL_ECHAR[INVERTED_DYNAMIC_ENCODE_INJECT] (61:63) to
+        //   001 to have the DDS inputs reflect 110 so as to allow the DPPL to respond to DDS droops
+        //   but not allow for any overclocking. Only needed for mode 4
+        PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_ECHAR,
+                    BITS64(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_ECHAR_INVERTED_DYNAMIC_ENCODE_INJECT,
+                           TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_ECHAR_INVERTED_DYNAMIC_ENCODE_INJECT_LEN));
+
+        //3. Move to Mode 4 by setting dynamic slew mode (25) in DPLL_CTRL
+        pgpe_dpll_set_mode(DPLL_MODE_4);
+
+        //4. Wait for at least 52.6ns (7 refclks @ 7.5ns (133MHz)) for flock to assert
+        //SCOM should complete in roughly 50-70ns, so in ideal case the first SCOM read of
+        //DPLL_STAT should have STAT_LOCK bit set. In case, it isn't, then we keep reading and
+        //eventually timeout when DPLL_STAT has been read 8 times(~400-500ns), and STAT_LOCK bit
+        //is still not set.
+        uint32_t cnt = 0;
+
+        for (cnt = 0; cnt < PLL_LOCK_TIMEOUT_COUNT; ++cnt)
+        {
+            if ((pgpe_dpll_get_dpll_stat() & BIT64(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT_LOCK)) == 1)
+            {
+                break;
+            }
+        }
+
+        if (cnt == PLL_LOCK_TIMEOUT_COUNT)
+        {
+            //\TODO Jump to the error routine(take out error log, etc)
+            //and remove the IOTA_PANIC call below.
+            IOTA_PANIC(IOTA_UNUSED_0104);
+        }
+    }
 
     //Enable WOV OCS
     pgpe_wov_ocs_enable();

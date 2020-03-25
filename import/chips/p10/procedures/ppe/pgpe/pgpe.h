@@ -82,5 +82,6 @@ typedef struct pcb_set_pmcr_arg
 } pcb_set_pmcr_args_t;
 
 
+static const uint32_t PLL_LOCK_TIMEOUT_COUNT = 8;
 
 #endif //
