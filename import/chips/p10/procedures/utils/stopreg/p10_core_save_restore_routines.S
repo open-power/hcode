@@ -153,11 +153,13 @@
                 .set SECURE_MODE_CONST,             0x0040  # bit 41, note: must be shifted left 16 bits
                 .set MACHINE_CHECK_ENABLE_CONST,    0x1000  # bit 51
                 .set ERR_CODE_SMF_E_NOT_SET,        0x0001  # Core is SMF capable but SMF[E] not SET
-#                .set ERR_CODE_SMF_BAD_B62_63_CFG,   0x0002  # Core is not configured to exit UV mode
                 .set SMFCTRL_ENABLE_BIT,            0
                 .set MSR_SECURITY_BIT,              41
                 .set SCRATCH_SLV_THDS_COMPLETE_BIT, 56
                 .set SCRATCH_RUNTIME_MODE_BIT,      59
+                .set HV_EXIT_WITH_SMF_ENABLE_BIT,   58  #0 : HV exit with SMFCTRL[E] bit SET to 0b01
+                                                        #1 : HV exit with SMFCTRL[E] bit SET to 0b00
+                .set OFFSET_SMF_EN_SLAVE_THREADS,    4
 
                 .set OTHER_THREADS_STOPPED,         0x07
                 .set CORE_THREAD_STATE_REG_ID,      0x01E0
@@ -172,6 +174,7 @@
                 .set SMF_SIGNATURE_CONST,           0x5f534d46 # '_SMF'
                 .set HILE_BIT_POS,                  4
                 .set LE_BIT_POS,                    63
+                .set SECURE_ADDR_BIT,               15
                 .set MF_HRMOR_R1,                   0xa64a397c
                 .set CLEAR_MSR_LE,                  0xa407b57a
                 .set MT_SRR1,                       0xa603bb7e
@@ -299,6 +302,13 @@ _start:
 .org _start + SRESET
 
 _sreset_hndlr:
+# In case of OPAL, during STOP entry, core will hit here in LE mode.
+# 'b big_endian_start' is executed by LE core as instruction 'subic'
+# It behaves like a NOP allowing an LE core to continue execution of
+# instructions starting under label 'little_endian_start'. These
+# instructions transition core from LE to BE by clearing LE bit in MSR.
+# Regardless of core endianess at label '_sreset_hndlr', endianess will
+# be BE while hitting 'big_endian_start'.
 
 b big_endian_start
 
@@ -340,7 +350,10 @@ uv_core_check:
 li          TEMP_REG2,      ERR_CODE_SMF_E_NOT_SET
 mfspr       SMF_VAL_REG,    SMFCTRL
 extrdi.     TEMP_REG1,      SMF_VAL_REG, 1, SMFCTRL_ENABLE_BIT
-bne         uv_core_init                          # Core is initialization is not consistent
+cmpwi       TEMP_REG1,      0x01
+beq         uv_core_init
+# We have MSR[S] bit SET but SMFCTRL[E] bit CLEAR. This is an undefined state.
+# Considering it as HW initialization issue.
 
 uv_init_error:
 #Put error code in a specific GPR
@@ -731,10 +744,7 @@ and         TEMP_REG1,   THREAD_SCRATCH_VAL_REG, TEMP_REG2
 cmpwi       TEMP_REG1,   0x00
 bne         find_self_save
 
-
 thread_restore_base:
-# li          TEMP_REG1,   CORE_THREAD_STATE_REG_ID
-# mtspr       SPRC,        TEMP_REG1
 mtlr        THREAD_SCOPE_RESTORE_ADDR_REG
 blrl                               ## branch to thread register restore area
 
@@ -789,24 +799,51 @@ mtsrr1      TEMP_REG2
 mfspr       TEMP_REG2,      HSRR1
 insrdi      TEMP_REG2,      TEMP_REG1,  1,  MSR_SECURITY_BIT
 mtspr       HSRR1,          TEMP_REG2
-mfspr       SMF_VAL_REG,    SMFCTRL
-insrdi      SMF_VAL_REG,    TEMP_REG1,  1,  SMFCTRL_ENABLE_BIT
 insrdi      MSR_INIT_REG,   TEMP_REG1,  1,  MSR_SECURITY_BIT
 
-addi        TEMP_REG1,      RMOR_INIT_REG,  HRMOR_RESTORE_OFFSET
+extrdi.     TEMP_REG2,      THREAD_SCRATCH_VAL_REG,  1,  HV_EXIT_WITH_SMF_ENABLE_BIT
+beq         wakeup_hv_smf_enable_mode
+
+wakeup_hv_smf_disable_mode:
+#In this case HOMER is expected in regular unsecure region.
+
+cmplwi      THREAD_ID_REG,  0
+bne         ipl_stop_exit
+insrdi      SMF_VAL_REG,    TEMP_REG1,  1,  SMFCTRL_ENABLE_BIT
+mtspr       SMFCTRL,        SMF_VAL_REG #SMFCTRL[E] is cleared by only master thread
+b ipl_stop_exit
+
+wakeup_hv_smf_enable_mode:
+mfspr       TEMP_REG2,  URMOR  #Check if  Un-Secure HOMER location
+extrdi.     TEMP_REG1,  TEMP_REG2, 1, SECURE_ADDR_BIT
+cmplwi      TEMP_REG1,  0
+beq         ipl_stop_exit
+
+runtime_stop_exit:
+mfspr       TEMP_REG2,  HRMOR  #Get Un-Secure HOMER location
+ori         TEMP_REG2,  TEMP_REG2,  0x200 #Exit Routine Offset
+mtspr       HRMOR,      TEMP_REG2
+b hrmor_restore_hv
+
+#In an SMF enabled system, for compatbility reasons, during IPL HOMER is built in regular memory
+#and gets moved to secure memory later during HOMER rebuild pahse. However, in istep 16 cores exits STOP
+#in UV mode. Code below support HV exit just in case it is useful.
+
+ipl_stop_exit:
+li           TEMP_REG2, HRMOR_RESTORE_OFFSET
+
+hrmor_restore_hv:
+
 cmplwi      THREAD_ID_REG,  0
 beq         update_usrrx
-addi        TEMP_REG1,      TEMP_REG1, SKIP_HRMOR_UPDATE_OFFSET # restore HRMOR only if thread0
+addi        TEMP_REG2,      TEMP_REG2, OFFSET_SMF_EN_SLAVE_THREADS  # branch where slave threads STOPs
 
 update_usrrx:
-mtspr       USRR0,          TEMP_REG1
-mtspr       USRR1,          MSR_INIT_REG
-cmpwi       THREAD_ID_REG,  0
-bne         exit_to_thread_stop
+mtspr       USRR0,     TEMP_REG2
+mtspr       USRR1,     MSR_INIT_REG
+mtspr       SRR1,      MSR_INIT_REG
 
 #------------------------------ Trampoline Sequence Start -------------------------------
-
-mtspr       SMFCTRL,        SMF_VAL_REG  #SMFCTRL[E] = 0b0 for HV exit and 0b1 for UV exit
 
 exit_to_thread_stop:
 isync
@@ -839,6 +876,7 @@ mtspr       USRR0,          TEMP_REG1
 mtspr       USRR1,          MSR_INIT_REG
 .long       urfid
 .long       ATTN
+
 
 # THREAD_LAUNCHER_SIZE_OFFSET must be >= (4 * number of instructions between
 # here and thread_launcher_start)
