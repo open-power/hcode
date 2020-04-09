@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2015,2019                                                    -->
+<!-- COPYRIGHT 2015,2020                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -24,7 +24,6 @@
 <!-- IBM_PROLOG_END_TAG                                                     -->
 
 <hwpErrors>
-  <sbeTarget>MASTER_CHIP</sbeTarget>
   <!-- ******************************************************************** -->
   <hwpError>
       <sbeError/>
