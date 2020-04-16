@@ -622,9 +622,6 @@ fapi2::ReturnCode p10_putRingUtils(
         FAPI_INF( "Ring Id is 0x%04x magic 0x%04x ring size 0x%04x",
                   (uint16_t)l_ringId , (uint32_t) rev_16(l_rs4Header->iv_magic), (uint16_t)l_ringSize);
 
-//CMO-20200410: Temp fix to avoid coreq
-if (l_rs4Header->iv_version == RS4_VERSION)
-{
         // Determine override/flush status
         if ( ( l_rs4Header->iv_type & RS4_IV_TYPE_SCAN_MASK ) == RS4_IV_TYPE_SCAN_OVRD )
         {
@@ -646,31 +643,6 @@ if (l_rs4Header->iv_version == RS4_VERSION)
             IOTA_PANIC(QME_STOP_PUTRING_HEADER_ERROR);
         #endif
         }
-}
-else
-{
-  // Determine override/flush status
-  if ( ( l_rs4Header->iv_type & RS4_IV_TYPE_SCAN_MASK_V4 ) == RS4_IV_TYPE_SCAN_OVRD_V4 )
-  {
-    l_bOverride = true;
-    PKTRACE( "Override Ring" );
-  }
-  else if ( ( l_rs4Header->iv_type & RS4_IV_TYPE_SCAN_MASK_V4 ) == RS4_IV_TYPE_SCAN_FLUSH_V4 )
-  {
-    l_bOverride = false;
-  }
-  else // Violation of decompression engine rules
-  {
-    FAPI_INF("The iv_type Ovrd bits MUST be either 0x%02x (override) or 0x%02x"
-             " (flush). However, the [masked] iv_type = 0x%02x",
-             RS4_IV_TYPE_SCAN_OVRD_V4,
-             RS4_IV_TYPE_SCAN_FLUSH_V4,
-             (l_rs4Header->iv_type & RS4_IV_TYPE_SCAN_MASK_V4));
-#ifndef __UNIT_TEST_
-  IOTA_PANIC(QME_STOP_PUTRING_HEADER_ERROR);
-#endif
-  }
-}
 
         // Get scan region and type value
         l_scanRegion    =   decodeScanRegionData( i_target, rev_32( l_rs4Header->iv_scanAddr ), l_ringId );
