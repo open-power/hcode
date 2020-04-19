@@ -32,6 +32,7 @@ $(EXE)_DEPLIBS+=p10_tor
 $(EXE)_DEPLIBS+=p10_ringId
 $(EXE)_DEPLIBS+=p10_scan_compression
 $(EXE)_DEPLIBS+=p10_ddco
+$(EXE)_DEPLIBS+=p10_dynamic
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/common/utils/imageProcs)
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/chips/p10/utils/imageProcs)
 $(call ADD_EXE_INCDIR,$(EXE),$(ROOTPATH)/hwpf/fapi2/include)
@@ -45,6 +46,7 @@ $(WRAPPER)_DEPLIBS+=p10_tor
 $(WRAPPER)_DEPLIBS+=p10_ringId
 $(WRAPPER)_DEPLIBS+=p10_scan_compression
 $(WRAPPER)_DEPLIBS+=p10_ddco
+$(WRAPPER)_DEPLIBS+=p10_dynamic
 $(call ADD_WRAPPER_INCDIR,$(WRAPPER),$(ROOTPATH)/chips/common/utils/imageProcs)
 $(call ADD_WRAPPER_INCDIR,$(WRAPPER),$(ROOTPATH)/chips/p10/utils/imageProcs)
 $(call ADD_WRAPPER_INCDIR,$(WRAPPER),$(ROOTPATH)/hwpf/fapi2/include)
