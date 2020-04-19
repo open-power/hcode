@@ -46,9 +46,13 @@ void pgpe_occ_init()
 
     occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2;
     occ_shared_data->occ_data_offset = offsetof(HcodeOCCSharedData_t, occ_wof_values);
-    occ_shared_data->xgpe_data_offset = offsetof(HcodeOCCSharedData_t, xgpe_wof_values);
+    occ_shared_data->occ_data_length = sizeof(occ_wof_values_t);
     occ_shared_data->pgpe_data_offset = offsetof(HcodeOCCSharedData_t, pgpe_wof_values);
+    occ_shared_data->pgpe_data_length = sizeof(pgpe_wof_values_t);
+    occ_shared_data->xgpe_data_offset = offsetof(HcodeOCCSharedData_t, xgpe_wof_values);
+    occ_shared_data->xgpe_data_length = sizeof(xgpe_wof_values_t);
     occ_shared_data->iddq_data_offset = offsetof(HcodeOCCSharedData_t, iddq_activity_values);
+    occ_shared_data->iddq_data_length = sizeof(iddq_activity_t);
     occ_shared_data->error_log_offset = offsetof(HcodeOCCSharedData_t, errlog_idx);
     occ_shared_data->pstate_table_offset = offsetof(HcodeOCCSharedData_t, pstate_table);
     occ_shared_data->iddq_activity_sample_depth =
