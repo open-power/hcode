@@ -291,13 +291,24 @@ void pgpe_process_pstate_start()
 
     //11. Switch to DPLL Mode 4 if DDS is enabled
     //\TODO Determine how to check for DDS enabled
+    uint32_t cnt = 0;
+
     if ((pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_SLEW_MODE) == DDS_MODE_SLEW) && dpll_mode == DPLL_MODE_2)
     {
         //1. Checks that flock is asserted (NEST_DPLL_STAT(lock)[bit 63].
         // Poll for 1ms; if timeout, critical error log
-        while ( (pgpe_dpll_get_dpll_stat() & BIT64(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT_LOCK)) == 0)
+        for (cnt = 0; cnt < PLL_LOCK_TIMEOUT_COUNT; ++cnt) //TODO Update Timer Count
         {
-            //\TODO add timeout
+            if ((pgpe_dpll_get_dpll_stat() & BIT64(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT_LOCK)) == 1)
+            {
+                break;
+            }
+        }
+
+        if (cnt == PLL_LOCK_TIMEOUT_COUNT)
+        {
+            //\TODO Jump to the error routine(take out error log, etc)
+            //and remove the IOTA_PANIC call below.
         }
 
         //2. Write NEST.REGS.DPLL_ECHAR[INVERTED_DYNAMIC_ENCODE_INJECT] (61:63) to
@@ -315,7 +326,6 @@ void pgpe_process_pstate_start()
         //DPLL_STAT should have STAT_LOCK bit set. In case, it isn't, then we keep reading and
         //eventually timeout when DPLL_STAT has been read 8 times(~400-500ns), and STAT_LOCK bit
         //is still not set.
-        uint32_t cnt = 0;
 
         for (cnt = 0; cnt < PLL_LOCK_TIMEOUT_COUNT; ++cnt)
         {
@@ -329,7 +339,6 @@ void pgpe_process_pstate_start()
         {
             //\TODO Jump to the error routine(take out error log, etc)
             //and remove the IOTA_PANIC call below.
-            IOTA_PANIC(IOTA_UNUSED_0104);
         }
     }
 
