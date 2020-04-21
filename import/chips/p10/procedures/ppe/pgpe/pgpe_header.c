@@ -65,7 +65,7 @@ void pgpe_header_init()
     //OCC Pstate table address and length
     G_pgpe_header_data->g_pgpe_opspbTableAddress = (uint32_t)
             &occ_shared_data->pstate_table; //OCC Pstate table address
-    G_pgpe_header_data->g_pgpe_opspbTableAddress = MAX_OCC_PSTATE_TABLE_ENTRIES * sizeof(
+    G_pgpe_header_data->g_pgpe_opspbTableLength = MAX_OCC_PSTATE_TABLE_ENTRIES * sizeof(
                 OCCPstateTable_entry_t); //OCC Pstate table length
 
     //PGPE Beacon Address
