@@ -112,6 +112,7 @@ void pgpe_irq_pcb_handler()
                 //Save into the args
                 G_pcb_set_pmcr_args.ps_request[q] = data;
                 G_pcb_set_pmcr_args.ps_valid[q] = 1;
+                PK_TRACE("PCB: q=%u, data=0x%x", q, data);
             }
         }
 
