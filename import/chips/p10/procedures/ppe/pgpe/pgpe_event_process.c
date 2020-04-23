@@ -380,16 +380,21 @@ void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_CLEAR, BIT32(17));//Enable PCB_Type1
         PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(8)); //Enable AUTO_PMCR_UPDATE
+
+        //Enable SCOM writes to PMCR if characterization mode. Otherwise, core-shifter updates
+        if ((owner == PMCR_OWNER_CHAR))
+        {
+            PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(0));
+        }
+        else
+        {
+            PPE_PUTSCOM_MC_Q(QME_QMCR_WO_CLEAR, BIT64(0));
+        }
     }
     else
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(17));//Disable PCB_Type1
-    }
-
-    //Enable SCOM writes to PMCR if characterization mode
-    if ((owner == PMCR_OWNER_CHAR))
-    {
-        PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(0));
+        PPE_PUTSCOM_MC_Q(QME_QMCR_WO_CLEAR, BIT64(8)); //Disable AUTO_PMCR_UPDATE
     }
 }
 
