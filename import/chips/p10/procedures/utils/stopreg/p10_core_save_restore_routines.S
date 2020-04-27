@@ -127,6 +127,7 @@
                 .set USRR0,                         506
                 .set USRR1,                         507
                 .set SMFCTRL,                       511 # Ultravisor
+                .set HEIR,                          339
                 .set HID,                           1008
                 .set PIR,                           1023
 
@@ -145,6 +146,7 @@
                 .set SKIP_HRMOR_UPDATE_OFFSET,      4
                 .set SKIP_URMOR_UPDATE_OFFSET,      8
                 .set SPR_SAVE_ROUTINE_OFFSET,       0x2300
+                .set SELF_SAVE_RESTORE_COLLECT_FFDC,0x1400
 
                 .set STOP,                          0x4C0002E4
                 .set ATTN,                          0x00000200
@@ -172,6 +174,8 @@
                 .set SELF_REST_VER_INFO_OFFSET,     0x1C
                 .set SMF_SIGNATURE_OFFSET,          0x1300
                 .set SMF_SIGNATURE_CONST,           0x5f534d46 # '_SMF'
+                .set START_FFDC_CONST,              0x5448
+                .set THREAD_NUM_BASE_ASCII,         0x3030
                 .set HILE_BIT_POS,                  4
                 .set LE_BIT_POS,                    63
                 .set SECURE_ADDR_BIT,               15
@@ -184,6 +188,8 @@
                 .set TRAP_LE,                       0x0800e07f
                 .set MFMSR_R21,                     0xa600a07e
                 .set SHIFT_ATTN_ENABLE_BIT_POS,     60  #HID[3]
+                .set FFDC_COLLECTED_CONST,          0x55aa
+                .set FFDC_AVBL_BIT_MASK,            0x02
 
 
                 .set SPR_SAVE_SCRATCH_REG,          r0
@@ -208,10 +214,14 @@
                 .set TEMP_REG3,                     r19
                 .set RMOR_INIT_REG,                 r20
                 .set MSR_INIT_REG,                  r21
+                .set GPR_22_REG,                    r22
                 .set MSR_SECURITY_ENABLE_REG,       r23
                 .set TEST_REG,                      r24
                 .set SELF_REST_ERR_REG,             r25
                 .set SELF_REST_VER_REG,             r26
+                .set FFDC_BASE_ADDRES_REG,          r27
+                .set CORE_FFDC_OFFSET_REG,          r28
+                .set GPR_29_REG,                    r29
                 .set SELF_SAVE_ADDR_REG,            r30
                 .set SELF_RESTORE_ADDR_REG,         r31
 
@@ -387,11 +397,11 @@ mtspr       USRR1,           MSR_INIT_REG            # Save MSR to USRR1
 
 enable_attn:
 li          TEMP_REG3,    0x01
-sldi        TEMP_REG3,    TEMP_REG1, SHIFT_ATTN_ENABLE_BIT_POS
+sldi        TEMP_REG3,    TEMP_REG3, SHIFT_ATTN_ENABLE_BIT_POS
 mfspr       TEMP_REG2,    HID
-ori         TEMP_REG2,    TEMP_REG2, TEMP_REG1
+or          TEMP_REG2,    TEMP_REG2, TEMP_REG3
 mtspr       HID,          TEMP_REG2
-.long ATTN
+b collect_ffdc
 
 #--------------------------------------------------------------------#
 #       Data Storage
@@ -439,8 +449,14 @@ b   enable_attn
 #       Program
 #--------------------------------------------------------------------#
 .org _start + 0x0700
+cmplwi TEMP_REG1, FFDC_COLLECTED_CONST  #did we come here due to FFDC collection
+beq ffdc_done
+#we came here due to a program interrupt and not due to FFDC collection
 li SELF_REST_ERR_REG, 0x700
 b   enable_attn
+
+ffdc_done:
+.long STOP
 
 #--------------------------------------------------------------------#
 #       Floating Point Unavailable
@@ -612,7 +628,134 @@ slbia
 
 .org _start + SMF_SIGNATURE_OFFSET
 ## A signature indicating that self save-restore image supports SMF.
+
 .long   SMF_SIGNATURE_CONST
+
+#---------------------------------------------------------------------
+
+.org _start + SELF_SAVE_RESTORE_COLLECT_FFDC
+# FFDC region starts at an ofset of 224KB from CPMR base. Each cores has been
+# allocated 1KB. Each core region is divided in to two halves. One half is meant
+# for critical FFDC and other is meant for additional FFDC. Each half is further
+# divided into 4 threads region. Each thread region is of size 128B.
+# Thread uses its region to populate GPR and SPR values.
+
+collect_ffdc:
+li      FFDC_BASE_ADDRES_REG,   0x3800      //FFDC region starts at 224KB from CPMR base
+sldi    FFDC_BASE_ADDRES_REG,   FFDC_BASE_ADDRES_REG, 4
+or      FFDC_BASE_ADDRES_REG,   FFDC_BASE_ADDRES_REG, RMOR_INIT_REG
+sldi    CORE_FFDC_OFFSET_REG,   CORE_ID_REG,  10 // each cores has been allocated 1KB
+add     FFDC_BASE_ADDRES_REG,   CORE_FFDC_OFFSET_REG, FFDC_BASE_ADDRES_REG
+sldi    CORE_FFDC_OFFSET_REG,   THREAD_ID_REG, 7
+add     FFDC_BASE_ADDRES_REG,   CORE_FFDC_OFFSET_REG, FFDC_BASE_ADDRES_REG
+mr      CORE_FFDC_OFFSET_REG,   FFDC_BASE_ADDRES_REG
+
+collect_non_uv_ffdc:
+#R28
+stdu    CORE_FFDC_OFFSET_REG,   8 ( CORE_FFDC_OFFSET_REG )
+
+#R8
+stdu    TEMP_REG1,              8 ( CORE_FFDC_OFFSET_REG )
+
+#mark FFDC start eye catcher "THxx"
+li       TEMP_REG1,   START_FFDC_CONST
+sldi     TEMP_REG1,   TEMP_REG1, 16
+ori      TEMP_REG1,   TEMP_REG1, THREAD_NUM_BASE_ASCII
+or       TEMP_REG1,   THREAD_ID_REG, TEMP_REG1
+std      TEMP_REG1,  -16 ( CORE_FFDC_OFFSET_REG )
+
+#R13
+stdu    THREAD_SCOPE_RESTORE_ADDR_REG, 8 ( CORE_FFDC_OFFSET_REG )
+
+#R14
+stdu    THREAD_SELF_SAVE_BASE_ADDR, 8 ( CORE_FFDC_OFFSET_REG )
+
+#R16
+stdu    SMF_VAL_REG,            8 ( CORE_FFDC_OFFSET_REG )
+
+#R17
+stdu    TEMP_REG2,              8 ( CORE_FFDC_OFFSET_REG )
+
+#R18
+stdu    THREAD_SCRATCH_VAL_REG, 8 ( CORE_FFDC_OFFSET_REG )
+
+#R31
+stdu    SELF_RESTORE_ADDR_REG,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  HRMOR
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfmsr   TEMP_REG1
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  PVR
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  HSRR0
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  HSRR1
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  HID
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+addi    FFDC_BASE_ADDRES_REG,   FFDC_BASE_ADDRES_REG, 512
+mr      CORE_FFDC_OFFSET_REG,   FFDC_BASE_ADDRES_REG
+
+//Collection of additional FFDC
+
+mfspr   TEMP_REG1,  PIR
+stdu    TEMP_REG1,  0 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  SRR0
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  SRR1
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  HEIR
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+#R20
+stdu    RMOR_INIT_REG,          8 ( CORE_FFDC_OFFSET_REG )
+
+#R21
+stdu    MSR_INIT_REG,           8 ( CORE_FFDC_OFFSET_REG )
+
+#R25
+stdu    SELF_REST_ERR_REG,      8 ( CORE_FFDC_OFFSET_REG )
+
+#R9
+stdu    URMOR_RESTORE_REG,      8 ( CORE_FFDC_OFFSET_REG )
+
+#R10
+stdu    HRMOR_RESTORE_REG,      8 ( CORE_FFDC_OFFSET_REG )
+
+#R30
+stdu    SELF_SAVE_ADDR_REG,     8 ( CORE_FFDC_OFFSET_REG )
+
+#If in UV mode, then collect UV level SPRs else skip it
+cmplwi  MSR_SECURITY_ENABLE_REG,    0
+beq end_ffdc
+
+collect_uv_ffdc:
+
+mfspr   TEMP_REG1,  URMOR
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  USRR0
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+mfspr   TEMP_REG1,  USRR1
+stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
+
+end_ffdc:
+ori     THREAD_SCRATCH_VAL_REG, THREAD_SCRATCH_VAL_REG, FFDC_AVBL_BIT_MASK  #Setting FFDC available
+mtspr   SPRD, THREAD_SCRATCH_VAL_REG
+li      TEMP_REG1,   FFDC_COLLECTED_CONST
+.long ATTN  #to let Host know
+
 #---------------------------------------------------------------------
 #
 # common code for thread restoration
