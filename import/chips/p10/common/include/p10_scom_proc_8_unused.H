@@ -1412,23 +1412,6 @@ static const uint32_t PB_BRIDGE_NHTM_SC_HTM_PMU_MODE_CFG_MEM_SIZE_LEN = 16;
 //<< [PB_BRIDGE_NHTM_SC_HTM_PMU_MODE_CFG]
 // proc/reg00042.H
 
-//>> [PSI_MAC_SCOM_REGS_TX_MODE]
-static const uint64_t PSI_MAC_SCOM_REGS_TX_MODE = 0x01011031ull;
-
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_PC_TEST_MODE = 0;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_MAIN_EN_ENC = 4;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_MAIN_EN_ENC_LEN = 4;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_PC_EN_ENC = 12;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_PC_EN_ENC_LEN = 4;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_SLEWCTL = 16;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_SLEWCTL_LEN = 4;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_PVTNL_ENC = 24;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_PVTNL_ENC_LEN = 2;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_PVTPL_ENC = 28;
-static const uint32_t PSI_MAC_SCOM_REGS_TX_MODE_PVTPL_ENC_LEN = 2;
-//<< [PSI_MAC_SCOM_REGS_TX_MODE]
-// proc/reg00042.H
-
 //>> [TP_TCN0_N0_CLOCK_STAT_SL]
 static const uint64_t TP_TCN0_N0_CLOCK_STAT_SL = 0x02030008ull;
 

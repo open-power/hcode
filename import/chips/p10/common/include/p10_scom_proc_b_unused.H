@@ -1575,21 +1575,6 @@ static const uint64_t PB_PTLSCOM67_MAILBOX_11_REG = 0x13011833ull;
 //<< [PB_PTLSCOM67_MAILBOX_11_REG]
 // proc/reg00056.H
 
-//>> [PSI_MAC_SCOM_REGS_RX_MODE]
-static const uint64_t PSI_MAC_SCOM_REGS_RX_MODE = 0x01011021ull;
-
-static const uint32_t PSI_MAC_SCOM_REGS_RX_MODE_VREF = 0;
-static const uint32_t PSI_MAC_SCOM_REGS_RX_MODE_VREF_LEN = 8;
-static const uint32_t PSI_MAC_SCOM_REGS_RX_MODE_TERM_TEST_MODE = 12;
-static const uint32_t PSI_MAC_SCOM_REGS_RX_MODE_TERM_MODE_ENC = 15;
-static const uint32_t PSI_MAC_SCOM_REGS_RX_MODE_TERM_MODE_ENC_LEN = 5;
-static const uint32_t PSI_MAC_SCOM_REGS_RX_MODE_PEAK = 20;
-static const uint32_t PSI_MAC_SCOM_REGS_RX_MODE_PEAK_LEN = 3;
-static const uint32_t PSI_MAC_SCOM_REGS_RX_MODE_MODE_SPARE = 24;
-static const uint32_t PSI_MAC_SCOM_REGS_RX_MODE_MODE_SPARE_LEN = 8;
-//<< [PSI_MAC_SCOM_REGS_RX_MODE]
-// proc/reg00056.H
-
 //>> [PSI_MAC_SCOM_REGS_RX_STATUS]
 static const uint64_t PSI_MAC_SCOM_REGS_RX_STATUS = 0x01011022ull;
 
