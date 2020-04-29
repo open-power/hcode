@@ -392,7 +392,28 @@ extern "C"
             const uint32_t i_mode)
     {
         uint32_t l_rc = 0;
+        uint32_t l_core0_domain = 0;
+        uint32_t l_domain = 0;
 
+#ifdef DEBUG_PRINT
+        printf("\nEntering p10_clockcntl_getScanClockDomain\n");
+        std::string l_chipUnitStr;
+        uint32_t l_rc1 = 0;
+        l_rc1 = pu_convertCUEnum_to_String(i_p10CU, l_chipUnitStr);
+
+        if (l_rc1)
+        {
+            printf("\nError: Can not convert chip unit type to string!\n");
+        }
+        else
+        {
+            printf(" Chip unit type: %s\n", l_chipUnitStr.c_str());
+            printf("  Chip unit num: %d\n", i_chipUnitNum);
+            printf("   Clock domain: %d\n", io_domain);
+            printf("           Mode: %d\n", i_mode);
+        }
+
+#endif
         // Use macro to convert to the input domain to the one for i_chipUnitNum
         // ## is the macro concatenation operator
 
@@ -428,7 +449,7 @@ extern "C"
         io_domain == P10_EQ5##P##_DOMAIN ||  \
         io_domain == P10_EQ6##P##_DOMAIN ||  \
         io_domain == P10_EQ7##P##_DOMAIN) {  \
-        switch ((i_p10CU == PU_C_CHIPUNIT)?(i_chipUnitNum/4):(i_chipUnitNum)) { \
+        switch (i_chipUnitNum) {             \
             case 0 : io_domain = P10_EQ0##P##_DOMAIN; break; \
             case 1 : io_domain = P10_EQ1##P##_DOMAIN; break; \
             case 2 : io_domain = P10_EQ2##P##_DOMAIN; break; \
@@ -441,20 +462,101 @@ extern "C"
         } \
     }
         CHECKEQ(VITL)
-        CHECKEQ(ECL20)
-        CHECKEQ(ECL21)
-        CHECKEQ(ECL22)
-        CHECKEQ(ECL23)
-        CHECKEQ(L30)
-        CHECKEQ(L31)
-        CHECKEQ(L32)
-        CHECKEQ(L33)
-        CHECKEQ(MMA0)
-        CHECKEQ(MMA1)
-        CHECKEQ(MMA2)
-        CHECKEQ(MMA3)
         CHECKEQ(QME)
         CHECKEQ(CLKADJ)
+
+        // -------------------------------
+        // Check ECL2
+        // -------------------------------
+#define CHECKECL2(P)                         \
+    if (io_domain == P10_EQ0##P##_DOMAIN ||  \
+        io_domain == P10_EQ1##P##_DOMAIN ||  \
+        io_domain == P10_EQ2##P##_DOMAIN ||  \
+        io_domain == P10_EQ3##P##_DOMAIN ||  \
+        io_domain == P10_EQ4##P##_DOMAIN ||  \
+        io_domain == P10_EQ5##P##_DOMAIN ||  \
+        io_domain == P10_EQ6##P##_DOMAIN ||  \
+        io_domain == P10_EQ7##P##_DOMAIN) {  \
+        switch (i_chipUnitNum/NUM_CORES_PER_EQ) {                           \
+            case 0 : l_core0_domain = P10_EQ0ECL20_DOMAIN; break; \
+            case 1 : l_core0_domain = P10_EQ1ECL20_DOMAIN; break; \
+            case 2 : l_core0_domain = P10_EQ2ECL20_DOMAIN; break; \
+            case 3 : l_core0_domain = P10_EQ3ECL20_DOMAIN; break; \
+            case 4 : l_core0_domain = P10_EQ4ECL20_DOMAIN; break; \
+            case 5 : l_core0_domain = P10_EQ5ECL20_DOMAIN; break; \
+            case 6 : l_core0_domain = P10_EQ6ECL20_DOMAIN; break; \
+            case 7 : l_core0_domain = P10_EQ7ECL20_DOMAIN; break; \
+            default : l_rc = 1; \
+        } \
+        l_domain = l_core0_domain + (i_chipUnitNum % NUM_CORES_PER_EQ); \
+        io_domain = static_cast<CLOCK_DOMAIN>(l_domain);\
+    }
+        CHECKECL2(ECL20)
+        CHECKECL2(ECL21)
+        CHECKECL2(ECL22)
+        CHECKECL2(ECL23)
+
+        // -------------------------------
+        // Check L3
+        // -------------------------------
+#define CHECKL3(P)                         \
+    if (io_domain == P10_EQ0##P##_DOMAIN ||  \
+        io_domain == P10_EQ1##P##_DOMAIN ||  \
+        io_domain == P10_EQ2##P##_DOMAIN ||  \
+        io_domain == P10_EQ3##P##_DOMAIN ||  \
+        io_domain == P10_EQ4##P##_DOMAIN ||  \
+        io_domain == P10_EQ5##P##_DOMAIN ||  \
+        io_domain == P10_EQ6##P##_DOMAIN ||  \
+        io_domain == P10_EQ7##P##_DOMAIN) {  \
+        switch (i_chipUnitNum/NUM_CORES_PER_EQ) {                              \
+            case 0 : l_core0_domain = P10_EQ0L30_DOMAIN; break; \
+            case 1 : l_core0_domain = P10_EQ1L30_DOMAIN; break; \
+            case 2 : l_core0_domain = P10_EQ2L30_DOMAIN; break; \
+            case 3 : l_core0_domain = P10_EQ3L30_DOMAIN; break; \
+            case 4 : l_core0_domain = P10_EQ4L30_DOMAIN; break; \
+            case 5 : l_core0_domain = P10_EQ5L30_DOMAIN; break; \
+            case 6 : l_core0_domain = P10_EQ6L30_DOMAIN; break; \
+            case 7 : l_core0_domain = P10_EQ7L30_DOMAIN; break; \
+            default : l_rc = 1; \
+        } \
+        l_domain = l_core0_domain + (i_chipUnitNum % NUM_CORES_PER_EQ); \
+        io_domain = static_cast<CLOCK_DOMAIN>(l_domain);\
+    }
+        CHECKL3(L30)
+        CHECKL3(L31)
+        CHECKL3(L32)
+        CHECKL3(L33)
+
+        // -------------------------------
+        // Check MMA
+        // -------------------------------
+#define CHECKMMA(P)                         \
+    if (io_domain == P10_EQ0##P##_DOMAIN ||  \
+        io_domain == P10_EQ1##P##_DOMAIN ||  \
+        io_domain == P10_EQ2##P##_DOMAIN ||  \
+        io_domain == P10_EQ3##P##_DOMAIN ||  \
+        io_domain == P10_EQ4##P##_DOMAIN ||  \
+        io_domain == P10_EQ5##P##_DOMAIN ||  \
+        io_domain == P10_EQ6##P##_DOMAIN ||  \
+        io_domain == P10_EQ7##P##_DOMAIN) {  \
+        switch (i_chipUnitNum/NUM_CORES_PER_EQ) {                               \
+            case 0 : l_core0_domain = P10_EQ0MMA0_DOMAIN; break; \
+            case 1 : l_core0_domain = P10_EQ1MMA0_DOMAIN; break; \
+            case 2 : l_core0_domain = P10_EQ2MMA0_DOMAIN; break; \
+            case 3 : l_core0_domain = P10_EQ3MMA0_DOMAIN; break; \
+            case 4 : l_core0_domain = P10_EQ4MMA0_DOMAIN; break; \
+            case 5 : l_core0_domain = P10_EQ5MMA0_DOMAIN; break; \
+            case 6 : l_core0_domain = P10_EQ6MMA0_DOMAIN; break; \
+            case 7 : l_core0_domain = P10_EQ7MMA0_DOMAIN; break; \
+            default : l_rc = 1; \
+        } \
+        l_domain = l_core0_domain + (i_chipUnitNum % NUM_CORES_PER_EQ); \
+        io_domain = static_cast<CLOCK_DOMAIN>(l_domain);\
+    }
+        CHECKMMA(MMA0)
+        CHECKMMA(MMA1)
+        CHECKMMA(MMA2)
+        CHECKMMA(MMA3)
 
         // -------------------------------
         // PCI chiplets
@@ -472,6 +574,9 @@ extern "C"
         CHECKPCI(IOP)
         CHECKPCI(PLL)
 
+#ifdef DEBUG_PRINT
+        printf("\nOutput io_domain = %u\n", io_domain);
+#endif
         return l_rc;
     }
 
