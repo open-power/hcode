@@ -165,6 +165,17 @@ enum TargetFilter : uint64_t;
     return static_cast<TargetType>(static_cast<uint64_t>(x) |
                                    static_cast<uint64_t>(y));
 }
+
+constexpr TargetType operator&(TargetType x, TargetType y)
+{
+    return static_cast<TargetType>(static_cast<uint64_t>(x) &
+                                   static_cast<uint64_t>(y));
+}
+
+constexpr TargetType operator~(TargetType x)
+{
+    return static_cast<TargetType>(~static_cast<uint64_t>(x));
+}
 #endif
 
 template<uint64_t V>
