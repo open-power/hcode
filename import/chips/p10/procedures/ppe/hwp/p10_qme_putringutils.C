@@ -126,11 +126,13 @@ inline uint32_t rs4_get_nibble( const uint8_t* i_rs4Str, const uint32_t i_nibble
 ///
 inline uint32_t stop_decode( const uint8_t* i_rs4Str,
                              uint32_t i_nibbleIndx,
-                             uint32_t* o_numRotate )__attribute__((always_inline) );
+                             uint32_t* o_numRotate,
+                             const uint32_t i_totalNibbleIndex )__attribute__((always_inline) );
 
 inline uint32_t stop_decode( const uint8_t* i_rs4Str,
                              uint32_t i_nibbleIndx,
-                             uint32_t* o_numRotate )
+                             uint32_t* o_numRotate,
+                             const uint32_t i_totalNibbleIndex )
 {
     uint32_t l_numNibblesParsed = 0; // No.of nibbles that make up the stop-code
     uint32_t l_numNonZeroNibbles = 0;
@@ -147,8 +149,15 @@ inline uint32_t stop_decode( const uint8_t* i_rs4Str,
 
         i_nibbleIndx++;
         l_numNibblesParsed++;
+
+        if ( i_nibbleIndx > i_totalNibbleIndex )
+        {
+            PKTRACE( "ROTATE:Current nibble index is greater than total nibble index" );
+            IOTA_PANIC(QME_STOP_PUTRING_ROTATE_RS4_IMAGE_INVALID);
+        }
     }
     while( ( l_nibble & 0x08 ) == 0 );
+
 
     *o_numRotate    =   l_numNonZeroNibbles;
 
@@ -537,6 +546,8 @@ fapi2::ReturnCode p10_putRingUtils(
     CompressedScanData* l_rs4Header =   NULL;
     bool l_bOverride                =   UNDEFINED_BOOLEAN;
     uint32_t l_ringId               =   0;
+    uint32_t l_ringSize             =   0;
+    uint32_t l_totalNibbleValue     =   0;
     uint32_t l_regAddress   =   0;
 
 #ifndef __UNIT_TEST_
@@ -605,9 +616,11 @@ fapi2::ReturnCode p10_putRingUtils(
         }
 
         l_ringId        =   rev_16(l_rs4Header->iv_ringId);
+        l_ringSize      =   rev_16(l_rs4Header->iv_size);
+        l_totalNibbleValue = (l_ringSize - sizeof(CompressedScanData) ) * 2;
 
-        FAPI_INF( "Ring Id is 0x%04x magic 0x%04x",
-                  (uint16_t)l_ringId , (uint32_t) rev_16(l_rs4Header->iv_magic) );
+        FAPI_INF( "Ring Id is 0x%04x magic 0x%04x ring size 0x%04x",
+                  (uint16_t)l_ringId , (uint32_t) rev_16(l_rs4Header->iv_magic), (uint16_t)l_ringSize);
 
 //CMO-20200410: Temp fix to avoid coreq
 if (l_rs4Header->iv_version == RS4_VERSION)
@@ -698,7 +711,7 @@ else
             {
                 // Determine the no.of ROTATE operations encoded in stop-code
                 uint32_t l_bitRotates;
-                l_nibbleIndx +=  stop_decode(l_rs4Str, l_nibbleIndx, &l_bitRotates);
+                l_nibbleIndx +=  stop_decode(l_rs4Str, l_nibbleIndx, &l_bitRotates,l_totalNibbleValue);
 
                 // Determine the no.of rotates in bits
                 l_bitRotates  =  l_bitRotates << 2;
@@ -724,6 +737,12 @@ else
             {
                 uint32_t l_scanCount = rs4_get_nibble( l_rs4Str, l_nibbleIndx );
                 l_nibbleIndx++;
+
+                if ( l_nibbleIndx > l_totalNibbleValue)
+                {
+                    PKTRACE( "SCAN:Current nibble index is greater than total nibble index" );
+                    IOTA_PANIC(QME_STOP_PUTRING_SCAN_RS4_IMAGE_INVALID);
+                }
 
                 if ( l_scanCount == 0 )
                 {

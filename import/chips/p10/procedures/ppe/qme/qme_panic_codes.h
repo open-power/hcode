@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -91,8 +91,8 @@ QME_STOP_PUTRING_PARALLEL_SCAN_ERR    = 0x1d1e,
 //QME_PSTATE_DPLL_OUT_OF_BOUNDS_REQ   = 0x1e05,
 //QME_PSTATE_TRAP_INJECT              = 0x1e06,
 //QME_PSTATE_REGISTRATION_FAILED      = 0x1e07,
-//_UNUSED_1e08                      = 0x1e08,
-//_UNUSED_1e09                      = 0x1e09,
+QME_STOP_PUTRING_ROTATE_RS4_IMAGE_INVALID = 0x1e08,
+QME_STOP_PUTRING_SCAN_RS4_IMAGE_INVALID   = 0x1e09,
 //_UNUSED_1e0a                      = 0x1e0a,
 //_UNUSED_1e0d                      = 0x1e0d,
 //_UNUSED_1e1c                      = 0x1e1c,
