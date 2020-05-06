@@ -247,6 +247,14 @@ void pgpe_pstate_actuate_step()
     pgpe_pstate_pmsr_updt();
     pgpe_pstate_pmsr_write();
 
+    pgpe_opt_set_word(0, 0);
+    pgpe_opt_set_word(1, 0);
+    pgpe_opt_set_byte(0, pgpe_pstate_get(pstate_target));
+    pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
+    pgpe_opt_set_half(1, pgpe_pstate_get(vdd_curr_ext));
+    pgpe_opt_set_half(2, pgpe_pstate_get(vcs_curr_ext));
+    //pgpe_opt_set_byte(6, );  //\TODO Add RVRM Transition
+    ppe_trace_op(PGPE_OPT_ACTUATE_STEP_DONE, pgpe_opt_get());
 }
 
 void pgpe_pstate_actuate_pstate(uint32_t pstate)
@@ -388,6 +396,9 @@ void pgpe_pstate_apply_clips()
     }
 
     PK_TRACE("APC: ps_target=0x%x", G_pgpe_pstate.pstate_target);
+    pgpe_opt_set_word(0, 0);
+    pgpe_opt_set_byte(0, G_pgpe_pstate.pstate_target);
+    ppe_trace_op(PGPE_OPT_AUCTION_DONE, pgpe_opt_get());
 }
 
 void pgpe_pstate_compute_vratio(uint32_t pstate)
