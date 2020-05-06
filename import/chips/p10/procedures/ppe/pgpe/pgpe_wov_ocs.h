@@ -46,7 +46,7 @@ enum OCS_STATUS
 
 enum OCS_THRESH
 {
-    OCS_UNDER_THRESH   = 0xFFFFFFFF,
+    OCS_UNDER_THRESH   = 0x0,
     OCS_OVER_THRESH    = 0x1
 };
 
@@ -69,6 +69,13 @@ enum WOV_FREQ_LOSS_STATUS
     WOV_FREQ_LOSS_STATUS_ENABLED     = 0x00000001
 };
 
+enum OCS_DIRTY_SAMPLE_TYPE
+{
+    OCS_DIRTY_SAMPLE_TYPE_00 = 0x0,
+    OCS_DIRTY_SAMPLE_TYPE_10 = 0x2,
+    OCS_DIRTY_SAMPLE_TYPE_11 = 0x3,
+};
+
 typedef struct pgpe_wov_ocs
 {
     uint32_t wov_status;
@@ -78,6 +85,8 @@ typedef struct pgpe_wov_ocs
     uint32_t wov_freq_loss_enable;
     uint32_t light_loss;
     uint32_t heavy_loss;
+    uint32_t droop_level;
+    uint32_t dirty;
     uint32_t curr_pct, tgt_pct;
     uint32_t curr_mv, target_mv;
     uint32_t hysteresis_cnt;

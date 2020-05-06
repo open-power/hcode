@@ -34,6 +34,7 @@ void pgpe_thr_ctrl_init()
 {
     //todo Check PGPE_FLAG bits
     G_pgpe_thr_ctrl.status = PGPE_THR_CTRL_ENABLED;
+    G_pgpe_thr_ctrl.ceff_ovr = 0;
     G_pgpe_thr_ctrl.curr_ceff_ovr_idx = 0;
 }
 
@@ -44,6 +45,7 @@ void pgpe_thr_ctrl_update(uint32_t pstate)
         uint32_t vrt_overage =  pstate - pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE);
 
         PK_TRACE("THR: vrt_over=0x%x, curr_ceff_ovr_idx=0x%x", vrt_overage, G_pgpe_thr_ctrl.curr_ceff_ovr_idx);
+        uint32_t prev_ceff_ovr_idx = G_pgpe_thr_ctrl.curr_ceff_ovr_idx;
 
         //if  VRT overage == 0 && present_ceff_overage_index == 0
         if ((vrt_overage == 0) && (G_pgpe_thr_ctrl.curr_ceff_ovr_idx == 0))
@@ -70,6 +72,12 @@ void pgpe_thr_ctrl_update(uint32_t pstate)
             //ERROR \\todo
         }
 
+        pgpe_opt_set_word(0, 0);
+        pgpe_opt_set_byte(0, (uint8_t)vrt_overage);
+        pgpe_opt_set_byte(1, (uint8_t)G_pgpe_thr_ctrl.ceff_ovr);
+        pgpe_opt_set_byte(2, (uint8_t)G_pgpe_thr_ctrl.curr_ceff_ovr_idx);
+        pgpe_opt_set_byte(3, (uint8_t)prev_ceff_ovr_idx);
+        ppe_trace_op(PGPE_OPT_CEFF_OVERAGE_UPDT, pgpe_opt_get());
         PK_TRACE("THR: vrt_over=0x%x, curr_ceff_ovr_idx=0x%x", vrt_overage, G_pgpe_thr_ctrl.curr_ceff_ovr_idx);
     }
 }

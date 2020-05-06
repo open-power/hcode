@@ -52,6 +52,15 @@ typedef enum CLIP_TYPE
     CLIP_MIN        = 0x2,
 } clip_type_t;
 
+enum SAFE_MODE_FAULT_INDEX
+{
+    SAFE_MODE_FAULT_OCC     = 0,
+    SAFE_MODE_FAULT_XGPE    = 1,
+    SAFE_MODE_FAULT_QME     = 2,
+    SAFE_MODE_FAULT_PVREF   = 3
+};
+
+
 typedef struct pgpe_pstate
 {
     uint32_t pstate_status;

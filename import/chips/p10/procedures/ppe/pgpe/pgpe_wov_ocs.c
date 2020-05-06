@@ -52,6 +52,7 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.wov_freq_loss_enable = WOV_FREQ_LOSS_STATUS_DISABLED;
     G_pgpe_wov_ocs.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_pgpe_pgpeWofStateAddress));
     G_pgpe_wov_ocs.overcurrent_flag = OCS_UNDER_THRESH;
+    G_pgpe_wov_ocs.droop_level = DROOP_LVL_OK;
 }
 
 void pgpe_wov_ocs_enable()
@@ -125,6 +126,8 @@ void pgpe_wov_ocs_determine_perf_loss()
 void pgpe_wov_ocs_update_dirty()
 {
     uint32_t droop;
+    uint32_t overcurrent;
+    uint32_t dirty;
 
     if (G_pgpe_wov_ocs.heavy_loss)
     {
@@ -139,17 +142,44 @@ void pgpe_wov_ocs_update_dirty()
         droop = DROOP_LVL_OK;
     }
 
+    //Check for overrcurrent status
+    if(G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_ma  >= G_pgpe_wov_ocs.idd_current_thresh)
+    {
+        overcurrent = OCS_OVER_THRESH;
+    }
+    else
+    {
+        overcurrent = OCS_UNDER_THRESH;
+    }
+
+    //Trace if change in droop level
+    if (G_pgpe_wov_ocs.droop_level != droop)
+    {
+        pgpe_opt_set_word(0, 0);
+        pgpe_opt_set_byte(0, droop);
+        ppe_trace_op(PGPE_OPT_OCS_DROOP_COND, pgpe_opt_get());
+    }
+
+    //Trace if change in overcurrent status
+    if (G_pgpe_wov_ocs.overcurrent_flag != overcurrent)
+    {
+        pgpe_opt_set_word(0, 0);
+        pgpe_opt_set_half(0, G_pgpe_wov_ocs.idd_current_thresh);
+        pgpe_opt_set_half(1, G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_ma - G_pgpe_wov_ocs.idd_current_thresh);
+        ppe_trace_op(PGPE_OPT_OCS_THRESH_TRANS, pgpe_opt_get());
+    }
+
+    G_pgpe_wov_ocs.droop_level = droop;
+    G_pgpe_wov_ocs.overcurrent_flag = overcurrent;
+
     if (droop == DROOP_LVL_OK)
     {
-        if(G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_ma  >= G_pgpe_wov_ocs.idd_current_thresh)
+        if (overcurrent == OCS_OVER_THRESH)
         {
-            G_pgpe_wov_ocs.overcurrent_flag = OCS_OVER_THRESH;
             //Update instrumentation counters
         }
         else
         {
-            G_pgpe_wov_ocs.overcurrent_flag = OCS_UNDER_THRESH;
-
             if (G_pgpe_wov_ocs.hysteresis_cnt > 0)
             {
                 G_pgpe_wov_ocs.hysteresis_cnt--;
@@ -166,49 +196,50 @@ void pgpe_wov_ocs_update_dirty()
 
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+        dirty = OCS_DIRTY_SAMPLE_TYPE_00;
     }
     else if (droop == DROOP_LVL_LIGHT)
     {
-        if(G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_ma  >= G_pgpe_wov_ocs.idd_current_thresh)
+        if (overcurrent == OCS_OVER_THRESH)
         {
-            G_pgpe_wov_ocs.overcurrent_flag = OCS_OVER_THRESH;
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
+            dirty = OCS_DIRTY_SAMPLE_TYPE_11;
             //Update instrumentation counters
             //Buffer trace
         }
         else
         {
-            G_pgpe_wov_ocs.overcurrent_flag = OCS_UNDER_THRESH;
             //\todo Make it configurable
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
             pgpe_wov_ocs_inc_tgt_pct();
+            dirty = OCS_DIRTY_SAMPLE_TYPE_00;
             //Update instrumentation counters
             //Buffer trace
         }
     }
     else
     {
-        if (G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_ma  >= G_pgpe_wov_ocs.idd_current_thresh)
+        if (overcurrent == OCS_OVER_THRESH)
         {
-            G_pgpe_wov_ocs.overcurrent_flag = OCS_OVER_THRESH;
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
+            dirty = OCS_DIRTY_SAMPLE_TYPE_11;
             //update instrumentation counters
             //Buffer trace
         }
         else
         {
-            G_pgpe_wov_ocs.overcurrent_flag = OCS_UNDER_THRESH;
             //\todo Make it configurable
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
             pgpe_wov_ocs_inc_tgt_pct();
+            dirty = OCS_DIRTY_SAMPLE_TYPE_10;
             //update instrumentation counters
             //Buffer trace
         }
@@ -218,7 +249,17 @@ void pgpe_wov_ocs_update_dirty()
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+        dirty = OCS_DIRTY_SAMPLE_TYPE_11;
     }
+
+    if (G_pgpe_wov_ocs.dirty != dirty)
+    {
+        pgpe_opt_set_word(0, 0);
+        pgpe_opt_set_byte(0, dirty);
+        ppe_trace_op(PGPE_OPT_OCS_DIRTY_TYPE , pgpe_opt_get());
+    }
+
+    G_pgpe_wov_ocs.dirty = dirty;
 }
 
 void pgpe_wov_ocs_dec_tgt_pct()

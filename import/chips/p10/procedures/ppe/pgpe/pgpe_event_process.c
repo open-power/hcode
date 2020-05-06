@@ -73,6 +73,14 @@ void pgpe_process_pstate_start_stop(void* eargs)
                 (args->pmcr_owner == PMCR_OWNER_OCC)  ||
                 (args->pmcr_owner == PMCR_OWNER_CHAR))
             {
+                dpll_mode_t dpll_mode = pgpe_dpll_get_mode();
+                pgpe_opt_set_word(0, 0);
+                pgpe_opt_set_byte(0, ((uint8_t)args->pmcr_owner << 2) | 0x1);
+                pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
+                pgpe_opt_set_byte(2, 0x1);
+                pgpe_opt_set_byte(3, (uint8_t)dpll_mode);
+                ppe_trace_op(PGPE_OPT_START_STOP, pgpe_opt_get());
+
                 //If pstate is NOT enabled, run pstate start protocol.
                 //Otherwise, only update owner
                 if(!pgpe_pstate_is_pstate_enabled())
@@ -81,6 +89,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
                 }
 
                 pgpe_process_set_pmcr_owner(args->pmcr_owner);
+
             }
             else
             {
@@ -101,6 +110,13 @@ void pgpe_process_pstate_start_stop(void* eargs)
         //If NOT immediate mode, then process this IPC. Otherwise, we ACK back with success
         if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
         {
+            dpll_mode_t dpll_mode = pgpe_dpll_get_mode();
+            pgpe_opt_set_word(0, 0);
+            pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
+            pgpe_opt_set_byte(2, 0x1);
+            pgpe_opt_set_byte(3, (uint8_t)dpll_mode);
+            ppe_trace_op(PGPE_OPT_START_STOP, pgpe_opt_get());
+
             //Only run Pstate Stop protocol if Pstate is enabled.
             //Otherwise, just ACK back
             if(pgpe_pstate_is_pstate_enabled())
@@ -118,6 +134,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
 
     pgpe_occ_send_ipc_ack_cmd(cmd);
     pgpe_event_tbl_set_status(EV_IPC_PSTATE_START_STOP, EVENT_INACTIVE);
+    ppe_trace_op(PGPE_OPT_START_STOP_ACK, 0);
 }
 
 void pgpe_process_pstate_start()
@@ -415,6 +432,12 @@ void pgpe_process_clip_update(void* eargs)
 
     PK_TRACE("PEP: Clip Updt");
 
+    pgpe_opt_set_word(0, 0);
+    pgpe_opt_set_byte(0, args->ps_val_clip_max);
+    pgpe_opt_set_byte(1, args->ps_val_clip_min);
+    ppe_trace_op(PGPE_OPT_CLIP_UPDT, pgpe_opt_get());
+
+
     if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
         pgpe_pstate_set(clip_min, args->ps_val_clip_max);
@@ -429,6 +452,7 @@ void pgpe_process_clip_update(void* eargs)
     {
         pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+        ppe_trace_op(PGPE_OPT_CLIP_UPDT_ACK, 0);
     }
 }
 
@@ -441,6 +465,11 @@ void pgpe_process_clip_update_w_ack(void* eargs)
 
     PK_TRACE("PEP: Clip Updt w/ack");
 
+    pgpe_opt_set_word(0, 0);
+    pgpe_opt_set_byte(0, args->ps_val_clip_max);
+    pgpe_opt_set_byte(1, args->ps_val_clip_min);
+    ppe_trace_op(PGPE_OPT_CLIP_UPDT, pgpe_opt_get());
+
     if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
         pgpe_pstate_set(clip_min, args->ps_val_clip_max);
@@ -452,6 +481,7 @@ void pgpe_process_clip_update_w_ack(void* eargs)
 
     pgpe_occ_send_ipc_ack_cmd(cmd);
     pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+    ppe_trace_op(PGPE_OPT_CLIP_UPDT_ACK, 0);
 }
 
 void pgpe_process_clip_update_post_actuate()
@@ -463,7 +493,7 @@ void pgpe_process_clip_update_post_actuate()
         PK_TRACE("PEP: PS Clips Bounded");
         pgpe_occ_send_ipc_ack_type_rc(EV_IPC_CLIP_UPDT, PGPE_RC_SUCCESS);
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
-
+        ppe_trace_op(PGPE_OPT_CLIP_UPDT_ACK, 0);
 
         //Update PMSR
         pgpe_pstate_pmsr_updt();
@@ -480,12 +510,17 @@ void pgpe_process_pmcr_request(void* eargs)
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
 
     uint32_t i = 0;
+    uint32_t req_pstate = ((args->pmcr >> 48) & 0x00FF);
+    pgpe_opt_set_word(0, 0);
+    pgpe_opt_set_byte(0, req_pstate);
+    pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
+    ppe_trace_op(PGPE_OPT_SET_PMCR, pgpe_opt_get());
 
     if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
     {
         for (i = 0; i < MAX_QUADS; i++)
         {
-            pgpe_pstate_set_ps_request(i, ((args->pmcr >> 48) & 0x00FF));
+            pgpe_pstate_set_ps_request(i, req_pstate);
         }
 
         pgpe_pstate_compute();
@@ -503,6 +538,8 @@ void pgpe_process_pcb_pmcr_request(void* eargs)
     PkMachineContext ctx;
     uint32_t q;
 
+    pgpe_opt_set_word(0, 0);
+    pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
     //This is make sure that PCB Type1 interrupt can't
     //come in between and overwrite the PCB args.
     pk_critical_section_enter(&ctx);
@@ -513,6 +550,9 @@ void pgpe_process_pcb_pmcr_request(void* eargs)
         {
             pgpe_pstate_set_ps_request(q, (args->ps_request[q] & 0xFF));
             args->ps_valid[q] = 0;
+            pgpe_opt_set_byte(0, q);
+            pgpe_opt_set_byte(2, args->ps_request[q]);
+            ppe_trace_op(PGPE_OPT_SET_PMCR, pgpe_opt_get());
         }
     }
 
@@ -532,6 +572,10 @@ void pgpe_process_wof_ctrl(void* eargs)
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
     uint32_t ack_now = 1;
 
+    pgpe_opt_set_word(0, 0);
+    pgpe_opt_set_byte(1, args->action);
+    ppe_trace_op(PGPE_OPT_WOF_CTRL, pgpe_opt_get());
+
     if(args->action == PGPE_ACTION_WOF_ON)
     {
         if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE) == 0)
@@ -548,8 +592,8 @@ void pgpe_process_wof_ctrl(void* eargs)
     else if(args->action == PGPE_ACTION_WOF_OFF)
     {
         pgpe_process_wof_disable();
-        pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
-        pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+        //pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
+        //pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
         pgpe_pstate_set(wof_status, WOF_STATUS_DISABLED);
     }
     else
@@ -561,6 +605,7 @@ void pgpe_process_wof_ctrl(void* eargs)
     {
         pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+        ppe_trace_op(PGPE_OPT_WOF_CTRL_ACK, 0);
     }
 }
 
@@ -588,6 +633,12 @@ void pgpe_process_wof_enable(ipcmsg_wof_control_t* args)
     pgpe_pstate_compute_vratio(pgpe_pstate_get(pstate_curr));
     pgpe_pstate_compute_vindex();
     pgpe_pstate_set(clip_wof, pgpe_pstate_get(vrt)->data[pgpe_pstate_get(vindex)]);
+    pgpe_opt_set_word(0, 0);
+    pgpe_opt_set_half(0, pgpe_pstate_get(vratio_inst));
+    pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
+    pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
+    ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
+
     PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_inst),
              pgpe_pstate_get(vindex),
              pgpe_pstate_get(clip_wof));
@@ -623,6 +674,7 @@ void pgpe_process_wof_ctrl_post_actuate()
         pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_CTRL, PGPE_RC_SUCCESS);
         pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
         pgpe_pstate_set(wof_status, WOF_STATUS_ENABLED);
+        ppe_trace_op(PGPE_OPT_WOF_CTRL_ACK, 0);
     }
 }
 
@@ -633,6 +685,10 @@ void pgpe_process_wof_vrt(void* eargs)
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
     ipcmsg_wof_vrt_t* args = (ipcmsg_wof_vrt_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
+
+    pgpe_opt_set_word(0, 0);
+    pgpe_opt_set_word(0, (uint32_t)args->idd_vrt_ptr);
+    ppe_trace_op(PGPE_OPT_WOF_VRT, pgpe_opt_get());
 
     if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE) == 0)
     {
@@ -653,6 +709,11 @@ void pgpe_process_wof_vrt(void* eargs)
             pgpe_pstate_compute_vratio(pgpe_pstate_get(pstate_curr));
             pgpe_pstate_compute_vindex();
             pgpe_pstate_set(clip_wof, args->idd_vrt_ptr->data[pgpe_pstate_get(vindex)]);
+            pgpe_opt_set_word(0, 0);
+            pgpe_opt_set_half(0, pgpe_pstate_get(vratio_inst));
+            pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
+            pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
+            ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
             PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_inst),
                      pgpe_pstate_get(vindex),
                      pgpe_pstate_get(clip_wof));
@@ -666,12 +727,14 @@ void pgpe_process_wof_vrt(void* eargs)
             //ACK back
             pgpe_occ_send_ipc_ack_cmd(cmd);
             pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+            ppe_trace_op(PGPE_OPT_WOF_VRT_ACK, 0);
         }
     }
     else
     {
         pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+        ppe_trace_op(PGPE_OPT_WOF_VRT_ACK, 0);
     }
 
 }
@@ -685,6 +748,7 @@ void pgpe_process_wof_vrt_post_actuate()
         PK_TRACE("PEP: WOF Clip Bounded");
         pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_VRT, PGPE_RC_SUCCESS);
         pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+        ppe_trace_op(PGPE_OPT_WOF_VRT_ACK, 0);
 
         if(pgpe_pstate_get(clip_wof) >= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE))
         {
@@ -744,6 +808,7 @@ void pgpe_process_safe_mode(void* args)
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE));
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_SAFE_MODE_ACTIVE));
     PK_TRACE("PEP: Process Safe Mode");
+    ppe_trace_op(PGPE_OPT_SAFE_MODE_DONE, 0);
 }
 
 void pgpe_process_occ_fault()

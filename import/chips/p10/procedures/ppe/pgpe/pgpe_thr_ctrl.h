@@ -37,6 +37,7 @@ enum PGPE_THR_CTRL_STATUS
 typedef struct pgpe_thr_ctrl
 {
     uint32_t status;
+    uint32_t ceff_ovr;
     uint32_t curr_ceff_ovr_idx;
 } pgpe_thr_ctrl_t;
 

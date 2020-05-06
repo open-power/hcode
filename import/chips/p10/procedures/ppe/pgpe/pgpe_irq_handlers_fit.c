@@ -107,6 +107,11 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
     {
         //Mark event
         pgpe_event_tbl_set_status(EV_SAFE_MODE, EVENT_PENDING);
+        pgpe_opt_set_byte(0, 0);
+        pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
+        pgpe_opt_set_byte(2, pgpe_pstate_get(pstate_safe));
+        pgpe_opt_set_byte(3, SAFE_MODE_FAULT_OCC);
+        ppe_trace_op(PGPE_OPT_SAFE_MODE, pgpe_opt_get());
     }
 }
 

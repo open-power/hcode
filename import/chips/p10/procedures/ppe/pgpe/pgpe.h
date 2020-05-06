@@ -45,6 +45,7 @@
     #include "p10_hcode_image_defines.H"
     #include "occ_hcode_errldefs.h"
     #include "errldefs.h"
+    #include "pgpe_optrace.h"
 #else
     #define MAX_QUADS   8
 #endif
