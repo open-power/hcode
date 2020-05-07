@@ -30,8 +30,8 @@ $(IMAGE)_LINK_SCRIPT=link.ld
 
 _PPE_TYPE=gpe
 
-$(IMAGE)_COMMONFLAGS = -DPK_TRACE_LEVEL=3
-$(IMAGE)_COMMONFLAGS = -DPK_TRACE_SZ=4096
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_LEVEL=3
+$(IMAGE)_COMMONFLAGS+= -DPK_TRACE_SZ=4096
 $(IMAGE)_COMMONFLAGS+= -DSIMICS_TUNING=0
 $(IMAGE)_COMMONFLAGS+= -DUSE_MC=1
 $(IMAGE)_COMMONFLAGS+= -DUSE_SIMICS_IO=0
@@ -70,6 +70,7 @@ PGPE_OBJS += ppe_trace_op.o
 #PGPE_OBJS += pk_trace_big.o
 #PGPE_OBJS += pk_trace_binary.o
 
+PGPE_OBJS += errl.o
 
 # Add source code directories for the above objects
 SCOM_SRCDIR=$(ROOTPATH)/chips/p10/common/include
@@ -84,7 +85,9 @@ $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/ppetrace)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(OCC_SRCDIR)/occlib)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/baselib)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(TRACE_SRCDIR))
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SHARED_LIBDIR))
 
+include $(PPE_SHARED_LIBDIR)/hcodelibfiles.mk
 include $(PGPE_SRCDIR)/pgpe_files.mk
 
 PGPE_OBJS+=$(PGPE_OBJECTS)
@@ -103,6 +106,7 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE), \
 	$(HWP_SRCDIR)/lib \
 	$(TRACE_SRCDIR)/ \
 	$(SCOM_SRCDIR)/ \
+	$(PPE_SHARED_LIBDIR)/ \
 	)
 
 $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
