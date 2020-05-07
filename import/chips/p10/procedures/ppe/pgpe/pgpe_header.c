@@ -58,6 +58,9 @@ void pgpe_header_init()
         occ_shared_data_indx++;
     }
 
+    // @TODO Discuss the implications of clearing Shared SRAM in the loop above
+    initErrLogging ((uint8_t) ERRL_SOURCE_PGPE, &(occ_shared_data->errlog_idx));
+
     //GPPB SRAM Address
     G_pgpe_header_data->g_pgpe_gpspbSramAddress = (uint32_t)(OCC_SRAM_PGPE_BASE_ADDR +
             G_pgpe_header_data->g_pgpe_hcodeLength);
