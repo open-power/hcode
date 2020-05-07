@@ -29,7 +29,7 @@
 
 extern QmeRecord G_qme_record;
 uint32_t G_IsSimics = 0; // extern declared in qme.h
-
+hcode_error_table_t G_qmeElogTable; // QME local Error Log Table
 
 void
 qme_attr_init()
@@ -128,6 +128,9 @@ main()
         PK_TRACE_INF("BREAK: Trap at QME Booted");
         asm volatile ("trap");
     }
+
+    // Initialize QME Eror Logging Table & framework
+    initErrLogging ((uint8_t) ERRL_SOURCE_QME, &G_qmeElogTable);
 
     PK_TRACE("Main: Configure Trace Timebase");
     uint32_t trace_timebase = PPE_TIMEBASE_HZ;
