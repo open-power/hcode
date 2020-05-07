@@ -22,26 +22,8 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-#  @file libcommonfiles.mk
-#
-#  @brief mk for libcommon.a object files
-#
-#  @page ChangeLogs Change Logs
-#  @section ofiles.mk
-#  @verbatim
-#
-#
-# Change Log ******************************************************************
-# Flag     Defect/Feature  User        Date         Description
-# ------   --------------  ----------  ------------ -----------
-#
-# @endverbatim
-#
-##########################################################################
-# INCLUDES
-##########################################################################
-
-#HCODE_C_SOURCES = \
+HCODE_C_SOURCES = \
+  errl.c
 	#p9_stop_recovery_trigger.c \
 	#p9_hcd_block_copy.c
 
