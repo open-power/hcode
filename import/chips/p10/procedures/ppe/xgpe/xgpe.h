@@ -37,6 +37,8 @@
 #include "ppe42_scom.h"
 #include "xgpe_header.h"
 #include "p10_hcode_image_defines.H"
+#include "hcode_occ_errldefs.h"
+#include "errldefs.h"
 
 
 #define EQ_CORE_MASK   0xF

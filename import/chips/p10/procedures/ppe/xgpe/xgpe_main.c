@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,6 +25,7 @@
 #include "xgpe.h"
 #include "ocb_register_addresses.h"
 #include "xgpe_irq_handlers.h"
+#include "pstate_pgpe_occ_api.h"
 
 uint32_t G_OCB_OISR0_CLR     = OCB_OISR0_CLR;
 uint32_t G_OCB_OIMR0_CLR     = OCB_OIMR0_CLR;
@@ -43,6 +44,9 @@ uint32_t G_OCB_OPITFSVRR     = OCB_OPITFSVRR;
 int main()
 {
     PK_TRACE("XGPE Booted");
+
+    HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*) OCC_SHARED_SRAM_ADDR_START;
+    initErrLogging ((uint8_t) ERRL_SOURCE_XGPE, &(occ_shared_data->errlog_idx));
 
     xgpe_header_init ();
     xgpe_init();
