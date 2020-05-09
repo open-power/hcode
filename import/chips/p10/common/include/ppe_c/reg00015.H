@@ -35,6 +35,7 @@ namespace ppe_c
 #endif
 
 
+//>> PREP_[CPMS_ACCR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_CPMS_ACCR(const fapi2::Target<K, M, V>& i_target)
 {
@@ -48,7 +49,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PREP_[CPMS_ACCR]
 
+//>> GET_[CPMS_ACCR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode GET_CPMS_ACCR(const fapi2::Target<K, M, V>& i_target, fapi2::buffer<uint64_t>& o_data)
 {
@@ -62,7 +65,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< GET_[CPMS_ACCR]
 
+//>> PUT_[CPMS_ACCR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PUT_CPMS_ACCR(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
 {
@@ -76,8 +81,10 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PUT_[CPMS_ACCR]
 
 
+//>> SET_[CPMS_ACCR_COUNT_MODE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_MODE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -88,11 +95,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_MODE(fapi2::buffer<ui
            CPMS_ACCR_COUNT_MODE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_ACCR_COUNT_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_COUNT_MODE]
 
+//>> SET_[CPMS_ACCR_COUNT_MODE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_MODE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -103,11 +112,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_MODE(const uint64_t i
            CPMS_ACCR_COUNT_MODE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_ACCR_COUNT_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_COUNT_MODE]
 
+//>> GET_[CPMS_ACCR_COUNT_MODE]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_COUNT_MODE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -118,11 +129,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_COUNT_MODE(fapi2::buffer<ui
            CPMS_ACCR_COUNT_MODE_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_ACCR_COUNT_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_COUNT_MODE]
 
+//>> SET_[CPMS_ACCR_COUNT_TYPE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_TYPE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -133,11 +146,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_TYPE(fapi2::buffer<ui
            CPMS_ACCR_COUNT_TYPE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_ACCR_COUNT_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_COUNT_TYPE]
 
+//>> SET_[CPMS_ACCR_COUNT_TYPE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_TYPE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -148,11 +163,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_TYPE(const uint64_t i
            CPMS_ACCR_COUNT_TYPE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_ACCR_COUNT_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_COUNT_TYPE]
 
+//>> GET_[CPMS_ACCR_COUNT_TYPE]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_COUNT_TYPE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -163,11 +180,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_COUNT_TYPE(fapi2::buffer<ui
            CPMS_ACCR_COUNT_TYPE_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_ACCR_COUNT_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_COUNT_TYPE]
 
+//>> SET_[CPMS_ACCR_COUNT_ENABLE_SEL]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ENABLE_SEL(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -178,11 +197,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ENABLE_SEL(fapi2::buf
            CPMS_ACCR_COUNT_ENABLE_SEL_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_ENABLE_SEL chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_ACCR_COUNT_ENABLE_SEL chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_COUNT_ENABLE_SEL]
 
+//>> SET_[CPMS_ACCR_COUNT_ENABLE_SEL]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ENABLE_SEL(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -193,11 +214,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ENABLE_SEL(const uint
            CPMS_ACCR_COUNT_ENABLE_SEL_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_ENABLE_SEL chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_ACCR_COUNT_ENABLE_SEL chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_COUNT_ENABLE_SEL]
 
+//>> GET_[CPMS_ACCR_COUNT_ENABLE_SEL]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_COUNT_ENABLE_SEL(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -208,11 +231,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_COUNT_ENABLE_SEL(fapi2::buf
            CPMS_ACCR_COUNT_ENABLE_SEL_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_ENABLE_SEL chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_ACCR_COUNT_ENABLE_SEL chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_COUNT_ENABLE_SEL]
 
+//>> SET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -223,11 +248,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2::
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 
+//>> SET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_INVERT_COUNT_ENABLE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -238,11 +265,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_INVERT_COUNT_ENABLE(const u
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 
+//>> SET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -251,11 +280,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2::
     return o_data.setBit<CPMS_ACCR_INVERT_COUNT_ENABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:ppe_c Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 
+//>> CLEAR_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -264,11 +295,13 @@ static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2
     return o_data.clearBit<CPMS_ACCR_INVERT_COUNT_ENABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:ppe_c Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< CLEAR_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 
+//>> GET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -279,11 +312,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2::
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 
+//>> GET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 static inline bool GET_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
@@ -292,11 +327,13 @@ static inline bool GET_CPMS_ACCR_INVERT_COUNT_ENABLE(fapi2::buffer<uint64_t>& i_
     return i_data.getBit<CPMS_ACCR_INVERT_COUNT_ENABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:ppe_c Invalid dial access CPMS_ACCR_INVERT_COUNT_ENABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_INVERT_COUNT_ENABLE]
 
+//>> SET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -307,11 +344,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi2:
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 
+//>> SET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -322,11 +361,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(const 
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 
+//>> SET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -335,11 +376,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi2:
     return o_data.setBit<CPMS_ACCR_COUNT_ALWAYS_SAMPLED>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:ppe_c Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 
+//>> CLEAR_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -348,11 +391,13 @@ static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi
     return o_data.clearBit<CPMS_ACCR_COUNT_ALWAYS_SAMPLED>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:ppe_c Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< CLEAR_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 
+//>> GET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -363,11 +408,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi2:
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 
+//>> GET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 static inline bool GET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
@@ -376,11 +423,13 @@ static inline bool GET_CPMS_ACCR_COUNT_ALWAYS_SAMPLED(fapi2::buffer<uint64_t>& i
     return i_data.getBit<CPMS_ACCR_COUNT_ALWAYS_SAMPLED>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:ppe_c Invalid dial access CPMS_ACCR_COUNT_ALWAYS_SAMPLED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_COUNT_ALWAYS_SAMPLED]
 
+//>> SET_[CPMS_ACCR_HI_THRESHOLD]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_HI_THRESHOLD(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -391,11 +440,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_HI_THRESHOLD(fapi2::buffer<
            CPMS_ACCR_HI_THRESHOLD_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_HI_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_ACCR_HI_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_HI_THRESHOLD]
 
+//>> SET_[CPMS_ACCR_HI_THRESHOLD]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_HI_THRESHOLD(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -406,11 +457,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_HI_THRESHOLD(const uint64_t
            CPMS_ACCR_HI_THRESHOLD_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_HI_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_ACCR_HI_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_HI_THRESHOLD]
 
+//>> GET_[CPMS_ACCR_HI_THRESHOLD]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_HI_THRESHOLD(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -421,11 +474,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_HI_THRESHOLD(fapi2::buffer<
            CPMS_ACCR_HI_THRESHOLD_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_HI_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_ACCR_HI_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_HI_THRESHOLD]
 
+//>> SET_[CPMS_ACCR_LO_THRESHOLD]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_LO_THRESHOLD(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -436,11 +491,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_LO_THRESHOLD(fapi2::buffer<
            CPMS_ACCR_LO_THRESHOLD_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_LO_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_ACCR_LO_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_LO_THRESHOLD]
 
+//>> SET_[CPMS_ACCR_LO_THRESHOLD]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_LO_THRESHOLD(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -451,11 +508,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_LO_THRESHOLD(const uint64_t
            CPMS_ACCR_LO_THRESHOLD_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_LO_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_ACCR_LO_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_LO_THRESHOLD]
 
+//>> GET_[CPMS_ACCR_LO_THRESHOLD]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_LO_THRESHOLD(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -466,11 +525,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_LO_THRESHOLD(fapi2::buffer<
            CPMS_ACCR_LO_THRESHOLD_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_LO_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_ACCR_LO_THRESHOLD chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_LO_THRESHOLD]
 
+//>> SET_[CPMS_ACCR_SPARE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_SPARE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -481,11 +542,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_SPARE(fapi2::buffer<uint64_
            CPMS_ACCR_SPARE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_SPARE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_ACCR_SPARE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_SPARE]
 
+//>> SET_[CPMS_ACCR_SPARE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_SPARE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -496,11 +559,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_ACCR_SPARE(const uint64_t i_data
            CPMS_ACCR_SPARE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_SPARE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_ACCR_SPARE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_ACCR_SPARE]
 
+//>> GET_[CPMS_ACCR_SPARE]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_SPARE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -511,11 +576,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_ACCR_SPARE(fapi2::buffer<uint64_
            CPMS_ACCR_SPARE_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_ACCR_SPARE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_ACCR_SPARE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_ACCR_SPARE]
 
+//>> PREP_[CPMS_MMAR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_CPMS_MMAR(const fapi2::Target<K, M, V>& i_target)
 {
@@ -529,7 +596,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PREP_[CPMS_MMAR]
 
+//>> GET_[CPMS_MMAR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode GET_CPMS_MMAR(const fapi2::Target<K, M, V>& i_target, fapi2::buffer<uint64_t>& o_data)
 {
@@ -543,7 +612,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< GET_[CPMS_MMAR]
 
+//>> PUT_[CPMS_MMAR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PUT_CPMS_MMAR(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
 {
@@ -557,7 +628,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PUT_[CPMS_MMAR]
 
+//>> PREP_[CPMS_MMAR_PPE2]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_CPMS_MMAR_PPE2(const fapi2::Target<K, M, V>& i_target)
 {
@@ -571,7 +644,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PREP_[CPMS_MMAR_PPE2]
 
+//>> GET_[CPMS_MMAR_PPE2]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode GET_CPMS_MMAR_PPE2(const fapi2::Target<K, M, V>& i_target,
         fapi2::buffer<uint64_t>& o_data)
@@ -586,7 +661,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< GET_[CPMS_MMAR_PPE2]
 
+//>> PUT_[CPMS_MMAR_PPE2]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PUT_CPMS_MMAR_PPE2(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
 {
@@ -600,7 +677,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PUT_[CPMS_MMAR_PPE2]
 
+//>> PREP_[CPMS_MMAR_WO_CLEAR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_CPMS_MMAR_WO_CLEAR(const fapi2::Target<K, M, V>& i_target)
 {
@@ -614,7 +693,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PREP_[CPMS_MMAR_WO_CLEAR]
 
+//>> GET_[CPMS_MMAR_WO_CLEAR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode GET_CPMS_MMAR_WO_CLEAR(const fapi2::Target<K, M, V>& i_target,
         fapi2::buffer<uint64_t>& o_data)
@@ -629,7 +710,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< GET_[CPMS_MMAR_WO_CLEAR]
 
+//>> PUT_[CPMS_MMAR_WO_CLEAR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PUT_CPMS_MMAR_WO_CLEAR(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
 {
@@ -643,8 +726,10 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PUT_[CPMS_MMAR_WO_CLEAR]
 
 
+//>> SET_[CPMS_MMAR_AVAILABLE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_AVAILABLE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -655,11 +740,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_AVAILABLE(fapi2::buffer<uin
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_AVAILABLE]
 
+//>> SET_[CPMS_MMAR_AVAILABLE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_AVAILABLE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -670,11 +757,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_AVAILABLE(const uint64_t i_
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_AVAILABLE]
 
+//>> SET_[CPMS_MMAR_AVAILABLE]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_AVAILABLE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -683,11 +772,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_AVAILABLE(fapi2::buffer<uin
     return o_data.setBit<CPMS_MMAR_AVAILABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:ppe_c Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_AVAILABLE]
 
+//>> CLEAR_[CPMS_MMAR_AVAILABLE]
 static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_MMAR_AVAILABLE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -696,11 +787,13 @@ static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_MMAR_AVAILABLE(fapi2::buffer<u
     return o_data.clearBit<CPMS_MMAR_AVAILABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:ppe_c Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< CLEAR_[CPMS_MMAR_AVAILABLE]
 
+//>> GET_[CPMS_MMAR_AVAILABLE]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_AVAILABLE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -711,11 +804,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_AVAILABLE(fapi2::buffer<uin
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_MMAR_AVAILABLE]
 
+//>> GET_[CPMS_MMAR_AVAILABLE]
 static inline bool GET_CPMS_MMAR_AVAILABLE(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
@@ -724,11 +819,13 @@ static inline bool GET_CPMS_MMAR_AVAILABLE(fapi2::buffer<uint64_t>& i_data)
     return i_data.getBit<CPMS_MMAR_AVAILABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:ppe_c Invalid dial access CPMS_MMAR_AVAILABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_MMAR_AVAILABLE]
 
+//>> SET_[CPMS_MMAR_FUNC_RESET]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_FUNC_RESET(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -739,11 +836,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_FUNC_RESET(fapi2::buffer<ui
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_FUNC_RESET]
 
+//>> SET_[CPMS_MMAR_FUNC_RESET]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_FUNC_RESET(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -754,11 +853,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_FUNC_RESET(const uint64_t i
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_FUNC_RESET]
 
+//>> SET_[CPMS_MMAR_FUNC_RESET]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_FUNC_RESET(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -767,11 +868,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_FUNC_RESET(fapi2::buffer<ui
     return o_data.setBit<CPMS_MMAR_FUNC_RESET>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:ppe_c Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_FUNC_RESET]
 
+//>> CLEAR_[CPMS_MMAR_FUNC_RESET]
 static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_MMAR_FUNC_RESET(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -780,11 +883,13 @@ static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_MMAR_FUNC_RESET(fapi2::buffer<
     return o_data.clearBit<CPMS_MMAR_FUNC_RESET>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:ppe_c Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< CLEAR_[CPMS_MMAR_FUNC_RESET]
 
+//>> GET_[CPMS_MMAR_FUNC_RESET]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_FUNC_RESET(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -795,11 +900,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_FUNC_RESET(fapi2::buffer<ui
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_MMAR_FUNC_RESET]
 
+//>> GET_[CPMS_MMAR_FUNC_RESET]
 static inline bool GET_CPMS_MMAR_FUNC_RESET(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
@@ -808,11 +915,13 @@ static inline bool GET_CPMS_MMAR_FUNC_RESET(fapi2::buffer<uint64_t>& i_data)
     return i_data.getBit<CPMS_MMAR_FUNC_RESET>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:ppe_c Invalid dial access CPMS_MMAR_FUNC_RESET chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_MMAR_FUNC_RESET]
 
+//>> SET_[CPMS_MMAR_LIMIT]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -823,11 +932,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT(fapi2::buffer<uint64_
            CPMS_MMAR_LIMIT_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_LIMIT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_MMAR_LIMIT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_LIMIT]
 
+//>> SET_[CPMS_MMAR_LIMIT]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -838,11 +949,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT(const uint64_t i_data
            CPMS_MMAR_LIMIT_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_LIMIT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_MMAR_LIMIT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_LIMIT]
 
+//>> GET_[CPMS_MMAR_LIMIT]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_LIMIT(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -853,11 +966,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_LIMIT(fapi2::buffer<uint64_
            CPMS_MMAR_LIMIT_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_LIMIT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_MMAR_LIMIT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_MMAR_LIMIT]
 
+//>> SET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -868,11 +983,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2::
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 
+//>> SET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT_UPDATE_SELECT(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -883,11 +1000,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT_UPDATE_SELECT(const u
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 
+//>> SET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -896,11 +1015,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2::
     return o_data.setBit<CPMS_MMAR_LIMIT_UPDATE_SELECT>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:ppe_c Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 
+//>> CLEAR_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -909,11 +1030,13 @@ static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2
     return o_data.clearBit<CPMS_MMAR_LIMIT_UPDATE_SELECT>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:ppe_c Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< CLEAR_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 
+//>> GET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -924,11 +1047,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2::
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 
+//>> GET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 static inline bool GET_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
@@ -937,11 +1062,13 @@ static inline bool GET_CPMS_MMAR_LIMIT_UPDATE_SELECT(fapi2::buffer<uint64_t>& i_
     return i_data.getBit<CPMS_MMAR_LIMIT_UPDATE_SELECT>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:ppe_c Invalid dial access CPMS_MMAR_LIMIT_UPDATE_SELECT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_MMAR_LIMIT_UPDATE_SELECT]
 
+//>> SET_[CPMS_MMAR_DIRTY]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_DIRTY(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -952,11 +1079,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_DIRTY(fapi2::buffer<uint64_
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_DIRTY]
 
+//>> SET_[CPMS_MMAR_DIRTY]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_DIRTY(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -967,11 +1096,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_DIRTY(const uint64_t i_data
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_DIRTY]
 
+//>> SET_[CPMS_MMAR_DIRTY]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_DIRTY(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -980,11 +1111,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_MMAR_DIRTY(fapi2::buffer<uint64_
     return o_data.setBit<CPMS_MMAR_DIRTY>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:ppe_c Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_MMAR_DIRTY]
 
+//>> CLEAR_[CPMS_MMAR_DIRTY]
 static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_MMAR_DIRTY(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -993,11 +1126,13 @@ static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_MMAR_DIRTY(fapi2::buffer<uint6
     return o_data.clearBit<CPMS_MMAR_DIRTY>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:ppe_c Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< CLEAR_[CPMS_MMAR_DIRTY]
 
+//>> GET_[CPMS_MMAR_DIRTY]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_DIRTY(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -1008,11 +1143,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_MMAR_DIRTY(fapi2::buffer<uint64_
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_MMAR_DIRTY]
 
+//>> GET_[CPMS_MMAR_DIRTY]
 static inline bool GET_CPMS_MMAR_DIRTY(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
@@ -1021,11 +1158,13 @@ static inline bool GET_CPMS_MMAR_DIRTY(fapi2::buffer<uint64_t>& i_data)
     return i_data.getBit<CPMS_MMAR_DIRTY>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:ppe_c Invalid dial access CPMS_MMAR_DIRTY chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_MMAR_DIRTY]
 
+//>> PREP_[CPMS_SDSR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_CPMS_SDSR(const fapi2::Target<K, M, V>& i_target)
 {
@@ -1039,7 +1178,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PREP_[CPMS_SDSR]
 
+//>> GET_[CPMS_SDSR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode GET_CPMS_SDSR(const fapi2::Target<K, M, V>& i_target, fapi2::buffer<uint64_t>& o_data)
 {
@@ -1053,7 +1194,9 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< GET_[CPMS_SDSR]
 
+//>> PUT_[CPMS_SDSR]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PUT_CPMS_SDSR(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
 {
@@ -1067,8 +1210,10 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
+//<< PUT_[CPMS_SDSR]
 
 
+//>> SET_[CPMS_SDSR_DDS_DATA]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_DATA(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -1079,11 +1224,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_DATA(fapi2::buffer<uint
            CPMS_SDSR_DDS_DATA_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_DDS_DATA chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_SDSR_DDS_DATA chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_SDSR_DDS_DATA]
 
+//>> SET_[CPMS_SDSR_DDS_DATA]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_DATA(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -1094,11 +1241,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_DATA(const uint64_t i_d
            CPMS_SDSR_DDS_DATA_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_DDS_DATA chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_SDSR_DDS_DATA chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_SDSR_DDS_DATA]
 
+//>> GET_[CPMS_SDSR_DDS_DATA]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_SDSR_DDS_DATA(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -1109,11 +1258,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_SDSR_DDS_DATA(fapi2::buffer<uint
            CPMS_SDSR_DDS_DATA_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_DDS_DATA chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_SDSR_DDS_DATA chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_SDSR_DDS_DATA]
 
+//>> SET_[CPMS_SDSR_DDS_MIN]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_MIN(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -1124,11 +1275,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_MIN(fapi2::buffer<uint6
            CPMS_SDSR_DDS_MIN_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_DDS_MIN chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_SDSR_DDS_MIN chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_SDSR_DDS_MIN]
 
+//>> SET_[CPMS_SDSR_DDS_MIN]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_MIN(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -1139,11 +1292,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_MIN(const uint64_t i_da
            CPMS_SDSR_DDS_MIN_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_DDS_MIN chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_SDSR_DDS_MIN chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_SDSR_DDS_MIN]
 
+//>> GET_[CPMS_SDSR_DDS_MIN]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_SDSR_DDS_MIN(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -1154,11 +1309,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_SDSR_DDS_MIN(fapi2::buffer<uint6
            CPMS_SDSR_DDS_MIN_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_DDS_MIN chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_SDSR_DDS_MIN chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_SDSR_DDS_MIN]
 
+//>> SET_[CPMS_SDSR_DDS_MAX]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_MAX(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -1169,11 +1326,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_MAX(fapi2::buffer<uint6
            CPMS_SDSR_DDS_MAX_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_DDS_MAX chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_SDSR_DDS_MAX chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_SDSR_DDS_MAX]
 
+//>> SET_[CPMS_SDSR_DDS_MAX]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_MAX(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -1184,11 +1343,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_DDS_MAX(const uint64_t i_da
            CPMS_SDSR_DDS_MAX_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_DDS_MAX chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_SDSR_DDS_MAX chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_SDSR_DDS_MAX]
 
+//>> GET_[CPMS_SDSR_DDS_MAX]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_SDSR_DDS_MAX(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -1199,11 +1360,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_SDSR_DDS_MAX(fapi2::buffer<uint6
            CPMS_SDSR_DDS_MAX_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_DDS_MAX chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_SDSR_DDS_MAX chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_SDSR_DDS_MAX]
 
+//>> SET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -1214,11 +1377,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(fap
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 
+//>> SET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
@@ -1229,11 +1394,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(con
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 
+//>> SET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -1242,11 +1409,13 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(fap
     return o_data.setBit<CPMS_SDSR_SAMPLE_DISABLE_OCCURRED>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:ppe_c Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< SET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 
+//>> CLEAR_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -1255,11 +1424,13 @@ static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(f
     return o_data.clearBit<CPMS_SDSR_SAMPLE_DISABLE_OCCURRED>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:ppe_c Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
+//<< CLEAR_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 
+//>> GET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 static inline fapi2::buffer<uint64_t>& GET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
@@ -1270,11 +1441,13 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(fap
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 
+//>> GET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 static inline bool GET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
@@ -1283,11 +1456,14 @@ static inline bool GET_CPMS_SDSR_SAMPLE_DISABLE_OCCURRED(fapi2::buffer<uint64_t>
     return i_data.getBit<CPMS_SDSR_SAMPLE_DISABLE_OCCURRED>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:ppe_c Invalid dial access CPMS_SDSR_SAMPLE_DISABLE_OCCURRED chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
+//<< GET_[CPMS_SDSR_SAMPLE_DISABLE_OCCURRED]
 
+
+//>>THE END<<
 
 #ifndef __PPE_HCODE__
 }

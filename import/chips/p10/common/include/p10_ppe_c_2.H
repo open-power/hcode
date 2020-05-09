@@ -39,6 +39,7 @@ namespace ppe_c
 #endif
 
 
+//>> [CPMS_DTIR]
 static const uint32_t CPMS_DTIR = 0xc000e800ull;
 
 static const uint32_t CPMS_DTIR_VALID = 0;
@@ -50,8 +51,10 @@ static const uint32_t CPMS_DTIR_VALUE = 8;
 static const uint32_t CPMS_DTIR_VALUE_LEN = 8;
 static const uint32_t CPMS_DTIR_WINDOW_SEL = 17;
 static const uint32_t CPMS_DTIR_WINDOW_SEL_LEN = 3;
+//<< [CPMS_DTIR]
 // ppe_c/reg00002.H
 
+//>> [CPMS_FMMR]
 static const uint32_t CPMS_FMMR_RW = 0xc000e4c0ull;
 static const uint32_t CPMS_FMMR_WO_CLEAR = 0xc000e4f0ull;
 static const uint32_t CPMS_FMMR_WO_OR = 0xc000e4e0ull;
@@ -102,7 +105,10 @@ static const uint32_t CPMS_FMMR_SMALL_RESPONSE_DISABLE = 59;
 static const uint32_t CPMS_FMMR_SLOPE_REPORT_SEL = 60;
 static const uint32_t CPMS_FMMR_OVERRIDE_VECTOR_LIMIT = 61;
 static const uint32_t CPMS_FMMR_OVERRIDE_VECTOR_LIMIT_LEN = 3;
+//<< [CPMS_FMMR]
 // ppe_c/reg00002.H
+
+//>>THE END<<
 
 #ifndef __PPE_HCODE__
 }

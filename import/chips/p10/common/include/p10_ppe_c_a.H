@@ -39,6 +39,7 @@ namespace ppe_c
 #endif
 
 
+//>> [CPMS_DPMR]
 static const uint32_t CPMS_DPMR = 0xc000ea00ull;
 
 static const uint32_t CPMS_DPMR_POWER_PROXY_ENABLE = 0;
@@ -49,7 +50,10 @@ static const uint32_t CPMS_DPMR_EMPATH_MODE_SEL = 4;
 static const uint32_t CPMS_DPMR_DDP_DDS_ADJUST_EN = 5;
 static const uint32_t CPMS_DPMR_SPARE = 6;
 static const uint32_t CPMS_DPMR_SPARE_LEN = 2;
+//<< [CPMS_DPMR]
 // ppe_c/reg00010.H
+
+//>>THE END<<
 
 #ifndef __PPE_HCODE__
 }
