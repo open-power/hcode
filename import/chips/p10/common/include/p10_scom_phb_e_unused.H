@@ -1,0 +1,68 @@
+/* IBM_PROLOG_BEGIN_TAG                                                   */
+/* This is an automatically generated prolog.                             */
+/*                                                                        */
+/* $Source: import/chips/p10/common/include/p10_scom_phb_e_unused.H $     */
+/*                                                                        */
+/* OpenPOWER EKB Project                                                  */
+/*                                                                        */
+/* COPYRIGHT 2019,2020                                                    */
+/* [+] International Business Machines Corp.                              */
+/*                                                                        */
+/*                                                                        */
+/* Licensed under the Apache License, Version 2.0 (the "License");        */
+/* you may not use this file except in compliance with the License.       */
+/* You may obtain a copy of the License at                                */
+/*                                                                        */
+/*     http://www.apache.org/licenses/LICENSE-2.0                         */
+/*                                                                        */
+/* Unless required by applicable law or agreed to in writing, software    */
+/* distributed under the License is distributed on an "AS IS" BASIS,      */
+/* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or        */
+/* implied. See the License for the specific language governing           */
+/* permissions and limitations under the License.                         */
+/*                                                                        */
+/* IBM_PROLOG_END_TAG                                                     */
+
+#ifndef __PPE_HCODE__
+    #include "proc_scomt.H"
+#endif
+
+#ifndef __p10_scom_phb_e_H_UNUSED__
+#define __p10_scom_phb_e_H_UNUSED__
+
+
+#ifndef __PPE_HCODE__
+namespace scomt
+{
+namespace phb
+{
+#endif
+
+
+//>> [REGS_INTBAR_REG]
+static const uint64_t REGS_INTBAR_REG = 0x03011853ull;
+
+static const uint32_t REGS_INTBAR_REG_PE_INT_BAR = 0;
+static const uint32_t REGS_INTBAR_REG_PE_INT_BAR_LEN = 28;
+//<< [REGS_INTBAR_REG]
+// phb/reg00014.H
+
+//>> [RSB_SCOM_SSR_PHB5_UVIAR]
+static const uint64_t RSB_SCOM_SSR_PHB5_UVIAR = 0x08010902ull;
+
+static const uint32_t RSB_SCOM_SSR_PHB5_UVIAR_REQ_ADDR_VLD = 0;
+static const uint32_t RSB_SCOM_SSR_PHB5_UVIAR_REQ_4B = 1;
+static const uint32_t RSB_SCOM_SSR_PHB5_UVIAR_AUTO_INC = 2;
+static const uint32_t RSB_SCOM_SSR_PHB5_UVIAR_REQ_ADDR_VALUE = 51;
+static const uint32_t RSB_SCOM_SSR_PHB5_UVIAR_REQ_ADDR_VALUE_LEN = 11;
+//<< [RSB_SCOM_SSR_PHB5_UVIAR]
+// phb/reg00014.H
+
+//>>THE END<<
+
+#ifndef __PPE_HCODE__
+}
+}
+#include "phb/reg00014_unused.H"
+#endif
+#endif
