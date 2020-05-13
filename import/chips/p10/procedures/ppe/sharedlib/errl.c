@@ -100,7 +100,7 @@ void initErrLogging ( const uint8_t              i_errlSource,
             // For XGPE and PGPE, the Eror Log Index Table is common
             // Each QME has its own copy of the Error Log Index Table
             i_pErrTable->dw0.fields.total_log_slots = MAX_ELOG_ENTRIES;
-            i_pErrTable->dw0.fields.magic_word = HCODE_ELOG_TABLE_MAGIC_WORD;
+            i_pErrTable->dw0.fields.magic_word = HCODE_ELOG_TABLE_MAGIC_NUMBER;
 
             // Init the table pointer of each GPE
             G_elogTable = i_pErrTable->elog;
@@ -469,10 +469,10 @@ errlHndl_t createErrl(
         l_rc->iv_userDetails.iv_ppeId = G_errlConfigData.ppeId;
 
         // Default other unused fields
-        l_rc->iv_reserved1 = 0;
-        l_rc->iv_userDetails.iv_reserved4 = 0; // reserved by def
-        l_rc->iv_userDetails.iv_reserved5 = 0; // reuse OCC State
-        l_rc->iv_userDetails.iv_reserved7 = 0; // Alignment
+        l_rc->iv_reserved3 = 0;
+        l_rc->iv_userDetails.iv_reserved1 = 0; // reserved by def
+        l_rc->iv_userDetails.iv_reserved2 = 0; // reuse OCC State
+        l_rc->iv_userDetails.iv_reserved4 = 0; // Alignment
     }
 
     PK_TRACE_INF ("<< createErrl EID: 0x%08X",

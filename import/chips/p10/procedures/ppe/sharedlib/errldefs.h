@@ -26,11 +26,18 @@
 #define ERRLDEFS_H
 
 #include <stdint.h>
-#include "hcode_occ_errldefs.h"
+#include "hcode_errl_table.h"
+#include "occ_hcode_errldefs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Max size of a HCode error log (1024 bytes)
+#define ERRL_MAX_ENTRY_SZ 0x400
+
+// Min size (bytes) of user data that can be added, excluding the header
+#define ERRL_USR_DATA_SZ_MIN 128
 
 // Size of traces to add to ERRL_USR_DTL_TRACE_DATA
 #define ERRL_TRACE_DATA_SZ_PGPE 0x200

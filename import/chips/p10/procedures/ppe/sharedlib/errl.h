@@ -26,7 +26,7 @@
 #define ERRL_H
 
 #include <stdbool.h>
-#include "hcode_occ_errldefs.h"
+#include "occ_hcode_errldefs.h"
 
 #ifdef __cplusplus
 extern "C" {

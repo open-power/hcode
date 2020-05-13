@@ -36,7 +36,7 @@
 #define __PSTATES_PGPE_OCC_API_H__
 
 #include <pstates_common.H>
-#include "hcode_occ_errldefs.h"
+#include "hcode_errl_table.h"
 
 #ifdef __cplusplus
 extern "C" {
