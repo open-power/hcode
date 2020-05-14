@@ -63,7 +63,7 @@ XGPE_OBJS += ipc_init.o
 XGPE_OBJS += pk_trace_core.o
 XGPE_OBJS += pk_trace_big.o
 XGPE_OBJS += pk_trace_binary.o
-XGPE_OBJS+=$(HCODE_OBJECTS)
+XGPE_OBJS += errl.o
 
 # Add source code directories for the above objects
 PPE_SRCDIR=$(ROOTPATH)/chips/p10/common/ppe
