@@ -165,20 +165,15 @@ void pgpe_pstate_actuate_step()
     G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
     G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
 
-
-    //\\todo all these magic constants 700, 20 should come attributes. However, currently
-    //this is how they are specified in the Hcode HWP spec
-    if (G_pgpe_pstate.vdd_next_ext >= 700)
+    if (G_pgpe_pstate.vdd_next_ext >= pgpe_gppb_get(vcs_floor_mv))
     {
-        if (G_pgpe_pstate.vcs_next_ext < (G_pgpe_pstate.vdd_next_ext + 20))
-        {
-            PK_TRACE("ACT: Adjusting VCS against VDD");
-            G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vdd_next_ext + 20;
-        }
+        PK_TRACE("ACT: Adjusting VCS against VDD");
+        G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv);
     }
     else
     {
-        G_pgpe_pstate.vcs_next_ext = (G_pgpe_pstate.vdd_next_ext + 20 > 700) ? (G_pgpe_pstate.vdd_next_ext + 20) : 700;
+        G_pgpe_pstate.vcs_next_ext = ((G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv)) > pgpe_gppb_get(
+                                          vcs_floor_mv)) ? (G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv)) : pgpe_gppb_get(vcs_floor_mv);
     }
 
     PK_TRACE("ACT: vdd_del=0x%x, vdd_next=0x%x,ps_next=0x%x ,vcs_next=0x%x", vdd_delta, G_pgpe_pstate.vdd_next,
