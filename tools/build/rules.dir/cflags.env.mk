@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2019
+# COPYRIGHT 2015,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -30,3 +30,5 @@ ifeq ( $(UNAME), Linux )
 LOCALCOMMONFLAGS += -m64
 endif
 CFLAGS += -O0
+#Uncomment bellow to enable scom checking
+#LOCALCOMMONFLAGS += -DSCOM_CHECKING
