@@ -58,6 +58,7 @@ QME_OBJS += std_init.o
 # component objects at $(QME_SCRDIR)
 QME_OBJS += iota_uih_priority_table.o
 QME_OBJS += iota_unified_irq_handler.o
+QME_OBJS += errl.o
 
 REGFILES_DIR=$(PMLIB_INCDIR)/registers
 
@@ -125,9 +126,10 @@ $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),$(RING_INCDIR))
 ##################################
 # PPE Shared Objects
 ##################################
-#include $(PPE_SHARED_LIBDIR)/hcodelibfiles.mk
-#QME_OBJS+= $(PPE_SHARED_OBJECTS)
+include $(PPE_SHARED_LIBDIR)/hcodelibfiles.mk
+###QME_OBJS+= $(PPE_SHARED_OBJECTS) ## fails rhel7 op-build
 $(call ADD_PPEIMAGE_INCDIR,$(IMAGE),$(PPE_SHARED_LIBDIR)) 
+$(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SHARED_LIBDIR)) 
 
 ####################################
 # QME Objects
