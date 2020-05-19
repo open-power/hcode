@@ -89,14 +89,6 @@ static const uint32_t SCOMFIR_MCWATACT_RESERVED_36_47_LEN = 16;
 //<< [SCOMFIR_MCWATACT]
 // mc/reg00012.H
 
-//>> [CPLT_MASK0]
-static const uint64_t CPLT_MASK0 = 0x0c000101ull;
-
-static const uint32_t CPLT_MASK0_ITR_MASK = 0;
-static const uint32_t CPLT_MASK0_ITR_MASK_LEN = 32;
-//<< [CPLT_MASK0]
-// mc/reg00012.H
-
 //>> [CTRL_PROTECT_MODE_REG]
 static const uint64_t CTRL_PROTECT_MODE_REG = 0x0c0003feull;
 

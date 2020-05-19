@@ -159,19 +159,6 @@ static const uint32_t QMETRA0_TR1_CONFIG_MASTER_CLOCK_ENABLE_INT = 23;
 //<< [QMETRA0_TR1_CONFIG]
 // eq/reg00014.H
 
-//>> [QME_PCBSII]
-static const uint64_t QME_PCBSII = 0x200e0038ull;
-
-static const uint32_t QME_PCBSII_PCB_REQ_ACK = 0;
-static const uint32_t QME_PCBSII_PCB_RSP_P = 1;
-static const uint32_t QME_PCBSII_PCB_RSP_VLD = 4;
-static const uint32_t QME_PCBSII_PCB_RSP_INFO = 5;
-static const uint32_t QME_PCBSII_PCB_RSP_INFO_LEN = 3;
-static const uint32_t QME_PCBSII_QUAD_ID = 33;
-static const uint32_t QME_PCBSII_QUAD_ID_LEN = 3;
-//<< [QME_PCBSII]
-// eq/reg00014.H
-
 //>> [EPS_DBG_TRACE_REG_1]
 static const uint64_t EPS_DBG_TRACE_REG_1 = 0x200183eeull;
 

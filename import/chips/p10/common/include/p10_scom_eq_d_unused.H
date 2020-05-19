@@ -238,25 +238,6 @@ static const uint32_t QMETRA0_TR1_CONFIG_9_SPARE_LT = 37;
 //<< [QMETRA0_TR1_CONFIG_9]
 // eq/reg00013.H
 
-//>> [QME_PIG]
-static const uint64_t QME_PIG = 0x200e0030ull;
-
-static const uint32_t QME_PIG_REQ_INTR_TYPE = 1;
-static const uint32_t QME_PIG_REQ_INTR_TYPE_LEN = 4;
-static const uint32_t QME_PIG_REQ_INTR_PAYLOAD = 5;
-static const uint32_t QME_PIG_REQ_INTR_PAYLOAD_LEN = 19;
-static const uint32_t QME_PIG_PENDING_SOURCE = 24;
-static const uint32_t QME_PIG_PENDING_SOURCE_LEN = 6;
-static const uint32_t QME_PIG_INTR_GRANTED = 32;
-static const uint32_t QME_PIG_GRANTED_SOURCE = 33;
-static const uint32_t QME_PIG_GRANTED_SOURCE_LEN = 3;
-static const uint32_t QME_PIG_QUAD_ID = 37;
-static const uint32_t QME_PIG_QUAD_ID_LEN = 3;
-static const uint32_t QME_PIG_GRANTED_PACKET = 40;
-static const uint32_t QME_PIG_GRANTED_PACKET_LEN = 24;
-//<< [QME_PIG]
-// eq/reg00013.H
-
 //>> [CC_ATOMIC_LOCK_REG]
 static const uint64_t CC_ATOMIC_LOCK_REG = 0x200303ffull;
 

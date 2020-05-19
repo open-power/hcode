@@ -1323,20 +1323,6 @@ static const uint32_t PB_BRIDGE_HCA_MONITOR_0_ADDRESS_REG_SIZE_LEN = 15;
 //<< [PB_BRIDGE_HCA_MONITOR_0_ADDRESS_REG]
 // proc/reg00022.H
 
-//>> [PB_BRIDGE_NHTM_SC_HTM_TRIG]
-static const uint64_t PB_BRIDGE_NHTM_SC_HTM_TRIG = 0x03011c85ull;
-
-static const uint32_t PB_BRIDGE_NHTM_SC_HTM_TRIG_START = 0;
-static const uint32_t PB_BRIDGE_NHTM_SC_HTM_TRIG_STOP = 1;
-static const uint32_t PB_BRIDGE_NHTM_SC_HTM_TRIG_PAUSE = 2;
-static const uint32_t PB_BRIDGE_NHTM_SC_HTM_TRIG_STOP_ALT = 3;
-static const uint32_t PB_BRIDGE_NHTM_SC_HTM_TRIG_RESET = 4;
-static const uint32_t PB_BRIDGE_NHTM_SC_HTM_TRIG_MARK_VALID = 5;
-static const uint32_t PB_BRIDGE_NHTM_SC_HTM_TRIG_MARK_TYPE = 6;
-static const uint32_t PB_BRIDGE_NHTM_SC_HTM_TRIG_MARK_TYPE_LEN = 10;
-//<< [PB_BRIDGE_NHTM_SC_HTM_TRIG]
-// proc/reg00022.H
-
 //>> [TP_TCN0_N0_CLOCK_STAT_ARY]
 static const uint64_t TP_TCN0_N0_CLOCK_STAT_ARY = 0x0203000aull;
 

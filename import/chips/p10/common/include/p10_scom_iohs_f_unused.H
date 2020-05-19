@@ -2001,14 +2001,6 @@ static const uint32_t PROTECT_MODE_REG_WRITE_PROTECT_ENABLE = 1;
 //<< [PROTECT_MODE_REG]
 // iohs/reg00068.H
 
-//>> [TIMEOUT_REG]
-static const uint64_t TIMEOUT_REG = 0x180f0010ull;
-
-static const uint32_t TIMEOUT_REG_INT_TIMEOUT = 0;
-static const uint32_t TIMEOUT_REG_INT_TIMEOUT_LEN = 2;
-//<< [TIMEOUT_REG]
-// iohs/reg00068.H
-
 //>> [VITAL_SCAN_OUT]
 static const uint64_t VITAL_SCAN_OUT = 0x180f0017ull;
 //<< [VITAL_SCAN_OUT]

@@ -173,16 +173,6 @@ static const uint32_t CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SET_OVERRIDE_CORE_SYNC_ENABLE
 //<< [CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SET_OVERRIDE_CORE_SYNC_ENABLE]
 // eq/reg00010.H
 
-//>> [QME_TSEL]
-static const uint64_t QME_TSEL = 0x200e0240ull;
-
-static const uint32_t QME_TSEL_WATCHDOG_SEL = 0;
-static const uint32_t QME_TSEL_WATCHDOG_SEL_LEN = 4;
-static const uint32_t QME_TSEL_FIT_SEL = 4;
-static const uint32_t QME_TSEL_FIT_SEL_LEN = 4;
-//<< [QME_TSEL]
-// eq/reg00010.H
-
 //>> [CC_PROTECT_MODE_REG]
 static const uint64_t CC_PROTECT_MODE_REG = 0x200303feull;
 

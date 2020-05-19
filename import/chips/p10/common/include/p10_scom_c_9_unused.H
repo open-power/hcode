@@ -39,28 +39,6 @@ namespace c
 #endif
 
 
-//>> [CPMS_DDSR]
-static const uint64_t CPMS_DDSR = 0x200e0e50ull;
-
-static const uint32_t CPMS_DDSR_DDS_DATA = 3;
-static const uint32_t CPMS_DDSR_DDS_DATA_LEN = 5;
-static const uint32_t CPMS_DDSR_DDS_MIN = 11;
-static const uint32_t CPMS_DDSR_DDS_MIN_LEN = 5;
-static const uint32_t CPMS_DDSR_DDS_MAX = 19;
-static const uint32_t CPMS_DDSR_DDS_MAX_LEN = 5;
-static const uint32_t CPMS_DDSR_DPLL_ENCODED_DATA = 33;
-static const uint32_t CPMS_DDSR_DPLL_ENCODED_DATA_LEN = 3;
-static const uint32_t CPMS_DDSR_DPLL_ENCODED_MIN = 37;
-static const uint32_t CPMS_DDSR_DPLL_ENCODED_MIN_LEN = 3;
-static const uint32_t CPMS_DDSR_DPLL_ENCODED_MAX = 41;
-static const uint32_t CPMS_DDSR_DPLL_ENCODED_MAX_LEN = 3;
-static const uint32_t CPMS_DDSR_STOP_STATE_ACTIVE = 60;
-static const uint32_t CPMS_DDSR_CORE_SAMPLE_DISABLED = 61;
-static const uint32_t CPMS_DDSR_STOP_STATE_OCCURRED = 62;
-static const uint32_t CPMS_DDSR_SAMPLE_DISABLE_OCCURRED = 63;
-//<< [CPMS_DDSR]
-// c/reg00009.H
-
 //>> [EC_PC_COMMON_SPR_CTRL]
 static const uint64_t EC_PC_COMMON_SPR_CTRL = 0x20020485ull;
 
@@ -163,14 +141,6 @@ static const uint64_t NC_NCCHTM_NCCHTSC_HTM_LAST = 0x20010683ull;
 static const uint32_t NC_NCCHTM_NCCHTSC_HTM_LAST_HTM_LAST_ADDRESS = 12;
 static const uint32_t NC_NCCHTM_NCCHTSC_HTM_LAST_HTM_LAST_ADDRESS_LEN = 45;
 //<< [NC_NCCHTM_NCCHTSC_HTM_LAST]
-// c/reg00009.H
-
-//>> [QME_CDBB]
-static const uint64_t QME_CDBB = 0x200e0804ull;
-
-static const uint32_t QME_CDBB_MESSAGE_NUMBER = 0;
-static const uint32_t QME_CDBB_MESSAGE_NUMBER_LEN = 8;
-//<< [QME_CDBB]
 // c/reg00009.H
 
 //>>THE END<<

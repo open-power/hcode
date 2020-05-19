@@ -39,19 +39,6 @@ namespace ppe_eq
 #endif
 
 
-//>> [QME_THOR]
-//ERRCODE: // Some of the name targets not found in address targets: eq
-// No targets could be determined from the address.
-
-static const uint32_t QME_THOR = 0xc0000980ull;
-
-static const uint32_t QME_THOR_TSR_OVERRIDE_EN = 0;
-static const uint32_t QME_THOR_PTSR_OVERRIDE_SEL = 1;
-static const uint32_t QME_THOR_TSR_OVERRIDE_VAL = 4;
-static const uint32_t QME_THOR_TSR_OVERRIDE_VAL_LEN = 8;
-//<< [QME_THOR]
-// ppe_eq/reg00002.H
-
 //>>THE END<<
 
 #ifndef __PPE_HCODE__

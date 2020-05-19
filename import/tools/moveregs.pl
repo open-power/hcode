@@ -26,157 +26,58 @@
 
 #$PROJECT_ROOT
 
+use strict;
+
 if ( $ENV{PROJECT_ROOT} !~ /\S+/ )
 {
     print "You need to be in ekb workon\n";
     exit(1);
 }
 
-$possibleregs = {};
+my $allregs      = {};
+my $possibleregs = {};
 
-$p10root = $ENV{PROJECT_ROOT} . "/chips/p10/";
+my $p10root = $ENV{PROJECT_ROOT} . "/chips/p10/";
 
 sub addpossiblereg($)
 {
     my $preg = shift();
-
-    #if ($preg eq "TP_TCN1_N1_CPLT_CTRL0_TC_UNIT_SYNCCLK_MUXSEL_DC") {
-    #  my ($package, $filename, $line) = caller;
-    #  print "ADDED HERE!  $package $filename $line\n";
-    #}
     $possibleregs->{$preg}++;
 }
 
-# We should really be using a static analysis tool for this, but I
-# didn't see that any were installed by default on our machines.
+# See which registers are referenced in this source file
 sub analyzefile($)
 {
     my $lastns = "";
     my $f      = shift();
-    if ( ( $f =~ /\.C$/ || $f =~ /\.c$/ || $f =~ /\.H$/ || $f =~ /\.h$/ ) && $f !~ /common\/include/ )
+    if (   ( $f =~ /\.C$/ || $f =~ /\.c$/ || $f =~ /\.H$/ || $f =~ /\.h$/ )
+        && $f !~ /common\/include/
+        && $f !~ /hwp\/initfiles/ )
     {
+        print "Processing: $f\n";
         open( BUF, $f ) || die "could not open file";
         while ( my $line = <BUF> )
         {
             my @sl = split( /\/\//, $line );    # parse out comments
             $line = @sl[0];
-            if ( $line =~ /using\s+namespace\s+(\S+)\s*;/ )
+            my @rmregs  = ();
+            my $linelen = length($line);
+            foreach my $reg ( keys %$allregs )
             {
-                $lastns = $1;
-            }
-            elsif ( $line =~ /Scom\s*\(\s*\S+\s*,\s*([A-Z0-9_]+)\s*/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /Register\s*\(\s*\S+\s*,\s*([A-Z0-9_]+)\s*,/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /PREP_([A-Z0-9_]+)\s*([(,]|$)/ )
-            {
-                while ( $line =~ /PREP_([A-Z0-9_]+)\s*([(,]|$)/g )
+                if ( length($reg) <= $linelen )
                 {
-                    my $regv = $1;
-                    addpossiblereg($regv);
+                    if ( index( $line, $reg ) != -1 )
+                    {
+                        addpossiblereg($reg);
+                        push( @rmregs, $reg );
+
+                        #last; # someone could put more than one register in a line :(
+                    }
                 }
             }
-            elsif ( $line =~ /GET_([A-Z0-9_]+)\s*([(,]|$)/ )
+            foreach my $reg (@rmregs)
             {
-                while ( $line =~ /GET_([A-Z0-9_]+)\s*([(,]|$)/g )
-                {
-                    my $regv = $1;
-                    addpossiblereg($regv);
-                }
-            }
-            elsif ( $line =~ /PUT_([A-Z0-9_]+)\s*([(,]|$)/ )
-            {
-                while ( $line =~ /PUT_([A-Z0-9_]+)\s*([(,]|$)/g )
-                {
-                    my $regv = $1;
-                    addpossiblereg($regv);
-                }
-            }
-            elsif ( $line =~ /scomt\:\:[a-z]+\:\:([A-Z0-9_]+)/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /^\s*([A-Z0-9_]+)\s*[,]*\s*$/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /MMIO_\S+\s*\(\s*\S+\s*,\s*([A-Z0-9_]+)\s*,/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /regs\s*\(\s*\S+\s*,\s*([A-Z0-9_]+)\s*,/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /racetrack\s*\(\s*\S+\s*,\s*([A-Z0-9_]+)\s*,/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /SCOM_\S+\s*\(\s*\S+\s*,\s*([A-Z0-9_]+)\s*,/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /\S*SCOM\S*\s*\(\s*([A-Z0-9_]+)/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /in32\s*\(\s*([A-Z0-9_]+)/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /MMIO_LOWADDR\s*\(\s*([A-Z0-9_]+)\s*\)/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /\#define\s+\S+\s+([A-Z0-9_]+)/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /Scom\s*\(\s*\S+\s*,\s*[a-z]+::([A-Z0-9_]+)\s*/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /Register\s*\(\s*\S+\s*,\s*[a-z]+::([A-Z0-9_]+)\s*,/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /\s*=\s*([A-Z0-9_]+)\s*/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /FFDCREG\s*\(\s*([A-Z0-9_]+)/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            elsif ( $line =~ /^\s*\S+\s*=\s*.+\?\s*[(]*\s*([A-Z0-9_]+)\s*[)]*\s*/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
-            }
-            if ( $line =~ /^\s*\S+\s*=\s*.+\?.+\:\s*[(]*\s*([A-Z0-9_]+)\s*[)]*\s*/ )
-            {
-                my $regv = $1;
-                addpossiblereg($regv);
+                delete $allregs->{$reg};
             }
         }
         close(BUF);
@@ -223,11 +124,10 @@ sub move_used_unused($)
     my $nf        = $f . ".tmp";
     my $uf        = $f;
     $uf =~ s/\.H$/_unused.H/;
-    my $nuf      = $uf . ".tmp";
-    my $buf      = "";
-    my $ubuf     = "";
-    my $path     = "";
-    my $regmatch = {};
+    my $nuf  = $uf . ".tmp";
+    my $buf  = "";
+    my $ubuf = "";
+    my $path = "";
     if ( $f =~ /(\S+)\/[a-zA-Z0-9_]+\.H/ )
     {
         $path = $1;
@@ -239,7 +139,7 @@ sub move_used_unused($)
     {
         ## read unused file and extract used registers
         open( UIN, $uf ) || die "could not open file";
-        $line = <UIN>;
+        my $line    = <UIN>;
         my $lastreg = "";
         my $used    = 0;
         my $tmpbuf  = "";
@@ -267,9 +167,12 @@ sub move_used_unused($)
             elsif ( $line =~ /\s*static\s+const\s+\S+\s+(\S+)\s*=\s*0x/ )
             {
                 my $cnst = $1;
-                if ( $possibleregs->{$cnst} > 0 )
+                if ( $used != 0 )
                 {
-                    $regmatch->{$lastreg}++;
+                    addpossiblereg($cnst);
+                }
+                elsif ( $possibleregs->{$cnst} > 0 )
+                {
                     addpossiblereg($lastreg);
                     $used = 1;
                 }
@@ -277,14 +180,9 @@ sub move_used_unused($)
             elsif ( $line =~ /\s*static\s+const\s+\S+\s+(\S+)\s*=\s*\d+/ )
             {
                 my $dval = $1;
-                foreach my $rm ( keys %$regmatch )
+                if ( $used != 0 )
                 {
-                    if ( $dval =~ /$rm/ )
-                    {
-                        addpossiblereg($dval);
-                        $used = 1;
-                        last;
-                    }
+                    addpossiblereg($dval);
                 }
             }
             if ( $line =~ /\/\/>>\s*\S+\[(\S+)\]/ )
@@ -312,7 +210,7 @@ sub move_used_unused($)
     {
         # unised file doesn't exist yet
         # take the crap from the used file for the header
-        $line = <IN>;
+        my $line = <IN>;
         while ( $line !~ /\/\/>>\s+\S*\[\S+\]/ && $line !~ /^\s*static/ && $line !~ /\/\/>>THE END<</ )
         {
             if ( $line =~ /\s*\#ifndef\s+(\S+)/ || $line =~ /\s*\#define\s+(\S+)/ )
@@ -329,9 +227,9 @@ sub move_used_unused($)
         close(IN);
         open( IN, $f ) || die "could not open file";
     }
-    $line = <IN>;
+    my $line    = <IN>;
     my $lastreg = "";
-    my $used    = 1;    #header is used
+    my $used    = 1;      #header is used
     my $tmpbuf  = "";
     while ( $line !~ /\/\/>>THE END<</ )
     {
@@ -356,9 +254,12 @@ sub move_used_unused($)
         elsif ( $line =~ /\s*static\s+const\s+\S+\s+(\S+)\s*=\s*0x/ )
         {
             my $cnst = $1;
-            if ( $possibleregs->{$cnst} > 0 )
+            if ( $used != 0 )
             {
-                $regmatch->{$lastreg}++;
+                addpossiblereg($cnst);
+            }
+            elsif ( $possibleregs->{$cnst} > 0 )
+            {
                 addpossiblereg($lastreg);
                 $used = 1;
             }
@@ -366,14 +267,9 @@ sub move_used_unused($)
         elsif ( $line =~ /\s*static\s+const\s+\S+\s+(\S+)\s*=\s*\d+/ )
         {
             my $dval = $1;
-            foreach my $rm ( keys %$regmatch )
+            if ( $used != 0 )
             {
-                if ( $dval =~ /$rm/ )
-                {
-                    addpossiblereg($dval);
-                    $used = 1;
-                    last;
-                }
+                addpossiblereg($dval);
             }
         }
         if ( $line =~ /\/\/>>\s*\S+\[(\S+)\]/ )
@@ -426,13 +322,110 @@ sub move_used_unused($)
     }
 }
 
-walkdir($p10root);
+sub collectallfileregs($)
+{
+    my $f = shift;
+    open( BUF, $f ) || die "could not open file.";
+    while ( my $line = <BUF> )
+    {
+        if ( $line =~ /\/\/>>\s+\[(\S+)\]/ )
+        {
+            $allregs->{$1}++;
+        }
+    }
+}
 
-$numargs = @ARGV;
+sub collectallregs()
+{
+    print "Collecting all regs\n";
+    my $headerdir = $p10root . "common/include/";
+    my @files = split( /\n/, `ls -1 ${headerdir}p10_*_*_?.H` );
+
+    foreach my $file (@files)
+    {
+        collectallfileregs($file);
+    }
+    @files = split( /\n/, `ls -1 ${headerdir}p10_*_*_?_unused.H` );
+
+    foreach my $file (@files)
+    {
+        collectallfileregs($file);
+    }
+}
+
+sub moveallfiles()
+{
+    my $headerdir = $p10root . "common/include/";
+    my @files = split( /\n/, `ls -1 ${headerdir}p10_*_*_?.H` );
+
+    foreach my $file (@files)
+    {
+        print "$file\n";
+        move_used_unused($file);
+    }
+}
+
+sub getcurrentused($)
+{
+    my $f        = shift();
+    my @nxtfiles = ();
+    my $path     = "";
+    if ( $f =~ /(\S+)\/[a-zA-Z0-9_]+\.H/ )
+    {
+        $path = $1;
+    }
+    open( BUF, $f ) || die "could not open file";
+    while ( my $line = <BUF> )
+    {
+        if ( $line =~ /\/\/>>\s+\S*\[(\S+)\]/ )
+        {
+            my $lastreg = $1;
+            addpossiblereg($lastreg);
+        }
+        elsif ( $line =~ /\s*static\s+const\s+\S+\s+(\S+)\s*=\s*0x/ )
+        {
+            my $cnst = $1;
+            addpossiblereg($cnst);
+        }
+        elsif ( $line =~ /\s*static\s+const\s+\S+\s+(\S+)\s*=\s*\d+/ )
+        {
+            my $dval = $1;
+            addpossiblereg($dval);
+        }
+        elsif ( $line =~ /^\s*#include\s+\"(\S+)\"/ )
+        {
+            my $ntf = $1;
+            if ( $ntf =~ /\/reg/ )
+            {
+                push( @nxtfiles, $path . "/" . $ntf );
+            }
+        }
+    }
+    close(BUF);
+    foreach my $nf (@nxtfiles)
+    {
+        getcurrentused($nf);
+    }
+}
+
+sub buildcurrentusedregs()
+{
+    my $headerdir = $p10root . "common/include/";
+    my @files = split( /\n/, `ls -1 ${headerdir}p10_*_*_?.H` );
+
+    foreach my $file (@files)
+    {
+        getcurrentused($file);
+    }
+}
+
+collectallregs();
+
+my $numargs = @ARGV;
 
 if ( $numargs > 0 )
 {
-    $manualadds = @ARGV[0];
+    my $manualadds = @ARGV[0];
     open( BUF, $manualadds ) || die "could not open file";
     while ( my $line = <BUF> )
     {
@@ -444,13 +437,28 @@ if ( $numargs > 0 )
     }
 }
 
-#get project headers
-$headerdir = $p10root . "common/include/";
-
-@files = split( /\n/, `ls -1 ${headerdir}p10_*_*_?.H` );
-
-foreach $file (@files)
+if ( $numargs > 1 )
 {
-    print "$file\n";
-    move_used_unused($file);
+    buildcurrentusedregs();
+    for ( my $idx = 1; $idx < $numargs; $idx++ )
+    {
+        my $f = @ARGV[$idx];
+        $f = $ENV{PROJECT_ROOT} . "/" . $f;
+        if ( -d $f )
+        {
+            walkdir($f);
+        }
+        else
+        {
+            analyzefile($f);
+        }
+    }
+
 }
+else
+{
+    print "Walking source looking for regs\n";
+    walkdir($p10root);
+}
+
+moveallfiles();

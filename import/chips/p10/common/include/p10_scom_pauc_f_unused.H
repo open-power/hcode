@@ -183,14 +183,6 @@ static const uint32_t PROTECT_MODE_REG_WRITE_PROTECT_ENABLE = 1;
 //<< [PROTECT_MODE_REG]
 // pauc/reg00015.H
 
-//>> [TIMEOUT_REG]
-static const uint64_t TIMEOUT_REG = 0x100f0010ull;
-
-static const uint32_t TIMEOUT_REG_INT_TIMEOUT = 0;
-static const uint32_t TIMEOUT_REG_INT_TIMEOUT_LEN = 2;
-//<< [TIMEOUT_REG]
-// pauc/reg00015.H
-
 //>> [TRA0_TR0_CONFIG_1]
 static const uint64_t TRA0_TR0_CONFIG_1 = 0x10010404ull;
 

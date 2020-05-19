@@ -51,6 +51,6 @@ module_call_moveregs()
 {
     [ -z "${PROJECT_ROOT}" ] && echo "Missing PROJECT_ROOT." && exit -1
 
-    ${PROJECT_ROOT}/tools/moveregs.pl  ${PROJECT_ROOT}/tools/manualmoveregs.txt
+    ${PROJECT_ROOT}/tools/moveregs.pl  ${PROJECT_ROOT}/tools/manualmoveregs.txt  $*
 
 }

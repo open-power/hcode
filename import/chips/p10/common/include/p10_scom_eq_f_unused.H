@@ -137,35 +137,6 @@ static const uint32_t QMETRA0_TR1_CONFIG_1_CMP_MSK_LT_B_64_TO_87_LEN = 24;
 //<< [QMETRA0_TR1_CONFIG_1]
 // eq/reg00015.H
 
-//>> [QME_PBCR]
-static const uint64_t QME_PBCR = 0x200e0044ull;
-static const uint64_t QME_PBCR_SCOM2 = 0x200e0046ull;
-static const uint64_t QME_PBCR_WO_CLEAR = 0x200e0047ull;
-
-static const uint32_t QME_PBCR_DISABLE_LN_RD = 0;
-static const uint32_t QME_PBCR_DISABLE_NN_RN_RD = 1;
-static const uint32_t QME_PBCR_DISABLE_GROUP_RD = 2;
-static const uint32_t QME_PBCR_DISABLE_VG_RD = 3;
-static const uint32_t QME_PBCR_DISABLE_LN_WR = 4;
-static const uint32_t QME_PBCR_DISABLE_NN_RN_WR = 5;
-static const uint32_t QME_PBCR_DISABLE_GROUP_WR = 6;
-static const uint32_t QME_PBCR_DISABLE_VG_WR = 7;
-static const uint32_t QME_PBCR_SKIP_GROUP_SCOPE = 8;
-static const uint32_t QME_PBCR_USE_DMA_PR_W = 9;
-static const uint32_t QME_PBCR_FREEZE_ON_CRESP_ERR = 10;
-static const uint32_t QME_PBCR_SPARE = 11;
-static const uint32_t QME_PBCR_SPARE_LEN = 2;
-static const uint32_t QME_PBCR_TYPE = 13;
-static const uint32_t QME_PBCR_TYPE_LEN = 3;
-static const uint32_t QME_PBCR_HANG_POLL_MAX_CNT = 16;
-static const uint32_t QME_PBCR_HANG_POLL_MAX_CNT_LEN = 4;
-static const uint32_t QME_PBCR_HANG_DATA_MAX_CNT = 20;
-static const uint32_t QME_PBCR_HANG_DATA_MAX_CNT_LEN = 4;
-static const uint32_t QME_PBCR_DISABLE_PB_CACHE = 24;
-static const uint32_t QME_PBCR_INVALIDATE_PB_CACHE = 25;
-//<< [QME_PBCR]
-// eq/reg00015.H
-
 //>> [EPS_FIR_CLKSTOP_ON_XSTOP_MASK2]
 static const uint64_t EPS_FIR_CLKSTOP_ON_XSTOP_MASK2 = 0x20040082ull;
 
@@ -292,14 +263,6 @@ static const uint64_t PROTECT_MODE_REG = 0x200f03feull;
 static const uint32_t PROTECT_MODE_REG_READ_PROTECT_ENABLE = 0;
 static const uint32_t PROTECT_MODE_REG_WRITE_PROTECT_ENABLE = 1;
 //<< [PROTECT_MODE_REG]
-// eq/reg00015.H
-
-//>> [TIMEOUT_REG]
-static const uint64_t TIMEOUT_REG = 0x200f0010ull;
-
-static const uint32_t TIMEOUT_REG_INT_TIMEOUT = 0;
-static const uint32_t TIMEOUT_REG_INT_TIMEOUT_LEN = 2;
-//<< [TIMEOUT_REG]
 // eq/reg00015.H
 
 //>> [VITAL_SCAN_OUT]

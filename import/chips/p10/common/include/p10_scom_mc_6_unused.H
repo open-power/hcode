@@ -201,6 +201,18 @@ static const uint32_t TRA1_TR0_CONFIG_MASTER_CLOCK_ENABLE_INT = 23;
 //<< [TRA1_TR0_CONFIG]
 // mc/reg00006.H
 
+//>> [SCOMFIR_MCFGPM0E]
+static const uint64_t SCOMFIR_MCFGPM0E = 0x0c010c1cull;
+
+static const uint32_t SCOMFIR_MCFGPM0E_VALID = 0;
+static const uint32_t SCOMFIR_MCFGPM0E_EXTEND_TO_END_OF_RANGE = 1;
+static const uint32_t SCOMFIR_MCFGPM0E_LOWER_ADDRESS = 2;
+static const uint32_t SCOMFIR_MCFGPM0E_LOWER_ADDRESS_LEN = 19;
+static const uint32_t SCOMFIR_MCFGPM0E_UPPER_ADDRESS = 21;
+static const uint32_t SCOMFIR_MCFGPM0E_UPPER_ADDRESS_LEN = 19;
+//<< [SCOMFIR_MCFGPM0E]
+// mc/reg00006.H
+
 //>>THE END<<
 
 #ifndef __PPE_HCODE__
