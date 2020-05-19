@@ -35,6 +35,7 @@
 #include "pstate_pgpe_occ_api.h"
 #include "pgpe_header.h"
 #include "p10_scom_eq_3.H"
+#include "p10_scom_c_4.H"
 
 //
 //Local function prototypes
@@ -98,6 +99,7 @@ void pgpe_pstate_init()
     G_pgpe_pstate.vcs_next_ext      = 0;
 
     G_pgpe_pstate.vrt                = 0;
+    G_pgpe_pstate.power_proxy_scale  = 0;
     G_pgpe_pstate.update_pgpe_beacon = 1;
 
     if (pgpe_gppb_get_safe_frequency())
@@ -179,6 +181,14 @@ void pgpe_pstate_actuate_step()
     PK_TRACE("ACT: vdd_del=0x%x, vdd_next=0x%x,ps_next=0x%x ,vcs_next=0x%x", vdd_delta, G_pgpe_pstate.vdd_next,
              G_pgpe_pstate.pstate_next, G_pgpe_pstate.vcs_next);
 
+    //Compute power proxy scale factor
+    cpms_dpcr dpcr;
+    dpcr.value = 0;
+    uint32_t power_proxy_scale_tgt;
+    uint32_t x = G_pgpe_pstate.vdd_next * G_pgpe_pstate.vdd_next;
+    //X>>8 minus X>>11 minus X>>13 plus (X>>7)&0x1 plus (X>>10)&0x1 plus (X>>12)&0x1   // approximate a divide by 295
+    power_proxy_scale_tgt =  (x >> 8) - (x >> 11) - (x >> 13) + ((x >> 7) & 0x1) + ((x >> 10) & 0x1) + ((x >> 12) & 0x1);
+
     if (G_pgpe_pstate.vdd_next_ext <= pgpe_gppb_get(array_write_vdd_mv))
     {
         PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WOR, BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
@@ -200,10 +210,20 @@ void pgpe_pstate_actuate_step()
         pgpe_dds_poll_done();
 #endif
 
-        //lower VDD, then lower VCS
+        //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
+        dpcr.fields.proxy_scale_factor = (power_proxy_scale_tgt + G_pgpe_pstate.power_proxy_scale) >> 1;
+        PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
+
+        //lower VDD
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
                                   pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
                                   G_pgpe_pstate.vdd_next_ext);
+
+        //Write proxy_scale_factor_target to DPCRs
+        dpcr.fields.proxy_scale_factor = power_proxy_scale_tgt;
+        PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
+
+        //lower VCS
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
                                   pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
                                   G_pgpe_pstate.vcs_next_ext);
@@ -211,13 +231,23 @@ void pgpe_pstate_actuate_step()
     //else raising frequency
     else
     {
-        //raise VCS, then raise VDD
+        //raise VCS
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
                                   pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
                                   G_pgpe_pstate.vcs_next_ext);
+
+        //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
+        dpcr.fields.proxy_scale_factor = (power_proxy_scale_tgt + G_pgpe_pstate.power_proxy_scale) >> 1;
+        PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
+
+        //raise VDD
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
                                   pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
                                   G_pgpe_pstate.vdd_next_ext);
+
+        //Write proxy_scale_factor_target to DPCRs
+        dpcr.fields.proxy_scale_factor = power_proxy_scale_tgt;
+        PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
 
         //DDS
         pgpe_dds_update(G_pgpe_pstate.pstate_next);
@@ -238,6 +268,7 @@ void pgpe_pstate_actuate_step()
         PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WAND, ~BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
     }
 
+    G_pgpe_pstate.power_proxy_scale = power_proxy_scale_tgt;
     pgpe_pstate_update_vdd_vcs_ps();
     pgpe_pstate_pmsr_updt();
     pgpe_pstate_pmsr_write();

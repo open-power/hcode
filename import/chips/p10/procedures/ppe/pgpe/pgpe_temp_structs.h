@@ -471,4 +471,35 @@ typedef union qme_wcor
 
 } qme_wcor_t;
 
+typedef union cpms_dpcr
+{
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint32_t high_order;
+        uint32_t low_order;
+#else
+        uint32_t low_order;
+        uint32_t high_order;
+#endif
+    } words;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t proxy_scale_factor: 12;
+        uint64_t proxy_leakage_constant: 8;
+        uint64_t ddp_recharge_value: 7;
+        uint64_t reserved: 37;
+#else
+        uint64_t reserved: 37;
+        uint64_t ddp_recharge_value: 7;
+        uint64_t proxy_leakage_constant: 8;
+        uint64_t proxy_scale_factor: 12;
+#endif
+    } fields;
+
+} cpms_dpcr;
+
+
 #endif

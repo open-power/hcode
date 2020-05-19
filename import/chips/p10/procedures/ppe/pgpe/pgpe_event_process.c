@@ -34,6 +34,7 @@
 #include "p10_oci_proc_7.H"
 #include "p10_scom_eq_7.H"
 #include "p10_scom_eq_3.H"
+#include "p10_scom_c_4.H"
 #include "p10_scom_proc_a.H"
 #include "p10_scom_proc_b.H"
 #include "pgpe_resclk.h"
@@ -279,6 +280,18 @@ void pgpe_process_pstate_start()
                                   pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
                                   pgpe_pstate_get(vcs_next_ext));
     }
+
+    //Set initial power_proxy_scale
+    cpms_dpcr dpcr;
+    dpcr.value = 0;
+    uint32_t power_proxy_scale_init;
+    uint32_t x = G_pgpe_pstate.vdd_next * G_pgpe_pstate.vdd_next;
+    //X>>8 minus X>>11 minus X>>13 plus (X>>7)&0x1 plus (X>>10)&0x1 plus (X>>12)&0x1   // approximate a divide by 295
+    power_proxy_scale_init =  (x >> 8) - (x >> 11) - (x >> 13) + ((x >> 7) & 0x1) + ((x >> 10) & 0x1) + ((x >> 12) & 0x1);
+
+    dpcr.fields.proxy_scale_factor = power_proxy_scale_init;
+    PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
+    pgpe_pstate_set(power_proxy_scale, power_proxy_scale_init);
 
     if (pgpe_pstate_get(vdd_next_ext) > pgpe_gppb_get(array_write_vdd_mv))
     {
