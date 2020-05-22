@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2017                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -324,7 +324,7 @@ p9_ppe_commands(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_target,
         //Get IAR again
         FAPI_TRY(fapi2::getScom(i_target, i_base_address + PPE_XIDBGPRO, l_data64), "Error in GETSCOM");
         l_data64.extractToRight(l2_data32, 32, 32);
-        sprintf(outstr, "IAR after ramming the instruction");
+        sprintf(outstr, "IAR after ramming instruction");
         FAPI_INF("%-9s = 0x%08llX", outstr, l2_data32);
 
         //If IAR is same after Ramming, increment IAR + 4

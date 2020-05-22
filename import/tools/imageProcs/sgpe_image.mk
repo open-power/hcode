@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2016,2018
+# COPYRIGHT 2016,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -76,8 +76,8 @@ $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
 $(eval $(call BUILD_XIPIMAGE))
 endef
 
-$(eval CHIPS := $(filter-out centaur ocmb,$(CHIPS)))
+$(eval MY_CHIPS := $(filter-out centaur ocmb,$(CHIPS)))
 
-$(foreach chip,$(CHIPS),\
+$(foreach chip,$(MY_CHIPS),\
 	$(foreach chipId, $($(chip)_CHIPID),\
 	$(eval $(call BUILD_SGPE_IMAGE,$(chipId)))))
