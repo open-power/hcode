@@ -50,23 +50,25 @@ errlHndl_t  G_gpeErrLogs[ERRL_MAX_SLOTS_PER_GPE] =
 
 hcode_elog_entry_t* G_elogTable = NULL; // Ptr to shared data err idx tbl
 hcodeErrlConfigData_t G_errlConfigData = {0};
-hcodeErrlMetadata_t G_errlMetaData = {0};
+hcodeErrlMetadata_t G_errlMetaData[ERRL_MAX_SLOTS_PER_GPE] = {{0}};
 
 void initErrLogging ( const uint8_t              i_errlSource,
                       hcode_error_table_t*       i_pErrTable )
 {
     if (NULL != i_pErrTable)
     {
-        // Initialize common defaults .. some change based on logic below
+        // Initialize common defaults .. note that some change later
         G_errlConfigData.source = i_errlSource;
         G_errlConfigData.tblBaseSlot = ERRL_SLOT_TBL_BASE;
+        G_errlConfigData.slotBits = 0;
+        G_errlConfigData.errId = 0;
+
         // Record PPE Processor Version from where errors will be logged
         // e.g. 0x421A0100 == PPE42, Core Ver. Nr. 1, POWER10 DD1
         G_errlConfigData.procVersion = mfspr (SPRN_PVR);
         // Record PPE Instance from which errors will be logged
         G_errlConfigData.ppeId = (uint16_t) ( mfspr(SPRN_PIR) &
                                               PIR_PPE_INSTANCE_MASK );
-
 
         switch (i_errlSource)
         {
@@ -105,11 +107,14 @@ void initErrLogging ( const uint8_t              i_errlSource,
             // Init the table pointer of each GPE
             G_elogTable = i_pErrTable->elog;
 
-            // Initialize metadata of first error log to be created to defaults
-            G_errlMetaData.errId = 0;
-            G_errlMetaData.slotBits = 0;
-            G_errlMetaData.slotMask = ERRL_SLOT_MASK_DEFAULT;
-            G_errlMetaData.errSlot = ERRL_SLOT_INVALID;
+            // Initialize metadata of error logs to be created to defaults
+            uint8_t l_slot = 0;
+
+            do
+            {
+                G_errlMetaData[l_slot++].slotMask = ERRL_SLOT_MASK_DEFAULT;
+            }
+            while (l_slot < ERRL_MAX_SLOTS_PER_GPE);
         }
         else
         {
@@ -193,7 +198,7 @@ uint8_t getErrSlotNumAndErrId (
         pk_critical_section_enter (&ctx);
 
         // 1. Check if a slot is free in the local GPE maintained slotBits word
-        uint32_t l_slotBitWord = ~(G_errlMetaData.slotBits | l_slotmask);
+        uint32_t l_slotBitWord = ~(G_errlConfigData.slotBits | l_slotmask);
 
         // Count leading 0 bits in l_slotBitWord to get available slot based on
         // l_slotmask. This logic is extensible to allow for a variable
@@ -202,19 +207,15 @@ uint8_t getErrSlotNumAndErrId (
         __asm__ __volatile__ ( "cntlzw %0, %1;" : "=r" (l_slot) :
                                "r"  (l_slotBitWord));
 
-        // As Error Log Table can be shared across GPEs, normalize slot based on
-        // table base slot of this PPE
-        l_slot -= G_errlConfigData.tblBaseSlot;
-
         // If l_slot maps within bounds of Error Log Index Table, its available
-        if (MAX_ELOG_ENTRIES > l_slot)
+        if (MAX_ELOG_ENTRIES > (l_slot - G_errlConfigData.tblBaseSlot))
         {
             // 2. Slot matching source + sev is available in local GPE slotBits
             //    Now check that this slot is free in the Error Log Index Table
-            if (0 == G_elogTable[l_slot].dw0.value)
+            if (0 == G_elogTable[l_slot - G_errlConfigData.tblBaseSlot].dw0.value)
             {
                 // Matching slot is available in OCC/XGPE watched error table
-                // Get the slot relative to this GPE
+                // Get the slot relative to this GPE's error log payload array
                 l_localSlot = l_slot - G_errlConfigData.gpeBaseSlot;
 
                 // 3. Check that it does not exceed total error slots per GPE
@@ -230,15 +231,16 @@ uint8_t getErrSlotNumAndErrId (
                     //    Error Log Index Table until error is ready for commit,
                     //    to avoid OCC/XGPE getting notified of an error before
                     //    it is fully baked.
-                    G_errlMetaData.slotBits |= (ERRL_SLOT_SHIFT >> l_slot);
-                    G_errlMetaData.slotMask = l_slotmask;
-                    G_errlMetaData.errSlot = l_slot;
+                    G_errlConfigData.slotBits |= (ERRL_SLOT_SHIFT >> l_slot);
+                    G_errlMetaData[l_localSlot].slotMask = l_slotmask;
 
                     // 6. Save off incremented counter which forms error log id
                     //    Provide next ErrorId; ErrorId should never be 0.
-                    *o_errlId = ((++G_errlMetaData.errId) == 0) ?
-                                ++G_errlMetaData.errId :
-                                G_errlMetaData.errId;
+                    G_errlMetaData[l_localSlot].errId =
+                        ((++G_errlConfigData.errId) == 0) ?
+                        ++G_errlConfigData.errId :
+                        G_errlConfigData.errId;
+                    *o_errlId = G_errlMetaData[l_localSlot].errId;
                 }
                 else
                 {
@@ -265,8 +267,8 @@ uint8_t getErrSlotNumAndErrId (
             // 1. Either multiple errors are created while processing an err log
             // 2. Or, a multi-threaded GPE is producing errors of same severity
             //    faster than they are committed to the Error Log Idx Table
-            PK_TRACE_ERR ("Slot %d not free in GPE! Bits 0x%04X Mask 0x%04X"
-                          " Word 0x%04X", l_slot, G_errlMetaData.slotBits,
+            PK_TRACE_ERR ("Slot %d not free in GPE! Bits 0x%04X Mask 0x%04X "
+                          "Word 0x%04X", l_slot, G_errlConfigData.slotBits,
                           l_slotmask, l_slotBitWord);
         }
 
@@ -381,7 +383,19 @@ void reportErrorLog (errlHndl_t i_err)
 {
     if (NULL != i_err)
     {
-        if (G_errlMetaData.errId == i_err->iv_entryId)
+        uint8_t l_slot = 0;
+
+        // Get the slot of the error to be reported based on unique across logs
+        do
+        {
+            if (G_errlMetaData[l_slot].errId == i_err->iv_entryId)
+            {
+                break;
+            }
+        }
+        while (++l_slot < ERRL_MAX_SLOTS_PER_GPE);
+
+        if (l_slot < ERRL_MAX_SLOTS_PER_GPE)
         {
             PK_TRACE_INF ("reportErrorLog: EID 0x%08X", i_err->iv_entryId);
             hcode_elog_entry_t l_errlEntry;
@@ -396,15 +410,13 @@ void reportErrorLog (errlHndl_t i_err)
             pk_critical_section_enter (&ctx);
 
             // Error Table should get updated last as OCC/XGPE polls on it
-            G_elogTable[G_errlMetaData.errSlot].dw0.value =
-                l_errlEntry.dw0.value;
+            G_elogTable[l_slot].dw0.value = l_errlEntry.dw0.value;
 
             // Free up this slot as available on this GPE's records.
             // OCC will free up corresponding slot in Shared SRAM space once
             // the error log is processed
-            G_errlMetaData.slotBits &= G_errlMetaData.slotMask;
-            G_errlMetaData.slotMask = ERRL_SLOT_MASK_DEFAULT;
-            G_errlMetaData.errSlot = ERRL_SLOT_INVALID;
+            G_errlConfigData.slotBits &= G_errlMetaData[l_slot].slotMask;
+            G_errlMetaData[l_slot].slotMask = ERRL_SLOT_MASK_DEFAULT;
 
             pk_critical_section_exit (&ctx);
         }

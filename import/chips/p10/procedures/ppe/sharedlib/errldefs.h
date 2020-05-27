@@ -130,10 +130,8 @@ enum elog_entry_index
 // commited out to the OCC Shared Data Error Index Table
 typedef struct
 {
-    uint32_t slotBits; // Bits 0:1 flags for slots taken by errors
-    uint32_t slotMask; // Slot mask of the current error being processed
-    uint8_t  errId;    // Error log id of this error, rolling counter
-    uint8_t  errSlot;  // Slot number of this error in PPE's Error Log Idx Tbl
+    uint32_t slotMask; // Slot mask of this specific error being processed
+    uint8_t  errId;    // Error log id of this specific error bring processed
 } hcodeErrlMetadata_t;
 
 // Structure to configure GPE specific metadata for error logging that is
@@ -142,10 +140,12 @@ typedef struct
 {
     uint32_t tblBaseSlot; // Base slot of the Error Log Index Table
     uint32_t gpeBaseSlot; // Base slot inside Error Log Index Table for this GPE
+    uint32_t slotBits;    // Slot bits taken by logs being processed on this GPE
     uint32_t procVersion; // PPE Processor Version, from PVR
     uint16_t ppeId;       // PPE Instance Id, from PIR
     uint16_t traceSz;     // Size of ERRL_USR_DTL_TRACE_DATA to add
     uint8_t  source;      // Engine creating logs. See ERRL_SOURCE
+    uint8_t  errId;       // Last error log id used by this GPE, rolling counter
 } hcodeErrlConfigData_t;
 
 // Initializes attributes of the common error logging framework based on the GPE
