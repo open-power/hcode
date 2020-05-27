@@ -131,14 +131,6 @@ static const uint32_t USTL_USTLERRPT_RT_DSTL_WB_READ_TAG_PAR_ERR = 12;
 //<< [USTL_USTLERRPT]
 // mcc/reg00008.H
 
-//>> [USTL_USTLFIRACT0]
-static const uint64_t USTL_USTLFIRACT0 = 0x0c010e06ull;
-
-static const uint32_t USTL_USTLFIRACT0_USTLFIRACT0_ACTION_0 = 0;
-static const uint32_t USTL_USTLFIRACT0_USTLFIRACT0_ACTION_0_LEN = 62;
-//<< [USTL_USTLFIRACT0]
-// mcc/reg00008.H
-
 //>> [USTL_USTLSTATUS]
 static const uint64_t USTL_USTLSTATUS = 0x0c010e0aull;
 

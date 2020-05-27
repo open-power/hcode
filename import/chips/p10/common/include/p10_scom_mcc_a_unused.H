@@ -104,14 +104,6 @@ static const uint32_t DSTL_DSTLERRRPT_SUBCHANNEL_B_FAIL_STATE = 63;
 //<< [DSTL_DSTLERRRPT]
 // mcc/reg00010.H
 
-//>> [DSTL_DSTLFIRACT1]
-static const uint64_t DSTL_DSTLFIRACT1 = 0x0c010d07ull;
-
-static const uint32_t DSTL_DSTLFIRACT1_DSTLFIRACT1_ACTION_1 = 0;
-static const uint32_t DSTL_DSTLFIRACT1_DSTLFIRACT1_ACTION_1_LEN = 39;
-//<< [DSTL_DSTLFIRACT1]
-// mcc/reg00010.H
-
 //>> [DSTL_DSTLFIRWOF]
 static const uint64_t DSTL_DSTLFIRWOF = 0x0c010d08ull;
 

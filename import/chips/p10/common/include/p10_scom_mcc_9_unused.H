@@ -87,16 +87,6 @@ static const uint32_t ATCL_CL_CLSCOM_MCWAT_RESERVED59_63_LEN = 5;
 //<< [ATCL_CL_CLSCOM_MCWAT]
 // mcc/reg00009.H
 
-//>> [DSTL_DSTLFIRMASK]
-static const uint64_t DSTL_DSTLFIRMASK_RW = 0x0c010d03ull;
-static const uint64_t DSTL_DSTLFIRMASK_WO_AND = 0x0c010d04ull;
-static const uint64_t DSTL_DSTLFIRMASK_WO_OR = 0x0c010d05ull;
-
-static const uint32_t DSTL_DSTLFIRMASK_DSTLFIRMASK_FIR_MASK = 0;
-static const uint32_t DSTL_DSTLFIRMASK_DSTLFIRMASK_FIR_MASK_LEN = 39;
-//<< [DSTL_DSTLFIRMASK]
-// mcc/reg00009.H
-
 //>> [DSTL_DSTLSTATUS]
 static const uint64_t DSTL_DSTLSTATUS = 0x0c010d10ull;
 
