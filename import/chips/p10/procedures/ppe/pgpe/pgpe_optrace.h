@@ -62,6 +62,20 @@ enum PGPE_OPT_CODES
     PGPE_OPT_SAFE_MODE_DONE         = 0xcf,
 };
 
+enum PGPE_OPT_START_STOP_SRC
+{
+    PGPE_OPT_START_STOP_SRC_IPC      = 0x1,
+    PGPE_OPT_START_STOP_SRC_SCOM     = 0x2,
+};
+
+enum PGPE_OPT_START_STOP_SS
+{
+    PGPE_OPT_START_STOP_SS_STOP         = 0x0,
+    PGPE_OPT_START_STOP_SS_START_HOST   = 0x1,
+    PGPE_OPT_START_STOP_SS_START_OCC    = 0x2,
+    PGPE_OPT_START_STOP_SS_START_CHAR   = 0x3,
+};
+
 typedef union
 {
     uint8_t byte[16];

@@ -43,9 +43,6 @@
 #include "pgpe_dds.h"
 
 //Local Functions
-void pgpe_process_pstate_start();
-void pgpe_process_pstate_stop();
-void pgpe_process_set_pmcr_owner();
 void pgpe_process_clip_update_post_actuate();
 void pgpe_process_wof_enable();
 void pgpe_process_wof_disable();
@@ -76,9 +73,9 @@ void pgpe_process_pstate_start_stop(void* eargs)
             {
                 dpll_mode_t dpll_mode = pgpe_dpll_get_mode();
                 pgpe_opt_set_word(0, 0);
-                pgpe_opt_set_byte(0, ((uint8_t)args->pmcr_owner << 2) | 0x1);
+                pgpe_opt_set_byte(0, ((uint8_t)args->pmcr_owner) + 0x1);
                 pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
-                pgpe_opt_set_byte(2, 0x1);
+                pgpe_opt_set_byte(2, PGPE_OPT_START_STOP_SRC_IPC);
                 pgpe_opt_set_byte(3, (uint8_t)dpll_mode);
                 ppe_trace_op(PGPE_OPT_START_STOP, pgpe_opt_get());
 
@@ -111,11 +108,9 @@ void pgpe_process_pstate_start_stop(void* eargs)
         //If NOT immediate mode, then process this IPC. Otherwise, we ACK back with success
         if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCC_IPC_IMMEDIATE_MODE) == 0)
         {
-            dpll_mode_t dpll_mode = pgpe_dpll_get_mode();
             pgpe_opt_set_word(0, 0);
             pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
-            pgpe_opt_set_byte(2, 0x1);
-            pgpe_opt_set_byte(3, (uint8_t)dpll_mode);
+            pgpe_opt_set_byte(2, PGPE_OPT_START_STOP_SRC_IPC);
             ppe_trace_op(PGPE_OPT_START_STOP, pgpe_opt_get());
 
             //Only run Pstate Stop protocol if Pstate is enabled.

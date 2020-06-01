@@ -63,7 +63,6 @@ int main()
     pgpe_header_init();
     pgpe_gppb_init();
     pgpe_event_tbl_init();
-    pgpe_event_manager_init();
     pgpe_pstate_init();
     pgpe_avsbus_init();
     init_data_struct_table();
@@ -72,6 +71,7 @@ int main()
     pgpe_occ_init();
     pgpe_wov_ocs_init();
     pgpe_irq_init();
+    pgpe_event_manager_init();
 
     PK_TRACE("PGPE Booted");
     ppe_trace_op(PGPE_OPT_PGPE_BOOTED, 0);

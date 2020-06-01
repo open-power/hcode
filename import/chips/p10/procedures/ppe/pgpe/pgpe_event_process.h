@@ -27,6 +27,9 @@
 
 
 void pgpe_process_pstate_start_stop(void* args);
+void pgpe_process_pstate_start();
+void pgpe_process_pstate_stop();
+void pgpe_process_set_pmcr_owner();
 void pgpe_process_clip_update(void* args);
 void pgpe_process_clip_update_w_ack(void* args);
 void pgpe_process_clip_update_post_actuate();

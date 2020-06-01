@@ -29,6 +29,7 @@
 #include "pgpe_occ.h"
 #include "pgpe_dpll.h"
 #include "p10_oci_proc.H"
+#include "pgpe_optrace.h"
 
 //Data
 pgpe_event_manager_t G_pgpe_event_manager __attribute__((section (".data_structs")));
@@ -58,6 +59,23 @@ void pgpe_event_manager_upd_state(uint32_t status)
 
 void pgpe_event_manager_task_init()
 {
+
+    //If OCCFLG2[PSTATE_PROTOCOL_AUTO_ACTIVATE]=1, then enable pstates here
+    uint32_t occFlag = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW);
+
+    if(occFlag & BIT32(PGPE_PSTATE_PROTOCOL_AUTO_ACTIVATE))
+    {
+        pgpe_process_pstate_start();
+        dpll_mode_t dpll_mode = pgpe_dpll_get_mode();
+        pgpe_opt_set_word(0, 0);
+        pgpe_opt_set_byte(0, PGPE_OPT_START_STOP_SS_START_OCC);
+        pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
+        pgpe_opt_set_byte(2, PGPE_OPT_START_STOP_SRC_SCOM);
+        pgpe_opt_set_byte(3, (uint8_t)dpll_mode);
+        ppe_trace_op(PGPE_OPT_START_STOP, pgpe_opt_get());
+        pgpe_process_set_pmcr_owner(PMCR_OWNER_OCC);
+    }
+
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_ACTIVE));
 }
 
@@ -135,6 +153,16 @@ void pgpe_event_manager_run_booted_or_stopped()
             break; //Don't process any other pending requests
         }
 
+        //PSTATE_STOP(SCOM)
+        //Do nothing
+        e = pgpe_event_tbl_get(EV_PSTATE_STOP);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_PSTATE_STOP, EVENT_INACTIVE);
+        }
+
+
         //WOF_CTRL
         //Ack with bad rc
         e = pgpe_event_tbl_get(EV_IPC_WOF_CTRL);
@@ -209,7 +237,7 @@ void pgpe_event_manager_run_active()
         //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
         //If any fault, then mark next state as SAFE_MODE and break
 
-        //Safe Mode \\todo
+        //Safe Mode
         //Process Safe Mode
         //mark next state as SAFE_MODE and break
         e = pgpe_event_tbl_get(EV_SAFE_MODE);
@@ -221,8 +249,21 @@ void pgpe_event_manager_run_active()
             break; //Don't process any other pending requests
         }
 
-        //PSTATE_STOP(SCOM) \\todo
+        //PSTATE_STOP(SCOM)
         //If pstate stopped, then mark next state as STOPPED and break
+        e = pgpe_event_tbl_get(EV_PSTATE_STOP);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_pstate_stop();
+            pgpe_event_manager_upd_state(PGPE_SM_STOPPED);
+            pgpe_opt_set_word(0, 0);
+            pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
+            pgpe_opt_set_byte(2, PGPE_OPT_START_STOP_SRC_SCOM);
+            ppe_trace_op(PGPE_OPT_START_STOP, pgpe_opt_get());
+            break; //Don't process any other pending requests
+        }
+
 
         //PSTATE_START_STOP
         e = pgpe_event_tbl_get(EV_IPC_PSTATE_START_STOP);
@@ -336,6 +377,15 @@ void pgpe_event_manager_run_safe_mode()
         if (e->status == EVENT_PENDING)
         {
             pgpe_event_tbl_set_status(EV_SAFE_MODE, EVENT_INACTIVE);
+        }
+
+        //PSTATE_STOP(SCOM)
+        //Do nothing
+        e = pgpe_event_tbl_get(EV_PSTATE_STOP);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_PSTATE_STOP, EVENT_INACTIVE);
         }
 
         //WOF_CTRL, PMCR_REQUEST, PMCR_PCB, CLIP_UPDATE, PSTATE_START_STOP
