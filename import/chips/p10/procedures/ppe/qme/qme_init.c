@@ -24,9 +24,6 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "qme.h"
-//#include "p9_qme_copy_scan_ring.h"
-//#include "p9_hcode_image_defines.H"
-
 
 #define QME_INIT_ENABLE_INTERRUPT_VECTOR
 
@@ -44,9 +41,13 @@ QmeRecord G_qme_record __attribute__((section (".dump_ptr"))) =
     0
 };
 
+// The throttle table from the core group.  May be dynamically generated.
+#include "p10_core_throttle_table_values.H"
+
 void
 qme_init()
 {
+
     //--------------------------------------------------------------------------
     // Initialize Software Scoreboard
     //--------------------------------------------------------------------------
@@ -139,8 +140,28 @@ qme_init()
     // Initialize Hardware Settings
     //--------------------------------------------------------------------------
 
-    PK_TRACE("Assert SRAM_SCRUB_ENABLE via QSCR[1]");
-    out32( QME_LCL_QSCR_OR, BIT32(1) );
+    PK_TRACE("Assert SRAM_SCRUB_ENABLE via QSCR[1]and set QSCR[DTCBASE] to the throttle table");
+    uint64_t qscr = 0;
+
+    // clear DTCBASE in the hardware first so that OR operations can be used
+    // to set it.  This must be done as this can get executed on a code update
+    // path that moves the throttle table location location
+    qscr = BITS64(32, 8);
+    out64( QME_LCL_QSCR_CLR, qscr);
+
+    uint32_t* core_throttle_table_ptr = (uint32_t*)&core_throttle_table_values;
+
+    // This "copy to itself" is a trick to make the compiler not optimize out the
+    // throttle table array being pointed as it is only being accessed by hardware
+    // and not anywhere else in the Hcode.
+    ((uint32_t volatile*)core_throttle_table_ptr)[0] = core_throttle_table_ptr[0];
+
+    // DTCBase field (32:39)
+    qscr  = ((uint64_t)((uint32_t)core_throttle_table_ptr & 0x0000FF00)) << 16;
+
+    // SRAM scrub
+    qscr |=  BIT64(1);
+    out64( QME_LCL_QSCR_OR, qscr );
 
     PK_TRACE("Drop BCECSR_OVERRIDE_EN/STOP_OVERRIDE_MODE/STOP_ACTIVE_MASK/STOP_SHIFTREG_OVERRIDE_EN via QMCR[3,6,7,29]");
     out32( QME_LCL_QMCR_OR,  BITS32(16, 8) ); //0xB=1011 (Lo-Pri Sel)
