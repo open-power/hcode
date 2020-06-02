@@ -221,13 +221,18 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
                 // 1. Init Runtime wakeup mode for core.
                 // 2. Signal Self Save Restore code for restore operation.
 
+                scom_data.value = 0;
+
                 if ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_RUNTIME_WAKEUP_MODE ) )
                 {
+                    //Core Wakeup as HV
                     scom_data.value = BIT64(59);
                 }
-                else
+
+                if( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_SMF_DISABLE_MODE ) )
                 {
-                    scom_data.value = 0;
+                    //Core wakeup with SMF Disabled
+                    scom_data.value |= BIT64(58);
                 }
             }
 

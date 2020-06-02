@@ -830,7 +830,7 @@ b hrmor_restore_hv
 #in UV mode. Code below support HV exit just in case it is useful.
 
 ipl_stop_exit:
-li           TEMP_REG2, HRMOR_RESTORE_OFFSET
+addi        TEMP_REG2, RMOR_INIT_REG, HRMOR_RESTORE_OFFSET
 
 hrmor_restore_hv:
 
