@@ -33,6 +33,7 @@
 
 // Includes
 #include <p10_cu_utils.H>
+#include <stdio.h>
 
 #define P10_CU_UTILS_C
 
