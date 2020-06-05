@@ -31,4 +31,4 @@ LOCALCOMMONFLAGS += -m64
 endif
 CFLAGS += -O0
 #Uncomment bellow to enable scom checking
-#LOCALCOMMONFLAGS += -DSCOM_CHECKING
+LOCALCOMMONFLAGS += -DSCOM_CHECKING
