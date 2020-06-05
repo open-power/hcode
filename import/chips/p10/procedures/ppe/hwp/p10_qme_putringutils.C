@@ -58,19 +58,17 @@ std::map <uint16_t, uint64_t> g_ringScanRegionMap;
 
 void initScanRegionTest()
 {
-    g_ringScanRegionMap[ec_cl2_fure]   =   0x4780000000009000ul;
+    g_ringScanRegionMap[ec_cl2_func]   =   0x4780000000008000ul;
     g_ringScanRegionMap[ec_cl2_gptr]   =   0x4780000000002000ul;
     g_ringScanRegionMap[ec_cl2_repr]   =   0x4780000000002000ul;
     g_ringScanRegionMap[ec_cl2_time]   =   0x4780000000000100ul;
     g_ringScanRegionMap[ec_cl2_cmsk]   =   0x4780000000000020ul;
     g_ringScanRegionMap[ec_cl2_inex]   =   0x4780000000000010ul;
-    g_ringScanRegionMap[ec_mma_fure]   =   0x0001000000009000ul;
+    g_ringScanRegionMap[ec_mma_func]   =   0x0001000000008000ul;
     g_ringScanRegionMap[ec_mma_gptr]   =   0x0001000000002000ul;
-    g_ringScanRegionMap[ec_mma_repr]   =   0x0001000000000200ul;
     g_ringScanRegionMap[ec_mma_time]   =   0x0001000000000100ul;
     g_ringScanRegionMap[ec_mma_cmsk]   =   0x0001000000000020ul;
-    g_ringScanRegionMap[ec_mma_inex]   =   0x0001000000000010ul;
-    g_ringScanRegionMap[ec_l3_fure]    =   0x4078000000009000ul;
+    g_ringScanRegionMap[ec_l3_func]    =   0x4078000000008000ul;
     g_ringScanRegionMap[ec_l3_gptr]    =   0x4078000000002000ul;
     g_ringScanRegionMap[ec_l3_repr]    =   0x4078000000000200ul;
     g_ringScanRegionMap[ec_l3_time]    =   0x4078000000000100ul;
