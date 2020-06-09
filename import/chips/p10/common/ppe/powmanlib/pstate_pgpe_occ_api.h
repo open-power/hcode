@@ -276,7 +276,7 @@ typedef union
     struct
     {
         uint64_t sibling_base_frequency         : 16;
-        uint64_t reserved0                      : 24;
+        uint64_t reserved0                      : 8;
         uint64_t sibling_pstate                 : 8;
         uint64_t reserved1                      : 32;
     } fields;
