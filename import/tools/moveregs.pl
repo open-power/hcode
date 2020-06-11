@@ -52,7 +52,8 @@ sub analyzefile($)
     my $f      = shift();
     if (   ( $f =~ /\.C$/ || $f =~ /\.c$/ || $f =~ /\.H$/ || $f =~ /\.h$/ )
         && $f !~ /common\/include/
-        && $f !~ /hwp\/initfiles/ )
+        && $f !~ /hwp\/initfiles/
+        && $f !~ /engd\// )
     {
         print "Processing: $f\n";
         open( BUF, $f ) || die "could not open file";
@@ -87,7 +88,8 @@ sub analyzefile($)
         open( BUF, $f ) || die "could not open file";
         while ( my $line = <BUF> )
         {
-            if ( $line =~ /<scomRegister>(\S+)<\/scomRegister>/ )
+            if (   $line =~ /<scomRegister>\s*(\S+)\s*<\/scomRegister>/
+                || $line =~ /<cfamRegister>\s*(\S+)\s*<\/cfamRegister>/ )
             {
                 my $reg   = $1;
                 my @parts = split( /::/, $reg );
