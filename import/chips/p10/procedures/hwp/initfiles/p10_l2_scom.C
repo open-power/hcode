@@ -109,6 +109,8 @@ fapi2::ReturnCode p10_l2_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
             l_scom_buffer.insert<28, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L2_ADDR_EN_ON );
             constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_CAC_ERR_REPAIR_EN_ON = 0x1;
             l_scom_buffer.insert<15, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_CAC_ERR_REPAIR_EN_ON );
+            constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_LINEDEL_ON_CAC_UE_EN_ON = 0x1;
+            l_scom_buffer.insert<16, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_LINEDEL_ON_CAC_UE_EN_ON );
             FAPI_TRY(fapi2::putScom(TGT0, 0x2002800aull, l_scom_buffer));
         }
         {
