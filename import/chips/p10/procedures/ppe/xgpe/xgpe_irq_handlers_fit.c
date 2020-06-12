@@ -219,28 +219,27 @@ void handle_wof_iddq_values()
                 //if core MMA is OFF(1)
                 if (opitasv2 & CORE_MASK(c))
                 {
-                    G_iddq.curr_cnts.core_mma_off[c]++;
+                    G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_MMA_OFF]++;
                 }
             }
             //if core c is Vmin(1)
             else if ((opitasv1 & CORE_MASK(c)))
             {
-                G_iddq.curr_cnts.core_vmin[c]++;
+                G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORE_VMIN]++;
             }
             else if (opitasv0 & CORE_MASK(c))
             {
-                G_iddq.curr_cnts.core_off[c]++;
+                G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECLK_OFF]++;
             }
 
             if (opitasv3 & CORE_MASK(c))
             {
-                G_iddq.curr_cnts.l3_off[c]++;
+                G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECACHE_OFF]++;
             }
         }
         else
         {
-            G_iddq.curr_cnts.core_off[c]++;
-            G_iddq.curr_cnts.l3_off[c]++;
+            G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECACHE_OFF]++;
         }
     }
 
@@ -259,15 +258,8 @@ void handle_wof_iddq_values()
         {
             if (in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW) & CORE_MASK(c))
             {
-                G_iddq.p_act_val->core_off[c]       = G_iddq.curr_cnts.core_off[c];
-                G_iddq.p_act_val->core_vmin[c]      = G_iddq.curr_cnts.core_vmin[c];
-                G_iddq.p_act_val->core_mma_off[c]   = G_iddq.curr_cnts.core_mma_off[c];
-                G_iddq.p_act_val->l3_off[c]         = G_iddq.curr_cnts.l3_off[c];
-
-                G_iddq.curr_cnts.core_off[c] = 0;
-                G_iddq.curr_cnts.core_vmin[c] = 0;
-                G_iddq.curr_cnts.core_mma_off[c] = 0;
-                G_iddq.curr_cnts.l3_off[c] = 0;
+                G_iddq.p_act_val->act_val_core[c]  = G_iddq.curr_cnts.act_val_core[c];
+                G_iddq.curr_cnts.act_val_core[c] = 0;
             }
         }
 

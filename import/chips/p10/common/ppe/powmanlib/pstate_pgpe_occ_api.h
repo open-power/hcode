@@ -282,12 +282,19 @@ typedef union
     } fields;
 } occ_wof_values_t;
 
+enum ACT_CNT_IDX
+{
+    ACT_CNT_IDX_CORECLK_OFF    = 0,
+    ACT_CNT_IDX_CORE_VMIN      = 1,
+    ACT_CNT_IDX_MMA_OFF        = 2,
+    ACT_CNT_IDX_CORECACHE_OFF  = 3,
+    ACT_CNT_IDX_MAX            = 4,
+};
+
 typedef union
 {
-    uint32_t    core_off[32];
-    uint32_t    core_vmin[32];
-    uint32_t    core_mma_off[32];
-    uint32_t    l3_off[32];
+    uint8_t act_val[32][ACT_CNT_IDX_MAX];
+    uint32_t act_val_core[32];
 } iddq_activity_t;
 
 

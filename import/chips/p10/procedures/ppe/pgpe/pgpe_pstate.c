@@ -447,18 +447,18 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
             core_cnt++;
 
             //if core is ON
-            if (G_p_iddq_act_val->core_off[c] == 0)
+            if (G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_CORECLK_OFF] == 0)
             {
                 vratio_vdd_accum += pgpe_gppb_get_core_on_ratio_vdd();
 
                 //if core MMA is ON
-                if (G_p_iddq_act_val->core_mma_off[c] == 0)
+                if (G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_MMA_OFF] == 0)
                 {
                     vratio_vdd_accum += pgpe_gppb_get_mma_on_ratio_vdd();
                 }
             }
             //if core c is Vmin
-            else if (G_p_iddq_act_val->core_vmin[c])
+            else if (G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_CORE_VMIN])
             {
                 vratio_vdd_accum += (pgpe_gppb_get_core_on_ratio_vdd() * vmin_mv) / vdd;
             }
