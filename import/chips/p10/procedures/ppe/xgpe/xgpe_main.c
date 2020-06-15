@@ -37,8 +37,13 @@ uint32_t G_OCB_OCCFLG3_OR    = OCB_OCCFLG3_OR;
 uint32_t G_OCB_OCCFLG3_CLR   = OCB_OCCFLG3_CLR;
 uint32_t G_OCB_CCSR          = OCB_CCSR;
 uint32_t G_OCB_OPITFSV       = OCB_OPITFSV;
+uint32_t G_OCB_OPITESV       = OCB_OPITESV;
 uint32_t G_OCB_OPITFPRD      = OCB_OPITFPRD;
+uint32_t G_OCB_OPITFPRD_CLR  = OCB_OPITFPRD_WO_CLEAR;
+uint32_t G_OCB_OPITEPRD      = OCB_OPITEPRD;
+uint32_t G_OCB_OPITEPRD_CLR  = OCB_OPITEPRD_WO_CLEAR;
 uint32_t G_OCB_OPITFSVRR     = OCB_OPITFSVRR;
+uint32_t G_OCB_OPITESVRR     = OCB_OPITESVRR;
 
 
 int main()
@@ -65,11 +70,11 @@ void xgpe_init()
     out32(G_OCB_OCCFLG3, BIT32(XGPE_ACTIVE));
 
     //Unmask
-    //PCBtype F(31)
+    //PCBtype E(30), F(31)
     //ipi3(9)
     //GPE2 error (2) notify
     //XSTOP GPE3 (5)interrupts
-    out32(G_OCB_OIMR0_CLR, BIT32(31) | BIT32(11) | BIT32(9) | BIT32(2) | BIT32(5));
+    out32(G_OCB_OIMR0_CLR, BITS32(30, 2) | BIT32(11) | BIT32(9) | BIT32(2) | BIT32(5));
 
 #if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)
 

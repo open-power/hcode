@@ -110,6 +110,8 @@ main()
 
     // Initialize QME Eror Logging Table & framework
     initErrLogging ((uint8_t) ERRL_SOURCE_QME, &G_qmeElogTable);
+    QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
+    pQmeImgHdr->g_qme_elog_addr = (uint32_t)&G_qmeElogTable;
 
     PK_TRACE("Main: Configure Trace Timebase");
     uint32_t trace_timebase = PPE_TIMEBASE_HZ;

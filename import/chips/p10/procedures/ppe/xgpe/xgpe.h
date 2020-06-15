@@ -51,6 +51,8 @@
 #define CORE_MASK(core) \
     (0x80000000 >> core)
 
+#define MAX_QME_ERRORLOG_ENTRIES 16
+
 enum PCB_TYPE_F_MSG
 {
     UNSUSPEND_STOP_ENTRY      = 0x01,

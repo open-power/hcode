@@ -24,6 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "qme.h"
+#include "errl.h"
 #include <fapi2.H>
 #include <fapi2_target.H>
 
@@ -235,6 +236,34 @@ qme_stop_exit()
     fapi2::Target < fapi2::TARGET_TYPE_PROC_CHIP > chip_target;
     fapi2::Target < fapi2::TARGET_TYPE_CORE |
     fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_target;
+
+    if( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_STOP_EXIT_INJECT ) )
+    {
+        errlHndl_t rc = NULL;
+        rc = createErrl (
+                 0xBABE, // i_modId,
+                 0x0B, // i_reasonCode, 0x0B
+                 QME_STOP_EXIT_ENTRY_ERROR_INJECT,  // i_extReasonCode, 0x1c1f
+                 ERRL_SEV_UNRECOVERABLE, // ERRL_SEVERITY,
+                 0xDEADBEEF,   // i_userData1,
+                 0xBADBADBA,   // i_userData2,
+                 0xC0DEFEED ); // i_userData3
+
+        if (NULL != rc)
+        {
+            addTraceToErrl (rc);
+            commitErrl (&rc);
+        }
+
+        uint32_t pig_data = 0;
+        pig_data = ( PIG_TYPE_E << SHIFT32(4) ) |
+                   ( G_qme_record.quad_id       << SHIFT32(19) ) |
+                   ( (QME_STOP_EXIT_ENTRY_ERROR_INJECT) << SHIFT32(23) );
+        qme_send_pig_packet(pig_data);
+        IOTA_PANIC(QME_STOP_EXIT_ENTRY_ERROR_INJECT);
+
+    }
+
 
     if( G_qme_record.c_stop2_exit_targets )
     {

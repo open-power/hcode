@@ -55,3 +55,23 @@ void xgpe_gpe3_func_handler();
 /// @return none
 /// ---------------------------------------------
 void xgpe_irq_pcb_typef_handler();
+
+/// ----------------------------------------------
+/// @brief Handles PCB type E interrupt (QME->XGPE)
+//  specially for error handling case
+/// @return none
+/// ---------------------------------------------
+void xgpe_irq_pcb_typeE_handler();
+
+/// ----------------------------------------------
+/// @brief Function that access qme sram data
+/// @param[in] i_quadId Quad ID
+/// @param[in] i_address QME SRAM address
+/// @param[in] i_words_to_access number of words
+/// @param[out] o_data qme sram data
+/// @return none
+/// ---------------------------------------------
+void xgpe_qme_sram_access(uint32_t i_quadId,
+                          uint32_t i_address,
+                          uint32_t i_words_to_access,
+                          uint64_t* o_data);
