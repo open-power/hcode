@@ -34,13 +34,15 @@
 #define IRQ_VEC_PRTY2_GPE 0x0040000000000000ull
 // Group3: Direct GPE3 function trigger
 #define IRQ_VEC_PRTY3_GPE 0x0010000000000000ull
-// Group4: PCB type F
-#define IRQ_VEC_PRTY4_GPE 0x0000000100000000ull
-// Group5: Other Engines IRQs
+// Group4: PCB type E ( QME error log)
+#define IRQ_VEC_PRTY4_GPE 0x0000000200000000ull
+// Group5: PCB type F
+#define IRQ_VEC_PRTY5_GPE 0x0000000100000000ull
+// Group6: Other Engines IRQs
 #ifdef _XGPE_STANDALONE_
-    #define IRQ_VEC_PRTY5_GPE 0xDBAEFFFEFFFFFFFFull
+    #define IRQ_VEC_PRTY6_GPE 0xDBACFFFEFFFFFFFFull
 #else
-    #define IRQ_VEC_PRTY5_GPE 0x0000000000000000ull
+    #define IRQ_VEC_PRTY6_GPE 0x0000000000000000ull
 #endif
 
 #define IRQ_VEC_ALL_OUR_IRQS (IRQ_VEC_PRTY0_GPE | \
@@ -48,7 +50,8 @@
                               IRQ_VEC_PRTY2_GPE | \
                               IRQ_VEC_PRTY3_GPE | \
                               IRQ_VEC_PRTY4_GPE | \
-                              IRQ_VEC_PRTY5_GPE)
+                              IRQ_VEC_PRTY5_GPE | \
+                              IRQ_VEC_PRTY6_GPE)
 
 #define IDX_PRTY_VEC 0
 #define IDX_MASK_VEC 1

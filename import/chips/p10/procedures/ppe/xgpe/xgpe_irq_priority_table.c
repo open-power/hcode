@@ -37,7 +37,8 @@ const uint64_t ext_irq_vectors_gpe[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY2_GPE |
         IRQ_VEC_PRTY3_GPE |
         IRQ_VEC_PRTY4_GPE |
-        IRQ_VEC_PRTY5_GPE
+        IRQ_VEC_PRTY5_GPE |
+        IRQ_VEC_PRTY6_GPE
     },
     {
         IRQ_VEC_PRTY1_GPE,        //PBA overcurrent indicator
@@ -45,29 +46,38 @@ const uint64_t ext_irq_vectors_gpe[IOTA_NUM_EXT_IRQ_PRIORITIES][2] =
         IRQ_VEC_PRTY2_GPE |
         IRQ_VEC_PRTY3_GPE |
         IRQ_VEC_PRTY4_GPE |
-        IRQ_VEC_PRTY5_GPE
+        IRQ_VEC_PRTY5_GPE |
+        IRQ_VEC_PRTY6_GPE
     },
     {
         IRQ_VEC_PRTY2_GPE,        //IPC(IPI3)
         IRQ_VEC_PRTY2_GPE |
         IRQ_VEC_PRTY3_GPE |
         IRQ_VEC_PRTY4_GPE |
-        IRQ_VEC_PRTY5_GPE
+        IRQ_VEC_PRTY5_GPE |
+        IRQ_VEC_PRTY6_GPE
     },
     {
         IRQ_VEC_PRTY3_GPE,        //GPE3 func trigger
         IRQ_VEC_PRTY3_GPE |
         IRQ_VEC_PRTY4_GPE |
-        IRQ_VEC_PRTY5_GPE
+        IRQ_VEC_PRTY5_GPE |
+        IRQ_VEC_PRTY6_GPE
     },
     {
-        IRQ_VEC_PRTY4_GPE,        //PCB Type F
+        IRQ_VEC_PRTY4_GPE,        //PCB Type E
         IRQ_VEC_PRTY4_GPE |
-        IRQ_VEC_PRTY5_GPE
+        IRQ_VEC_PRTY5_GPE |
+        IRQ_VEC_PRTY6_GPE
+    },
+    {
+        IRQ_VEC_PRTY5_GPE,        //PCB Type F
+        IRQ_VEC_PRTY5_GPE |
+        IRQ_VEC_PRTY6_GPE
     },
     // last entry is for irqs not handled by this engine.
     {
-        IRQ_VEC_PRTY5_GPE,
-        IRQ_VEC_PRTY5_GPE
+        IRQ_VEC_PRTY6_GPE,
+        IRQ_VEC_PRTY6_GPE
     }
 };
