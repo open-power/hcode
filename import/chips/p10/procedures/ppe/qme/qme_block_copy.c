@@ -42,36 +42,58 @@ enum QME_BCE_CONTROL_STATUS
     NUM_BLK_SHIFT_POS       = 36
 };
 
-void
-qme_block_copy_start(uint32_t barIndex, uint32_t bcMembase, uint32_t bcSrambase, uint32_t bcLength)
+void kick_off_bce( uint32_t i_barIndex, uint32_t i_memBase,
+                   uint32_t i_sramBase,  uint32_t i_length )
 {
-    //let us find out HOMER address where core specific scan rings reside.
-    // use native 16-bit PPE multiply instruction
     uint64_t l_tempData = 0;
     uint64_t l_bceControlData = 0;
-    bcMembase = bcMembase + (mulu16( G_qme_record.quad_id , bcLength ));
-    PK_TRACE_DBG("Start qme block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  QME Ist %d",
-                 bcMembase, bcSrambase, bcLength, G_qme_record.quad_id);
 
-    l_tempData  =  bcSrambase;
+    l_tempData  =  i_sramBase;
     l_bceControlData  =  l_tempData << SBASE_SHIFT_POS;
 
-    l_tempData  =  bcLength;
+    l_tempData  =  i_length;
     l_bceControlData  |=  l_tempData << NUM_BLK_SHIFT_POS;
 
-    l_tempData =  bcMembase;
+    l_tempData =  i_memBase;
     l_bceControlData |= l_tempData;
 
     l_bceControlData  =  l_bceControlData |
                          START_BLOCK_COPY |
                          RD_FROM_HOMER_TO_SRAM |
-                         ((barIndex == 0) ? SEL_BCEBAR0 : SEL_BCEBAR1) |
+                         ((i_barIndex == 0) ? SEL_BCEBAR0 : SEL_BCEBAR1) |
                          (SET_RD_PRIORITY_0);
 
     PKTRACE( "Control Data 0x%08x%08x", (l_bceControlData >> 32), (uint32_t)l_bceControlData );
     out64(QME_LCL_BCECSR, l_bceControlData);
+
 }
 
+void
+qme_block_copy_start(uint32_t barIndex, uint32_t bcMembase, uint32_t bcSrambase, uint32_t bcLength)
+{
+    //let us find out HOMER address where core specific scan rings reside.
+    // use native 16-bit PPE multiply instruction
+    bcMembase = bcMembase + (mulu16( G_qme_record.quad_id , bcLength ));
+    PK_TRACE_DBG("Start qme block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  QME Ist %d",
+                 bcMembase, bcSrambase, bcLength, G_qme_record.quad_id);
+
+    kick_off_bce( barIndex, bcMembase, bcSrambase, bcLength );
+
+}
+
+
+void
+qme_block_copy_ffdc(uint32_t i_barIndex, uint32_t i_bcMembase, uint32_t i_bcSrambase, uint32_t i_qmeBlockLen,
+                    uint32_t i_coreLen )
+{
+    //let us find out HOMER address where core specific scan rings reside.
+    // use native 16-bit PPE multiply instruction
+    i_bcMembase = i_bcMembase + (mulu16( G_qme_record.quad_id , i_qmeBlockLen ));
+    PKTRACE("Start qme block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  QME Ist %d",
+            i_bcMembase, i_bcSrambase, i_coreLen, G_qme_record.quad_id);
+
+    kick_off_bce( i_barIndex, i_bcMembase, i_bcSrambase, i_coreLen );
+}
 
 BceReturnCode_t
 qme_block_copy_check()

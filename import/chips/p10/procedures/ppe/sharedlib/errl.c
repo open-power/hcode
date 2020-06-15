@@ -29,9 +29,17 @@
 #include "iota_trace.h"
 
 #include "p10_hcd_memmap_occ_sram.H"
+#include "p10_hcd_memmap_base.H"
 
 #include "errldefs.h"
 #include "errl.h"
+
+#ifdef __PPE_QME
+    #include "qme.h"
+    extern QmeRecord G_qme_record;
+    //This yields a timeout of 10.6ms at a 4.5GHz core and 24ms at a 2GHz core.
+    static uint32_t BCE_TIMEOUT_COUNT = 100000;
+#endif
 
 uint8_t G_errLogUnrec[ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
 uint8_t G_errLogInfo [ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
@@ -87,7 +95,7 @@ void initErrLogging ( const uint8_t              i_errlSource,
             case ERRL_SOURCE_QME:
                 // Each QME commits error logs to its own table in local QME SRAM
                 G_errlConfigData.traceSz = ERRL_TRACE_DATA_SZ_QME;
-                G_errlConfigData.tblBaseSlot += (G_errlConfigData.ppeId << 1);
+                G_errlConfigData.tblBaseSlot += (( G_errlConfigData.ppeId & 0x0f ) << 1 );
                 G_errlConfigData.gpeBaseSlot = G_errlConfigData.tblBaseSlot;
                 break;
 
@@ -161,7 +169,7 @@ uint8_t getErrSlotNumAndErrId (
                 break;
 
             case ERRL_SOURCE_QME:
-                l_slotmask = ~(ERRL_SLOT_MASK_QME_UNREC_BASE >> (G_errlConfigData.ppeId << 1));
+                l_slotmask = ~(ERRL_SLOT_MASK_QME_UNREC_BASE >> (( G_errlConfigData.ppeId & 0x0f ) << 1));
                 break;
         }
     }
@@ -178,7 +186,7 @@ uint8_t getErrSlotNumAndErrId (
                 break;
 
             case ERRL_SOURCE_QME:
-                l_slotmask = ~(ERRL_SLOT_MASK_QME_INFO_BASE >> (G_errlConfigData.ppeId << 1));
+                l_slotmask = ~(ERRL_SLOT_MASK_QME_INFO_BASE >> (( G_errlConfigData.ppeId & 0x0f ) << 1));
                 break;
         }
     }
@@ -573,7 +581,6 @@ void addUsrDtlsToErrl(
             l_usrDtlsEntry.iv_version = i_version;
             l_usrDtlsEntry.iv_size = (i_size < l_availableSize) ? i_size :
                                      l_availableSize;
-
             void* l_p = io_err;
 
             // add user detail entry to end of the current error log
@@ -593,6 +600,43 @@ void addUsrDtlsToErrl(
             {
                 // copy the trace buffer (source data ptr is global)
                 copyTraceBufferPartial (l_p, l_usrDtlsEntry.iv_size);
+            }
+            else if ( l_usrDtlsEntry.iv_type == ERRL_USR_DTL_SR_FFDC )
+            {
+#ifdef __PPE_QME
+
+                ErrlUserDetailsEntry_t* l_pffdcHdr = ( ErrlUserDetailsEntry_t*)((uint8_t*)l_p - sizeof (ErrlUserDetailsEntry_t));
+                uint32_t l_ffdc         =   (uint32_t ) l_p;
+                uint32_t l_coreNum   =   *i_dataPtr;
+
+                if( l_coreNum > 3 )
+                {
+                    PK_TRACE_DBG( "Bad FFDC Source Location Index %d", l_coreNum );
+                    l_coreNum = 3;
+                }
+
+                l_coreNum   =   l_coreNum * SELF_RESTORE_FFDC_PER_CORE_IN_HOMER;
+                uint32_t l_roundedSize  =   l_pffdcHdr->iv_size + ( 32 - (l_ffdc % 32) );
+                l_pffdcHdr->iv_size     =   ( l_roundedSize < l_availableSize ) ? l_roundedSize : l_availableSize;
+
+                l_ffdc = (( l_ffdc + 31 ) & ~(0x1F ));
+
+                qme_block_copy_ffdc( QME_BCEBAR_0,
+                                     (( SELF_RESTORE_FFDC_OFFSET + l_coreNum ) >> 5 ),
+                                     (( l_ffdc & 0x0000ffff ) >> 5),
+                                     ( SELF_RESTORE_FFDC_PER_QUAD_IN_HOMER >> 5 ),
+                                     SELF_RESTORE_FFDC_BLK_CNT );
+
+                G_qme_record.cts_timeout_count = BCE_TIMEOUT_COUNT;
+
+                do
+                {
+                    PPE_WAIT_4NOP_CYCLES;
+
+                }
+                while( ( BLOCK_COPY_SUCCESS != qme_block_copy_check()) &&  ( --G_qme_record.cts_timeout_count > 0 ) );
+
+#endif
             }
             else
             {
