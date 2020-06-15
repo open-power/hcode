@@ -23,6 +23,18 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "qme.h"
+#include "errl.h"
+
+enum
+{
+    QME_MODULE_ID_SR        =   0x01,
+    QME_REASON_SR_FAIL      =   0x01,
+    SR_FAIL_SLAVE_THREAD    =   0x01,
+    SR_FAIL_MASTER_THREAD   =   0x02,
+    QME_STOP11_EXIT         =   0x02,
+    SR_FFDC_SIZE            =   864,
+
+};
 
 extern QmeRecord G_qme_record;
 uint64_t G_spattn_mask = 0;
@@ -32,11 +44,13 @@ qme_stop_self_complete(uint32_t core_target)
 {
     data64_t scom_data;
     uint32_t core_mask;
+    uint32_t sr_fail_loc    =   SR_FAIL_SLAVE_THREAD;
 
     // RTC 248150: value needs to be reviewed post hardware
     // the timeout needs to cover the worst case save or
     // restore operation for all the slave threads
     static uint32_t CTS_TIMEOUT_COUNT = 100000;
+    uint8_t core_inst = 0;
 
     PK_TRACE("Core Target %08X", core_target );
 
@@ -48,13 +62,10 @@ qme_stop_self_complete(uint32_t core_target)
 
     for (core_mask = 8; core_mask; core_mask = core_mask >> 1)
     {
-
         PK_TRACE("CORE_THREAD_STATE Loop Core %d", core_mask);
-
 
         if (core_target & core_mask)
         {
-
             G_qme_record.cts_timeout_count = 0;
 
             do
@@ -69,7 +80,7 @@ qme_stop_self_complete(uint32_t core_target)
             if (G_qme_record.cts_timeout_count == CTS_TIMEOUT_COUNT)
             {
                 PK_TRACE("Timout polling for slave threads stopping on core mask %X", core_mask);
-                //  RTC 214437 Add logging
+                goto commit_sr_log;
             }
             else
             {
@@ -80,15 +91,14 @@ qme_stop_self_complete(uint32_t core_target)
                 {
                     PK_TRACE("Setting Slave Threads Complete in SCRATCH 0.");
                     PPE_GETSCOM_UC ( SCRATCH0, 0, core_mask, scom_data.value);
-                    scom_data.words.lower |= BIT64SH(56);
+                    scom_data.value |= BIT64(56);
                     PPE_PUTSCOM_UC( SCRATCH0, 0, core_mask, scom_data.value );
                 }
-
-                if (core_mask & 0x5) // Odd cores
+                else // Odd cores
                 {
                     PK_TRACE("Setting Slave Threads Complete in SCRATCH 1.");
                     PPE_GETSCOM_UC ( SCRATCH1, 0, core_mask, scom_data.value);
-                    scom_data.words.lower |= BIT64SH(56);
+                    scom_data.value |= BIT64(56);
                     PPE_PUTSCOM_UC( SCRATCH1, 0, core_mask, scom_data.value );
                 }
             }
@@ -98,10 +108,96 @@ qme_stop_self_complete(uint32_t core_target)
     PK_TRACE("Poll for core(s) stop again(pm_active=1)");
 
     // check pm_active_lopri for stop11
-    // RTC 248149: needs timout for logging!!!
-    while((~(in32_sh(QME_LCL_EINR))) & (core_target << SHIFT64SH(55)));
+    G_qme_record.cts_timeout_count = (2 * CTS_TIMEOUT_COUNT);
 
-    PK_TRACE_INF("SF.RS: Self Save/Restore Completed, Core Stopped Again(pm_exit=0/pm_active=1)");
+    do
+    {
+        PPE_WAIT_4NOP_CYCLES;
+    }
+    while( ((~(in32_sh(QME_LCL_EINR))) & (core_target << SHIFT64SH(55))) && ( --G_qme_record.cts_timeout_count > 0 ) );
+
+    if( G_qme_record.cts_timeout_count > 0 )
+    {
+        //Self-Save-Restore ended fine
+        PK_TRACE_INF("SF.RS: Self Save/Restore Completed, Core Stopped Again(pm_exit=0/pm_active=1)");
+        goto skip_sr_log;
+    }
+
+    sr_fail_loc = SR_FAIL_MASTER_THREAD;
+
+commit_sr_log:
+
+    for (core_mask = 8; core_mask; core_mask = core_mask >> 1)
+    {
+        PK_TRACE( "SR: Time Out" );
+
+        if( in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) ) & BIT64SH(58) )
+        {
+            PK_TRACE( "SR: Spl Attention on core %d", core_mask );
+
+            if (core_mask & 0xA) // Even cores
+            {
+                PPE_GETSCOM_UC ( SCRATCH0, 0, core_mask, scom_data.value);
+            }
+            else
+            {
+                PPE_GETSCOM_UC ( SCRATCH1, 0, core_mask, scom_data.value);
+            }
+
+            //FFDC Available
+            if( scom_data.value &  BIT64(62) )
+            {
+                PK_TRACE( "SR: FFDC Available, Logging Error" );
+                G_qme_record.cts_timeout_count = CTS_TIMEOUT_COUNT;
+                //commit error log and add self-save restore FFDC as user detail
+                errlHndl_t l_errl = NULL;
+
+                do
+                {
+                    l_errl  = createErrl (
+                                  QME_MODULE_ID_SR,
+                                  QME_REASON_SR_FAIL,
+                                  QME_STOP11_EXIT,
+                                  ERRL_SEV_UNRECOVERABLE,
+                                  core_target,
+                                  scom_data.words.lower,
+                                  sr_fail_loc );
+
+                    if( NULL != l_errl )
+                    {
+                        if( core_mask & 0x4 )
+                        {
+                            core_inst = 1;
+                        }
+                        else if(  core_mask & 0x2 )
+                        {
+                            core_inst = 2;
+                        }
+                        else if( core_mask & 0x1 )
+                        {
+                            core_inst = 3;
+                        }
+
+                        addUsrDtlsToErrl( l_errl,
+                                          &core_inst,
+                                          SR_FFDC_SIZE,
+                                          ERRL_STRUCT_VERSION_1,
+                                          ERRL_USR_DTL_SR_FFDC );
+
+                        commitErrl( &l_errl );
+
+                        PK_TRACE_DBG( "SR: Core %d Logging Done", core_mask );
+                        break; // to check for next core
+                    }
+
+                }
+                while( --G_qme_record.cts_timeout_count > 0 );
+            }
+        }
+
+    }//for (core_mask
+
+skip_sr_log:
 
     PK_TRACE("Cleaning up thread scratch registers after self restore.");
     PPE_PUTSCOM_MC( SCRATCH0, core_target, 0 );
@@ -119,7 +215,6 @@ qme_stop_self_complete(uint32_t core_target)
 
     PK_TRACE("Clear pm_active status via EISR[52:55]");
     out32_sh( QME_LCL_EISR_CLR, core_target << SHIFT64SH(55));
-
 }
 
 void

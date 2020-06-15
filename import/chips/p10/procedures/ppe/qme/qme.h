@@ -298,6 +298,7 @@ void qme_init();
 void qme_eval_eimr_override();
 void qme_send_pig_packet(uint32_t);
 void qme_block_copy_start(uint32_t, uint32_t, uint32_t, uint32_t);
+void qme_block_copy_ffdc( uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
 BceReturnCode_t qme_block_copy_check();
 
 // QME Stop Functions
