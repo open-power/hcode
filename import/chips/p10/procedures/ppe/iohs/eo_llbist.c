@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,6 +41,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
+// cws20011400 |cws     | Added Debug Logs
+// mwh19111500 |mwh     | Increase the time we are checking to 2 microsec.
 // bja19082100 |bja     | Set rx_fail_flag on fail
 // bja19081900 |bja     | Set FIR on fail
 // bja19081400 |bja     | Remove while loops. Use longer spins instead.
@@ -60,6 +63,7 @@
 #include "ppe_mem_reg_const_pkg.h"
 #include "ppe_com_reg_const_pkg.h"
 #include "config_ioo.h"
+#include "io_logger.h"
 
 void eo_llbist(t_gcr_addr* gcr_addr)
 {
@@ -78,13 +82,14 @@ void eo_llbist(t_gcr_addr* gcr_addr)
 
     //let comparison run
     set_debug_state(0x51E2);
-    io_spin_us(1);//1 micro-sec
+    io_spin_us(2);//1 micro-sec
 
     int error = get_ptr_field(gcr_addr, rx_pb_io_nv_iobist_prbs_error);//pg
 
     if ( error )
     {
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_RX_BIST_LL_TEST_FAIL, gcr_addr, 0);
     }
 
     mem_pg_field_put(rx_linklayer_done, 0b1);//pg

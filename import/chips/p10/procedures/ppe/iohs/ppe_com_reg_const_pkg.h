@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -267,6 +267,7 @@
 #define scom_ppe_mem_arb_csar_addr                 0b000001101
 #define scom_ppe_mem_arb_csdr_addr                 0b000001110
 #define scom_ppe_mem_arb_scr_addr                  0b000001010
+#define scom_ppe_srr0_lr_addr                      0b000011111
 #define scom_ppe_work_reg1_addr                    0b000100001
 #define scom_ppe_work_reg2_addr                    0b000100010
 #define scom_ppe_xcr_none_addr                     0b000010000
@@ -5163,460 +5164,484 @@
 #define rx_vtal_late_result_mask                   0xffff
 
 
+#define scom_mode_pb_reserved1_addr                0b000100110
+#define scom_mode_pb_reserved1_startbit            1
+#define scom_mode_pb_reserved1_width               1
+#define scom_mode_pb_reserved1_endbit              1
+#define scom_mode_pb_reserved1_shift               62
+#define scom_mode_pb_reserved1_mask                0x4000000000000000
+
+
 #define scom_mode_pb_spares1_addr                  0b000100110
 #define scom_mode_pb_spares1_startbit              10
-#define scom_mode_pb_spares1_width                 12
-#define scom_mode_pb_spares1_endbit                21
-#define scom_mode_pb_spares1_shift                 -6
-#define scom_mode_pb_spares1_mask                  0xfc00000000000000
-
-
-#define scom_mode_pb_spares2_addr                  0b000100110
-#define scom_mode_pb_spares2_startbit              23
-#define scom_mode_pb_spares2_width                 8
-#define scom_mode_pb_spares2_endbit                30
-#define scom_mode_pb_spares2_shift                 -15
-#define scom_mode_pb_spares2_mask                  0x1fe000000000000
+#define scom_mode_pb_spares1_width                 22
+#define scom_mode_pb_spares1_endbit                31
+#define scom_mode_pb_spares1_shift                 32
+#define scom_mode_pb_spares1_mask                  0x3fffff00000000
 
 
 #define scom_ppe_arb_ecc_inject_err_addr           0b000100000
 #define scom_ppe_arb_ecc_inject_err_startbit       2
 #define scom_ppe_arb_ecc_inject_err_width          1
 #define scom_ppe_arb_ecc_inject_err_endbit         2
-#define scom_ppe_arb_ecc_inject_err_shift          13
-#define scom_ppe_arb_ecc_inject_err_mask           0x2000
+#define scom_ppe_arb_ecc_inject_err_shift          61
+#define scom_ppe_arb_ecc_inject_err_mask           0x2000000000000000
 
 
 #define scom_ppe_cntl_full_reg_addr                0b000100000
 #define scom_ppe_cntl_full_reg_startbit            0
 #define scom_ppe_cntl_full_reg_width               24
 #define scom_ppe_cntl_full_reg_endbit              23
-#define scom_ppe_cntl_full_reg_shift               -8
-#define scom_ppe_cntl_full_reg_mask                0xff00000000000000
+#define scom_ppe_cntl_full_reg_shift               40
+#define scom_ppe_cntl_full_reg_mask                0xffffff0000000000
 
 
 #define scom_ppe_fir_addr                          0b000101000
 #define scom_ppe_fir_startbit                      0
 #define scom_ppe_fir_width                         8
 #define scom_ppe_fir_endbit                        7
-#define scom_ppe_fir_shift                         8
-#define scom_ppe_fir_mask                          0xff00
+#define scom_ppe_fir_shift                         56
+#define scom_ppe_fir_mask                          0xff00000000000000
 
 
 #define scom_ppe_fir_clr_addr                      0b000101010
 #define scom_ppe_fir_clr_startbit                  0
 #define scom_ppe_fir_clr_width                     8
 #define scom_ppe_fir_clr_endbit                    7
-#define scom_ppe_fir_clr_shift                     8
-#define scom_ppe_fir_clr_mask                      0xff00
+#define scom_ppe_fir_clr_shift                     56
+#define scom_ppe_fir_clr_mask                      0xff00000000000000
 
 
 #define scom_ppe_fir_mask_addr                     0b000101011
 #define scom_ppe_fir_mask_startbit                 0
 #define scom_ppe_fir_mask_width                    8
 #define scom_ppe_fir_mask_endbit                   7
-#define scom_ppe_fir_mask_shift                    8
-#define scom_ppe_fir_mask_mask                     0xff00
+#define scom_ppe_fir_mask_shift                    56
+#define scom_ppe_fir_mask_mask                     0xff00000000000000
 
 
 #define scom_ppe_fir_set_addr                      0b000101001
 #define scom_ppe_fir_set_startbit                  0
 #define scom_ppe_fir_set_width                     8
 #define scom_ppe_fir_set_endbit                    7
-#define scom_ppe_fir_set_shift                     8
-#define scom_ppe_fir_set_mask                      0xff00
+#define scom_ppe_fir_set_shift                     56
+#define scom_ppe_fir_set_mask                      0xff00000000000000
 
 
 #define scom_ppe_flags_addr                        0b000100011
 #define scom_ppe_flags_startbit                    0
 #define scom_ppe_flags_width                       16
 #define scom_ppe_flags_endbit                      15
-#define scom_ppe_flags_shift                       0
-#define scom_ppe_flags_mask                        0xffff
+#define scom_ppe_flags_shift                       48
+#define scom_ppe_flags_mask                        0xffff000000000000
 
 
 #define scom_ppe_flags_clr_addr                    0b000100101
 #define scom_ppe_flags_clr_startbit                0
 #define scom_ppe_flags_clr_width                   16
 #define scom_ppe_flags_clr_endbit                  15
-#define scom_ppe_flags_clr_shift                   0
-#define scom_ppe_flags_clr_mask                    0xffff
+#define scom_ppe_flags_clr_shift                   48
+#define scom_ppe_flags_clr_mask                    0xffff000000000000
 
 
 #define scom_ppe_flags_set_addr                    0b000100100
 #define scom_ppe_flags_set_startbit                0
 #define scom_ppe_flags_set_width                   16
 #define scom_ppe_flags_set_endbit                  15
-#define scom_ppe_flags_set_shift                   0
-#define scom_ppe_flags_set_mask                    0xffff
+#define scom_ppe_flags_set_shift                   48
+#define scom_ppe_flags_set_mask                    0xffff000000000000
 
 
 #define scom_ppe_func_full_reg_addr                0b000100111
 #define scom_ppe_func_full_reg_startbit            0
 #define scom_ppe_func_full_reg_width               16
 #define scom_ppe_func_full_reg_endbit              15
-#define scom_ppe_func_full_reg_shift               0
-#define scom_ppe_func_full_reg_mask                0xffff
+#define scom_ppe_func_full_reg_shift               48
+#define scom_ppe_func_full_reg_mask                0xffff000000000000
 
 
 #define scom_ppe_iar_addr                          0b000010101
 #define scom_ppe_iar_startbit                      32
 #define scom_ppe_iar_width                         32
 #define scom_ppe_iar_endbit                        63
-#define scom_ppe_iar_shift                         -48
-#define scom_ppe_iar_mask                          0xffffffff0000
+#define scom_ppe_iar_shift                         0
+#define scom_ppe_iar_mask                          0xffffffff
 
 
 #define scom_ppe_interleaving_addr                 0b000100000
 #define scom_ppe_interleaving_startbit             3
 #define scom_ppe_interleaving_width                2
 #define scom_ppe_interleaving_endbit               4
-#define scom_ppe_interleaving_shift                11
-#define scom_ppe_interleaving_mask                 0x1800
+#define scom_ppe_interleaving_shift                59
+#define scom_ppe_interleaving_mask                 0x1800000000000000
 
 
 #define scom_ppe_ioreset_addr                      0b000100000
 #define scom_ppe_ioreset_startbit                  0
 #define scom_ppe_ioreset_width                     1
 #define scom_ppe_ioreset_endbit                    0
-#define scom_ppe_ioreset_shift                     15
-#define scom_ppe_ioreset_mask                      0x8000
+#define scom_ppe_ioreset_shift                     63
+#define scom_ppe_ioreset_mask                      0x8000000000000000
 
 
 #define scom_ppe_ir_edr_0_63_addr                  0b000010100
 #define scom_ppe_ir_edr_0_63_startbit              0
 #define scom_ppe_ir_edr_0_63_width                 64
 #define scom_ppe_ir_edr_0_63_endbit                63
-#define scom_ppe_ir_edr_0_63_shift                 -48
-#define scom_ppe_ir_edr_0_63_mask                  0xffffffffffff0000
+#define scom_ppe_ir_edr_0_63_shift                 0
+#define scom_ppe_ir_edr_0_63_mask                  0xffffffffffffffff
 
 
 #define scom_ppe_ir_sprg0_0_63_addr                0b000010010
 #define scom_ppe_ir_sprg0_0_63_startbit            0
 #define scom_ppe_ir_sprg0_0_63_width               64
 #define scom_ppe_ir_sprg0_0_63_endbit              63
-#define scom_ppe_ir_sprg0_0_63_shift               -48
-#define scom_ppe_ir_sprg0_0_63_mask                0xffffffffffff0000
+#define scom_ppe_ir_sprg0_0_63_shift               0
+#define scom_ppe_ir_sprg0_0_63_mask                0xffffffffffffffff
+
+
+#define scom_ppe_lr_addr                           0b000011111
+#define scom_ppe_lr_startbit                       32
+#define scom_ppe_lr_width                          32
+#define scom_ppe_lr_endbit                         63
+#define scom_ppe_lr_shift                          0
+#define scom_ppe_lr_mask                           0xffffffff
 
 
 #define scom_ppe_mem_arb_addr_offset_addr          0b000001101
 #define scom_ppe_mem_arb_addr_offset_startbit      16
 #define scom_ppe_mem_arb_addr_offset_width         16
 #define scom_ppe_mem_arb_addr_offset_endbit        31
-#define scom_ppe_mem_arb_addr_offset_shift         -16
-#define scom_ppe_mem_arb_addr_offset_mask          0xffff000000000000
+#define scom_ppe_mem_arb_addr_offset_shift         32
+#define scom_ppe_mem_arb_addr_offset_mask          0xffff00000000
 
 
 #define scom_ppe_mem_arb_auto_inc_en_addr          0b000001010
 #define scom_ppe_mem_arb_auto_inc_en_startbit      0
 #define scom_ppe_mem_arb_auto_inc_en_width         1
 #define scom_ppe_mem_arb_auto_inc_en_endbit        0
-#define scom_ppe_mem_arb_auto_inc_en_shift         15
-#define scom_ppe_mem_arb_auto_inc_en_mask          0x8000
+#define scom_ppe_mem_arb_auto_inc_en_shift         63
+#define scom_ppe_mem_arb_auto_inc_en_mask          0x8000000000000000
 
 
 #define scom_ppe_mem_arb_csar_0_63_addr            0b000001101
 #define scom_ppe_mem_arb_csar_0_63_startbit        0
 #define scom_ppe_mem_arb_csar_0_63_width           64
 #define scom_ppe_mem_arb_csar_0_63_endbit          63
-#define scom_ppe_mem_arb_csar_0_63_shift           -48
-#define scom_ppe_mem_arb_csar_0_63_mask            0xffffffffffff0000
+#define scom_ppe_mem_arb_csar_0_63_shift           0
+#define scom_ppe_mem_arb_csar_0_63_mask            0xffffffffffffffff
 
 
 #define scom_ppe_mem_arb_csdr_0_63_addr            0b000001110
 #define scom_ppe_mem_arb_csdr_0_63_startbit        0
 #define scom_ppe_mem_arb_csdr_0_63_width           64
 #define scom_ppe_mem_arb_csdr_0_63_endbit          63
-#define scom_ppe_mem_arb_csdr_0_63_shift           -48
-#define scom_ppe_mem_arb_csdr_0_63_mask            0xffffffffffff0000
+#define scom_ppe_mem_arb_csdr_0_63_shift           0
+#define scom_ppe_mem_arb_csdr_0_63_mask            0xffffffffffffffff
 
 
 #define scom_ppe_mem_arb_data_addr                 0b000001110
 #define scom_ppe_mem_arb_data_startbit             0
 #define scom_ppe_mem_arb_data_width                64
 #define scom_ppe_mem_arb_data_endbit               63
-#define scom_ppe_mem_arb_data_shift                -48
-#define scom_ppe_mem_arb_data_mask                 0xffffffffffff0000
+#define scom_ppe_mem_arb_data_shift                0
+#define scom_ppe_mem_arb_data_mask                 0xffffffffffffffff
 
 
 #define scom_ppe_mem_arb_ecc_correct_dis_addr      0b000001010
 #define scom_ppe_mem_arb_ecc_correct_dis_startbit   2
 #define scom_ppe_mem_arb_ecc_correct_dis_width     1
 #define scom_ppe_mem_arb_ecc_correct_dis_endbit    2
-#define scom_ppe_mem_arb_ecc_correct_dis_shift     13
-#define scom_ppe_mem_arb_ecc_correct_dis_mask      0x2000
+#define scom_ppe_mem_arb_ecc_correct_dis_shift     61
+#define scom_ppe_mem_arb_ecc_correct_dis_mask      0x2000000000000000
 
 
 #define scom_ppe_mem_arb_ecc_detect_dis_addr       0b000001010
 #define scom_ppe_mem_arb_ecc_detect_dis_startbit   3
 #define scom_ppe_mem_arb_ecc_detect_dis_width      1
 #define scom_ppe_mem_arb_ecc_detect_dis_endbit     3
-#define scom_ppe_mem_arb_ecc_detect_dis_shift      12
-#define scom_ppe_mem_arb_ecc_detect_dis_mask       0x1000
+#define scom_ppe_mem_arb_ecc_detect_dis_shift      60
+#define scom_ppe_mem_arb_ecc_detect_dis_mask       0x1000000000000000
 
 
 #define scom_ppe_mem_arb_ecc_inject_err_addr       0b000001010
 #define scom_ppe_mem_arb_ecc_inject_err_startbit   5
 #define scom_ppe_mem_arb_ecc_inject_err_width      1
 #define scom_ppe_mem_arb_ecc_inject_err_endbit     5
-#define scom_ppe_mem_arb_ecc_inject_err_shift      10
-#define scom_ppe_mem_arb_ecc_inject_err_mask       0x400
+#define scom_ppe_mem_arb_ecc_inject_err_shift      58
+#define scom_ppe_mem_arb_ecc_inject_err_mask       0x400000000000000
 
 
 #define scom_ppe_mem_arb_ecc_inject_type_addr      0b000001010
 #define scom_ppe_mem_arb_ecc_inject_type_startbit   4
 #define scom_ppe_mem_arb_ecc_inject_type_width     1
 #define scom_ppe_mem_arb_ecc_inject_type_endbit    4
-#define scom_ppe_mem_arb_ecc_inject_type_shift     11
-#define scom_ppe_mem_arb_ecc_inject_type_mask      0x800
+#define scom_ppe_mem_arb_ecc_inject_type_shift     59
+#define scom_ppe_mem_arb_ecc_inject_type_mask      0x800000000000000
 
 
 #define scom_ppe_mem_arb_scr_0_63_addr             0b000001010
 #define scom_ppe_mem_arb_scr_0_63_startbit         0
 #define scom_ppe_mem_arb_scr_0_63_width            64
 #define scom_ppe_mem_arb_scr_0_63_endbit           63
-#define scom_ppe_mem_arb_scr_0_63_shift            -48
-#define scom_ppe_mem_arb_scr_0_63_mask             0xffffffffffff0000
+#define scom_ppe_mem_arb_scr_0_63_shift            0
+#define scom_ppe_mem_arb_scr_0_63_mask             0xffffffffffffffff
 
 
 #define scom_ppe_mem_arb_scrub_en_addr             0b000001010
 #define scom_ppe_mem_arb_scrub_en_startbit         1
 #define scom_ppe_mem_arb_scrub_en_width            1
 #define scom_ppe_mem_arb_scrub_en_endbit           1
-#define scom_ppe_mem_arb_scrub_en_shift            14
-#define scom_ppe_mem_arb_scrub_en_mask             0x4000
+#define scom_ppe_mem_arb_scrub_en_shift            62
+#define scom_ppe_mem_arb_scrub_en_mask             0x4000000000000000
 
 
 #define scom_ppe_mem_arb_scrub_index_addr          0b000001010
 #define scom_ppe_mem_arb_scrub_index_startbit      47
 #define scom_ppe_mem_arb_scrub_index_width         13
 #define scom_ppe_mem_arb_scrub_index_endbit        59
-#define scom_ppe_mem_arb_scrub_index_shift         -44
-#define scom_ppe_mem_arb_scrub_index_mask          0x1fff00000
+#define scom_ppe_mem_arb_scrub_index_shift         4
+#define scom_ppe_mem_arb_scrub_index_mask          0x1fff0
 
 
 #define scom_ppe_null_msr_lp_addr                  0b000010101
 #define scom_ppe_null_msr_lp_startbit              20
 #define scom_ppe_null_msr_lp_width                 1
 #define scom_ppe_null_msr_lp_endbit                20
-#define scom_ppe_null_msr_lp_shift                 -5
-#define scom_ppe_null_msr_lp_mask                  0x800000000000000
+#define scom_ppe_null_msr_lp_shift                 43
+#define scom_ppe_null_msr_lp_mask                  0x80000000000
 
 
 #define scom_ppe_null_msr_sibrc_addr               0b000010101
 #define scom_ppe_null_msr_sibrc_startbit           9
 #define scom_ppe_null_msr_sibrc_width              3
 #define scom_ppe_null_msr_sibrc_endbit             11
-#define scom_ppe_null_msr_sibrc_shift              4
-#define scom_ppe_null_msr_sibrc_mask               0x70
+#define scom_ppe_null_msr_sibrc_shift              52
+#define scom_ppe_null_msr_sibrc_mask               0x70000000000000
 
 
 #define scom_ppe_null_msr_we_addr                  0b000010101
 #define scom_ppe_null_msr_we_startbit              14
 #define scom_ppe_null_msr_we_width                 1
 #define scom_ppe_null_msr_we_endbit                14
-#define scom_ppe_null_msr_we_shift                 1
-#define scom_ppe_null_msr_we_mask                  0x2
+#define scom_ppe_null_msr_we_shift                 49
+#define scom_ppe_null_msr_we_mask                  0x2000000000000
 
 
 #define scom_ppe_pdwn_addr                         0b000100000
 #define scom_ppe_pdwn_startbit                     1
 #define scom_ppe_pdwn_width                        1
 #define scom_ppe_pdwn_endbit                       1
-#define scom_ppe_pdwn_shift                        14
-#define scom_ppe_pdwn_mask                         0x4000
+#define scom_ppe_pdwn_shift                        62
+#define scom_ppe_pdwn_mask                         0x4000000000000000
 
 
 #define scom_ppe_spares_addr                       0b000100000
 #define scom_ppe_spares_startbit                   15
 #define scom_ppe_spares_width                      9
 #define scom_ppe_spares_endbit                     23
-#define scom_ppe_spares_shift                      -8
-#define scom_ppe_spares_mask                       0xff00000000000000
+#define scom_ppe_spares_shift                      40
+#define scom_ppe_spares_mask                       0x1ff0000000000
+
+
+#define scom_ppe_srr0_addr                         0b000011111
+#define scom_ppe_srr0_startbit                     0
+#define scom_ppe_srr0_width                        30
+#define scom_ppe_srr0_endbit                       29
+#define scom_ppe_srr0_shift                        34
+#define scom_ppe_srr0_mask                         0xfffffffc00000000
+
+
+#define scom_ppe_srr0_lr_0_63_addr                 0b000011111
+#define scom_ppe_srr0_lr_0_63_startbit             0
+#define scom_ppe_srr0_lr_0_63_width                64
+#define scom_ppe_srr0_lr_0_63_endbit               63
+#define scom_ppe_srr0_lr_0_63_shift                0
+#define scom_ppe_srr0_lr_0_63_mask                 0xffffffffffffffff
 
 
 #define scom_ppe_work1_addr                        0b000100001
 #define scom_ppe_work1_startbit                    0
 #define scom_ppe_work1_width                       32
 #define scom_ppe_work1_endbit                      31
-#define scom_ppe_work1_shift                       -16
-#define scom_ppe_work1_mask                        0xffff000000000000
+#define scom_ppe_work1_shift                       32
+#define scom_ppe_work1_mask                        0xffffffff00000000
 
 
 #define scom_ppe_work2_addr                        0b000100010
 #define scom_ppe_work2_startbit                    0
 #define scom_ppe_work2_width                       32
 #define scom_ppe_work2_endbit                      31
-#define scom_ppe_work2_shift                       -16
-#define scom_ppe_work2_mask                        0xffff000000000000
+#define scom_ppe_work2_shift                       32
+#define scom_ppe_work2_mask                        0xffffffff00000000
 
 
 #define scom_ppe_xcr_addr                          0b000010000
 #define scom_ppe_xcr_startbit                      1
 #define scom_ppe_xcr_width                         3
 #define scom_ppe_xcr_endbit                        3
-#define scom_ppe_xcr_shift                         12
-#define scom_ppe_xcr_mask                          0x7000
+#define scom_ppe_xcr_shift                         60
+#define scom_ppe_xcr_mask                          0x7000000000000000
 
 
 #define scom_ppe_xcr_none_0_63_addr                0b000010000
 #define scom_ppe_xcr_none_0_63_startbit            0
 #define scom_ppe_xcr_none_0_63_width               64
 #define scom_ppe_xcr_none_0_63_endbit              63
-#define scom_ppe_xcr_none_0_63_shift               -48
-#define scom_ppe_xcr_none_0_63_mask                0xffffffffffff0000
+#define scom_ppe_xcr_none_0_63_shift               0
+#define scom_ppe_xcr_none_0_63_mask                0xffffffffffffffff
 
 
 #define scom_ppe_xcr_sprg0_0_63_addr               0b000010001
 #define scom_ppe_xcr_sprg0_0_63_startbit           0
 #define scom_ppe_xcr_sprg0_0_63_width              64
 #define scom_ppe_xcr_sprg0_0_63_endbit             63
-#define scom_ppe_xcr_sprg0_0_63_shift              -48
-#define scom_ppe_xcr_sprg0_0_63_mask               0xffffffffffff0000
+#define scom_ppe_xcr_sprg0_0_63_shift              0
+#define scom_ppe_xcr_sprg0_0_63_mask               0xffffffffffffffff
 
 
 #define scom_ppe_xsr_dacr_addr                     0b000010101
 #define scom_ppe_xsr_dacr_startbit                 12
 #define scom_ppe_xsr_dacr_width                    1
 #define scom_ppe_xsr_dacr_endbit                   12
-#define scom_ppe_xsr_dacr_shift                    3
-#define scom_ppe_xsr_dacr_mask                     0x8
+#define scom_ppe_xsr_dacr_shift                    51
+#define scom_ppe_xsr_dacr_mask                     0x8000000000000
 
 
 #define scom_ppe_xsr_dacw_addr                     0b000010101
 #define scom_ppe_xsr_dacw_startbit                 13
 #define scom_ppe_xsr_dacw_width                    1
 #define scom_ppe_xsr_dacw_endbit                   13
-#define scom_ppe_xsr_dacw_shift                    2
-#define scom_ppe_xsr_dacw_mask                     0x4
+#define scom_ppe_xsr_dacw_shift                    50
+#define scom_ppe_xsr_dacw_mask                     0x4000000000000
 
 
 #define scom_ppe_xsr_ep_addr                       0b000010101
 #define scom_ppe_xsr_ep_startbit                   21
 #define scom_ppe_xsr_ep_width                      1
 #define scom_ppe_xsr_ep_endbit                     21
-#define scom_ppe_xsr_ep_shift                      -6
-#define scom_ppe_xsr_ep_mask                       0x400000000000000
+#define scom_ppe_xsr_ep_shift                      42
+#define scom_ppe_xsr_ep_mask                       0x40000000000
 
 
 #define scom_ppe_xsr_hc_addr                       0b000010101
 #define scom_ppe_xsr_hc_startbit                   1
 #define scom_ppe_xsr_hc_width                      3
 #define scom_ppe_xsr_hc_endbit                     3
-#define scom_ppe_xsr_hc_shift                      12
-#define scom_ppe_xsr_hc_mask                       0x7000
+#define scom_ppe_xsr_hc_shift                      60
+#define scom_ppe_xsr_hc_mask                       0x7000000000000000
 
 
 #define scom_ppe_xsr_hcp_addr                      0b000010101
 #define scom_ppe_xsr_hcp_startbit                  4
 #define scom_ppe_xsr_hcp_width                     1
 #define scom_ppe_xsr_hcp_endbit                    4
-#define scom_ppe_xsr_hcp_shift                     11
-#define scom_ppe_xsr_hcp_mask                      0x800
+#define scom_ppe_xsr_hcp_shift                     59
+#define scom_ppe_xsr_hcp_mask                      0x800000000000000
 
 
 #define scom_ppe_xsr_hs_addr                       0b000010101
 #define scom_ppe_xsr_hs_startbit                   0
 #define scom_ppe_xsr_hs_width                      1
 #define scom_ppe_xsr_hs_endbit                     0
-#define scom_ppe_xsr_hs_shift                      15
-#define scom_ppe_xsr_hs_mask                       0x8000
+#define scom_ppe_xsr_hs_shift                      63
+#define scom_ppe_xsr_hs_mask                       0x8000000000000000
 
 
 #define scom_ppe_xsr_iac_addr                      0b000010101
 #define scom_ppe_xsr_iac_startbit                  8
 #define scom_ppe_xsr_iac_width                     1
 #define scom_ppe_xsr_iac_endbit                    8
-#define scom_ppe_xsr_iac_shift                     7
-#define scom_ppe_xsr_iac_mask                      0x80
+#define scom_ppe_xsr_iac_shift                     55
+#define scom_ppe_xsr_iac_mask                      0x80000000000000
 
 
 #define scom_ppe_xsr_iar_0_63_addr                 0b000010101
 #define scom_ppe_xsr_iar_0_63_startbit             0
 #define scom_ppe_xsr_iar_0_63_width                64
 #define scom_ppe_xsr_iar_0_63_endbit               63
-#define scom_ppe_xsr_iar_0_63_shift                -48
-#define scom_ppe_xsr_iar_0_63_mask                 0xffffffffffff0000
+#define scom_ppe_xsr_iar_0_63_shift                0
+#define scom_ppe_xsr_iar_0_63_mask                 0xffffffffffffffff
 
 
 #define scom_ppe_xsr_mcs_addr                      0b000010101
 #define scom_ppe_xsr_mcs_startbit                  29
 #define scom_ppe_xsr_mcs_width                     3
 #define scom_ppe_xsr_mcs_endbit                    31
-#define scom_ppe_xsr_mcs_shift                     -16
-#define scom_ppe_xsr_mcs_mask                      0x7000000000000
+#define scom_ppe_xsr_mcs_shift                     32
+#define scom_ppe_xsr_mcs_mask                      0x700000000
 
 
 #define scom_ppe_xsr_mfe_addr                      0b000010101
 #define scom_ppe_xsr_mfe_startbit                  28
 #define scom_ppe_xsr_mfe_width                     1
 #define scom_ppe_xsr_mfe_endbit                    28
-#define scom_ppe_xsr_mfe_shift                     -13
-#define scom_ppe_xsr_mfe_mask                      0x8000000000000
+#define scom_ppe_xsr_mfe_shift                     35
+#define scom_ppe_xsr_mfe_mask                      0x800000000
 
 
 #define scom_ppe_xsr_ptr_addr                      0b000010101
 #define scom_ppe_xsr_ptr_startbit                  24
 #define scom_ppe_xsr_ptr_width                     1
 #define scom_ppe_xsr_ptr_endbit                    24
-#define scom_ppe_xsr_ptr_shift                     -9
-#define scom_ppe_xsr_ptr_mask                      0x80000000000000
+#define scom_ppe_xsr_ptr_shift                     39
+#define scom_ppe_xsr_ptr_mask                      0x8000000000
 
 
 #define scom_ppe_xsr_rip_addr                      0b000010101
 #define scom_ppe_xsr_rip_startbit                  5
 #define scom_ppe_xsr_rip_width                     1
 #define scom_ppe_xsr_rip_endbit                    5
-#define scom_ppe_xsr_rip_shift                     10
-#define scom_ppe_xsr_rip_mask                      0x400
+#define scom_ppe_xsr_rip_shift                     58
+#define scom_ppe_xsr_rip_mask                      0x400000000000000
 
 
 #define scom_ppe_xsr_sip_addr                      0b000010101
 #define scom_ppe_xsr_sip_startbit                  6
 #define scom_ppe_xsr_sip_width                     1
 #define scom_ppe_xsr_sip_endbit                    6
-#define scom_ppe_xsr_sip_shift                     9
-#define scom_ppe_xsr_sip_mask                      0x200
+#define scom_ppe_xsr_sip_shift                     57
+#define scom_ppe_xsr_sip_mask                      0x200000000000000
 
 
 #define scom_ppe_xsr_sms_addr                      0b000010101
 #define scom_ppe_xsr_sms_startbit                  16
 #define scom_ppe_xsr_sms_width                     4
 #define scom_ppe_xsr_sms_endbit                    19
-#define scom_ppe_xsr_sms_shift                     -4
-#define scom_ppe_xsr_sms_mask                      0xf000000000000000
+#define scom_ppe_xsr_sms_shift                     44
+#define scom_ppe_xsr_sms_mask                      0xf00000000000
 
 
 #define scom_ppe_xsr_sprg0_0_63_addr               0b000010011
 #define scom_ppe_xsr_sprg0_0_63_startbit           0
 #define scom_ppe_xsr_sprg0_0_63_width              64
 #define scom_ppe_xsr_sprg0_0_63_endbit             63
-#define scom_ppe_xsr_sprg0_0_63_shift              -48
-#define scom_ppe_xsr_sprg0_0_63_mask               0xffffffffffff0000
+#define scom_ppe_xsr_sprg0_0_63_shift              0
+#define scom_ppe_xsr_sprg0_0_63_mask               0xffffffffffffffff
 
 
 #define scom_ppe_xsr_st_addr                       0b000010101
 #define scom_ppe_xsr_st_startbit                   25
 #define scom_ppe_xsr_st_width                      1
 #define scom_ppe_xsr_st_endbit                     25
-#define scom_ppe_xsr_st_shift                      -10
-#define scom_ppe_xsr_st_mask                       0x40000000000000
+#define scom_ppe_xsr_st_shift                      38
+#define scom_ppe_xsr_st_mask                       0x4000000000
 
 
 #define scom_ppe_xsr_trap_addr                     0b000010101
 #define scom_ppe_xsr_trap_startbit                 7
 #define scom_ppe_xsr_trap_width                    1
 #define scom_ppe_xsr_trap_endbit                   7
-#define scom_ppe_xsr_trap_shift                    8
-#define scom_ppe_xsr_trap_mask                     0x100
+#define scom_ppe_xsr_trap_shift                    56
+#define scom_ppe_xsr_trap_mask                     0x100000000000000
 
 
 #define scom_ppe_xsr_trh_addr                      0b000010101
 #define scom_ppe_xsr_trh_startbit                  15
 #define scom_ppe_xsr_trh_width                     1
 #define scom_ppe_xsr_trh_endbit                    15
-#define scom_ppe_xsr_trh_shift                     0
-#define scom_ppe_xsr_trh_mask                      0x1
+#define scom_ppe_xsr_trh_shift                     48
+#define scom_ppe_xsr_trh_mask                      0x1000000000000
 
 
 #define system_manu_sel_addr                       0b100100100

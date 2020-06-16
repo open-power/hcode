@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jfg20022000 |jfg     | HW522672 Also had to change the ns/ew offset remainder conditional from && to ^
+// jfg20021800 |jfg     | HW522672 Somehow after all this time centerskew_ns bool was found to be inverted due to it's interaction with centerdir_ns
+// cws20011400 |cws     | Added Debug Logs
 // jfg19090900 |jfg     | HW503330 Remove default FIR action (true parm) in wait_for_cdr
 // jfg19070801 |jfg     | typo
 // jfg19070800 |jfg     | fixed prior bug in edge_seek loop which skipped 0 step check for ending while loop
@@ -93,6 +96,7 @@
 #include "ppe_com_reg_const_pkg.h"
 #include "ppe_mem_reg_const_pkg.h"
 #include "config_ioo.h"
+#include "io_logger.h"
 
 #define max_eye 0xFFFF
 #define ber_too_long 1023
@@ -120,8 +124,6 @@ void set_qpa_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, uint32_t* bank_pr
                   int* pr_active)//uint32_t peak1_restore, uint32_t peak2_restore
 {
     mem_pl_bit_set(rx_quad_phase_fail, lane);
-    // mem_pg_field_put(rx_lane_bad_16_23, new_lane_bad);
-    // mem_pg_field_put(rx_lane_bad_0_15, new_lane_bad >> 8);
     int tgt = pr_active[prEns_i] - prmask_Ens(bank_pr[0]);
     bool dirL1R0 = tgt < 0;
     tgt = abs(tgt);
@@ -450,7 +452,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     pr_active[prEew_i] = prmask_Eew(bank_pr_save[1]);
 
     // Calculate Center offset
-    bool centerskew_ns = abs(16 - pr_active[prEns_i]) > abs(16 - pr_active[prEew_i]);
+    bool centerskew_ns = abs(16 - pr_active[prEns_i]) < abs(16 - pr_active[prEew_i]);
     bool centerdir_ns = pr_active[prEns_i] > pr_active[prEew_i];
 
     uint32_t vote_ratio = get_ptr(gcr_addr, rx_qpa_vote_ratio_cfg_addr,  rx_qpa_vote_ratio_cfg_startbit,
@@ -476,6 +478,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
         set_qpa_err (gcr_addr, bank, lane, bank_pr_save, pr_active);
         set_debug_state(0xE081); // DEBUG: Algorithm error. CDR not locked.
         set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_QPA_CDR_NOT_LOCKED, gcr_addr, 0x0);
         return warning_code;
     }
 
@@ -548,6 +551,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
             // Set the FIR if either queue is not empty.
             set_debug_state(0xE01F); // Servo queues not empty
             set_fir(fir_code_warning);
+            ADD_LOG(DEBUG_RX_QPA_SERVO_QUEUE_NOT_EMPTY, gcr_addr, 0x0);
             return warning_code;
         }
 
@@ -669,7 +673,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     uint32_t EEavg_tgt;
     set_debug_state(0xE800 | (0x07FF & OffsetNS));
 
-    if (centerskew_ns && (centerdir_ns ^ dirL1R0NS))
+    if (centerskew_ns ^  (centerdir_ns ^ dirL1R0NS))
     {
         ENavg_tgt = OffsetNS >> 1;
         EEavg_tgt = OffsetEW - ENavg_tgt;

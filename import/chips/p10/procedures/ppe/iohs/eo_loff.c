@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// cws20011400 |cws     | Added Debug Logs
 // mbs19072500 |mbs     | Moved live_edgeoff_mode out of loff_setting_ovr_enb umbrella
 // mwh19051700 |mwh     | HW492097 changed inc/dec for change in step size
 // mwh19040200 |mwh     | add a put of rx_loff_hyst_start to 5, to reset for loff
@@ -82,6 +83,7 @@
 #include "eo_loff.h"
 #include "ppe_com_reg_const_pkg.h"
 #include "config_ioo.h"
+#include "io_logger.h"
 
 
 // Declare servo op arrays as static globals so they are placed in static memory thus reducing code size and complexity.
@@ -127,6 +129,7 @@ int eo_loff_fenced(t_gcr_addr* gcr_addr, t_bank bank)
         //set ppe fir because servo op and result queue not empty
         set_debug_state(0x4005);
         set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_LOFF_SERVO_QUEUE_NOT_EMPTY, gcr_addr, servo_op_queue_empty);
         return warning_code;
     }//servo check end
     else

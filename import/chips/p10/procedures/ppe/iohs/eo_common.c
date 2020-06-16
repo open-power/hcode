@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,17 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20030500 |vbr     | HW523782/HW523779: When fw_spread_en, min cdr lock wait time is 5us.
+// mwh20040201 |mwh     | Fix a issue with having cap Int change to int -- add ; in debug_state in fir.
+// mwh20040200 |mwh     | Fix a comment issue had tx when should of been rx
+// mwh20040100 |mwh     | Add in debug state for check_for_rxpsave_req_sts and check_for_txpsave_req_sts
+// mwh20022400 |mwh     | Add in function check_for_rxpsave_req_sts and check_for_txpsave_req_sts
+// vbr20021100 |vbr     | HW522731: smarter lane cal copy based on flywheel lane.
+// vbr20020600 |vbr     | HW522210: Check for lane_bad before copying lane cal; added set/clr_rx_lane_bad() functions.
+// bja20021300 |bja     | Don't override tx_fifo_l2u_dly bc reset val is appropriate
+// bja20020500 |bja     | Add tx_fifo_init()
+// cws20011400 |cws     | Added Debug Logs
+// jfg19091200 |jfg     | Experimental ONLY change for DFE filter parms RE ALLEYEOPT DAC inconsistency
 // vbr19092601 |vbr     | Added option to enable/disable copying of LTE settings between lanes
 // mbs19072500 |mbs     | Added amp_setting_ovr_enb
 // mbs19051600 |mbs     | HW491617: Separated servo setup for dfe_fast and dfe_full
@@ -103,7 +114,9 @@
 #include "pk.h"
 
 #include "eo_common.h"
+#include "io_logger.h"
 
+#include "ppe_fw_reg_const_pkg.h"
 #include "ppe_mem_reg_const_pkg.h"
 #include "ppe_com_reg_const_pkg.h"
 
@@ -119,6 +132,15 @@ PK_STATIC_ASSERT(rx_pr_locked_ab_alias_width == 2);
 int wait_for_cdr_lock(t_gcr_addr* gcr_addr, bool set_fir_on_error)
 {
     PkTimebase start_time = pk_timebase_get();
+
+    // HW523782/HW523779: When spread is enabled, we wait a minumum of 5 us before checking for lock.
+    // This is to prevent advancing on the false lock that may occur when the flywheel is far from the correct value.
+    // Since this function is called both right after enabling the CDR and again at the end of cal before switching banks,
+    // this minimum wait will be incurred twice in each calibration.
+    if (fw_field_get(fw_spread_en))
+    {
+        io_wait_us(get_gcr_addr_thread(gcr_addr), 5); // sleep until 5us has elapsed
+    }
 
     while ( true )
     {
@@ -141,6 +163,7 @@ int wait_for_cdr_lock(t_gcr_addr* gcr_addr, bool set_fir_on_error)
                     set_fir(fir_code_warning);    // Set FIR on a timeout.
                 }
 
+                ADD_LOG(DEBUG_RX_CDR_LOCK_TIMEOUT, gcr_addr, locked_ab);
                 return warning_code; // Exit when timeout
             }
 
@@ -176,6 +199,7 @@ int check_rx_abort(t_gcr_addr* gcr_addr)
         {
             ret_val = abort_code;
             set_fir(fir_code_recal_abort); // Added call to set_fir in order to trap ppe_error_state info
+            ADD_LOG(DEBUG_RECAL_ABORT, gcr_addr, 0x0);
         }
         else
         {
@@ -187,13 +211,44 @@ int check_rx_abort(t_gcr_addr* gcr_addr)
 } //check_rx_abort
 
 
-// Copy the cal results from source lane to destination lane to use as a starting point.
+// Copy the cal results to destination lane from its flywheel source lane to use as a starting point.
 // To save time, only reads some of the Bank A results and copies them where needed by cal.
+// Does not copy if source lane is un-calibrated or marked as lane_bad.
+// gcr_addr->lane will be set to lane_dst after calling this function.
 PK_STATIC_ASSERT(rx_a_ctle_gain_peak_full_reg_alias_width == 16);
 PK_STATIC_ASSERT(rx_b_ctle_gain_peak_full_reg_alias_width == 16);
 PK_STATIC_ASSERT(rx_a_lte_gain_zero_alias_width == rx_b_lte_gain_zero_alias_width);
-void eo_copy_lane_cal(t_gcr_addr* gcr_addr, int lane_src, int lane_dst)
+void eo_copy_lane_cal(t_gcr_addr* gcr_addr, int lane_dst)
 {
+    // HW522731: Use the psave flywheel snapshot source lane as the cal source
+    set_gcr_addr_lane(gcr_addr, lane_dst);
+    int fw_mux_sel = get_ptr_field(gcr_addr, rx_psave_fw_val_sel);
+    int lane_src;
+
+    if (fw_mux_sel == 0)
+    {
+        lane_src = get_ptr_field(gcr_addr, rx_psave_fw_val0_sel);
+    }
+    else if (fw_mux_sel == 1)
+    {
+        lane_src = get_ptr_field(gcr_addr, rx_psave_fw_val1_sel);
+    }
+    else if (fw_mux_sel == 2)
+    {
+        lane_src = get_ptr_field(gcr_addr, rx_psave_fw_val2_sel);
+    }
+    else     //fw_mux_sel == 3
+    {
+        lane_src = get_ptr_field(gcr_addr, rx_psave_fw_val3_sel);
+    }
+
+    // HW522210: If the source lane is un-calibrated or marked as bad, do not copy from it (return without doing anything)
+    if ( !mem_pl_field_get(rx_init_done, lane_src) || mem_pl_field_get(rx_lane_bad, lane_src) )
+    {
+        return;
+    }
+
+    // Additional settings
     bool lte_copy_en = mem_pg_field_get(rx_enable_lane_cal_lte_copy);
 
     // Read from source lane
@@ -253,13 +308,13 @@ void rx_eo_servo_setup(t_gcr_addr* i_tgt, const t_servo_setup i_servo_setup)
 
             if ( amp_setting_ovr == 0 )
             {
-                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x01, read_modify_write);
-                put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x01, read_modify_write);
-                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x01, read_modify_write);
-                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x01, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x03, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x03, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x02, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x02, read_modify_write);
                 put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x02, read_modify_write);
                 put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x02, read_modify_write);
-                put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x05, read_modify_write);
                 put_ptr_field(i_tgt, rx_amp_filter_depth_dec3  , 0x04, read_modify_write);
             }
 
@@ -272,10 +327,10 @@ void rx_eo_servo_setup(t_gcr_addr* i_tgt, const t_servo_setup i_servo_setup)
 
             if ( amp_setting_ovr == 0 )
             {
-                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x04, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc0  , 0x05, read_modify_write);
                 put_ptr_field(i_tgt, rx_amp_filter_depth_dec0  , 0x00, read_modify_write);
-                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x04, read_modify_write);
-                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x00, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_inc1  , 0x05, read_modify_write);
+                put_ptr_field(i_tgt, rx_amp_filter_depth_dec1  , 0x01, read_modify_write);
                 put_ptr_field(i_tgt, rx_amp_filter_depth_inc2  , 0x04, read_modify_write);
                 put_ptr_field(i_tgt, rx_amp_filter_depth_dec2  , 0x00, read_modify_write);
                 put_ptr_field(i_tgt, rx_amp_filter_depth_inc3  , 0x06, read_modify_write);
@@ -302,3 +357,159 @@ void clear_all_cal_lane_sel(t_gcr_addr* gcr_addr)
     set_gcr_addr_lane(gcr_addr, saved_lane);
     return;
 }
+
+
+
+
+// Functions to set or clear a lane's status in rx_lane_bad (pl) and rx_lane_bad_0_23 (pg)
+PK_STATIC_ASSERT(rx_lane_bad_0_15_width == 16);
+PK_STATIC_ASSERT(rx_lane_bad_16_23_width == 8);
+PK_STATIC_ASSERT(rx_lane_bad_16_23_startbit == 0);
+void set_rx_lane_bad(unsigned int lane)
+{
+    uint32_t lane_mask = 0x80000000 >> lane;
+
+    if (lane < 16)
+    {
+        mem_regs_u16_bit_set(pg_addr(rx_lane_bad_0_15_addr), (lane_mask >> 16));
+    }
+    else     // lane>=16
+    {
+        mem_regs_u16_bit_set(pg_addr(rx_lane_bad_16_23_addr), lane_mask);
+    }
+
+    mem_pl_bit_set(rx_lane_bad, lane);
+} //set_rx_lane_bad()
+
+void clr_rx_lane_bad(unsigned int lane)
+{
+    uint32_t lane_mask = 0x80000000 >> lane;
+
+    if (lane < 16)
+    {
+        mem_regs_u16_bit_clr(pg_addr(rx_lane_bad_0_15_addr), (lane_mask >> 16));
+    }
+    else     // lane>=16
+    {
+        mem_regs_u16_bit_clr(pg_addr(rx_lane_bad_16_23_addr), lane_mask);
+    }
+
+    mem_pl_bit_clr(rx_lane_bad, lane);
+} //clr_rx_lane_bad()
+
+
+// apply (un)load settings and synchronize
+void tx_fifo_init(t_gcr_addr* gcr_addr)
+{
+    // (BJA 2/5/20) Override TX FIFO "margin" settings here in PPE code
+    // because it's too close to RIT to change the RegDef.
+    // The unload select is reduced by 1 to maintain same the margins
+    // as were seen in simulation prior to the HW521134 verilog update.
+    //put_ptr_field(gcr_addr, tx_fifo_l2u_dly, 0b001, read_modify_write);
+    put_ptr_field(gcr_addr, tx_unload_sel,   0b100, read_modify_write);
+
+    put_ptr_field_fast(gcr_addr, tx_clr_unload_clk_disable,   0b1);
+    put_ptr_field_fast(gcr_addr, tx_fifo_init,   0b1);
+    put_ptr_field_fast(gcr_addr, tx_set_unload_clk_disable,   0b1);
+    return;
+}
+
+//Check that tx psave is quiesced and that req is not = 1 will set fir
+void check_for_txpsave_req_sts(t_gcr_addr* gcr_addr)  //start void
+{
+    set_debug_state(0x0300); //start check_for_txpsave_req_sts
+    set_gcr_addr_reg_id(gcr_addr, tx_group);
+
+// Wait for the lane to has req = sts
+    int lane_mask = (0x80000000 >> get_gcr_addr_lane(gcr_addr));
+    int tx_psave_req = 0;
+    int cnt = 0;
+    int phy_dl_tx_psave_sts_0_23, phy_dl_tx_psave_req_0_23;
+
+    do
+    {
+        cnt++;
+
+        if (cnt == 32) //begin if
+        {
+            set_debug_state(0x0301); //in tx sleep cnt loop
+            cnt = 0;
+            io_sleep(get_gcr_addr_thread(gcr_addr));
+        }//end if
+
+        phy_dl_tx_psave_sts_0_23 = (get_ptr_field(gcr_addr, tx_psave_sts_phy_0_15_sts)  << 16) |
+                                   (get_ptr_field(gcr_addr, tx_psave_sts_phy_16_23_sts) << (16 - tx_psave_sts_phy_16_23_sts_width));
+
+        phy_dl_tx_psave_req_0_23 = (get_ptr_field(gcr_addr, tx_psave_req_dl_0_15_sts)  << 16) |
+                                   (get_ptr_field(gcr_addr, tx_psave_req_dl_16_23_sts) << (16 - tx_psave_req_dl_16_23_sts_width));
+
+        tx_psave_req = phy_dl_tx_psave_req_0_23 &
+                       lane_mask;//bit and the lane sts with mask change all to 0 but the lane that looking at
+
+    }
+    while (((phy_dl_tx_psave_sts_0_23  ^ phy_dl_tx_psave_req_0_23 )& lane_mask) !=
+           0);  // bit xoring and using mask to get lane want look at
+
+    set_debug_state(0x0302); //out of do loop check_for_txpsave_req_sts
+
+    //If the powerdown lane req is high after check that req=sts -- error -- see Mike S -- CQ522215
+    if (tx_psave_req != 0 )
+    {
+        set_debug_state(0x0303);
+        set_fir(fir_code_fatal_error);
+    }
+
+}//end void
+
+//Check that rx psave is quiesced and that req is not = 1 will set fir
+void check_for_rxpsave_req_sts(t_gcr_addr* gcr_addr)  //begin void
+{
+    set_debug_state(0x0310); //start check_for_rxpsave_req_sts
+    // Wait for the lane to has req = sts
+    set_gcr_addr_reg_id(gcr_addr, rx_group);
+
+    //If the powerdown lane is asked for but we are doing a init or recal than that a no-no see Mike S -- CQ522215
+    int rx_dl_phy_run_lane_int =  get_ptr_field (gcr_addr, rx_dl_phy_run_lane);
+    int rx_dl_phy_recal_req_int =  get_ptr_field (gcr_addr, rx_dl_phy_recal_req);
+
+    if ((rx_dl_phy_run_lane_int == 1) || (rx_dl_phy_recal_req_int == 1 ))
+    {
+        set_debug_state(0x0314);
+        set_fir(fir_code_fatal_error);
+    }
+
+    int rx_psave_sts_alt_int , rx_psave_req_alt_int;
+    int rx_psave_sts_phy_int, rx_psave_req_dl_int;
+    int cnt = 0;
+
+    do
+    {
+        cnt++;
+
+        if (cnt == 32) //begin if
+        {
+            set_debug_state(0x0311); //in rx sleep cnt loop
+            cnt = 0;
+            io_sleep(get_gcr_addr_thread(gcr_addr));
+        }//end if
+
+        rx_psave_sts_alt_int = get_ptr_field(gcr_addr, rx_psave_sts_alt );//pl
+        rx_psave_req_alt_int = get_ptr_field(gcr_addr, rx_psave_req_alt);//pl
+
+        rx_psave_sts_phy_int = get_ptr_field(gcr_addr, rx_psave_sts_phy);//pl
+        rx_psave_req_dl_int = get_ptr_field(gcr_addr, rx_psave_req_dl);//pl
+
+
+    }
+    while (((rx_psave_sts_alt_int ^ rx_psave_req_alt_int) != 0) || ((rx_psave_sts_phy_int ^ rx_psave_req_dl_int) != 0));
+
+    set_debug_state(0x0312); //out of do loop check_for_rxpsave_req_sts
+
+    //If the powerdown lane req is high after check that req=sts -- error -- see Mike S -- CQ522215
+    if ((rx_psave_req_alt_int != 0 ) || (rx_psave_req_dl_int != 0 ))
+    {
+        set_debug_state(0x0313);
+        set_fir(fir_code_fatal_error);
+    }
+
+}//end void

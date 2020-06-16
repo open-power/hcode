@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// cws20011400 |cws     | Added Debug Logs
+// bja19111800 |bja     | Set rx_berpl_exp_data_sel before running BERM
 // bja19081900 |bja     | Remove immediate return on fail. Fail is noted and function finishes.
 // mwh19040119 |mwh     | removed the rx_fail_flag code -- code size hit and taking out reduce sim
 // mwh19012100 |mwh     | Add in fail flag
@@ -61,6 +63,7 @@
 
 #include "eo_common.h"
 #include "eo_bank_sync.h"
+#include "io_logger.h"
 
 #include "ppe_fw_reg_const_pkg.h"
 #include "ppe_mem_reg_const_pkg.h"
@@ -106,6 +109,8 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
         max_bumps = 31;
     }
 
+    // enable BERM comparison between banks
+    put_ptr_field(gcr_addr, rx_berpl_exp_data_sel, 0b0, read_modify_write);
     // enable BERM logic clocks for current lane
     put_ptr_field(gcr_addr, rx_berpl_count_en, 0b1, read_modify_write);
     // set timer to saturate at 32 cycles
@@ -151,6 +156,7 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
 
                 status = warning_code;
                 set_fir(fir_code_warning);
+                ADD_LOG(DEBUG_RX_BANK_SYNC_FAIL, gcr_addr, bump_count);
                 break; //while(!aligned)
             }
             // otherwise bump the cal bank

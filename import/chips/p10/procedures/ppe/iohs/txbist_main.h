@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr19111500 |vbr     | Initial implementation of debug levels
 // gap19091000 |gap     | Change rx_dcc_debug to tx_dcc_debug HW503432
 // gap18112700 |gap     | Remove min and max defines
 // gap18101100 |gap     | Created
@@ -59,13 +60,13 @@ void txbist_main_set_bist_fail(t_gcr_addr* gcr_addr_i);
 // DEBUG FUNCTIONS
 // Some functions and macros to help in debugging.
 // These are light weight but the code size and performance hit can add up,
-// so allow for a compiler option to disable (IO_DISABLE_DEBUG).
+// so allow for a compiler option to enable/disable based on debug level.
 ////////////////////////////////////////////////////////////////////////////////////////////
 // share with dcc since these are not run at the same time
-#if IO_DISABLE_DEBUG == 1
+#if IO_DEBUG_LEVEL < 3
     #define set_tx_dcc_debug_txbist(marker, value) {}
 #else
     // This writes a "marker" followed by a value "value" to the mem_regs which can be used for tracking execution value.
     #define set_tx_dcc_debug_txbist(marker, value) { mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (marker);  mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (value); }
-#endif //DISABLE_IO_DEBUG
+#endif //IO_DEBUG_LEVEL
 #endif //_TXBIST_MAIN_H_

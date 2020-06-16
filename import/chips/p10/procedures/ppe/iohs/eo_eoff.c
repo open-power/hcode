@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,6 +41,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
+// cws20011400 |cws     | Added Debug Logs
+// mwh20116000 |mwh     | HW512908 increased first stage filter to 3 and reduced first stage inc/dec to 2
+// mwh19112000 |mwh     | Fix issue were we were going into a init only check, in recal hw512120
 // bja19081900 |bja     | Set loff_fail var when fail conditions are met in !recal section
 // mbs19072500 |mbs     | Added loff_setting_ovr_enb
 // mwh19051700 |mwh     | HW492097 Change inc/dec for loff and eoff for change in step 4.6
@@ -71,6 +75,7 @@
 #include "eo_eoff.h"
 #include "ppe_com_reg_const_pkg.h"
 #include "config_ioo.h"
+#include "io_logger.h"
 
 
 // Declare servo op arrays as static globals so they are placed in static memory thus reducing code size and complexity.
@@ -137,6 +142,7 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
         //set ppe fir because servo op and result queue not empty
         set_debug_state(0xA008);
         set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_EOFF_SERVO_QUEUE_NOT_EMPTY, gcr_addr, servo_op_queue_empty);
         return warning_code;
     }//servo check end
     else
@@ -163,7 +169,7 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
             else
             {
                 //eoff loff
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b011, read_modify_write);  // 3    4
+                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b010, read_modify_write);  // 3    4
                 put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b010, read_modify_write);  // 2    2
                 put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b001, read_modify_write);  // 1    2
                 put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);  // 0    0
@@ -172,7 +178,7 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
 
 
             //old filter failing 1,4,5,7                                                 //eoff loff
-            put_ptr_field(gcr_addr, rx_loff_filter_depth0, 0b0001, read_modify_write);// 3    3
+            put_ptr_field(gcr_addr, rx_loff_filter_depth0, 0b0011, read_modify_write);// 3    3
             put_ptr_field(gcr_addr, rx_loff_filter_depth1, 0b0100, read_modify_write);// 4    3
             put_ptr_field(gcr_addr, rx_loff_filter_depth2, 0b0101, read_modify_write);// 5    3
             put_ptr_field(gcr_addr, rx_loff_filter_depth3, 0b1000, read_modify_write);// 8    4
@@ -295,7 +301,7 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
             //begin1                                       a or b bank             7                         15
             loff_before = LatchDacToInt(get_ptr(gcr_addr, l_dac_addr, rx_ad_latch_dac_n000_startbit, rx_ad_latch_dac_n000_endbit)) ;
 
-            if(rx_latchoff_check_en_int)
+            if((rx_latchoff_check_en_int) && (vga_loop_count == 0))//this check is for before we add in path offset
             {
                 //begin2
                 //Check loff data latches before is +-64
@@ -304,7 +310,8 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
                     //begin3
                     mem_pl_field_put(rx_latch_offset_fail, lane, 0b1);//ppe pl
                     loff_fail = 1;
-                    set_fir(fir_code_dft_error);
+                    set_fir(fir_code_dft_error | fir_code_warning );
+                    ADD_LOG(DEBUG_RX_EOFF_PRE_LOFF_LIMIT, gcr_addr, loff_before);
                 }//end3
             }//end2
 
@@ -535,21 +542,24 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
 
     if (loff_fail == 1)
     {
-        mem_pl_field_put(rx_latch_offset_fail, lane, loff_fail);    //ppe pl
-        set_fir(fir_code_dft_error);
-    }
+        mem_pl_field_put(rx_latch_offset_fail, lane, loff_fail);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_RX_EOFF_LOFF_FAIL, gcr_addr, 0x0);
+    }//ppe pl
 
     if (eoff_fail == 1)
     {
-        mem_pl_field_put(rx_eoff_fail, lane, eoff_fail);    //ppe pl
-        set_fir(fir_code_dft_error);
-    }
+        mem_pl_field_put(rx_eoff_fail, lane, eoff_fail);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_RX_EOFF_EOFF_FAIL, gcr_addr, 0x0);
+    }//ppe pl
 
     if (delta_fail == 1)
     {
-        mem_pl_field_put(rx_eoff_poff_fail, lane, delta_fail);    //ppe pl
-        set_fir(fir_code_dft_error);
-    }
+        mem_pl_field_put(rx_eoff_poff_fail, lane, delta_fail);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_RX_EOFF_EOFF_FAIL, gcr_addr, 0x0);
+    }//ppe pl
 
 
     mem_pl_field_put(rx_latch_offset_fail, lane, loff_fail);//ppe pl

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// jfg20030900 |jfg     | HW525009 add a rough_only mode to set initial coarse peak 1&2
 // jfg19091100 |jfg     | Add first_run parm to eo_ctle
 // vbr19011600 |vbr     | HW473413: Do not use CDR quad mode tracking.
 // jfg16042300 |jfg     | Initial Rev
@@ -51,6 +52,7 @@
 #include "eo_common.h"
 
 
-int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_changed, bool first_run);
+int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_changed, bool first_run,
+            bool rough_only);
 
 #endif //_EO_CTLE_H_

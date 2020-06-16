@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -44,6 +44,14 @@
 #define ext_cmd_done_endbit                        15
 #define ext_cmd_done_shift                         0
 #define ext_cmd_done_mask                          0xffff
+
+
+#define ext_cmd_done_bist_final_pl_addr            0b000000101
+#define ext_cmd_done_bist_final_pl_startbit        13
+#define ext_cmd_done_bist_final_pl_width           1
+#define ext_cmd_done_bist_final_pl_endbit          13
+#define ext_cmd_done_bist_final_pl_shift           2
+#define ext_cmd_done_bist_final_pl_mask            0x4
 
 
 #define ext_cmd_done_dccal_pl_addr                 0b000000101
@@ -172,6 +180,14 @@
 #define ext_cmd_req_endbit                         15
 #define ext_cmd_req_shift                          0
 #define ext_cmd_req_mask                           0xffff
+
+
+#define ext_cmd_req_bist_final_pl_addr             0b000000010
+#define ext_cmd_req_bist_final_pl_startbit         13
+#define ext_cmd_req_bist_final_pl_width            1
+#define ext_cmd_req_bist_final_pl_endbit           13
+#define ext_cmd_req_bist_final_pl_shift            2
+#define ext_cmd_req_bist_final_pl_mask             0x4
 
 
 #define ext_cmd_req_dccal_pl_addr                  0b000000010
@@ -318,6 +334,14 @@
 #define fw_serdes_16_to_1_mode_mask                0x200
 
 
+#define fw_spread_en_addr                          0b000000011
+#define fw_spread_en_startbit                      7
+#define fw_spread_en_width                         1
+#define fw_spread_en_endbit                        7
+#define fw_spread_en_shift                         8
+#define fw_spread_en_mask                          0x100
+
+
 #define fw_stop_thread_addr                        0b000000011
 #define fw_stop_thread_startbit                    14
 #define fw_stop_thread_width                       1
@@ -332,6 +356,14 @@
 #define fw_thread_stopped_endbit                   0
 #define fw_thread_stopped_shift                    15
 #define fw_thread_stopped_mask                     0x8000
+
+
+#define fw_zcal_tdr_mode_addr                      0b000000011
+#define fw_zcal_tdr_mode_startbit                  15
+#define fw_zcal_tdr_mode_width                     1
+#define fw_zcal_tdr_mode_endbit                    15
+#define fw_zcal_tdr_mode_shift                     0
+#define fw_zcal_tdr_mode_mask                      0x1
 
 
 #endif //_PPE_FW_REG_CONST_PKG_H_

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -46,12 +46,84 @@
 #define amp_setting_ovr_enb_mask                   0x20
 
 
-#define jump_table_used_addr                       0b110111100
-#define jump_table_used_startbit                   0
+#define bist_in_hold_loop_addr                     0b111001011
+#define bist_in_hold_loop_startbit                 1
+#define bist_in_hold_loop_width                    1
+#define bist_in_hold_loop_endbit                   1
+#define bist_in_hold_loop_shift                    14
+#define bist_in_hold_loop_mask                     0x4000
+
+
+#define bist_in_progress_addr                      0b111001011
+#define bist_in_progress_startbit                  0
+#define bist_in_progress_width                     1
+#define bist_in_progress_endbit                    0
+#define bist_in_progress_shift                     15
+#define bist_in_progress_mask                      0x8000
+
+
+#define bist_internal_error_addr                   0b111001011
+#define bist_internal_error_startbit               6
+#define bist_internal_error_width                  1
+#define bist_internal_error_endbit                 6
+#define bist_internal_error_shift                  9
+#define bist_internal_error_mask                   0x200
+
+
+#define bist_other_fail_addr                       0b111001011
+#define bist_other_fail_startbit                   4
+#define bist_other_fail_width                      1
+#define bist_other_fail_endbit                     4
+#define bist_other_fail_shift                      11
+#define bist_other_fail_mask                       0x800
+
+
+#define bist_overall_pass_addr                     0b111001011
+#define bist_overall_pass_startbit                 5
+#define bist_overall_pass_width                    1
+#define bist_overall_pass_endbit                   5
+#define bist_overall_pass_shift                    10
+#define bist_overall_pass_mask                     0x400
+
+
+#define bist_rx_fail_addr                          0b111001011
+#define bist_rx_fail_startbit                      2
+#define bist_rx_fail_width                         1
+#define bist_rx_fail_endbit                        2
+#define bist_rx_fail_shift                         13
+#define bist_rx_fail_mask                          0x2000
+
+
+#define bist_spare_0_addr                          0b111001011
+#define bist_spare_0_startbit                      7
+#define bist_spare_0_width                         1
+#define bist_spare_0_endbit                        7
+#define bist_spare_0_shift                         8
+#define bist_spare_0_mask                          0x100
+
+
+#define bist_spare_1_addr                          0b111001011
+#define bist_spare_1_startbit                      8
+#define bist_spare_1_width                         1
+#define bist_spare_1_endbit                        8
+#define bist_spare_1_shift                         7
+#define bist_spare_1_mask                          0x80
+
+
+#define bist_tx_fail_addr                          0b111001011
+#define bist_tx_fail_startbit                      3
+#define bist_tx_fail_width                         1
+#define bist_tx_fail_endbit                        3
+#define bist_tx_fail_shift                         12
+#define bist_tx_fail_mask                          0x1000
+
+
+#define jump_table_used_addr                       0b000001111
+#define jump_table_used_startbit                   4
 #define jump_table_used_width                      1
-#define jump_table_used_endbit                     0
-#define jump_table_used_shift                      15
-#define jump_table_used_mask                       0x8000
+#define jump_table_used_endbit                     4
+#define jump_table_used_shift                      11
+#define jump_table_used_mask                       0x800
 
 
 #define lanes_pon_00_15_addr                       0b111001110
@@ -150,6 +222,14 @@
 #define ppe_lte_zero_disable_mask                  0x2
 
 
+#define ppe_recal_not_run_sim_mode_addr            0b110000100
+#define ppe_recal_not_run_sim_mode_startbit        4
+#define ppe_recal_not_run_sim_mode_width           4
+#define ppe_recal_not_run_sim_mode_endbit          7
+#define ppe_recal_not_run_sim_mode_shift           8
+#define ppe_recal_not_run_sim_mode_mask            0xf00
+
+
 #define ppe_servo_status0_addr                     0b110111010
 #define ppe_servo_status0_startbit                 0
 #define ppe_servo_status0_width                    16
@@ -164,6 +244,14 @@
 #define ppe_servo_status1_endbit                   15
 #define ppe_servo_status1_shift                    0
 #define ppe_servo_status1_mask                     0xffff
+
+
+#define ppe_thread_lock_sim_mode_addr              0b110000100
+#define ppe_thread_lock_sim_mode_startbit          0
+#define ppe_thread_lock_sim_mode_width             4
+#define ppe_thread_lock_sim_mode_endbit            3
+#define ppe_thread_lock_sim_mode_shift             12
+#define ppe_thread_lock_sim_mode_mask              0xf000
 
 
 #define ppe_thread_loop_count_addr                 0b110110001
@@ -262,20 +350,20 @@
 #define rx_a_ddc_done_mask                         0x10
 
 
-#define rx_a_ddc_hist_left_edge_addr               0b000001100
-#define rx_a_ddc_hist_left_edge_startbit           0
-#define rx_a_ddc_hist_left_edge_width              5
-#define rx_a_ddc_hist_left_edge_endbit             4
-#define rx_a_ddc_hist_left_edge_shift              11
-#define rx_a_ddc_hist_left_edge_mask               0xf800
+#define rx_a_ddc_hyst_left_edge_addr               0b000001100
+#define rx_a_ddc_hyst_left_edge_startbit           0
+#define rx_a_ddc_hyst_left_edge_width              5
+#define rx_a_ddc_hyst_left_edge_endbit             4
+#define rx_a_ddc_hyst_left_edge_shift              11
+#define rx_a_ddc_hyst_left_edge_mask               0xf800
 
 
-#define rx_a_ddc_hist_right_edge_addr              0b000001101
-#define rx_a_ddc_hist_right_edge_startbit          0
-#define rx_a_ddc_hist_right_edge_width             5
-#define rx_a_ddc_hist_right_edge_endbit            4
-#define rx_a_ddc_hist_right_edge_shift             11
-#define rx_a_ddc_hist_right_edge_mask              0xf800
+#define rx_a_ddc_hyst_right_edge_addr              0b000001100
+#define rx_a_ddc_hyst_right_edge_startbit          5
+#define rx_a_ddc_hyst_right_edge_width             5
+#define rx_a_ddc_hyst_right_edge_endbit            9
+#define rx_a_ddc_hyst_right_edge_shift             6
+#define rx_a_ddc_hyst_right_edge_mask              0x7c0
 
 
 #define rx_a_dfe_done_addr                         0b000000110
@@ -300,6 +388,14 @@
 #define rx_a_eoff_done_endbit                      2
 #define rx_a_eoff_done_shift                       13
 #define rx_a_eoff_done_mask                        0x2000
+
+
+#define rx_a_last_eye_height_addr                  0b000001000
+#define rx_a_last_eye_height_startbit              0
+#define rx_a_last_eye_height_width                 7
+#define rx_a_last_eye_height_endbit                6
+#define rx_a_last_eye_height_shift                 9
+#define rx_a_last_eye_height_mask                  0xfe00
 
 
 #define rx_a_latch_offset_done_addr                0b000000110
@@ -390,20 +486,20 @@
 #define rx_b_ddc_done_mask                         0x40
 
 
-#define rx_b_ddc_hist_left_edge_addr               0b000001100
-#define rx_b_ddc_hist_left_edge_startbit           5
-#define rx_b_ddc_hist_left_edge_width              5
-#define rx_b_ddc_hist_left_edge_endbit             9
-#define rx_b_ddc_hist_left_edge_shift              6
-#define rx_b_ddc_hist_left_edge_mask               0x7c0
+#define rx_b_ddc_hyst_left_edge_addr               0b000001101
+#define rx_b_ddc_hyst_left_edge_startbit           0
+#define rx_b_ddc_hyst_left_edge_width              5
+#define rx_b_ddc_hyst_left_edge_endbit             4
+#define rx_b_ddc_hyst_left_edge_shift              11
+#define rx_b_ddc_hyst_left_edge_mask               0xf800
 
 
-#define rx_b_ddc_hist_right_edge_addr              0b000001101
-#define rx_b_ddc_hist_right_edge_startbit          5
-#define rx_b_ddc_hist_right_edge_width             5
-#define rx_b_ddc_hist_right_edge_endbit            9
-#define rx_b_ddc_hist_right_edge_shift             6
-#define rx_b_ddc_hist_right_edge_mask              0x7c0
+#define rx_b_ddc_hyst_right_edge_addr              0b000001101
+#define rx_b_ddc_hyst_right_edge_startbit          5
+#define rx_b_ddc_hyst_right_edge_width             5
+#define rx_b_ddc_hyst_right_edge_endbit            9
+#define rx_b_ddc_hyst_right_edge_shift             6
+#define rx_b_ddc_hyst_right_edge_mask              0x7c0
 
 
 #define rx_b_dfe_done_addr                         0b000000111
@@ -428,6 +524,14 @@
 #define rx_b_eoff_done_endbit                      2
 #define rx_b_eoff_done_shift                       13
 #define rx_b_eoff_done_mask                        0x2000
+
+
+#define rx_b_last_eye_height_addr                  0b000001000
+#define rx_b_last_eye_height_startbit              7
+#define rx_b_last_eye_height_width                 7
+#define rx_b_last_eye_height_endbit                13
+#define rx_b_last_eye_height_shift                 2
+#define rx_b_last_eye_height_mask                  0x1fc
 
 
 #define rx_b_latch_offset_done_addr                0b000000111
@@ -460,6 +564,14 @@
 #define rx_b_quad_phase_done_endbit                6
 #define rx_b_quad_phase_done_shift                 9
 #define rx_b_quad_phase_done_mask                  0x200
+
+
+#define rx_bad_eye_opt_height_addr                 0b000000101
+#define rx_bad_eye_opt_height_startbit             1
+#define rx_bad_eye_opt_height_width                1
+#define rx_bad_eye_opt_height_endbit               1
+#define rx_bad_eye_opt_height_shift                14
+#define rx_bad_eye_opt_height_mask                 0x4000
 
 
 #define rx_bad_eye_opt_width_addr                  0b000000101
@@ -574,7 +686,7 @@
 #define rx_ctle_peak2_fail_mask                    0x100
 
 
-#define rx_ctle_peak2_max_check_addr               0b110101101
+#define rx_ctle_peak2_max_check_addr               0b110101001
 #define rx_ctle_peak2_max_check_startbit           0
 #define rx_ctle_peak2_max_check_width              5
 #define rx_ctle_peak2_max_check_endbit             4
@@ -582,7 +694,7 @@
 #define rx_ctle_peak2_max_check_mask               0xf800
 
 
-#define rx_ctle_peak2_min_check_addr               0b110101101
+#define rx_ctle_peak2_min_check_addr               0b110101001
 #define rx_ctle_peak2_min_check_startbit           5
 #define rx_ctle_peak2_min_check_width              5
 #define rx_ctle_peak2_min_check_endbit             9
@@ -616,10 +728,10 @@
 
 #define rx_dc_step_cntl_opt_alias_addr             0b110001101
 #define rx_dc_step_cntl_opt_alias_startbit         0
-#define rx_dc_step_cntl_opt_alias_width            3
-#define rx_dc_step_cntl_opt_alias_endbit           2
-#define rx_dc_step_cntl_opt_alias_shift            13
-#define rx_dc_step_cntl_opt_alias_mask             0xe000
+#define rx_dc_step_cntl_opt_alias_width            2
+#define rx_dc_step_cntl_opt_alias_endbit           1
+#define rx_dc_step_cntl_opt_alias_shift            14
+#define rx_dc_step_cntl_opt_alias_mask             0xc000
 
 
 #define rx_dccal_done_addr                         0b000000100
@@ -894,6 +1006,14 @@
 #define rx_epoff_min_check_mask                    0xff
 
 
+#define rx_eye_height_min_check_addr               0b110100000
+#define rx_eye_height_min_check_startbit           0
+#define rx_eye_height_min_check_width              7
+#define rx_eye_height_min_check_endbit             6
+#define rx_eye_height_min_check_shift              9
+#define rx_eye_height_min_check_mask               0xfe00
+
+
 #define rx_eye_width_min_check_addr                0b110100001
 #define rx_eye_width_min_check_startbit            0
 #define rx_eye_width_min_check_width               7
@@ -903,11 +1023,35 @@
 
 
 #define rx_fail_flag_addr                          0b111001011
-#define rx_fail_flag_startbit                      2
+#define rx_fail_flag_startbit                      12
 #define rx_fail_flag_width                         1
-#define rx_fail_flag_endbit                        2
-#define rx_fail_flag_shift                         13
-#define rx_fail_flag_mask                          0x2000
+#define rx_fail_flag_endbit                        12
+#define rx_fail_flag_shift                         3
+#define rx_fail_flag_mask                          0x8
+
+
+#define rx_hist_min_eye_height_addr                0b110110011
+#define rx_hist_min_eye_height_startbit            8
+#define rx_hist_min_eye_height_width               7
+#define rx_hist_min_eye_height_endbit              14
+#define rx_hist_min_eye_height_shift               1
+#define rx_hist_min_eye_height_mask                0xfe
+
+
+#define rx_hist_min_eye_height_lane_addr           0b110110010
+#define rx_hist_min_eye_height_lane_startbit       11
+#define rx_hist_min_eye_height_lane_width          5
+#define rx_hist_min_eye_height_lane_endbit         15
+#define rx_hist_min_eye_height_lane_shift          0
+#define rx_hist_min_eye_height_lane_mask           0x1f
+
+
+#define rx_hist_min_eye_height_valid_addr          0b110101100
+#define rx_hist_min_eye_height_valid_startbit      8
+#define rx_hist_min_eye_height_valid_width         1
+#define rx_hist_min_eye_height_valid_endbit        8
+#define rx_hist_min_eye_height_valid_shift         7
+#define rx_hist_min_eye_height_valid_mask          0x80
 
 
 #define rx_hist_min_eye_width_addr                 0b110110011
@@ -918,7 +1062,7 @@
 #define rx_hist_min_eye_width_mask                 0xff00
 
 
-#define rx_hist_min_eye_width_lane_addr            0b110110010
+#define rx_hist_min_eye_width_lane_addr            0b110101100
 #define rx_hist_min_eye_width_lane_startbit        3
 #define rx_hist_min_eye_width_lane_width           5
 #define rx_hist_min_eye_width_lane_endbit          7
@@ -934,7 +1078,7 @@
 #define rx_hist_min_eye_width_mode_mask            0xc00
 
 
-#define rx_hist_min_eye_width_valid_addr           0b110110010
+#define rx_hist_min_eye_width_valid_addr           0b110101100
 #define rx_hist_min_eye_width_valid_startbit       0
 #define rx_hist_min_eye_width_valid_width          1
 #define rx_hist_min_eye_width_valid_endbit         0
@@ -948,6 +1092,14 @@
 #define rx_init_done_endbit                        0
 #define rx_init_done_shift                         15
 #define rx_init_done_mask                          0x8000
+
+
+#define rx_lane_bad_addr                           0b000000100
+#define rx_lane_bad_startbit                       10
+#define rx_lane_bad_width                          1
+#define rx_lane_bad_endbit                         10
+#define rx_lane_bad_shift                          5
+#define rx_lane_bad_mask                           0x20
 
 
 #define rx_lane_bad_0_15_addr                      0b111000101
@@ -982,12 +1134,60 @@
 #define rx_lane_cal_time_us_mask                   0xffff
 
 
+#define rx_lane_hist_min_eye_height_addr           0b000001111
+#define rx_lane_hist_min_eye_height_startbit       9
+#define rx_lane_hist_min_eye_height_width          7
+#define rx_lane_hist_min_eye_height_endbit         15
+#define rx_lane_hist_min_eye_height_shift          0
+#define rx_lane_hist_min_eye_height_mask           0x7f
+
+
+#define rx_lane_hist_min_eye_height_bank_addr      0b000001111
+#define rx_lane_hist_min_eye_height_bank_startbit   5
+#define rx_lane_hist_min_eye_height_bank_width     1
+#define rx_lane_hist_min_eye_height_bank_endbit    5
+#define rx_lane_hist_min_eye_height_bank_shift     10
+#define rx_lane_hist_min_eye_height_bank_mask      0x400
+
+
+#define rx_lane_hist_min_eye_height_latch_addr     0b000001111
+#define rx_lane_hist_min_eye_height_latch_startbit   6
+#define rx_lane_hist_min_eye_height_latch_width    3
+#define rx_lane_hist_min_eye_height_latch_endbit   8
+#define rx_lane_hist_min_eye_height_latch_shift    7
+#define rx_lane_hist_min_eye_height_latch_mask     0x380
+
+
+#define rx_lane_hist_min_eye_height_quad_addr      0b000001000
+#define rx_lane_hist_min_eye_height_quad_startbit   14
+#define rx_lane_hist_min_eye_height_quad_width     2
+#define rx_lane_hist_min_eye_height_quad_endbit    15
+#define rx_lane_hist_min_eye_height_quad_shift     0
+#define rx_lane_hist_min_eye_height_quad_mask      0x3
+
+
+#define rx_lane_hist_min_eye_height_valid_addr     0b000000001
+#define rx_lane_hist_min_eye_height_valid_startbit   1
+#define rx_lane_hist_min_eye_height_valid_width    1
+#define rx_lane_hist_min_eye_height_valid_endbit   1
+#define rx_lane_hist_min_eye_height_valid_shift    14
+#define rx_lane_hist_min_eye_height_valid_mask     0x4000
+
+
 #define rx_lane_recal_cnt_addr                     0b000001011
 #define rx_lane_recal_cnt_startbit                 0
 #define rx_lane_recal_cnt_width                    16
 #define rx_lane_recal_cnt_endbit                   15
 #define rx_lane_recal_cnt_shift                    0
 #define rx_lane_recal_cnt_mask                     0xffff
+
+
+#define rx_last_init_lane_addr                     0b110110100
+#define rx_last_init_lane_startbit                 7
+#define rx_last_init_lane_width                    5
+#define rx_last_init_lane_endbit                   11
+#define rx_last_init_lane_shift                    4
+#define rx_last_init_lane_mask                     0x1f0
 
 
 #define rx_latch_offset_fail_addr                  0b000000101
@@ -1015,19 +1215,19 @@
 
 
 #define rx_linklayer_done_addr                     0b111001011
-#define rx_linklayer_done_startbit                 1
+#define rx_linklayer_done_startbit                 11
 #define rx_linklayer_done_width                    1
-#define rx_linklayer_done_endbit                   1
-#define rx_linklayer_done_shift                    14
-#define rx_linklayer_done_mask                     0x4000
+#define rx_linklayer_done_endbit                   11
+#define rx_linklayer_done_shift                    4
+#define rx_linklayer_done_mask                     0x10
 
 
 #define rx_linklayer_fail_addr                     0b111001011
-#define rx_linklayer_fail_startbit                 0
+#define rx_linklayer_fail_startbit                 9
 #define rx_linklayer_fail_width                    1
-#define rx_linklayer_fail_endbit                   0
-#define rx_linklayer_fail_shift                    15
-#define rx_linklayer_fail_mask                     0x8000
+#define rx_linklayer_fail_endbit                   9
+#define rx_linklayer_fail_shift                    6
+#define rx_linklayer_fail_mask                     0x40
 
 
 #define rx_lte_gain_fail_addr                      0b000000101
@@ -1318,7 +1518,7 @@
 #define rx_vga_amax_target_mask                    0xff
 
 
-#define rx_vga_converged_addr                      0b111000010
+#define rx_vga_converged_addr                      0b000001111
 #define rx_vga_converged_startbit                  0
 #define rx_vga_converged_width                     4
 #define rx_vga_converged_endbit                    3
@@ -1446,14 +1646,6 @@
 #define tx_dc_enable_dcc_mask                      0x4000
 
 
-#define tx_dc_enable_zcal_tdr_addr                 0b110001101
-#define tx_dc_enable_zcal_tdr_startbit             2
-#define tx_dc_enable_zcal_tdr_width                1
-#define tx_dc_enable_zcal_tdr_endbit               2
-#define tx_dc_enable_zcal_tdr_shift                13
-#define tx_dc_enable_zcal_tdr_mask                 0x2000
-
-
 #define tx_dcc_debug_addr                          0b111000100
 #define tx_dcc_debug_startbit                      0
 #define tx_dcc_debug_width                         16
@@ -1470,12 +1662,52 @@
 #define tx_dcc_main_min_samples_mask               0xff
 
 
+#define tx_ffe_margin_coef_addr                    0b110010101
+#define tx_ffe_margin_coef_startbit                8
+#define tx_ffe_margin_coef_width                   1
+#define tx_ffe_margin_coef_endbit                  8
+#define tx_ffe_margin_coef_shift                   7
+#define tx_ffe_margin_coef_mask                    0x80
+
+
+#define tx_ffe_pre1_coef_addr                      0b110010101
+#define tx_ffe_pre1_coef_startbit                  4
+#define tx_ffe_pre1_coef_width                     4
+#define tx_ffe_pre1_coef_endbit                    7
+#define tx_ffe_pre1_coef_shift                     8
+#define tx_ffe_pre1_coef_mask                      0xf00
+
+
+#define tx_ffe_pre2_coef_addr                      0b110010101
+#define tx_ffe_pre2_coef_startbit                  0
+#define tx_ffe_pre2_coef_width                     4
+#define tx_ffe_pre2_coef_endbit                    3
+#define tx_ffe_pre2_coef_shift                     12
+#define tx_ffe_pre2_coef_mask                      0xf000
+
+
 #define tx_rc_enable_dcc_addr                      0b110001010
 #define tx_rc_enable_dcc_startbit                  6
 #define tx_rc_enable_dcc_width                     1
 #define tx_rc_enable_dcc_endbit                    6
 #define tx_rc_enable_dcc_shift                     9
 #define tx_rc_enable_dcc_mask                      0x200
+
+
+#define tx_seg_test_en_addr                        0b110010100
+#define tx_seg_test_en_startbit                    0
+#define tx_seg_test_en_width                       1
+#define tx_seg_test_en_endbit                      0
+#define tx_seg_test_en_shift                       15
+#define tx_seg_test_en_mask                        0x8000
+
+
+#define tx_seg_test_fail_addr                      0b111010010
+#define tx_seg_test_fail_startbit                  0
+#define tx_seg_test_fail_width                     1
+#define tx_seg_test_fail_endbit                    0
+#define tx_seg_test_fail_shift                     15
+#define tx_seg_test_fail_mask                      0x8000
 
 
 #endif //_PPE_MEM_REG_CONST_PKG_H_

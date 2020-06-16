@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap20010900 |gap     | Removed put_ptr_field_twoscomp define, no longer used
+// vbr19111500 |vbr     | Initial implementation of debug levels
 // gap19091000 |gap     | Change rx_dcc_debug to tx_dcc_debug HW503432
 // mbs19090500 |mbs     | Updated tx_dcc_main_min_samples mem_reg for sim speedup
 // gap19073000 |gap     | Updated to use modified dcdet circuitry and associated state machine
@@ -102,18 +104,16 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir
 
 t_comp_result tx_dcc_main_compare_result(t_gcr_addr* gcr_addr_i, uint32_t min_samples_i, int32_t ratio_thresh_i);
 
-#define put_ptr_field_twoscomp(gcr_addr, reg, data, rmw) put_ptr(gcr_addr, reg##_addr, reg##_startbit, reg##_endbit, data & ((1 << reg##_width) - 1), rmw)
-
 ////////////////////////////////////////////////////////////////////////////////////////////
 // DEBUG FUNCTIONS
 // Some functions and macros to help in debugging.
 // These are light weight but the code size and performance hit can add up,
-// so allow for a compiler option to disable (IO_DISABLE_DEBUG).
+// so allow for a compiler option to enable/disable based on debug level.
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if IO_DISABLE_DEBUG == 1
+#if IO_DEBUG_LEVEL < 3
     #define set_tx_dcc_debug(marker, value) {}
 #else
     // This writes a "marker" followed by a value "value" to the mem_regs which can be used for tracking execution value.
     #define set_tx_dcc_debug(marker, value) { mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (marker);  mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (value); }
-#endif //DISABLE_IO_DEBUG
+#endif //IO_DEBUG_LEVEL
 #endif //_TX_DCC_MAIN_H_

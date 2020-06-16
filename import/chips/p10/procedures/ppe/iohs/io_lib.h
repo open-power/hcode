@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr19111500 |vbr     | Initial implementation of debug levels
 // vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
 // bja19081900 |bja     | ptr_ary macros save reg access info in an array, which is smaller than making many get/set_ptr calls
 // vbr19051700 |vbr     | HW491895: Change latch_dac reverse from twos complement to ones complement negation (match HW).
@@ -863,14 +864,32 @@ static inline int run_servo_ops_with_results_disabled_no_fir_on_error(t_gcr_addr
 // DEBUG FUNCTIONS
 // Some functions and macros to help in debugging.
 // These are light weight but the code size and performance hit can add up,
-// so allow for a compiler option to disable (IO_DISABLE_DEBUG).
+// so allow for a compiler options to enable/disable based on debug level.
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if IO_DISABLE_DEBUG == 1
-    #define set_debug_state(state) {}
+#if IO_DEBUG_LEVEL == 0
+#define set_debug_state(...) {}
+#define set_debug_state_at_level(state, level) {}
+#define set_debug_state_at_level_1(state) {}
+#define set_debug_state_at_level_2(state) {}
+#define set_debug_state_at_level_3(state) {}
 #else
-    // This writes a "state" to the mem_regs which can be used for tracking execution state.
-    #define set_debug_state(state) { PK_STATIC_ASSERT(ppe_debug_state_width == 16); mem_regs_u16[pg_addr(ppe_debug_state_addr)] = (state); }
-#endif //DISABLE_IO_DEBUG
+// This writes a "state" to the mem_regs when the debug level is exceeded which can be used for tracking execution state.
+#define set_debug_state_at_level(state, level) {      \
+        PK_STATIC_ASSERT(ppe_debug_state_width == 16); \
+        PK_STATIC_ASSERT((level) > 0); \
+        if (IO_DEBUG_LEVEL >= (level)) { mem_regs_u16[pg_addr(ppe_debug_state_addr)] = (state); }  \
+    }
+
+#define set_debug_state_at_level_1(state) set_debug_state_at_level((state), 1)
+#define set_debug_state_at_level_2(state) set_debug_state_at_level((state), 2)
+#define set_debug_state_at_level_3(state) set_debug_state_at_level((state), 3)
+
+// set_debug_state(state)         Set ppe_debug_state to state when the IO_DEBUG_LEVEL >= 1
+// set_debug_state(state, level)  Set ppe_debug_state to state when the IO_DEBUG_LEVEL >= level
+// Overload set_debug_state() to call the appropriate macro based on number of inputs
+#define set_debug_state_overload(_1, _2, _func, ...) _func
+#define set_debug_state(...) set_debug_state_overload(__VA_ARGS__, set_debug_state_at_level, set_debug_state_at_level_1)(__VA_ARGS__)
+#endif //IO_DEBUG_LEVEL
 
 
 #endif //_IO_LIB_H_

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,16 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20030900 |mbs     | HW525009: Set bit_lock_done=1 during bank sync and dfe to avoid bank B unlocks
+// jfg20031000 |jfg     | fix copy-paste error
+// jfg20030900 |jfg     | HW525009 add a rough_only mode to set initial coarse peak 1&2
+// vbr20021300 |vbr     | Added Min Eye Height enable to dfe_full calls
+// vbr20020600 |vbr     | HW522210: Added setting of rx_lane_bad in INIT and every recal iteration.
+// bja20020500 |bja     | Use new tx_fifo_init() in eo_main_dccal()
+// cws19121100 |cws     | Moved Bist tests to External Commands
+// bja20011400 |bja     | Remove TDR ZCAL from DCCAL. Moved to ext cmd.
+// vbr19111500 |vbr     | Initial implementation of debug levels
+// mbs19111100 |mbs     | Leave dl_clk_en untouched in eo_main_dccal (HW508366)
 // mbs19091000 |mbs     | Added rx iodom reset after recal alt bank power up (HW504112)
 // jfg19091100 |jfg     | Add first_run parm to eo_ctle
 // gap19091000 |gap     | Change  rx_rc_enable_dcc, rx_dc_enable_dcc to tx_* and rx_dc_enable_zcal to tx_dc_enable_zcal_tdr HW503432
@@ -192,10 +202,10 @@
 
 #include "tx_zcal_tdr.h"
 #include "tx_dcc_main.h"
-#include "txbist_main.h"
+//#include "txbist_main.h"
 #include "eo_vclq_checks.h"
-#include "eo_rxbist_ber.h"
-#include "eo_llbist.h"
+//#include "eo_rxbist_ber.h"
+//#include "eo_llbist.h"
 
 #include "io_init_and_reset.h"
 
@@ -213,12 +223,14 @@ static int eo_main_recal_tx(t_gcr_addr* gcr_addr);
 
 // Assumption Checking
 PK_STATIC_ASSERT(rx_pr_edge_track_cntl_ab_alias_width == 6);
-PK_STATIC_ASSERT(rx_lane_bad_16_23_startbit == 0);
+PK_STATIC_ASSERT(rx_pr_edge_track_cntl_ab_alias_startbit == 0);
+PK_STATIC_ASSERT(rx_pr_enable_a_startbit == 0);
+PK_STATIC_ASSERT(rx_pr_enable_b_startbit == 3);
 
 
 // Macros for the timestamping code used in all 3 cal functions for measuring cal time.
 // To avoid doing a divide, we assume a power-of-2 timer base which is close enough to the actual frequency.
-#if IO_DISABLE_DEBUG == 1
+#if IO_DEBUG_LEVEL < 2
 #define CAL_TIMER_START {}
 #define CAL_TIMER_STOP {}
 #else
@@ -242,7 +254,7 @@ void eo_main_dccal(t_gcr_addr* gcr_addr)
     CAL_TIMER_START;
     set_debug_state(0x1000); // Debug - DC Cal Start
     int lane = get_gcr_addr_lane(gcr_addr);
-#if IO_DISABLE_DEBUG == 0
+#if IO_DEBUG_LEVEL >= 1
     mem_pg_field_put(rx_current_cal_lane, lane);
 #endif
 
@@ -250,7 +262,7 @@ void eo_main_dccal(t_gcr_addr* gcr_addr)
     // Power up group and lane //
     /////////////////////////////
     io_group_power_on(gcr_addr);
-    io_lane_power_on(gcr_addr);
+    io_lane_power_on(gcr_addr, false); // Power on but leave dl_clk_en untouched (HW508366)
 
 
     //////////////////////////////////////////////////////////////
@@ -304,8 +316,8 @@ void eo_main_dccal(t_gcr_addr* gcr_addr)
     clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
     set_cal_bank(gcr_addr, bank_a);
 
-    // Enable Clock to RX DL
-    put_ptr_field(gcr_addr, rx_dl_clk_en, 0b1, read_modify_write);
+    // Removed (HW508366) // Enable Clock to RX DL
+    // Removed (HW508366) // put_ptr_field(gcr_addr, rx_dl_clk_en, 0b1, read_modify_write);
 
 
     //////////
@@ -315,10 +327,7 @@ void eo_main_dccal(t_gcr_addr* gcr_addr)
     set_gcr_addr_reg_id(gcr_addr, tx_group); // set to tx gcr address
 
     // run tx_fifo_init; needs to be run before dcc or bist or Zcal
-
-    put_ptr_field_fast(gcr_addr, tx_clr_unload_clk_disable,   0b1);
-    put_ptr_field_fast(gcr_addr, tx_fifo_init,   0b1);
-    put_ptr_field_fast(gcr_addr, tx_set_unload_clk_disable,   0b1);
+    tx_fifo_init(gcr_addr);
 
     // Cal Step: TX Duty Cycle Correction; needs to be run before tx_bist_dcc
     int tx_dcc_enable = mem_pg_field_get(tx_dc_enable_dcc);
@@ -328,21 +337,12 @@ void eo_main_dccal(t_gcr_addr* gcr_addr)
         tx_dcc_main_init(gcr_addr);
     }
 
-    // call txbist if requested
-    int run_txbist = get_ptr_field(gcr_addr, tx_bist_en_alias);
-
-    if (run_txbist > 0)
-    {
-        txbist_main(gcr_addr);
-    }
-
-    // Cal Step: TX Zcal
-    int tx_zcal_enable = mem_pg_field_get(tx_dc_enable_zcal_tdr);
-
-    if (tx_zcal_enable)
-    {
-        tx_zcal_tdr(gcr_addr);
-    }
+// CWS Moved Tx Bist to External Command
+//  // call txbist if requested
+//  int run_txbist = get_ptr_field(gcr_addr, tx_bist_en_alias);
+//  if (run_txbist > 0) {
+//      txbist_main(gcr_addr);
+//  }
 
     set_gcr_addr_reg_id(gcr_addr, rx_group); // set to rx gcr address
 
@@ -365,9 +365,13 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     CAL_TIMER_START;
     set_debug_state(0x2000); // Debug - INIT Cal Start
     int lane = get_gcr_addr_lane(gcr_addr);
-#if IO_DISABLE_DEBUG == 0
+#if IO_DEBUG_LEVEL >= 1
     mem_pg_field_put(rx_current_cal_lane, lane);
 #endif
+
+    // In initial cal, track step status for marking lane bad.
+    // But unlike recal, do not skip steps on status being set.
+    int status = rc_no_error;
 
     // Make sure the ALT bank is powered up
     put_ptr_field(gcr_addr, rx_psave_req_alt, 0b0, read_modify_write);
@@ -416,7 +420,7 @@ void eo_main_init(t_gcr_addr* gcr_addr)
             bool recal = false;
             bool copy_gain_to_b = true;
             bool copy_gain_to_b_loop = true;
-            eo_vga(gcr_addr, bank_a, &gain_changed, recal, copy_gain_to_b, copy_gain_to_b_loop, first_loop_iteration);
+            status |= eo_vga(gcr_addr, bank_a, &gain_changed, recal, copy_gain_to_b, copy_gain_to_b_loop, first_loop_iteration);
         }
 
         // CDR must be locked prior to running EOFF, Quad Adjust, CTLE, or LTE.
@@ -424,6 +428,7 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         //   1) The edge latches have all offset (latch and path) calibrated out.
         //   2) The data bits are being received well enough that don't get false invalid_locks.
         // It is likely that the CDR will not lock due to the above conditions not being met as yet and thus will run to the timeout.
+        // For this reason, we ignore the status of this CDR lock wait.
         if (first_loop_iteration)
         {
             // Enable Independent Edge Tracking (both banks Master) and wait for lock on both banks.
@@ -440,7 +445,7 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         if (eoff_enable)
         {
             bool recal = false;
-            eo_eoff(gcr_addr, recal, vga_loop_count, bank_a);
+            status |= eo_eoff(gcr_addr, recal, vga_loop_count, bank_a);
         }
 
         // Cal Step: Quad Phase Adjust (Edge NS to EW phase adjustment)
@@ -451,18 +456,19 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         if (quad_enable  && !first_loop_iteration)
         {
             bool recal_2ndrun = (vga_loop_count > 1); //vga_loop_count: 0 = skip, 1 = 1st run, 2 = 2nd run
-            eo_qpa(gcr_addr, bank_a, recal_2ndrun, &quad_adjust_changed);
+            status |= eo_qpa(gcr_addr, bank_a, recal_2ndrun, &quad_adjust_changed);
         }
 
         // Cal Step: CTLE (Peaking)
         // Requires edge tracking (master mode) but does not require bank alignment
         bool peak_changed = false;
+        bool rough_only = false;
         int ctle_enable = mem_pg_field_get(rx_eo_enable_ctle_peak_cal);
 
         if (ctle_enable)
         {
             bool copy_peak_to_b = true;
-            eo_ctle(gcr_addr, bank_a, copy_peak_to_b, &peak_changed, first_loop_iteration);
+            status |= eo_ctle(gcr_addr, bank_a, copy_peak_to_b, &peak_changed, first_loop_iteration, rough_only);
         }
 
         // Cal Step: LTE
@@ -474,7 +480,7 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         {
             bool recal = false;
             bool copy_lte_to_b = true;
-            eo_lte(gcr_addr, bank_a, copy_lte_to_b, recal, &lte_changed);
+            status |= eo_lte(gcr_addr, bank_a, copy_lte_to_b, recal, &lte_changed);
         }
 
         // Check for loop termination.
@@ -507,8 +513,9 @@ void eo_main_init(t_gcr_addr* gcr_addr)
 
 // Cal Step: Edge Offset (Live Data) on Bank B
     int eoff_enable = mem_pg_field_get(rx_eo_enable_edge_offset_cal);
+    int ctle_enable = mem_pg_field_get(rx_eo_enable_ctle_peak_cal);
 
-    if (eoff_enable)
+    if (eoff_enable || ctle_enable)
     {
         // Safely switch to bank_b without changing dl_clk_sel_a to avoid DL clock chopping (HW485000)
         clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
@@ -516,7 +523,21 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
 
         bool recal = false;
-        eo_eoff(gcr_addr, recal, 0, bank_b); // vga_loop_count = 0
+
+        if (eoff_enable)
+        {
+            status |= eo_eoff(gcr_addr, recal, 0, bank_b); // vga_loop_count = 0
+        }
+
+        bool rough_only = true;
+        bool copy_peak_to_b = false;
+        bool first_iteration = true;
+        bool peak_changed = false;
+
+        if (ctle_enable)
+        {
+            status |= eo_ctle(gcr_addr, bank_b, copy_peak_to_b, &peak_changed, first_iteration, rough_only);
+        }
 
         // Safely switch to bank_a
         clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
@@ -524,13 +545,17 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
     }
 
+    // Turn off invalid lock detection to avoid coming out of sync on bank B after bank sync
+    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_a, 0b1, read_modify_write);
+    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_b, 0b1, read_modify_write);
+
     // Perform Bank A/B UI Alignment by bumping alt bank
     // Requires edge tracking (master mode)
     int bank_sync_enable = mem_pg_field_get(rx_eo_enable_bank_sync);
 
     if (bank_sync_enable)
     {
-        align_bank_ui(gcr_addr, bank_a);
+        status |= align_bank_ui(gcr_addr, bank_a);
     }
 
     // Put Alt (Cal) bank into CDR Slave mode for DFE Amp Measurements and DDC
@@ -543,8 +568,9 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     if (dfe_enable)
     {
         bool recal = false;
-        rx_eo_dfe_fast(gcr_addr);
-        rx_eo_dfe_full(gcr_addr, bank_a, recal);
+        bool enable_min_eye_height = false;
+        status |= rx_eo_dfe_fast(gcr_addr);
+        status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
     }
 
     // Cal Step: DDC
@@ -555,12 +581,13 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     {
         bool recal = false;
         bool recal_dac_changed = false;
-        eo_ddc(gcr_addr, bank_a, recal, recal_dac_changed);
+        status |= eo_ddc(gcr_addr, bank_a, recal, recal_dac_changed);
 
         if (dfe_enable)
         {
             // after running ddc, run dfe again to recenter at new sample position
-            rx_eo_dfe_full(gcr_addr, bank_a, recal);
+            bool enable_min_eye_height = true;
+            status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
         }
     }
 
@@ -578,7 +605,11 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     set_debug_state(0x2015); // DEBUG - Init Cal Final Edge Tracking
     put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias, 0b100100, read_modify_write);
     bool set_fir_on_error = true;
-    wait_for_cdr_lock(gcr_addr, set_fir_on_error);
+    status |= wait_for_cdr_lock(gcr_addr, set_fir_on_error);
+
+    // Turn on invalid lock detection again so the CDR can relock after psave mode
+    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_a, 0b0, read_modify_write);
+    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_b, 0b0, read_modify_write);
 
     // Clear cal lane sel
     clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
@@ -602,6 +633,17 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     // Clear the recal_abort sticky bit in case it was previously asserted
     put_ptr_field(gcr_addr, rx_dl_phy_recal_abort_sticky_clr, 0b1, fast_write); // strobe bit
 
+    // Warning FIR and Bad Lane status on Warning/Error
+    if ( (status & (warning_code | error_code)) )
+    {
+        set_rx_lane_bad(lane);
+        set_fir(fir_code_warning);
+    }
+    else
+    {
+        clr_rx_lane_bad(lane); // Clear in case it was set by a prior training (and this is a retrain)
+    }
+
     set_debug_state(0x202F); // DEBUG - INIT Cal Done
     CAL_TIMER_STOP;
 } //eo_main_init
@@ -617,7 +659,7 @@ int eo_main_recal(t_gcr_addr* gcr_addr)
     CAL_TIMER_START;
     set_debug_state(0x3000); // Debug - Recal Start
     int lane = get_gcr_addr_lane(gcr_addr);
-#if IO_DISABLE_DEBUG == 0
+#if IO_DEBUG_LEVEL >= 1
     mem_pg_field_put(rx_current_cal_lane, lane);
 #endif
 
@@ -780,7 +822,8 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
     {
         bool peak_changed = false;
         bool copy_peak_to_b = false;
-        status |= eo_ctle(gcr_addr, cal_bank, copy_peak_to_b, &peak_changed, first_recal);
+        bool rough_only = false;
+        status |= eo_ctle(gcr_addr, cal_bank, copy_peak_to_b, &peak_changed, first_recal, rough_only);
     }
 
     // Cal Step: LTE
@@ -823,7 +866,9 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
 
     if (dfe_enable && (status == rc_no_error))
     {
-        status |= rx_eo_dfe_full(gcr_addr, cal_bank, recal);
+        // Enable the min eye height checks if past the first recal on Bank B or on the last iteration of that first recal
+        bool enable_min_eye_height = ( min_recal_cnt_reached || (mem_pg_field_get(rx_min_recal_cnt) == (recal_cnt + 1)) );
+        status |= rx_eo_dfe_full(gcr_addr, cal_bank, recal, enable_min_eye_height);
     }
 
     // Cal Step: DDC
@@ -868,7 +913,7 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
         eo_vclq_checks(gcr_addr, cal_bank);
     }
 
-    // In Recal, only switch banks at the end of a lane's recal when no abortor error and if reached the min lane recal count
+    // In Recal, only switch banks at the end of a lane's recal when no abort or error and if reached the min lane recal count
     status |= check_rx_abort(gcr_addr);
 
     if (status == rc_no_error)
@@ -879,30 +924,6 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
             set_debug_state(0x3015); // DEBUG - Recal Final Edge Tracking and Bank Switch
             bool set_fir_on_error = true;
             wait_for_cdr_lock(gcr_addr, set_fir_on_error);
-
-
-            //Perform Check of Data and Pr check
-            int rx_bist_max_lanes;//max number of lanes set manually
-            rx_bist_max_lanes = fw_field_get(fw_num_lanes);//max number of lanes;
-
-            // lane is base 0, max lanes is not
-            if (lane >= rx_bist_max_lanes - 1)
-            {
-                //begin if
-                if (get_ptr_field(gcr_addr, rx_link_layer_check_en))
-                {
-                    eo_llbist(gcr_addr);
-                }
-
-                if (get_ptr_field(gcr_addr, rx_pr_ber_check_en))
-                {
-                    eo_rxbist_ber(gcr_addr , bank_a); //
-                    set_cal_bank(gcr_addr, bank_b); // Set Bank A as Main, Bank B as Alt (cal_bank)
-                    eo_rxbist_ber(gcr_addr , bank_b); //Set Bank A as Main, Bank B as Alt (cal_bank) 1
-                    set_cal_bank(gcr_addr, bank_a); // Set Bank A as Main, Bank B as Alt (cal_bank)
-                }
-            }//end if
-
 
             // Switch banks
             cal_bank = switch_cal_bank(gcr_addr, cal_bank);
@@ -921,20 +942,10 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
             set_fir(fir_code_recal_abort);
         }
 
-        // Warning FIR and Bad Lane status on Warning/Error (only if reached the min lane recal count)
-        if ( min_recal_cnt_reached && (status & (warning_code | error_code)) )
+        // Warning FIR and Bad Lane status on Warning/Error
+        if ( (status & (warning_code | error_code)) )
         {
-            uint32_t lane_mask = 0x80000000 >> lane;
-
-            if (lane < 16)
-            {
-                mem_regs_u16_bit_set(pg_addr(rx_lane_bad_0_15_addr), (lane_mask >> 16));
-            }
-            else     // lane>=16
-            {
-                mem_regs_u16_bit_set(pg_addr(rx_lane_bad_16_23_addr), lane_mask);
-            }
-
+            set_rx_lane_bad(lane);
             set_fir(fir_code_warning);
         }
     } //if(status==rc_no_error)

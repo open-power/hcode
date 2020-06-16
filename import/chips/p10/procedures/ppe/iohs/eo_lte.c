@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// cws20011400 |cws     | Added Debug Logs
 // vbr19091200 |vbr     | HW503535: Added sub-step disables so can turn off just LTE Gain or Zero.
 // vbr19041500 |vbr     | Updated register names
 // vbr19022500 |vbr     | Disable servo_status for result min/max
@@ -62,6 +63,7 @@
 
 #include "eo_common.h"
 #include "eo_lte.h"
+#include "io_logger.h"
 
 #include "servo_ops.h"
 #include "ppe_mem_reg_const_pkg.h"
@@ -129,6 +131,7 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
         // Set the FIR if either queue is not empty.
         set_debug_state(0x9001); // Servo queues not empty
         set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_LTE_SERVO_QUEUE_NOT_EMPTY, gcr_addr, 0x0);
         return warning_code;
     }
 
@@ -218,7 +221,7 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
             {
                 restore = true;
                 *hysteresis_exceeded = false;
-                set_debug_state(0x9018); // DEBUG - LTE Hysteresis Restore
+                set_debug_state(0x9018, 2); // DEBUG - LTE Hysteresis Restore
             }
             else
             {
@@ -245,7 +248,7 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
         // Only allowed when not in recal.
         if (!recal && copy_to_main)
         {
-            set_debug_state(0x900A); // DEBUG - LTE Copy Result to Main
+            set_debug_state(0x900A, 2); // DEBUG - LTE Copy Result to Main
             int gain_result = gain_disable ? gain_prev : servo_results[gain_op];
             int zero_result = zero_disable ? zero_prev : servo_results[zero_op];
             int write_val   = (gain_result << (rx_a_lte_gain_shift - rx_a_lte_zero_shift)) | zero_result;

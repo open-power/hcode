@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,6 +41,11 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20022701 |mwh     | Removed extra powerdown write and comminted out the write of step since they are default to all on
+// mwh20022700 |mwh     | Put in fix for CQ523188 and CQ526617 -- put sleep in loop, fix shared loop issue
+// mwh20022600 |mwh     | Removed extra bit form rx_eo_step_cntl_opt_alias
+// mwh19121100 |mwh     | For new call of bist add in rx_disable_bank_pdwn = 1
+// mwh19121000 |mwh     | removed rx_enable_auto_recal -- this will be replaces by usning external recal command.
 // bja19082200 |bja     | add bits to rx_bist_cir_alias
 // bja19081900 |bja     | Switch addr to tx_group before setting tx_bist_en
 // cws19053000 |cws     | Removed hw_reg_init, dccal, run_lane calls
@@ -78,6 +83,7 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
     //start eo_rxbist_init_or_override.c
 
     //assume manu and system do a scan flush reset
+    mem_pg_field_put(bist_in_progress, 1);
 
     int lane = 0;//for the "for loop" used on pl registers
     int bist_num_lanes = fw_field_get(fw_num_lanes);//getting max number of lanes per theard
@@ -101,11 +107,11 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
     //trun off alt bank powerdown
     mem_pg_field_put(rx_disable_bank_pdwn, 0b1);//pg
 
-    //turning on all init steps
-    mem_pg_field_put(rx_eo_step_cntl_opt_alias, 0b111111111); //pg
+    //turning on all init steps -- removed since default to all on
+    //mem_pg_field_put(rx_eo_step_cntl_opt_alias,0b111111111);//pg
 
-    //turning on all recal steps
-    mem_pg_field_put(rx_rc_step_cntl_opt_alias, 0b111111111); //pg
+    //turning on all recal steps -- removed since default to all on
+    //mem_pg_field_put(rx_rc_step_cntl_opt_alias,0b111111111);//pg
 
 
     for (lane = 0; lane <  bist_num_lanes; lane++)
@@ -119,7 +125,7 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
         //mem_pl_field_put(io_power_up_lane_req,lane,0b1);//pl
 
         //enabling init and recal with two below
-        mem_pl_field_put(rx_enable_auto_recal, lane, 0b1); //pl
+        //mem_pl_field_put(rx_enable_auto_recal,lane,0b1);//pl
         //mem_pl_field_put(rx_run_lane,lane,0b1);//pl
     }//end for
 
@@ -137,6 +143,7 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
         //setting change specific to system
     }
 
+    mem_pg_field_put(bist_in_hold_loop, 1);
     //while loop for syncclk mux -- must be set 0 -- system should fly through this
     int rx_syncclk_muxsel_dc_int = get_ptr_field(gcr_addr, rx_syncclk_muxsel_dc); //pg rox
 
@@ -148,19 +155,32 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
     }//end
 
 
-    //while loop for shared test pin must be set if running txbist
-    int tc_shared_pin_dc_int = get_ptr_field(gcr_addr, tc_shared_pin_dc); //pg rox
-    int tc_bist_shared_ovrd_int = get_ptr_field(gcr_addr, tc_bist_shared_ovrd); //pg
-    int tc_bist_code_go_int = get_ptr_field(gcr_addr, tc_bist_code_go); //pg
+    //Shared test pin is tied to 1 for IO that are not shared at chip level
+    //Shared_test = 0 = on ( IO are shared for test)
+    //Shared_test = 1 = off ( IO are not shared for test)
+    //tc_bist_shared_ovrd =  rx_ctl_cntl5_pg, bit 1 (start at 0)
+    //tc_bist_code_go =  rx_ctl_cntl5_pg, bit 3 (start at 0)
+    //bist_in_hold_loop =  rx_ppe_stat28_pg, bit 1  (start at 0)
 
-    while (((tc_shared_pin_dc_int == 1) || (tc_bist_shared_ovrd_int == 1)) && (tc_bist_code_go_int == 1))
+
+    //while loop for shared test pin must be set if running txbist
+    int tc_shared_pin_dc_int = 0;
+    int tc_bist_shared_ovrd_int = 0;
+    int tc_bist_code_go_int = 0;
+    int l_run_bist = 0;
+
+    do
     {
-        //begin while
+        io_sleep(get_gcr_addr_thread(gcr_addr));
         tc_shared_pin_dc_int = get_ptr_field(gcr_addr, tc_shared_pin_dc); //pg rox
         tc_bist_shared_ovrd_int = get_ptr_field(gcr_addr, tc_bist_shared_ovrd); //pg
         tc_bist_code_go_int = get_ptr_field(gcr_addr, tc_bist_code_go); //pg
-        io_sleep(get_gcr_addr_thread(gcr_addr));
-    }//end
+
+        l_run_bist = ((tc_shared_pin_dc_int | tc_bist_shared_ovrd_int) & tc_bist_code_go_int) & 0x1;
+    }
+    while (l_run_bist == 0);
+
+    mem_pg_field_put(bist_in_hold_loop, 0);
 
     //clearing the work reg so we do not repeat the bist run
     lcl_put(scom_ppe_work1_lcl_addr, scom_ppe_work1_width, 0x00000000);

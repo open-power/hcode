@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -38,7 +38,10 @@
 // CHANGE HISTORY:
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
-// ------------|--------|-------------------------------------------------------
+//-------------|--------|-------------------------------------------------------
+// vbr20030900 |vbr     | HW525544: Make ppe_servo_status0/1 trap registers and clear the hw servo_status0/1 registers after copying
+// vbr20012400 |vbr     | HW520453: Clear the scom_ppe_fir reg bit before setting it again since FW can't write to it on DD1
+// vbr19111500 |vbr     | Initial implementation of debug levels
 // jgr19102300 |jgr     | HW509784: updated put/get functions to wait for echo flag independent of read valid
 // vbr19031300 |vbr     | Removed inlining on some set_gcr_addr_* functions.
 // mbs19021900 |mbs     | Updated polling loop in ll_put
@@ -171,7 +174,7 @@ void io_sleep(int thread)
     // Set the pointers for the current thread before returning
     set_pointers(thread);
 
-#if IO_DISABLE_DEBUG == 0
+#if IO_DEBUG_LEVEL >= 1
     // Debug info on the current thread running
     img_field_put(ppe_current_thread, thread);
 #endif
@@ -202,7 +205,7 @@ void io_wait(int thread, PkInterval wait_time)
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 // Run a list of servo ops and return the results in an array (2's complement integers).
-// Return value indicates if there was an error reported by the servo status.
+// Return value indicates if there was an error reported by the servo status (which it clears after copying to the mem_regs).
 // Can disable the pushing (and thus reading and returning) of results to improve speed.
 // Can disable the setting of the FIR on a servo error if want to handle that in calling function.
 PK_STATIC_ASSERT(rx_servo_op_queue0_startbit == rx_servo_op_queue1_startbit);
@@ -285,21 +288,23 @@ int run_servo_ops_base(t_gcr_addr* gcr_addr, unsigned int queue, unsigned int nu
 
     if (servo_status1 != 0)   // Error reported by servo status.
     {
-        // Copy the status into the mem_regs so calling function can handle it as needed.
-        int servo_status0 = get_ptr_field(gcr_addr, rx_servo_status0);
-        mem_pg_field_put(ppe_servo_status0, servo_status0);
-        mem_pg_field_put(ppe_servo_status1, servo_status1);
+        // Trap the servo status into the mem_regs if ppe_servo_status1 nothing previously trapped.
+        // For simplicity, checking that the full reg is 0 and not just the valid bit.
+        if (mem_pg_field_get(ppe_servo_status1) == 0)
+        {
+            int servo_status0 = get_ptr_field(gcr_addr, rx_servo_status0);
+            mem_pg_field_put(ppe_servo_status0, servo_status0);
+            mem_pg_field_put(ppe_servo_status1, servo_status1);
+        }
 
         // Set the FIR.
         if (set_fir_on_error)
         {
             set_fir(fir_code_warning);
         }
-        else
-        {
-            // If not setting the FIR we expect there may be an error (VGA).  Clear the servo status in HW since we don't consider this a real error.
-            put_ptr_field_fast(gcr_addr, rx_reset_servo_status, 0b1); // strobe bit
-        }
+
+        // HW525544: Clear the servo status in HW so don't react to the same error again
+        put_ptr_field_fast(gcr_addr, rx_reset_servo_status, 0b1); // strobe bit
 
         return rc_warning;
     }
@@ -593,7 +598,7 @@ uint32_t lcl_get_int(uint32_t reg_addr, uint32_t shift)
 // Set the FIR bits and img_reg Error status
 void set_fir(uint32_t fir_code)
 {
-#if IO_DISABLE_DEBUG == 0
+#if IO_DEBUG_LEVEL >= 1
     // Trap the error info if there isn't already a trapped error
     int error_valid = img_field_get(ppe_error_valid);
 
@@ -613,7 +618,11 @@ void set_fir(uint32_t fir_code)
 
 #endif
 
-    // Set the PPE FIR register
+    // Clear the bit in the PPE FIR register so it can be set again (FIR is edge triggered)
+    uint64_t volatile* fir_clr_addr = (uint64_t*)(0xC0000000 | scom_ppe_fir_clr_lcl_addr);
+    (*fir_clr_addr) = (uint64_t)fir_code << 32;
+
+    // Set the bit in the PPE FIR register to trigger the FIR
     uint64_t volatile* fir_set_addr = (uint64_t*)(0xC0000000 | scom_ppe_fir_set_lcl_addr);
     (*fir_set_addr) = (uint64_t)fir_code << 32;
 } //set_fir

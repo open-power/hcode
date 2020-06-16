@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,11 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20040800 |vbr     | HW527993: Increase thread lock check period from 100ms to 200ms
+// vbr20022700 |vbr     | Added config to allow sim to greatly reduce the check periods.
+// cws20010900 |cws     | Removed tx zcal state machine calls
+// vbr19111500 |vbr     | Initial implementation of debug levels
+// vbr19121100 |vbr     | HW515031: Disable thread and recal checks on threads where BIST is enabled.
 // vbr19100301 |vbr     | Removed dl ppe test code from supervisor thread.
 // bja19052900 |bja     | Add EOL toggling
 // mbs19021900 |mbs     | Updated p10 dl ppe code to set work1 regs
@@ -70,7 +75,7 @@
 /////////////////////////////////////////////////
 // Time constants for periodic events
 /////////////////////////////////////////////////
-#define THREAD_LOCK_CHECK_PERIOD    PK_MILLISECONDS(100)
+#define THREAD_LOCK_CHECK_PERIOD    PK_MILLISECONDS(200)
 #define RECAL_NOT_RUN_CHECK_PERIOD  PK_MILLISECONDS(500)
 #define FAST_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)43200) // 12 hrs
 #define SLOW_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)86400) // 24 hrs
@@ -88,7 +93,7 @@ void supervisor_thread(void* arg)
     // Set the pointers for mem_regs and fw_regs to this thread's section
     set_pointers(thread_id);
 
-#if IO_DISABLE_DEBUG == 0
+#if IO_DEBUG_LEVEL >= 1
     // Debug info on the current thread running
     img_field_put(ppe_current_thread, thread_id);
 #endif
@@ -106,12 +111,39 @@ void supervisor_thread(void* arg)
     // Read the number of threads from the img_regs. The IO threads have IDs [0, io_threads-1].
     int io_threads = img_field_get(ppe_num_threads);
 
-    // Calculate intervals and set the time for the first error checks
-    PkInterval thread_locked_check_interval = PK_INTERVAL_SCALE(THREAD_LOCK_CHECK_PERIOD);
-    PkInterval recal_not_run_check_interval = PK_INTERVAL_SCALE(RECAL_NOT_RUN_CHECK_PERIOD);
+    // Calculate check intervals
     PkInterval fast_eol_toggle_interval     = PK_INTERVAL_SCALE(FAST_EOL_TOGGLE_PERIOD);
     PkInterval slow_eol_toggle_interval     = PK_INTERVAL_SCALE(SLOW_EOL_TOGGLE_PERIOD);
 
+    PkInterval thread_locked_check_interval;
+    unsigned int thread_lock_sim_mode = mem_pg_field_get(ppe_thread_lock_sim_mode);
+
+    if (thread_lock_sim_mode)
+    {
+        // Sim Mode: 2^ppe_thread_lock_sim_mode microseconds
+        thread_locked_check_interval = (PkInterval)scaled_microsecond << thread_lock_sim_mode;
+    }
+    else
+    {
+        // Operational Mode
+        thread_locked_check_interval = PK_INTERVAL_SCALE(THREAD_LOCK_CHECK_PERIOD);
+    }
+
+    PkInterval recal_not_run_check_interval;
+    unsigned int recal_not_run_sim_mode = mem_pg_field_get(ppe_recal_not_run_sim_mode);
+
+    if (thread_lock_sim_mode)
+    {
+        // Sim Mode: 2^ppe_recal_not_run_sim_mode
+        recal_not_run_check_interval = (PkInterval)scaled_microsecond << recal_not_run_sim_mode;
+    }
+    else
+    {
+        // Operational Mode
+        recal_not_run_check_interval = PK_INTERVAL_SCALE(RECAL_NOT_RUN_CHECK_PERIOD);
+    }
+
+    // Set the time for the first error checks
     PkTimebase current_time = pk_timebase_get();
     PkTimebase thread_locked_check_time = current_time + thread_locked_check_interval;
     PkTimebase recal_not_run_check_time = current_time + recal_not_run_check_interval;
@@ -138,25 +170,6 @@ void supervisor_thread(void* arg)
             set_debug_state(0xF001); // DEBUG - Supervisor Thread Loop Start
 
 
-            /////////////////////////////////////////////////
-            // TX Z Cal
-            /////////////////////////////////////////////////
-            int tx_zcal_req  = img_field_get(ppe_tx_zcal_req);
-            int tx_zcal_done = img_field_get(ppe_tx_zcal_done);
-
-            if ( tx_zcal_req && !tx_zcal_done )
-            {
-                // Run zcal on a request.
-                img_field_put(ppe_tx_zcal_busy_done_error_alias, 0b100); // Set busy and clear error (in case it was previously set)
-                io_tx_zcal_meas(&gcr_addr);
-                img_field_put(ppe_tx_zcal_busy_done_alias, 0b01); // Clear busy and set done
-            }
-
-            // If done is set but no longer seeing a request, clear the done bit (completes the handshake) and clear the error status.
-            if ( !tx_zcal_req && tx_zcal_done )
-            {
-                img_field_put(ppe_tx_zcal_busy_done_error_alias, 0b000);
-            }
 
 
             /////////////////////////////////////////////////
@@ -187,6 +200,14 @@ void supervisor_thread(void* arg)
 
                 for (thread = 0; thread < io_threads; thread++)
                 {
+                    // Skip this check if BIST is enabled on the thread
+                    int bist_en = fw_regs_u16_base_get(fw_base_addr(fw_bist_en_addr, thread), fw_bist_en_mask, fw_bist_en_shift);
+
+                    if (bist_en)
+                    {
+                        continue;
+                    }
+
                     // Get the old and new count
                     uint16_t new_count = mem_regs_u16_base_get(pg_base_addr(ppe_thread_loop_count_addr, thread), ppe_thread_loop_count_mask,
                                          ppe_thread_loop_count_shift);
@@ -198,7 +219,7 @@ void supervisor_thread(void* arg)
                     // Set FIR if the count hasn't changed
                     if (old_count == new_count)
                     {
-#if IO_DISABLE_DEBUG == 0
+#if IO_DEBUG_LEVEL >= 1
                         // If the error info isn't already set, set_fir() will write this thread's ID to the error info so need to override that.
                         int ppe_error_already_set = img_field_get(ppe_error_valid);
 #else
@@ -232,6 +253,14 @@ void supervisor_thread(void* arg)
 
                 for (thread = 0; thread < io_threads; thread++)
                 {
+                    // Skip this check if BIST is enabled on the thread
+                    int bist_en = fw_regs_u16_base_get(fw_base_addr(fw_bist_en_addr, thread), fw_bist_en_mask, fw_bist_en_shift);
+
+                    if (bist_en)
+                    {
+                        continue;
+                    }
+
                     // Get the vector and then clear it for next time
                     uint32_t recal_run_or_unused_0_23 =
                         (mem_regs_u16_base_get(pg_base_addr(rx_recal_run_or_unused_0_15_addr,  thread), rx_recal_run_or_unused_0_15_mask,
@@ -252,7 +281,7 @@ void supervisor_thread(void* arg)
                     // Set FIR if there is a lane that recal was not run on
                     if (recal_run_or_unused_0_31 != 0xFFFFFFFF)
                     {
-#if IO_DISABLE_DEBUG == 0
+#if IO_DEBUG_LEVEL >= 1
                         // Figure out the lane that wasn't recal
                         uint32_t lane_mask = 0x80000000;
                         int lane;

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap20040100 |gap     | Commented out some superfluous set_debug_state statements
+// gap20032600 |gap     | Added wait time for th after changing segments
 // gap19041000 |gap     | Created
 // -----------------------------------------------------------------------------
 
@@ -119,23 +121,22 @@ void tx_zcal_tdr (t_gcr_addr* gcr_addr_i)
         // written to 0 below put_ptr_field(gcr_addr_i, tx_tdr_phase_sel, 0, read_modify_write);
         put_ptr_field(gcr_addr_i, tx_tdr_dac_cntl, tx_zcal_tdr_dac_75percent_vio_c,
                       fast_write); // only other field in reg is tx_ , which we want 0 == P
-        io_wait_us(thread_l, tx_zcal_tdr_th_wait_us_c);
+        io_wait_us(thread_l, tx_zcal_tdr_sw_wait_us_c);
         done_l = false;
 
         do
         {
-            set_debug_state(0xC121); // begin update pullup loop
-
+            //    set_debug_state(0xC121); // begin update pullup loop
             if (tx_zcal_tdr_capt_match_mult_rds(gcr_addr_i, 1,
                                                 tx_zcal_tdr_matches_needed_c))   // pulled too high; need to reduce pullups
             {
-                set_debug_state(0xC122); // try to decrement pullup
-
+                //        set_debug_state(0xC122); // try to decrement pullup
                 if (tx_zcal_tdr_decrement_bank(gcr_addr_i, SEGTYPE_MAIN_PSEG, &current_pseg_pre2_l, &current_pseg_pre1_l,
                                                &current_pseg_main_l))
                 {
                     set_debug_state(0xC123); // pullup decrement successful
                     updated_pu_or_pd_l = true;
+                    io_wait_us(thread_l, tx_zcal_tdr_seg_wait_us_c);
                 }
                 else
                 {
@@ -165,23 +166,22 @@ void tx_zcal_tdr (t_gcr_addr* gcr_addr_i)
         put_ptr_field(gcr_addr_i, tx_tdr_phase_sel, 1,
                       fast_write); // only other field in reg is tx_tdr_dac_cntl, which we write below
         put_ptr_field(gcr_addr_i, tx_tdr_dac_cntl, tx_zcal_tdr_dac_25percent_vio_c, read_modify_write);
-        io_wait_us(thread_l, tx_zcal_tdr_th_wait_us_c);
+        io_wait_us(thread_l, tx_zcal_tdr_sw_wait_us_c);
         done_l = false;
 
         do
         {
-            set_debug_state(0xC131); // begin update pulldown loop
-
+            //    set_debug_state(0xC131); // begin update pulldown loop
             if (tx_zcal_tdr_capt_match_mult_rds(gcr_addr_i, 0,
                                                 tx_zcal_tdr_matches_needed_c))   // pulled too low; need to decrease pulldowns
             {
-                set_debug_state(0xC132); // try to decrement pulldown
-
+                //        set_debug_state(0xC132); // try to decrement pulldown
                 if (tx_zcal_tdr_decrement_bank(gcr_addr_i, SEGTYPE_MAIN_NSEG, &current_nseg_pre2_l, &current_nseg_pre1_l,
                                                &current_nseg_main_l))
                 {
                     set_debug_state(0xC133); // pulldown decrement successful
                     updated_pu_or_pd_l = true;
+                    io_wait_us(thread_l, tx_zcal_tdr_seg_wait_us_c);
                 }
                 else
                 {
@@ -221,7 +221,7 @@ void tx_zcal_tdr (t_gcr_addr* gcr_addr_i)
 // number of segments; we can take advantage of this to save some writes
 void tx_zcal_tdr_write_en (t_gcr_addr* gcr_addr_i, uint8_t num_2r_equiv_i, t_segtype segtype_i)
 {
-    set_debug_state(0xC140); // tx_zcal_tdr_write_en begin
+//    set_debug_state(0xC140); // tx_zcal_tdr_write_en begin
     uint32_t high_bits_l = 0;
     uint32_t low_bits_l = 0;
 
@@ -278,7 +278,7 @@ void tx_zcal_tdr_write_en (t_gcr_addr* gcr_addr_i, uint8_t num_2r_equiv_i, t_seg
             break;
     } // switch segtype_i
 
-    set_debug_state(0xC14F); // tx_zcal_tdr_write_en end
+    //set_debug_state(0xC14F); // tx_zcal_tdr_write_en end
 } // tx_zcal_tdr_write_en
 
 // P or N is passed in as SEGTYPE_MAIN_PSEG or  SEGTYPE_MAIN_NSEG
@@ -286,7 +286,7 @@ void tx_zcal_tdr_write_en (t_gcr_addr* gcr_addr_i, uint8_t num_2r_equiv_i, t_seg
 bool tx_zcal_tdr_decrement_bank(t_gcr_addr* gcr_addr_i, t_segtype segtype_i, uint8_t* current_pre2_io,
                                 uint8_t* current_pre1_io, uint8_t* current_main_io)
 {
-    set_debug_state(0xC150); // tx_zcal_tdr_decrement_bank begin
+//    set_debug_state(0xC150); // tx_zcal_tdr_decrement_bank begin
     bool value_updated_l = false ;
 
     if (*current_main_io > 0)
@@ -318,7 +318,7 @@ bool tx_zcal_tdr_decrement_bank(t_gcr_addr* gcr_addr_i, t_segtype segtype_i, uin
         value_updated_l = false;
     }
 
-    set_debug_state(0xC155); // tx_zcal_tdr_decrement_bank begin
+//    set_debug_state(0xC155); // tx_zcal_tdr_decrement_bank end
     return value_updated_l;
 } // tx_zcal_tdr_decrement_bank
 
@@ -333,7 +333,9 @@ bool tx_zcal_tdr_capt_match_mult_rds(t_gcr_addr* gcr_addr_i, uint8_t match_value
 
         if (!value_matched_l)   // doing explicit conditional to allow coverage testing
         {
-            set_debug_state(0xC161); // tx_zcal_tdr_capt_match_mult_rds exit loop early
+// sim model generally does not include noise, so, unless we are lucky, we will see consistent
+// values on all reads in this loop; thus the debug_state is not very informative even in sim
+//           set_debug_state(0xC161); // tx_zcal_tdr_capt_match_mult_rds exit loop early
             break;
         }
     }

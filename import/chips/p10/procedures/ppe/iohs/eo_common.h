@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mwh20022400 |mwh     | Add in function check_for_rxpsave_req_sts and check_for_txpsave_req_sts
+// vbr20021100 |vbr     | HW522731: smarter lane cal copy based on flywheel lane.
+// vbr20020600 |vbr     | Added set/clr_rx_lane_bad() functions
+// bja20020500 |bja     | Add tx_fifo_init()
 // vbr19080900 |vbr     | Added macro to return just the bank_sel_a/rlm_clk_sel_a values
 // vbr19060300 |vbr     | HW486157/HW492011: Added DL/RLM clock_sel to set_cal_bank()
 // mbs10051600 |mbs     | HW491617: Separated servo setup for dfe_fast and dfe_full
@@ -176,8 +180,8 @@ int wait_for_cdr_lock(t_gcr_addr* gcr_addr, bool set_fir_on_error);
 // Eyeopt abort check/handling. Call this a lot and does enough that inline is not the right option.
 int check_rx_abort(t_gcr_addr* gcr_addr);
 
-// Copy the cal results from source lane to destination lane to use as a starting point.
-void eo_copy_lane_cal(t_gcr_addr* gcr_addr, int lane_src, int lane_dst);
+// Copy the cal results from a dynamically determined source lane to the specified destination lane to use as a starting point.
+void eo_copy_lane_cal(t_gcr_addr* gcr_addr, int lane_dst);
 
 
 typedef enum
@@ -190,5 +194,20 @@ void rx_eo_servo_setup(t_gcr_addr* i_tgt, const t_servo_setup i_servo_setup);
 
 // Broadcast write pulse to rx_clr_cal_lane_sel.
 void clear_all_cal_lane_sel(t_gcr_addr* gcr_addr);
+
+//Check that tx psave is quiesced and that req is not = 1 will set fir
+void check_for_txpsave_req_sts(t_gcr_addr* gcr_addr);
+
+//Check that tx psave is quiesced and that req is not = 1 will set fir
+void check_for_rxpsave_req_sts(t_gcr_addr* gcr_addr);
+
+// Functions to set or clear a lane's status in rx_lane_bad (pl) and rx_lane_bad_0_23 (pg)
+void set_rx_lane_bad(unsigned int lane);
+void clr_rx_lane_bad(unsigned int lane);
+
+
+// apply (un)load settings and synchronize
+void tx_fifo_init(t_gcr_addr* gcr_addr);
+
 
 #endif //_EO_COMMON_H_

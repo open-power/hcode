@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,6 +41,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
+// bja20012300 |bja     | Move setting of per group fail mask to function
+// mwh20012820 |mwh     | There is no min max for phase data -- HW516933
+// cws20011400 |cws     | Added Debug Logs
 // bja19100300 |bja     | enable peak2 checking
 // bja19081400 |bja     | improve code speed, size, and clarity
 // bja19081401 |bja     | set per-group fail regs
@@ -69,6 +73,7 @@
 #include "config_ioo.h"
 
 #include "eo_vclq_checks.h"
+#include "io_logger.h"
 
 //checking clte gain, ctle peak, lte gain, lte zero, qpa
 void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
@@ -92,9 +97,9 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
         mk_ptr_ary(rx_ctle_peak2);
         mk_ptr_ary(rx_lte_gain);
         mk_ptr_ary(rx_lte_zero);
-        mk_ptr_ary(rx_quad_ph_adj_nsd);
+        //mk_ptr_ary(rx_quad_ph_adj_nsd);
         mk_ptr_ary(rx_quad_ph_adj_nse);
-        mk_ptr_ary(rx_quad_ph_adj_ewd);
+        //mk_ptr_ary(rx_quad_ph_adj_ewd);
         mk_ptr_ary(rx_quad_ph_adj_ewe);
 
         // fill arrays with bank-dependent register values
@@ -106,9 +111,9 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             asn_ptr_ary(rx_ctle_peak2,      rx_a_ctle_peak2);
             asn_ptr_ary(rx_lte_gain,        rx_a_lte_gain);
             asn_ptr_ary(rx_lte_zero,        rx_a_lte_zero);
-            asn_ptr_ary(rx_quad_ph_adj_nsd, rx_a_pr_ns_data);
+            //asn_ptr_ary(rx_quad_ph_adj_nsd, rx_a_pr_ns_data);
             asn_ptr_ary(rx_quad_ph_adj_nse, rx_a_pr_ns_edge);
-            asn_ptr_ary(rx_quad_ph_adj_ewd, rx_a_pr_ew_data);
+            //asn_ptr_ary(rx_quad_ph_adj_ewd, rx_a_pr_ew_data);
             asn_ptr_ary(rx_quad_ph_adj_ewe, rx_a_pr_ew_edge);
         }
         else
@@ -119,9 +124,9 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             asn_ptr_ary(rx_ctle_peak2,      rx_b_ctle_peak2);
             asn_ptr_ary(rx_lte_gain,        rx_b_lte_gain);
             asn_ptr_ary(rx_lte_zero,        rx_b_lte_zero);
-            asn_ptr_ary(rx_quad_ph_adj_nsd, rx_b_pr_ns_data);
+            //asn_ptr_ary(rx_quad_ph_adj_nsd, rx_b_pr_ns_data);
             asn_ptr_ary(rx_quad_ph_adj_nse, rx_b_pr_ns_edge);
-            asn_ptr_ary(rx_quad_ph_adj_ewd, rx_b_pr_ew_data);
+            //asn_ptr_ary(rx_quad_ph_adj_ewd, rx_b_pr_ew_data);
             asn_ptr_ary(rx_quad_ph_adj_ewe, rx_b_pr_ew_edge);
         }
 
@@ -151,6 +156,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x5155);
             }
 
+            ADD_LOG(DEBUG_BIST_VGA_GAIN_FAIL, gcr_addr, rx_ctle_gain_int);
             mem_pl_field_put(rx_ctle_gain_fail, lane, fail);
         }
 
@@ -178,6 +184,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x5159);
             }
 
+            ADD_LOG(DEBUG_BIST_CTLE_PEAK1_FAIL, gcr_addr, rx_ctle_peak1_int);
             mem_pl_field_put(rx_ctle_peak1_fail, lane, fail );
         }
 
@@ -204,6 +211,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x515D);
             }
 
+            ADD_LOG(DEBUG_BIST_CTLE_PEAK2_FAIL, gcr_addr, rx_ctle_peak2_int);
             mem_pl_field_put(rx_ctle_peak2_fail, lane, fail );
         }
 
@@ -230,6 +238,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x5161);
             }
 
+            ADD_LOG(DEBUG_BIST_LTE_GAIN_FAIL, gcr_addr, rx_lte_gain_int);
             mem_pl_field_put(rx_lte_gain_fail, lane, fail );
         }
 
@@ -255,6 +264,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x5165);
             }
 
+            ADD_LOG(DEBUG_BIST_LTE_ZERO_FAIL, gcr_addr, rx_lte_zero_int);
             mem_pl_field_put(rx_lte_zero_fail, lane, fail );
         }
 
@@ -263,24 +273,22 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
         {
             set_debug_state(0x5166); // checking qpa
 
-            int rx_quad_ph_adj_nsd_int = get_ptr_ary(gcr_addr, rx_quad_ph_adj_nsd);
+            //int rx_quad_ph_adj_nsd_int = get_ptr_ary(gcr_addr, rx_quad_ph_adj_nsd);
             int rx_quad_ph_adj_nse_int = get_ptr_ary(gcr_addr, rx_quad_ph_adj_nse);
-            int rx_quad_ph_adj_ewd_int = get_ptr_ary(gcr_addr, rx_quad_ph_adj_ewd);
+            //int rx_quad_ph_adj_ewd_int = get_ptr_ary(gcr_addr, rx_quad_ph_adj_ewd);
             int rx_quad_ph_adj_ewe_int = get_ptr_ary(gcr_addr, rx_quad_ph_adj_ewe);
             int check_quad_ph_adj_max = mem_pg_field_get(rx_quad_ph_adj_max_check);
             int check_quad_ph_adj_min = mem_pg_field_get(rx_quad_ph_adj_min_check);
 
-            if ( rx_quad_ph_adj_nsd_int <  check_quad_ph_adj_min )
-            {
-                fail = 1;
-                set_debug_state(0x5167);
-            }
-            else if ( rx_quad_ph_adj_nsd_int >  check_quad_ph_adj_max )
-            {
-                fail = 1;
-                set_debug_state(0x5168);
-            }
-            else if ( rx_quad_ph_adj_nse_int <  check_quad_ph_adj_min )
+            //if ( rx_quad_ph_adj_nsd_int <  check_quad_ph_adj_min ) {
+            //    fail = 1;
+            //    set_debug_state(0x5167);
+            //}
+            //else if ( rx_quad_ph_adj_nsd_int >  check_quad_ph_adj_max ) {
+            //    fail = 1;
+            //    set_debug_state(0x5168);
+            //}
+            if ( rx_quad_ph_adj_nse_int <  check_quad_ph_adj_min )
             {
                 fail = 1;
                 set_debug_state(0x5169);
@@ -290,16 +298,14 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 fail = 1;
                 set_debug_state(0x516A);
             }
-            else if ( rx_quad_ph_adj_ewd_int <  check_quad_ph_adj_min )
-            {
-                fail = 1;
-                set_debug_state(0x516B);
-            }
-            else if ( rx_quad_ph_adj_ewd_int >  check_quad_ph_adj_max )
-            {
-                fail = 1;
-                set_debug_state(0x516C);
-            }
+            //else if ( rx_quad_ph_adj_ewd_int <  check_quad_ph_adj_min ) {
+            //    fail = 1;
+            //    set_debug_state(0x516B);
+            //}
+            //else if ( rx_quad_ph_adj_ewd_int >  check_quad_ph_adj_max ) {
+            //    fail = 1;
+            //    set_debug_state(0x516C);
+            //}
             else if ( rx_quad_ph_adj_ewe_int <  check_quad_ph_adj_min )
             {
                 fail = 1;
@@ -316,6 +322,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x516F);
             }
 
+            ADD_LOG(DEBUG_BIST_QPA_FAIL, gcr_addr, 0x0);
             mem_pl_field_put(rx_quad_phase_fail, lane, fail);
         }
 
@@ -326,40 +333,36 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
     {
         // start  scope limiting - B
 
-        mk_ptr_ary(pg_fail_reg);
         mk_ptr_ary(pg_done_reg);
-        uint8_t lane_bit_offset = 15;
+        uint8_t lane_bit_offset;
 
         // set register access values according to bank and lane number
-        if (bank == bank_a)
+        if (lane < 16)
         {
-            if (lane < 16)
+            lane_bit_offset = 15;
+
+            if (bank == bank_a)
             {
-                asn_ptr_ary( pg_fail_reg, rx_a_lane_fail_0_15 );
                 asn_ptr_ary( pg_done_reg, rx_a_lane_done_0_15 );
             }
             else
             {
-                asn_ptr_ary( pg_fail_reg, rx_a_lane_fail_16_23 );
-                asn_ptr_ary( pg_done_reg, rx_a_lane_done_16_23 );
-                lane_bit_offset = 23;
+                asn_ptr_ary( pg_done_reg, rx_b_lane_done_0_15 );
             }
         }
         else
         {
-            if (lane < 16)
+            lane_bit_offset = 23;
+
+            if (bank == bank_a)
             {
-                asn_ptr_ary( pg_fail_reg, rx_b_lane_fail_0_15 );
-                asn_ptr_ary( pg_done_reg, rx_b_lane_done_0_15 );
+                asn_ptr_ary( pg_done_reg, rx_a_lane_done_16_23 );
             }
             else
             {
-                asn_ptr_ary( pg_fail_reg, rx_b_lane_fail_16_23 );
                 asn_ptr_ary( pg_done_reg, rx_b_lane_done_16_23 );
-                lane_bit_offset = 23;
             }
         }
-
 
         // shift the lane bit to the appropriate spot for the reg selected
         uint32_t lane_mask = 1 << ( lane_bit_offset - lane );
@@ -378,15 +381,56 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
         {
             // setting fail
             set_debug_state(0x5171);
-            // read in the current reg values
-            pg_reg_val = get_ptr_ary( gcr_addr, pg_fail_reg );
-            // or in the lane bit
-            pg_reg_val = ( pg_reg_val | lane_mask );
-            put_ptr_ary( gcr_addr, pg_fail_reg, pg_reg_val, read_modify_write );
-            mem_pg_field_put(rx_fail_flag, 1);
-            set_fir(fir_code_dft_error);
+            set_rxbist_fail_lane( gcr_addr, bank );
         }
     } // end scope limiting - B
 
     set_debug_state(0x5101); // end vclq checks
 }//vclq_checks()
+
+// set the given lane bit of the given bank fail register
+void set_rxbist_fail_lane( t_gcr_addr* gcr_addr, t_bank bank)
+{
+    int lane = get_gcr_addr_lane(gcr_addr);
+    mk_ptr_ary(pg_fail_reg);
+    uint8_t lane_bit_offset;
+
+    // set register access values according to bank and lane number
+    if (lane < 16)
+    {
+        lane_bit_offset = 15;
+
+        if (bank == bank_a)
+        {
+            asn_ptr_ary( pg_fail_reg, rx_a_lane_fail_0_15 );
+        }
+        else
+        {
+            asn_ptr_ary( pg_fail_reg, rx_b_lane_fail_0_15 );
+        }
+    }
+    else
+    {
+        lane_bit_offset = 23;
+
+        if (bank == bank_a)
+        {
+            asn_ptr_ary( pg_fail_reg, rx_a_lane_fail_16_23 );
+        }
+        else
+        {
+            asn_ptr_ary( pg_fail_reg, rx_b_lane_fail_16_23 );
+        }
+    }
+
+    // shift the lane bit to the appropriate spot for the reg selected
+    uint32_t lane_mask = 1 << ( lane_bit_offset - lane );
+
+    // read in the current reg values
+    uint32_t pg_reg_val = get_ptr_ary( gcr_addr, pg_fail_reg );
+    // or in the lane bit
+    pg_reg_val = ( pg_reg_val | lane_mask );
+    put_ptr_ary( gcr_addr, pg_fail_reg, pg_reg_val, read_modify_write );
+    mem_pg_field_put(rx_fail_flag, 1);
+    set_fir(fir_code_dft_error | fir_code_warning);
+}

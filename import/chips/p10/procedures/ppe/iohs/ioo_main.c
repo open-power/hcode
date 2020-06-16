@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20030100 |vbr     | Added sim override of watchdog timeout select
+// cws20012200 |cws     | Cleared the debug log number
 // vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
 // vbr19040200 |vbr     | HW487712: Support to use uct_thread or ioo_thread.
 // vbr19011500 |vbr     | Max number of threads changed from 8 to 5. Kernel stack size increased from 128B to 512B.
@@ -147,6 +149,9 @@ int main(int argc, char** argv)
     // Initialize the error status bit in the img_regs
     img_bit_clr(ppe_error_valid);
 
+    // Clear the current debug log number
+    img_field_put(ppe_debug_log_num, 0);
+
     // Read the required number of threads from the img_regs (do once to prevent potential mismatch bewtween loops)
     int io_threads = img_field_get(ppe_num_threads);
     final_thread = io_threads; // The IO threads have IDs [0, io_threads-1], the Supervisor thread has ID io_threads
@@ -186,8 +191,10 @@ int main(int argc, char** argv)
     asm volatile ("sync");
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // As previously described, set watchdog_select=1 and fit_sel=0
-    lcl_put(ppe_local_timer_sel_lcl_addr, ppe_local_timer_sel_width, 0x10);
+    // As previously described, set watchdog_select=1 (bits[0:3]) and fit_sel=0 (bits[4:7]) of 8b register unless being overriden by sim.
+    int watchdog_select_sim_mode = img_field_get(ppe_watchdog_select_sim_mode);
+    int timer_sel = (watchdog_select_sim_mode == 0) ? 0x10 : (watchdog_select_sim_mode << 4);
+    lcl_put(ppe_local_timer_sel_lcl_addr, ppe_local_timer_sel_width, timer_sel);
 
     // Create Thread Barrier Semaphore
     pk_semaphore_create(&thread_barrier, 0, 0);

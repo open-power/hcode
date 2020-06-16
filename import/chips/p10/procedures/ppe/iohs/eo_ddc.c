@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -40,6 +40,13 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jfg20042000 |jfg     | HW523199 Replace ddc_hist_left/right with ddc_hyst_left_right
+// jfg20041400 |jfg     | HW518382 Regression exposed a possible error in QPA offset comparison using signed math on a signed value instead of unsigned
+// jfg20031101 |jfg     | HW518382 Fix use of ber_long on initial N quad search to match ber_short as on E
+// jfg20031100 |jfg     | HW525882 Fix parameter swap in mem_pl_field_put for ddc_measure_limited
+// mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
+// vbr20020600 |vbr     | Use new common set_rx_lane_bad() function which also sets per-lane bit
+// jfg19102300 |jfg     | HW508732 Remove excess conditionals in abort check
 // jfg19090900 |jfg     | HW499875 As described in Verif Forum All Eye Opt remove the max_eye condition on the
 //             |        | initial edge search in 8002 (still relies on the one in 8023).
 //             |        | In state 8002 the step jump-back of data/edge will now use all data steps to avoid running out.
@@ -263,13 +270,11 @@ bool  pr_recenter(t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, uint32_t* Esa
 }
 
 
-void set_ddc_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, uint32_t new_lane_bad, int* pr_vals, uint32_t* Esave,
-                  uint32_t* Dsave)
+void set_ddc_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, int* pr_vals, uint32_t* Esave, uint32_t* Dsave)
 {
     mem_pl_bit_set(rx_bad_eye_opt_width, lane);
     mem_pl_bit_set(rx_ddc_fail, lane);
-    mem_pg_field_put(rx_lane_bad_16_23, new_lane_bad);
-    mem_pg_field_put(rx_lane_bad_0_15, new_lane_bad >> 8);
+    set_rx_lane_bad(lane);
     //Disable BER
     put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 0, read_modify_write);
     // Disable the per-lane counter
@@ -366,6 +371,9 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
         quad_mask = (seek_quad == noseekEW) ? 0xA : 0x5;
         put_ptr(gcr_addr, rx_err_trap_mask_addr, rx_err_trap_mask_startbit, rx_err_trap_mask_endbit, quad_mask ,
                 read_modify_write);
+        // Reset timer_sel to ber_sel_short for both initial fuzz quad searches
+        put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_short,
+                read_modify_write);
         put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
         set_debug_state(0x8023); // DEBUG - Set Quadrant mask
 
@@ -393,7 +401,7 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
         {
             // In this case, simply remove one step for margin to ensure no errors and exit with a large eye measurement.
             *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, seek_quad, pr_vals);//, ber_count
-            mem_pl_field_put(rx_ddc_measure_limited, 1, lane);
+            mem_pl_field_put(rx_ddc_measure_limited, lane, 1);
             set_debug_state(0x8012 ); // DEBUG max eye check
         }
         else
@@ -429,7 +437,7 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
             //       The result could be a shift all the way over to the LEFT extreme and could goof up the centering math.
             if (*ber_reported == max_eye)
             {
-                //set_ddc_err (gcr_addr, bank, lane, new_lane_bad, pr_vals, Esave, Dsave);
+                //set_ddc_err (gcr_addr, bank, lane, pr_vals, Esave, Dsave);
                 //set_debug_state(0x8087); // DEBUG: Algorithm error. Lane broke during measure
                 //set_fir(fir_code_warning);
                 return warning_code;
@@ -474,7 +482,7 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
 //   All register modes are pre-set and stable
 // PHY state at the completion of DDC adjustment
 //   Mini-PR offset positions are applied by shifting via rx_{ab}_pr_{ns/ew}_data.
-//   Historic minimums are written to rx_ddc_hist_left_edge and rx_ddc_hist_right_edge.
+//   Historic minimums are written to rx_ddc_hyst_left_edge and rx_ddc_hyst_right_edge.
 //   CDR tracking is left as is.
 int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed)
 {
@@ -511,15 +519,13 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
     Esave[1] = prmask_Eew(bank_pr_save[1]);
 
     int lane = get_gcr_addr_lane(gcr_addr);
-    uint32_t new_lane_bad = (mem_pg_field_get(rx_lane_bad_0_15)  << 8) | mem_pg_field_get(rx_lane_bad_16_23);
-    new_lane_bad = new_lane_bad | (0b1 << (23 - lane));
 
     // Check CDR lock status before clearing sticky bit to start test.
     cdr_status = wait_for_cdr_lock(gcr_addr, true);
 
     if (cdr_status != pass_code)
     {
-        set_ddc_err (gcr_addr, bank, lane, new_lane_bad, pr_active, Esave, Dsave);
+        set_ddc_err (gcr_addr, bank, lane, pr_active, Esave, Dsave);
         set_debug_state(0x8082); // DEBUG: Algorithm error. CDR not locked.
         set_fir(fir_code_warning);
         return warning_code;
@@ -580,7 +586,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
     //put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_endbit, ber_sel,);
     // WO kickoff for checker A reset
     put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
-    mem_pl_field_put(rx_ddc_measure_limited, 0, lane); //Clear out any prior bad measurement indicator.
+    mem_pl_field_put(rx_ddc_measure_limited, lane, 0); //Clear out any prior bad measurement indicator.
 
     set_debug_state(0x8001); // DEBUG - DDC Setup
 
@@ -609,7 +615,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
     // Nor is it tolerant of unbalanced eyes that do not possess a minimum of *X* steps between the start point and the edge.
     if (ber_reported > ber_count)
     {
-        set_ddc_err (gcr_addr, bank, lane, new_lane_bad, pr_active, Esave, Dsave);
+        set_ddc_err (gcr_addr, bank, lane, pr_active, Esave, Dsave);
         set_debug_state(0x8081); // DEBUG: Algorithm error. Problem with data eye.
         set_fir(fir_code_warning);
         return warning_code;
@@ -625,7 +631,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
     if ((ber_reported == max_eye) && (abort_status != pass_code))
     {
-        set_ddc_err (gcr_addr, bank, lane, new_lane_bad, pr_active, Esave, Dsave);
+        set_ddc_err (gcr_addr, bank, lane, pr_active, Esave, Dsave);
         set_debug_state(0x8087); // DEBUG: Algorithm error. Lane broke during measure
         set_fir(fir_code_warning);
         return warning_code;
@@ -724,7 +730,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
     if ((ber_reported == max_eye) && (abort_status != pass_code))
     {
-        set_ddc_err (gcr_addr, bank, lane, new_lane_bad, pr_active, Esave, Dsave);
+        set_ddc_err (gcr_addr, bank, lane, pr_active, Esave, Dsave);
         set_debug_state(0x8088); // DEBUG: Algorithm error. Lane broke during measure
         set_fir(fir_code_warning);
         return warning_code;
@@ -771,42 +777,30 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
     // If the difference between the left and right edges exceeds the hysteresis then shift the offset and save the new measurements.
     if (((((abs(ddc_offset_w_hyst[0]) > ddc_hyst_val) || (abs(ddc_offset_w_hyst[1]) > ddc_hyst_val)
-           || (abs(old_offset - new_offset) > (ddc_hyst_val << 1)))
+           || (abs(old_offset + new_offset) > (ddc_hyst_val << 1)))
           || recal_dac_changed)
          || !recal) &&
         (abort_status == pass_code))
     {
         if (bank == bank_a)
         {
-            mem_pl_field_put(rx_a_ddc_hist_left_edge, lane, last_left_edge_reg);
-            mem_pl_field_put(rx_a_ddc_hist_right_edge, lane, last_right_edge_reg);
+            mem_pl_field_put(rx_a_ddc_hyst_left_edge, lane, last_left_edge_reg);
+            mem_pl_field_put(rx_a_ddc_hyst_right_edge, lane, last_right_edge_reg);
         }
         else
         {
-            mem_pl_field_put(rx_b_ddc_hist_left_edge, lane, last_left_edge_reg);
-            mem_pl_field_put(rx_b_ddc_hist_right_edge, lane, last_right_edge_reg);
+            mem_pl_field_put(rx_b_ddc_hyst_left_edge, lane, last_left_edge_reg);
+            mem_pl_field_put(rx_b_ddc_hyst_right_edge, lane, last_right_edge_reg);
         }
     }
     else
     {
-        if ((abs(ddc_offset_w_hyst[0]) <= ddc_hyst_val))
-        {
-            ddc_offset_w_hyst[0] = 0;
-        }
-
-        if ((abs(ddc_offset_w_hyst[1]) <= ddc_hyst_val))
-        {
-            ddc_offset_w_hyst[1] = 0;
-        }
-    }
-
-    set_debug_state(0x800C); // DEBUG - 8: DDC Check Width and update historic eye values.
-
-    if (abort_status != pass_code)   // This returns us to prior sample position.
-    {
+        // This returns us to prior sample position.
         ddc_offset_w_hyst[0] = 0;
         ddc_offset_w_hyst[1] = 0;
     }
+
+    set_debug_state(0x800C); // DEBUG - 8: DDC Check Width and update historic eye values.
 
     ds = 1;
     es = 1;
@@ -835,7 +829,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
     if (cdr_status != pass_code)
     {
-        set_ddc_err (gcr_addr, bank, lane, new_lane_bad, pr_active, Esave, Dsave);
+        set_ddc_err (gcr_addr, bank, lane, pr_active, Esave, Dsave);
         set_debug_state(0x8083); // DEBUG: Algorithm error. Final lock error
         set_fir(fir_code_warning);
         return warning_code;
@@ -860,7 +854,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
         if (ber_reported >  ber_count)
         {
-            set_ddc_err (gcr_addr, bank, lane, new_lane_bad, pr_active, Esave, Dsave);
+            set_ddc_err (gcr_addr, bank, lane, pr_active, Esave, Dsave);
             set_debug_state(0x8084); // DEBUG: Problem with data eye: final error check failed.
             set_fir(fir_code_warning);
             return warning_code;
@@ -919,7 +913,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
         if ( rx_bist_eye_width  < check_eye_width_min)
         {
             mem_pl_field_put(rx_ddc_fail, lane, 0b1 );
-            set_fir(fir_code_dft_error);
+            set_fir(fir_code_dft_error | fir_code_warning);
         }
     }//end 1
 

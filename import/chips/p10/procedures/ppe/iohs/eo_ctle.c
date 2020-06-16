@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,11 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// jfg20021901 |jfg     | HW521060: Abort scenario on first-run rough pass exposed failure to restore peak2 due to mis-use of pk
+// jfg20032401 |jfg     | HW526927  Wrong conditional || vs &&
+// jfg20032400 |jfg     | HW526927  hysteresis_en is not sensitive to first_run as intended.
+// jfg20030900 |jfg     | HW525009 add a rough_only mode to set initial coarse peak 1&2
+// cws20011400 |cws     | Added Debug Logs
 // jfg19092300 |jfg     | PR661 fix bug in error conditional for servo error
 // jfg19091100 |jfg     | HW503164 refactoring flow to include a coarse catch-up and then separate peak servos for an initial pass
 // jfg19082200 |jfg     | regression coverege identified ctle done write was missing for bankA
@@ -71,6 +76,7 @@
 #include "servo_ops.h"
 #include "eo_common.h"
 #include "eo_ctle.h"
+#include "io_logger.h"
 
 #include "ppe_com_reg_const_pkg.h"
 #include "ppe_mem_reg_const_pkg.h"
@@ -150,6 +156,7 @@ static int get_ctle_median (int32_t* servo_result, int CQD, int ctle_peak_preset
         *abort_status = warning_code;
         set_debug_state(0x6080); //DEBUG - Abort Condition
         set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_CTLE_SERVO_LIMIT, 0x0);
     }
     else
     {
@@ -176,6 +183,7 @@ static bool exit_peak_on_servo_error (t_gcr_addr* gcr_addr)
         // Set the FIR if either queue is not empty.
         set_debug_state(0x601F); // Servo queues not empty
         set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_CTLE_SERVO_QUEUE_NOT_EMPTY, gcr_addr, 0x0);
         // Re-enable servo status for result at min/max
         put_ptr_field(gcr_addr, rx_servo_status_error_en, 0b1111, read_modify_write);
         return true;
@@ -187,7 +195,7 @@ static bool exit_peak_on_servo_error (t_gcr_addr* gcr_addr)
 // Write peak registers from parms
 // -Parms:
 // int pk is a binary encode to establish peak1 vs. peak2 focus
-//   0b000 : Normal Peak1 only
+//   0b001 : Normal Peak1 only
 //   0b010 : Normal Peak2 only
 // int fail is the pass/fail bit value used for the peak fail reg
 static void update_peak_and_status (t_gcr_addr* gcr_addr, t_bank bank,  int peak1, int peak2, int pk, int fail)
@@ -230,7 +238,9 @@ static void update_peak_and_status (t_gcr_addr* gcr_addr, t_bank bank,  int peak
 // IOO CTLE ZFE METHOD
 // peak_changed : Primarily an output to indicate the main loop should continue due to a new peak value
 // first_run    : Input set true on the very first iteration of main loop Bank A and very first iteration on recal loop Bank B
-int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_changed, bool first_run)
+// rough_only   : Execute first_run/rough pass only and exit.
+int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_changed, bool first_run,
+            bool rough_only)
 {
     set_debug_state(0x6000); // DEBUG - CTLE Start (IOO)
     int peak_out[2];
@@ -323,7 +333,7 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
 
     int32_t servo_result[4];
 
-    if (first_run)
+    if (first_run || rough_only)
     {
         //CTLE Rough Servo Pass
         abort_status = run_servo_ops_and_get_results(gcr_addr, c_servo_queue_general, num_servo_ops_ctle_rough, servo_ops_rough,
@@ -333,6 +343,7 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
         // Check status with exit
         if (exit_peak_on_servo_error(gcr_addr) || (abort_status != pass_code))
         {
+            pk = 2;
             goto ABORT;
         }
 
@@ -350,6 +361,11 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
         }
 
         set_debug_state(0x6010); // DEBUG - CTLE Servo Rough Pass
+    }
+
+    if (rough_only)
+    {
+        goto EXIT;
     }
 
     uint16_t* servo_ops = servo_ops_main;
@@ -416,7 +432,7 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
         }
 
         // Post result averaging hysteresis applied to help reduce chances of result oscillation during Main VGA loop
-        if (hysteresis_en)
+        if (hysteresis_en && !first_run)
         {
             int hysteresis_lim = mem_pg_field_get(rx_ctle_hysteresis);
             bool restore = (hysteresis_lim >= abs(peak_out[pk] - ctle_peak_preset[pk]))  ;

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,13 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20031000 |mbs     | HW525009 - Switch slave mode to bank B when copying results for fast DFE
+// mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
+// vbr20021300 |vbr     | Added Min Eye Height code
+// cws20011400 |cws     | Added Debug Logs
+// vbr19111500 |vbr     | Initial implementation of debug levels
+// mbs19110600 |mbs     | HW468344 - Move check for servo queues empty to beginning of functions
+// mbs19110600 |mbs     | HW478019 - Set fir warning when DAC limit is reached
 // vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
 // bja19082900 |bja     | Rename rx_dfe_h1_coeff to rx_dfe_clkadj_coeff
 // bja19062100 |bja     | Read K from rx_dfe_h1_coeff
@@ -78,6 +85,7 @@
 #include "servo_ops.h"
 #include "eo_common.h"
 #include "eo_dfe.h"
+#include "io_logger.h"
 
 #include "config_ioo.h"
 
@@ -109,7 +117,7 @@
 #define SET_DFE_DEBUG2 SET_DFE_DEBUG_WITH_VALUE
 
 // Sets the debug state and also a mem regs debug dfe address
-#if IO_DISABLE_DEBUG == 1
+#if IO_DEBUG_LEVEL < 3
     #define SET_DFE_DEBUG_WITH_VALUE(i_debug_state, i_value) {}
 #else
     #define SET_DFE_DEBUG_WITH_VALUE(i_debug_state, i_value) { set_debug_state(i_debug_state);  mem_regs_u16[pg_addr(rx_dfe_debug_addr)] = (i_value); }
@@ -210,7 +218,8 @@ PK_STATIC_ASSERT(BUILD_DAC_ADDR(BANK_B, QUAD_WEST , L111) == rx_bd_latch_dac_w11
 // Function Definitions
 //------------------------------------------------------------------------------
 
-static int32_t rx_eo_dfe_check_dac_limits(t_gcr_addr* i_tgt, const uint32_t i_dac_addr, const int32_t i_new_val)
+static int32_t rx_eo_dfe_check_dac_limits(t_gcr_addr* i_tgt, uint32_t* l_rc, const uint32_t i_dac_addr,
+        const int32_t i_new_val)
 {
     const int32_t LOWER_LIMIT = -128;
     const int32_t UPPER_LIMIT =  127;
@@ -219,12 +228,14 @@ static int32_t rx_eo_dfe_check_dac_limits(t_gcr_addr* i_tgt, const uint32_t i_da
     if (i_new_val < LOWER_LIMIT)
     {
         l_return_val = LOWER_LIMIT;
-        // TODO Create Error Log with target, dac_addr, value
+        set_fir(fir_code_warning);
+        (*l_rc) = warning_code;
     }
     else if (i_new_val > UPPER_LIMIT)
     {
         l_return_val = UPPER_LIMIT;
-        // TODO Create Error Log, target, dac_addr, value
+        set_fir(fir_code_warning);
+        (*l_rc) = warning_code;
     }
 
     return l_return_val;
@@ -308,8 +319,8 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
     // Never divide by ZERO
     if (l_ap == 0)
     {
-        // TODO Log divide by issue failure
         set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_DFE_AP_ZERO_FAIL, i_tgt, i_ap1);
         l_rc = warning_code;
     }
     else
@@ -336,9 +347,10 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
     {
         if ( l_new_clk_adj <= 0)
         {
-            mem_pl_field_put(rx_dfe_h1_fail, lane, 0b1);    //ppe pl
-            set_fir(fir_code_dft_error);
-        }
+            mem_pl_field_put(rx_dfe_h1_fail, lane, 0b1);
+            set_fir(fir_code_dft_error | fir_code_warning);
+            ADD_LOG(DEBUG_RX_DFE_NEG_CLK_ADJ_FAIL, i_tgt, l_new_clk_adj);
+        }//ppe pl
     }
 
     //apply to both A and B banks at sametime
@@ -360,7 +372,7 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
  * @return void
  */
 static inline void rx_eo_dfe_set_clock_adj(t_gcr_addr* i_tgt, uint32_t i_pr_data[PR_DATA_SIZE], int32_t i_prev_clk_adj,
-        int32_t i_new_clk_adj)
+        int32_t i_new_clk_adj, const t_bank i_bank)
 {
     SET_DFE_DEBUG(0x7040);
     //SET_DFE_DEBUG(0x7040, i_new_clk_adj);
@@ -374,17 +386,23 @@ static inline void rx_eo_dfe_set_clock_adj(t_gcr_addr* i_tgt, uint32_t i_pr_data
 
         for (i = 0; i < clk_adj_diff; i++)
         {
-            i_pr_data[PR_A_NS_DATA]--;
-            put_ptr_field(i_tgt, rx_a_pr_ns_data, i_pr_data[PR_A_NS_DATA], read_modify_write);
+            // Only touch bank A or bank B according to the parameter (HW525009)
+            if ( i_bank == bank_a )
+            {
+                i_pr_data[PR_A_NS_DATA]--;
+                put_ptr_field(i_tgt, rx_a_pr_ns_data, i_pr_data[PR_A_NS_DATA], read_modify_write);
 
-            i_pr_data[PR_A_EW_DATA]--;
-            put_ptr_field(i_tgt, rx_a_pr_ew_data, i_pr_data[PR_A_EW_DATA], read_modify_write);
+                i_pr_data[PR_A_EW_DATA]--;
+                put_ptr_field(i_tgt, rx_a_pr_ew_data, i_pr_data[PR_A_EW_DATA], read_modify_write);
+            }
+            else
+            {
+                i_pr_data[PR_B_NS_DATA]--;
+                put_ptr_field(i_tgt, rx_b_pr_ns_data, i_pr_data[PR_B_NS_DATA], read_modify_write);
 
-            i_pr_data[PR_B_NS_DATA]--;
-            put_ptr_field(i_tgt, rx_b_pr_ns_data, i_pr_data[PR_B_NS_DATA], read_modify_write);
-
-            i_pr_data[PR_B_EW_DATA]--;
-            put_ptr_field(i_tgt, rx_b_pr_ew_data, i_pr_data[PR_B_EW_DATA], read_modify_write);
+                i_pr_data[PR_B_EW_DATA]--;
+                put_ptr_field(i_tgt, rx_b_pr_ew_data, i_pr_data[PR_B_EW_DATA], read_modify_write);
+            }
         } //for
     } //if(i_new_clk_adj > i_prev_clk_adj)
 
@@ -444,16 +462,6 @@ static uint32_t rx_eo_dfe_fast_servo(t_gcr_addr* i_tgt, int32_t i_loff[4], int32
     // Run Servo Ops
     //SET_DFE_DEBUG(0x7021); // Run Servo Ops
 
-    uint32_t servo_op_queue_empty         = get_ptr_field(i_tgt, rx_servo_op_queue_empty);
-    uint32_t servo_op_queue_results_empty = get_ptr_field(i_tgt, rx_servo_result_queue_empty);
-
-    if (servo_op_queue_empty == 0 || servo_op_queue_results_empty == 0 )
-    {
-        //set_debug_state(0x702F);
-        set_fir(fir_code_warning);
-        l_rc = warning_code;
-        goto function_exit;
-    }
 
     l_rc = run_servo_ops_and_get_results(
                i_tgt,
@@ -500,10 +508,12 @@ function_exit:
  *
  * @return void
  */
-static void rx_eo_dfe_fast_apply(t_gcr_addr* i_tgt, int16_t i_loff_array[DAC_SIZE], int32_t i_hvals[3])
+static void rx_eo_dfe_fast_apply(t_gcr_addr* i_tgt, uint32_t* l_rc, int16_t i_loff_array[DAC_SIZE], int32_t i_hvals[3],
+                                 const t_bank i_bank)
 {
     int32_t  l_result   = 0;
     int32_t  l_index    = 0;
+    int32_t  l_loop_end = ((DAC_SIZE) / 2) - 1;
     int32_t  l_dac_addr = DAC_BASE_ADDR;
     int32_t  l_dfe_latch_val[8] =
     {
@@ -517,15 +527,27 @@ static void rx_eo_dfe_fast_apply(t_gcr_addr* i_tgt, int16_t i_loff_array[DAC_SIZ
         ( i_hvals[2] + i_hvals[1] + i_hvals[0])
     };
 
+    if ( i_bank == bank_b )
+    {
+        l_dac_addr = DAC_BASE_ADDR + ((DAC_SIZE) / 2); // Only write half the DACs - bank A or B
+        l_index    = ((DAC_SIZE) / 2);
+        l_loop_end = DAC_SIZE - 1;
+    }
+
     // Apply the calculated DFE coefficients to each latch
     SET_DFE_DEBUG(0x7050); // Apply Found DFE Coefficients
 
-    for (; l_dac_addr <= DAC_END_ADDR; ++l_dac_addr, ++l_index)
+    for (; l_index <= l_loop_end; ++l_dac_addr, ++l_index)
     {
         // Calculate Result + Add Latch Offset
         l_result = l_dfe_latch_val[(l_index & 0x7)] + (int32_t)i_loff_array[l_index];
 
-        l_result = rx_eo_dfe_check_dac_limits(i_tgt, l_dac_addr, l_result);
+        l_result = rx_eo_dfe_check_dac_limits(i_tgt, l_rc, l_dac_addr, l_result);
+
+        if (*l_rc)
+        {
+            goto function_exit;
+        }
 
         // Convert Int to DAC Value
         int32_t l_dac_val = IntToLatchDac(l_result);
@@ -534,6 +556,7 @@ static void rx_eo_dfe_fast_apply(t_gcr_addr* i_tgt, int16_t i_loff_array[DAC_SIZ
         put_ptr_fast(i_tgt, l_dac_addr, DAC_ENDBIT, l_dac_val);
     }
 
+function_exit:
     SET_DFE_DEBUG(0x7051); // Exit DFE Fast Looper
     return;
 }
@@ -546,21 +569,27 @@ static void rx_eo_dfe_fast_apply(t_gcr_addr* i_tgt, int16_t i_loff_array[DAC_SIZ
  *
  * @return uint32_t. pass_code if success, else error code.
  */
-static void  rx_eo_dfe_check_hvals(t_gcr_addr* i_tgt, int32_t i_hvals[3])
+static int32_t rx_eo_dfe_check_hvals(t_gcr_addr* i_tgt, int32_t i_hvals[3])
 {
+    int32_t l_rc = pass_code;
+
     SET_DFE_DEBUG(0x7060); // Exit DFE Fast Looper
 
     if (i_hvals[0] < 0)
     {
-        // TODO Create Error Log, We don't expect H1 to go negative.
+        set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, i_hvals[0]);
+        l_rc = warning_code;
     }
     else if (i_hvals[0] > 50)
     {
-        // TODO Create Error Log, We don't expect H1 to go greater than 50.
+        set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, i_hvals[0]);
+        l_rc = warning_code;
     }
 
     SET_DFE_DEBUG(0x7061); // Exit DFE Fast Looper
-    return;
+    return l_rc;
 }
 
 
@@ -600,10 +629,12 @@ static inline int32_t rx_eo_dfe_hysteresis(const int32_t i_new, const int32_t i_
  *
  * @param[in] i_tgt    Reference to Bus Target
  * @param[in] i_bank   Target bank
+ * @param[in] i_recal  True when this is being run in recal (determines hysteresis used)
+ * @param[in] i_enable_min_eye_height True when the min eye height checking and logging are enabled
  *
  * @return uint32_t. pass_code if success, else error code.
  */
-uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
+uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool i_recal, bool i_enable_min_eye_height)
 {
     // l_bank - enumerated to index and for servo ops + safe if t_bank ever changes
     const uint32_t l_bank      = (i_bank == bank_a) ? BANK_A : BANK_B;
@@ -618,10 +649,29 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
     uint32_t l_dac_addr        = 0;
     uint32_t l_dac_array[LATCH_SIZE];
 
+
     SET_DFE_DEBUG(0x7010); // Enter Full DFE
+
+    uint32_t servo_op_queue_empty         = get_ptr_field(i_tgt, rx_servo_op_queue_empty);
+    uint32_t servo_op_queue_results_empty = get_ptr_field(i_tgt, rx_servo_result_queue_empty);
+
+    if (servo_op_queue_empty == 0 || servo_op_queue_results_empty == 0 )
+    {
+        set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_DFE_FULL_SERVO_QUEUE_NOT_EMPTY, i_tgt, 0x0);
+        l_rc = warning_code;
+        goto function_exit;
+    }
 
     //SET_DFE_DEBUG(0x7011); // Initialize Settings
     rx_eo_servo_setup(i_tgt, SERVO_SETUP_DFE_FULL);
+    int rx_dfe_check_en_int = get_ptr(i_tgt, rx_dfe_check_en_addr  , rx_dfe_check_en_startbit  ,
+                                      rx_dfe_check_en_endbit); //ppe pl
+
+    // Initialize Min Eye Height tracking before quadrant loop
+    int32_t  l_min_height = 127;
+    uint32_t l_min_quad   = 0;
+    uint32_t l_min_latch  = 0;
 
     // Quadrant Loop
     uint32_t l_quad = QUAD_NORTH;
@@ -641,16 +691,6 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
         }
 
         SET_DFE_DEBUG(0x7013); // Run Servo Ops
-        int servo_op_queue_empty = get_ptr_field(i_tgt, rx_servo_op_queue_empty);
-        int servo_op_queue_results_empty = get_ptr_field(i_tgt, rx_servo_result_queue_empty);
-
-        if (servo_op_queue_empty == 0 || servo_op_queue_results_empty == 0 )
-        {
-            set_debug_state(0x702F);
-            set_fir(fir_code_warning);
-            l_rc = warning_code;
-            goto function_exit;
-        }
 
         l_rc = run_servo_ops_and_get_results(
                    i_tgt,
@@ -683,6 +723,16 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
             //SET_DFE_DEBUG(0x7015, l_an_results[l_latch]); // Calcualte DAC Value
             int32_t l_new_val = eo_dfe_round((int32_t)l_ap_results[l_latch] + (int32_t)l_an_results[l_latch]);
 
+            // Calculate the eye height for this latch and save the relevant info if it is the new minimum eye height for this DFE run
+            int32_t l_height  = (l_ap_results[l_latch] - l_an_results[l_latch]) / 2; // truncated (round-down)
+
+            if (l_height < l_min_height)
+            {
+                l_min_height = l_height;
+                l_min_quad   = l_quad;
+                l_min_latch  = l_latch;
+            }
+
             // HW493492: This dfe full method tends to set DFE H1 a couple steps low.  So for LXX1 latches, add DFE_FULL_H1_ADJ,
             //           and for LXX0 latches, subtract DFE_FULL_H1_ADJ
             l_new_val = (l_latch & LXX1_MASK) ? (l_new_val + DFE_FULL_H1_ADJ) : (l_new_val - DFE_FULL_H1_ADJ);
@@ -694,10 +744,16 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
 
             // Apply a hysteresis to account for uncertainty of servo ops
             //SET_DFE_DEBUG(0x7016, l_prev_val); // Apply Hysteresis
-            l_new_val = rx_eo_dfe_hysteresis(l_new_val, l_prev_val, recal);
+            l_new_val = rx_eo_dfe_hysteresis(l_new_val, l_prev_val, i_recal);
             //SET_DFE_DEBUG(0x7016, l_new_val); // Apply Hysteresis
 
-            l_new_val = rx_eo_dfe_check_dac_limits(i_tgt, (l_dac_addr + l_latch), l_new_val);
+            l_new_val = rx_eo_dfe_check_dac_limits(i_tgt, &l_rc, (l_dac_addr + l_latch), l_new_val);
+
+            if (l_rc)
+            {
+                //SET_DFE_DEBUG(0x701F); // DFE Recal Abort
+                goto function_exit;
+            }
 
             if (l_new_val != l_prev_val)
             {
@@ -714,8 +770,6 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
             //
             //Rxbist code
             int lane_f = get_gcr_addr_lane(i_tgt);
-            int rx_dfe_check_en_int = get_ptr(i_tgt, rx_dfe_check_en_addr  , rx_dfe_check_en_startbit  ,
-                                              rx_dfe_check_en_endbit); //ppe pl
 
             if(rx_dfe_check_en_int)
             {
@@ -726,7 +780,8 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
                 {
                     //begin3
                     mem_pl_field_put(rx_dfe_fail, lane_f, 0b1);//ppe pl
-                    set_fir(fir_code_dft_error);
+                    set_fir(fir_code_dft_error | fir_code_warning);
+                    ADD_LOG(DEBUG_RX_DFE_DAC_LIMIT, i_tgt, l_new_val);
                 }//end3
             }
 
@@ -739,9 +794,57 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool recal)
                 mem_pl_field_put(rx_b_dfe_done, lane_f, 0b1);
             }
 
-        }//end calculate result
+        }//end calculate result - for(latch)
 
+    } // for(quad)
+
+    // Record the last eye height
+    int l_lane = get_gcr_addr_lane(i_tgt);
+
+    if (i_bank == bank_a)
+    {
+        mem_pl_field_put(rx_a_last_eye_height, l_lane, l_min_height);
     }
+    else     //bank_b
+    {
+        mem_pl_field_put(rx_b_last_eye_height, l_lane, l_min_height);
+    }
+
+    // Check and log the min eye height as needed
+    if (i_enable_min_eye_height)
+    {
+        SET_DFE_DEBUG(0x70AA); // Min Eye Height Checks
+
+        // Check if new min eye height for this lane (valid not set or is < old_min_height)
+        if ( !mem_pl_field_get(rx_lane_hist_min_eye_height_valid, l_lane)
+             || (l_min_height < mem_pl_field_get(rx_lane_hist_min_eye_height, l_lane)) )
+        {
+            mem_pl_field_put(rx_lane_hist_min_eye_height,       l_lane, l_min_height);
+            mem_pl_field_put(rx_lane_hist_min_eye_height_bank,  l_lane, l_bank);  //BANK_A=0, BANK_B=1
+            mem_pl_field_put(rx_lane_hist_min_eye_height_latch, l_lane, l_min_latch);
+            mem_pl_field_put(rx_lane_hist_min_eye_height_quad,  l_lane, (l_min_quad >> 3));
+            mem_pl_bit_set(rx_lane_hist_min_eye_height_valid,   l_lane);
+        }
+
+        // Check if new min eye height for group (valid not set or is < old_min_height)
+        if ( !mem_pg_field_get(rx_hist_min_eye_height_valid) || (l_min_height < mem_pg_field_get(rx_hist_min_eye_height)) )
+        {
+            mem_pg_field_put(rx_hist_min_eye_height, l_min_height);
+            mem_pg_field_put(rx_hist_min_eye_height_lane, l_lane);
+            mem_pg_bit_set(rx_hist_min_eye_height_valid);
+        }
+
+        // Bad Lane and DFT checks
+        if (l_min_height < mem_pg_field_get(rx_eye_height_min_check))
+        {
+            mem_pl_bit_set(rx_bad_eye_opt_height, l_lane);
+            set_rx_lane_bad(l_lane);
+            uint32_t l_fir_code = rx_dfe_check_en_int ? (fir_code_dft_error | fir_code_warning) : fir_code_warning;
+            set_fir(l_fir_code);
+            ADD_LOG(DEBUG_RX_EYE_HEIGHT_FAIL, i_tgt, l_min_height);
+            l_rc = warning_code;
+        }
+    } //if(i_enable_min_eye_height)
 
     //SET_DFE_DEBUG(0x7019); // Restore Settings
 
@@ -773,8 +876,19 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
     uint32_t       l_pr_data[PR_DATA_SIZE] = {0, 0, 0, 0};
     int32_t        l_h1_vals[2]            = {0, 0};
     int32_t        l_clk_adj[2]            = {0, 0};
+
     SET_DFE_DEBUG(0x7000); // Enter DFE Fast
 
+    uint32_t servo_op_queue_empty         = get_ptr_field(i_tgt, rx_servo_op_queue_empty);
+    uint32_t servo_op_queue_results_empty = get_ptr_field(i_tgt, rx_servo_result_queue_empty);
+
+    if (servo_op_queue_empty == 0 || servo_op_queue_results_empty == 0 )
+    {
+        set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_DFE_FAST_SERVO_QUEUE_NOT_EMPTY, i_tgt, 0x0);
+        l_rc = warning_code;
+        goto function_exit;
+    }
 
     //SET_DFE_DEBUG(0x7001); // Set Initialize Settings
     rx_eo_servo_setup(i_tgt, SERVO_SETUP_DFE_FAST);
@@ -803,11 +917,47 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
         }
 
         l_h1_vals[0] = l_hvals[0]; // [0] is current H1 value calculation
-        rx_eo_dfe_check_hvals(i_tgt, l_hvals);
-        rx_eo_dfe_fast_apply(i_tgt, l_loff_array, l_hvals);
+        l_rc = rx_eo_dfe_check_hvals(i_tgt, l_hvals);
+
+        if (l_rc)
+        {
+            goto function_exit;
+        }
+
+
+
+        // Apply DFE coefficients to bank A
+        rx_eo_dfe_fast_apply(i_tgt, &l_rc, l_loff_array, l_hvals, bank_a);
+
+        if (l_rc)
+        {
+            goto function_exit;
+        }
 
         //SET_DFE_DEBUG(0x7005); // Set DFE Clock Adjust
-        rx_eo_dfe_set_clock_adj(i_tgt, l_pr_data, l_clk_adj[1], l_clk_adj[0]);
+        rx_eo_dfe_set_clock_adj(i_tgt, l_pr_data, l_clk_adj[1], l_clk_adj[0], bank_a);
+
+        // Put bank B into CDR Slave mode temporarily while we write its DAC registers (HW525009)
+        // First disable slave mode on bank A, then enable bank B
+        put_ptr_field(i_tgt, rx_pr_slave_mode_a, 0b0, read_modify_write);
+        put_ptr_field(i_tgt, rx_pr_slave_mode_b, 0b1, read_modify_write);
+
+        // Apply DFE coefficients to bank B
+        rx_eo_dfe_fast_apply(i_tgt, &l_rc, l_loff_array, l_hvals, bank_b);
+
+        if (l_rc)
+        {
+            goto function_exit;
+        }
+
+        //SET_DFE_DEBUG(0x7005); // Set DFE Clock Adjust
+        rx_eo_dfe_set_clock_adj(i_tgt, l_pr_data, l_clk_adj[1], l_clk_adj[0], bank_b);
+
+        // Restore CDR Slave mode on bank A (HW525009)
+        // First disable slave mode on bank B, then enable bank A
+        put_ptr_field(i_tgt, rx_pr_slave_mode_b, 0b0, read_modify_write);
+        put_ptr_field(i_tgt, rx_pr_slave_mode_a, 0b1, read_modify_write);
+
 
         // DFE convergence criteria
         // - Skip on the first iteration as there is no previous data to compare to.
@@ -825,10 +975,10 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
     {
         //SET_DFE_DEBUG(0x7008); // DFE Max Iterations
 
-        // TODO Log this error and we can save the bad_dfe_conv bits
         mem_pl_field_put(rx_a_bad_dfe_conv, get_gcr_addr_lane(i_tgt), 1);
 
         set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_RX_DFE_NO_CONVERGANCE, i_tgt, 0x0);
         l_rc = warning_code;
     }
 
