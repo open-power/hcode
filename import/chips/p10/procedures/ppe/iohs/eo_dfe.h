@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr20021300 |vbr     | Added record_min_eye_height flag to dfe_full
 // mbs19041001 |mbs     | Added recal flag to dfe_full function (HW486784)
 // cws18071000 |cws     | Initial Rev
 // -----------------------------------------------------------------------------
@@ -65,10 +66,12 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_gcr_addr);
  *
  * @param[in] i_gcr_addr   References the unit target
  * @param[in] i_bank       References the bank to be calibrated
+ * @param[in] i_recal      True when this is being run in recal (determines hysteresis used)
+ * @param[in] i_enable_min_eye_height True when the min eye height checking and logging are enabled
  *
  * @return uint32_t. rc_pass if success, else error code.
  *
  */
-uint32_t rx_eo_dfe_full(t_gcr_addr* i_gcr_addr, const t_bank i_bank, bool recal);
+uint32_t rx_eo_dfe_full(t_gcr_addr* i_gcr_addr, const t_bank i_bank, bool i_recal, bool i_record_min_eye_height);
 
 #endif // __RX_EO_DFE_H__

@@ -49,6 +49,7 @@ echo ""
 # common files
 src_files+=("io_irq_handlers.c" "io_irq_handlers.h")
 src_files+=("io_lib.c" "io_lib.h")
+src_files+=("io_logger.c" "io_logger.h")
 src_files+=("pk_app_cfg.h")
 src_files+=("pk_app_irq_table.c")
 
@@ -59,6 +60,8 @@ src_files+=("nv_main.c")
 src_files+=("config_ioo.h")
 src_files+=("tx_dcc_main.c" "tx_dcc_main.h")
 src_files+=("tx_zcal_tdr.c" "tx_zcal_tdr.h")
+src_files+=("tx_seg_test.c" "tx_seg_test.h")
+src_files+=("tx_ffe.c" "tx_ffe.h")
 src_files+=("eo_bank_sync.c" "eo_bank_sync.h")
 src_files+=("eo_bist_init_ovride.c" "eo_bist_init_ovride.h")
 src_files+=("eo_common.c" "eo_common.h")

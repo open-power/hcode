@@ -40,6 +40,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// bja20011500 |bja     | Add lane_mask to eo_rxbist_ber
 // mwh1903220  |mwh     | Add another input
 // mwh1902190  |mwh     | Initial Rev
 // -----------------------------------------------------------------------------
@@ -51,7 +52,10 @@
 #include "eo_common.h"
 
 // vga ctle lte qpa checks
-void eo_rxbist_ber(t_gcr_addr* gcr_addr, t_bank bank);
+void eo_rxbist_ber(t_gcr_addr* gcr_addr, const uint32_t lane_mask, const t_bank bank);
+void min_pr_shift(t_gcr_addr* gcr_addr, int min_shift, int stop_value, const uint32_t lane_mask, t_bank bank);
+void step_pr_to_zero( t_gcr_addr*, t_bank );
+
 
 //int check_value(t_gcr_addr *gcr_addr, t_bank bank, int check_value, char addr_a,char startbit_a,char endbit_a, char addr_b,char startbit_b,char endbit_b);
 #endif //_EO_rxbist_ber_H_

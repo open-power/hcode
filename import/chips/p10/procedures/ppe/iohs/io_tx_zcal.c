@@ -39,6 +39,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// cws20011400 |cws     | Added Debug Logs
+// bja20011100 |bja     | Save and restore register ID in io_tx_zcal_meas()
+// cws20010900 |cws     | Added function to set zcal results to segments
 // vbr19031300 |vbr     | Set zcal_group/rx_group and bus_id=0 in gcr_addr as needed.
 // vbr19020400 |vbr     | Made min/max configurable and moved configuration into mem_regs so gets a default.
 // vbr19020100 |vbr     | HW478623: Made comparator reset time and filter depth configurable.
@@ -54,6 +57,8 @@
 
 #include "io_lib.h"
 #include "io_tx_zcal.h"
+#include "tx_zcal_tdr.h"
+#include "io_logger.h"
 
 #include "ppe_img_reg_const_pkg.h"
 #include "ppe_fw_reg_const_pkg.h"
@@ -86,6 +91,7 @@ void io_tx_zcal_meas(t_gcr_addr* gcr_addr)
     // Set proper bus_id and reg_id for accessing zcal registers.
     int saved_bus_id = get_gcr_addr_bus_id(gcr_addr);
     set_gcr_addr_bus_id(gcr_addr, zcal_bus_id);
+    int saved_reg_id = get_gcr_addr_reg_id(gcr_addr);
     set_gcr_addr_reg_id(gcr_addr, zcal_group);
 
     // Enable the ZCal SM Override so can write the controls
@@ -207,9 +213,9 @@ void io_tx_zcal_meas(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, tx_zcal_swo_powerdown, 0b1, read_modify_write);
     put_ptr_field(gcr_addr, tx_zcal_swo_en, 0b0, read_modify_write);
 
-    // Set gcr_addr back to the previous bus_id and rx_group (required return state of all function)
+    // Set gcr_addr back to the previous bus_id and reg_id (required return state of all function)
     set_gcr_addr_bus_id(gcr_addr, saved_bus_id);
-    set_gcr_addr_reg_id(gcr_addr, rx_group);
+    set_gcr_addr_reg_id(gcr_addr, saved_reg_id);
 
     set_debug_state(0xC0FF); // TX Z Cal Measurement Done
 } //io_tx_zcal_meas
@@ -332,6 +338,7 @@ unsigned int zcal_segment_search(t_gcr_addr* gcr_addr, bool nseg, bool increment
             // Reaching the limit is an error condition, set error and FIR.
             img_bit_set(ppe_tx_zcal_error);
             set_fir(fir_code_warning);
+            ADD_LOG(DEBUG_TX_ZCAL_LIMIT, num_seg_x2);
             run_loop = false;
         }
         else
@@ -443,3 +450,75 @@ void set_zcal_1x_n(t_gcr_addr* gcr_addr, unsigned int segments_x2)
     put_ptr_field(gcr_addr, tx_zcal_swo_imp_cntl_1r_1xn_16_31, therm_code_16_31, fast_write); //full register
     put_ptr_field(gcr_addr, tx_zcal_swo_imp_cntl_1r_1xn_32_39, therm_code_32_39, read_modify_write);
 } //set_zcal_4x_n
+
+
+/**
+ * @brief Sets Tx Segments for a Given Lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @param[in   ] i_leg         Target Leg
+ * @retval void
+ */
+void tx_zcal_set_segments(t_gcr_addr* io_gcr_addr, const t_legtype i_leg)
+{
+    const int32_t MAX_2R_MAIN_SEGS = (tx_pseg_main_16_24_hs_en_width + tx_pseg_main_0_15_hs_en_width) * 2 - 1;
+    const int32_t MAX_2R_PRE1_SEGS = (tx_pseg_pre1_hs_en_width                                      ) * 2 - 1;
+    const int32_t MAX_2R_PRE2_SEGS = (tx_pseg_pre2_hs_en_width                                      ) * 2 - 1;
+
+    // x8 segment values >> 2 = 2R Values
+    int32_t l_zval = (i_leg == TX_LEG_P ? img_field_get(ppe_tx_zcal_p) : img_field_get(ppe_tx_zcal_n)) >> 2;
+
+
+    uint32_t l_main_2r_segs = 0;
+    uint32_t l_pre1_2r_segs = 0;
+    uint32_t l_pre2_2r_segs = 0;
+
+    if (l_zval < MAX_2R_PRE1_SEGS)
+    {
+        l_pre1_2r_segs = l_zval;
+    }
+    else
+    {
+        l_zval -= MAX_2R_PRE1_SEGS;
+        l_pre1_2r_segs = MAX_2R_PRE1_SEGS;
+
+        if (l_zval < MAX_2R_PRE2_SEGS)
+        {
+            l_pre2_2r_segs = l_zval;
+        }
+        else
+        {
+            l_zval -= MAX_2R_PRE2_SEGS;
+            l_pre2_2r_segs = MAX_2R_PRE2_SEGS;
+
+            if (l_zval < MAX_2R_MAIN_SEGS)
+            {
+                l_main_2r_segs = l_zval;
+            }
+            else
+            {
+                l_zval -= MAX_2R_MAIN_SEGS;
+                l_main_2r_segs = MAX_2R_MAIN_SEGS;
+            }
+        }
+    }
+
+    tx_zcal_tdr_write_en(io_gcr_addr, l_main_2r_segs, (i_leg == TX_LEG_P ? SEGTYPE_MAIN_PSEG : SEGTYPE_MAIN_NSEG));
+    tx_zcal_tdr_write_en(io_gcr_addr, l_pre1_2r_segs, (i_leg == TX_LEG_P ? SEGTYPE_PRE1_PSEG : SEGTYPE_PRE1_NSEG));
+    tx_zcal_tdr_write_en(io_gcr_addr, l_pre2_2r_segs, (i_leg == TX_LEG_P ? SEGTYPE_PRE2_PSEG : SEGTYPE_PRE2_NSEG));
+}
+
+
+/**
+ * @brief Clears all the selects for given lane
+ * @param[inout] io_gcr_addr   Target Information
+ * @retval void
+ */
+void tx_zcal_clr_selects(t_gcr_addr* io_gcr_addr)
+{
+    // Clearing both the PRE1/2 Selects and enables are okay, since we will immmediately write the enables in the next step
+    put_ptr_field(io_gcr_addr, tx_pseg_pre1_hs_sel, 0, fast_write); // Fast Write will also Clear the PRE1 Enables
+    put_ptr_field(io_gcr_addr, tx_pseg_pre2_hs_sel, 0, fast_write); // Fast Write will also Clear the PRE2 Enables
+    put_ptr_field(io_gcr_addr, tx_nseg_pre1_hs_sel, 0, fast_write); // Fast Write will also Clear the PRE1 Enables
+    put_ptr_field(io_gcr_addr, tx_nseg_pre2_hs_sel, 0, fast_write); // Fast Write will also Clear the PRE2 Enables
+    return;
+}

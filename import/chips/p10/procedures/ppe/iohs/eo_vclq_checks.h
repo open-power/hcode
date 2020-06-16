@@ -52,5 +52,6 @@
 // vga ctle lte qpa checks
 void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank);
 
+void set_rxbist_fail_lane ( t_gcr_addr*, t_bank bank );
 //int check_value(t_gcr_addr *gcr_addr, t_bank bank, int check_value, char addr_a,char startbit_a,char endbit_a, char addr_b,char startbit_b,char endbit_b);
 #endif //_EO_VCLQ_CHECKS_H_

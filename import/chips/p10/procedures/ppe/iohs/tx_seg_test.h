@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/ppe/iohs/config_ioo.h $           */
+/* $Source: import/chips/p10/procedures/ppe/iohs/tx_seg_test.h $          */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2020                                                         */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -27,33 +27,61 @@
 // *! All Rights Reserved -- Property of IBM
 // *! *** IBM Confidential ***
 // *!---------------------------------------------------------------------------
-// *! FILENAME    : config_ioo.h
+// *! FILENAME    : tx_seg_test.h
 // *! TITLE       :
-// *! DESCRIPTION : Configuration options for IOO
+// *! DESCRIPTION :
 // *!
-// *! OWNER NAME  : Vikram Raj          Email: vbraj@us.ibm.com
-// *! BACKUP NAME : Mike Spear          Email: mspear@us.ibm.com
+// *! OWNER NAME  : Gary Peterson       Email: garyp@us.ibm.com
+// *! BACKUP NAME : Brian Albertson     Email: brian.j.albertson@ibm.com
 // *!
 // *!---------------------------------------------------------------------------
 // CHANGE HISTORY:
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
-// vbr19111500 |vbr     | Cleanup - nothing in this file is used; keeping file for possible future use.
-// vbr18092700 |vbr     | File is mostly stale old idea we're not using so cleaning up.
-// jfg18041800 |jfg     | add ctle_mode and ctle_quad_diff_thresh
-// vbr17082500 |vbr     | Removed max_lanes since added a fw_reg for num_lanes.
-// vbr17020600 |vbr     | Renamed test_mode to static_config (and inverted meaning)
-// vbr16092100 |vbr     | Added config for ctle middle of eye method
-// vbr16033100 |vbr     | Added additional vga config
-// vbr16033000 |vbr     | Added max_lanes
-// vbr16032500 |vbr     | changed to test_mode; made enables match RegDef defaults
-// vbr16030200 |vbr     | Initial Rev
+// gap20021800 |gap     | Changed from IO_DISABLE_DEBUG to IO_DEBUG_LEVEL
+// gap19121000 |gap     | Created
 // -----------------------------------------------------------------------------
 
-#ifndef _CONFIG_IOO_H_
-#define _CONFIG_IOO_H_
+#ifndef _TX_SEG_TEST_H_
+#define _TX_SEG_TEST_H_
 
+////////////////////////////////////////////////////////////////////////////////////////////
+// types of sst banks
+// BANKTYPE_MIN, BANKTYPE_MAX are defined to allow iteration w/o hardcoding limits.
+// Likewise, BANKTYPE_MAX_SEL is defined to show which banks have selects; they
+// must be listed first.
+typedef enum
+{
+    BANKTYPE_MIN,
+    BANKTYPE_PRE1 = BANKTYPE_MIN,
+    BANKTYPE_PRE2,
+    BANKTYPE_MAX_SEL = BANKTYPE_PRE2,
+    BANKTYPE_MAIN_LOW,
+    BANKTYPE_MAIN_HIGH,
+    BANKTYPE_MAX = BANKTYPE_MAIN_HIGH
+} t_banktype;
 
+void tx_seg_test(t_gcr_addr* gcr_addr_i);
+void tx_seg_test_test_bank(t_gcr_addr* gcr_addr_i, t_banktype banktype_i, uint8_t sel_i);
+void tx_seg_test_test_seg(t_gcr_addr* gcr_addr_i);
+void tx_seg_test_clear_bank(t_gcr_addr* gcr_addr_i, t_banktype banktype_i);
+void tx_seg_test_setup(t_gcr_addr* gcr_addr_i);
+void tx_seg_test_0_pattern(t_gcr_addr* gcr_addr_i);
+void tx_seg_test_1_pattern(t_gcr_addr* gcr_addr_i);
+void tx_seg_test_set_segtest_fail(t_gcr_addr* gcr_addr_i);
+void tx_seg_test_restore(t_gcr_addr* gcr_addr_i);
 
-#endif //_CONFIG_IOO_H_
+// DEBUG FUNCTIONS
+// Some functions and macros to help in debugging.
+// These are light weight but the code size and performance hit can add up,
+// so allow for a compiler option to disable (IO_DEBUG_LEVEL).
+////////////////////////////////////////////////////////////////////////////////////////////
+// share with dcc since these are not run at the same time
+#if IO_DEBUG_LEVEL < 3
+    #define set_tx_dcc_debug_tx_seg_test(marker, value) {}
+#else
+    // This writes a "marker" followed by a value "value" to the mem_regs which can be used for tracking execution value.
+    #define set_tx_dcc_debug_tx_seg_test(marker, value) { mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (marker);  mem_regs_u16[pg_addr(tx_dcc_debug_addr)] = (value); }
+#endif //IO_DEBUG_LEVEL
+#endif //_TX_SEG_TEST_H_

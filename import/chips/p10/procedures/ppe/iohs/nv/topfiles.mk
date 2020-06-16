@@ -22,7 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-TOP-C-SOURCES = io_lib.c pk_app_irq_table.c io_irq_handlers.c
+TOP-C-SOURCES = io_lib.c pk_app_irq_table.c io_irq_handlers.c io_logger.c
 TOP-C-SOURCES += nv_main.c
 TOP-CXX-SOURCES =
 TOP-S-SOURCES =

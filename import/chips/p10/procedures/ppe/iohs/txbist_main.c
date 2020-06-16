@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
+// cws20011400 |cws     | Added Debug Logs
 // gap19052100 |gap     | Removed high speed post test
 // mwh19043000 |mwh     | Add set_fir(fir_code_dft_error) to fail if's
 // bja19040400 |bja     | Set DFT FIR bit on fail
@@ -57,6 +59,7 @@
 
 #include "ppe_com_reg_const_pkg.h"
 #include "config_ioo.h"
+#include "io_logger.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 // TXBIST
@@ -117,7 +120,8 @@ void txbist_main_dcc(t_gcr_addr* gcr_addr_i)
         set_debug_state(0x0111); // txbist_main_dcc fail i low
         txbist_main_set_bist_fail(gcr_addr_i);
         put_ptr_field(gcr_addr_i, tx_bist_dcc_fail, 0b1, read_modify_write);
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_BIST_TX_DCC_I_FAIL, gcr_addr_i, dcc_i_tune_l);
     }
 
     if(dcc_i_tune_l > bist_dcc_i_max_l)
@@ -125,7 +129,8 @@ void txbist_main_dcc(t_gcr_addr* gcr_addr_i)
         set_debug_state(0x0112); // txbist_main_dcc fail i high
         txbist_main_set_bist_fail(gcr_addr_i);
         put_ptr_field(gcr_addr_i, tx_bist_dcc_fail, 0b1, read_modify_write);
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_BIST_TX_DCC_I_FAIL, gcr_addr_i, dcc_i_tune_l);
     }
 
     if(dcc_q_tune_l < bist_dcc_q_min_l)
@@ -133,7 +138,8 @@ void txbist_main_dcc(t_gcr_addr* gcr_addr_i)
         set_debug_state(0x0113); // txbist_main_dcc fail q low
         txbist_main_set_bist_fail(gcr_addr_i);
         put_ptr_field(gcr_addr_i, tx_bist_dcc_fail, 0b1, read_modify_write);
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_BIST_TX_DCC_Q_FAIL, gcr_addr_i, dcc_q_tune_l);
     }
 
     if(dcc_q_tune_l > bist_dcc_q_max_l)
@@ -141,7 +147,8 @@ void txbist_main_dcc(t_gcr_addr* gcr_addr_i)
         set_debug_state(0x0114); // txbist_main_dcc fail q high
         txbist_main_set_bist_fail(gcr_addr_i);
         put_ptr_field(gcr_addr_i, tx_bist_dcc_fail, 0b1, read_modify_write);
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_BIST_TX_DCC_Q_FAIL, gcr_addr_i, dcc_q_tune_l);
     }
 
     if(dcc_iq_tune_l < bist_dcc_iq_min_l)
@@ -149,7 +156,8 @@ void txbist_main_dcc(t_gcr_addr* gcr_addr_i)
         set_debug_state(0x0115); // txbist_main_dcc fail iq low
         txbist_main_set_bist_fail(gcr_addr_i);
         put_ptr_field(gcr_addr_i, tx_bist_dcc_fail, 0b1, read_modify_write);
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_BIST_TX_DCC_IQ_FAIL, gcr_addr_i, dcc_iq_tune_l);
     }
 
     if(dcc_iq_tune_l > bist_dcc_iq_max_l)
@@ -157,7 +165,8 @@ void txbist_main_dcc(t_gcr_addr* gcr_addr_i)
         set_debug_state(0x0116); // txbist_main_dcc fail iq high
         txbist_main_set_bist_fail(gcr_addr_i);
         put_ptr_field(gcr_addr_i, tx_bist_dcc_fail, 0b1, read_modify_write);
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_BIST_TX_DCC_IQ_FAIL, gcr_addr_i, dcc_iq_tune_l);
     }
 
     set_debug_state(0x012F); // txbist_main_dcc end
@@ -182,7 +191,8 @@ void txbist_main_ls(t_gcr_addr* gcr_addr_i)
         set_debug_state(0x0131); // txbist_main_ls fail
         txbist_main_set_bist_fail(gcr_addr_i);
         put_ptr_field(gcr_addr_i, tx_bist_ls_fail, 0b1, read_modify_write);
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_BIST_TX_LS_FAIL, gcr_addr_i, 0x0);
     }
 
     put_ptr_field(gcr_addr_i, tx_bist_prbs_enable, 0b0,    read_modify_write);
@@ -262,7 +272,8 @@ void txbist_main_hs_pat_sel(t_gcr_addr* gcr_addr_i, uint8_t clk_pattern_i, uint8
         set_debug_state(0x0153); // txbist_main_hs_pat_sel fail high
         txbist_main_set_bist_fail(gcr_addr_i);
         put_ptr_field(gcr_addr_i, tx_bist_hs_fail, 0b1, read_modify_write);
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_BIST_TX_HS_FAIL, gcr_addr_i, clk_pattern_i);
     }
 
     put_ptr_field(gcr_addr_i, tx_tdr_dac_cntl,    dac_thresh_min_l,  read_modify_write);
@@ -272,7 +283,8 @@ void txbist_main_hs_pat_sel(t_gcr_addr* gcr_addr_i, uint8_t clk_pattern_i, uint8
         set_debug_state(0x0154); // txbist_main_hs_pat_sel fail low
         txbist_main_set_bist_fail(gcr_addr_i);
         put_ptr_field(gcr_addr_i, tx_bist_hs_fail, 0b1, read_modify_write);
-        set_fir(fir_code_dft_error);
+        set_fir(fir_code_dft_error | fir_code_warning);
+        ADD_LOG(DEBUG_BIST_TX_HS_FAIL, gcr_addr_i, clk_pattern_i);
     }
 
     set_debug_state(0x0158); // txbist_main_hs_pat_sel end
@@ -295,6 +307,6 @@ void txbist_main_set_bist_fail(t_gcr_addr* gcr_addr_i)
         mem_pg_field_put(tx_bist_fail_16_23, new_lane_bad);
     }
 
-    set_fir(fir_code_dft_error); // set DFT FIR bit
+    set_fir(fir_code_dft_error | fir_code_warning); // set DFT FIR bit
     set_debug_state(0x018F); // txbist_main_set_bist_fail end
 } // txbist_main_set_bist_fail

@@ -43,6 +43,7 @@ $(IMAGE)_TRACE_HASH_PREFIX := $(shell echo $(IMAGE) | md5sum | cut -c1-4 \
 
 
 OBJS += eabi.o
+OBJS += ppe42_string.o
 
 #Note: Flags are resolved very late - so local variables can't be
 # used to build them
@@ -72,10 +73,12 @@ OBJS += $(PK_THREAD_OBJECTS)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PK_SRCDIR)/kernel)
 
 include $(PK_SRCDIR)/ppe42/pkppe42files.mk
+include $(PPE_SRCDIR)/baselib/baselibfiles.mk
 OBJS += $(PPE42_OBJECTS)
 OBJS += $(PPE42_THREAD_OBJECTS)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PK_SRCDIR)/ppe42)
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(PPE_SRCDIR)/baselib)
+
 
 include $(PPE_SRCDIR)/boltonlib/$(_PPE_BOLTON_CFG)/pk$(_PPE_TYPE)files.mk
 OBJS += $(STD_OBJECTS)

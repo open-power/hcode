@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mbs19111100 |mbs     | Added enable_dl_clk flag to io_lane_power_on (HW508366)
 // vbr17120100 |vbr     | Renamed file and added new function.
 // vbr16101200 |vbr     | Initial Rev
 // -----------------------------------------------------------------------------
@@ -61,7 +62,7 @@ void io_group_power_on(t_gcr_addr* gcr_addr);
 void io_group_power_off(t_gcr_addr* gcr_addr);
 
 // Power up a lane (both RX and TX)
-void io_lane_power_on(t_gcr_addr* gcr_addr);
+void io_lane_power_on(t_gcr_addr* gcr_addr, bool enable_dl_clk);
 
 // Power down a lane (both RX and TX)
 void io_lane_power_off(t_gcr_addr* gcr_addr);

@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// cws20010900 |cws     | Added legtype enums and set segments function
 // vbr18091900 |vbr     | Added functions for writing therm codes.
 // vbr18082900 |vbr     | Initial Rev
 //------------------------------------------------------------------------------
@@ -50,8 +51,18 @@
 
 #include "io_lib.h"
 
+// types of sst segments
+typedef enum
+{
+    TX_LEG_P,
+    TX_LEG_N
+} t_legtype;
+
 // Run Zcal Measurements
 void io_tx_zcal_meas(t_gcr_addr* gcr_addr);
+
+void tx_zcal_set_segments(t_gcr_addr* io_gcr_addr, const t_legtype i_leg);
+void tx_zcal_clr_selects(t_gcr_addr* io_gcr_addr);
 
 ///////////////////////////
 // Helper Functions

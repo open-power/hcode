@@ -46,6 +46,14 @@
 #define ppe_current_thread_mask                    0xe000
 
 
+#define ppe_debug_log_num_addr                     0b000000100
+#define ppe_debug_log_num_startbit                 7
+#define ppe_debug_log_num_width                    7
+#define ppe_debug_log_num_endbit                   13
+#define ppe_debug_log_num_shift                    2
+#define ppe_debug_log_num_mask                     0x1fc
+
+
 #define ppe_error_lane_addr                        0b000000111
 #define ppe_error_lane_startbit                    4
 #define ppe_error_lane_width                       5
@@ -150,12 +158,12 @@
 #define ppe_tx_zcal_p_mask                         0xff80
 
 
-#define ppe_tx_zcal_req_addr                       0b000000001
-#define ppe_tx_zcal_req_startbit                   1
-#define ppe_tx_zcal_req_width                      1
-#define ppe_tx_zcal_req_endbit                     1
-#define ppe_tx_zcal_req_shift                      14
-#define ppe_tx_zcal_req_mask                       0x4000
+#define ppe_watchdog_select_sim_mode_addr          0b000000000
+#define ppe_watchdog_select_sim_mode_startbit      3
+#define ppe_watchdog_select_sim_mode_width         4
+#define ppe_watchdog_select_sim_mode_endbit        6
+#define ppe_watchdog_select_sim_mode_shift         9
+#define ppe_watchdog_select_sim_mode_mask          0x1e00
 
 
 #define ucontroller_test_en_addr                   0b000000001

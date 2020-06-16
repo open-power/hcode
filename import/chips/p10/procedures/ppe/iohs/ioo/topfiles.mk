@@ -22,7 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-TOP-C-SOURCES = io_lib.c pk_app_irq_table.c io_irq_handlers.c
+TOP-C-SOURCES = io_lib.c pk_app_irq_table.c io_irq_handlers.c io_logger.c
 TOP-C-SOURCES += ioo_main.c
 TOP-C-SOURCES += ioo_thread.c
 TOP-C-SOURCES += supervisor_thread.c
@@ -43,9 +43,11 @@ TOP-C-SOURCES += eo_qpa.c
 TOP-C-SOURCES += eo_bank_sync.c
 TOP-C-SOURCES += eo_vclq_checks.c
 TOP-C-SOURCES += tx_zcal_tdr.c
+TOP-C-SOURCES += tx_ffe.c
 TOP-C-SOURCES += eo_bist_init_ovride.c
 TOP-C-SOURCES += eo_rxbist_ber.c
 TOP-C-SOURCES += eo_llbist.c
+TOP-C-SOURCES += tx_seg_test.c
 TOP-CXX-SOURCES =
 TOP-S-SOURCES =
 
