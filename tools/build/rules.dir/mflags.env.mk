@@ -41,21 +41,21 @@ endif
 UNAME = $(shell uname)
 
 ifeq ($(UNAME),AIX)
-	__EKB_PREFIX=/opt/xsite/contrib/bin/
+__EKB_PREFIX=/opt/xsite/contrib/bin/
 else
-	RHEL_VER = $(shell lsb_release -sr)
-	ifeq ($(word 1, $(subst ., ,$(RHEL_VER))), 6)
-	ifeq ($(wildcard /opt/rh/devtoolset-2/root/usr/bin),)
-	$(error devtoolset-2 is not installed on RHEL $(RHEL_VER))
+RHEL_VER = $(shell lsb_release -sr)
+ifeq ($(word 1, $(subst ., ,$(RHEL_VER))), 6)
+ifeq ($(wildcard /opt/rh/devtoolset-2/root/usr/bin),)
+$(error devtoolset-2 is not installed on RHEL $(RHEL_VER))
 endif
 __EKB_PREFIX?=/opt/rh/devtoolset-2/root/usr/bin/
 else ifeq ($(word 1, $(subst ., ,$(RHEL_VER))), 7)
-	ifeq ($(wildcard /opt/rh/devtoolset-8/root/usr/bin),)
-	$(error devtoolset-8 is not installed on RHEL $(RHEL_VER))
+ifeq ($(wildcard /opt/rh/devtoolset-8/root/usr/bin),)
+$(error devtoolset-8 is not installed on RHEL $(RHEL_VER))
 endif
 __EKB_PREFIX?=/opt/rh/devtoolset-8/root/usr/bin/
 else
-	$(error RHEL Version $RHEL_VER not supported)
+$(error RHEL Version $RHEL_VER not supported)
 endif
 endif
 
