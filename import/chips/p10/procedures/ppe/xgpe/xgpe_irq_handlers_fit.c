@@ -38,7 +38,13 @@
 //#include "pstate_pgpe_occ_api.h"
 
 #define IDDQ_FIT_SAMPLE_TICKS   8
+const uint32_t FDIR_MC_WCLR = 0x6E0EFE47;
+const uint32_t FDIR_MC_WOR  = 0x6E0EFE46;
+
 extern XgpeHeader_t* G_xgpe_header_data;
+uint32_t G_throttleOn = 0;
+uint32_t G_throttleCount = 0;
+
 extern uint32_t G_OCB_OCCFLG3_OR;
 extern uint32_t G_OCB_OCCFLG3_CLR;
 extern uint32_t G_OCB_OCCFLG3;
@@ -85,6 +91,96 @@ void xgpe_irq_fit_handler()
     mtspr(SPRN_TSR, TSR_FIS);
     handle_pm_suspend();
     handle_wof_iddq_values();
+    handle_core_throttle();
+}
+
+///////////////////////////////////////////////////
+//handle_core_throttle
+///////////////////////////////////////////////////
+void handle_core_throttle()
+{
+    uint32_t l_occflg3;
+    uint32_t force_legacy_throttle = 0;
+    uint32_t l_inject_response = 0;
+
+    l_occflg3 = in32(G_OCB_OCCFLG3);
+    l_inject_response = (l_occflg3 & BITS32(CORE_THROT_INJECT_RESP, CORE_THROT_INJECT_RESP_LEN)) >> 3;
+
+    if( l_occflg3 & BIT32(CORE_THROT_CONTIN_CHANGE_ENABLE) ||
+        l_occflg3 & BIT32(CORE_THROT_SINGLE_EVENT_INJECT))
+    {
+        uint32_t xgpe_throttle_assert   = G_xgpe_header_data->g_xgpe_coreThrottleAssertCnt;
+        uint32_t xgpe_throttle_deassert = G_xgpe_header_data->g_xgpe_coreThrottleDeAssertCnt;
+        force_legacy_throttle = l_occflg3 & BIT32(FORCE_LEGACY_THROTTLE);
+
+
+        //if currently off, we don't desire always off, this is the first evaluation since become enabled, we are in always on,
+        //or we (re enabled and have reached the count, then we turn throttling on (if both assert and deassert are 0 this statement fails)
+        if(!G_throttleOn && xgpe_throttle_assert != 0 &&
+           (G_throttleCount == 0 || xgpe_throttle_deassert == 0 || xgpe_throttle_deassert == G_throttleCount))
+        {
+            G_throttleOn = 1;
+            G_throttleCount = 0;
+
+            if (force_legacy_throttle)
+            {
+                out64(FDIR_MC_WCLR, ((uint64_t)FDIR_THROTTLE_DATA << 32));
+                out64(FDIR_MC_WOR, ((uint64_t)FDIR_THROTTLE_LEGACY << 32));
+            }
+        }
+
+        //if currently on and we desire always off or we don't desire always on and have reached the count,
+        //then we turn it off (if both assert and deassert are 0 this statement true)
+        else if(G_throttleOn &&
+                (xgpe_throttle_assert == 0 || ( xgpe_throttle_deassert != 0 && xgpe_throttle_assert == G_throttleCount)))
+        {
+            //Clear inject enable bit
+            G_throttleOn = 0;
+            G_throttleCount = 0;
+
+        }
+
+        if (G_throttleCount == 0)
+        {
+            xgpe_write_core_throttle_data(G_throttleOn, l_inject_response);
+        }
+
+        G_throttleCount++;
+    }
+    // disable throttle if no longer have a continuous or single inject active
+    else
+    {
+        if (G_throttleCount)
+        {
+            //Clear inject enable bit
+            G_throttleOn = 0;
+            G_throttleCount = 0;
+            xgpe_write_core_throttle_data(G_throttleOn, l_inject_response);
+        }
+    }
+
+}
+
+///////////////////////////////////////////////////
+//xgpe_write_core_throttle_data
+///////////////////////////////////////////////////
+void xgpe_write_core_throttle_data(uint32_t i_throttle_state,
+                                   uint32_t i_inject_response)
+{
+    uint32_t mc_addr = i_throttle_state ? FDIR_MC_WOR : FDIR_MC_WCLR;
+
+    if ( i_inject_response )
+    {
+        if (i_throttle_state)
+        {
+            //set the new value IRRITATE_INJECT_RESPONSE (20:21)
+            out64(FDIR_MC_WOR, ((uint64_t)i_inject_response) << SHIFT64(21));
+        }
+    }
+    else
+    {
+        out64(mc_addr, ((uint64_t) FDIR_INJECT_ENABLE << 32));
+    }
 }
 
 

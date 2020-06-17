@@ -69,7 +69,6 @@ enum PCB_TYPE_F_TASK
     PM_SUSPEND_COMPLETE = 1,
     PM_CCI_COMPLETE     = 2,
 };
-
 typedef struct iddq_state
 {
     iddq_activity_t* p_act_val; //OCC Shared SRAM Location
@@ -82,7 +81,13 @@ typedef struct iddq_state
 } iddq_state_t;
 
 
-
+enum SCOM_THROTTLE_VALUES
+{
+    FDIR_INJECT_ENABLE   = 0x80000000,
+    FDIR_THROTTLE_DATA   = 0xFFFFF000,
+    FDIR_THROTTLE_LEGACY = 0x10000000,
+    FDIR_INJECT_RESPONSE = 0x00000C00,
+};
 /// ----------------------------------------------
 /// @brief Starting point to initialize some of the
 //  flg register and invoke other sub functions
@@ -117,6 +122,21 @@ void handle_wof_iddq_values();
 /// @return none
 /// ---------------------------------------------
 void xgpe_send_db1_to_qme(uint64_t i_db1_data);
+
+/// ----------------------------------------------
+/// @brief Core throttle support
+/// @return none
+/// ---------------------------------------------
+void handle_core_throttle();
+
+/// ----------------------------------------------
+/// @brief Enable/disable core throttle operation
+/// @param[in] i_throttle_state  state of throttle
+/// @param[in] i_inject_response response data
+/// @return none
+/// ---------------------------------------------
+void xgpe_write_core_throttle_data(uint32_t i_throttle_state,
+                                   uint32_t i_inject_response);
 
 #ifdef __cplusplus
 }
