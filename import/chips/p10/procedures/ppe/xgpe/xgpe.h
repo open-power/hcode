@@ -75,8 +75,10 @@ typedef struct iddq_state
     pgpe_wof_values_t* p_wof_val; //OCC Shared SRAM Location
     iddq_activity_t curr_cnts;
     uint32_t tick_cnt;
-    uint32_t vratio_accum;
-    uint32_t vratio_inst;
+    uint32_t vratio_vdd_accum;
+    uint32_t vratio_vcs_accum;
+    uint32_t vratio_vdd_inst;
+    uint32_t vratio_vcs_inst;
     uint32_t override_vret;
 } iddq_state_t;
 

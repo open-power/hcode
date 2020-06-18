@@ -116,8 +116,8 @@ void pgpe_occ_produce_wof_values()
 
         if (pgpe_wov_ocs_is_ocs_enabled())
         {
-            G_pgpe_occ.pwof_val->dw1.fields.idd_avg_ma =  G_pgpe_occ.idd_wof_avg_accum_ma / G_pgpe_occ.wof_tick;;
-            G_pgpe_occ.pwof_val->dw1.fields.ics_avg_ma = G_pgpe_occ.ics_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma =  G_pgpe_occ.idd_wof_avg_accum_ma / G_pgpe_occ.wof_tick;;
+            G_pgpe_occ.pwof_val->dw1.fields.ics_avg_10ma = G_pgpe_occ.ics_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
             G_pgpe_occ.pwof_val->dw3.fields.ocs_avg_0p01pct = G_pgpe_occ.ocs_avg_pct_wof_accum / G_pgpe_occ.wof_tick;
             G_pgpe_occ.idd_wof_avg_accum_ma = 0;
             G_pgpe_occ.ics_wof_avg_accum_ma = 0;

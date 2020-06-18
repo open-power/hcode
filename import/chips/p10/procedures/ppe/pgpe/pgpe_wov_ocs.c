@@ -168,7 +168,7 @@ void pgpe_wov_ocs_update_dirty()
     }
 
     //Check for overrcurrent status
-    if(G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_ma  >= G_pgpe_wov_ocs.idd_current_thresh)
+    if(G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_10ma  >= G_pgpe_wov_ocs.idd_current_thresh)
     {
         overcurrent = OCS_OVER_THRESH;
     }
@@ -191,11 +191,11 @@ void pgpe_wov_ocs_update_dirty()
     {
         pgpe_opt_set_word(0, 0);
         pgpe_opt_set_half(0, G_pgpe_wov_ocs.idd_current_thresh);
-        pgpe_opt_set_half(1, G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_ma - G_pgpe_wov_ocs.idd_current_thresh);
+        pgpe_opt_set_half(1, G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_10ma - G_pgpe_wov_ocs.idd_current_thresh);
         ppe_trace_op(PGPE_OPT_OCS_THRESH_TRANS, pgpe_opt_get());
         PK_TRACE("OCS: new_ocs=0x%x, old_ocs=0x%x idd_avg_ma=0x%x, idd_thresh=0x%x", G_pgpe_wov_ocs.overcurrent_flag,
                  overcurrent,
-                 G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_ma,
+                 G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_10ma,
                  G_pgpe_wov_ocs.idd_current_thresh);
     }
 

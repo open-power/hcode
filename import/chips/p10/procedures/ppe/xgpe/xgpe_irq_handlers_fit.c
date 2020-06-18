@@ -345,7 +345,8 @@ void handle_wof_iddq_values()
         }
     }
 
-    G_iddq.vratio_accum += G_iddq.vratio_inst; //Accumulate the present vratios
+    G_iddq.vratio_vdd_accum += G_iddq.vratio_vdd_inst; //Accumulate the present vratios
+    G_iddq.vratio_vcs_accum += G_iddq.vratio_vcs_inst; //Accumulate the present vratios
     G_iddq.tick_cnt++;
 
     if(G_iddq.tick_cnt == IDDQ_FIT_SAMPLE_TICKS)
@@ -370,8 +371,10 @@ void handle_wof_iddq_values()
         }
 
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_EX_RATIOS_ATOMIC_FLAG));
-        G_iddq.p_wof_val->dw0.fields.vratio_avg = G_iddq.vratio_accum / G_iddq.tick_cnt;
-        G_iddq.vratio_accum = 0;
+        G_iddq.p_wof_val->dw0.fields.vratio_vdd_avg = G_iddq.vratio_vdd_accum / G_iddq.tick_cnt;
+        G_iddq.p_wof_val->dw0.fields.vratio_vcs_avg = G_iddq.vratio_vcs_accum / G_iddq.tick_cnt;
+        G_iddq.vratio_vdd_accum = 0;
+        G_iddq.vratio_vcs_accum = 0;
         G_iddq.tick_cnt = 0;
     }
 
