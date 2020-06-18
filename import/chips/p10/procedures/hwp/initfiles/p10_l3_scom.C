@@ -115,7 +115,7 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
         FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_L3_HASH_DISABLE, TGT1, l_TGT1_ATTR_PROC_L3_HASH_DISABLE));
         fapi2::buffer<uint64_t> l_scom_buffer;
         {
-            FAPI_TRY(fapi2::getScom( TGT0, 0x2001860aull, l_scom_buffer ));
+            FAPI_TRY(fapi2::getScom( TGT0, 0x2001060aull, l_scom_buffer ));
 
             if (((l_TGT2_ATTR_PROC_FABRIC_SL_DOMAIN == fapi2::ENUM_ATTR_PROC_FABRIC_SL_DOMAIN_CHIP)
                  && (l_def_LCO_TARGETS_COUNT_CHIP >= literal_3)))
@@ -156,10 +156,10 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
                 l_scom_buffer.insert<6, 32, 32, uint64_t>(l_def_LCO_TARGETS_VECTOR_EAST );
             }
 
-            FAPI_TRY(fapi2::putScom(TGT0, 0x2001860aull, l_scom_buffer));
+            FAPI_TRY(fapi2::putScom(TGT0, 0x2001060aull, l_scom_buffer));
         }
         {
-            FAPI_TRY(fapi2::getScom( TGT0, 0x20018625ull, l_scom_buffer ));
+            FAPI_TRY(fapi2::getScom( TGT0, 0x20010625ull, l_scom_buffer ));
 
             if ((l_TGT1_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE[literal_0] != fapi2::ENUM_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE_INVALID))
             {
@@ -241,10 +241,10 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
                 l_scom_buffer.insert<8, 4, 60, uint64_t>(l_TGT1_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE[literal_0] );
             }
 
-            FAPI_TRY(fapi2::putScom(TGT0, 0x20018625ull, l_scom_buffer));
+            FAPI_TRY(fapi2::putScom(TGT0, 0x20010625ull, l_scom_buffer));
         }
         {
-            FAPI_TRY(fapi2::getScom( TGT0, 0x20018626ull, l_scom_buffer ));
+            FAPI_TRY(fapi2::getScom( TGT0, 0x20010626ull, l_scom_buffer ));
 
             if ((l_TGT1_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE[literal_8] != fapi2::ENUM_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE_INVALID))
             {
@@ -326,10 +326,10 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
                 l_scom_buffer.insert<8, 4, 60, uint64_t>(l_TGT1_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE[literal_8] );
             }
 
-            FAPI_TRY(fapi2::putScom(TGT0, 0x20018626ull, l_scom_buffer));
+            FAPI_TRY(fapi2::putScom(TGT0, 0x20010626ull, l_scom_buffer));
         }
         {
-            FAPI_TRY(fapi2::getScom( TGT0, 0x20018627ull, l_scom_buffer ));
+            FAPI_TRY(fapi2::getScom( TGT0, 0x20010627ull, l_scom_buffer ));
 
             if ((l_TGT1_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE[literal_16] != fapi2::ENUM_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE_INVALID))
             {
@@ -411,10 +411,10 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
                 l_scom_buffer.insert<8, 4, 60, uint64_t>(l_TGT1_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE[literal_16] );
             }
 
-            FAPI_TRY(fapi2::putScom(TGT0, 0x20018627ull, l_scom_buffer));
+            FAPI_TRY(fapi2::putScom(TGT0, 0x20010627ull, l_scom_buffer));
         }
         {
-            FAPI_TRY(fapi2::getScom( TGT0, 0x20018628ull, l_scom_buffer ));
+            FAPI_TRY(fapi2::getScom( TGT0, 0x20010628ull, l_scom_buffer ));
 
             if ((l_TGT1_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE[literal_24] != fapi2::ENUM_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE_INVALID))
             {
@@ -496,10 +496,10 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
                 l_scom_buffer.insert<8, 4, 60, uint64_t>(l_TGT1_ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE[literal_24] );
             }
 
-            FAPI_TRY(fapi2::putScom(TGT0, 0x20018628ull, l_scom_buffer));
+            FAPI_TRY(fapi2::putScom(TGT0, 0x20010628ull, l_scom_buffer));
         }
         {
-            FAPI_TRY(fapi2::getScom( TGT0, 0x20018629ull, l_scom_buffer ));
+            FAPI_TRY(fapi2::getScom( TGT0, 0x20010629ull, l_scom_buffer ));
 
             l_scom_buffer.insert<0, 12, 52, uint64_t>((((l_TGT1_ATTR_PROC_EPS_READ_CYCLES_T0 / literal_8) / l_def_L3_EPS_DIVIDE) +
                     literal_1) );
@@ -507,10 +507,10 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
                     literal_1) );
             l_scom_buffer.insert<24, 12, 52, uint64_t>((((l_TGT1_ATTR_PROC_EPS_READ_CYCLES_T2 / literal_8) / l_def_L3_EPS_DIVIDE) +
                     literal_1) );
-            FAPI_TRY(fapi2::putScom(TGT0, 0x20018629ull, l_scom_buffer));
+            FAPI_TRY(fapi2::putScom(TGT0, 0x20010629ull, l_scom_buffer));
         }
         {
-            FAPI_TRY(fapi2::getScom( TGT0, 0x2001862aull, l_scom_buffer ));
+            FAPI_TRY(fapi2::getScom( TGT0, 0x2001062aull, l_scom_buffer ));
 
             l_scom_buffer.insert<0, 12, 52, uint64_t>((((l_TGT1_ATTR_PROC_EPS_WRITE_CYCLES_T1 / literal_8) / l_def_L3_EPS_DIVIDE) +
                     literal_1) );
@@ -519,10 +519,10 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
             l_scom_buffer.insert<34, 1, 63, uint64_t>(literal_0b0 );
             l_scom_buffer.insert<26, 4, 60, uint64_t>(literal_0b0000 );
             l_scom_buffer.insert<30, 4, 60, uint64_t>(l_def_L3_EPS_DIVIDE );
-            FAPI_TRY(fapi2::putScom(TGT0, 0x2001862aull, l_scom_buffer));
+            FAPI_TRY(fapi2::putScom(TGT0, 0x2001062aull, l_scom_buffer));
         }
         {
-            FAPI_TRY(fapi2::getScom( TGT0, 0x2001862bull, l_scom_buffer ));
+            FAPI_TRY(fapi2::getScom( TGT0, 0x2001062bull, l_scom_buffer ));
 
             if ((l_TGT1_ATTR_PROC_FABRIC_BROADCAST_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_BROADCAST_MODE_1HOP_CHIP_IS_GROUP))
             {
@@ -552,7 +552,7 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
             l_scom_buffer.insert<1, 1, 63, uint64_t>(l_ECP_L3_L3_MISC_L3CERRS_L3_DMAP_CI_EN_CFG_OFF );
             l_scom_buffer.insert<14, 4, 60, uint64_t>(literal_0b0001 );
             l_scom_buffer.insert<18, 4, 60, uint64_t>(literal_0b1000 );
-            FAPI_TRY(fapi2::putScom(TGT0, 0x2001862bull, l_scom_buffer));
+            FAPI_TRY(fapi2::putScom(TGT0, 0x2001062bull, l_scom_buffer));
         }
 
     };
