@@ -39,6 +39,7 @@
 #include "p10_hcode_image_defines.H"
 #include "occ_hcode_errldefs.h"
 #include "errldefs.h"
+#include "pstate_pgpe_occ_api.h"
 
 
 #define EQ_CORE_MASK   0xF
@@ -66,6 +67,18 @@ enum PCB_TYPE_F_TASK
     PM_SUSPEND_COMPLETE = 1,
     PM_CCI_COMPLETE     = 2,
 };
+
+typedef struct iddq_state
+{
+    iddq_activity_t* p_act_val; //OCC Shared SRAM Location
+    pgpe_wof_values_t* p_wof_val; //OCC Shared SRAM Location
+    iddq_activity_t curr_cnts;
+    uint32_t tick_cnt;
+    uint32_t vratio_accum;
+    uint32_t vratio_inst;
+} iddq_state_t;
+
+
 
 /// ----------------------------------------------
 /// @brief Starting point to initialize some of the

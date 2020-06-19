@@ -27,6 +27,8 @@
 XgpeHeader_t* G_xgpe_header_data;
 extern XgpeHeader_t* _XGPE_IMG_HEADER __attribute__ ((section (".xgpe_image_header")));
 
+iddq_state_t G_iddq;
+
 //TODO  RTC 212641
 #define PGPE_BASE_ADDRESS 0xfff20000
 #define PGPE_HCODE_HEADER_OFFSET 0x0180
@@ -44,6 +46,7 @@ extern XgpeHeader_t* _XGPE_IMG_HEADER __attribute__ ((section (".xgpe_image_head
 void xgpe_header_init()
 {
     PK_TRACE("HDR: Init");
+    uint32_t i;
 
     G_xgpe_header_data = (XgpeHeader_t*)&_XGPE_IMG_HEADER;
 
@@ -59,4 +62,12 @@ void xgpe_header_init()
     G_xgpe_header_data->g_xgpe_gpspbLength =  OCC_SRAM_XGPE_GPPB_LEN;
     //TODO until hcode image build is fixed
     G_xgpe_header_data->g_xgpe_xgpeFlags = 0;
+
+    for (i = 0; i < 32; i++)
+    {
+        G_iddq.curr_cnts.act_val[i][ACT_CNT_IDX_CORECLK_OFF] = 0;
+        G_iddq.curr_cnts.act_val[i][ACT_CNT_IDX_CORE_VMIN] = 0;
+        G_iddq.curr_cnts.act_val[i][ACT_CNT_IDX_MMA_OFF] = 8;
+        G_iddq.curr_cnts.act_val[i][ACT_CNT_IDX_CORECACHE_OFF] = 8;
+    }
 }

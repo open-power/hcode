@@ -35,21 +35,10 @@
 #include "p10_oci_proc_b.H"
 #include "p10_oci_proc_d.H"
 #include "pstates_common.H"
-#include "pstate_pgpe_occ_api.h"
+//#include "pstate_pgpe_occ_api.h"
 
 #define IDDQ_FIT_SAMPLE_TICKS   8
 extern XgpeHeader_t* G_xgpe_header_data;
-
-typedef struct iddq_state
-{
-    iddq_activity_t* p_act_val; //OCC Shared SRAM Location
-    pgpe_wof_values_t* p_wof_val; //OCC Shared SRAM Location
-    iddq_activity_t curr_cnts;
-    uint32_t tick_cnt;
-    uint32_t vratio_accum;
-    uint32_t vratio_inst;
-} iddq_state_t;
-
 extern uint32_t G_OCB_OCCFLG3_OR;
 extern uint32_t G_OCB_OCCFLG3_CLR;
 extern uint32_t G_OCB_OCCFLG3;
@@ -58,7 +47,7 @@ extern uint32_t G_OCB_CCSR;
 extern uint32_t G_OCB_OPITFPRD;
 extern uint32_t G_OCB_OPITFSVRR;
 
-iddq_state_t G_iddq;
+extern iddq_state_t G_iddq;
 
 void xgpe_irq_fit_init()
 {
