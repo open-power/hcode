@@ -458,29 +458,6 @@ static const uint32_t L3TRA3_TR0_CONFIG_2_B_LEN = 24;
 //<< [L3TRA3_TR0_CONFIG_2]
 // perv/reg00012.H
 
-//>> [LOCAL_XSTOP_MASK]
-static const uint64_t LOCAL_XSTOP_MASK_RW = 0x00040043ull;
-static const uint64_t LOCAL_XSTOP_MASK_WO_CLEAR = 0x00040063ull;
-static const uint64_t LOCAL_XSTOP_MASK_WO_OR = 0x00040053ull;
-
-static const uint32_t LOCAL_XSTOP_MASK_01 = 1;
-static const uint32_t LOCAL_XSTOP_MASK_02 = 2;
-static const uint32_t LOCAL_XSTOP_MASK_03 = 3;
-static const uint32_t LOCAL_XSTOP_MASK_04 = 4;
-static const uint32_t LOCAL_XSTOP_MASK_05 = 5;
-static const uint32_t LOCAL_XSTOP_MASK_06 = 6;
-static const uint32_t LOCAL_XSTOP_MASK_07 = 7;
-static const uint32_t LOCAL_XSTOP_MASK_08 = 8;
-static const uint32_t LOCAL_XSTOP_MASK_09 = 9;
-static const uint32_t LOCAL_XSTOP_MASK_10 = 10;
-static const uint32_t LOCAL_XSTOP_MASK_11 = 11;
-static const uint32_t LOCAL_XSTOP_MASK_12 = 12;
-static const uint32_t LOCAL_XSTOP_MASK_13 = 13;
-static const uint32_t LOCAL_XSTOP_MASK_14 = 14;
-static const uint32_t LOCAL_XSTOP_MASK_15 = 15;
-//<< [LOCAL_XSTOP_MASK]
-// perv/reg00012.H
-
 //>> [LOCAL_XSTOP_UNMASKED]
 static const uint64_t LOCAL_XSTOP_UNMASKED = 0x00040013ull;
 
