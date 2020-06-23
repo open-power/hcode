@@ -50,7 +50,10 @@ fi
 # Check for env variable OPENPOWER_BUILD
 if [ "${OPENPOWER_BUILD}" == "" ]; then
 
-export CTEPATH=/afs/awd.austin.ibm.com/projects/cte
+## Set CTE path if not already set
+if [ -z "${CTEPATH}" ]; then
+    export CTEPATH=/afs/apd.pok.ibm.com/projects/cte
+fi
 
 if [ "$UNAME" == 'AIX' ]
 then
