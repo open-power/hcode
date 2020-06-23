@@ -75,6 +75,10 @@ fapi2::ReturnCode p10_l2_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
         FAPI_TRY(FAPI_ATTR_GET_PRIVILEGED(fapi2::ATTR_EC, TGT2, l_chip_ec));
         fapi2::ATTR_PROC_FABRIC_BROADCAST_MODE_Type l_TGT1_ATTR_PROC_FABRIC_BROADCAST_MODE;
         FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_FABRIC_BROADCAST_MODE, TGT1, l_TGT1_ATTR_PROC_FABRIC_BROADCAST_MODE));
+        fapi2::ATTR_PROC_L3_HASH_DISABLE_Type l_TGT1_ATTR_PROC_L3_HASH_DISABLE;
+        FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_L3_HASH_DISABLE, TGT1, l_TGT1_ATTR_PROC_L3_HASH_DISABLE));
+        fapi2::ATTR_PROC_L2_HASH_DISABLE_Type l_TGT1_ATTR_PROC_L2_HASH_DISABLE;
+        FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_L2_HASH_DISABLE, TGT1, l_TGT1_ATTR_PROC_L2_HASH_DISABLE));
         uint64_t l_def_L2_EPS_DIVIDE = literal_1;
         fapi2::ATTR_PROC_EPS_READ_CYCLES_T0_Type l_TGT1_ATTR_PROC_EPS_READ_CYCLES_T0;
         FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_EPS_READ_CYCLES_T0, TGT1, l_TGT1_ATTR_PROC_EPS_READ_CYCLES_T0));
@@ -103,10 +107,28 @@ fapi2::ReturnCode p10_l2_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
                 l_scom_buffer.insert<38, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_SKIP_GRP_SCOPE_EN_OFF );
             }
 
-            constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L3_ADDR_EN_ON = 0x1;
-            l_scom_buffer.insert<21, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L3_ADDR_EN_ON );
-            constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L2_ADDR_EN_ON = 0x1;
-            l_scom_buffer.insert<28, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L2_ADDR_EN_ON );
+            if ((l_TGT1_ATTR_PROC_L3_HASH_DISABLE == fapi2::ENUM_ATTR_PROC_L3_HASH_DISABLE_ON))
+            {
+                constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L3_ADDR_EN_OFF = 0x0;
+                l_scom_buffer.insert<21, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L3_ADDR_EN_OFF );
+            }
+            else if (( true ))
+            {
+                constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L3_ADDR_EN_ON = 0x1;
+                l_scom_buffer.insert<21, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L3_ADDR_EN_ON );
+            }
+
+            if ((l_TGT1_ATTR_PROC_L2_HASH_DISABLE == fapi2::ENUM_ATTR_PROC_L2_HASH_DISABLE_ON))
+            {
+                constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L2_ADDR_EN_OFF = 0x0;
+                l_scom_buffer.insert<28, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L2_ADDR_EN_OFF );
+            }
+            else if (( true ))
+            {
+                constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L2_ADDR_EN_ON = 0x1;
+                l_scom_buffer.insert<28, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_HASH_L2_ADDR_EN_ON );
+            }
+
             constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_CAC_ERR_REPAIR_EN_ON = 0x1;
             l_scom_buffer.insert<15, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_CAC_ERR_REPAIR_EN_ON );
             constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_LINEDEL_ON_CAC_UE_EN_ON = 0x1;
