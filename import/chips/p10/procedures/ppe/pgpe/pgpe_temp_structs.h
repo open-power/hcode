@@ -498,8 +498,98 @@ typedef union cpms_dpcr
         uint64_t proxy_scale_factor: 12;
 #endif
     } fields;
-
 } cpms_dpcr;
 
+typedef union qme_fdcr
+{
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t disable: 1;
+        uint64_t force_sample: 1;
+        uint64_t sticky_control: 2;
+        uint64_t control_update_disable: 1;
+        uint64_t suppress_ftc_update: 1;
+        uint64_t cal_adjust: 2;
+        uint64_t delay: 8;
+        uint64_t threshold_update_disable: 1;
+        uint64_t trip_offset: 3;
+        uint64_t data0_detect: 4;
+        uint64_t data1_detect: 4;
+        uint64_t data2_detect: 4;
+        uint64_t large_droop_detect: 4;
+        uint64_t small_droop_detect: 4;
+        uint64_t slopeA_start_detect: 4;
+        uint64_t slopeA_end_detect: 4;
+        uint64_t slopeB_start_detect: 4;
+        uint64_t slopeB_end_detect: 4;
+        uint64_t slopeA_cycles: 4;
+        uint64_t slopeB_cycles: 4;
+#else
+        uint64_t slopeB_cycles: 4;
+        uint64_t slopeA_cycles: 4;
+        uint64_t slopeB_end_detect: 4;
+        uint64_t slopeB_start_detect: 4;
+        uint64_t slopeA_end_detect: 4;
+        uint64_t slopeA_start_detect: 4;
+        uint64_t small_droop_detect: 4;
+        uint64_t large_droop_detect: 4;
+        uint64_t data2_detect: 4;
+        uint64_t data1_detect: 4;
+        uint64_t data0_detect: 4;
+        uint64_t trip_offset: 3;
+        uint64_t threshold_update_disable: 1;
+        uint64_t delay: 8;
+        uint64_t cal_adjust: 2;
+        uint64_t suppress_ftc_update: 1;
+        uint64_t control_update_disable: 1;
+        uint64_t sticky_control: 2;
+        uint64_t force_sample: 1;
+        uint64_t disable: 1;
+#endif
+    } fields;
+} qme_fdcr_t;
+
+typedef union qme_ducr
+{
+    uint64_t value;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint32_t high_order;
+        uint32_t low_order;
+#else
+        uint32_t low_order;
+        uint32_t high_order;
+#endif
+    } words;
+    struct
+    {
+#ifdef _BIG_ENDIAN
+        uint64_t fdcr_delay_c0 : 8;
+        uint64_t fdcr_delay_c1 : 8;
+        uint64_t fdcr_delay_c2 : 8;
+        uint64_t fdcr_delay_c3 : 8;
+        uint64_t fdcr_cal_adjust_c0: 2;
+        uint64_t fdcr_cal_adjust_c1: 2;
+        uint64_t fdcr_cal_adjust_c2: 2;
+        uint64_t fdcr_cal_adjust_c3: 2;
+        uint64_t core_update_enable: 4;
+        uint64_t reserved: 20;
+#else
+        uint64_t reserved: 20;
+        uint64_t core_update_enable: 4;
+        uint64_t fdcr_cal_adjust_c3: 2;
+        uint64_t fdcr_cal_adjust_c2: 2;
+        uint64_t fdcr_cal_adjust_c1: 2;
+        uint64_t fdcr_cal_adjust_c0: 2;
+        uint64_t fdcr_delay_c3 : 8;
+        uint64_t fdcr_delay_c2 : 8;
+        uint64_t fdcr_delay_c1 : 8;
+        uint64_t fdcr_delay_c0 : 8;
+#endif
+    } fields;
+} qme_ducr_t;
 
 #endif

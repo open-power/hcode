@@ -194,6 +194,13 @@ void pgpe_pstate_actuate_step()
         PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WOR, BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
     }
 
+    //DDS Compute
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
+    {
+        pgpe_dds_compute(G_pgpe_pstate.pstate_next);
+        pgpe_dds_update_pre(G_pgpe_pstate.pstate_next);
+    }
+
     //if lowering frequency
     if (G_pgpe_pstate.pstate_next > G_pgpe_pstate.pstate_curr)
     {
@@ -202,13 +209,6 @@ void pgpe_pstate_actuate_step()
 
         //write DPLL(Update freq)
         pgpe_dpll_write_dpll_freq_ps(G_pgpe_pstate.pstate_next);
-
-        //DDS
-        pgpe_dds_update(G_pgpe_pstate.pstate_next);
-
-#if USE_MC == 1
-        pgpe_dds_poll_done();
-#endif
 
         //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
         dpcr.fields.proxy_scale_factor = (power_proxy_scale_tgt + G_pgpe_pstate.power_proxy_scale) >> 1;
@@ -227,9 +227,15 @@ void pgpe_pstate_actuate_step()
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
                                   pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
                                   G_pgpe_pstate.vcs_next_ext);
+
+        if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
+        {
+            pgpe_dds_update_post(G_pgpe_pstate.pstate_next);
+        }
     }
-    //else raising frequency
-    else
+
+    //raising frequency
+    else if (G_pgpe_pstate.pstate_next < G_pgpe_pstate.pstate_curr)
     {
         //raise VCS
         pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
@@ -249,18 +255,16 @@ void pgpe_pstate_actuate_step()
         dpcr.fields.proxy_scale_factor = power_proxy_scale_tgt;
         PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
 
-        //DDS
-        pgpe_dds_update(G_pgpe_pstate.pstate_next);
-#if USE_MC == 1
-        pgpe_dds_poll_done();
-#endif
-
         //write DPLL(Update freq)
         pgpe_dpll_write_dpll_freq_ps(G_pgpe_pstate.pstate_next);
 
         //resclk
         pgpe_resclk_update(G_pgpe_pstate.pstate_next);
 
+        if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
+        {
+            pgpe_dds_update_post(G_pgpe_pstate.pstate_next);
+        }
     }
 
     if (G_pgpe_pstate.vdd_next_ext > pgpe_gppb_get(array_write_vdd_mv))

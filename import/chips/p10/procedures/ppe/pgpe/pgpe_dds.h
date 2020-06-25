@@ -33,9 +33,27 @@ enum DDS_MODE
     DDS_MODE_JUMP   =   0x1,
     DDS_MODE_SLEW   =   0x2
 };
+typedef struct pgpe_dds
+{
+    uint32_t delay[MAX_QUADS][CORES_PER_QUAD], delay_prev[MAX_QUADS][CORES_PER_QUAD];
+    uint32_t cal_adjust[MAX_QUADS][CORES_PER_QUAD], cal_adjust_prev[MAX_QUADS][CORES_PER_QUAD];
+    uint32_t trip[MAX_QUADS][CORES_PER_QUAD], trip_prev[MAX_QUADS][CORES_PER_QUAD];
+    uint32_t any_trip_larger[MAX_QUADS][CORES_PER_QUAD], any_trip_smaller[MAX_QUADS][CORES_PER_QUAD];
+    uint32_t any_delay_larger[MAX_QUADS], any_delay_smaller[MAX_QUADS];
+    uint32_t any_cal_later[MAX_QUADS], any_cal_earlier[MAX_QUADS];
+    qme_fdcr_t fdcr[MAX_QUADS][CORES_PER_QUAD];
+    qme_ducr_t ducr[MAX_QUADS];
+    uint32_t trip_chip, trip_chip_prev;
+    uint32_t any_trip_larger_chip, any_trip_smaller_chip;
+    qme_fdcr_t fdcr_chip;
+} pgpe_dds_t;
 
-void pgpe_dds_init();
-void pgpe_dds_update(uint32_t pstate);
+extern pgpe_dds_t G_pgpe_dds;
+
+void pgpe_dds_init(uint32_t pstate);
+void pgpe_dds_compute(uint32_t pstate);
+void pgpe_dds_update_pre(uint32_t pstate);
+void pgpe_dds_update_post(uint32_t pstate);
 void pgpe_dds_poll_done();
 
 #endif
