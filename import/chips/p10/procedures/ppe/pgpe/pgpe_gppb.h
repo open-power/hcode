@@ -48,8 +48,13 @@ void pgpe_gppb_init();
 #define pgpe_gppb_get_iac_ps_slope(rail, pt_set, region) G_gppb->ac_current_ps_tdp[rail][pt_set][region]
 #define pgpe_gppb_get_idc_ps_slope(rail, pt_set, region) G_gppb->dc_current_ps_tdp[rail][pt_set][region]
 #define pgpe_gppb_get_dds_delay_ps_slope(pt_set, core, region) G_gppb->ps_dds_delay_slopes[pt_set][core][region]
+#define pgpe_gppb_get_dds_trip_ps_slope(pt_set, core, region) G_gppb->ps_dds_slopes[TRIP_OFFSET][pt_set][core][region]
 #define pgpe_gppb_get_dds_delay(core, idx) G_gppb->dds[core][idx].ddsc.fields.insrtn_dely
+#define pgpe_gppb_get_dds_trip(core, idx) G_gppb->dds[core][idx].ddsc.fields.trip_offset
 #define pgpe_gppb_get_dds_cal_adj(core, idx) G_gppb->dds[core][idx].ddsc.fields.calb_adj
+#define pgpe_gppb_get_dds_other(x) G_gppb->dds_other.x
+#define pgpe_gppb_get_dds_trip_mode() G_gppb->pgpe_flags[PGPE_FLAG_TRIP_MODE]
+#define pgpe_gppb_get_dds_trip_intp_ctrl(x) G_gppb->pgpe_flags[PGPE_FLAG_TRIP_INTERPOLATION_CONTROL] & (x)
 #define pgpe_gppb_get_core_on_ratio_vdd() G_gppb->core_on_ratio_vdd
 #define pgpe_gppb_get_l3_on_ratio_vdd() G_gppb->l3_on_ratio_vdd
 #define pgpe_gppb_get_mma_on_ratio_vdd() G_gppb->mma_on_ratio_vdd
