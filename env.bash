@@ -69,7 +69,7 @@ export PATH=${PATH}:$TOOLSDIR:"$TOOLSDIR/test"
 
 # make sure ECMD_RELEASE is set
 if [ -z "${ECMD_RELEASE}" ]; then
-    export ECMD_RELEASE=ver-14-18
+    export ECMD_RELEASE=ver-14-20
 fi
 ECMD_LIB_PATH=${CTEPATH}/tools/ecmd/${ECMD_RELEASE}/x86_64/lib
 
