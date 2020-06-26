@@ -49,16 +49,6 @@ static const uint32_t DL_PPE_WRAP_XIRAMEDR_EDR_LEN = 32;
 //<< [DL_PPE_WRAP_XIRAMEDR]
 // pauc/reg00002.H
 
-//>> [DL_PPE_WRAP_XIXCR]
-static const uint64_t DL_PPE_WRAP_XIXCR = 0x10012c50ull;
-
-static const uint32_t DL_PPE_WRAP_XIXCR_PPE_XIXCR_XCR = 1;
-static const uint32_t DL_PPE_WRAP_XIXCR_PPE_XIXCR_XCR_LEN = 3;
-static const uint32_t DL_PPE_WRAP_XIXCR_NULL_CTR = 32;
-static const uint32_t DL_PPE_WRAP_XIXCR_NULL_CTR_LEN = 32;
-//<< [DL_PPE_WRAP_XIXCR]
-// pauc/reg00002.H
-
 //>> [DL_SCOM_MAC_FIR_MASK_REG]
 static const uint64_t DL_SCOM_MAC_FIR_MASK_REG_RW = 0x10012c43ull;
 static const uint64_t DL_SCOM_MAC_FIR_MASK_REG_WO_AND = 0x10012c44ull;
@@ -99,46 +89,6 @@ static const uint64_t DL_SCOM_MAC_FIR_WOF_REG = 0x10012c48ull;
 static const uint32_t DL_SCOM_MAC_FIR_WOF_REG_WOF = 0;
 static const uint32_t DL_SCOM_MAC_FIR_WOF_REG_WOF_LEN = 26;
 //<< [DL_SCOM_MAC_FIR_WOF_REG]
-// pauc/reg00002.H
-
-//>> [PB_FP23_CFG]
-static const uint64_t PB_FP23_CFG = 0x1001180bull;
-
-static const uint32_t PB_FP23_CFG_2_CREDIT_PRIORITY_4_NOT_8 = 0;
-static const uint32_t PB_FP23_CFG_2_DISABLE_GATHERING = 1;
-static const uint32_t PB_FP23_CFG_2_DISABLE_CMD_COMPRESSION = 2;
-static const uint32_t PB_FP23_CFG_2_DISABLE_PRSP_COMPRESSION = 3;
-static const uint32_t PB_FP23_CFG_2_LL_CREDIT_FW_LIMIT = 4;
-static const uint32_t PB_FP23_CFG_2_LL_CREDIT_FW_LIMIT_LEN = 6;
-static const uint32_t PB_FP23_CFG_2_LL_CREDIT_HW_LIMIT = 10;
-static const uint32_t PB_FP23_CFG_2_LL_CREDIT_HW_LIMIT_LEN = 6;
-static const uint32_t PB_FP23_CFG_2_LL_CREDIT_QW_LIMIT = 16;
-static const uint32_t PB_FP23_CFG_2_LL_CREDIT_QW_LIMIT_LEN = 4;
-static const uint32_t PB_FP23_CFG_2_FMR_ENABLE_1PER4_PRESP = 20;
-static const uint32_t PB_FP23_CFG_23_CMD_EXP_TIME = 21;
-static const uint32_t PB_FP23_CFG_23_CMD_EXP_TIME_LEN = 3;
-static const uint32_t PB_FP23_CFG_2_RUN_AFTER_FRAME_ERROR = 24;
-static const uint32_t PB_FP23_CFG_2_BRICKWALL_CREDITS_TO_NEST = 25;
-static const uint32_t PB_FP23_CFG_2_PRS_SPARE = 26;
-static const uint32_t PB_FP23_CFG_2_PRS_SPARE_LEN = 6;
-static const uint32_t PB_FP23_CFG_3_CREDIT_PRIORITY_4_NOT_8 = 32;
-static const uint32_t PB_FP23_CFG_3_DISABLE_GATHERING = 33;
-static const uint32_t PB_FP23_CFG_3_DISABLE_CMD_COMPRESSION = 34;
-static const uint32_t PB_FP23_CFG_3_DISABLE_PRSP_COMPRESSION = 35;
-static const uint32_t PB_FP23_CFG_3_LL_CREDIT_FW_LIMIT = 36;
-static const uint32_t PB_FP23_CFG_3_LL_CREDIT_FW_LIMIT_LEN = 6;
-static const uint32_t PB_FP23_CFG_3_LL_CREDIT_HW_LIMIT = 42;
-static const uint32_t PB_FP23_CFG_3_LL_CREDIT_HW_LIMIT_LEN = 6;
-static const uint32_t PB_FP23_CFG_3_LL_CREDIT_QW_LIMIT = 48;
-static const uint32_t PB_FP23_CFG_3_LL_CREDIT_QW_LIMIT_LEN = 4;
-static const uint32_t PB_FP23_CFG_3_FMR_ENABLE_1PER4_PRESP = 52;
-static const uint32_t PB_FP23_CFG_3_FMR_SPARE = 53;
-static const uint32_t PB_FP23_CFG_3_FMR_SPARE_LEN = 3;
-static const uint32_t PB_FP23_CFG_3_RUN_AFTER_FRAME_ERROR = 56;
-static const uint32_t PB_FP23_CFG_3_BRICKWALL_CREDITS_TO_NEST = 57;
-static const uint32_t PB_FP23_CFG_3_PRS_SPARE = 58;
-static const uint32_t PB_FP23_CFG_3_PRS_SPARE_LEN = 6;
-//<< [PB_FP23_CFG]
 // pauc/reg00002.H
 
 //>> [PB_TRACE_CFG]

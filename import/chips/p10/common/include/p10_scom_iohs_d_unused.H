@@ -118,22 +118,6 @@ static const uint32_t DLP_LINK0_EDPL_STATUS_8_LEN = 4;
 //<< [DLP_LINK0_EDPL_STATUS]
 // iohs/reg00056.H
 
-//>> [DLP_LINK1_QUALITY]
-static const uint64_t DLP_LINK1_QUALITY = 0x18011027ull;
-
-static const uint32_t DLP_LINK1_QUALITY_TX_BW = 1;
-static const uint32_t DLP_LINK1_QUALITY_TX_BW_LEN = 11;
-static const uint32_t DLP_LINK1_QUALITY_RX_BW = 13;
-static const uint32_t DLP_LINK1_QUALITY_RX_BW_LEN = 11;
-static const uint32_t DLP_LINK1_QUALITY_ERROR_RATE = 25;
-static const uint32_t DLP_LINK1_QUALITY_ERROR_RATE_LEN = 23;
-static const uint32_t DLP_LINK1_QUALITY_LINK_CAP_SLECC_SYN3 = 48;
-static const uint32_t DLP_LINK1_QUALITY_LINK_CAP_SLECC_SYN3_LEN = 8;
-static const uint32_t DLP_LINK1_QUALITY_SPARE_COUNTER_2 = 57;
-static const uint32_t DLP_LINK1_QUALITY_SPARE_COUNTER_2_LEN = 7;
-//<< [DLP_LINK1_QUALITY]
-// iohs/reg00056.H
-
 //>> [IOO_RX0_RXCTL_CTL_REGS_RX_MODE19_PG]
 static const uint64_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE19_PG = 0x8008980010012c3full;
 
