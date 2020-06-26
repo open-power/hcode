@@ -47,6 +47,7 @@
 #include "p10_hcd_core_scominit.H"
 #include "p10_hcd_core_scom_customize.H"
 
+#include "p10_hcd_core_timefac_enable.H"
 #include "p10_hcd_core_shadows_enable.H"
 #include "p10_hcd_core_startgrid.H"
 #include "p10_hcd_core_vmin_disable.H"
@@ -59,8 +60,10 @@ extern QmeRecord G_qme_record;
 void
 qme_stop_report_pls_srr1(uint32_t core_target)
 {
+    uint32_t c_index        = 0;
     uint32_t c_loop         = 0;
     uint32_t c_end          = 0;
+    uint32_t t_index        = 0;
     uint32_t t_end          = 0;
     uint32_t t_offset       = 0;
     uint32_t pls_end        = 0;
@@ -75,9 +78,9 @@ qme_stop_report_pls_srr1(uint32_t core_target)
 
     PK_TRACE("Restore PSCDR.PLS+SRR1 back to actual level");
 
-    for( c_end = 51, t_end = 3,
+    for( c_end = 51, t_end = 3,  c_index = 0,
          c_loop = 8; c_loop > 0; c_loop = c_loop >> 1,
-         c_end += 4, t_end += 16 )
+         c_end += 4, t_end += 16, c_index++ )
     {
         if ( ! (c_loop & core_target) )
         {
@@ -87,11 +90,20 @@ qme_stop_report_pls_srr1(uint32_t core_target)
         act_stop_level = ( in32_sh(QME_LCL_SCDR) >> SHIFT64SH(c_end) ) & 0xF;
         local_data     = 0;
 
-        for( pls_end  = 3, srr1_end = 17,
+        PK_TRACE_DBG("Core[%x] act_stop_level[%x] previous act_stop_level[%x]",
+                     c_loop, act_stop_level, G_qme_record.c_act_stop_level[c_index]);
+        G_qme_record.c_act_stop_level[c_index] = act_stop_level;
+
+        for( pls_end  = 3, srr1_end = 17, t_index = 0,
              t_offset = 0; t_offset < 16; t_offset += 4,
-             pls_end += 4, srr1_end += 2 )
+             pls_end += 4, srr1_end += 2, t_index++ )
         {
             pscrs = in32( ( QME_PSCRS | (c_loop << 16) | (t_offset << 4) ) );
+
+            PK_TRACE_DBG("c_loop[%x] t_offset[%x] pscrs_addr[%x], pscrs_data[%x]",
+                         c_loop, t_offset,
+                         ( QME_PSCRS | (c_loop << 16) | (t_offset << 4) ),
+                         pscrs);
 
 #if POWER10_DD_LEVEL == 10
             old_pls = ( pscrs & BITS32(24, 4) ) >> SHIFT32(27);
@@ -101,8 +113,13 @@ qme_stop_report_pls_srr1(uint32_t core_target)
 
             new_pls = ( act_stop_level > old_pls ) ? (act_stop_level) : (old_pls);
 
-            PK_TRACE_DBG("Core[%x] act_stop_level[%x] old_pls[%x] new_pls[%x]",
-                         c_loop, act_stop_level, old_pls, new_pls);
+            PK_TRACE_DBG("old_pls[%x] new_pls[%x] previous old_pls[%x] new_pls[%x]",
+                         old_pls, new_pls,
+                         G_qme_record.t_old_pls[c_index][t_index],
+                         G_qme_record.t_new_pls[c_index][t_index]);
+
+            G_qme_record.t_old_pls[c_index][t_index] = old_pls;
+            G_qme_record.t_new_pls[c_index][t_index] = new_pls;
 
             // unless esl=0, srr1 = some_state_loss regardless stop_level
             srr1 = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
@@ -255,6 +272,7 @@ qme_stop_exit()
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_ENABLE_SHADOWS )
 
         p10_hcd_core_shadows_enable(core_target);
+        p10_hcd_core_timefac_enable(core_target);
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_CLOCKED )
 
@@ -599,6 +617,9 @@ qme_stop_exit()
         PK_TRACE_INF("WAKE0: Waking up Cores in STOP0[%x]", G_qme_record.c_stop2_exit_targets);
 
         //===============//
+
+        // HW534619 DD1 workaround move to after self restore
+        p10_hcd_core_timefac_enable(core_target);
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_HANDOFF_PC )
 

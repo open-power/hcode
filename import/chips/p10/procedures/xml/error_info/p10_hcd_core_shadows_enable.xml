@@ -120,4 +120,14 @@
     </gard>
   </hwpError>
   <!-- ********************************************************************* -->
+  <hwpError>
+    <sbeError/>
+    <rc>RC_SHADOW_ENA_TFCSR_ERROR_CHECK_FAILED</rc>
+    <description>
+        Shadow Disable TFCSR Error Check Failed.
+    </description>
+    <ffdc>QME_TFCSR</ffdc>
+    <ffdc>CORE_TARGET</ffdc>
+  </hwpError>
+  <!-- ********************************************************************* -->
 </hwpErrors>

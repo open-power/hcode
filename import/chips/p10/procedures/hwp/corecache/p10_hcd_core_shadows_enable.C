@@ -96,11 +96,13 @@ p10_hcd_core_shadows_enable(
     uint32_t                l_state_loss_cores    = 0;
     uint32_t                l_core_refresh_active = 0;
     uint32_t                l_dds_operable        = 0;
-
-    FAPI_INF(">>p10_hcd_core_shadows_enable");
-
+//    HW534619 DD1 workaround move to after self restore
+//    uint32_t                l_tfcsr_errors        = 0;
+//    fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST > l_mc_or = i_target;//default OR
     fapi2::Target < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > l_eq_target =
         i_target.getParent < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST > ();
+
+    FAPI_INF(">>p10_hcd_core_shadows_enable");
 
     FAPI_TRY(HCD_GETMMIO_Q( l_eq_target, QME_FLAGS_RW, l_mmioData ) );
     l_dds_operable = MMIO_GET(QME_FLAGS_DDS_ENABLED);
@@ -121,8 +123,9 @@ p10_hcd_core_shadows_enable(
         FAPI_DBG("DD1: Write-OR with 0s on FIDR");
         FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_FDIR_WO_OR, 0 ) );
 
-        FAPI_DBG("Assert XFER_START via PCR_TFCSR[0]");
-        FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_TFCSR_WO_OR, MMIO_1BIT(0) ) );
+//        HW534619 DD1 workaround move to after self restore
+//        FAPI_DBG("Assert XFER_START via PCR_TFCSR[0]");
+//        FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_TFCSR_WO_OR, MMIO_1BIT(0) ) );
 
         FAPI_DBG("Enable CORE_SHADOW via CUCR[0]");
         FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_OR, MMIO_1BIT(0) ) );
@@ -216,35 +219,60 @@ p10_hcd_core_shadows_enable(
                         "ERROR: FDCR Update Timeout");
         }
 
-        FAPI_DBG("Wait on XFER_SENT_DONE via PCR_TFCSR[33]");
-        l_timeout = HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS /
-                    HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_DELAY_HW_NS;
+//        HW534619 DD1 workaround move to after self restore
+        /*
+                FAPI_DBG("Wait on XFER_SENT_DONE via PCR_TFCSR[33]");
+                l_timeout = HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS /
+                            HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_DELAY_HW_NS;
 
-        do
-        {
-            FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR), l_mmioData ) );
+                do
+                {
+                    FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR), l_mmioData ) );
 
-            // use multicastAND to check 1
-            if( MMIO_GET(MMIO_LOWBIT(33)) == 1 )
-            {
-                break;
-            }
+                    // use multicastAND to check 1
+                    if( MMIO_GET(MMIO_LOWBIT(33)) == 1 )
+                    {
+                        break;
+                    }
 
-            fapi2::delay(HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_DELAY_HW_NS,
-                         HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_DELAY_SIM_CYCLE);
-        }
-        while( (--l_timeout) != 0 );
+                    fapi2::delay(HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_DELAY_HW_NS,
+                                 HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_DELAY_SIM_CYCLE);
+                }
+                while( (--l_timeout) != 0 );
 
-        FAPI_ASSERT((l_timeout != 0),
-                    fapi2::SHADOW_ENA_XFER_SENT_DONE_TIMEOUT()
-                    .set_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS)
-                    .set_QME_TFCSR(l_mmioData)
-                    .set_CORE_TARGET(i_target),
-                    "ERROR: Shadow Enable Xfer Sent Done Timeout");
+                FAPI_ASSERT((l_timeout != 0),
+                            fapi2::SHADOW_ENA_XFER_SENT_DONE_TIMEOUT()
+                            .set_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS)
+                            .set_QME_TFCSR(l_mmioData)
+                            .set_CORE_TARGET(i_target),
+                            "ERROR: Shadow Enable Xfer Sent Done Timeout");
 
-        FAPI_DBG("Drop XFER_SENT_DONE via PCR_TFCSR[33]");
-        FAPI_TRY( HCD_PUTMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_1BIT( MMIO_LOWBIT(33) ) ) );
+                FAPI_DBG("Check INCOMING/RUNTIME/STATE_ERR == 0 via PCR_TFCSR[34-36]");
+                FAPI_TRY( HCD_GETMMIO_C( l_mc_or, MMIO_LOWADDR(QME_TFCSR), l_mmioData ) );
 
+                MMIO_EXTRACT(MMIO_LOWBIT(34), 3, l_tfcsr_errors);
+
+                if( l_tfcsr_errors != 0 )
+                {
+                    FAPI_DBG("Clear INCOMING/RUNTIME/STATE_ERR[%x] via PCR_TFCSR[34-36]", l_tfcsr_errors);
+                    FAPI_TRY( HCD_PUTMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_LOAD32L( BITS64SH(34, 3) ) ) );
+
+                    FAPI_DBG("Assert TFAC_RESET via PCR_TFCSR[1]");
+                    FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_TFCSR_WO_OR, MMIO_1BIT(1) ) );
+
+                    FAPI_DBG("Reset the core timefac to INACTIVE via PC.COMMON.TFX[1]");
+                    FAPI_TRY( HCD_PUTSCOM_C( i_target, EC_PC_TFX_SM, BIT64(1) ) );
+                }
+
+                FAPI_ASSERT((l_tfcsr_errors == 0),
+                            fapi2::SHADOW_ENA_TFCSR_ERROR_CHECK_FAILED()
+                            .set_QME_TFCSR(l_tfcsr_errors)
+                            .set_CORE_TARGET(i_target),
+                            "ERROR: Shadow Disable TFCSR Error Check Failed");
+
+                FAPI_DBG("Drop XFER_SENT_DONE via PCR_TFCSR[33]");
+                FAPI_TRY( HCD_PUTMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_1BIT( MMIO_LOWBIT(33) ) ) );
+        */
         // wait for remaining registers to be done (overlap with DDS enable) -- DD1 may be partially done
         FAPI_DBG("Wait for CORE_REFRESH_ACTIVE to be 0x000 via CUCR[50-52]");
         l_timeout = HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS /

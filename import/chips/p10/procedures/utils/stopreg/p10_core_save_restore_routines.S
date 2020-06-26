@@ -122,6 +122,7 @@
                 .set HRMOR,                         313
                 .set HSRR0,                         314
                 .set HSRR1,                         315
+                .set TFMR,                          317
                 .set HMER,                          336
                 .set URMOR,                         505 # Ultravisor
                 .set USRR0,                         506
@@ -190,7 +191,10 @@
                 .set SHIFT_ATTN_ENABLE_BIT_POS,     60  #HID[3]
                 .set FFDC_COLLECTED_CONST,          0x55aa
                 .set FFDC_AVBL_BIT_MASK,            0x02
-
+                .set TFAC_BUG_TFMR_BIT_POS_28,      28  #28:31 indicates tb_get_tod state of tbst
+                .set TFAC_TFMR_BUG_BIT_LEN,         4
+                .set TFAC_TFMR_BUG_BIT_CONST,       7
+                .set SIMICS_ENV_BIT_MASK,           0x04
 
                 .set SPR_SAVE_SCRATCH_REG,          r0
                 .set SPR_DATA_REG,                  r1
@@ -596,6 +600,12 @@ b   enable_attn
 li SELF_REST_ERR_REG, 0xF80
 b   enable_attn
 
+#--------------------------------------------------------------------#
+#       Ultravisor Directed Priviledged Doorbell
+#--------------------------------------------------------------------#
+.org _start + 0x0FA0
+li SELF_REST_ERR_REG, 0xFA0
+b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Self Restore Completion
@@ -887,7 +897,44 @@ and         TEMP_REG1,   THREAD_SCRATCH_VAL_REG, TEMP_REG2
 cmpwi       TEMP_REG1,   0x00
 bne         find_self_save
 
+#TODO RTC 257096 Enable conditional compile and DD-level specific image for self-save-restore image
+
 thread_restore_base:
+cmpwi       THREAD_ID_REG, 0     # if thread in question is 0 then handle workaround for HW534619
+bne         restore_thread_spr
+
+li          TEMP_REG2,   SIMICS_ENV_BIT_MASK
+and         TEMP_REG1,   THREAD_SCRATCH_VAL_REG, TEMP_REG2
+cmpwi       TEMP_REG1,   SIMICS_ENV_BIT_MASK
+beq         restore_thread_spr   # if it is SIMICS, workaround for HW534619 is not necessary
+
+#=====================================  HW534619 DD1 Workaround ========================================
+
+work_around_HW534619:
+li          TEMP_REG2,   0x05
+sldi        TEMP_REG3,  TEMP_REG2,  47
+lis         TEMP_REG2,   0x00ff
+ori         TEMP_REG2,  TEMP_REG2, 0x0220
+mfspr       TEMP_REG1,  TFMR
+or          TEMP_REG3,  TEMP_REG1,  TEMP_REG3
+mtspr       TFMR,       TEMP_REG3           #bit 14 and 16 SET
+sldi        TEMP_REG2,  TEMP_REG2,  40
+or          TEMP_REG3,  TEMP_REG1,  TEMP_REG2
+mtspr       TFMR,       TEMP_REG3           #setting bit TFMR[0:7,14,18]
+
+wait_tfmr:
+mfspr       TEMP_REG1,  TFMR
+extrdi.     TEMP_REG2,  TEMP_REG1,  TFAC_TFMR_BUG_BIT_LEN,  TFAC_BUG_TFMR_BIT_POS_28
+cmpwi       TEMP_REG2,  TFAC_TFMR_BUG_BIT_CONST
+bne         wait_tfmr
+
+li          TEMP_REG1,  0x100
+or          THREAD_SCRATCH_VAL_REG, THREAD_SCRATCH_VAL_REG, TEMP_REG1    # set bit 55 of Thread scratch register
+mtspr       SPRD,       THREAD_SCRATCH_VAL_REG
+
+#=====================================  HW534619 DD1 Workaround Ends ======================================
+
+restore_thread_spr:
 mtlr        THREAD_SCOPE_RESTORE_ADDR_REG
 blrl                               ## branch to thread register restore area
 

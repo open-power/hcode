@@ -63,33 +63,6 @@ qme_attr_init()
         FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE, FAPI_SYSTEM, l_topo_tbl));
     }
 
-    //===============
-
-    // Deal with SMF enablement
-    // RTC 24898 change to different type.
-    // fapi2::ATTR_SMF_CONFIG_Type l_attr_smf_config;
-    uint32_t l_attr_smf_config;
-
-    // Start workaround RTC 24898: move to using ATTR_SMF_CONFIG directly and use the QME flag bit
-    uint32_t l_smf_config;
-    l_smf_config = (in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_RUNTIME_WAKEUP_MODE ));
-    // Note: polarity is UV=0, HV=1 as UV is the default
-    l_attr_smf_config = l_smf_config ? 0 : 1;
-    // End workaround
-
-    // Enable secure memory facility
-    // RTC 24898: uncomment the following line.  Couldn't be used as the
-    // attribute is not writable.
-    // fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
-    // FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_SMF_CONFIG, FAPI_SYSTEM, l_attr_smf_config));
-
-    if (l_attr_smf_config)
-    {
-        G_qme_record.hcode_func_enabled |= QME_SMF_SUPPORT_ENABLE;
-    }
-
-    //===============
-
     uint8_t runn_mode      = 0;
     uint8_t contained_type = 0;
     fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>                 l_sys;

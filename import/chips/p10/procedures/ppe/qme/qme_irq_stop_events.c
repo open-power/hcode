@@ -202,7 +202,8 @@ qme_parse_regular_wakeup_fast()
         PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_mask ), BIT32(1) );
 
-        PPE_WAIT_4NOP_CYCLES
+        PK_TRACE("Update STOP history: STOP exit completed, core ready");
+        out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_mask ), SSH_EXIT_COMPLETE );
 
         PK_TRACE("Polling for Core Waking up(pm_active=0) via QME_SSDR[12-15]");
 

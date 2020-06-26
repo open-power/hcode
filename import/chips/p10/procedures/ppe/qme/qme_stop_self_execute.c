@@ -234,6 +234,17 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
                     //Core wakeup with SMF Disabled
                     scom_data.value |= BIT64(58);
                 }
+
+#if POWER10_DD_LEVEL == 10
+
+                if(  G_IsSimics )
+                {
+                    //Self-Restore should ignore workaround for HW534619
+                    scom_data.value |= BIT64(61);
+                }
+
+#endif
+
             }
 
             if (core_mask & 0xA) // Even cores

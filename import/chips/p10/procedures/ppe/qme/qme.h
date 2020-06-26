@@ -260,6 +260,10 @@ typedef struct
     uint32_t    c_stop5_exit_targets;
     uint32_t    c_stop11_exit_targets;
 
+    uint32_t    c_act_stop_level[4];
+    uint32_t    t_old_pls[4][4];
+    uint32_t    t_new_pls[4][4];
+
     // Hipri IRQ and Error Records
 
     uint32_t    qme_debugger;
