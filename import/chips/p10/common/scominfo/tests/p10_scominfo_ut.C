@@ -227,6 +227,7 @@ struct goodPathEntry_t
     // perv resources (pscom endpoint)
     { 0x0000000020010000, PU_C_CHIPUNIT,     "PU_C_CHIPUNIT",     0, 11,   0x00,   P10_DEFAULT_MODE,  0x0000000022011000}, // InAddr: inst  0, OutAddr: inst 11 (endpoint ID = 1, PSCOM, internal ring)
     { 0x0000000023014000, PU_C_CHIPUNIT,     "PU_C_CHIPUNIT",    13,  2,   0x00,   P10_DEFAULT_MODE,  0x0000000020012000}, // InAddr: inst 13, OutAddr: inst  2 (endpoint ID = 1, PSCOM, internal ring)
+    { 0x0000000023012302, PU_C_CHIPUNIT,     "PU_C_CHIPUNIT",    14,  2,   0x00,   P10_DEFAULT_MODE,  0x0000000020012302}, // InAddr: inst 14, OutAddr: inst  2 (endpoint ID = 1, PSCOM, perv ring, CLKADJ satellite)
 
 
     // PEC:
