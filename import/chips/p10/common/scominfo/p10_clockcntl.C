@@ -226,7 +226,7 @@ extern "C"
             uint8_t l_region = QUAD_REGION;
             uint8_t l_coreNum = DONT_CARE;
 
-            // If core address, determine if it's CORE/L2 or L3
+            // If core address, determine if it's CORE/L2, L3 or CLKADJ
             if (l_addr.isCoreTarget())
             {
                 // Intentionally set this here to emphasize that
@@ -243,7 +243,15 @@ extern "C"
                 // Check if address belongs to L3
                 else if (l_endPoint == PSCOM_ENDPOINT)
                 {
-                    l_region = L3_REGION;
+                    if ((l_addr.getEQRingId() == PERV_RING_ID) &&
+                        (l_addr.getEQSatId() == CLKADJ_SAT_ID))
+                    {
+                        l_region = CLKADJ_REGION;
+                    }
+                    else
+                    {
+                        l_region = L3_REGION;
+                    }
                 }
 
                 // Get the CORE number in the EQ chiplet (0-3)
@@ -252,16 +260,7 @@ extern "C"
                 {
                     l_coreNum = l_addr.getCoreTargetInstance() - ( (l_chipletId - EQ0_CHIPLET_ID) * 4 );
                 }
-            }
-            else
-            {
-                // clkadj
-                if ((l_endPoint == PSCOM_ENDPOINT) &&
-                    (l_addr.getEQRingId() == PERV_RING_ID) &&
-                    (l_addr.getEQSatId() == 0x4))
-                {
-                    l_region = CLKADJ_REGION;
-                }
+
             }
 
             // Look up the domain from the EQ clock domain table
