@@ -23,7 +23,10 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "xgpe.h"
+#include "pstate_pgpe_xgpe_api.h"
 
+extern iddq_state_t G_iddq;
+void xgpe_irq_ipc_vret_update(ipc_msg_t* cmd, void* arg);
 
 // Function table for multi target (common) functions
 IPC_MT_FUNC_TABLE_START
@@ -42,7 +45,7 @@ IPC_MT_FUNC_TABLE_END
 IPC_ST_FUNC_TABLE_START
 //(function, arg)
 IPC_HANDLER_DEFAULT                                 // 0
-IPC_HANDLER_DEFAULT                                 // 1
+IPC_HANDLER(xgpe_irq_ipc_vret_update, NULL)         // 1
 IPC_HANDLER_DEFAULT                                 // 2
 IPC_HANDLER_DEFAULT                                 // 3
 IPC_HANDLER_DEFAULT                                 // 4
@@ -58,3 +61,35 @@ IPC_HANDLER_DEFAULT                                 // 13
 IPC_HANDLER_DEFAULT                                 // 14
 IPC_HANDLER_DEFAULT                                 // 15
 IPC_ST_FUNC_TABLE_END
+
+void xgpe_irq_ipc_init()
+{
+    ipc_init();
+    ipc_enable();
+}
+
+//
+//  xgpe_irq_ipc_vret_update
+//
+//  IPC function called upon receiving 'Pstate Start/Stop' IPC from OCC.
+//
+//
+void xgpe_irq_ipc_vret_update(ipc_msg_t* cmd, void* arg)
+{
+    PK_TRACE("IPC VRET Update");
+
+    ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
+    ipcmsg_p2x_update_vret_t* args = (ipcmsg_p2x_update_vret_t*)async_cmd->cmd_data;
+
+    if (args->fields.update_type == UPDATE_VRET_TYPE_CLEAR)
+    {
+        G_iddq.override_vret = 0;
+    }
+    else
+    {
+        G_iddq.override_vret = 1;
+    }
+
+    args->fields.return_code = PGPE_RC_REQ_WHILE_PENDING_ACK;
+    ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+}
