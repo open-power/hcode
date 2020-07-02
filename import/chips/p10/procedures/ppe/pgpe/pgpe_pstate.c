@@ -28,6 +28,7 @@
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_dpll.h"
 #include "pgpe_dds.h"
+#include "pgpe_xgpe.h"
 #include "p10_scom_c_1.H"
 #include "p10_oci_proc.H"
 #include "pgpe_resclk.h"
@@ -36,6 +37,7 @@
 #include "pgpe_header.h"
 #include "p10_scom_eq_3.H"
 #include "p10_scom_c_4.H"
+#include "p10_scom_eq_8.H"
 
 //
 //Local function prototypes
@@ -56,6 +58,7 @@ void pgpe_pstate_init()
     PK_TRACE("PS: Init");
     uint32_t i;
     uint32_t ccsr;
+    uint64_t rvcr;
 
     G_pgpe_pstate.pstate_status = PSTATE_STATUS_DISABLED;
     G_pgpe_pstate.wof_status = WOF_STATUS_DISABLED;
@@ -101,6 +104,12 @@ void pgpe_pstate_init()
     G_pgpe_pstate.vrt                = 0;
     G_pgpe_pstate.power_proxy_scale  = 0;
     G_pgpe_pstate.update_pgpe_beacon = 1;
+
+
+
+    PPE_GETSCOM_MC_Q_EQU(QME_RVCR, rvcr);
+    G_pgpe_pstate.rvrm_volt  = (((rvcr >> 56) & 0xFF) <<
+                                3); //Extract RVID Value from RVCR[1:7] and then multiply by 8 to get RVRM voltage
 
     if (pgpe_gppb_get_safe_frequency())
     {
@@ -201,6 +210,17 @@ void pgpe_pstate_actuate_step()
         pgpe_dds_update_pre(G_pgpe_pstate.pstate_next);
     }
 
+    //See whether to set rVRM enablement override
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RVRM_ENABLE) && (in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW) && BIT32(XGPE_ACTIVE)))
+    {
+        if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) < pgpe_gppb_get(rvrm_deadzone_mv))
+        {
+            pgpe_xgpe_send_vret_updt(UPDATE_VRET_TYPE_SET);
+            //Set RVCSR[RVID_OVERRIDE]
+            PPE_PUTSCOM_MC(CPMS_RVCSR_WO_OR, 0xF, BIT64(CPMS_RVCSR_RVID_OVERRIDE));
+        }
+    }
+
     //if lowering frequency
     if (G_pgpe_pstate.pstate_next > G_pgpe_pstate.pstate_curr)
     {
@@ -264,6 +284,17 @@ void pgpe_pstate_actuate_step()
         if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
         {
             pgpe_dds_update_post(G_pgpe_pstate.pstate_next);
+        }
+    }
+
+    //See whether to remove rVRM enablement override
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RVRM_ENABLE) && (in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW) && BIT32(XGPE_ACTIVE)))
+    {
+        if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) >= pgpe_gppb_get(rvrm_deadzone_mv))
+        {
+            pgpe_xgpe_send_vret_updt(UPDATE_VRET_TYPE_CLEAR);
+            //Set RVCSR[RVID_OVERRIDE]
+            PPE_PUTSCOM_MC(CPMS_RVCSR_WO_CLEAR, 0xF, BIT64(CPMS_RVCSR_RVID_OVERRIDE));
         }
     }
 

@@ -93,4 +93,6 @@ void xgpe_init()
 
 #endif
 
+    xgpe_irq_ipc_init();
+
 }

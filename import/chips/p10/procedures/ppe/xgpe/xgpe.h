@@ -76,6 +76,7 @@ typedef struct iddq_state
     uint32_t tick_cnt;
     uint32_t vratio_accum;
     uint32_t vratio_inst;
+    uint32_t override_vret;
 } iddq_state_t;
 
 

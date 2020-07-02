@@ -80,6 +80,7 @@ typedef struct pgpe_pstate
     uint32_t vratio_inst, vratio_vcs_inst, vratio_vdd_inst, vindex;
     uint32_t power_proxy_scale;
     uint32_t update_pgpe_beacon;
+    uint32_t rvrm_volt;
 } pgpe_pstate_t;
 
 

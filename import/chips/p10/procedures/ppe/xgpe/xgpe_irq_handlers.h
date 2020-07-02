@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -30,6 +30,12 @@
 /// @return none
 /// ----------------------------------------------
 void  xgpe_irq_fit_init();
+
+/// ----------------------------------------------
+/// @brief Initializes IPC
+/// @return none
+/// ----------------------------------------------
+void  xgpe_irq_ipc_init();
 
 /// ----------------------------------------------
 /// @brief Handles GPE2 fault and GPE3 XSTOP fault
