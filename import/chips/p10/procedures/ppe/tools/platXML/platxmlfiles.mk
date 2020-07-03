@@ -33,6 +33,7 @@ ATTRFILES += $(ATTRINFO_DIR)/p10_runn_attributes.xml
 ATTRFILES += $(ATTRINFO_DIR)/p10_chip_ec_attributes.xml
 ATTRFILES += $(ATTRINFO_DIR)/p10_pervasive_attributes.xml
 ATTRFILES += $(ATTRINFO_DIR)/p10_nest_attributes.xml
+ATTRFILES += $(ATTRINFO_DIR)/p10_memory_bars_attributes.xml
 ATTRFILES += $(ATTRINFO_DIR)/p10_bars_attributes.xml
 ATTRFILES += $(ATTRINFO_DIR)/p10_freq_attributes.xml
 ATTRFILES += $(ATTRINFO_DIR)/pm_hwp_attributes.xml

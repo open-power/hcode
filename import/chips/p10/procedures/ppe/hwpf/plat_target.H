@@ -241,6 +241,16 @@ typedef union plat_target_handle
     }
 
     ///
+    /// @brief set the instance number for this target
+    ///
+    /// @param [in] The instance number for this target
+    ///
+    void setTargetInstance(const uint32_t instance_num)
+    {
+        fields.target_num = instance_num;
+    }
+
+    ///
     /// @brief Returns whether this target is functional
     ///
     /// @return true if Target is functional
@@ -358,6 +368,8 @@ createPlatTargetHandle(const uint32_t i_plat_argument)
 
         if( K & TARGET_TYPE_MULTICAST )
         {
+            l_handle.fields.target_type =
+                l_handle.fields.target_type | TARGET_TYPE_MULTICAST;
             // this would be multi-hot select
             l_handle.fields.core_select_l = i_plat_argument;
             l_handle.fields.core_select_s = i_plat_argument;

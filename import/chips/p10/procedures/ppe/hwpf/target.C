@@ -105,6 +105,8 @@ ReturnCode plat_TargetsInit(uint32_t i_quad_id)
     {
         Target<TARGET_TYPE_CORE> core_target(createPlatTargetHandle<TARGET_TYPE_CORE>(l_core_index));
         plat_target_handle_t l_handle = core_target.get();
+        // DO so ATTR_CHIP_UNIT_POS returns global core id
+        l_handle.setTargetInstance((i_quad_id * 4 + l_core_index));
 
         // Check partial goodness
         if(l_pg_cores & l_core_mask)

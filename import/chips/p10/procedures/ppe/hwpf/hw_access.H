@@ -228,7 +228,7 @@ inline ReturnCode getScom(const Target<K, M, V>& i_target,
     uint64_t l_data = 0;
     uint32_t l_addr = (uint32_t)i_address;
 
-    if (i_target.get().getPlatTargetType() & PPE_TARGET_TYPE_MULTICAST)
+    if (i_target.get().getPlatTargetType() & PPE_TARGET_TYPE_CORE)
     {
         PPE_LVD(i_target.get().getScomAddressOverlay(l_addr), l_data);
     }
@@ -256,7 +256,7 @@ inline ReturnCode putScom(const Target<K, M, V>& i_target,
     uint64_t l_data = i_data;
     uint32_t l_addr = (uint32_t)i_address;
 
-    if (i_target.get().getPlatTargetType() & PPE_TARGET_TYPE_MULTICAST)
+    if (i_target.get().getPlatTargetType() & PPE_TARGET_TYPE_CORE)
     {
         PPE_STVD(i_target.get().getScomAddressOverlay(l_addr), l_data);
     }
