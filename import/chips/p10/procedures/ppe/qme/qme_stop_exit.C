@@ -29,6 +29,7 @@
 
 #include "p10_hcd_cache_poweron.H"
 #include "p10_hcd_cache_reset.H"
+#include "p10_hcd_cache_scan0.H"
 #include "p10_hcd_cache_gptr_time_initf.H"
 #include "p10_hcd_cache_repair_initf.H"
 #include "p10_hcd_cache_arrayinit.H"
@@ -39,6 +40,7 @@
 
 #include "p10_hcd_core_poweron.H"
 #include "p10_hcd_core_reset.H"
+#include "p10_hcd_core_scan0.H"
 #include "p10_hcd_core_gptr_time_initf.H"
 #include "p10_hcd_core_repair_initf.H"
 #include "p10_hcd_core_arrayinit.H"
@@ -240,11 +242,33 @@ qme_stop_exit()
                    QME_SSH_SRC, G_qme_record.c_stop2_exit_targets ), SSH_EXIT_IN_SESSION );
     }
 
+    ///// [STOP3 EXIT EXPRESS] /////
+
+    if( G_qme_record.c_stop3_exit_targets )
+    {
+        PK_TRACE_INF("WAKE3: Waking up Cores in STOP3[%x]", G_qme_record.c_stop3_exit_targets);
+
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop3_exit_targets));
+
+        //===============//
+
+        MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CORE_VMIN_DISABLE )
+
+        p10_hcd_core_vmin_disable(core_target);
+
+        MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CORE_VOLT_RESTORED )
+
+        //===============//
+
+        G_qme_record.c_stop3_reached &= (~G_qme_record.c_stop3_exit_targets);
+        G_qme_record.c_stop3_exit_targets = 0;
+    }
+
     ///// [STOP2 EXIT EXPRESS] /////
 
     G_qme_record.c_stop2_exit_express =
         G_qme_record.c_stop2_exit_targets  &
-        (~G_qme_record.c_stop3_exit_targets) &
         (~G_qme_record.c_stop5_exit_targets) &
         (~G_qme_record.c_stop11_exit_targets);
 
@@ -334,6 +358,11 @@ qme_stop_exit()
 
         p10_hcd_cache_reset(core_target);
 
+        if( G_qme_record.hcode_func_enabled & QME_HWP_SCANFLUSH_ENABLE )
+        {
+            p10_hcd_cache_scan0(core_target);
+        }
+
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_POWERED )
 
         //===============//
@@ -358,7 +387,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_ARRAYINIT )
 
-        if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
+        if( G_qme_record.hcode_func_enabled & QME_HWP_ARRAYINIT_ENABLE )
         {
             p10_hcd_cache_arrayinit(core_target);
         }
@@ -444,6 +473,11 @@ qme_stop_exit()
 
         p10_hcd_core_reset(core_target);
 
+        if( G_qme_record.hcode_func_enabled & QME_HWP_SCANFLUSH_ENABLE )
+        {
+            p10_hcd_core_scan0(core_target);
+        }
+
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_POWERED )
 
         //===============//
@@ -468,7 +502,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_ARRAYINIT )
 
-        if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
+        if( G_qme_record.hcode_func_enabled & QME_HWP_ARRAYINIT_ENABLE )
         {
             p10_hcd_core_arrayinit(core_target);
         }
@@ -502,29 +536,6 @@ qme_stop_exit()
 
         G_qme_record.c_stop5_reached &= (~G_qme_record.c_stop5_exit_targets);
         G_qme_record.c_stop5_exit_targets = 0;
-    }
-
-    ///// [STOP3 EXIT] /////
-
-    if( G_qme_record.c_stop3_exit_targets )
-    {
-        PK_TRACE_INF("WAKE3: Waking up Cores in STOP3[%x]", G_qme_record.c_stop3_exit_targets);
-
-        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop3_exit_targets));
-
-        //===============//
-
-        MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CORE_VMIN_DISABLE )
-
-        p10_hcd_core_vmin_disable(core_target);
-
-        MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CORE_VOLT_RESTORED )
-
-        //===============//
-
-        G_qme_record.c_stop3_reached &= (~G_qme_record.c_stop3_exit_targets);
-        G_qme_record.c_stop3_exit_targets = 0;
     }
 
     ///// [STOP2 EXIT] /////

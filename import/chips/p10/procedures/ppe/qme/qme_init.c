@@ -113,14 +113,26 @@ qme_init()
         // Always test shadows as well as DDS
         out32( QME_LCL_FLAGS_OR, ( BIT32(QME_FLAGS_TOD_SETUP_COMPLETE) | BIT32(QME_FLAGS_DDS_OPERABLE) ) );
 
-        //EPM can turn PFET off, but no Scanning or BCE or self restore
-        G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCAN_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCOM_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_HWP_SCAN_INIT_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
+
+        if( !( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE ) )
+        {
+            //EPM do real scan0 and arrayinit and self restore with broadside
+            //otherwise
+            //EPM can turn PFET off, but no Scanning or BCE or self restore
+            G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
+            G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
+            G_qme_record.hcode_func_enabled &= ~QME_HWP_ARRAYINIT_ENABLE;
+            G_qme_record.hcode_func_enabled &= ~QME_HWP_SCANFLUSH_ENABLE;
+        }
+    }
+    else
+    {
+        G_qme_record.hcode_func_enabled &= ~QME_EPM_BROADSIDE_ENABLE;
     }
 
     //technically contained mode implies stop11 is not supported with it
@@ -133,6 +145,8 @@ qme_init()
         G_qme_record.hcode_func_enabled &= ~QME_HWP_SCAN_INIT_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_ARRAYINIT_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCANFLUSH_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_HWP_PFET_CTRL_ENABLE;
     }
 

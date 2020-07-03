@@ -59,6 +59,7 @@ CACHE-CPP-SOURCES = p10_hcd_l3_purge.C              \
                     p10_hcd_cache_poweroff.C        \
                     p10_hcd_cache_poweron.C         \
                     p10_hcd_cache_reset.C           \
+                    p10_hcd_cache_scan0.C           \
                     p10_hcd_cache_gptr_time_initf.C \
                     p10_hcd_cache_repair_initf.C    \
                     p10_hcd_cache_arrayinit.C       \
@@ -77,6 +78,7 @@ CORE-CPP-SOURCES  = p10_hcd_l2_purge.C             \
                     p10_hcd_core_poweroff.C        \
                     p10_hcd_core_poweron.C         \
                     p10_hcd_core_reset.C           \
+                    p10_hcd_core_scan0.C           \
                     p10_hcd_core_gptr_time_initf.C \
                     p10_hcd_core_repair_initf.C    \
                     p10_hcd_core_arrayinit.C       \

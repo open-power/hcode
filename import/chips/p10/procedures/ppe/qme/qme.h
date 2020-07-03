@@ -149,14 +149,20 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
     QME_HWP_SCOM_CUST_ENABLE          = BIT32(12),
     QME_HWP_SCOM_INIT_ENABLE          = BIT32(13),
     QME_HWP_SCAN_INIT_ENABLE          = BIT32(14),
-    QME_HWP_PFET_CTRL_ENABLE          = BIT32(15),
+    QME_HWP_ARRAYINIT_ENABLE          = BIT32(15),
+    QME_HWP_SCANFLUSH_ENABLE          = BIT32(16),
+    QME_HWP_PFET_CTRL_ENABLE          = BIT32(17),
     // Modes Switches
-    QME_SMF_SUPPORT_ENABLE            = BIT32(16),
-    QME_RUNN_MODE_ENABLE              = BIT32(17),
-    QME_CONTAINED_MODE_ENABLE         = BIT32(18)
+    QME_EPM_BROADSIDE_ENABLE          = BIT32(18),
+    QME_SMF_SUPPORT_ENABLE            = BIT32(19),
+    QME_RUNN_MODE_ENABLE              = BIT32(20),
+    QME_CONTAINED_MODE_ENABLE         = BIT32(21)
 };
+// todo
+// (auto) pmcr fwd enable, throttle enable,
+// pstate enable, wof enable, safe mode enable
 
-#define ENABLED_HCODE_FUNCTIONS 0x3FEF0000
+#define ENABLED_HCODE_FUNCTIONS 0x3FEFE000 //FIXME BEFORE MERGE
 #define QME_SCOREBOARD_VERSION  0x514d4531 //QME1
 
 typedef struct
@@ -183,16 +189,6 @@ typedef struct
     //   can add PMCR data collection
     //   if profile/debug is needed
     //   Same with DB1 reserved by XGPE
-
-    uint32_t    wof_control_status;
-    uint32_t    safe_mode_status;
-    uint32_t    c_throttle_done;
-    uint32_t    c_throttle_req;
-
-    uint32_t    c_doorbella_req;
-    uint32_t    c_doorbella_msg;
-    uint32_t    c_doorbellb_reg;
-    uint32_t    c_doorbellb_msg;
 
     uint32_t    doorbell2_msg;
     uint32_t    doorbell1_msg;

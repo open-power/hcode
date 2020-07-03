@@ -274,7 +274,16 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     {
         // HV Mode
         PK_TRACE_INF("HV mode: write HRMOR and URMOR with HOMER address");
-        scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
+
+        if( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE )
+        {
+            scom_data.value = 0xA200000;
+        }
+        else
+        {
+            scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
+        }
+
         // Write HRMOR
         out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
 

@@ -24,10 +24,8 @@
 # IBM_PROLOG_END_TAG
 PROCEDURE=p10_hcd_cache_reset
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
-$(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p9/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
-$(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/perv)
-OBJS+=p10_perv_sbe_cmn.o
+$(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/perv)
+OBJS+=p10_hcd_cache_scan0.o
 OBJS+=p10_hcd_corecache_realign.o
-#lib$(PROCEDURE)_COMMONFLAGS += -DP10_HCD_CORECACHE_SKIP_FLUSH
 $(call BUILD_PROCEDURE)
