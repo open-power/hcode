@@ -56,13 +56,18 @@ SECTIONS
     PPE_HEADER_IMAGE_NAME _IMG_HEADER : { *(PPE_HEADER_IMAGE_NAME) } > sram
 
     /*====================================
-     * Debug pointers table
+     * iota debug/trace ptr table
+     * qme scoreboard 
+     * attribute storage
      ====================================*/
-    _DEBUG_PTRS_START = _VECTOR_START + PPE_DEBUG_PTRS_OFFSET;
-    .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
+    _DEBUG_PTR_START = _VECTOR_START + PPE_DEBUG_PTR_OFFSET;
+    .debug_ptr _DEBUG_PTR_START : { *(.debug_ptrs) } > sram
 
-    _DUMP_PTR_START = _DEBUG_PTRS_START + PPE_DEBUG_PTRS_SIZE;
+    _DUMP_PTR_START = _DEBUG_PTR_START + PPE_DEBUG_PTR_SIZE;
     .dump_ptr _DUMP_PTR_START : { *(.dump_ptr) } > sram
+
+    _ATTR_PTR_START = _DUMP_PTR_START + PPE_DUMP_PTR_SIZE;
+    .attr_ptr _ATTR_PTR_START : { *(.attrdata) } > sram
 
     . = ALIGN(16);
     /*======================================

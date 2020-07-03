@@ -28,22 +28,13 @@
  * @file iota_lnk_cfg.h
  * @brief Control IOTA linkerscript configuration
  */
-/*TBD
 #include "p10_hcd_memmap_qme_sram.H"
-*/
 
-//QME_SRAM_BASE_ADDR
-//QME_SRAM_SIZE
-//QME_HEADER_IMAGE_OFFSET
-//QME_DEBUG_PTRS_OFFSET
-//QME_DEBUG_PTRS_SIZE
-
-#define SRAM_START               0xFFFF0000
-#define SRAM_LENGTH              0x10000
-#define PPE_HEADER_IMAGE_OFFSET  0x200
+#define SRAM_START               QME_SRAM_BASE_ADDR
+#define SRAM_LENGTH              QME_SRAM_SIZE
+#define PPE_HEADER_IMAGE_OFFSET  QME_HEADER_IMAGE_OFFSET
 #define PPE_HEADER_IMAGE_NAME    .qme_image_header
-#define PPE_DEBUG_PTRS_OFFSET    0x200
-#define PPE_DEBUG_PTRS_SIZE      0x20
-#define PPE_DUMP_PTRS_SIZE       0x150
-
+#define PPE_DEBUG_PTR_OFFSET     QME_DEBUG_PTRS_OFFSET
+#define PPE_DEBUG_PTR_SIZE       QME_DEBUG_PTRS_SIZE
+#define PPE_DUMP_PTR_SIZE        QME_DUMP_PTRS_SIZE
 #endif

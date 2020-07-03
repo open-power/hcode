@@ -84,6 +84,7 @@ extern "C" {
 #endif
 
 #include "ppe_attribute_system.H"
+PPE_ATTRIBUTE_UINT8_VECTOR(ATTR_QME_DUMMY_BUFFER_SYSTEM, 32);
 
 #ifdef __ASSEMBLER__
 .endm
@@ -109,6 +110,7 @@ extern "C" {
 #endif
 
 #include "ppe_attribute_proc_chip.H"
+PPE_ATTRIBUTE_UINT8_VECTOR(ATTR_QME_DUMMY_BUFFER_PROC_CHIP, 32);
 
 #ifdef __ASSEMBLER__
 .endm
@@ -134,6 +136,7 @@ typedef struct PervAttributes_t
 #endif
 
 #include "ppe_attribute_perv.H"
+PPE_ATTRIBUTE_UINT8_VECTOR(ATTR_QME_DUMMY_BUFFER_PERV, 32);
 
 #ifdef __ASSEMBLER__
 .endm
@@ -158,6 +161,7 @@ typedef struct CoreAttributes_t
 #endif
 
 #include "ppe_attribute_core.H"
+PPE_ATTRIBUTE_UINT8_VECTOR(ATTR_QME_DUMMY_BUFFER_CORE, 32);
 
 #ifdef __ASSEMBLER__
 .endm
@@ -182,6 +186,7 @@ typedef struct EXAttributes_t
 #endif
 
 #include "ppe_attribute_ex.H"
+PPE_ATTRIBUTE_UINT8_VECTOR(ATTR_QME_DUMMY_BUFFER_EX, 32);
 
 #ifdef __ASSEMBLER__
 .endm
@@ -206,6 +211,7 @@ typedef struct EQAttributes_t
 #endif
 
 #include "ppe_attribute_eq.H"
+PPE_ATTRIBUTE_UINT8_VECTOR(ATTR_QME_DUMMY_BUFFER_EQ, 32);
 
 #ifdef __ASSEMBLER__
 .endm

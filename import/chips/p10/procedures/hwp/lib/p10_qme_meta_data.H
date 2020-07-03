@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/ppe/qme/qme_header.S $            */
+/* $Source: import/chips/p10/procedures/hwp/lib/p10_qme_meta_data.H $     */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2020                                                    */
+/* COPYRIGHT 2020                                                         */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -22,16 +22,54 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
+/// @file   p10_qme_meta_data.H
+/// @brief  define qme meta data structure.
+///
 
-#include "ppe_attribute_struct.H"
-#include <p10_hcode_image_defines.H>
+// *HWP HWP Owner:        David Du   <daviddu@us.ibm.com>
+// *HWP Backup HWP Owner: Greg Still <stillgs@us.ibm.com>
+// *HWP FW Owner:         Prem S Jha <premjha2@in.ibm.com>
+// *HWP Team:             PM
+// *HWP Level:            2
+// *HWP Consumed by:      PM:Hostboot:Phyp
 
-.qme_header
+#ifndef __QME_META_DATA_H__
+#define __QME_META_DATA_H__
 
-    // Create the .attrdata section
-    .ppe_attribute_system
-    .ppe_attribute_proc_chip
-    .ppe_attribute_perv
-    .ppe_attribute_core
-    .ppe_attribute_ex
-    .ppe_attribute_eq
+#include <p10_hcd_header_defs.H>
+
+// -------------------------------------------------------------------
+// Note: There can be NO semicolons(";") at end of macros in this file
+//       There can ONLY have HCD_CONST/HCD_CONST64 macros in this file
+// -------------------------------------------------------------------
+
+/// Image Magic Numbers
+
+HCD_CONST64(QMEATMT_MAGIC_NUMBER,                ULL(0x514d4541544d54))  // QMEATMT
+
+typedef struct QmeAttrMeta
+{
+    char     magic_word[7];
+    uint8_t  meta_data_version;
+
+    // Do Not change the order below
+    uint16_t system_num_of_attrs;
+    uint16_t system_num_of_bytes;
+
+    uint16_t proc_chip_num_of_attrs;
+    uint16_t proc_chip_num_of_bytes;
+
+    uint16_t perv_num_of_attrs;
+    uint16_t perv_num_of_bytes;
+
+    uint16_t ec_num_of_attrs;
+    uint16_t ec_num_of_bytes;
+
+    uint16_t ex_num_of_attrs;
+    uint16_t ex_num_of_bytes;
+
+    uint16_t eq_num_of_attrs;
+    uint16_t eq_num_of_bytes;
+} QmeAttrMeta_t;
+
+#endif

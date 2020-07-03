@@ -1,11 +1,11 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/ppe/qme/qme_header.S $            */
+/* $Source: import/chips/p10/procedures/hwp/pm/p10_qme_build_attributes.H $ */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2020                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -23,15 +23,42 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
-#include "ppe_attribute_struct.H"
-#include <p10_hcode_image_defines.H>
+///
+/// @file  p10_p10_qme_build_attributes.H
+/// @brief Hcode Image Build to extract attribute value and put in qme image
+///
+/// *HW Owner    : Yue Du <daviddu@us.ibm.com>
+/// *FW Owner    : Greg Still <stillgs@us.ibm.com>
+/// *Team        : PM
+/// *Consumed by : QME
+/// *Level       : 3
+///
 
-.qme_header
+#ifndef __p10_p10_qme_build_attributes_H__
+#define __p10_p10_qme_build_attributes_H__
 
-    // Create the .attrdata section
-    .ppe_attribute_system
-    .ppe_attribute_proc_chip
-    .ppe_attribute_perv
-    .ppe_attribute_core
-    .ppe_attribute_ex
-    .ppe_attribute_eq
+#include <fapi2.H>
+#include <p10_qme_meta_data.H>
+
+/// @typedef p10_p10_qme_build_attributes_FP_t
+/// function pointer typedef definition for HWP call support
+typedef fapi2::ReturnCode (*p10_qme_build_attributes_FP_t) (
+    const fapi2::Target< fapi2::TARGET_TYPE_PROC_CHIP >&,
+    void*, QmeAttrMeta_t*);
+
+extern "C"
+{
+/// @brief Read and Decode the MARK information in SPRG0 on a CME
+/// @param [in]  i_target TARGET_TYPE_PROC_EX
+/// @param [out] o_mark   Value of the MARK field
+/// @param [out] o_str    Text decode of the MARK field
+
+/// @return FAPI2_RC_SUCCESS
+    fapi2::ReturnCode
+    p10_qme_build_attributes(
+        const fapi2::Target< fapi2::TARGET_TYPE_PROC_CHIP >& i_core_tgt,
+        void* i_pQmeAttrTank, QmeAttrMeta_t* i_pQmeAttrMeta);
+
+} // extern "C"
+
+#endif  // __p10_p10_qme_build_attributes_H__

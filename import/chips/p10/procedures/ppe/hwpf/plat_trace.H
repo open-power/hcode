@@ -44,10 +44,10 @@ extern "C" {
 
 // Why not a #define, why is this in the fapi2 namespace?
 // To prevent problems with Cronus and the fapi1 definitions.
-//F2//namespace fapi2
-//F2//{
-//F2//static const uint32_t MAX_ECMD_STRING_LEN = 64;
-//F2//};
+namespace fapi2
+{
+static const uint32_t MAX_ECMD_STRING_LEN = 64;
+};
 
 //PLAT NOTE// map fapi trace levels to pk trace levels
 
