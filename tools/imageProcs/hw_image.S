@@ -73,8 +73,8 @@ __header_64_reserved:
         .xip_section iopxram,      8
         .xip_section overlays,     8
         .xip_section dynamic,      8
-        .xip_section
-        .xip_section
+        .xip_section dyn_features, 8
+        .xip_section dyn_services, 8
         .xip_section
         .xip_section
         .xip_section
