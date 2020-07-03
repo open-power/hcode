@@ -45,6 +45,9 @@ QME-C-SOURCES   = qme_addresses.c           \
 SUBMODULE-CPP-SOURCES = p10_hcd_corecache_realign.C       \
                         p10_hcd_corecache_clock_control.C \
                         p10_hcd_corecache_power_control.C \
+                        p10_ncu_scom.C                    \
+                        p10_l2_scom.C                     \
+                        p10_l3_scom.C                     \
                         p10_fbc_utils.C                   \
                         p10_perv_sbe_cmn.C
 

@@ -47,22 +47,6 @@ qme_attr_init()
 
     //===============
 
-    // RTC 245890: Topology ID setup until QME attribute initialization works
-    {
-        const fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> FAPI_SYSTEM;
-        fapi2::ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE_Type l_topo_tbl;
-
-        l_topo_tbl[0] = 0x00;
-
-        for (auto i = 1; i < 32; ++i)
-        {
-            l_topo_tbl[i] = 0xFF;
-        }
-
-        PK_TRACE("Workaround: Set Topo Table Array Attribute" );
-        FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_PROC_FABRIC_TOPOLOGY_ID_TABLE, FAPI_SYSTEM, l_topo_tbl));
-    }
-
     uint8_t runn_mode      = 0;
     uint8_t contained_type = 0;
     fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>                 l_sys;
@@ -77,6 +61,18 @@ qme_attr_init()
     if( contained_type != 0)
     {
         G_qme_record.hcode_func_enabled |= QME_CONTAINED_MODE_ENABLE;
+    }
+
+    //===============
+
+    uint8_t pair_mode = 0;
+
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_FUSED_CORE_PAIRED_MODE_ENABLED, l_sys, pair_mode ) );
+
+    if( ( pair_mode || (G_qme_record.chip_dd_level == 10) ) &&
+        ( in32_sh(QME_LCL_QMCR) & BIT64SH(47) ) )
+    {
+        out32(QME_LCL_QMCR, BIT32(10));
     }
 }
 
