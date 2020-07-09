@@ -928,6 +928,7 @@ extrdi.     TEMP_REG2,  TEMP_REG1,  TFAC_TFMR_BUG_BIT_LEN,  TFAC_BUG_TFMR_BIT_PO
 cmpwi       TEMP_REG2,  TFAC_TFMR_BUG_BIT_CONST
 bne         wait_tfmr
 
+mfspr       THREAD_SCRATCH_VAL_REG,   SPRD  #QME might have written bit 56 by this time so do RMW
 li          TEMP_REG1,  0x100
 or          THREAD_SCRATCH_VAL_REG, THREAD_SCRATCH_VAL_REG, TEMP_REG1    # set bit 55 of Thread scratch register
 mtspr       SPRD,       THREAD_SCRATCH_VAL_REG

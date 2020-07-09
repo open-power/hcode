@@ -332,7 +332,8 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 
 #if POWER10_DD_LEVEL == 10
 
-                if(  G_IsSimics )
+                if( G_IsSimics ||
+                    (! ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_TOD_SETUP_COMPLETE ) ) ) )
                 {
                     //Self-Restore should ignore workaround for HW534619
                     scom_data.value |= BIT64(61);
