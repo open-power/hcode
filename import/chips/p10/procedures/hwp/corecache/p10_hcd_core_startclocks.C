@@ -47,7 +47,9 @@
 #include "p10_hcd_mma_startclocks.H"
 #include "p10_hcd_corecache_clock_control.H"
 #include "p10_hcd_common.H"
-#include "p10_resclk.H"
+#ifndef __PPE__
+    #include "p10_resclk.H"
+#endif
 
 #ifdef __PPE_QME
     #include "p10_scom_eq.H"
@@ -78,7 +80,7 @@ enum P10_HCD_CORE_STARTCLOCKS_CONSTANTS
 //------------------------------------------------------------------------------
 // Procedure: p10_hcd_core_startclocks
 //------------------------------------------------------------------------------
-#ifndef __PPE_PLAT
+#ifndef __PPE__
 uint32_t p10_hcd_core_startclocks_ps_from_freq(uint32_t freq)
 {
     return  (4600000 - freq) / 16667; //Assume Pstate0 Frequency of 4.6Ghz and Step-Size of 16.667Mhz
@@ -101,7 +103,7 @@ p10_hcd_core_startclocks(
     uint32_t                       l_core_num           = 0;
     fapi2::ATTR_CHIP_UNIT_POS_Type l_attr_chip_unit_pos = 0;
 
-#ifndef __PPE_PLAT
+#ifndef __PPE__
     fapi2::Target < fapi2::TARGET_TYPE_PROC_CHIP> l_proc = eq_target.getParent <fapi2::TARGET_TYPE_PROC_CHIP> ();
 #endif
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
@@ -218,7 +220,7 @@ p10_hcd_core_startclocks(
     FAPI_TRY( HCD_PUTSCOM_C( i_target, QME_SSH_SRC, 0 ) );
 #endif
 
-#ifndef __PPE_PLAT
+#ifndef __PPE__
     fapi2::ATTR_SYSTEM_RESCLK_ISTEP4_ENABLE_Type l_attr_resclk_istep4_enable;
 
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_RESCLK_ISTEP4_ENABLE, l_sys, l_attr_resclk_istep4_enable) );
