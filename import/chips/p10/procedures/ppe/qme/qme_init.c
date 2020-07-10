@@ -86,6 +86,9 @@ qme_init()
     {
         PK_TRACE_DBG("Setup: Remove Hostboot Master[%x] from Istep4 Special Wakeup", G_qme_record.c_hostboot_master);
         out32( QME_LCL_CORE_ADDR_WR( QME_SPWU_OTR, G_qme_record.c_hostboot_master ), 0 );
+
+        PK_TRACE("Drop PM_EXIT via PCR_SCSR[1]");
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_hostboot_master ), BIT32(1) );
     }
 
     // use SSDR[36:39] PM_BLOCK_INTERRUPTS to initalize block wakeup status
