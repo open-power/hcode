@@ -24,6 +24,7 @@
 # IBM_PROLOG_END_TAG
 PROCEDURE=p10_hcd_core_scominit
 OBJS+=p10_fbc_utils.o
+OBJS+=p10_core_scom.o
 OBJS+=p10_l2_scom.o
 OBJS+=p10_ncu_scom.o
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
