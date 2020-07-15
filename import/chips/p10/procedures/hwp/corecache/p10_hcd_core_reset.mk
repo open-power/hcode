@@ -26,6 +26,8 @@ PROCEDURE=p10_hcd_core_reset
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
 $(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/perv)
+$(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/perv)
 OBJS+=p10_hcd_core_scan0.o
+OBJS+=p10_perv_sbe_cmn.o
 OBJS+=p10_hcd_corecache_realign.o
 $(call BUILD_PROCEDURE)
