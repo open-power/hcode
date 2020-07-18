@@ -91,26 +91,26 @@ def parse_attr(attrIdFile):
       continue
     if hash_start == 0:
       if "typedef" in line:
-        words = line.split() 
+        words = line.split()
         #print words
         attr_list[index].append(data_type[words[1]][0])
         dim = re.split("[\[\]]", words[2])
         #print dim
         if len(dim) > 2:
-          attr_list[index].append(int(dim[1])) 
+          attr_list[index].append(int(dim[1]))
         else:
-          attr_list[index].append(0) 
+          attr_list[index].append(0)
         attr_list[index].append(data_type[words[1]][1])
         attr_list[index].append(data_type[words[1]][2])
         attr_list[index].append(data_type[words[1]][3])
       if "TARGET_TYPE_" in line:
-        words = line.split() 
+        words = line.split()
         #print words
         target = words[4].split(';')
         entry  = attr_list[index]
         #print attr_list
-        attr_meta[target[0]].append(entry)    
-        index += 1 
+        attr_meta[target[0]].append(entry)
+        index += 1
     continue
   attr_id.close()
   print attr_meta
@@ -154,8 +154,8 @@ def write_meta(binaryFile, hwPrcdFile):
   hwp_file.write("const uint8_t  HCODE_IMAGE_BUILD_ATTR_VERSION = " + str(META_DATA_VERSION) + ";\n\n")
   hwp_file.write("const uint32_t COREQ_DUMMY_BUFFER_SIZE        = " + str(DUMMY_BUFFER_SIZE) + ";\n\n")
 
-  hwp_file.write("fapi2::ReturnCode\n") 
-  hwp_file.write("p10_qme_build_attributes(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_chip_tgt,\n") 
+  hwp_file.write("fapi2::ReturnCode\n")
+  hwp_file.write("p10_qme_build_attributes(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP>& i_chip_tgt,\n")
   hwp_file.write("                         void* i_pQmeAttrTank, QmeAttrMeta_t* i_pQmeAttrMeta)\n")
   hwp_file.write("{\n")
   hwp_file.write("    FAPI_INF(\">>p10_qme_build_attributes\")\n\n")
@@ -180,10 +180,10 @@ def write_meta(binaryFile, hwPrcdFile):
 
   hwp_file.write("\n\n    if( l_hw_image_meta_ver != HCODE_IMAGE_BUILD_ATTR_VERSION )\n")
   hwp_file.write("    {\n")
-  hwp_file.write("        FAPI_INF(\"CAREFUL!!! hw_image attr ver %x, hcode_image_build attr ver %x\",\n") 
+  hwp_file.write("        FAPI_INF(\"CAREFUL!!! hw_image attr ver %x, hcode_image_build attr ver %x\",\n")
   hwp_file.write("                 l_hw_image_meta_ver, HCODE_IMAGE_BUILD_ATTR_VERSION);\n")
   hwp_file.write("    }\n")
- 
+
   for scope in META_SCOPE_WORD:
     #print target_type[scope][0], target_type[scope][1]
     target     = target_type[scope][0]
@@ -192,15 +192,15 @@ def write_meta(binaryFile, hwPrcdFile):
     attr_data  = attr_meta[target]
     entries    = len(attr_data)
     total_size = 0
-     
+
     for index in range(entries):
-      attr_name  = attr_data[index][0]                       #name 
+      attr_name  = attr_data[index][0]                       #name
       data_size  = attr_data[index][1]                       #num of bytes
       array_dim  = attr_data[index][2]                       #dim
-      data_var   = attr_data[index][3]                       #uintX_t 
+      data_var   = attr_data[index][3]                       #uintX_t
       byte_swap0 = attr_data[index][4]                       #func to BE
       byte_swap1 = attr_data[index][5]                       #func to BE
-   
+
       if attr_name == "ATTR_NAME" or attr_name == "ATTR_EC":
         privileged = "_PRIVILEGED"
       else:
@@ -210,7 +210,7 @@ def write_meta(binaryFile, hwPrcdFile):
         print_format = "ll"
       else:
         print_format = ""
- 
+
       hwp_file.write("\n    {\n")
       if array_dim:
         total_size += data_size * array_dim
@@ -227,8 +227,8 @@ def write_meta(binaryFile, hwPrcdFile):
         hwp_file.write("            *(" + data_var + "t*)i_pQmeAttrTank = " +\
                                           byte_swap0 + "l_" + data_var + "data[index]" + byte_swap1 + ";\n")
         hwp_file.write("            i_pQmeAttrTank = (uint8_t*)i_pQmeAttrTank + " + str(data_size) + ";\n")
-        hwp_file.write("        }\n") 
-      else: 
+        hwp_file.write("        }\n")
+      else:
         total_size += data_size
         print attr_name, str(total_size)
         hwp_file.write("        " + data_var + "t " + "l_" + data_var + "data = 0;\n")
@@ -302,7 +302,7 @@ def write_meta(binaryFile, hwPrcdFile):
     hwp_file.write("        i_pQmeAttrTank = (uint8_t*)i_pQmeAttrTank + skip_size + leftover;\n\n")
 
     hwp_file.write("        FAPI_DBG(\"" + target + " Image_Byte %d Build_Byte " + str(total_size) +\
-                                       " Skip_Size %d Alignment %d Leftover %d\",\n") 
+                                       " Skip_Size %d Alignment %d Leftover %d\",\n")
     hwp_file.write("                 " + target_byte + ", skip_size, alignment, leftover);\n")
     hwp_file.write("    }\n\n")
 
@@ -321,6 +321,8 @@ def attr2meta():
   parser = OptionParser(usage=usage)
   parser.add_option("-e", "--ekb_root",  type="string", dest="ekbRoot",
                     help="ekb root directory")
+  parser.add_option("-o", "--outuput_path",  type="string", dest="outputPath",
+                    help="ekb output directory")
   parser.add_option("-b", "--output_binary",  type="string", dest="binFile",
                     help="path and filename of attribute meta data binary")
   parser.add_option("-p", "--output_hwp",  type="string", dest="hwpFile",
@@ -329,10 +331,16 @@ def attr2meta():
 
   if options.ekbRoot:
     print "EkbRoot " + options.ekbRoot
-    attrIdFile = options.ekbRoot + "/output/gen/qme/attribute_ids.H"
     hwPrcdFile = options.ekbRoot + "/chips/p10/procedures/hwp/pm/p10_qme_build_attributes.C"
   else:
     print "ERROR: Please specify EKB root directory path with -e option"
+    return
+
+  if options.outputPath:
+    print "outputPath " + options.outputPath
+    attrIdFile = options.outputPath + "/gen/qme/attribute_ids.H"
+  else:
+    print "ERROR: Please specify EKB output directory path with -o option"
     return
 
   if options.binFile:

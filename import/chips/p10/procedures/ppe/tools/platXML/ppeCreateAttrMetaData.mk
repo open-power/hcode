@@ -33,6 +33,6 @@ TARGETS+=qme_attr_meta.bin
 $(GENERATED)_PATH=$(IMAGEPATH)/qme_image
 
 define ppeCreateAttrMetaData_qme_RUN
-                $(C1) $$< -e $(ROOTPATH) -b $($(GENERATED)_PATH)/qme_attr_meta.bin;
+                $(C1) $$< -e $(ROOTPATH) -o $(OUTPUTPATH) -b $($(GENERATED)_PATH)/qme_attr_meta.bin;
 endef
 $(call BUILD_GENERATED)
