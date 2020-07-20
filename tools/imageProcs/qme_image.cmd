@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -94,6 +94,15 @@ SECTIONS
     _rings_offset = . - _qme_image_origin;
     .rings . : { *(.rings) }
     _rings_size = . - _rings_origin;
+
+    ////////////////////////////////
+    // META_DATA
+    ////////////////////////////////
+    . = ALIGN(8);
+    _meta_data_origin = .;
+    _meta_data_offset = . - _qme_image_origin;
+    .meta_data . : { *(.meta_data) }
+    _meta_data_size = . - _meta_data_origin;
 
     ////////////////////////////////
     // end of the image

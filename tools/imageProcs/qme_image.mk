@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2016,2019
+# COPYRIGHT 2016,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -48,6 +48,7 @@ $(eval $(IMAGE)_FILE_LVL1_BL=$(IMAGEPATH)/qme_lvl1_copier/qme_lvl1_copier.bin)
 $(eval $(IMAGE)_FILE_LVL2_BL=$(IMAGEPATH)/qme_lvl2_loader/qme_lvl2_loader.bin)
 $(eval $(IMAGE)_FILE_HCODE=$$($(IMAGE)_DD_CONT_qme))
 $(eval $(IMAGE)_FILE_RINGS=$(RINGFILEPATH)/$3.$1.qme.rings.bin)
+$(eval $(IMAGE)_FILE_META_DATA=$(IMAGEPATH)/qme_image/qme_attr_meta.bin)
 
 # Dependencies for appending image sections in sequence:
 # - file to be appended
@@ -71,11 +72,16 @@ $(eval $(IMAGE)_DEPS_RINGS+=$$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
 $(eval $(IMAGE)_DEPS_REPORT =$$($(IMAGE)_DEPS_RINGS))
 $(eval $(IMAGE)_DEPS_REPORT+=$$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
 
+$(eval $(IMAGE)_DEPS_META_DATA =$$($(IMAGE)_FILE_META_DATA))
+$(eval $(IMAGE)_DEPS_META_DATA+=$$($(IMAGE)_DEPS_HCODE))
+$(eval $(IMAGE)_DEPS_META_DATA+=$$($(IMAGE)_PATH)/.$(IMAGE).append.meta_data)
+
 # Image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.lvl1_bl,$$($(IMAGE)_DEPS_LVL1_BL),$$($(IMAGE)_FILE_LVL1_BL)))
 $(eval $(call XIP_TOOL,append,.lvl2_bl,$$($(IMAGE)_DEPS_LVL2_BL),$$($(IMAGE)_FILE_LVL2_BL)))
 $(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HCODE) 1))
 $(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1))
+$(eval $(call XIP_TOOL,append,.meta_data,$$($(IMAGE)_DEPS_META_DATA),$$($(IMAGE)_FILE_META_DATA) 1))
 
 # Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
@@ -98,6 +104,7 @@ $(eval $(call BUILD_DD_LEVEL_CONTAINER,$3,$1,qme))
 # Files to be appended to image
 $(eval $(IMAGE)_FILE_HCODE=$$($(IMAGE)_DD_CONT_qme))
 $(eval $(IMAGE)_FILE_RINGS=$(RINGFILEPATH)/$3.$1.qme.rings.bin)
+$(eval $(IMAGE)_FILE_META_DATA=$(IMAGEPATH)/qme_image/qme_attr_meta.bin)
 
 # Setup dependencies for
 # - building image ( $(IMAGE)_DEPS_IMAGE )
@@ -116,9 +123,15 @@ $(eval $(IMAGE)_DEPS_RINGS  += $$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
 $(eval $(IMAGE)_DEPS_REPORT  = $$($(IMAGE)_DEPS_RINGS))
 $(eval $(IMAGE)_DEPS_REPORT += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
 
+$(eval $(IMAGE)_DEPS_IMAGE     += $$($(IMAGE)_FILE_META_DATA))
+$(eval $(IMAGE)_DEPS_META_DATA  = $$($(IMAGE)_FILE_META_DATA))
+$(eval $(IMAGE)_DEPS_META_DATA += $$($(IMAGE)_DEPS_HCODE))
+$(eval $(IMAGE)_DEPS_META_DATA += $$($(IMAGE)_PATH)/.$(IMAGE).append.meta_data)
+
 # Image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HCODE) 1))
 $(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1))
+$(eval $(call XIP_TOOL,append,.meta_data,$$($(IMAGE)_DEPS_META_DATA),$$($(IMAGE)_FILE_META_DATA) 1))
 
 # Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))

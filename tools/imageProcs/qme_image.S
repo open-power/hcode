@@ -69,7 +69,7 @@ __header_64_reserved:
         .xip_section lvl2_bl,      8
         .xip_section hcode,        8
         .xip_section rings,        8
-        .xip_section
+        .xip_section meta_data,    8
         .xip_section
         .xip_section
         .xip_section
