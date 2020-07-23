@@ -212,6 +212,21 @@ def write_meta(binaryFile, hwPrcdFile):
         print_format = ""
 
       hwp_file.write("\n    {\n")
+      align_size = 0
+      if data_size == 8 or data_size == 4:
+        align_size = total_size % 4
+        if align_size:
+          align_size = 4 - align_size
+      if data_size == 2:
+        align_size = (total_size % 2)
+        if align_size:
+          align_size = 2 - align_size
+
+      if align_size:
+        total_size += align_size
+        hwp_file.write("        // 32b/64b data align at 4, 16b data align at 2\n")
+        hwp_file.write("        i_pQmeAttrTank = (uint8_t*)i_pQmeAttrTank + " + str(align_size) + ";\n\n")
+ 
       if array_dim:
         total_size += data_size * array_dim
         print attr_name, str(total_size), str(data_size), str(array_dim)
