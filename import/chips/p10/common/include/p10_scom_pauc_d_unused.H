@@ -155,33 +155,6 @@ static const uint32_t TRA0_TR1_CONFIG_0_CMP_MSK_LT_B_0_TO_63_LEN = 64;
 //<< [TRA0_TR1_CONFIG_0]
 // pauc/reg00013.H
 
-//>> [XSTOP5]
-static const uint64_t XSTOP5 = 0x10030015ull;
-
-static const uint32_t XSTOP5_ENABLE = 0;
-static const uint32_t XSTOP5_WAIT_SNOPA = 1;
-static const uint32_t XSTOP5_TRIGGER_OPCG_GO = 2;
-static const uint32_t XSTOP5_WAIT_ALWAYS = 3;
-static const uint32_t XSTOP5_REGION_PERV = 4;
-static const uint32_t XSTOP5_REGION_UNIT1 = 5;
-static const uint32_t XSTOP5_REGION_UNIT2 = 6;
-static const uint32_t XSTOP5_REGION_UNIT3 = 7;
-static const uint32_t XSTOP5_REGION_UNIT4 = 8;
-static const uint32_t XSTOP5_REGION_UNIT5 = 9;
-static const uint32_t XSTOP5_REGION_UNIT6 = 10;
-static const uint32_t XSTOP5_REGION_UNIT7 = 11;
-static const uint32_t XSTOP5_REGION_UNIT8 = 12;
-static const uint32_t XSTOP5_REGION_UNIT9 = 13;
-static const uint32_t XSTOP5_REGION_UNIT10 = 14;
-static const uint32_t XSTOP5_REGION_UNIT11 = 15;
-static const uint32_t XSTOP5_REGION_UNIT12 = 16;
-static const uint32_t XSTOP5_REGION_UNIT13 = 17;
-static const uint32_t XSTOP5_REGION_UNIT14 = 18;
-static const uint32_t XSTOP5_WAIT_CYCLES = 48;
-static const uint32_t XSTOP5_WAIT_CYCLES_LEN = 12;
-//<< [XSTOP5]
-// pauc/reg00013.H
-
 //>>THE END<<
 
 #ifndef __PPE_HCODE__
