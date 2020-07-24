@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -107,6 +107,8 @@ uint32_t poll_dpll_stat()
 {
     data64_t data;
     uint32_t rc = 0;
+    uint32_t ack;
+    uint32_t pgpe_notified = 0;
 
     // DPLL Modes
     //                     enable_fmin    enable_fmax   enable_jump
@@ -178,11 +180,29 @@ uint32_t poll_dpll_stat()
 
             //If !CPPM_CSAR[DIS_NACK] AND (Elapsed Count > DROOP_POLL_COUNT), then prolonged
             //droop detected
-            if (!(csar.value & BIT64(CPPM_CSAR_DISABLE_CME_NACK_ON_PROLONGED_DROOP)) &&
-                elapsed > DROOP_POLL_COUNT)
+            if ((elapsed > DROOP_POLL_COUNT) && (pgpe_notified == 0))
             {
-                rc = 1; //Non-zero return code
-                break;
+                if (!(csar.value & BIT64(CPPM_CSAR_DISABLE_CME_NACK_ON_PROLONGED_DROOP)))
+                {
+                    rc = 1; //Non-zero return code
+                    break;
+                }
+                else if ((csar.value & BIT64(CPPM_CSAR_DISABLE_CME_NACK_ON_PROLONGED_DROOP)) && (pgpe_notified == 0))
+                {
+                    pgpe_notified = 1;
+                    PK_TRACE_INF("Nack on Droop disabled. Notifying PGPE about droop condition");
+                    ack = MSGID_PCB_TYPE4_NACK_DROOP_PRESENT_WITH_CSAR_SET;
+                    send_ack_to_pgpe(ack);
+
+                    //Check for PGPE Ack
+                    CME_GETSCOM(CPPM_CSAR, G_cme_pstate_record.firstGoodCoreMask, csar.value);
+
+                    while (!(csar.value & BIT64(CPPM_CSAR_PGPE_ACK_FOR_NACK_ON_PROLONGED_DROOP_W_CSAR_SET)))
+                    {
+                        //Spin until PGPE acks back
+                        CME_GETSCOM(CPPM_CSAR, G_cme_pstate_record.firstGoodCoreMask, csar.value);
+                    }
+                }
             }
         }
         while(1);

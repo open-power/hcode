@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -650,6 +650,7 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect, uint32_t expectedAck)
     uint32_t q, c, ack;
     uint32_t opit4pr, opit4prQuad, opit4Clr = 0;
     ocb_opit4cn_t opit4cn;
+    uint32_t quadNackWCSARSet = 0;
 
     PK_TRACE_INF("DBW: AckExpect=0x%x, AckType=0x%x", quadAckExpect, expectedAck);
 
@@ -700,12 +701,41 @@ void p9_pgpe_wait_cme_db_ack(uint32_t quadAckExpect, uint32_t expectedAck)
                                 PGPE_TRACE_AND_PANIC(PGPE_CME_UNEXPECTED_DB_ACK);
                             }
 
+                            //Clear our CPPM_CSAR if a nack with csar set was received from this quad
+                            if (quadNackWCSARSet & QUAD_MASK(q))
+                            {
+                                for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
+                                {
+                                    if (G_pgpe_pstate_record.activeDB & CORE_MASK(c))
+                                    {
+                                        GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CSAR_CLR, c), BIT64(CPPM_CSAR_PGPE_ACK_FOR_NACK_ON_PROLONGED_DROOP_W_CSAR_SET));
+                                    }
+                                }
+                            }
+
                             break;
 
                         case MSGID_PCB_TYPE4_NACK_DROOP_PRESENT: //0x4
                             //Mark that this quad sent a NACK
                             PK_TRACE_DBG("DBW: Got NACK from %d", q);
                             G_pgpe_pstate_record.quadsNACKed |= QUAD_MASK(q);
+                            break;
+
+                        case MSGID_PCB_TYPE4_NACK_DROOP_PRESENT_WITH_CSAR_SET: //0x7
+                            PK_TRACE_INF("DBW: Nack woth CSAR Set. Setting OCCLFG[PM_RESET_SUPPRESS] ");
+                            out32(G_OCB_OCCFLG_OR, BIT32(PGPE_PM_RESET_SUPPRESS));//Set OCCFLG[PM_RESET_SUPPRESS]
+                            quadNackWCSARSet |= QUAD_MASK(q);
+                            quadAckExpect |= QUAD_MASK(q); //Add it back to the expect because CME will send another ACK when the droop has subsided
+
+                            //Notify CME that PGPE has seen this ACK
+                            for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
+                            {
+                                if (G_pgpe_pstate_record.activeDB & CORE_MASK(c))
+                                {
+                                    GPE_PUTSCOM(GPE_SCOM_ADDR_CORE(CPPM_CSAR_OR, c), BIT64(CPPM_CSAR_PGPE_ACK_FOR_NACK_ON_PROLONGED_DROOP_W_CSAR_SET));
+                                }
+                            }
+
                             break;
 
                         //Note this includes MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE(0x3)

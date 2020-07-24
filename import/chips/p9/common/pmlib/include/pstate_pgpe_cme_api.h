@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -126,7 +126,8 @@ enum MESSAGEID_PCB_TYPE4_ACK_TYPES
     MSGID_PCB_TYPE4_QUAD_MGR_AVAILABLE           = 3,
     MSGID_PCB_TYPE4_NACK_DROOP_PRESENT           = 4,
     MSGID_PCB_TYPE4_SUSPEND_ENTRY_ACK            = 5,
-    MSGID_PCB_TYPE4_UNSUSPEND_ENTRY_ACK          = 6
+    MSGID_PCB_TYPE4_UNSUSPEND_ENTRY_ACK          = 6,
+    MSGID_PCB_TYPE4_NACK_DROOP_PRESENT_WITH_CSAR_SET = 7,
 };
 
 enum DB0_CLIP_BCAST_FIELDS
