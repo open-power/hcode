@@ -39,16 +39,6 @@ namespace omi
 #endif
 
 
-//>> [ERROR_CAPTURE]
-static const uint64_t ERROR_CAPTURE = 0x0c011414ull;
-
-static const uint32_t ERROR_CAPTURE_DL0_ERROR_CAPTURE_INFO = 1;
-static const uint32_t ERROR_CAPTURE_DL0_ERROR_CAPTURE_INFO_LEN = 63;
-static const uint32_t ERROR_CAPTURE_DL1_ERROR_CAPTURE_INFO = 1;
-static const uint32_t ERROR_CAPTURE_DL1_ERROR_CAPTURE_INFO_LEN = 63;
-//<< [ERROR_CAPTURE]
-// omi/reg00020.H
-
 //>> [RXCTL_DATASM_11_PLREGS_RX_MODE1_PL]
 static const uint64_t RXCTL_DATASM_11_PLREGS_RX_MODE1_PL = 0x8003d04310012c3full;
 

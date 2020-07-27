@@ -39,16 +39,6 @@ namespace omi
 #endif
 
 
-//>> [DLX_CONFIG]
-static const uint64_t DLX_CONFIG = 0x0c011418ull;
-
-static const uint32_t DLX_CONFIG_CFG_DLX0 = 32;
-static const uint32_t DLX_CONFIG_CFG_DLX0_LEN = 32;
-static const uint32_t DLX_CONFIG_CFG_DLX1 = 32;
-static const uint32_t DLX_CONFIG_CFG_DLX1_LEN = 32;
-//<< [DLX_CONFIG]
-// omi/reg00022.H
-
 //>> [RXCTL_DATASM_10_PLREGS_RX_MODE1_PL]
 static const uint64_t RXCTL_DATASM_10_PLREGS_RX_MODE1_PL = 0x8003d04210012c3full;
 

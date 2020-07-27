@@ -236,14 +236,6 @@ static const uint32_t AXON_SCAN_REGION_TYPE_SCAN_TYPE_INEX = 59;
 //<< [AXON_SCAN_REGION_TYPE]
 // iohs/reg00046.H
 
-//>> [DLX_CONFIG]
-static const uint64_t DLX_CONFIG = 0x18011031ull;
-
-static const uint32_t DLX_CONFIG_CFG_DLX1 = 0;
-static const uint32_t DLX_CONFIG_CFG_DLX1_LEN = 32;
-//<< [DLX_CONFIG]
-// iohs/reg00046.H
-
 //>> [IOO_RX0_RXCTL_CTL_REGS_RX_CNTL3_PG]
 static const uint64_t IOO_RX0_RXCTL_CTL_REGS_RX_CNTL3_PG = 0x8009100010012c3full;
 
