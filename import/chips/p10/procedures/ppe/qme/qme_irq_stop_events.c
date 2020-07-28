@@ -24,9 +24,17 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "qme.h"
+#include "iota_lnk_cfg.h"
+#include "p10_hcode_image_defines.H"
+#include "p10_hcd_memmap_base.H"
 
 extern QmeRecord G_qme_record;
 extern uint64_t g_eimr_override;
+
+enum
+{
+    CPMR_HDR_AUTO_WAKEUP_OFFSET  = 0xE0,
+};
 
 //only call this function within interrupt handler where ee is disabled
 //otherwise, protect this function by handle ee around the function call
@@ -631,6 +639,35 @@ qme_special_wakeup_rise_event()
 }
 
 void
+load_auto_wakeup_vector()
+{
+    QmeHeader_t* l_pQmeHdr  =  (QmeHeader_t*)( SRAM_START + QME_INT_VECTOR_SIZE );
+    uint32_t l_sramOffset   =  l_pQmeHdr->g_qme_common_ring_offset;
+    uint32_t l_cpmrOffset   =  CPMR_HDR_AUTO_WAKEUP_OFFSET; //Auto Wkup Vector from CPMR Header
+    PK_TRACE_INF( "Cmn Ring Offset 0x%08x", l_sramOffset );
+
+
+    qme_block_copy_start( QME_BCEBAR_1,
+                          ( l_cpmrOffset >> 5 ),
+                          ( l_sramOffset >> 5 ),
+                          1,        // 32B
+                          QME_COMMON ); // Copied for all QMEs in same way
+
+    if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
+    {
+        PK_TRACE_INF("ERROR: BCE Failed For Block Copy Of Auto Wakeup Vector" );
+        IOTA_PANIC(QME_STOP_BLOCK_COPY_AUTO_WKUP_FAILED);
+    }
+
+    //Copying Auto Wakeup Vector from temp location to QME Record
+    G_qme_record.c_auto_stop11_wakeup = *(uint32_t*) ( SRAM_START + l_sramOffset );
+
+    G_qme_record.bce_buf_content_type = AUTO_WAKUP_VECT;
+
+    PK_TRACE_INF("Auto Wakeup Vector Block Copied 0x%08x", G_qme_record.c_auto_stop11_wakeup);
+}
+
+void
 qme_special_wakeup_fall_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_SPWU_FALL);
@@ -1014,6 +1051,40 @@ qme_pm_state_active_slow_event()
         wrteei(1);
         qme_stop_entry();
         qme_send_pig_type_a();
+
+        // TODO  Read Auto Wake-up Controls from HOMER for this chip Parse to bit X and, if set
+
+        if( G_qme_record.hcode_func_enabled & QME_AUTO_STOP11_WAKEUP_ENABLE )
+        {
+            load_auto_wakeup_vector();
+
+            if( G_qme_record.c_auto_stop11_wakeup )
+            {
+                uint32_t l_quad_auto_wkup_vect = G_qme_record.c_auto_stop11_wakeup;
+                l_quad_auto_wkup_vect = ( l_quad_auto_wkup_vect >> ( 28 - ( G_qme_record.quad_id * 4 ) ) );
+                l_quad_auto_wkup_vect = l_quad_auto_wkup_vect & 0x0f;
+
+                PK_TRACE_INF( "Auto Stop11 Wakeup On Cores[%x]", l_quad_auto_wkup_vect );
+                G_qme_record.c_stop2_exit_targets  |= l_quad_auto_wkup_vect;
+                G_qme_record.c_stop5_exit_targets  |= l_quad_auto_wkup_vect;
+                G_qme_record.c_stop11_exit_targets |= l_quad_auto_wkup_vect;
+
+                qme_stop_exit();
+
+                // After self-restore, Sreset the core(s) with PHYP URMOR/HRMOR.
+                // This is unique for this flow as interrupts normally cause
+                // the hardware to perform the sreset.
+                wrteei(0);
+                PPE_PUTSCOM_MC( DIRECT_CONTROLS, l_quad_auto_wkup_vect,
+                                BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
+                sync();
+                wrteei(1);
+
+                G_qme_record.c_auto_stop11_wakeup = 0;
+                qme_send_pig_type_a();
+            }
+        }
+
         wrteei(0);
     }
 

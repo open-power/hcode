@@ -116,6 +116,13 @@ enum STOP_REPORT_SRR1
     NO_STATE_LOSS                     = 1
 };
 
+enum SR_FAILURE_CODE
+{
+    SR_SUCCESS          =    0,
+    SLAVE_THRD_FAIL     =    1,
+    MASTER_THRD_FAIL    =    2,
+};
+
 enum SPR_SELF_ACTIONS
 {
     SPR_SELF_SAVE       =   0x00,
@@ -145,6 +152,7 @@ enum BCE_BUF_CONTENT_TYPE
     SCOM_RESTORE    =    3,
     OVRRIDES        =    4,
     ALL             =    5,
+    AUTO_WAKUP_VECT =    6,
 };
 
 enum BCE_SCOPE
@@ -153,13 +161,6 @@ enum BCE_SCOPE
     QME_SPECIFIC = 1,
 };
 
-
-enum SR_FAILURE_CODE
-{
-    SR_SUCCESS          =    0,
-    SLAVE_THRD_FAIL     =    1,
-    MASTER_THRD_FAIL    =    2,
-};
 
 enum QME_MODULE_ID
 {
@@ -192,7 +193,7 @@ enum QME_EXTENDED_REASON_CODE
 enum QME_HCODE_FUNCTIONAL_ENABLES
 {
     // Software Checks
-    QME_CLOCK_STATUS_CHECK_ENABLE     = BIT32(0),
+    QME_AUTO_STOP11_WAKEUP_ENABLE     = BIT32(0),
     QME_POWER_LOSS_ESL_CHECK_ENABLE   = BIT32(1),
     QME_SPWU_PROTOCOL_CHECK_ENABLE    = BIT32(2),
     // Stop Catchup/Abort Path Switches

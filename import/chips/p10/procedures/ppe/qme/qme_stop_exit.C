@@ -459,6 +459,47 @@ qme_stop_exit()
 
         //===============//
 
+        // IF QMCR.MIXED_LPAR_MODE_DISABLE == 0
+        if(! ( in32_sh(QME_LCL_QMCR) & BIT64SH(36) ) )
+        {
+            // Read QME Scratch B[20:23] and mask for core X
+            // In fused core mode, ME Hcode will only key off of the even core bits (20, 22)
+            // to manage the respective odd core too.
+            G_qme_record.c_lpar_mode_enabled = ( in32(QME_LCL_SCRB) & BITS32(20, 4) ) >> SHIFT32(23);
+
+            PK_TRACE_INF("WAKE11: Waking up Cores in LPAR mode[%x] under fused core mode[%x]",
+                         G_qme_record.c_lpar_mode_enabled,
+                         G_qme_record.fused_core_enabled);
+
+            // Write value from masked QME Scratch B[20:23] to SCSR[31] for Core X (if fused, Core X+1 too)
+            // this establishes the LPAR mode wire to the core(s) and caches(s)
+            for( uint32_t core_mask = 8; core_mask; core_mask = core_mask >> 1 )
+            {
+                if( core_mask & G_qme_record.c_lpar_mode_enabled & G_qme_record.c_stop11_exit_targets )
+                {
+                    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_mask ), BIT32(31) );
+
+                    if( G_qme_record.fused_core_enabled && (core_mask & 0xA) )
+                    {
+                        core_mask = core_mask >> 1;
+                        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_mask ), BIT32(31) );
+                    }
+                }
+                else if( core_mask & G_qme_record.c_stop11_exit_targets )
+                {
+                    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_mask ), BIT32(31) );
+
+                    if( G_qme_record.fused_core_enabled && (core_mask & 0xA) )
+                    {
+                        core_mask = core_mask >> 1;
+                        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_mask ), BIT32(31) );
+                    }
+                }
+            }
+        }
+
+        //===============//
+
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_POWERON )
 
         if( G_qme_record.hcode_func_enabled & QME_HWP_PFET_CTRL_ENABLE )
