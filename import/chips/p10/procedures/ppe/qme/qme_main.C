@@ -72,7 +72,7 @@ qme_attr_init()
     if( ( pair_mode || (G_qme_record.chip_dd_level == 10) ) &&
         ( in32_sh(QME_LCL_QMCR) & BIT64SH(47) ) )
     {
-        out32(QME_LCL_QMCR, BIT32(10));
+        out32(QME_LCL_QMCR_OR, BIT32(10));
     }
 }
 
