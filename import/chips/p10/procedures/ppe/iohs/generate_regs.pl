@@ -49,11 +49,11 @@ open( HBUF, ">>${hfile}" ) || die "Could not write file: $hfile";
 open( CBUF, ">>${cfile}" ) || die "Could not write file: $cfile";
 
 print HBUF "\n";
-print HBUF "extern p10_io_ppe_cache ${section};\n";
+print HBUF "p10_io_ppe_cache ${section};\n";
 print HBUF "\n";
 
 print CBUF "\n";
-print CBUF "p10_io_ppe_cache ${section}(&p10_io_phy_ppe_scom_regs, ${section}_start);\n";
+print CBUF "${section}(&p10_io_phy_ppe_scom_regs, ${section}_start),\n";
 print CBUF "\n";
 
 open( BUF, $ppefile ) || die "Could not open ppe file: $ppefile";
@@ -77,8 +77,8 @@ while ( my $line = <BUF> )
     if ( $line =~ /\#define\s+(\S+)_mask\s+(\S+)/ )
     {
         $mask = $2;
-        print HBUF "extern p10_io_ppe_sram_reg p10_io_ppe_${register}${suffix};\n";
-        print CBUF "p10_io_ppe_sram_reg p10_io_ppe_${register}${suffix}(&${section}, $addr, $mask, $shift);\n";
+        print HBUF "p10_io_ppe_sram_reg p10_io_ppe_${register}${suffix};\n";
+        print CBUF "p10_io_ppe_${register}${suffix}(&${section}, $addr, $mask, $shift),\n";
     }
 }
 

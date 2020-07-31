@@ -41,6 +41,7 @@ my $ppefile          = $ARGV[2];
 my $suffix           = $ARGV[3];
 my $sectionarrayname = $ARGV[4];
 my $sectionfiles     = $ARGV[5];
+my $lastsection      = $ARGV[6];
 
 my @sections = split( /,/, $sectionfiles );
 
@@ -48,12 +49,10 @@ open( HBUF, ">>${hfile}" ) || die "Could not write file: $hfile";
 open( CBUF, ">>${cfile}" ) || die "Could not write file: $cfile";
 
 print HBUF "\n";
-print HBUF "extern p10_io_ppe_cache ${sectionarrayname}[${suffix}];\n";
+print HBUF "p10_io_ppe_cache ${sectionarrayname}[${suffix}];\n";
 print HBUF "\n";
 
-print CBUF "\n";
-print CBUF "p10_io_ppe_cache ${sectionarrayname}[${suffix}] = {\n";
-
+print CBUF "${sectionarrayname}{\n";
 for ( my $cnt = 0; $cnt < $suffix; $cnt++ )
 {
     my $section = $sections[$cnt];
@@ -61,9 +60,7 @@ for ( my $cnt = 0; $cnt < $suffix; $cnt++ )
     if ( $cnt < $suffix - 1 ) { print CBUF ","; }
     print CBUF "\n";
 }
-
-print CBUF "};\n";
-print CBUF "\n";
+print CBUF "},\n";
 
 open( BUF, $ppefile ) || die "Could not open ppe file: $ppefile";
 
@@ -71,6 +68,7 @@ my $register;
 my $addr;
 my $shift;
 my $mask;
+my $firstpass = 1;
 while ( my $line = <BUF> )
 {
     if ( $line =~ /\#define\s+(\S+)_addr\s+(\S+)/ )
@@ -85,18 +83,23 @@ while ( my $line = <BUF> )
     if ( $line =~ /\#define\s+(\S+)_mask\s+(\S+)/ )
     {
         $mask = $2;
-        print HBUF "extern p10_io_ppe_sram_reg p10_io_ppe_${register}[${suffix}];\n";
+        print HBUF "p10_io_ppe_sram_reg p10_io_ppe_${register}[${suffix}];\n";
 
-        print CBUF "p10_io_ppe_sram_reg p10_io_ppe_${register}[${suffix}] = {\n";
+        if ( !$firstpass ) { print CBUF ",\n"; }
+        $firstpass = 0;
+        print CBUF "p10_io_ppe_${register}{\n";
         for ( my $cnt = 0; $cnt < $suffix; $cnt++ )
         {
             print CBUF "p10_io_ppe_sram_reg(&${sectionarrayname}[$cnt], $addr, $mask, $shift)";
             if ( $cnt < $suffix - 1 ) { print CBUF ","; }
             print CBUF "\n";
         }
-        print CBUF "};\n";
+        print CBUF "}";
     }
 }
+
+if   ( $lastsection eq "y" ) { print CBUF " {}\n"; }
+else                         { print CBUF ",\n"; }
 
 close(HBUF);
 close(CBUF);
