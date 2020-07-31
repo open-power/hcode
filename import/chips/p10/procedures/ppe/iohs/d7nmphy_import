@@ -178,6 +178,10 @@ echo "#define ${include_str}"                                                   
 echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
 echo "#include <p10_io_ppe_lib.H>"                                                       >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
 echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "class p10_io_ppe_cache_proc {"                                                     >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "public:"                                                                           >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "p10_io_ppe_cache_proc();"                                                          >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
 
 echo "///"                                                                               >  ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
 echo "/// @file p10_io_ppe_regs.C"                                                       >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
@@ -190,7 +194,7 @@ echo "///"                                                                      
 echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
 echo "#include <${EKB_HWP_HDR}>"                                                         >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
 echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
-echo ""                                                                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
+echo "p10_io_ppe_cache_proc::p10_io_ppe_cache_proc() :"                                  >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_SRC}
 
 ${EKB_ROOT}/${EKB_PPE_DST_PATH}/generate_sections_header.pl < ${EKB_ROOT}/${EKB_PPE_DST_PATH}/ioo/link_ioo.cmd >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
 
@@ -206,7 +210,7 @@ ${EKB_ROOT}/${EKB_PPE_DST_PATH}/generate_reg_arrays.pl                          
   ${EKB_ROOT}/${EKB_PPE_DST_PATH}/ppe_fw_reg_const_pkg.h                                                     \
   5                                                                                                          \
   p10_io_ppe_fw_regs                                                                                         \
-  "p10_io_ppe_fw_regs0,p10_io_ppe_fw_regs1,p10_io_ppe_fw_regs2,p10_io_ppe_fw_regs3,p10_io_ppe_fw_regs4"
+  "p10_io_ppe_fw_regs0,p10_io_ppe_fw_regs1,p10_io_ppe_fw_regs2,p10_io_ppe_fw_regs3,p10_io_ppe_fw_regs4" n
 
 ${EKB_ROOT}/${EKB_PPE_DST_PATH}/generate_reg_arrays.pl                                                       \
   ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}                                                             \
@@ -214,9 +218,9 @@ ${EKB_ROOT}/${EKB_PPE_DST_PATH}/generate_reg_arrays.pl                          
   ${EKB_ROOT}/${EKB_PPE_DST_PATH}/ppe_mem_reg_const_pkg.h                                                    \
   5                                                                                                          \
   p10_io_ppe_mem_regs                                                                                        \
-  "p10_io_ppe_mem_regs0,p10_io_ppe_mem_regs1,p10_io_ppe_mem_regs2,p10_io_ppe_mem_regs3,p10_io_ppe_mem_regs4"
+  "p10_io_ppe_mem_regs0,p10_io_ppe_mem_regs1,p10_io_ppe_mem_regs2,p10_io_ppe_mem_regs3,p10_io_ppe_mem_regs4" y
 
-echo ""       >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
+echo "};"     >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
 echo "#endif" >> ${EKB_ROOT}/${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}
 
 beautify_file_list+=("${EKB_HWP_DST_PATH}/${EKB_HWP_HDR}")
