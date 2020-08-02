@@ -49,7 +49,10 @@ void
 qme_top_priority_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_TOPPRI);
-    PK_TRACE_INF("Event: Top Priority");
+    uint64_t top = in64(QME_LCL_EISR) & BITS64(0, 8);
+    out64(QME_LCL_EIMR_OR, top);
+    PK_TRACE_INF("Event: Top Priority: %x", (uint32_t)(top >> 32));
+    //placeholder if flag: errlog and halt
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_TOPPRI);
 }
 
@@ -104,7 +107,7 @@ qme_dec_handler()
 {
     G_qme_record.uih_status |= BIT32(IDX_TIMER_DEC);
     mtspr(SPRN_TSR, TSR_DIS);
-    PK_TRACE_INF("Timer: Decrementer");
+    //PK_TRACE_INF("Timer: Decrementer");
     G_qme_record.uih_status &= ~BIT32(IDX_TIMER_DEC);
 }
 
@@ -124,7 +127,7 @@ qme_fit_handler()
 
     G_qme_record.uih_status |= BIT32(IDX_TIMER_FIT);
 
-    PK_TRACE("Timer: FIT, UIH Status[%x]", G_qme_record.uih_status);
+    //PK_TRACE("Timer: FIT, UIH Status[%x]", G_qme_record.uih_status);
 
     if ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_STOP11_ENTRY_REQUESTED ) )
     {
