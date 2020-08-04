@@ -105,6 +105,15 @@
 #define DEBUG_RX_BIST_LL_TEST_FAIL              0x24
 #define DEBUG_RX_EYE_HEIGHT_FAIL                0x25
 #define DEBUG_BIST_TXSEG                        0x26
+#define DEBUG_MAN_SERVO_DATAPIPE_FAIL           0x27
+#define DEBUG_MAN_SERVO_TIMEOUT_FAIL            0x28
+#define DEBUG_MAN_SERVO_OP                      0x29
+#define DEBUG_MAN_SERVO_DATA                    0x2A
+#define DEBUG_MAN_SERVO_DATA1                   0x2B
+#define DEBUG_MAN_SERVO_DATA2                   0x2C
+#define DEBUG_MAN_SERVO_MASK                    0x2D
+#define DEBUG_MAN_SERVO_PATTERN                 0x2E
+#define DEBUG_VGA_GAIN                          0x2F
 /// DEBUG LOG TYPES END
 
 #include "io_lib.h"

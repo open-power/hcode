@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mbs20073000 |mbs     | LAB - Remove override of rx_loff_timeout (now one value in io_init_and_reset.c)
 // cws20011400 |cws     | Added Debug Logs
 // mbs19072500 |mbs     | Moved live_edgeoff_mode out of loff_setting_ovr_enb umbrella
 // mwh19051700 |mwh     | HW492097 changed inc/dec for change in step size
@@ -153,8 +154,6 @@ int eo_loff_fenced(t_gcr_addr* gcr_addr, t_bank bank)
             put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b010, read_modify_write);  // 4    3
             put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b010, read_modify_write);  // 1    3
             put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);  // 0    0
-
-            put_ptr_field(gcr_addr, rx_loff_timeout, 0b0011, read_modify_write);
 
             //change for Loff to 5 since this is one time call
             //change default to 4 for eoff

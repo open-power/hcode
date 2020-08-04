@@ -39,6 +39,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20073000 |mbs     | LAB - Updated dfe h1 check to error at -20 instead of 0
+// mbs20073000 |mbs     | LAB - Updated dfe clkadj to only adjust for h1 > 0
+// mbs20073000 |mbs     | LAB - Updated dfe_fast H coefficient calculations for DAC swizzle bug
+// mbs20073000 |mbs     | LAB - Updated dfe_full servo op call to twist servo_op patterns for DAC swizzle bug
 // mbs20031000 |mbs     | HW525009 - Switch slave mode to bank B when copying results for fast DFE
 // mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
 // vbr20021300 |vbr     | Added Min Eye Height code
@@ -196,6 +200,18 @@ const static uint16_t SERVO_OPS[8] =
     SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX111XX
 };
 
+const static uint16_t SERVO_OPS_PDD1[8] =
+{
+    SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX111XX,
+    SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX011XX,
+    SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX101XX,
+    SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX001XX,
+    SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX110XX,
+    SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX010XX,
+    SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX100XX,
+    SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX000XX
+};
+
 PK_STATIC_ASSERT(DAC_SIZE == 64);
 PK_STATIC_ASSERT(BUILD_DAC_ADDR(BANK_A, QUAD_NORTH, L000) == rx_ad_latch_dac_n000_addr);
 PK_STATIC_ASSERT(BUILD_DAC_ADDR(BANK_A, QUAD_NORTH, L111) == rx_ad_latch_dac_n111_addr);
@@ -323,7 +339,7 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
         ADD_LOG(DEBUG_RX_DFE_AP_ZERO_FAIL, i_tgt, i_ap1);
         l_rc = warning_code;
     }
-    else
+    else if ( i_h1 > 0 )
     {
         // Only allow the clock adjust to grow.
         // - This will prevent the DFE Values + Clk Adjust from oscillating
@@ -442,20 +458,87 @@ static inline void rx_eo_dfe_read_loff(t_gcr_addr* i_tgt, int16_t o_loff_array[D
  *
  * @return uint32_t. pass_code if success, else error code.
  */
-static uint32_t rx_eo_dfe_fast_servo(t_gcr_addr* i_tgt, int32_t i_loff[4], int32_t o_hvals[3], int32_t* io_clk_adj)
+//static uint32_t rx_eo_dfe_fast_servo(t_gcr_addr *i_tgt, int32_t i_loff[4], int32_t o_hvals[3], int32_t *io_clk_adj)
+//{
+//    const uint32_t AP01010       = 0;
+//    const uint32_t AP10010       = 1;
+//    const uint32_t AP10110       = 2;
+//    const uint32_t AP11010       = 3;
+//    uint32_t       l_rc          = pass_code;
+//    int32_t  l_servo_results[4];
+//    uint16_t l_servo_ops[4] =
+//    {
+//        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX010XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L010,
+//        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX100XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L100,
+//        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX101XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L101,
+//        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX110XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L110
+//    };
+//    SET_DFE_DEBUG(0x7020); // Enter DFE Fast Looper
+//
+//    // Run Servo Ops
+//    //SET_DFE_DEBUG(0x7021); // Run Servo Ops
+//
+//
+//    l_rc = run_servo_ops_and_get_results(
+//                i_tgt,
+//                c_servo_queue_amp_meas,
+//                4,
+//                l_servo_ops,
+//                l_servo_results);
+//    if (l_rc)
+//    {
+//        goto function_exit;
+//    }
+//
+//    // Remove latch offset from the measurements
+//    //SET_DFE_DEBUG(0x7022); // Remove Latch Offsets from Servo Ops
+//    l_servo_results[AP01010] -= i_loff[AP01010];
+//    l_servo_results[AP10010] -= i_loff[AP10010];
+//    l_servo_results[AP10110] -= i_loff[AP10110];
+//    l_servo_results[AP11010] -= i_loff[AP11010];
+//     ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP01010]);
+//     ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP10010]);
+//     ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP10110]);
+//     ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP11010]);
+//
+//    // Use the AP measurements to pull out DFE coefficients
+//    //SET_DFE_DEBUG(0x7023); // Calculate H1/H2/H3
+//    o_hvals[0] = eo_dfe_round(l_servo_results[AP10110] - l_servo_results[AP10010]);
+//    o_hvals[1] = eo_dfe_round(l_servo_results[AP11010] - l_servo_results[AP10010]);
+//    o_hvals[2] = eo_dfe_round(l_servo_results[AP11010] - l_servo_results[AP01010]);
+//    //SET_DFE_DEBUG(0x7023, o_hvals[0]); // Calculate H1/H2/H3
+//    //SET_DFE_DEBUG(0x7023, o_hvals[1]); // Calculate H1/H2/H3
+//    //SET_DFE_DEBUG(0x7023, o_hvals[2]); // Calculate H1/H2/H3
+//
+//    //SET_DFE_DEBUG(0x7024); // Calculate DFE Clock Adjust
+//    l_rc = rx_eo_dfe_calc_clk_adj(i_tgt, o_hvals[0], l_servo_results[AP10110], l_servo_results[AP10010], io_clk_adj);
+//
+//function_exit:
+//    SET_DFE_DEBUG(0x7025); // Exit DFE Fast Looper
+//    return l_rc;
+//}
+static uint32_t rx_eo_dfe_fast_servo(t_gcr_addr* i_tgt, int32_t i_loff[8], int32_t o_hvals[3], int32_t* io_clk_adj)
 {
-    const uint32_t AP01010       = 0;
-    const uint32_t AP10010       = 1;
-    const uint32_t AP10110       = 2;
-    const uint32_t AP11010       = 3;
+    const uint32_t AP00010       = 0;
+    const uint32_t AP00110       = 1;
+    const uint32_t AP01010       = 2;
+    const uint32_t AP01110       = 3;
+    const uint32_t AP10010       = 4;
+    const uint32_t AP10110       = 5;
+    const uint32_t AP11010       = 6;
+    const uint32_t AP11110       = 7;
     uint32_t       l_rc          = pass_code;
-    int32_t  l_servo_results[4];
-    uint16_t l_servo_ops[4] =
+    int32_t  l_servo_results[8];
+    uint16_t l_servo_ops[8] =
     {
+        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX000XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L000,
+        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX001XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L001,
         SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX010XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L010,
+        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX011XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L011,
         SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX100XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L100,
         SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX101XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L101,
-        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX110XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L110
+        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX110XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L110,
+        SERVO_OP_MASK_ALL | SERVO_OP_FILT_AX111XX | SERVO_OP_AP | (BANK_A << 6) | QUAD_NORTH | L111
     };
     SET_DFE_DEBUG(0x7020); // Enter DFE Fast Looper
 
@@ -466,7 +549,7 @@ static uint32_t rx_eo_dfe_fast_servo(t_gcr_addr* i_tgt, int32_t i_loff[4], int32
     l_rc = run_servo_ops_and_get_results(
                i_tgt,
                c_servo_queue_amp_meas,
-               4,
+               8,
                l_servo_ops,
                l_servo_results);
 
@@ -477,16 +560,40 @@ static uint32_t rx_eo_dfe_fast_servo(t_gcr_addr* i_tgt, int32_t i_loff[4], int32
 
     // Remove latch offset from the measurements
     //SET_DFE_DEBUG(0x7022); // Remove Latch Offsets from Servo Ops
+    l_servo_results[AP00010] -= i_loff[AP00010];
+    l_servo_results[AP00110] -= i_loff[AP00110];
     l_servo_results[AP01010] -= i_loff[AP01010];
+    l_servo_results[AP01110] -= i_loff[AP01110];
     l_servo_results[AP10010] -= i_loff[AP10010];
     l_servo_results[AP10110] -= i_loff[AP10110];
     l_servo_results[AP11010] -= i_loff[AP11010];
+    l_servo_results[AP11110] -= i_loff[AP11110];
+    ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP00010]);
+    ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP00110]);
+    ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP01010]);
+    ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP01110]);
+    ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP10010]);
+    ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP10110]);
+    ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP11010]);
+    ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, l_servo_results[AP11110]);
 
     // Use the AP measurements to pull out DFE coefficients
     //SET_DFE_DEBUG(0x7023); // Calculate H1/H2/H3
-    o_hvals[0] = eo_dfe_round(l_servo_results[AP10110] - l_servo_results[AP10010]);
+    //o_hvals[0] = eo_dfe_round(l_servo_results[AP10110] - l_servo_results[AP10010]);
+    //o_hvals[0] = eo_dfe_round(l_servo_results[AP11110] - l_servo_results[AP11010]);
+    o_hvals[0] = eo_dfe_round(l_servo_results[AP01110] - l_servo_results[AP01010]);
     o_hvals[1] = eo_dfe_round(l_servo_results[AP11010] - l_servo_results[AP10010]);
     o_hvals[2] = eo_dfe_round(l_servo_results[AP11010] - l_servo_results[AP01010]);
+    uint16_t pl_mem_dfe_save = (o_hvals[0] << 8) & 0xFF00;
+    pl_mem_dfe_save |= (o_hvals[1] << 4) & 0x00F0;
+    pl_mem_dfe_save |= (o_hvals[2]) & 0x000F;
+
+
+
+
+    int lane = get_gcr_addr_lane(i_tgt);
+    mem_pl_field_put(rx_lane_cal_time_us, lane, pl_mem_dfe_save);
+    \
     //SET_DFE_DEBUG(0x7023, o_hvals[0]); // Calculate H1/H2/H3
     //SET_DFE_DEBUG(0x7023, o_hvals[1]); // Calculate H1/H2/H3
     //SET_DFE_DEBUG(0x7023, o_hvals[2]); // Calculate H1/H2/H3
@@ -515,17 +622,32 @@ static void rx_eo_dfe_fast_apply(t_gcr_addr* i_tgt, uint32_t* l_rc, int16_t i_lo
     int32_t  l_index    = 0;
     int32_t  l_loop_end = ((DAC_SIZE) / 2) - 1;
     int32_t  l_dac_addr = DAC_BASE_ADDR;
-    int32_t  l_dfe_latch_val[8] =
+    int32_t  l_dfe_latch_val[8];
+
+    if (   ( get_chip_id()  == CHIP_ID_P10  )
+           && ( get_major_ec() == MAJOR_EC_DD1 ) )
     {
-        (-i_hvals[2] - i_hvals[1] - i_hvals[0]),
-        (-i_hvals[2] - i_hvals[1] + i_hvals[0]),
-        (-i_hvals[2] + i_hvals[1] - i_hvals[0]),
-        (-i_hvals[2] + i_hvals[1] + i_hvals[0]),
-        ( i_hvals[2] - i_hvals[1] - i_hvals[0]),
-        ( i_hvals[2] - i_hvals[1] + i_hvals[0]),
-        ( i_hvals[2] + i_hvals[1] - i_hvals[0]),
-        ( i_hvals[2] + i_hvals[1] + i_hvals[0])
-    };
+        // Workaround for DD1.0
+        l_dfe_latch_val[0] = ( i_hvals[2] + i_hvals[1] + i_hvals[0]);
+        l_dfe_latch_val[1] = (-i_hvals[2] + i_hvals[1] + i_hvals[0]);
+        l_dfe_latch_val[2] = ( i_hvals[2] - i_hvals[1] + i_hvals[0]);
+        l_dfe_latch_val[3] = (-i_hvals[2] - i_hvals[1] + i_hvals[0]);
+        l_dfe_latch_val[4] = ( i_hvals[2] + i_hvals[1] - i_hvals[0]);
+        l_dfe_latch_val[5] = (-i_hvals[2] + i_hvals[1] - i_hvals[0]);
+        l_dfe_latch_val[6] = ( i_hvals[2] - i_hvals[1] - i_hvals[0]);
+        l_dfe_latch_val[7] = (-i_hvals[2] - i_hvals[1] - i_hvals[0]);
+    }
+    else
+    {
+        l_dfe_latch_val[0] = (-i_hvals[2] - i_hvals[1] - i_hvals[0]);
+        l_dfe_latch_val[1] = (-i_hvals[2] - i_hvals[1] + i_hvals[0]);
+        l_dfe_latch_val[2] = (-i_hvals[2] + i_hvals[1] - i_hvals[0]);
+        l_dfe_latch_val[3] = (-i_hvals[2] + i_hvals[1] + i_hvals[0]);
+        l_dfe_latch_val[4] = ( i_hvals[2] - i_hvals[1] - i_hvals[0]);
+        l_dfe_latch_val[5] = ( i_hvals[2] - i_hvals[1] + i_hvals[0]);
+        l_dfe_latch_val[6] = ( i_hvals[2] + i_hvals[1] - i_hvals[0]);
+        l_dfe_latch_val[7] = ( i_hvals[2] + i_hvals[1] + i_hvals[0]);
+    }
 
     if ( i_bank == bank_b )
     {
@@ -575,7 +697,7 @@ static int32_t rx_eo_dfe_check_hvals(t_gcr_addr* i_tgt, int32_t i_hvals[3])
 
     SET_DFE_DEBUG(0x7060); // Exit DFE Fast Looper
 
-    if (i_hvals[0] < 0)
+    if (i_hvals[0] < -20)
     {
         set_fir(fir_code_warning);
         ADD_LOG(DEBUG_RX_DFE_H1_LIMIT, i_tgt, i_hvals[0]);
@@ -684,8 +806,17 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool i_recal, bo
         // Customize Servo Ops for Specific Quadrant and Bank
         for (l_latch = L000; l_latch <= L111; ++l_latch)
         {
-            l_ap_servo_ops[l_latch] = SERVO_OPS[l_latch] | SERVO_OP_AP | ( l_bank << 6) | l_quad | l_latch;
-            l_an_servo_ops[l_latch] = SERVO_OPS[l_latch] | SERVO_OP_AN | ( l_bank << 6) | l_quad | l_latch;
+            if (   ( get_chip_id()  == CHIP_ID_P10  )
+                   && ( get_major_ec() == MAJOR_EC_DD1 ) )
+            {
+                l_ap_servo_ops[l_latch] = SERVO_OPS_PDD1[l_latch] | SERVO_OP_AP | ( l_bank << 6) | l_quad | l_latch;
+                l_an_servo_ops[l_latch] = SERVO_OPS_PDD1[l_latch] | SERVO_OP_AN | ( l_bank << 6) | l_quad | l_latch;
+            }
+            else
+            {
+                l_ap_servo_ops[l_latch] = SERVO_OPS[l_latch]      | SERVO_OP_AP | ( l_bank << 6) | l_quad | l_latch;
+                l_an_servo_ops[l_latch] = SERVO_OPS[l_latch]      | SERVO_OP_AN | ( l_bank << 6) | l_quad | l_latch;
+            }
 
             l_dac_array[l_latch] = LatchDacToInt(get_ptr(i_tgt, (l_dac_addr + l_latch), DAC_STARTBIT, DAC_ENDBIT));
         }
@@ -871,7 +1002,7 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
     uint32_t       l_iter                  = 0;       // Current Iteration Number
     uint32_t       l_rc                    = pass_code; // Return Code
     int16_t        l_loff_array[DAC_SIZE];
-    int32_t        l_loff_servo[4];
+    int32_t        l_loff_servo[8];
     int32_t        l_hvals[3]              = {0, 0, 0};
     uint32_t       l_pr_data[PR_DATA_SIZE] = {0, 0, 0, 0};
     int32_t        l_h1_vals[2]            = {0, 0};
@@ -896,10 +1027,14 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
     //SET_DFE_DEBUG(0x7002); // Read Prior PR & Latch DAC Loff Data
     rx_eo_dfe_get_mini_pr(i_tgt, l_pr_data);
     rx_eo_dfe_read_loff(i_tgt, l_loff_array);
-    l_loff_servo[0] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L010)];
-    l_loff_servo[1] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L100)];
-    l_loff_servo[2] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L101)];
-    l_loff_servo[3] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L110)];
+    l_loff_servo[0] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L000)];
+    l_loff_servo[1] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L001)];
+    l_loff_servo[2] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L010)];
+    l_loff_servo[3] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L011)];
+    l_loff_servo[4] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L100)];
+    l_loff_servo[5] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L101)];
+    l_loff_servo[6] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L110)];
+    l_loff_servo[7] = l_loff_array[((BANK_A << 5) + QUAD_NORTH + L111)];
 
 
     for (l_iter = 0; l_iter < MAX_ITERATIONS; ++l_iter)
@@ -987,5 +1122,32 @@ function_exit:
     //rx_eo_dfe_restore_mini_pr(i_tgt, l_pr_data);
 
     SET_DFE_DEBUG(0x700A); // Exit DFE Fast
+    return l_rc;
+}
+
+
+uint32_t rx_eo_dfe_force(t_gcr_addr* i_tgt)
+{
+    uint32_t       l_rc                    = pass_code; // Return Code
+    int32_t        l_hvals[3]              = {6, 2, 1};
+    int16_t        l_loff_array[DAC_SIZE];
+
+    rx_eo_dfe_read_loff(i_tgt, l_loff_array);
+
+
+    // Apply DFE coefficients to bank A
+    rx_eo_dfe_fast_apply(i_tgt, &l_rc, l_loff_array, l_hvals, bank_a);
+
+    // Put bank B into CDR Slave mode temporarily while we write its DAC registers (HW525009)
+    // First disable slave mode on bank A, then enable bank B
+    put_ptr_field(i_tgt, rx_pr_slave_mode_a, 0b0, read_modify_write);
+    put_ptr_field(i_tgt, rx_pr_slave_mode_b, 0b1, read_modify_write);
+
+    rx_eo_dfe_fast_apply(i_tgt, &l_rc, l_loff_array, l_hvals, bank_b);
+
+    // Restore CDR Slave mode on bank A (HW525009)
+    // First disable slave mode on bank B, then enable bank A
+    put_ptr_field(i_tgt, rx_pr_slave_mode_b, 0b0, read_modify_write);
+    put_ptr_field(i_tgt, rx_pr_slave_mode_a, 0b1, read_modify_write);
     return l_rc;
 }

@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20073000 |mbs     | LAB - Override rx_loff_timeout to 8
 // mbs20030900 |mbs     | HW525009: Set bit_lock_done=1 during bank sync and dfe to avoid bank B unlocks
 // jfg20031000 |jfg     | fix copy-paste error
 // jfg20030900 |jfg     | HW525009 add a rough_only mode to set initial coarse peak 1&2
@@ -230,18 +231,19 @@ PK_STATIC_ASSERT(rx_pr_enable_b_startbit == 3);
 
 // Macros for the timestamping code used in all 3 cal functions for measuring cal time.
 // To avoid doing a divide, we assume a power-of-2 timer base which is close enough to the actual frequency.
-#if IO_DEBUG_LEVEL < 2
+//#if IO_DEBUG_LEVEL < 2
 #define CAL_TIMER_START {}
 #define CAL_TIMER_STOP {}
-#else
-#define CAL_TIMER_START  PkTimebase cal_start_time = pk_timebase_get();
-#define CAL_TIMER_STOP { \
-        uint32_t cal_time = (uint32_t)(pk_timebase_get() - cal_start_time); \
-        uint16_t cal_time_us = cal_time / TIMER_US_DIVIDER; \
-        mem_pl_field_put(rx_lane_cal_time_us, lane, cal_time_us); \
-    }
-#endif
-
+/*
+//#else
+//  #define CAL_TIMER_START  PkTimebase cal_start_time = pk_timebase_get();
+//  #define CAL_TIMER_STOP { \
+//    uint32_t cal_time = (uint32_t)(pk_timebase_get() - cal_start_time); \
+//    uint16_t cal_time_us = cal_time / TIMER_US_DIVIDER; \
+//    mem_pl_field_put(rx_lane_cal_time_us, lane, cal_time_us); \
+//  }
+//#endif
+*/
 
 ////////////////////////////////////////////////////////////////////////////////////
 // DC CAL
@@ -567,10 +569,10 @@ void eo_main_init(t_gcr_addr* gcr_addr)
 
     if (dfe_enable)
     {
-        bool recal = false;
-        bool enable_min_eye_height = false;
+//    bool recal = false;
+//    bool enable_min_eye_height = false;
         status |= rx_eo_dfe_fast(gcr_addr);
-        status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
+//    status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
     }
 
     // Cal Step: DDC
@@ -583,12 +585,11 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         bool recal_dac_changed = false;
         status |= eo_ddc(gcr_addr, bank_a, recal, recal_dac_changed);
 
-        if (dfe_enable)
-        {
-            // after running ddc, run dfe again to recenter at new sample position
-            bool enable_min_eye_height = true;
-            status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
-        }
+//    if (dfe_enable) {
+//      // after running ddc, run dfe again to recenter at new sample position
+//      bool enable_min_eye_height = true;
+//      status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
+//    }
     }
 
     // Perform Check of VGA, CTLE, LTE, and QPA values
@@ -884,6 +885,12 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
 
     // Update recal count and check if the min recal count has been reached
     recal_cnt = recal_cnt + 1;
+
+    if (recal_cnt > 0xFFFF)
+    {
+        recal_cnt = 0;
+    }
+
     mem_pl_field_put(rx_lane_recal_cnt, lane, recal_cnt);
 
     if (!min_recal_cnt_reached)

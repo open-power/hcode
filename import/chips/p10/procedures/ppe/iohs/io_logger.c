@@ -58,7 +58,7 @@
 //------------------------------------------------------------------------------
 // Constant Definitions
 //------------------------------------------------------------------------------
-#define DEBUG_LOG_SIZE 128
+#define DEBUG_LOG_SIZE 127
 
 t_log _debug_log_start __attribute__ ((section ("debuglog")));
 volatile t_log* g_io_logs = &_debug_log_start;
@@ -96,6 +96,10 @@ void _add_log(const uint8_t i_type,
     set_gcr_addr_reg_id(i_gcr_addr, l_reg_id);
 
     img_field_put(ppe_debug_log_num, ++l_log_num);
+
+    //while(l_log_num == DEBUG_LOG_SIZE) {
+    //    l_log_num = img_field_get(ppe_debug_log_num);
+    //}
     return;
 }
 
@@ -120,5 +124,9 @@ void _add_log_no_gcr_addr(const uint8_t i_type,
     g_io_logs[l_log_num] = l_new_log;
 
     img_field_put(ppe_debug_log_num, ++l_log_num);
+
+    //while(l_log_num == DEBUG_LOG_SIZE) {
+    //    l_log_num = img_field_get(ppe_debug_log_num);
+    //}
     return;
 }

@@ -187,7 +187,6 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
             put_ptr_field(gcr_addr, rx_loff_hyst_start, 0b00100, read_modify_write);
 
 
-            put_ptr_field(gcr_addr, rx_loff_timeout, 0b0110, read_modify_write);
         }
 
         if (bank == bank_a )
@@ -558,7 +557,7 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
     {
         mem_pl_field_put(rx_eoff_poff_fail, lane, delta_fail);
         set_fir(fir_code_dft_error | fir_code_warning);
-        ADD_LOG(DEBUG_RX_EOFF_EOFF_FAIL, gcr_addr, 0x0);
+        ADD_LOG(DEBUG_RX_EOFF_POFF_FAIL, gcr_addr, 0x0);
     }//ppe pl
 
 

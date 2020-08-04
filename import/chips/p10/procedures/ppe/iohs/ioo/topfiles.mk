@@ -48,6 +48,7 @@ TOP-C-SOURCES += eo_bist_init_ovride.c
 TOP-C-SOURCES += eo_rxbist_ber.c
 TOP-C-SOURCES += eo_llbist.c
 TOP-C-SOURCES += tx_seg_test.c
+TOP-C-SOURCES += io_manual_amp_servo.c
 TOP-CXX-SOURCES =
 TOP-S-SOURCES =
 

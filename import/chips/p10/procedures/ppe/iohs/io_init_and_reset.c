@@ -97,7 +97,7 @@
 
 // (BJA 1/16/20) Per Glen W, setting 0b11 is used for timing analysis.
 // The scan init (RegDef) value is 0b00, but hardware is currently frozen.
-#define RX_CLK_PHASE_SELECT_RESET_VALUE 0b11
+#define RX_CLK_PHASE_SELECT_RESET_VALUE 0b01
 
 //////////////////////////////////
 // Initialize HW Regs
@@ -134,6 +134,15 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
         put_ptr_field(gcr_addr, rx_lte_timeout,     8, read_modify_write); //pg
         put_ptr_field(gcr_addr, rx_bo_time,        11, read_modify_write); //pg
     }
+
+    // CWS CHANGED THIS FROM 6 -> 8
+    put_ptr_field(gcr_addr, rx_loff_timeout, 8, read_modify_write);
+
+    // Values from Chad/Glen, vset may need to change based upon voltage
+    put_ptr_field(gcr_addr, rx_iref_clock_dac  , 0x2, read_modify_write);
+    put_ptr_field(gcr_addr, rx_iref_data_dac   , 0x2, read_modify_write);
+    put_ptr_field(gcr_addr, rx_iref_vset_dac   , 0x1, read_modify_write);
+    put_ptr_field(gcr_addr, rx_ctle_peak2_h_sel, 0x1, read_modify_write);
 
     // Set up the flywheel snapshot routing for psave (HW476919)
     // Each chiplet is split evenly into two links.

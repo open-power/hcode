@@ -304,7 +304,7 @@ void rx_eo_servo_setup(t_gcr_addr* i_tgt, const t_servo_setup i_servo_setup)
         case SERVO_SETUP_DFE_FAST:
             put_ptr_field(i_tgt, rx_amp_servo_mask_h0      , 0x01, read_modify_write);
             put_ptr_field(i_tgt, rx_amp_servo_vote_bias_dec, 0x00, read_modify_write);
-            put_ptr_field(i_tgt, rx_amp_servo_vote_bias_inc, 0x00, read_modify_write);
+            put_ptr_field(i_tgt, rx_amp_servo_vote_bias_inc, 0x01, read_modify_write);
 
             if ( amp_setting_ovr == 0 )
             {

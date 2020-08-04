@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20073000 |mbs     | LAB - Added workaround hooks for run_servo_ops_base
 // vbr20030900 |vbr     | HW525544: Make ppe_servo_status0/1 trap registers and clear the hw servo_status0/1 registers after copying
 // vbr20012400 |vbr     | HW520453: Clear the scom_ppe_fir reg bit before setting it again since FW can't write to it on DD1
 // vbr19111500 |vbr     | Initial implementation of debug levels
@@ -100,6 +101,7 @@
 #include "pk.h"
 
 #include "servo_ops.h"
+#include "io_manual_amp_servo.h"
 
 #include "ppe_img_reg_const_pkg.h"
 #include "ppe_mem_reg_const_pkg.h"
@@ -217,6 +219,23 @@ int run_servo_ops_base(t_gcr_addr* gcr_addr, unsigned int queue, unsigned int nu
     unsigned int ops_submitted = 0;
     unsigned int ops_done = 0;
     unsigned int servo_op_queue_addr = (queue == c_servo_queue_general) ? rx_servo_op_queue0_addr : rx_servo_op_queue1_addr;
+
+    if (   ( get_chip_id()  == CHIP_ID_P10  )
+           && ( get_major_ec() == MAJOR_EC_DD1 ) )
+    {
+        // >>>> WORKAROUND >>>>>
+        unsigned int l_is_eoff = get_ptr_field(gcr_addr, rx_loff_livedge_mode);
+        unsigned int dd1_flag = 1;
+        unsigned int l_is_loff = ((queue == c_servo_queue_general) && (0x4000 == (servo_ops[0] & 0xF000))
+                                  && (l_is_eoff == 0x0));
+
+        if ((queue == c_servo_queue_amp_meas || l_is_loff) && dd1_flag)
+        {
+            return manual_amp_servo_op(gcr_addr, num_ops, servo_ops, results, results_enabled, set_fir_on_error, l_is_loff);
+        }
+
+        // <<<<<<<<<<<<<<<<<<<<<
+    }
 
     // Loop to submit servo ops and read results
     bool read_results = false; // Don't want to read results on first loop since haven't submitted anything as yet.
@@ -625,4 +644,6 @@ void set_fir(uint32_t fir_code)
     // Set the bit in the PPE FIR register to trigger the FIR
     uint64_t volatile* fir_set_addr = (uint64_t*)(0xC0000000 | scom_ppe_fir_set_lcl_addr);
     (*fir_set_addr) = (uint64_t)fir_code << 32;
+
+    //PK_PANIC(0);
 } //set_fir

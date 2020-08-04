@@ -101,7 +101,8 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
     if ( fw_field_get(fw_serdes_16_to_1_mode) )   // 16:1
     {
         timer_sel = 0xD;
-        max_bumps = 15;
+        max_bumps = 255;
+        //max_bumps = 15;
     }
     else
     {

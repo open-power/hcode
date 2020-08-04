@@ -90,6 +90,7 @@ src_files+=("ppe_com_reg_const_pkg.h")
 src_files+=("ppe_fw_reg_const_pkg.h")
 src_files+=("ppe_img_reg_const_pkg.h")
 src_files+=("ppe_mem_reg_const_pkg.h")
+src_files+=("io_manual_amp_servo.c" "io_manual_amp_servo.h")
 
 
 #

@@ -60,6 +60,8 @@
  */
 uint32_t rx_eo_dfe_fast(t_gcr_addr* i_gcr_addr);
 
+uint32_t rx_eo_dfe_force(t_gcr_addr* i_gcr_addr);
+
 /**
  * @brief The procedure calculates and sets proper latch dac values. The dac
  *   values represent latch offset, path offset, and dfe.

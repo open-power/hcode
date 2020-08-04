@@ -78,6 +78,7 @@
 #include "servo_ops.h"
 #include "eo_common.h"
 #include "eo_vga.h"
+#include "io_logger.h"
 
 #include "ppe_com_reg_const_pkg.h"
 #include "config_ioo.h"
@@ -251,6 +252,7 @@ int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, bool* gain_changed, bool recal, bo
     while (run_loop)                                                                                                                        //Pg1-5
     {
         //begin while                                                                                                                           //
+        //ADD_LOG(DEBUG_VGA_GAIN, gcr_addr, gain);
         set_debug_state(
             0x5004);                                                                                                          //
         //loop_count++;                                                                                                                     //Pg1-6

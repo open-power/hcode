@@ -217,7 +217,8 @@ void supervisor_thread(void* arg)
                     prev_thread_loop_cnt[thread] = new_count;
 
                     // Set FIR if the count hasn't changed
-                    if (old_count == new_count)
+//          if (old_count == new_count) {
+                    if (old_count == new_count && 0)
                     {
 #if IO_DEBUG_LEVEL >= 1
                         // If the error info isn't already set, set_fir() will write this thread's ID to the error info so need to override that.

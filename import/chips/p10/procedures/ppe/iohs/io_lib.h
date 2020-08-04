@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20042102 |mbs     | Added PIR and PVR functions to query design level
 // vbr19111500 |vbr     | Initial implementation of debug levels
 // vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
 // bja19081900 |bja     | ptr_ary macros save reg access info in an array, which is smaller than making many get/set_ptr calls
@@ -795,6 +796,32 @@ uint32_t lcl_get_int(uint32_t reg_addr, uint32_t shift);
                     ); \
     })
 
+// PIR and PVR functions
+#define SPRN_PIR_CHIP_ID_MASK    0x00000700 // x00=P10, x01=zArtemis                                                                          
+#define SPRN_PIR_CHIP_ID_SHIFT   8
+#define          CHIP_ID_P10     0x00000000
+#define          CHIP_ID_ZA      0x00000100
+
+#define SPRN_PVR_MAJOR_EC_MASK   0x00000f00
+#define SPRN_PVR_MAJOR_EC_SHIFT  8
+#define          MAJOR_EC_DD1    0x00000100
+#define          MAJOR_EC_DD2    0x00000200
+
+#define SPRN_PVR_MINOR_EC_MASK   0x0000000f
+#define SPRN_PVR_MINOR_EC_SHIFT  0
+
+static inline int get_chip_id  ()
+{
+    return mfspr(SPRN_PIR) & SPRN_PIR_CHIP_ID_MASK;
+}
+static inline int get_major_ec ()
+{
+    return mfspr(SPRN_PVR) & SPRN_PVR_MAJOR_EC_MASK;
+}
+static inline int get_minor_ec ()
+{
+    return mfspr(SPRN_PVR) & SPRN_PVR_MINOR_EC_MASK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // SERVO OP FUNCTIONS
