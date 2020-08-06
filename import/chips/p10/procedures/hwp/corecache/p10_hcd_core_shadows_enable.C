@@ -101,6 +101,8 @@ p10_hcd_core_shadows_enable(
 //    fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST > l_mc_or = i_target;//default OR
     fapi2::Target < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > l_eq_target =
         i_target.getParent < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST > ();
+    fapi2::Target< fapi2::TARGET_TYPE_PROC_CHIP > l_chip =
+        i_target.getParent< fapi2::TARGET_TYPE_PROC_CHIP >();
 
     FAPI_INF(">>p10_hcd_core_shadows_enable");
 
@@ -109,117 +111,17 @@ p10_hcd_core_shadows_enable(
 
     if ( MMIO_GET( QME_FLAGS_TOD_COMPLETE ) == 1 )
     {
-        FAPI_DBG("Assert CORE_INTR_SAMPLE/REFRESH_PMSR via PCR_SCSR[18/23]");
-        FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_OR, MMIO_LOAD32H( BIT32(18) | BIT32(23) ) ) );
 
-        // Also for Stop11 Timebase, during Stop11 wakeup before setting the XFER start to restore timebase,
-        // do scom write to PC to put their state machine in standby so they will accept the TFAC data coming in.
-        FAPI_DBG("Reset the core timefac to INACTIVE via PC.COMMON.TFX[0-1]=0b10");
-        FAPI_TRY( HCD_PUTSCOM_C( i_target, EC_PC_TFX_SM, BIT64(0) ) );
+#if POWER10_DD_LEVEL != 10 // HW534619 
 
-        // Then for DD1 ERRATA workaround for defect HW527679,
-        // on any stop wakeup before setting the CORE_SHADOW_ENABLE,
-        // first do a Write-OR of all zero data to the FDIR.
-        FAPI_DBG("DD1: Write-OR with 0s on FIDR");
-        FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_FDIR_WO_OR, 0 ) );
+        // DD1: self restore -> timefac start -> poll for receive_done
+        // DD2: timefac start -> self restore -> poll for receive_done
+        FAPI_DBG("Assert XFER_START via PCR_TFCSR[0]");
+        FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_TFCSR_WO_OR, MMIO_1BIT(0) ) );
 
-//        HW534619 DD1 workaround move to after self restore
-//        FAPI_DBG("Assert XFER_START via PCR_TFCSR[0]");
-//        FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_TFCSR_WO_OR, MMIO_1BIT(0) ) );
+#endif
 
-        FAPI_DBG("Enable CORE_SHADOW via CUCR[0]");
-        FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_OR, MMIO_1BIT(0) ) );
-
-        // Making the following design purely to accommodate potential stop5,
-        // or potentially stop11 mixed with stop2/3; otherwise a boolean switch
-        // for stop11 execution would suffice, and scom with bit0 can be combined.
-        //
-        // Also note this attribute is assumed to be per qme regional cores,
-        // but due to limit of multicast target not be able to access attribute,
-        // decided to put at chip level on qme platform, which also implies that
-        // this hwp is not meant to be ran at cronus/sbe level.
-        //
-        // If it were to be ran like that, with multicast to all cores on chip
-        // can assume all cores on chip accross quads are only doing stop11,
-        // then 0xF can be stored to this attribute before execution to make it work.
-        fapi2::Target< fapi2::TARGET_TYPE_PROC_CHIP > l_chip =
-            i_target.getParent< fapi2::TARGET_TYPE_PROC_CHIP >();
-        FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_QME_STATE_LOSS_CORES, l_chip, l_state_loss_cores));
-
-        if( l_state_loss_cores )
-        {
-            FAPI_DBG("As Stop5/11[%x], Forcing REFRESH_FTC/PP/DPT_SHADOW via CUCR[9-11]", l_state_loss_cores);
-            l_state_loss_cores &= i_target.getCoreSelect();
-            fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST,
-                  fapi2::MULTICAST_AND > l_state_loss_core_target =
-                      l_chip.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                              static_cast<fapi2::MulticastCoreSelect>(l_state_loss_cores));
-            l_state_loss_cores = 0;
-            FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_QME_STATE_LOSS_CORES, l_chip, l_state_loss_cores));
-            FAPI_TRY( HCD_PUTMMIO_C( l_state_loss_core_target, CPMS_CUCR_WO_OR, MMIO_LOAD32H( BITS32(9, 3) ) ) );
-        }
-
-        FAPI_DBG("Wait for CORE_REFRESH_ACTIVE to be 0x0 via CUCR[50]");
-        l_timeout = HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS /
-                    HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS;
-
-        do
-        {
-            FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CUCR), l_mmioData ) );
-
-            // use multicastAND to check 0
-            MMIO_GET32L(l_core_refresh_active);
-
-            if( !( l_core_refresh_active & BIT64SH(50) ) )
-            {
-                break;
-            }
-
-            fapi2::delay(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS,
-                         HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_SIM_CYCLE);
-        }
-        while( (--l_timeout) != 0 );
-
-        FAPI_ASSERT((l_timeout != 0),
-                    fapi2::SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT()
-                    .set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS)
-                    .set_CPMS_CUCR(l_mmioData)
-                    .set_CORE_TARGET(i_target),
-                    "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 0)");
-
-        if( l_dds_operable )
-        {
-            FAPI_DBG("Enable Droop Detection via FDCR[0]");
-            FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_FDCR_WO_CLEAR, MMIO_LOAD32H(BIT32(0)) ) );
-
-            FAPI_DBG("Wait for FDCR_UPDATE_IN_PROGRESS to be 0x0 via CUCR[31]");
-            l_timeout = HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS /
-                        HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_DELAY_HW_NS;
-
-            do
-            {
-                FAPI_TRY( HCD_GETMMIO_C( i_target, CPMS_CUCR, l_mmioData ) );
-
-                // use multicastAND to check 0
-                if( MMIO_GET(31) == 0 )
-                {
-                    break;
-                }
-
-                fapi2::delay(HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_DELAY_HW_NS,
-                             HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_DELAY_SIM_CYCLE);
-            }
-            while( (--l_timeout) != 0 );
-
-            FAPI_ASSERT((l_timeout != 0),
-                        fapi2::SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT()
-                        .set_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS)
-                        .set_CPMS_CUCR(l_mmioData)
-                        .set_CORE_TARGET(i_target),
-                        "ERROR: FDCR Update Timeout");
-        }
-
-//        HW534619 DD1 workaround move to after self restore
+        // HW534619 DD1 workaround move to after self restore
         /*
                 FAPI_DBG("Wait on XFER_SENT_DONE via PCR_TFCSR[33]");
                 l_timeout = HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS /
@@ -273,90 +175,194 @@ p10_hcd_core_shadows_enable(
                 FAPI_DBG("Drop XFER_SENT_DONE via PCR_TFCSR[33]");
                 FAPI_TRY( HCD_PUTMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_1BIT( MMIO_LOWBIT(33) ) ) );
         */
-        // wait for remaining registers to be done (overlap with DDS enable) -- DD1 may be partially done
-        FAPI_DBG("Wait for CORE_REFRESH_ACTIVE to be 0x000 via CUCR[50-52]");
-        l_timeout = HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS /
-                    HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS;
-
-        do
-        {
-            FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CUCR), l_mmioData ) );
-
-            // use multicastAND to check 0
-            MMIO_GET32L(l_core_refresh_active);
-
-            if( !( l_core_refresh_active & BITS64SH(50, 3) ) )
-            {
-                break;
-            }
-
-            fapi2::delay(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS,
-                         HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_SIM_CYCLE);
-        }
-        while( (--l_timeout) != 0 );
-
-        FAPI_ASSERT((l_timeout != 0),
-                    fapi2::SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT()
-                    .set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS)
-                    .set_CPMS_CUCR(l_mmioData)
-                    .set_CORE_TARGET(i_target),
-                    "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 1)");
-
-        //TODO:  need to put condition compile switch around DD1 work-arounds.
-        // DD1 WORKAROUND START
-        FAPI_DBG("Disable CORE_SHADOW via CUCR[0]");
-        FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_CLEAR, MMIO_1BIT(0) ) );
-
-        FAPI_DBG("Enable CORE_SHADOW via CUCR[0]");
-        FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_OR, MMIO_1BIT(0) ) );
-
-        FAPI_DBG("Wait for CORE_REFRESH_ACTIVE to be 0x000 via CUCR[50-52]");
-        l_timeout = HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS /
-                    HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS;
-
-        do
-        {
-            FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CUCR), l_mmioData ) );
-
-            // use multicastAND to check 0
-            MMIO_GET32L(l_core_refresh_active);
-
-            if( !( l_core_refresh_active & BITS64SH(50, 3) ) )
-            {
-                break;
-            }
-
-            fapi2::delay(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS,
-                         HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_SIM_CYCLE);
-        }
-        while( (--l_timeout) != 0 );
-
-        FAPI_ASSERT((l_timeout != 0),
-                    fapi2::SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT()
-                    .set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS)
-                    .set_CPMS_CUCR(l_mmioData)
-                    .set_CORE_TARGET(i_target),
-                    "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 2)");
-        // DD1 WORKAROUND END
-
-        FAPI_DBG("Drop CTFS_WKUP_ENABLE via PCR_SCSR[27]");
-        FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_CLEAR, MMIO_1BIT(27) ) );
-
-        // P10 HW Spec requires 4 ppe cycle delay (to account for staging delay)
-        // between asserting CUCR[0] above and then asserting CUCR[1] below
-        // Extra poll loop above for XFER_SENT_DONE will be enough for 4 cycles
-        FAPI_DBG("Enable CORE_SAMPLE via CUCR[1]");
-        FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_OR, MMIO_1BIT(1) ) );
     }
     else
     {
         FAPI_INF("TOD not enabled.  Skipping enablement of TimeFac Shadow");
     }
 
+    FAPI_DBG("Assert CORE_INTR_SAMPLE/REFRESH_PMSR via PCR_SCSR[18/23]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_OR, MMIO_LOAD32H( BIT32(18) | BIT32(23) ) ) );
+
+#if POWER10_DD_LEVEL == 10 //HW527679
+
+    // on any stop wakeup before setting the CORE_SHADOW_ENABLE,
+    // first do a Write-OR of all zero data to the FDIR.
+    FAPI_DBG("DD1: Write-OR with 0s on FDIR");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_FDIR_WO_OR, 0 ) );
+
+#endif
+
+    FAPI_DBG("Enable CORE_SHADOW via CUCR[0]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_OR, MMIO_1BIT(0) ) );
+
+    // Making the following design purely to accommodate potential stop5,
+    // or potentially stop11 mixed with stop2/3; otherwise a boolean switch
+    // for stop11 execution would suffice, and scom with bit0 can be combined.
+    //
+    // Also note this attribute is assumed to be per qme regional cores,
+    // but due to limit of multicast target not be able to access attribute,
+    // decided to put at chip level on qme platform, which also implies that
+    // this hwp is not meant to be ran at cronus/sbe level.
+    //
+    // If it were to be ran like that, with multicast to all cores on chip
+    // can assume all cores on chip accross quads are only doing stop11,
+    // then 0xF can be stored to this attribute before execution to make it work.
+    FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_QME_STATE_LOSS_CORES, l_chip, l_state_loss_cores));
+
+    FAPI_INF("Stop11 only targets: %x shadows current_targets %x",
+             l_state_loss_cores, i_target.getCoreSelect());
+    l_state_loss_cores &= i_target.getCoreSelect();
+
+    if( l_state_loss_cores )
+    {
+        fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST,
+              fapi2::MULTICAST_AND > l_state_loss_core_target =
+                  l_chip.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                          static_cast<fapi2::MulticastCoreSelect>(l_state_loss_cores));
+
+        FAPI_DBG("As Stop5/11[%x], Forcing REFRESH_FTC/PP/DPT_SHADOW via CUCR[9-11]", l_state_loss_cores);
+        FAPI_TRY( HCD_PUTMMIO_C( l_state_loss_core_target, CPMS_CUCR_WO_OR, MMIO_LOAD32H( BITS32(9, 3) ) ) );
+
+        // HW534619 reset l_state_loss_cores are done in later p10_hcd_core_timefac_enable.C
+    }
+
+    FAPI_DBG("Wait for CORE_REFRESH_ACTIVE to be 0x0 via CUCR[50]");
+    l_timeout = HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS /
+                HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS;
+
+    do
+    {
+        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CUCR), l_mmioData ) );
+
+        // use multicastAND to check 0
+        MMIO_GET32L(l_core_refresh_active);
+
+        if( !( l_core_refresh_active & BIT64SH(50) ) )
+        {
+            break;
+        }
+
+        fapi2::delay(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS,
+                     HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_SIM_CYCLE);
+    }
+    while( (--l_timeout) != 0 );
+
+    FAPI_ASSERT((l_timeout != 0),
+                fapi2::SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT()
+                .set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS)
+                .set_CPMS_CUCR(l_mmioData)
+                .set_CORE_TARGET(i_target),
+                "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 0)");
+
+    if( l_dds_operable )
+    {
+        FAPI_DBG("Enable Droop Detection via FDCR[0]");
+        FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_FDCR_WO_CLEAR, MMIO_LOAD32H(BIT32(0)) ) );
+
+        FAPI_DBG("Wait for FDCR_UPDATE_IN_PROGRESS to be 0x0 via CUCR[31]");
+        l_timeout = HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS /
+                    HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_DELAY_HW_NS;
+
+        do
+        {
+            FAPI_TRY( HCD_GETMMIO_C( i_target, CPMS_CUCR, l_mmioData ) );
+
+            // use multicastAND to check 0
+            if( MMIO_GET(31) == 0 )
+            {
+                break;
+            }
+
+            fapi2::delay(HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_DELAY_HW_NS,
+                         HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_DELAY_SIM_CYCLE);
+        }
+        while( (--l_timeout) != 0 );
+
+        FAPI_ASSERT((l_timeout != 0),
+                    fapi2::SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT()
+                    .set_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS)
+                    .set_CPMS_CUCR(l_mmioData)
+                    .set_CORE_TARGET(i_target),
+                    "ERROR: FDCR Update Timeout");
+    }
+
+    // wait for remaining registers to be done (overlap with DDS enable) -- DD1 may be partially done
+    FAPI_DBG("Wait for CORE_REFRESH_ACTIVE to be 0x000 via CUCR[50-52]");
+    l_timeout = HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS /
+                HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS;
+
+    do
+    {
+        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CUCR), l_mmioData ) );
+
+        // use multicastAND to check 0
+        MMIO_GET32L(l_core_refresh_active);
+
+        if( !( l_core_refresh_active & BITS64SH(50, 3) ) )
+        {
+            break;
+        }
+
+        fapi2::delay(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS,
+                     HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_SIM_CYCLE);
+    }
+    while( (--l_timeout) != 0 );
+
+    FAPI_ASSERT((l_timeout != 0),
+                fapi2::SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT()
+                .set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS)
+                .set_CPMS_CUCR(l_mmioData)
+                .set_CORE_TARGET(i_target),
+                "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 1)");
+
+    //TODO:  need to put condition compile switch around DD1 work-arounds.
+    // DD1 WORKAROUND START
+    FAPI_DBG("Disable CORE_SHADOW via CUCR[0]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_CLEAR, MMIO_1BIT(0) ) );
+
+    FAPI_DBG("Enable CORE_SHADOW via CUCR[0]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_OR, MMIO_1BIT(0) ) );
+
+    FAPI_DBG("Wait for CORE_REFRESH_ACTIVE to be 0x000 via CUCR[50-52]");
+    l_timeout = HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS /
+                HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS;
+
+    do
+    {
+        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CUCR), l_mmioData ) );
+
+        // use multicastAND to check 0
+        MMIO_GET32L(l_core_refresh_active);
+
+        if( !( l_core_refresh_active & BITS64SH(50, 3) ) )
+        {
+            break;
+        }
+
+        fapi2::delay(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_HW_NS,
+                     HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_DELAY_SIM_CYCLE);
+    }
+    while( (--l_timeout) != 0 );
+
+    FAPI_ASSERT((l_timeout != 0),
+                fapi2::SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT()
+                .set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS)
+                .set_CPMS_CUCR(l_mmioData)
+                .set_CORE_TARGET(i_target),
+                "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 2)");
+    // DD1 WORKAROUND END
+
+    FAPI_DBG("Drop CTFS_WKUP_ENABLE via PCR_SCSR[27]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_CLEAR, MMIO_1BIT(27) ) );
+
+    // P10 HW Spec requires 4 ppe cycle delay (to account for staging delay)
+    // between asserting CUCR[0] above and then asserting CUCR[1] below
+    // Extra poll loop above for XFER_SENT_DONE will be enough for 4 cycles
+    FAPI_DBG("Enable CORE_SAMPLE via CUCR[1]");
+    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CUCR_WO_OR, MMIO_1BIT(1) ) );
+
 fapi_try_exit:
-
     FAPI_INF("<<p10_hcd_core_shadows_enable");
-
     return fapi2::current_err;
-
 }

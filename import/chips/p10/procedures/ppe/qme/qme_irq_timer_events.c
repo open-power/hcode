@@ -51,7 +51,13 @@ qme_top_priority_event()
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_TOPPRI);
     uint64_t top = in64(QME_LCL_EISR) & BITS64(0, 8);
     out64(QME_LCL_EIMR_OR, top);
-    PK_TRACE_INF("Event: Top Priority: %x", (uint32_t)(top >> 32));
+    g_eimr_override |= top;
+
+    if( top & BIT64(2) )
+    {
+        PK_TRACE_INF("Event: Top Priority: %x", (uint32_t)(top >> 32));
+    }
+
     //placeholder if flag: errlog and halt
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_TOPPRI);
 }

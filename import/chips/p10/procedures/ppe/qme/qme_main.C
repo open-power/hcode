@@ -88,7 +88,7 @@ main()
 #endif
 
     // @note If QME_FLAGS[63] is set .. execution environment is Simics
-    if (in64 (QME_LCL_FLAGS) & QME_FLAGS_RUNNING_SIMICS)
+    if( in32_sh(QME_LCL_FLAGS) & BIT64SH(QME_FLAGS_RUNNING_SIMICS) )
     {
         PK_TRACE ("QME running on Simics");
         G_IsSimics = 1;

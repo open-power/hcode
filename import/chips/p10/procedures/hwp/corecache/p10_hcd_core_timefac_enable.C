@@ -56,6 +56,7 @@
     #define EC_PC_TOD_READ 0x200204A3
     #define QME_FLAGS_TOD_COMPLETE QME_FLAGS_TOD_SETUP_COMPLETE
 #else
+    #include <multicast_group_defs.H>
     #include "p10_scom_c.H"
     #include "p10_scom_eq.H"
     using namespace scomt::c;
@@ -86,24 +87,61 @@ p10_hcd_core_timefac_enable(
     fapi2::buffer<buffer_t> l_mmioData            = 0;
     uint32_t                l_timeout             = 0;
     uint32_t                l_tfcsr_errors        = 0;
+    uint32_t                l_state_loss_cores    = 0;
     fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST > l_mc_or = i_target;//default OR
 
     FAPI_INF(">>p10_hcd_core_timefac_enable");
 
     fapi2::Target < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > l_eq_target =
         i_target.getParent < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST > ();
+    fapi2::Target< fapi2::TARGET_TYPE_PROC_CHIP > l_chip =
+        i_target.getParent< fapi2::TARGET_TYPE_PROC_CHIP >();
+
+    FAPI_INF(">>p10_hcd_core_timefac_enable");
 
     FAPI_TRY(HCD_GETMMIO_Q( l_eq_target, QME_FLAGS_RW, l_mmioData ) );
 
     if ( MMIO_GET( QME_FLAGS_TOD_COMPLETE ) == 1 )
     {
-        // HW534619 DD1 workaround move to self restore
-        FAPI_DBG("DD1 HW534619: Write 0 to TOD_READ");
-        FAPI_TRY( HCD_PUTSCOM_C( i_target, EC_PC_TOD_READ, 0 ) );
+        FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_QME_STATE_LOSS_CORES, l_chip, l_state_loss_cores));
 
+        FAPI_INF("Stop11 only targets: %x timefac current_target %x",
+                 l_state_loss_cores, i_target.getCoreSelect());
+        l_state_loss_cores &= i_target.getCoreSelect();
+
+        if( l_state_loss_cores )
+        {
+
+#if POWER10_DD_LEVEL == 10 // HW534619
+
+            fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST,
+                  fapi2::MULTICAST_AND > l_state_loss_core_target =
+                      l_chip.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                              static_cast<fapi2::MulticastCoreSelect>(l_state_loss_cores));
+
+            FAPI_DBG("DD1 HW534619: Write 0 to TOD_READ");
+            FAPI_TRY( HCD_PUTSCOM_C( l_state_loss_core_target, EC_PC_TOD_READ, 0 ) );
+
+#endif
+
+            // reset stop11 targets
+            l_state_loss_cores = 0;
+            FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_QME_STATE_LOSS_CORES, l_chip, l_state_loss_cores));
+        }
+
+#if POWER10_DD_LEVEL == 10 // HW534619
+
+        // DD1: self restore -> timefac start -> poll for receive_done
+        // DD2: timefac start -> self restore -> poll for receive_done
         FAPI_DBG("Assert XFER_START via PCR_TFCSR[0]");
         FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_TFCSR_WO_OR, MMIO_1BIT(0) ) );
 
+#endif
+
+        // For STOP exit, after TFAC shadow has been initiated,
+        // check that TFCSR[XFER_SEND_DONE is set;
+        // after timeout of 50us, create critical error log
+        // calling out this core with the TFSCR as part of the FFDC
         FAPI_DBG("Wait on XFER_SENT_DONE via PCR_TFCSR[33]");
         l_timeout = HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS /
                     HCD_SHADOW_ENA_XFER_SENT_DONE_POLL_DELAY_HW_NS;
@@ -135,16 +173,13 @@ p10_hcd_core_timefac_enable(
 
         MMIO_EXTRACT(MMIO_LOWBIT(34), 3, l_tfcsr_errors);
 
+        // If any of TFCSR[INCOMING, RUNTIME and STATE] are set,
+        // create informational error log with the TFSCR as part of the FFDC
+        // clear TFSCR
         if( l_tfcsr_errors != 0 )
         {
             FAPI_DBG("Clear INCOMING/RUNTIME/STATE_ERR[%x] via PCR_TFCSR[34-36]", l_tfcsr_errors);
             FAPI_TRY( HCD_PUTMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_LOAD32L( BITS64SH(34, 3) ) ) );
-
-            FAPI_DBG("Assert TFAC_RESET via PCR_TFCSR[1]");
-            FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_TFCSR_WO_OR, MMIO_1BIT(1) ) );
-
-            FAPI_DBG("Reset the core timefac to INACTIVE via PC.COMMON.TFX[1]");
-            FAPI_TRY( HCD_PUTSCOM_C( i_target, EC_PC_TFX_SM, BIT64(1) ) );
         }
 
         FAPI_ASSERT((l_tfcsr_errors == 0),
