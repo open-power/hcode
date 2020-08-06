@@ -26,7 +26,9 @@
 #ifndef __PGPE_RESCLK_H__
 #define __PGPE_RESCLK_H__
 
-#include "pgpe.h"
+#ifndef __PARSER_TOOL__
+    #include "pgpe.h"
+#endif
 
 enum PGPE_RESCLK_STATUS
 {
@@ -48,6 +50,7 @@ typedef struct pgpe_resclk
 
 
 void pgpe_resclk_init();
+void* pgpe_resclk_data_addr();
 void pgpe_resclk_enable(uint32_t pstate_target);
 void pgpe_resclk_disable();
 void pgpe_resclk_update(uint32_t pstate_target);
