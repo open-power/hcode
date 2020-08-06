@@ -39,7 +39,11 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20080500 |mbs     | HW539048- Added separate dfe_full training enable in init
 // mbs20073000 |mbs     | LAB - Override rx_loff_timeout to 8
+// vbr20061600 |vbr     | HW532652: Set bit_lock_done when could be bumping (training/DL), clear when CDR locking.
+// vbr20042300 |vbr     | HW529150: Changes for lab testing to allow rx_disable_bank_pdwn to change after INIT
+// bja20041700 |bja     | HW522518: Don't switch banks or power down the alt bank if init failed.
 // mbs20030900 |mbs     | HW525009: Set bit_lock_done=1 during bank sync and dfe to avoid bank B unlocks
 // jfg20031000 |jfg     | fix copy-paste error
 // jfg20030900 |jfg     | HW525009 add a rough_only mode to set initial coarse peak 1&2
@@ -231,19 +235,18 @@ PK_STATIC_ASSERT(rx_pr_enable_b_startbit == 3);
 
 // Macros for the timestamping code used in all 3 cal functions for measuring cal time.
 // To avoid doing a divide, we assume a power-of-2 timer base which is close enough to the actual frequency.
-//#if IO_DEBUG_LEVEL < 2
+#if IO_DEBUG_LEVEL < 2
 #define CAL_TIMER_START {}
 #define CAL_TIMER_STOP {}
-/*
-//#else
-//  #define CAL_TIMER_START  PkTimebase cal_start_time = pk_timebase_get();
-//  #define CAL_TIMER_STOP { \
-//    uint32_t cal_time = (uint32_t)(pk_timebase_get() - cal_start_time); \
-//    uint16_t cal_time_us = cal_time / TIMER_US_DIVIDER; \
-//    mem_pl_field_put(rx_lane_cal_time_us, lane, cal_time_us); \
-//  }
-//#endif
-*/
+#else
+#define CAL_TIMER_START  PkTimebase cal_start_time = pk_timebase_get();
+#define CAL_TIMER_STOP { \
+        uint32_t cal_time = (uint32_t)(pk_timebase_get() - cal_start_time); \
+        uint16_t cal_time_us = cal_time / TIMER_US_DIVIDER; \
+        mem_pl_field_put(rx_lane_cal_time_us, lane, cal_time_us); \
+    }
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 // DC CAL
@@ -383,6 +386,9 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     {
         psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
     }
+
+    // HW532652: The psave logic sets bit_lock_done, so clear it here
+    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_ab_alias, 0b00, read_modify_write);
 
     // Prior to asserting cal_lane_sel: Set Bank B as Main, Bank A as Alt (cal_bank)
     // This may cause a DL clock glitch if the lane was not already in this state (HW496723)
@@ -547,9 +553,8 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
     }
 
-    // Turn off invalid lock detection to avoid coming out of sync on bank B after bank sync
-    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_a, 0b1, read_modify_write);
-    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_b, 0b1, read_modify_write);
+    // Turn off invalid lock detection to avoid bump errors on bank A and coming out of sync on bank B after bank sync
+    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_ab_alias, 0b11, read_modify_write);
 
     // Perform Bank A/B UI Alignment by bumping alt bank
     // Requires edge tracking (master mode)
@@ -563,16 +568,22 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     // Put Alt (Cal) bank into CDR Slave mode for DFE Amp Measurements and DDC
     put_ptr_field(gcr_addr, rx_pr_slave_mode_a, 0b1, read_modify_write);
 
-    // Cal Step: DFE H1-H3
+    // Cal Step: DFE H1-H3 (Fast)
     // Requires edge tracking (slave mode) and bank alignment
     int dfe_enable = mem_pg_field_get(rx_eo_enable_dfe_cal);
 
     if (dfe_enable)
     {
-//    bool recal = false;
-//    bool enable_min_eye_height = false;
         status |= rx_eo_dfe_fast(gcr_addr);
-//    status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
+    }
+
+    int dfe_full_enable = mem_pg_field_get(rx_eo_enable_dfe_full_cal);
+
+    if (dfe_full_enable)
+    {
+        bool recal = false;
+        bool enable_min_eye_height = false;
+        status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
     }
 
     // Cal Step: DDC
@@ -585,11 +596,12 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         bool recal_dac_changed = false;
         status |= eo_ddc(gcr_addr, bank_a, recal, recal_dac_changed);
 
-//    if (dfe_enable) {
-//      // after running ddc, run dfe again to recenter at new sample position
-//      bool enable_min_eye_height = true;
-//      status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
-//    }
+        if (dfe_full_enable)
+        {
+            // after running ddc, run dfe again to recenter at new sample position
+            bool enable_min_eye_height = true;
+            status |= rx_eo_dfe_full(gcr_addr, bank_a, recal, enable_min_eye_height);
+        }
     }
 
     // Perform Check of VGA, CTLE, LTE, and QPA values
@@ -602,29 +614,34 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         eo_vclq_checks(gcr_addr, bank_a);
     }
 
-    // Cal Done: Re-enable CDR master mode on both banks and double check for lock
+    // Cal Done: Re-enable CDR master mode on both banks and double check for lock with invalid lock detection on
     set_debug_state(0x2015); // DEBUG - Init Cal Final Edge Tracking
+    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_ab_alias, 0b00, read_modify_write);
     put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias, 0b100100, read_modify_write);
     bool set_fir_on_error = true;
     status |= wait_for_cdr_lock(gcr_addr, set_fir_on_error);
 
-    // Turn on invalid lock detection again so the CDR can relock after psave mode
-    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_a, 0b0, read_modify_write);
-    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_b, 0b0, read_modify_write);
+    // HW532652: Turn off invalid lock detection to help with DL bumping
+    put_ptr_field(gcr_addr, rx_pr_bit_lock_done_ab_alias, 0b11, read_modify_write);
 
     // Clear cal lane sel
     clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
 
-    // Set Bank A as Main and Bank B as Alt
-    set_cal_bank(gcr_addr, bank_b);
-
-    // Power Down the ALT Bank (if configured to power down). This should be Bank B after the above cal steps.
-    int disable_bank_powerdown = mem_pg_field_get(rx_disable_bank_pdwn);
-
-    if (!disable_bank_powerdown)
+    // HW522518: Don't switch banks or power down the alt bank if init failed.
+    // The primary concern is to avoid a DL clock glitch when bank sync fails.
+    if (status == rc_no_error)
     {
-        set_debug_state(0x201A); // DEBUG - Init Alt Bank Power Down
-        put_ptr_field(gcr_addr, rx_psave_req_alt, 0b1, read_modify_write);
+        // Set Bank A as Main and Bank B as Alt
+        set_cal_bank(gcr_addr, bank_b);
+
+        // Power Down the ALT Bank (if configured to power down). This should be Bank B after the above cal steps.
+        int disable_bank_powerdown = mem_pg_field_get(rx_disable_bank_pdwn);
+
+        if (!disable_bank_powerdown)
+        {
+            set_debug_state(0x201A); // DEBUG - Init Alt Bank Power Down
+            put_ptr_field(gcr_addr, rx_psave_req_alt, 0b1, read_modify_write);
+        }
     }
 
     // Clear the recal count
@@ -741,19 +758,24 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
         phy_dl_rx_psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_phy);
     }
 
-    // Power up the ALT bank (if configured to power it up/down)
-    int disable_bank_powerdown = mem_pg_field_get(rx_disable_bank_pdwn);
+    // Power up the ALT bank
+    set_debug_state(0x3004); // DEBUG - Recal Alt Bank Power Up
+    put_ptr_field(gcr_addr, rx_psave_req_alt, 0b0, read_modify_write);
+    int psave_sts = 1;
 
-    if (!disable_bank_powerdown)
+    while (psave_sts)
     {
-        set_debug_state(0x3004); // DEBUG - Recal Alt Bank Power Up
-        put_ptr_field(gcr_addr, rx_psave_req_alt, 0b0, read_modify_write);
-        int psave_sts = 1;
+        psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
+    }
 
-        while (psave_sts)
-        {
-            psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
-        }
+    // HW532652: The psave logic sets bit_lock_done, so clear it on the ALT bank (leave it set on main bank)
+    if (cal_bank == bank_a)
+    {
+        put_ptr_field(gcr_addr, rx_pr_bit_lock_done_a, 0b0, read_modify_write);
+    }
+    else     //bank_b
+    {
+        put_ptr_field(gcr_addr, rx_pr_bit_lock_done_b, 0b0, read_modify_write);
     }
 
     // reset rx io domain  - HW504112
@@ -841,11 +863,30 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
 
     // Perform Bank A/B UI Alignment
     // Requires edge tracking (master mode)
+    // HW532652: Turn off invalid lock detection on Alt bank during bumps; renable when done
     int bank_sync_enable = mem_pg_field_get(rx_rc_enable_bank_sync);
 
     if (bank_sync_enable && (status == rc_no_error))
     {
+        if (cal_bank == bank_a)
+        {
+            put_ptr_field(gcr_addr, rx_pr_bit_lock_done_a, 0b1, read_modify_write);
+        }
+        else     //bank_b
+        {
+            put_ptr_field(gcr_addr, rx_pr_bit_lock_done_b, 0b1, read_modify_write);
+        }
+
         status |= align_bank_ui(gcr_addr, cal_bank);
+
+        if (cal_bank == bank_a)
+        {
+            put_ptr_field(gcr_addr, rx_pr_bit_lock_done_a, 0b0, read_modify_write);
+        }
+        else     //bank_b
+        {
+            put_ptr_field(gcr_addr, rx_pr_bit_lock_done_b, 0b0, read_modify_write);
+        }
     }
 
     // Put Alt (Cal) bank into CDR Slave mode for  DFE Amp Measurements and DDC
@@ -885,12 +926,6 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
 
     // Update recal count and check if the min recal count has been reached
     recal_cnt = recal_cnt + 1;
-
-    if (recal_cnt > 0xFFFF)
-    {
-        recal_cnt = 0;
-    }
-
     mem_pl_field_put(rx_lane_recal_cnt, lane, recal_cnt);
 
     if (!min_recal_cnt_reached)
@@ -921,6 +956,7 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
     }
 
     // In Recal, only switch banks at the end of a lane's recal when no abort or error and if reached the min lane recal count
+    int disable_bank_powerdown = mem_pg_field_get(rx_disable_bank_pdwn);
     status |= check_rx_abort(gcr_addr);
 
     if (status == rc_no_error)
@@ -931,6 +967,9 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
             set_debug_state(0x3015); // DEBUG - Recal Final Edge Tracking and Bank Switch
             bool set_fir_on_error = true;
             wait_for_cdr_lock(gcr_addr, set_fir_on_error);
+
+            // HW532652: Turn off invalid lock detection to help with DL bumping
+            put_ptr_field(gcr_addr, rx_pr_bit_lock_done_ab_alias, 0b11, read_modify_write);
 
             // Switch banks
             cal_bank = switch_cal_bank(gcr_addr, cal_bank);

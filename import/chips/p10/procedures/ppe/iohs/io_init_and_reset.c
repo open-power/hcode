@@ -39,8 +39,23 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20061501 |vbr     | HW533452: Increase CDR phase_step to 0.296875 for 32G (and 50G)
+// vbr20061500 |vbr     | HW532468: Peak2 Servo Op should use H3 instead of H4 for 32G
+// vbr20061600 |vbr     | HW532326: Set Flwheel range based on whether spread is enabled or not
+// mbs20061601 |mbs     | HW532825 - SEt rx_pr_psave_val_ena_a/b=1 during io_lane_power_off to prevent flywheel snapshot hang
+// mwh20052801 |mwh     | Change comments that were did not make sense
+// mwh20052800 |mwh     | Add in ( get_chip_id()  == CHIP_ID_ZA) for ZA DD1 -- no using  MAJOR_EC_??? at this time
+// mwh20052700 |mwh     | Add in if else for code so work with both DD1 and DD2 p10 CHIP_ID_P10  ) && ( get_major_ec() == MAJOR_EC_DD2 ))
+// gap20052300 |gap     | Change for CQ521314 -- return gcr addr to rx_group
+// mwh20052000 |mwh     | Change for CQ521314 -- 20 to 0x20
+// mwh20051300 |mwh     | Change for CQ521314 -- dcc circuit is not be powered up
+// mbs20050700 |mbs     | Updated lte timeout to 8
+// mbs20042102 |mbs     | Restored tx_16to1 bit and 32:1 settings for p10 dd1 mode
+// mbs20030400 |mbs     | Removed tx_16to1 mode bit
+// mbs20030400 |mbs     | Removed 32:1 content (rx_16to1 now selects 8:1 mode for DL data path only)
 // vbr20030500 |vbr     | HW523782/HW523779: leave lock_filter at default (2) for all cases
 // mwh20021300 |mwh     | Add in code to check if req=sts and other stuff before power off lane -- fir was add
+// mbs20051300 |mbs     | HW530311: Updated io_lane_power_off procedure to flush psave state machine req and sts back to 0
 // vbr20021000 |vbr     | HW521651: Configure CDR lock_filter in hw_reg_init and lane_reset based on fw_spread_en
 // bja20011600 |bja     | Override rx_clk_phase_select reset val in reg init and lane reset
 // bja20011701 |bja     | HW519449: Reset flywheel for both banks
@@ -89,6 +104,7 @@
 
 #include "io_init_and_reset.h"
 
+#include "ppe_img_reg_const_pkg.h"
 #include "ppe_com_reg_const_pkg.h"
 #include "ppe_fw_reg_const_pkg.h"
 
@@ -99,23 +115,46 @@
 // The scan init (RegDef) value is 0b00, but hardware is currently frozen.
 #define RX_CLK_PHASE_SELECT_RESET_VALUE 0b01
 
+// CDR Settings: rx_pr_phase_step (KP) = 0.296875; rx_pr_fw_inertia_amt (KI) = 4
+#define CDR_KP_RESET_VALUE 0b0100110
+#define CDR_KI_RESET_VALUE 0b0100
+
+
 //////////////////////////////////
 // Initialize HW Regs
 //////////////////////////////////
 PK_STATIC_ASSERT(rx_ab_bank_controls_alias_width == 16);
+PK_STATIC_ASSERT(rx_pr_ki_kp_full_reg_width == 16);
 
 void io_hw_reg_init(t_gcr_addr* gcr_addr)
 {
     int serdes_16_to_1_mode = fw_field_get(fw_serdes_16_to_1_mode);
+    int l_vio_volt          = img_field_get(ppe_vio_volts);
+    int num_lanes           = fw_field_get(fw_num_lanes);
+
+    set_gcr_addr_reg_id(gcr_addr, tx_group);
+    int l_data_rate         = mem_pg_field_get(ppe_data_rate);
 
     // TX Registers
-    set_gcr_addr_reg_id(gcr_addr, tx_group);
+    // Restore if TX regs are added again // set_gcr_addr_reg_id(gcr_addr, tx_group);
 
     // Update Settings for SerDes 32:1 (TX Group)
-    if (!serdes_16_to_1_mode)   // 32:1
+    if (   ( get_chip_id()  == CHIP_ID_P10  )
+           && ( get_major_ec() == MAJOR_EC_DD1 )
+           && !serdes_16_to_1_mode               )   // 32:1 -- P10 DD1 only
     {
         put_ptr_field(gcr_addr, tx_16to1,         0b0, read_modify_write); //pg
     }
+
+    put_ptr_field(gcr_addr, tx_iref_clock_dac, 0x2, read_modify_write);
+    put_ptr_field(gcr_addr, tx_iref_vset_dac , l_vio_volt, read_modify_write);
+
+    set_gcr_addr_lane(gcr_addr, bcast_all_lanes);
+    int l_tx_boost_en = (mem_pg_field_get(ppe_channel_loss) <= 1) ? 0x01 : 0x00;
+    put_ptr_field(gcr_addr, tx_boost_hs_en , l_tx_boost_en, read_modify_write);
+    put_ptr_field(gcr_addr, tx_d2_ctrl       , l_data_rate, read_modify_write);
+    put_ptr_field(gcr_addr, tx_d2_div_ctrl   , l_data_rate, read_modify_write);
+    set_gcr_addr_lane(gcr_addr, 0);
 
     // RX Registers
     set_gcr_addr_reg_id(gcr_addr, rx_group);
@@ -125,24 +164,50 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, rx_servo_reverse_latch_dac, 0b1, read_modify_write); //pg
 #endif
 
-    // Update Settings for SerDes 32:1 (RX Group)
-    if (!serdes_16_to_1_mode)   // 32:1
+    // Bump lte_timeout up to 8 since 7 fails sometimes with PRBS15
+    put_ptr_field(gcr_addr, rx_lte_timeout,     8, read_modify_write); //pg
+
+    // Update Settings for SerDes 8:1 (RX Group)
+    if (!serdes_16_to_1_mode)   // 8:1 (to the DL only)   (32:1 for  P10 DD1)
     {
         put_ptr_field(gcr_addr, rx_16to1,         0b0, read_modify_write); //pg
-        put_ptr_field(gcr_addr, rx_amp_timeout,     6, read_modify_write); //pg
-        put_ptr_field(gcr_addr, rx_ctle_timeout,    7, read_modify_write); //pg
-        put_ptr_field(gcr_addr, rx_lte_timeout,     8, read_modify_write); //pg
-        put_ptr_field(gcr_addr, rx_bo_time,        11, read_modify_write); //pg
+
+        if (   ( get_chip_id()  == CHIP_ID_P10  )
+               && ( get_major_ec() == MAJOR_EC_DD1 ) )   // P10 DD1 only
+        {
+            put_ptr_field(gcr_addr, rx_amp_timeout,     6, read_modify_write); //pg
+            put_ptr_field(gcr_addr, rx_ctle_timeout,    7, read_modify_write); //pg
+            put_ptr_field(gcr_addr, rx_bo_time,        11, read_modify_write); //pg
+        }
+    }
+
+    // HW532468: Use H3 (0b01) for Peak2 servo @ 32G (16:1, 8:1).  Use H4 (0b10) for Peak2 servo @ 50G (32:1)
+    //int peak2_h_sel = ( !serdes_16_to_1_mode && (get_chip_id() == CHIP_ID_P10) && (get_major_ec() == MAJOR_EC_DD1) ) ? 0b10 : 0b01;
+    //put_ptr_field(gcr_addr, rx_ctle_peak2_h_sel, peak2_h_sel, read_modify_write); //pg
+
+    // peak2_h_sel   (> 2 is for future speeds)
+    if (l_data_rate <= 2)
+    {
+        put_ptr_field(gcr_addr, rx_ctle_peak2_h_sel, 0x1, read_modify_write); // use H3 for peak2
+    }
+    else
+    {
+        put_ptr_field(gcr_addr, rx_ctle_peak2_h_sel, 0x2, read_modify_write); // use H4 for peak2
     }
 
     // CWS CHANGED THIS FROM 6 -> 8
     put_ptr_field(gcr_addr, rx_loff_timeout, 8, read_modify_write);
 
-    // Values from Chad/Glen, vset may need to change based upon voltage
     put_ptr_field(gcr_addr, rx_iref_clock_dac  , 0x2, read_modify_write);
     put_ptr_field(gcr_addr, rx_iref_data_dac   , 0x2, read_modify_write);
-    put_ptr_field(gcr_addr, rx_iref_vset_dac   , 0x1, read_modify_write);
-    put_ptr_field(gcr_addr, rx_ctle_peak2_h_sel, 0x1, read_modify_write);
+    put_ptr_field(gcr_addr, rx_iref_vset_dac   , l_vio_volt, read_modify_write);
+
+
+    // frequency adjust
+    uint16_t l_rx_freq_adj = (l_data_rate == 0) ? 0x01 : 0x0D;
+    set_gcr_addr_lane(gcr_addr, bcast_all_lanes);
+    put_ptr_field(gcr_addr, rx_freq_adjust, l_rx_freq_adj, read_modify_write);
+    set_gcr_addr_lane(gcr_addr, 0);
 
     // Set up the flywheel snapshot routing for psave (HW476919)
     // Each chiplet is split evenly into two links.
@@ -150,7 +215,6 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     // The default register settings are rx_psave_fw_val_sel=0b00 and rx_psave_fw_valX_sel=0 so only some lanes need to be updated.
     // The lanes in the lower link continue to select mux0 which defaults to selecting lane 0.
     // The lanes in the upper link are configured to select mux1 which is configured to select the lowest lane in the link.
-    int num_lanes   = fw_field_get(fw_num_lanes);
     int source_lane = num_lanes / 2;
     put_ptr_field(gcr_addr, rx_psave_fw_val1_sel, source_lane, read_modify_write); //pg
     int i;
@@ -165,11 +229,21 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     // These can be done with a RMW broadcasts because all lanes in a chiplet will have the same values for the CDR mode bits
     // and they are in registers separate from any other mode bits that may be different per-lane.
     // Additionally, hw_reg_init is only called when all lanes are powered down, so changing the mode bits on all lanes is safe.
-    //if (fw_field_get(fw_spread_en)) {
-    //  // Different settings when Spread Spectrum Clocking (SSC) is enabled
-    //  set_gcr_addr_lane(gcr_addr, bcast_all_lanes);
-    //  put_ptr_field(gcr_addr, rx_pr_lock_filter, 4, read_modify_write); //pl
-    //}
+    set_gcr_addr_lane(gcr_addr, bcast_all_lanes);
+
+    // KI/KP Settings (coarse mode is disabled by default)
+    int ki_kp_full_reg_val =
+        (CDR_KI_RESET_VALUE << rx_pr_fw_inertia_amt_shift) |
+        (CDR_KP_RESET_VALUE << rx_pr_phase_step_shift);
+    put_ptr_field(gcr_addr, rx_pr_ki_kp_full_reg, ki_kp_full_reg_val, fast_write); //pl
+
+    // Different settings when Spread Spectrum Clocking (SSC) is disabled
+    if ( !fw_field_get(fw_spread_en) )
+    {
+        // HW532326: Set rx_pr_fw_range_sel=1 (by setting rx_pr_fw_inertia_amt_coarse=15) when when spread is disabled.
+        // This reduces the max flywheel correction and increases the Bump UI step size.
+        put_ptr_field(gcr_addr, rx_pr_fw_inertia_amt_coarse, 15, read_modify_write); //pl
+    }
 
     // Set the RX clock phase offset (data and clock relationship)
     // for all lanes. Done in PPE code because hardware is frozen.
@@ -183,6 +257,16 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     if (fw_field_get(fw_bist_en))
     {
         eo_bist_init_ovride(gcr_addr);
+    }
+
+    //CQ521314 never turn on tx_bank_controls_dc(0) = dcc_comp_en_dc
+    //only change for DD2 in not DD2 keep what default is in Regdef
+    if ((( get_chip_id()  == CHIP_ID_P10) && ( get_major_ec() == MAJOR_EC_DD2 )) || ( get_chip_id()  == CHIP_ID_ZA) )
+    {
+        set_gcr_addr_reg_id(gcr_addr, tx_group);
+        put_ptr_field(gcr_addr, tx_psave_subset0,                0b100000, read_modify_write); //pg
+        put_ptr_field(gcr_addr, tx_psave_subset1,                0b100100, read_modify_write); //pg
+        set_gcr_addr_reg_id(gcr_addr, rx_group);
     }
 
 } //io_hw_reg_init
@@ -201,6 +285,13 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
     set_gcr_addr_reg_id(gcr_addr, tx_group);
     put_ptr_field(gcr_addr, tx_ioreset,    0b1, read_modify_write); //pl
     put_ptr_field(gcr_addr, tx_ioreset,    0b0, read_modify_write); //pl
+    int l_tx_boost_en = (mem_pg_field_get(ppe_channel_loss) <= 1) ? 0x01 : 0x00;
+    put_ptr_field(gcr_addr, tx_boost_hs_en , l_tx_boost_en, read_modify_write);
+
+    // Tx CML IREF clock control
+    int l_data_rate = mem_pg_field_get(ppe_data_rate);
+    put_ptr_field(gcr_addr, tx_d2_ctrl    , l_data_rate, read_modify_write);
+    put_ptr_field(gcr_addr, tx_d2_div_ctrl, l_data_rate, read_modify_write);
 
     // RX Registers
     set_gcr_addr_reg_id(gcr_addr, rx_group);
@@ -219,14 +310,27 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
     }
 
     // Update CDR Settings - must be done before powering on the lane.
-    //if (fw_field_get(fw_spread_en)) {
-    //  // Different settings when Spread Spectrum Clocking (SSC) is enabled
-    //  put_ptr_field(gcr_addr, rx_pr_lock_filter, 4, read_modify_write); //pl
-    //}
+    // KI/KP Settings (coarse mode is disabled by default)
+    int ki_kp_full_reg_val =
+        (CDR_KI_RESET_VALUE << rx_pr_fw_inertia_amt_shift) |
+        (CDR_KP_RESET_VALUE << rx_pr_phase_step_shift);
+    put_ptr_field(gcr_addr, rx_pr_ki_kp_full_reg, ki_kp_full_reg_val, fast_write); //pl
+
+    // Different settings when Spread Spectrum Clocking (SSC) is disabled
+    if ( !fw_field_get(fw_spread_en) )
+    {
+        put_ptr_field(gcr_addr, rx_pr_fw_inertia_amt_coarse, 15, read_modify_write); //pl
+    }
 
     // Reset the RX clock phase offset (data and clock relationship)
     // for given lane. Hardware reset value is incorrect but frozen.
     put_ptr_field(gcr_addr, rx_clk_phase_select, RX_CLK_PHASE_SELECT_RESET_VALUE, read_modify_write);
+
+
+
+    // frequency adjust
+    int l_rx_freq_adj = (l_data_rate == 0) ? 0x01 : 0x0D;
+    put_ptr_field(gcr_addr, rx_freq_adjust, l_rx_freq_adj, read_modify_write);
 
     // Clear per-lane mem_regs (addresses 0x00-0x0F).
     // These are consecutive addresses so we can speed this up by just incrementing after decoding the first address.
@@ -286,20 +390,37 @@ void io_lane_power_on(t_gcr_addr* gcr_addr, bool enable_dl_clk)
     check_for_txpsave_req_sts(gcr_addr);
 
 
-    int tx_bank_controls_zero = get_ptr_field (gcr_addr, tx_bank_controls);
+    int tx_bank_controls_int = get_ptr_field (gcr_addr, tx_bank_controls);
 
-    if(tx_bank_controls_zero != 0)
+    //tx_psave_subset5 111110 //= not used
+    //tx_psave_subset4 111100 //= not used
+    //CQ521314 bit 5 of bank_controls is not going power on fifo ptr or not 0 = on 1 = off
+    //CQ521314 dcc_comp is to be turned off now all time.
+
+    if ((( get_chip_id()  == CHIP_ID_P10  ) && ( get_major_ec() == MAJOR_EC_DD2 )) || ( get_chip_id()  == CHIP_ID_ZA) )
     {
-        //tx_psave_subset5 111110 //= not used
-        //tx_psave_subset4 111100 //= not used
-        put_ptr_field(gcr_addr, tx_bank_controls,        0b110100, read_modify_write); //pl tx_bank_controls_dc(2) = d2_en_dc
-        put_ptr_field(gcr_addr, tx_bank_controls,        0b100100,
-                      read_modify_write); //pl tx_bank_controls_dc(1) = txc_pwrdwn_dc
-        put_ptr_field(gcr_addr, tx_bank_controls,        0b000100,
-                      read_modify_write); //pl tx_bank_controls_dc(0) = dcc_comp_en_dc
-        put_ptr_field(gcr_addr, tx_bank_controls,        0b000000,
-                      read_modify_write); //pl tx_bank_controls_dc(3) = txr_txc_drv_en_p/n_dc
-    }
+        //start if DD2
+        if(tx_bank_controls_int != 0x20)
+        {
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b110100, read_modify_write); //pl tx_bank_controls_dc(2) = d2_en_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b100100, read_modify_write); //pl tx_bank_controls_dc(1) = txc_pwrdwn_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b100100, read_modify_write); //pl tx_bank_controls_dc(0) = dcc_comp_en_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b100000,
+                          read_modify_write); //pl tx_bank_controls_dc(3) = txr_txc_drv_en_p/n_dc
+        }
+    }//end if DD2
+    else
+    {
+        //DD1 P10
+        if(tx_bank_controls_int != 0)
+        {
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b110100, read_modify_write); //pl tx_bank_controls_dc(2) = d2_en_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b100100, read_modify_write); //pl tx_bank_controls_dc(1) = txc_pwrdwn_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b000100, read_modify_write); //pl tx_bank_controls_dc(0) = dcc_comp_en_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b000000,
+                          read_modify_write); //pl tx_bank_controls_dc(3) = txr_txc_drv_en_p/n_dc
+        }
+    }//end if--DD1
 
 
     // reset tx io domain - HW504112
@@ -316,9 +437,9 @@ void io_lane_power_on(t_gcr_addr* gcr_addr, bool enable_dl_clk)
     check_for_rxpsave_req_sts(gcr_addr);
 
 
-    int rx_b_controls_zero = get_ptr_field (gcr_addr, rx_b_bank_controls);
+    int rx_b_controls_int = get_ptr_field (gcr_addr, rx_b_bank_controls);
 
-    if(rx_b_controls_zero != 0)
+    if(rx_b_controls_int != 0)
     {
         put_ptr_field(gcr_addr, rx_b_bank_controls , 0b011111, read_modify_write); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
         put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001111, read_modify_write); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
@@ -328,9 +449,9 @@ void io_lane_power_on(t_gcr_addr* gcr_addr, bool enable_dl_clk)
         put_ptr_field(gcr_addr, rx_b_bank_controls , 0b000000, read_modify_write); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
     }
 
-    int rx_a_controls_zero = get_ptr_field (gcr_addr, rx_a_bank_controls);
+    int rx_a_controls_int = get_ptr_field (gcr_addr, rx_a_bank_controls);
 
-    if(rx_a_controls_zero != 0)
+    if(rx_a_controls_int != 0)
     {
         put_ptr_field(gcr_addr, rx_a_bank_controls , 0b011111, read_modify_write); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
         put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001111, read_modify_write); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
@@ -366,6 +487,9 @@ void io_lane_power_on(t_gcr_addr* gcr_addr, bool enable_dl_clk)
     put_ptr_field(gcr_addr, rx_iodom_ioreset,        0b1, read_modify_write); //pl  reset rx io domain
     put_ptr_field(gcr_addr, rx_iodom_ioreset,        0b0, read_modify_write); //pl  reset rx io domain
 
+    // -- HW532825 - Restore flywheel snapshot operation (set to 1 during io_lane_power_off)
+    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_a               , 0b0     , read_modify_write);//pl
+    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_b               , 0b0     , read_modify_write);//pl
 } //io_lane_power_on
 
 // Power down a lane (both RX and TX)
@@ -377,19 +501,31 @@ void io_lane_power_off(t_gcr_addr* gcr_addr)
     //Check that tx psave is quiesced and that req is not = 1 will set fir
     check_for_txpsave_req_sts(gcr_addr);
 
-    int tx_bank_controls_ones = get_ptr_field (gcr_addr, tx_bank_controls);
+    int tx_bank_controls_int = get_ptr_field (gcr_addr, tx_bank_controls);
 
-    if(tx_bank_controls_ones != 0x3F)
+//CQ521314 never turn on tx_bank_controls_dc(0) = dcc_comp_en_dc
+    if(tx_bank_controls_int != 0x3F)
     {
-        put_ptr_field(gcr_addr, tx_bank_controls,        0b000100,
-                      read_modify_write); //pl tx_bank_controls_dc(3) = txr_txc_drv_en_p/n_dc
-        put_ptr_field(gcr_addr, tx_bank_controls,        0b100100,
-                      read_modify_write); //pl tx_bank_controls_dc(0) = dcc_comp_en_dc
-        put_ptr_field(gcr_addr, tx_bank_controls,        0b110100,
-                      read_modify_write); //pl tx_bank_controls_dc(1) = txc_pwrdwn_dc
-        put_ptr_field(gcr_addr, tx_bank_controls,        0b111111, read_modify_write); //pl tx_bank_controls_dc(2) = d2_en_dc
-        //tx_psave_subset5 111110 //= not used
-        //tx_psave_subset6 111111 //= iot used
+        if ((( get_chip_id()  == CHIP_ID_P10  ) && ( get_major_ec() == MAJOR_EC_DD2 )) || ( get_chip_id()  == CHIP_ID_ZA))
+        {
+            //start if
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b100100,
+                          read_modify_write); //pl tx_bank_controls_dc(3) = txr_txc_drv_en_p/n_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b100100, read_modify_write); //pl tx_bank_controls_dc(0) = dcc_comp_en_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b110100, read_modify_write); //pl tx_bank_controls_dc(1) = txc_pwrdwn_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b111111, read_modify_write); //pl tx_bank_controls_dc(2) = d2_en_dc
+            //tx_psave_subset5 111110 //= not used
+            //tx_psave_subset6 111111 //= iot used
+        }//end if
+        else
+        {
+            //start else DD1
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b000100,
+                          read_modify_write); //pl tx_bank_controls_dc(3) = txr_txc_drv_en_p/n_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b100100, read_modify_write); //pl tx_bank_controls_dc(0) = dcc_comp_en_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b110100, read_modify_write); //pl tx_bank_controls_dc(1) = txc_pwrdwn_dc
+            put_ptr_field(gcr_addr, tx_bank_controls, 0b111111, read_modify_write); //pl tx_bank_controls_dc(2) = d2_en_dc
+        }//end else
     }
 
     // RX Registers
@@ -399,14 +535,40 @@ void io_lane_power_off(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, rx_hold_div_clks_ab_alias,  0b11,
                   read_modify_write); //pl Assert hold_div_clock to freeze c16 and c32
 
+    //CQ HW530311 -- When we power off a lane manually, make sure the RX psave state machine
+    // is flushed into an all zeros state for that lane.  That implies potentially turning the
+    // power back on for the alt bank, before proceeding to turn it off again.
+    //
+    // However, this also enables the CDR and a CDR lock timer, which we don't want.
+    // Disabling the psave cdr state machine will disable the timer but not the CDR itself.
+    // Therefore we must also turn off the CDR manually here.
+    put_ptr_field(gcr_addr, rx_psave_cdr_disable_sm              , 0b1     , read_modify_write);//pl
+    put_ptr_field(gcr_addr,  rx_psave_cdrlock_mode_sel           , 0b11    , read_modify_write);//pl
+    put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias      , 0b000000,
+                  read_modify_write);//pl -- HW532825 - Need CDR disabled for the flywheel valid chicken switch to work
+    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_a               , 0b1     ,
+                  read_modify_write);//pl -- HW532825 - Make sure flywheel snapshot cannot make us hang
+    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_b               , 0b1     ,
+                  read_modify_write);//pl -- HW532825 - Make sure flywheel snapshot cannot make us hang
+    put_ptr_field(gcr_addr, rx_psave_req_alt                     , 0b0     , read_modify_write);//pl
+    int psave_sts = 1;
+
+    while (psave_sts)
+    {
+        psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
+    }
+
+    put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias       , 0b000000, read_modify_write);//pl
+    put_ptr_field(gcr_addr, rx_psave_cdr_disable_sm              , 0b0     , read_modify_write);//pl
+    put_ptr_field(gcr_addr,  rx_psave_cdrlock_mode_sel           , 0b00    , read_modify_write);//pl
 
     //Check that rx psave is quiesced and that req is not = 1 will set fir
     //If the powerdown lane is asked for but we are doing a init or recal than that a no-no see Mike S -- CQ522215
     check_for_rxpsave_req_sts(gcr_addr);
 
-    int rx_b_bank_controls_ones = get_ptr_field (gcr_addr, rx_b_bank_controls);
+    int rx_b_bank_controls_int = get_ptr_field (gcr_addr, rx_b_bank_controls);
 
-    if(rx_b_bank_controls_ones != 0x3F)
+    if(rx_b_bank_controls_int != 0x3F)
     {
         put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001000, read_modify_write ); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
         put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001001, read_modify_write ); //pl.CTLE_PDWN( ABANK_DATA_PDWN )
@@ -417,9 +579,9 @@ void io_lane_power_off(t_gcr_addr* gcr_addr)
     }
 
 
-    int rx_a_bank_controls_ones = get_ptr_field (gcr_addr, rx_a_bank_controls);
+    int rx_a_bank_controls_int = get_ptr_field (gcr_addr, rx_a_bank_controls);
 
-    if(rx_a_bank_controls_ones != 0x3F)
+    if(rx_a_bank_controls_int != 0x3F)
     {
         put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001000, read_modify_write ); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
         put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001001, read_modify_write ); //pl.CTLE_PDWN( ABANK_DATA_PDWN )

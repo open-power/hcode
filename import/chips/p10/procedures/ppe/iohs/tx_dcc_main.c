@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap20052100 |gap     | Added power up/down controls for dd2, repmux path select dd1 cq521314
+// gap20050200 |gap     | Add main and pad dcc error propagation
 // gap19091000 |gap     | Change rx_dcc_debug to tx_dcc_debug HW503432
 // mbs19090500 |mbs     | Updated tx_dcc_main_min_samples mem_reg for sim speedup
 // vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
@@ -69,18 +71,52 @@ void tx_dcc_main_init(t_gcr_addr* gcr_addr_i)
 {
     set_debug_state(0xD010); // init start
 
+    uint32_t tx_dcc_sel_alias_l = get_ptr_field(gcr_addr_i, tx_dcc_sel_alias) ; // main followed by pad
+    set_tx_dcc_debug(0xD061, tx_dcc_sel_alias_l); //dcc_sel_alias
+    bool use_repmux_l = (tx_dcc_sel_alias_l == 0);
+
     uint32_t tx_dcc_main_min_samples_int = mem_pg_field_get(tx_dcc_main_min_samples);
 
     put_ptr_field(gcr_addr_i, tx_dcc_i_tune,   IntToGray6(0),   read_modify_write);
     put_ptr_field(gcr_addr_i, tx_dcc_q_tune,   IntToGray6(0),   read_modify_write);
     put_ptr_field(gcr_addr_i, tx_dcc_iq_tune,  IntToGray5IQ(0), read_modify_write);
 
-    tx_dcc_main_servo(gcr_addr_i, tx_dcc_main_max_step_i_c,  tx_dcc_main_dir_i_c,  SERVOOP_I, tx_dcc_main_min_i_c,
-                      tx_dcc_main_max_i_c,  tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
-    tx_dcc_main_servo(gcr_addr_i, tx_dcc_main_max_step_q_c,  tx_dcc_main_dir_q_c,  SERVOOP_Q, tx_dcc_main_min_q_c,
-                      tx_dcc_main_max_q_c,  tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
-    tx_dcc_main_servo(gcr_addr_i, tx_dcc_main_max_step_iq_c, tx_dcc_main_dir_iq_c, SERVOOP_IQ, tx_dcc_main_min_iq_c,
-                      tx_dcc_main_max_iq_c, tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
+    // power on dcc if not p10 dd1; p10 dd1 does not allow this control
+    if ((get_chip_id() != CHIP_ID_P10) || (get_major_ec() != MAJOR_EC_DD1))   // not p10 dd1
+    {
+        put_ptr_field(gcr_addr_i, tx_bank_controls_dcc_alias,  0b0, read_modify_write); //pl power-on, active low
+    }
+
+    if(!use_repmux_l)
+    {
+        set_debug_state(0xD011); // enable pattern gen
+        put_ptr_field(gcr_addr_i, tx_tdr_enable,      0b0,     read_modify_write);
+        put_ptr_field(gcr_addr_i, tx_pattern_enable,  0b1,     read_modify_write);
+        put_ptr_field(gcr_addr_i, tx_pattern_sel,     0b001,   read_modify_write);
+    }
+
+    tx_dcc_main_servo(gcr_addr_i, use_repmux_l, tx_dcc_main_max_step_i_c,  tx_dcc_main_dir_i_c,  SERVOOP_I,
+                      tx_dcc_main_min_i_c,  tx_dcc_main_max_i_c,  tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
+    tx_dcc_main_servo(gcr_addr_i, use_repmux_l, tx_dcc_main_max_step_q_c,  tx_dcc_main_dir_q_c,  SERVOOP_Q,
+                      tx_dcc_main_min_q_c,  tx_dcc_main_max_q_c,  tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
+    tx_dcc_main_servo(gcr_addr_i, use_repmux_l, tx_dcc_main_max_step_iq_c, tx_dcc_main_dir_iq_c, SERVOOP_IQ,
+                      tx_dcc_main_min_iq_c, tx_dcc_main_max_iq_c, tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
+
+    if(!use_repmux_l)
+    {
+        put_ptr_field(gcr_addr_i, tx_pattern_enable,  0b0,     read_modify_write);
+        put_ptr_field(gcr_addr_i, tx_pattern_sel,     0b000,   read_modify_write);
+    }
+
+    // power off dcc if not dd1; dd1 does not allow this control
+    if ((get_chip_id() != CHIP_ID_P10) || (get_major_ec() != MAJOR_EC_DD1))   // not p10 dd1
+    {
+        put_ptr_field(gcr_addr_i, tx_bank_controls_dcc_alias,  0b1, read_modify_write); //pl power-on, active low
+    }
+    else if (!use_repmux_l)   // if p10 dd1 and repmux not selected, select it
+    {
+        put_ptr_field(gcr_addr_i, tx_dcc_sel_alias,  0b00, read_modify_write); //pl
+    }
 
     set_debug_state(0xD01F); // init end
 } //tx_dcc_main_init
@@ -88,6 +124,9 @@ void tx_dcc_main_init(t_gcr_addr* gcr_addr_i)
 ////////////////////////////////////////////////////////////////////////////////////
 // DCC
 // Run Duty cycle correction adjustment
+//
+// This will only be called for dd1; therefor power-up, power-down are not used here
+// It is also only used in repmux mode; so no pattern generation is required
 ////////////////////////////////////////////////////////////////////////////////////
 int tx_dcc_main_adjust(t_gcr_addr* gcr_addr_i)
 {
@@ -95,11 +134,11 @@ int tx_dcc_main_adjust(t_gcr_addr* gcr_addr_i)
 
     uint32_t tx_dcc_main_min_samples_int = mem_pg_field_get(tx_dcc_main_min_samples);
 
-    tx_dcc_main_servo(gcr_addr_i, 1, tx_dcc_main_dir_i_c,  SERVOOP_I,  tx_dcc_main_min_i_c,  tx_dcc_main_max_i_c,
+    tx_dcc_main_servo(gcr_addr_i, true, 1, tx_dcc_main_dir_i_c,  SERVOOP_I,  tx_dcc_main_min_i_c,  tx_dcc_main_max_i_c,
                       tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
-    tx_dcc_main_servo(gcr_addr_i, 1, tx_dcc_main_dir_q_c,  SERVOOP_Q,  tx_dcc_main_min_q_c,  tx_dcc_main_max_q_c,
+    tx_dcc_main_servo(gcr_addr_i, true, 1, tx_dcc_main_dir_q_c,  SERVOOP_Q,  tx_dcc_main_min_q_c,  tx_dcc_main_max_q_c,
                       tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
-    tx_dcc_main_servo(gcr_addr_i, 1, tx_dcc_main_dir_iq_c, SERVOOP_IQ, tx_dcc_main_min_iq_c, tx_dcc_main_max_iq_c,
+    tx_dcc_main_servo(gcr_addr_i, true, 1, tx_dcc_main_dir_iq_c, SERVOOP_IQ, tx_dcc_main_min_iq_c, tx_dcc_main_max_iq_c,
                       tx_dcc_main_min_samples_int, tx_dcc_main_ratio_thresh_c);
 
     int status_l = pass_code;
@@ -113,11 +152,10 @@ int tx_dcc_main_adjust(t_gcr_addr* gcr_addr_i)
 // DCC servo
 // Run Duty cycle servo to move towards or over edge with finer steps downto a step size of 1
 ////////////////////////////////////////////////////////////////////////////////////
-void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir_i, t_servoop op_i, int32_t min_tune_i,
-                       int32_t max_tune_i, uint32_t min_samples_i,
+void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, bool use_repmux_i, uint32_t step_size_i, int32_t dir_i, t_servoop op_i,
+                       int32_t min_tune_i, int32_t max_tune_i, uint32_t min_samples_i,
                        int32_t ratio_thresh_i)
 {
-    set_debug_state(0xD030); // servo start
 
     set_tx_dcc_debug(0xD071, step_size_i); //step_size_i
     set_tx_dcc_debug(0xD072, dir_i); //temp debug
@@ -139,23 +177,66 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir
     bool saved_compare = false;
     int thread_l = 0;
 
+    // Notes on bit alignment for clk_pat pattern gen
+    //    The bits are swizzled at the main mux as follows:
+    //       data_in[1:3,0]<->D4[0:3]
+    //    So, in order to obtain a desired D4[0:3] pattern, the
+    //       same as the applicable tx_dcc_pat, we must swizzle
+    //       the repeating data/clock pattern as follows:
+    //         data_in[0:3]<->D4[3,0:2]
+    //
+    //    Phase     Desired control      Repeating clk pattern
+    //      I           0b0110                 0011
+    //      Q           0b0011                 1001
+    //      IQ          0b0101                 1010
+
     switch(op_i)
     {
         case SERVOOP_I:
             set_debug_state(0xD031); // servo init i
-            put_ptr_field(gcr_addr_i, tx_dcc_pat, 0b0110, read_modify_write); // set pattern for repmux
+
+            if (use_repmux_i)
+            {
+                put_ptr_field(gcr_addr_i, tx_dcc_pat, 0b0110, read_modify_write); // set pattern for repmux
+            }
+            else
+            {
+                //tx_dcc_main_clk_pat(gcr_addr_i, 0b0011);
+                tx_dcc_main_clk_pat(gcr_addr_i, 0b00001111);
+            }
+
             dcc_last_tune_l = Gray6ToInt(get_ptr_field(gcr_addr_i, tx_dcc_i_tune)) ; // must be 6 bits wide
             break;
 
         case SERVOOP_Q:
             set_debug_state(0xD032); // servo init q
-            put_ptr_field(gcr_addr_i, tx_dcc_pat, 0b0011, read_modify_write); // set pattern for repmux
+
+            if (use_repmux_i)
+            {
+                put_ptr_field(gcr_addr_i, tx_dcc_pat, 0b0011, read_modify_write); // set pattern for repmux
+            }
+            else
+            {
+                //tx_dcc_main_clk_pat(gcr_addr_i, 0b1001);
+                tx_dcc_main_clk_pat(gcr_addr_i, 0b11000011);
+            }
+
             dcc_last_tune_l = Gray6ToInt(get_ptr_field(gcr_addr_i, tx_dcc_q_tune)) ;  // must be 6 bits wide
             break;
 
         case SERVOOP_IQ:
             set_debug_state(0xD033); // servo init iq
-            put_ptr_field(gcr_addr_i, tx_dcc_pat, 0b0101, read_modify_write); // set pattern for repmux
+
+            if (use_repmux_i)
+            {
+                put_ptr_field(gcr_addr_i, tx_dcc_pat, 0b0101, read_modify_write); // set pattern for repmux
+            }
+            else
+            {
+                //tx_dcc_main_clk_pat(gcr_addr_i, 0b1010);
+                tx_dcc_main_clk_pat(gcr_addr_i, 0b11001100);
+            }
+
             dcc_last_tune_l = Gray5IQToInt(get_ptr_field(gcr_addr_i, tx_dcc_iq_tune)) ; // must be 5 bits wide
             break;
     }
@@ -167,7 +248,7 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir
 
     do
     {
-        set_debug_state(0xD041); // servo do loop start
+        set_debug_state(0xD034); // servo do loop start
         io_wait_us(thread_l, tx_dcc_main_wait_tune_us_c);
         comp_decision_l = tx_dcc_main_compare_result(gcr_addr_i, min_samples_i, ratio_thresh_i);
 
@@ -182,17 +263,17 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir
         switch(comp_decision_l)
         {
             case COMP_RESULT_P_GT_N:
-                set_debug_state(0xD034); // servo prelim reduce
+                set_debug_state(0xD035); // servo prelim reduce
                 adj_l = -1 * step_l;
                 break;
 
             case COMP_RESULT_P_LT_N:
-                set_debug_state(0xD035); // servo prelim increase
+                set_debug_state(0xD036); // servo prelim increase
                 adj_l = step_l;
                 break;
 
             case COMP_RESULT_P_NEAR_N:
-                set_debug_state(0xD036); // servo no change - done
+                set_debug_state(0xD037); // servo no change - done
                 done = true;
                 break;
         }
@@ -209,12 +290,12 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir
             {
                 if (dcc_last_tune_l == max_tune_i)
                 {
-                    set_debug_state(0xD037); // servo at max limit - done
+                    set_debug_state(0xD038); // servo at max limit - done
                     done = true;
                 }
                 else
                 {
-                    set_debug_state(0xD038); // servo tune to max
+                    set_debug_state(0xD039); // servo tune to max
                     // there is a suboptimization issue with this
                     // in normal scenarios, one could see, with a step_size_i of 4,
                     // for example, this sequence of tune values:
@@ -230,41 +311,39 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir
             {
                 if (dcc_last_tune_l == min_tune_i)
                 {
-                    set_debug_state(0xD039); // servo at min limit - done
+                    set_debug_state(0xD03A); // servo at min limit - done
                     done = true;
                 }
                 else
                 {
-                    set_debug_state(0xD03A); // servo tune to min
+                    set_debug_state(0xD03B); // servo tune to min
                     // see above for a suboptimization issue that is also present here
                     dcc_next_tune_l = min_tune_i;
                 }
             }
             else
             {
-                set_debug_state(0xD03B); // servo use prelim adj
+                set_debug_state(0xD03C); // servo use prelim adj
                 dcc_next_tune_l = dcc_last_tune_l + adj_l;
             }
         }
 
         if (!done)
         {
-            set_tx_dcc_debug(0xD090, dcc_next_tune_l);
-
             switch(op_i)
             {
                 case SERVOOP_I:
-                    set_debug_state(0xD03C); // servo update i
+                    set_debug_state(0xD03D); // servo update i
                     put_ptr_field(gcr_addr_i, tx_dcc_i_tune,   IntToGray6(dcc_next_tune_l),    read_modify_write);
                     break;
 
                 case SERVOOP_Q:
-                    set_debug_state(0xD03D); // servo update q
+                    set_debug_state(0xD03E); // servo update q
                     put_ptr_field(gcr_addr_i, tx_dcc_q_tune,   IntToGray6(dcc_next_tune_l),    read_modify_write);
                     break;
 
                 case SERVOOP_IQ:
-                    set_debug_state(0xD03E); // servo update iq
+                    set_debug_state(0xD041); // servo update iq
                     put_ptr_field(gcr_addr_i, tx_dcc_iq_tune,   IntToGray5IQ(dcc_next_tune_l),    read_modify_write);
                     break;
             }
@@ -280,7 +359,6 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir
     }
     while ((step_size_l > 0) & !done);
 
-    set_debug_state(0xD04F); // servo end
 } //tx_dcc_main_servo
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -289,7 +367,6 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, uint32_t step_size_i, int32_t dir
 ////////////////////////////////////////////////////////////////////////////////////
 t_comp_result tx_dcc_main_compare_result(t_gcr_addr* gcr_addr_i, uint32_t min_samples_i, int32_t ratio_thresh_i)
 {
-    set_debug_state(0xD050); // compare_result_start
 
     t_comp_result comp_result_l = COMP_RESULT_P_NEAR_N;
     uint32_t vote_p_gt_n_l = 0;
@@ -337,6 +414,20 @@ t_comp_result tx_dcc_main_compare_result(t_gcr_addr* gcr_addr_i, uint32_t min_sa
 
     put_ptr_field(gcr_addr_i, tx_dcc_cmp_run, 0, read_modify_write);
 
-    set_debug_state(0xD06F); // compare_result end
     return comp_result_l;
 } //tx_dcc_main_compare_result
+
+////////////////////////////////////////////////////////////////////////////////////
+// DCC write repeating clock pattern
+// Write repeating clock pattern
+////////////////////////////////////////////////////////////////////////////////////
+void tx_dcc_main_clk_pat(t_gcr_addr* gcr_addr_i, uint8_t clk_pattern_i)
+{
+
+    uint16_t clk_pattern_16_bit = clk_pattern_i | (clk_pattern_i << 8);
+    put_ptr_field(gcr_addr_i, tx_pattern_0_15,   clk_pattern_16_bit,  fast_write);
+    put_ptr_field(gcr_addr_i, tx_pattern_16_31,  clk_pattern_16_bit,  fast_write);
+    put_ptr_field(gcr_addr_i, tx_pattern_32_47,  clk_pattern_16_bit,  fast_write);
+    put_ptr_field(gcr_addr_i, tx_pattern_48_63,  clk_pattern_16_bit,  fast_write);
+
+} //tx_dcc_main_clk_pat

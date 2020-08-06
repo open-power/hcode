@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr20061101 |vbr     | Added log type for bank sync warning
+// gap20032600 |gap     | Inserted DEBUG_BIST_TX_ZCAL_FAIL
 // mwh20022500 |mwh     | Added log type DEBUG_BIST_TXSEG
 // vbr20021300 |vbr     | Added log type for eye height fail
 // cws20011000 |cws     | Initial Rev
@@ -114,6 +116,11 @@
 #define DEBUG_MAN_SERVO_MASK                    0x2D
 #define DEBUG_MAN_SERVO_PATTERN                 0x2E
 #define DEBUG_VGA_GAIN                          0x2F
+
+// A2 version (p10 dd2, zA dd1) fields start here
+#define DEBUG_BIST_TX_ZCAL_FAIL                 0x40
+#define DEBUG_RX_BANK_SYNC_WARN                 0x41
+
 /// DEBUG LOG TYPES END
 
 #include "io_lib.h"

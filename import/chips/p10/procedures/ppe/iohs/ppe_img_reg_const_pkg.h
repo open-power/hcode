@@ -54,7 +54,7 @@
 #define ppe_debug_log_num_mask                     0x1fc
 
 
-#define ppe_error_lane_addr                        0b000000111
+#define ppe_error_lane_addr                        0b000001001
 #define ppe_error_lane_startbit                    4
 #define ppe_error_lane_width                       5
 #define ppe_error_lane_endbit                      8
@@ -70,7 +70,7 @@
 #define ppe_error_state_mask                       0xffff
 
 
-#define ppe_error_thread_addr                      0b000000111
+#define ppe_error_thread_addr                      0b000001001
 #define ppe_error_thread_startbit                  1
 #define ppe_error_thread_width                     3
 #define ppe_error_thread_endbit                    3
@@ -78,7 +78,7 @@
 #define ppe_error_thread_mask                      0x7000
 
 
-#define ppe_error_valid_addr                       0b000000111
+#define ppe_error_valid_addr                       0b000001001
 #define ppe_error_valid_startbit                   0
 #define ppe_error_valid_width                      1
 #define ppe_error_valid_endbit                     0
@@ -92,6 +92,62 @@
 #define ppe_num_threads_endbit                     2
 #define ppe_num_threads_shift                      13
 #define ppe_num_threads_mask                       0xe000
+
+
+#define ppe_tx_zcal_bist_busy_addr                 0b000000111
+#define ppe_tx_zcal_bist_busy_startbit             9
+#define ppe_tx_zcal_bist_busy_width                1
+#define ppe_tx_zcal_bist_busy_endbit               9
+#define ppe_tx_zcal_bist_busy_shift                6
+#define ppe_tx_zcal_bist_busy_mask                 0x40
+
+
+#define ppe_tx_zcal_bist_busy_done_alias_addr      0b000000111
+#define ppe_tx_zcal_bist_busy_done_alias_startbit   9
+#define ppe_tx_zcal_bist_busy_done_alias_width     2
+#define ppe_tx_zcal_bist_busy_done_alias_endbit    10
+#define ppe_tx_zcal_bist_busy_done_alias_shift     5
+#define ppe_tx_zcal_bist_busy_done_alias_mask      0x60
+
+
+#define ppe_tx_zcal_bist_busy_done_fail_alias_addr   0b000000111
+#define ppe_tx_zcal_bist_busy_done_fail_alias_startbit   9
+#define ppe_tx_zcal_bist_busy_done_fail_alias_width   3
+#define ppe_tx_zcal_bist_busy_done_fail_alias_endbit   11
+#define ppe_tx_zcal_bist_busy_done_fail_alias_shift   4
+#define ppe_tx_zcal_bist_busy_done_fail_alias_mask   0x70
+
+
+#define ppe_tx_zcal_bist_done_addr                 0b000000111
+#define ppe_tx_zcal_bist_done_startbit             10
+#define ppe_tx_zcal_bist_done_width                1
+#define ppe_tx_zcal_bist_done_endbit               10
+#define ppe_tx_zcal_bist_done_shift                5
+#define ppe_tx_zcal_bist_done_mask                 0x20
+
+
+#define ppe_tx_zcal_bist_done_fail_alias_addr      0b000000111
+#define ppe_tx_zcal_bist_done_fail_alias_startbit   10
+#define ppe_tx_zcal_bist_done_fail_alias_width     2
+#define ppe_tx_zcal_bist_done_fail_alias_endbit    11
+#define ppe_tx_zcal_bist_done_fail_alias_shift     4
+#define ppe_tx_zcal_bist_done_fail_alias_mask      0x30
+
+
+#define ppe_tx_zcal_bist_en_addr                   0b000000001
+#define ppe_tx_zcal_bist_en_startbit               1
+#define ppe_tx_zcal_bist_en_width                  1
+#define ppe_tx_zcal_bist_en_endbit                 1
+#define ppe_tx_zcal_bist_en_shift                  14
+#define ppe_tx_zcal_bist_en_mask                   0x4000
+
+
+#define ppe_tx_zcal_bist_fail_addr                 0b000000111
+#define ppe_tx_zcal_bist_fail_startbit             11
+#define ppe_tx_zcal_bist_fail_width                1
+#define ppe_tx_zcal_bist_fail_endbit               11
+#define ppe_tx_zcal_bist_fail_shift                4
+#define ppe_tx_zcal_bist_fail_mask                 0x10
 
 
 #define ppe_tx_zcal_busy_addr                      0b000000100
@@ -156,6 +212,14 @@
 #define ppe_tx_zcal_p_endbit                       8
 #define ppe_tx_zcal_p_shift                        7
 #define ppe_tx_zcal_p_mask                         0xff80
+
+
+#define ppe_vio_volts_addr                         0b000000000
+#define ppe_vio_volts_startbit                     7
+#define ppe_vio_volts_width                        2
+#define ppe_vio_volts_endbit                       8
+#define ppe_vio_volts_shift                        7
+#define ppe_vio_volts_mask                         0x180
 
 
 #define ppe_watchdog_select_sim_mode_addr          0b000000000

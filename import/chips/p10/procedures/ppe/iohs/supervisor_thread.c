@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20061800 |vbr     | HW533813: Fixed check period config for recal_not_run.
 // vbr20040800 |vbr     | HW527993: Increase thread lock check period from 100ms to 200ms
 // vbr20022700 |vbr     | Added config to allow sim to greatly reduce the check periods.
 // cws20010900 |cws     | Removed tx zcal state machine calls
@@ -75,7 +76,9 @@
 /////////////////////////////////////////////////
 // Time constants for periodic events
 /////////////////////////////////////////////////
-#define THREAD_LOCK_CHECK_PERIOD    PK_MILLISECONDS(200)
+#define THREAD_LOCK_CHECK_PERIOD    PK_SECONDS((PkInterval)10)
+#define RECAL_RUN_CHECK_PERIOD      PK_SECONDS((PkInterval)10)
+//#define THREAD_LOCK_CHECK_PERIOD    PK_MILLISECONDS(200)
 #define RECAL_NOT_RUN_CHECK_PERIOD  PK_MILLISECONDS(500)
 #define FAST_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)43200) // 12 hrs
 #define SLOW_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)86400) // 24 hrs
@@ -132,7 +135,7 @@ void supervisor_thread(void* arg)
     PkInterval recal_not_run_check_interval;
     unsigned int recal_not_run_sim_mode = mem_pg_field_get(ppe_recal_not_run_sim_mode);
 
-    if (thread_lock_sim_mode)
+    if (recal_not_run_sim_mode)
     {
         // Sim Mode: 2^ppe_recal_not_run_sim_mode
         recal_not_run_check_interval = (PkInterval)scaled_microsecond << recal_not_run_sim_mode;
@@ -217,8 +220,7 @@ void supervisor_thread(void* arg)
                     prev_thread_loop_cnt[thread] = new_count;
 
                     // Set FIR if the count hasn't changed
-//          if (old_count == new_count) {
-                    if (old_count == new_count && 0)
+                    if (old_count == new_count)
                     {
 #if IO_DEBUG_LEVEL >= 1
                         // If the error info isn't already set, set_fir() will write this thread's ID to the error info so need to override that.

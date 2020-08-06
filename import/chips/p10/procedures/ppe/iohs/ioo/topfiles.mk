@@ -49,6 +49,7 @@ TOP-C-SOURCES += eo_rxbist_ber.c
 TOP-C-SOURCES += eo_llbist.c
 TOP-C-SOURCES += tx_seg_test.c
 TOP-C-SOURCES += io_manual_amp_servo.c
+TOP-C-SOURCES += tx_zcal_bist.c
 TOP-CXX-SOURCES =
 TOP-S-SOURCES =
 

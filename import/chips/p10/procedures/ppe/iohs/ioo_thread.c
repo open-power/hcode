@@ -39,6 +39,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20072800 |mbs     | HW537933 - Updated dl_recal_req to fix issue with sending recal done erroneously after init_req is high
+// mbs20072700 |mbs     | HW537933 - Updated dl_recal_req to complete recal handshake even when run_lane is 0
+// gap20021100 |gap     | Added tx_zcal_bist in cmd_tx_bist_tests_pl
 // vbr20021100 |vbr     | HW522731: smarter lane cal copy based on flywheel lane.
 // bja20020500 |bja     | Use new tx_fifo_init() in cmd_tx_fifo_init_pl()
 // bja20020300 |bja     | Set load/unload regs during fifo init
@@ -135,6 +138,7 @@
 #include "io_init_and_reset.h"
 #include "tx_zcal_tdr.h"
 #include "tx_ffe.h"
+#include "tx_zcal_bist.h"
 #include "tx_seg_test.h"
 #include "io_tx_zcal.h"
 #include "txbist_main.h"
@@ -704,6 +708,23 @@ static void cmd_tx_bist_tests_pl(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_
         }
     }
 
+    if (img_field_get(ppe_tx_zcal_bist_en) == 1)
+    {
+        if (img_field_get(ppe_tx_zcal_bist_done) == 0 && img_field_get(ppe_tx_zcal_bist_busy) == 0)
+        {
+            img_field_put(ppe_tx_zcal_bist_busy_done_fail_alias, 0b100); // Set busy and clear fail (in case it was previously set)
+            tx_zcal_bist(io_gcr_addr);
+            img_field_put(ppe_tx_zcal_bist_busy_done_alias, 0b01); // Clear busy and set done
+        }
+        else
+        {
+            while (img_field_get(ppe_tx_zcal_bist_done) == 0)
+            {
+                io_sleep(get_gcr_addr_thread(io_gcr_addr));
+            }
+        }
+    }
+
     set_gcr_addr_reg_id(io_gcr_addr, rx_group); // set to rx gcr address
     return;
 }
@@ -1023,14 +1044,23 @@ static void dl_recal_req(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes, co
 
         if ((0x80000000 >> l_lane) & i_recal_req_vec)
         {
+            bool send_recal_done = false;
+
             if (!mem_pl_field_get(rx_init_done, l_lane))
             {
                 mem_pl_field_put(rx_recal_before_init, l_lane, 1);
+                send_recal_done = true;
             }
             else if (!get_ptr_field(io_gcr_addr, rx_any_init_req_or_reset))
             {
                 run_recalibration(io_gcr_addr, l_lane);
+                send_recal_done = true;
+            }
 
+            // HW537933 - Complete the recal handshake with the DL, even if run_lane=0 and we don't actually recal.
+            // This helps flush out reset time issues with the DL recal request signals.
+            if ( send_recal_done )
+            {
                 set_debug_state(0x0005); // DEBUG - Recal Done Handshake
                 put_ptr_field(io_gcr_addr, rx_phy_dl_recal_done_set, 0b1, fast_write); // strobe bit
 
@@ -1045,6 +1075,7 @@ static void dl_recal_req(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes, co
                 // Clear the recal_abort sticky bit now that recal_abort should be unasserted (in both external and internal recal modes)
                 put_ptr_field(io_gcr_addr, rx_dl_phy_recal_abort_sticky_clr, 0b1, fast_write); // strobe bit
             }
+
         }
     }
 

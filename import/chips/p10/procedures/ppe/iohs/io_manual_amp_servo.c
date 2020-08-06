@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20080501 |mbs     | HW539048- Updated to make FILTER_DEPTH modes (1 is too short)
+// mbs20080500 |mbs     | HW539048- Updated to make FILTER_DEPTH programmable (rx_manual_servo_filter_depth)
 // cws20072200 |cws     |- Initial
 // -----------------------------------------------------------------------------
 
@@ -148,7 +150,28 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
                      const uint16_t i_servo_op,
                      int32_t* o_result)
 {
-    const int32_t  FILTER_DEPTH          = 16;
+    int32_t  FILTER_DEPTH_SEL = mem_pg_field_get(rx_manual_servo_filter_depth);
+    int32_t  FILTER_DEPTH;
+
+    switch(FILTER_DEPTH_SEL)
+    {
+        case 0x0:
+            FILTER_DEPTH = 2;
+            break;
+
+        case 0x1:
+            FILTER_DEPTH = 4;
+            break;
+
+        case 0x2:
+            FILTER_DEPTH = 8;
+            break;
+
+        default :
+            FILTER_DEPTH = 16;
+    }
+
+
     const int32_t  DAC_MIN              = -128;
     const int32_t  DAC_MAX              = 127;
     const uint32_t MAX_LOOPS            = 255;
@@ -174,6 +197,7 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
     uint32_t l_quad    = (i_servo_op >>  3) & 0x03;
     uint32_t l_latch   = (i_servo_op >>  0) & 0x07;
 
+    //ADD_LOG(DEBUG_MAN_SERVO_OP, io_gcr_addr, i_servo_op);
 
     uint32_t l_spec_mux = 0;
 
@@ -208,16 +232,6 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
     {
         l_mask = 0x00;
         l_pattern = 0x02;
-    }
-    else
-    {
-        //ADD_LOG(DEBUG_MAN_SERVO_MASK, io_gcr_addr, l_mask);
-        //ADD_LOG(DEBUG_MAN_SERVO_PATTERN, io_gcr_addr, l_pattern);
-    }
-
-    if (l_mask == 0x1F)
-    {
-        ADD_LOG(DEBUG_MAN_SERVO_OP, io_gcr_addr, i_servo_op);
     }
 
     // put_fast on the spec mux works because we pad the other bank's spec mux with zeros
@@ -268,9 +282,6 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
 
     for (l_loop = 0; l_loop < MAX_LOOPS; l_loop++)
     {
-        //if (l_mask == 0x1F) {
-        //    ADD_LOG(DEBUG_MAN_SERVO_DATA1, io_gcr_addr, l_dac_offset & 0xFFFF);
-        //}
 
         // 1. Set the new dac value
         l_dac_val = IntToLatchDac(l_dac_offset);
@@ -338,7 +349,6 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
     if (l_loop >= MAX_LOOPS)
     {
         set_fir(fir_code_warning);
-        ADD_LOG(DEBUG_MAN_SERVO_TIMEOUT_FAIL, io_gcr_addr, i_servo_op);
         return l_rc;
     }
 
@@ -375,18 +385,53 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
         *o_result = l_dac_offset;
     }
 
-    //lcl_put(scom_ppe_work1_lcl_addr, scom_ppe_work1_width, l_dac_offset & 0x000000FF);
-    //lcl_put(scom_ppe_work2_lcl_addr, scom_ppe_work2_width, l_dac_val & 0x000000FF);
-    if (l_mask == 0x1F)
-    {
-        ADD_LOG(DEBUG_MAN_SERVO_DATA, io_gcr_addr, l_dac_offset);
-    }
-
     return l_rc;
 }
 
+
+
+
+
+
+
 int data_pipe_setup(t_gcr_addr* gcr_addr)
 {
+    // Vikram says these're already done
+    //  int lane = get_gcr_addr_lane(gcr_addr);
+
+    //  clear_all_cal_lane_sel(gcr_addr);
+
+    //  io_lane_power_on(gcr_addr, false);
+
+    //  put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // strobe bit
+    //  put_ptr_field(gcr_addr, rx_cal_lane_pg_phy_gcrmsg, lane, read_modify_write);
+    /*
+    int bank_sel_a  = get_ptr_field(gcr_addr, rx_bank_sel_a);
+    t_bank cal_bank = (bank_sel_a == 0) ? bank_a : bank_b;
+
+    if (cal_bank == bank_a)
+      {
+        put_ptr(gcr_addr, rx_pr_slave_mode_a_addr, rx_pr_slave_mode_a_startbit, rx_pr_slave_mode_a_endbit, 1, read_modify_write);
+      }
+    else
+      {
+        put_ptr(gcr_addr, rx_pr_slave_mode_b_addr, rx_pr_slave_mode_b_startbit, rx_pr_slave_mode_b_endbit, 1, read_modify_write);
+      }
+    */
+    // I think we won't need any of this:
+    /*
+      #Bank A =alt bank, Bank B = main bank to edge track with
+      if bank == bank_a:
+          self.putScom("rx_bank_sel_a", 0)
+          self.putScom("rx_rlm_clk_sel_a", 1)
+          self.putScom("rx_dl_clk_sel_a", 0)
+      #Bank B =alt bank, Bank A = main bank to edge track with
+      else:
+          self.putScom("rx_bank_sel_a", 1)
+          self.putScom("rx_rlm_clk_sel_a", 0)
+          self.putScom("rx_dl_clk_sel_a", 1)
+    */
+
 
     put_ptr(gcr_addr, rx_data_pipe_clr_on_read_mode_addr, rx_data_pipe_clr_on_read_mode_startbit,
             rx_data_pipe_clr_on_read_mode_endbit, 0, read_modify_write);
@@ -399,6 +444,19 @@ int data_pipe_setup(t_gcr_addr* gcr_addr)
 
 int data_pipe_cleanup(t_gcr_addr* gcr_addr)
 {
+    /*
+    int bank_sel_a  = get_ptr_field(gcr_addr, rx_bank_sel_a);
+    t_bank cal_bank = (bank_sel_a == 0) ? bank_a : bank_b;
+
+    if (cal_bank == bank_a)
+      {
+        put_ptr(gcr_addr, rx_pr_slave_mode_a_addr, rx_pr_slave_mode_a_startbit, rx_pr_slave_mode_a_endbit, 0, read_modify_write);
+      }
+    else
+      {
+        put_ptr(gcr_addr, rx_pr_slave_mode_b_addr, rx_pr_slave_mode_b_startbit, rx_pr_slave_mode_b_endbit, 0, read_modify_write);
+      }
+    */
     return pass_code;
 }
 
@@ -413,6 +471,91 @@ int data_pipe_read(t_gcr_addr* gcr_addr, uint32_t* main_data, uint8_t* alt_data)
 
     return pass_code;
 }
+//
+//int read_datapipe(t_gcr_addr *gcr_addr, uint8_t mask, uint8_t pattern, uint8_t quad, uint32_t *result, int target_bits)
+//{
+//    int retval = pass_code;
+//    int num_bits = 0;
+//    bool done = false;
+//    int start_bit = quad + 1; // +1 for Hneg1
+//
+//    bool pattern_match;
+//    uint32_t data_xor;
+//    uint32_t main_data;
+//    uint8_t alt_data;
+//
+//    *result = 0;
+//
+//    if (start_bit < 4)
+//    {
+//        start_bit += 4;
+//    }
+//
+//
+//    uint32_t l_pipesel = (get_ptr_field(gcr_addr, rx_pipe_sel) & 0x4) | quad;
+//    put_ptr_field(gcr_addr, rx_pipe_sel, l_pipesel, read_modify_write);
+//
+//    while (!done)
+//    {
+//        retval = data_pipe_read(gcr_addr, &main_data, &alt_data);
+//
+//        // Check bits within this chunk of data for pattern match
+//        int check_bit = start_bit;
+//        for (; check_bit <= 31; check_bit += 4)
+//        {
+//            data_xor = pattern ^ (main_data >> (31 - check_bit));
+//
+//            pattern_match = true;
+//
+//            if (mask & 0x10 && data_xor & 0x10)
+//            {
+//                pattern_match = false;
+//            }
+//
+//            if (mask & 0x08 && data_xor & 0x08)
+//            {
+//                pattern_match = false;
+//            }
+//
+//            if (mask & 0x04 && data_xor & 0x04)
+//            {
+//                pattern_match = false;
+//            }
+//
+//            if (mask & 0x02 && data_xor & 0x02)
+//            {
+//                pattern_match = false;
+//            }
+//
+//            if (mask & 0x01 && data_xor & 0x01)
+//            {
+//                pattern_match = false;
+//            }
+//
+//            if (pattern_match)
+//            {
+//                num_bits++;
+//
+//                if ((alt_data >> (7 - ((check_bit-1) >> 2))) & 1)
+//                {
+//                    // We got a 1 !
+//                    (*result)++;
+//                }
+//
+//                if (num_bits == target_bits)
+//                {
+//                    done = true;
+//                    break;
+//                }
+//            }
+//        }
+//    }
+//
+//    //data_pipe_cleanup(gcr_addr);
+//
+//    return retval;
+//}
+
 
 int read_datapipe(t_gcr_addr* gcr_addr, bool i_is_loff, uint8_t mask, uint8_t pattern, uint8_t quad, uint32_t* result,
                   int filter_depth)
@@ -444,11 +587,6 @@ int read_datapipe(t_gcr_addr* gcr_addr, bool i_is_loff, uint8_t mask, uint8_t pa
     {
         l_rc = data_pipe_read(gcr_addr, &l_raw_main, &l_raw_alt);
 
-        //if (!i_is_loff) {
-        //    ADD_LOG(DEBUG_MAN_SERVO_DATA1, gcr_addr, (l_raw_main >> 16) & 0xFFFF);
-        //    ADD_LOG(DEBUG_MAN_SERVO_DATA1, gcr_addr, l_raw_main & 0xFFFF);
-        //    ADD_LOG(DEBUG_MAN_SERVO_DATA2, gcr_addr, l_raw_alt & 0x00FF);
-        //}
         // North main (shift left 1) & throw alt bit 0
         // East  main (shift left 2) & throw alt bit 0
         // South main (shift left 3) & throw alt bit 0
@@ -496,11 +634,6 @@ int read_datapipe(t_gcr_addr* gcr_addr, bool i_is_loff, uint8_t mask, uint8_t pa
             raw_inc += (filter_match && alt_data == 1) ? 1 : 0;
             raw_dec += (filter_match && alt_data == 0) ? 1 : 0;
 
-
-            if (mask == 0x1F && pattern == 0x16)
-            {
-//                ADD_LOG(DEBUG_MAN_SERVO_DATA1, gcr_addr, ((filter_match << 15) & 0x8000)  | ((alt_data << 14) & 0x4000)  | exp_data);
-            }
         }
 
         // Bias filtering here :)

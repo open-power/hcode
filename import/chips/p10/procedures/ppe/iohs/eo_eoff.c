@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20070700 |mwh     | Change DEBUG_RX_EOFF_EOFF_FAIL to DEBUG_RX_EOFF_POFF_FAIL for CQ528211 delta is for poff set
 // mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
 // cws20011400 |cws     | Added Debug Logs
 // mwh20116000 |mwh     | HW512908 increased first stage filter to 3 and reduced first stage inc/dec to 2

@@ -40,6 +40,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jfg20042000 |jfg     | HW523199 Remove ddc_last_left & ddc_last_right and add per-lane history recording.
 // jfg20042000 |jfg     | HW523199 Replace ddc_hist_left/right with ddc_hyst_left_right
 // jfg20041400 |jfg     | HW518382 Regression exposed a possible error in QPA offset comparison using signed math on a signed value instead of unsigned
 // jfg20031101 |jfg     | HW518382 Fix use of ber_long on initial N quad search to match ber_short as on E
@@ -760,18 +761,19 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
     ddc_offset_w_hyst[0] = (last_right_edge[0] - last_left_edge[0]) >> 1;
     ddc_offset_w_hyst[1] = (last_right_edge[1] - last_left_edge[1]) >> 1;
 
-    if (last_left_edge_reg >= (0b1 << rx_ddc_last_left_edge_width))
+    if (last_left_edge_reg >= (0b1 << rx_a_ddc_hyst_left_edge_width))
     {
-        last_left_edge_reg = (0b1 << rx_ddc_last_left_edge_width) - 1;
+        last_left_edge_reg = (0b1 << rx_a_ddc_hyst_left_edge_width) - 1;
     }
 
-    if (last_right_edge_reg >= (0b1 << rx_ddc_last_right_edge_width))
+    if (last_right_edge_reg >= (0b1 << rx_a_ddc_hyst_right_edge_width))
     {
-        last_right_edge_reg = (0b1 << rx_ddc_last_right_edge_width) - 1;
+        last_right_edge_reg = (0b1 << rx_a_ddc_hyst_right_edge_width) - 1;
     }
 
-    mem_pl_field_put(rx_ddc_last_left_edge, lane, last_left_edge_reg);
-    mem_pl_field_put(rx_ddc_last_right_edge, lane, last_right_edge_reg);
+    //DD1  mem_pl_field_put(rx_ddc_last_left_edge, lane, last_left_edge_reg);
+    //DD1 mem_pl_field_put(rx_ddc_last_right_edge, lane, last_right_edge_reg);
+
     int old_offset = Dsave[0] - Dsave[1];
     int new_offset = ddc_offset_w_hyst[0] - ddc_offset_w_hyst[1];
 
@@ -878,6 +880,8 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
     int hist_width_reg   = mem_regs_u16[pg_addr(
                                             rx_hist_min_eye_width_lane_addr)]; //Only works if lane & valid occupy same addr.
     int hist_width_lane  = bitfield_get(hist_width_reg, rx_hist_min_eye_width_lane_mask, rx_hist_min_eye_width_lane_shift);
+    // Read width of lane
+    int width = last_right_edge_reg + last_left_edge_reg;
 
     if ( update_mode == 0 || ((update_mode == 1) && (lane == hist_width_lane)) )
     {
@@ -885,8 +889,6 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
                                             rx_hist_min_eye_width_valid_shift);
         int hist_width       = mem_pg_field_get(rx_hist_min_eye_width);
 
-        // Read width of lane
-        int width = last_right_edge_reg + last_left_edge_reg;
 
         // Write if no previous recording or if the width is a new min. Requirement: rx_hist_min_eye_width_valid and rx_hist_min_eye_width_lane occupy same reg
         if ( (hist_width_valid == 0) || (width < hist_width) )
@@ -897,6 +899,29 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
             mem_pg_field_put(rx_hist_min_eye_width, width);
         }
     } //width_mode
+
+    int lane_hist_width_valid = mem_pl_field_get(rx_lane_hist_min_eye_width_valid, lane);
+
+    if (bank == bank_a)
+    {
+        int lane_hist_width  = mem_pl_field_get(rx_a_lane_hist_min_eye_width, lane);
+
+        if ((width < lane_hist_width) || (lane_hist_width_valid == 0))
+        {
+            mem_pl_field_put(rx_a_lane_hist_min_eye_width, lane, width);
+            mem_pl_field_put(rx_lane_hist_min_eye_width_valid, lane, 1);
+        }
+    }
+    else
+    {
+        int lane_hist_width  = mem_pl_field_get(rx_b_lane_hist_min_eye_width, lane);
+
+        if ((width < lane_hist_width) || (lane_hist_width_valid == 0))
+        {
+            mem_pl_field_put(rx_b_lane_hist_min_eye_width, lane, width);
+            mem_pl_field_put(rx_lane_hist_min_eye_width_valid, lane, 1);
+        }
+    }
 
     //Rxbist check min eye width
     //After DDC runs should have min eye width of 40 -- could change based on hardware

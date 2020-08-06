@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20061101 |vbr     | HW532941: To deal with lossy bump, increasing max_bumps to fail and setting warning after full rotation
+// vbr20061100 |vbr     | HW533071: DD2 should not change the timer settings based on 16to1 mode
 // cws20011400 |cws     | Added Debug Logs
 // bja19111800 |bja     | Set rx_berpl_exp_data_sel before running BERM
 // bja19081900 |bja     | Remove immediate return on fail. Fail is noted and function finishes.
@@ -89,7 +91,8 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
     const int max_errs = 1229;
     int bump_count = 0;
     int ber_count;
-    int max_bumps;
+    int max_bumps_warn;
+    int max_bumps_fail;
     int timer_sel;
     int op_running;
     bool aligned;
@@ -97,17 +100,20 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
     int lane = get_gcr_addr_lane(gcr_addr);
     int status = pass_code;
 
-    // if running in in 16:1 mode
-    if ( fw_field_get(fw_serdes_16_to_1_mode) )   // 16:1
+    // P10 DD1: Need different settings when running in in 16:1 vs 32:1 mode
+    // P10 DD2: The RLM is always 16:1 (only the DL changes between 16:1 and 8:1)
+    timer_sel      = 0xD;
+    max_bumps_warn = 15;
+    max_bumps_fail = 255;
+
+    if (   ( get_chip_id()  == CHIP_ID_P10  )
+           && ( get_major_ec() == MAJOR_EC_DD1 )
+           && !fw_field_get(fw_serdes_16_to_1_mode)  )
     {
-        timer_sel = 0xD;
-        max_bumps = 255;
-        //max_bumps = 15;
-    }
-    else
-    {
-        timer_sel = 0xE;
-        max_bumps = 31;
+        // 32:1 -- P10 DD1 only
+        timer_sel      = 0xE;
+        max_bumps_warn = 31;
+        max_bumps_fail = 511;
     }
 
     // enable BERM comparison between banks
@@ -145,10 +151,18 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
         // if the banks are misaligned
         if ( !aligned )
         {
-            // and if the banks haven't synced after bumping through all UI's
-            if (bump_count >= max_bumps)
+            // and if the banks haven't synced after bumping through all UIs once
+            if (bump_count == max_bumps_warn)
             {
-                set_debug_state(0xB005); // fail
+                set_debug_state(0xB006); // bump ui warning - bumped through all UIs once
+                set_fir(fir_code_warning);
+                ADD_LOG(DEBUG_RX_BANK_SYNC_WARN, gcr_addr, bump_count);
+            }
+
+            // and if the banks haven't synced after bumping through all UIs multiple times
+            if (bump_count >= max_bumps_fail)
+            {
+                set_debug_state(0xB005); // bump ui fail
 
                 if (get_ptr_field(gcr_addr, rx_bank_sync_check_en))
                 {
@@ -182,7 +196,7 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
                     op_running = get_ptr_field(gcr_addr, rx_pr_bump_in_progress_ab_alias);
                 }
                 while ( op_running );
-            } // if ( bump_count < max_bumps )
+            } // if ( bump_count < max_bumps_fail )
         } // if ( !aligned )
     }
     while ( !aligned );

@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jfg20061500 |jfg     | HW527761 Servos have a clear resistance when > 3 or biased to EW: Add 1 to compensate
 // jfg20022000 |jfg     | HW522672 Also had to change the ns/ew offset remainder conditional from && to ^
 // jfg20021800 |jfg     | HW522672 Somehow after all this time centerskew_ns bool was found to be inverted due to it's interaction with centerdir_ns
 // cws20011400 |cws     | Added Debug Logs
@@ -665,7 +666,18 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     //OffsetNS = (OffsetNS >> 1) + (OffsetNS & 0b1);
     dirL1R0NS = (OffsetNS) > 0;
     dirL1R0EW = !dirL1R0NS;
-    OffsetNS = abs(OffsetNS);
+    int OffsetNS_mag = abs(OffsetNS);
+    // OffsetNS is tweaked by two terms
+    // A- +2 is added to abs(OffsetNS) to bias the ceiling of the div 4 magnitude to not lose 0.5 step changes
+    // B- +1 is added to counter an emprically observed negative CDR inertia that becomes relevant over 3 steps in a servo result
+    int neg_bias = 0;
+
+    if ((OffsetNS_mag >= 6) && dirL1R0NS)
+    {
+        neg_bias = 1;
+    }
+
+    OffsetNS = abs(OffsetNS + neg_bias);
     OffsetNS = (OffsetNS + 2) >> 2;
     // Split difference in shifts evenly between phases
     OffsetEW = OffsetNS;
