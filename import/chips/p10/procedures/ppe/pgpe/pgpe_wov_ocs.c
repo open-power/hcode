@@ -31,9 +31,17 @@
 #include "pgpe_gppb.h"
 #include "p10_scom_eq_7.H"
 
-pgpe_wov_ocs_t G_pgpe_wov_ocs;
+pgpe_wov_ocs_t G_pgpe_wov_ocs __attribute__((section (".data_structs")));
 void pgpe_wov_ocs_dec_tgt_pct();
 void pgpe_wov_ocs_inc_tgt_pct();
+
+//
+//pgpe_wov_ocs_data_addr
+//
+void* pgpe_wov_ocs_data_addr()
+{
+    return &G_pgpe_wov_ocs;
+}
 
 void pgpe_wov_ocs_init()
 {

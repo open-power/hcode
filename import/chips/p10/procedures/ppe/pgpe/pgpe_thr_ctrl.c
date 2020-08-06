@@ -28,7 +28,15 @@
 #include "pgpe_gppb.h"
 
 
-pgpe_thr_ctrl_t G_pgpe_thr_ctrl;
+pgpe_thr_ctrl_t G_pgpe_thr_ctrl __attribute__((section (".data_structs")));
+
+//
+//pgpe_thr_ctrl_data_addr
+//
+void* pgpe_thr_ctrl_data_addr()
+{
+    return &G_pgpe_thr_ctrl;
+}
 
 void pgpe_thr_ctrl_init()
 {

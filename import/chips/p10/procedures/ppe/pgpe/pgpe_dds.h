@@ -25,7 +25,12 @@
 #ifndef __PGPE_DDS_H__
 #define __PGPE_DDS_H__
 
-#include "pgpe.h"
+#ifndef __PARSER_TOOL__
+    #include "pgpe.h"
+#else
+    #define CORES_PER_QUAD  4
+    #define MAX_QUADS   8
+#endif
 
 enum DDS_MODE
 {
@@ -33,6 +38,7 @@ enum DDS_MODE
     DDS_MODE_JUMP   =   0x1,
     DDS_MODE_SLEW   =   0x2
 };
+
 typedef struct pgpe_dds
 {
     uint32_t delay[MAX_QUADS][CORES_PER_QUAD], delay_prev[MAX_QUADS][CORES_PER_QUAD];
@@ -51,6 +57,7 @@ typedef struct pgpe_dds
 extern pgpe_dds_t G_pgpe_dds;
 
 void pgpe_dds_init(uint32_t pstate);
+void* pgpe_dds_data_addr();
 void pgpe_dds_compute(uint32_t pstate);
 void pgpe_dds_update_pre(uint32_t pstate);
 void pgpe_dds_update_post(uint32_t pstate);

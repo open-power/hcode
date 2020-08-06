@@ -25,14 +25,15 @@
 #ifndef __PGPE_THR_CTRL_H__
 #define __PGPE_THR_CTRL_H__
 
-#include "pgpe.h"
+#ifndef __PARSER_TOOL__
+    #include "pgpe.h"
+#endif
 
 enum PGPE_THR_CTRL_STATUS
 {
     PGPE_THR_CTRL_DISABLED    = 0xFFFFFFFF,
     PGPE_THR_CTRL_ENABLED     = 0x00000002,
 };
-
 
 typedef struct pgpe_thr_ctrl
 {
@@ -42,6 +43,7 @@ typedef struct pgpe_thr_ctrl
 } pgpe_thr_ctrl_t;
 
 void pgpe_thr_ctrl_init();
+void* pgpe_thr_ctrl_data_addr();
 void pgpe_thr_ctrl_update(uint32_t pstate);
 void pgpe_thr_ctrl_set_ceff_ovr_idx(uint32_t idx);
 void pgpe_thr_ctrl_write_wcor();

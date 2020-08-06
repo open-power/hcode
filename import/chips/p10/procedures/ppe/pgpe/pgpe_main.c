@@ -35,6 +35,7 @@
 #include "pgpe_thr_ctrl.h"
 #include "pgpe_occ.h"
 #include "pgpe_wov_ocs.h"
+#include "pgpe_dds.h"
 #include "iota_trace.h"
 
 IOTA_BEGIN_IDLE_TASK_TABLE
@@ -90,4 +91,20 @@ void init_data_struct_table()
 
     G_data_struct_table.entry[DATA_PSTATE].address = (uint32_t)pgpe_pstate_data_addr();
     G_data_struct_table.entry[DATA_PSTATE].size = sizeof(pgpe_pstate_t);
+
+    G_data_struct_table.entry[DATA_RESCLK].address = (uint32_t)pgpe_resclk_data_addr();
+    G_data_struct_table.entry[DATA_RESCLK].size = sizeof(pgpe_resclk_t);
+
+    G_data_struct_table.entry[DATA_OCC].address = (uint32_t)pgpe_occ_data_addr();
+    G_data_struct_table.entry[DATA_OCC].size = sizeof(pgpe_occ_t);
+
+    G_data_struct_table.entry[DATA_WOV_OCS].address = (uint32_t)pgpe_wov_ocs_data_addr();
+    G_data_struct_table.entry[DATA_WOV_OCS].size = sizeof(pgpe_wov_ocs_t);
+
+    G_data_struct_table.entry[DATA_DDS].address = (uint32_t)pgpe_dds_data_addr();
+    G_data_struct_table.entry[DATA_DDS].size = sizeof(pgpe_dds_t);
+
+    G_data_struct_table.entry[DATA_THR_CTRL].address = (uint32_t)pgpe_thr_ctrl_data_addr();
+    G_data_struct_table.entry[DATA_THR_CTRL].size = sizeof(pgpe_thr_ctrl_t);
+
 }

@@ -34,9 +34,14 @@
 #include "pgpe_wov_ocs.h"
 #include "p10_oci_proc.H"
 
-pgpe_occ_t G_pgpe_occ;
+pgpe_occ_t G_pgpe_occ __attribute__((section (".data_structs")));
 void pgpe_occ_sample_values();
 void pgpe_occ_produce_fit_values();
+
+void* pgpe_occ_data_addr()
+{
+    return &G_pgpe_occ;
+}
 
 void pgpe_occ_init()
 {

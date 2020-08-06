@@ -25,7 +25,11 @@
 #ifndef __PGPE_OCC_H__
 #define __PGPE_OCC_H__
 
-#include "pgpe.h"
+#ifndef __PARSER_TOOL__
+    #include "pgpe.h"
+#else
+    #include "pstate_pgpe_occ_api.h"
+#endif
 
 
 typedef struct pgpe_occ
@@ -44,12 +48,14 @@ typedef struct pgpe_occ
     uint32_t ocs_avg_pct_tb_accum, ocs_avg_pct_fit, ocs_avg_pct_wof_accum;
 } pgpe_occ_t;
 
-void pgpe_occ_init();
-void pgpe_occ_update_beacon();
-void pgpe_occ_produce_wof_values();
-void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd);
-void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc);
-void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc);
-
+#ifndef __PARSER_TOOL__
+    void pgpe_occ_init();
+    void* pgpe_occ_data_addr();
+    void pgpe_occ_update_beacon();
+    void pgpe_occ_produce_wof_values();
+    void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd);
+    void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc);
+    void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc);
+#endif
 
 #endif//

@@ -25,7 +25,12 @@
 #ifndef __PGPE_WOV_OCS_H__
 #define __PGPE_WOV_OCS_H__
 
-#include "pgpe.h"
+#ifndef __PARSER_TOOL__
+    #include "pgpe.h"
+#else
+    #include "pstate_pgpe_occ_api.h"
+#endif
+
 
 
 
@@ -103,6 +108,7 @@ typedef struct pgpe_wov_ocs
 extern pgpe_wov_ocs_t G_pgpe_wov_ocs;
 
 void pgpe_wov_ocs_init();
+void* pgpe_wov_ocs_data_addr();
 void pgpe_wov_ocs_enable();
 void pgpe_wov_ocs_disable();
 void pgpe_wov_ocs_determine_perf_loss();

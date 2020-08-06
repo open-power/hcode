@@ -33,13 +33,18 @@
 #include "p10_scom_c_5_unused.H"
 #include "p10_oci_proc.H"
 
-pgpe_dds_t G_pgpe_dds;
+pgpe_dds_t G_pgpe_dds __attribute__((section (".data_structs")));
 
 //Local Function Prototypes
 uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c);
 uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c);
 uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c);
 void pgpe_dds_compare_trip_and_delay();
+
+void* pgpe_dds_data_addr()
+{
+    return &G_pgpe_dds;
+}
 
 //
 //pgpe_dds_init()

@@ -64,7 +64,12 @@ enum  DATA_STRUCT_TABLE_IDX
 {
     DATA_EVENT_MANAGER      = 0,
     DATA_EVENT_TABLE        = 1,
-    DATA_PSTATE             = 2
+    DATA_PSTATE             = 2,
+    DATA_RESCLK             = 3,
+    DATA_OCC                = 4,
+    DATA_WOV_OCS            = 5,
+    DATA_DDS                = 6,
+    DATA_THR_CTRL           = 7,
 };
 
 typedef struct data_struct_entry
