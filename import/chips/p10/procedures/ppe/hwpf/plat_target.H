@@ -67,8 +67,8 @@ typedef enum plat_target_type
     PPE_TARGET_TYPE_PERV              = 0x04,
     PPE_TARGET_TYPE_EQ                = 0x08,
     PPE_TARGET_TYPE_CORE              = 0x10,
-    PPE_TARGET_TYPE_MULTICAST         = 0x80,
-    PPE_TARGET_TYPE_ALL               = 0xFF
+    PPE_TARGET_TYPE_MULTICAST         = 0x20,
+    PPE_TARGET_TYPE_ALL               = 0x7F
 } plat_target_type_t;
 
 typedef union plat_target_handle
@@ -147,8 +147,8 @@ typedef union plat_target_handle
         uint32_t keep_zeros        : 4;
         uint32_t core_select_l     : 4;
         uint32_t core_select_s     : 4;
-        uint32_t target_num        : 4;
-        uint32_t target_type       : 8;
+        uint32_t target_num        : 5;
+        uint32_t target_type       : 7;
     } fields;
 
     //PLAT NOTE//
