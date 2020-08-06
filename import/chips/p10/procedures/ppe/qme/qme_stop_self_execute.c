@@ -230,6 +230,14 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 
     // ===============================
 
+    // consider for HW534619
+    // for Stop11 Timebase, during Stop11 wakeup before setting the XFER start to restore timebase,
+    // do scom write to PC to put their state machine in standby so they will accept the TFAC data coming in.
+    // Also, before self-restore/save, SCOM to core to temporarily disable STOP tfac shawdowing.
+    // This way, the subsequent ending STOP doesn't corrupt the shadow copy.
+    PK_TRACE("Reset the core timefac to INACTIVE via PC.COMMON.TFX[0,1]=0b10");
+    PPE_PUTSCOM_MC( EC_PC_TFX_SM, core_target, BIT64(0) );
+
     PK_TRACE("Assert BLOCK_INTERRUPT to PC and IGNORE_RECENT_PMCR via SCSR[0/19]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), ( BIT32(0) | BIT32(19) ) );
 
@@ -348,8 +356,10 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
                 if( G_IsSimics ||
                     (! ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_TOD_SETUP_COMPLETE ) ) ) )
                 {
-                    //Self-Restore should ignore workaround for HW534619
+#endif
+                    PK_TRACE_INF("Self-Restore should ignore workaround for HW534619");
                     scom_data.value |= BIT64(61);
+#if POWER10_DD_LEVEL == 10
                 }
 
 #endif
