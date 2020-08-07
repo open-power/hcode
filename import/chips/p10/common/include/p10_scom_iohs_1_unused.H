@@ -1813,6 +1813,18 @@ static const uint32_t RECOV_INTERRUPT_REG_RECOV = 0;
 //<< [RECOV_INTERRUPT_REG]
 // iohs/reg00007.H
 
+//>> [IOO_RX0_0_RD_RX_DAC_REGS_CNTL6_PL]
+static const uint64_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL6_PL = 0x8000300010012c3full;
+
+static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL6_PL_GAIN = 48;
+static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL6_PL_GAIN_LEN = 4;
+static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL6_PL_PEAK1 = 52;
+static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL6_PL_PEAK1_LEN = 4;
+static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL6_PL_PEAK2 = 56;
+static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL6_PL_PEAK2_LEN = 4;
+//<< [IOO_RX0_0_RD_RX_DAC_REGS_CNTL6_PL]
+// iohs/reg00004.H
+
 //>>THE END<<
 
 #ifndef __PPE_HCODE__
