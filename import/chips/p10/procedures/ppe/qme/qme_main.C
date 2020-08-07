@@ -92,6 +92,9 @@ main()
     {
         PK_TRACE ("QME running on Simics");
         G_IsSimics = 1;
+
+        // Disable, as window conditions cause bad path and timeouts in Simics
+        G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
     }
     else
     {

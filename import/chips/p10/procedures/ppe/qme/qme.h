@@ -215,7 +215,7 @@ typedef struct
     uint32_t    c_special_wakeup_source;
     uint32_t    c_special_wakeup_error; //2nd 8bits spwu_drop, 3rd 8bits spwu_on_active, 4th 8bits spwu_on_stop
     uint32_t    c_special_wakeup_done;
-    uint32_t    c_hostboot_master;
+    uint32_t    c_hostboot_cores;
 
     uint32_t    c_stop2_reached;
     uint32_t    c_stop3_reached;

@@ -79,16 +79,35 @@ qme_init()
 
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
     G_qme_record.c_special_wakeup_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
-    G_qme_record.c_hostboot_master = G_qme_record.c_special_wakeup_done & G_qme_record.c_configured;
-    G_qme_record.c_special_wakeup_done = 0;
+    G_qme_record.c_hostboot_cores = G_qme_record.c_special_wakeup_done & G_qme_record.c_configured;
 
-    if( G_qme_record.c_hostboot_master )
+    if( G_qme_record.c_hostboot_cores )
     {
-        PK_TRACE_DBG("Setup: Remove Hostboot Master[%x] from Istep4 Special Wakeup", G_qme_record.c_hostboot_master);
-        out32( QME_LCL_CORE_ADDR_WR( QME_SPWU_OTR, G_qme_record.c_hostboot_master ), 0 );
+        G_qme_record.c_special_wakeup_done &= ~G_qme_record.c_hostboot_cores;
 
-        PK_TRACE("Drop PM_EXIT via PCR_SCSR[1]");
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_hostboot_master ), BIT32(1) );
+        PK_TRACE_DBG("Setup: Remove Hostboot cores[%x] from Istep4 Special Wakeup", G_qme_record.c_hostboot_cores);
+        out32( QME_LCL_CORE_ADDR_WR( QME_SPWU_OTR, G_qme_record.c_hostboot_cores ), 0 );
+
+        PK_TRACE("Clear SPWU_FALL caused by drop SPWU_OTR while in spwu auto mode");
+        out64( QME_LCL_EISR_CLR, ( ( (uint64_t)G_qme_record.c_hostboot_cores ) << SHIFT64SH(39) ) );
+    }
+
+    // Simics does not model the SSDR and never sees instructions running.
+    // That would cause markup evaluations to not send an intr. to QME to exit STOP15 on master cores
+    // when SBE triggers it at the end of istep 16.1
+    if (!G_IsSimics)
+    {
+        local_data = ((in32(QME_LCL_SSDR) & BITS32(4, 4)) >> SHIFT32(7)); // instruction running
+        PK_TRACE_INF("Setup: Current HB cores and backing caches %x Instruction_Running %x",
+                     G_qme_record.c_hostboot_cores, local_data);
+
+        G_qme_record.c_hostboot_cores &= local_data;
+    }
+
+    if( G_qme_record.c_hostboot_cores )
+    {
+        PK_TRACE("Drop PM_EXIT only on primary core[%x] via PCR_SCSR[1]", G_qme_record.c_hostboot_cores);
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_hostboot_cores ), BIT32(1) );
     }
 
     // use SSDR[36:39] PM_BLOCK_INTERRUPTS to initalize block wakeup status
