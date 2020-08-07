@@ -49,7 +49,7 @@ qme_stop_self_complete(uint32_t core_target)
     // RTC 248150: value needs to be reviewed post hardware
     // the timeout needs to cover the worst case save or
     // restore operation for all the slave threads
-    static uint32_t CTS_TIMEOUT_COUNT = 100000;
+    static uint32_t CTS_TIMEOUT_COUNT = 10000000;
     uint8_t core_inst = 0;
 
     PK_TRACE("Core Target %08X", core_target );
@@ -108,7 +108,7 @@ qme_stop_self_complete(uint32_t core_target)
     PK_TRACE("Poll for core(s) stop again(pm_active=1)");
 
     // check pm_active_lopri for stop11
-    G_qme_record.cts_timeout_count = (2 * CTS_TIMEOUT_COUNT);
+    G_qme_record.cts_timeout_count = CTS_TIMEOUT_COUNT;
 
     do
     {
@@ -129,71 +129,75 @@ commit_sr_log:
 
     for (core_mask = 8; core_mask; core_mask = core_mask >> 1)
     {
-        PK_TRACE( "SR: Time Out" );
-
-        if( in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) ) & BIT64SH(58) )
+        if( core_mask & core_target )
         {
-            PK_TRACE( "SR: Spl Attention on core %d", core_mask );
+            PK_TRACE( "SR: Time Out" );
 
-            if (core_mask & 0xA) // Even cores
+            if( in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) ) & BIT64SH(58) )
             {
-                PPE_GETSCOM_UC ( SCRATCH0, 0, core_mask, scom_data.value);
-            }
-            else
-            {
-                PPE_GETSCOM_UC ( SCRATCH1, 0, core_mask, scom_data.value);
-            }
+                PK_TRACE( "SR: Spl Attention on core %d", core_mask );
 
-            //FFDC Available
-            if( scom_data.value &  BIT64(62) )
-            {
-                PK_TRACE( "SR: FFDC Available, Logging Error" );
-                G_qme_record.cts_timeout_count = CTS_TIMEOUT_COUNT;
-                //commit error log and add self-save restore FFDC as user detail
-                errlHndl_t l_errl = NULL;
-
-                do
+                if (core_mask & 0xA) // Even cores
                 {
-                    l_errl  = createErrl (
-                                  QME_MODULE_ID_SR,
-                                  QME_REASON_SR_FAIL,
-                                  QME_STOP11_EXIT,
-                                  ERRL_SEV_UNRECOVERABLE,
-                                  core_target,
-                                  scom_data.words.lower,
-                                  sr_fail_loc );
-
-                    if( NULL != l_errl )
-                    {
-                        if( core_mask & 0x4 )
-                        {
-                            core_inst = 1;
-                        }
-                        else if(  core_mask & 0x2 )
-                        {
-                            core_inst = 2;
-                        }
-                        else if( core_mask & 0x1 )
-                        {
-                            core_inst = 3;
-                        }
-
-                        addUsrDtlsToErrl( l_errl,
-                                          &core_inst,
-                                          SR_FFDC_SIZE,
-                                          ERRL_STRUCT_VERSION_1,
-                                          ERRL_USR_DTL_SR_FFDC );
-
-                        commitErrl( &l_errl );
-
-                        PK_TRACE_DBG( "SR: Core %d Logging Done", core_mask );
-                        break; // to check for next core
-                    }
-
+                    PPE_GETSCOM_UC ( SCRATCH0, 0, core_mask, scom_data.value);
                 }
-                while( --G_qme_record.cts_timeout_count > 0 );
+                else
+                {
+                    PPE_GETSCOM_UC ( SCRATCH1, 0, core_mask, scom_data.value);
+                }
+
+                //FFDC Available
+                if( scom_data.value &  BIT64(62) )
+                {
+                    PK_TRACE( "SR: FFDC Available, Logging Error" );
+                    G_qme_record.cts_timeout_count = CTS_TIMEOUT_COUNT;
+                    //commit error log and add self-save restore FFDC as user detail
+                    errlHndl_t l_errl = NULL;
+
+                    do
+                    {
+                        l_errl  = createErrl (
+                                      QME_MODULE_ID_SR,
+                                      QME_REASON_SR_FAIL,
+                                      QME_STOP11_EXIT,
+                                      ERRL_SEV_UNRECOVERABLE,
+                                      core_target,
+                                      scom_data.words.lower,
+                                      sr_fail_loc );
+
+                        if( NULL != l_errl )
+                        {
+                            if( core_mask & 0x4 )
+                            {
+                                core_inst = 1;
+                            }
+                            else if(  core_mask & 0x2 )
+                            {
+                                core_inst = 2;
+                            }
+                            else if( core_mask & 0x1 )
+                            {
+                                core_inst = 3;
+                            }
+
+                            addUsrDtlsToErrl( l_errl,
+                                              &core_inst,
+                                              SR_FFDC_SIZE,
+                                              ERRL_STRUCT_VERSION_1,
+                                              ERRL_USR_DTL_SR_FFDC );
+
+                            commitErrl( &l_errl );
+
+                            PK_TRACE_DBG( "SR: Core %d Logging Done", core_mask );
+                            break; // to check for next core
+                        }
+
+                    }
+                    while( --G_qme_record.cts_timeout_count > 0 );
+                }
             }
-        }
+
+        } //if( core_mask & core_target )
 
     }//for (core_mask
 
