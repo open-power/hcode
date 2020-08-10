@@ -49,6 +49,39 @@ enum
 
 //-----------------------------------------------------------------------------------------------------------------
 
+TorOffset_t * traverseRingOverride( uint8_t* i_pRingSectn, const RingId_t i_index, uint8_t i_torIndex )
+{
+    ChipletType_t l_chipletType =   RING_PROPERTIES[i_index].chipletType;
+    SectionTOR* l_pSectnTor     =   (SectionTOR*) ( i_pRingSectn + sizeof( TorHeader_t ) );
+    TorOffset_t* l_pRingTor     =   NULL;
+    TorOffset_t  l_sectionOffset =  0;
+
+    switch( l_chipletType )
+    {
+        case EQ_TYPE: // EQ - Quad 0 - Quad 7
+            l_sectionOffset     =   rev_16(l_pSectnTor->TOC_EQ_COMMON_RING);
+            break;
+
+        default:
+            fapi2::current_err  =   fapi2::RC_PUTRING_INVALID_PARAMETER;
+            goto func_exit;
+            break;
+
+    } // end of switch(l_chipletID)
+
+    l_pRingTor      =   (TorOffset_t*) (i_pRingSectn + l_sectionOffset);
+
+    l_pRingTor  +=  i_torIndex;
+
+func_exit:
+    FAPI_INF( "TOR Override Traversal: Chiplet 0x%04x Chiplet Offset 0x%04x Ring offset 0x%02x ",
+              (uint16_t)l_chipletType, l_sectionOffset, i_torIndex );
+    return l_pRingTor;
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+
 fapi2::ReturnCode getRS4ImageFromTor(
                     const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST > & i_target,
                     uint8_t* i_pRingSectn, // Pts to the beginning of the TOR ring section hdr
@@ -64,13 +97,15 @@ fapi2::ReturnCode getRS4ImageFromTor(
     RingId_t l_rpIndex          =   UNDEFINED_RING_ID;
     uint8_t l_corePos           =   0;
     ChipletData_t* l_pChipletData;
-    TorOffset_t* l_pRingTor        =   NULL;
+    TorOffset_t* l_pRingTor     =   NULL;
     std::vector < fapi2::Target < fapi2::TARGET_TYPE_CORE >> l_ucCoreTgt =
                                 i_target.getChildren< fapi2::TARGET_TYPE_CORE > ();
+    uint32_t l_magicWord        =   rev_32( ((TorHeader_t*)i_pRingSectn)->magic );
 
     FAPI_TRY( FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_ucCoreTgt[0], l_corePos ) );
 
-    FAPI_ASSERT( ( l_torVersion == TOR_VERSION ),
+    FAPI_ASSERT( ((( l_torVersion == TOR_VERSION ) && ( l_magicWord == TOR_MAGIC_QME )) ||
+                  ( l_magicWord == TOR_MAGIC_OVRD )),
                  fapi2::INVALID_TOR_VERSION()
                  .set_TOR_VER( l_torVersion ),
                  "Invalid TOR Version 0x%04x ", l_torVersion  );
@@ -115,6 +150,16 @@ fapi2::ReturnCode getRS4ImageFromTor(
         l_pRingTor +=  l_torIndex;
     }
 
+    if( l_magicWord == TOR_MAGIC_OVRD )
+    {
+        l_pRingTor = traverseRingOverride( i_pRingSectn, l_rpIndex, l_torIndex );
+
+        if( !l_pRingTor )
+        {
+            goto fapi_try_exit;
+        }
+    }
+
     FAPI_INF( "Ring TOR Slot Offset : 0x%04x TOR Offset : 0x%04x",
               rev_16(*l_pSectnTor), rev_16(*l_pRingTor) );
 
@@ -148,8 +193,8 @@ fapi2::ReturnCode putRingQme(
     }
 
     RingType_t l_ringType       =   COMMON_RING;
-    uint8_t * i_pRing           =   (uint8_t *)SRAM_START;
-    QmeHeader_t * l_pQmeHdr     =   (QmeHeader_t*)( i_pRing + QME_INT_VECTOR );
+    uint8_t * l_pRing           =   (uint8_t *)SRAM_START;
+    QmeHeader_t * l_pQmeHdr     =   (QmeHeader_t*)( l_pRing + QME_INT_VECTOR );
     RingId_t l_rpIndex          =    UNDEFINED_RING_ID;
 
     // Get the ring properties (rp) index
@@ -165,15 +210,23 @@ fapi2::ReturnCode putRingQme(
 
     if( COMMON_RING == l_ringType )
     {
-        i_pRing   =   i_pRing + rev_32(l_pQmeHdr->g_qme_hcode_length);
+        l_pRing   =   l_pRing + rev_32(l_pQmeHdr->g_qme_hcode_length);
     }
     else
     {
-        i_pRing   =   i_pRing + rev_32(l_pQmeHdr->g_qme_inst_spec_ring_offset);
+        l_pRing   =   l_pRing + rev_32(l_pQmeHdr->g_qme_inst_spec_ring_offset);
     }
 
-    FAPI_TRY( getRS4ImageFromTor( i_target, i_pRing, i_ringId, QME_SCOM_NOP, i_ringMode ),
+    FAPI_TRY( getRS4ImageFromTor( i_target, l_pRing, i_ringId, QME_SCOM_NOP, i_ringMode ),
               "Putring Failed for QME Ring 0x%04x", i_ringId );
+
+    if( rev_32(l_pQmeHdr->g_qme_cmn_ring_ovrd_offset) )
+    {
+        l_pRing   =   (uint8_t *)SRAM_START + rev_32(l_pQmeHdr->g_qme_cmn_ring_ovrd_offset);
+
+        FAPI_TRY( getRS4ImageFromTor( i_target, l_pRing, i_ringId, QME_SCOM_NOP, i_ringMode ),
+                  "Putring Failed for QME Ring 0x%04x", i_ringId );
+    }
 
 fapi_try_exit:
     return fapi2::current_err;
