@@ -102,6 +102,10 @@ void pgpe_pstate_init()
     G_pgpe_pstate.vcs_next_ext      = 0;
 
     G_pgpe_pstate.vrt                = 0;
+    G_pgpe_pstate.vratio_inst        = 0;
+    G_pgpe_pstate.vratio_vcs_inst    = 0;
+    G_pgpe_pstate.vratio_vdd_inst    = 0;
+    G_pgpe_pstate.vindex             = 0;
     G_pgpe_pstate.power_proxy_scale  = 0;
     G_pgpe_pstate.update_pgpe_beacon = 1;
 
@@ -110,6 +114,8 @@ void pgpe_pstate_init()
     PPE_GETSCOM_MC_Q_EQU(QME_RVCR, rvcr);
     G_pgpe_pstate.rvrm_volt  = (((rvcr >> 56) & 0xFF) <<
                                 3); //Extract RVID Value from RVCR[1:7] and then multiply by 8 to get RVRM voltage
+
+    PK_TRACE("PS: RVRM Voltage=%u", G_pgpe_pstate.rvrm_volt);
 
     if (pgpe_gppb_get_safe_frequency())
     {
@@ -179,6 +185,8 @@ void pgpe_pstate_actuate_step()
     if (G_pgpe_pstate.vdd_next_ext >= pgpe_gppb_get(vcs_floor_mv))
     {
         PK_TRACE("ACT: Adjusting VCS against VDD");
+        PK_TRACE_DBG("ACT: vcs_floor_mv=0x%x, vcs_vdd_offset_mv=0x%x", pgpe_gppb_get(vcs_floor_mv),
+                     pgpe_gppb_get(vcs_vdd_offset_mv));
         G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv);
     }
     else
@@ -187,8 +195,8 @@ void pgpe_pstate_actuate_step()
                                           vcs_floor_mv)) ? (G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv)) : pgpe_gppb_get(vcs_floor_mv);
     }
 
-    PK_TRACE("ACT: vdd_del=0x%x, vdd_next=0x%x,ps_next=0x%x ,vcs_next=0x%x", vdd_delta, G_pgpe_pstate.vdd_next,
-             G_pgpe_pstate.pstate_next, G_pgpe_pstate.vcs_next);
+    PK_TRACE("ACT: vdd_del=0x%x, vdd_next=0x%x,ps_next=0x%x ,vcs_next=0x%x", vdd_delta, G_pgpe_pstate.vdd_next_ext,
+             G_pgpe_pstate.pstate_next, G_pgpe_pstate.vcs_next_ext);
 
     //Compute power proxy scale factor
     cpms_dpcr dpcr;
