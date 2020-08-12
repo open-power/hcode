@@ -157,6 +157,7 @@ void
 qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 {
     uint32_t core_done = 0;
+    uint32_t core_mask = 0;
 
     //===============//
 
@@ -182,6 +183,18 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
     //special wakeup shouldnt be affacted via fences.
     PK_TRACE("Clear EISR on Regular Wakeup for extra edge caused by fencing/unfencing between entry and exit");
     out32_sh(QME_LCL_EISR_CLR, ( (core_target << SHIFT64SH(43)) | (core_target << SHIFT64SH(47)) ) );
+
+    for( core_mask = 8; core_mask > 0; core_mask = core_mask >> 1 )
+    {
+        // No interrupt pending AND no special wakeup
+        if( ( core_target & core_mask ) &&
+            ( ! ( in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) ) & BIT64SH(46) ) ) &&
+            ( ! ( core_spwu & core_mask ) ) )
+        {
+            PK_TRACE_INF("Warning: No PC_INTR_PENDING on core %x that only has Regular Wakeup via QME_SCSR[47]", core_mask);
+            G_qme_record.c_stop1_targets |= core_mask;
+        }
+    }
 
     //===============//
 

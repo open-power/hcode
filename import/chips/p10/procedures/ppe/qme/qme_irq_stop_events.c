@@ -162,6 +162,8 @@ qme_parse_pm_state_active_fast()
 void
 qme_parse_regular_wakeup_fast()
 {
+    uint32_t core_loop = 0;
+
     G_qme_record.c_regular_wakeup_fast_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(40, 4) ) >> SHIFT64SH(43);
 
     uint32_t c_mask = G_qme_record.c_regular_wakeup_fast_req &
@@ -195,10 +197,21 @@ qme_parse_regular_wakeup_fast()
 
     // handle stop1 wakeup
     c_mask &= ~G_qme_record.c_stop2_reached;
-    G_qme_record.c_stop1_targets &= ~c_mask;
+
+    // if still dont have pc_interrupt_pending, ignore until real one show up
+    for( core_loop = 8; core_loop > 0; core_loop = core_loop >> 1 )
+    {
+        if( ( c_mask & core_loop ) &&
+            ( ! ( in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_loop ) ) & BIT64SH(46) ) ) )
+        {
+            c_mask &= ~core_loop;
+        }
+    }
 
     if( c_mask )
     {
+        G_qme_record.c_stop1_targets &= ~c_mask;
+
         PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_mask ), BIT32(1) );
 
