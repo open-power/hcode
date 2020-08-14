@@ -112,26 +112,26 @@ $(eval $(IMAGE)_FILE_META_DATA=$(IMAGEPATH)/qme_image/qme_attr_meta.bin)
 #   - file to be appended
 #   - all dependencies of previously appended sections or on raw image
 #   - append operation as to other section that has to be finished first
-$(eval $(IMAGE)_DEPS_IMAGE  = $$($(IMAGE)_FILE_HCODE))
-$(eval $(IMAGE)_DEPS_HCODE  = $$($(IMAGE)_FILE_HCODE))
-$(eval $(IMAGE)_DEPS_HCODE += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
-
-$(eval $(IMAGE)_DEPS_IMAGE  += $$($(IMAGE)_FILE_RINGS))
-$(eval $(IMAGE)_DEPS_RINGS   = $$($(IMAGE)_FILE_RINGS))
-$(eval $(IMAGE)_DEPS_RINGS  += $$($(IMAGE)_DEPS_HCODE))
-$(eval $(IMAGE)_DEPS_RINGS  += $$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
-$(eval $(IMAGE)_DEPS_REPORT  = $$($(IMAGE)_DEPS_RINGS))
-$(eval $(IMAGE)_DEPS_REPORT += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
+$(eval $(IMAGE)_DEPS_IMAGE      = $$($(IMAGE)_FILE_HCODE))
+$(eval $(IMAGE)_DEPS_HCODE      = $$($(IMAGE)_FILE_HCODE))
+$(eval $(IMAGE)_DEPS_HCODE     += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_host)
 
 $(eval $(IMAGE)_DEPS_IMAGE     += $$($(IMAGE)_FILE_META_DATA))
 $(eval $(IMAGE)_DEPS_META_DATA  = $$($(IMAGE)_FILE_META_DATA))
 $(eval $(IMAGE)_DEPS_META_DATA += $$($(IMAGE)_DEPS_HCODE))
-$(eval $(IMAGE)_DEPS_META_DATA += $$($(IMAGE)_PATH)/.$(IMAGE).append.meta_data)
+$(eval $(IMAGE)_DEPS_META_DATA += $$($(IMAGE)_PATH)/.$(IMAGE).append.hcode)
+
+$(eval $(IMAGE)_DEPS_IMAGE  += $$($(IMAGE)_FILE_RINGS))
+$(eval $(IMAGE)_DEPS_RINGS   = $$($(IMAGE)_FILE_RINGS))
+$(eval $(IMAGE)_DEPS_RINGS  += $$($(IMAGE)_DEPS_META_DATA))
+$(eval $(IMAGE)_DEPS_RINGS  += $$($(IMAGE)_PATH)/.$(IMAGE).append.meta_data)
+$(eval $(IMAGE)_DEPS_REPORT  = $$($(IMAGE)_DEPS_RINGS))
+$(eval $(IMAGE)_DEPS_REPORT += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
 
 # Image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.hcode,$$($(IMAGE)_DEPS_HCODE),$$($(IMAGE)_FILE_HCODE) 1))
-$(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1))
 $(eval $(call XIP_TOOL,append,.meta_data,$$($(IMAGE)_DEPS_META_DATA),$$($(IMAGE)_FILE_META_DATA) 1))
+$(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1))
 
 # Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
