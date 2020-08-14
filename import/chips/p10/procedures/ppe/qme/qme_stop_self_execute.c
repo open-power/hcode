@@ -37,13 +37,14 @@ enum
 };
 
 extern QmeRecord G_qme_record;
-uint64_t G_spattn_mask = 0;
+uint64_t G_spattn_mask[4] = {0};
 
 void
 qme_stop_self_complete(uint32_t core_target)
 {
     data64_t scom_data;
     uint32_t core_mask;
+    uint32_t core_index;
     uint32_t sr_fail_loc    =   SR_FAIL_SLAVE_THREAD;
 
     // RTC 248150: value needs to be reviewed post hardware
@@ -208,11 +209,19 @@ skip_sr_log:
     PPE_PUTSCOM_MC( SCRATCH1, core_target, 0 );
 
     PK_TRACE("Restore SPATTN after self-restore");
-    PPE_PUTSCOM_MC( SPATTN_MASK, core_target, G_spattn_mask );
-
     PK_TRACE("Always Unfreeze IMA (by clearing bit 34) in case the CHTM is enabled to sample it");
-    PPE_GETSCOM_MC_EQU( IMA_EVENT_MASK, core_target, scom_data.value);
-    PPE_PUTSCOM_MC    ( IMA_EVENT_MASK, core_target, scom_data.value & ~BIT64(34));
+
+    for (core_mask = 8, core_index = 0;
+         core_mask;
+         core_mask = core_mask >> 1, core_index++)
+    {
+        if( core_mask & core_target )
+        {
+            PPE_PUTSCOM_UC( SPATTN_MASK,   0, core_mask, G_spattn_mask[core_index] );
+            PPE_GETSCOM_UC( IMA_EVENT_MASK, 0, core_mask, scom_data.value);
+            PPE_PUTSCOM_UC( IMA_EVENT_MASK, 0, core_mask, scom_data.value & ~BIT64(34));
+        }
+    }
 
     PK_TRACE("Drop BLOCK_INTERRUPT to PC and IGNORE_RECENT_PMCR via SCSR[0/19]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), ( BIT32(0) | BIT32(19) ) );
@@ -224,6 +233,7 @@ skip_sr_log:
 void
 qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 {
+    uint32_t core_index;
     uint32_t core_mask;
     data64_t scom_data;
     QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
@@ -311,8 +321,17 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     // ===============================
 
     PK_TRACE("Save off and mask SPATTN before self-restore");
-    PPE_GETSCOM_MC_EQU( SPATTN_MASK, core_target, G_spattn_mask);
-    PPE_PUTSCOM_MC    ( SPATTN_MASK, core_target, BITS64(0, 64));
+
+    for (core_mask = 8, core_index = 0;
+         core_mask;
+         core_mask = core_mask >> 1, core_index++)
+    {
+        if( core_mask & core_target )
+        {
+            PPE_GETSCOM_UC( SPATTN_MASK, 0, core_mask, G_spattn_mask[core_index]);
+            PPE_PUTSCOM_UC( SPATTN_MASK, 0, core_mask, BITS64(0, 64));
+        }
+    }
 
     for (core_mask = 8; core_mask; core_mask = core_mask >> 1)
     {
