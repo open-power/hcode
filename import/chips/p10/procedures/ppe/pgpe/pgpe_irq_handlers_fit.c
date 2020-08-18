@@ -55,13 +55,15 @@ void pgpe_irq_fit_init()
 
     //Set PGPE beacon count threshold. PGPE beacon should be incremented
     //every 2ms. This is monitored by OCC
-    //\\todo Need to check with Michael and Greg, it this is still
-    //correct way to do this in P19
-    G_beacon_count_threshold = (freq < 1573) ? 6 :
-                               (freq < 1835) ? 7 :
-                               (freq < 2097) ? 8 :
-                               (freq < 2359) ? 9 :
-                               (freq < 2621) ? 10 : 11;
+    G_beacon_count_threshold = (freq < 360) ? 11 :
+                               (freq < 393) ? 12 :
+                               (freq < 426) ? 13 :
+                               (freq < 458) ? 14 :
+                               (freq < 491) ? 15 :
+                               (freq < 524) ? 16 :
+                               (freq < 557) ? 17 :
+                               (freq < 589) ? 18 :
+                               (freq < 622) ? 19 : 20;
     PK_TRACE("Fit BeaconThr=0x%d", G_beacon_count_threshold);
 
     //Determine PGPE heartbeat value to be written in each quad(monitored by CME)
