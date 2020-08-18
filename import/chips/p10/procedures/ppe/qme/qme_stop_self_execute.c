@@ -80,7 +80,7 @@ qme_stop_self_complete(uint32_t core_target)
 
             if (G_qme_record.cts_timeout_count == CTS_TIMEOUT_COUNT)
             {
-                PK_TRACE("Timout polling for slave threads stopping on core mask %X", core_mask);
+                PK_TRACE_INF("Timout polling for slave threads stopping on core mask %X", core_mask);
                 goto commit_sr_log;
             }
             else
@@ -132,7 +132,7 @@ commit_sr_log:
     {
         if( core_mask & core_target )
         {
-            PK_TRACE( "SR: Time Out" );
+            PK_TRACE_INF( "SR: Time Out" );
 
             if( in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) ) & BIT64SH(58) )
             {
@@ -295,7 +295,8 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     else
     {
         // HV Mode
-        PK_TRACE_INF("HV mode: write HRMOR and URMOR with HOMER address");
+        PK_TRACE_INF("HV mode: %s : write HRMOR and URMOR with HOMER address"
+                     (SPR_SELF_SAVE == i_saveRestore) ? "Self-Save" : "Self-Restore" );
 
         if( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE )
         {

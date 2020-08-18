@@ -1079,6 +1079,13 @@ blrl
 cmpwi       THREAD_ID_REG,  0               # if thread in question is 0, also, save core SPRs
 bne         save_restore_done               # else saving of SPRs is done
 
+wait_slave_thd_entry_complete:
+#wait until all the slave threads are DONE with self-save
+mfspr       THREAD_SCRATCH_VAL_REG,   SPRD
+extrdi.     TEMP_REG1,    THREAD_SCRATCH_VAL_REG, 1, SCRATCH_SLV_THDS_COMPLETE_BIT    # Check Slave Thread STOP bit
+cmpwi       TEMP_REG1,    1
+bne         wait_slave_thd_entry_complete
+
 save_core_spr:
 # 8B  for mflr r30
 # 32B for skipping HRMOR restore entry
