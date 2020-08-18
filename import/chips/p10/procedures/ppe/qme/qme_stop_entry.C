@@ -448,7 +448,11 @@ qme_stop_entry()
 
         MARK_TAG( G_qme_record.c_stop3_enter_targets, SE_CORE_VMIN_ENABLE )
 
+#if POWER10_DD_LEVEL != 10
+
         p10_hcd_core_vmin_enable(core_target);
+
+#endif
 
         //===============//
 

@@ -297,7 +297,11 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CORE_VMIN_DISABLE )
 
+#if POWER10_DD_LEVEL != 10
+
         p10_hcd_core_vmin_disable(core_target);
+
+#endif
 
         MARK_TAG( G_qme_record.c_stop3_exit_targets, SX_CORE_VOLT_RESTORED )
 
