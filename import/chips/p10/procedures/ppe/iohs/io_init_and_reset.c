@@ -113,7 +113,7 @@
 
 // (BJA 1/16/20) Per Glen W, setting 0b11 is used for timing analysis.
 // The scan init (RegDef) value is 0b00, but hardware is currently frozen.
-#define RX_CLK_PHASE_SELECT_RESET_VALUE 0b01
+#define RX_CLK_PHASE_SELECT_RESET_VALUE 0b00
 
 // CDR Settings: rx_pr_phase_step (KP) = 0.296875; rx_pr_fw_inertia_amt (KI) = 4
 #define CDR_KP_RESET_VALUE 0b0100110
