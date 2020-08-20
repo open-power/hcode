@@ -128,12 +128,76 @@ void
 qme_fit_handler()
 {
     uint32_t c_stop11 = 0;
-
+#if POWER10_DD_LEVEL == 10
+    uint32_t c_mask   = 0;
+    uint32_t c_pair   = 0;
+    uint32_t c_entry  = 0;
+    uint32_t scsr     = 0;
+    uint32_t shift    = 0;
+    uint32_t pm_active      = 0;
+    uint32_t pm_state       = 0;
+    uint32_t pm_state_even  = 0;
+    uint32_t pm_state_odd   = 0;
+#endif
     mtspr(SPRN_TSR, TSR_FIS);
 
     G_qme_record.uih_status |= BIT32(IDX_TIMER_FIT);
 
     //PK_TRACE("Timer: FIT, UIH Status[%x]", G_qme_record.uih_status);
+
+#if POWER10_DD_LEVEL == 10
+
+    if( in32(QME_LCL_QMCR) & BIT32(10) )
+    {
+        for( c_mask = 8; c_mask > 0; c_mask = c_mask >> 1 )
+        {
+            if( c_mask & G_qme_record.c_configured )
+            {
+                scsr = in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_mask ) );
+                pm_active = scsr & BIT64SH(59);
+
+                if( c_mask & 0xA )
+                {
+                    c_pair = (pm_active >> 3);
+                    pm_state_even = scsr & BITS64SH(60, 4);
+                }
+                else
+                {
+                    c_pair |= (pm_active >> 4);
+                    pm_state_odd = scsr & BITS64SH(60, 4);
+
+                    if( c_pair == 0x3 )
+                    {
+                        pm_state = pm_state_even < pm_state_odd ? pm_state_even : pm_state_odd ;
+
+                        // fast
+                        shift = SHIFT64SH(51);
+
+                        // slow
+                        if( pm_state > 10 )
+                        {
+                            shift = SHIFT64SH(55);
+                        }
+
+                        // c2 c3
+                        c_entry = 0x3 << shift;
+
+                        // c0 c1
+                        if( c_mask > 3 )
+                        {
+                            c_entry = 0x3 << (shift + 2);
+                        }
+
+                        out64( QME_LCL_EISR_OR, ((uint64_t)c_entry) );
+                        PK_TRACE_INF("pair mode pm_state_even %x pm_state_odd %x c_entry %x c_mask %x",
+                                     pm_state_even, pm_state_odd, c_entry, c_mask);
+                    }
+                }
+            }
+        }
+    }
+
+#endif
 
     if ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_STOP11_ENTRY_REQUESTED ) )
     {

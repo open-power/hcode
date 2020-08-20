@@ -84,6 +84,10 @@ qme_parse_pm_state_active_fast()
     uint32_t c_loop     = 0;
     uint32_t c_start    = 0;
     uint32_t c_index    = 0;
+#if POWER10_DD_LEVEL == 10
+    uint32_t pm_state_even = 0;
+    uint32_t pm_state_odd  = 0;
+#endif
 
     G_qme_record.c_pm_state_active_fast_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(48, 4) );
 #ifdef QME_EDGE_TRIGGER_INTERRUPT
@@ -110,8 +114,40 @@ qme_parse_pm_state_active_fast()
     {
         if( c_loop & c_mask )
         {
+
+#if POWER10_DD_LEVEL == 10
+
+            if( in32(QME_LCL_QMCR) & BIT32(10) )
+            {
+                if( c_mask & 0xA )
+                {
+                    pm_state_even =
+                        ( in32( QME_LCL_SSDR ) & BITS32(c_start, 4) ) >> SHIFT32( (c_start + 3) );
+                    pm_state_odd =
+                        ( in32( QME_LCL_SSDR ) & BITS32((c_start + 4), 4) ) >> SHIFT32( ((c_start + 4) + 3) );
+                }
+                else
+                {
+                    pm_state_even =
+                        ( in32( QME_LCL_SSDR ) & BITS32((c_start - 4), 4) ) >> SHIFT32( ((c_start - 4) + 3) );
+                    pm_state_odd =
+                        ( in32( QME_LCL_SSDR ) & BITS32(c_start, 4) ) >> SHIFT32( (c_start + 3) );
+                }
+
+                G_qme_record.c_pm_state[c_index] = pm_state_even < pm_state_odd ? pm_state_even : pm_state_odd;
+            }
+            else
+            {
+                G_qme_record.c_pm_state[c_index] =
+                    ( in32( QME_LCL_SSDR ) & BITS32(c_start, 4) ) >> SHIFT32( (c_start + 3) );
+            }
+
+#else
+
             G_qme_record.c_pm_state[c_index] =
                 ( in32( QME_LCL_SSDR ) & BITS32(c_start, 4) ) >> SHIFT32( (c_start + 3) );
+
+#endif
 
             out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_loop ),
                    ( SSH_REQ_LEVEL_UPDATE | ( G_qme_record.c_pm_state[c_index] << SHIFT32(7) ) ) );
