@@ -63,6 +63,15 @@ void xgpe_header_init()
     //TODO until hcode image build is fixed
     G_xgpe_header_data->g_xgpe_xgpeFlags = 0;
 
+    //Clear out the OCC Shared SRAM region by setting everything to zero
+    uint64_t* occ_shared_data_indx = (uint64_t*)OCC_SHARED_SRAM_ADDR_START;
+
+    for (i = 0; i < PGPE_OCC_SHARED_SRAM_SIZE / sizeof(uint64_t); ++i)
+    {
+        *occ_shared_data_indx = 0;
+        occ_shared_data_indx++;
+    }
+
     for (i = 0; i < 32; i++)
     {
         G_iddq.curr_cnts.act_val[i][ACT_CNT_IDX_CORECLK_OFF] = 0;

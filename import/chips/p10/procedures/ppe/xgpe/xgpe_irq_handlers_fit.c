@@ -53,6 +53,23 @@ void xgpe_irq_fit_init()
 {
     //Todo: Determine if XGPE should read OCC Shared SRAM from PGPE header
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)G_xgpe_header_data->g_xgpe_sharedSramAddress;
+    //uint32_t c;
+
+    occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2;
+    occ_shared_data->occ_data_offset = offsetof(HcodeOCCSharedData_t, occ_wof_values);
+    occ_shared_data->occ_data_length = sizeof(occ_wof_values_t);
+    occ_shared_data->pgpe_data_offset = offsetof(HcodeOCCSharedData_t, pgpe_wof_values);
+    occ_shared_data->pgpe_data_length = sizeof(pgpe_wof_values_t);
+    occ_shared_data->xgpe_data_offset = offsetof(HcodeOCCSharedData_t, xgpe_wof_values);
+    occ_shared_data->xgpe_data_length = sizeof(xgpe_wof_values_t);
+    occ_shared_data->iddq_data_offset = offsetof(HcodeOCCSharedData_t, iddq_activity_values);
+    occ_shared_data->iddq_data_length = sizeof(iddq_activity_t);
+    occ_shared_data->error_log_offset = offsetof(HcodeOCCSharedData_t, errlog_idx);
+    occ_shared_data->pstate_table_offset = offsetof(HcodeOCCSharedData_t, pstate_table);
+    occ_shared_data->iddq_activity_sample_depth =
+        8; //TODO RTC: 214486 Determine if this should be an attribute or hard-coded like this
+
+
     G_iddq.p_act_val =  (iddq_activity_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +
                                            occ_shared_data->iddq_data_offset);
     G_iddq.p_wof_val =  (pgpe_wof_values_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +

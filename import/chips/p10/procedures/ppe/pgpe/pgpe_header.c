@@ -23,6 +23,7 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "pgpe_header.h"
+#include "p10_oci_proc_1.H"
 
 PgpeHeader_t* G_pgpe_header_data;
 extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
@@ -38,7 +39,6 @@ extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_head
 void pgpe_header_init()
 {
     PK_TRACE("HDR: Init");
-    uint32_t i = 0;
 
     G_pgpe_header_data = (PgpeHeader_t*)&_PGPE_IMG_HEADER;
 
@@ -49,13 +49,20 @@ void pgpe_header_init()
     G_pgpe_header_data->g_pgpe_sharedSramAddress = (uint32_t)OCC_SHARED_SRAM_ADDR_START;
     G_pgpe_header_data->g_pgpe_sharedLength = PGPE_OCC_SHARED_SRAM_SIZE;
 
-    //Clear out the OCC Shared SRAM region by setting everything to zero
-    uint64_t* occ_shared_data_indx = (uint64_t*)OCC_SHARED_SRAM_ADDR_START;
 
-    for (i = 0; i < PGPE_OCC_SHARED_SRAM_SIZE / sizeof(uint64_t); ++i)
+    uint32_t occflg3 = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW);
+
+    if(!(occflg3 & BIT32(XGPE_ACTIVE)))
     {
-        *occ_shared_data_indx = 0;
-        occ_shared_data_indx++;
+        //Clear out the OCC Shared SRAM region by setting everything to zero
+        uint32_t i = 0;
+        uint64_t* occ_shared_data_indx = (uint64_t*)OCC_SHARED_SRAM_ADDR_START;
+
+        for (i = 0; i < PGPE_OCC_SHARED_SRAM_SIZE / sizeof(uint64_t); ++i)
+        {
+            *occ_shared_data_indx = 0;
+            occ_shared_data_indx++;
+        }
     }
 
     // @TODO Discuss the implications of clearing Shared SRAM in the loop above
