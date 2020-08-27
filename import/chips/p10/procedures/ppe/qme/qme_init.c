@@ -76,10 +76,22 @@ qme_init()
     G_qme_record.c_stop11_reached  |= (~G_qme_record.c_configured) & QME_MASK_ALL_CORES;
     G_qme_record.c_stop5_reached    = G_qme_record.c_stop11_reached;
     G_qme_record.c_stop2_reached    = G_qme_record.c_stop11_reached;
+    // This data will be used to know we are in ipl mode or runtime mode to
+    // handle the master/backing core case, which is valid only in ipl case.
+    // Now I have check for TOD_SETUPC_OMPLETE to know we are in runtime or not,
+    // because the new flag QME_FLAGS_RUNTIME_MODE has a dependency of HB
+    // code.Once that code is in ,then we can remove the TOD check.
+    uint32_t ipl_time = ((in32( QME_LCL_FLAGS ) & BIT32(QME_FLAGS_RUNTIME_MODE)) ||
+                         (in32( QME_LCL_FLAGS ) & BIT32(QME_FLAGS_TOD_SETUP_COMPLETE))) ? 0x00 : 0x0F;
 
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
     G_qme_record.c_special_wakeup_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
-    G_qme_record.c_hostboot_cores = G_qme_record.c_special_wakeup_done & G_qme_record.c_configured;
+
+    //This should be valid only in ipl time case, because in istep4
+    //master/backing cores are spwu asserted(OTR), so we need to de-assert in istep
+    //16 only and in runtime mode will not have the concept of master/backing,
+    //so this condition should be skipped.
+    G_qme_record.c_hostboot_cores = G_qme_record.c_special_wakeup_done & G_qme_record.c_configured & ipl_time;
 
     if( G_qme_record.c_hostboot_cores )
     {
@@ -90,24 +102,25 @@ qme_init()
 
         PK_TRACE("Clear SPWU_FALL caused by drop SPWU_OTR while in spwu auto mode");
         out64( QME_LCL_EISR_CLR, ( ( (uint64_t)G_qme_record.c_hostboot_cores ) << SHIFT64SH(39) ) );
-    }
 
-    // Simics does not model the SSDR and never sees instructions running.
-    // That would cause markup evaluations to not send an intr. to QME to exit STOP15 on master cores
-    // when SBE triggers it at the end of istep 16.1
-    if (!G_IsSimics)
-    {
-        local_data = ((in32(QME_LCL_SSDR) & BITS32(4, 4)) >> SHIFT32(7)); // instruction running
-        PK_TRACE_INF("Setup: Current HB cores and backing caches %x Instruction_Running %x",
-                     G_qme_record.c_hostboot_cores, local_data);
+        // Simics does not model the SSDR and never sees instructions running.
+        // That would cause markup evaluations to not send an intr. to QME to exit STOP15 on master cores
+        // when SBE triggers it at the end of istep 16.1
+        if (!G_IsSimics)
+        {
+            local_data = ((in32(QME_LCL_SSDR) & BITS32(4, 4)) >> SHIFT32(7)); // instruction running
+            PK_TRACE_INF("Setup: Current HB cores and backing caches %x Instruction_Running %x",
+                         G_qme_record.c_hostboot_cores, local_data);
 
-        G_qme_record.c_hostboot_cores &= local_data;
-    }
+            G_qme_record.c_hostboot_cores &= local_data;
+        }
 
-    if( G_qme_record.c_hostboot_cores )
-    {
-        PK_TRACE("Drop PM_EXIT only on primary core[%x] via PCR_SCSR[1]", G_qme_record.c_hostboot_cores);
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_hostboot_cores ), BIT32(1) );
+        if( G_qme_record.c_hostboot_cores )
+        {
+            PK_TRACE("Drop PM_EXIT only on primary core[%x] via PCR_SCSR[1]", G_qme_record.c_hostboot_cores);
+            out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_hostboot_cores ), BIT32(1) );
+        }
+
     }
 
     // use SSDR[36:39] PM_BLOCK_INTERRUPTS to initalize block wakeup status
