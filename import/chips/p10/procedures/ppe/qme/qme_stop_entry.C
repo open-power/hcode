@@ -489,11 +489,10 @@ qme_stop_entry()
 
         MARK_TAG(G_qme_record.c_stop5_enter_targets, SE_CORE_POWEROFF)
 
-#ifndef POWER_LOSS_DISABLE
-
-        p10_hcd_core_poweroff(core_target);
-
-#endif
+        if( G_qme_record.hcode_func_enabled & QME_HWP_PFET_CTRL_ENABLE )
+        {
+            p10_hcd_core_poweroff(core_target);
+        }
 
         //===============//
 
@@ -563,11 +562,10 @@ qme_stop_entry()
 
         MARK_TAG(G_qme_record.c_stop11_enter_targets, SE_CACHE_POWEROFF)
 
-#ifndef POWER_LOSS_DISABLE
-
-        p10_hcd_cache_poweroff(core_target);
-
-#endif
+        if( G_qme_record.hcode_func_enabled & QME_HWP_PFET_CTRL_ENABLE )
+        {
+            p10_hcd_cache_poweroff(core_target);
+        }
 
         //===============//
 

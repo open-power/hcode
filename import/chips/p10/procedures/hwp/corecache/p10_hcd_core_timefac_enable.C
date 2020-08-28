@@ -86,6 +86,7 @@ p10_hcd_core_timefac_enable(
 {
     fapi2::buffer<buffer_t> l_mmioData            = 0;
     uint32_t                l_timeout             = 0;
+    uint32_t                l_scsr                = 0;
     uint32_t                l_tfcsr_errors        = 0;
     uint32_t                l_state_loss_cores    = 0;
     fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST > l_mc_or = i_target;//default OR
@@ -190,6 +191,14 @@ p10_hcd_core_timefac_enable(
 
         FAPI_DBG("Drop XFER_SENT_DONE via PCR_TFCSR[33]");
         FAPI_TRY( HCD_PUTMMIO_C( i_target, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_1BIT( MMIO_LOWBIT(33) ) ) );
+
+        // This may be redundent in stop11 exit as scominit would have done it already
+        // but for stop2/3, this would be done here once.
+        // Undo potential quiesces before last clock off, no-op for istep4
+        l_scsr = ( BIT32(4) | BITS32(7, 2) | BIT32(22) );
+
+        FAPI_DBG("Drop HBUS_DISABLE/L2RCMD_INTF_QUIESCE/NCU_TLBIE_QUIESCE/AUTO_PMSR_SHIFT_DIS via PCR_SCSR[4,7,8,22]");
+        FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_CLEAR, MMIO_LOAD32H( l_scsr ) ) );
     }
     else
     {
