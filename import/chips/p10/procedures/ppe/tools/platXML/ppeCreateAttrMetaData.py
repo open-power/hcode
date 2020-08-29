@@ -51,12 +51,12 @@ attr_meta = {
 }
 
 target_type = {
-  "QMEASYS" : ["TARGET_TYPE_SYSTEM",    "l_sys_tgt",  "l_sys_bytes"],
-  "QMEAPRC" : ["TARGET_TYPE_PROC_CHIP", "i_chip_tgt", "l_proc_bytes"],
-  "QMEAPRV" : ["TARGET_TYPE_PERV",      "l_perv_tgt", "l_perv_bytes"],
-  "QMEAEC_" : ["TARGET_TYPE_CORE",      "l_core_tgt", "l_ec_bytes"],
-  "QMEAEX_" : ["TARGET_TYPE_EX",        "l_ex_tgt",   "l_ex_bytes"],
-  "QMEAEQ_" : ["TARGET_TYPE_EQ",        "l_eq_tgt",   "l_eq_bytes"]
+  "QMEASYS" : ["TARGET_TYPE_SYSTEM",    "l_sys_tgt",   "l_sys_bytes"],
+  "QMEAPRC" : ["TARGET_TYPE_PROC_CHIP", "i_chip_tgt",  "l_proc_bytes"],
+  "QMEAPRV" : ["TARGET_TYPE_PERV",      "l_perv_tgts", "l_perv_bytes"],
+  "QMEAEC_" : ["TARGET_TYPE_CORE",      "l_ec_tgts",   "l_ec_bytes"],
+  "QMEAEX_" : ["TARGET_TYPE_EX",        "l_ex_tgts",   "l_ex_bytes"],
+  "QMEAEQ_" : ["TARGET_TYPE_EQ",        "l_eq_tgts",   "l_eq_bytes"]
 }
 
 data_type = {
@@ -170,13 +170,12 @@ def write_meta(binaryFile, hwPrcdFile):
   hwp_file.write("    uint16_t       alignment           = 0;\n")
   hwp_file.write("    uint16_t       leftover            = 0;\n\n")
   hwp_file.write("    fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> l_sys_tgt;\n")
-  hwp_file.write("    auto l_cores = i_chip_tgt.getChildren<fapi2::TARGET_TYPE_CORE>(fapi2::TARGET_STATE_FUNCTIONAL);\n")
+  hwp_file.write("    auto l_perv_tgts = i_chip_tgt.getChildren<fapi2::TARGET_TYPE_PERV>(fapi2::TARGET_STATE_FUNCTIONAL);\n")
+  hwp_file.write("    auto l_ec_tgts = i_chip_tgt.getChildren<fapi2::TARGET_TYPE_CORE>(fapi2::TARGET_STATE_FUNCTIONAL);\n")
+  hwp_file.write("    auto l_eq_tgts = i_chip_tgt.getChildren<fapi2::TARGET_TYPE_EQ>(fapi2::TARGET_STATE_FUNCTIONAL);\n")
   hwp_file.write("    //Assume all attributes share the same value between cores\n")
   hwp_file.write("    //If that assumption is wrong, then should consider using\n")
   hwp_file.write("    //system/proc_chip level attribute array like the topology_vector\n")
-  hwp_file.write("    fapi2::Target<fapi2::TARGET_TYPE_CORE>   l_core_tgt = l_cores.front();\n")
-  #hwp_file.write("    auto l_quads = i_chip_tgt.getChildren<fapi2::TARGET_TYPE_EQ>(fapi2::TARGET_STATE_FUNCTIONAL);\n")
-  #hwp_file.write("    fapi2::Target<fapi2::TARGET_TYPE_EQ>     l_eq_tgt   = l_quads.front();\n")
 
   hwp_file.write("\n\n    if( l_hw_image_meta_ver != HCODE_IMAGE_BUILD_ATTR_VERSION )\n")
   hwp_file.write("    {\n")
@@ -206,11 +205,17 @@ def write_meta(binaryFile, hwPrcdFile):
       else:
         privileged = ""
 
+      if target == "TARGET_TYPE_SYSTEM" or target == "TARGET_TYPE_PROC_CHIP":
+        direct = 1
+      else:
+        direct = 0
+
       if data_size == 8:
         print_format = "ll"
       else:
         print_format = ""
 
+      # block per attribute
       hwp_file.write("\n    {\n")
       align_size = 0
       if data_size == 8 or data_size == 4:
@@ -221,19 +226,28 @@ def write_meta(binaryFile, hwPrcdFile):
         align_size = (total_size % 2)
         if align_size:
           align_size = 2 - align_size
-
+  
       if align_size:
         total_size += align_size
         hwp_file.write("        // 32b/64b data align at 4, 16b data align at 2\n")
         hwp_file.write("        i_pQmeAttrTank = (uint8_t*)i_pQmeAttrTank + " + str(align_size) + ";\n\n")
- 
+   
       if array_dim:
         total_size += data_size * array_dim
         print attr_name, str(total_size), str(data_size), str(array_dim)
         hwp_file.write("        " + data_var + "t " + "l_" + data_var + "data[" + str(array_dim)  + "] = {0};\n")
-        hwp_file.write("        FAPI_TRY(FAPI_ATTR_GET" + privileged + "(fapi2::" + attr_name + ", " +\
-                                            target_var + ", l_" + data_var + "data),\n")
-        hwp_file.write("                 \"Error From FAPI_ATTR_GET For " + attr_name + "\");\n\n")
+        if direct:
+          hwp_file.write("        FAPI_TRY(FAPI_ATTR_GET" + privileged + "(fapi2::" + attr_name + ", " +\
+                                              target_var + ", l_" + data_var + "data),\n")
+          hwp_file.write("                 \"Error From FAPI_ATTR_GET For " + attr_name + "\");\n\n")
+        else:
+          hwp_file.write("\n")
+          hwp_file.write("        if (" + target_var + ".size())\n")
+          hwp_file.write("        {\n")
+          hwp_file.write("            FAPI_TRY(FAPI_ATTR_GET" + privileged + "(fapi2::" + attr_name + ", " +\
+                                                target_var + ".front(), l_" + data_var + "data),\n")
+          hwp_file.write("                   \"Error From FAPI_ATTR_GET For " + attr_name + "\");\n")
+          hwp_file.write("        }\n\n")
         hwp_file.write("        for( int index = 0; index < " + str(array_dim) + "; index++ )\n")
         hwp_file.write("        {\n")
         hwp_file.write("            FAPI_DBG(\"" + attr_name + " " + data_var + \
@@ -247,9 +261,18 @@ def write_meta(binaryFile, hwPrcdFile):
         total_size += data_size
         print attr_name, str(total_size)
         hwp_file.write("        " + data_var + "t " + "l_" + data_var + "data = 0;\n")
-        hwp_file.write("        FAPI_TRY(FAPI_ATTR_GET" + privileged + "(fapi2::" + attr_name + ", " +\
-                                            target_var + ", l_" + data_var + "data),\n")
-        hwp_file.write("                 \"Error From FAPI_ATTR_GET For " + attr_name + "\");\n\n")
+        if direct:
+          hwp_file.write("        FAPI_TRY(FAPI_ATTR_GET" + privileged + "(fapi2::" + attr_name + ", " +\
+                                              target_var + ", l_" + data_var + "data),\n")
+          hwp_file.write("                 \"Error From FAPI_ATTR_GET For " + attr_name + "\");\n\n")
+        else:
+          hwp_file.write("\n")
+          hwp_file.write("        if (" + target_var + ".size())\n")
+          hwp_file.write("        {\n")
+          hwp_file.write("            FAPI_TRY(FAPI_ATTR_GET" + privileged + "(fapi2::" + attr_name + ", " +\
+                                                target_var + ".front(), l_" + data_var + "data),\n")
+          hwp_file.write("                     \"Error From FAPI_ATTR_GET For " + attr_name + "\");\n")
+          hwp_file.write("        }\n\n")
         hwp_file.write("        FAPI_DBG(\"" + attr_name + " " + data_var + \
                                            " Attribute Value: %" + print_format + "x, Copy to Address: %x\",\n")
         hwp_file.write("                 l_" + data_var + "data, i_pQmeAttrTank);\n")
@@ -257,7 +280,7 @@ def write_meta(binaryFile, hwPrcdFile):
                                       byte_swap0 + "l_" + data_var + "data" + byte_swap1 + ";\n")
         hwp_file.write("        i_pQmeAttrTank = (uint8_t*)i_pQmeAttrTank + " + str(data_size) + ";\n")
       hwp_file.write("    }\n")
-
+  
     meta_data.write(struct.pack('>h', entries))
     meta_data.write(struct.pack('>h', total_size))
     print "Alignment is currently: " + str(total_size)
