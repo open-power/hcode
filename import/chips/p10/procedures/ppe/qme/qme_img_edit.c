@@ -38,14 +38,14 @@ enum
     CPMR_IMAGE  =   2,
 };
 
-uint32_t updateQmeImage( FILE* i_fpQmeImg, uint32_t i_imgSize );
-uint32_t updateCpmrImage( FILE* i_fpCpmrHdrImg, uint32_t i_imgSize );
+uint32_t updateQmeImage( FILE* i_fpQmeImg, uint32_t i_imgSize, uint8_t i_quiet );
+uint32_t updateCpmrImage( FILE* i_fpCpmrHdrImg, uint32_t i_imgSize, uint8_t i_quiet );
 
 int main(int narg, char* argv[])
 {
     if (narg < 2)
     {
-        printf("QME Img Edit Usage: %s <full path to image>\n",
+        printf("QME Img Edit Usage: %s <full path to image> <quiet>\n",
                argv[0]);
         return -1;
     }
@@ -54,6 +54,7 @@ int main(int narg, char* argv[])
     FILE* fpImage           =   NULL;
     uint32_t size           =   0;
     uint8_t   arg           =   0;
+    uint8_t quiet           =   0;
 
     fpImage     =   fopen( argv[1], "r+" );
 
@@ -63,6 +64,11 @@ int main(int narg, char* argv[])
         return -1;
     }
 
+    if ( narg > 2 )
+    {
+        quiet = 1;
+    }
+
     fseek ( fpImage, 0, SEEK_END );
     size = ftell ( fpImage );
     rewind ( fpImage );
@@ -70,14 +76,23 @@ int main(int narg, char* argv[])
     if( CPMR_HEADER_SIZE == size )
     {
         imageType      =    CPMR_IMAGE;
-        printf("\nCPMR edit" );
-        updateCpmrImage( fpImage, size );
+
+        if ( !quiet )
+        {
+            printf("\nCPMR edit" );
+        }
+
+        updateCpmrImage( fpImage, size, quiet );
     }
 
     if( QME_IMAGE  ==  imageType )
     {
-        printf("\nQME edit" );
-        updateQmeImage( fpImage, size );
+        if ( !quiet )
+        {
+            printf("\nQME edit" );
+        }
+
+        updateQmeImage( fpImage, size, quiet );
     }
 
     fclose( fpImage );
@@ -88,22 +103,26 @@ int main(int narg, char* argv[])
 
 //---------------------------------------------------------------------------------------------
 
-uint32_t getTime()
+uint32_t getTime( uint8_t i_quiet )
 {
     time_t buildTime        =   time(NULL);
     struct tm* headerTime   =   localtime(&buildTime);
     uint32_t temp           =   (((headerTime->tm_year + 1900) << 16) |
                                  ((headerTime->tm_mon + 1) << 8) |
                                  (headerTime->tm_mday));
-    printf( "                    Build date              : %X -> %04d/%02d/%02d (YYYY/MM/DD)\n",
-            temp, headerTime->tm_year + 1900, headerTime->tm_mon + 1, headerTime->tm_mday );
+
+    if ( !i_quiet )
+    {
+        printf( "                    Build date              : %X -> %04d/%02d/%02d (YYYY/MM/DD)\n",
+                temp, headerTime->tm_year + 1900, headerTime->tm_mon + 1, headerTime->tm_mday );
+    }
 
     return temp;
 }
 
 //---------------------------------------------------------------------------------------------
 
-uint32_t updateQmeImage( FILE* i_fpQmeImg, uint32_t i_imgSize )
+uint32_t updateQmeImage( FILE* i_fpQmeImg, uint32_t i_imgSize, uint8_t i_quiet )
 {
     uint32_t l_rc       =   0;
     uint32_t l_tempVal  =   0;
@@ -112,22 +131,26 @@ uint32_t updateQmeImage( FILE* i_fpQmeImg, uint32_t i_imgSize )
     fseek( i_fpQmeImg, headerFieldPos, SEEK_SET);
     l_tempVal       =   htonl(i_imgSize);
     fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpQmeImg );
-    printf( "                    QME Hcode Size              : %X -> %04d\n",
-            i_imgSize, i_imgSize );
+
+    if ( !i_quiet )
+    {
+        printf( "                    QME Hcode Size              : %X -> %04d\n",
+                i_imgSize, i_imgSize );
+    }
 
     return l_rc;
 }
 
 //---------------------------------------------------------------------------------------------
 
-uint32_t updateCpmrImage( FILE* i_fpCpmrHdrImg, uint32_t i_imgSize )
+uint32_t updateCpmrImage( FILE* i_fpCpmrHdrImg, uint32_t i_imgSize, uint8_t i_quiet )
 {
     uint32_t l_rc       =   0;
     uint32_t l_tempVal  =   0;
     uint32_t headerFieldPos =  0;
 
     headerFieldPos  =   offsetof( CpmrHeader_t, iv_buildDate );
-    l_tempVal       =   htonl(getTime());
+    l_tempVal       =   htonl(getTime( i_quiet ));
     fseek( i_fpCpmrHdrImg, headerFieldPos, SEEK_SET);
     fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpCpmrHdrImg );
 

@@ -31,7 +31,9 @@ use strict;
 use Getopt::Long;
 
 my $iop_bin_output = undef;
-GetOptions("output-file=s" => \$iop_bin_output);
+my $debug = 0;
+GetOptions("output-file=s" => \$iop_bin_output,
+           "debug"         => \$debug);
 
 my $num_args = $#ARGV + 1;
 if (($num_args < 1) || (!defined($iop_bin_output)))
@@ -45,8 +47,11 @@ if (($num_args < 1) || (!defined($iop_bin_output)))
 
 # Set input/output fies
 my $iop_fw_file  = $ARGV[0];
-printf("Input file : $iop_fw_file\n");
-printf("Output file: $iop_bin_output\n");
+if ($debug)
+{
+  printf("Input file : $iop_fw_file\n");
+  printf("Output file: $iop_bin_output\n");
+}
 
 # Read input file
 my @input_lines;
