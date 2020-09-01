@@ -73,7 +73,7 @@ data_type = {
 
 def parse_attr(attrIdFile):
   hash_start = 0
-  print "Parsing " + attrIdFile
+  #print "Parsing " + attrIdFile
   attr_id = open(attrIdFile)
   for line in attr_id:
     if "enum AttributeId" in line:
@@ -113,7 +113,7 @@ def parse_attr(attrIdFile):
         index += 1
     continue
   attr_id.close()
-  print attr_meta
+  #print attr_meta
 
 def write_meta(binaryFile, hwPrcdFile):
   hwp_file  = open(hwPrcdFile, "wb")
@@ -234,7 +234,7 @@ def write_meta(binaryFile, hwPrcdFile):
    
       if array_dim:
         total_size += data_size * array_dim
-        print attr_name, str(total_size), str(data_size), str(array_dim)
+        #print attr_name, str(total_size), str(data_size), str(array_dim)
         hwp_file.write("        " + data_var + "t " + "l_" + data_var + "data[" + str(array_dim)  + "] = {0};\n")
         if direct:
           hwp_file.write("        FAPI_TRY(FAPI_ATTR_GET" + privileged + "(fapi2::" + attr_name + ", " +\
@@ -259,7 +259,7 @@ def write_meta(binaryFile, hwPrcdFile):
         hwp_file.write("        }\n")
       else:
         total_size += data_size
-        print attr_name, str(total_size)
+        #print attr_name, str(total_size)
         hwp_file.write("        " + data_var + "t " + "l_" + data_var + "data = 0;\n")
         if direct:
           hwp_file.write("        FAPI_TRY(FAPI_ATTR_GET" + privileged + "(fapi2::" + attr_name + ", " +\
@@ -283,9 +283,9 @@ def write_meta(binaryFile, hwPrcdFile):
   
     meta_data.write(struct.pack('>h', entries))
     meta_data.write(struct.pack('>h', total_size))
-    print "Alignment is currently: " + str(total_size)
+    #print "Alignment is currently: " + str(total_size)
     leftover  = (8 - (total_size % 8)) % 8
-    print "Alignment is off by: " + str(leftover)
+    #print "Alignment is off by: " + str(leftover)
     limit_size = total_size - DUMMY_BUFFER_SIZE
 
     hwp_file.write("\n    //Co-req detection\n")
@@ -368,21 +368,21 @@ def attr2meta():
   (options, args) = parser.parse_args()
 
   if options.ekbRoot:
-    print "EkbRoot " + options.ekbRoot
+    #print "EkbRoot " + options.ekbRoot
     hwPrcdFile = options.ekbRoot + "/chips/p10/procedures/hwp/pm/p10_qme_build_attributes.C"
   else:
     print "ERROR: Please specify EKB root directory path with -e option"
     return
 
   if options.outputPath:
-    print "outputPath " + options.outputPath
+    #print "outputPath " + options.outputPath
     attrIdFile = options.outputPath + "/gen/qme/attribute_ids.H"
   else:
     print "ERROR: Please specify EKB output directory path with -o option"
     return
 
   if options.binFile:
-    print "binFile " + options.binFile
+    #print "binFile " + options.binFile
     binaryFile = options.binFile
   else:
     print "ERROR: Please specify output binary filename and path with -b option"
