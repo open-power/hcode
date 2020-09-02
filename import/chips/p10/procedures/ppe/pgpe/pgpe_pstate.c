@@ -1046,6 +1046,18 @@ uint32_t pgpe_pstate_ps_from_freq(uint32_t freq_khz)
     return  ((G_gppb->reference_frequency_khz - freq_khz) / G_gppb->frequency_step_khz);
 }
 
+uint32_t pgpe_pstate_ps_from_freq_clipped(uint32_t freq_khz)
+{
+    if (G_gppb->reference_frequency_khz < freq_khz)
+    {
+        return 0;
+    }
+    else
+    {
+        return  ((G_gppb->reference_frequency_khz - freq_khz) / G_gppb->frequency_step_khz);
+    }
+}
+
 uint32_t pgpe_pstate_is_at_target()
 {
     return (G_pgpe_pstate.pstate_curr == G_pgpe_pstate.pstate_target);

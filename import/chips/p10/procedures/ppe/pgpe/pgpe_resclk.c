@@ -67,22 +67,22 @@ void pgpe_resclk_init()
             switch(i)
             {
                 case(0):
-                    rcimr.fields.rp0 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
+                    rcimr.fields.rp0 = pgpe_pstate_ps_from_freq_clipped(RESCLK_INDEX[i + 1].freq * 1000);
                     rcimr.fields.rx0 = RESCLK_INDEX[i].idx;
                     break;
 
                 case(1):
-                    rcimr.fields.rp1 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
+                    rcimr.fields.rp1 = pgpe_pstate_ps_from_freq_clipped(RESCLK_INDEX[i + 1].freq * 1000);
                     rcimr.fields.rx1 = RESCLK_INDEX[i].idx;
                     break;
 
                 case(2):
-                    rcimr.fields.rp2 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
+                    rcimr.fields.rp2 = pgpe_pstate_ps_from_freq_clipped(RESCLK_INDEX[i + 1].freq * 1000);
                     rcimr.fields.rx2 = RESCLK_INDEX[i].idx;
                     break;
 
                 case(3):
-                    rcimr.fields.rp3 = pgpe_pstate_ps_from_freq(RESCLK_INDEX[i].freq * 1000);
+                    rcimr.fields.rp3 = 0;
                     rcimr.fields.rx3 = RESCLK_INDEX[i].idx;
                     break;
             }
