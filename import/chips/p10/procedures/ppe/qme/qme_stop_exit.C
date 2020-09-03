@@ -50,7 +50,7 @@
 #include "p10_hcd_core_scominit.H"
 #include "p10_hcd_core_scom_customize.H"
 
-#include "p10_hcd_core_timefac_enable.H"
+#include "p10_hcd_core_timefac_to_pc.H"
 #include "p10_hcd_core_shadows_enable.H"
 #include "p10_hcd_core_startgrid.H"
 #include "p10_hcd_core_vmin_disable.H"
@@ -342,7 +342,7 @@ qme_stop_exit()
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_ENABLE_SHADOWS )
 
         p10_hcd_core_shadows_enable(core_target);
-        p10_hcd_core_timefac_enable(core_target);
+        p10_hcd_core_timefac_to_pc(core_target);
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_CLOCKED )
 
@@ -676,7 +676,7 @@ qme_stop_exit()
         //===============//
 
         // HW534619 DD1 workaround move to after self restore
-        p10_hcd_core_timefac_enable(core_target);
+        p10_hcd_core_timefac_to_pc(core_target);
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_HANDOFF_PC )
 

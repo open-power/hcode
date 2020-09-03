@@ -76,6 +76,7 @@ CORE-CPP-SOURCES  = p10_hcd_l2_purge.C             \
                     p10_hcd_l2_tlbie_quiesce.C     \
                     p10_hcd_ncu_purge.C            \
                     p10_hcd_core_shadows_disable.C \
+                    p10_hcd_core_timefac_from_pc.C \
                     p10_hcd_core_stopclocks.C      \
                     p10_hcd_core_stopgrid.C        \
                     p10_hcd_core_vmin_enable.C     \
@@ -91,7 +92,7 @@ CORE-CPP-SOURCES  = p10_hcd_l2_purge.C             \
                     p10_hcd_core_startgrid.C       \
                     p10_hcd_core_startclocks.C     \
                     p10_hcd_core_shadows_enable.C  \
-                    p10_hcd_core_timefac_enable.C  \
+                    p10_hcd_core_timefac_to_pc.C  \
                     p10_hcd_core_scominit.C        \
                     p10_hcd_core_scom_customize.C  
 

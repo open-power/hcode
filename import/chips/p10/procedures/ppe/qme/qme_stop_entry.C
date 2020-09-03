@@ -29,6 +29,7 @@
 #include "p10_hcd_l2_tlbie_quiesce.H"
 #include "p10_hcd_ncu_purge.H"
 #include "p10_hcd_core_shadows_disable.H"
+#include "p10_hcd_core_timefac_from_pc.H"
 #include "p10_hcd_core_stopclocks.H"
 #include "p10_hcd_core_stopgrid.H"
 #include "p10_hcd_core_vmin_enable.H"
@@ -44,11 +45,10 @@
 extern QmeRecord G_qme_record;
 
 inline void
-qme_stop_prepare()
+qme_stop_prepare(uint32_t c_stop2)
 {
     PK_TRACE("Assert HALTED_STOP_OVERRIDE_DISABLE via PCR_SCSR[21]");
-    out32( QME_LCL_CORE_ADDR_WR(
-               QME_SCSR_WO_OR, G_qme_record.c_stop2_enter_targets ), BIT32(21) );
+    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_stop2 ), BIT32(21) );
 }
 
 // called in p10_hcd_l2_purge()
@@ -71,7 +71,7 @@ qme_l2_purge_catchup_detect(uint32_t& core_select)
 
             //===============//
 
-            qme_stop_prepare();
+            qme_stop_prepare(c_stop2);
 
             out32( QME_LCL_CORE_ADDR_WR(
                        QME_SCSR_WO_OR, c_stop2 ), ( BITS32(4, 2) | BIT32(22) ) );
@@ -207,7 +207,7 @@ qme_stop_entry()
     {
         ///// [STOP2] /////
 
-        qme_stop_prepare();
+        qme_stop_prepare(G_qme_record.c_stop2_enter_targets);
 
         core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
                       static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
@@ -299,6 +299,7 @@ qme_stop_entry()
 
         MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_CORE_DISABLE_SHADOWS )
 
+        p10_hcd_core_timefac_from_pc(core_target);
         p10_hcd_core_shadows_disable(core_target);
 
         // Assert STOP_GATED before Assert regional fence which will block pm_active

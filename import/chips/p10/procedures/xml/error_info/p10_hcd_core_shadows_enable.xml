@@ -89,11 +89,11 @@
   <!-- ********************************************************************* -->
   <hwpError>
     <sbeError/>
-    <rc>RC_SHADOW_ENA_XFER_SENT_DONE_TIMEOUT</rc>
+    <rc>RC_TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT</rc>
     <description>
         Shadow Enable Xfer Sent Done Timeout.
     </description>
-    <ffdc>SHADOW_ENA_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS</ffdc>
+    <ffdc>TIMEFAC_TO_PC_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS</ffdc>
     <ffdc>QME_TFCSR</ffdc>
     <ffdc>CORE_TARGET</ffdc>
     <callout>
@@ -122,7 +122,7 @@
   <!-- ********************************************************************* -->
   <hwpError>
     <sbeError/>
-    <rc>RC_SHADOW_ENA_TFCSR_ERROR_CHECK_FAILED</rc>
+    <rc>RC_TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED</rc>
     <description>
         Shadow Disable TFCSR Error Check Failed.
     </description>
