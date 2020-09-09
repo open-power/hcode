@@ -126,6 +126,7 @@ uint32_t updateQmeImage( FILE* i_fpQmeImg, uint32_t i_imgSize, uint8_t i_quiet )
 {
     uint32_t l_rc       =   0;
     uint32_t l_tempVal  =   0;
+    uint64_t l_tempDb   =   0;
     uint32_t headerFieldPos =
         QME_HEADER_IMAGE_OFFSET + offsetof(QmeHeader_t, g_qme_hcode_length);
     fseek( i_fpQmeImg, headerFieldPos, SEEK_SET);
@@ -136,6 +137,17 @@ uint32_t updateQmeImage( FILE* i_fpQmeImg, uint32_t i_imgSize, uint8_t i_quiet )
     {
         printf( "                    QME Hcode Size              : %X -> %04d\n",
                 i_imgSize, i_imgSize );
+    }
+
+    headerFieldPos  =   QME_HEADER_IMAGE_OFFSET + offsetof(QmeHeader_t, g_qme_magic_number);
+    l_tempDb        =   htobe64(QME_MAGIC_NUMBER);
+    fseek( i_fpQmeImg, headerFieldPos, SEEK_SET);
+    fwrite( &l_tempDb, sizeof(uint64_t), 1, i_fpQmeImg );
+
+    if ( !i_quiet )
+    {
+        printf( "                    QME Magic Word              : %016lX -> %016ld\n",
+                htobe64(l_tempDb), htobe64(l_tempDb) );
     }
 
     return l_rc;

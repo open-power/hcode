@@ -23,6 +23,8 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
+#ifndef __QME_RECORD_H__
+#define __QME_RECORD_H__
 
 #define QME_SCOREBOARD_VERSION  0x514d4531 //QME1
 
@@ -152,5 +154,8 @@ typedef struct
     uint32_t    c_self_failed;
 
     uint32_t    cts_timeout_count;
+    uint32_t    bce_buf_content_type;
 
 } QmeRecord __attribute__ ((aligned (4)));
+
+#endif //__QME_RECORD_H__
