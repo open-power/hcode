@@ -74,7 +74,7 @@ typedef struct pgpe_pstate
     uint32_t clip_min, clip_max, clip_wof, dcm_sibling_ps;
     uint32_t vdd_curr, vdd_next, vdd_curr_uplift, vdd_next_uplift, vdd_curr_ext, vdd_next_ext;
     uint32_t vcs_curr, vcs_next, vcs_curr_uplift, vcs_next_uplift, vcs_curr_ext, vcs_next_ext;
-    uint32_t vdd_bias, vcs_bias, vdd_bias_tgt, vcs_bias_tgt;
+    int32_t vdd_wov_bias, vcs_wov_bias;
     uint32_t idd, ics;
     VRT_t*   vrt;
     uint32_t vratio_inst, vratio_vcs_inst, vratio_vdd_inst, vindex;

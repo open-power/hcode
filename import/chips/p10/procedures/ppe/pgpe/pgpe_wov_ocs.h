@@ -93,7 +93,6 @@ typedef struct pgpe_wov_ocs
     uint32_t droop_level;
     uint32_t dirty;
     uint32_t curr_pct, tgt_pct;
-    uint32_t curr_mv, target_mv;
     uint32_t hysteresis_cnt;
     uint32_t idd_current_thresh;
     uint32_t overcurrent_flag;
@@ -113,8 +112,11 @@ void pgpe_wov_ocs_enable();
 void pgpe_wov_ocs_disable();
 void pgpe_wov_ocs_determine_perf_loss();
 void pgpe_wov_ocs_update_dirty();
-#define pgpe_wov_ocs_is_wov_overv_enabled() (G_pgpe_wov_ocs.wov_status & WOV_STATUS_OVERVOLT_ENABLED)
-#define pgpe_wov_ocs_is_wov_underv_enabled() (G_pgpe_wov_ocs.wov_status & WOV_STATUS_UNDERVOLT_ENABLED)
+#define pgpe_wov_ocs_get_wov_tgt_pct() G_pgpe_wov_ocs.tgt_pct
+#define pgpe_wov_ocs_set_wov_curr_pct(val) G_pgpe_wov_ocs.curr_pct = val
+#define pgpe_wov_is_wov_at_target() (G_pgpe_wov_ocs.tgt_pct == G_pgpe_wov_ocs.curr_pct)
+#define pgpe_wov_ocs_is_wov_overv_enabled() ((G_pgpe_wov_ocs.wov_status != WOV_STATUS_DISABLED) && (G_pgpe_wov_ocs.wov_status & WOV_STATUS_OVERVOLT_ENABLED))
+#define pgpe_wov_ocs_is_wov_underv_enabled() ((G_pgpe_wov_ocs.wov_status != WOV_STATUS_DISABLED) && (G_pgpe_wov_ocs.wov_status & WOV_STATUS_UNDERVOLT_ENABLED))
 #define pgpe_wov_ocs_is_ocs_enabled() (G_pgpe_wov_ocs.ocs_status == OCS_STATUS_ENABLED)
 #define pgpe_wov_ocs_is_overcurrent() (G_pgpe_wov_ocs.overcurrent_flag == OCS_OVER_THRESH)
 #endif

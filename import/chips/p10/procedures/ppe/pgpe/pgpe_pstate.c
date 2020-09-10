@@ -28,6 +28,7 @@
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_dpll.h"
 #include "pgpe_dds.h"
+#include "pgpe_wov_ocs.h"
 #include "pgpe_xgpe.h"
 #include "p10_scom_c_1.H"
 #include "p10_oci_proc.H"
@@ -182,6 +183,8 @@ void pgpe_pstate_actuate_step()
     G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
     G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
 
+
+    //Adjust VCS
     if (G_pgpe_pstate.vdd_next_ext >= pgpe_gppb_get(vcs_floor_mv))
     {
         PK_TRACE("ACT: Adjusting VCS against VDD");
@@ -193,6 +196,13 @@ void pgpe_pstate_actuate_step()
     {
         G_pgpe_pstate.vcs_next_ext = ((G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv)) > pgpe_gppb_get(
                                           vcs_floor_mv)) ? (G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv)) : pgpe_gppb_get(vcs_floor_mv);
+    }
+
+    //Do WOV adjustment here
+    if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
+    {
+        G_pgpe_pstate.vdd_wov_bias = ((int16_t)G_pgpe_pstate.vdd_next_ext * pgpe_wov_ocs_get_wov_tgt_pct()) / 1000;
+        G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next_ext + G_pgpe_pstate.vdd_wov_bias;
     }
 
     PK_TRACE("ACT: vdd_del=0x%x, vdd_next=0x%x,ps_next=0x%x ,vcs_next=0x%x", vdd_delta, G_pgpe_pstate.vdd_next_ext,
@@ -1173,4 +1183,9 @@ void pgpe_pstate_update_vdd_vcs_ps()
     G_pgpe_pstate.vcs_curr_uplift = G_pgpe_pstate.vcs_next_uplift;
     G_pgpe_pstate.vcs_curr_ext = G_pgpe_pstate.vcs_next_ext;
     G_pgpe_pstate.pstate_curr = G_pgpe_pstate.pstate_next;
+
+    if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
+    {
+        pgpe_wov_ocs_set_wov_curr_pct(pgpe_wov_ocs_get_wov_tgt_pct());
+    }
 }
