@@ -57,7 +57,8 @@
 
 /* want the sample after the pulse settling time; the later in the pulse, the better, though we don't want */
 /* to hit the trailing edge; arbitrarily choosing 10 from the end                                          */
-#define tx_zcal_tdr_sample_position_c      190 /* grid clocks from start of pulse to sample                */
+#define tx_zcal_tdr_sample_position_c      150 /* grid clocks from start of pulse to sample                */
+//#define tx_zcal_tdr_sample_position_c      190 /* grid clocks from start of pulse to sample                */
 #define tx_zcal_tdr_16to1_grid_clk_ratio_c  16 /* ui's/pulse_width value for 16:1                          */
 #define tx_zcal_tdr_matches_needed_c         2 /* # compare reads that must match before removing segments */
 

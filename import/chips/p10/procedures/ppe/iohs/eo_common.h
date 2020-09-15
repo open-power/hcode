@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// bja20090800 |bja     | HW542315: make in_tx_half_width_mode() return false for p10 dd1 omi
+// gap20082500 |gap     | HW542315: add tx_write_4_bit_pat and in_tx_half_width_mode for half/full width
 // mwh20022400 |mwh     | Add in function check_for_rxpsave_req_sts and check_for_txpsave_req_sts
 // vbr20021100 |vbr     | HW522731: smarter lane cal copy based on flywheel lane.
 // vbr20020600 |vbr     | Added set/clr_rx_lane_bad() functions
@@ -209,5 +211,10 @@ void clr_rx_lane_bad(unsigned int lane);
 // apply (un)load settings and synchronize
 void tx_fifo_init(t_gcr_addr* gcr_addr);
 
+// Determine if in tx_half_width_mode
+bool in_tx_half_width_mode();
+
+// write a repeating 4-bit pattern to the tx pattern register
+void tx_write_4_bit_pat(t_gcr_addr* gcr_addr, unsigned int pat_4);
 
 #endif //_EO_COMMON_H_

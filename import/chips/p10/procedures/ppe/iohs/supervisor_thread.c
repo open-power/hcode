@@ -76,10 +76,11 @@
 /////////////////////////////////////////////////
 // Time constants for periodic events
 /////////////////////////////////////////////////
-#define THREAD_LOCK_CHECK_PERIOD    PK_SECONDS((PkInterval)10)
-#define RECAL_RUN_CHECK_PERIOD      PK_SECONDS((PkInterval)10)
+#define THREAD_LOCK_CHECK_PERIOD    PK_SECONDS((PkInterval)60)
+#define RECAL_RUN_CHECK_PERIOD      PK_SECONDS((PkInterval)60)
 //#define THREAD_LOCK_CHECK_PERIOD    PK_MILLISECONDS(200)
-#define RECAL_NOT_RUN_CHECK_PERIOD  PK_MILLISECONDS(500)
+//#define RECAL_NOT_RUN_CHECK_PERIOD  PK_MILLISECONDS(500)
+#define RECAL_NOT_RUN_CHECK_PERIOD      PK_SECONDS((PkInterval)60)
 #define FAST_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)43200) // 12 hrs
 #define SLOW_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)86400) // 24 hrs
 

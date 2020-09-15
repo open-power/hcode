@@ -154,6 +154,7 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, tx_boost_hs_en , l_tx_boost_en, read_modify_write);
     put_ptr_field(gcr_addr, tx_d2_ctrl       , l_data_rate, read_modify_write);
     put_ptr_field(gcr_addr, tx_d2_div_ctrl   , l_data_rate, read_modify_write);
+    put_ptr_field(gcr_addr, tx_dcc_sel_alias,  0b10, read_modify_write); //pl
     set_gcr_addr_lane(gcr_addr, 0);
 
     // RX Registers
@@ -204,7 +205,7 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
 
 
     // frequency adjust
-    uint16_t l_rx_freq_adj = (l_data_rate == 0) ? 0x01 : 0x0D;
+    uint16_t l_rx_freq_adj = (l_data_rate == 0) ? 0x05 : 0x0D;
     set_gcr_addr_lane(gcr_addr, bcast_all_lanes);
     put_ptr_field(gcr_addr, rx_freq_adjust, l_rx_freq_adj, read_modify_write);
     set_gcr_addr_lane(gcr_addr, 0);

@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap20082500 |gap     | HW542315 correct repeating pattern when in half-width mode
 // gap20052100 |gap     | Added power up/down controls for dd2, repmux path select dd1 cq521314
 // gap20050200 |gap     | Add main and pad dcc error propagation
 // gap19091000 |gap     | Change rx_dcc_debug to tx_dcc_debug HW503432
@@ -201,8 +202,7 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, bool use_repmux_i, uint32_t step_
             }
             else
             {
-                //tx_dcc_main_clk_pat(gcr_addr_i, 0b0011);
-                tx_dcc_main_clk_pat(gcr_addr_i, 0b00001111);
+                tx_write_4_bit_pat(gcr_addr_i, 0b0011);
             }
 
             dcc_last_tune_l = Gray6ToInt(get_ptr_field(gcr_addr_i, tx_dcc_i_tune)) ; // must be 6 bits wide
@@ -217,8 +217,7 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, bool use_repmux_i, uint32_t step_
             }
             else
             {
-                //tx_dcc_main_clk_pat(gcr_addr_i, 0b1001);
-                tx_dcc_main_clk_pat(gcr_addr_i, 0b11000011);
+                tx_write_4_bit_pat(gcr_addr_i, 0b1001);
             }
 
             dcc_last_tune_l = Gray6ToInt(get_ptr_field(gcr_addr_i, tx_dcc_q_tune)) ;  // must be 6 bits wide
@@ -233,8 +232,7 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, bool use_repmux_i, uint32_t step_
             }
             else
             {
-                //tx_dcc_main_clk_pat(gcr_addr_i, 0b1010);
-                tx_dcc_main_clk_pat(gcr_addr_i, 0b11001100);
+                tx_write_4_bit_pat(gcr_addr_i, 0b1010);
             }
 
             dcc_last_tune_l = Gray5IQToInt(get_ptr_field(gcr_addr_i, tx_dcc_iq_tune)) ; // must be 5 bits wide
@@ -416,18 +414,3 @@ t_comp_result tx_dcc_main_compare_result(t_gcr_addr* gcr_addr_i, uint32_t min_sa
 
     return comp_result_l;
 } //tx_dcc_main_compare_result
-
-////////////////////////////////////////////////////////////////////////////////////
-// DCC write repeating clock pattern
-// Write repeating clock pattern
-////////////////////////////////////////////////////////////////////////////////////
-void tx_dcc_main_clk_pat(t_gcr_addr* gcr_addr_i, uint8_t clk_pattern_i)
-{
-
-    uint16_t clk_pattern_16_bit = clk_pattern_i | (clk_pattern_i << 8);
-    put_ptr_field(gcr_addr_i, tx_pattern_0_15,   clk_pattern_16_bit,  fast_write);
-    put_ptr_field(gcr_addr_i, tx_pattern_16_31,  clk_pattern_16_bit,  fast_write);
-    put_ptr_field(gcr_addr_i, tx_pattern_32_47,  clk_pattern_16_bit,  fast_write);
-    put_ptr_field(gcr_addr_i, tx_pattern_48_63,  clk_pattern_16_bit,  fast_write);
-
-} //tx_dcc_main_clk_pat

@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// bja20090800 |bja     | HW542315: make in_tx_half_width_mode() return false for p10 dd1 omi
+// gap20082500 |gap     | HW542315: add tx_write_4_bit_pat to handle half/full width modes
 // vbr20030500 |vbr     | HW523782/HW523779: When fw_spread_en, min cdr lock wait time is 5us.
 // mwh20040201 |mwh     | Fix a issue with having cap Int change to int -- add ; in debug_state in fir.
 // mwh20040200 |mwh     | Fix a comment issue had tx when should of been rx
@@ -513,3 +515,52 @@ void check_for_rxpsave_req_sts(t_gcr_addr* gcr_addr)  //begin void
     }
 
 }//end void
+
+// write a repeating 4-bit pattern to the tx pattern register
+void tx_write_4_bit_pat(t_gcr_addr* gcr_addr, unsigned int pat_4)
+{
+    unsigned int pat_8 = 0;
+    unsigned int pat_16 = 0;
+
+    // this copies the 4-bits to the even bits of an 8-bit word,
+    // considering msb as 0
+    // two steps to move to odd; then, shift 1 to move to even
+    if (in_tx_half_width_mode())
+    {
+        pat_8 = ((pat_4 << 2) | pat_4) & 0x33; // move 2 msb over 2; odd bits are in correct relative place now
+        pat_8 = ((pat_8 << 1) | pat_8) & 0x55; // move even bits over 1;
+        pat_8 = pat_8 << 1; // shift to move odd to even
+    }
+    else
+    {
+        pat_8 = pat_4 | (pat_4 << 4);
+    }
+
+    pat_16 = pat_8 | (pat_8 << 8);
+
+    put_ptr_field(gcr_addr, tx_pattern_0_15,   pat_16,  fast_write);
+    put_ptr_field(gcr_addr, tx_pattern_16_31,  pat_16,  fast_write);
+    put_ptr_field(gcr_addr, tx_pattern_32_47,  pat_16,  fast_write);
+    put_ptr_field(gcr_addr, tx_pattern_48_63,  pat_16,  fast_write);
+} // tx_write_4_bit_pat
+
+// Determine if in tx_half_width_mode
+bool in_tx_half_width_mode()
+{
+    bool half_width_mode = false;
+
+    if ( ( get_chip_id() == CHIP_ID_P10 )
+         && ( get_major_ec() == MAJOR_EC_DD1 ) )
+    {
+        // HW542315: Even though OMI is 16:1, it does not use half width mode. In P10 DD1 -
+        // the only time that hwm is possible - OMI can be distinguished by fw_num_lanes=16.
+        // Checking ppe_current_thread was also a candidate, but so far it's only used for
+        // debug. Its reliability is untested.
+        if ( fw_field_get(fw_num_lanes) != 16 )
+        {
+            half_width_mode = true;
+        }
+    }
+
+    return half_width_mode;
+}
