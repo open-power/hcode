@@ -90,7 +90,7 @@ uint32_t pgpe_dpll_get_pstate()
 
     PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);
 
-    uint32_t pstate = pgpe_gppb_get(dpll_pstate0_value) - dpll_stat.fields.freqout;
+    uint32_t pstate = pgpe_gppb_get_dpll_pstate0_value() - dpll_stat.fields.freqout;
 
     return pstate;
 }
@@ -100,7 +100,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     //Write fmax and fmult fields
     dpll_freq_t dpll_freq;
     dpll_freq.value = 0;
-    dpll_freq.fields.fmax  = pgpe_gppb_get(dpll_pstate0_value) - pstate;
+    dpll_freq.fields.fmax  = pgpe_gppb_get_dpll_pstate0_value() - pstate;
     dpll_freq.fields.fmult = dpll_freq.fields.fmax;
 
     PK_TRACE("dpll=0x%08x%08x", dpll_freq.value >> 32, dpll_freq.value);

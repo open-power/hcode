@@ -192,11 +192,11 @@ void pgpe_occ_sample_values()
 
     if (pgpe_wov_ocs_is_ocs_enabled())
     {
-        pgpe_avsbus_current_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                                 pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+        pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                 pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
                                  &idd_ma);
-        pgpe_avsbus_current_read(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                                 pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+        pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                                 pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                  &ics_ma);
 
         G_pgpe_occ.idd_tb_accum = idd_ma * delta_tb;

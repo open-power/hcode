@@ -314,7 +314,7 @@ void pgpe_wov_ocs_dec_tgt_pct()
 
     if (pgpe_wov_ocs_is_wov_underv_enabled())
     {
-        min_pct = -pgpe_gppb_get(wov_underv_max_pct);
+        min_pct = -pgpe_gppb_get_wov_underv_max_pct();
     }
     else
     {
@@ -323,7 +323,7 @@ void pgpe_wov_ocs_dec_tgt_pct()
 
     if (G_pgpe_wov_ocs.curr_pct > min_pct)
     {
-        G_pgpe_wov_ocs.tgt_pct -= pgpe_gppb_get(wov_underv_step_incr_pct);
+        G_pgpe_wov_ocs.tgt_pct -= pgpe_gppb_get_wov_underv_step_incr_pct();
     }
     else
     {
@@ -338,7 +338,7 @@ void pgpe_wov_ocs_inc_tgt_pct()
 
     if (pgpe_wov_ocs_is_wov_overv_enabled())
     {
-        max_pct = pgpe_gppb_get(wov_overv_max_pct);
+        max_pct = pgpe_gppb_get_wov_overv_max_pct();
     }
     else
     {
@@ -347,7 +347,7 @@ void pgpe_wov_ocs_inc_tgt_pct()
 
     if (G_pgpe_wov_ocs.curr_pct < max_pct)
     {
-        G_pgpe_wov_ocs.tgt_pct += pgpe_gppb_get(wov_underv_step_decr_pct);
+        G_pgpe_wov_ocs.tgt_pct += pgpe_gppb_get_wov_underv_step_decr_pct();
     }
     else
     {

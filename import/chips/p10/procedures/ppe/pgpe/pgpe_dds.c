@@ -55,13 +55,13 @@ void pgpe_dds_init(uint32_t pstate)
 
     //1. Write DCCR, FLMR and FMMR values
     //Write DCCR
-    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_DCCR, 0xF), pgpe_gppb_get_dds_other(droop_count_control));
+    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_DCCR, 0xF), pgpe_gppb_get_dds_other_droop_count_control());
 
     //Write FLMR
-    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FLMR_RW, 0xF), pgpe_gppb_get_dds_other(ftc_large_droop_mode_reg_setting));
+    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FLMR_RW, 0xF), pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting());
 
     //Write FMMR
-    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FMMR_RW, 0xF), pgpe_gppb_get_dds_other(ftc_misc_droop_mode_reg_setting));
+    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FMMR_RW, 0xF), pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting());
 
     //2 Set OTR Special Wake-up (200E0830[0]=1) on all cores
     //RTC:214435 Add timeout

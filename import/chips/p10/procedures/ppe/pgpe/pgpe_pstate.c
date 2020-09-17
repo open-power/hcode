@@ -151,9 +151,9 @@ void pgpe_pstate_actuate_step()
     {
         vdd_delta = G_pgpe_pstate.vdd_curr - G_pgpe_pstate.vdd_next;
 
-        if (vdd_delta > pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]))
+        if (vdd_delta > pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD))
         {
-            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr - pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]);
+            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr - pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD);
             G_pgpe_pstate.pstate_next = pgpe_pstate_intp_ps_from_vdd(G_pgpe_pstate.vdd_next);
             G_pgpe_pstate.vdd_next = pgpe_pstate_intp_vdd_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
         }
@@ -162,9 +162,9 @@ void pgpe_pstate_actuate_step()
     {
         vdd_delta = G_pgpe_pstate.vdd_next - G_pgpe_pstate.vdd_curr;
 
-        if (vdd_delta > pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]))
+        if (vdd_delta > pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD))
         {
-            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr + pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]);
+            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr + pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD);
             G_pgpe_pstate.pstate_next = pgpe_pstate_intp_ps_from_vdd(G_pgpe_pstate.vdd_next);
             G_pgpe_pstate.vdd_next = pgpe_pstate_intp_vdd_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
         }
@@ -185,17 +185,18 @@ void pgpe_pstate_actuate_step()
 
 
     //Adjust VCS
-    if (G_pgpe_pstate.vdd_next_ext >= pgpe_gppb_get(vcs_floor_mv))
+    if (G_pgpe_pstate.vdd_next_ext >= pgpe_gppb_get_vcs_floor_mv())
     {
         PK_TRACE("ACT: Adjusting VCS against VDD");
-        PK_TRACE_DBG("ACT: vcs_floor_mv=0x%x, vcs_vdd_offset_mv=0x%x", pgpe_gppb_get(vcs_floor_mv),
-                     pgpe_gppb_get(vcs_vdd_offset_mv));
-        G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv);
+        PK_TRACE_DBG("ACT: vcs_floor_mv=0x%x, vcs_vdd_offset_mv=0x%x", pgpe_gppb_get_vcs_floor_mv(),
+                     pgpe_gppb_get_vcs_vdd_offset_mv());
+        G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get_vcs_vdd_offset_mv();
     }
     else
     {
-        G_pgpe_pstate.vcs_next_ext = ((G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv)) > pgpe_gppb_get(
-                                          vcs_floor_mv)) ? (G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get(vcs_vdd_offset_mv)) : pgpe_gppb_get(vcs_floor_mv);
+        G_pgpe_pstate.vcs_next_ext = ((G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get_vcs_vdd_offset_mv()) >
+                                      pgpe_gppb_get_vcs_floor_mv()) ? (G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get_vcs_vdd_offset_mv()) :
+                                     pgpe_gppb_get_vcs_floor_mv();
     }
 
     //Do WOV adjustment here
@@ -216,7 +217,7 @@ void pgpe_pstate_actuate_step()
     //X>>8 minus X>>11 minus X>>13 plus (X>>7)&0x1 plus (X>>10)&0x1 plus (X>>12)&0x1   // approximate a divide by 295
     power_proxy_scale_tgt =  (x >> 8) - (x >> 11) - (x >> 13) + ((x >> 7) & 0x1) + ((x >> 10) & 0x1) + ((x >> 12) & 0x1);
 
-    if (G_pgpe_pstate.vdd_next_ext <= pgpe_gppb_get(array_write_vdd_mv))
+    if (G_pgpe_pstate.vdd_next_ext <= pgpe_gppb_get_array_write_vdd_mv())
     {
         PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WOR, BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
     }
@@ -231,7 +232,7 @@ void pgpe_pstate_actuate_step()
     //See whether to set rVRM enablement override
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RVRM_ENABLE) && (in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW) && BIT32(XGPE_ACTIVE)))
     {
-        if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) < pgpe_gppb_get(rvrm_deadzone_mv))
+        if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) < pgpe_gppb_get_rvrm_deadzone_mv())
         {
             pgpe_xgpe_send_vret_updt(UPDATE_VRET_TYPE_SET);
             //Set RVCSR[RVID_OVERRIDE]
@@ -253,8 +254,8 @@ void pgpe_pstate_actuate_step()
         PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
 
         //lower VDD
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
                                   G_pgpe_pstate.vdd_next_ext);
 
         //Write proxy_scale_factor_target to DPCRs
@@ -262,8 +263,8 @@ void pgpe_pstate_actuate_step()
         PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
 
         //lower VCS
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                   G_pgpe_pstate.vcs_next_ext);
 
         if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
@@ -276,8 +277,8 @@ void pgpe_pstate_actuate_step()
     else if (G_pgpe_pstate.pstate_next < G_pgpe_pstate.pstate_curr)
     {
         //raise VCS
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                   G_pgpe_pstate.vcs_next_ext);
 
         //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
@@ -285,8 +286,8 @@ void pgpe_pstate_actuate_step()
         PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
 
         //raise VDD
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
                                   G_pgpe_pstate.vdd_next_ext);
 
         //Write proxy_scale_factor_target to DPCRs
@@ -308,7 +309,7 @@ void pgpe_pstate_actuate_step()
     //See whether to remove rVRM enablement override
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RVRM_ENABLE) && (in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW) && BIT32(XGPE_ACTIVE)))
     {
-        if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) >= pgpe_gppb_get(rvrm_deadzone_mv))
+        if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) >= pgpe_gppb_get_rvrm_deadzone_mv())
         {
             pgpe_xgpe_send_vret_updt(UPDATE_VRET_TYPE_CLEAR);
             //Set RVCSR[RVID_OVERRIDE]
@@ -316,7 +317,7 @@ void pgpe_pstate_actuate_step()
         }
     }
 
-    if (G_pgpe_pstate.vdd_next_ext > pgpe_gppb_get(array_write_vdd_mv))
+    if (G_pgpe_pstate.vdd_next_ext > pgpe_gppb_get_array_write_vdd_mv())
     {
         PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WAND, ~BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
     }
@@ -354,54 +355,54 @@ void pgpe_pstate_actuate_pstate(uint32_t pstate)
 
 void pgpe_pstate_actuate_safe_voltage_vdd()
 {
-    while (G_pgpe_pstate.vdd_curr != pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD]))
+    while (G_pgpe_pstate.vdd_curr != pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD))
     {
-        if (((int16_t)G_pgpe_pstate.vdd_curr - (int16_t)pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD])) >
-            (int16_t)pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]))
+        if (((int16_t)G_pgpe_pstate.vdd_curr - (int16_t)pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD)) >
+            (int16_t)pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD))
         {
-            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr - pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]);
+            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr - pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD);
         }
-        else if (((int16_t)pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD]) - (int16_t)G_pgpe_pstate.vdd_curr ) >
-                 (int16_t)pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]))
+        else if (((int16_t)pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD) - (int16_t)G_pgpe_pstate.vdd_curr ) >
+                 (int16_t)pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD))
         {
-            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr + pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]);
+            G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr + pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD);
         }
         else
         {
-            G_pgpe_pstate.vdd_next = pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD]);
+            G_pgpe_pstate.vdd_next = pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD);
         }
 
         G_pgpe_pstate.vdd_next_uplift = 0;
         G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
                                   G_pgpe_pstate.vdd_next_ext);
     }
 }
 
 void pgpe_pstate_actuate_safe_voltage_vcs()
 {
-    while (G_pgpe_pstate.vcs_curr != pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VCS]))
+    while (G_pgpe_pstate.vcs_curr != pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VCS))
     {
-        if (((int16_t)G_pgpe_pstate.vcs_curr - (int16_t)pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VCS])) >
-            (int16_t)pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]))
+        if (((int16_t)G_pgpe_pstate.vcs_curr - (int16_t)pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VCS)) >
+            (int16_t)pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VCS))
         {
-            G_pgpe_pstate.vcs_next = G_pgpe_pstate.vcs_curr - pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]);
+            G_pgpe_pstate.vcs_next = G_pgpe_pstate.vcs_curr - pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VCS);
         }
-        else if (((int16_t)pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VCS]) - (int16_t)G_pgpe_pstate.vcs_curr ) >
-                 (int16_t)pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]))
+        else if (((int16_t)pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VCS) - (int16_t)G_pgpe_pstate.vcs_curr ) >
+                 (int16_t)pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VCS))
         {
-            G_pgpe_pstate.vcs_next = G_pgpe_pstate.vcs_curr + pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]);
+            G_pgpe_pstate.vcs_next = G_pgpe_pstate.vcs_curr + pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VCS);
         }
         else
         {
-            G_pgpe_pstate.vcs_next = pgpe_gppb_get(ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS]);
+            G_pgpe_pstate.vcs_next = pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VCS);
         }
 
         G_pgpe_pstate.vcs_next_uplift = 0;
         G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                   G_pgpe_pstate.vcs_next_ext);
     }
 }
@@ -580,9 +581,9 @@ uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
     //compute load line drop
     //\\todo come up with correct idd_scale/vratio_format.
     //idd_scale/vratio format is a number between 0.0 and 1.0, but we need to represent this using integers on PGPE
-    uint32_t vdd_uplift = ((((idd_ac + idd_dc) * idd_scale) * (pgpe_gppb_get(vdd_sysparm.loadline_uohm) + pgpe_gppb_get(
-                                vdd_sysparm.distloss_uohm))) / 1000
-                           + pgpe_gppb_get(vdd_sysparm.distoffset_uv)) / 1000;
+    uint32_t vdd_uplift = ((((idd_ac + idd_dc) * idd_scale) * (pgpe_gppb_get_vdd_sysparm_loadline() +
+                            pgpe_gppb_get_vdd_sysparm_distloss())) / 1000
+                           + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
 
     //PK_TRACE("PS: ps=0x%x, idd_ac=0x%x, idd_dc=0x%x, vdd_up=0x%x", ps, idd_ac, idd_dc, vdd_uplift);
     return vdd_uplift;
@@ -593,9 +594,9 @@ uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set)
     uint32_t ics_ac = pgpe_pstate_intp_ics_ac_from_ps(ps, VPD_PT_SET_BIASED);
     uint32_t ics_dc = pgpe_pstate_intp_ics_dc_from_ps(ps, VPD_PT_SET_BIASED);
 
-    uint32_t vcs_uplift = ((((ics_ac + ics_dc)) *  (pgpe_gppb_get(vcs_sysparm.loadline_uohm) + pgpe_gppb_get(
-                                vcs_sysparm.distloss_uohm))) / 1000
-                           + pgpe_gppb_get(vcs_sysparm.distoffset_uv)) / 1000;
+    uint32_t vcs_uplift = ((((ics_ac + ics_dc)) *  (pgpe_gppb_get_vcs_sysparm_loadline() +
+                            pgpe_gppb_get_vcs_sysparm_distloss())) / 1000
+                           + pgpe_gppb_get_vcs_sysparm_distoffset()) / 1000;
 
     //PK_TRACE("PS: ps=0x%x, ics_ac=0x%x, ics_dc=0x%x, vcs_up=0x%x", ps, ics_ac, ics_dc, vcs_uplift);
     return vcs_uplift;
@@ -1163,13 +1164,13 @@ void pgpe_pstate_sample_currents()
 {
     uint32_t current;
 
-    pgpe_avsbus_voltage_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                             pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+    pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                             pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
                              &current);
     G_pgpe_pstate.idd = current;
 
-    pgpe_avsbus_voltage_read(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                             pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+    pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                             pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                              &current);
     G_pgpe_pstate.ics = current;
 }

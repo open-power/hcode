@@ -49,9 +49,9 @@ void pgpe_irq_fit_handler();
 //
 void pgpe_irq_fit_init()
 {
-    uint16_t freq = pgpe_gppb_get(occ_complex_frequency_mhz);
+    uint16_t freq = pgpe_gppb_get_occ_complex_frequency_mhz();
 
-    PK_TRACE("FIT: OCCCmpFreq=0x%dMhz", pgpe_gppb_get(occ_complex_frequency_mhz));
+    PK_TRACE("FIT: OCCCmpFreq=0x%dMhz", pgpe_gppb_get_occ_complex_frequency_mhz());
 
     //Set PGPE beacon count threshold. PGPE beacon should be incremented
     //every 2ms. This is monitored by OCC

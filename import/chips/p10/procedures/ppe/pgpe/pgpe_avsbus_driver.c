@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019                                                         */
+/* COPYRIGHT 2019,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -287,28 +287,28 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
 
 void pgpe_avsbus_init()
 {
-    PK_TRACE("VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-             pgpe_gppb_get(avs_bus_topology.vdn_avsbus_num), pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num));
-    pgpe_avsbus_init_bus(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num));
+    PK_TRACE("VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+             pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(), pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
+    pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num());
 
     //Initialize VDN
-    pgpe_avsbus_init_bus(pgpe_gppb_get(avs_bus_topology.vdn_avsbus_num));
+    pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num());
 
     //Initialize VCS
-    pgpe_avsbus_init_bus(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num));
+    pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
 }
 
 void pgpe_avsbus_init_bus(uint32_t bus_num)
 {
     uint32_t   rc = 0;
 
-    PK_TRACE("OCCCmpFreq=0x%x", pgpe_gppb_get(occ_complex_frequency_mhz));
+    PK_TRACE("OCCCmpFreq=0x%x", pgpe_gppb_get_occ_complex_frequency_mhz());
     uint32_t  data = 0;
     uint32_t  O2SCTRLF_value = 0b10000010000011111100000000000000; //0x820FC000
     uint32_t  O2SCTRLS_value = 0b00000000000010000000000000000000; //0x00080000
     uint32_t  O2SCTRL2_value = 0b00000000000000000000000000000000; //0x00000000
     uint32_t  O2SCTRL1_value = 0b10000000000000000100000000000000 |
-                               (pgpe_gppb_get(occ_complex_frequency_mhz) / (8 * CLOCK_SPIVID_MHZ) - 1) << 18;
+                               (pgpe_gppb_get_occ_complex_frequency_mhz() / (8 * CLOCK_SPIVID_MHZ) - 1) << 18;
 
     // OCI to SPIPMBus (O2S) bridge initialization
     uint32_t bus_mask = bus_num << O2S_BUSNUM_OFFSET_SHIFT;

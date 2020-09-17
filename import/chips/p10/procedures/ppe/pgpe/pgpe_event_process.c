@@ -154,20 +154,20 @@ void pgpe_process_pstate_start()
     dpll_stat_t dpll;
     dpll.value = pgpe_dpll_get_dpll_stat();
 
-    if (dpll.fields.freqout > pgpe_gppb_get(dpll_pstate0_value))
+    if (dpll.fields.freqout > pgpe_gppb_get_dpll_pstate0_value())
     {
         sync_pstate = 0;
         move_frequency = -1;
     }
     else
     {
-        sync_pstate = pgpe_gppb_get(dpll_pstate0_value) - dpll.fields.freqout;
+        sync_pstate = pgpe_gppb_get_dpll_pstate0_value() - dpll.fields.freqout;
         move_frequency = 0;
     }
 
     dpll_mode = pgpe_dpll_get_mode();
     PK_TRACE("PSS: DPLL=0x%x DPLL0=0x%x Mode=%u, syncPS=0x%x", dpll.fields.freqout,
-             pgpe_gppb_get(dpll_pstate0_value), dpll_mode, sync_pstate);
+             pgpe_gppb_get_dpll_pstate0_value(), dpll_mode, sync_pstate);
 
     //3. Clip the pstate and determine the pstate closest to the frequency read
     if (sync_pstate < pgpe_pstate_get(clip_min))
@@ -191,12 +191,12 @@ void pgpe_process_pstate_start()
     pgpe_pstate_set(pstate_next, sync_pstate);
 
     //4. Read the external VDD and VCS
-    pgpe_avsbus_voltage_read(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                             pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+    pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                             pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
                              &voltage);
     pgpe_pstate_set(vdd_curr_ext, voltage);
-    pgpe_avsbus_voltage_read(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                             pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+    pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                             pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                              &voltage);
     pgpe_pstate_set(vcs_curr_ext, voltage);
 
@@ -249,27 +249,27 @@ void pgpe_process_pstate_start()
         vcs_before_vdd = 1;
     }
 
-    if (pgpe_pstate_get(vdd_next_ext) <= pgpe_gppb_get(array_write_vdd_mv))
+    if (pgpe_pstate_get(vdd_next_ext) <= pgpe_gppb_get_array_write_vdd_mv())
     {
         PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WOR, BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
     }
 
     if(vcs_before_vdd)
     {
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                   pgpe_pstate_get(vcs_next_ext));
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
                                   pgpe_pstate_get(vdd_next_ext));
     }
     else
     {
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vdd_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vdd_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
                                   pgpe_pstate_get(vdd_next_ext));
-        pgpe_avsbus_voltage_write(pgpe_gppb_get(avs_bus_topology.vcs_avsbus_num),
-                                  pgpe_gppb_get(avs_bus_topology.vcs_avsbus_rail),
+        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                                  pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                   pgpe_pstate_get(vcs_next_ext));
     }
 
@@ -285,7 +285,7 @@ void pgpe_process_pstate_start()
     PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
     pgpe_pstate_set(power_proxy_scale, power_proxy_scale_init);
 
-    if (pgpe_pstate_get(vdd_next_ext) > pgpe_gppb_get(array_write_vdd_mv))
+    if (pgpe_pstate_get(vdd_next_ext) > pgpe_gppb_get_array_write_vdd_mv())
     {
         PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WAND, ~BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
     }
@@ -776,11 +776,11 @@ void pgpe_process_safe_mode(void* args)
     if(pgpe_pstate_is_pstate_enabled())
     {
         //Move throttling to ATTR_SAFE_MODE_THROTTLE_IDX
-        pgpe_thr_ctrl_set_ceff_ovr_idx(pgpe_gppb_get(safe_throttle_idx));
+        pgpe_thr_ctrl_set_ceff_ovr_idx(pgpe_gppb_get_safe_throttle_idx());
         pgpe_thr_ctrl_write_wcor();
 
         //VDD above ATTR_SAFE_MODE_MV[VDD]
-        if (pgpe_pstate_get(vdd_curr) > pgpe_gppb_get(safe_voltage_mv[SAFE_VOLTAGE_VDD]))
+        if (pgpe_pstate_get(vdd_curr) > pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD))
         {
             //Move frequency to Safe Frequency
             pgpe_pstate_actuate_pstate(pgpe_pstate_get(pstate_safe));
