@@ -85,18 +85,6 @@ static const uint32_t SCOMFIR_AAER_AAER_TAG_ECC_LEN = 9;
 //<< [SCOMFIR_AAER]
 // mc/reg00014.H
 
-//>> [SCOMFIR_MCFGP0E]
-static const uint64_t SCOMFIR_MCFGP0E = 0x0c010c16ull;
-
-static const uint32_t SCOMFIR_MCFGP0E_VALID = 0;
-static const uint32_t SCOMFIR_MCFGP0E_EXTEND_TO_END_OF_RANGE = 1;
-static const uint32_t SCOMFIR_MCFGP0E_LOWER_ADDRESS = 2;
-static const uint32_t SCOMFIR_MCFGP0E_LOWER_ADDRESS_LEN = 19;
-static const uint32_t SCOMFIR_MCFGP0E_UPPER_ADDRESS = 21;
-static const uint32_t SCOMFIR_MCFGP0E_UPPER_ADDRESS_LEN = 19;
-//<< [SCOMFIR_MCFGP0E]
-// mc/reg00014.H
-
 //>> [EPS_DBG_TRACE_REG_1]
 static const uint64_t EPS_DBG_TRACE_REG_1 = 0x0c0107ceull;
 
