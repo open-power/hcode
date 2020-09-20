@@ -104,6 +104,33 @@ SECTIONS
     .ringidfeatlist . : { *(.ringidfeatlist) }
     _ringidfeatlist_size = . - _ringidfeatlist_origin;
 
+    ///////////////////////////////
+    // HDCT
+    ////////////////////////////////
+    . = ALIGN(8);
+    _hdct_origin = .;
+    _hdct_offset = . - _sbe_image_origin;
+    .hdct . : { *(.hdct) }
+    _hdct_size = . - _hdct_origin;
+
+    ///////////////////////////////
+    // SBH_FIRMWARE
+    ////////////////////////////////
+    . = ALIGN(8);
+    _sbh_firmware_origin = .;
+    _sbh_firmware_offset = . - _sbe_image_origin;
+    .sbh_firmware . : { *(.sbh_firmware) }
+    _sbh_firmware_size = . - _sbh_firmware_origin;
+
+    ///////////////////////////////
+    // SBH_HBBL
+    ////////////////////////////////
+    . = ALIGN(8);
+    _sbh_hbbl_origin = .;
+    _sbh_hbbl_offset = . - _sbe_image_origin;
+    .sbh_hbbl . : { *(.sbh_hbbl) }
+    _sbh_hbbl_size = . - _sbh_hbbl_origin;
+
     ////////////////////////////////
     // end of the image
     ////////////////////////////////
