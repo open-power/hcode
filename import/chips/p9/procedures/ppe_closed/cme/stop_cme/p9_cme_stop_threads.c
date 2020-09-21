@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -352,7 +352,7 @@ void periodic_core_quiesce_workaround(uint32_t core_instruction_running)
     }
     else
     {
-        PK_TRACE_INF("PCQW: Error while trying to Quiesce Cores.  Bad Error %d, QuiesceTime (ns) %d", sample_error,
+        PK_TRACE_DBG("PCQW: Error while trying to Quiesce Cores.  Bad Error %d, QuiesceTime (ns) %d", sample_error,
                      (G_cme_fit_record.core_quiesce_time_latest << 5));
         G_cme_fit_record.core_quiesce_failed_count++;
     }

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017,2018                                                    */
+/* COPYRIGHT 2017,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -42,6 +42,7 @@ extern uint32_t G_CME_LCL_FLAGS;
 extern uint32_t G_CME_LCL_FLAGS_CLR;
 extern uint32_t G_CME_LCL_FLAGS_OR;
 extern uint32_t G_CME_LCL_SRTCH0;
+extern uint32_t G_CME_LCL_SRTCH1;
 extern uint32_t G_CME_LCL_TSEL;
 extern uint32_t G_CME_LCL_TBR;
 extern uint32_t G_CME_LCL_DBG;

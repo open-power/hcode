@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017,2019                                                    */
+/* COPYRIGHT 2017,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -61,6 +61,7 @@ uint32_t G_CME_LCL_FLAGS     = CME_LCL_FLAGS;
 uint32_t G_CME_LCL_FLAGS_CLR = CME_LCL_FLAGS_CLR;
 uint32_t G_CME_LCL_FLAGS_OR  = CME_LCL_FLAGS_OR;
 uint32_t G_CME_LCL_SRTCH0    = CME_LCL_SRTCH0;
+uint32_t G_CME_LCL_SRTCH1    = CME_LCL_SRTCH1;
 uint32_t G_CME_LCL_TSEL      = CME_LCL_TSEL;
 uint32_t G_CME_LCL_TBR       = CME_LCL_TBR;
 uint32_t G_CME_LCL_DBG       = CME_LCL_DBG;
@@ -88,6 +89,35 @@ void fit_handler()
     data64_t scom_data;
     scom_data.value = 0;
 
+    if( in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_PFET_FIT_INJECTION) )
+    {
+        // Inject Core 0 as bad
+        CME_PUTSCOM_NOP(CPPM_CPMMR_OR, CME_MASK_C0, BIT64(5));
+        PK_PANIC(CME_PFET_EXIT_SENSE_FIT_INJECT);
+    }
+
+    CME_GETSCOM(PPM_PFSNS, CME_MASK_C0, scom_data);
+
+    if( ( ( ( scom_data.words.upper & BIT32(0) ) == 1 ) &&
+          ( ( scom_data.words.upper & BIT32(1) ) == 1 ) ) ||
+        ( ( ( scom_data.words.upper & BIT32(0) ) == 0 ) &&
+          ( ( scom_data.words.upper & BIT32(1) ) == 0 ) ) )
+    {
+        CME_PUTSCOM_NOP(CPPM_CPMMR_OR, CME_MASK_C0, BIT64(5));
+        PK_PANIC(CME_BAD_PFET);
+    }
+
+    CME_GETSCOM(PPM_PFSNS, CME_MASK_C1, scom_data);
+
+    if( ( ( ( scom_data.words.upper & BIT32(0) ) == 1 ) &&
+          ( ( scom_data.words.upper & BIT32(1) ) == 1 ) ) ||
+        ( ( ( scom_data.words.upper & BIT32(0) ) == 0 ) &&
+          ( ( scom_data.words.upper & BIT32(1) ) == 0 ) ) )
+    {
+        CME_PUTSCOM_NOP(CPPM_CPMMR_OR, CME_MASK_C1, BIT64(6));
+        PK_PANIC(CME_BAD_PFET);
+    }
+
     CME_GETSCOM_OR(CPPM_CSAR, CME_MASK_BC, scom_data.value);
 
     if(BIT32(CPPM_CSAR_FIT_HCODE_ERROR_INJECT) & scom_data.words.upper)
@@ -98,7 +128,7 @@ void fit_handler()
 
 
     mtspr(SPRN_TSR, TSR_FIS);
-    PK_TRACE("FIT Timer Handler");
+    //PK_TRACE("FIT Timer Handler");
 
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
     p9_cme_core_livelock_buster();
@@ -198,7 +228,7 @@ int main()
 
     pk_trace_set_freq(trace_timebase);
 
-    PK_TRACE(">CME MAIN");
+    // PK_TRACE(">CME MAIN");
 
     // Clear SPRG0
     ppe42_app_ctx_set(0);
@@ -212,7 +242,7 @@ int main()
     out32(G_CME_LCL_LMCR_OR, BITS32(8, 2));
 #endif
 
-    PK_TRACE("Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
+    // PK_TRACE("Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
     out32(G_CME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
 
 #if (!DISABLE_CME_FIT_TIMER || ENABLE_CME_DEC_TIMER)
@@ -220,12 +250,12 @@ int main()
     uint32_t TCR_VAL = 0;
 
 #if !DISABLE_CME_FIT_TIMER
-    PK_TRACE("Enable FIT Timer");
+    // PK_TRACE("Enable FIT Timer");
     TCR_VAL |= TCR_FIE;
 #endif
 
 #if ENABLE_CME_DEC_TIMER
-    PK_TRACE("Enable DEC Timer");
+    // PK_TRACE("Enable DEC Timer");
     TCR_VAL |= TCR_DIE;
 #endif
 

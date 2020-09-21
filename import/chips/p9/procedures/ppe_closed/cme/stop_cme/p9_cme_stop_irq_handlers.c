@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2019                                                    */
+/* COPYRIGHT 2015,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -165,7 +165,7 @@ p9_cme_stop_spwu_handler(void)
                 else
                 {
                     out32(G_CME_LCL_SICR_CLR, BIT32((4  + core_index)));
-                    PK_TRACE_INF("SPWU drop confirmed, now drop pm_exit");
+                    PK_TRACE_DBG("SPWU drop confirmed, now drop pm_exit");
 
                     // Core is now out of spwu, allow pm_active
                     // block entry mode is handled via eimr override

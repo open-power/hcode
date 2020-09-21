@@ -1251,13 +1251,13 @@ p9_cme_stop_self_execute(uint32_t core, uint32_t i_saveRestore )
 #else
 
     CME_PUTSCOM(URMOR, core, scom_data.value);
-    PK_TRACE_INF("SMF core wakes up, write URMOR with HOMER address" );
+    PK_TRACE_DBG("SMF core wakes up, write URMOR with HOMER address" );
     scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
 
     if( SPR_SELF_SAVE == i_saveRestore )
     {
         scom_data.value = pCmeImgHdr->g_cme_unsec_cpmr_PhyAddr & BITS64(13, 30); //Unsecure HOMER
-        PKTRACE("SMF core self save, write un-secure HOMER address");
+        PK_TRACE_DBG("SMF core self save, write un-secure HOMER address");
     }
 
     CME_PUTSCOM(HRMOR, core, scom_data.value);
@@ -1271,7 +1271,7 @@ p9_cme_stop_self_execute(uint32_t core, uint32_t i_saveRestore )
     CME_PUTSCOM(HRMOR, core, 0xA200000);
 #else
 
-    PK_TRACE_INF("Non SMF core wakes up, write HRMOR with HOMER address");
+    PK_TRACE_DBG("Non SMF core wakes up, write HRMOR with HOMER address");
     scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
     CME_PUTSCOM(HRMOR, core, scom_data.value);
 
@@ -1353,7 +1353,7 @@ p9_cme_stop_self_execute(uint32_t core, uint32_t i_saveRestore )
 
     wrteei(1);
 
-    PK_TRACE_INF("Allow threads to run(pm_exit=0)");
+    PK_TRACE_DBG("Allow threads to run(pm_exit=0)");
     out32(G_CME_LCL_SICR_CLR, core << SHIFT32(5));
 
 }

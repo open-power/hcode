@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2019                                                    */
+/* COPYRIGHT 2015,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -224,6 +224,8 @@ void p9_cme_pcbmux_savior_epilogue(uint32_t core)
 void
 p9_cme_stop_entry()
 {
+    int          i = 0;
+    uint32_t     timeout = 0;
     int          catchup_ongoing     = 0;
     int          entry_ongoing       = 1;
     uint8_t      target_level        = 0;
@@ -1441,9 +1443,39 @@ p9_cme_stop_entry()
                 PK_PANIC(CME_STOP_ENTRY_TRAP_INJECT);
             }
 
+            //500Mhz gives 2ns per ppe cycle
+            //pfet or stop should finish within 1ms
+            //set delay to 20ns
+#define PFET_DELAY    20
+#define PFET_TIMEOUT  20000
+
+            timeout = PFET_TIMEOUT;
+
             do
             {
                 CME_GETSCOM_AND(PPM_PFSNS, core, scom_data.value);
+
+                timeout--;
+
+                if( !timeout )
+                {
+                    CME_PUTSCOM_NOP(CPPM_CPMMR_OR, core, ((uint64_t)(core) << SHIFT64(6)));
+                    //PK_TRACE_ERR("PFET SENSE TIMED OUT, HALT CME!");
+
+//                    if( in32(G_CME_LCL_FLAGS) & BIT32(CME_FLAGS_PFET_DELAY_TO_TIMEOUT) )
+//                    {
+                    PK_PANIC(CME_PFET_ENTRY_SENSE_TIMEOUT);
+//                    }
+//                    else
+//                    {
+//                        break;
+//                    }
+                }
+
+                for(i = 0; i < PFET_DELAY; i++)
+                {
+                    asm volatile ("tw 0, 0, 0");
+                }
             }
             while(!(scom_data.words.upper & BIT32(1)));
 
@@ -1451,7 +1483,7 @@ p9_cme_stop_entry()
             // vdd_pfet_force_state = 00 (Nop)
             CME_PUTSCOM(PPM_PFCS_CLR, core, BITS64(0, 2));
 
-            PK_TRACE_INF("SE.4A: Core[%d] Powered Off", core);
+            PK_TRACE_DBG("SE.4A: Core[%d] Powered Off", core);
 
 #endif
 

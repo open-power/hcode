@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -94,7 +94,7 @@ void p9_cme_pstate_pmcr_handler(void)
 //
 void p9_cme_init_done()
 {
-    PK_TRACE_INF("CME INIT DONE: Enter");
+    PK_TRACE_DBG("CME INIT DONE: Enter");
     uint32_t msg;
 
     // Synchronization between QM and Sibling

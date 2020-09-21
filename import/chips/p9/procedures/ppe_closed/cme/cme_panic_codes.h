@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2018                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -57,7 +57,7 @@ CME_PVREF_FAIL_DETECTED             = 0x1c0d,
 CME_OCC_HEARTBEAT_LOST_DETECTED     = 0x1c1c,
 CME_CORE_CHECKSTOP_DETECTED         = 0x1c1d,
 CME_BAD_DD_LEVEL                    = 0x1c1e,
-//_UNUSED_1c1f                      = 0x1c1f,
+CME_BAD_PFET                        = 0x1c1f,
 //
 CME_STOP_EXIT_PHANTOM_WAKEUP        = 0x1d00, // Stop Error
 CME_STOP_EXIT_BCE_SCOM_FAILED       = 0x1d01,
@@ -66,14 +66,14 @@ CME_STOP_EXIT_STARTCLK_FAILED       = 0x1d03,
 CME_STOP_EXIT_STARTCLK_XSTOP_ERROR  = 0x1d04,
 CME_STOP_EXIT_SCOM_RES_XSTOP_ERROR  = 0x1d05,
 CME_STOP_SPWU_PROTOCOL_ERROR        = 0x1d06,
-//_UNUSED_1d07                      = 0x1d07,
+CME_PFET_ENTRY_SENSE_TIMEOUT        = 0x1d07,
 CME_STOP_ENTRY_STOPCLK_FAILED       = 0x1d08,
 CME_STOP_ENTRY_XSTOP_ERROR          = 0x1d09, // NDD1
 CME_STOP_ENTRY_TRAP_INJECT          = 0x1d0a,
 CME_STOP_ENTRY_HANDOFF_LESSTHAN5    = 0x1d0d,
-//_UNUSED_1d1c                      = 0x1d1c,
-//_UNUSED_1d1d                      = 0x1d1d,
-//_UNUSED_1d1e                      = 0x1d1e,
+CME_PFET_EXIT_SENSE_TIMEOUT         = 0x1d1c,
+CME_PFET_EXIT_SENSE_TIMEOUT_INJECT  = 0x1d1d,
+CME_PFET_EXIT_SENSE_FIT_INJECT      = 0x1d1e,
 //_UNUSED_1d1f                      = 0x1d1f,
 
 CME_PSTATE_RESCLK_ENABLED_AT_BOOT   = 0x1e00, // Pstate Error

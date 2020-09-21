@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -179,8 +179,8 @@ void bce_irr_run()
 
     if (l_data32 != G_bce_irr.data.word)
     {
-        PKTRACE("miscompare between bce irr read[%x] and cme shadow copy[%x]",
-                l_data32, G_bce_irr.data.word);
+        PK_TRACE_DBG("miscompare between bce irr read[%x] and cme shadow copy[%x]",
+                     l_data32, G_bce_irr.data.word);
         pk_halt();
     }
 

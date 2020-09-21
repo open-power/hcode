@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -383,6 +383,14 @@ BootErrorCode_t boot_cme( uint16_t i_bootCme )
                     {
                         continue;
                     }
+
+                    /*
+                                        uint64_t DavidData = in32(G_OCB_OCCS2) & BITS32(20, 2);
+                                        DavidData = DavidData << 32;
+
+                                        GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS_OR,
+                                                                      (l_cmeIndex >> 1), (l_cmeIndex % 2)), DavidData);
+                    */
 
                     // Clear CME LFIR[5] (ppe_halted) upon respective CME boot
                     GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_LFIR_AND,

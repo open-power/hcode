@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -63,7 +63,7 @@ void p9_cme_pstate_intercme_msg_handler(void)
 
 void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION intercme_msg_lock_action)
 {
-    PK_TRACE_INF("SIBL: Enter");
+    PK_TRACE_DBG("SIBL: Enter");
     uint32_t msg;
 
     if (intercme_msg_lock_action == INTERCME_MSG_LOCK_WAIT_ON_RECV)
@@ -101,7 +101,7 @@ void p9_cme_pstate_process_db0_sibling()
     //writes same value for both cores
     CME_GETSCOM(CPPM_CMEDB0, G_cme_pstate_record.firstGoodCoreMask, dbData.value);
 
-    PK_TRACE_INF("INTER0: Enter");
+    PK_TRACE_DBG("INTER0: Enter");
 
     dbQuadInfo = (dbData.value >> (in32(G_CME_LCL_SRTCH0) &
                                    (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)

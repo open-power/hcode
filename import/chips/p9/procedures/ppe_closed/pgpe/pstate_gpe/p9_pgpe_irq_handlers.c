@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -448,8 +448,11 @@ void p9_pgpe_irq_handler_cme_err()
     uint64_t value, baseVal, coreSsh;
     qppm_dpll_freq_t dpllFreq;
     ocb_qcsr_t qcsr;
+    ocb_ccsr_t ccsr;
     qcsr.value = in32(G_OCB_QCSR);
+    ccsr.value = in32(OCB_CCSR);
     uint64_t cme_flags = 0;
+    uint64_t cme_cpmmr = 0;
 
     //Optrace
     G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
@@ -483,17 +486,45 @@ void p9_pgpe_irq_handler_cme_err()
 
             PK_TRACE_INF("CER:Quad[%d]", q);
 
-
             //1.1 Halt both CMEs in the quad containing faulted CME,
             if (qcsr.fields.ex_config & QUAD_EX0_MASK(q))
             {
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR, q, 0), BIT64(3)); //XCR[1:3] = 001(Halt the CME)
                 GPE_GETSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_FLAGS, q, 0), cme_flags);
+
+                for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
+                {
+                    if (ccsr.value & CORE_MASK(c))
+                    {
+                        GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR, c), cme_cpmmr);
+
+                        if( cme_cpmmr & BITS64(5, 2) )
+                        {
+                            GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(61));
+                        }
+                    }
+                }
+
             }
 
             if (qcsr.fields.ex_config & QUAD_EX1_MASK(q))
             {
                 GPE_PUTSCOM(GPE_SCOM_ADDR_CME(CME_SCOM_XIXCR, q, 1), BIT64(3)); //XCR[1:3] = 001(Halt the CME)
+
+                for (c = FIRST_CORE_FROM_QUAD(q); c < LAST_CORE_FROM_QUAD(q); c++)
+                {
+                    if (ccsr.value & CORE_MASK(c))
+                    {
+                        GPE_GETSCOM(GPE_SCOM_ADDR_CORE(CPPM_CPMMR, c), cme_cpmmr);
+
+                        if( cme_cpmmr & BITS64(5, 2) )
+                        {
+                            GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(61));
+                        }
+                    }
+                }
+
+
 
                 //Read CME1 CME_FLAGS, if CME0 not configured
                 if (!(qcsr.fields.ex_config & QUAD_EX0_MASK(q)))

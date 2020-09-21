@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -368,7 +368,7 @@ void p9_cme_pstate_db3_handler(void)
     }
     else if (db3.fields.cme_message_numbern == MSGID_DB3_CLIP_BROADCAST)
     {
-        PK_TRACE_INF("PSTATE: DB3 Clip Enter");
+        PK_TRACE_DBG("PSTATE: DB3 Clip Enter");
 
         uint32_t dbQuadInfo, dbBit8_15;
         cppm_cmedb0_t dbData;
@@ -732,7 +732,7 @@ void p9_cme_pstate_process_db0()
     //Clear out db0_pending_tick_count
     g_db0_pending_fit_tick_count = 0;
 
-    PK_TRACE_INF("PSTATE: Process DB0 Enter");
+    PK_TRACE_DBG("PSTATE: Process DB0 Enter");
 
     //Clear EISR and read DB0 register
     out32_sh(CME_LCL_EISR_CLR, BITS64SH(36, 2));
@@ -942,7 +942,7 @@ inline void p9_cme_pstate_register()
 //
 void p9_cme_pstate_db0_start()
 {
-    PK_TRACE_INF("PSTATE: DB0 Start Enter");
+    PK_TRACE_DBG("PSTATE: DB0 Start Enter");
 
     p9_cme_pstate_update();
     uint32_t ack;
@@ -989,7 +989,7 @@ void p9_cme_pstate_db0_start()
 //
 void p9_cme_pstate_db0_glb_bcast()
 {
-    PK_TRACE_INF("PSTATE: DB0 GlbBcast Enter");
+    PK_TRACE_DBG("PSTATE: DB0 GlbBcast Enter");
 
     p9_cme_pstate_update();
     uint32_t ack;
@@ -1015,7 +1015,7 @@ void p9_cme_pstate_db0_glb_bcast()
 //
 inline void p9_cme_pstate_db0_stop()
 {
-    PK_TRACE_INF("PSTATE: DB0 Stop Enter");
+    PK_TRACE_DBG("PSTATE: DB0 Stop Enter");
 
     out32(G_CME_LCL_FLAGS_CLR, BIT32(24));//Set Pstates Disabled
 
@@ -1045,7 +1045,7 @@ inline void p9_cme_pstate_db0_stop()
 void p9_cme_pstate_db0_clip_bcast()
 {
 
-    PK_TRACE_INF("PSTATE: DB0 Clip Enter");
+    PK_TRACE_DBG("PSTATE: DB0 Clip Enter");
 
 
     uint32_t dbBit8_15 = (G_dbData.value & BITS64(8, 8)) >> SHIFT64(15);
@@ -1082,7 +1082,7 @@ void p9_cme_pstate_db0_clip_bcast()
 
 inline void p9_cme_pstate_db0_pmsr_updt()
 {
-    PK_TRACE_INF("PSTATE: DB0 Pmsr Updt Enter");
+    PK_TRACE_DBG("PSTATE: DB0 Pmsr Updt Enter");
 
     uint32_t dbBit8_15 = (G_dbData.value & BITS64(8, 8)) >> SHIFT64(15);
 
@@ -1129,7 +1129,7 @@ inline void p9_cme_pstate_freq_update(uint32_t cme_flags)
     }
     else
     {
-        PK_TRACE_INF("PSTATE: Freq Updt Enter");
+        PK_TRACE_DBG("PSTATE: Freq Updt Enter");
         PK_TRACE_DBG("PSTATE: Dpll0=0x%x", G_lppb->dpll_pstate0_value);
 
         //Adjust DPLL
@@ -1237,7 +1237,7 @@ void p9_cme_pstate_update()
 {
     PkMachineContext ctx;
 
-    PK_TRACE_INF("PSTATE: Pstate Updt Enter");
+    PK_TRACE_DBG("PSTATE: Pstate Updt Enter");
 
     G_cme_pstate_record.nextPstate = (G_dbData.value >> (in32(G_CME_LCL_SRTCH0) &
                                       (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START,
