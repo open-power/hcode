@@ -105,6 +105,7 @@ uint32_t QME_DCSR                       = 0xC0008700;
 uint32_t QME_SCSR                       = 0xC0008400;
 uint32_t QME_SCSR_WO_CLEAR              = 0xC0008430;
 uint32_t QME_SCSR_WO_OR                 = 0xC0008420;
+uint32_t QME_CISR                       = 0xC0008780;
 
 uint32_t QME_TFCSR                      = 0xC0008800;
 uint32_t QME_TFCSR_WO_CLEAR             = 0xC0008830;

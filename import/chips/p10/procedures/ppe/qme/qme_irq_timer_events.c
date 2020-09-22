@@ -170,13 +170,13 @@ qme_fit_handler()
                     {
                         pm_state = pm_state_even < pm_state_odd ? pm_state_even : pm_state_odd ;
 
-                        // fast
-                        shift = SHIFT64SH(51);
-
                         // slow
+                        shift = 0;
+
+                        // fast
                         if( pm_state > 10 )
                         {
-                            shift = SHIFT64SH(55);
+                            shift = SHIFT64SH(59);
                         }
 
                         // c2 c3
@@ -185,11 +185,11 @@ qme_fit_handler()
                         // c0 c1
                         if( c_mask > 3 )
                         {
-                            c_entry = 0x3 << (shift + 2);
+                            c_entry = c_entry << 2;
                         }
 
-                        out64( QME_LCL_EISR_OR, ((uint64_t)c_entry) );
-                        PK_TRACE_INF("pair mode pm_state_even %x pm_state_odd %x c_entry %x c_mask %x",
+                        out32_sh( QME_LCL_EISR_OR, c_entry );
+                        PK_TRACE_INF("fit pair mode pm_state_even %x pm_state_odd %x c_entry %x c_mask %x",
                                      pm_state_even, pm_state_odd, c_entry, c_mask);
                     }
                 }

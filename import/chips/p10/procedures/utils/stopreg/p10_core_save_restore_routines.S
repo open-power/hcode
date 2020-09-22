@@ -911,16 +911,27 @@ beq         restore_thread_spr   # if it is SIMICS, workaround for HW534619 is n
 #=====================================  HW534619 DD1 Workaround ========================================
 
 work_around_HW534619:
-li          TEMP_REG2,   0x05
-sldi        TEMP_REG3,  TEMP_REG2,  47
-lis         TEMP_REG2,   0x00ff
-ori         TEMP_REG2,  TEMP_REG2, 0x0220
+li          TEMP_REG2,   0x05                 # r2 0b0101 for bit14:TB_ECLIPZ, bit16
+sldi        TEMP_REG3,  TEMP_REG2,  47        # r3 0002 8000 0000 0000 0x5 << 47
+lis         TEMP_REG2,   0x00ff               # r2 0000 00ff 0000 0000 MAX_CYC_BET_STEPS=ff at bit7
+ori         TEMP_REG2,  TEMP_REG2, 0x0220     # r2 0000 00ff 0000 0220 
+mfspr       TEMP_REG1,  TFMR                  # r1 save trmr base 
+or          TEMP_REG3,  TEMP_REG1,  TEMP_REG3 # r3 0002 8000 0000 0000 overlay bit14/16
+mtspr       TFMR,       TEMP_REG3             # bit 14 and 16 SET
+
+#wait for bit 16 to be cleared by HW
+wait_tfmr_bit16_clr:
 mfspr       TEMP_REG1,  TFMR
-or          TEMP_REG3,  TEMP_REG1,  TEMP_REG3
-mtspr       TFMR,       TEMP_REG3           #bit 14 and 16 SET
-sldi        TEMP_REG2,  TEMP_REG2,  40
-or          TEMP_REG3,  TEMP_REG1,  TEMP_REG2
-mtspr       TFMR,       TEMP_REG3           #setting bit TFMR[0:7,14,18]
+extrdi.     TEMP_REG3,  TEMP_REG1,  1,  16    # Check for bit 16 to be cleared by HW
+cmpwi       TEMP_REG3,  0x01
+beq         wait_tfmr_bit16_clr
+
+#bit 16 has been cleared by hw. proceed with next step.
+
+mfspr       TEMP_REG1,  TFMR                  
+sldi        TEMP_REG2,  TEMP_REG2,  40        # 0000 0500 0000 0000
+or          TEMP_REG3,  TEMP_REG1,  TEMP_REG2 # 0002 2000 0000 0000 bit14 18
+mtspr       TFMR,       TEMP_REG3             # setting bit TFMR[0:7,14,18]
 
 wait_tfmr:
 mfspr       TEMP_REG1,  TFMR
@@ -928,10 +939,11 @@ extrdi.     TEMP_REG2,  TEMP_REG1,  TFAC_TFMR_BUG_BIT_LEN,  TFAC_BUG_TFMR_BIT_PO
 cmpwi       TEMP_REG2,  TFAC_TFMR_BUG_BIT_CONST
 bne         wait_tfmr
 
-mfspr       THREAD_SCRATCH_VAL_REG,   SPRD  #QME might have written bit 56 by this time so do RMW
-li          TEMP_REG1,  0x100
-or          THREAD_SCRATCH_VAL_REG, THREAD_SCRATCH_VAL_REG, TEMP_REG1    # set bit 55 of Thread scratch register
-mtspr       SPRD,       THREAD_SCRATCH_VAL_REG
+# comment this out because there is window bit56 is erased and bit 55 is not used
+#i mfspr       THREAD_SCRATCH_VAL_REG,   SPRD  #QME might have written bit 56 by this time so do RMW
+#i li          TEMP_REG1,  0x100
+#i or          THREAD_SCRATCH_VAL_REG, THREAD_SCRATCH_VAL_REG, TEMP_REG1    # set bit 55 of Thread scratch register
+#i mtspr       SPRD,       THREAD_SCRATCH_VAL_REG
 
 #=====================================  HW534619 DD1 Workaround Ends ======================================
 

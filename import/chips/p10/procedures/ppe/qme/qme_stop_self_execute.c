@@ -50,7 +50,7 @@ qme_stop_self_complete(uint32_t core_target)
     // RTC 248150: value needs to be reviewed post hardware
     // the timeout needs to cover the worst case save or
     // restore operation for all the slave threads
-    static uint32_t CTS_TIMEOUT_COUNT = 10000000;
+    static uint32_t CTS_TIMEOUT_COUNT = 0xFFFFFFFF;
     uint8_t core_inst = 0;
 
     PK_TRACE("Core Target %08X", core_target );
@@ -73,7 +73,7 @@ qme_stop_self_complete(uint32_t core_target)
             {
                 PPE_WAIT_4NOP_CYCLES;
                 PPE_GETSCOM_UC ( CORE_THREAD_STATE, 0, core_mask, scom_data.value);
-// debug        PK_TRACE("CORE_THREAD_STATE UC lower Core %d %08X", core_mask, scom_data.words.lower );
+                PK_TRACE_INF("CORE_THREAD_STATE UC lower Core %d %08X", core_mask, scom_data.words.lower );
                 scom_data.words.lower &= BITS64SH(56, 4); // vt[1,2,3]_stop_state
             }
             while( scom_data.words.lower >> 4 != 0x7 && ++G_qme_record.cts_timeout_count < CTS_TIMEOUT_COUNT );
@@ -81,6 +81,7 @@ qme_stop_self_complete(uint32_t core_target)
             if (G_qme_record.cts_timeout_count == CTS_TIMEOUT_COUNT)
             {
                 PK_TRACE_INF("Timout polling for slave threads stopping on core mask %X", core_mask);
+                iota_halt();
                 goto commit_sr_log;
             }
             else

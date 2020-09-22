@@ -99,6 +99,7 @@ extern uint32_t QME_DCSR;
 extern uint32_t QME_SCSR;
 extern uint32_t QME_SCSR_WO_OR;
 extern uint32_t QME_SCSR_WO_CLEAR;
+extern uint32_t QME_CISR;
 
 extern uint32_t QME_TFCSR;
 extern uint32_t QME_TFCSR_WO_OR;

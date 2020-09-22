@@ -64,16 +64,17 @@ qme_attr_init()
     }
 
     //===============
+    /*
+        uint8_t pair_mode = 0;
 
-    uint8_t pair_mode = 0;
+        FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_FUSED_CORE_PAIRED_MODE_ENABLED, l_sys, pair_mode ) );
 
-    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_FUSED_CORE_PAIRED_MODE_ENABLED, l_sys, pair_mode ) );
-
-    if( ( pair_mode || (G_qme_record.chip_dd_level == 10) ) &&
-        ( in32_sh(QME_LCL_QMCR) & BIT64SH(47) ) )
-    {
-        out32(QME_LCL_QMCR_OR, BIT32(10));
-    }
+        if( ( pair_mode || (G_qme_record.chip_dd_level == 10) ) &&
+            ( in32_sh(QME_LCL_QMCR) & BIT64SH(47) ) )
+        {
+            out32(QME_LCL_QMCR_OR, BIT32(10));
+        }
+    */
 }
 
 

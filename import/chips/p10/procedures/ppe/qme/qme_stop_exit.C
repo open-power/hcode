@@ -158,6 +158,10 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 {
     uint32_t core_done = 0;
     uint32_t core_mask = 0;
+    uint32_t cisr0     = 0;
+    uint32_t cisr1     = 0;
+    uint32_t scsr0     = 0;
+    uint32_t scsr1     = 0;
 
     //===============//
 
@@ -184,15 +188,28 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
     PK_TRACE("Clear EISR on Regular Wakeup for extra edge caused by fencing/unfencing between entry and exit");
     out32_sh(QME_LCL_EISR_CLR, ( (core_target << SHIFT64SH(43)) | (core_target << SHIFT64SH(47)) ) );
 
-    for( core_mask = 8; core_mask > 0; core_mask = core_mask >> 1 )
+    if( in32(QME_LCL_QMCR) & BIT32(10) )
     {
-        // No interrupt pending AND no special wakeup
-        if( ( core_target & core_mask ) &&
-            ( ! ( in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) ) & BIT64SH(46) ) ) &&
-            ( ! ( core_spwu & core_mask ) ) )
+        for( core_mask = 8; core_mask > 0; core_mask = core_mask >> 1 )
         {
-            PK_TRACE_INF("Warning: No PC_INTR_PENDING on core %x that only has Regular Wakeup via QME_SCSR[47]", core_mask);
-            G_qme_record.c_stop1_targets |= core_mask;
+            if ( core_target & core_mask )
+            {
+                cisr0 = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+                cisr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+
+                scsr0 = in32( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) );
+                scsr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) );
+
+                PK_TRACE_INF("Cisr %x %x Scsr %x %x", cisr0, cisr1, scsr0, scsr1);
+
+                // No interrupt pending AND no special wakeup
+                if( ( ! ( scsr1 & BIT64SH(46) ) ) &&
+                    ( ! ( core_spwu & core_mask ) ) )
+                {
+                    PK_TRACE_INF("Warning: No PC_INTR_PENDING on core %x that only has Regular Wakeup via QME_SCSR[46]", core_mask);
+                    G_qme_record.c_stop1_targets |= core_mask;
+                }
+            }
         }
     }
 
