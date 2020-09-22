@@ -499,10 +499,10 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
         {
             // This is a user error condition where the custom pattern has no transition at H0 and therefore cannot measure an edge position.
             // In this case, fail the servo and set all QPA OBS values to 7 which is an impossible normal result.
-            mem_pl_field_put(rx_qpa_ne_obs, lane, 7);
-            mem_pl_field_put(rx_qpa_ee_obs, lane, 7);
-            mem_pl_field_put(rx_qpa_se_obs, lane, 7);
-            mem_pl_field_put(rx_qpa_we_obs, lane, 7);
+            // MBS reclaim these reg bits // mem_pl_field_put(rx_qpa_ne_obs, lane, 7);
+            // MBS reclaim these reg bits // mem_pl_field_put(rx_qpa_ee_obs, lane, 7);
+            // MBS reclaim these reg bits // mem_pl_field_put(rx_qpa_se_obs, lane, 7);
+            // MBS reclaim these reg bits // mem_pl_field_put(rx_qpa_we_obs, lane, 7);
             abort_status |= error_code;
             mem_pl_bit_set(rx_quad_phase_fail, lane);
             set_debug_state(0xE08F); //DEBUG: Main RX abort
@@ -726,10 +726,10 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     }
 
     // Write results but mask off leading bits to prevent corruption
-    mem_pl_field_put(rx_qpa_ne_obs, lane, servo_results[0] & ((0b1 << rx_qpa_ne_obs_width) - 1));
-    mem_pl_field_put(rx_qpa_ee_obs, lane, servo_results[1] & ((0b1 << rx_qpa_ee_obs_width) - 1));
-    mem_pl_field_put(rx_qpa_se_obs, lane, servo_results[2] & ((0b1 << rx_qpa_se_obs_width) - 1));
-    mem_pl_field_put(rx_qpa_we_obs, lane, servo_results[3] & ((0b1 << rx_qpa_we_obs_width) - 1));
+    // MBS reclaim these reg bits // mem_pl_field_put(rx_qpa_ne_obs, lane, servo_results[0] & ((0b1 << rx_qpa_ne_obs_width) - 1));
+    // MBS reclaim these reg bits // mem_pl_field_put(rx_qpa_ee_obs, lane, servo_results[1] & ((0b1 << rx_qpa_ee_obs_width) - 1));
+    // MBS reclaim these reg bits // mem_pl_field_put(rx_qpa_se_obs, lane, servo_results[2] & ((0b1 << rx_qpa_se_obs_width) - 1));
+    // MBS reclaim these reg bits // mem_pl_field_put(rx_qpa_we_obs, lane, servo_results[3] & ((0b1 << rx_qpa_we_obs_width) - 1));
 
     set_debug_state(0xE031); // DEBUG - Phase adjust done
 

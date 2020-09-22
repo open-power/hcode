@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+//// Determine if in tx_half_width_mode
+// gap20091500 |gap     | HW542315: updated to use is_p10_dd1
 // bja20090800 |bja     | HW542315: make in_tx_half_width_mode() return false for p10 dd1 omi
 // gap20082500 |gap     | HW542315: add tx_write_4_bit_pat to handle half/full width modes
 // vbr20030500 |vbr     | HW523782/HW523779: When fw_spread_en, min cdr lock wait time is 5us.
@@ -549,8 +551,7 @@ bool in_tx_half_width_mode()
 {
     bool half_width_mode = false;
 
-    if ( ( get_chip_id() == CHIP_ID_P10 )
-         && ( get_major_ec() == MAJOR_EC_DD1 ) )
+    if ( is_p10_dd1() )
     {
         // HW542315: Even though OMI is 16:1, it does not use half width mode. In P10 DD1 -
         // the only time that hwm is possible - OMI can be distinguished by fw_num_lanes=16.
@@ -563,4 +564,4 @@ bool in_tx_half_width_mode()
     }
 
     return half_width_mode;
-}
+} // in_tx_half_widt_mode

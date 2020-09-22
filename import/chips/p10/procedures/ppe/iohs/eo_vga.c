@@ -40,6 +40,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20091600 |vbr     | HW542599: move rx_vga_amax from mem_regs to a stack variable from eo_main (only used in init)
 // mwh20012500 |mwh     | Change jump_table_used to pl hw518572 only the first lane called was using jump_table
 // mwh19120900 |mwh     | Change rx_vga_converged per groupt ppe to per lane ppe
 // mwh19101000 |mwh     | Change servo to get servo result with error, and put in if statement to turn
@@ -159,7 +160,7 @@ void write_a_copy_b (t_gcr_addr* gcr_addr, int gain, t_bank bank,
 //////////////////////////
 // VGA Gain Loop Function
 //////////////////////////
-int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, bool* gain_changed, bool recal, bool copy_gain_to_b,
+int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, int* saved_Amax, bool* gain_changed, bool recal, bool copy_gain_to_b,
            bool copy_gain_to_b_loop, bool first_loop_iteration)
 {
     //begin eo_vga_gain                                                                                                                      //
@@ -239,8 +240,8 @@ int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, bool* gain_changed, bool recal, bo
         0;                             //loop_count for inter loop vga                                                         //Pg1-4
     int converged =
         false;                                                                                                                  //Pg1-4
-    int Amax = mem_regs_u16_get(pg_addr(rx_vga_amax_addr), rx_vga_amax_mask,
-                                rx_vga_amax_shift);                                             //Pg1-4
+    int Amax =
+        *saved_Amax; //mem_regs_u16_get(pg_addr(rx_vga_amax_addr), rx_vga_amax_mask, rx_vga_amax_shift);                                             //Pg1-4
     int last_gain =
         gain;                                                                                                                   //Pg1-4
     int last_Amax;                                                                                                                          //Pg1-4
@@ -593,8 +594,8 @@ int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, bool* gain_changed, bool recal, bo
     }                                                                                                                                 //Pg6-7
 
     //
-    mem_regs_u16_put(pg_addr(rx_vga_amax_addr), rx_vga_amax_mask, rx_vga_amax_shift,
-                     Amax);// ppe resgiter log Amax before exit         //Pg6-8
+    //mem_regs_u16_put(pg_addr(rx_vga_amax_addr), rx_vga_amax_mask, rx_vga_amax_shift, Amax);// ppe resgiter log Amax before exit         //Pg6-8
+    *saved_Amax = Amax;
     //
     mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift,
                      Amax);                                           //

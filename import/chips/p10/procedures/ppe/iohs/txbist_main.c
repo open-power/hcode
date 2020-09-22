@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap20082500 |gap     | HW542315 correct repeating pattern when in half-width mode
 // gap20060900 |gap     | HW524816 made debug before set_fir unique
 // gap20060901 |gap     | Removed redundant set_fir calls; removed extra set_debug calls
 // mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
@@ -232,11 +233,7 @@ void txbist_main_hs(t_gcr_addr* gcr_addr_i)
 void txbist_main_hs_pat(t_gcr_addr* gcr_addr_i, uint8_t clk_pattern_i)
 {
 
-    uint16_t clk_pattern_16_bit = clk_pattern_i | (clk_pattern_i << 4) | (clk_pattern_i << 8) | (clk_pattern_i << 12);
-    put_ptr_field(gcr_addr_i, tx_pattern_0_15,   clk_pattern_16_bit,  fast_write);
-    put_ptr_field(gcr_addr_i, tx_pattern_16_31,  clk_pattern_16_bit,  fast_write);
-    put_ptr_field(gcr_addr_i, tx_pattern_32_47,  clk_pattern_16_bit,  fast_write);
-    put_ptr_field(gcr_addr_i, tx_pattern_48_63,  clk_pattern_16_bit,  fast_write);
+    tx_write_4_bit_pat(gcr_addr_i, clk_pattern_i);
 
     txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b000); // Main N
     txbist_main_hs_pat_sel(gcr_addr_i, clk_pattern_i, 0b001); // Main P

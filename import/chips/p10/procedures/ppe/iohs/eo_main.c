@@ -39,6 +39,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20091600 |vbr     | HW542599: move rx_vga_amax from mem_regs to a stack variable (only used in init)
+// vbr20091100 |vbr     | Move cal_time_us from PL to PG to make space
+// jfg20090400 |jfg     | HW532333 Changed PR offset from PL to PG
+// jfg20090100 |jfg     | HW532333 Add new static PR Offset feature
 // mbs20080500 |mbs     | HW539048- Added separate dfe_full training enable in init
 // mbs20073000 |mbs     | LAB - Override rx_loff_timeout to 8
 // vbr20061600 |vbr     | HW532652: Set bit_lock_done when could be bumping (training/DL), clear when CDR locking.
@@ -243,7 +247,7 @@ PK_STATIC_ASSERT(rx_pr_enable_b_startbit == 3);
 #define CAL_TIMER_STOP { \
         uint32_t cal_time = (uint32_t)(pk_timebase_get() - cal_start_time); \
         uint16_t cal_time_us = cal_time / TIMER_US_DIVIDER; \
-        mem_pl_field_put(rx_lane_cal_time_us, lane, cal_time_us); \
+        mem_pg_field_put(ppe_last_cal_time_us, cal_time_us); \
     }
 #endif
 
@@ -413,6 +417,7 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     // 6) If gain, peak, lte, or qpa changed, repeat the loop from #1.
     bool run_vga_loop = true; // Must always run loop at least once so CDR gets enabled
     unsigned int vga_loop_count = 0;
+    int  saved_Amax = 0;
 
     while (run_vga_loop)
     {
@@ -428,7 +433,8 @@ void eo_main_init(t_gcr_addr* gcr_addr)
             bool recal = false;
             bool copy_gain_to_b = true;
             bool copy_gain_to_b_loop = true;
-            status |= eo_vga(gcr_addr, bank_a, &gain_changed, recal, copy_gain_to_b, copy_gain_to_b_loop, first_loop_iteration);
+            status |= eo_vga(gcr_addr, bank_a, &saved_Amax, &gain_changed, recal, copy_gain_to_b, copy_gain_to_b_loop,
+                             first_loop_iteration);
         }
 
         // CDR must be locked prior to running EOFF, Quad Adjust, CTLE, or LTE.
@@ -787,6 +793,47 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // strobe bit
     put_ptr_field(gcr_addr, rx_cal_lane_pg_phy_gcrmsg, lane, read_modify_write);
 
+    uint32_t bank_pr_save[2];
+    int pr_active[4]; // All four PR positions packed in as: {Data NS, Edge NS, Data EW, Edge EW}
+
+    // Load ****both**** data and edge values on read. Assumes in same reg address in data + edge order
+    if (cal_bank == bank_a)
+    {
+        bank_pr_save[0] = get_ptr(gcr_addr, rx_a_pr_ns_data_addr,  rx_a_pr_ns_data_startbit, rx_a_pr_ns_edge_endbit);
+        bank_pr_save[1] = get_ptr(gcr_addr, rx_a_pr_ew_data_addr,  rx_a_pr_ew_data_startbit, rx_a_pr_ew_edge_endbit);
+    }
+    else
+    {
+        bank_pr_save[0] = get_ptr(gcr_addr, rx_b_pr_ns_data_addr,  rx_b_pr_ns_data_startbit, rx_b_pr_ns_edge_endbit);
+        bank_pr_save[1] = get_ptr(gcr_addr, rx_b_pr_ew_data_addr,  rx_b_pr_ew_data_startbit, rx_b_pr_ew_edge_endbit);
+    }
+
+    pr_active[prDns_i] = prmask_Dns(bank_pr_save[0]);
+    pr_active[prEns_i] = prmask_Ens(bank_pr_save[0]);
+    pr_active[prDew_i] = prmask_Dew(bank_pr_save[1]);
+    pr_active[prEew_i] = prmask_Eew(bank_pr_save[1]);
+
+    uint32_t prDsave[2];
+    prDsave[0] = prmask_Dns(bank_pr_save[0]);
+    prDsave[1] = prmask_Dew(bank_pr_save[1]);
+    uint32_t prEsave[2];
+    prEsave[0] = prmask_Ens(bank_pr_save[0]);
+    prEsave[1] = prmask_Eew(bank_pr_save[1]);
+
+    // Remove any applied static offset. If this is not set before initial training it could get tied up in hysteresis and act strangely.
+    bool offset_applied = (0 != mem_pl_field_get(ppe_pr_offset_applied, lane));
+    int pr_offset_static_d = TwosCompToInt(mem_pg_field_get(ppe_pr_offset_d_override), ppe_pr_offset_d_override_width);
+    int pr_offset_static_e = TwosCompToInt(mem_pg_field_get(ppe_pr_offset_e_override), ppe_pr_offset_e_override_width);
+    int pr_offset_vec_d[2] = {0 - pr_offset_static_d, 0 - pr_offset_static_d};
+    int pr_offset_neg_e = 0 - pr_offset_static_e;
+
+    if ( offset_applied)
+    {
+        pr_recenter(gcr_addr, cal_bank, pr_active, prEsave, prDsave, pr_offset_vec_d, pr_offset_neg_e);
+        mem_pl_bit_clr(ppe_pr_offset_applied, lane);
+        offset_applied = false;
+    }
+
     // See if this is the very first recal on un-initialized bank B.
     // Check both recal_cnt and min_recal_cnt_reached in case recal_cnt was cleared (or rolled over).
     // If this is the very first recal, run it as init so that Bank B gets one pass through init sequence.
@@ -803,10 +850,12 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
     {
         bool copy_gain_to_b = false;
         bool copy_gain_to_b_loop = false;
+        int  saved_Amax = 0;
         bool gain_changed = false;
         bool first_loop_iteration =
             true; //Used in VGA logic for init hardware so we want run into dither issue, hardcode for recal
-        status |= eo_vga(gcr_addr, cal_bank, &gain_changed, recal, copy_gain_to_b, copy_gain_to_b_loop, first_loop_iteration);
+        status |= eo_vga(gcr_addr, cal_bank, &saved_Amax, &gain_changed, recal, copy_gain_to_b, copy_gain_to_b_loop,
+                         first_loop_iteration);
     }
 
     // Enable both Bank CDRs in Master Mode and wait for lock on both banks.
@@ -961,8 +1010,43 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
 
     if (status == rc_no_error)
     {
+
         if (min_recal_cnt_reached)
         {
+            // Add PR Offset
+            bool pr_offset_pause = (0 != mem_pg_field_get(ppe_pr_offset_pause));
+
+            if (cal_bank == bank_a)
+            {
+                bank_pr_save[0] = get_ptr(gcr_addr, rx_a_pr_ns_data_addr,  rx_a_pr_ns_data_startbit, rx_a_pr_ns_edge_endbit);
+                bank_pr_save[1] = get_ptr(gcr_addr, rx_a_pr_ew_data_addr,  rx_a_pr_ew_data_startbit, rx_a_pr_ew_edge_endbit);
+            }
+            else
+            {
+                bank_pr_save[0] = get_ptr(gcr_addr, rx_b_pr_ns_data_addr,  rx_b_pr_ns_data_startbit, rx_b_pr_ns_edge_endbit);
+                bank_pr_save[1] = get_ptr(gcr_addr, rx_b_pr_ew_data_addr,  rx_b_pr_ew_data_startbit, rx_b_pr_ew_edge_endbit);
+            }
+
+            pr_active[prDns_i] = prmask_Dns(bank_pr_save[0]);
+            pr_active[prEns_i] = prmask_Ens(bank_pr_save[0]);
+            pr_active[prDew_i] = prmask_Dew(bank_pr_save[1]);
+            pr_active[prEew_i] = prmask_Eew(bank_pr_save[1]);
+
+            prDsave[0] = prmask_Dns(bank_pr_save[0]);
+            prDsave[1] = prmask_Dew(bank_pr_save[1]);
+            prEsave[0] = prmask_Ens(bank_pr_save[0]);
+            prEsave[1] = prmask_Eew(bank_pr_save[1]);
+
+            pr_offset_vec_d[0] = pr_offset_vec_d[1] = pr_offset_static_d;
+
+            if (! offset_applied && !pr_offset_pause)
+            {
+                pr_recenter(gcr_addr, cal_bank, pr_active, prEsave, prDsave, pr_offset_vec_d, pr_offset_static_e);
+                mem_pl_bit_set(ppe_pr_offset_applied, lane);
+            }
+
+            // Done: Add PR offset
+
             // Cal Done:  Double check lock
             set_debug_state(0x3015); // DEBUG - Recal Final Edge Tracking and Bank Switch
             bool set_fir_on_error = true;

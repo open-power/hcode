@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// bja20090900 |bja     | New is_p10_dd1() shorthand function
 // mbs20042102 |mbs     | Added PIR and PVR functions to query design level
 // vbr19111500 |vbr     | Initial implementation of debug levels
 // vbr19081300 |vbr     | Removed mult_int16 (not needed for ppe42x)
@@ -821,6 +822,12 @@ static inline int get_major_ec ()
 static inline int get_minor_ec ()
 {
     return mfspr(SPRN_PVR) & SPRN_PVR_MINOR_EC_MASK;
+}
+
+// Remove code duplication for p10 dd1 fixes. Returns true if PPE running in P10 DD1 chip.
+static inline bool is_p10_dd1()
+{
+    return ( get_chip_id() == CHIP_ID_P10 ) && ( get_major_ec() == MAJOR_EC_DD1 );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////

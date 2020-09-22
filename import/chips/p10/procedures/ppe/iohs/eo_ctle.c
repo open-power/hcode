@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20090900 |vbr     | HW544452: Added config for disabling peak1 or peak2 cal. Also removed averaging of peak2 results in rough mode.
 // jfg20021901 |jfg     | HW521060: Abort scenario on first-run rough pass exposed failure to restore peak2 due to mis-use of pk
 // jfg20032401 |jfg     | HW526927  Wrong conditional || vs &&
 // jfg20032400 |jfg     | HW526927  hysteresis_en is not sensitive to first_run as intended.
@@ -243,6 +244,7 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
             bool rough_only)
 {
     set_debug_state(0x6000); // DEBUG - CTLE Start (IOO)
+    int abort_status = pass_code;
     int peak_out[2];
     //int peak2_out;
     int ctle_peak_preset[2];
@@ -266,10 +268,38 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
                                              c_ctle_peak1_bd_n000, c_ctle_peak2_bd_n000
                                             };
 
+    // Get configuration on which sub-steps are disabled and return if both are disabled for some reason.
+    int peak1_peak2_disable = mem_pg_field_get(ppe_ctle_peak1_peak2_disable_alias);
+
+    if (peak1_peak2_disable == 0b11)
+    {
+        goto EXIT;    //return rc_no_error;
+    }
+
+    bool peak1_disable = peak1_peak2_disable & 0b10;
+    bool peak2_disable = peak1_peak2_disable & 0b01;
+
     // ctle quadrant mode: 0=Run on each quadrant, 1=Run on North quad only
     bool ctle_mode_setup = mem_pg_field_get(rx_ctle_mode) == 0b1;
     int num_servo_ops_ctle = ctle_mode_setup ? 1 : 4;
-    int num_servo_ops_ctle_rough = 4;
+
+    // ctle_rough: only need to run 1 of the servo ops if peak1 or peak2 is disabled
+    int num_servo_ops_ctle_rough = (peak1_peak2_disable == 0) ? 4 : 1;
+
+    // Start rough servos at peak2 (index=1) when peak1 is disabled
+    int servo_array_start_rough = peak1_disable ? 1 : 0;
+
+    // Select the passes to run for ctle_main (full).
+    // Will never have both peak1 and peak2 disabled, so valid combos for the while(pk < pk_end) loop are:
+    //   peak1 and peak2: start=0, end=2, run pk=0,1
+    //   peak1 only:      start=0, end=1, run pk=0
+    //   peak2 only:      start=1, end=2, run pk=1
+    int pk_start = peak1_disable ? 1 : 0; // start with peak2 (pk=1) when peak1 is disabled
+    int pk_end   = peak2_disable ? 1 : 2; // end   with peak1 (pk<1) when peak2 is disabled
+
+    // Start main (full) servos at peak2 index when peak1 is disabled
+    int servo_array_start_main = peak1_disable ? num_servo_ops_ctle : 0;
+
 
     // Assume already switched to the correct bank prior to this being called
     /////// Initial Setup
@@ -317,7 +347,6 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
     }
 
     int pk = 0; // This serves as both a results index value and a binary encode for the update function update_peak_and_status
-    int abort_status = pass_code;
 
     if (exit_peak_on_servo_error(gcr_addr))
     {
@@ -336,8 +365,8 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
     if (first_run || rough_only)
     {
         //CTLE Rough Servo Pass
-        abort_status = run_servo_ops_and_get_results(gcr_addr, c_servo_queue_general, num_servo_ops_ctle_rough, servo_ops_rough,
-                       servo_result);
+        abort_status = run_servo_ops_and_get_results(gcr_addr, c_servo_queue_general, num_servo_ops_ctle_rough,
+                       &servo_ops_rough[servo_array_start_rough], servo_result);
         abort_status |= check_rx_abort(gcr_addr);
 
         // Check status with exit
@@ -347,18 +376,13 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
             goto ABORT;
         }
 
-        int rough_peak2 = (servo_result[1] + servo_result[3]) >> 1;
-
-        if (bank == bank_a)
-        {
-            put_ptr(gcr_addr, rx_a_ctle_peak2_addr, rx_a_ctle_peak2_startbit, rx_a_ctle_peak2_endbit, rough_peak2,
-                    read_modify_write);
-        }
-        else   //bank_b
-        {
-            put_ptr(gcr_addr, rx_b_ctle_peak2_addr, rx_b_ctle_peak2_startbit, rx_b_ctle_peak2_endbit, rough_peak2,
-                    read_modify_write);
-        }
+        //int rough_peak2 = (servo_result[1] + servo_result[3]) >> 1;
+        //if (bank == bank_a) {
+        //  put_ptr(gcr_addr, rx_a_ctle_peak2_addr, rx_a_ctle_peak2_startbit, rx_a_ctle_peak2_endbit, rough_peak2, read_modify_write);
+        //}
+        //else { //bank_b
+        //  put_ptr(gcr_addr, rx_b_ctle_peak2_addr, rx_b_ctle_peak2_startbit, rx_b_ctle_peak2_endbit, rough_peak2, read_modify_write);
+        //}
 
         set_debug_state(0x6010); // DEBUG - CTLE Servo Rough Pass
     }
@@ -368,10 +392,11 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
         goto EXIT;
     }
 
-    uint16_t* servo_ops = servo_ops_main;
-
+    uint16_t* servo_ops = &servo_ops_main[servo_array_start_main];
     // Run the Main Quad servo ops
-    while (pk < 2)
+    pk = pk_start;
+
+    while (pk < pk_end)
     {
         int cnt = num_servo_ops_ctle;
 

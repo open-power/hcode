@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20091600 |vbr     | HW546085: Added observation mem_regs for DFE Fast measured/calculated AP
+// vbr20091100 |vbr     | HW546085: Added observation mem_regs for DFE Fast coefficients
 // mbs20080500 |mbs     | HW539048- Added dfe_quad_mode to allow dfe full training of only one quadrant
 // mbs20073000 |mbs     | LAB - Updated dfe h1 check to error at -20 instead of 0
 // mbs20073000 |mbs     | LAB - Updated dfe clkadj to only adjust for h1 > 0
@@ -333,6 +335,10 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
     //SET_DFE_DEBUG(0x7030, i_ap1); // Enter DFE Calc Clk Adj
     //SET_DFE_DEBUG(0x7030, i_ap0); // Enter DFE Calc Clk Adj
 
+    // Report AP
+    int32_t lane = get_gcr_addr_lane(i_tgt);
+    mem_pl_field_put(rx_dfe_ap, lane, l_ap);
+
     // Never divide by ZERO
     if (l_ap == 0)
     {
@@ -356,7 +362,6 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
 
 
     //Rxbist check of H1 value -- can not be 0 or less
-    int lane = get_gcr_addr_lane(i_tgt);
     int rx_dfe_h1_check_en_int = get_ptr(i_tgt, rx_dfe_h1_check_en_addr  , rx_dfe_h1_check_en_startbit  ,
                                          rx_dfe_h1_check_en_endbit);//ppe pl
 
@@ -972,6 +977,13 @@ uint32_t rx_eo_dfe_fast(t_gcr_addr* i_tgt)
             goto function_exit;
         }
 
+        // Report new coefficients
+        int32_t l_lane = get_gcr_addr_lane(i_tgt);
+        mem_pl_field_put(rx_h1_coef, l_lane, l_hvals[0]);
+        mem_pl_field_put(rx_h2_coef, l_lane, l_hvals[1]);
+        mem_pl_field_put(rx_h3_coef, l_lane, l_hvals[2]);
+
+        // Check coefficients
         l_h1_vals[0] = l_hvals[0]; // [0] is current H1 value calculation
         l_rc = rx_eo_dfe_check_hvals(i_tgt, l_hvals);
 

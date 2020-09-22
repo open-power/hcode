@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap20082500 |gap     | HW542315 correct repeating pattern when in half-width mode
 // gap20050200 |gap     | Add main and pad dcc error propagation
 // gap20010900 |gap     | Removed put_ptr_field_twoscomp define, no longer used
 // vbr19111500 |vbr     | Initial implementation of debug levels
@@ -104,9 +105,6 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, bool use_repmux_i, uint32_t step_
                        int32_t ratio_thresh_i);
 
 t_comp_result tx_dcc_main_compare_result(t_gcr_addr* gcr_addr_i, uint32_t min_samples_i, int32_t ratio_thresh_i);
-
-// Drive repeating clock pattern
-void tx_dcc_main_clk_pat(t_gcr_addr* gcr_addr_i, uint8_t clk_pattern_i);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // DEBUG FUNCTIONS

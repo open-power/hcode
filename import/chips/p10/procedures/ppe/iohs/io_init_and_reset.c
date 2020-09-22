@@ -39,6 +39,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20091800 |mbs     | HW546645: Update rx_ctle_config_dc setting to 0x2
+// bja20091501 |bja     | HW544277: Use main path by default for dcc
+// bja20091500 |bja     | HW544277: Overwrite tx_dcc_sel_alias default value in p10dd1
+// vbr20091500 |vbr     | HW541162: rx_freq_adj changed from 0x1 to 0x5 for 25.6 Gbps.
 // vbr20061501 |vbr     | HW533452: Increase CDR phase_step to 0.296875 for 32G (and 50G)
 // vbr20061500 |vbr     | HW532468: Peak2 Servo Op should use H3 instead of H4 for 32G
 // vbr20061600 |vbr     | HW532326: Set Flwheel range based on whether spread is enabled or not
@@ -113,11 +117,18 @@
 
 // (BJA 1/16/20) Per Glen W, setting 0b11 is used for timing analysis.
 // The scan init (RegDef) value is 0b00, but hardware is currently frozen.
-#define RX_CLK_PHASE_SELECT_RESET_VALUE 0b00
+#define RX_CLK_PHASE_SELECT_RESET_VALUE 0b01
 
 // CDR Settings: rx_pr_phase_step (KP) = 0.296875; rx_pr_fw_inertia_amt (KI) = 4
 #define CDR_KP_RESET_VALUE 0b0100110
 #define CDR_KI_RESET_VALUE 0b0100
+
+// Circuit Settings for 25.6 Gbps and 32.5 Gbps
+#define RX_FREQ_ADJ_RESET_VALUE_25G  0x05
+#define RX_FREQ_ADJ_RESET_VALUE_32G  0x0D
+
+// CTLE config
+#define RX_CTLE_CONFIG_DC_RESET_VALUE 0x2
 
 
 //////////////////////////////////
@@ -154,7 +165,7 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, tx_boost_hs_en , l_tx_boost_en, read_modify_write);
     put_ptr_field(gcr_addr, tx_d2_ctrl       , l_data_rate, read_modify_write);
     put_ptr_field(gcr_addr, tx_d2_div_ctrl   , l_data_rate, read_modify_write);
-    put_ptr_field(gcr_addr, tx_dcc_sel_alias,  0b10, read_modify_write); //pl
+    put_ptr_field(gcr_addr, tx_dcc_sel_alias, 0b10, read_modify_write); //pl //HW544277
     set_gcr_addr_lane(gcr_addr, 0);
 
     // RX Registers
@@ -204,10 +215,15 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, rx_iref_vset_dac   , l_vio_volt, read_modify_write);
 
 
-    // frequency adjust
-    uint16_t l_rx_freq_adj = (l_data_rate == 0) ? 0x05 : 0x0D;
     set_gcr_addr_lane(gcr_addr, bcast_all_lanes);
+
+    // frequency adjust
+    uint16_t l_rx_freq_adj = (l_data_rate == 0) ? RX_FREQ_ADJ_RESET_VALUE_25G : RX_FREQ_ADJ_RESET_VALUE_32G;
     put_ptr_field(gcr_addr, rx_freq_adjust, l_rx_freq_adj, read_modify_write);
+
+    // ctle_config
+    put_ptr_field(gcr_addr, rx_ctle_config_dc, RX_CTLE_CONFIG_DC_RESET_VALUE, read_modify_write);
+
     set_gcr_addr_lane(gcr_addr, 0);
 
     // Set up the flywheel snapshot routing for psave (HW476919)
@@ -288,6 +304,7 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, tx_ioreset,    0b0, read_modify_write); //pl
     int l_tx_boost_en = (mem_pg_field_get(ppe_channel_loss) <= 1) ? 0x01 : 0x00;
     put_ptr_field(gcr_addr, tx_boost_hs_en , l_tx_boost_en, read_modify_write);
+    put_ptr_field(gcr_addr, tx_dcc_sel_alias, 0b10, read_modify_write); //pl //HW544277
 
     // Tx CML IREF clock control
     int l_data_rate = mem_pg_field_get(ppe_data_rate);
@@ -330,8 +347,11 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
 
 
     // frequency adjust
-    int l_rx_freq_adj = (l_data_rate == 0) ? 0x01 : 0x0D;
+    int l_rx_freq_adj = (l_data_rate == 0) ? RX_FREQ_ADJ_RESET_VALUE_25G : RX_FREQ_ADJ_RESET_VALUE_32G;
     put_ptr_field(gcr_addr, rx_freq_adjust, l_rx_freq_adj, read_modify_write);
+
+    // ctle_config
+    put_ptr_field(gcr_addr, rx_ctle_config_dc, RX_CTLE_CONFIG_DC_RESET_VALUE, read_modify_write);
 
     // Clear per-lane mem_regs (addresses 0x00-0x0F).
     // These are consecutive addresses so we can speed this up by just incrementing after decoding the first address.

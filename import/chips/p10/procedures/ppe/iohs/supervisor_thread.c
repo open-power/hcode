@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// bja20091400 |bja     | Also extend thread lock timeout in P10 DD1
+// bja20090900 |bja     | HW544454: Greatly extend recal not run timeout in P10 DD1
 // vbr20061800 |vbr     | HW533813: Fixed check period config for recal_not_run.
 // vbr20040800 |vbr     | HW527993: Increase thread lock check period from 100ms to 200ms
 // vbr20022700 |vbr     | Added config to allow sim to greatly reduce the check periods.
@@ -76,11 +78,10 @@
 /////////////////////////////////////////////////
 // Time constants for periodic events
 /////////////////////////////////////////////////
-#define THREAD_LOCK_CHECK_PERIOD    PK_SECONDS((PkInterval)60)
-#define RECAL_RUN_CHECK_PERIOD      PK_SECONDS((PkInterval)60)
-//#define THREAD_LOCK_CHECK_PERIOD    PK_MILLISECONDS(200)
-//#define RECAL_NOT_RUN_CHECK_PERIOD  PK_MILLISECONDS(500)
-#define RECAL_NOT_RUN_CHECK_PERIOD      PK_SECONDS((PkInterval)60)
+#define THREAD_LOCK_CHECK_PERIOD    PK_MILLISECONDS(200)
+#define THREAD_LOCK_CHECK_PERIOD_P10_DD1    PK_SECONDS((PkInterval)10)
+#define RECAL_NOT_RUN_CHECK_PERIOD  PK_MILLISECONDS(500)
+#define RECAL_NOT_RUN_CHECK_PERIOD_P10_DD1  PK_SECONDS((PkInterval)10)
 #define FAST_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)43200) // 12 hrs
 #define SLOW_EOL_TOGGLE_PERIOD      PK_SECONDS((PkInterval)86400) // 24 hrs
 
@@ -130,7 +131,15 @@ void supervisor_thread(void* arg)
     else
     {
         // Operational Mode
-        thread_locked_check_interval = PK_INTERVAL_SCALE(THREAD_LOCK_CHECK_PERIOD);
+        // HW544454: Greatly extend timeout in DD1 because of manual servo ops
+        if ( is_p10_dd1() )
+        {
+            thread_locked_check_interval = PK_INTERVAL_SCALE(THREAD_LOCK_CHECK_PERIOD_P10_DD1);
+        }
+        else
+        {
+            thread_locked_check_interval = PK_INTERVAL_SCALE(THREAD_LOCK_CHECK_PERIOD);
+        }
     }
 
     PkInterval recal_not_run_check_interval;
@@ -144,7 +153,15 @@ void supervisor_thread(void* arg)
     else
     {
         // Operational Mode
-        recal_not_run_check_interval = PK_INTERVAL_SCALE(RECAL_NOT_RUN_CHECK_PERIOD);
+        // HW544454: Greatly extend timeout in DD1 because of manual servo ops
+        if ( is_p10_dd1() )
+        {
+            recal_not_run_check_interval = PK_INTERVAL_SCALE(RECAL_NOT_RUN_CHECK_PERIOD_P10_DD1);
+        }
+        else
+        {
+            recal_not_run_check_interval = PK_INTERVAL_SCALE(RECAL_NOT_RUN_CHECK_PERIOD);
+        }
     }
 
     // Set the time for the first error checks

@@ -40,6 +40,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jfg20090100 |jfg     | HW532333 Move offset changes to eo_main
+// jfg20081400 |jfg     | HW532333 Add new static PR Offset feature
 // jfg20042000 |jfg     | HW523199 Remove ddc_last_left & ddc_last_right and add per-lane history recording.
 // jfg20042000 |jfg     | HW523199 Replace ddc_hist_left/right with ddc_hyst_left_right
 // jfg20041400 |jfg     | HW518382 Regression exposed a possible error in QPA offset comparison using signed math on a signed value instead of unsigned
@@ -155,19 +157,9 @@
 #define max_eye 0xFFFF
 #define ber_too_long 1023
 #define lock_error -1
-// All four PR positions packed in as: {Data NS, Edge NS, Data EW, Edge EW}
-#define prDns_i 0
-#define prEns_i 1
-#define prDew_i 2
-#define prEew_i 3
 
 #define edge_half_left (pr_mini_cen-((pr_mini_cen - pr_mini_min)>>1)-4)
 #define edge_half_right (pr_mini_cen+((pr_mini_max - pr_mini_cen)>>1)+4)
-
-#define prmask_Dns(a) ( ((a) & (rx_a_pr_ns_data_mask >> rx_a_pr_ns_edge_shift)) >> (rx_a_pr_ns_data_shift - rx_a_pr_ns_edge_shift) )
-#define prmask_Ens(a) ( ((a) & (rx_a_pr_ns_edge_mask >> rx_a_pr_ns_edge_shift)) )
-#define prmask_Dew(a) ( ((a) & (rx_a_pr_ew_data_mask >> rx_a_pr_ew_edge_shift)) >> (rx_a_pr_ew_data_shift - rx_a_pr_ew_edge_shift) )
-#define prmask_Eew(a) ( ((a) & (rx_a_pr_ew_edge_mask >> rx_a_pr_ew_edge_shift)) )
 
 #define edge_size(cnt,ref) ((cnt <= (ref<<1))?2:1)
 
@@ -197,16 +189,17 @@ const int ber_sel_final = 0x9 + 0x1; // Selects 262K@des16 or 524K@des32. Divide
 // - Esave  : 2 uint array containing original PR position packed into NS / EW format
 // - Dsave  : 2 uint array containing original PR position packed into NS / EW format
 // - Doff   : 2 int array containing signed offset from orignal start if desired. Otherwise set = 0
+// - Eoff   : 1 int provided for implementing PR Bias. Must be common between both edges. Split values not supported.
 // Return value:
 //  False   : Edge value was not on the opposite side of the data compared to the original target position. It must be dealt with separately.
-bool  pr_recenter(t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, uint32_t* Esave, uint32_t* Dsave, int* Doffset)
+bool  pr_recenter(t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, uint32_t* Esave, uint32_t* Dsave, int* Doffset,
+                  int Eoffset)
 {
     int i;
     bool status = true;
 
     for (i = 0; i < 2; i++)
     {
-        int Eoffset =  0; // There will always be an error term here and a non-zero risks upsetting QPA positioning anyway.
         int Eidx, Didx;
         uint32_t ds, es;
         int Eleft, Dleft;
@@ -226,7 +219,7 @@ bool  pr_recenter(t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, uint32_t* Esa
             Eidx = prEew_i;
         }
 
-        Eleft = (pr_vals[Eidx]) - Esave[i] + (Eoffset);
+        Eleft = (pr_vals[Eidx]) - Esave[i] - (Eoffset);
         Dleft = Dsave[i] - (pr_vals[Didx]) + (Doffset[i]);
         dirL1R0 = dirRnoseek;
 
@@ -291,9 +284,9 @@ void set_ddc_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, int* pr_vals, uin
     /* // make 1 data step */
     /* ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, false, false, noseek, pr_active, ber_count); */
     int offsets[2] = {0, 0};
-    pr_recenter(gcr_addr, bank, pr_vals, Esave, Dsave, offsets);
+    pr_recenter(gcr_addr, bank, pr_vals, Esave, Dsave, offsets, 0);
     // Run this twice in case D/E get out of whack and need to restore in opposite directions
-    pr_recenter(gcr_addr, bank, pr_vals, Esave, Dsave, offsets);
+    pr_recenter(gcr_addr, bank, pr_vals, Esave, Dsave, offsets, 0);
 
 }
 
@@ -458,13 +451,13 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
             Dedge[0] = pr_vals[prDns_i];
         }
 
-        pr_recenter(gcr_addr, bank, pr_vals, Esave, Dsave, Doffset);
+        pr_recenter(gcr_addr, bank, pr_vals, Esave, Dsave, Doffset, 0);
 
         seek_quad--;
     }
     while (seek_quad != doseek);
 
-    pr_recenter(gcr_addr, bank, pr_vals, Esave, Dedge, Doffset);
+    pr_recenter(gcr_addr, bank, pr_vals, Esave, Dedge, Doffset, 0);
     put_ptr(gcr_addr, rx_berpl_mask_mode_addr, rx_berpl_mask_mode_startbit, rx_berpl_mask_mode_endbit, 0,
             read_modify_write);
     put_ptr(gcr_addr, rx_err_trap_mask_addr, rx_err_trap_mask_startbit, rx_err_trap_mask_endbit, 0 , read_modify_write);
@@ -593,9 +586,6 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
     // 3: Search RIGHT first error
     int ber_status;
-    //slow down reads to ensure reset completes
-    ber_status = get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit, rx_ber_timer_running_endbit);
-    ber_status = get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit, rx_ber_timer_running_endbit);
 
     ///////DEBUG
     //set_debug_state(0x8041 | (ber_status << 4)); // DEBUG - DDC Setup
@@ -806,7 +796,7 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
     ds = 1;
     es = 1;
-    pr_recenter(gcr_addr, bank, pr_active, Esave, Dsave, ddc_offset_w_hyst);
+    pr_recenter(gcr_addr, bank, pr_active, Esave, Dsave, ddc_offset_w_hyst, 0);
 
     set_debug_state(0x801F); // DEBUG: 8: Shift back to sample position done
 

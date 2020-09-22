@@ -39,6 +39,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// bja20091500 |bja     | HW544277: Use main path by default for dcc
+// bja20091400 |bja     | HW544277: Prevent replica path in anything but p10 dd1
+// bja20090900 |bja     | Use common is_p10_dd1() check
 // gap20082500 |gap     | HW542315 correct repeating pattern when in half-width mode
 // gap20052100 |gap     | Added power up/down controls for dd2, repmux path select dd1 cq521314
 // gap20050200 |gap     | Add main and pad dcc error propagation
@@ -75,6 +78,14 @@ void tx_dcc_main_init(t_gcr_addr* gcr_addr_i)
     uint32_t tx_dcc_sel_alias_l = get_ptr_field(gcr_addr_i, tx_dcc_sel_alias) ; // main followed by pad
     set_tx_dcc_debug(0xD061, tx_dcc_sel_alias_l); //dcc_sel_alias
     bool use_repmux_l = (tx_dcc_sel_alias_l == 0);
+    const bool IS_P10_DD1 = is_p10_dd1();
+
+    if ( use_repmux_l && !IS_P10_DD1 )   // Guard against using replica path in anything but p10 dd1.
+    {
+        use_repmux_l = false;
+        // HW544277: default is main path
+        put_ptr_field(gcr_addr_i, tx_dcc_sel_alias,  0b10, read_modify_write); //pl
+    }
 
     uint32_t tx_dcc_main_min_samples_int = mem_pg_field_get(tx_dcc_main_min_samples);
 
@@ -83,7 +94,7 @@ void tx_dcc_main_init(t_gcr_addr* gcr_addr_i)
     put_ptr_field(gcr_addr_i, tx_dcc_iq_tune,  IntToGray5IQ(0), read_modify_write);
 
     // power on dcc if not p10 dd1; p10 dd1 does not allow this control
-    if ((get_chip_id() != CHIP_ID_P10) || (get_major_ec() != MAJOR_EC_DD1))   // not p10 dd1
+    if ( !IS_P10_DD1 )   // not p10 dd1
     {
         put_ptr_field(gcr_addr_i, tx_bank_controls_dcc_alias,  0b0, read_modify_write); //pl power-on, active low
     }
@@ -110,13 +121,9 @@ void tx_dcc_main_init(t_gcr_addr* gcr_addr_i)
     }
 
     // power off dcc if not dd1; dd1 does not allow this control
-    if ((get_chip_id() != CHIP_ID_P10) || (get_major_ec() != MAJOR_EC_DD1))   // not p10 dd1
+    if ( !IS_P10_DD1 )   // not p10 dd1
     {
         put_ptr_field(gcr_addr_i, tx_bank_controls_dcc_alias,  0b1, read_modify_write); //pl power-on, active low
-    }
-    else if (!use_repmux_l)   // if p10 dd1 and repmux not selected, select it
-    {
-        put_ptr_field(gcr_addr_i, tx_dcc_sel_alias,  0b00, read_modify_write); //pl
     }
 
     set_debug_state(0xD01F); // init end

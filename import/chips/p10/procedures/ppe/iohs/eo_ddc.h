@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// jfg20090100 |jfg     | HW532333 Move offset changes to eo_main
 // jfg18081000 |jfg     | Modified for new function def
 // vbr16021600 |vbr     | Initial Rev
 // -----------------------------------------------------------------------------
@@ -48,6 +49,19 @@
 
 #include "eo_common.h"
 
+// All four PR positions packed in as: {Data NS, Edge NS, Data EW, Edge EW}
+#define prDns_i 0
+#define prEns_i 1
+#define prDew_i 2
+#define prEew_i 3
+
+#define prmask_Dns(a) ( ((a) & (rx_a_pr_ns_data_mask >> rx_a_pr_ns_edge_shift)) >> (rx_a_pr_ns_data_shift - rx_a_pr_ns_edge_shift) )
+#define prmask_Ens(a) ( ((a) & (rx_a_pr_ns_edge_mask >> rx_a_pr_ns_edge_shift)) )
+#define prmask_Dew(a) ( ((a) & (rx_a_pr_ew_data_mask >> rx_a_pr_ew_edge_shift)) >> (rx_a_pr_ew_data_shift - rx_a_pr_ew_edge_shift) )
+#define prmask_Eew(a) ( ((a) & (rx_a_pr_ew_edge_mask >> rx_a_pr_ew_edge_shift)) )
+
+bool  pr_recenter(t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, uint32_t* Esave, uint32_t* Dsave, int* Doffset,
+                  int Eoffset);
 // Run DDC on a lane and update historical width
 int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed);
 

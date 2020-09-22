@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// bja20091400 |bja     | HW544454- Sleep after each _run_amp_op() call
 // mbs20080501 |mbs     | HW539048- Updated to make FILTER_DEPTH modes (1 is too short)
 // mbs20080500 |mbs     | HW539048- Updated to make FILTER_DEPTH programmable (rx_manual_servo_filter_depth)
 // cws20072200 |cws     |- Initial
@@ -138,6 +139,7 @@ uint32_t manual_amp_servo_op(t_gcr_addr* io_gcr_addr,
     for (l_idx = 0; l_idx < i_num_ops; l_idx++)
     {
         l_rc |= _run_amp_op(io_gcr_addr, i_set_fir_on_error, i_is_loff, i_servo_ops[l_idx], &o_results[l_idx]);
+        io_sleep(get_gcr_addr_thread(io_gcr_addr));
     }
 
     return l_rc;

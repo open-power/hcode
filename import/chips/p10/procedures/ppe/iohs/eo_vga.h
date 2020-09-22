@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr20091600 |vbr     | Added saved_Amax pointer input
 // vbr17081501 |vbr     | Added copy_to_b input.
 // vbr16081000 |vbr     | No bank input for IOF
 // vbr16032100 |vbr     | Initial Rev
@@ -51,7 +52,7 @@
 #include "eo_common.h"
 
 // VGA Gain loop portion of VGA
-int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, bool* gain_changed, bool recal, bool copy_gain_to_b,
+int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, int* saved_Amax, bool* gain_changed, bool recal, bool copy_gain_to_b,
            bool copy_gain_to_b_loop, bool first_loop_iteration );
 
 //copy function for vga and write
