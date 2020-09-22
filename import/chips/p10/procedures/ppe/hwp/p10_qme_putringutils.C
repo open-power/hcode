@@ -901,14 +901,19 @@ fapi2::ReturnCode p10_putRingUtils(
             PKTRACE("Ring Header Mismatch ");
             PKTRACE("Header  Value %08X %08X", (l_readHeader >> 32), l_readHeader);
 
-            //In EDR: ring Id (8b),core value(4b) and number of latches that went thru rotate
-            //and scan.
+            //In EDR: core value(4b), ring Id (12b), and number of latches that went thru rotate
+            //and scan (16b).
             //In SPRG0: First 32 bits of header data read from the hw
-            uint32_t l_ringId       =   l_rs4Header->iv_ringId;
-            uint32_t debug_data_0   =   (l_ringId << 16) | (l_bitsDecoded & 0x000FFFFF);
-            uint32_t debug_data_1   =   (uint32_t)(l_readHeader >> 32);
+            uint32_t l_coreId       = i_target.getCoreSelect();
+            uint32_t l_ringId       = l_rs4Header->iv_ringId;
+            uint32_t debug_data_0   = (l_coreId << 28) | (l_ringId << 16) | (l_bitsDecoded & 0x000FFFFF);
             asm volatile ("mtspr %0, %1" : : "i" (61), "r" (debug_data_0) : "memory");
+
+            uint32_t sprg0 = 0;
+            asm volatile ("mfspr %0, %1" : : "r" (sprg0), "i" (272) : "memory");
+            uint32_t debug_data_1   = sprg0 | (uint32_t)((l_readHeader >> 32) & 0xFFFF0000);
             asm volatile ("mtspr %0, %1" : : "i" (272), "r" (debug_data_1) : "memory");
+
             IOTA_PANIC(QME_STOP_PUTRING_HEADER_MISMATCH);
         }
         else
