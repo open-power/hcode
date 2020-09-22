@@ -1184,6 +1184,9 @@ void pgpe_pstate_update_vdd_vcs_ps()
     G_pgpe_pstate.vcs_curr_ext = G_pgpe_pstate.vcs_next_ext;
     G_pgpe_pstate.pstate_curr = G_pgpe_pstate.pstate_next;
 
+    uint32_t occs2  =  (G_pgpe_pstate.vdd_curr_ext << 16) | G_pgpe_pstate.vcs_curr_ext;
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCS2_RW, occs2);
+
     if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
     {
         pgpe_wov_ocs_set_wov_curr_pct(pgpe_wov_ocs_get_wov_tgt_pct());
