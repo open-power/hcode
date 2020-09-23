@@ -39,6 +39,7 @@ $(eval $(IMAGE)_FILE_RINGS=$(RINGFILEPATH)/$3.$1.sbe.rings.bin)
 $(eval $(IMAGE)_FILE_FA_EC_CL2_FAR=$(RINGFILEPATH)/$3.$1.fa_ec_cl2_far.bin)
 $(eval $(IMAGE)_FILE_FA_EC_MMA_FAR=$(RINGFILEPATH)/$3.$1.fa_ec_mma_far.bin)
 $(eval $(IMAGE)_FILE_FA_RING_OVRD=$(RINGFILEPATH)/$3.$1.fa_ring_ovrd.bin)
+$(eval $(IMAGE)_FILE_HDCT=$(RINGFILEPATH)/$3.$1.hdct.bin)
 
 # Dependencies for appending image sections in sequence:
 #   - file to be appended
@@ -53,7 +54,7 @@ $(eval $(IMAGE)_DEPS_FA_EC_MMA_FAR  = $$($(IMAGE)_FILE_FA_EC_MMA_FAR))
 $(eval $(IMAGE)_DEPS_FA_EC_MMA_FAR += $$($(IMAGE)_DEPS_FA_EC_CL2_FAR))
 $(eval $(IMAGE)_DEPS_FA_EC_MMA_FAR += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ec_cl2_far)
 
-$(eval $(IMAGE)_DEPS_IMAGE         += $$($(IMAGE)_FILE_FA_RING_OVRD))
+$(eval $(IMAGE)_DEPS_IMAGE          += $$($(IMAGE)_FILE_FA_RING_OVRD))
 $(eval $(IMAGE)_DEPS_FA_RING_OVRD    = $$($(IMAGE)_FILE_FA_RING_OVRD))
 $(eval $(IMAGE)_DEPS_FA_RING_OVRD   += $$($(IMAGE)_DEPS_FA_EC_MMA_FAR))
 $(eval $(IMAGE)_DEPS_FA_RING_OVRD   += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ec_mma_far)
@@ -62,14 +63,21 @@ $(eval $(IMAGE)_DEPS_IMAGE         += $$($(IMAGE)_FILE_RINGS))
 $(eval $(IMAGE)_DEPS_RINGS          = $$($(IMAGE)_FILE_RINGS))
 $(eval $(IMAGE)_DEPS_RINGS         += $$($(IMAGE)_DEPS_FA_RING_OVRD))
 $(eval $(IMAGE)_DEPS_RINGS         += $$($(IMAGE)_PATH)/.$(IMAGE).append.fa_ring_ovrd)
-$(eval $(IMAGE)_DEPS_REPORT         = $$($(IMAGE)_DEPS_RINGS))
-$(eval $(IMAGE)_DEPS_REPORT        += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
+
+$(eval $(IMAGE)_DEPS_IMAGE         += $$($(IMAGE)_FILE_HDCT))
+$(eval $(IMAGE)_DEPS_HDCT           = $$($(IMAGE)_FILE_HDCT))
+$(eval $(IMAGE)_DEPS_HDCT          += $$($(IMAGE)_DEPS_RINGS))
+$(eval $(IMAGE)_DEPS_HDCT          += $$($(IMAGE)_PATH)/.$(IMAGE).append.rings)
+
+$(eval $(IMAGE)_DEPS_REPORT         = $$($(IMAGE)_DEPS_HDCT))
+$(eval $(IMAGE)_DEPS_REPORT        += $$($(IMAGE)_PATH)/.$(IMAGE).append.hdct)
 
 # Image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.fa_ec_cl2_far,$$($(IMAGE)_DEPS_FA_EC_CL2_FAR),$$($(IMAGE)_FILE_FA_EC_CL2_FAR) 1))
 $(eval $(call XIP_TOOL,append,.fa_ec_mma_far,$$($(IMAGE)_DEPS_FA_EC_MMA_FAR),$$($(IMAGE)_FILE_FA_EC_MMA_FAR) 1))
 $(eval $(call XIP_TOOL,append,.fa_ring_ovrd,$$($(IMAGE)_DEPS_FA_RING_OVRD),$$($(IMAGE)_FILE_FA_RING_OVRD) 1))
 $(eval $(call XIP_TOOL,append,.rings,$$($(IMAGE)_DEPS_RINGS),$$($(IMAGE)_FILE_RINGS) 1))
+$(eval $(call XIP_TOOL,append,.hdct,$$($(IMAGE)_DEPS_HDCT),$$($(IMAGE)_FILE_HDCT) 1))
 
 # Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))
