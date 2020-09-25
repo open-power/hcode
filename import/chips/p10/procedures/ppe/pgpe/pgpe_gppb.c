@@ -52,8 +52,8 @@ void pgpe_gppb_init()
 
 #if GENERATE_HOMER_TABLES == 1
     //Fill out GeneratedPstateInfo structure
-    PK_TRACE("GPPB: genPsTblMemOff=0x%08x", (uint32_t)pgpe_header_get(g_pgpe_gpspbMemOffset));
-    G_gpi = (GeneratedPstateInfo_t*)pgpe_header_get(g_pgpe_gpspbMemOffset);
+    PK_TRACE("GPPB: genPsTblMemOff=0x%08x", (uint32_t)pgpe_header_get(g_pgpe_genPsTableMemOffset));
+    G_gpi = (GeneratedPstateInfo_t*)pgpe_header_get(g_pgpe_genPsTableMemOffset);
     G_gpi->magic = GEN_PSTATES_TBL_MAGIC;
     G_gpi->marker_gppb_end = 0xdead0000;
     G_gpi->globalppb = *G_gppb;
