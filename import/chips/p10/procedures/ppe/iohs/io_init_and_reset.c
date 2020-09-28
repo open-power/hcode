@@ -163,8 +163,20 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     set_gcr_addr_lane(gcr_addr, bcast_all_lanes);
     int l_tx_boost_en = (mem_pg_field_get(ppe_channel_loss) <= 1) ? 0x01 : 0x00;
     put_ptr_field(gcr_addr, tx_boost_hs_en , l_tx_boost_en, read_modify_write);
-    put_ptr_field(gcr_addr, tx_d2_ctrl       , l_data_rate, read_modify_write);
-    put_ptr_field(gcr_addr, tx_d2_div_ctrl   , l_data_rate, read_modify_write);
+
+    if (   ( get_chip_id()  == CHIP_ID_P10  )
+           && ( get_major_ec() == MAJOR_EC_DD1 ) )
+    {
+        put_ptr_field(gcr_addr, tx_d2_ctrl       , 0, read_modify_write);
+        put_ptr_field(gcr_addr, tx_d2_div_ctrl   , 1, read_modify_write);
+    }
+    else
+    {
+        put_ptr_field(gcr_addr, tx_d2_ctrl       , l_data_rate, read_modify_write);
+        put_ptr_field(gcr_addr, tx_d2_div_ctrl   , l_data_rate, read_modify_write);
+
+    }
+
     put_ptr_field(gcr_addr, tx_dcc_sel_alias, 0b10, read_modify_write); //pl //HW544277
     set_gcr_addr_lane(gcr_addr, 0);
 
@@ -200,7 +212,7 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     // peak2_h_sel   (> 2 is for future speeds)
     if (l_data_rate <= 2)
     {
-        put_ptr_field(gcr_addr, rx_ctle_peak2_h_sel, 0x1, read_modify_write); // use H3 for peak2
+        put_ptr_field(gcr_addr, rx_ctle_peak2_h_sel, 0x0, read_modify_write); // use H2 for peak2
     }
     else
     {
