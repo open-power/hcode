@@ -26,6 +26,7 @@
 #include "ocb_register_addresses.h"
 #include "xgpe_irq_handlers.h"
 #include "pstate_pgpe_occ_api.h"
+#include "p10_oci_proc.H"
 
 uint32_t G_OCB_OISR0_CLR     = OCB_OISR0_CLR;
 uint32_t G_OCB_OIMR0_CLR     = OCB_OIMR0_CLR;
@@ -49,6 +50,27 @@ uint32_t G_OCB_OPITESVRR     = OCB_OPITESVRR;
 int main()
 {
     PK_TRACE("XGPE Booted");
+
+#if (POWER10_DD_LEVEL != 0)
+#define PVR_CONST (0x421A0000 | (((POWER10_DD_LEVEL ) / 10) << 8) | (POWER10_DD_LEVEL % 10))
+#else
+#define PVR_CONST 0
+#endif
+
+#define OCC_FLAGS_RUNNING_SIMICS 63
+
+    // @note If OCC Flag 0 [63] is set .. execution environment is Simics
+    if( in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_RW) & BIT64SH(OCC_FLAGS_RUNNING_SIMICS) )
+    {
+        PK_TRACE ("XGPE running on Simics");
+    }
+    else
+    {
+        if(mfspr(287) != PVR_CONST)
+        {
+            IOTA_PANIC(XGPE_BAD_DD_LEVEL);
+        }
+    }
 
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*) OCC_SHARED_SRAM_ADDR_START;
     initErrLogging ((uint8_t) ERRL_SOURCE_XGPE, &(occ_shared_data->errlog_idx));

@@ -37,6 +37,7 @@
 #include "pgpe_wov_ocs.h"
 #include "pgpe_dds.h"
 #include "iota_trace.h"
+#include "p10_oci_proc.H"
 
 IOTA_BEGIN_IDLE_TASK_TABLE
 { IOTA_IDLE_ENABLED, IOTA_TASK(pgpe_event_manager_run) }
@@ -51,6 +52,8 @@ data_struct_table_t G_data_struct_table __attribute__((section (".data_struct_ta
 
 void init_data_struct_table();
 
+
+
 int main()
 {
 
@@ -59,6 +62,27 @@ int main()
     pgpe_fake_boot_gppb();
     pgpe_fake_boot_pgpe_header();
 #endif
+
+#if (POWER10_DD_LEVEL != 0)
+#define PVR_CONST (0x421A0000 | (((POWER10_DD_LEVEL ) / 10) << 8) | (POWER10_DD_LEVEL % 10))
+#else
+#define PVR_CONST 0
+#endif
+
+#define OCC_FLAGS_RUNNING_SIMICS 63
+
+    // @note If OCC Flag 0 [63] is set .. execution environment is Simics
+    if( in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_RW) & BIT64SH(OCC_FLAGS_RUNNING_SIMICS) )
+    {
+        PK_TRACE ("PGPE running on Simics");
+    }
+    else
+    {
+        if(mfspr(287) != PVR_CONST)
+        {
+            IOTA_PANIC(PGPE_BAD_DD_LEVEL);
+        }
+    }
 
     //Do all initialization here
     pgpe_header_init();
