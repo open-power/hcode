@@ -73,7 +73,7 @@ void pgpe_event_manager_task_init()
         pgpe_opt_set_byte(2, PGPE_OPT_START_STOP_SRC_SCOM);
         pgpe_opt_set_byte(3, (uint8_t)dpll_mode);
         ppe_trace_op(PGPE_OPT_START_STOP, pgpe_opt_get());
-        pgpe_process_set_pmcr_owner(PMCR_OWNER_OCC);
+        pgpe_process_set_pmcr_owner(PMCR_OWNER_CHAR);
     }
 
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_ACTIVE));

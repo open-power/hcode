@@ -418,7 +418,7 @@ void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
         PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(8)); //Enable AUTO_PMCR_UPDATE
 
         //Enable SCOM writes to PMCR if characterization mode. Otherwise, core-shifter updates
-        if ((owner == PMCR_OWNER_CHAR))
+        if ((pgpe_pstate_get(pmcr_owner) == PMCR_OWNER_CHAR))
         {
             PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(0));
         }
