@@ -254,18 +254,24 @@ void pgpe_pstate_actuate_step()
         PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
 
         //lower VDD
-        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
-                                  pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                  G_pgpe_pstate.vdd_next_ext);
+        if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
+        {
+            pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                      pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
+                                      G_pgpe_pstate.vdd_next_ext);
+        }
 
         //Write proxy_scale_factor_target to DPCRs
         dpcr.fields.proxy_scale_factor = power_proxy_scale_tgt;
         PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
 
         //lower VCS
-        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
-                                  pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                                  G_pgpe_pstate.vcs_next_ext);
+        if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
+        {
+            pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                                      pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
+                                      G_pgpe_pstate.vcs_next_ext);
+        }
 
         if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
         {
@@ -277,18 +283,24 @@ void pgpe_pstate_actuate_step()
     else if (G_pgpe_pstate.pstate_next < G_pgpe_pstate.pstate_curr)
     {
         //raise VCS
-        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
-                                  pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                                  G_pgpe_pstate.vcs_next_ext);
+        if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
+        {
+            pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                                      pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
+                                      G_pgpe_pstate.vcs_next_ext);
+        }
 
         //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
         dpcr.fields.proxy_scale_factor = (power_proxy_scale_tgt + G_pgpe_pstate.power_proxy_scale) >> 1;
         PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
 
         //raise VDD
-        pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
-                                  pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                  G_pgpe_pstate.vdd_next_ext);
+        if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
+        {
+            pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                      pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
+                                      G_pgpe_pstate.vdd_next_ext);
+        }
 
         //Write proxy_scale_factor_target to DPCRs
         dpcr.fields.proxy_scale_factor = power_proxy_scale_tgt;
