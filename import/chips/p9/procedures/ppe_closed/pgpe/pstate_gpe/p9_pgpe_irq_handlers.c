@@ -68,6 +68,7 @@ void p9_pgpe_irq_init()
 //  and any pending OCB_HB interrupt
 //
 #define OCC_HB_ERROR_FIR 4
+#define OCC_UE_FIR       44
 void p9_pgpe_ocb_hb_error_init()
 {
     PK_TRACE_DBG("INIT: Occ Heartbeat Setup");
@@ -77,13 +78,16 @@ void p9_pgpe_ocb_hb_error_init()
     //Set up OCB_HB loss FIR bit to generate interrupt
     GPE_GETSCOM(OCB_OCCLFIRACT0, firact);
     firact |= BIT64(OCC_HB_ERROR_FIR);
+    firact |= BIT64(OCC_UE_FIR);
     GPE_PUTSCOM(OCB_OCCLFIRACT0, firact);
 
     GPE_GETSCOM(OCB_OCCLFIRACT1, firact);
     firact &= ~BIT64(OCC_HB_ERROR_FIR);
+    firact &= ~BIT64(OCC_UE_FIR);
     GPE_PUTSCOM(OCB_OCCLFIRACT1, firact);
 
     GPE_PUTSCOM(OCB_OCCLFIRMASK_AND, ~BIT64(OCC_HB_ERROR_FIR));
+    GPE_PUTSCOM(OCB_OCCLFIRMASK_AND, ~BIT64(OCC_UE_FIR));
 
     out64(OCB_OCCHBR, 0); //Clear and Disable OCC Heartbeat Register
     GPE_PUTSCOM(OCB_OCCLFIR_AND, ~BIT64(OCC_HB_ERROR_FIR));
@@ -156,7 +160,7 @@ void p9_pgpe_irq_handler_ocb_err()
     GPE_GETSCOM(OCB_OCCLFIR, fir.value);
 
     //If OCB_LFIR[occ_hb_error]
-    if (fir.fields.occ_hb_error == 1)
+    if (fir.fields.occ_hb_error == 1 || fir.fields.c405_ecc_ue == 1)
     {
 
         G_pgpe_optrace_data.word[0] = (G_pgpe_pstate_record.activeQuads << 24) |
