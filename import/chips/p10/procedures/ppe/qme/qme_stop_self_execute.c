@@ -237,7 +237,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     uint32_t core_index;
     uint32_t core_mask;
     data64_t scom_data;
-    QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
+    //QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
 
     // ===============================
 
@@ -268,54 +268,61 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     PK_TRACE("*RMOR HOMER address: 0x%08lX %08lX",
              scom_data.words.upper, scom_data.words.lower);
 
-    if( G_qme_record.hcode_func_enabled & QME_SMF_SUPPORT_ENABLE )
-    {
-        // UV Mode
-        PK_TRACE("SMF core self save/restore, write URMOR with HOMER address");
-
-        // Write URMOR
-        scom_data.value |= BIT64(63);
-        out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
-
-        if( SPR_SELF_SAVE == i_saveRestore )
+    /* Commenting SMF as the feature is no longer POR
+     * and DD2 scom timeout protection will require delay after the first
+     * scom write to RMOR to give enough time for ack to be back from serial shifter.
+     * otherwise second write to URMOR will fail. thus just commenting out
+     * unused function as workaround instead of keeping it with a delay.
+        if( G_qme_record.hcode_func_enabled & QME_SMF_SUPPORT_ENABLE )
         {
-            PK_TRACE_INF("SMF core self save, write HRMOR un-secure HOMER address");
-            scom_data.value = pQmeImgHdr->g_qme_unsec_cpmr_PhyAddr & BITS64(13, 30); //Unsecure HOMER
+            // UV Mode
+            PK_TRACE("SMF core self save/restore, write URMOR with HOMER address");
+
+            // Write URMOR
+            scom_data.value |= BIT64(63);
+            out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
+
+            if( SPR_SELF_SAVE == i_saveRestore )
+            {
+                PK_TRACE_INF("SMF core self save, write HRMOR un-secure HOMER address");
+                scom_data.value = pQmeImgHdr->g_qme_unsec_cpmr_PhyAddr & BITS64(13, 30); //Unsecure HOMER
+            }
+            else
+            {
+                PK_TRACE_INF("SMF core wakeup, write HRMOR un-secure HOMER address");
+                scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
+            }
+
+            // Write HRMOR
+            // Clear the steering bit for HRMOR
+            scom_data.value &= ~BIT64(63);
+            out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
         }
         else
         {
-            PK_TRACE_INF("SMF core wakeup, write HRMOR un-secure HOMER address");
-            scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
-        }
+    */
+    // HV Mode
+    PK_TRACE_INF("HV mode: %s : write HRMOR and URMOR with HOMER address"
+                 (SPR_SELF_SAVE == i_saveRestore) ? "Self-Save" : "Self-Restore" );
 
-        // Write HRMOR
-        // Clear the steering bit for HRMOR
-        scom_data.value &= ~BIT64(63);
-        out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
+    if( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE )
+    {
+        scom_data.value = 0xA200000;
     }
     else
     {
-        // HV Mode
-        PK_TRACE_INF("HV mode: %s : write HRMOR and URMOR with HOMER address"
-                     (SPR_SELF_SAVE == i_saveRestore) ? "Self-Save" : "Self-Restore" );
-
-        if( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE )
-        {
-            scom_data.value = 0xA200000;
-        }
-        else
-        {
-            scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
-        }
-
-        // Write HRMOR
-        out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
-
-        // Write URMOR
-        scom_data.value |= BIT64(63);
-        out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
+        scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
     }
 
+    // Write HRMOR
+    out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
+
+    /*see comments above
+            // Write URMOR
+            scom_data.value |= BIT64(63);
+            out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
+        }
+    */
 
 
 //#endif
