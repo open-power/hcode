@@ -732,6 +732,13 @@ qme_stop_exit()
         if( G_qme_record.hcode_func_enabled & QME_SELF_RESTORE_ENABLE )
         {
             qme_stop_self_complete(G_qme_record.c_stop11_exit_targets);
+
+            G_qme_record.c_stop11_exit_targets &= ~G_qme_record.c_self_failed;
+
+            if( G_qme_record.c_stop11_exit_targets == 0 )
+            {
+                return;
+            }
         }
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_RESTORED )

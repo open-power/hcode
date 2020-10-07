@@ -176,6 +176,12 @@ enum BCE_SCOPE
     QME_SPECIFIC = 1,
 };
 
+enum SR_FAILURE_CODE
+{
+    SR_SUCCESS          =    0,
+    SLAVE_THRD_FAIL     =    1,
+    MASTER_THRD_FAIL    =    2,
+};
 // todo
 // (auto) pmcr fwd enable, throttle enable,
 // pstate enable, wof enable, safe mode enable

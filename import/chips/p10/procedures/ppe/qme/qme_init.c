@@ -63,6 +63,8 @@ qme_init()
     G_qme_record.mma_enabled        = 0;
     G_qme_record.pmcr_fwd_enabled   = 0;
     G_qme_record.throttle_enabled   = 0;
+    G_qme_record.c_self_failed      = 0;
+    G_qme_record.c_self_fault_vector = 0;
 
     PK_TRACE_INF("Setup: Git Head[%x], Chip DD Level[%d], Stop Level Enabled[%x], Configured Cores[%x]",
                  G_qme_record.git_head,

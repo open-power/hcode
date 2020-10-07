@@ -33,11 +33,41 @@ enum
     SR_FAIL_MASTER_THREAD   =   0x02,
     QME_STOP11_EXIT         =   0x02,
     SR_FFDC_SIZE            =   864,
-
+    INIT_FFDC_COLLECT       =   55,
+    SLAVE_THRD_COMPLETE     =   56,
+    FFDC_AVAILABLE          =   62,
+    ODD_CORES_MASK          =   0x05,
+    EVEN_CORES_MASK         =   0x0A,
 };
 
 extern QmeRecord G_qme_record;
 uint64_t G_spattn_mask[4] = {0};
+
+uint8_t get_core_pos( uint32_t i_mask )
+{
+    uint32_t l_corePos = 0;
+
+    switch( i_mask )
+    {
+        case 8:
+            l_corePos = 0;
+            break;
+
+        case 4:
+            l_corePos = 1;
+            break;
+
+        case 2:
+            l_corePos = 2;
+            break;
+
+        case 1:
+            l_corePos = 3;
+            break;
+    }
+
+    return l_corePos;
+}
 
 void
 qme_stop_self_complete(uint32_t core_target)
@@ -50,24 +80,34 @@ qme_stop_self_complete(uint32_t core_target)
     // RTC 248150: value needs to be reviewed post hardware
     // the timeout needs to cover the worst case save or
     // restore operation for all the slave threads
-    static uint32_t CTS_TIMEOUT_COUNT = 0xFFFFFFFF;
+    static uint32_t CTS_TIMEOUT_COUNT    =  0x00FFFFFF;
+    static uint32_t THREAD_TIMEOUT_COUNT =  0x000FFFFF;
     uint8_t core_inst = 0;
+    uint32_t l_scratch_add = 0;
 
-    PK_TRACE("Core Target %08X", core_target );
+    PK_TRACE_INF("Core Target %08X", core_target );
 
     // check pm_active_lopri to be low
     // RTC 248149: needs timout for logging!!!
     while(((in32_sh(QME_LCL_EINR))) & (core_target << SHIFT64SH(55)));
 
-    PK_TRACE("Poll for slave threads (1,2,3) to complete via Core Thread State");
+    PK_TRACE_INF("Poll for slave threads (1,2,3) to complete via Core Thread State");
 
-    for (core_mask = 8; core_mask; core_mask = core_mask >> 1)
+    for( core_mask = 8; core_mask; core_mask = core_mask >> 1 )
     {
-        PK_TRACE("CORE_THREAD_STATE Loop Core %d", core_mask);
+        core_inst      =  get_core_pos( core_mask );
+        l_scratch_add  =  SCRATCH0;
 
-        if (core_target & core_mask)
+        if( core_mask & ODD_CORES_MASK  )
         {
+            l_scratch_add = SCRATCH1;
+        }
+
+        if( core_target & core_mask )
+        {
+            PK_TRACE_INF("CORE_THREAD_STATE Loop Core Pos %d",  core_inst );
             G_qme_record.cts_timeout_count = 0;
+            scom_data.value = 0;
 
             do
             {
@@ -77,129 +117,172 @@ qme_stop_self_complete(uint32_t core_target)
             }
             while( scom_data.words.lower >> 4 != 0x7 && ++G_qme_record.cts_timeout_count < CTS_TIMEOUT_COUNT );
 
-            PK_TRACE_INF("CORE_THREAD_STATE UC lower Core %d %08X", core_mask, scom_data.words.lower );
+            PPE_GETSCOM_UC ( l_scratch_add, 0, core_mask, scom_data.value);
 
-            if (G_qme_record.cts_timeout_count == CTS_TIMEOUT_COUNT)
+            if ( CTS_TIMEOUT_COUNT == G_qme_record.cts_timeout_count )
             {
-                PK_TRACE_INF("Timout polling for slave threads stopping on core mask %X", core_mask);
-                iota_halt();
-                goto commit_sr_log;
+                G_qme_record.c_self_fault_vector |= ( SLAVE_THRD_FAIL << ( 24 - ( core_inst * 8 )) );
+                G_qme_record.c_self_failed  |= core_mask;
+
+                if( !( scom_data.value & BIT64( FFDC_AVAILABLE ) ) )
+                {
+                    //Slave threads failed to finish within time and there is no FFDC available,
+                    //force FFDC collection
+                    scom_data.value |= BIT64(INIT_FFDC_COLLECT);
+                }
             }
             else
             {
-                PK_TRACE("Slave threads (1,2,3) completed on core mask %X  count = %d",
-                         core_mask, G_qme_record.cts_timeout_count );
+                //Unlock master thread to finish self-save-restore
+                scom_data.value |= BIT64(SLAVE_THRD_COMPLETE);
+            }
 
-                if (core_mask & 0xA) // Even cores
+            PPE_PUTSCOM_UC( l_scratch_add, 0, core_mask, scom_data.value );
+
+            // check pm_active_lopri for stop11
+            G_qme_record.cts_timeout_count = 0;
+
+            //Good cores will finish core SPR-Save-Restore. However, bad cores will
+            // collect FFDC during delay below
+
+            do
+            {
+                PPE_WAIT_4NOP_CYCLES;
+
+                if( in32_sh(QME_LCL_EINR) & ( core_mask << SHIFT64SH(55) ) )
                 {
-                    PK_TRACE("Setting Slave Threads Complete in SCRATCH 0.");
-                    PPE_GETSCOM_UC ( SCRATCH0, 0, core_mask, scom_data.value);
-                    scom_data.value |= BIT64(56);
-                    PPE_PUTSCOM_UC( SCRATCH0, 0, core_mask, scom_data.value );
+                    G_qme_record.c_self_fault_vector |= ( SR_SUCCESS << ( 24 - ( core_inst * 8 )) );
+                    PK_TRACE_INF( "SR: All threads done" );
+                    break;
                 }
-                else // Odd cores
+
+                PPE_GETSCOM_UC ( l_scratch_add, 0, core_mask, scom_data.value);
+
+                if( scom_data.value & BIT64( FFDC_AVAILABLE ) )
                 {
-                    PK_TRACE("Setting Slave Threads Complete in SCRATCH 1.");
-                    PPE_GETSCOM_UC ( SCRATCH1, 0, core_mask, scom_data.value);
-                    scom_data.value |= BIT64(56);
-                    PPE_PUTSCOM_UC( SCRATCH1, 0, core_mask, scom_data.value );
+                    G_qme_record.cts_timeout_count = 0;
+
+                    if( scom_data.value & BIT64(SLAVE_THRD_COMPLETE) )
+                    {
+                        //slave threads are done and FFDC is available i.e.
+                        //master thread failed and FFDC collected
+                        G_qme_record.c_self_fault_vector |= ( MASTER_THRD_FAIL << ( 24 - ( core_inst * 8 )) );
+                        G_qme_record.c_self_failed  |= core_mask;
+                    }
+                    else
+                    {
+                        //FFDC collected due to slave thread failure
+                        break;
+                    }
                 }
             }
-        }
-    }
+            while(  ++G_qme_record.cts_timeout_count < CTS_TIMEOUT_COUNT );
 
-    PK_TRACE("Poll for core(s) stop again(pm_active=1)");
+            PK_TRACE_INF( "Core SR Time Over. Fault 0x%08x", G_qme_record.c_self_fault_vector );
 
-    // check pm_active_lopri for stop11
-    G_qme_record.cts_timeout_count = CTS_TIMEOUT_COUNT;
+            if( ( CTS_TIMEOUT_COUNT == G_qme_record.cts_timeout_count ) &&
+                !( G_qme_record.c_self_fault_vector & ( 0xFF << ( 24 - ( core_inst * 8 ))) ))
+            {
+                PK_TRACE_INF( "Master Thread Timeout" );
+                PPE_GETSCOM_UC ( l_scratch_add, 0, core_mask, scom_data.value);
 
-    do
-    {
-        PPE_WAIT_4NOP_CYCLES;
-    }
-    while( ((~(in32_sh(QME_LCL_EINR))) & (core_target << SHIFT64SH(55))) && ( --G_qme_record.cts_timeout_count > 0 ) );
+                if( !( scom_data.value & BIT64( FFDC_AVAILABLE ) ) )
+                {
+                    //Trigger FFDC collection for master thread
+                    scom_data.value |= BIT64(INIT_FFDC_COLLECT);
+                    PPE_PUTSCOM_UC( l_scratch_add, 0, core_mask, scom_data.value );
+                    PK_TRACE_INF( "Forcing Master Thread FFDC Collection" );
+                    G_qme_record.c_self_fault_vector |= ( MASTER_THRD_FAIL << ( 24 - ( core_inst * 8 )) );
+                    G_qme_record.c_self_failed  |= core_mask;
+                }
+            }
 
-    if( G_qme_record.cts_timeout_count > 0 )
-    {
-        //Self-Save-Restore ended fine
-        PK_TRACE_INF("SF.RS: Self Save/Restore Completed, Core Stopped Again(pm_exit=0/pm_active=1)");
-        goto skip_sr_log;
-    }
+            PK_TRACE_INF( "Fault Vect 0x%08x", G_qme_record.c_self_fault_vector );
 
-    sr_fail_loc = SR_FAIL_MASTER_THREAD;
-    iota_halt();
+            continue;
 
-commit_sr_log:
+        } //if (core_target & core_mask)
 
-    for (core_mask = 8; core_mask; core_mask = core_mask >> 1)
+    } // completed handling of slave and master threads
+
+    for( core_mask = 8; core_mask; core_mask = core_mask >> 1 )
     {
         if ( core_mask & core_target )
         {
-            PK_TRACE_INF( "SR: Time Out" );
+            core_inst      =  get_core_pos( core_mask );
+            l_scratch_add  =  SCRATCH0;
 
-            if ( in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) ) & BIT64SH(58) )
+            if( core_mask & ODD_CORES_MASK  )
             {
-                PK_TRACE( "SR: Spl Attention on core %d", core_mask );
-
-                if (core_mask & 0xA) // Even cores
-                {
-                    PPE_GETSCOM_UC ( SCRATCH0, 0, core_mask, scom_data.value);
-                }
-                else
-                {
-                    PPE_GETSCOM_UC ( SCRATCH1, 0, core_mask, scom_data.value);
-                }
-
-                //FFDC Available
-                if ( scom_data.value &  BIT64(62) )
-                {
-                    PK_TRACE( "SR: FFDC Available, Logging Error" );
-
-                    if( core_mask & 0x4 )
-                    {
-                        core_inst = 1;
-                    }
-                    else if(  core_mask & 0x2 )
-                    {
-                        core_inst = 2;
-                    }
-                    else if( core_mask & 0x1 )
-                    {
-                        core_inst = 3;
-                    }
-
-                    // commit error log, add self-save restore FFDC as user detail
-                    errlDataUsrDtls_t usrDtls =
-                    {
-                        ERRL_USR_DTL_SR_FFDC,
-                        SR_FFDC_SIZE,
-                        &core_inst,
-                        ERRL_STRUCT_VERSION_1,
-                        NULL
-                    };
-
-                    uint32_t errStatus = ERRL_STATUS_SUCCESS;
-
-                    PPE_LOG_ERR_CRITICAL (
-                        QME_REASON_SR_FAIL,
-                        QME_STOP11_EXIT,
-                        QME_MODULE_ID_SR,
-                        core_target,
-                        scom_data.words.lower,
-                        sr_fail_loc,
-                        &usrDtls,
-                        NULL,
-                        errStatus );
-
-                    PK_TRACE_DBG( "SR: Core %d Logging Done: status %d",
-                                  core_mask, errStatus );
-                }   // FFDC Available
+                l_scratch_add = SCRATCH1;
             }
+
+            G_qme_record.cts_timeout_count = 0;
+
+            // FFDC not collected , wait a bit and hope it is DONE
+            do
+            {
+                PPE_GETSCOM_UC ( l_scratch_add, 0, core_mask, scom_data.value );
+
+                if( !( scom_data.value &  BIT64(INIT_FFDC_COLLECT)) )
+                {
+                    //No case of force collection of FFDC
+                    break;
+                }
+
+                if( ( scom_data.value &  BIT64( FFDC_AVAILABLE ) ) )
+                {
+                    // Master thread FFDC is available now
+                    break;
+                }
+
+                PPE_WAIT_4NOP_CYCLES;
+
+            }
+            while( ++G_qme_record.cts_timeout_count < THREAD_TIMEOUT_COUNT );
+
+            PPE_GETSCOM_UC ( l_scratch_add, 0, core_mask, scom_data.value);
+
+            //FFDC Available
+            if( scom_data.value &  BIT64( FFDC_AVAILABLE ) )
+            {
+                PK_TRACE( "SR: FFDC Available, Logging Error" );
+                G_qme_record.cts_timeout_count = 0;
+                //commit error log and add self-save restore FFDC as user detail
+                sr_fail_loc = ( G_qme_record.c_self_fault_vector & ( MASTER_THRD_FAIL << ( 24 - ( core_inst * 8 )) ) ) ?
+                              SR_FAIL_MASTER_THREAD : SR_FAIL_SLAVE_THREAD;
+
+                // commit error log, add self-save restore FFDC as user detail
+                errlDataUsrDtls_t usrDtls =
+                {
+                    ERRL_USR_DTL_SR_FFDC,
+                    SR_FFDC_SIZE,
+                    &core_inst,
+                    ERRL_STRUCT_VERSION_1,
+                    NULL
+                };
+
+                uint32_t errStatus = ERRL_STATUS_SUCCESS;
+
+                PPE_LOG_ERR_CRITICAL (
+                    QME_REASON_SR_FAIL,
+                    QME_STOP11_EXIT,
+                    QME_MODULE_ID_SR,
+                    core_target,
+                    scom_data.words.lower,
+                    sr_fail_loc,
+                    &usrDtls,
+                    NULL,
+                    errStatus );
+
+                PK_TRACE_DBG( "SR: Core %d Logging Done: status %d",
+                              core_mask, errStatus );
+
+            } //if( scom_data.value &  BIT64( FFDC_AVAILABLE ) )
+
         } //if( core_mask & core_target )
 
     }//for (core_mask
-
-skip_sr_log:
 
     PK_TRACE("Cleaning up thread scratch registers after self restore.");
     PPE_PUTSCOM_MC( SCRATCH0, core_target, 0 );

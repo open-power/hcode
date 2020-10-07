@@ -158,6 +158,7 @@
                 .set ERR_CODE_SMF_E_NOT_SET,        0x0001  # Core is SMF capable but SMF[E] not SET
                 .set SMFCTRL_ENABLE_BIT,            0
                 .set MSR_SECURITY_BIT,              41
+                .set TRIGGER_FFDC_COLLECTION,       55  #Thread Scratch register bit 55
                 .set SCRATCH_SLV_THDS_COMPLETE_BIT, 56
                 .set SCRATCH_RUNTIME_MODE_BIT,      59
                 .set HV_EXIT_WITH_SMF_ENABLE_BIT,   58  #0 : HV exit with SMFCTRL[E] bit SET to 0b01
@@ -761,6 +762,7 @@ mfspr   TEMP_REG1,  USRR1
 stdu    TEMP_REG1,  8 ( CORE_FFDC_OFFSET_REG )
 
 end_ffdc:
+mfspr   THREAD_SCRATCH_VAL_REG, SPRD
 ori     THREAD_SCRATCH_VAL_REG, THREAD_SCRATCH_VAL_REG, FFDC_AVBL_BIT_MASK  #Setting FFDC available
 mtspr   SPRD, THREAD_SCRATCH_VAL_REG
 li      TEMP_REG1,   FFDC_COLLECTED_CONST
@@ -928,6 +930,11 @@ mtspr       TFMR,       TEMP_REG3             # bit 14 and 16 SET
 
 #wait for bit 16 to be cleared by HW
 wait_tfmr_bit16_clr:
+mfspr       THREAD_SCRATCH_VAL_REG,   SPRD
+extrdi.     TEMP_REG1,  THREAD_SCRATCH_VAL_REG, 1, TRIGGER_FFDC_COLLECTION
+cmpwi       TEMP_REG1,  0x01
+beq         collect_ffdc  #QME declared timeout, so collect FFDC
+
 mfspr       TEMP_REG1,  TFMR
 extrdi.     TEMP_REG3,  TEMP_REG1,  1,  16    # Check for bit 16 to be cleared by HW
 cmpwi       TEMP_REG3,  0x01
@@ -941,16 +948,16 @@ or          TEMP_REG3,  TEMP_REG1,  TEMP_REG2 # 0002 2000 0000 0000 bit14 18
 mtspr       TFMR,       TEMP_REG3             # setting bit TFMR[0:7,14,18]
 
 wait_tfmr:
+mfspr       THREAD_SCRATCH_VAL_REG,   SPRD
+extrdi.     TEMP_REG1,  THREAD_SCRATCH_VAL_REG, 1, TRIGGER_FFDC_COLLECTION
+cmpwi       TEMP_REG1,  0x01
+beq         collect_ffdc  #QME declared timeout, so collect FFDC
+
 mfspr       TEMP_REG1,  TFMR
 extrdi.     TEMP_REG2,  TEMP_REG1,  TFAC_TFMR_BUG_BIT_LEN,  TFAC_BUG_TFMR_BIT_POS_28
 cmpwi       TEMP_REG2,  TFAC_TFMR_BUG_BIT_CONST
 bne         wait_tfmr
 
-# comment this out because there is window bit56 is erased and bit 55 is not used
-#i mfspr       THREAD_SCRATCH_VAL_REG,   SPRD  #QME might have written bit 56 by this time so do RMW
-#i li          TEMP_REG1,  0x100
-#i or          THREAD_SCRATCH_VAL_REG, THREAD_SCRATCH_VAL_REG, TEMP_REG1    # set bit 55 of Thread scratch register
-#i mtspr       SPRD,       THREAD_SCRATCH_VAL_REG
 
 #=====================================  HW534619 DD1 Workaround Ends ======================================
 
@@ -963,15 +970,19 @@ thread_restore_return:
 cmpwi       THREAD_ID_REG, 0            # if thread in question is not 0, skip core shared reg restore
 bne         restore_done                # else wait for other threads to be stopped again
 
-
 wait_until_single_thread:
 mfspr       THREAD_SCRATCH_VAL_REG,   SPRD
+extrdi.     TEMP_REG1,  THREAD_SCRATCH_VAL_REG, 1, TRIGGER_FFDC_COLLECTION
+cmpwi       TEMP_REG1,  0x01
+beq         collect_ffdc                #QME declared timeout, so collect FFDC
+
+#otherwise check if slave threads are done with self-restore
 extrdi.     TEMP_REG1,    THREAD_SCRATCH_VAL_REG, 1, SCRATCH_SLV_THDS_COMPLETE_BIT    # Check Slave Thread STOP bit
 cmpwi       TEMP_REG1,    1
-bne         wait_until_single_thread       # wait until all threads are done restoring
+bne         wait_until_single_thread    # wait until all threads are done restoring
 
 mtlr        CORE_SCOPE_RESTORE_ADDR_REG
-blrl                               # branch to core shared register restore area
+blrl                                    # branch to core shared register restore area
 
 
 # return here after shared core register restoration
@@ -1101,6 +1112,11 @@ bne         save_restore_done               # else saving of SPRs is done
 wait_slave_thd_entry_complete:
 #wait until all the slave threads are DONE with self-save
 mfspr       THREAD_SCRATCH_VAL_REG,   SPRD
+extrdi.     TEMP_REG1,  THREAD_SCRATCH_VAL_REG, 1, TRIGGER_FFDC_COLLECTION
+cmpwi       TEMP_REG1,  0x01
+beq         collect_ffdc  #QME declared timeout, so collect FFDC
+
+#otherwise check if slave threads are done with self-save
 extrdi.     TEMP_REG1,    THREAD_SCRATCH_VAL_REG, 1, SCRATCH_SLV_THDS_COMPLETE_BIT    # Check Slave Thread STOP bit
 cmpwi       TEMP_REG1,    1
 bne         wait_slave_thd_entry_complete

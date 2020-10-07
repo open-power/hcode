@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -156,6 +156,7 @@ typedef struct
     uint32_t    cts_timeout_count;
     uint32_t    bce_buf_content_type;
     uint32_t    c_fused_spwu_fall;
+    uint32_t    c_self_fault_vector;
 
 } QmeRecord __attribute__ ((aligned (4)));
 
