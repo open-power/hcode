@@ -132,43 +132,40 @@ qme_init()
                  G_qme_record.c_special_wakeup_done,
                  G_qme_record.c_block_wake_done);
 
-    if( in32_sh( QME_LCL_FLAGS ) & BIT64SH( QME_FLAGS_RUNNING_EPM ) )
+#ifdef EPM_TUNING
+
+    PK_TRACE_INF("EPM Always have cores ready to enter first, aka cores are running when boot");
+    G_qme_record.c_stop2_reached  = 0;
+    G_qme_record.c_stop3_reached  = 0;
+    G_qme_record.c_stop5_reached  = 0;
+    G_qme_record.c_stop11_reached = 0;
+
+    if (G_qme_record.c_configured)
     {
-        PK_TRACE_INF("EPM Always have cores ready to enter first, aka cores are running when boot");
-        G_qme_record.c_stop2_reached  = 0;
-        G_qme_record.c_stop3_reached  = 0;
-        G_qme_record.c_stop5_reached  = 0;
-        G_qme_record.c_stop11_reached = 0;
-
-        if (G_qme_record.c_configured)
-        {
-            out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, G_qme_record.c_configured ), 0 );
-        }
-
-        // Always test shadows as well as DDS
-        out32( QME_LCL_FLAGS_OR, ( BIT32(QME_FLAGS_TOD_SETUP_COMPLETE) | BIT32(QME_FLAGS_DDS_OPERABLE) ) );
-
-        G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCAN_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCOM_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCAN_INIT_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
-
-        if( !( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE ) )
-        {
-            //EPM do real scan0 and arrayinit and self restore with broadside
-            //otherwise
-            //EPM can turn PFET off, but no Scanning or BCE or self restore
-            G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
-            G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
-            G_qme_record.hcode_func_enabled &= ~QME_HWP_ARRAYINIT_ENABLE;
-            G_qme_record.hcode_func_enabled &= ~QME_HWP_SCANFLUSH_ENABLE;
-        }
+        out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, G_qme_record.c_configured ), 0 );
     }
-    else
+
+    // Always test shadows as well as DDS
+    out32( QME_LCL_FLAGS_OR, ( BIT32(QME_FLAGS_TOD_SETUP_COMPLETE) | BIT32(QME_FLAGS_DDS_OPERABLE) ) );
+
+    G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCAN_ENABLE;
+    G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCOM_ENABLE;
+    G_qme_record.hcode_func_enabled &= ~QME_HWP_SCAN_INIT_ENABLE;
+    G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
+    G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
+
+    if( !( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE ) )
     {
-        G_qme_record.hcode_func_enabled &= ~QME_EPM_BROADSIDE_ENABLE;
+        //EPM do real scan0 and arrayinit and self restore with broadside
+        //otherwise
+        //EPM can turn PFET off, but no Scanning or BCE or self restore
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_ARRAYINIT_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCANFLUSH_ENABLE;
     }
+
+#endif
 
     //technically contained mode implies stop11 is not supported with it
     if( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE )

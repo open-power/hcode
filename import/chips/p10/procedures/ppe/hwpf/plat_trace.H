@@ -55,7 +55,7 @@ static const uint32_t MAX_ECMD_STRING_LEN = 64;
 #define FAPI_TRACE(_id_, _fmt_, _args_...) PK_TRACE(_fmt_, ##_args_)
 
 // Information traces (go into fast trace buffer that can wrap often)
-#define FAPI_INF(_fmt_, _args_...) PK_TRACE_INF(_fmt_, ##_args_)
+#define FAPI_INF(_fmt_, _args_...) PK_TRACE_DBG(_fmt_, ##_args_)
 
 // Important traces (go into slow trace buffer that should not wrap often)
 #define FAPI_IMP(_fmt_, _args_...) PK_TRACE_INF(_fmt_, ##_args_)
@@ -64,7 +64,7 @@ static const uint32_t MAX_ECMD_STRING_LEN = 64;
 #define FAPI_ERR(_fmt_, _args_...) PK_TRACE_ERR(_fmt_, ##_args_)
 
 // Debug traces (go into fast trace buffer that can wrap often)
-#define FAPI_DBG(_fmt_, _args_...) PK_TRACE_DBG(_fmt_, ##_args_)
+#define FAPI_DBG(_fmt_, _args_...) PK_TRACE(_fmt_, ##_args_)
 
 // Scan traces
 #define FAPI_SCAN(_fmt_, _args_...) PK_TRACE_DBG(_fmt_, ##_args_)

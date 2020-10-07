@@ -305,14 +305,11 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     PK_TRACE_INF("HV mode: %s : write HRMOR and URMOR with HOMER address"
                  (SPR_SELF_SAVE == i_saveRestore) ? "Self-Save" : "Self-Restore" );
 
-    if( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE )
-    {
-        scom_data.value = 0xA200000;
-    }
-    else
-    {
-        scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
-    }
+#ifdef EPM_TUNING
+    scom_data.value = 0xA200000;
+#else
+    scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
+#endif
 
     // Write HRMOR
     out64( QME_LCL_CORE_ADDR_WR( QME_RMOR, core_target ), scom_data.value );
@@ -324,8 +321,6 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
         }
     */
 
-
-//#endif
 
     // ===============================
 

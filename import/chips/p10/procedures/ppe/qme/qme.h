@@ -163,7 +163,7 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
 // (auto) pmcr fwd enable, throttle enable,
 // pstate enable, wof enable, safe mode enable
 
-#define ENABLED_HCODE_FUNCTIONS 0x3FEFE000 //FIXME BEFORE MERGE
+#define ENABLED_HCODE_FUNCTIONS 0x3FEFE000
 
 // QME Generic Functions
 void qme_init();
