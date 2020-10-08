@@ -128,77 +128,78 @@ void
 qme_fit_handler()
 {
     uint32_t c_stop11 = 0;
-#if POWER10_DD_LEVEL == 10
-    uint32_t c_mask   = 0;
-    uint32_t c_pair   = 0;
-    uint32_t c_entry  = 0;
-    uint32_t scsr     = 0;
-    uint32_t shift    = 0;
-    uint32_t pm_active      = 0;
-    uint32_t pm_state       = 0;
-    uint32_t pm_state_even  = 0;
-    uint32_t pm_state_odd   = 0;
-#endif
+    /*
+    #if POWER10_DD_LEVEL == 10
+        uint32_t c_mask   = 0;
+        uint32_t c_pair   = 0;
+        uint32_t c_entry  = 0;
+        uint32_t scsr     = 0;
+        uint32_t shift    = 0;
+        uint32_t pm_active      = 0;
+        uint32_t pm_state       = 0;
+        uint32_t pm_state_even  = 0;
+        uint32_t pm_state_odd   = 0;
+        uint32_t is_fast_even   = 0;
+        uint32_t is_fast_odd    = 0;
+    #endif
+    */
     mtspr(SPRN_TSR, TSR_FIS);
 
     G_qme_record.uih_status |= BIT32(IDX_TIMER_FIT);
 
     //PK_TRACE("Timer: FIT, UIH Status[%x]", G_qme_record.uih_status);
+    /*
+    #if POWER10_DD_LEVEL == 10
 
-#if POWER10_DD_LEVEL == 10
-
-    if( in32(QME_LCL_QMCR) & BIT32(10) )
-    {
-        for( c_mask = 8; c_mask > 0; c_mask = c_mask >> 1 )
+        if( in32(QME_LCL_QMCR) & BIT32(10) )
         {
-            if( c_mask & G_qme_record.c_configured )
+            for( c_mask = 8; c_mask > 0; c_mask = c_mask >> 1 )
             {
-                scsr = in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_mask ) );
-                pm_active = scsr & BIT64SH(59);
-
-                if( c_mask & 0xA )
+                if( c_mask & G_qme_record.c_configured )
                 {
-                    c_pair = (pm_active >> 3);
-                    pm_state_even = scsr & BITS64SH(60, 4);
-                }
-                else
-                {
-                    c_pair |= (pm_active >> 4);
-                    pm_state_odd = scsr & BITS64SH(60, 4);
+                    scsr = in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_mask ) );
+                    pm_active = scsr & BIT64SH(59);
 
-                    if( c_pair == 0x3 )
+                    if( c_mask & 0xA )
                     {
-                        pm_state = pm_state_even < pm_state_odd ? pm_state_even : pm_state_odd ;
+                        c_pair = (pm_active >> 3);
+                        pm_state_even = scsr & BITS64SH(60, 4);
+                        is_fast_even = pm_state_even < 10 ? 1 : 0;
+                    }
+                    else
+                    {
+                        c_pair |= (pm_active >> 4);
+                        pm_state_odd = scsr & BITS64SH(60, 4);
+                        is_fast_odd = pm_state_odd < 10 ? 1 : 0;
 
-                        // slow
-                        shift = 0;
-
-                        // fast
-                        if( pm_state > 10 )
+                        if( (c_pair == 0x3) &&
+                            (is_fast_even ^ is_fast_odd ) )
                         {
-                            shift = SHIFT64SH(59);
+                            // if stop2/3 vs stop3/5 both in fast channel, fast handler will take care of it
+                            // if stop11 vs stop15 both in slow channel, slow handler will take care of it
+                            // if fast v.s. slow, always take fast here to work around the defect HW541758
+                            // using the last 4 bits of EISR which CPMS interrupts
+
+                            // c2 c3
+                            c_entry = 0x3;
+
+                            // c0 c1
+                            if( c_mask > 3 )
+                            {
+                                c_entry = c_entry << 2;
+                            }
+
+                            out32_sh( QME_LCL_EISR_OR, c_entry );
+                            PK_TRACE_INF("fit pair mode pm_state_even %x pm_state_odd %x c_entry %x c_mask %x",
+                                         pm_state_even, pm_state_odd, c_entry, c_mask);
                         }
-
-                        // c2 c3
-                        c_entry = 0x3 << shift;
-
-                        // c0 c1
-                        if( c_mask > 3 )
-                        {
-                            c_entry = c_entry << 2;
-                        }
-
-                        out32_sh( QME_LCL_EISR_OR, c_entry );
-                        PK_TRACE_INF("fit pair mode pm_state_even %x pm_state_odd %x c_entry %x c_mask %x",
-                                     pm_state_even, pm_state_odd, c_entry, c_mask);
                     }
                 }
             }
         }
-    }
 
-#endif
-
+    #endif
+    */
     if ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_STOP11_ENTRY_REQUESTED ) )
     {
         // Clear so that resampling will not occur.

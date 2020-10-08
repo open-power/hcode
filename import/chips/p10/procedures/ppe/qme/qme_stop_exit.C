@@ -188,7 +188,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
     PK_TRACE("Clear EISR on Regular Wakeup for extra edge caused by fencing/unfencing between entry and exit");
     out32_sh(QME_LCL_EISR_CLR, ( (core_target << SHIFT64SH(43)) | (core_target << SHIFT64SH(47)) ) );
 
-    if( in32(QME_LCL_QMCR) & BIT32(10) )
+    if( G_qme_record.fused_core_enabled )
     {
         for( core_mask = 8; core_mask > 0; core_mask = core_mask >> 1 )
         {
@@ -317,6 +317,15 @@ qme_stop_exit()
 #if POWER10_DD_LEVEL != 10
 
         p10_hcd_core_vmin_disable(core_target);
+
+#else
+
+        // artifical delay to minic stop3 latency for 2us
+
+        for(int i = 0; i < 1000; i++)
+        {
+            asm volatile ("tw 0, 0, 0");
+        }
 
 #endif
 

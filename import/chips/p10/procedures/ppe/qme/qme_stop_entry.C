@@ -453,6 +453,15 @@ qme_stop_entry()
 
         p10_hcd_core_vmin_enable(core_target);
 
+#else
+
+        // artifical delay to minic stop3 latency for 2us
+
+        for(int i = 0; i < 1000; i++)
+        {
+            asm volatile ("tw 0, 0, 0");
+        }
+
 #endif
 
         //===============//
