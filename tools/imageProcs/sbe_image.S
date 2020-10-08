@@ -80,8 +80,8 @@ __header_64_reserved:
         .xip_section hdct,           8
         .xip_section sbh_firmware,   8
         .xip_section sbh_hbbl,       8
-        .xip_section
-        .xip_section
+        .xip_section sb_settings,    8
+        .xip_section sb_verification,8
         .xip_section
 
         ////////////////////////////////////////////////////////////////////

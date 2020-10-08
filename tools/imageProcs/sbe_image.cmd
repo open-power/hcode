@@ -131,6 +131,24 @@ SECTIONS
     .sbh_hbbl . : { *(.sbh_hbbl) }
     _sbh_hbbl_size = . - _sbh_hbbl_origin;
 
+    ///////////////////////////////
+    // SB_SETTINGS
+    ////////////////////////////////
+    . = ALIGN(8);
+    _sb_settings_origin = .;
+    _sb_settings_offset = . - _sbe_image_origin;
+    .sb_settings . : { *(.sb_settings) }
+    _sb_settings_size = . - _sb_settings_origin;
+
+    ///////////////////////////////
+    // SB_VERIFICATION
+    ////////////////////////////////
+    . = ALIGN(8);
+    _sb_verification_origin = .;
+    _sb_verification_offset = . - _sbe_image_origin;
+    .sb_verification . : { *(.sb_verification) }
+    _sb_verification_size = . - _sb_verification_origin;
+
     ////////////////////////////////
     // end of the image
     ////////////////////////////////
