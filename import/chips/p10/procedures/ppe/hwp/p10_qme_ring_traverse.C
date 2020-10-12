@@ -166,7 +166,7 @@ fapi2::ReturnCode getRS4ImageFromTor(
     if( *l_pRingTor )
     {
         uint8_t* l_pRs4  =  i_pRingSectn + rev_16(*l_pRingTor);
-        CompressedScanData* l_pRingHdr     =   (CompressedScanData*) l_pRs4;
+        //CompressedScanData* l_pRingHdr     =   (CompressedScanData*) l_pRs4;
 
         FAPI_INF( "Ring Id 0x%04x Type 0x%02x", rev_16(l_pRingHdr->iv_ringId), l_pRingHdr->iv_type );
 
@@ -241,7 +241,7 @@ fapi2::ReturnCode p10_qme_ring_traverse( uint8_t* i_pImgPtr,
 {
     QmeHeader_t* l_pQmeHdr   =  (QmeHeader_t*)( i_pImgPtr +  QME_INT_VECTOR );
     uint8_t* l_pRingPtr      =  i_pImgPtr + rev_32(l_pQmeHdr->g_qme_hcode_length);
-    uint32_t * l_pTorMagic   =  (uint32_t *)l_pRingPtr;
+    //uint32_t * l_pTorMagic   =  (uint32_t *)l_pRingPtr;
 
     FAPI_INF( "QME Image Hcode Length       :   0x%08x", rev_32(l_pQmeHdr->g_qme_hcode_length ));
     FAPI_INF( "QME Image TOR Magic Word     :   0x%08x", rev_32( *l_pTorMagic ));

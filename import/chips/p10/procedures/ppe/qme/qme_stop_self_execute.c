@@ -73,10 +73,11 @@ qme_stop_self_complete(uint32_t core_target)
             {
                 PPE_WAIT_4NOP_CYCLES;
                 PPE_GETSCOM_UC ( CORE_THREAD_STATE, 0, core_mask, scom_data.value);
-                PK_TRACE_INF("CORE_THREAD_STATE UC lower Core %d %08X", core_mask, scom_data.words.lower );
                 scom_data.words.lower &= BITS64SH(56, 4); // vt[1,2,3]_stop_state
             }
             while( scom_data.words.lower >> 4 != 0x7 && ++G_qme_record.cts_timeout_count < CTS_TIMEOUT_COUNT );
+
+            PK_TRACE_INF("CORE_THREAD_STATE UC lower Core %d %08X", core_mask, scom_data.words.lower );
 
             if (G_qme_record.cts_timeout_count == CTS_TIMEOUT_COUNT)
             {
@@ -126,6 +127,7 @@ qme_stop_self_complete(uint32_t core_target)
     }
 
     sr_fail_loc = SR_FAIL_MASTER_THREAD;
+    iota_halt();
 
 commit_sr_log:
 
@@ -301,9 +303,9 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
         else
         {
     */
+
     // HV Mode
-    PK_TRACE_INF("HV mode: %s : write HRMOR and URMOR with HOMER address"
-                 (SPR_SELF_SAVE == i_saveRestore) ? "Self-Save" : "Self-Restore" );
+    PK_TRACE_INF("HV mode: %d [Save=0/Restore=1] write HRMOR and URMOR with HOMER address", i_saveRestore);
 
 #ifdef EPM_TUNING
     scom_data.value = 0xA200000;
@@ -377,10 +379,14 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 #if POWER10_DD_LEVEL == 10
 
                 if( G_IsSimics ||
-                    (! ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_TOD_SETUP_COMPLETE ) ) ) )
+                    (! ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_TOD_SETUP_COMPLETE ) ) ) ||
+                    // if fused core but no interrupt pending, the waking thread on sibling core will perform
+                    ( ( G_qme_record.fused_core_enabled ) &&
+                      (! ( in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) ) & BIT64SH(60) ) ) &&
+                      (! ( in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) ) & BIT64SH(62) ) ) ) )
                 {
 #endif
-                    PK_TRACE_INF("Self-Restore should ignore workaround for HW534619");
+                    PK_TRACE_INF("Self-Restore should ignore workaround for HW534619 at core %x", core_mask);
                     scom_data.value |= BIT64(61);
 #if POWER10_DD_LEVEL == 10
                 }
@@ -414,7 +420,10 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
                     BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
     sync();
 
-    wrteei(1);
+    if( SPR_SELF_SAVE != i_saveRestore )
+    {
+        wrteei(1);
+    }
 
     PK_TRACE("Allow threads to run(pm_exit=0)");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(1) );

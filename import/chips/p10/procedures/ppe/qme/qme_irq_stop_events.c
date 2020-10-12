@@ -231,12 +231,13 @@ qme_parse_pm_state_active_fast()
         {
             if( ( c_stops & 0xc ) != 0xc )
             {
-                G_qme_record.c_stop1_targets |= G_qme_record.c_pm_state_active_fast_req >> 2;
+                G_qme_record.c_stop1_targets |= G_qme_record.c_pm_state_active_fast_req & 0xc;
                 G_qme_record.c_pm_state_active_fast_req &= ~0xc;
             }
             else
             {
                 G_qme_record.c_pm_state_active_fast_req |= 0xc;
+                G_qme_record.c_stop1_targets &= ~0xc;
             }
         }
 
@@ -250,6 +251,7 @@ qme_parse_pm_state_active_fast()
             else
             {
                 G_qme_record.c_pm_state_active_fast_req |= 0x3;
+                G_qme_record.c_stop1_targets &= ~0x3;
             }
         }
 
@@ -712,8 +714,12 @@ qme_parse_pm_state_active_slow()
 
         if( (G_qme_record.c_pm_state_active_slow_req & 0xc) != 0xc )
         {
-            G_qme_record.c_stop1_targets |= G_qme_record.c_pm_state_active_slow_req >> 2;
+            G_qme_record.c_stop1_targets |= G_qme_record.c_pm_state_active_slow_req & 0xc;
             G_qme_record.c_pm_state_active_slow_req &= ~0xc;
+        }
+        else
+        {
+            G_qme_record.c_stop1_targets &= ~0xc;
         }
 
         if( (G_qme_record.c_pm_state_active_slow_req & 0x3) != 0x3 )
@@ -721,6 +727,11 @@ qme_parse_pm_state_active_slow()
             G_qme_record.c_stop1_targets |= G_qme_record.c_pm_state_active_slow_req & 0x3;
             G_qme_record.c_pm_state_active_slow_req &= ~0x3;
         }
+        else
+        {
+            G_qme_record.c_stop1_targets &= ~0x3;
+        }
+
 
         if( !G_qme_record.c_pm_state_active_slow_req )
         {
