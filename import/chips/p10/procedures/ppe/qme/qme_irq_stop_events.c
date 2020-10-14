@@ -439,6 +439,12 @@ qme_parse_special_wakeup_rise()
 
     out32_sh(QME_LCL_EISR_CLR, (c_mask << SHIFT64SH(35)) );
 
+    PK_TRACE_INF("Parse: Special Wakeup Rise on Cores[%x], Cores in STOP2+[%x], Partial Good Cores[%x], Block Exit on Cores[%x]",
+                 G_qme_record.c_special_wakeup_rise_req,
+                 G_qme_record.c_stop2_reached,
+                 G_qme_record.c_configured,
+                 G_qme_record.c_block_wake_done);
+
     qme_fused_core_pair_mode(&c_mask);
 
     uint32_t c_spwu = c_mask & (~G_qme_record.c_stop2_reached);
@@ -469,11 +475,6 @@ qme_parse_special_wakeup_rise()
     G_qme_record.c_stop2_exit_targets    |= c_mask & G_qme_record.c_stop2_reached;
     G_qme_record.c_special_wakeup_exit_pending = c_mask & G_qme_record.c_stop2_exit_targets ;
 
-    PK_TRACE_INF("Parse: Special Wakeup Rise on Cores[%x], Cores in STOP2+[%x], Partial Good Cores[%x], Block Exit on Cores[%x]",
-                 G_qme_record.c_special_wakeup_rise_req,
-                 G_qme_record.c_stop2_reached,
-                 G_qme_record.c_configured,
-                 G_qme_record.c_block_wake_done);
 }
 
 
@@ -482,6 +483,9 @@ qme_parse_special_wakeup_rise()
 void
 qme_parse_special_wakeup_fall()
 {
+    uint32_t c_rise = 0;
+    uint32_t c_fall = 0;
+
     G_qme_record.c_special_wakeup_fall_req =  ( in32_sh(QME_LCL_EISR) & BITS64SH(36, 4) );
     out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_special_wakeup_fall_req);
     G_qme_record.c_special_wakeup_fall_req = G_qme_record.c_special_wakeup_fall_req >> SHIFT64SH(39);
@@ -513,9 +517,28 @@ qme_parse_special_wakeup_fall()
             }
         }
 
-        PK_TRACE_DBG("Check: Drop Special Wakeup Done and PM_EXIT on Cores[%x]", c_mask);
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, c_mask ), ( BIT32(1) | BIT32(16) ) );
-        G_qme_record.c_special_wakeup_done &= ~c_mask;
+        PK_TRACE_DBG("Check: Drop Special Wakeup Done on Cores[%x]", c_mask);
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, c_mask ), BIT32(16) );
+
+        c_rise = ( in32_sh(QME_LCL_EISR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
+        c_rise = c_mask & c_rise;
+        c_fall  = c_mask & (~c_rise);
+
+        // if spwu has been re-asserted after spwu_done is dropped:
+        if( c_rise )
+        {
+            PK_TRACE_DBG("Check: SPWU asserts again, Clear Spwu_Rise, Re-assert Special Wakeup Done on Cores[%x]", c_rise);
+            out32_sh( QME_LCL_EISR_CLR, c_rise << SHIFT64SH(35) );
+            out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_rise ), BIT32(16) );
+        }
+
+        // if spwu truly dropped
+        if( c_fall )
+        {
+            PK_TRACE_DBG("Check: SPWU drop confirmed, now drop PM_EXIT on Cores[%x]", c_fall);
+            out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, c_fall ), BIT32(1) );
+            G_qme_record.c_special_wakeup_done &= ~c_fall;
+        }
     }
 }
 

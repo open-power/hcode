@@ -236,6 +236,9 @@ skip_sr_log:
 void
 qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 {
+#if POWER10_DD_LEVEL == 10
+    uint32_t sibling_not_ignored = 0;
+#endif
     uint32_t core_index;
     uint32_t core_mask;
     data64_t scom_data;
@@ -378,8 +381,14 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 
 #if POWER10_DD_LEVEL == 10
 
+                if( G_qme_record.fused_core_enabled && (core_mask & 0xA) )
+                {
+                    sibling_not_ignored = 0;
+                }
+
                 if( G_IsSimics ||
                     (! ( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_TOD_SETUP_COMPLETE ) ) ) ||
+                    ( sibling_not_ignored ) || // only one core should do the workaround under fused
                     // if fused core but no interrupt pending, the waking thread on sibling core will perform
                     ( ( G_qme_record.fused_core_enabled ) &&
                       (! ( in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) ) & BIT64SH(60) ) ) &&
@@ -389,6 +398,10 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
                     PK_TRACE_INF("Self-Restore should ignore workaround for HW534619 at core %x", core_mask);
                     scom_data.value |= BIT64(61);
 #if POWER10_DD_LEVEL == 10
+                }
+                else if( G_qme_record.fused_core_enabled && (core_mask & 0xA) )
+                {
+                    sibling_not_ignored = 1;
                 }
 
 #endif

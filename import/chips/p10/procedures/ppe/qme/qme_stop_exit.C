@@ -203,10 +203,10 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
                 PK_TRACE_INF("Cisr %x %x Scsr %x %x", cisr0, cisr1, scsr0, scsr1);
 
                 // No interrupt pending AND no special wakeup
-                if( ( ! ( scsr1 & BIT64SH(46) ) ) &&
+                if( ( ! ( cisr1 & 0xA ) ) &&
                     ( ! ( core_spwu & core_mask ) ) )
                 {
-                    PK_TRACE_INF("Warning: No PC_INTR_PENDING on core %x that only has Regular Wakeup via QME_SCSR[46]", core_mask);
+                    PK_TRACE_INF("Warning: No PC_INTR_PENDING or REG_WKUP_PRESENT on Core %x via QME_CISR[60,62]", core_mask);
                     G_qme_record.c_stop1_targets |= core_mask;
                 }
             }
