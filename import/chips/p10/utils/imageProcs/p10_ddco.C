@@ -156,6 +156,9 @@ struct p9_dd_cont* p9_dd_create(void)
 
     cont->iv_magic = htobe32(DDCO_MAGIC);
     cont->iv_num   = 0;
+    cont->iv_reserved[0] = 0;
+    cont->iv_reserved[1] = 0;
+    cont->iv_reserved[2] = 0;
 
     return cont;
 }
