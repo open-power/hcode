@@ -35,7 +35,7 @@ constexpr uint64_t literal_0x4 = 0x4;
 constexpr uint64_t literal_0b0001 = 0b0001;
 constexpr uint64_t literal_0b0100 = 0b0100;
 constexpr uint64_t literal_0x08 = 0x08;
-constexpr uint64_t literal_0x20 = 0x20;
+constexpr uint64_t literal_0x80 = 0x80;
 constexpr uint64_t literal_0x8 = 0x8;
 constexpr uint64_t literal_0b10 = 0b10;
 constexpr uint64_t literal_6 = 6;
@@ -114,7 +114,7 @@ fapi2::ReturnCode p10_ncu_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT
             l_scom_buffer.insert<0, 4, 60, uint64_t>(literal_0b0001 );
             l_scom_buffer.insert<4, 4, 60, uint64_t>(literal_0b0100 );
             l_scom_buffer.insert<8, 10, 54, uint64_t>(literal_0x08 );
-            l_scom_buffer.insert<26, 10, 54, uint64_t>(literal_0x20 );
+            l_scom_buffer.insert<26, 10, 54, uint64_t>(literal_0x80 );
             l_scom_buffer.insert<18, 4, 60, uint64_t>(literal_0x8 );
             l_scom_buffer.insert<22, 4, 60, uint64_t>(literal_0x8 );
             FAPI_TRY(fapi2::putScom(TGT0, 0x2001064bull, l_scom_buffer));
