@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -37,10 +37,26 @@ XIPPATH?=$(ROOTPATH)/chips/p9/xip
 
 # Location of the cross-compiler toolchain.
 UNAME = $(shell uname)
-__EKB_PREFIX?=/opt/rh/devtoolset-2/root/usr/bin/
 
 ifeq ($(UNAME),AIX)
 __EKB_PREFIX=/opt/xsite/contrib/bin/
+else
+RHEL_VER = $(shell lsb_release -sr)
+ifeq ($(word 1, $(subst ., ,$(RHEL_VER))), 6)
+ifeq ($(wildcard /opt/rh/devtoolset-2/root/usr/bin),)
+$(error devtoolset-2 is not installed on RHEL $(RHEL_VER))
+endif
+__EKB_PREFIX?=/opt/rh/devtoolset-2/root/usr/bin/
+SYS_RHEL7=false
+else ifeq ($(word 1, $(subst ., ,$(RHEL_VER))), 7)
+ifeq ($(wildcard /opt/rh/devtoolset-8/root/usr/bin),)
+$(error devtoolset-8 is not installed on RHEL $(RHEL_VER))
+endif
+__EKB_PREFIX?=/opt/rh/devtoolset-8/root/usr/bin/
+SYS_RHEL7=true
+else
+$(error RHEL Version $RHEL_VER not supported)
+endif
 endif
 
 HOST_PREFIX?=$(__EKB_PREFIX)
