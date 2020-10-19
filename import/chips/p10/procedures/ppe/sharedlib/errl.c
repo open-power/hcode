@@ -621,11 +621,11 @@ void addUsrDtlsToErrl(
 
                 l_ffdc = (( l_ffdc + 31 ) & ~(0x1F ));
 
-                qme_block_copy_core_data( QME_BCEBAR_0,
-                                          (( SELF_RESTORE_FFDC_OFFSET + l_coreNum ) >> 5 ),
-                                          (( l_ffdc & 0x0000ffff ) >> 5),
-                                          ( SELF_RESTORE_FFDC_PER_QUAD_IN_HOMER >> 5 ),
-                                          SELF_RESTORE_FFDC_BLK_CNT );
+                qme_block_copy_ffdc( QME_BCEBAR_0,
+                                     (( SELF_RESTORE_FFDC_OFFSET + l_coreNum ) >> 5 ),
+                                     (( l_ffdc & 0x0000ffff ) >> 5),
+                                     ( SELF_RESTORE_FFDC_PER_QUAD_IN_HOMER >> 5 ),
+                                     SELF_RESTORE_FFDC_BLK_CNT );
 
                 G_qme_record.cts_timeout_count = BCE_TIMEOUT_COUNT;
 

@@ -224,31 +224,18 @@ qme_init()
     //--------------------------------------------------------------------------
     // BCE Core Specific Scan Ring
     //--------------------------------------------------------------------------
-    QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
-
-    if( pQmeImgHdr->g_qme_common_ring_offset == pQmeImgHdr->g_qme_inst_spec_ring_offset )
-    {
-        //If QME hcode has migrated to an approach of copy ring on demand then
-        //do not copy repair ring upfront on boot of QME. Retaining line 233 - 251
-        //for backward compatibility.
-        G_qme_record.hcode_func_enabled  &= ~QME_BLOCK_COPY_SCAN_ENABLE;
-    }
-    else
-    {
-        G_qme_record.bce_buf_content_type  =  ALL;
-    }
 
     if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCAN_ENABLE )
     {
         PK_TRACE_DBG("Setup: BCE Setup Kickoff to Copy Core Specific Scan Ring");
 
+        QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
 
         //right now a blocking call. Need to confirm this.
         qme_block_copy_start(QME_BCEBAR_1,
                              ((QME_IMAGE_CPMR_OFFSET + (pQmeImgHdr->g_qme_inst_spec_ring_offset)) >> 5),
                              ( pQmeImgHdr->g_qme_inst_spec_ring_offset >> 5 ),
-                             ( pQmeImgHdr->g_qme_max_spec_ring_length >> 5),
-                             QME_SPECIFIC );
+                             ( pQmeImgHdr->g_qme_max_spec_ring_length >> 5) );
 
         PK_TRACE_DBG("Setup: BCE Check for Copy Completed");
 

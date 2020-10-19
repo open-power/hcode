@@ -37,7 +37,7 @@
 #include "p10_hcd_cache_initf.H"
 #include "p10_hcd_cache_startclocks.H"
 #include "p10_hcd_cache_scominit.H"
-#include "p10_hcd_core_cache_scom_customize.H"
+#include "p10_hcd_cache_scom_customize.H"
 
 #include "p10_hcd_core_poweron.H"
 #include "p10_hcd_core_reset.H"
@@ -48,6 +48,7 @@
 #include "p10_hcd_core_initf.H"
 #include "p10_hcd_core_startclocks.H"
 #include "p10_hcd_core_scominit.H"
+#include "p10_hcd_core_scom_customize.H"
 
 #include "p10_hcd_core_timefac_to_pc.H"
 #include "p10_hcd_core_shadows_enable.H"
@@ -265,8 +266,6 @@ qme_stop_exit()
     fapi2::Target < fapi2::TARGET_TYPE_PROC_CHIP > chip_target;
     fapi2::Target < fapi2::TARGET_TYPE_CORE |
     fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_target;
-    fapi2::Target < fapi2::TARGET_TYPE_CORE |
-    fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_scom_rest_target;
 
     if( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_STOP_EXIT_INJECT ) )
     {
@@ -401,11 +400,20 @@ qme_stop_exit()
 
     if( G_qme_record.c_stop11_exit_targets )
     {
-        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop11_exit_targets));
 
+        if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
+        {
+            PK_TRACE("BCE Runtime Kickoff to Copy Scom Restore core");
+            qme_block_copy_start(QME_BCEBAR_0,
+                                 SCOM_RESTORE_CPMR_OFFSET,
+                                 pQmeImgHdr->g_qme_scom_offset,
+                                 (pQmeImgHdr->g_qme_scom_length >> 5));
+        }
 
         PK_TRACE_INF("WAKE11: Waking up Cores in STOP11[%x]", G_qme_record.c_stop11_exit_targets);
+
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop11_exit_targets));
 
         //===============//
 
@@ -489,41 +497,20 @@ qme_stop_exit()
 
         if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
         {
-            uint32_t homerOffset = 0;
+            PK_TRACE_DBG("BCE Runtime Check Scom Restore Copy Completed");
 
-            for( uint32_t ec = 8; ec; ec = ( ec >> 1 ) )
+            if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
             {
-                if( G_qme_record.c_stop11_exit_targets & ec )
-                {
-                    G_qme_record.bce_buf_content_type  = SCOM_RESTORE;
-                    homerOffset = SCOM_RESTORE_CPMR_OFFSET + pQmeImgHdr->g_qme_coreL2ScomLength;
-
-                    PK_TRACE("BCE Runtime Kickoff to Copy L3 Restore core");
-
-                    qme_block_copy_core_data( QME_BCEBAR_0,
-                                              ( homerOffset >> 5),
-                                              ( pQmeImgHdr->g_qme_scom_offset >> 5 ),
-                                              ( pQmeImgHdr->g_qme_scom_length >> 5 ),
-                                              ( pQmeImgHdr->g_qme_L3ScomLength >> 5) );
-
-                    PK_TRACE_DBG("BCE Runtime Check Scom Restore Copy Completed");
-
-                    if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
-                    {
-                        PK_TRACE_DBG("ERROR: BCE Scom Restore Copy Failed. HALT QME!");
-                        IOTA_PANIC(QME_STOP_BLOCK_COPY_SCOM_FAILED);
-                    }
-
-                    MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
-
-                    if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_CUST_ENABLE )
-                    {
-                        core_scom_rest_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                                                static_cast<fapi2::MulticastCoreSelect>( ec ) );
-                        p10_hcd_core_cache_scom_customize( core_scom_rest_target, CACHE_RESTORE_ENTRY );
-                    }
-                }
+                PK_TRACE_DBG("ERROR: BCE Scom Restore Copy Failed. HALT QME!");
+                IOTA_PANIC(QME_STOP_BLOCK_COPY_SCOM_FAILED);
             }
+        }
+
+        MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
+
+        if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_CUST_ENABLE )
+        {
+            p10_hcd_cache_scom_customize(core_target);
         }
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOMED )
@@ -672,46 +659,10 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOM_CUSTOMIZE )
 
-        if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
+        if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_CUST_ENABLE )
         {
-            G_qme_record.bce_buf_content_type  = SCOM_RESTORE;
-            uint32_t homerOffset = 0;
-
-            for( uint32_t ec = 8; ec; ec = ( ec >> 1 ) )
-            {
-                if( G_qme_record.c_stop11_exit_targets & ec )
-                {
-                    homerOffset = SCOM_RESTORE_CPMR_OFFSET;
-                    PK_TRACE("BCE Runtime Kickoff to Copy Core Scom Restore");
-
-                    qme_block_copy_core_data( QME_BCEBAR_0,
-                                              ( homerOffset >> 5 ),
-                                              ( pQmeImgHdr->g_qme_scom_offset >> 5 ),
-                                              ( pQmeImgHdr->g_qme_scom_length >> 5 ),
-                                              ( pQmeImgHdr->g_qme_coreL2ScomLength >> 5) );
-
-                    PK_TRACE_DBG("BCE Runtime Check Scom Restore Copy Completed");
-
-                    if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
-                    {
-                        PK_TRACE_DBG("ERROR: BCE Scom Restore Copy Failed. HALT QME!");
-                        IOTA_PANIC(QME_STOP_BLOCK_COPY_SCOM_FAILED);
-                    }
-
-                    MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
-
-                    if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_CUST_ENABLE )
-                    {
-                        core_scom_rest_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                                                static_cast<fapi2::MulticastCoreSelect>( ec ) );
-                        p10_hcd_core_cache_scom_customize( core_scom_rest_target, CORE_RESTORE_ENTRY );
-                    }
-
-                } //if( G_qme_record.c_stop11_exit_targets & ec )
-
-            } //for( uint32_t ec = 8;
-
-        } // if( G_qme_record.hcode_func_enabled
+            p10_hcd_core_scom_customize(core_target);
+        }
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOMED )
 

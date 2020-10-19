@@ -70,7 +70,7 @@ CACHE-CPP-SOURCES = p10_hcd_l3_purge.C              \
                     p10_hcd_cache_initf.C           \
                     p10_hcd_cache_startclocks.C     \
                     p10_hcd_cache_scominit.C        \
-                    p10_hcd_core_cache_scom_customize.C 
+                    p10_hcd_cache_scom_customize.C 
                     
 CORE-CPP-SOURCES  = p10_hcd_l2_purge.C             \
                     p10_hcd_l2_tlbie_quiesce.C     \
@@ -93,7 +93,8 @@ CORE-CPP-SOURCES  = p10_hcd_l2_purge.C             \
                     p10_hcd_core_startclocks.C     \
                     p10_hcd_core_shadows_enable.C  \
                     p10_hcd_core_timefac_to_pc.C  \
-                    p10_hcd_core_scominit.C        
+                    p10_hcd_core_scominit.C        \
+                    p10_hcd_core_scom_customize.C  
 
 MMA-CPP-SOURCES = p10_hcd_mma_poweroff.C           \
                   p10_hcd_mma_poweron.C            \
