@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2020                                                         */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -615,16 +615,6 @@ static const uint64_t IOO_RX0_0_RD_5_RX_DAC_REGS_LOFF_B_CNTLX89_PL = 0x8002c8051
 static const uint32_t IOO_RX0_0_RD_5_RX_DAC_REGS_LOFF_B_CNTLX89_PL_RX_BD_LATCH_DAC_W110 = 56;
 static const uint32_t IOO_RX0_0_RD_5_RX_DAC_REGS_LOFF_B_CNTLX89_PL_RX_BD_LATCH_DAC_W110_LEN = 8;
 //<< [IOO_RX0_0_RD_5_RX_DAC_REGS_LOFF_B_CNTLX89_PL]
-// iohs/reg00044.H
-
-//>> [IOO_RX0_0_RD_RX_DAC_REGS_CNTL4_PL]
-static const uint64_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL4_PL = 0x8000200010012c3full;
-
-static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL4_PL_GAIN = 48;
-static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL4_PL_GAIN_LEN = 3;
-static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL4_PL_ZERO = 51;
-static const uint32_t IOO_RX0_0_RD_RX_DAC_REGS_CNTL4_PL_ZERO_LEN = 3;
-//<< [IOO_RX0_0_RD_RX_DAC_REGS_CNTL4_PL]
 // iohs/reg00044.H
 
 //>> [IOO_RX0_0_RD_RX_DAC_REGS_LOFF_A_CNTLX34_PL]
@@ -2008,3 +1998,4 @@ static const uint32_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL4_PG_PHASE_SEL = 57;
 #include "iohs/reg00047_unused.H"
 #endif
 #endif
+

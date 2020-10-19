@@ -41,6 +41,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20101300 |mwh     | After talking with Chris and Jim moved logger for eoff back to eoff, lane scom get set up here
+//                                       | done in ioo_thread
+// mwh20100900 |mwh     | HW549417: Move the add_log to inside the if fail so only logs if there a fail
 // mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
 // bja20012300 |bja     | Move setting of per group fail mask to function
 // mwh20012820 |mwh     | There is no min max for phase data -- HW516933
@@ -143,11 +146,13 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             if ( rx_ctle_gain_int < mem_pg_field_get(rx_ctle_gain_min_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_VGA_GAIN_FAIL, gcr_addr, rx_ctle_gain_int);
                 set_debug_state(0x5153);
             }
             else if ( rx_ctle_gain_int > mem_pg_field_get(rx_ctle_gain_max_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_VGA_GAIN_FAIL, gcr_addr, rx_ctle_gain_int);
                 set_debug_state(0x5154);
             }
             else
@@ -156,7 +161,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x5155);
             }
 
-            ADD_LOG(DEBUG_BIST_VGA_GAIN_FAIL, gcr_addr, rx_ctle_gain_int);
+            //set the fail to register
             mem_pl_field_put(rx_ctle_gain_fail, lane, fail);
         }
 
@@ -171,11 +176,13 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             if ( rx_ctle_peak1_int < mem_pg_field_get(rx_ctle_peak1_min_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_CTLE_PEAK1_FAIL, gcr_addr, rx_ctle_peak1_int);
                 set_debug_state(0x5157);
             }
             else if ( rx_ctle_peak1_int >  mem_pg_field_get(rx_ctle_peak1_max_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_CTLE_PEAK1_FAIL, gcr_addr, rx_ctle_peak1_int);
                 set_debug_state(0x5158);
             }
             else
@@ -184,7 +191,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x5159);
             }
 
-            ADD_LOG(DEBUG_BIST_CTLE_PEAK1_FAIL, gcr_addr, rx_ctle_peak1_int);
+
             mem_pl_field_put(rx_ctle_peak1_fail, lane, fail );
         }
 
@@ -198,11 +205,13 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             if ( rx_ctle_peak2_int < mem_pg_field_get(rx_ctle_peak2_min_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_CTLE_PEAK2_FAIL, gcr_addr, rx_ctle_peak2_int);
                 set_debug_state(0x515B);
             }
             else if ( rx_ctle_peak2_int >  mem_pg_field_get(rx_ctle_peak2_max_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_CTLE_PEAK2_FAIL, gcr_addr, rx_ctle_peak2_int);
                 set_debug_state(0x515C);
             }
             else
@@ -211,7 +220,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x515D);
             }
 
-            ADD_LOG(DEBUG_BIST_CTLE_PEAK2_FAIL, gcr_addr, rx_ctle_peak2_int);
+
             mem_pl_field_put(rx_ctle_peak2_fail, lane, fail );
         }
 
@@ -225,11 +234,13 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             if ( rx_lte_gain_int < mem_pg_field_get(rx_lte_gain_min_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_LTE_GAIN_FAIL, gcr_addr, rx_lte_gain_int);
                 set_debug_state(0x516F);
             }
             else if ( rx_lte_gain_int >  mem_pg_field_get(rx_lte_gain_max_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_LTE_GAIN_FAIL, gcr_addr, rx_lte_gain_int);
                 set_debug_state(0x5160);
             }
             else
@@ -238,7 +249,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x5161);
             }
 
-            ADD_LOG(DEBUG_BIST_LTE_GAIN_FAIL, gcr_addr, rx_lte_gain_int);
+
             mem_pl_field_put(rx_lte_gain_fail, lane, fail );
         }
 
@@ -251,11 +262,13 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             if ( rx_lte_zero_int  < mem_pg_field_get(rx_lte_zero_min_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_LTE_ZERO_FAIL, gcr_addr, rx_lte_zero_int);
                 set_debug_state(0x5163);
             }
             else if ( rx_lte_zero_int >  mem_pg_field_get(rx_lte_zero_max_check) )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_LTE_ZERO_FAIL, gcr_addr, rx_lte_zero_int);
                 set_debug_state(0x5164);
             }
             else
@@ -264,7 +277,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x5165);
             }
 
-            ADD_LOG(DEBUG_BIST_LTE_ZERO_FAIL, gcr_addr, rx_lte_zero_int);
+
             mem_pl_field_put(rx_lte_zero_fail, lane, fail );
         }
 
@@ -291,11 +304,13 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             if ( rx_quad_ph_adj_nse_int <  check_quad_ph_adj_min )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_QPA_FAIL, gcr_addr, 0x0);
                 set_debug_state(0x5169);
             }
             else if ( rx_quad_ph_adj_nse_int >  check_quad_ph_adj_max )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_QPA_FAIL, gcr_addr, 0x0);
                 set_debug_state(0x516A);
             }
             //else if ( rx_quad_ph_adj_ewd_int <  check_quad_ph_adj_min ) {
@@ -309,11 +324,13 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             else if ( rx_quad_ph_adj_ewe_int <  check_quad_ph_adj_min )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_QPA_FAIL, gcr_addr, 0x0);
                 set_debug_state(0x516D);
             }
             else if ( rx_quad_ph_adj_ewe_int >  check_quad_ph_adj_max )
             {
                 fail = 1;
+                ADD_LOG(DEBUG_BIST_QPA_FAIL, gcr_addr, 0x0);
                 set_debug_state(0x516E);
             }
             else
@@ -322,7 +339,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
                 set_debug_state(0x516F);
             }
 
-            ADD_LOG(DEBUG_BIST_QPA_FAIL, gcr_addr, 0x0);
+
             mem_pl_field_put(rx_quad_phase_fail, lane, fail);
         }
 
@@ -384,6 +401,7 @@ void eo_vclq_checks(t_gcr_addr* gcr_addr, t_bank bank)
             set_rxbist_fail_lane( gcr_addr, bank );
         }
     } // end scope limiting - B
+
 
     set_debug_state(0x5101); // end vclq checks
 }//vclq_checks()

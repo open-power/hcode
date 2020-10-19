@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2020                                                         */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -54,14 +54,6 @@ static const uint32_t PM_REGS_DLR_APSR_ACTIVITY_SAMPLE_LEN = 8;
 static const uint32_t PM_REGS_DLR_APSR_BASE_SAMPLE = 20;
 static const uint32_t PM_REGS_DLR_APSR_BASE_SAMPLE_LEN = 8;
 //<< [PM_REGS_DLR_APSR]
-// omi/reg00024.H
-
-//>> [RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL]
-static const uint64_t RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL = 0x8003c04010012c3full;
-
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL_INIT_DONE = 48;
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL_RECAL_DONE = 49;
-//<< [RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL]
 // omi/reg00024.H
 
 //>> [RXCTL_DATASM_0_PLREGS_RX_STAT1_PL]
@@ -901,3 +893,4 @@ static const uint32_t TXPACKS_1_DD_3_TX_BIT_REGS_STAT1_PL_TDR_CAPT_VAL_RO_SIGNAL
 #include "omi/reg00025_unused.H"
 #endif
 #endif
+

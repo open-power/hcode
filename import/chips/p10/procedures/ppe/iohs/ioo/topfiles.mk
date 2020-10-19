@@ -50,7 +50,9 @@ TOP-C-SOURCES += eo_llbist.c
 TOP-C-SOURCES += tx_seg_test.c
 TOP-C-SOURCES += io_manual_amp_servo.c
 TOP-C-SOURCES += tx_zcal_bist.c
+TOP-C-SOURCES += eo_dac_test.c
 TOP-CXX-SOURCES =
 TOP-S-SOURCES =
 
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o) $(TOP-CXX-SOURCES:.C=.o)
+

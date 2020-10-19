@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20073000 |mwh     | Change the rx_check_en_alias FFFE to FFFF so dac test is included
 // mwh20022701 |mwh     | Removed extra powerdown write and comminted out the write of step since they are default to all on
 // mwh20022700 |mwh     | Put in fix for CQ523188 and CQ526617 -- put sleep in loop, fix shared loop issue
 // mwh20022600 |mwh     | Removed extra bit form rx_eo_step_cntl_opt_alias
@@ -89,7 +90,7 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
     int bist_num_lanes = fw_field_get(fw_num_lanes);//getting max number of lanes per theard
 
     //enabling all rx bist checks
-    put_ptr_field(gcr_addr, rx_check_en_alias, 0xFFFE, fast_write); //pg
+    put_ptr_field(gcr_addr, rx_check_en_alias, 0xFFFF, fast_write); //pg
 
     // switch to tx address
     int saved_gcr_reg_id = get_gcr_addr_reg_id(gcr_addr);
@@ -441,3 +442,4 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
 //put_ptr_field(gcr_addr,rx_ber_check_en         ,0b0, read_modify_write);
 //put_ptr_field(gcr_addr,rx_link_layer_check_en  ,0b0, read_modify_write);
 //put_ptr_field(gcr_addr,system_dft_check_sel     ,0b0, read_modify_write);
+

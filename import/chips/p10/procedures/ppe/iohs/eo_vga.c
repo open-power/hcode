@@ -41,6 +41,7 @@
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
 // vbr20091600 |vbr     | HW542599: move rx_vga_amax from mem_regs to a stack variable from eo_main (only used in init)
+// mbs20081900 |mbs     | HW542599 - Moved rx_vga_amax to per lane mem regs, and removed qpa obs regs to make room
 // mwh20012500 |mwh     | Change jump_table_used to pl hw518572 only the first lane called was using jump_table
 // mwh19120900 |mwh     | Change rx_vga_converged per groupt ppe to per lane ppe
 // mwh19101000 |mwh     | Change servo to get servo result with error, and put in if statement to turn
@@ -618,3 +619,5 @@ int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, int* saved_Amax, bool* gain_change
 } //end eo_vga_gain                                                                                                                   //Pg6-8
 //
 //------------------------------------------------------------------------------------------------------------------------------------//
+
+

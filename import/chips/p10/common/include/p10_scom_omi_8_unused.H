@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2020                                                         */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -525,16 +525,6 @@ static const uint32_t RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_CNTL18_PL_EDGE_LEN = 5;
 //<< [RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_CNTL18_PL]
 // omi/reg00016.H
 
-//>> [RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_CNTL3_PL]
-static const uint64_t RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_CNTL3_PL = 0x8000184010012c3full;
-
-static const uint32_t RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_CNTL3_PL_GAIN = 48;
-static const uint32_t RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_CNTL3_PL_GAIN_LEN = 3;
-static const uint32_t RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_CNTL3_PL_ZERO = 51;
-static const uint32_t RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_CNTL3_PL_ZERO_LEN = 3;
-//<< [RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_CNTL3_PL]
-// omi/reg00016.H
-
 //>> [RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_LOFF_A_CNTLX19_PL]
 static const uint64_t RXPACKS_0_DEFAULT_RD_RX_DAC_REGS_LOFF_A_CNTLX19_PL = 0x8000984010012c3full;
 
@@ -900,3 +890,4 @@ static const uint32_t TXPACKS_1_DD_2_TX_BIT_REGS_CNTL6_PL_SEL_LEN = 5;
 #include "omi/reg00017_unused.H"
 #endif
 #endif
+

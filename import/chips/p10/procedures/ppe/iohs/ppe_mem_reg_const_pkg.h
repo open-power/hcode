@@ -383,11 +383,11 @@
 
 
 #define rx_a_bank_sync_done_addr                   0b000000110
-#define rx_a_bank_sync_done_startbit               7
+#define rx_a_bank_sync_done_startbit               8
 #define rx_a_bank_sync_done_width                  1
-#define rx_a_bank_sync_done_endbit                 7
-#define rx_a_bank_sync_done_shift                  8
-#define rx_a_bank_sync_done_mask                   0x100
+#define rx_a_bank_sync_done_endbit                 8
+#define rx_a_bank_sync_done_shift                  7
+#define rx_a_bank_sync_done_mask                   0x80
 
 
 #define rx_a_ber_done_addr                         0b000000110
@@ -399,27 +399,27 @@
 
 
 #define rx_a_ctle_gain_done_addr                   0b000000110
-#define rx_a_ctle_gain_done_startbit               0
+#define rx_a_ctle_gain_done_startbit               1
 #define rx_a_ctle_gain_done_width                  1
-#define rx_a_ctle_gain_done_endbit                 0
-#define rx_a_ctle_gain_done_shift                  15
-#define rx_a_ctle_gain_done_mask                   0x8000
+#define rx_a_ctle_gain_done_endbit                 1
+#define rx_a_ctle_gain_done_shift                  14
+#define rx_a_ctle_gain_done_mask                   0x4000
 
 
 #define rx_a_ctle_peak1_done_addr                  0b000000110
-#define rx_a_ctle_peak1_done_startbit              3
+#define rx_a_ctle_peak1_done_startbit              4
 #define rx_a_ctle_peak1_done_width                 1
-#define rx_a_ctle_peak1_done_endbit                3
-#define rx_a_ctle_peak1_done_shift                 12
-#define rx_a_ctle_peak1_done_mask                  0x1000
+#define rx_a_ctle_peak1_done_endbit                4
+#define rx_a_ctle_peak1_done_shift                 11
+#define rx_a_ctle_peak1_done_mask                  0x800
 
 
 #define rx_a_ctle_peak2_done_addr                  0b000000110
-#define rx_a_ctle_peak2_done_startbit              4
+#define rx_a_ctle_peak2_done_startbit              5
 #define rx_a_ctle_peak2_done_width                 1
-#define rx_a_ctle_peak2_done_endbit                4
-#define rx_a_ctle_peak2_done_shift                 11
-#define rx_a_ctle_peak2_done_mask                  0x800
+#define rx_a_ctle_peak2_done_endbit                5
+#define rx_a_ctle_peak2_done_shift                 10
+#define rx_a_ctle_peak2_done_mask                  0x400
 
 
 #define rx_a_ddc_done_addr                         0b000000110
@@ -487,35 +487,35 @@
 
 
 #define rx_a_latch_offset_done_addr                0b000000110
-#define rx_a_latch_offset_done_startbit            1
+#define rx_a_latch_offset_done_startbit            0
 #define rx_a_latch_offset_done_width               1
-#define rx_a_latch_offset_done_endbit              1
-#define rx_a_latch_offset_done_shift               14
-#define rx_a_latch_offset_done_mask                0x4000
+#define rx_a_latch_offset_done_endbit              0
+#define rx_a_latch_offset_done_shift               15
+#define rx_a_latch_offset_done_mask                0x8000
 
 
 #define rx_a_lte_gain_done_addr                    0b000000110
-#define rx_a_lte_gain_done_startbit                5
+#define rx_a_lte_gain_done_startbit                6
 #define rx_a_lte_gain_done_width                   1
-#define rx_a_lte_gain_done_endbit                  5
-#define rx_a_lte_gain_done_shift                   10
-#define rx_a_lte_gain_done_mask                    0x400
+#define rx_a_lte_gain_done_endbit                  6
+#define rx_a_lte_gain_done_shift                   9
+#define rx_a_lte_gain_done_mask                    0x200
 
 
 #define rx_a_lte_zero_done_addr                    0b000000110
-#define rx_a_lte_zero_done_startbit                6
+#define rx_a_lte_zero_done_startbit                7
 #define rx_a_lte_zero_done_width                   1
-#define rx_a_lte_zero_done_endbit                  6
-#define rx_a_lte_zero_done_shift                   9
-#define rx_a_lte_zero_done_mask                    0x200
+#define rx_a_lte_zero_done_endbit                  7
+#define rx_a_lte_zero_done_shift                   8
+#define rx_a_lte_zero_done_mask                    0x100
 
 
 #define rx_a_quad_phase_done_addr                  0b000000110
-#define rx_a_quad_phase_done_startbit              8
+#define rx_a_quad_phase_done_startbit              3
 #define rx_a_quad_phase_done_width                 1
-#define rx_a_quad_phase_done_endbit                8
-#define rx_a_quad_phase_done_shift                 7
-#define rx_a_quad_phase_done_mask                  0x80
+#define rx_a_quad_phase_done_endbit                3
+#define rx_a_quad_phase_done_shift                 12
+#define rx_a_quad_phase_done_mask                  0x1000
 
 
 #define rx_a_step_done_alias_addr                  0b000000110
@@ -535,51 +535,51 @@
 
 
 #define rx_b_bank_sync_done_addr                   0b000000111
-#define rx_b_bank_sync_done_startbit               5
+#define rx_b_bank_sync_done_startbit               8
 #define rx_b_bank_sync_done_width                  1
-#define rx_b_bank_sync_done_endbit                 5
-#define rx_b_bank_sync_done_shift                  10
-#define rx_b_bank_sync_done_mask                   0x400
+#define rx_b_bank_sync_done_endbit                 8
+#define rx_b_bank_sync_done_shift                  7
+#define rx_b_bank_sync_done_mask                   0x80
 
 
 #define rx_b_ber_done_addr                         0b000000111
-#define rx_b_ber_done_startbit                     10
+#define rx_b_ber_done_startbit                     12
 #define rx_b_ber_done_width                        1
-#define rx_b_ber_done_endbit                       10
-#define rx_b_ber_done_shift                        5
-#define rx_b_ber_done_mask                         0x20
+#define rx_b_ber_done_endbit                       12
+#define rx_b_ber_done_shift                        3
+#define rx_b_ber_done_mask                         0x8
 
 
 #define rx_b_ctle_gain_done_addr                   0b000000111
-#define rx_b_ctle_gain_done_startbit               0
+#define rx_b_ctle_gain_done_startbit               1
 #define rx_b_ctle_gain_done_width                  1
-#define rx_b_ctle_gain_done_endbit                 0
-#define rx_b_ctle_gain_done_shift                  15
-#define rx_b_ctle_gain_done_mask                   0x8000
+#define rx_b_ctle_gain_done_endbit                 1
+#define rx_b_ctle_gain_done_shift                  14
+#define rx_b_ctle_gain_done_mask                   0x4000
 
 
 #define rx_b_ctle_peak1_done_addr                  0b000000111
-#define rx_b_ctle_peak1_done_startbit              11
+#define rx_b_ctle_peak1_done_startbit              4
 #define rx_b_ctle_peak1_done_width                 1
-#define rx_b_ctle_peak1_done_endbit                11
-#define rx_b_ctle_peak1_done_shift                 4
-#define rx_b_ctle_peak1_done_mask                  0x10
+#define rx_b_ctle_peak1_done_endbit                4
+#define rx_b_ctle_peak1_done_shift                 11
+#define rx_b_ctle_peak1_done_mask                  0x800
 
 
 #define rx_b_ctle_peak2_done_addr                  0b000000111
-#define rx_b_ctle_peak2_done_startbit              12
+#define rx_b_ctle_peak2_done_startbit              5
 #define rx_b_ctle_peak2_done_width                 1
-#define rx_b_ctle_peak2_done_endbit                12
-#define rx_b_ctle_peak2_done_shift                 3
-#define rx_b_ctle_peak2_done_mask                  0x8
+#define rx_b_ctle_peak2_done_endbit                5
+#define rx_b_ctle_peak2_done_shift                 10
+#define rx_b_ctle_peak2_done_mask                  0x400
 
 
 #define rx_b_ddc_done_addr                         0b000000111
-#define rx_b_ddc_done_startbit                     9
+#define rx_b_ddc_done_startbit                     11
 #define rx_b_ddc_done_width                        1
-#define rx_b_ddc_done_endbit                       9
-#define rx_b_ddc_done_shift                        6
-#define rx_b_ddc_done_mask                         0x40
+#define rx_b_ddc_done_endbit                       11
+#define rx_b_ddc_done_shift                        4
+#define rx_b_ddc_done_mask                         0x10
 
 
 #define rx_b_ddc_hyst_left_edge_addr               0b000001101
@@ -599,19 +599,19 @@
 
 
 #define rx_b_dfe_done_addr                         0b000000111
-#define rx_b_dfe_done_startbit                     8
+#define rx_b_dfe_done_startbit                     10
 #define rx_b_dfe_done_width                        1
-#define rx_b_dfe_done_endbit                       8
-#define rx_b_dfe_done_shift                        7
-#define rx_b_dfe_done_mask                         0x80
+#define rx_b_dfe_done_endbit                       10
+#define rx_b_dfe_done_shift                        5
+#define rx_b_dfe_done_mask                         0x20
 
 
 #define rx_b_dfe_h1_done_addr                      0b000000111
-#define rx_b_dfe_h1_done_startbit                  7
+#define rx_b_dfe_h1_done_startbit                  9
 #define rx_b_dfe_h1_done_width                     1
-#define rx_b_dfe_h1_done_endbit                    7
-#define rx_b_dfe_h1_done_shift                     8
-#define rx_b_dfe_h1_done_mask                      0x100
+#define rx_b_dfe_h1_done_endbit                    9
+#define rx_b_dfe_h1_done_shift                     6
+#define rx_b_dfe_h1_done_mask                      0x40
 
 
 #define rx_b_eoff_done_addr                        0b000000111
@@ -639,35 +639,35 @@
 
 
 #define rx_b_latch_offset_done_addr                0b000000111
-#define rx_b_latch_offset_done_startbit            1
+#define rx_b_latch_offset_done_startbit            0
 #define rx_b_latch_offset_done_width               1
-#define rx_b_latch_offset_done_endbit              1
-#define rx_b_latch_offset_done_shift               14
-#define rx_b_latch_offset_done_mask                0x4000
+#define rx_b_latch_offset_done_endbit              0
+#define rx_b_latch_offset_done_shift               15
+#define rx_b_latch_offset_done_mask                0x8000
 
 
 #define rx_b_lte_gain_done_addr                    0b000000111
-#define rx_b_lte_gain_done_startbit                3
+#define rx_b_lte_gain_done_startbit                6
 #define rx_b_lte_gain_done_width                   1
-#define rx_b_lte_gain_done_endbit                  3
-#define rx_b_lte_gain_done_shift                   12
-#define rx_b_lte_gain_done_mask                    0x1000
+#define rx_b_lte_gain_done_endbit                  6
+#define rx_b_lte_gain_done_shift                   9
+#define rx_b_lte_gain_done_mask                    0x200
 
 
 #define rx_b_lte_zero_done_addr                    0b000000111
-#define rx_b_lte_zero_done_startbit                4
+#define rx_b_lte_zero_done_startbit                7
 #define rx_b_lte_zero_done_width                   1
-#define rx_b_lte_zero_done_endbit                  4
-#define rx_b_lte_zero_done_shift                   11
-#define rx_b_lte_zero_done_mask                    0x800
+#define rx_b_lte_zero_done_endbit                  7
+#define rx_b_lte_zero_done_shift                   8
+#define rx_b_lte_zero_done_mask                    0x100
 
 
 #define rx_b_quad_phase_done_addr                  0b000000111
-#define rx_b_quad_phase_done_startbit              6
+#define rx_b_quad_phase_done_startbit              3
 #define rx_b_quad_phase_done_width                 1
-#define rx_b_quad_phase_done_endbit                6
-#define rx_b_quad_phase_done_shift                 9
-#define rx_b_quad_phase_done_mask                  0x200
+#define rx_b_quad_phase_done_endbit                3
+#define rx_b_quad_phase_done_shift                 12
+#define rx_b_quad_phase_done_mask                  0x1000
 
 
 #define rx_b_step_done_alias_addr                  0b000000111
@@ -1462,6 +1462,14 @@
 #define rx_qpa_cdrlock_ignore_mask                 0x100
 
 
+#define rx_qpa_hysteresis_addr                     0b111100000
+#define rx_qpa_hysteresis_startbit                 10
+#define rx_qpa_hysteresis_width                    3
+#define rx_qpa_hysteresis_endbit                   12
+#define rx_qpa_hysteresis_shift                    3
+#define rx_qpa_hysteresis_mask                     0x38
+
+
 #define rx_qpa_hysteresis_enable_addr              0b111100000
 #define rx_qpa_hysteresis_enable_startbit          6
 #define rx_qpa_hysteresis_enable_width             1
@@ -1855,3 +1863,4 @@
 
 
 #endif //_PPE_MEM_REG_CONST_PKG_H_
+

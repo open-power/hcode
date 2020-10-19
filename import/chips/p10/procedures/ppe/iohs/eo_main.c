@@ -39,10 +39,13 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mwh20100801 |mwh     | HW549165: add if rx_min_recal_cnt_reached to running eo_vlcq check for recal taken it out of loop.
+// mwh20100800 |mwh     | HW549165: add in bist_check if ture turn on checks if false turn off checks
 // vbr20091600 |vbr     | HW542599: move rx_vga_amax from mem_regs to a stack variable (only used in init)
 // vbr20091100 |vbr     | Move cal_time_us from PL to PG to make space
 // jfg20090400 |jfg     | HW532333 Changed PR offset from PL to PG
 // jfg20090100 |jfg     | HW532333 Add new static PR Offset feature
+// jfg20051500 |jfg     | HW528360 Force ctle init cal to run as "first_iteration" on all loops not just the first. Even with increase of Reg hysteresis to 2 there is plenty of hysteresis.
 // mbs20080500 |mbs     | HW539048- Added separate dfe_full training enable in init
 // mbs20073000 |mbs     | LAB - Override rx_loff_timeout to 8
 // vbr20061600 |vbr     | HW532652: Set bit_lock_done when could be bumping (training/DL), clear when CDR locking.
@@ -458,8 +461,9 @@ void eo_main_init(t_gcr_addr* gcr_addr)
 
         if (eoff_enable)
         {
+            bool bist_check = true;//turn on bist checks for this part
             bool recal = false;
-            status |= eo_eoff(gcr_addr, recal, vga_loop_count, bank_a);
+            status |= eo_eoff(gcr_addr, recal, vga_loop_count, bank_a, bist_check);
         }
 
         // Cal Step: Quad Phase Adjust (Edge NS to EW phase adjustment)
@@ -475,6 +479,7 @@ void eo_main_init(t_gcr_addr* gcr_addr)
 
         // Cal Step: CTLE (Peaking)
         // Requires edge tracking (master mode) but does not require bank alignment
+        bool vga_loop_runctle = true;
         bool peak_changed = false;
         bool rough_only = false;
         int ctle_enable = mem_pg_field_get(rx_eo_enable_ctle_peak_cal);
@@ -482,7 +487,7 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         if (ctle_enable)
         {
             bool copy_peak_to_b = true;
-            status |= eo_ctle(gcr_addr, bank_a, copy_peak_to_b, &peak_changed, first_loop_iteration, rough_only);
+            status |= eo_ctle(gcr_addr, bank_a, copy_peak_to_b, &peak_changed, vga_loop_runctle, rough_only);
         }
 
         // Cal Step: LTE
@@ -536,11 +541,12 @@ void eo_main_init(t_gcr_addr* gcr_addr)
         put_ptr_field(gcr_addr, rx_bank_rlmclk_sel_a_alias, cal_bank_to_bank_rlmclk_sel_a(bank_b), read_modify_write);
         put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
 
+        bool bist_check = false;//turn off bist checks for this part
         bool recal = false;
 
         if (eoff_enable)
         {
-            status |= eo_eoff(gcr_addr, recal, 0, bank_b); // vga_loop_count = 0
+            status |= eo_eoff(gcr_addr, recal, 0, bank_b, bist_check); // vga_loop_count = 0,
         }
 
         bool rough_only = true;
@@ -869,11 +875,12 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
 
     // Cal Step: Edge Offset (Live Data)
     // Requires edge tracking (master mode) but does not require bank alignment
+    bool bist_check = true; //turn on bist checks for this part
     int eoff_enable = mem_pg_field_get(rx_rc_enable_edge_offset_cal);
 
     if (eoff_enable && (status == rc_no_error))
     {
-        status |= eo_eoff(gcr_addr, recal, 1, cal_bank);
+        status |= eo_eoff(gcr_addr, recal, 1, cal_bank, bist_check); //vga_loop_count=1 no latch offset check
     }
 
     // Cal Step: Quad Phase Adjust (Edge NS to EW phase adjustment)
@@ -997,12 +1004,15 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
     // Perform Check of VGA, CTLE, LTE, and QPA values
     // Check pass/fail status of other steps, too
     // part of bist
-    int bist_check_en = get_ptr_field(gcr_addr, rx_check_en_alias);
-
-    if ( bist_check_en )
+    if (min_recal_cnt_reached)  //begin if
     {
-        eo_vclq_checks(gcr_addr, cal_bank);
-    }
+        int bist_check_en = get_ptr_field(gcr_addr, rx_check_en_alias);
+
+        if ( bist_check_en )
+        {
+            eo_vclq_checks(gcr_addr, cal_bank);
+        }
+    }//end if
 
     // In Recal, only switch banks at the end of a lane's recal when no abort or error and if reached the min lane recal count
     int disable_bank_powerdown = mem_pg_field_get(rx_disable_bank_pdwn);
