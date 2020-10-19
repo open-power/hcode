@@ -39,7 +39,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20101200 |vbr     | HW544452/HW539450: Don't clear peak1/2 if it is disabled.
+// mwh20100900 |mwh     | HW549165:Only the eo_vcql should be setting fail also need be 0 since need set outside the loop
 // vbr20090900 |vbr     | HW544452: Added config for disabling peak1 or peak2 cal. Also removed averaging of peak2 results in rough mode.
+// vbr20080600 |vbr     | HW539450: Start first_run/rough servos from 0 since ZFE breaks down when peak is extremely high.
 // jfg20021901 |jfg     | HW521060: Abort scenario on first-run rough pass exposed failure to restore peak2 due to mis-use of pk
 // jfg20032401 |jfg     | HW526927  Wrong conditional || vs &&
 // jfg20032400 |jfg     | HW526927  hysteresis_en is not sensitive to first_run as intended.
@@ -364,6 +367,25 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
 
     if (first_run || rough_only)
     {
+        // HW539450: Start from 0 since ZFE does not work when peak is excessively high; only clear for enabled steps.
+        int pk_clear;
+
+        if      (peak1_disable)
+        {
+            pk_clear =  2;    // Clear peak2 only
+        }
+        else if (peak2_disable)
+        {
+            pk_clear =  1;    // Clear peak1 only
+        }
+        else
+        {
+            pk_clear =  3;    // Clear both peak1 and peak2
+        }
+
+        update_peak_and_status(gcr_addr, bank, 0, 0, pk_clear, 0); // peak1/peak2=0, fail=0
+
+
         //CTLE Rough Servo Pass
         abort_status = run_servo_ops_and_get_results(gcr_addr, c_servo_queue_general, num_servo_ops_ctle_rough,
                        &servo_ops_rough[servo_array_start_rough], servo_result);
@@ -507,7 +529,8 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
 
 ABORT:
     // Write final result
-    update_peak_and_status(gcr_addr, bank, ctle_peak_preset[0], ctle_peak_preset[1], pk + 1, 1);
+    //fail are checked in eo_vlcq and should not be set here. All input for fail are 0 in this code
+    update_peak_and_status(gcr_addr, bank, ctle_peak_preset[0], ctle_peak_preset[1], pk + 1, 0);
     abort_status |= warning_code;
 
 EXIT:

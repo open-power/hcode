@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mbs20090201 |mbs     | HW528360 - Added rx_qpa_hysteresis and set to 3 (was hardcoded to 2 in eo_qpa previously)
+// mbs20081900 |mbs     | HW542599 - Moved rx_vga_amax to per lane mem regs, and removed qpa obs regs to make room
 // jfg20061500 |jfg     | HW527761 Servos have a clear resistance when > 3 or biased to EW: Add 1 to compensate
 // jfg20022000 |jfg     | HW522672 Also had to change the ns/ew offset remainder conditional from && to ^
 // jfg20021800 |jfg     | HW522672 Somehow after all this time centerskew_ns bool was found to be inverted due to it's interaction with centerdir_ns
@@ -632,6 +634,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     int OffsetNS;
     int OffsetEW;
     bool hysteresis_en = mem_pg_field_get(rx_qpa_hysteresis_enable) == 1;
+    int qpa_hysteresis = mem_pg_field_get(rx_qpa_hysteresis);
 
     /*
     // Eliminate potential bias.
@@ -700,7 +703,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
     // Post result averaging hysteresis applied to help reduce chances of result oscillation during Main VGA loop
     // Correct for fixed 1-step hysteresis during recal or post 1st iteration and when manually enabled
     // If hysteresis stability is triggered then neither phase should move.
-    if (!((recal_2ndrun || hysteresis_en) && (OffsetNS < 2)))
+    if (!((recal_2ndrun || hysteresis_en) && (OffsetNS < qpa_hysteresis)))
     {
 
         set_debug_state(0xE030); // DEBUG - Phase adjust exceeds hysteresis

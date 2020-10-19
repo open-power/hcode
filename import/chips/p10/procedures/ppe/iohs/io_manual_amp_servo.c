@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20101200 |vbr     | HW549006/HW549610 - Updated manual servo op timeout behavior. Added abort check.
 // bja20091400 |bja     | HW544454- Sleep after each _run_amp_op() call
 // mbs20080501 |mbs     | HW539048- Updated to make FILTER_DEPTH modes (1 is too short)
 // mbs20080500 |mbs     | HW539048- Updated to make FILTER_DEPTH programmable (rx_manual_servo_filter_depth)
@@ -138,6 +139,14 @@ uint32_t manual_amp_servo_op(t_gcr_addr* io_gcr_addr,
 
     for (l_idx = 0; l_idx < i_num_ops; l_idx++)
     {
+        l_rc |= check_rx_abort(io_gcr_addr);
+
+        if (l_rc)
+        {
+            // Exit servo loop on either an abort or servo error/timeout
+            break;
+        }
+
         l_rc |= _run_amp_op(io_gcr_addr, i_set_fir_on_error, i_is_loff, i_servo_ops[l_idx], &o_results[l_idx]);
         io_sleep(get_gcr_addr_thread(io_gcr_addr));
     }
@@ -297,7 +306,7 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
         {
             set_fir(fir_code_warning);
             ADD_LOG(DEBUG_MAN_SERVO_DATAPIPE_FAIL, io_gcr_addr, i_servo_op);
-            return l_rc;
+            break;
         }
 
         // 3. Evalutate
@@ -351,7 +360,7 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
     if (l_loop >= MAX_LOOPS)
     {
         set_fir(fir_code_warning);
-        return l_rc;
+        l_rc |= error_code;
     }
 
     // Always select the lower dac value we are toggling between for consistency.
@@ -385,6 +394,17 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
     {
         put_ptr_fast(io_gcr_addr, l_dac_addr, DAC_ENDBIT, l_original);
         *o_result = l_dac_offset;
+    }
+
+    // Trap ppe servo status on an error if no previous error
+    if (l_rc)
+    {
+        // For simplicity, checking that the full reg is 0 and not just the valid bit.
+        if (mem_pg_field_get(ppe_servo_status1) == 0)
+        {
+            mem_pg_field_put(ppe_servo_status0, i_servo_op);
+            mem_pg_field_put(ppe_servo_status1, 0xFFFF);
+        }
     }
 
     return l_rc;
@@ -578,6 +598,8 @@ int read_datapipe(t_gcr_addr* gcr_addr, bool i_is_loff, uint8_t mask, uint8_t pa
     uint32_t alt_data = 0;
     uint32_t filter_match = 0;
 
+    uint32_t l_timeout = 4 * 1024 * filter_depth; // Have 1/32 chance to hit 5b Amp pattern so set much larger timeout
+
     uint32_t l_pipesel = (get_ptr_field(gcr_addr, rx_pipe_sel) & 0x4) | quad;
     put_ptr_field(gcr_addr, rx_pipe_sel, l_pipesel, read_modify_write);
 
@@ -685,10 +707,11 @@ int read_datapipe(t_gcr_addr* gcr_addr, bool i_is_loff, uint8_t mask, uint8_t pa
             break;
         }
 
-        if (loop > 1000000 && inc == 0 && dec == 0)
+        // Timeout if don't get enough votes within l_timeout reads of the data pipe
+        if (loop >= l_timeout && inc <= filter_depth && dec <= filter_depth)
         {
             ADD_LOG(DEBUG_MAN_SERVO_DATAPIPE_FAIL, gcr_addr, (((pattern) << 8) & 0xFF00) | (mask & 0x00FF));
-            PK_PANIC(0);
+            return error_code;
         }
 
         loop++;

@@ -39,8 +39,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20092800 |mbs     | Updated hysteresis for DFE
 // vbr20091600 |vbr     | HW546085: Added observation mem_regs for DFE Fast measured/calculated AP
 // vbr20091100 |vbr     | HW546085: Added observation mem_regs for DFE Fast coefficients
+// bja20090900 |bja     | Use common is_p10_dd1() check
 // mbs20080500 |mbs     | HW539048- Added dfe_quad_mode to allow dfe full training of only one quadrant
 // mbs20073000 |mbs     | LAB - Updated dfe h1 check to error at -20 instead of 0
 // mbs20073000 |mbs     | LAB - Updated dfe clkadj to only adjust for h1 > 0
@@ -539,8 +541,7 @@ static void rx_eo_dfe_fast_apply(t_gcr_addr* i_tgt, uint32_t* l_rc, int16_t i_lo
     int32_t  l_dac_addr = DAC_BASE_ADDR;
     int32_t  l_dfe_latch_val[8];
 
-    if (   ( get_chip_id()  == CHIP_ID_P10  )
-           && ( get_major_ec() == MAJOR_EC_DD1 ) )
+    if ( is_p10_dd1() )
     {
         // Workaround for DD1.0
         l_dfe_latch_val[0] = ( i_hvals[2] + i_hvals[1] + i_hvals[0]);
@@ -643,9 +644,9 @@ static int32_t rx_eo_dfe_check_hvals(t_gcr_addr* i_tgt, int32_t i_hvals[3])
  */
 static inline int32_t rx_eo_dfe_hysteresis(const int32_t i_new, const int32_t i_prev, bool recal)
 {
-    const int32_t UNCERTAINTY_AVG  = 3;  // If a change is larger than this value, the result changes to the new value
+    const int32_t UNCERTAINTY_AVG  = 4;  // If a change is larger than this value, the result changes to the new value
     const int32_t UNCERTAINTY_HYST =
-        1;  // If a change is larger than this value, the result changes to the average of the new and prev values, else it doesn't change
+        2;  // If a change is larger than this value, the result changes to the average of the new and prev values, else it doesn't change
 
     int32_t result  = i_new;
 
@@ -738,8 +739,7 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool i_recal, bo
         // Customize Servo Ops for Specific Quadrant and Bank
         for (l_latch = L000; l_latch <= L111; ++l_latch)
         {
-            if (   ( get_chip_id()  == CHIP_ID_P10  )
-                   && ( get_major_ec() == MAJOR_EC_DD1 ) )
+            if ( is_p10_dd1() )
             {
                 l_ap_servo_ops[l_latch] = SERVO_OPS_PDD1[l_latch] | SERVO_OP_AP | ( l_bank << 6) | l_quad | l_latch;
                 l_an_servo_ops[l_latch] = SERVO_OPS_PDD1[l_latch] | SERVO_OP_AN | ( l_bank << 6) | l_quad | l_latch;

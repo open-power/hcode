@@ -41,6 +41,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20101300 |mwh     | Atfter talking with Chris and Jim logger is back in this file, also scom set in vclq
+// mwh20101200 |mwh     | Put loff fail clear into if to gate form clearing
 // mwh20070700 |mwh     | Change DEBUG_RX_EOFF_EOFF_FAIL to DEBUG_RX_EOFF_POFF_FAIL for CQ528211 delta is for poff set
 // mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
 // cws20011400 |cws     | Added Debug Logs
@@ -93,7 +95,7 @@ static uint16_t servo_ops_eoff_b[num_servo_ops] = { c_loff_be_n000, c_loff_be_e0
 
 
 // Latch Offset (fenced)
-int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
+int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, bool bist_check)
 {
     //start eo_eoff
     set_debug_state(0xA000); // DEBUG
@@ -484,7 +486,7 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
     }//end1
 
     //Check loff edge latches before is +-96
-    if (rx_eoff_check_en_int && !status)
+    if ((rx_eoff_check_en_int) && (!status) && (bist_check))
     {
         //begin1
         if ((edge_after_n < check_eoff_min)  || (edge_after_n > check_eoff_max))
@@ -511,7 +513,7 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
     }//end1
 
     //check for poff delta should be close to 0
-    if (rx_eoff_poff_check_en_int && !status)
+    if ((rx_eoff_poff_check_en_int) && (!status) && (bist_check))
     {
         //begin1
         if ((poff_n_delta < check_poff_min) || (poff_n_delta > check_poff_max))
@@ -561,10 +563,15 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank)
         ADD_LOG(DEBUG_RX_EOFF_POFF_FAIL, gcr_addr, 0x0);
     }//ppe pl
 
+    //Clear fail if fail compare are not failing anymore
+    if ((!recal) && (vga_loop_count == 0))
+    {
+        mem_pl_field_put(rx_latch_offset_fail, lane, loff_fail);   //ppe pl
+    }
 
-    mem_pl_field_put(rx_latch_offset_fail, lane, loff_fail);//ppe pl
     mem_pl_field_put(rx_eoff_fail, lane, eoff_fail);//ppe pl
     mem_pl_field_put(rx_eoff_poff_fail, lane, delta_fail); //ppe pl
+
 
     if (bank == bank_a)
     {

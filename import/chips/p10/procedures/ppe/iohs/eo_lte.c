@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20092800 |mbs     | Updated hysteresis for LTE and turned off in init
 // cws20011400 |cws     | Added Debug Logs
 // vbr19091200 |vbr     | HW503535: Added sub-step disables so can turn off just LTE Gain or Zero.
 // vbr19041500 |vbr     | Updated register names
@@ -209,7 +210,7 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
     else     // !recal || !status
     {
         // Either not in recal or no abort/error, so check hysteresis
-        if (hysteresis_en)
+        if (recal && hysteresis_en)
         {
             // Check the hysteresis. If the change in BOTH lte_gain and lte_zero is less than or equal to the limit,
             // the previous values are restored. The change of at least one must be larger than the limit to be allowed.

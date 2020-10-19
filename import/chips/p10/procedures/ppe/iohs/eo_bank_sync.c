@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// bja20090900 |bja     | Use common is_p10_dd1() check
 // vbr20061101 |vbr     | HW532941: To deal with lossy bump, increasing max_bumps to fail and setting warning after full rotation
 // vbr20061100 |vbr     | HW533071: DD2 should not change the timer settings based on 16to1 mode
 // cws20011400 |cws     | Added Debug Logs
@@ -106,9 +107,7 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
     max_bumps_warn = 15;
     max_bumps_fail = 255;
 
-    if (   ( get_chip_id()  == CHIP_ID_P10  )
-           && ( get_major_ec() == MAJOR_EC_DD1 )
-           && !fw_field_get(fw_serdes_16_to_1_mode)  )
+    if ( is_p10_dd1() && !fw_field_get(fw_serdes_16_to_1_mode)  )
     {
         // 32:1 -- P10 DD1 only
         timer_sel      = 0xE;

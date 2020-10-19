@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20071400 |mwh     | Added log type DEBUG_RX_DAC_TEST_FAIL
 // vbr20061101 |vbr     | Added log type for bank sync warning
 // gap20032600 |gap     | Inserted DEBUG_BIST_TX_ZCAL_FAIL
 // mwh20022500 |mwh     | Added log type DEBUG_BIST_TXSEG
@@ -83,6 +84,7 @@
 #define DEBUG_BIST_TX_DCC_IQ_FAIL               0x0C
 #define DEBUG_BIST_TX_LS_FAIL                   0x0D
 #define DEBUG_BIST_TX_HS_FAIL                   0x0E
+
 #define DEBUG_TX_ZCAL_LIMIT                     0x0F
 #define DEBUG_RX_CTLE_SERVO_QUEUE_NOT_EMPTY     0x10
 #define DEBUG_RX_DFE_FAST_SERVO_QUEUE_NOT_EMPTY 0x11
@@ -116,6 +118,8 @@
 #define DEBUG_MAN_SERVO_MASK                    0x2D
 #define DEBUG_MAN_SERVO_PATTERN                 0x2E
 #define DEBUG_VGA_GAIN                          0x2F
+#define DEBUG_RX_DAC_TEST_FAIL                  0x30
+
 
 // A2 version (p10 dd2, zA dd1) fields start here
 #define DEBUG_BIST_TX_ZCAL_FAIL                 0x40

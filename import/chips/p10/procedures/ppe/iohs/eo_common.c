@@ -39,7 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
-//// Determine if in tx_half_width_mode
+// vbr20101201 |vbr     | HW549006: Removed the abort check on recal_req since that doesn't work with auto recal and command interface recals.
+// vbr20101200 |vbr     | HW549006: DL asserting psave_req or lowering recal_req when entering degraded mode is treated as a recal abort.
 // gap20091500 |gap     | HW542315: updated to use is_p10_dd1
 // bja20090800 |bja     | HW542315: make in_tx_half_width_mode() return false for p10 dd1 omi
 // gap20082500 |gap     | HW542315: add tx_write_4_bit_pat to handle half/full width modes
@@ -198,8 +199,12 @@ int check_rx_abort(t_gcr_addr* gcr_addr)
         int abort_val1 = get_ptr_field(gcr_addr, rx_dl_phy_recal_abort_sticky);
         int abort_val  = (abort_val0 | abort_val1);
 
-        //ret_val = abort_val ? abort_code : pass_code;
-        if ( abort_val )
+        // HW549006: DL may assert psave_req and lower recal_req in the middle of a recal when entering degraded mode; treat this as an abort.
+        // Only checking psave_req and not recal_req since recal_req will not be asserted in an auto recal or command interface recal.
+        //int recal_req = get_ptr_field(gcr_addr, rx_dl_phy_recal_req);
+        int psave_req = get_ptr_field(gcr_addr, rx_psave_req_dl);
+
+        if ( abort_val | psave_req )
         {
             ret_val = abort_code;
             set_fir(fir_code_recal_abort); // Added call to set_fir in order to trap ppe_error_state info
