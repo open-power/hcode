@@ -34,7 +34,7 @@
 ///
 
 // This array comes from the hardware team directly
-static const uint32_t core_throttle_table_values[] __attribute__((aligned (8))) =
+static const uint32_t core_throttle_table_values[] __attribute__((aligned (256))) =
 {
     0x20000000,     // 0  Throttle Disabled with mode update to 00
     0x73F10000,     // 1
