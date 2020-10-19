@@ -1,7 +1,7 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* This is an automatically generated prolog.                             */
 /*                                                                        */
-/* $Source: import/chips/p10/procedures/hwp/io/p10_io_power.H $           */
+/* $Source: import/chips/p10/procedures/ppe/iohs/eo_dac_test.h $          */
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
@@ -22,48 +22,33 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-// EKB-Mirror-To: hostboot
-///
-/// @file p10_io_power.H
-/// @brief Common IO functions and constants
-///-----------------------------------------------------------------------------
-/// *HW HW Maintainer: Chris Steffen <cwsteffen@us.ibm.com>
-/// *HW FW Maintainer: Ilya Smirnov <ismirno@us.ibm.com>
-/// *HW Consumed by  : HB
-///-----------------------------------------------------------------------------
-
-#include <fapi2.H>
-
-#ifndef _P10_IO_POWER__
-#define _P10_IO_POWER__
-
+// *!---------------------------------------------------------------------------
+// *! (C) Copyright International Business Machines Corp. 2016
+// *! All Rights Reserved -- Property of IBM
+// *! *** IBM Confidential ***
+// *!---------------------------------------------------------------------------
+// *! FILENAME    : eo_dac_test.h
+// *! TITLE       :
+// *! DESCRIPTION :
+// *!
+// *! OWNER NAME  : Mike Harper          Email:harperm@us.ibm.com
+// *! BACKUP NAME : Mike Spear          Email: mspear@us.ibm.com
+// *!
+// *!---------------------------------------------------------------------------
+// CHANGE HISTORY:
 //------------------------------------------------------------------------------
-// Consts
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-// Functions
-//------------------------------------------------------------------------------
+// Version ID: |Author: | Comment:
+// ------------|--------|-------------------------------------------------------
+// mwh20071300 |mwh     | Initial Rev
+// -----------------------------------------------------------------------------
 
-extern "C"
-{
-///
-/// @brief Set power on/off for targeted lanes.
-///
-/// @param[in] i_iohs_target Iohs target to work with
-///
-/// @return fapi2::ReturnCode. FAPI2_RC_SUCCESS if success, else error code.
-    fapi2::ReturnCode p10_io_iohs_power(
-        const fapi2::Target<fapi2::TARGET_TYPE_IOHS>& i_iohs_target,
-        const bool& i_on);
+#ifndef _EO_DAC_TEST_H_
+#define _EO_DAC_TEST_H_
 
-///
-/// @brief Set power on/off for targeted lanes.
-///
-/// @param[in] i_omic_target Omic target to work with
-///
-/// @return fapi2::ReturnCode. FAPI2_RC_SUCCESS if success, else error code.
-    fapi2::ReturnCode p10_io_omic_power(
-        const fapi2::Target<fapi2::TARGET_TYPE_OMIC>& i_omic_target,
-        const bool& i_on);
-} // extern "C"
-#endif
+#include <stdbool.h>
+#include "eo_common.h"
+
+// Latch Offset (Fenced)
+void eo_dac_test(t_gcr_addr* gcr_addr, const uint32_t i_lane_mask) ;
+
+#endif //_EO_DAC_TEST_H_
