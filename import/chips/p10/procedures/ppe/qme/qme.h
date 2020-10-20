@@ -159,6 +159,23 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
     QME_RUNN_MODE_ENABLE              = BIT32(20),
     QME_CONTAINED_MODE_ENABLE         = BIT32(21)
 };
+
+enum BCE_BUF_CONTENT_TYPE
+{
+    NONE            =    0,
+    CMN_RING        =    1,
+    INST_RING       =    2,
+    SCOM_RESTORE    =    3,
+    OVRRIDES        =    4,
+    ALL             =    5,
+};
+
+enum BCE_SCOPE
+{
+    QME_COMMON   = 0,
+    QME_SPECIFIC = 1,
+};
+
 // todo
 // (auto) pmcr fwd enable, throttle enable,
 // pstate enable, wof enable, safe mode enable
@@ -169,8 +186,8 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
 void qme_init();
 void qme_eval_eimr_override();
 void qme_send_pig_packet(uint32_t);
-void qme_block_copy_start(uint32_t, uint32_t, uint32_t, uint32_t);
-void qme_block_copy_ffdc( uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
+void qme_block_copy_start(uint32_t, uint32_t, uint32_t, uint32_t, enum BCE_SCOPE );
+void qme_block_copy_core_data( uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
 BceReturnCode_t qme_block_copy_check();
 
 // QME Stop Functions

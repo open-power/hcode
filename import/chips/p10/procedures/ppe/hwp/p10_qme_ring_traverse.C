@@ -41,6 +41,9 @@
 #include <p10_tor.H>
 #include <fapi2.H>
 #include <iota_lnk_cfg.h>
+#include <qme_record.h>
+
+extern QmeRecord  G_qme_record;
 
 enum
 {
@@ -92,7 +95,7 @@ fapi2::ReturnCode getRS4ImageFromTor(
     FAPI_INF( ">> getRS4ImageFromTor" );
     uint32_t l_torVersion       =   ((TorHeader_t*)i_pRingSectn)->version;
     TorOffset_t* l_pSectnTor    =   (TorOffset_t *)( i_pRingSectn + sizeof( TorHeader_t ) );
-    uint8_t   l_torIndex        =   0;
+    uint16_t   l_torIndex       =   0;
     RingType_t l_ringType       =   COMMON_RING;
     RingId_t l_rpIndex          =   UNDEFINED_RING_ID;
     uint8_t l_corePos           =   0;
@@ -195,7 +198,12 @@ fapi2::ReturnCode putRingQme(
     RingType_t l_ringType       =   COMMON_RING;
     uint8_t * l_pRing           =   (uint8_t *)SRAM_START;
     QmeHeader_t * l_pQmeHdr     =   (QmeHeader_t*)( l_pRing + QME_INT_VECTOR );
-    RingId_t l_rpIndex          =    UNDEFINED_RING_ID;
+    RingId_t l_rpIndex          =   UNDEFINED_RING_ID;
+    uint32_t l_cpmrOffset       =   0;
+    uint32_t l_sramOffset       =   0;
+    uint32_t l_bcLength         =   0;
+    BCE_SCOPE l_bcScope         =   QME_COMMON;
+    uint32_t l_tmpWord          =   0;
 
     // Get the ring properties (rp) index
     l_rpIndex = ringid_convert_ringId_to_rpIndex(i_ringId);
@@ -210,11 +218,36 @@ fapi2::ReturnCode putRingQme(
 
     if( COMMON_RING == l_ringType )
     {
-        l_pRing   =   l_pRing + rev_32(l_pQmeHdr->g_qme_hcode_length);
+        l_tmpWord       =   CMN_RING;
+        l_pRing         =   l_pRing + rev_32(l_pQmeHdr->g_qme_hcode_length);
+        l_cpmrOffset    =   QME_IMAGE_CPMR_OFFSET + rev_32(l_pQmeHdr->g_qme_common_ring_offset);
+        l_bcLength      =   rev_32(l_pQmeHdr->g_qme_common_ring_length);
     }
     else
     {
-        l_pRing   =   l_pRing + rev_32(l_pQmeHdr->g_qme_inst_spec_ring_offset);
+        l_tmpWord       =   INST_RING;
+        l_pRing         =   l_pRing + rev_32(l_pQmeHdr->g_qme_inst_spec_ring_offset);
+        l_cpmrOffset    =   QME_IMAGE_CPMR_OFFSET + rev_32(l_pQmeHdr->g_qme_common_ring_offset) + rev_32(l_pQmeHdr->g_qme_common_ring_length);
+        l_bcLength      =   rev_32(l_pQmeHdr->g_qme_max_spec_ring_length);
+        l_bcScope       =   QME_SPECIFIC;
+    }
+    if( ( G_qme_record.bce_buf_content_type != l_tmpWord ) && ( G_qme_record.bce_buf_content_type != ALL ) )
+    {
+        PK_TRACE_INF( "CR Offset : 0x%08x BC Len 0x%08x", l_cpmrOffset, l_bcLength );
+        //we don't have right binary in SRAM yet. We need to load it from
+        //HOMER through BCE
+        l_sramOffset    =   (rev_32(l_pQmeHdr->g_qme_common_ring_offset) >> 5);
+        l_cpmrOffset    =   l_cpmrOffset >>5;
+        l_bcLength      =   l_bcLength   >>5;
+        qme_block_copy_start( QME_BCEBAR_1, l_cpmrOffset, l_sramOffset, l_bcLength, l_bcScope );
+
+        if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
+        {
+            PK_TRACE_INF("ERROR: BCE Copy for ring type %02x Failed. HALT QME!", l_ringType );
+            IOTA_PANIC(QME_STOP_SCAN_RING_BLOCK_COPY_FAILED);
+        }
+
+        G_qme_record.bce_buf_content_type  =  l_tmpWord;
     }
 
     FAPI_TRY( getRS4ImageFromTor( i_target, l_pRing, i_ringId, QME_SCOM_NOP, i_ringMode ),
