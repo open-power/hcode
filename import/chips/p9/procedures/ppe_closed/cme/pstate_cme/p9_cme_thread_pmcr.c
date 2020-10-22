@@ -67,7 +67,7 @@ void cme_pstate_pmcr_action()
         if (core & cm)
         {
             request = in64(CME_LCL_PMCRS0 + ((cm & 1) << 5)) & PMCR_LOWERPS_MASK;
-            PK_TRACE_INF("PMCR: Fwd Core[%d] Pstate Request = 0x%02x", cm, (uint32_t)(request >> PMCR_PSTATE_SHIFT_AMOUNT));
+            //PK_TRACE_INF("PMCR: Fwd Core[%d] Pstate Request = 0x%02x", cm, (uint32_t)(request >> PMCR_PSTATE_SHIFT_AMOUNT));
 
             //NOTE: that LowerPS coincidentally is in the correct place for the PIG payload
             //Send Type1(previously Phase 2) only.
@@ -94,7 +94,7 @@ void p9_cme_pstate_pmcr_handler(void)
 //
 void p9_cme_init_done()
 {
-    PK_TRACE_DBG("CME INIT DONE: Enter");
+    //PK_TRACE_DBG("CME INIT DONE: Enter");
     uint32_t msg;
 
     // Synchronization between QM and Sibling
@@ -118,5 +118,5 @@ void p9_cme_init_done()
     // initialization must be completed prior!
     out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_PMCR_READY));
 
-    PK_TRACE_INF("CME INIT DONE: Exit");
+    //PK_TRACE_INF("CME INIT DONE: Exit");
 }

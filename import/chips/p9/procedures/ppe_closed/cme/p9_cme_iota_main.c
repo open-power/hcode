@@ -103,8 +103,18 @@ void fit_handler()
         ( ( ( scom_data.words.upper & BIT32(0) ) == 0 ) &&
           ( ( scom_data.words.upper & BIT32(1) ) == 0 ) ) )
     {
-        CME_PUTSCOM_NOP(CPPM_CPMMR_OR, CME_MASK_C0, BIT64(5));
-        PK_PANIC(CME_BAD_PFET);
+        PPE_WAIT_CORE_CYCLES(512)
+        CME_GETSCOM(PPM_PFSNS, CME_MASK_C0, scom_data);
+
+        if( ( ( ( scom_data.words.upper & BIT32(0) ) == 1 ) &&
+              ( ( scom_data.words.upper & BIT32(1) ) == 1 ) ) ||
+            ( ( ( scom_data.words.upper & BIT32(0) ) == 0 ) &&
+              ( ( scom_data.words.upper & BIT32(1) ) == 0 ) ) )
+        {
+
+            CME_PUTSCOM_NOP(CPPM_CPMMR_OR, CME_MASK_C0, BIT64(5));
+            PK_PANIC(CME_BAD_PFET);
+        }
     }
 
     CME_GETSCOM(PPM_PFSNS, CME_MASK_C1, scom_data);
@@ -114,8 +124,17 @@ void fit_handler()
         ( ( ( scom_data.words.upper & BIT32(0) ) == 0 ) &&
           ( ( scom_data.words.upper & BIT32(1) ) == 0 ) ) )
     {
-        CME_PUTSCOM_NOP(CPPM_CPMMR_OR, CME_MASK_C1, BIT64(6));
-        PK_PANIC(CME_BAD_PFET);
+        PPE_WAIT_CORE_CYCLES(512)
+        CME_GETSCOM(PPM_PFSNS, CME_MASK_C1, scom_data);
+
+        if( ( ( ( scom_data.words.upper & BIT32(0) ) == 1 ) &&
+              ( ( scom_data.words.upper & BIT32(1) ) == 1 ) ) ||
+            ( ( ( scom_data.words.upper & BIT32(0) ) == 0 ) &&
+              ( ( scom_data.words.upper & BIT32(1) ) == 0 ) ) )
+        {
+            CME_PUTSCOM_NOP(CPPM_CPMMR_OR, CME_MASK_C1, BIT64(6));
+            PK_PANIC(CME_BAD_PFET);
+        }
     }
 
     CME_GETSCOM_OR(CPPM_CSAR, CME_MASK_BC, scom_data.value);

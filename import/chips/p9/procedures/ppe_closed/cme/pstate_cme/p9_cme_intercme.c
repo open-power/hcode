@@ -63,7 +63,7 @@ void p9_cme_pstate_intercme_msg_handler(void)
 
 void p9_cme_pstate_sibling_lock_and_intercme_protocol(INTERCME_MSG_LOCK_ACTION intercme_msg_lock_action)
 {
-    PK_TRACE_DBG("SIBL: Enter");
+    PK_TRACE_INF("SIBL: Enter");
     uint32_t msg;
 
     if (intercme_msg_lock_action == INTERCME_MSG_LOCK_WAIT_ON_RECV)
@@ -101,7 +101,7 @@ void p9_cme_pstate_process_db0_sibling()
     //writes same value for both cores
     CME_GETSCOM(CPPM_CMEDB0, G_cme_pstate_record.firstGoodCoreMask, dbData.value);
 
-    PK_TRACE_DBG("INTER0: Enter");
+    PK_TRACE_INF("INTER0: Enter");
 
     dbQuadInfo = (dbData.value >> (in32(G_CME_LCL_SRTCH0) &
                                    (BITS32(CME_SCRATCH_LOCAL_PSTATE_IDX_START, CME_SCRATCH_LOCAL_PSTATE_IDX_LENGTH)
@@ -110,7 +110,7 @@ void p9_cme_pstate_process_db0_sibling()
 
     if(dbData.fields.cme_message_number0 == MSGID_DB0_START_PSTATE_BROADCAST)
     {
-        PK_TRACE_INF("INTER0: DB0 Start");
+        //PK_TRACE_INF("INTER0: DB0 Start");
 
         G_cme_pstate_record.quadPstate = dbQuadInfo;
         G_cme_pstate_record.globalPstate = dbBit8_15;
@@ -131,14 +131,14 @@ void p9_cme_pstate_process_db0_sibling()
     else if((dbData.fields.cme_message_number0 == MSGID_DB0_GLOBAL_ACTUAL_BROADCAST) ||
             (dbData.fields.cme_message_number0 == MSGID_DB0_DB3_PAYLOAD))
     {
-        PK_TRACE_INF("INTER0: DB0 GlbBcast");
+        //PK_TRACE_INF("INTER0: DB0 GlbBcast");
         G_cme_pstate_record.quadPstate = dbQuadInfo;
         G_cme_pstate_record.globalPstate = dbBit8_15;
         p9_cme_pstate_pmsr_updt();
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_CLIP_BROADCAST)
     {
-        PK_TRACE_INF("INTER0: DB0 Clip");
+        //PK_TRACE_INF("INTER0: DB0 Clip");
 
         if (dbBit8_15 == DB0_CLIP_BCAST_TYPE_PMIN)
         {
@@ -153,7 +153,7 @@ void p9_cme_pstate_process_db0_sibling()
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_STOP_PSTATE_BROADCAST)
     {
-        PK_TRACE_INF("INTER0: DB0 Stop");
+        //PK_TRACE_INF("INTER0: DB0 Stop");
         out32_sh(CME_LCL_EIMR_OR, (BITS64SH(34, 2)));//Disable PMCR0/1
         g_eimr_override |= BITS64(34, 2);
 
@@ -168,7 +168,7 @@ void p9_cme_pstate_process_db0_sibling()
     }
     else if(dbData.fields.cme_message_number0 == MSGID_DB0_PMSR_UPDT)
     {
-        PK_TRACE_INF("INTER0: DB0 PMSR Updt");
+        //PK_TRACE_INF("INTER0: DB0 PMSR Updt");
 
         switch(dbBit8_15)
         {
