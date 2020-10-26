@@ -39,14 +39,6 @@ namespace mcc
 #endif
 
 
-//>> [CRYPTO_DECRYPT_CRYPTOKEY1A]
-static const uint64_t CRYPTO_DECRYPT_CRYPTOKEY1A = 0x0c010f5aull;
-
-static const uint32_t CRYPTO_DECRYPT_CRYPTOKEY1A_KEY1A = 0;
-static const uint32_t CRYPTO_DECRYPT_CRYPTOKEY1A_KEY1A_LEN = 64;
-//<< [CRYPTO_DECRYPT_CRYPTOKEY1A]
-// mcc/reg00001.H
-
 //>> [WDF_DSTL_ECC]
 static const uint64_t WDF_DSTL_ECC = 0x0c010f45ull;
 

@@ -39,14 +39,6 @@ namespace mcc
 #endif
 
 
-//>> [CRYPTO_ENCRYPT_CRYPTOKEY2B]
-static const uint64_t CRYPTO_ENCRYPT_CRYPTOKEY2B = 0x0c010f55ull;
-
-static const uint32_t CRYPTO_ENCRYPT_CRYPTOKEY2B_KEY2B = 0;
-static const uint32_t CRYPTO_ENCRYPT_CRYPTOKEY2B_KEY2B_LEN = 64;
-//<< [CRYPTO_ENCRYPT_CRYPTOKEY2B]
-// mcc/reg00014.H
-
 //>> [USTL_USTLINJ]
 static const uint64_t USTL_USTLINJ = 0x0c010e0cull;
 

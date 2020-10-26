@@ -39,14 +39,6 @@ namespace mcc
 #endif
 
 
-//>> [CRYPTO_ENCRYPT_CRYPTOKEY1B]
-static const uint64_t CRYPTO_ENCRYPT_CRYPTOKEY1B = 0x0c010f53ull;
-
-static const uint32_t CRYPTO_ENCRYPT_CRYPTOKEY1B_KEY1B = 0;
-static const uint32_t CRYPTO_ENCRYPT_CRYPTOKEY1B_KEY1B_LEN = 64;
-//<< [CRYPTO_ENCRYPT_CRYPTOKEY1B]
-// mcc/reg00013.H
-
 //>> [USTL_USTLCFWOF]
 static const uint64_t USTL_USTLCFWOF = 0x0c010e15ull;
 

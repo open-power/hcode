@@ -39,14 +39,6 @@ namespace mcc
 #endif
 
 
-//>> [CRYPTO_DECRYPT_CRYPTOKEY1B]
-static const uint64_t CRYPTO_DECRYPT_CRYPTOKEY1B = 0x0c010f5bull;
-
-static const uint32_t CRYPTO_DECRYPT_CRYPTOKEY1B_KEY1B = 0;
-static const uint32_t CRYPTO_DECRYPT_CRYPTOKEY1B_KEY1B_LEN = 64;
-//<< [CRYPTO_DECRYPT_CRYPTOKEY1B]
-// mcc/reg00011.H
-
 //>> [DSTL_DSTLCREDIT]
 static const uint64_t DSTL_DSTLCREDIT = 0x0c010d0aull;
 

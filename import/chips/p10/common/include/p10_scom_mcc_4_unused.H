@@ -39,14 +39,6 @@ namespace mcc
 #endif
 
 
-//>> [CRYPTO_ENCRYPT_CRYPTOKEY2A]
-static const uint64_t CRYPTO_ENCRYPT_CRYPTOKEY2A = 0x0c010f54ull;
-
-static const uint32_t CRYPTO_ENCRYPT_CRYPTOKEY2A_KEY2A = 0;
-static const uint32_t CRYPTO_ENCRYPT_CRYPTOKEY2A_KEY2A_LEN = 64;
-//<< [CRYPTO_ENCRYPT_CRYPTOKEY2A]
-// mcc/reg00004.H
-
 //>>THE END<<
 
 #ifndef __PPE_HCODE__
