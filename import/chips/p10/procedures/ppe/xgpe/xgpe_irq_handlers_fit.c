@@ -175,6 +175,8 @@ void xgpe_write_core_throttle_data(uint32_t i_throttle_state,
         {
             //set the new value IRRITATE_INJECT_RESPONSE (20:21)
             out64(FDIR_MC_WOR, ((uint64_t)i_inject_response) << SHIFT64(21));
+            out64(FDIR_MC_WCLR, ((uint64_t)i_inject_response) << SHIFT64(21)); //Need to clear because of HW Issue
+            //PK_TRACE("Set/Clear FDIR[20:21] =0x%08x",i_inject_response);
         }
     }
     else
