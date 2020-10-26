@@ -49,16 +49,6 @@ static const uint32_t USTL_USTLCFWOF_B_CHANFAIL_WOF_LEN = 16;
 //<< [USTL_USTLCFWOF]
 // mcc/reg00013.H
 
-//>> [USTL_USTLLOLMASK]
-static const uint64_t USTL_USTLLOLMASK = 0x0c010e12ull;
-
-static const uint32_t USTL_USTLLOLMASK_RECOVER_ENABLE_MASK = 0;
-static const uint32_t USTL_USTLLOLMASK_RECOVER_ENABLE_MASK_LEN = 22;
-static const uint32_t USTL_USTLLOLMASK_CHECKSTOP_ENABLE_MASK = 32;
-static const uint32_t USTL_USTLLOLMASK_CHECKSTOP_ENABLE_MASK_LEN = 22;
-//<< [USTL_USTLLOLMASK]
-// mcc/reg00013.H
-
 //>>THE END<<
 
 #ifndef __PPE_HCODE__
