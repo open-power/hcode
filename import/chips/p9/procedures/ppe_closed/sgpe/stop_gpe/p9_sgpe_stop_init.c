@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2020                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -489,7 +489,7 @@ p9_sgpe_stop_init()
 #if !SKIP_CME_BOOT_IPL_HB
 
     uint32_t cme_flags   = 0;
-    uint16_t cmeBootList = ((~qssr.value) >> 16) & 0xFFF0;
+    uint16_t cmeBootList = (((~qssr.value) & qcsr.value) >> 16) & 0xFFF0;
 
     PK_TRACE_INF("Setup: Prepare CME[%x] to be Booted", cmeBootList);
 
