@@ -143,15 +143,11 @@ p10_hcd_core_timefac_to_pc(
 
             do
             {
-
-#if POWER10_DD_LEVEL == 10 // HW534619
-
-                // DD1: self restore -> timefac start -> poll for receive_done
-                // DD2: timefac start -> self restore -> poll for receive_done
+                // HW534619
+                // DD1 and DD2:
+                // self restore -> timefac start -> poll for receive_done
                 FAPI_DBG("Assert XFER_START via PCR_TFCSR[0]");
                 FAPI_TRY( HCD_PUTMMIO_C( l_core, QME_TFCSR_WO_OR, MMIO_1BIT(0) ) );
-
-#endif
 
                 // For STOP exit, after TFAC shadow has been initiated,
                 // check that TFCSR[XFER_SEND_DONE is set;
