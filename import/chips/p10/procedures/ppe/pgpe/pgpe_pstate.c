@@ -1069,16 +1069,27 @@ uint32_t pgpe_pstate_ps_from_freq(uint32_t freq_khz)
     return  ((G_gppb->reference_frequency_khz - freq_khz) / G_gppb->frequency_step_khz);
 }
 
-uint32_t pgpe_pstate_ps_from_freq_clipped(uint32_t freq_khz)
+uint32_t pgpe_pstate_ps_from_freq_clipped(uint32_t freq_khz, uint32_t round_up)
 {
+    uint32_t ps;
+
     if (G_gppb->reference_frequency_khz < freq_khz)
     {
-        return 0;
+        ps = 0;
     }
     else
     {
-        return  ((G_gppb->reference_frequency_khz - freq_khz) / G_gppb->frequency_step_khz);
+        if (round_up == PS_FROM_FREQ_ROUND_UP)
+        {
+            ps = ((G_gppb->reference_frequency_khz - freq_khz + G_gppb->frequency_step_khz) / G_gppb->frequency_step_khz);
+        }
+        else
+        {
+            ps = ((G_gppb->reference_frequency_khz - freq_khz) / G_gppb->frequency_step_khz);
+        }
     }
+
+    return ps;
 }
 
 uint32_t pgpe_pstate_is_at_target()

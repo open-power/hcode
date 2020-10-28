@@ -67,17 +67,17 @@ void pgpe_resclk_init()
             switch(i)
             {
                 case(0):
-                    rcimr.fields.rp0 = pgpe_pstate_ps_from_freq_clipped(RESCLK_INDEX[i + 1].freq * 1000);
+                    rcimr.fields.rp0 = pgpe_pstate_ps_from_freq_clipped(RESCLK_INDEX[i + 1].freq * 1000, PS_FROM_FREQ_ROUND_UP);
                     rcimr.fields.rx0 = RESCLK_INDEX[i].idx;
                     break;
 
                 case(1):
-                    rcimr.fields.rp1 = pgpe_pstate_ps_from_freq_clipped(RESCLK_INDEX[i + 1].freq * 1000);
+                    rcimr.fields.rp1 = pgpe_pstate_ps_from_freq_clipped(RESCLK_INDEX[i + 1].freq * 1000, PS_FROM_FREQ_ROUND_UP);
                     rcimr.fields.rx1 = RESCLK_INDEX[i].idx;
                     break;
 
                 case(2):
-                    rcimr.fields.rp2 = pgpe_pstate_ps_from_freq_clipped(RESCLK_INDEX[i + 1].freq * 1000);
+                    rcimr.fields.rp2 = pgpe_pstate_ps_from_freq_clipped(RESCLK_INDEX[i + 1].freq * 1000, PS_FROM_FREQ_ROUND_UP);
                     rcimr.fields.rx2 = RESCLK_INDEX[i].idx;
                     break;
 
@@ -201,10 +201,12 @@ void pgpe_resclk_enable(uint32_t pstate_target)
         for (q = 0; q < MAX_QUADS; q++)
         {
             PPE_PUTSCOM_UC_Q(QME_RCMR_WO_OR, q, rcmr.value);
+            PPE_PUTSCOM_UC_Q(QME_RCSCR_WO_CLEAR, q, BITS64(QME_RCSCR_OFF_REQ, QME_RCSCR_OFF_REQ_LEN));
         }
 
 #else
         PPE_PUTSCOM_MC_Q(QME_RCMR_WO_OR, rcmr.value);
+        PPE_PUTSCOM_MC_Q(QME_RCSCR_WO_CLEAR, BITS64(QME_RCSCR_OFF_REQ, QME_RCSCR_OFF_REQ_LEN));
 #endif
 
         //Multicast write the actual Pstate to the RCPTR

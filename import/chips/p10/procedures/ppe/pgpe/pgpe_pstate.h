@@ -61,6 +61,12 @@ enum SAFE_MODE_FAULT_INDEX
 };
 
 
+enum PS_FROM_FREQ_ROUNDING
+{
+    PS_FROM_FREQ_NO_ROUNDING    = 0,
+    PS_FROM_FREQ_ROUND_UP       = 1,
+};
+
 typedef struct pgpe_pstate
 {
     uint32_t pstate_status;
@@ -134,7 +140,7 @@ uint32_t pgpe_pstate_intp_ps_from_vcs(uint32_t vcs);
 uint32_t pgpe_pstate_intp_ps_from_idd(uint32_t idd);
 uint32_t pgpe_pstate_freq_from_ps(uint32_t ps);
 uint32_t pgpe_pstate_ps_from_freq(uint32_t freq_khz);
-uint32_t pgpe_pstate_ps_from_freq_clipped(uint32_t freq_khz);
+uint32_t pgpe_pstate_ps_from_freq_clipped(uint32_t freq_khz, uint32_t round_up);
 
 
 #endif
