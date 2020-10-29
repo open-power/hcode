@@ -168,12 +168,11 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
         else
         {
             slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A | bus_mask);
-            PK_TRACE_DBG("AVS_W:ReadData=0x%04x", slave_ack);
 
             //Non-zero SlaveAck
             if(slave_ack & 0xC0000000)
             {
-                PK_TRACE_DBG("AVS_W:Error Slave Ack");
+                PK_TRACE_DBG("AVS_W: Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
 
                 //Retry one-time
                 if (retry_cnt)
@@ -250,12 +249,11 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
         {
             // Read returned voltage value from Read frame
             slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A  | bus_mask);
-            PK_TRACE_DBG("AVS_READ: RegRead=0x%04x", slave_ack);
 
             //Non-zero SlaveAck
             if(slave_ack & 0xC0000000)
             {
-                PK_TRACE_DBG("AVS_W:Error Slave Ack");
+                PK_TRACE_DBG("AVS_R: Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
 
                 if (retry_cnt)
                 {
@@ -287,16 +285,47 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
 
 void pgpe_avsbus_init()
 {
-    PK_TRACE("VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+    PK_TRACE("AVS: VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
              pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(), pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
-    pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num());
+
+    //Initialize VDD
+    if (pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num() != 0xFF)
+    {
+        pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num());
+    }
+    else
+    {
+        PK_TRACE_ERR("AVS: VDD Bus Not Available, BusNum=0xFF");
+        //\todo Add Error Logging
+        //Determine what to do here in P10. In P9, we would just halt PGPE
+    }
 
     //Initialize VDN
-    pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num());
+    if (pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num() != 0xFF)
+    {
+        pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num());
+    }
+    else
+    {
+        //This is expected on some systems, and PGPE will simply report 0s
+        //for any voltage and current reads on VDN Bus
+        PK_TRACE("AVS: VDN Bus Not Available");
+    }
 
     //Initialize VCS
-    pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
+    if (pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num() != 0xFF)
+    {
+        pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
+    }
+    else
+    {
+        PK_TRACE_ERR("AVS: VCS Bus Not Available, BusNum=0xFF");
+        //\todo Add Error Logging
+        //Determine what to do here in P10. In P9, we would just halt PGPE
+    }
 }
+
+
 
 void pgpe_avsbus_init_bus(uint32_t bus_num)
 {
@@ -354,34 +383,41 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
     uint32_t  rc = 0;
     uint32_t  cmd_data_type = 0; // 0b0000=Target rail voltage
 
-    if (volt_mv > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
-        volt_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
+    if (bus_num != 0xFF)
     {
-        //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+        if (volt_mv > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
+            volt_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
+        {
+            //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+        }
+
+        // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
+        rc = pgpe_avsbus_drive_write(cmd_data_type, volt_mv, bus_num, rail_num);
+
+        switch (rc)
+        {
+            case AVS_RC_SUCCESS:
+                PK_TRACE_DBG("AVS_WRITE: Success!");
+                break;
+
+            case AVS_RC_ONGOING_TIMEOUT:
+                PK_TRACE_ERR("AVS_WRITE: OnGoing Flag Timeout");
+                //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+                break;
+
+            case AVS_RC_RESYNC_ERROR:
+                PK_TRACE_ERR("AVS_WRITE: Resync Error");
+                //GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(59)); //OCCLFIR[59]=AVS Resync Error
+                //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+                break;
+
+            default:
+                break;
+        }
     }
-
-    // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
-    rc = pgpe_avsbus_drive_write(cmd_data_type, volt_mv, bus_num, rail_num);
-
-    switch (rc)
+    else
     {
-        case AVS_RC_SUCCESS:
-            PK_TRACE_DBG("AVS_WRITE: Success!");
-            break;
-
-        case AVS_RC_ONGOING_TIMEOUT:
-            PK_TRACE_ERR("AVS_WRITE: OnGoing Flag Timeout");
-            //\todo Determine what to do here in P10. In P9, we would just halt PGPE
-            break;
-
-        case AVS_RC_RESYNC_ERROR:
-            PK_TRACE_ERR("AVS_WRITE: Resync Error");
-            //GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(59)); //OCCLFIR[59]=AVS Resync Error
-            //\todo Determine what to do here in P10. In P9, we would just halt PGPE
-            break;
-
-        default:
-            break;
+        PK_TRACE("AVS_WRITE: bus_num=%u not available", bus_num)
     }
 
 }
@@ -390,12 +426,20 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 {
     uint32_t rc = 0;
 
-    rc = pgpe_avsbus_drive_read(0x0, ret_volt, bus_num, rail_num);
-
-    if (rc)
+    if (bus_num != 0xFF)
     {
-        PK_TRACE_ERR("AVS_READ_VOLT: DriveRead FAILED. BusNum=0x%x,RailNum=0x%x", bus_num, rail_num);
-        //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+        rc = pgpe_avsbus_drive_read(0x0, ret_volt, bus_num, rail_num);
+
+        if (rc)
+        {
+            PK_TRACE_ERR("AVS_READ_VOLT: DriveRead FAILED. BusNum=0x%x,RailNum=0x%x", bus_num, rail_num);
+            //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+        }
+    }
+    else
+    {
+        PK_TRACE("AVS_READ_VOLT: bus_num=%u not available", bus_num)
+        *ret_volt = 0;
     }
 
 }
@@ -404,12 +448,20 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 {
     uint32_t rc = 0;
 
-    rc = pgpe_avsbus_drive_read(0x2, ret_current, bus_num, rail_num);
-
-    if (rc)
+    if (bus_num != 0xFF)
     {
-        PK_TRACE_ERR("AVS_READ_CURRENT: DriveRead FAILED rc=0x%x. BusNum=0x%x, RailNum=0x%x", rc, bus_num, rail_num);
-        //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+        rc = pgpe_avsbus_drive_read(0x2, ret_current, bus_num, rail_num);
+
+        if (rc)
+        {
+            PK_TRACE_ERR("AVS_READ_CURRENT: DriveRead FAILED rc=0x%x. BusNum=0x%x, RailNum=0x%x", rc, bus_num, rail_num);
+            //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+        }
+    }
+    else
+    {
+        PK_TRACE("AVS_READ_CURRENT: bus_num=%u not available", bus_num)
+        *ret_current = 0;
     }
 
 }
