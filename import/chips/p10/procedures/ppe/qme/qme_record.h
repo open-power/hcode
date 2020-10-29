@@ -157,6 +157,7 @@ typedef struct
     uint32_t    bce_buf_content_type;
     uint32_t    c_fused_spwu_fall;
     uint32_t    c_self_fault_vector;
+    uint16_t    c_failed_ring[4]; // Field needs to be at 8B boundary
 
 } QmeRecord __attribute__ ((aligned (4)));
 

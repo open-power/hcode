@@ -438,6 +438,8 @@ qme_stop_exit()
         }
 
         //===============//
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop11_exit_targets));
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_REPAIR_INITF )
 
@@ -446,7 +448,14 @@ qme_stop_exit()
             p10_hcd_cache_repair_initf(core_target);
         }
 
+        if( !G_qme_record.c_stop11_exit_targets )
+        {
+            return;
+        }
+
         //===============//
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop11_exit_targets));
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_ARRAYINIT )
 
@@ -455,13 +464,25 @@ qme_stop_exit()
             p10_hcd_cache_arrayinit(core_target);
         }
 
+        if( !G_qme_record.c_stop11_exit_targets )
+        {
+            return;
+        }
+
         //===============//
 
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop11_exit_targets));
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_INITF )
 
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
         {
             p10_hcd_cache_initf(core_target);
+        }
+
+        if( !G_qme_record.c_stop11_exit_targets )
+        {
+            return;
         }
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCANED )
@@ -574,6 +595,13 @@ qme_stop_exit()
         }
 
         //===============//
+        if( !G_qme_record.c_stop5_exit_targets )
+        {
+            return;
+        }
+
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop5_exit_targets));
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_REPAIR_INITF )
 
@@ -583,6 +611,13 @@ qme_stop_exit()
         }
 
         //===============//
+        if( !G_qme_record.c_stop5_exit_targets )
+        {
+            return;
+        }
+
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop5_exit_targets));
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_ARRAYINIT )
 
@@ -591,13 +626,26 @@ qme_stop_exit()
             p10_hcd_core_arrayinit(core_target);
         }
 
+        if( !G_qme_record.c_stop5_exit_targets )
+        {
+            return;
+        }
+
         //===============//
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_INITF )
 
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop5_exit_targets));
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
         {
             p10_hcd_core_initf(core_target);
+        }
+
+        if( !G_qme_record.c_stop5_exit_targets )
+        {
+            return;
         }
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_SCANED )

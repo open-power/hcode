@@ -27,11 +27,8 @@
 
 enum
 {
-    QME_MODULE_ID_SR        =   0x01,
-    QME_REASON_SR_FAIL      =   0x01,
     SR_FAIL_SLAVE_THREAD    =   0x01,
     SR_FAIL_MASTER_THREAD   =   0x02,
-    QME_STOP11_EXIT         =   0x02,
     SR_FFDC_SIZE            =   864,
     INIT_FFDC_COLLECT       =   55,
     SLAVE_THRD_COMPLETE     =   56,
@@ -265,7 +262,7 @@ qme_stop_self_complete(uint32_t core_target)
                 uint32_t errStatus = ERRL_STATUS_SUCCESS;
 
                 PPE_LOG_ERR_CRITICAL (
-                    QME_REASON_SR_FAIL,
+                    REASON_SR_FAIL,
                     QME_STOP11_EXIT,
                     QME_MODULE_ID_SR,
                     core_target,

@@ -182,6 +182,30 @@ enum SR_FAILURE_CODE
     SLAVE_THRD_FAIL     =    1,
     MASTER_THRD_FAIL    =    2,
 };
+
+enum QME_MODULE_ID
+{
+    QME_MODULE_ID_SR        =   0x01,
+    QME_MODULE_ID_QME_SCAN  =   0x02,
+};
+
+enum QME_REASON_CODE
+{
+    REASON_SR_FAIL              =   0x01,
+    PUTRING_PARALLEL_SCAN_ERR   =   0x02,
+    PUTRING_HEADER_ERR          =   0x03,
+    PUTRING_BAD_STRING          =   0x04,
+    PUTRING_HEADER_MISMATCH     =   0x05,
+    PUTRING_BAD_NIBBLE_INDEX    =   0x06,
+    PUTRING_UNKNOWN_ERR         =   0x07,
+};
+
+enum QME_EXTENDED_REASON_CODE
+{
+    QME_STOP11_EXIT         =   0x01,
+    QME_PUT_RING_FAIL       =   0x02,
+};
+
 // todo
 // (auto) pmcr fwd enable, throttle enable,
 // pstate enable, wof enable, safe mode enable

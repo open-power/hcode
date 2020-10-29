@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -33,7 +33,7 @@
 // *HWP Consumed by:    QME
 // *INDENT-OFF*
 
-#include <qme.h>
+#include "qme.h"
 #include <p10_qme_ring_traverse.H>
 #include <p10_ipl_image.H>
 #include <p10_scan_compression.H>
@@ -41,7 +41,8 @@
 #include <p10_tor.H>
 #include <fapi2.H>
 #include <iota_lnk_cfg.h>
-#include <qme_record.h>
+#include "errl.h"
+#include "errlutil.h"
 
 extern QmeRecord  G_qme_record;
 
@@ -93,6 +94,7 @@ fapi2::ReturnCode getRS4ImageFromTor(
                     const fapi2::RingMode i_ringMode )
 {
     FAPI_INF( ">> getRS4ImageFromTor" );
+    fapi2::ReturnCode   l_tmpRc;
     uint32_t l_torVersion       =   ((TorHeader_t*)i_pRingSectn)->version;
     TorOffset_t* l_pSectnTor    =   (TorOffset_t *)( i_pRingSectn + sizeof( TorHeader_t ) );
     uint16_t   l_torIndex       =   0;
@@ -169,13 +171,94 @@ fapi2::ReturnCode getRS4ImageFromTor(
     if( *l_pRingTor )
     {
         uint8_t* l_pRs4  =  i_pRingSectn + rev_16(*l_pRingTor);
+
         //CompressedScanData* l_pRingHdr     =   (CompressedScanData*) l_pRs4;
 
         FAPI_INF( "Ring Id 0x%04x Type 0x%02x", rev_16(l_pRingHdr->iv_ringId), l_pRingHdr->iv_type );
 
-        FAPI_TRY( p10_putRingUtils( i_target, l_pRs4, i_scomOp, REGULAR, i_ringMode ),
-                  "QME Putring Failed For Ring 0x%04x",  i_ringId );
-    }
+        l_tmpRc = p10_putRingUtils( i_target,
+                                    l_pRs4,
+                                    i_scomOp,
+                                    REGULAR,
+                                    i_ringMode );
+
+        if( l_tmpRc )
+        {
+            std::vector< fapi2::Target < fapi2::TARGET_TYPE_CORE >> l_coreList =
+                    i_target.getChildren< fapi2::TARGET_TYPE_CORE > ();
+
+            uint32_t l_reasonCode = 0;
+
+            for( auto l_core : l_coreList )
+            {
+                FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_CHIP_UNIT_POS,
+                                         l_core, l_corePos ) );
+
+                l_tmpRc = p10_putRingUtils( l_core,
+                                            l_pRs4,
+                                            i_scomOp,
+                                            REGULAR,
+                                            i_ringMode );
+                if( !l_tmpRc )
+                {
+                    continue;
+                }
+
+                switch( (uint32_t)l_tmpRc )
+                {
+                    case fapi2::RC_QME_PUTRING_PARALLEL_SCAN_ERR:
+                        l_reasonCode = PUTRING_PARALLEL_SCAN_ERR;
+                        break;
+
+                    case fapi2::RC_QME_PUTRING_HEADER_ERR:
+                        l_reasonCode = PUTRING_HEADER_ERR;
+                        break;
+
+                    case fapi2::RC_QME_PUTRING_BAD_STRING:
+                        l_reasonCode = PUTRING_BAD_STRING;
+                        break;
+
+                    case fapi2::RC_QME_PUTRING_HEADER_MISMATCH:
+                        l_reasonCode = PUTRING_HEADER_MISMATCH;
+                        break;
+
+                    case fapi2::RC_QME_PUTRING_BAD_NIBBLE_INDEX:
+                        l_reasonCode = PUTRING_BAD_NIBBLE_INDEX;
+                        break;
+
+                        default:
+                        l_reasonCode = PUTRING_UNKNOWN_ERR;
+                        break;
+                }
+
+                PK_TRACE_INF( "Putring Failed on QME %02d Core %02d",
+                               G_qme_record.quad_id, l_corePos );
+
+                uint32_t errStatus = ERRL_STATUS_SUCCESS;
+
+                PPE_LOG_ERR_CRITICAL ( l_reasonCode,
+                                       QME_PUT_RING_FAIL,
+                                       QME_MODULE_ID_QME_SCAN,
+                                       l_tmpRc,
+                                       l_corePos,
+                                       i_ringId,
+                                       NULL,
+                                       NULL,
+                                       errStatus );
+
+                PK_TRACE_INF( "Scanning Error Log Status %d ", errStatus );
+
+
+                G_qme_record.c_stop11_exit_targets &= ~( l_core.getCoreSelect() );
+                G_qme_record.c_stop5_exit_targets &= ~( l_core.getCoreSelect() );
+                G_qme_record.c_scan_failed |= l_core.getCoreSelect();
+                G_qme_record.c_failed_ring[ l_corePos % MAX_CORES_PER_QUAD ] = i_ringId;
+
+            }//for
+
+        }//if( l_tmpRc )
+
+    }//if( *l_pRingTor )
 
 fapi_try_exit:
     FAPI_INF( "<< getRS4ImageFromTor" );

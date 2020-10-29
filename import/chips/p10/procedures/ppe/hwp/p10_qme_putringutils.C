@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2020                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -122,15 +122,15 @@ inline uint32_t rs4_get_nibble( const uint8_t* i_rs4Str, const uint32_t i_nibble
 /// @param[out] o_numRotate     No.of rotates decoded from the stop-code.
 /// @return The number of nibbles decoded.
 ///
-inline uint32_t stop_decode( const uint8_t* i_rs4Str,
+inline fapi2::ReturnCode stop_decode( const uint8_t* i_rs4Str,
                              uint32_t i_nibbleIndx,
                              uint32_t* o_numRotate,
-                             const uint32_t i_totalNibbleIndex )__attribute__((always_inline) );
+                             const uint32_t i_totalNibbleIndex, uint32_t & o_numNibbleDecoded )__attribute__((always_inline) );
 
-inline uint32_t stop_decode( const uint8_t* i_rs4Str,
+inline fapi2::ReturnCode stop_decode( const uint8_t* i_rs4Str,
                              uint32_t i_nibbleIndx,
                              uint32_t* o_numRotate,
-                             const uint32_t i_totalNibbleIndex )
+                             const uint32_t i_totalNibbleIndex, uint32_t & o_numNibbleDecoded )
 {
     uint32_t l_numNibblesParsed = 0; // No.of nibbles that make up the stop-code
     uint32_t l_numNonZeroNibbles = 0;
@@ -151,15 +151,18 @@ inline uint32_t stop_decode( const uint8_t* i_rs4Str,
         if ( i_nibbleIndx > i_totalNibbleIndex )
         {
             PKTRACE( "ROTATE:Current nibble index is greater than total nibble index" );
-            IOTA_PANIC(QME_STOP_PUTRING_ROTATE_RS4_IMAGE_INVALID);
+            fapi2::current_err = fapi2::RC_QME_PUTRING_BAD_STRING;
+            goto fapi_try_exit;
         }
     }
     while( ( l_nibble & 0x08 ) == 0 );
 
 
-    *o_numRotate    =   l_numNonZeroNibbles;
+    *o_numRotate        =   l_numNonZeroNibbles;
+    o_numNibbleDecoded +=   l_numNibblesParsed;
 
-    return l_numNibblesParsed;
+fapi_try_exit:
+    return fapi2::current_err;
 }
 
 //------------------------------------------------------------------------------------------
@@ -384,8 +387,10 @@ fapi2::ReturnCode checkParallelScanErr( fapi2::Target<fapi2::TARGET_TYPE_EQ> i_e
     if( l_scomData.getBit<scomt::eq::CPLT_STAT0_CC_CTRL_PARALLEL_SCAN_COMPARE_ERR>() )
     {
         PKTRACE( "Err: Parallel Scan Error" );
-        IOTA_PANIC(QME_STOP_PUTRING_PARALLEL_SCAN_ERR);
+        fapi2::current_err = fapi2::RC_QME_PUTRING_PARALLEL_SCAN_ERR;
+        goto fapi_try_exit;
     }
+
 fapi_try_exit:
     return fapi2::current_err;
 
@@ -517,8 +522,8 @@ fapi2::ReturnCode flushRTIMs( const fapi2::Target<fapi2::TARGET_TYPE_EQ> & i_eqT
         if( l_scomData.getBit<scomt::eq::CPLT_STAT0_CC_CTRL_PARALLEL_SCAN_COMPARE_ERR>() )
         {
             PKTRACE( "Parallel Scan Error Found Before Scanning" );
-            PKTRACE( "Halting Now" );
-            IOTA_PANIC(QME_STOP_PUTRING_PARALLEL_SCAN_ERR);
+            fapi2::current_err = fapi2::RC_QME_PUTRING_PARALLEL_SCAN_ERR;
+            goto fapi_try_exit;
         }
 
     }
@@ -546,6 +551,7 @@ fapi2::ReturnCode p10_putRingUtils(
     uint32_t l_ringId               =   0;
     uint32_t l_ringSize             =   0;
     uint32_t l_totalNibbleValue     =   0;
+    fapi2::ReturnCode   l_rcTemp    =   fapi2::FAPI2_RC_SUCCESS;
     uint32_t l_regAddress   =   0;
 
 #ifndef __UNIT_TEST_
@@ -638,7 +644,8 @@ fapi2::ReturnCode p10_putRingUtils(
                      RS4_IV_TYPE_SCAN_FLUSH,
                      (l_rs4Header->iv_type & RS4_IV_TYPE_SCAN_MASK));
         #ifndef __UNIT_TEST_
-            IOTA_PANIC(QME_STOP_PUTRING_HEADER_ERROR);
+            fapi2::current_err = fapi2::RC_QME_PUTRING_HEADER_ERR;
+            goto fapi_try_exit;
         #endif
         }
 
@@ -680,8 +687,8 @@ fapi2::ReturnCode p10_putRingUtils(
             if ( l_opType == ROTATE )
             {
                 // Determine the no.of ROTATE operations encoded in stop-code
-                uint32_t l_bitRotates;
-                l_nibbleIndx +=  stop_decode(l_rs4Str, l_nibbleIndx, &l_bitRotates,l_totalNibbleValue);
+                uint32_t l_bitRotates = 0;
+                FAPI_TRY( stop_decode( l_rs4Str, l_nibbleIndx, &l_bitRotates,l_totalNibbleValue, l_nibbleIndx ));
 
                 // Determine the no.of rotates in bits
                 l_bitRotates  =  l_bitRotates << 2;
@@ -711,7 +718,8 @@ fapi2::ReturnCode p10_putRingUtils(
                 if ( l_nibbleIndx > l_totalNibbleValue)
                 {
                     PKTRACE( "SCAN:Current nibble index is greater than total nibble index" );
-                    IOTA_PANIC(QME_STOP_PUTRING_SCAN_RS4_IMAGE_INVALID);
+                    fapi2::current_err = fapi2::RC_QME_PUTRING_BAD_NIBBLE_INDEX;
+                    goto fapi_try_exit;
                 }
 
                 if ( l_scanCount == 0 )
@@ -900,21 +908,8 @@ fapi2::ReturnCode p10_putRingUtils(
         {
             PKTRACE("Ring Header Mismatch ");
             PKTRACE("Header  Value %08X %08X", (l_readHeader >> 32), l_readHeader);
-
-            //In EDR: core value(4b), ring Id (12b), and number of latches that went thru rotate
-            //and scan (16b).
-            //In SPRG0: First 32 bits of header data read from the hw
-            uint32_t l_coreId       = i_target.getCoreSelect();
-            uint32_t l_ringId       = l_rs4Header->iv_ringId;
-            uint32_t debug_data_0   = (l_coreId << 28) | (l_ringId << 16) | (l_bitsDecoded & 0x000FFFFF);
-            asm volatile ("mtspr %0, %1" : : "i" (61), "r" (debug_data_0) : "memory");
-
-            uint32_t sprg0 = 0;
-            asm volatile ("mfspr %0, %1" : : "r" (sprg0), "i" (272) : "memory");
-            uint32_t debug_data_1   = sprg0 | (uint32_t)((l_readHeader >> 32) & 0xFFFF0000);
-            asm volatile ("mtspr %0, %1" : : "i" (272), "r" (debug_data_1) : "memory");
-
-            IOTA_PANIC(QME_STOP_PUTRING_HEADER_MISMATCH);
+            fapi2::current_err = fapi2::RC_QME_PUTRING_HEADER_MISMATCH;
+            goto fapi_try_exit;
         }
         else
         {
@@ -926,9 +921,6 @@ fapi2::ReturnCode p10_putRingUtils(
             FAPI_TRY( checkParallelScanErr( l_eqTgt ) );
         }
 
-        // Clean scan region and type data
-        FAPI_TRY( cleanUpClockController( l_eqTgt, (l_scanRegion >> 32) ) );
-        PKTRACE( "<< p10_putRingUtils" );
 #else
 
         FAPI_INF( "Scan Region  0x%016lx Type 0x%016lx Override : %s Coomon %s",
@@ -941,6 +933,17 @@ fapi2::ReturnCode p10_putRingUtils(
 
 #ifndef __UNIT_TEST_
 fapi_try_exit:
+
+        l_rcTemp    =   fapi2::current_err;
+
+        // Clean scan region and type data
+        if( !cleanUpClockController( l_eqTgt, (l_scanRegion >> 32) ) )
+        {
+            fapi2::current_err = l_rcTemp;
+        }
+
+        PKTRACE( "<< p10_putRingUtils" );
+
 #endif
 
     return fapi2::current_err;
