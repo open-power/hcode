@@ -114,7 +114,7 @@ void pgpe_occ_produce_wof_values()
             G_pgpe_occ.vcs_wof_avg_accum_mv = 0;
         }
 
-        if (pgpe_wov_ocs_is_ocs_enabled())
+        if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
         {
             G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma =  G_pgpe_occ.idd_wof_avg_accum_ma / G_pgpe_occ.wof_tick;;
             G_pgpe_occ.pwof_val->dw1.fields.ics_avg_10ma = G_pgpe_occ.ics_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
@@ -153,7 +153,7 @@ void pgpe_occ_produce_fit_values()
         G_pgpe_occ.thr_idx_tb_accum = 0;
     }
 
-    if (pgpe_wov_ocs_is_ocs_enabled())
+    if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
     {
         G_pgpe_occ.idd_fit_avg_ma = G_pgpe_occ.idd_tb_accum / G_pgpe_occ.max_tb_delta;
         G_pgpe_occ.ics_fit_avg_ma = G_pgpe_occ.ics_tb_accum / G_pgpe_occ.max_tb_delta;
@@ -190,7 +190,7 @@ void pgpe_occ_sample_values()
     //Read IDD and ICS
     uint32_t idd_ma, ics_ma;
 
-    if (pgpe_wov_ocs_is_ocs_enabled())
+    if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
     {
         pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                                  pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
