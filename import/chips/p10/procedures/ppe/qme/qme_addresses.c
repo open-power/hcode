@@ -94,6 +94,14 @@ uint32_t QME_LCL_EITR_CLR               = 0xC00026F0;
 uint32_t QME_LCL_EISTR                  = 0xC0002700;
 uint32_t QME_LCL_EINR                   = 0xC0002740;
 
+uint32_t QME_LCL_RCMR                   = 0xC0001800;
+uint32_t QME_LCL_RCMR_OR                = 0xC0001820;
+uint32_t QME_LCL_RCMR_CLR               = 0xC0001830;
+
+uint32_t QME_LCL_RCSCR                  = 0xC0001840;
+uint32_t QME_LCL_RCSCR_OR               = 0xC0001860;
+uint32_t QME_LCL_RCSCR_CLR              = 0xC0001870;
+
 // QME Per-Core
 
 uint32_t QME_SSH_SRC                    = 0xC00081C0;

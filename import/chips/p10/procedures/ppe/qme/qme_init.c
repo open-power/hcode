@@ -259,6 +259,17 @@ qme_init()
         }
     }
 
+    // Initialize the resonant clock setup
+
+    // Clear RCMR STEP_ENABLE
+    out32 ( QME_LCL_RCMR_CLR, BIT32(QME_RCMR_STEP_ENABLE) );
+    // Set RCMR AUTO_DONE_DISABLE
+    out32 ( QME_LCL_RCMR_OR, BIT32(QME_RCMR_AUTO_DONE_DISABLE) );
+
+    // Set RCSCR CORE_CHANGE_DONE for all cores to provide a "done" until the
+    // resonant clocks are enabled.
+    out32 ( QME_LCL_RCSCR_OR, BITS32(QME_RCSCR_CHANGE_DONE, QME_RCSCR_CHANGE_DONE_LEN) );
+
     //--------------------------------------------------------------------------
     // QME Init Completed
     //--------------------------------------------------------------------------

@@ -126,7 +126,7 @@ void pgpe_resclk_init()
         }
 
         rcmr_t rcmr;
-        rcmr.value = 0;
+        rcmr.value = 0;  // Note: this will clear AUTO_DONE_DISABLE set by QME
         rcmr.fields.step_delay = 2; //todo Not use this hardcoded value
         PK_TRACE("RCK: Init RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
 #if USE_MC == 0
@@ -201,12 +201,14 @@ void pgpe_resclk_enable(uint32_t pstate_target)
         for (q = 0; q < MAX_QUADS; q++)
         {
             PPE_PUTSCOM_UC_Q(QME_RCMR_WO_OR, q, rcmr.value);
-            PPE_PUTSCOM_UC_Q(QME_RCSCR_WO_CLEAR, q, BITS64(QME_RCSCR_OFF_REQ, QME_RCSCR_OFF_REQ_LEN));
+            // RCSCR OFF REQ is owned by QME.  Resclks are enabled by RCPTR updates below
+            // PPE_PUTSCOM_UC_Q(QME_RCSCR_WO_CLEAR, q, BITS64(QME_RCSCR_OFF_REQ, QME_RCSCR_OFF_REQ_LEN));
         }
 
 #else
         PPE_PUTSCOM_MC_Q(QME_RCMR_WO_OR, rcmr.value);
-        PPE_PUTSCOM_MC_Q(QME_RCSCR_WO_CLEAR, BITS64(QME_RCSCR_OFF_REQ, QME_RCSCR_OFF_REQ_LEN));
+        // RCSCR OFF REQ is owned by QME.  Resclks are enabled by RCPTR updates below
+        // PPE_PUTSCOM_MC_Q(QME_RCSCR_WO_CLEAR, BITS64(QME_RCSCR_OFF_REQ, QME_RCSCR_OFF_REQ_LEN));
 #endif
 
         //Multicast write the actual Pstate to the RCPTR

@@ -88,6 +88,20 @@ extern uint32_t QME_LCL_EITR_CLR;
 extern uint32_t QME_LCL_EISTR;
 extern uint32_t QME_LCL_EINR;
 
+extern uint32_t QME_LCL_RCMR;
+extern uint32_t QME_LCL_RCMR_OR;
+extern uint32_t QME_LCL_RCMR_CLR;
+
+static const uint32_t QME_RCMR_STEP_ENABLE = 0;
+static const uint32_t QME_RCMR_AUTO_DONE_DISABLE = 3;
+
+extern uint32_t QME_LCL_RCSCR;
+extern uint32_t QME_LCL_RCSCR_OR;
+extern uint32_t QME_LCL_RCSCR_CLR;
+
+static const uint32_t QME_RCSCR_CHANGE_DONE = 4;
+static const uint32_t QME_RCSCR_CHANGE_DONE_LEN = 4;
+
 // QME Per-Core
 
 extern uint32_t QME_SSH_SRC;
