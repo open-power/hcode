@@ -33,6 +33,7 @@
 #include "p10_scom_c_1.H"
 #include "p10_oci_proc.H"
 #include "pgpe_resclk.h"
+#include "pgpe_thr_ctrl.h"
 #include "p10_hcd_common.H"
 #include "pstate_pgpe_occ_api.h"
 #include "pgpe_header.h"
@@ -416,6 +417,21 @@ void pgpe_pstate_actuate_safe_voltage_vcs()
         pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                                   pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                   G_pgpe_pstate.vcs_next_ext);
+    }
+}
+
+void pgpe_pstate_do_throttle()
+{
+    if (pgpe_thr_ctrl_is_enabled())
+    {
+        if (G_pgpe_pstate.pstate_computed > G_pgpe_pstate.pstate_safe)
+        {
+            pgpe_thr_ctrl_update(G_pgpe_pstate.pstate_computed);
+        }
+        else
+        {
+            pgpe_thr_ctrl_update(G_pgpe_pstate.pstate_safe);
+        }
     }
 }
 
@@ -1150,8 +1166,9 @@ void pgpe_pstate_pmsr_updt()
 {
     G_pgpe_pstate.pmsr.fields.global_actual =  G_pgpe_pstate.pstate_curr;
     G_pgpe_pstate.pmsr.fields.local_actual  =  G_pgpe_pstate.pstate_curr;
-    G_pgpe_pstate.pmsr.fields.pmin          =  G_pgpe_pstate.clip_min;
     G_pgpe_pstate.pmsr.fields.pmax          =  G_pgpe_pstate.clip_max;
+    G_pgpe_pstate.pmsr.fields.pmin          =  G_pgpe_pstate.clip_min > G_pgpe_pstate.pstate_safe ?
+            G_pgpe_pstate.pstate_safe : G_pgpe_pstate.clip_min;
 }
 
 void pgpe_pstate_pmsr_set_safe_mode()
