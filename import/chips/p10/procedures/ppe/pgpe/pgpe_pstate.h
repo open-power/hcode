@@ -99,6 +99,7 @@ void pgpe_pstate_actuate_step();
 void pgpe_pstate_actuate_pstate(uint32_t pstate);
 void pgpe_pstate_actuate_safe_voltage_vdd();
 void pgpe_pstate_actuate_safe_voltage_vcs();
+void pgpe_pstate_do_throttle();
 void pgpe_pstate_compute();
 void pgpe_pstate_apply_clips();
 void pgpe_pstate_compute_vratio(uint32_t pstate);

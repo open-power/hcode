@@ -40,6 +40,7 @@ typedef struct pgpe_thr_ctrl
     uint32_t status;
     uint32_t ceff_ovr;
     uint32_t curr_ceff_ovr_idx;
+    uint32_t mode;
 } pgpe_thr_ctrl_t;
 
 void pgpe_thr_ctrl_init();
@@ -51,5 +52,6 @@ void pgpe_thr_ctrl_write_wcor();
 extern pgpe_thr_ctrl_t G_pgpe_thr_ctrl;
 
 #define pgpe_thr_ctrl_get_thr_idx() (G_pgpe_thr_ctrl.curr_ceff_ovr_idx)
+#define pgpe_thr_ctrl_is_enabled() (G_pgpe_thr_ctrl.status == PGPE_THR_CTRL_ENABLED)
 
 #endif

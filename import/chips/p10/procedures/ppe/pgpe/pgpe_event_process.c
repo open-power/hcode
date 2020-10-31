@@ -504,8 +504,27 @@ void pgpe_process_clip_update_post_actuate()
     if(pgpe_pstate_is_clip_bounded())
     {
         PK_TRACE("PEP: PS Clips Bounded");
-        pgpe_occ_send_ipc_ack_type_rc(EV_IPC_CLIP_UPDT, PGPE_RC_SUCCESS);
+
+        if (pgpe_thr_ctrl_is_enabled())
+        {
+            uint32_t pstate = (pgpe_pstate_get(clip_min) >= pgpe_pstate_get(pstate_safe)) ? pgpe_pstate_get(
+                                  clip_min) : pgpe_pstate_get(pstate_safe);
+
+            if (pgpe_pstate_is_wof_enabled())
+            {
+                pgpe_thr_ctrl_update(pstate);
+            }
+            else
+            {
+                uint32_t overrage = pstate - pgpe_pstate_get(pstate_safe);
+                PK_TRACE("PEP: Direct Thr/WCOR Updt over=0x%x, pstate=0x%x,psafe=0x%x", overrage, pstate, pgpe_pstate_get(pstate_safe));
+                pgpe_thr_ctrl_set_ceff_ovr_idx(overrage);
+                pgpe_thr_ctrl_write_wcor();
+            }
+        }
+
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+        pgpe_occ_send_ipc_ack_type_rc(EV_IPC_CLIP_UPDT, PGPE_RC_SUCCESS);
         ppe_trace_op(PGPE_OPT_CLIP_UPDT_ACK, 0);
 
         //Update PMSR
@@ -759,18 +778,22 @@ void pgpe_process_wof_vrt_post_actuate()
     if(pgpe_pstate_is_wof_clip_bounded())
     {
         PK_TRACE("PEP: WOF Clip Bounded");
-        pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_VRT, PGPE_RC_SUCCESS);
-        pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
-        ppe_trace_op(PGPE_OPT_WOF_VRT_ACK, 0);
 
-        if(pgpe_pstate_get(clip_wof) >= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE))
+        if (pgpe_thr_ctrl_is_enabled())
         {
-            pgpe_thr_ctrl_update(pgpe_pstate_get(clip_wof));
+            if(pgpe_pstate_get(clip_wof) >= pgpe_pstate_get(pstate_safe))
+            {
+                pgpe_thr_ctrl_update(pgpe_pstate_get(clip_wof));
+            }
+            else
+            {
+                pgpe_thr_ctrl_update(pgpe_pstate_get(pstate_safe));
+            }
         }
-        else
-        {
-            pgpe_thr_ctrl_update(pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE));
-        }
+
+        pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+        pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_VRT, PGPE_RC_SUCCESS);
+        ppe_trace_op(PGPE_OPT_WOF_VRT_ACK, 0);
     }
 }
 
@@ -779,8 +802,11 @@ void pgpe_process_safe_mode(void* args)
     if(pgpe_pstate_is_pstate_enabled())
     {
         //Move throttling to ATTR_SAFE_MODE_THROTTLE_IDX
-        pgpe_thr_ctrl_set_ceff_ovr_idx(pgpe_gppb_get_safe_throttle_idx());
-        pgpe_thr_ctrl_write_wcor();
+        if (pgpe_thr_ctrl_is_enabled())
+        {
+            pgpe_thr_ctrl_set_ceff_ovr_idx(pgpe_gppb_get_safe_throttle_idx());
+            pgpe_thr_ctrl_write_wcor();
+        }
 
         //VDD above ATTR_SAFE_MODE_MV[VDD]
         if (pgpe_pstate_get(vdd_curr) > pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD))
@@ -810,7 +836,6 @@ void pgpe_process_safe_mode(void* args)
 
             //Move frequency to Safe frequency
             pgpe_pstate_actuate_pstate(pgpe_pstate_get(pstate_safe));
-
         }
     }
     else
