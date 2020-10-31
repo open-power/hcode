@@ -207,6 +207,10 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
                 {
                     PK_TRACE_INF("Warning: No PC_INTR_PENDING or REG_WKUP_PRESENT on Core %x via QME_CISR[60,62]", core_mask);
                     G_qme_record.c_stop1_targets |= core_mask;
+                    //skip pm_exit as it would broke timefac state machine assumption, see core_to_timefac hwp for details
+                    //core_target &= ~core_mask;
+                    //out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, core_mask ), SSH_EXIT_COMPLETE );
+                    //out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_mask ), BIT32(21) );
                 }
             }
         }
