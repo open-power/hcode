@@ -115,6 +115,16 @@ static const uint32_t EC_PC_TOD_SYNC100_CHIP_TOD_STATUS_LEN = 4;
 //<< [EC_PC_TOD_SYNC100]
 // c/reg00004.H
 
+//>> [L2TRA_TR1_CONFIG_3]
+static const uint64_t L2TRA_TR1_CONFIG_3 = 0x20020086ull;
+
+static const uint32_t L2TRA_TR1_CONFIG_3_C = 0;
+static const uint32_t L2TRA_TR1_CONFIG_3_C_LEN = 24;
+static const uint32_t L2TRA_TR1_CONFIG_3_D = 24;
+static const uint32_t L2TRA_TR1_CONFIG_3_D_LEN = 24;
+//<< [L2TRA_TR1_CONFIG_3]
+// c/reg00004.H
+
 //>> [L2_L2MISC_L2CERRS_ERR_RPT1]
 static const uint64_t L2_L2MISC_L2CERRS_ERR_RPT1 = 0x20020013ull;
 
@@ -190,14 +200,12 @@ static const uint32_t L2_L2MISC_L2CERRS_MODE_REG0_MODE_REG0_SPARE_LEN = 2;
 //<< [L2_L2MISC_L2CERRS_MODE_REG0]
 // c/reg00004.H
 
-//>> [L2TRA_TR1_CONFIG_3]
-static const uint64_t L2TRA_TR1_CONFIG_3 = 0x20020086ull;
+//>> [P10_20_L3_MISC_L3CERRS_PM_RCMD_DIS_REG]
+static const uint64_t L3_MISC_L3CERRS_PM_RCMD_DIS_REG = 0x20010616ull; // p10:20,
 
-static const uint32_t L2TRA_TR1_CONFIG_3_C = 0;
-static const uint32_t L2TRA_TR1_CONFIG_3_C_LEN = 24;
-static const uint32_t L2TRA_TR1_CONFIG_3_D = 24;
-static const uint32_t L2TRA_TR1_CONFIG_3_D_LEN = 24;
-//<< [L2TRA_TR1_CONFIG_3]
+static const uint32_t P10_20_L3_MISC_L3CERRS_PM_RCMD_DIS_REG_LCO_DIS_CFG = 0;
+static const uint32_t P10_20_L3_MISC_L3CERRS_PM_RCMD_DIS_REG_RCMD_DIS_CFG = 1;
+//<< [P10_20_L3_MISC_L3CERRS_PM_RCMD_DIS_REG]
 // c/reg00004.H
 
 //>> [NC_NCMISC_NCSCOMS_ERR_RPT_REG]

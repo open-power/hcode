@@ -152,24 +152,6 @@ static const uint64_t CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SOFT_RESET = 0x20011325ull;
 //<< [CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SOFT_RESET]
 // eq/reg00002.H
 
-//>> [QMETRA0_TR0_CONFIG_5]
-static const uint64_t QMETRA0_TR0_CONFIG_5 = 0x20018408ull;
-
-static const uint32_t QMETRA0_TR0_CONFIG_5_C = 0;
-static const uint32_t QMETRA0_TR0_CONFIG_5_C_LEN = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_5_D = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_5_D_LEN = 24;
-//<< [QMETRA0_TR0_CONFIG_5]
-// eq/reg00002.H
-
-//>> [L3TRA0_TR1_TRACE_HI_DATA_REG]
-static const uint64_t L3TRA0_TR1_TRACE_HI_DATA_REG = 0x20018220ull;
-
-static const uint32_t L3TRA0_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
-static const uint32_t L3TRA0_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
-//<< [L3TRA0_TR1_TRACE_HI_DATA_REG]
-// eq/reg00002.H
-
 //>> [L3TRA0_TR1_CONFIG_5]
 static const uint64_t L3TRA0_TR1_CONFIG_5 = 0x20018228ull;
 
@@ -178,6 +160,14 @@ static const uint32_t L3TRA0_TR1_CONFIG_5_C_LEN = 24;
 static const uint32_t L3TRA0_TR1_CONFIG_5_D = 24;
 static const uint32_t L3TRA0_TR1_CONFIG_5_D_LEN = 24;
 //<< [L3TRA0_TR1_CONFIG_5]
+// eq/reg00002.H
+
+//>> [L3TRA0_TR1_TRACE_HI_DATA_REG]
+static const uint64_t L3TRA0_TR1_TRACE_HI_DATA_REG = 0x20018220ull;
+
+static const uint32_t L3TRA0_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
+static const uint32_t L3TRA0_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
+//<< [L3TRA0_TR1_TRACE_HI_DATA_REG]
 // eq/reg00002.H
 
 //>> [L3TRA1_TR0_CONFIG_3]
@@ -225,6 +215,16 @@ static const uint32_t L3TRA3_TR1_CONFIG_2_A_LEN = 24;
 static const uint32_t L3TRA3_TR1_CONFIG_2_B = 24;
 static const uint32_t L3TRA3_TR1_CONFIG_2_B_LEN = 24;
 //<< [L3TRA3_TR1_CONFIG_2]
+// eq/reg00002.H
+
+//>> [QMETRA0_TR0_CONFIG_5]
+static const uint64_t QMETRA0_TR0_CONFIG_5 = 0x20018408ull;
+
+static const uint32_t QMETRA0_TR0_CONFIG_5_C = 0;
+static const uint32_t QMETRA0_TR0_CONFIG_5_C_LEN = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_5_D = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_5_D_LEN = 24;
+//<< [QMETRA0_TR0_CONFIG_5]
 // eq/reg00002.H
 
 //>>THE END<<

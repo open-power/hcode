@@ -91,6 +91,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16(f
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16,
@@ -108,6 +109,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16,
@@ -124,6 +126,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16>();
@@ -139,6 +142,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16>();
@@ -155,6 +159,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16,
@@ -171,6 +176,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16>();
@@ -182,11 +188,125 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_16]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_6]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17,
@@ -204,6 +324,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17,
@@ -220,6 +341,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17>();
@@ -235,6 +357,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17>();
@@ -251,6 +374,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17,
@@ -267,6 +391,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17>();
@@ -278,11 +403,125 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_17]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFDCTL_IBUF_PERR_HOLD_OUT_7]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18,
@@ -300,6 +539,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18,
@@ -316,6 +556,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18>();
@@ -331,6 +572,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18>();
@@ -347,6 +589,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18,
@@ -363,6 +606,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18>();
@@ -374,11 +618,125 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_18]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_CRIT_P_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19,
@@ -396,6 +754,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19,
@@ -412,6 +771,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19>();
@@ -427,6 +787,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19>();
@@ -443,6 +804,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19,
@@ -459,6 +821,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19>();
@@ -470,11 +833,126 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_19]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_LOG_NONCRIT_P_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20,
@@ -492,6 +970,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20,
@@ -508,6 +987,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20>();
@@ -523,6 +1003,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20>();
@@ -539,6 +1020,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20,
@@ -555,6 +1037,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20>();
@@ -566,11 +1049,126 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_20]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_CRIT_P_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21,
@@ -588,6 +1186,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21,
@@ -604,6 +1203,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21>();
@@ -619,6 +1219,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21>();
@@ -635,6 +1236,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21,
@@ -651,6 +1253,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21>();
@@ -662,11 +1265,126 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_21]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_MFSPR_RFILE_NONCRIT_P_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22,
@@ -684,6 +1402,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22,
@@ -700,6 +1419,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22>();
@@ -715,6 +1435,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22>();
@@ -731,6 +1452,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22,
@@ -747,6 +1469,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22>();
@@ -758,11 +1481,125 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_22]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_COMP_RFILE_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23,
@@ -780,6 +1617,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23,
@@ -796,6 +1634,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23>();
@@ -811,6 +1650,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23>();
@@ -827,6 +1667,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23,
@@ -843,6 +1684,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23>();
@@ -854,11 +1696,125 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_23]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_S0_NIA_P_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24,
@@ -876,6 +1832,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24,
@@ -892,6 +1849,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24>();
@@ -907,6 +1865,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24>();
@@ -923,6 +1882,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24,
@@ -939,6 +1899,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24>();
@@ -950,11 +1911,124 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_24]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_RFILE_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25,
@@ -972,6 +2046,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25,
@@ -988,6 +2063,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25>();
@@ -1003,6 +2079,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25>();
@@ -1019,6 +2096,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25,
@@ -1035,6 +2113,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25>();
@@ -1046,11 +2125,126 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_25]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_REFETCH_OUTOFRANGE_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26,
@@ -1068,6 +2262,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26,
@@ -1084,6 +2279,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26>();
@@ -1099,6 +2295,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26>();
@@ -1115,6 +2312,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26,
@@ -1131,6 +2329,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26>();
@@ -1142,11 +2341,126 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_26]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFAC_EAT_TAIL_BEYOND_HEAD_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27,
@@ -1164,6 +2478,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27,
@@ -1180,6 +2495,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27>();
@@ -1195,6 +2511,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27>();
@@ -1211,6 +2528,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27,
@@ -1227,6 +2545,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27>();
@@ -1238,11 +2557,125 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_27]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFMSR_MSR_DATA_PERR_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28,
@@ -1260,6 +2693,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28,
@@ -1276,6 +2710,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28>();
@@ -1291,6 +2726,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28>();
@@ -1307,6 +2743,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28,
@@ -1323,6 +2760,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28>();
@@ -1334,11 +2772,125 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_28]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_ISU_REFETCH_P_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29,
@@ -1356,6 +2908,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29,
@@ -1372,6 +2925,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29>();
@@ -1387,6 +2941,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29>();
@@ -1403,6 +2958,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29,
@@ -1419,6 +2975,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29>();
@@ -1430,11 +2987,125 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_29]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFFRC_REFETCH_EAT_P_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30,
@@ -1452,6 +3123,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30,
@@ -1468,6 +3140,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30>();
@@ -1483,6 +3156,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30>();
@@ -1499,6 +3173,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30,
@@ -1515,6 +3190,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30>();
@@ -1526,11 +3202,125 @@ fapi_try_exit:
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_30]
 
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_IFBSC_SPR_PARITY_HOLD_OUT]
+
 //>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31]
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31,
@@ -1548,6 +3338,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31,
@@ -1564,6 +3355,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31>();
@@ -1579,6 +3371,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31>();
@@ -1595,6 +3388,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31,
@@ -1611,6 +3405,7 @@ fapi_try_exit:
 static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
 #endif
     return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31>();
@@ -1621,6 +3416,119 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_31]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.insertFromRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+
+//>> SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.setBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+
+//>> CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return o_data.clearBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.extractToRight<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+
+//>> GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
+static inline bool GET_EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1));
+#endif
+    return i_data.getBit<EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT1_HFSCR_FSCR_PARITY_HOLD_OUT]
 
 //>> PREP_[EC_PC_FIR_CORE_SYS]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
@@ -2361,13 +4269,13 @@ fapi_try_exit:
 }
 //<< GET_[EC_PC_TRACE2_TR_TR0_TRACE_LO_DATA_REG_HOLD_ADDRESS]
 
-//>> PREP_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+//>> PREP_[L2TRA_TR0_CONFIG_0]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_L2_L2MISC_L2CERRS_FIR_ACTION0_REG(const fapi2::Target<K, M, V>& i_target)
+static inline fapi2::ReturnCode PREP_L2TRA_TR0_CONFIG_0(const fapi2::Target<K, M, V>& i_target)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = L2_L2MISC_L2CERRS_FIR_ACTION0_REG;
+    scomt::last_scom = L2TRA_TR0_CONFIG_0;
 #endif
     return fapi2::current_err;
 #ifdef SCOM_CHECKING
@@ -2375,205 +4283,95 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
-//<< PREP_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+//<< PREP_[L2TRA_TR0_CONFIG_0]
 
-//>> GET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+//>> GET_[L2TRA_TR0_CONFIG_0]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_L2_L2MISC_L2CERRS_FIR_ACTION0_REG(const fapi2::Target<K, M, V>& i_target,
+static inline fapi2::ReturnCode GET_L2TRA_TR0_CONFIG_0(const fapi2::Target<K, M, V>& i_target,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = L2_L2MISC_L2CERRS_FIR_ACTION0_REG;
+    scomt::last_scom = L2TRA_TR0_CONFIG_0;
 #endif
-    return fapi2::getScom(i_target, L2_L2MISC_L2CERRS_FIR_ACTION0_REG, o_data);
+    return fapi2::getScom(i_target, L2TRA_TR0_CONFIG_0, o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
-//<< GET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+//<< GET_[L2TRA_TR0_CONFIG_0]
 
-//>> PUT_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+//>> PUT_[L2TRA_TR0_CONFIG_0]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_L2_L2MISC_L2CERRS_FIR_ACTION0_REG(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
+static inline fapi2::ReturnCode PUT_L2TRA_TR0_CONFIG_0(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION0_REG));
+    FAPI_TRY(scomt::chkReg(L2TRA_TR0_CONFIG_0));
 #endif
-    return fapi2::putScom(i_target, L2_L2MISC_L2CERRS_FIR_ACTION0_REG, i_data);
+    return fapi2::putScom(i_target, L2TRA_TR0_CONFIG_0, i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
-//<< PUT_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+//<< PUT_[L2TRA_TR0_CONFIG_0]
 
 
-//>> SET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
-static inline fapi2::buffer<uint64_t>& SET_L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION0_REG));
-#endif
-    return o_data.insertFromRight<L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0,
-           L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0 chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
-
-//>> SET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
-static inline fapi2::buffer<uint64_t>& SET_L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0(const uint64_t i_data,
+//>> SET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
+static inline fapi2::buffer<uint64_t>& SET_L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION0_REG));
+    FAPI_TRY(scomt::chkReg(L2TRA_TR0_CONFIG_0));
 #endif
-    return o_data.insertFromRight<L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0,
-           L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0_LEN>(i_data);
+    return o_data.insertFromRight<L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63,
+           L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0 chip: %x, ec: %x", scomt::chip,
+    FAPI_ERR("0:scom_c Invalid dial access L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63 chip: %x, ec: %x", scomt::chip,
              scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
+//<< SET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
 
-//>> GET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
-static inline fapi2::buffer<uint64_t>& GET_L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
+//>> SET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
+static inline fapi2::buffer<uint64_t>& SET_L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION0_REG));
+    FAPI_TRY(scomt::chkReg(L2TRA_TR0_CONFIG_0));
 #endif
-    return i_data.extractToRight<L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0,
-           L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0_LEN>(o_data);
+    return o_data.insertFromRight<L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63,
+           L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0 chip: %x, ec: %x", scomt::chip,
+    FAPI_ERR("1:scom_c Invalid dial access L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
+
+//>> GET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
+static inline fapi2::buffer<uint64_t>& GET_L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(L2TRA_TR0_CONFIG_0));
+#endif
+    return i_data.extractToRight<L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63,
+           L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63 chip: %x, ec: %x", scomt::chip,
              scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
-
-//>> PREP_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_L2_L2MISC_L2CERRS_FIR_ACTION1_REG(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = L2_L2MISC_L2CERRS_FIR_ACTION1_REG;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
-
-//>> GET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_L2_L2MISC_L2CERRS_FIR_ACTION1_REG(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = L2_L2MISC_L2CERRS_FIR_ACTION1_REG;
-#endif
-    return fapi2::getScom(i_target, L2_L2MISC_L2CERRS_FIR_ACTION1_REG, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
-
-//>> PUT_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_L2_L2MISC_L2CERRS_FIR_ACTION1_REG(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION1_REG));
-#endif
-    return fapi2::putScom(i_target, L2_L2MISC_L2CERRS_FIR_ACTION1_REG, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
-
-
-//>> SET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
-static inline fapi2::buffer<uint64_t>& SET_L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION1_REG));
-#endif
-    return o_data.insertFromRight<L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1,
-           L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1 chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
-
-//>> SET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
-static inline fapi2::buffer<uint64_t>& SET_L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION1_REG));
-#endif
-    return o_data.insertFromRight<L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1,
-           L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1 chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
-
-//>> GET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
-static inline fapi2::buffer<uint64_t>& GET_L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION1_REG));
-#endif
-    return i_data.extractToRight<L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1,
-           L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1 chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
+//<< GET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
 
 //>> PREP_[L2TRA_TR0_TRACE_HI_DATA_REG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
@@ -2679,110 +4477,6 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[L2TRA_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA]
-
-//>> PREP_[L2TRA_TR0_CONFIG_0]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_L2TRA_TR0_CONFIG_0(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = L2TRA_TR0_CONFIG_0;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[L2TRA_TR0_CONFIG_0]
-
-//>> GET_[L2TRA_TR0_CONFIG_0]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_L2TRA_TR0_CONFIG_0(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = L2TRA_TR0_CONFIG_0;
-#endif
-    return fapi2::getScom(i_target, L2TRA_TR0_CONFIG_0, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[L2TRA_TR0_CONFIG_0]
-
-//>> PUT_[L2TRA_TR0_CONFIG_0]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_L2TRA_TR0_CONFIG_0(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(L2TRA_TR0_CONFIG_0));
-#endif
-    return fapi2::putScom(i_target, L2TRA_TR0_CONFIG_0, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[L2TRA_TR0_CONFIG_0]
-
-
-//>> SET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
-static inline fapi2::buffer<uint64_t>& SET_L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63(fapi2::buffer<uint64_t>& i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(L2TRA_TR0_CONFIG_0));
-#endif
-    return o_data.insertFromRight<L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63,
-           L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_c Invalid dial access L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63 chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
-
-//>> SET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
-static inline fapi2::buffer<uint64_t>& SET_L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(L2TRA_TR0_CONFIG_0));
-#endif
-    return o_data.insertFromRight<L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63,
-           L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_c Invalid dial access L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63 chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
-
-//>> GET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
-static inline fapi2::buffer<uint64_t>& GET_L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63(fapi2::buffer<uint64_t>& i_data,
-        uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(L2TRA_TR0_CONFIG_0));
-#endif
-    return i_data.extractToRight<L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63,
-           L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_c Invalid dial access L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63 chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[L2TRA_TR0_CONFIG_0_CMP_MSK_LT_B_0_TO_63]
 
 //>> PREP_[L2TRA_TR1_CONFIG_9]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
@@ -4278,6 +5972,220 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[L2TRA_TR1_CONFIG_9_SPARE_LT]
+
+//>> PREP_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_L2_L2MISC_L2CERRS_FIR_ACTION0_REG(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = L2_L2MISC_L2CERRS_FIR_ACTION0_REG;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+
+//>> GET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_L2_L2MISC_L2CERRS_FIR_ACTION0_REG(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = L2_L2MISC_L2CERRS_FIR_ACTION0_REG;
+#endif
+    return fapi2::getScom(i_target, L2_L2MISC_L2CERRS_FIR_ACTION0_REG, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+
+//>> PUT_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_L2_L2MISC_L2CERRS_FIR_ACTION0_REG(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION0_REG));
+#endif
+    return fapi2::putScom(i_target, L2_L2MISC_L2CERRS_FIR_ACTION0_REG, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG]
+
+
+//>> SET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
+static inline fapi2::buffer<uint64_t>& SET_L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION0_REG));
+#endif
+    return o_data.insertFromRight<L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0,
+           L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
+
+//>> SET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
+static inline fapi2::buffer<uint64_t>& SET_L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION0_REG));
+#endif
+    return o_data.insertFromRight<L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0,
+           L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
+
+//>> GET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
+static inline fapi2::buffer<uint64_t>& GET_L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION0_REG));
+#endif
+    return i_data.extractToRight<L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0,
+           L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[L2_L2MISC_L2CERRS_FIR_ACTION0_REG_FIR_ACTION0]
+
+//>> PREP_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_L2_L2MISC_L2CERRS_FIR_ACTION1_REG(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = L2_L2MISC_L2CERRS_FIR_ACTION1_REG;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
+
+//>> GET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_L2_L2MISC_L2CERRS_FIR_ACTION1_REG(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = L2_L2MISC_L2CERRS_FIR_ACTION1_REG;
+#endif
+    return fapi2::getScom(i_target, L2_L2MISC_L2CERRS_FIR_ACTION1_REG, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
+
+//>> PUT_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_L2_L2MISC_L2CERRS_FIR_ACTION1_REG(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION1_REG));
+#endif
+    return fapi2::putScom(i_target, L2_L2MISC_L2CERRS_FIR_ACTION1_REG, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG]
+
+
+//>> SET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
+static inline fapi2::buffer<uint64_t>& SET_L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION1_REG));
+#endif
+    return o_data.insertFromRight<L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1,
+           L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
+
+//>> SET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
+static inline fapi2::buffer<uint64_t>& SET_L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION1_REG));
+#endif
+    return o_data.insertFromRight<L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1,
+           L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
+
+//>> GET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
+static inline fapi2::buffer<uint64_t>& GET_L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(L2_L2MISC_L2CERRS_FIR_ACTION1_REG));
+#endif
+    return i_data.extractToRight<L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1,
+           L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[L2_L2MISC_L2CERRS_FIR_ACTION1_REG_FIR_ACTION1]
 
 //>> PREP_[L3_MISC_L3CERRS_LRU_VIC_ALLOC_REG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

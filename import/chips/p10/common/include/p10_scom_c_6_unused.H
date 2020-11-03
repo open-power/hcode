@@ -39,25 +39,51 @@ namespace c
 #endif
 
 
+//>> [P10_20_CPMS_MCSR]
+static const uint64_t CPMS_MCSR = 0x200e0eb4ull; // p10:20,
+
+static const uint32_t P10_20_CPMS_MCSR_0 = 8;
+static const uint32_t P10_20_CPMS_MCSR_0_LEN = 24;
+static const uint32_t P10_20_CPMS_MCSR_1 = 40;
+static const uint32_t P10_20_CPMS_MCSR_1_LEN = 24;
+//<< [P10_20_CPMS_MCSR]
+// c/reg00006.H
+
 //>> [EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3]
 static const uint64_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3 = 0x20020603ull;
 
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_48 = 0;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_IFFFD_ALIAS_TABLE_PARITY_ERR_HOLD_OUT = 0; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_49 = 1;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_IFFPF_MULTI_RLDM_HAS_SAME_EA_ERR_HOLD_OUT = 1; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_50 = 2;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_IFFCP_CIABR_PERR_HOLD_OUT = 2; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_51 = 3;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_IFFAC_CN2_SAVE_EA_EATAG_PTY_HOLD_OUT = 3; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_52 = 4;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_IFFAC_CN2_CMP_EATAG_LOOKUP_PTY_HOLD_OUT = 4; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_53 = 5;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_53_UNUSED = 5; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_54 = 6;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_54_UNUSED = 6; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_55 = 7;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_55_UNUSED = 7; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_56 = 8;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_56_UNUSED = 8; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_57 = 9;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_57_UNUSED = 9; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_58 = 10;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_58_UNUSED = 10; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_59 = 11;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_59_UNUSED = 11; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_60 = 12;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_60_UNUSED = 12; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_61 = 13;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_61_UNUSED = 13; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_62 = 14;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_62_UNUSED = 14; // p10:20,
 static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_63 = 15;
+static const uint32_t EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3_HOLD_OUT_63_UNUSED = 15; // p10:20,
 //<< [EC_IFU_IFRE_IFCER_UNIT_HOLD_OUT3]
 // c/reg00006.H
 
@@ -72,6 +98,7 @@ static const uint32_t EC_PC_COMMON_SPR_V0_HMER_V0_HMER_SUSPEND_MODE = 3;
 static const uint32_t EC_PC_COMMON_SPR_V0_HMER_V0_HMER_TFAC_ERR = 4;
 static const uint32_t EC_PC_COMMON_SPR_V0_HMER_V0_HMER_TFX_ERR = 5;
 static const uint32_t EC_PC_COMMON_SPR_V0_HMER_SPARE_6 = 6;
+static const uint32_t EC_PC_COMMON_SPR_V0_HMER_V0_HMER_SPURR_SCALE_LIMIT = 6; // p10:20,
 static const uint32_t EC_PC_COMMON_SPR_V0_HMER_SPARE_7 = 7;
 static const uint32_t EC_PC_COMMON_SPR_V0_HMER_V0_HMER_XSCOM_FAIL = 8;
 static const uint32_t EC_PC_COMMON_SPR_V0_HMER_V0_HMER_XSCOM_DONE = 9;
@@ -115,6 +142,7 @@ static const uint32_t EC_PC_FIR_ERR_INJ_ERR_INJ_TAP_SEL = 17;
 static const uint32_t EC_PC_FIR_ERR_INJ_ERR_INJ_TAP_SEL_LEN = 4;
 static const uint32_t EC_PC_FIR_ERR_INJ_ERR_INJ_HYP_BLOCK = 21;
 static const uint32_t EC_PC_FIR_ERR_INJ_ERR_INJ_HYP_BLOCK_LEN = 3;
+static const uint32_t EC_PC_FIR_ERR_INJ_ERR_INJ_RECONFIG_BLOCK = 24; // p10:20,
 //<< [EC_PC_FIR_ERR_INJ]
 // c/reg00006.H
 

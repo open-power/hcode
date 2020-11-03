@@ -39,37 +39,6 @@ namespace pec
 #endif
 
 
-//>> [PIPEDINCTL0]
-static const uint64_t PIPEDINCTL0 = 0x08011519ull;
-
-static const uint32_t PIPEDINCTL0_RESERVED_63_17 = 0;
-static const uint32_t PIPEDINCTL0_RESERVED_63_17_LEN = 47;
-static const uint32_t PIPEDINCTL0_PHY_RTUNE_ACK = 47;
-static const uint32_t PIPEDINCTL0_RESERVED_15_12 = 48;
-static const uint32_t PIPEDINCTL0_RESERVED_15_12_LEN = 4;
-static const uint32_t PIPEDINCTL0_PHY1_REFB_CLKDET_RESULT = 52;
-static const uint32_t PIPEDINCTL0_PHY1_REFA_CLKDET_RESULT = 53;
-static const uint32_t PIPEDINCTL0_PHY1_MPLLB_FORCE_ACK = 54;
-static const uint32_t PIPEDINCTL0_PHY1_MPLLA_FORCE_ACK = 55;
-static const uint32_t PIPEDINCTL0_RESERVED_7_4 = 56;
-static const uint32_t PIPEDINCTL0_RESERVED_7_4_LEN = 4;
-static const uint32_t PIPEDINCTL0_PHY0_REFB_CLKDET_RESULT = 60;
-static const uint32_t PIPEDINCTL0_PHY0_REFA_CLKDET_RESULT = 61;
-static const uint32_t PIPEDINCTL0_PHY0_MPLLB_FORCE_ACK = 62;
-static const uint32_t PIPEDINCTL0_PHY0_MPLLA_FORCE_ACK = 63;
-//<< [PIPEDINCTL0]
-// pec/reg00001.H
-
-//>> [PIPEDOUTCTL3]
-static const uint64_t PIPEDOUTCTL3 = 0x08011517ull;
-
-static const uint32_t PIPEDOUTCTL3_PHY1_HANDSHAKE = 0;
-static const uint32_t PIPEDOUTCTL3_PHY0_HANDSHAKE = 1;
-static const uint32_t PIPEDOUTCTL3_RESERVED_61_0 = 2;
-static const uint32_t PIPEDOUTCTL3_RESERVED_61_0_LEN = 62;
-//<< [PIPEDOUTCTL3]
-// pec/reg00001.H
-
 //>> [DBG_CBS_CC]
 static const uint64_t DBG_CBS_CC = 0x08030013ull;
 
@@ -146,6 +115,14 @@ static const uint64_t RECOV_INTERRUPT_REG = 0x080f001bull;
 
 static const uint32_t RECOV_INTERRUPT_REG_RECOV = 0;
 //<< [RECOV_INTERRUPT_REG]
+// pec/reg00001.H
+
+//>> [TOP1_IOPFIRACT0]
+static const uint64_t TOP1_IOPFIRACT0 = 0x08011506ull;
+
+static const uint32_t TOP1_IOPFIRACT0_IOPFIRACT0_FIR_ACTION0 = 0;
+static const uint32_t TOP1_IOPFIRACT0_IOPFIRACT0_FIR_ACTION0_LEN = 12;
+//<< [TOP1_IOPFIRACT0]
 // pec/reg00001.H
 
 //>>THE END<<

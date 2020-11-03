@@ -339,6 +339,158 @@ fapi_try_exit:
 }
 //<< GET_[TRA2_TR0_CONFIG_3_D]
 
+//>> PREP_[TRA3_TR1_CONFIG_5]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_TRA3_TR1_CONFIG_5(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TRA3_TR1_CONFIG_5;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[TRA3_TR1_CONFIG_5]
+
+//>> GET_[TRA3_TR1_CONFIG_5]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_TRA3_TR1_CONFIG_5(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TRA3_TR1_CONFIG_5;
+#endif
+    return fapi2::getScom(i_target, TRA3_TR1_CONFIG_5, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[TRA3_TR1_CONFIG_5]
+
+//>> PUT_[TRA3_TR1_CONFIG_5]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_TRA3_TR1_CONFIG_5(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
+#endif
+    return fapi2::putScom(i_target, TRA3_TR1_CONFIG_5, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[TRA3_TR1_CONFIG_5]
+
+
+//>> SET_[TRA3_TR1_CONFIG_5_C]
+static inline fapi2::buffer<uint64_t>& SET_TRA3_TR1_CONFIG_5_C(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
+#endif
+    return o_data.insertFromRight<TRA3_TR1_CONFIG_5_C,
+           TRA3_TR1_CONFIG_5_C_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_C chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[TRA3_TR1_CONFIG_5_C]
+
+//>> SET_[TRA3_TR1_CONFIG_5_C]
+static inline fapi2::buffer<uint64_t>& SET_TRA3_TR1_CONFIG_5_C(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
+#endif
+    return o_data.insertFromRight<TRA3_TR1_CONFIG_5_C,
+           TRA3_TR1_CONFIG_5_C_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_C chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[TRA3_TR1_CONFIG_5_C]
+
+//>> GET_[TRA3_TR1_CONFIG_5_C]
+static inline fapi2::buffer<uint64_t>& GET_TRA3_TR1_CONFIG_5_C(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
+#endif
+    return i_data.extractToRight<TRA3_TR1_CONFIG_5_C,
+           TRA3_TR1_CONFIG_5_C_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_C chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[TRA3_TR1_CONFIG_5_C]
+
+//>> SET_[TRA3_TR1_CONFIG_5_D]
+static inline fapi2::buffer<uint64_t>& SET_TRA3_TR1_CONFIG_5_D(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
+#endif
+    return o_data.insertFromRight<TRA3_TR1_CONFIG_5_D,
+           TRA3_TR1_CONFIG_5_D_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_D chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[TRA3_TR1_CONFIG_5_D]
+
+//>> SET_[TRA3_TR1_CONFIG_5_D]
+static inline fapi2::buffer<uint64_t>& SET_TRA3_TR1_CONFIG_5_D(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
+#endif
+    return o_data.insertFromRight<TRA3_TR1_CONFIG_5_D,
+           TRA3_TR1_CONFIG_5_D_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_D chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[TRA3_TR1_CONFIG_5_D]
+
+//>> GET_[TRA3_TR1_CONFIG_5_D]
+static inline fapi2::buffer<uint64_t>& GET_TRA3_TR1_CONFIG_5_D(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
+#endif
+    return i_data.extractToRight<TRA3_TR1_CONFIG_5_D,
+           TRA3_TR1_CONFIG_5_D_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_D chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[TRA3_TR1_CONFIG_5_D]
+
 //>> PREP_[TRA3_TR1_TRACE_LO_DATA_REG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_TRA3_TR1_TRACE_LO_DATA_REG(const fapi2::Target<K, M, V>& i_target)
@@ -899,158 +1051,6 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[TRA3_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS]
-
-//>> PREP_[TRA3_TR1_CONFIG_5]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_TRA3_TR1_CONFIG_5(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = TRA3_TR1_CONFIG_5;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[TRA3_TR1_CONFIG_5]
-
-//>> GET_[TRA3_TR1_CONFIG_5]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_TRA3_TR1_CONFIG_5(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = TRA3_TR1_CONFIG_5;
-#endif
-    return fapi2::getScom(i_target, TRA3_TR1_CONFIG_5, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[TRA3_TR1_CONFIG_5]
-
-//>> PUT_[TRA3_TR1_CONFIG_5]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_TRA3_TR1_CONFIG_5(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
-#endif
-    return fapi2::putScom(i_target, TRA3_TR1_CONFIG_5, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[TRA3_TR1_CONFIG_5]
-
-
-//>> SET_[TRA3_TR1_CONFIG_5_C]
-static inline fapi2::buffer<uint64_t>& SET_TRA3_TR1_CONFIG_5_C(fapi2::buffer<uint64_t>& i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
-#endif
-    return o_data.insertFromRight<TRA3_TR1_CONFIG_5_C,
-           TRA3_TR1_CONFIG_5_C_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_C chip: %x, ec: %x", scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TRA3_TR1_CONFIG_5_C]
-
-//>> SET_[TRA3_TR1_CONFIG_5_C]
-static inline fapi2::buffer<uint64_t>& SET_TRA3_TR1_CONFIG_5_C(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
-#endif
-    return o_data.insertFromRight<TRA3_TR1_CONFIG_5_C,
-           TRA3_TR1_CONFIG_5_C_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_C chip: %x, ec: %x", scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TRA3_TR1_CONFIG_5_C]
-
-//>> GET_[TRA3_TR1_CONFIG_5_C]
-static inline fapi2::buffer<uint64_t>& GET_TRA3_TR1_CONFIG_5_C(fapi2::buffer<uint64_t>& i_data,
-        uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
-#endif
-    return i_data.extractToRight<TRA3_TR1_CONFIG_5_C,
-           TRA3_TR1_CONFIG_5_C_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_C chip: %x, ec: %x", scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TRA3_TR1_CONFIG_5_C]
-
-//>> SET_[TRA3_TR1_CONFIG_5_D]
-static inline fapi2::buffer<uint64_t>& SET_TRA3_TR1_CONFIG_5_D(fapi2::buffer<uint64_t>& i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
-#endif
-    return o_data.insertFromRight<TRA3_TR1_CONFIG_5_D,
-           TRA3_TR1_CONFIG_5_D_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_D chip: %x, ec: %x", scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TRA3_TR1_CONFIG_5_D]
-
-//>> SET_[TRA3_TR1_CONFIG_5_D]
-static inline fapi2::buffer<uint64_t>& SET_TRA3_TR1_CONFIG_5_D(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
-#endif
-    return o_data.insertFromRight<TRA3_TR1_CONFIG_5_D,
-           TRA3_TR1_CONFIG_5_D_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_D chip: %x, ec: %x", scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TRA3_TR1_CONFIG_5_D]
-
-//>> GET_[TRA3_TR1_CONFIG_5_D]
-static inline fapi2::buffer<uint64_t>& GET_TRA3_TR1_CONFIG_5_D(fapi2::buffer<uint64_t>& i_data,
-        uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TRA3_TR1_CONFIG_5));
-#endif
-    return i_data.extractToRight<TRA3_TR1_CONFIG_5_D,
-           TRA3_TR1_CONFIG_5_D_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_perv Invalid dial access TRA3_TR1_CONFIG_5_D chip: %x, ec: %x", scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TRA3_TR1_CONFIG_5_D]
 
 //>> PREP_[TRA4_TR1_CONFIG_4]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

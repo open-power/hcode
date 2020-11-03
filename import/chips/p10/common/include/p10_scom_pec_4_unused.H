@@ -39,31 +39,6 @@ namespace pec
 #endif
 
 
-//>> [REGION_CCFLUSH_STATUS]
-static const uint64_t REGION_CCFLUSH_STATUS = 0x08030016ull;
-
-static const uint32_t REGION_CCFLUSH_STATUS_REGION_CCFLUSH = 4;
-static const uint32_t REGION_CCFLUSH_STATUS_REGION_CCFLUSH_LEN = 15;
-//<< [REGION_CCFLUSH_STATUS]
-// pec/reg00004.H
-
-//>> [EPS_THERM_WSUB_INJECT_REG]
-static const uint64_t EPS_THERM_WSUB_INJECT_REG = 0x08050011ull;
-
-static const uint32_t EPS_THERM_WSUB_INJECT_REG_TRIP = 0;
-static const uint32_t EPS_THERM_WSUB_INJECT_REG_TRIP_LEN = 2;
-static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE = 2;
-static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE_LEN = 2;
-//<< [EPS_THERM_WSUB_INJECT_REG]
-// pec/reg00004.H
-
-//>> [PCB_OPCG_GO]
-static const uint64_t PCB_OPCG_GO = 0x08030020ull;
-
-static const uint32_t PCB_OPCG_GO_PCB_OPCGGO = 0;
-//<< [PCB_OPCG_GO]
-// pec/reg00004.H
-
 //>> [EPS_FIR_LOCAL_ACTION2]
 static const uint64_t EPS_FIR_LOCAL_ACTION2 = 0x08040109ull;
 
@@ -132,6 +107,51 @@ static const uint32_t EPS_FIR_LOCAL_ACTION2_61 = 61;
 static const uint32_t EPS_FIR_LOCAL_ACTION2_62 = 62;
 static const uint32_t EPS_FIR_LOCAL_ACTION2_63 = 63;
 //<< [EPS_FIR_LOCAL_ACTION2]
+// pec/reg00004.H
+
+//>> [EPS_THERM_WSUB_INJECT_REG]
+static const uint64_t EPS_THERM_WSUB_INJECT_REG = 0x08050011ull;
+
+static const uint32_t EPS_THERM_WSUB_INJECT_REG_TRIP = 0;
+static const uint32_t EPS_THERM_WSUB_INJECT_REG_TRIP_LEN = 2;
+static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE = 2;
+static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE_LEN = 2;
+//<< [EPS_THERM_WSUB_INJECT_REG]
+// pec/reg00004.H
+
+//>> [PCB_OPCG_GO]
+static const uint64_t PCB_OPCG_GO = 0x08030020ull;
+
+static const uint32_t PCB_OPCG_GO_PCB_OPCGGO = 0;
+//<< [PCB_OPCG_GO]
+// pec/reg00004.H
+
+//>> [REGION_CCFLUSH_STATUS]
+static const uint64_t REGION_CCFLUSH_STATUS = 0x08030016ull;
+
+static const uint32_t REGION_CCFLUSH_STATUS_REGION_CCFLUSH = 4;
+static const uint32_t REGION_CCFLUSH_STATUS_REGION_CCFLUSH_LEN = 15;
+//<< [REGION_CCFLUSH_STATUS]
+// pec/reg00004.H
+
+//>> [TOP1_IOPFIRMASK]
+static const uint64_t TOP1_IOPFIRMASK_RW = 0x08011503ull;
+static const uint64_t TOP1_IOPFIRMASK_WO_AND = 0x08011504ull;
+static const uint64_t TOP1_IOPFIRMASK_WO_OR = 0x08011505ull;
+
+static const uint32_t TOP1_IOPFIRMASK_PHY0_ECC_CE_MASK = 0;
+static const uint32_t TOP1_IOPFIRMASK_PHY0_ECC_UE_MASK = 1;
+static const uint32_t TOP1_IOPFIRMASK_PHY1_ECC_CE_MASK = 2;
+static const uint32_t TOP1_IOPFIRMASK_PHY1_ECC_UE_MASK = 3;
+static const uint32_t TOP1_IOPFIRMASK_SCOM0_ECC_CE_MASK = 4;
+static const uint32_t TOP1_IOPFIRMASK_SCOM0_ECC_UE_MASK = 5;
+static const uint32_t TOP1_IOPFIRMASK_SCOM1_ECC_CE_MASK = 6;
+static const uint32_t TOP1_IOPFIRMASK_SCOM1_ECC_UE_MASK = 7;
+static const uint32_t TOP1_IOPFIRMASK_SCRUB0_ECC_CE_MASK = 8;
+static const uint32_t TOP1_IOPFIRMASK_SCRUB0_ECC_UE_MASK = 9;
+static const uint32_t TOP1_IOPFIRMASK_SCRUB1_ECC_CE_MASK = 10;
+static const uint32_t TOP1_IOPFIRMASK_SCRUB1_ECC_UE_MASK = 11;
+//<< [TOP1_IOPFIRMASK]
 // pec/reg00004.H
 
 //>>THE END<<

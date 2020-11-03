@@ -39,33 +39,6 @@ namespace pec
 #endif
 
 
-//>> [IXMODE]
-static const uint64_t IXMODE = 0x0801150eull;
-
-static const uint32_t IXMODE_PHY0_SRAM_EXT_LD_DONE = 0;
-static const uint32_t IXMODE_PHY1_SRAM_EXT_LD_DONE = 1;
-static const uint32_t IXMODE_RAM_SCOM_ACCESS_MODE = 2;
-static const uint32_t IXMODE_RAM_SCOM_AUTOINC_RW_MODE = 3;
-static const uint32_t IXMODE_SCRUB_EN = 17;
-static const uint32_t IXMODE_SCRUB_PERIOD = 18;
-static const uint32_t IXMODE_SCRUB_PERIOD_LEN = 8;
-static const uint32_t IXMODE_PHY0_ARRAY_ERR_INJ_EN = 26;
-static const uint32_t IXMODE_PHY0_ARRAY_ERR_INJ_TYPE = 27;
-static const uint32_t IXMODE_PHY0_ARRAY_ERR_INJ_ACTION = 28;
-static const uint32_t IXMODE_PHY1_ARRAY_ERR_INJ_EN = 31;
-static const uint32_t IXMODE_PHY1_ARRAY_ERR_INJ_TYPE = 32;
-static const uint32_t IXMODE_PHY1_ARRAY_ERR_INJ_ACTION = 33;
-//<< [IXMODE]
-// pec/reg00014.H
-
-//>> [PB_PBCQ_PEPBREGS_ADDREXTMASK_REG]
-static const uint64_t PB_PBCQ_PEPBREGS_ADDREXTMASK_REG = 0x03011805ull;
-
-static const uint32_t PB_PBCQ_PEPBREGS_ADDREXTMASK_REG_PE_ADDREXTMASK = 0;
-static const uint32_t PB_PBCQ_PEPBREGS_ADDREXTMASK_REG_PE_ADDREXTMASK_LEN = 7;
-//<< [PB_PBCQ_PEPBREGS_ADDREXTMASK_REG]
-// pec/reg00014.H
-
 //>> [EPS_DBG_TRACE_REG_1]
 static const uint64_t EPS_DBG_TRACE_REG_1 = 0x080107ceull;
 
@@ -100,6 +73,57 @@ static const uint32_t EPS_DBG_TRACE_REG_1_2_CHECKSTOP_MODE_LT = 52;
 static const uint32_t EPS_DBG_TRACE_REG_1_2_CHECKSTOP_MODE_LT_LEN = 3;
 static const uint32_t EPS_DBG_TRACE_REG_1_2_CHECKSTOP_MODE_SELECTOR = 55;
 //<< [EPS_DBG_TRACE_REG_1]
+// pec/reg00014.H
+
+//>> [PB_PBCQ_PEPBREGS_ADDREXTMASK_REG]
+static const uint64_t PB_PBCQ_PEPBREGS_ADDREXTMASK_REG = 0x03011805ull;
+
+static const uint32_t PB_PBCQ_PEPBREGS_ADDREXTMASK_REG_PE_ADDREXTMASK = 0;
+static const uint32_t PB_PBCQ_PEPBREGS_ADDREXTMASK_REG_PE_ADDREXTMASK_LEN = 7;
+//<< [PB_PBCQ_PEPBREGS_ADDREXTMASK_REG]
+// pec/reg00014.H
+
+//>> [TOP0_IOPFIRACT0]
+static const uint64_t TOP0_IOPFIRACT0 = 0x08011106ull;
+
+static const uint32_t TOP0_IOPFIRACT0_IOPFIRACT0_FIR_ACTION0 = 0;
+static const uint32_t TOP0_IOPFIRACT0_IOPFIRACT0_FIR_ACTION0_LEN = 12;
+//<< [TOP0_IOPFIRACT0]
+// pec/reg00014.H
+
+//>> [TOP0_IXDATA0]
+static const uint64_t TOP0_IXDATA0 = 0x0801110cull;
+
+static const uint32_t TOP0_IXDATA0_IXDATA0_DATA = 0;
+static const uint32_t TOP0_IXDATA0_IXDATA0_DATA_LEN = 64;
+//<< [TOP0_IXDATA0]
+// pec/reg00014.H
+
+//>> [TOP0_IXRADR0]
+static const uint64_t TOP0_IXRADR0 = 0x0801110aull;
+
+static const uint32_t TOP0_IXRADR0_IXRADR0_ADDR = 0;
+static const uint32_t TOP0_IXRADR0_IXRADR0_ADDR_LEN = 12;
+//<< [TOP0_IXRADR0]
+// pec/reg00014.H
+
+//>> [TOP1_IXMODE]
+static const uint64_t TOP1_IXMODE = 0x0801150eull;
+
+static const uint32_t TOP1_IXMODE_PHY0_SRAM_EXT_LD_DONE = 0;
+static const uint32_t TOP1_IXMODE_PHY1_SRAM_EXT_LD_DONE = 1;
+static const uint32_t TOP1_IXMODE_RAM_SCOM_ACCESS_MODE = 2;
+static const uint32_t TOP1_IXMODE_RAM_SCOM_AUTOINC_RW_MODE = 3;
+static const uint32_t TOP1_IXMODE_SCRUB_EN = 17;
+static const uint32_t TOP1_IXMODE_SCRUB_PERIOD = 18;
+static const uint32_t TOP1_IXMODE_SCRUB_PERIOD_LEN = 8;
+static const uint32_t TOP1_IXMODE_PHY0_ARRAY_ERR_INJ_EN = 26;
+static const uint32_t TOP1_IXMODE_PHY0_ARRAY_ERR_INJ_TYPE = 27;
+static const uint32_t TOP1_IXMODE_PHY0_ARRAY_ERR_INJ_ACTION = 28;
+static const uint32_t TOP1_IXMODE_PHY1_ARRAY_ERR_INJ_EN = 31;
+static const uint32_t TOP1_IXMODE_PHY1_ARRAY_ERR_INJ_TYPE = 32;
+static const uint32_t TOP1_IXMODE_PHY1_ARRAY_ERR_INJ_ACTION = 33;
+//<< [TOP1_IXMODE]
 // pec/reg00014.H
 
 //>>THE END<<

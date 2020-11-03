@@ -868,6 +868,8 @@ static const uint32_t CS_SM2_SNP_MISC_CONFIG0_DISABLE_CAN_BY_PROBE = 60;
 static const uint32_t CS_SM2_SNP_MISC_CONFIG0_HANG_ON_ADDRESS_ERRORS = 61;
 static const uint32_t CS_SM2_SNP_MISC_CONFIG0_0_RESERVED0 = 62;
 static const uint32_t CS_SM2_SNP_MISC_CONFIG0_0_RESERVED0_LEN = 2;
+static const uint32_t CS_SM2_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT = 62; // p10:20,
+static const uint32_t CS_SM2_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL = 63; // p10:20,
 //<< [CS_SM2_SNP_MISC_CONFIG0]
 // pau/reg00004.H
 
@@ -1154,6 +1156,10 @@ static const uint32_t DAT_MISC_CONFIG1_BRK4_NVLINK_MODE = 49;
 static const uint32_t DAT_MISC_CONFIG1_1_CHKNSW_HW405659 = 50;
 static const uint32_t DAT_MISC_CONFIG1_1_RESERVED1 = 51;
 static const uint32_t DAT_MISC_CONFIG1_1_RESERVED1_LEN = 13;
+static const uint32_t DAT_MISC_CONFIG1_1_CHKNSW_HW520782 = 51; // p10:20,
+static const uint32_t DAT_MISC_CONFIG1_1_CHKNSW_HW531490 = 52; // p10:20,
+// ERROR Duplicate Dial         static const uint32_t DAT_MISC_CONFIG1_1_RESERVED1 = 53; // p10:20,
+// ERROR Duplicate Dial         static const uint32_t DAT_MISC_CONFIG1_1_RESERVED1_LEN = 11;
 //<< [DAT_MISC_CONFIG1]
 // pau/reg00004.H
 
@@ -1268,6 +1274,46 @@ static const uint32_t XTS_ATSD_HYP0_LPARID_LEN = 12;
 //<< [XTS_ATSD_HYP0]
 // pau/reg00004.H
 
+//>> [XTS_REG_CONFIG2]
+static const uint64_t XTS_REG_CONFIG2 = 0x10010af5ull;
+
+static const uint32_t XTS_REG_CONFIG2_PERF_ENABLE = 0;
+static const uint32_t XTS_REG_CONFIG2_PERF_RESETMODE = 1;
+static const uint32_t XTS_REG_CONFIG2_PERF_FREEZEMODE = 2;
+static const uint32_t XTS_REG_CONFIG2_PERF_DISABLE_PMISC = 3;
+static const uint32_t XTS_REG_CONFIG2_PERF_PMISC_MODE = 4;
+static const uint32_t XTS_REG_CONFIG2_PERF_CASCADE = 5;
+static const uint32_t XTS_REG_CONFIG2_PERF_CASCADE_LEN = 3;
+static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C0 = 8;
+static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C0_LEN = 2;
+static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C1 = 10;
+static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C1_LEN = 2;
+static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C2 = 12;
+static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C2_LEN = 2;
+static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C3 = 14;
+static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C3_LEN = 2;
+static const uint32_t XTS_REG_CONFIG2_PERF_EVENT0 = 16;
+static const uint32_t XTS_REG_CONFIG2_PERF_EVENT0_LEN = 8;
+static const uint32_t XTS_REG_CONFIG2_PERF_EVENT1 = 24;
+static const uint32_t XTS_REG_CONFIG2_PERF_EVENT1_LEN = 8;
+static const uint32_t XTS_REG_CONFIG2_PERF_EVENT2 = 32;
+static const uint32_t XTS_REG_CONFIG2_PERF_EVENT2_LEN = 8;
+static const uint32_t XTS_REG_CONFIG2_PERF_EVENT3 = 40;
+static const uint32_t XTS_REG_CONFIG2_PERF_EVENT3_LEN = 8;
+static const uint32_t XTS_REG_CONFIG2_RADDR_BND = 48;
+static const uint32_t XTS_REG_CONFIG2_NO_FLUSH_ENA = 49;
+static const uint32_t XTS_REG_CONFIG2_MAP_ILOCK = 50;
+static const uint32_t XTS_REG_CONFIG2_ADJUST_PLS_RATE = 51;
+static const uint32_t XTS_REG_CONFIG2_TLBIE_HV_EN = 52;
+static const uint32_t XTS_REG_CONFIG2_TLBIE_PACING_CNT_EN = 53;
+static const uint32_t XTS_REG_CONFIG2_XSL2_ENA = 55;
+static const uint32_t XTS_REG_CONFIG2_ATSD_TIMEOUT = 56;
+static const uint32_t XTS_REG_CONFIG2_ATSD_TIMEOUT_LEN = 4;
+static const uint32_t XTS_REG_CONFIG2_ATR_TIMEOUT = 60;
+static const uint32_t XTS_REG_CONFIG2_ATR_TIMEOUT_LEN = 4;
+//<< [XTS_REG_CONFIG2]
+// pau/reg00005.H
+
 //>> [XTS_REG_ERR_HOLD]
 static const uint64_t XTS_REG_ERR_HOLD = 0x10010af0ull;
 
@@ -1316,46 +1362,6 @@ static const uint32_t XTS_REG_ERR_HOLD_MAP_REG_ERR0 = 57;
 static const uint32_t XTS_REG_ERR_HOLD_MAP_REG_ERR1 = 58;
 static const uint32_t XTS_REG_ERR_HOLD_ATR_MISS_IRQ = 63;
 //<< [XTS_REG_ERR_HOLD]
-// pau/reg00005.H
-
-//>> [XTS_REG_CONFIG2]
-static const uint64_t XTS_REG_CONFIG2 = 0x10010af5ull;
-
-static const uint32_t XTS_REG_CONFIG2_PERF_ENABLE = 0;
-static const uint32_t XTS_REG_CONFIG2_PERF_RESETMODE = 1;
-static const uint32_t XTS_REG_CONFIG2_PERF_FREEZEMODE = 2;
-static const uint32_t XTS_REG_CONFIG2_PERF_DISABLE_PMISC = 3;
-static const uint32_t XTS_REG_CONFIG2_PERF_PMISC_MODE = 4;
-static const uint32_t XTS_REG_CONFIG2_PERF_CASCADE = 5;
-static const uint32_t XTS_REG_CONFIG2_PERF_CASCADE_LEN = 3;
-static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C0 = 8;
-static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C0_LEN = 2;
-static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C1 = 10;
-static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C1_LEN = 2;
-static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C2 = 12;
-static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C2_LEN = 2;
-static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C3 = 14;
-static const uint32_t XTS_REG_CONFIG2_PERF_PRESCALE_C3_LEN = 2;
-static const uint32_t XTS_REG_CONFIG2_PERF_EVENT0 = 16;
-static const uint32_t XTS_REG_CONFIG2_PERF_EVENT0_LEN = 8;
-static const uint32_t XTS_REG_CONFIG2_PERF_EVENT1 = 24;
-static const uint32_t XTS_REG_CONFIG2_PERF_EVENT1_LEN = 8;
-static const uint32_t XTS_REG_CONFIG2_PERF_EVENT2 = 32;
-static const uint32_t XTS_REG_CONFIG2_PERF_EVENT2_LEN = 8;
-static const uint32_t XTS_REG_CONFIG2_PERF_EVENT3 = 40;
-static const uint32_t XTS_REG_CONFIG2_PERF_EVENT3_LEN = 8;
-static const uint32_t XTS_REG_CONFIG2_RADDR_BND = 48;
-static const uint32_t XTS_REG_CONFIG2_NO_FLUSH_ENA = 49;
-static const uint32_t XTS_REG_CONFIG2_MAP_ILOCK = 50;
-static const uint32_t XTS_REG_CONFIG2_ADJUST_PLS_RATE = 51;
-static const uint32_t XTS_REG_CONFIG2_TLBIE_HV_EN = 52;
-static const uint32_t XTS_REG_CONFIG2_TLBIE_PACING_CNT_EN = 53;
-static const uint32_t XTS_REG_CONFIG2_XSL2_ENA = 55;
-static const uint32_t XTS_REG_CONFIG2_ATSD_TIMEOUT = 56;
-static const uint32_t XTS_REG_CONFIG2_ATSD_TIMEOUT_LEN = 4;
-static const uint32_t XTS_REG_CONFIG2_ATR_TIMEOUT = 60;
-static const uint32_t XTS_REG_CONFIG2_ATR_TIMEOUT_LEN = 4;
-//<< [XTS_REG_CONFIG2]
 // pau/reg00005.H
 
 //>>THE END<<

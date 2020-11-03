@@ -129,14 +129,6 @@ static const uint32_t CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SET_SWAP_CACHE_INC_DEC_CACHE_
 //<< [CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SET_SWAP_CACHE_INC_DEC]
 // eq/reg00015.H
 
-//>> [QMETRA0_TR1_CONFIG_1]
-static const uint64_t QMETRA0_TR1_CONFIG_1 = 0x20018444ull;
-
-static const uint32_t QMETRA0_TR1_CONFIG_1_CMP_MSK_LT_B_64_TO_87 = 0;
-static const uint32_t QMETRA0_TR1_CONFIG_1_CMP_MSK_LT_B_64_TO_87_LEN = 24;
-//<< [QMETRA0_TR1_CONFIG_1]
-// eq/reg00015.H
-
 //>> [EPS_FIR_CLKSTOP_ON_XSTOP_MASK2]
 static const uint64_t EPS_FIR_CLKSTOP_ON_XSTOP_MASK2 = 0x20040082ull;
 
@@ -174,6 +166,14 @@ static const uint32_t EPS_THERM_WSUB2_DTS_RESULT2_DTS_8_RESULT_LEN = 16;
 //<< [EPS_THERM_WSUB2_DTS_RESULT2]
 // eq/reg00015.H
 
+//>> [L3TRA0_TR0_CONFIG_1]
+static const uint64_t L3TRA0_TR0_CONFIG_1 = 0x20018204ull;
+
+static const uint32_t L3TRA0_TR0_CONFIG_1_CMP_MSK_LT_B_64_TO_87 = 0;
+static const uint32_t L3TRA0_TR0_CONFIG_1_CMP_MSK_LT_B_64_TO_87_LEN = 24;
+//<< [L3TRA0_TR0_CONFIG_1]
+// eq/reg00015.H
+
 //>> [L3TRA0_TR0_TRACE_LO_DATA_REG]
 static const uint64_t L3TRA0_TR0_TRACE_LO_DATA_REG = 0x20018201ull;
 
@@ -189,14 +189,6 @@ static const uint32_t L3TRA0_TR0_TRACE_LO_DATA_REG_RUNNING = 53;
 static const uint32_t L3TRA0_TR0_TRACE_LO_DATA_REG_HOLD_ADDRESS = 54;
 static const uint32_t L3TRA0_TR0_TRACE_LO_DATA_REG_HOLD_ADDRESS_LEN = 10;
 //<< [L3TRA0_TR0_TRACE_LO_DATA_REG]
-// eq/reg00015.H
-
-//>> [L3TRA0_TR0_CONFIG_1]
-static const uint64_t L3TRA0_TR0_CONFIG_1 = 0x20018204ull;
-
-static const uint32_t L3TRA0_TR0_CONFIG_1_CMP_MSK_LT_B_64_TO_87 = 0;
-static const uint32_t L3TRA0_TR0_CONFIG_1_CMP_MSK_LT_B_64_TO_87_LEN = 24;
-//<< [L3TRA0_TR0_CONFIG_1]
 // eq/reg00015.H
 
 //>> [L3TRA2_TR0_CONFIG_9]
@@ -263,6 +255,22 @@ static const uint64_t PROTECT_MODE_REG = 0x200f03feull;
 static const uint32_t PROTECT_MODE_REG_READ_PROTECT_ENABLE = 0;
 static const uint32_t PROTECT_MODE_REG_WRITE_PROTECT_ENABLE = 1;
 //<< [PROTECT_MODE_REG]
+// eq/reg00015.H
+
+//>> [QMETRA0_TR1_CONFIG_1]
+static const uint64_t QMETRA0_TR1_CONFIG_1 = 0x20018444ull;
+
+static const uint32_t QMETRA0_TR1_CONFIG_1_CMP_MSK_LT_B_64_TO_87 = 0;
+static const uint32_t QMETRA0_TR1_CONFIG_1_CMP_MSK_LT_B_64_TO_87_LEN = 24;
+//<< [QMETRA0_TR1_CONFIG_1]
+// eq/reg00015.H
+
+//>> [P10_20_QME_DB3]
+static const uint64_t QME_DB3 = 0x200e010cull; // p10:20,
+
+static const uint32_t P10_20_QME_DB3_MESSAGE_NUMBER = 0;
+static const uint32_t P10_20_QME_DB3_MESSAGE_NUMBER_LEN = 8;
+//<< [P10_20_QME_DB3]
 // eq/reg00015.H
 
 //>> [VITAL_SCAN_OUT]

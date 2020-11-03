@@ -41,6 +41,7 @@ static inline fapi2::ReturnCode PREP_AME_AME2_MISC_TEST_CERR_RPT(const fapi2::Ta
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     scomt::last_scom = AME_AME2_MISC_TEST_CERR_RPT;
 #endif
     return fapi2::current_err;
@@ -58,6 +59,7 @@ static inline fapi2::ReturnCode GET_AME_AME2_MISC_TEST_CERR_RPT(const fapi2::Tar
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     scomt::last_scom = AME_AME2_MISC_TEST_CERR_RPT;
 #endif
     return fapi2::getScom(i_target, AME_AME2_MISC_TEST_CERR_RPT, o_data);
@@ -75,6 +77,7 @@ static inline fapi2::ReturnCode PUT_AME_AME2_MISC_TEST_CERR_RPT(const fapi2::Tar
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME2_MISC_TEST_CERR_RPT));
 #endif
     return fapi2::putScom(i_target, AME_AME2_MISC_TEST_CERR_RPT, i_data);
@@ -91,6 +94,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME2_MISC_TEST_CERR_RPT_TEST_CERR
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME2_MISC_TEST_CERR_RPT));
 #endif
     return o_data.insertFromRight<AME_AME2_MISC_TEST_CERR_RPT_TEST_CERR_BITSEL,
@@ -109,6 +113,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME2_MISC_TEST_CERR_RPT_TEST_CERR
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME2_MISC_TEST_CERR_RPT));
 #endif
     return o_data.insertFromRight<AME_AME2_MISC_TEST_CERR_RPT_TEST_CERR_BITSEL,
@@ -127,6 +132,7 @@ static inline fapi2::buffer<uint64_t>& GET_AME_AME2_MISC_TEST_CERR_RPT_TEST_CERR
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME2_MISC_TEST_CERR_RPT));
 #endif
     return i_data.extractToRight<AME_AME2_MISC_TEST_CERR_RPT_TEST_CERR_BITSEL,
@@ -29737,6 +29743,7 @@ static inline fapi2::buffer<uint64_t>& SET_CS_SM3_SNP_MISC_CONFIG0_0_RESERVED0(f
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
 #endif
     return o_data.insertFromRight<CS_SM3_SNP_MISC_CONFIG0_0_RESERVED0,
@@ -29754,6 +29761,7 @@ static inline fapi2::buffer<uint64_t>& SET_CS_SM3_SNP_MISC_CONFIG0_0_RESERVED0(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
 #endif
     return o_data.insertFromRight<CS_SM3_SNP_MISC_CONFIG0_0_RESERVED0,
@@ -29771,6 +29779,7 @@ static inline fapi2::buffer<uint64_t>& GET_CS_SM3_SNP_MISC_CONFIG0_0_RESERVED0(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
 #endif
     return i_data.extractToRight<CS_SM3_SNP_MISC_CONFIG0_0_RESERVED0,
@@ -29782,6 +29791,232 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[CS_SM3_SNP_MISC_CONFIG0_0_RESERVED0]
+
+//>> SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+static inline fapi2::buffer<uint64_t>& SET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return o_data.insertFromRight<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+
+//>> SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+static inline fapi2::buffer<uint64_t>& SET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return o_data.insertFromRight<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+
+//>> SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+static inline fapi2::buffer<uint64_t>& SET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return o_data.setBit<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+
+//>> CLEAR_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return o_data.clearBit<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+
+//>> GET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+static inline fapi2::buffer<uint64_t>& GET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return i_data.extractToRight<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+
+//>> GET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+static inline bool GET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return i_data.getBit<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW521165_SFE_BLOCKS_CASTOUT]
+
+//>> SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+static inline fapi2::buffer<uint64_t>& SET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return o_data.insertFromRight<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+
+//>> SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+static inline fapi2::buffer<uint64_t>& SET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return o_data.insertFromRight<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+
+//>> SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+static inline fapi2::buffer<uint64_t>& SET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return o_data.setBit<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+
+//>> CLEAR_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+static inline fapi2::buffer<uint64_t>& CLEAR_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return o_data.clearBit<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+
+//>> GET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+static inline fapi2::buffer<uint64_t>& GET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return i_data.extractToRight<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+
+//>> GET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
+static inline bool GET_CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM3_SNP_MISC_CONFIG0));
+#endif
+    return i_data.getBit<CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_pau Invalid dial access CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[CS_SM3_SNP_MISC_CONFIG0_DISABLE_HW517982_PSNOOP_MISS_PRESP_NULL]
 
 //>> PREP_[CS_SM3_SNP_MISC_CONFIG_RELAXED_SRC6]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

@@ -120,6 +120,49 @@ static const uint32_t SCAN_CAPTUREDR_SCAN_CAPTUREDR_REG_LEN = 32;
 //<< [SCAN_CAPTUREDR]
 // pec/reg00000.H
 
+//>> [TOP0_IXMODE]
+static const uint64_t TOP0_IXMODE = 0x0801110eull;
+
+static const uint32_t TOP0_IXMODE_PHY0_SRAM_EXT_LD_DONE = 0;
+static const uint32_t TOP0_IXMODE_PHY1_SRAM_EXT_LD_DONE = 1;
+static const uint32_t TOP0_IXMODE_RAM_SCOM_ACCESS_MODE = 2;
+static const uint32_t TOP0_IXMODE_RAM_SCOM_AUTOINC_RW_MODE = 3;
+static const uint32_t TOP0_IXMODE_SCRUB_EN = 17;
+static const uint32_t TOP0_IXMODE_SCRUB_PERIOD = 18;
+static const uint32_t TOP0_IXMODE_SCRUB_PERIOD_LEN = 8;
+static const uint32_t TOP0_IXMODE_PHY0_ARRAY_ERR_INJ_EN = 26;
+static const uint32_t TOP0_IXMODE_PHY0_ARRAY_ERR_INJ_TYPE = 27;
+static const uint32_t TOP0_IXMODE_PHY0_ARRAY_ERR_INJ_ACTION = 28;
+static const uint32_t TOP0_IXMODE_PHY1_ARRAY_ERR_INJ_EN = 31;
+static const uint32_t TOP0_IXMODE_PHY1_ARRAY_ERR_INJ_TYPE = 32;
+static const uint32_t TOP0_IXMODE_PHY1_ARRAY_ERR_INJ_ACTION = 33;
+//<< [TOP0_IXMODE]
+// pec/reg00000.H
+
+//>> [TOP1_PIPEDINCTL3]
+static const uint64_t TOP1_PIPEDINCTL3 = 0x0801151cull;
+
+static const uint32_t TOP1_PIPEDINCTL3_PHY1_HANDSHAKE_RESULT = 0;
+static const uint32_t TOP1_PIPEDINCTL3_PHY0_HANDSHAKE_RESULT = 1;
+static const uint32_t TOP1_PIPEDINCTL3_RESERVED_61_4 = 2;
+static const uint32_t TOP1_PIPEDINCTL3_RESERVED_61_4_LEN = 58;
+static const uint32_t TOP1_PIPEDINCTL3_PHY1_DTB = 60;
+static const uint32_t TOP1_PIPEDINCTL3_PHY1_DTB_LEN = 2;
+static const uint32_t TOP1_PIPEDINCTL3_PHY0_DTB = 62;
+static const uint32_t TOP1_PIPEDINCTL3_PHY0_DTB_LEN = 2;
+//<< [TOP1_PIPEDINCTL3]
+// pec/reg00000.H
+
+//>> [TOP1_PIPEDOUTCTL3]
+static const uint64_t TOP1_PIPEDOUTCTL3 = 0x08011517ull;
+
+static const uint32_t TOP1_PIPEDOUTCTL3_PHY1_HANDSHAKE = 0;
+static const uint32_t TOP1_PIPEDOUTCTL3_PHY0_HANDSHAKE = 1;
+static const uint32_t TOP1_PIPEDOUTCTL3_RESERVED_61_0 = 2;
+static const uint32_t TOP1_PIPEDOUTCTL3_RESERVED_61_0_LEN = 62;
+//<< [TOP1_PIPEDOUTCTL3]
+// pec/reg00000.H
+
 //>> [TRA0_TR0_CONFIG_4]
 static const uint64_t TRA0_TR0_CONFIG_4 = 0x08010407ull;
 

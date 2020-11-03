@@ -39,46 +39,6 @@ namespace mc
 #endif
 
 
-//>> [MBA_SCOMFIR_AAER]
-static const uint64_t MBA_SCOMFIR_AAER = 0x0c010f2bull;
-
-static const uint32_t MBA_SCOMFIR_AAER_AAER_TAG_ECC = 0;
-static const uint32_t MBA_SCOMFIR_AAER_AAER_TAG_ECC_LEN = 9;
-//<< [MBA_SCOMFIR_AAER]
-// mc/reg00008.H
-
-//>> [MBA_SCOMFIR_DBGSRC]
-static const uint64_t MBA_SCOMFIR_DBGSRC = 0x0c010fecull;
-
-static const uint32_t MBA_SCOMFIR_DBGSRC_0 = 0;
-static const uint32_t MBA_SCOMFIR_DBGSRC_0_LEN = 16;
-static const uint32_t MBA_SCOMFIR_DBGSRC_1 = 16;
-static const uint32_t MBA_SCOMFIR_DBGSRC_1_LEN = 16;
-static const uint32_t MBA_SCOMFIR_DBGSRC_2 = 32;
-static const uint32_t MBA_SCOMFIR_DBGSRC_2_LEN = 16;
-static const uint32_t MBA_SCOMFIR_DBGSRC_3 = 48;
-static const uint32_t MBA_SCOMFIR_DBGSRC_3_LEN = 16;
-//<< [MBA_SCOMFIR_DBGSRC]
-// mc/reg00008.H
-
-//>> [MBA_SCOMFIR_WATPATA0]
-static const uint64_t MBA_SCOMFIR_WATPATA0 = 0x0c010f84ull;
-
-static const uint32_t MBA_SCOMFIR_WATPATA0_WAT_PATTERN_A0 = 0;
-static const uint32_t MBA_SCOMFIR_WATPATA0_WAT_PATTERN_A0_LEN = 44;
-//<< [MBA_SCOMFIR_WATPATA0]
-// mc/reg00008.H
-
-//>> [SCOMFIR_AACR]
-static const uint64_t SCOMFIR_AACR = 0x0c010c2cull;
-
-static const uint32_t SCOMFIR_AACR_BUFFER = 0;
-static const uint32_t SCOMFIR_AACR_ADDRESS = 1;
-static const uint32_t SCOMFIR_AACR_ADDRESS_LEN = 9;
-static const uint32_t SCOMFIR_AACR_AUTOINC = 10;
-//<< [SCOMFIR_AACR]
-// mc/reg00008.H
-
 //>> [ASSIST_INTERRUPT_REG]
 static const uint64_t ASSIST_INTERRUPT_REG = 0x0c0f0011ull;
 
@@ -170,12 +130,55 @@ static const uint32_t EPS_PSC_WRITE_PROTECT_RINGS_REG_WRITE_PROTECT_RINGS_LEN = 
 //<< [EPS_PSC_WRITE_PROTECT_RINGS_REG]
 // mc/reg00008.H
 
+//>> [MBA_SCOMFIR_AAER]
+static const uint64_t MBA_SCOMFIR_AAER = 0x0c010f2bull;
+
+static const uint32_t MBA_SCOMFIR_AAER_AAER_TAG_ECC = 0;
+static const uint32_t MBA_SCOMFIR_AAER_AAER_TAG_ECC_LEN = 9;
+//<< [MBA_SCOMFIR_AAER]
+// mc/reg00008.H
+
+//>> [MBA_SCOMFIR_DBGSRC]
+static const uint64_t MBA_SCOMFIR_DBGSRC = 0x0c010fecull;
+
+static const uint32_t MBA_SCOMFIR_DBGSRC_0 = 0;
+static const uint32_t MBA_SCOMFIR_DBGSRC_0_LEN = 16;
+static const uint32_t MBA_SCOMFIR_DBGSRC_1 = 16;
+static const uint32_t MBA_SCOMFIR_DBGSRC_1_LEN = 16;
+static const uint32_t MBA_SCOMFIR_DBGSRC_2 = 32;
+static const uint32_t MBA_SCOMFIR_DBGSRC_2_LEN = 16;
+static const uint32_t MBA_SCOMFIR_DBGSRC_3 = 48;
+static const uint32_t MBA_SCOMFIR_DBGSRC_3_LEN = 16;
+//<< [MBA_SCOMFIR_DBGSRC]
+// mc/reg00008.H
+
+//>> [MBA_SCOMFIR_WATPATA0]
+static const uint64_t MBA_SCOMFIR_WATPATA0 = 0x0c010f84ull;
+
+static const uint32_t MBA_SCOMFIR_WATPATA0_WAT_PATTERN_A0 = 0;
+static const uint32_t MBA_SCOMFIR_WATPATA0_WAT_PATTERN_A0_LEN = 44;
+//<< [MBA_SCOMFIR_WATPATA0]
+// mc/reg00008.H
+
 //>> [SCAN_CAPTUREDR_LONG]
 static const uint64_t SCAN_CAPTUREDR_LONG = 0x0c03d000ull;
 
 static const uint32_t SCAN_CAPTUREDR_LONG_SCAN_CAPTUREDR_LONG_REG = 0;
 static const uint32_t SCAN_CAPTUREDR_LONG_SCAN_CAPTUREDR_LONG_REG_LEN = 32;
 //<< [SCAN_CAPTUREDR_LONG]
+// mc/reg00008.H
+
+//>> [SCOMFIR_AACR]
+static const uint64_t SCOMFIR_AACR = 0x0c010c2cull;
+
+static const uint32_t SCOMFIR_AACR_BUFFER = 0;
+static const uint32_t SCOMFIR_AACR_ADDRESS = 1;
+static const uint32_t SCOMFIR_AACR_ADDRESS_LEN = 9;
+// ERROR Duplicate Dial         static const uint32_t SCOMFIR_AACR_ADDRESS = 1; // p10:20,
+// ERROR Duplicate Dial         static const uint32_t SCOMFIR_AACR_ADDRESS_LEN = 10;
+static const uint32_t SCOMFIR_AACR_AUTOINC = 10;
+// ERROR Duplicate Dial         static const uint32_t SCOMFIR_AACR_AUTOINC = 11; // p10:20,
+//<< [SCOMFIR_AACR]
 // mc/reg00008.H
 
 //>> [TRA1_TR0_CONFIG_0]

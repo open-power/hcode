@@ -116,28 +116,6 @@ static const uint32_t CLK_ADJ_02_SKEW_WRAP_SKEWADJ_SET_SWAP_CORE_INC_DEC_CORE_IN
 //<< [CLK_ADJ_02_SKEW_WRAP_SKEWADJ_SET_SWAP_CORE_INC_DEC]
 // perv/reg00010.H
 
-//>> [FSXCOMP_FSXLOG_SCRATCH_REGISTER_15]
-//ERRCODE: // The addresses of this register do not all translate to the same targets.
-
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_FSI = 0x00002986ull;
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_FSI_BYTE = 0x00002e18ull;
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_RW = 0x00050186ull;
-
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_SR_SCRATCH_REGISTER_15 = 0;
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_SR_SCRATCH_REGISTER_15_LEN = 32;
-//<< [FSXCOMP_FSXLOG_SCRATCH_REGISTER_15]
-// perv/reg00010.H
-
-//>> [QMETRA0_TR1_CONFIG_2]
-static const uint64_t QMETRA0_TR1_CONFIG_2 = 0x00018445ull;
-
-static const uint32_t QMETRA0_TR1_CONFIG_2_A = 0;
-static const uint32_t QMETRA0_TR1_CONFIG_2_A_LEN = 24;
-static const uint32_t QMETRA0_TR1_CONFIG_2_B = 24;
-static const uint32_t QMETRA0_TR1_CONFIG_2_B_LEN = 24;
-//<< [QMETRA0_TR1_CONFIG_2]
-// perv/reg00010.H
-
 //>> [COMP_INTR_INTERRUPT1_REG]
 static const uint64_t COMP_INTR_INTERRUPT1_REG_RW = 0x000f0020ull;
 static const uint64_t COMP_INTR_INTERRUPT1_REG_WO_AND = 0x000f0022ull;
@@ -301,6 +279,18 @@ static const uint32_t FSXCOMP_FSXLOG_MAILBOX_SLAVE_B_DOORBELL_ERROR_STATUS_MSBDE
 //<< [FSXCOMP_FSXLOG_MAILBOX_SLAVE_B_DOORBELL_ERROR_STATUS]
 // perv/reg00010.H
 
+//>> [FSXCOMP_FSXLOG_SCRATCH_REGISTER_15]
+//ERRCODE: // The addresses of this register do not all translate to the same targets.
+
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_FSI = 0x00002986ull;
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_FSI_BYTE = 0x00002e18ull;
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_RW = 0x00050186ull;
+
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_SR_SCRATCH_REGISTER_15 = 0;
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_15_SR_SCRATCH_REGISTER_15_LEN = 32;
+//<< [FSXCOMP_FSXLOG_SCRATCH_REGISTER_15]
+// perv/reg00010.H
+
 //>> [L3TRA0_TR0_CONFIG_2]
 static const uint64_t L3TRA0_TR0_CONFIG_2 = 0x00018205ull;
 
@@ -347,6 +337,16 @@ static const uint64_t OTPC_M_MEASURE_REG10 = 0x0001001aull;
 static const uint32_t OTPC_M_MEASURE_REG10_SEEPROM_MEASUREMENT10_DATA = 0;
 static const uint32_t OTPC_M_MEASURE_REG10_SEEPROM_MEASUREMENT10_DATA_LEN = 64;
 //<< [OTPC_M_MEASURE_REG10]
+// perv/reg00010.H
+
+//>> [QMETRA0_TR1_CONFIG_2]
+static const uint64_t QMETRA0_TR1_CONFIG_2 = 0x00018445ull;
+
+static const uint32_t QMETRA0_TR1_CONFIG_2_A = 0;
+static const uint32_t QMETRA0_TR1_CONFIG_2_A_LEN = 24;
+static const uint32_t QMETRA0_TR1_CONFIG_2_B = 24;
+static const uint32_t QMETRA0_TR1_CONFIG_2_B_LEN = 24;
+//<< [QMETRA0_TR1_CONFIG_2]
 // perv/reg00010.H
 
 //>> [REC_ERR_MST3_REG3]
@@ -641,6 +641,16 @@ static const uint32_t TRA2_TR0_CONFIG_MASTER_CLOCK_ENABLE_INT = 23;
 //<< [TRA2_TR0_CONFIG]
 // perv/reg00011.H
 
+//>> [TRA2_TR1_CONFIG_3]
+static const uint64_t TRA2_TR1_CONFIG_3 = 0x00010546ull;
+
+static const uint32_t TRA2_TR1_CONFIG_3_C = 0;
+static const uint32_t TRA2_TR1_CONFIG_3_C_LEN = 24;
+static const uint32_t TRA2_TR1_CONFIG_3_D = 24;
+static const uint32_t TRA2_TR1_CONFIG_3_D_LEN = 24;
+//<< [TRA2_TR1_CONFIG_3]
+// perv/reg00011.H
+
 //>> [TRA2_TR1_TRACE_LO_DATA_REG]
 static const uint64_t TRA2_TR1_TRACE_LO_DATA_REG = 0x00010541ull;
 
@@ -656,16 +666,6 @@ static const uint32_t TRA2_TR1_TRACE_LO_DATA_REG_RUNNING = 53;
 static const uint32_t TRA2_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS = 54;
 static const uint32_t TRA2_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS_LEN = 10;
 //<< [TRA2_TR1_TRACE_LO_DATA_REG]
-// perv/reg00011.H
-
-//>> [TRA2_TR1_CONFIG_3]
-static const uint64_t TRA2_TR1_CONFIG_3 = 0x00010546ull;
-
-static const uint32_t TRA2_TR1_CONFIG_3_C = 0;
-static const uint32_t TRA2_TR1_CONFIG_3_C_LEN = 24;
-static const uint32_t TRA2_TR1_CONFIG_3_D = 24;
-static const uint32_t TRA2_TR1_CONFIG_3_D_LEN = 24;
-//<< [TRA2_TR1_CONFIG_3]
 // perv/reg00011.H
 
 //>> [TRA3_TR0_CONFIG_5]

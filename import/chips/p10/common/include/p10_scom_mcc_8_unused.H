@@ -52,6 +52,10 @@ static const uint32_t USTL_USTLBADRESP_B_BAD_RESP_IS_WRITE = 11;
 static const uint32_t USTL_USTLBADRESP_B_BAD_RESP_IS_GOOD = 12;
 static const uint32_t USTL_USTLBADRESP_B_BAD_RESP_TAG = 13;
 static const uint32_t USTL_USTLBADRESP_B_BAD_RESP_TAG_LEN = 7;
+static const uint32_t USTL_USTLBADRESP_A_BAD_RESP_TYPE = 20; // p10:20,
+static const uint32_t USTL_USTLBADRESP_A_BAD_RESP_TYPE_LEN = 2;
+static const uint32_t USTL_USTLBADRESP_B_BAD_RESP_TYPE = 22; // p10:20,
+static const uint32_t USTL_USTLBADRESP_B_BAD_RESP_TYPE_LEN = 2;
 //<< [USTL_USTLBADRESP]
 // mcc/reg00008.H
 

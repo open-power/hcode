@@ -39,34 +39,6 @@ namespace pec
 #endif
 
 
-//>> [IOPFIRMASK]
-static const uint64_t IOPFIRMASK_RW = 0x08011503ull;
-static const uint64_t IOPFIRMASK_WO_AND = 0x08011504ull;
-static const uint64_t IOPFIRMASK_WO_OR = 0x08011505ull;
-
-static const uint32_t IOPFIRMASK_PHY0_ECC_CE_MASK = 0;
-static const uint32_t IOPFIRMASK_PHY0_ECC_UE_MASK = 1;
-static const uint32_t IOPFIRMASK_PHY1_ECC_CE_MASK = 2;
-static const uint32_t IOPFIRMASK_PHY1_ECC_UE_MASK = 3;
-static const uint32_t IOPFIRMASK_SCOM0_ECC_CE_MASK = 4;
-static const uint32_t IOPFIRMASK_SCOM0_ECC_UE_MASK = 5;
-static const uint32_t IOPFIRMASK_SCOM1_ECC_CE_MASK = 6;
-static const uint32_t IOPFIRMASK_SCOM1_ECC_UE_MASK = 7;
-static const uint32_t IOPFIRMASK_SCRUB0_ECC_CE_MASK = 8;
-static const uint32_t IOPFIRMASK_SCRUB0_ECC_UE_MASK = 9;
-static const uint32_t IOPFIRMASK_SCRUB1_ECC_CE_MASK = 10;
-static const uint32_t IOPFIRMASK_SCRUB1_ECC_UE_MASK = 11;
-//<< [IOPFIRMASK]
-// pec/reg00008.H
-
-//>> [PIPEDINCTL4]
-static const uint64_t PIPEDINCTL4 = 0x0801151dull;
-
-static const uint32_t PIPEDINCTL4_RESERVED_63_0 = 0;
-static const uint32_t PIPEDINCTL4_RESERVED_63_0_LEN = 64;
-//<< [PIPEDINCTL4]
-// pec/reg00008.H
-
 //>> [ASSIST_INTERRUPT_REG]
 static const uint64_t ASSIST_INTERRUPT_REG = 0x080f0011ull;
 
@@ -164,6 +136,35 @@ static const uint64_t SCAN_CAPTUREDR_LONG = 0x0803d000ull;
 static const uint32_t SCAN_CAPTUREDR_LONG_SCAN_CAPTUREDR_LONG_REG = 0;
 static const uint32_t SCAN_CAPTUREDR_LONG_SCAN_CAPTUREDR_LONG_REG_LEN = 32;
 //<< [SCAN_CAPTUREDR_LONG]
+// pec/reg00008.H
+
+//>> [TOP0_IOPFIRACT1]
+static const uint64_t TOP0_IOPFIRACT1 = 0x08011107ull;
+
+static const uint32_t TOP0_IOPFIRACT1_IOPFIRACT1_FIR_ACTION1 = 0;
+static const uint32_t TOP0_IOPFIRACT1_IOPFIRACT1_FIR_ACTION1_LEN = 12;
+//<< [TOP0_IOPFIRACT1]
+// pec/reg00008.H
+
+//>> [TOP0_IXDATA1]
+static const uint64_t TOP0_IXDATA1 = 0x0801110dull;
+
+static const uint32_t TOP0_IXDATA1_IXDATA1_DATA = 0;
+static const uint32_t TOP0_IXDATA1_IXDATA1_DATA_LEN = 64;
+//<< [TOP0_IXDATA1]
+// pec/reg00008.H
+
+//>> [TOP0_IXRADR1]
+static const uint64_t TOP0_IXRADR1 = 0x0801110bull;
+
+static const uint32_t TOP0_IXRADR1_IXRADR1_ADDR = 0;
+static const uint32_t TOP0_IXRADR1_IXRADR1_ADDR_LEN = 12;
+//<< [TOP0_IXRADR1]
+// pec/reg00008.H
+
+//>> [TOP1_IXCS]
+static const uint64_t TOP1_IXCS = 0x08011510ull;
+//<< [TOP1_IXCS]
 // pec/reg00008.H
 
 //>>THE END<<

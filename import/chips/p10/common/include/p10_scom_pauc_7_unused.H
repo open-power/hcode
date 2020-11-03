@@ -130,36 +130,6 @@ static const uint32_t EPS_FIR_LOCAL_WOF_63 = 63;
 //<< [EPS_FIR_LOCAL_WOF]
 // pauc/reg00007.H
 
-//>> [PB_PMU1_TLPM_COUNTER]
-static const uint64_t PB_PMU1_TLPM_COUNTER = 0x1001181cull;
-
-static const uint32_t PB_PMU1_TLPM_COUNTER_0 = 0;
-static const uint32_t PB_PMU1_TLPM_COUNTER_0_LEN = 16;
-static const uint32_t PB_PMU1_TLPM_COUNTER_1 = 16;
-static const uint32_t PB_PMU1_TLPM_COUNTER_1_LEN = 16;
-static const uint32_t PB_PMU1_TLPM_COUNTER_2 = 32;
-static const uint32_t PB_PMU1_TLPM_COUNTER_2_LEN = 16;
-static const uint32_t PB_PMU1_TLPM_COUNTER_3 = 48;
-static const uint32_t PB_PMU1_TLPM_COUNTER_3_LEN = 16;
-//<< [PB_PMU1_TLPM_COUNTER]
-// pauc/reg00007.H
-
-//>> [TXIRLM_REGS_TX_IMPCAL_PVAL_PB]
-static const uint64_t TXIRLM_REGS_TX_IMPCAL_PVAL_PB = 0x800f25c010012c3full;
-
-static const uint32_t TXIRLM_REGS_TX_IMPCAL_PVAL_PB_TX_ZCAL_P = 48;
-static const uint32_t TXIRLM_REGS_TX_IMPCAL_PVAL_PB_TX_ZCAL_P_LEN = 9;
-//<< [TXIRLM_REGS_TX_IMPCAL_PVAL_PB]
-// pauc/reg00007.H
-
-//>> [TXIRLM_REGS_ZCAL_FIR_MASK_PB]
-static const uint64_t TXIRLM_REGS_ZCAL_FIR_MASK_PB = 0x800f91c010012c3full;
-
-static const uint32_t TXIRLM_REGS_ZCAL_FIR_MASK_PB_ZCAL_FIR_ERRS_MASK = 48;
-static const uint32_t TXIRLM_REGS_ZCAL_FIR_MASK_PB_ZCAL_FIR_ERRS_MASK_LEN = 2;
-//<< [TXIRLM_REGS_ZCAL_FIR_MASK_PB]
-// pauc/reg00007.H
-
 //>> [EPS_THERM_WSUB_SKITTER_CLKSRC_REG]
 static const uint64_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG = 0x10050016ull;
 
@@ -184,6 +154,20 @@ static const uint64_t HOSTATTN_INTERRUPT_REG = 0x100f002bull;
 
 static const uint32_t HOSTATTN_INTERRUPT_REG_TYPE4 = 0;
 //<< [HOSTATTN_INTERRUPT_REG]
+// pauc/reg00007.H
+
+//>> [PB_PMU1_TLPM_COUNTER]
+static const uint64_t PB_PMU1_TLPM_COUNTER = 0x1001181cull;
+
+static const uint32_t PB_PMU1_TLPM_COUNTER_0 = 0;
+static const uint32_t PB_PMU1_TLPM_COUNTER_0_LEN = 16;
+static const uint32_t PB_PMU1_TLPM_COUNTER_1 = 16;
+static const uint32_t PB_PMU1_TLPM_COUNTER_1_LEN = 16;
+static const uint32_t PB_PMU1_TLPM_COUNTER_2 = 32;
+static const uint32_t PB_PMU1_TLPM_COUNTER_2_LEN = 16;
+static const uint32_t PB_PMU1_TLPM_COUNTER_3 = 48;
+static const uint32_t PB_PMU1_TLPM_COUNTER_3_LEN = 16;
+//<< [PB_PMU1_TLPM_COUNTER]
 // pauc/reg00007.H
 
 //>> [RECOV_UNMASKED]
@@ -228,6 +212,22 @@ static const uint32_t TRA1_TR0_CONFIG_5_C_LEN = 24;
 static const uint32_t TRA1_TR0_CONFIG_5_D = 24;
 static const uint32_t TRA1_TR0_CONFIG_5_D_LEN = 24;
 //<< [TRA1_TR0_CONFIG_5]
+// pauc/reg00007.H
+
+//>> [TXIRLM_REGS_TX_IMPCAL_PVAL_PB]
+static const uint64_t TXIRLM_REGS_TX_IMPCAL_PVAL_PB = 0x800f25c010012c3full;
+
+static const uint32_t TXIRLM_REGS_TX_IMPCAL_PVAL_PB_TX_ZCAL_P = 48;
+static const uint32_t TXIRLM_REGS_TX_IMPCAL_PVAL_PB_TX_ZCAL_P_LEN = 9;
+//<< [TXIRLM_REGS_TX_IMPCAL_PVAL_PB]
+// pauc/reg00007.H
+
+//>> [TXIRLM_REGS_ZCAL_FIR_MASK_PB]
+static const uint64_t TXIRLM_REGS_ZCAL_FIR_MASK_PB = 0x800f91c010012c3full;
+
+static const uint32_t TXIRLM_REGS_ZCAL_FIR_MASK_PB_ZCAL_FIR_ERRS_MASK = 48;
+static const uint32_t TXIRLM_REGS_ZCAL_FIR_MASK_PB_ZCAL_FIR_ERRS_MASK_LEN = 2;
+//<< [TXIRLM_REGS_ZCAL_FIR_MASK_PB]
 // pauc/reg00007.H
 
 //>>THE END<<

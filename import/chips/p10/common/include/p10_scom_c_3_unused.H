@@ -70,6 +70,7 @@ static const uint32_t EC_PC_COMMON_SPR_V1_HMER_V1_HMER_SUSPEND_MODE = 3;
 static const uint32_t EC_PC_COMMON_SPR_V1_HMER_V1_HMER_TFAC_ERR = 4;
 static const uint32_t EC_PC_COMMON_SPR_V1_HMER_V1_HMER_TFX_ERR = 5;
 static const uint32_t EC_PC_COMMON_SPR_V1_HMER_SPARE_6 = 6;
+static const uint32_t EC_PC_COMMON_SPR_V1_HMER_V1_HMER_SPURR_SCALE_LIMIT = 6; // p10:20,
 static const uint32_t EC_PC_COMMON_SPR_V1_HMER_SPARE_7 = 7;
 static const uint32_t EC_PC_COMMON_SPR_V1_HMER_V1_HMER_XSCOM_FAIL = 8;
 static const uint32_t EC_PC_COMMON_SPR_V1_HMER_V1_HMER_XSCOM_DONE = 9;
@@ -153,6 +154,16 @@ static const uint32_t EC_PC_TRACE2_TR_TR0_CONFIG_9_SPARE_LT = 37;
 //<< [EC_PC_TRACE2_TR_TR0_CONFIG_9]
 // c/reg00003.H
 
+//>> [L2TRA_TR0_CONFIG_4]
+static const uint64_t L2TRA_TR0_CONFIG_4 = 0x20020047ull;
+
+static const uint32_t L2TRA_TR0_CONFIG_4_A = 0;
+static const uint32_t L2TRA_TR0_CONFIG_4_A_LEN = 24;
+static const uint32_t L2TRA_TR0_CONFIG_4_B = 24;
+static const uint32_t L2TRA_TR0_CONFIG_4_B_LEN = 24;
+//<< [L2TRA_TR0_CONFIG_4]
+// c/reg00003.H
+
 //>> [L2_L2MISC_L2CERRS_RD_EPS_REG]
 static const uint64_t L2_L2MISC_L2CERRS_RD_EPS_REG = 0x20020010ull;
 
@@ -163,16 +174,6 @@ static const uint32_t L2_L2MISC_L2CERRS_RD_EPS_REG_1_RD_EPS_VALUE_LEN = 12;
 static const uint32_t L2_L2MISC_L2CERRS_RD_EPS_REG_2_RD_EPS_VALUE = 24;
 static const uint32_t L2_L2MISC_L2CERRS_RD_EPS_REG_2_RD_EPS_VALUE_LEN = 12;
 //<< [L2_L2MISC_L2CERRS_RD_EPS_REG]
-// c/reg00003.H
-
-//>> [L2TRA_TR0_CONFIG_4]
-static const uint64_t L2TRA_TR0_CONFIG_4 = 0x20020047ull;
-
-static const uint32_t L2TRA_TR0_CONFIG_4_A = 0;
-static const uint32_t L2TRA_TR0_CONFIG_4_A_LEN = 24;
-static const uint32_t L2TRA_TR0_CONFIG_4_B = 24;
-static const uint32_t L2TRA_TR0_CONFIG_4_B_LEN = 24;
-//<< [L2TRA_TR0_CONFIG_4]
 // c/reg00003.H
 
 //>> [L3_MISC_L3CERRS_ERR_RPT0_REG]

@@ -35,538 +35,6 @@ namespace proc
 #endif
 
 
-//>> PREP_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_TP_TPVSB_FSI_W_SLAVE_A_SLBUS(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_A_SLBUS;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_A_SLBUS;
-#endif
-    return fapi2::getScom(i_target, TP_TPVSB_FSI_W_SLAVE_A_SLBUS, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS]
-
-//>> PUT_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_TP_TPVSB_FSI_W_SLAVE_A_SLBUS(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return fapi2::putScom(i_target, TP_TPVSB_FSI_W_SLAVE_A_SLBUS, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS]
-
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.setBit<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-
-//>> CLEAR_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.clearBit<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return i_data.extractToRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-static inline bool GET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return i_data.getBit<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_FORCE_LBUS_OWNERSHIP]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.setBit<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-
-//>> CLEAR_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.clearBit<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return i_data.extractToRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-static inline bool GET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return i_data.getBit<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_REQUEST_LBUS_OWNERSHIP]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP,
-           TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP,
-           TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return i_data.extractToRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP,
-           TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RELEASE_LBUS_OWNERSHIP]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.setBit<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-
-//>> CLEAR_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.clearBit<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return i_data.extractToRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-static inline bool GET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return i_data.getBit<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_RESET_LBUS_REQUEST]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS,
-           TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS]
-
-//>> SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return o_data.insertFromRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS,
-           TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SLBUS));
-#endif
-    return i_data.extractToRight<TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS,
-           TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SLBUS_LOCK_LBUS_ACCESS]
-
-//>> PREP_[TP_TPVSB_FSI_W_SLAVE_A_SRSIC0]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_TP_TPVSB_FSI_W_SLAVE_A_SRSIC0(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_A_SRSIC0;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[TP_TPVSB_FSI_W_SLAVE_A_SRSIC0]
-
-//>> GET_[TP_TPVSB_FSI_W_SLAVE_A_SRSIC0]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_TP_TPVSB_FSI_W_SLAVE_A_SRSIC0(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_A_SRSIC0;
-#endif
-    return fapi2::getScom(i_target, TP_TPVSB_FSI_W_SLAVE_A_SRSIC0, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[TP_TPVSB_FSI_W_SLAVE_A_SRSIC0]
-
-//>> PUT_[TP_TPVSB_FSI_W_SLAVE_A_SRSIC0]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_TP_TPVSB_FSI_W_SLAVE_A_SRSIC0(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_A_SRSIC0));
-#endif
-    return fapi2::putScom(i_target, TP_TPVSB_FSI_W_SLAVE_A_SRSIC0, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[TP_TPVSB_FSI_W_SLAVE_A_SRSIC0]
-
-
 //>> PREP_[TP_TPVSB_FSI_W_SLAVE_B_SNML]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_TP_TPVSB_FSI_W_SLAVE_B_SNML(const fapi2::Target<K, M, V>& i_target)
@@ -2663,6 +2131,162 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[TP_TPVSB_FSI_W_SLAVE_B_SSTAT_CRC_ERR_CTR]
+
+//>> PREP_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS(
+    const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS]
+
+//>> GET_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS(
+    const fapi2::Target<K, M, V>& i_target, fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS;
+#endif
+    return fapi2::getScom(i_target, TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS]
+
+//>> PUT_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS(
+    const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS));
+#endif
+    return fapi2::putScom(i_target, TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_CRSIS]
+
+
+//>> PREP_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS(
+    const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS]
+
+//>> GET_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS(
+    const fapi2::Target<K, M, V>& i_target, fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS;
+#endif
+    return fapi2::getScom(i_target, TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS]
+
+//>> PUT_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS(
+    const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS));
+#endif
+    return fapi2::putScom(i_target, TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_0_RSIS]
+
+
+//>> PREP_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM(
+    const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM]
+
+//>> GET_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM(
+    const fapi2::Target<K, M, V>& i_target, fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM;
+#endif
+    return fapi2::getScom(i_target, TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM]
+
+//>> PUT_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM(
+    const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM));
+#endif
+    return fapi2::putScom(i_target, TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[TP_TPVSB_FSI_W_SLAVE_CMFSI_INCLUDE_MFSI_A_PIB2OPB_COMP_P_1_CRSIM]
+
 
 //>> PREP_[TP_TPVSB_FSI_W_SPIMC_FSI2SPI_COMPLEMENT_MASK_FSI]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

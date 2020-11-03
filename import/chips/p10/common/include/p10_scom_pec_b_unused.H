@@ -39,80 +39,6 @@ namespace pec
 #endif
 
 
-//>> [IOPFIR]
-static const uint64_t IOPFIR_RW = 0x08011500ull;
-static const uint64_t IOPFIR_WO_AND = 0x08011501ull;
-static const uint64_t IOPFIR_WO_OR = 0x08011502ull;
-
-static const uint32_t IOPFIR_PHY0_ECC_CE_ERR = 0;
-static const uint32_t IOPFIR_PHY0_ECC_UE_ERR = 1;
-static const uint32_t IOPFIR_PHY1_ECC_CE_ERR = 2;
-static const uint32_t IOPFIR_PHY1_ECC_UE_ERR = 3;
-static const uint32_t IOPFIR_SCOM0_ECC_CE = 4;
-static const uint32_t IOPFIR_SCOM0_ECC_UE = 5;
-static const uint32_t IOPFIR_SCOM1_ECC_CE = 6;
-static const uint32_t IOPFIR_SCOM1_ECC_UE = 7;
-static const uint32_t IOPFIR_SCRUB0_ECC_CE = 8;
-static const uint32_t IOPFIR_SCRUB0_ECC_UE = 9;
-static const uint32_t IOPFIR_SCRUB1_ECC_CE = 10;
-static const uint32_t IOPFIR_SCRUB1_ECC_UE = 11;
-//<< [IOPFIR]
-// pec/reg00011.H
-
-//>> [IOPFIRACT1]
-static const uint64_t IOPFIRACT1 = 0x08011507ull;
-
-static const uint32_t IOPFIRACT1_FIR_ACTION1 = 0;
-static const uint32_t IOPFIRACT1_FIR_ACTION1_LEN = 12;
-//<< [IOPFIRACT1]
-// pec/reg00011.H
-
-//>> [IXCS]
-static const uint64_t IXCS = 0x08011510ull;
-//<< [IXCS]
-// pec/reg00011.H
-
-//>> [IXDATA0]
-static const uint64_t IXDATA0 = 0x0801150cull;
-
-static const uint32_t IXDATA0_DATA = 0;
-static const uint32_t IXDATA0_DATA_LEN = 64;
-//<< [IXDATA0]
-// pec/reg00011.H
-
-//>> [IXRADR0]
-static const uint64_t IXRADR0 = 0x0801150aull;
-
-static const uint32_t IXRADR0_ADDR = 0;
-static const uint32_t IXRADR0_ADDR_LEN = 12;
-//<< [IXRADR0]
-// pec/reg00011.H
-
-//>> [PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG]
-static const uint64_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG = 0x0301180aull;
-
-static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_STK0 = 0;
-static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_STK0_LEN = 16;
-static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_STK1 = 16;
-static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_STK1_LEN = 8;
-static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_ENABLE = 24;
-//<< [PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG]
-// pec/reg00011.H
-
-//>> [PIPEDINCTL3]
-static const uint64_t PIPEDINCTL3 = 0x0801151cull;
-
-static const uint32_t PIPEDINCTL3_PHY1_HANDSHAKE_RESULT = 0;
-static const uint32_t PIPEDINCTL3_PHY0_HANDSHAKE_RESULT = 1;
-static const uint32_t PIPEDINCTL3_RESERVED_61_4 = 2;
-static const uint32_t PIPEDINCTL3_RESERVED_61_4_LEN = 58;
-static const uint32_t PIPEDINCTL3_PHY1_DTB = 60;
-static const uint32_t PIPEDINCTL3_PHY1_DTB_LEN = 2;
-static const uint32_t PIPEDINCTL3_PHY0_DTB = 62;
-static const uint32_t PIPEDINCTL3_PHY0_DTB_LEN = 2;
-//<< [PIPEDINCTL3]
-// pec/reg00011.H
-
 //>> [EPS_DBG_TRACE_MODE_REG_2]
 static const uint64_t EPS_DBG_TRACE_MODE_REG_2 = 0x080107cfull;
 
@@ -127,6 +53,73 @@ static const uint32_t EPS_DBG_TRACE_MODE_REG_2_FRZ_COUNT_ON = 21;
 static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK = 22;
 static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK_LEN = 2;
 //<< [EPS_DBG_TRACE_MODE_REG_2]
+// pec/reg00011.H
+
+//>> [PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG]
+static const uint64_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG = 0x0301180aull;
+
+static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_STK0 = 0;
+static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_STK0_LEN = 16;
+static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_STK1 = 16;
+static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_STK1_LEN = 8;
+static const uint32_t PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG_ENABLE = 24;
+//<< [PB_PBCQ_PEPBREGS_NSTQSTKOVR_REG]
+// pec/reg00011.H
+
+//>> [TOP0_IOPFIRMASK]
+static const uint64_t TOP0_IOPFIRMASK_RW = 0x08011103ull;
+static const uint64_t TOP0_IOPFIRMASK_WO_AND = 0x08011104ull;
+static const uint64_t TOP0_IOPFIRMASK_WO_OR = 0x08011105ull;
+
+static const uint32_t TOP0_IOPFIRMASK_PHY0_ECC_CE_MASK = 0;
+static const uint32_t TOP0_IOPFIRMASK_PHY0_ECC_UE_MASK = 1;
+static const uint32_t TOP0_IOPFIRMASK_PHY1_ECC_CE_MASK = 2;
+static const uint32_t TOP0_IOPFIRMASK_PHY1_ECC_UE_MASK = 3;
+static const uint32_t TOP0_IOPFIRMASK_SCOM0_ECC_CE_MASK = 4;
+static const uint32_t TOP0_IOPFIRMASK_SCOM0_ECC_UE_MASK = 5;
+static const uint32_t TOP0_IOPFIRMASK_SCOM1_ECC_CE_MASK = 6;
+static const uint32_t TOP0_IOPFIRMASK_SCOM1_ECC_UE_MASK = 7;
+static const uint32_t TOP0_IOPFIRMASK_SCRUB0_ECC_CE_MASK = 8;
+static const uint32_t TOP0_IOPFIRMASK_SCRUB0_ECC_UE_MASK = 9;
+static const uint32_t TOP0_IOPFIRMASK_SCRUB1_ECC_CE_MASK = 10;
+static const uint32_t TOP0_IOPFIRMASK_SCRUB1_ECC_UE_MASK = 11;
+//<< [TOP0_IOPFIRMASK]
+// pec/reg00011.H
+
+//>> [TOP1_IOPFIR]
+static const uint64_t TOP1_IOPFIR_RW = 0x08011500ull;
+static const uint64_t TOP1_IOPFIR_WO_AND = 0x08011501ull;
+static const uint64_t TOP1_IOPFIR_WO_OR = 0x08011502ull;
+
+static const uint32_t TOP1_IOPFIR_PHY0_ECC_CE_ERR = 0;
+static const uint32_t TOP1_IOPFIR_PHY0_ECC_UE_ERR = 1;
+static const uint32_t TOP1_IOPFIR_PHY1_ECC_CE_ERR = 2;
+static const uint32_t TOP1_IOPFIR_PHY1_ECC_UE_ERR = 3;
+static const uint32_t TOP1_IOPFIR_SCOM0_ECC_CE = 4;
+static const uint32_t TOP1_IOPFIR_SCOM0_ECC_UE = 5;
+static const uint32_t TOP1_IOPFIR_SCOM1_ECC_CE = 6;
+static const uint32_t TOP1_IOPFIR_SCOM1_ECC_UE = 7;
+static const uint32_t TOP1_IOPFIR_SCRUB0_ECC_CE = 8;
+static const uint32_t TOP1_IOPFIR_SCRUB0_ECC_UE = 9;
+static const uint32_t TOP1_IOPFIR_SCRUB1_ECC_CE = 10;
+static const uint32_t TOP1_IOPFIR_SCRUB1_ECC_UE = 11;
+//<< [TOP1_IOPFIR]
+// pec/reg00011.H
+
+//>> [TOP1_IXDATA1]
+static const uint64_t TOP1_IXDATA1 = 0x0801150dull;
+
+static const uint32_t TOP1_IXDATA1_IXDATA1_DATA = 0;
+static const uint32_t TOP1_IXDATA1_IXDATA1_DATA_LEN = 64;
+//<< [TOP1_IXDATA1]
+// pec/reg00011.H
+
+//>> [TOP1_IXRADR1]
+static const uint64_t TOP1_IXRADR1 = 0x0801150bull;
+
+static const uint32_t TOP1_IXRADR1_IXRADR1_ADDR = 0;
+static const uint32_t TOP1_IXRADR1_IXRADR1_ADDR_LEN = 12;
+//<< [TOP1_IXRADR1]
 // pec/reg00011.H
 
 //>>THE END<<

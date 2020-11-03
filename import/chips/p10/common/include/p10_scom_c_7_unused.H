@@ -39,6 +39,20 @@ namespace c
 #endif
 
 
+//>> [P10_20_CPMS_MCCR]
+static const uint64_t CPMS_MCCR = 0x200e0eb0ull; // p10:20,
+
+static const uint32_t P10_20_CPMS_MCCR_EVENT0_SEL = 1;
+static const uint32_t P10_20_CPMS_MCCR_EVENT0_SEL_LEN = 3;
+static const uint32_t P10_20_CPMS_MCCR_COUNT0_OFFSET = 4;
+static const uint32_t P10_20_CPMS_MCCR_COUNT0_OFFSET_LEN = 4;
+static const uint32_t P10_20_CPMS_MCCR_EVENT1_SEL = 9;
+static const uint32_t P10_20_CPMS_MCCR_EVENT1_SEL_LEN = 3;
+static const uint32_t P10_20_CPMS_MCCR_COUNT1_OFFSET = 12;
+static const uint32_t P10_20_CPMS_MCCR_COUNT1_OFFSET_LEN = 4;
+//<< [P10_20_CPMS_MCCR]
+// c/reg00007.H
+
 //>> [EC_LS_LSU_HOLD_OUT_REG0]
 static const uint64_t EC_LS_LSU_HOLD_OUT_REG0 = 0x200206c0ull;
 
@@ -104,6 +118,16 @@ static const uint32_t EC_SD_SDP_SDCR_UNIT_HOLD_OUT1_S_ERR_HOLD_OUT_4 = 15;
 //<< [EC_SD_SDP_SDCR_UNIT_HOLD_OUT1]
 // c/reg00007.H
 
+//>> [L2TRA_TR1_CONFIG_4]
+static const uint64_t L2TRA_TR1_CONFIG_4 = 0x20020087ull;
+
+static const uint32_t L2TRA_TR1_CONFIG_4_A = 0;
+static const uint32_t L2TRA_TR1_CONFIG_4_A_LEN = 24;
+static const uint32_t L2TRA_TR1_CONFIG_4_B = 24;
+static const uint32_t L2TRA_TR1_CONFIG_4_B_LEN = 24;
+//<< [L2TRA_TR1_CONFIG_4]
+// c/reg00007.H
+
 //>> [L2TRA_TR1_TRACE_LO_DATA_REG]
 static const uint64_t L2TRA_TR1_TRACE_LO_DATA_REG = 0x20020081ull;
 
@@ -119,16 +143,6 @@ static const uint32_t L2TRA_TR1_TRACE_LO_DATA_REG_RUNNING = 53;
 static const uint32_t L2TRA_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS = 54;
 static const uint32_t L2TRA_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS_LEN = 10;
 //<< [L2TRA_TR1_TRACE_LO_DATA_REG]
-// c/reg00007.H
-
-//>> [L2TRA_TR1_CONFIG_4]
-static const uint64_t L2TRA_TR1_CONFIG_4 = 0x20020087ull;
-
-static const uint32_t L2TRA_TR1_CONFIG_4_A = 0;
-static const uint32_t L2TRA_TR1_CONFIG_4_A_LEN = 24;
-static const uint32_t L2TRA_TR1_CONFIG_4_B = 24;
-static const uint32_t L2TRA_TR1_CONFIG_4_B_LEN = 24;
-//<< [L2TRA_TR1_CONFIG_4]
 // c/reg00007.H
 
 //>> [NC_NCMISC_NCSCOMS_NCU_STATUS_REG]

@@ -6486,6 +6486,112 @@ fapi_try_exit:
 }
 //<< GET_[PRE_COUNTER_REG_PRE_COUNTER]
 
+//>> PREP_[QME_DB4]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_QME_DB4(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    scomt::last_scom = QME_DB4;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[QME_DB4]
+
+//>> GET_[QME_DB4]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_QME_DB4(const fapi2::Target<K, M, V>& i_target, fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    scomt::last_scom = QME_DB4;
+#endif
+    return fapi2::getScom(i_target, QME_DB4, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[QME_DB4]
+
+//>> PUT_[QME_DB4]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_QME_DB4(const fapi2::Target<K, M, V>& i_target, const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(QME_DB4));
+#endif
+    return fapi2::putScom(i_target, QME_DB4, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[QME_DB4]
+
+
+//>> SET_[P10_20_QME_DB4_MESSAGE_NUMBER]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_QME_DB4_MESSAGE_NUMBER(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(QME_DB4));
+#endif
+    return o_data.insertFromRight<P10_20_QME_DB4_MESSAGE_NUMBER,
+           P10_20_QME_DB4_MESSAGE_NUMBER_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_eq Invalid dial access P10_20_QME_DB4_MESSAGE_NUMBER chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_QME_DB4_MESSAGE_NUMBER]
+
+//>> SET_[P10_20_QME_DB4_MESSAGE_NUMBER]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_QME_DB4_MESSAGE_NUMBER(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(QME_DB4));
+#endif
+    return o_data.insertFromRight<P10_20_QME_DB4_MESSAGE_NUMBER,
+           P10_20_QME_DB4_MESSAGE_NUMBER_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_eq Invalid dial access P10_20_QME_DB4_MESSAGE_NUMBER chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_QME_DB4_MESSAGE_NUMBER]
+
+//>> GET_[P10_20_QME_DB4_MESSAGE_NUMBER]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_QME_DB4_MESSAGE_NUMBER(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(QME_DB4));
+#endif
+    return i_data.extractToRight<P10_20_QME_DB4_MESSAGE_NUMBER,
+           P10_20_QME_DB4_MESSAGE_NUMBER_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_eq Invalid dial access P10_20_QME_DB4_MESSAGE_NUMBER chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_QME_DB4_MESSAGE_NUMBER]
+
 //>> PREP_[XSTOP_INTERRUPT_REG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_XSTOP_INTERRUPT_REG(const fapi2::Target<K, M, V>& i_target)

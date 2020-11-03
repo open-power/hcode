@@ -5488,6 +5488,7 @@ static inline fapi2::buffer<uint64_t>& SET_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF(fapi2:
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(DSTL_DSTLFIRWOF));
 #endif
     return o_data.insertFromRight<DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF,
@@ -5505,6 +5506,7 @@ static inline fapi2::buffer<uint64_t>& SET_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF(const 
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(DSTL_DSTLFIRWOF));
 #endif
     return o_data.insertFromRight<DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF,
@@ -5522,6 +5524,7 @@ static inline fapi2::buffer<uint64_t>& GET_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF(fapi2:
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(DSTL_DSTLFIRWOF));
 #endif
     return i_data.extractToRight<DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF,

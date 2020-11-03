@@ -116,16 +116,6 @@ static const uint32_t CLK_ADJ_02_SKEW_WRAP_SKEWADJ_SET_SWAP_CORE_INC_DEC_CORE_IN
 //<< [CLK_ADJ_02_SKEW_WRAP_SKEWADJ_SET_SWAP_CORE_INC_DEC]
 // eq/reg00005.H
 
-//>> [QMETRA0_TR1_CONFIG_2]
-static const uint64_t QMETRA0_TR1_CONFIG_2 = 0x20018445ull;
-
-static const uint32_t QMETRA0_TR1_CONFIG_2_A = 0;
-static const uint32_t QMETRA0_TR1_CONFIG_2_A_LEN = 24;
-static const uint32_t QMETRA0_TR1_CONFIG_2_B = 24;
-static const uint32_t QMETRA0_TR1_CONFIG_2_B_LEN = 24;
-//<< [QMETRA0_TR1_CONFIG_2]
-// eq/reg00005.H
-
 //>> [EPS_THERM_WSUB_SKITTER_DATA0]
 static const uint64_t EPS_THERM_WSUB_SKITTER_DATA0 = 0x20050019ull;
 //<< [EPS_THERM_WSUB_SKITTER_DATA0]
@@ -185,6 +175,16 @@ static const uint32_t L3TRA3_TR0_CONFIG_5_C_LEN = 24;
 static const uint32_t L3TRA3_TR0_CONFIG_5_D = 24;
 static const uint32_t L3TRA3_TR0_CONFIG_5_D_LEN = 24;
 //<< [L3TRA3_TR0_CONFIG_5]
+// eq/reg00005.H
+
+//>> [QMETRA0_TR1_CONFIG_2]
+static const uint64_t QMETRA0_TR1_CONFIG_2 = 0x20018445ull;
+
+static const uint32_t QMETRA0_TR1_CONFIG_2_A = 0;
+static const uint32_t QMETRA0_TR1_CONFIG_2_A_LEN = 24;
+static const uint32_t QMETRA0_TR1_CONFIG_2_B = 24;
+static const uint32_t QMETRA0_TR1_CONFIG_2_B_LEN = 24;
+//<< [QMETRA0_TR1_CONFIG_2]
 // eq/reg00005.H
 
 //>>THE END<<

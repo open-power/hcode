@@ -39,14 +39,6 @@ namespace mc
 #endif
 
 
-//>> [SCOMFIR_MCFIRACT2]
-static const uint64_t SCOMFIR_MCFIRACT2 = 0x0c010c09ull;
-
-static const uint32_t SCOMFIR_MCFIRACT2_MCFIRACT2_ACTION_2 = 0;
-static const uint32_t SCOMFIR_MCFIRACT2_MCFIRACT2_ACTION_2_LEN = 24;
-//<< [SCOMFIR_MCFIRACT2]
-// mc/reg00000.H
-
 //>> [EPS_DBG_INST1_COND_REG_2]
 static const uint64_t EPS_DBG_INST1_COND_REG_2 = 0x0c0107c2ull;
 
@@ -126,6 +118,14 @@ static const uint64_t SCAN_CAPTUREDR = 0x0c03c000ull;
 static const uint32_t SCAN_CAPTUREDR_SCAN_CAPTUREDR_REG = 0;
 static const uint32_t SCAN_CAPTUREDR_SCAN_CAPTUREDR_REG_LEN = 32;
 //<< [SCAN_CAPTUREDR]
+// mc/reg00000.H
+
+//>> [SCOMFIR_MCFIRACT2]
+static const uint64_t SCOMFIR_MCFIRACT2 = 0x0c010c09ull;
+
+static const uint32_t SCOMFIR_MCFIRACT2_MCFIRACT2_ACTION_2 = 0;
+static const uint32_t SCOMFIR_MCFIRACT2_MCFIRACT2_ACTION_2_LEN = 24;
+//<< [SCOMFIR_MCFIRACT2]
 // mc/reg00000.H
 
 //>> [TRA0_TR0_CONFIG_4]

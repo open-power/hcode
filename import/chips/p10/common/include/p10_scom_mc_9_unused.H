@@ -39,38 +39,6 @@ namespace mc
 #endif
 
 
-//>> [MBA_SCOMFIR_AADR]
-static const uint64_t MBA_SCOMFIR_AADR = 0x0c010f2aull;
-
-static const uint32_t MBA_SCOMFIR_AADR_AADR_DATA = 0;
-static const uint32_t MBA_SCOMFIR_AADR_AADR_DATA_LEN = 64;
-//<< [MBA_SCOMFIR_AADR]
-// mc/reg00009.H
-
-//>> [MBA_SCOMFIR_WATCFG2]
-static const uint64_t MBA_SCOMFIR_WATCFG2 = 0x0c010f8aull;
-
-static const uint32_t MBA_SCOMFIR_WATCFG2_WAT_2_CFG = 0;
-static const uint32_t MBA_SCOMFIR_WATCFG2_WAT_2_CFG_LEN = 60;
-//<< [MBA_SCOMFIR_WATCFG2]
-// mc/reg00009.H
-
-//>> [MBA_SCOMFIR_WATFND]
-static const uint64_t MBA_SCOMFIR_WATFND = 0x0c010f8full;
-
-static const uint32_t MBA_SCOMFIR_WATFND_WAT_FN7_CFG = 0;
-static const uint32_t MBA_SCOMFIR_WATFND_WAT_FN7_CFG_LEN = 22;
-//<< [MBA_SCOMFIR_WATFND]
-// mc/reg00009.H
-
-//>> [SCOMFIR_MCFIRWOF]
-static const uint64_t SCOMFIR_MCFIRWOF = 0x0c010c08ull;
-
-static const uint32_t SCOMFIR_MCFIRWOF_MCFIRWOF_WOF = 0;
-static const uint32_t SCOMFIR_MCFIRWOF_MCFIRWOF_WOF_LEN = 24;
-//<< [SCOMFIR_MCFIRWOF]
-// mc/reg00009.H
-
 //>> [EPS_FIR_CLKSTOP_ON_XSTOP_MASK3]
 static const uint64_t EPS_FIR_CLKSTOP_ON_XSTOP_MASK3 = 0x0c040083ull;
 
@@ -112,12 +80,44 @@ static const uint32_t EPS_THERM_WSUB_SKITTER_FORCE_REG_F_SKITTER_READ = 0;
 //<< [EPS_THERM_WSUB_SKITTER_FORCE_REG]
 // mc/reg00009.H
 
+//>> [MBA_SCOMFIR_AADR]
+static const uint64_t MBA_SCOMFIR_AADR = 0x0c010f2aull;
+
+static const uint32_t MBA_SCOMFIR_AADR_AADR_DATA = 0;
+static const uint32_t MBA_SCOMFIR_AADR_AADR_DATA_LEN = 64;
+//<< [MBA_SCOMFIR_AADR]
+// mc/reg00009.H
+
+//>> [MBA_SCOMFIR_WATCFG2]
+static const uint64_t MBA_SCOMFIR_WATCFG2 = 0x0c010f8aull;
+
+static const uint32_t MBA_SCOMFIR_WATCFG2_WAT_2_CFG = 0;
+static const uint32_t MBA_SCOMFIR_WATCFG2_WAT_2_CFG_LEN = 60;
+//<< [MBA_SCOMFIR_WATCFG2]
+// mc/reg00009.H
+
+//>> [MBA_SCOMFIR_WATFND]
+static const uint64_t MBA_SCOMFIR_WATFND = 0x0c010f8full;
+
+static const uint32_t MBA_SCOMFIR_WATFND_WAT_FN7_CFG = 0;
+static const uint32_t MBA_SCOMFIR_WATFND_WAT_FN7_CFG_LEN = 22;
+//<< [MBA_SCOMFIR_WATFND]
+// mc/reg00009.H
+
 //>> [MULTICAST_GROUP_2]
 static const uint64_t MULTICAST_GROUP_2 = 0x0c0f0002ull;
 
 static const uint32_t MULTICAST_GROUP_2_MULTICAST2_GROUP = 3;
 static const uint32_t MULTICAST_GROUP_2_MULTICAST2_GROUP_LEN = 3;
 //<< [MULTICAST_GROUP_2]
+// mc/reg00009.H
+
+//>> [SCOMFIR_MCFIRWOF]
+static const uint64_t SCOMFIR_MCFIRWOF = 0x0c010c08ull;
+
+static const uint32_t SCOMFIR_MCFIRWOF_MCFIRWOF_WOF = 0;
+static const uint32_t SCOMFIR_MCFIRWOF_MCFIRWOF_WOF_LEN = 24;
+//<< [SCOMFIR_MCFIRWOF]
 // mc/reg00009.H
 
 //>> [TRA0_TR0_CONFIG_0]

@@ -39,6 +39,29 @@ namespace mc
 #endif
 
 
+//>> [EPS_FIR_ANY_LOCAL_ERR_MASK]
+static const uint64_t EPS_FIR_ANY_LOCAL_ERR_MASK = 0x0c040080ull;
+
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_XSTOP_TO_PCB = 0;
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_RECOV_TO_PCB = 1;
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_SPATTN_TO_PCB = 2;
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_LOCAL_XSTOP_TO_PCB = 3;
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_HOSTATTN_TO_PCB = 4;
+//<< [EPS_FIR_ANY_LOCAL_ERR_MASK]
+// mc/reg00003.H
+
+//>> [EPS_THERM_WSUB_SKITTER_DATA1]
+static const uint64_t EPS_THERM_WSUB_SKITTER_DATA1 = 0x0c05001aull;
+//<< [EPS_THERM_WSUB_SKITTER_DATA1]
+// mc/reg00003.H
+
+//>> [LXSTOP_INTERRUPT_REG]
+static const uint64_t LXSTOP_INTERRUPT_REG = 0x0c0f002aull;
+
+static const uint32_t LXSTOP_INTERRUPT_REG_LXSTOP = 0;
+//<< [LXSTOP_INTERRUPT_REG]
+// mc/reg00003.H
+
 //>> [MBA_SCOMFIR_DBG0_SCOM1Q]
 static const uint64_t MBA_SCOMFIR_DBG0_SCOM1Q = 0x0c010f95ull;
 
@@ -53,6 +76,13 @@ static const uint64_t MBA_SCOMFIR_WATCFG1 = 0x0c010f89ull;
 static const uint32_t MBA_SCOMFIR_WATCFG1_WAT_1_CFG = 0;
 static const uint32_t MBA_SCOMFIR_WATCFG1_WAT_1_CFG_LEN = 60;
 //<< [MBA_SCOMFIR_WATCFG1]
+// mc/reg00003.H
+
+//>> [PHASE_COUNTER_RESET]
+static const uint64_t PHASE_COUNTER_RESET = 0x0c030028ull;
+
+static const uint32_t PHASE_COUNTER_RESET_PHASECOUNTER_RESET = 0;
+//<< [PHASE_COUNTER_RESET]
 // mc/reg00003.H
 
 //>> [SCOMFIR_MCERPT0]
@@ -119,36 +149,6 @@ static const uint32_t SCOMFIR_MCWATCNTL2_RESERVED_0_49 = 0;
 static const uint32_t SCOMFIR_MCWATCNTL2_RESERVED_0_49_LEN = 50;
 static const uint32_t SCOMFIR_MCWATCNTL2_CL_EARLY_HANG_MODE = 50;
 //<< [SCOMFIR_MCWATCNTL2]
-// mc/reg00003.H
-
-//>> [EPS_FIR_ANY_LOCAL_ERR_MASK]
-static const uint64_t EPS_FIR_ANY_LOCAL_ERR_MASK = 0x0c040080ull;
-
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_XSTOP_TO_PCB = 0;
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_RECOV_TO_PCB = 1;
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_SPATTN_TO_PCB = 2;
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_LOCAL_XSTOP_TO_PCB = 3;
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_HOSTATTN_TO_PCB = 4;
-//<< [EPS_FIR_ANY_LOCAL_ERR_MASK]
-// mc/reg00003.H
-
-//>> [EPS_THERM_WSUB_SKITTER_DATA1]
-static const uint64_t EPS_THERM_WSUB_SKITTER_DATA1 = 0x0c05001aull;
-//<< [EPS_THERM_WSUB_SKITTER_DATA1]
-// mc/reg00003.H
-
-//>> [LXSTOP_INTERRUPT_REG]
-static const uint64_t LXSTOP_INTERRUPT_REG = 0x0c0f002aull;
-
-static const uint32_t LXSTOP_INTERRUPT_REG_LXSTOP = 0;
-//<< [LXSTOP_INTERRUPT_REG]
-// mc/reg00003.H
-
-//>> [PHASE_COUNTER_RESET]
-static const uint64_t PHASE_COUNTER_RESET = 0x0c030028ull;
-
-static const uint32_t PHASE_COUNTER_RESET_PHASECOUNTER_RESET = 0;
-//<< [PHASE_COUNTER_RESET]
 // mc/reg00003.H
 
 //>> [TRA0_TR0_CONFIG_3]

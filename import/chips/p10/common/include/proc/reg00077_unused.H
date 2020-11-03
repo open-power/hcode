@@ -8059,13 +8059,13 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_OTPROM_SINGLE_OTP_ROM_REG81_REGISTER81]
 
-//>> PREP_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C]
+//>> PREP_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C(const fapi2::Target<K, M, V>& i_target)
+static inline fapi2::ReturnCode PREP_TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER(const fapi2::Target<K, M, V>& i_target)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C;
+    scomt::last_scom = TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER;
 #endif
     return fapi2::current_err;
 #ifdef SCOM_CHECKING
@@ -8073,261 +8073,99 @@ fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
-//<< PREP_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C]
+//<< PREP_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER]
 
-//>> GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C]
+//>> GET_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C(const fapi2::Target<K, M, V>& i_target,
+static inline fapi2::ReturnCode GET_TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER(const fapi2::Target<K, M, V>& i_target,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C;
+    scomt::last_scom = TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER;
 #endif
-    return fapi2::getScom(i_target, TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C, o_data);
+    return fapi2::getScom(i_target, TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER, o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C]
+//<< GET_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER]
 
-//>> PUT_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C]
+//>> PUT_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C(const fapi2::Target<K, M, V>& i_target,
+static inline fapi2::ReturnCode PUT_TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER(const fapi2::Target<K, M, V>& i_target,
         const uint64_t i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER));
 #endif
-    return fapi2::putScom(i_target, TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C, i_data);
+    return fapi2::putScom(i_target, TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER, i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
     return fapi2::current_err;
 #endif
 }
-//<< PUT_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C]
+//<< PUT_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER]
 
 
-//>> SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001(
+//>> SET_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER]
+static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001,
-           TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001_LEN>(i_data);
+    return o_data.insertFromRight<TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER,
+           TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001 chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001]
+//<< SET_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER]
 
-//>> SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001,
-           TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001]
-
-//>> GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
-#endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001,
-           TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PORT_BUSY_001]
-
-//>> SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001,
-           TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001]
-
-//>> SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001,
-           TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001]
-
-//>> GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
-#endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001,
-           TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_PEEK_DATA1_001]
-
-//>> SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-
-//>> SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001(
+//>> SET_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER]
+static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001,
-           1>(i_data);
+    return o_data.insertFromRight<TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER,
+           TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001 chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
+//<< SET_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER]
 
-//>> SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
-#endif
-    return o_data.setBit<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-
-//>> CLEAR_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
-#endif
-    return o_data.clearBit<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-
-//>> GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001(
+//>> GET_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER]
+static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001,
-           1>(o_data);
+    return i_data.extractToRight<TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER,
+           TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001 chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-
-//>> GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
-static inline bool GET_TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C));
-#endif
-    return i_data.getBit<TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_I2CM_I2C_BUSY_REGISTER_C_LBUS_PARITY_ERR1_001]
+//<< GET_[TP_TPCHIP_PIBMEM_CTRL_MAC_ADDRESS_REGISTER_ADDRESS_POINTER]
 
 
 //>>THE END<<

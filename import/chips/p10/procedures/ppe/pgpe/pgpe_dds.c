@@ -29,8 +29,6 @@
 #include "p10_scom_eq.H"
 #include "p10_scom_c.H"
 #include "p10_scom_c_d.H"
-#include "p10_scom_c_2_unused.H"
-#include "p10_scom_c_5_unused.H"
 #include "p10_oci_proc.H"
 
 pgpe_dds_t G_pgpe_dds __attribute__((section (".data_structs")));

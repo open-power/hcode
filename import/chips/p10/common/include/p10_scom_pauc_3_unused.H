@@ -57,6 +57,29 @@ static const uint32_t DL_PPE_WRAP_XIDBGINF_LR_LEN = 32;
 //<< [DL_PPE_WRAP_XIDBGINF]
 // pauc/reg00003.H
 
+//>> [EPS_FIR_ANY_LOCAL_ERR_MASK]
+static const uint64_t EPS_FIR_ANY_LOCAL_ERR_MASK = 0x10040080ull;
+
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_XSTOP_TO_PCB = 0;
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_RECOV_TO_PCB = 1;
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_SPATTN_TO_PCB = 2;
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_LOCAL_XSTOP_TO_PCB = 3;
+static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_HOSTATTN_TO_PCB = 4;
+//<< [EPS_FIR_ANY_LOCAL_ERR_MASK]
+// pauc/reg00003.H
+
+//>> [EPS_THERM_WSUB_SKITTER_DATA1]
+static const uint64_t EPS_THERM_WSUB_SKITTER_DATA1 = 0x1005001aull;
+//<< [EPS_THERM_WSUB_SKITTER_DATA1]
+// pauc/reg00003.H
+
+//>> [LXSTOP_INTERRUPT_REG]
+static const uint64_t LXSTOP_INTERRUPT_REG = 0x100f002aull;
+
+static const uint32_t LXSTOP_INTERRUPT_REG_LXSTOP = 0;
+//<< [LXSTOP_INTERRUPT_REG]
+// pauc/reg00003.H
+
 //>> [PB_CFG_CNPM_REG]
 static const uint64_t PB_CFG_CNPM_REG = 0x1001181full;
 
@@ -151,15 +174,28 @@ static const uint32_t PB_TL_LINK_DATA_01_CFG_REG_DIBDOB01_SP_2_LEN = 2;
 //<< [PB_TL_LINK_DATA_01_CFG_REG]
 // pauc/reg00003.H
 
+//>> [PHASE_COUNTER_RESET]
+static const uint64_t PHASE_COUNTER_RESET = 0x10030028ull;
+
+static const uint32_t PHASE_COUNTER_RESET_PHASECOUNTER_RESET = 0;
+//<< [PHASE_COUNTER_RESET]
+// pauc/reg00003.H
+
 //>> [PHY_PPE_WRAP_MIB_XISGB]
 static const uint64_t PHY_PPE_WRAP_MIB_XISGB = 0x10012c18ull;
 
 static const uint32_t PHY_PPE_WRAP_MIB_XISGB_SGB_STORE_ADDRESS = 0;
 static const uint32_t PHY_PPE_WRAP_MIB_XISGB_SGB_STORE_ADDRESS_LEN = 32;
+static const uint32_t PHY_PPE_WRAP_MIB_XISGB_STORE_ADDRESS = 0; // p10:20,
+static const uint32_t PHY_PPE_WRAP_MIB_XISGB_STORE_ADDRESS_LEN = 32;
 static const uint32_t PHY_PPE_WRAP_MIB_XISGB_MEM_IMPRECISE_ERROR_PENDING = 35;
+static const uint32_t PHY_PPE_WRAP_MIB_XISGB_PPE_XIMEM_MEM_IMPRECISE_ERROR_PENDING = 35; // p10:20,
 static const uint32_t PHY_PPE_WRAP_MIB_XISGB_SGB_BYTE_VALID = 36;
 static const uint32_t PHY_PPE_WRAP_MIB_XISGB_SGB_BYTE_VALID_LEN = 4;
+// ERROR Duplicate Dial         static const uint32_t PHY_PPE_WRAP_MIB_XISGB_SGB_BYTE_VALID = 36; // p10:20,
+// ERROR Duplicate Dial         static const uint32_t PHY_PPE_WRAP_MIB_XISGB_SGB_BYTE_VALID_LEN = 4;
 static const uint32_t PHY_PPE_WRAP_MIB_XISGB_SGB_FLUSH_PENDING = 63;
+// ERROR Duplicate Dial         static const uint32_t PHY_PPE_WRAP_MIB_XISGB_SGB_FLUSH_PENDING = 63; // p10:20,
 //<< [PHY_PPE_WRAP_MIB_XISGB]
 // pauc/reg00003.H
 
@@ -169,6 +205,16 @@ static const uint64_t PHY_PPE_WRAP_SCOM_WORK_REG1 = 0x10012c21ull;
 static const uint32_t PHY_PPE_WRAP_SCOM_WORK_REG1_SCOM_PPE_WORK1 = 0;
 static const uint32_t PHY_PPE_WRAP_SCOM_WORK_REG1_SCOM_PPE_WORK1_LEN = 32;
 //<< [PHY_PPE_WRAP_SCOM_WORK_REG1]
+// pauc/reg00003.H
+
+//>> [TRA0_TR0_CONFIG_3]
+static const uint64_t TRA0_TR0_CONFIG_3 = 0x10010406ull;
+
+static const uint32_t TRA0_TR0_CONFIG_3_C = 0;
+static const uint32_t TRA0_TR0_CONFIG_3_C_LEN = 24;
+static const uint32_t TRA0_TR0_CONFIG_3_D = 24;
+static const uint32_t TRA0_TR0_CONFIG_3_D_LEN = 24;
+//<< [TRA0_TR0_CONFIG_3]
 // pauc/reg00003.H
 
 //>> [TXIRLM_REGS_SPARE_MODE_PB]
@@ -191,46 +237,6 @@ static const uint64_t TXIRLM_REGS_TX_IMPCAL_SWO7_PB = 0x800f65c010012c3full;
 static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO7_PB_TX_ZCAL_SWO_IMP_CNTL_1R_1XP_16_31 = 48;
 static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO7_PB_TX_ZCAL_SWO_IMP_CNTL_1R_1XP_16_31_LEN = 16;
 //<< [TXIRLM_REGS_TX_IMPCAL_SWO7_PB]
-// pauc/reg00003.H
-
-//>> [EPS_FIR_ANY_LOCAL_ERR_MASK]
-static const uint64_t EPS_FIR_ANY_LOCAL_ERR_MASK = 0x10040080ull;
-
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_XSTOP_TO_PCB = 0;
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_RECOV_TO_PCB = 1;
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_SPATTN_TO_PCB = 2;
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_LOCAL_XSTOP_TO_PCB = 3;
-static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_HOSTATTN_TO_PCB = 4;
-//<< [EPS_FIR_ANY_LOCAL_ERR_MASK]
-// pauc/reg00003.H
-
-//>> [EPS_THERM_WSUB_SKITTER_DATA1]
-static const uint64_t EPS_THERM_WSUB_SKITTER_DATA1 = 0x1005001aull;
-//<< [EPS_THERM_WSUB_SKITTER_DATA1]
-// pauc/reg00003.H
-
-//>> [LXSTOP_INTERRUPT_REG]
-static const uint64_t LXSTOP_INTERRUPT_REG = 0x100f002aull;
-
-static const uint32_t LXSTOP_INTERRUPT_REG_LXSTOP = 0;
-//<< [LXSTOP_INTERRUPT_REG]
-// pauc/reg00003.H
-
-//>> [PHASE_COUNTER_RESET]
-static const uint64_t PHASE_COUNTER_RESET = 0x10030028ull;
-
-static const uint32_t PHASE_COUNTER_RESET_PHASECOUNTER_RESET = 0;
-//<< [PHASE_COUNTER_RESET]
-// pauc/reg00003.H
-
-//>> [TRA0_TR0_CONFIG_3]
-static const uint64_t TRA0_TR0_CONFIG_3 = 0x10010406ull;
-
-static const uint32_t TRA0_TR0_CONFIG_3_C = 0;
-static const uint32_t TRA0_TR0_CONFIG_3_C_LEN = 24;
-static const uint32_t TRA0_TR0_CONFIG_3_D = 24;
-static const uint32_t TRA0_TR0_CONFIG_3_D_LEN = 24;
-//<< [TRA0_TR0_CONFIG_3]
 // pauc/reg00003.H
 
 //>>THE END<<

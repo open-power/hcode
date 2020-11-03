@@ -39,49 +39,6 @@ namespace mc
 #endif
 
 
-//>> [MBA_SCOMFIR_WATMSKA1]
-static const uint64_t MBA_SCOMFIR_WATMSKA1 = 0x0c010f81ull;
-
-static const uint32_t MBA_SCOMFIR_WATMSKA1_WAT_MASK_A1 = 0;
-static const uint32_t MBA_SCOMFIR_WATMSKA1_WAT_MASK_A1_LEN = 44;
-//<< [MBA_SCOMFIR_WATMSKA1]
-// mc/reg00004.H
-
-//>> [REGION_CCFLUSH_STATUS]
-static const uint64_t REGION_CCFLUSH_STATUS = 0x0c030016ull;
-
-static const uint32_t REGION_CCFLUSH_STATUS_REGION_CCFLUSH = 4;
-static const uint32_t REGION_CCFLUSH_STATUS_REGION_CCFLUSH_LEN = 15;
-//<< [REGION_CCFLUSH_STATUS]
-// mc/reg00004.H
-
-//>> [EPS_THERM_WSUB_INJECT_REG]
-static const uint64_t EPS_THERM_WSUB_INJECT_REG = 0x0c050011ull;
-
-static const uint32_t EPS_THERM_WSUB_INJECT_REG_TRIP = 0;
-static const uint32_t EPS_THERM_WSUB_INJECT_REG_TRIP_LEN = 2;
-static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE = 2;
-static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE_LEN = 2;
-//<< [EPS_THERM_WSUB_INJECT_REG]
-// mc/reg00004.H
-
-//>> [PCB_OPCG_GO]
-static const uint64_t PCB_OPCG_GO = 0x0c030020ull;
-
-static const uint32_t PCB_OPCG_GO_PCB_OPCGGO = 0;
-//<< [PCB_OPCG_GO]
-// mc/reg00004.H
-
-//>> [TRA1_TR0_CONFIG_2]
-static const uint64_t TRA1_TR0_CONFIG_2 = 0x0c010485ull;
-
-static const uint32_t TRA1_TR0_CONFIG_2_A = 0;
-static const uint32_t TRA1_TR0_CONFIG_2_A_LEN = 24;
-static const uint32_t TRA1_TR0_CONFIG_2_B = 24;
-static const uint32_t TRA1_TR0_CONFIG_2_B_LEN = 24;
-//<< [TRA1_TR0_CONFIG_2]
-// mc/reg00004.H
-
 //>> [EPS_FIR_LOCAL_ACTION2]
 static const uint64_t EPS_FIR_LOCAL_ACTION2 = 0x0c040109ull;
 
@@ -150,6 +107,49 @@ static const uint32_t EPS_FIR_LOCAL_ACTION2_61 = 61;
 static const uint32_t EPS_FIR_LOCAL_ACTION2_62 = 62;
 static const uint32_t EPS_FIR_LOCAL_ACTION2_63 = 63;
 //<< [EPS_FIR_LOCAL_ACTION2]
+// mc/reg00004.H
+
+//>> [EPS_THERM_WSUB_INJECT_REG]
+static const uint64_t EPS_THERM_WSUB_INJECT_REG = 0x0c050011ull;
+
+static const uint32_t EPS_THERM_WSUB_INJECT_REG_TRIP = 0;
+static const uint32_t EPS_THERM_WSUB_INJECT_REG_TRIP_LEN = 2;
+static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE = 2;
+static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE_LEN = 2;
+//<< [EPS_THERM_WSUB_INJECT_REG]
+// mc/reg00004.H
+
+//>> [MBA_SCOMFIR_WATMSKA1]
+static const uint64_t MBA_SCOMFIR_WATMSKA1 = 0x0c010f81ull;
+
+static const uint32_t MBA_SCOMFIR_WATMSKA1_WAT_MASK_A1 = 0;
+static const uint32_t MBA_SCOMFIR_WATMSKA1_WAT_MASK_A1_LEN = 44;
+//<< [MBA_SCOMFIR_WATMSKA1]
+// mc/reg00004.H
+
+//>> [PCB_OPCG_GO]
+static const uint64_t PCB_OPCG_GO = 0x0c030020ull;
+
+static const uint32_t PCB_OPCG_GO_PCB_OPCGGO = 0;
+//<< [PCB_OPCG_GO]
+// mc/reg00004.H
+
+//>> [REGION_CCFLUSH_STATUS]
+static const uint64_t REGION_CCFLUSH_STATUS = 0x0c030016ull;
+
+static const uint32_t REGION_CCFLUSH_STATUS_REGION_CCFLUSH = 4;
+static const uint32_t REGION_CCFLUSH_STATUS_REGION_CCFLUSH_LEN = 15;
+//<< [REGION_CCFLUSH_STATUS]
+// mc/reg00004.H
+
+//>> [TRA1_TR0_CONFIG_2]
+static const uint64_t TRA1_TR0_CONFIG_2 = 0x0c010485ull;
+
+static const uint32_t TRA1_TR0_CONFIG_2_A = 0;
+static const uint32_t TRA1_TR0_CONFIG_2_A_LEN = 24;
+static const uint32_t TRA1_TR0_CONFIG_2_B = 24;
+static const uint32_t TRA1_TR0_CONFIG_2_B_LEN = 24;
+//<< [TRA1_TR0_CONFIG_2]
 // mc/reg00004.H
 
 //>>THE END<<

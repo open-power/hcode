@@ -41,6 +41,7 @@ static inline fapi2::ReturnCode PREP_AME_AME0_MISC_PMU_CONFIG1(const fapi2::Targ
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     scomt::last_scom = AME_AME0_MISC_PMU_CONFIG1;
 #endif
     return fapi2::current_err;
@@ -58,6 +59,7 @@ static inline fapi2::ReturnCode GET_AME_AME0_MISC_PMU_CONFIG1(const fapi2::Targe
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     scomt::last_scom = AME_AME0_MISC_PMU_CONFIG1;
 #endif
     return fapi2::getScom(i_target, AME_AME0_MISC_PMU_CONFIG1, o_data);
@@ -75,6 +77,7 @@ static inline fapi2::ReturnCode PUT_AME_AME0_MISC_PMU_CONFIG1(const fapi2::Targe
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return fapi2::putScom(i_target, AME_AME0_MISC_PMU_CONFIG1, i_data);
@@ -91,6 +94,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME0_MISC_PMU_CONFIG1_0_SEL(fapi2
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return o_data.insertFromRight<AME_AME0_MISC_PMU_CONFIG1_0_SEL,
@@ -108,6 +112,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME0_MISC_PMU_CONFIG1_0_SEL(const
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return o_data.insertFromRight<AME_AME0_MISC_PMU_CONFIG1_0_SEL,
@@ -125,6 +130,7 @@ static inline fapi2::buffer<uint64_t>& GET_AME_AME0_MISC_PMU_CONFIG1_0_SEL(fapi2
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return i_data.extractToRight<AME_AME0_MISC_PMU_CONFIG1_0_SEL,
@@ -142,6 +148,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME0_MISC_PMU_CONFIG1_1_SEL(fapi2
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return o_data.insertFromRight<AME_AME0_MISC_PMU_CONFIG1_1_SEL,
@@ -159,6 +166,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME0_MISC_PMU_CONFIG1_1_SEL(const
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return o_data.insertFromRight<AME_AME0_MISC_PMU_CONFIG1_1_SEL,
@@ -176,6 +184,7 @@ static inline fapi2::buffer<uint64_t>& GET_AME_AME0_MISC_PMU_CONFIG1_1_SEL(fapi2
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return i_data.extractToRight<AME_AME0_MISC_PMU_CONFIG1_1_SEL,
@@ -193,6 +202,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME0_MISC_PMU_CONFIG1_2_SEL(fapi2
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return o_data.insertFromRight<AME_AME0_MISC_PMU_CONFIG1_2_SEL,
@@ -210,6 +220,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME0_MISC_PMU_CONFIG1_2_SEL(const
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return o_data.insertFromRight<AME_AME0_MISC_PMU_CONFIG1_2_SEL,
@@ -227,6 +238,7 @@ static inline fapi2::buffer<uint64_t>& GET_AME_AME0_MISC_PMU_CONFIG1_2_SEL(fapi2
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return i_data.extractToRight<AME_AME0_MISC_PMU_CONFIG1_2_SEL,
@@ -244,6 +256,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME0_MISC_PMU_CONFIG1_3_SEL(fapi2
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return o_data.insertFromRight<AME_AME0_MISC_PMU_CONFIG1_3_SEL,
@@ -261,6 +274,7 @@ static inline fapi2::buffer<uint64_t>& SET_AME_AME0_MISC_PMU_CONFIG1_3_SEL(const
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return o_data.insertFromRight<AME_AME0_MISC_PMU_CONFIG1_3_SEL,
@@ -278,6 +292,7 @@ static inline fapi2::buffer<uint64_t>& GET_AME_AME0_MISC_PMU_CONFIG1_3_SEL(fapi2
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(AME_AME0_MISC_PMU_CONFIG1));
 #endif
     return i_data.extractToRight<AME_AME0_MISC_PMU_CONFIG1_3_SEL,
@@ -71031,324 +71046,6 @@ fapi_try_exit:
 }
 //<< GET_[OTL1_MISC_TLX_CREDIT_STATUS_DCP3_COUNT]
 
-//>> PREP_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
-
-//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0;
-#endif
-    return fapi2::getScom(i_target, XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
-
-//>> PUT_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return fapi2::putScom(i_target, XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
-
-
-//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
-static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL,
-           XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
-
-//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
-static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL,
-           XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
-
-//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
-static inline fapi2::buffer<uint64_t>& GET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return i_data.extractToRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL,
-           XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
-
-//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-
-//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-
-//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return o_data.setBit<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-
-//>> CLEAR_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-static inline fapi2::buffer<uint64_t>& CLEAR_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return o_data.clearBit<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-
-//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-static inline fapi2::buffer<uint64_t>& GET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return i_data.extractToRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-
-//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-static inline bool GET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
-#endif
-    return i_data.getBit<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
-
-//>> PREP_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_XSL_MAIN_XSLOP_VLOG_RGS_ATD(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = XSL_MAIN_XSLOP_VLOG_RGS_ATD;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
-
-//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_XSL_MAIN_XSLOP_VLOG_RGS_ATD(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = XSL_MAIN_XSLOP_VLOG_RGS_ATD;
-#endif
-    return fapi2::getScom(i_target, XSL_MAIN_XSLOP_VLOG_RGS_ATD, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
-
-//>> PUT_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_XSL_MAIN_XSLOP_VLOG_RGS_ATD(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_ATD));
-#endif
-    return fapi2::putScom(i_target, XSL_MAIN_XSLOP_VLOG_RGS_ATD, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
-
-
-//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
-static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL(fapi2::buffer<uint64_t>& i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_ATD));
-#endif
-    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL,
-           XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
-
-//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
-static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_ATD));
-#endif
-    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL,
-           XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
-
-//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
-static inline fapi2::buffer<uint64_t>& GET_XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL(fapi2::buffer<uint64_t>& i_data,
-        uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_ATD));
-#endif
-    return i_data.extractToRight<XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL,
-           XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
-
 //>> PREP_[XSL_MAIN_WRAP_ERROR_2]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_XSL_MAIN_WRAP_ERROR_2(const fapi2::Target<K, M, V>& i_target)
@@ -72379,6 +72076,324 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[XSL_MAIN_WRAP_ERROR_2_INVLD_PEHANDLE_ATL]
+
+//>> PREP_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_XSL_MAIN_XSLOP_VLOG_RGS_ATD(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = XSL_MAIN_XSLOP_VLOG_RGS_ATD;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
+
+//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_XSL_MAIN_XSLOP_VLOG_RGS_ATD(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = XSL_MAIN_XSLOP_VLOG_RGS_ATD;
+#endif
+    return fapi2::getScom(i_target, XSL_MAIN_XSLOP_VLOG_RGS_ATD, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
+
+//>> PUT_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_XSL_MAIN_XSLOP_VLOG_RGS_ATD(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_ATD));
+#endif
+    return fapi2::putScom(i_target, XSL_MAIN_XSLOP_VLOG_RGS_ATD, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[XSL_MAIN_XSLOP_VLOG_RGS_ATD]
+
+
+//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
+static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_ATD));
+#endif
+    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL,
+           XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
+
+//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
+static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_ATD));
+#endif
+    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL,
+           XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
+
+//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
+static inline fapi2::buffer<uint64_t>& GET_XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_ATD));
+#endif
+    return i_data.extractToRight<XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL,
+           XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_ATD_XSL_ATD_DIAL]
+
+//>> PREP_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
+
+//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0;
+#endif
+    return fapi2::getScom(i_target, XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
+
+//>> PUT_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return fapi2::putScom(i_target, XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0]
+
+
+//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
+static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL,
+           XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
+
+//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
+static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL,
+           XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
+
+//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
+static inline fapi2::buffer<uint64_t>& GET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return i_data.extractToRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL,
+           XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_ADDR_DIAL]
+
+//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+
+//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return o_data.insertFromRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+
+//>> SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+static inline fapi2::buffer<uint64_t>& SET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return o_data.setBit<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+
+//>> CLEAR_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+static inline fapi2::buffer<uint64_t>& CLEAR_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return o_data.clearBit<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+
+//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+static inline fapi2::buffer<uint64_t>& GET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return i_data.extractToRight<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+
+//>> GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
+static inline bool GET_XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0));
+#endif
+    return i_data.getBit<XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_pau Invalid dial access XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[XSL_MAIN_XSLOP_VLOG_RGS_OSL_SPAP_A0_VALID_DIAL]
 
 //>> PREP_[XTS_ATSD_HYP4]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

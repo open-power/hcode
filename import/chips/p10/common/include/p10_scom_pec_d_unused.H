@@ -39,28 +39,15 @@ namespace pec
 #endif
 
 
-//>> [IOPFIRACT0]
-static const uint64_t IOPFIRACT0 = 0x08011506ull;
+//>> [CC_ATOMIC_LOCK_REG]
+static const uint64_t CC_ATOMIC_LOCK_REG = 0x080303ffull;
 
-static const uint32_t IOPFIRACT0_FIR_ACTION0 = 0;
-static const uint32_t IOPFIRACT0_FIR_ACTION0_LEN = 12;
-//<< [IOPFIRACT0]
-// pec/reg00013.H
-
-//>> [IXDATA1]
-static const uint64_t IXDATA1 = 0x0801150dull;
-
-static const uint32_t IXDATA1_DATA = 0;
-static const uint32_t IXDATA1_DATA_LEN = 64;
-//<< [IXDATA1]
-// pec/reg00013.H
-
-//>> [IXRADR1]
-static const uint64_t IXRADR1 = 0x0801150bull;
-
-static const uint32_t IXRADR1_ADDR = 0;
-static const uint32_t IXRADR1_ADDR_LEN = 12;
-//<< [IXRADR1]
+static const uint32_t CC_ATOMIC_LOCK_REG_LOCK_ENABLE = 0;
+static const uint32_t CC_ATOMIC_LOCK_REG_ID = 1;
+static const uint32_t CC_ATOMIC_LOCK_REG_ID_LEN = 4;
+static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY = 8;
+static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY_LEN = 8;
+//<< [CC_ATOMIC_LOCK_REG]
 // pec/reg00013.H
 
 //>> [PB_PBCQ_PEPBREGS_DRPPRICTL_REG]
@@ -79,43 +66,6 @@ static const uint32_t PB_PBCQ_PEPBREGS_DRPPRICTL_REG_RTYDROPDIVIDER_LEN = 3;
 //<< [PB_PBCQ_PEPBREGS_DRPPRICTL_REG]
 // pec/reg00013.H
 
-//>> [PIPEDINCTL2]
-static const uint64_t PIPEDINCTL2 = 0x0801151bull;
-
-static const uint32_t PIPEDINCTL2_RESERVED_63_0 = 0;
-static const uint32_t PIPEDINCTL2_RESERVED_63_0_LEN = 64;
-//<< [PIPEDINCTL2]
-// pec/reg00013.H
-
-//>> [PIPEDOUTCTL1]
-static const uint64_t PIPEDOUTCTL1 = 0x08011515ull;
-
-static const uint32_t PIPEDOUTCTL1_RESERVED_63_31 = 0;
-static const uint32_t PIPEDOUTCTL1_RESERVED_63_31_LEN = 33;
-static const uint32_t PIPEDOUTCTL1_RESERVED_30 = 33;
-static const uint32_t PIPEDOUTCTL1_PHY1_MPLLB_FORCE_EN = 34;
-static const uint32_t PIPEDOUTCTL1_RESERVED_28 = 35;
-static const uint32_t PIPEDOUTCTL1_PHY1_MPLLA_FORCE_EN = 36;
-static const uint32_t PIPEDOUTCTL1_RESERVED_26 = 37;
-static const uint32_t PIPEDOUTCTL1_PHY0_MPLLB_FORCE_EN = 38;
-static const uint32_t PIPEDOUTCTL1_RESERVED_24 = 39;
-static const uint32_t PIPEDOUTCTL1_PHY0_MPLLA_FORCE_EN = 40;
-static const uint32_t PIPEDOUTCTL1_RESERVED_22_0 = 41;
-static const uint32_t PIPEDOUTCTL1_RESERVED_22_0_LEN = 23;
-//<< [PIPEDOUTCTL1]
-// pec/reg00013.H
-
-//>> [CC_ATOMIC_LOCK_REG]
-static const uint64_t CC_ATOMIC_LOCK_REG = 0x080303ffull;
-
-static const uint32_t CC_ATOMIC_LOCK_REG_LOCK_ENABLE = 0;
-static const uint32_t CC_ATOMIC_LOCK_REG_ID = 1;
-static const uint32_t CC_ATOMIC_LOCK_REG_ID_LEN = 4;
-static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY = 8;
-static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY_LEN = 8;
-//<< [CC_ATOMIC_LOCK_REG]
-// pec/reg00013.H
-
 //>> [PRIMARY_ADDRESS_REG]
 static const uint64_t PRIMARY_ADDRESS_REG = 0x080f0000ull;
 
@@ -130,6 +80,27 @@ static const uint64_t SCAN_UPDATEDR_LONG = 0x0803b000ull;
 static const uint32_t SCAN_UPDATEDR_LONG_SCAN_UPDATEDR_LONG_REG = 0;
 static const uint32_t SCAN_UPDATEDR_LONG_SCAN_UPDATEDR_LONG_REG_LEN = 32;
 //<< [SCAN_UPDATEDR_LONG]
+// pec/reg00013.H
+
+//>> [TOP0_IXCS]
+static const uint64_t TOP0_IXCS = 0x08011110ull;
+//<< [TOP0_IXCS]
+// pec/reg00013.H
+
+//>> [TOP1_IXDATA0]
+static const uint64_t TOP1_IXDATA0 = 0x0801150cull;
+
+static const uint32_t TOP1_IXDATA0_IXDATA0_DATA = 0;
+static const uint32_t TOP1_IXDATA0_IXDATA0_DATA_LEN = 64;
+//<< [TOP1_IXDATA0]
+// pec/reg00013.H
+
+//>> [TOP1_IXRADR0]
+static const uint64_t TOP1_IXRADR0 = 0x0801150aull;
+
+static const uint32_t TOP1_IXRADR0_IXRADR0_ADDR = 0;
+static const uint32_t TOP1_IXRADR0_IXRADR0_ADDR_LEN = 12;
+//<< [TOP1_IXRADR0]
 // pec/reg00013.H
 
 //>> [TRA0_TR0_CONFIG_9]

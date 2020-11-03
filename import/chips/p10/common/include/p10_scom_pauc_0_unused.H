@@ -39,76 +39,6 @@ namespace pauc
 #endif
 
 
-//>> [PB_MAILBOX_20_REG]
-static const uint64_t PB_MAILBOX_20_REG = 0x10011834ull;
-//<< [PB_MAILBOX_20_REG]
-// pauc/reg00000.H
-
-//>> [PB_MAILBOX_21_REG]
-static const uint64_t PB_MAILBOX_21_REG = 0x10011835ull;
-//<< [PB_MAILBOX_21_REG]
-// pauc/reg00000.H
-
-//>> [PHY_PPE_WRAP_XIRAMDBG]
-static const uint64_t PHY_PPE_WRAP_XIRAMDBG = 0x10012c13ull;
-
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_HS = 0;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_HC = 1;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_HC_LEN = 3;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_HCP = 4;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_RIP = 5;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_SIP = 6;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_TRAP = 7;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_IAC = 8;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_NULL_MSR_SIBRC = 9;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_NULL_MSR_SIBRC_LEN = 3;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_RDAC = 12;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_WDAC = 13;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_NULL_MSR_WE = 14;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_TRH = 15;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_SMS = 16;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_SMS_LEN = 4;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_NULL_MSR_LP = 20;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_EP = 21;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_PTR = 24;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_ST = 25;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_MFE = 28;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_MCS = 29;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_MCS_LEN = 3;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_PPE_XIRAMRA_SPRG0 = 32;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_PPE_XIRAMRA_SPRG0_LEN = 32;
-//<< [PHY_PPE_WRAP_XIRAMDBG]
-// pauc/reg00000.H
-
-//>> [PHY_PPE_WRAP_XIRAMRA]
-static const uint64_t PHY_PPE_WRAP_XIRAMRA = 0x10012c11ull;
-
-static const uint32_t PHY_PPE_WRAP_XIRAMRA_XCR = 1;
-static const uint32_t PHY_PPE_WRAP_XIRAMRA_XCR_LEN = 3;
-static const uint32_t PHY_PPE_WRAP_XIRAMRA_RAMRA_SPRG0 = 32;
-static const uint32_t PHY_PPE_WRAP_XIRAMRA_RAMRA_SPRG0_LEN = 32;
-//<< [PHY_PPE_WRAP_XIRAMRA]
-// pauc/reg00000.H
-
-//>> [TXIRLM_REGS_TX_IMPCAL_SWO9_PB]
-static const uint64_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB = 0x800f75c010012c3full;
-
-static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_1R_4XP = 48;
-static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_1R_4XP_LEN = 10;
-static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_1R_4XN = 58;
-static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_2R_1XP = 59;
-static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_2R_1XN = 60;
-//<< [TXIRLM_REGS_TX_IMPCAL_SWO9_PB]
-// pauc/reg00000.H
-
-//>> [TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB]
-static const uint64_t TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB = 0x800f99c010012c3full;
-
-static const uint32_t TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB_ZCAL_FIR_ERR_INJ = 48;
-static const uint32_t TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB_ZCAL_FIR_ERR_INJ_LEN = 2;
-//<< [TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB]
-// pauc/reg00000.H
-
 //>> [EPS_DBG_INST1_COND_REG_2]
 static const uint64_t EPS_DBG_INST1_COND_REG_2 = 0x100107c2ull;
 
@@ -182,6 +112,91 @@ static const uint32_t EPS_THERM_WSUB_DTS_TRC_RESULT_DTS_1_RESULT_LEN = 16;
 //<< [EPS_THERM_WSUB_DTS_TRC_RESULT]
 // pauc/reg00000.H
 
+//>> [PB_MAILBOX_20_REG]
+static const uint64_t PB_MAILBOX_20_REG = 0x10011834ull;
+//<< [PB_MAILBOX_20_REG]
+// pauc/reg00000.H
+
+//>> [PB_MAILBOX_21_REG]
+static const uint64_t PB_MAILBOX_21_REG = 0x10011835ull;
+//<< [PB_MAILBOX_21_REG]
+// pauc/reg00000.H
+
+//>> [PB_PSAVE01_MISC_CFG]
+static const uint64_t PB_PSAVE01_MISC_CFG = 0x10011815ull;
+
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_LUC = 0;
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_LUC_LEN = 8;
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_HUC = 8;
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_HUC_LEN = 8;
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_LUT = 16;
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_LUT_LEN = 5;
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_HUT = 21;
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_HUT_LEN = 5;
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_SPARE = 26;
+static const uint32_t PB_PSAVE01_MISC_CFG_HALF_SPARE_LEN = 2;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_LUC = 28;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_LUC_LEN = 8;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_HUC = 36;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_HUC_LEN = 8;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_LUT = 44;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_LUT_LEN = 5;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_HUT = 49;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_HUT_LEN = 5;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_SPARE = 54;
+static const uint32_t PB_PSAVE01_MISC_CFG_QTR_SPARE_LEN = 2;
+static const uint32_t PB_PSAVE01_MISC_CFG_WSIZE = 56;
+static const uint32_t PB_PSAVE01_MISC_CFG_WSIZE_LEN = 3;
+//<< [PB_PSAVE01_MISC_CFG]
+// pauc/reg00000.H
+
+//>> [PHY_PPE_WRAP_XIRAMDBG]
+static const uint64_t PHY_PPE_WRAP_XIRAMDBG = 0x10012c13ull;
+
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_HS = 0;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_HC = 1;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_HC_LEN = 3;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_HCP = 4;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_RIP = 5;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_SIP = 6;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_TRAP = 7;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_IAC = 8;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_NULL_MSR_SIBRC = 9;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_NULL_MSR_SIBRC_LEN = 3;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_RDAC = 12;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_WDAC = 13;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_NULL_MSR_WE = 14;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_TRH = 15;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_SMS = 16;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_SMS_LEN = 4;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_NULL_MSR_LP = 20;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_EP = 21;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_PTR = 24;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_ST = 25;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_MFE = 28;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_MCS = 29;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_MCS_LEN = 3;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_PPE_XIRAMRA_SPRG0 = 32;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_PPE_XIRAMRA_SPRG0_LEN = 32;
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_SPRG0 = 32; // p10:20,
+static const uint32_t PHY_PPE_WRAP_XIRAMDBG_SPRG0_LEN = 32;
+//<< [PHY_PPE_WRAP_XIRAMDBG]
+// pauc/reg00000.H
+
+//>> [PHY_PPE_WRAP_XIRAMRA]
+static const uint64_t PHY_PPE_WRAP_XIRAMRA = 0x10012c11ull;
+
+static const uint32_t PHY_PPE_WRAP_XIRAMRA_XCR = 1;
+static const uint32_t PHY_PPE_WRAP_XIRAMRA_XCR_LEN = 3;
+static const uint32_t PHY_PPE_WRAP_XIRAMRA_PPE_XIXCR_XCR = 1; // p10:20,
+static const uint32_t PHY_PPE_WRAP_XIRAMRA_PPE_XIXCR_XCR_LEN = 3;
+static const uint32_t PHY_PPE_WRAP_XIRAMRA_RAMRA_SPRG0 = 32;
+static const uint32_t PHY_PPE_WRAP_XIRAMRA_RAMRA_SPRG0_LEN = 32;
+static const uint32_t PHY_PPE_WRAP_XIRAMRA_SPRG0 = 32; // p10:20,
+static const uint32_t PHY_PPE_WRAP_XIRAMRA_SPRG0_LEN = 32;
+//<< [PHY_PPE_WRAP_XIRAMRA]
+// pauc/reg00000.H
+
 //>> [SCAN_CAPTUREDR]
 static const uint64_t SCAN_CAPTUREDR = 0x1003c000ull;
 
@@ -217,32 +232,23 @@ static const uint32_t TRA1_TR0_TRACE_LO_DATA_REG_HOLD_ADDRESS_LEN = 10;
 //<< [TRA1_TR0_TRACE_LO_DATA_REG]
 // pauc/reg00000.H
 
-//>> [PB_PSAVE01_MISC_CFG]
-static const uint64_t PB_PSAVE01_MISC_CFG = 0x10011815ull;
+//>> [TXIRLM_REGS_TX_IMPCAL_SWO9_PB]
+static const uint64_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB = 0x800f75c010012c3full;
 
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_LUC = 0;
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_LUC_LEN = 8;
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_HUC = 8;
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_HUC_LEN = 8;
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_LUT = 16;
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_LUT_LEN = 5;
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_HUT = 21;
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_HUT_LEN = 5;
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_SPARE = 26;
-static const uint32_t PB_PSAVE01_MISC_CFG_HALF_SPARE_LEN = 2;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_LUC = 28;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_LUC_LEN = 8;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_HUC = 36;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_HUC_LEN = 8;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_LUT = 44;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_LUT_LEN = 5;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_HUT = 49;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_HUT_LEN = 5;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_SPARE = 54;
-static const uint32_t PB_PSAVE01_MISC_CFG_QTR_SPARE_LEN = 2;
-static const uint32_t PB_PSAVE01_MISC_CFG_WSIZE = 56;
-static const uint32_t PB_PSAVE01_MISC_CFG_WSIZE_LEN = 3;
-//<< [PB_PSAVE01_MISC_CFG]
+static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_1R_4XP = 48;
+static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_1R_4XP_LEN = 10;
+static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_1R_4XN = 58;
+static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_2R_1XP = 59;
+static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO9_PB_2R_1XN = 60;
+//<< [TXIRLM_REGS_TX_IMPCAL_SWO9_PB]
+// pauc/reg00000.H
+
+//>> [TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB]
+static const uint64_t TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB = 0x800f99c010012c3full;
+
+static const uint32_t TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB_ZCAL_FIR_ERR_INJ = 48;
+static const uint32_t TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB_ZCAL_FIR_ERR_INJ_LEN = 2;
+//<< [TXIRLM_REGS_ZCAL_FIR_ERROR_INJECT_PB]
 // pauc/reg00000.H
 
 //>>THE END<<

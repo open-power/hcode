@@ -640,6 +640,7 @@ static inline fapi2::buffer<uint64_t>& SET_CTL_REGS_TX_MODE1_PG_16TO1(fapi2::buf
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CTL_REGS_TX_MODE1_PG));
 #endif
     return o_data.insertFromRight<CTL_REGS_TX_MODE1_PG_16TO1,
@@ -657,6 +658,7 @@ static inline fapi2::buffer<uint64_t>& SET_CTL_REGS_TX_MODE1_PG_16TO1(const uint
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CTL_REGS_TX_MODE1_PG));
 #endif
     return o_data.insertFromRight<CTL_REGS_TX_MODE1_PG_16TO1,
@@ -673,6 +675,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_CTL_REGS_TX_MODE1_PG_16TO1(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CTL_REGS_TX_MODE1_PG));
 #endif
     return o_data.setBit<CTL_REGS_TX_MODE1_PG_16TO1>();
@@ -688,6 +691,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_CTL_REGS_TX_MODE1_PG_16TO1(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CTL_REGS_TX_MODE1_PG));
 #endif
     return o_data.clearBit<CTL_REGS_TX_MODE1_PG_16TO1>();
@@ -704,6 +708,7 @@ static inline fapi2::buffer<uint64_t>& GET_CTL_REGS_TX_MODE1_PG_16TO1(fapi2::buf
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CTL_REGS_TX_MODE1_PG));
 #endif
     return i_data.extractToRight<CTL_REGS_TX_MODE1_PG_16TO1,
@@ -720,6 +725,7 @@ fapi_try_exit:
 static inline bool GET_CTL_REGS_TX_MODE1_PG_16TO1(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CTL_REGS_TX_MODE1_PG));
 #endif
     return i_data.getBit<CTL_REGS_TX_MODE1_PG_16TO1>();

@@ -109,6 +109,8 @@ static const uint64_t DSTL_DSTLFIRWOF = 0x0c010d08ull;
 
 static const uint32_t DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF = 0;
 static const uint32_t DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF_LEN = 39;
+// ERROR Duplicate Dial         static const uint32_t DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF = 0; // p10:20,
+// ERROR Duplicate Dial         static const uint32_t DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF_LEN = 41;
 //<< [DSTL_DSTLFIRWOF]
 // mcc/reg00010.H
 

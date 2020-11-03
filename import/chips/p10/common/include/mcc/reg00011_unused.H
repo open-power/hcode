@@ -4920,6 +4920,692 @@ fapi_try_exit:
 }
 //<< GET_[USTL_USTLERRRPT_USTLERRPRT_CNFG2_REG_PE_HOLD_OUT]
 
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.setBit<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.clearBit<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.extractToRight<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline bool GET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.getBit<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.setBit<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+CLEAR_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.clearBit<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+GET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.extractToRight<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline bool GET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.getBit<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.setBit<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+CLEAR_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.clearBit<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+GET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.extractToRight<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline bool GET_USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.getBit<USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANA_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& SET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.setBit<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& CLEAR_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.clearBit<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>& GET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.extractToRight<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+static inline bool GET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.getBit<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_ON_TAG_CMD_ERROR_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.setBit<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+CLEAR_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.clearBit<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+GET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.extractToRight<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+static inline bool GET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.getBit<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_NOT_EXPECTED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.insertFromRight<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+SET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.setBit<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+CLEAR_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return o_data.clearBit<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline fapi2::buffer<uint64_t>&
+GET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.extractToRight<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
+//>> GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+static inline bool GET_USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(USTL_USTLERRRPT));
+#endif
+    return i_data.getBit<USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_mcc Invalid dial access USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[USTL_USTLERRRPT_USTLERRPRT_CHANB_BAD_RESP_MEM_CNTL_ERROR_ALREADY_RECEIVED_HOLD_OUT]
+
 //>> PREP_[USTL_USTLFIRWOF]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_USTL_USTLFIRWOF(const fapi2::Target<K, M, V>& i_target)

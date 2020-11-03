@@ -152,16 +152,6 @@ static const uint64_t CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SOFT_RESET = 0x00011325ull;
 //<< [CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SOFT_RESET]
 // perv/reg00004.H
 
-//>> [QMETRA0_TR0_CONFIG_5]
-static const uint64_t QMETRA0_TR0_CONFIG_5 = 0x00018408ull;
-
-static const uint32_t QMETRA0_TR0_CONFIG_5_C = 0;
-static const uint32_t QMETRA0_TR0_CONFIG_5_C_LEN = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_5_D = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_5_D_LEN = 24;
-//<< [QMETRA0_TR0_CONFIG_5]
-// perv/reg00004.H
-
 //>> [FSXCOMP_FSXLOG_M1A_DATA_AREA_12]
 //ERRCODE: // The addresses of this register do not all translate to the same targets.
 
@@ -234,14 +224,6 @@ static const uint32_t FSXCOMP_FSXLOG_MAILBOX_2_HEADER_COMMAND_A_M2HC2A_MAILBOX_2
 //<< [FSXCOMP_FSXLOG_MAILBOX_2_HEADER_COMMAND_A]
 // perv/reg00004.H
 
-//>> [L3TRA0_TR1_TRACE_HI_DATA_REG]
-static const uint64_t L3TRA0_TR1_TRACE_HI_DATA_REG = 0x00018220ull;
-
-static const uint32_t L3TRA0_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
-static const uint32_t L3TRA0_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
-//<< [L3TRA0_TR1_TRACE_HI_DATA_REG]
-// perv/reg00004.H
-
 //>> [L3TRA0_TR1_CONFIG_5]
 static const uint64_t L3TRA0_TR1_CONFIG_5 = 0x00018228ull;
 
@@ -250,6 +232,14 @@ static const uint32_t L3TRA0_TR1_CONFIG_5_C_LEN = 24;
 static const uint32_t L3TRA0_TR1_CONFIG_5_D = 24;
 static const uint32_t L3TRA0_TR1_CONFIG_5_D_LEN = 24;
 //<< [L3TRA0_TR1_CONFIG_5]
+// perv/reg00004.H
+
+//>> [L3TRA0_TR1_TRACE_HI_DATA_REG]
+static const uint64_t L3TRA0_TR1_TRACE_HI_DATA_REG = 0x00018220ull;
+
+static const uint32_t L3TRA0_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
+static const uint32_t L3TRA0_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
+//<< [L3TRA0_TR1_TRACE_HI_DATA_REG]
 // perv/reg00004.H
 
 //>> [L3TRA1_TR0_CONFIG_3]
@@ -305,6 +295,16 @@ static const uint64_t OTPC_M_MEASURE_REG5 = 0x00010015ull;
 static const uint32_t OTPC_M_MEASURE_REG5_SEEPROM_MEASUREMENT5_DATA = 0;
 static const uint32_t OTPC_M_MEASURE_REG5_SEEPROM_MEASUREMENT5_DATA_LEN = 64;
 //<< [OTPC_M_MEASURE_REG5]
+// perv/reg00004.H
+
+//>> [QMETRA0_TR0_CONFIG_5]
+static const uint64_t QMETRA0_TR0_CONFIG_5 = 0x00018408ull;
+
+static const uint32_t QMETRA0_TR0_CONFIG_5_C = 0;
+static const uint32_t QMETRA0_TR0_CONFIG_5_C_LEN = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_5_D = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_5_D_LEN = 24;
+//<< [QMETRA0_TR0_CONFIG_5]
 // perv/reg00004.H
 
 //>> [REC_ERR_MST1_REG1]

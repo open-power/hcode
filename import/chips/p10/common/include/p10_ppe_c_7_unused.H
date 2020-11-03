@@ -39,6 +39,20 @@ namespace ppe_c
 #endif
 
 
+//>> [P10_20_CPMS_MCCR]
+static const uint32_t CPMS_MCCR = 0xc000eb00ull; // p10:20,
+
+static const uint32_t P10_20_CPMS_MCCR_EVENT0_SEL = 1;
+static const uint32_t P10_20_CPMS_MCCR_EVENT0_SEL_LEN = 3;
+static const uint32_t P10_20_CPMS_MCCR_COUNT0_OFFSET = 4;
+static const uint32_t P10_20_CPMS_MCCR_COUNT0_OFFSET_LEN = 4;
+static const uint32_t P10_20_CPMS_MCCR_EVENT1_SEL = 9;
+static const uint32_t P10_20_CPMS_MCCR_EVENT1_SEL_LEN = 3;
+static const uint32_t P10_20_CPMS_MCCR_COUNT1_OFFSET = 12;
+static const uint32_t P10_20_CPMS_MCCR_COUNT1_OFFSET_LEN = 4;
+//<< [P10_20_CPMS_MCCR]
+// ppe_c/reg00007.H
+
 //>>THE END<<
 
 #ifndef __PPE_HCODE__

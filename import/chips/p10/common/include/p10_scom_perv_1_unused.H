@@ -179,16 +179,6 @@ static const uint32_t CLK_ADJ_03_DCADJ_WRAP_SET_CONFIG_CHKSW_NO_DCC_CONFIG_VISIB
 //<< [CLK_ADJ_03_DCADJ_WRAP_SET_CONFIG]
 // perv/reg00002.H
 
-//>> [QMETRA0_TR0_CONFIG_2]
-static const uint64_t QMETRA0_TR0_CONFIG_2 = 0x00018405ull;
-
-static const uint32_t QMETRA0_TR0_CONFIG_2_A = 0;
-static const uint32_t QMETRA0_TR0_CONFIG_2_A_LEN = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_2_B = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_2_B_LEN = 24;
-//<< [QMETRA0_TR0_CONFIG_2]
-// perv/reg00002.H
-
 //>> [DBG_CBS_CC]
 static const uint64_t DBG_CBS_CC = 0x00030013ull;
 
@@ -396,6 +386,16 @@ static const uint32_t OTPC_M_MEASURE_REG2_SEEPROM_MEASUREMENT2_DATA_LEN = 64;
 //<< [OTPC_M_MEASURE_REG2]
 // perv/reg00002.H
 
+//>> [QMETRA0_TR0_CONFIG_2]
+static const uint64_t QMETRA0_TR0_CONFIG_2 = 0x00018405ull;
+
+static const uint32_t QMETRA0_TR0_CONFIG_2_A = 0;
+static const uint32_t QMETRA0_TR0_CONFIG_2_A_LEN = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_2_B = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_2_B_LEN = 24;
+//<< [QMETRA0_TR0_CONFIG_2]
+// perv/reg00002.H
+
 //>> [RECOV_INTERRUPT_REG]
 static const uint64_t RECOV_INTERRUPT_REG = 0x000f001bull;
 
@@ -455,6 +455,22 @@ static const uint32_t REC_ERR_MST4_REG1_31_MST4_RESPONSE_BIT = 60;
 static const uint32_t REC_ERR_MST4_REG1_31_MST4_ERROR_CODE = 61;
 static const uint32_t REC_ERR_MST4_REG1_31_MST4_ERROR_CODE_LEN = 3;
 //<< [REC_ERR_MST4_REG1]
+// perv/reg00002.H
+
+//>> [SINGLE_OTP_ROM_OTPROM_REG100]
+static const uint64_t SINGLE_OTP_ROM_OTPROM_REG100 = 0x00018064ull;
+
+static const uint32_t SINGLE_OTP_ROM_OTPROM_REG100_REGISTER100 = 0;
+static const uint32_t SINGLE_OTP_ROM_OTPROM_REG100_REGISTER100_LEN = 64;
+//<< [SINGLE_OTP_ROM_OTPROM_REG100]
+// perv/reg00002.H
+
+//>> [SINGLE_OTP_ROM_OTPROM_REG11]
+static const uint64_t SINGLE_OTP_ROM_OTPROM_REG11 = 0x0001800bull;
+
+static const uint32_t SINGLE_OTP_ROM_OTPROM_REG11_REGISTER11 = 0;
+static const uint32_t SINGLE_OTP_ROM_OTPROM_REG11_REGISTER11_LEN = 64;
+//<< [SINGLE_OTP_ROM_OTPROM_REG11]
 // perv/reg00002.H
 
 //>> [SINGLE_OTP_ROM_OTPROM_REG26]
@@ -535,6 +551,16 @@ static const uint32_t TRA2_TR0_CONFIG_3_D_LEN = 24;
 //<< [TRA2_TR0_CONFIG_3]
 // perv/reg00003.H
 
+//>> [TRA3_TR1_CONFIG_5]
+static const uint64_t TRA3_TR1_CONFIG_5 = 0x000105c8ull;
+
+static const uint32_t TRA3_TR1_CONFIG_5_C = 0;
+static const uint32_t TRA3_TR1_CONFIG_5_C_LEN = 24;
+static const uint32_t TRA3_TR1_CONFIG_5_D = 24;
+static const uint32_t TRA3_TR1_CONFIG_5_D_LEN = 24;
+//<< [TRA3_TR1_CONFIG_5]
+// perv/reg00003.H
+
 //>> [TRA3_TR1_TRACE_LO_DATA_REG]
 static const uint64_t TRA3_TR1_TRACE_LO_DATA_REG = 0x000105c1ull;
 
@@ -550,16 +576,6 @@ static const uint32_t TRA3_TR1_TRACE_LO_DATA_REG_RUNNING = 53;
 static const uint32_t TRA3_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS = 54;
 static const uint32_t TRA3_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS_LEN = 10;
 //<< [TRA3_TR1_TRACE_LO_DATA_REG]
-// perv/reg00003.H
-
-//>> [TRA3_TR1_CONFIG_5]
-static const uint64_t TRA3_TR1_CONFIG_5 = 0x000105c8ull;
-
-static const uint32_t TRA3_TR1_CONFIG_5_C = 0;
-static const uint32_t TRA3_TR1_CONFIG_5_C_LEN = 24;
-static const uint32_t TRA3_TR1_CONFIG_5_D = 24;
-static const uint32_t TRA3_TR1_CONFIG_5_D_LEN = 24;
-//<< [TRA3_TR1_CONFIG_5]
 // perv/reg00003.H
 
 //>> [TRA4_TR1_CONFIG_4]
@@ -591,22 +607,6 @@ static const uint32_t TRA6_TR0_CONFIG_5_D = 24;
 static const uint32_t TRA6_TR0_CONFIG_5_D_LEN = 24;
 //<< [TRA6_TR0_CONFIG_5]
 // perv/reg00003.H
-
-//>> [SINGLE_OTP_ROM_OTPROM_REG100]
-static const uint64_t SINGLE_OTP_ROM_OTPROM_REG100 = 0x00018064ull;
-
-static const uint32_t SINGLE_OTP_ROM_OTPROM_REG100_REGISTER100 = 0;
-static const uint32_t SINGLE_OTP_ROM_OTPROM_REG100_REGISTER100_LEN = 64;
-//<< [SINGLE_OTP_ROM_OTPROM_REG100]
-// perv/reg00002.H
-
-//>> [SINGLE_OTP_ROM_OTPROM_REG11]
-static const uint64_t SINGLE_OTP_ROM_OTPROM_REG11 = 0x0001800bull;
-
-static const uint32_t SINGLE_OTP_ROM_OTPROM_REG11_REGISTER11 = 0;
-static const uint32_t SINGLE_OTP_ROM_OTPROM_REG11_REGISTER11_LEN = 64;
-//<< [SINGLE_OTP_ROM_OTPROM_REG11]
-// perv/reg00002.H
 
 //>>THE END<<
 

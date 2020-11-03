@@ -179,16 +179,6 @@ static const uint32_t CLK_ADJ_03_DCADJ_WRAP_SET_CONFIG_CHKSW_NO_DCC_CONFIG_VISIB
 //<< [CLK_ADJ_03_DCADJ_WRAP_SET_CONFIG]
 // eq/reg00001.H
 
-//>> [QMETRA0_TR0_CONFIG_2]
-static const uint64_t QMETRA0_TR0_CONFIG_2 = 0x20018405ull;
-
-static const uint32_t QMETRA0_TR0_CONFIG_2_A = 0;
-static const uint32_t QMETRA0_TR0_CONFIG_2_A_LEN = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_2_B = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_2_B_LEN = 24;
-//<< [QMETRA0_TR0_CONFIG_2]
-// eq/reg00001.H
-
 //>> [DBG_CBS_CC]
 static const uint64_t DBG_CBS_CC = 0x20030013ull;
 
@@ -280,6 +270,16 @@ static const uint32_t L3TRA3_TR1_CONFIG_5_C_LEN = 24;
 static const uint32_t L3TRA3_TR1_CONFIG_5_D = 24;
 static const uint32_t L3TRA3_TR1_CONFIG_5_D_LEN = 24;
 //<< [L3TRA3_TR1_CONFIG_5]
+// eq/reg00001.H
+
+//>> [QMETRA0_TR0_CONFIG_2]
+static const uint64_t QMETRA0_TR0_CONFIG_2 = 0x20018405ull;
+
+static const uint32_t QMETRA0_TR0_CONFIG_2_A = 0;
+static const uint32_t QMETRA0_TR0_CONFIG_2_A_LEN = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_2_B = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_2_B_LEN = 24;
+//<< [QMETRA0_TR0_CONFIG_2]
 // eq/reg00001.H
 
 //>> [RECOV_INTERRUPT_REG]

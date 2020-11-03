@@ -277,6 +277,113 @@ fapi_try_exit:
 }
 //<< GET_[CTL_REGS_RX_CNTL3_PG_FIR_RESET]
 
+//>> PREP_[CTL_REGS_RX_FIR1_MASK_PG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_CTL_REGS_RX_FIR1_MASK_PG(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = CTL_REGS_RX_FIR1_MASK_PG;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[CTL_REGS_RX_FIR1_MASK_PG]
+
+//>> GET_[CTL_REGS_RX_FIR1_MASK_PG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_CTL_REGS_RX_FIR1_MASK_PG(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = CTL_REGS_RX_FIR1_MASK_PG;
+#endif
+    return fapi2::getScom(i_target, CTL_REGS_RX_FIR1_MASK_PG, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[CTL_REGS_RX_FIR1_MASK_PG]
+
+//>> PUT_[CTL_REGS_RX_FIR1_MASK_PG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_CTL_REGS_RX_FIR1_MASK_PG(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(CTL_REGS_RX_FIR1_MASK_PG));
+#endif
+    return fapi2::putScom(i_target, CTL_REGS_RX_FIR1_MASK_PG, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[CTL_REGS_RX_FIR1_MASK_PG]
+
+
+//>> SET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
+static inline fapi2::buffer<uint64_t>& SET_CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CTL_REGS_RX_FIR1_MASK_PG));
+#endif
+    return o_data.insertFromRight<CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK,
+           CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_omic Invalid dial access CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
+
+//>> SET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
+static inline fapi2::buffer<uint64_t>& SET_CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CTL_REGS_RX_FIR1_MASK_PG));
+#endif
+    return o_data.insertFromRight<CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK,
+           CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_omic Invalid dial access CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
+
+//>> GET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
+static inline fapi2::buffer<uint64_t>& GET_CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(CTL_REGS_RX_FIR1_MASK_PG));
+#endif
+    return i_data.extractToRight<CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK,
+           CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_omic Invalid dial access CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
+
 //>> PREP_[CTL_REGS_RX_MODE10_PG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_CTL_REGS_RX_MODE10_PG(const fapi2::Target<K, M, V>& i_target)
@@ -1092,113 +1199,6 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[CTL_REGS_RX_MODE5_PG_THRESH2]
-
-//>> PREP_[CTL_REGS_RX_FIR1_MASK_PG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_CTL_REGS_RX_FIR1_MASK_PG(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = CTL_REGS_RX_FIR1_MASK_PG;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[CTL_REGS_RX_FIR1_MASK_PG]
-
-//>> GET_[CTL_REGS_RX_FIR1_MASK_PG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_CTL_REGS_RX_FIR1_MASK_PG(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = CTL_REGS_RX_FIR1_MASK_PG;
-#endif
-    return fapi2::getScom(i_target, CTL_REGS_RX_FIR1_MASK_PG, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[CTL_REGS_RX_FIR1_MASK_PG]
-
-//>> PUT_[CTL_REGS_RX_FIR1_MASK_PG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_CTL_REGS_RX_FIR1_MASK_PG(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(CTL_REGS_RX_FIR1_MASK_PG));
-#endif
-    return fapi2::putScom(i_target, CTL_REGS_RX_FIR1_MASK_PG, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[CTL_REGS_RX_FIR1_MASK_PG]
-
-
-//>> SET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
-static inline fapi2::buffer<uint64_t>& SET_CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(CTL_REGS_RX_FIR1_MASK_PG));
-#endif
-    return o_data.insertFromRight<CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK,
-           CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_omic Invalid dial access CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
-
-//>> SET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
-static inline fapi2::buffer<uint64_t>& SET_CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(CTL_REGS_RX_FIR1_MASK_PG));
-#endif
-    return o_data.insertFromRight<CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK,
-           CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_omic Invalid dial access CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
-
-//>> GET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
-static inline fapi2::buffer<uint64_t>& GET_CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(CTL_REGS_RX_FIR1_MASK_PG));
-#endif
-    return i_data.extractToRight<CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK,
-           CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_omic Invalid dial access CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK]
 
 //>> PREP_[CTL_REGS_TX_CNTL10_PG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
@@ -3390,6 +3390,114 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[DATASM_REGS_RX_CNT22_PG_LINK_LAYER_CHECK_EN]
+
+//>> SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& SET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
+#endif
+    return o_data.insertFromRight<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+
+//>> SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& SET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
+#endif
+    return o_data.insertFromRight<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+
+//>> SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& SET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
+#endif
+    return o_data.setBit<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+
+//>> CLEAR_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& CLEAR_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
+#endif
+    return o_data.clearBit<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+
+//>> GET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& GET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
+#endif
+    return i_data.extractToRight<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+
+//>> GET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline bool GET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
+#endif
+    return i_data.getBit<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
 
 //>> PREP_[DATASM_REGS_RX_CNT32_PG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

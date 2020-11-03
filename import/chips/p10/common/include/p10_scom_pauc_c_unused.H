@@ -39,6 +39,14 @@ namespace pauc
 #endif
 
 
+//>> [CTRL_PROTECT_MODE_REG]
+static const uint64_t CTRL_PROTECT_MODE_REG = 0x100003feull;
+
+static const uint32_t CTRL_PROTECT_MODE_REG_READ_PROTECT_ENABLE = 0;
+static const uint32_t CTRL_PROTECT_MODE_REG_WRITE_PROTECT_ENABLE = 1;
+//<< [CTRL_PROTECT_MODE_REG]
+// pauc/reg00012.H
+
 //>> [DL_PPE_WRAP_MIB_XIICAC]
 static const uint64_t DL_PPE_WRAP_MIB_XIICAC = 0x10012c59ull;
 
@@ -55,28 +63,6 @@ static const uint32_t DL_PPE_WRAP_MIB_XIICAC_ICACHE_LINE_PTR = 45;
 static const uint32_t DL_PPE_WRAP_MIB_XIICAC_ICACHE_LINE2_ERR = 46;
 static const uint32_t DL_PPE_WRAP_MIB_XIICAC_ICACHE_PREFETCH_PENDING = 47;
 //<< [DL_PPE_WRAP_MIB_XIICAC]
-// pauc/reg00012.H
-
-//>> [PB_PMU2_TLPM_COUNTER]
-static const uint64_t PB_PMU2_TLPM_COUNTER = 0x1001181dull;
-
-static const uint32_t PB_PMU2_TLPM_COUNTER_0 = 0;
-static const uint32_t PB_PMU2_TLPM_COUNTER_0_LEN = 16;
-static const uint32_t PB_PMU2_TLPM_COUNTER_1 = 16;
-static const uint32_t PB_PMU2_TLPM_COUNTER_1_LEN = 16;
-static const uint32_t PB_PMU2_TLPM_COUNTER_2 = 32;
-static const uint32_t PB_PMU2_TLPM_COUNTER_2_LEN = 16;
-static const uint32_t PB_PMU2_TLPM_COUNTER_3 = 48;
-static const uint32_t PB_PMU2_TLPM_COUNTER_3_LEN = 16;
-//<< [PB_PMU2_TLPM_COUNTER]
-// pauc/reg00012.H
-
-//>> [CTRL_PROTECT_MODE_REG]
-static const uint64_t CTRL_PROTECT_MODE_REG = 0x100003feull;
-
-static const uint32_t CTRL_PROTECT_MODE_REG_READ_PROTECT_ENABLE = 0;
-static const uint32_t CTRL_PROTECT_MODE_REG_WRITE_PROTECT_ENABLE = 1;
-//<< [CTRL_PROTECT_MODE_REG]
 // pauc/reg00012.H
 
 //>> [EPS_FIR_CLKSTOP_ON_XSTOP_MASK5]
@@ -130,6 +116,48 @@ static const uint64_t MULTICAST_GROUP_4 = 0x100f0004ull;
 static const uint32_t MULTICAST_GROUP_4_MULTICAST4_GROUP = 3;
 static const uint32_t MULTICAST_GROUP_4_MULTICAST4_GROUP_LEN = 3;
 //<< [MULTICAST_GROUP_4]
+// pauc/reg00012.H
+
+//>> [PB_PMU2_TLPM_COUNTER]
+static const uint64_t PB_PMU2_TLPM_COUNTER = 0x1001181dull;
+
+static const uint32_t PB_PMU2_TLPM_COUNTER_0 = 0;
+static const uint32_t PB_PMU2_TLPM_COUNTER_0_LEN = 16;
+static const uint32_t PB_PMU2_TLPM_COUNTER_1 = 16;
+static const uint32_t PB_PMU2_TLPM_COUNTER_1_LEN = 16;
+static const uint32_t PB_PMU2_TLPM_COUNTER_2 = 32;
+static const uint32_t PB_PMU2_TLPM_COUNTER_2_LEN = 16;
+static const uint32_t PB_PMU2_TLPM_COUNTER_3 = 48;
+static const uint32_t PB_PMU2_TLPM_COUNTER_3_LEN = 16;
+//<< [PB_PMU2_TLPM_COUNTER]
+// pauc/reg00012.H
+
+//>> [PB_PSAVE23_MISC_CFG]
+static const uint64_t PB_PSAVE23_MISC_CFG = 0x10011817ull;
+
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_LUC = 0;
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_LUC_LEN = 8;
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_HUC = 8;
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_HUC_LEN = 8;
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_LUT = 16;
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_LUT_LEN = 5;
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_HUT = 21;
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_HUT_LEN = 5;
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_SPARE = 26;
+static const uint32_t PB_PSAVE23_MISC_CFG_HALF_SPARE_LEN = 2;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_LUC = 28;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_LUC_LEN = 8;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_HUC = 36;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_HUC_LEN = 8;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_LUT = 44;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_LUT_LEN = 5;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_HUT = 49;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_HUT_LEN = 5;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_SPARE = 54;
+static const uint32_t PB_PSAVE23_MISC_CFG_QTR_SPARE_LEN = 2;
+static const uint32_t PB_PSAVE23_MISC_CFG_WSIZE = 56;
+static const uint32_t PB_PSAVE23_MISC_CFG_WSIZE_LEN = 3;
+//<< [PB_PSAVE23_MISC_CFG]
 // pauc/reg00012.H
 
 //>> [PRE_COUNTER_REG]
@@ -196,34 +224,6 @@ static const uint64_t XSTOP_INTERRUPT_REG = 0x100f001cull;
 
 static const uint32_t XSTOP_INTERRUPT_REG_XSTOP = 0;
 //<< [XSTOP_INTERRUPT_REG]
-// pauc/reg00012.H
-
-//>> [PB_PSAVE23_MISC_CFG]
-static const uint64_t PB_PSAVE23_MISC_CFG = 0x10011817ull;
-
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_LUC = 0;
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_LUC_LEN = 8;
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_HUC = 8;
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_HUC_LEN = 8;
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_LUT = 16;
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_LUT_LEN = 5;
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_HUT = 21;
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_HUT_LEN = 5;
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_SPARE = 26;
-static const uint32_t PB_PSAVE23_MISC_CFG_HALF_SPARE_LEN = 2;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_LUC = 28;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_LUC_LEN = 8;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_HUC = 36;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_HUC_LEN = 8;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_LUT = 44;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_LUT_LEN = 5;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_HUT = 49;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_HUT_LEN = 5;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_SPARE = 54;
-static const uint32_t PB_PSAVE23_MISC_CFG_QTR_SPARE_LEN = 2;
-static const uint32_t PB_PSAVE23_MISC_CFG_WSIZE = 56;
-static const uint32_t PB_PSAVE23_MISC_CFG_WSIZE_LEN = 3;
-//<< [PB_PSAVE23_MISC_CFG]
 // pauc/reg00012.H
 
 //>>THE END<<

@@ -39,6 +39,16 @@ namespace ppe_c
 #endif
 
 
+//>> [P10_20_CPMS_MCSR]
+static const uint32_t CPMS_MCSR = 0xc000eb40ull; // p10:20,
+
+static const uint32_t P10_20_CPMS_MCSR_0 = 8;
+static const uint32_t P10_20_CPMS_MCSR_0_LEN = 24;
+static const uint32_t P10_20_CPMS_MCSR_1 = 40;
+static const uint32_t P10_20_CPMS_MCSR_1_LEN = 24;
+//<< [P10_20_CPMS_MCSR]
+// ppe_c/reg00006.H
+
 //>>THE END<<
 
 #ifndef __PPE_HCODE__

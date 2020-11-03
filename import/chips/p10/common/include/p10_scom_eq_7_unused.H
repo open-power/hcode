@@ -178,26 +178,6 @@ static const uint32_t EPS_FIR_LOCAL_WOF_63 = 63;
 //<< [EPS_FIR_LOCAL_WOF]
 // eq/reg00007.H
 
-//>> [QMETRA0_TR0_CONFIG_3]
-static const uint64_t QMETRA0_TR0_CONFIG_3 = 0x20018406ull;
-
-static const uint32_t QMETRA0_TR0_CONFIG_3_C = 0;
-static const uint32_t QMETRA0_TR0_CONFIG_3_C_LEN = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_3_D = 24;
-static const uint32_t QMETRA0_TR0_CONFIG_3_D_LEN = 24;
-//<< [QMETRA0_TR0_CONFIG_3]
-// eq/reg00007.H
-
-//>> [EPS_THERM_WSUB_SKITTER_CLKSRC_REG]
-static const uint64_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG = 0x20050016ull;
-
-static const uint32_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG_CLKSRC = 0;
-static const uint32_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG_CLKSRC_LEN = 3;
-static const uint32_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG_DELAY_SELECT = 36;
-static const uint32_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG_DELAY_SELECT_LEN = 2;
-//<< [EPS_THERM_WSUB_SKITTER_CLKSRC_REG]
-// eq/reg00007.H
-
 //>> [EPS_THERM_WSUB2_SKITTER_DATA0]
 static const uint64_t EPS_THERM_WSUB2_SKITTER_DATA0 = 0x20050039ull;
 //<< [EPS_THERM_WSUB2_SKITTER_DATA0]
@@ -219,6 +199,16 @@ static const uint32_t EPS_THERM_WSUB2_SKITTER_MODE_REG_SKITTER_DATA_V_LT = 45;
 //<< [EPS_THERM_WSUB2_SKITTER_MODE_REG]
 // eq/reg00007.H
 
+//>> [EPS_THERM_WSUB_SKITTER_CLKSRC_REG]
+static const uint64_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG = 0x20050016ull;
+
+static const uint32_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG_CLKSRC = 0;
+static const uint32_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG_CLKSRC_LEN = 3;
+static const uint32_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG_DELAY_SELECT = 36;
+static const uint32_t EPS_THERM_WSUB_SKITTER_CLKSRC_REG_DELAY_SELECT_LEN = 2;
+//<< [EPS_THERM_WSUB_SKITTER_CLKSRC_REG]
+// eq/reg00007.H
+
 //>> [HANG_PULSE_6_REG]
 static const uint64_t HANG_PULSE_6_REG = 0x200f0026ull;
 
@@ -233,6 +223,16 @@ static const uint64_t HOSTATTN_INTERRUPT_REG = 0x200f002bull;
 
 static const uint32_t HOSTATTN_INTERRUPT_REG_TYPE4 = 0;
 //<< [HOSTATTN_INTERRUPT_REG]
+// eq/reg00007.H
+
+//>> [L3TRA0_TR1_CONFIG_3]
+static const uint64_t L3TRA0_TR1_CONFIG_3 = 0x20018226ull;
+
+static const uint32_t L3TRA0_TR1_CONFIG_3_C = 0;
+static const uint32_t L3TRA0_TR1_CONFIG_3_C_LEN = 24;
+static const uint32_t L3TRA0_TR1_CONFIG_3_D = 24;
+static const uint32_t L3TRA0_TR1_CONFIG_3_D_LEN = 24;
+//<< [L3TRA0_TR1_CONFIG_3]
 // eq/reg00007.H
 
 //>> [L3TRA0_TR1_TRACE_LO_DATA_REG]
@@ -250,16 +250,6 @@ static const uint32_t L3TRA0_TR1_TRACE_LO_DATA_REG_RUNNING = 53;
 static const uint32_t L3TRA0_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS = 54;
 static const uint32_t L3TRA0_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS_LEN = 10;
 //<< [L3TRA0_TR1_TRACE_LO_DATA_REG]
-// eq/reg00007.H
-
-//>> [L3TRA0_TR1_CONFIG_3]
-static const uint64_t L3TRA0_TR1_CONFIG_3 = 0x20018226ull;
-
-static const uint32_t L3TRA0_TR1_CONFIG_3_C = 0;
-static const uint32_t L3TRA0_TR1_CONFIG_3_C_LEN = 24;
-static const uint32_t L3TRA0_TR1_CONFIG_3_D = 24;
-static const uint32_t L3TRA0_TR1_CONFIG_3_D_LEN = 24;
-//<< [L3TRA0_TR1_CONFIG_3]
 // eq/reg00007.H
 
 //>> [L3TRA1_TR0_CONFIG_5]
@@ -298,6 +288,16 @@ static const uint32_t L3TRA3_TR1_CONFIG_4_A_LEN = 24;
 static const uint32_t L3TRA3_TR1_CONFIG_4_B = 24;
 static const uint32_t L3TRA3_TR1_CONFIG_4_B_LEN = 24;
 //<< [L3TRA3_TR1_CONFIG_4]
+// eq/reg00007.H
+
+//>> [QMETRA0_TR0_CONFIG_3]
+static const uint64_t QMETRA0_TR0_CONFIG_3 = 0x20018406ull;
+
+static const uint32_t QMETRA0_TR0_CONFIG_3_C = 0;
+static const uint32_t QMETRA0_TR0_CONFIG_3_C_LEN = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_3_D = 24;
+static const uint32_t QMETRA0_TR0_CONFIG_3_D_LEN = 24;
+//<< [QMETRA0_TR0_CONFIG_3]
 // eq/reg00007.H
 
 //>> [RECOV_UNMASKED]

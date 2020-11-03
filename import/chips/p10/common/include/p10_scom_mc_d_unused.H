@@ -39,6 +39,17 @@ namespace mc
 #endif
 
 
+//>> [CC_ATOMIC_LOCK_REG]
+static const uint64_t CC_ATOMIC_LOCK_REG = 0x0c0303ffull;
+
+static const uint32_t CC_ATOMIC_LOCK_REG_LOCK_ENABLE = 0;
+static const uint32_t CC_ATOMIC_LOCK_REG_ID = 1;
+static const uint32_t CC_ATOMIC_LOCK_REG_ID_LEN = 4;
+static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY = 8;
+static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY_LEN = 8;
+//<< [CC_ATOMIC_LOCK_REG]
+// mc/reg00013.H
+
 //>> [MBA_SCOMFIR_DBG1_SCOM1Q]
 static const uint64_t MBA_SCOMFIR_DBG1_SCOM1Q = 0x0c010f97ull;
 
@@ -69,17 +80,6 @@ static const uint64_t MBA_SCOMFIR_WATPATB1 = 0x0c010f87ull;
 static const uint32_t MBA_SCOMFIR_WATPATB1_WAT_PATTERN_B1 = 0;
 static const uint32_t MBA_SCOMFIR_WATPATB1_WAT_PATTERN_B1_LEN = 44;
 //<< [MBA_SCOMFIR_WATPATB1]
-// mc/reg00013.H
-
-//>> [CC_ATOMIC_LOCK_REG]
-static const uint64_t CC_ATOMIC_LOCK_REG = 0x0c0303ffull;
-
-static const uint32_t CC_ATOMIC_LOCK_REG_LOCK_ENABLE = 0;
-static const uint32_t CC_ATOMIC_LOCK_REG_ID = 1;
-static const uint32_t CC_ATOMIC_LOCK_REG_ID_LEN = 4;
-static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY = 8;
-static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY_LEN = 8;
-//<< [CC_ATOMIC_LOCK_REG]
 // mc/reg00013.H
 
 //>> [PRIMARY_ADDRESS_REG]

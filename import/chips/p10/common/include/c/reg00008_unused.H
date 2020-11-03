@@ -3647,6 +3647,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_PC_COMMON_SPR_V3_HMER_SPARE_6(fapi
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
 #endif
     return o_data.insertFromRight<EC_PC_COMMON_SPR_V3_HMER_SPARE_6,
@@ -3664,6 +3665,7 @@ static inline fapi2::buffer<uint64_t>& SET_EC_PC_COMMON_SPR_V3_HMER_SPARE_6(cons
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
 #endif
     return o_data.insertFromRight<EC_PC_COMMON_SPR_V3_HMER_SPARE_6,
@@ -3680,6 +3682,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& SET_EC_PC_COMMON_SPR_V3_HMER_SPARE_6(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
 #endif
     return o_data.setBit<EC_PC_COMMON_SPR_V3_HMER_SPARE_6>();
@@ -3695,6 +3698,7 @@ fapi_try_exit:
 static inline fapi2::buffer<uint64_t>& CLEAR_EC_PC_COMMON_SPR_V3_HMER_SPARE_6(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
 #endif
     return o_data.clearBit<EC_PC_COMMON_SPR_V3_HMER_SPARE_6>();
@@ -3711,6 +3715,7 @@ static inline fapi2::buffer<uint64_t>& GET_EC_PC_COMMON_SPR_V3_HMER_SPARE_6(fapi
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
 #endif
     return i_data.extractToRight<EC_PC_COMMON_SPR_V3_HMER_SPARE_6,
@@ -3727,6 +3732,7 @@ fapi_try_exit:
 static inline bool GET_EC_PC_COMMON_SPR_V3_HMER_SPARE_6(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
 #endif
     return i_data.getBit<EC_PC_COMMON_SPR_V3_HMER_SPARE_6>();
@@ -3737,6 +3743,118 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[EC_PC_COMMON_SPR_V3_HMER_SPARE_6]
+
+//>> SET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+static inline fapi2::buffer<uint64_t>& SET_EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
+#endif
+    return o_data.insertFromRight<EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+
+//>> SET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+static inline fapi2::buffer<uint64_t>& SET_EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
+#endif
+    return o_data.insertFromRight<EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+
+//>> SET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+static inline fapi2::buffer<uint64_t>& SET_EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
+#endif
+    return o_data.setBit<EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+
+//>> CLEAR_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+static inline fapi2::buffer<uint64_t>& CLEAR_EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
+#endif
+    return o_data.clearBit<EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+
+//>> GET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+static inline fapi2::buffer<uint64_t>& GET_EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
+#endif
+    return i_data.extractToRight<EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+
+//>> GET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
+static inline bool GET_EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_PC_COMMON_SPR_V3_HMER_RW_WAND, EC_PC_COMMON_SPR_V3_HMER_WO_OR));
+#endif
+    return i_data.getBit<EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[EC_PC_COMMON_SPR_V3_HMER_V3_HMER_SPURR_SCALE_LIMIT]
 
 //>> SET_[EC_PC_COMMON_SPR_V3_HMER_SPARE_7]
 static inline fapi2::buffer<uint64_t>& SET_EC_PC_COMMON_SPR_V3_HMER_SPARE_7(fapi2::buffer<uint64_t>& i_data,
@@ -6664,6 +6782,1826 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[EC_PC_TRACE2_TR_TR0_CONFIG_5_D]
+
+//>> PREP_[EC_SD_SDP_SDCR_UNIT_HOLD_OUT4]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    scomt::last_scom = EC_SD_SDP_SDCR_UNIT_HOLD_OUT4;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[EC_SD_SDP_SDCR_UNIT_HOLD_OUT4]
+
+//>> GET_[EC_SD_SDP_SDCR_UNIT_HOLD_OUT4]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    scomt::last_scom = EC_SD_SDP_SDCR_UNIT_HOLD_OUT4;
+#endif
+    return fapi2::getScom(i_target, EC_SD_SDP_SDCR_UNIT_HOLD_OUT4, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[EC_SD_SDP_SDCR_UNIT_HOLD_OUT4]
+
+//>> PUT_[EC_SD_SDP_SDCR_UNIT_HOLD_OUT4]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return fapi2::putScom(i_target, EC_SD_SDP_SDCR_UNIT_HOLD_OUT4, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[EC_SD_SDP_SDCR_UNIT_HOLD_OUT4]
+
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_SDE_T3_MCHK_AND_ME_EQ_0]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED1]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED2]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED3]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED4]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED5]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED6]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED7]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED8]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED9]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED10]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED11]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED12]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED13]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED14]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.insertFromRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+
+//>> SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.setBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+
+//>> CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return o_data.clearBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.extractToRight<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+
+//>> GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
+static inline bool GET_P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(EC_SD_SDP_SDCR_UNIT_HOLD_OUT4));
+#endif
+    return i_data.getBit<P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_c Invalid dial access P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_EC_SD_SDP_SDCR_UNIT_HOLD_OUT4_UNUSED15]
 
 //>> PREP_[L2TRA_TR1_CONFIG_1]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

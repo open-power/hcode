@@ -657,6 +657,27 @@ static const uint32_t MISC_REGS_BDF2PE_2_CONFIG_BDF_LEN = 16;
 //<< [MISC_REGS_BDF2PE_2_CONFIG]
 // pau/reg00018.H
 
+//>> [MISC_REGS_CONFIG]
+static const uint64_t MISC_REGS_CONFIG = 0x10010b36ull;
+
+static const uint32_t MISC_REGS_CONFIG_CONFIG_SYNC_WAIT = 0;
+static const uint32_t MISC_REGS_CONFIG_CONFIG_SYNC_WAIT_LEN = 5;
+static const uint32_t MISC_REGS_CONFIG_PERF_CONFIG_ENABLE = 5;
+static const uint32_t MISC_REGS_CONFIG_PERF_CONFIG_PE_MASK = 6;
+static const uint32_t MISC_REGS_CONFIG_PERF_CONFIG_PE_MATCH = 7;
+static const uint32_t MISC_REGS_CONFIG_PERF_CONFIG_PE_MATCH_LEN = 4;
+static const uint32_t MISC_REGS_CONFIG_IPI_PS = 11;
+static const uint32_t MISC_REGS_CONFIG_IPI_OS = 12;
+static const uint32_t MISC_REGS_CONFIG_OC_ATS_SYNC_START = 13;
+static const uint32_t MISC_REGS_CONFIG_CQ_RESP_VALID_ENABLE = 14;
+static const uint32_t MISC_REGS_CONFIG_NV_MODE = 15;
+static const uint32_t MISC_REGS_CONFIG_OC_MODE = 16;
+static const uint32_t MISC_REGS_CONFIG_AME_MODE = 17;
+static const uint32_t MISC_REGS_CONFIG_CONFIG_MISC_RSVD = 18;
+static const uint32_t MISC_REGS_CONFIG_CONFIG_MISC_RSVD_LEN = 46;
+//<< [MISC_REGS_CONFIG]
+// pau/reg00018.H
+
 //>> [MISC_REGS_DA_ADDR]
 static const uint64_t MISC_REGS_DA_ADDR = 0x10010b3eull;
 
@@ -717,27 +738,6 @@ static const uint32_t MISC_REGS_INT_LOG_1_PE6_RSVD0_LEN = 7;
 //<< [MISC_REGS_INT_LOG_1_PE6]
 // pau/reg00018.H
 
-//>> [MISC_REGS_CONFIG]
-static const uint64_t MISC_REGS_CONFIG = 0x10010b36ull;
-
-static const uint32_t MISC_REGS_CONFIG_CONFIG_SYNC_WAIT = 0;
-static const uint32_t MISC_REGS_CONFIG_CONFIG_SYNC_WAIT_LEN = 5;
-static const uint32_t MISC_REGS_CONFIG_PERF_CONFIG_ENABLE = 5;
-static const uint32_t MISC_REGS_CONFIG_PERF_CONFIG_PE_MASK = 6;
-static const uint32_t MISC_REGS_CONFIG_PERF_CONFIG_PE_MATCH = 7;
-static const uint32_t MISC_REGS_CONFIG_PERF_CONFIG_PE_MATCH_LEN = 4;
-static const uint32_t MISC_REGS_CONFIG_IPI_PS = 11;
-static const uint32_t MISC_REGS_CONFIG_IPI_OS = 12;
-static const uint32_t MISC_REGS_CONFIG_OC_ATS_SYNC_START = 13;
-static const uint32_t MISC_REGS_CONFIG_CQ_RESP_VALID_ENABLE = 14;
-static const uint32_t MISC_REGS_CONFIG_NV_MODE = 15;
-static const uint32_t MISC_REGS_CONFIG_OC_MODE = 16;
-static const uint32_t MISC_REGS_CONFIG_AME_MODE = 17;
-static const uint32_t MISC_REGS_CONFIG_CONFIG_MISC_RSVD = 18;
-static const uint32_t MISC_REGS_CONFIG_CONFIG_MISC_RSVD_LEN = 46;
-//<< [MISC_REGS_CONFIG]
-// pau/reg00018.H
-
 //>> [MISC_REGS_PESTB_ADDR_PE13]
 static const uint64_t MISC_REGS_PESTB_ADDR_PE13 = 0x10010b8dull;
 
@@ -787,6 +787,11 @@ static const uint32_t OTL0_MISC_CHKSW0_OTL_RXO_HW407443_DISABLE = 16;
 static const uint32_t OTL0_MISC_CHKSW0_OTL_RXO_CONVERT_DOTN_TO_NORMAL = 17;
 static const uint32_t OTL0_MISC_CHKSW0_OTL_CHKSW00 = 18;
 static const uint32_t OTL0_MISC_CHKSW0_OTL_CHKSW00_LEN = 14;
+static const uint32_t OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE = 18; // p10:20,
+static const uint32_t OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE = 19; // p10:20,
+static const uint32_t OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE = 20; // p10:20,
+// ERROR Duplicate Dial         static const uint32_t OTL0_MISC_CHKSW0_OTL_CHKSW00 = 21; // p10:20,
+// ERROR Duplicate Dial         static const uint32_t OTL0_MISC_CHKSW0_OTL_CHKSW00_LEN = 11;
 static const uint32_t OTL0_MISC_CHKSW0_OTL_CHKSW01 = 32;
 static const uint32_t OTL0_MISC_CHKSW0_OTL_CHKSW01_LEN = 32;
 //<< [OTL0_MISC_CHKSW0]
@@ -821,6 +826,18 @@ static const uint32_t OTL1_MISC_PSL_DAR_AN_CO_EA_LEN = 52;
 //<< [OTL1_MISC_PSL_DAR_AN]
 // pau/reg00018.H
 
+//>> [XSL_MAIN_WRAP_CFG]
+static const uint64_t XSL_MAIN_WRAP_CFG = 0x10010aa0ull;
+
+static const uint32_t XSL_MAIN_WRAP_CFG_XSLO_CLOCK_ENABLE = 0;
+static const uint32_t XSL_MAIN_WRAP_CFG_XSLO_BLOCK_MEMHIT = 1;
+static const uint32_t XSL_MAIN_WRAP_CFG_RESERVED = 2;
+static const uint32_t XSL_MAIN_WRAP_CFG_RESERVED_LEN = 2;
+static const uint32_t XSL_MAIN_WRAP_CFG_XSLO_OTL_REQ_LIMIT = 4;
+static const uint32_t XSL_MAIN_WRAP_CFG_XSLO_OTL_REQ_LIMIT_LEN = 4;
+//<< [XSL_MAIN_WRAP_CFG]
+// pau/reg00018.H
+
 //>> [XSL_MAIN_XSLOP_VLOG_RGS_OSL_EPOCH_CTL]
 static const uint64_t XSL_MAIN_XSLOP_VLOG_RGS_OSL_EPOCH_CTL = 0x10010a93ull;
 
@@ -847,18 +864,6 @@ static const uint32_t XSL_MAIN_XSLOP_VLOG_RGS_OSL_XLATE_CNTL1_DABDF_DIAL_LEN = 1
 static const uint32_t XSL_MAIN_XSLOP_VLOG_RGS_OSL_XLATE_CNTL1_DAPASID_DIAL = 32;
 static const uint32_t XSL_MAIN_XSLOP_VLOG_RGS_OSL_XLATE_CNTL1_DAPASID_DIAL_LEN = 20;
 //<< [XSL_MAIN_XSLOP_VLOG_RGS_OSL_XLATE_CNTL1]
-// pau/reg00018.H
-
-//>> [XSL_MAIN_WRAP_CFG]
-static const uint64_t XSL_MAIN_WRAP_CFG = 0x10010aa0ull;
-
-static const uint32_t XSL_MAIN_WRAP_CFG_XSLO_CLOCK_ENABLE = 0;
-static const uint32_t XSL_MAIN_WRAP_CFG_XSLO_BLOCK_MEMHIT = 1;
-static const uint32_t XSL_MAIN_WRAP_CFG_RESERVED = 2;
-static const uint32_t XSL_MAIN_WRAP_CFG_RESERVED_LEN = 2;
-static const uint32_t XSL_MAIN_WRAP_CFG_XSLO_OTL_REQ_LIMIT = 4;
-static const uint32_t XSL_MAIN_WRAP_CFG_XSLO_OTL_REQ_LIMIT_LEN = 4;
-//<< [XSL_MAIN_WRAP_CFG]
 // pau/reg00018.H
 
 //>>THE END<<

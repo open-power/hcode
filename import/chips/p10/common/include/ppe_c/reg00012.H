@@ -379,6 +379,7 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_CGCSR_RESERVED_2_3(fapi2::buffer
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
 #endif
     return o_data.insertFromRight<CPMS_CGCSR_RESERVED_2_3,
@@ -396,6 +397,7 @@ static inline fapi2::buffer<uint64_t>& SET_CPMS_CGCSR_RESERVED_2_3(const uint64_
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
 #endif
     return o_data.insertFromRight<CPMS_CGCSR_RESERVED_2_3,
@@ -413,6 +415,7 @@ static inline fapi2::buffer<uint64_t>& GET_CPMS_CGCSR_RESERVED_2_3(fapi2::buffer
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
 #endif
     return i_data.extractToRight<CPMS_CGCSR_RESERVED_2_3,
@@ -424,6 +427,210 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[CPMS_CGCSR_RESERVED_2_3]
+
+//>> SET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& SET_CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return o_data.insertFromRight<CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+
+//>> SET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& SET_CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return o_data.insertFromRight<CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+
+//>> SET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& SET_CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return o_data.setBit<CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:ppe_c Invalid dial access CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+
+//>> CLEAR_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return o_data.clearBit<CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:ppe_c Invalid dial access CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+
+//>> GET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& GET_CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return i_data.extractToRight<CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+
+//>> GET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+static inline bool GET_CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return i_data.getBit<CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:ppe_c Invalid dial access CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[CPMS_CGCSR_ANALOG_SENSOR_INPUT_GATE]
+
+//>> SET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& SET_CPMS_CGCSR_PFET_SENSE_INPUT_GATE(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return o_data.insertFromRight<CPMS_CGCSR_PFET_SENSE_INPUT_GATE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:ppe_c Invalid dial access CPMS_CGCSR_PFET_SENSE_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+
+//>> SET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& SET_CPMS_CGCSR_PFET_SENSE_INPUT_GATE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return o_data.insertFromRight<CPMS_CGCSR_PFET_SENSE_INPUT_GATE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:ppe_c Invalid dial access CPMS_CGCSR_PFET_SENSE_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+
+//>> SET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& SET_CPMS_CGCSR_PFET_SENSE_INPUT_GATE(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return o_data.setBit<CPMS_CGCSR_PFET_SENSE_INPUT_GATE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:ppe_c Invalid dial access CPMS_CGCSR_PFET_SENSE_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+
+//>> CLEAR_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& CLEAR_CPMS_CGCSR_PFET_SENSE_INPUT_GATE(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return o_data.clearBit<CPMS_CGCSR_PFET_SENSE_INPUT_GATE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:ppe_c Invalid dial access CPMS_CGCSR_PFET_SENSE_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+
+//>> GET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+static inline fapi2::buffer<uint64_t>& GET_CPMS_CGCSR_PFET_SENSE_INPUT_GATE(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return i_data.extractToRight<CPMS_CGCSR_PFET_SENSE_INPUT_GATE,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:ppe_c Invalid dial access CPMS_CGCSR_PFET_SENSE_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+
+//>> GET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
+static inline bool GET_CPMS_CGCSR_PFET_SENSE_INPUT_GATE(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CPMS_CGCSR, CPMS_CGCSR_WO_CLEAR, CPMS_CGCSR_WO_OR));
+#endif
+    return i_data.getBit<CPMS_CGCSR_PFET_SENSE_INPUT_GATE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:ppe_c Invalid dial access CPMS_CGCSR_PFET_SENSE_INPUT_GATE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[CPMS_CGCSR_PFET_SENSE_INPUT_GATE]
 
 //>> SET_[CPMS_CGCSR_L3_CLKGLM_ASYNC_RESET]
 static inline fapi2::buffer<uint64_t>& SET_CPMS_CGCSR_L3_CLKGLM_ASYNC_RESET(fapi2::buffer<uint64_t>& i_data,

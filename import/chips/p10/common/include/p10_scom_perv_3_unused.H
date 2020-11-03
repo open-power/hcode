@@ -145,36 +145,6 @@ static const uint32_t CLK_ADJ_03_DCADJ_WRAP_SINGLE_STEP_COUNT_STEP_COUNT_LEN = 1
 //<< [CLK_ADJ_03_DCADJ_WRAP_SINGLE_STEP_COUNT]
 // perv/reg00006.H
 
-//>> [FSXCOMP_FSXLOG_SCRATCH_REGISTER_14]
-//ERRCODE: // The addresses of this register do not all translate to the same targets.
-
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_FSI = 0x00002985ull;
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_FSI_BYTE = 0x00002e14ull;
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_RW = 0x00050185ull;
-
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_SR_SCRATCH_REGISTER_14 = 0;
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_SR_SCRATCH_REGISTER_14_LEN = 32;
-//<< [FSXCOMP_FSXLOG_SCRATCH_REGISTER_14]
-// perv/reg00006.H
-
-//>> [QMETRA0_TR0_TRACE_HI_DATA_REG]
-static const uint64_t QMETRA0_TR0_TRACE_HI_DATA_REG = 0x00018400ull;
-
-static const uint32_t QMETRA0_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
-static const uint32_t QMETRA0_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
-//<< [QMETRA0_TR0_TRACE_HI_DATA_REG]
-// perv/reg00006.H
-
-//>> [QMETRA0_TR1_CONFIG_3]
-static const uint64_t QMETRA0_TR1_CONFIG_3 = 0x00018446ull;
-
-static const uint32_t QMETRA0_TR1_CONFIG_3_C = 0;
-static const uint32_t QMETRA0_TR1_CONFIG_3_C_LEN = 24;
-static const uint32_t QMETRA0_TR1_CONFIG_3_D = 24;
-static const uint32_t QMETRA0_TR1_CONFIG_3_D_LEN = 24;
-//<< [QMETRA0_TR1_CONFIG_3]
-// perv/reg00006.H
-
 //>> [DEVICE_ID_REG]
 static const uint64_t DEVICE_ID_REG = 0x000f000full;
 
@@ -200,11 +170,6 @@ static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_HOSTATTN_TO_PCB = 4;
 //<< [EPS_FIR_ANY_LOCAL_ERR_MASK]
 // perv/reg00006.H
 
-//>> [EPS_THERM_WSUB_SKITTER_DATA1]
-static const uint64_t EPS_THERM_WSUB_SKITTER_DATA1 = 0x0005001aull;
-//<< [EPS_THERM_WSUB_SKITTER_DATA1]
-// perv/reg00006.H
-
 //>> [EPS_THERM_WSUB2_INJECT_REG]
 static const uint64_t EPS_THERM_WSUB2_INJECT_REG = 0x00050031ull;
 
@@ -213,6 +178,11 @@ static const uint32_t EPS_THERM_WSUB2_INJECT_REG_TRIP_LEN = 2;
 static const uint32_t EPS_THERM_WSUB2_INJECT_REG_MODE = 2;
 static const uint32_t EPS_THERM_WSUB2_INJECT_REG_MODE_LEN = 2;
 //<< [EPS_THERM_WSUB2_INJECT_REG]
+// perv/reg00006.H
+
+//>> [EPS_THERM_WSUB_SKITTER_DATA1]
+static const uint64_t EPS_THERM_WSUB_SKITTER_DATA1 = 0x0005001aull;
+//<< [EPS_THERM_WSUB_SKITTER_DATA1]
 // perv/reg00006.H
 
 //>> [FSXCOMP_FSXLOG_DOORBELL_STATUS_CONTROL_2A]
@@ -322,6 +292,18 @@ static const uint32_t FSXCOMP_FSXLOG_MAILBOX_SLAVE_B_DOORBELL_INTERRUPT_MSBDI_LB
 //<< [FSXCOMP_FSXLOG_MAILBOX_SLAVE_B_DOORBELL_INTERRUPT]
 // perv/reg00006.H
 
+//>> [FSXCOMP_FSXLOG_SCRATCH_REGISTER_14]
+//ERRCODE: // The addresses of this register do not all translate to the same targets.
+
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_FSI = 0x00002985ull;
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_FSI_BYTE = 0x00002e14ull;
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_RW = 0x00050185ull;
+
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_SR_SCRATCH_REGISTER_14 = 0;
+static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_14_SR_SCRATCH_REGISTER_14_LEN = 32;
+//<< [FSXCOMP_FSXLOG_SCRATCH_REGISTER_14]
+// perv/reg00006.H
+
 //>> [L3TRA0_TR0_CONFIG_3]
 static const uint64_t L3TRA0_TR0_CONFIG_3 = 0x00018206ull;
 
@@ -330,6 +312,16 @@ static const uint32_t L3TRA0_TR0_CONFIG_3_C_LEN = 24;
 static const uint32_t L3TRA0_TR0_CONFIG_3_D = 24;
 static const uint32_t L3TRA0_TR0_CONFIG_3_D_LEN = 24;
 //<< [L3TRA0_TR0_CONFIG_3]
+// perv/reg00006.H
+
+//>> [L3TRA1_TR1_CONFIG_5]
+static const uint64_t L3TRA1_TR1_CONFIG_5 = 0x00018268ull;
+
+static const uint32_t L3TRA1_TR1_CONFIG_5_C = 0;
+static const uint32_t L3TRA1_TR1_CONFIG_5_C_LEN = 24;
+static const uint32_t L3TRA1_TR1_CONFIG_5_D = 24;
+static const uint32_t L3TRA1_TR1_CONFIG_5_D_LEN = 24;
+//<< [L3TRA1_TR1_CONFIG_5]
 // perv/reg00006.H
 
 //>> [L3TRA1_TR1_TRACE_LO_DATA_REG]
@@ -347,24 +339,6 @@ static const uint32_t L3TRA1_TR1_TRACE_LO_DATA_REG_RUNNING = 53;
 static const uint32_t L3TRA1_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS = 54;
 static const uint32_t L3TRA1_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS_LEN = 10;
 //<< [L3TRA1_TR1_TRACE_LO_DATA_REG]
-// perv/reg00006.H
-
-//>> [L3TRA1_TR1_CONFIG_5]
-static const uint64_t L3TRA1_TR1_CONFIG_5 = 0x00018268ull;
-
-static const uint32_t L3TRA1_TR1_CONFIG_5_C = 0;
-static const uint32_t L3TRA1_TR1_CONFIG_5_C_LEN = 24;
-static const uint32_t L3TRA1_TR1_CONFIG_5_D = 24;
-static const uint32_t L3TRA1_TR1_CONFIG_5_D_LEN = 24;
-//<< [L3TRA1_TR1_CONFIG_5]
-// perv/reg00006.H
-
-//>> [L3TRA2_TR0_TRACE_HI_DATA_REG]
-static const uint64_t L3TRA2_TR0_TRACE_HI_DATA_REG = 0x00018280ull;
-
-static const uint32_t L3TRA2_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
-static const uint32_t L3TRA2_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
-//<< [L3TRA2_TR0_TRACE_HI_DATA_REG]
 // perv/reg00006.H
 
 //>> [L3TRA2_TR0_CONFIG]
@@ -387,6 +361,14 @@ static const uint32_t L3TRA2_TR0_CONFIG_DISABLE_BANK_EDGE_DETECT = 21;
 static const uint32_t L3TRA2_TR0_CONFIG_DISABLE_SCOM_TRCTRL_TRARR_RD_ACT = 22;
 static const uint32_t L3TRA2_TR0_CONFIG_MASTER_CLOCK_ENABLE_INT = 23;
 //<< [L3TRA2_TR0_CONFIG]
+// perv/reg00006.H
+
+//>> [L3TRA2_TR0_TRACE_HI_DATA_REG]
+static const uint64_t L3TRA2_TR0_TRACE_HI_DATA_REG = 0x00018280ull;
+
+static const uint32_t L3TRA2_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
+static const uint32_t L3TRA2_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
+//<< [L3TRA2_TR0_TRACE_HI_DATA_REG]
 // perv/reg00006.H
 
 //>> [L3TRA2_TR1_CONFIG_2]
@@ -451,6 +433,24 @@ static const uint64_t PHASE_COUNTER_RESET = 0x00030028ull;
 
 static const uint32_t PHASE_COUNTER_RESET_PHASECOUNTER_RESET = 0;
 //<< [PHASE_COUNTER_RESET]
+// perv/reg00006.H
+
+//>> [QMETRA0_TR0_TRACE_HI_DATA_REG]
+static const uint64_t QMETRA0_TR0_TRACE_HI_DATA_REG = 0x00018400ull;
+
+static const uint32_t QMETRA0_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
+static const uint32_t QMETRA0_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
+//<< [QMETRA0_TR0_TRACE_HI_DATA_REG]
+// perv/reg00006.H
+
+//>> [QMETRA0_TR1_CONFIG_3]
+static const uint64_t QMETRA0_TR1_CONFIG_3 = 0x00018446ull;
+
+static const uint32_t QMETRA0_TR1_CONFIG_3_C = 0;
+static const uint32_t QMETRA0_TR1_CONFIG_3_C_LEN = 24;
+static const uint32_t QMETRA0_TR1_CONFIG_3_D = 24;
+static const uint32_t QMETRA0_TR1_CONFIG_3_D_LEN = 24;
+//<< [QMETRA0_TR1_CONFIG_3]
 // perv/reg00006.H
 
 //>> [REC_ERR_MST3_REG2]
@@ -816,14 +816,6 @@ static const uint32_t TRA5_TR1_CONFIG_3_D_LEN = 24;
 //<< [TRA5_TR1_CONFIG_3]
 // perv/reg00007.H
 
-//>> [TRA6_TR1_TRACE_HI_DATA_REG]
-static const uint64_t TRA6_TR1_TRACE_HI_DATA_REG = 0x00010740ull;
-
-static const uint32_t TRA6_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
-static const uint32_t TRA6_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
-//<< [TRA6_TR1_TRACE_HI_DATA_REG]
-// perv/reg00007.H
-
 //>> [TRA6_TR1_CONFIG_4]
 static const uint64_t TRA6_TR1_CONFIG_4 = 0x00010747ull;
 
@@ -832,6 +824,14 @@ static const uint32_t TRA6_TR1_CONFIG_4_A_LEN = 24;
 static const uint32_t TRA6_TR1_CONFIG_4_B = 24;
 static const uint32_t TRA6_TR1_CONFIG_4_B_LEN = 24;
 //<< [TRA6_TR1_CONFIG_4]
+// perv/reg00007.H
+
+//>> [TRA6_TR1_TRACE_HI_DATA_REG]
+static const uint64_t TRA6_TR1_TRACE_HI_DATA_REG = 0x00010740ull;
+
+static const uint32_t TRA6_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
+static const uint32_t TRA6_TR1_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
+//<< [TRA6_TR1_TRACE_HI_DATA_REG]
 // perv/reg00007.H
 
 //>> [TRA7_TR0_CONFIG_2]

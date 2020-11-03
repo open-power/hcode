@@ -39,6 +39,17 @@ namespace pauc
 #endif
 
 
+//>> [CC_ATOMIC_LOCK_REG]
+static const uint64_t CC_ATOMIC_LOCK_REG = 0x100303ffull;
+
+static const uint32_t CC_ATOMIC_LOCK_REG_LOCK_ENABLE = 0;
+static const uint32_t CC_ATOMIC_LOCK_REG_ID = 1;
+static const uint32_t CC_ATOMIC_LOCK_REG_ID_LEN = 4;
+static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY = 8;
+static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY_LEN = 8;
+//<< [CC_ATOMIC_LOCK_REG]
+// pauc/reg00013.H
+
 //>> [PB_PTL_FIR_WOF_REG]
 static const uint64_t PB_PTL_FIR_WOF_REG = 0x10011808ull;
 
@@ -76,25 +87,6 @@ static const uint32_t PHY_PPE_WRAP_XIDBGPRO_XSR_MCS_LEN = 3;
 static const uint32_t PHY_PPE_WRAP_XIDBGPRO_IAR = 32;
 static const uint32_t PHY_PPE_WRAP_XIDBGPRO_IAR_LEN = 30;
 //<< [PHY_PPE_WRAP_XIDBGPRO]
-// pauc/reg00013.H
-
-//>> [TXIRLM_REGS_TX_IMPCAL_SWO4_PB]
-static const uint64_t TXIRLM_REGS_TX_IMPCAL_SWO4_PB = 0x800f4dc010012c3full;
-
-static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO4_PB_TX_ZCAL_SWO_IMP_CNTL_1R_1XN_16_31 = 48;
-static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO4_PB_TX_ZCAL_SWO_IMP_CNTL_1R_1XN_16_31_LEN = 16;
-//<< [TXIRLM_REGS_TX_IMPCAL_SWO4_PB]
-// pauc/reg00013.H
-
-//>> [CC_ATOMIC_LOCK_REG]
-static const uint64_t CC_ATOMIC_LOCK_REG = 0x100303ffull;
-
-static const uint32_t CC_ATOMIC_LOCK_REG_LOCK_ENABLE = 0;
-static const uint32_t CC_ATOMIC_LOCK_REG_ID = 1;
-static const uint32_t CC_ATOMIC_LOCK_REG_ID_LEN = 4;
-static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY = 8;
-static const uint32_t CC_ATOMIC_LOCK_REG_ACTIVITY_LEN = 8;
-//<< [CC_ATOMIC_LOCK_REG]
 // pauc/reg00013.H
 
 //>> [PRIMARY_ADDRESS_REG]
@@ -153,6 +145,14 @@ static const uint64_t TRA0_TR1_CONFIG_0 = 0x10010443ull;
 static const uint32_t TRA0_TR1_CONFIG_0_CMP_MSK_LT_B_0_TO_63 = 0;
 static const uint32_t TRA0_TR1_CONFIG_0_CMP_MSK_LT_B_0_TO_63_LEN = 64;
 //<< [TRA0_TR1_CONFIG_0]
+// pauc/reg00013.H
+
+//>> [TXIRLM_REGS_TX_IMPCAL_SWO4_PB]
+static const uint64_t TXIRLM_REGS_TX_IMPCAL_SWO4_PB = 0x800f4dc010012c3full;
+
+static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO4_PB_TX_ZCAL_SWO_IMP_CNTL_1R_1XN_16_31 = 48;
+static const uint32_t TXIRLM_REGS_TX_IMPCAL_SWO4_PB_TX_ZCAL_SWO_IMP_CNTL_1R_1XN_16_31_LEN = 16;
+//<< [TXIRLM_REGS_TX_IMPCAL_SWO4_PB]
 // pauc/reg00013.H
 
 //>>THE END<<

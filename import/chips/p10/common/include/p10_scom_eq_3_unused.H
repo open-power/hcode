@@ -145,24 +145,6 @@ static const uint32_t CLK_ADJ_03_DCADJ_WRAP_SINGLE_STEP_COUNT_STEP_COUNT_LEN = 1
 //<< [CLK_ADJ_03_DCADJ_WRAP_SINGLE_STEP_COUNT]
 // eq/reg00003.H
 
-//>> [QMETRA0_TR0_TRACE_HI_DATA_REG]
-static const uint64_t QMETRA0_TR0_TRACE_HI_DATA_REG = 0x20018400ull;
-
-static const uint32_t QMETRA0_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
-static const uint32_t QMETRA0_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
-//<< [QMETRA0_TR0_TRACE_HI_DATA_REG]
-// eq/reg00003.H
-
-//>> [QMETRA0_TR1_CONFIG_3]
-static const uint64_t QMETRA0_TR1_CONFIG_3 = 0x20018446ull;
-
-static const uint32_t QMETRA0_TR1_CONFIG_3_C = 0;
-static const uint32_t QMETRA0_TR1_CONFIG_3_C_LEN = 24;
-static const uint32_t QMETRA0_TR1_CONFIG_3_D = 24;
-static const uint32_t QMETRA0_TR1_CONFIG_3_D_LEN = 24;
-//<< [QMETRA0_TR1_CONFIG_3]
-// eq/reg00003.H
-
 //>> [EPS_FIR_ANY_LOCAL_ERR_MASK]
 static const uint64_t EPS_FIR_ANY_LOCAL_ERR_MASK = 0x20040080ull;
 
@@ -172,11 +154,6 @@ static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_SPATTN_TO_PCB = 2;
 static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_LOCAL_XSTOP_TO_PCB = 3;
 static const uint32_t EPS_FIR_ANY_LOCAL_ERR_MASK_HOSTATTN_TO_PCB = 4;
 //<< [EPS_FIR_ANY_LOCAL_ERR_MASK]
-// eq/reg00003.H
-
-//>> [EPS_THERM_WSUB_SKITTER_DATA1]
-static const uint64_t EPS_THERM_WSUB_SKITTER_DATA1 = 0x2005001aull;
-//<< [EPS_THERM_WSUB_SKITTER_DATA1]
 // eq/reg00003.H
 
 //>> [EPS_THERM_WSUB2_INJECT_REG]
@@ -189,6 +166,11 @@ static const uint32_t EPS_THERM_WSUB2_INJECT_REG_MODE_LEN = 2;
 //<< [EPS_THERM_WSUB2_INJECT_REG]
 // eq/reg00003.H
 
+//>> [EPS_THERM_WSUB_SKITTER_DATA1]
+static const uint64_t EPS_THERM_WSUB_SKITTER_DATA1 = 0x2005001aull;
+//<< [EPS_THERM_WSUB_SKITTER_DATA1]
+// eq/reg00003.H
+
 //>> [L3TRA0_TR0_CONFIG_3]
 static const uint64_t L3TRA0_TR0_CONFIG_3 = 0x20018206ull;
 
@@ -197,6 +179,16 @@ static const uint32_t L3TRA0_TR0_CONFIG_3_C_LEN = 24;
 static const uint32_t L3TRA0_TR0_CONFIG_3_D = 24;
 static const uint32_t L3TRA0_TR0_CONFIG_3_D_LEN = 24;
 //<< [L3TRA0_TR0_CONFIG_3]
+// eq/reg00003.H
+
+//>> [L3TRA1_TR1_CONFIG_5]
+static const uint64_t L3TRA1_TR1_CONFIG_5 = 0x20018268ull;
+
+static const uint32_t L3TRA1_TR1_CONFIG_5_C = 0;
+static const uint32_t L3TRA1_TR1_CONFIG_5_C_LEN = 24;
+static const uint32_t L3TRA1_TR1_CONFIG_5_D = 24;
+static const uint32_t L3TRA1_TR1_CONFIG_5_D_LEN = 24;
+//<< [L3TRA1_TR1_CONFIG_5]
 // eq/reg00003.H
 
 //>> [L3TRA1_TR1_TRACE_LO_DATA_REG]
@@ -214,24 +206,6 @@ static const uint32_t L3TRA1_TR1_TRACE_LO_DATA_REG_RUNNING = 53;
 static const uint32_t L3TRA1_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS = 54;
 static const uint32_t L3TRA1_TR1_TRACE_LO_DATA_REG_HOLD_ADDRESS_LEN = 10;
 //<< [L3TRA1_TR1_TRACE_LO_DATA_REG]
-// eq/reg00003.H
-
-//>> [L3TRA1_TR1_CONFIG_5]
-static const uint64_t L3TRA1_TR1_CONFIG_5 = 0x20018268ull;
-
-static const uint32_t L3TRA1_TR1_CONFIG_5_C = 0;
-static const uint32_t L3TRA1_TR1_CONFIG_5_C_LEN = 24;
-static const uint32_t L3TRA1_TR1_CONFIG_5_D = 24;
-static const uint32_t L3TRA1_TR1_CONFIG_5_D_LEN = 24;
-//<< [L3TRA1_TR1_CONFIG_5]
-// eq/reg00003.H
-
-//>> [L3TRA2_TR0_TRACE_HI_DATA_REG]
-static const uint64_t L3TRA2_TR0_TRACE_HI_DATA_REG = 0x20018280ull;
-
-static const uint32_t L3TRA2_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
-static const uint32_t L3TRA2_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
-//<< [L3TRA2_TR0_TRACE_HI_DATA_REG]
 // eq/reg00003.H
 
 //>> [L3TRA2_TR0_CONFIG]
@@ -254,6 +228,14 @@ static const uint32_t L3TRA2_TR0_CONFIG_DISABLE_BANK_EDGE_DETECT = 21;
 static const uint32_t L3TRA2_TR0_CONFIG_DISABLE_SCOM_TRCTRL_TRARR_RD_ACT = 22;
 static const uint32_t L3TRA2_TR0_CONFIG_MASTER_CLOCK_ENABLE_INT = 23;
 //<< [L3TRA2_TR0_CONFIG]
+// eq/reg00003.H
+
+//>> [L3TRA2_TR0_TRACE_HI_DATA_REG]
+static const uint64_t L3TRA2_TR0_TRACE_HI_DATA_REG = 0x20018280ull;
+
+static const uint32_t L3TRA2_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
+static const uint32_t L3TRA2_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
+//<< [L3TRA2_TR0_TRACE_HI_DATA_REG]
 // eq/reg00003.H
 
 //>> [L3TRA2_TR1_CONFIG_2]
@@ -310,6 +292,24 @@ static const uint64_t PHASE_COUNTER_RESET = 0x20030028ull;
 
 static const uint32_t PHASE_COUNTER_RESET_PHASECOUNTER_RESET = 0;
 //<< [PHASE_COUNTER_RESET]
+// eq/reg00003.H
+
+//>> [QMETRA0_TR0_TRACE_HI_DATA_REG]
+static const uint64_t QMETRA0_TR0_TRACE_HI_DATA_REG = 0x20018400ull;
+
+static const uint32_t QMETRA0_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA = 0;
+static const uint32_t QMETRA0_TR0_TRACE_HI_DATA_REG_TRACE_HI_DATA_LEN = 64;
+//<< [QMETRA0_TR0_TRACE_HI_DATA_REG]
+// eq/reg00003.H
+
+//>> [QMETRA0_TR1_CONFIG_3]
+static const uint64_t QMETRA0_TR1_CONFIG_3 = 0x20018446ull;
+
+static const uint32_t QMETRA0_TR1_CONFIG_3_C = 0;
+static const uint32_t QMETRA0_TR1_CONFIG_3_C_LEN = 24;
+static const uint32_t QMETRA0_TR1_CONFIG_3_D = 24;
+static const uint32_t QMETRA0_TR1_CONFIG_3_D_LEN = 24;
+//<< [QMETRA0_TR1_CONFIG_3]
 // eq/reg00003.H
 
 //>>THE END<<

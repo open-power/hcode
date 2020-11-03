@@ -2914,6 +2914,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG));
 #endif
     return o_data.insertFromRight<TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SEQUENCER_OP_Q,
@@ -2933,6 +2934,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG));
 #endif
     return o_data.insertFromRight<TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SEQUENCER_OP_Q,
@@ -2952,6 +2954,7 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG));
 #endif
     return i_data.extractToRight<TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SEQUENCER_OP_Q,
@@ -2965,500 +2968,65 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SEQUENCER_OP_Q]
 
-//>> PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
-
-//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG;
-#endif
-    return fapi2::getScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
-
-//>> PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
-#endif
-    return fapi2::putScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
-
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15(
+//>> SET_[TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
+static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG));
 #endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15_LEN>(i_data);
+    return o_data.insertFromRight<TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q,
+           TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15 chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
+//<< SET_[TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
 
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15(
+//>> SET_[TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
+static inline fapi2::buffer<uint64_t>& SET_TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG));
 #endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15_LEN>(i_data);
+    return o_data.insertFromRight<TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q,
+           TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15 chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
+//<< SET_[TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
 
-//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
-static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15(
+//>> GET_[TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
+static inline fapi2::buffer<uint64_t>& GET_TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG));
 #endif
-    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15_LEN>(o_data);
+    return i_data.extractToRight<TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q,
+           TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15 chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
-
-//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
-static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
-#endif
-    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
-
-//>> PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
-
-//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG;
-#endif
-    return fapi2::getScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
-
-//>> PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
-#endif
-    return fapi2::putScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
-
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
-
-//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
-static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
-#endif
-    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
-
-//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
-static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
-#endif
-    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
-
-//>> PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PREP_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG(const fapi2::Target<K, M, V>& i_target)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG;
-#endif
-    return fapi2::current_err;
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
-
-//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG(const fapi2::Target<K, M, V>& i_target,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG;
-#endif
-    return fapi2::getScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG, o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
-
-//>> PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
-template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
-static inline fapi2::ReturnCode PUT_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG(const fapi2::Target<K, M, V>& i_target,
-        const uint64_t i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::init(i_target));
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
-#endif
-    return fapi2::putScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG, i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    return fapi2::current_err;
-#endif
-}
-//<< PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
-
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
-
-//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
-static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
-#endif
-    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
-
-//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
-static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
-#endif
-    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31_LEN>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
-
-//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
-static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
-#endif
-    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31,
-           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31_LEN>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31 chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
+//<< GET_[TP_TPVSB_FSI_W_SPIMC_SPI_PIB_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
 
 //>> PREP_[VAS_VA_EG_SCF_PBCFG0]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
@@ -4496,6 +4064,501 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[VAS_VA_EG_SCF_PBCFG0_PBCFG_0_QUEUE_DISABLES]
+
+//>> PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
+
+//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG;
+#endif
+    return fapi2::getScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
+
+//>> PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+#endif
+    return fapi2::putScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG]
+
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
+
+//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
+static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+#endif
+    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_VALID_BITS_FOR_ENTRIES_8_15]
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
+
+//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
+static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG));
+#endif
+    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL1_REG_TOPOID_XLAT_TBL_ENTRIES_08_15]
+
+//>> PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
+
+//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG;
+#endif
+    return fapi2::getScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
+
+//>> PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
+#endif
+    return fapi2::putScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG]
+
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
+
+//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
+static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
+#endif
+    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_VALID_BITS_FOR_ENTRIES_16_23]
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
+
+//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
+static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG));
+#endif
+    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL2_REG_TOPOID_XLAT_TBL_ENTRIES_16_23]
+
+//>> PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
+
+//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG;
+#endif
+    return fapi2::getScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
+
+//>> PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
+#endif
+    return fapi2::putScom(i_target, VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG]
+
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
+
+//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
+static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
+#endif
+    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_VALID_BITS_FOR_ENTRIES_24_31]
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
+
+//>> SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
+static inline fapi2::buffer<uint64_t>& SET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
+#endif
+    return o_data.insertFromRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
+
+//>> GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
+static inline fapi2::buffer<uint64_t>& GET_VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG));
+#endif
+    return i_data.extractToRight<VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31,
+           VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31 chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[VAS_VA_EG_SCF_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31]
 
 //>> PREP_[VAS_VA_RG_SCF_DBGTRIG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

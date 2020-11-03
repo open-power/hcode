@@ -50,14 +50,6 @@ static const uint32_t PB_PBCQ_PEPBREGS_NWRSTKOVR_REG_ENABLE = 24;
 //<< [PB_PBCQ_PEPBREGS_NWRSTKOVR_REG]
 // pec/reg00002.H
 
-//>> [PIPEDOUTCTL4]
-static const uint64_t PIPEDOUTCTL4 = 0x08011518ull;
-
-static const uint32_t PIPEDOUTCTL4_RESERVED_63_0 = 0;
-static const uint32_t PIPEDOUTCTL4_RESERVED_63_0_LEN = 64;
-//<< [PIPEDOUTCTL4]
-// pec/reg00002.H
-
 //>>THE END<<
 
 #ifndef __PPE_HCODE__

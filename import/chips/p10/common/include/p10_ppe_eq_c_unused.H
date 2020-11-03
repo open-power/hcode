@@ -39,6 +39,17 @@ namespace ppe_eq
 #endif
 
 
+//>> [P10_20_QME_DB4]
+//ERRCODE: // Some of the name targets not found in address targets: eq
+// No targets could be determined from the address.
+
+static const uint32_t QME_DB4 = 0xc0001100ull; // p10:20,
+
+static const uint32_t P10_20_QME_DB4_MESSAGE_NUMBER = 0;
+static const uint32_t P10_20_QME_DB4_MESSAGE_NUMBER_LEN = 8;
+//<< [P10_20_QME_DB4]
+// ppe_eq/reg00012.H
+
 //>>THE END<<
 
 #ifndef __PPE_HCODE__

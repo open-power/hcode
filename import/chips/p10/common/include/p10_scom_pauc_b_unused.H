@@ -83,6 +83,22 @@ static const uint32_t DL_SCOM_MAC_FIR_REG_PPE_CODE_7 = 25;
 //<< [DL_SCOM_MAC_FIR_REG]
 // pauc/reg00011.H
 
+//>> [EPS_DBG_TRACE_MODE_REG_2]
+static const uint64_t EPS_DBG_TRACE_MODE_REG_2 = 0x100107cfull;
+
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_RUNN_COUNT_COMPARE_VALUE = 0;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_RUNN_COUNT_COMPARE_VALUE_LEN = 16;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_IMM_FREEZE_MODE = 16;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_STOP_ON_ERR = 17;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_BANK_ON_RUNN_MATCH = 18;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_FORCE_TEST_MODE = 19;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_ACCUM_HIST_MODE = 20;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_FRZ_COUNT_ON = 21;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK = 22;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK_LEN = 2;
+//<< [EPS_DBG_TRACE_MODE_REG_2]
+// pauc/reg00011.H
+
 //>> [PB_MAILBOX_00_REG]
 static const uint64_t PB_MAILBOX_00_REG = 0x10011830ull;
 //<< [PB_MAILBOX_00_REG]
@@ -101,22 +117,6 @@ static const uint32_t PHY_PPE_WRAP_XIDBGINF_SRR0_LEN = 30;
 static const uint32_t PHY_PPE_WRAP_XIDBGINF_LR = 32;
 static const uint32_t PHY_PPE_WRAP_XIDBGINF_LR_LEN = 32;
 //<< [PHY_PPE_WRAP_XIDBGINF]
-// pauc/reg00011.H
-
-//>> [EPS_DBG_TRACE_MODE_REG_2]
-static const uint64_t EPS_DBG_TRACE_MODE_REG_2 = 0x100107cfull;
-
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_RUNN_COUNT_COMPARE_VALUE = 0;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_RUNN_COUNT_COMPARE_VALUE_LEN = 16;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_IMM_FREEZE_MODE = 16;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_STOP_ON_ERR = 17;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_BANK_ON_RUNN_MATCH = 18;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_FORCE_TEST_MODE = 19;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_ACCUM_HIST_MODE = 20;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_FRZ_COUNT_ON = 21;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK = 22;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK_LEN = 2;
-//<< [EPS_DBG_TRACE_MODE_REG_2]
 // pauc/reg00011.H
 
 //>> [TRA0_TR1_CONFIG_1]

@@ -39,6 +39,22 @@ namespace mc
 #endif
 
 
+//>> [EPS_DBG_TRACE_MODE_REG_2]
+static const uint64_t EPS_DBG_TRACE_MODE_REG_2 = 0x0c0107cfull;
+
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_RUNN_COUNT_COMPARE_VALUE = 0;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_RUNN_COUNT_COMPARE_VALUE_LEN = 16;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_IMM_FREEZE_MODE = 16;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_STOP_ON_ERR = 17;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_BANK_ON_RUNN_MATCH = 18;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_FORCE_TEST_MODE = 19;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_ACCUM_HIST_MODE = 20;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_FRZ_COUNT_ON = 21;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK = 22;
+static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK_LEN = 2;
+//<< [EPS_DBG_TRACE_MODE_REG_2]
+// mc/reg00011.H
+
 //>> [MBA_SCOMFIR_MCEBUSEN3]
 static const uint64_t MBA_SCOMFIR_MCEBUSEN3 = 0x0c010fa7ull;
 
@@ -64,22 +80,6 @@ static const uint64_t MBA_SCOMFIR_WATPATB0 = 0x0c010f86ull;
 static const uint32_t MBA_SCOMFIR_WATPATB0_WAT_PATTERN_B0 = 0;
 static const uint32_t MBA_SCOMFIR_WATPATB0_WAT_PATTERN_B0_LEN = 44;
 //<< [MBA_SCOMFIR_WATPATB0]
-// mc/reg00011.H
-
-//>> [EPS_DBG_TRACE_MODE_REG_2]
-static const uint64_t EPS_DBG_TRACE_MODE_REG_2 = 0x0c0107cfull;
-
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_RUNN_COUNT_COMPARE_VALUE = 0;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_RUNN_COUNT_COMPARE_VALUE_LEN = 16;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_IMM_FREEZE_MODE = 16;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_STOP_ON_ERR = 17;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_BANK_ON_RUNN_MATCH = 18;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_FORCE_TEST_MODE = 19;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_ACCUM_HIST_MODE = 20;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_FRZ_COUNT_ON = 21;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK = 22;
-static const uint32_t EPS_DBG_TRACE_MODE_REG_2_EXTEND_BANK_LEN = 2;
-//<< [EPS_DBG_TRACE_MODE_REG_2]
 // mc/reg00011.H
 
 //>>THE END<<

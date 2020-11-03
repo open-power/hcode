@@ -237,6 +237,14 @@ static const uint32_t PRE_COUNTER_REG_PRE_COUNTER_LEN = 8;
 //<< [PRE_COUNTER_REG]
 // eq/reg00012.H
 
+//>> [P10_20_QME_DB4]
+static const uint64_t QME_DB4 = 0x200e0110ull; // p10:20,
+
+static const uint32_t P10_20_QME_DB4_MESSAGE_NUMBER = 0;
+static const uint32_t P10_20_QME_DB4_MESSAGE_NUMBER_LEN = 8;
+//<< [P10_20_QME_DB4]
+// eq/reg00012.H
+
 //>> [XSTOP_INTERRUPT_REG]
 static const uint64_t XSTOP_INTERRUPT_REG = 0x200f001cull;
 
