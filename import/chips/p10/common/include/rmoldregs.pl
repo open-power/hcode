@@ -26,8 +26,10 @@
 
 @dlst = ( "iohs", "mc", "mcc", "mi", "omi", "omic", "pau", "pec", "perv", "phb", "proc", "c", "eq" );
 
+system("rm *unused*");
 foreach $dr (@dlst)
 {
+    system("rm $dr/*unused*");
     $newest = `ls -ltr  $dr | tail -1`;
     if ( $newest =~ /\s+(\d+):(\d+)\s+/ )
     {
@@ -37,8 +39,8 @@ foreach $dr (@dlst)
         {
             if ( $tf !~ /$ntime/ && $tf =~ /(\S+).H/ )
             {
-                system("git rm $dr/$1.H");
-                system("rm $dr/$1.H");
+                #system("git rm $dr/$1.H");
+                #system("rm $dr/$1.H");
             }
         }
     }
