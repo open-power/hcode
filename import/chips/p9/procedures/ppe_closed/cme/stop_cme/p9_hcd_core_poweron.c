@@ -52,6 +52,12 @@ p9_hcd_core_poweron(uint32_t core)
     // PK_TRACE("Prepare PFET Controls");
     CME_PUTSCOM(PPM_PFCS_CLR, core, BIT64(4) | BIT64(5) | BIT64(8));
 
+    uint32_t TCR_VAL = 0;
+    //Disable fit
+    TCR_VAL = mfspr(SPRN_TCR);
+    TCR_VAL &= ~TCR_FIE;
+    mtspr(SPRN_TCR, TCR_VAL);
+
     // vdd_pfet_force_state = 11 (Force Von)
     // PK_TRACE("Power On Core VDD");
     CME_PUTSCOM(PPM_PFCS_OR, core, BITS64(0, 2));
@@ -93,6 +99,10 @@ p9_hcd_core_poweron(uint32_t core)
         }
     }
     while(!(scom_data & BIT64(0)));
+
+    //Disable fit
+    TCR_VAL |= TCR_FIE;
+    mtspr(SPRN_TCR, TCR_VAL);
 
     // vdd_pfet_force_state = 00 (Nop)
     // PK_TRACE("Turn Off Force Von");

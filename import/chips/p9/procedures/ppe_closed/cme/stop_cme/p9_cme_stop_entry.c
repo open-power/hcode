@@ -1422,6 +1422,12 @@ p9_cme_stop_entry()
                 CME_PUTSCOM(PPM_VDMCR_CLR, core, BIT64(0));
             }
 
+            uint32_t TCR_VAL = 0;
+            //Disable fit
+            TCR_VAL = mfspr(SPRN_TCR);
+            TCR_VAL &= ~TCR_FIE;
+            mtspr(SPRN_TCR, TCR_VAL);
+
             PK_TRACE("Drop vdd_pfet_val/sel_override/regulation_finger_en via PFCS[4,5,8]");
             // vdd_pfet_val/sel_override     = 0 (disbaled)
             // vdd_pfet_regulation_finger_en = 0 (controled by FSM)
@@ -1478,6 +1484,10 @@ p9_cme_stop_entry()
                 }
             }
             while(!(scom_data.words.upper & BIT32(1)));
+
+            //enable fit
+            TCR_VAL |= TCR_FIE;
+            mtspr(SPRN_TCR, TCR_VAL);
 
             PK_TRACE("Turn off force voff via PFCS[0-1]");
             // vdd_pfet_force_state = 00 (Nop)
