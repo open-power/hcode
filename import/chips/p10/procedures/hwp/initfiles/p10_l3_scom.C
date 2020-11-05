@@ -61,8 +61,6 @@ constexpr uint64_t literal_28 = 28;
 constexpr uint64_t literal_29 = 29;
 constexpr uint64_t literal_30 = 30;
 constexpr uint64_t literal_31 = 31;
-constexpr uint64_t literal_0b0 = 0b0;
-constexpr uint64_t literal_0b0000 = 0b0000;
 constexpr uint64_t literal_0b0001 = 0b0001;
 constexpr uint64_t literal_0b0100 = 0b0100;
 
@@ -516,8 +514,6 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
                     literal_1) );
             l_scom_buffer.insert<12, 12, 52, uint64_t>((((l_TGT1_ATTR_PROC_EPS_WRITE_CYCLES_T2 / literal_8) / l_def_L3_EPS_DIVIDE) +
                     literal_1) );
-            l_scom_buffer.insert<34, 1, 63, uint64_t>(literal_0b0 );
-            l_scom_buffer.insert<26, 4, 60, uint64_t>(literal_0b0000 );
             l_scom_buffer.insert<30, 4, 60, uint64_t>(l_def_L3_EPS_DIVIDE );
             FAPI_TRY(fapi2::putScom(TGT0, 0x2001062aull, l_scom_buffer));
         }
