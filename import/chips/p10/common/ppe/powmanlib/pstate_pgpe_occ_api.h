@@ -262,7 +262,8 @@ typedef union
     } words;
     struct
     {
-        uint64_t reserved0                      : 24;
+        uint16_t io_power_proxy_0p01w           : 16;
+        uint64_t reserved0                      : 8;
         uint64_t io_index                       : 8;
         uint64_t reserved1                      : 32;
     } fields;
