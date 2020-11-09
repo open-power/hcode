@@ -5537,6 +5537,63 @@ fapi_try_exit:
 }
 //<< GET_[DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF]
 
+//>> SET_[P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DSTL_DSTLFIRWOF));
+#endif
+    return o_data.insertFromRight<P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF,
+           P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mcc Invalid dial access P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF]
+
+//>> SET_[P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DSTL_DSTLFIRWOF));
+#endif
+    return o_data.insertFromRight<P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF,
+           P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mcc Invalid dial access P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF]
+
+//>> GET_[P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DSTL_DSTLFIRWOF));
+#endif
+    return i_data.extractToRight<P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF,
+           P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mcc Invalid dial access P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_DSTL_DSTLFIRWOF_DSTLFIRWOF_WOF]
+
 //>> PREP_[DSTL_DSTLPSAVE0]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
 static inline fapi2::ReturnCode PREP_DSTL_DSTLPSAVE0(const fapi2::Target<K, M, V>& i_target)

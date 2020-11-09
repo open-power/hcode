@@ -34018,329 +34018,395 @@ fapi_try_exit:
 }
 //<< GET_[OTL0_MISC_CHKSW0_OTL_CHKSW00]
 
-//>> SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.insertFromRight<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
 #endif
-    return o_data.insertFromRight<OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE,
+    return o_data.insertFromRight<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("1:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
 
-//>> SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(const uint64_t i_data,
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.setBit<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+
+//>> CLEAR_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.clearBit<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+
+//>> GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return i_data.extractToRight<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+
+//>> GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+static inline bool GET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return i_data.getBit<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.insertFromRight<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
+
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
 #endif
-    return o_data.insertFromRight<OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE,
+    return o_data.insertFromRight<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("1:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
 
-//>> SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
 #endif
-    return o_data.setBit<OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE>();
+    return o_data.setBit<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("2:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
 
-//>> CLEAR_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
-static inline fapi2::buffer<uint64_t>& CLEAR_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
 #endif
-    return o_data.clearBit<OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE>();
+    return o_data.clearBit<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("3:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
+//<< CLEAR_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
 
-//>> GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
-static inline fapi2::buffer<uint64_t>& GET_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return i_data.extractToRight<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
+
+//>> GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
+static inline bool GET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return i_data.getBit<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
+
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.insertFromRight<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.insertFromRight<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.setBit<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+
+//>> CLEAR_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.clearBit<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+
+//>> GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return i_data.extractToRight<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+
+//>> GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+static inline bool GET_P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return i_data.getBit<P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.insertFromRight<P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00,
+           P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00]
+
+//>> SET_[P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
+#endif
+    return o_data.insertFromRight<P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00,
+           P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00]
+
+//>> GET_[P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
 #endif
-    return i_data.extractToRight<OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE,
-           1>(o_data);
+    return i_data.extractToRight<P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00,
+           P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("4:scom_pau Invalid dial access P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
-
-//>> GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
-static inline bool GET_OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return i_data.getBit<OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW530141_DISABLE]
-
-//>> SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(fapi2::buffer<uint64_t>& i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return o_data.insertFromRight<OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-
-//>> SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return o_data.insertFromRight<OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-
-//>> SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return o_data.setBit<OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-
-//>> CLEAR_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-static inline fapi2::buffer<uint64_t>& CLEAR_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return o_data.clearBit<OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-
-//>> GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-static inline fapi2::buffer<uint64_t>& GET_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(fapi2::buffer<uint64_t>& i_data,
-        uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return i_data.extractToRight<OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-
-//>> GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-static inline bool GET_OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return i_data.getBit<OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW531488_DISABLE]
-
-//>> SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(fapi2::buffer<uint64_t>& i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return o_data.insertFromRight<OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-
-//>> SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return o_data.insertFromRight<OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-
-//>> SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return o_data.setBit<OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-
-//>> CLEAR_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-static inline fapi2::buffer<uint64_t>& CLEAR_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return o_data.clearBit<OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-
-//>> GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-static inline fapi2::buffer<uint64_t>& GET_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(fapi2::buffer<uint64_t>& i_data,
-        uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return i_data.extractToRight<OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-
-//>> GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
-static inline bool GET_OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(OTL0_MISC_CHKSW0));
-#endif
-    return i_data.getBit<OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_pau Invalid dial access OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[OTL0_MISC_CHKSW0_OTL_RXO_HW538558_DISABLE]
+//<< GET_[P10_20_OTL0_MISC_CHKSW0_OTL_CHKSW00]
 
 //>> SET_[OTL0_MISC_CHKSW0_OTL_CHKSW01]
 static inline fapi2::buffer<uint64_t>& SET_OTL0_MISC_CHKSW0_OTL_CHKSW01(fapi2::buffer<uint64_t>& i_data,

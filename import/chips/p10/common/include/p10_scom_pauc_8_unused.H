@@ -286,10 +286,10 @@ static const uint32_t PHY_PPE_WRAP_SCOM_CNTL_IO_PPE_DONE_DLY_CHKN = 13;
 static const uint32_t PHY_PPE_WRAP_SCOM_CNTL_MMIO_ECHO_CHKN = 14;
 static const uint32_t PHY_PPE_WRAP_SCOM_CNTL_SCOM_PPE_SPARES = 15;
 static const uint32_t PHY_PPE_WRAP_SCOM_CNTL_SCOM_PPE_SPARES_LEN = 9;
-static const uint32_t PHY_PPE_WRAP_SCOM_CNTL_SST_4TO1_CNTL = 15; // p10:20,
-static const uint32_t PHY_PPE_WRAP_SCOM_CNTL_SST_4TO1_CNTL_LEN = 3;
-// ERROR Duplicate Dial         static const uint32_t PHY_PPE_WRAP_SCOM_CNTL_SCOM_PPE_SPARES = 18; // p10:20,
-// ERROR Duplicate Dial         static const uint32_t PHY_PPE_WRAP_SCOM_CNTL_SCOM_PPE_SPARES_LEN = 6;
+static const uint32_t P10_20_PHY_PPE_WRAP_SCOM_CNTL_SST_4TO1_CNTL = 15; // p10:20,
+static const uint32_t P10_20_PHY_PPE_WRAP_SCOM_CNTL_SST_4TO1_CNTL_LEN = 3;
+static const uint32_t P10_20_PHY_PPE_WRAP_SCOM_CNTL_SCOM_PPE_SPARES = 18; // p10:20,
+static const uint32_t P10_20_PHY_PPE_WRAP_SCOM_CNTL_SCOM_PPE_SPARES_LEN = 6;
 //<< [PHY_PPE_WRAP_SCOM_CNTL]
 // pauc/reg00008.H
 

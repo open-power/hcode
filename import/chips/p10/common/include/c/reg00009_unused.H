@@ -3317,8 +3317,8 @@ fapi_try_exit:
 }
 //<< GET_[L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_EPS_CNT_USE_L3_DIVIDER_EN]
 
-//>> SET_[L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
-static inline fapi2::buffer<uint64_t>& SET_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL(
+//>> SET_[P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -3326,19 +3326,19 @@ static inline fapi2::buffer<uint64_t>& SET_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(L3_MISC_L3CERRS_WR_EPSILON_CFG_REG));
 #endif
-    return o_data.insertFromRight<L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL,
-           L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL,
+           P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_c Invalid dial access L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL chip: %x, ec: %x",
+    FAPI_ERR("0:scom_c Invalid dial access P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
+//<< SET_[P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
 
-//>> SET_[L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
-static inline fapi2::buffer<uint64_t>& SET_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL(
+//>> SET_[P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -3346,19 +3346,19 @@ static inline fapi2::buffer<uint64_t>& SET_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(L3_MISC_L3CERRS_WR_EPSILON_CFG_REG));
 #endif
-    return o_data.insertFromRight<L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL,
-           L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL,
+           P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_c Invalid dial access L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL chip: %x, ec: %x",
+    FAPI_ERR("1:scom_c Invalid dial access P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
+//<< SET_[P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
 
-//>> GET_[L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
-static inline fapi2::buffer<uint64_t>& GET_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL(
+//>> GET_[P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -3366,16 +3366,16 @@ static inline fapi2::buffer<uint64_t>& GET_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(L3_MISC_L3CERRS_WR_EPSILON_CFG_REG));
 #endif
-    return i_data.extractToRight<L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL,
-           L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL_LEN>(o_data);
+    return i_data.extractToRight<P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL,
+           P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_c Invalid dial access L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL chip: %x, ec: %x",
+    FAPI_ERR("4:scom_c Invalid dial access P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
+//<< GET_[P10_20_L3_MISC_L3CERRS_WR_EPSILON_CFG_REG_L3_WT4CR_WR_TIER0_EPS_VAL]
 
 //>> PREP_[NC_NCCHTM_NCCHTSC_HTM_LAST]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

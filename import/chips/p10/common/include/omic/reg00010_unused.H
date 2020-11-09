@@ -3391,113 +3391,117 @@ fapi_try_exit:
 }
 //<< GET_[DATASM_REGS_RX_CNT22_PG_LINK_LAYER_CHECK_EN]
 
-//>> SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
-static inline fapi2::buffer<uint64_t>& SET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
+#endif
+    return o_data.insertFromRight<P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_omic Invalid dial access P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+
+//>> SET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
 #endif
-    return o_data.insertFromRight<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN,
+    return o_data.insertFromRight<P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("1:scom_omic Invalid dial access P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+//<< SET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
 
-//>> SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
-static inline fapi2::buffer<uint64_t>& SET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
 #endif
-    return o_data.insertFromRight<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN,
-           1>(i_data);
+    return o_data.setBit<P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("2:scom_omic Invalid dial access P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+//<< SET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
 
-//>> SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
-static inline fapi2::buffer<uint64_t>& SET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
 #endif
-    return o_data.setBit<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN>();
+    return o_data.clearBit<P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("3:scom_omic Invalid dial access P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+//<< CLEAR_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
 
-//>> CLEAR_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
-static inline fapi2::buffer<uint64_t>& CLEAR_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& o_data)
+//>> GET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
 #endif
-    return o_data.clearBit<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
-
-//>> GET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
-static inline fapi2::buffer<uint64_t>& GET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& i_data,
-        uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
-#endif
-    return i_data.extractToRight<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN,
+    return i_data.extractToRight<P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("4:scom_omic Invalid dial access P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+//<< GET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
 
-//>> GET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
-static inline bool GET_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+static inline bool GET_P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(DATASM_REGS_RX_CNT22_PG));
 #endif
-    return i_data.getBit<DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN>();
+    return i_data.getBit<P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_omic Invalid dial access DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("5:scom_omic Invalid dial access P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
+//<< GET_[P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN]
 
 //>> PREP_[DATASM_REGS_RX_CNT32_PG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

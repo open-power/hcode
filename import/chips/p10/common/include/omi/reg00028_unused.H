@@ -9869,8 +9869,8 @@ fapi_try_exit:
 }
 //<< GET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_DL_CLK_EN]
 
-//>> SET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
-static inline fapi2::buffer<uint64_t>& SET_RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
+//>> SET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9878,19 +9878,19 @@ static inline fapi2::buffer<uint64_t>& SET_RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CN
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL));
 #endif
-    return o_data.insertFromRight<RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN,
+    return o_data.insertFromRight<P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_omi Invalid dial access RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
+    FAPI_ERR("0:scom_omi Invalid dial access P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+//<< SET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
 
-//>> SET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
-static inline fapi2::buffer<uint64_t>& SET_RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
+//>> SET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9898,55 +9898,55 @@ static inline fapi2::buffer<uint64_t>& SET_RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CN
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL));
 #endif
-    return o_data.insertFromRight<RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN,
+    return o_data.insertFromRight<P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_omi Invalid dial access RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
+    FAPI_ERR("1:scom_omi Invalid dial access P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+//<< SET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
 
-//>> SET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
-static inline fapi2::buffer<uint64_t>& SET_RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
+//>> SET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL));
 #endif
-    return o_data.setBit<RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN>();
+    return o_data.setBit<P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_omi Invalid dial access RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
+    FAPI_ERR("2:scom_omi Invalid dial access P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+//<< SET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
 
-//>> CLEAR_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
-static inline fapi2::buffer<uint64_t>& CLEAR_RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
+//>> CLEAR_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL));
 #endif
-    return o_data.clearBit<RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN>();
+    return o_data.clearBit<P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_omi Invalid dial access RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
+    FAPI_ERR("3:scom_omi Invalid dial access P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+//<< CLEAR_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
 
-//>> GET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
-static inline fapi2::buffer<uint64_t>& GET_RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
+//>> GET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -9954,34 +9954,33 @@ static inline fapi2::buffer<uint64_t>& GET_RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CN
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL));
 #endif
-    return i_data.extractToRight<RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN,
+    return i_data.extractToRight<P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_omi Invalid dial access RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
+    FAPI_ERR("4:scom_omi Invalid dial access P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+//<< GET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
 
-//>> GET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
-static inline bool GET_RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(
-    fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+static inline bool GET_P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL));
 #endif
-    return i_data.getBit<RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN>();
+    return i_data.getBit<P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_omi Invalid dial access RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
+    FAPI_ERR("5:scom_omi Invalid dial access P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
+//<< GET_[P10_20_0_DEFAULT_RD_4_RX_BIT_REGS_CNTLX1_PL_PSAVE_PR_BIT_LOCK_EN]
 
 //>> PREP_[RXPACKS_0_DEFAULT_RD_4_RX_BIT_REGS_MODE6_PL]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

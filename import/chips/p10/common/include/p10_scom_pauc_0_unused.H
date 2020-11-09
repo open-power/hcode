@@ -178,8 +178,8 @@ static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_MCS = 29;
 static const uint32_t PHY_PPE_WRAP_XIRAMDBG_XSR_MCS_LEN = 3;
 static const uint32_t PHY_PPE_WRAP_XIRAMDBG_PPE_XIRAMRA_SPRG0 = 32;
 static const uint32_t PHY_PPE_WRAP_XIRAMDBG_PPE_XIRAMRA_SPRG0_LEN = 32;
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_SPRG0 = 32; // p10:20,
-static const uint32_t PHY_PPE_WRAP_XIRAMDBG_SPRG0_LEN = 32;
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMDBG_SPRG0 = 32; // p10:20,
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMDBG_SPRG0_LEN = 32;
 //<< [PHY_PPE_WRAP_XIRAMDBG]
 // pauc/reg00000.H
 
@@ -188,12 +188,12 @@ static const uint64_t PHY_PPE_WRAP_XIRAMRA = 0x10012c11ull;
 
 static const uint32_t PHY_PPE_WRAP_XIRAMRA_XCR = 1;
 static const uint32_t PHY_PPE_WRAP_XIRAMRA_XCR_LEN = 3;
-static const uint32_t PHY_PPE_WRAP_XIRAMRA_PPE_XIXCR_XCR = 1; // p10:20,
-static const uint32_t PHY_PPE_WRAP_XIRAMRA_PPE_XIXCR_XCR_LEN = 3;
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMRA_PPE_XIXCR_XCR = 1; // p10:20,
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMRA_PPE_XIXCR_XCR_LEN = 3;
 static const uint32_t PHY_PPE_WRAP_XIRAMRA_RAMRA_SPRG0 = 32;
 static const uint32_t PHY_PPE_WRAP_XIRAMRA_RAMRA_SPRG0_LEN = 32;
-static const uint32_t PHY_PPE_WRAP_XIRAMRA_SPRG0 = 32; // p10:20,
-static const uint32_t PHY_PPE_WRAP_XIRAMRA_SPRG0_LEN = 32;
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMRA_SPRG0 = 32; // p10:20,
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMRA_SPRG0_LEN = 32;
 //<< [PHY_PPE_WRAP_XIRAMRA]
 // pauc/reg00000.H
 

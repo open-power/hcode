@@ -5190,6 +5190,60 @@ fapi_try_exit:
 }
 //<< GET_[SCOMFIR_AACR_ADDRESS]
 
+//>> SET_[P10_20_SCOMFIR_AACR_ADDRESS]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_SCOMFIR_AACR_ADDRESS(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(SCOMFIR_AACR));
+#endif
+    return o_data.insertFromRight<P10_20_SCOMFIR_AACR_ADDRESS,
+           P10_20_SCOMFIR_AACR_ADDRESS_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mc Invalid dial access P10_20_SCOMFIR_AACR_ADDRESS chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_SCOMFIR_AACR_ADDRESS]
+
+//>> SET_[P10_20_SCOMFIR_AACR_ADDRESS]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_SCOMFIR_AACR_ADDRESS(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(SCOMFIR_AACR));
+#endif
+    return o_data.insertFromRight<P10_20_SCOMFIR_AACR_ADDRESS,
+           P10_20_SCOMFIR_AACR_ADDRESS_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mc Invalid dial access P10_20_SCOMFIR_AACR_ADDRESS chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_SCOMFIR_AACR_ADDRESS]
+
+//>> GET_[P10_20_SCOMFIR_AACR_ADDRESS]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_SCOMFIR_AACR_ADDRESS(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(SCOMFIR_AACR));
+#endif
+    return i_data.extractToRight<P10_20_SCOMFIR_AACR_ADDRESS,
+           P10_20_SCOMFIR_AACR_ADDRESS_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mc Invalid dial access P10_20_SCOMFIR_AACR_ADDRESS chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_SCOMFIR_AACR_ADDRESS]
+
 //>> SET_[SCOMFIR_AACR_AUTOINC]
 static inline fapi2::buffer<uint64_t>& SET_SCOMFIR_AACR_AUTOINC(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
@@ -5291,6 +5345,108 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[SCOMFIR_AACR_AUTOINC]
+
+//>> SET_[P10_20_SCOMFIR_AACR_AUTOINC]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_SCOMFIR_AACR_AUTOINC(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(SCOMFIR_AACR));
+#endif
+    return o_data.insertFromRight<P10_20_SCOMFIR_AACR_AUTOINC,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mc Invalid dial access P10_20_SCOMFIR_AACR_AUTOINC chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_SCOMFIR_AACR_AUTOINC]
+
+//>> SET_[P10_20_SCOMFIR_AACR_AUTOINC]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_SCOMFIR_AACR_AUTOINC(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(SCOMFIR_AACR));
+#endif
+    return o_data.insertFromRight<P10_20_SCOMFIR_AACR_AUTOINC,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mc Invalid dial access P10_20_SCOMFIR_AACR_AUTOINC chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_SCOMFIR_AACR_AUTOINC]
+
+//>> SET_[P10_20_SCOMFIR_AACR_AUTOINC]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_SCOMFIR_AACR_AUTOINC(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(SCOMFIR_AACR));
+#endif
+    return o_data.setBit<P10_20_SCOMFIR_AACR_AUTOINC>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_mc Invalid dial access P10_20_SCOMFIR_AACR_AUTOINC chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_SCOMFIR_AACR_AUTOINC]
+
+//>> CLEAR_[P10_20_SCOMFIR_AACR_AUTOINC]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_SCOMFIR_AACR_AUTOINC(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(SCOMFIR_AACR));
+#endif
+    return o_data.clearBit<P10_20_SCOMFIR_AACR_AUTOINC>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_mc Invalid dial access P10_20_SCOMFIR_AACR_AUTOINC chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_SCOMFIR_AACR_AUTOINC]
+
+//>> GET_[P10_20_SCOMFIR_AACR_AUTOINC]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_SCOMFIR_AACR_AUTOINC(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(SCOMFIR_AACR));
+#endif
+    return i_data.extractToRight<P10_20_SCOMFIR_AACR_AUTOINC,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mc Invalid dial access P10_20_SCOMFIR_AACR_AUTOINC chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_SCOMFIR_AACR_AUTOINC]
+
+//>> GET_[P10_20_SCOMFIR_AACR_AUTOINC]
+static inline bool GET_P10_20_SCOMFIR_AACR_AUTOINC(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(SCOMFIR_AACR));
+#endif
+    return i_data.getBit<P10_20_SCOMFIR_AACR_AUTOINC>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_mc Invalid dial access P10_20_SCOMFIR_AACR_AUTOINC chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_SCOMFIR_AACR_AUTOINC]
 
 //>> PREP_[TRA1_TR0_CONFIG_0]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

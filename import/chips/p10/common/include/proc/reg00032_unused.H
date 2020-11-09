@@ -57459,6 +57459,65 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID]
 
+//>> SET_[P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPBR_AD_XSCOM_RCVED_STAT_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID,
+           P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID]
+
+//>> SET_[P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPBR_AD_XSCOM_RCVED_STAT_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID,
+           P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID]
+
+//>> GET_[P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPBR_AD_XSCOM_RCVED_STAT_REG));
+#endif
+    return i_data.extractToRight<P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID,
+           P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_COREID]
+
 //>> SET_[TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_STAT_THRID]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_AD_XSCOM_RCVED_STAT_REG_XSCOM_STAT_THRID(
     fapi2::buffer<uint64_t>& i_data,

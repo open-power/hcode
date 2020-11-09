@@ -205,12 +205,12 @@ static const uint64_t PHY_PPE_WRAP_XIRAMEDR = 0x10012c14ull;
 
 static const uint32_t PHY_PPE_WRAP_XIRAMEDR_GA_IR = 0;
 static const uint32_t PHY_PPE_WRAP_XIRAMEDR_GA_IR_LEN = 32;
-static const uint32_t PHY_PPE_WRAP_XIRAMEDR_IR = 0; // p10:20,
-static const uint32_t PHY_PPE_WRAP_XIRAMEDR_IR_LEN = 32;
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMEDR_IR = 0; // p10:20,
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMEDR_IR_LEN = 32;
 static const uint32_t PHY_PPE_WRAP_XIRAMEDR_EDR = 32;
 static const uint32_t PHY_PPE_WRAP_XIRAMEDR_EDR_LEN = 32;
-// ERROR Duplicate Dial         static const uint32_t PHY_PPE_WRAP_XIRAMEDR_EDR = 32; // p10:20,
-// ERROR Duplicate Dial         static const uint32_t PHY_PPE_WRAP_XIRAMEDR_EDR_LEN = 32;
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMEDR_EDR = 32; // p10:20,
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMEDR_EDR_LEN = 32;
 //<< [PHY_PPE_WRAP_XIRAMEDR]
 // pauc/reg00010.H
 
@@ -219,8 +219,8 @@ static const uint64_t PHY_SCOM_MAC_FIR_WOF_REG = 0x10012c08ull;
 
 static const uint32_t PHY_SCOM_MAC_FIR_WOF_REG_WOF = 0;
 static const uint32_t PHY_SCOM_MAC_FIR_WOF_REG_WOF_LEN = 26;
-// ERROR Duplicate Dial         static const uint32_t PHY_SCOM_MAC_FIR_WOF_REG_WOF = 0; // p10:20,
-// ERROR Duplicate Dial         static const uint32_t PHY_SCOM_MAC_FIR_WOF_REG_WOF_LEN = 27;
+static const uint32_t P10_20_PHY_SCOM_MAC_FIR_WOF_REG_WOF = 0; // p10:20,
+static const uint32_t P10_20_PHY_SCOM_MAC_FIR_WOF_REG_WOF_LEN = 27;
 //<< [PHY_SCOM_MAC_FIR_WOF_REG]
 // pauc/reg00010.H
 

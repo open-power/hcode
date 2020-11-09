@@ -775,113 +775,119 @@ fapi_try_exit:
 }
 //<< GET_[USTL_USTLBADRESP_B_BAD_RESP_TAG]
 
-//>> SET_[USTL_USTLBADRESP_A_BAD_RESP_TYPE]
-static inline fapi2::buffer<uint64_t>& SET_USTL_USTLBADRESP_A_BAD_RESP_TYPE(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(USTL_USTLBADRESP));
 #endif
-    return o_data.insertFromRight<USTL_USTLBADRESP_A_BAD_RESP_TYPE,
-           USTL_USTLBADRESP_A_BAD_RESP_TYPE_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE,
+           P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_mcc Invalid dial access USTL_USTLBADRESP_A_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_mcc Invalid dial access P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[USTL_USTLBADRESP_A_BAD_RESP_TYPE]
+//<< SET_[P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE]
 
-//>> SET_[USTL_USTLBADRESP_A_BAD_RESP_TYPE]
-static inline fapi2::buffer<uint64_t>& SET_USTL_USTLBADRESP_A_BAD_RESP_TYPE(const uint64_t i_data,
+//>> SET_[P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(USTL_USTLBADRESP));
 #endif
-    return o_data.insertFromRight<USTL_USTLBADRESP_A_BAD_RESP_TYPE,
-           USTL_USTLBADRESP_A_BAD_RESP_TYPE_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE,
+           P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_mcc Invalid dial access USTL_USTLBADRESP_A_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_mcc Invalid dial access P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[USTL_USTLBADRESP_A_BAD_RESP_TYPE]
+//<< SET_[P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE]
 
-//>> GET_[USTL_USTLBADRESP_A_BAD_RESP_TYPE]
-static inline fapi2::buffer<uint64_t>& GET_USTL_USTLBADRESP_A_BAD_RESP_TYPE(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(USTL_USTLBADRESP));
 #endif
-    return i_data.extractToRight<USTL_USTLBADRESP_A_BAD_RESP_TYPE,
-           USTL_USTLBADRESP_A_BAD_RESP_TYPE_LEN>(o_data);
+    return i_data.extractToRight<P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE,
+           P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_mcc Invalid dial access USTL_USTLBADRESP_A_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_mcc Invalid dial access P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[USTL_USTLBADRESP_A_BAD_RESP_TYPE]
+//<< GET_[P10_20_USTL_USTLBADRESP_A_BAD_RESP_TYPE]
 
-//>> SET_[USTL_USTLBADRESP_B_BAD_RESP_TYPE]
-static inline fapi2::buffer<uint64_t>& SET_USTL_USTLBADRESP_B_BAD_RESP_TYPE(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(USTL_USTLBADRESP));
 #endif
-    return o_data.insertFromRight<USTL_USTLBADRESP_B_BAD_RESP_TYPE,
-           USTL_USTLBADRESP_B_BAD_RESP_TYPE_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE,
+           P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_mcc Invalid dial access USTL_USTLBADRESP_B_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_mcc Invalid dial access P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[USTL_USTLBADRESP_B_BAD_RESP_TYPE]
+//<< SET_[P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE]
 
-//>> SET_[USTL_USTLBADRESP_B_BAD_RESP_TYPE]
-static inline fapi2::buffer<uint64_t>& SET_USTL_USTLBADRESP_B_BAD_RESP_TYPE(const uint64_t i_data,
+//>> SET_[P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(USTL_USTLBADRESP));
 #endif
-    return o_data.insertFromRight<USTL_USTLBADRESP_B_BAD_RESP_TYPE,
-           USTL_USTLBADRESP_B_BAD_RESP_TYPE_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE,
+           P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_mcc Invalid dial access USTL_USTLBADRESP_B_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_mcc Invalid dial access P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[USTL_USTLBADRESP_B_BAD_RESP_TYPE]
+//<< SET_[P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE]
 
-//>> GET_[USTL_USTLBADRESP_B_BAD_RESP_TYPE]
-static inline fapi2::buffer<uint64_t>& GET_USTL_USTLBADRESP_B_BAD_RESP_TYPE(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(USTL_USTLBADRESP));
 #endif
-    return i_data.extractToRight<USTL_USTLBADRESP_B_BAD_RESP_TYPE,
-           USTL_USTLBADRESP_B_BAD_RESP_TYPE_LEN>(o_data);
+    return i_data.extractToRight<P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE,
+           P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_mcc Invalid dial access USTL_USTLBADRESP_B_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_mcc Invalid dial access P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[USTL_USTLBADRESP_B_BAD_RESP_TYPE]
+//<< GET_[P10_20_USTL_USTLBADRESP_B_BAD_RESP_TYPE]
 
 //>> PREP_[USTL_USTLERRPT]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

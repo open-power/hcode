@@ -4338,59 +4338,62 @@ fapi_try_exit:
 }
 //<< GET_[INT_VC_ATX_PERF_EVENT_SEL_2_0]
 
-//>> SET_[INT_VC_ATX_PERF_EVENT_SEL_2_11]
-static inline fapi2::buffer<uint64_t>& SET_INT_VC_ATX_PERF_EVENT_SEL_2_11(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_VC_ATX_PERF_EVENT_SEL_2));
 #endif
-    return o_data.insertFromRight<INT_VC_ATX_PERF_EVENT_SEL_2_11,
-           INT_VC_ATX_PERF_EVENT_SEL_2_11_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11,
+           P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_VC_ATX_PERF_EVENT_SEL_2_11 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_VC_ATX_PERF_EVENT_SEL_2_11]
+//<< SET_[P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11]
 
-//>> SET_[INT_VC_ATX_PERF_EVENT_SEL_2_11]
-static inline fapi2::buffer<uint64_t>& SET_INT_VC_ATX_PERF_EVENT_SEL_2_11(const uint64_t i_data,
+//>> SET_[P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_VC_ATX_PERF_EVENT_SEL_2));
 #endif
-    return o_data.insertFromRight<INT_VC_ATX_PERF_EVENT_SEL_2_11,
-           INT_VC_ATX_PERF_EVENT_SEL_2_11_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11,
+           P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_VC_ATX_PERF_EVENT_SEL_2_11 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_VC_ATX_PERF_EVENT_SEL_2_11]
+//<< SET_[P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11]
 
-//>> GET_[INT_VC_ATX_PERF_EVENT_SEL_2_11]
-static inline fapi2::buffer<uint64_t>& GET_INT_VC_ATX_PERF_EVENT_SEL_2_11(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_VC_ATX_PERF_EVENT_SEL_2));
 #endif
-    return i_data.extractToRight<INT_VC_ATX_PERF_EVENT_SEL_2_11,
-           INT_VC_ATX_PERF_EVENT_SEL_2_11_LEN>(o_data);
+    return i_data.extractToRight<P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11,
+           P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_VC_ATX_PERF_EVENT_SEL_2_11 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_VC_ATX_PERF_EVENT_SEL_2_11]
+//<< GET_[P10_20_INT_VC_ATX_PERF_EVENT_SEL_2_11]
 
 //>> SET_[INT_VC_ATX_PERF_EVENT_SEL_2_1R]
 static inline fapi2::buffer<uint64_t>& SET_INT_VC_ATX_PERF_EVENT_SEL_2_1R(fapi2::buffer<uint64_t>& i_data,

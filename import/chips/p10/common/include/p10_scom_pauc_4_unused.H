@@ -193,12 +193,12 @@ static const uint64_t PHY_PPE_WRAP_XIRAMGA = 0x10012c12ull;
 
 static const uint32_t PHY_PPE_WRAP_XIRAMGA_GA_IR = 0;
 static const uint32_t PHY_PPE_WRAP_XIRAMGA_GA_IR_LEN = 32;
-static const uint32_t PHY_PPE_WRAP_XIRAMGA_PPE_XIRAMEDR_IR = 0; // p10:20,
-static const uint32_t PHY_PPE_WRAP_XIRAMGA_PPE_XIRAMEDR_IR_LEN = 32;
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMGA_PPE_XIRAMEDR_IR = 0; // p10:20,
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMGA_PPE_XIRAMEDR_IR_LEN = 32;
 static const uint32_t PHY_PPE_WRAP_XIRAMGA_RA_SPRG0 = 32;
 static const uint32_t PHY_PPE_WRAP_XIRAMGA_RA_SPRG0_LEN = 32;
-static const uint32_t PHY_PPE_WRAP_XIRAMGA_SPRG0 = 32; // p10:20,
-static const uint32_t PHY_PPE_WRAP_XIRAMGA_SPRG0_LEN = 32;
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMGA_SPRG0 = 32; // p10:20,
+static const uint32_t P10_20_PHY_PPE_WRAP_XIRAMGA_SPRG0_LEN = 32;
 //<< [PHY_PPE_WRAP_XIRAMGA]
 // pauc/reg00004.H
 

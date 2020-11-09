@@ -6675,8 +6675,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_GA_IR]
 
-//>> SET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -6684,19 +6684,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XI
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR,
-           TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR,
+           P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
 
-//>> SET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -6704,19 +6704,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XI
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR,
-           TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR,
+           P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
 
-//>> GET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -6724,16 +6724,16 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XI
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR,
-           TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR_LEN>(o_data);
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR,
+           P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_PPE_XIRAMEDR_IR]
 
 //>> SET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_RA_SPRG0]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_RA_SPRG0(
@@ -6794,8 +6794,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_RA_SPRG0]
 
-//>> SET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -6803,38 +6803,39 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XI
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0,
-           TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0,
+           P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0 chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0 chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
 
-//>> SET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0,
-           TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0,
+           P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0 chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0 chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
 
-//>> GET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -6842,16 +6843,16 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XI
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0,
-           TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0_LEN>(o_data);
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0,
+           P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0 chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0 chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SBE_SBEPM_SBEPPE_PPE_XIRAMGA_SPRG0]
 
 //>> PREP_[TP_TPCHIP_PIB_SPIMC_SPIMST0_COUNTER]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
@@ -7515,8 +7516,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__ERROR_REG_Q]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -7524,38 +7525,39 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJ
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT_));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE,
-           TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT_));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE,
-           TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -7563,19 +7565,19 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJ
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT_));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE,
-           TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE_LEN>(o_data);
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_PULSE]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -7583,38 +7585,39 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJ
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT_));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK,
-           TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT_));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK,
-           TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -7622,19 +7625,19 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJ
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT_));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK,
-           TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK_LEN>(o_data);
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__INJECT_MASK]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -7642,38 +7645,38 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJ
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT_));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK,
-           TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK(const uint64_t i_data,
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT_));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK,
-           TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -7681,16 +7684,16 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJ
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT_));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK,
-           TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK_LEN>(o_data);
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST1_ERROR_INJECT__MASK]
 
 //>> PREP_[TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
@@ -7804,8 +7807,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SEQUENCER_OP_Q]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -7813,19 +7816,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q,
-           TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -7833,19 +7836,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q,
-           TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -7853,16 +7856,16 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q,
-           TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q_LEN>(o_data);
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST2_SEQUENCER_OP_REG_SPIMST2_SEQUENCER_OP_Q]
 
 //>> PREP_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
@@ -9048,8 +9051,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_32]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9057,19 +9060,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9077,55 +9080,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -9133,33 +9136,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_COUNTER_REG_PARITY_ERRS]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_33]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_33(
@@ -9273,8 +9277,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_33]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9282,19 +9286,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9302,55 +9306,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -9358,33 +9362,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CLOCK_REG_PARITY_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_34]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_34(
@@ -9498,8 +9503,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_34]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9507,19 +9512,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9527,55 +9532,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -9583,33 +9588,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_REG_PARITY_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_35]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_35(
@@ -9723,8 +9729,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_35]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9732,19 +9738,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9752,55 +9758,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -9808,33 +9814,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_PARITY_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_36]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_36(
@@ -9948,8 +9955,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_36]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9957,19 +9964,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -9977,55 +9984,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -10033,33 +10040,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_PARITY_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_37]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_37(
@@ -10173,8 +10181,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_37]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -10182,19 +10190,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -10202,55 +10210,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -10258,33 +10266,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PATTERN_REG_PARITY_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_38]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_38(
@@ -10398,8 +10407,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_38]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -10407,19 +10416,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -10427,55 +10436,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -10483,33 +10492,33 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_TDR_REG_PARITY_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_39]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_39(
@@ -10623,8 +10632,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_39]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -10632,19 +10641,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -10652,55 +10661,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -10708,33 +10717,33 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_RDR_REG_PARITY_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_40]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_40(
@@ -10848,8 +10857,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_40]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -10857,19 +10866,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -10877,55 +10886,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -10933,33 +10942,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_CONFIG_REG1_PARITY_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_41]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_41(
@@ -11185,8 +11195,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_42]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -11194,19 +11204,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -11214,55 +11224,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -11270,33 +11280,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ERROR_REG_PARITY_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_43]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_43(
@@ -11410,8 +11421,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_43]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -11419,19 +11430,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -11439,55 +11450,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -11495,33 +11506,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_CORRECTABLE_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_44]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_44(
@@ -11635,8 +11647,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_44]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -11644,19 +11656,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -11664,55 +11676,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -11720,33 +11732,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_UNCORRECTABLE_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_45]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_45(
@@ -11807,8 +11820,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_45]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -11816,38 +11829,39 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS,
-           TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS,
-           TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -11855,16 +11869,16 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS,
-           TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS_LEN>(o_data);
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ECC_STATUS]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_47]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_47(
@@ -11978,8 +11992,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_47]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -11987,74 +12001,75 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(
+    const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP>();
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP,
+           1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -12062,33 +12077,33 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MM_ADDR_OVERLAP]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_48]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_48(
@@ -12149,8 +12164,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_48]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -12158,19 +12173,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION,
-           TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -12178,19 +12193,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION,
-           TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -12198,16 +12213,16 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION,
-           TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION_LEN>(o_data);
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION,
+           P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ACCESS_VIOLATION]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_50]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_50(
@@ -12321,8 +12336,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_50]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -12330,19 +12345,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -12350,55 +12365,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -12406,33 +12421,34 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR(
+    fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_PORT_MULTIPLEXER_ERR]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_51]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_51(
@@ -12546,8 +12562,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_51]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -12555,19 +12571,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -12575,55 +12591,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -12631,33 +12647,33 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ADDR_OUT_OF_RANGE]
 
 //>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_52]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_52(
@@ -12718,8 +12734,8 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_STATUS_52]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -12727,19 +12743,19 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
     const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -12747,55 +12763,55 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP,
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
 
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP>();
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
 
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP>();
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -12803,711 +12819,716 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_RE
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP,
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
 
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(fapi2::buffer<uint64_t>& i_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
-    fapi2::buffer<uint64_t>& i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
-    const uint64_t i_data,
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.insertFromRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-
-//>> SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-static inline fapi2::buffer<uint64_t>& SET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.setBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-
-//>> CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
-    fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return o_data.clearBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-static inline fapi2::buffer<uint64_t>& GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
-    fapi2::buffer<uint64_t>& i_data,
-    uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
-#endif
-    return i_data.extractToRight<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO,
-           1>(o_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return i_data;
-#endif
-}
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-
-//>> GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
-static inline bool GET_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP(
     fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
 #endif
-    return i_data.getBit<TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO>();
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_MEM_MAPPING_OVERLAP]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_SLAVE_SEL_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SEQUENCER_FSM_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SHIFTER_FSM_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_ANY_CONFIG_PARITY_ERR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_PORT_MUX_INDICATOR]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+
+//>> SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.setBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+
+//>> CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return o_data.clearBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.extractToRight<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+
+//>> GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
+static inline bool GET_P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO(
+    fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG));
+#endif
+    return i_data.getBit<P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPCHIP_PIB_SPIMC_SPIMST4_STATUS_REG_SPI_SEC_PIB_RETRY_RSP_INFO]
 
 //>> PREP_[TP_TPCHIP_PIB_TOD_S_PATH_CTRL_REG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

@@ -174,10 +174,10 @@ static const uint64_t SCOMFIR_AACR = 0x0c010c2cull;
 static const uint32_t SCOMFIR_AACR_BUFFER = 0;
 static const uint32_t SCOMFIR_AACR_ADDRESS = 1;
 static const uint32_t SCOMFIR_AACR_ADDRESS_LEN = 9;
-// ERROR Duplicate Dial         static const uint32_t SCOMFIR_AACR_ADDRESS = 1; // p10:20,
-// ERROR Duplicate Dial         static const uint32_t SCOMFIR_AACR_ADDRESS_LEN = 10;
+static const uint32_t P10_20_SCOMFIR_AACR_ADDRESS = 1; // p10:20,
+static const uint32_t P10_20_SCOMFIR_AACR_ADDRESS_LEN = 10;
 static const uint32_t SCOMFIR_AACR_AUTOINC = 10;
-// ERROR Duplicate Dial         static const uint32_t SCOMFIR_AACR_AUTOINC = 11; // p10:20,
+static const uint32_t P10_20_SCOMFIR_AACR_AUTOINC = 11; // p10:20,
 //<< [SCOMFIR_AACR]
 // mc/reg00008.H
 

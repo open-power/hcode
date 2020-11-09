@@ -2034,113 +2034,117 @@ fapi_try_exit:
 }
 //<< GET_[INT_CQ_PBO_CTL_RESERVED_6]
 
-//>> SET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
+#endif
+    return o_data.insertFromRight<P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+
+//>> SET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return o_data.insertFromRight<INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE,
+    return o_data.insertFromRight<P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
              scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+//<< SET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
 
-//>> SET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return o_data.insertFromRight<INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE,
-           1>(i_data);
+    return o_data.setBit<P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
              scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+//<< SET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
 
-//>> SET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return o_data.setBit<INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE>();
+    return o_data.clearBit<P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
              scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+//<< CLEAR_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
 
-//>> CLEAR_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
-static inline fapi2::buffer<uint64_t>& CLEAR_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(fapi2::buffer<uint64_t>& o_data)
+//>> GET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return o_data.clearBit<INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE>();
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
-    return o_data;
-#endif
-}
-//<< CLEAR_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
-
-//>> GET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(fapi2::buffer<uint64_t>& i_data,
-        uint64_t& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
-#endif
-    return i_data.extractToRight<INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE,
+    return i_data.extractToRight<P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
              scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+//<< GET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
 
-//>> GET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
-static inline bool GET_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+static inline bool GET_P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return i_data.getBit<INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE>();
+    return i_data.getBit<P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE chip: %x, ec: %x", scomt::chip,
              scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
+//<< GET_[P10_20_INT_CQ_PBO_CTL_EXEMPT_GRP_INT_MAX_SCOPE]
 
 //>> SET_[INT_CQ_PBO_CTL_DROP_PRI_INTRP]
 static inline fapi2::buffer<uint64_t>& SET_INT_CQ_PBO_CTL_DROP_PRI_INTRP(fapi2::buffer<uint64_t>& i_data,
@@ -3837,107 +3841,107 @@ fapi_try_exit:
 }
 //<< GET_[INT_CQ_PBO_CTL_POLLCNT_RTY_VP]
 
-//>> SET_[INT_CQ_PBO_CTL_RESERVED_34]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return o_data.insertFromRight<INT_CQ_PBO_CTL_RESERVED_34,
+    return o_data.insertFromRight<P10_20_INT_CQ_PBO_CTL_RESERVED_34,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_PBO_CTL_RESERVED_34]
+//<< SET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
 
-//>> SET_[INT_CQ_PBO_CTL_RESERVED_34]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_PBO_CTL_RESERVED_34(const uint64_t i_data,
+//>> SET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_PBO_CTL_RESERVED_34(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return o_data.insertFromRight<INT_CQ_PBO_CTL_RESERVED_34,
+    return o_data.insertFromRight<P10_20_INT_CQ_PBO_CTL_RESERVED_34,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_PBO_CTL_RESERVED_34]
+//<< SET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
 
-//>> SET_[INT_CQ_PBO_CTL_RESERVED_34]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return o_data.setBit<INT_CQ_PBO_CTL_RESERVED_34>();
+    return o_data.setBit<P10_20_INT_CQ_PBO_CTL_RESERVED_34>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_PBO_CTL_RESERVED_34]
+//<< SET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
 
-//>> CLEAR_[INT_CQ_PBO_CTL_RESERVED_34]
-static inline fapi2::buffer<uint64_t>& CLEAR_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return o_data.clearBit<INT_CQ_PBO_CTL_RESERVED_34>();
+    return o_data.clearBit<P10_20_INT_CQ_PBO_CTL_RESERVED_34>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[INT_CQ_PBO_CTL_RESERVED_34]
+//<< CLEAR_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
 
-//>> GET_[INT_CQ_PBO_CTL_RESERVED_34]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return i_data.extractToRight<INT_CQ_PBO_CTL_RESERVED_34,
+    return i_data.extractToRight<P10_20_INT_CQ_PBO_CTL_RESERVED_34,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_PBO_CTL_RESERVED_34]
+//<< GET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
 
-//>> GET_[INT_CQ_PBO_CTL_RESERVED_34]
-static inline bool GET_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
+static inline bool GET_P10_20_INT_CQ_PBO_CTL_RESERVED_34(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_PBO_CTL));
 #endif
-    return i_data.getBit<INT_CQ_PBO_CTL_RESERVED_34>();
+    return i_data.getBit<P10_20_INT_CQ_PBO_CTL_RESERVED_34>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_INT_CQ_PBO_CTL_RESERVED_34 chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_PBO_CTL_RESERVED_34]
+//<< GET_[P10_20_INT_CQ_PBO_CTL_RESERVED_34]
 
 //>> SET_[INT_CQ_PBO_CTL_POLLCNT_RTY_GRP]
 static inline fapi2::buffer<uint64_t>& SET_INT_CQ_PBO_CTL_POLLCNT_RTY_GRP(fapi2::buffer<uint64_t>& i_data,

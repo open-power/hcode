@@ -7641,8 +7641,8 @@ fapi_try_exit:
 }
 //<< GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_FIR_SPARE_3]
 
-//>> SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(
+//>> SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -7651,39 +7651,20 @@ static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_INACT
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return o_data.insertFromRight<PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR,
+    return o_data.insertFromRight<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+//<< SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
 
-//>> SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
-                           PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
-#endif
-    return o_data.insertFromRight<PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
-
-//>> SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(
+//>> SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(
+    const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -7691,18 +7672,19 @@ static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_INACT
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return o_data.setBit<PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR>();
+    return o_data.insertFromRight<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR,
+           1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+//<< SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
 
-//>> CLEAR_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& CLEAR_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(
+//>> SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -7710,18 +7692,37 @@ static inline fapi2::buffer<uint64_t>& CLEAR_PB_COM_SCOM_ES3_STATION_FIR_REG_INA
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return o_data.clearBit<PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR>();
+    return o_data.setBit<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+//<< SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
 
-//>> GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& GET_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(
+//>> CLEAR_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
+                           PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
+#endif
+    return o_data.clearBit<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+
+//>> GET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -7730,34 +7731,34 @@ static inline fapi2::buffer<uint64_t>& GET_PB_COM_SCOM_ES3_STATION_FIR_REG_INACT
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return i_data.extractToRight<PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR,
+    return i_data.extractToRight<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+//<< GET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
 
-//>> GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
-static inline bool GET_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+static inline bool GET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return i_data.getBit<PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR>();
+    return i_data.getBit<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
+//<< GET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_INACTIVE_LINK_ERROR]
 
 //>> SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_COHERENCY_ERROR]
 static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_COHERENCY_ERROR(
@@ -8320,8 +8321,8 @@ fapi_try_exit:
 }
 //<< GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_FIR_SPARE_8]
 
-//>> SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(
+//>> SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
@@ -8330,39 +8331,20 @@ static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIV
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return o_data.insertFromRight<PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR,
+    return o_data.insertFromRight<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+//<< SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
 
-//>> SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
-{
-#ifdef SCOM_CHECKING
-    FAPI_TRY(scomt::failOn(0xa, 0x10));
-    FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
-                           PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
-#endif
-    return o_data.insertFromRight<PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR,
-           1>(i_data);
-#ifdef SCOM_CHECKING
-fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
-             scomt::chip, scomt::ec);
-    return o_data;
-#endif
-}
-//<< SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
-
-//>> SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(
+//>> SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(
+    const uint64_t i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -8370,18 +8352,19 @@ static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIV
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return o_data.setBit<PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR>();
+    return o_data.insertFromRight<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR,
+           1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+//<< SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
 
-//>> CLEAR_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& CLEAR_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(
+//>> SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
@@ -8389,18 +8372,37 @@ static inline fapi2::buffer<uint64_t>& CLEAR_PB_COM_SCOM_ES3_STATION_FIR_REG_ACT
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return o_data.clearBit<PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR>();
+    return o_data.setBit<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+//<< SET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
 
-//>> GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
-static inline fapi2::buffer<uint64_t>& GET_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(
+//>> CLEAR_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
+                           PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
+#endif
+    return o_data.clearBit<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+
+//>> GET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(
     fapi2::buffer<uint64_t>& i_data,
     uint64_t& o_data)
 {
@@ -8409,34 +8411,34 @@ static inline fapi2::buffer<uint64_t>& GET_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIV
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return i_data.extractToRight<PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR,
+    return i_data.extractToRight<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+//<< GET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
 
-//>> GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
-static inline bool GET_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+static inline bool GET_P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(PB_COM_SCOM_ES3_STATION_FIR_REG_RW, PB_COM_SCOM_ES3_STATION_FIR_REG_WO_AND,
                            PB_COM_SCOM_ES3_STATION_FIR_REG_WO_OR));
 #endif
-    return i_data.getBit<PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR>();
+    return i_data.getBit<P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR chip: %x, ec: %x",
              scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
+//<< GET_[P10_20_PB_COM_SCOM_ES3_STATION_FIR_REG_ACTIVE_LINK_ERROR]
 
 //>> SET_[PB_COM_SCOM_ES3_STATION_FIR_REG_HANG_RECOVERY_GTE_LEVEL1]
 static inline fapi2::buffer<uint64_t>& SET_PB_COM_SCOM_ES3_STATION_FIR_REG_HANG_RECOVERY_GTE_LEVEL1(

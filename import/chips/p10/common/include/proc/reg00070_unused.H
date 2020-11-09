@@ -755,725 +755,752 @@ fapi_try_exit:
 }
 //<< GET_[INT_CQ_XIVE_CAP_INT_CQ_XIVE_CAP_INFO_0_63]
 
-//>> SET_[INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_XIVE_INFO_0_55(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_XIVE_INFO_0_55,
-           INT_CQ_XIVE_CAP_XIVE_INFO_0_55_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55,
+           P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_XIVE_CAP_XIVE_INFO_0_55 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
 
-//>> SET_[INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_XIVE_INFO_0_55(const uint64_t i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_XIVE_INFO_0_55,
-           INT_CQ_XIVE_CAP_XIVE_INFO_0_55_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55,
+           P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_XIVE_CAP_XIVE_INFO_0_55 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
 
-//>> GET_[INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_XIVE_CAP_XIVE_INFO_0_55(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.extractToRight<INT_CQ_XIVE_CAP_XIVE_INFO_0_55,
-           INT_CQ_XIVE_CAP_XIVE_INFO_0_55_LEN>(o_data);
+    return i_data.extractToRight<P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55,
+           P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_XIVE_CAP_XIVE_INFO_0_55 chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_XIVE_INFO_0_55]
 
-//>> SET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_PHB_PQ_DISABLE,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
 
-//>> SET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(const uint64_t i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_PHB_PQ_DISABLE,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
 
-//>> SET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.setBit<INT_CQ_XIVE_CAP_PHB_PQ_DISABLE>();
+    return o_data.setBit<P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
 
-//>> CLEAR_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
-static inline fapi2::buffer<uint64_t>& CLEAR_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.clearBit<INT_CQ_XIVE_CAP_PHB_PQ_DISABLE>();
+    return o_data.clearBit<P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+//<< CLEAR_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
 
-//>> GET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.extractToRight<INT_CQ_XIVE_CAP_PHB_PQ_DISABLE,
+    return i_data.extractToRight<P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
 
-//>> GET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
-static inline bool GET_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+static inline bool GET_P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.getBit<INT_CQ_XIVE_CAP_PHB_PQ_DISABLE>();
+    return i_data.getBit<P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_PHB_PQ_DISABLE]
 
-//>> SET_[INT_CQ_XIVE_CAP_PHB_ABT]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_PHB_ABT,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_PHB_ABT,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_PHB_ABT]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
 
-//>> SET_[INT_CQ_XIVE_CAP_PHB_ABT]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_PHB_ABT(const uint64_t i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_PHB_ABT(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_PHB_ABT,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_PHB_ABT,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_PHB_ABT]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
 
-//>> SET_[INT_CQ_XIVE_CAP_PHB_ABT]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.setBit<INT_CQ_XIVE_CAP_PHB_ABT>();
+    return o_data.setBit<P10_20_INT_CQ_XIVE_CAP_PHB_ABT>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_PHB_ABT]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
 
-//>> CLEAR_[INT_CQ_XIVE_CAP_PHB_ABT]
-static inline fapi2::buffer<uint64_t>& CLEAR_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.clearBit<INT_CQ_XIVE_CAP_PHB_ABT>();
+    return o_data.clearBit<P10_20_INT_CQ_XIVE_CAP_PHB_ABT>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[INT_CQ_XIVE_CAP_PHB_ABT]
+//<< CLEAR_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
 
-//>> GET_[INT_CQ_XIVE_CAP_PHB_ABT]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.extractToRight<INT_CQ_XIVE_CAP_PHB_ABT,
+    return i_data.extractToRight<P10_20_INT_CQ_XIVE_CAP_PHB_ABT,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_PHB_ABT]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
 
-//>> GET_[INT_CQ_XIVE_CAP_PHB_ABT]
-static inline bool GET_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
+static inline bool GET_P10_20_INT_CQ_XIVE_CAP_PHB_ABT(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.getBit<INT_CQ_XIVE_CAP_PHB_ABT>();
+    return i_data.getBit<P10_20_INT_CQ_XIVE_CAP_PHB_ABT>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_PHB_ABT chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_PHB_ABT]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_PHB_ABT]
 
-//>> SET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_EXPLOITATION_MODE,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
 
-//>> SET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(const uint64_t i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_EXPLOITATION_MODE,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
 
-//>> SET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.setBit<INT_CQ_XIVE_CAP_EXPLOITATION_MODE>();
+    return o_data.setBit<P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
 
-//>> CLEAR_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
-static inline fapi2::buffer<uint64_t>& CLEAR_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.clearBit<INT_CQ_XIVE_CAP_EXPLOITATION_MODE>();
+    return o_data.clearBit<P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+//<< CLEAR_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
 
-//>> GET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.extractToRight<INT_CQ_XIVE_CAP_EXPLOITATION_MODE,
+    return i_data.extractToRight<P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
 
-//>> GET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
-static inline bool GET_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+static inline bool GET_P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.getBit<INT_CQ_XIVE_CAP_EXPLOITATION_MODE>();
+    return i_data.getBit<P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_EXPLOITATION_MODE]
 
-//>> SET_[INT_CQ_XIVE_CAP_STORE_EOI]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_STORE_EOI,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_STORE_EOI,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_STORE_EOI]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
 
-//>> SET_[INT_CQ_XIVE_CAP_STORE_EOI]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_STORE_EOI(const uint64_t i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_STORE_EOI(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_STORE_EOI,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_STORE_EOI,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_STORE_EOI]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
 
-//>> SET_[INT_CQ_XIVE_CAP_STORE_EOI]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.setBit<INT_CQ_XIVE_CAP_STORE_EOI>();
+    return o_data.setBit<P10_20_INT_CQ_XIVE_CAP_STORE_EOI>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_STORE_EOI]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
 
-//>> CLEAR_[INT_CQ_XIVE_CAP_STORE_EOI]
-static inline fapi2::buffer<uint64_t>& CLEAR_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.clearBit<INT_CQ_XIVE_CAP_STORE_EOI>();
+    return o_data.clearBit<P10_20_INT_CQ_XIVE_CAP_STORE_EOI>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[INT_CQ_XIVE_CAP_STORE_EOI]
+//<< CLEAR_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
 
-//>> GET_[INT_CQ_XIVE_CAP_STORE_EOI]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.extractToRight<INT_CQ_XIVE_CAP_STORE_EOI,
+    return i_data.extractToRight<P10_20_INT_CQ_XIVE_CAP_STORE_EOI,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_STORE_EOI]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
 
-//>> GET_[INT_CQ_XIVE_CAP_STORE_EOI]
-static inline bool GET_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
+static inline bool GET_P10_20_INT_CQ_XIVE_CAP_STORE_EOI(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.getBit<INT_CQ_XIVE_CAP_STORE_EOI>();
+    return i_data.getBit<P10_20_INT_CQ_XIVE_CAP_STORE_EOI>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_STORE_EOI chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_STORE_EOI]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_STORE_EOI]
 
-//>> SET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
 
-//>> SET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(const uint64_t i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
 
-//>> SET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.setBit<INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL>();
+    return o_data.setBit<P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
 
-//>> CLEAR_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
-static inline fapi2::buffer<uint64_t>& CLEAR_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.clearBit<INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL>();
+    return o_data.clearBit<P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+//<< CLEAR_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
 
-//>> GET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.extractToRight<INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL,
+    return i_data.extractToRight<P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
 
-//>> GET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
-static inline bool GET_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+static inline bool GET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.getBit<INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL>();
+    return i_data.getBit<P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_SYNC_KILL]
 
-//>> SET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_SCALABLE_WATCH,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
 
-//>> SET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_SCALABLE_WATCH(const uint64_t i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_SCALABLE_WATCH,
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
 
-//>> SET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.setBit<INT_CQ_XIVE_CAP_SCALABLE_WATCH>();
+    return o_data.setBit<P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("2:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
 
-//>> CLEAR_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
-static inline fapi2::buffer<uint64_t>& CLEAR_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.clearBit<INT_CQ_XIVE_CAP_SCALABLE_WATCH>();
+    return o_data.clearBit<P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("3:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+//<< CLEAR_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
 
-//>> GET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.extractToRight<INT_CQ_XIVE_CAP_SCALABLE_WATCH,
+    return i_data.extractToRight<P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
 
-//>> GET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
-static inline bool GET_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+static inline bool GET_P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.getBit<INT_CQ_XIVE_CAP_SCALABLE_WATCH>();
+    return i_data.getBit<P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_proc Invalid dial access INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("5:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_SCALABLE_WATCH]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_SCALABLE_WATCH]
 
-//>> SET_[INT_CQ_XIVE_CAP_RSVD]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_RSVD(fapi2::buffer<uint64_t>& i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_RSVD]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_RSVD(fapi2::buffer<uint64_t>& i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_RSVD,
-           INT_CQ_XIVE_CAP_RSVD_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_RSVD,
+           P10_20_INT_CQ_XIVE_CAP_RSVD_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_proc Invalid dial access INT_CQ_XIVE_CAP_RSVD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_RSVD chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_RSVD]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_RSVD]
 
-//>> SET_[INT_CQ_XIVE_CAP_RSVD]
-static inline fapi2::buffer<uint64_t>& SET_INT_CQ_XIVE_CAP_RSVD(const uint64_t i_data,
+//>> SET_[P10_20_INT_CQ_XIVE_CAP_RSVD]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_INT_CQ_XIVE_CAP_RSVD(const uint64_t i_data,
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return o_data.insertFromRight<INT_CQ_XIVE_CAP_RSVD,
-           INT_CQ_XIVE_CAP_RSVD_LEN>(i_data);
+    return o_data.insertFromRight<P10_20_INT_CQ_XIVE_CAP_RSVD,
+           P10_20_INT_CQ_XIVE_CAP_RSVD_LEN>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_proc Invalid dial access INT_CQ_XIVE_CAP_RSVD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_RSVD chip: %x, ec: %x", scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[INT_CQ_XIVE_CAP_RSVD]
+//<< SET_[P10_20_INT_CQ_XIVE_CAP_RSVD]
 
-//>> GET_[INT_CQ_XIVE_CAP_RSVD]
-static inline fapi2::buffer<uint64_t>& GET_INT_CQ_XIVE_CAP_RSVD(fapi2::buffer<uint64_t>& i_data,
+//>> GET_[P10_20_INT_CQ_XIVE_CAP_RSVD]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_INT_CQ_XIVE_CAP_RSVD(fapi2::buffer<uint64_t>& i_data,
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(INT_CQ_XIVE_CAP));
 #endif
-    return i_data.extractToRight<INT_CQ_XIVE_CAP_RSVD,
-           INT_CQ_XIVE_CAP_RSVD_LEN>(o_data);
+    return i_data.extractToRight<P10_20_INT_CQ_XIVE_CAP_RSVD,
+           P10_20_INT_CQ_XIVE_CAP_RSVD_LEN>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_proc Invalid dial access INT_CQ_XIVE_CAP_RSVD chip: %x, ec: %x", scomt::chip, scomt::ec);
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_INT_CQ_XIVE_CAP_RSVD chip: %x, ec: %x", scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[INT_CQ_XIVE_CAP_RSVD]
+//<< GET_[P10_20_INT_CQ_XIVE_CAP_RSVD]
 
 //>> PREP_[INT_CQ_XIVE_CFG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
