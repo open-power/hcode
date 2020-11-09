@@ -42,7 +42,6 @@
 // ------------|--------|-------------------------------------------------------
 // jfg20090100 |jfg     | HW532333 Move offset changes to eo_main
 // jfg20081400 |jfg     | HW532333 Add new static PR Offset feature
-// jfg20091600 |jfg     | HW544800 Remove max-eye branch from 0x8013 to continue straight 0x8003 edge seek. Increase hyst per-measured-EW
 // jfg20042000 |jfg     | HW523199 Remove ddc_last_left & ddc_last_right and add per-lane history recording.
 // jfg20042000 |jfg     | HW523199 Replace ddc_hist_left/right with ddc_hyst_left_right
 // jfg20041400 |jfg     | HW518382 Regression exposed a possible error in QPA offset comparison using signed math on a signed value instead of unsigned
@@ -395,16 +394,15 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
         if (*ber_reported == max_eye)
         {
             // In this case, simply remove one step for margin to ensure no errors and exit with a large eye measurement.
-            // obsolete now with else removed on next block: *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, seek_quad, pr_vals);//, ber_count
+            *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, seek_quad, pr_vals);//, ber_count
             mem_pl_field_put(rx_ddc_measure_limited, lane, 1);
             set_debug_state(0x8012 ); // DEBUG max eye check
         }
-
+        else
         {
-            // No else here...state x8012 max eye condition is an additional status set state...continue as normal.
 
             //An extra step for margin.
-            //*ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, revSeekDir, false, seek_quad, pr_vals);//, ber_count
+            *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, revSeekDir, false, seek_quad, pr_vals);//, ber_count
 
             ///////DEBUG
             set_debug_state(0x8013); // DEBUG - 4: Search LEFT to return to ber_count limit
@@ -768,8 +766,6 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
 
     int old_offset = Dsave[0] - Dsave[1];
     int new_offset = ddc_offset_w_hyst[0] - ddc_offset_w_hyst[1];
-    int width = last_right_edge_reg + last_left_edge_reg;
-    ddc_hyst_val += (width >> 4);
 
     // If the difference between the left and right edges exceeds the hysteresis then shift the offset and save the new measurements.
     if (((((abs(ddc_offset_w_hyst[0]) > ddc_hyst_val) || (abs(ddc_offset_w_hyst[1]) > ddc_hyst_val)
@@ -874,8 +870,9 @@ int eo_ddc(t_gcr_addr* gcr_addr, t_bank bank, bool recal, bool recal_dac_changed
     int hist_width_reg   = mem_regs_u16[pg_addr(
                                             rx_hist_min_eye_width_lane_addr)]; //Only works if lane & valid occupy same addr.
     int hist_width_lane  = bitfield_get(hist_width_reg, rx_hist_min_eye_width_lane_mask, rx_hist_min_eye_width_lane_shift);
-
     // Read width of lane
+    int width = last_right_edge_reg + last_left_edge_reg;
+
     if ( update_mode == 0 || ((update_mode == 1) && (lane == hist_width_lane)) )
     {
         int hist_width_valid = bitfield_get(hist_width_reg, rx_hist_min_eye_width_valid_mask,

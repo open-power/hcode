@@ -39,7 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
-// bja20092800 |bja     | Use shared constants for TX register overrides
 // bja20090800 |bja     | HW542315: make in_tx_half_width_mode() return false for p10 dd1 omi
 // gap20082500 |gap     | HW542315: add tx_write_4_bit_pat and in_tx_half_width_mode for half/full width
 // mwh20022400 |mwh     | Add in function check_for_rxpsave_req_sts and check_for_txpsave_req_sts
@@ -146,11 +145,6 @@ typedef enum
 #define pr_mini_min 0x00
 #define pr_mini_max 0x1F
 #define pr_mini_cen 0x10
-
-// TX post-RIT register override constants
-#define P10_DD1_TX_D2_CTRL 0b00
-#define P10_DD1_TX_D2_DIV_CTRL 0b01
-#define TX_DCC_SEL_ALIAS_DEFAULT 0b10
 
 // Making a procedure inline means that the compiled code is copied to the location it is used instead of having to jump to the code location.
 // This saves a jump/return and should also save having to push values onto the stack (which is additional code).

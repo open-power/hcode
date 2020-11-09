@@ -39,7 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
-// bja20092800 |bja     | Use shared constants for TX register overrides
 // bja20091500 |bja     | HW544277: Use main path by default for dcc
 // bja20091400 |bja     | HW544277: Prevent replica path in anything but p10 dd1
 // bja20090900 |bja     | Use common is_p10_dd1() check
@@ -85,7 +84,7 @@ void tx_dcc_main_init(t_gcr_addr* gcr_addr_i)
     {
         use_repmux_l = false;
         // HW544277: default is main path
-        put_ptr_field(gcr_addr_i, tx_dcc_sel_alias, TX_DCC_SEL_ALIAS_DEFAULT, read_modify_write); //pl
+        put_ptr_field(gcr_addr_i, tx_dcc_sel_alias,  0b10, read_modify_write); //pl
     }
 
     uint32_t tx_dcc_main_min_samples_int = mem_pg_field_get(tx_dcc_main_min_samples);
@@ -95,7 +94,7 @@ void tx_dcc_main_init(t_gcr_addr* gcr_addr_i)
     put_ptr_field(gcr_addr_i, tx_dcc_iq_tune,  IntToGray5IQ(0), read_modify_write);
 
     // power on dcc if not p10 dd1; p10 dd1 does not allow this control
-    if ( ! is_p10_dd1() )   // not p10 dd1
+    if ( !IS_P10_DD1 )   // not p10 dd1
     {
         put_ptr_field(gcr_addr_i, tx_bank_controls_dcc_alias,  0b0, read_modify_write); //pl power-on, active low
     }
@@ -122,7 +121,7 @@ void tx_dcc_main_init(t_gcr_addr* gcr_addr_i)
     }
 
     // power off dcc if not dd1; dd1 does not allow this control
-    if ( ! is_p10_dd1() )   // not p10 dd1
+    if ( !IS_P10_DD1 )   // not p10 dd1
     {
         put_ptr_field(gcr_addr_i, tx_bank_controls_dcc_alias,  0b1, read_modify_write); //pl power-on, active low
     }

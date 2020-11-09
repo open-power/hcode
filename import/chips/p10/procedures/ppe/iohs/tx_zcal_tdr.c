@@ -39,7 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
-// gap20092200 |gap     | Update for 32:1 in 16:1 mode
 // gap20040100 |gap     | Commented out some superfluous set_debug_state statements
 // gap20032600 |gap     | Added wait time for th after changing segments
 // gap19041000 |gap     | Created
@@ -63,18 +62,18 @@ void tx_zcal_tdr (t_gcr_addr* gcr_addr_i)
     int thread_l = 0;
     thread_l = get_gcr_addr_thread(gcr_addr_i);
 
-    // setup tdr; offset reg value is a function of what is being called half_width_mode
+    // setup tdr; offset in ui is a function of the grid to interface ratio
     uint16_t tdr_offset_l = 0;
 
-    if ( in_tx_half_width_mode() )   // offset_reg=2*offset_ui
+    if ( fw_field_get(fw_serdes_16_to_1_mode) )   // 16:1
     {
-        set_debug_state(0xC101); // tx_zcal_tdr half_width
-        tdr_offset_l = 2 * 16 * tx_zcal_tdr_sample_position_c;
-    }
-    else   // offset_reg=offset_ui
-    {
-        set_debug_state(0xC102); // tx_zcal_tdr normal_16_to_1
+        set_debug_state(0xC101); // tx_zcal_tdr 16:1
         tdr_offset_l = 16 * tx_zcal_tdr_sample_position_c;
+    }
+    else   // 32:1
+    {
+        set_debug_state(0xC102); // tx_zcal_tdr 32:1
+        tdr_offset_l = 32 * tx_zcal_tdr_sample_position_c;
     }
 
     put_ptr_field(gcr_addr_i, tx_tdr_pulse_offset, tdr_offset_l, read_modify_write);

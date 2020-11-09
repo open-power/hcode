@@ -39,7 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
-// bja20090900 |bja     | Use common is_p10_dd1() check
 // mbs20073000 |mbs     | LAB - Added workaround hooks for run_servo_ops_base
 // vbr20030900 |vbr     | HW525544: Make ppe_servo_status0/1 trap registers and clear the hw servo_status0/1 registers after copying
 // vbr20012400 |vbr     | HW520453: Clear the scom_ppe_fir reg bit before setting it again since FW can't write to it on DD1
@@ -221,7 +220,8 @@ int run_servo_ops_base(t_gcr_addr* gcr_addr, unsigned int queue, unsigned int nu
     unsigned int ops_done = 0;
     unsigned int servo_op_queue_addr = (queue == c_servo_queue_general) ? rx_servo_op_queue0_addr : rx_servo_op_queue1_addr;
 
-    if ( is_p10_dd1() )
+    if (   ( get_chip_id()  == CHIP_ID_P10  )
+           && ( get_major_ec() == MAJOR_EC_DD1 ) )
     {
         // >>>> WORKAROUND >>>>>
         unsigned int l_is_eoff = get_ptr_field(gcr_addr, rx_loff_livedge_mode);

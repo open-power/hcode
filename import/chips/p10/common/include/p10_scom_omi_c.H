@@ -71,14 +71,6 @@ static const uint32_t DLX_INFO_DL1_STS_DLX_INFO_LEN = 64;
 //<< [DLX_INFO]
 // omi/reg00024.H
 
-//>> [RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL]
-static const uint64_t RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL = 0x8003c04010012c3full;
-
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL_INIT_DONE = 48;
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL_RECAL_DONE = 49;
-//<< [RXCTL_DATASM_0_PLREGS_RX_CNTL1_PL]
-// omi/reg00024.H
-
 //>>THE END<<
 
 #ifndef __PPE_HCODE__

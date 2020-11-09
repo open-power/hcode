@@ -39,8 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
-// mwh20100800 |mwh     | Add in bist_check to turn on or off the bist checks
-// -----------------------------------------------------------------------------
 // mwh19032100 |mwh     | Add in vga_llop_count
 // -----------------------------------------------------------------------------
 // mwh18062100 |mwh     | Initial Rev
@@ -53,6 +51,6 @@
 #include "eo_common.h"
 
 // Live data edge offset
-int eo_eoff(t_gcr_addr* gcr_addr, bool recal, int vga_loop_count, t_bank bank, bool bist_check);
+int eo_eoff(t_gcr_addr* gcr_addr, bool recal, int vga_loop_count, t_bank bank);
 
 #endif //_EO_EOFF_H_

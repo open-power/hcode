@@ -39,7 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
-// gap20092200 |gap     | Update for 32:1 in 16:1 mode
 // gap20032600 |gap     | Added wait time for th after changing segments
 // vbr19111500 |vbr     | Initial implementation of debug levels
 // gap19091000 |gap     | Change rx_dcc_debug to tx_dcc_debug HW503432
@@ -54,13 +53,12 @@
 #define tx_zcal_tdr_dac_25percent_vio_c     64 /* assumes 255 step dac                                     */
 
 /* at 16 ui/grid clk, 32G, a value of 100 gives a 100nS pulse width                                        */
-#define tx_zcal_tdr_pulse_width_c          100 /* width of pulse; period is 4*pulse_width*grid clk period  */
+#define tx_zcal_tdr_pulse_width_c          100 /* width of tdr pulse; period is 4*grid clk period * this   */
 
 /* want the sample after the pulse settling time; the later in the pulse, the better, though we don't want */
-/* to hit the trailing edge                                                                                */
-/* designer sim shows TH to edge with offset 0 is 100 UI =~ 7 grid clocks at 16ui/grid clock               */
-/* for some margin, sampling 10 grid clocks from end; => offset 2*pw_reg_val - 10 = 190                    */
+/* to hit the trailing edge; arbitrarily choosing 10 from the end                                          */
 #define tx_zcal_tdr_sample_position_c      190 /* grid clocks from start of pulse to sample                */
+#define tx_zcal_tdr_16to1_grid_clk_ratio_c  16 /* ui's/pulse_width value for 16:1                          */
 #define tx_zcal_tdr_matches_needed_c         2 /* # compare reads that must match before removing segments */
 
 /* 20 tdr pulses to settle; at 50G, 32:1, pw=100; a period is 12800/50 = 256nS; x 20 = 5.12 uS; assume at  */

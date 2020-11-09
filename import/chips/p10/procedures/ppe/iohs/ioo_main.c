@@ -39,7 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
-// bja20090900 |bja     | Use common is_p10_dd1() check
 // mbs20073000 |mbs     | LAB - Disabled watchdog timeout for P10 dd1.0
 // vbr20030100 |vbr     | Added sim override of watchdog timeout select
 // cws20012200 |cws     | Cleared the debug log number
@@ -188,7 +187,8 @@ int main(int argc, char** argv)
     // The WDT runs on the hang pulse (32ns) and it expires after 2^(23-watchdog_select) pulses.
     // TCR[DIE] is already set by kernel to enable the decrement counter interrupt for the timebase.
     // TCR[DS] is also already set by the kernel when using the hang pulse for the timebase.
-    if ( ! is_p10_dd1() )
+    if (   ( get_chip_id()  != CHIP_ID_P10  )
+           || ( get_major_ec() != MAJOR_EC_DD1 ) )
     {
         or_spr(SPRN_TCR, TCR_WP_1 | TCR_WRC_HALT);
     }

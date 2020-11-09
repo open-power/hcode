@@ -39,7 +39,6 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
-// mwh20092100 |mwh     | Add in the if statement for dac test code so will not run on DD1 or even if cmd is given
 // mbs20072800 |mbs     | HW537933 - Updated dl_recal_req to fix issue with sending recal done erroneously after init_req is high
 // mbs20072700 |mbs     | HW537933 - Updated dl_recal_req to complete recal handshake even when run_lane is 0
 // gap20021100 |gap     | Added tx_zcal_bist in cmd_tx_bist_tests_pl
@@ -145,7 +144,6 @@
 #include "txbist_main.h"
 #include "eo_rxbist_ber.h"
 #include "eo_llbist.h"
-#include "eo_dac_test.h"
 
 #include "ppe_fw_reg_const_pkg.h"
 #include "ppe_img_reg_const_pkg.h"
@@ -537,7 +535,6 @@ static void cmd_tx_ffe_pl(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
  */
 static void cmd_dccal_pl(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
 {
-
     //set_debug_state(0x000E);
     uint32_t l_lane = 0;
     uint32_t i_lane_shift = i_lane_mask;
@@ -676,23 +673,9 @@ static void cmd_tx_fifo_init_pl(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_m
  */
 static void cmd_rx_bist_tests_pl(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
 {
-    //Put it here -- not in dccal -- ??
-    set_debug_state(0x001A);
+    //set_debug_state(0x001A);
     // TODO Write Code
-
-    if ( ! is_p10_dd1() )
-    {
-        //P10 DD2 or more and Za DD1 or more
-        int rx_dac_test_check_en_int = get_ptr_field(io_gcr_addr, rx_dac_test_check_en); //pg
-
-        if(rx_dac_test_check_en_int)
-        {
-            //begin if
-            eo_dac_test(io_gcr_addr, i_lane_mask);
-        }//end if
-    }//run if not DD1
-
-    set_debug_state(0x001B);
+    //set_debug_state(0x001B);
     return;
 }
 
