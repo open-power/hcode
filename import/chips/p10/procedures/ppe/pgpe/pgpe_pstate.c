@@ -1180,6 +1180,7 @@ void pgpe_pstate_pmsr_write()
 #else
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value);
     PK_TRACE("PMSR WRAddr=0x%x, RdAddr=0x%x", PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), PPE_SCOM_ADDR_MC_OR(QME_PMSRS, 0xF));
+    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value); //HW Bug workaround. Rewrite PMSR
 #endif
 }
 
