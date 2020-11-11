@@ -1,0 +1,154 @@
+#!/usr/bin/perl
+# IBM_PROLOG_BEGIN_TAG
+# This is an automatically generated prolog.
+#
+# $Source: import/chips/p10/procedures/ppe/iop/gen_iop_bin_ver $
+#
+# OpenPOWER EKB Project
+#
+# COPYRIGHT 2020
+# [+] International Business Machines Corp.
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
+#
+# IBM_PROLOG_END_TAG
+
+# Generates iop version binary data file from iop.fw
+
+use warnings;
+use strict;
+use Getopt::Long;
+
+my $iop_bin_output = undef;
+my $debug = 0;
+GetOptions("output-file=s" => \$iop_bin_output,
+           "debug"         => \$debug);
+
+my $num_args = $#ARGV + 1;
+if (($num_args < 1) || (!defined($iop_bin_output)))
+{
+    print("Usage: gen_iop_ver_bin --output-file=<output file> <IOP fw file>\n");
+    printf(" ${num_args}\n");
+    printf(" $iop_bin_output\n");
+    print("  This perl script will generate the IOP fw version binary file.\n");
+    exit(1);
+}
+
+# Set input/output fies
+my $iop_fw_file  = $ARGV[0];
+if ($debug)
+{
+  printf("Input file : $iop_fw_file\n");
+  printf("Output file: $iop_bin_output\n");
+}
+
+# Read input file
+my @input_lines;
+open(INFILE, $iop_fw_file) || die "\n\nERROR: Could not open $iop_fw_file.\n$!\n\n";
+@input_lines = <INFILE>;
+close(INFILE);
+
+# Open output file
+open(OUTFILE, '>:raw', $iop_bin_output) || die "\n\nERROR: Could not open $iop_bin_output\n$!\n\n";
+
+my $date_enc = 0x0000;
+my $date_str_found = 0;
+
+my $fw_enc = 0x0000;
+my $fw_str_found = 0;
+
+# For each line from input file
+foreach my $line (@input_lines)
+{
+  if ($line =~ /Generated on (\d+)-(\S+)-(\d+)_/)
+  {
+    my $build_y = $1;
+    my $build_m = $2;
+    my $build_d = $3;
+
+    $date_enc = $build_y - 2018;
+    die "Build year ($build_y) unrecognized" unless ($build_y > 2018);
+    die "Build year ($build_y) would overflow" unless ($date_enc < 8);
+
+    if    ($build_m eq "Jan") { $build_m = 1;  }
+    elsif ($build_m eq "Feb") { $build_m = 2;  }
+    elsif ($build_m eq "Mar") { $build_m = 3;  }
+    elsif ($build_m eq "Apr") { $build_m = 4;  }
+    elsif ($build_m eq "May") { $build_m = 5;  }
+    elsif ($build_m eq "Jun") { $build_m = 6;  }
+    elsif ($build_m eq "Jul") { $build_m = 7;  }
+    elsif ($build_m eq "Aug") { $build_m = 8;  }
+    elsif ($build_m eq "Sep") { $build_m = 9;  }
+    elsif ($build_m eq "Oct") { $build_m = 10; }
+    elsif ($build_m eq "Nov") { $build_m = 11; }
+    elsif ($build_m eq "Dec") { $build_m = 12; }
+    else
+    {
+      die "Build month ($build_m) string is unsupported";
+    }
+    $date_enc |= ($build_m << 3);
+
+    $date_enc |= (($build_d & 0x1F) << 7);
+
+    $date_str_found = 1;
+  }
+  elsif ($line =~ /FW\s+=\s+(\S+)/)
+  {
+    my $fw_str = $1;
+
+    my $fw_a = 0;
+    my $fw_b = 0;
+    my $fw_c = 0;
+    if ($fw_str =~ /(\d+)\.(\d+)[\.\_](\d+)/)
+    {
+      $fw_a = $1;
+      $fw_b = $2;
+      $fw_c = $3;
+    }
+    elsif ($fw_str =~ /(\d+)\.(\d+)/)
+    {
+      $fw_a = $1;
+      $fw_b = $2;
+    }
+    else
+    {
+      die "FW version string ($fw_str) unrecognized";
+    }
+
+    $fw_enc = (($fw_c & 0xF) |
+               (($fw_b & 0xFF) << 4) |
+               (($fw_a & 0xF)  << 12));
+
+    if ($debug)
+    {
+      printf("FW str: %s . %s . %s\n", $fw_a, $fw_b, $fw_c);
+      printf("FW enc: 0x%04X\n", $fw_enc);
+    }
+
+    $fw_str_found = 1;
+  }
+
+  if ($date_str_found && $fw_str_found)
+  {
+    last;
+  }
+}
+
+die "Did not find IOP FW version or date stamp!" unless ($date_str_found && $fw_str_found);
+
+# 's'=short, '>'=big-endian
+print OUTFILE pack('s>', $fw_enc)   ; # FW_VERSION_0
+print OUTFILE pack('s>', $date_enc) ; # FW_VERSION_1
+
+close(OUTFILE);

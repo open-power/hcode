@@ -49,6 +49,15 @@ SECTIONS
     _iop_fw_size = . - _iop_fw_origin;
 
     ////////////////////////////////
+    // IOP_FW image
+    ////////////////////////////////
+    . = ALIGN(8);
+    _iop_fw_ver_origin = .;
+    _iop_fw_ver_offset = . - _iopxram_image_origin;
+    .iop_fw_ver . : { *(.iop_fw_ver) }
+    _iop_fw_ver_size = . - _iop_fw_ver_origin;
+
+    ////////////////////////////////
     // end of the image
     ////////////////////////////////
     . = ALIGN(8);
