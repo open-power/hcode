@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019
+# COPYRIGHT 2019,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -35,6 +35,7 @@ $(eval iopxram_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
 # Files to be appended to image
 $(eval $(IMAGE)_FILE_IOPFW=$(IMAGEPATH)/gen_iop_bin/iop_fw.bin)
+$(eval $(IMAGE)_FILE_IOPFW_VER=$(IMAGEPATH)/gen_iop_bin_ver/iop_fw_ver.bin)
 
 # Setup dependencies for
 # - building image ( $(IMAGE)_DEPS_IMAGE )
@@ -42,14 +43,20 @@ $(eval $(IMAGE)_FILE_IOPFW=$(IMAGEPATH)/gen_iop_bin/iop_fw.bin)
 #   - file to be appended
 #   - all dependencies of previously appended sections or on raw image
 #   - append operation as to other section that has to be finished first
-$(eval $(IMAGE)_DEPS_IMAGE    = $$($(IMAGE)_FILE_IOPFW))
-$(eval $(IMAGE)_DEPS_IOPFW  = $$($(IMAGE)_FILE_IOPFW))
-$(eval $(IMAGE)_DEPS_IOPFW += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
-$(eval $(IMAGE)_DEPS_REPORT   = $$($(IMAGE)_DEPS_IOPFW))
-$(eval $(IMAGE)_DEPS_REPORT  += $$($(IMAGE)_PATH)/.$(IMAGE).append.iop_fw)
+$(eval $(IMAGE)_DEPS_IMAGE      = $$($(IMAGE)_FILE_IOPFW))
+$(eval $(IMAGE)_DEPS_IOPFW      = $$($(IMAGE)_FILE_IOPFW))
+$(eval $(IMAGE)_DEPS_IOPFW     += $$($(IMAGE)_PATH)/.$(IMAGE).setbuild_head_commit)
+
+$(eval $(IMAGE)_DEPS_IMAGE     += $$($(IMAGE)_FILE_IOPFW_VER))
+$(eval $(IMAGE)_DEPS_IOPFW_VER  = $$($(IMAGE)_FILE_IOPFW_VER))
+$(eval $(IMAGE)_DEPS_IOPFW_VER += $$($(IMAGE)_PATH)/.$(IMAGE).append.iop_fw)
+
+$(eval $(IMAGE)_DEPS_REPORT    = $$($(IMAGE)_DEPS_IOPFW_VER))
+$(eval $(IMAGE)_DEPS_REPORT   += $$($(IMAGE)_PATH)/.$(IMAGE).append.iop_fw_ver)
 
 # Image build using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.iop_fw,$$($(IMAGE)_DEPS_IOPFW),$$($(IMAGE)_FILE_IOPFW)))
+$(eval $(call XIP_TOOL,append,.iop_fw_ver,$$($(IMAGE)_DEPS_IOPFW_VER),$$($(IMAGE)_FILE_IOPFW_VER)))
 
 # Create image report for image with all files appended
 $(eval $(call XIP_TOOL,report,,$$($(IMAGE)_DEPS_REPORT)))

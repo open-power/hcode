@@ -65,7 +65,7 @@ __header_64_reserved:
         .xip_section strings
 
         .xip_section iop_fw,           8
-        .xip_section
+        .xip_section iop_fw_ver        8
         .xip_section
         .xip_section
         .xip_section
