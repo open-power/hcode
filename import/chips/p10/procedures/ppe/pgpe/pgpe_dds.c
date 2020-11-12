@@ -49,17 +49,24 @@ void* pgpe_dds_data_addr()
 //
 void pgpe_dds_init(uint32_t pstate)
 {
+    PK_TRACE("DDS: Init Enter");
     uint32_t q, c;
 
     //1. Write DCCR, FLMR and FMMR values
     //Write DCCR
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_DCCR, 0xF), pgpe_gppb_get_dds_other_droop_count_control());
+    PK_TRACE("DDS: DCCR=0x%08x%08x", pgpe_gppb_get_dds_other_droop_count_control() >> 32,
+             pgpe_gppb_get_dds_other_droop_count_control());
 
     //Write FLMR
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FLMR_RW, 0xF), pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting());
+    PK_TRACE("DDS: FLMR=0x%08x%08x", pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting() >> 32,
+             pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting());
 
     //Write FMMR
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FMMR_RW, 0xF), pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting());
+    PK_TRACE("DDS: FMMR=0x%08x%08x", pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting() >> 32,
+             pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting());
 
     //2 Set OTR Special Wake-up (200E0830[0]=1) on all cores
     //RTC:214435 Add timeout
@@ -109,6 +116,8 @@ void pgpe_dds_init(uint32_t pstate)
 
     //7. Clear OTR Special Wake-up register on all cores
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SPWU_OTR, 0xF), 0x0);
+
+    PK_TRACE("DDS: Init Exit");
 }
 
 //
@@ -116,6 +125,7 @@ void pgpe_dds_init(uint32_t pstate)
 //
 void pgpe_dds_compute(uint32_t pstate)
 {
+    PK_TRACE("DDS: Compute Enter");
     uint32_t q, c, core;
     uint32_t ccsr;
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
@@ -125,7 +135,9 @@ void pgpe_dds_compute(uint32_t pstate)
     {
         for (c = 0; c < CORES_PER_QUAD; c++)
         {
-            if (ccsr & CORE_MASK(((q << 2) + c)))
+            uint32_t core_num = q * CORES_PER_QUAD + c;
+
+            if (ccsr & CORE_MASK(core_num))
             {
                 core = (q << 2 ) + c;
                 G_pgpe_dds.delay_prev[q][c] = G_pgpe_dds.delay[q][c];
@@ -133,11 +145,14 @@ void pgpe_dds_compute(uint32_t pstate)
                 G_pgpe_dds.cal_adjust_prev[q][c] = G_pgpe_dds.cal_adjust[q][c];
                 G_pgpe_dds.cal_adjust[q][c] = pgpe_dds_intp_cal_adj_from_ps(pstate, core);
 
+                PK_TRACE("DDS: delay=0x%08x, cal_adjust=0x%08x", G_pgpe_dds.delay[q][c], G_pgpe_dds.cal_adjust[q][c]);
+
                 if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
                     &&  pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
                 {
                     G_pgpe_dds.trip_prev[q][c] = G_pgpe_dds.trip[q][c];
                     G_pgpe_dds.trip[q][c] = pgpe_dds_intp_trip(pstate, core);
+                    PK_TRACE("DDS: trip=0x%08x", G_pgpe_dds.trip[q][c]);
                 }
             }
         }
@@ -149,10 +164,12 @@ void pgpe_dds_compute(uint32_t pstate)
     {
         G_pgpe_dds.trip_chip_prev = G_pgpe_dds.trip_chip;
         G_pgpe_dds.trip_chip = pgpe_dds_intp_trip(pstate, MAX_CORES + 1);
+        PK_TRACE("DDS: trip=0x%08x", G_pgpe_dds.trip_chip);
     }
 
     //Compare trip and delay
     pgpe_dds_compare_trip_and_delay();
+    PK_TRACE("DDS: Compute Exit");
 }
 
 //
@@ -160,6 +177,7 @@ void pgpe_dds_compute(uint32_t pstate)
 //
 void pgpe_dds_compare_trip_and_delay()
 {
+    PK_TRACE("DDS: Compare Trip and Delay Enter");
     uint32_t q, c;
 
     uint32_t ccsr;
@@ -172,7 +190,9 @@ void pgpe_dds_compare_trip_and_delay()
 
         for (c = 0; c < CORES_PER_QUAD; c++)
         {
-            if (ccsr & CORE_MASK(((q << 2) + c)))
+            uint32_t core_num = q * CORES_PER_QUAD + c;
+
+            if (ccsr & CORE_MASK(core_num))
             {
                 if (G_pgpe_dds.any_delay_larger[q] == 0)
                 {
@@ -210,6 +230,8 @@ void pgpe_dds_compare_trip_and_delay()
         G_pgpe_dds.any_trip_larger_chip = G_pgpe_dds.trip_chip > G_pgpe_dds.trip_chip_prev ? 1 : 0;
         G_pgpe_dds.any_trip_smaller_chip = G_pgpe_dds.trip_chip < G_pgpe_dds.trip_chip_prev ? 1 : 0;
     }
+
+    PK_TRACE("DDS: Compare Trip and Delay Exit");
 }
 
 //
@@ -219,6 +241,7 @@ void pgpe_dds_compare_trip_and_delay()
 //parameters for small differences they might have
 void pgpe_dds_update_pre(uint32_t pstate)
 {
+    PK_TRACE("DDS: Update Pre Enter");
     uint32_t ducr_upd_needed = 0;
     uint32_t q, c;
     uint32_t ccsr;
@@ -236,6 +259,8 @@ void pgpe_dds_update_pre(uint32_t pstate)
 
         //2. Multicast write FDCR
         PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDCR, 0xF), G_pgpe_dds.fdcr_chip.value);
+        PK_TRACE("DDS: Chip, Trip Mode FDCR=0x%08x%08x", G_pgpe_dds.fdcr_chip.words.high_order,
+                 G_pgpe_dds.fdcr_chip.words.low_order);
 
         //3. ducr_update_needed = true
         ducr_upd_needed = 1;
@@ -247,7 +272,9 @@ void pgpe_dds_update_pre(uint32_t pstate)
         //1. for each core c
         for (c = 0; c < CORES_PER_QUAD; c++)
         {
-            if (ccsr & CORE_MASK(((q << 2) + c)))
+            uint32_t core_num = q * CORES_PER_QUAD + c;
+
+            if (ccsr & CORE_MASK(core_num))
             {
                 //1. If TripMode=Core
                 if ((pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE))
@@ -296,6 +323,8 @@ void pgpe_dds_update_pre(uint32_t pstate)
             PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_DUCR, q), G_pgpe_dds.ducr[q].value);
         }
     }
+
+    PK_TRACE("DDS: Update Pre Exit");
 }
 
 //
@@ -305,6 +334,7 @@ void pgpe_dds_update_pre(uint32_t pstate)
 //parameters for small differences they might have
 void pgpe_dds_update_post(uint32_t pstate)
 {
+    PK_TRACE("DDS: Update Post Enter ");
     uint32_t ducr_upd_needed = 0;
     uint32_t q, c;
     uint32_t ccsr;
@@ -379,6 +409,8 @@ void pgpe_dds_update_post(uint32_t pstate)
             PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_DUCR, q), G_pgpe_dds.ducr[q].value);
         }
     }
+
+    PK_TRACE("DDS: Update Post Exit");
 }
 
 
@@ -404,6 +436,7 @@ void pgpe_dds_poll_done()
 //
 uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c)
 {
+    PK_TRACE("DDS: Intp Delay ps=0x%x, c=%u", ps, c);
     uint32_t delay;
     uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_RAW);
 
@@ -414,6 +447,7 @@ uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c)
 
     delay = delay >> 1; //Shift back
 
+    PK_TRACE("DDS: Intp Delay r=0x%x, delay=0x%x base_delay=0x%x", r, delay, pgpe_gppb_get_dds_delay(c, r) );
     return delay;
 }
 
@@ -424,9 +458,12 @@ uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c)
 {
     uint32_t cal_adj;
 
+    PK_TRACE("DDS: Intp Cal Adjust ps=0x%x, c=%u", ps, c);
     //determine closest vpd pt
     uint32_t p = pgpe_pstate_get_ps_vpd_pt(ps);
     cal_adj = pgpe_gppb_get_dds_cal_adj(c, p);
+
+    PK_TRACE("DDS: Intp Cal Adjust p=0x%x, cal_adj=%u", p, cal_adj);
 
     return cal_adj;
 }

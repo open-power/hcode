@@ -135,6 +135,7 @@ void pgpe_gppb_init()
     {
         PK_TRACE("GPPB: Init G_gppb=0x%x magic=PSTATE_PARMSBLOCK_MAGIC_V0", (uint32_t)G_gppb);
         PK_TRACE("GPPB: Init occ_cmpl_freq=0x%x", (uint32_t)G_gppb->occ_complex_frequency_mhz);
+        PK_TRACE("GPPB: pgpe_flags=0x%x", (uint32_t)&G_gppb->pgpe_flags);
     }
 
 #if GENERATE_HOMER_TABLES == 1
@@ -926,11 +927,11 @@ uint32_t pgpe_gppb_get_dds_delay(uint32_t core, uint32_t idx)
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {
-        return G_gppb->dds[core][idx].ddsc.fields.insrtn_dely;
+        return G_gppb->dds[idx][core].ddsc.fields.insrtn_dely;
     }
     else
     {
-        return G_gppb_dds[core][idx].ddsc.fields.insrtn_dely;
+        return G_gppb_dds[idx][core].ddsc.fields.insrtn_dely;
 
     }
 }
@@ -938,11 +939,11 @@ uint32_t pgpe_gppb_get_dds_trip(uint32_t core, uint32_t idx)
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {
-        return G_gppb->dds[core][idx].ddsc.fields.trip_offset;
+        return G_gppb->dds[idx][core].ddsc.fields.trip_offset;
     }
     else
     {
-        return G_gppb_dds[core][idx].ddsc.fields.trip_offset;
+        return G_gppb_dds[idx][core].ddsc.fields.trip_offset;
 
     }
 }
@@ -950,16 +951,16 @@ uint32_t pgpe_gppb_get_dds_cal_adj(uint32_t core, uint32_t idx)
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {
-        return G_gppb->dds[core][idx].ddsc.fields.calb_adj;
+        return G_gppb->dds[idx][core].ddsc.fields.calb_adj;
     }
     else
     {
-        return G_gppb_dds[core][idx].ddsc.fields.calb_adj;
+        return G_gppb_dds[idx][core].ddsc.fields.calb_adj;
 
     }
 }
 
-uint32_t pgpe_gppb_get_dds_other_droop_count_control()
+uint64_t pgpe_gppb_get_dds_other_droop_count_control()
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {
@@ -971,7 +972,7 @@ uint32_t pgpe_gppb_get_dds_other_droop_count_control()
     }
 }
 
-uint32_t pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting()
+uint64_t pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting()
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {
@@ -983,7 +984,7 @@ uint32_t pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting()
     }
 }
 
-uint32_t pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting()
+uint64_t pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting()
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {

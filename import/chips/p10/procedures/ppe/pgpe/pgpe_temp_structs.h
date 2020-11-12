@@ -506,6 +506,16 @@ typedef union qme_fdcr
     struct
     {
 #ifdef _BIG_ENDIAN
+        uint32_t high_order;
+        uint32_t low_order;
+#else
+        uint32_t low_order;
+        uint32_t high_order;
+#endif
+    } words;
+    struct
+    {
+#ifdef _BIG_ENDIAN
         uint64_t disable: 1;
         uint64_t force_sample: 1;
         uint64_t sticky_control: 2;
