@@ -43,7 +43,8 @@ dpll_mode_t pgpe_dpll_get_mode();
 uint32_t pgpe_dpll_get_pstate();
 void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate);
 void pgpe_dpll_write_dpll_freq(uint64_t value);
-void pgpe_dpll_write_dpll_ctrl_or(uint64_t value);
+void pgpe_dpll_set_slewrate(uint32_t down, uint32_t up);
+void pgpe_dpll_clear_dpll_lock_sel();
 void pgpe_dpll_set_mode(dpll_mode_t mode);
 
 #endif
