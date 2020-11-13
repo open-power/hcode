@@ -142,12 +142,18 @@ void pgpe_process_pstate_start()
     dpll_mode_t dpll_mode;
 
     //1. Write NEST.REGS.DPLL_CTRL [DPLL_CTRL_FF_SLEWRATE_DOWN] and
-    //NEST.REGS.DPLL_CTRL [DPLL_CTRL_FF_SLEWRATE_UP] fields (10bits each) with 0x1
+    //NEST.REGS.DPLL_CTRL [DPLL_CTRL_FF_SLEWRATE_UP] fields (10bits each) with 0x4
     //hardcoded for both.
-    dpll_ctrl_t dpll_ctrl;
-    dpll_ctrl.fields.ff_slewrate_dn = 0x1;
-    dpll_ctrl.fields.ff_slewrate_up = 0x1;
-    pgpe_dpll_write_dpll_ctrl_or(dpll_ctrl.value);
+    //dpll_ctrl_t dpll_ctrl;
+    //dpll_ctrl.value = 0;
+    //dpll_ctrl.fields.ff_slewrate_dn = 0x4;
+    //dpll_ctrl.fields.ff_slewrate_up = 0x4;
+    //pgpe_dpll_write_dpll_ctrl_or(dpll_ctrl.value);
+    //dpll_ctrl.value = 0;
+    //dpll_ctrl.fields.dpll_lock_sel = 1;
+    //pgpe_dpll_write_dpll_ctrl_clear(dpll_ctrl.value);
+    pgpe_dpll_set_slewrate(0x4, 0x4);
+    pgpe_dpll_clear_dpll_lock_sel();
 
     //2. Determine the highest pstate that matches with the read DPLL frequency
     //Read DPLL frequency
