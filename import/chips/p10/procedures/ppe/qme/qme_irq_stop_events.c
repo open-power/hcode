@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -727,6 +727,43 @@ qme_pm_state_active_fast_event()
 }
 
 
+uint32_t
+qme_stop11_msgsnd_abort(uint32_t core_target)
+{
+    uint32_t i            = 0;
+    uint32_t core_mask    = 0;
+    uint32_t abort_target = 0;
+
+    //this keeps further wake-up from getting to the core
+    PK_TRACE("Assert BLOCK_INTERRUPT_OUTPUT to PC via SCSR[24]");
+    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(24) );
+
+    //256 core cycles to deal with round-trip latencies
+    PK_TRACE("Delay 32 QME cycles");
+
+    for(i = 0; i < 32; i++)
+    {
+        asm volatile ("tw 0, 0, 0");
+    }
+
+    for(core_mask = 8; core_mask; core_mask = core_mask >> 1)
+    {
+        if( (core_mask & core_target) &&
+            (in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) ) & BIT64SH(46) ) )
+        {
+            PK_TRACE("Drop BLOCK_INTERRUPT_OUTPUT to PC[%x] via SCSR[24]", core_mask);
+            out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_mask ), BIT32(24) );
+
+            // msgsnd detected cores,
+            // waking them up now without take them into stop
+            // so core will take msgsnd
+            qme_stop1_exit(core_mask);
+            abort_target |= core_mask;
+        }
+    }
+
+    return abort_target;
+}
 
 
 //==============================
@@ -946,6 +983,7 @@ qme_regular_wakeup_slow_event()
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_RGWU_SLOW);
 }
 
+
 void
 qme_pm_state_active_slow_event()
 {
@@ -971,6 +1009,14 @@ qme_pm_state_active_slow_event()
     {
         MARK_TAG( G_qme_record.c_stop11_enter_targets, IRQ_PM_STATE_ACTIVE_SLOW_EVENT )
 
+        // TODO consider fused core
+        G_qme_record.c_msgsnd_abort_targets = qme_stop11_msgsnd_abort( G_qme_record.c_stop11_enter_targets );
+        G_qme_record.c_stop11_enter_targets &= ~G_qme_record.c_msgsnd_abort_targets;
+    }
+
+    // code above can change the target
+    if( G_qme_record.c_stop11_enter_targets )
+    {
         //===============//
 
         G_qme_record.hcode_func_enabled &= ~QME_L2_PURGE_CATCHUP_PATH_ENABLE;
