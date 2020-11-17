@@ -485,7 +485,36 @@ qme_parse_special_wakeup_fall()
                       G_qme_record.c_special_wakeup_done &
                       G_qme_record.c_configured;
 
-    qme_fused_core_pair_mode(&c_mask);
+    if( !(in32(QME_LCL_QMCR) & BIT32(10)) &&
+        G_qme_record.fused_core_enabled )
+    {
+        PK_TRACE_INF("Parse: Fused Core Mode Special Wakeup Fall[%x] on Cores[%x] (both Siblings required)",
+                     G_qme_record.c_fused_spwu_fall, c_mask);
+
+        G_qme_record.c_fused_spwu_fall |= c_mask;
+
+        if( (G_qme_record.c_fused_spwu_fall & 0xc) != 0xc )
+        {
+            G_qme_record.c_fused_spwu_fall |= c_mask & 0xc;
+            c_mask &= ~0xc;
+        }
+        else
+        {
+            G_qme_record.c_fused_spwu_fall &= ~0xc;
+            c_mask |= 0xc;
+        }
+
+        if( (G_qme_record.c_fused_spwu_fall & 0x3) != 0x3 )
+        {
+            G_qme_record.c_fused_spwu_fall |= c_mask & 0x3;
+            c_mask &= ~0x3;
+        }
+        else
+        {
+            G_qme_record.c_fused_spwu_fall &= ~0x3;
+            c_mask |= 0x3;
+        }
+    }
 
     if( c_mask )
     {

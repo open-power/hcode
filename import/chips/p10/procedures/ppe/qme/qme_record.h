@@ -155,6 +155,7 @@ typedef struct
 
     uint32_t    cts_timeout_count;
     uint32_t    bce_buf_content_type;
+    uint32_t    c_fused_spwu_fall;
 
 } QmeRecord __attribute__ ((aligned (4)));
 
