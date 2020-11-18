@@ -68,12 +68,13 @@ void pgpe_event_manager_task_init()
         pgpe_process_pstate_start();
         dpll_mode_t dpll_mode = pgpe_dpll_get_mode();
         pgpe_opt_set_word(0, 0);
-        pgpe_opt_set_byte(0, PGPE_OPT_START_STOP_SS_START_OCC);
+        pgpe_opt_set_byte(0, PGPE_OPT_START_STOP_SS_START_CHAR);
         pgpe_opt_set_byte(1, pgpe_pstate_get(pstate_curr));
         pgpe_opt_set_byte(2, PGPE_OPT_START_STOP_SRC_SCOM);
         pgpe_opt_set_byte(3, (uint8_t)dpll_mode);
         ppe_trace_op(PGPE_OPT_START_STOP, pgpe_opt_get());
         pgpe_process_set_pmcr_owner(PMCR_OWNER_CHAR);
+        pgpe_event_manager_upd_state(PGPE_SM_ACTIVE);
     }
 
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_ACTIVE));

@@ -77,7 +77,7 @@ void pgpe_opCodeTable(
         {PGPE_OPT_WOV,              OP_HASH("OP: WOV            | Vdd=0x%umV Vcs=%umV VddOffset=%dmV VcsOffset=%dmV"), {2, 2, 2, 2, 0, 0, 0, 0, 0}},
 
         {PGPE_OPT_PCB_TYPE1,        OP_HASH("OP: PCB_TYPE1(PMCR)| CoreNum=%u PresentPS=0x%02x ReqPS=0x%02x"), {1, 1, 1, 0, 0, 0, 0, 0, 0}},
-        {PGPE_OPT_START_STOP,       OP_HASH("OP: START/STOP     | Action=%u(0:STOP,1:HOST,2:OCC,3:CHAR) PresentPS=0x%02x SRC=%u(0:IPC,1:SCOM) DPLLMode=%u"),   {1, 1, 1, 1, 0, 0, 0, 0, 0}},
+        {PGPE_OPT_START_STOP,       OP_HASH("OP: START/STOP     | Action=%u(0:STOP,1:HOST,2:OCC,3:CHAR) PresentPS=0x%02x SRC=%u(1:IPC,2:SCOM) DPLLMode=%u"),   {1, 1, 1, 1, 0, 0, 0, 0, 0}},
         {PGPE_OPT_SEV_FAULT ,       OP_HASH("OP: SEV_FAULT "), {0, 0, 0, 0, 0, 0, 0, 0, 0}},
 
         {PGPE_OPT_WOF_VRT ,         OP_HASH("OP: WOF_VRT        | Header=0x%08x"), {4, 0, 0, 0, 0, 0, 0, 0, 0}},
