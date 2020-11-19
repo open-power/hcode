@@ -39,6 +39,14 @@ namespace omic
 #endif
 
 
+//>> [CTL_REGS_TX_CNTL1_PG]
+static const uint64_t CTL_REGS_TX_CNTL1_PG = 0x800c444010012c3full;
+
+static const uint32_t CTL_REGS_TX_CNTL1_PG_TX_PATTERN_SEL = 48;
+static const uint32_t CTL_REGS_TX_CNTL1_PG_TX_PATTERN_SEL_LEN = 3;
+//<< [CTL_REGS_TX_CNTL1_PG]
+// omic/reg00004.H
+
 //>>THE END<<
 
 #ifndef __PPE_HCODE__
