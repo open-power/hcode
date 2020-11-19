@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20110700 |mbs     | HW552079 - Patch from Jim/Chris for DAC_MIN/MAX hang
 // vbr20101200 |vbr     | HW549006/HW549610 - Updated manual servo op timeout behavior. Added abort check.
 // bja20091400 |bja     | HW544454- Sleep after each _run_amp_op() call
 // mbs20080501 |mbs     | HW539048- Updated to make FILTER_DEPTH modes (1 is too short)
@@ -350,7 +351,7 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
             l_dac_offset -= l_step_size;
         }
 
-        if (l_dac_offset == DAC_MIN || l_dac_offset == DAC_MAX)
+        if (l_dac_offset <= DAC_MIN || l_dac_offset >= DAC_MAX)
         {
             break;
         }
@@ -363,24 +364,22 @@ uint32_t _run_amp_op(t_gcr_addr* io_gcr_addr,
         l_rc |= error_code;
     }
 
-    // Always select the lower dac value we are toggling between for consistency.
-    if (l_dac_offset > 0 && l_direction[0] == 1)
-    {
-        l_dac_offset -= 1;
-    }
-
-    if (l_dac_offset < 0 && l_direction[0] == 0)
-    {
-        l_dac_offset += 1;
-    }
-
-    if (l_dac_offset < DAC_MIN)
+    if (l_dac_offset <= DAC_MIN)
     {
         l_dac_offset = DAC_MIN;
     }
-    else if (l_dac_offset > DAC_MAX)
+    else if (l_dac_offset >= DAC_MAX)
     {
         l_dac_offset = DAC_MAX;
+    }
+    // Always select the lower dac value we are toggling between for consistency.
+    else if (l_dac_offset > 0 && l_direction[0] == 1)
+    {
+        l_dac_offset -= 1;
+    }
+    else if (l_dac_offset < 0 && l_direction[0] == 0)
+    {
+        l_dac_offset += 1;
     }
 
     l_dac_val = IntToLatchDac(l_dac_offset);

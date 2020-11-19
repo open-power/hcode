@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20111800 |mbs     | HW552774: Updated tx_iref_clock_dac to 4
+// mwh20111300 |mwh     | HW550299rx_loff_timeout to 10
 // vbr20091000 |vbr     | HW536853: CDR lock ratio decreased from 464 to 456.
 // vbr20101301 |vbr     | HW548766: rx_iref_vset_dac=3 in BIST for DD1 V units only
 // vbr20101300 |vbr     | HW543601: Increased LTE timeout due to errors in BIST (PRBS15)
@@ -247,8 +249,9 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
         put_ptr_field(gcr_addr, tx_16to1,         0b0, read_modify_write); //pg
     }
 
-    put_ptr_field(gcr_addr, tx_iref_clock_dac, 0x2, read_modify_write); //pg
+    put_ptr_field(gcr_addr, tx_iref_clock_dac, 0x4, read_modify_write); //pg
     put_ptr_field(gcr_addr, tx_iref_vset_dac , l_vio_volt, read_modify_write); //pg
+
 
     //CQ521314 never turn on tx_bank_controls_dc(0) = dcc_comp_en_dc
     //only change for DD2 in not DD2 keep what default is in Regdef
@@ -325,13 +328,11 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, rx_ctle_peak2_h_sel, l_data_rate_settings->rx_ctle_peak2_h_sel, read_modify_write);
 
     // CWS CHANGED THIS FROM 6 -> 8
-    put_ptr_field(gcr_addr, rx_loff_timeout, 8, read_modify_write); //pg
+    put_ptr_field(gcr_addr, rx_loff_timeout, 10, read_modify_write); //pg
 
     put_ptr_field(gcr_addr, rx_iref_clock_dac  , 0x2, read_modify_write); //pg
     put_ptr_field(gcr_addr, rx_iref_data_dac   , 0x2, read_modify_write); //pg
 
-
-    put_ptr_field(gcr_addr, rx_iref_vset_dac   , l_vio_volt, read_modify_write); //pg
 
     // HW548766: Set rx_iref_vset_dac to 3 in BIST for P10 DD1 vertical chiplets
     int l_rx_vio_volt = ( fw_field_get(fw_bist_en) && is_p10_dd1_v_chiplet() ) ? 0x3 : l_vio_volt;
@@ -405,7 +406,7 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     if ( is_p10_dd1() )   // P10 DD1 only
     {
         // HW541155 - Setting for P10 DD1
-        rx_clk_phase_select_value = 0b01;
+        rx_clk_phase_select_value = 0b00;
     }
     else
     {

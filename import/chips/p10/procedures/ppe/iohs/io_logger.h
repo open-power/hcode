@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr20111800 |vbr     | HW552111: Added log type for timebase error (stuck/rollover)
 // mwh20071400 |mwh     | Added log type DEBUG_RX_DAC_TEST_FAIL
 // vbr20061101 |vbr     | Added log type for bank sync warning
 // gap20032600 |gap     | Inserted DEBUG_BIST_TX_ZCAL_FAIL
@@ -119,6 +120,7 @@
 #define DEBUG_MAN_SERVO_PATTERN                 0x2E
 #define DEBUG_VGA_GAIN                          0x2F
 #define DEBUG_RX_DAC_TEST_FAIL                  0x30
+#define DEBUG_TIMEBASE_ERROR                    0x31
 
 
 // A2 version (p10 dd2, zA dd1) fields start here

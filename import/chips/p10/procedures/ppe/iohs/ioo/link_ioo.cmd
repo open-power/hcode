@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20111700 |vbr     | Added wildcards for the sections as recommended by Doug Gilbert.
 // vbr19072400 |vbr     | Increase SRAM from 64K to 80K and add 1K debug log
 //------------------------------------------------------------------------------
 
@@ -62,7 +63,7 @@ SECTIONS
     . = 0xfffe0000;
 
     // Code
-    .text          : {. = ALIGN(512); *(.vectors) *(.text)} > sram
+    .text          : {. = ALIGN(512); *(.vectors*) *(.text*)} > sram
 
     ////////////////////////////////
     // Read-only Data
@@ -76,12 +77,12 @@ SECTIONS
     // offsets. 
 
     _SDA2_BASE_ = .;
-   .sdata2 . : { *(.sdata2) } > sram
-   .sbss2  . : { *(.sbss2) } > sram
+   .sdata2 . : { *(.sdata2*) } > sram
+   .sbss2  . : { *(.sbss2*) } > sram
 
    // Other read-only data.  
 
-   .rodata . : { *(.rodata*) *(.got2) } > sram
+   .rodata . : { *(.rodata*) *(.got2*) } > sram
 
     _RODATA_SECTION_SIZE = . - _RODATA_SECTION_BASE;
 
@@ -97,15 +98,15 @@ SECTIONS
     // offsets. 
 
     _SDA_BASE_ = .;
-    .sdata  . : { *(.sdata)  } > sram
-    .sbss   . : { *(.sbss)   } > sram
+    .sdata  . : { *(.sdata*)  } > sram
+    .sbss   . : { *(.sbss*)   } > sram
 
     // Other read-write data
     // It's not clear why boot.S is generating empty .glink,.iplt
 
    .rela   . : { *(.rela*) } > sram
-   .rwdata . : { *(.data) *(.bss) } > sram
-//   .iplt . : { *(.iplt) } > sram
+   .rwdata . : { *(.data*) *(.bss*) } > sram
+//   .iplt . : { *(.iplt*) } > sram
 
    _PK_INITIAL_STACK_LIMIT = .;
    . = . + INITIAL_STACK_SIZE;

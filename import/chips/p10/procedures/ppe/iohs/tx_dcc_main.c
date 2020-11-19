@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr20111300 |vbr     | HW552111: Replaced 1us io_wait with a sleep. Added some debug writes that should probably be removed when issue is fully resolved.
 // bja20092800 |bja     | Use shared constants for TX register overrides
 // bja20091500 |bja     | HW544277: Use main path by default for dcc
 // bja20091400 |bja     | HW544277: Prevent replica path in anything but p10 dd1
@@ -252,10 +253,18 @@ void tx_dcc_main_servo(t_gcr_addr* gcr_addr_i, bool use_repmux_i, uint32_t step_
     saved_compare = false;
     done = false;
 
+    uint16_t loop_count = 0;
+
     do
     {
+        loop_count++;
+        set_tx_dcc_debug(0xFAFA, loop_count);
+        lcl_put(scom_ppe_work1_lcl_addr, scom_ppe_work1_width, loop_count);
+        lcl_put(scom_ppe_work2_lcl_addr, scom_ppe_work2_width, loop_count + 1);
         set_debug_state(0xD034); // servo do loop start
-        io_wait_us(thread_l, tx_dcc_main_wait_tune_us_c);
+
+        //io_wait_us(thread_l, tx_dcc_main_wait_tune_us_c);
+        io_sleep(thread_l);
         comp_decision_l = tx_dcc_main_compare_result(gcr_addr_i, min_samples_i, ratio_thresh_i);
 
         if (!saved_compare)

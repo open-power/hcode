@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20102300 |mbs     | HW548202: Removed eo_main_recal_tx (no longer used)
 // mwh20100801 |mwh     | HW549165: add if rx_min_recal_cnt_reached to running eo_vlcq check for recal taken it out of loop.
 // mwh20100800 |mwh     | HW549165: add in bist_check if ture turn on checks if false turn off checks
 // vbr20091600 |vbr     | HW542599: move rx_vga_amax from mem_regs to a stack variable (only used in init)
@@ -230,7 +231,7 @@
 
 // Local Functions
 static int eo_main_recal_rx(t_gcr_addr* gcr_addr);
-static int eo_main_recal_tx(t_gcr_addr* gcr_addr);
+//static int eo_main_recal_tx(t_gcr_addr *gcr_addr);
 
 
 // Assumption Checking
@@ -712,23 +713,20 @@ int eo_main_recal(t_gcr_addr* gcr_addr)
         }
     }
 
-    // Run TX Recal if no RX status
-    if (status == rc_no_error)
-    {
-        // HW493618: Skip TX Recal when DL has powered down TX (bad lane)
-        set_gcr_addr_reg_id(gcr_addr, tx_group); // set to tx gcr address
-        int dl_phy_tx_psave_req_0_23 =
-            (get_ptr_field(gcr_addr, tx_psave_req_dl_0_15_sts)  << 16) |
-            (get_ptr_field(gcr_addr, tx_psave_req_dl_16_23_sts) << (16 - tx_psave_req_dl_16_23_sts_width));
-        set_gcr_addr_reg_id(gcr_addr, rx_group); // set back to rx gcr address
-        int lane_mask = (0x80000000 >> lane);
-        int dl_phy_tx_psave_req = dl_phy_tx_psave_req_0_23 & lane_mask;
-
-        if (!dl_phy_tx_psave_req)
-        {
-            status |= eo_main_recal_tx(gcr_addr);
-        }
-    }
+//  // Run TX Recal if no RX status
+//  if (status == rc_no_error) {
+//    // HW493618: Skip TX Recal when DL has powered down TX (bad lane)
+//    set_gcr_addr_reg_id(gcr_addr, tx_group); // set to tx gcr address
+//    int dl_phy_tx_psave_req_0_23 =
+//      (get_ptr_field(gcr_addr, tx_psave_req_dl_0_15_sts)  << 16) |
+//      (get_ptr_field(gcr_addr, tx_psave_req_dl_16_23_sts) << (16 - tx_psave_req_dl_16_23_sts_width));
+//    set_gcr_addr_reg_id(gcr_addr, rx_group); // set back to rx gcr address
+//    int lane_mask = (0x80000000 >> lane);
+//    int dl_phy_tx_psave_req = dl_phy_tx_psave_req_0_23 & lane_mask;
+//    if (!dl_phy_tx_psave_req) {
+//      status |= eo_main_recal_tx(gcr_addr);
+//    }
+//  }
 
     set_debug_state(0x302F); // DEBUG - Recal Done
     CAL_TIMER_STOP;
@@ -1102,35 +1100,30 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
 } //eo_main_recal_rx
 
 
-//////////////
-// TX Recal //
-//////////////
-static int eo_main_recal_tx(t_gcr_addr* gcr_addr)
-{
-    int status = rc_no_error;
-    set_gcr_addr_reg_id(gcr_addr, tx_group); // set to tx gcr address
-
-    // Wait for the lane to be powered up (controlled by DL)
-    int lane = get_gcr_addr_lane(gcr_addr);
-    int lane_mask = (0x80000000 >> lane);
-    int phy_dl_tx_psave_sts = 1;
-
-    while (phy_dl_tx_psave_sts)
-    {
-        int phy_dl_tx_psave_sts_0_23 =
-            (get_ptr_field(gcr_addr, tx_psave_sts_phy_0_15_sts)  << 16) |
-            (get_ptr_field(gcr_addr, tx_psave_sts_phy_16_23_sts) << (16 - tx_psave_sts_phy_16_23_sts_width));
-        phy_dl_tx_psave_sts = phy_dl_tx_psave_sts_0_23 & lane_mask;
-    }
-
-    // Cal Step: TX DCC
-    int tx_dcc_enable = mem_pg_field_get(tx_rc_enable_dcc);
-
-    if (tx_dcc_enable && (status == rc_no_error))
-    {
-        status |= tx_dcc_main_adjust(gcr_addr);
-    }
-
-    set_gcr_addr_reg_id(gcr_addr, rx_group); // set back to rx gcr address
-    return status;
-} //eo_main_recal_tx
+////////////////
+//// TX Recal //
+////////////////
+//static int eo_main_recal_tx(t_gcr_addr *gcr_addr) {
+//  int status = rc_no_error;
+//  set_gcr_addr_reg_id(gcr_addr, tx_group); // set to tx gcr address
+//
+//  // Wait for the lane to be powered up (controlled by DL)
+//  int lane = get_gcr_addr_lane(gcr_addr);
+//  int lane_mask = (0x80000000 >> lane);
+//  int phy_dl_tx_psave_sts = 1;
+//  while (phy_dl_tx_psave_sts) {
+//    int phy_dl_tx_psave_sts_0_23 =
+//      (get_ptr_field(gcr_addr, tx_psave_sts_phy_0_15_sts)  << 16) |
+//      (get_ptr_field(gcr_addr, tx_psave_sts_phy_16_23_sts) << (16 - tx_psave_sts_phy_16_23_sts_width));
+//    phy_dl_tx_psave_sts = phy_dl_tx_psave_sts_0_23 & lane_mask;
+//  }
+//
+//  // Cal Step: TX DCC
+//  int tx_dcc_enable = mem_pg_field_get(tx_rc_enable_dcc);
+//  if (tx_dcc_enable && (status == rc_no_error)) {
+//    status |= tx_dcc_main_adjust(gcr_addr);
+//  }
+//
+//  set_gcr_addr_reg_id(gcr_addr, rx_group); // set back to rx gcr address
+//  return status;
+//} //eo_main_recal_tx

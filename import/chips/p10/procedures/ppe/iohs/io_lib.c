@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20111800 |vbr     | HW552111: Added escape to io_wait()
 // bja20090900 |bja     | Use common is_p10_dd1() check
 // mbs20073000 |mbs     | LAB - Added workaround hooks for run_servo_ops_base
 // vbr20030900 |vbr     | HW525544: Make ppe_servo_status0/1 trap registers and clear the hw servo_status0/1 registers after copying
@@ -186,19 +187,26 @@ void io_sleep(int thread)
 // Wait for at least X time by sleeping.
 // Note that with threading we could just sleep the thread for the desired interval, but that would break our controlled
 // round-robin scheduling since a high priority thread would immediately resume running when the timer expires.
-// The timer on the PPE42 is a 32-bit decrement counter that underflows from 0 to 0xfffffffful; however, we do not need to handle
-// that since we use the pk_timebase_get() (which returns an incrementing u64 timebase) and the kernel manages the underflowing.
-// To manage that underflow, the MSR[EE] must be set to enable external and timer interrupts.
+// The timer on the PPE42 can be based on the DEC counter or an external counter. We use the external counter.
+// The DEC is a 32-bit decrement counter that underflows from 0 to 0xfffffffful while
+// the external counter is a 32-bit counter that overflows from 0xfffffffful to 0.
+// However, we do not need to handle that since we use the pk_timebase_get() (which returns an incrementing u64 timebase)
+// and the kernel manages the over/under-flow.
+// To manage the DEC underflow, the MSR[EE] must be set to enable external and timer interrupts.
 void io_wait(int thread, PkInterval wait_time)
 {
     PkTimebase end_time = pk_timebase_get() + PK_INTERVAL_SCALE(wait_time);
 
-    // Loop on a spin/sleep until pass the min time
+    // Loop on a spin/sleep until pass the min time or hit a loop limit (in case timer is broke HW552111)
+    int loop_count = 0;
+
     do
     {
+        loop_count++;
         io_sleep(thread);
     }
-    while (pk_timebase_get() < end_time);
+    while ( (pk_timebase_get() < end_time)
+            && (loop_count < 128) );   // 128 loops is min ~250us but can be much more based on thread sleep times
 } //io_wait
 #endif //PK_THREAD_SUPPORT
 

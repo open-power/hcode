@@ -41,7 +41,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
-// mwh20101300 |mwh     | Atfter talking with Chris and Jim logger is back in this file, also scom set in vclq
+// mwh20111100 |mwh     | HW550299 -- changes make eoff more statibly
+// mwh20101600 |mwh     | Change way clear is happen so we retain fails better.
+// mwh20101300 |mwh     | After talking with Chris and Jim logger is back in this file, also scom set in vclq
 // mwh20101200 |mwh     | Put loff fail clear into if to gate form clearing
 // mwh20070700 |mwh     | Change DEBUG_RX_EOFF_EOFF_FAIL to DEBUG_RX_EOFF_POFF_FAIL for CQ528211 delta is for poff set
 // mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
@@ -91,6 +93,42 @@ static uint16_t servo_ops_eoff_a[num_servo_ops] = { c_loff_ae_n000, c_loff_ae_e0
 static uint16_t servo_ops_eoff_b[num_servo_ops] = { c_loff_be_n000, c_loff_be_e000, c_loff_be_s000, c_loff_be_w000};
 
 
+/**
+ * @brief Round to reduce bias
+ * If the result is positive then we want  to the round up, if the result is neg then do nothing
+ * - This is due to the twos complement of the negative number. in order to reduce bias
+ * For example, if the numerator was 6 and you divide by 4, the result is 1.5 which should round up to 2.  (6+1)/4 = 0b0111 >> 2 = 1.  (6+2)/4 = 0b1000 >> 2 = 2.
+ * @param[in] i_val average of 4 edge offsets
+ * @param[out]round val of average of 4 edge offset
+ *
+ * @return new val
+ */
+
+//If Condition is true ? then value X : otherwise value Y
+static inline int eo_eoff_round( const int i_val)
+{
+    // Find the rounded value of (i_val / 4)
+    return ((i_val >= 0) ? (i_val + 2) : i_val) >> 2;
+}
+
+/**
+ * @brief Averge to remove error
+ * weight average with 1 to 3 weighting
+ *
+ * @param[in] i_e_after, is edge offset after servo op
+ * @param[in] i_e_before, is edge offset of previous servo op
+ * @param[out]round val of average of 4 edge offset
+ *
+ * @return new val
+ */
+
+static inline int eo_get_weight_ave( int i_e_after, int i_e_before)
+{
+    //shift by 2 is divide by 4
+    int eoffn_next = (1 * i_e_after + 3 * i_e_before);
+    int weight_average = eo_eoff_round(eoffn_next);
+    return weight_average;
+}
 
 
 
@@ -135,6 +173,10 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
     int check_poff_min           =  TwosCompToInt(mem_pg_field_get(rx_epoff_min_check), rx_epoff_min_check_width); //ppe pg
     int check_poff_max           =  TwosCompToInt(mem_pg_field_get(rx_epoff_max_check), rx_epoff_max_check_width); //ppe pg
 
+    int rx_eoff_fail_a = 0;
+    int rx_eoff_poff_fail_a = 0;
+
+
     int status;
 
     set_debug_state(0xA001);
@@ -159,38 +201,37 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
         int loff_setting_ovr = mem_regs_u16_get(pg_addr(loff_setting_ovr_enb_addr), loff_setting_ovr_enb_mask,
                                                 loff_setting_ovr_enb_shift);
 
-        if ( loff_setting_ovr == 0)
+        if (( loff_setting_ovr == 0) && (vga_loop_count == 0))//only need to be set once HW550299
         {
-            if (recal)
-            {
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b000, read_modify_write);
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b000, read_modify_write);
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b000, read_modify_write);
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);
-                set_debug_state(0xA002);
-            }
-            else
-            {
-                //eoff loff
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b010, read_modify_write);  // 3    4
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b010, read_modify_write);  // 2    2
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b001, read_modify_write);  // 1    2
-                put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);  // 0    0
-                set_debug_state(0xA003);
-            }
+            //used as default unless  loff_setting_ovr=1
+
+            //HW550299 remove the different setting for recal
+            //HW550299 Setting inc and dec to 0 step of 1  for all stages
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt0, 0b000, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt1, 0b000, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt2, 0b000, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_inc_dec_amt3, 0b000, read_modify_write);
+            set_debug_state(0xA003);
+
+            //
+            //HW550299 change all filter to 10
+            put_ptr_field(gcr_addr, rx_loff_filter_depth0, 0b1010, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_filter_depth1, 0b1010, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_filter_depth2, 0b1010, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_filter_depth3, 0b1010, read_modify_write);
+
+            //HW550299 change thresh 1-3 to 0 and thresh 4
+            //
+            put_ptr_field(gcr_addr, rx_loff_thresh1, 0b00000, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_thresh2, 0b00000, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_thresh3, 0b00000, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_thresh4, 0b00011, read_modify_write);
 
 
-            //old filter failing 1,4,5,7                                                 //eoff loff
-            put_ptr_field(gcr_addr, rx_loff_filter_depth0, 0b0011, read_modify_write);// 3    3
-            put_ptr_field(gcr_addr, rx_loff_filter_depth1, 0b0100, read_modify_write);// 4    3
-            put_ptr_field(gcr_addr, rx_loff_filter_depth2, 0b0101, read_modify_write);// 5    3
-            put_ptr_field(gcr_addr, rx_loff_filter_depth3, 0b1000, read_modify_write);// 8    4
+            //HW550299 change to 1
+            put_ptr_field(gcr_addr, rx_loff_hyst_start, 0b0001, read_modify_write);
 
-            //change vs dccal latch offset = 5
-            put_ptr_field(gcr_addr, rx_loff_hyst_start, 0b00100, read_modify_write);
-
-
-        }
+        }//used as default unless  loff_setting_ovr=1
 
         if (bank == bank_a )
         {
@@ -259,6 +300,9 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
 // poff = edge_after - eoff_fence
 //Going do averge since this is course poff
 
+
+
+
 //Init checks -- eoff_after +-96, Loff_before(data) +-64, eoff_before +-32, poff delta +-10
 //Recal checks --  eoff_after +-96 and  poff delta +-10
 
@@ -267,7 +311,12 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
     int poff_s =  (edge_after_s - edge_before_s );
     int poff_w =  (edge_after_w - edge_before_w );
 
-    int poff_avg_int = ( poff_n +  poff_e + poff_s + poff_w) / 4;
+    //shift by 2 is divide by 4
+    int poff_avg = ( poff_n +  poff_e + poff_s + poff_w);
+
+    // get better rounded value of (i_val / 4)
+    int poff_avg_int = eo_eoff_round(poff_avg);
+
 
     if (bank == bank_a )
     {
@@ -278,6 +327,8 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
     {
         //bank B is alt A is main
         mem_pl_field_put(poff_avg_b, lane, poff_avg_int );//pl
+        rx_eoff_fail_a = mem_pl_field_get(rx_eoff_fail, lane); //pl
+        rx_eoff_poff_fail_a = mem_pl_field_get(rx_eoff_poff_fail, lane); //pl
     }
 
     int poff_n_delta = poff_n - poff_avg_int;
@@ -353,27 +404,74 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
         else
         {
             //if not abort
+            int weight_avr_n = eo_get_weight_ave(edge_after_n, edge_before_n); //getting weighted round average
+            int weight_avr_e = eo_get_weight_ave(edge_after_e, edge_before_e); //getting weighted round average
+            int weight_avr_s = eo_get_weight_ave(edge_after_s, edge_before_s); //getting weighted round average
+            int weight_avr_w = eo_get_weight_ave(edge_after_w, edge_before_w); //getting weighted round average
+
+            poff_n = weight_avr_n - edge_before_n ;//assign poff_n value
+            poff_e = weight_avr_e - edge_before_e ;//assign poff_e value
+            poff_s = weight_avr_s - edge_before_s ;//assign poff_s value
+            poff_w = weight_avr_w - edge_before_w ;//assign poff_w value
+
+            //Do not need a if bank A or B because up above selection of what servo to run apply to this
+            if ( (abs(poff_n)) <= ppe_eoff_edge_hysteresis_int)
+            {
+                restore_n = true;    // Restore setting did not change enough
+            }
+
+            if ( (abs(poff_e)) <= ppe_eoff_edge_hysteresis_int)
+            {
+                restore_e = true;    // Restore setting did not change enough
+            }
+
+            if ( (abs(poff_s)) <= ppe_eoff_edge_hysteresis_int)
+            {
+                restore_s = true;    // Restore setting did not change enough
+            }
+
+            if ( (abs(poff_w)) <= ppe_eoff_edge_hysteresis_int)
+            {
+                restore_w = true;    // Restore setting did not change enough
+            }
+
             if (bank == bank_a )
             {
                 //bank A is alt B is main
-                if ( (abs(poff_n)) <= ppe_eoff_edge_hysteresis_int)
+                if (restore_n)
                 {
-                    restore_n = true;    // Restore setting did not change enough
+                    put_ptr_field(gcr_addr, rx_ae_latch_dac_n, edge_n_dac, fast_write);   //pl if restore
+                }
+                else
+                {
+                    put_ptr_field(gcr_addr, rx_ae_latch_dac_n, IntToLatchDac(weight_avr_n), fast_write);   //pl if not restore
                 }
 
-                if ( (abs(poff_e)) <= ppe_eoff_edge_hysteresis_int)
+                if (restore_e)
                 {
-                    restore_e = true;    // Restore setting did not change enough
+                    put_ptr_field(gcr_addr, rx_ae_latch_dac_e, edge_e_dac, fast_write);   //pl if restore
+                }
+                else
+                {
+                    put_ptr_field(gcr_addr, rx_ae_latch_dac_e, IntToLatchDac(weight_avr_e), fast_write);   //pl if not restore
                 }
 
-                if ( (abs(poff_s)) <= ppe_eoff_edge_hysteresis_int)
+                if (restore_s)
                 {
-                    restore_s = true;    // Restore setting did not change enough
+                    put_ptr_field(gcr_addr, rx_ae_latch_dac_s, edge_s_dac, fast_write);   //pl if restore
+                }
+                else
+                {
+                    put_ptr_field(gcr_addr, rx_ae_latch_dac_s, IntToLatchDac(weight_avr_s), fast_write);   //pl if not restore
                 }
 
-                if ( (abs(poff_w)) <= ppe_eoff_edge_hysteresis_int)
+                if (restore_w)
                 {
-                    restore_w = true;    // Restore setting did not change enough
+                    put_ptr_field(gcr_addr, rx_ae_latch_dac_w, edge_w_dac, fast_write);   //pl if restore
+                }
+                else
+                {
+                    put_ptr_field(gcr_addr, rx_ae_latch_dac_w, IntToLatchDac(weight_avr_w), fast_write);   //pl if not restore
                 }
 
                 set_debug_state(0xA00D); // DEBUG
@@ -381,79 +479,46 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
             else
             {
                 //bank B is alt A is main
-                if ( (abs(poff_n)) <= ppe_eoff_edge_hysteresis_int)
+                if (restore_n)
                 {
-                    restore_n = true;    // Restore setting did not change enough
+                    put_ptr_field(gcr_addr, rx_be_latch_dac_n, edge_n_dac, fast_write);   //pl if restore
+                }
+                else
+                {
+                    put_ptr_field(gcr_addr, rx_be_latch_dac_n, IntToLatchDac(weight_avr_n), fast_write);   //pl if not restore
                 }
 
-                if ( (abs(poff_e)) <= ppe_eoff_edge_hysteresis_int)
+                if (restore_e)
                 {
-                    restore_e = true;    // Restore setting did not change enough
+                    put_ptr_field(gcr_addr, rx_be_latch_dac_e, edge_e_dac, fast_write);   //pl if restore
+                }
+                else
+                {
+                    put_ptr_field(gcr_addr, rx_be_latch_dac_e, IntToLatchDac(weight_avr_e), fast_write);   //pl if not restore
                 }
 
-                if ( (abs(poff_s)) <= ppe_eoff_edge_hysteresis_int)
+                if (restore_s)
                 {
-                    restore_s = true;    // Restore setting did not change enough
+                    put_ptr_field(gcr_addr, rx_be_latch_dac_s, edge_s_dac, fast_write);   //pl if restore
+                }
+                else
+                {
+                    put_ptr_field(gcr_addr, rx_be_latch_dac_s, IntToLatchDac(weight_avr_s), fast_write);   //pl if not restore
                 }
 
-                if ( (abs(poff_w)) <= ppe_eoff_edge_hysteresis_int)
+                if (restore_w)
                 {
-                    restore_w = true;    // Restore setting did not change enough
+                    put_ptr_field(gcr_addr, rx_be_latch_dac_w, edge_w_dac, fast_write);   //pl if restore
                 }
+                else
+                {
+                    put_ptr_field(gcr_addr, rx_be_latch_dac_w, IntToLatchDac(weight_avr_w), fast_write);   //pl if not restore
+                }
+
+                set_debug_state(0xA00E); // DEBUG
             }//bank B is alt A is main
         }//if not abort
     }//end if recal
-
-    if (bank == bank_a )
-    {
-        //bank A is alt B is main
-        if (restore_n)
-        {
-            put_ptr_field(gcr_addr, rx_ae_latch_dac_n, edge_n_dac, fast_write);   //pl
-        }
-
-        if (restore_e)
-        {
-            put_ptr_field(gcr_addr, rx_ae_latch_dac_e, edge_e_dac, fast_write);   //pl
-        }
-
-        if (restore_s)
-        {
-            put_ptr_field(gcr_addr, rx_ae_latch_dac_s, edge_s_dac, fast_write);   //pl
-        }
-
-        if (restore_w)
-        {
-            put_ptr_field(gcr_addr, rx_ae_latch_dac_w, edge_w_dac, fast_write);   //pl
-        }
-
-        set_debug_state(0xA00D); // DEBUG
-    }//bank A is alt B is main
-    else
-    {
-        //bank B is alt A is main
-        if (restore_n)
-        {
-            put_ptr_field(gcr_addr, rx_be_latch_dac_n, edge_n_dac, fast_write);   //pl
-        }
-
-        if (restore_e)
-        {
-            put_ptr_field(gcr_addr, rx_be_latch_dac_e, edge_e_dac, fast_write);   //pl
-        }
-
-        if (restore_s)
-        {
-            put_ptr_field(gcr_addr, rx_be_latch_dac_s, edge_s_dac, fast_write);   //pl
-        }
-
-        if (restore_w)
-        {
-            put_ptr_field(gcr_addr, rx_be_latch_dac_w, edge_w_dac, fast_write);   //pl
-        }
-
-        set_debug_state(0xA00E); // DEBUG
-    }//bank B is alt A is main
 
     //------------------------------------------------------------------------------------
 
@@ -563,15 +628,33 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
         ADD_LOG(DEBUG_RX_EOFF_POFF_FAIL, gcr_addr, 0x0);
     }//ppe pl
 
-    //Clear fail if fail compare are not failing anymore
-    if ((!recal) && (vga_loop_count == 0))
+    //Not having seperate PL fail registers for A and B bank cause the below
+    //ABank run first and will have this set if fail is still high at end of vga loop
+    //Init train BBank is next and we do not want BBank to clear it if been set and only
+    //And if it not set and BBank has a fail than it will stay.  We do not check this in recal loop.
+    if ((!recal) && (bank == bank_a ))
     {
         mem_pl_field_put(rx_latch_offset_fail, lane, loff_fail);   //ppe pl
     }
 
-    mem_pl_field_put(rx_eoff_fail, lane, eoff_fail);//ppe pl
-    mem_pl_field_put(rx_eoff_poff_fail, lane, delta_fail); //ppe pl
+    //10162020 mwh Issue with code, if fail on Abank it will show Bbank also failing.
+    //Abank     |  Bbank  |result on pg lane register
+    //----------|---------|------------------
+    //  no fail |    fail |Bank B lane show fail
+    //----------|---------|---------------------
+    //  no fail | no fail |NO lane show fail
+    //----------|---------|---------------------------
+    //   fail   |    fail |Bank A and B lane show fail
+    //----------|---------|----------------------------
+    //   fail   | no fail |Bank A and B lane show fail
+    //--------- |---------|
 
+
+    if (bist_check)
+    {
+        mem_pl_field_put(rx_eoff_fail, lane, (eoff_fail || rx_eoff_fail_a));//ppe pl
+        mem_pl_field_put(rx_eoff_poff_fail, lane, (delta_fail || rx_eoff_poff_fail_a)); //ppe pl
+    }
 
     if (bank == bank_a)
     {

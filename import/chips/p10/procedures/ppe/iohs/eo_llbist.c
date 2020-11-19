@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20110300 |mwh     | Fix issue with fail flag, was getting cleared here HW552097
 // mwh20022400 |mwh     | Add in warning fir to DFT fir so both get set if DFT check triggers
 // cws20011400 |cws     | Added Debug Logs
 // mwh19111500 |mwh     | Increase the time we are checking to 2 microsec.
@@ -94,6 +95,7 @@ void eo_llbist(t_gcr_addr* gcr_addr)
 
     mem_pg_field_put(rx_linklayer_done, 0b1);//pg
     mem_pg_field_put(rx_linklayer_fail, error);//pg
+    error |= mem_pg_field_get(rx_fail_flag);
     mem_pg_field_put(rx_fail_flag, error);
 
     set_debug_state(0x51E3); // DEBUG

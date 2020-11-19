@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20111700 |vbr     | Added extern keyword on linker symbol for debuglog address
 // cws18071000 |cws     | Initial Rev
 //------------------------------------------------------------------------------
 
@@ -60,7 +61,7 @@
 //------------------------------------------------------------------------------
 #define DEBUG_LOG_SIZE 127
 
-t_log _debug_log_start __attribute__ ((section ("debuglog")));
+extern t_log _debug_log_start __attribute__ ((section ("debuglog")));
 volatile t_log* g_io_logs = &_debug_log_start;
 
 

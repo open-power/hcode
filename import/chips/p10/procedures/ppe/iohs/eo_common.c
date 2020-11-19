@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr20111800 |vbr     | HW552111: Added escape to wait_for_cdr_lock()
 // vbr20101201 |vbr     | HW549006: Removed the abort check on recal_req since that doesn't work with auto recal and command interface recals.
 // vbr20101200 |vbr     | HW549006: DL asserting psave_req or lowering recal_req when entering degraded mode is treated as a recal abort.
 // gap20091500 |gap     | HW542315: updated to use is_p10_dd1
@@ -147,8 +148,11 @@ int wait_for_cdr_lock(t_gcr_addr* gcr_addr, bool set_fir_on_error)
         io_wait_us(get_gcr_addr_thread(gcr_addr), 5); // sleep until 5us has elapsed
     }
 
+    int loop_count = 0;
+
     while ( true )
     {
+        loop_count++;
         // Check CDR status
         int locked_ab = get_ptr_field(gcr_addr, rx_pr_locked_ab_alias);
 
@@ -158,10 +162,11 @@ int wait_for_cdr_lock(t_gcr_addr* gcr_addr, bool set_fir_on_error)
         }
         else
         {
-            // Check timeout if not locked as yet
+            // Check timeout if not locked as yet. Check if hit a loop limit (in case timer is broke HW552111).
             bool timeout = (pk_timebase_get() - start_time) > (32 * scaled_microsecond);
+            bool escape  = (loop_count >= 32); // 32 loops is much more that 32 us with min thread sleep times
 
-            if (timeout)
+            if (timeout || escape)
             {
                 if(set_fir_on_error)
                 {
