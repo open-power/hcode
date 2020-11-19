@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -54,18 +54,6 @@ static const uint32_t PM_REGS_DLR_APSR_ACTIVITY_SAMPLE_LEN = 8;
 static const uint32_t PM_REGS_DLR_APSR_BASE_SAMPLE = 20;
 static const uint32_t PM_REGS_DLR_APSR_BASE_SAMPLE_LEN = 8;
 //<< [PM_REGS_DLR_APSR]
-// omi/reg00024.H
-
-//>> [RXCTL_DATASM_0_PLREGS_RX_STAT1_PL]
-static const uint64_t RXCTL_DATASM_0_PLREGS_RX_STAT1_PL = 0x8003e04010012c3full;
-
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_STAT1_PL_DL_PHY_RUN_LANE_RO_SIGNAL = 48;
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_STAT1_PL_DL_PHY_RECAL_REQ_RO_SIGNAL = 49;
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_STAT1_PL_DL_PHY_RECAL_ABORT_RO_SIGNAL = 50;
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_STAT1_PL_DL_PHY_RECAL_ABORT_STICKY_RO_SIGNAL = 51;
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_STAT1_PL_PSAVE_REQ_DL_RO_SIGNAL = 52;
-static const uint32_t RXCTL_DATASM_0_PLREGS_RX_STAT1_PL_PSAVE_STS_PHY_RO_SIGNAL = 53;
-//<< [RXCTL_DATASM_0_PLREGS_RX_STAT1_PL]
 // omi/reg00024.H
 
 //>> [RXCTL_DATASM_10_PLREGS_RX_CNTL3_PL]
