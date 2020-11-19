@@ -79,9 +79,9 @@ void pgpe_dds_init(uint32_t pstate)
     //Polling time should be small (eg 10us) as the done should already set.
     //We don't want a tight polling loop so that the PIB/PCB is not flooded with polling
     //operations.  Also, a 10us latency adder for a Pstate Start operation is not a problem.
-    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SPWU_OTR, 0xF), BIT64(0));
+    //PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SPWU_OTR, 0xF), BIT64(0));
 
-    //3. Clear PGPE internal DDS structure state to 0s
+    //2. Clear PGPE internal DDS structure state to 0s
     for (q = 0; q < MAX_QUADS; q++)
     {
         for (c = 0; c < CORES_PER_QUAD; c++)
@@ -103,19 +103,19 @@ void pgpe_dds_init(uint32_t pstate)
     G_pgpe_dds.any_trip_smaller_chip = 0;
     G_pgpe_dds.fdcr_chip.value = 0;
 
-    //4.Pre-DVFS DDS Update.
+    //3.Pre-DVFS DDS Update.
     pgpe_dds_compute(pstate);
     pgpe_dds_compare_trip_and_delay();
     pgpe_dds_update_pre(pstate);
 
-    //5. Multicast write-CLEAR FDCR[DISABLE](0) = 1
+    //4. Multicast write-CLEAR FDCR[DISABLE](0) = 1
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDCR_WO_CLEAR, 0xF), BIT64(0));
 
-    //6. Multicast write-OR QME FLAG[DDS Enable] = 1
+    //5. Multicast write-OR QME FLAG[DDS Enable] = 1
     PPE_PUTSCOM_MC_Q(QME_FLAGS_WO_OR, BIT64(0));
 
-    //7. Clear OTR Special Wake-up register on all cores
-    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SPWU_OTR, 0xF), 0x0);
+    //6. Clear OTR Special Wake-up register on all cores
+    //PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SPWU_OTR, 0xF), 0x0);
 
     PK_TRACE("DDS: Init Exit");
 }
