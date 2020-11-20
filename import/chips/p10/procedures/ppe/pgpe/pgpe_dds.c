@@ -442,8 +442,16 @@ uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c)
 
     //Round-up by adding 1/2
     delay = (((pgpe_gppb_get_dds_delay_ps_slope(VPD_PT_SET_RAW, c, r)) *
-              (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_RAW, r))) >> (DDS_DELAY_SLOPE_FP_SHIFT_12 - 1)) +
-            (pgpe_gppb_get_dds_delay(c, r) << 1) + 1;
+              (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_RAW, r))) >> (DDS_DELAY_SLOPE_FP_SHIFT_12 - 1));
+
+    if (pgpe_gppb_get_dds_delay(c, r) <= pgpe_gppb_get_dds_delay(c, r + 1))
+    {
+        delay = (pgpe_gppb_get_dds_delay(c, r) << 1) + 1 + delay;
+    }
+    else
+    {
+        delay = (pgpe_gppb_get_dds_delay(c, r) << 1) + 1 - delay;
+    }
 
     delay = delay >> 1; //Shift back
 
