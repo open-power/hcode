@@ -92,8 +92,8 @@ qme_stop_report_pls_srr1(uint32_t core_target)
         act_stop_level = ( in32_sh(QME_LCL_SCDR) >> SHIFT64SH(c_end) ) & 0xF;
         local_data     = 0;
 
-        PK_TRACE_DBG("Core[%x] act_stop_level[%x] previous act_stop_level[%x]",
-                     c_loop, act_stop_level, G_qme_record.c_act_stop_level[c_index]);
+        PK_TRACE("Core[%x] act_stop_level[%x] previous act_stop_level[%x]",
+                 c_loop, act_stop_level, G_qme_record.c_act_stop_level[c_index]);
         G_qme_record.c_act_stop_level[c_index] = act_stop_level;
 
         for( pls_end  = 3, srr1_end = 17, t_index = 0,
@@ -102,10 +102,10 @@ qme_stop_report_pls_srr1(uint32_t core_target)
         {
             pscrs = in32( ( QME_PSCRS | (c_loop << 16) | (t_offset << 4) ) );
 
-            PK_TRACE_DBG("c_loop[%x] t_offset[%x] pscrs_addr[%x], pscrs_data[%x]",
-                         c_loop, t_offset,
-                         ( QME_PSCRS | (c_loop << 16) | (t_offset << 4) ),
-                         pscrs);
+            PK_TRACE("c_loop[%x] t_offset[%x] pscrs_addr[%x], pscrs_data[%x]",
+                     c_loop, t_offset,
+                     ( QME_PSCRS | (c_loop << 16) | (t_offset << 4) ),
+                     pscrs);
 
 #if POWER10_DD_LEVEL == 10
             old_pls = ( pscrs & BITS32(24, 4) ) >> SHIFT32(27);
@@ -115,10 +115,10 @@ qme_stop_report_pls_srr1(uint32_t core_target)
 
             new_pls = ( act_stop_level > old_pls ) ? (act_stop_level) : (old_pls);
 
-            PK_TRACE_DBG("old_pls[%x] new_pls[%x] previous old_pls[%x] new_pls[%x]",
-                         old_pls, new_pls,
-                         G_qme_record.t_old_pls[c_index][t_index],
-                         G_qme_record.t_new_pls[c_index][t_index]);
+            PK_TRACE("old_pls[%x] new_pls[%x] previous old_pls[%x] new_pls[%x]",
+                     old_pls, new_pls,
+                     G_qme_record.t_old_pls[c_index][t_index],
+                     G_qme_record.t_new_pls[c_index][t_index]);
 
             G_qme_record.t_old_pls[c_index][t_index] = old_pls;
             G_qme_record.t_new_pls[c_index][t_index] = new_pls;
@@ -138,8 +138,8 @@ qme_stop_report_pls_srr1(uint32_t core_target)
             // Due to special wakeup to stop11 can be done with esl = 0
             // especially with ipl cases where core start with esl = 0
             // print these info as possible debug aid, instead of check and panic
-            PK_TRACE_INF("DEBUG: Core|Thread[%x] act_stop_level[%x] PSCRS = %x with esl[%x]",
-                         (c_loop << 8 | t_offset), act_stop_level, pscrs, esl);
+            PK_TRACE("DEBUG: Core|Thread[%x] act_stop_level[%x] PSCRS = %x with esl[%x]",
+                     (c_loop << 8 | t_offset), act_stop_level, pscrs, esl);
         }
 
         out32( QME_LCL_CORE_ADDR_WR( QME_DCSR, c_loop ), local_data );
@@ -213,6 +213,9 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
     }
 
     //===============//
+
+//    PK_TRACE_INF("assert pmc_reg_dis_xfer_tfac via PMC_UPDATE[1]");
+//    PPE_PUTSCOM_MC( PMC_UPDATE, core_target, BIT64(1) );
 
     PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(1) );

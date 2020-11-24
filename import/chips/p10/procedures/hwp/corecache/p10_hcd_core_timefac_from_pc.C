@@ -120,7 +120,7 @@ p10_hcd_core_timefac_from_pc(
                 // transfer would already occur that time but then wont occur on next acutal
                 // stop entry due to state machine now being inactive in light of lack of
                 // another shadow2pc from would be stop2+ exit calling timefac_to_pc hwp.
-                FAPI_DBG("Assert TFAC_RESET via PCR_TFCSR[1]");
+                FAPI_IMP("Assert TFAC_RESET via PCR_TFCSR[1]");
                 FAPI_TRY( HCD_PUTMMIO_C( l_core, QME_TFCSR_WO_OR, MMIO_1BIT(1) ) );
 
                 FAPI_IMP("Reset the core timefac to ACTIVE via PC.COMMON.TFX[1]");

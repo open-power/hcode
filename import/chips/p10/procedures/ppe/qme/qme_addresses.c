@@ -35,7 +35,7 @@ uint32_t SCRATCH0                       = 0x20020486;
 uint32_t SCRATCH1                       = 0x20020487;
 uint32_t SPATTN_MASK                    = 0x2002049A;
 uint32_t EC_PC_TFX_SM                   = 0x2002049b;
-
+uint32_t PMC_UPDATE                     = 0x20028414;
 // QME Local Addresses:
 
 // QME Per-Quad

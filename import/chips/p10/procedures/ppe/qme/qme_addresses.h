@@ -33,7 +33,7 @@ extern uint32_t SCRATCH0;
 extern uint32_t SCRATCH1;
 extern uint32_t SPATTN_MASK;
 extern uint32_t EC_PC_TFX_SM;
-
+extern uint32_t PMC_UPDATE;
 // QME Local Addresses:
 extern uint32_t QME_LCL_QSCR;
 extern uint32_t QME_LCL_QSCR_OR;
