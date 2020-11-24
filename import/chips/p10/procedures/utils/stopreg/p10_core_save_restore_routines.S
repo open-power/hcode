@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2020
+# COPYRIGHT 2015,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -218,7 +218,7 @@
                 .set TEMP_REG3,                     r19
                 .set RMOR_INIT_REG,                 r20
                 .set MSR_INIT_REG,                  r21
-                .set GPR_22_REG,                    r22
+                .set VIRT_THREAD_ID_REG,            r22
                 .set MSR_SECURITY_ENABLE_REG,       r23
                 .set TEST_REG,                      r24
                 .set SELF_REST_ERR_REG,             r25
@@ -787,6 +787,7 @@ core_is_fused:
 #Bit 60:        Fuse Core Select within the Quad
 #Bit 61:62      Thread select within a core chiplet
 #Bit 63         chip select within the fused core
+#Bit 61:63      Virtual thread number across within the fused core
 
 #Multiply the fused core select bit (bit 60) by 2 since there are two core chiplets in
 #a pair forming the fused core. Bit 63 selects even or odd core within the pair.
@@ -798,7 +799,9 @@ extrdi      TEMP_REG1,      PIR_VAL_REG,  1, 63
 add         CORE_ID_REG,    CORE_ID_REG,  TEMP_REG1
 
 # thread id = 2 * (bit 61 ) + bit 62
-extrdi THREAD_ID_REG, PIR_VAL_REG, 2, 61
+extrdi      THREAD_ID_REG, PIR_VAL_REG, 2, 61
+extrdi      VIRT_THREAD_ID_REG, PIR_VAL_REG, 3, 61
+
 b thread_restore
 
 core_is_not_fused:
@@ -808,6 +811,7 @@ core_is_not_fused:
 
 extrdi      CORE_ID_REG,    PIR_VAL_REG,    2, 60
 extrdi      THREAD_ID_REG,  PIR_VAL_REG,    2, 62
+mr          VIRT_THREAD_ID_REG, THREAD_ID_REG
 
 #********* Determining core id relative to P10 chip  by using quad info **************
 # bit 57:59 Quad Select within the P10 Chip
@@ -909,13 +913,16 @@ cmpwi       TEMP_REG1,   SIMICS_ENV_BIT_MASK
 beq         restore_thread_spr   # if it is SIMICS, workaround for HW534619 is not necessary
 
 #=====================================  HW534619 DD1 Workaround ========================================
+# Only execute if on virtual thread 0 (fused = core 0, thread 0; normal, thread 0)
+or.         VIRT_THREAD_ID_REG, VIRT_THREAD_ID_REG, VIRT_THREAD_ID_REG
+bne         restore_thread_spr
 
 work_around_HW534619:
 li          TEMP_REG2,   0x05                 # r2 0b0101 for bit14:TB_ECLIPZ, bit16
 sldi        TEMP_REG3,  TEMP_REG2,  47        # r3 0002 8000 0000 0000 0x5 << 47
 lis         TEMP_REG2,   0x00ff               # r2 0000 00ff 0000 0000 MAX_CYC_BET_STEPS=ff at bit7
-ori         TEMP_REG2,  TEMP_REG2, 0x0220     # r2 0000 00ff 0000 0220 
-mfspr       TEMP_REG1,  TFMR                  # r1 save trmr base 
+ori         TEMP_REG2,  TEMP_REG2, 0x0220     # r2 0000 00ff 0000 0220
+mfspr       TEMP_REG1,  TFMR                  # r1 save trmr base
 or          TEMP_REG3,  TEMP_REG1,  TEMP_REG3 # r3 0002 8000 0000 0000 overlay bit14/16
 mtspr       TFMR,       TEMP_REG3             # bit 14 and 16 SET
 
@@ -928,7 +935,7 @@ beq         wait_tfmr_bit16_clr
 
 #bit 16 has been cleared by hw. proceed with next step.
 
-mfspr       TEMP_REG1,  TFMR                  
+mfspr       TEMP_REG1,  TFMR
 sldi        TEMP_REG2,  TEMP_REG2,  40        # 0000 0500 0000 0000
 or          TEMP_REG3,  TEMP_REG1,  TEMP_REG2 # 0002 2000 0000 0000 bit14 18
 mtspr       TFMR,       TEMP_REG3             # setting bit TFMR[0:7,14,18]
