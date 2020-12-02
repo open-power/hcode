@@ -112,7 +112,7 @@ void pgpe_dds_init(uint32_t pstate)
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDCR_WO_CLEAR, 0xF), BIT64(0));
 
     //5. Multicast write-OR QME FLAG[DDS Enable] = 1
-    PPE_PUTSCOM_MC_Q(QME_FLAGS_WO_OR, BIT64(0));
+    PPE_PUTSCOM_MC_Q(QME_FLAGS_WO_OR, BIT64(QME_FLAGS_DDS_OPERABLE));
 
     //6. Clear OTR Special Wake-up register on all cores
     //PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SPWU_OTR, 0xF), 0x0);
