@@ -79,8 +79,6 @@ void pgpe_occ_init()
     G_pgpe_occ.present_tb = 0;
     G_pgpe_occ.vdd_accum = 0;
     G_pgpe_occ.vcs_accum = 0;
-    G_pgpe_occ.idd_accum = 0;
-    G_pgpe_occ.ics_accum = 0;
     G_pgpe_occ.fit_tick = 0;
     G_pgpe_occ.wof_tick = 4; //TODO RTC: 214486 This WOF_TICK_TIME/FIT_TICK_TIME. Should get it from somewhere else
 }
@@ -188,19 +186,22 @@ void pgpe_occ_sample_values()
     }
 
     //Read IDD and ICS
-    uint32_t idd_ma, ics_ma;
+    //uint32_t idd_ma, ics_ma;
 
     if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
     {
         pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                                  pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                 &idd_ma);
+                                 &G_pgpe_occ.idd_ma,
+                                 CURRENT_SCALE_IDX_VDD);
         pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                                  pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                                 &ics_ma);
+                                 &G_pgpe_occ.ics_ma,
+                                 CURRENT_SCALE_IDX_VCS);
 
-        G_pgpe_occ.idd_tb_accum = idd_ma * delta_tb;
-        G_pgpe_occ.ics_tb_accum = ics_ma * delta_tb;
+        //PK_TRACE("OCC: idd_ma=%u, ics_ma=%u, delta_tb=%u",G_pgpe_occ.idd_ma, G_pgpe_occ.ics_ma, delta_tb);
+        G_pgpe_occ.idd_tb_accum = G_pgpe_occ.idd_ma * delta_tb;
+        G_pgpe_occ.ics_tb_accum = G_pgpe_occ.ics_ma * delta_tb;
         G_pgpe_occ.ocs_avg_pct_tb_accum = pgpe_wov_ocs_is_overcurrent();
     }
 

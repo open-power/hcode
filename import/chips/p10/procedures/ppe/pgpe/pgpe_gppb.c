@@ -643,6 +643,19 @@ uint32_t pgpe_gppb_get_ext_vrm_parms_step_size_mv(uint32_t rail)
     }
 }
 
+uint32_t pgpe_gppb_get_current_scale_factor(uint32_t rail)
+{
+    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
+    {
+        return G_gppb->current_scaling_factor[rail];
+    }
+    else
+    {
+        return G_gppb->current_scaling_factor[rail];
+    }
+}
+
+
 //#PoundV
 uint32_t pgpe_gppb_get_ops_ps(uint32_t pt_set, uint32_t idx)
 {
