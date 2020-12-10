@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2016,2019
+# COPYRIGHT 2016,2020
 # [+] International Business Machines Corp.
 #
 #
@@ -43,23 +43,25 @@ define GEN_PPEIMAGE_BINARY
 $2/$1.bin : $2/$1.out | $(IMAGE_DEPS)
 		$(C2) "    GEN        $$(@F)"
 		$(C1) mkdir -p $$(@D)
-ifdef IMAGE_EDITOR		
+ifdef IMAGE_EDITOR
 		$(C1) $$($(3)_PREFIX)$$(OBJCOPY) -O binary $$^ $2/$1_temp.bin && \
-		$(EXEPATH)/$(IMAGE_EDITOR) $2/$1_temp.bin
+		$(EXEPATH)/$(IMAGE_EDITOR) $2/$1_temp.bin 1
 else
 		$(C1) $$($(3)_PREFIX)$$(OBJCOPY) -O binary $$^ $2/$1_temp.bin
-endif			
+endif
 		$(C1) mv $2/$1_temp.bin $$@
 		$(C2) "    GEN        $$(@F).dis"
 		$(C1) $$($(3)_PREFIX)$$(OBJDUMP) -S $$^ > $2/$1.dis
 		$(C2) "    GEN        trexStringFile"
 		$(C1) $$(THASH) -c -d $(OBJPATH)/$(1) \
 			-s $(OBJPATH)/$(1)/trexStringFile > /dev/null
+		$(C1) cp $(OBJPATH)/$(1)/trexStringFile $2/trexStringFile
 
 $2/$1.dis : $2/$1.bin
 
 $(call __CLEAN_TARGET,$2/$1.bin)
 $(call __CLEAN_TARGET,$2/$1.dis)
 $(call __CLEAN_TARGET,$(OBJPATH)/$(1)/trexStringFile)
+$(call __CLEAN_TARGET,$(OBJPATH)/$2/trexStringFile)
 IMAGE_EDITOR=
 endef
