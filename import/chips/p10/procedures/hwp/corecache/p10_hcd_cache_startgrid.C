@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -79,7 +79,7 @@ p10_hcd_cache_startgrid(
     FAPI_INF(">>p10_hcd_cache_startgrid");
 
     FAPI_DBG("Switch L3 Glsmux to DPLL via CPMS_CGCSR[7:L3_CLKGLM_SEL]");
-    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CGCSR_WO_OR, MMIO_1BIT(7) ) );
+    FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CGCSR_WO_OR, BIT64(7) ) );
 
     FAPI_TRY( p10_hcd_corecache_realign(eq_target, ( l_regions << SHIFT32(12) ) ) );
 

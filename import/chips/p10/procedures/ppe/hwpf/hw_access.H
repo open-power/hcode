@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2012,2020                                                    */
+/* COPYRIGHT 2012,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -129,6 +129,26 @@ inline uint8_t getPIBErrorMask(void)
 // For high level usage, please refers to the macros in p10_hcd_common.H
 // Also refer to plat_target.H for corresponding plat target design and
 // implementation for this same very reason.
+
+template< TargetType K, MulticastType M, typename V >
+__attribute__((always_inline))
+inline void putMmioCpms(const Target<K, M, V>& i_target,
+                        const uint32_t i_address,
+                        const buffer<uint64_t> i_data)
+{
+    uint64_t l_data = i_data;
+    PPE_STVD(i_target.get().getLocalAddressOverlay(i_address), l_data);
+}
+
+template< TargetType K, MulticastType M, typename V >
+__attribute__((always_inline))
+inline void getMmioCpms(const Target<K, M, V>& i_target,
+                        const uint32_t i_address,
+                        buffer<uint64_t>& o_data)
+{
+    PPE_LVD(i_target.get().getLocalAddressOverlay(i_address), o_data);
+}
+
 
 template< TargetType K, MulticastType M, typename V >
 __attribute__((always_inline))

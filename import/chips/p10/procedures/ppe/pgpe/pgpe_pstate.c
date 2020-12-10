@@ -1197,7 +1197,12 @@ void pgpe_pstate_pmsr_write()
 #else
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value);
     PK_TRACE("PMSR WRAddr=0x%x, RdAddr=0x%x", PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), PPE_SCOM_ADDR_MC_OR(QME_PMSRS, 0xF));
-    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value); //HW Bug workaround. Rewrite PMSR
+    //HW552730 this original defect requires PMSR at all cores be written twice as workaround
+    //HW555543 later found more observation on potentially endangering qme local access to CPMS
+    //that can be workaround with two options:
+    //1. QME always write SCSR[22].REFRESH_PMSR to all cores during STOP, without any workaround writing PMSR
+    //2. PGPE here instead write twice to all cores[0xF], should write to one core at a time so write 4 times in [8,4,2,1]
+    //Option 1 is picked as default. refer to QME hcode.
 #endif
 }
 

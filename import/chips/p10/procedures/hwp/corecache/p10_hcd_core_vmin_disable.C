@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -82,6 +82,7 @@ p10_hcd_core_vmin_disable(
     const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > & i_target)
 {
     fapi2::buffer<buffer_t> l_mmioData = 0;
+    fapi2::buffer<uint64_t> l_scomData = 0;
     uint32_t                l_timeout  = 0;
 
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
@@ -96,11 +97,11 @@ p10_hcd_core_vmin_disable(
 
     do
     {
-        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
+        FAPI_TRY( HCD_GETMMIO_S( i_target, CPMS_RVCSR, l_scomData ) );
 
         // use multicastAND to check 1
         if( ( !l_attr_runn_mode ) &&
-            ( MMIO_GET(MMIO_LOWBIT(34)) == 1 ) )
+            ( SCOM_GET(34) == 1 ) )
         {
             break;
         }
@@ -111,15 +112,15 @@ p10_hcd_core_vmin_disable(
     while( (--l_timeout) != 0 );
 
     FAPI_ASSERT( ( l_attr_runn_mode ?
-                   ( MMIO_GET(MMIO_LOWBIT(34)) == 1 ) : (l_timeout != 0) ),
+                   ( SCOM_GET(34) == 1 ) : (l_timeout != 0) ),
                  fapi2::VMIN_DIS_RVID_ENABLED_TIMEOUT()
                  .set_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS)
-                 .set_CPMS_RVCSR(l_mmioData)
+                 .set_CPMS_RVCSR(l_scomData)
                  .set_CORE_TARGET(i_target),
                  "ERROR: Vmin Disable Rvid Enabled Timeout");
 
     FAPI_DBG("Drop RVID_ENABLE via CPMS_RVCSR[0]");
-    FAPI_TRY( HCD_PUTMMIO_C(i_target, CPMS_RVCSR_WO_CLEAR, MMIO_1BIT(0) ) );
+    FAPI_TRY( HCD_PUTMMIO_S(i_target, CPMS_RVCSR_WO_CLEAR, BIT64(0) ) );
 
     FAPI_DBG("Wait for RVID_BYPASS via CPMS_RVCSR[33]");
     l_timeout = HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS /
@@ -127,11 +128,11 @@ p10_hcd_core_vmin_disable(
 
     do
     {
-        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_RVCSR), l_mmioData ) );
+        FAPI_TRY( HCD_GETMMIO_S( i_target, CPMS_RVCSR, l_scomData ) );
 
         // use multicastAND to check 1
         if( ( !l_attr_runn_mode ) &&
-            ( MMIO_GET(MMIO_LOWBIT(33)) == 1 ) )
+            ( SCOM_GET(33) == 1 ) )
         {
             break;
         }
@@ -141,15 +142,15 @@ p10_hcd_core_vmin_disable(
     }
     while( (--l_timeout) != 0 );
 
-    FAPI_ASSERT( ( l_attr_runn_mode ? ( MMIO_GET(MMIO_LOWBIT(33)) == 1 ) : (l_timeout != 0) ),
+    FAPI_ASSERT( ( l_attr_runn_mode ? ( SCOM_GET(33) == 1 ) : (l_timeout != 0) ),
                  fapi2::VMIN_DIS_RVID_BYPASS_TIMEOUT()
                  .set_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS)
-                 .set_CPMS_RVCSR(l_mmioData)
+                 .set_CPMS_RVCSR(l_scomData)
                  .set_CORE_TARGET(i_target),
                  "ERROR: Vmin Disable Rvid Bypass Timeout");
 
     FAPI_DBG("Set VDD_PFET_SEQ_STATE to Von(0b11) via CPMS_CL2_PFETCNTL[0-1]");
-    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_OR,  MMIO_LOAD32H(BITS32(0, 2)) ) );
+    FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_OR,  BITS64(0, 2) ) );
 
 #ifndef PFET_SENSE_POLL_DISABLE
 
@@ -159,11 +160,11 @@ p10_hcd_core_vmin_disable(
 
     do
     {
-        FAPI_TRY( HCD_GETMMIO_C( i_target, CPMS_CL2_PFETSTAT, l_mmioData ) );
+        FAPI_TRY( HCD_GETMMIO_S( i_target, CPMS_CL2_PFETSTAT, l_scomData ) );
 
         // use multicastAND to check 1
         if( ( !l_attr_runn_mode ) &&
-            ( MMIO_GET(0) == 1 ) )
+            ( SCOM_GET(0) == 1 ) )
         {
             break;
         }
@@ -173,17 +174,17 @@ p10_hcd_core_vmin_disable(
     }
     while( (--l_timeout) != 0 );
 
-    FAPI_ASSERT( ( l_attr_runn_mode ? ( MMIO_GET(0) == 1 ) : (l_timeout != 0) ),
+    FAPI_ASSERT( ( l_attr_runn_mode ? ( SCOM_GET(0) == 1 ) : (l_timeout != 0) ),
                  fapi2::VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT()
                  .set_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS)
-                 .set_CPMS_CL2_PFETSTAT(l_mmioData)
+                 .set_CPMS_CL2_PFETSTAT(l_scomData)
                  .set_CORE_TARGET(i_target),
                  "ERROR: Vmin Disable VDD Pfet Enable Timeout");
 
 #endif
 
     FAPI_DBG("Reset VDD_PFET_SEQ_STATE to No-Op(0b00) via CPMS_CL2_PFETCNTL[0-1]");
-    FAPI_TRY( HCD_PUTMMIO_C( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR,  MMIO_LOAD32H(BITS32(0, 2)) ) );
+    FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR, BITS64(0, 2) ) );
 
 #ifndef POWER_LOSS_DISABLE
 
