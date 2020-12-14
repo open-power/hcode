@@ -41,8 +41,8 @@ typedef struct pgpe_occ
     uint32_t ps_tb_accum, ps_fit_avg, ps_wof_avg_accum;
     uint32_t ps_freq_tb_accum, ps_freq_fit_avg, ps_freq_wof_avg_accum;
     uint32_t thr_idx_tb_accum, thr_idx_fit_avg, thr_idx_wof_avg_accum;
-    uint32_t idd_ma, idd_tb_accum, idd_fit_avg_ma, idd_wof_avg_accum_ma;
-    uint32_t ics_ma, ics_tb_accum, ics_fit_avg_ma, ics_wof_avg_accum_ma;
+    uint32_t idd_accum, idd_tb_accum, idd_fit_avg_ma, idd_wof_avg_accum_ma, idd_avg_ma;
+    uint32_t ics_accum, ics_tb_accum, ics_fit_avg_ma, ics_wof_avg_accum_ma, ics_avg_ma;
     uint32_t vdd_accum, vdd_tb_accum, vdd_fit_avg_mv, vdd_wof_avg_accum_mv, vdd_avg_mv;
     uint32_t vcs_accum, vcs_tb_accum, vcs_fit_avg_mv, vcs_wof_avg_accum_mv, vcs_avg_mv;
     uint32_t ocs_avg_pct_tb_accum, ocs_avg_pct_fit, ocs_avg_pct_wof_accum;

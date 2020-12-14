@@ -83,7 +83,6 @@ uint32_t pgpe_gppb_get_ext_vrm_parms_transition_rate_inc_uv_per_us(uint32_t rail
 uint32_t pgpe_gppb_get_ext_vrm_parms_transition_rate_dec_uv_per_us(uint32_t rail);
 uint32_t pgpe_gppb_get_ext_vrm_parms_stabilization_time_us(uint32_t rail);
 uint32_t pgpe_gppb_get_ext_vrm_parms_step_size_mv(uint32_t rail);
-uint32_t pgpe_gppb_get_current_scale_factor(uint32_t rail);
 
 //#PoundV
 uint32_t pgpe_gppb_get_ops_ps(uint32_t pt_set, uint32_t idx);
