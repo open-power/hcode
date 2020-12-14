@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -59,6 +59,15 @@ errlHndl_t  G_gpeErrLogs[ERRL_MAX_SLOTS_PER_GPE] =
 hcode_elog_entry_t* G_elogTable = NULL; // Ptr to shared data err idx tbl
 hcodeErrlConfigData_t G_errlConfigData = {0};
 hcodeErrlMetadata_t G_errlMetaData[ERRL_MAX_SLOTS_PER_GPE] = {{0}};
+
+/// Internal Function Prototypes
+uint32_t reportErrorLog ( errlHndl_t* io_err, bool i_report );
+uint8_t getErrSlotNumAndErrId ( ERRL_SEVERITY i_severity,
+                                uint8_t*      o_errlId,
+                                uint64_t*     o_timeStamp,
+                                uint32_t*     o_status );
+uint32_t copyTraceBufferPartial ( void* i_pDst,
+                                  uint16_t i_size );
 
 void initErrLogging ( const uint8_t              i_errlSource,
                       hcode_error_table_t*       i_pErrTable )
@@ -148,11 +157,13 @@ void initErrLogging ( const uint8_t              i_errlSource,
 uint8_t getErrSlotNumAndErrId (
     ERRL_SEVERITY i_severity,
     uint8_t*      o_errlId,
-    uint64_t*     o_timeStamp )
+    uint64_t*     o_timeStamp,
+    uint32_t*     o_status )
 {
     uint8_t  l_slot = ERRL_SLOT_INVALID;
     uint8_t  l_localSlot = ERRL_SLOT_INVALID;
     uint32_t l_slotmask = ERRL_SLOT_MASK_DEFAULT;
+    *o_status = ERRL_STATUS_SUCCESS;
 
     // this logic will evolve once we support other severities
     // or we could have a map table
@@ -169,7 +180,9 @@ uint8_t getErrSlotNumAndErrId (
                 break;
 
             case ERRL_SOURCE_QME:
-                l_slotmask = ~(ERRL_SLOT_MASK_QME_UNREC_BASE >> (( G_errlConfigData.ppeId & 0x0f ) << 1));
+                l_slotmask = ~(ERRL_SLOT_MASK_QME_UNREC_BASE >>
+                               (( G_errlConfigData.ppeId & 0x0f ) << 1)
+                              );
                 break;
         }
     }
@@ -253,6 +266,7 @@ uint8_t getErrSlotNumAndErrId (
                 else
                 {
                     // localSlot cannot exceed slots per GPE
+                    *o_status = ERRL_STATUS_INTERNAL_ERROR;
                     PK_TRACE_ERR("LocalSlot %d > Max Slot/GPE Slot %d Src 0x%X",
                                  l_localSlot, l_slot, G_errlConfigData.source);
                     l_localSlot = ERRL_SLOT_INVALID;
@@ -260,8 +274,9 @@ uint8_t getErrSlotNumAndErrId (
             }
             else
             {
-                // Prev error nor yet offloaded by OCC/XGPE, GPE creating errors
+                // Prev error not yet offloaded by OCC/XGPE, GPE creating errors
                 // faster than OCC/XGPE is consuming them
+                *o_status = ERRL_STATUS_GLOBAL_SLOTS_FULL;
                 PK_TRACE_ERR ( "Slot %d not free in elog idx tbl. Source: 0x%X",
                                l_slot, G_errlConfigData.source);
             }
@@ -275,6 +290,7 @@ uint8_t getErrSlotNumAndErrId (
             // 1. Either multiple errors are created while processing an err log
             // 2. Or, a multi-threaded GPE is producing errors of same severity
             //    faster than they are committed to the Error Log Idx Table
+            *o_status = ERRL_STATUS_LOCAL_SLOTS_FULL;
             PK_TRACE_ERR ("Slot %d not free in GPE! Bits 0x%04X Mask 0x%04X "
                           "Word 0x%04X", l_slot, G_errlConfigData.slotBits,
                           l_slotmask, l_slotBitWord);
@@ -285,12 +301,13 @@ uint8_t getErrSlotNumAndErrId (
     }
     else
     {
+        *o_status = ERRL_STATUS_INIT_ERROR;
         PK_TRACE_ERR ("Cannot calculate a free slot! Bad Source %d OR Sev %d!",
                       G_errlConfigData.source, i_severity);
     }
 
-    PK_TRACE_INF ("Sev %d Slot G %d L %d EID 0x%08X",
-                  i_severity, l_slot, l_localSlot, *o_errlId);
+    PK_TRACE_INF ("Slots G %d L %d EID 0x%08X Status %d",
+                  l_slot, l_localSlot, *o_errlId, *o_status);
 
     return l_localSlot;
 }
@@ -387,16 +404,19 @@ uint32_t copyTraceBufferPartial ( void* i_pDst,
     return l_bytesCopied;
 }
 
-void reportErrorLog (errlHndl_t i_err)
+
+uint32_t reportErrorLog (errlHndl_t* io_err, bool i_report)
 {
-    if (NULL != i_err)
+    uint32_t l_status = ERRL_STATUS_SUCCESS;
+
+    if (NULL != *io_err)
     {
         uint8_t l_slot = 0;
 
         // Get the slot of the error to be reported based on unique across logs
         do
         {
-            if (G_errlMetaData[l_slot].errId == i_err->iv_entryId)
+            if (G_errlMetaData[l_slot].errId == (*io_err)->iv_entryId)
             {
                 break;
             }
@@ -405,32 +425,45 @@ void reportErrorLog (errlHndl_t i_err)
 
         if (l_slot < ERRL_MAX_SLOTS_PER_GPE)
         {
-            PK_TRACE_INF ("reportErrorLog: EID 0x%08X", i_err->iv_entryId);
-            hcode_elog_entry_t l_errlEntry;
-
-            l_errlEntry.dw0.fields.errlog_id = i_err->iv_entryId;
-            l_errlEntry.dw0.fields.errlog_len = i_err->iv_userDetails.iv_entrySize;
-            l_errlEntry.dw0.fields.errlog_addr = (uint32_t)i_err;
-            l_errlEntry.dw0.fields.errlog_src = G_errlConfigData.source;
+            PK_TRACE_INF ("reportErrorLog: EID 0x%08X Local Slot: %d",
+                          (*io_err)->iv_entryId, l_slot);
 
             // Enter Critical Section to be thread-safe
             PkMachineContext ctx;
             pk_critical_section_enter (&ctx);
 
-            // Error Table should get updated last as OCC/XGPE polls on it
-            G_elogTable[l_slot].dw0.value = l_errlEntry.dw0.value;
+            if (i_report)
+            {
+                hcode_elog_entry_t l_errlEntry;
+
+                l_errlEntry.dw0.fields.errlog_id = (*io_err)->iv_entryId;
+                l_errlEntry.dw0.fields.errlog_len = (*io_err)->iv_userDetails.iv_entrySize;
+                l_errlEntry.dw0.fields.errlog_addr = (uint32_t)(*io_err);
+                l_errlEntry.dw0.fields.errlog_src = G_errlConfigData.source;
+
+                // Error Table should get updated last as OCC/XGPE polls on it
+                // OCC will free up corresponding slot in Shared SRAM space once
+                // the error log is processed
+                G_elogTable[l_slot].dw0.value = l_errlEntry.dw0.value;
+            }
 
             // Free up this slot as available on this GPE's records.
-            // OCC will free up corresponding slot in Shared SRAM space once
-            // the error log is processed
             G_errlConfigData.slotBits &= G_errlMetaData[l_slot].slotMask;
             G_errlMetaData[l_slot].slotMask = ERRL_SLOT_MASK_DEFAULT;
 
             pk_critical_section_exit (&ctx);
+
+            *io_err = (errlHndl_t) NULL;
+        }
+        else
+        {
+            PK_TRACE_ERR ("No local slot found for EID 0x%08X!",
+                          (*io_err)->iv_entryId);
+            l_status = ERRL_STATUS_INTERNAL_ERROR;
         }
     }
 
-    PK_TRACE_INF ("<< reportErrorLog");
+    return l_status;
 }
 
 // Function Specification
@@ -444,15 +477,17 @@ errlHndl_t createErrl(
     const ERRL_SEVERITY i_sev,
     const uint32_t i_userData1,
     const uint32_t i_userData2,
-    const uint32_t i_userData3 )
+    const uint32_t i_userData3,
+    uint32_t*      o_status )
 {
     PK_TRACE_INF ("createErrl: modid 0x%X rc 0x%X sev 0x%X",
                   i_modId, i_reasonCode, i_sev);
 
     errlHndl_t  l_rc = NULL;
+    *o_status = ERRL_STATUS_SUCCESS;
     uint64_t    l_time = 0;
     uint8_t     l_id = 0;
-    uint8_t     l_errSlot = getErrSlotNumAndErrId( i_sev, &l_id, &l_time);
+    uint8_t     l_errSlot = getErrSlotNumAndErrId( i_sev, &l_id, &l_time, o_status);
 
     if (ERRL_MAX_SLOTS_PER_GPE > l_errSlot)
     {
@@ -495,8 +530,9 @@ errlHndl_t createErrl(
         l_rc->iv_userDetails.iv_reserved4 = 0; // Alignment
     }
 
-    PK_TRACE_INF ("<< createErrl EID: 0x%08X",
-                  (l_rc != NULL) ? (l_rc->iv_entryId) : 0ull);
+    PK_TRACE_INF ("<< createErrl EID: 0x%08X Status: %d",
+                  ((l_rc != NULL) ? (l_rc->iv_entryId) : 0ull),
+                  *o_status);
 
     return l_rc;
 }
@@ -506,12 +542,14 @@ errlHndl_t createErrl(
 // Name:  addCalloutToErrl
 // Description: Add a callout to an Error Log
 // End Function Specification
-void addCalloutToErrl(
+uint32_t  addCalloutToErrl(
     errlHndl_t io_err,
     const ERRL_CALLOUT_TYPE i_type,
     const uint64_t i_calloutValue,
     const ERRL_CALLOUT_PRIORITY i_priority)
 {
+    uint32_t l_status = ERRL_STATUS_SUCCESS;
+
     // 1. check if handle is valid (not null or invalid)
     // 2. not committed
     // 3. severity is not informational (unless mfg action flag is set)
@@ -535,8 +573,11 @@ void addCalloutToErrl(
     }
     else
     {
+        l_status = ERRL_STATUS_USER_ERROR;
         PK_TRACE_INF ("Callout type 0x%02X was NOT added to elog", i_type);
     }
+
+    return l_status;
 }
 
 
@@ -547,13 +588,15 @@ void addCalloutToErrl(
 // Description: Add User Details to an Error Log
 // @note i_size should be a multiple of 8 bytes for alignment
 // End Function Specification
-void addUsrDtlsToErrl(
+uint32_t  addUsrDtlsToErrl (
     errlHndl_t io_err,
     uint8_t* i_dataPtr,
     const uint16_t i_size,
     const uint8_t i_version,
-    const ERRL_USR_DETAIL_TYPE i_type)
+    const ERRL_USR_DETAIL_TYPE i_type )
 {
+    uint32_t l_status = ERRL_STATUS_USER_ERROR;
+
     // 1.  check if handle is valid
     // 2.  NOT empty
     // 3.  not committed
@@ -634,7 +677,8 @@ void addUsrDtlsToErrl(
                     PPE_WAIT_4NOP_CYCLES;
 
                 }
-                while( ( BLOCK_COPY_SUCCESS != qme_block_copy_check()) &&  ( --G_qme_record.cts_timeout_count > 0 ) );
+                while( ( BLOCK_COPY_SUCCESS != qme_block_copy_check()) &&
+                       ( --G_qme_record.cts_timeout_count > 0 ) );
 
 #endif
             }
@@ -643,6 +687,8 @@ void addUsrDtlsToErrl(
                 memcpy (l_p, i_dataPtr, l_usrDtlsEntry.iv_size);
             }
 
+            // any errors in copying payload are ignored by errl infrastructure
+            // and space will be accounted for that in the error log
             uint16_t l_totalSizeOfUsrDtls = sizeof (ErrlUserDetailsEntry_t) +
                                             l_usrDtlsEntry.iv_size;
             //update usr data entry size
@@ -650,8 +696,17 @@ void addUsrDtlsToErrl(
                 l_totalSizeOfUsrDtls;
             //update error log size
             io_err->iv_userDetails.iv_entrySize += l_totalSizeOfUsrDtls;
+            l_status = ERRL_STATUS_SUCCESS;
+        }
+        else
+        {
+            l_status = ERRL_STATUS_LOG_FULL;
+            PK_TRACE_ERR ("No space to add usr dtl! I/p %dB Avail: %dB",
+                          i_size, l_availableSize);
         }
     }
+
+    return l_status;
 }
 
 
@@ -685,10 +740,13 @@ void addTraceToErrl (errlHndl_t io_err)
 // Description: Commit an Error Log
 //
 // End Function Specification
-void commitErrl (errlHndl_t* io_err)
+uint32_t commitErrl (errlHndl_t* io_err)
 {
+    uint32_t l_status = ERRL_STATUS_USER_ERROR;
+
     if (NULL != *io_err)
     {
+        l_status = ERRL_STATUS_SUCCESS;
         // this is the last common place holder to change or override the error
         // log fields like actions, severity, callouts, etc. based on generic
         // handling on cases like xstop, etc., before the error is 'commited'
@@ -726,8 +784,119 @@ void commitErrl (errlHndl_t* io_err)
         (*io_err)->iv_userDetails.iv_committed = 1;
 
         // report error to OCC
-        reportErrorLog(*io_err);
-
-        *io_err = (errlHndl_t) NULL;
+        l_status = reportErrorLog (io_err, true);
     }
+
+    return l_status;
+}
+
+
+// Function Specification
+//
+// Name: deleteErrl
+//
+// Description: Deletes an error log that has already been created, but not
+//              yet committed. It cleans up the internal errl framework so
+//              that new errors of the same sev can be created in the same
+//              space
+//
+// End Function Specification
+uint32_t deleteErrl (errlHndl_t* io_err)
+{
+    return (reportErrorLog (io_err, false));
+}
+
+
+// Function Specification
+//
+// Name:  ppeLogError
+//
+// Description: Utility function to accept error log params and orchestrate
+//              all errl API calls to create, add user details/callouts and
+//              commit an Error Log
+//
+// End Function Specification
+uint32_t  ppeLogError (
+    const uint8_t       i_rc,
+    const uint16_t      i_extRc,
+    const uint16_t      i_modId,
+    const ERRL_SEVERITY i_sev,
+    const uint32_t      i_userData1,
+    const uint32_t      i_userData2,
+    const uint32_t      i_userData3,
+    errlDataUsrDtls_t*  p_usrDtls,
+    errlDataCallout_t*  p_callOuts )
+{
+    uint32_t status = ERRL_STATUS_SUCCESS;
+    errlHndl_t err = NULL;
+
+    // 1. Create an error log, with basic info
+    err = createErrl (i_modId,
+                      i_rc,
+                      i_extRc,
+                      i_sev,
+                      i_userData1,
+                      i_userData2,
+                      i_userData3,
+                      &status);
+
+    if (NULL != err)
+    {
+        // Base error log created successfully
+        while ( ((ERRL_STATUS_SUCCESS == status)   ||
+                 (ERRL_STATUS_LOG_FULL == status)) && p_usrDtls )
+        {
+            // 2. Add user details sections passed by user.
+            //    Try fitting as many user data sections as possible
+            status = addUsrDtlsToErrl(err,
+                                      p_usrDtls->pData,
+                                      p_usrDtls->size,
+                                      p_usrDtls->version,
+                                      p_usrDtls->type);
+            p_usrDtls = p_usrDtls->pNext;
+        }
+
+        if (ERRL_STATUS_LOG_FULL == status)
+        {
+            // continue as good, even if last added user detail did not fit
+            status = ERRL_STATUS_SUCCESS;
+        }
+
+        if (ERRL_STATUS_SUCCESS == status)
+        {
+            // 3. Add traces to the error log, as default
+            //    If no space, traces are dropped from the log favouring
+            //    user details added before
+            addTraceToErrl (err);
+        }
+
+        while ((ERRL_STATUS_SUCCESS == status) && p_callOuts);
+
+        {
+            // 4. Add callouts passed by user
+            status = addCalloutToErrl(err,
+                                      p_callOuts->type,
+                                      p_callOuts->value,
+                                      p_callOuts->priority);
+            p_callOuts = p_callOuts->pNext;
+        }
+
+        if (ERRL_STATUS_SUCCESS == status)
+        {
+            // 5. Commit error log to be noticed for retrieval
+            //    note: err gets NULL here on success
+            status = commitErrl (&err);
+        }
+    }
+
+    if (err)
+    {
+        // 6. If something failed in steps 2-5, delete the error to allow for
+        //    for subsequent retries or new logs from the caller
+        PK_TRACE_ERR ( "ppeLogError: Failed status: %d. delete status: %d",
+                       status, (deleteErrl (&err)) );
+    }
+
+    // 7. Return first failed status to caller
+    return status;
 }

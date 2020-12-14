@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -24,7 +24,7 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "qme.h"
-#include "errl.h"
+#include "errlutil.h"
 #include <fapi2.H>
 #include <fapi2_target.H>
 
@@ -273,22 +273,18 @@ qme_stop_exit()
 
     if( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_STOP_EXIT_INJECT ) )
     {
-        errlHndl_t rc = NULL;
-        rc = createErrl (
-                 0xBABE, // i_modId,
-                 0x0B, // i_reasonCode, 0x0B
-                 QME_STOP_EXIT_ENTRY_ERROR_INJECT,  // i_extReasonCode, 0x1c1f
-                 ERRL_SEV_UNRECOVERABLE, // ERRL_SEVERITY,
-                 0xDEADBEEF,   // i_userData1,
-                 0xBADBADBA,   // i_userData2,
-                 0xC0DEFEED ); // i_userData3
+        uint32_t errStatus __attribute__((unused));
+        PPE_LOG_ERR_CRITICAL ( 0x0B,         // reason code
+                               QME_STOP_EXIT_ENTRY_ERROR_INJECT, // ext reason code
+                               0xBABE,       // mod id
+                               0xDEADBEEF,   // i_userData1,
+                               0xBADBADBA,   // i_userData2,
+                               0xC0DEFEED,   // i_userData3,
+                               NULL,         // no user details
+                               NULL,         // no callouts
+                               errStatus );  // status
 
-        if (NULL != rc)
-        {
-            addTraceToErrl (rc);
-            commitErrl (&rc);
-        }
-
+        // @TODO Check if the PIG to XGPE can be hidden under the errl APIs
         uint32_t pig_data = 0;
         pig_data = ( PIG_TYPE_E << SHIFT32(4) ) |
                    ( G_qme_record.quad_id       << SHIFT32(19) ) |
