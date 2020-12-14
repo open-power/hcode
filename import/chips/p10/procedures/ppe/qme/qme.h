@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2020                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -180,7 +180,7 @@ enum BCE_SCOPE
 // (auto) pmcr fwd enable, throttle enable,
 // pstate enable, wof enable, safe mode enable
 
-#define ENABLED_HCODE_FUNCTIONS 0x3FEFE000
+#define ENABLED_HCODE_FUNCTIONS 0x3FFFE000
 
 // QME Generic Functions
 void qme_init();

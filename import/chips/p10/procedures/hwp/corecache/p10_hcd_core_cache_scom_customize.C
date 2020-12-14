@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -85,20 +85,45 @@ p10_hcd_core_cache_scom_customize(
     uint32_t l_validEntry     = 0;
     uint32_t l_offset         = 0;
     uint64_t l_scom_data      = 0;
+    uint32_t idx              = 0;
     ScomEntry_t* pQmeScomRes  = 0;
     QmeHeader_t* pQmeImgHdr   = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
+
+    if (l_core_select == 8)
+    {
+        idx = 0;
+    }
+
+    if ( l_core_select == 4)
+    {
+        idx = 1;
+    }
+
+    if ( l_core_select == 2)
+    {
+        idx = 2;
+    }
+
+    if ( l_core_select == 1)
+    {
+        idx = 3;
+    }
+
+
+
 
     if( CACHE_RESTORE_ENTRY == i_entryType )
     {
         l_max_scom_entry  = pQmeImgHdr->g_qme_L3ScomLength;
         l_validEntry      = VALID_L3_SCOM_RESTORE;
-        l_offset          = 0;
+        l_offset          = ( ((MAX_EQ_SCOM_ENTRIES + MAX_L3_SCOM_ENTRIES) * SCOM_RESTORE_ENTRY_SIZE) * idx );
     }
     else
     {
         l_max_scom_entry  = pQmeImgHdr->g_qme_coreL2ScomLength;
         l_validEntry      = VALID_L2_SCOM_RESTORE;
-        l_offset          = SCOM_RESTORE_HEADER;
+        l_offset          = SCOM_RESTORE_HEADER +
+                            ( ((MAX_CORE_SCOM_ENTRIES + MAX_L2_SCOM_ENTRIES) * SCOM_RESTORE_ENTRY_SIZE) * idx );
     }
 
     l_max_scom_entry = ( l_max_scom_entry / SCOM_RESTORE_ENTRY_SIZE );

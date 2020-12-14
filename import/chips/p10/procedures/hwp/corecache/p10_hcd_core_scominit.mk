@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019,2020
+# COPYRIGHT 2019,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -24,6 +24,7 @@
 # IBM_PROLOG_END_TAG
 PROCEDURE=p10_hcd_core_scominit
 OBJS+=p10_fbc_utils.o
+OBJS+=p10_fbc_core_topo.o
 OBJS+=p10_core_scom.o
 OBJS+=p10_l2_scom.o
 OBJS+=p10_ncu_scom.o
@@ -33,4 +34,6 @@ $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/nest)
 $(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/nest)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/initfiles)
 $(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/initfiles)
+$(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/utils/stopreg/)
+$(call ADD_PPEIMG_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/utils/stopreg/)
 $(call BUILD_PROCEDURE)
