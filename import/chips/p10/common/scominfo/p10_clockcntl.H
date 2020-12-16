@@ -120,6 +120,8 @@ extern "C" {
         {  PIB_CHIPLET_ID,     ALL_GOOD_ID,         P10_FSIVITL_DOMAIN            }, // FSI
 
         {  PERV_CHIPLET_ID,    TP_OCC_RING_ID,      P10_TPOCC_DOMAIN              }, // RingId 0x2
+        {  PERV_CHIPLET_ID,    PSCOM_RING_ID,       P10_TPVITL_DOMAIN             }, // TP
+        {  PERV_CHIPLET_ID,    PBA_RING_ID,         P10_TPSBEPIBOCCNET_DOMAIN     }, // TP
         {  PERV_CHIPLET_ID,    ALL_GOOD_ID,         P10_TPSBEPIBOCCNETPSI_DOMAIN  }, // TP
 
         {  N0_CHIPLET_ID,      ALL_GOOD_ID,         P10_N0NXVASINTNMMU0PE1_DOMAIN },
@@ -323,6 +325,7 @@ extern "C" {
 
         { "TPVITL",               P10_TPVITL_DOMAIN,             0x0000281A, 0x0000800000000000ULL, 0x00 },
         { "TPSBEPIBOCCNETPSI",    P10_TPSBEPIBOCCNETPSI_DOMAIN,  0x01030008, 0x0EA0000000000000ULL, 0x81 }, // Regions 0,1,2,4,6; bits 4,5,6,8,10
+        { "TPSBEPIBOCCNET",       P10_TPSBEPIBOCCNET_DOMAIN,     0x01030008, 0x0E80000000000000ULL, 0x81 }, // Regions 0,1,2,4,6; bits 4,5,6,8,10
         { "TPOCC",                P10_TPOCC_DOMAIN,              0x01030008, 0x0100000000000000ULL, 0x81 }, // Region 3; bit 7
         { "TPDPLLPAU",            P10_TPDPLLPAU_DOMAIN,          0x01030008, 0x0008000000000000ULL, 0x81 }, // Region 8; bit 12
         { "TPDPLLNEST",           P10_TPDPLLNEST_DOMAIN,         0x01030008, 0x0004000000000000ULL, 0x81 }, // Region 9; bit 13

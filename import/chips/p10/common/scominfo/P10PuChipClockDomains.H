@@ -303,6 +303,8 @@
     #define P10_EQ7QME_DOMAIN                    CLOCK_DOMAIN_241
     #define P10_EQ7CLKADJ_DOMAIN                 CLOCK_DOMAIN_242
 
+    #define P10_TPSBEPIBOCCNET_DOMAIN            CLOCK_DOMAIN_243  // SBE + PIB + OCC + NET
+
     #define P10_MAXCLOCK_DOMAIN                  CLOCK_DOMAIN_299 // Need to contact Cronus if more is needed.
 
 #endif // _P10PUCHIPCLOCKDOMAINS_H
