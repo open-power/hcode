@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2020                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -51,7 +51,7 @@ qme_init()
     //--------------------------------------------------------------------------
     // Initialize Software Scoreboard
     //--------------------------------------------------------------------------
-
+    uint32_t before, after;
     uint32_t local_data = in32_sh(QME_LCL_QMCR);
     G_qme_record.c_configured       = local_data & BITS64SH(60, 4);
     G_qme_record.fused_core_enabled = ( local_data >> SHIFT64SH(47) ) & 0x1;
@@ -87,6 +87,14 @@ qme_init()
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
     G_qme_record.c_special_wakeup_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
 
+    if( G_qme_record.c_special_wakeup_done )
+    {
+        PK_TRACE_INF("Assert manual SPECIAL_WAKEUP_DONE[%x] via PCR_SCSR[16] in turning off auto mode",
+                     G_qme_record.c_special_wakeup_done);
+        out32( QME_LCL_CORE_ADDR_WR(
+                   QME_SCSR_WO_OR, G_qme_record.c_special_wakeup_done ), BIT32(16) );
+    }
+
     //This should be valid only in ipl time case, because in istep4
     //master/backing cores are spwu asserted(OTR), so we need to de-assert in istep
     //16 only and in runtime mode will not have the concept of master/backing,
@@ -97,7 +105,7 @@ qme_init()
     {
         G_qme_record.c_special_wakeup_done &= ~G_qme_record.c_hostboot_cores;
 
-        PK_TRACE_DBG("Setup: Remove Hostboot cores[%x] from Istep4 Special Wakeup", G_qme_record.c_hostboot_cores);
+        PK_TRACE_INF("Setup: Remove Hostboot cores[%x] from Istep4 Special Wakeup", G_qme_record.c_hostboot_cores);
         out32( QME_LCL_CORE_ADDR_WR( QME_SPWU_OTR, G_qme_record.c_hostboot_cores ), 0 );
 
         PK_TRACE("Clear SPWU_FALL caused by drop SPWU_OTR while in spwu auto mode");
@@ -117,7 +125,7 @@ qme_init()
 
         if( G_qme_record.c_hostboot_cores )
         {
-            PK_TRACE("Drop PM_EXIT only on primary core[%x] via PCR_SCSR[1]", G_qme_record.c_hostboot_cores);
+            PK_TRACE_INF("Drop PM_EXIT only on primary core[%x] via PCR_SCSR[1]", G_qme_record.c_hostboot_cores);
             out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_hostboot_cores ), BIT32(1) );
         }
 
@@ -127,7 +135,7 @@ qme_init()
     G_qme_record.c_block_wake_done = ((in32_sh(QME_LCL_SSDR) & BITS64SH(36, 4)) >> SHIFT64SH(39));
     G_qme_record.c_block_stop_done = 0;
 
-    PK_TRACE_INF("Setup: Core Stop Gated[%x], Core in Special Wakeup[%d], Core in Block Wakeup[%x]",
+    PK_TRACE_INF("Setup: Core Stop Gated[%x], Core in Special Wakeup[%x], Core in Block Wakeup[%x]",
                  G_qme_record.c_stop11_reached,
                  G_qme_record.c_special_wakeup_done,
                  G_qme_record.c_block_wake_done);
@@ -214,12 +222,17 @@ qme_init()
     out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2) | BIT32(3) | BIT32(29)) );
     PK_TRACE_DBG( "DEBUG: QMCR value 0x%08x%08x", in32(QME_LCL_QMCR ));
 
+
     if (G_qme_record.c_configured)
     {
-        PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE via PCR_SCSR[20, 26]");
+        before = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
         out32( QME_LCL_CORE_ADDR_WR(
                    QME_SCSR_WO_OR, G_qme_record.c_configured ), ( BIT32(20) | BIT32(26) ) );
+        after = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
+        PK_TRACE_INF("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE via PCR_SCSR[20, 26], done[%x][%x]",
+                     before, after);
     }
+
 
     //--------------------------------------------------------------------------
     // BCE Core Specific Scan Ring
