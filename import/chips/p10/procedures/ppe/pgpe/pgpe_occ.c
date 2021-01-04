@@ -186,7 +186,6 @@ void pgpe_occ_sample_values()
     }
 
     //Read IDD and ICS
-    //uint32_t idd_ma, ics_ma;
 
     if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
     {

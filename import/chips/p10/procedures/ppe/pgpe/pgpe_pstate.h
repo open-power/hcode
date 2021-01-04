@@ -83,10 +83,17 @@ typedef struct pgpe_pstate
     int32_t vdd_wov_bias, vcs_wov_bias;
     uint32_t idd, ics;
     VRT_t*   vrt;
-    uint32_t vratio_inst, vratio_vcs_inst, vratio_vdd_inst, vindex;
+    uint32_t vindex;
     uint32_t power_proxy_scale;
     uint32_t update_pgpe_beacon;
     uint32_t rvrm_volt;
+    uint32_t stopped_ac_vdd_64ths, stopped_ac_vcs_64ths;
+    uint32_t active_core_ratio_64th,
+             vratio_vdd_snapup_64th, vratio_vcs_snapup_64th,
+             vratio_vdd_rounded_64th, vratio_vcs_rounded_64th,
+             vratio_table_16th,
+             vratio_vdd_loadline_64th, vratio_vdd_ceff_inst_64th,
+             vratio_vcs_loadline_64th, vratio_vcs_ceff_ins_64th;
 } pgpe_pstate_t;
 
 
@@ -129,8 +136,8 @@ uint32_t pgpe_pstate_get_ps_region(uint32_t ps, uint32_t vpt_pt_set);
 uint32_t pgpe_pstate_get_ps_vpd_pt(uint32_t ps);
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set);
-uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t idd_scale);
-uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vdd);
+uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vcs);
 uint32_t pgpe_pstate_intp_idd_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_ics_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);

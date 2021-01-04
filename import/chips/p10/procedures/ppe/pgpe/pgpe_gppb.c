@@ -1035,80 +1035,25 @@ uint32_t pgpe_gppb_get_dds_trip_intp_ctrl(uint32_t x)
     }
 }
 
-uint32_t pgpe_gppb_get_core_on_ratio_vdd()
+uint32_t pgpe_gppb_get_vratio_vdd(uint32_t idx)
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {
-        return G_gppb->core_on_ratio_vdd;
+        return G_gppb->vratio_vdd_64ths[idx];
     }
     else
     {
-        return  G_gppb_wof->core_on_ratio_vdd;
+        return  G_gppb_wof->core_on_ratio_vdd; //To be fixed when restructuring
     }
 }
-uint32_t pgpe_gppb_get_l3_on_ratio_vdd()
+uint32_t pgpe_gppb_get_vratio_vcs(uint32_t idx)
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {
-        return  G_gppb->l3_on_ratio_vdd;
+        return G_gppb->vratio_vcs_64ths[idx];
     }
     else
     {
-        return  G_gppb_wof->l3_on_ratio_vdd;
-    }
-}
-uint32_t pgpe_gppb_get_mma_on_ratio_vdd()
-{
-    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
-    {
-        return  G_gppb->mma_on_ratio_vdd;
-    }
-    else
-    {
-        return G_gppb_wof->mma_on_ratio_vdd;
-    }
-}
-uint32_t pgpe_gppb_get_l3_on_ratio_vcs()
-{
-    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
-    {
-        return G_gppb->l3_on_ratio_vcs;
-    }
-    else
-    {
-        return  G_gppb_wof->l3_on_ratio_vcs;
-    }
-}
-uint32_t pgpe_gppb_get_core_on_ratio_vcs()
-{
-    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
-    {
-        return  G_gppb->core_on_ratio_vcs;
-    }
-    else
-    {
-        return  G_gppb_wof->core_on_ratio_vcs;
-    }
-}
-uint32_t pgpe_gppb_get_vdd_vratio_weight()
-{
-    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
-    {
-        return  G_gppb->vdd_vratio_weight;
-    }
-    else
-    {
-        return  G_gppb_wof->vdd_vratio_weight;
-    }
-}
-uint32_t pgpe_gppb_get_vcs_vratio_weight()
-{
-    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
-    {
-        return   G_gppb->vcs_vratio_weight;
-    }
-    else
-    {
-        return  G_gppb_wof->vcs_vratio_weight;
+        return  G_gppb_wof->core_on_ratio_vcs; //To be fixed when restructuring
     }
 }

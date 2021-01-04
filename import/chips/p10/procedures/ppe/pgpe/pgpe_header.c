@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2020                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@ extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_head
 void pgpe_header_init()
 {
     PK_TRACE("HDR: Init");
+    //uint32_t i = 0;
 
     G_pgpe_header_data = (PgpeHeader_t*)&_PGPE_IMG_HEADER;
 
@@ -49,7 +50,7 @@ void pgpe_header_init()
     G_pgpe_header_data->g_pgpe_sharedSramAddress = (uint32_t)OCC_SHARED_SRAM_ADDR_START;
     G_pgpe_header_data->g_pgpe_sharedLength = PGPE_OCC_SHARED_SRAM_SIZE;
 
-
+    //Clear out the OCC Shared SRAM region by setting everything to zero
     uint32_t occflg3 = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW);
 
     if(!(occflg3 & BIT32(XGPE_ACTIVE)))

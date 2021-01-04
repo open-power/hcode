@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -228,8 +228,10 @@ void pgpe_process_pstate_start()
                     VPD_PT_SET_BIASED) ); //\todo use correct format for scale
     pgpe_pstate_set(vcs_next, pgpe_pstate_intp_vcs_from_ps(pgpe_pstate_get(pstate_next),
                     VPD_PT_SET_BIASED) );//\todo use correct format for scale
-    pgpe_pstate_set(vdd_next_uplift, pgpe_pstate_intp_vddup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED, 1));
-    pgpe_pstate_set(vcs_next_uplift, pgpe_pstate_intp_vcsup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED));
+    pgpe_pstate_set(vdd_next_uplift, pgpe_pstate_intp_vddup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED,
+                    G_pgpe_pstate.vratio_vdd_loadline_64th));
+    pgpe_pstate_set(vcs_next_uplift, pgpe_pstate_intp_vcsup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED,
+                    G_pgpe_pstate.vratio_vcs_loadline_64th));
     pgpe_pstate_set(vdd_next_ext, pgpe_pstate_get(vdd_next) + pgpe_pstate_get(vdd_next_uplift));
     pgpe_pstate_set(vcs_next_ext, pgpe_pstate_get(vcs_next) + pgpe_pstate_get(vcs_next_uplift));
 
@@ -672,12 +674,12 @@ void pgpe_process_wof_enable(ipcmsg_wof_control_t* args)
     pgpe_pstate_compute_vindex();
     pgpe_pstate_set(clip_wof, pgpe_pstate_get(vrt)->data[pgpe_pstate_get(vindex)]);
     pgpe_opt_set_word(0, 0);
-    pgpe_opt_set_half(0, pgpe_pstate_get(vratio_inst));
+    pgpe_opt_set_half(0, pgpe_pstate_get(vratio_table_16th));
     pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
     pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
     ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
 
-    PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_inst),
+    PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_table_16th),
              pgpe_pstate_get(vindex),
              pgpe_pstate_get(clip_wof));
 
@@ -748,11 +750,11 @@ void pgpe_process_wof_vrt(void* eargs)
             pgpe_pstate_compute_vindex();
             pgpe_pstate_set(clip_wof, args->idd_vrt_ptr->data[pgpe_pstate_get(vindex)]);
             pgpe_opt_set_word(0, 0);
-            pgpe_opt_set_half(0, pgpe_pstate_get(vratio_inst));
+            pgpe_opt_set_half(0, pgpe_pstate_get(vratio_table_16th));
             pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
             pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
             ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
-            PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_inst),
+            PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_table_16th),
                      pgpe_pstate_get(vindex),
                      pgpe_pstate_get(clip_wof));
             pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_PENDING_ACTUATION);

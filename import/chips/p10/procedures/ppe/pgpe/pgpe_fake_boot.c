@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -118,15 +118,6 @@ void pgpe_fake_boot_gppb()
     gppb->safe_voltage_mv[SAFE_VOLTAGE_VDD] = 740;
     gppb->safe_voltage_mv[SAFE_VOLTAGE_VCS] = 720;
     gppb->safe_frequency_khz = 2000000;
-
-    //vratio
-    gppb->core_on_ratio_vdd = PGPE_FAKE_BOOT_CORE_ON_RATIO * 65535  ;
-    gppb->l3_on_ratio_vdd = PGPE_FAKE_BOOT_L3_ON_RATIO * 65535;
-    gppb->mma_on_ratio_vdd = PGPE_FAKE_BOOT_MMA_ON_RATIO * 65535;
-    gppb->core_on_ratio_vcs = 800;
-    gppb->l3_on_ratio_vcs = 200;
-    gppb->vdd_vratio_weight = 80;
-    gppb->vcs_vratio_weight = 20;
 
     gppb->ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VDD] = 50;
     gppb->ext_vrm_parms.step_size_mv[RUNTIME_RAIL_VCS] = 50;

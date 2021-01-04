@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -37,7 +37,7 @@
 #include "pstates_common.H"
 //#include "pstate_pgpe_occ_api.h"
 
-#define IDDQ_FIT_SAMPLE_TICKS   8
+#define IDDQ_FIT_SAMPLE_TICKS   8 //TODO RTC: 214486 Determine if this should be an attribute or hard-coded like this
 const uint32_t FDIR_MC_WCLR = 0x6E0EFE47;
 const uint32_t FDIR_MC_WOR  = 0x6E0EFE46;
 
@@ -59,7 +59,7 @@ void xgpe_irq_fit_init()
 {
     //Todo: Determine if XGPE should read OCC Shared SRAM from PGPE header
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)G_xgpe_header_data->g_xgpe_sharedSramAddress;
-    //uint32_t c;
+    uint32_t c;
 
     occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2;
     occ_shared_data->occ_data_offset = offsetof(HcodeOCCSharedData_t, occ_wof_values);
@@ -72,14 +72,24 @@ void xgpe_irq_fit_init()
     occ_shared_data->iddq_data_length = sizeof(iddq_activity_t);
     occ_shared_data->error_log_offset = offsetof(HcodeOCCSharedData_t, errlog_idx);
     occ_shared_data->pstate_table_offset = offsetof(HcodeOCCSharedData_t, pstate_table);
-    occ_shared_data->iddq_activity_sample_depth =
-        8; //TODO RTC: 214486 Determine if this should be an attribute or hard-coded like this
-
+    occ_shared_data->iddq_activity_sample_depth = IDDQ_FIT_SAMPLE_TICKS;
 
     G_iddq.p_act_val =  (iddq_activity_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +
                                            occ_shared_data->iddq_data_offset);
     G_iddq.p_wof_val =  (pgpe_wof_values_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +
-                        occ_shared_data->iddq_data_offset);
+                        occ_shared_data->pgpe_data_offset);
+
+
+    PK_TRACE("FIT: Initializing FIT p_act_val=0x%x p_wof_val=0x%x", (uint32_t)G_iddq.p_act_val,
+             (uint32_t) G_iddq.p_wof_val);
+
+    G_iddq.tick_cnt = 0;
+
+    //Initialize each activity count to IDDQ_FIT_SAMPLE_TICKS(=8) for each core
+    for (c = 0; c < MAX_CORES; c++)
+    {
+        G_iddq.p_act_val->act_val_core[c]  =  0x04040404;
+    }
 }
 
 //
@@ -344,11 +354,12 @@ void handle_wof_iddq_values()
         else
         {
             G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECACHE_OFF]++;
+            G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECLK_OFF]++;
         }
     }
 
-    G_iddq.vratio_vdd_accum += G_iddq.vratio_vdd_inst; //Accumulate the present vratios
-    G_iddq.vratio_vcs_accum += G_iddq.vratio_vcs_inst; //Accumulate the present vratios
+    //G_iddq.vratio_vdd_accum += G_iddq.vratio_vdd_inst; //Accumulate the present vratios
+    //G_iddq.vratio_vcs_accum += G_iddq.vratio_vcs_inst; //Accumulate the present vratios
     G_iddq.tick_cnt++;
 
     if(G_iddq.tick_cnt == IDDQ_FIT_SAMPLE_TICKS)
@@ -373,10 +384,10 @@ void handle_wof_iddq_values()
         }
 
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_EX_RATIOS_ATOMIC_FLAG));
-        G_iddq.p_wof_val->dw0.fields.vratio_vdd_avg = G_iddq.vratio_vdd_accum / G_iddq.tick_cnt;
-        G_iddq.p_wof_val->dw0.fields.vratio_vcs_avg = G_iddq.vratio_vcs_accum / G_iddq.tick_cnt;
-        G_iddq.vratio_vdd_accum = 0;
-        G_iddq.vratio_vcs_accum = 0;
+        //G_iddq.p_wof_val->dw0.fields.vratio_vdd_avg = G_iddq.vratio_vdd_accum / G_iddq.tick_cnt;
+        //G_iddq.p_wof_val->dw0.fields.vratio_vcs_avg = G_iddq.vratio_vcs_accum / G_iddq.tick_cnt;
+        //G_iddq.vratio_vdd_accum = 0;
+        //G_iddq.vratio_vcs_accum = 0;
         G_iddq.tick_cnt = 0;
     }
 

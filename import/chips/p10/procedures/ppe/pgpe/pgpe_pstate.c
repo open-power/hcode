@@ -104,13 +104,20 @@ void pgpe_pstate_init()
     G_pgpe_pstate.vcs_next_ext      = 0;
 
     G_pgpe_pstate.vrt                = 0;
-    G_pgpe_pstate.vratio_inst        = 0;
-    G_pgpe_pstate.vratio_vcs_inst    = 0;
-    G_pgpe_pstate.vratio_vdd_inst    = 0;
     G_pgpe_pstate.vindex             = 0;
+    G_pgpe_pstate.active_core_ratio_64th    = 0;
+    G_pgpe_pstate.vratio_vdd_snapup_64th    = 0;
+    G_pgpe_pstate.vratio_vcs_snapup_64th    = 0;
+    G_pgpe_pstate.vratio_vdd_rounded_64th   = 0;
+    G_pgpe_pstate.vratio_vcs_rounded_64th   = 0;
+    G_pgpe_pstate.vratio_table_16th         = 0;
+    G_pgpe_pstate.vratio_vdd_loadline_64th  = 0;
+    G_pgpe_pstate.vratio_vdd_ceff_inst_64th = 0;
+    G_pgpe_pstate.vratio_vcs_loadline_64th  = 0;
+    G_pgpe_pstate.vratio_vcs_ceff_ins_64th  = 0;
+
     G_pgpe_pstate.power_proxy_scale  = 0;
     G_pgpe_pstate.update_pgpe_beacon = 1;
-
 
 
     PPE_GETSCOM_MC_Q_EQU(QME_RVCR, rvcr);
@@ -129,6 +136,11 @@ void pgpe_pstate_init()
     {
         G_pgpe_pstate.pstate_safe = pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, POWERSAVE);
     }
+
+    G_pgpe_pstate.stopped_ac_vdd_64ths = pgpe_gppb_get_vratio_vdd(WOF_VRATIO_VDD_IDX_CORE)  + pgpe_gppb_get_vratio_vdd(
+            WOF_VRATIO_VDD_IDX_RACETRACK_PER_CORE);
+    G_pgpe_pstate.stopped_ac_vcs_64ths = pgpe_gppb_get_vratio_vcs(WOF_VRATIO_VCS_IDX_CORE)  + pgpe_gppb_get_vratio_vcs(
+            WOF_VRATIO_VCS_IDX_CACHE_BASE);
 
     PK_TRACE("PS: Psafe=0x%x", G_pgpe_pstate.pstate_safe);
 }
@@ -175,11 +187,10 @@ void pgpe_pstate_actuate_step()
     G_pgpe_pstate.vcs_next = pgpe_pstate_intp_vcs_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
 
     //compute load line drop
-    pgpe_pstate_compute_vratio(G_pgpe_pstate.pstate_next);
-
     G_pgpe_pstate.vdd_next_uplift = pgpe_pstate_intp_vddup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED,
-                                    G_pgpe_pstate.vratio_inst);
-    G_pgpe_pstate.vcs_next_uplift = pgpe_pstate_intp_vcsup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
+                                    G_pgpe_pstate.vratio_vdd_loadline_64th);
+    G_pgpe_pstate.vcs_next_uplift = pgpe_pstate_intp_vcsup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED,
+                                    G_pgpe_pstate.vratio_vcs_loadline_64th);
 
     G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
     G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
@@ -511,53 +522,50 @@ void pgpe_pstate_apply_clips()
 
 void pgpe_pstate_compute_vratio(uint32_t pstate)
 {
-    uint32_t vmin_mv = pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, POWERSAVE);
-    uint32_t vdd = pgpe_pstate_intp_vdd_from_ps(pstate, VPD_PT_SET_BIASED); //non-uplifted
-    uint32_t vratio_vdd_accum = 0;
-    uint32_t core_cnt = 0;
     uint32_t ccsr;
     uint32_t c;
+    uint32_t vratio_vdd_accum_64th = 0;
+    uint32_t vratio_vcs_accum_64th = 0;
+    uint32_t active_core_accum_64th = 0;
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)OCC_SHARED_SRAM_ADDR_START;
     iddq_activity_t* G_p_iddq_act_val =  (iddq_activity_t*)(OCC_SHARED_SRAM_ADDR_START + occ_shared_data->iddq_data_offset);
 
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
-    for(c = 0; c < MAX_CORES; c++)
+    for (c = 0; c < MAX_CORES; c++)
     {
         if (ccsr & CORE_MASK(c))
         {
-            core_cnt++;
-
-            //if core is ON
-            if (G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_CORECLK_OFF] == 0)
-            {
-                vratio_vdd_accum += pgpe_gppb_get_core_on_ratio_vdd();
-
-                //if core MMA is ON
-                if (G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_MMA_OFF] == 0)
-                {
-                    vratio_vdd_accum += pgpe_gppb_get_mma_on_ratio_vdd();
-                }
-            }
-            //if core c is Vmin
-            else if (G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_CORE_VMIN])
-            {
-                vratio_vdd_accum += (pgpe_gppb_get_core_on_ratio_vdd() * vmin_mv) / vdd;
-            }
+            uint32_t coreclk_off_64th = G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_CORECLK_OFF] << 3;
+            uint32_t corecache_off_64th = G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_CORECACHE_OFF] << 3;
+            uint32_t mma_off_64th = G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_MMA_OFF] << 3;
+            uint32_t stopped_64th = coreclk_off_64th + corecache_off_64th;
+            active_core_accum_64th += 64 - stopped_64th;
+            vratio_vdd_accum_64th  += 64 - (  ((G_pgpe_pstate.stopped_ac_vdd_64ths * stopped_64th) >> 6)
+                                              + ((pgpe_gppb_get_vratio_vdd(WOF_VRATIO_VDD_IDX_CACHE_BASE) * corecache_off_64th) >> 6)
+                                              + ((pgpe_gppb_get_vratio_vdd(WOF_VRATIO_VDD_IDX_MMA) * mma_off_64th) >> 6));
+            vratio_vcs_accum_64th += 64 - (((G_pgpe_pstate.stopped_ac_vcs_64ths * stopped_64th) >> 6)
+                                           + ((pgpe_gppb_get_vratio_vcs(WOF_VRATIO_VCS_IDX_CACHE_BASE) * corecache_off_64th) >> 6));
         }
     }
 
-    PK_TRACE("VRA: CoreCnt=%u, SortCnt=%u", core_cnt, G_pgpe_pstate.sort_core_count);
-    G_pgpe_pstate.vratio_vdd_inst = vratio_vdd_accum / G_pgpe_pstate.sort_core_count;
-    G_pgpe_pstate.vratio_inst = G_pgpe_pstate.vratio_vdd_inst;
-    PK_TRACE("VRA: vratio_inst_vdd=%u, vratio_vdd_accum=%u", G_pgpe_pstate.vratio_vdd_inst, vratio_vdd_accum);
-    PK_TRACE("VRA: vratio_inst=%u", G_pgpe_pstate.vratio_inst);
+    G_pgpe_pstate.active_core_ratio_64th   = ((active_core_accum_64th + 63) / G_pgpe_pstate.sort_core_count) >> 6;
+    G_pgpe_pstate.vratio_vdd_snapup_64th = ((vratio_vdd_accum_64th + 63) / G_pgpe_pstate.sort_core_count) >> 6;
+    G_pgpe_pstate.vratio_vcs_snapup_64th = ((vratio_vcs_accum_64th + 63) / G_pgpe_pstate.sort_core_count) >> 6;
+    G_pgpe_pstate.vratio_vdd_rounded_64th = ((vratio_vdd_accum_64th + 32) / G_pgpe_pstate.sort_core_count) >> 6;
+    G_pgpe_pstate.vratio_vcs_rounded_64th = ((vratio_vcs_accum_64th + 32) / G_pgpe_pstate.sort_core_count) >> 6;
+
+    G_pgpe_pstate.vratio_table_16th         = G_pgpe_pstate.active_core_ratio_64th >> 2;
+    G_pgpe_pstate.vratio_vdd_loadline_64th  = G_pgpe_pstate.vratio_vdd_snapup_64th;
+    G_pgpe_pstate.vratio_vdd_ceff_inst_64th = G_pgpe_pstate.vratio_vdd_rounded_64th;
+    G_pgpe_pstate.vratio_vcs_loadline_64th  = G_pgpe_pstate.vratio_vcs_snapup_64th;
+    G_pgpe_pstate.vratio_vcs_ceff_ins_64th  = G_pgpe_pstate.vratio_vcs_rounded_64th;
 }
 
 void pgpe_pstate_compute_vindex()
 {
-    uint32_t msd = ((G_pgpe_pstate.vratio_inst & 0xF000) >> 12);
-    uint32_t rem = (G_pgpe_pstate.vratio_inst & 0x0FFF);
+    uint32_t msd = ((G_pgpe_pstate.vratio_table_16th & 0xF000) >> 12);
+    uint32_t rem = (G_pgpe_pstate.vratio_table_16th & 0x0FFF);
     uint32_t idx_rnd = (rem > 0x800) ? 1 : 0;
     G_pgpe_pstate.vindex = (msd >= 5) ? (msd - 5 + idx_rnd) : 0;
     PK_TRACE("VIX: Vindex=0x%x", G_pgpe_pstate.vindex);
@@ -600,7 +608,7 @@ uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set)
     return vcs;
 }
 
-uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t idd_scale)
+uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vdd)
 {
     //interpolate new current(AC and DC) based on pstate next
     uint32_t idd_ac = pgpe_pstate_intp_idd_ac_from_ps(ps, VPD_PT_SET_BIASED);
@@ -609,7 +617,7 @@ uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
     //compute load line drop
     //\\todo come up with correct idd_scale/vratio_format.
     //idd_scale/vratio format is a number between 0.0 and 1.0, but we need to represent this using integers on PGPE
-    uint32_t vdd_uplift = ((((idd_ac + idd_dc) * idd_scale) * (pgpe_gppb_get_vdd_sysparm_loadline() +
+    uint32_t vdd_uplift = ((((idd_ac + idd_dc) * vratio_vdd) * (pgpe_gppb_get_vdd_sysparm_loadline() +
                             pgpe_gppb_get_vdd_sysparm_distloss())) / 1000
                            + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
 
@@ -617,12 +625,12 @@ uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
     return vdd_uplift;
 }
 
-uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set)
+uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vcs)
 {
     uint32_t ics_ac = pgpe_pstate_intp_ics_ac_from_ps(ps, VPD_PT_SET_BIASED);
     uint32_t ics_dc = pgpe_pstate_intp_ics_dc_from_ps(ps, VPD_PT_SET_BIASED);
 
-    uint32_t vcs_uplift = ((((ics_ac + ics_dc)) *  (pgpe_gppb_get_vcs_sysparm_loadline() +
+    uint32_t vcs_uplift = ((((ics_ac + ics_dc) * vratio_vcs) *  (pgpe_gppb_get_vcs_sysparm_loadline() +
                             pgpe_gppb_get_vcs_sysparm_distloss())) / 1000
                            + pgpe_gppb_get_vcs_sysparm_distoffset()) / 1000;
 
