@@ -451,7 +451,7 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
 }
 
-void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_current)
+void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_current, uint32_t current_scale_idx)
 {
     PkMachineContext ctx;
     pk_critical_section_enter(&ctx);
@@ -467,6 +467,9 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
             PK_TRACE_ERR("AVS_READ_CURRENT: DriveRead FAILED rc=0x%x. BusNum=0x%x, RailNum=0x%x", rc, bus_num, rail_num);
             //\todo Determine what to do here in P10. In P9, we would just halt PGPE
         }
+
+        *ret_current = *ret_current * pgpe_gppb_get_current_scale_factor(current_scale_idx);
+        //PK_TRACE("AVS_READ_CURRENT: bus_num=%u, rail_num=%u,current=%u scale=%u",bus_num, rail_num, *ret_current,pgpe_gppb_get_current_scale_factor(current_scale_idx));
     }
     else
     {
