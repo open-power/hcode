@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -94,6 +94,7 @@ int main()
     pgpe_resclk_init();
     pgpe_thr_ctrl_init();
     pgpe_occ_init();
+    pgpe_sync_qme_occ_timebase();
     pgpe_wov_ocs_init();
     pgpe_irq_init();
     pgpe_event_manager_init();

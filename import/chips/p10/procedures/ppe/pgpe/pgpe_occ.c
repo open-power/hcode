@@ -33,6 +33,7 @@
 #include "pgpe_thr_ctrl.h"
 #include "pgpe_wov_ocs.h"
 #include "p10_oci_proc.H"
+#include "p10_scom_eq_1.H"
 
 pgpe_occ_t G_pgpe_occ __attribute__((section (".data_structs")));
 void pgpe_occ_sample_values();
@@ -246,4 +247,62 @@ void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc)
     ipcmsg_base_t* args = (ipcmsg_base_t*)async_cmd->cmd_data;
     args->rc = msg_rc;
     ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+}
+
+void pgpe_sync_qme_occ_timebase( )
+{
+    uint32_t otbr_1_32 = 0;
+    uint32_t otbr_2_32 = 0;
+    uint32_t otbr_offset = 0;
+    uint32_t otbr_delta  = 0;
+    uint32_t k = 0;
+
+    // there will be an unavoidable delay between time OCC TBR is read and counts
+    // read getting written to QME TBR. This delay needs to be calculated and compensated
+    // for. Finding out the measurememt overhead by mocking time base sync steps.
+
+    otbr_1_32  =  in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+
+    for( k = 0; k < 10; k++ )
+    {
+        uint64_t temp64 = 0;
+        temp64  =  in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+        temp64 +=  10;
+        temp64  =  temp64 << 32;
+        PPE_PUTSCOM_MC_Q( QME_TBR, temp64 );
+    }
+
+    otbr_2_32   =  in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+
+    if( otbr_2_32 > otbr_1_32 )
+    {
+        otbr_delta   =  otbr_2_32 - otbr_1_32;
+    }
+    else
+    {
+        otbr_delta   =  ( 0xffffffff - otbr_1_32 ) + otbr_2_32 ;
+    }
+
+    otbr_offset  =  (otbr_delta / 10);
+
+    if( ( otbr_offset % 10 ) >= 6 )
+    {
+        otbr_offset++;
+    }
+
+    PK_TRACE( "Time Base Sync Offset: 0x%08x", otbr_offset );
+
+    // delay calculated by mocking time base synch-up
+
+    uint64_t time_base_value = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+    time_base_value += otbr_offset;
+    time_base_value  = time_base_value << 32;
+    PPE_PUTSCOM_MC_Q( QME_TBR, time_base_value );
+
+    otbr_1_32  =  in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+    PPE_GETSCOM_MC_Q_AND( QME_TBR, time_base_value );
+    otbr_2_32  = time_base_value >> 32;
+
+    PK_TRACE( "QME Time Base Synchronized: OCC TBR: 0x%08x  QME TBR: 0x%08x",
+              otbr_1_32, otbr_2_32 );
 }
