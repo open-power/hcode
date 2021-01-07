@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -380,6 +380,8 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
 
 void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv)
 {
+    PkMachineContext ctx;
+    pk_critical_section_enter(&ctx);
     uint32_t  rc = 0;
     uint32_t  cmd_data_type = 0; // 0b0000=Target rail voltage
 
@@ -420,10 +422,13 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
         PK_TRACE("AVS_WRITE: bus_num=%u not available", bus_num)
     }
 
+    pk_critical_section_exit(&ctx);
 }
 
 void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_volt)
 {
+    PkMachineContext ctx;
+    pk_critical_section_enter(&ctx);
     uint32_t rc = 0;
 
     if (bus_num != 0xFF)
@@ -442,10 +447,15 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
         *ret_volt = 0;
     }
 
+    pk_critical_section_exit(&ctx);
+
 }
 
 void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_current)
 {
+    PkMachineContext ctx;
+    pk_critical_section_enter(&ctx);
+
     uint32_t rc = 0;
 
     if (bus_num != 0xFF)
@@ -464,4 +474,5 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
         *ret_current = 0;
     }
 
+    pk_critical_section_exit(&ctx);
 }

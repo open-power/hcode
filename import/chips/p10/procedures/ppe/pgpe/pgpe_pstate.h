@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -111,7 +111,6 @@ void pgpe_pstate_pmsr_updt();
 void pgpe_pstate_pmsr_set_safe_mode();
 void pgpe_pstate_pmsr_write();
 void pgpe_pstate_set_safe_mode();
-void pgpe_pstate_sample_currents();
 
 //Macro accessor function
 #define pgpe_pstate_get(x) G_pgpe_pstate.x

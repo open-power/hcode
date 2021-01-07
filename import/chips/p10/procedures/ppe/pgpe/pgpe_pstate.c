@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1199,21 +1199,6 @@ void pgpe_pstate_pmsr_write()
     PK_TRACE("PMSR WRAddr=0x%x, RdAddr=0x%x", PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), PPE_SCOM_ADDR_MC_OR(QME_PMSRS, 0xF));
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value); //HW Bug workaround. Rewrite PMSR
 #endif
-}
-
-void pgpe_pstate_sample_currents()
-{
-    uint32_t current;
-
-    pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
-                             pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                             &current);
-    G_pgpe_pstate.idd = current;
-
-    pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
-                             pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                             &current);
-    G_pgpe_pstate.ics = current;
 }
 
 void pgpe_pstate_update_vdd_vcs_ps()
