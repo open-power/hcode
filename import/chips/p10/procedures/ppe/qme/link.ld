@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2020                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -69,6 +69,8 @@ SECTIONS
     _ATTR_PTR_START = _DUMP_PTR_START + PPE_DUMP_PTR_SIZE;
     .attr_ptr _ATTR_PTR_START : { *(.attrdata) } > sram
 
+    . = ALIGN(16);
+    .trace  . : { *(.data.pk_trace_buf) } > sram
     . = ALIGN(16);
     /*======================================
      * Code
