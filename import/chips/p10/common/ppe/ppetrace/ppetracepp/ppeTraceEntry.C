@@ -60,6 +60,32 @@ string PpeTraceEntry::getTimeStamp() const
     return oss.str();
 }
 
+string PpeTraceEntry::getTimeDiff(const PpeTraceEntry* i_previous) const
+{
+    uint64_t time1 = ((uint64_t)iv_Seconds * 1000000) + iv_microSeconds;
+    uint64_t time2 = ((uint64_t)i_previous->iv_Seconds * 1000000) + i_previous->iv_microSeconds;
+    uint64_t diff_time = 0;
+
+    if(time1 >= time2)
+    {
+        diff_time = time1 - time2;
+    }
+    else
+    {
+        diff_time = time2 - time1;
+    }
+
+    uint64_t diff_Seconds = diff_time / 1000000;
+    uint64_t diff_microSs = diff_time % 1000000;
+
+    ostringstream oss;
+    oss << dec << setfill('0') << setw(8) << diff_Seconds
+        << '.' << setw(9) << diff_microSs;
+    return oss.str();
+
+
+}
+
 void PpeTraceEntry::addTimeStamp(uint64_t i_ts, uint32_t i_timeBase)
 {
     uint32_t seconds = i_ts / i_timeBase;

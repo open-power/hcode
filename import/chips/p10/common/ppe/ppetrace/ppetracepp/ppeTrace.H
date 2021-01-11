@@ -35,6 +35,15 @@
 #include <vector>
 #include <iostream>
 
+#define HCODE_DEBUG_PTRS (0x200)
+#define OCCGPE_DEBUG_PTRS (0x180)
+
+#define PGPE_BASE_SRAM  (0xfff20000)
+#define XGPE_BASE_SRAM  (0xfff30000)
+#define QME_BASE_SRAM   (0xffff0000)
+#define GPE1_BASE_SRAM  (0xfff10000)
+#define GPE0_BASE_SRAM  (0xfff01000)
+
 using namespace std;
 
 /**
@@ -147,9 +156,15 @@ class PpeTrace
          */
         void dumpMarkHashInfo(ostream& i_out);
 
+        /**
+         * isValid.   Is the buffer a valid pk_trace buffer
+         */
+        bool isValid(ostream& errInfo);
+
     private:
 
         ostream& iv_info;
+        char* iv_alloc;
         PkTraceBuffer* iv_buffer;
         int iv_version;
 
