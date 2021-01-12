@@ -116,9 +116,10 @@ void pgpe_gppb_init()
         G_gppb_wof = (GlobalPstateParmBlockWOF_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[WOF_OFFSET_IDX]);
         G_gppb_wov = (GlobalPstateParmBlockWOV_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[WOF_OFFSET_IDX]);
 
-        PK_TRACE("GPPB: Init G_gppb=0x%x, magic=PSTATE_PARMSBLOCK_MAGIC_V1", (uint32_t)G_gppb_v1);
-        PK_TRACE("GPPB: Init occ_cmpl_freq=0x%x", (uint32_t)G_gppb_v1->base.occ_complex_frequency_mhz);
-        PK_TRACE("GPPB: pgpe_flags=0x%08x", (uint32_t)G_gppb_pgpe_flags);
+        PK_TRACE("GPPB: gppb_addr=0x%x, magic=PSTATE_PARMSBLOCK_MAGIC_V1", (uint32_t)G_gppb_v1);
+        PK_TRACE("GPPB: occ_cmpl_freq=%u(0x%x Mhz)", (uint32_t)G_gppb->occ_complex_frequency_mhz,
+                 (uint32_t)G_gppb->occ_complex_frequency_mhz);
+        PK_TRACE("GPPB: pgpe_flags_addr=0x%08x", (uint32_t)&G_gppb->pgpe_flags);
         PK_TRACE("GPPB: base=0x%08x", (uint32_t)G_gppb_base);
         PK_TRACE("GPPB: avsbus=0x%08x", (uint32_t)G_gppb_avsbus);
         PK_TRACE("GPPB: vdd_sys=0x%08x", (uint32_t)G_gppb_vdd_sysparm);
@@ -133,9 +134,10 @@ void pgpe_gppb_init()
     }
     else
     {
-        PK_TRACE("GPPB: Init G_gppb=0x%x magic=PSTATE_PARMSBLOCK_MAGIC_V0", (uint32_t)G_gppb);
-        PK_TRACE("GPPB: Init occ_cmpl_freq=0x%x", (uint32_t)G_gppb->occ_complex_frequency_mhz);
-        PK_TRACE("GPPB: pgpe_flags=0x%x", (uint32_t)&G_gppb->pgpe_flags);
+        PK_TRACE("GPPB: gppb_addr=0x%08x magic=PSTATE_PARMSBLOCK_MAGIC_V0", (uint32_t)G_gppb);
+        PK_TRACE("GPPB: occ_cmpl_freq=%u(0x%x Mhz)", (uint32_t)G_gppb->occ_complex_frequency_mhz,
+                 (uint32_t)G_gppb->occ_complex_frequency_mhz);
+        PK_TRACE("GPPB: pgpe_flags_addr=0x%08x", (uint32_t)&G_gppb->pgpe_flags);
     }
 
 #if GENERATE_HOMER_TABLES == 1
@@ -148,7 +150,7 @@ void pgpe_gppb_init()
         G_gpi_v1->magic = GEN_PSTATES_TBL_MAGIC_V1;
         G_gpi_v1->globalppb = *G_gppb_v1;
         G_gpi_v1->pstate0_frequency_khz = G_gppb_v1->base.reference_frequency_khz;
-        G_gpi_v1->highest_pstate = G_gppb_v1->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_gpi_v1->highest_pstate = G_gppb_v1->operating_points_set[VPD_PT_SET_BIASED][POWERSAVE].pstate;
         G_gpi_v1->pgpe_header  = *(pgpe_header_get_ptr());
     }
     else
@@ -157,7 +159,7 @@ void pgpe_gppb_init()
         G_gpi->magic = GEN_PSTATES_TBL_MAGIC;
         G_gpi->globalppb = *G_gppb;
         G_gpi->pstate0_frequency_khz = G_gppb->reference_frequency_khz;
-        G_gpi->highest_pstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED_SYSP][POWERSAVE].pstate;
+        G_gpi->highest_pstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED][POWERSAVE].pstate;
         G_gpi->pgpe_header  = *(pgpe_header_get_ptr());
     }
 
@@ -205,6 +207,8 @@ void pgpe_gppb_raw_pstate_tbl(PstateTable_t* tbl)
         step_size = G_gppb->frequency_step_khz;
     }
 
+    PK_TRACE("GPPB: Raw Pstate Tbl addr=0x%08x, max_ps=%u(0x%x)", (uint32_t)tbl, max_ps, max_ps);
+
     for (p = 0; p <= max_ps; p++)
     {
         tbl[p].pstate = p;
@@ -218,13 +222,12 @@ void pgpe_gppb_raw_pstate_tbl(PstateTable_t* tbl)
             tbl[p].frequency_mhz = (G_gppb->reference_frequency_khz - freq_khz_offset) / 1000;
         }
 
-        tbl[p].external_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_BIASED_SYSP);
+        tbl[p].external_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
         tbl[p].effective_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
         freq_khz_offset += step_size;
         //\TODO Need Update spec as to what else needs to be in here
     }
 
-    PK_TRACE(": Generatd Raw Pstate Tbl addr=0x%08x", (uint32_t)tbl);
 }
 
 void pgpe_gppb_biased_pstate_tbl(PstateTable_t* tbl)
@@ -245,6 +248,7 @@ void pgpe_gppb_biased_pstate_tbl(PstateTable_t* tbl)
         step_size = G_gppb->frequency_step_khz;
     }
 
+    PK_TRACE("GPPB: Biased Pstate Tbl addr=0x%08x, max_ps=%u(0x%x)", (uint32_t)tbl, max_ps, max_ps);
 
     for (p = 0; p <= max_ps; p++)
     {
@@ -259,13 +263,11 @@ void pgpe_gppb_biased_pstate_tbl(PstateTable_t* tbl)
             tbl[p].frequency_mhz = (G_gppb->reference_frequency_khz - freq_khz_offset) / 1000;
         }
 
-        tbl[p].external_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_BIASED_SYSP);
+        tbl[p].external_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
         tbl[p].effective_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
         freq_khz_offset += step_size;
         //\TODO Need Update spec as to what else needs to be in here
     }
-
-    PK_TRACE("GPPB: Generated Biased Pstate Tbl addr=0x%08x", (uint32_t)tbl);
 }
 //
 //Generate OCC Table
