@@ -130,6 +130,23 @@ typedef enum
     BLOCK_COPY_BUSY         = 2
 } BceReturnCode_t;
 
+enum BCE_BUF_CONTENT_TYPE
+{
+    NONE            =    0,
+    CMN_RING        =    1,
+    INST_RING       =    2,
+    SCOM_RESTORE    =    3,
+    OVRRIDES        =    4,
+    ALL             =    5,
+};
+
+enum BCE_SCOPE
+{
+    QME_COMMON   = 0,
+    QME_SPECIFIC = 1,
+};
+
+
 enum QME_HCODE_FUNCTIONAL_ENABLES
 {
     // Software Checks
@@ -154,26 +171,11 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
     QME_HWP_SCANFLUSH_ENABLE          = BIT32(16),
     QME_HWP_PFET_CTRL_ENABLE          = BIT32(17),
     // Modes Switches
-    QME_EPM_BROADSIDE_ENABLE          = BIT32(18),
-    QME_SMF_SUPPORT_ENABLE            = BIT32(19),
+    QME_PIG_TYPEA_ENABLE              = BIT32(18),
+    QME_EPM_BROADSIDE_ENABLE          = BIT32(19),
     QME_RUNN_MODE_ENABLE              = BIT32(20),
-    QME_CONTAINED_MODE_ENABLE         = BIT32(21)
-};
-
-enum BCE_BUF_CONTENT_TYPE
-{
-    NONE            =    0,
-    CMN_RING        =    1,
-    INST_RING       =    2,
-    SCOM_RESTORE    =    3,
-    OVRRIDES        =    4,
-    ALL             =    5,
-};
-
-enum BCE_SCOPE
-{
-    QME_COMMON   = 0,
-    QME_SPECIFIC = 1,
+    QME_CONTAINED_MODE_ENABLE         = BIT32(21),
+    QME_SMF_SUPPORT_ENABLE            = BIT32(22)
 };
 
 enum SR_FAILURE_CODE
@@ -210,7 +212,7 @@ enum QME_EXTENDED_REASON_CODE
 // (auto) pmcr fwd enable, throttle enable,
 // pstate enable, wof enable, safe mode enable
 
-#define ENABLED_HCODE_FUNCTIONS 0x3FFFE000
+#define ENABLED_HCODE_FUNCTIONS 0x3FFFF000
 
 // QME Generic Functions
 void qme_init();

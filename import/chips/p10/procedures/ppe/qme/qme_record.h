@@ -80,10 +80,10 @@ typedef struct
     uint32_t    c_special_wakeup_done;
     uint32_t    c_hostboot_cores;
 
-    uint32_t    c_stop2_reached;
-    uint32_t    c_stop3_reached;
+    uint32_t    c_stop2_reached; // PIG TypeA 8:11
+    uint32_t    c_stop3_reached; // PIG TypeA 12:15
     uint32_t    c_stop5_reached;
-    uint32_t    c_stop11_reached;
+    uint32_t    c_stop11_reached;// PIG TypeA 20:23
 
     // Stop and Wakeup Processing
 
@@ -104,7 +104,7 @@ typedef struct
     uint32_t    c_stop5_enter_targets;
     uint32_t    c_stop11_enter_targets;
 
-    uint32_t    c_mma_poweron_done;
+    uint32_t    c_mma_available; // invert PIG TypeA 16:19
     uint32_t    c_mma_poweron_req;
     uint32_t    c_l2_purge_catchup_targets;
     uint32_t    c_stop3or5_catchup_targets;
