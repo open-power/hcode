@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2020
+# COPYRIGHT 2015,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -69,7 +69,7 @@ export PATH=${PATH}:$TOOLSDIR:"$TOOLSDIR/test"
 
 # make sure ECMD_RELEASE is set
 if [ -z "${ECMD_RELEASE}" ]; then
-    export ECMD_RELEASE=ver-14-20
+    export ECMD_RELEASE=ver-14-21
 fi
 ECMD_LIB_PATH=${CTEPATH}/tools/ecmd/${ECMD_RELEASE}/x86_64/lib
 

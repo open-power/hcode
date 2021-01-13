@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2016,2020
+# COPYRIGHT 2016,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -61,7 +61,7 @@ $2/$1.dis : $2/$1.bin
 
 $(call __CLEAN_TARGET,$2/$1.bin)
 $(call __CLEAN_TARGET,$2/$1.dis)
+$(call __CLEAN_TARGET,$2/trexStringFile)
 $(call __CLEAN_TARGET,$(OBJPATH)/$(1)/trexStringFile)
-$(call __CLEAN_TARGET,$(OBJPATH)/$2/trexStringFile)
 IMAGE_EDITOR=
 endef
