@@ -77,6 +77,28 @@ qme_eval_eimr_override()
 
 
 void
+qme_send_pig_type_a()
+{
+    uint32_t pig_data = 0;
+    uint32_t just_stop2;
+
+    if( G_qme_record.hcode_func_enabled & QME_PIG_TYPEA_ENABLE )
+    {
+        just_stop2 = G_qme_record.c_stop2_reached &
+                     (~G_qme_record.c_stop3_reached) &
+                     (~G_qme_record.c_stop11_reached);
+
+        pig_data = ( PIG_TYPE_A << SHIFT32(4) ) |
+                   ( just_stop2 << SHIFT32(11) ) |
+                   ( G_qme_record.c_stop3_reached << SHIFT32(15) ) |
+                   ( ( (~G_qme_record.c_mma_available) & 0xF ) << SHIFT32(19) ) |
+                   ( G_qme_record.c_stop11_reached << SHIFT32(23) );
+
+        qme_send_pig_packet(pig_data);
+    }
+}
+
+void
 qme_fused_core_pair_mode(uint32_t* c_mask)
 {
     if( G_qme_record.fused_core_enabled )
@@ -597,6 +619,7 @@ qme_special_wakeup_rise_event()
 
         wrteei(1);
         qme_stop_exit();
+        qme_send_pig_type_a();
         wrteei(0);
     }
 
@@ -668,6 +691,7 @@ qme_regular_wakeup_fast_event()
 
         wrteei(1);
         qme_stop_exit();
+        qme_send_pig_type_a();
         wrteei(0);
     }
 
@@ -715,6 +739,7 @@ qme_pm_state_active_fast_event()
 
         wrteei(1);
         qme_stop_entry();
+        qme_send_pig_type_a();
         wrteei(0);
     }
 
@@ -969,6 +994,7 @@ qme_regular_wakeup_slow_event()
 
         wrteei(1);
         qme_stop_exit();
+        qme_send_pig_type_a();
         wrteei(0);
     }
 
@@ -1037,6 +1063,7 @@ qme_pm_state_active_slow_event()
 
         wrteei(1);
         qme_stop_entry();
+        qme_send_pig_type_a();
         wrteei(0);
     }
 
