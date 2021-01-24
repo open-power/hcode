@@ -50,8 +50,7 @@ extern "C" {
 #include "p10_hcode_image_defines.H"
 #include "p10_hcd_memmap_qme_sram.H"
 
-#include "occ_hcode_errldefs.h"
-#include "errldefs.h"
+#include "errlutil.h"
 #include "qme_record.h"
 
 extern uint32_t G_IsSimics;
