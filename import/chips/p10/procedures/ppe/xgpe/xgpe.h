@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -37,8 +37,7 @@
 #include "ppe42_scom.h"
 #include "xgpe_header.h"
 #include "p10_hcode_image_defines.H"
-#include "occ_hcode_errldefs.h"
-#include "errldefs.h"
+#include "errlutil.h"
 #include "pstate_pgpe_occ_api.h"
 
 

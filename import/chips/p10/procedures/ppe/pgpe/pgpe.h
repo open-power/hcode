@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -43,8 +43,7 @@
     #include "p10_hcd_common.H"
     #include "p10_hcd_memmap_occ_sram.H"
     #include "p10_hcode_image_defines.H"
-    #include "occ_hcode_errldefs.h"
-    #include "errldefs.h"
+    #include "errlutil.h"
     #include "pgpe_optrace.h"
 #else
     #define MAX_QUADS   8

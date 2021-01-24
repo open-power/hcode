@@ -26,11 +26,18 @@
 #define ERRL_H
 
 #include <stdbool.h>
+#include "hcode_errl_table.h"
 #include "occ_hcode_errldefs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Max size of a HCode error log (1024 bytes)
+#define ERRL_MAX_ENTRY_SZ 0x400
+
+// Min size (bytes) of user data that can be added, excluding the header
+#define ERRL_USR_DATA_SZ_MIN 128
 
 /// Status code of error logging from error logging infrastructure
 enum errlStatusCodes
@@ -81,6 +88,17 @@ struct errlUserDataWords
 };
 
 typedef struct errlUserDataWords errlUDWords_t;
+
+/// @brief Initialize common error logging framework based on the PPE instance
+///        trying to use it. Required once per PPE init/boot before the rest of
+///        error log APIs are used
+///
+/// @param [in] i_errlSource Engine (this) using error logging, see ERRL_SOURCE
+/// @param [in] i_pErrTable  Pointer to error log index table for this engine
+///
+/// @note All other APIs will execute as no-ops if framework is not initialized
+void initErrLogging (const uint8_t        i_errlSource,
+                     hcode_error_table_t* i_pErrTable );
 
 /// @brief Creates an Error Log in the PPE's local SRAM
 ///

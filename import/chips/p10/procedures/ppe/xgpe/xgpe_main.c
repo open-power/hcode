@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,6 +25,7 @@
 #include "xgpe.h"
 #include "ocb_register_addresses.h"
 #include "xgpe_irq_handlers.h"
+#include "errlqmeproxy.h"
 #include "pstate_pgpe_occ_api.h"
 #include "p10_oci_proc.H"
 
@@ -72,8 +73,11 @@ int main()
         }
     }
 
+    // initialize XGPE's error logging function
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*) OCC_SHARED_SRAM_ADDR_START;
     initErrLogging ((uint8_t) ERRL_SOURCE_XGPE, &(occ_shared_data->errlog_idx));
+    // Setup where Error Logs offloaded from QME SRAM are expected to land
+    initQmeErrSlots (G_pErrLogsQme);
 
     xgpe_header_init ();
     xgpe_init();

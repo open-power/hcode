@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -61,3 +61,4 @@ extern uint32_t G_OCB_OIMR1_CLR;
 extern uint32_t G_OCB_OIMR0_OR;
 extern uint32_t G_OCB_OIMR1_OR;
 extern uint32_t G_OCB_OPITFSV;
+extern uint64_t g_oimr_override;

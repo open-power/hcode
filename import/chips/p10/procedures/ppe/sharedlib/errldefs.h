@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -33,20 +33,10 @@
 extern "C" {
 #endif
 
-// Max size of a HCode error log (1024 bytes)
-#define ERRL_MAX_ENTRY_SZ 0x400
-
-// Min size (bytes) of user data that can be added, excluding the header
-#define ERRL_USR_DATA_SZ_MIN 128
-
 // Size of traces to add to ERRL_USR_DTL_TRACE_DATA
 #define ERRL_TRACE_DATA_SZ_PGPE 0x200
 #define ERRL_TRACE_DATA_SZ_XGPE 0x200
 #define ERRL_TRACE_DATA_SZ_QME  0x200
-
-// Max number of errorlog slots per GPE
-// Support only 1 unrecoverable & 1 informational elog per GPE
-#define ERRL_MAX_SLOTS_PER_GPE 2
 
 // Defines used to programmatically arrive at QME instance slot mask
 #define ERRL_SLOT_MASK_QME_UNREC_BASE 0x80000000
@@ -99,6 +89,7 @@ typedef enum
 enum elog_entry_index
 {
     ERRL_SLOT_TBL_BASE      = 0x00,
+    ERRL_SLOT_QMES_BASE     = 0x00,
     ERRL_SLOT_QME_UNREC_BASE = ERRL_SLOT_TBL_BASE,
     ERRL_SLOT_QME0_UNREC    = 0x00, // 0
     ERRL_SLOT_QME_INFO_BASE = 0x01,
@@ -117,6 +108,7 @@ enum elog_entry_index
     ERRL_SLOT_QME6_INF      = 0x0D,
     ERRL_SLOT_QME7_UNREC    = 0x0E, // 14
     ERRL_SLOT_QME7_INF      = 0x0F, // 15
+    ERRL_SLOT_QMES_MAX      = 0x0F,
     ERRL_SLOT_PGPE_BASE     = 0x10,
     ERRL_SLOT_PGPE_UNREC    = 0x10, // 16
     ERRL_SLOT_PGPE_INF      = 0x11, // 17
@@ -147,13 +139,6 @@ typedef struct
     uint8_t  source;      // Engine creating logs. See ERRL_SOURCE
     uint8_t  errId;       // Last error log id used by this GPE, rolling counter
 } hcodeErrlConfigData_t;
-
-// Initializes attributes of the common error logging framework based on the GPE
-// instance trying to use it. Required once per GPE init/boot before the APIs in
-// errl.h are used.
-// @note APIs in errl.h execute as no-ops if the framework is not initialized
-void initErrLogging (const uint8_t        i_errlSource,
-                     hcode_error_table_t* i_pErrTable );
 
 #ifdef __cplusplus
 }
