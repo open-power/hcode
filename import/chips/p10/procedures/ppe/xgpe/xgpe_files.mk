@@ -31,6 +31,7 @@ XGPE-C-SOURCES = xgpe_main.c \
 				xgpe_irq_handlers.c  \
 				xgpe_irq_handlers_fit.c \
 				xgpe_irq_handlers_ipc.c \
+        xgpe_qme_err_handler.c \
 
 XGPE-CPP-SOURCES =
                   
