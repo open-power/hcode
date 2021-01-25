@@ -914,6 +914,19 @@ uint8_t pgpe_gppb_get_wov_overv_max_pct()
     }
 }
 
+uint16_t pgpe_gppb_get_wov_idd_thresh()
+{
+    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
+    {
+        return G_gppb->wov_idd_thresh;
+    }
+    else
+    {
+        return G_gppb_wov->wov_idd_thresh;
+    }
+}
+
+
 uint16_t pgpe_gppb_get_dds_delay_ps_slope(uint32_t pt_set, uint32_t core, uint32_t region)
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)

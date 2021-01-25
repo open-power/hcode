@@ -122,6 +122,7 @@ uint8_t pgpe_gppb_get_wov_overv_vmax_mv();
 uint8_t pgpe_gppb_get_wov_overv_step_incr_pct();
 uint8_t pgpe_gppb_get_wov_overv_step_decr_pct();
 uint8_t pgpe_gppb_get_wov_overv_max_pct();
+uint16_t pgpe_gppb_get_wov_idd_thresh();
 
 
 //WOF

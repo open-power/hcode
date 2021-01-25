@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -46,13 +46,7 @@ void* pgpe_wov_ocs_data_addr()
 void pgpe_wov_ocs_init()
 {
 
-    //ATTR_DROOP_COUNT_CONTROL->GPPB
-    //Multicast DCCR to define the events that make up LIGHT_LOSS and HEAVY_LOSS
-    //\todo Read the value from GPPB
-    uint64_t data  = 0x1F01F01480000000ULL;
-    PPE_PUTSCOM_MC(CPMS_DCCR, 0xF, data);
-
-    PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(25)); //Enable TTSR
+    PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(QME_QMCR_TTSR_READ_ENABLE)); //Enable TTSR
 
     G_pgpe_wov_ocs.wov_status = WOV_STATUS_DISABLED;
     G_pgpe_wov_ocs.ocs_status = OCS_STATUS_DISABLED;
@@ -64,7 +58,7 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.curr_pct = 0;
     G_pgpe_wov_ocs.tgt_pct = 0;
     G_pgpe_wov_ocs.hysteresis_cnt = 0;
-    G_pgpe_wov_ocs.idd_current_thresh = 4100; //Todo Get this from GPPB
+    G_pgpe_wov_ocs.idd_current_thresh = pgpe_gppb_get_wov_idd_thresh();
     G_pgpe_wov_ocs.overcurrent_flag = OCS_UNDER_THRESH;
     G_pgpe_wov_ocs.cnt_droop_ok = 0;
     G_pgpe_wov_ocs.cnt_droop_ok_oc = 0;
