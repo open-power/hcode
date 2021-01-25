@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -68,8 +68,8 @@ typedef enum
     IOTA_UIH_STACK_OVERFLOW = 0x0101,
     IOTA_UIH_STACK_UNDERFLOW = 0x0102,
     IOTA_UIH_PHANTOM_INTERRUPT = 0x0103,
-    IOTA_UNUSED_0104 = 0x0104,
-    IOTA_UNUSED_0105 = 0x0105,
+    IOTA_MACHINE_CHECK_SCOM = 0x0104,
+    IOTA_MACHINE_CHECK_LOCAL = 0x0105,
     IOTA_UNUSED_0106 = 0x0106,
     IOTA_UNUSED_0107 = 0x0107,
     IOTA_UNUSED_0108 = 0x0108,
