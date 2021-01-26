@@ -128,8 +128,8 @@ void pgpe_process_pstate_start_stop(void* eargs)
     }
 
 
-    pgpe_occ_send_ipc_ack_cmd(cmd);
     pgpe_event_tbl_set_status(EV_IPC_PSTATE_START_STOP, EVENT_INACTIVE);
+    pgpe_occ_send_ipc_ack_cmd(cmd);
     ppe_trace_op(PGPE_OPT_START_STOP_ACK, 0);
 }
 
@@ -471,8 +471,8 @@ void pgpe_process_clip_update(void* eargs)
     }
     else
     {
-        pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+        pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         ppe_trace_op(PGPE_OPT_CLIP_UPDT_ACK, 0);
     }
 }
@@ -500,8 +500,8 @@ void pgpe_process_clip_update_w_ack(void* eargs)
         pgpe_pstate_apply_clips();
     }
 
-    pgpe_occ_send_ipc_ack_cmd(cmd);
     pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+    pgpe_occ_send_ipc_ack_cmd(cmd);
     ppe_trace_op(PGPE_OPT_CLIP_UPDT_ACK, 0);
 }
 
@@ -567,8 +567,8 @@ void pgpe_process_pmcr_request(void* eargs)
         pgpe_pstate_apply_clips();
     }
 
-    pgpe_occ_send_ipc_ack_cmd(cmd);
     pgpe_event_tbl_set_status(EV_IPC_SET_PMCR, EVENT_INACTIVE);
+    pgpe_occ_send_ipc_ack_cmd(cmd);
 }
 
 void pgpe_process_pcb_pmcr_request(void* eargs)
@@ -632,8 +632,6 @@ void pgpe_process_wof_ctrl(void* eargs)
     else if(args->action == PGPE_ACTION_WOF_OFF)
     {
         pgpe_process_wof_disable();
-        //pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
-        //pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
         pgpe_pstate_set(wof_status, WOF_STATUS_DISABLED);
     }
     else
@@ -643,8 +641,8 @@ void pgpe_process_wof_ctrl(void* eargs)
 
     if(ack_now)
     {
-        pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+        pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         ppe_trace_op(PGPE_OPT_WOF_CTRL_ACK, 0);
     }
 }
@@ -711,8 +709,8 @@ void pgpe_process_wof_ctrl_post_actuate()
     if(pgpe_pstate_is_wof_clip_bounded())
     {
         PK_TRACE("PEP: WOF Clip Bounded");
-        pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_CTRL, PGPE_RC_SUCCESS);
         pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+        pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_CTRL, PGPE_RC_SUCCESS);
         pgpe_pstate_set(wof_status, WOF_STATUS_ENABLED);
         ppe_trace_op(PGPE_OPT_WOF_CTRL_ACK, 0);
     }
@@ -765,15 +763,15 @@ void pgpe_process_wof_vrt(void* eargs)
         else
         {
             //ACK back
-            pgpe_occ_send_ipc_ack_cmd(cmd);
             pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd(cmd);
             ppe_trace_op(PGPE_OPT_WOF_VRT_ACK, 0);
         }
     }
     else
     {
-        pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+        pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);
         ppe_trace_op(PGPE_OPT_WOF_VRT_ACK, 0);
     }
 

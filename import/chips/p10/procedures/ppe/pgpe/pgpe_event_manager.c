@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -170,8 +170,8 @@ void pgpe_event_manager_run_booted_or_stopped()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PSTATES_NOT_STARTED);
             pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PSTATES_NOT_STARTED);
         }
 
         //WOF_VRT
@@ -179,8 +179,8 @@ void pgpe_event_manager_run_booted_or_stopped()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PSTATES_NOT_STARTED);
             pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PSTATES_NOT_STARTED);
         }
 
         //SET_PMCR IPC
@@ -189,8 +189,8 @@ void pgpe_event_manager_run_booted_or_stopped()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PSTATES_NOT_STARTED);
             pgpe_event_tbl_set_status(EV_IPC_SET_PMCR, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PSTATES_NOT_STARTED);
         }
 
         //PMCR_PCB
@@ -397,8 +397,8 @@ void pgpe_event_manager_run_safe_mode()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
             pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
         }
 
         //WOF_VRT
@@ -406,8 +406,8 @@ void pgpe_event_manager_run_safe_mode()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
             pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
         }
 
         //SET_PMCR IPC
@@ -416,8 +416,8 @@ void pgpe_event_manager_run_safe_mode()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
             pgpe_event_tbl_set_status(EV_IPC_SET_PMCR, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
         }
 
         //PMCR_PCB
@@ -434,8 +434,8 @@ void pgpe_event_manager_run_safe_mode()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
             pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
         }
 
         //PSTART_START_STOP
@@ -443,8 +443,8 @@ void pgpe_event_manager_run_safe_mode()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
             pgpe_event_tbl_set_status(EV_IPC_PSTATE_START_STOP, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
         }
 
     }
