@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2020
+# COPYRIGHT 2015,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -53,11 +53,7 @@ HOST_PREFIX?=$(__EKB_PREFIX)
 TARGET_PREFIX?=$(__EKB_PREFIX)
 
 # Location of PPE42 cross-compiler toolchain
-ifeq ($(PROJECT_NAME),p9)
 PPE_TOOL_PATH ?= $(CTEPATH)/tools/ppetools/prod
-else
-PPE_TOOL_PATH ?= $(CTEPATH)/tools/ppetools/test
-endif
 
 PPE_PREFIX    ?= $(PPE_TOOL_PATH)/bin/powerpc-eabi-
 PPE_BINUTILS_PREFIX ?= $(PPE_TOOL_PATH)/powerpc-eabi/bin/
