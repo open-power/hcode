@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -54,6 +54,10 @@ void xgpe_header_init()
     G_xgpe_header_data->g_xgpe_sharedSramAddress = (uint32_t)OCC_SHARED_SRAM_ADDR_START;;
     G_xgpe_header_data->g_xgpe_sharedSramLength = PGPE_OCC_SHARED_SRAM_SIZE;
 
+    //OCC-HCode Error Logging Table
+    HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*) OCC_SHARED_SRAM_ADDR_START;
+    G_xgpe_header_data->g_xgpe_elog_addr = (uint32_t) & (occ_shared_data->errlog_idx);
+
     G_xgpe_header_data->g_xgpe_ivprAddress = OCC_SRAM_XGPE_IVPR_ADDR;
     G_xgpe_header_data->g_xgpe_sysResetAddress = OCC_SRAM_XGPE_SYSTEM_RESET_ADDR;
 
@@ -71,6 +75,7 @@ void xgpe_header_init()
         *occ_shared_data_indx = 0;
         occ_shared_data_indx++;
     }
+
 
     for (i = 0; i < 32; i++)
     {
