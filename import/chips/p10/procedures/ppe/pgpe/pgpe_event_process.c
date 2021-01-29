@@ -535,13 +535,14 @@ void pgpe_process_clip_update_post_actuate()
             }
         }
 
+        //Update PMSR
+        pgpe_pstate_pmsr_updt();
+        pgpe_pstate_pmsr_write();
+
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
         pgpe_occ_send_ipc_ack_type_rc(EV_IPC_CLIP_UPDT, PGPE_RC_SUCCESS);
         ppe_trace_op(PGPE_OPT_CLIP_UPDT_ACK, 0);
 
-        //Update PMSR
-        pgpe_pstate_pmsr_updt();
-        pgpe_pstate_pmsr_write();
     }
 }
 
