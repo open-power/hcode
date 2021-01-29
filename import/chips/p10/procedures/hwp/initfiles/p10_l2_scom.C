@@ -105,6 +105,12 @@ fapi2::ReturnCode p10_l2_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
         {
             FAPI_TRY(fapi2::getScom( TGT0, 0x2002000bull, l_scom_buffer ));
 
+            if (((l_chip_id == 0xa) && (l_chip_ec == 0x20)) )
+            {
+                constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_MASTER_RTY_BACKOFF_EN_ON = 0x1;
+                l_scom_buffer.insert<23, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_MASTER_RTY_BACKOFF_EN_ON );
+            }
+
             l_scom_buffer.insert<4, 4, 60, uint64_t>(literal_0b0001 );
             l_scom_buffer.insert<8, 4, 60, uint64_t>(literal_0b0100 );
             FAPI_TRY(fapi2::putScom(TGT0, 0x2002000bull, l_scom_buffer));
