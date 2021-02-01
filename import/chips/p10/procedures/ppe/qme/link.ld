@@ -70,8 +70,6 @@ SECTIONS
     .attr_ptr _ATTR_PTR_START : { *(.attrdata) } > sram
 
     . = ALIGN(16);
-    .trace  . : { *(.data.pk_trace_buf) } > sram
-    . = ALIGN(16);
     /*======================================
      * Code
      ======================================*/

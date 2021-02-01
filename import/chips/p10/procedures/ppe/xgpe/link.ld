@@ -69,8 +69,6 @@ SECTIONS
 	.data_structs_ _DATA_STRUCT_START : { *(.data_structs) } > sram*/
 
     . = ALIGN(16);
-    .trace  . : { *(.data.pk_trace_buf) } > sram
-    . = ALIGN(16);
     /*======================================
      * Code
      ======================================*/

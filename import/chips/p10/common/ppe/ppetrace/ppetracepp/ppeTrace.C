@@ -36,7 +36,6 @@ typedef uint8_t u8;
 
 PpeTrace::PpeTrace(ostream& i_info, Trex& i_trex)
     : iv_info(i_info),
-      iv_alloc(NULL),
       iv_buffer(NULL),
       iv_version(0),
       iv_endIndex(0),
@@ -49,7 +48,7 @@ PpeTrace::PpeTrace(ostream& i_info, Trex& i_trex)
 
 PpeTrace::~PpeTrace()
 {
-    delete[] (char*)iv_alloc;
+    delete[] (char*)iv_buffer;
 }
 
 bool PpeTrace::loadFile(const char* filepath)
@@ -67,9 +66,9 @@ bool PpeTrace::loadFile(const char* filepath)
     bin.seekg(0, bin.end);
     int binSize = bin.tellg();
     bin.seekg(0, bin.beg);
-    iv_alloc = new char[binSize];
-    iv_buffer = reinterpret_cast<PkTraceBuffer*>(iv_alloc);
-    bin.read(iv_alloc, binSize);
+    char* buffer = new char[binSize];
+    iv_buffer = reinterpret_cast<PkTraceBuffer*>(buffer);
+    bin.read(buffer, binSize);
 
     if(!bin)
     {
@@ -81,89 +80,26 @@ bool PpeTrace::loadFile(const char* filepath)
     //iv_info << "Read in " << binSize << " bytes" << endl;
     bin.close();
 
-    // trace buffer must be bigger than header
-    if(((char*)(iv_buffer->cb) - (char*)iv_alloc) > binSize)
+    // validity tests
+    if(((char*)(iv_buffer->cb) - (char*)buffer) > binSize)
     {
         iv_info << filepath << " does not have a valid size." << endl;
-        iv_info << "Expecting >= " << sizeof(PkTraceBuffer)
+        iv_info << "Expecting " << sizeof(PkTraceBuffer)
                 << " Actual " << binSize << endl;
         return false;
     }
 
-    ostringstream errInfo;
+    iv_version = extractVersion();
 
-    if(!isValid(errInfo))
+    //iv_info << "Version " << iv_version << endl;
+
+    // could add list of objects to support version
+    if(iv_version != 2 && iv_version != 3)
     {
-        // maybe is dump - check for debug pointers
-        if(HCODE_DEBUG_PTRS < binSize)
-        {
-            uint32_t* debugPtrs = reinterpret_cast<uint32_t*>(iv_alloc + HCODE_DEBUG_PTRS);
-            uint32_t traceBufAddr = ntohl(debugPtrs[1]);
-            uint32_t offset = traceBufAddr & 0xffff0000;
-
-            //iv_info << "Checking offset " << hex << HCODE_DEBUG_PTRS << " traceBufAddr "
-            //        << traceBufAddr << " offset " << offset << endl;
-            // probably need something better than this for unmatching addresses
-            if( offset == QME_BASE_SRAM )
-            {
-                offset = traceBufAddr - QME_BASE_SRAM;
-            }
-            else if ( offset == XGPE_BASE_SRAM )
-            {
-                offset = traceBufAddr - XGPE_BASE_SRAM;
-            }
-            else if ( offset == PGPE_BASE_SRAM )
-            {
-                offset = traceBufAddr - PGPE_BASE_SRAM;
-            }
-            else
-            {
-                debugPtrs = reinterpret_cast<uint32_t*>(iv_alloc + OCCGPE_DEBUG_PTRS);
-                traceBufAddr = ntohl(debugPtrs[1]);
-                offset = traceBufAddr & 0xffff0000;
-                //iv_info << "Checking offset " << hex << OCCGPE_DEBUG_PTRS << " traceBufAddr "
-                //        << traceBufAddr << " offset " << offset << endl;
-
-                if( offset == GPE1_BASE_SRAM )
-                {
-                    offset = traceBufAddr - GPE1_BASE_SRAM;
-                }
-                else if( traceBufAddr > GPE0_BASE_SRAM &&
-                         traceBufAddr < GPE1_BASE_SRAM)
-                {
-                    offset = traceBufAddr - GPE0_BASE_SRAM;
-                }
-                else
-                {
-                    iv_info << "This does not look like a pktrace or SRAM dump" << endl;
-                    iv_info << errInfo.str() << endl;
-                    return false;
-                }
-            }
-
-            // offset within buffer?
-            if((int)offset < binSize)
-            {
-                iv_buffer = reinterpret_cast<PkTraceBuffer*>(&iv_alloc[offset]);
-            }
-            else
-            {
-                iv_info << "trace buffer was not found within binary image" << endl;
-                return false;
-            }
-
-            ostringstream osIgnore;
-
-            if(false == isValid(osIgnore))
-            {
-                iv_info << "pk_trace buffer not valid" << endl;
-                iv_info << errInfo.str() << endl;
-                return false;
-            }
-        }
+        iv_info << "Unsupported version " << iv_version << endl;
+        return false;
     }
 
-    iv_version = extractVersion();
     iv_cbwSize = circularBufferSize() / 4;
     iv_endIndex = entryEndIndex() / 4;
 
@@ -219,55 +155,6 @@ bool PpeTrace::loadFile(const char* filepath)
 
     parseEntries();
     return true;
-}
-
-bool PpeTrace::isValid(ostream& errInfo)
-{
-    bool result = true;
-
-    // version must be valid
-    int version = extractVersion();
-
-    if(version != 2 && version != 3)
-    {
-        errInfo << "Unsupported pk_trace version: " << version << endl;
-        result = false;
-    }
-
-    if(result)
-    {
-        //Component name cannot be blank or have non-printable chars
-        string compName;
-        componentName(compName, false);
-
-        if(compName.length() == 0 || compName[0] == 0)
-        {
-            errInfo << "Component name is NULL" << endl;
-            result = false;
-        }
-        else
-        {
-            for(string::const_iterator s = compName.begin();
-                s != compName.end();
-                ++s)
-            {
-                if(*s == 0)
-                {
-                    break;
-                }
-
-                // non-printable characters
-                if(*s < 0x20 || *s > 126)
-                {
-                    result = false;
-                    errInfo << "Component name contains unprintable characers" << endl;
-                    break;
-                }
-            }
-        }
-    }
-
-    return result;
 }
 
 int PpeTrace::extractVersion() const
@@ -621,10 +508,6 @@ void PpeTrace::parseEntries()
 
 void PpeTrace::trexIt()
 {
-    iv_info << "------------------|------------------|-----------" << endl;
-    iv_info << "Time min.microsec |Diff min.microsec |Description" << endl;
-    iv_info << "------------------|------------------|-----------" << endl;
-
     for(list<PpeTraceEntry>::iterator i = iv_entries.begin(); i != iv_entries.end(); ++i)
     {
         iv_trex.print(*i);//     i->getHash(),i->parmCount(),i->parms());
@@ -674,29 +557,16 @@ void PpeTrace::dumpMarkHashInfo(ostream& i_out)
     }
 }
 
-const char* usage = "\nusage1 - Convert ppe_trace binary to fsp_trace binary:\n"
-                    "    ppe-trace.exe <ppe_trace.bin>  >  <fsp_trace.bin>\n"
-                    "\nUsage2 - Parse ppe_trace binary to text:\n"
-                    "    ppe-trace.exe <ppe_trace.bin> -s <trexStringFile>\n";
-
 int main(int narg, char* argv[])
 {
     if(narg < 2)
     {
-        cout << usage << endl;
+        cerr << "Something profound" << endl;
         return -1;
     }
 
     string filePath(argv[1]);
     string trexPath;
-
-    if(filePath.substr(0, 2) == "-h" ||
-       filePath.substr(0, 3) == "--h" ||
-       filePath == "--usage")
-    {
-        cout << usage << endl;
-        return -1;
-    }
 
     for(int i = 2; i < narg; ++i)
     {
@@ -710,32 +580,25 @@ int main(int narg, char* argv[])
     }
 
     bool trexLoaded = false;
-    Trex trex(cout);
+    Trex trex(cerr);
 
     if(trexPath.length())
     {
         trexLoaded = trex.load(trexPath);
     }
 
-    PpeTrace theTrace(cout, trex);
+    PpeTrace theTrace(std::cerr, trex);
+    //cerr << "Loading trace...." << endl;
+    theTrace.loadFile(argv[1]);
+    //cerr << "theTrace loaded" << endl;
 
-    //cout << "Loading trace...." << endl;
-    if(!theTrace.loadFile(filePath.c_str()))
-    {
-        cout << usage << endl;
-        return -1;
-    }
-
-    //theTrace.dumpMarkHashInfo(cout);
+    //theTrace.dumpMarkHashInfo(cerr);
 
     if(trexLoaded)
     {
         theTrace.trexIt();
     }
-    else
-    {
-        theTrace.genFspTrace(std::cout);
-    }
 
-    //trex.dump(std::cout);
+    theTrace.genFspTrace(std::cout);
+    //trex.dump(std::cerr);
 }
