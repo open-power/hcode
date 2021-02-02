@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// gap21012800 |gap     | Change tx_zcal_tdr_split_main_therm HW558264
 // gap20092200 |gap     | Update for 32:1 in 16:1 mode
 // gap20040100 |gap     | Commented out some superfluous set_debug_state statements
 // gap20032600 |gap     | Added wait time for th after changing segments
@@ -356,6 +357,25 @@ bool tx_zcal_tdr_capt_match_mult_rds(t_gcr_addr* gcr_addr_i, uint8_t match_value
  * with this assumption, we only need to write the lsb's when we are writing
  * all segments or when some of the low order segments are disabled and the
  * value is odd.
+ *
+ * Note, when decrementing and some low order segments are disabled and the
+ * value is odd; this operation will set the 2r bit in the high register
+ * and clear a bit in the low register. Here is the sequence of values assuming
+ * widths of 16 and 9:
+ *
+ *  high             low       low written
+ * 1111111111111111 111111111 <<
+ * 0111111111111111 111111111
+ * 1011111111111111 111111111
+ * ...
+ * 1000000000000000 111111111
+ * 0000000000000000 111111111
+ * 1000000000000000 011111111 <<
+ * 0000000000000000 011111111
+ * 1000000000000000 001111111 <<
+ * ...
+ * 1000000000000000 000000001 <<
+ * 0000000000000000 000000000
  */
 bool tx_zcal_tdr_split_main_therm (const uint32_t num_2r_equiv_i, uint8_t high_width_i, uint8_t low_width_i,
                                    uint32_t* high_bits_io, uint32_t* low_bits_io)
@@ -364,7 +384,11 @@ bool tx_zcal_tdr_split_main_therm (const uint32_t num_2r_equiv_i, uint8_t high_w
     full_therm_l = tx_zcal_tdr_toThermWithHalf(num_2r_equiv_i, low_width_i + high_width_i);
     *high_bits_io = full_therm_l >> low_width_i;
     *low_bits_io = full_therm_l & ((0x1 << low_width_i) - 1);
-    return (num_2r_equiv_i == ((high_width_i + low_width_i) * 2) - 1) || ((num_2r_equiv_i < low_width_i)
+    // HW558264
+    // high_width_i and low_width_i represent numbers of 2r segments, with the exception of 1 bit of high_width_i
+    // Thus, in the computation below, these terms are multiplied by 2 to convert to 2r-equivalent segments before comparison
+    // with the 2r_equiv_i desired result.
+    return (num_2r_equiv_i == ((high_width_i + low_width_i) * 2) - 1) || ((num_2r_equiv_i < (low_width_i * 2))
             && ((num_2r_equiv_i & 0x1) == 1)) ;
 } //tx_zcal_tdr_split_main_therm
 

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr21011901 |vbr     | Added new log for debugging thread_locked errors
 // vbr20111800 |vbr     | HW552111: Added log type for timebase error (stuck/rollover)
 // mwh20071400 |mwh     | Added log type DEBUG_RX_DAC_TEST_FAIL
 // vbr20061101 |vbr     | Added log type for bank sync warning
@@ -121,6 +122,7 @@
 #define DEBUG_VGA_GAIN                          0x2F
 #define DEBUG_RX_DAC_TEST_FAIL                  0x30
 #define DEBUG_TIMEBASE_ERROR                    0x31
+#define DEBUG_THREAD_LOCK_ERROR                 0x32
 
 
 // A2 version (p10 dd2, zA dd1) fields start here

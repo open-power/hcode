@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr21011900 |vbr     | Updated thread_lock check to avoid possibility of thread_loop_count incrementing exactly 64K times
 // mwh20092100 |mwh     | Add in the if statement for dac test code so will not run on DD1 or even if cmd is given
 // mbs20072800 |mbs     | HW537933 - Updated dl_recal_req to fix issue with sending recal done erroneously after init_req is high
 // mbs20072700 |mbs     | HW537933 - Updated dl_recal_req to complete recal handshake even when run_lane is 0
@@ -286,7 +287,6 @@ void ioo_thread(void* arg)
     t_gcr_addr l_gcr_addr;
     set_gcr_addr(&l_gcr_addr, l_thread, l_bus_id, rx_group, 0); // RX lane 0
 
-    uint32_t l_thread_loop_cnt = mem_pg_field_get(ppe_thread_loop_count);
     uint32_t l_stop_thread = 0;
 
     do
@@ -328,15 +328,27 @@ void ioo_thread(void* arg)
         } //!fw_stop_thread
 
 
-        // Increment the thread loop count (for both active and stopped)
-        mem_pg_field_put(ppe_thread_loop_count, ++l_thread_loop_cnt);
+        // Increment the thread loop count (for both active and stopped) and never set to 0
+        uint16_t l_thread_loop_cnt = mem_pg_field_get(ppe_thread_loop_count);
+        l_thread_loop_cnt = l_thread_loop_cnt + 1;
+
+        if (l_thread_loop_cnt == 0)
+        {
+            l_thread_loop_cnt = 1;
+        }
+
+        mem_pg_field_put(ppe_thread_loop_count, l_thread_loop_cnt);
 
         // Yield to other threads at least once per thread loop
         io_sleep(get_gcr_addr_thread(&l_gcr_addr));
     }
     while(1);
 
-}
+} //ioo_thread()
+
+// Assumption Checking
+PK_STATIC_ASSERT(ppe_thread_loop_count_width == 16);
+
 
 /**
  * @brief Calls HW REG INIT Per-Group
@@ -680,18 +692,6 @@ static void cmd_rx_bist_tests_pl(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_
     set_debug_state(0x001A);
     // TODO Write Code
 
-    if ( ! is_p10_dd1() )
-    {
-        //P10 DD2 or more and Za DD1 or more
-        int rx_dac_test_check_en_int = get_ptr_field(io_gcr_addr, rx_dac_test_check_en); //pg
-
-        if(rx_dac_test_check_en_int)
-        {
-            //begin if
-            eo_dac_test(io_gcr_addr, i_lane_mask);
-        }//end if
-    }//run if not DD1
-
     set_debug_state(0x001B);
     return;
 }
@@ -907,6 +907,20 @@ static void cmd_bist_final(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
         // Test Bank B
         eo_rxbist_ber(io_gcr_addr, i_lane_mask, bank_b);
     }
+
+    if ( ! is_p10_dd1() )
+    {
+        //P10 DD2 or more and Za DD1 or more
+        int rx_dac_test_check_en_int = get_ptr_field(io_gcr_addr, rx_dac_test_check_en); //pg
+
+        if(rx_dac_test_check_en_int)
+        {
+            //begin if
+            eo_dac_test(io_gcr_addr, i_lane_mask);
+        }//end if
+    }//run if not DD1
+
+
 
     // Bist Reporting Code
     set_gcr_addr_reg_id(io_gcr_addr, tx_group);

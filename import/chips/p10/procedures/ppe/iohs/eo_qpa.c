@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh20012100 |mwh     | Add in code to set rx_quad_phase_fail if servo op has issue
 // mbs20090201 |mbs     | HW528360 - Added rx_qpa_hysteresis and set to 3 (was hardcoded to 2 in eo_qpa previously)
 // mbs20081900 |mbs     | HW542599 - Moved rx_vga_amax to per lane mem regs, and removed qpa obs regs to make room
 // jfg20061500 |jfg     | HW527761 Servos have a clear resistance when > 3 or biased to EW: Add 1 to compensate
@@ -562,6 +563,14 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
         abort_status = run_servo_ops_and_get_results(gcr_addr, c_servo_queue_general, 1, servo_ops, &servo_results[quad]);
         abort_status |= check_rx_abort(gcr_addr);
         set_debug_state(0xE010 | quad); // DEBUG - CTLE Run Servo Op
+
+        //for bist if there is a servo error this get set
+        if (abort_status & 2 )
+        {
+            mem_pl_field_put(rx_quad_phase_fail, lane, 0b1);    //ppe pl
+            set_debug_state(0xE0DD);
+        }
+
 
         int pridx;
         t_seek seek_quad;

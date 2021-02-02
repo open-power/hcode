@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mwh20012100 |mwh     | Add in code to set rx_lte_gain_fail if servo op has issue
 // mbs20092800 |mbs     | Updated hysteresis for LTE and turned off in init
 // cws20011400 |cws     | Added Debug Logs
 // vbr19091200 |vbr     | HW503535: Added sub-step disables so can turn off just LTE Gain or Zero.
@@ -193,6 +194,13 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
     int status = run_servo_ops_and_get_results(gcr_addr, c_servo_queue_general, num_servo_ops_to_run,
                  &servo_ops[servo_array_start], &servo_results[servo_array_start]);
     status |= check_rx_abort(gcr_addr);
+
+    //for bist -- if there error in servo we will set the below
+    if (status & 2 )
+    {
+        mem_pl_field_put(rx_lte_gain_fail, lane, 0b1);    //ppe pl
+        set_debug_state(0x90DD);
+    }
 
     // Re-enable servo status for result at min/max
     put_ptr_field(gcr_addr, rx_servo_status_error_en, 0b1111, read_modify_write);

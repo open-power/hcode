@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -667,6 +667,12 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
 
     set_debug_state(0xA012); // DEBUG
 
+    //for bist if there is a servo error this get set -- help with debug
+    if (status & 2 )
+    {
+        mem_pl_field_put(rx_eoff_fail, lane, 0b1);    //ppe pl
+        set_debug_state(0xA0DD);
+    }
 
 
     return status;

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -916,6 +916,14 @@
 #define rx_dfe_fail_endbit                         13
 #define rx_dfe_fail_shift                          2
 #define rx_dfe_fail_mask                           0x4
+
+
+#define rx_dfe_full_h1_adj_addr                    0b110000100
+#define rx_dfe_full_h1_adj_startbit                13
+#define rx_dfe_full_h1_adj_width                   2
+#define rx_dfe_full_h1_adj_endbit                  14
+#define rx_dfe_full_h1_adj_shift                   1
+#define rx_dfe_full_h1_adj_mask                    0x6
 
 
 #define rx_dfe_full_mode_addr                      0b110000100

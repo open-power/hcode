@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,13 +39,16 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mwh20012100 |mwh     | Add in code to set rx_dfe_fail if servo op has issue
+// mbs20111800 |mbs     | Reversed dfe H1 adjust for dd1 dac swizzle
+// bja20120100 |bja     | HW553981: In DFE clock adjust, set error if Ap is less than zero
 // mbs20092800 |mbs     | Updated hysteresis for DFE
 // vbr20091600 |vbr     | HW546085: Added observation mem_regs for DFE Fast measured/calculated AP
 // vbr20091100 |vbr     | HW546085: Added observation mem_regs for DFE Fast coefficients
 // bja20090900 |bja     | Use common is_p10_dd1() check
 // mbs20080500 |mbs     | HW539048- Added dfe_quad_mode to allow dfe full training of only one quadrant
 // mbs20073000 |mbs     | LAB - Updated dfe h1 check to error at -20 instead of 0
-// mbs20073000 |mbs     | LAB - Updated dfe clkadj to only adjust for h1 > 0
+// mbs20073000 |mbs     | LAB - Updated dfrx_pr_fw_inertia_amt_coarsee clkadj to only adjust for h1 > 0
 // mbs20073000 |mbs     | LAB - Updated dfe_fast H coefficient calculations for DAC swizzle bug
 // mbs20073000 |mbs     | LAB - Updated dfe_full servo op call to twist servo_op patterns for DAC swizzle bug
 // mbs20031000 |mbs     | HW525009 - Switch slave mode to bank B when copying results for fast DFE
@@ -101,7 +104,7 @@
 //------------------------------------------------------------------------------
 // Constant Definitions
 //------------------------------------------------------------------------------
-#define DFE_FULL_H1_ADJ   1  // Adjust DFE H1 by this amount after full dfe (ap+an/2)
+//#define DFE_FULL_H1_ADJ   1  // Adjust DFE H1 by this amount after full dfe (ap+an/2)
 
 #define BUILD_DAC_ADDR(__bank__, __quad__, __latch__) (DAC_BASE_ADDR+(__bank__<<5)+(__quad__)+__latch__)
 #define DAC_BASE_ADDR rx_ad_latch_dac_n000_addr // 0x01B
@@ -174,7 +177,8 @@ typedef enum
     L110       = 6,
     L111       = 7,
     LATCH_SIZE = 8,
-    LXX1_MASK  = 1
+    LXX1_MASK  = 1,
+    LXX1_MASK_PDD1 = 4
 } LATCH;
 
 typedef enum
@@ -341,8 +345,8 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
     int32_t lane = get_gcr_addr_lane(i_tgt);
     mem_pl_field_put(rx_dfe_ap, lane, l_ap);
 
-    // Never divide by ZERO
-    if (l_ap == 0)
+    // Never divide by ZERO or negative
+    if (l_ap <= 0)
     {
         set_fir(fir_code_warning);
         ADD_LOG(DEBUG_RX_DFE_AP_ZERO_FAIL, i_tgt, i_ap1);
@@ -687,6 +691,7 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool i_recal, bo
     uint32_t l_dac_addr        = 0;
     uint32_t l_dac_array[LATCH_SIZE];
     uint32_t l_lane            = get_gcr_addr_lane(i_tgt);
+    uint32_t dfe_full_h1_adj   = mem_pg_field_get(rx_dfe_full_h1_adj);
 
 
     SET_DFE_DEBUG(0x7010); // Enter Full DFE
@@ -798,7 +803,15 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool i_recal, bo
 
             // HW493492: This dfe full method tends to set DFE H1 a couple steps low.  So for LXX1 latches, add DFE_FULL_H1_ADJ,
             //           and for LXX0 latches, subtract DFE_FULL_H1_ADJ
-            l_new_val = (l_latch & LXX1_MASK) ? (l_new_val + DFE_FULL_H1_ADJ) : (l_new_val - DFE_FULL_H1_ADJ);
+            if ( is_p10_dd1() )
+            {
+                // for p10 dd1 the dacs are reversed and inverted, so switch the signs and swap the mask bit
+                l_new_val = (l_latch & LXX1_MASK_PDD1) ? (l_new_val - dfe_full_h1_adj) : (l_new_val + dfe_full_h1_adj);
+            }
+            else
+            {
+                l_new_val = (l_latch & LXX1_MASK     ) ? (l_new_val + dfe_full_h1_adj) : (l_new_val - dfe_full_h1_adj);
+            }
 
             //SET_DFE_DEBUG(0x7015, l_new_val); // Calcualte DAC Value
 
@@ -911,6 +924,13 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool i_recal, bo
 
 function_exit:
     SET_DFE_DEBUG(0x701A); // Exit Full DFE
+
+    if (l_rc & 2 )
+    {
+        mem_pl_field_put(rx_dfe_fail, l_lane, 0b1);    //ppe pl
+        set_debug_state(0x70EE);
+    }
+
     return l_rc;
 }
 

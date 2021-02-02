@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mwh20012100 |mwh     | Add in code to set rx_ctle_peak1/2_fail if servo op has issue
 // vbr20101200 |vbr     | HW544452/HW539450: Don't clear peak1/2 if it is disabled.
 // mwh20100900 |mwh     | HW549165:Only the eo_vcql should be setting fail also need be 0 since need set outside the loop
 // vbr20090900 |vbr     | HW544452: Added config for disabling peak1 or peak2 cal. Also removed averaging of peak2 results in rough mode.
@@ -391,6 +392,13 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
                        &servo_ops_rough[servo_array_start_rough], servo_result);
         abort_status |= check_rx_abort(gcr_addr);
 
+        // Servo error will set rx_eoff_fail now rc_warning=2 is what is used  to mask on servo error
+        if (abort_status & 2 )
+        {
+            mem_pl_field_put(rx_ctle_peak1_fail, lane, 0b1);    //ppe pl
+            set_debug_state(0x60DD);
+        }
+
         // Check status with exit
         if (exit_peak_on_servo_error(gcr_addr) || (abort_status != pass_code))
         {
@@ -439,6 +447,15 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
                             &servo_result[pk_loop]);
             set_debug_state(0x6020 | mem_pg_field_get(rx_ctle_mode)); //DEBUG - CTLE Servo Quad Pass
             abort_status |= check_rx_abort(gcr_addr);
+
+            // Servo error will set rx_eoff_fail now rc_warning=2 is what is used  to mask on servo error
+            if (abort_status & 2 )
+            {
+                mem_pl_field_put(rx_ctle_peak2_fail, lane, 0b1);    //ppe pl
+                set_debug_state(0x60EE);
+            }
+
+
 
             pk_loop += cnt;
 

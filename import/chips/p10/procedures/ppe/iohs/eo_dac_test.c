@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -40,7 +40,9 @@
 // CHANGE HISTORY:
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
-// ----------------------|-----------|-------------------------------------------------------
+// ---------------------|------------------------------------------------------------------
+// mwh20102801 |mwh     | HW551352 Turn mask for load of black out timer bug in logic that write to 0 for linear part b
+// mwh20102800 |mwh     | HW548405 rx_psave_cdrlock_mode_sel = 11 show that ppe code ran through.
 // mwh20093000 |mwh     | Changed compare for pulldown test to correct settings based on filter depeth
 // ------------|--------|-------------------------------------------------------
 // mwh20090800 |mwh     | Add in disable the mux and clock after dac test is done
@@ -64,6 +66,7 @@
 #include "ppe_com_reg_const_pkg.h"
 #include "config_ioo.h"
 
+#include "eo_vclq_checks.h"//pick up set_rxbist_fail_lane
 
 //In run_external_command() - Chris's function - it creates l_lane_mask and passes it as an argument to EXT_CMD_FUNCTIONS.
 //EXT_CMD_FUNCTIONS is a pointer to a command function, like cmd_rx_bist_tests_pl()
@@ -92,6 +95,11 @@
 //--------------------------------------------------------------------------------------------------------------------------------
 //           3(8)                 |               4                               |               1
 //--------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
 
 
 void eo_dac_test(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
@@ -164,7 +172,9 @@ void eo_dac_test(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
             //there are 2 diff blackout times for pulldown tests and linear test
             //the two register will override the values but only to 1 that will be used for both pulldown and linear test
             //put_ptr_field(io_gcr_addr,rx_dactt_bo_timer_cfg , 0b00001, read_modify_write);
-            //put_ptr_field(io_gcr_addr,rx_dactt_bo_timer_mask , 0b1, read_modify_write);
+
+            //Work around for HW551352 keep logic form change black out counter
+            put_ptr_field(io_gcr_addr, rx_dactt_bo_timer_mask , 0b1, read_modify_write);
 
 
             //enable the dac test logic to take control of read and write of dac registers
@@ -295,6 +305,11 @@ void eo_dac_test(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
         put_ptr_field(io_gcr_addr, rx_pr_phase_force_val_a, 0b0000000,      fast_write);
         put_ptr_field(io_gcr_addr, rx_pr_phase_force_val_b, 0b0000000,      fast_write);
 
+        //setting rx_psave_cdrlock_mode_sel to 11 show that ppe code ran through
+        //know HW548405
+        put_ptr_field(io_gcr_addr, rx_psave_cdrlock_mode_sel, 0b11, read_modify_write); //pl
+
+
 
         set_debug_state(0x5188);
     }//end for
@@ -327,14 +342,17 @@ void eo_dac_test(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
         rx_dactt_fail_banka_int = get_ptr_field(io_gcr_addr, rx_dactt_fail_banka);
         rx_dactt_fail_bankb_int = get_ptr_field(io_gcr_addr, rx_dactt_fail_bankb);
 
-        if ((rx_dactt_fail_banka_int == 0b1) || (rx_dactt_fail_bankb_int == 0b1))
+        if (rx_dactt_fail_banka_int == 0b1)
         {
-            //start if
-            set_debug_state(0x518A);
-            ADD_LOG(DEBUG_RX_DAC_TEST_FAIL, io_gcr_addr, 0x0);
-        }//end if
+            set_rxbist_fail_lane( io_gcr_addr, bank_a );
+        }
 
-        set_debug_state(0x518B);
+        if (rx_dactt_fail_bankb_int == 0b1)
+        {
+            set_rxbist_fail_lane( io_gcr_addr, bank_b );
+        }
+
+
     }//end for
 
     //Sleep thread so other buses start
@@ -342,5 +360,5 @@ void eo_dac_test(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
 
     //-------END DAC TEST-------------------------------------/
     //return pass_code;
-    set_debug_state(0x518C);
+    set_debug_state(0x518D);
 }//end eo_dac_test

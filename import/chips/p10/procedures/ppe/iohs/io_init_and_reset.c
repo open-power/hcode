@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr21010500 |vbr     | HW556573: Set rx_vdac_config_dc based on voltage
 // mbs20111800 |mbs     | HW552774: Updated tx_iref_clock_dac to 4
 // mwh20111300 |mwh     | HW550299rx_loff_timeout to 10
 // vbr20091000 |vbr     | HW536853: CDR lock ratio decreased from 464 to 456.
@@ -378,6 +379,9 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
 
     put_ptr_field(gcr_addr, rx_bist_freq_adjust_dc, bist_freq_adjust, read_modify_write); //pl
 
+    // vdac voltage config
+    put_ptr_field(gcr_addr, rx_vdac_config_dc, l_vio_volt, read_modify_write); //pl
+
     // ctle_config
     put_ptr_field(gcr_addr, rx_ctle_config_dc, RX_CTLE_CONFIG_DC_RESET_VALUE, read_modify_write); //pl
 
@@ -549,12 +553,11 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
 
     // BIST frequency adjust
     // HW548766: Set rx_bist_freq_adjust_dc to 3 for P10 DD1 vertical chiplets
+    int l_vio_volt = img_field_get(ppe_vio_volts);
     int bist_freq_adjust = 0b11;
 
     if (!is_p10_dd1_v_chiplet())
     {
-        int l_vio_volt = img_field_get(ppe_vio_volts);
-
         if (l_vio_volt < 2)   // 00 = 950mV, 01 = 900mV
         {
             bist_freq_adjust = l_data_rate_settings->rx_bist_freq_adjust_9xx;
@@ -566,6 +569,9 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
     }
 
     put_ptr_field(gcr_addr, rx_bist_freq_adjust_dc, bist_freq_adjust, read_modify_write); //pl
+
+    // vdac voltage config
+    put_ptr_field(gcr_addr, rx_vdac_config_dc, l_vio_volt, read_modify_write); //pl
 
     // ctle_config
     put_ptr_field(gcr_addr, rx_ctle_config_dc, RX_CTLE_CONFIG_DC_RESET_VALUE, read_modify_write); //pl

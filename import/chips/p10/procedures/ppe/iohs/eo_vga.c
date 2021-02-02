@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -40,6 +40,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mwh20012100 |mwh     | Add in code to set rx_ctle_gain_fail if servo op has issue
+// mwh20011200 |mwh     | Removed tabs form file and // at end of lines
+// mwh20012010 |mwh     | HW553797: add in int status to catch return of servo error and have it abort if come back bad
 // vbr20091600 |vbr     | HW542599: move rx_vga_amax from mem_regs to a stack variable from eo_main (only used in init)
 // mbs20081900 |mbs     | HW542599 - Moved rx_vga_amax to per lane mem regs, and removed qpa obs regs to make room
 // mwh20012500 |mwh     | Change jump_table_used to pl hw518572 only the first lane called was using jump_table
@@ -153,7 +156,7 @@ void write_a_copy_b (t_gcr_addr* gcr_addr, int gain, t_bank bank,
         put_ptr(gcr_addr, rx_b_ctle_gain_addr, rx_b_ctle_gain_startbit, rx_b_ctle_gain_endbit, gain, read_modify_write);   //
         set_debug_state(0x5042);                                                                                           //
     }                                                                                                                   //
-}                                                                                                                                     //
+}                                                                                                                                   //
 //---end copy function bank a to bank b-----------------------------------------------------------------------------------------------//
 
 
@@ -164,103 +167,78 @@ void write_a_copy_b (t_gcr_addr* gcr_addr, int gain, t_bank bank,
 int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, int* saved_Amax, bool* gain_changed, bool recal, bool copy_gain_to_b,
            bool copy_gain_to_b_loop, bool first_loop_iteration)
 {
-    //begin eo_vga_gain                                                                                                                      //
-    set_debug_state(
-        0x5000);                                                                                                                  //
-    int lane = get_gcr_addr_lane(
-                   gcr_addr);                                                                                                                                          //
+    //begin eo_vga_gain
+    set_debug_state(0x5000);
+    int lane = get_gcr_addr_lane(gcr_addr);
     // Set up Apxxxxx and Anxxxxx servos with biased filters to find Amax.
     // This has the advantage of being bank independent and more peaking independent.
     rx_eo_servo_setup(gcr_addr, SERVO_SETUP_VGA);
-    //Pg1-0
-    int loop_cnt_max = mem_regs_u16_get(pg_addr(rx_amp_gain_cnt_max_addr), rx_amp_gain_cnt_max_mask,
-                                        rx_amp_gain_cnt_max_shift);             //
-    int jump_table_used = mem_pl_field_get(jump_table_used,
-                                           lane);                                                                      //
-//set_debug_state(loop_cnt_max);                                                                                                         //
-    set_debug_state(
-        0x5001);                                                                                                                 //
-    //
-    // Step 0 reading Gain value in Regdef register                                                                                         //
-    int gain;                                                                                                                               //Pg1-1,2,3
 
-    if (bank ==
-        bank_a)                                                                                                                     //Pg1-1,2,3
+    int loop_cnt_max = mem_regs_u16_get(pg_addr(rx_amp_gain_cnt_max_addr), rx_amp_gain_cnt_max_mask,
+                                        rx_amp_gain_cnt_max_shift);
+    int jump_table_used = mem_pl_field_get(jump_table_used, lane);
+//set_debug_state(loop_cnt_max);
+    set_debug_state(0x5001);
+
+    // Step 0 reading Gain value in Regdef register
+    int gain;
+
+    if (bank == bank_a)
     {
-        gain = get_ptr(gcr_addr, rx_a_ctle_gain_addr, rx_a_ctle_gain_startbit,
-                       rx_a_ctle_gain_endbit);                                        //Pg1-1,2,3
+        gain = get_ptr(gcr_addr, rx_a_ctle_gain_addr, rx_a_ctle_gain_startbit, rx_a_ctle_gain_endbit);
         mem_pl_field_put(rx_a_ctle_gain_done, lane, 0b0);
     }
-    else     //bank_b                                                                                                                       //Pg1-1,2,3
+    else     //bank_b
     {
-        gain = get_ptr(gcr_addr, rx_b_ctle_gain_addr, rx_b_ctle_gain_startbit,
-                       rx_b_ctle_gain_endbit);                                        //Pg1-1,2,3
+        gain = get_ptr(gcr_addr, rx_b_ctle_gain_addr, rx_b_ctle_gain_startbit, rx_b_ctle_gain_endbit);
         mem_pl_field_put(rx_b_ctle_gain_done, lane, 0b0);
-    }                                                                                                                                       //
-
-    set_debug_state(
-        0x5002);                                                                                                                //
-    //
-    uint16_t* servo_ops;                                                                                                                    //
-
-    if (bank ==
-        bank_a)                                                                                                                     //Pg1-1,2,3
-    {
-        servo_ops =
-            servo_ops_gain_a;                                                                                                         //Pg1-1,2,3
     }
-    else     //bank_b                                                                                                                       //Pg1-1,2,3
-    {
-        servo_ops =
-            servo_ops_gain_b;                                                                                                         //Pg1-1,2,3
-    }                                                                                                                                       //Pg1-1,2,3
 
-    set_debug_state(
-        0x5003);                                                                                                                //
-    //
-    //Step 4 setting up variables                                                                                                           //
-    int start_gain =
-        gain;    //used to cut of vga outer loop                                                                               //Pg1-4
-    bool run_loop =
-        true;     //used to cut of inter loop                                                                                   //Pg1-4
-    int min_gain =
-        0;         //min gain setting                                                                                            //Pg1-4
-    int max_gain =
-        15;        //Target to hit, max target                                                                                   //Pg1-4
-    int Amax_target = mem_regs_u16_get(pg_addr(rx_vga_amax_target_addr), rx_vga_amax_target_mask,
-                                       rx_vga_amax_target_shift);                //Pg1-4 Target to hit
+    set_debug_state(0x5002);
+
+    uint16_t* servo_ops;
+
+    if (bank == bank_a)
+    {
+        servo_ops = servo_ops_gain_a;
+    }
+    else     //bank_b
+    {
+        servo_ops = servo_ops_gain_b;
+    }
+
+    set_debug_state(0x5003);
+
+    //Step 4 setting up variables
+    int start_gain = gain;    //used to cut of vga outer loop
+    bool run_loop = true;     //used to cut of inter loop
+    int min_gain = 0;         //min gain setting
+    int max_gain = 15;        //Target to hit, max target
+    int Amax_target = mem_regs_u16_get(pg_addr(rx_vga_amax_target_addr), rx_vga_amax_target_mask, rx_vga_amax_target_shift);
     int max_range =   mem_regs_u16_get(pg_addr(rx_vga_recal_max_target_addr), rx_vga_recal_max_target_mask,
-                                       rx_vga_recal_max_target_shift); //Pg1-4  Recal path max range
+                                       rx_vga_recal_max_target_shift);
     int min_range =   mem_regs_u16_get(pg_addr(rx_vga_recal_min_target_addr), rx_vga_recal_min_target_mask,
-                                       rx_vga_recal_min_target_shift); //Recal  Recal path min range
-    //
-    //int low_target = 180; // ((max_range + min_range)>> 1); //same as ((max_range + min_range)/2)                                         //Pg1-4
-    int jump_target = mem_regs_u16_get(pg_addr(rx_vga_jump_target_addr), rx_vga_jump_target_mask,
-                                       rx_vga_jump_target_shift);                //
-    int loop_count =
-        0;                             //loop_count for inter loop vga                                                         //Pg1-4
-    int converged =
-        false;                                                                                                                  //Pg1-4
-    int Amax =
-        *saved_Amax; //mem_regs_u16_get(pg_addr(rx_vga_amax_addr), rx_vga_amax_mask, rx_vga_amax_shift);                                             //Pg1-4
-    int last_gain =
-        gain;                                                                                                                   //Pg1-4
-    int last_Amax;                                                                                                                          //Pg1-4
-    //
-//Convergence loop -----------------------------------------------------------------------------------------------------------------------//
-    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift,
-                     0 );                                     //
+                                       rx_vga_recal_min_target_shift);
 
-    while (run_loop)                                                                                                                        //Pg1-5
+    //int low_target = 180; // ((max_range + min_range)>> 1); //same as ((max_range + min_range)/2)
+    int jump_target = mem_regs_u16_get(pg_addr(rx_vga_jump_target_addr), rx_vga_jump_target_mask, rx_vga_jump_target_shift);
+    int loop_count = 0;                             //loop_count for inter loop vga
+    int converged = false;
+    int Amax = *saved_Amax; //mem_regs_u16_get(pg_addr(rx_vga_amax_addr), rx_vga_amax_mask, rx_vga_amax_shift);
+    int last_gain = gain;
+    int last_Amax;
+
+//Convergence loop -----------------------------------------------------------------------------------------------------------------------//
+    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 0 );
+
+    while (run_loop)
     {
-        //begin while                                                                                                                           //
+        //begin while
         //ADD_LOG(DEBUG_VGA_GAIN, gcr_addr, gain);
-        set_debug_state(
-            0x5004);                                                                                                          //
-        //loop_count++;                                                                                                                     //Pg1-6
-        mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift,
-                         loop_count);                                    //
-        // Run the servo ops results are two's complement                                                                                 //
+        set_debug_state(0x5004);
+        //loop_count++;
+        mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, loop_count);
+        // Run the servo ops results are two's complement
         int32_t results[2];
 
         // Disable servo status for result at min/max fpr first loop only
@@ -273,338 +251,281 @@ int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, int* saved_Amax, bool* gain_change
 
         //Pg1-6
         //TwosCompToInt                                                                                                                   //
-        run_servo_ops_and_get_results(gcr_addr, c_servo_queue_amp_meas, 2, servo_ops,
-                                      results);                                           //Pg1-7
+        int status = run_servo_ops_and_get_results(gcr_addr, c_servo_queue_amp_meas, 2, servo_ops,
+                     results);                                           //Pg1-7
 
         // Re-enable servo status for result at min/max
         put_ptr_field(gcr_addr, rx_servo_status_error_en, 0b1111, read_modify_write);
 
+        // Servo error will set rx_eoff_fail now rc_warning=2 is what is used  to mask on servo error
+        if (status & 2 )
+        {
+            mem_pl_field_put(rx_ctle_gain_fail, lane, 0b1);    //ppe pl
+            set_debug_state(0x50DD);
+        }
+
         // Ignore servo errors (could rail due to incorrect gain).
         // Check for recal abort and return without changing gain on an abort.
-        int abort_status = check_rx_abort(gcr_addr);
 
-        if (abort_status)
+        status |= check_rx_abort(gcr_addr);
+
+        if (status)
         {
             set_debug_state(
                 0x5005);                                                                                                        //Pg1-8,9 Recal Abort
-            return abort_status;
+            return status;
         }
 
-        //
-        last_Amax =
-            Amax;                                                                                                                 //Pg1-10
-        Amax = ((results[0] - results[1]) >>
-                1);                                                                                           //Pg1-10
-        mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift,
-                         results[0]);                                   //
-        mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift,
-                         results[1]);                                   //
-        set_debug_state(
-            0x5006);                                                                                                          //
+        last_Amax = Amax;
+        Amax = ((results[0] - results[1]) >> 1);
+        mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, results[0]);
+        mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, results[1]);
+        set_debug_state(0x5006);
 
-        //
-        if(!recal)                                                                                                                        //Pg2-1
+        if(!recal)
         {
-            //begin1                                                                                                                     //
-            set_debug_state(
-                0x5007);                                                                                                   //
-            mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift,
-                             Amax);                                  //
+            //begin1
+            set_debug_state(0x5007);
+            mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, Amax);
             jump_table_used = mem_pl_field_get(jump_table_used, lane);
-            mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift,
-                             jump_table_used);                       //Pg2-2
+            mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, jump_table_used);
 
-            if((Amax >=
-                Amax_target))//decreasing                                                                                      //Pg2-3
+            if((Amax >= Amax_target))//decreasing
             {
-                //begin2                                                                                                                 //
-                set_debug_state(
-                    0x5008);                                                                                                //
+                //begin2
+                set_debug_state(0x5008);
 
-                if (gain ==
-                    min_gain)                                                                                                   //Pg2-6
+                if (gain == min_gain)
                 {
-                    //begin3                                                                                                             //
-                    set_debug_state(0x5009);                                                                                           //
-                    break;                                                                                                             //Pg6-1
-                }//end3                                                                                                               //
-                else                                                                                                                    //
+                    //begin3
+                    set_debug_state(0x5009);
+                    break;
+                }//end3
+                else
                 {
-                    //begin4                                                                                                             //
-                    mem_pl_field_put(jump_table_used, lane, 0b1);                                                                    //Pg2-5
-                    set_debug_state(0x5010);                                                                                            //
-                    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_Amax);                     //
-                    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, gain);                          //
-                    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_gain);                     //
+                    //begin4
+                    mem_pl_field_put(jump_table_used, lane, 0b1);
+                    set_debug_state(0x5010);
+                    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_Amax);
+                    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, gain);
+                    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_gain);
 
-                    if((last_Amax < Amax_target) && (Amax >= Amax_target)
-                       && (gain == (last_gain + 1)))                                  //Pg4-1 converged 1
+                    if((last_Amax < Amax_target) && (Amax >= Amax_target) && (gain == (last_gain + 1)))
                     {
-                        //begin5                                                                                                          //
-                        set_debug_state(0x5011);                                                                                         //
-                        write_a_copy_b (gcr_addr, gain, bank,
-                                        copy_gain_to_b );                                                          //Pg4-5to9
-                        mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 1);          //
-                        converged = true;                                                                                                //
-                    }//end5                                                                                                            //
-                    else if((last_Amax >= Amax_target) && (Amax <= Amax_target)
-                            && (gain + 1 == last_gain))                              //Pg4-2 converged 2
+                        //begin5
+                        set_debug_state(0x5011);
+                        write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );
+                        mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 1);
+                        converged = true;
+                    }//end5
+                    else if((last_Amax >= Amax_target) && (Amax <= Amax_target) && (gain + 1 == last_gain))
                     {
-                        //begin6                                                                                                      //
-                        set_debug_state(0x5012);                                                                                     //
-                        gain = last_gain;                                                                                            //Pg4-4
-                        write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );                                                      //Pg4-5to9
-                        mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 2);         //
-                        converged = true;                                                                                            //
-                    }//end6                                                                                                        //
-                    else                                                                                                                 //
+                        //begin6
+                        set_debug_state(0x5012);
+                        gain = last_gain;
+                        write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );
+                        mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 2);
+                        converged = true;
+                    }//end6
+                    else
                     {
-                        //begin7                                                                                                      //
-                        last_gain = gain;                                                                                            //Pg4-3
-                        gain = gain - 1;                                                                                             //Pg4-3
-                        write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b_loop );                                                 //Pg4-5to9
-                        mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 10);        //
-                        converged = false;                                                                                           //
-                        set_debug_state(0x5013);                                                                                     //
-                    }//end7                                                                                                        //
-                }//end4                                                                                                               //
-            }//end2                                                                                                                   //
-            else if( gain >=
-                     max_gain)                                                                                                  //Pg2-6
+                        //begin7
+                        last_gain = gain;
+                        gain = gain - 1;
+                        write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b_loop );
+                        mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 10);
+                        converged = false;
+                        set_debug_state(0x5013);
+                    }//end7
+                }//end4
+            }//end2
+            else if( gain >= max_gain)
             {
-                set_debug_state(0x5014);    //
+                set_debug_state(0x5014);
                 break;
             }
-            else if(jump_table_used ==
-                    0)//increasing                                                                                   //Pg3-1
+            else if(jump_table_used == 0)//increasing
             {
                 //begin8
-                loop_count++;                                                                                                      //
-                set_debug_state(0x5015);                                                                                          //
-                //int ratio_target = low_target / 2;                                                                              //
-                int ratio_step =   jump_target >>
-                                   4;//11.25                                                                       //Pg3-2
-                int ratio_target_mult = 6 *
-                                        jump_target;                                                                          //Pg3-2
-                int ratio_target = (ratio_target_mult) >> 4
-                                   ;//67.5                                                               //Pg3-2
-                int ratio_index =
-                    0;                                                                                              //Pg3-2
-                int Amax_ratio = Amax;                                                                                            //
-                mem_pl_field_put(jump_table_used, lane, 0b1);//Pg3-2
+                loop_count++;
+                set_debug_state(0x5015);
+                //int ratio_target = low_target / 2;
+                int ratio_step =   jump_target >> 4;//11.25
+                int ratio_target_mult = 6 * jump_target;
+                int ratio_target = (ratio_target_mult) >> 4 ;//67.5
+                int ratio_index = 0;
+                int Amax_ratio = Amax;
+                mem_pl_field_put(jump_table_used, lane, 0b1);
 
-                //
-                for(ratio_index = 0; ratio_index < vga_jump_table_max;
-                    ratio_index++)                                             //Pg3-3
+                for(ratio_index = 0; ratio_index < vga_jump_table_max; ratio_index++)
                 {
-                    //begin9                                                                                                       //
-                    set_debug_state(0x5016);                                                                                       //
+                    //begin9
+                    set_debug_state(0x5016);
 
                     if(Amax_ratio <= ratio_target)
                     {
-                        set_debug_state(0x5017);    //Pg3-4
+                        set_debug_state(0x5017);
                         break;
                     }
                     else
                     {
-                        ratio_target = (ratio_target + ratio_step );    //Pg3-5
+                        ratio_target = (ratio_target + ratio_step );
                         set_debug_state(0x5018);
                     }
-                }//end9                                                                                                         //
+                }//end9
 
-                gain = gain +
-                       vga_jump_table[ratio_index];                                                                        //Pg3-6
-                set_debug_state(0x5019);                                                                                          //
-                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_Amax);                   //
-                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, Amax_target);                 //
-                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, gain);                        //
-                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_gain);                   //
+                gain = gain + vga_jump_table[ratio_index];
+                set_debug_state(0x5019);
+                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_Amax);
+                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, Amax_target);
+                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, gain);
+                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_gain);
 
-                if(gain > max_gain)                                                                                               //Pg3-7
+                if(gain > max_gain)
                 {
-                    //begin10                                                                                                    //
-                    set_debug_state(0x5020);                                                                                     //
-                    gain = max_gain;                                                                                             //Pg3-7
-                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );                                                      //Pg3-8
-                }//end10                                                                                                      //
+                    //begin10
+                    set_debug_state(0x5020);
+                    gain = max_gain;
+                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );
+                }//end10
 
-                if((last_Amax < Amax_target) && (Amax >= Amax_target)
-                   && (gain == (last_gain + 1)))                             //Pg4-1 converged 1
+                if((last_Amax < Amax_target) && (Amax >= Amax_target) && (gain == (last_gain + 1)))
                 {
-                    //begin12                                                                                                     //
-                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );                                                       //Pg4-5to9
-                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 3);         //
-                    converged = true;                                                                                             //
-                    set_debug_state(0x5021);                                                                                      //
-                }//end12                                                                                                       //
-                else                                                                                                            //
+                    //begin12
+                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );
+                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 3);
+                    converged = true;
+                    set_debug_state(0x5021);
+                }//end12
+                else
                 {
-                    //begin14                                                                                                      //
-                    set_debug_state(0x5023);                                                                                      //
-                    write_a_copy_b (gcr_addr, gain, bank,
-                                    copy_gain_to_b_loop );                                                  //Pg4-5to9
-                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 11);         //
-                    converged = false;                                                                                            //
-                    set_debug_state(
-                        0x5024);                                                                                      //
-                }//end14                                                                                                        //
-            }//end8                                                                                                             //
-            //else if((jump_table_used == 1))//increasing                                                                                 //Pg3-1
+                    //begin14
+                    set_debug_state(0x5023);
+                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b_loop );
+                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 11);
+                    converged = false;
+                    set_debug_state(0x5024);
+                }//end14
+            }//end8
+            //else if((jump_table_used == 1))//increasing
             else
             {
-                //begin15                                                                                                            //
-                loop_count++;                                                                                                      //
-                set_debug_state(0x5025);                                                                                        //Pg3-9
-                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_Amax);                 //
-                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, Amax_target);               //
-                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, gain);                      //
-                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_gain);                 //
+                //begin15
+                loop_count++;
+                set_debug_state(0x5025);
+                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_Amax);
+                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, Amax_target);
+                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, gain);
+                mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, last_gain);
 
-                if((last_Amax < Amax_target) && (Amax >= Amax_target)
-                   && (gain == (last_gain + 1)))                             //Pg4-1 converged 1
+                if((last_Amax < Amax_target) && (Amax >= Amax_target) && (gain == (last_gain + 1)))
                 {
-                    //begin18                                                                                                     //
-                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );                                                       //Pg4-5to9
-                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 5);          //
-                    converged = true;                                                                                             //
-                    set_debug_state(0x5026);                                                                                      //
-                }//end18                                                                                                       //
-                else if((last_Amax >= Amax_target) && (Amax <= Amax_target)
-                        && (gain + 1 == last_gain))                         //Pg4-2 converged 2
+                    //begin18
+                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );
+                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 5);
+                    converged = true;
+                    set_debug_state(0x5026);
+                }//end18
+                else if((last_Amax >= Amax_target) && (Amax <= Amax_target) && (gain + 1 == last_gain))
                 {
-                    //begin19                                                                                                     //
-                    gain = last_gain;                                                                                             //Pg4-4
-                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );                                                       //Pg4-5to9
-                    set_debug_state(0x5027);                                                                                      //
-                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 6);          //
-                    converged = true;                                                                                             //
-                }//end19                                                                                                       //
-                else                                                                                                            //
+                    //begin19
+                    gain = last_gain;
+                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );
+                    set_debug_state(0x5027);
+                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 6);
+                    converged = true;
+                }//end19
+                else
                 {
-                    //begin20                                                                                                     //
-                    last_gain = gain;                                                                                            //Pg4-3
-                    gain = gain +
-                           1;                                                                                             //Pg4-3
-                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b_loop );                                                 //Pg4-5to9
-                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 12);        //
-                    converged = false;                                                                                           //
-                    set_debug_state(0x5028);                                                                                     //
-                }//end20                                                                                                       //
-
-                //}//end17                                                                                                      //
-            }//end15                                                                                                              //
-        }//end1                                                                                                                       //
-        //recal path                                                                                                                      //
-        else if (Amax >
-                 max_range)                                                                                                        //Pg2-7-8
+                    //begin20
+                    last_gain = gain;
+                    gain = gain + 1;
+                    write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b_loop );
+                    mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 12);
+                    converged = false;
+                    set_debug_state(0x5028);
+                }//end20
+            }//end15
+        }//end1
+        //recal path
+        else if (Amax > max_range)
         {
-            //begin21                                                                                                                      //
-            set_debug_state(
-                0x5080);                                                                                                       //
+            //begin21
+            set_debug_state(0x5080);
 
-            if (gain !=
-                min_gain)                                                                                                         //
+            if (gain != min_gain)
             {
-                //begin22                                                                                                                  //
-                gain = gain -
-                       1;                                                                                                           //pg2-9
-                write_a_copy_b (gcr_addr, gain, bank,
-                                copy_gain_to_b );                                                                    //Pg4-5to9
-                mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift,
-                                 8);                       //
-                converged =
-                    true;                                                                                                         //
-                set_debug_state(
-                    0x5081);                                                                                                  //
-            }//end22                                                                                                                    //
-        }//end21                                                                                                                        //
-        else if (Amax <
-                 min_range)                                                                                                       //
+                //begin22
+                gain = gain - 1;
+                write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b );
+                mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 8);
+                converged = true;
+                set_debug_state(0x5081);
+            }//end22
+        }//end21
+        else if (Amax < min_range)
         {
-            //begin23                                                                                                                      //
-            set_debug_state(
-                0x5082);                                                                                                      //
+            //begin23
+            set_debug_state(0x5082);
 
-            if (gain !=
-                max_gain)                                                                                                         //
+            if (gain != max_gain)
             {
-                //begin24                                                                                                                  //
-                gain = gain +
-                       1;                                                                                                           //Pg2-13
-                write_a_copy_b (gcr_addr, gain, bank,
-                                copy_gain_to_b_loop );                                                                //Pg4-5to
-                mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift,
-                                 9);                         //
-                converged =
-                    true;                                                                                                          //
-                set_debug_state(
-                    0x5083);                                                                                                   //
-            }//end24                                                                                                                    //
-        }//end23                                                                                                                        //
-        else                                                                                                                              //
+                //begin24
+                gain = gain + 1;
+                write_a_copy_b (gcr_addr, gain, bank, copy_gain_to_b_loop );
+                mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 9);
+                converged = true;
+                set_debug_state(0x5083);
+            }//end24
+        }//end23
+        else
         {
-            //begin25                                                                                                                      //
-            mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift,
-                             7);                            //
-            converged =
-                true;                                                                                                             //
-            set_debug_state(
-                0x5084);                                                                                                      //
-        }//end25                                                                                                                        //
+            //begin25
+            mem_regs_u16_put(pl_addr(rx_vga_converged_addr, lane), rx_vga_converged_mask, rx_vga_converged_shift, 7);
+            converged = true;
+            set_debug_state(0x5084);
+        }//end25
 
-        run_loop = ((!recal && !converged)
-                    && (loop_count != loop_cnt_max));                                                              //Pg4-9
-        set_debug_state(
-            0x5035);                                                                                                          //
-    } //end while                                                                                                                        //
+        run_loop = ((!recal && !converged) && (loop_count != loop_cnt_max));
+        set_debug_state(0x5035);
+    } //end while
 
-    //
-    // Return Success gain change or not                                                                                                //
-    if ((first_loop_iteration)
-        || (recal))                                                                                              //Pg6-1
+    // Return Success gain change or not
+    if ((first_loop_iteration) || (recal))
     {
-        set_debug_state(
-            0x5036);                                                                                                       //
+        set_debug_state(0x5036);
 
-        if (start_gain ==
-            gain)                                                                                                         //Pg6-2
+        if (start_gain == gain)
         {
-            *gain_changed = false;   //Pg6-3
+            *gain_changed = false;
         }
-        else                                                                                                                            //
+        else
         {
-            *gain_changed = true;   //Pg6-4
+            *gain_changed = true;
         }
-    }                                                                                                                                  //
-    else//for outer loop converged                                                                                                      //
+    }
+    else//for outer loop converged
     {
-        set_debug_state(
-            0x5037);                                                                                                       //
+        set_debug_state(0x5037);
 
-        if ((start_gain == gain + 1) || (start_gain == gain - 1)
-            || (start_gain == gain ))                                              //Pg6-5
+        if ((start_gain == gain + 1) || (start_gain == gain - 1) || (start_gain == gain ))
         {
-            *gain_changed = false;    //Pg6-6
+            *gain_changed = false;
             set_debug_state(0x5038);
         }
-        else                                                                                                                            //
+        else
         {
-            *gain_changed = true;    //
+            *gain_changed = true;
             set_debug_state(0x5039);
         }
-    }                                                                                                                                 //Pg6-7
+    }
 
-    //
-    //mem_regs_u16_put(pg_addr(rx_vga_amax_addr), rx_vga_amax_mask, rx_vga_amax_shift, Amax);// ppe resgiter log Amax before exit         //Pg6-8
     *saved_Amax = Amax;
-    //
-    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift,
-                     Amax);                                           //
-    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift,
-                     gain);                                           //
 
-    set_debug_state(
-        0x5043);                                                                                                            //
+    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, Amax);
+    mem_regs_u16_put(pg_addr(rx_vga_debug_addr), rx_vga_debug_mask, rx_vga_debug_shift, gain);
+
+    set_debug_state(0x5043);
 
     if (bank == bank_a)
     {
@@ -615,9 +536,9 @@ int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, int* saved_Amax, bool* gain_change
         mem_pl_field_put(rx_b_ctle_gain_done, lane, 0b1);
     }
 
-    return pass_code;                                                                                                                   //
-} //end eo_vga_gain                                                                                                                   //Pg6-8
-//
+    return pass_code;
+} //end eo_vga_gain
+
 //------------------------------------------------------------------------------------------------------------------------------------//
 
 
