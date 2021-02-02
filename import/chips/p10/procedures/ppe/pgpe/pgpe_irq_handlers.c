@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -31,8 +31,10 @@
 #include "p10_oci_proc_c.H"
 #include "p10_oci_proc_f.H"
 
-//Local Functions
 
+extern  uint64_t  g_oimr_override;
+
+//Local Functions
 extern void pgpe_irq_ipc_init();
 extern void pgpe_irq_fit_init();
 
@@ -76,6 +78,16 @@ void pgpe_irq_init()
     //later when pstates are enabled
     uint32_t oimr0 = 0x59000000;
     out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_CLEAR, oimr0);
+    oimr0 = 0x000EE020;
+    out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, oimr0);
+
+    g_oimr_override |=  BIT64(TP_TPCHIP_OCC_OCI_OCB_OISR0_PBAX_PGPE_ATTN) |
+                        BIT64(TP_TPCHIP_OCC_OCI_OCB_OISR0_PBAX_PGPE_PUSH0) |
+                        BIT64(TP_TPCHIP_OCC_OCI_OCB_OISR0_PBAX_PGPE_PUSH1) |
+                        BIT64(TP_TPCHIP_OCC_OCI_OCB_OISR0_PMC_PCB_INTR_TYPE0_PENDING) |
+                        BIT64(TP_TPCHIP_OCC_OCI_OCB_OISR0_PMC_PCB_INTR_TYPE1_PENDING) |
+                        BIT64(TP_TPCHIP_OCC_OCI_OCB_OISR0_PMC_PCB_INTR_TYPE2_PENDING) |
+                        BIT64(TP_TPCHIP_OCC_OCI_OCB_OISR0_PMC_PCB_INTR_TYPEA_PENDING);
 }
 
 

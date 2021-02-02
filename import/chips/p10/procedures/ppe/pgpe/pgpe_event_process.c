@@ -42,6 +42,8 @@
 #include "pgpe_wov_ocs.h"
 #include "pgpe_dds.h"
 
+extern  uint64_t  g_oimr_override;
+
 //Local Functions
 void pgpe_process_clip_update_post_actuate();
 void pgpe_process_wof_enable();
@@ -426,6 +428,7 @@ void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
     if ((owner == PMCR_OWNER_HOST) || (owner == PMCR_OWNER_CHAR))
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_CLEAR, BIT32(17));//Enable PCB_Type1
+        g_oimr_override &=  ~BIT64(17);
         PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(8)); //Enable AUTO_PMCR_UPDATE
 
         //Enable SCOM writes to PMCR if characterization mode. Otherwise, core-shifter updates
@@ -441,6 +444,7 @@ void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
     else
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(17));//Disable PCB_Type1
+        g_oimr_override |=  BIT64(17);
         PPE_PUTSCOM_MC_Q(QME_QMCR_WO_CLEAR, BIT64(8)); //Disable AUTO_PMCR_UPDATE
     }
 }
