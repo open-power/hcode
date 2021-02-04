@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2018,2020                                                    -->
+<!-- COPYRIGHT 2018,2021                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -2992,7 +2992,7 @@
     </description>
     <valueType>uint8</valueType>
     <array>8</array>
-    <platInit/>
+    <platInit>mrw</platInit>
     <default>1,1,1,1,1,1,1,1</default>
     <overrideOnly/>
     <group>vrm</group>
