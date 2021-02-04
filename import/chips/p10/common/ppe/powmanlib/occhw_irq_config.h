@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2020                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -87,7 +87,7 @@
     OCCHW_IRQ_PMC_PCB_INTR_TYPE7_PENDING    OCCHW_IRQ_TARGET_ID_NONE \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE8_PENDING    OCCHW_IRQ_TARGET_ID_NONE \
     OCCHW_IRQ_PMC_PCB_INTR_TYPE9_PENDING    OCCHW_IRQ_TARGET_ID_NONE \
-    OCCHW_IRQ_PMC_PCB_INTR_TYPEA_PENDING    OCCHW_IRQ_TARGET_ID_GPE2 \
+    OCCHW_IRQ_PMC_PCB_INTR_TYPEA_PENDING    OCCHW_IRQ_TARGET_ID_GPE3 \
     OCCHW_IRQ_PMC_PCB_INTR_TYPEB_PENDING    OCCHW_IRQ_TARGET_ID_NONE \
     OCCHW_IRQ_PMC_PCB_INTR_TYPEC_PENDING    OCCHW_IRQ_TARGET_ID_NONE \
     OCCHW_IRQ_PMC_PCB_INTR_TYPED_PENDING    OCCHW_IRQ_TARGET_ID_NONE \
