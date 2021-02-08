@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2020                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -226,6 +226,7 @@ p9_cme_stop_entry()
 {
     int          i = 0;
     uint32_t     timeout = 0;
+    uint32_t     the_other_core      = 0;
     int          catchup_ongoing     = 0;
     int          entry_ongoing       = 1;
     uint8_t      target_level        = 0;
@@ -587,6 +588,7 @@ p9_cme_stop_entry()
 
 #endif
 
+
             // ---------------------------------
             // Permanent workaround for HW407385
 
@@ -824,6 +826,107 @@ p9_cme_stop_entry()
 
 #endif
 
+            // ---------------------------------
+            // Permanent workaround for HW407385
+
+            wrteei(0);
+
+            PK_TRACE("HW407385: Drop pm_exit via SICR[4/5]");
+            out32(G_CME_LCL_SICR_CLR, core << SHIFT32(5));
+
+            PK_TRACE("HW407385: Polling for core to stop(pm_active=1) via EINR[20/21]");
+
+            while((~(in32(G_CME_LCL_EINR))) & (core << SHIFT32(21)));
+
+            PK_TRACE("HW407385: Clear pm_active status via EISR[20/21]");
+            out32(G_CME_LCL_EISR_CLR, core << SHIFT32(21));
+
+            PK_TRACE("HW407385: Drop block interrupt to PC via SICR[2/3]");
+            out32(G_CME_LCL_SICR_CLR, core << SHIFT32(3));
+
+            wrteei(1);
+
+            // end of HW407385
+            // ---------------------------------
+
+            PK_TRACE_INF("entering core %x core_running %x, stop1prime %x",
+                         core, G_cme_stop_record.core_running, G_cme_stop_record.core_stop1prime);
+
+            // Check if the entry is dealing with only 1 core
+            if( core != CME_MASK_BC )
+            {
+                // check if the non-targeted core is running
+                the_other_core = G_cme_stop_record.core_running & (~core) & CME_MASK_BC;
+
+                // if other core is running, pause stop2+ stop entry
+                // wait until the other core comes to stop2+
+                if( the_other_core )
+                {
+                    G_cme_stop_record.core_stop1prime |= core;
+                    scom_data.words.lower = 0;
+                    scom_data.words.upper = SSH_ACT_LV1_COMPLETE;
+                    CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
+                    return;
+                }
+                // if other core is stopped:
+                // A) the other core is also previously entered stop1prime
+                //    then continue stop2+ with both cores targeted
+                // B) the other core is previously entered stop2+(did not wakeup)
+                //    then still target the current core to continue on stop2+
+                else
+                {
+                    // consider the other core for its in stop(without running qualifier)
+                    the_other_core = (~core) & CME_MASK_BC;
+
+                    if( G_cme_stop_record.core_stop1prime & the_other_core )
+                    {
+                        // Handle cases that request level from both cores are different
+                        //   if same, deeper_core has to be 0, target level doesnt need to change
+                        if (G_cme_stop_record.req_level[the_other_core & 1] > target_level )
+                        {
+                            deeper_level = G_cme_stop_record.req_level[the_other_core & 1];
+                            deeper_core = the_other_core;
+                        }
+
+                        if (G_cme_stop_record.req_level[the_other_core & 1] < target_level )
+                        {
+                            deeper_level = target_level;
+                            target_level = G_cme_stop_record.req_level[the_other_core & 1];
+                            deeper_core = core;
+                        }
+
+                        //both core enters now
+                        core = CME_MASK_BC;
+
+                        // reset the prime state if core into deeper stop state
+                        // thus their wakeup and re-entry will be counted without prime
+                        G_cme_stop_record.core_stop1prime = 0;
+                    }
+                }
+            }
+
+            // ---------------------------------
+            // Permanent workaround for HW407385
+
+            wrteei(0);
+
+            PK_TRACE("HW407385: Assert block interrupt to PC via SICR[2/3]");
+            out32(G_CME_LCL_SICR_OR, core << SHIFT32(3));
+
+            PK_TRACE("HW407385: Waking up the core(pm_exit=1) via SICR[4/5]");
+            out32(G_CME_LCL_SICR_OR, core << SHIFT32(5));
+
+            CME_PM_EXIT_DELAY
+
+            PK_TRACE("HW407385: Polling for core wakeup(pm_active=0) via EINR[20/21]");
+
+            while((in32(G_CME_LCL_EINR)) & (core << SHIFT32(21)));
+
+            wrteei(1);
+
+            // end of HW407385
+            // ---------------------------------
+
 #if SMF_SUPPORT_ENABLE
 
             if (G_cme_stop_record.req_level[0] >= STOP_LEVEL_4)
@@ -948,7 +1051,7 @@ p9_cme_stop_entry()
 
 
 
-            PK_TRACE_INF("SE.2A: Core[%d] PCB Mux Granted", core);
+            //PK_TRACE_INF("SE.2A: Core[%d] PCB Mux Granted", core);
 
             //=============================
             MARK_TRAP(SE_QUIESCE_CORE_INTF)
@@ -1739,8 +1842,8 @@ p9_cme_stop_entry()
                     }
                     else
                     {
-                        PK_TRACE_ERR("ERROR: Core[%d] Handoff to SGPE with Requested Stop Level[%d]",
-                                     core_mask, G_cme_stop_record.req_level[core_index]);
+//                        PK_TRACE_ERR("ERROR: Core[%d] Handoff to SGPE with Requested Stop Level[%d]",
+//                                     core_mask, G_cme_stop_record.req_level[core_index]);
                         PK_PANIC(CME_STOP_ENTRY_HANDOFF_LESSTHAN5);
                     }
 
@@ -1777,7 +1880,7 @@ p9_cme_stop_entry()
             PK_TRACE("Clear special/regular wakeup after wakeup_notify = 1 since it is edge triggered");
             out32(G_CME_LCL_EISR_CLR, (core << SHIFT32(15)) | (core << SHIFT32(17)));
 
-            PK_TRACE_INF("SE.5B: Core[%d] Handed off to SGPE", core);
+//            PK_TRACE_INF("SE.5B: Core[%d] Handed off to SGPE", core);
 
         }
         while(0);

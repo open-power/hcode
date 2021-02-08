@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2020                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -750,7 +750,7 @@ void p9_cme_pstate_process_db0()
 
     uint32_t cme_flags = in32(G_CME_LCL_FLAGS);
 
-    PK_TRACE_INF("PSTATE: DB0=0x%08x%08x", G_dbData.value >> 32, G_dbData.value);
+    //PK_TRACE_INF("PSTATE: DB0=0x%08x%08x", G_dbData.value >> 32, G_dbData.value);
 
     //Ignore if Doorbell0 if DB0_PROCESSING_ENABLE=0. This bit is zero
     //upon CME boot. PGPE will set it right before sending Pstate Starts.
@@ -828,7 +828,7 @@ void p9_cme_pstate_process_db0()
         }
     }
 
-    PK_TRACE_INF("PSTATE: Process DB0 Exit");
+    //PK_TRACE_INF("PSTATE: Process DB0 Exit");
 }
 
 
@@ -1291,5 +1291,5 @@ void p9_cme_pstate_update()
         p9_cme_pstate_notify_sib(INTERCME_DIRECT_IN0);
     }
 
-    PK_TRACE_INF("PSTATE: Pstate Updt Exit");
+    //PK_TRACE_INF("PSTATE: Pstate Updt Exit");
 }

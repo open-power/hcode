@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -183,7 +183,7 @@ p9_cme_stop_init()
     // CME Init Completed
     //--------------------------------------------------------------------------
 
-    PK_TRACE_INF("Setup: CME STOP READY");
+    //PK_TRACE_INF("Setup: CME STOP READY");
     out32(G_CME_LCL_FLAGS_OR, BIT32(CME_FLAGS_STOP_READY));
 
 #if EPM_P9_TUNING

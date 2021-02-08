@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2019                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -209,7 +209,8 @@ enum CME_STOP_STATE_HISTORY_VECTORS
     SSH_EXIT_IN_SESSION  = (SSH_STOP_GATED  | SSH_TRANS_EXIT),
     SSH_REQ_LEVEL_UPDATE = (SSH_TRANS_ENTRY | SSH_REQ_ENABLE),
     SSH_ACT_LEVEL_UPDATE = (SSH_STOP_GATED  | SSH_ACT_ENABLE),
-    SSH_ACT_LV1_COMPLETE = (SSH_STOP_GATED  | BIT32(7) | BITS32(11, 3)),
+    //SSH_ACT_LV1_COMPLETE = (SSH_STOP_GATED  | BIT32(7) | BITS32(11, 3)),
+    SSH_ACT_LV1_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(11)),
     SSH_ACT_LV2_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BIT32(10)),
     SSH_ACT_LV2_CONTINUE = (SSH_ACT_LV2_COMPLETE | SSH_TRANS_ENTRY),
     SSH_ACT_LV3_COMPLETE = (SSH_ACT_LEVEL_UPDATE | BITS32(10, 2)),
@@ -304,6 +305,7 @@ typedef struct
     // core in special wakeup, can be used as core select in scom address or data
     uint32_t      core_in_spwu;
     // core in error state, prevent it being further processed
+    uint32_t      core_stop1prime;
     uint32_t      core_errored;
     // store panic code indicating where and what that certain core encountered error
     // mostly from various xstop detection or failed clock operation through stages of code

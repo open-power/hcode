@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2020                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -274,7 +274,7 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
     while((core & ~(in32(G_CME_LCL_SISR) >> SHIFT32(11))) != core);
 
-    PK_TRACE_INF("SX.0A: PCB Mux Released on Core[%d]", core);
+    //PK_TRACE_INF("SX.0A: PCB Mux Released on Core[%d]", core);
 
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
     scom_data.words.lower = 0;
@@ -315,8 +315,8 @@ p9_cme_stop_exit_end(uint32_t core, uint32_t spwu_stop)
 
             if (scom_data.words.upper & BIT32(0))
             {
-                PK_TRACE_ERR("Protocol Error[2]: Assert SPWU_Done when STOP_GATED=1, SSH[%d][%x]",
-                             spwu_stop, scom_data.words.upper);
+//                PK_TRACE_ERR("Protocol Error[2]: Assert SPWU_Done when STOP_GATED=1, SSH[%d][%x]",
+//                             spwu_stop, scom_data.words.upper);
                 PK_PANIC(CME_STOP_SPWU_PROTOCOL_ERROR);
             }
         }
@@ -580,8 +580,8 @@ p9_cme_stop_exit()
 
             if (scom_data.words.upper & BIT32(0))
             {
-                PK_TRACE_ERR("Protocol Error[1]: Assert SPWU_Done when STOP_GATED=1, SSH[%d][%x]",
-                             spwu_wake, scom_data.words.upper);
+//                PK_TRACE_ERR("Protocol Error[1]: Assert SPWU_Done when STOP_GATED=1, SSH[%d][%x]",
+//                             spwu_wake, scom_data.words.upper);
                 PK_PANIC(CME_STOP_SPWU_PROTOCOL_ERROR);
             }
         }
@@ -612,7 +612,7 @@ p9_cme_stop_exit()
 
     if (!core)
     {
-        PK_TRACE_ERR("ERROR: No Wakeup Fired to a Stopped and Enabled Core.");
+        //PK_TRACE_ERR("ERROR: No Wakeup Fired to a Stopped and Enabled Core.");
 
         if (pCmeImgHdr->g_cme_mode_flags & CME_STOP_PHANTOM_HALT_ENABLE_BIT_POS)
         {
@@ -714,6 +714,25 @@ p9_cme_stop_exit()
         scom_data.words.lower = 0;
         scom_data.words.upper = SSH_EXIT_IN_SESSION;
         CME_PUTSCOM(PPM_SSHSRC, core, scom_data.value);
+
+        // when one core enters and wakeup from stop1prime
+        // the other core can only be running state(no wakeup)
+        // if the other core was in either also stop1prime
+        // or deeper stop state, both cores would also enter
+        // deeper stop state and cleared stop1prime state.
+        // thus it is safe to return here
+        if( G_cme_stop_record.core_stop1prime & core )
+        {
+            if( (~G_cme_stop_record.core_stop1prime) & core )
+            {
+                PKTRACE("Stop1 Prime Exit Error");
+                //pk_halt();
+            }
+
+            p9_cme_stop_exit_end(core, spwu_stop);
+            G_cme_stop_record.core_stop1prime = 0;
+            return;
+        }
 
         if (target_level == STOP_LEVEL_2)
         {

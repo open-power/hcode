@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2019                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -199,8 +199,8 @@ main(int argc, char** argv)
     // Unified interrupt handler checks
     if (IDX_PRTY_LVL_DISABLED != (NUM_EXT_IRQ_PRTY_LEVELS - 1))
     {
-        PK_TRACE_ERR("ERROR: IDX_PRTY_LVL_DISABLED(=%d)!=NUM_EXT_IRQ_PRTY_LEVELS(=%d)-1. HATL_CME!",
-                     IDX_PRTY_LVL_DISABLED, NUM_EXT_IRQ_PRTY_LEVELS);
+//        PK_TRACE_ERR("ERROR: IDX_PRTY_LVL_DISABLED(=%d)!=NUM_EXT_IRQ_PRTY_LEVELS(=%d)-1. HATL_CME!",
+//                     IDX_PRTY_LVL_DISABLED, NUM_EXT_IRQ_PRTY_LEVELS);
         PK_PANIC(CME_UIH_DISABLED_NOT_LAST_LVL);
     }
 

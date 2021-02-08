@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2017,2020                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,7 +39,7 @@ CmePstateRecord G_cme_pstate_record __attribute__((section (".dump_ptr_pstate"))
 
 // CME Stop Header and Structure
 #include "p9_cme_stop.h"
-CmeStopRecord G_cme_stop_record __attribute__((section (".dump_ptr_stop"))) = {{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}};
+CmeStopRecord G_cme_stop_record __attribute__((section (".dump_ptr_stop"))) = {{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}};
 
 #if !DISABLE_PERIODIC_CORE_QUIESCE && (NIMBUS_DD_LEVEL == 20 || NIMBUS_DD_LEVEL == 21 || CUMULUS_DD_LEVEL == 10)
 CmeFitRecord G_cme_fit_record = {0, 0, 0, 0, 0xFFFFFFFF, 0};
