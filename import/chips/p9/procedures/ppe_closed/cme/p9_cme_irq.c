@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -93,8 +93,8 @@ void pk_unified_irq_prty_mask_handler(void)
         }
         else
         {
-            PK_TRACE_ERR("ERROR: EIMR S/R stack counter=%d  >=  max=%d. HALT CME!",
-                         g_eimr_stack_ctr, NUM_EXT_IRQ_PRTY_LEVELS);
+//            PK_TRACE_ERR("ERROR: EIMR S/R stack counter=%d  >=  max=%d. HALT CME!",
+//                         g_eimr_stack_ctr, NUM_EXT_IRQ_PRTY_LEVELS);
             PK_PANIC(CME_UIH_EIMR_STACK_OVERFLOW);
         }
 
@@ -105,8 +105,8 @@ void pk_unified_irq_prty_mask_handler(void)
     }
     else
     {
-        PK_TRACE_ERR("ERROR: Phantom IRQ Fired, EISTR=%x %x. HALT CME!",
-                     UPPER32(ext_irq_vector_pk), LOWER32(ext_irq_vector_pk));
+//        PK_TRACE_ERR("ERROR: Phantom IRQ Fired, EISTR=%x %x. HALT CME!",
+//                     UPPER32(ext_irq_vector_pk), LOWER32(ext_irq_vector_pk));
 #if !EPM_P9_TUNING
         PK_PANIC(CME_UIH_PHANTOM_INTERRUPT);
 #endif

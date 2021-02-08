@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2018                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -49,7 +49,7 @@ p9_cme_stop_pcwu_handler(void)
     ppm_pig_t pig       = {0};
 
     MARK_TRAP(STOP_PCWU_HANDLER)
-    PK_TRACE_INF("PCWU Handler Trigger: Core Interrupts %x", core);
+    //PK_TRACE_INF("PCWU Handler Trigger: Core Interrupts %x", core);
 
     // consider wakeup is done on a running core
     // also ignore the decrementor request that already sent to sgpe
@@ -123,8 +123,8 @@ p9_cme_stop_spwu_handler(void)
     uint64_t scom_data  = 0;
 
     MARK_TRAP(STOP_SPWU_HANDLER)
-    PK_TRACE_INF("SPWU Handler Trigger: Core Interrupts %x SPWU States %x",
-                 raw_spwu, G_cme_stop_record.core_in_spwu);
+//    PK_TRACE_INF("SPWU Handler Trigger: Core Interrupts %x SPWU States %x",
+//                 raw_spwu, G_cme_stop_record.core_in_spwu);
 
     for(core_mask = 2; core_mask; core_mask--)
     {
@@ -272,7 +272,7 @@ p9_cme_stop_db2_handler(void)
     uint32_t         core_mask;
 
     MARK_TRAP(STOP_DB2_HANDLER)
-    PK_TRACE_INF("DB2 Handler Trigger: Core Interrupts %x", core);
+//    PK_TRACE_INF("DB2 Handler Trigger: Core Interrupts %x", core);
 
     for(core_mask = 2; core_mask; core_mask--)
     {
