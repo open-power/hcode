@@ -131,22 +131,6 @@ class FirstFailureData
         void* getData(void) const;
 
         ///
-        /// @brief Get a pointer to any error info and release ownership from
-        ///      FirstFailureData. The caller is responsible for deletion.
-        ///
-        /// This is called by PLAT. The expected use-case is to retrieve a
-        /// platform error log.
-        ///
-        /// @return void*. Pointer to any Error data. If NULL then no data
-        ///
-        inline void* releaseData(void)
-        {
-            void* l_pData = iv_info;
-            iv_info = nullptr;
-            return l_pData;
-        }
-
-        ///
         /// @brief Add ErrorInfo
         ///
         /// This is called by the FAPI_SET_HWP_ERROR and macro to add ErrorInfo
