@@ -31,7 +31,7 @@ OUTPUT_FORMAT(elf32-powerpc);
 
 // Need to do this so that memmap header uses defines for linkerscript
 #define __LINKERSCRIPT__
-#include <p9_hcd_memmap_occ_sram.H>
+#include <p10_hcd_memmap_occ_sram.H>
 
 #define SRAM_START  OCC_SRAM_AUX_TASK_ADDR
 #define SRAM_LENGTH XGPE_AUX_TASK_SIZE

@@ -27,6 +27,8 @@ TOP-S-SOURCES =  xgpe_boot_loader.S xgpe_boot_copier.S
 
 TOP_OBJECTS = $(TOP-C-SOURCES:.c=.o) $(TOP-S-SOURCES:.S=.o)
 
+AUX_TASK-C-SOURCES = p10_xgpe_aux_task.c
+AUX_TASK_OBJECTS = $(AUX_TASK-C-SOURCES:.c=.o)
 BOOT-LOADER-C-SOURCES = 
 BOOT-LOADER-S-SOURCES =  xgpe_boot_loader.S 
 
