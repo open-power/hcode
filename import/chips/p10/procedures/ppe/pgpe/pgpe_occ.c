@@ -82,6 +82,7 @@ void pgpe_occ_init()
     G_pgpe_occ.vcs_accum = 0;
     G_pgpe_occ.fit_tick = 0;
     G_pgpe_occ.wof_tick = 4; //TODO RTC: 214486 This WOF_TICK_TIME/FIT_TICK_TIME. Should get it from somewhere else
+    G_pgpe_occ.wof_tick_rnd = 2; //Half of wof_tick
 }
 
 void pgpe_occ_update_beacon()
@@ -101,11 +102,16 @@ void pgpe_occ_produce_wof_values()
     {
         if (pgpe_pstate_is_pstate_enabled())
         {
-            G_pgpe_occ.pwof_val->dw0.fields.average_pstate = G_pgpe_occ.ps_wof_avg_accum / G_pgpe_occ.wof_tick;
-            G_pgpe_occ.pwof_val->dw0.fields.average_frequency_pstate = G_pgpe_occ.ps_freq_wof_avg_accum / G_pgpe_occ.wof_tick;
-            G_pgpe_occ.pwof_val->dw0.fields.average_throttle_idx = G_pgpe_occ.thr_idx_wof_avg_accum / G_pgpe_occ.wof_tick;
-            G_pgpe_occ.pwof_val->dw2.fields.vdd_avg_mv = G_pgpe_occ.vdd_wof_avg_accum_mv / G_pgpe_occ.wof_tick;
-            G_pgpe_occ.pwof_val->dw2.fields.vcs_avg_mv = G_pgpe_occ.vcs_wof_avg_accum_mv / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw0.fields.average_pstate = (G_pgpe_occ.ps_wof_avg_accum + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw0.fields.average_frequency_pstate = (G_pgpe_occ.ps_freq_wof_avg_accum +
+                    G_pgpe_occ.wof_tick_rnd) / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw0.fields.average_throttle_idx = (G_pgpe_occ.thr_idx_wof_avg_accum + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw2.fields.vdd_avg_mv = (G_pgpe_occ.vdd_wof_avg_accum_mv + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw2.fields.vcs_avg_mv = (G_pgpe_occ.vcs_wof_avg_accum_mv + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;
             G_pgpe_occ.ps_wof_avg_accum = 0;
             G_pgpe_occ.ps_freq_wof_avg_accum = 0;
             G_pgpe_occ.thr_idx_wof_avg_accum = 0;
@@ -115,12 +121,42 @@ void pgpe_occ_produce_wof_values()
 
         if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
         {
-            G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma =  G_pgpe_occ.idd_wof_avg_accum_ma / G_pgpe_occ.wof_tick;;
-            G_pgpe_occ.pwof_val->dw1.fields.ics_avg_10ma = G_pgpe_occ.ics_wof_avg_accum_ma / G_pgpe_occ.wof_tick;
-            G_pgpe_occ.pwof_val->dw3.fields.ocs_avg_0p01pct = G_pgpe_occ.ocs_avg_pct_wof_accum / G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma =  (G_pgpe_occ.idd_wof_avg_accum_ma  + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;;
+            G_pgpe_occ.pwof_val->dw1.fields.ics_avg_10ma = (G_pgpe_occ.ics_wof_avg_accum_ma + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw3.fields.ocs_avg_0p01pct = (G_pgpe_occ.ocs_avg_pct_wof_accum + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;
             G_pgpe_occ.idd_wof_avg_accum_ma = 0;
             G_pgpe_occ.ics_wof_avg_accum_ma = 0;
             G_pgpe_occ.ocs_avg_pct_wof_accum = 0;
+        }
+
+        if (pgpe_pstate_is_wof_enabled())
+        {
+            //Due to timebase delta variation, the total sum can exceed wof_tick*0xFFFF, so we clip it
+            if (G_pgpe_occ.vratio_vdd_wof_accum > (0xFFFF << 2) )
+            {
+                G_pgpe_occ.pwof_val->dw0.fields.vratio_vdd_avg = 0xFFFF;
+            }
+            else
+            {
+                G_pgpe_occ.pwof_val->dw0.fields.vratio_vdd_avg = G_pgpe_occ.vratio_vdd_wof_accum / G_pgpe_occ.wof_tick;
+            }
+
+            if (G_pgpe_occ.vratio_vcs_wof_accum > (0xFFFF << 2) )
+            {
+                G_pgpe_occ.pwof_val->dw0.fields.vratio_vcs_avg = 0xFFFF;
+            }
+            else
+            {
+                G_pgpe_occ.pwof_val->dw0.fields.vratio_vcs_avg = G_pgpe_occ.vratio_vcs_wof_accum / G_pgpe_occ.wof_tick;
+            }
+
+
+            G_pgpe_occ.vratio_vdd_wof_accum  = 0;
+            G_pgpe_occ.vratio_vcs_wof_accum  = 0;
+            //PK_TRACE("OCC: FIT Tick");
         }
 
         //PK_TRACE("OCC: woftick vdd_wof=0x%x,vcs_wof=%u,idd_wof=%u,ics_wof=%u",G_pgpe_occ.vdd_wof_avg_accum_mv,G_pgpe_occ.vcs_wof_avg_accum_mv,G_pgpe_occ.idd_wof_avg_accum_ma,G_pgpe_occ.ics_wof_avg_accum_ma);
@@ -163,6 +199,21 @@ void pgpe_occ_produce_fit_values()
         G_pgpe_occ.idd_tb_accum = 0;
         G_pgpe_occ.ics_tb_accum = 0;
         G_pgpe_occ.ocs_avg_pct_tb_accum = 0;
+    }
+
+    if (pgpe_pstate_is_wof_enabled())
+    {
+        G_pgpe_occ.vratio_vdd_fit_avg = G_pgpe_occ.vratio_vdd_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.vratio_vcs_fit_avg = G_pgpe_occ.vratio_vcs_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.vratio_vdd_wof_accum += G_pgpe_occ.vratio_vdd_fit_avg;
+        G_pgpe_occ.vratio_vcs_wof_accum += G_pgpe_occ.vratio_vcs_fit_avg;
+
+        /*PK_TRACE("OCC: vratio_vdd_fit_avg=0x%08x vratio_vcs_fit_avg=0x%08x max_delta_tb=0x%08x", G_pgpe_occ.vratio_vdd_fit_avg,
+                 G_pgpe_occ.vratio_vcs_fit_avg, G_pgpe_occ.max_tb_delta);
+        PK_TRACE("OCC: vratio_vdd_wof_accum=0x%08x vratio_vcs_wof_accum=0x%08x ", G_pgpe_occ.vratio_vdd_wof_accum,
+                 G_pgpe_occ.vratio_vcs_wof_accum);*/
+        G_pgpe_occ.vratio_vdd_tb_accum = 0;
+        G_pgpe_occ.vratio_vcs_tb_accum = 0;
     }
 
     G_pgpe_occ.fit_tick++;
@@ -214,6 +265,16 @@ void pgpe_occ_sample_values()
         G_pgpe_occ.vdd_tb_accum = pgpe_pstate_get(vdd_curr) * delta_tb;
         G_pgpe_occ.vcs_tb_accum = pgpe_pstate_get(vcs_curr) * delta_tb;
         G_pgpe_occ.thr_idx_tb_accum = pgpe_thr_ctrl_get_thr_idx();
+    }
+
+    if (pgpe_pstate_is_wof_enabled())
+    {
+        G_pgpe_occ.vratio_vdd_tb_accum = pgpe_pstate_get(vratio_vdd_rounded) * delta_tb;
+        G_pgpe_occ.vratio_vcs_tb_accum = pgpe_pstate_get(vratio_vcs_rounded) * delta_tb;
+        G_pgpe_occ.pwof_val->dw3.fields.vratio_vdd_roundup_avg = pgpe_pstate_get(vratio_vdd_rounded);
+        G_pgpe_occ.pwof_val->dw3.fields.vratio_vcs_roundup_avg = pgpe_pstate_get(vratio_vcs_rounded);
+        /*PK_TRACE("OCC: vratio_vdd_tb_accum=0x%08x vratio_vcs_tb_accum=0x%08x delta_tb=0x%08x", G_pgpe_occ.vratio_vdd_tb_accum,
+                 G_pgpe_occ.vratio_vcs_tb_accum, delta_tb);*/
     }
 
     G_pgpe_occ.prev_tb = G_pgpe_occ.present_tb;

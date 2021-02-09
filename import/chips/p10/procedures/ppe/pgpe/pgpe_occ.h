@@ -46,6 +46,9 @@ typedef struct pgpe_occ
     uint32_t vdd_accum, vdd_tb_accum, vdd_fit_avg_mv, vdd_wof_avg_accum_mv, vdd_avg_mv;
     uint32_t vcs_accum, vcs_tb_accum, vcs_fit_avg_mv, vcs_wof_avg_accum_mv, vcs_avg_mv;
     uint32_t ocs_avg_pct_tb_accum, ocs_avg_pct_fit, ocs_avg_pct_wof_accum;
+    uint32_t vratio_vdd_tb_accum, vratio_vdd_fit_avg, vratio_vdd_wof_accum;
+    uint32_t vratio_vcs_tb_accum, vratio_vcs_fit_avg, vratio_vcs_wof_accum;
+    uint32_t wof_tick_rnd;
 } pgpe_occ_t;
 
 #ifndef __PARSER_TOOL__

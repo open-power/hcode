@@ -677,12 +677,12 @@ void pgpe_process_wof_enable(ipcmsg_wof_control_t* args)
     pgpe_pstate_compute_vindex();
     pgpe_pstate_set(clip_wof, pgpe_pstate_get(vrt)->data[pgpe_pstate_get(vindex)]);
     pgpe_opt_set_word(0, 0);
-    pgpe_opt_set_half(0, pgpe_pstate_get(vratio_table_16th));
+    pgpe_opt_set_half(0, pgpe_pstate_get(vratio_index_format));
     pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
     pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
     ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
 
-    PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_table_16th),
+    PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
              pgpe_pstate_get(vindex),
              pgpe_pstate_get(clip_wof));
 
@@ -753,11 +753,11 @@ void pgpe_process_wof_vrt(void* eargs)
             pgpe_pstate_compute_vindex();
             pgpe_pstate_set(clip_wof, args->idd_vrt_ptr->data[pgpe_pstate_get(vindex)]);
             pgpe_opt_set_word(0, 0);
-            pgpe_opt_set_half(0, pgpe_pstate_get(vratio_table_16th));
+            pgpe_opt_set_half(0, pgpe_pstate_get(vratio_index_format));
             pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
             pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
             ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
-            PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_table_16th),
+            PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
                      pgpe_pstate_get(vindex),
                      pgpe_pstate_get(clip_wof));
             pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_PENDING_ACTUATION);

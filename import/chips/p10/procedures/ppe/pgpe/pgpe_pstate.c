@@ -110,7 +110,7 @@ void pgpe_pstate_init()
     G_pgpe_pstate.vratio_vcs_snapup_64th    = 0;
     G_pgpe_pstate.vratio_vdd_rounded_64th   = 0;
     G_pgpe_pstate.vratio_vcs_rounded_64th   = 0;
-    G_pgpe_pstate.vratio_table_16th         = 0;
+    G_pgpe_pstate.vratio_index_format       = 0;
     G_pgpe_pstate.vratio_vdd_loadline_64th  = 0;
     G_pgpe_pstate.vratio_vdd_ceff_inst_64th = 0;
     G_pgpe_pstate.vratio_vcs_loadline_64th  = 0;
@@ -142,6 +142,8 @@ void pgpe_pstate_init()
     G_pgpe_pstate.stopped_ac_vcs_64ths = pgpe_gppb_get_vratio_vcs(WOF_VRATIO_VCS_IDX_CORE)  + pgpe_gppb_get_vratio_vcs(
             WOF_VRATIO_VCS_IDX_CACHE_BASE);
 
+    PK_TRACE("PS: stopped_ac_vdd/vcs_64ths=0x%08x, 0x08%x", G_pgpe_pstate.stopped_ac_vdd_64ths,
+             G_pgpe_pstate.stopped_ac_vcs_64ths);
     PK_TRACE("PS: Psafe=0x%x", G_pgpe_pstate.pstate_safe);
 }
 
@@ -188,9 +190,9 @@ void pgpe_pstate_actuate_step()
 
     //compute load line drop
     G_pgpe_pstate.vdd_next_uplift = pgpe_pstate_intp_vddup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED,
-                                    G_pgpe_pstate.vratio_vdd_loadline_64th);
+                                    G_pgpe_pstate.vratio_vdd_loadline_64th) >> 6; //Shift by 6 since vratio is in 64ths
     G_pgpe_pstate.vcs_next_uplift = pgpe_pstate_intp_vcsup_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED,
-                                    G_pgpe_pstate.vratio_vcs_loadline_64th);
+                                    G_pgpe_pstate.vratio_vcs_loadline_64th) >> 6;//Shift by 6 since vratio is in 64ths
 
     G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
     G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
@@ -549,13 +551,33 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
         }
     }
 
-    G_pgpe_pstate.active_core_ratio_64th   = ((active_core_accum_64th + 63) / G_pgpe_pstate.sort_core_count) >> 6;
-    G_pgpe_pstate.vratio_vdd_snapup_64th = ((vratio_vdd_accum_64th + 63) / G_pgpe_pstate.sort_core_count) >> 6;
-    G_pgpe_pstate.vratio_vcs_snapup_64th = ((vratio_vcs_accum_64th + 63) / G_pgpe_pstate.sort_core_count) >> 6;
-    G_pgpe_pstate.vratio_vdd_rounded_64th = ((vratio_vdd_accum_64th + 32) / G_pgpe_pstate.sort_core_count) >> 6;
-    G_pgpe_pstate.vratio_vcs_rounded_64th = ((vratio_vcs_accum_64th + 32) / G_pgpe_pstate.sort_core_count) >> 6;
+    PK_TRACE("VRT: active_core_accum_64th=0x%08x, vratio_vdd_accum_64th=0x%08x, vratio_vcs_accum_64th=0x%08x",
+             active_core_accum_64th, vratio_vdd_accum_64th, vratio_vcs_accum_64th);
+    G_pgpe_pstate.vratio_index_format       = ((((active_core_accum_64th) << 10) - 1) /
+            G_pgpe_pstate.sort_core_count); //Index Format is 16-bits. We accumulate in 6bits, so do a shift by 10
+    G_pgpe_pstate.active_core_ratio_64th    = G_pgpe_pstate.vratio_index_format >> 10; //Index format back to 64ths
+    G_pgpe_pstate.vratio_vdd_snapup_64th    = ((vratio_vdd_accum_64th + 63) / G_pgpe_pstate.sort_core_count);
+    G_pgpe_pstate.vratio_vcs_snapup_64th    = ((vratio_vcs_accum_64th + 63) / G_pgpe_pstate.sort_core_count);
+    G_pgpe_pstate.vratio_vdd_rounded_64th   = ((vratio_vdd_accum_64th + 32) / G_pgpe_pstate.sort_core_count);
+    G_pgpe_pstate.vratio_vcs_rounded_64th   = ((vratio_vcs_accum_64th + 32) / G_pgpe_pstate.sort_core_count);
+    G_pgpe_pstate.vratio_vdd_snapup_64th    = G_pgpe_pstate.vratio_vdd_snapup_64th < 64 ?
+            G_pgpe_pstate.vratio_vdd_snapup_64th : 64;
+    G_pgpe_pstate.vratio_vcs_snapup_64th    = G_pgpe_pstate.vratio_vcs_snapup_64th < 64 ?
+            G_pgpe_pstate.vratio_vcs_snapup_64th : 64;
+    G_pgpe_pstate.vratio_vdd_rounded_64th   = G_pgpe_pstate.vratio_vdd_rounded_64th < 64 ?
+            G_pgpe_pstate.vratio_vdd_rounded_64th : 64;
+    G_pgpe_pstate.vratio_vcs_rounded_64th   = G_pgpe_pstate.vratio_vcs_rounded_64th < 64 ?
+            G_pgpe_pstate.vratio_vcs_rounded_64th : 64;
 
-    G_pgpe_pstate.vratio_table_16th         = G_pgpe_pstate.active_core_ratio_64th >> 2;
+
+    G_pgpe_pstate.vratio_vdd_rounded        = ((((vratio_vdd_accum_64th + 32) << 10) - 1) / G_pgpe_pstate.sort_core_count);
+    G_pgpe_pstate.vratio_vcs_rounded        = ((((vratio_vcs_accum_64th + 32) << 10) - 1) / G_pgpe_pstate.sort_core_count);
+    G_pgpe_pstate.vratio_vdd_rounded        = G_pgpe_pstate.vratio_vdd_rounded <= 0xFFFF ? G_pgpe_pstate.vratio_vdd_rounded
+            : 0xFFFF;
+    G_pgpe_pstate.vratio_vcs_rounded        = G_pgpe_pstate.vratio_vcs_rounded <= 0xFFFF ? G_pgpe_pstate.vratio_vcs_rounded
+            : 0xFFFF;
+
+
     G_pgpe_pstate.vratio_vdd_loadline_64th  = G_pgpe_pstate.vratio_vdd_snapup_64th;
     G_pgpe_pstate.vratio_vdd_ceff_inst_64th = G_pgpe_pstate.vratio_vdd_rounded_64th;
     G_pgpe_pstate.vratio_vcs_loadline_64th  = G_pgpe_pstate.vratio_vcs_snapup_64th;
@@ -564,8 +586,8 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
 
 void pgpe_pstate_compute_vindex()
 {
-    uint32_t msd = ((G_pgpe_pstate.vratio_table_16th & 0xF000) >> 12);
-    uint32_t rem = (G_pgpe_pstate.vratio_table_16th & 0x0FFF);
+    uint32_t msd = ((G_pgpe_pstate.vratio_index_format & 0xF000) >> 12);
+    uint32_t rem = (G_pgpe_pstate.vratio_index_format & 0x0FFF);
     uint32_t idx_rnd = (rem > 0x800) ? 1 : 0;
     G_pgpe_pstate.vindex = (msd >= 5) ? (msd - 5 + idx_rnd) : 0;
     PK_TRACE("VIX: Vindex=0x%x", G_pgpe_pstate.vindex);
@@ -621,7 +643,7 @@ uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
                             pgpe_gppb_get_vdd_sysparm_distloss())) / 1000
                            + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
 
-    //PK_TRACE("PS: ps=0x%x, idd_ac=0x%x, idd_dc=0x%x, vdd_up=0x%x", ps, idd_ac, idd_dc, vdd_uplift);
+    PK_TRACE("PS: ps=0x%x, idd_ac=0x%x, idd_dc=0x%x, vdd_up=0x%x", ps, idd_ac, idd_dc, vdd_uplift);
     return vdd_uplift;
 }
 
@@ -634,7 +656,7 @@ uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
                             pgpe_gppb_get_vcs_sysparm_distloss())) / 1000
                            + pgpe_gppb_get_vcs_sysparm_distoffset()) / 1000;
 
-    //PK_TRACE("PS: ps=0x%x, ics_ac=0x%x, ics_dc=0x%x, vcs_up=0x%x", ps, ics_ac, ics_dc, vcs_uplift);
+    PK_TRACE("PS: ps=0x%x, ics_ac=0x%x, ics_dc=0x%x, vcs_up=0x%x", ps, ics_ac, ics_dc, vcs_uplift);
     return vcs_uplift;
 }
 

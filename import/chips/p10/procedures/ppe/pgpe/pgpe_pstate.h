@@ -69,31 +69,31 @@ enum PS_FROM_FREQ_ROUNDING
 
 typedef struct pgpe_pstate
 {
-    uint32_t pstate_status;
-    uint32_t wof_status;
-    uint32_t pmcr_owner;
-    uint32_t ps_request[MAX_QUADS];
-    uint32_t sort_core_count;
-    uint32_t pstate_computed, pstate_target, pstate_next, pstate_curr;
-    uint32_t pstate_safe;
-    pmsr_t   pmsr;
-    uint32_t clip_min, clip_max, clip_wof, dcm_sibling_ps;
-    uint32_t vdd_curr, vdd_next, vdd_curr_uplift, vdd_next_uplift, vdd_curr_ext, vdd_next_ext;
-    uint32_t vcs_curr, vcs_next, vcs_curr_uplift, vcs_next_uplift, vcs_curr_ext, vcs_next_ext;
-    int32_t vdd_wov_bias, vcs_wov_bias;
-    uint32_t idd, ics;
-    VRT_t*   vrt;
-    uint32_t vindex;
-    uint32_t power_proxy_scale;
-    uint32_t update_pgpe_beacon;
-    uint32_t rvrm_volt;
-    uint32_t stopped_ac_vdd_64ths, stopped_ac_vcs_64ths;
-    uint32_t active_core_ratio_64th,
-             vratio_vdd_snapup_64th, vratio_vcs_snapup_64th,
-             vratio_vdd_rounded_64th, vratio_vcs_rounded_64th,
-             vratio_table_16th,
-             vratio_vdd_loadline_64th, vratio_vdd_ceff_inst_64th,
-             vratio_vcs_loadline_64th, vratio_vcs_ceff_ins_64th;
+    uint32_t pstate_status;         //0
+    uint32_t wof_status;            //1
+    uint32_t pmcr_owner;            //2
+    uint32_t update_pgpe_beacon;    //3
+    uint32_t sort_core_count;       //4
+    uint32_t power_proxy_scale;     //5
+    uint32_t rvrm_volt;             //6
+    uint32_t pstate_safe;           //7
+    uint32_t ps_request[MAX_QUADS]; //15
+    uint32_t pstate_computed, pstate_target, pstate_next, pstate_curr;  //16-19
+    uint32_t clip_min, clip_max, clip_wof, dcm_sibling_ps;              //20-23
+    uint32_t vdd_curr, vdd_next, vdd_curr_uplift, vdd_next_uplift, vdd_curr_ext, vdd_next_ext; //24-29
+    uint32_t vcs_curr, vcs_next, vcs_curr_uplift, vcs_next_uplift, vcs_curr_ext, vcs_next_ext; //30-35
+    int32_t vdd_wov_bias, vcs_wov_bias; //36-37
+    uint32_t idd, ics;                  //38-39
+    pmsr_t   pmsr;                      //40-47
+    VRT_t*   vrt;                       //48-55
+    uint32_t stopped_ac_vdd_64ths, stopped_ac_vcs_64ths;            //56-57
+    uint32_t active_core_ratio_64th, vratio_index_format,           //58-59
+             vratio_vdd_snapup_64th, vratio_vcs_snapup_64th,        //60-61
+             vratio_vdd_rounded_64th, vratio_vcs_rounded_64th,      //62-63
+             vratio_vdd_loadline_64th, vratio_vdd_ceff_inst_64th,   //64-65
+             vratio_vcs_loadline_64th, vratio_vcs_ceff_ins_64th,    //66-67
+             vratio_vdd_rounded, vratio_vcs_rounded;                //68-69
+    uint32_t vindex;                                                //70
 } pgpe_pstate_t;
 
 
