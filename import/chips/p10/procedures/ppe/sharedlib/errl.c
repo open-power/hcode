@@ -106,6 +106,8 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 G_errlConfigData.traceSz = ERRL_TRACE_DATA_SZ_QME;
                 G_errlConfigData.tblBaseSlot += (( G_errlConfigData.ppeId & 0x0f ) << 1 );
                 G_errlConfigData.gpeBaseSlot = G_errlConfigData.tblBaseSlot;
+                // EID range of each QME is kept unique to avoid entry conflict
+                G_errlConfigData.errId = (G_errlConfigData.ppeId & 0x0f) << 5;
                 break;
 
             default:
@@ -257,10 +259,26 @@ uint8_t getErrSlotNumAndErrId (
 
                     // 6. Save off incremented counter which forms error log id
                     //    Provide next ErrorId; ErrorId should never be 0.
-                    G_errlMetaData[l_localSlot].errId =
-                        ((++G_errlConfigData.errId) == 0) ?
-                        ++G_errlConfigData.errId :
-                        G_errlConfigData.errId;
+                    uint8_t eidBegin = 0;
+                    uint8_t eidWrap = 0;
+
+#ifdef __PPE_QME
+
+                    if (G_errlConfigData.source == ERRL_SOURCE_QME)
+                    {
+                        // limit every QME EID to its unique range
+                        eidBegin = (G_errlConfigData.ppeId & 0x0f) << 5;
+                        eidWrap = ((G_errlConfigData.ppeId + 1) & 0x0f) << 5;
+                    }
+
+#endif
+
+                    if (++G_errlConfigData.errId == eidWrap)
+                    {
+                        G_errlConfigData.errId = eidBegin ? eidBegin : ++eidBegin;
+                    }
+
+                    G_errlMetaData[l_localSlot].errId = G_errlConfigData.errId;
                     *o_errlId = G_errlMetaData[l_localSlot].errId;
                 }
                 else
