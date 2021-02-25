@@ -99,25 +99,6 @@ qme_send_pig_type_a()
 }
 
 void
-qme_fused_core_pair_mode(uint32_t* c_mask)
-{
-    if( G_qme_record.fused_core_enabled )
-    {
-        PK_TRACE_INF("Parse: Consider Fused SMT4 Cores[%x] Pairing together for Stop and Wake", *c_mask);
-
-        if( (*c_mask) & 0x3 )
-        {
-            (*c_mask) |= 0x3;
-        }
-
-        if( (*c_mask) & 0xC )
-        {
-            (*c_mask) |= 0xC;
-        }
-    }
-}
-
-void
 qme_stop1_exit(uint32_t c_mask)
 {
     uint32_t c_loop    = 0;
@@ -461,7 +442,20 @@ qme_parse_special_wakeup_rise()
 
     out32_sh(QME_LCL_EISR_CLR, (c_mask << SHIFT64SH(35)) );
 
-    qme_fused_core_pair_mode(&c_mask);
+    if( G_qme_record.fused_core_enabled )
+    {
+        PK_TRACE_INF("Parse: Consider Fused SMT4 Cores[%x] Pairing together for Stop and Wake", c_mask);
+
+        if( (c_mask) & 0x3 )
+        {
+            (c_mask) |= 0x3;
+        }
+
+        if( (c_mask) & 0xC )
+        {
+            (c_mask) |= 0xC;
+        }
+    }
 
     uint32_t c_spwu = c_mask & (~G_qme_record.c_stop2_reached);
 
@@ -507,34 +501,34 @@ qme_parse_special_wakeup_fall()
                       G_qme_record.c_special_wakeup_done &
                       G_qme_record.c_configured;
 
-    if( !(in32(QME_LCL_QMCR) & BIT32(10)) &&
-        G_qme_record.fused_core_enabled )
+    if( G_qme_record.fused_core_enabled )
     {
         PK_TRACE_INF("Parse: Fused Core Mode Special Wakeup Fall[%x] on Cores[%x] (both Siblings required)",
                      G_qme_record.c_fused_spwu_fall, c_mask);
 
+        uint32_t spwu_assert = ( in32_sh(QME_LCL_EINR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
         G_qme_record.c_fused_spwu_fall |= c_mask;
 
-        if( (G_qme_record.c_fused_spwu_fall & 0xc) != 0xc )
-        {
-            G_qme_record.c_fused_spwu_fall |= c_mask & 0xc;
-            c_mask &= ~0xc;
-        }
-        else
+        if( ( G_qme_record.c_fused_spwu_fall & 0xc ) &&
+            ( (spwu_assert & 0xC) == 0 ) )
         {
             G_qme_record.c_fused_spwu_fall &= ~0xc;
             c_mask |= 0xc;
         }
-
-        if( (G_qme_record.c_fused_spwu_fall & 0x3) != 0x3 )
-        {
-            G_qme_record.c_fused_spwu_fall |= c_mask & 0x3;
-            c_mask &= ~0x3;
-        }
         else
+        {
+            c_mask &= ~0xc;
+        }
+
+        if( ( G_qme_record.c_fused_spwu_fall & 0x3 ) &&
+            ( (spwu_assert & 0x3) == 0 ) )
         {
             G_qme_record.c_fused_spwu_fall &= ~0x3;
             c_mask |= 0x3;
+        }
+        else
+        {
+            c_mask &= ~0x3;
         }
     }
 
