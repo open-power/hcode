@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2011,2020                                                    */
+/* COPYRIGHT 2011,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -238,6 +238,10 @@ ReturnCode delay(uint64_t i_nanoSeconds, uint64_t i_simCycles, bool i_fixed = fa
 
 #ifndef __FAPI_DELAY_PPE_SIM_CYCLES__
 #define __FAPI_DELAY_PPE_SIM_CYCLES__ 8
+#endif
+
+#ifdef EPM_TUNING
+    i_simCycles = i_simCycles / 6;
 #endif
 
     static const uint8_t NUM_OVERHEAD_INSTRS = 15;
