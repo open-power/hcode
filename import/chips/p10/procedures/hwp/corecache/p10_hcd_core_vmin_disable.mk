@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019,2020
+# COPYRIGHT 2019,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -23,8 +23,12 @@
 #
 # IBM_PROLOG_END_TAG
 PROCEDURE=p10_hcd_core_vmin_disable
+OBJS += p10_hcd_corecache_power_control.o
 OBJS += p10_hcd_mma_poweron.o
 OBJS += p10_hcd_mma_scaninit.o
+OBJS += p10_perv_sbe_cmn.o
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
+$(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/perv)
+$(call ADD_MODULE_INCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/perv)
 $(call BUILD_PROCEDURE)

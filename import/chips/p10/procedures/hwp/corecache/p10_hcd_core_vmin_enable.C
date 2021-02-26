@@ -44,7 +44,6 @@
 //------------------------------------------------------------------------------
 
 #include "p10_hcd_core_vmin_enable.H"
-#include "p10_hcd_mma_poweroff.H"
 #include "p10_hcd_common.H"
 
 #ifdef __PPE_QME
@@ -61,10 +60,10 @@
 
 enum P10_HCD_CORE_VMIN_ENABLE_CONSTANTS
 {
-    HCD_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS    = 100000, // 10^5ns = 100us timeout
+    HCD_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS    = 100000000, // 10^5ns = 100us timeout
     HCD_VMIN_ENA_RVID_ACTIVE_POLL_DELAY_HW_NS      = 1000,   // 1us poll loop delay
     HCD_VMIN_ENA_RVID_ACTIVE_POLL_DELAY_SIM_CYCLE  = 32000,  // 32k sim cycle delay
-    HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS   = 100000, // 10^5ns = 100us timeout
+    HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS   = 100000000, // 10^5ns = 100us timeout
     HCD_VMIN_ENA_VDD_PG_STATE_POLL_DELAY_HW_NS     = 1000,   // 1us poll loop delay
     HCD_VMIN_ENA_VDD_PG_STATE_POLL_DELAY_SIM_CYCLE = 32000,  // 32k sim cycle delay
     HCD_VMIN_ENA_PFET_ENABLE_DELAY_HW_NS           = 50,     // 50ns quiesce delay
@@ -82,9 +81,7 @@ p10_hcd_core_vmin_enable(
     fapi2::buffer<buffer_t> l_mmioData = 0;
     fapi2::buffer<uint64_t> l_scomData = 0;
     uint32_t                l_timeout  = 0;
-#ifndef PFET_SENSE_POLL_DISABLE
     uint32_t                l_vdd_pfet_enable_actual = 0;
-#endif
 
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
     fapi2::ATTR_RUNN_MODE_Type                  l_attr_runn_mode;
@@ -92,25 +89,10 @@ p10_hcd_core_vmin_enable(
 
     FAPI_INF(">>p10_hcd_core_vmin_enable");
 
-    // MMA clock would already be turned off by stop2 with core clocks
-
-    // MMA PFET Power On/Off sequence requires CL2 PFET[ON] + CL2 RegulationFinger[ON]
-    // Stop3: Set RF -> MMA PFET[OFF] -> CL2 PFET[Vmin]
-    // Exit3:                            CL2 PFET[ON] -> MMA PFET[ON] (keep RF on)
-    FAPI_DBG("Assert VDD_PFET_REGULATION_FINGER_EN via CPMS_CL2_PFETCNTL[8]");
-    FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_OR, BIT64(8) ) );
-
-#ifndef POWER_LOSS_DISABLE
-
-    FAPI_DBG("Power Off MMA before enabling Vmin");
-    FAPI_TRY( p10_hcd_mma_poweroff( i_target ) );
-
-#endif
+    // MMA clock and power would already be turned off by stop2 with core clocks
 
     FAPI_DBG("Set VDD_PFET_SEQ_STATE to Voff(0b01) via CPMS_CL2_PFETCNTL[0-1]");
     FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_OR, BIT64(1) ) );
-
-#ifndef PFET_SENSE_POLL_DISABLE
 
     FAPI_DBG("Wait for VDD_PG_STATE == 0x8 via CPMS_CL2_PFETCNTL[42-45]");
     l_timeout = HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS /
@@ -155,8 +137,6 @@ p10_hcd_core_vmin_enable(
 
 #ifdef __PPE_PLAT
     asm("sync");
-#endif
-
 #endif
 
     FAPI_DBG("Reset VDD_PFET_SEQ_STATE to No-Op(0b00) via CPMS_CL2_PFETCNTL[0-1]");

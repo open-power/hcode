@@ -62,15 +62,18 @@
 
 enum P10_HCD_CORE_VMIN_DISABLE_CONSTANTS
 {
-    HCD_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS    = 100000, // 10^5ns = 100us timeout
-    HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_HW_NS      = 1000,   // 1us poll loop delay
-    HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_SIM_CYCLE  = 32000,  // 32k sim cycle delay
-    HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS       = 10000000, // 10^5ns = 100us timeout
+    HCD_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS      = 100000000, // 10^5ns = 100us timeout
+    HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_HW_NS        = 1000,   // 1us poll loop delay
+    HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_SIM_CYCLE    = 32000,  // 32k sim cycle delay
+    HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS       = 100000000, // 10^5ns = 100us timeout
     HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_HW_NS         = 1000,   // 1us poll loop delay
     HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_SIM_CYCLE     = 32000,  // 32k sim cycle delay
-    HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS   = 100000, // 10^5ns = 100us timeout
+    HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS   = 100000000, // 10^5ns = 100us timeout
     HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_DELAY_HW_NS     = 1000,   // 1us poll loop delay
     HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_DELAY_SIM_CYCLE = 32000,  // 32k sim cycle delay
+    HCD_VMIN_DIS_VDD_PG_STATE_POLL_TIMEOUT_HW_NS      = 100000000, // 10^5ns = 100us timeout
+    HCD_VMIN_DIS_VDD_PG_STATE_POLL_DELAY_HW_NS        = 1000,   // 1us poll loop delay
+    HCD_VMIN_DIS_VDD_PG_STATE_POLL_DELAY_SIM_CYCLE    = 32000,  // 32k sim cycle delay
 };
 
 //------------------------------------------------------------------------------
@@ -119,6 +122,10 @@ p10_hcd_core_vmin_disable(
                  .set_CORE_TARGET(i_target),
                  "ERROR: Vmin Disable Rvid Enabled Timeout");
 
+    // TODO enable this once settings is known
+    //FAPI_DBG("Set RVRM_TUNE to be 64ns(0b110) via CPMS_RVCSR[6:11]");
+    //FAPI_TRY( HCD_PUTMMIO_S(i_target, CPMS_RVCSR_WO_OR, BITS64(9, 2) ) );
+
     FAPI_DBG("Drop RVID_ENABLE via CPMS_RVCSR[0]");
     FAPI_TRY( HCD_PUTMMIO_S(i_target, CPMS_RVCSR_WO_CLEAR, BIT64(0) ) );
 
@@ -142,17 +149,22 @@ p10_hcd_core_vmin_disable(
     }
     while( (--l_timeout) != 0 );
 
-    FAPI_ASSERT( ( l_attr_runn_mode ? ( SCOM_GET(33) == 1 ) : (l_timeout != 0) ),
-                 fapi2::VMIN_DIS_RVID_BYPASS_TIMEOUT()
-                 .set_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS)
-                 .set_CPMS_RVCSR(l_scomData)
-                 .set_CORE_TARGET(i_target),
-                 "ERROR: Vmin Disable Rvid Bypass Timeout");
+    if( !l_timeout )
+    {
+        FAPI_IMP("WARNING RVRM BYPASS TIMEOUT");
+    }
+
+    /*HW563996
+        FAPI_ASSERT( ( l_attr_runn_mode ? ( SCOM_GET(33) == 1 ) : (l_timeout != 0) ),
+                     fapi2::VMIN_DIS_RVID_BYPASS_TIMEOUT()
+                     .set_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS)
+                     .set_CPMS_RVCSR(l_scomData)
+                     .set_CORE_TARGET(i_target),
+                     "ERROR: Vmin Disable Rvid Bypass Timeout");
+    */
 
     FAPI_DBG("Set VDD_PFET_SEQ_STATE to Von(0b11) via CPMS_CL2_PFETCNTL[0-1]");
     FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_OR,  BITS64(0, 2) ) );
-
-#ifndef PFET_SENSE_POLL_DISABLE
 
     FAPI_DBG("Wait for VDD_PFETS_ENABLED_SENSE asserted via CPMS_CL2_PFETSTAT[0]");
     l_timeout = HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS /
@@ -164,7 +176,11 @@ p10_hcd_core_vmin_disable(
 
         // use multicastAND to check 1
         if( ( !l_attr_runn_mode ) &&
+#if defined(POWER10_DD_LEVEL) && POWER10_DD_LEVEL != 10
+            ( SCOM_GET(4) == 1 ) )
+#else
             ( SCOM_GET(0) == 1 ) )
+#endif
         {
             break;
         }
@@ -174,32 +190,51 @@ p10_hcd_core_vmin_disable(
     }
     while( (--l_timeout) != 0 );
 
-    FAPI_ASSERT( ( l_attr_runn_mode ? ( SCOM_GET(0) == 1 ) : (l_timeout != 0) ),
+    FAPI_ASSERT( ( l_attr_runn_mode ?
+#if defined(POWER10_DD_LEVEL) && POWER10_DD_LEVEL != 10
+                   ( SCOM_GET(4) == 1 ) : (l_timeout != 0) ),
+#else
+                   ( SCOM_GET(0) == 1 ) : (l_timeout != 0) ),
+#endif
                  fapi2::VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT()
                  .set_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS)
                  .set_CPMS_CL2_PFETSTAT(l_scomData)
                  .set_CORE_TARGET(i_target),
                  "ERROR: Vmin Disable VDD Pfet Enable Timeout");
 
+#ifdef EPM_TUNING
+
+    FAPI_DBG("Wait for VDD_PG_STATE == 0x8 via CPMS_CL2_PFETCNTL[42-45]");
+    l_timeout = HCD_VMIN_DIS_VDD_PG_STATE_POLL_TIMEOUT_HW_NS /
+                HCD_VMIN_DIS_VDD_PG_STATE_POLL_DELAY_HW_NS;
+
+    do
+    {
+        FAPI_TRY( HCD_GETMMIO_C( i_target, MMIO_LOWADDR(CPMS_CL2_PFETCNTL), l_mmioData ) );
+
+        // use multicastAND to check 1
+        if( ( !l_attr_runn_mode ) &&
+            ( MMIO_GET(MMIO_LOWBIT(42)) == 1 ) )
+        {
+            break;
+        }
+
+        fapi2::delay(HCD_VMIN_DIS_VDD_PG_STATE_POLL_DELAY_HW_NS,
+                     HCD_VMIN_DIS_VDD_PG_STATE_POLL_DELAY_SIM_CYCLE);
+    }
+    while( (--l_timeout) != 0 );
+
+    FAPI_ASSERT( ( l_attr_runn_mode ? ( MMIO_GET(MMIO_LOWBIT(42)) == 1 ) : (l_timeout != 0) ),
+                 fapi2::VMIN_ENA_VDD_PG_STATE_TIMEOUT()
+                 .set_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_VDD_PG_STATE_POLL_TIMEOUT_HW_NS)
+                 .set_CPMS_CL2_PFETCNTL(l_mmioData)
+                 .set_CORE_TARGET(i_target),
+                 "ERROR: Vmin Disable VDD_PG_STATE Timeout");
+
 #endif
 
     FAPI_DBG("Reset VDD_PFET_SEQ_STATE to No-Op(0b00) via CPMS_CL2_PFETCNTL[0-1]");
-    FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR, BITS64(0, 2) ) );
-
-#ifndef POWER_LOSS_DISABLE
-
-    // MMA PFET Power On/Off sequence requires CL2 PFET[ON] + CL2 RegulationFinger[ON]
-    // Stop3: Set RF -> MMA PFET[OFF] -> CL2 PFET[Vmin]
-    // Exit3:                            CL2 PFET[ON] -> MMA PFET[ON] (keep RF on)
-    FAPI_DBG("Power On MMA after disabling Vmin");
-    FAPI_TRY( p10_hcd_mma_poweron( i_target ) );
-
-    FAPI_DBG("Scaninit MMA after disabling Vmin");
-    FAPI_TRY( p10_hcd_mma_scaninit( i_target ) );
-
-    // MMA clocks will be turned on along with core_startclocks in stop2
-
-#endif
+    FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR,  BITS64(0, 2)) );
 
 fapi_try_exit:
 
