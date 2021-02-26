@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2020                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -75,13 +75,13 @@
 #define IRQ_VEC_PRTY3_QME   (uint64_t)(0x00000000F0000000) // SPWU_RISE
 #define IRQ_VEC_PRTY4_QME   (uint64_t)(0x000000000F000000) // SPWU_FALL
 #define IRQ_VEC_PRTY5_QME   (uint64_t)(0x0000000000F00000) // RGWU_FAST
-#define IRQ_VEC_PRTY6_QME   (uint64_t)(0x0000100000000000) // PMCR
+#define IRQ_VEC_PRTY6_QME   (uint64_t)(0x0000000000000000) // PMCR ALWAYS MASKED
 #define IRQ_VEC_PRTY7_QME   (uint64_t)(0x0000800000000000) // DB0
-#define IRQ_VEC_PRTY8_QME   (uint64_t)(0x0000000000000000) // MMA FIXME ENABLE WHEN READY
+#define IRQ_VEC_PRTY8_QME   (uint64_t)(0x0000000F00000000) // MMA 
 #define IRQ_VEC_PRTY9_QME   (uint64_t)(0x000000000000F000) // STOP_FAST
 #define IRQ_VEC_PRTY10_QME  (uint64_t)(0x00000000000F0000) // RGWU_SLOW
 #define IRQ_VEC_PRTY11_QME  (uint64_t)(0x0000000000000F00) // STOP_SLOW
-#define IRQ_VEC_PRTY12_QME  (uint64_t)(0x0FFF0FFF000000FF) // Disabled
+#define IRQ_VEC_PRTY12_QME  (uint64_t)(0x0FFF1FF0000000FF) // Disabled
 
 // This should be 0xFFFFFFFFFFFFFFFF
 #define IRQ_VEC_PRTY_ALL_CHECK  ( IRQ_VEC_PRTY0_QME | \

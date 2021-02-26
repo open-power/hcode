@@ -122,6 +122,13 @@ enum SPR_SELF_ACTIONS
     SPR_SELF_RESTORE    =   0x01,
 };
 
+enum MMA_POWER_OFF_MODE
+{
+    MMA_POFF_ALWAYS     =   0x00,
+    MMA_POFF_STATIC     =   0x01,
+    MMA_POFF_DYNAMIC    =   0x02,
+};
+
 //Return codes associated with Block Copy Engine.
 typedef enum
 {
@@ -146,37 +153,6 @@ enum BCE_SCOPE
     QME_SPECIFIC = 1,
 };
 
-
-enum QME_HCODE_FUNCTIONAL_ENABLES
-{
-    // Software Checks
-    QME_CLOCK_STATUS_CHECK_ENABLE     = BIT32(0),
-    QME_POWER_LOSS_ESL_CHECK_ENABLE   = BIT32(1),
-    QME_SPWU_PROTOCOL_CHECK_ENABLE    = BIT32(2),
-    // Stop Catchup/Abort Path Switches
-    QME_L2_PURGE_CATCHUP_PATH_ENABLE  = BIT32(3),
-    QME_L2_PURGE_ABORT_PATH_ENABLE    = BIT32(4),
-    QME_NCU_PURGE_ABORT_PATH_ENABLE   = BIT32(5),
-    QME_STOP3OR5_CATCHUP_PATH_ENABLE  = BIT32(6),
-    QME_STOP3OR5_ABORT_PATH_ENABLE    = BIT32(7),
-    // HWP Switches
-    QME_SELF_RESTORE_ENABLE           = BIT32(8),
-    QME_SELF_SAVE_ENABLE              = BIT32(9),
-    QME_BLOCK_COPY_SCAN_ENABLE        = BIT32(10),
-    QME_BLOCK_COPY_SCOM_ENABLE        = BIT32(11),
-    QME_HWP_SCOM_CUST_ENABLE          = BIT32(12),
-    QME_HWP_SCOM_INIT_ENABLE          = BIT32(13),
-    QME_HWP_SCAN_INIT_ENABLE          = BIT32(14),
-    QME_HWP_ARRAYINIT_ENABLE          = BIT32(15),
-    QME_HWP_SCANFLUSH_ENABLE          = BIT32(16),
-    QME_HWP_PFET_CTRL_ENABLE          = BIT32(17),
-    // Modes Switches
-    QME_PIG_TYPEA_ENABLE              = BIT32(18),
-    QME_EPM_BROADSIDE_ENABLE          = BIT32(19),
-    QME_RUNN_MODE_ENABLE              = BIT32(20),
-    QME_CONTAINED_MODE_ENABLE         = BIT32(21),
-    QME_SMF_SUPPORT_ENABLE            = BIT32(22)
-};
 
 enum SR_FAILURE_CODE
 {
@@ -211,10 +187,45 @@ enum QME_EXTENDED_REASON_CODE
 // todo
 // (auto) pmcr fwd enable, throttle enable,
 // pstate enable, wof enable, safe mode enable
-
 #define ENABLED_HCODE_FUNCTIONS 0x3FFFF000
 
+enum QME_HCODE_FUNCTIONAL_ENABLES
+{
+    // Software Checks
+    QME_CLOCK_STATUS_CHECK_ENABLE     = BIT32(0),
+    QME_POWER_LOSS_ESL_CHECK_ENABLE   = BIT32(1),
+    QME_SPWU_PROTOCOL_CHECK_ENABLE    = BIT32(2),
+    // Stop Catchup/Abort Path Switches
+    QME_L2_PURGE_CATCHUP_PATH_ENABLE  = BIT32(3),
+    QME_L2_PURGE_ABORT_PATH_ENABLE    = BIT32(4),
+    QME_NCU_PURGE_ABORT_PATH_ENABLE   = BIT32(5),
+    QME_STOP3OR5_CATCHUP_PATH_ENABLE  = BIT32(6),
+    QME_STOP3OR5_ABORT_PATH_ENABLE    = BIT32(7),
+    // HWP Switches
+    QME_SELF_RESTORE_ENABLE           = BIT32(8),
+    QME_SELF_SAVE_ENABLE              = BIT32(9),
+    QME_BLOCK_COPY_SCAN_ENABLE        = BIT32(10),
+    QME_BLOCK_COPY_SCOM_ENABLE        = BIT32(11),
+    QME_HWP_SCOM_CUST_ENABLE          = BIT32(12),
+    QME_HWP_SCOM_INIT_ENABLE          = BIT32(13),
+    QME_HWP_SCAN_INIT_ENABLE          = BIT32(14),
+    QME_HWP_ARRAYINIT_ENABLE          = BIT32(15),
+    QME_HWP_SCANFLUSH_ENABLE          = BIT32(16),
+    QME_HWP_PFET_CTRL_ENABLE          = BIT32(17),
+    // Modes Switches
+    QME_PIG_TYPEA_ENABLE              = BIT32(18),
+    QME_EPM_BROADSIDE_ENABLE          = BIT32(19),
+    QME_RUNN_MODE_ENABLE              = BIT32(20),
+    QME_CONTAINED_MODE_ENABLE         = BIT32(21),
+    QME_SMF_SUPPORT_ENABLE            = BIT32(22)
+};
+
 // QME Generic Functions
+// set entry_limit before qme halt
+// { out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, 0xF ), BIT32(2) ); IOTA_PANIC(code); }
+#define QME_PANIC_HANDLER(code) \
+    { IOTA_PANIC(code); }
+
 void qme_init();
 void qme_eval_eimr_override();
 void qme_send_pig_packet(uint32_t);

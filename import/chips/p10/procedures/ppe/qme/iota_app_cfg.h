@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2020                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -102,7 +102,7 @@
 
 
 #define ENABLE_FIT_TIMER             1
-#define ENABLE_DEC_TIMER             0
+#define ENABLE_DEC_TIMER             1
 #define ENABLE_WATCHDOG_TIMER        0
 
 

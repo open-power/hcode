@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2020                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -139,10 +139,10 @@
     QMEHW_IRQ_DOORBELL_B1           STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     QMEHW_IRQ_DOORBELL_B2           STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     QMEHW_IRQ_DOORBELL_B3           STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    QMEHW_IRQ_MMA_ACTIVE_CORE0      STD_IRQ_TYPE_LEVEL    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    QMEHW_IRQ_MMA_ACTIVE_CORE1      STD_IRQ_TYPE_LEVEL    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    QMEHW_IRQ_MMA_ACTIVE_CORE2      STD_IRQ_TYPE_LEVEL    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
-    QMEHW_IRQ_MMA_ACTIVE_CORE3      STD_IRQ_TYPE_LEVEL    STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    QMEHW_IRQ_MMA_ACTIVE_CORE0      STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    QMEHW_IRQ_MMA_ACTIVE_CORE1      STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    QMEHW_IRQ_MMA_ACTIVE_CORE2      STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
+    QMEHW_IRQ_MMA_ACTIVE_CORE3      STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     QMEHW_IRQ_SPC_WKUP_RISE_CORE0   STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     QMEHW_IRQ_SPC_WKUP_RISE_CORE1   STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \
     QMEHW_IRQ_SPC_WKUP_RISE_CORE2   STD_IRQ_TYPE_EDGE     STD_IRQ_POLARITY_RISING    STD_IRQ_MASKED \

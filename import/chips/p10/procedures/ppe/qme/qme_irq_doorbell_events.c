@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -26,7 +26,64 @@
 #include "qme.h"
 
 extern QmeRecord G_qme_record;
+extern uint64_t g_eimr_override;
 
+IOTA_BEGIN_TASK_TABLE
+IOTA_TASK(qme_top_priority_event),                   // 0 Top  (Debugger/HB_Loss/QuadXstop)
+          IOTA_TASK(qme_doorbell2_event),            // 1 DB2  (WOF/SafeMode/BlockStopWake)
+          IOTA_TASK(qme_doorbell1_event),            // 2 DB1  (XGPE reserved)
+          IOTA_TASK(qme_special_wakeup_rise_event),  // 3 SPWU_RISE
+          IOTA_TASK(qme_special_wakeup_fall_event),  // 4 SPWU_FALL
+          IOTA_TASK(qme_regular_wakeup_fast_event),  // 5 RGWU_Hipri
+          IOTA_TASK(qme_pmcr_update_event),          // 6 PMCR (Permentaly masked as handled by PSREQ reg)
+          IOTA_TASK(qme_doorbell0_event),            // 7 DB0  (Core Throttle)
+          IOTA_TASK(qme_mma_active_event),           // 8 MMA  (TODO MMA priority tops spwu to be discussed)
+          IOTA_TASK(qme_pm_state_active_fast_event), // 9 STOP_Hipri
+          IOTA_TASK(qme_regular_wakeup_slow_event),  // 10 RGWU_Lopri
+          IOTA_TASK(qme_pm_state_active_slow_event), // 11 STOP_Lopri
+          IOTA_NO_TASK                               // Should never see these
+          IOTA_END_TASK_TABLE;
+
+void
+qme_top_priority_event()
+{
+    G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_TOPPRI);
+    uint64_t fir = 0;
+    uint64_t top = in64(QME_LCL_EISR) & BITS64(0, 8);
+    out64(QME_LCL_EIMR_OR, top);
+    g_eimr_override |= top;
+
+    PK_TRACE("Event: Top Priority Error/Debug Interrupt[0:DEBUGGER,1:TRIGGER,2:SYS_XSTOP,3:LFIR]: %x",
+             (uint32_t)(top >> 60));
+
+    if( top & BIT64(3) )
+    {
+        if (!G_IsSimics)
+        {
+            fir = in64( QME_LCL_LFIR );
+            out64(QME_LCL_LFIRMASK_OR, fir);
+            PK_TRACE_INF("Event: QME LFIR %x %x", (uint32_t)(fir >> 32), (uint32_t)(fir & 0xFFFFFFFF) );
+        }
+
+        //currently do not decide to halt qme upon just any lfir
+        //IOTA_PANIC(QME_LFIR_INDICATION_DETECTED);
+    }
+
+    if( top & BIT64(2) )
+    {
+        PK_TRACE_INF("Event: SYSTEM CHECKSTOP");
+        IOTA_PANIC(QME_SYSTEM_CHECKSTOP_DETECTED);
+    }
+
+    if( top & BITS64(0, 2) )
+    {
+        PK_TRACE_INF("Event: SOFTWARE DEBUGGER");
+        IOTA_PANIC(QME_DEBUGGER_TRIGGER_DETECTED);
+    }
+
+    //placeholder if flag: errlog and halt
+    G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_TOPPRI);
+}
 
 //wof interlock, safe mode
 void
@@ -34,6 +91,7 @@ qme_doorbell2_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_DB2);
     PK_TRACE("Event: Doorbell 2");
+    out64( QME_LCL_EISR_CLR, BIT64(18) );
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_DB2);
 }
 
@@ -46,8 +104,11 @@ qme_doorbell1_event()
     G_qme_record.doorbell1_msg = in32(QME_LCL_DB1) >> SHIFT32(7);
     out32(QME_LCL_DB1,  0);
     //HW525040
-    //out32(QME_LCL_EISR_CLR, BIT32(17));
+#if POWER10_DD_LEVEL == 10
     out64( QME_LCL_EISR_CLR, BIT64(17) );
+#else
+    out32(QME_LCL_EISR_CLR, BIT32(17));
+#endif
     uint32_t scratchB = in32(QME_LCL_SCRB);
     uint32_t pig_data = 0;
 
@@ -179,6 +240,7 @@ qme_doorbell0_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_DB0);
     PK_TRACE("Event: Doorbell 0");
+    out64( QME_LCL_EISR_CLR, BIT64(16) );
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_DB0);
 }
 
@@ -187,6 +249,7 @@ qme_pmcr_update_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_PMCR);
     PK_TRACE("Event: PMCR Update");
+    out64( QME_LCL_EISR_CLR, BIT64(19) );
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_PMCR);
 }
 

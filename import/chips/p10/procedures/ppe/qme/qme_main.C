@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2020                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -31,6 +31,19 @@ extern QmeRecord G_qme_record;
 uint32_t G_IsSimics = 0; // extern declared in qme.h
 hcode_error_table_t G_qmeElogTable; // QME local Error Log Table
 
+uint64_t pow2(uint32_t num)
+{
+    uint32_t i; /* Variable used in loop counter */
+    uint64_t result = 1;
+
+    for (i = 0; i < num; ++i)
+    {
+        result *= 2;
+    }
+
+    return result;
+}
+
 void
 qme_attr_init()
 {
@@ -42,7 +55,7 @@ qme_attr_init()
     if( fapiRc != fapi2::FAPI2_RC_SUCCESS )
     {
         PK_TRACE_ERR("ERROR: FAPI2 Init Failed. HALT QME!");
-        IOTA_PANIC(QME_MAIN_FAPI2_INIT_FAILED);
+        QME_PANIC_HANDLER(QME_MAIN_FAPI2_INIT_FAILED);
     }
 
     //===============
@@ -55,11 +68,13 @@ qme_attr_init()
 
     if( runn_mode )
     {
+        PK_TRACE_INF("RUNN Mode is engaged %x", runn_mode);
         G_qme_record.hcode_func_enabled |= QME_RUNN_MODE_ENABLE;
     }
 
     if( contained_type != 0)
     {
+        PK_TRACE_INF("Contained Mode is engaged %x", contained_type);
         G_qme_record.hcode_func_enabled |= QME_CONTAINED_MODE_ENABLE;
     }
 
@@ -75,6 +90,95 @@ qme_attr_init()
             out32(QME_LCL_QMCR_OR, BIT32(10));
         }
     */
+
+    //===============
+
+    // Time to delay before powering off the MMA due to the lack of MMA instructions.
+    // Time = 1ms * 2**ATTR_SYSTEM_MMA_POWEROFF_DELAY_POWEROF2_MS.
+    // Values of  0x00 - 0x1B to yield times from 1ms to 24 hours -:
+    //     0x00 - 1ms
+    //     ...
+    //     0x0A - 1 second (default, 2^10)
+    //     ...
+    //     0x1B - 1 day (2^27)
+    //     0x1C - 0xFD - Reserved (maps as 0x1C)
+    //     0xFE - every QME FIT timer interrupt (~250us)
+    //     0xFF - no power off of MMA (QME Hcode still runs; different behavior
+
+    // Assuming QME Timebase is at 32ns duration (when Nest is at 2GHz)
+    //   Ticks * Dec_Val = ( Delay**2 )*1K*1K / 32ns
+    // For simplicity, always use 100us as the frequency of
+    //   Dec check MMA instruction running and increment ticks if not
+#define MMA_ACTIVE_CHECK_OCCUR_NS 1000000
+    G_qme_record.mma_pwoff_dec_val = MMA_ACTIVE_CHECK_OCCUR_NS / 32;
+
+    uint8_t  mma_pon_dis  = 0;
+    uint8_t  mma_poff_dis = 0;
+    uint8_t  mma_powerof2 = 0;
+    uint64_t mma_delay_ns = 0;
+
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DELAY_POWEROF2_MS, l_sys, mma_powerof2 ) );
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE,           l_sys, mma_poff_dis ) );
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWERON_DISABLE,            l_sys, mma_pon_dis ) );
+
+    // STICK DD1 to STATIC model until all commits are there, and code tested in DD2.
+    mma_pon_dis  = 0;
+    mma_poff_dis = 1;
+
+    if( mma_pon_dis )
+    {
+        PK_TRACE_INF("MMA POWERON DISABLED %x", mma_pon_dis);
+        G_qme_record.mma_modes_enabled = MMA_POFF_ALWAYS;
+    }
+    else if( mma_poff_dis || mma_powerof2 == 0xFF)
+    {
+        PK_TRACE_INF("MMA POWEROFF DISABLED %x with mma_powerof2 %x", mma_poff_dis, mma_powerof2);
+        G_qme_record.mma_modes_enabled = MMA_POFF_STATIC;
+    }
+    else
+    {
+        // disable hwp to poweron MMA, EISR[mma_active] will take over
+        mma_pon_dis = 1;
+        FAPI_TRY( FAPI_ATTR_SET( fapi2::ATTR_SYSTEM_MMA_POWERON_DISABLE, l_sys, mma_pon_dis ) );
+
+        G_qme_record.mma_modes_enabled = MMA_POFF_DYNAMIC;
+
+        if( mma_powerof2 == 0xFE )
+        {
+            mma_delay_ns = 250000;
+        }
+        // around down to 1 day if more than 1 day
+        else if( mma_powerof2 > 0x1B )
+        {
+            mma_delay_ns = pow2(0x1B) * 1000000;
+        }
+        else
+        {
+            mma_delay_ns = pow2(mma_powerof2) * 1000000;
+        }
+
+        PK_TRACE_INF("MMA Dynmatic Engagement with mma_powerof2 %x mma_delay_ns %x",
+                     mma_powerof2, mma_delay_ns);
+        G_qme_record.mma_pwoff_dec_ticks = mma_delay_ns / MMA_ACTIVE_CHECK_OCCUR_NS;
+
+        // Leave TCR.DS=0 for DEC to tick every ppe cycle for easy math
+        // PPE runs on 500MHz, thus 2ns per ppe cycle
+        // For EPM uses 100K simcycle timeout, given 1ns = 8 simcycle
+        // 6250ns dec countdown thus 250 for spr DEC and 25 dec ticks
+
+        if( in32_sh( QME_LCL_FLAGS ) & BIT64SH( QME_FLAGS_RUNNING_EPM ) )
+        {
+            G_qme_record.mma_pwoff_dec_ticks = 25;
+            G_qme_record.mma_pwoff_dec_val   = 250;
+        }
+        else
+        {
+            G_qme_record.mma_pwoff_dec_ticks = 5;
+            G_qme_record.mma_pwoff_dec_val = MMA_ACTIVE_CHECK_OCCUR_NS / 32;
+        }
+
+        mtspr(SPRN_DEC, G_qme_record.mma_pwoff_dec_val);
+    }
 }
 
 
@@ -87,6 +191,12 @@ main()
 #else
 #define PVR_CONST 0
 #endif
+
+    if (in32(QME_LCL_FLAGS) & BIT32(QME_FLAGS_DEBUG_TRAP_ENABLE))
+    {
+        PK_TRACE_INF("BREAK: Trap at QME Booted");
+        asm volatile ("trap");
+    }
 
     // @note If QME_FLAGS[63] is set .. execution environment is Simics
     if( in32_sh(QME_LCL_FLAGS) & BIT64SH(QME_FLAGS_RUNNING_SIMICS) )
@@ -102,14 +212,8 @@ main()
         // @TODO - Temp workaround as Simics has a P9 value of PVR
         if(mfspr(287) != PVR_CONST)
         {
-            IOTA_PANIC(QME_BAD_DD_LEVEL);
+            QME_PANIC_HANDLER(QME_BAD_DD_LEVEL);
         }
-    }
-
-    if (in32(QME_LCL_FLAGS) & BIT32(QME_FLAGS_DEBUG_TRAP_ENABLE))
-    {
-        PK_TRACE_INF("BREAK: Trap at QME Booted");
-        asm volatile ("trap");
     }
 
     // Initialize QME Eror Logging Table & framework
@@ -134,8 +238,10 @@ main()
     PK_TRACE("Main: Set Watch Dog Timer Rate to 6 and FIT Timer Rate to 8");
     out32(QME_LCL_TSEL, (BITS32(1, 2) | BIT32(4)));
 
-    // Initialize the Stop state and Pstate tasks
+    // Initialize FAPI and attributes
     qme_attr_init();
+
+    // Initialize the Stop state and Pstate tasks
     qme_init();
 
 #if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)

@@ -42,13 +42,13 @@ typedef struct
     uint32_t    stop_level_enabled; // Stop2:bit2, Stop5:bit5, Stop11:bit11
     uint32_t    fused_core_enabled; // HwFused:0b01, HcodePaired:0b10
 
-    uint32_t    mma_enabled;        // POff:0b001, POff_Delay:0b010(Dynamic), POn:0b100(Static)
-    uint32_t    throttle_enabled;   // Enable Hcode Core Throttling
-    uint32_t    pmcr_fwd_enabled;   // Enable QMCR and PMCRS auto updates
+    uint32_t    mma_modes_enabled;  // POff:0b001, POff_Delay:0b010(Dynamic), POn:0b100(Static)
+    uint32_t    mma_pwoff_dec_ticks;// number of ticks of dec timer to poweroff mma
+    uint32_t    mma_pwoff_dec_val;  // dec value to setup for each dec tick
     uint32_t    uih_status;         // upper 16b actual irq, lower 16b phantom
 
     // Wof and Pstate and Doorbells
-    //   Note: PMCR is handled by HW
+    //   Note: PMCR and throttle are handled by HW
     //   can add PMCR data collection
     //   if profile/debug is needed
     //   Same with DB1 reserved by XGPE
@@ -104,8 +104,10 @@ typedef struct
     uint32_t    c_stop5_enter_targets;
     uint32_t    c_stop11_enter_targets;
 
+    uint32_t    c_mma_poweroff_count[4];
+
     uint32_t    c_mma_available; // invert PIG TypeA 16:19
-    uint32_t    c_mma_poweron_req;
+    uint32_t    c_mma_active_req;
     uint32_t    c_l2_purge_catchup_targets;
     uint32_t    c_stop3or5_catchup_targets;
 
@@ -118,6 +120,11 @@ typedef struct
     uint32_t    c_stop3_exit_targets;
     uint32_t    c_stop5_exit_targets;
     uint32_t    c_stop11_exit_targets;
+
+    uint32_t    c_auto_stop11_wakeup;
+    uint32_t    c_lpar_mode_enabled;
+    uint32_t    c_xstop_clock_abort_targets;
+    uint32_t    c_xstop_power_abort_targets;
 
     uint32_t    c_act_stop_level[4];
     uint32_t    t_old_pls[4][4];
@@ -157,6 +164,7 @@ typedef struct
 
     uint32_t    cts_timeout_count;
     uint32_t    bce_buf_content_type;
+
     uint32_t    c_fused_spwu_fall;
     uint32_t    c_self_fault_vector;
     uint32_t    c_msgsnd_abort_targets;

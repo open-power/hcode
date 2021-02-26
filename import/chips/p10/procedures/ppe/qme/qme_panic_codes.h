@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2020                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -52,9 +52,9 @@ QME_MAIN_FAPI2_INIT_FAILED              = 0x1c00,
 //QME_STOP_NO_PARTIAL_GOOD_CORE       = 0x1c05,
 //QME_STOP_PUTRING_HEADER_ERROR       = 0x1c06,
 //QME_STOP_BCE_CORE_RING_FAILED       = 0x1c07,
-//QME_DEBUGGER_DETECTED               = 0x1c08,
-//QME_DEBUG_TRIGGER_DETECTED          = 0x1c09,
-//QME_QUAD_CHECKSTOP_DETECTED         = 0x1c0a,
+QME_DEBUGGER_TRIGGER_DETECTED         = 0x1c08,
+QME_SYSTEM_CHECKSTOP_DETECTED         = 0x1c09,
+QME_LFIR_INDICATION_DETECTED          = 0x1c0a,
 //QME_PVREF_FAIL_DETECTED             = 0x1c0d,
 //QME_OCC_HEARTBEAT_LOST_DETECTED     = 0x1c1c,
 //QME_CORE_CHECKSTOP_DETECTED         = 0x1c1d,

@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2020
+# COPYRIGHT 2015,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -30,13 +30,13 @@ IMG-S-SOURCES   = cpmr_header.S
 
 QME-S-SOURCES   = qme_header.S
 
-QME-CPP-SOURCES = qme_main.C       \
-                  qme_stop_entry.C \
+QME-CPP-SOURCES = qme_main.C            \
+                  qme_irq_timer_events.C \
+                  qme_stop_entry.C      \
                   qme_stop_exit.C  
          
 QME-C-SOURCES   = qme_addresses.c           \
                   qme_init.c                \
-                  qme_irq_timer_events.c    \
                   qme_irq_doorbell_events.c \
                   qme_irq_stop_events.c     \
                   qme_block_copy.c          \

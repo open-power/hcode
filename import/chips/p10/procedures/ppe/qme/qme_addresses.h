@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -33,13 +33,23 @@ extern uint32_t SCRATCH0;
 extern uint32_t SCRATCH1;
 extern uint32_t SPATTN_MASK;
 extern uint32_t EC_PC_TFX_SM;
+extern uint32_t LOCAL_XSTOP;
 extern uint32_t PMC_UPDATE;
+
 // QME Local Addresses:
 extern uint32_t QME_LCL_QSCR;
 extern uint32_t QME_LCL_QSCR_OR;
 extern uint32_t QME_LCL_QSCR_CLR;
 
 // QME Per-Quad
+
+extern uint32_t QME_LCL_LFIR;
+extern uint32_t QME_LCL_LFIR_AND;
+extern uint32_t QME_LCL_LFIR_OR;
+
+extern uint32_t QME_LCL_LFIRMASK;
+extern uint32_t QME_LCL_LFIRMASK_AND;
+extern uint32_t QME_LCL_LFIRMASK_OR;
 
 extern uint32_t QME_LCL_PIG;
 extern uint32_t QME_LCL_BCEBAR0;
@@ -103,6 +113,9 @@ static const uint32_t QME_RCSCR_CHANGE_DONE = 4;
 static const uint32_t QME_RCSCR_CHANGE_DONE_LEN = 4;
 
 // QME Per-Core
+extern uint32_t QME_LCL_SCR;
+extern uint32_t QME_LCL_SCR_OR;
+extern uint32_t QME_LCL_SCR_CLEAR;
 
 extern uint32_t QME_SSH_SRC;
 extern uint32_t QME_SPWU_OTR;
@@ -119,6 +132,6 @@ extern uint32_t QME_TFCSR;
 extern uint32_t QME_TFCSR_WO_OR;
 extern uint32_t QME_TFCSR_WO_CLEAR;
 
-extern uint32_t QME_LCL_SCR;
-extern uint32_t QME_LCL_SCR_OR;
-extern uint32_t QME_LCL_SCR_CLEAR;
+extern uint32_t CPMS_MMAR;
+extern uint32_t CPMS_MMAR_WO_CLEAR;
+extern uint32_t CPMS_MMAR_WO_OR;

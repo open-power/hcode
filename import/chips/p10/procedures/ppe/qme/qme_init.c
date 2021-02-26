@@ -47,7 +47,6 @@ QmeRecord G_qme_record __attribute__((section (".dump_ptr"))) =
 void
 qme_init()
 {
-
     //--------------------------------------------------------------------------
     // Initialize Software Scoreboard
     //--------------------------------------------------------------------------
@@ -60,9 +59,6 @@ qme_init()
     // TODO assert pm_entry_limit when stop levels are all disabled
     // However, cannot disable stop11 as gating the IPL, to be discussed with Greg
     //G_qme_record.stop_level_enabled = TBD ATTRIBUTES
-    G_qme_record.mma_enabled        = 0;
-    G_qme_record.pmcr_fwd_enabled   = 0;
-    G_qme_record.throttle_enabled   = 0;
     G_qme_record.c_self_failed      = 0;
     G_qme_record.c_self_fault_vector = 0;
 
@@ -144,48 +140,54 @@ qme_init()
 
 #ifdef EPM_TUNING
 
-    PK_TRACE_INF("EPM Always have cores ready to enter first, aka cores are running when boot");
-    G_qme_record.c_stop2_reached  = 0;
-    G_qme_record.c_stop3_reached  = 0;
-    G_qme_record.c_stop5_reached  = 0;
-    G_qme_record.c_stop11_reached = 0;
-
-    if (G_qme_record.c_configured)
+    if( in32_sh( QME_LCL_FLAGS ) & BIT64SH( QME_FLAGS_RUNNING_EPM ) )
     {
-        out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, G_qme_record.c_configured ), 0 );
-    }
+        PK_TRACE_INF("EPM Always have cores ready to enter first, aka cores are running when boot");
+        G_qme_record.c_stop2_reached  = 0;
+        G_qme_record.c_stop3_reached  = 0;
+        G_qme_record.c_stop5_reached  = 0;
+        G_qme_record.c_stop11_reached = 0;
+        G_qme_record.c_mma_available  = 0xF;
 
-    // Always test shadows as well as DDS
-    out32( QME_LCL_FLAGS_OR, ( BIT32(QME_FLAGS_TOD_SETUP_COMPLETE) | BIT32(QME_FLAGS_DDS_OPERABLE) ) );
+        if (G_qme_record.c_configured)
+        {
+            out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, G_qme_record.c_configured ), 0 );
+        }
 
-    G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCAN_ENABLE;
-    G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCOM_ENABLE;
-    G_qme_record.hcode_func_enabled &= ~QME_HWP_SCAN_INIT_ENABLE;
-    G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
-    G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
+        // Always test shadows as well as DDS
+        out32( QME_LCL_FLAGS_OR, ( BIT32(QME_FLAGS_TOD_SETUP_COMPLETE) | BIT32(QME_FLAGS_DDS_OPERABLE) ) );
 
-    if( !( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE ) )
-    {
-        //EPM do real scan0 and arrayinit and self restore with broadside
-        //otherwise
-        //EPM can turn PFET off, but no Scanning or BCE or self restore
-        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_HWP_ARRAYINIT_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCANFLUSH_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCAN_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCOM_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCAN_INIT_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
+        G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
+
+        G_qme_record.hcode_func_enabled |= QME_EPM_BROADSIDE_ENABLE;
+
+        if( !( G_qme_record.hcode_func_enabled & QME_EPM_BROADSIDE_ENABLE ) )
+        {
+            //EPM do real scan0 and arrayinit and self restore with broadside
+            //otherwise
+            //EPM can turn PFET off, but no Scanning or BCE or self restore
+            G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
+            G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
+            G_qme_record.hcode_func_enabled &= ~QME_HWP_ARRAYINIT_ENABLE;
+            G_qme_record.hcode_func_enabled &= ~QME_HWP_SCANFLUSH_ENABLE;
+        }
     }
 
 #endif
 
     //technically contained mode implies stop11 is not supported with it
-    if( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE )
+    if( ( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE ) ||
+        ( G_qme_record.hcode_func_enabled & QME_RUNN_MODE_ENABLE ) )
     {
         G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_SELF_SAVE_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCAN_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_BLOCK_COPY_SCOM_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_HWP_SCAN_INIT_ENABLE;
-        G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_INIT_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_HWP_ARRAYINIT_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_HWP_SCANFLUSH_ENABLE;
@@ -270,7 +272,7 @@ qme_init()
         if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
         {
             PK_TRACE_DBG("ERROR: BCE Copy of Core Specific Scan Ring Failed. HALT QME!");
-            IOTA_PANIC(QME_STOP_BLOCK_COPY_SCAN_FAILED);
+            QME_PANIC_HANDLER(QME_STOP_BLOCK_COPY_SCAN_FAILED);
         }
     }
 
@@ -288,6 +290,16 @@ qme_init()
     //--------------------------------------------------------------------------
     // QME Init Completed
     //--------------------------------------------------------------------------
+
+#if POWER10_DD_LEVEL == 10
+
+    if (!G_IsSimics)
+    {
+        PK_TRACE_INF("DD1: Mask PCB_RESET_WHEN_ACTIVE in QME_LFIR");
+        out32( QME_LCL_LFIRMASK_OR, BIT32(16) );
+    }
+
+#endif
 
     PK_TRACE_INF("Setup: QME STOP READY");
     out32( QME_LCL_FLAGS_OR, BIT32(QME_FLAGS_STOP_READY) );
@@ -310,12 +322,20 @@ qme_init()
 #endif
 
     // HW525040
-    // Re-enable this for DD2
-    // out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( IRQ_VEC_PRTY12_QME >> 32 ) ) ) );
-    // out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
+#if POWER10_DD_LEVEL == 10
     {
         uint64_t eimr = ( ( (~IRQ_VEC_PRTY12_QME) & (~BITS64(32, 24)) ) |
                           ( ( ~( (uint64_t)G_qme_record.c_all_stop_mask ) ) & ( BITS64(32, 24) ) ) );
+
+        if( G_qme_record.mma_modes_enabled != MMA_POFF_DYNAMIC )
+        {
+            eimr |= BITS64(28, 4);
+        }
+
         out64( QME_LCL_EIMR_CLR, eimr );
     }
+#else
+    out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( IRQ_VEC_PRTY12_QME >> 32 ) ) ) );
+    out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
+#endif
 }

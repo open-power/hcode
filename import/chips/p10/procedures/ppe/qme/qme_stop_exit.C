@@ -157,11 +157,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 {
     uint32_t core_done = 0;
     uint32_t core_mask = 0;
-    uint32_t cisr0     = 0;
     uint32_t cisr1     = 0;
-    uint32_t scsr0     = 0;
-    uint32_t scsr1     = 0;
-
     //===============//
 
     wrteei(0);
@@ -180,12 +176,6 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR,    core_target ), BIT32(2) );
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(2) );
     */
-    //stopclocks will take pm_active and regular wakeup away from EINR via its fencing
-    //startclocks will reassert EINR via its unfencing so phantom wakeup will be created to EISR
-    //clear them here, and pm_active will be taking care of via pm_exit below
-    //special wakeup shouldnt be affacted via fences.
-    PK_TRACE("Clear EISR on Regular Wakeup for extra edge caused by fencing/unfencing between entry and exit");
-    out32_sh(QME_LCL_EISR_CLR, ( (core_target << SHIFT64SH(43)) | (core_target << SHIFT64SH(47)) ) );
 
     if( G_qme_record.fused_core_enabled )
     {
@@ -193,13 +183,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
         {
             if ( core_target & core_mask )
             {
-                cisr0 = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
                 cisr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
-
-                scsr0 = in32( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) );
-                scsr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, core_mask ) );
-
-                PK_TRACE_INF("Cisr %x %x Scsr %x %x", cisr0, cisr1, scsr0, scsr1);
 
                 // No interrupt pending AND no special wakeup
                 if( ( ! ( cisr1 & 0xA ) ) &&
@@ -234,6 +218,14 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
     out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, core_target ), SSH_EXIT_COMPLETE );
+
+    // HW527893
+    //stopclocks will take pm_active and regular wakeup away from EINR via its fencing
+    //startclocks will reassert EINR via its unfencing so phantom wakeup will be created to EISR
+    //clear them here, and pm_active will be taking care of via pm_exit below
+    //special wakeup shouldnt be affacted via fences.
+    PK_TRACE("Clear EISR on Regular Wakeup for extra edge caused by fencing/unfencing between entry and exit");
+    out32_sh(QME_LCL_EISR_CLR, ( (core_target << SHIFT64SH(43)) | (core_target << SHIFT64SH(47)) ) );
 
     PK_TRACE("Drop halt STOP override disable via PCR_SCSR[21]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(21) );
@@ -355,6 +347,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_SKEWADJUST )
 
+        wrteei(0);
         p10_hcd_core_startgrid(core_target);
 
         //===============//
@@ -363,12 +356,18 @@ qme_stop_exit()
 
         p10_hcd_core_startclocks(core_target);
 
+        if( G_qme_record.mma_modes_enabled != MMA_POFF_DYNAMIC )
+        {
+            G_qme_record.c_mma_available |= G_qme_record.c_stop2_exit_targets;
+        }
+
+        wrteei(1);
+
         //===============//
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_ENABLE_SHADOWS )
 
         p10_hcd_core_shadows_enable(core_target);
-        p10_hcd_core_timefac_to_pc(core_target);
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_CLOCKED )
 
@@ -376,9 +375,11 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_express, SX_CORE_HANDOFF_PC )
 
-        qme_stop_report_pls_srr1(G_qme_record.c_stop2_exit_express);
+        p10_hcd_core_timefac_to_pc(core_target);
 
         //===============//
+
+        qme_stop_report_pls_srr1(G_qme_record.c_stop2_exit_express);
 
         qme_stop_handoff_pc(G_qme_record.c_stop2_exit_express,
                             G_qme_record.c_special_wakeup_exit_pending);
@@ -403,8 +404,58 @@ qme_stop_exit()
         core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
                       static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop11_exit_targets));
 
+        //===============//
 
-        PK_TRACE_INF("WAKE11: Waking up Cores in STOP11[%x]", G_qme_record.c_stop11_exit_targets);
+        // IF QMCR.MIXED_LPAR_MODE_DISABLE == 0
+        if(! ( in32_sh(QME_LCL_QMCR) & BIT64SH(36) ) )
+        {
+            // Read QME Scratch B[20:23] and mask for core X
+            // In fused core mode, ME Hcode will only key off of the even core bits (20, 22)
+            // to manage the respective odd core too.
+            G_qme_record.c_lpar_mode_enabled = ( in32(QME_LCL_SCRB) & BITS32(20, 4) ) >> SHIFT32(23);
+
+            PK_TRACE_INF("WAKE11: Waking up Cores in LPAR mode[%x] under fused core mode[%x]",
+                         G_qme_record.c_lpar_mode_enabled,
+                         G_qme_record.fused_core_enabled);
+
+            uint32_t fuse_mask = 0;
+
+            // Write value from masked QME Scratch B[20:23] to SCSR[31] for Core X (if fused, Core X+1 too)
+            // this establishes the LPAR mode wire to the core(s) and caches(s)
+            for( uint32_t core_mask = 8; core_mask; core_mask = core_mask >> 1 )
+            {
+                if( core_mask & G_qme_record.c_lpar_mode_enabled & G_qme_record.c_stop11_exit_targets )
+                {
+                    if( G_qme_record.fused_core_enabled && (core_mask & 0xA) )
+                    {
+                        fuse_mask = core_mask | (core_mask >> 1);
+                        core_mask = core_mask >> 1;
+                        PK_TRACE_INF("fused: Set SCSR[31] Signle_Lpar_mode on core_mask[%x]", core_mask);
+                        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, fuse_mask ), BIT32(31) );
+                    }
+                    else
+                    {
+                        PK_TRACE_INF("Set SCSR[31] Signle_Lpar_mode on core_mask[%x]", core_mask);
+                        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_mask ), BIT32(31) );
+                    }
+                }
+                else if( core_mask & G_qme_record.c_stop11_exit_targets )
+                {
+                    if( G_qme_record.fused_core_enabled && (core_mask & 0xA) )
+                    {
+                        fuse_mask = core_mask | (core_mask >> 1);
+                        core_mask = core_mask >> 1;
+                        PK_TRACE_INF("Fused: Clear SCSR[31] Signle_Lpar_mode on core_mask[%x]", core_mask);
+                        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, fuse_mask ), BIT32(31) );
+                    }
+                    else
+                    {
+                        PK_TRACE_INF("Clear SCSR[31] Signle_Lpar_mode on core_mask[%x]", core_mask);
+                        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_mask ), BIT32(31) );
+                    }
+                }
+            }
+        }
 
         //===============//
 
@@ -419,6 +470,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_RESET )
 
+        wrteei(0);
         p10_hcd_cache_reset(core_target);
 
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCANFLUSH_ENABLE )
@@ -493,6 +545,7 @@ qme_stop_exit()
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_STARTCLOCKS )
 
         p10_hcd_cache_startclocks(core_target);
+        wrteei(1);
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_CLOCKED )
 
@@ -531,7 +584,7 @@ qme_stop_exit()
                     if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
                     {
                         PK_TRACE_DBG("ERROR: BCE Scom Restore Copy Failed. HALT QME!");
-                        IOTA_PANIC(QME_STOP_BLOCK_COPY_SCOM_FAILED);
+                        QME_PANIC_HANDLER(QME_STOP_BLOCK_COPY_SCOM_FAILED);
                     }
 
                     MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
@@ -576,6 +629,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_RESET )
 
+        wrteei(0);
         p10_hcd_core_reset(core_target);
 
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCANFLUSH_ENABLE )
@@ -648,6 +702,8 @@ qme_stop_exit()
             return;
         }
 
+        wrteei(1);
+
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_SCANED )
         //rest continue to stop2 exit
 
@@ -663,8 +719,7 @@ qme_stop_exit()
         // as they will have their own attribute container at local.
         // Note chip target scope at qme platform is not really a chip scope,
         // as this chip would only have one qme, which is the only local one.
-        fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP> l_chip;
-        FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_QME_STATE_LOSS_CORES, l_chip, G_qme_record.c_stop5_exit_targets));
+        FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_QME_STATE_LOSS_CORES, chip_target, G_qme_record.c_stop5_exit_targets));
 
         G_qme_record.c_stop5_reached &= (~G_qme_record.c_stop5_exit_targets);
         G_qme_record.c_stop5_exit_targets = 0;
@@ -683,6 +738,7 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_SKEWADJUST )
 
+        wrteei(0);
         p10_hcd_core_startgrid(core_target);
 
         //===============//
@@ -690,6 +746,13 @@ qme_stop_exit()
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_STARTCLOCKS )
 
         p10_hcd_core_startclocks(core_target);
+
+        if( G_qme_record.mma_modes_enabled != MMA_POFF_DYNAMIC )
+        {
+            G_qme_record.c_mma_available |= G_qme_record.c_stop2_exit_targets;
+        }
+
+        wrteei(1);
 
         //===============//
 
@@ -716,6 +779,24 @@ qme_stop_exit()
         }
 
         //===============//
+
+        //In order to allow for cores to special wake-ups in the presence of a system xstop
+        //  Upon a STOP 11 Exit, if EINR.SYSTEM_CHECKSTOP is assert,
+        //  skip SCOM restore, skip SELF restore
+        //  set QME LFIR[35](spare) as "STOP 11 special wake-up in xstop"
+        //  set special wakeup done
+        if( in32( QME_LCL_EINR ) & BIT32(2) )
+        {
+            G_qme_record.hcode_func_enabled &= ~QME_HWP_SCOM_CUST_ENABLE;
+            G_qme_record.hcode_func_enabled &= ~QME_SELF_RESTORE_ENABLE;
+
+            if (!G_IsSimics)
+            {
+                out64(QME_LCL_LFIR_OR, BIT64(35)); //has to be 64B with LFIR
+            }
+
+            G_qme_record.c_special_wakeup_exit_pending = 0xF;
+        }
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOM_CUSTOMIZE )
 
@@ -804,14 +885,14 @@ qme_stop_exit()
 
         //===============//
 
+        MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_HANDOFF_PC )
+
         // HW534619 DD1 workaround move to after self restore
         p10_hcd_core_timefac_to_pc(core_target);
 
-        MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_HANDOFF_PC )
+        //===============//
 
         qme_stop_report_pls_srr1(G_qme_record.c_stop2_exit_targets);
-
-        //===============//
 
         qme_stop_handoff_pc(G_qme_record.c_stop2_exit_targets,
                             G_qme_record.c_special_wakeup_exit_pending);

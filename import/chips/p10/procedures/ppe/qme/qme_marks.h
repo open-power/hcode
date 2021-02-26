@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -76,8 +76,12 @@ enum QME_SE_MARKS
     SE_CACHE_STOPCLOCKS            = 0x500      ,
     SE_CACHE_STOPGRID              = 0x510      ,
     SE_CACHE_POWEROFF              = 0x520      ,
-    SE_STOP11_DONE                 = 0x530
+    SE_STOP11_DONE                 = 0x530      ,
+    SE_MMA_STOPCLOCKS              = 0x540      ,
+    SE_MMA_POWEROFF                = 0x550      ,
+    SE_MMA_STOPPED                 = 0x5e0
 };
+
 
 //----------------------
 
@@ -85,60 +89,40 @@ enum QME_SE_MARKS
 
 const std::vector<QME_SE_MARKS> MARKS =
 {
-//M2B_START_SE
-    IRQ_PM_STATE_ACTIVE_FAST_EVENT, //M2B_BRANCH_ONLY
-    //SE_L2_PURGE_HBUS_DIS,         stop2/3
+    IRQ_PM_STATE_ACTIVE_FAST_EVENT,
     IRQ_PM_STATE_ACTIVE_SLOW_EVENT,
     SE_L2_PURGE_HBUS_DIS,
-    //SE_L2_PURGE_ABORT,             wakeup_pending
-    //SE_L2_TLBIE_QUIESCE,           l2_purge_done_hbus_disabled
-    SE_L2_PURGE_CATCHUP,             //M2B_BRANCH_ONLY
-    //SE_L2_TLBIE_QUIESCE_CATCHUP,   catchup_detected
+    SE_L2_PURGE_CATCHUP,
     SE_L2_PURGE_ABORT,
-    SE_L2_PURGE_ABORT_DONE,          //M2B_BRANCH_ONLY
-    //SX_CORE_HANDOFF_PC,            wakeup_stop0
-    SE_L2_TLBIE_QUIESCE,             //M2B_BRANCH_ONLY
-    //SE_NCU_PURGE,                  no catchup path
+    SE_L2_PURGE_ABORT_DONE,
+    SE_L2_TLBIE_QUIESCE,
     SE_L2_TLBIE_QUIESCE_CATCHUP,
-    SE_NCU_PURGE,                    //M2B_BRANCH_ONLY
-    //SE_CORE_DISABLE_SHADOWS,       ncu_purge_done
-    //SE_NCU_PURGE_ABORT,            wakeup_pending
+    SE_NCU_PURGE,
     SE_NCU_PURGE_ABORT,
-    SE_NCU_PURGE_ABORT_DONE,         //M2B_BRANCH_ONLY
-    //SX_CORE_HANDOFF_PC,            wakeup_stop0
+    SE_NCU_PURGE_ABORT_DONE,
     SE_CORE_DISABLE_SHADOWS,
     SE_CORE_STOPCLOCKS,
     SE_CORE_STOPGRID,
     SE_STOP2_DONE,
-    //IRQ_REGULAR_WAKEUP_FAST_EVENT, wakeup_detected
-    //IRQ_SPECIAL_WAKEUP_RISE_EVENT, wakeup_detected
-    //SE_IS0_BEGIN,                  abort_detecting
-    SE_STOP3OR5_CATCHUP,             //M2B_BRANCH_ONLY
-    //SE_L2_PURGE_HBUS_DIS,          catchup_detected
+    SE_STOP3OR5_CATCHUP,
     SE_IS0_BEGIN,
-    //IRQ_REGULAR_WAKEUP_FAST_EVENT, abort_detected
-    //IRQ_SPECIAL_WAKEUP_RISE_EVENT, abort_detected
     SE_IS0_END,
-    //SE_CORE_POWEROFF,              stop5_after_stop2
     SE_CORE_VMIN_ENABLE,
-    SE_STOP3_DONE,                   //M2B_BRANCH_ONLY
-    //IRQ_REGULAR_WAKEUP_FAST_EVENT, wakeup_detected
-    //IRQ_SPECIAL_WAKEUP_RISE_EVENT, wakeup_detected
+    SE_STOP3_DONE,
     SE_CORE_POWEROFF,
     SE_STOP5_DONE,
-    //IRQ_REGULAR_WAKEUP_FAST_EVENT, wakeup_detected
-    //IRQ_SPECIAL_WAKEUP_RISE_EVENT, wakeup_detected
     SE_CHTM_PURGE,
     SE_L3_PURGE,
     SE_POWERBUS_PURGE,
     SE_CACHE_STOPCLOCKS,
     SE_CACHE_STOPGRID,
     SE_CACHE_POWEROFF,
-    SE_STOP11_DONE                   //M2B_BRANCH_ONLY
-    //IRQ_REGULAR_WAKEUP_FAST_EVENT, wakeup_detected
-    //IRQ_SPECIAL_WAKEUP_RISE_EVENT, wakeup_detected
-//M2B_END_SE
+    SE_STOP11_DONE,
+    SE_MMA_STOPCLOCKS,
+    SE_MMA_POWEROFF,
+    SE_MMA_STOPPED
 };
+
 
 #endif
 
@@ -153,36 +137,38 @@ const std::map<QME_SE_MARKS, std::string> mMARKS = boost::assign::map_list_of
 std::map<uint32_t, std::string> g_QME_SE_MARKS_MAP =
 {
 #endif
-
-        FOOBAR (IRQ_PM_STATE_ACTIVE_FAST_EVENT, "IRQ_PM_STATE_ACTIVE_FAST_EVENT")
-        FOOBAR (IRQ_PM_STATE_ACTIVE_SLOW_EVENT, "IRQ_PM_STATE_ACTIVE_SLOW_EVENT")
-        FOOBAR (SE_L2_PURGE_HBUS_DIS          , "SE_L2_PURGE_HBUS_DIS          ")
-        FOOBAR (SE_L2_PURGE_CATCHUP           , "SE_L2_PURGE_CATCHUP           ")
-        FOOBAR (SE_L2_PURGE_ABORT             , "SE_L2_PURGE_ABORT             ")
-        FOOBAR (SE_L2_PURGE_ABORT_DONE        , "SE_L2_PURGE_ABORT_DONE        ")
-        FOOBAR (SE_L2_TLBIE_QUIESCE           , "SE_L2_TLBIE_QUIESCE           ")
-        FOOBAR (SE_L2_TLBIE_QUIESCE_CATCHUP   , "SE_L2_TLBIE_QUIESCE_CATCHUP   ")
-        FOOBAR (SE_NCU_PURGE                  , "SE_NCU_PURGE                  ")
-        FOOBAR (SE_NCU_PURGE_ABORT            , "SE_NCU_PURGE_ABORT            ")
-        FOOBAR (SE_NCU_PURGE_ABORT_DONE       , "SE_NCU_PURGE_ABORT_DONE       ")
-        FOOBAR (SE_CORE_DISABLE_SHADOWS       , "SE_CORE_DISABLE_SHADOWS       ")
-        FOOBAR (SE_CORE_STOPCLOCKS            , "SE_CORE_STOPCLOCKS            ")
-        FOOBAR (SE_CORE_STOPGRID              , "SE_CORE_STOPGRID              ")
-        FOOBAR (SE_STOP2_DONE                 , "SE_STOP2_DONE                 ")
-        FOOBAR (SE_STOP3OR5_CATCHUP           , "SE_STOP3OR5_CATCHUP           ")
-        FOOBAR (SE_IS0_BEGIN                  , "SE_IS0_BEGIN                  ")
-        FOOBAR (SE_IS0_END                    , "SE_IS0_END                    ")
-        FOOBAR (SE_CORE_VMIN_ENABLE           , "SE_CORE_VMIN_ENABLE           ")
-        FOOBAR (SE_STOP3_DONE                 , "SE_STOP3_DONE                 ")
-        FOOBAR (SE_CORE_POWEROFF              , "SE_CORE_POWEROFF              ")
-        FOOBAR (SE_STOP5_DONE                 , "SE_STOP5_DONE                 ")
-        FOOBAR (SE_CHTM_PURGE                 , "SE_CHTM_PURGE                 ")
-        FOOBAR (SE_L3_PURGE                   , "SE_L3_PURGE                   ")
-        FOOBAR (SE_POWERBUS_PURGE             , "SE_POWERBUS_PURGE             ")
-        FOOBAR (SE_CACHE_STOPCLOCKS           , "SE_CACHE_STOPCLOCKS           ")
-        FOOBAR (SE_CACHE_STOPGRID             , "SE_CACHE_STOPGRID             ")
-        FOOBAR (SE_CACHE_POWEROFF             , "SE_CACHE_POWEROFF             ")
-        FOOBAR (SE_STOP11_DONE                , "SE_STOP11_DONE                ")
+        FOOBAR(IRQ_PM_STATE_ACTIVE_FAST_EVENT, "IRQ_PM_STATE_ACTIVE_FAST_EVENT")
+        FOOBAR(IRQ_PM_STATE_ACTIVE_SLOW_EVENT, "IRQ_PM_STATE_ACTIVE_SLOW_EVENT")
+        FOOBAR(SE_L2_PURGE_HBUS_DIS          , "SE_L2_PURGE_HBUS_DIS          ")
+        FOOBAR(SE_L2_PURGE_CATCHUP           , "SE_L2_PURGE_CATCHUP           ")
+        FOOBAR(SE_L2_PURGE_ABORT             , "SE_L2_PURGE_ABORT             ")
+        FOOBAR(SE_L2_PURGE_ABORT_DONE        , "SE_L2_PURGE_ABORT_DONE        ")
+        FOOBAR(SE_L2_TLBIE_QUIESCE           , "SE_L2_TLBIE_QUIESCE           ")
+        FOOBAR(SE_L2_TLBIE_QUIESCE_CATCHUP   , "SE_L2_TLBIE_QUIESCE_CATCHUP   ")
+        FOOBAR(SE_NCU_PURGE                  , "SE_NCU_PURGE                  ")
+        FOOBAR(SE_NCU_PURGE_ABORT            , "SE_NCU_PURGE_ABORT            ")
+        FOOBAR(SE_NCU_PURGE_ABORT_DONE       , "SE_NCU_PURGE_ABORT_DONE       ")
+        FOOBAR(SE_CORE_DISABLE_SHADOWS       , "SE_CORE_DISABLE_SHADOWS       ")
+        FOOBAR(SE_CORE_STOPCLOCKS            , "SE_CORE_STOPCLOCKS            ")
+        FOOBAR(SE_CORE_STOPGRID              , "SE_CORE_STOPGRID              ")
+        FOOBAR(SE_STOP2_DONE                 , "SE_STOP2_DONE                 ")
+        FOOBAR(SE_STOP3OR5_CATCHUP           , "SE_STOP3OR5_CATCHUP           ")
+        FOOBAR(SE_IS0_BEGIN                  , "SE_IS0_BEGIN                  ")
+        FOOBAR(SE_IS0_END                    , "SE_IS0_END                    ")
+        FOOBAR(SE_CORE_VMIN_ENABLE           , "SE_CORE_VMIN_ENABLE           ")
+        FOOBAR(SE_STOP3_DONE                 , "SE_STOP3_DONE                 ")
+        FOOBAR(SE_CORE_POWEROFF              , "SE_CORE_POWEROFF              ")
+        FOOBAR(SE_STOP5_DONE                 , "SE_STOP5_DONE                 ")
+        FOOBAR(SE_CHTM_PURGE                 , "SE_CHTM_PURGE                 ")
+        FOOBAR(SE_L3_PURGE                   , "SE_L3_PURGE                   ")
+        FOOBAR(SE_POWERBUS_PURGE             , "SE_POWERBUS_PURGE             ")
+        FOOBAR(SE_CACHE_STOPCLOCKS           , "SE_CACHE_STOPCLOCKS           ")
+        FOOBAR(SE_CACHE_STOPGRID             , "SE_CACHE_STOPGRID             ")
+        FOOBAR(SE_CACHE_POWEROFF             , "SE_CACHE_POWEROFF             ")
+        FOOBAR(SE_STOP11_DONE                , "SE_STOP11_DONE                ")
+        FOOBAR(SE_MMA_STOPCLOCKS             , "SE_MMA_STOPCLOCKS             ")
+        FOOBAR(SE_MMA_POWEROFF               , "SE_MMA_POWEROFF               ")
+        FOOBAR(SE_MMA_STOPPED                , "SE_MMA_STOPPED                ")
 
 #ifdef EPM_SIM_ENV
 //map
@@ -250,7 +236,11 @@ enum QME_SX_MARKS
     SX_CORE_SRESET_THREADS         = 0xae0      ,
     SX_CORE_RESTORED               = 0xaf0      ,
     SX_CORE_HANDOFF_PC             = 0xdf0      ,
-    SX_CORE_AWAKE                  = 0x1c00
+    SX_CORE_AWAKE                  = 0x1c00     ,
+    SX_MMA_POWERON                 = 0x1c10     ,
+    SX_MMA_SCANINIT                = 0x1c20     ,
+    SX_MMA_STARTCLOCKS             = 0x1c30     ,
+    SX_MMA_AVAILABLE               = 0x1c40
 };
 
 //----------------------
@@ -259,18 +249,10 @@ enum QME_SX_MARKS
 
 const std::vector<QME_SX_MARKS> MARKS =
 {
-//M2B_START_SX
-    IRQ_REGULAR_WAKEUP_FAST_EVENT,    //M2B_BRANCH_ONLY
-    //SX_CORE_VMIN_DISABLE,           stop3_exit
-    //SX_CORE_SKEWADJUST,             stop2_exit
-    IRQ_REGULAR_WAKEUP_SLOW_EVENT,    //M2B_BRANCH_ONLY
-    //SX_CACHE_POWERON,               stop11_exit
+    IRQ_REGULAR_WAKEUP_FAST_EVENT,
+    IRQ_REGULAR_WAKEUP_SLOW_EVENT,
     IRQ_SPECIAL_WAKEUP_RISE_EVENT,
-    //SX_CACHE_POWERON,               stop11_exit
-    //SX_CORE_VMIN_DISABLE,           stop3_exit
-    //SX_CORE_SKEWADJUST,             stop2_exit
-    IRQ_SPECIAL_WAKEUP_FALL_EVENT,    //M2B_BRANCH_ONLY
-    //IRQ_PM_STATE_ACTIVE_FAST_EVENT, reentry_after_spwu_drop
+    IRQ_SPECIAL_WAKEUP_FALL_EVENT,
     SX_CACHE_POWERON,
     SX_CACHE_RESET,
     SX_CACHE_POWERED,
@@ -299,7 +281,6 @@ const std::vector<QME_SX_MARKS> MARKS =
     SX_CORE_STARTCLOCKS,
     SX_CORE_ENABLE_SHADOWS,
     SX_CORE_CLOCKED,
-    //SX_CORE_HANDOFF_PC,             stop2/3_exit
     SX_CORE_SCOMINIT,
     SX_CORE_SCOM_CUSTOMIZE,
     SX_CORE_SCOMED,
@@ -307,10 +288,11 @@ const std::vector<QME_SX_MARKS> MARKS =
     SX_CORE_SRESET_THREADS,
     SX_CORE_RESTORED,
     SX_CORE_HANDOFF_PC,
-    SX_CORE_AWAKE                     //M2B_BRANCH_ONLY
-    //IRQ_PM_STATE_ACTIVE_FAST_EVENT, another entry
-    //IRQ_PM_STATE_ACTIVE_SLOW_EVENT, another entry
-//M2B_END_SX
+    SX_CORE_AWAKE,
+    SX_MMA_POWERON,
+    SX_MMA_SCANINIT,
+    SX_MMA_STARTCLOCKS,
+    SX_MMA_AVAILABLE
 };
 
 #endif
@@ -326,47 +308,50 @@ const std::map<QME_SX_MARKS, std::string> mMARKS = boost::assign::map_list_of
 std::map<uint32_t, std::string> g_QME_SX_MARKS_MAP =
 {
 #endif
-
-        FOOBAR (IRQ_REGULAR_WAKEUP_FAST_EVENT , "IRQ_REGULAR_WAKEUP_FAST_EVENT ")
-        FOOBAR (IRQ_REGULAR_WAKEUP_SLOW_EVENT , "IRQ_REGULAR_WAKEUP_SLOW_EVENT ")
-        FOOBAR (IRQ_SPECIAL_WAKEUP_RISE_EVENT , "IRQ_SPECIAL_WAKEUP_RISE_EVENT ")
-        FOOBAR (IRQ_SPECIAL_WAKEUP_FALL_EVENT , "IRQ_SPECIAL_WAKEUP_FALL_EVENT ")
-        FOOBAR (SX_CACHE_POWERON              , "SX_CACHE_POWERON              ")
-        FOOBAR (SX_CACHE_RESET                , "SX_CACHE_RESET                ")
-        FOOBAR (SX_CACHE_POWERED              , "SX_CACHE_POWERED              ")
-        FOOBAR (SX_CACHE_GPTR_TIME_INITF      , "SX_CACHE_GPTR_TIME_INITF      ")
-        FOOBAR (SX_CACHE_REPAIR_INITF         , "SX_CACHE_REPAIR_INITF         ")
-        FOOBAR (SX_CACHE_ARRAYINIT            , "SX_CACHE_ARRAYINIT            ")
-        FOOBAR (SX_CACHE_INITF                , "SX_CACHE_INITF                ")
-        FOOBAR (SX_CACHE_SCANED               , "SX_CACHE_SCANED               ")
-        FOOBAR (SX_CACHE_SKEWADJUST           , "SX_CACHE_SKEWADJUST           ")
-        FOOBAR (SX_CACHE_STARTCLOCKS          , "SX_CACHE_STARTCLOCKS          ")
-        FOOBAR (SX_CACHE_CLOCKED              , "SX_CACHE_CLOCKED              ")
-        FOOBAR (SX_CACHE_SCOMINIT             , "SX_CACHE_SCOMINIT             ")
-        FOOBAR (SX_CACHE_SCOM_CUSTOMIZE       , "SX_CACHE_SCOM_CUSTOMIZE       ")
-        FOOBAR (SX_CACHE_SCOMED               , "SX_CACHE_SCOMED               ")
-        FOOBAR (SX_CORE_POWERON               , "SX_CORE_POWERON               ")
-        FOOBAR (SX_CORE_RESET                 , "SX_CORE_RESET                 ")
-        FOOBAR (SX_CORE_POWERED               , "SX_CORE_POWERED               ")
-        FOOBAR (SX_CORE_GPTR_TIME_INITF       , "SX_CORE_GPTR_TIME_INITF       ")
-        FOOBAR (SX_CORE_REPAIR_INITF          , "SX_CORE_REPAIR_INITF          ")
-        FOOBAR (SX_CORE_ARRAYINIT             , "SX_CORE_ARRAYINIT             ")
-        FOOBAR (SX_CORE_INITF                 , "SX_CORE_INITF                 ")
-        FOOBAR (SX_CORE_SCANED                , "SX_CORE_SCANED                ")
-        FOOBAR (SX_CORE_VMIN_DISABLE          , "SX_CORE_VMIN_DISABLE          ")
-        FOOBAR (SX_CORE_VOLT_RESTORED         , "SX_CORE_VOLT_RESTORED         ")
-        FOOBAR (SX_CORE_SKEWADJUST            , "SX_CORE_SKEWADJUST            ")
-        FOOBAR (SX_CORE_STARTCLOCKS           , "SX_CORE_STARTCLOCKS           ")
-        FOOBAR (SX_CORE_ENABLE_SHADOWS        , "SX_CORE_ENABLE_SHADOWS        ")
-        FOOBAR (SX_CORE_CLOCKED               , "SX_CORE_CLOCKED               ")
-        FOOBAR (SX_CORE_SCOMINIT              , "SX_CORE_SCOMINIT              ")
-        FOOBAR (SX_CORE_SCOM_CUSTOMIZE        , "SX_CORE_SCOM_CUSTOMIZE        ")
-        FOOBAR (SX_CORE_SCOMED                , "SX_CORE_SCOMED                ")
-        FOOBAR (SX_CORE_SELF_RESTORE          , "SX_CORE_SELF_RESTORE          ")
-        FOOBAR (SX_CORE_SRESET_THREADS        , "SX_CORE_SRESET_THREADS        ")
-        FOOBAR (SX_CORE_RESTORED              , "SX_CORE_RESTORED              ")
-        FOOBAR (SX_CORE_HANDOFF_PC            , "SX_CORE_HANDOFF_PC            ")
-        FOOBAR (SX_CORE_AWAKE                 , "SX_CORE_AWAKE                 ")
+        FOOBAR(IRQ_REGULAR_WAKEUP_FAST_EVENT , "IRQ_REGULAR_WAKEUP_FAST_EVENT ")
+        FOOBAR(IRQ_REGULAR_WAKEUP_SLOW_EVENT , "IRQ_REGULAR_WAKEUP_SLOW_EVENT ")
+        FOOBAR(IRQ_SPECIAL_WAKEUP_RISE_EVENT , "IRQ_SPECIAL_WAKEUP_RISE_EVENT ")
+        FOOBAR(IRQ_SPECIAL_WAKEUP_FALL_EVENT , "IRQ_SPECIAL_WAKEUP_FALL_EVENT ")
+        FOOBAR(SX_CACHE_POWERON              , "SX_CACHE_POWERON              ")
+        FOOBAR(SX_CACHE_RESET                , "SX_CACHE_RESET                ")
+        FOOBAR(SX_CACHE_POWERED              , "SX_CACHE_POWERED              ")
+        FOOBAR(SX_CACHE_GPTR_TIME_INITF      , "SX_CACHE_GPTR_TIME_INITF      ")
+        FOOBAR(SX_CACHE_REPAIR_INITF         , "SX_CACHE_REPAIR_INITF         ")
+        FOOBAR(SX_CACHE_ARRAYINIT            , "SX_CACHE_ARRAYINIT            ")
+        FOOBAR(SX_CACHE_INITF                , "SX_CACHE_INITF                ")
+        FOOBAR(SX_CACHE_SCANED               , "SX_CACHE_SCANED               ")
+        FOOBAR(SX_CACHE_SKEWADJUST           , "SX_CACHE_SKEWADJUST           ")
+        FOOBAR(SX_CACHE_STARTCLOCKS          , "SX_CACHE_STARTCLOCKS          ")
+        FOOBAR(SX_CACHE_CLOCKED              , "SX_CACHE_CLOCKED              ")
+        FOOBAR(SX_CACHE_SCOMINIT             , "SX_CACHE_SCOMINIT             ")
+        FOOBAR(SX_CACHE_SCOM_CUSTOMIZE       , "SX_CACHE_SCOM_CUSTOMIZE       ")
+        FOOBAR(SX_CACHE_SCOMED               , "SX_CACHE_SCOMED               ")
+        FOOBAR(SX_CORE_POWERON               , "SX_CORE_POWERON               ")
+        FOOBAR(SX_CORE_RESET                 , "SX_CORE_RESET                 ")
+        FOOBAR(SX_CORE_POWERED               , "SX_CORE_POWERED               ")
+        FOOBAR(SX_CORE_GPTR_TIME_INITF       , "SX_CORE_GPTR_TIME_INITF       ")
+        FOOBAR(SX_CORE_REPAIR_INITF          , "SX_CORE_REPAIR_INITF          ")
+        FOOBAR(SX_CORE_ARRAYINIT             , "SX_CORE_ARRAYINIT             ")
+        FOOBAR(SX_CORE_INITF                 , "SX_CORE_INITF                 ")
+        FOOBAR(SX_CORE_SCANED                , "SX_CORE_SCANED                ")
+        FOOBAR(SX_CORE_VMIN_DISABLE          , "SX_CORE_VMIN_DISABLE          ")
+        FOOBAR(SX_CORE_VOLT_RESTORED         , "SX_CORE_VOLT_RESTORED         ")
+        FOOBAR(SX_CORE_SKEWADJUST            , "SX_CORE_SKEWADJUST            ")
+        FOOBAR(SX_CORE_STARTCLOCKS           , "SX_CORE_STARTCLOCKS           ")
+        FOOBAR(SX_CORE_ENABLE_SHADOWS        , "SX_CORE_ENABLE_SHADOWS        ")
+        FOOBAR(SX_CORE_CLOCKED               , "SX_CORE_CLOCKED               ")
+        FOOBAR(SX_CORE_SCOMINIT              , "SX_CORE_SCOMINIT              ")
+        FOOBAR(SX_CORE_SCOM_CUSTOMIZE        , "SX_CORE_SCOM_CUSTOMIZE        ")
+        FOOBAR(SX_CORE_SCOMED                , "SX_CORE_SCOMED                ")
+        FOOBAR(SX_CORE_SELF_RESTORE          , "SX_CORE_SELF_RESTORE          ")
+        FOOBAR(SX_CORE_SRESET_THREADS        , "SX_CORE_SRESET_THREADS        ")
+        FOOBAR(SX_CORE_RESTORED              , "SX_CORE_RESTORED              ")
+        FOOBAR(SX_CORE_HANDOFF_PC            , "SX_CORE_HANDOFF_PC            ")
+        FOOBAR(SX_CORE_AWAKE                 , "SX_CORE_AWAKE                 ")
+        FOOBAR(SX_MMA_POWERON                , "SX_MMA_POWERON                ")
+        FOOBAR(SX_MMA_SCANINIT               , "SX_MMA_SCANINIT               ")
+        FOOBAR(SX_MMA_STARTCLOCKS            , "SX_MMA_STARTCLOCKS            ")
+        FOOBAR(SX_MMA_AVAILABLE              , "SX_MMA_AVAILABLE              ")
 
 #ifdef EPM_SIM_ENV
 //boost map
@@ -414,5 +399,7 @@ const std::map<GLOBAL_MARKS, std::string> mMARKS = boost::assign::map_list_of
 
 }
 #endif
+
+
 
 #endif // __QME_MARKS_H__

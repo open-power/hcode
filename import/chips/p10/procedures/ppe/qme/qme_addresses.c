@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2020                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -35,10 +35,20 @@ uint32_t SCRATCH0                       = 0x20020486;
 uint32_t SCRATCH1                       = 0x20020487;
 uint32_t SPATTN_MASK                    = 0x2002049A;
 uint32_t EC_PC_TFX_SM                   = 0x2002049b;
-uint32_t PMC_UPDATE                     = 0x20028414;
+uint32_t PMC_UPDATE                     = 0x20020414;
+uint32_t LOCAL_XSTOP                    = 0x20040003;
+
 // QME Local Addresses:
 
 // QME Per-Quad
+
+uint32_t QME_LCL_LFIR                   = 0xc0000000;
+uint32_t QME_LCL_LFIR_AND               = 0xc0000010;
+uint32_t QME_LCL_LFIR_OR                = 0xc0000020;
+
+uint32_t QME_LCL_LFIRMASK               = 0xC0000040;
+uint32_t QME_LCL_LFIRMASK_AND           = 0xC0000050;
+uint32_t QME_LCL_LFIRMASK_OR            = 0xC0000060;
 
 uint32_t QME_LCL_PIG                    = 0xC0000300;
 uint32_t QME_LCL_BCEBAR0                = 0xC0000600;
@@ -103,6 +113,9 @@ uint32_t QME_LCL_RCSCR_OR               = 0xC0001860;
 uint32_t QME_LCL_RCSCR_CLR              = 0xC0001870;
 
 // QME Per-Core
+uint32_t QME_LCL_SCR                    = 0xC00080C0;
+uint32_t QME_LCL_SCR_OR                 = 0xC00080E0;
+uint32_t QME_LCL_SCR_CLEAR              = 0xC00080F0;
 
 uint32_t QME_SSH_SRC                    = 0xC00081C0;
 uint32_t QME_SPWU_OTR                   = 0xC0008300;
@@ -119,6 +132,6 @@ uint32_t QME_TFCSR                      = 0xC0008800;
 uint32_t QME_TFCSR_WO_CLEAR             = 0xC0008830;
 uint32_t QME_TFCSR_WO_OR                = 0xC0008820;
 
-uint32_t QME_LCL_SCR                    = 0xC00880C0;
-uint32_t QME_LCL_SCR_OR                 = 0xC00880E0;
-uint32_t QME_LCL_SCR_CLEAR              = 0xC00880F0;
+uint32_t CPMS_MMAR                      = 0xC000E380;
+uint32_t CPMS_MMAR_WO_CLEAR             = 0xC000E3B0;
+uint32_t CPMS_MMAR_WO_OR                = 0xC000E3A0;

@@ -195,6 +195,10 @@ qme_stop2_abort_cleanup(uint32_t abort_targets)
 void
 qme_stop_entry()
 {
+    uint32_t core_mask  = 0;
+    uint32_t xstop_mask = 0;
+    data64_t scom_data  = {0};
+
     G_qme_record.c_stop3or5_catchup_targets = 0;
     G_qme_record.c_stop3or5_abort_targets   = 0;
 
@@ -303,16 +307,60 @@ qme_stop_entry()
         p10_hcd_core_timefac_from_pc(core_target);
         p10_hcd_core_shadows_disable(core_target);
 
+        //===============//
+
+        for( core_mask = 8, xstop_mask = BIT32(5);
+             core_mask;
+             core_mask = core_mask >> 1, xstop_mask = xstop_mask >> 1)
+        {
+            if( core_mask & G_qme_record.c_stop2_enter_targets )
+            {
+                PPE_GETSCOM( LOCAL_XSTOP, scom_data.value );
+
+                if( scom_data.words.upper & xstop_mask )
+                {
+                    G_qme_record.c_xstop_clock_abort_targets |= core_mask;
+                }
+            }
+        }
+
+        //===============//
+
+        if( G_qme_record.c_xstop_clock_abort_targets )
+        {
+            PK_TRACE_INF("Local Xstop detected on Core[%x], Abort Stop Entry before stopclocks",
+                         G_qme_record.c_xstop_clock_abort_targets);
+            G_qme_record.c_stop2_enter_targets &= (~G_qme_record.c_xstop_clock_abort_targets);
+            G_qme_record.c_stop3_enter_targets &= (~G_qme_record.c_xstop_clock_abort_targets);
+            G_qme_record.c_stop5_enter_targets &= (~G_qme_record.c_xstop_clock_abort_targets);
+        }
+
+        //===============//
+
+        //If Xstop Abort occured, and all previous targets aborted, terminate current stop entry
+        if( !G_qme_record.c_stop2_enter_targets )
+        {
+            return;
+        }
+
+        //recreate target in case abort
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
+
+        //===============//
+
         // Assert STOP_GATED before Assert regional fence which will block pm_active
         out32( QME_LCL_CORE_ADDR_WR(
                    QME_SSH_SRC, G_qme_record.c_stop2_enter_targets ), SSH_ENTRY_IN_SESSION );
-
-        //===============//
 
         MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_CORE_STOPCLOCKS )
 
         core_target_or = chip_target.getMulticast<fapi2::MULTICAST_OR>(fapi2::MCGROUP_GOOD_EQ,
                          static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
+
+        wrteei(0);
+        G_qme_record.c_mma_available &= ~G_qme_record.c_stop2_enter_targets;
+        out64(QME_LCL_EIMR_CLR, ((uint64_t)G_qme_record.c_stop2_enter_targets << 32));
 
         p10_hcd_core_stopclocks(core_target_or);
 
@@ -320,11 +368,8 @@ qme_stop_entry()
 
         MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_CORE_STOPGRID )
 
-#ifndef EQ_SKEW_ADJUST_DISABLE
-
         p10_hcd_core_stopgrid(core_target);
-
-#endif
+        wrteei(1);
 
         //===============//
 
@@ -487,9 +532,45 @@ qme_stop_entry()
     {
         ///// [STOP5] /////
 
+        //===============//
+
+        for( core_mask = 8, xstop_mask = BIT32(5);
+             core_mask;
+             core_mask = core_mask >> 1, xstop_mask = xstop_mask >> 1)
+        {
+            if( core_mask & G_qme_record.c_stop5_enter_targets )
+            {
+                PPE_GETSCOM( LOCAL_XSTOP, scom_data.value );
+
+                if( scom_data.words.upper & xstop_mask )
+                {
+                    G_qme_record.c_xstop_power_abort_targets |= core_mask;
+                }
+            }
+        }
+
+        //===============//
+
+        if( G_qme_record.c_xstop_power_abort_targets )
+        {
+            PK_TRACE_INF("Local Xstop detected on Core[%x], Abort Stop Entry before poweroff",
+                         G_qme_record.c_xstop_power_abort_targets);
+            G_qme_record.c_stop5_enter_targets  &= (~G_qme_record.c_xstop_power_abort_targets);
+            G_qme_record.c_stop11_enter_targets &= (~G_qme_record.c_xstop_power_abort_targets);
+        }
+
+        //===============//
+
+        //If Xstop Abort occured, and all previous targets aborted, terminate current stop entry
+        if( !G_qme_record.c_stop5_enter_targets )
+        {
+            return;
+        }
+
         out32( QME_LCL_CORE_ADDR_WR(
                    QME_SSH_SRC, G_qme_record.c_stop5_enter_targets ), SSH_ACT_LV2_CONTINUE );
 
+        //recreate target in case abort
         core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
                       static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop5_enter_targets));
 
@@ -558,6 +639,7 @@ qme_stop_entry()
 
         MARK_TAG(G_qme_record.c_stop11_enter_targets, SE_CACHE_STOPCLOCKS)
 
+        wrteei(0);
         p10_hcd_cache_stopclocks(core_target);
 
         //===============//
@@ -565,6 +647,7 @@ qme_stop_entry()
         MARK_TAG( G_qme_record.c_stop11_enter_targets, SE_CACHE_STOPGRID )
 
         p10_hcd_cache_stopgrid(core_target);
+        wrteei(1);
 
         //===============//
 

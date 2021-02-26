@@ -68,9 +68,9 @@ qme_eval_eimr_override()
          (G_qme_record.c_pm_state_active_mask << SHIFT64SH(51)) |
          (G_qme_record.c_pm_state_active_mask << SHIFT64SH(55)));
 
-    g_eimr_override       &= ~BITS64(32, 24);
+    g_eimr_override       &= ~BITS64(28, 28);
     data64_t mask_irqs     = {0};
-    mask_irqs.words.upper  = 0;
+    mask_irqs.words.upper  = G_qme_record.c_mma_available;
     mask_irqs.words.lower  = G_qme_record.c_all_stop_mask;
     g_eimr_override |= mask_irqs.value;
 }
@@ -101,12 +101,12 @@ qme_send_pig_type_a()
 void
 qme_stop1_exit(uint32_t c_mask)
 {
-    uint32_t c_loop    = 0;
+//    uint32_t c_loop    = 0;
 //    uint32_t c_temp    = 0;
-    uint32_t cisr0     = 0;
-    uint32_t cisr1     = 0;
-    uint32_t scsr0     = 0;
-    uint32_t scsr1     = 0;
+//    uint32_t cisr0     = 0;
+//    uint32_t cisr1     = 0;
+//    uint32_t scsr0     = 0;
+//    uint32_t scsr1     = 0;
 //    uint32_t einr      = 0;
 
     // handle stop1 wakeup
@@ -138,27 +138,28 @@ qme_stop1_exit(uint32_t c_mask)
     */
 
     // if still dont have pc_interrupt_pending, ignore until real one show up
-    for( c_loop = 8; c_loop > 0; c_loop = c_loop >> 1 )
-    {
-        if ( c_mask & c_loop )
+    /*
+        for( c_loop = 8; c_loop > 0; c_loop = c_loop >> 1 )
         {
-            cisr0 = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, c_loop ) );
-            cisr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, c_loop ) );
+            if ( c_mask & c_loop )
+            {
+                cisr0 = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, c_loop ) );
+                cisr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, c_loop ) );
 
-            scsr0 = in32( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_loop ) );
-            scsr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_loop ) );
+                scsr0 = in32( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_loop ) );
+                scsr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_loop ) );
 
-            PK_TRACE_INF("IRQ Cisr %x %x Scsr %x %x", cisr0, cisr1, scsr0, scsr1);
+                PK_TRACE_INF("IRQ Cisr %x %x Scsr %x %x", cisr0, cisr1, scsr0, scsr1);
+            }
+
+            /
+                    if ( ! ( scsr1 & BIT64SH(46) ) )
+                    {
+                        c_mask &= ~core_loop;
+                    }
+            /
         }
-
-        /*
-                if ( ! ( scsr1 & BIT64SH(46) ) )
-                {
-                    c_mask &= ~core_loop;
-                }
-        */
-    }
-
+    */
     if( c_mask )
     {
         G_qme_record.c_stop1_targets &= ~c_mask;
@@ -608,7 +609,8 @@ qme_special_wakeup_rise_event()
         // Special_Wakeup_Rise/Fall
         // Regular_Wakeup_Hipri/Lopri
         // PM_State_Active_Hipri/Lopri
-        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+
+        out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
@@ -680,7 +682,7 @@ qme_regular_wakeup_fast_event()
         // Special_Wakeup_Rise/Fall
         // Regular_Wakeup_Hipri/Lopri
         // PM_State_Active_Hipri/Lopri
-        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+        out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
@@ -728,7 +730,7 @@ qme_pm_state_active_fast_event()
 
         //===============//
 
-        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+        out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
@@ -885,7 +887,7 @@ qme_parse_pm_state_active_slow()
                     // If this is the case, cannot do Power Loss State when esl is actually 0 that would be error
                     if( G_qme_record.hcode_func_enabled & QME_POWER_LOSS_ESL_CHECK_ENABLE )
                     {
-                        IOTA_PANIC(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED);
+                        QME_PANIC_HANDLER(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED);
                     }
                 }
 
@@ -961,7 +963,7 @@ qme_regular_wakeup_slow_event()
         ( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE ) )
     {
         PK_TRACE_ERR("ERROR: Attempt to Perform Stop11 when RUNN mode or Contained mode is enabled ");
-        IOTA_PANIC(QME_STOP11_RUNN_CONTAINED_MODE_ERROR);
+        QME_PANIC_HANDLER(QME_STOP11_RUNN_CONTAINED_MODE_ERROR);
     }
 
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_RGWU_SLOW);
@@ -983,7 +985,7 @@ qme_regular_wakeup_slow_event()
         qme_parse_special_wakeup_rise();
 
         // Stop11 is expected not to be aborted
-        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+        out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
@@ -1012,7 +1014,7 @@ qme_pm_state_active_slow_event()
         ( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE ) )
     {
         PK_TRACE_ERR("ERROR: Attempt to Perform Stop11 when RUNN mode or Contained mode is enabled ");
-        IOTA_PANIC(QME_STOP11_RUNN_CONTAINED_MODE_ERROR);
+        QME_PANIC_HANDLER(QME_STOP11_RUNN_CONTAINED_MODE_ERROR);
     }
 
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_STOP_SLOW);
@@ -1052,7 +1054,7 @@ qme_pm_state_active_slow_event()
         }
 
         // stop11 is expected not to be aborted
-        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+        out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
