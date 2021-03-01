@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -117,6 +117,9 @@ static const uint32_t WDF_WDFCFG_CFG_WRITE_MODE_ECC_COR_DIS = 1;
 static const uint32_t WDF_WDFCFG_CFG_WDF_SERIAL_SEQ_MODE = 2;
 static const uint32_t WDF_WDFCFG_WDFCFG_3_8_SPARE = 3;
 static const uint32_t WDF_WDFCFG_WDFCFG_3_8_SPARE_LEN = 6;
+static const uint32_t P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY = 3; // p10:20,
+static const uint32_t P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE = 4; // p10:20,
+static const uint32_t P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE_LEN = 5;
 static const uint32_t WDF_WDFCFG_CFG_OVERRUN_FORCE_SUE_ENABLE = 9;
 static const uint32_t WDF_WDFCFG_WDFCFG_10_11_SPARE = 10;
 static const uint32_t WDF_WDFCFG_WDFCFG_10_11_SPARE_LEN = 2;

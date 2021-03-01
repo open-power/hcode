@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -128,6 +128,14 @@ static const uint64_t EPS_PSC_WRITE_PROTECT_RINGS_REG = 0x08010006ull;
 static const uint32_t EPS_PSC_WRITE_PROTECT_RINGS_REG_WRITE_PROTECT_RINGS = 0;
 static const uint32_t EPS_PSC_WRITE_PROTECT_RINGS_REG_WRITE_PROTECT_RINGS_LEN = 32;
 //<< [EPS_PSC_WRITE_PROTECT_RINGS_REG]
+// pec/reg00008.H
+
+//>> [PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG3]
+static const uint64_t PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG3 = 0x0301180full;
+
+static const uint32_t PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG3_PE_TOPOLOGY_ID_REG3 = 0;
+static const uint32_t PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG3_PE_TOPOLOGY_ID_REG3_LEN = 40;
+//<< [PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG3]
 // pec/reg00008.H
 
 //>> [SCAN_CAPTUREDR_LONG]

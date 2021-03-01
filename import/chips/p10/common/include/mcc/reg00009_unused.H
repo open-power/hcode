@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -2710,6 +2710,7 @@ static inline fapi2::buffer<uint64_t>& SET_WDF_WDFCFG_WDFCFG_3_8_SPARE(fapi2::bu
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
 #endif
     return o_data.insertFromRight<WDF_WDFCFG_WDFCFG_3_8_SPARE,
@@ -2727,6 +2728,7 @@ static inline fapi2::buffer<uint64_t>& SET_WDF_WDFCFG_WDFCFG_3_8_SPARE(const uin
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
 #endif
     return o_data.insertFromRight<WDF_WDFCFG_WDFCFG_3_8_SPARE,
@@ -2744,6 +2746,7 @@ static inline fapi2::buffer<uint64_t>& GET_WDF_WDFCFG_WDFCFG_3_8_SPARE(fapi2::bu
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
 #endif
     return i_data.extractToRight<WDF_WDFCFG_WDFCFG_3_8_SPARE,
@@ -2755,6 +2758,162 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[WDF_WDFCFG_WDFCFG_3_8_SPARE]
+
+//>> SET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
+#endif
+    return o_data.insertFromRight<P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mcc Invalid dial access P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+
+//>> SET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
+#endif
+    return o_data.insertFromRight<P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mcc Invalid dial access P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+
+//>> SET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
+#endif
+    return o_data.setBit<P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_mcc Invalid dial access P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+
+//>> CLEAR_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY(fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
+#endif
+    return o_data.clearBit<P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_mcc Invalid dial access P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+
+//>> GET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
+#endif
+    return i_data.extractToRight<P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mcc Invalid dial access P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+
+//>> GET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+static inline bool GET_P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
+#endif
+    return i_data.getBit<P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_mcc Invalid dial access P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_WDF_WDFCFG_CFG_P10DD2_HCADCY]
+
+//>> SET_[P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
+#endif
+    return o_data.insertFromRight<P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE,
+           P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_mcc Invalid dial access P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE]
+
+//>> SET_[P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
+#endif
+    return o_data.insertFromRight<P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE,
+           P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_mcc Invalid dial access P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE]
+
+//>> GET_[P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(WDF_WDFCFG));
+#endif
+    return i_data.extractToRight<P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE,
+           P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_mcc Invalid dial access P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE chip: %x, ec: %x", scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_WDF_WDFCFG_WDFCFG_4_8_SPARE]
 
 //>> SET_[WDF_WDFCFG_CFG_OVERRUN_FORCE_SUE_ENABLE]
 static inline fapi2::buffer<uint64_t>& SET_WDF_WDFCFG_CFG_OVERRUN_FORCE_SUE_ENABLE(fapi2::buffer<uint64_t>& i_data,

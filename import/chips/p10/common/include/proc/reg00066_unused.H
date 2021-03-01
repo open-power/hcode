@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -31376,6 +31376,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_C
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_CHANGE_WHILE_ACTIVE,
@@ -31395,6 +31396,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_C
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_CHANGE_WHILE_ACTIVE,
@@ -31413,6 +31415,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_C
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.setBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_CHANGE_WHILE_ACTIVE>();
@@ -31430,6 +31433,7 @@ static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.clearBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_CHANGE_WHILE_ACTIVE>();
@@ -31448,6 +31452,7 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_C
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.extractToRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_CHANGE_WHILE_ACTIVE,
@@ -31465,6 +31470,7 @@ fapi_try_exit:
 static inline bool GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_CHANGE_WHILE_ACTIVE(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.getBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_CHANGE_WHILE_ACTIVE>();
@@ -31477,12 +31483,70 @@ fapi_try_exit:
 }
 //<< GET_[TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_CHANGE_WHILE_ACTIVE]
 
+//>> SET_[P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR,
+           P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR]
+
+//>> SET_[P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
+#endif
+    return o_data.insertFromRight<P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR,
+           P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR]
+
+//>> GET_[P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
+#endif
+    return i_data.extractToRight<P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR,
+           P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR]
+
 //>> SET_[TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR]
 static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR(
     fapi2::buffer<uint64_t>& i_data,
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR,
@@ -31501,6 +31565,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDR
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR,
@@ -31519,6 +31584,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.setBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR>();
@@ -31536,6 +31602,7 @@ static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_AD
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.clearBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR>();
@@ -31554,6 +31621,7 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDR
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.extractToRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR,
@@ -31571,6 +31639,7 @@ fapi_try_exit:
 static inline bool GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.getBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR>();
@@ -31589,6 +31658,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDRESS_ERROR,
@@ -31607,6 +31677,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDR
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDRESS_ERROR,
@@ -31625,6 +31696,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.setBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDRESS_ERROR>();
@@ -31642,6 +31714,7 @@ static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_AD
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.clearBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDRESS_ERROR>();
@@ -31660,6 +31733,7 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDR
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.extractToRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDRESS_ERROR,
@@ -31677,6 +31751,7 @@ fapi_try_exit:
 static inline bool GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDRESS_ERROR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.getBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDRESS_ERROR>();
@@ -31695,6 +31770,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDRESS_ERROR,
@@ -31713,6 +31789,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDR
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDRESS_ERROR,
@@ -31731,6 +31808,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.setBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDRESS_ERROR>();
@@ -31748,6 +31826,7 @@ static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_AD
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.clearBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDRESS_ERROR>();
@@ -31766,6 +31845,7 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDR
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.extractToRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDRESS_ERROR,
@@ -31783,6 +31863,7 @@ fapi_try_exit:
 static inline bool GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDRESS_ERROR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.getBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDRESS_ERROR>();
@@ -31801,6 +31882,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDRESS_ERROR,
@@ -31819,6 +31901,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDR
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDRESS_ERROR,
@@ -31837,6 +31920,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.setBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDRESS_ERROR>();
@@ -31854,6 +31938,7 @@ static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_AD
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.clearBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDRESS_ERROR>();
@@ -31872,6 +31957,7 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDR
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.extractToRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDRESS_ERROR,
@@ -31889,6 +31975,7 @@ fapi_try_exit:
 static inline bool GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDRESS_ERROR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.getBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT3_ADDRESS_ERROR>();
@@ -31907,6 +31994,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDRESS_ERROR,
@@ -31925,6 +32013,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDR
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDRESS_ERROR,
@@ -31943,6 +32032,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.setBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDRESS_ERROR>();
@@ -31960,6 +32050,7 @@ static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_AD
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.clearBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDRESS_ERROR>();
@@ -31978,6 +32069,7 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDR
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.extractToRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDRESS_ERROR,
@@ -31995,6 +32087,7 @@ fapi_try_exit:
 static inline bool GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDRESS_ERROR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.getBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT4_ADDRESS_ERROR>();
@@ -32013,6 +32106,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDRESS_ERROR,
@@ -32031,6 +32125,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDR
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.insertFromRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDRESS_ERROR,
@@ -32049,6 +32144,7 @@ static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDR
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.setBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDRESS_ERROR>();
@@ -32066,6 +32162,7 @@ static inline fapi2::buffer<uint64_t>& CLEAR_TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_AD
     fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return o_data.clearBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDRESS_ERROR>();
@@ -32084,6 +32181,7 @@ static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDR
     uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.extractToRight<TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDRESS_ERROR,
@@ -32101,6 +32199,7 @@ fapi_try_exit:
 static inline bool GET_TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDRESS_ERROR(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(TP_TPBR_PSIHB_FIR_REG_RW, TP_TPBR_PSIHB_FIR_REG_WO_AND, TP_TPBR_PSIHB_FIR_REG_WO_OR));
 #endif
     return i_data.getBit<TP_TPBR_PSIHB_FIR_REG_INTERRUPT5_ADDRESS_ERROR>();
@@ -33735,6 +33834,111 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[TP_TPBR_PSIHB_INTERRUPT_STATUS_PSU_INTERRUPT_PENDING]
+
+//>> PREP_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PREP_TP_TPBR_PSI_WRAP_RX_DF_FSM_REG(const fapi2::Target<K, M, V>& i_target)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TP_TPBR_PSI_WRAP_RX_DF_FSM_REG;
+#endif
+    return fapi2::current_err;
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PREP_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG]
+
+//>> GET_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode GET_TP_TPBR_PSI_WRAP_RX_DF_FSM_REG(const fapi2::Target<K, M, V>& i_target,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    scomt::last_scom = TP_TPBR_PSI_WRAP_RX_DF_FSM_REG;
+#endif
+    return fapi2::getScom(i_target, TP_TPBR_PSI_WRAP_RX_DF_FSM_REG, o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< GET_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG]
+
+//>> PUT_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG]
+template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+static inline fapi2::ReturnCode PUT_TP_TPBR_PSI_WRAP_RX_DF_FSM_REG(const fapi2::Target<K, M, V>& i_target,
+        const uint64_t i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::init(i_target));
+    FAPI_TRY(scomt::chkReg(TP_TPBR_PSI_WRAP_RX_DF_FSM_REG));
+#endif
+    return fapi2::putScom(i_target, TP_TPBR_PSI_WRAP_RX_DF_FSM_REG, i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    return fapi2::current_err;
+#endif
+}
+//<< PUT_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG]
+
+
+//>> SET_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM]
+static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(TP_TPBR_PSI_WRAP_RX_DF_FSM_REG));
+#endif
+    return o_data.insertFromRight<TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM,
+           TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_proc Invalid dial access TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM]
+
+//>> SET_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM]
+static inline fapi2::buffer<uint64_t>& SET_TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(TP_TPBR_PSI_WRAP_RX_DF_FSM_REG));
+#endif
+    return o_data.insertFromRight<TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM,
+           TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_proc Invalid dial access TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM]
+
+//>> GET_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM]
+static inline fapi2::buffer<uint64_t>& GET_TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::chkReg(TP_TPBR_PSI_WRAP_RX_DF_FSM_REG));
+#endif
+    return i_data.extractToRight<TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM,
+           TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_proc Invalid dial access TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM]
 
 //>> PREP_[TP_TPCHIP_NET_PCBSLN0_LXSTOP_INTERRUPT_REG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

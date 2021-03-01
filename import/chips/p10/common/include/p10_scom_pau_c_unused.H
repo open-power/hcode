@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -996,6 +996,8 @@ static const uint32_t CS_SM3_MCP_MISC_CONFIG0_FORBID_MMIO_READ_GT_32 = 32;
 static const uint32_t CS_SM3_MCP_MISC_CONFIG0_FORBID_MMIO_ATOMIC = 33;
 static const uint32_t CS_SM3_MCP_MISC_CONFIG0_0_RESERVED1 = 34;
 static const uint32_t CS_SM3_MCP_MISC_CONFIG0_0_RESERVED1_LEN = 2;
+static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG0_DISABLE_HW555363_FASTPATH_AND_FENCE = 34; // p10:20,
+static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG0_0_RESERVED1 = 35; // p10:20,
 static const uint32_t CS_SM3_MCP_MISC_CONFIG0_ENABLE_CONTEXT_LCO = 36;
 static const uint32_t CS_SM3_MCP_MISC_CONFIG0_MA_DSA_OPT_FAIL_WAKE = 37;
 static const uint32_t CS_SM3_MCP_MISC_CONFIG0_ENABLE_FAST_DIR_UPDATE = 38;

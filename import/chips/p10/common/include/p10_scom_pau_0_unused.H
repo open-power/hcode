@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -932,8 +932,13 @@ static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_PB_TO_OC_FASTPATH_REQUIRE_C
 static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_PB_TO_OC_FASTPATH_REQUIRE_CL_LEN = 2;
 static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_PB_TO_OC_FASTPATH_REQUIRE_LD_PR_1 = 52; // p10:20,
 static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_PB_TO_OC_FASTPATH_REQUIRE_RXO_EMPTY = 53; // p10:20,
-static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_2_RESERVED = 54; // p10:20,
-static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_2_RESERVED_LEN = 10;
+static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_DISABLE_HW551717_PTLA_TO_UCI = 54; // p10:20,
+static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_DISABLE_HW552185_BKRETRY_TO_RMA = 55; // p10:20,
+static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_ENABLE_HW549830_MI_RETRY_NON_CP = 56; // p10:20,
+static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_HW549830_MI_RETRY_THRESH = 57; // p10:20,
+static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_HW549830_MI_RETRY_THRESH_LEN = 4;
+static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_2_RESERVED = 61; // p10:20,
+static const uint32_t P10_20_CS_SM3_MCP_MISC_CONFIG2_2_RESERVED_LEN = 3;
 //<< [CS_SM3_MCP_MISC_CONFIG2]
 // pau/reg00000.H
 

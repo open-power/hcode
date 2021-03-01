@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1615,6 +1615,8 @@ static const uint32_t TP_TPBR_PSIHB_FIR_REG_PB_PARITY_ERROR = 11;
 static const uint32_t TP_TPBR_PSIHB_FIR_REG_FSP_ACCESS_TRUSTED_SPACE = 12;
 static const uint32_t TP_TPBR_PSIHB_FIR_REG_UNEXPECTED_PB = 13;
 static const uint32_t TP_TPBR_PSIHB_FIR_REG_INTERRUPT_REG_CHANGE_WHILE_ACTIVE = 14;
+static const uint32_t P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR = 14; // p10:20,
+static const uint32_t P10_20_TP_TPBR_PSIHB_FIR_REG_SPARE_FIR_ERR_LEN = 7;
 static const uint32_t TP_TPBR_PSIHB_FIR_REG_INTERRUPT0_ADDRESS_ERROR = 15;
 static const uint32_t TP_TPBR_PSIHB_FIR_REG_INTERRUPT1_ADDRESS_ERROR = 16;
 static const uint32_t TP_TPBR_PSIHB_FIR_REG_INTERRUPT2_ADDRESS_ERROR = 17;
@@ -1646,6 +1648,14 @@ static const uint32_t TP_TPBR_PSIHB_INTERRUPT_STATUS_SBE_INTERRUPT_PENDING = 11;
 static const uint32_t TP_TPBR_PSIHB_INTERRUPT_STATUS_DIO_INTERRUPT_PENDING = 12;
 static const uint32_t TP_TPBR_PSIHB_INTERRUPT_STATUS_PSU_INTERRUPT_PENDING = 13;
 //<< [TP_TPBR_PSIHB_INTERRUPT_STATUS]
+// proc/reg00066.H
+
+//>> [TP_TPBR_PSI_WRAP_RX_DF_FSM_REG]
+static const uint64_t TP_TPBR_PSI_WRAP_RX_DF_FSM_REG = 0x03011c0eull;
+
+static const uint32_t TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM = 0;
+static const uint32_t TP_TPBR_PSI_WRAP_RX_DF_FSM_REG_RX_DF_FSM_LEN = 4;
+//<< [TP_TPBR_PSI_WRAP_RX_DF_FSM_REG]
 // proc/reg00066.H
 
 //>> [TP_TPCHIP_NET_PCBSLN0_LXSTOP_INTERRUPT_REG]
@@ -2763,18 +2773,6 @@ static const uint32_t TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL2_CLEAR_ROO
 //<< [TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL2_CLEAR]
 // proc/reg00068.H
 
-//>> [P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF]
-//ERRCODE: // The addresses of this register do not all translate to the same targets.
-
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_FSI = 0x00002918ull; // p10:20,
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_FSI_BYTE = 0x00002c60ull; // p10:20,
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_RW = 0x00050118ull; // p10:20,
-
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_ROOT_CTRL8_EFF_REG = 0;
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_ROOT_CTRL8_EFF_REG_LEN = 32;
-//<< [P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF]
-// proc/reg00068.H
-
 //>> [TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_SCRATCH_REGISTER_10]
 //ERRCODE: // The addresses of this register do not all translate to the same targets.
 
@@ -2907,7 +2905,7 @@ static const uint32_t TP_TPVSB_FSI_W_SLAVE_A_MST_0_MRESP6_ERROR_RESET_6 = 1;
 static const uint32_t TP_TPVSB_FSI_W_SLAVE_A_MST_0_MSIEP5_FSI0 = 0x00003044ull;
 static const uint32_t TP_TPVSB_FSI_W_SLAVE_A_MST_0_MSIEP5_SCOMFSI0 = 0x00000c11ull;
 //<< [TP_TPVSB_FSI_W_SLAVE_A_MST_0_MSIEP5]
-// proc/reg00069.H
+// proc/reg00068.H
 
 //>> [TP_TPVSB_FSI_W_SLAVE_A_MST_1_MAESP4]
 static const uint32_t TP_TPVSB_FSI_W_SLAVE_A_MST_1_MAESP4_FSI0 = 0x00003460ull;

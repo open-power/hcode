@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -9968,6 +9968,7 @@ static inline fapi2::buffer<uint64_t>& SET_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2(f
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
 #endif
     return o_data.insertFromRight<CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2,
@@ -9985,6 +9986,7 @@ static inline fapi2::buffer<uint64_t>& SET_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2(c
         fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
 #endif
     return o_data.insertFromRight<CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2,
@@ -10002,6 +10004,7 @@ static inline fapi2::buffer<uint64_t>& GET_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2(f
         uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x20));
     FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
 #endif
     return i_data.extractToRight<CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2,
@@ -10013,6 +10016,347 @@ fapi_try_exit:
 #endif
 }
 //<< GET_[CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.setBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+
+//>> CLEAR_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.clearBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+
+//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return i_data.extractToRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+
+//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+static inline bool GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return i_data.getBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE,
+           P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE,
+           P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE]
+
+//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return i_data.extractToRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE,
+           P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA,
+           1>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.setBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("2:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+
+//>> CLEAR_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA(
+    fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.clearBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("3:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return o_data;
+#endif
+}
+//<< CLEAR_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+
+//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return i_data.extractToRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA,
+           1>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+
+//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+static inline bool GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA(fapi2::buffer<uint64_t>& i_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return i_data.getBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA>();
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("5:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2(fapi2::buffer<uint64_t>& i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2,
+           P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("0:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2]
+
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2(const uint64_t i_data,
+        fapi2::buffer<uint64_t>& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2,
+           P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2_LEN>(i_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("1:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return o_data;
+#endif
+}
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2]
+
+//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2(fapi2::buffer<uint64_t>& i_data,
+        uint64_t& o_data)
+{
+#ifdef SCOM_CHECKING
+    FAPI_TRY(scomt::failOn(0xa, 0x10));
+    FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
+#endif
+    return i_data.extractToRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2,
+           P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2_LEN>(o_data);
+#ifdef SCOM_CHECKING
+fapi_try_exit:
+    FAPI_ERR("4:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2 chip: %x, ec: %x", scomt::chip,
+             scomt::ec);
+    return i_data;
+#endif
+}
+//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2]
 
 //>> SET_[CS_SM1_MCP_MISC_CONFIG1_PCKT_LONG_CL_DMA_INJ]
 static inline fapi2::buffer<uint64_t>& SET_CS_SM1_MCP_MISC_CONFIG1_PCKT_LONG_CL_DMA_INJ(fapi2::buffer<uint64_t>& i_data,
@@ -12501,113 +12845,118 @@ fapi_try_exit:
 }
 //<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_DISABLE_HW546460_INC_DEC_ALL_ONES]
 
-//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
-static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED(fapi2::buffer<uint64_t>& i_data,
-        fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE(
+    fapi2::buffer<uint64_t>& i_data,
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
 #endif
-    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED,
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("0:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("0:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
 
-//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
-static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED(const uint64_t i_data,
-        fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE(
+    const uint64_t i_data,
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
 #endif
-    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED,
+    return o_data.insertFromRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE,
            1>(i_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("1:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("1:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
 
-//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
-static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED(fapi2::buffer<uint64_t>& o_data)
+//>> SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
+static inline fapi2::buffer<uint64_t>& SET_P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE(
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
 #endif
-    return o_data.setBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED>();
+    return o_data.setBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("2:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("2:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
+//<< SET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
 
-//>> CLEAR_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
-static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED(fapi2::buffer<uint64_t>& o_data)
+//>> CLEAR_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
+static inline fapi2::buffer<uint64_t>& CLEAR_P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE(
+    fapi2::buffer<uint64_t>& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
 #endif
-    return o_data.clearBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED>();
+    return o_data.clearBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("3:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("3:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return o_data;
 #endif
 }
-//<< CLEAR_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
+//<< CLEAR_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
 
-//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
-static inline fapi2::buffer<uint64_t>& GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED(fapi2::buffer<uint64_t>& i_data,
-        uint64_t& o_data)
+//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
+static inline fapi2::buffer<uint64_t>& GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE(
+    fapi2::buffer<uint64_t>& i_data,
+    uint64_t& o_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
 #endif
-    return i_data.extractToRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED,
+    return i_data.extractToRight<P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE,
            1>(o_data);
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("4:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("4:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
+//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
 
-//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
-static inline bool GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED(fapi2::buffer<uint64_t>& i_data)
+//>> GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
+static inline bool GET_P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE(fapi2::buffer<uint64_t>& i_data)
 {
 #ifdef SCOM_CHECKING
     FAPI_TRY(scomt::failOn(0xa, 0x10));
     FAPI_TRY(scomt::chkReg(CS_SM1_MCP_MISC_CONFIG1));
 #endif
-    return i_data.getBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED>();
+    return i_data.getBit<P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE>();
 #ifdef SCOM_CHECKING
 fapi_try_exit:
-    FAPI_ERR("5:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED chip: %x, ec: %x", scomt::chip,
-             scomt::ec);
+    FAPI_ERR("5:scom_pau Invalid dial access P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE chip: %x, ec: %x",
+             scomt::chip, scomt::ec);
     return i_data;
 #endif
 }
-//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED]
+//<< GET_[P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE]
 
 //>> PREP_[CS_SM1_MCP_MISC_EPSILON_CONFIG]
 template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

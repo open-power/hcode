@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -185,54 +185,6 @@ static const uint64_t CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SET_OVERRIDE_CACHE_SYNC_ENABL
 static const uint32_t CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SET_OVERRIDE_CACHE_SYNC_ENABLE_ENABLE_OVERRIDE = 0;
 static const uint32_t CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SET_OVERRIDE_CACHE_SYNC_ENABLE_VALUE_OVERRIDE = 1;
 //<< [CLK_ADJ_03_SKEW_WRAP_SKEWADJ_SET_OVERRIDE_CACHE_SYNC_ENABLE]
-// eq/reg00006.H
-
-//>> [P10_20_CPLT_CTRL0_EFF]
-static const uint64_t P10_20_CPLT_CTRL0_EFF_RW = 0x20000000ull; // p10:20,
-
-static const uint32_t P10_20_CPLT_CTRL0_EFF_CPLT_CTRL0_EFF_REG = 0;
-static const uint32_t P10_20_CPLT_CTRL0_EFF_CPLT_CTRL0_EFF_REG_LEN = 64;
-//<< [P10_20_CPLT_CTRL0_EFF]
-// eq/reg00006.H
-
-//>> [P10_20_CPLT_CTRL1_EFF]
-static const uint64_t P10_20_CPLT_CTRL1_EFF_RW = 0x20000001ull; // p10:20,
-
-static const uint32_t P10_20_CPLT_CTRL1_EFF_CPLT_CTRL1_EFF_REG = 0;
-static const uint32_t P10_20_CPLT_CTRL1_EFF_CPLT_CTRL1_EFF_REG_LEN = 32;
-//<< [P10_20_CPLT_CTRL1_EFF]
-// eq/reg00006.H
-
-//>> [P10_20_CPLT_CTRL2_EFF]
-static const uint64_t P10_20_CPLT_CTRL2_EFF_RW = 0x20000002ull; // p10:20,
-
-static const uint32_t P10_20_CPLT_CTRL2_EFF_CPLT_CTRL2_EFF_REG = 0;
-static const uint32_t P10_20_CPLT_CTRL2_EFF_CPLT_CTRL2_EFF_REG_LEN = 15;
-//<< [P10_20_CPLT_CTRL2_EFF]
-// eq/reg00006.H
-
-//>> [P10_20_CPLT_CTRL3_EFF]
-static const uint64_t P10_20_CPLT_CTRL3_EFF_RW = 0x20000003ull; // p10:20,
-
-static const uint32_t P10_20_CPLT_CTRL3_EFF_CPLT_CTRL3_EFF_REG = 0;
-static const uint32_t P10_20_CPLT_CTRL3_EFF_CPLT_CTRL3_EFF_REG_LEN = 15;
-//<< [P10_20_CPLT_CTRL3_EFF]
-// eq/reg00006.H
-
-//>> [P10_20_CPLT_CTRL4_EFF]
-static const uint64_t P10_20_CPLT_CTRL4_EFF_RW = 0x20000004ull; // p10:20,
-
-static const uint32_t P10_20_CPLT_CTRL4_EFF_CPLT_CTRL4_EFF_REG = 0;
-static const uint32_t P10_20_CPLT_CTRL4_EFF_CPLT_CTRL4_EFF_REG_LEN = 15;
-//<< [P10_20_CPLT_CTRL4_EFF]
-// eq/reg00006.H
-
-//>> [P10_20_CPLT_CTRL5_EFF]
-static const uint64_t P10_20_CPLT_CTRL5_EFF_RW = 0x20000005ull; // p10:20,
-
-static const uint32_t P10_20_CPLT_CTRL5_EFF_CPLT_CTRL5_EFF_REG = 0;
-static const uint32_t P10_20_CPLT_CTRL5_EFF_CPLT_CTRL5_EFF_REG_LEN = 15;
-//<< [P10_20_CPLT_CTRL5_EFF]
 // eq/reg00006.H
 
 //>> [EPS_DBG_INST1_COND_REG_3]

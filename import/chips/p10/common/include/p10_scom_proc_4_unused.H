@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -2779,30 +2779,6 @@ static const uint32_t TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_M2B_DATA_AREA_0_MDA_
 //<< [TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_M2B_DATA_AREA_0]
 // proc/reg00024.H
 
-//>> [P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL0_EFF]
-//ERRCODE: // The addresses of this register do not all translate to the same targets.
-
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL0_EFF_FSI = 0x0000291aull; // p10:20,
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL0_EFF_FSI_BYTE = 0x00002c68ull; // p10:20,
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL0_EFF_RW = 0x0005011aull; // p10:20,
-
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL0_EFF_PERV_CTRL0_EFF_REG = 0;
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL0_EFF_PERV_CTRL0_EFF_REG_LEN = 32;
-//<< [P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL0_EFF]
-// proc/reg00024.H
-
-//>> [P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL1_EFF]
-//ERRCODE: // The addresses of this register do not all translate to the same targets.
-
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL1_EFF_FSI = 0x0000291bull; // p10:20,
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL1_EFF_FSI_BYTE = 0x00002c6cull; // p10:20,
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL1_EFF_RW = 0x0005011bull; // p10:20,
-
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL1_EFF_PERV_CTRL1_EFF_REG = 0;
-static const uint32_t P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL1_EFF_PERV_CTRL1_EFF_REG_LEN = 32;
-//<< [P10_20_TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_PERV_CTRL1_EFF]
-// proc/reg00024.H
-
 //>> [TP_TPVSB_FSI_W_MAILBOX_FSXCOMP_FSXLOG_ROOT_CTRL0_CLEAR]
 //ERRCODE: // The addresses of this register do not all translate to the same targets.
 
@@ -2911,14 +2887,14 @@ static const uint32_t TP_TPVSB_FSI_W_SBE_FIFO_FSB_DOWNFIFO_ACK_EOT_FSI_BYTE = 0x
 
 static const uint32_t TP_TPVSB_FSI_W_SBE_FIFO_FSB_DOWNFIFO_ACK_EOT_DNFIFO_ACK_EOT = 0;
 //<< [TP_TPVSB_FSI_W_SBE_FIFO_FSB_DOWNFIFO_ACK_EOT]
-// proc/reg00025.H
+// proc/reg00024.H
 
 //>> [TP_TPVSB_FSI_W_SBE_FIFO_FSB_DOWNFIFO_REQ_RESET]
 static const uint64_t TP_TPVSB_FSI_W_SBE_FIFO_FSB_DOWNFIFO_REQ_RESET = 0x000b0013ull;
 
 static const uint32_t TP_TPVSB_FSI_W_SBE_FIFO_FSB_DOWNFIFO_REQ_RESET_DNFIFO_REQ_RESET = 0;
 //<< [TP_TPVSB_FSI_W_SBE_FIFO_FSB_DOWNFIFO_REQ_RESET]
-// proc/reg00025.H
+// proc/reg00024.H
 
 //>> [TP_TPVSB_FSI_W_SBE_FIFO_FSB_DOWNFIFO_SIG_EOT]
 static const uint64_t TP_TPVSB_FSI_W_SBE_FIFO_FSB_DOWNFIFO_SIG_EOT = 0x000b0012ull;

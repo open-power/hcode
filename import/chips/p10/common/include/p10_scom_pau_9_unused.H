@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -247,6 +247,12 @@ static const uint32_t CS_SM1_MCP_MISC_CONFIG1_EPSILON_WLN_COUNT = 16;
 static const uint32_t CS_SM1_MCP_MISC_CONFIG1_EPSILON_WLN_COUNT_LEN = 12;
 static const uint32_t CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2 = 28;
 static const uint32_t CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2_LEN = 7;
+static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE = 28; // p10:20,
+static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE = 29; // p10:20,
+static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE_LEN = 3;
+static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA = 32; // p10:20,
+static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2 = 33; // p10:20,
+static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED2_LEN = 2;
 static const uint32_t CS_SM1_MCP_MISC_CONFIG1_PCKT_LONG_CL_DMA_INJ = 35;
 static const uint32_t CS_SM1_MCP_MISC_CONFIG1_PCKT_LONG_PR_DMA_INJ = 36;
 static const uint32_t CS_SM1_MCP_MISC_CONFIG1_PCKT_LONG_MIN_COUNT = 37;
@@ -273,7 +279,7 @@ static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_DISABLE_HW532477_ARMWF_IMP_
 static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_DISABLE_HW536051_FENCE_HOSPICE_PRONOTE = 60; // p10:20,
 static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_DISABLE_HW537584_HOSPICE_QUALIFIER = 61; // p10:20,
 static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_DISABLE_HW546460_INC_DEC_ALL_ONES = 62; // p10:20,
-static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_1_RESERVED = 63; // p10:20,
+static const uint32_t P10_20_CS_SM1_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE = 63; // p10:20,
 //<< [CS_SM1_MCP_MISC_CONFIG1]
 // pau/reg00011.H
 

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -578,6 +578,8 @@ static const uint32_t CS_SM1_SNP_MISC_CONFIG0_ADR_BAR_MODE = 5;
 static const uint32_t CS_SM1_SNP_MISC_CONFIG0_RESTRICT_CHIP_GROUP = 6;
 static const uint32_t CS_SM1_SNP_MISC_CONFIG0_0_RESERVED3 = 7;
 static const uint32_t CS_SM1_SNP_MISC_CONFIG0_0_RESERVED3_LEN = 2;
+static const uint32_t P10_20_CS_SM1_SNP_MISC_CONFIG0_DISABLE_HW552185_BKRETRY_TO_RMA = 7; // p10:20,
+static const uint32_t P10_20_CS_SM1_SNP_MISC_CONFIG0_0_RESERVED3 = 8; // p10:20,
 static const uint32_t CS_SM1_SNP_MISC_CONFIG0_SNP_FIR_TO_INHIBIT_MASK = 9;
 static const uint32_t CS_SM1_SNP_MISC_CONFIG0_SNP_FIR_TO_INHIBIT_MASK_LEN = 7;
 static const uint32_t CS_SM1_SNP_MISC_CONFIG0_BRK0_FENCE_TO_INHIBIT_MASK = 16;

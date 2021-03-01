@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -117,6 +117,14 @@ static const uint32_t EPS_THERM_WSUB_INJECT_REG_TRIP_LEN = 2;
 static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE = 2;
 static const uint32_t EPS_THERM_WSUB_INJECT_REG_MODE_LEN = 2;
 //<< [EPS_THERM_WSUB_INJECT_REG]
+// pec/reg00004.H
+
+//>> [PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG1]
+static const uint64_t PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG1 = 0x0301180dull;
+
+static const uint32_t PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG1_PE_TOPOLOGY_ID_REG1 = 0;
+static const uint32_t PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG1_PE_TOPOLOGY_ID_REG1_LEN = 40;
+//<< [PB_PBCQ_PEPBREGS_PE_TOPOLOGY_REG1]
 // pec/reg00004.H
 
 //>> [PCB_OPCG_GO]

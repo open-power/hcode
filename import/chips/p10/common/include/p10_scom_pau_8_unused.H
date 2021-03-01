@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -281,8 +281,9 @@ static const uint32_t CS_CTL_MISC_CONFIG2_2_RESERVED1_LEN = 6;
 static const uint32_t P10_20_CS_CTL_MISC_CONFIG2_DISABLE_HW531747_CAS_T_IMP_TAGS = 42; // p10:20,
 static const uint32_t P10_20_CS_CTL_MISC_CONFIG2_DISABLE_HW539321_SM_REQIN_CREDIT_DROP = 43; // p10:20,
 static const uint32_t P10_20_CS_CTL_MISC_CONFIG2_DISABLE_HW539464_BACK_TO_SYNC_DONE = 44; // p10:20,
-static const uint32_t P10_20_CS_CTL_MISC_CONFIG2_2_RESERVED1 = 45; // p10:20,
-static const uint32_t P10_20_CS_CTL_MISC_CONFIG2_2_RESERVED1_LEN = 3;
+static const uint32_t P10_20_CS_CTL_MISC_CONFIG2_ENABLE_HW549830_MI_RETRY_NON_CP = 45; // p10:20,
+static const uint32_t P10_20_CS_CTL_MISC_CONFIG2_DISABLE_HW551717_ZERO_CO_FIELD = 46; // p10:20,
+static const uint32_t P10_20_CS_CTL_MISC_CONFIG2_2_RESERVED1 = 47; // p10:20,
 static const uint32_t CS_CTL_MISC_CONFIG2_GENID_RATE_INC = 48;
 static const uint32_t CS_CTL_MISC_CONFIG2_GENID_RATE_INC_LEN = 8;
 static const uint32_t CS_CTL_MISC_CONFIG2_GENID_RATE_DEC = 56;
@@ -416,6 +417,12 @@ static const uint32_t CS_SM0_MCP_MISC_CONFIG1_EPSILON_WLN_COUNT = 16;
 static const uint32_t CS_SM0_MCP_MISC_CONFIG1_EPSILON_WLN_COUNT_LEN = 12;
 static const uint32_t CS_SM0_MCP_MISC_CONFIG1_1_RESERVED2 = 28;
 static const uint32_t CS_SM0_MCP_MISC_CONFIG1_1_RESERVED2_LEN = 7;
+static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_MIMIRROR_MASTER_ENABLE = 28; // p10:20,
+static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE = 29; // p10:20,
+static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_MIMIRROR_BRICK_MODE_LEN = 3;
+static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_MIMIRROR_FENCE_ON_BAD_DATA = 32; // p10:20,
+static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_1_RESERVED2 = 33; // p10:20,
+static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_1_RESERVED2_LEN = 2;
 static const uint32_t CS_SM0_MCP_MISC_CONFIG1_PCKT_LONG_CL_DMA_INJ = 35;
 static const uint32_t CS_SM0_MCP_MISC_CONFIG1_PCKT_LONG_PR_DMA_INJ = 36;
 static const uint32_t CS_SM0_MCP_MISC_CONFIG1_PCKT_LONG_MIN_COUNT = 37;
@@ -442,7 +449,7 @@ static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_DISABLE_HW532477_ARMWF_IMP_
 static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_DISABLE_HW536051_FENCE_HOSPICE_PRONOTE = 60; // p10:20,
 static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_DISABLE_HW537584_HOSPICE_QUALIFIER = 61; // p10:20,
 static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_DISABLE_HW546460_INC_DEC_ALL_ONES = 62; // p10:20,
-static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_1_RESERVED = 63; // p10:20,
+static const uint32_t P10_20_CS_SM0_MCP_MISC_CONFIG1_ENABLE_HW555343_ALL_PTL_ARE_BE = 63; // p10:20,
 //<< [CS_SM0_MCP_MISC_CONFIG1]
 // pau/reg00009.H
 

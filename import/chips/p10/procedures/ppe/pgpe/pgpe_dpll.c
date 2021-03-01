@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -26,9 +26,6 @@
 #include "pgpe_dpll.h"
 #include "pgpe_gppb.h"
 #include "p10_scom_proc.H"
-#include "p10_scom_proc_1.H"
-
-const uint64_t TP_TPCHIP_NET_PCBSLPERV_ERROR_REG = 0x010f001f;
 
 void pgpe_dpll_init()
 {

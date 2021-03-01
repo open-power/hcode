@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -302,18 +302,6 @@ static const uint32_t FSXCOMP_FSXLOG_PERV_CTRL1_SET_PERV_CTRL1_20_31_RESERVED_LE
 //<< [FSXCOMP_FSXLOG_PERV_CTRL1_SET]
 // perv/reg00014.H
 
-//>> [P10_20_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF]
-//ERRCODE: // The addresses of this register do not all translate to the same targets.
-
-static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_FSI = 0x00002918ull; // p10:20,
-static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_FSI_BYTE = 0x00002c60ull; // p10:20,
-static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_RW = 0x00050118ull; // p10:20,
-
-static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_ROOT_CTRL8_EFF_REG = 0;
-static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF_ROOT_CTRL8_EFF_REG_LEN = 32;
-//<< [P10_20_FSXCOMP_FSXLOG_ROOT_CTRL8_EFF]
-// perv/reg00014.H
-
 //>> [HANG_PULSE_6_REG]
 static const uint64_t HANG_PULSE_6_REG = 0x000f0026ull;
 
@@ -512,7 +500,7 @@ static const uint64_t SINGLE_OTP_ROM_OTPROM_REG27 = 0x0001801bull;
 static const uint32_t SINGLE_OTP_ROM_OTPROM_REG27_REGISTER27 = 0;
 static const uint32_t SINGLE_OTP_ROM_OTPROM_REG27_REGISTER27_LEN = 64;
 //<< [SINGLE_OTP_ROM_OTPROM_REG27]
-// perv/reg00015.H
+// perv/reg00014.H
 
 //>> [SINGLE_OTP_ROM_OTPROM_REG38]
 static const uint64_t SINGLE_OTP_ROM_OTPROM_REG38 = 0x00018026ull;

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -270,6 +270,8 @@ static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_WO_CLEAR = 0x00050136ull;
 
 static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_TP_AN_SYS0_RX_REFCLK_TERM = 0;
 static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_TP_AN_SYS0_RX_REFCLK_TERM_LEN = 2;
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_ROOT_CTRL6_0_3 = 0; // p10:20,
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_ROOT_CTRL6_0_3_LEN = 4;
 static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_TP_AN_SYS1_RX_REFCLK_TERM = 2;
 static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_TP_AN_SYS1_RX_REFCLK_TERM_LEN = 2;
 static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_TP_AN_PCI0_RX_REFCLK_TERM = 4;
@@ -278,6 +280,15 @@ static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_TP_AN_PCI1_RX_REFCLK_TERM 
 static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_TP_AN_PCI1_RX_REFCLK_TERM_LEN = 2;
 static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_ROOT_CTRL6_8_31 = 8;
 static const uint32_t FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_ROOT_CTRL6_8_31_LEN = 24;
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_CHKSW_DD1_HW547515_RCS_EVENTLOG = 8; // p10:20,
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_ROOT_CTRL6_9_15 = 9; // p10:20,
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_ROOT_CTRL6_9_15_LEN = 7;
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_DESKEW_SEL_A = 16; // p10:20,
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_DESKEW_SEL_A_LEN = 4;
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_DESKEW_SEL_B = 20; // p10:20,
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_DESKEW_SEL_B_LEN = 4;
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_RCS_CONTROL_7_0 = 24; // p10:20,
+static const uint32_t P10_20_FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR_RCS_CONTROL_7_0_LEN = 8;
 //<< [FSXCOMP_FSXLOG_ROOT_CTRL6_CLEAR]
 // perv/reg00026.H
 
