@@ -123,7 +123,7 @@ uint8_t pgpe_gppb_get_wov_overv_step_incr_pct();
 uint8_t pgpe_gppb_get_wov_overv_step_decr_pct();
 uint8_t pgpe_gppb_get_wov_overv_max_pct();
 uint16_t pgpe_gppb_get_wov_idd_thresh();
-
+uint16_t pgpe_gppb_get_wov_dirty_undercurr_control(uint32_t droop_level);
 
 //WOF
 uint32_t pgpe_gppb_get_vratio_vdd(uint32_t idx);

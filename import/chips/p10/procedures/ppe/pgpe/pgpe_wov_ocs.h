@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -76,9 +76,9 @@ enum WOV_FREQ_LOSS_STATUS
 
 enum OCS_DIRTY_SAMPLE_TYPE
 {
-    OCS_DIRTY_SAMPLE_TYPE_00 = 0x0,
-    OCS_DIRTY_SAMPLE_TYPE_10 = 0x2,
-    OCS_DIRTY_SAMPLE_TYPE_11 = 0x3,
+    OCS_DIRTY_SAMPLE_TYPE_00 = 0x0, //Overcurrent Sensor Dirty=0,Type=0
+    OCS_DIRTY_SAMPLE_TYPE_10 = 0x2, //Overcurrent Sensor Dirty=1,Type=0
+    OCS_DIRTY_SAMPLE_TYPE_11 = 0x3, //Overcurrent Sensor Dirty=1,Type=1
 };
 
 typedef struct pgpe_wov_ocs

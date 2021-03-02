@@ -926,6 +926,17 @@ uint16_t pgpe_gppb_get_wov_idd_thresh()
     }
 }
 
+uint16_t pgpe_gppb_get_wov_dirty_undercurr_control(uint32_t droop_level)
+{
+    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
+    {
+        return G_gppb->wov_dirty_undercurr_control[droop_level];
+    }
+    else
+    {
+        return G_gppb_wov->wov_dirty_undercurr_control[droop_level];
+    }
+}
 
 uint16_t pgpe_gppb_get_dds_delay_ps_slope(uint32_t pt_set, uint32_t core, uint32_t region)
 {

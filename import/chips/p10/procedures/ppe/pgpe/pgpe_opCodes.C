@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -92,7 +92,7 @@ void pgpe_opCodeTable(
         {PGPE_OPT_WOF_CALC_DONE,    OP_HASH("OP: WOF_CALC_DONE  | Vratio=0x%04x Vindex=%d WOF_Clip=0x%02x MMAOff=%d CoreClockOff=%d CoreVmin=%d CoreCacheOff=%d"), {2, 1, 1, 1, 1, 1, 1, 0, 0}},
         {PGPE_OPT_OCS_THRESH_TRANS, OP_HASH("OP: OCS_THRESHOLD  | Thresh=%u(Amp) Delta=%d(Amp)"), {2, 2, 0, 0, 0, 0, 0, 0, 0}},
         {PGPE_OPT_OCS_DIRTY_TYPE,   OP_HASH("OP: OCS_DIRTY_TYPE | Type=%d"), {1, 0, 0, 0, 0, 0, 0, 0, 0}},
-        {PGPE_OPT_OCS_DROOP_COND ,  OP_HASH("OP: DROOP_COND     | Condition=0x%02x(00:OK,10:LIGHT,11:HEAVY)"), {1, 0, 0, 0, 0, 0, 0, 0, 0}},
+        {PGPE_OPT_OCS_DROOP_COND ,  OP_HASH("OP: DROOP_COND     | Condition=0x%01x(0x3:OK,0x2:LIGHT,0x1:HEAVY)"), {1, 0, 0, 0, 0, 0, 0, 0, 0}},
         {PGPE_OPT_CEFF_OVERAGE_UPDT, OP_HASH("OP: CEFF_OVERAGE   | Overage=%u PrevOverage=%u OverIdx=%u PrevOverIdx=%u"), {1, 1, 1, 1, 0, 0, 0, 0, 0}},
 
         //Events with timestamps only
