@@ -154,6 +154,7 @@ void* pgpe_pstate_data_addr()
 
 void pgpe_pstate_actuate_step()
 {
+    PkMachineContext ctx;
 
     PK_TRACE("ACT: ps_cur=0x%x, ps_target=0x%x", G_pgpe_pstate.pstate_curr, G_pgpe_pstate.pstate_target);
     //compute vdd_target corresponding to pstate_target
@@ -213,11 +214,17 @@ void pgpe_pstate_actuate_step()
                                      pgpe_gppb_get_vcs_floor_mv();
     }
 
+
     //Do WOV adjustment here
     if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
     {
-        G_pgpe_pstate.vdd_wov_bias = ((int16_t)G_pgpe_pstate.vdd_next_ext * pgpe_wov_ocs_get_wov_tgt_pct()) / 1000;
-        G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next_ext + G_pgpe_pstate.vdd_wov_bias;
+        //Clear wov bias and set tgt_pct to zero
+        G_pgpe_pstate.vdd_wov_bias = 0;
+        pk_critical_section_enter(&ctx);
+        pgpe_wov_ocs_set_wov_curr_pct(0);
+        pk_critical_section_exit(&ctx);
+        PK_TRACE("ACT: cleared wov_bias and  wov_curr_pct. wov_curr_pct=%d, wov_tgt_pct=%d,", pgpe_wov_ocs_get_wov_curr_pct(),
+                 pgpe_wov_ocs_get_wov_tgt_pct());
     }
 
     PK_TRACE("ACT: vdd_del=0x%x, vdd_next=0x%x,ps_next=0x%x ,vcs_next=0x%x", vdd_delta, G_pgpe_pstate.vdd_next_ext,
@@ -361,6 +368,104 @@ void pgpe_pstate_actuate_step()
     pgpe_opt_set_half(2, pgpe_pstate_get(vcs_curr_ext));
     //pgpe_opt_set_byte(6, );  //\TODO Add RVRM Transition
     ppe_trace_op(PGPE_OPT_ACTUATE_STEP_DONE, pgpe_opt_get());
+}
+
+void pgpe_pstate_actuate_voltage_step()
+{
+    if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
+    {
+        G_pgpe_pstate.vdd_wov_bias = ((int16_t)G_pgpe_pstate.vdd_next_ext * pgpe_wov_ocs_get_wov_tgt_pct()) / 1000;
+        G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift + G_pgpe_pstate.vdd_wov_bias;
+        PK_TRACE("ACT: vdd_next=%d wov_bias=%d wov_tgt_pct=%d wov_curr_pct=%d", G_pgpe_pstate.vdd_next_ext,
+                 G_pgpe_pstate.vdd_wov_bias, pgpe_wov_ocs_get_wov_tgt_pct(), pgpe_wov_ocs_get_wov_curr_pct());
+
+        //Compute power proxy scale factor
+        cpms_dpcr dpcr;
+        dpcr.value = 0;
+        uint32_t power_proxy_scale_tgt;
+        uint32_t x = G_pgpe_pstate.vdd_next * G_pgpe_pstate.vdd_next;
+        //X>>8 minus X>>11 minus X>>13 plus (X>>7)&0x1 plus (X>>10)&0x1 plus (X>>12)&0x1   // approximate a divide by 295
+        power_proxy_scale_tgt =  (x >> 8) - (x >> 11) - (x >> 13) + ((x >> 7) & 0x1) + ((x >> 10) & 0x1) + ((x >> 12) & 0x1);
+
+        if (G_pgpe_pstate.vdd_next_ext <= pgpe_gppb_get_array_write_vdd_mv())
+        {
+            PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WOR, BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
+        }
+
+        //See whether to set rVRM enablement override
+        if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RVRM_ENABLE) && (in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW) && BIT32(XGPE_ACTIVE)))
+        {
+            if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) < pgpe_gppb_get_rvrm_deadzone_mv())
+            {
+                pgpe_xgpe_send_vret_updt(UPDATE_VRET_TYPE_SET);
+                //Set RVCSR[RVID_OVERRIDE]
+                PPE_PUTSCOM_MC(CPMS_RVCSR_WO_OR, 0xF, BIT64(CPMS_RVCSR_RVID_OVERRIDE));
+            }
+        }
+
+        //lowering voltage
+        if (G_pgpe_pstate.vdd_next < G_pgpe_pstate.vdd_curr)
+        {
+            //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
+            dpcr.fields.proxy_scale_factor = (power_proxy_scale_tgt + G_pgpe_pstate.power_proxy_scale) >> 1;
+            PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
+
+            //lower VDD
+            if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
+            {
+                pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                          pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
+                                          G_pgpe_pstate.vdd_next_ext);
+            }
+
+            //Write proxy_scale_factor_target to DPCRs
+            dpcr.fields.proxy_scale_factor = power_proxy_scale_tgt;
+            PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
+        }
+        //raising voltage
+        else if (G_pgpe_pstate.vdd_next > G_pgpe_pstate.vdd_curr)
+        {
+            //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
+            dpcr.fields.proxy_scale_factor = (power_proxy_scale_tgt + G_pgpe_pstate.power_proxy_scale) >> 1;
+            PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
+
+            //raise VDD
+            if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
+            {
+                pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                          pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
+                                          G_pgpe_pstate.vdd_next_ext);
+            }
+
+            //Write proxy_scale_factor_target to DPCRs
+            dpcr.fields.proxy_scale_factor = power_proxy_scale_tgt;
+            PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
+        }
+
+        //See whether to remove rVRM enablement override
+        if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RVRM_ENABLE) && (in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW) && BIT32(XGPE_ACTIVE)))
+        {
+            if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) >= pgpe_gppb_get_rvrm_deadzone_mv())
+            {
+                pgpe_xgpe_send_vret_updt(UPDATE_VRET_TYPE_CLEAR);
+                //Set RVCSR[RVID_OVERRIDE]
+                PPE_PUTSCOM_MC(CPMS_RVCSR_WO_CLEAR, 0xF, BIT64(CPMS_RVCSR_RVID_OVERRIDE));
+            }
+        }
+
+        if (G_pgpe_pstate.vdd_next_ext > pgpe_gppb_get_array_write_vdd_mv())
+        {
+            PPE_PUTSCOM_MC_Q(NET_CTRL0_RW_WAND, ~BIT64(NET_CTRL0_ARRAY_WRITE_ASSIST_EN));
+        }
+
+        G_pgpe_pstate.power_proxy_scale = power_proxy_scale_tgt;
+        pgpe_pstate_update_vdd_vcs_ps();
+
+        if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
+        {
+            pgpe_wov_ocs_set_wov_curr_pct(pgpe_wov_ocs_get_wov_tgt_pct());
+        }
+    }
 }
 
 void pgpe_pstate_actuate_pstate(uint32_t pstate)
@@ -1249,8 +1354,4 @@ void pgpe_pstate_update_vdd_vcs_ps()
     uint32_t occs2  =  (G_pgpe_pstate.vdd_curr_ext << 16) | G_pgpe_pstate.vcs_curr_ext;
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCS2_RW, occs2);
 
-    if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
-    {
-        pgpe_wov_ocs_set_wov_curr_pct(pgpe_wov_ocs_get_wov_tgt_pct());
-    }
 }
