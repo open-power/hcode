@@ -48,7 +48,8 @@ void pgpe_wov_ocs_init()
 
     PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(QME_QMCR_TTSR_READ_ENABLE)); //Enable TTSR
 
-    G_pgpe_wov_ocs.wov_status = WOV_STATUS_DISABLED;
+    G_pgpe_wov_ocs.wov_uv_status = WOV_STATUS_DISABLED;
+    G_pgpe_wov_ocs.wov_ov_status = WOV_STATUS_DISABLED;
     G_pgpe_wov_ocs.ocs_status = OCS_STATUS_DISABLED;
     G_pgpe_wov_ocs.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_pgpe_pgpeWofStateAddress));
     G_pgpe_wov_ocs.wov_thr_loss_enable = WOV_THR_LOSS_STATUS_DISABLED;
@@ -68,6 +69,9 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.cnt_droop_heavy = 0;
     G_pgpe_wov_ocs.cnt_droop_heavy_oc = 0;
 
+    PK_TRACE("WOV_OCS: overv_max_pct  = 0x%x", pgpe_gppb_get_wov_overv_max_pct());
+    PK_TRACE("WOV_OCS: underv_max_pct = 0x%x", pgpe_gppb_get_wov_underv_max_pct());
+
     PK_TRACE("WOV_OCS: WOV_DIRTY_UC_CTRL_LIGHT_DROOP=%u",
              pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_LIGHT_DROOP));
     PK_TRACE("WOV_OCS: WOV_DIRTY_UC_CTRL_HEAVY_DROOP=%u",
@@ -80,13 +84,13 @@ void pgpe_wov_ocs_enable()
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOV_UNDERVOLT_ENABLE))
     {
         PK_TRACE("WOV_OCS: Undervolt Enabled");
-        G_pgpe_wov_ocs.wov_status |= WOV_STATUS_UNDERVOLT_ENABLED;
+        G_pgpe_wov_ocs.wov_uv_status = WOV_STATUS_ENABLED;
     }
 
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOV_OVERVOLT_ENABLE))
     {
         PK_TRACE("OV_OCS: Overvolt Enabled");
-        G_pgpe_wov_ocs.wov_status |= WOV_STATUS_OVERVOLT_ENABLED;
+        G_pgpe_wov_ocs.wov_ov_status = WOV_STATUS_ENABLED;
     }
 
 
@@ -100,12 +104,15 @@ void pgpe_wov_ocs_enable()
     //\todo RTC 247186
     G_pgpe_wov_ocs.wov_thr_loss_enable = WOV_THR_LOSS_STATUS_ENABLED;
     G_pgpe_wov_ocs.wov_freq_loss_enable = WOV_FREQ_LOSS_STATUS_DISABLED;
+    PK_TRACE("WOV_OCS: WOV_UNDERV_STATUS=0x%x", G_pgpe_wov_ocs.wov_uv_status);
+    PK_TRACE("WOV_OCS: WOV_OVERV_STATUS=0x%x", G_pgpe_wov_ocs.wov_ov_status);
 }
 
 void pgpe_wov_ocs_disable()
 {
     PK_TRACE("WOV_OCS: Disabled");
-    G_pgpe_wov_ocs.wov_status = WOV_STATUS_DISABLED;
+    G_pgpe_wov_ocs.wov_uv_status = WOV_STATUS_DISABLED;
+    G_pgpe_wov_ocs.wov_ov_status = WOV_STATUS_DISABLED;
     G_pgpe_wov_ocs.ocs_status = OCS_STATUS_DISABLED;
     G_pgpe_wov_ocs.wov_thr_loss_enable = WOV_THR_LOSS_STATUS_DISABLED;
     G_pgpe_wov_ocs.wov_freq_loss_enable = WOV_FREQ_LOSS_STATUS_DISABLED;
@@ -118,8 +125,8 @@ void pgpe_wov_ocs_determine_perf_loss()
     //PK_TRACE("OCS: Perf loss");
 
     if ((G_pgpe_wov_ocs.ocs_status == OCS_STATUS_ENABLED) ||
-        (G_pgpe_wov_ocs.wov_status  & WOV_STATUS_OVERVOLT_ENABLED)
-        || (G_pgpe_wov_ocs.wov_status & WOV_STATUS_UNDERVOLT_ENABLED))
+        (G_pgpe_wov_ocs.wov_uv_status  & WOV_STATUS_ENABLED)
+        || (G_pgpe_wov_ocs.wov_ov_status & WOV_STATUS_ENABLED))
     {
         uint64_t thr_light_loss = 0;
         uint64_t thr_heavy_loss = 0;
@@ -336,7 +343,7 @@ void pgpe_wov_ocs_update_dirty()
 void pgpe_wov_ocs_dec_tgt_pct()
 {
     //Adjust WOV Target Pct
-    int32_t min_pct;
+    int32_t min_pct, step_size;
 
     if (pgpe_wov_ocs_is_wov_underv_enabled())
     {
@@ -347,9 +354,18 @@ void pgpe_wov_ocs_dec_tgt_pct()
         min_pct = 0;
     }
 
-    if (G_pgpe_wov_ocs.curr_pct > min_pct)
+    if (G_pgpe_wov_ocs.tgt_pct > 0)
     {
-        G_pgpe_wov_ocs.tgt_pct -= pgpe_gppb_get_wov_underv_step_incr_pct();
+        step_size =  pgpe_gppb_get_wov_overv_step_decr_pct();
+    }
+    else
+    {
+        step_size =  pgpe_gppb_get_wov_underv_step_decr_pct();
+    }
+
+    if (G_pgpe_wov_ocs.tgt_pct > min_pct)
+    {
+        G_pgpe_wov_ocs.tgt_pct -= step_size;
     }
     else
     {
@@ -360,7 +376,7 @@ void pgpe_wov_ocs_dec_tgt_pct()
 void pgpe_wov_ocs_inc_tgt_pct()
 {
     //Adjust WOV Target Pct
-    int32_t max_pct;
+    int32_t max_pct, step_size;
 
     if (pgpe_wov_ocs_is_wov_overv_enabled())
     {
@@ -371,9 +387,18 @@ void pgpe_wov_ocs_inc_tgt_pct()
         max_pct = 0;
     }
 
-    if (G_pgpe_wov_ocs.curr_pct < max_pct)
+    if (G_pgpe_wov_ocs.tgt_pct > 0)
     {
-        G_pgpe_wov_ocs.tgt_pct += pgpe_gppb_get_wov_underv_step_decr_pct();
+        step_size =  pgpe_gppb_get_wov_overv_step_incr_pct();
+    }
+    else
+    {
+        step_size =  pgpe_gppb_get_wov_underv_step_incr_pct();
+    }
+
+    if (G_pgpe_wov_ocs.tgt_pct < max_pct)
+    {
+        G_pgpe_wov_ocs.tgt_pct += step_size;
     }
     else
     {

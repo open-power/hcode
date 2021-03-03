@@ -30,6 +30,7 @@
 #include "pgpe_dpll.h"
 #include "p10_oci_proc.H"
 #include "pgpe_optrace.h"
+#include "pgpe_wov_ocs.h"
 
 //Data
 pgpe_event_manager_t G_pgpe_event_manager __attribute__((section (".data_structs")));
@@ -108,7 +109,7 @@ void pgpe_event_manager_run()
             case PGPE_SM_ACTIVE:
                 pgpe_event_manager_run_active();
 
-                if(!pgpe_pstate_is_at_target())
+                if(!pgpe_pstate_is_at_target() || !pgpe_wov_is_wov_at_target())
                 {
                     done = 0;
                 }
@@ -329,6 +330,13 @@ void pgpe_event_manager_run_active()
         if(!pgpe_pstate_is_at_target())
         {
             pgpe_pstate_actuate_step();
+        }
+        else
+        {
+            if(!pgpe_wov_is_wov_at_target())
+            {
+                pgpe_pstate_actuate_voltage_step();
+            }
         }
 
         //Do post actuation

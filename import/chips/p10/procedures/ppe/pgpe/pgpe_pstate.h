@@ -103,6 +103,7 @@ extern pgpe_pstate_t G_pgpe_pstate;
 void pgpe_pstate_init();
 void* pgpe_pstate_data_addr();
 void pgpe_pstate_actuate_step();
+void pgpe_pstate_actuate_voltage_step();
 void pgpe_pstate_actuate_pstate(uint32_t pstate);
 void pgpe_pstate_actuate_safe_voltage_vdd();
 void pgpe_pstate_actuate_safe_voltage_vcs();
