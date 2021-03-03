@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -85,16 +85,6 @@ static const uint32_t CTL_REGS_RX_MODE3_PG_DATA_SRC = 60;
 static const uint32_t CTL_REGS_RX_MODE3_PG_FORMAT = 61;
 static const uint32_t CTL_REGS_RX_MODE3_PG_VOTE_WIN_BOTH = 62;
 //<< [CTL_REGS_RX_MODE3_PG]
-// omic/reg00006.H
-
-//>> [CTL_REGS_TX_CNTL4_PG]
-static const uint64_t CTL_REGS_TX_CNTL4_PG = 0x800c5c4010012c3full;
-
-static const uint32_t CTL_REGS_TX_CNTL4_PG_DAC_CNTL = 48;
-static const uint32_t CTL_REGS_TX_CNTL4_PG_DAC_CNTL_LEN = 8;
-static const uint32_t CTL_REGS_TX_CNTL4_PG_CLAMP_DISABLE = 56;
-static const uint32_t CTL_REGS_TX_CNTL4_PG_PHASE_SEL = 57;
-//<< [CTL_REGS_TX_CNTL4_PG]
 // omic/reg00006.H
 
 //>> [DATASM_REGS_RX_CNT14_PG]

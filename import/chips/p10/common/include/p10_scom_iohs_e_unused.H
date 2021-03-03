@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -2040,17 +2040,6 @@ static const uint64_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL25_PL = 0x8004f40010012c3full
 static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL25_PL_TX_NSEG_MAIN_0_15_SAFE_EN = 48;
 static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL25_PL_TX_NSEG_MAIN_0_15_SAFE_EN_LEN = 16;
 //<< [IOO_TX0_0_DD_TX_BIT_REGS_CNTL25_PL]
-// iohs/reg00065.H
-
-//>> [IOO_TX0_0_DD_TX_BIT_REGS_STAT1_PL]
-static const uint64_t IOO_TX0_0_DD_TX_BIT_REGS_STAT1_PL = 0x8005240010012c3full;
-
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_STAT1_PL_BIST_PRBS_ERR_DET_RO_SIGNAL = 48;
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_STAT1_PL_BIST_PRBS_ACTIVITY_DET_RO_SIGNAL = 49;
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_STAT1_PL_SEG_TEST_STATUS_RO_SIGNAL = 50;
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_STAT1_PL_SEG_TEST_STATUS_RO_SIGNAL_LEN = 2;
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_STAT1_PL_TDR_CAPT_VAL_RO_SIGNAL = 63;
-//<< [IOO_TX0_0_DD_TX_BIT_REGS_STAT1_PL]
 // iohs/reg00065.H
 
 //>> [IOO_TX0_1_DD_0_TX_BIT_REGS_CNTL14_PL]
