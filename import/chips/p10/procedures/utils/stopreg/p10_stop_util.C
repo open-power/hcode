@@ -80,8 +80,8 @@ STATIC StopReturnCode_t  isFusedMode( void* const i_pImage, bool* o_fusedMode )
 
         if( CPMR_REGION_CHECK_WORD != l_cpmrCheckWord )
         {
-            MY_ERR("corrupt or invalid HOMER image location 0x%016lx",
-                   l_cpmrCheckWord );
+            MY_ERR("corrupt or invalid HOMER image location 0x%08x",
+                   (uint32_t) l_cpmrCheckWord );
             l_rc = STOP_SAVE_ARG_INVALID_IMG;
             break;
         }
