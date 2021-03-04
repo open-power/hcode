@@ -493,9 +493,7 @@ errlHndl_t createErrl(
     const uint8_t i_reasonCode,
     const uint16_t i_extReasonCode,
     const ERRL_SEVERITY i_sev,
-    const uint32_t i_userData1,
-    const uint32_t i_userData2,
-    const uint32_t i_userData3,
+    errlUDWords_t* p_uDWords,
     uint32_t*      o_status )
 {
     PK_TRACE_INF ("createErrl: modid 0x%X rc 0x%X sev 0x%X",
@@ -532,9 +530,14 @@ errlHndl_t createErrl(
         l_rc->iv_userDetails.iv_timeStamp = l_time;
         // save off rest of input parameters
         l_rc->iv_userDetails.iv_modId = i_modId;
-        l_rc->iv_userDetails.iv_userData1 = i_userData1;
-        l_rc->iv_userDetails.iv_userData2 = i_userData2;
-        l_rc->iv_userDetails.iv_userData3 = i_userData3;
+
+        if (p_uDWords)
+        {
+            l_rc->iv_userDetails.iv_userData1 = p_uDWords->userdata1;
+            l_rc->iv_userDetails.iv_userData2 = p_uDWords->userdata2;
+            l_rc->iv_userDetails.iv_userData3 = p_uDWords->userdata3;
+        }
+
         l_rc->iv_userDetails.iv_version = ERRL_USR_DTL_STRUCT_VERSION_1;
 
         // Save other invariants
@@ -839,9 +842,7 @@ uint32_t  ppeLogError (
     const uint16_t      i_extRc,
     const uint16_t      i_modId,
     const ERRL_SEVERITY i_sev,
-    const uint32_t      i_userData1,
-    const uint32_t      i_userData2,
-    const uint32_t      i_userData3,
+    errlUDWords_t*      p_uDWords,
     errlDataUsrDtls_t*  p_usrDtls,
     errlDataCallout_t*  p_callOuts )
 {
@@ -853,9 +854,7 @@ uint32_t  ppeLogError (
                       i_rc,
                       i_extRc,
                       i_sev,
-                      i_userData1,
-                      i_userData2,
-                      i_userData3,
+                      p_uDWords,
                       &status);
 
     if (NULL != err)
@@ -888,8 +887,7 @@ uint32_t  ppeLogError (
             addTraceToErrl (err);
         }
 
-        while ((ERRL_STATUS_SUCCESS == status) && p_callOuts);
-
+        while ((ERRL_STATUS_SUCCESS == status) && p_callOuts)
         {
             // 4. Add callouts passed by user
             status = addCalloutToErrl(err,

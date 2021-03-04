@@ -41,10 +41,10 @@
                         i_userData1, i_userData2, i_userData3,    \
                         p_usrDtls, o_status)                     \
 {                                                                 \
+    errlUDWords_t uDWords = {i_userData1, i_userData2, i_userData3};\
     o_status = ppeLogError ( i_rc, i_extRc, i_modId,       \
                              ERRL_SEV_INFORMATIONAL,       \
-                             i_userData1, i_userData2, i_userData3,\
-                             p_usrDtls, NULL );                    \
+                             &uDWords, p_usrDtls, NULL );              \
 }
 
 /// @brief Create and commit an unrecoverable (critical) error log and continue
@@ -64,9 +64,9 @@
                               i_userData1, i_userData2, i_userData3,\
                               p_usrDtls, p_callOuts, o_status )     \
 {                                                                   \
+    errlUDWords_t uDWords = {i_userData1, i_userData2, i_userData3};\
     o_status = ppeLogError ( i_rc, i_extRc, i_modId, ERRL_SEV_UNRECOVERABLE, \
-                             i_userData1, i_userData2, i_userData3,          \
-                             p_usrDtls, p_callOuts );                        \
+                             &uDWords, p_usrDtls, p_callOuts );              \
 }
 
 /// @brief Create and commit an unrecoverable (critical) error log and halt PPE
@@ -89,9 +89,9 @@
                              i_userData1, i_userData2, i_userData3, \
                              p_usrDtls, p_callOuts, o_status )      \
 {                                                                   \
+    errlUDWords_t uDWords = {i_userData1, i_userData2, i_userData3};\
     o_status = ppeLogError ( i_rc, i_extRc, i_modId, ERRL_SEV_UNRECOVERABLE, \
-                             i_userData1, i_userData2, i_userData3,          \
-                             p_usrDtls, p_callOuts );                        \
+                             &uDWords, p_usrDtls, p_callOuts );              \
 }
 
 #endif // ERRLUTIL_H

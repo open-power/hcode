@@ -71,13 +71,24 @@ struct errlDataUsrDtls
 
 typedef struct errlDataUsrDtls errlDataUsrDtls_t;
 
+// Structure aggregating the user data words 1-3 that get into a PEL's
+// SRC words 4-6, as additional FFDC info for the error
+struct errlUserDataWords
+{
+    uint32_t userdata1;
+    uint32_t userdata2;
+    uint32_t userdata3;
+};
+
+typedef struct errlUserDataWords errlUDWords_t;
+
 /// @brief Creates an Error Log in the PPE's local SRAM
 ///
 /// @param [in] i_modId Module/function ID where the error log is being created
 /// @param [in] i_reasonCode A unique code identifying the reason of this error
 /// @param [in] i_extReasonCode An extended Reason Code for this error
 /// @param [in] i_sev Severity this Error Log should be created with
-/// @param [in] i_userData1-3 User data to add to the Error Log as a FFDC
+/// @param [in] p_uDWords User data words 1-3 to add to the Error Log as FFDC
 /// @param[out] o_status, See errlStatusCodes
 ///
 /// @return On Success: A non-NULL handle to the Error Log created
@@ -93,9 +104,7 @@ errlHndl_t createErrl (
     const uint8_t i_reasonCode,
     const uint16_t i_extReasonCode,
     const ERRL_SEVERITY i_sev,
-    const uint32_t i_userData1,
-    const uint32_t i_userData2,
-    const uint32_t i_userData3,
+    errlUDWords_t* p_uDWords,
     uint32_t*      o_status );
 
 
@@ -193,7 +202,7 @@ uint32_t deleteErrl (errlHndl_t* io_errl);
 /// @param [in] i_extRc An extended Reason Code for this error
 /// @param [in] i_modId Module/function ID where the error log is being created
 /// @param [in] i_sev Severity this Error Log should be created with
-/// @param [in] i_userData1-3 User data to add to SRC words of Error Log as FFDC
+/// @param [in] p_uDWords User data words 1-3 to add to the Error Log as FFDC
 /// @param [in] p_usrDtls Linked list of user detail sections to be added. NULL
 ///             if there is no user detail section to be added to the error log.
 /// @param [in] p_callOuts Linked list of callouts to be added. NULL if there is
@@ -222,9 +231,7 @@ uint32_t  ppeLogError (
     const uint16_t      i_extRc,
     const uint16_t      i_modId,
     const ERRL_SEVERITY i_sev,
-    const uint32_t      i_userData1,
-    const uint32_t      i_userData2,
-    const uint32_t      i_userData3,
+    errlUDWords_t*      p_uDWords,
     errlDataUsrDtls_t*  p_usrDtls,
     errlDataCallout_t*  p_callOuts
 );
