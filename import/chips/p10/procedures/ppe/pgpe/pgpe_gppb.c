@@ -150,7 +150,7 @@ void pgpe_gppb_init()
         G_gpi_v1->magic = GEN_PSTATES_TBL_MAGIC_V1;
         G_gpi_v1->globalppb = *G_gppb_v1;
         G_gpi_v1->pstate0_frequency_khz = G_gppb_v1->base.reference_frequency_khz;
-        G_gpi_v1->highest_pstate = G_gppb_v1->operating_points_set[VPD_PT_SET_BIASED][POWERSAVE].pstate;
+        G_gpi_v1->highest_pstate = G_gppb_v1->operating_points_set[VPD_PT_SET_BIASED][CF0].pstate;
         G_gpi_v1->pgpe_header  = *(pgpe_header_get_ptr());
     }
     else
@@ -159,7 +159,7 @@ void pgpe_gppb_init()
         G_gpi->magic = GEN_PSTATES_TBL_MAGIC;
         G_gpi->globalppb = *G_gppb;
         G_gpi->pstate0_frequency_khz = G_gppb->reference_frequency_khz;
-        G_gpi->highest_pstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED][POWERSAVE].pstate;
+        G_gpi->highest_pstate = G_gppb->operating_points_set[VPD_PT_SET_BIASED][CF0].pstate;
         G_gpi->pgpe_header  = *(pgpe_header_get_ptr());
     }
 
@@ -198,12 +198,12 @@ void pgpe_gppb_raw_pstate_tbl(PstateTable_t* tbl)
 
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC_V1)
     {
-        max_ps = G_gppb_v1->operating_points_set[VPD_PT_SET_RAW][POWERSAVE].pstate;
+        max_ps = G_gppb_v1->operating_points_set[VPD_PT_SET_RAW][CF0].pstate;
         step_size = G_gppb_v1->base.frequency_step_khz;
     }
     else
     {
-        max_ps = G_gppb->operating_points_set[VPD_PT_SET_RAW][POWERSAVE].pstate;
+        max_ps = G_gppb->operating_points_set[VPD_PT_SET_RAW][CF0].pstate;
         step_size = G_gppb->frequency_step_khz;
     }
 
@@ -239,12 +239,12 @@ void pgpe_gppb_biased_pstate_tbl(PstateTable_t* tbl)
 
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC_V1)
     {
-        max_ps = G_gppb_v1->operating_points_set[VPD_PT_SET_RAW][POWERSAVE].pstate;
+        max_ps = G_gppb_v1->operating_points_set[VPD_PT_SET_RAW][CF0].pstate;
         step_size = G_gppb_v1->base.frequency_step_khz;
     }
     else
     {
-        max_ps = G_gppb->operating_points_set[VPD_PT_SET_RAW][POWERSAVE].pstate;
+        max_ps = G_gppb->operating_points_set[VPD_PT_SET_RAW][CF0].pstate;
         step_size = G_gppb->frequency_step_khz;
     }
 
