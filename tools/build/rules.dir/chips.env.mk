@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2019
+# COPYRIGHT 2015,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -50,7 +50,7 @@ CHIPS += ocmb/common
 CHIPS += ocmb/explorer
 p10_CHIPID += p10
 ocmb_CHIPID += explorer
-p10_EC += 10
+p10_EC += 10 20
 explorer_EC += 10
 endif
 
