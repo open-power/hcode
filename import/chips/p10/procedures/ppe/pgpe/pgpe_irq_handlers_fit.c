@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -107,6 +107,7 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
     //PK_TRACE("FIT: OCCFLG=0x%08x",occFlag);
     if(occFlag & BIT32(PGPE_SAFE_MODE))
     {
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_SAFE_MODE));
         //Mark event
         pgpe_event_tbl_set_status(EV_SAFE_MODE, EVENT_PENDING);
         pgpe_opt_set_byte(0, 0);
@@ -118,6 +119,7 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
 
     if(occFlag & BIT32(PGPE_PSTATE_PROTOCOL_STOP))
     {
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_PSTATE_PROTOCOL_STOP));
         //Mark event
         pgpe_event_tbl_set_status(EV_PSTATE_STOP, EVENT_PENDING);
         pgpe_opt_set_byte(0, 0);
