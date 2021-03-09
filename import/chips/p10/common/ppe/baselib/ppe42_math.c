@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2019                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -147,6 +147,32 @@ int __divsi3(int _a, int _b)
     }
 
     int c = (int)__udivsi3((unsigned long)_a, (unsigned long)_b);
+
+    if(neg)
+    {
+        c = (~c) + 1;
+    }
+
+    return c;
+}
+
+int __modsi3(int _a, int _b)
+{
+    register unsigned long neg = 0;
+
+    if(_a & 0x80000000)
+    {
+        neg = !neg;
+        _a = (~_a) + 1;
+    }
+
+    if(_b & 0x80000000)
+    {
+        _b = (~_b) + 1;
+        neg = !neg;
+    }
+
+    int c = (int)__umodsi3((unsigned long)_a, (unsigned long)_b);
 
     if(neg)
     {
