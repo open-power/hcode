@@ -26,6 +26,7 @@
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_gppb.h"
 #include "p10_oci_proc.H"
+#include "pgpe_error.h"
 
 //Local Functions
 uint32_t pgpe_avsbus_calc_crc(uint32_t data);
@@ -390,7 +391,8 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
         if (volt_mv > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
             volt_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
         {
-            //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+            pgpe_error_critical_log(PGPE_ERR_CODE_AVSBUS_VOLTAGE_OUT_OF_BOUNDS);
+            IOTA_PANIC(AVSBUS_OUT_OF_BOUNDS_VOLTAGE); //TODO Jump to fault state loop. Will be added as part of next error commit
         }
 
         // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0

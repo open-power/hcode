@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -43,6 +43,7 @@ typedef enum PGPE_STATE_MACHINE
     PGPE_SM_ACTIVE      = 0x00000002, //PGPE Pstate Active
     PGPE_SM_STOPPED     = 0x00000004, //PGPE Pstate Stopped
     PGPE_SM_SAFE_MODE   = 0x00000008, //PGPE Safe Mode
+    PGPE_SM_FAULT_MODE  = 0x00000010, //PGPE Fault Mode
 } pgpe_state_machine_t;
 
 typedef struct pgpe_event_manager

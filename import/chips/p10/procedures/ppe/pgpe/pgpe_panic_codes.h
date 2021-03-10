@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2020                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -38,7 +38,7 @@ UIH_OIMR_STACK_OVERFLOW             = 0x1c02,
 //_UNUSED_1c07                      = 0x1c07,
 //_UNUSED_1c08                      = 0x1c08,
 //_UNUSED_1c09                      = 0x1c09,
-//_UNUSED_1c0a                      = 0x1c0a,
+PGPE_HW_ERROR_INJECT_TRAP           = 0x1c0a,
 //_UNUSED_1c0d                      = 0x1c0d,
 //_UNUSED_1c1c                      = 0x1c1c,
 //_UNUSED_1c1d                      = 0x1c1d,
@@ -47,7 +47,7 @@ UIH_OIMR_STACK_OVERFLOW             = 0x1c02,
 
 CRITICAL_ERROR_LOG                  = 0x1d00,
 PGPE_BAD_DD_LEVEL                   = 0x1d01,
-//_UNUSED_1d02                      = 0x1d02,
+AVSBUS_OUT_OF_BOUNDS_VOLTAGE        = 0x1d02,
 //_UNUSED_1d03                      = 0x1d03,
 //_UNUSED_1d04                      = 0x1d04,
 //_UNUSED_1d05                      = 0x1d05,

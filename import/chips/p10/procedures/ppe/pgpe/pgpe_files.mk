@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2020
+# COPYRIGHT 2015,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -48,7 +48,8 @@ PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_thr_ctrl.c \
 				pgpe_wov_ocs.c \
 				pgpe_optrace.c \
-				pgpe_xgpe.c
+				pgpe_xgpe.c \
+				pgpe_error.c
 
 
 PGPE-CXX-SOURCES = pgpe_opCodes.C

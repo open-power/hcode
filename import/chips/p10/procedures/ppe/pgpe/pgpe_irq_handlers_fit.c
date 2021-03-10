@@ -104,6 +104,19 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
     //Read OCC_FLAGS
     occFlag = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW);
 
+    if(occFlag & BIT32(PGPE_HW_ERROR_INJECT))
+    {
+        PK_TRACE("OCCFLG2[PGPE_HW_ERROR_INJECT]=1. Halting PGPE");
+        IOTA_PANIC(PGPE_HW_ERROR_INJECT_TRAP);
+    }
+
+    if((occFlag & BITS32(PGPE_HCODE_ERROR_INJECT, PGPE_HCODE_ERROR_INJECT_LEN)) == 0x03000000)
+    {
+        PK_TRACE("OCCFLG2[PGPE_HCODE_ERROR_INJECT]=0x3. FIT ERROR INJECT 0x%08x", occFlag);
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BITS32(PGPE_HCODE_ERROR_INJECT, PGPE_HCODE_ERROR_INJECT_LEN));
+        pgpe_event_tbl_set_status(EV_FIT_ERROR_INJECT, EVENT_PENDING);
+    }
+
     //PK_TRACE("FIT: OCCFLG=0x%08x",occFlag);
     if(occFlag & BIT32(PGPE_SAFE_MODE))
     {

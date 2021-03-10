@@ -27,6 +27,7 @@
 #include "pgpe_event_process.h"
 #include "pgpe_pstate.h"
 #include "pgpe_occ.h"
+#include "pgpe_error.h"
 #include "pgpe_dpll.h"
 #include "p10_oci_proc.H"
 #include "pgpe_optrace.h"
@@ -39,6 +40,7 @@ pgpe_event_manager_t G_pgpe_event_manager __attribute__((section (".data_structs
 void pgpe_event_manager_run_booted_or_stopped();
 void pgpe_event_manager_run_active();
 void pgpe_event_manager_run_safe_mode();
+void pgpe_event_manager_run_fault_mode();
 void pgpe_event_manager_upd_state(uint32_t status);
 
 
@@ -124,6 +126,10 @@ void pgpe_event_manager_run()
                 pgpe_event_manager_run_safe_mode();
                 break;
 
+            case PGPE_SM_FAULT_MODE:
+                pgpe_event_manager_run_fault_mode();
+                break;
+
             default:
                 // \todo Most likely halt because PGPE data got corrupted
                 break;
@@ -153,6 +159,19 @@ void pgpe_event_manager_run_booted_or_stopped()
             break; //Don't process any other pending requests
         }
 
+
+        //Process
+        //Error Inject Mode
+        e = pgpe_event_tbl_get(EV_FIT_ERROR_INJECT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_error_critical_log(PGPE_ERR_EXT_CODE_PGPE_FIT_ERROR_INJECT);
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            pgpe_event_tbl_set_status(EV_FIT_ERROR_INJECT, EVENT_INACTIVE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            break; //Don't process any other pending requests
+        }
 
         //Safe Mode
         //Process Safe Mode, but mark error no actuation can be done)
@@ -262,6 +281,19 @@ void pgpe_event_manager_run_active()
 
 
 
+        //Error Inject Mode
+        e = pgpe_event_tbl_get(EV_FIT_ERROR_INJECT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_error_critical_log(PGPE_ERR_EXT_CODE_PGPE_FIT_ERROR_INJECT);
+            pgpe_process_safe_mode(e->args);
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            pgpe_event_tbl_set_status(EV_FIT_ERROR_INJECT, EVENT_INACTIVE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            break; //Don't process any other pending requests
+        }
+
         //Safe Mode
         //Process Safe Mode
         //mark next state as SAFE_MODE and break
@@ -352,7 +384,27 @@ void pgpe_event_manager_run_active()
         //Do actuation
         if(!pgpe_pstate_is_at_target())
         {
-            pgpe_pstate_actuate_step();
+            //Error Injection
+            uint32_t occFlag = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW);
+
+            if(occFlag & 0x01000000)
+            {
+                out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BITS32(PGPE_HCODE_ERROR_INJECT, PGPE_HCODE_ERROR_INJECT_LEN));
+                pgpe_error_critical_log(PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL);
+                pgpe_process_safe_mode(e->args);
+                pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+                out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+                break; //Don't process any other pending requests
+            }
+            else if(occFlag & 0x02000000)
+            {
+                out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BITS32(PGPE_HCODE_ERROR_INJECT, PGPE_HCODE_ERROR_INJECT_LEN));
+                pgpe_error_info_log(PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO);
+            }
+            else
+            {
+                pgpe_pstate_actuate_step();
+            }
         }
         else
         {
@@ -394,7 +446,6 @@ void pgpe_event_manager_run_active()
 void pgpe_event_manager_run_safe_mode()
 {
     //Process
-    //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
     event_t* e;
 
     do
@@ -430,8 +481,96 @@ void pgpe_event_manager_run_safe_mode()
             pgpe_event_tbl_set_status(EV_PSTATE_STOP, EVENT_INACTIVE);
         }
 
-        //WOF_CTRL, PMCR_REQUEST, PMCR_PCB, CLIP_UPDATE, PSTATE_START_STOP
+        //WOF_CTRL
         //Ack with bad rc
+        e = pgpe_event_tbl_get(EV_IPC_WOF_CTRL);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+        }
+
+        //WOF_VRT
+        e = pgpe_event_tbl_get(EV_IPC_WOF_VRT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+        }
+
+        //SET_PMCR IPC
+        //Ack with bad rc
+        e = pgpe_event_tbl_get(EV_IPC_SET_PMCR);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_IPC_SET_PMCR, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+        }
+
+        //PMCR_PCB
+        e = pgpe_event_tbl_get(EV_PCB_SET_PMCR);
+
+        if (e->status == EVENT_PENDING)
+        {
+            //\todo This should never happen. TBD Should this be an error??
+            pgpe_event_tbl_set_status(EV_PCB_SET_PMCR, EVENT_INACTIVE);
+        }
+
+        //CLIP_UPDT
+        e = pgpe_event_tbl_get(EV_IPC_CLIP_UPDT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+        }
+
+        //PSTART_START_STOP
+        e = pgpe_event_tbl_get(EV_IPC_PSTATE_START_STOP);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_IPC_PSTATE_START_STOP, EVENT_INACTIVE);
+            pgpe_occ_send_ipc_ack_cmd_rc((ipc_msg_t*)e->args, PGPE_RC_PM_COMPLEX_SUSPEND_SAFE_MODE);
+        }
+
+    }
+    while(0);
+
+}
+
+void pgpe_event_manager_run_fault_mode()
+{
+    //Process
+    //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
+    event_t* e;
+
+    do
+    {
+        //Process
+        //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
+
+        //Safe Mode
+        //Do nothing
+        e = pgpe_event_tbl_get(EV_SAFE_MODE);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_SAFE_MODE, EVENT_INACTIVE);
+        }
+
+        //PSTATE_STOP(SCOM)
+        //Do nothing
+        e = pgpe_event_tbl_get(EV_PSTATE_STOP);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_PSTATE_STOP, EVENT_INACTIVE);
+        }
+
         //WOF_CTRL
         //Ack with bad rc
         e = pgpe_event_tbl_get(EV_IPC_WOF_CTRL);

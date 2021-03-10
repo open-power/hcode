@@ -47,7 +47,8 @@ enum EVENT_TABLE_IDX
     EV_XGPE_FAULT                       =   11,
     EV_PVREF_FAULT                      =   12,
     EV_IPC_STOP_BEACON                  =   13,
-    MAX_EVENT_TABLE_ENTRIES             =   14
+    EV_FIT_ERROR_INJECT                 =   14,
+    MAX_EVENT_TABLE_ENTRIES             =   15
 };
 
 #ifdef __PARSER_TOOL__
