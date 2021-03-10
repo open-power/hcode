@@ -724,7 +724,7 @@ void pgpe_process_wof_ctrl_post_actuate()
 void pgpe_process_wof_vrt(void* eargs)
 {
     PK_TRACE("PEP: WOF VRT");
-    ipc_msg_t* cmd = (ipc_msg_t*)eargs;
+    uint32_t vindex, ack_back = 0;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
     ipcmsg_wof_vrt_t* args = (ipcmsg_wof_vrt_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
@@ -739,41 +739,73 @@ void pgpe_process_wof_vrt(void* eargs)
         if (args->idd_vrt_ptr == NULL)
         {
             PK_TRACE("PEP: NULL VRT");
-            //\todo Error
-        }
-
-        pgpe_pstate_set_vrt(args->idd_vrt_ptr);
-        PK_TRACE("PEP: VRT_PTR=0x%x", (uint32_t)args->idd_vrt_ptr);
-
-        //If WOF is enabled
-        if(pgpe_pstate_is_wof_enabled())
-        {
-            //Do vratio instantaneous calculation
-            pgpe_pstate_compute_vratio(pgpe_pstate_get(pstate_curr));
-            pgpe_pstate_compute_vindex();
-            pgpe_pstate_set(clip_wof, args->idd_vrt_ptr->data[pgpe_pstate_get(vindex)]);
-            pgpe_opt_set_word(0, 0);
-            pgpe_opt_set_half(0, pgpe_pstate_get(vratio_index_format));
-            pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
-            pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
-            ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
-            PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
-                     pgpe_pstate_get(vindex),
-                     pgpe_pstate_get(clip_wof));
-            pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_PENDING_ACTUATION);
-
-            pgpe_pstate_compute();
-            pgpe_pstate_apply_clips();
+            //\todo Take out an error log
+            ack_back = 1;
+            args->msg_cb.rc = PGPE_RC_NULL_VRT_POINTER;
         }
         else
         {
-            //ACK back
-            pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
-            pgpe_occ_send_ipc_ack_cmd(cmd);
-            ppe_trace_op(PGPE_OPT_WOF_VRT_ACK, 0);
+
+            pgpe_pstate_set_vrt(args->idd_vrt_ptr);
+            PK_TRACE("PEP: VRT_PTR=0x%x", (uint32_t)args->idd_vrt_ptr);
+
+            //If WOF is enabled
+            if(pgpe_pstate_is_wof_enabled())
+            {
+                //Vration fixed mode
+                if (args->vratio_mode == PGPE_OCC_VRATIO_MODE_FIXED)
+                {
+                    if (args->fixed_vratio_index > WOF_VRT_SIZE)
+                    {
+                        //\todo Take out an error log
+                        PK_TRACE("PEP: INVALID VRATIO INDEX"); //todo take critical error log
+                        ack_back = 1;
+                        args->msg_cb.rc = PGPE_WOF_RC_INVALID_FIXED_VRATIO_INDEX;
+                    }
+                    else
+                    {
+                        pgpe_pstate_set(vindex, args->fixed_vratio_index);
+                    }
+                }
+                else
+                {
+                    //Do vratio instantaneous calculation
+                    pgpe_pstate_compute_vratio(pgpe_pstate_get(pstate_curr));
+                    pgpe_pstate_compute_vindex();
+                }
+
+                //If valid vindex, then determine new wof clip
+                if (ack_back == 0)
+                {
+                    vindex = pgpe_pstate_get(vindex);
+                    pgpe_pstate_set(clip_wof, args->idd_vrt_ptr->data[vindex]);
+                    pgpe_opt_set_word(0, 0);
+                    pgpe_opt_set_half(0, pgpe_pstate_get(vratio_index_format));
+                    pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
+                    pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
+                    ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
+                    PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
+                             pgpe_pstate_get(vindex),
+                             pgpe_pstate_get(clip_wof));
+                    pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_PENDING_ACTUATION);
+
+                    pgpe_pstate_compute();
+                    pgpe_pstate_apply_clips();
+                }
+            }
+            else
+            {
+                ack_back = 1;
+            }
         }
     }
     else
+    {
+        ack_back = 1;
+    }
+
+    //If WOF is not enabled yet(just initial VRT), immediate mode or an error, then we ACK back.
+    if(ack_back)
     {
         pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
         pgpe_occ_send_ipc_ack_cmd((ipc_msg_t*)eargs);

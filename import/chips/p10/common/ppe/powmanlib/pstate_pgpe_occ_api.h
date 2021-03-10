@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2020                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -70,6 +70,7 @@ enum MESSAGE_ID_IPI2HI
 #define PGPE_RC_REQ_WHILE_PENDING_ACK           0x21
 #define PGPE_RC_NULL_VRT_POINTER                0x22
 #define PGPE_RC_INVALID_PMCR_OWNER              0x23
+#define PGPE_WOF_RC_INVALID_FIXED_VRATIO_INDEX  0x24
 
 //
 // PMCR Owner
@@ -124,6 +125,8 @@ typedef struct ipcmsg_set_pmcr
 //
 #define PGPE_ACTION_WOF_ON         1
 #define PGPE_ACTION_WOF_OFF        2
+#define PGPE_OCC_VRATIO_MODE_VARIABLE   0
+#define PGPE_OCC_VRATIO_MODE_FIXED      1
 
 typedef struct ipcmsg_wof_control
 {
