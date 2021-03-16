@@ -298,7 +298,6 @@ p10_hcd_core_shadows_enable(
                     .set_CPMS_CUCR(l_scomData)
                     .set_CORE_TARGET(i_target),
                     "ERROR: FDCR Update Timeout");
-
     }
 
     // wait for remaining registers to be done (overlap with DDS enable) -- DD1 may be partially done
@@ -330,8 +329,8 @@ p10_hcd_core_shadows_enable(
                 .set_CORE_TARGET(i_target),
                 "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 1)");
 
-    //TODO:  need to put condition compile switch around DD1 work-arounds.
-    // DD1 WORKAROUND START
+#if POWER10_DD_LEVEL == 10 //HW527679
+
     FAPI_DBG("Disable CORE_SHADOW via CUCR[0]");
     FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CUCR_WO_CLEAR, BIT64(0) ) );
 
@@ -365,7 +364,8 @@ p10_hcd_core_shadows_enable(
                 .set_CPMS_CUCR(l_scomData)
                 .set_CORE_TARGET(i_target),
                 "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 2)");
-    // DD1 WORKAROUND END
+
+#endif // DD1 WORKAROUND END
 
     FAPI_DBG("Drop CTFS_WKUP_ENABLE via PCR_SCSR[27]");
     FAPI_TRY( HCD_PUTMMIO_C( i_target, QME_SCSR_WO_CLEAR, MMIO_1BIT(27) ) );

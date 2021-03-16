@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -78,6 +78,9 @@ enum P10_HCD_CORE_TIMEFAC_TO_PC_CONSTANTS
     HCD_TIMEFAC_TO_PC_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS      = 100000, // 10^5ns = 100us timeout
     HCD_TIMEFAC_TO_PC_XFER_SENT_DONE_POLL_DELAY_HW_NS        = 1000,   // 1us poll loop delay
     HCD_TIMEFAC_TO_PC_XFER_SENT_DONE_POLL_DELAY_SIM_CYCLE    = 32000,  // 32k sim cycle delay
+    HCD_SHADOW_ENA_FUSED_COPY_DONE_POLL_TIMEOUT_HW_NS     = 100000, // 10^5ns = 100us timeout
+    HCD_SHADOW_ENA_FUSED_COPY_DONE_POLL_DELAY_HW_NS       = 1000,   // 1us poll loop delay
+    HCD_SHADOW_ENA_FUSED_COPY_DONE_POLL_DELAY_SIM_CYCLE   = 32000,  // 32k sim cycle delay
 };
 
 //------------------------------------------------------------------------------
@@ -233,6 +236,86 @@ p10_hcd_core_timefac_to_pc(
 #endif
 
         }
+
+
+#if POWER10_DD_LEVEL != 10 // HW534619 or HW524921
+
+        FAPI_TRY(HCD_GETMMIO_Q( l_eq_target, MMIO_LOWADDR(QME_QMCR), l_mmioData ) );
+
+        if( MMIO_GET(MMIO_LOWBIT(47)) == 1 )
+        {
+            uint32_t l_core_select    = i_target.getCoreSelect() ;
+            uint32_t l_stop_gated     = 0;
+            uint32_t l_awake_sibling  = 0;
+
+            FAPI_TRY( HCD_GETMMIO_Q( l_eq_target, QME_SCDR, l_mmioData ) );
+            MMIO_EXTRACT(0, 4, l_stop_gated);
+
+            // if both cores waking up, no action
+            // if both cores stays in stop, no action
+            // if one core wakes up, the sibling stays in stop, no action
+            // if one core wakes up, the sibling is already awake,
+            //   perform this sequence to the sibling
+            l_awake_sibling = (l_core_select ^ 0xF) & 0xF;
+
+            if( (l_awake_sibling & 0x3) == 0x3 )
+            {
+                l_awake_sibling &= 0xC;
+            }
+
+            if( (l_awake_sibling & 0xC) == 0xC )
+            {
+                l_awake_sibling &= 0x3;
+            }
+
+            l_awake_sibling &= ~l_stop_gated;
+
+            FAPI_INF("Awake Sibling core vector[%x] given Current Core Select[%x] and Stop_Gated Cores[%x]",
+                     l_awake_sibling, l_core_select, l_stop_gated);
+
+            if( l_awake_sibling )
+            {
+                fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST,
+                      fapi2::MULTICAST_AND > l_sibling_target =
+                          l_chip.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                                  static_cast<fapi2::MulticastCoreSelect>(l_awake_sibling));
+
+                FAPI_DBG("Assert PC_COPY_FUSED_SPRS via PCR_SCSR[28]");
+                FAPI_TRY( HCD_PUTMMIO_C( l_sibling_target, QME_SCSR_WO_OR, MMIO_LOAD32H( BIT32(28) ) ) );
+
+                FAPI_DBG("Wait on PC_FUSED_COPY_DONE via PCR_SCSR[42]");
+                l_timeout = HCD_SHADOW_ENA_FUSED_COPY_DONE_POLL_TIMEOUT_HW_NS /
+                            HCD_SHADOW_ENA_FUSED_COPY_DONE_POLL_DELAY_HW_NS;
+
+                do
+                {
+                    FAPI_TRY( HCD_GETMMIO_C( l_sibling_target, MMIO_LOWADDR(QME_SCSR), l_mmioData ) );
+
+                    // use multicastAND to check 1
+                    if( MMIO_GET(MMIO_LOWBIT(42)) == 1 )
+                    {
+                        break;
+                    }
+
+                    fapi2::delay(HCD_SHADOW_ENA_FUSED_COPY_DONE_POLL_DELAY_HW_NS,
+                                 HCD_SHADOW_ENA_FUSED_COPY_DONE_POLL_DELAY_SIM_CYCLE);
+                }
+                while( (--l_timeout) != 0 );
+
+                FAPI_ASSERT((l_timeout != 0),
+                            fapi2::SHADOW_ENA_FUSED_COPY_DONE_TIMEOUT()
+                            .set_SHADOW_ENA_FUSED_COPY_DONE_POLL_TIMEOUT_HW_NS(HCD_SHADOW_ENA_FUSED_COPY_DONE_POLL_TIMEOUT_HW_NS)
+                            .set_QME_SCSR(l_mmioData)
+                            .set_CORE_TARGET(l_sibling_target),
+                            "ERROR: Shadow Enable Fused Copy Done Timeout");
+
+                FAPI_DBG("Drop PC_COPY_FUSED_SPRS via PCR_SCSR[28]");
+                FAPI_TRY( HCD_PUTMMIO_C( l_sibling_target, QME_SCSR_WO_CLEAR, MMIO_LOAD32H( BIT32(28) ) ) );
+            }
+        }
+
+#endif
+
 
         // This may be redundent in stop11 exit as scominit would have done it already
         // but for stop2/3, this would be done here once.
