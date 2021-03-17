@@ -584,26 +584,23 @@ void pgpe_pstate_apply_clips()
 
     clip_min = G_pgpe_pstate.clip_min;
 
-    if (G_pgpe_pstate.wof_status == WOF_STATUS_ENABLED)
+    //Check if wof_clip is lower(freq) than clip_min. Otherwise, clip_min is thermal clip min
+    if (G_pgpe_pstate.clip_wof > clip_min)
     {
-        //Check if wof_clip is lower(freq) than clip_min. Otherwise, clip_min is thermal clip min
-        if (G_pgpe_pstate.clip_wof > clip_min)
+        clip_min = G_pgpe_pstate.clip_wof;
+
+        //Make sure that clip_min is not lower(freq),higher pstate than clip_max. If, yes,
+        //then set it to clip_max
+        if(clip_min > G_pgpe_pstate.clip_max)
         {
-            clip_min = G_pgpe_pstate.clip_wof;
+            clip_min = G_pgpe_pstate.clip_max;
+        }
 
-            //Make sure that clip_min is not lower(freq),higher pstate than clip_max. If, yes,
-            //then set it to clip_max
-            if(clip_min > G_pgpe_pstate.clip_max)
-            {
-                clip_min = G_pgpe_pstate.clip_max;
-            }
-
-            //Make sure that clip_min is not lower(freq), higher pstate than clip_min. If, yes, then set
-            //it to pstate_safe
-            if(clip_min > G_pgpe_pstate.pstate_safe)
-            {
-                clip_min = G_pgpe_pstate.pstate_safe;
-            }
+        //Make sure that clip_min is not lower(freq), higher pstate than clip_min. If, yes, then set
+        //it to pstate_safe
+        if(clip_min > G_pgpe_pstate.pstate_safe)
+        {
+            clip_min = G_pgpe_pstate.pstate_safe;
         }
     }
 
