@@ -32,7 +32,14 @@
 
 // Add any other FFDC procedures with #include
 
-// needed for collectFfdc to work for adding Explorer log data
-#include <exp_collect_explorer_log.H>
+// Don't do explorer log collection on FSP side
+#ifndef FIPSODE
+
+    // needed for collectFfdc to work for adding Explorer log data
+    #include <exp_collect_explorer_active_log.H>
+    #include <exp_collect_explorer_saved_A_log.H>
+    #include <exp_collect_explorer_saved_B_log.H>
+
+#endif
 
 #endif
