@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,89 +41,51 @@
 #include <return_code.H>
 #include <error_info_defs.H>
 
+/**
+ * @brief Explorer Log type?
+ *
+ * The firmware maintains the log in a circular buffer in RAM (ACTIVE_LOG) and
+ * in the event of a processor exception, firmware assert, or other critical
+ * condition the firmware saves the data in RAM to SPI flash (SAVED_LOG).
+ * Having the log stored in non-volatile memory allows post-analysis
+ * of the log even if it requires a power-cycle to recover the system.
+ */
+enum exp_log_type : uint8_t
+{
+    ACTIVE_LOG  = 1, // RAM error section
+    SAVED_LOG_A = 2, // SPI flash error section from image A
+    SAVED_LOG_B = 3  // SPI flash error section from image B
+};
+
 //------------------------------------------------------------------------------
 // Structure definitions
 //------------------------------------------------------------------------------
 
 // function pointer typedef definition for HWP call support
-typedef fapi2::ReturnCode (*exp_collect_explorer_active_log_FP_t)(
+typedef fapi2::ReturnCode (*exp_collect_explorer_logs_FP_t)(
     const fapi2::ffdc_t&,
     const fapi2::ffdc_t&,
+    const exp_log_type,
     fapi2::ReturnCode& );
-
-typedef fapi2::ReturnCode (*exp_collect_explorer_saved_A_log_FP_t)(
-    const fapi2::ffdc_t&,
-    const fapi2::ffdc_t&,
-    fapi2::ReturnCode& );
-
-typedef fapi2::ReturnCode (*exp_collect_explorer_saved_B_log_FP_t)(
-    const fapi2::ffdc_t&,
-    const fapi2::ffdc_t&,
-    fapi2::ReturnCode& );
-//------------------------------------------------------------------------------
-// Constant definitions
-//------------------------------------------------------------------------------
-
-
-//------------------------------------------------------------------------------
-// Function prototypes
-//------------------------------------------------------------------------------
 
 extern "C"
 {
-///
-/// @brief  Procedure to grab active (RAM) log traces from Explorer chip
-///         and add those traces to the HWP error
-///  @param[in]  i_ocmb_chip - OCMB chip target
-///  @param[in]  i_size - allowable total size (add entries upto this size)
-///  @param[out] o_rc - return code to add FFDC data to.
-///
-/// @return FAPI2_RC_SUCCESS iff ok
-///
-/// NOTE: All input parameters must be of type fapi2::ffdc_t and converted
-///       to the correct type inside the function.
-///
-    fapi2::ReturnCode exp_collect_explorer_active_log(
-        const fapi2::ffdc_t& i_ocmb_chip,
-        const fapi2::ffdc_t& i_size,
-        fapi2::ReturnCode& o_rc );
 
-
-///
-/// @brief  Procedure to grab saved (SPI flash) log traces from Explorer chip
-///         image A and add those traces to the HWP error
-///  @param[in]  i_ocmb_chip - OCMB chip target
-///  @param[in]  i_size - allowable total size (add entries upto this size)
-///  @param[out] o_rc - return code to add FFDC data to.
-///
-/// @return FAPI2_RC_SUCCESS iff ok
-///
-/// NOTE: All input parameters must be of type fapi2::ffdc_t and converted
-///       to the correct type inside the function.
-///
-    fapi2::ReturnCode exp_collect_explorer_saved_A_log(
-        const fapi2::ffdc_t& i_ocmb_chip,
-        const fapi2::ffdc_t& i_size,
-        fapi2::ReturnCode& o_rc );
-
-///
-/// @brief  Procedure to grab saved (SPI flash) log traces from Explorer chip
-///         image B and add those traces to the HWP error
-///  @param[in]  i_ocmb_chip - OCMB chip target
-///  @param[in]  i_size - allowable total size (add entries upto this size)
-///  @param[out] o_rc - return code to add FFDC data to.
-///
-/// @return FAPI2_RC_SUCCESS iff ok
-///
-/// NOTE: All input parameters must be of type fapi2::ffdc_t and converted
-///       to the correct type inside the function.
-///
-    fapi2::ReturnCode exp_collect_explorer_saved_B_log(
-        const fapi2::ffdc_t& i_ocmb_chip,
-        const fapi2::ffdc_t& i_size,
-        fapi2::ReturnCode& o_rc );
-
+    /**
+     * @brief  Main procedure to grab log traces from Explorer chip
+     *         and append the trace data to HWP error (o_rc)
+     *
+     * @param[in] i_ocmb_chip - OCMB chip target
+     * @param[in] i_size - allowable total size (add entries upto this size)
+     * @param[in] i_log_type - what kind of explorer log to grab
+     * @param[out] o_rc - return code to add FFDC data to.
+     *
+     * @return FAPI2_RC_SUCCESS iff ok
+     */
+    fapi2::ReturnCode exp_collect_explorer_logs(const fapi2::ffdc_t& i_ocmb_chip,
+            const fapi2::ffdc_t& i_size,
+            const exp_log_type i_log_type,
+            fapi2::ReturnCode& o_rc);
 } // extern "C"
-
 
 #endif // _COLLECT_EXPLORER_LOG_H_
