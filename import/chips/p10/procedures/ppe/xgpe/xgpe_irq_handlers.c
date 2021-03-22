@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -30,6 +30,7 @@
 #include "p10_scom_eq.H"
 #include "p10_hcd_memmap_qme_sram.H"
 #include "p10_hcode_image_defines.H"
+#include "p10_stop_recovery_trigger.h"
 
 
 
@@ -75,6 +76,11 @@ errlHndl_t  g_SharedHcodeErrLogs[MAX_ELOG_ENTRIES];
 ///////////////////////////////////////////////
 void xgpe_irq_fault_handler()
 {
+    out32(G_OCB_OISR0_CLR, BIT32(2));
+    out32(G_OCB_OIMR0_OR, BIT32(2));
+
+    p10_stop_recovery_trigger();
+    g_oimr_override |= BIT64(2);
 
 }
 

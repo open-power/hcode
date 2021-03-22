@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2020
+# COPYRIGHT 2015,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -23,8 +23,8 @@
 #
 # IBM_PROLOG_END_TAG
 HCODE_C_SOURCES = \
-  errl.c
-	#p9_stop_recovery_trigger.c \
+  errl.c \
+	p10_stop_recovery_trigger.c 
 	#p9_hcd_block_copy.c
 
 HCODE_S_SOURCES =
