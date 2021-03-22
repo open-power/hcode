@@ -404,7 +404,7 @@ void pgpe_pstate_actuate_voltage_step()
         }
 
         //lowering voltage
-        if (G_pgpe_pstate.vdd_next < G_pgpe_pstate.vdd_curr)
+        if (G_pgpe_pstate.vdd_next_ext < G_pgpe_pstate.vdd_curr_ext)
         {
             //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
             dpcr.fields.proxy_scale_factor = (power_proxy_scale_tgt + G_pgpe_pstate.power_proxy_scale) >> 1;
@@ -423,7 +423,7 @@ void pgpe_pstate_actuate_voltage_step()
             PPE_PUTSCOM_MC(CPMS_DPCR, 0xF, dpcr.value);
         }
         //raising voltage
-        else if (G_pgpe_pstate.vdd_next > G_pgpe_pstate.vdd_curr)
+        else if (G_pgpe_pstate.vdd_next_ext > G_pgpe_pstate.vdd_curr_ext)
         {
             //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
             dpcr.fields.proxy_scale_factor = (power_proxy_scale_tgt + G_pgpe_pstate.power_proxy_scale) >> 1;
@@ -461,10 +461,7 @@ void pgpe_pstate_actuate_voltage_step()
         G_pgpe_pstate.power_proxy_scale = power_proxy_scale_tgt;
         pgpe_pstate_update_vdd_vcs_ps();
 
-        if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
-        {
-            pgpe_wov_ocs_set_wov_curr_pct(pgpe_wov_ocs_get_wov_tgt_pct());
-        }
+        pgpe_wov_ocs_set_wov_curr_pct(pgpe_wov_ocs_get_wov_tgt_pct());
     }
 }
 
