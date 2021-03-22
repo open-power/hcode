@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -37,7 +37,7 @@ XIPPATH?=$(ROOTPATH)/chips/p9/xip
 
 # Location of the cross-compiler toolchain.
 UNAME = $(shell uname)
-__EKB_PREFIX?=/opt/rh/devtoolset-2/root/usr/bin/
+__EKB_PREFIX?=/opt/rh/devtoolset-8/root/usr/bin/
 
 ifeq ($(UNAME),AIX)
 __EKB_PREFIX=/opt/xsite/contrib/bin/
