@@ -154,8 +154,10 @@ void pgpe_occ_produce_wof_values()
             }
 
 
+            G_pgpe_occ.pwof_val->dw0.fields.wof_clip_pstate = G_pgpe_occ.wof_clip_wof_accum / G_pgpe_occ.wof_tick;
             G_pgpe_occ.vratio_vdd_wof_accum  = 0;
             G_pgpe_occ.vratio_vcs_wof_accum  = 0;
+            G_pgpe_occ.wof_clip_wof_accum  = 0;
             //PK_TRACE("OCC: FIT Tick");
         }
 
@@ -205,8 +207,10 @@ void pgpe_occ_produce_fit_values()
     {
         G_pgpe_occ.vratio_vdd_fit_avg = G_pgpe_occ.vratio_vdd_tb_accum / G_pgpe_occ.max_tb_delta;
         G_pgpe_occ.vratio_vcs_fit_avg = G_pgpe_occ.vratio_vcs_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.wof_clip_fit_avg = G_pgpe_occ.wof_clip_tb_accum / G_pgpe_occ.max_tb_delta;
         G_pgpe_occ.vratio_vdd_wof_accum += G_pgpe_occ.vratio_vdd_fit_avg;
         G_pgpe_occ.vratio_vcs_wof_accum += G_pgpe_occ.vratio_vcs_fit_avg;
+        G_pgpe_occ.wof_clip_wof_accum += G_pgpe_occ.wof_clip_fit_avg;
 
         /*PK_TRACE("OCC: vratio_vdd_fit_avg=0x%08x vratio_vcs_fit_avg=0x%08x max_delta_tb=0x%08x", G_pgpe_occ.vratio_vdd_fit_avg,
                  G_pgpe_occ.vratio_vcs_fit_avg, G_pgpe_occ.max_tb_delta);
@@ -214,6 +218,7 @@ void pgpe_occ_produce_fit_values()
                  G_pgpe_occ.vratio_vcs_wof_accum);*/
         G_pgpe_occ.vratio_vdd_tb_accum = 0;
         G_pgpe_occ.vratio_vcs_tb_accum = 0;
+        G_pgpe_occ.wof_clip_tb_accum = 0;
     }
 
     G_pgpe_occ.fit_tick++;
@@ -273,6 +278,7 @@ void pgpe_occ_sample_values()
         G_pgpe_occ.vratio_vcs_tb_accum = pgpe_pstate_get(vratio_vcs_rounded) * delta_tb;
         G_pgpe_occ.pwof_val->dw3.fields.vratio_vdd_roundup_avg = pgpe_pstate_get(vratio_vdd_rounded);
         G_pgpe_occ.pwof_val->dw3.fields.vratio_vcs_roundup_avg = pgpe_pstate_get(vratio_vcs_rounded);
+        G_pgpe_occ.wof_clip_tb_accum = pgpe_pstate_get(clip_wof) * delta_tb;
         /*PK_TRACE("OCC: vratio_vdd_tb_accum=0x%08x vratio_vcs_tb_accum=0x%08x delta_tb=0x%08x", G_pgpe_occ.vratio_vdd_tb_accum,
                  G_pgpe_occ.vratio_vcs_tb_accum, delta_tb);*/
     }
