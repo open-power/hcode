@@ -675,6 +675,9 @@ qme_stop_entry()
                      G_qme_record.c_stop11_enter_targets,
                      G_qme_record.c_stop11_reached);
 
+        // for qme_stop11_msgsnd_abort
+        PK_TRACE("Drop BLOCK_INTERRUPT_OUTPUT to PC via SCSR[24]");
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_stop11_enter_targets ), BIT32(24) );
         G_qme_record.c_stop11_enter_targets = 0;
 
         G_qme_record.hcode_func_enabled |= QME_L2_PURGE_CATCHUP_PATH_ENABLE;

@@ -112,14 +112,6 @@ qme_send_pig_type_a()
 void
 qme_stop1_exit(uint32_t c_mask)
 {
-//    uint32_t c_loop    = 0;
-//    uint32_t c_temp    = 0;
-//    uint32_t cisr0     = 0;
-//    uint32_t cisr1     = 0;
-//    uint32_t scsr0     = 0;
-//    uint32_t scsr1     = 0;
-//    uint32_t einr      = 0;
-
     // handle stop1 wakeup
     // normal core mode
     // a) runtime wakeup: Covered by HW520675 and HW527893
@@ -137,40 +129,6 @@ qme_stop1_exit(uint32_t c_mask)
 
     c_mask &= ~G_qme_record.c_stop2_reached;
 
-    // pair on target took off by run state filter
-    /*
-    if( in32(QME_LCL_QMCR) & BIT32(10) )
-    {
-        c_temp  = c_mask;
-        qme_fused_core_pair_mode(&c_mask);
-        c_temp = c_mask & ~c_temp;
-        out32_sh(QME_LCL_EISR_CLR, ( (c_temp << SHIFT64SH(43)) | (c_temp << SHIFT64SH(47)) ) );
-    }
-    */
-
-    // if still dont have pc_interrupt_pending, ignore until real one show up
-    /*
-        for( c_loop = 8; c_loop > 0; c_loop = c_loop >> 1 )
-        {
-            if ( c_mask & c_loop )
-            {
-                cisr0 = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, c_loop ) );
-                cisr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, c_loop ) );
-
-                scsr0 = in32( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_loop ) );
-                scsr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_SCSR, c_loop ) );
-
-                PK_TRACE_INF("IRQ Cisr %x %x Scsr %x %x", cisr0, cisr1, scsr0, scsr1);
-            }
-
-            /
-                    if ( ! ( scsr1 & BIT64SH(46) ) )
-                    {
-                        c_mask &= ~core_loop;
-                    }
-            /
-        }
-    */
     if( c_mask )
     {
         G_qme_record.c_stop1_targets &= ~c_mask;
@@ -190,22 +148,6 @@ qme_stop1_exit(uint32_t c_mask)
 
         if( c_mask )
         {
-            /*
-                        if( in32(QME_LCL_QMCR) & BIT32(10) )
-                        {
-                            do
-                            {
-                                einr = in32(QME_LCL_EINR);
-
-                                if( !(einr & c_mask) )
-                                {
-                                    break;
-                                }
-                            }
-                            while(1);
-                        }
-            */
-
             PK_TRACE_INF("WAKE1: Core[%x] Drop PM_EXIT via PCR_SCSR[1]", c_mask );
             out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, c_mask ), BIT32(1) );
         }
@@ -216,7 +158,6 @@ qme_stop1_exit(uint32_t c_mask)
 void
 qme_parse_pm_state_active_fast()
 {
-    //uint32_t c_cpms     = 0;
     uint32_t c_mask     = 0;
     uint32_t c_loop     = 0;
     uint32_t c_start    = 0;
@@ -233,8 +174,7 @@ qme_parse_pm_state_active_fast()
 #endif
     G_qme_record.c_pm_state_active_fast_req = G_qme_record.c_pm_state_active_fast_req >> SHIFT64SH(51);
 
-    if( !(in32(QME_LCL_QMCR) & BIT32(10)) &&
-        G_qme_record.fused_core_enabled )
+    if( G_qme_record.fused_core_enabled )
     {
         c_stop11 = ( in32_sh(QME_LCL_EISR) & BITS64SH(52, 4) ) >> SHIFT64SH(55);
         c_stops  = G_qme_record.c_pm_state_active_fast_req | c_stop11;
@@ -276,17 +216,6 @@ qme_parse_pm_state_active_fast()
         }
     }
 
-    // use cpms interrupt as pair mode patch
-    /*
-        if( in32(QME_LCL_QMCR) & BIT32(10) )
-        {
-            c_cpms = ( in32_sh(QME_LCL_EISR) & BITS64SH(60, 4) );
-            out32_sh(QME_LCL_EISR_CLR, c_cpms);
-            G_qme_record.c_pm_state_active_fast_req |= c_cpms;
-            PK_TRACE_INF("Parse: different channel pm_active under pair mode: %x, current pm_active_fast %x",
-                         c_cpms, G_qme_record.c_pm_state_active_fast_req);
-        }
-    */
     // -------------------
 
     PK_TRACE_INF("Parse: PM State Active Fast on Cores[%x], Cores in STOP2+[%x], Partial Good Cores[%x], Block Entry on Cores[%x]",
@@ -306,8 +235,7 @@ qme_parse_pm_state_active_fast()
     {
         if( c_loop & c_mask )
         {
-            if( !(in32(QME_LCL_QMCR) & BIT32(10)) &&
-                G_qme_record.fused_core_enabled )
+            if( G_qme_record.fused_core_enabled )
             {
                 if( c_loop & 0xA )
                 {
@@ -417,8 +345,7 @@ qme_parse_regular_wakeup_fast()
                  G_qme_record.c_stop2_reached,
                  G_qme_record.c_block_wake_done);
 
-    if( !(in32(QME_LCL_QMCR) & BIT32(10)) &&
-        G_qme_record.fused_core_enabled )
+    if( G_qme_record.fused_core_enabled )
     {
         if( ( c_mask & 0xc ) && ( (G_qme_record.c_stop2_reached & 0xc) == 0xc ) )
         {
@@ -459,14 +386,14 @@ qme_parse_special_wakeup_rise()
     {
         PK_TRACE_INF("Parse: Consider Fused SMT4 Cores[%x] Pairing together for Stop and Wake", c_mask);
 
-        if( (c_mask) & 0x3 )
+        if( c_mask & 0x3 )
         {
-            (c_mask) |= 0x3;
+            c_mask |= 0x3;
         }
 
-        if( (c_mask) & 0xC )
+        if( c_mask & 0xC )
         {
-            (c_mask) |= 0xC;
+            c_mask |= 0xC;
         }
     }
 
@@ -794,8 +721,6 @@ qme_pm_state_active_fast_event()
 }
 
 
-
-
 //==============================
 
 void
@@ -815,8 +740,7 @@ qme_parse_pm_state_active_slow()
 #endif
     G_qme_record.c_pm_state_active_slow_req = G_qme_record.c_pm_state_active_slow_req >> SHIFT64SH(55);
 
-    if( !(in32(QME_LCL_QMCR) & BIT32(10)) &&
-        G_qme_record.fused_core_enabled )
+    if( G_qme_record.fused_core_enabled )
     {
         PK_TRACE_INF("Parse: Fused Core Mode Stop11 Entry Request on Cores[%x] (both Siblings required)",
                      G_qme_record.c_pm_state_active_slow_req);
@@ -940,8 +864,7 @@ qme_parse_regular_wakeup_slow()
                  G_qme_record.c_stop11_reached,
                  G_qme_record.c_block_wake_done);
 
-    if( !(in32(QME_LCL_QMCR) & BIT32(10)) &&
-        G_qme_record.fused_core_enabled )
+    if( G_qme_record.fused_core_enabled )
     {
         if( ( c_mask & 0xc ) && ( (G_qme_record.c_stop2_reached & 0xc) == 0xc ) )
         {
@@ -1016,6 +939,49 @@ qme_regular_wakeup_slow_event()
 }
 
 void
+qme_stop11_msgsnd_injection(uint32_t core_target)
+{
+    uint32_t i           = 0;
+    uint32_t core_mask   = 0;
+    uint32_t thread_mask = 0;
+
+    //this keeps further wake-up from getting to the core
+    PK_TRACE("Assert BLOCK_INTERRUPT_OUTPUT to PC via SCSR[24]");
+    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(24) );
+
+    //256 core cycles to deal with round-trip latencies
+    PK_TRACE("Delay 32 QME cycles");
+
+    for(i = 0; i < 32; i++)
+    {
+        asm volatile ("tw 0, 0, 0");
+    }
+
+    for(core_mask = 8; core_mask; core_mask = core_mask >> 1)
+    {
+        if( core_target & core_mask )
+        {
+            thread_mask = ( in32( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) ) &
+                            BITS32(8, 4) ) >> SHIFT32(11);
+
+            if( thread_mask )
+            {
+                PK_TRACE_INF("Injecting Msgsnd to core[%x] thread[%x] via CIIR[28:31]",
+                             core_mask, thread_mask);
+                out32( QME_LCL_CORE_ADDR_OR( QME_CIIR, core_mask ), thread_mask );
+                //BLOCK_INTERRUPT_OUTPUT will be dropped after stop11 entry later
+            }
+            else
+            {
+                PK_TRACE("Drop BLOCK_INTERRUPT_OUTPUT to PC[%x] via SCSR[24]", core_mask);
+                out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_mask ), BIT32(24) );
+            }
+        }
+    }
+}
+
+
+void
 qme_pm_state_active_slow_event()
 {
     //technically contained mode implies stop11 is not supported with it
@@ -1041,6 +1007,8 @@ qme_pm_state_active_slow_event()
         MARK_TAG( G_qme_record.c_stop11_enter_targets, IRQ_PM_STATE_ACTIVE_SLOW_EVENT )
         qme_fault_inject(QME_PCSCR_STOP11_ENTRY_FAULT_INJECT, G_qme_record.c_stop11_enter_targets);
 
+        qme_stop11_msgsnd_injection( G_qme_record.c_stop11_enter_targets );
+
         //===============//
 
         G_qme_record.hcode_func_enabled &= ~QME_L2_PURGE_CATCHUP_PATH_ENABLE;
@@ -1052,7 +1020,7 @@ qme_pm_state_active_slow_event()
         if( G_qme_record.hcode_func_enabled & QME_SELF_SAVE_ENABLE )
         {
             qme_stop_self_execute(G_qme_record.c_stop11_enter_targets, SPR_SELF_SAVE);
-            qme_stop_self_complete(G_qme_record.c_stop11_enter_targets);
+            qme_stop_self_complete(G_qme_record.c_stop11_enter_targets, SPR_SELF_SAVE);
         }
 
         // stop11 is expected not to be aborted

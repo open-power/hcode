@@ -892,7 +892,7 @@ qme_stop_exit()
 
         if( G_qme_record.hcode_func_enabled & QME_SELF_RESTORE_ENABLE )
         {
-            qme_stop_self_complete(G_qme_record.c_stop11_exit_targets);
+            qme_stop_self_complete(G_qme_record.c_stop11_exit_targets, SPR_SELF_RESTORE);
 
             G_qme_record.c_stop11_exit_targets &= ~G_qme_record.c_self_failed;
 

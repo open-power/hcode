@@ -67,7 +67,7 @@ uint8_t get_core_pos( uint32_t i_mask )
 }
 
 void
-qme_stop_self_complete(uint32_t core_target)
+qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
 {
     data64_t scom_data;
     uint32_t core_mask;
@@ -300,8 +300,11 @@ qme_stop_self_complete(uint32_t core_target)
         }
     }
 
-    PK_TRACE("Drop BLOCK_INTERRUPT to PC and IGNORE_RECENT_PMCR via SCSR[0/19]");
-    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), ( BIT32(0) | BIT32(19) ) );
+    if( SPR_SELF_SAVE != i_saveRestore )
+    {
+        PK_TRACE("Drop BLOCK_INTERRUPT to PC and IGNORE_RECENT_PMCR via SCSR[0/19]");
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), ( BIT32(0) | BIT32(19) ) );
+    }
 
     PK_TRACE("Clear pm_active status via EISR[52:55]");
     out32_sh( QME_LCL_EISR_CLR, core_target << SHIFT64SH(55));

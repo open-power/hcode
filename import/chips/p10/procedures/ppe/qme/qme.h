@@ -217,8 +217,9 @@ void qme_parse_pm_state_active_fast();
 void qme_stop_entry();
 void qme_stop_exit();
 void qme_stop_self_execute(uint32_t, uint32_t);
-void qme_stop_self_complete(uint32_t);
+void qme_stop_self_complete(uint32_t, uint32_t);
 void qme_stop_report_pls_srr1(uint32_t);
+void qme_stop11_msgsnd_injection(uint32_t);
 
 #ifdef __cplusplus
 //only C++ supports passing by reference
