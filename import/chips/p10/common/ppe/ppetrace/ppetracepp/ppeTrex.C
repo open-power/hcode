@@ -30,8 +30,25 @@
 #include <iomanip>
 #include <stdint.h>
 #include <string.h>
-#include <byteswap.h>
 #include <arpa/inet.h>
+
+#ifndef _AIX
+#include <byteswap.h>
+#else
+uint64_t bswap_64(uint64_t u64)
+{
+    return u64;
+}
+uint32_t bswap_32(uint32_t u32)
+{
+    return u32;
+}
+float  bswap_32(float f32)
+{
+    return f32;
+}
+uint32_t __WORDSIZE = 64;
+#endif
 
 #define TYPE_UINT64 1
 #define TYPE_FLOAT  2
@@ -98,7 +115,7 @@ bool Trex::load(string& filepath)
         }
 
         string text(line.substr(startpos, pos - startpos));
-        int hashval = strtol(hash.c_str(), NULL, 10);
+        int hashval = strtoul(hash.c_str(), NULL, 10);
         iv_map[hashval] = text;
         //iv_err << (unsigned int)hashval << ":" << text << endl;
     }
