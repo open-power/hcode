@@ -44,7 +44,6 @@
 
 extern QmeRecord G_qme_record;
 
-
 inline void
 qme_stop_prepare(uint32_t c_stop2)
 {
@@ -432,6 +431,7 @@ qme_stop_entry()
     while( G_qme_record.c_stop3or5_catchup_targets );
 
 
+
     if( ( G_qme_record.hcode_func_enabled & QME_STOP3OR5_ABORT_PATH_ENABLE ) &&
         ( G_qme_record.c_stop3_enter_targets || G_qme_record.c_stop5_enter_targets ) )
     {
@@ -477,6 +477,8 @@ qme_stop_entry()
             G_qme_record.c_stop3or5_abort_targets = 0;
         }
     }
+
+
 
     if( G_qme_record.c_stop3_enter_targets )
     {
@@ -673,9 +675,6 @@ qme_stop_entry()
                      G_qme_record.c_stop11_enter_targets,
                      G_qme_record.c_stop11_reached);
 
-        // for qme_stop11_msgsnd_abort
-        PK_TRACE("Drop BLOCK_INTERRUPT_OUTPUT to PC via SCSR[24]");
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_stop11_enter_targets ), BIT32(24) );
         G_qme_record.c_stop11_enter_targets = 0;
 
         G_qme_record.hcode_func_enabled |= QME_L2_PURGE_CATCHUP_PATH_ENABLE;

@@ -160,14 +160,12 @@ typedef struct
     uint32_t    c_scan_failed;
     uint32_t    c_self_failed;
 
-    uint16_t    c_failed_ring[4]; // Field needs to be at 8B boundary
-
     uint32_t    cts_timeout_count;
     uint32_t    bce_buf_content_type;
 
     uint32_t    c_fused_spwu_fall;
     uint32_t    c_self_fault_vector;
-    uint32_t    c_msgsnd_abort_targets;
+    uint16_t    c_failed_ring[4]; // Field needs to be at 8B boundary
 
 } QmeRecord __attribute__ ((aligned (4)));
 
