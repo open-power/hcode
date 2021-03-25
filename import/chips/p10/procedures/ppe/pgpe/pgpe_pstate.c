@@ -111,9 +111,9 @@ void pgpe_pstate_init()
     G_pgpe_pstate.vratio_vdd_rounded_64th   = 0;
     G_pgpe_pstate.vratio_vcs_rounded_64th   = 0;
     G_pgpe_pstate.vratio_index_format       = 0;
-    G_pgpe_pstate.vratio_vdd_loadline_64th  = 0;
+    G_pgpe_pstate.vratio_vdd_loadline_64th  = 64;
     G_pgpe_pstate.vratio_vdd_ceff_inst_64th = 0;
-    G_pgpe_pstate.vratio_vcs_loadline_64th  = 0;
+    G_pgpe_pstate.vratio_vcs_loadline_64th  = 64;
     G_pgpe_pstate.vratio_vcs_ceff_ins_64th  = 0;
 
     G_pgpe_pstate.power_proxy_scale  = 0;
