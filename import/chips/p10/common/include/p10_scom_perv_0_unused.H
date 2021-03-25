@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -304,18 +304,6 @@ static const uint32_t FSXCOMP_FSXLOG_RCS_EL0_ERR_LEN = 4;
 static const uint32_t FSXCOMP_FSXLOG_RCS_EL0_TIME = 21;
 static const uint32_t FSXCOMP_FSXLOG_RCS_EL0_TIME_LEN = 11;
 //<< [FSXCOMP_FSXLOG_RCS_EL0]
-// perv/reg00000.H
-
-//>> [FSXCOMP_FSXLOG_SCRATCH_REGISTER_13]
-//ERRCODE: // The addresses of this register do not all translate to the same targets.
-
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_13_FSI = 0x00002984ull;
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_13_FSI_BYTE = 0x00002e10ull;
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_13_RW = 0x00050184ull;
-
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_13_SR_SCRATCH_REGISTER_13 = 0;
-static const uint32_t FSXCOMP_FSXLOG_SCRATCH_REGISTER_13_SR_SCRATCH_REGISTER_13_LEN = 32;
-//<< [FSXCOMP_FSXLOG_SCRATCH_REGISTER_13]
 // perv/reg00000.H
 
 //>> [L3TRA0_TR0_CONFIG_4]
