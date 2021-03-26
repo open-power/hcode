@@ -50,6 +50,7 @@ qme_init()
     //--------------------------------------------------------------------------
     // Initialize Software Scoreboard
     //--------------------------------------------------------------------------
+    uint32_t c_loop, c_end, act_stop_level;
     uint32_t before, after;
     uint32_t local_data = in32_sh(QME_LCL_QMCR);
     G_qme_record.c_configured       = local_data & BITS64SH(60, 4);
@@ -226,7 +227,6 @@ qme_init()
     out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2) | BIT32(3) | BIT32(29)) );
     PK_TRACE_DBG( "DEBUG: QMCR value 0x%08x%08x", in32(QME_LCL_QMCR ));
 
-
     if (G_qme_record.c_configured)
     {
         before = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
@@ -235,8 +235,27 @@ qme_init()
         after = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
         PK_TRACE_INF("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE via PCR_SCSR[20, 26], done[%x][%x]",
                      before, after);
-    }
 
+        for( c_end = 51,
+             c_loop = 8; c_loop > 0; c_loop = c_loop >> 1,
+             c_end += 4 )
+        {
+            if( c_loop & G_qme_record.c_configured )
+            {
+                act_stop_level = ( in32_sh(QME_LCL_SCDR) >> SHIFT64SH(c_end) ) & 0xF;
+
+                if( act_stop_level == 0xF )
+                {
+                    //apply only to the configured secondary cores
+                    //do not assert to primary core because those are running and we need the filter
+                    //do not need to cover backing cache as there is assertion in core_poweroff hwp
+                    PK_TRACE_INF("Assert REG_WKUP_FILTER_DIS via QME_SCSR[14] to secondary cores[%x] at stop[%x]",
+                                 c_loop, act_stop_level);
+                    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_loop ), BIT32(14) );
+                }
+            }
+        }
+    }
 
     //--------------------------------------------------------------------------
     // BCE Core Specific Scan Ring
