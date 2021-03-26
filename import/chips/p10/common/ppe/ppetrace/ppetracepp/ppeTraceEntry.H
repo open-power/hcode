@@ -97,6 +97,11 @@ class PpeTraceEntry
         string getTimeStamp() const;
 
         /**
+         * Get a differential timestamp
+         */
+        string getTimeDiff(const PpeTraceEntry* i_previous) const;
+
+        /**
          * Query if entry is of type binary
          */
         bool isBinary() const

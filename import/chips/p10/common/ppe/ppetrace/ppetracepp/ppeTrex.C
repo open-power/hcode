@@ -64,7 +64,7 @@ int32_t trexMyVsnprintf(char* io_dest,
                         bool i_swap);
 
 Trex::Trex(ostream& i_err)
-    : iv_err(i_err)
+    : iv_out(i_err), iv_previous(NULL)
 {
 }
 
@@ -74,7 +74,7 @@ void Trex::dump(ostream& out)
 
     for(map<int, string>::const_iterator i = iv_map.begin(); i != iv_map.end(); ++i)
     {
-        iv_err << dec << (uint32_t)i->first << "||" << i->second << "||local" << endl;
+        iv_out << dec << (uint32_t)i->first << "||" << i->second << "||local" << endl;
     }
 }
 
@@ -85,7 +85,7 @@ bool Trex::load(string& filepath)
 
     if(!ins)
     {
-        iv_err << "Could not open " << filepath << endl;
+        iv_out << "Could not open " << filepath << endl;
         return false;
     }
 
@@ -117,7 +117,6 @@ bool Trex::load(string& filepath)
         string text(line.substr(startpos, pos - startpos));
         int hashval = strtoul(hash.c_str(), NULL, 10);
         iv_map[hashval] = text;
-        //iv_err << (unsigned int)hashval << ":" << text << endl;
     }
 
     return result;
@@ -138,35 +137,42 @@ void Trex::print(const PpeTraceEntry& i_entry)
     string s = iv_map[hash];
     const char* format = s.c_str();
 
-    iv_err << i_entry.getTimeStamp() << "|";
+    if(!iv_previous)
+    {
+        iv_previous = &i_entry;
+    }
 
-    // TODO  isOpTrace needed?
+    // 00000801.000511754|00000000.000000000|
+    iv_out << i_entry.getTimeStamp() << "|";
+    iv_out << i_entry.getTimeDiff(iv_previous) << "|";
+
+    // OPTRACE should have already been converted - print info here
     if(i_entry.isOpTrace())
     {
-        iv_err << "Mark: " << hex << setfill('0') << setw(2) << parms[0];
+        iv_out << "Mark: " << hex << setfill('0') << setw(2) << parms[0];
 
         if(parmCount > 1)
         {
-            iv_err << " args:";
+            iv_out << " args:";
 
             for(int i = 1; i < parmCount; ++i)
             {
-                iv_err << " 0x" << hex << setfill('0') << setw(8) << parms[i];
+                iv_out << " 0x" << hex << setfill('0') << setw(8) << parms[i];
             }
         }
 
-        iv_err << endl;
+        iv_out << endl;
     }
     else
     {
         if(0 == s.length())
         {
-            iv_err << "Missing format hash " << dec << (uint32_t)hash
+            iv_out << "Missing format hash " << dec << (uint32_t)hash
                    << " [0x" << hex << setfill('0') << setw(8) << hash << "] Data: ";
 
             for(int i = 0; i < parmCount; ++i)
             {
-                iv_err << hex << setfill('0') << setw(8) << ntohl(parms[i]) << ' ';
+                iv_out << hex << setfill('0') << setw(8) << ntohl(parms[i]) << ' ';
             }
         }
 
@@ -177,26 +183,28 @@ void Trex::print(const PpeTraceEntry& i_entry)
                         parmCount * sizeof(uint32_t),
                         (1 != htonl(1)));
 
-        iv_err << b << endl;
+        iv_out << b << endl;
 
         if(i_entry.isBinary())
         {
-            iv_err << "                  |";
+            iv_out << "                  |";
 
             for(int i = 0; i < parmCount; ++i)
             {
-                iv_err << "0x" << hex << setfill('0') << setw(8)
+                iv_out << "0x" << hex << setfill('0') << setw(8)
                        << parms[i] << ' ';
 
                 if(i % 4 == 3)
                 {
-                    iv_err << endl << "                  |";
+                    iv_out << endl << "                  |";
                 }
             }
 
-            iv_err << endl;
+            iv_out << endl;
         }
     }
+
+    iv_previous = &i_entry;
 }
 
 // This code segment was taken from fsp-trace   github/open-power/fps-trace

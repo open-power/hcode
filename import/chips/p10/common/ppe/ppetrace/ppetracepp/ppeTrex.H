@@ -71,8 +71,9 @@ class Trex
 
     private:
 
-        ostream& iv_err;
+        ostream& iv_out;
         map<int, string> iv_map;
+        const PpeTraceEntry* iv_previous;
 
 };
 
