@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2017,2020
+# COPYRIGHT 2017,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -50,6 +50,7 @@ QME_OBJS += iota_debug_ptrs.o
 # ppe kernel base objects
 QME_OBJS += eabi.o
 QME_OBJS += div32.o
+QME_OBJS += div64.o
 QME_OBJS += ppe42_math.o
 QME_OBJS += ppe42_gcc.o
 QME_OBJS += ppe42_string.o
@@ -216,8 +217,8 @@ $(IMAGE)_COMMONFLAGS+= -DUSE_QME_QUEUED_SCAN
 #$(IMAGE)_COMMONFLAGS+= -DPFET_SENSE_POLL_DISABLE
 
 #EPM Workaround
+#$(IMAGE)_COMMONFLAGS+= -DEPM_TUNING
 $(IMAGE)_COMMONFLAGS+= -DHCD_QME_SKIP_BCE_SCOM
-#$(IMAGE)_COMMONFLAGS+= -DPOWER_LOSS_DISABLE # MMA
 
 # Options for Functions being skipped
 #$(IMAGE)_COMMONFLAGS+= -DP10_HCD_CORECACHE_SKIP_INITF
