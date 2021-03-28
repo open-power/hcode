@@ -736,10 +736,8 @@ uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
     uint32_t idd_dc = pgpe_pstate_intp_idd_dc_from_ps(ps, VPD_PT_SET_BIASED);
 
     //compute load line drop
-    //\\todo come up with correct idd_scale/vratio_format.
-    //idd_scale/vratio format is a number between 0.0 and 1.0, but we need to represent this using integers on PGPE
     uint32_t vdd_uplift = ((((idd_ac + idd_dc) * vratio_vdd) * (pgpe_gppb_get_vdd_sysparm_loadline() +
-                            pgpe_gppb_get_vdd_sysparm_distloss())) / 1000
+                            pgpe_gppb_get_vdd_sysparm_distloss())) / 100
                            + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
 
     PK_TRACE("PS: ps=0x%x, idd_ac=0x%x, idd_dc=0x%x, vdd_up=0x%x", ps, idd_ac, idd_dc, vdd_uplift);
@@ -752,7 +750,7 @@ uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
     uint32_t ics_dc = pgpe_pstate_intp_ics_dc_from_ps(ps, VPD_PT_SET_BIASED);
 
     uint32_t vcs_uplift = ((((ics_ac + ics_dc) * vratio_vcs) *  (pgpe_gppb_get_vcs_sysparm_loadline() +
-                            pgpe_gppb_get_vcs_sysparm_distloss())) / 1000
+                            pgpe_gppb_get_vcs_sysparm_distloss())) / 100
                            + pgpe_gppb_get_vcs_sysparm_distoffset()) / 1000;
 
     PK_TRACE("PS: ps=0x%x, ics_ac=0x%x, ics_dc=0x%x, vcs_up=0x%x", ps, ics_ac, ics_dc, vcs_uplift);

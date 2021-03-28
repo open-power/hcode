@@ -231,9 +231,9 @@ void pgpe_process_pstate_start()
     pgpe_pstate_set(vcs_next, pgpe_pstate_intp_vcs_from_ps(pgpe_pstate_get(pstate_next),
                     VPD_PT_SET_BIASED) );//\todo use correct format for scale
     pgpe_pstate_set(vdd_next_uplift, pgpe_pstate_intp_vddup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED,
-                    G_pgpe_pstate.vratio_vdd_loadline_64th));
+                    G_pgpe_pstate.vratio_vdd_loadline_64th) >> 6);
     pgpe_pstate_set(vcs_next_uplift, pgpe_pstate_intp_vcsup_from_ps(pgpe_pstate_get(pstate_next), VPD_PT_SET_BIASED,
-                    G_pgpe_pstate.vratio_vcs_loadline_64th));
+                    G_pgpe_pstate.vratio_vcs_loadline_64th) >> 6);
     pgpe_pstate_set(vdd_next_ext, pgpe_pstate_get(vdd_next) + pgpe_pstate_get(vdd_next_uplift));
     pgpe_pstate_set(vcs_next_ext, pgpe_pstate_get(vcs_next) + pgpe_pstate_get(vcs_next_uplift));
 
