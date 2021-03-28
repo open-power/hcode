@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -329,7 +329,7 @@ void pgpe_resclk_rcptr_write(uint32_t target_pstate)
     }
 
 #else
-    PK_TRACE("RCK: addr=0x%08x", PPE_SCOM_ADDR_MC_Q_WR(PPE_QUEUED_SCOM(QME_RCPTR & PPE_MC_BASE_ADDR_MASK)));
+    //PK_TRACE("RCK: addr=0x%08x", PPE_SCOM_ADDR_MC_Q_WR(PPE_QUEUED_SCOM(QME_RCPTR & PPE_MC_BASE_ADDR_MASK)));
     PPE_PUTSCOM_MC_Q(QME_RCPTR, rcptr.value);
 #endif
 
@@ -372,13 +372,13 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
     while(rcptr.fields.pstate_ack_pending) //\Todo Timeout: 50us, critical error
     {
         PPE_GETSCOM_MC_Q_AND(QME_RCPTR, rcptr.value);
-        PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
-                 rcptr.words.low_order);
+        //PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
+        //         rcptr.words.low_order);
     }
 
 
-    PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
-             rcptr.words.low_order);
+    //PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
+    //         rcptr.words.low_order);
 
     //Check that the pstate in 16:23 from every QME matches the RCPTR target value
     //Check is only done upon the first enablement to ensure that the HW and hcode are in sync

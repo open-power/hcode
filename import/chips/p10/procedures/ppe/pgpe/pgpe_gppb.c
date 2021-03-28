@@ -975,6 +975,17 @@ uint8_t pgpe_gppb_get_dds_trip_ps_slope(uint32_t pt_set, uint32_t core, uint32_t
     }
 }
 
+uint8_t pgpe_gppb_get_dds_large_ps_slope(uint32_t pt_set, uint32_t core, uint32_t region)
+{
+    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
+    {
+        return G_gppb->ps_dds_slopes[LARGE_DROOP_DETECT][pt_set][core][region];
+    }
+    else
+    {
+        return G_gppb_poundw_slopes->ps_dds_slopes[LARGE_DROOP_DETECT][pt_set][core][region];
+    }
+}
 uint32_t pgpe_gppb_get_dds_delay(uint32_t core, uint32_t idx)
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
@@ -996,6 +1007,18 @@ uint32_t pgpe_gppb_get_dds_trip(uint32_t core, uint32_t idx)
     else
     {
         return G_gppb_dds[idx][core].ddsc.fields.trip_offset;
+
+    }
+}
+uint32_t pgpe_gppb_get_dds_large(uint32_t core, uint32_t idx)
+{
+    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
+    {
+        return G_gppb->dds[idx][core].ddsc.fields.large_droop;
+    }
+    else
+    {
+        return G_gppb_dds[idx][core].ddsc.fields.large_droop;
 
     }
 }

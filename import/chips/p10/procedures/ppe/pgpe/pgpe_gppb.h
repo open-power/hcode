@@ -104,8 +104,10 @@ uint16_t pgpe_gppb_get_idc_ps_slope(uint32_t rail, uint32_t pt_set, uint32_t reg
 //DDS
 uint16_t pgpe_gppb_get_dds_delay_ps_slope(uint32_t pt_set, uint32_t core, uint32_t region);
 uint8_t pgpe_gppb_get_dds_trip_ps_slope(uint32_t pt_set, uint32_t core, uint32_t region);
+uint8_t pgpe_gppb_get_dds_large_ps_slope(uint32_t pt_set, uint32_t core, uint32_t region);
 uint32_t pgpe_gppb_get_dds_delay(uint32_t core, uint32_t idx);
 uint32_t pgpe_gppb_get_dds_trip(uint32_t core, uint32_t idx);
+uint32_t pgpe_gppb_get_dds_large(uint32_t core, uint32_t idx);
 uint32_t pgpe_gppb_get_dds_cal_adj(uint32_t core, uint32_t idx);
 uint64_t pgpe_gppb_get_dds_other_droop_count_control();
 uint64_t pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting();

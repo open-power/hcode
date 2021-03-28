@@ -37,6 +37,7 @@ pgpe_dds_t G_pgpe_dds __attribute__((section (".data_structs")));
 uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c);
 uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c);
 uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c);
+uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c);
 void pgpe_dds_compare_trip_and_delay();
 
 void* pgpe_dds_data_addr()
@@ -49,24 +50,24 @@ void* pgpe_dds_data_addr()
 //
 void pgpe_dds_init(uint32_t pstate)
 {
-    PK_TRACE("DDS: Init");
-    uint32_t q, c;
+    PK_TRACE("DDS: Init Enter");
+    uint32_t q, c, f;
 
     //1. Write DCCR, FLMR and FMMR values
     //Write DCCR
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_DCCR, 0xF), pgpe_gppb_get_dds_other_droop_count_control());
-    PK_TRACE("DDS: DCCR=0x%08x%08x", pgpe_gppb_get_dds_other_droop_count_control() >> 32,
-             pgpe_gppb_get_dds_other_droop_count_control());
+    /*PK_TRACE("DDS: DCCR=0x%08x%08x", pgpe_gppb_get_dds_other_droop_count_control() >> 32,
+             pgpe_gppb_get_dds_other_droop_count_control());*/
 
     //Write FLMR
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FLMR_RW, 0xF), pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting());
-    PK_TRACE("DDS: FLMR=0x%08x%08x", pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting() >> 32,
-             pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting());
+    /*PK_TRACE("DDS: FLMR=0x%08x%08x", pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting() >> 32,
+             pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting());*/
 
     //Write FMMR
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FMMR_RW, 0xF), pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting());
-    PK_TRACE("DDS: FMMR=0x%08x%08x", pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting() >> 32,
-             pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting());
+    /*PK_TRACE("DDS: FMMR=0x%08x%08x", pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting() >> 32,
+             pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting());*/
 
     //2 Set OTR Special Wake-up (200E0830[0]=1) on all cores
     //RTC:214435 Add timeout
@@ -86,21 +87,36 @@ void pgpe_dds_init(uint32_t pstate)
     {
         for (c = 0; c < CORES_PER_QUAD; c++)
         {
-            G_pgpe_dds.delay[q][c] = 0;
-            G_pgpe_dds.cal_adjust[q][c] = 0;
-            G_pgpe_dds.trip[q][c] = 0;
             G_pgpe_dds.fdcr[q][c].value = 0;
-            G_pgpe_dds.any_trip_smaller[q][c] = 0;
-            G_pgpe_dds.any_trip_larger[q][c] = 0;
+            G_pgpe_dds.delay[q][c] = 0;
+            G_pgpe_dds.delay_prev[q][c] = 0;
+            G_pgpe_dds.cal_adjust[q][c] = 0;
+            G_pgpe_dds.cal_adjust_prev[q][c] = 0;
+
+            for (f = 0; f < PGPE_DDS_OTHER_MAX; f++)
+            {
+                G_pgpe_dds.other[f][q][c] = 0;
+                G_pgpe_dds.other_prev[f][q][c] = 0;
+                G_pgpe_dds.any_other_larger[f][q][c] = 0;
+                G_pgpe_dds.any_other_smaller[f][q][c] = 0;
+            }
         }
 
+        G_pgpe_dds.ducr[q].value = 0;
         G_pgpe_dds.any_delay_larger[q] = 0;
         G_pgpe_dds.any_delay_smaller[q] = 0;
-        G_pgpe_dds.ducr[q].value = 0;
+        G_pgpe_dds.any_cal_later[q] = 0;
+        G_pgpe_dds.any_cal_earlier[q] = 0;
     }
 
-    G_pgpe_dds.any_trip_larger_chip = 0;
-    G_pgpe_dds.any_trip_smaller_chip = 0;
+    for (f = 0; f < PGPE_DDS_OTHER_MAX; f++)
+    {
+        G_pgpe_dds.other_chip[f] = 0;
+        G_pgpe_dds.other_chip_prev[f] = 0;
+        G_pgpe_dds.any_other_larger_chip[f] = 0;
+        G_pgpe_dds.any_other_smaller_chip[f] = 0;
+    }
+
     G_pgpe_dds.fdcr_chip.value = 0;
 
     //3.Pre-DVFS DDS Update.
@@ -117,7 +133,7 @@ void pgpe_dds_init(uint32_t pstate)
     //6. Clear OTR Special Wake-up register on all cores
     //PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SPWU_OTR, 0xF), 0x0);
 
-    PK_TRACE("DDS: Init Exit");
+    //PK_TRACE("DDS: Init Exit");
 }
 
 //
@@ -147,29 +163,49 @@ void pgpe_dds_compute(uint32_t pstate)
 
                 PK_TRACE("DDS: delay=0x%08x, cal_adjust=0x%08x", G_pgpe_dds.delay[q][c], G_pgpe_dds.cal_adjust[q][c]);
 
-                if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
-                    &&  pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
+                if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
                 {
-                    G_pgpe_dds.trip_prev[q][c] = G_pgpe_dds.trip[q][c];
-                    G_pgpe_dds.trip[q][c] = pgpe_dds_intp_trip(pstate, core);
-                    PK_TRACE("DDS: trip=0x%08x", G_pgpe_dds.trip[q][c]);
+                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET))
+                    {
+                        G_pgpe_dds.other_prev[PGPE_DDS_OTHER_TRIP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c];
+                        G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c] = pgpe_dds_intp_trip(pstate, core);
+                        PK_TRACE("DDS: trip=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c]);
+                    }
+
+                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE))
+                    {
+                        G_pgpe_dds.other_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c];
+                        G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] = pgpe_dds_intp_large(pstate, core);
+                        PK_TRACE("DDS: large=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]);
+                    }
                 }
+
             }
         }
     }
 
     //Trip Offsets
-    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
-        && pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
+    if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
     {
-        G_pgpe_dds.trip_chip_prev = G_pgpe_dds.trip_chip;
-        G_pgpe_dds.trip_chip = pgpe_dds_intp_trip(pstate, MAX_CORES + 1);
-        PK_TRACE("DDS: trip=0x%08x", G_pgpe_dds.trip_chip);
+        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET))
+        {
+            G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_TRIP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX];
+            G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX] = pgpe_dds_intp_trip(pstate, 0);
+            //PK_TRACE("DDS: trip=0x%08x", G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX]);
+        }
+
+        //Large
+        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE))
+        {
+            G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX];
+            G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] = pgpe_dds_intp_large(pstate, 0);
+            //PK_TRACE("DDS: large=0x%08x", G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX]);
+        }
     }
 
     //Compare trip and delay
     pgpe_dds_compare_trip_and_delay();
-    PK_TRACE("DDS: Compute Exit");
+    //PK_TRACE("DDS: Compute Exit");
 }
 
 //
@@ -214,24 +250,65 @@ void pgpe_dds_compare_trip_and_delay()
                     G_pgpe_dds.any_cal_earlier[q] = G_pgpe_dds.cal_adjust[q][c] < G_pgpe_dds.cal_adjust_prev[q][c] ? 1 : 0;
                 }
 
-                if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
-                    && pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
+                PK_TRACE("DDS: delay_smaller=%u,delay_larger=%u,cal_later=%u,cal_earlier=%u", G_pgpe_dds.any_delay_larger[q],
+                         G_pgpe_dds.any_delay_smaller[q],
+                         G_pgpe_dds.any_cal_later[q],
+                         G_pgpe_dds.any_cal_earlier[q]);
+
+                if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
                 {
-                    G_pgpe_dds.any_trip_larger[q][c]  = G_pgpe_dds.trip[q][c] > G_pgpe_dds.trip_prev[q][c] ? 1 : 0;
-                    G_pgpe_dds.any_trip_smaller[q][c] = G_pgpe_dds.trip[q][c] < G_pgpe_dds.trip_prev[q][c] ? 1 : 0;
+                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET))
+                    {
+                        G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_TRIP_IDX][q][c]  = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c] >
+                                G_pgpe_dds.other_prev[PGPE_DDS_OTHER_TRIP_IDX][q][c] ? 1 : 0;
+                        G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_TRIP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c] <
+                                G_pgpe_dds.other_prev[PGPE_DDS_OTHER_TRIP_IDX][q][c] ? 1 : 0;
+                    }
+
+                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE))
+                    {
+                        G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]  =
+                            G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] >
+                            G_pgpe_dds.other_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] ? 1 : 0;
+                        G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] =
+                            G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] <
+                            G_pgpe_dds.other_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] ? 1 : 0;
+                    }
+
+                    PK_TRACE("DDS:[%u][%u] trip_larger=%u,trip_smaller=%u", q, c,
+                             G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_TRIP_IDX][q][c],
+                             G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_TRIP_IDX][q][c]);
+                    PK_TRACE("DDS: [%u][%u]large_larger=%u,large_smaller=%u", q, c,
+                             G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c],
+                             G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]);
                 }
             }
         }
     }
 
-    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
-        && pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
+    if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
     {
-        G_pgpe_dds.any_trip_larger_chip = G_pgpe_dds.trip_chip > G_pgpe_dds.trip_chip_prev ? 1 : 0;
-        G_pgpe_dds.any_trip_smaller_chip = G_pgpe_dds.trip_chip < G_pgpe_dds.trip_chip_prev ? 1 : 0;
+        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET))
+        {
+            G_pgpe_dds.any_other_larger_chip[PGPE_DDS_OTHER_TRIP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX] >
+                    G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_TRIP_IDX] ? 1 : 0;
+            G_pgpe_dds.any_other_smaller_chip[PGPE_DDS_OTHER_TRIP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX] <
+                    G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_TRIP_IDX] ? 1 : 0;
+        }
+
+        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE))
+        {
+            G_pgpe_dds.any_other_larger_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX]
+                    >
+                    G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX] ? 1 : 0;
+            G_pgpe_dds.any_other_smaller_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] =
+                G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] <
+                G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX] ? 1 : 0;
+        }
+
     }
 
-    PK_TRACE("DDS: Compare Trip and Delay Exit");
+    //PK_TRACE("DDS: Compare Trip and Delay Exit");
 }
 
 //
@@ -241,29 +318,44 @@ void pgpe_dds_compare_trip_and_delay()
 //parameters for small differences they might have
 void pgpe_dds_update_pre(uint32_t pstate)
 {
-    PK_TRACE("DDS: Update Pre Enter");
+    PK_TRACE("DDS: Update Pre ");
     uint32_t ducr_upd_needed = 0;
     uint32_t q, c;
     uint32_t ccsr;
+    uint32_t update = 0;
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
     //1. If TripMode=chip and any_trip_larger
-    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET) &&
-        (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
-        && G_pgpe_dds.any_trip_larger)
+    if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
     {
-        //1. Update to larger trip values in FDCR.data and set FDCR.CPMS_FDCR_SUPPRESS_FTC_UPDATE bit
-        G_pgpe_dds.fdcr_chip.fields.control_update_disable = 1;
-        G_pgpe_dds.fdcr_chip.fields.trip_offset = G_pgpe_dds.trip_chip;
-        G_pgpe_dds.fdcr_chip.fields.suppress_ftc_update = 1;
+        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
+            && G_pgpe_dds.any_other_larger_chip[PGPE_DDS_OTHER_TRIP_IDX])
+        {
+            G_pgpe_dds.fdcr_chip.fields.trip_offset = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX];
+            update = 1;
+        }
 
-        //2. Multicast write FDCR
-        PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDCR, 0xF), G_pgpe_dds.fdcr_chip.value);
-        PK_TRACE("DDS: Chip, Trip Mode FDCR=0x%08x%08x", G_pgpe_dds.fdcr_chip.words.high_order,
-                 G_pgpe_dds.fdcr_chip.words.low_order);
+        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE)
+            && G_pgpe_dds.any_other_larger_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX])
+        {
+            G_pgpe_dds.fdcr_chip.fields.large_droop_detect = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX];
+            update = 1;
+        }
 
-        //3. ducr_update_needed = true
-        ducr_upd_needed = 1;
+        if (update)
+        {
+            //1. FDCR.CPMS_FDCR_SUPPRESS_FTC_UPDATE bit
+            G_pgpe_dds.fdcr_chip.fields.control_update_disable = 1;
+            G_pgpe_dds.fdcr_chip.fields.suppress_ftc_update = 1;
+
+            //2. Multicast write FDCR
+            PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDCR, 0xF), G_pgpe_dds.fdcr_chip.value);
+            /*PK_TRACE("DDS: Chip, Trip Mode FDCR=0x%08x%08x", G_pgpe_dds.fdcr_chip.words.high_order,
+                     G_pgpe_dds.fdcr_chip.words.low_order);*/
+
+            //3. ducr_update_needed = true
+            ducr_upd_needed = 1;
+        }
     }
 
     //2. for each quad q
@@ -279,18 +371,34 @@ void pgpe_dds_update_pre(uint32_t pstate)
                 //1. If TripMode=Core
                 if ((pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE))
                 {
-                    //1. If any_trip_larger[q][c]
-                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET) && G_pgpe_dds.any_trip_larger[q][c] == 1)
+                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
+                        && G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_TRIP_IDX][q][c] == 1)
+                    {
+                        G_pgpe_dds.fdcr[q][c].fields.trip_offset = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c];
+                        update = 1;
+                        PK_TRACE("DDS: Post Any Larger Trip");
+                    }
+
+                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE)
+                        && G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] == 1)
+                    {
+                        G_pgpe_dds.fdcr[q][c].fields.large_droop_detect = G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c];
+                        update = 1;
+                        PK_TRACE("DDS: Post Any Larger Large");
+                    }
+
+                    if(update)
                     {
                         //1. Update to larger trip values in FDCR.data and set FDCR.CPMS_FDCR_SUPPRESS_FTC_UPDATE bit
                         G_pgpe_dds.fdcr[q][c].fields.control_update_disable = 1;
-                        G_pgpe_dds.fdcr[q][c].fields.trip_offset = G_pgpe_dds.trip[q][c];
                         G_pgpe_dds.fdcr[q][c].fields.suppress_ftc_update = 1;
 
                         //2. Unicast write FDCR[c]
                         uint32_t core = 0x8 >> c;
                         PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_FDCR, q, core), G_pgpe_dds.fdcr[q][c].value);
 
+                        PK_TRACE("DDS: Pre Core Trip Mode FDCR=0x%08x%08x", G_pgpe_dds.fdcr[q][c].words.high_order,
+                                 G_pgpe_dds.fdcr[q][c].words.low_order);
                         //3. ducr_update_needed=true
                         ducr_upd_needed = 1;
                     }
@@ -324,7 +432,7 @@ void pgpe_dds_update_pre(uint32_t pstate)
         }
     }
 
-    PK_TRACE("DDS: Update Pre Exit");
+    //PK_TRACE("DDS: Update Pre Exit");
 }
 
 //
@@ -334,26 +442,41 @@ void pgpe_dds_update_pre(uint32_t pstate)
 //parameters for small differences they might have
 void pgpe_dds_update_post(uint32_t pstate)
 {
-    PK_TRACE("DDS: Update Post Enter ");
+    PK_TRACE("DDS: Update Post");
     uint32_t ducr_upd_needed = 0;
     uint32_t q, c;
     uint32_t ccsr;
+    uint32_t update = 0;
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
     //1. If TripMode=chip and any_trip_smaller
-    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
-        && (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP) && G_pgpe_dds.any_trip_smaller)
+    if( pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
     {
-        //1. update to smaller trip values in FDCR.data and set FDCR.CPMS_FDCR_SUPPRESS_FTC_UPDATE bit
-        G_pgpe_dds.fdcr_chip.fields.control_update_disable = 1;
-        G_pgpe_dds.fdcr_chip.fields.trip_offset = G_pgpe_dds.trip_chip;
-        G_pgpe_dds.fdcr_chip.fields.suppress_ftc_update = 1;
+        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET) && G_pgpe_dds.any_other_smaller_chip[TRIP_OFFSET])
+        {
+            G_pgpe_dds.fdcr_chip.fields.trip_offset = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX];
+            update = 1;
+        }
 
-        //2. Multicast write FDCR
-        PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDCR, 0xF), G_pgpe_dds.fdcr_chip.value);
+        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE)
+            && G_pgpe_dds.any_other_smaller_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX])
+        {
+            G_pgpe_dds.fdcr_chip.fields.large_droop_detect = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX];
+            update = 1;
+        }
 
-        //3. ducr_update_needed=true
-        ducr_upd_needed = 1;
+        if(update)
+        {
+            //1. update to smaller trip values in FDCR.data and set FDCR.CPMS_FDCR_SUPPRESS_FTC_UPDATE bit
+            G_pgpe_dds.fdcr_chip.fields.control_update_disable = 1;
+            G_pgpe_dds.fdcr_chip.fields.suppress_ftc_update = 1;
+
+            //2. Multicast write FDCR
+            PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDCR, 0xF), G_pgpe_dds.fdcr_chip.value);
+
+            //3. ducr_update_needed=true
+            ducr_upd_needed = 1;
+        }
     }
 
     //2. For each quad q
@@ -365,21 +488,35 @@ void pgpe_dds_update_post(uint32_t pstate)
             if (ccsr & CORE_MASK(((q << 2) + c)))
             {
                 //1. If TripMode=Core
-                if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
-                    && (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE))
+                if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
                 {
-                    //1. if any_trip_smaller[q][c]
-                    if (G_pgpe_dds.any_trip_smaller[q][c] == 1)
+                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET)
+                        && (G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_TRIP_IDX][q][c] == 1))
                     {
-                        //1. update to smaller trip values in FDCR.data and set FDCR.CPMS_FDCR_SUPPRESS_FTC_UPDATE bit
+                        G_pgpe_dds.fdcr[q][c].fields.trip_offset = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c];
+                        update = 1;
+                        PK_TRACE("DDS: Post Any Smaller Trip");
+                    }
+
+                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE)
+                        && (G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] == 1))
+                    {
+                        G_pgpe_dds.fdcr[q][c].fields.large_droop_detect = G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c];
+                        update = 1;
+                        PK_TRACE("DDS: Post Any Smaller Large");
+                    }
+
+                    if (update)
+                    {
                         G_pgpe_dds.fdcr[q][c].fields.control_update_disable = 1;
-                        G_pgpe_dds.fdcr[q][c].fields.trip_offset = G_pgpe_dds.trip[q][c];
                         G_pgpe_dds.fdcr[q][c].fields.suppress_ftc_update = 1;
 
-                        //2. Unicast write FDCR[c]
+                        //Unicast write FDCR[c]
                         PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_FDCR, q, (0x8 >> c)), G_pgpe_dds.fdcr[q][c].value);
 
-                        //3. ducr_update_needed=true
+                        PK_TRACE("DDS: Post Core Trip Mode FDCR=0x%08x%08x", G_pgpe_dds.fdcr[q][c].words.high_order,
+                                 G_pgpe_dds.fdcr[q][c].words.low_order);
+                        //ducr_update_needed=true
                         ducr_upd_needed = 1;
                     }
                 }
@@ -410,7 +547,7 @@ void pgpe_dds_update_post(uint32_t pstate)
         }
     }
 
-    PK_TRACE("DDS: Update Post Exit");
+    //PK_TRACE("DDS: Update Post Exit");
 }
 
 
@@ -455,7 +592,7 @@ uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c)
 
     delay = delay >> 1; //Shift back
 
-    PK_TRACE("DDS: Intp Delay r=0x%x, delay=0x%x base_delay=0x%x", r, delay, pgpe_gppb_get_dds_delay(c, r) );
+    //PK_TRACE("DDS: Intp Delay r=0x%x, delay=0x%x base_delay=0x%x", r, delay, pgpe_gppb_get_dds_delay(c, r) );
     return delay;
 }
 
@@ -466,12 +603,12 @@ uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c)
 {
     uint32_t cal_adj;
 
-    PK_TRACE("DDS: Intp Cal Adjust ps=0x%x, c=%u", ps, c);
+    //PK_TRACE("DDS: Intp Cal Adjust ps=0x%x, c=%u", ps, c);
     //determine closest vpd pt
     uint32_t p = pgpe_pstate_get_ps_closest_vpd_pt(ps);
     cal_adj = pgpe_gppb_get_dds_cal_adj(c, p);
 
-    PK_TRACE("DDS: Intp Cal Adjust p=0x%x, cal_adj=%u", p, cal_adj);
+    //PK_TRACE("DDS: Intp Cal Adjust p=0x%x, cal_adj=%u", p, cal_adj);
 
     return cal_adj;
 }
@@ -486,9 +623,51 @@ uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c)
 
     //Round-up by adding 1/2
     trip = (((pgpe_gppb_get_dds_trip_ps_slope(VPD_PT_SET_BIASED, c, r)) *
-             (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r))) >> (DDS_SLOPE_FP_SHIFT_6 - 1)) +
-           (pgpe_gppb_get_dds_trip(c, r) << 1) + 1;
+             (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r))) >> (DDS_SLOPE_FP_SHIFT_6 - 1));
+
+    if (pgpe_gppb_get_dds_trip(c, r) <= pgpe_gppb_get_dds_trip(c, r + 1))
+    {
+        trip = (pgpe_gppb_get_dds_trip(c, r) << 1) + 1 + trip;
+    }
+    else
+    {
+        trip = (pgpe_gppb_get_dds_trip(c, r) << 1) + 1 - trip;
+    }
 
     trip = trip >> 1; //Shift back
+
     return trip;
+}
+
+//
+//pgpe_dds_intp_large()
+//
+uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c)
+{
+    uint32_t large;
+    uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_BIASED);
+
+    //Round-up by adding 1/2
+    large = (((pgpe_gppb_get_dds_large_ps_slope(VPD_PT_SET_BIASED, c, r)) *
+              (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r))) >> (DDS_SLOPE_FP_SHIFT_6 - 1));
+
+    PK_TRACE("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
+
+    if (pgpe_gppb_get_dds_large(c, r) <= pgpe_gppb_get_dds_large(c, r + 1))
+    {
+        large = (pgpe_gppb_get_dds_large(c, r) << 1) + 1 + large;
+    }
+    else
+    {
+        large = (pgpe_gppb_get_dds_large(c, r) << 1) + 1 - large;
+    }
+
+
+    PK_TRACE("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
+    large = large >> 1; //Shift back
+
+    //PK_TRACE("DDS: Intp Large p=0x%x, cal_adj=%u", p, cal_adj);
+    PK_TRACE("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
+
+    return large;
 }

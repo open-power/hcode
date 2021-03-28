@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,18 +39,28 @@ enum DDS_MODE
     DDS_MODE_SLEW   =   0x2
 };
 
+enum  PGPE_DDS_OTHER_IDX
+{
+    PGPE_DDS_OTHER_TRIP_IDX         =   0x0,
+    PGPE_DDS_OTHER_LARGE_DROOP_IDX  =   0x1,
+    PGPE_DDS_OTHER_MAX              =   0x2
+};
+
 typedef struct pgpe_dds
 {
-    uint32_t delay[MAX_QUADS][CORES_PER_QUAD], delay_prev[MAX_QUADS][CORES_PER_QUAD];
-    uint32_t cal_adjust[MAX_QUADS][CORES_PER_QUAD], cal_adjust_prev[MAX_QUADS][CORES_PER_QUAD];
-    uint32_t trip[MAX_QUADS][CORES_PER_QUAD], trip_prev[MAX_QUADS][CORES_PER_QUAD];
-    uint32_t any_trip_larger[MAX_QUADS][CORES_PER_QUAD], any_trip_smaller[MAX_QUADS][CORES_PER_QUAD];
-    uint32_t any_delay_larger[MAX_QUADS], any_delay_smaller[MAX_QUADS];
-    uint32_t any_cal_later[MAX_QUADS], any_cal_earlier[MAX_QUADS];
     qme_fdcr_t fdcr[MAX_QUADS][CORES_PER_QUAD];
     qme_ducr_t ducr[MAX_QUADS];
-    uint32_t trip_chip, trip_chip_prev;
-    uint32_t any_trip_larger_chip, any_trip_smaller_chip;
+    uint32_t delay[MAX_QUADS][CORES_PER_QUAD], delay_prev[MAX_QUADS][CORES_PER_QUAD];
+    uint32_t cal_adjust[MAX_QUADS][CORES_PER_QUAD], cal_adjust_prev[MAX_QUADS][CORES_PER_QUAD];
+    uint32_t any_delay_larger[MAX_QUADS], any_delay_smaller[MAX_QUADS];
+    uint32_t any_cal_later[MAX_QUADS], any_cal_earlier[MAX_QUADS];
+    uint32_t other[PGPE_DDS_OTHER_MAX][MAX_QUADS][CORES_PER_QUAD],
+             other_prev[PGPE_DDS_OTHER_MAX][MAX_QUADS][CORES_PER_QUAD];
+    uint32_t any_other_larger[PGPE_DDS_OTHER_MAX][MAX_QUADS][CORES_PER_QUAD],
+             any_other_smaller[PGPE_DDS_OTHER_MAX][MAX_QUADS][CORES_PER_QUAD];
+
+    uint32_t other_chip[PGPE_DDS_OTHER_MAX], other_chip_prev[PGPE_DDS_OTHER_MAX];
+    uint32_t any_other_larger_chip[PGPE_DDS_OTHER_MAX], any_other_smaller_chip[PGPE_DDS_OTHER_MAX];
     qme_fdcr_t fdcr_chip;
 } pgpe_dds_t;
 

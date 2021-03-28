@@ -823,7 +823,7 @@ uint32_t pgpe_pstate_get_ps_region(uint32_t ps, uint32_t vpt_pt_set)
     }
     else
     {
-        if (ps >= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF1))
+        if (ps > pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF1))
         {
             return REGION_CF0_CF1;
         }
@@ -1283,7 +1283,7 @@ void pgpe_pstate_pmsr_write()
 
 #else
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value);
-    PK_TRACE("PS: PMSR WRAddr=0x%x, RdAddr=0x%x", PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), PPE_SCOM_ADDR_MC_OR(QME_PMSRS, 0xF));
+    //PK_TRACE("PS: PMSR WRAddr=0x%x, RdAddr=0x%x", PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), PPE_SCOM_ADDR_MC_OR(QME_PMSRS, 0xF));
     //HW552730 this original defect requires PMSR at all cores be written twice as workaround
     //HW555543 later found more observation on potentially endangering qme local access to CPMS
     //that can be workaround with two options:
