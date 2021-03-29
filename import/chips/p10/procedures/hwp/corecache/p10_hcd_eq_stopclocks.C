@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -71,6 +71,13 @@ p10_hcd_eq_stopclocks(
     FAPI_TRY( HCD_PUTSCOM_Q( i_target, CPLT_CTRL1_WO_OR, SCOM_LOAD32H( HCD_CLK_REGION_ALL ) ) );
 
     FAPI_TRY( p10_hcd_corecache_clock_control( i_target, HCD_CLK_REGION_ALL, HCD_CLK_STOP ) );
+
+#ifndef __PPE_QME
+
+    FAPI_DBG("Drop TC_SRAM_ABIST_MODE_DC only for Scan via BIST[1]");
+    FAPI_TRY( putScom(i_target, BIST, 0));
+
+#endif
 
 fapi_try_exit:
 
