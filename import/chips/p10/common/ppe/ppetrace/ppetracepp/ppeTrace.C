@@ -34,6 +34,10 @@ typedef uint32_t u32;
 typedef uint8_t u8;
 #include "jhash.h"
 
+#ifdef hz
+    #undef hz
+#endif
+
 PpeTrace::PpeTrace(ostream& i_info, Trex& i_trex)
     : iv_info(i_info),
       iv_alloc(NULL),
