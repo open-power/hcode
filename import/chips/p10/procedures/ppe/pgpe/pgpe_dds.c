@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -438,11 +438,11 @@ uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c)
 {
     PK_TRACE("DDS: Intp Delay ps=0x%x, c=%u", ps, c);
     uint32_t delay;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_RAW);
+    uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_BIASED);
 
     //Round-up by adding 1/2
-    delay = (((pgpe_gppb_get_dds_delay_ps_slope(VPD_PT_SET_RAW, c, r)) *
-              (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_RAW, r))) >> (DDS_DELAY_SLOPE_FP_SHIFT_12 - 1));
+    delay = (((pgpe_gppb_get_dds_delay_ps_slope(VPD_PT_SET_BIASED, c, r)) *
+              (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r))) >> (DDS_DELAY_SLOPE_FP_SHIFT_12 - 1));
 
     if (pgpe_gppb_get_dds_delay(c, r) <= pgpe_gppb_get_dds_delay(c, r + 1))
     {
@@ -468,7 +468,7 @@ uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c)
 
     PK_TRACE("DDS: Intp Cal Adjust ps=0x%x, c=%u", ps, c);
     //determine closest vpd pt
-    uint32_t p = pgpe_pstate_get_ps_vpd_pt(ps);
+    uint32_t p = pgpe_pstate_get_ps_closest_vpd_pt(ps);
     cal_adj = pgpe_gppb_get_dds_cal_adj(c, p);
 
     PK_TRACE("DDS: Intp Cal Adjust p=0x%x, cal_adj=%u", p, cal_adj);
@@ -482,11 +482,11 @@ uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c)
 uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c)
 {
     uint32_t trip;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_RAW);
+    uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_BIASED);
 
     //Round-up by adding 1/2
-    trip = (((pgpe_gppb_get_dds_trip_ps_slope(VPD_PT_SET_RAW, c, r)) *
-             (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_RAW, r))) >> (DDS_SLOPE_FP_SHIFT_6 - 1)) +
+    trip = (((pgpe_gppb_get_dds_trip_ps_slope(VPD_PT_SET_BIASED, c, r)) *
+             (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r))) >> (DDS_SLOPE_FP_SHIFT_6 - 1)) +
            (pgpe_gppb_get_dds_trip(c, r) << 1) + 1;
 
     trip = trip >> 1; //Shift back

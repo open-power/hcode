@@ -369,6 +369,17 @@ uint32_t pgpe_gppb_get_safe_frequency()
     }
 }
 
+uint32_t pgpe_gppb_get_ceiling_frequency()
+{
+    if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
+    {
+        return G_gppb->frequency_ceiling_khz;
+    }
+    else
+    {
+        return G_gppb_base->frequency_ceiling_khz;
+    }
+}
 uint32_t pgpe_gppb_get_safe_voltage_mv(uint32_t idx)
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)

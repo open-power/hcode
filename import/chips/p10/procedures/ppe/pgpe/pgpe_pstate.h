@@ -94,6 +94,7 @@ typedef struct pgpe_pstate
              vratio_vcs_loadline_64th, vratio_vcs_ceff_ins_64th,    //66-67
              vratio_vdd_rounded, vratio_vcs_rounded;                //68-69
     uint32_t vindex;                                                //70
+    uint32_t pstate_ceiling;        //71
 } pgpe_pstate_t;
 
 
@@ -134,7 +135,7 @@ void pgpe_pstate_update_vdd_vcs_ps();
 
 //Interpolation
 uint32_t pgpe_pstate_get_ps_region(uint32_t ps, uint32_t vpt_pt_set);
-uint32_t pgpe_pstate_get_ps_vpd_pt(uint32_t ps);
+uint32_t pgpe_pstate_get_ps_closest_vpd_pt(uint32_t ps);
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vdd);
@@ -144,8 +145,8 @@ uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_ics_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_ics_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_ps_from_vdd(uint32_t vdd);
-uint32_t pgpe_pstate_intp_ps_from_vcs(uint32_t vcs);
-uint32_t pgpe_pstate_intp_ps_from_idd(uint32_t idd);
+uint32_t pgpe_pstate_intp_ps_from_vcs(uint32_t vcs); //unused
+uint32_t pgpe_pstate_intp_ps_from_idd(uint32_t idd); //unused
 uint32_t pgpe_pstate_freq_from_ps(uint32_t ps);
 uint32_t pgpe_pstate_ps_from_freq(uint32_t freq_khz);
 uint32_t pgpe_pstate_ps_from_freq_clipped(uint32_t freq_khz, uint32_t round_up);

@@ -59,6 +59,7 @@ uint32_t pgpe_gppb_get_frequency_step();
 uint32_t pgpe_gppb_get_occ_complex_frequency_mhz();
 uint32_t pgpe_gppb_get_dpll_pstate0_value();
 uint32_t pgpe_gppb_get_safe_frequency();
+uint32_t pgpe_gppb_get_ceiling_frequency();
 uint32_t pgpe_gppb_get_safe_voltage_mv(uint32_t idx);
 uint32_t pgpe_gppb_get_safe_throttle_idx();
 uint16_t pgpe_gppb_get_vcs_vdd_offset_mv();

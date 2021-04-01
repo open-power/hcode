@@ -47,11 +47,10 @@
 uint32_t pgpe_pstate_is_at_target();
 uint32_t pgpe_pstate_get_vdd_region(uint32_t vdd);
 uint32_t pgpe_pstate_get_vcs_region(uint32_t vcs);
-uint32_t pgpe_pstate_get_idd_region(uint32_t idd);
-uint32_t pgpe_pstate_get_idd_ac_region(uint32_t idd);
-uint32_t pgpe_pstate_get_idd_dc_region(uint32_t idd);
-uint32_t pgpe_pstate_get_ics_ac_region(uint32_t ics);
-uint32_t pgpe_pstate_get_ics_dc_region(uint32_t ics);
+uint32_t pgpe_pstate_get_idd_ac_region(uint32_t idd); //unused
+uint32_t pgpe_pstate_get_idd_dc_region(uint32_t idd); //unused
+uint32_t pgpe_pstate_get_ics_ac_region(uint32_t ics); //unused
+uint32_t pgpe_pstate_get_ics_dc_region(uint32_t ics); //unused
 
 pgpe_pstate_t G_pgpe_pstate __attribute__((section (".data_structs")));
 
@@ -124,7 +123,6 @@ void pgpe_pstate_init()
     G_pgpe_pstate.rvrm_volt  = (((rvcr >> 56) & 0xFF) <<
                                 3); //Extract RVID Value from RVCR[1:7] and then multiply by 8 to get RVRM voltage
 
-    PK_TRACE("PS: RVRM Voltage=%u", G_pgpe_pstate.rvrm_volt);
 
     if (pgpe_gppb_get_safe_frequency())
     {
@@ -137,14 +135,23 @@ void pgpe_pstate_init()
         G_pgpe_pstate.pstate_safe = pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, CF0);
     }
 
+    if(pgpe_gppb_get_ceiling_frequency())
+    {
+        G_pgpe_pstate.pstate_ceiling = (pgpe_gppb_get_reference_frequency() -
+                                        pgpe_gppb_get_ceiling_frequency()) / pgpe_gppb_get_frequency_step();
+    }
+    else
+    {
+        G_pgpe_pstate.pstate_ceiling = 0;
+    }
+
     G_pgpe_pstate.stopped_ac_vdd_64ths = pgpe_gppb_get_vratio_vdd(WOF_VRATIO_VDD_IDX_CORE)  + pgpe_gppb_get_vratio_vdd(
             WOF_VRATIO_VDD_IDX_RACETRACK_PER_CORE);
     G_pgpe_pstate.stopped_ac_vcs_64ths = pgpe_gppb_get_vratio_vcs(WOF_VRATIO_VCS_IDX_CORE)  + pgpe_gppb_get_vratio_vcs(
             WOF_VRATIO_VCS_IDX_CACHE_BASE);
 
-    PK_TRACE("PS: stopped_ac_vdd/vcs_64ths=0x%08x, 0x08%x", G_pgpe_pstate.stopped_ac_vdd_64ths,
-             G_pgpe_pstate.stopped_ac_vcs_64ths);
     PK_TRACE("PS: Psafe=0x%x", G_pgpe_pstate.pstate_safe);
+    PK_TRACE("PS: Pceil=0x%x, Ceiling Frequency=%u", G_pgpe_pstate.pstate_ceiling, pgpe_gppb_get_ceiling_frequency());
 }
 
 void* pgpe_pstate_data_addr()
@@ -581,6 +588,10 @@ void pgpe_pstate_apply_clips()
 
     clip_min = G_pgpe_pstate.clip_min;
 
+    //Min Pstate(higher freq) should not be lower(higher freq) than pstate_ceiling
+    clip_min = G_pgpe_pstate.clip_min > G_pgpe_pstate.pstate_ceiling ?
+               G_pgpe_pstate.clip_min : G_pgpe_pstate.pstate_ceiling;
+
     //Check if wof_clip is lower(freq) than clip_min. Otherwise, clip_min is thermal clip min
     if (G_pgpe_pstate.clip_wof > clip_min)
     {
@@ -876,7 +887,11 @@ uint32_t pgpe_pstate_get_ps_region(uint32_t ps, uint32_t vpt_pt_set)
     //We use binary search to deteremine the region
     if (ps <= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF3))
     {
-        if (ps <= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF5))
+        if (ps <= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF6))
+        {
+            return REGION_CF6_CF7;
+        }
+        else if (ps <= pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF5))
         {
             return REGION_CF5_CF6;
         }
@@ -912,17 +927,23 @@ uint32_t pgpe_pstate_get_ps_region(uint32_t ps, uint32_t vpt_pt_set)
     }
 }
 
-uint32_t pgpe_pstate_get_ps_vpd_pt(uint32_t ps)
+uint32_t pgpe_pstate_get_ps_closest_vpd_pt(uint32_t ps)
 {
 
     //We use binary search to determine the region
     if (ps < ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF3) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
                VPD_PV_CF4)) >> 1))
     {
+        if (ps < ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF6) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
+                   VPD_PV_CF7)) >> 1))
+        {
+            return CF7;
+        }
+
         if (ps < ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF5) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
                    VPD_PV_CF6)) >> 1))
         {
-            return VPD_PV_CF6;
+            return CF6;
         }
         else if (ps > ((pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, VPD_PV_CF4) + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED,
                         VPD_PV_CF5)) >> 1))
@@ -966,7 +987,11 @@ uint32_t pgpe_pstate_get_vdd_region(uint32_t vdd)
 {
     if (vdd >= pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, VPD_PV_CF3))
     {
-        if (vdd >= pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, VPD_PV_CF5))
+        if (vdd >= pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, VPD_PV_CF6))
+        {
+            return REGION_CF6_CF7;
+        }
+        else if (vdd >= pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, VPD_PV_CF5))
         {
             return REGION_CF5_CF6;
         }
@@ -1006,7 +1031,11 @@ uint32_t pgpe_pstate_get_vcs_region(uint32_t vcs)
 {
     if (vcs >= pgpe_gppb_get_ops_vcs(VPD_PT_SET_BIASED, VPD_PV_CF3))
     {
-        if (vcs >= pgpe_gppb_get_ops_vcs(VPD_PT_SET_BIASED, VPD_PV_CF5))
+        if (vcs >= pgpe_gppb_get_ops_vcs(VPD_PT_SET_BIASED, VPD_PV_CF6))
+        {
+            return REGION_CF6_CF7;
+        }
+        else if (vcs >= pgpe_gppb_get_ops_vcs(VPD_PT_SET_BIASED, VPD_PV_CF5))
         {
             return REGION_CF5_CF6;
         }
@@ -1046,7 +1075,12 @@ uint32_t pgpe_pstate_get_idd_ac_region(uint32_t idd)
 {
     if (idd >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF3].idd_tdp_ac_10ma)
     {
-        if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].idd_tdp_ac_10ma)
+
+        if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF6].idd_tdp_ac_10ma)
+        {
+            return REGION_CF6_CF7;
+        }
+        else if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].idd_tdp_ac_10ma)
         {
             return REGION_CF5_CF6;
         }
@@ -1086,7 +1120,11 @@ uint32_t pgpe_pstate_get_idd_dc_region(uint32_t idd)
 {
     if (idd >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF3].idd_tdp_dc_10ma)
     {
-        if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].idd_tdp_dc_10ma)
+        if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF6].idd_tdp_dc_10ma)
+        {
+            return REGION_CF6_CF7;
+        }
+        else if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].idd_tdp_dc_10ma)
         {
             return REGION_CF5_CF6;
         }
@@ -1126,7 +1164,11 @@ uint32_t pgpe_pstate_get_ics_dc_region(uint32_t ics)
 {
     if (ics >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF3].ics_tdp_dc_10ma)
     {
-        if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].ics_tdp_dc_10ma)
+        if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF6].ics_tdp_dc_10ma)
+        {
+            return REGION_CF6_CF7;
+        }
+        else if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].ics_tdp_dc_10ma)
         {
             return REGION_CF5_CF6;
         }
@@ -1166,7 +1208,11 @@ uint32_t pgpe_pstate_get_ics_ac_region(uint32_t ics)
 {
     if (ics >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF3].ics_tdp_ac_10ma)
     {
-        if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].ics_tdp_ac_10ma)
+        if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF6].ics_tdp_ac_10ma)
+        {
+            return REGION_CF6_CF7;
+        }
+        else if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].ics_tdp_ac_10ma)
         {
             return REGION_CF5_CF6;
         }
