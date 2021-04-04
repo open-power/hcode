@@ -53,7 +53,6 @@ typedef struct pgpe_occ
 } pgpe_occ_t;
 
 #ifndef __PARSER_TOOL__
-    void pgpe_sync_qme_occ_timebase();
     void pgpe_occ_init();
     void* pgpe_occ_data_addr();
     void pgpe_occ_update_beacon();

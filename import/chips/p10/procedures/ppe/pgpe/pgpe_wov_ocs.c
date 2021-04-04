@@ -69,34 +69,34 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.cnt_droop_heavy = 0;
     G_pgpe_wov_ocs.cnt_droop_heavy_oc = 0;
 
-    PK_TRACE("WOV_OCS: overv_max_pct  = 0x%x", pgpe_gppb_get_wov_overv_max_pct());
-    PK_TRACE("WOV_OCS: underv_max_pct = 0x%x", pgpe_gppb_get_wov_underv_max_pct());
+    /*PK_TRACE_DBG("WOV: overv_max_pct  = 0x%x", pgpe_gppb_get_wov_overv_max_pct());
+    PK_TRACE_DBG("WOV: underv_max_pct = 0x%x", pgpe_gppb_get_wov_underv_max_pct());
 
-    PK_TRACE("WOV_OCS: WOV_DIRTY_UC_CTRL_LIGHT_DROOP=%u",
+    PK_TRACE_DBG("WOV: WOV_DIRTY_UC_CTRL_LIGHT_DROOP=%u",
              pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_LIGHT_DROOP));
-    PK_TRACE("WOV_OCS: WOV_DIRTY_UC_CTRL_HEAVY_DROOP=%u",
-             pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_HEAVY_DROOP));
-    PK_TRACE("WOV_OCS: Inited");
+    PK_TRACE_DBG("WOV: WOV_DIRTY_UC_CTRL_HEAVY_DROOP=%u",
+             pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_HEAVY_DROOP));*/
+    PK_TRACE_DBG("WOV: Inited");
 }
 
 void pgpe_wov_ocs_enable()
 {
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOV_UNDERVOLT_ENABLE))
     {
-        PK_TRACE("WOV_OCS: Undervolt Enabled");
+        PK_TRACE("WOV: Undervolt Enabled");
         G_pgpe_wov_ocs.wov_uv_status = WOV_STATUS_ENABLED;
     }
 
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOV_OVERVOLT_ENABLE))
     {
-        PK_TRACE("OV_OCS: Overvolt Enabled");
+        PK_TRACE("WOV: Overvolt Enabled");
         G_pgpe_wov_ocs.wov_ov_status = WOV_STATUS_ENABLED;
     }
 
 
     if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_OCS_DISABLE))
     {
-        PK_TRACE("WOV_OCS: OCS Enabled");
+        PK_TRACE("WOV: OCS Enabled");
         G_pgpe_wov_ocs.ocs_status = OCS_STATUS_ENABLED;
     }
 
@@ -104,13 +104,13 @@ void pgpe_wov_ocs_enable()
     //\todo RTC 247186
     G_pgpe_wov_ocs.wov_thr_loss_enable = WOV_THR_LOSS_STATUS_ENABLED;
     G_pgpe_wov_ocs.wov_freq_loss_enable = WOV_FREQ_LOSS_STATUS_DISABLED;
-    PK_TRACE("WOV_OCS: WOV_UNDERV_STATUS=0x%x", G_pgpe_wov_ocs.wov_uv_status);
-    PK_TRACE("WOV_OCS: WOV_OVERV_STATUS=0x%x", G_pgpe_wov_ocs.wov_ov_status);
+    PK_TRACE("WOV: Enablement Status(OCS=0x%x,UNDERV=0x%x,OVERV=0x%x", G_pgpe_wov_ocs.ocs_status,
+             G_pgpe_wov_ocs.wov_uv_status, G_pgpe_wov_ocs.wov_ov_status);
 }
 
 void pgpe_wov_ocs_disable()
 {
-    PK_TRACE("WOV_OCS: Disabled");
+    PK_TRACE("WOV: Disabled");
     G_pgpe_wov_ocs.wov_uv_status = WOV_STATUS_DISABLED;
     G_pgpe_wov_ocs.wov_ov_status = WOV_STATUS_DISABLED;
     G_pgpe_wov_ocs.ocs_status = OCS_STATUS_DISABLED;
@@ -190,7 +190,7 @@ void pgpe_wov_ocs_update_dirty()
         pgpe_opt_set_word(0, 0);
         pgpe_opt_set_byte(0, droop);
         ppe_trace_op(PGPE_OPT_OCS_DROOP_COND, pgpe_opt_get());
-        PK_TRACE("OCS: old_droop_lvl=0x%x, new_droop_lvl=0x%x", G_pgpe_wov_ocs.droop_level, droop);
+        PK_TRACE("WOV: old_droop_lvl=0x%x, new_droop_lvl=0x%x", G_pgpe_wov_ocs.droop_level, droop);
     }
 
     //Trace if change in overcurrent status
@@ -200,7 +200,7 @@ void pgpe_wov_ocs_update_dirty()
         pgpe_opt_set_half(0, G_pgpe_wov_ocs.idd_current_thresh);
         pgpe_opt_set_half(1, G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_10ma - G_pgpe_wov_ocs.idd_current_thresh);
         ppe_trace_op(PGPE_OPT_OCS_THRESH_TRANS, pgpe_opt_get());
-        PK_TRACE("OCS: old_ocs=0x%x, new_ocs=0x%x idd_avg_ma=0x%x, idd_thresh=0x%x", G_pgpe_wov_ocs.overcurrent_flag,
+        PK_TRACE("WOV: old_ocs=0x%x, new_ocs=0x%x idd_avg_ma=0x%x, idd_thresh=0x%x", G_pgpe_wov_ocs.overcurrent_flag,
                  overcurrent,
                  G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_10ma,
                  G_pgpe_wov_ocs.idd_current_thresh);
@@ -326,7 +326,7 @@ void pgpe_wov_ocs_update_dirty()
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
         dirty = OCS_DIRTY_SAMPLE_TYPE_11;
-        PK_TRACE("OCS: tgt_pct=0x%x, overv_max_pct=0x%x", G_pgpe_wov_ocs.tgt_pct, G_gppb->wov_overv_max_pct);
+        PK_TRACE("WOV: tgt_pct=0x%x, overv_max_pct=0x%x", G_pgpe_wov_ocs.tgt_pct, G_gppb->wov_overv_max_pct);
     }
 
     if (G_pgpe_wov_ocs.dirty != dirty)
@@ -334,7 +334,7 @@ void pgpe_wov_ocs_update_dirty()
         pgpe_opt_set_word(0, 0);
         pgpe_opt_set_byte(0, dirty);
         ppe_trace_op(PGPE_OPT_OCS_DIRTY_TYPE , pgpe_opt_get());
-        PK_TRACE("OCS: new_dirty=0x%x, old_dirty=0x%x", dirty, G_pgpe_wov_ocs.dirty);
+        PK_TRACE("WOV: new_dirty=0x%x, old_dirty=0x%x", dirty, G_pgpe_wov_ocs.dirty);
     }
 
     G_pgpe_wov_ocs.dirty = dirty;

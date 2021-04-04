@@ -38,6 +38,7 @@
 pgpe_occ_t G_pgpe_occ __attribute__((section (".data_structs")));
 void pgpe_occ_sample_values();
 void pgpe_occ_produce_fit_values();
+void pgpe_occ_sync_qme_occ_timebase();
 
 void* pgpe_occ_data_addr()
 {
@@ -46,7 +47,7 @@ void* pgpe_occ_data_addr()
 
 void pgpe_occ_init()
 {
-
+    PK_TRACE("OCC: Init");
     uint32_t occflg3 = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW);
 
     if(!(occflg3 & BIT32(XGPE_ACTIVE)))
@@ -83,6 +84,8 @@ void pgpe_occ_init()
     G_pgpe_occ.fit_tick = 0;
     G_pgpe_occ.wof_tick = 4; //TODO RTC: 214486 This WOF_TICK_TIME/FIT_TICK_TIME. Should get it from somewhere else
     G_pgpe_occ.wof_tick_rnd = 2; //Half of wof_tick
+
+    pgpe_occ_sync_qme_occ_timebase();
 }
 
 void pgpe_occ_update_beacon()
@@ -293,13 +296,13 @@ void pgpe_occ_sample_values()
 
 void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd)
 {
-    PK_TRACE("IPC ACK: cmd=0x%x", (uint32_t)cmd);
+    PK_TRACE("OCC: IPC Ack cmd=0x%x", (uint32_t)cmd);
     ipc_send_rsp(cmd, IPC_RC_SUCCESS);
 }
 
 void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc)
 {
-    PK_TRACE("IPC ACK: rc=%d", msg_rc);
+    PK_TRACE("OCC: IPC Ack rc=%d", msg_rc);
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_base_t* args = (ipcmsg_base_t*)async_cmd->cmd_data;
     args->rc = msg_rc;
@@ -308,7 +311,7 @@ void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc)
 
 void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc)
 {
-    PK_TRACE("IPC ACK: type=%d, rc=%d", ipc_type, msg_rc);
+    PK_TRACE("OCC: IPC Ack type=%d, rc=%d", ipc_type, msg_rc);
     ipc_msg_t* cmd = (ipc_msg_t*)pgpe_event_tbl_get_args(ipc_type);
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_base_t* args = (ipcmsg_base_t*)async_cmd->cmd_data;
@@ -316,7 +319,7 @@ void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc)
     ipc_send_rsp(cmd, IPC_RC_SUCCESS);
 }
 
-void pgpe_sync_qme_occ_timebase( )
+void pgpe_occ_sync_qme_occ_timebase()
 {
     uint32_t otbr_1_32 = 0;
     uint32_t otbr_2_32 = 0;
@@ -357,7 +360,7 @@ void pgpe_sync_qme_occ_timebase( )
         otbr_offset++;
     }
 
-    PK_TRACE( "Time Base Sync Offset: 0x%08x", otbr_offset );
+    PK_TRACE("OCC: OCC Time Base Sync Offset: 0x%08x", otbr_offset );
 
     // delay calculated by mocking time base synch-up
 
@@ -370,6 +373,6 @@ void pgpe_sync_qme_occ_timebase( )
     PPE_GETSCOM_MC_Q_AND( QME_TBR, time_base_value );
     otbr_2_32  = time_base_value >> 32;
 
-    PK_TRACE( "QME Time Base Synchronized: OCC TBR: 0x%08x  QME TBR: 0x%08x",
-              otbr_1_32, otbr_2_32 );
+    PK_TRACE("OCC: QME Time Base Synchronized: OCC TBR: 0x%08x  QME TBR: 0x%08x",
+             otbr_1_32, otbr_2_32 );
 }

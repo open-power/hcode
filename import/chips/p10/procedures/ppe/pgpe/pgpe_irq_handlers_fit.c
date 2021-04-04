@@ -64,7 +64,7 @@ void pgpe_irq_fit_init()
                                (freq < 557) ? 17 :
                                (freq < 589) ? 18 :
                                (freq < 622) ? 19 : 20;
-    PK_TRACE("Fit BeaconThr=0x%d", G_beacon_count_threshold);
+    PK_TRACE("FIT: Beacon Threshold=0x%d", G_beacon_count_threshold);
 
     //Determine PGPE heartbeat value to be written in each quad(monitored by CME)
     G_beacon_count = 0;

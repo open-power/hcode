@@ -39,7 +39,7 @@ uint64_t pgpe_dpll_get_dpll_stat()
     uint64_t dpll_stat;
 
     PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat);
-    PK_TRACE("dpll_stat=0x%08x%08x", dpll_stat >> 32, dpll_stat);
+    PK_TRACE("DPL: dpll_stat=0x%08x%08x", dpll_stat >> 32, dpll_stat);
 
     return dpll_stat;
 }
@@ -110,7 +110,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     pgpe_dpll_mask_and_clear_pll_unlock();
 
     // Write DPLL_FREQ
-    PK_TRACE("dpll=0x%08x%08x", dpll_freq.value >> 32, dpll_freq.value);
+    PK_TRACE("DPL: dpll=0x%08x%08x", dpll_freq.value >> 32, dpll_freq.value);
     PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_FREQ, dpll_freq.value);
 
     // Wait until frequency update is complete
@@ -118,7 +118,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     dpll_stat_t dpll_stat;
     dpll_stat.value = 0;
     PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);
-    PK_TRACE("dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
+    PK_TRACE("DPL: dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
     uint32_t start = in32(0xc00604f8ull); //Read OTBR
 
     while(!dpll_stat.fields.update_complete || !dpll_stat.fields.lock)
@@ -127,7 +127,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     }
 
     uint32_t end = in32(0xc00604f8ull);
-    PK_TRACE("dpll_stat=0x%08x%08x, start=0x%x end=0x%x", dpll_stat.value >> 32, dpll_stat.value, start, end);
+    PK_TRACE("DPL: dpll_stat=0x%08x%08x, start=0x%x end=0x%x", dpll_stat.value >> 32, dpll_stat.value, start, end);
 
     // Unmask the NEST DPLL Unlock check via TP Slave Config Reg
     pgpe_dpll_unmask_pll_unlock();

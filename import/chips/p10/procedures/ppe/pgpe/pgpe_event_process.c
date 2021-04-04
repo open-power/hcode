@@ -137,7 +137,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
 
 void pgpe_process_pstate_start()
 {
-    PK_TRACE("PSS: PS Start");
+    PK_TRACE("PEP: PS Start");
     uint32_t sync_pstate;
     uint32_t voltage, vcs_before_vdd = 0;
     int32_t move_frequency;
@@ -174,14 +174,14 @@ void pgpe_process_pstate_start()
     }
 
     dpll_mode = pgpe_dpll_get_mode();
-    PK_TRACE("PSS: DPLL=0x%x DPLL0=0x%x Mode=%u, syncPS=0x%x", dpll.fields.freqout,
+    PK_TRACE("PEP: DPLL=0x%x DPLL0=0x%x Mode=%u, syncPS=0x%x", dpll.fields.freqout,
              pgpe_gppb_get_dpll_pstate0_value(), dpll_mode, sync_pstate);
 
     //3. Clip the pstate and determine the pstate closest to the frequency read
     if (sync_pstate < pgpe_pstate_get(clip_min))
     {
         sync_pstate = pgpe_pstate_get(clip_min);
-        PK_TRACE("PSS: sync_ps < clip_min=0x%x, setting sync_ps=0x%x", pgpe_pstate_get(clip_min), sync_pstate);
+        PK_TRACE("PEP: sync_ps < clip_min=0x%x, setting sync_ps=0x%x", pgpe_pstate_get(clip_min), sync_pstate);
         move_frequency = -1;
     }
 
@@ -191,7 +191,7 @@ void pgpe_process_pstate_start()
     if (sync_pstate > clip_max)
     {
         sync_pstate = clip_max;
-        PK_TRACE("PSS: sync_ps > clip_max=0x%x, setting sync_ps=0x%x", clip_max, sync_pstate);
+        PK_TRACE("PEP: sync_ps > clip_max=0x%x, setting sync_ps=0x%x", clip_max, sync_pstate);
         move_frequency = 1;
     }
 
@@ -208,7 +208,7 @@ void pgpe_process_pstate_start()
                              &voltage);
     pgpe_pstate_set(vcs_curr_ext, voltage);
 
-    PK_TRACE("PSS: Read vdd=%u vcs=%u", pgpe_pstate_get(vdd_curr_ext), pgpe_pstate_get(vcs_curr_ext));
+    PK_TRACE("PEP: Read vdd=%u vcs=%u", pgpe_pstate_get(vdd_curr_ext), pgpe_pstate_get(vcs_curr_ext));
 
     //5. If frequency moving down, then adjust frequency
     if (move_frequency < 0 )
@@ -237,11 +237,11 @@ void pgpe_process_pstate_start()
     pgpe_pstate_set(vdd_next_ext, pgpe_pstate_get(vdd_next) + pgpe_pstate_get(vdd_next_uplift));
     pgpe_pstate_set(vcs_next_ext, pgpe_pstate_get(vcs_next) + pgpe_pstate_get(vcs_next_uplift));
 
-    PK_TRACE("PSS: vdd_next=%u vdd_next_up=%u, vdd_next_ext=%u",
+    PK_TRACE("PEP: vdd_next=%u vdd_next_up=%u, vdd_next_ext=%u",
              pgpe_pstate_get(vdd_next),
              pgpe_pstate_get(vdd_next_uplift),
              pgpe_pstate_get(vdd_next_ext));
-    PK_TRACE("PSS: vcs_next=%u vcs_next_up=%u, vcs_next_ext=%u",
+    PK_TRACE("PEP: vcs_next=%u vcs_next_up=%u, vcs_next_ext=%u",
              pgpe_pstate_get(vcs_next),
              pgpe_pstate_get(vcs_next_uplift),
              pgpe_pstate_get(vcs_next_ext));

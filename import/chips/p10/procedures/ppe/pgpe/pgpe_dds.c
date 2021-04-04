@@ -49,7 +49,7 @@ void* pgpe_dds_data_addr()
 //
 void pgpe_dds_init(uint32_t pstate)
 {
-    PK_TRACE("DDS: Init Enter");
+    PK_TRACE("DDS: Init");
     uint32_t q, c;
 
     //1. Write DCCR, FLMR and FMMR values

@@ -172,7 +172,7 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
             //Non-zero SlaveAck
             if(slave_ack & 0xC0000000)
             {
-                PK_TRACE_DBG("AVS_W: Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
+                PK_TRACE_DBG("AVS: Drive_W Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
 
                 //Retry one-time
                 if (retry_cnt)
@@ -253,7 +253,7 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
             //Non-zero SlaveAck
             if(slave_ack & 0xC0000000)
             {
-                PK_TRACE_DBG("AVS_R: Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
+                PK_TRACE_DBG("AVS: Drive_R Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
 
                 if (retry_cnt)
                 {
@@ -285,6 +285,7 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
 
 void pgpe_avsbus_init()
 {
+    PK_TRACE("AVS: Init");
     PK_TRACE("AVS: VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
              pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(), pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
 
@@ -331,7 +332,6 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
 {
     uint32_t   rc = 0;
 
-    PK_TRACE("OCCCmpFreq=0x%x", pgpe_gppb_get_occ_complex_frequency_mhz());
     uint32_t  data = 0;
     uint32_t  O2SCTRLF_value = 0b10000010000011111100000000000000; //0x820FC000
     uint32_t  O2SCTRLS_value = 0b00000000000010000000000000000000; //0x00080000
@@ -371,11 +371,11 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
 
     if (rc)
     {
-        PK_TRACE_ERR("AVS_INIT: DriveIdleFrame FAIL");
+        PK_TRACE_ERR("AVS: Init Bus, DriveIdleFrame FAIL");
         //\todo Determine what to do here in P10. In P9, we would just halt PGPE
     }
 
-    PK_TRACE("AVS_INIT: Initialized bus_num=0x%x", bus_num);
+    PK_TRACE("AVS: Initialized bus_num=0x%x", bus_num);
 }
 
 void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv)
@@ -399,16 +399,16 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
         switch (rc)
         {
             case AVS_RC_SUCCESS:
-                PK_TRACE_DBG("AVS_WRITE: Success!");
+                PK_TRACE_DBG("AVS: Volt_W Success!");
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
-                PK_TRACE_ERR("AVS_WRITE: OnGoing Flag Timeout");
+                PK_TRACE_ERR("AVS: Volt_W Flag Timeout");
                 //\todo Determine what to do here in P10. In P9, we would just halt PGPE
                 break;
 
             case AVS_RC_RESYNC_ERROR:
-                PK_TRACE_ERR("AVS_WRITE: Resync Error");
+                PK_TRACE_ERR("AVS: Volt_W Resync Error");
                 //GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(59)); //OCCLFIR[59]=AVS Resync Error
                 //\todo Determine what to do here in P10. In P9, we would just halt PGPE
                 break;
@@ -419,7 +419,7 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
     }
     else
     {
-        PK_TRACE("AVS_WRITE: bus_num=%u not available", bus_num)
+        PK_TRACE("AVS: Volt_W bus_num=%u not available", bus_num)
     }
 
     pk_critical_section_exit(&ctx);
@@ -437,13 +437,13 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
         if (rc)
         {
-            PK_TRACE_ERR("AVS_READ_VOLT: DriveRead FAILED. BusNum=0x%x,RailNum=0x%x", bus_num, rail_num);
+            PK_TRACE_ERR("AVS: Volt_R DriveRead FAILED. BusNum=0x%x,RailNum=0x%x", bus_num, rail_num);
             //\todo Determine what to do here in P10. In P9, we would just halt PGPE
         }
     }
     else
     {
-        PK_TRACE("AVS_READ_VOLT: bus_num=%u not available", bus_num)
+        PK_TRACE("AVS: Volt_R, bus_num=%u not available", bus_num)
         *ret_volt = 0;
     }
 
@@ -464,7 +464,7 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
         if (rc)
         {
-            PK_TRACE_ERR("AVS_READ_CURRENT: DriveRead FAILED rc=0x%x. BusNum=0x%x, RailNum=0x%x", rc, bus_num, rail_num);
+            PK_TRACE_ERR("AVS: Curr_R, DriveRead FAILED rc=0x%x. BusNum=0x%x, RailNum=0x%x", rc, bus_num, rail_num);
             //\todo Determine what to do here in P10. In P9, we would just halt PGPE
         }
 
@@ -473,7 +473,7 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     }
     else
     {
-        PK_TRACE("AVS_READ_CURRENT: bus_num=%u not available", bus_num)
+        PK_TRACE("AVS: Curr_R, bus_num=%u not available", bus_num)
         *ret_current = 0;
     }
 
