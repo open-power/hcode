@@ -81,7 +81,7 @@ void pgpe_irq_ipc_init()
 //
 void pgpe_irq_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE("IPC Pstate Start Stop");
+    PK_TRACE("IPC: Pstate Start Stop");
 
     if(pgpe_event_tbl_get_status(EV_IPC_PSTATE_START_STOP) != EVENT_INACTIVE)
     {
