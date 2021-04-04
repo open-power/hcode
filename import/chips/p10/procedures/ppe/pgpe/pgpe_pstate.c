@@ -56,7 +56,7 @@ pgpe_pstate_t G_pgpe_pstate __attribute__((section (".data_structs")));
 
 void pgpe_pstate_init()
 {
-    PK_TRACE("PS: Init");
+    PK_TRACE("PSS: Init");
     uint32_t i;
     uint32_t ccsr;
     uint64_t rvcr;
@@ -150,8 +150,8 @@ void pgpe_pstate_init()
     G_pgpe_pstate.stopped_ac_vcs_64ths = pgpe_gppb_get_vratio_vcs(WOF_VRATIO_VCS_IDX_CORE)  + pgpe_gppb_get_vratio_vcs(
             WOF_VRATIO_VCS_IDX_CACHE_BASE);
 
-    PK_TRACE("PS: Psafe=0x%x", G_pgpe_pstate.pstate_safe);
-    PK_TRACE("PS: Pceil=0x%x, Ceiling Frequency=%u", G_pgpe_pstate.pstate_ceiling, pgpe_gppb_get_ceiling_frequency());
+    PK_TRACE("PSS: Psafe=0x%x", G_pgpe_pstate.pstate_safe);
+    PK_TRACE("PSS: Pceil=0x%x, Ceiling Frequency=%u", G_pgpe_pstate.pstate_ceiling, pgpe_gppb_get_ceiling_frequency());
 }
 
 void* pgpe_pstate_data_addr()
@@ -163,7 +163,7 @@ void pgpe_pstate_actuate_step()
 {
     PkMachineContext ctx;
 
-    PK_TRACE("ACT: ps_cur=0x%x, ps_target=0x%x", G_pgpe_pstate.pstate_curr, G_pgpe_pstate.pstate_target);
+    PK_TRACE("PSS: Act_S PsCurr=0x%x, PsTgt=0x%x", G_pgpe_pstate.pstate_curr, G_pgpe_pstate.pstate_target);
     //compute vdd_target corresponding to pstate_target
     G_pgpe_pstate.vdd_next = pgpe_pstate_intp_vdd_from_ps(G_pgpe_pstate.pstate_target, VPD_PT_SET_BIASED);
     G_pgpe_pstate.pstate_next = G_pgpe_pstate.pstate_target;
@@ -209,9 +209,9 @@ void pgpe_pstate_actuate_step()
     //Adjust VCS
     if (G_pgpe_pstate.vdd_next_ext >= pgpe_gppb_get_vcs_floor_mv())
     {
-        PK_TRACE("ACT: Adjusting VCS against VDD");
-        PK_TRACE_DBG("ACT: vcs_floor_mv=0x%x, vcs_vdd_offset_mv=0x%x", pgpe_gppb_get_vcs_floor_mv(),
-                     pgpe_gppb_get_vcs_vdd_offset_mv());
+        PK_TRACE_DBG("PSS: Act_S Adjusting VCS against VDD");
+        PK_TRACE("PSS: Act_S VcsFloor=0x%x mV, VcsVddOffset=0x%x mV", pgpe_gppb_get_vcs_floor_mv(),
+                 pgpe_gppb_get_vcs_vdd_offset_mv());
         G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get_vcs_vdd_offset_mv();
     }
     else
@@ -230,11 +230,11 @@ void pgpe_pstate_actuate_step()
         pk_critical_section_enter(&ctx);
         pgpe_wov_ocs_set_wov_curr_pct(0);
         pk_critical_section_exit(&ctx);
-        PK_TRACE("ACT: cleared wov_bias and  wov_curr_pct. wov_curr_pct=%d, wov_tgt_pct=%d,", pgpe_wov_ocs_get_wov_curr_pct(),
+        PK_TRACE("PSS: Act_S WovCurrPct=%d, WovTgtPct=%d set,", pgpe_wov_ocs_get_wov_curr_pct(),
                  pgpe_wov_ocs_get_wov_tgt_pct());
     }
 
-    PK_TRACE("ACT: vdd_del=0x%x, vdd_next=0x%x,ps_next=0x%x ,vcs_next=0x%x", vdd_delta, G_pgpe_pstate.vdd_next_ext,
+    PK_TRACE("PSS: Act_S VddDel=0x%x, VddNextExt=0x%x, PsNext=0x%x ,VcsNextExt=0x%x", vdd_delta, G_pgpe_pstate.vdd_next_ext,
              G_pgpe_pstate.pstate_next, G_pgpe_pstate.vcs_next_ext);
 
     //Compute power proxy scale factor
@@ -383,7 +383,7 @@ void pgpe_pstate_actuate_voltage_step()
     {
         G_pgpe_pstate.vdd_wov_bias = ((int16_t)G_pgpe_pstate.vdd_next_ext * pgpe_wov_ocs_get_wov_tgt_pct()) / 1000;
         G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift + G_pgpe_pstate.vdd_wov_bias;
-        PK_TRACE("ACT: vdd_next=%d wov_bias=%d wov_tgt_pct=%d wov_curr_pct=%d", G_pgpe_pstate.vdd_next_ext,
+        PK_TRACE("PSS: Act_V, VddNext=%d WovBias=%d WovTgtPct=%d WovCurrPct=%d", G_pgpe_pstate.vdd_next_ext,
                  G_pgpe_pstate.vdd_wov_bias, pgpe_wov_ocs_get_wov_tgt_pct(), pgpe_wov_ocs_get_wov_curr_pct());
 
         //Compute power proxy scale factor
@@ -587,7 +587,7 @@ void pgpe_pstate_compute()
 
     G_pgpe_pstate.pstate_computed = min;
 
-    PK_TRACE("CMP: ps_computed=0x%x", G_pgpe_pstate.pstate_computed);
+    PK_TRACE("PSS: PsComputed=0x%x", G_pgpe_pstate.pstate_computed);
 }
 
 void pgpe_pstate_apply_clips()
@@ -637,7 +637,7 @@ void pgpe_pstate_apply_clips()
         G_pgpe_pstate.pstate_target = clip_max;
     }
 
-    PK_TRACE("APC: ps_target=0x%x", G_pgpe_pstate.pstate_target);
+    PK_TRACE("PSS: PsTgt=0x%x", G_pgpe_pstate.pstate_target);
     pgpe_opt_set_word(0, 0);
     pgpe_opt_set_byte(0, G_pgpe_pstate.pstate_target);
     ppe_trace_op(PGPE_OPT_AUCTION_DONE, pgpe_opt_get());
@@ -672,7 +672,7 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
         }
     }
 
-    PK_TRACE("VRT: active_core_accum_64th=0x%08x, vratio_vdd_accum_64th=0x%08x, vratio_vcs_accum_64th=0x%08x",
+    PK_TRACE("PSS: active_core_accum_64th=0x%08x, vratio_vdd_accum_64th=0x%08x, vratio_vcs_accum_64th=0x%08x",
              active_core_accum_64th, vratio_vdd_accum_64th, vratio_vcs_accum_64th);
     G_pgpe_pstate.vratio_index_format       = ((((active_core_accum_64th) << 10) - 1) /
             G_pgpe_pstate.sort_core_count); //Index Format is 16-bits. We accumulate in 6bits, so do a shift by 10
@@ -711,7 +711,7 @@ void pgpe_pstate_compute_vindex()
     uint32_t rem = (G_pgpe_pstate.vratio_index_format & 0x0FFF);
     uint32_t idx_rnd = (rem > 0x800) ? 1 : 0;
     G_pgpe_pstate.vindex = (msd >= 5) ? (msd - 5 + idx_rnd) : 0;
-    PK_TRACE("VIX: Vindex=0x%x", G_pgpe_pstate.vindex);
+    PK_TRACE("PSS: Vindex=0x%x", G_pgpe_pstate.vindex);
 }
 
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set)
@@ -762,7 +762,7 @@ uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
                             pgpe_gppb_get_vdd_sysparm_distloss())) / 100
                            + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
 
-    PK_TRACE("PS: ps=0x%x, idd_ac=0x%x, idd_dc=0x%x, vdd_up=0x%x", ps, idd_ac, idd_dc, vdd_uplift);
+    PK_TRACE("PSS: ps=0x%x, idd_ac=0x%x, idd_dc=0x%x, vdd_up=0x%x", ps, idd_ac, idd_dc, vdd_uplift);
     return vdd_uplift;
 }
 
@@ -775,7 +775,7 @@ uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
                             pgpe_gppb_get_vcs_sysparm_distloss())) / 100
                            + pgpe_gppb_get_vcs_sysparm_distoffset()) / 1000;
 
-    PK_TRACE("PS: ps=0x%x, ics_ac=0x%x, ics_dc=0x%x, vcs_up=0x%x", ps, ics_ac, ics_dc, vcs_uplift);
+    PK_TRACE("PSS: ps=0x%x, ics_ac=0x%x, ics_dc=0x%x, vcs_up=0x%x", ps, ics_ac, ics_dc, vcs_uplift);
     return vcs_uplift;
 }
 
@@ -1362,7 +1362,7 @@ void pgpe_pstate_pmsr_set_safe_mode()
 
 void pgpe_pstate_pmsr_write()
 {
-    PK_TRACE("PMSR=0x%08x%08x", G_pgpe_pstate.pmsr.words.high_order,
+    PK_TRACE("PS: PMSR=0x%08x%08x", G_pgpe_pstate.pmsr.words.high_order,
              G_pgpe_pstate.pmsr.words.low_order);
 #if USE_MC == 0
 
@@ -1380,7 +1380,7 @@ void pgpe_pstate_pmsr_write()
 
 #else
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), G_pgpe_pstate.pmsr.value);
-    PK_TRACE("PMSR WRAddr=0x%x, RdAddr=0x%x", PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), PPE_SCOM_ADDR_MC_OR(QME_PMSRS, 0xF));
+    PK_TRACE("PS: PMSR WRAddr=0x%x, RdAddr=0x%x", PPE_SCOM_ADDR_MC_WR(QME_PMSRS, 0xF), PPE_SCOM_ADDR_MC_OR(QME_PMSRS, 0xF));
     //HW552730 this original defect requires PMSR at all cores be written twice as workaround
     //HW555543 later found more observation on potentially endangering qme local access to CPMS
     //that can be workaround with two options:
