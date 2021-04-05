@@ -490,6 +490,8 @@ void pgpe_pstate_actuate_pstate(uint32_t pstate)
 
 void pgpe_pstate_actuate_safe_voltage_vdd()
 {
+    PK_TRACE("PSS: Actuate Safe VDD ");
+
     while (G_pgpe_pstate.vdd_curr != pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD))
     {
         if (((int16_t)G_pgpe_pstate.vdd_curr - (int16_t)pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD)) >
@@ -504,19 +506,25 @@ void pgpe_pstate_actuate_safe_voltage_vdd()
         }
         else
         {
-            G_pgpe_pstate.vdd_next = pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD);
+            G_pgpe_pstate.vdd_next = pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD);
         }
 
+        PK_TRACE("PSS: vdd_curr=%u mV, vdd_next, safe_vdd=%u mV", G_pgpe_pstate.vdd_curr, G_pgpe_pstate.vcs_curr,
+                 pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD));
         G_pgpe_pstate.vdd_next_uplift = 0;
         G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift;
         pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                                   pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
                                   G_pgpe_pstate.vdd_next_ext);
+        pgpe_pstate_update_vdd_vcs_ps();
     }
 }
 
 void pgpe_pstate_actuate_safe_voltage_vcs()
 {
+    PK_TRACE("PSS: Actuate Safe VCS");
+
+
     while (G_pgpe_pstate.vcs_curr != pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VCS))
     {
         if (((int16_t)G_pgpe_pstate.vcs_curr - (int16_t)pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VCS)) >
@@ -531,14 +539,17 @@ void pgpe_pstate_actuate_safe_voltage_vcs()
         }
         else
         {
-            G_pgpe_pstate.vcs_next = pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VCS);
+            G_pgpe_pstate.vcs_next = pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VCS);
         }
 
+        PK_TRACE("PSS: vcs_curr=%u mV, vcs_next, safe_vdd=%u mV", G_pgpe_pstate.vcs_curr, G_pgpe_pstate.vcs_next,
+                 pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VCS));
         G_pgpe_pstate.vcs_next_uplift = 0;
         G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
         pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                                   pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                   G_pgpe_pstate.vcs_next_ext);
+        pgpe_pstate_update_vdd_vcs_ps();
     }
 }
 
