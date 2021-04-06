@@ -22,10 +22,18 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-EXE=p10_stop_api_tool
-OBJS +=$(EXE).o
-$(EXE)_DEPLIBS += p10_stop_util
-$(EXE)_DEPLIBS += p10_stop_api
-$(call ADD_EXE_INCDIR, $(EXE), $(ROOTPATH)/chips/p10/procedures/utils/stopreg)
-$(call ADD_EXE_INCDIR, $(EXE), $(ROOTPATH)/chips/p10/procedures/hwp/lib)
-$(call BUILD_EXE)
+WRAPPER=p10_stop_api_tool
+$(WRAPPER)_COMMONFLAGS += -DP10_STOP_API_TOOL
+$(WRAPPER)_DEPLIBS+=proc_scomt
+#lib$(WRAPPER)_DEPLIBS += p10_stop_util
+#lib$(WRAPPER)_DEPLIBS += p10_stop_api
+OBJS+= p10_stop_util.o
+OBJS+= p10_stop_api.o
+$(call ADD_EXE_INCDIR, $(WRAPPER), $(ROOTPATH)/chips/p10/procedures/utils/stopreg)
+$(call ADD_EXE_INCDIR, $(WRAPPER), $(ROOTPATH)/chips/p10/procedures/hwp/lib)
+#$(call ADD_EXE_INCDIR, $(EXE), $(ROOTPATH)/hwpf/fapi2/include/)
+#$(call ADD_EXE_INCDIR, $(EXE), $(ROOTPATH)/hwpf/fapi2/include/plat/)
+#$(call ADD_EXE_INCDIR, $(EXE), $(ROOTPATH)/output/gen/)
+#$(call ADD_EXE_INCDIR, $(EXE), $(ROOTPATH)/tools/ifCompiler/plat/)
+#$(call ADD_EXE_INCDIR, $(EXE), $(ROOTPATH)/chips/p10/procedures/hwp/ffdc/)
+$(call BUILD_WRAPPER)
