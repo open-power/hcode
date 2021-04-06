@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -177,14 +177,6 @@ static const uint64_t SPATTN_UNMASKED = 0x08040012ull;
 static const uint32_t SPATTN_UNMASKED_IN = 1;
 static const uint32_t SPATTN_UNMASKED_IN_LEN = 35;
 //<< [SPATTN_UNMASKED]
-// pec/reg00007.H
-
-//>> [TOP1_IOPFIRACT1]
-static const uint64_t TOP1_IOPFIRACT1 = 0x08011507ull;
-
-static const uint32_t TOP1_IOPFIRACT1_IOPFIRACT1_FIR_ACTION1 = 0;
-static const uint32_t TOP1_IOPFIRACT1_IOPFIRACT1_FIR_ACTION1_LEN = 12;
-//<< [TOP1_IOPFIRACT1]
 // pec/reg00007.H
 
 //>>THE END<<

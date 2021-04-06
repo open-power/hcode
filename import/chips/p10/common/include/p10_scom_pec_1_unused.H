@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -115,14 +115,6 @@ static const uint64_t RECOV_INTERRUPT_REG = 0x080f001bull;
 
 static const uint32_t RECOV_INTERRUPT_REG_RECOV = 0;
 //<< [RECOV_INTERRUPT_REG]
-// pec/reg00001.H
-
-//>> [TOP1_IOPFIRACT0]
-static const uint64_t TOP1_IOPFIRACT0 = 0x08011506ull;
-
-static const uint32_t TOP1_IOPFIRACT0_IOPFIRACT0_FIR_ACTION0 = 0;
-static const uint32_t TOP1_IOPFIRACT0_IOPFIRACT0_FIR_ACTION0_LEN = 12;
-//<< [TOP1_IOPFIRACT0]
 // pec/reg00001.H
 
 //>>THE END<<
