@@ -206,22 +206,6 @@ void pgpe_pstate_actuate_step()
     G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vcs_next + G_pgpe_pstate.vcs_next_uplift;
 
 
-    //Adjust VCS
-    if (G_pgpe_pstate.vdd_next_ext >= pgpe_gppb_get_vcs_floor_mv())
-    {
-        PK_TRACE_DBG("PSS: Act_S Adjusting VCS against VDD");
-        PK_TRACE("PSS: Act_S VcsFloor=0x%x mV, VcsVddOffset=0x%x mV", pgpe_gppb_get_vcs_floor_mv(),
-                 pgpe_gppb_get_vcs_vdd_offset_mv());
-        G_pgpe_pstate.vcs_next_ext = G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get_vcs_vdd_offset_mv();
-    }
-    else
-    {
-        G_pgpe_pstate.vcs_next_ext = ((G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get_vcs_vdd_offset_mv()) >
-                                      pgpe_gppb_get_vcs_floor_mv()) ? (G_pgpe_pstate.vdd_next_ext + pgpe_gppb_get_vcs_vdd_offset_mv()) :
-                                     pgpe_gppb_get_vcs_floor_mv();
-    }
-
-
     //Do WOV adjustment here
     if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
     {
