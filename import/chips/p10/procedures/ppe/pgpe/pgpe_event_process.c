@@ -842,6 +842,8 @@ void pgpe_process_wof_vrt_post_actuate()
 
 void pgpe_process_safe_mode(void* args)
 {
+    PK_TRACE("PEP: Process Safe Mode");
+
     if(pgpe_pstate_is_pstate_enabled())
     {
         //Move throttling to ATTR_SAFE_MODE_THROTTLE_IDX
@@ -851,34 +853,23 @@ void pgpe_process_safe_mode(void* args)
             pgpe_thr_ctrl_write_wcor();
         }
 
-        //VDD above ATTR_SAFE_MODE_MV[VDD]
-        if (pgpe_pstate_get(vdd_curr) > pgpe_gppb_get_safe_voltage_mv(SAFE_VOLTAGE_VDD))
+        //Set ps request, clips and target to safe mode
+        uint32_t q;
+
+        for (q = 0; q < MAX_QUADS; q++)
         {
-            //Move frequency to Safe Frequency
-            pgpe_pstate_actuate_pstate(pgpe_pstate_get(pstate_safe));
-
-            if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
-            {
-                //Move VDD voltage to ATTR_SAFE_MODE_MV[VDD]
-                pgpe_pstate_actuate_safe_voltage_vdd();
-
-                //Move VCS voltage to ATTR_SAFE_MODE_MV[VCS]
-                pgpe_pstate_actuate_safe_voltage_vcs();
-            }
+            G_pgpe_pstate.ps_request[q] = pgpe_pstate_get(pstate_safe);
         }
-        else     //VDD is at or below ATTR_SAFE_MODE_MV[VDD]
+
+        pgpe_pstate_set(clip_min, pgpe_pstate_get(pstate_safe));
+        pgpe_pstate_set(clip_max, pgpe_pstate_get(pstate_safe));
+        pgpe_pstate_compute();
+        pgpe_pstate_apply_clips();
+
+        //Actuate to safe mode
+        while(!pgpe_pstate_is_at_target())
         {
-            if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
-            {
-                //Move VCS voltage to ATTR_SAFE_MODE_MV[VCS]
-                pgpe_pstate_actuate_safe_voltage_vcs();
-
-                //Move VDD voltage to ATTR_SAFE_MODE_MV[VDD]
-                pgpe_pstate_actuate_safe_voltage_vdd();
-            }
-
-            //Move frequency to Safe frequency
-            pgpe_pstate_actuate_pstate(pgpe_pstate_get(pstate_safe));
+            pgpe_pstate_actuate_step();
         }
     }
     else
@@ -894,7 +885,7 @@ void pgpe_process_safe_mode(void* args)
     //Set Status Bits
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE));
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_SAFE_MODE_ACTIVE));
-    PK_TRACE("PEP: Process Safe Mode");
+    PK_TRACE("PEP: Safe Mode Processed");
     ppe_trace_op(PGPE_OPT_SAFE_MODE_DONE, 0);
 }
 
