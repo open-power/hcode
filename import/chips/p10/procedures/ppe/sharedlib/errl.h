@@ -39,6 +39,9 @@ extern "C" {
 // Min size (bytes) of user data that can be added, excluding the header
 #define ERRL_USR_DATA_SZ_MIN 128
 
+// Max registers (XIRs) to be collected for belly-up PPEs
+#define ERRL_PPE_REGS_MAX 5
+
 /// Status code of error logging from error logging infrastructure
 enum errlStatusCodes
 {
@@ -52,6 +55,16 @@ enum errlStatusCodes
     ERRL_STATUS_LOG_FULL,          // errl does not have space for adding data
     ERRL_STATUS_INTERNAL_ERROR,    // errl internal framework error
     ERRL_STATUS_UNKNOWN,           // errl framework got an unknown error
+};
+
+/// Enum specifying order in which PPE XIRs are read and stored
+enum errlPpeXirIdx
+{
+    ERRL_XIR_IDX_XIXCR    = 0, // xxx  | CTR
+    ERRL_XIR_IDX_XIRAMDBG = 1, // XSR  | SPRG0
+    ERRL_XIR_IDX_XIRAMEDR = 2, // IR   | EDR
+    ERRL_XIR_IDX_XIDBGPRO = 3, // XSR  | IAR
+    ERRL_XIR_IDX_XIDBGINF = 4, // SRR0 | LR
 };
 
 /// Self referential structure to add code/hardware  (e.g. code, core, cache,
@@ -88,6 +101,14 @@ struct errlUserDataWords
 };
 
 typedef struct errlUserDataWords errlUDWords_t;
+
+// Structure to collect PPE XIRs in order specified by errlPpeXirIdx
+struct errlPpeRegs
+{
+    uint64_t ppeRegs[ERRL_PPE_REGS_MAX];
+};
+
+typedef struct errlPpeRegs errlPpeRegs_t;
 
 /// @brief Initialize common error logging framework based on the PPE instance
 ///        trying to use it. Required once per PPE init/boot before the rest of
@@ -183,6 +204,26 @@ uint32_t addUsrDtlsToErrl (
 /// @note: If there is an error adding traces to the Error Log, the trace data
 ///        will be dropped from the Error Log
 void addTraceToErrl (errlHndl_t io_errl);
+
+
+/// @brief Captures PPE debug registers & sets up an user details section for it
+///
+/// @param [in] i_source PPE whose registers are to be captured, see ERRL_SOURCE
+/// @param [in] i_instance For ERRL_SOURCE_QME, 0..7
+///                        For ERRL_SOURCE_PGPE/ERRL_SOURCE_XGPE, ignored
+/// @param [out] o_ppRegs  Pointer to a valid instance of errlPpeRegs_t
+/// @param [out] o_usrDtls Pointer to a valid instance of errlDataUsrDtls_t
+///
+/// @return void
+///
+/// @note On successful execution,
+///       o_ppeRegs contains PPE XIRs in order specified by errlPpeXirIdx,
+///       o_usrDtls contains valid metadata with payload pointing to o_ppeRegs,
+///       such that it can be directly added to an error log
+void getPpeRegsUsrDtls ( const uint8_t i_source,
+                         const uint8_t i_instance,
+                         errlPpeRegs_t* o_ppeRegs,
+                         errlDataUsrDtls_t* o_usrDtls );
 
 
 /// @brief Commit the Error Log to the Error Log Table for FW processing

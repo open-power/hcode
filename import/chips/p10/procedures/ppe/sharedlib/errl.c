@@ -24,13 +24,15 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include <stdint.h>
 
+#include "ppe42_scom.h"
+#include "gpehw_common.h"
+#include "ppehw_common.h"
+#include "p10_hcd_memmap_occ_sram.H"
+#include "p10_hcd_memmap_base.H"
+
 #include "iota.h"
 #include "ppe42_string.h"
 #include "iota_trace.h"
-
-#include "gpehw_common.h"
-#include "p10_hcd_memmap_occ_sram.H"
-#include "p10_hcd_memmap_base.H"
 
 #include "errldefs.h"
 #include "errlqmeproxy.h"
@@ -63,8 +65,11 @@ uint8_t getErrSlotNumAndErrId ( ERRL_SEVERITY i_severity,
                                 uint8_t*      o_errlId,
                                 uint64_t*     o_timeStamp,
                                 uint32_t*     o_status );
-uint32_t copyTraceBufferPartial ( void* i_pDst,
+uint32_t copyTraceBufferPartial ( void*    i_pDst,
                                   uint16_t i_size );
+void getPpeRegs ( const uint8_t  i_errlSource,
+                  const uint8_t  i_ppeInstance,
+                  errlPpeRegs_t* o_data );
 
 /// Function Definitions
 #ifndef __PPE_QME
@@ -919,6 +924,65 @@ void addTraceToErrl (errlHndl_t io_err)
         ERRL_USR_DTL_TRACE_DATA );
 
     pk_critical_section_exit (&ctx);
+}
+
+
+void getPpeRegs ( const uint8_t  i_errlSource,
+                  const uint8_t  i_ppeInstance,
+                  errlPpeRegs_t* o_data )
+{
+    uint32_t ppeIdx = 0x3;
+    uint32_t ppeXirs[][ERRL_PPE_REGS_MAX] =
+    {
+        { 0x64010, 0x64013, 0x64014, 0x64015, 0x6401F }, // PGPE
+        { 0x66010, 0x66013, 0x66014, 0x66015, 0x6601F }, // XGPE
+        {
+            PPE_SCOM_ADDR_UC_Q(0x200e0200, i_ppeInstance),
+            PPE_SCOM_ADDR_UC_Q(0x200e020c, i_ppeInstance),
+            PPE_SCOM_ADDR_UC_Q(0x200e0210, i_ppeInstance),
+            PPE_SCOM_ADDR_UC_Q(0x200e0214, i_ppeInstance),
+            PPE_SCOM_ADDR_UC_Q(0x200e023c, i_ppeInstance)
+        } // QME
+    };
+
+    switch (i_errlSource)
+    {
+        case ERRL_SOURCE_PGPE:
+            ppeIdx = 0;
+            break;
+
+        case ERRL_SOURCE_XGPE:
+            ppeIdx = 1;
+            break;
+
+        case ERRL_SOURCE_QME:
+            ppeIdx = 2;
+            break;
+    }
+
+    if (ppeIdx <= 2)
+    {
+        uint32_t regIdx = 0;
+
+        for (; regIdx < ERRL_PPE_REGS_MAX; ++regIdx)
+        {
+            PPE_GETSCOM (ppeXirs[ppeIdx][regIdx], o_data->ppeRegs[regIdx]);
+        }
+    }
+}
+
+void getPpeRegsUsrDtls (const uint8_t i_source,
+                        const uint8_t i_instance,
+                        errlPpeRegs_t* o_ppeRegs,
+                        errlDataUsrDtls_t* o_usrDtls)
+{
+    o_usrDtls->type = ERRL_USR_DTL_PPE_REGS;
+    o_usrDtls->size = sizeof (errlPpeRegs_t);
+    o_usrDtls->pData = (uint8_t*) &o_ppeRegs;
+    o_usrDtls->version = ERRL_PPE_REGS_VERSION_1;
+    o_usrDtls->pNext = NULL;
+
+    getPpeRegs (i_source, i_instance, o_ppeRegs);
 }
 
 // Function Specification
