@@ -79,59 +79,57 @@ qme_mma_active_event()
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_MMA);
     PK_TRACE("Event: MMA Active, UIH Status[%x]", G_qme_record.uih_status);
 
-    if( G_qme_record.mma_modes_enabled == MMA_POFF_DYNAMIC )
+    G_qme_record.c_mma_active_req = in32(QME_LCL_EINR) & BITS32(28, 4);
+    out64(QME_LCL_EISR_CLR, (((uint64_t)G_qme_record.c_mma_active_req << 32))); //DD1 FIXME
+
+    uint32_t c_mask = G_qme_record.c_mma_active_req &
+                      G_qme_record.c_configured     &
+                      (~G_qme_record.c_mma_available) &
+                      (~G_qme_record.c_stop2_reached);
+
+    PK_TRACE_INF("Parse: MMA Active on EINR[%x], MMA Available on Cores[%x], Cores in STOP2+[%x], MMA to Bringup[%x]",
+                 G_qme_record.c_mma_active_req,
+                 G_qme_record.c_mma_available,
+                 G_qme_record.c_stop2_reached,
+                 c_mask);
+
+    if( c_mask && G_qme_record.mma_modes_enabled == MMA_POFF_DYNAMIC )
     {
-        G_qme_record.c_mma_active_req = in32(QME_LCL_EISR) & BITS32(28, 4);
-        uint32_t c_mask = G_qme_record.c_mma_active_req &
-                          G_qme_record.c_configured;
-        out64(QME_LCL_EISR_CLR, (((uint64_t)c_mask << 32))); //DD1 FIXME
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(c_mask));
 
-        PK_TRACE_INF("Parse: MMA Active on Cores[%x], MMA Available on Cores[%x], Partial Good Cores[%x], Cores in STOP2+[%x]",
-                     G_qme_record.c_mma_active_req,
-                     G_qme_record.c_mma_available,
-                     G_qme_record.c_configured,
-                     G_qme_record.c_stop2_reached);
+        MARK_TAG( c_mask, SX_MMA_POWERON )
 
-        c_mask &= ~(G_qme_record.c_mma_available);
+        p10_hcd_mma_poweron(core_target);
 
-        if( c_mask )
+        MARK_TAG( c_mask, SX_MMA_SCANINIT )
+
+        p10_hcd_mma_scaninit(core_target);
+
+        MARK_TAG( c_mask, SX_MMA_STARTCLOCKS )
+
+        p10_hcd_mma_startclocks(core_target);
+
+        // delay for mma available travel window
+        for(uint32_t i = 0; i < 10; i++)
         {
-            core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                          static_cast<fapi2::MulticastCoreSelect>(c_mask));
-
-            MARK_TAG( c_mask, SX_MMA_POWERON )
-
-            p10_hcd_mma_poweron(core_target);
-
-            MARK_TAG( c_mask, SX_MMA_SCANINIT )
-
-            p10_hcd_mma_scaninit(core_target);
-
-            MARK_TAG( c_mask, SX_MMA_STARTCLOCKS )
-
-            p10_hcd_mma_startclocks(core_target);
-
-            // delay for mma available travel window
-            for(uint32_t i = 0; i < 10; i++)
-            {
-                asm volatile ("tw 0, 0, 0");
-            }
-
-            // assert mma_available
-            G_qme_record.c_mma_available |= c_mask;
-            // core can pulse mma_active during poweron, this is to cleanup
-            out64( QME_LCL_EISR_CLR, ((uint64_t)G_qme_record.c_mma_available << 32)); //DD1 FIXME
-            out64( QME_LCL_CORE_ADDR_WR(CPMS_MMAR_WO_OR, c_mask), BIT64(0) );
-
-            MARK_TAG( c_mask, SX_MMA_AVAILABLE )
-
-            //mask EIMR[28+c] mma_active
-            data64_t mask_irqs     = {0};
-            mask_irqs.words.upper  = c_mask;
-            mask_irqs.words.lower  = 0;
-            g_eimr_override |= mask_irqs.value;
-            out64(QME_LCL_EIMR_OR, ((uint64_t)c_mask << 32));
+            asm volatile ("tw 0, 0, 0");
         }
+
+        // assert mma_available
+        G_qme_record.c_mma_available |= c_mask;
+        // core can pulse mma_active during poweron, this is to cleanup
+        out64( QME_LCL_EISR_CLR, ((uint64_t)G_qme_record.c_mma_available << 32)); //DD1 FIXME
+        out64( QME_LCL_CORE_ADDR_WR(CPMS_MMAR_WO_OR, c_mask), BIT64(0) );
+
+        MARK_TAG( c_mask, SX_MMA_AVAILABLE )
+
+        //mask EIMR[28+c] mma_active
+        data64_t mask_irqs     = {0};
+        mask_irqs.words.upper  = c_mask;
+        mask_irqs.words.lower  = 0;
+        g_eimr_override |= mask_irqs.value;
+        out64(QME_LCL_EIMR_OR, ((uint64_t)c_mask << 32));
     }
 
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_MMA);
@@ -203,9 +201,6 @@ qme_dec_handler()
             // take away mma_available
             G_qme_record.c_mma_available &= ~c_mask;
             out64( QME_LCL_CORE_ADDR_WR(CPMS_MMAR_WO_CLEAR, c_mask), BIT64(0) );
-
-            // fence the MMA[c] by asserting mma_functional_reset
-            //out64( QME_LCL_CORE_ADDR_WR(CPMS_MMAR_WO_OR, c_mask), BIT64(1) );
 
             // delay for mma available travel window
             for(uint32_t i = 0; i < 10; i++)

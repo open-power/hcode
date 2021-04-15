@@ -78,7 +78,10 @@ qme_eval_eimr_override()
 
     g_eimr_override       &= ~BITS64(28, 28);
     data64_t mask_irqs     = {0};
-    mask_irqs.words.upper  = G_qme_record.c_mma_available;
+    mask_irqs.words.upper  = G_qme_record.c_mma_available |
+                             G_qme_record.c_stop2_reached |
+                             G_qme_record.c_stop2_enter_targets |
+                             G_qme_record.c_stop2_exit_targets;
     mask_irqs.words.lower  = G_qme_record.c_all_stop_mask;
     g_eimr_override |= mask_irqs.value;
 }
@@ -618,6 +621,7 @@ qme_special_wakeup_rise_event()
         // Regular_Wakeup_Hipri/Lopri
         // PM_State_Active_Hipri/Lopri
 
+        out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop2_exit_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 
@@ -719,6 +723,8 @@ qme_regular_wakeup_fast_event()
         // Special_Wakeup_Rise/Fall
         // Regular_Wakeup_Hipri/Lopri
         // PM_State_Active_Hipri/Lopri
+
+        out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop2_exit_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 
@@ -767,6 +773,7 @@ qme_pm_state_active_fast_event()
 
         //===============//
 
+        out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop2_enter_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 
@@ -985,6 +992,7 @@ qme_regular_wakeup_slow_event()
         qme_parse_special_wakeup_rise();
 
         // Stop11 is expected not to be aborted
+        out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop11_exit_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 
@@ -1045,6 +1053,7 @@ qme_pm_state_active_slow_event()
         }
 
         // stop11 is expected not to be aborted
+        out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop11_enter_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
         g_eimr_override |= BITS64(32, 24);
 

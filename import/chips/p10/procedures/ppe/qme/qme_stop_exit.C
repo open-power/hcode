@@ -601,6 +601,8 @@ qme_stop_exit()
 
         //===============//
 
+        wrteei(0);
+
         if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
         {
             uint32_t homerOffset = 0;
@@ -639,6 +641,8 @@ qme_stop_exit()
                 }
             }
         }
+
+        wrteei(1);
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOMED )
 
@@ -841,6 +845,8 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOM_CUSTOMIZE )
 
+        wrteei(0);
+
         if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
         {
             G_qme_record.bce_buf_content_type  = SCOM_RESTORE;
@@ -881,6 +887,8 @@ qme_stop_exit()
             } //for( uint32_t ec = 8;
 
         } // if( G_qme_record.hcode_func_enabled
+
+        wrteei(1);
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOMED )
 

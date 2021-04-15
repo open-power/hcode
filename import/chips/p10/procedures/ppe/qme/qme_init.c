@@ -343,18 +343,13 @@ qme_init()
     // HW525040
 #if POWER10_DD_LEVEL == 10
     {
-        uint64_t eimr = ( ( (~IRQ_VEC_PRTY12_QME) & (~BITS64(32, 24)) ) |
+        uint64_t eimr = ( ( ( ~( IRQ_VEC_PRTY12_QME | ((uint64_t)G_qme_record.c_mma_available << 32) ) ) & (~BITS64(32, 24)) ) |
                           ( ( ~( (uint64_t)G_qme_record.c_all_stop_mask ) ) & ( BITS64(32, 24) ) ) );
-
-        if( G_qme_record.mma_modes_enabled != MMA_POFF_DYNAMIC )
-        {
-            eimr |= BITS64(28, 4);
-        }
 
         out64( QME_LCL_EIMR_CLR, eimr );
     }
 #else
-    out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( IRQ_VEC_PRTY12_QME >> 32 ) ) ) );
+    out32   ( QME_LCL_EIMR_CLR, ( (uint32_t) ( ~( ( IRQ_VEC_PRTY12_QME >> 32 ) | G_qme_record.c_mma_available ) ) ) );
     out32_sh( QME_LCL_EIMR_CLR, ( (~G_qme_record.c_all_stop_mask) & ( BITS64SH(32, 24) ) ) );
 #endif
 }

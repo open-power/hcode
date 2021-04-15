@@ -28,6 +28,8 @@
 #include <fapi2_target.H>
 
 extern QmeRecord G_qme_record;
+extern uint64_t g_eimr_override;
+
 uint32_t G_IsSimics = 0; // extern declared in qme.h
 hcode_error_table_t G_qmeElogTable; // QME local Error Log Table
 
@@ -129,11 +131,15 @@ qme_attr_init()
     {
         PK_TRACE_INF("MMA POWERON DISABLED %x", mma_pon_dis);
         G_qme_record.mma_modes_enabled = MMA_POFF_ALWAYS;
+        G_qme_record.c_mma_available = 0xF;
+        g_eimr_override |= BITS64(28, 4);
     }
     else if( mma_poff_dis || mma_powerof2 == 0xFF)
     {
         PK_TRACE_INF("MMA POWEROFF DISABLED %x with mma_powerof2 %x", mma_poff_dis, mma_powerof2);
         G_qme_record.mma_modes_enabled = MMA_POFF_STATIC;
+        G_qme_record.c_mma_available = 0xF;
+        g_eimr_override |= BITS64(28, 4);
     }
     else
     {
