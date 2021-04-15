@@ -39,6 +39,7 @@
 #include "p10_hcode_image_defines.H"
 #include "errlutil.h"
 #include "pstate_pgpe_occ_api.h"
+#include "xgpe_service_codes.h"
 
 
 #define EQ_CORE_MASK   0xF

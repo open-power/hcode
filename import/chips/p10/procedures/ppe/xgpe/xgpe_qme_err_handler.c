@@ -22,17 +22,36 @@
 /* permissions and limitations under the License.                         */
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
-
 #include "xgpe.h"
-#include "p10_hcd_memmap_qme_sram.H"
-#include "errlqmeproxy.h"
 #include "xgpe_qme_err_handler.h"
+
 #include "p10_scom_eq.H"
+#include "p10_oci_proc_5.H"
+#include "p10_scom_proc_9.H"
+#include "p10_ppe_c_5.H"
+
+#include "p10_hcd_memmap_qme_sram.H"
+#include "p10_stop_recovery_trigger.h"
+
+#include "errl.h"
+#include "errlutil.h"
+#include "errlqmeproxy.h"
 
 // XPGE needs to cater space for all (16) QME Error Logs in OCC SRAM
 #define XGPE_ERRL_ENTRY_SZ_QME (ERRL_MAX_ENTRY_SZ * \
                                 MAX_QUADS * \
                                 MAX_ELOG_SLOTS_PER_GPE)
+
+// Error Codes that are expected in the OPITESV register, when the QME takes
+// an error path or halt via the PIG Type E
+typedef enum
+{
+    XGPE_QME_ERR_FIRMWARE = 0x0, // QME code generated fault, offload elog
+    XGPE_QME_ERR_INTERNAL = 0x8, // QME halt due to int. error
+    XGPE_QME_ERR_EXTERNAL = 0x4, // QME halt due to ext. error (mem bolton)
+    XGPE_QME_ERR_HANG     = 0x2, // QME halt due to lack of forward progress
+    XGPE_QME_ERR_BRKPOINT = 0x1, // QME halt due to hw debug / sw break point
+}   XgpeQmeOpitEErrCode_t;
 
 // Global Variables
 // Address of error log table in QME SRAM
@@ -44,7 +63,10 @@ uint8_t* G_pErrLogsQme = (uint8_t*)& G_errLogsQme[0];
 
 // Function Prototypes
 uint32_t downloadQmeErrl (const uint32_t i_quadId);
-uint32_t createQmeErrl (const uint32_t i_quadId);
+uint32_t createQmeErrl (const uint16_t i_extRc,
+                        const uint32_t i_usrData0,
+                        const uint32_t i_usrData1,
+                        const uint32_t i_usrData2);
 uint32_t handleQmeMalfunction (const uint32_t i_quadId);
 
 
@@ -126,32 +148,73 @@ uint32_t handleQmeErrl (const uint32_t i_quadId,
     uint32_t status = ERRL_STATUS_SUCCESS;
     PK_TRACE (">> handleQmeErrl: QME: %d Err Code: %d", i_quadId, i_errCode);
 
-    if (i_errCode == XGPE_QME_ERR_FIRMWARE)
+    if (XGPE_QME_ERR_FIRMWARE == i_errCode)
     {
         // download QME Hcode generated error log
         status = downloadQmeErrl (i_quadId);
 
         if (ERRL_STATUS_SUCCESS != status)
         {
-            // @TODO via RTC 270071:
-            // Hcode Spec v0.97, Feb 2021:
             // download failed, create critical error indicating the same
+            PPE_LOG_ERR_CRITICAL ( XGPE_RC_QME_ERR_DOWNLOAD,
+                                   0, XGPE_MODID_HANDLE_QME_ERRL,
+                                   i_quadId, i_errCode, status,
+                                   NULL, NULL, status );
         }
     }
     else
     {
-        // @TODO via RTC 270071:
-        // Hcode Spec v0.97, Feb 2021:
         // QME hit other errors which it cannot create error logs for.
         // XGPE to create error logs to indicate such a QME error condition
-        //
-        // 1. Read all configured core’s QME per-Core Scratch Reg (0x200E080C)
-        //    to determine if a Critical Error Log Overflow (bit 1) occurred
-        // 2. If asserted, create a critical error log indicating the QME error
-        //    logging overflow/timeout fault
-        // 3. If not asserted, QME HW fault occured. Create a critical error log
-        //    indicating the QME HW fault
-        //    status = createQmeErrl (i_quadId);
+
+        // If PCSCR[1] not asserted, QME HW fault occured.
+        // Create a critical error log indicating the QME HW fault
+        uint16_t extRc = XGPE_ERC_QME_HW_FAULT; // default
+        uint32_t userData3 = 0;
+
+        if (XGPE_QME_ERR_BRKPOINT == i_errCode)
+        {
+            // 1. Read configured core’s QME per-Core Scratch Reg (0x200E080C)
+            //    to determine if a Critical Error Log Overflow (bit 1) occurred
+            uint32_t core_idx = i_quadId << 2;
+            uint32_t core_max = core_idx + 4;
+            uint32_t failed_cores = 0;
+            uint32_t ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
+
+            for (; core_idx < core_max; ++core_idx)
+            {
+                if (ccsr & CORE_MASK(core_idx))
+                {
+                    uint32_t core = 0x8 >> (core_idx % 4);
+                    uint64_t data = 0;
+
+                    PPE_GETSCOM(PPE_SCOM_ADDR_UC(QME_SCR_RW, i_quadId, core), data);
+
+                    if (data & BIT64(QME_PCSCR_CRIT_ELOG_OVERFLOW))
+                    {
+                        failed_cores |= CORE_MASK(core_idx);
+                    }
+                }
+            }
+
+            // If PCSCR[1] asserted, create a critical error log indicating
+            // the QME error logging overflow / timeout fault
+            if (failed_cores)
+            {
+                extRc = XGPE_ERC_QME_ELOG_OVERFLOW;
+                userData3 = failed_cores;
+            }
+        }
+
+        // For all other cases (below), create err with XGPE_ERC_QME_HW_FAULT
+        //   XGPE_QME_ERR_INTERNAL
+        //   XGPE_QME_ERR_EXTERNAL
+        //   XGPE_QME_ERR_HANG
+        //   XGPE_QME_ERR_BRKPOINT
+        status = createQmeErrl (extRc,
+                                i_quadId,
+                                i_errCode,
+                                userData3);
     }
 
     status = handleQmeMalfunction (i_quadId);
@@ -264,31 +327,41 @@ uint32_t downloadQmeErrl (const uint32_t i_quadId)
     return status;
 }
 
-// @TODO via RTC: 270071: Implement the below method
-
-uint32_t createQmeErrl (const uint32_t i_quadId)
+uint32_t createQmeErrl (const uint16_t i_extRc,
+                        const uint32_t i_quadId,
+                        const uint32_t i_usrData0,
+                        const uint32_t i_usrData1)
 {
     uint32_t status = ERRL_STATUS_SUCCESS;
 
-    PK_TRACE ("createQmeErrl: TODO via RTC: 270071");
+    errlDataUsrDtls_t usrDtlsSect = {0};
+    errlPpeRegs_t qmeDbgRegs = {{0}};
 
+    // @TODO via RTC: 271023: add QME score board and QME PK trace to error log
+    getPpeRegsUsrDtls (ERRL_SOURCE_QME, i_quadId, &qmeDbgRegs, &usrDtlsSect);
+
+    PPE_LOG_ERR_CRITICAL ( XGPE_RC_QME_CRITICAL_ERR, i_extRc, XGPE_MODID_HANDLE_QME_ERRL,
+                           i_quadId, i_usrData0, i_usrData1,
+                           &usrDtlsSect, NULL, status );
+
+    PK_TRACE ("createQmeErrl: ID %d status %d", i_quadId, status);
     return status;
 }
 
-// @TODO Depends on RTC: 269800
 uint32_t handleQmeMalfunction (const uint32_t i_quadId)
 {
     uint32_t status = ERRL_STATUS_SUCCESS;
 
-    PK_TRACE ("handleQmeMalfunction: TODO via RTC: 269800");
-    // If critical logs or QME halts are detected,
-    // ◦ Sets OCC LFIR[qme_error_notify] (2) as this is one of the bits that HYP will use as a PM
-    // Complex fault upon malfunction alert.
-    // ◦ Performs the STOP Recovery Trigger to cause a malfunction alert to HYP. @TODO via RTC 269800
-    // ◦ Issues a “PM Restart Necessary” IPC (see XGPE to PGPE IPC) to the PGPE. The PGPE will, as
-    // a result, stop the OCC Beacon to initiate the restart. If informational logs are present, no PM
-    // restart is requested. If PM restart is requested, the OCC will extract the QME logs for
-    // commitment by TMGT before requesting restart to TMGT.
+    PK_TRACE (">> handleQmeMalfunction: QME Id %d", i_quadId);
+
+    // @TODO: Is this needed? p10_stop_recovery_trigger does the workaround
+    // Set OCC LFIR[qme_error_notify] to HYP to know PM Complex fault
+    // PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_WO_OR,BIT64(2));
+
+    // Perform STOP Recovery Trigger to cause a malfunction alert to HYP
+    p10_stop_recovery_trigger();
+
+    // @TODO via RTC 271026 - ssue a “PM Restart Necessary” IPC to PGPE
 
     return status;
 }
