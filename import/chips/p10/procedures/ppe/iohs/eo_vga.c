@@ -258,7 +258,7 @@ int eo_vga(t_gcr_addr* gcr_addr, t_bank bank, int* saved_Amax, bool* gain_change
         put_ptr_field(gcr_addr, rx_servo_status_error_en, 0b1111, read_modify_write);
 
         // Servo error will set rx_eoff_fail now rc_warning=2 is what is used  to mask on servo error
-        if (status & 2 )
+        if (status & rc_warning )
         {
             mem_pl_field_put(rx_ctle_gain_fail, lane, 0b1);    //ppe pl
             set_debug_state(0x50DD);

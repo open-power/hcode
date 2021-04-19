@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs21041200 |mbs     | Removed eo_copy_lane_cal (no longer used)
+// mbs21041200 |mbs     | Renamed rx_lane_bad vector to rx_lane_fail, removed per-lane version, and added rx_lane_fail_cnt
 // vbr20111800 |vbr     | HW552111: Added escape to wait_for_cdr_lock()
 // vbr20101201 |vbr     | HW549006: Removed the abort check on recal_req since that doesn't work with auto recal and command interface recals.
 // vbr20101200 |vbr     | HW549006: DL asserting psave_req or lowering recal_req when entering degraded mode is treated as a recal abort.
@@ -225,67 +227,6 @@ int check_rx_abort(t_gcr_addr* gcr_addr)
 } //check_rx_abort
 
 
-// Copy the cal results to destination lane from its flywheel source lane to use as a starting point.
-// To save time, only reads some of the Bank A results and copies them where needed by cal.
-// Does not copy if source lane is un-calibrated or marked as lane_bad.
-// gcr_addr->lane will be set to lane_dst after calling this function.
-PK_STATIC_ASSERT(rx_a_ctle_gain_peak_full_reg_alias_width == 16);
-PK_STATIC_ASSERT(rx_b_ctle_gain_peak_full_reg_alias_width == 16);
-PK_STATIC_ASSERT(rx_a_lte_gain_zero_alias_width == rx_b_lte_gain_zero_alias_width);
-void eo_copy_lane_cal(t_gcr_addr* gcr_addr, int lane_dst)
-{
-    // HW522731: Use the psave flywheel snapshot source lane as the cal source
-    set_gcr_addr_lane(gcr_addr, lane_dst);
-    int fw_mux_sel = get_ptr_field(gcr_addr, rx_psave_fw_val_sel);
-    int lane_src;
-
-    if (fw_mux_sel == 0)
-    {
-        lane_src = get_ptr_field(gcr_addr, rx_psave_fw_val0_sel);
-    }
-    else if (fw_mux_sel == 1)
-    {
-        lane_src = get_ptr_field(gcr_addr, rx_psave_fw_val1_sel);
-    }
-    else if (fw_mux_sel == 2)
-    {
-        lane_src = get_ptr_field(gcr_addr, rx_psave_fw_val2_sel);
-    }
-    else     //fw_mux_sel == 3
-    {
-        lane_src = get_ptr_field(gcr_addr, rx_psave_fw_val3_sel);
-    }
-
-    // HW522210: If the source lane is un-calibrated or marked as bad, do not copy from it (return without doing anything)
-    if ( !mem_pl_field_get(rx_init_done, lane_src) || mem_pl_field_get(rx_lane_bad, lane_src) )
-    {
-        return;
-    }
-
-    // Additional settings
-    bool lte_copy_en = mem_pg_field_get(rx_enable_lane_cal_lte_copy);
-
-    // Read from source lane
-    set_gcr_addr_lane(gcr_addr, lane_src);
-    int gain_and_peak = get_ptr_field(gcr_addr, rx_a_ctle_gain_peak_full_reg_alias); // ctle_gain and ctle_peak1/2
-    int lte_gain_zero = 0;
-
-    if (lte_copy_en)
-    {
-        lte_gain_zero = get_ptr_field(gcr_addr, rx_a_lte_gain_zero_alias); // lte_gain and lte_zero
-    }
-
-    // Write to destination lane
-    set_gcr_addr_lane(gcr_addr, lane_dst);
-    put_ptr_field(gcr_addr, rx_a_ctle_gain_peak_full_reg_alias, gain_and_peak, fast_write);
-    put_ptr_field(gcr_addr, rx_b_ctle_gain_peak_full_reg_alias, gain_and_peak, fast_write);
-
-    if (lte_copy_en)
-    {
-        put_ptr_field(gcr_addr, rx_a_lte_gain_zero_alias, lte_gain_zero, read_modify_write);
-        put_ptr_field(gcr_addr, rx_b_lte_gain_zero_alias, lte_gain_zero, read_modify_write);
-    }
-} //eo_copy_lane_cal
 
 
 void rx_eo_servo_setup(t_gcr_addr* i_tgt, const t_servo_setup i_servo_setup)
@@ -373,44 +314,59 @@ void clear_all_cal_lane_sel(t_gcr_addr* gcr_addr)
 }
 
 
+void set_rx_lane_fail_cnt()
+{
+    uint32_t fail_cnt = 0;
+    uint32_t lane_fail = (mem_pg_field_get(rx_lane_fail_0_15) << 8) | mem_pg_field_get(rx_lane_fail_16_23);
 
+    while ( lane_fail != 0 )
+    {
+        if ( fail_cnt < ((1 << rx_lane_fail_cnt_width) - 1) )   // Increase the fail count if the bit width allows
+        {
+            fail_cnt += (lane_fail & 0x1);
+        }
 
-// Functions to set or clear a lane's status in rx_lane_bad (pl) and rx_lane_bad_0_23 (pg)
-PK_STATIC_ASSERT(rx_lane_bad_0_15_width == 16);
-PK_STATIC_ASSERT(rx_lane_bad_16_23_width == 8);
-PK_STATIC_ASSERT(rx_lane_bad_16_23_startbit == 0);
-void set_rx_lane_bad(unsigned int lane)
+        lane_fail = (lane_fail >> 1); // Shifting will eventually go to 0
+    }
+
+    mem_pg_field_put(rx_lane_fail_cnt, fail_cnt);
+}
+
+// Functions to set or clear a lane's status in rx_lane_fail (pl) and rx_lane_fail_0_23 (pg)
+PK_STATIC_ASSERT(rx_lane_fail_0_15_width == 16);
+PK_STATIC_ASSERT(rx_lane_fail_16_23_width == 8);
+PK_STATIC_ASSERT(rx_lane_fail_16_23_startbit == 0);
+void set_rx_lane_fail(unsigned int lane)
 {
     uint32_t lane_mask = 0x80000000 >> lane;
 
     if (lane < 16)
     {
-        mem_regs_u16_bit_set(pg_addr(rx_lane_bad_0_15_addr), (lane_mask >> 16));
+        mem_regs_u16_bit_set(pg_addr(rx_lane_fail_0_15_addr), (lane_mask >> 16));
     }
     else     // lane>=16
     {
-        mem_regs_u16_bit_set(pg_addr(rx_lane_bad_16_23_addr), lane_mask);
+        mem_regs_u16_bit_set(pg_addr(rx_lane_fail_16_23_addr), lane_mask);
     }
 
-    mem_pl_bit_set(rx_lane_bad, lane);
-} //set_rx_lane_bad()
+    set_rx_lane_fail_cnt();
+} //set_rx_lane_fail()
 
-void clr_rx_lane_bad(unsigned int lane)
+void clr_rx_lane_fail(unsigned int lane)
 {
     uint32_t lane_mask = 0x80000000 >> lane;
 
     if (lane < 16)
     {
-        mem_regs_u16_bit_clr(pg_addr(rx_lane_bad_0_15_addr), (lane_mask >> 16));
+        mem_regs_u16_bit_clr(pg_addr(rx_lane_fail_0_15_addr), (lane_mask >> 16));
     }
     else     // lane>=16
     {
-        mem_regs_u16_bit_clr(pg_addr(rx_lane_bad_16_23_addr), lane_mask);
+        mem_regs_u16_bit_clr(pg_addr(rx_lane_fail_16_23_addr), lane_mask);
     }
 
-    mem_pl_bit_clr(rx_lane_bad, lane);
-} //clr_rx_lane_bad()
-
+    set_rx_lane_fail_cnt();
+} //clr_rx_lane_fail()
 
 // apply (un)load settings and synchronize
 void tx_fifo_init(t_gcr_addr* gcr_addr)

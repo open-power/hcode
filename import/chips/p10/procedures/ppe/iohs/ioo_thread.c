@@ -39,6 +39,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs21041401 |mbs     | HW563765: Removed rx_any_init_req_or_reset condition to support presetting bad lanes
+// mwh21041300 |mwh     | Fix issue causing iobist ll to fail in smoke test
+// mbs21041200 |mbs     | Removed eo_copy_lane_cal (no longer used)
+// mbs21041200 |mbs     | Renamed rx_lane_bad vector to rx_lane_fail, removed per-lane version, and added rx_lane_fail_cnt
 // vbr21011900 |vbr     | Updated thread_lock check to avoid possibility of thread_loop_count incrementing exactly 64K times
 // mwh20092100 |mwh     | Add in the if statement for dac test code so will not run on DD1 or even if cmd is given
 // mbs20072800 |mbs     | HW537933 - Updated dl_recal_req to fix issue with sending recal done erroneously after init_req is high
@@ -754,14 +758,7 @@ static void cmd_tx_bist_tests_pl(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_
  */
 static void run_initial_training(t_gcr_addr* io_gcr_addr, const uint32_t i_lane)
 {
-    // copy results from calibrated lane in same brick to current lane to use as a starting point for initial calibration.
-    if (mem_pg_field_get(rx_enable_lane_cal_copy))
-    {
-        eo_copy_lane_cal(io_gcr_addr, i_lane);
-    }
-
-    set_gcr_addr_lane(io_gcr_addr,
-                      i_lane); // eo_copy_lane_cal() leaves set correctly, but need to set again in case it wasn't called
+    set_gcr_addr_lane(io_gcr_addr, i_lane);
     mem_pl_bit_set(rx_lane_busy, i_lane);
     eo_main_init(io_gcr_addr);
     mem_pl_bit_set(rx_init_done, i_lane);
@@ -940,8 +937,10 @@ static void cmd_bist_final(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
     uint32_t l_internal_error = 0;
 
     // Check Per-Lane Data
-    uint32_t l_lane_fail_mask = (get_ptr_field(io_gcr_addr, rx_a_lane_fail_0_15 ) << 16) |
+    uint32_t l_lane_fail_mask = (mem_pg_field_get            (rx_lane_fail_0_15 ) << 16) |
+                                (get_ptr_field(io_gcr_addr, rx_a_lane_fail_0_15 ) << 16) |
                                 (get_ptr_field(io_gcr_addr, rx_b_lane_fail_0_15 ) << 16) |
+                                (mem_pg_field_get            (rx_lane_fail_16_23) <<  8) |
                                 (get_ptr_field(io_gcr_addr, rx_a_lane_fail_16_23) <<  8) |
                                 (get_ptr_field(io_gcr_addr, rx_b_lane_fail_16_23) <<  8);
     uint32_t l_lane = 0;
@@ -1082,7 +1081,8 @@ static void dl_recal_req(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes, co
                 mem_pl_field_put(rx_recal_before_init, l_lane, 1);
                 send_recal_done = true;
             }
-            else if (!get_ptr_field(io_gcr_addr, rx_any_init_req_or_reset))
+            // HW563765 - Don't check rx_any_init_req_or_reset due to preset bad lane // else if (!get_ptr_field(io_gcr_addr, rx_any_init_req_or_reset)) {
+            else
             {
                 run_recalibration(io_gcr_addr, l_lane);
                 send_recal_done = true;
@@ -1143,10 +1143,9 @@ static void auto_recal(t_gcr_addr* io_gcr_addr, const uint32_t i_num_lanes)
         {
             if (mem_pl_field_get(rx_init_done, l_lane))
             {
-                if (!get_ptr_field(io_gcr_addr, rx_any_init_req_or_reset))
-                {
-                    run_recalibration(io_gcr_addr, l_lane);
-                }
+                // HW563765 - Don't check rx_any_init_req_or_reset due to preset bad lane // if (!get_ptr_field(io_gcr_addr, rx_any_init_req_or_reset)) {
+                run_recalibration(io_gcr_addr, l_lane);
+                //}
             }
         }
     }

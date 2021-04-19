@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr21030800 |vbr     | HW560154: Prevent overwritting of rx_bist_cir settings (freq_adj, atten); allow dac_test to be enabled/disabled individually.
 // mwh20073000 |mwh     | Change the rx_check_en_alias FFFE to FFFF so dac test is included
 // mwh20022701 |mwh     | Removed extra powerdown write and comminted out the write of step since they are default to all on
 // mwh20022700 |mwh     | Put in fix for CQ523188 and CQ526617 -- put sleep in loop, fix shared loop issue
@@ -76,6 +77,11 @@
 #include "eo_bist_init_ovride.h"
 
 
+// Assumption Checking
+PK_STATIC_ASSERT(rx_check_en_alias_width == 16);
+PK_STATIC_ASSERT(rx_check_en_alias_addr == rx_dac_test_check_en_addr);
+PK_STATIC_ASSERT(rx_dac_test_check_en_width == 1);
+PK_STATIC_ASSERT(rx_dac_test_check_en_startbit == 15);
 
 
 //checking clte gain, ctle peak, lte gain, lte zero, qpa
@@ -89,8 +95,10 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
     int lane = 0;//for the "for loop" used on pl registers
     int bist_num_lanes = fw_field_get(fw_num_lanes);//getting max number of lanes per theard
 
-    //enabling all rx bist checks
-    put_ptr_field(gcr_addr, rx_check_en_alias, 0xFFFF, fast_write); //pg
+    //enabling all rx bist checks except for dac_test which is enabled/disabled by tester pattern (HW560154)
+    int dac_test_check_en = get_ptr_field(gcr_addr, rx_dac_test_check_en); //pg
+    int bist_check_en = 0xFFFE | dac_test_check_en;
+    put_ptr_field(gcr_addr, rx_check_en_alias, bist_check_en, fast_write); //pg
 
     // switch to tx address
     int saved_gcr_reg_id = get_gcr_addr_reg_id(gcr_addr);
@@ -119,8 +127,9 @@ void eo_bist_init_ovride(t_gcr_addr* gcr_addr)
     {
         //begin for
         //turn on circuit components for bist
+        // Bist circuit settings are done elsewhere (HW548766, HW560154)
         set_gcr_addr_lane(gcr_addr, lane);
-        put_ptr_field(gcr_addr, rx_bist_cir_alias, 0x8000, read_modify_write); //pl
+        put_ptr_field(gcr_addr, rx_bist_en_dc, 0b1, read_modify_write); //pl
 
         //doing lane power up
         //mem_pl_field_put(io_power_up_lane_req,lane,0b1);//pl

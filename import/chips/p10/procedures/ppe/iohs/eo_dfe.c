@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs21041200 |mbs     | Renamed rx_lane_bad vector to rx_lane_fail, removed per-lane version, and added rx_lane_fail_cnt
+// vbr21030800 |vbr     | HW560155: clk_adj=0 is valid and should not give an error
 // mwh20012100 |mwh     | Add in code to set rx_dfe_fail if servo op has issue
 // mbs20111800 |mbs     | Reversed dfe H1 adjust for dd1 dac swizzle
 // bja20120100 |bja     | HW553981: In DFE clock adjust, set error if Ap is less than zero
@@ -368,12 +370,14 @@ static inline uint32_t  rx_eo_dfe_calc_clk_adj(t_gcr_addr* i_tgt, int32_t i_h1, 
 
 
     //Rxbist check of H1 value -- can not be 0 or less
+    //TODO VBR210308 - DFT should be checking H1<X like in check_hvals()
+    // and not checking the ClkAdj which can legally be 0 and should never be negative unless there is a code issue
     int rx_dfe_h1_check_en_int = get_ptr(i_tgt, rx_dfe_h1_check_en_addr  , rx_dfe_h1_check_en_startbit  ,
                                          rx_dfe_h1_check_en_endbit);//ppe pl
 
     if (rx_dfe_h1_check_en_int)
     {
-        if ( l_new_clk_adj <= 0)
+        if ( l_new_clk_adj < 0)
         {
             mem_pl_field_put(rx_dfe_h1_fail, lane, 0b1);
             set_fir(fir_code_dft_error | fir_code_warning);
@@ -912,7 +916,7 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool i_recal, bo
         if (l_min_height < mem_pg_field_get(rx_eye_height_min_check))
         {
             mem_pl_bit_set(rx_bad_eye_opt_height, l_lane);
-            set_rx_lane_bad(l_lane);
+            set_rx_lane_fail(l_lane);
             uint32_t l_fir_code = rx_dfe_check_en_int ? (fir_code_dft_error | fir_code_warning) : fir_code_warning;
             set_fir(l_fir_code);
             ADD_LOG(DEBUG_RX_EYE_HEIGHT_FAIL, i_tgt, l_min_height);
@@ -925,7 +929,7 @@ uint32_t rx_eo_dfe_full(t_gcr_addr* i_tgt, const t_bank i_bank, bool i_recal, bo
 function_exit:
     SET_DFE_DEBUG(0x701A); // Exit Full DFE
 
-    if (l_rc & 2 )
+    if (l_rc & rc_warning )
     {
         mem_pl_field_put(rx_dfe_fail, l_lane, 0b1);    //ppe pl
         set_debug_state(0x70EE);

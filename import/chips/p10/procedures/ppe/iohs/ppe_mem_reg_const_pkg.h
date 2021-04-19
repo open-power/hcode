@@ -710,6 +710,14 @@
 #define rx_ber_fail_mask                           0x1
 
 
+#define rx_ber_timer_sel_bist_addr                 0b110000101
+#define rx_ber_timer_sel_bist_startbit             0
+#define rx_ber_timer_sel_bist_width                4
+#define rx_ber_timer_sel_bist_endbit               3
+#define rx_ber_timer_sel_bist_shift                12
+#define rx_ber_timer_sel_bist_mask                 0xf000
+
+
 #define rx_clr_lane_recal_cnt_addr                 0b000000001
 #define rx_clr_lane_recal_cnt_startbit             0
 #define rx_clr_lane_recal_cnt_width                1
@@ -886,6 +894,14 @@
 #define rx_ddc_min_err_lim_mask                    0x38
 
 
+#define rx_ddc_small_eye_warning_addr              0b000000100
+#define rx_ddc_small_eye_warning_startbit          11
+#define rx_ddc_small_eye_warning_width             1
+#define rx_ddc_small_eye_warning_endbit            11
+#define rx_ddc_small_eye_warning_shift             4
+#define rx_ddc_small_eye_warning_mask              0x10
+
+
 #define rx_dfe_ap_addr                             0b000001001
 #define rx_dfe_ap_startbit                         8
 #define rx_dfe_ap_width                            8
@@ -980,22 +996,6 @@
 #define rx_enable_auto_recal_endbit                1
 #define rx_enable_auto_recal_shift                 14
 #define rx_enable_auto_recal_mask                  0x4000
-
-
-#define rx_enable_lane_cal_copy_addr               0b110000011
-#define rx_enable_lane_cal_copy_startbit           13
-#define rx_enable_lane_cal_copy_width              1
-#define rx_enable_lane_cal_copy_endbit             13
-#define rx_enable_lane_cal_copy_shift              2
-#define rx_enable_lane_cal_copy_mask               0x4
-
-
-#define rx_enable_lane_cal_lte_copy_addr           0b110000011
-#define rx_enable_lane_cal_lte_copy_startbit       14
-#define rx_enable_lane_cal_lte_copy_width          1
-#define rx_enable_lane_cal_lte_copy_endbit         14
-#define rx_enable_lane_cal_lte_copy_shift          1
-#define rx_enable_lane_cal_lte_copy_mask           0x2
 
 
 #define rx_eo_converged_end_count_addr             0b110000011
@@ -1262,28 +1262,36 @@
 #define rx_lane_bad_mask                           0x20
 
 
-#define rx_lane_bad_0_15_addr                      0b111000101
-#define rx_lane_bad_0_15_startbit                  0
-#define rx_lane_bad_0_15_width                     16
-#define rx_lane_bad_0_15_endbit                    15
-#define rx_lane_bad_0_15_shift                     0
-#define rx_lane_bad_0_15_mask                      0xffff
-
-
-#define rx_lane_bad_16_23_addr                     0b111000110
-#define rx_lane_bad_16_23_startbit                 0
-#define rx_lane_bad_16_23_width                    8
-#define rx_lane_bad_16_23_endbit                   7
-#define rx_lane_bad_16_23_shift                    8
-#define rx_lane_bad_16_23_mask                     0xff00
-
-
 #define rx_lane_busy_addr                          0b000000100
 #define rx_lane_busy_startbit                      2
 #define rx_lane_busy_width                         1
 #define rx_lane_busy_endbit                        2
 #define rx_lane_busy_shift                         13
 #define rx_lane_busy_mask                          0x2000
+
+
+#define rx_lane_fail_0_15_addr                     0b111000101
+#define rx_lane_fail_0_15_startbit                 0
+#define rx_lane_fail_0_15_width                    16
+#define rx_lane_fail_0_15_endbit                   15
+#define rx_lane_fail_0_15_shift                    0
+#define rx_lane_fail_0_15_mask                     0xffff
+
+
+#define rx_lane_fail_16_23_addr                    0b111000110
+#define rx_lane_fail_16_23_startbit                0
+#define rx_lane_fail_16_23_width                   8
+#define rx_lane_fail_16_23_endbit                  7
+#define rx_lane_fail_16_23_shift                   8
+#define rx_lane_fail_16_23_mask                    0xff00
+
+
+#define rx_lane_fail_cnt_addr                      0b111001011
+#define rx_lane_fail_cnt_startbit                  13
+#define rx_lane_fail_cnt_width                     2
+#define rx_lane_fail_cnt_endbit                    14
+#define rx_lane_fail_cnt_shift                     1
+#define rx_lane_fail_cnt_mask                      0x6
 
 
 #define rx_lane_hist_min_eye_height_addr           0b000001111

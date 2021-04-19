@@ -393,7 +393,7 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
         abort_status |= check_rx_abort(gcr_addr);
 
         // Servo error will set rx_eoff_fail now rc_warning=2 is what is used  to mask on servo error
-        if (abort_status & 2 )
+        if (abort_status & rc_warning )
         {
             mem_pl_field_put(rx_ctle_peak1_fail, lane, 0b1);    //ppe pl
             set_debug_state(0x60DD);
@@ -449,7 +449,7 @@ int eo_ctle(t_gcr_addr* gcr_addr, t_bank bank, bool copy_peak_to_b, bool* peak_c
             abort_status |= check_rx_abort(gcr_addr);
 
             // Servo error will set rx_eoff_fail now rc_warning=2 is what is used  to mask on servo error
-            if (abort_status & 2 )
+            if (abort_status & rc_warning )
             {
                 mem_pl_field_put(rx_ctle_peak2_fail, lane, 0b1);    //ppe pl
                 set_debug_state(0x60EE);

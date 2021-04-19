@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs21041401 |mbs     | HW563765: Changed skip RX DCCAL to rx_recal_abort
+// mbs21041400 |mbs     | HW563765: Skip RX DCCAL when firmware has forced psave_req_dl on lane
+// mbs21041200 |mbs     | Renamed rx_lane_bad vector to rx_lane_fail, removed per-lane version, and added rx_lane_fail_cnt
 // mbs20102300 |mbs     | HW548202: Removed eo_main_recal_tx (no longer used)
 // mwh20100801 |mwh     | HW549165: add if rx_min_recal_cnt_reached to running eo_vlcq check for recal taken it out of loop.
 // mwh20100800 |mwh     | HW549165: add in bist_check if ture turn on checks if false turn off checks
@@ -277,61 +280,66 @@ void eo_main_dccal(t_gcr_addr* gcr_addr)
     io_group_power_on(gcr_addr);
     io_lane_power_on(gcr_addr, false); // Power on but leave dl_clk_en untouched (HW508366)
 
+    // HW563765: Skip RX DCCAL when firmware has forced rx_recal_abort on lane
+    int rx_recal_abort = mem_pl_field_get(rx_recal_abort, lane);
 
-    //////////////////////////////////////////////////////////////
-    // Disable Clock to RX DL During DC Cal to prevent glitches //
-    //////////////////////////////////////////////////////////////
-    put_ptr_field(gcr_addr, rx_dl_clk_en, 0b0, read_modify_write);
-
-
-    //////////
-    //  RX  //
-    //////////
-    // Make sure the ALT bank is powered up
-    put_ptr_field(gcr_addr, rx_psave_req_alt, 0b0, read_modify_write);
-    int psave_sts = 1;
-
-    while (psave_sts)
+    if (rx_recal_abort == 0)
     {
-        psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
-    }
 
-    // Prior to asserting cal_lane_sel:
-    //   Initialize/Reset CDR by clearing FW; Phase accumulator not cleared since that can cause a glitch.
-    //   Make sure the CDR is disabled.
-    put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias, 0b000000, read_modify_write);
-    put_ptr_field(gcr_addr, rx_pr_fw_reset_ab_alias,        0b11,     read_modify_write);
-    //put_ptr_field(gcr_addr, rx_pr_phase_force_cmd_ab_alias, 0x8080,   fast_write);
-    put_ptr_field(gcr_addr, rx_pr_fw_reset_ab_alias,        0b00,     read_modify_write);
+        //////////////////////////////////////////////////////////////
+        // Disable Clock to RX DL During DC Cal to prevent glitches //
+        //////////////////////////////////////////////////////////////
+        put_ptr_field(gcr_addr, rx_dl_clk_en, 0b0, read_modify_write);
 
-    // Select the cal lane (servo logic) but do not assert cal_lane_sel as yet
-    put_ptr_field(gcr_addr, rx_cal_lane_pg_phy_gcrmsg, lane, read_modify_write);
 
-    // Cal Step: Latch Offset
-    int loff_enable = mem_pg_field_get(rx_dc_enable_latch_offset_cal);
+        //////////
+        //  RX  //
+        //////////
+        // Make sure the ALT bank is powered up
+        put_ptr_field(gcr_addr, rx_psave_req_alt, 0b0, read_modify_write);
+        int psave_sts = 1;
 
-    if (loff_enable)
-    {
-        // Safely switch to bank_a and run LOFF (assumes cal_lane_sel is unasserted)
+        while (psave_sts)
+        {
+            psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
+        }
+
+        // Prior to asserting cal_lane_sel:
+        //   Initialize/Reset CDR by clearing FW; Phase accumulator not cleared since that can cause a glitch.
+        //   Make sure the CDR is disabled.
+        put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias, 0b000000, read_modify_write);
+        put_ptr_field(gcr_addr, rx_pr_fw_reset_ab_alias,        0b11,     read_modify_write);
+        //put_ptr_field(gcr_addr, rx_pr_phase_force_cmd_ab_alias, 0x8080,   fast_write);
+        put_ptr_field(gcr_addr, rx_pr_fw_reset_ab_alias,        0b00,     read_modify_write);
+
+        // Select the cal lane (servo logic) but do not assert cal_lane_sel as yet
+        put_ptr_field(gcr_addr, rx_cal_lane_pg_phy_gcrmsg, lane, read_modify_write);
+
+        // Cal Step: Latch Offset
+        int loff_enable = mem_pg_field_get(rx_dc_enable_latch_offset_cal);
+
+        if (loff_enable)
+        {
+            // Safely switch to bank_a and run LOFF (assumes cal_lane_sel is unasserted)
+            clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
+            set_cal_bank(gcr_addr, bank_a);// Set Bank B as Main, Bank A as Alt (cal_bank)
+            put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
+            eo_loff_fenced(gcr_addr, bank_a);
+
+            // Safely switch to bank_b and run LOFF
+            clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
+            set_cal_bank(gcr_addr, bank_b);// Set Bank A as Main, Bank B as Alt (cal_bank)
+            put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
+            eo_loff_fenced(gcr_addr, bank_b);
+        }
+
+        // Clear cal lane sel and switch back to Bank B as Main, Bank A as Alt (cal_bank)
         clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
-        set_cal_bank(gcr_addr, bank_a);// Set Bank B as Main, Bank A as Alt (cal_bank)
-        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
-        eo_loff_fenced(gcr_addr, bank_a);
+        set_cal_bank(gcr_addr, bank_a);
 
-        // Safely switch to bank_b and run LOFF
-        clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
-        set_cal_bank(gcr_addr, bank_b);// Set Bank A as Main, Bank B as Alt (cal_bank)
-        put_ptr_field(gcr_addr, rx_set_cal_lane_sel, 0b1, fast_write); // turn on cal lane sel
-        eo_loff_fenced(gcr_addr, bank_b);
+        // Removed (HW508366) // Enable Clock to RX DL
+        // Removed (HW508366) // put_ptr_field(gcr_addr, rx_dl_clk_en, 0b1, read_modify_write);
     }
-
-    // Clear cal lane sel and switch back to Bank B as Main, Bank A as Alt (cal_bank)
-    clear_all_cal_lane_sel(gcr_addr); // clear rx_cal_lane_sel for all lanes
-    set_cal_bank(gcr_addr, bank_a);
-
-    // Removed (HW508366) // Enable Clock to RX DL
-    // Removed (HW508366) // put_ptr_field(gcr_addr, rx_dl_clk_en, 0b1, read_modify_write);
-
 
     //////////
     //  TX  //
@@ -667,12 +675,12 @@ void eo_main_init(t_gcr_addr* gcr_addr)
     // Warning FIR and Bad Lane status on Warning/Error
     if ( (status & (warning_code | error_code)) )
     {
-        set_rx_lane_bad(lane);
+        set_rx_lane_fail(lane);
         set_fir(fir_code_warning);
     }
     else
     {
-        clr_rx_lane_bad(lane); // Clear in case it was set by a prior training (and this is a retrain)
+        clr_rx_lane_fail(lane); // Clear in case it was set by a prior training (and this is a retrain)
     }
 
     set_debug_state(0x202F); // DEBUG - INIT Cal Done
@@ -1083,7 +1091,7 @@ static int eo_main_recal_rx(t_gcr_addr* gcr_addr)
         // Warning FIR and Bad Lane status on Warning/Error
         if ( (status & (warning_code | error_code)) )
         {
-            set_rx_lane_bad(lane);
+            set_rx_lane_fail(lane);
             set_fir(fir_code_warning);
         }
     } //if(status==rc_no_error)

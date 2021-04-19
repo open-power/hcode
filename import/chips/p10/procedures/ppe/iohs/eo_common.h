@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs21041200 |mbs     | Removed eo_copy_lane_cal (no longer used)
+// mbs21041200 |mbs     | Renamed rx_lane_bad vector to rx_lane_fail, removed per-lane version, and added rx_lane_fail_cnt
 // bja20092800 |bja     | Use shared constants for TX register overrides
 // bja20090800 |bja     | HW542315: make in_tx_half_width_mode() return false for p10 dd1 omi
 // gap20082500 |gap     | HW542315: add tx_write_4_bit_pat and in_tx_half_width_mode for half/full width
@@ -188,10 +190,6 @@ int wait_for_cdr_lock(t_gcr_addr* gcr_addr, bool set_fir_on_error);
 // Eyeopt abort check/handling. Call this a lot and does enough that inline is not the right option.
 int check_rx_abort(t_gcr_addr* gcr_addr);
 
-// Copy the cal results from a dynamically determined source lane to the specified destination lane to use as a starting point.
-void eo_copy_lane_cal(t_gcr_addr* gcr_addr, int lane_dst);
-
-
 typedef enum
 {
     SERVO_SETUP_VGA = 0x00,
@@ -209,9 +207,9 @@ void check_for_txpsave_req_sts(t_gcr_addr* gcr_addr);
 //Check that tx psave is quiesced and that req is not = 1 will set fir
 void check_for_rxpsave_req_sts(t_gcr_addr* gcr_addr);
 
-// Functions to set or clear a lane's status in rx_lane_bad (pl) and rx_lane_bad_0_23 (pg)
-void set_rx_lane_bad(unsigned int lane);
-void clr_rx_lane_bad(unsigned int lane);
+// Functions to set or clear a lane's status in rx_lane_fail_0_23 (pg)
+void set_rx_lane_fail(unsigned int lane);
+void clr_rx_lane_fail(unsigned int lane);
 
 
 // apply (un)load settings and synchronize

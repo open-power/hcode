@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// vbr21020901 |vbr     | HW552111: Set fir and debug log on io_wait escape
 // vbr20111800 |vbr     | HW552111: Added escape to io_wait()
 // bja20090900 |bja     | Use common is_p10_dd1() check
 // mbs20073000 |mbs     | LAB - Added workaround hooks for run_servo_ops_base
@@ -102,6 +103,7 @@
 #include "io_lib.h"
 #include "pk.h"
 
+#include "io_logger.h"
 #include "servo_ops.h"
 #include "io_manual_amp_servo.h"
 
@@ -207,6 +209,13 @@ void io_wait(int thread, PkInterval wait_time)
     }
     while ( (pk_timebase_get() < end_time)
             && (loop_count < 128) );   // 128 loops is min ~250us but can be much more based on thread sleep times
+
+    // Set fir and debug_log if hit max loop count
+    if (loop_count >= 128)
+    {
+        set_fir(fir_code_warning);
+        ADD_LOG(DEBUG_IO_WAIT_ESCAPE, 0x00);
+    }
 } //io_wait
 #endif //PK_THREAD_SUPPORT
 

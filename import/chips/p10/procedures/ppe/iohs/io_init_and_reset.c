@@ -39,6 +39,10 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs20111800 |mbs     | HW562628: Updated tx_iref_clock_dac to 2 for all except p10 dd1
+// mbs21032300 |mbs     | HW542501: Update rx_dl_clk_phase_sel to 0b10 for zA Xbus
+// vbr21030800 |vbr     | HW560156: Only force rx_iref_vset to 3 when at >=32Gbps
+// vbr20111100 |vbr     | HW552824: Updated LTE Zero Settings based on sim and lab
 // vbr21010500 |vbr     | HW556573: Set rx_vdac_config_dc based on voltage
 // mbs20111800 |mbs     | HW552774: Updated tx_iref_clock_dac to 4
 // mwh20111300 |mwh     | HW550299rx_loff_timeout to 10
@@ -250,8 +254,9 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
         put_ptr_field(gcr_addr, tx_16to1,         0b0, read_modify_write); //pg
     }
 
-    put_ptr_field(gcr_addr, tx_iref_clock_dac, 0x4, read_modify_write); //pg
-    put_ptr_field(gcr_addr, tx_iref_vset_dac , l_vio_volt, read_modify_write); //pg
+    int l_tx_iref_clock_dac_value = ( is_p10_dd1() ) ? 0x4 : 0x2;
+    put_ptr_field(gcr_addr, tx_iref_clock_dac, l_tx_iref_clock_dac_value, read_modify_write); //pg
+    put_ptr_field(gcr_addr, tx_iref_vset_dac , l_vio_volt               , read_modify_write); //pg
 
 
     //CQ521314 never turn on tx_bank_controls_dc(0) = dcc_comp_en_dc
@@ -320,6 +325,9 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, rx_lte_filter_depth,      9, read_modify_write); //pg
     put_ptr_field(gcr_addr, rx_lte_vote_ratio_cfg,    7, read_modify_write); //pg
 
+    put_ptr_field(gcr_addr, rx_lte_zero_n1_samples,         0, read_modify_write); //pg
+    put_ptr_field(gcr_addr, rx_lte_zero_hist_bias_thresh,   8, read_modify_write); //pg
+
     // Peak Servo Settings
     put_ptr_field(gcr_addr, rx_ctle_timeout,          8, read_modify_write); //pg
     put_ptr_field(gcr_addr, rx_ctle_filter_depth,    10, read_modify_write); //pg
@@ -335,8 +343,8 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, rx_iref_data_dac   , 0x2, read_modify_write); //pg
 
 
-    // HW548766: Set rx_iref_vset_dac to 3 in BIST for P10 DD1 vertical chiplets
-    int l_rx_vio_volt = ( fw_field_get(fw_bist_en) && is_p10_dd1_v_chiplet() ) ? 0x3 : l_vio_volt;
+    // HW548766/HW560156: Set rx_iref_vset_dac to 3 in BIST for P10 DD1 vertical chiplets at >=32Gbps
+    int l_rx_vio_volt = ( fw_field_get(fw_bist_en) && is_p10_dd1_v_chiplet() && (l_data_rate >= 2) ) ? 0x3 : l_vio_volt;
     put_ptr_field(gcr_addr, rx_iref_vset_dac, l_rx_vio_volt, read_modify_write); //pg
 
     // HW544036: Flywheel snapshot does not work correctly for OpenCAPI / OMI.  Those applications happen to becommon oscillator
@@ -421,6 +429,14 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     }
 
     put_ptr_field(gcr_addr, rx_clk_phase_select, rx_clk_phase_select_value, read_modify_write); //pl
+
+    // Set the RX DL clock phase offset (data and clock relationship)
+    // for all lanes specially on zA Xbus.
+    if ( is_za_xbus() )   // zA Xbus only
+    {
+        // HWHW542501 - Setting for zA Xbus
+        put_ptr_field(gcr_addr, rx_dl_clk_phase_select, 0b10, read_modify_write); //pl
+    }
 
 
     // Clear the BCAST condition
@@ -545,8 +561,15 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
         rx_clk_phase_select_value = 0b11;
     }
 
-
     put_ptr_field(gcr_addr, rx_clk_phase_select, rx_clk_phase_select_value, read_modify_write); //pl
+
+    // Set the RX DL clock phase offset (data and clock relationship)
+    // for all lanes specially on zA Xbus.
+    if ( is_za_xbus() )   // zA Xbus only
+    {
+        // HWHW542501 - Setting for zA Xbus
+        put_ptr_field(gcr_addr, rx_dl_clk_phase_select, 0b10, read_modify_write); //pl
+    }
 
     // frequency adjust
     put_ptr_field(gcr_addr, rx_freq_adjust, l_data_rate_settings->rx_freq_adjust, read_modify_write); //pl

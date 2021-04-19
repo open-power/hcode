@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -40,6 +40,9 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mbs21041200 |mbs     | Renamed rx_lane_bad vector to rx_lane_fail, removed per-lane version, and added rx_lane_fail_cnt
+// jfg20120301 |jfg     | HW552377 Add rx_ddc_small_eye_warning indicator in ddc_seek_loop
+// jfg20120200 |jfg     | HW552377 Increase safe near-fuzz sample time and modify max standoff for small eyes.
 // jfg20090100 |jfg     | HW532333 Move offset changes to eo_main
 // jfg20081400 |jfg     | HW532333 Add new static PR Offset feature
 // jfg20091600 |jfg     | HW544800 Remove max-eye branch from 0x8013 to continue straight 0x8003 edge seek. Increase hyst per-measured-EW
@@ -269,7 +272,7 @@ void set_ddc_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, int* pr_vals, uin
 {
     mem_pl_bit_set(rx_bad_eye_opt_width, lane);
     mem_pl_bit_set(rx_ddc_fail, lane);
-    set_rx_lane_bad(lane);
+    set_rx_lane_fail(lane);
     //Disable BER
     put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 0, read_modify_write);
     // Disable the per-lane counter
@@ -291,6 +294,19 @@ void set_ddc_err (t_gcr_addr* gcr_addr, t_bank bank, int lane, int* pr_vals, uin
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// FUNCDOC: ddc_seek_loop
+// Implements DDC algoritm state transitions 8002 thru 8003
+// Returns pass/fail
+// Stores Data and Edge PR positions and the reported BER in original parameter pointers
+// Function expects that starting PR position is defined as a solid low/no-error sample position
+// parms:
+// - pr_vals: 4 uint array containing values of MINI-PR in order of NS Data; NS Edge; EW Data; EW Edge
+// - seekdir: direction a defined in nedge_seek_step
+// - ber_count: target error count for valid edge threshold
+// - ber_reported: direct response from BER check hardware
+// Return value:
+//  False   : One of the defined errors occurred.
 int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir, int* ber_reported, int ber_count)
 {
     uint32_t quad_mask;
@@ -300,6 +316,12 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
     int ber_status;
     int ber_lim = (ber_count == 1) ? 1 : ber_count >> 1;
     int lane = get_gcr_addr_lane(gcr_addr);
+    uint32_t Dsave[2];
+    uint32_t Esave[2];
+
+    // Store starting position for search. This implies, and is defined as, the starting sample prior to DDC
+    Esave[0] = pr_vals[prEns_i];
+    Dsave[0] = pr_vals[prDns_i];
 
     *ber_reported = 0;
     //Disable then enable BER
@@ -324,17 +346,37 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
     // Paranoia check that max_eye was actually reached under low BER condition is not needed here
     // and in fact can have the detrimental effect of mis-representing a step or two edge tuning when
     // this max is borderline bad
-    put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_short,
+    put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_final,
             read_modify_write);
 
     // Reduce last step movement for margin before continuing Rightward seek.
-    ds = 4;
+    int ds_max = abs(pr_vals[prDns_i] - Dsave[0]) + abs(pr_vals[prEns_i] - Esave[0]);
+
+    if (ds_max > 5)
+    {
+        ds = 5;
+    }
+
     es = 0;
     *ber_reported = nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, noseek, pr_vals);//, ber_count
 
     if (*ber_reported > ber_count)   //This is pure paranoia and may not be coverable except on really bad channel
     {
+        //HW552377 After increased 5 step standoff...skip paranoia completely if we reach starting position.
+        set_debug_state(0x8015 ); // DEBUG DDC Small eye warning
+
+        if (ds_max - ds > 1)
+        {
+            ds = 2;
+        }
+        else
+        {
+            mem_pl_field_put(rx_ddc_small_eye_warning, lane, 1);
+            ds = 1;
+        }
+
         nedge_seek_step(gcr_addr, bank, ds, es, seekdir, false, noseek, pr_vals);
+
     }
 
     set_debug_state(0x8002); // DEBUG - 3: Search RIGHT
@@ -351,10 +393,8 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
             read_modify_write);
     put_ptr(gcr_addr, rx_ber_en_addr, rx_ber_en_startbit, rx_ber_en_endbit, 1, read_modify_write);
     // Save original position for returning a quad to ensure same edge dynamics for all other quad searches
-    uint32_t Esave[2];
     Esave[0] = pr_vals[prEns_i];
     Esave[1] = pr_vals[prEew_i];
-    uint32_t Dsave[2];
     Dsave[0] = pr_vals[prDns_i];
     Dsave[1] = pr_vals[prDew_i];
     uint32_t Dedge[2];
@@ -369,11 +409,11 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
         // Reset timer_sel to ber_sel_short for both initial fuzz quad searches
         put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_short,
                 read_modify_write);
-        put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
+        //redundant with nedge_seek_step+seek_quad : put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
         set_debug_state(0x8023); // DEBUG - Set Quadrant mask
 
-        // 4: Search RIGHT until above below threshold ///////////////////////////////////////////////////
-        ds = 1;
+        // 4: Search RIGHT until above threshold ///////////////////////////////////////////////////
+        ds = 2; // Speed up fuzz search .. find errors faster
 
         //es = 0;
         do
@@ -410,9 +450,10 @@ int ddc_seek_loop (t_gcr_addr* gcr_addr, t_bank bank, int* pr_vals, bool seekdir
             set_debug_state(0x8013); // DEBUG - 4: Search LEFT to return to ber_count limit
             put_ptr(gcr_addr, rx_ber_timer_sel_addr, rx_ber_timer_sel_startbit, rx_ber_timer_sel_endbit, ber_sel_final,
                     read_modify_write);
-            put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
+            //redundant with nedge_seek_step+seek_quad : put_ptr_fast(gcr_addr, rx_ber_reset_addr, rx_ber_reset_endbit, 1);
             get_ptr(gcr_addr, rx_ber_timer_running_addr, rx_ber_timer_running_startbit,
                     rx_ber_timer_running_endbit); // throwaway to sync up BER status
+            ds = 1; // Single-step "error-safe edge" search accuracy
 
             do
             {

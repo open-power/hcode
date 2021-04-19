@@ -668,7 +668,7 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
     set_debug_state(0xA012); // DEBUG
 
     //for bist if there is a servo error this get set -- help with debug
-    if (status & 2 )
+    if (status & rc_warning )
     {
         mem_pl_field_put(rx_eoff_fail, lane, 0b1);    //ppe pl
         set_debug_state(0xA0DD);

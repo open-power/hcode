@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ---------------------|------------------------------------------------------------------
+// mwh21027000 |mwh     | HW557778 loop for check dones was only looking at highest lane, fix by put in &=
 // mwh20102801 |mwh     | HW551352 Turn mask for load of black out timer bug in logic that write to 0 for linear part b
 // mwh20102800 |mwh     | HW548405 rx_psave_cdrlock_mode_sel = 11 show that ppe code ran through.
 // mwh20093000 |mwh     | Changed compare for pulldown test to correct settings based on filter depeth
@@ -109,7 +110,6 @@ void eo_dac_test(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
 
     //fw_num_lanes This field is used to programmably set the number of lanes in the group serviced by the PPE thread.
     const uint32_t G_NUM_LANES = fw_field_get(fw_num_lanes);
-
 
 
 
@@ -221,13 +221,15 @@ void eo_dac_test(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
 
 
 //-------KEEP PPE IN THIS CODE UNTIL DAC TEST IS DONE-------------------------------------/
-    int rx_dactt_done_banka_int = get_ptr_field(io_gcr_addr, rx_dactt_done_banka);
-    int rx_dactt_done_bankb_int = get_ptr_field(io_gcr_addr, rx_dactt_done_bankb);
+    int rx_dactt_done_banka_int;
+    int rx_dactt_done_bankb_int;
 
     do
     {
         l_lane = 0;
         i_lane_shift = i_lane_mask;
+        rx_dactt_done_banka_int = 0b1000;
+        rx_dactt_done_bankb_int = 0b1000;
 
         for (; l_lane < G_NUM_LANES; ++l_lane, i_lane_shift = i_lane_shift << 1)
         {
@@ -241,8 +243,10 @@ void eo_dac_test(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
 
             set_gcr_addr_lane(io_gcr_addr, l_lane);
 
-            rx_dactt_done_banka_int = (get_ptr_field(io_gcr_addr, rx_dactt_done_banka)) & 0b1000;
-            rx_dactt_done_bankb_int = (get_ptr_field(io_gcr_addr, rx_dactt_done_bankb)) & 0b1000;
+            //bit oring the read of all lanes -- if one is 0 we will keep looping, mask is need so
+            //we only look at the msb.
+            rx_dactt_done_banka_int &= (get_ptr_field(io_gcr_addr, rx_dactt_done_banka)) & 0b1000;
+            rx_dactt_done_bankb_int &= (get_ptr_field(io_gcr_addr, rx_dactt_done_bankb)) & 0b1000;
 
             set_debug_state(0x5186);
         }//end for
@@ -250,8 +254,10 @@ void eo_dac_test(t_gcr_addr* io_gcr_addr, const uint32_t i_lane_mask)
         //Sleep thread so other buses start
         io_sleep(get_gcr_addr_thread(io_gcr_addr));
         //0000 0000 0000 1000
-        set_debug_state(rx_dactt_done_banka_int);
-        set_debug_state(rx_dactt_done_bankb_int);
+
+        //set_debug_state(rx_dactt_done_banka_int);
+        //set_debug_state(rx_dactt_done_bankb_int);
+
         //&&  Called Logical AND operator. If both the operands are non-zero, then the condition becomes true.
         //&   Binary AND Operator copies a bit to the result if it exists in both operands.
 

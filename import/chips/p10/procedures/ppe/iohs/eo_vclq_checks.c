@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mbs21041200 |mbs     | Renamed rx_lane_bad vector to rx_lane_fail, removed per-lane version, and added rx_lane_fail_cnt
 // mwh20101300 |mwh     | After talking with Chris and Jim moved logger for eoff back to eoff, lane scom get set up here
 //                                       | done in ioo_thread
 // mwh20100900 |mwh     | HW549417: Move the add_log to inside the if fail so only logs if there a fail
@@ -412,6 +413,9 @@ void set_rxbist_fail_lane( t_gcr_addr* gcr_addr, t_bank bank)
     int lane = get_gcr_addr_lane(gcr_addr);
     mk_ptr_ary(pg_fail_reg);
     uint8_t lane_bit_offset;
+
+    // Set rx_lane_fail vector - if one bank is bad, both are bad
+    set_rx_lane_fail(lane);
 
     // set register access values according to bank and lane number
     if (lane < 16)

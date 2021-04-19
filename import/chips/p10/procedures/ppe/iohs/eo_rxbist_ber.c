@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,6 +41,8 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh21041500 |mwh     | HW562606 Add rx_ber_timer_sel_bist ppe register that update rx_ber_timer_sel gcr register
+// mwh21040700 |mwh     | HW562260 Add in count_seed_done to while loop so we will break out of it if does not seed
 // bja20012300 |bja     | Set per group fail mask on error
 // bja20011700 |bja     | Always bump both banks to prevent timing issues
 // bja20011600 |bja     | Don't use ptr_ary to access rx_b_ber_done because it is ppe reg
@@ -115,7 +117,8 @@ void eo_rxbist_ber(t_gcr_addr* gcr_addr, const uint32_t lane_mask, const t_bank 
     put_ptr_field(gcr_addr, rx_ber_en, 0b1, read_modify_write);//pg
 
     //Choose the amount of time to sample data. See chart in workbook -- low setting F
-    put_ptr_field(gcr_addr, rx_ber_timer_sel, 0b1111, read_modify_write);//pg
+    int rx_ber_timer_sel_bist = mem_pg_field_get(rx_ber_timer_sel_bist);
+    put_ptr_field(gcr_addr, rx_ber_timer_sel, rx_ber_timer_sel_bist, read_modify_write);//pg
 
     int lane;
     FOR_LESS(lane, G_NUM_LANES)
@@ -315,9 +318,19 @@ void min_pr_shift(t_gcr_addr* gcr_addr, int min_shift, int stop_value, const uin
 
     set_debug_state(0x510B);
 
+    //// wait for prbs sync
+    //    int lane;
+    //    FOR_LESS(lane, G_NUM_LANES) {
+    //        if LANE_MASKED(lane_mask,lane) continue;
+    //        set_gcr_addr_lane(gcr_addr, lane);
+    //        while( get_ptr_field(gcr_addr,rx_berpl_prbs_seed_done) == 0 );
+    //    }
+
     // wait for prbs sync
     int lane;
-    FOR_LESS(lane, G_NUM_LANES)
+    int count_seed_done = 0;
+
+    FOR_LESS(lane, G_NUM_LANES)  //for less
     {
         if LANE_MASKED(lane_mask, lane)
         {
@@ -325,9 +338,14 @@ void min_pr_shift(t_gcr_addr* gcr_addr, int min_shift, int stop_value, const uin
         }
 
         set_gcr_addr_lane(gcr_addr, lane);
+        count_seed_done = 0;
 
-        while( get_ptr_field(gcr_addr, rx_berpl_prbs_seed_done) == 0 );
-    }
+        while((get_ptr_field(gcr_addr, rx_berpl_prbs_seed_done) == 0) && (count_seed_done < 20 )) //while
+        {
+            count_seed_done = count_seed_done + 1;
+        }//while
+    }//for less
+
 
     // need to run against the stop value, but direction ambiguity prevents using > or <
     stop_value += min_pr_step;

@@ -196,7 +196,7 @@ int eo_lte(t_gcr_addr* gcr_addr, t_bank cal_bank, bool copy_to_main, bool recal,
     status |= check_rx_abort(gcr_addr);
 
     //for bist -- if there error in servo we will set the below
-    if (status & 2 )
+    if (status & rc_warning )
     {
         mem_pl_field_put(rx_lte_gain_fail, lane, 0b1);    //ppe pl
         set_debug_state(0x90DD);

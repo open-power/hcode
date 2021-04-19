@@ -565,7 +565,7 @@ int eo_qpa(t_gcr_addr* gcr_addr, t_bank bank, bool recal_2ndrun, bool* pr_change
         set_debug_state(0xE010 | quad); // DEBUG - CTLE Run Servo Op
 
         //for bist if there is a servo error this get set
-        if (abort_status & 2 )
+        if (abort_status & rc_warning )
         {
             mem_pl_field_put(rx_quad_phase_fail, lane, 0b1);    //ppe pl
             set_debug_state(0xE0DD);

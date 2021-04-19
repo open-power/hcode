@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// vbr21020901 |vbr     | Added new debug log for io_wait escape
 // vbr21011901 |vbr     | Added new log for debugging thread_locked errors
 // vbr20111800 |vbr     | HW552111: Added log type for timebase error (stuck/rollover)
 // mwh20071400 |mwh     | Added log type DEBUG_RX_DAC_TEST_FAIL
@@ -123,6 +124,7 @@
 #define DEBUG_RX_DAC_TEST_FAIL                  0x30
 #define DEBUG_TIMEBASE_ERROR                    0x31
 #define DEBUG_THREAD_LOCK_ERROR                 0x32
+#define DEBUG_IO_WAIT_ESCAPE                    0x33
 
 
 // A2 version (p10 dd2, zA dd1) fields start here

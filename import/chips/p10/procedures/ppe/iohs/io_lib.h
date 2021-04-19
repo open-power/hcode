@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mbs21032300 |mbs     | HW542501: Added node_id decode for zA Xbus
 // bja12120200 |bja     | HW553981: in div_uint32 use only uints and change loop condition
 // bja12120100 |bja     | HW553981: div_uint32 sets error if divisor is less than zero
 // vbr20100500 |vbr     | HW548766: added is_p10_dd1_h/v_chiplet() for DD1 vertical unit workarounds.
@@ -808,6 +809,10 @@ uint32_t lcl_get_int(uint32_t reg_addr, uint32_t shift);
 #define          CHIP_ID_P10     0x00000000
 #define          CHIP_ID_ZA      0x00000100
 
+#define SPRN_PIR_NODE_ID_MASK    0x00003800 // x01=zArtemis Xbus                                                                         
+#define SPRN_PIR_NODE_ID_SHIFT   11
+#define          NODE_ID_ZA_XBUS 0x00000800
+
 #define SPRN_PVR_MAJOR_EC_MASK   0x00000f00
 #define SPRN_PVR_MAJOR_EC_SHIFT  8
 #define          MAJOR_EC_DD1    0x00000100
@@ -819,6 +824,10 @@ uint32_t lcl_get_int(uint32_t reg_addr, uint32_t shift);
 static inline int get_chip_id  ()
 {
     return mfspr(SPRN_PIR) & SPRN_PIR_CHIP_ID_MASK;
+}
+static inline int get_node_id  ()
+{
+    return mfspr(SPRN_PIR) & SPRN_PIR_NODE_ID_MASK;
 }
 static inline int get_major_ec ()
 {
@@ -844,6 +853,12 @@ static inline bool is_p10_dd1_h_chiplet()
 static inline bool is_p10_dd1_v_chiplet()
 {
     return is_p10_dd1() && (fw_field_get(fw_gcr_bus_id) == 0);
+}
+
+// Returns true if PPE running in zA Xbus
+static inline bool is_za_xbus()
+{
+    return ( get_node_id() == NODE_ID_ZA_XBUS );
 }
 
 
