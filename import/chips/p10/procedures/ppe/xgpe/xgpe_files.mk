@@ -25,13 +25,14 @@
 #ifdef IMAGE
 IMG-S-SOURCES  = xpmr_header.S
 XGPE-C-SOURCES = xgpe_main.c \
-    			xgpe_irq_priority_table.c \
-				xgpe_uih.c \
-				xgpe_header.c         \
-				xgpe_irq_handlers.c  \
-				xgpe_irq_handlers_fit.c \
-				xgpe_irq_handlers_ipc.c \
-        xgpe_qme_err_handler.c \
+    			          xgpe_irq_priority_table.c \
+				             xgpe_uih.c \
+				             xgpe_header.c         \
+				             xgpe_irq_handlers.c  \
+				             xgpe_irq_handlers_fit.c \
+				             xgpe_irq_handlers_ipc.c \
+                 xgpe_qme_err_handler.c \
+								         xgpe.c \
 
 XGPE-CPP-SOURCES =
                   

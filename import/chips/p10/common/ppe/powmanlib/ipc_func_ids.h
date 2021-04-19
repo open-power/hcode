@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2020                                                    */
+/* COPYRIGHT 2016,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -64,7 +64,7 @@ IPC_FUNC_ID(IPC_MSGID_405_CLIPS)
 IPC_FUNC_ID(IPC_MSGID_405_SET_PMCR)
 IPC_FUNC_ID(IPC_MSGID_405_WOF_CONTROL)
 IPC_FUNC_ID(IPC_MSGID_405_WOF_VFRT)
-IPC_FUNC_ID(IPC_MSGID_405_RESERVED_1)
+IPC_FUNC_ID(IPC_MSGID_XGPE_PGPE_BEACON_STOP)
 IPC_FUNC_ID(IPC_MSGID_405_RESERVED_2)
 IPC_FUNC_ID(IPC_MSGID_405_RESERVED_3)
 IPC_FUNC_ID(IPC_MSGID_SGPE_PGPE_UPDATE_ACTIVE_CORES)

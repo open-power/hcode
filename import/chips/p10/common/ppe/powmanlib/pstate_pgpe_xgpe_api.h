@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -35,6 +35,11 @@ enum UPDATE_VRET_TYPES
     UPDATE_VRET_TYPE_SET    =   0x1,
 };
 
+enum REQUEST_OP_TYPES
+{
+    REQUEST_BEACON_STOP      =   0x1,
+};
+
 typedef union
 {
     uint64_t value;
@@ -46,5 +51,19 @@ typedef union
         uint64_t  return_code       : 8;
     } fields;
 } ipcmsg_p2x_update_vret_t;
+
+
+
+typedef union
+{
+    uint64_t value;
+    struct
+    {
+        uint64_t  reserved          : 4;
+        uint64_t  req_type          : 4;
+        uint64_t  reserved1         : 48;
+        uint64_t  return_code       : 8;
+    } fields;
+} ipcmsg_req_beacon_stop_t;
 
 #endif
