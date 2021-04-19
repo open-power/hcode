@@ -140,6 +140,14 @@ void handle_core_throttle();
 void xgpe_write_core_throttle_data(uint32_t i_throttle_state,
                                    uint32_t i_inject_response);
 
+//
+//  xgpe_pgpe_beacon_stop_req
+//
+//  IPC function called to PGPE for beacon stop
+//
+//
+void xgpe_pgpe_beacon_stop_req();
+
 #ifdef __cplusplus
 }
 #endif
