@@ -46,7 +46,8 @@ enum EVENT_TABLE_IDX
     EV_QME_FAULT                        =   10,
     EV_XGPE_FAULT                       =   11,
     EV_PVREF_FAULT                      =   12,
-    MAX_EVENT_TABLE_ENTRIES             =   13
+    EV_IPC_STOP_BEACON                  =   13,
+    MAX_EVENT_TABLE_ENTRIES             =   14
 };
 
 #ifdef __PARSER_TOOL__
@@ -64,7 +65,8 @@ const char* event_table_str[] =
     "OCC_FAULT          ",
     "QME_FAULT          ",
     "XGPE_FAULT         ",
-    "PVREF_FAULT        "
+    "PVREF_FAULT        ",
+    "STOP_BEACON        ",
 };
 #endif
 

@@ -36,6 +36,7 @@ void pgpe_irq_ipc_405_clips(ipc_msg_t* cmd, void* arg);
 void pgpe_irq_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg);
 void pgpe_irq_ipc_405_wof_control(ipc_msg_t* cmd, void* arg);
 void pgpe_irq_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg);
+void pgpe_irq_ipc_xgpe_stop_beacon(ipc_msg_t* cmd, void* arg);
 
 
 void pgpe_irq_pcb_handler();
