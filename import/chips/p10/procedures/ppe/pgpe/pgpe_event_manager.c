@@ -143,6 +143,17 @@ void pgpe_event_manager_run_booted_or_stopped()
         //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
         //If any fault, then mark next state as SAFE_MODE and break
 
+        //Stop Beacon
+        e = pgpe_event_tbl_get(EV_IPC_STOP_BEACON);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_stop_beacon();
+            pgpe_event_manager_upd_state(PGPE_SM_SAFE_MODE);
+            break; //Don't process any other pending requests
+        }
+
+
         //Safe Mode
         //Process Safe Mode, but mark error no actuation can be done)
         //mark next state as SAFE_MODE and break
@@ -238,6 +249,18 @@ void pgpe_event_manager_run_active()
         //Process \\todo
         //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
         //If any fault, then mark next state as SAFE_MODE and break
+
+        //Stop Beacon
+        e = pgpe_event_tbl_get(EV_IPC_STOP_BEACON);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_stop_beacon();
+            pgpe_event_manager_upd_state(PGPE_SM_SAFE_MODE);
+            break; //Don't process any other pending requests
+        }
+
+
 
         //Safe Mode
         //Process Safe Mode
@@ -378,6 +401,16 @@ void pgpe_event_manager_run_safe_mode()
     {
         //Process
         //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
+
+
+        //Stop Beacon. Do Nothing
+        e = pgpe_event_tbl_get(EV_IPC_STOP_BEACON);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_IPC_STOP_BEACON, EVENT_INACTIVE);
+        }
+
 
         //Safe Mode
         //Do nothing

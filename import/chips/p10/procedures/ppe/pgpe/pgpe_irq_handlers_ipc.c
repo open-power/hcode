@@ -52,7 +52,7 @@ IPC_HANDLER(pgpe_irq_ipc_405_wof_vfrt, NULL)        // 5
 IPC_HANDLER_DEFAULT                                 // 6
 IPC_HANDLER_DEFAULT                                 // 7
 IPC_HANDLER_DEFAULT                                 // 8
-IPC_HANDLER_DEFAULT                                 // 9
+IPC_HANDLER(pgpe_irq_ipc_xgpe_stop_beacon, NULL)    // 9
 IPC_HANDLER_DEFAULT                                 // 10
 IPC_HANDLER_DEFAULT                                 // 11
 IPC_HANDLER_DEFAULT                                 // 12
@@ -217,4 +217,29 @@ void pgpe_irq_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
     {
         pgpe_event_tbl_set(EV_IPC_WOF_VRT, EVENT_PENDING, (void*)cmd);
     }
+}
+
+//
+//  pgpe_irq_ipc_xgpe_stop_beacon
+//
+//  IPC function called upon receiving 'Stop Beacon' IPC from XGPE.
+//
+//
+void pgpe_irq_ipc_xgpe_stop_beacon(ipc_msg_t* cmd, void* arg)
+{
+    PK_TRACE("IPC: Stop Beacon");
+
+    if(pgpe_event_tbl_get_status(EV_IPC_STOP_BEACON) != EVENT_INACTIVE)
+    {
+        //Ack Here with an error
+        ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
+        ipcmsg_wof_vrt_t* args = (ipcmsg_wof_vrt_t*)async_cmd->cmd_data;
+        args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
+        ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+    }
+    else
+    {
+        pgpe_event_tbl_set(EV_IPC_STOP_BEACON, EVENT_PENDING, (void*)cmd);
+    }
+
 }

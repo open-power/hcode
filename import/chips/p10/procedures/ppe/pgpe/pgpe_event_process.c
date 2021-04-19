@@ -904,3 +904,11 @@ void pgpe_process_xgpe_fault()
 void pgpe_process_pvref_fault()
 {
 }
+
+void pgpe_process_stop_beacon()
+{
+    PK_TRACE("PEP: Stop Beacon");
+    pgpe_pstate_set(update_pgpe_beacon, 0);
+    pgpe_event_tbl_set_status(EV_IPC_STOP_BEACON, EVENT_INACTIVE);
+    pgpe_occ_send_ipc_ack_type_rc(EV_IPC_STOP_BEACON, PGPE_RC_SUCCESS);
+}

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -44,6 +44,7 @@ void pgpe_process_occ_fault();
 void pgpe_process_qme_fault();
 void pgpe_process_xgpe_fault();
 void pgpe_process_pvref_fault();
+void pgpe_process_stop_beacon();
 
 
 #endif
