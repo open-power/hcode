@@ -57,7 +57,7 @@ qme_attr_init()
     if( fapiRc != fapi2::FAPI2_RC_SUCCESS )
     {
         PK_TRACE_ERR("ERROR: FAPI2 Init Failed. HALT QME!");
-        QME_PANIC_HANDLER(QME_MAIN_FAPI2_INIT_FAILED);
+        QME_ERROR_HANDLER(QME_MAIN_FAPI2_INIT_FAILED, 0, pir, 0);
     }
 
     //===============
@@ -216,9 +216,11 @@ main()
     else
     {
         // @TODO - Temp workaround as Simics has a P9 value of PVR
-        if(mfspr(287) != PVR_CONST)
+        uint32_t pvr = mfspr(SPRN_PVR);
+
+        if( pvr != PVR_CONST)
         {
-            QME_PANIC_HANDLER(QME_BAD_DD_LEVEL);
+            QME_ERROR_HANDLER(QME_BAD_DD_LEVEL, 0, pvr, 0);
         }
     }
 
@@ -249,6 +251,10 @@ main()
 
     // Initialize the Stop state and Pstate tasks
     qme_init();
+
+#if ENABLE_MACHINE_CHECK_HANDLER
+    IOTA_MC_HANDLER(qme_machine_check_handler);
+#endif
 
 #if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)
 

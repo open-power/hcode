@@ -135,6 +135,13 @@ typedef struct
     uint32_t    c_tfac_s2c_retry_limit[4];
     uint32_t    c_tfac_s2c_retry_total[4];
 
+    // Errlog
+    uint16_t    pad;
+    uint16_t    errl_panic;
+    uint32_t    errl_data0;
+    uint32_t    errl_data1;
+    uint32_t    errl_data2;
+
     // Hipri IRQ and Error Records
 
     uint32_t    qme_debugger;

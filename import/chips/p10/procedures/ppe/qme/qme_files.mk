@@ -40,7 +40,8 @@ QME-C-SOURCES   = qme_addresses.c           \
                   qme_irq_doorbell_events.c \
                   qme_irq_stop_events.c     \
                   qme_block_copy.c          \
-                  qme_stop_self_execute.c
+                  qme_stop_self_execute.c   \
+                  qme_errl_utils.c
 
 SUBMODULE-CPP-SOURCES = p10_hcd_corecache_realign.C       \
                         p10_hcd_corecache_clock_control.C \

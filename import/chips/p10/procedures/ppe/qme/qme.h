@@ -42,7 +42,7 @@ extern "C" {
 
 #include "qme_marks.h"
 #include "qme_addresses.h"
-
+#include "qme_service_codes.h"
 #include "p10_pm_hcd_flags.h"
 #define   QME_IMAGE_SOURCE
 #include "p10_hcd_common.H"
@@ -51,6 +51,7 @@ extern "C" {
 #include "p10_hcd_memmap_qme_sram.H"
 
 #include "errlutil.h"
+#include "qme_errl_utils.h"
 #include "qme_record.h"
 
 extern uint32_t G_IsSimics;
@@ -160,29 +161,6 @@ enum BCE_SCOPE
     QME_SPECIFIC = 1,
 };
 
-
-enum QME_MODULE_ID
-{
-    QME_MODULE_ID_SR        =   0x01,
-    QME_MODULE_ID_QME_SCAN  =   0x02,
-};
-
-enum QME_REASON_CODE
-{
-    REASON_SR_FAIL              =   0x01,
-    PUTRING_PARALLEL_SCAN_ERR   =   0x02,
-    PUTRING_HEADER_ERR          =   0x03,
-    PUTRING_BAD_STRING          =   0x04,
-    PUTRING_HEADER_MISMATCH     =   0x05,
-    PUTRING_BAD_NIBBLE_INDEX    =   0x06,
-    PUTRING_UNKNOWN_ERR         =   0x07,
-};
-
-enum QME_EXTENDED_REASON_CODE
-{
-    QME_STOP11_EXIT         =   0x01,
-    QME_PUT_RING_FAIL       =   0x02,
-};
 
 // todo
 // (auto) pmcr fwd enable, throttle enable,

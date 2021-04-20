@@ -263,32 +263,9 @@ qme_stop_exit()
     fapi2::Target < fapi2::TARGET_TYPE_CORE |
     fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_scom_rest_target;
 
-    if( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_STOP_EXIT_INJECT ) )
-    {
-        uint32_t errStatus __attribute__((unused));
-        PPE_LOG_ERR_CRITICAL ( 0x0B,         // reason code
-                               QME_STOP_EXIT_ENTRY_ERROR_INJECT, // ext reason code
-                               0xBABE,       // mod id
-                               0xDEADBEEF,   // i_userData1,
-                               0xBADBADBA,   // i_userData2,
-                               0xC0DEFEED,   // i_userData3,
-                               NULL,         // no user details
-                               NULL,         // no callouts
-                               errStatus );  // status
-
-        // @TODO Check if the PIG to XGPE can be hidden under the errl APIs
-        uint32_t pig_data = 0;
-        pig_data = ( PIG_TYPE_E << SHIFT32(4) ) |
-                   ( G_qme_record.quad_id       << SHIFT32(19) ) |
-                   ( (QME_STOP_EXIT_ENTRY_ERROR_INJECT) << SHIFT32(23) );
-        qme_send_pig_packet(pig_data);
-        IOTA_PANIC(QME_STOP_EXIT_ENTRY_ERROR_INJECT);
-
-    }
-
-
     if( G_qme_record.c_stop2_exit_targets )
     {
+        qme_fault_inject(QME_PCSCR_STOP2_EXIT_FAULT_INJECT, G_qme_record.c_stop2_exit_targets);
         out32( QME_LCL_CORE_ADDR_WR(
                    QME_SSH_SRC, G_qme_record.c_stop2_exit_targets ), SSH_EXIT_IN_SESSION );
     }
@@ -308,6 +285,7 @@ qme_stop_exit()
 
 #if POWER10_DD_LEVEL != 10
 
+        qme_fault_inject(QME_PCSCR_STOP3_RVRM_POWON_FAULT_INJECT, G_qme_record.c_stop3_exit_targets);
         p10_hcd_core_vmin_disable(core_target);
 
 #else
@@ -504,6 +482,7 @@ qme_stop_exit()
 
         if( G_qme_record.hcode_func_enabled & QME_HWP_PFET_CTRL_ENABLE )
         {
+            qme_fault_inject(QME_PCSCR_STOP11_POWON_FAULT_INJECT, G_qme_record.c_stop11_exit_targets);
             p10_hcd_cache_poweron(core_target);
         }
 
@@ -626,8 +605,10 @@ qme_stop_exit()
 
                     if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
                     {
-                        PK_TRACE_DBG("ERROR: BCE Scom Restore Copy Failed. HALT QME!");
-                        QME_PANIC_HANDLER(QME_STOP_BLOCK_COPY_SCOM_FAILED);
+                        PK_TRACE_DBG("ERROR: BCE L3 Scom Restore Copy Failed. HALT QME!");
+                        QME_ERROR_HANDLER(QME_STOP_BLOCK_COPY_L3_SCOM_FAILED,
+                                          pQmeImgHdr->g_qme_scom_offset,
+                                          pQmeImgHdr->g_qme_L3ScomLength, ec);
                     }
 
                     MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
@@ -869,8 +850,10 @@ qme_stop_exit()
 
                     if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
                     {
-                        PK_TRACE_DBG("ERROR: BCE Scom Restore Copy Failed. HALT QME!");
-                        IOTA_PANIC(QME_STOP_BLOCK_COPY_SCOM_FAILED);
+                        PK_TRACE_DBG("ERROR: BCE CL2 Scom Restore Copy Failed. HALT QME!");
+                        QME_ERROR_HANDLER(QME_STOP_BLOCK_COPY_CL2_SCOM_FAILED,
+                                          pQmeImgHdr->g_qme_scom_offset,
+                                          pQmeImgHdr->g_qme_coreL2ScomLength, ec);
                     }
 
                     MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )

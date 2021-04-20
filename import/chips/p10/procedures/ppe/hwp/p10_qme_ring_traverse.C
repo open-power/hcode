@@ -327,7 +327,7 @@ fapi2::ReturnCode putRingQme(
         if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
         {
             PK_TRACE_INF("ERROR: BCE Copy for ring type %02x Failed. HALT QME!", l_ringType );
-            IOTA_PANIC(QME_STOP_SCAN_RING_BLOCK_COPY_FAILED);
+            QME_ERROR_HANDLER(QME_STOP_BLOCK_COPY_SCAN_RING_FAILED, l_cpmrOffset, l_sramOffset, l_ringType );
         }
 
         G_qme_record.bce_buf_content_type  =  l_tmpWord;

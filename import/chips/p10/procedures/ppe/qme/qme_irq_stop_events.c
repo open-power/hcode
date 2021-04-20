@@ -339,7 +339,8 @@ qme_parse_pm_state_active_fast()
                     {
                         PK_TRACE_INF("balanced pm_state[even] %x pm_state[odd] %x, index %d is not made even, Halt",
                                      G_qme_record.c_pm_state[c_index], G_qme_record.c_pm_state[c_index - 1], c_index);
-                        IOTA_PANIC(QME_FUSED_EVEN_STOP_LEVELS_DD1);
+                        QME_ERROR_HANDLER(QME_FUSED_EVEN_STOP_LEVELS_DD1,
+                                          G_qme_record.c_pm_state[c_index], G_qme_record.c_pm_state[c_index - 1], c_index);
                     }
                 }
             }
@@ -761,6 +762,7 @@ qme_pm_state_active_fast_event()
     if( G_qme_record.c_stop2_enter_targets )
     {
         MARK_TAG( G_qme_record.c_stop2_enter_targets, IRQ_PM_STATE_ACTIVE_FAST_EVENT )
+        qme_fault_inject(QME_PCSCR_STOP23_ENTRY_FAULT_INJECT, G_qme_record.c_stop2_enter_targets);
 
         if( G_qme_record.fused_core_enabled )
         {
@@ -894,7 +896,7 @@ qme_parse_pm_state_active_slow()
                     // If this is the case, cannot do Power Loss State when esl is actually 0 that would be error
                     if( G_qme_record.hcode_func_enabled & QME_POWER_LOSS_ESL_CHECK_ENABLE )
                     {
-                        QME_PANIC_HANDLER(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED);
+                        QME_ERROR_HANDLER(QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED, pscrs, esl_ec, c_loop);
                     }
                 }
 
@@ -970,7 +972,7 @@ qme_regular_wakeup_slow_event()
         ( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE ) )
     {
         PK_TRACE_ERR("ERROR: Attempt to Perform Stop11 when RUNN mode or Contained mode is enabled ");
-        QME_PANIC_HANDLER(QME_STOP11_RUNN_CONTAINED_MODE_ERROR);
+        QME_ERROR_HANDLER(QME_STOP11_RUNN_CONTAINED_MODE_ERROR, 0, 0, 0);
     }
 
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_RGWU_SLOW);
@@ -1021,7 +1023,7 @@ qme_pm_state_active_slow_event()
         ( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE ) )
     {
         PK_TRACE_ERR("ERROR: Attempt to Perform Stop11 when RUNN mode or Contained mode is enabled ");
-        QME_PANIC_HANDLER(QME_STOP11_RUNN_CONTAINED_MODE_ERROR);
+        QME_ERROR_HANDLER(QME_STOP11_RUNN_CONTAINED_MODE_ERROR, 0, 0, 0);
     }
 
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_STOP_SLOW);
@@ -1037,6 +1039,7 @@ qme_pm_state_active_slow_event()
     if( G_qme_record.c_stop11_enter_targets )
     {
         MARK_TAG( G_qme_record.c_stop11_enter_targets, IRQ_PM_STATE_ACTIVE_SLOW_EVENT )
+        qme_fault_inject(QME_PCSCR_STOP11_ENTRY_FAULT_INJECT, G_qme_record.c_stop11_enter_targets);
 
         //===============//
 

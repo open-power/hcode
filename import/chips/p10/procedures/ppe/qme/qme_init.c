@@ -291,7 +291,10 @@ qme_init()
         if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
         {
             PK_TRACE_DBG("ERROR: BCE Copy of Core Specific Scan Ring Failed. HALT QME!");
-            QME_PANIC_HANDLER(QME_STOP_BLOCK_COPY_SCAN_FAILED);
+            QME_ERROR_HANDLER(QME_STOP_BLOCK_COPY_AT_BOOT_FAILED,
+                              pQmeImgHdr->g_qme_common_ring_offset,
+                              pQmeImgHdr->g_qme_inst_spec_ring_offset,
+                              pQmeImgHdr->g_qme_max_spec_ring_length);
         }
     }
 

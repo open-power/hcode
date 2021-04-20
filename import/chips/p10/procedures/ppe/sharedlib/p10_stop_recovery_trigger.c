@@ -28,6 +28,7 @@
 #include "ppe42_scom.h"
 #include "ppehw_common.h"
 #include "ocb_register_addresses.h"
+#include "p10_scom_c_5.H"
 #include "iota_trace.h"
 #include "p10_hcd_common.H"
 #include "p10_pm_hcd_flags.h"
@@ -61,11 +62,17 @@ p10_stop_recovery_trigger()
 
     // QMEs
     scom_data = BIT64(QME_FLAGS_CORE_WKUP_ERR_INJECT) |
-                BIT64(QME_FLAGS_PSTATE_HCODE_ERR_INJECT) |
-                BIT64(QME_FLAGS_STOP_EXIT_INJECT) |
-                BIT64(QME_FLAGS_STOP_ENTRY_INJECT);
+                BIT64(QME_FLAGS_FATAL_FAULT_ERR_INJECT);
 
     PPE_PUTSCOM_MC_Q(QME_FLAGS_WO_CLEAR, scom_data);
+
+    scom_data = BIT64(QME_PCSCR_STOP23_ENTRY_FAULT_INJECT) |
+                BIT64(QME_PCSCR_STOP11_ENTRY_FAULT_INJECT) |
+                BIT64(QME_PCSCR_STOP2_EXIT_FAULT_INJECT) |
+                BIT64(QME_PCSCR_STOP3_RVRM_POWON_FAULT_INJECT) |
+                BIT64(QME_PCSCR_STOP11_POWON_FAULT_INJECT) |
+                BIT64(QME_PCSCR_SELF_RESTORE_FAULT_INJECT);
+    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SCR_WO_CLEAR, 0xF), scom_data); // @TODO check
 
     if (in32(OCB_OCCFLG3) & BIT32(STOP_RECOVERY_TRIGGER_ENABLE))
     {
