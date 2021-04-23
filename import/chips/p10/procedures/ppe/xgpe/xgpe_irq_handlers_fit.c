@@ -35,6 +35,8 @@
 #include "p10_oci_proc_b.H"
 #include "p10_oci_proc_d.H"
 #include "pstates_common.H"
+//#include "p10_io_pwr.H"
+#include "p10_io_pwr_types.H"
 //#include "pstate_pgpe_occ_api.h"
 
 #define IDDQ_FIT_SAMPLE_TICKS   8 //TODO RTC: 214486 Determine if this should be an attribute or hard-coded like this
@@ -44,6 +46,7 @@ const uint32_t FDIR_MC_WOR  = 0x6E0EFE46;
 extern XgpeHeader_t* G_xgpe_header_data;
 uint32_t G_throttleOn = 0;
 uint32_t G_throttleCount = 0;
+uint32_t G_static_powr_mv = 0;
 
 extern uint32_t G_OCB_OCCFLG3_OR;
 extern uint32_t G_OCB_OCCFLG3_CLR;
@@ -102,8 +105,125 @@ void xgpe_irq_fit_handler()
     handle_pm_suspend();
     handle_wof_iddq_values();
     handle_core_throttle();
+    compute_io_power();
 }
 
+extern XgpeHeader_t* _XGPE_IMG_HEADER __attribute__ ((section (".xgpe_image_header")));
+///////////////////////////////////////////////////
+// compute_io_power
+///////////////////////////////////////////////////
+void compute_io_power()
+{
+    uint32_t io_pgated_cntrlr = 0;
+    uint64_t io_disable_lnks  = 0;
+    XgpeHeader_t* l_header = (XgpeHeader_t*)&_XGPE_IMG_HEADER;
+    HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*) OCC_SHARED_SRAM_ADDR_START;
+    io_static_lnks_cntrls* static_lnk_cntlr = (io_static_lnks_cntrls*)XGPE_SRAM_IO_OFFSET_ADDR;
+    uint32_t io_addr = XGPE_SRAM_IO_OFFSET_ADDR + sizeof(io_static_lnks_cntrls);
+    controller_entry_t* io_cntrlr_data = (controller_entry_t*)io_addr;
+    link_entry_t* io_lnk_data = (link_entry_t*)(io_addr + (sizeof(controller_entry_t) * NUM_IO_CNTRLS));
+
+    uint32_t io_start = l_header->g_xgpe_ioStart;
+    uint32_t io_step  = l_header->g_xgpe_ioStep;
+    uint32_t io_count = l_header->g_xgpe_ioCount;
+    uint32_t io_idx = 0;
+    uint32_t io_idx_power = 0;
+    uint32_t io_pwr_fraction = 0;
+    uint32_t x = 0;
+    uint32_t io_compute_state = 0;
+    uint32_t powr_diff = 0;
+    xgpe_wof_values_t* wof_io_values = (xgpe_wof_values_t*)&occ_shared_data->xgpe_wof_values;
+
+    do
+    {
+        if (G_static_powr_mv || io_compute_state)
+        {
+            break;
+        }
+
+        if(static_lnk_cntlr->io_magic ==
+           0x53540000) //ST
+        {
+            PK_TRACE("xgpe_wof_values_t add %08x", (uint32_t)&occ_shared_data->xgpe_wof_values);
+            io_pgated_cntrlr = static_lnk_cntlr->io_pwr_gated_cntrlrs;
+            io_disable_lnks  = static_lnk_cntlr->io_disable_links;
+
+            //Pgated power
+            for ( x = EMO01; x < NUM_IO_CNTRLS; x++)
+            {
+                if (io_pgated_cntrlr & BIT32(x))
+                {
+                    G_static_powr_mv += io_cntrlr_data->base_power_mw;
+                }
+
+                io_cntrlr_data = (controller_entry_t*)(io_addr + (sizeof(controller_entry_t) * x));
+            }
+
+            io_addr = io_addr + (sizeof(controller_entry_t) * NUM_IO_CNTRLS);
+
+            //Disable power
+            for ( x = MC00_OMI0; x < NUMBER_OF_IO_LINKS; x++)
+            {
+                if (io_disable_lnks & BIT64(x))
+                {
+                    G_static_powr_mv += io_lnk_data->base_power_mw;
+                }
+
+                io_lnk_data = (link_entry_t*)(io_addr + (sizeof(link_entry_t) * x));
+            }
+
+            //compute io index from wof table
+            //and update to occ sram
+            if( G_static_powr_mv <= io_start )
+            {
+                io_idx = 0;
+                io_idx_power = io_start;
+                io_pwr_fraction = io_start;
+                io_compute_state = 1;
+            }
+            else
+            {
+                for ( io_idx = 1; io_idx < io_count; ++io_idx)
+                {
+                    if (G_static_powr_mv <= (io_start + (io_step * io_idx)))
+                    {
+                        io_idx_power = io_start + (io_step * io_idx);
+                        io_compute_state = 1;
+                        break;
+                    }
+                }
+
+                if ( io_idx == io_count)
+                {
+                    PK_TRACE("Didn't find any matching index from WOF table");
+                    PK_TRACE("So considering the last index io powr value");
+                    io_idx = io_count - 1;
+                    io_idx_power = io_start + (io_step * io_idx);
+                    G_static_powr_mv = io_idx_power;
+
+                }
+
+
+                powr_diff = io_idx_power  - (io_start + (io_step * io_idx ));
+
+                if (powr_diff)
+                {
+                    io_pwr_fraction =
+                        (io_idx_power - G_static_powr_mv) / powr_diff;
+                }
+            }
+
+            if (G_static_powr_mv)
+            {
+                PK_TRACE("writing to occ sram %x %x %x", io_idx_power / 10, io_idx, io_pwr_fraction);
+                wof_io_values->fields.io_power_proxy_0p01w = io_idx_power / 10;
+                wof_io_values->fields.io_index = (uint8_t)io_idx << 4; //OCC Shared SRAM→io_index(1:3)
+                wof_io_values->fields.io_index = (uint8_t)io_pwr_fraction << 1; //SRAM→io_index(4:6)
+            }
+        }
+    }
+    while(0);
+}
 ///////////////////////////////////////////////////
 //handle_core_throttle
 ///////////////////////////////////////////////////

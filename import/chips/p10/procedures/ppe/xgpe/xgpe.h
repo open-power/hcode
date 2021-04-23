@@ -132,6 +132,12 @@ void xgpe_send_db1_to_qme(uint64_t i_db1_data);
 void handle_core_throttle();
 
 /// ----------------------------------------------
+/// @brief Compute io static power
+/// @return none
+/// ---------------------------------------------
+void compute_io_power();
+
+
 /// @brief Enable/disable core throttle operation
 /// @param[in] i_throttle_state  state of throttle
 /// @param[in] i_inject_response response data
