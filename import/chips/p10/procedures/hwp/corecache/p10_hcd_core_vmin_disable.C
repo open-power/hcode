@@ -65,7 +65,7 @@ enum P10_HCD_CORE_VMIN_DISABLE_CONSTANTS
     HCD_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS      = 100000000, // 10^5ns = 100us timeout
     HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_HW_NS        = 1000,   // 1us poll loop delay
     HCD_VMIN_DIS_RVID_ENABLED_POLL_DELAY_SIM_CYCLE    = 32000,  // 32k sim cycle delay
-    HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS       = 100000000, // 10^5ns = 100us timeout
+    HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS       = 100000, // 10^5ns = 100us timeout
     HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_HW_NS         = 1000,   // 1us poll loop delay
     HCD_VMIN_DIS_RVID_BYPASS_POLL_DELAY_SIM_CYCLE     = 32000,  // 32k sim cycle delay
     HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS   = 100000000, // 10^5ns = 100us timeout
@@ -87,10 +87,11 @@ p10_hcd_core_vmin_disable(
     fapi2::buffer<buffer_t> l_mmioData = 0;
     fapi2::buffer<uint64_t> l_scomData = 0;
     uint32_t                l_timeout  = 0;
-
+    uint8_t                 l_attr_mma_poweroff_disable = 0;
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
     fapi2::ATTR_RUNN_MODE_Type                  l_attr_runn_mode;
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE, l_sys, l_attr_runn_mode ) );
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE, l_sys,  l_attr_mma_poweroff_disable ) );
 
     FAPI_INF(">>p10_hcd_core_vmin_disable");
 
@@ -123,8 +124,8 @@ p10_hcd_core_vmin_disable(
                  "ERROR: Vmin Disable Rvid Enabled Timeout");
 
     // TODO enable this once settings is known
-    //FAPI_DBG("Set RVRM_TUNE to be 64ns(0b110) via CPMS_RVCSR[6:11]");
-    //FAPI_TRY( HCD_PUTMMIO_S(i_target, CPMS_RVCSR_WO_OR, BITS64(9, 2) ) );
+    //FAPI_DBG("Set RVRM_TUNE to be 64ns(0b110) via CPMS_RVCSR[6:8]");
+    //FAPI_TRY( HCD_PUTMMIO_S(i_target, CPMS_RVCSR_WO_OR, BITS64(6, 2) ) );
 
     FAPI_DBG("Drop RVID_ENABLE via CPMS_RVCSR[0]");
     FAPI_TRY( HCD_PUTMMIO_S(i_target, CPMS_RVCSR_WO_CLEAR, BIT64(0) ) );
@@ -202,8 +203,6 @@ p10_hcd_core_vmin_disable(
                  .set_CORE_TARGET(i_target),
                  "ERROR: Vmin Disable VDD Pfet Enable Timeout");
 
-#ifdef EPM_TUNING
-
     FAPI_DBG("Wait for VDD_PG_STATE == 0x8 via CPMS_CL2_PFETCNTL[42-45]");
     l_timeout = HCD_VMIN_DIS_VDD_PG_STATE_POLL_TIMEOUT_HW_NS /
                 HCD_VMIN_DIS_VDD_PG_STATE_POLL_DELAY_HW_NS;
@@ -231,10 +230,19 @@ p10_hcd_core_vmin_disable(
                  .set_CORE_TARGET(i_target),
                  "ERROR: Vmin Disable VDD_PG_STATE Timeout");
 
-#endif
-
     FAPI_DBG("Reset VDD_PFET_SEQ_STATE to No-Op(0b00) via CPMS_CL2_PFETCNTL[0-1]");
     FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR,  BITS64(0, 2)) );
+
+    //if not dynamic mode, stop2 only turn on mma clock, stop3 turn on mma power and scan
+    if( l_attr_mma_poweroff_disable )
+    {
+        // will be redundent with stop2 scom but for mma scaninit this is required
+        FAPI_DBG("Switch CL2 Glsmux to DPLL via CPMS_CGCSR[11:L2_CLKGLM_SEL]");
+        FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CGCSR_WO_OR, BIT64(11) ) );
+
+        FAPI_TRY( p10_hcd_mma_poweron( i_target ) );
+        FAPI_TRY( p10_hcd_mma_scaninit( i_target ) );
+    }
 
 fapi_try_exit:
 

@@ -45,6 +45,7 @@
 
 #include "p10_hcd_core_vmin_enable.H"
 #include "p10_hcd_common.H"
+#include "p10_hcd_mma_poweroff.H"
 
 #ifdef __PPE_QME
     #include "p10_ppe_c.H"
@@ -82,14 +83,20 @@ p10_hcd_core_vmin_enable(
     fapi2::buffer<uint64_t> l_scomData = 0;
     uint32_t                l_timeout  = 0;
     uint32_t                l_vdd_pfet_enable_actual = 0;
-
+    uint8_t                 l_attr_mma_poweroff_disable = 0;
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
     fapi2::ATTR_RUNN_MODE_Type                  l_attr_runn_mode;
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE, l_sys, l_attr_runn_mode ) );
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE, l_sys, l_attr_mma_poweroff_disable ) );
 
     FAPI_INF(">>p10_hcd_core_vmin_enable");
 
-    // MMA clock and power would already be turned off by stop2 with core clocks
+    //If dynamic mode, stop2,3,11 all turn off mma completely
+    //otherwise, stop2 only turn off mma clock, stop3 turn off mma power
+    if( l_attr_mma_poweroff_disable )
+    {
+        FAPI_TRY( p10_hcd_mma_poweroff( i_target ) );
+    }
 
     FAPI_DBG("Set VDD_PFET_SEQ_STATE to Voff(0b01) via CPMS_CL2_PFETCNTL[0-1]");
     FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_OR, BIT64(1) ) );
