@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -2320,18 +2320,6 @@ static const uint32_t TP_TPCHIP_PIB_I2CM_WATER_MARK_REGISTER_C_PEEK_DATA1_001 = 
 static const uint32_t TP_TPCHIP_PIB_I2CM_WATER_MARK_REGISTER_C_PEEK_DATA1_001_LEN = 8;
 static const uint32_t TP_TPCHIP_PIB_I2CM_WATER_MARK_REGISTER_C_LBUS_PARITY_ERR1_001 = 40;
 //<< [TP_TPCHIP_PIB_I2CM_WATER_MARK_REGISTER_C]
-// proc/reg00048.H
-
-//>> [P10_20_TP_TPCHIP_PIB_OTP_OTPC_M_I2CM_SLVID_CONFIG_REG_C]
-static const uint64_t TP_TPCHIP_PIB_OTP_OTPC_M_I2CM_SLVID_CONFIG_REG_C = 0x00010021ull; // p10:20,
-
-static const uint32_t P10_20_TP_TPCHIP_PIB_OTP_OTPC_M_I2CM_SLVID_CONFIG_REG_C_PORT_PROTECTION_C = 0;
-static const uint32_t P10_20_TP_TPCHIP_PIB_OTP_OTPC_M_I2CM_SLVID_CONFIG_REG_C_PORT_PROTECTION_C_LEN = 18;
-static const uint32_t P10_20_TP_TPCHIP_PIB_OTP_OTPC_M_I2CM_SLVID_CONFIG_REG_C_SLV_ID_C = 18;
-static const uint32_t P10_20_TP_TPCHIP_PIB_OTP_OTPC_M_I2CM_SLVID_CONFIG_REG_C_SLV_ID_C_LEN = 7;
-static const uint32_t P10_20_TP_TPCHIP_PIB_OTP_OTPC_M_I2CM_SLVID_CONFIG_REG_C_MASK_ID_C = 25;
-static const uint32_t P10_20_TP_TPCHIP_PIB_OTP_OTPC_M_I2CM_SLVID_CONFIG_REG_C_MASK_ID_C_LEN = 7;
-//<< [P10_20_TP_TPCHIP_PIB_OTP_OTPC_M_I2CM_SLVID_CONFIG_REG_C]
 // proc/reg00048.H
 
 //>> [TP_TPCHIP_PIB_OTP_OTPC_M_MEASURE_REG11]

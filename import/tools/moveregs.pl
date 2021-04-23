@@ -6,7 +6,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2020
+# COPYRIGHT 2020,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -332,7 +332,9 @@ sub collectallfileregs($)
     {
         if ( $line =~ /\/\/>>\s+\[(\S+)\]/ )
         {
-            $allregs->{$1}++;
+            my $reg = $1;
+            $reg =~ s/^P10_20_//;
+            $allregs->{$reg}++;
         }
     }
 }

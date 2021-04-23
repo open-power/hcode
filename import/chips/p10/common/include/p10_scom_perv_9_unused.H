@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -428,18 +428,6 @@ static const uint64_t OTPC_M_DATA_REGISTER = 0x00010003ull;
 static const uint32_t OTPC_M_DATA_REGISTER_OTP_DATA_REGISTER = 0;
 static const uint32_t OTPC_M_DATA_REGISTER_OTP_DATA_REGISTER_LEN = 64;
 //<< [OTPC_M_DATA_REGISTER]
-// perv/reg00018.H
-
-//>> [P10_20_OTPC_M_I2CM_SLVID_CONFIG_REG_E]
-static const uint64_t OTPC_M_I2CM_SLVID_CONFIG_REG_E = 0x00010022ull; // p10:20,
-
-static const uint32_t P10_20_OTPC_M_I2CM_SLVID_CONFIG_REG_E_PORT_PROTECTION_E = 0;
-static const uint32_t P10_20_OTPC_M_I2CM_SLVID_CONFIG_REG_E_PORT_PROTECTION_E_LEN = 18;
-static const uint32_t P10_20_OTPC_M_I2CM_SLVID_CONFIG_REG_E_SLV_ID_E = 18;
-static const uint32_t P10_20_OTPC_M_I2CM_SLVID_CONFIG_REG_E_SLV_ID_E_LEN = 7;
-static const uint32_t P10_20_OTPC_M_I2CM_SLVID_CONFIG_REG_E_MASK_ID_E = 25;
-static const uint32_t P10_20_OTPC_M_I2CM_SLVID_CONFIG_REG_E_MASK_ID_E_LEN = 7;
-//<< [P10_20_OTPC_M_I2CM_SLVID_CONFIG_REG_E]
 // perv/reg00018.H
 
 //>> [OTPC_M_MEASURE_REG12]
