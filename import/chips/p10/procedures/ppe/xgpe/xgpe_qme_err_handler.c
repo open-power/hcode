@@ -28,7 +28,7 @@
 #include "p10_scom_eq.H"
 #include "p10_oci_proc_5.H"
 #include "p10_scom_proc_9.H"
-#include "p10_ppe_c_5.H"
+#include "p10_scom_c_5.H"
 
 #include "p10_hcd_memmap_qme_sram.H"
 #include "p10_stop_recovery_trigger.h"
