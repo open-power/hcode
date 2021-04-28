@@ -25,7 +25,10 @@
 
 #include "pgpe_dpll.h"
 #include "pgpe_gppb.h"
+#include "pgpe_pstate.h"
 #include "p10_scom_proc.H"
+#include "ppe42_msr.h"
+
 
 void pgpe_dpll_init()
 {
@@ -121,14 +124,29 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     //\todo Add timeout and critical error log
     dpll_stat_t dpll_stat;
     dpll_stat.value = 0;
-    PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);
-    PK_TRACE("DPL: dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
+
+    uint32_t cnt = 0;
+    uint32_t saved_msr = mfmsr();
     uint32_t start = in32(0xc00604f8ull); //Read OTBR
+    mtmsr(saved_msr | MSR_SEM6);  // Mask off address parity
 
     while(!dpll_stat.fields.update_complete || !dpll_stat.fields.lock)
     {
         PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);
+
+        if ((mfmsr() & MSR_SIBRC) != 0)
+        {
+            mtmsr(saved_msr | MSR_SEM6);  // Mask off address parity
+            cnt++;
+        }
+
+        if (cnt > 1)
+        {
+            IOTA_PANIC(DPLL_ADDRESS_PARITY);
+        }
     }
+
+    mtmsr(saved_msr);
 
     //CLear the pll unlock error bit
     pgpe_dpll_clear_pll_unlock_error();
