@@ -51,8 +51,8 @@ IPC_HANDLER(pgpe_irq_ipc_405_wof_control, NULL)     // 4
 IPC_HANDLER(pgpe_irq_ipc_405_wof_vfrt, NULL)        // 5
 IPC_HANDLER_DEFAULT                                 // 6
 IPC_HANDLER_DEFAULT                                 // 7
-IPC_HANDLER_DEFAULT                                 // 8
-IPC_HANDLER(pgpe_irq_ipc_xgpe_stop_beacon, NULL)    // 9
+IPC_HANDLER(pgpe_irq_ipc_xgpe_stop_beacon, NULL)    // 8
+IPC_HANDLER_DEFAULT                                 // 9
 IPC_HANDLER_DEFAULT                                 // 10
 IPC_HANDLER_DEFAULT                                 // 11
 IPC_HANDLER_DEFAULT                                 // 12
