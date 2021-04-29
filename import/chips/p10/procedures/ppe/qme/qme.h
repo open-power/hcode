@@ -223,6 +223,7 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
 // QME Generic Functions
 // set entry_limit before qme halt
 // { out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, 0xF ), BIT32(2) ); IOTA_PANIC(code); }
+// { if( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_DEBUG_HALT_ENABLE ) ) { IOTA_PANIC(code); } }
 #define QME_PANIC_HANDLER(code) \
     { IOTA_PANIC(code); }
 

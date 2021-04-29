@@ -72,7 +72,11 @@ qme_top_priority_event()
     if( top & BIT64(2) )
     {
         PK_TRACE_INF("Event: SYSTEM CHECKSTOP");
-        IOTA_PANIC(QME_SYSTEM_CHECKSTOP_DETECTED);
+
+        if (in32( QME_LCL_FLAGS ) & BIT32(QME_FLAGS_HALT_ON_CHECKSTOP))
+        {
+            IOTA_PANIC(QME_SYSTEM_CHECKSTOP_DETECTED);
+        }
     }
 
     if( top & BITS64(0, 2) )
