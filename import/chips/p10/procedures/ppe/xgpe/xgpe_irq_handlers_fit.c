@@ -88,7 +88,7 @@ void xgpe_irq_fit_init()
     //Initialize each activity count to IDDQ_FIT_SAMPLE_TICKS(=8) for each core
     for (c = 0; c < MAX_CORES; c++)
     {
-        G_iddq.p_act_val->act_val_core[c]  =  0x04040404;
+        G_iddq.p_act_val->act_val_core[c]  =  0x00000808;
     }
 }
 
