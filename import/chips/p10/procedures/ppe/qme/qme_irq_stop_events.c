@@ -53,12 +53,14 @@ qme_eval_eimr_override()
           (~(G_qme_record.c_stop1_targets    |
              G_qme_record.c_stop2_reached))  |
           G_qme_record.c_in_error            |
+          G_qme_record.c_block_wake_override |
           G_qme_record.c_block_wake_done)    & QME_MASK_ALL_CORES);
 
     G_qme_record.c_special_wakeup_rise_mask =
         (((~G_qme_record.c_configured)       |
           G_qme_record.c_in_error            |
           G_qme_record.c_special_wakeup_done |
+          G_qme_record.c_block_wake_override |
           G_qme_record.c_block_wake_done     )  & QME_MASK_ALL_CORES);
 
     G_qme_record.c_special_wakeup_fall_mask =
@@ -332,7 +334,7 @@ qme_parse_regular_wakeup_fast()
                       G_qme_record.c_configured &
                       (G_qme_record.c_stop1_targets |
                        G_qme_record.c_stop2_reached) & // not clear or handle wakeup until we enter stop first
-                      (~G_qme_record.c_block_wake_done);
+                      (~(G_qme_record.c_block_wake_done | G_qme_record.c_block_wake_override));
 
     // leave block wakeup interrupts asserted until the protocol releases
     // and leave deconfigured core signal alone as they are always masked
@@ -377,7 +379,7 @@ qme_parse_special_wakeup_rise()
 
     uint32_t c_mask = G_qme_record.c_special_wakeup_rise_req &
                       G_qme_record.c_configured &
-                      (~G_qme_record.c_block_wake_done);
+                      (~(G_qme_record.c_block_wake_done | G_qme_record.c_block_wake_override));
 
     out32_sh(QME_LCL_EISR_CLR, (c_mask << SHIFT64SH(35)) );
 
@@ -848,7 +850,7 @@ qme_parse_regular_wakeup_slow()
                       G_qme_record.c_configured &
                       (G_qme_record.c_stop1_targets |
                        G_qme_record.c_stop2_reached) &   // not clear or handle wakeup until we enter stop11
-                      (~G_qme_record.c_block_wake_done);
+                      (~(G_qme_record.c_block_wake_done | G_qme_record.c_block_wake_override));
 
     // Note: not possible to get this wakeup when core is only entered stop2
     // In that case if happened, we should clear the wakeup and do nothing.
