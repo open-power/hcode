@@ -27,14 +27,26 @@
 
 extern uint32_t IMA_EVENT_MASK;
 extern uint32_t CORE_THREAD_STATE;
+extern uint32_t PMC_UPDATE;
+extern uint32_t CORE_HID;
+extern uint32_t CORE_FIR;
+extern uint32_t CORE_FIR_AND;
 extern uint32_t CORE_FIR_OR;
+extern uint32_t CORE_FIR_MASK;
+extern uint32_t CORE_FIR_MASK_AND;
+extern uint32_t CORE_FIR_MASK_OR;
+extern uint32_t CORE_FIR_ACT0;
+extern uint32_t CORE_FIR_ACT1;
 extern uint32_t DIRECT_CONTROLS;
 extern uint32_t SCRATCH0;
 extern uint32_t SCRATCH1;
 extern uint32_t SPATTN_MASK;
 extern uint32_t EC_PC_TFX_SM;
 extern uint32_t LOCAL_XSTOP;
-extern uint32_t PMC_UPDATE;
+extern uint32_t CPLT_CTRL0_OR;
+extern uint32_t CPLT_CTRL0_CLR;
+extern uint32_t CPLT_CONF0_OR;
+extern uint32_t CPLT_CONF0_CLR;
 
 // QME Local Addresses:
 extern uint32_t QME_LCL_QSCR;

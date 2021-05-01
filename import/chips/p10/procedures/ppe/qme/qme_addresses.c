@@ -29,14 +29,27 @@
 
 uint32_t IMA_EVENT_MASK                 = 0x20020400;
 uint32_t CORE_THREAD_STATE              = 0x20020412;
+uint32_t PMC_UPDATE                     = 0x20020414;
+uint32_t CORE_HID                       = 0x20020415;
+uint32_t CORE_FIR                       = 0x20020440;
+uint32_t CORE_FIR_AND                   = 0x20020441;
 uint32_t CORE_FIR_OR                    = 0x20020442;
+uint32_t CORE_FIR_MASK                  = 0x20020443;
+uint32_t CORE_FIR_MASK_AND              = 0x20020444;
+uint32_t CORE_FIR_MASK_OR               = 0x20020445;
+uint32_t CORE_FIR_ACT0                  = 0x20020446;
+uint32_t CORE_FIR_ACT1                  = 0x20020447;
 uint32_t DIRECT_CONTROLS                = 0x20020449;
 uint32_t SCRATCH0                       = 0x20020486;
 uint32_t SCRATCH1                       = 0x20020487;
 uint32_t SPATTN_MASK                    = 0x2002049A;
 uint32_t EC_PC_TFX_SM                   = 0x2002049b;
-uint32_t PMC_UPDATE                     = 0x20020414;
 uint32_t LOCAL_XSTOP                    = 0x20040003;
+uint32_t CPLT_CTRL0_OR                  = 0x20000010;
+uint32_t CPLT_CTRL0_CLR                 = 0x20000020;
+uint32_t CPLT_CONF0_OR                  = 0x20000018;
+uint32_t CPLT_CONF0_CLR                 = 0x20000028;
+
 
 // QME Local Addresses:
 
