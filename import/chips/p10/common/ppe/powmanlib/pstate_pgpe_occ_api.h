@@ -253,6 +253,22 @@ typedef struct
             uint64_t ov_avg_0p1pct              :  8;
         } fields;
     } dw3;
+    union
+    {
+        uint64_t value;
+        struct
+        {
+            uint32_t high_order;
+            uint32_t low_order;
+        } words;
+        struct
+        {
+            uint64_t max_idd_100ma              : 16;
+            uint64_t max_ics_100ma              : 16;
+            uint64_t max_idd_ocs_average_10ma   : 16;
+            uint64_t reserved                   : 16;
+        } fields;
+    } dw4;
 } pgpe_wof_values_t;
 
 typedef union

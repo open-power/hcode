@@ -32,6 +32,8 @@
 #endif
 
 
+#define PGPE_OCS_SAMPLE_SIZE 8
+
 typedef struct pgpe_occ
 {
     pgpe_wof_values_t*  pwof_val;
@@ -49,8 +51,12 @@ typedef struct pgpe_occ
     uint32_t vratio_vdd_tb_accum, vratio_vdd_fit_avg, vratio_vdd_wof_accum;
     uint32_t vratio_vcs_tb_accum, vratio_vcs_fit_avg, vratio_vcs_wof_accum;
     uint32_t wof_clip_tb_accum, wof_clip_fit_avg, wof_clip_wof_accum;
+    uint32_t idd_ocs_accum[PGPE_OCS_SAMPLE_SIZE], idd_ocs_accum_idx, idd_ocs_running_avg;
     uint32_t wof_tick_rnd;
+    uint32_t ocs_tick;
 } pgpe_occ_t;
+
+extern pgpe_occ_t G_pgpe_occ;
 
 #ifndef __PARSER_TOOL__
     void pgpe_occ_init();
@@ -60,6 +66,8 @@ typedef struct pgpe_occ
     void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd);
     void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc);
     void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc);
+
+    #define pgpe_occ_get(x) G_pgpe_occ.x
 #endif
 
 #endif//

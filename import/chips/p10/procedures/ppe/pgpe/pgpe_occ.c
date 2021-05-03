@@ -40,6 +40,7 @@ void pgpe_occ_sample_values();
 void pgpe_occ_produce_fit_values();
 void pgpe_occ_sync_qme_occ_timebase();
 
+
 void* pgpe_occ_data_addr()
 {
     return &G_pgpe_occ;
@@ -84,6 +85,15 @@ void pgpe_occ_init()
     G_pgpe_occ.fit_tick = 0;
     G_pgpe_occ.wof_tick = 4; //TODO RTC: 214486 This WOF_TICK_TIME/FIT_TICK_TIME. Should get it from somewhere else
     G_pgpe_occ.wof_tick_rnd = 2; //Half of wof_tick
+
+    G_pgpe_occ.idd_ocs_accum_idx = 0;
+    G_pgpe_occ.idd_ocs_running_avg = 0;
+    uint32_t i = 0;
+
+    for (i = 0; i < PGPE_OCS_SAMPLE_SIZE; i++)
+    {
+        G_pgpe_occ.idd_ocs_accum[i] = 0;
+    }
 
     pgpe_occ_sync_qme_occ_timebase();
 }
@@ -130,6 +140,17 @@ void pgpe_occ_produce_wof_values()
                     G_pgpe_occ.wof_tick;
             G_pgpe_occ.pwof_val->dw3.fields.ocs_avg_0p01pct = (G_pgpe_occ.ocs_avg_pct_wof_accum + G_pgpe_occ.wof_tick_rnd) /
                     G_pgpe_occ.wof_tick;
+
+            if (G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma > G_pgpe_occ.pwof_val->dw4.fields.max_idd_100ma * 10)
+            {
+                G_pgpe_occ.pwof_val->dw4.fields.max_idd_100ma = G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma / 10;
+            }
+
+            if (G_pgpe_occ.pwof_val->dw1.fields.ics_avg_10ma  > G_pgpe_occ.pwof_val->dw4.fields.max_ics_100ma * 10)
+            {
+                G_pgpe_occ.pwof_val->dw4.fields.max_ics_100ma = G_pgpe_occ.pwof_val->dw1.fields.ics_avg_10ma / 10;
+            }
+
             G_pgpe_occ.idd_wof_avg_accum_ma = 0;
             G_pgpe_occ.ics_wof_avg_accum_ma = 0;
             G_pgpe_occ.ocs_avg_pct_wof_accum = 0;
@@ -204,6 +225,20 @@ void pgpe_occ_produce_fit_values()
         G_pgpe_occ.idd_tb_accum = 0;
         G_pgpe_occ.ics_tb_accum = 0;
         G_pgpe_occ.ocs_avg_pct_tb_accum = 0;
+
+        //Subtract oldest sample and add new sample
+        G_pgpe_occ.idd_ocs_running_avg = G_pgpe_occ.idd_ocs_running_avg - G_pgpe_occ.idd_ocs_accum[G_pgpe_occ.idd_ocs_accum_idx]
+                                         + G_pgpe_occ.idd_fit_avg_ma;
+        G_pgpe_occ.idd_ocs_running_avg = G_pgpe_occ.idd_ocs_running_avg >> 3;
+
+        G_pgpe_occ.idd_ocs_accum[G_pgpe_occ.idd_ocs_accum_idx] = G_pgpe_occ.idd_fit_avg_ma;
+        G_pgpe_occ.idd_ocs_accum_idx = (G_pgpe_occ.idd_ocs_accum_idx + 1 ) % PGPE_OCS_SAMPLE_SIZE;
+
+        if (G_pgpe_occ.pwof_val->dw4.fields.max_idd_ocs_average_10ma <  G_pgpe_occ.idd_ocs_running_avg)
+        {
+            G_pgpe_occ.pwof_val->dw4.fields.max_idd_ocs_average_10ma = G_pgpe_occ.idd_ocs_running_avg;
+        }
+
     }
 
     if (pgpe_pstate_is_wof_enabled())

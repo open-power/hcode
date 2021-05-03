@@ -30,6 +30,7 @@
 #include "p10_oci_proc.H"
 #include "pgpe_gppb.h"
 #include "p10_scom_eq_7.H"
+#include "pgpe_occ.h"
 
 pgpe_wov_ocs_t G_pgpe_wov_ocs __attribute__((section (".data_structs")));
 void pgpe_wov_ocs_dec_tgt_pct();
@@ -175,7 +176,7 @@ void pgpe_wov_ocs_update_dirty()
     }
 
     //Check for overrcurrent status
-    if(G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_10ma  >= G_pgpe_wov_ocs.idd_current_thresh)
+    if(pgpe_occ_get(idd_ocs_running_avg) >= G_pgpe_wov_ocs.idd_current_thresh)
     {
         overcurrent = OCS_OVER_THRESH;
     }
@@ -214,6 +215,10 @@ void pgpe_wov_ocs_update_dirty()
         if (overcurrent == OCS_OVER_THRESH)
         {
             //Update instrumentation counters
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+            G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
+            dirty = OCS_DIRTY_SAMPLE_TYPE_11;
             G_pgpe_wov_ocs.cnt_droop_ok_oc++;
         }
         else
