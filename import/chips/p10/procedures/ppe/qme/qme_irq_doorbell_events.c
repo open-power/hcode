@@ -49,6 +49,7 @@ qme_top_priority_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_TOPPRI);
     uint64_t fir = 0;
+    uint64_t fir_action = 0;
     uint64_t top = in64(QME_LCL_EISR) & BITS64(0, 8);
     out64(QME_LCL_EIMR_OR, top);
     g_eimr_override |= top;
@@ -61,6 +62,10 @@ qme_top_priority_event()
         if (!G_IsSimics)
         {
             fir = in64( QME_LCL_LFIR );
+            fir_action = in64( QME_LCL_ACTION0 );
+            fir = ( fir & fir_action );
+            fir_action = in64( QME_LCL_ACTION1 );
+            fir = ( fir & ( ~fir_action ) );
             out64(QME_LCL_LFIRMASK_OR, fir);
             PK_TRACE_INF("Event: QME LFIR %x %x", (uint32_t)(fir >> 32), (uint32_t)(fir & 0xFFFFFFFF) );
         }

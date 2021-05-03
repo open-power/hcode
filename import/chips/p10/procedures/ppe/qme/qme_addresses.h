@@ -62,6 +62,8 @@ extern uint32_t QME_LCL_LFIR_OR;
 extern uint32_t QME_LCL_LFIRMASK;
 extern uint32_t QME_LCL_LFIRMASK_AND;
 extern uint32_t QME_LCL_LFIRMASK_OR;
+extern uint32_t QME_LCL_ACTION0;
+extern uint32_t QME_LCL_ACTION1;
 
 extern uint32_t QME_LCL_PIG;
 extern uint32_t QME_LCL_BCEBAR0;

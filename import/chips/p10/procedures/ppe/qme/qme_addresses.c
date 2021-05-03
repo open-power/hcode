@@ -63,6 +63,9 @@ uint32_t QME_LCL_LFIRMASK               = 0xC0000040;
 uint32_t QME_LCL_LFIRMASK_AND           = 0xC0000050;
 uint32_t QME_LCL_LFIRMASK_OR            = 0xC0000060;
 
+uint32_t QME_LCL_ACTION0                = 0xC0000080;
+uint32_t QME_LCL_ACTION1                = 0xC00000C0;
+
 uint32_t QME_LCL_PIG                    = 0xC0000300;
 uint32_t QME_LCL_BCEBAR0                = 0xC0000600;
 uint32_t QME_LCL_BCEBAR1                = 0xC0000640;
