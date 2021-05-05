@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2015,2020                                                    -->
+<!-- COPYRIGHT 2015,2021                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -128,6 +128,7 @@
     <description>
         Shadow Disable TFCSR Error Check Failed.
     </description>
+    <ffdc>PC_FIR</ffdc>
     <ffdc>QME_TFCSR</ffdc>
     <ffdc>CORE_TARGET</ffdc>
   </hwpError>

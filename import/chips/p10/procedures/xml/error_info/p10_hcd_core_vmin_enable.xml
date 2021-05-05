@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2015,2020                                                    -->
+<!-- COPYRIGHT 2015,2021                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -130,6 +130,7 @@
     <description>
         Vmin Enable VDD_PFET_ENABLE_ACTUAL Failed.
     </description>
+    <ffdc>VDD_PFET_ENABLE_ACTUAL</ffdc>
     <ffdc>CPMS_CL2_PFETSTAT</ffdc>
     <ffdc>CORE_TARGET</ffdc>
     <callout>

@@ -57,8 +57,6 @@
     #define EC_PC_FIR_CORE_RW               0x20020440
     #define EC_PC_FIR_CORE_WO_AND           0x20020441
     #define QME_FLAGS_TOD_COMPLETE QME_FLAGS_TOD_SETUP_COMPLETE
-    #include "qme_record.h"
-    extern QmeRecord G_qme_record;
 #else
     #include <multicast_group_defs.H>
     #include "p10_scom_c.H"
@@ -175,12 +173,12 @@ p10_hcd_core_timefac_to_pc(
                 }
                 while( (--l_timeout) != 0 );
 
-                FAPI_ASSERT((l_timeout != 0),
-                            fapi2::TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT()
-                            .set_TIMEFAC_TO_PC_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS(HCD_TIMEFAC_TO_PC_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS)
-                            .set_QME_TFCSR(l_mmioData)
-                            .set_CORE_TARGET(l_core),
-                            "ERROR: TimeFac to PC Xfer Sent Done Timeout");
+                HCD_ASSERT((l_timeout != 0),
+                           TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT,
+                           set_TIMEFAC_TO_PC_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS, HCD_TIMEFAC_TO_PC_XFER_SENT_DONE_POLL_TIMEOUT_HW_NS,
+                           set_QME_TFCSR, l_mmioData,
+                           set_CORE_TARGET, l_core,
+                           "ERROR: TimeFac to PC Xfer Sent Done Timeout");
 
                 FAPI_DBG("Drop XFER_SENT_DONE via PCR_TFCSR[33]");
                 FAPI_TRY( HCD_PUTMMIO_C( l_core, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_1BIT( MMIO_LOWBIT(33) ) ) );
@@ -193,11 +191,12 @@ p10_hcd_core_timefac_to_pc(
                 SCOM_EXTRACT(46, 2, l_pc_fir_errors);
                 FAPI_DBG("Check PC_TFX_XSTOP_ERROR/PC_TFAC_XSTOP_ERROR[%x] == 0 via CORE_FIR[46,47]", l_pc_fir_errors);
 
-                FAPI_ASSERT( ( (l_tfcsr_errors == 0) || (l_tfcsr_errors & 0x1) ),
-                             fapi2::TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED()
-                             .set_QME_TFCSR(l_tfcsr_errors)
-                             .set_CORE_TARGET(i_target),
-                             "ERROR: TimeFac to PC TFCSR Error Check Failed");
+                HCD_ASSERT( ( (l_tfcsr_errors == 0) || (l_tfcsr_errors & 0x1) ),
+                            TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED,
+                            set_PC_FIR, l_pc_fir_errors,
+                            set_QME_TFCSR, l_tfcsr_errors,
+                            set_CORE_TARGET, i_target,
+                            "ERROR: TimeFac to PC TFCSR Error Check Failed");
 
                 // On stop exit, if PC gets this error when shifting, reset the PC and shift the shadow again
                 if( l_tfcsr_errors || l_pc_fir_errors )

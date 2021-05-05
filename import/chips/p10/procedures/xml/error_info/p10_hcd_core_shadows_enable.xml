@@ -159,6 +159,7 @@
     <description>
         Shadow Disable TFCSR Error Check Failed.
     </description>
+    <ffdc>PC_FIR</ffdc>
     <ffdc>QME_TFCSR</ffdc>
     <ffdc>CORE_TARGET</ffdc>
   </hwpError>

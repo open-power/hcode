@@ -123,13 +123,12 @@ p10_hcd_core_startgrid(
     FAPI_DBG("After Poll, RCSCR: %x, region: %x, Change done: %x l_timeout %x", l_mmioData, l_regions, l_core_change_done,
              l_timeout);
 
-    FAPI_ASSERT( (l_timeout != 0),
-                 fapi2::CORE_CHANGE_DONE_RESCLK_EXIT_TIMEOUT()
-                 .set_CORE_CHANGE_DONE_RESCLK_EXIT_POLL_TIMEOUT_HW_NS(HCD_CORE_CHANGE_DONE_RESCLK_EXIT_POLL_TIMEOUT_HW_NS)
-                 .set_CORE_CHANGE_DONE(l_core_change_done)
-                 .set_CORE_SELECT(l_regions)
-                 .set_CORE_TARGET(i_target),
-                 "ERROR: Core Resclk Change Done Exit Timeout");
+    HCD_ASSERT( (l_timeout != 0),
+                CORE_CHANGE_DONE_RESCLK_EXIT_TIMEOUT,
+                set_CORE_CHANGE_DONE_RESCLK_EXIT_POLL_TIMEOUT_HW_NS, HCD_CORE_CHANGE_DONE_RESCLK_EXIT_POLL_TIMEOUT_HW_NS,
+                set_CORE_CHANGE_DONE, l_core_change_done,
+                set_CORE_TARGET, i_target,
+                "ERROR: Core Resclk Change Done Exit Timeout");
 
     FAPI_TRY( p10_hcd_corecache_realign(eq_target, ( l_regions << SHIFT32(8) ) ) );
 

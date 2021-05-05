@@ -94,9 +94,11 @@ p10_hcd_core_vmin_enable(
     uint32_t                l_vdd_pfet_enable_actual = 0;
     uint8_t                 l_attr_mma_poweroff_disable = 0;
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE, l_sys, l_attr_mma_poweroff_disable ) );
+#ifdef USE_RUNN
     fapi2::ATTR_RUNN_MODE_Type                  l_attr_runn_mode;
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE, l_sys, l_attr_runn_mode ) );
-    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE, l_sys, l_attr_mma_poweroff_disable ) );
+#endif
 
     FAPI_INF(">>p10_hcd_core_vmin_enable");
 
@@ -123,7 +125,10 @@ p10_hcd_core_vmin_enable(
             FAPI_TRY( HCD_GETMMIO_S( i_target, CPMS_CL2_PFETCNTL, l_scomData ) );
 
             // use multicastAND to check 1
-            if( ( !l_attr_runn_mode ) &&
+            if(
+#ifdef USE_RUNN
+                ( !l_attr_runn_mode ) &&
+#endif
                 ( SCOM_GET(42) == 1 ) )
             {
                 break;
@@ -134,12 +139,16 @@ p10_hcd_core_vmin_enable(
         }
         while( (--l_timeout) != 0 );
 
-        FAPI_ASSERT( ( l_attr_runn_mode ? ( SCOM_GET(42) == 1 ) : (l_timeout != 0) ),
-                     fapi2::VMIN_ENA_VDD_PG_STATE_TIMEOUT()
-                     .set_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS(HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS)
-                     .set_CPMS_CL2_PFETCNTL(l_scomData)
-                     .set_CORE_TARGET(i_target),
-                     "ERROR: Vmin Enable VDD_PG_STATE Timeout");
+        HCD_ASSERT( (
+#ifdef USE_RUNN
+                        l_attr_runn_mode ? ( SCOM_GET(42) == 1 ) :
+#endif
+                        (l_timeout != 0) ),
+                    VMIN_ENA_VDD_PG_STATE_TIMEOUT,
+                    set_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS, HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS,
+                    set_CPMS_CL2_PFETCNTL, l_scomData,
+                    set_CORE_TARGET, i_target,
+                    "ERROR: Vmin Enable VDD_PG_STATE Timeout");
 
         FAPI_DBG("Check VDD_PFET_ENABLE_ACTUAL == 0x80 via CPMS_CL2_PFETSTAT[16-23]");
         FAPI_TRY( HCD_GETMMIO_S( i_target, CPMS_CL2_PFETSTAT, l_scomData ) );
@@ -174,9 +183,12 @@ p10_hcd_core_vmin_enable(
             FAPI_TRY( HCD_GETMMIO_S( i_target, CPMS_RVCSR, l_scomData ) );
 
             // use multicastAND to check 1
-            if( ( !l_attr_runn_mode ) &&
-                ( ( SCOM_GET(32) == 1 ) &&
-                  ( SCOM_GET(34) == 1 ) ) )
+            if(
+#ifdef USE_RUNN
+                ( !l_attr_runn_mode ) &&
+#endif
+                ( SCOM_GET(32) == 1 ) &&
+                ( SCOM_GET(34) == 1 ) )
             {
                 break;
             }
@@ -186,14 +198,16 @@ p10_hcd_core_vmin_enable(
         }
         while( (--l_timeout) != 0 );
 
-        FAPI_ASSERT( ( l_attr_runn_mode ?
-                       ( ( SCOM_GET(32) == 1 ) &&
-                         ( SCOM_GET(34) == 1 ) ) : (l_timeout != 0) ),
-                     fapi2::VMIN_ENA_RVID_ACTIVE_TIMEOUT()
-                     .set_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS(HCD_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS)
-                     .set_CPMS_RVCSR(l_scomData)
-                     .set_CORE_TARGET(i_target),
-                     "ERROR: Vmin Enable Rvid Active/Enabled Timeout");
+        HCD_ASSERT( (
+#ifdef USE_RUNN
+                        l_attr_runn_mode ? ( ( SCOM_GET(32) == 1 ) && ( SCOM_GET(34) == 1 ) ) :
+#endif
+                        (l_timeout != 0) ),
+                    VMIN_ENA_RVID_ACTIVE_TIMEOUT,
+                    set_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS, HCD_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS,
+                    set_CPMS_RVCSR, l_scomData,
+                    set_CORE_TARGET, i_target,
+                    "ERROR: Vmin Enable Rvid Active/Enabled Timeout");
     }
 
 fapi_try_exit:
