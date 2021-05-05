@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2019                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -49,6 +49,7 @@ uint64_t g_iota_execution_stack_end __attribute__((section(".data.g_iota_executi
 // Plugin default functions
 iotaTimerFuncPtr g_iota_dec_handler = IOTA_TIMER_HANDLER(__iota_halt);
 iotaTimerFuncPtr g_iota_fit_handler = IOTA_TIMER_HANDLER(__iota_halt);
+iotaTimerFuncPtr g_iota_machine_check_handler = IOTA_TIMER_HANDLER(__iota_halt);
 
 extern uint32_t G_LOCAL_TIMEBASE_REGISTER __attribute__((section(".sdata")));
 uint32_t G_LOCAL_TIMEBASE_REGISTER = LOCAL_TIMEBASE_REGISTER;
@@ -103,6 +104,15 @@ void _iota_run_init_tasks()
 #endif
 
 extern void main(void);
+
+void _iota_machine_check_handler()
+{
+#if ENABLE_MACHINE_CHECK_HANDLER
+    g_iota_machine_check_handler();
+#else
+    asm volatile ("tw 0, 0, 0");
+#endif
+}
 
 void _iota_boot()
 {

@@ -161,7 +161,6 @@ enum BCE_SCOPE
     QME_SPECIFIC = 1,
 };
 
-
 // todo
 // (auto) pmcr fwd enable, throttle enable,
 // pstate enable, wof enable, safe mode enable
@@ -172,7 +171,7 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
     // Software Checks
     QME_AUTO_STOP11_WAKEUP_ENABLE     = BIT32(0),
     QME_POWER_LOSS_ESL_CHECK_ENABLE   = BIT32(1),
-    QME_SPWU_PROTOCOL_CHECK_ENABLE    = BIT32(2),
+    QME_UNUSED1                       = BIT32(2),
     // Stop Catchup/Abort Path Switches
     QME_L2_PURGE_CATCHUP_PATH_ENABLE  = BIT32(3),
     QME_L2_PURGE_ABORT_PATH_ENABLE    = BIT32(4),

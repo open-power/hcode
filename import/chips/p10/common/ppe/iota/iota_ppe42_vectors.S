@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2019                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -43,6 +43,7 @@ __set_msr:
 .global __machine_check
 .org    __vectors + 0x0020
 __machine_check:
+    __m_iota_machine_check_handler
     _pk_panic IOTA_MACHINE_CHECK_PANIC
 
 .global __system_reset

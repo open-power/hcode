@@ -46,8 +46,6 @@
 #include <p10_scom_eq_c.H>
 
 #ifndef __UNIT_TEST_
-#include <qme_panic_codes.h>
-#include <p10_hcd_common.H>
 #include <iota.h>
 #endif
 

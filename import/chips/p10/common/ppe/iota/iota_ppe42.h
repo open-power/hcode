@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2019                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -133,6 +133,11 @@
 # halt ppe with panic code macro
 .macro _pk_panic, code
     tw  31,(\code)/256, (\code)%256
+.endm
+
+# branch to machine check handler
+.macro __m_iota_machine_check_handler
+    bl _iota_machine_check_handler
 .endm
 
 # EABI set SDATA2(r2) ,SDATA(r13), and stack pointer

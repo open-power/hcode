@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2019                                                    */
+/* COPYRIGHT 2017,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -128,6 +128,8 @@ void iota_run()  __attribute__((noreturn));
 #define IOTA_TASK(function) ((iotaTaskFuncPtr)function)
 #define IOTA_TIMER_HANDLER(function) ((iotaTimerFuncPtr)function)
 
+#define IOTA_MC_HANDLER(function) g_iota_machine_check_handler \
+        = IOTA_TIMER_HANDLER(function);
 
 #define IOTA_DEC_HANDLER(function) g_iota_dec_handler \
         = IOTA_TIMER_HANDLER(function);
@@ -260,12 +262,14 @@ extern uint64_t           g_iota_execution_stack_end;
 #endif
 
 void _iota_boot();
+void _iota_machine_check_handler();
 void _iota_schedule(uint32_t schedule_reason);
 void _iota_evaluate_idle_tasks();
 void  iota_run_init_tasks();
 
 extern void __iota_halt() __attribute__((noreturn));
 
+extern iotaTimerFuncPtr g_iota_machine_check_handler;
 extern iotaTimerFuncPtr g_iota_dec_handler;
 extern iotaTimerFuncPtr g_iota_fit_handler;
 extern void __hwmacro_setup(void);
