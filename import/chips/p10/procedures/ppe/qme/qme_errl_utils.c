@@ -156,16 +156,10 @@ qme_fault_inject(uint32_t pcscr_bit, uint32_t core_target)
     G_qme_record.errl_data2     = 0;
     uint32_t core_mask          = 0;
 
-    PK_TRACE_INF ("qme_fault_inject: PCSCR Bit %d Core 0x%08x", pcscr_bit, core_target);
-
     if( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_FATAL_FAULT_ERR_INJECT ) )
     {
         for( core_mask = 8; core_mask; core_mask = core_mask >> 1 )
         {
-            PK_TRACE_INF ("qme_fault_inject: Core 0x%08x I/P PCSCR 0x%08x QME PCSR 0x%08x", // @TODO
-                          core_mask, BIT32(pcscr_bit),
-                          in32(QME_LCL_CORE_ADDR_AND( QME_LCL_SCR, core_mask)));
-
             if( ( core_target & core_mask ) &&
                 ( BIT32(pcscr_bit) &
                   in32( QME_LCL_CORE_ADDR_AND( QME_LCL_SCR, core_mask ) ) ) )

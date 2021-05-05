@@ -47,7 +47,11 @@
 
 // Error Log payload for the 2 errors to be committed by local GPE
 uint8_t G_errLogUnrec[ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
+
+#ifndef __PPE_QME
+// @TODO via RTC 274373: QME hcode size: Temporarly disable unused info logs
 uint8_t G_errLogInfo [ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
+#endif
 
 // Order of error logs in this table should match relative order per GPE as per
 // elog_entry_index. This table is set up to point to the error log payloads,
@@ -223,7 +227,8 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 // EID range of each QME is kept unique to avoid entry conflict
                 G_errlConfigData.errId = (G_errlConfigData.ppeId & 0x0f) << 5;
                 G_gpeErrLogs[ERRL_SLOT_QME_UNREC_BASE] = (errlHndl_t) &G_errLogUnrec;
-                G_gpeErrLogs[ERRL_SLOT_QME_INFO_BASE] = (errlHndl_t) &G_errLogInfo;
+                // @TODO via RTC 274373: QME hcode size: Temporarly disable unused info logs
+                // G_gpeErrLogs[ERRL_SLOT_QME_INFO_BASE] = (errlHndl_t) &G_errLogInfo;
                 break;
 
             default:
