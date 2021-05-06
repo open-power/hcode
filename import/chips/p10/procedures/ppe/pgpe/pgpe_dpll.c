@@ -32,7 +32,10 @@ void pgpe_dpll_init()
 }
 
 void pgpe_dpll_mask_and_clear_pll_unlock();
+void pgpe_dpll_clear_pll_unlock_error();
 void pgpe_dpll_unmask_pll_unlock();
+uint64_t g_dpll_mask;
+
 
 uint64_t pgpe_dpll_get_dpll_stat()
 {
@@ -113,6 +116,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     PK_TRACE("DPL: dpll=0x%08x%08x", dpll_freq.value >> 32, dpll_freq.value);
     PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_FREQ, dpll_freq.value);
 
+
     // Wait until frequency update is complete
     //\todo Add timeout and critical error log
     dpll_stat_t dpll_stat;
@@ -125,6 +129,9 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     {
         PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);
     }
+
+    //CLear the pll unlock error bit
+    pgpe_dpll_clear_pll_unlock_error();
 
     uint32_t end = in32(0xc00604f8ull);
     PK_TRACE("DPL: dpll_stat=0x%08x%08x, start=0x%x end=0x%x", dpll_stat.value >> 32, dpll_stat.value, start, end);
@@ -152,6 +159,8 @@ void pgpe_dpll_set_slewrate(uint32_t down, uint32_t up)
     dpll_ctrl.fields.ff_slewrate_up = up;
     PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_CTRL_RW, dpll_ctrl.value);
 
+    //CLear the pll unlock error bit
+    pgpe_dpll_clear_pll_unlock_error();
     // Unmask the NEST DPLL Unlock check via TP Slave Config Reg
     pgpe_dpll_unmask_pll_unlock();
 }
@@ -169,6 +178,8 @@ void pgpe_dpll_clear_dpll_lock_sel()
     dpll_ctrl.fields.dpll_lock_sel = 1;
     PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_CTRL_WO_CLEAR, dpll_ctrl.value);
 
+    //CLear the pll unlock error bit
+    pgpe_dpll_clear_pll_unlock_error();
     // Unmask the NEST DPLL Unlock check via TP Slave Config Reg
     pgpe_dpll_unmask_pll_unlock();
 }
@@ -216,6 +227,9 @@ void pgpe_dpll_set_mode(dpll_mode_t mode)
     // Write DPLL_CNTL
     PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_CTRL_RW, dpll_ctrl.value);
 
+    //CLear the pll unlock error bit
+    pgpe_dpll_clear_pll_unlock_error();
+
     // Unmask the NEST DPLL Unlock check via TP Slave Config Reg
     pgpe_dpll_unmask_pll_unlock();
 }
@@ -228,9 +242,19 @@ void pgpe_dpll_mask_and_clear_pll_unlock()
 
     // Mask the NEST DPLL Unlock check via TP Slave Config Reg
     PPE_GETSCOM(TP_TPCHIP_NET_PCBSLPERV_SLAVE_CONFIG_REG, pll_mask_data);
+    g_dpll_mask = pll_mask_data & BIT64(19);
     pll_mask_data |= BIT64(19);
     PPE_PUTSCOM(TP_TPCHIP_NET_PCBSLPERV_SLAVE_CONFIG_REG, pll_mask_data);
 
+    // Clear the unlock error set in TP Error Capture Register by slewing
+    PPE_GETSCOM(TP_TPCHIP_NET_PCBSLPERV_ERROR_REG, pll_err_data);
+    pll_err_data |= BIT64(31);
+    PPE_PUTSCOM(TP_TPCHIP_NET_PCBSLPERV_ERROR_REG, pll_err_data);
+}
+
+void pgpe_dpll_clear_pll_unlock_error()
+{
+    uint64_t pll_err_data = 0;
     // Clear the unlock error set in TP Error Capture Register by slewing
     PPE_GETSCOM(TP_TPCHIP_NET_PCBSLPERV_ERROR_REG, pll_err_data);
     pll_err_data |= BIT64(31);
@@ -243,6 +267,6 @@ void pgpe_dpll_unmask_pll_unlock()
 
     // Unmask the NEST DPLL Unlock check via TP Slave Config Reg
     PPE_GETSCOM(TP_TPCHIP_NET_PCBSLPERV_SLAVE_CONFIG_REG, pll_mask_data);
-    pll_mask_data &= ~BIT64(19);
+    pll_mask_data |= g_dpll_mask;
     PPE_PUTSCOM(TP_TPCHIP_NET_PCBSLPERV_SLAVE_CONFIG_REG, pll_mask_data);
 }
