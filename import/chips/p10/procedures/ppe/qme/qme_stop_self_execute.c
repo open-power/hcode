@@ -272,7 +272,7 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
                     NULL,
                     errStatus );
 
-                PK_TRACE_DBG( "SR: Core %d Logging Done: status %d",
+                PK_TRACE_INF( "SR: Core %d Logging Done: status %d",
                               core_mask, errStatus );
 
             } //if( scom_data.value &  BIT64( FFDC_AVAILABLE ) )
