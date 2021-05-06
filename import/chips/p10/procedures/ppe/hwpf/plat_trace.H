@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2011,2020                                                    */
+/* COPYRIGHT 2011,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -58,7 +58,7 @@ static const uint32_t MAX_ECMD_STRING_LEN = 64;
 #define FAPI_INF(_fmt_, _args_...) PK_TRACE(_fmt_, ##_args_)
 
 // Important traces (go into slow trace buffer that should not wrap often)
-#define FAPI_IMP(_fmt_, _args_...) PK_TRACE_INF(_fmt_, ##_args_)
+#define FAPI_IMP(_fmt_, _args_...) PKTRACE(_fmt_, ##_args_)
 
 // Error traces (go into slow trace buffer that should not wrap often)
 #define FAPI_ERR(_fmt_, _args_...) PK_TRACE_ERR(_fmt_, ##_args_)

@@ -231,9 +231,6 @@ fapi2::ReturnCode getRS4ImageFromTor(
                         break;
                 }
 
-                PK_TRACE_INF( "Putring Failed on QME %02d Core %02d",
-                               G_qme_record.quad_id, l_corePos );
-
                 uint32_t errStatus = ERRL_STATUS_SUCCESS;
 
                 PPE_LOG_ERR_CRITICAL ( l_reasonCode,
@@ -246,8 +243,8 @@ fapi2::ReturnCode getRS4ImageFromTor(
                                        NULL,
                                        errStatus );
 
-                PK_TRACE_INF( "Scanning Error Log Status %d ", errStatus );
-
+                PKTRACE( "Putring Failed on QME %02d Core %02d, Scanning Error Log Status %d ",
+                         G_qme_record.quad_id, l_corePos, errStatus );
 
                 G_qme_record.c_stop11_exit_targets &= ~( l_core.getCoreSelect() );
                 G_qme_record.c_stop5_exit_targets &= ~( l_core.getCoreSelect() );
@@ -316,7 +313,7 @@ fapi2::ReturnCode putRingQme(
     }
     if( ( G_qme_record.bce_buf_content_type != l_tmpWord ) && ( G_qme_record.bce_buf_content_type != ALL ) )
     {
-        PK_TRACE_INF( "CR Offset : 0x%08x BC Len 0x%08x", l_cpmrOffset, l_bcLength );
+        FAPI_DBG( "CR Offset : 0x%08x BC Len 0x%08x", l_cpmrOffset, l_bcLength );
         //we don't have right binary in SRAM yet. We need to load it from
         //HOMER through BCE
         l_sramOffset    =   (rev_32(l_pQmeHdr->g_qme_common_ring_offset) >> 5);
@@ -326,7 +323,7 @@ fapi2::ReturnCode putRingQme(
 
         if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
         {
-            PK_TRACE_INF("ERROR: BCE Copy for ring type %02x Failed. HALT QME!", l_ringType );
+            PKTRACE("ERROR: BCE Copy for ring type %02x Failed. HALT QME!", l_ringType );
             QME_ERROR_HANDLER(QME_STOP_BLOCK_COPY_SCAN_RING_FAILED, l_cpmrOffset, l_sramOffset, l_ringType );
         }
 

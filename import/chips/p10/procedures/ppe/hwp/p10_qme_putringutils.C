@@ -226,7 +226,7 @@ inline uint64_t decodeScanRegionData(
      l_value             =   l_scan_region;
      l_value             =   ( l_value << 32 ) |  l_scan_type;
 
-     PKTRACE( "Scan-Region Type 0x%08x %08x",
+     FAPI_DBG( "Scan-Region Type 0x%08x %08x",
                (l_value >> 32), (uint32_t)l_value );
 
      #ifdef  __UNIT_TEST_
@@ -454,7 +454,7 @@ fapi2::ReturnCode cleanUpClockController( const fapi2::Target<fapi2::TARGET_TYPE
         l_scomaddress   =   scomt::eq::NET_CTRL0_RW_WOR;
 
         FAPI_TRY( fapi2::putScom( i_eqTgt, l_scomaddress, l_scomData ));
-        PKTRACE("Inside cleanUpClockController" );
+        FAPI_DBG("Inside cleanUpClockController" );
     }
 
     //cleaning up clock control region
@@ -498,7 +498,7 @@ fapi2::ReturnCode flushRTIMs( const fapi2::Target<fapi2::TARGET_TYPE_EQ> & i_eqT
 
     if( ( l_scanRegion & ENABLE_PARALLEL_SCAN ) == ENABLE_PARALLEL_SCAN )
     {
-        PKTRACE( "Flushing RTIMs" );
+        FAPI_DBG( "Flushing RTIMs" );
         l_scanRegion     =   i_scanRegion;
         l_scanRegion    &=   0xFFFFFFFFFFFF0000ULL;
         l_scanRegion    |=   0x0000000000000080ULL;
@@ -555,7 +555,7 @@ fapi2::ReturnCode p10_putRingUtils(
     uint32_t l_regAddress   =   0;
 
 #ifndef __UNIT_TEST_
-    PKTRACE( ">> p10_putRingUtils" );
+    FAPI_DBG( ">> p10_putRingUtils" );
     uint32_t l_nibbleIndx   =   0;
     uint32_t l_bitsDecoded  =   0;
     uint32_t l_mask         =   0x08;
@@ -630,7 +630,7 @@ fapi2::ReturnCode p10_putRingUtils(
         if ( ( l_rs4Header->iv_type & RS4_IV_TYPE_SCAN_MASK ) == RS4_IV_TYPE_SCAN_OVRD )
         {
             l_bOverride = true;
-            PKTRACE( "Override Ring" );
+            FAPI_DBG( "Override Ring" );
         }
         else if ( ( l_rs4Header->iv_type & RS4_IV_TYPE_SCAN_MASK ) == RS4_IV_TYPE_SCAN_FLUSH )
         {
@@ -678,7 +678,7 @@ fapi2::ReturnCode p10_putRingUtils(
         FAPI_TRY(fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ) );
 
         // Decompress the RS4 string and scan
-        PKTRACE( "RS4 Str 0x%08x  Offset 0x%08x Ring Base %08x",
+        FAPI_DBG( "RS4 Str 0x%08x  Offset 0x%08x Ring Base %08x",
                   *(uint32_t*)l_rs4Str, (uint32_t)(l_rs4Str - i_rs4), i_rs4 );
 
         do
@@ -835,7 +835,7 @@ fapi2::ReturnCode p10_putRingUtils(
 
                 l_regAddress  = (eq::SCAN64CONTSCAN | (l_nibble & 0x3));
                 FAPI_TRY( fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ));
-                PKTRACE( "Flush Scan Data 0x%08x %08x Nibble 0x%02x",
+                FAPI_DBG( "Flush Scan Data 0x%08x %08x Nibble 0x%02x",
                          (l_scomData >> 32), (uint32_t) l_scomData, l_nibble );
             }
             else // Process override ring (plus occasional flush ring with '0'-write bits)
@@ -857,7 +857,7 @@ fapi2::ReturnCode p10_putRingUtils(
                         {
                             l_scomData  =   l_spyData & l_data ? 0xFFFFFFFFFFFFFFFF : 0;
 
-                            PKTRACE( "Care Mask 0 Write Scan Data 0x%08x %08x",
+                            FAPI_DBG( "Care Mask 0 Write Scan Data 0x%08x %08x",
                                      (l_scomData >> 32), (uint32_t) l_scomData );
                             l_regAddress   =   eq::SCAN64CONTSCAN;
                             l_regAddress  |=  (l_nibble & 0x1);
@@ -884,7 +884,7 @@ fapi2::ReturnCode p10_putRingUtils(
                         if( ( l_data & ( l_mask >> l_nibbleCnt ) ) )
                         {
                             l_scomData  =   0xFFFFFFFFFFFFFFFF;
-                            PKTRACE( "Care Mask 1 Write Scan Data 0x%08x %08x",
+                            FAPI_DBG( "Care Mask 1 Write Scan Data 0x%08x %08x",
                                      (l_scomData >> 32), (uint32_t) l_scomData );
                             l_regAddress = (eq::SCAN64CONTSCAN | 0x01);
                             FAPI_TRY( fapi2::putScom( l_eqTgt, l_regAddress, l_scomData ));
@@ -906,14 +906,13 @@ fapi2::ReturnCode p10_putRingUtils(
 
         if( l_readHeader != HEADER_CHECK_PATTERN )
         {
-            PKTRACE("Ring Header Mismatch ");
-            PKTRACE("Header  Value %08X %08X", (l_readHeader >> 32), l_readHeader);
+            PKTRACE("Ring Header Mismatch: Header  Value %08X %08X", (l_readHeader >> 32), l_readHeader);
             fapi2::current_err = fapi2::RC_QME_PUTRING_HEADER_MISMATCH;
             goto fapi_try_exit;
         }
         else
         {
-            PKTRACE( "Scanning Success 0x%08x%08x", (l_readHeader >> 32), (uint32_t)l_readHeader );
+            FAPI_DBG( "Scanning Success 0x%08x%08x", (l_readHeader >> 32), (uint32_t)l_readHeader );
         }
 
         if( ( l_scanRegion >> 32 ) & ENABLE_PARALLEL_SCAN )
@@ -942,7 +941,7 @@ fapi_try_exit:
             fapi2::current_err = l_rcTemp;
         }
 
-        PKTRACE( "<< p10_putRingUtils" );
+        FAPI_DBG( "<< p10_putRingUtils" );
 
 #endif
 
