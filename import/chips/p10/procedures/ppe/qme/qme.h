@@ -164,14 +164,14 @@ enum BCE_SCOPE
 // todo
 // (auto) pmcr fwd enable, throttle enable,
 // pstate enable, wof enable, safe mode enable
-#define ENABLED_HCODE_FUNCTIONS 0x3FFFF000
+#define ENABLED_HCODE_FUNCTIONS 0x1FFFF000
 
 enum QME_HCODE_FUNCTIONAL_ENABLES
 {
     // Software Checks
     QME_AUTO_STOP11_WAKEUP_ENABLE     = BIT32(0),
     QME_POWER_LOSS_ESL_CHECK_ENABLE   = BIT32(1),
-    QME_UNUSED1                       = BIT32(2),
+    QME_CONTINUE_SERVICE_ON_PANIC     = BIT32(2),
     // Stop Catchup/Abort Path Switches
     QME_L2_PURGE_CATCHUP_PATH_ENABLE  = BIT32(3),
     QME_L2_PURGE_ABORT_PATH_ENABLE    = BIT32(4),
@@ -198,12 +198,7 @@ enum QME_HCODE_FUNCTIONAL_ENABLES
 };
 
 // QME Generic Functions
-// set entry_limit before qme halt
-// { out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, 0xF ), BIT32(2) ); IOTA_PANIC(code); }
-// { if( in32( QME_LCL_FLAGS ) & BIT32( QME_FLAGS_DEBUG_HALT_ENABLE ) ) { IOTA_PANIC(code); } }
-#define QME_PANIC_HANDLER(code) \
-    { IOTA_PANIC(code); }
-
+void qme_panic_handler();
 void qme_init();
 void qme_eval_eimr_override();
 void qme_send_pig_packet(uint32_t);
