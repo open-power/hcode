@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -123,14 +123,6 @@ static const uint64_t DATASM_REGS_RX_CNT23_PG = 0x800a384010012c3full;
 static const uint32_t DATASM_REGS_RX_CNT23_PG_RX_A_LANE_FAIL_0_15 = 48;
 static const uint32_t DATASM_REGS_RX_CNT23_PG_RX_A_LANE_FAIL_0_15_LEN = 16;
 //<< [DATASM_REGS_RX_CNT23_PG]
-// omic/reg00015.H
-
-//>> [DATASM_REGS_RX_CNT33_PG]
-static const uint64_t DATASM_REGS_RX_CNT33_PG = 0x800a884010012c3full;
-
-static const uint32_t DATASM_REGS_RX_CNT33_PG_RX_PSAVE_FORCE_REQ_16_23_1 = 48;
-static const uint32_t DATASM_REGS_RX_CNT33_PG_RX_PSAVE_FORCE_REQ_16_23_1_LEN = 8;
-//<< [DATASM_REGS_RX_CNT33_PG]
 // omic/reg00015.H
 
 //>> [DATASM_REGS_RX_SPARE_MODE_PG]

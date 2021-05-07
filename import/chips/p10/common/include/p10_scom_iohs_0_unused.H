@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1519,14 +1519,6 @@ static const uint64_t IOO_RX0_RXCTL_DATASM_REGS_RX_CNT26_PG = 0x800a500010012c3f
 static const uint32_t IOO_RX0_RXCTL_DATASM_REGS_RX_CNT26_PG_RX_B_LANE_FAIL_16_23 = 56;
 static const uint32_t IOO_RX0_RXCTL_DATASM_REGS_RX_CNT26_PG_RX_B_LANE_FAIL_16_23_LEN = 8;
 //<< [IOO_RX0_RXCTL_DATASM_REGS_RX_CNT26_PG]
-// iohs/reg00002.H
-
-//>> [IOO_RX0_RXCTL_DATASM_REGS_RX_CNTL5_PG]
-static const uint64_t IOO_RX0_RXCTL_DATASM_REGS_RX_CNTL5_PG = 0x8009a80010012c3full;
-
-static const uint32_t IOO_RX0_RXCTL_DATASM_REGS_RX_CNTL5_PG_RX_PSAVE_FENCE_REQ_DL_IO_0_15 = 48;
-static const uint32_t IOO_RX0_RXCTL_DATASM_REGS_RX_CNTL5_PG_RX_PSAVE_FENCE_REQ_DL_IO_0_15_LEN = 16;
-//<< [IOO_RX0_RXCTL_DATASM_REGS_RX_CNTL5_PG]
 // iohs/reg00002.H
 
 //>> [IOO_RX0_RXCTL_DATASM_REGS_RX_STAT10_PG]

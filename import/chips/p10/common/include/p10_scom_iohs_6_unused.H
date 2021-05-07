@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1583,17 +1583,6 @@ static const uint64_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE8_PG = 0x8008400010012c3full
 static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE8_PG_RX_BO_TIME = 48;
 static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE8_PG_RX_BO_TIME_LEN = 5;
 //<< [IOO_RX0_RXCTL_CTL_REGS_RX_MODE8_PG]
-// iohs/reg00028.H
-
-//>> [IOO_RX0_RXCTL_DATASM_0_PLREGS_RX_MODE1_PL]
-static const uint64_t IOO_RX0_RXCTL_DATASM_0_PLREGS_RX_MODE1_PL = 0x8003d00010012c3full;
-
-static const uint32_t IOO_RX0_RXCTL_DATASM_0_PLREGS_RX_MODE1_PL_RECAL_REQ_DL_MASK = 48;
-static const uint32_t IOO_RX0_RXCTL_DATASM_0_PLREGS_RX_MODE1_PL_RECAL_DONE_DL_MASK = 49;
-static const uint32_t IOO_RX0_RXCTL_DATASM_0_PLREGS_RX_MODE1_PL_RUN_LANE_DL_MASK = 50;
-static const uint32_t IOO_RX0_RXCTL_DATASM_0_PLREGS_RX_MODE1_PL_RECAL_ABORT_DL_MASK = 51;
-static const uint32_t IOO_RX0_RXCTL_DATASM_0_PLREGS_RX_MODE1_PL_INIT_DONE_DL_MASK = 52;
-//<< [IOO_RX0_RXCTL_DATASM_0_PLREGS_RX_MODE1_PL]
 // iohs/reg00028.H
 
 //>> [IOO_RX0_RXCTL_DATASM_16_PLREGS_RX_CNTL1_PL]

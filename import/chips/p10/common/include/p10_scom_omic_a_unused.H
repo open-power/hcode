@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -143,14 +143,6 @@ static const uint32_t DATASM_REGS_RX_CNT22_PG_PR_BER_CHECK_EN = 61;
 static const uint32_t DATASM_REGS_RX_CNT22_PG_LINK_LAYER_CHECK_EN = 62;
 static const uint32_t P10_20_DATASM_REGS_RX_CNT22_PG_DAC_TEST_CHECK_EN = 63; // p10:20,
 //<< [DATASM_REGS_RX_CNT22_PG]
-// omic/reg00010.H
-
-//>> [DATASM_REGS_RX_CNT32_PG]
-static const uint64_t DATASM_REGS_RX_CNT32_PG = 0x800a804010012c3full;
-
-static const uint32_t DATASM_REGS_RX_CNT32_PG_RX_PSAVE_FORCE_REQ_0_15_1 = 48;
-static const uint32_t DATASM_REGS_RX_CNT32_PG_RX_PSAVE_FORCE_REQ_0_15_1_LEN = 16;
-//<< [DATASM_REGS_RX_CNT32_PG]
 // omic/reg00010.H
 
 //>> [DATASM_REGS_RX_CNTL1_PG]
