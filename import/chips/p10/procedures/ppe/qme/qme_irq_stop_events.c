@@ -43,7 +43,6 @@ qme_eval_eimr_override()
 {
     G_qme_record.c_pm_state_active_mask =
         (((~G_qme_record.c_configured)       |
-          G_qme_record.c_stop1_targets       |
           G_qme_record.c_stop2_reached       |
           G_qme_record.c_in_error            |
           G_qme_record.c_special_wakeup_done |
