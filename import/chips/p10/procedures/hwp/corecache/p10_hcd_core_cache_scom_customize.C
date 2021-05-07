@@ -89,34 +89,38 @@ p10_hcd_core_cache_scom_customize(
     ScomEntry_t* pQmeScomRes  = 0;
     QmeHeader_t* pQmeImgHdr   = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
 
-    if (l_core_select == 8)
+    if ( 8 == l_core_select )
     {
         idx = 0;
     }
 
-    if ( l_core_select == 4)
+    if ( 4 == l_core_select )
     {
         idx = 1;
     }
 
-    if ( l_core_select == 2)
+    if ( 2 == l_core_select )
     {
         idx = 2;
     }
 
-    if ( l_core_select == 1)
+    if ( 1 == l_core_select )
     {
         idx = 3;
     }
 
-
-
+    if ( SCOM_RESTORE_OPT_VER <= pQmeImgHdr->g_qme_magic_number )
+    {
+        // If hcode has been optimized to block copy only a given core's
+        // SCOM restore entry, indexing is not necessary.
+        idx = 0;
+    }
 
     if( CACHE_RESTORE_ENTRY == i_entryType )
     {
-        l_max_scom_entry  = pQmeImgHdr->g_qme_L3ScomLength;
-        l_validEntry      = VALID_L3_SCOM_RESTORE;
-        l_offset          = ( ((MAX_EQ_SCOM_ENTRIES + MAX_L3_SCOM_ENTRIES) * SCOM_RESTORE_ENTRY_SIZE) * idx );
+        l_max_scom_entry  =  pQmeImgHdr->g_qme_L3ScomLength;
+        l_validEntry      =  VALID_L3_SCOM_RESTORE;
+        l_offset        =  ( ((MAX_EQ_SCOM_ENTRIES + MAX_L3_SCOM_ENTRIES) * SCOM_RESTORE_ENTRY_SIZE) * idx );
     }
     else
     {

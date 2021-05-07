@@ -584,22 +584,30 @@ qme_stop_exit()
 
         if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
         {
-            uint32_t homerOffset = 0;
+            uint32_t l3HomerOffset = 0;
+            uint32_t l3Length    = 0;
 
             for( uint32_t ec = 8; ec; ec = ( ec >> 1 ) )
             {
                 if( G_qme_record.c_stop11_exit_targets & ec )
                 {
                     G_qme_record.bce_buf_content_type  = SCOM_RESTORE;
-                    homerOffset = SCOM_RESTORE_CPMR_OFFSET + pQmeImgHdr->g_qme_coreL2ScomLength;
+                    l3HomerOffset = SCOM_RESTORE_CPMR_OFFSET + pQmeImgHdr->g_qme_coreL2ScomLength;
+                    l3Length      = pQmeImgHdr->g_qme_L3ScomLength;
+
+                    if( pQmeImgHdr->g_qme_magic_number >= SCOM_RESTORE_OPT_VER )
+                    {
+                        l3HomerOffset += (( pQmeImgHdr->g_qme_L3ScomLength >> 2 ) * get_core_pos( ec ));
+                        l3Length       = l3Length >> 2; //Scom restore size per core
+                    }
 
                     PK_TRACE("BCE Runtime Kickoff to Copy L3 Restore core");
 
                     qme_block_copy_core_data( QME_BCEBAR_0,
-                                              ( homerOffset >> 5),
+                                              ( l3HomerOffset >> 5),
                                               ( pQmeImgHdr->g_qme_scom_offset >> 5 ),
                                               ( pQmeImgHdr->g_qme_scom_length >> 5 ),
-                                              ( pQmeImgHdr->g_qme_L3ScomLength >> 5) );
+                                              ( l3Length >> 5) ); //32B blocks per core
 
                     PK_TRACE_DBG("BCE Runtime Check Scom Restore Copy Completed");
 
@@ -831,20 +839,31 @@ qme_stop_exit()
         if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
         {
             G_qme_record.bce_buf_content_type  = SCOM_RESTORE;
-            uint32_t homerOffset = 0;
+            uint32_t l2HomerOffet = 0;
+            uint32_t l2Length    = 0;
 
             for( uint32_t ec = 8; ec; ec = ( ec >> 1 ) )
             {
                 if( G_qme_record.c_stop11_exit_targets & ec )
                 {
-                    homerOffset = SCOM_RESTORE_CPMR_OFFSET;
+                    l2HomerOffet  =  0;
+                    l2Length      =  pQmeImgHdr->g_qme_coreL2ScomLength;
+
+                    if( pQmeImgHdr->g_qme_magic_number >= SCOM_RESTORE_OPT_VER )
+                    {
+                        l2HomerOffet  =  ( ( pQmeImgHdr->g_qme_coreL2ScomLength >> 2 ) * get_core_pos( ec ) );
+                        l2Length      =  l2Length >> 2;
+                    }
+
+                    l2HomerOffet += SCOM_RESTORE_CPMR_OFFSET;
+
                     PK_TRACE("BCE Runtime Kickoff to Copy Core Scom Restore");
 
                     qme_block_copy_core_data( QME_BCEBAR_0,
-                                              ( homerOffset >> 5 ),
+                                              ( l2HomerOffet >> 5 ),
                                               ( pQmeImgHdr->g_qme_scom_offset >> 5 ),
                                               ( pQmeImgHdr->g_qme_scom_length >> 5 ),
-                                              ( pQmeImgHdr->g_qme_coreL2ScomLength >> 5) );
+                                              ( l2Length >> 5 ) ); //32B blocks of per core entry
 
                     PK_TRACE_DBG("BCE Runtime Check Scom Restore Copy Completed");
 
