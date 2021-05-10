@@ -41,6 +41,9 @@
 #include "pgpe_thr_ctrl.h"
 #include "pgpe_wov_ocs.h"
 #include "pgpe_dds.h"
+#include "pgpe_error.h"
+#include "errldefs.h"
+#include "errlutil.h"
 
 extern  uint64_t  g_oimr_override;
 
@@ -837,41 +840,14 @@ void pgpe_process_safe_mode(void* args)
 
     if(pgpe_pstate_is_pstate_enabled())
     {
-        //Move throttling to ATTR_SAFE_MODE_THROTTLE_IDX
-        if (pgpe_thr_ctrl_is_enabled())
-        {
-            pgpe_thr_ctrl_set_ceff_ovr_idx(pgpe_gppb_get_safe_throttle_idx());
-            pgpe_thr_ctrl_write_wcor();
-        }
-
-        //Set ps request, clips and target to safe mode
-        uint32_t q;
-
-        for (q = 0; q < MAX_QUADS; q++)
-        {
-            G_pgpe_pstate.ps_request[q] = pgpe_pstate_get(pstate_safe);
-        }
-
-        pgpe_pstate_set(clip_min, pgpe_pstate_get(pstate_safe));
-        pgpe_pstate_set(clip_max, pgpe_pstate_get(pstate_safe));
-        pgpe_pstate_compute();
-        pgpe_pstate_apply_clips();
-
-        //Actuate to safe mode
-        while(!pgpe_pstate_is_at_target())
-        {
-            pgpe_pstate_actuate_step();
-        }
+        pgpe_pstate_actuate_safe_mode();
     }
     else
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_SAFE_MODE_ERROR));
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED);
     }
-
-    //Update PMSR
-    pgpe_pstate_update_vdd_vcs_ps();
-    pgpe_pstate_pmsr_set_safe_mode();
-    pgpe_pstate_pmsr_write();
 
     //Set Status Bits
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE));
@@ -882,18 +858,71 @@ void pgpe_process_safe_mode(void* args)
 
 void pgpe_process_occ_fault()
 {
+    //Take out a critical log
+    pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ);
+
+    //Notify error module
+    pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ);
+
+    //Actuate to Safe Mode
+    pgpe_pstate_actuate_safe_mode();
+
+    //Stop Beacon Updates. Should we even care. OCC is dead already
+    pgpe_error_stop_beacon();
 }
 
-void pgpe_process_qme_fault()
+void pgpe_process_xstop_fault()
 {
+    //Take out a critical log
+    pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
+
+    //Notify error module
+    pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
+
+    //Check whether PGPE should halt
+    if (in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW) & BIT32(PGPE_DEBUG_HALT_ENABLE))
+    {
+        PK_TRACE_INF("Halting on System XSTOP");
+        IOTA_PANIC(PGPE_XSTOP_GPE2);
+    }
 }
 
-void pgpe_process_xgpe_fault()
+void pgpe_process_xgpe_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag)
 {
+    //Take out a critical log with xgpe regs
+    errlDataUsrDtls_t usrDtlsSect = {0};
+    errlPpeRegs_t xgpeDbgRegs = {{0}};
+    getPpeRegsUsrDtls(ERRL_SOURCE_XGPE, 0, &xgpeDbgRegs, &usrDtlsSect);
+    pgpe_error_critical_log_usr(PGPE_ERR_CODE_PGPE_GPE3_ERROR, &usrDtlsSect);
+
+    //Notify error module
+    pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_GPE3_ERROR);
+
+    //Actuate to Safe Mode
+    if(safe_mode_flag == PGPE_PROCESS_SAFE_MODE_TRUE)
+    {
+        pgpe_pstate_actuate_safe_mode();
+    }
+
+    //Stop Beacon Updates
+    pgpe_error_stop_beacon();
+
+    //Ack any pending IPCS with bad rc
+    pgpe_error_ack_pending();
 }
 
 void pgpe_process_pvref_fault()
 {
+    //PVREF
+    //disable the rVRMs through setting RVCSR[RVID_OVERRIDE]
+    PPE_PUTSCOM_MC(CPMS_RVCSR_WO_CLEAR, 0xF, BIT64(CPMS_RVCSR_RVID_OVERRIDE));
+
+    //Notify error module
+    pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_PVREF_ERROR);
+
+    //Take out a log
+    pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_PVREF_ERROR);
+
 }
 
 void pgpe_process_stop_beacon()

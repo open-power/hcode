@@ -43,7 +43,7 @@ enum EVENT_TABLE_IDX
     EV_SAFE_MODE                        =   7,
     EV_PM_COMPLEX_SUSPEND               =   8,
     EV_OCC_FAULT                        =   9,
-    EV_QME_FAULT                        =   10,
+    EV_XSTOP_FAULT                      =   10,
     EV_XGPE_FAULT                       =   11,
     EV_PVREF_FAULT                      =   12,
     EV_IPC_STOP_BEACON                  =   13,

@@ -105,6 +105,7 @@ void pgpe_pstate_init();
 void* pgpe_pstate_data_addr();
 void pgpe_pstate_actuate_step();
 void pgpe_pstate_actuate_voltage_step();
+void pgpe_pstate_actuate_safe_mode();
 void pgpe_pstate_do_throttle();
 void pgpe_pstate_compute();
 void pgpe_pstate_apply_clips();

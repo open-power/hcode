@@ -191,7 +191,7 @@ void pgpe_wov_ocs_update_dirty()
         pgpe_opt_set_word(0, 0);
         pgpe_opt_set_byte(0, droop);
         ppe_trace_op(PGPE_OPT_OCS_DROOP_COND, pgpe_opt_get());
-        PK_TRACE_DBG("WOV: old_droop_lvl=0x%x, new_droop_lvl=0x%x", G_pgpe_wov_ocs.droop_level, droop);
+        PK_TRACE_INF("WOV: old_droop_lvl=0x%x, new_droop_lvl=0x%x", G_pgpe_wov_ocs.droop_level, droop);
     }
 
     //Trace if change in overcurrent status
@@ -201,7 +201,7 @@ void pgpe_wov_ocs_update_dirty()
         pgpe_opt_set_half(0, G_pgpe_wov_ocs.idd_current_thresh);
         pgpe_opt_set_half(1, pgpe_occ_get(idd_ocs_running_avg) - G_pgpe_wov_ocs.idd_current_thresh);
         ppe_trace_op(PGPE_OPT_OCS_THRESH_TRANS, pgpe_opt_get());
-        PK_TRACE_DBG("WOV: old_ocs=0x%x, new_ocs=0x%x idd_avg_ma=0x%x, idd_thresh=0x%x", G_pgpe_wov_ocs.overcurrent_flag,
+        PK_TRACE_INF("WOV: old_ocs=0x%x, new_ocs=0x%x idd_avg_ma=0x%x, idd_thresh=0x%x", G_pgpe_wov_ocs.overcurrent_flag,
                      overcurrent,
                      G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_10ma,
                      G_pgpe_wov_ocs.idd_current_thresh);
@@ -331,7 +331,7 @@ void pgpe_wov_ocs_update_dirty()
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
         dirty = OCS_DIRTY_SAMPLE_TYPE_11;
-        PK_TRACE_DBG("WOV: tgt_pct=0x%x, overv_max_pct=0x%x", G_pgpe_wov_ocs.tgt_pct, G_gppb->wov_overv_max_pct);
+        PK_TRACE_INF("WOV: tgt_pct=0x%x, overv_max_pct=0x%x", G_pgpe_wov_ocs.tgt_pct, G_gppb->wov_overv_max_pct);
     }
 
     if (G_pgpe_wov_ocs.dirty != dirty)
@@ -339,7 +339,7 @@ void pgpe_wov_ocs_update_dirty()
         pgpe_opt_set_word(0, 0);
         pgpe_opt_set_byte(0, dirty);
         ppe_trace_op(PGPE_OPT_OCS_DIRTY_TYPE , pgpe_opt_get());
-        PK_TRACE_DBG("WOV: new_dirty=0x%x, old_dirty=0x%x", dirty, G_pgpe_wov_ocs.dirty);
+        PK_TRACE_INF("WOV: new_dirty=0x%x, old_dirty=0x%x", dirty, G_pgpe_wov_ocs.dirty);
     }
 
     G_pgpe_wov_ocs.dirty = dirty;

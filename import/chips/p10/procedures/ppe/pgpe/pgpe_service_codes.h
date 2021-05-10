@@ -116,6 +116,7 @@ enum pgpeExtReasonCode
     PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_WHILE_PENDING                   =   0x109a,
     PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PSTATE_STOPPED              =   0x109b,
     PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PMCR_OWNER_OCC              =   0x109c,
+    PGPE_ERR_EXT_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED              =   0x109d,
 
     //WOF
     PGPE_ERR_EXT_CODE_PGPE_WOF_NULL_VRT_PTR                         =   0x10b0,

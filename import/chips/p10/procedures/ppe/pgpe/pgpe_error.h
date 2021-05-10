@@ -42,12 +42,10 @@ typedef struct pgpe_error_code
     uint8_t     reason_code;
     uint8_t     pad;
     uint16_t    ext_reason_code;
-    uint16_t    safe_mode_flag;
 } pgpe_error_code_t;
 
 typedef struct pgpe_error
 {
-    uint32_t ppe_context; //Use PPE Context Type
     uint32_t current_status;
     uint32_t critical_cnt, info_cnt;
     uint32_t first_info_err_idx, last_info_err_idx;
@@ -55,15 +53,13 @@ typedef struct pgpe_error
 } pgpe_error_t;
 
 void pgpe_error_init();
-void pgpe_error_set_jump();
-void pgpe_error_long_jump();
 void pgpe_error_critical_log(uint32_t pgpe_err_id);
+void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dtls);
 void pgpe_error_info_log(uint32_t pgpe_err_id);
 void pgpe_error_notify_critical(uint32_t pgpe_irr_id);
 void pgpe_error_notify_info(uint32_t pgpe_irr_id);
 void pgpe_error_stop_beacon();
 void pgpe_error_mask_irqs();
 void pgpe_error_ack_pending();
-void pgpe_error_loop();
 void pgpe_error_handle_fault(uint32_t pgpe_irr_id);
 #endif

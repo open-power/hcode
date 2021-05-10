@@ -145,9 +145,54 @@ void pgpe_event_manager_run_booted_or_stopped()
 
     do
     {
-        //Process \\todo
-        //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
-        //If any fault, then mark next state as SAFE_MODE and break
+
+        //OCC Fault
+        e = pgpe_event_tbl_get(EV_OCC_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_occ_fault();
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_OCC_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
+        //XSTOP Fault
+        e = pgpe_event_tbl_get(EV_XSTOP_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_xstop_fault();
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_XSTOP_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
+        //XGPE Fault
+        e = pgpe_event_tbl_get(EV_XGPE_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_xgpe_fault(PGPE_PROCESS_SAFE_MODE_FALSE);
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_XGPE_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
+        //PVREF Fault
+        e = pgpe_event_tbl_get(EV_PVREF_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_pvref_fault();
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_PVREF_FAULT, EVENT_INACTIVE);
+            break;
+        }
 
         //Stop Beacon
         e = pgpe_event_tbl_get(EV_IPC_STOP_BEACON);
@@ -166,7 +211,7 @@ void pgpe_event_manager_run_booted_or_stopped()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_error_critical_log(PGPE_ERR_EXT_CODE_PGPE_FIT_ERROR_INJECT);
+            pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_FIT_ERROR_INJECT);
             pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
             pgpe_event_tbl_set_status(EV_FIT_ERROR_INJECT, EVENT_INACTIVE);
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
@@ -266,8 +311,55 @@ void pgpe_event_manager_run_active()
     do
     {
         //Process \\todo
-        //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
-        //If any fault, then mark next state as SAFE_MODE and break
+
+        //OCC Fault
+        e = pgpe_event_tbl_get(EV_OCC_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_occ_fault();
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_OCC_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
+        //XSTOP Fault
+        e = pgpe_event_tbl_get(EV_XSTOP_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_xstop_fault();
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_XSTOP_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
+        //XGPE Fault
+        e = pgpe_event_tbl_get(EV_XGPE_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_xgpe_fault(PGPE_PROCESS_SAFE_MODE_TRUE);
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_XGPE_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
+        //PVREF Fault
+        e = pgpe_event_tbl_get(EV_PVREF_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_pvref_fault();
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_PVREF_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
 
         //Stop Beacon
         e = pgpe_event_tbl_get(EV_IPC_STOP_BEACON);
@@ -286,7 +378,7 @@ void pgpe_event_manager_run_active()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_error_critical_log(PGPE_ERR_EXT_CODE_PGPE_FIT_ERROR_INJECT);
+            pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_FIT_ERROR_INJECT);
             pgpe_process_safe_mode(e->args);
             pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
             pgpe_event_tbl_set_status(EV_FIT_ERROR_INJECT, EVENT_INACTIVE);
@@ -390,7 +482,7 @@ void pgpe_event_manager_run_active()
             if(occFlag & 0x01000000)
             {
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BITS32(PGPE_HCODE_ERROR_INJECT, PGPE_HCODE_ERROR_INJECT_LEN));
-                pgpe_error_critical_log(PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL);
+                pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL);
                 pgpe_process_safe_mode(e->args);
                 pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
@@ -399,7 +491,7 @@ void pgpe_event_manager_run_active()
             else if(occFlag & 0x02000000)
             {
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BITS32(PGPE_HCODE_ERROR_INJECT, PGPE_HCODE_ERROR_INJECT_LEN));
-                pgpe_error_info_log(PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO);
+                pgpe_error_info_log(PGPE_ERR_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO);
             }
             else
             {
@@ -451,7 +543,53 @@ void pgpe_event_manager_run_safe_mode()
     do
     {
         //Process
-        //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
+        //OCC Fault
+        e = pgpe_event_tbl_get(EV_OCC_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_occ_fault();
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_OCC_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
+        //XSTOP Fault
+        e = pgpe_event_tbl_get(EV_XSTOP_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_xstop_fault();
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_XSTOP_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
+        //XGPE Fault
+        e = pgpe_event_tbl_get(EV_XGPE_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_xgpe_fault(PGPE_PROCESS_SAFE_MODE_FALSE);
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_XGPE_FAULT, EVENT_INACTIVE);
+            break;
+        }
+
+        //PVREF Fault
+        e = pgpe_event_tbl_get(EV_PVREF_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_process_pvref_fault();
+            pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
+            pgpe_event_tbl_set_status(EV_PVREF_FAULT, EVENT_INACTIVE);
+            break;
+        }
 
 
         //Stop Beacon. Do Nothing
@@ -551,7 +689,38 @@ void pgpe_event_manager_run_fault_mode()
     do
     {
         //Process
-        //OCC_FAULT, QME_FAULT, XGPE_FAULT, and PVREF_FAULT
+        //OCC Fault
+        e = pgpe_event_tbl_get(EV_OCC_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_OCC_FAULT, EVENT_INACTIVE);
+        }
+
+        //XSTOP Fault
+        e = pgpe_event_tbl_get(EV_XSTOP_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_XSTOP_FAULT, EVENT_INACTIVE);
+        }
+
+        //XGPE Fault
+        e = pgpe_event_tbl_get(EV_XGPE_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_XGPE_FAULT, EVENT_INACTIVE);
+        }
+
+        //PVREF Fault
+        e = pgpe_event_tbl_get(EV_PVREF_FAULT);
+
+        if (e->status == EVENT_PENDING)
+        {
+            pgpe_event_tbl_set_status(EV_PVREF_FAULT, EVENT_INACTIVE);
+        }
+
 
         //Safe Mode
         //Do nothing

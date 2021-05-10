@@ -25,6 +25,11 @@
 #ifndef __PGPE_PROCESS_EVENT_H__
 #define __PGPE_PROCESS_EVENT_H__
 
+enum PGPE_PROCESS_SAFE_MODE
+{
+    PGPE_PROCESS_SAFE_MODE_FALSE = 0,
+    PGPE_PROCESS_SAFE_MODE_TRUE = 1
+};
 
 void pgpe_process_pstate_start_stop(void* args);
 void pgpe_process_pstate_start();
@@ -41,8 +46,8 @@ void pgpe_process_wof_vrt(void* args);
 void pgpe_process_wof_vrt_post_actuate();
 void pgpe_process_safe_mode(void* args);
 void pgpe_process_occ_fault();
-void pgpe_process_qme_fault();
-void pgpe_process_xgpe_fault();
+void pgpe_process_xstop_fault();
+void pgpe_process_xgpe_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag);
 void pgpe_process_pvref_fault();
 void pgpe_process_stop_beacon();
 

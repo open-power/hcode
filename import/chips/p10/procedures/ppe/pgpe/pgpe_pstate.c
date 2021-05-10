@@ -458,6 +458,43 @@ void pgpe_pstate_actuate_voltage_step()
     }
 }
 
+void pgpe_pstate_actuate_safe_mode()
+{
+    //Move throttling to ATTR_SAFE_MODE_THROTTLE_IDX
+    if (pgpe_thr_ctrl_is_enabled())
+    {
+        pgpe_thr_ctrl_set_ceff_ovr_idx(pgpe_gppb_get_safe_throttle_idx());
+        pgpe_thr_ctrl_write_wcor();
+    }
+
+    //Set ps request, clips and target to safe mode
+    uint32_t q;
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        G_pgpe_pstate.ps_request[q] = pgpe_pstate_get(pstate_safe);
+    }
+
+    pgpe_pstate_set(clip_min, pgpe_pstate_get(pstate_safe));
+    pgpe_pstate_set(clip_max, pgpe_pstate_get(pstate_safe));
+    pgpe_pstate_compute();
+    pgpe_pstate_apply_clips();
+
+    //Actuate to safe mode
+    while(!pgpe_pstate_is_at_target())
+    {
+        pgpe_pstate_actuate_step();
+    }
+
+    //Update PMSR
+    pgpe_pstate_update_vdd_vcs_ps();
+    pgpe_pstate_pmsr_set_safe_mode();
+    pgpe_pstate_pmsr_write();
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_SAFE_MODE_ACTIVE));
+    ppe_trace_op(PGPE_OPT_SAFE_MODE_DONE, 0);
+
+}
+
 void pgpe_pstate_do_throttle()
 {
     if (pgpe_thr_ctrl_is_enabled())
