@@ -25,6 +25,13 @@
 
 // Core/Cache/PC SCOM Addresses:
 
+
+//extern uint32_t TP_TPBR_AD_ALTD_CMD_REG;
+//extern uint32_t QME_FLAGS_INVALID_ADDR;
+//extern uint32_t CORE_PCR_INVALID_ADDR;
+//extern uint32_t QME_SCR_INVALID_ADDR;
+
+
 extern uint32_t IMA_EVENT_MASK;
 extern uint32_t CORE_THREAD_STATE;
 extern uint32_t PMC_UPDATE;

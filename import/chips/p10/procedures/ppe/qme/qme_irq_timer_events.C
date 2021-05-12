@@ -33,7 +33,6 @@
 extern QmeRecord G_qme_record;
 extern uint64_t g_eimr_override;
 
-
 // Core Awake, ISU issues EISR[MMA_ACTIVE]:
 //   qme_mma_poweron();
 //   qme_mma_scans();
@@ -451,6 +450,33 @@ qme_fit_handler()
         }
     }
 
+    /*enable when needs such injection
+        // Sense for QME machine check error inject
+        if (in32 (QME_LCL_FLAGS) & BIT32 (QME_FLAGS_FATAL_FAULT_ERR_INJECT))
+        {
+            uint64_t scom_data  = 0;
+            uint32_t local_data = 0;
+
+            // If bit 8 set on any PCSCR reg, trigger a machine check bad scom access
+            if ( BIT32 (QME_PCSCR_BAD_SCOM_FAULT_INJECT) &
+                 in32 (QME_LCL_CORE_ADDR_OR (QME_LCL_SCR, 0xF)) )
+            {
+                PK_TRACE_DBG ("Access bad SCOM as trigger for QME machine check");
+                PPE_GETSCOM (TP_TPBR_AD_ALTD_CMD_REG, scom_data);
+                //per core: PPE_GETSCOM_MC_AND( CORE_PCR_INVALID_ADDR, fault_core, scom_data);
+            }
+
+            // If bit 9 set on any PCSCR reg, trigger a machine check via bad local access
+            if ( BIT32 (QME_PCSCR_BAD_LOCAL_FAULT_INJECT) &
+                 in32 (QME_LCL_CORE_ADDR_OR (QME_LCL_SCR, 0xF)) )
+            {
+                PK_TRACE_DBG ("Access bad Local as trigger for QME machine check");
+                local_data = in32(QME_FLAGS_INVALID_ADDR);
+                //per core: local_data = in32( QME_LCL_CORE_ADDR_WR( QME_SCR_INVALID_ADDR, fault_core) );
+                local_data++;//prevent vairable not used error
+            }
+        }
+    */
     G_qme_record.uih_status &= ~BIT32(IDX_TIMER_FIT);
 }
 

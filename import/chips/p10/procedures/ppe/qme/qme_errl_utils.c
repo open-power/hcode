@@ -111,14 +111,20 @@ extern uint64_t g_eimr_override;
 void
 qme_panic_handler()
 {
-    // Cannot special wakup stopped cores without QME
-    // As default, only select cores that can be auto special woken up
-    uint32_t good_cores = 0xF & (~G_qme_record.c_stop2_reached);
-
-    PK_TRACE_DBG ("Cores not in stop: 0x%X", good_cores);
-
+    // No need to do auto mode or mask interrupt at all if QME is going to be alive
     if( !( G_qme_record.hcode_func_enabled & QME_CONTINUE_SERVICE_ON_PANIC ) )
     {
+        // Cannot special wakup stopped cores without QME
+        // As default, only select cores that can be auto special woken up
+        // also when mma isnt available, make sure auto mode isnt given to the core
+        uint32_t good_cores = 0xF & (~G_qme_record.c_stop2_reached) & G_qme_record.c_mma_available;
+        PK_TRACE_DBG ("Cores running 0x%X, Cores in stop: 0x%X, MMA not in stop 0x%X",
+                      good_cores,
+                      G_qme_record.c_stop2_reached,
+                      G_qme_record.c_mma_available);
+
+        // when error inject, error detect, machine check happen with per core error
+        // filter those cores with the error so fw do not get spwu_done on fault cores
         if( G_qme_record.errl_panic > 0x1d00 &&
             G_qme_record.errl_data2 > 0 &&
             G_qme_record.errl_data2 <= 0xF )
@@ -181,6 +187,7 @@ qme_panic_handler()
         // otherwise signal xgpe to collection the errlog if we dont halt
         // note, we do not want to do both then errlog will be redundant
         // Send a PCB Type E interrupt to the XGPE (HW encodes 0b0000)
+
         uint32_t pig_data = ( PIG_TYPE_E << SHIFT32(4) );
 
         PK_TRACE_DBG ("Sending PIG E 0x%08X", pig_data);
@@ -266,23 +273,34 @@ qme_errlog()
     qme_panic_handler();
 }
 
+
 void
 qme_machine_check_handler()
 {
     uint32_t sprg0 = mfspr(SPRN_SPRG0);
+    uint32_t srr0  = mfspr(SPRN_SRR0);
     uint32_t srr1  = mfspr(SPRN_SRR1);
     uint32_t edr   = mfspr(SPRN_EDR);
 
+    G_qme_record.errl_data0 = sprg0;
+    G_qme_record.errl_data1 = srr0;
+    G_qme_record.errl_data2 = edr;
+
+    if ( edr == 0 )
+    {
+        G_qme_record.errl_panic = QME_MACHINE_CHECK_COMMON_ERROR;
+        G_qme_record.errl_data2 = srr1;
+    }
     // Local access
-    if ( ( edr >> SHIFT32(3) ) == 0xC )
+    else if ( ( edr >> SHIFT32(3) ) == 0xC )
     {
         G_qme_record.errl_panic = QME_MACHINE_CHECK_LOCAL_ERROR;
     }
-
-    G_qme_record.errl_panic = QME_MACHINE_CHECK_SCOM_ERROR;
-    G_qme_record.errl_data0 = sprg0;
-    G_qme_record.errl_data1 = srr1;
-    G_qme_record.errl_data2 = edr;
+    // Scom access
+    else
+    {
+        G_qme_record.errl_panic = QME_MACHINE_CHECK_SCOM_ERROR;
+    }
 
     qme_errlog();
 }

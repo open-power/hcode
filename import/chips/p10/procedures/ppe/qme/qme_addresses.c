@@ -27,6 +27,12 @@
 
 // Core/Cache/PC SCOM Addresses:
 
+// used by error Injection
+//uint32_t TP_TPBR_AD_ALTD_CMD_REG        = 0x00090001;
+//uint32_t QME_FLAGS_INVALID_ADDR         = 0xC0001210;
+//uint32_t CORE_PCR_INVALID_ADDR          = 0x2002049D;
+//uint32_t QME_SCR_INVALID_ADDR           = 0xC00080C1;
+
 uint32_t IMA_EVENT_MASK                 = 0x20020400;
 uint32_t CORE_THREAD_STATE              = 0x20020412;
 uint32_t PMC_UPDATE                     = 0x20020414;

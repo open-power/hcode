@@ -55,6 +55,7 @@ __system_reset:
 .global __data_storage
 .org    __vectors + 0x0060
 __data_storage:
+    __m_iota_machine_check_handler
     _pk_panic IOTA_DATA_STORAGE_PANIC
 
 .global __instruction_storage

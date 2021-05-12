@@ -110,7 +110,7 @@ void _iota_machine_check_handler()
 #if ENABLE_MACHINE_CHECK_HANDLER
     g_iota_machine_check_handler();
 #else
-    asm volatile ("tw 0, 0, 0");
+    asm volatile ("tw 31, 0, 0");
 #endif
 }
 
