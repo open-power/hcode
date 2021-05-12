@@ -91,14 +91,14 @@ p10_hcd_core_startgrid(
     FAPI_DBG("Switch CL2 Glsmux to DPLL via CPMS_CGCSR[11:L2_CLKGLM_SEL]");
     FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CGCSR_WO_OR, BIT64(11) ) );
 
-    FAPI_TRY( HCD_GETMMIO_Q( eq_target, QME_RCSCR, l_mmioData ) );
-    FAPI_IMP("Before Drop, RCSCR: %x, region: %x", l_mmioData, l_regions);
+    //FAPI_TRY( HCD_GETMMIO_Q( eq_target, QME_RCSCR, l_mmioData ) );
+    //FAPI_DBG("Before Drop, RCSCR: %x, region: %x", l_mmioData, l_regions);
 
     FAPI_DBG("Drop CORE_OFF_REQ[0:3] of Resonent Clocking via RCSCR[0:3]");
     FAPI_TRY( HCD_PUTMMIO_Q( eq_target, QME_RCSCR_WO_CLEAR, MMIO_LOAD32H( ( l_regions << SHIFT32(3) ) ) ) );
 
-    FAPI_TRY( HCD_GETMMIO_Q( eq_target, QME_RCSCR, l_mmioData ) );
-    FAPI_IMP("After Drop, RCSCR: %x, region: %x", l_mmioData, l_regions);
+    //FAPI_TRY( HCD_GETMMIO_Q( eq_target, QME_RCSCR, l_mmioData ) );
+    //FAPI_DBG("After Drop, RCSCR: %x, region: %x", l_mmioData, l_regions);
 
     FAPI_DBG("Poll for CORE_CHANGE_DONE in RCSR[4:7]");
     l_timeout = HCD_CORE_CHANGE_DONE_RESCLK_EXIT_POLL_TIMEOUT_HW_NS /
@@ -120,7 +120,7 @@ p10_hcd_core_startgrid(
     }
     while( (--l_timeout) != 0 );
 
-    FAPI_IMP("After Poll, RCSCR: %x, region: %x, Change done: %x l_timeout %x", l_mmioData, l_regions, l_core_change_done,
+    FAPI_DBG("After Poll, RCSCR: %x, region: %x, Change done: %x l_timeout %x", l_mmioData, l_regions, l_core_change_done,
              l_timeout);
 
     FAPI_ASSERT( (l_timeout != 0),
