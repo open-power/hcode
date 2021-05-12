@@ -30,6 +30,8 @@
 #include "p10_scom_c.H"
 #include "p10_scom_c_d.H"
 #include "p10_oci_proc.H"
+#include "pgpe_utils.h"
+#include "pgpe_error.h"
 
 pgpe_dds_t G_pgpe_dds __attribute__((section (".data_structs")));
 
@@ -562,8 +564,18 @@ void pgpe_dds_poll_done()
 
     PPE_GETSCOM_MC_OR(CPMS_CUCR, 0xF, data);
 
+    TIMER_START()
+
     while(data & BIT64(56))   //todo: Timeout and take critical error log
     {
+        TIMER_DELTA()
+
+        if(TIMER_DETECT_TIMEOUT_US(50))
+        {
+            PK_TRACE("DDS: FDCR_UPDATE_TIMEOUT");
+            pgpe_error_handle_fault(PGPE_ERR_EXT_CODE_DDS_FDCR_UPDATE_TIMEOUT);
+        }
+
         PPE_GETSCOM_MC_OR(CPMS_CUCR, 0xF, data);
     }
 }

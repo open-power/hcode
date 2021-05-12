@@ -29,6 +29,8 @@
 #include "p10_scom_eq.H"
 #include "pgpe_gppb.h"
 #include "p10_resclk.H"
+#include "pgpe_utils.h"
+#include "pgpe_error.h"
 
 
 pgpe_resclk_t G_pgpe_resclk __attribute__((section (".data_structs")));
@@ -371,8 +373,18 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
 #else
     rcptr.fields.pstate_ack_pending = 1;
 
+    TIMER_START()
+
     while(rcptr.fields.pstate_ack_pending) //\Todo Timeout: 50us, critical error
     {
+        TIMER_DELTA()
+
+        if(TIMER_DETECT_TIMEOUT_US(100))
+        {
+            PK_TRACE("RCK: RCPTR_PSTATE_ACK_TIMEOUT");
+            pgpe_error_handle_fault(PGPE_ERR_EXT_CODE_RESCLK_RCPTR_PSTATE_ACK_TIMEOUT);
+        }
+
         PPE_GETSCOM_MC_Q_AND(QME_RCPTR, rcptr.value);
         //PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
         //         rcptr.words.low_order);
@@ -389,9 +401,8 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
     {
         if (rcptr.fields.target_pstate != pstate_target)
         {
-            //\todo RTC:214435 take critical log and not halt
-            PK_TRACE_ERR("RCK: RCPTR[tgtPS]=0x%x psTgt=0x%x", rcptr.fields.target_pstate, pstate_target);
-            IOTA_PANIC(CRITICAL_ERROR_LOG);
+            PK_TRACE("RCK: RCPTR[tgtPS]=0x%x psTgt=0x%x", rcptr.fields.target_pstate, pstate_target);
+            pgpe_error_handle_fault(PGPE_ERR_EXT_CODE_RESCLK_RCPTR_TGT_PSTATE_NOT_EQUAL);
         }
     }
 

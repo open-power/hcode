@@ -298,8 +298,7 @@ void pgpe_avsbus_init()
     else
     {
         PK_TRACE_ERR("AVS: VDD Bus Not Available, BusNum=0xFF");
-        //\todo Add Error Logging
-        //Determine what to do here in P10. In P9, we would just halt PGPE
+        pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VDD_INVALID_BUSNUM);
     }
 
     //Initialize VDN
@@ -322,8 +321,7 @@ void pgpe_avsbus_init()
     else
     {
         PK_TRACE_ERR("AVS: VCS Bus Not Available, BusNum=0xFF");
-        //\todo Add Error Logging
-        //Determine what to do here in P10. In P9, we would just halt PGPE
+        pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VCS_INVALID_BUSNUM);
     }
 }
 
@@ -373,10 +371,12 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
     if (rc)
     {
         PK_TRACE_ERR("AVS: Init Bus, DriveIdleFrame FAIL");
-        //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+        pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_INIT_ERR);
     }
-
-    PK_TRACE_DBG("AVS: Initialized bus_num=0x%x", bus_num);
+    else
+    {
+        PK_TRACE("AVS: Initialized bus_num=0x%x", bus_num);
+    }
 }
 
 void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv)
@@ -391,8 +391,7 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
         if (volt_mv > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
             volt_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
         {
-            pgpe_error_critical_log(PGPE_ERR_CODE_AVSBUS_VOLTAGE_OUT_OF_BOUNDS);
-            IOTA_PANIC(AVSBUS_OUT_OF_BOUNDS_VOLTAGE); //TODO Jump to fault state loop. Will be added as part of next error commit
+            pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_OUT_OF_BOUNDS);
         }
 
         // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
@@ -406,13 +405,12 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
 
             case AVS_RC_ONGOING_TIMEOUT:
                 PK_TRACE_ERR("AVS: Volt_W Flag Timeout");
-                //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_ONGOING_TIMEOUT);
                 break;
 
             case AVS_RC_RESYNC_ERROR:
                 PK_TRACE_ERR("AVS: Volt_W Resync Error");
-                //GPE_PUTSCOM(OCB_OCCLFIR_OR, BIT64(59)); //OCCLFIR[59]=AVS Resync Error
-                //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_RESYNC_ERROR);
                 break;
 
             default:
@@ -437,10 +435,24 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     {
         rc = pgpe_avsbus_drive_read(0x0, ret_volt, bus_num, rail_num);
 
-        if (rc)
+        switch (rc)
         {
-            PK_TRACE_ERR("AVS: Volt_R DriveRead FAILED. BusNum=0x%x,RailNum=0x%x", bus_num, rail_num);
-            //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+            case AVS_RC_SUCCESS:
+                PK_TRACE_DBG("AVS_READ: Success!");
+                break;
+
+            case AVS_RC_ONGOING_TIMEOUT:
+                PK_TRACE_ERR("AVS_READ: OnGoing Flag Timeout");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT);
+                break;
+
+            case AVS_RC_RESYNC_ERROR:
+                PK_TRACE_ERR("AVS_READ: Resync Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_RESYNC_ERROR);
+                break;
+
+            default:
+                break;
         }
     }
     else
@@ -464,13 +476,27 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     {
         rc = pgpe_avsbus_drive_read(0x2, ret_current, bus_num, rail_num);
 
-        if (rc)
+        switch (rc)
         {
-            PK_TRACE_ERR("AVS: Curr_R, DriveRead FAILED rc=0x%x. BusNum=0x%x, RailNum=0x%x", rc, bus_num, rail_num);
-            //\todo Determine what to do here in P10. In P9, we would just halt PGPE
+            case AVS_RC_SUCCESS:
+                PK_TRACE_DBG("AVS_READ: Success!");
+                *ret_current = *ret_current * pgpe_gppb_get_current_scale_factor(current_scale_idx);
+                break;
+
+            case AVS_RC_ONGOING_TIMEOUT:
+                PK_TRACE_ERR("AVS_READ: OnGoing Flag Timeout");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT);
+                break;
+
+            case AVS_RC_RESYNC_ERROR:
+                PK_TRACE_ERR("AVS_READ: Resync Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_RESYNC_ERROR);
+                break;
+
+            default:
+                break;
         }
 
-        *ret_current = *ret_current * pgpe_gppb_get_current_scale_factor(current_scale_idx);
         //PK_TRACE("AVS_READ_CURRENT: bus_num=%u, rail_num=%u,current=%u scale=%u",bus_num, rail_num, *ret_current,pgpe_gppb_get_current_scale_factor(current_scale_idx));
     }
     else

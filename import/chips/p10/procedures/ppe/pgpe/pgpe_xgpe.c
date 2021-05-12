@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -24,6 +24,8 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include "pgpe_xgpe.h"
 #include "ppe42_cache.h"
+#include "pgpe_utils.h"
+#include "pgpe_error.h"
 
 
 
@@ -46,7 +48,7 @@ void pgpe_xgpe_send_vret_updt(uint32_t update_type)
 
     if(rc)
     {
-        //TODO: Error Log
+        pgpe_error_handle_fault(PGPE_ERR_CODE_XGPE_PGPE_VRET_UPDATE_BAD_ACK);
     }
 
 }

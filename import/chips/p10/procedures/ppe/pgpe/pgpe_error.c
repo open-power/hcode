@@ -286,5 +286,5 @@ void pgpe_error_handle_fault(uint32_t pgpe_err_id)
     pgpe_error_notify_critical(pgpe_err_id);
 
     //ack any pending IPCS with bad rc
-    pgpe_error_mask_irqs();
+    pgpe_error_ack_pending();
 }

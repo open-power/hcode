@@ -28,7 +28,8 @@
 #include "pgpe_pstate.h"
 #include "p10_scom_proc.H"
 #include "ppe42_msr.h"
-
+#include "pgpe_error.h"
+#include "pgpe_utils.h"
 
 void pgpe_dpll_init()
 {
@@ -87,7 +88,7 @@ dpll_mode_t pgpe_dpll_get_mode()
     }
     else
     {
-        //\TODO unsupported DPLL_MODE. error log
+        pgpe_error_handle_fault(PGPE_ERR_EXT_CODE_DPLL_UNSUPPORTED_MODE);
         return DPLL_MODE_INVALID;
     }
 }
@@ -121,7 +122,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
 
 
     // Wait until frequency update is complete
-    //\todo Add timeout and critical error log
+    TIMER_START()
     dpll_stat_t dpll_stat;
     dpll_stat.value = 0;
 
@@ -131,6 +132,15 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
 
     while(!dpll_stat.fields.update_complete || !dpll_stat.fields.lock)
     {
+        TIMER_DELTA()
+
+        if (TIMER_DETECT_TIMEOUT_US(75))
+        {
+            PK_TRACE("dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
+            PK_TRACE("DPLL: Update Complete Timeout otbr_t0=0x%x otbr_t1=0x%x, otbr_delta=0x%x", otbr_t0, otbr_t1, otbr_delta);
+            pgpe_error_handle_fault(PGPE_ERR_EXT_CODE_DPLL_WRITE_UPDATE_COMPLETE_AND_LOCK_TIMEOUT);
+        }
+
         PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);
 
         if ((mfmsr() & MSR_SIBRC) != 0)
