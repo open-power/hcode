@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -63,7 +63,7 @@ void kick_off_bce( uint32_t i_barIndex, uint32_t i_memBase,
                          ((i_barIndex == 0) ? SEL_BCEBAR0 : SEL_BCEBAR1) |
                          (SET_RD_PRIORITY_0);
 
-    PKTRACE( "Control Data 0x%08x%08x", (l_bceControlData >> 32), (uint32_t)l_bceControlData );
+    PK_TRACE_DBG( "Control Data 0x%08x%08x", (l_bceControlData >> 32), (uint32_t)l_bceControlData );
     out64(QME_LCL_BCECSR, l_bceControlData);
 
 }

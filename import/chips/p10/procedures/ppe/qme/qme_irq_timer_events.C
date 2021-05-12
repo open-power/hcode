@@ -279,6 +279,7 @@ void
 qme_fit_handler()
 {
     uint32_t recovery_dis   = 0;
+    uint32_t core_stop_gated = 0;
     uint32_t core_spwu_done = 0;
     uint32_t core_mask  = 0;
     uint64_t c_hid      = 0;
@@ -301,9 +302,11 @@ qme_fit_handler()
     //as safe zone to proceed with core recovery.
     core_spwu_done = core_spwu_done | G_qme_record.c_block_wake_done;
 
+    core_stop_gated = ( in32(QME_LCL_SCDR) >> SHIFT32(3) ) & 0xF;
+
     for( core_mask = 8; core_mask; core_mask = core_mask >> 1 )
     {
-        if( core_mask & G_qme_record.c_configured & (~G_qme_record.c_stop2_reached) )
+        if( core_mask & G_qme_record.c_configured & (~core_stop_gated) )
         {
             PPE_GETSCOM_UC( CORE_HID, 0, core_mask, c_hid);
 

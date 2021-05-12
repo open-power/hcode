@@ -88,7 +88,7 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
     // RTC 248149: needs timout for logging!!!
     while(((in32_sh(QME_LCL_EINR))) & (core_target << SHIFT64SH(55)));
 
-    PK_TRACE_INF("Poll for slave threads (1,2,3) to complete via Core Thread State");
+    PK_TRACE_DBG("Poll for slave threads (1,2,3) to complete via Core Thread State");
 
     for( core_mask = 8; core_mask; core_mask = core_mask >> 1 )
     {
@@ -102,7 +102,7 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
 
         if( core_target & core_mask )
         {
-            PK_TRACE_INF("CORE_THREAD_STATE Loop Core Pos %d",  core_inst );
+            PK_TRACE_DBG("CORE_THREAD_STATE Loop Core Pos %d",  core_inst );
             G_qme_record.cts_timeout_count = 0;
             scom_data.value = 0;
 
@@ -149,7 +149,7 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
                 if( in32_sh(QME_LCL_EINR) & ( core_mask << SHIFT64SH(55) ) )
                 {
                     G_qme_record.c_self_fault_vector |= ( SR_SUCCESS << ( 24 - ( core_inst * 8 )) );
-                    PK_TRACE_INF( "SR: All threads done" );
+                    PK_TRACE_DBG( "SR: All threads done" );
                     break;
                 }
 
@@ -175,7 +175,7 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
             }
             while(  ++G_qme_record.cts_timeout_count < CTS_TIMEOUT_COUNT );
 
-            PK_TRACE_INF( "Core SR Time Over. Fault 0x%08x", G_qme_record.c_self_fault_vector );
+            PK_TRACE_DBG( "Core SR Time Over. Fault 0x%08x", G_qme_record.c_self_fault_vector );
 
             if( ( CTS_TIMEOUT_COUNT == G_qme_record.cts_timeout_count ) &&
                 !( G_qme_record.c_self_fault_vector & ( 0xFF << ( 24 - ( core_inst * 8 ))) ))
@@ -188,13 +188,13 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
                     //Trigger FFDC collection for master thread
                     scom_data.value |= BIT64(INIT_FFDC_COLLECT);
                     PPE_PUTSCOM_UC( l_scratch_add, 0, core_mask, scom_data.value );
-                    PK_TRACE_INF( "Forcing Master Thread FFDC Collection" );
+                    PK_TRACE_DBG( "Forcing Master Thread FFDC Collection" );
                     G_qme_record.c_self_fault_vector |= ( MASTER_THRD_FAIL << ( 24 - ( core_inst * 8 )) );
                     G_qme_record.c_self_failed  |= core_mask;
                 }
             }
 
-            PK_TRACE_INF( "Fault Vect 0x%08x", G_qme_record.c_self_fault_vector );
+            PK_TRACE_DBG( "Fault Vect 0x%08x", G_qme_record.c_self_fault_vector );
 
             continue;
 
@@ -331,7 +331,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     PK_TRACE("Assert BLOCK_INTERRUPT to PC and IGNORE_RECENT_PMCR via SCSR[0/19]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), ( BIT32(0) | BIT32(19) ) );
 
-    PK_TRACE_INF("SF.RS: Self Restore Prepare, Core Waking up(pm_exit=1) via SCSR[1]");
+    PK_TRACE_DBG("SF.RS: Self Restore Prepare, Core Waking up(pm_exit=1) via SCSR[1]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(1) );
 
     PPE_WAIT_4NOP_CYCLES
@@ -382,7 +382,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
     */
 
     // HV Mode
-    PK_TRACE_INF("HV mode: %d [Save=0/Restore=1] write HRMOR and URMOR with HOMER address", i_saveRestore);
+    PK_TRACE_DBG("HV mode: %d [Save=0/Restore=1] write HRMOR and URMOR with HOMER address", i_saveRestore);
 
 #ifdef EPM_TUNING
     scom_data.value = 0xA200000;
@@ -486,7 +486,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 
     // ===============================
 
-    PK_TRACE_INF("SF.RS: Self Restore Kickoff, S-Reset All Core Threads");
+    PK_TRACE_DBG("SF.RS: Self Restore Kickoff, S-Reset All Core Threads");
 
     // Disable interrupts around the sreset to polling check to not miss the self-restore
     wrteei(0);
