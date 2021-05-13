@@ -81,7 +81,7 @@ void pgpe_irq_ipc_init()
 //
 void pgpe_irq_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE("IPC: Pstate Start Stop");
+    PK_TRACE_INF("IPC: Pstate Start Stop");
 
     if(pgpe_event_tbl_get_status(EV_IPC_PSTATE_START_STOP) != EVENT_INACTIVE)
     {
@@ -109,7 +109,7 @@ void pgpe_irq_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 //
 void pgpe_irq_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE("IPC: Clips cmd=0x%x", (uint32_t)cmd);
+    PK_TRACE_INF("IPC: Clips cmd=0x%x", (uint32_t)cmd);
 
     if(pgpe_event_tbl_get_status(EV_IPC_CLIP_UPDT) != EVENT_INACTIVE)
     {
@@ -137,14 +137,14 @@ void pgpe_irq_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 //
 void pgpe_irq_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE("IPC: Set PMCR");
+    PK_TRACE_INF("IPC: Set PMCR");
 
     /* \\TBD
     if(in32(G_OCB_OCCFLG2) & BIT32(OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ))
     {
         // Clear the injection so things are not permenently stuck
         out32(G_OCB_OCCFLG2_CLR, BIT32(OCCFLG2_PGPE_HCODE_PSTATE_REQ_ERR_INJ));
-        PK_TRACE_ERR("SET PMCR IPC ERROR INJECT TRAP");
+        PK_TRACE_INF_ERR("SET PMCR IPC ERROR INJECT TRAP");
         PK_PANIC(PGPE_SET_PMCR_TRAP_INJECT);
     }*/
     if(pgpe_event_tbl_get_status(EV_IPC_SET_PMCR) != EVENT_INACTIVE)
@@ -174,7 +174,7 @@ void pgpe_irq_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
 //
 void pgpe_irq_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE("IPC: WOF CTRL");
+    PK_TRACE_INF("IPC: WOF CTRL");
 
     if(pgpe_event_tbl_get_status(EV_IPC_WOF_CTRL) != EVENT_INACTIVE)
     {
@@ -203,7 +203,7 @@ void pgpe_irq_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
 //
 void pgpe_irq_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE("IPC:_WOF VRT");
+    PK_TRACE_INF("IPC:_WOF VRT");
 
     if(pgpe_event_tbl_get_status(EV_IPC_WOF_VRT) != EVENT_INACTIVE)
     {
@@ -227,7 +227,7 @@ void pgpe_irq_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
 //
 void pgpe_irq_ipc_xgpe_stop_beacon(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE("IPC: Stop Beacon");
+    PK_TRACE_INF("IPC: Stop Beacon");
 
     if(pgpe_event_tbl_get_status(EV_IPC_STOP_BEACON) != EVENT_INACTIVE)
     {

@@ -50,7 +50,7 @@ void* pgpe_dds_data_addr()
 //
 void pgpe_dds_init(uint32_t pstate)
 {
-    PK_TRACE("DDS: Init Enter");
+    PK_TRACE_INF("DDS: Init");
     uint32_t q, c, f;
 
     //1. Write DCCR, FLMR and FMMR values
@@ -141,7 +141,7 @@ void pgpe_dds_init(uint32_t pstate)
 //
 void pgpe_dds_compute(uint32_t pstate)
 {
-    PK_TRACE("DDS: Compute Enter");
+    PK_TRACE_INF("DDS: Compute");
     uint32_t q, c, core;
     uint32_t ccsr;
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
@@ -161,7 +161,7 @@ void pgpe_dds_compute(uint32_t pstate)
                 G_pgpe_dds.cal_adjust_prev[q][c] = G_pgpe_dds.cal_adjust[q][c];
                 G_pgpe_dds.cal_adjust[q][c] = pgpe_dds_intp_cal_adj_from_ps(pstate, core);
 
-                PK_TRACE("DDS: delay=0x%08x, cal_adjust=0x%08x", G_pgpe_dds.delay[q][c], G_pgpe_dds.cal_adjust[q][c]);
+                PK_TRACE_DBG("DDS: delay=0x%08x, cal_adjust=0x%08x", G_pgpe_dds.delay[q][c], G_pgpe_dds.cal_adjust[q][c]);
 
                 if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
                 {
@@ -169,14 +169,14 @@ void pgpe_dds_compute(uint32_t pstate)
                     {
                         G_pgpe_dds.other_prev[PGPE_DDS_OTHER_TRIP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c];
                         G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c] = pgpe_dds_intp_trip(pstate, core);
-                        PK_TRACE("DDS: trip=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c]);
+                        PK_TRACE_DBG("DDS: trip=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c]);
                     }
 
                     if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE))
                     {
                         G_pgpe_dds.other_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c];
                         G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] = pgpe_dds_intp_large(pstate, core);
-                        PK_TRACE("DDS: large=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]);
+                        PK_TRACE_DBG("DDS: large=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]);
                     }
                 }
 
@@ -213,7 +213,7 @@ void pgpe_dds_compute(uint32_t pstate)
 //
 void pgpe_dds_compare_trip_and_delay()
 {
-    PK_TRACE("DDS: Compare Trip and Delay Enter");
+    PK_TRACE_INF("DDS: Compare Trip and Delay");
     uint32_t q, c;
 
     uint32_t ccsr;
@@ -250,10 +250,10 @@ void pgpe_dds_compare_trip_and_delay()
                     G_pgpe_dds.any_cal_earlier[q] = G_pgpe_dds.cal_adjust[q][c] < G_pgpe_dds.cal_adjust_prev[q][c] ? 1 : 0;
                 }
 
-                PK_TRACE("DDS: delay_smaller=%u,delay_larger=%u,cal_later=%u,cal_earlier=%u", G_pgpe_dds.any_delay_larger[q],
-                         G_pgpe_dds.any_delay_smaller[q],
-                         G_pgpe_dds.any_cal_later[q],
-                         G_pgpe_dds.any_cal_earlier[q]);
+                PK_TRACE_DBG("DDS: delay_smaller=%u,delay_larger=%u,cal_later=%u,cal_earlier=%u", G_pgpe_dds.any_delay_larger[q],
+                             G_pgpe_dds.any_delay_smaller[q],
+                             G_pgpe_dds.any_cal_later[q],
+                             G_pgpe_dds.any_cal_earlier[q]);
 
                 if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
                 {
@@ -275,12 +275,12 @@ void pgpe_dds_compare_trip_and_delay()
                             G_pgpe_dds.other_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] ? 1 : 0;
                     }
 
-                    PK_TRACE("DDS:[%u][%u] trip_larger=%u,trip_smaller=%u", q, c,
-                             G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_TRIP_IDX][q][c],
-                             G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_TRIP_IDX][q][c]);
-                    PK_TRACE("DDS: [%u][%u]large_larger=%u,large_smaller=%u", q, c,
-                             G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c],
-                             G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]);
+                    PK_TRACE_DBG("DDS:[%u][%u] trip_larger=%u,trip_smaller=%u", q, c,
+                                 G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_TRIP_IDX][q][c],
+                                 G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_TRIP_IDX][q][c]);
+                    PK_TRACE_DBG("DDS: [%u][%u]large_larger=%u,large_smaller=%u", q, c,
+                                 G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c],
+                                 G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]);
                 }
             }
         }
@@ -318,7 +318,7 @@ void pgpe_dds_compare_trip_and_delay()
 //parameters for small differences they might have
 void pgpe_dds_update_pre(uint32_t pstate)
 {
-    PK_TRACE("DDS: Update Pre ");
+    PK_TRACE_INF("DDS: Update Pre ");
     uint32_t ducr_upd_needed = 0;
     uint32_t q, c;
     uint32_t ccsr;
@@ -376,7 +376,7 @@ void pgpe_dds_update_pre(uint32_t pstate)
                     {
                         G_pgpe_dds.fdcr[q][c].fields.trip_offset = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c];
                         update = 1;
-                        PK_TRACE("DDS: Post Any Larger Trip");
+                        PK_TRACE_DBG("DDS: Post Any Larger Trip");
                     }
 
                     if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE)
@@ -384,7 +384,7 @@ void pgpe_dds_update_pre(uint32_t pstate)
                     {
                         G_pgpe_dds.fdcr[q][c].fields.large_droop_detect = G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c];
                         update = 1;
-                        PK_TRACE("DDS: Post Any Larger Large");
+                        PK_TRACE_DBG("DDS: Post Any Larger Large");
                     }
 
                     if(update)
@@ -397,8 +397,8 @@ void pgpe_dds_update_pre(uint32_t pstate)
                         uint32_t core = 0x8 >> c;
                         PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_FDCR, q, core), G_pgpe_dds.fdcr[q][c].value);
 
-                        PK_TRACE("DDS: Pre Core Trip Mode FDCR=0x%08x%08x", G_pgpe_dds.fdcr[q][c].words.high_order,
-                                 G_pgpe_dds.fdcr[q][c].words.low_order);
+                        PK_TRACE_DBG("DDS: Pre Core Trip Mode FDCR=0x%08x%08x", G_pgpe_dds.fdcr[q][c].words.high_order,
+                                     G_pgpe_dds.fdcr[q][c].words.low_order);
                         //3. ducr_update_needed=true
                         ducr_upd_needed = 1;
                     }
@@ -442,7 +442,7 @@ void pgpe_dds_update_pre(uint32_t pstate)
 //parameters for small differences they might have
 void pgpe_dds_update_post(uint32_t pstate)
 {
-    PK_TRACE("DDS: Update Post");
+    PK_TRACE_INF("DDS: Update Post");
     uint32_t ducr_upd_needed = 0;
     uint32_t q, c;
     uint32_t ccsr;
@@ -495,7 +495,7 @@ void pgpe_dds_update_post(uint32_t pstate)
                     {
                         G_pgpe_dds.fdcr[q][c].fields.trip_offset = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c];
                         update = 1;
-                        PK_TRACE("DDS: Post Any Smaller Trip");
+                        PK_TRACE_DBG("DDS: Post Any Smaller Trip");
                     }
 
                     if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE)
@@ -503,7 +503,7 @@ void pgpe_dds_update_post(uint32_t pstate)
                     {
                         G_pgpe_dds.fdcr[q][c].fields.large_droop_detect = G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c];
                         update = 1;
-                        PK_TRACE("DDS: Post Any Smaller Large");
+                        PK_TRACE_DBG("DDS: Post Any Smaller Large");
                     }
 
                     if (update)
@@ -514,8 +514,8 @@ void pgpe_dds_update_post(uint32_t pstate)
                         //Unicast write FDCR[c]
                         PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_FDCR, q, (0x8 >> c)), G_pgpe_dds.fdcr[q][c].value);
 
-                        PK_TRACE("DDS: Post Core Trip Mode FDCR=0x%08x%08x", G_pgpe_dds.fdcr[q][c].words.high_order,
-                                 G_pgpe_dds.fdcr[q][c].words.low_order);
+                        PK_TRACE_DBG("DDS: Post Core Trip Mode FDCR=0x%08x%08x", G_pgpe_dds.fdcr[q][c].words.high_order,
+                                     G_pgpe_dds.fdcr[q][c].words.low_order);
                         //ducr_update_needed=true
                         ducr_upd_needed = 1;
                     }
@@ -573,7 +573,7 @@ void pgpe_dds_poll_done()
 //
 uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c)
 {
-    PK_TRACE("DDS: Intp Delay ps=0x%x, c=%u", ps, c);
+    PK_TRACE_DBG("DDS: Intp Delay ps=0x%x, c=%u", ps, c);
     uint32_t delay;
     uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_BIASED);
 
@@ -651,7 +651,7 @@ uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c)
     large = (((pgpe_gppb_get_dds_large_ps_slope(VPD_PT_SET_BIASED, c, r)) *
               (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r))) >> (DDS_SLOPE_FP_SHIFT_6 - 1));
 
-    PK_TRACE("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
+    PK_TRACE_DBG("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
 
     if (pgpe_gppb_get_dds_large(c, r) <= pgpe_gppb_get_dds_large(c, r + 1))
     {
@@ -663,11 +663,11 @@ uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c)
     }
 
 
-    PK_TRACE("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
+    PK_TRACE_DBG("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
     large = large >> 1; //Shift back
 
     //PK_TRACE("DDS: Intp Large p=0x%x, cal_adj=%u", p, cal_adj);
-    PK_TRACE("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
+    PK_TRACE_DBG("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
 
     return large;
 }

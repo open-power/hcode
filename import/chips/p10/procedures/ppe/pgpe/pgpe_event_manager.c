@@ -46,7 +46,7 @@ void pgpe_event_manager_upd_state(uint32_t status);
 
 void pgpe_event_manager_init()
 {
-    PK_TRACE("PEM: Init");
+    PK_TRACE_INF("PEM: Init");
     G_pgpe_event_manager.pgpe_state_machine_status  = PGPE_SM_BOOTED;
 }
 

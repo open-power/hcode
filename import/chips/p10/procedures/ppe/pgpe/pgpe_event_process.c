@@ -54,7 +54,7 @@ void pgpe_process_wof_vrt_post_actuate();
 
 void pgpe_process_pstate_start_stop(void* eargs)
 {
-    PK_TRACE("PEP: PS Start Stop");
+    PK_TRACE_INF("PEP: PS Start Stop");
 
     ipc_msg_t* cmd = (ipc_msg_t*)eargs;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
@@ -93,7 +93,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
             }
             else
             {
-                PK_TRACE("PEP: Invalid PMCR Owner");
+                PK_TRACE_ERR("PEP: Invalid PMCR Owner");
                 args->msg_cb.rc = PGPE_RC_INVALID_PMCR_OWNER;
             }
         }
@@ -137,23 +137,13 @@ void pgpe_process_pstate_start_stop(void* eargs)
 
 void pgpe_process_pstate_start()
 {
-    PK_TRACE("PEP: PS Start");
+    PK_TRACE_INF("PEP: PS Start");
     uint32_t sync_pstate;
     uint32_t voltage, vcs_before_vdd = 0;
     int32_t move_frequency;
     dpll_mode_t dpll_mode;
 
-    //1. Write NEST.REGS.DPLL_CTRL [DPLL_CTRL_FF_SLEWRATE_DOWN] and
-    //NEST.REGS.DPLL_CTRL [DPLL_CTRL_FF_SLEWRATE_UP] fields (10bits each) with 0x4
-    //hardcoded for both.
-    //dpll_ctrl_t dpll_ctrl;
-    //dpll_ctrl.value = 0;
-    //dpll_ctrl.fields.ff_slewrate_dn = 0x4;
-    //dpll_ctrl.fields.ff_slewrate_up = 0x4;
-    //pgpe_dpll_write_dpll_ctrl_or(dpll_ctrl.value);
-    //dpll_ctrl.value = 0;
-    //dpll_ctrl.fields.dpll_lock_sel = 1;
-    //pgpe_dpll_write_dpll_ctrl_clear(dpll_ctrl.value);
+    //1.Set slewrate
     pgpe_dpll_set_slewrate(0x4, 0x4);
     pgpe_dpll_clear_dpll_lock_sel();
 
@@ -174,14 +164,14 @@ void pgpe_process_pstate_start()
     }
 
     dpll_mode = pgpe_dpll_get_mode();
-    PK_TRACE("PEP: DPLL=0x%x DPLL0=0x%x Mode=%u, syncPS=0x%x", dpll.fields.freqout,
-             pgpe_gppb_get_dpll_pstate0_value(), dpll_mode, sync_pstate);
+    PK_TRACE_INF("PEP: DPLL=0x%x DPLL0=0x%x Mode=%u, syncPS=0x%x", dpll.fields.freqout,
+                 pgpe_gppb_get_dpll_pstate0_value(), dpll_mode, sync_pstate);
 
     //3. Clip the pstate and determine the pstate closest to the frequency read
     if (sync_pstate < pgpe_pstate_get(clip_min))
     {
         sync_pstate = pgpe_pstate_get(clip_min);
-        PK_TRACE("PEP: sync_ps < clip_min=0x%x, setting sync_ps=0x%x", pgpe_pstate_get(clip_min), sync_pstate);
+        PK_TRACE_INF("PEP: sync_ps < clip_min=0x%x, setting sync_ps=0x%x", pgpe_pstate_get(clip_min), sync_pstate);
         move_frequency = -1;
     }
 
@@ -191,7 +181,7 @@ void pgpe_process_pstate_start()
     if (sync_pstate > clip_max)
     {
         sync_pstate = clip_max;
-        PK_TRACE("PEP: sync_ps > clip_max=0x%x, setting sync_ps=0x%x", clip_max, sync_pstate);
+        PK_TRACE_INF("PEP: sync_ps > clip_max=0x%x, setting sync_ps=0x%x", clip_max, sync_pstate);
         move_frequency = 1;
     }
 
@@ -208,7 +198,7 @@ void pgpe_process_pstate_start()
                              &voltage);
     pgpe_pstate_set(vcs_curr_ext, voltage);
 
-    PK_TRACE("PEP: Read vdd=%u vcs=%u", pgpe_pstate_get(vdd_curr_ext), pgpe_pstate_get(vcs_curr_ext));
+    PK_TRACE_INF("PEP: Read vdd=%u vcs=%u", pgpe_pstate_get(vdd_curr_ext), pgpe_pstate_get(vcs_curr_ext));
 
     //5. If frequency moving down, then adjust frequency
     if (move_frequency < 0 )
@@ -237,14 +227,14 @@ void pgpe_process_pstate_start()
     pgpe_pstate_set(vdd_next_ext, pgpe_pstate_get(vdd_next) + pgpe_pstate_get(vdd_next_uplift));
     pgpe_pstate_set(vcs_next_ext, pgpe_pstate_get(vcs_next) + pgpe_pstate_get(vcs_next_uplift));
 
-    PK_TRACE("PEP: vdd_next=%u vdd_next_up=%u, vdd_next_ext=%u",
-             pgpe_pstate_get(vdd_next),
-             pgpe_pstate_get(vdd_next_uplift),
-             pgpe_pstate_get(vdd_next_ext));
-    PK_TRACE("PEP: vcs_next=%u vcs_next_up=%u, vcs_next_ext=%u",
-             pgpe_pstate_get(vcs_next),
-             pgpe_pstate_get(vcs_next_uplift),
-             pgpe_pstate_get(vcs_next_ext));
+    PK_TRACE_INF("PEP: vdd_next=%u vdd_next_up=%u, vdd_next_ext=%u",
+                 pgpe_pstate_get(vdd_next),
+                 pgpe_pstate_get(vdd_next_uplift),
+                 pgpe_pstate_get(vdd_next_ext));
+    PK_TRACE_INF("PEP: vcs_next=%u vcs_next_up=%u, vcs_next_ext=%u",
+                 pgpe_pstate_get(vcs_next),
+                 pgpe_pstate_get(vcs_next_uplift),
+                 pgpe_pstate_get(vcs_next_ext));
 
     //7. Perform voltage adjustment
     //If new external VRM(VDD and VCS) set points different from present value, then
@@ -394,7 +384,7 @@ void pgpe_process_pstate_start()
 
 void pgpe_process_pstate_stop()
 {
-    PK_TRACE("PEP: PS Stop");
+    PK_TRACE_INF("PEP: PS Stop");
 
     //Disable PCB Type1(PMCR)
     out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(17));//Disable PCB_Type1
@@ -420,7 +410,7 @@ void pgpe_process_pstate_stop()
 void pgpe_process_set_pmcr_owner(PMCR_OWNER owner)
 {
 
-    PK_TRACE("PEP: PS Owner %d", owner);
+    PK_TRACE_INF("PEP: PS Owner %u", owner);
     //Set the PMCR owner
     pgpe_pstate_set(pmcr_owner, owner);
 
@@ -455,7 +445,7 @@ void pgpe_process_clip_update(void* eargs)
     ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
 
-    PK_TRACE("PEP: Clip Updt");
+    PK_TRACE_INF("PEP: Clip Updt");
 
     pgpe_opt_set_word(0, 0);
     pgpe_opt_set_byte(0, args->ps_val_clip_max);
@@ -468,7 +458,7 @@ void pgpe_process_clip_update(void* eargs)
         pgpe_pstate_set(clip_min, args->ps_val_clip_max);
         pgpe_pstate_set(clip_max, args->ps_val_clip_min);
 
-        PK_TRACE("PEP: Clip Min(high_freq)=0x%x Clip_Max(low_freq)=0x%x", args->ps_val_clip_max, args->ps_val_clip_min);
+        PK_TRACE_INF("PEP: Clip Min(high_freq)=0x%x Clip_Max(low_freq)=0x%x", args->ps_val_clip_max, args->ps_val_clip_min);
         pgpe_pstate_compute();
         pgpe_pstate_apply_clips();
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_PENDING_ACTUATION);
@@ -488,7 +478,7 @@ void pgpe_process_clip_update_w_ack(void* eargs)
     ipcmsg_clip_update_t* args = (ipcmsg_clip_update_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
 
-    PK_TRACE("PEP: Clip Updt w/ack");
+    PK_TRACE_INF("PEP: Clip Updt w/ack");
 
     pgpe_opt_set_word(0, 0);
     pgpe_opt_set_byte(0, args->ps_val_clip_max);
@@ -511,11 +501,11 @@ void pgpe_process_clip_update_w_ack(void* eargs)
 
 void pgpe_process_clip_update_post_actuate()
 {
-    PK_TRACE("PEP: Clip Updt Post Actuate");
+    PK_TRACE_INF("PEP: Clip Updt Post Actuate");
 
     if(pgpe_pstate_is_clip_bounded())
     {
-        PK_TRACE("PEP: PS Clips Bounded");
+        PK_TRACE_INF("PEP: PS Clips Bounded");
 
         if (pgpe_thr_ctrl_is_enabled())
         {
@@ -529,7 +519,8 @@ void pgpe_process_clip_update_post_actuate()
             else
             {
                 uint32_t overrage = pstate - pgpe_pstate_get(pstate_safe);
-                PK_TRACE("PEP: Direct Thr/WCOR Updt over=0x%x, pstate=0x%x,psafe=0x%x", overrage, pstate, pgpe_pstate_get(pstate_safe));
+                PK_TRACE_INF("PEP: Direct Thr/WCOR Updt over=0x%x, pstate=0x%x,psafe=0x%x", overrage, pstate,
+                             pgpe_pstate_get(pstate_safe));
                 pgpe_thr_ctrl_set_ceff_ovr_idx(overrage);
                 pgpe_thr_ctrl_write_wcor();
             }
@@ -548,7 +539,7 @@ void pgpe_process_clip_update_post_actuate()
 
 void pgpe_process_pmcr_request(void* eargs)
 {
-    PK_TRACE("PEP: PS PMCR");
+    PK_TRACE_INF("PEP: PS PMCR");
     ipc_msg_t* cmd = (ipc_msg_t*)eargs;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
     ipcmsg_set_pmcr_t* args = (ipcmsg_set_pmcr_t*)async_cmd->cmd_data;
@@ -578,7 +569,7 @@ void pgpe_process_pmcr_request(void* eargs)
 
 void pgpe_process_pcb_pmcr_request(void* eargs)
 {
-    PK_TRACE("PEP: PCB PMCR");
+    PK_TRACE_INF("PEP: PCB PMCR");
     pcb_set_pmcr_args_t* args = (pcb_set_pmcr_args_t*)eargs;
     PkMachineContext ctx;
     uint32_t q;
@@ -611,7 +602,7 @@ void pgpe_process_pcb_pmcr_request(void* eargs)
 
 void pgpe_process_wof_ctrl(void* eargs)
 {
-    PK_TRACE("PEP: WOF CTRL");
+    PK_TRACE_INF("PEP: WOF CTRL");
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
     ipcmsg_wof_control_t* args = (ipcmsg_wof_control_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
@@ -682,9 +673,9 @@ void pgpe_process_wof_enable(ipcmsg_wof_control_t* args)
     pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
     ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
 
-    PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
-             pgpe_pstate_get(vindex),
-             pgpe_pstate_get(clip_wof));
+    PK_TRACE_INF("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
+                 pgpe_pstate_get(vindex),
+                 pgpe_pstate_get(clip_wof));
 
     pgpe_pstate_compute();
     pgpe_pstate_apply_clips();
@@ -709,11 +700,11 @@ void pgpe_process_wof_disable()
 
 void pgpe_process_wof_ctrl_post_actuate()
 {
-    PK_TRACE("PEP: WOF CTRL Post Actuate");
+    PK_TRACE_INF("PEP: WOF CTRL Post Actuate");
 
     if(pgpe_pstate_is_wof_clip_bounded())
     {
-        PK_TRACE("PEP: WOF Clip Bounded");
+        PK_TRACE_INF("PEP: WOF Clip Bounded");
         pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_INACTIVE);
         pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_CTRL, PGPE_RC_SUCCESS);
         pgpe_pstate_set(wof_status, WOF_STATUS_ENABLED);
@@ -723,7 +714,7 @@ void pgpe_process_wof_ctrl_post_actuate()
 
 void pgpe_process_wof_vrt(void* eargs)
 {
-    PK_TRACE("PEP: WOF VRT");
+    PK_TRACE_INF("PEP: WOF VRT");
     uint32_t vindex, ack_back = 0;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
     ipcmsg_wof_vrt_t* args = (ipcmsg_wof_vrt_t*)async_cmd->cmd_data;
@@ -738,7 +729,7 @@ void pgpe_process_wof_vrt(void* eargs)
         //Check that VRT pointer is not NULL
         if (args->idd_vrt_ptr == NULL)
         {
-            PK_TRACE("PEP: NULL VRT");
+            PK_TRACE_ERR("PEP: NULL VRT");
             //\todo Take out an error log
             ack_back = 1;
             args->msg_cb.rc = PGPE_RC_NULL_VRT_POINTER;
@@ -747,7 +738,7 @@ void pgpe_process_wof_vrt(void* eargs)
         {
 
             pgpe_pstate_set_vrt(args->idd_vrt_ptr);
-            PK_TRACE("PEP: VRT_PTR=0x%x", (uint32_t)args->idd_vrt_ptr);
+            PK_TRACE_DBG("PEP: VRT_PTR=0x%x", (uint32_t)args->idd_vrt_ptr);
 
             //If WOF is enabled
             if(pgpe_pstate_is_wof_enabled())
@@ -758,7 +749,7 @@ void pgpe_process_wof_vrt(void* eargs)
                     if (args->fixed_vratio_index > WOF_VRT_SIZE)
                     {
                         //\todo Take out an error log
-                        PK_TRACE("PEP: INVALID VRATIO INDEX"); //todo take critical error log
+                        PK_TRACE_ERR("PEP: INVALID VRATIO INDEX"); //todo take critical error log
                         ack_back = 1;
                         args->msg_cb.rc = PGPE_WOF_RC_INVALID_FIXED_VRATIO_INDEX;
                     }
@@ -784,9 +775,9 @@ void pgpe_process_wof_vrt(void* eargs)
                     pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
                     pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
                     ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
-                    PK_TRACE("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
-                             pgpe_pstate_get(vindex),
-                             pgpe_pstate_get(clip_wof));
+                    PK_TRACE_INF("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
+                                 pgpe_pstate_get(vindex),
+                                 pgpe_pstate_get(clip_wof));
                     pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_PENDING_ACTUATION);
 
                     pgpe_pstate_compute();
@@ -816,11 +807,11 @@ void pgpe_process_wof_vrt(void* eargs)
 
 void pgpe_process_wof_vrt_post_actuate()
 {
-    PK_TRACE("PEP: WOF VRT Post Actuate");
+    PK_TRACE_INF("PEP: WOF VRT Post Actuate");
 
     if(pgpe_pstate_is_wof_clip_bounded())
     {
-        PK_TRACE("PEP: WOF Clip Bounded");
+        PK_TRACE_INF("PEP: WOF Clip Bounded");
 
         if (pgpe_thr_ctrl_is_enabled())
         {
@@ -842,7 +833,7 @@ void pgpe_process_wof_vrt_post_actuate()
 
 void pgpe_process_safe_mode(void* args)
 {
-    PK_TRACE("PEP: Process Safe Mode");
+    PK_TRACE_INF("PEP: Process Safe Mode");
 
     if(pgpe_pstate_is_pstate_enabled())
     {
@@ -885,7 +876,7 @@ void pgpe_process_safe_mode(void* args)
     //Set Status Bits
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE));
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_SAFE_MODE_ACTIVE));
-    PK_TRACE("PEP: Safe Mode Processed");
+    PK_TRACE_DBG("PEP: Safe Mode Processed");
     ppe_trace_op(PGPE_OPT_SAFE_MODE_DONE, 0);
 }
 
@@ -907,7 +898,7 @@ void pgpe_process_pvref_fault()
 
 void pgpe_process_stop_beacon()
 {
-    PK_TRACE("PEP: Stop Beacon");
+    PK_TRACE_INF("PEP: Stop Beacon");
     pgpe_pstate_set(update_pgpe_beacon, 0);
     pgpe_event_tbl_set_status(EV_IPC_STOP_BEACON, EVENT_INACTIVE);
     pgpe_occ_send_ipc_ack_type_rc(EV_IPC_STOP_BEACON, PGPE_RC_SUCCESS);

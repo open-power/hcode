@@ -64,7 +64,7 @@ GlobalPstateParmBlockWOV_t* G_gppb_wov;
 //
 void pgpe_gppb_init()
 {
-    PK_TRACE("GPB: Init");
+    PK_TRACE_INF("GPB: Init");
 
     uint32_t p, c;
     void* gppb_sram_offset = (void*)pgpe_header_get(g_pgpe_gpspbSramAddress);//GPB Sram Offset
@@ -116,25 +116,25 @@ void pgpe_gppb_init()
         G_gppb_wof = (GlobalPstateParmBlockWOF_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[WOF_OFFSET_IDX]);
         G_gppb_wov = (GlobalPstateParmBlockWOV_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[WOF_OFFSET_IDX]);
 
-        PK_TRACE("GPB: GPB Sram Addr=0x%08x Magic=PSTATE_PARMSBLOCK_MAGIC_V0", (uint32_t)G_gppb_v1);
-        PK_TRACE("GPB: OCC Cmpl. Freq=%u(0x%x) Mhz", (uint32_t)G_gppb->occ_complex_frequency_mhz,
-                 (uint32_t)G_gppb->occ_complex_frequency_mhz);
-        PK_TRACE("GPB: PGPE Flag SRAM Addr=0x%08x", (uint32_t)&G_gppb->pgpe_flags);
-        PK_TRACE("GPB: base=0x%08x", (uint32_t)G_gppb_base);
-        PK_TRACE("GPB: avsbus=0x%08x", (uint32_t)G_gppb_avsbus);
-        PK_TRACE("GPB: vdd_sys=0x%08x", (uint32_t)G_gppb_vdd_sysparm);
-        PK_TRACE("GPB: vcs_sys=0x%08x", (uint32_t)G_gppb_vcs_sysparm);
-        PK_TRACE("GPB: vdn_sys=0x%08x", (uint32_t)G_gppb_vdn_sysparm);
-        PK_TRACE("GPB: ext_vrm=0x%08x", (uint32_t)G_gppb_ext_vrm_parms);
-        PK_TRACE("GPB: ops_pts [0]=0x%08x,[1]=0x%08x,[2]=0x%08x, sizeof(PoundVOpPoint_t)=0x%08x",
-                 (uint32_t)G_gppb_operating_points_set[0], (uint32_t)G_gppb_operating_points_set[1],
-                 (uint32_t)G_gppb_operating_points_set[2], sizeof(PoundVOpPoint_t));
-        PK_TRACE("GPB: poundv_slopes=0x%08x", (uint32_t)G_gppb_poundv_slopes);
-        PK_TRACE("GPB: resclk=0x%08x", (uint32_t)G_gppb_resclk);
+        PK_TRACE_INF("GPB: GPB Sram Addr=0x%08x Magic=PSTATE_PARMSBLOCK_MAGIC_V0", (uint32_t)G_gppb_v1);
+        PK_TRACE_DBG("GPB: OCC Cmpl. Freq=%u(0x%x) Mhz", (uint32_t)G_gppb->occ_complex_frequency_mhz,
+                     (uint32_t)G_gppb->occ_complex_frequency_mhz);
+        PK_TRACE_DBG("GPB: PGPE Flag SRAM Addr=0x%08x", (uint32_t)&G_gppb->pgpe_flags);
+        PK_TRACE_DBG("GPB: base=0x%08x", (uint32_t)G_gppb_base);
+        PK_TRACE_DBG("GPB: avsbus=0x%08x", (uint32_t)G_gppb_avsbus);
+        PK_TRACE_DBG("GPB: vdd_sys=0x%08x", (uint32_t)G_gppb_vdd_sysparm);
+        PK_TRACE_DBG("GPB: vcs_sys=0x%08x", (uint32_t)G_gppb_vcs_sysparm);
+        PK_TRACE_DBG("GPB: vdn_sys=0x%08x", (uint32_t)G_gppb_vdn_sysparm);
+        PK_TRACE_DBG("GPB: ext_vrm=0x%08x", (uint32_t)G_gppb_ext_vrm_parms);
+        PK_TRACE_DBG("GPB: ops_pts [0]=0x%08x,[1]=0x%08x,[2]=0x%08x, sizeof(PoundVOpPoint_t)=0x%08x",
+                     (uint32_t)G_gppb_operating_points_set[0], (uint32_t)G_gppb_operating_points_set[1],
+                     (uint32_t)G_gppb_operating_points_set[2], sizeof(PoundVOpPoint_t));
+        PK_TRACE_DBG("GPB: poundv_slopes=0x%08x", (uint32_t)G_gppb_poundv_slopes);
+        PK_TRACE_DBG("GPB: resclk=0x%08x", (uint32_t)G_gppb_resclk);
     }
     else
     {
-        PK_TRACE("GPB: GPB Sram Addr=0x%08x Magic=PSTATE_PARMSBLOCK_MAGIC_V0", (uint32_t)G_gppb);
+        PK_TRACE_INF("GPB: GPB Sram Addr=0x%08x Magic=PSTATE_PARMSBLOCK_MAGIC_V0", (uint32_t)G_gppb);
         PK_TRACE("GPB: OCC Cmpl. Freq=%u(0x%x) Mhz", (uint32_t)G_gppb->occ_complex_frequency_mhz,
                  (uint32_t)G_gppb->occ_complex_frequency_mhz);
         PK_TRACE("GPB: PGPE Flag SRAM Addr=0x%08x", (uint32_t)&G_gppb->pgpe_flags);
@@ -142,7 +142,7 @@ void pgpe_gppb_init()
 
 #if GENERATE_HOMER_TABLES == 1
     //Fill out GeneratedPstateInfo structure
-    PK_TRACE("GPB: Pstate Table HOMER Addr=0x%08x", (uint32_t)pgpe_header_get(g_pgpe_genPsTableMemOffset));
+    PK_TRACE_INF("GPB: Pstate Table HOMER Addr=0x%08x", (uint32_t)pgpe_header_get(g_pgpe_genPsTableMemOffset));
 
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC_V1)
     {
@@ -207,7 +207,7 @@ void pgpe_gppb_raw_pstate_tbl(PstateTable_t* tbl)
         step_size = G_gppb->frequency_step_khz;
     }
 
-    PK_TRACE("GPB: Generating Raw Pstate Tbl, HOMER Addr=0x%08x, max_ps=%u(0x%x)", (uint32_t)tbl, max_ps, max_ps);
+    PK_TRACE_INF("GPB: Generating Raw Pstate Tbl, HOMER Addr=0x%08x, max_ps=%u(0x%x)", (uint32_t)tbl, max_ps, max_ps);
 
     for (p = 0; p <= max_ps; p++)
     {
@@ -249,7 +249,7 @@ void pgpe_gppb_biased_pstate_tbl(PstateTable_t* tbl)
     }
 
 
-    PK_TRACE("GPB: Generating Biased Pstate Tbl, HOMER Addr=0x%08x, max_ps=%u(0x%x)", (uint32_t)tbl, max_ps, max_ps);
+    PK_TRACE_INF("GPB: Generating Biased Pstate Tbl, HOMER Addr=0x%08x, max_ps=%u(0x%x)", (uint32_t)tbl, max_ps, max_ps);
 
     for (p = 0; p <= max_ps; p++)
     {
@@ -280,7 +280,7 @@ void pgpe_gppb_occ_tbl()
     OCCPstateTable_t* opst = (OCCPstateTable_t*)pgpe_header_get(g_pgpe_opspbTableAddress);
     opst->entries = pgpe_header_get(g_pgpe_opspbTableLength) / sizeof(OCCPstateTable_entry_t);
 
-    PK_TRACE("GPB: Generating OCC Tbl, Addr=0x%08x", (uint32_t)opst);
+    PK_TRACE_INF("GPB: Generating OCC Tbl, Addr=0x%08x", (uint32_t)opst);
 
     for (p = 0; p < opst->entries; p++)
     {

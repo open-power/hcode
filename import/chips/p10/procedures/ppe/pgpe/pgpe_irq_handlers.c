@@ -59,7 +59,7 @@ pcb_set_pmcr_args_t G_pcb_set_pmcr_args;
 
 void pgpe_irq_init()
 {
-    PK_TRACE("IRQ: Init");
+    PK_TRACE_INF("IRQ: Init");
     //Init IPC
     pgpe_irq_ipc_init();
 
@@ -93,25 +93,25 @@ void pgpe_irq_init()
 
 void pgpe_irq_pcb_handler()
 {
-    PK_TRACE("PCB: Enter");
+    PK_TRACE_INF("PCB: Enter");
 
     uint32_t oisr = in32(TP_TPCHIP_OCC_OCI_OCB_OISR0_RO);
 
     if(oisr & BIT32(16))
     {
-        PK_TRACE("PCB: Type0");
+        PK_TRACE_INF("PCB: Type0");
         out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(16));
     }
 
     if(oisr & BIT32(17))
     {
-        PK_TRACE("PCB: Type1");
+        PK_TRACE_INF("PCB: Type1");
 
         //Read Pending bits
         uint32_t opit1pra = in32(TP_TPCHIP_OCC_OCI_OCB_OPIT1PRA_RO);
         uint32_t q;
 
-        PK_TRACE("PCB: opit1pra=0x%x", opit1pra);
+        PK_TRACE_DBG("PCB: opit1pra=0x%x", opit1pra);
 
         //Loop through quads
         for (q = 0; q < MAX_QUADS; q++)
@@ -123,7 +123,7 @@ void pgpe_irq_pcb_handler()
                 //Save into the args
                 G_pcb_set_pmcr_args.ps_request[q] = data;
                 G_pcb_set_pmcr_args.ps_valid[q] = 1;
-                PK_TRACE("PCB: q=%u, data=0x%x", q, data);
+                PK_TRACE_INF("PCB: q=%u, data=0x%x", q, data);
             }
         }
 
@@ -132,11 +132,11 @@ void pgpe_irq_pcb_handler()
 
     if(oisr & BIT32(18))
     {
-        PK_TRACE("PCB: Type2");
+        PK_TRACE_INF("PCB: Type2");
         out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(18));
     }
 
-    PK_TRACE("PCB: Exit");
+    PK_TRACE_DBG("PCB: Exit");
 }
 
 void pgpe_irq_fault_handler()

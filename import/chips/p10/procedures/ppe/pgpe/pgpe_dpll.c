@@ -45,7 +45,7 @@ uint64_t pgpe_dpll_get_dpll_stat()
     uint64_t dpll_stat;
 
     PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat);
-    PK_TRACE("DPL: dpll_stat=0x%08x%08x", dpll_stat >> 32, dpll_stat);
+    PK_TRACE_DBG("DPL: dpll_stat=0x%08x%08x", dpll_stat >> 32, dpll_stat);
 
     return dpll_stat;
 }
@@ -116,7 +116,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     pgpe_dpll_mask_and_clear_pll_unlock();
 
     // Write DPLL_FREQ
-    PK_TRACE("DPL: dpll=0x%08x%08x", dpll_freq.value >> 32, dpll_freq.value);
+    PK_TRACE_INF("DPL: Write DPLL_CNTL=0x%08x%08x", dpll_freq.value >> 32, dpll_freq.value);
     PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_FREQ, dpll_freq.value);
 
 
@@ -127,7 +127,6 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
 
     uint32_t cnt = 0;
     uint32_t saved_msr = mfmsr();
-    uint32_t start = in32(0xc00604f8ull); //Read OTBR
     mtmsr(saved_msr | MSR_SEM6);  // Mask off address parity
 
     while(!dpll_stat.fields.update_complete || !dpll_stat.fields.lock)
@@ -151,8 +150,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     //CLear the pll unlock error bit
     pgpe_dpll_clear_pll_unlock_error();
 
-    uint32_t end = in32(0xc00604f8ull);
-    PK_TRACE("DPL: dpll_stat=0x%08x%08x, start=0x%x end=0x%x", dpll_stat.value >> 32, dpll_stat.value, start, end);
+    PK_TRACE_DBG("DPL: dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
 
     // Unmask the NEST DPLL Unlock check via TP Slave Config Reg
     pgpe_dpll_unmask_pll_unlock();

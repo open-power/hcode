@@ -53,6 +53,7 @@ void* pgpe_resclk_data_addr()
 void pgpe_resclk_init()
 {
 
+    PK_TRACE_INF("RCK: Resclk Init");
     //Write RCIMR(Index Map Register) with the pstate values for the 4-inflection points
     rcimr_t rcimr;
     uint32_t i;
@@ -88,11 +89,11 @@ void pgpe_resclk_init()
             }
         }
 
-        PK_TRACE("RCK: Init Write RCIMR=0x%08x%08x", rcimr.words.high_order, rcimr.words.low_order);
-        PK_TRACE("RCK: Init Write rp0=0x%x rx0=0x%x", rcimr.fields.rp0, rcimr.fields.rx0);
-        PK_TRACE("RCK: Init Write rp1=0x%x rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
-        PK_TRACE("RCK: Init Write rp2=0x%x rx2=0x%x", rcimr.fields.rp2, rcimr.fields.rx2);
-        PK_TRACE("RCK: Init Write rp3=0x%x rx3=0x%x", rcimr.fields.rp3, rcimr.fields.rx3);
+        PK_TRACE_DBG("RCK: Init Write RCIMR=0x%08x%08x", rcimr.words.high_order, rcimr.words.low_order);
+        PK_TRACE_DBG("RCK: Init Write rp0=0x%x rx0=0x%x", rcimr.fields.rp0, rcimr.fields.rx0);
+        PK_TRACE_DBG("RCK: Init Write rp1=0x%x rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
+        PK_TRACE_DBG("RCK: Init Write rp2=0x%x rx2=0x%x", rcimr.fields.rp2, rcimr.fields.rx2);
+        PK_TRACE_DBG("RCK: Init Write rp3=0x%x rx3=0x%x", rcimr.fields.rp3, rcimr.fields.rx3);
 #if USE_MC == 0
 
         for (q = 0; q < MAX_QUADS; q++)
@@ -112,7 +113,7 @@ void pgpe_resclk_init()
         {
             rctar.value = RESCLK_TABLE[i];
 
-            PK_TRACE("RCK: Init Write RCTAR[%u]=0x%08x%08x", i, rctar.words.high_order, rctar.words.low_order);
+            PK_TRACE_DBG("RCK: Init Write RCTAR[%u]=0x%08x%08x", i, rctar.words.high_order, rctar.words.low_order);
 #if USE_MC == 0
 
             for (q = 0; q < MAX_QUADS; q++)
@@ -128,7 +129,7 @@ void pgpe_resclk_init()
         rcmr_t rcmr;
         rcmr.value = 0;  // Note: this will clear AUTO_DONE_DISABLE set by QME
         rcmr.fields.step_delay = 2; //todo Not use this hardcoded value
-        PK_TRACE("RCK: Init RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
+        PK_TRACE_DBG("RCK: Init RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
 #if USE_MC == 0
 
         for (q = 0; q < MAX_QUADS; q++)
@@ -154,7 +155,7 @@ void pgpe_resclk_enable(uint32_t pstate_target)
         rcimr_t rcimr;
         rcimr.value = 0;
         uint64_t data;
-        PK_TRACE("RCK: Rclk Enable PS=0x%x"pstate_target);
+        PK_TRACE_INF("RCK: Rclk Enable PS=0x%x"pstate_target);
         //Multicast Read-compare RCIMR[RP1]
 #if USE_MC == 0
         uint32_t q;
@@ -181,13 +182,13 @@ void pgpe_resclk_enable(uint32_t pstate_target)
         }
 
 #else
-        PK_TRACE("RCK:addr=0x%08x", PPE_SCOM_ADDR_MC_Q_EQU((uint32_t)QME_RCIMR));
+        PK_TRACE_DBG("RCK:addr=0x%08x", PPE_SCOM_ADDR_MC_Q_EQU((uint32_t)QME_RCIMR));
         PPE_GETSCOM_MC_Q_EQU(QME_RCIMR, data);
         rcimr.value = data;
 #endif
 
         //Multicast write the RP1+1 Pstate to the RCPTR
-        PK_TRACE("RCK: Enable Write rp1=0x%x, rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
+        PK_TRACE_DBG("RCK: Enable Write rp1=0x%x, rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
         pgpe_resclk_rcptr_write(rcimr.fields.rp1 + 1);
 
         //Multicast write RMCR_OR
@@ -195,7 +196,7 @@ void pgpe_resclk_enable(uint32_t pstate_target)
         rcmr_t rcmr;
         rcmr.value = 0;
         rcmr.fields.step_enable = 1;
-        PK_TRACE("RCK: Enable Write RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
+        PK_TRACE_DBG("RCK: Enable Write RCMR=0x%08x%08x", rcmr.words.high_order, rcmr.words.low_order);
 #if USE_MC == 0
 
         for (q = 0; q < MAX_QUADS; q++)
@@ -235,6 +236,7 @@ void pgpe_resclk_disable()
 {
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RESCLK_ENABLE))
     {
+        PK_TRACE_INF("RCK: Rclk Disable");
         rcimr_t rcimr;
         rcimr.value = 0;
         uint64_t data;
@@ -269,7 +271,7 @@ void pgpe_resclk_disable()
         rcimr.value = data;
 #endif
 
-        PK_TRACE("RCK: Disable Write rp1=0x%x, rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
+        PK_TRACE_INF("RCK: Disable Write rp1=0x%x, rx1=0x%x", rcimr.fields.rp1, rcimr.fields.rx1);
         pgpe_resclk_rcptr_write(rcimr.fields.rp1 + 1);
         pgpe_resclk_rcptr_poll_done(PGPE_RESCLK_RCPTR_COMPARE, rcimr.fields.rp1 + 1);
 
@@ -317,8 +319,8 @@ void pgpe_resclk_rcptr_write(uint32_t target_pstate)
 
     //Multicast write to all QMEs, RCPTR[target_pstate] with target pstate
     rcptr.fields.target_pstate = target_pstate;
-    PK_TRACE("RCK: RCPTR[tgtPS]=0x%x psTgt=0x%x", rcptr.fields.target_pstate, target_pstate);
-    PK_TRACE("RCK: Upd Write RCPTR=0x%08x%08x", rcptr.words.high_order, rcptr.words.low_order);
+    PK_TRACE_INF("RCK: RCPTR[tgtPS]=0x%x psTgt=0x%x", rcptr.fields.target_pstate, target_pstate);
+    PK_TRACE_DBG("RCK: Upd Write RCPTR=0x%08x%08x", rcptr.words.high_order, rcptr.words.low_order);
 
 #if USE_MC == 0
     uint32_t q;
@@ -343,7 +345,7 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
     rcptr_t rcptr;
     rcptr.value = 0;
 
-    PK_TRACE("RCK: RCPTR Poll");
+    PK_TRACE_INF("RCK: RCPTR Poll");
 
 #if USE_MC == 0
     uint32_t q;
@@ -360,7 +362,7 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
                 if (!rcptr.fields.pstate_ack_pending)
                 {
                     acks_rcvd   |= (1 << q);
-                    PK_TRACE("RCK: RCPTR[%u]=0x%08x%08x Acks_Rcvd=0x%x", q, rcptr.words.high_order, rcptr.words.low_order, acks_rcvd);
+                    PK_TRACE_DBG("RCK: RCPTR[%u]=0x%08x%08x Acks_Rcvd=0x%x", q, rcptr.words.high_order, rcptr.words.low_order, acks_rcvd);
                 }
             }
         }
@@ -388,7 +390,7 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
         if (rcptr.fields.target_pstate != pstate_target)
         {
             //\todo RTC:214435 take critical log and not halt
-            PK_TRACE("RCK: RCPTR[tgtPS]=0x%x psTgt=0x%x", rcptr.fields.target_pstate, pstate_target);
+            PK_TRACE_ERR("RCK: RCPTR[tgtPS]=0x%x psTgt=0x%x", rcptr.fields.target_pstate, pstate_target);
             IOTA_PANIC(CRITICAL_ERROR_LOG);
         }
     }

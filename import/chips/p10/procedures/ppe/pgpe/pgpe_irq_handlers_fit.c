@@ -51,7 +51,7 @@ void pgpe_irq_fit_init()
 {
     uint16_t freq = pgpe_gppb_get_occ_complex_frequency_mhz();
 
-    PK_TRACE("FIT: OCCCmpFreq=0x%dMhz", pgpe_gppb_get_occ_complex_frequency_mhz());
+    PK_TRACE_INF("FIT: OCCCmpFreq=0x%dMhz", pgpe_gppb_get_occ_complex_frequency_mhz());
 
     //Set PGPE beacon count threshold. PGPE beacon should be incremented
     //every 2ms. This is monitored by OCC
@@ -64,7 +64,7 @@ void pgpe_irq_fit_init()
                                (freq < 557) ? 17 :
                                (freq < 589) ? 18 :
                                (freq < 622) ? 19 : 20;
-    PK_TRACE("FIT: Beacon Threshold=0x%d", G_beacon_count_threshold);
+    PK_TRACE_INF("FIT: Beacon Threshold=0x%d", G_beacon_count_threshold);
 
     //Determine PGPE heartbeat value to be written in each quad(monitored by CME)
     G_beacon_count = 0;
@@ -106,13 +106,13 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
 
     if(occFlag & BIT32(PGPE_HW_ERROR_INJECT))
     {
-        PK_TRACE("OCCFLG2[PGPE_HW_ERROR_INJECT]=1. Halting PGPE");
+        PK_TRACE_INF("OCCFLG2[PGPE_HW_ERROR_INJECT]=1. Halting PGPE");
         IOTA_PANIC(PGPE_HW_ERROR_INJECT_TRAP);
     }
 
     if((occFlag & BITS32(PGPE_HCODE_ERROR_INJECT, PGPE_HCODE_ERROR_INJECT_LEN)) == 0x03000000)
     {
-        PK_TRACE("OCCFLG2[PGPE_HCODE_ERROR_INJECT]=0x3. FIT ERROR INJECT 0x%08x", occFlag);
+        PK_TRACE_INF("OCCFLG2[PGPE_HCODE_ERROR_INJECT]=0x3. FIT ERROR INJECT 0x%08x", occFlag);
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BITS32(PGPE_HCODE_ERROR_INJECT, PGPE_HCODE_ERROR_INJECT_LEN));
         pgpe_event_tbl_set_status(EV_FIT_ERROR_INJECT, EVENT_PENDING);
     }

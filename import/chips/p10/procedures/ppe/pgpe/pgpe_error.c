@@ -137,7 +137,7 @@ void pgpe_error_info_log(uint32_t pgpe_err_id)
                     0x0,
                     NULL,
                     o_status);
-    PK_TRACE("ERRL: o_status=0x%x", o_status); //TODO Check error code
+    PK_TRACE_INF("ERRL: o_status=0x%x", o_status); //TODO Check error code
 
 }
 
@@ -154,7 +154,7 @@ void pgpe_error_critical_log(uint32_t pgpe_err_id)
                          NULL,
                          NULL,
                          o_status);
-    PK_TRACE("ERRL: o_status=0x%x", o_status);//TODO Check error code
+    PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
 }
 
 void pgpe_error_notify_critical(uint32_t pgpe_err_id)

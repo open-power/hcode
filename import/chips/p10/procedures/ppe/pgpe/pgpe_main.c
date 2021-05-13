@@ -99,7 +99,7 @@ int main()
     pgpe_irq_init();
     pgpe_event_manager_init();
 
-    PK_TRACE("PGPE Booted");
+    PK_TRACE_INF("PGPE Booted");
     ppe_trace_op(PGPE_OPT_PGPE_BOOTED, 0);
 
     iota_run();

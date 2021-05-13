@@ -286,9 +286,9 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
 
 void pgpe_avsbus_init()
 {
-    PK_TRACE("AVS: Init");
-    PK_TRACE("AVS: VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
-             pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(), pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
+    PK_TRACE_INF("AVS: Init");
+    PK_TRACE_INF("AVS: VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                 pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(), pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
 
     //Initialize VDD
     if (pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num() != 0xFF)
@@ -311,7 +311,7 @@ void pgpe_avsbus_init()
     {
         //This is expected on some systems, and PGPE will simply report 0s
         //for any voltage and current reads on VDN Bus
-        PK_TRACE("AVS: VDN Bus Not Available");
+        PK_TRACE_INF("AVS: VDN Bus Not Available");
     }
 
     //Initialize VCS
@@ -376,7 +376,7 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
         //\todo Determine what to do here in P10. In P9, we would just halt PGPE
     }
 
-    PK_TRACE("AVS: Initialized bus_num=0x%x", bus_num);
+    PK_TRACE_DBG("AVS: Initialized bus_num=0x%x", bus_num);
 }
 
 void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv)
@@ -421,7 +421,7 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
     }
     else
     {
-        PK_TRACE("AVS: Volt_W bus_num=%u not available", bus_num)
+        PK_TRACE_ERR("AVS: Volt_W bus_num=%u not available", bus_num)
     }
 
     pk_critical_section_exit(&ctx);
@@ -445,7 +445,7 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     }
     else
     {
-        PK_TRACE("AVS: Volt_R, bus_num=%u not available", bus_num)
+        PK_TRACE_ERR("AVS: Volt_R, bus_num=%u not available", bus_num)
         *ret_volt = 0;
     }
 
@@ -475,7 +475,7 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     }
     else
     {
-        PK_TRACE("AVS: Curr_R, bus_num=%u not available", bus_num)
+        PK_TRACE_ERR("AVS: Curr_R, bus_num=%u not available", bus_num)
         *ret_current = 0;
     }
 

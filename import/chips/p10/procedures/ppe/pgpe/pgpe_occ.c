@@ -48,7 +48,7 @@ void* pgpe_occ_data_addr()
 
 void pgpe_occ_init()
 {
-    PK_TRACE("OCC: Init");
+    PK_TRACE_INF("OCC: Init");
     uint32_t occflg3 = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW);
 
     if(!(occflg3 & BIT32(XGPE_ACTIVE)))
@@ -326,13 +326,13 @@ void pgpe_occ_sample_values()
 
 void pgpe_occ_send_ipc_ack_cmd(ipc_msg_t* cmd)
 {
-    PK_TRACE("OCC: IPC Ack cmd=0x%x", (uint32_t)cmd);
+    PK_TRACE_INF("OCC: IPC Ack cmd=0x%x", (uint32_t)cmd);
     ipc_send_rsp(cmd, IPC_RC_SUCCESS);
 }
 
 void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc)
 {
-    PK_TRACE("OCC: IPC Ack rc=%d", msg_rc);
+    PK_TRACE_INF("OCC: IPC Ack rc=%d", msg_rc);
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_base_t* args = (ipcmsg_base_t*)async_cmd->cmd_data;
     args->rc = msg_rc;
@@ -341,7 +341,7 @@ void pgpe_occ_send_ipc_ack_cmd_rc(ipc_msg_t* cmd, uint32_t msg_rc)
 
 void pgpe_occ_send_ipc_ack_type_rc(uint32_t ipc_type, uint32_t msg_rc)
 {
-    PK_TRACE("OCC: IPC Ack type=%d, rc=%d", ipc_type, msg_rc);
+    PK_TRACE_INF("OCC: IPC Ack type=%d, rc=%d", ipc_type, msg_rc);
     ipc_msg_t* cmd = (ipc_msg_t*)pgpe_event_tbl_get_args(ipc_type);
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)cmd;
     ipcmsg_base_t* args = (ipcmsg_base_t*)async_cmd->cmd_data;
