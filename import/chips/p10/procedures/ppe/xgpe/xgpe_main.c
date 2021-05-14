@@ -101,6 +101,9 @@ void xgpe_init()
     //GPE2 error (2) notify
     //XSTOP GPE3 (5)interrupts
     out32(G_OCB_OIMR0_CLR, BITS32(30, 2) | BIT32(11) | BIT32(9) | BIT32(2) | BIT32(5));
+#if ENABLE_MACHINE_CHECK_HANDLER
+    IOTA_MC_HANDLER(__xgpe_machine_check_handler);
+#endif
 
 #if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)
 

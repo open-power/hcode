@@ -28,6 +28,7 @@
 
 #include "iota.h"
 #include "iota_trace.h"
+#include "iota_app_cfg.h"
 #include "ipc_api.h"
 #include "ipc_async_cmd.h"
 #include "p10_pm_hcd_flags.h"
@@ -137,6 +138,29 @@ void handle_core_throttle();
 /// ---------------------------------------------
 void compute_io_power();
 
+/// ----------------------------------------------
+/// @brief error inject method
+/// @return none
+/// ---------------------------------------------
+void handle_error_inject();
+
+/// ----------------------------------------------
+/// @brief errorlog creation method
+/// @return none
+/// ---------------------------------------------
+uint32_t xgpe_errl_create(const uint32_t i_rc,
+                          const uint32_t i_extRc,
+                          const uint32_t i_modId,
+                          const uint32_t i_usrd1,
+                          const uint32_t i_usrd2,
+                          const uint32_t i_usrd3,
+                          const uint32_t i_sev);
+
+/// ----------------------------------------------
+/// @brief handles MCHK case
+/// @return none
+/// ---------------------------------------------
+void __xgpe_machine_check_handler();
 
 /// @brief Enable/disable core throttle operation
 /// @param[in] i_throttle_state  state of throttle

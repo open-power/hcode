@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -31,7 +31,7 @@
 TEST_EXAMPLE_PANIC_CODE             = 0x1c00,
 UIH_OIMR_STACK_UNDERFLOW            = 0x1c01,
 UIH_OIMR_STACK_OVERFLOW             = 0x1c02,
-//_UNUSED_1c03                      = 0x1c03,
+XGPE_HW_ERROR_INJECT_TRAP           = 0x1c03,
 //_UNUSED_1c04                      = 0x1c04,
 //_UNUSED_1c05                      = 0x1c05,
 //_UNUSED_1c06                      = 0x1c06,

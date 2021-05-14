@@ -102,11 +102,34 @@ void xgpe_irq_fit_init()
 void xgpe_irq_fit_handler()
 {
     mtspr(SPRN_TSR, TSR_FIS);
+    handle_error_inject();
     handle_pm_suspend();
     handle_wof_iddq_values();
     handle_core_throttle();
     compute_io_power();
 }
+
+void handle_error_inject()
+{
+    uint32_t l_occflg3;
+    l_occflg3 = in32(G_OCB_OCCFLG3);
+
+    if( l_occflg3 & BIT32(XGPE_HW_ERROR_INJECT))
+    {
+        PK_TRACE("OCCFLG3[XGPE_HW_ERROR_INJECT]=1. Halting XGPE");
+        IOTA_PANIC(XGPE_HW_ERROR_INJECT_TRAP);
+    }
+
+    if ( l_occflg3 & BITS32(XGPE_HCODE_ERROR_INJECT, XGPE_HCODE_ERROR_INJECT_LEN))
+    {
+        PK_TRACE("OCCFLG3[XGPE_HCODE_ERROR_INJECT]=0x3. FIT ERROR INJECT 0x%08x", l_occflg3);
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_WO_CLEAR, BITS32(XGPE_HCODE_ERROR_INJECT, XGPE_HCODE_ERROR_INJECT_LEN));
+
+        xgpe_errl_create(XGPE_RC_HCODE_ERR_INJECT, 0, XGPE_MODID_FIT_HANDLER,
+                         l_occflg3, 0xdeadbeef, 0xdeadbeef, ERRL_SEV_UNRECOVERABLE);
+    }
+}
+
 
 extern XgpeHeader_t* _XGPE_IMG_HEADER __attribute__ ((section (".xgpe_image_header")));
 ///////////////////////////////////////////////////

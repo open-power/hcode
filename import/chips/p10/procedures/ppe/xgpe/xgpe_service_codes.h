@@ -27,9 +27,11 @@
 
 enum xgpeReasonCode
 {
-    XGPE_RC_INTERNAL_ERR        = 0x01,
-    XGPE_RC_QME_CRITICAL_ERR    = 0X02,
-    XGPE_RC_QME_ERR_DOWNLOAD    = 0x03,
+    XGPE_RC_INTERNAL_ERR          = 0x01,
+    XGPE_RC_QME_CRITICAL_ERR      = 0X02,
+    XGPE_RC_QME_ERR_DOWNLOAD      = 0x03,
+    XGPE_RC_HCODE_ERR_INJECT      = 0x04,
+    XGPE_SCOM_MACHINE_CHECK_ERROR = 0x05,
 };
 
 enum xgpeExtReasonCode
@@ -41,6 +43,8 @@ enum xgpeExtReasonCode
 enum xgpeModuleId
 {
     XGPE_MODID_HANDLE_QME_ERRL  = 0x0001,
+    XGPE_MODID_FIT_HANDLER      = 0x0002,
+    XGPE_HCODE_SCOM             = 0x0003,
 };
 
 #endif

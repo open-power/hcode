@@ -113,6 +113,7 @@ SECTIONS
     .sdata   . : {  *(.sdata.ppe42_64bit_timebase)
                     *(.sdata.g_current_prty_level)
                     *(.sdata.g_iota_curr_machine_state_ptr)
+                    *(.sdata.g_iota_machine_check_handler)
                     *(.sdata.g_iota_fit_handler)
                     *(.sdata.g_iota_dec_handler)
                     *(.sdata.g_iota_idle_task_list)
