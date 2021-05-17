@@ -255,6 +255,10 @@ qme_init()
                 }
             }
         }
+
+        // Apply run-time CUCR settings to allow CPMS sampling transfers upon STOP
+        out32( QME_LCL_CORE_ADDR_WR(
+                   CPMS_CUCR_WO_OR, G_qme_record.c_configured ),  BITS32(5, 2) );
     }
 
     //--------------------------------------------------------------------------

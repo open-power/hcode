@@ -158,3 +158,7 @@ uint32_t QME_TFCSR_WO_OR                = 0xC0008820;
 uint32_t CPMS_MMAR                      = 0xC000E380;
 uint32_t CPMS_MMAR_WO_CLEAR             = 0xC000E3B0;
 uint32_t CPMS_MMAR_WO_OR                = 0xC000E3A0;
+
+uint32_t CPMS_CUCR                      = 0xC000E3C0;
+uint32_t CPMS_CUCR_WO_CLEAR             = 0xC000E3F0;
+uint32_t CPMS_CUCR_WO_OR                = 0xC000E3E0;

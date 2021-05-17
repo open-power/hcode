@@ -157,3 +157,7 @@ extern uint32_t QME_TFCSR_WO_CLEAR;
 extern uint32_t CPMS_MMAR;
 extern uint32_t CPMS_MMAR_WO_CLEAR;
 extern uint32_t CPMS_MMAR_WO_OR;
+
+extern uint32_t CPMS_CUCR;
+extern uint32_t CPMS_CUCR_WO_CLEAR;
+extern uint32_t CPMS_CUCR_WO_OR;
