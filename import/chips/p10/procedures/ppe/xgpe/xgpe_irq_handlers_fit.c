@@ -507,15 +507,6 @@ void handle_wof_iddq_values()
 
     if(G_iddq.tick_cnt == IDDQ_FIT_SAMPLE_TICKS)
     {
-        //TODO Fixme RTC 256834
-#if 0
-        while(in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW) & BIT32(PGPE_EX_RATIOS_ATOMIC_FLAG))
-        {
-            //TODO add busy-wait timeout(20us)
-            //Determine what XGPE needs to do here.
-        }
-
-#endif
 
         for (c = 0; c < MAX_CORES; c++)
         {
@@ -526,7 +517,6 @@ void handle_wof_iddq_values()
             }
         }
 
-        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_EX_RATIOS_ATOMIC_FLAG));
         //G_iddq.p_wof_val->dw0.fields.vratio_vdd_avg = G_iddq.vratio_vdd_accum / G_iddq.tick_cnt;
         //G_iddq.p_wof_val->dw0.fields.vratio_vcs_avg = G_iddq.vratio_vcs_accum / G_iddq.tick_cnt;
         //G_iddq.vratio_vdd_accum = 0;
