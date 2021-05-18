@@ -199,7 +199,7 @@ void pgpe_wov_ocs_update_dirty()
     {
         pgpe_opt_set_word(0, 0);
         pgpe_opt_set_half(0, G_pgpe_wov_ocs.idd_current_thresh);
-        pgpe_opt_set_half(1, G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_10ma - G_pgpe_wov_ocs.idd_current_thresh);
+        pgpe_opt_set_half(1, pgpe_occ_get(idd_ocs_running_avg) - G_pgpe_wov_ocs.idd_current_thresh);
         ppe_trace_op(PGPE_OPT_OCS_THRESH_TRANS, pgpe_opt_get());
         PK_TRACE_DBG("WOV: old_ocs=0x%x, new_ocs=0x%x idd_avg_ma=0x%x, idd_thresh=0x%x", G_pgpe_wov_ocs.overcurrent_flag,
                      overcurrent,
@@ -237,11 +237,11 @@ void pgpe_wov_ocs_update_dirty()
             G_pgpe_wov_ocs.cnt_droop_ok++;
 
             //Buffer trace \\todo
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+            dirty = OCS_DIRTY_SAMPLE_TYPE_00;
         }
 
-        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
-        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
-        dirty = OCS_DIRTY_SAMPLE_TYPE_00;
     }
     else if (droop == DROOP_LVL_LIGHT)
     {

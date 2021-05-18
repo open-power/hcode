@@ -35,11 +35,29 @@
 #include "p10_oci_proc.H"
 #include "p10_scom_eq_1.H"
 
-pgpe_occ_t G_pgpe_occ __attribute__((section (".data_structs")));
+pgpe_occ_t G_pgpe_occ __attribute__((section (".data_structs")))  =
+{
+    0,
+    0,
+    0, 0,
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0,
+    {0, 0, 0, 0, 0, 0, 0, 0}, 0, 0,
+    0,
+    0
+};
 void pgpe_occ_sample_values();
 void pgpe_occ_produce_fit_values();
 void pgpe_occ_sync_qme_occ_timebase();
-
 
 void* pgpe_occ_data_addr()
 {
@@ -224,19 +242,36 @@ void pgpe_occ_produce_fit_values()
         G_pgpe_occ.ics_tb_accum = 0;
         G_pgpe_occ.ocs_avg_pct_tb_accum = 0;
 
-        //Subtract oldest sample and add new sample
-        G_pgpe_occ.idd_ocs_running_avg = G_pgpe_occ.idd_ocs_running_avg - G_pgpe_occ.idd_ocs_accum[G_pgpe_occ.idd_ocs_accum_idx]
+        //Subtract the oldest entry and add the latest reading
+        G_pgpe_occ.idd_ocs_running_sum = G_pgpe_occ.idd_ocs_running_sum - G_pgpe_occ.idd_ocs_accum[G_pgpe_occ.idd_ocs_accum_idx]
                                          + G_pgpe_occ.idd_fit_avg_ma;
-        G_pgpe_occ.idd_ocs_running_avg = G_pgpe_occ.idd_ocs_running_avg >> 3;
 
-        G_pgpe_occ.idd_ocs_accum[G_pgpe_occ.idd_ocs_accum_idx] = G_pgpe_occ.idd_fit_avg_ma;
-        G_pgpe_occ.idd_ocs_accum_idx = (G_pgpe_occ.idd_ocs_accum_idx + 1 ) % PGPE_OCS_SAMPLE_SIZE;
+        G_pgpe_occ.idd_ocs_running_avg = (G_pgpe_occ.idd_ocs_running_sum + (PGPE_OCS_SAMPLE_SIZE >> 1)) >>
+                                         PGPE_OCS_SAMPLE_SIZE_SHIFT  ; //Round by adding 4 and then divide by 8 to get average
+        PK_TRACE("OCC: Idd_ocs_running_sum=0x%08x idd_ocs_accum[%u]=0x%08x, idd_fit_avg=0x%08x ",
+                 G_pgpe_occ.idd_ocs_running_avg,
+                 G_pgpe_occ.idd_ocs_accum_idx,
+                 G_pgpe_occ.idd_ocs_accum[G_pgpe_occ.idd_ocs_accum_idx],
+                 G_pgpe_occ.idd_fit_avg_ma);
+
+        PK_TRACE("OCC: Idd_ocs_running_avg=0x%08x", G_pgpe_occ.idd_ocs_running_avg);
+
+        G_pgpe_occ.idd_ocs_accum[G_pgpe_occ.idd_ocs_accum_idx] = G_pgpe_occ.idd_fit_avg_ma; //Save entry in the array
+
+        //Increment Index
+        if (G_pgpe_occ.idd_ocs_accum_idx < PGPE_OCS_SAMPLE_SIZE - 1)
+        {
+            G_pgpe_occ.idd_ocs_accum_idx = (G_pgpe_occ.idd_ocs_accum_idx + 1);
+        }
+        else
+        {
+            G_pgpe_occ.idd_ocs_accum_idx = 0;
+        }
 
         if (G_pgpe_occ.pwof_val->dw4.fields.max_idd_ocs_average_10ma <  G_pgpe_occ.idd_ocs_running_avg)
         {
             G_pgpe_occ.pwof_val->dw4.fields.max_idd_ocs_average_10ma = G_pgpe_occ.idd_ocs_running_avg;
         }
-
     }
 
     if (pgpe_pstate_is_wof_enabled())

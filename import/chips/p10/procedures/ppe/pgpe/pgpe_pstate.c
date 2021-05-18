@@ -366,7 +366,8 @@ void pgpe_pstate_actuate_voltage_step()
 {
     if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
     {
-        G_pgpe_pstate.vdd_wov_bias = ((int16_t)G_pgpe_pstate.vdd_next_ext * pgpe_wov_ocs_get_wov_tgt_pct()) / 1000;
+        G_pgpe_pstate.vdd_wov_bias = ((int16_t)(G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift)  *
+                                      pgpe_wov_ocs_get_wov_tgt_pct()) / 1000;
         G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift + G_pgpe_pstate.vdd_wov_bias;
         PK_TRACE_INF("PSS: Act_V, VddNext=%d WovBias=%d WovTgtPct=%d WovCurrPct=%d", G_pgpe_pstate.vdd_next_ext,
                      G_pgpe_pstate.vdd_wov_bias, pgpe_wov_ocs_get_wov_tgt_pct(), pgpe_wov_ocs_get_wov_curr_pct());
