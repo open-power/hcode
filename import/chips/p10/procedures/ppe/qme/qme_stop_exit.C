@@ -92,10 +92,11 @@ qme_stop_report_pls_srr1(uint32_t core_target)
         act_stop_level = ( in32_sh(QME_LCL_SCDR) >> SHIFT64SH(c_end) ) & 0xF;
         local_data     = 0;
 
-        PK_TRACE("Core[%x] act_stop_level[%x] previous act_stop_level[%x]",
-                 c_loop, act_stop_level, G_qme_record.c_act_stop_level[c_index]);
-        G_qme_record.c_act_stop_level[c_index] = act_stop_level;
-
+        /*DEBUG ONLY
+                PK_TRACE("Core[%x] act_stop_level[%x] previous act_stop_level[%x]",
+                         c_loop, act_stop_level, G_qme_record.c_act_stop_level[c_index]);
+                G_qme_record.c_act_stop_level[c_index] = act_stop_level;
+        */
         for( pls_end  = 3, srr1_end = 17, t_index = 0,
              t_offset = 0; t_offset < 16; t_offset += 4,
              pls_end += 4, srr1_end += 2, t_index++ )
@@ -114,15 +115,15 @@ qme_stop_report_pls_srr1(uint32_t core_target)
 #endif
 
             new_pls = ( act_stop_level > old_pls ) ? (act_stop_level) : (old_pls);
+            /*DEBUG_ONLY
+                        PK_TRACE("old_pls[%x] new_pls[%x] previous old_pls[%x] new_pls[%x]",
+                                 old_pls, new_pls,
+                                 G_qme_record.t_old_pls[c_index][t_index],
+                                 G_qme_record.t_new_pls[c_index][t_index]);
 
-            PK_TRACE("old_pls[%x] new_pls[%x] previous old_pls[%x] new_pls[%x]",
-                     old_pls, new_pls,
-                     G_qme_record.t_old_pls[c_index][t_index],
-                     G_qme_record.t_new_pls[c_index][t_index]);
-
-            G_qme_record.t_old_pls[c_index][t_index] = old_pls;
-            G_qme_record.t_new_pls[c_index][t_index] = new_pls;
-
+                        G_qme_record.t_old_pls[c_index][t_index] = old_pls;
+                        G_qme_record.t_new_pls[c_index][t_index] = new_pls;
+            */
             // unless esl=0, srr1 = some_state_loss regardless stop_level
             srr1 = SOME_STATE_LOSS_BUT_NOT_TIMEBASE;
             esl = pscrs & BIT32(2);
@@ -198,9 +199,6 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
     //===============//
 
-//    PK_TRACE_INF("assert pmc_reg_dis_xfer_tfac via PMC_UPDATE[1]");
-//    PPE_PUTSCOM_MC( PMC_UPDATE, core_target, BIT64(1) );
-
     PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(1) );
 
@@ -210,10 +208,6 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
     while( ( ( (~in32(QME_LCL_SSDR)) >> SHIFT32(15) ) & core_target ) != core_target );
 
-    /*
-        PK_TRACE("Drop BLOCK_INTERRUPT to PC via SCSR[0]");
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(0) );
-    */
     //===============//
 
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
@@ -234,6 +228,13 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
     if( ( core_done = ( core_spwu & core_target ) ) )
     {
+        uint32_t c_mma_down = core_done & (~G_qme_record.c_mma_available);
+
+        if( c_mma_down && G_qme_record.mma_modes_enabled == MMA_POFF_DYNAMIC )
+        {
+            qme_mma_stop_exit(c_mma_down);
+        }
+
         PK_TRACE_INF("SX.0A: Cores[%x] Assert Special_Wakeup_Done via PCR_SCSR[16]", core_done);
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_done ), BIT32(16) );
         G_qme_record.c_special_wakeup_done |= core_done;
@@ -832,8 +833,6 @@ qme_stop_exit()
             G_qme_record.c_special_wakeup_exit_pending = 0xF;
         }
 
-        MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOM_CUSTOMIZE )
-
         wrteei(0);
 
         if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
@@ -870,12 +869,13 @@ qme_stop_exit()
                     if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
                     {
                         PK_TRACE_DBG("ERROR: BCE CL2 Scom Restore Copy Failed. HALT QME!");
+
                         QME_ERROR_HANDLER(QME_STOP_BLOCK_COPY_CL2_SCOM_FAILED,
                                           pQmeImgHdr->g_qme_scom_offset,
                                           pQmeImgHdr->g_qme_coreL2ScomLength, ec);
                     }
 
-                    MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
+                    MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOM_CUSTOMIZE )
 
                     if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_CUST_ENABLE )
                     {
@@ -883,11 +883,8 @@ qme_stop_exit()
                                                 static_cast<fapi2::MulticastCoreSelect>( ec ) );
                         p10_hcd_core_cache_scom_customize( core_scom_rest_target, CORE_RESTORE_ENTRY );
                     }
-
                 } //if( G_qme_record.c_stop11_exit_targets & ec )
-
             } //for( uint32_t ec = 8;
-
         } // if( G_qme_record.hcode_func_enabled
 
         wrteei(1);

@@ -50,12 +50,18 @@ qme_top_priority_event()
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_TOPPRI);
     uint64_t fir = 0;
     uint64_t fir_action = 0;
+#if POWER10_DD_LEVEL == 10
     uint64_t top = in64(QME_LCL_EISR) & BITS64(0, 8);
     out64(QME_LCL_EIMR_OR, top);
     g_eimr_override |= top;
-
     PK_TRACE("Event: Top Priority Error/Debug Interrupt[0:DEBUGGER,1:TRIGGER,2:SYS_XSTOP,3:LFIR]: %x",
              (uint32_t)(top >> 60));
+#else
+    uint32_t top = in32(QME_LCL_EISR) & BITS32(0, 8);
+    out32(QME_LCL_EIMR_OR, top);
+    g_eimr_override |= ((uint64_t)top << 32);
+    PK_TRACE("Event: Top Priority Error/Debug Interrupt[0:DEBUGGER,1:TRIGGER,2:SYS_XSTOP,3:LFIR]: %x", top);
+#endif
 
     if( top & BIT64(3) )
     {
@@ -100,7 +106,11 @@ qme_doorbell2_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_DB2);
     PK_TRACE("Event: Doorbell 2");
+#if POWER10_DD_LEVEL == 10
     out64( QME_LCL_EISR_CLR, BIT64(18) );
+#else
+    out32( QME_LCL_EISR_CLR, BIT32(18) );
+#endif
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_DB2);
 }
 
@@ -249,7 +259,11 @@ qme_doorbell0_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_DB0);
     PK_TRACE("Event: Doorbell 0");
+#if POWER10_DD_LEVEL == 10
     out64( QME_LCL_EISR_CLR, BIT64(16) );
+#else
+    out32( QME_LCL_EISR_CLR, BIT32(16) );
+#endif
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_DB0);
 }
 
@@ -258,7 +272,11 @@ qme_pmcr_update_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_PMCR);
     PK_TRACE("Event: PMCR Update");
+#if POWER10_DD_LEVEL == 10
     out64( QME_LCL_EISR_CLR, BIT64(19) );
+#else
+    out32( QME_LCL_EISR_CLR, BIT32(19) );
+#endif
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_PMCR);
 }
 

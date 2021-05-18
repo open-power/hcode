@@ -131,6 +131,7 @@ qme_panic_handler()
         {
             PK_TRACE_DBG ("Good cores in user data2: 0x%X", G_qme_record.errl_data2);
             good_cores &= (~G_qme_record.errl_data2);
+            G_qme_record.c_in_error = G_qme_record.errl_data2;
         }
 
         PK_TRACE_DBG ("Net good cores not in stop: 0x%X", good_cores);

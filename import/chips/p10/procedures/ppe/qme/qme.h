@@ -208,6 +208,7 @@ BceReturnCode_t qme_block_copy_check();
 
 // QME Stop Functions
 void qme_parse_pm_state_active_fast();
+void qme_mma_stop_exit(uint32_t);
 void qme_stop_entry();
 void qme_stop_exit();
 void qme_stop_self_execute(uint32_t, uint32_t);

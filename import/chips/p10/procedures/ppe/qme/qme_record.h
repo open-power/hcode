@@ -31,152 +31,131 @@
 typedef struct
 {
     // Header and Enables
-
+    // 1
     uint32_t    scoreboard_version;
     uint32_t    scoreboard_size;
     uint32_t    chip_dd_level;
     uint32_t    git_head;
-
-    uint32_t    timers_enabled;     // FIT: 0b001, DEC: 0b010, DOG:0b100
+    // 2
+    uint32_t    quad_id;            // PIR[28:31]
     uint32_t    hcode_func_enabled; // See above enum QME_HCODE_FUNCTIONAL_ENABLES
     uint32_t    stop_level_enabled; // Stop2:bit2, Stop5:bit5, Stop11:bit11
     uint32_t    fused_core_enabled; // HwFused:0b01, HcodePaired:0b10
-
+    // 3
     uint32_t    mma_modes_enabled;  // POff:0b001, POff_Delay:0b010(Dynamic), POn:0b100(Static)
     uint32_t    mma_pwoff_dec_ticks;// number of ticks of dec timer to poweroff mma
     uint32_t    mma_pwoff_dec_val;  // dec value to setup for each dec tick
-    uint32_t    uih_status;         // upper 16b actual irq, lower 16b phantom
+    uint32_t    bce_buf_content_type;//bce paging content selection
 
     // Wof and Pstate and Doorbells
     //   Note: PMCR and throttle are handled by HW
     //   can add PMCR data collection
     //   if profile/debug is needed
     //   Same with DB1 reserved by XGPE
-
+    // 4
     uint32_t    doorbell2_msg;
     uint32_t    doorbell1_msg;
     uint32_t    doorbell0_msg;
-    uint32_t    quad_id;            // PIR[28:31]
+    uint32_t    uih_status;         // upper 16b actual irq, lower 16b phantom
 
     // State of Cores
-
+    // 5
     uint32_t    c_configured;       // Configured Cores
     uint32_t    c_in_error;         // Core encountered error and garded
     uint32_t    c_all_stop_mask;    // stop masks that applying to the uih override
     uint32_t    c_stop1_targets;
-
+    // 6
     uint32_t    c_special_wakeup_rise_mask;
     uint32_t    c_special_wakeup_fall_mask;
     uint32_t    c_regular_wakeup_mask;
     uint32_t    c_pm_state_active_mask;
-
+    // 7
     uint32_t    c_block_stop_done;
     uint32_t    c_block_stop_req;
     uint32_t    c_block_wake_done;
     uint32_t    c_block_wake_req;
-
-    uint32_t    c_special_wakeup_source;
-    uint32_t    c_special_wakeup_error; //2nd 8bits spwu_drop, 3rd 8bits spwu_on_active, 4th 8bits spwu_on_stop
+    // 8
+    uint32_t    c_block_wake_override;
+    uint32_t    c_fused_spwu_fall;
     uint32_t    c_special_wakeup_done;
     uint32_t    c_hostboot_cores;
-
+    // 9
     uint32_t    c_stop2_reached; // PIG TypeA 8:11
     uint32_t    c_stop3_reached; // PIG TypeA 12:15
     uint32_t    c_stop5_reached;
     uint32_t    c_stop11_reached;// PIG TypeA 20:23
 
     // Stop and Wakeup Processing
-
+    // 10
     uint32_t    c_pm_state_active_fast_req;
     uint32_t    c_regular_wakeup_fast_req;
     uint32_t    c_pm_state_active_slow_req;
     uint32_t    c_regular_wakeup_slow_req;
-
+    // 11
     uint32_t    c_special_wakeup_rise_req;
     uint32_t    c_special_wakeup_fall_req;
     uint32_t    c_special_wakeup_exit_pending;
     uint32_t    c_special_wakeup_abort_pending;
-
+    // 12
     uint32_t    c_pm_state[4];
-
+    // 13
     uint32_t    c_stop2_enter_targets;
     uint32_t    c_stop3_enter_targets;
     uint32_t    c_stop5_enter_targets;
     uint32_t    c_stop11_enter_targets;
-
+    // 14
     uint32_t    c_mma_poweroff_count[4];
-
+    // 15
     uint32_t    c_mma_available; // invert PIG TypeA 16:19
     uint32_t    c_mma_active_req;
     uint32_t    c_l2_purge_catchup_targets;
     uint32_t    c_stop3or5_catchup_targets;
-
+    // 16
     uint32_t    c_l2_purge_abort_targets;
     uint32_t    c_ncu_purge_abort_targets;
     uint32_t    c_stop3or5_abort_targets;
     uint32_t    c_stop2_exit_express;
-
+    // 17
     uint32_t    c_stop2_exit_targets;
     uint32_t    c_stop3_exit_targets;
     uint32_t    c_stop5_exit_targets;
     uint32_t    c_stop11_exit_targets;
-
-    uint32_t    c_auto_stop11_wakeup;
-    uint32_t    c_lpar_mode_enabled;
+    // 18
     uint32_t    c_xstop_clock_abort_targets;
     uint32_t    c_xstop_power_abort_targets;
-
-    uint32_t    c_act_stop_level[4];
-    uint32_t    t_old_pls[4][4];
-    uint32_t    t_new_pls[4][4];
-
-    uint32_t    c_tfac_c2s_retry_limit[4];
-    uint32_t    c_tfac_c2s_retry_total[4];
-    uint32_t    c_tfac_s2c_retry_limit[4];
-    uint32_t    c_tfac_s2c_retry_total[4];
+    uint32_t    c_lpar_mode_enabled;    // FW: Core enabled multi lpar mode
+    uint32_t    c_auto_stop11_wakeup;   // FW: auto stop11 wakeup vector
 
     // Errlog
+    // 19
     uint16_t    pad;
     uint16_t    errl_panic;
     uint32_t    errl_data0;
     uint32_t    errl_data1;
     uint32_t    errl_data2;
-
-    // Hipri IRQ and Error Records
-
-    uint32_t    qme_debugger;
-    uint32_t    pgpe_hb_loss;
-    uint32_t    pv_ref_failed;
-    uint32_t    quad_checkstop;
-
-    //applies to all below:
-    //1st Half for Entry, 2nd Half for Exit
-
-    uint32_t    c_checkstop;
-    uint32_t    c_clock_failed;
-    uint32_t    l3_clock_failed;
-    uint32_t    mma_clock_failed;
-
-    uint32_t    c_rvrm_failed;
-    uint32_t    c_pfet_failed;
-    uint32_t    l3_pfet_failed;
-    uint32_t    mma_pfet_failed;
-
-    uint32_t    c_resclk_failed;
-    uint32_t    c_vdm_failed;
-    uint32_t    c_scan_failed;
-    uint32_t    c_self_failed;
-
+    // 20
     uint16_t    c_failed_ring[4]; // Field needs to be at 8B boundary
-    uint32_t    c_self_fault_vector;
+    uint32_t    c_scan_failed;
     uint32_t    cts_timeout_count;
-
-    uint32_t    c_fused_spwu_fall;
-    uint32_t    c_block_wake_override;
+    // 21
+    uint32_t    c_self_fault_vector;
+    uint32_t    c_self_failed;
     uint32_t    c_in_recovery;
     uint32_t    recovery_ongoing;
-    uint32_t    bce_buf_content_type;
+    // 22,23,24,25
+    uint32_t    c_tfac_c2s_retry_limit[4];
+    uint32_t    c_tfac_c2s_retry_total[4];
+    uint32_t    c_tfac_s2c_retry_limit[4];
+    uint32_t    c_tfac_s2c_retry_total[4];
 
+    /*DEBUG_ONLY
+    // 26
+        uint32_t    c_act_stop_level[4];
+    // 27,28,29,30
+        uint32_t    t_old_pls[4][4];
+    // 31,32,33,34
+        uint32_t    t_new_pls[4][4];
+    */
 } QmeRecord __attribute__ ((aligned (4)));
 
 #endif //__QME_RECORD_H__

@@ -93,8 +93,8 @@ qme_block_copy_core_data(uint32_t i_barIndex, uint32_t i_bcMembase, uint32_t i_b
     //let us find out HOMER address where core specific scan rings reside.
     // use native 16-bit PPE multiply instruction
     i_bcMembase = i_bcMembase + (mulu16( G_qme_record.quad_id , i_qmeBlockLen ));
-    PKTRACE("Start qme block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  QME Ist %d",
-            i_bcMembase, i_bcSrambase, i_coreLen, G_qme_record.quad_id);
+    PK_TRACE_DBG("Start qme block copy MBASE 0x%08x SBSE 0x%08x Len 0x%08x  QME Ist %d",
+                 i_bcMembase, i_bcSrambase, i_coreLen, G_qme_record.quad_id);
 
     kick_off_bce( i_barIndex, i_bcMembase, i_bcSrambase, i_coreLen );
 }

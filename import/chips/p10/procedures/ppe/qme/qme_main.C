@@ -33,19 +33,6 @@ extern uint64_t g_eimr_override;
 uint32_t G_IsSimics = 0; // extern declared in qme.h
 hcode_error_table_t G_qmeElogTable; // QME local Error Log Table
 
-uint64_t pow2(uint32_t num)
-{
-    uint32_t i; /* Variable used in loop counter */
-    uint64_t result = 1;
-
-    for (i = 0; i < num; ++i)
-    {
-        result *= 2;
-    }
-
-    return result;
-}
-
 void
 qme_attr_init()
 {
@@ -81,19 +68,6 @@ qme_attr_init()
     }
 
     //===============
-    /*
-        uint8_t pair_mode = 0;
-
-        FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_FUSED_CORE_PAIRED_MODE_ENABLED, l_sys, pair_mode ) );
-
-        if( ( pair_mode || (G_qme_record.chip_dd_level == 10) ) &&
-            ( in32_sh(QME_LCL_QMCR) & BIT64SH(47) ) )
-        {
-            out32(QME_LCL_QMCR_OR, BIT32(10));
-        }
-    */
-
-    //===============
 
     // Time to delay before powering off the MMA due to the lack of MMA instructions.
     // Time = 1ms * 2**ATTR_SYSTEM_MMA_POWEROFF_DELAY_POWEROF2_MS.
@@ -107,25 +81,14 @@ qme_attr_init()
     //     0xFE - every QME FIT timer interrupt (~250us)
     //     0xFF - no power off of MMA (QME Hcode still runs; different behavior
 
-    // Assuming QME Timebase is at 32ns duration (when Nest is at 2GHz)
-    //   Ticks * Dec_Val = ( Delay**2 )*1K*1K / 32ns
-    // For simplicity, always use 100us as the frequency of
-    //   Dec check MMA instruction running and increment ticks if not
-#define MMA_ACTIVE_CHECK_OCCUR_NS 1000000
-    G_qme_record.mma_pwoff_dec_val = MMA_ACTIVE_CHECK_OCCUR_NS / 32;
-
     uint8_t  mma_pon_dis  = 0;
     uint8_t  mma_poff_dis = 0;
     uint8_t  mma_powerof2 = 0;
-    uint64_t mma_delay_ns = 0;
+    uint64_t mma_delay_ms = 0;
 
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DELAY_POWEROF2_MS, l_sys, mma_powerof2 ) );
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE,           l_sys, mma_poff_dis ) );
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWERON_DISABLE,            l_sys, mma_pon_dis ) );
-
-    // STICK DD1 to STATIC model until all commits are there, and code tested in DD2.
-    mma_pon_dis  = 0;
-    mma_poff_dis = 1;
 
     if( mma_pon_dis )
     {
@@ -149,39 +112,49 @@ qme_attr_init()
 
         G_qme_record.mma_modes_enabled = MMA_POFF_DYNAMIC;
 
+        // 250us
         if( mma_powerof2 == 0xFE )
         {
-            mma_delay_ns = 250000;
+            G_qme_record.mma_pwoff_dec_val   = 25000;//50us per 2ns/500Mhz
+            G_qme_record.mma_pwoff_dec_ticks = 5;
         }
-        // around down to 1 day if more than 1 day
+        // round down to 1 day if more than 1 day
+        // max pow2(0x1B);
         else if( mma_powerof2 > 0x1B )
         {
-            mma_delay_ns = pow2(0x1B) * 1000000;
+            G_qme_record.mma_pwoff_dec_val   = 500000000;//1s per 2ns/500Mhz
+            G_qme_record.mma_pwoff_dec_ticks = 86400;    //24x60x60
         }
+        // Leave TCR.DS=0 for DEC to tick every ppe cycle for easy math
+        // Given QME cycle is at 2ns duration since it runs on 500Mhz when Nest is at 2Ghz
+        //   Ticks * Dec_Val = ( Delay**2 )*1K*1K / 2ns
+        // Dec checks MMA instruction running and increment ticks if not
+        //   For simplicity, always use 128us for Dev Value
+        //   as that gives 8 Dec ticks for minimal 1ms delay
         else
         {
-            mma_delay_ns = pow2(mma_powerof2) * 1000000;
+            mma_delay_ms = (1 << mma_powerof2);       //default pow2(0x0A)=1024
+            G_qme_record.mma_pwoff_dec_val   = 64000; //128us per 2ns/500Mhz
+            //therefore 8 times/ticks to meet minimal 1ms or 1024us.
+            //instead of division which uses extra math library(increase image size)
+            //approximate shift left by 3 for 8 times of X ms
+            G_qme_record.mma_pwoff_dec_ticks = mma_delay_ms << 3;
         }
 
-        PK_TRACE_INF("MMA Dynmatic Engagement with mma_powerof2 %x mma_delay_ns %x",
-                     mma_powerof2, mma_delay_ns);
-        G_qme_record.mma_pwoff_dec_ticks = mma_delay_ns / MMA_ACTIVE_CHECK_OCCUR_NS;
+        PK_TRACE_INF("MMA Dynmatic Engagement with mma_powerof2 %x mma_delay_ms %x, dec_val %x, dev_ticks %x",
+                     mma_powerof2, mma_delay_ms, G_qme_record.mma_pwoff_dec_val, G_qme_record.mma_pwoff_dec_ticks);
 
-        // Leave TCR.DS=0 for DEC to tick every ppe cycle for easy math
-        // PPE runs on 500MHz, thus 2ns per ppe cycle
-        // For EPM uses 100K simcycle timeout, given 1ns = 8 simcycle
-        // 6250ns dec countdown thus 250 for spr DEC and 25 dec ticks
+#ifdef EPM_TUNING
 
         if( in32_sh( QME_LCL_FLAGS ) & BIT64SH( QME_FLAGS_RUNNING_EPM ) )
         {
+            // For EPM uses 100K simcycle timeout, given 1ns = 8 simcycle
+            // 6250ns dec countdown thus 250 for spr DEC and 25 dec ticks
             G_qme_record.mma_pwoff_dec_ticks = 25;
             G_qme_record.mma_pwoff_dec_val   = 250;
         }
-        else
-        {
-            G_qme_record.mma_pwoff_dec_ticks = 5;
-            G_qme_record.mma_pwoff_dec_val = MMA_ACTIVE_CHECK_OCCUR_NS / 32;
-        }
+
+#endif
 
         mtspr(SPRN_DEC, G_qme_record.mma_pwoff_dec_val);
     }
@@ -265,9 +238,14 @@ main()
 #endif
 
 #if ENABLE_DEC_TIMER
-    PK_TRACE("Main: Register and Enable DEC Timer");
-    IOTA_DEC_HANDLER(qme_dec_handler);
-    TCR_VAL |= TCR_DIE;
+
+    if( G_qme_record.mma_modes_enabled == MMA_POFF_DYNAMIC )
+    {
+        PK_TRACE("Main: Register and Enable DEC Timer");
+        IOTA_DEC_HANDLER(qme_dec_handler);
+        TCR_VAL |= TCR_DIE;
+    }
+
 #endif
 
     mtspr(SPRN_TCR, TCR_VAL);

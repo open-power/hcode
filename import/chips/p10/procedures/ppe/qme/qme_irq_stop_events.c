@@ -402,6 +402,13 @@ qme_parse_special_wakeup_rise()
 
     if( c_spwu )
     {
+        uint32_t c_mma_down = c_spwu & (~G_qme_record.c_mma_available);
+
+        if( c_mma_down && G_qme_record.mma_modes_enabled == MMA_POFF_DYNAMIC )
+        {
+            qme_mma_stop_exit(c_mma_down);
+        }
+
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_spwu ), ( BIT32(1) | BIT32(16) ) );
         G_qme_record.c_special_wakeup_done  |= c_spwu;
         PK_TRACE_DBG("Event: Assert Special Wakeup Done and PM_EXIT on Cores[%x]", c_spwu);
@@ -523,6 +530,21 @@ qme_parse_special_wakeup_fall()
 
 //==============================
 
+// spwu cases with mma
+//
+// no actions for static mode
+// core in stop11, mma powered down, mma static, spwu core will bring mma up, and it will stay up with core
+// core in stop3,  mma powered down, mma static, spwu core will bring mma up, and it will stay up with core
+// core in stop2,  mma clock off,    mma static, spwu core will bring mma up, and it will stay up with core
+// core running,   mma already on,   mma static, mma is already on, and it will stay up with core
+//
+// action required for dynamic mode
+// core in stop11, mma powered down, mma dynamic, core spwu not touch mma, action: poweron mma, disable dyn until spwu drop
+// core in stop3,  mma powered down, mma dynamic, core spwu not touch mma, action: poweron mma, disable dyn until spwu drop
+// core in stop2,  mma powered down, mma dynamic, core spwu not touch mma, action: poweron mma, disable dyn until spwu drop
+// core running,   mma already on,   mma dynamic, core spwu not touch mma, action: disable dyn until spwu drop
+// core running,   mma powered down, mma dynamic, core spwu not touch mma, action: poweron mma, disable dyn until spwu drop
+
 void
 qme_special_wakeup_rise_event()
 {
@@ -550,8 +572,13 @@ qme_special_wakeup_rise_event()
         // Regular_Wakeup_Hipri/Lopri
         // PM_State_Active_Hipri/Lopri
 
+#if POWER10_DD_LEVEL == 10
         out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop2_exit_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
+#else
+        out32(QME_LCL_EIMR_OR,    G_qme_record.c_stop2_exit_targets);
+        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+#endif
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
@@ -652,9 +679,13 @@ qme_regular_wakeup_fast_event()
         // Special_Wakeup_Rise/Fall
         // Regular_Wakeup_Hipri/Lopri
         // PM_State_Active_Hipri/Lopri
-
+#if POWER10_DD_LEVEL == 10
         out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop2_exit_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
+#else
+        out32(QME_LCL_EIMR_OR,    G_qme_record.c_stop2_exit_targets);
+        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+#endif
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
@@ -702,9 +733,13 @@ qme_pm_state_active_fast_event()
         }
 
         //===============//
-
+#if POWER10_DD_LEVEL == 10
         out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop2_enter_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
+#else
+        out32(QME_LCL_EIMR_OR,    G_qme_record.c_stop2_enter_targets);
+        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+#endif
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
@@ -918,8 +953,13 @@ qme_regular_wakeup_slow_event()
         qme_parse_special_wakeup_rise();
 
         // Stop11 is expected not to be aborted
+#if POWER10_DD_LEVEL == 10
         out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop11_exit_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
+#else
+        out32(QME_LCL_EIMR_OR,    G_qme_record.c_stop11_exit_targets);
+        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+#endif
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
@@ -1025,8 +1065,14 @@ qme_pm_state_active_slow_event()
         }
 
         // stop11 is expected not to be aborted
+#if POWER10_DD_LEVEL == 10
         out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop11_enter_targets << 32));
         out64(QME_LCL_EIMR_OR, BITS64(32, 24));
+#else
+        out32(QME_LCL_EIMR_OR,    G_qme_record.c_stop11_enter_targets);
+        out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+#endif
+
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);

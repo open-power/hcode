@@ -359,8 +359,11 @@ qme_stop_entry()
 
         wrteei(0);
         G_qme_record.c_mma_available &= ~G_qme_record.c_stop2_enter_targets;
+#if POWER10_DD_LEVEL == 10
         out64(QME_LCL_EISR_CLR, ((uint64_t)G_qme_record.c_stop2_enter_targets << 32));
-
+#else
+        out32(QME_LCL_EISR_CLR, G_qme_record.c_stop2_enter_targets);
+#endif
         p10_hcd_core_stopclocks(core_target_or);
 
         //===============//
@@ -450,13 +453,24 @@ qme_stop_entry()
                                                 (~G_qme_record.c_stop11_enter_targets) &
                                                 (~G_qme_record.c_block_wake_done);
 
+#if POWER10_DD_LEVEL == 10
         out64( QME_LCL_EIMR_CLR,
                ( ((uint64_t)G_qme_record.c_stop3or5_abort_targets << SHIFT64(35)) |
                  ((uint64_t)G_qme_record.c_stop3or5_abort_targets << SHIFT64(43)) ) );
+#else
+        out32_sh( QME_LCL_EIMR_CLR,
+                  ( (G_qme_record.c_stop3or5_abort_targets << SHIFT64SH(35)) |
+                    (G_qme_record.c_stop3or5_abort_targets << SHIFT64SH(43)) ) );
+#endif
         sync();
 
         wrteei(0);
+#if POWER10_DD_LEVEL == 10
         out64( QME_LCL_EIMR_OR, ( BITS64(32, 4) | BITS64(40, 4) ) );
+#else
+        out32_sh( QME_LCL_EIMR_OR, ( BITS64SH(32, 4) | BITS64SH(40, 4) ) );
+#endif
+
         wrteei(1);
 
         //===============//

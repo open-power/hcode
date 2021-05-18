@@ -69,17 +69,57 @@ extern uint64_t g_eimr_override;
 //   do nothing and wait for ISU's next poweron request
 
 void
-qme_mma_active_event()
+qme_mma_stop_exit(uint32_t c_mask)
 {
     fapi2::Target < fapi2::TARGET_TYPE_PROC_CHIP > chip_target;
     fapi2::Target < fapi2::TARGET_TYPE_CORE |
-    fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_target;
+    fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_target =
+        chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                static_cast<fapi2::MulticastCoreSelect>(c_mask));
 
+    MARK_TAG( c_mask, SX_MMA_POWERON )
+
+    p10_hcd_mma_poweron(core_target);
+
+    MARK_TAG( c_mask, SX_MMA_SCANINIT )
+
+    p10_hcd_mma_scaninit(core_target);
+
+    MARK_TAG( c_mask, SX_MMA_STARTCLOCKS )
+
+    p10_hcd_mma_startclocks(core_target);
+
+    // delay for mma available travel window
+    for(uint32_t i = 0; i < 10; i++)
+    {
+        asm volatile ("tw 0, 0, 0");
+    }
+
+    // assert mma_available
+    G_qme_record.c_mma_available |= c_mask;
+    // core can pulse mma_active during poweron, this is to cleanup
+#if POWER10_DD_LEVEL == 10
+    out64( QME_LCL_EISR_CLR, ((uint64_t)G_qme_record.c_mma_available << 32));
+#else
+    out32( QME_LCL_EISR_CLR, G_qme_record.c_mma_available );
+#endif
+    out64( QME_LCL_CORE_ADDR_WR(CPMS_MMAR_WO_OR, c_mask), BIT64(0) );
+    MARK_TAG( c_mask, SX_MMA_AVAILABLE )
+}
+
+
+void
+qme_mma_active_event()
+{
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_MMA);
     PK_TRACE("Event: MMA Active, UIH Status[%x]", G_qme_record.uih_status);
 
     G_qme_record.c_mma_active_req = in32(QME_LCL_EINR) & BITS32(28, 4);
-    out64(QME_LCL_EISR_CLR, (((uint64_t)G_qme_record.c_mma_active_req << 32))); //DD1 FIXME
+#if POWER10_DD_LEVEL == 10
+    out64(QME_LCL_EISR_CLR, (((uint64_t)G_qme_record.c_mma_active_req << 32)));
+#else
+    out32(QME_LCL_EISR_CLR, G_qme_record.c_mma_active_req);
+#endif
 
     uint32_t c_mask = G_qme_record.c_mma_active_req &
                       G_qme_record.c_configured     &
@@ -94,41 +134,18 @@ qme_mma_active_event()
 
     if( c_mask && G_qme_record.mma_modes_enabled == MMA_POFF_DYNAMIC )
     {
-        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                      static_cast<fapi2::MulticastCoreSelect>(c_mask));
-
-        MARK_TAG( c_mask, SX_MMA_POWERON )
-
-        p10_hcd_mma_poweron(core_target);
-
-        MARK_TAG( c_mask, SX_MMA_SCANINIT )
-
-        p10_hcd_mma_scaninit(core_target);
-
-        MARK_TAG( c_mask, SX_MMA_STARTCLOCKS )
-
-        p10_hcd_mma_startclocks(core_target);
-
-        // delay for mma available travel window
-        for(uint32_t i = 0; i < 10; i++)
-        {
-            asm volatile ("tw 0, 0, 0");
-        }
-
-        // assert mma_available
-        G_qme_record.c_mma_available |= c_mask;
-        // core can pulse mma_active during poweron, this is to cleanup
-        out64( QME_LCL_EISR_CLR, ((uint64_t)G_qme_record.c_mma_available << 32)); //DD1 FIXME
-        out64( QME_LCL_CORE_ADDR_WR(CPMS_MMAR_WO_OR, c_mask), BIT64(0) );
-
-        MARK_TAG( c_mask, SX_MMA_AVAILABLE )
+        qme_mma_stop_exit(c_mask);
 
         //mask EIMR[28+c] mma_active
         data64_t mask_irqs     = {0};
         mask_irqs.words.upper  = c_mask;
         mask_irqs.words.lower  = 0;
         g_eimr_override |= mask_irqs.value;
+#if POWER10_DD_LEVEL == 10
         out64(QME_LCL_EIMR_OR, ((uint64_t)c_mask << 32));
+#else
+        out32(QME_LCL_EIMR_OR, c_mask);
+#endif
     }
 
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_MMA);
@@ -173,7 +190,8 @@ qme_dec_handler()
             // and mma is not executing instruction
             if( c_loop & (~c_active) &
                 G_qme_record.c_configured &
-                G_qme_record.c_mma_available )
+                G_qme_record.c_mma_available &
+                (~G_qme_record.c_special_wakeup_done))
             {
                 G_qme_record.c_mma_poweroff_count[c_index]++;
             }
@@ -218,7 +236,11 @@ qme_dec_handler()
 
             if( c_mma_abort )
             {
-                out64( QME_LCL_EISR_CLR, ((uint64_t)c_mma_abort << 32)); //DD1 FIXME
+#if POWER10_DD_LEVEL == 10
+                out64( QME_LCL_EISR_CLR, ((uint64_t)c_mma_abort << 32));
+#else
+                out32( QME_LCL_EISR_CLR, c_mma_abort );
+#endif
                 out64( QME_LCL_CORE_ADDR_WR(CPMS_MMAR_WO_OR, c_mma_abort), BIT64(0) );
                 G_qme_record.c_mma_available |= c_mma_abort;
                 PK_TRACE_INF("Event: MMA Abort Detect on MMA_ACTIVE[%x], Current MMA Power OFF target[%x]",
@@ -244,12 +266,22 @@ qme_dec_handler()
 
                 // clean eisr for any leftover, check if einr is set so mma_active here would be real
                 c_eisr   = in32(QME_LCL_EISR) & BITS32(28, 4) & c_mask;
-                out64( QME_LCL_EISR_CLR, ((uint64_t)c_eisr << 32)); //DD1 FIXME
+#if POWER10_DD_LEVEL == 10
+                out64( QME_LCL_EISR_CLR, ((uint64_t)c_eisr << 32));
+#else
+                out32( QME_LCL_EISR_CLR, c_eisr);
+
+#endif
                 c_einr   = in32(QME_LCL_EINR) & BITS32(28, 4) & c_mask;
 
                 if( c_einr )
                 {
-                    out64( QME_LCL_EISR_OR, ((uint64_t)c_einr << 32)); //DD1 FIXME
+#if POWER10_DD_LEVEL == 10
+                    out64( QME_LCL_EISR_OR, ((uint64_t)c_einr << 32));
+#else
+                    out32( QME_LCL_EISR_OR, c_einr);
+#endif
+
                 }
 
                 //unmask EIMR[28+c] to allow for MMA power-on
@@ -257,12 +289,16 @@ qme_dec_handler()
                 mask_irqs.words.upper  = c_mask;
                 mask_irqs.words.lower  = 0;
                 g_eimr_override &= ~mask_irqs.value;
+#if POWER10_DD_LEVEL == 10
                 out64(QME_LCL_EIMR_CLR, ((uint64_t)c_mask << 32));
+#else
+                out32(QME_LCL_EIMR_CLR, c_mask);
+#endif
             }
         }
-    }
 
-    mtspr(SPRN_DEC, G_qme_record.mma_pwoff_dec_val);
+        mtspr(SPRN_DEC, G_qme_record.mma_pwoff_dec_val);
+    }
 
     G_qme_record.uih_status &= ~BIT32(IDX_TIMER_DEC);
 }
@@ -436,7 +472,11 @@ qme_fit_handler()
             G_qme_record.hcode_func_enabled &= ~QME_STOP3OR5_ABORT_PATH_ENABLE;
 
             // stop11 is expected not to be aborted
+#if POWER10_DD_LEVEL == 10
             out64(QME_LCL_EIMR_OR, BITS64(32, 24));
+#else
+            out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
+#endif
             g_eimr_override |= BITS64(32, 24);
 
             wrteei(1);

@@ -82,7 +82,7 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
     uint8_t core_inst = 0;
     uint32_t l_scratch_add = 0;
 
-    PK_TRACE_INF("Core Target %08X", core_target );
+    PK_TRACE_DBG("Core Target %08X", core_target );
 
     // check pm_active_lopri to be low
     // RTC 248149: needs timout for logging!!!
@@ -461,7 +461,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
                     ( G_qme_record.fused_core_enabled && (core_mask & 0x5) ) )
                 {
 #endif
-                    PK_TRACE_INF("Self-Restore should ignore workaround for HW534619 at core %x", core_mask);
+                    PK_TRACE_DBG("Self-Restore should ignore workaround for HW534619 at core %x", core_mask);
                     scom_data.value |= BIT64(61);
 #if POWER10_DD_LEVEL == 10
                 }
