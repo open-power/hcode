@@ -158,6 +158,9 @@ typedef struct
     uint32_t    c_tfac_s2c_retry_limit[4];
     uint32_t    c_tfac_s2c_retry_total[4];
 
+    uint32_t    stop11_counter[4];
+    uint32_t    msg_snd_interrupt;
+
     /*DEBUG_ONLY
         uint32_t    c_act_stop_level[4];
         uint32_t    t_old_pls[4][4];

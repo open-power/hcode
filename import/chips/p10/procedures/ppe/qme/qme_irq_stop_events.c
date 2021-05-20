@@ -35,6 +35,7 @@ extern uint32_t QME_LCL_PBCR;
 enum
 {
     CPMR_HDR_AUTO_WAKEUP_OFFSET  = 0xE0,
+    PRIV_DB_MSG_SEND_INT_OFFSET  = 0x04,
 };
 
 //only call this function within interrupt handler where ee is disabled
@@ -1090,7 +1091,9 @@ qme_stop11_msgsnd_injection(uint32_t core_target)
 {
     uint32_t i           = 0;
     uint32_t core_mask   = 0;
-    uint32_t thread_mask = 0;
+    uint32_t msg_snd_addr = CPMR_MSG_SND_VECTOR_OFFSET + 0x20;
+    QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
+    uint8_t   thread_mask   =  0;
 
     //this keeps further wake-up from getting to the core
     PK_TRACE("Assert BLOCK_INTERRUPT_OUTPUT to PC via SCSR[24]");
@@ -1104,12 +1107,36 @@ qme_stop11_msgsnd_injection(uint32_t core_target)
         asm volatile ("tw 0, 0, 0");
     }
 
+    //Invalidate cache before block copy of msgsnd vector from HOMER
+    out32(0xC0000460, BIT32(25));
+
+    qme_block_copy_core_data( QME_BCEBAR_0,
+                              ( msg_snd_addr >> 5),
+                              ( pQmeImgHdr->g_qme_scom_offset >> 5 ),
+                              ( CPMR_MSG_SND_VECTOR_LENGTH >> 5 ),
+                              1 ); //32B blocks per core
+
+    if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
+    {
+        QME_ERROR_HANDLER( MSG_SEND_BLOCK_COPY_FAILED,
+                           pQmeImgHdr->g_qme_scom_offset,
+                           CPMR_MSG_SND_VECTOR_LENGTH,
+                           0 );
+    }
+
+    G_qme_record.bce_buf_content_type = MSG_SEND_VECT;
+
     for(core_mask = 8; core_mask; core_mask = core_mask >> 1)
     {
         if( core_target & core_mask )
         {
-            thread_mask = ( in32( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) ) &
-                            BITS32(8, 4) ) >> SHIFT32(11);
+            thread_mask =  *(uint8_t*)( QME_SRAM_BASE_ADDR + pQmeImgHdr->g_qme_scom_offset + get_core_pos( core_mask ) );
+
+            //shifting by 4bits for correct bit alignment for msgsnd interrupt injection through CIIR
+            thread_mask  = thread_mask >> 4;
+            G_qme_record.msg_snd_interrupt  =  thread_mask;
+
+            PKTRACE( "Thread Mask %02x ", thread_mask );
 
             if( thread_mask )
             {
@@ -1147,18 +1174,16 @@ qme_pm_state_active_slow_event()
 
     qme_parse_pm_state_active_slow();
 
-    PK_TRACE_INF("Event: UIH Status[%x], PM State Active Slow on Cores[%x], STOP11 Request on Cores[%x], STOP11 Reached on Cores[%x]",
-                 G_qme_record.uih_status,
-                 G_qme_record.c_pm_state_active_slow_req,
-                 G_qme_record.c_stop11_enter_targets,
-                 G_qme_record.c_stop11_reached);
+    PK_TRACE("Event: UIH Status[%x], PM State Active Slow on Cores[%x], STOP11 Request on Cores[%x], STOP11 Reached on Cores[%x]",
+             G_qme_record.uih_status,
+             G_qme_record.c_pm_state_active_slow_req,
+             G_qme_record.c_stop11_enter_targets,
+             G_qme_record.c_stop11_reached);
 
     if( G_qme_record.c_stop11_enter_targets )
     {
         MARK_TAG( G_qme_record.c_stop11_enter_targets, IRQ_PM_STATE_ACTIVE_SLOW_EVENT )
         qme_fault_inject(QME_PCSCR_STOP11_ENTRY_FAULT_INJECT, G_qme_record.c_stop11_enter_targets);
-
-        qme_stop11_msgsnd_injection( G_qme_record.c_stop11_enter_targets );
 
         //===============//
 
@@ -1176,6 +1201,8 @@ qme_pm_state_active_slow_event()
             qme_stop_self_complete(G_qme_record.c_stop11_enter_targets, SPR_SELF_SAVE);
         }
 
+        qme_stop11_msgsnd_injection( G_qme_record.c_stop11_enter_targets );
+
         // stop11 is expected not to be aborted
 #if POWER10_DD_LEVEL == 10
         out64(QME_LCL_EIMR_OR, ((uint64_t)G_qme_record.c_stop11_enter_targets << 32));
@@ -1188,6 +1215,23 @@ qme_pm_state_active_slow_event()
         g_eimr_override |= BITS64(32, 24);
 
         wrteei(1);
+
+        uint32_t i, j;
+
+        for(i = 8, j = 0; i; i = i >> 1, j++)
+        {
+            if(i & G_qme_record.c_stop11_enter_targets)
+            {
+                G_qme_record.stop11_counter[j]++;
+            }
+        }
+
+        PK_TRACE_INF("counters %x %x %x %x",
+                     G_qme_record.stop11_counter[0],
+                     G_qme_record.stop11_counter[1],
+                     G_qme_record.stop11_counter[2],
+                     G_qme_record.stop11_counter[3]);
+
         qme_stop_entry();
         qme_send_pig_type_a();
         qme_dds_sync();

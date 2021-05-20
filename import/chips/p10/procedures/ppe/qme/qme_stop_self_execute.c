@@ -77,7 +77,7 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
     // RTC 248150: value needs to be reviewed post hardware
     // the timeout needs to cover the worst case save or
     // restore operation for all the slave threads
-    static uint32_t CTS_TIMEOUT_COUNT    =  0x00FFFFFF;
+    static uint32_t CTS_TIMEOUT_COUNT    =  0xFFFFFFFF;
     static uint32_t THREAD_TIMEOUT_COUNT =  0x000FFFFF;
     uint8_t core_inst = 0;
     uint32_t l_scratch_add = 0;
@@ -112,7 +112,7 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
                 PPE_GETSCOM_UC ( CORE_THREAD_STATE, 0, core_mask, scom_data.value);
                 scom_data.words.lower &= BITS64SH(56, 4); // vt[1,2,3]_stop_state
             }
-            while( scom_data.words.lower >> 4 != 0x7 && ++G_qme_record.cts_timeout_count < CTS_TIMEOUT_COUNT );
+            while( scom_data.words.lower >> 4 != 0x7 );
 
             PPE_GETSCOM_UC ( l_scratch_add, 0, core_mask, scom_data.value);
 
