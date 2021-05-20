@@ -24,9 +24,11 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #include "pgpe_header.h"
 #include "p10_oci_proc_1.H"
+#include "pgpe_pstate.h"
 
 PgpeHeader_t* G_pgpe_header_data;
 extern PgpeHeader_t* _PGPE_IMG_HEADER __attribute__ ((section (".pgpe_image_header")));
+extern pgpe_pstate_t G_pgpe_pstate __attribute__((section (".data_structs")));
 
 
 //
@@ -45,6 +47,9 @@ void pgpe_header_init()
 
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)
                                             OCC_SHARED_SRAM_ADDR_START; //Bottom 2K of PGPE OCC Sram Space
+
+    G_pgpe_header_data->g_pgpe_scrBrdAddr = (uint32_t)&G_pgpe_pstate;
+    G_pgpe_header_data->g_pgpe_traceAddr  = (uint32_t)&g_pk_trace_buf;
 
     //OCC Shared SRAM address and length
     G_pgpe_header_data->g_pgpe_sharedSramAddress = (uint32_t)OCC_SHARED_SRAM_ADDR_START;

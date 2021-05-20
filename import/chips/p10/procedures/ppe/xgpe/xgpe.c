@@ -129,3 +129,44 @@ uint32_t xgpe_errl_create(const uint32_t i_rc,
 
     return status;
 }
+
+#define PGPE_BASE_ADDRESS 0xfff20000
+#define PGPE_HCODE_HEADER_OFFSET 0x0180
+void createPgpelog()
+{
+    uint32_t status = ERRL_STATUS_SUCCESS;
+    uint32_t srr0 = in32(0xc0000180); //SRR0
+    uint32_t lr   = in32(0xc0000188); //LR
+    uint32_t ctr  = in32(0xc0000190); //CTR
+
+    PgpeHeader_t* pgpe_hdr_data = (PgpeHeader_t*)(PGPE_BASE_ADDRESS + PGPE_HCODE_HEADER_OFFSET);
+    uint32_t g_pgpe_scr_brd_addr = pgpe_hdr_data->g_pgpe_scrBrdAddr;
+    uint32_t g_pgpe_pk_trace_buf = pgpe_hdr_data->g_pgpe_traceAddr;
+
+    errlDataUsrDtls_t usrDtlsSect = {0};
+
+    errlDataUsrDtls_t usrDtlsSect1 = {0};
+    errlPpeRegs_t pgpeDbgRegs = {{0}};
+
+    getPpeRegsUsrDtls (ERRL_SOURCE_PGPE, 0, &pgpeDbgRegs, &usrDtlsSect);
+
+    usrDtlsSect.pNext = &usrDtlsSect1;
+    PK_TRACE("g_pgpe_scr_brd_addr %08x", g_pgpe_scr_brd_addr);
+    PK_TRACE("g_pgpe_pk_trace_buf %08x", g_pgpe_pk_trace_buf);
+
+    getPpeScrBrdUsrDtls (ERRL_SOURCE_PGPE, 0, (uint8_t*)g_pgpe_scr_brd_addr, &usrDtlsSect1);
+
+    PPE_LOG_ERR_CRITICAL ( XGPE_RC_PGPE_CRITICAL_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
+                           srr0, lr, ctr,
+                           &usrDtlsSect, NULL, status );
+
+    PK_TRACE ("createPgpelog critical: status %d",  status);
+
+    getPpePkTraceUsrDtls(ERRL_SOURCE_PGPE, 0, (uint8_t*)g_pgpe_pk_trace_buf, &usrDtlsSect);
+
+    PPE_LOG_ERR_INF ( XGPE_RC_PGPE_INFO_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
+                      0, 0, 0,
+                      &usrDtlsSect, status );
+
+    PK_TRACE ("createPgpelog info: status %d",  status);
+}

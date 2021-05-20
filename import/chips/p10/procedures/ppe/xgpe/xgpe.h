@@ -156,6 +156,13 @@ uint32_t xgpe_errl_create(const uint32_t i_rc,
                           const uint32_t i_usrd3,
                           const uint32_t i_sev);
 
+
+/// ----------------------------------------------
+/// @brief Create pgpe log when pgpe halts
+/// @return none
+/// ---------------------------------------------
+void createPgpelog();
+
 /// ----------------------------------------------
 /// @brief handles MCHK case
 /// @return none

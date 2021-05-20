@@ -40,12 +40,15 @@ extern uint32_t G_OCB_CCSR;
 extern uint32_t G_OCB_OPITFSV;
 extern uint32_t G_OCB_OPITESV;
 extern uint32_t G_OCB_OISR0_CLR;
+extern uint32_t G_OCB_OISR0;
 extern uint32_t G_OCB_OPITFPRD;
 extern uint32_t G_OCB_OPITFPRD_CLR;
 extern uint32_t G_OCB_OPITEPRD;
 extern uint32_t G_OCB_OPITEPRD_CLR;
 extern uint32_t G_OCB_OPITFSVRR;
 extern uint32_t G_OCB_OPITESVRR;
+#define OISR0_PGPE_FAIL 2
+#define OISR0_CHECKSTOP 5
 
 //This task gets triggered when OISR bits are
 //set as mentioned below
@@ -64,13 +67,28 @@ IOTA_TASK(xgpe_irq_fault_handler),    //Bit 2,5
 ///////////////////////////////////////////////
 void xgpe_irq_fault_handler()
 {
-    out32(G_OCB_OISR0_CLR, BIT32(2));
-    out32(G_OCB_OIMR0_OR, BIT32(2));
+    uint32_t oisr0 = in32(G_OCB_OISR0);
 
-    p10_stop_recovery_trigger();
-    g_oimr_override |= BIT64(2);
+    if ( oisr0 & BIT32(OISR0_PGPE_FAIL) )
+    {
+        out32(G_OCB_OISR0_CLR, BIT32(OISR0_PGPE_FAIL));
+        out32(G_OCB_OIMR0_OR, BIT32(OISR0_PGPE_FAIL));
+
+        createPgpelog();
+
+        g_oimr_override |= BIT64(OISR0_PGPE_FAIL);
+    }
+    else //checkstop detected
+    {
+        PK_TRACE("XGPE checkstop detected");
+        out32(G_OCB_OISR0_CLR, BIT32(OISR0_CHECKSTOP));
+        out32(G_OCB_OIMR0_OR, BIT32(OISR0_CHECKSTOP));
+
+        g_oimr_override |= BIT64(OISR0_CHECKSTOP);
+    }
 
 }
+
 
 ///////////////////////////////////////////////
 // xgpe_gpe3_func_handler

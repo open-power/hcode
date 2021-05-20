@@ -29,6 +29,7 @@
 #include "pstate_pgpe_occ_api.h"
 #include "p10_oci_proc.H"
 
+uint32_t G_OCB_OISR0         = OCB_OISR0;
 uint32_t G_OCB_OISR0_CLR     = OCB_OISR0_CLR;
 uint32_t G_OCB_OIMR0_CLR     = OCB_OIMR0_CLR;
 uint32_t G_OCB_OIMR1_CLR     = OCB_OIMR1_CLR;

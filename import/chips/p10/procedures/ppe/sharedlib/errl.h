@@ -41,6 +41,8 @@ extern "C" {
 
 // Max registers (XIRs) to be collected for belly-up PPEs
 #define ERRL_PPE_REGS_MAX 5
+#define ERRL_PPE_SCRBRD_SIZE 256
+#define ERRL_PPE_TRACE_SIZE  512
 
 /// Status code of error logging from error logging infrastructure
 enum errlStatusCodes
@@ -109,6 +111,7 @@ struct errlPpeRegs
 };
 
 typedef struct errlPpeRegs errlPpeRegs_t;
+
 
 /// @brief Initialize common error logging framework based on the PPE instance
 ///        trying to use it. Required once per PPE init/boot before the rest of
@@ -205,6 +208,7 @@ uint32_t addUsrDtlsToErrl (
 ///        will be dropped from the Error Log
 void addTraceToErrl (errlHndl_t io_errl);
 
+#ifndef __PPE_QME
 
 /// @brief Captures PPE debug registers & sets up an user details section for it
 ///
@@ -225,6 +229,44 @@ void getPpeRegsUsrDtls ( const uint8_t i_source,
                          errlPpeRegs_t* o_ppeRegs,
                          errlDataUsrDtls_t* o_usrDtls );
 
+/// @brief Captures PPE score board data & sets up an user details section for it
+///
+/// @param [in] i_source PPE whose score board are to be captured, see ERRL_SOURCE
+/// @param [in] i_instance For ERRL_SOURCE_QME, 0..7
+///                        For ERRL_SOURCE_PGPE/ERRL_SOURCE_XGPE, ignored
+/// @param [in]  i_ppeSram Pointer to a valid instance of score brd addr
+/// @param [out] o_usrDtls Pointer to a valid instance of errlDataUsrDtls_t
+///
+/// @return void
+///
+/// @note On successful execution,
+///       i_ppeRegs contains PPE score board sram  addr
+///       o_usrDtls contains valid  score board sram address contents
+///       such that it can be directly added to an error log
+void getPpeScrBrdUsrDtls( const uint8_t i_source,
+                          const uint8_t i_instance,
+                          uint8_t* i_ppeSram,
+                          errlDataUsrDtls_t* o_usrDtls );
+
+/// @brief Captures PPE pk trace data & sets up an user details section for it
+///
+/// @param [in] i_source PPE whose pk trace are to be captured, see ERRL_SOURCE
+/// @param [in] i_instance For ERRL_SOURCE_QME, 0..7
+///                        For ERRL_SOURCE_PGPE/ERRL_SOURCE_XGPE, ignored
+/// @param [in]  i_ppeSram Pointer to a valid instance of trace addr
+/// @param [out] o_usrDtls Pointer to a valid instance of errlDataUsrDtls_t
+///
+/// @return void
+///
+/// @note On successful execution,
+///       i_ppeRegs contains PPE pk trace sram  addr
+///       o_usrDtls contains valid pk trace sram address contents
+///       such that it can be directly added to an error log
+void getPpePkTraceUsrDtls( const uint8_t i_source,
+                           const uint8_t i_instance,
+                           uint8_t* i_ppeSram,
+                           errlDataUsrDtls_t* o_usrDtls );
+#endif  // __PPE_QME
 
 /// @brief Commit the Error Log to the Error Log Table for FW processing
 ///

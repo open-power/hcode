@@ -938,6 +938,7 @@ void addTraceToErrl (errlHndl_t io_err)
 }
 
 
+#ifndef __PPE_QME
 void getPpeRegs ( const uint8_t  i_errlSource,
                   const uint8_t  i_ppeInstance,
                   errlPpeRegs_t* o_data )
@@ -996,6 +997,30 @@ void getPpeRegsUsrDtls (const uint8_t i_source,
     getPpeRegs (i_source, i_instance, o_ppeRegs);
 }
 
+void getPpeScrBrdUsrDtls(const uint8_t i_source,
+                         const uint8_t i_instance,
+                         uint8_t* i_ppeSram,
+                         errlDataUsrDtls_t* o_usrDtls)
+{
+    o_usrDtls->type = ERRL_USR_DTL_BINARY_DATA;
+    o_usrDtls->size = ERRL_PPE_SCRBRD_SIZE;
+    o_usrDtls->pData = i_ppeSram;
+    o_usrDtls->version = 0;
+    o_usrDtls->pNext = NULL;
+}
+
+void getPpePkTraceUsrDtls(const uint8_t i_source,
+                          const uint8_t i_instance,
+                          uint8_t* i_ppeSram,
+                          errlDataUsrDtls_t* o_usrDtls)
+{
+    o_usrDtls->type = ERRL_USR_DTL_BINARY_DATA;;
+    o_usrDtls->size = ERRL_PPE_TRACE_SIZE;
+    o_usrDtls->pData = i_ppeSram;
+    o_usrDtls->version = ERRL_TRACE_VERSION_1;
+    o_usrDtls->pNext = NULL;
+}
+#endif  // __PPE_QME
 // Function Specification
 //
 // Name:  commitErrl
