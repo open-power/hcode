@@ -524,7 +524,7 @@ TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT      = 0x1f04,
 * @devdesc     QME TimeFac Sent Error detected
 */
 TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED    = 0x1f05,
-//UNUSED                                  = 0x1f06,
+MSG_SEND_BLOCK_COPY_FAILED                = 0x1f06,
 //UNUSED                                  = 0x1f07,
 /*
 * @errortype

@@ -156,6 +156,7 @@ enum BCE_BUF_CONTENT_TYPE
     OVRRIDES        =    4,
     ALL             =    5,
     AUTO_WAKUP_VECT =    6,
+    MSG_SEND_VECT   =    7,
 };
 
 enum BCE_SCOPE

@@ -103,6 +103,7 @@
                 .set SRR0,                          26
                 .set SRR1,                          27
                 .set CFAR,                          28
+                .set DPDES,                         176
                 .set HFSCR,                         190
                 .set TB,                            268
                 .set SPRG0,                         272
@@ -123,12 +124,15 @@
                 .set HSRR0,                         314
                 .set HSRR1,                         315
                 .set TFMR,                          317
+                .set LPCR,                          318
                 .set HMER,                          336
+                .set HMEER,                         337
                 .set URMOR,                         505 # Ultravisor
                 .set USRR0,                         506
                 .set USRR1,                         507
                 .set SMFCTRL,                       511 # Ultravisor
                 .set HEIR,                          339
+                .set MMCR0,                         795 # 779
                 .set HID,                           1008
                 .set PIR,                           1023
 
@@ -148,6 +152,10 @@
                 .set SKIP_URMOR_UPDATE_OFFSET,      8
                 .set SPR_SAVE_ROUTINE_OFFSET,       0x2300
                 .set SELF_SAVE_RESTORE_COLLECT_FFDC,0x1400
+                .set SELF_SAVE_MSG_SEND,            0x1500
+                .set DISABLE_INT_EXCEPTION,         0x1700
+                .set RESTORE_INT_EXCEPTION,         0x1800
+                .set ONE_MS_TIMEOUT_CONST,          16384
 
                 .set STOP,                          0x4C0002E4
                 .set ATTN,                          0x00000200
@@ -163,6 +171,7 @@
                 .set SCRATCH_RUNTIME_MODE_BIT,      59
                 .set HV_EXIT_WITH_SMF_ENABLE_BIT,   58  #0 : HV exit with SMFCTRL[E] bit SET to 0b01
                                                         #1 : HV exit with SMFCTRL[E] bit SET to 0b00
+                .set DISABLE_MSG_SND_FIX_BIT,       60  # Disable Msgsnd fix
                 .set OFFSET_SMF_EN_SLAVE_THREADS,    4
 
                 .set OTHER_THREADS_STOPPED,         0x07
@@ -196,6 +205,19 @@
                 .set TFAC_TFMR_BUG_BIT_LEN,         4
                 .set TFAC_TFMR_BUG_BIT_CONST,       7
                 .set SIMICS_ENV_BIT_MASK,           0x04
+                .set MSR_REG_EE_BIT_POS,            48
+                .set MSG_SEND_LOCK_VALUE,           0xA5A
+                .set LOCK_TO_MSG_SND_FLAG_OFFSET,   0x20
+                .set RELATIVE_CORE_ID_MASK,         0x03
+                .set THREAD0_MASK,                  0x80
+                .set MSG_SEND_LOCK_BASE_ADDR,       0x3700 #actual offset wrt CPMR base is 0x37000
+                .set HEIC_BIT_POS,                  59
+                .set HVICE_BIT_POS,                 62
+                .set HDICE_BIT_POS,                 63
+                .set PMAE_BIT_POS,                  37
+                .set PMAO_BIT_POS,                  56
+                
+
 
                 .set SPR_SAVE_SCRATCH_REG,          r0
                 .set SPR_DATA_REG,                  r1
@@ -229,6 +251,13 @@
                 .set GPR_29_REG,                    r29
                 .set SELF_SAVE_ADDR_REG,            r30
                 .set SELF_RESTORE_ADDR_REG,         r31
+                .set QUAD_ID_REG,                   r27  #renaming r27 AGAIN for better readability of code
+                .set QUAD_MSG_SND_VECTOR_ADD,       r28  #renaming r28 AGAIN for better readability of code
+                .set QUAD_MSG_SND_LOCK_ADDR_REG,    r9   #renaming r9 AGAIN for better readability of code
+                .set HMEER_VALUE_REG,               r24
+                .set INT_SERVICE_REG,               r29
+                .set LPCR_SAVED_REG,                r1
+                .set MMCR0_SAVED_REG,               r16
 
 #--------------------------------------------------------------------#
 #
@@ -467,29 +496,29 @@ ffdc_done:
 #       Floating Point Unavailable
 #--------------------------------------------------------------------#
 .org _start + 0x0800
-li SELF_REST_ERR_REG, 0x800
+li  SELF_REST_ERR_REG, 0x800
 b   enable_attn
 
 #--------------------------------------------------------------------#
 #       Decrementer
 #--------------------------------------------------------------------#
 .org _start + 0x0900
-li SELF_REST_ERR_REG, 0x900
-b   enable_attn
+li      INT_SERVICE_REG,    ONE_MS_TIMEOUT_CONST
+mtdec   INT_SERVICE_REG
+rfid
 
 #--------------------------------------------------------------------#
 #       Ultravisor Decrementer
 #--------------------------------------------------------------------#
 .org _start + 0x0980
-li SELF_REST_ERR_REG, 0x980
-b   enable_attn
+rfid
 
 #--------------------------------------------------------------------#
 #       Directed Priviledged Doorbell
 #--------------------------------------------------------------------#
 .org _start + 0x0A00
-li SELF_REST_ERR_REG, 0xA00
-b   enable_attn
+li SELF_REST_ERR_REG, 0x0A00
+b save_msg_snd_int
 
 #--------------------------------------------------------------------#
 #       Reserved
@@ -533,25 +562,22 @@ li SELF_REST_ERR_REG, 0xE40
 b   enable_attn
 
 #--------------------------------------------------------------------#
-#       Ultravisor Maintenance
+#   Hypervisor Maintenance
 #--------------------------------------------------------------------#
 .org _start + 0x0E60
-li SELF_REST_ERR_REG, 0xE60
-b   enable_attn
+rfid
 
 #--------------------------------------------------------------------#
-#       Directed Ultravisor Doorbell
+#       Directed Hypervisor Doorbell
 #--------------------------------------------------------------------#
 .org _start + 0x0E80
 li SELF_REST_ERR_REG, 0x0E80
-b   enable_attn
+b save_msg_snd_int
 #--------------------------------------------------------------------#
-#       Reserved
+#       Hypervisor Virtualization
 #--------------------------------------------------------------------#
 .org _start + 0x0EA0
-li SELF_REST_ERR_REG, 0xEA0
-b   enable_attn
-
+rfid
 #--------------------------------------------------------------------#
 #       Reserved
 #--------------------------------------------------------------------#
@@ -570,8 +596,7 @@ b   enable_attn
 #       Performance Monitoring
 #--------------------------------------------------------------------#
 .org _start + 0x0F00
-li SELF_REST_ERR_REG, 0xF00
-b   enable_attn
+rfid
 
 #--------------------------------------------------------------------#
 #       Vector Unavailable
@@ -595,19 +620,16 @@ li SELF_REST_ERR_REG, 0xF60
 b   enable_attn
 
 #--------------------------------------------------------------------#
-#       Ultravisor Facility Unavailable
+#       Hypervisor Facility Unavailable
 #--------------------------------------------------------------------#
 .org _start + 0x0F80
-li SELF_REST_ERR_REG, 0xF80
-b   enable_attn
+rfid
 
 #--------------------------------------------------------------------#
 #       Ultravisor Directed Priviledged Doorbell
 #--------------------------------------------------------------------#
 .org _start + 0x0FA0
-li SELF_REST_ERR_REG, 0xFA0
-b   enable_attn
-
+rfid
 #--------------------------------------------------------------------#
 #       Self Restore Completion
 #--------------------------------------------------------------------#
@@ -616,6 +638,7 @@ b   enable_attn
 #restore the URMOR/HRMOR to the value needed by the Ultravisor upon wakeup
 #there can be no future I-fetches after this point, so no more than 7
 #instructions after this
+restore_hrmor:
 
 mtspr HRMOR,     HRMOR_RESTORE_REG
 
@@ -768,6 +791,151 @@ mtspr   SPRD, THREAD_SCRATCH_VAL_REG
 li      TEMP_REG1,   FFDC_COLLECTED_CONST
 .long ATTN  #to let Host know
 
+
+#---------------------------------------------------------------------
+
+.org _start + SELF_SAVE_MSG_SEND
+
+#---------------------------------------------------------------------
+
+save_msg_snd_int:
+mfspr       THREAD_SCRATCH_VAL_REG,   SPRD
+extrdi.     TEMP_REG1, THREAD_SCRATCH_VAL_REG, 1, DISABLE_MSG_SND_FIX_BIT    # Check if msg-snd fix needs to be ignored
+cmpwi       TEMP_REG1,    1
+beq         skip_msg_snd_save_case                                           # QME has indicated that msgsnd fix should be bypassed during self-save
+
+#setup address for saving msgsnd interrupt status
+li      QUAD_MSG_SND_LOCK_ADDR_REG,   MSG_SEND_LOCK_BASE_ADDR  # msgsnd save region starts at an offset of 220KB wrt to CPMR base
+sldi    QUAD_MSG_SND_LOCK_ADDR_REG,   QUAD_MSG_SND_LOCK_ADDR_REG, 4
+or      QUAD_MSG_SND_LOCK_ADDR_REG,   QUAD_MSG_SND_LOCK_ADDR_REG, RMOR_INIT_REG
+
+srdi    QUAD_ID_REG,   CORE_ID_REG,   2       # Quad No = Core Id / 4
+sldi    TEMP_REG1,     QUAD_ID_REG,   7       # Quad Base = Quad No * 128B
+add     QUAD_MSG_SND_LOCK_ADDR_REG, QUAD_MSG_SND_LOCK_ADDR_REG, TEMP_REG1 #Lock Address associated with a Quad
+
+andi.   TEMP_REG2,   CORE_ID_REG,   RELATIVE_CORE_ID_MASK     # Get relative core id within a quad
+addi    TEMP_REG1,   QUAD_MSG_SND_LOCK_ADDR_REG,   LOCK_TO_MSG_SND_FLAG_OFFSET
+add     QUAD_MSG_SND_VECTOR_ADD,    TEMP_REG2,     TEMP_REG1  #address of msgsnd vector
+
+cmplwi  SELF_REST_ERR_REG,  0x0A00
+bne     hyp_db_int_vect_add
+
+priv_db_int_vect_add:
+addi    QUAD_MSG_SND_VECTOR_ADD,    QUAD_MSG_SND_VECTOR_ADD,    4
+
+hyp_db_int_vect_add:
+#determine if we are here due to self-save or due to restore
+li      TEMP_REG3,  THREAD0_MASK
+mfspr   THREAD_SCRATCH_VAL_REG,   SPRD
+li      TEMP_REG2,  0x01
+and     TEMP_REG1,  THREAD_SCRATCH_VAL_REG, TEMP_REG2
+cmpwi   TEMP_REG1,  0x00
+bne     wait_for_free_lock  #set flag during save and cleanup during restore
+li      TEMP_REG3,  0x00
+
+wait_for_free_lock:
+lwz      TEMP_REG1,  0( QUAD_MSG_SND_LOCK_ADDR_REG )
+
+#FIXME just a delay between spin loop
+ori     0, 0, 0
+ori     0, 0, 0
+ori     0, 0, 0
+ori     0, 0, 0
+
+cmplwi  TEMP_REG1,  MSG_SEND_LOCK_VALUE
+bne     wait_for_free_lock
+
+acquire_lock:
+lwarx   TEMP_REG1,  0,  QUAD_MSG_SND_LOCK_ADDR_REG, 1
+cmplwi  TEMP_REG1,  MSG_SEND_LOCK_VALUE
+bne-    wait_for_free_lock
+
+stwcx.  PIR_VAL_REG, 0, QUAD_MSG_SND_LOCK_ADDR_REG
+bne-    acquire_lock
+
+# setting any import barrier
+isync
+
+lbz     TEMP_REG1,  0( QUAD_MSG_SND_VECTOR_ADD )
+srd     TEMP_REG2,  TEMP_REG3,  THREAD_ID_REG
+or      TEMP_REG1,  TEMP_REG1,  TEMP_REG2    # NOP for restore, setup msg send vector for self-save
+cmplwi  TEMP_REG2,  0
+bne     update_vect
+li      TEMP_REG1,  0                        # self-restore case - will cleanup msg send vector
+
+update_vect: 
+stb     TEMP_REG1,  0( QUAD_MSG_SND_VECTOR_ADD ) #finally update memory
+li      TEMP_REG1,  MSG_SEND_LOCK_VALUE
+stw     TEMP_REG1,  0 ( QUAD_MSG_SND_LOCK_ADDR_REG )
+
+li      TEMP_REG1,      0x00
+mfmsr   MSR_INIT_REG
+insrdi  MSR_INIT_REG,   TEMP_REG1,  1,  MSR_REG_EE_BIT_POS # clearing MSR[EE]
+mtmsr   MSR_INIT_REG
+
+cmpwi   TEMP_REG3,   THREAD0_MASK   # are we here due to save or restore
+bne     skip_msg_snd_cleanup        # self-restore-continue
+
+restore_int_status:
+mfspr   TEMP_REG1,  HRMOR
+ori     TEMP_REG1,  TEMP_REG1,  RESTORE_INT_EXCEPTION
+mtlr    TEMP_REG1
+blrl                                # enable interrupts
+
+skip_msg_snd_save_case:
+b       save_restore_done           # branch to end of self-save
+
+#---------------------------------------------------------------------
+
+
+#---------------------------------------------------------------------
+# self-save of msg-send ends
+#---------------------------------------------------------------------
+
+
+
+#---------------------------------------------------------------------
+#           Disabling all interrupts 
+#---------------------------------------------------------------------
+.org _start + DISABLE_INT_EXCEPTION
+
+disable_int_and_exception:
+
+li      TEMP_REG1,  0x00
+mfspr   TEMP_REG2,  LPCR
+mr      LPCR_SAVED_REG, TEMP_REG2
+insrdi  TEMP_REG2,  TEMP_REG1,  1,  HVICE_BIT_POS   # Disable hyp virtualization  interrupt
+insrdi  TEMP_REG2,  TEMP_REG1,  1,  HDICE_BIT_POS   # Disable hyp decrmenter interrupt
+ori     TEMP_REG2,  TEMP_REG2,  0x10                # Sets HEIC bit to disable external interrupt
+mtspr   LPCR,       TEMP_REG2
+mfspr   TEMP_REG2,  MMCR0
+mr      MMCR0_SAVED_REG, TEMP_REG2
+insrdi  TEMP_REG2,  TEMP_REG1,  1,  PMAE_BIT_POS    # disable performance monitor interrupt
+insrdi  TEMP_REG2,  TEMP_REG1,  1,  PMAO_BIT_POS    # disable performance monitor interrupt
+mtspr   MMCR0,      TEMP_REG2
+mfspr   HMEER_VALUE_REG,        HMEER             
+mtspr   HMEER,      TEMP_REG1                       # disable hyp maintenance interrupts
+blr 
+
+
+#---------------------------------------------------------------------
+#           Disabling all interrupts ends
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+#           Enabling interrupts starts
+#---------------------------------------------------------------------
+.org _start + RESTORE_INT_EXCEPTION
+
+enable_int_and_exception:
+mtspr   LPCR,       LPCR_SAVED_REG
+mtspr   MMCR0,      MMCR0_SAVED_REG
+mtspr   HMEER,      HMEER_VALUE_REG                 # Enable hyp maintenance interrupt 
+blr
+#---------------------------------------------------------------------
+#           Enabling interrupts ends
+#---------------------------------------------------------------------
+
 #---------------------------------------------------------------------
 #
 # common code for thread restoration
@@ -776,8 +944,8 @@ li      TEMP_REG1,   FFDC_COLLECTED_CONST
 
 .org _start + THREAD_LAUNCHER_START_OFFSET
 
-thread_launcher_start:
 
+thread_launcher_start:
 mfspr       PIR_VAL_REG, PIR       #Processor Identification Register
 mfspr       FUSED_STATUS_REG,   PVR
 extrdi.     FUSED_STATUS_REG,   FUSED_STATUS_REG, 1, 51
@@ -1074,7 +1242,10 @@ isync
 
 
 initiate_hv_compatibility_mode:
+cmplwi      THREAD_ID_REG,  0
+beq         save_msg_snd_int
 
+skip_msg_snd_cleanup:
 addi        TEMP_REG1,      RMOR_INIT_REG,  HRMOR_RESTORE_OFFSET
 cmplwi      THREAD_ID_REG,  0
 beq         update_srrx
@@ -1103,11 +1274,22 @@ mtspr       USRR1,          MSR_INIT_REG
 # here and thread_launcher_start)
 
 find_self_save:
+mfspr       TEMP_REG1,      HRMOR
+ori         TEMP_REG1,      TEMP_REG1,   DISABLE_INT_EXCEPTION
+mtlr        TEMP_REG1
+blrl        # branch to interrupt disable
+
 addi        SELF_RESTORE_ADDR_REG,      THREAD_SCOPE_RESTORE_ADDR_REG, 8
 mtlr        THREAD_SELF_SAVE_BASE_ADDR
 blrl
+
+#---------------------------------------------------------------------------------------
+#   at the end of self save, check for pending msg send interrupt. Master as well as 
+#   slave threads needs to do it.
+#----------------------------------------------------------------------------------------
+
 cmpwi       THREAD_ID_REG,  0               # if thread in question is 0, also, save core SPRs
-bne         save_restore_done               # else saving of SPRs is done
+bne         check_for_msgsnd                # else check for pending msgsnd interrupt
 
 wait_slave_thd_entry_complete:
 #wait until all the slave threads are DONE with self-save
@@ -1129,7 +1311,36 @@ addi        SELF_RESTORE_ADDR_REG,  CORE_SCOPE_RESTORE_ADDR_REG, 40
 mtlr        CORE_SELF_SAVE_BASE_ADDR
 blrl
 
-b           save_restore_done
+check_for_msgsnd:
+mfspr       THREAD_SCRATCH_VAL_REG,   SPRD
+extrdi.     TEMP_REG1, THREAD_SCRATCH_VAL_REG, 1, DISABLE_MSG_SND_FIX_BIT    # Check if msg-snd fix needs to be ignored
+cmpwi       TEMP_REG1,    1
+beq         skip_msg_snd_restore_case       # QME has indicated that msgsnd fix should be bypassed
+
+# Set external interrupt enable i.e. MSR[EE]
+
+mfmsr       MSR_INIT_REG
+ori         MSR_INIT_REG,       MSR_INIT_REG,   0x8000
+mtmsr       MSR_INIT_REG
+
+#-----------------------------------------------------------------------------
+# Let all instruction finish before it.
+
+sync
+
+#-----------------------------------------------------------------------------
+
+# allowing a small time window for msgsnd interrupt to show up.
+# This is being done by inserting few NOPs.
+#------------------------------------------------------------------------------
+
+ori     0, 0, 0
+ori     0, 0, 0
+ori     0, 0, 0
+
+#------------------------------------------------------------------------------
+skip_msg_snd_restore_case:
+b       save_restore_done
 
 #-------------------- Self Save Routine --------------------------------
 
