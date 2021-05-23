@@ -40,7 +40,7 @@ typedef struct
     uint32_t    quad_id;            // PIR[28:31]
     uint32_t    hcode_func_enabled; // See above enum QME_HCODE_FUNCTIONAL_ENABLES
     uint32_t    stop_level_enabled; // Stop2:bit2, Stop5:bit5, Stop11:bit11
-    uint32_t    fused_core_enabled; // HwFused:0b01, HcodePaired:0b10
+    uint32_t    fused_core_enabled; // when fused always pair mode
     // 3
     uint32_t    mma_modes_enabled;  // POff:0b001, POff_Delay:0b010(Dynamic), POn:0b100(Static)
     uint32_t    mma_pwoff_dec_ticks;// number of ticks of dec timer to poweroff mma
@@ -80,40 +80,43 @@ typedef struct
     uint32_t    c_special_wakeup_done;
     uint32_t    c_hostboot_cores;
     // 9
+    uint32_t    c_cache_only_enabled;  //FW cache only cores
+    uint32_t    c_lpar_mode_enabled;   //FW Core enabled multi lpar mode
+    uint32_t    c_fit_stop11_requested;//FW request stop11 entry without stop
+    uint32_t    c_auto_stop11_wakeup;  //FW auto stop11 wakeup vector
+    // 10
     uint32_t    c_stop2_reached; // PIG TypeA 8:11
     uint32_t    c_stop3_reached; // PIG TypeA 12:15
     uint32_t    c_stop5_reached;
     uint32_t    c_stop11_reached;// PIG TypeA 20:23
 
     // Stop and Wakeup Processing
-    // 10
+    // 11
     uint32_t    c_pm_state_active_fast_req;
     uint32_t    c_regular_wakeup_fast_req;
     uint32_t    c_pm_state_active_slow_req;
     uint32_t    c_regular_wakeup_slow_req;
-    // 11
+    // 12
     uint32_t    c_special_wakeup_rise_req;
     uint32_t    c_special_wakeup_fall_req;
     uint32_t    c_special_wakeup_exit_pending;
     uint32_t    c_special_wakeup_abort_pending;
-    // 12
-    uint32_t    c_pm_state[4];
     // 13
+    uint32_t    c_pm_state[4];
+    // 14
     uint32_t    c_stop2_enter_targets;
     uint32_t    c_stop3_enter_targets;
     uint32_t    c_stop5_enter_targets;
     uint32_t    c_stop11_enter_targets;
-    // 14
-    uint32_t    c_mma_poweroff_count[4];
     // 15
-    uint32_t    c_mma_available; // invert PIG TypeA 16:19
-    uint32_t    c_mma_active_req;
     uint32_t    c_l2_purge_catchup_targets;
     uint32_t    c_stop3or5_catchup_targets;
-    // 16
     uint32_t    c_l2_purge_abort_targets;
     uint32_t    c_ncu_purge_abort_targets;
+    // 16
     uint32_t    c_stop3or5_abort_targets;
+    uint32_t    c_xstop_clock_abort_targets;
+    uint32_t    c_xstop_power_abort_targets;
     uint32_t    c_stop2_exit_express;
     // 17
     uint32_t    c_stop2_exit_targets;
@@ -121,39 +124,40 @@ typedef struct
     uint32_t    c_stop5_exit_targets;
     uint32_t    c_stop11_exit_targets;
     // 18
-    uint32_t    c_xstop_clock_abort_targets;
-    uint32_t    c_xstop_power_abort_targets;
-    uint32_t    c_lpar_mode_enabled;    // FW: Core enabled multi lpar mode
-    uint32_t    c_auto_stop11_wakeup;   // FW: auto stop11 wakeup vector
+    uint32_t    c_stop2p_exit_targets;
+    uint32_t    reserved;
+    uint32_t    c_mma_active_req;
+    uint32_t    c_mma_available; // invert PIG TypeA 16:19
+    // 19
+    uint32_t    c_mma_poweroff_count[4];
 
     // Errlog
-    // 19
+    // 20
     uint16_t    pad;
     uint16_t    errl_panic;
     uint32_t    errl_data0;
     uint32_t    errl_data1;
     uint32_t    errl_data2;
-    // 20
+    // 21
     uint16_t    c_failed_ring[4]; // Field needs to be at 8B boundary
     uint32_t    c_scan_failed;
     uint32_t    cts_timeout_count;
-    // 21
+    // 22
     uint32_t    c_self_fault_vector;
     uint32_t    c_self_failed;
-    uint32_t    c_in_recovery;
+    uint32_t    c_in_recovery;    // Deadly paint
     uint32_t    recovery_ongoing;
-    // 22,23,24,25
+    // 23,24,25,26
     uint32_t    c_tfac_c2s_retry_limit[4];
     uint32_t    c_tfac_c2s_retry_total[4];
     uint32_t    c_tfac_s2c_retry_limit[4];
     uint32_t    c_tfac_s2c_retry_total[4];
+    // 27
+    uint64_t    qme_lfir;
 
     /*DEBUG_ONLY
-    // 26
         uint32_t    c_act_stop_level[4];
-    // 27,28,29,30
         uint32_t    t_old_pls[4][4];
-    // 31,32,33,34
         uint32_t    t_new_pls[4][4];
     */
 } QmeRecord __attribute__ ((aligned (4)));

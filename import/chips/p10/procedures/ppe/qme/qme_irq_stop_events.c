@@ -44,6 +44,7 @@ qme_eval_eimr_override()
     G_qme_record.c_pm_state_active_mask =
         (((~G_qme_record.c_configured)       |
           G_qme_record.c_stop2_reached       |
+          G_qme_record.c_cache_only_enabled  |
           G_qme_record.c_in_error            |
           G_qme_record.c_special_wakeup_done |
           G_qme_record.c_block_stop_done)    & QME_MASK_ALL_CORES);
@@ -52,6 +53,7 @@ qme_eval_eimr_override()
         (((~G_qme_record.c_configured)       |
           (~(G_qme_record.c_stop1_targets    |
              G_qme_record.c_stop2_reached))  |
+          G_qme_record.c_cache_only_enabled  |
           G_qme_record.c_in_error            |
           G_qme_record.c_block_wake_override |
           G_qme_record.c_block_wake_done)    & QME_MASK_ALL_CORES);
@@ -310,8 +312,9 @@ qme_parse_pm_state_active_fast()
         G_qme_record.c_stop2_enter_targets =
             G_qme_record.c_stop3_enter_targets |
             G_qme_record.c_stop5_enter_targets;
-
+#ifdef USE_ABORT
         G_qme_record.hcode_func_enabled &= (~QME_STOP3OR5_ABORT_PATH_ENABLE);
+#endif
     }
 
     //stop0 pm_state_active is blocked from qme by hw.
@@ -512,6 +515,19 @@ qme_parse_special_wakeup_fall()
             out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, c_fall_fall ), BIT32(1) );
             G_qme_record.c_special_wakeup_done &= ~c_fall_fall;
             PK_TRACE("Check: SPWU drop confirmed, now drop PM_EXIT on Cores[%x]", c_fall);
+
+            G_qme_record.c_stop2_enter_targets = c_fall_fall &
+                                                 G_qme_record.c_configured &
+                                                 G_qme_record.c_cache_only_enabled &
+                                                 (~G_qme_record.c_stop2_reached);
+            G_qme_record.c_stop5_enter_targets = G_qme_record.c_stop2_enter_targets ;
+
+            if( G_qme_record.c_stop2_enter_targets )
+            {
+                PK_TRACE_INF("STOP6: Cache Only Cores[%x] Detected, Drop SpWu leading to Stop6 Entry",
+                             G_qme_record.c_stop2_enter_targets);
+                qme_stop_entry();
+            }
         }
 
         PK_TRACE_INF("Check: Keep SPWU Done on Cores(c_rise[%x] c_rise_rise[%x]) Drop SPWU Done+PM_EXIT on Cores(c_fall[%x] c_rise_fall[%x])",
@@ -723,6 +739,8 @@ qme_pm_state_active_fast_event()
         MARK_TAG( G_qme_record.c_stop2_enter_targets, IRQ_PM_STATE_ACTIVE_FAST_EVENT )
         qme_fault_inject(QME_PCSCR_STOP23_ENTRY_FAULT_INJECT, G_qme_record.c_stop2_enter_targets);
 
+#if defined(USE_CATCHUP) || defined(USE_ABORT)
+
         if( G_qme_record.fused_core_enabled )
         {
             G_qme_record.hcode_func_enabled &= ~QME_L2_PURGE_CATCHUP_PATH_ENABLE;
@@ -731,6 +749,8 @@ qme_pm_state_active_fast_event()
             G_qme_record.hcode_func_enabled &= ~QME_STOP3OR5_CATCHUP_PATH_ENABLE;
             G_qme_record.hcode_func_enabled &= ~QME_STOP3OR5_ABORT_PATH_ENABLE;
         }
+
+#endif
 
         //===============//
 #if POWER10_DD_LEVEL == 10
@@ -927,12 +947,15 @@ void
 qme_regular_wakeup_slow_event()
 {
     //technically contained mode implies stop11 is not supported with it
+#ifdef USE_RUNN
     if( ( G_qme_record.hcode_func_enabled & QME_RUNN_MODE_ENABLE ) ||
         ( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE ) )
     {
         PK_TRACE_ERR("ERROR: Attempt to Perform Stop11 when RUNN mode or Contained mode is enabled ");
         QME_ERROR_HANDLER(QME_STOP11_RUNN_CONTAINED_MODE_ERROR, 0, 0, 0);
     }
+
+#endif
 
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_RGWU_SLOW);
 
@@ -1025,6 +1048,8 @@ qme_stop11_msgsnd_injection(uint32_t core_target)
 void
 qme_pm_state_active_slow_event()
 {
+#ifdef USE_RUNN
+
     //technically contained mode implies stop11 is not supported with it
     if( ( G_qme_record.hcode_func_enabled & QME_RUNN_MODE_ENABLE ) ||
         ( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE ) )
@@ -1032,6 +1057,8 @@ qme_pm_state_active_slow_event()
         PK_TRACE_ERR("ERROR: Attempt to Perform Stop11 when RUNN mode or Contained mode is enabled ");
         QME_ERROR_HANDLER(QME_STOP11_RUNN_CONTAINED_MODE_ERROR, 0, 0, 0);
     }
+
+#endif
 
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_STOP_SLOW);
 
@@ -1052,11 +1079,13 @@ qme_pm_state_active_slow_event()
 
         //===============//
 
+#if defined(USE_CATCHUP) || defined(USE_ABORT)
         G_qme_record.hcode_func_enabled &= ~QME_L2_PURGE_CATCHUP_PATH_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_L2_PURGE_ABORT_PATH_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_NCU_PURGE_ABORT_PATH_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_STOP3OR5_CATCHUP_PATH_ENABLE;
         G_qme_record.hcode_func_enabled &= ~QME_STOP3OR5_ABORT_PATH_ENABLE;
+#endif
 
         if( G_qme_record.hcode_func_enabled & QME_SELF_SAVE_ENABLE )
         {

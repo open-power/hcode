@@ -51,6 +51,7 @@ qme_stop_prepare(uint32_t c_stop2)
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_stop2 ), BIT32(21) );
 }
 
+#ifdef USE_CATCHUP
 // called in p10_hcd_l2_purge()
 void
 qme_l2_purge_catchup_detect(uint32_t& core_select)
@@ -81,7 +82,9 @@ qme_l2_purge_catchup_detect(uint32_t& core_select)
         }
     }
 }
+#endif
 
+#ifdef USE_ABORT
 // called in p10_hcd_l2_purge()
 void
 qme_l2_purge_abort_detect()
@@ -189,7 +192,7 @@ qme_stop2_abort_cleanup(uint32_t abort_targets)
     G_qme_record.c_stop3_enter_targets &= (~abort_targets);
     G_qme_record.c_stop5_enter_targets &= (~abort_targets);
 }
-
+#endif
 
 void
 qme_stop_entry()
@@ -213,134 +216,147 @@ qme_stop_entry()
 
         qme_stop_prepare(G_qme_record.c_stop2_enter_targets);
 
-        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
+        //did this way because stop2_target may keep changing.
+        //also assumption is made that abort and catchup is disabled FIXME p11?
+        uint32_t core_skip = G_qme_record.c_stop2_enter_targets & G_qme_record.c_cache_only_enabled;
+        G_qme_record.c_stop2_enter_targets = G_qme_record.c_stop2_enter_targets & (~core_skip);
 
-        //===============//
-
-        MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_L2_PURGE_HBUS_DIS )
-
-        p10_hcd_l2_purge(core_target);
-
-        //===============//
-
-        // L2 Purge Abort Cleanup and Wakeup
-        if( G_qme_record.c_l2_purge_abort_targets )
+        if( G_qme_record.c_stop2_enter_targets )
         {
-            PK_TRACE("Drop HBUS_DISABLE/AUTO_PMSR_SHIFT_DIS via PCR_SCSR[4,22]");
+            core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                          static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
 
-            out32( QME_LCL_CORE_ADDR_WR(
-                       QME_SCSR_WO_CLEAR, G_qme_record.c_l2_purge_abort_targets ),
-                   ( BIT32(4) | BIT32(22) ) );
+            //===============//
 
-            qme_stop2_abort_cleanup(G_qme_record.c_l2_purge_abort_targets);
+            MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_L2_PURGE_HBUS_DIS )
 
-            MARK_TAG( G_qme_record.c_l2_purge_abort_targets, SE_L2_PURGE_ABORT_DONE )
-            G_qme_record.c_l2_purge_abort_targets = 0;
-        }
+            p10_hcd_l2_purge(core_target);
 
-        //===============//
+            //===============//
+#ifdef USE_ABORT
 
-        //If L2 Purge Abort occured, and all previous targets aborted, terminate current stop entry
-        if( !G_qme_record.c_stop2_enter_targets )
-        {
-            return;
-        }
-
-        //recreate target in case catchup/abort
-        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
-
-        //===============//
-
-        MARK_TAG( (G_qme_record.c_stop2_enter_targets & (~G_qme_record.c_l2_purge_catchup_targets)), SE_L2_TLBIE_QUIESCE )
-
-        if (G_qme_record.c_l2_purge_catchup_targets)
-        {
-            MARK_TAG( G_qme_record.c_l2_purge_catchup_targets, SE_L2_TLBIE_QUIESCE_CATCHUP )
-
-            G_qme_record.c_l2_purge_catchup_targets = 0;
-        }
-
-        p10_hcd_l2_tlbie_quiesce(core_target);
-
-        //===============//
-
-        MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_NCU_PURGE )
-
-        p10_hcd_ncu_purge(core_target);
-
-        //===============//
-
-        // NCU Purge Abort Cleanup and Wakeup
-        if( G_qme_record.c_ncu_purge_abort_targets )
-        {
-            PK_TRACE("Drop HBUS_DISABLE/L2RCMD_INTF_QUIESCE/NCU_TLBIE_QUIESCE/AUTO_PMSR_SHIFT_DIS via PCR_SCSR[4,7,8,22]");
-
-            out32( QME_LCL_CORE_ADDR_WR(
-                       QME_SCSR_WO_CLEAR, G_qme_record.c_ncu_purge_abort_targets ),
-                   ( BIT32(4) | BITS32(7, 2) | BIT32(22) ) );
-
-            qme_stop2_abort_cleanup(G_qme_record.c_ncu_purge_abort_targets);
-
-            MARK_TAG( G_qme_record.c_ncu_purge_abort_targets, SE_NCU_PURGE_ABORT_DONE )
-            G_qme_record.c_ncu_purge_abort_targets = 0;
-        }
-
-        //===============//
-
-        //If NCU Purge Abort occured, and all previous targets aborted, terminate current stop entry
-        if( !G_qme_record.c_stop2_enter_targets )
-        {
-            return;
-        }
-
-        //recreate target in case abort
-        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
-
-        //===============//
-
-        MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_CORE_DISABLE_SHADOWS )
-
-        p10_hcd_core_timefac_from_pc(core_target);
-        p10_hcd_core_shadows_disable(core_target);
-
-        //===============//
-
-        for( core_mask = 8, xstop_mask = BIT32(5);
-             core_mask;
-             core_mask = core_mask >> 1, xstop_mask = xstop_mask >> 1)
-        {
-            if( core_mask & G_qme_record.c_stop2_enter_targets )
+            // L2 Purge Abort Cleanup and Wakeup
+            if( G_qme_record.c_l2_purge_abort_targets )
             {
-                PPE_GETSCOM( LOCAL_XSTOP, scom_data.value );
+                PK_TRACE("Drop HBUS_DISABLE/AUTO_PMSR_SHIFT_DIS via PCR_SCSR[4,22]");
 
-                if( scom_data.words.upper & xstop_mask )
+                out32( QME_LCL_CORE_ADDR_WR(
+                           QME_SCSR_WO_CLEAR, G_qme_record.c_l2_purge_abort_targets ),
+                       ( BIT32(4) | BIT32(22) ) );
+
+                qme_stop2_abort_cleanup(G_qme_record.c_l2_purge_abort_targets);
+
+                MARK_TAG( G_qme_record.c_l2_purge_abort_targets, SE_L2_PURGE_ABORT_DONE )
+                G_qme_record.c_l2_purge_abort_targets = 0;
+            }
+
+            //===============//
+
+            //If L2 Purge Abort occured, and all previous targets aborted, terminate current stop entry
+            if( !G_qme_record.c_stop2_enter_targets )
+            {
+                return;
+            }
+
+            //recreate target in case catchup/abort
+            core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                          static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
+#endif
+            //===============//
+#ifdef USE_CATCHUP
+            MARK_TAG( (G_qme_record.c_stop2_enter_targets & (~G_qme_record.c_l2_purge_catchup_targets)), SE_L2_TLBIE_QUIESCE )
+
+            if (G_qme_record.c_l2_purge_catchup_targets)
+            {
+                MARK_TAG( G_qme_record.c_l2_purge_catchup_targets, SE_L2_TLBIE_QUIESCE_CATCHUP )
+
+                G_qme_record.c_l2_purge_catchup_targets = 0;
+            }
+
+#endif
+            p10_hcd_l2_tlbie_quiesce(core_target);
+
+            //===============//
+
+            MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_NCU_PURGE )
+
+            p10_hcd_ncu_purge(core_target);
+
+            //===============//
+#ifdef USE_ABORT
+
+            // NCU Purge Abort Cleanup and Wakeup
+            if( G_qme_record.c_ncu_purge_abort_targets )
+            {
+                PK_TRACE("Drop HBUS_DISABLE/L2RCMD_INTF_QUIESCE/NCU_TLBIE_QUIESCE/AUTO_PMSR_SHIFT_DIS via PCR_SCSR[4,7,8,22]");
+
+                out32( QME_LCL_CORE_ADDR_WR(
+                           QME_SCSR_WO_CLEAR, G_qme_record.c_ncu_purge_abort_targets ),
+                       ( BIT32(4) | BITS32(7, 2) | BIT32(22) ) );
+
+                qme_stop2_abort_cleanup(G_qme_record.c_ncu_purge_abort_targets);
+
+                MARK_TAG( G_qme_record.c_ncu_purge_abort_targets, SE_NCU_PURGE_ABORT_DONE )
+                G_qme_record.c_ncu_purge_abort_targets = 0;
+            }
+
+            //===============//
+
+            //If NCU Purge Abort occured, and all previous targets aborted, terminate current stop entry
+            if( !G_qme_record.c_stop2_enter_targets )
+            {
+                return;
+            }
+
+            //recreate target in case abort
+            core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                          static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2_enter_targets));
+#endif
+            //===============//
+
+            MARK_TAG( G_qme_record.c_stop2_enter_targets, SE_CORE_DISABLE_SHADOWS )
+
+            p10_hcd_core_timefac_from_pc(core_target);
+            p10_hcd_core_shadows_disable(core_target);
+
+            //===============//
+
+            for( core_mask = 8, xstop_mask = BIT32(5);
+                 core_mask;
+                 core_mask = core_mask >> 1, xstop_mask = xstop_mask >> 1)
+            {
+                if( core_mask & G_qme_record.c_stop2_enter_targets )
                 {
-                    G_qme_record.c_xstop_clock_abort_targets |= core_mask;
+                    PPE_GETSCOM( LOCAL_XSTOP, scom_data.value );
+
+                    if( scom_data.words.upper & xstop_mask )
+                    {
+                        G_qme_record.c_xstop_clock_abort_targets |= core_mask;
+                    }
                 }
+            }
+
+            //===============//
+
+            if( G_qme_record.c_xstop_clock_abort_targets )
+            {
+                PK_TRACE_INF("Local Xstop detected on Core[%x], Abort Stop Entry before stopclocks",
+                             G_qme_record.c_xstop_clock_abort_targets);
+                G_qme_record.c_stop2_enter_targets &= (~G_qme_record.c_xstop_clock_abort_targets);
+                G_qme_record.c_stop3_enter_targets &= (~G_qme_record.c_xstop_clock_abort_targets);
+                G_qme_record.c_stop5_enter_targets &= (~G_qme_record.c_xstop_clock_abort_targets);
+            }
+
+            //===============//
+
+            //If Xstop Abort occured, and all previous targets aborted, terminate current stop entry
+            if( !G_qme_record.c_stop2_enter_targets && !core_skip )
+            {
+                return;
             }
         }
 
-        //===============//
-
-        if( G_qme_record.c_xstop_clock_abort_targets )
-        {
-            PK_TRACE_INF("Local Xstop detected on Core[%x], Abort Stop Entry before stopclocks",
-                         G_qme_record.c_xstop_clock_abort_targets);
-            G_qme_record.c_stop2_enter_targets &= (~G_qme_record.c_xstop_clock_abort_targets);
-            G_qme_record.c_stop3_enter_targets &= (~G_qme_record.c_xstop_clock_abort_targets);
-            G_qme_record.c_stop5_enter_targets &= (~G_qme_record.c_xstop_clock_abort_targets);
-        }
-
-        //===============//
-
-        //If Xstop Abort occured, and all previous targets aborted, terminate current stop entry
-        if( !G_qme_record.c_stop2_enter_targets )
-        {
-            return;
-        }
+        G_qme_record.c_stop2_enter_targets = G_qme_record.c_stop2_enter_targets | core_skip;
 
         //recreate target in case abort
         core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
@@ -398,8 +414,9 @@ qme_stop_entry()
             return;
         }
 
-        ///// [STOP3/5_CATCHUP] /////
+#ifdef USE_CATCHUP
 
+        ///// [STOP3/5_CATCHUP] /////
         if( G_qme_record.hcode_func_enabled & QME_STOP3OR5_CATCHUP_PATH_ENABLE)
         {
             if( G_qme_record.c_stop3or5_catchup_targets )
@@ -430,10 +447,13 @@ qme_stop_entry()
                 G_qme_record.hcode_func_enabled &= ~QME_NCU_PURGE_ABORT_PATH_ENABLE;
             }
         }
+
+#endif
     }
     while( G_qme_record.c_stop3or5_catchup_targets );
 
 
+#ifdef USE_ABORT
 
     if( ( G_qme_record.hcode_func_enabled & QME_STOP3OR5_ABORT_PATH_ENABLE ) &&
         ( G_qme_record.c_stop3_enter_targets || G_qme_record.c_stop5_enter_targets ) )
@@ -492,6 +512,7 @@ qme_stop_entry()
         }
     }
 
+#endif
 
 
     if( G_qme_record.c_stop3_enter_targets )
@@ -594,10 +615,16 @@ qme_stop_entry()
 
         MARK_TAG(G_qme_record.c_stop5_enter_targets, SE_CORE_POWEROFF)
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_PFET_CTRL_ENABLE )
         {
+#endif
             p10_hcd_core_poweroff(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         //===============//
 
@@ -615,10 +642,18 @@ qme_stop_entry()
                      G_qme_record.c_stop5_reached,
                      G_qme_record.c_stop11_enter_targets);
 
+        uint32_t c_stop6 = G_qme_record.c_stop5_enter_targets & G_qme_record.c_cache_only_enabled;
+
+        if( c_stop6 )
+        {
+            out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_stop6 ), SSH_ACT_LV6_COMPLETE );
+        }
+
         G_qme_record.c_stop5_enter_targets = 0;
     }
 
-
+    //cache only cores wont go to stop11
+    G_qme_record.c_stop11_enter_targets &= ~G_qme_record.c_cache_only_enabled;
 
     if( G_qme_record.c_stop11_enter_targets )
     {
@@ -669,10 +704,16 @@ qme_stop_entry()
 
         MARK_TAG(G_qme_record.c_stop11_enter_targets, SE_CACHE_POWEROFF)
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_PFET_CTRL_ENABLE )
         {
+#endif
             p10_hcd_cache_poweroff(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         //===============//
 

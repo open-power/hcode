@@ -36,6 +36,8 @@ hcode_error_table_t G_qmeElogTable; // QME local Error Log Table
 void
 qme_attr_init()
 {
+    fapi2::Target<fapi2::TARGET_TYPE_SYSTEM> l_sys;
+
     uint32_t pir = 0;
     asm volatile ( "mfspr %0, %1 \n\t" : "=r" (pir) : "i" (SPRN_PIR));
     G_qme_record.quad_id = pir & 0xF;
@@ -48,10 +50,9 @@ qme_attr_init()
     }
 
     //===============
-
+#ifdef USE_RUNN
     uint8_t runn_mode      = 0;
     uint8_t contained_type = 0;
-    fapi2::Target<fapi2::TARGET_TYPE_SYSTEM>                 l_sys;
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE,          l_sys,  runn_mode ) );
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_CONTAINED_IPL_TYPE, l_sys,  contained_type ) );
 
@@ -67,6 +68,7 @@ qme_attr_init()
         G_qme_record.hcode_func_enabled |= QME_CONTAINED_MODE_ENABLE;
     }
 
+#endif
     //===============
 
     // Time to delay before powering off the MMA due to the lack of MMA instructions.

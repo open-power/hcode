@@ -284,20 +284,20 @@ qme_machine_check_handler()
     G_qme_record.errl_data1 = srr0;
     G_qme_record.errl_data2 = edr;
 
-    if ( edr == 0 )
-    {
-        G_qme_record.errl_panic = QME_MACHINE_CHECK_COMMON_ERROR;
-        G_qme_record.errl_data2 = srr1;
-    }
     // Local access
-    else if ( ( edr >> SHIFT32(3) ) == 0xC )
+    if ( ( edr >> SHIFT32(3) ) == 0xC )
     {
         G_qme_record.errl_panic = QME_MACHINE_CHECK_LOCAL_ERROR;
     }
-    // Scom access
-    else
+    // Scom access as qme only scom to per-core registers
+    else if ( ( edr >> SHIFT32(3) ) == 0x2 )
     {
         G_qme_record.errl_panic = QME_MACHINE_CHECK_SCOM_ERROR;
+    }
+    else
+    {
+        G_qme_record.errl_panic = QME_MACHINE_CHECK_COMMON_ERROR;
+        G_qme_record.errl_data2 = srr1;
     }
 
     qme_errlog();

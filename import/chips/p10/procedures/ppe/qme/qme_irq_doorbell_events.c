@@ -67,9 +67,9 @@ qme_top_priority_event()
     {
         if (!G_IsSimics)
         {
-            fir = in64( QME_LCL_LFIR );
+            G_qme_record.qme_lfir = in64( QME_LCL_LFIR );
             fir_action = in64( QME_LCL_ACTION0 );
-            fir = ( fir & fir_action );
+            fir = ( G_qme_record.qme_lfir & fir_action );
             fir_action = in64( QME_LCL_ACTION1 );
             fir = ( fir & ( ~fir_action ) );
             out64(QME_LCL_LFIRMASK_OR, fir);
@@ -294,10 +294,16 @@ qme_send_pig_packet(uint32_t data)
     while ( temp & BIT32(24) );
 
     // Send PIG packet
+#ifdef USE_RUNN
+
     if( !(G_qme_record.hcode_func_enabled & QME_RUNN_MODE_ENABLE) )
     {
+#endif
         out32(QME_LCL_PIG, data);
+#ifdef USE_RUNN
     }
+
+#endif
 
     PK_TRACE_DBG("PIG: Sending[%x]", data);
 }

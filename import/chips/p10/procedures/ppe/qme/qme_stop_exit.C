@@ -199,14 +199,20 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
     //===============//
 
-    PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
-    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_target ), BIT32(1) );
+    // do not mess pm_exit for cache_only cores
+    uint32_t core_wakeup = core_target & ~G_qme_record.c_cache_only_enabled;
 
-    PPE_WAIT_4NOP_CYCLES
+    if( core_wakeup )
+    {
+        PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_wakeup ), BIT32(1) );
 
-    PK_TRACE("Polling for Core Waking up(pm_active=0) via QME_SSDR[12-15]");
+        PPE_WAIT_4NOP_CYCLES
 
-    while( ( ( (~in32(QME_LCL_SSDR)) >> SHIFT32(15) ) & core_target ) != core_target );
+        PK_TRACE("Polling for Core Waking up(pm_active=0) via QME_SSDR[12-15]");
+
+        while( ( ( (~in32(QME_LCL_SSDR)) >> SHIFT32(15) ) & core_wakeup ) != core_target );
+    }
 
     //===============//
 
@@ -391,7 +397,11 @@ qme_stop_exit()
             // Read QME Scratch B[20:23] and mask for core X
             // In fused core mode, ME Hcode will only key off of the even core bits (20, 22)
             // to manage the respective odd core too.
-            G_qme_record.c_lpar_mode_enabled = ( in32(QME_LCL_SCRB) & BITS32(20, 4) ) >> SHIFT32(23);
+            G_qme_record.c_lpar_mode_enabled = ( in32(QME_LCL_SCRB) &
+                                                 BITS32(QME_SCRB_CORE_LPAR_MODE_VECTOR_BASE,
+                                                         QME_SCRB_CORE_LPAR_MODE_VECTOR_SIZE) ) >>
+                                               SHIFT32( ( QME_SCRB_CORE_LPAR_MODE_VECTOR_BASE +
+                                                       QME_SCRB_CORE_LPAR_MODE_VECTOR_SIZE - 1 ) );
 
             PK_TRACE_INF("WAKE11: Waking up Cores in LPAR mode[%x] under fused core mode[%x]",
                          G_qme_record.c_lpar_mode_enabled,
@@ -481,11 +491,17 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_POWERON )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_PFET_CTRL_ENABLE )
         {
+#endif
             qme_fault_inject(QME_PCSCR_STOP11_POWON_FAULT_INJECT, G_qme_record.c_stop11_exit_targets);
             p10_hcd_cache_poweron(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         //===============//
 
@@ -494,10 +510,16 @@ qme_stop_exit()
         wrteei(0);
         p10_hcd_cache_reset(core_target);
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCANFLUSH_ENABLE )
         {
+#endif
             p10_hcd_cache_scan0(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_POWERED )
 
@@ -505,10 +527,16 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_GPTR_TIME_INITF )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
         {
+#endif
             p10_hcd_cache_gptr_time_initf(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         //===============//
         core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
@@ -516,10 +544,16 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_REPAIR_INITF )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
         {
+#endif
             p10_hcd_cache_repair_initf(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         if( !G_qme_record.c_stop11_exit_targets )
         {
@@ -532,10 +566,16 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_ARRAYINIT )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_ARRAYINIT_ENABLE )
         {
+#endif
             p10_hcd_cache_arrayinit(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         if( !G_qme_record.c_stop11_exit_targets )
         {
@@ -548,10 +588,16 @@ qme_stop_exit()
                       static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop11_exit_targets));
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_INITF )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
         {
+#endif
             p10_hcd_cache_initf(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         if( !G_qme_record.c_stop11_exit_targets )
         {
@@ -574,17 +620,28 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOMINIT )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_INIT_ENABLE )
         {
+#endif
             p10_hcd_cache_scominit(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         //===============//
 
+        MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
+
         wrteei(0);
+
+#ifdef USE_HWP_ENABLE
 
         if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
         {
+#endif
             uint32_t l3HomerOffset = 0;
             uint32_t l3Length    = 0;
 
@@ -620,8 +677,6 @@ qme_stop_exit()
                                           pQmeImgHdr->g_qme_L3ScomLength, ec);
                     }
 
-                    MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CACHE_SCOM_CUSTOMIZE )
-
                     if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_CUST_ENABLE )
                     {
                         core_scom_rest_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
@@ -630,7 +685,11 @@ qme_stop_exit()
                     }
                 }
             }
+
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         wrteei(1);
 
@@ -640,6 +699,17 @@ qme_stop_exit()
 
         G_qme_record.c_stop11_reached &= (~G_qme_record.c_stop11_exit_targets);
         //note, not reset stop11_exit_targets until stop11 scom restore is completed below
+
+        uint32_t c_stop6 = G_qme_record.c_stop11_exit_targets & G_qme_record.c_cache_only_enabled;
+
+        if( c_stop6 )
+        {
+            PK_TRACE_INF("WAKE6: Cache Only Cores[%x] Detected, hold them at this state", c_stop6);
+            out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, c_stop6 ), SSH_ACT_LV6_COMPLETE );
+            G_qme_record.c_stop11_exit_targets &= ~c_stop6;
+            G_qme_record.c_stop5_exit_targets  &= ~c_stop6;
+            G_qme_record.c_stop2_exit_targets  &= ~c_stop6;
+        }
     }
 
     ///// [STOP5 EXIT] /////
@@ -655,10 +725,16 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_POWERON )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_PFET_CTRL_ENABLE )
         {
+#endif
             p10_hcd_core_poweron(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         //===============//
 
@@ -667,10 +743,16 @@ qme_stop_exit()
         wrteei(0);
         p10_hcd_core_reset(core_target);
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCANFLUSH_ENABLE )
         {
+#endif
             p10_hcd_core_scan0(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_POWERED )
 
@@ -678,10 +760,16 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_GPTR_TIME_INITF )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
         {
+#endif
             p10_hcd_core_gptr_time_initf(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         //===============//
         if( !G_qme_record.c_stop5_exit_targets )
@@ -694,10 +782,16 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_REPAIR_INITF )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
         {
+#endif
             p10_hcd_core_repair_initf(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         //===============//
         if( !G_qme_record.c_stop5_exit_targets )
@@ -710,10 +804,16 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop5_exit_targets, SX_CORE_ARRAYINIT )
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_ARRAYINIT_ENABLE )
         {
+#endif
             p10_hcd_core_arrayinit(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         if( !G_qme_record.c_stop5_exit_targets )
         {
@@ -727,10 +827,16 @@ qme_stop_exit()
         core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
                       static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop5_exit_targets));
 
+#ifdef USE_HWP_ENABLE
+
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCAN_INIT_ENABLE )
         {
+#endif
             p10_hcd_core_initf(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         if( !G_qme_record.c_stop5_exit_targets )
         {
@@ -757,7 +863,6 @@ qme_stop_exit()
         FAPI_TRY(FAPI_ATTR_SET(fapi2::ATTR_QME_STATE_LOSS_CORES, chip_target, G_qme_record.c_stop5_exit_targets));
 
         G_qme_record.c_stop5_reached &= (~G_qme_record.c_stop5_exit_targets);
-        G_qme_record.c_stop5_exit_targets = 0;
     }
 
     ///// [STOP2 EXIT] /////
@@ -798,20 +903,34 @@ qme_stop_exit()
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_CLOCKED )
     }
 
-    ///// [STOP11 EXIT SCOM] /////
+    ///// [STOP5/11 EXIT SCOM] /////
 
-    if( G_qme_record.c_stop11_exit_targets )
+    G_qme_record.c_stop2p_exit_targets = G_qme_record.c_stop11_exit_targets | G_qme_record.c_stop5_exit_targets;
+
+    if( G_qme_record.c_stop2p_exit_targets )
     {
-        PK_TRACE_INF("WAKE11: Scominit Cores in STOP11[%x]", G_qme_record.c_stop11_exit_targets);
+        PK_TRACE_INF("WAKE5/11: Scominit Cores[%x] in STOP5[%x]/11[%x]",
+                     G_qme_record.c_stop2p_exit_targets,
+                     G_qme_record.c_stop5_exit_targets,
+                     G_qme_record.c_stop11_exit_targets);
+
+        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2p_exit_targets));
 
         //===============//
 
-        MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOMINIT )
+        MARK_TAG( G_qme_record.c_stop2p_exit_targets, SX_CORE_SCOMINIT )
+
+#ifdef USE_HWP_ENABLE
 
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_INIT_ENABLE )
         {
+#endif
             p10_hcd_core_scominit(core_target);
+#ifdef USE_HWP_ENABLE
         }
+
+#endif
 
         //===============//
 
@@ -833,6 +952,8 @@ qme_stop_exit()
             G_qme_record.c_special_wakeup_exit_pending = 0xF;
         }
 
+        MARK_TAG( G_qme_record.c_stop2p_exit_targets, SX_CORE_SCOM_CUSTOMIZE )
+
         wrteei(0);
 
         if( G_qme_record.hcode_func_enabled & QME_BLOCK_COPY_SCOM_ENABLE )
@@ -843,7 +964,7 @@ qme_stop_exit()
 
             for( uint32_t ec = 8; ec; ec = ( ec >> 1 ) )
             {
-                if( G_qme_record.c_stop11_exit_targets & ec )
+                if( G_qme_record.c_stop2p_exit_targets & ec )
                 {
                     l2HomerOffet  =  0;
                     l2Length      =  pQmeImgHdr->g_qme_coreL2ScomLength;
@@ -875,8 +996,6 @@ qme_stop_exit()
                                           pQmeImgHdr->g_qme_coreL2ScomLength, ec);
                     }
 
-                    MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOM_CUSTOMIZE )
-
                     if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_CUST_ENABLE )
                     {
                         core_scom_rest_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
@@ -889,40 +1008,50 @@ qme_stop_exit()
 
         wrteei(1);
 
-        MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SCOMED )
+        MARK_TAG( G_qme_record.c_stop2p_exit_targets, SX_CORE_SCOMED )
 
         //===============//
 
-        MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SELF_RESTORE )
+        G_qme_record.c_stop11_exit_targets = 0;
+        G_qme_record.c_stop5_exit_targets  = 0;
+    }
+
+    //Core is not going to do self restore if in cache_only mode
+    G_qme_record.c_stop2p_exit_targets &= ~G_qme_record.c_cache_only_enabled;
+
+    if( G_qme_record.c_stop2p_exit_targets )
+    {
+        MARK_TAG( G_qme_record.c_stop2p_exit_targets, SX_CORE_SELF_RESTORE )
 
         if( G_qme_record.hcode_func_enabled & QME_SELF_RESTORE_ENABLE )
         {
-            PK_TRACE_INF("WAKE11: self restore STOP11[%x] 0x%08x",
-                         G_qme_record.c_stop11_exit_targets,
+            PK_TRACE_INF("WAKE11: self restore STOP5/11[%x] Cache only Cores[%x] 0x%08x",
+                         G_qme_record.c_stop2p_exit_targets,
+                         G_qme_record.c_cache_only_enabled,
                          G_qme_record.hcode_func_enabled);
 
-            qme_stop_self_execute(G_qme_record.c_stop11_exit_targets, SPR_SELF_RESTORE);
+            qme_stop_self_execute(G_qme_record.c_stop2p_exit_targets, SPR_SELF_RESTORE);
         }
 
-        MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_SRESET_THREADS )
+        MARK_TAG( G_qme_record.c_stop2p_exit_targets, SX_CORE_SRESET_THREADS )
 
         if( G_qme_record.hcode_func_enabled & QME_SELF_RESTORE_ENABLE )
         {
-            qme_stop_self_complete(G_qme_record.c_stop11_exit_targets, SPR_SELF_RESTORE);
+            qme_stop_self_complete(G_qme_record.c_stop2p_exit_targets, SPR_SELF_RESTORE);
 
-            G_qme_record.c_stop11_exit_targets &= ~G_qme_record.c_self_failed;
+            G_qme_record.c_stop2p_exit_targets &= ~G_qme_record.c_self_failed;
 
-            if( G_qme_record.c_stop11_exit_targets == 0 )
+            if( G_qme_record.c_stop2p_exit_targets == 0 )
             {
                 return;
             }
         }
 
-        MARK_TAG( G_qme_record.c_stop11_exit_targets, SX_CORE_RESTORED )
+        MARK_TAG( G_qme_record.c_stop2p_exit_targets, SX_CORE_RESTORED )
 
         //===============//
 
-        G_qme_record.c_stop11_exit_targets = 0;
+        G_qme_record.c_stop2p_exit_targets = 0;
     }
 
     ///// [STOP0 WAKEUP] /////
@@ -952,5 +1081,4 @@ qme_stop_exit()
         G_qme_record.c_stop2_reached &= ~G_qme_record.c_stop2_exit_targets;
         G_qme_record.c_stop2_exit_targets = 0;
     }
-
 }

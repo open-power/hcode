@@ -50,18 +50,29 @@ qme_init()
     //--------------------------------------------------------------------------
     // Initialize Software Scoreboard
     //--------------------------------------------------------------------------
+
     uint32_t c_loop, c_end, act_stop_level;
-    //uint32_t before, after;
     uint32_t local_data = in32_sh(QME_LCL_QMCR);
     G_qme_record.c_configured       = local_data & BITS64SH(60, 4);
     G_qme_record.fused_core_enabled = ( local_data >> SHIFT64SH(47) ) & 0x1;
 
-    // TODO attributes or flag bits
+    G_qme_record.c_cache_only_enabled = ( in32( QME_LCL_SCRB ) &
+                                          BITS32(QME_SCRB_CACHE_ONLY_MODE_VECTOR_BASE,
+                                                  QME_SCRB_CACHE_ONLY_MODE_VECTOR_SIZE) ) >>
+                                        SHIFT32( ( QME_SCRB_CACHE_ONLY_MODE_VECTOR_BASE +
+                                                QME_SCRB_CACHE_ONLY_MODE_VECTOR_SIZE - 1 ) ) ;
+
     // TODO assert pm_entry_limit when stop levels are all disabled
     // However, cannot disable stop11 as gating the IPL, to be discussed with Greg
-    //G_qme_record.stop_level_enabled = TBD ATTRIBUTES
-    G_qme_record.c_self_failed      = 0;
-    G_qme_record.c_self_fault_vector = 0;
+    if( in32( QME_LCL_SCRB ) & BIT32( QME_SCRB_STOP2_TO_STOP0 ) )
+    {
+        G_qme_record.stop_level_enabled &= ~BIT32(STOP_LEVEL_2);
+    }
+
+    if( in32( QME_LCL_SCRB ) & BIT32( QME_SCRB_STOP3_TO_STOP2 ) )
+    {
+        G_qme_record.stop_level_enabled &= ~BIT32(STOP_LEVEL_3);
+    }
 
     PK_TRACE_INF("Setup: Git Head[%x], Chip DD Level[%d], Stop Level Enabled[%x], Configured Cores[%x]",
                  G_qme_record.git_head,
@@ -75,6 +86,7 @@ qme_init()
     G_qme_record.c_stop11_reached  |= (~G_qme_record.c_configured) & QME_MASK_ALL_CORES;
     G_qme_record.c_stop5_reached    = G_qme_record.c_stop11_reached;
     G_qme_record.c_stop2_reached    = G_qme_record.c_stop11_reached;
+
     // This data will be used to know we are in ipl mode or runtime mode to
     // handle the master/backing core case, which is valid only in ipl case.
     // Now I have check for TOD_SETUPC_OMPLETE to know we are in runtime or not,
@@ -134,10 +146,11 @@ qme_init()
     G_qme_record.c_block_wake_done = ((in32_sh(QME_LCL_SSDR) & BITS64SH(36, 4)) >> SHIFT64SH(39));
     G_qme_record.c_block_stop_done = 0;
 
-    PK_TRACE_INF("Setup: Core Stop Gated[%x], Core in Special Wakeup[%x], Core in Block Wakeup[%x]",
+    PK_TRACE_INF("Setup: Core Stop Gated[%x], Core in Special Wakeup[%x], Core in Block Wakeup[%x], Core in Cache Only[%x]",
                  G_qme_record.c_stop11_reached,
                  G_qme_record.c_special_wakeup_done,
-                 G_qme_record.c_block_wake_done);
+                 G_qme_record.c_block_wake_done,
+                 G_qme_record.c_cache_only_enabled);
 
 #ifdef EPM_TUNING
 
@@ -180,6 +193,8 @@ qme_init()
 
 #endif
 
+#ifdef USE_RUNN
+
     //technically contained mode implies stop11 is not supported with it
     if( ( G_qme_record.hcode_func_enabled & QME_CONTAINED_MODE_ENABLE ) ||
         ( G_qme_record.hcode_func_enabled & QME_RUNN_MODE_ENABLE ) )
@@ -195,9 +210,13 @@ qme_init()
         G_qme_record.hcode_func_enabled &= ~QME_HWP_PFET_CTRL_ENABLE;
     }
 
+#endif
+
     //--------------------------------------------------------------------------
     // Initialize Hardware Settings
     //--------------------------------------------------------------------------
+
+    // Initialize the throttle table
 
     PK_TRACE("Assert SRAM_SCRUB_ENABLE via QSCR[1]and set QSCR[DTCBASE] to the throttle table");
     uint64_t qscr = 0;
@@ -222,6 +241,19 @@ qme_init()
     qscr |=  BIT64(1);
     out64( QME_LCL_QSCR_OR, qscr );
 
+    // Initialize the resonant clock setup
+
+    PK_TRACE("Drop RCMR STEP_ENABLE via RCMR[0]");
+    out32 ( QME_LCL_RCMR_CLR, BIT32(QME_RCMR_STEP_ENABLE) );
+
+    PK_TRACE("Assert RCMR AUTO_DONE_DISABLE via RCMR[3]");
+    out32 ( QME_LCL_RCMR_OR, BIT32(QME_RCMR_AUTO_DONE_DISABLE) );
+
+    PK_TRACE("Set RCSCR CORE_CHANGE_DONE for all cores to provide a done until the resonant clocks are enabled");
+    out32 ( QME_LCL_RCSCR_OR, BITS32(QME_RCSCR_CHANGE_DONE, QME_RCSCR_CHANGE_DONE_LEN) );
+
+    // Initialize stop and qme settings
+
     PK_TRACE("Drop BCECSR_OVERRIDE_EN/STOP_OVERRIDE_MODE/STOP_ACTIVE_MASK/STOP_SHIFTREG_OVERRIDE_EN via QMCR[3,6,7,29]");
     out32( QME_LCL_QMCR_OR,  BITS32(16, 8) ); //0xB=1011 (Lo-Pri Sel)
     out32( QME_LCL_QMCR_CLR, (BIT32(17) | BIT32(21) | BITS32(6, 2) | BIT32(3) | BIT32(29)) );
@@ -232,6 +264,10 @@ qme_init()
         PK_TRACE("Drop potential entry_limit set by previous error path before possible reboot");
         out32( QME_LCL_CORE_ADDR_WR(
                    QME_SCSR_WO_CLEAR, G_qme_record.c_configured ), BIT32(2) );
+
+        PK_TRACE("Apply run-time CUCR settings to allow CPMS sampling transfers upon STOP");
+        out32( QME_LCL_CORE_ADDR_WR(
+                   CPMS_CUCR_WO_OR, G_qme_record.c_configured ),  BITS32(5, 2) );
 
         PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE via PCR_SCSR[20, 26]");
         out32( QME_LCL_CORE_ADDR_WR(
@@ -254,17 +290,22 @@ qme_init()
                                  c_loop, act_stop_level);
                     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_loop ), BIT32(14) );
                 }
+
+                if( act_stop_level == 0x6 )
+                {
+                    //likely qme rebooted, and there are cache_only cores left in stop6(if stop gated)
+                    //OR those cores can be in spwu_done(stop ungated), when it drops they can go back to stop6
+                    //either way this provents stop6 flow gets on the wrong foot.
+                    G_qme_record.c_stop11_reached &= ~c_loop;
+                }
             }
         }
-
-        // Apply run-time CUCR settings to allow CPMS sampling transfers upon STOP
-        out32( QME_LCL_CORE_ADDR_WR(
-                   CPMS_CUCR_WO_OR, G_qme_record.c_configured ),  BITS32(5, 2) );
     }
 
     //--------------------------------------------------------------------------
     // BCE Core Specific Scan Ring
     //--------------------------------------------------------------------------
+
     QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
 
     if( pQmeImgHdr->g_qme_common_ring_offset == pQmeImgHdr->g_qme_inst_spec_ring_offset )
@@ -303,16 +344,23 @@ qme_init()
         }
     }
 
-    // Initialize the resonant clock setup
+    //--------------------------------------------------------------------------
+    // Cache Only Cores Boot
+    //--------------------------------------------------------------------------
 
-    // Clear RCMR STEP_ENABLE
-    out32 ( QME_LCL_RCMR_CLR, BIT32(QME_RCMR_STEP_ENABLE) );
-    // Set RCMR AUTO_DONE_DISABLE
-    out32 ( QME_LCL_RCMR_OR, BIT32(QME_RCMR_AUTO_DONE_DISABLE) );
+    wrteei(0);
 
-    // Set RCSCR CORE_CHANGE_DONE for all cores to provide a "done" until the
-    // resonant clocks are enabled.
-    out32 ( QME_LCL_RCSCR_OR, BITS32(QME_RCSCR_CHANGE_DONE, QME_RCSCR_CHANGE_DONE_LEN) );
+    // stop_gated, act_level 0xF => wake to stop6
+    // stop_gated, act_level 0x6 => no action
+    // note gated, act_level 0x6 => no action, spwu drop does
+    G_qme_record.c_stop11_exit_targets = G_qme_record.c_stop11_reached & G_qme_record.c_cache_only_enabled;
+
+    if( G_qme_record.c_stop11_exit_targets )
+    {
+        qme_stop_exit();
+    }
+
+    wrteei(1);
 
     //--------------------------------------------------------------------------
     // QME Init Completed
