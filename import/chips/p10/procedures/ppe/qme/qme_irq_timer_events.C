@@ -318,7 +318,6 @@ qme_fit_handler()
     uint64_t q_recov        = 0;
     uint64_t c_hid          = 0;
     uint64_t c_thread_info  = 0;
-    uint32_t c_stop11       = 0;
     mtspr(SPRN_TSR, TSR_FIS);
 
     G_qme_record.uih_status |= BIT32(IDX_TIMER_FIT);
@@ -419,24 +418,28 @@ qme_fit_handler()
         out32( QME_LCL_FLAGS_CLR, BIT32( QME_FLAGS_STOP11_ENTRY_REQUESTED ) );
 
         // Read stop11 request from scrb
-        c_stop11 = ( in32( QME_LCL_SCRB ) & BITS32(24, 4) ) >> SHIFT32(27) ;
+        G_qme_record.c_fit_stop11_requested = ( in32( QME_LCL_SCRB ) &
+                                                BITS32(QME_SCRB_STOP11_ENTRY_REQUESTED_BASE,
+                                                        QME_SCRB_STOP11_ENTRY_REQUESTED_SIZE) ) >>
+                                              SHIFT32( ( QME_SCRB_STOP11_ENTRY_REQUESTED_BASE +
+                                                      QME_SCRB_STOP11_ENTRY_REQUESTED_SIZE - 1 ) ) ;
 
-        PK_TRACE_INF("Event: Stop11 Requested via Flags and Scrb[%x]", c_stop11);
+        PK_TRACE_INF("Event: Stop11 Requested via Flags and Scrb[%x]", G_qme_record.c_fit_stop11_requested);
 
-        if( c_stop11 )
+        if( G_qme_record.c_fit_stop11_requested )
         {
-            G_qme_record.c_stop2_enter_targets  |= c_stop11;
-            G_qme_record.c_stop5_enter_targets  |= c_stop11;
-            G_qme_record.c_stop11_enter_targets |= c_stop11;
+            G_qme_record.c_stop2_enter_targets  |= G_qme_record.c_fit_stop11_requested;
+            G_qme_record.c_stop5_enter_targets  |= G_qme_record.c_fit_stop11_requested;
+            G_qme_record.c_stop11_enter_targets |= G_qme_record.c_fit_stop11_requested;
 
             MARK_TAG( G_qme_record.c_stop11_enter_targets, IRQ_PM_STATE_ACTIVE_SLOW_EVENT )
 
             //===============//
-
+#ifdef USE_ABORT
             G_qme_record.hcode_func_enabled &= ~QME_L2_PURGE_ABORT_PATH_ENABLE;
             G_qme_record.hcode_func_enabled &= ~QME_NCU_PURGE_ABORT_PATH_ENABLE;
             G_qme_record.hcode_func_enabled &= ~QME_STOP3OR5_ABORT_PATH_ENABLE;
-
+#endif
             // stop11 is expected not to be aborted
 #if POWER10_DD_LEVEL == 10
             out64(QME_LCL_EIMR_OR, BITS64(32, 24));
