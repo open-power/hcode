@@ -880,7 +880,7 @@ uint8_t pgpe_gppb_get_wov_underv_max_pct()
         return G_gppb_wov->wov_underv_max_pct;
     }
 }
-uint8_t pgpe_gppb_get_wov_underv_vmin_mv()
+uint16_t pgpe_gppb_get_wov_underv_vmin_mv()
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {
@@ -891,7 +891,7 @@ uint8_t pgpe_gppb_get_wov_underv_vmin_mv()
         return G_gppb_wov->wov_underv_vmin_mv;
     }
 }
-uint8_t pgpe_gppb_get_wov_overv_vmax_mv()
+uint16_t pgpe_gppb_get_wov_overv_vmax_mv()
 {
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC)
     {

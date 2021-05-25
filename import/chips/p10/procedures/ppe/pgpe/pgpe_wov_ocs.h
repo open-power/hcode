@@ -115,6 +115,7 @@ void pgpe_wov_ocs_enable();
 void pgpe_wov_ocs_disable();
 void pgpe_wov_ocs_determine_perf_loss();
 void pgpe_wov_ocs_update_dirty();
+void pgpe_wov_ocs_step_curr_pct();
 #define pgpe_wov_ocs_get_wov_tgt_pct() G_pgpe_wov_ocs.tgt_pct
 #define pgpe_wov_ocs_get_wov_curr_pct() G_pgpe_wov_ocs.curr_pct
 #define pgpe_wov_ocs_set_wov_curr_pct(val) G_pgpe_wov_ocs.curr_pct = val
