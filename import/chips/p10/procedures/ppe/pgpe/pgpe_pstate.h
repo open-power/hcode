@@ -98,6 +98,7 @@ typedef struct pgpe_pstate
     uint32_t vindex;                                                //70
     uint32_t pstate_ceiling;        //71
     uint32_t eco_core_count;        //72
+    uint32_t voltage_step_trace_cnt;
 } pgpe_pstate_t;
 
 
