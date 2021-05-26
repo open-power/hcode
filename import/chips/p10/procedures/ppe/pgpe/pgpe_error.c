@@ -120,9 +120,9 @@ void pgpe_error_info_log(uint32_t pgpe_err_id)
 {
     //Create Info Error Log
     uint32_t o_status;
-    PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
-                    G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
+    PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                     G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
+                    G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
                     0x0,
                     0x0,
                     0x0,
@@ -136,9 +136,9 @@ void pgpe_error_critical_log(uint32_t pgpe_err_id)
 {
     //Create Critical Log
     uint32_t o_status;
-    PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
-                         G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
+    PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                          G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
+                         G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
                          0x0,
                          0x0,
                          0x0,
@@ -152,9 +152,9 @@ void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dt
 {
     //Create Critical Log
     uint32_t o_status;
-    PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
-                         G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
+    PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                          G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
+                         G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
                          0x0,
                          0x0,
                          0x0,
