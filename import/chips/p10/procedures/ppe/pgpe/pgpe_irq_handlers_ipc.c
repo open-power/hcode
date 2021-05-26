@@ -109,7 +109,7 @@ void pgpe_irq_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
 //
 void pgpe_irq_ipc_405_clips(ipc_msg_t* cmd, void* arg)
 {
-    PK_TRACE_INF("IPC: Clips cmd=0x%x", (uint32_t)cmd);
+    PK_TRACE_INF("IPC: Clips");
 
     if(pgpe_event_tbl_get_status(EV_IPC_CLIP_UPDT) != EVENT_INACTIVE)
     {

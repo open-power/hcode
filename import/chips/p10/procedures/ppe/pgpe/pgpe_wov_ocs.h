@@ -102,6 +102,9 @@ typedef struct pgpe_wov_ocs
     uint32_t cnt_droop_light_oc;
     uint32_t cnt_droop_heavy;
     uint32_t cnt_droop_heavy_oc;
+    uint32_t cnt_wov_total_ticks;
+    uint32_t cnt_wov_uv_ticks;
+    uint32_t cnt_wov_ov_ticks;
 } pgpe_wov_ocs_t;
 
 extern pgpe_wov_ocs_t G_pgpe_wov_ocs;

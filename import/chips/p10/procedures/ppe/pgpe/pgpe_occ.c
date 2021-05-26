@@ -425,7 +425,7 @@ void pgpe_occ_sync_qme_occ_timebase()
         otbr_offset++;
     }
 
-    PK_TRACE("OCC: OCC Time Base Sync Offset: 0x%08x", otbr_offset );
+    PK_TRACE_DBG("OCC: OCC Time Base Sync Offset: 0x%08x", otbr_offset );
 
     // delay calculated by mocking time base synch-up
 
@@ -438,6 +438,6 @@ void pgpe_occ_sync_qme_occ_timebase()
     PPE_GETSCOM_MC_Q_AND( QME_TBR, time_base_value );
     otbr_2_32  = time_base_value >> 32;
 
-    PK_TRACE("OCC: QME Time Base Synchronized: OCC TBR: 0x%08x  QME TBR: 0x%08x",
-             otbr_1_32, otbr_2_32 );
+    PK_TRACE_DBG("OCC: QME Time Base Synchronized: OCC TBR: 0x%08x  QME TBR: 0x%08x",
+                 otbr_1_32, otbr_2_32 );
 }
