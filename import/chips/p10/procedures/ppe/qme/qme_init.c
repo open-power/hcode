@@ -229,12 +229,13 @@ qme_init()
 
     if (G_qme_record.c_configured)
     {
-        //before = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
+        PK_TRACE("Drop potential entry_limit set by previous error path before possible reboot");
+        out32( QME_LCL_CORE_ADDR_WR(
+                   QME_SCSR_WO_CLEAR, G_qme_record.c_configured ), BIT32(2) );
+
+        PK_TRACE("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE via PCR_SCSR[20, 26]");
         out32( QME_LCL_CORE_ADDR_WR(
                    QME_SCSR_WO_OR, G_qme_record.c_configured ), ( BIT32(20) | BIT32(26) ) );
-        //after = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
-        //PK_TRACE_INF("Assert AUTO_SPECIAL_WAKEUP_DISABLE/ENABLE_PECE via PCR_SCSR[20, 26], done[%x][%x]",
-        //             before, after);
 
         for( c_end = 51,
              c_loop = 8; c_loop > 0; c_loop = c_loop >> 1,

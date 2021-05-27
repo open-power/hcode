@@ -169,9 +169,6 @@ qme_panic_handler()
             out32 (QME_LCL_CORE_ADDR_WR (QME_SCSR_WO_CLEAR, good_cores), BIT32(20));
         }
 
-        // Set QME_QMCR_STOP_OVERRIDE_MODE and QME_QMCR_STOP_ACTIVE_MASK
-        out32 (QME_LCL_QMCR_OR, BITS32 (6, 2));
-
         // Mask all regular and special wake-up interrupts
         out32_sh(QME_LCL_EIMR_OR, BITS64SH(32, 24));
         g_eimr_override |= BITS64(32, 24);
