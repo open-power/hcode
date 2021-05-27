@@ -50,6 +50,7 @@ extern GlobalPstateParmBlockWOV_t* G_gppb_wov;
 
 
 void pgpe_gppb_init();
+void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 
 //Temporary will be removed later on when HWP code has move to
 //newer version of GPPB

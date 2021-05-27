@@ -81,6 +81,15 @@ void pgpe_pstate_init()
         }
     }
 
+    // If we don't have core bits set in CSSR, then
+    // we shouldn't run any following features
+    if (!ccsr)
+    {
+        pgpe_gppb_set_pgpe_flags_disable(PGPE_FLAG_RESCLK_ENABLE);
+        pgpe_gppb_set_pgpe_flags_disable(PGPE_FLAG_RVRM_ENABLE);
+        pgpe_gppb_set_pgpe_flags_disable(PGPE_FLAG_DDS_ENABLE);
+    }
+
     G_pgpe_pstate.pstate_computed   = 0xFF;
     G_pgpe_pstate.pstate_target     = 0xFF;
     G_pgpe_pstate.pstate_next       = 0xFF;

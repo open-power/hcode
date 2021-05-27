@@ -299,6 +299,10 @@ void pgpe_gppb_occ_tbl()
     }
 
 }
+void pgpe_gppb_set_pgpe_flags_disable(uint32_t x)
+{
+    G_gppb->pgpe_flags[x] = 0;
+}
 
 uint32_t pgpe_gppb_get_pgpe_flags(uint32_t x)
 {
