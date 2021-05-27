@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh21041500 |mwh     | HW568673 Add in sleep to while loop wait on ber count done
 // mwh21041500 |mwh     | HW562606 Add rx_ber_timer_sel_bist ppe register that update rx_ber_timer_sel gcr register
 // mwh21040700 |mwh     | HW562260 Add in count_seed_done to while loop so we will break out of it if does not seed
 // bja20012300 |bja     | Set per group fail mask on error
@@ -376,7 +377,10 @@ void min_pr_shift(t_gcr_addr* gcr_addr, int min_shift, int stop_value, const uin
         //waiting for run signal to go low so we know we are finished
         set_debug_state(0x510D);
 
-        while ( get_ptr_field(gcr_addr, rx_ber_timer_running) != 0 );
+        while ( get_ptr_field(gcr_addr, rx_ber_timer_running) != 0 )
+        {
+            io_sleep(get_gcr_addr_thread(gcr_addr));//switch threads HW568673
+        }
 
         set_debug_state(0x510E);
 

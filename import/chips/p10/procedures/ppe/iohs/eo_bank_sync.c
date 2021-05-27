@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -39,6 +39,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 //-------------|--------|-------------------------------------------------------
+// mwh20042900 |mwh     | HW567359 -- Agreed to remove fir warning setting at B006
 // bja20090900 |bja     | Use common is_p10_dd1() check
 // vbr20061101 |vbr     | HW532941: To deal with lossy bump, increasing max_bumps to fail and setting warning after full rotation
 // vbr20061100 |vbr     | HW533071: DD2 should not change the timer settings based on 16to1 mode
@@ -154,7 +155,7 @@ int align_bank_ui(t_gcr_addr* gcr_addr, t_bank current_cal_bank)
             if (bump_count == max_bumps_warn)
             {
                 set_debug_state(0xB006); // bump ui warning - bumped through all UIs once
-                set_fir(fir_code_warning);
+                //set_fir(fir_code_warning);HW567359
                 ADD_LOG(DEBUG_RX_BANK_SYNC_WARN, gcr_addr, bump_count);
             }
 

@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh21042900 |mwh     | HW567512 -- removed clear of rx_latch_offset_fail in vga loop 1 and 2, if Abank fails does not matter what bbank does
 // mwh20111100 |mwh     | HW550299 -- changes make eoff more statibly
 // mwh20101600 |mwh     | Change way clear is happen so we retain fails better.
 // mwh20101300 |mwh     | After talking with Chris and Jim logger is back in this file, also scom set in vclq
@@ -632,10 +633,7 @@ int eo_eoff(t_gcr_addr* gcr_addr,  bool recal, int vga_loop_count, t_bank bank, 
     //ABank run first and will have this set if fail is still high at end of vga loop
     //Init train BBank is next and we do not want BBank to clear it if been set and only
     //And if it not set and BBank has a fail than it will stay.  We do not check this in recal loop.
-    if ((!recal) && (bank == bank_a ))
-    {
-        mem_pl_field_put(rx_latch_offset_fail, lane, loff_fail);   //ppe pl
-    }
+    // Removed for HW567512 if ((!recal)&& (bank == bank_a )){mem_pl_field_put(rx_latch_offset_fail, lane, loff_fail);}//ppe pl
 
     //10162020 mwh Issue with code, if fail on Abank it will show Bbank also failing.
     //Abank     |  Bbank  |result on pg lane register

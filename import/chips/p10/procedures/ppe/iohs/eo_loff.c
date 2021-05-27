@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -41,6 +41,7 @@
 //------------------------------------------------------------------------------
 // Version ID: |Author: | Comment:
 // ------------|--------|-------------------------------------------------------
+// mwh21060900 |mwh     | LAB - Add in setting thresh for loff-- issue if per-lane reset happens after eo_eoff.c
 // mbs20073000 |mbs     | LAB - Remove override of rx_loff_timeout (now one value in io_init_and_reset.c)
 // cws20011400 |cws     | Added Debug Logs
 // mbs19072500 |mbs     | Moved live_edgeoff_mode out of loff_setting_ovr_enb umbrella
@@ -158,6 +159,15 @@ int eo_loff_fenced(t_gcr_addr* gcr_addr, t_bank bank)
             //change for Loff to 5 since this is one time call
             //change default to 4 for eoff
             put_ptr_field(gcr_addr, rx_loff_hyst_start, 0b00101, read_modify_write);
+
+            //need to write thresh because if per-lane reset happens and pass eo_eoff.c the thresh is wrong
+            //found in lab
+            put_ptr_field(gcr_addr, rx_loff_thresh1 , 0b00001, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_thresh2 , 0b00010, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_thresh3 , 0b00011, read_modify_write);
+            put_ptr_field(gcr_addr, rx_loff_thresh4 , 0b00111, read_modify_write);
+
+
         }
 
         //setting fence for latch offset(data and edge done by same commmand) and alt and main
