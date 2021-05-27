@@ -92,9 +92,11 @@ p10_hcd_core_vmin_enable(
     fapi2::buffer<uint64_t> l_scomData = 0;
     uint32_t                l_timeout  = 0;
     uint32_t                l_vdd_pfet_enable_actual = 0;
+    uint8_t                 l_attr_mma_poweron_disable = 0;
     uint8_t                 l_attr_mma_poweroff_disable = 0;
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE, l_sys, l_attr_mma_poweroff_disable ) );
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWERON_DISABLE,  l_sys, l_attr_mma_poweron_disable ) );
 #ifdef USE_RUNN
     fapi2::ATTR_RUNN_MODE_Type                  l_attr_runn_mode;
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE, l_sys, l_attr_runn_mode ) );
@@ -102,9 +104,18 @@ p10_hcd_core_vmin_enable(
 
     FAPI_INF(">>p10_hcd_core_vmin_enable");
 
-    //If dynamic mode, stop2,3,11 all turn off mma completely
+    //If dynamic mode, stop2,3,11 all turn off mma completely(done by stop2)
     //otherwise, stop2 only turn off mma clock, stop3 turn off mma power
-    if( l_attr_mma_poweroff_disable )
+    //therefore the condition here is reverse of what in core_stopgrid.C
+
+    // PowerON_Dis = 0 and PowerOFF_Dis = 0 do not power off mma as in dynamic
+    // PowerON_Dis = 0 and PowerOFF_Dis = 1 do power off mma     as in static
+    // PowerON_Dis = 1 and PowerOFF_Dis = 0 do not power off mma as in dynamic
+    // PowerON_Dis = 1 and PowerOFF_Dis = 1 do not power off mma as already power off
+
+    // note here the poweroff disable attribute is for disabling dynamic poweroff
+    // thus instead of poweroff by qme decrementor mma is powered off here
+    if( !l_attr_mma_poweron_disable && l_attr_mma_poweroff_disable )
     {
         FAPI_TRY( p10_hcd_mma_poweroff( i_target ) );
     }

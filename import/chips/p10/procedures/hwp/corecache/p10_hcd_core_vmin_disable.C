@@ -97,8 +97,8 @@ p10_hcd_core_vmin_disable(
     fapi2::buffer<uint64_t> l_scomData = 0;
     uint32_t                l_timeout  = 0;
     uint8_t                 l_attr_mma_poweroff_disable = 0;
+    uint8_t                 l_attr_mma_poweron_disable = 0;
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
-    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE, l_sys,  l_attr_mma_poweroff_disable ) );
 #ifdef USE_RUNN
     fapi2::ATTR_RUNN_MODE_Type                  l_attr_runn_mode;
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_RUNN_MODE, l_sys, l_attr_runn_mode ) );
@@ -278,8 +278,15 @@ p10_hcd_core_vmin_disable(
         FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR,  BITS64(0, 2)) );
     }
 
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE, l_sys,  l_attr_mma_poweroff_disable ) );
+    FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWERON_DISABLE,  l_sys,  l_attr_mma_poweron_disable  ) );
+
     //if not dynamic mode, stop2 only turn on mma clock, stop3 turn on mma power and scan
-    if( l_attr_mma_poweroff_disable )
+    // PowerON_Dis = 0 and PowerOFF_Dis = 0 do not start mma as in dynamic
+    // PowerON_Dis = 0 and PowerOFF_Dis = 1 do start mma     as in static
+    // PowerON_Dis = 1 and PowerOFF_Dis = 0 do not start mma as in dynamic
+    // PowerON_Dis = 1 and PowerOFF_Dis = 1 do not start mma as already stopped
+    if( !l_attr_mma_poweron_disable && l_attr_mma_poweroff_disable )
     {
         // will be redundent with stop2 scom but for mma scaninit this is required
         FAPI_DBG("Switch CL2 Glsmux to DPLL via CPMS_CGCSR[11:L2_CLKGLM_SEL]");

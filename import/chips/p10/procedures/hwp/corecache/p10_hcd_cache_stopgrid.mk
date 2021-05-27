@@ -23,8 +23,6 @@
 #
 # IBM_PROLOG_END_TAG
 PROCEDURE=p10_hcd_cache_stopgrid
-OBJS += p10_hcd_corecache_power_control.o
-OBJS += p10_hcd_mma_poweroff.o
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/common/include)
 $(call ADD_MODULE_SRCDIR,$(PROCEDURE),$(ROOTPATH)/chips/p10/procedures/hwp/lib)
 $(call BUILD_PROCEDURE)
