@@ -61,7 +61,7 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.curr_pct = 0;
     G_pgpe_wov_ocs.tgt_pct = 0;
     G_pgpe_wov_ocs.hysteresis_cnt = 0;
-    G_pgpe_wov_ocs.idd_current_thresh = pgpe_gppb_get_wov_idd_thresh();
+    G_pgpe_wov_ocs.idd_current_thresh = pgpe_gppb_get_wov_idd_thresh() * 10;
 
     G_pgpe_wov_ocs.overcurrent_flag = OCS_UNDER_THRESH;
     G_pgpe_wov_ocs.cnt_droop_ok = 0;
