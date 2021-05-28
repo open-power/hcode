@@ -48,8 +48,10 @@
 // Error Log payload for the 2 errors to be committed by local GPE
 uint8_t G_errLogUnrec[ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
 
-#ifndef __PPE_QME
 // @TODO via RTC 274373: QME hcode size: Temporarly disable unused info logs
+//#ifndef __PPE_QME
+// @TODO via RTC 282696: Temp fix to optimize PGPE image size - disable info logs
+#if !defined(__PPE_QME) && !defined(__PPE_PGPE)
 uint8_t G_errLogInfo [ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
 #endif
 
@@ -207,8 +209,11 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 G_errlConfigData.traceSz = ERRL_TRACE_DATA_SZ_PGPE;
                 G_errlConfigData.gpeBaseSlot = ERRL_SLOT_PGPE_BASE;
                 G_gpeErrLogs[ERRL_SLOT_PGPE_UNREC] = (errlHndl_t) &G_errLogUnrec;
-                G_gpeErrLogs[ERRL_SLOT_PGPE_INF] = (errlHndl_t) &G_errLogInfo;
+                // @TODO via RTC 282696: Disable PGPE Error Logs as a quick fix to size issues
+                // G_gpeErrLogs[ERRL_SLOT_PGPE_INF] = (errlHndl_t) &G_errLogInfo;
                 break;
+
+#ifndef __PPE_PGPE
 
             case ERRL_SOURCE_XGPE:
                 // Shares table in OCC SRAM with other GPEs
@@ -217,6 +222,7 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 G_gpeErrLogs[ERRL_SLOT_XGPE_UNREC] = (errlHndl_t) &G_errLogUnrec;
                 G_gpeErrLogs[ERRL_SLOT_XGPE_INF] = (errlHndl_t) &G_errLogInfo;
                 break;
+#endif
 #endif //  not __PPE_QME
 
             case ERRL_SOURCE_QME:

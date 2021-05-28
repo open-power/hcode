@@ -119,6 +119,8 @@ void pgpe_error_init()
 void pgpe_error_info_log(uint32_t pgpe_err_id)
 {
     //Create Info Error Log
+    // @TODO via RTC: 282696 - tmp disable info errors on pgpe
+#ifdef __PPE_PGPE
     uint32_t o_status;
     PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                     G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
@@ -129,6 +131,9 @@ void pgpe_error_info_log(uint32_t pgpe_err_id)
                     NULL,
                     o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status); //TODO Check error code
+#else
+    PK_TRACE_INF("SKIPPING INFO ERRL: 0x%08X", pgpe_err_id);
+#endif
 
 }
 
