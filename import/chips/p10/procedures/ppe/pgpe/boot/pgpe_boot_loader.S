@@ -138,7 +138,8 @@ PPMR_header_copy_loop:
         srwi GPR_SIZE, GPR_SIZE, PGPE_DIV_8
 
         ## If PGPE payload size is 0 then fail
-        cmpwbeq    %GPR_SIZE, 00, BLFAIL
+        cmplwi   %GPR_SIZE, 0
+        beq BLFAIL
 
         ## Set the counter for copying
         mtctr GPR_SIZE

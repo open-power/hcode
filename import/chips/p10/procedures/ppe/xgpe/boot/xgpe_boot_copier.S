@@ -99,7 +99,8 @@ __bootCopier:
     srwi    GPR_BL_SIZE, GPR_BL_SIZE, XGPE_DIV_8
 
     ## If bootLoader size is 0 then failure
-    cmpwbeq    %GPR_BL_SIZE, 00, BCFAIL
+    cmplwi     %GPR_BL_SIZE, 0
+    beq BCFAIL
 
     ## Set the counter for copy loop
     mtctr  GPR_BL_SIZE
