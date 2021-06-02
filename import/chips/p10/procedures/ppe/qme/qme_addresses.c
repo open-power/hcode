@@ -35,6 +35,7 @@
 
 uint32_t IMA_EVENT_MASK                 = 0x20020400;
 uint32_t CORE_THREAD_STATE              = 0x20020412;
+uint32_t THREAD_INFO                    = 0x20020413;
 uint32_t PMC_UPDATE                     = 0x20020414;
 uint32_t CORE_HID                       = 0x20020415;
 uint32_t CORE_FIR                       = 0x20020440;
@@ -50,6 +51,7 @@ uint32_t SCRATCH0                       = 0x20020486;
 uint32_t SCRATCH1                       = 0x20020487;
 uint32_t SPATTN_MASK                    = 0x2002049A;
 uint32_t EC_PC_TFX_SM                   = 0x2002049b;
+uint32_t RECOV                          = 0x20040001;
 uint32_t LOCAL_XSTOP                    = 0x20040003;
 uint32_t CPLT_CTRL0_OR                  = 0x20000010;
 uint32_t CPLT_CTRL0_CLR                 = 0x20000020;

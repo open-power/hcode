@@ -34,6 +34,7 @@
 
 extern uint32_t IMA_EVENT_MASK;
 extern uint32_t CORE_THREAD_STATE;
+extern uint32_t THREAD_INFO;
 extern uint32_t PMC_UPDATE;
 extern uint32_t CORE_HID;
 extern uint32_t CORE_FIR;
@@ -49,6 +50,7 @@ extern uint32_t SCRATCH0;
 extern uint32_t SCRATCH1;
 extern uint32_t SPATTN_MASK;
 extern uint32_t EC_PC_TFX_SM;
+extern uint32_t RECOV;
 extern uint32_t LOCAL_XSTOP;
 extern uint32_t CPLT_CTRL0_OR;
 extern uint32_t CPLT_CTRL0_CLR;

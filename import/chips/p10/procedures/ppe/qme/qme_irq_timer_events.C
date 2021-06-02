@@ -313,102 +313,67 @@ qme_dec_handler()
 void
 qme_fit_handler()
 {
-    uint32_t recovery_dis   = 0;
-    uint32_t core_stop_gated = 0;
     uint32_t core_spwu_done = 0;
-    uint32_t core_mask  = 0;
-    uint64_t c_hid      = 0;
-    uint64_t c_fir      = 0;
-    uint64_t c_firmask  = 0;
-    uint64_t c_firact0  = 0;
-    uint64_t c_firact1  = 0;
-    uint32_t c_stop11   = 0;
+    uint32_t core_mask      = 0;
+    uint64_t q_recov        = 0;
+    uint64_t c_hid          = 0;
+    uint64_t c_thread_info  = 0;
+    uint32_t c_stop11       = 0;
     mtspr(SPRN_TSR, TSR_FIS);
 
     G_qme_record.uih_status |= BIT32(IDX_TIMER_FIT);
 
-    recovery_dis   = 0;
-    G_qme_record.c_in_recovery = 0;
+    PPE_GETSCOM( RECOV, q_recov );
+    G_qme_record.c_in_recovery = ( q_recov & BITS64(5, 4) ) >> SHIFT64(8);
 
-    core_spwu_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
-    //Primarily for CCI, if we cannot get to spwu_done due to block_exit
-    //then we can we take both block_exit(sitting in stop11) and
-    //spwu_wakeup_done(out of stop11)
-    //as safe zone to proceed with core recovery.
-    core_spwu_done = core_spwu_done | G_qme_record.c_block_wake_done;
-
-    core_stop_gated = ( in32(QME_LCL_SCDR) >> SHIFT32(3) ) & 0xF;
-
-    for( core_mask = 8; core_mask; core_mask = core_mask >> 1 )
+    if( G_qme_record.c_in_recovery && ( !G_qme_record.recovery_ongoing ) )
     {
-        if( core_mask & G_qme_record.c_configured & (~core_stop_gated) )
+        PK_TRACE_INF("Detected core[%x] in recovery, special wakeup all cores", G_qme_record.c_in_recovery);
+        out32( QME_LCL_CORE_ADDR_WR( QME_SPWU_OTR, G_qme_record.c_configured ), BIT32(0) );
+
+        core_spwu_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
+        //Primarily for CCI, if we cannot get to spwu_done due to block_exit
+        //then we can we take both block_exit(sitting in stop11) and
+        //spwu_wakeup_done(out of stop11)
+        //as safe zone to proceed with core recovery.
+        core_spwu_done = core_spwu_done | G_qme_record.c_block_wake_done;
+
+        //if any core is in recovery, and special wakeup done is set for all cores
+        if( core_spwu_done == G_qme_record.c_configured )
         {
-            PPE_GETSCOM_UC( CORE_HID, 0, core_mask, c_hid);
+            G_qme_record.recovery_ongoing = 1;
 
-            if( recovery_dis || (c_hid & BIT64(11)) )
+            //make sure even block_exit is removed,
+            //we will keep them in place until this is done
+            G_qme_record.c_block_wake_override = G_qme_record.c_block_wake_done;
+
+            PK_TRACE("Assert EQ_FLUSHMODE_INH via CPLT_CTRL0[2]");
+            PPE_PUTSCOM(CPLT_CTRL0_OR, BIT64(2));
+
+            PK_TRACE("Assert EQ_SDIS_DC_N CPLT_CONF0[34]");
+            PPE_PUTSCOM(CPLT_CONF0_OR, BIT64(34));
+
+            PK_TRACE_INF("Deassert HID(5) for any core in recovery");
+
+            for( core_mask = 8; core_mask; core_mask = core_mask >> 1 )
             {
-                PK_TRACE("core recovery is disabled, do not perform any actions");
-                recovery_dis = 1;
-                break;
-            }
-
-            PPE_GETSCOM_UC( CORE_FIR,      0, core_mask, c_fir);
-            PPE_GETSCOM_UC( CORE_FIR_MASK, 0, core_mask, c_firmask);
-            PPE_GETSCOM_UC( CORE_FIR_ACT0, 0, core_mask, c_firact0);
-            PPE_GETSCOM_UC( CORE_FIR_ACT1, 0, core_mask, c_firact1);
-
-            //read core fir, mask, act0, act1 and determine if any recoverable errors are set.
-            if( c_fir & (~c_firmask) & (~c_firact0) & c_firact1 )
-            {
-                G_qme_record.c_in_recovery |= core_mask;
-                G_qme_record.recovery_ongoing = 1;
-
-                //if any core is in recovery, and special wakeup done is set for all cores
-                if( core_spwu_done == G_qme_record.c_configured )
+                if( core_mask & G_qme_record.c_configured )
                 {
-                    //make sure even block_exit is removed,
-                    //we will keep them in place until this is done
-                    G_qme_record.c_block_wake_override = G_qme_record.c_block_wake_done;
-
-                    PK_TRACE("Assert EQ_FLUSHMODE_INH via CPLT_CTRL0[2]");
-                    PPE_PUTSCOM(CPLT_CTRL0_OR, BIT64(2));
-
-                    PK_TRACE("Assert EQ_SDIS_DC_N CPLT_CONF0[34]");
-                    PPE_PUTSCOM(CPLT_CONF0_OR, BIT64(34));
-
-                    PK_TRACE("Deassert HID(5) for any core in recovery");
+                    PPE_GETSCOM_UC( CORE_HID, 0, core_mask, c_hid);
                     c_hid &= ~BIT64(5);
-                    PPE_PUTSCOM_UC(CORE_HID, 0, core_mask, c_hid);
-                }
-                //If any core is in recovery, set special wakeup for all cores
-                else
-                {
-                    PK_TRACE("Core in Recovery, special wakeup all cores");
-                    out32( QME_LCL_CORE_ADDR_WR( QME_SPWU_OTR, G_qme_record.c_configured ), BIT32(0) );
+                    PPE_PUTSCOM_UC( CORE_HID, 0, core_mask, c_hid);
                 }
             }
         }
     }
 
-    if( G_qme_record.c_in_recovery )
-    {
-        PK_TRACE_INF("detected core[%x] in recovery", G_qme_record.c_in_recovery);
-    }
-
     //If all cores are out of recovery, and special wakeup done is asserted on all cores
-    if( (!recovery_dis) && (!G_qme_record.c_in_recovery) && G_qme_record.recovery_ongoing &&
-        (core_spwu_done == G_qme_record.c_configured) )
+    if( (!G_qme_record.c_in_recovery) && G_qme_record.recovery_ongoing )
     {
         G_qme_record.recovery_ongoing = 0;
         G_qme_record.c_block_wake_override = 0;
 
-        PK_TRACE("Clear CORE_FIR[28]");
-        PPE_PUTSCOM_MC( CORE_FIR_AND, G_qme_record.c_configured, (~BIT64(28)));
-
-        PK_TRACE("Unmask CORE_FIR[28]");
-        PPE_PUTSCOM_MC( CORE_FIR_MASK_AND, G_qme_record.c_configured, (~BIT64(28)));
-
-        PK_TRACE("Assert HID(5) for all cores to disable recovery");
+        PK_TRACE_INF("Assert HID(5) for all cores to disable recovery");
 
         for( core_mask = 8; core_mask; core_mask = core_mask >> 1 )
         {
@@ -420,27 +385,28 @@ qme_fit_handler()
             }
         }
 
-        PK_TRACE("Drop EQ_FLUSHMODE_INH via CPLT_CTRL0[2]");
-        PPE_PUTSCOM(CPLT_CTRL0_CLR, BIT64(2));
-
-        PK_TRACE("Drop EQ_SDIS_DC_N CPLT_CONF0[34]");
-        PPE_PUTSCOM(CPLT_CONF0_CLR, BIT64(34));
-
         for( core_mask = 8; core_mask; core_mask = core_mask >> 1 )
         {
             if( core_mask & G_qme_record.c_configured )
             {
-                PPE_GETSCOM_UC( CORE_FIR, 0, core_mask, c_fir);
-
-                //Read CORE_FIR[28]. If 0 then mask CORE_FIR[28].
-                //If 1 do not mask CORE_FIR[28]. Leave breadcrumbs for PRD
-                if( !(c_fir & BIT64(28)) )
+                do
                 {
-                    PK_TRACE("Mask CORE_FIR[28] only if it isnt set");
-                    PPE_PUTSCOM_UC( CORE_FIR_MASK_OR, 0, core_mask, BIT64(28));
+                    PPE_GETSCOM_UC( THREAD_INFO, 0, core_mask, c_thread_info);
+
+                    if( !(c_thread_info & BIT64(25)) )
+                    {
+                        break;
+                    }
                 }
+                while(1);
             }
         }
+
+        PK_TRACE_INF("Drop EQ_FLUSHMODE_INH via CPLT_CTRL0[2]");
+        PPE_PUTSCOM(CPLT_CTRL0_CLR, BIT64(2));
+
+        PK_TRACE("Drop EQ_SDIS_DC_N CPLT_CONF0[34]");
+        PPE_PUTSCOM(CPLT_CONF0_CLR, BIT64(34));
 
         PK_TRACE("Drop special wakeup on all cores");
         out32( QME_LCL_CORE_ADDR_WR( QME_SPWU_OTR, G_qme_record.c_configured ), 0 );
