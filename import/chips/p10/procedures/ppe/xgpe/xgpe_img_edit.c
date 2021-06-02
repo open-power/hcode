@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2020                                                    */
+/* COPYRIGHT 2015,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -139,7 +139,7 @@ uint32_t updateXgpeImage( FILE* i_fpXgpeImg, uint32_t i_imgSize, uint8_t i_quiet
 
     headerFieldPos  =   XGPE_HEADER_IMAGE_OFFSET + offsetof(XgpeHeader_t, g_xgpe_buildVer );
     fseek( i_fpXgpeImg, headerFieldPos, SEEK_SET);
-    l_tempVal       =   htonl(XGPE_BUILD_VER);
+    l_tempVal       =   htonl(XGPE_BUILD_VERSION);
     fwrite( &l_tempVal, sizeof(uint32_t), 1, i_fpXgpeImg );
 
     return l_rc;
