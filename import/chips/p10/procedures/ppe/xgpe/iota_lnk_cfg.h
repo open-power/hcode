@@ -29,8 +29,8 @@
  * @brief Control IOTA linkerscript configuration
  */
 
-#define SRAM_START               0xfff30000
-#define SRAM_LENGTH              (64*1024)
+#define SRAM_START               0xfff34000
+#define SRAM_LENGTH              (48*1024)
 #define XGPE_HEADER_IMAGE_OFFSET  0x0180
 #define XGPE_HEADER_IMAGE_NAME    .xgpe_image_header
 #define XGPE_DEBUG_PTRS_OFFSET    0x0200
