@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2015,2020                                                    -->
+<!-- COPYRIGHT 2015,2021                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -36,6 +36,7 @@
    </hwpError>
    <!-- ******************************************************************** -->
    <hwpError>
+     <sbeError/>
      <rc>RC_FILT_PLL_LOCK_ERR</rc>
      <description>Filter pll not locked</description>
      <ffdc>PLL_EXPECT</ffdc>
@@ -43,6 +44,7 @@
    </hwpError>
    <!-- ******************************************************************** -->
    <hwpError>
+     <sbeError/>
      <rc>RC_DPLL_LOCK_ERR</rc>
      <description>NEST/PAU DPLL not locked</description>
      <ffdc>PLL_EXPECT</ffdc>
