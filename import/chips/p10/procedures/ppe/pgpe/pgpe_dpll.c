@@ -136,6 +136,8 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
 
         if (TIMER_DETECT_TIMEOUT_US(75))
         {
+            TIMER_DELTA_PRINT()
+
             PK_TRACE("dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
             PK_TRACE("DPLL: Update Complete Timeout otbr_t0=0x%x otbr_t1=0x%x, otbr_delta=0x%x", otbr_t0, otbr_t1, otbr_delta);
             pgpe_error_handle_fault(PGPE_ERR_CODE_DPLL_WRITE_UPDATE_COMPLETE_AND_LOCK_TIMEOUT);

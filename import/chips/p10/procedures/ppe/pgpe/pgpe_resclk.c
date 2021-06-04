@@ -375,12 +375,13 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
 
     TIMER_START()
 
-    while(rcptr.fields.pstate_ack_pending) //\Todo Timeout: 50us, critical error
+    while(rcptr.fields.pstate_ack_pending) //Timeout: 50us, critical error
     {
         TIMER_DELTA()
 
-        if(TIMER_DETECT_TIMEOUT_US(100))
+        if(TIMER_DETECT_TIMEOUT_US(50))
         {
+            TIMER_DELTA_PRINT()
             PK_TRACE_INF("RCK: RCPTR_PSTATE_ACK_TIMEOUT");
             pgpe_error_handle_fault(PGPE_ERR_CODE_RESCLK_RCPTR_PSTATE_ACK_TIMEOUT);
         }

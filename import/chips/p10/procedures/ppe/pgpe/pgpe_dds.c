@@ -572,6 +572,7 @@ void pgpe_dds_poll_done()
 
         if(TIMER_DETECT_TIMEOUT_US(50))
         {
+            TIMER_DELTA_PRINT()
             PK_TRACE("DDS: FDCR_UPDATE_TIMEOUT");
             pgpe_error_handle_fault(PGPE_ERR_CODE_DDS_FDCR_UPDATE_TIMEOUT);
         }
