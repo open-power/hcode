@@ -51,11 +51,13 @@ uint32_t G_static_powr_mv = 0;
 extern uint32_t G_OCB_OCCFLG3_OR;
 extern uint32_t G_OCB_OCCFLG3_CLR;
 extern uint32_t G_OCB_OCCFLG3;
+extern uint32_t G_OCB_OCCFLG6;
 extern uint32_t G_OCB_OPITFSV;
 extern uint32_t G_OCB_CCSR;
 extern uint32_t G_OCB_OPITFPRD;
 extern uint32_t G_OCB_OPITFSVRR;
 
+void xgpe_eco_mode_update();
 extern iddq_state_t G_iddq;
 
 void xgpe_irq_fit_init()
@@ -92,6 +94,32 @@ void xgpe_irq_fit_init()
     for (c = 0; c < MAX_CORES; c++)
     {
         G_iddq.p_act_val->act_val_core[c]  =  0x00000808;
+    }
+
+    //Update the activity counts for eco cores
+    xgpe_eco_mode_update();
+}
+
+void xgpe_eco_mode_update()
+{
+    uint32_t c;
+    uint32_t occflg6 = in32(G_OCB_OCCFLG6);
+
+    for (c = 0; c < MAX_CORES; c++)
+    {
+        G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORECLK_OFF]   = 0;
+        G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORE_VMIN]     = 0;
+        G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_MMA_OFF]       = 0;
+        G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORECACHE_OFF] = 0;
+
+
+        if (occflg6 & CORE_MASK(c))
+        {
+            G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORECLK_OFF]   = 0;
+            G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORE_VMIN]     = 0;
+            G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_MMA_OFF]       = 8;
+            G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORECACHE_OFF] = 8;
+        }
     }
 }
 
@@ -460,6 +488,7 @@ void handle_wof_iddq_values()
     uint32_t opitasv1;
     uint32_t opitasv2;
     uint32_t opitasv3;
+    uint32_t occflg6 = in32(G_OCB_OCCFLG6);
 
     opitasv0 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV0);//Read PCB Type A0(Core off)
     opitasv1 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV1);//Read PCB Type A1(Core Vmin)
@@ -468,7 +497,8 @@ void handle_wof_iddq_values()
 
     for (c = 0; c < MAX_CORES; c++)
     {
-        if (in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW) & CORE_MASK(c))
+        if (in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW) & CORE_MASK(c) &&
+            !(occflg6 & CORE_MASK(c))) //skip the cores which are in eco mode
         {
             //if core is ON/VMIN(0) and VMIN(0))
             if ( (!(opitasv0 & CORE_MASK(c))) && !(opitasv1 & CORE_MASK(c)))
@@ -494,7 +524,7 @@ void handle_wof_iddq_values()
                 G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECACHE_OFF]++;
             }
         }
-        else
+        else if (!(occflg6 & CORE_MASK(c)))
         {
             G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECACHE_OFF]++;
             G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECLK_OFF]++;
