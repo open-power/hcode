@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019,2020
+# COPYRIGHT 2019,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -23,4 +23,6 @@
 #
 # IBM_PROLOG_END_TAG
 PROCEDURE=p10_io_lib
+OBJS+=p10_io_ppe_lib.o
+OBJS+=p10_io_ppe_regs.o
 $(call BUILD_PROCEDURE)

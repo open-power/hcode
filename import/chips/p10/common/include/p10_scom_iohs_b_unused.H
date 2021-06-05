@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1540,20 +1540,6 @@ static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MAS
 static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_FIR1_MASK_PG_RX_PG_FIR1_ERRS_MASK_LEN = 12;
 //<< [IOO_RX0_RXCTL_CTL_REGS_RX_FIR1_MASK_PG]
 // iohs/reg00050.H
-
-//>> [IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG]
-static const uint64_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG = 0x8008800010012c3full;
-
-static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG_INC_DEC_AMT0 = 48;
-static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG_INC_DEC_AMT0_LEN = 3;
-static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG_THRESH1 = 51;
-static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG_THRESH1_LEN = 5;
-static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG_INC_DEC_AMT1 = 56;
-static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG_INC_DEC_AMT1_LEN = 3;
-static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG_THRESH2 = 59;
-static const uint32_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG_THRESH2_LEN = 5;
-//<< [IOO_RX0_RXCTL_CTL_REGS_RX_MODE16_PG]
-// iohs/reg00051.H
 
 //>> [IOO_RX0_RXCTL_CTL_REGS_RX_MODE5_PG]
 static const uint64_t IOO_RX0_RXCTL_CTL_REGS_RX_MODE5_PG = 0x8008280010012c3full;

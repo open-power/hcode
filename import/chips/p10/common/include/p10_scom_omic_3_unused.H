@@ -39,20 +39,6 @@ namespace omic
 #endif
 
 
-//>> [CTL_REGS_RX_MODE17_PG]
-static const uint64_t CTL_REGS_RX_MODE17_PG = 0x8008884010012c3full;
-
-static const uint32_t CTL_REGS_RX_MODE17_PG_INC_DEC_AMT2 = 48;
-static const uint32_t CTL_REGS_RX_MODE17_PG_INC_DEC_AMT2_LEN = 3;
-static const uint32_t CTL_REGS_RX_MODE17_PG_THRESH3 = 51;
-static const uint32_t CTL_REGS_RX_MODE17_PG_THRESH3_LEN = 5;
-static const uint32_t CTL_REGS_RX_MODE17_PG_INC_DEC_AMT3 = 56;
-static const uint32_t CTL_REGS_RX_MODE17_PG_INC_DEC_AMT3_LEN = 3;
-static const uint32_t CTL_REGS_RX_MODE17_PG_THRESH4 = 59;
-static const uint32_t CTL_REGS_RX_MODE17_PG_THRESH4_LEN = 5;
-//<< [CTL_REGS_RX_MODE17_PG]
-// omic/reg00003.H
-
 //>> [CTL_REGS_RX_MODE2_PG]
 static const uint64_t CTL_REGS_RX_MODE2_PG = 0x8008104010012c3full;
 
