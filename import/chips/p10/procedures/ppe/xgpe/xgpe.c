@@ -100,7 +100,7 @@ uint32_t xgpe_errl_create(const uint32_t i_rc,
         uint32_t tdp_idx = l_header->g_xgpe_wofTdpIoIndex;
         HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*) OCC_SHARED_SRAM_ADDR_START;
         xgpe_wof_values_t* wof_io_values = (xgpe_wof_values_t*)&occ_shared_data->xgpe_wof_values;
-        wof_io_values->fields.io_power_proxy_0p01w = 0;
+        wof_io_values->fields.io_power_proxy_w = 0;
         wof_io_values->fields.io_index = 0; //SRAM→io_index(4:6)
         wof_io_values->fields.io_index = (uint8_t)tdp_idx << 4; //OCC Shared SRAM→io_index(1:3)
 

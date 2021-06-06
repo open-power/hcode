@@ -47,7 +47,6 @@ extern XgpeHeader_t* G_xgpe_header_data;
 uint32_t G_throttleOn = 0;
 uint32_t G_throttleCount = 0;
 uint32_t G_static_powr_mw = 0;
-uint32_t G_io_done_once = 0;
 
 extern uint32_t G_OCB_OCCFLG3_OR;
 extern uint32_t G_OCB_OCCFLG3_CLR;
@@ -108,12 +107,6 @@ void xgpe_eco_mode_update()
 
     for (c = 0; c < MAX_CORES; c++)
     {
-        G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORECLK_OFF]   = 0;
-        G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORE_VMIN]     = 0;
-        G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_MMA_OFF]       = 0;
-        G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORECACHE_OFF] = 0;
-
-
         if (occflg6 & CORE_MASK(c))
         {
             G_iddq.p_act_val->act_val[c][ACT_CNT_IDX_CORECLK_OFF]   = 0;
@@ -131,11 +124,11 @@ void xgpe_eco_mode_update()
 void xgpe_irq_fit_handler()
 {
     mtspr(SPRN_TSR, TSR_FIS);
+    compute_io_power();
     handle_error_inject();
     handle_pm_suspend();
     handle_wof_iddq_values();
     handle_core_throttle();
-    compute_io_power();
 }
 
 void handle_error_inject()
@@ -169,16 +162,21 @@ void compute_io_power()
 {
     uint32_t io_pgated_cntrlr = 0;
     uint64_t io_disable_lnks  = 0;
+    uint64_t io_active_lnks  = 0;
     XgpeHeader_t* l_header = (XgpeHeader_t*)&_XGPE_IMG_HEADER;
+    void* xgpe_io_sram = (void*)XGPE_SRAM_IO_OFFSET_ADDR;
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*) OCC_SHARED_SRAM_ADDR_START;
     io_static_lnks_cntrls* static_lnk_cntlr = (io_static_lnks_cntrls*)XGPE_SRAM_IO_OFFSET_ADDR;
-    uint32_t io_addr = XGPE_SRAM_IO_OFFSET_ADDR + sizeof(io_static_lnks_cntrls);
-    controller_entry_t* io_cntrlr_data = (controller_entry_t*)io_addr;
-    link_entry_t* io_lnk_data = (link_entry_t*)(io_addr + (sizeof(controller_entry_t) * NUM_IO_CNTRLS));
+    uint32_t io_addr = (uint32_t)XGPE_SRAM_IO_OFFSET_ADDR + sizeof(io_static_lnks_cntrls);
+    controller_entry_t* io_cntrlr_data = (controller_entry_t*)((uint32_t)xgpe_io_sram + sizeof(io_static_lnks_cntrls));
+    link_entry_t* io_lnk_data = (link_entry_t*)((uint32_t)xgpe_io_sram +  sizeof(io_static_lnks_cntrls) +
+                                (sizeof(controller_entry_t) * NUM_IO_CNTRLS));
 
-    uint32_t io_start = l_header->g_xgpe_ioStart;
-    uint32_t io_step  = l_header->g_xgpe_ioStep;
-    uint32_t io_count = l_header->g_xgpe_ioCount;
+
+    uint32_t io_start     = l_header->g_xgpe_ioStart;
+    uint32_t io_step      = l_header->g_xgpe_ioStep;
+    uint32_t io_count     = l_header->g_xgpe_ioCount;
+    uint32_t io_base_powr_P01W = l_header->g_xgpe_wofIoBase;
     uint32_t io_idx = 0;
     uint32_t io_idx_power = 0;
     uint32_t io_pwr_fraction = 0;
@@ -186,67 +184,80 @@ void compute_io_power()
     uint32_t io_compute_state = 0;
     uint32_t powr_diff = 0;
     xgpe_wof_values_t* wof_io_values = (xgpe_wof_values_t*)&occ_shared_data->xgpe_wof_values;
+    uint32_t l_occflg3;
+    l_occflg3 = in32(G_OCB_OCCFLG3);
 
     do
     {
 
-        // RTC 283857 - this is to be removed once the updated I/O algorithm is available
-
-        // This sets the I/O index to 4 to be modestly conservative.
-        io_idx = 4;
-        io_idx_power = io_start + (io_step * io_idx);
-        // io_pwr_fraction is already 0.
-        G_static_powr_mw = io_idx_power;
-
-        wof_io_values->fields.io_power_proxy_0p01w = io_idx_power;
-        wof_io_values->fields.io_index = (uint8_t)io_idx << 4; //OCC Shared SRAM io_index(1:3)
-
-        if (!G_io_done_once)
-        {
-            PK_TRACE("Writing fixed I/O power %x, index %x and fraction %x to OCC sram", io_idx_power / 10, io_idx,
-                     io_pwr_fraction);
-            G_io_done_once = 1;
-        }
-
-        break;
-
-        // End RTC 283857 - this is to be removed once the updated I/O algorithm is available
-
-        if (G_static_powr_mw || io_compute_state)
+        if (!(l_occflg3 & BIT32(17)) || (G_static_powr_mw || io_compute_state))
         {
             break;
+        }
+        else
+        {
+            G_static_powr_mw = 0;
         }
 
         if(static_lnk_cntlr->io_magic ==
            0x53540000) //ST
         {
-            PK_TRACE("xgpe_wof_values_t add %08x", (uint32_t)&occ_shared_data->xgpe_wof_values);
             io_pgated_cntrlr = static_lnk_cntlr->io_pwr_gated_cntrlrs;
             io_disable_lnks  = static_lnk_cntlr->io_disable_links;
+            io_active_lnks   = static_lnk_cntlr->io_active_links;
+            PK_TRACE("io_active_lnks %08x %08x" , io_active_lnks >> 32, io_active_lnks);
+            PK_TRACE("io_disable_lnks %08x %08x" , io_disable_lnks >> 32, io_disable_lnks);
+
+            PK_TRACE("io_cntrlr_data %08X ", (uint32_t)io_cntrlr_data);
 
             //Pgated power
             for ( x = EMO01; x < NUM_IO_CNTRLS; x++)
             {
+                io_cntrlr_data = (controller_entry_t*)((uint32_t)xgpe_io_sram + sizeof(io_static_lnks_cntrls)
+                                                       + (sizeof(controller_entry_t) * x));
+
                 if (io_pgated_cntrlr & BIT32(x))
                 {
                     G_static_powr_mw += io_cntrlr_data->base_power_mw;
                 }
 
-                io_cntrlr_data = (controller_entry_t*)(io_addr + (sizeof(controller_entry_t) * x));
+                PK_TRACE("io_cntrlr_data %08x %08x", (uint32_t)io_cntrlr_data, G_static_powr_mw);
+
             }
 
+            PK_TRACE("Pgated io_addr %08x", io_addr);
+
             io_addr = io_addr + (sizeof(controller_entry_t) * NUM_IO_CNTRLS);
+
+            PK_TRACE("power io_addr %08x %08x ", io_addr,  (uint32_t)io_lnk_data );
 
             //Disable power
             for ( x = MC00_OMI0; x < NUMBER_OF_IO_LINKS; x++)
             {
+                io_lnk_data = (link_entry_t*)((uint32_t)xgpe_io_sram + sizeof(io_static_lnks_cntrls) +
+                                              (sizeof(controller_entry_t) * NUM_IO_CNTRLS) + (sizeof(link_entry_t) * x));
+
                 if (io_disable_lnks & BIT64(x))
                 {
                     G_static_powr_mw += io_lnk_data->base_power_mw;
+                    PK_TRACE("D- Basepower %d %08X %08x", x, io_lnk_data->base_power_mw, io_addr + (sizeof(link_entry_t) * x));
                 }
 
-                io_lnk_data = (link_entry_t*)(io_addr + (sizeof(link_entry_t) * x));
+                if(io_active_lnks  & BIT64(x))
+                {
+                    G_static_powr_mw += io_lnk_data->base_power_mw;
+                    PK_TRACE("A -Basepower %d %08X %08x %08x", x, io_lnk_data->base_power_mw, io_addr + (sizeof(link_entry_t) * x),
+                             (uint32_t) io_lnk_data);
+                }
+
             }
+
+            PK_TRACE("G_static_powr_mw %08x io_base_powr_P01W %08x", G_static_powr_mw, io_base_powr_P01W);
+
+            wof_io_values->fields.compute_pwr_10mw = (G_static_powr_mw + (io_base_powr_P01W * 10)) / 100;
+            G_static_powr_mw =  (G_static_powr_mw / 1000) + 1 + (io_base_powr_P01W / 100); //convert to Watts
+
+            PK_TRACE("Total G_static_powr_mw %08x", G_static_powr_mw);
 
             //compute io index from wof table
             //and update to occ sram
@@ -254,7 +265,7 @@ void compute_io_power()
             {
                 io_idx = 0;
                 io_idx_power = io_start;
-                io_pwr_fraction = io_start;
+                io_pwr_fraction = 0;
                 io_compute_state = 1;
             }
             else
@@ -291,10 +302,12 @@ void compute_io_power()
 
             if (G_static_powr_mw)
             {
-                PK_TRACE("writing to occ sram %x %x %x", io_idx_power / 10, io_idx, io_pwr_fraction);
-                wof_io_values->fields.io_power_proxy_0p01w = io_idx_power / 10;
-                wof_io_values->fields.io_index = (uint8_t)io_idx << 4; //OCC Shared SRAM io_index(1:3)
-                wof_io_values->fields.io_index = (uint8_t)io_pwr_fraction << 1; //SRAM io_index(4:6)
+                PK_TRACE("G_static_powr_mw %08x %08x", G_static_powr_mw, io_idx_power);
+                PK_TRACE("io_start %08x %08x", io_start, io_step);
+                PK_TRACE("writing to occ sram %x %x %x", io_idx_power, io_idx, io_pwr_fraction);
+                wof_io_values->fields.io_power_proxy_w = G_static_powr_mw;
+                wof_io_values->fields.io_index = (uint8_t)io_idx << 4; //OCC Shared SRAM→io_index(1:3)
+                wof_io_values->fields.io_index |= (uint8_t)io_pwr_fraction << 1; //SRAM→io_index(4:6)
             }
         }
     }
@@ -565,7 +578,8 @@ void handle_wof_iddq_values()
 
         for (c = 0; c < MAX_CORES; c++)
         {
-            if (in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW) & CORE_MASK(c))
+            if (in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW) & CORE_MASK(c) &&
+                !(occflg6 & CORE_MASK(c)))
             {
                 G_iddq.p_act_val->act_val_core[c]  = G_iddq.curr_cnts.act_val_core[c];
                 G_iddq.curr_cnts.act_val_core[c] = 0;

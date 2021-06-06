@@ -95,7 +95,7 @@ int main()
 void xgpe_init()
 {
     //Bit 16 in OCCFLG3 indicates XGPE active
-    out32(G_OCB_OCCFLG3, BIT32(XGPE_ACTIVE));
+    out32(G_OCB_OCCFLG3_OR, BIT32(XGPE_ACTIVE));
 
     //Unmask
     //PCBtype E(30), F(31)
