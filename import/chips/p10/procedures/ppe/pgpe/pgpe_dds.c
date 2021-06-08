@@ -680,7 +680,7 @@ uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c)
     large = large >> 1; //Shift back
 
     //PK_TRACE("DDS: Intp Large p=0x%x, cal_adj=%u", p, cal_adj);
-    PK_TRACE_DBG("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
+    PK_TRACE_INF("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
 
     return large;
 }
