@@ -191,17 +191,19 @@ qme_panic_handler()
         PK_TRACE_DBG ("Sending PIG E 0x%08X", pig_data);
         qme_send_pig_packet(pig_data);
 
-        // not enabled by default
-        if( G_qme_record.hcode_func_enabled & QME_CONTINUE_SERVICE_ON_PANIC )
+        // continue on service not enabled by default
+        if( !(G_qme_record.hcode_func_enabled & QME_CONTINUE_SERVICE_ON_PANIC ) )
         {
-            wrteei(1);
-        }
-        else // by default disable interrupt branch to itself
-        {
-            wrteei(0);
+            // by default mask all stop related external interrupts
+            out64(QME_LCL_EIMR_OR, BITS64(28, 32));
+            g_eimr_override |= BITS64(28, 32);
         }
 
-        PK_TRACE_DBG ("Wait in endless loop .. ");
+        PK_TRACE_INF ("Panic: QME Quiesced, Wait in endless loop .. ");
+        out32( QME_LCL_FLAGS_OR, BIT32(QME_FLAGS_QUIESCE_MODE) );
+
+        // keep the fit timer workaround alive while mask external interrupts
+        wrteei(1);
 
         while(1);
     }
@@ -279,6 +281,9 @@ qme_machine_check_handler()
     uint32_t srr0  = mfspr(SPRN_SRR0);
     uint32_t srr1  = mfspr(SPRN_SRR1);
     uint32_t edr   = mfspr(SPRN_EDR);
+
+    PK_TRACE_INF("Error: QME Machine Check SPRG0:%x EDR:%x SRR1:%x SRR0:%x",
+                 sprg0, edr, srr1, srr0);
 
     G_qme_record.errl_data0 = sprg0;
     G_qme_record.errl_data1 = srr0;
