@@ -265,11 +265,31 @@ qme_doorbell0_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_DB0);
     PK_TRACE("Event: Doorbell 0");
+
 #if POWER10_DD_LEVEL == 10
     out64( QME_LCL_EISR_CLR, BIT64(16) );
 #else
     out32( QME_LCL_EISR_CLR, BIT32(16) );
 #endif
+
+    G_qme_record.doorbell0_msg = in32(QME_LCL_DB0) >> SHIFT32(7);
+    out32(QME_LCL_DB0,  0);
+
+    if( G_qme_record.doorbell0_msg == 0xF2 )
+    {
+        //mask all stop related external interrupts
+        out64(QME_LCL_EIMR_OR, BITS64(28, 32));
+        g_eimr_override |= BITS64(28, 32);
+
+        PK_TRACE_INF ("DB0: QME Quiesced, Wait in endless loop .. ");
+        out32( QME_LCL_FLAGS_OR, BIT32(QME_FLAGS_QUIESCE_MODE) );
+
+        // keep the fit timer workaround alive while mask external interrupts
+        wrteei(1);
+
+        while(1);
+    }
+
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_DB0);
 }
 
