@@ -327,12 +327,12 @@ void pgpe_wov_ocs_update_dirty()
         }
     }
 
-    if (G_pgpe_wov_ocs.tgt_pct > G_gppb->wov_overv_max_pct)
+    if (G_pgpe_wov_ocs.tgt_pct > pgpe_gppb_get_wov_overv_max_pct())
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
         dirty = OCS_DIRTY_SAMPLE_TYPE_11;
-        PK_TRACE_INF("WOV: tgt_pct=0x%x, overv_max_pct=0x%x", G_pgpe_wov_ocs.tgt_pct, G_gppb->wov_overv_max_pct);
+        PK_TRACE_INF("WOV: tgt_pct=0x%x, overv_max_pct=0x%x", G_pgpe_wov_ocs.tgt_pct, pgpe_gppb_get_wov_overv_max_pct());
     }
 
     if (G_pgpe_wov_ocs.dirty != dirty)

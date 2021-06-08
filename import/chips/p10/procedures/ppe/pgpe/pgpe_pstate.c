@@ -1035,20 +1035,20 @@ uint32_t pgpe_pstate_get_vcs_region(uint32_t vcs)
 
 uint32_t pgpe_pstate_get_idd_ac_region(uint32_t idd)
 {
-    if (idd >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF3].idd_tdp_ac_10ma)
+    if (idd >= pgpe_gppb_get_ops_idd_ac(VPD_PT_SET_BIASED, VPD_PV_CF3))
     {
 
-        if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF6].idd_tdp_ac_10ma)
+        if (idd  >=  pgpe_gppb_get_ops_idd_ac(VPD_PT_SET_BIASED, VPD_PV_CF6))
         {
             return REGION_CF6_CF7;
         }
-        else if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].idd_tdp_ac_10ma)
+        else if (idd  >=  pgpe_gppb_get_ops_idd_ac(VPD_PT_SET_BIASED, VPD_PV_CF5))
         {
             return REGION_CF5_CF6;
         }
         else
         {
-            if (idd >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF4].idd_tdp_ac_10ma)
+            if (idd >=  pgpe_gppb_get_ops_idd_ac(VPD_PT_SET_BIASED, VPD_PV_CF4))
             {
                 return REGION_CF4_CF5;
             }
@@ -1060,13 +1060,13 @@ uint32_t pgpe_pstate_get_idd_ac_region(uint32_t idd)
     }
     else
     {
-        if (idd <=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF1].idd_tdp_ac_10ma)
+        if (idd <=  pgpe_gppb_get_ops_idd_ac(VPD_PT_SET_BIASED, VPD_PV_CF1))
         {
             return REGION_CF0_CF1;
         }
         else
         {
-            if (idd <=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF2].idd_tdp_ac_10ma)
+            if (idd <=  pgpe_gppb_get_ops_idd_ac(VPD_PT_SET_BIASED, VPD_PV_CF2))
             {
                 return REGION_CF1_CF2;
             }
@@ -1080,19 +1080,19 @@ uint32_t pgpe_pstate_get_idd_ac_region(uint32_t idd)
 
 uint32_t pgpe_pstate_get_idd_dc_region(uint32_t idd)
 {
-    if (idd >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF3].idd_tdp_dc_10ma)
+    if (idd >=  pgpe_gppb_get_ops_idd_dc(VPD_PT_SET_BIASED, VPD_PV_CF3))
     {
-        if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF6].idd_tdp_dc_10ma)
+        if (idd  >= pgpe_gppb_get_ops_idd_dc(VPD_PT_SET_BIASED, VPD_PV_CF6))
         {
             return REGION_CF6_CF7;
         }
-        else if (idd  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].idd_tdp_dc_10ma)
+        else if (idd  >=  pgpe_gppb_get_ops_idd_dc(VPD_PT_SET_BIASED, VPD_PV_CF5))
         {
             return REGION_CF5_CF6;
         }
         else
         {
-            if (idd >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF4].idd_tdp_dc_10ma)
+            if (idd >=  pgpe_gppb_get_ops_idd_dc(VPD_PT_SET_BIASED, VPD_PV_CF4))
             {
                 return REGION_CF4_CF5;
             }
@@ -1104,13 +1104,13 @@ uint32_t pgpe_pstate_get_idd_dc_region(uint32_t idd)
     }
     else
     {
-        if (idd <=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF1].idd_tdp_dc_10ma)
+        if (idd <=  pgpe_gppb_get_ops_idd_dc(VPD_PT_SET_BIASED, VPD_PV_CF1))
         {
             return REGION_CF0_CF1;
         }
         else
         {
-            if (idd <=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF2].idd_tdp_dc_10ma)
+            if (idd <=  pgpe_gppb_get_ops_idd_dc(VPD_PT_SET_BIASED, VPD_PV_CF2))
             {
                 return REGION_CF1_CF2;
             }
@@ -1124,19 +1124,19 @@ uint32_t pgpe_pstate_get_idd_dc_region(uint32_t idd)
 
 uint32_t pgpe_pstate_get_ics_dc_region(uint32_t ics)
 {
-    if (ics >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF3].ics_tdp_dc_10ma)
+    if (ics >=  pgpe_gppb_get_ops_ics_dc(VPD_PT_SET_BIASED, VPD_PV_CF3))
     {
-        if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF6].ics_tdp_dc_10ma)
+        if (ics  >=  pgpe_gppb_get_ops_ics_dc(VPD_PT_SET_BIASED, VPD_PV_CF6))
         {
             return REGION_CF6_CF7;
         }
-        else if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].ics_tdp_dc_10ma)
+        else if (ics  >=  pgpe_gppb_get_ops_ics_dc(VPD_PT_SET_BIASED, VPD_PV_CF5))
         {
             return REGION_CF5_CF6;
         }
         else
         {
-            if (ics >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF4].ics_tdp_dc_10ma)
+            if (ics >=  pgpe_gppb_get_ops_ics_dc(VPD_PT_SET_BIASED, VPD_PV_CF4))
             {
                 return REGION_CF4_CF5;
             }
@@ -1148,13 +1148,13 @@ uint32_t pgpe_pstate_get_ics_dc_region(uint32_t ics)
     }
     else
     {
-        if (ics <=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF1].ics_tdp_dc_10ma)
+        if (ics <=  pgpe_gppb_get_ops_ics_dc(VPD_PT_SET_BIASED, VPD_PV_CF4))
         {
             return REGION_CF0_CF1;
         }
         else
         {
-            if (ics <=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF2].ics_tdp_dc_10ma)
+            if (ics <=  pgpe_gppb_get_ops_ics_dc(VPD_PT_SET_BIASED, VPD_PV_CF2))
             {
                 return REGION_CF1_CF2;
             }
@@ -1168,19 +1168,19 @@ uint32_t pgpe_pstate_get_ics_dc_region(uint32_t ics)
 
 uint32_t pgpe_pstate_get_ics_ac_region(uint32_t ics)
 {
-    if (ics >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF3].ics_tdp_ac_10ma)
+    if (ics >=  pgpe_gppb_get_ops_ics_ac(VPD_PT_SET_BIASED, VPD_PV_CF3))
     {
-        if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF6].ics_tdp_ac_10ma)
+        if (ics  >=  pgpe_gppb_get_ops_ics_ac(VPD_PT_SET_BIASED, VPD_PV_CF6))
         {
             return REGION_CF6_CF7;
         }
-        else if (ics  >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF5].ics_tdp_ac_10ma)
+        else if (ics  >=  pgpe_gppb_get_ops_ics_ac(VPD_PT_SET_BIASED, VPD_PV_CF5))
         {
             return REGION_CF5_CF6;
         }
         else
         {
-            if (ics >=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF4].ics_tdp_ac_10ma)
+            if (ics >=  pgpe_gppb_get_ops_ics_ac(VPD_PT_SET_BIASED, VPD_PV_CF4))
             {
                 return REGION_CF4_CF5;
             }
@@ -1192,13 +1192,13 @@ uint32_t pgpe_pstate_get_ics_ac_region(uint32_t ics)
     }
     else
     {
-        if (ics <=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF1].ics_tdp_ac_10ma)
+        if (ics <=  pgpe_gppb_get_ops_ics_ac(VPD_PT_SET_BIASED, VPD_PV_CF1))
         {
             return REGION_CF0_CF1;
         }
         else
         {
-            if (ics <=  G_gppb->operating_points_set[VPD_PT_SET_BIASED][VPD_PV_CF2].ics_tdp_ac_10ma)
+            if (ics <=  pgpe_gppb_get_ops_ics_ac(VPD_PT_SET_BIASED, VPD_PV_CF2))
             {
                 return REGION_CF1_CF2;
             }
@@ -1212,19 +1212,19 @@ uint32_t pgpe_pstate_get_ics_ac_region(uint32_t ics)
 
 uint32_t pgpe_pstate_freq_from_ps(uint32_t ps)
 {
-    return  (G_gppb->reference_frequency_khz - ((ps) * G_gppb->frequency_step_khz)) / 1000;
+    return  (pgpe_gppb_get_reference_frequency() - ((ps) * pgpe_gppb_get_frequency_step())) / 1000;
 }
 
 uint32_t pgpe_pstate_ps_from_freq(uint32_t freq_khz)
 {
-    return  ((G_gppb->reference_frequency_khz - freq_khz) / G_gppb->frequency_step_khz);
+    return  ((pgpe_gppb_get_reference_frequency() - freq_khz) / pgpe_gppb_get_frequency_step());
 }
 
 uint32_t pgpe_pstate_ps_from_freq_clipped(uint32_t freq_khz, uint32_t round_up)
 {
     uint32_t ps;
 
-    if (G_gppb->reference_frequency_khz < freq_khz)
+    if (pgpe_gppb_get_reference_frequency() < freq_khz)
     {
         ps = 0;
     }
@@ -1232,11 +1232,12 @@ uint32_t pgpe_pstate_ps_from_freq_clipped(uint32_t freq_khz, uint32_t round_up)
     {
         if (round_up == PS_FROM_FREQ_ROUND_UP)
         {
-            ps = ((G_gppb->reference_frequency_khz - freq_khz + G_gppb->frequency_step_khz) / G_gppb->frequency_step_khz);
+            ps = ((pgpe_gppb_get_reference_frequency() - freq_khz + pgpe_gppb_get_frequency_step()) /
+                  pgpe_gppb_get_frequency_step());
         }
         else
         {
-            ps = ((G_gppb->reference_frequency_khz - freq_khz) / G_gppb->frequency_step_khz);
+            ps = ((pgpe_gppb_get_reference_frequency() - freq_khz) / pgpe_gppb_get_frequency_step());
         }
     }
 

@@ -46,14 +46,14 @@ AvsBusTopology_t* G_gppb_avsbus;
 SysPowerDistParms_t* G_gppb_vdd_sysparm;
 SysPowerDistParms_t* G_gppb_vcs_sysparm;
 SysPowerDistParms_t* G_gppb_vdn_sysparm;
-VRMParms_t*          G_gppb_ext_vrm_parms;
-PoundVOpPoint_t*     G_gppb_operating_points_set[NUM_VPD_PTS_SET];
+VRMParms_v1_t*          G_gppb_ext_vrm_parms;
+PoundVOpPoint_t*     G_gppb_operating_points_set[NUM_VPD_PTS_SET_V1];
 PoundVSlopes_t*      G_gppb_poundv_slopes;
 ResClkSetup_t*       G_gppb_resclk;
 PoundWEntry_t*       G_gppb_dds[MAXIMUM_CORES];
 PoundWEntry_AltCal_t* G_gppb_alt_cal[MAXIMUM_CORES];
 PoundWEntry_TgtActBin_t* G_gppb_tgt_act_bin[MAXIMUM_CORES];
-PoundWOther_t*           G_gppb_dds_other;
+PoundWOtherPadded_t*           G_gppb_dds_other;
 vdd_calibration*         G_gppb_vdd_cal;
 PoundWSlopes_t*          G_gppb_poundw_slopes;
 GlobalPstateParmBlockWOF_t* G_gppb_wof;
@@ -83,9 +83,10 @@ void pgpe_gppb_init()
                              G_gppb_v1->offsets[SYSPARMS_VCS_OFFSET_IDX]);
         G_gppb_vdn_sysparm = (SysPowerDistParms_t*)((uint32_t)gppb_sram_offset + (uint32_t)
                              G_gppb_v1->offsets[SYSPARMS_VDN_OFFSET_IDX]);
-        G_gppb_ext_vrm_parms = (VRMParms_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[VRM_PARMS_OFFSET_IDX]);
+        G_gppb_ext_vrm_parms = (VRMParms_v1_t*)((uint32_t)gppb_sram_offset + (uint32_t)
+                                                G_gppb_v1->offsets[VRM_PARMS_OFFSET_IDX]);
 
-        for (p = 0; p < NUM_VPD_PTS_SET; p++)
+        for (p = 0; p < NUM_VPD_PTS_SET_V1; p++)
         {
             G_gppb_operating_points_set[p] = (PoundVOpPoint_t*)((uint32_t)gppb_sram_offset +
                                              (uint32_t)G_gppb_v1->offsets[VPD_OP_OFFSET_IDX] +
@@ -109,28 +110,30 @@ void pgpe_gppb_init()
                                     c * NUM_PV_POINTS * sizeof(PoundWEntry_TgtActBin_t));
         }
 
-        G_gppb_dds_other = (PoundWOther_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[DDS_OTHER_OFFSET_IDX]);
+        G_gppb_dds_other = (PoundWOtherPadded_t*)((uint32_t)gppb_sram_offset + (uint32_t)
+                           G_gppb_v1->offsets[DDS_OTHER_OFFSET_IDX]);
         G_gppb_vdd_cal = (vdd_calibration*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[DDS_VDD_CAL_OFFSET_IDX]);
         G_gppb_poundw_slopes = (PoundWSlopes_t*)((uint32_t)gppb_sram_offset + (uint32_t)
                                G_gppb_v1->offsets[POUNDW_SLOPES_OFFSET_IDX]);
         G_gppb_wof = (GlobalPstateParmBlockWOF_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[WOF_OFFSET_IDX]);
         G_gppb_wov = (GlobalPstateParmBlockWOV_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[WOF_OFFSET_IDX]);
 
-        PK_TRACE_INF("GPB: GPB Sram Addr=0x%08x Magic=PSTATE_PARMSBLOCK_MAGIC_V0", (uint32_t)G_gppb_v1);
-        PK_TRACE_DBG("GPB: OCC Cmpl. Freq=%u(0x%x) Mhz", (uint32_t)G_gppb->occ_complex_frequency_mhz,
+        PK_TRACE_INF("GPB: GPB Sram Addr=0x%08x Magic=PSTATE_PARMSBLOCK_MAGIC_V1", (uint32_t)G_gppb_v1);
+        PK_TRACE_INF("GPB: OCC Cmpl. Freq=%u(0x%x) Mhz", (uint32_t)G_gppb_base->occ_complex_frequency_mhz,
                      (uint32_t)G_gppb->occ_complex_frequency_mhz);
-        PK_TRACE_DBG("GPB: PGPE Flag SRAM Addr=0x%08x", (uint32_t)&G_gppb->pgpe_flags);
-        PK_TRACE_DBG("GPB: base=0x%08x", (uint32_t)G_gppb_base);
-        PK_TRACE_DBG("GPB: avsbus=0x%08x", (uint32_t)G_gppb_avsbus);
-        PK_TRACE_DBG("GPB: vdd_sys=0x%08x", (uint32_t)G_gppb_vdd_sysparm);
-        PK_TRACE_DBG("GPB: vcs_sys=0x%08x", (uint32_t)G_gppb_vcs_sysparm);
-        PK_TRACE_DBG("GPB: vdn_sys=0x%08x", (uint32_t)G_gppb_vdn_sysparm);
-        PK_TRACE_DBG("GPB: ext_vrm=0x%08x", (uint32_t)G_gppb_ext_vrm_parms);
-        PK_TRACE_DBG("GPB: ops_pts [0]=0x%08x,[1]=0x%08x,[2]=0x%08x, sizeof(PoundVOpPoint_t)=0x%08x",
+        PK_TRACE_INF("GPB: PGPE Flag SRAM Addr=0x%08x", (uint32_t)G_gppb_pgpe_flags);
+        PK_TRACE_INF("GPB: base=0x%08x", (uint32_t)G_gppb_base);
+        PK_TRACE_INF("GPB: avsbus=0x%08x", (uint32_t)G_gppb_avsbus);
+        PK_TRACE_INF("GPB: vdd_sys=0x%08x", (uint32_t)G_gppb_vdd_sysparm);
+        PK_TRACE_INF("GPB: vcs_sys=0x%08x", (uint32_t)G_gppb_vcs_sysparm);
+        PK_TRACE_INF("GPB: vdn_sys=0x%08x", (uint32_t)G_gppb_vdn_sysparm);
+        PK_TRACE_INF("GPB: ext_vrm=0x%08x", (uint32_t)G_gppb_ext_vrm_parms);
+        PK_TRACE_INF("GPB: ops_pts [0]=0x%08x,[1]=0x%08x, sizeof(PoundVOpPoint_t)=0x%08x",
                      (uint32_t)G_gppb_operating_points_set[0], (uint32_t)G_gppb_operating_points_set[1],
-                     (uint32_t)G_gppb_operating_points_set[2], sizeof(PoundVOpPoint_t));
-        PK_TRACE_DBG("GPB: poundv_slopes=0x%08x", (uint32_t)G_gppb_poundv_slopes);
-        PK_TRACE_DBG("GPB: resclk=0x%08x", (uint32_t)G_gppb_resclk);
+                     sizeof(PoundVOpPoint_t));
+        PK_TRACE_INF("GPB: poundv_slopes=0x%08x", (uint32_t)G_gppb_poundv_slopes);
+        PK_TRACE_INF("GPB: resclk=0x%08x", (uint32_t)G_gppb_resclk);
+        PK_TRACE_INF("GPB: dds_other=0x%08x", (uint32_t)G_gppb_dds_other);
     }
     else
     {
@@ -239,12 +242,12 @@ void pgpe_gppb_biased_pstate_tbl(PstateTable_t* tbl)
 
     if(G_gppb->magic.value == PSTATE_PARMSBLOCK_MAGIC_V1)
     {
-        max_ps = G_gppb_v1->operating_points_set[VPD_PT_SET_RAW][CF0].pstate;
+        max_ps = G_gppb_v1->operating_points_set[VPD_PT_SET_BIASED][CF0].pstate;
         step_size = G_gppb_v1->base.frequency_step_khz;
     }
     else
     {
-        max_ps = G_gppb->operating_points_set[VPD_PT_SET_RAW][CF0].pstate;
+        max_ps = G_gppb->operating_points_set[VPD_PT_SET_BIASED][CF0].pstate;
         step_size = G_gppb->frequency_step_khz;
     }
 
@@ -670,7 +673,7 @@ uint32_t pgpe_gppb_get_current_scale_factor(uint32_t rail)
     }
     else
     {
-        return G_gppb->current_scaling_factor[rail];
+        return G_gppb_ext_vrm_parms->current_scaling_factor[rail];
     }
 }
 
@@ -1107,7 +1110,7 @@ uint32_t pgpe_gppb_get_vratio_vdd(uint32_t idx)
     }
     else
     {
-        return  G_gppb_wof->core_on_ratio_vdd; //To be fixed when restructuring
+        return  G_gppb_wof->vratio_vdd_64ths[idx]; //To be fixed when restructuring
     }
 }
 uint32_t pgpe_gppb_get_vratio_vcs(uint32_t idx)
@@ -1118,6 +1121,6 @@ uint32_t pgpe_gppb_get_vratio_vcs(uint32_t idx)
     }
     else
     {
-        return  G_gppb_wof->core_on_ratio_vcs; //To be fixed when restructuring
+        return  G_gppb_wof->vratio_vcs_64ths[idx];; //To be fixed when restructuring
     }
 }
