@@ -30,6 +30,7 @@
 
 extern QmeRecord G_qme_record;
 extern uint64_t g_eimr_override;
+extern uint32_t QME_LCL_PBCR;
 
 enum
 {
@@ -622,6 +623,10 @@ load_auto_wakeup_vector()
     uint32_t l_cpmrOffset   =  CPMR_HDR_AUTO_WAKEUP_OFFSET; //Auto Wkup Vector from CPMR Header
     PK_TRACE_INF( "Cmn Ring Offset 0x%08x", l_sramOffset );
 
+    //Invalidate cache before block copy of auto wakeup vector. This allows QME to directly read
+    //from HOMER instead of reading the copy in cache.
+
+    out32( QME_LCL_PBCR, BIT32(25) );
 
     qme_block_copy_start( QME_BCEBAR_1,
                           ( l_cpmrOffset >> 5 ),

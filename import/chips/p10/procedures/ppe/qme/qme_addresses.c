@@ -106,6 +106,7 @@ uint32_t QME_LCL_SCRB_CLR               = 0xC00012B0;
 uint32_t QME_LCL_SSDR                   = 0xC0001400;
 uint32_t QME_LCL_SCDR                   = 0xC0001440;
 uint32_t QME_LCL_PLSR                   = 0xC0001480;
+uint32_t QME_LCL_PBCR                   = 0xC0000460;
 
 uint32_t QME_LCL_TSEL                   = 0xC0002400;
 uint32_t QME_LCL_TBR                    = 0xC0002480;
