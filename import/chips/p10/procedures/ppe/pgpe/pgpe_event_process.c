@@ -856,8 +856,11 @@ void pgpe_process_safe_mode(void* args)
     ppe_trace_op(PGPE_OPT_SAFE_MODE_DONE, 0);
 }
 
-void pgpe_process_occ_fault()
+void pgpe_process_occ_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag)
 {
+    //Mask interrupt except IPC and Error
+    pgpe_error_mask_irqs();
+
     //Take out a critical log
     pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ);
 
@@ -865,7 +868,10 @@ void pgpe_process_occ_fault()
     pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ);
 
     //Actuate to Safe Mode
-    pgpe_pstate_actuate_safe_mode();
+    if(safe_mode_flag == PGPE_PROCESS_SAFE_MODE_TRUE)
+    {
+        pgpe_pstate_actuate_safe_mode();
+    }
 
     //Stop Beacon Updates. Should we even care. OCC is dead already
     pgpe_error_stop_beacon();
@@ -873,6 +879,9 @@ void pgpe_process_occ_fault()
 
 void pgpe_process_xstop_fault()
 {
+    //Mask interrupt except IPC and Error
+    pgpe_error_mask_irqs();
+
     //Take out a critical log
     pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
 
@@ -894,6 +903,9 @@ void pgpe_process_xgpe_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag)
     errlPpeRegs_t xgpeDbgRegs = {{0}};
     getPpeRegsUsrDtls(ERRL_SOURCE_XGPE, 0, &xgpeDbgRegs, &usrDtlsSect);
     pgpe_error_critical_log_usr(PGPE_ERR_CODE_PGPE_GPE3_ERROR, &usrDtlsSect);
+
+    //Mask interrupt except IPC and Error
+    pgpe_error_mask_irqs();
 
     //Notify error module
     pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_GPE3_ERROR);

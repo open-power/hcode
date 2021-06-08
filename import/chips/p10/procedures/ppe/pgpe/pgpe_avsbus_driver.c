@@ -299,6 +299,7 @@ void pgpe_avsbus_init()
     {
         PK_TRACE_ERR("AVS: VDD Bus Not Available, BusNum=0xFF");
         pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VDD_INVALID_BUSNUM);
+        pgpe_error_state_loop();
     }
 
     //Initialize VDN
@@ -322,6 +323,7 @@ void pgpe_avsbus_init()
     {
         PK_TRACE_ERR("AVS: VCS Bus Not Available, BusNum=0xFF");
         pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VCS_INVALID_BUSNUM);
+        pgpe_error_state_loop();
     }
 }
 
@@ -372,6 +374,7 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
     {
         PK_TRACE_ERR("AVS: Init Bus, DriveIdleFrame FAIL");
         pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_INIT_ERR);
+        pgpe_error_state_loop();
     }
     else
     {
@@ -392,6 +395,7 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
             volt_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
         {
             pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_OUT_OF_BOUNDS);
+            pgpe_error_state_loop();
         }
 
         // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
@@ -406,11 +410,13 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
             case AVS_RC_ONGOING_TIMEOUT:
                 PK_TRACE_ERR("AVS: Volt_W Flag Timeout");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_ONGOING_TIMEOUT);
+                pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
                 PK_TRACE_ERR("AVS: Volt_W Resync Error");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_RESYNC_ERROR);
+                pgpe_error_state_loop();
                 break;
 
             default:
@@ -444,11 +450,13 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
             case AVS_RC_ONGOING_TIMEOUT:
                 PK_TRACE_ERR("AVS_READ: OnGoing Flag Timeout");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT);
+                pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
                 PK_TRACE_ERR("AVS_READ: Resync Error");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_RESYNC_ERROR);
+                pgpe_error_state_loop();
                 break;
 
             default:
@@ -486,11 +494,13 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
             case AVS_RC_ONGOING_TIMEOUT:
                 PK_TRACE_ERR("AVS_READ: OnGoing Flag Timeout");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT);
+                pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
                 PK_TRACE_ERR("AVS_READ: Resync Error");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_RESYNC_ERROR);
+                pgpe_error_state_loop();
                 break;
 
             default:

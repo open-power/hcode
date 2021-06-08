@@ -151,7 +151,7 @@ void pgpe_event_manager_run_booted_or_stopped()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_process_occ_fault();
+            pgpe_process_occ_fault(PGPE_PROCESS_SAFE_MODE_FALSE);
             pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
             pgpe_event_tbl_set_status(EV_OCC_FAULT, EVENT_INACTIVE);
@@ -317,7 +317,7 @@ void pgpe_event_manager_run_active()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_process_occ_fault();
+            pgpe_process_occ_fault(PGPE_PROCESS_SAFE_MODE_TRUE);
             pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
             pgpe_event_tbl_set_status(EV_OCC_FAULT, EVENT_INACTIVE);
@@ -548,7 +548,7 @@ void pgpe_event_manager_run_safe_mode()
 
         if (e->status == EVENT_PENDING)
         {
-            pgpe_process_occ_fault();
+            pgpe_process_occ_fault(PGPE_PROCESS_SAFE_MODE_FALSE);
             pgpe_event_manager_upd_state(PGPE_SM_FAULT_MODE);
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_HCODE_FAULT_STATE));
             pgpe_event_tbl_set_status(EV_OCC_FAULT, EVENT_INACTIVE);

@@ -89,6 +89,7 @@ dpll_mode_t pgpe_dpll_get_mode()
     else
     {
         pgpe_error_handle_fault(PGPE_ERR_CODE_DPLL_UNSUPPORTED_MODE);
+        pgpe_error_state_loop();
         return DPLL_MODE_INVALID;
     }
 }
@@ -141,6 +142,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
             PK_TRACE("dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
             PK_TRACE("DPLL: Update Complete Timeout otbr_t0=0x%x otbr_t1=0x%x, otbr_delta=0x%x", otbr_t0, otbr_t1, otbr_delta);
             pgpe_error_handle_fault(PGPE_ERR_CODE_DPLL_WRITE_UPDATE_COMPLETE_AND_LOCK_TIMEOUT);
+            pgpe_error_state_loop();
         }
 
         PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);

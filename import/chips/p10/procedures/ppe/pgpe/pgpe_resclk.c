@@ -384,6 +384,7 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
             TIMER_DELTA_PRINT()
             PK_TRACE_INF("RCK: RCPTR_PSTATE_ACK_TIMEOUT");
             pgpe_error_handle_fault(PGPE_ERR_CODE_RESCLK_RCPTR_PSTATE_ACK_TIMEOUT);
+            pgpe_error_state_loop();
         }
 
         PPE_GETSCOM_MC_Q_AND(QME_RCPTR, rcptr.value);
@@ -404,6 +405,7 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
         {
             PK_TRACE("RCK: RCPTR[tgtPS]=0x%x psTgt=0x%x", rcptr.fields.target_pstate, pstate_target);
             pgpe_error_handle_fault(PGPE_ERR_CODE_RESCLK_RCPTR_TGT_PSTATE_NOT_EQUAL);
+            pgpe_error_state_loop();
         }
     }
 

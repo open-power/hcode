@@ -43,6 +43,7 @@ extern void pgpe_irq_fit_init();
 
 
 //FAULT
+void pgpe_ocb_hb_error_init();
 void pgpe_irq_occ_fault_handler();
 void pgpe_irq_xgpe_fault_handler();
 void pgpe_irq_pvref_fault_handler();
@@ -69,6 +70,8 @@ void pgpe_irq_init()
     //Init FIT
     pgpe_irq_fit_init();
 
+    //OCC Heartbeat Init
+    pgpe_ocb_hb_error_init();
 
     //Clear all PGPE interrupts except IPI2.
     //IPI2 is cleared and setup by ipc_init call above
@@ -91,6 +94,28 @@ void pgpe_irq_init()
                         BIT64(TP_TPCHIP_OCC_OCI_OCB_OISR0_PMC_PCB_INTR_TYPE2_PENDING);
 }
 
+
+void pgpe_ocb_hb_error_init()
+{
+    PK_TRACE("IRQ: OCC Heartbeat Setup");
+
+    uint64_t firact;
+
+    //Set up OCB_HB loss FIR bit to generate interrupt
+    PPE_GETSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRACT0, firact);
+    firact |= BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OCC_HB_ERROR);
+    PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRACT0, firact);
+
+    PPE_GETSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRACT1, firact);
+    firact &= ~BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OCC_HB_ERROR);
+    PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRACT1, firact);
+
+    PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRMASK_WO_AND, ~BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRMASK_OCC_HB_ERROR_MASK));
+    out64(OCB_OCCHBR, 0); //Clear and Disable OCC Heartbeat Register
+    PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_WO_AND, ~BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OCC_HB_ERROR));
+    out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_OCC_ERROR));//Clear any pending interrupts
+    out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_OCC_ERROR));//Unmask interrupt
+}
 
 void pgpe_irq_fault_handler()
 {

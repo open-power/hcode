@@ -29,6 +29,8 @@
 #include "pgpe_occ.h"
 #include "p10_oci_proc_6.H"
 
+extern  uint64_t  g_oimr_override;
+
 pgpe_error_code_t G_PGPE_ERROR_CODES[] =
 {
     {0, 0, 0, 0}, //Leave first index unused
@@ -206,7 +208,11 @@ void pgpe_error_stop_beacon()
 
 void pgpe_error_mask_irqs()
 {
-    uint32_t oimr0 = 0x000EE020; //Except IPC and ERROR
+    uint32_t oimr0 = 0x400EE020; //Except IPC and GPE3_ERROR, XSTOP_GPE2, and PVREF error
+    g_oimr_override |= BIT64(2) |
+                       BIT64(12) | BIT64(13) | BIT64(14) |
+                       BIT64(16) | BIT64(17) | BIT64(18) |
+                       BIT64(26);
     out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, oimr0);
     PK_TRACE("ERR: IRQs Masked");
 }
@@ -287,4 +293,14 @@ void pgpe_error_handle_fault(uint32_t pgpe_err_id)
 
     //ack any pending IPCS with bad rc
     pgpe_error_ack_pending();
+}
+
+void pgpe_error_state_loop()
+{
+
+    PK_TRACE_INF("ERR: In Error State Loop");
+
+    while(1)
+    {
+    }
 }

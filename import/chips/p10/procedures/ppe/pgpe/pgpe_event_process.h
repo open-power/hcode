@@ -45,7 +45,7 @@ void pgpe_process_wof_ctrl_post_actuate();
 void pgpe_process_wof_vrt(void* args);
 void pgpe_process_wof_vrt_post_actuate();
 void pgpe_process_safe_mode(void* args);
-void pgpe_process_occ_fault();
+void pgpe_process_occ_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag);
 void pgpe_process_xstop_fault();
 void pgpe_process_xgpe_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag);
 void pgpe_process_pvref_fault();

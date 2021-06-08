@@ -62,4 +62,5 @@ void pgpe_error_stop_beacon();
 void pgpe_error_mask_irqs();
 void pgpe_error_ack_pending();
 void pgpe_error_handle_fault(uint32_t pgpe_irr_id);
+void pgpe_error_state_loop();
 #endif
