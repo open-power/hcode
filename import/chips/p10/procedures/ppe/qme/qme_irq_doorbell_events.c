@@ -144,7 +144,9 @@ qme_doorbell1_event()
         // exit
         if (G_qme_record.doorbell1_msg & STOP_BLOCK_EXIT)
         {
-            G_qme_record.c_block_wake_req   = (scratchB & BITS32(0, 4)) >> SHIFT32(3);
+            G_qme_record.c_block_wake_req   = (scratchB &
+                                               BITS32(QME_SCRB_STOP_BLOCK_EXIT_VECTOR_BASE, QME_SCRB_STOP_BLOCK_EXIT_VECTOR_SIZE)) >>
+                                              SHIFT32((QME_SCRB_STOP_BLOCK_EXIT_VECTOR_BASE + QME_SCRB_STOP_BLOCK_EXIT_VECTOR_SIZE - 1));
 
             if( G_qme_record.c_block_wake_req )
             {
@@ -156,7 +158,8 @@ qme_doorbell1_event()
                        BIT32(0) );
 
                 // Block Exit Enabled
-                out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_wake_req << SHIFT32(11) ));
+                out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_wake_req <<
+                                         SHIFT32((QME_SCRB_STOP_EXIT_BLOCKED_VECTOR_BASE + QME_SCRB_STOP_EXIT_BLOCKED_VECTOR_SIZE - 1)) ));
                 G_qme_record.c_block_wake_done |= G_qme_record.c_block_wake_req;
             }
         }
@@ -164,7 +167,9 @@ qme_doorbell1_event()
         // entry
         if (G_qme_record.doorbell1_msg & STOP_BLOCK_ENTRY)
         {
-            G_qme_record.c_block_stop_req   = (scratchB & BITS32(4, 4)) >> SHIFT32(7);
+            G_qme_record.c_block_stop_req   = (scratchB &
+                                               BITS32(QME_SCRB_STOP_BLOCK_ENTRY_VECTOR_BASE, QME_SCRB_STOP_BLOCK_ENTRY_VECTOR_SIZE)) >>
+                                              SHIFT32((QME_SCRB_STOP_BLOCK_ENTRY_VECTOR_BASE + QME_SCRB_STOP_BLOCK_ENTRY_VECTOR_SIZE - 1));
 
             if( G_qme_record.c_block_stop_req )
             {
@@ -175,7 +180,8 @@ qme_doorbell1_event()
                        BIT32(1) );
 
                 // Block Entry Enabled
-                out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_stop_req << SHIFT32(15) ));
+                out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_stop_req <<
+                                         SHIFT32((QME_SCRB_STOP_ENTRY_BLOCKED_VECTOR_BASE + QME_SCRB_STOP_ENTRY_BLOCKED_VECTOR_SIZE - 1)) ));
                 G_qme_record.c_block_stop_done |= G_qme_record.c_block_stop_req;
             }
         }

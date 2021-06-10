@@ -56,12 +56,6 @@ qme_init()
     G_qme_record.c_configured       = local_data & BITS64SH(60, 4);
     G_qme_record.fused_core_enabled = ( local_data >> SHIFT64SH(47) ) & 0x1;
 
-    G_qme_record.c_cache_only_enabled = ( in32( QME_LCL_SCRB ) &
-                                          BITS32(QME_SCRB_CACHE_ONLY_MODE_VECTOR_BASE,
-                                                  QME_SCRB_CACHE_ONLY_MODE_VECTOR_SIZE) ) >>
-                                        SHIFT32( ( QME_SCRB_CACHE_ONLY_MODE_VECTOR_BASE +
-                                                QME_SCRB_CACHE_ONLY_MODE_VECTOR_SIZE - 1 ) ) ;
-
     // TODO assert pm_entry_limit when stop levels are all disabled
     // However, cannot disable stop11 as gating the IPL, to be discussed with Greg
     if( in32( QME_LCL_SCRB ) & BIT32( QME_SCRB_STOP2_TO_STOP0 ) )
@@ -74,11 +68,23 @@ qme_init()
         G_qme_record.stop_level_enabled &= ~BIT32(STOP_LEVEL_3);
     }
 
-    PK_TRACE_INF("Setup: Git Head[%x], Chip DD Level[%d], Stop Level Enabled[%x], Configured Cores[%x]",
+    G_qme_record.c_cache_only_enabled = ( in32( QME_LCL_SCRB ) &
+                                          BITS32(QME_SCRB_CACHE_ONLY_MODE_VECTOR_BASE,
+                                                  QME_SCRB_CACHE_ONLY_MODE_VECTOR_SIZE) ) >>
+                                        SHIFT32( ( QME_SCRB_CACHE_ONLY_MODE_VECTOR_BASE +
+                                                QME_SCRB_CACHE_ONLY_MODE_VECTOR_SIZE - 1 ) ) ;
+
+    G_qme_record.c_in_error = ( in32(QME_LCL_SCRA) &
+                                BITS32(QME_SCRA_STOP_CALLOUT_VECTOR_BASE,
+                                       QME_SCRA_STOP_CALLOUT_VECTOR_SIZE) ) >>
+                              SHIFT32( ( QME_SCRA_STOP_CALLOUT_VECTOR_BASE +
+                                         QME_SCRA_STOP_CALLOUT_VECTOR_SIZE - 1 ) );
+
+    PK_TRACE_INF("Setup: Git Head[%x], Stop Level Enabled[%x], Configured Cores[%x], Callout Cores[%x]",
                  G_qme_record.git_head,
-                 G_qme_record.chip_dd_level,
                  G_qme_record.stop_level_enabled,
-                 G_qme_record.c_configured);
+                 G_qme_record.c_configured,
+                 G_qme_record.c_in_error);
 
     // use SCDR[0:3] STOP_GATED to initialize core stop status
     // Note when QME is booted, either core is in stop11 or running
@@ -97,6 +103,14 @@ qme_init()
 
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
     G_qme_record.c_special_wakeup_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
+    // do not provide spwu done or pm exit to callout cores
+    G_qme_record.c_special_wakeup_done &= ~G_qme_record.c_in_error;
+
+    if( G_qme_record.c_in_error )
+    {
+        PK_TRACE("Drop spwu_done and pm_exit on callout Cores");
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_in_error ), (BIT32(1) | BIT32(16)) );
+    }
 
     if( G_qme_record.c_special_wakeup_done )
     {
