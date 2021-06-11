@@ -35,6 +35,9 @@ uint32_t pgpe_avsbus_drive_idle_frame(uint32_t bus_num);
 uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint32_t bus_num, uint32_t rail_num);
 uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint32_t bus_num, uint32_t rail_num);
 
+static uint32_t AVS_CONTROL_RETRIES = 500;
+static uint32_t AVS_RESYNC_RETRIES = 1;
+
 uint32_t pgpe_avsbus_calc_crc(uint32_t data)
 {
     //Polynomial =  x^3 + x^2 + 1 = 1*x^3 + 0*x^2 + 1*x^1 + 1*x^0  = divisor(1011)
@@ -129,7 +132,7 @@ uint32_t pgpe_avsbus_drive_idle_frame(uint32_t bus_num)
 //#################################################################################################
 uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint32_t bus_num, uint32_t rail_num)
 {
-    uint8_t  rc = 0, retry_cnt = 0, done = 0;
+    uint8_t  rc = 0, retry_cnt = 0, done = 0, retry_cnt_avsbus_not_in_ctrl = 0;
     uint32_t cmd_frame = 0;
     uint32_t slave_ack  = 0;
 
@@ -154,6 +157,8 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
     crc = pgpe_avsbus_calc_crc(cmd_frame);
     cmd_frame = cmd_frame | crc;
 
+    PK_TRACE_DBG("AVS: Drive_W Cmd_Frame=0x%08x", cmd_frame);
+
     do
     {
         // Send frame
@@ -173,14 +178,30 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
             //Non-zero SlaveAck
             if(slave_ack & 0xC0000000)
             {
-                PK_TRACE_DBG("AVS: Drive_W Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
 
-                //Retry one-time
-                if (retry_cnt)
+                //If AVSBUS Control taken away then retry multiple times
+                if (!(slave_ack & 0x04000000))
                 {
+                    if (retry_cnt_avsbus_not_in_ctrl < AVS_CONTROL_RETRIES)
+                    {
+                        PK_TRACE_INF("AVS: Drive_W, Not in PGPE Control, retry_cnt=(%u/%u)", retry_cnt_avsbus_not_in_ctrl, AVS_CONTROL_RETRIES);
+                        retry_cnt_avsbus_not_in_ctrl++;
+                    }
+                    else
+                    {
+                        PK_TRACE_INF("AVS: Drive_W Error, Not in PGPE Control, retry_cnt=(%u/%u)", retry_cnt_avsbus_not_in_ctrl,
+                                     AVS_CONTROL_RETRIES);
+                        rc = AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL;
+                        done = 1;
+                    }
+                }
+                else if (retry_cnt > AVS_RESYNC_RETRIES)
+                {
+                    PK_TRACE_INF("AVS: Drive_W Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
                     rc = AVS_RC_RESYNC_ERROR;
                     done = 1;
                 }
+                //Retry once on resync error
                 else
                 {
                     retry_cnt++;
@@ -208,7 +229,7 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
 //#################################################################################################
 uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint32_t bus_num, uint32_t rail_num)
 {
-    uint8_t  rc = 0, retry_cnt = 0, done = 0;
+    uint8_t  rc = 0, retry_cnt = 0, done = 0 , retry_cnt_avsbus_not_in_ctrl = 0 ;
     uint32_t cmd_frame = 0;
     uint32_t slave_ack = 0;
 
@@ -234,6 +255,8 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
     crc = pgpe_avsbus_calc_crc(cmd_frame);
     cmd_frame = cmd_frame | crc;
 
+    PK_TRACE_DBG("AVS: Drive_R Cmd_Frame=0x%08x", cmd_frame);
+
     do
     {
         // Send frame
@@ -254,13 +277,30 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
             //Non-zero SlaveAck
             if(slave_ack & 0xC0000000)
             {
-                PK_TRACE_DBG("AVS: Drive_R Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
 
-                if (retry_cnt)
+                //If AVSBUS Control taken away then retry multiple times
+                if (!(slave_ack & 0x04000000))
                 {
+                    if (retry_cnt_avsbus_not_in_ctrl < AVS_CONTROL_RETRIES)
+                    {
+                        PK_TRACE_INF("AVS: Drive_R, Not in PGPE Control, retry_cnt=(%u,%u)", retry_cnt_avsbus_not_in_ctrl, AVS_CONTROL_RETRIES);
+                        retry_cnt_avsbus_not_in_ctrl++;
+                    }
+                    else
+                    {
+                        PK_TRACE_INF("AVS: Drive_R Error, Not in PGPE Control, retry_cnt=(%u,%u)", retry_cnt_avsbus_not_in_ctrl,
+                                     AVS_CONTROL_RETRIES);
+                        rc = AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL;
+                        done = 1;
+                    }
+                }
+                else if (retry_cnt > AVS_RESYNC_RETRIES)
+                {
+                    PK_TRACE_INF("AVS: Drive_R Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
                     rc = AVS_RC_RESYNC_ERROR;
                     done = 1;
                 }
+                //Retry one-time for resync error
                 else
                 {
                     retry_cnt++;
@@ -419,7 +459,16 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
                 pgpe_error_state_loop();
                 break;
 
+            case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
+                PK_TRACE_ERR("AVS: Volt_W, Not in PGPE Control");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_NOT_IN_PGPE_CONTROL);
+                pgpe_error_state_loop();
+                break;
+
             default:
+                PK_TRACE_ERR("AVS: Volt_W, Unknown Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_UNKNOWN_ERROR);
+                pgpe_error_state_loop();
                 break;
         }
     }
@@ -444,22 +493,31 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
         switch (rc)
         {
             case AVS_RC_SUCCESS:
-                PK_TRACE_DBG("AVS_READ: Success!");
+                PK_TRACE_DBG("AVS: Volt_R, Success!");
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
-                PK_TRACE_ERR("AVS_READ: OnGoing Flag Timeout");
+                PK_TRACE_ERR("AVS: Volt_R, OnGoing Flag Timeout");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
-                PK_TRACE_ERR("AVS_READ: Resync Error");
+                PK_TRACE_ERR("AVS: Volt_R, Resync Error");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_RESYNC_ERROR);
                 pgpe_error_state_loop();
                 break;
 
+            case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
+                PK_TRACE_ERR("AVS: Volt_R, Not in PGPE Control");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_NOT_IN_PGPE_CONTROL);
+                pgpe_error_state_loop();
+                break;
+
             default:
+                PK_TRACE_ERR("AVS: Volt_R, Unknown Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_UNKNOWN_ERROR);
+                pgpe_error_state_loop();
                 break;
         }
     }
@@ -487,23 +545,32 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
         switch (rc)
         {
             case AVS_RC_SUCCESS:
-                PK_TRACE_DBG("AVS_READ: Success!");
+                PK_TRACE_DBG("AVS: Curr_R, Success!");
                 *ret_current = *ret_current * pgpe_gppb_get_current_scale_factor(current_scale_idx);
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
-                PK_TRACE_ERR("AVS_READ: OnGoing Flag Timeout");
+                PK_TRACE_ERR("AVS: Curr_R, OnGoing Flag Timeout Error");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
-                PK_TRACE_ERR("AVS_READ: Resync Error");
+                PK_TRACE_ERR("AVS: Curr_R, Resync Error");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_RESYNC_ERROR);
                 pgpe_error_state_loop();
                 break;
 
+            case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
+                PK_TRACE_ERR("AVS: Curr_R, Not In PGPE Control");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_NOT_IN_PGPE_CONTROL);
+                pgpe_error_state_loop();
+                break;
+
             default:
+                PK_TRACE_ERR("AVS: Curr_R, Unknown Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_UNKNOWN_ERROR);
+                pgpe_error_state_loop();
                 break;
         }
 

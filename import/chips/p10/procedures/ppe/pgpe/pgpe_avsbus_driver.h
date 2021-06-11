@@ -37,7 +37,8 @@ enum AVSBUS_DRIVER_RETURN_CODES
 {
     AVS_RC_SUCCESS              = 0,
     AVS_RC_ONGOING_TIMEOUT      = 1,
-    AVS_RC_RESYNC_ERROR         = 2
+    AVS_RC_RESYNC_ERROR         = 2,
+    AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL = 3
 };
 
 void pgpe_avsbus_init();
