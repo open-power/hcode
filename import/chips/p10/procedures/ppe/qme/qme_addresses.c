@@ -53,6 +53,7 @@ uint32_t SPATTN_MASK                    = 0x2002049A;
 uint32_t EC_PC_TFX_SM                   = 0x2002049b;
 uint32_t RECOV                          = 0x20040001;
 uint32_t LOCAL_XSTOP                    = 0x20040003;
+uint32_t RECOV_UNMASKED                 = 0x20040011;
 uint32_t CPLT_CTRL0_OR                  = 0x20000010;
 uint32_t CPLT_CTRL0_CLR                 = 0x20000020;
 uint32_t CPLT_CONF0_OR                  = 0x20000018;

@@ -323,7 +323,7 @@ qme_fit_handler()
 
     G_qme_record.uih_status |= BIT32(IDX_TIMER_FIT);
 
-    PPE_GETSCOM( RECOV, q_recov );
+    PPE_GETSCOM( RECOV_UNMASKED, q_recov );
     G_qme_record.c_in_recovery = ( q_recov & BITS64(5, 4) ) >> SHIFT64(8);
 
     if( G_qme_record.c_in_recovery && ( !G_qme_record.recovery_ongoing ) )
