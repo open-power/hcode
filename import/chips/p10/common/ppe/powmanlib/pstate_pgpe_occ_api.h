@@ -216,7 +216,7 @@ typedef struct
             uint64_t idd_avg_10ma               : 16;
             uint64_t ics_avg_10ma               : 16;
             uint64_t idn_avg_10ma               : 16;
-            uint64_t iio_avg_10ma               : 16;
+            uint64_t rdp_limit_10ma             : 16;
 
         } fields;
     } dw1;
@@ -266,9 +266,22 @@ typedef struct
             uint64_t max_idd_100ma              : 16;
             uint64_t max_ics_100ma              : 16;
             uint64_t max_idd_ocs_average_10ma   : 16;
-            uint64_t reserved                   : 16;
+            uint64_t dirty_current_10ma         : 16;
         } fields;
     } dw4;
+    union
+    {
+        uint64_t value;
+        struct
+        {
+            uint32_t high_order;
+            uint32_t low_order;
+        } words;
+        struct
+        {
+            uint64_t dirty_ttsr;
+        } fields;
+    } dw5;
 } pgpe_wof_values_t;
 
 typedef union

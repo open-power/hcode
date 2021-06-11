@@ -71,6 +71,9 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.cnt_droop_heavy = 0;
     G_pgpe_wov_ocs.cnt_droop_heavy_oc = 0;
 
+    //Store rdp_limit_10ma value in occ sram space
+    G_pgpe_wov_ocs.pwof_val->dw1.fields.rdp_limit_10ma = G_pgpe_wov_ocs.idd_current_thresh;
+
     /*PK_TRACE_DBG("WOV: overv_max_pct  = 0x%x", pgpe_gppb_get_wov_overv_max_pct());
     PK_TRACE_DBG("WOV: underv_max_pct = 0x%x", pgpe_gppb_get_wov_underv_max_pct());
 
@@ -144,6 +147,12 @@ void pgpe_wov_ocs_determine_perf_loss()
             thr_light_loss = ttsr & 0XF0F0F0F0F0F0F0F0;
             thr_heavy_loss = ttsr & 0X0F0F0F0F0F0F0F0F;
             //PK_TRACE("OCS: light_loss=0x%x, heavy_loss=0x%x, ttsr=0x%08x%08x",thr_light_loss,thr_heavy_loss, (ttsr>>32)&0xFFFFFFFF,ttsr&0xFFFFFFFF);
+
+            if (ttsr)
+            {
+                //Update TTSR data to occ shared sram space
+                G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = ttsr;
+            }
         }
 
         //\todo RTC 247186
@@ -215,6 +224,9 @@ void pgpe_wov_ocs_update_dirty()
     {
         if (overcurrent == OCS_OVER_THRESH)
         {
+            //Update current running avg value to occ sram space
+            G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
+
             //Update instrumentation counters
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
@@ -248,6 +260,8 @@ void pgpe_wov_ocs_update_dirty()
     {
         if (overcurrent == OCS_OVER_THRESH)
         {
+            //Update current running avg value to occ sram space
+            G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
@@ -272,6 +286,8 @@ void pgpe_wov_ocs_update_dirty()
             }
             else if  (pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_LIGHT_DROOP) == 3)
             {
+                //Update current running avg value to occ sram space
+                G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             }
@@ -289,6 +305,9 @@ void pgpe_wov_ocs_update_dirty()
     {
         if (overcurrent == OCS_OVER_THRESH)
         {
+            //Update current running avg value to occ sram space
+            G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
+
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
@@ -312,6 +331,8 @@ void pgpe_wov_ocs_update_dirty()
             }
             else if (pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_HEAVY_DROOP) == 3)
             {
+                //Update current running avg value to occ sram space
+                G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             }
