@@ -46,7 +46,8 @@ const uint32_t FDIR_MC_WOR  = 0x6E0EFE46;
 extern XgpeHeader_t* G_xgpe_header_data;
 uint32_t G_throttleOn = 0;
 uint32_t G_throttleCount = 0;
-uint32_t G_static_powr_mv = 0;
+uint32_t G_static_powr_mw = 0;
+uint32_t G_io_done_once = 0;
 
 extern uint32_t G_OCB_OCCFLG3_OR;
 extern uint32_t G_OCB_OCCFLG3_CLR;
@@ -188,7 +189,30 @@ void compute_io_power()
 
     do
     {
-        if (G_static_powr_mv || io_compute_state)
+
+        // RTC 283857 - this is to be removed once the updated I/O algorithm is available
+
+        // This sets the I/O index to 4 to be modestly conservative.
+        io_idx = 4;
+        io_idx_power = io_start + (io_step * io_idx);
+        // io_pwr_fraction is already 0.
+        G_static_powr_mw = io_idx_power;
+
+        wof_io_values->fields.io_power_proxy_0p01w = io_idx_power;
+        wof_io_values->fields.io_index = (uint8_t)io_idx << 4; //OCC Shared SRAM io_index(1:3)
+
+        if (!G_io_done_once)
+        {
+            PK_TRACE("Writing fixed I/O power %x, index %x and fraction %x to OCC sram", io_idx_power / 10, io_idx,
+                     io_pwr_fraction);
+            G_io_done_once = 1;
+        }
+
+        break;
+
+        // End RTC 283857 - this is to be removed once the updated I/O algorithm is available
+
+        if (G_static_powr_mw || io_compute_state)
         {
             break;
         }
@@ -205,7 +229,7 @@ void compute_io_power()
             {
                 if (io_pgated_cntrlr & BIT32(x))
                 {
-                    G_static_powr_mv += io_cntrlr_data->base_power_mw;
+                    G_static_powr_mw += io_cntrlr_data->base_power_mw;
                 }
 
                 io_cntrlr_data = (controller_entry_t*)(io_addr + (sizeof(controller_entry_t) * x));
@@ -218,7 +242,7 @@ void compute_io_power()
             {
                 if (io_disable_lnks & BIT64(x))
                 {
-                    G_static_powr_mv += io_lnk_data->base_power_mw;
+                    G_static_powr_mw += io_lnk_data->base_power_mw;
                 }
 
                 io_lnk_data = (link_entry_t*)(io_addr + (sizeof(link_entry_t) * x));
@@ -226,7 +250,7 @@ void compute_io_power()
 
             //compute io index from wof table
             //and update to occ sram
-            if( G_static_powr_mv <= io_start )
+            if( G_static_powr_mw <= io_start )
             {
                 io_idx = 0;
                 io_idx_power = io_start;
@@ -237,7 +261,7 @@ void compute_io_power()
             {
                 for ( io_idx = 1; io_idx < io_count; ++io_idx)
                 {
-                    if (G_static_powr_mv <= (io_start + (io_step * io_idx)))
+                    if (G_static_powr_mw <= (io_start + (io_step * io_idx)))
                     {
                         io_idx_power = io_start + (io_step * io_idx);
                         io_compute_state = 1;
@@ -251,7 +275,7 @@ void compute_io_power()
                     PK_TRACE("So considering the last index io powr value");
                     io_idx = io_count - 1;
                     io_idx_power = io_start + (io_step * io_idx);
-                    G_static_powr_mv = io_idx_power;
+                    G_static_powr_mw = io_idx_power;
 
                 }
 
@@ -261,16 +285,16 @@ void compute_io_power()
                 if (powr_diff)
                 {
                     io_pwr_fraction =
-                        (io_idx_power - G_static_powr_mv) / powr_diff;
+                        (io_idx_power - G_static_powr_mw) / powr_diff;
                 }
             }
 
-            if (G_static_powr_mv)
+            if (G_static_powr_mw)
             {
                 PK_TRACE("writing to occ sram %x %x %x", io_idx_power / 10, io_idx, io_pwr_fraction);
                 wof_io_values->fields.io_power_proxy_0p01w = io_idx_power / 10;
-                wof_io_values->fields.io_index = (uint8_t)io_idx << 4; //OCC Shared SRAM→io_index(1:3)
-                wof_io_values->fields.io_index = (uint8_t)io_pwr_fraction << 1; //SRAM→io_index(4:6)
+                wof_io_values->fields.io_index = (uint8_t)io_idx << 4; //OCC Shared SRAM io_index(1:3)
+                wof_io_values->fields.io_index = (uint8_t)io_pwr_fraction << 1; //SRAM io_index(4:6)
             }
         }
     }
