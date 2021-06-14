@@ -106,6 +106,7 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
 
     if(occFlag & BIT32(PGPE_HW_ERROR_INJECT))
     {
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BIT32(PGPE_HW_ERROR_INJECT));
         PK_TRACE_INF("OCCFLG2[PGPE_HW_ERROR_INJECT]=1. Halting PGPE");
         IOTA_PANIC(PGPE_HW_ERROR_INJECT_TRAP);
     }

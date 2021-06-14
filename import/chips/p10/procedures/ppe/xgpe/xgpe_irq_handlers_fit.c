@@ -144,6 +144,7 @@ void handle_error_inject()
 
     if( l_occflg3 & BIT32(XGPE_HW_ERROR_INJECT))
     {
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_WO_CLEAR, BIT32(XGPE_HW_ERROR_INJECT));
         PK_TRACE("OCCFLG3[XGPE_HW_ERROR_INJECT]=1. Halting XGPE");
         IOTA_PANIC(XGPE_HW_ERROR_INJECT_TRAP);
     }
