@@ -59,6 +59,7 @@ void pgpe_pstate_init()
     PK_TRACE_INF("PSS: Init");
     uint32_t i;
     uint32_t ccsr;
+    uint32_t ecomask;
     uint64_t rvcr;
 
     G_pgpe_pstate.pstate_status = PSTATE_STATUS_DISABLED;
@@ -66,6 +67,8 @@ void pgpe_pstate_init()
     G_pgpe_pstate.pmcr_owner = 0xFFFFFFFF;
 
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
+    ecomask = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG6_RW);
+
     G_pgpe_pstate.sort_core_count = 0;
 
     for (i = 0; i < MAX_QUADS; i++)
@@ -78,6 +81,11 @@ void pgpe_pstate_init()
         if (ccsr & CORE_MASK(i))
         {
             G_pgpe_pstate.sort_core_count++;
+        }
+
+        if (ecomask & CORE_MASK(i))
+        {
+            G_pgpe_pstate.eco_core_count++;
         }
     }
 
@@ -597,6 +605,7 @@ void pgpe_pstate_apply_clips()
 void pgpe_pstate_compute_vratio(uint32_t pstate)
 {
     uint32_t ccsr;
+    uint32_t ecomask;
     uint32_t c;
     uint32_t vratio_vdd_accum_64th = 0;
     uint32_t vratio_vcs_accum_64th = 0;
@@ -605,9 +614,15 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
     iddq_activity_t* G_p_iddq_act_val =  (iddq_activity_t*)(OCC_SHARED_SRAM_ADDR_START + occ_shared_data->iddq_data_offset);
 
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
+    ecomask = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG6_RW);
 
     for (c = 0; c < MAX_CORES; c++)
     {
+        if (ecomask & CORE_MASK(c))
+        {
+            continue;
+        }
+
         if (ccsr & CORE_MASK(c))
         {
             uint32_t coreclk_off_64th = G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_CORECLK_OFF] << 3;
@@ -625,13 +640,18 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
 
     PK_TRACE_DBG("PSS: active_core_accum_64th=0x%08x, vratio_vdd_accum_64th=0x%08x, vratio_vcs_accum_64th=0x%08x",
                  active_core_accum_64th, vratio_vdd_accum_64th, vratio_vcs_accum_64th);
+    //Index Format is 16-bits. We accumulate in 6bits, so do a shift by 10
     G_pgpe_pstate.vratio_index_format       = ((((active_core_accum_64th) << 10) - 1) /
-            G_pgpe_pstate.sort_core_count); //Index Format is 16-bits. We accumulate in 6bits, so do a shift by 10
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.active_core_ratio_64th    = G_pgpe_pstate.vratio_index_format >> 10; //Index format back to 64ths
-    G_pgpe_pstate.vratio_vdd_snapup_64th    = ((vratio_vdd_accum_64th + 63) / G_pgpe_pstate.sort_core_count);
-    G_pgpe_pstate.vratio_vcs_snapup_64th    = ((vratio_vcs_accum_64th + 63) / G_pgpe_pstate.sort_core_count);
-    G_pgpe_pstate.vratio_vdd_rounded_64th   = ((vratio_vdd_accum_64th + 32) / G_pgpe_pstate.sort_core_count);
-    G_pgpe_pstate.vratio_vcs_rounded_64th   = ((vratio_vcs_accum_64th + 32) / G_pgpe_pstate.sort_core_count);
+    G_pgpe_pstate.vratio_vdd_snapup_64th    = ((vratio_vdd_accum_64th + 63) /
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
+    G_pgpe_pstate.vratio_vcs_snapup_64th    = ((vratio_vcs_accum_64th + 63) /
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
+    G_pgpe_pstate.vratio_vdd_rounded_64th   = ((vratio_vdd_accum_64th + 32) /
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
+    G_pgpe_pstate.vratio_vcs_rounded_64th   = ((vratio_vcs_accum_64th + 32) /
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.vratio_vdd_snapup_64th    = G_pgpe_pstate.vratio_vdd_snapup_64th < 64 ?
             G_pgpe_pstate.vratio_vdd_snapup_64th : 64;
     G_pgpe_pstate.vratio_vcs_snapup_64th    = G_pgpe_pstate.vratio_vcs_snapup_64th < 64 ?
@@ -642,8 +662,10 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
             G_pgpe_pstate.vratio_vcs_rounded_64th : 64;
 
 
-    G_pgpe_pstate.vratio_vdd_rounded        = ((((vratio_vdd_accum_64th + 32) << 10) - 1) / G_pgpe_pstate.sort_core_count);
-    G_pgpe_pstate.vratio_vcs_rounded        = ((((vratio_vcs_accum_64th + 32) << 10) - 1) / G_pgpe_pstate.sort_core_count);
+    G_pgpe_pstate.vratio_vdd_rounded        = ((((vratio_vdd_accum_64th + 32) << 10) - 1) /
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
+    G_pgpe_pstate.vratio_vcs_rounded        = ((((vratio_vcs_accum_64th + 32) << 10) - 1) /
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.vratio_vdd_rounded        = G_pgpe_pstate.vratio_vdd_rounded <= 0xFFFF ? G_pgpe_pstate.vratio_vdd_rounded
             : 0xFFFF;
     G_pgpe_pstate.vratio_vcs_rounded        = G_pgpe_pstate.vratio_vcs_rounded <= 0xFFFF ? G_pgpe_pstate.vratio_vcs_rounded

@@ -95,6 +95,7 @@ typedef struct pgpe_pstate
              vratio_vdd_rounded, vratio_vcs_rounded;                //68-69
     uint32_t vindex;                                                //70
     uint32_t pstate_ceiling;        //71
+    uint32_t eco_core_count;        //72
 } pgpe_pstate_t;
 
 
