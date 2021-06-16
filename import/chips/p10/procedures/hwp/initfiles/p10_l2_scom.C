@@ -42,8 +42,6 @@ fapi2::ReturnCode p10_l2_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
         fapi2::ATTR_NAME_Type l_chip_id;
         FAPI_TRY(FAPI_ATTR_GET_PRIVILEGED(fapi2::ATTR_NAME, TGT2, l_chip_id));
         FAPI_TRY(FAPI_ATTR_GET_PRIVILEGED(fapi2::ATTR_EC, TGT2, l_chip_ec));
-        fapi2::ATTR_PROC_FABRIC_BROADCAST_MODE_Type l_TGT1_ATTR_PROC_FABRIC_BROADCAST_MODE;
-        FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_FABRIC_BROADCAST_MODE, TGT1, l_TGT1_ATTR_PROC_FABRIC_BROADCAST_MODE));
         fapi2::ATTR_PROC_L3_HASH_DISABLE_Type l_TGT1_ATTR_PROC_L3_HASH_DISABLE;
         FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_L3_HASH_DISABLE, TGT1, l_TGT1_ATTR_PROC_L3_HASH_DISABLE));
         fapi2::ATTR_PROC_L2_HASH_DISABLE_Type l_TGT1_ATTR_PROC_L2_HASH_DISABLE;
@@ -63,15 +61,10 @@ fapi2::ReturnCode p10_l2_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
         {
             FAPI_TRY(fapi2::getScom( TGT0, 0x2002000aull, l_scom_buffer ));
 
-            if ((l_TGT1_ATTR_PROC_FABRIC_BROADCAST_MODE == fapi2::ENUM_ATTR_PROC_FABRIC_BROADCAST_MODE_1HOP_CHIP_IS_GROUP))
+            if (( true ))
             {
                 constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_SKIP_GRP_SCOPE_EN_ON = 0x1;
                 l_scom_buffer.insert<38, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_SKIP_GRP_SCOPE_EN_ON );
-            }
-            else if (( true ))
-            {
-                constexpr auto l_ECP_L2_L2MISC_L2CERRS_CFG_SKIP_GRP_SCOPE_EN_OFF = 0x0;
-                l_scom_buffer.insert<38, 1, 63, uint64_t>(l_ECP_L2_L2MISC_L2CERRS_CFG_SKIP_GRP_SCOPE_EN_OFF );
             }
 
             if ((l_TGT1_ATTR_PROC_L3_HASH_DISABLE == fapi2::ENUM_ATTR_PROC_L3_HASH_DISABLE_ON))
