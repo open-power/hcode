@@ -107,6 +107,8 @@ uint32_t pgpe_dpll_get_pstate()
 
 void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
 {
+    PkMachineContext ctx;
+
     // Write fmax and fmult fields
     dpll_freq_t dpll_freq;
     dpll_freq.value = 0;
@@ -123,6 +125,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
 
 
     // Wait until frequency update is complete
+    pk_critical_section_enter(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
     TIMER_START()
     dpll_stat_t dpll_stat;
     dpll_stat.value = 0;
@@ -159,6 +162,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
         }
     }
 
+    pk_critical_section_exit(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
     mtmsr(saved_msr);
 
     //CLear the pll unlock error bit

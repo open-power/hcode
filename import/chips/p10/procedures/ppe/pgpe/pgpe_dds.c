@@ -561,9 +561,11 @@ void pgpe_dds_poll_done()
     //Poll for FDCR_UPDATE_IN_PROGRESS being with Multicast READ-OR to all core regions
     //Poll Time: direct, Timeout: 10us with critical error log
     uint64_t data;
+    PkMachineContext ctx;
 
     PPE_GETSCOM_MC_OR(CPMS_CUCR, 0xF, data);
 
+    pk_critical_section_enter(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
     TIMER_START()
 
     while(data & BIT64(56))   //todo: Timeout and take critical error log
@@ -580,6 +582,8 @@ void pgpe_dds_poll_done()
 
         PPE_GETSCOM_MC_OR(CPMS_CUCR, 0xF, data);
     }
+
+    pk_critical_section_exit(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
 }
 
 //

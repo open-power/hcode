@@ -346,6 +346,7 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
 {
     rcptr_t rcptr;
     rcptr.value = 0;
+    PkMachineContext ctx;
 
     PK_TRACE_INF("RCK: RCPTR Poll");
 
@@ -373,6 +374,7 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
 #else
     rcptr.fields.pstate_ack_pending = 1;
 
+    pk_critical_section_enter(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
     TIMER_START()
 
     while(rcptr.fields.pstate_ack_pending) //Timeout: 50us, critical error
@@ -391,6 +393,8 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
         //PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
         //         rcptr.words.low_order);
     }
+
+    pk_critical_section_exit(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
 
 
     //PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
