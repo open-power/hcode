@@ -103,6 +103,10 @@ __bootLoader:
         ## Set the counter for copying
         mtctr GPR_SIZE
 
+        #  Read PGPE's SRAM base address
+        lwz  PGPE_SRAM_ADDR_BASE_REG,   PPMR_PGPE_BASE_ADDRESS_OFFSET( GPR_PPMR_HOMER_ADDR )
+        mr   GPR_SRAM_PGPE_ADDR,        PGPE_SRAM_ADDR_BASE_REG
+
         ## Copy the PPMR header from HOMER to OCC SRAM
 PPMR_header_copy_loop:
         lvd  DATA_WR, OFFSET(GPR_PPMR_HOMER_ADDR)
@@ -114,9 +118,6 @@ PPMR_header_copy_loop:
         #########################
         ## Copy PGPE Header/Exe
         #########################
-
-        ## Address in SRAM where the payload will have to be copied (Destination address)
-        _liw %GPR_SRAM_PGPE_ADDR, OCC_SRAM_PGPE_BASE_ADDR
 
         ## Address in SRAM where the offset of payload will be found
         _liw %GPR_SRAM_HCODE_OFF_ADDR, OCC_SRAM_PGPE_HCODE_OFFSET_ADDR
@@ -144,30 +145,30 @@ PPMR_header_copy_loop:
         ## Set the counter for copying
         mtctr GPR_SIZE
 
+
         ## Start copying
 payload_copy_loop:
-        lvd DATA_WR, OFFSET(GPR_ADDR_PAYLOAD_HOMER)
-        stvd DATA_WR, OFFSET(GPR_SRAM_PGPE_ADDR)
+        lvd  DATA_WR,   OFFSET(GPR_ADDR_PAYLOAD_HOMER)
+        stvd DATA_WR,   OFFSET(GPR_SRAM_PGPE_ADDR)
         addi GPR_ADDR_PAYLOAD_HOMER, GPR_ADDR_PAYLOAD_HOMER, NXT_BLK_OFF
-        addi GPR_SRAM_PGPE_ADDR, GPR_SRAM_PGPE_ADDR, NXT_BLK_OFF
+        addi GPR_SRAM_PGPE_ADDR,     GPR_SRAM_PGPE_ADDR, NXT_BLK_OFF
         bdnz payload_copy_loop
 
         ## Write the success status "BL-S" to PPMR header
         _liw   %GPR_STAT_ADDR, PGPE_BOOT_LOADER_SUCCESS
-        stw  GPR_STAT_ADDR, OFF_STAT_WR(GPR_PPMR_HOMER_ADDR)
+        stw    GPR_STAT_ADDR,  OFF_STAT_WR(GPR_PPMR_HOMER_ADDR)
 
         ########################
         ## branch to hcode
         ########################
 branch:
         ## Reset address to which branch must take place
-        _liw %GPR_TEMP, OCC_SRAM_PGPE_HCODE_RESET_ADDR
-        mtlr GPR_TEMP
+        addi    GPR_TEMP,   PGPE_SRAM_ADDR_BASE_REG,   PGPE_HCODE_RESET_ADDR_VAL  
+        mtlr    GPR_TEMP
 
         ## Setup the IVPR for the Hcode
-        _liw    %GPR_PPMR_HOMER_ADDR, OCC_SRAM_PGPE_BASE_ADDR
-        _liw    %GPR_ADDR_PAYLOAD_HOMER, GPE_GPE2IVPR
-        stw     GPR_PPMR_HOMER_ADDR, OFFSET(GPR_ADDR_PAYLOAD_HOMER)
+        _liw    %GPR_TEMP,                  GPE_GPE2IVPR
+        stw     PGPE_SRAM_ADDR_BASE_REG,    OFFSET( GPR_TEMP )
         blr
 
         //Write the failure status "BL-F" to PPMR header

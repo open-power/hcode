@@ -84,7 +84,7 @@ __bootLoader:
 
         _liw    %BL_START_SRAM_ADDRESS_REG, OCC_SRAM_XGPE_BOOT_LOADER_ADDR
         _liw    %GPR_TEMP, GPE_GPE3IVPR
-         stw     BL_START_SRAM_ADDRESS_REG, OFFSET (GPR_TEMP)
+        stw     BL_START_SRAM_ADDRESS_REG, OFFSET (GPR_TEMP)
 
         ## Enable Trap
          lis     GPR_TEMP, ENABLE_XGPE_TRAP
@@ -103,6 +103,10 @@ __bootLoader:
         ## Set the counter for copying
         mtctr GPR_SIZE
 
+        #  Read XGPE's SRAM base address
+        lwz  XGPE_SRAM_ADDR_BASE_REG,   XPMR_XGPE_BASE_ADDRESS_OFFSET( GPR_XPMR_HOMER_ADDR )
+        mr   GPR_SRAM_XGPE_ADDR,        XGPE_SRAM_ADDR_BASE_REG
+
         ## Copy the XPMR header from HOMER to OCC SRAM
 XPMR_header_copy_loop:
         lvd  DATA_WR, OFFSET(GPR_XPMR_HOMER_ADDR)
@@ -114,9 +118,6 @@ XPMR_header_copy_loop:
         #########################
         ## Copy XGPE Header/Exe
         #########################
-
-        ## Address in SRAM where the payload will have to be copied (Destination address)
-        _liw %GPR_SRAM_XGPE_ADDR, XGPE_SRAM_BASE_ADDR
 
         ## Address in SRAM where the offset of payload will be found
         _liw %GPR_SRAM_HCODE_OFF_ADDR, OCC_SRAM_XGPE_HCODE_OFFSET_ADDR
@@ -146,7 +147,7 @@ XPMR_header_copy_loop:
 
         ## Start copying
 payload_copy_loop:
-        lvd DATA_WR, OFFSET(GPR_ADDR_PAYLOAD_HOMER)
+        lvd  DATA_WR, OFFSET(GPR_ADDR_PAYLOAD_HOMER)
         stvd DATA_WR, OFFSET(GPR_SRAM_XGPE_ADDR)
         addi GPR_ADDR_PAYLOAD_HOMER, GPR_ADDR_PAYLOAD_HOMER, NXT_BLK_OFF
         addi GPR_SRAM_XGPE_ADDR, GPR_SRAM_XGPE_ADDR, NXT_BLK_OFF
@@ -161,13 +162,12 @@ payload_copy_loop:
         ########################
 branch:
         ## Reset address to which branch must take place
-        _liw %GPR_TEMP, OCC_SRAM_XGPE_HCODE_RESET_ADDR
+        addi GPR_TEMP,  XGPE_SRAM_ADDR_BASE_REG,  XGPE_HCODE_RESET_ADDR_VAL
         mtlr GPR_TEMP
 
         ## Setup the IVPR for the Hcode
-        _liw    %GPR_XPMR_HOMER_ADDR, XGPE_SRAM_BASE_ADDR
-        _liw    %GPR_ADDR_PAYLOAD_HOMER, GPE_GPE3IVPR
-        stw     GPR_XPMR_HOMER_ADDR, OFFSET(GPR_ADDR_PAYLOAD_HOMER)
+        _liw     %GPR_TEMP,    GPE_GPE3IVPR
+        stw     XGPE_SRAM_ADDR_BASE_REG,    OFFSET( GPR_TEMP )
         blr
 
         //Write the failure status "BL-F" to XPMR header
