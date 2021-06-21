@@ -63,6 +63,7 @@
 #define GPR_ADDR_PAYLOAD_HOMER      r4
 #define GPR_SRAM_IMG_LEN_ADDR       r6
 #define BL_START_SRAM_ADDRESS_REG   r28
+#define XGPE_SRAM_ADDR_BASE_REG     r30
 #define GPE_GPE3IVPR                0xc0030008
 
 #endif  // __HCD_GPE_BOOT_DEFINES_H__

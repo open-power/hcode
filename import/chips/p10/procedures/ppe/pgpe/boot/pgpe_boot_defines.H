@@ -61,15 +61,16 @@
 #define ENABLE_PGPE_TRAP 0x100
 
 // Register mnemonics used in Boot Loader
-#define GPR_PPMR_HOMER_ADDR r3
-#define GPR_PPMR_SRAM_ADDR  r4
-#define GPR_SIZE            r5
-#define GPR_SRAM_PGPE_ADDR  r7
-#define GPR_SRAM_HCODE_OFF_ADDR r6
-#define GPR_HOMER_PAYLOAD_OFF  r9
-#define GPR_ADDR_PAYLOAD_HOMER r4
-#define GPR_SRAM_IMG_LEN_ADDR r6
-#define BL_START_SRAM_ADDRESS_REG r28
+#define GPR_PPMR_HOMER_ADDR         r3
+#define GPR_PPMR_SRAM_ADDR          r4
+#define GPR_SIZE                    r5
+#define GPR_SRAM_PGPE_ADDR          r7
+#define GPR_SRAM_HCODE_OFF_ADDR     r6
+#define GPR_HOMER_PAYLOAD_OFF       r9
+#define GPR_ADDR_PAYLOAD_HOMER      r4
+#define GPR_SRAM_IMG_LEN_ADDR       r6
+#define BL_START_SRAM_ADDRESS_REG   r28
+#define PGPE_SRAM_ADDR_BASE_REG     r30
 #define GPE_GPE2IVPR    0xc0020008
 
 #endif  // __HCD_GPE_BOOT_DEFINES_H__
