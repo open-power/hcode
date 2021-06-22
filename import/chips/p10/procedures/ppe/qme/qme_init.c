@@ -300,17 +300,22 @@ qme_init()
                     //apply only to the configured secondary cores
                     //do not assert to primary core because those are running and we need the filter
                     //do not need to cover backing cache as there is assertion in core_poweroff hwp
-                    PK_TRACE_DBG("Assert REG_WKUP_FILTER_DIS via QME_SCSR[14] to secondary cores[%x] at stop[%x]",
-                                 c_loop, act_stop_level);
+                    PK_TRACE_DBG("Assert REG_WKUP_FILTER_DIS via QME_SCSR[14] to secondary cores[%x] at stop[F]",
+                                 c_loop);
                     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_loop ), BIT32(14) );
-                }
 
-                if( act_stop_level == 0x6 )
-                {
                     //likely qme rebooted, and there are cache_only cores left in stop6(if stop gated)
                     //OR those cores can be in spwu_done(stop ungated), when it drops they can go back to stop6
                     //either way this provents stop6 flow gets on the wrong foot.
-                    G_qme_record.c_stop11_reached &= ~c_loop;
+                    // stop_gated, act_level 0xF => wake to stop6
+                    // stop_gated, act_level 0x6 => no action
+                    // note gated, act_level 0x6 => no action, spwu drop does
+                    G_qme_record.c_stop11_exit_targets |=
+                        ( G_qme_record.c_stop11_reached & c_loop & G_qme_record.c_cache_only_enabled );
+                }
+                else if( act_stop_level == 0x6 )
+                {
+                    G_qme_record.c_stop11_reached &= ~(c_loop & G_qme_record.c_cache_only_enabled);
                 }
             }
         }
@@ -364,13 +369,9 @@ qme_init()
 
     wrteei(0);
 
-    // stop_gated, act_level 0xF => wake to stop6
-    // stop_gated, act_level 0x6 => no action
-    // note gated, act_level 0x6 => no action, spwu drop does
-    G_qme_record.c_stop11_exit_targets = G_qme_record.c_stop11_reached & G_qme_record.c_cache_only_enabled;
-
     if( G_qme_record.c_stop11_exit_targets )
     {
+        PK_TRACE_INF("Check: ECO core[%x] detected, boot to stop[6]", G_qme_record.c_stop11_exit_targets);
         qme_stop_exit();
     }
 

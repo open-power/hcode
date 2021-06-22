@@ -269,6 +269,9 @@ qme_stop_exit()
     fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_target;
     fapi2::Target < fapi2::TARGET_TYPE_CORE |
     fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_scom_rest_target;
+    fapi2::Target < fapi2::TARGET_TYPE_CORE |
+    fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > core_not_eco;
+    uint32_t c_not_eco = 0;
 
     if( G_qme_record.c_stop2_exit_targets )
     {
@@ -926,7 +929,17 @@ qme_stop_exit()
         if( G_qme_record.hcode_func_enabled & QME_HWP_SCOM_INIT_ENABLE )
         {
 #endif
-            p10_hcd_core_scominit(core_target);
+
+            c_not_eco = G_qme_record.c_stop2p_exit_targets & (~G_qme_record.c_cache_only_enabled);
+
+            if( c_not_eco )
+            {
+                core_not_eco = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                               static_cast<fapi2::MulticastCoreSelect>(c_not_eco));
+
+                p10_hcd_core_scominit(core_not_eco);
+            }
+
 #ifdef USE_HWP_ENABLE
         }
 
@@ -1064,8 +1077,16 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_HANDOFF_PC )
 
-        // HW534619 DD1 workaround move to after self restore
-        p10_hcd_core_timefac_to_pc(core_target);
+        c_not_eco = G_qme_record.c_stop2_exit_targets & (~G_qme_record.c_cache_only_enabled);
+
+        if( c_not_eco )
+        {
+            core_not_eco = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                           static_cast<fapi2::MulticastCoreSelect>(c_not_eco));
+
+            // HW534619 DD1 workaround move to after self restore
+            p10_hcd_core_timefac_to_pc(core_not_eco);
+        }
 
         //===============//
 
