@@ -990,7 +990,7 @@ void getPpeRegsUsrDtls (const uint8_t i_source,
 {
     o_usrDtls->type = ERRL_USR_DTL_PPE_REGS;
     o_usrDtls->size = sizeof (errlPpeRegs_t);
-    o_usrDtls->pData = (uint8_t*) &o_ppeRegs;
+    o_usrDtls->pData = (uint8_t*) o_ppeRegs;
     o_usrDtls->version = ERRL_PPE_REGS_VERSION_1;
     o_usrDtls->pNext = NULL;
 
