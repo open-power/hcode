@@ -545,6 +545,7 @@ void pgpe_dds_update_post(uint32_t pstate)
         //3. if ducr_update_needed write to per quad DUCR. This commits the updated values to HW
         if(ducr_upd_needed )
         {
+
             PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_DUCR, q), G_pgpe_dds.ducr[q].value);
         }
     }
@@ -610,7 +611,7 @@ uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c)
 
     delay = delay >> 1; //Shift back
 
-    //PK_TRACE("DDS: Intp Delay r=0x%x, delay=0x%x base_delay=0x%x", r, delay, pgpe_gppb_get_dds_delay(c, r) );
+    PK_TRACE_DBG("DDS: Intp Ps=%u, Delay r=0x%x, delay=0x%x base_delay=0x%x", ps, r, delay, pgpe_gppb_get_dds_delay(c, r) );
     return delay;
 }
 
@@ -685,7 +686,7 @@ uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c)
     large = large >> 1; //Shift back
 
     //PK_TRACE("DDS: Intp Large p=0x%x, cal_adj=%u", p, cal_adj);
-    PK_TRACE_INF("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
+    PK_TRACE_DBG("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
 
     return large;
 }

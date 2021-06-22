@@ -50,9 +50,9 @@ VRMParms_v1_t*          G_gppb_ext_vrm_parms;
 PoundVOpPoint_t*     G_gppb_operating_points_set[NUM_VPD_PTS_SET_V1];
 PoundVSlopes_t*      G_gppb_poundv_slopes;
 ResClkSetup_t*       G_gppb_resclk;
-PoundWEntry_t*       G_gppb_dds[MAXIMUM_CORES];
-PoundWEntry_AltCal_t* G_gppb_alt_cal[MAXIMUM_CORES];
-PoundWEntry_TgtActBin_t* G_gppb_tgt_act_bin[MAXIMUM_CORES];
+PoundWEntry_t*       G_gppb_dds[NUM_PV_POINTS];
+PoundWEntry_AltCal_t* G_gppb_alt_cal[NUM_PV_POINTS];
+PoundWEntry_TgtActBin_t* G_gppb_tgt_act_bin[NUM_PV_POINTS];
 PoundWOtherPadded_t*           G_gppb_dds_other;
 vdd_calibration*         G_gppb_vdd_cal;
 PoundWSlopes_t*          G_gppb_poundw_slopes;
@@ -66,7 +66,7 @@ void pgpe_gppb_init()
 {
     PK_TRACE_INF("GPB: Init");
 
-    uint32_t p, c;
+    uint32_t p;
     void* gppb_sram_offset = (void*)pgpe_header_get(g_pgpe_gpspbSramAddress);//GPB Sram Offset
     G_gppb = (GlobalPstateParmBlock_t*)gppb_sram_offset;
 
@@ -97,17 +97,17 @@ void pgpe_gppb_init()
                                G_gppb_v1->offsets[POUNDV_SLOPES_OFFSET_IDX]);
         G_gppb_resclk = (ResClkSetup_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[RESCLK_OFFSET_IDX]);
 
-        for (c = 0; c < MAXIMUM_CORES; c++)
+        for (p = 0; p < NUM_PV_POINTS; p++)
         {
-            G_gppb_dds[c] = (PoundWEntry_t*)((uint32_t)gppb_sram_offset +
+            G_gppb_dds[p] = (PoundWEntry_t*)((uint32_t)gppb_sram_offset +
                                              (uint32_t)G_gppb_v1->offsets[DDS_OFFSET_IDX] +
-                                             c * NUM_PV_POINTS * sizeof(PoundWEntry_t));
-            G_gppb_alt_cal[c] =  (PoundWEntry_AltCal_t*)((uint32_t)gppb_sram_offset +
+                                             p * MAXIMUM_CORES * sizeof(PoundWEntry_t));
+            G_gppb_alt_cal[p] =  (PoundWEntry_AltCal_t*)((uint32_t)gppb_sram_offset +
                                  (uint32_t)G_gppb_v1->offsets[DDS_ALT_CAL_OFFSET_IDX] +
-                                 c * NUM_PV_POINTS * sizeof(PoundWEntry_AltCal_t));
-            G_gppb_tgt_act_bin[c] = (PoundWEntry_TgtActBin_t*)((uint32_t)gppb_sram_offset +
+                                 p * MAXIMUM_CORES * sizeof(PoundWEntry_AltCal_t));
+            G_gppb_tgt_act_bin[p] = (PoundWEntry_TgtActBin_t*)((uint32_t)gppb_sram_offset +
                                     (uint32_t)G_gppb_v1->offsets[DDS_TGT_ACT_BIN_OFFSET_IDX] +
-                                    c * NUM_PV_POINTS * sizeof(PoundWEntry_TgtActBin_t));
+                                    p * MAXIMUM_CORES * sizeof(PoundWEntry_TgtActBin_t));
         }
 
         G_gppb_dds_other = (PoundWOtherPadded_t*)((uint32_t)gppb_sram_offset + (uint32_t)
@@ -187,6 +187,7 @@ void pgpe_gppb_init()
     mtmsr(msr);//Restore MSR
 
 #endif
+
 }
 
 //
@@ -1002,6 +1003,7 @@ uint32_t pgpe_gppb_get_dds_delay(uint32_t core, uint32_t idx)
     }
     else
     {
+        //PK_TRACE_INF("G_gppb_dds[%u][%u]=%u", core, idx, G_gppb_dds[idx][core].ddsc.fields.insrtn_dely);
         return G_gppb_dds[idx][core].ddsc.fields.insrtn_dely;
 
     }
