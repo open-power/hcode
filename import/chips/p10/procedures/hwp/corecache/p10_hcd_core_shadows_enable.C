@@ -190,10 +190,10 @@ p10_hcd_core_shadows_enable(
 
     if( l_dds_operable )
     {
-        FAPI_DBG("Enable Droop Detection via FDCR[0]");
-        FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_FDCR_WO_CLEAR, BIT64(0) ) );
+        FAPI_DBG("Enable Droop Detection and Active Droop Response via FDCR[0,2-3]");
+        FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_FDCR_WO_CLEAR, (BIT64(0) | BITS64(2, 2)) ) );
 #if POWER10_DD_LEVEL == 10 //HW555711
-        FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_FDCR_WO_CLEAR, BIT64(0) ) );
+        FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_FDCR_WO_CLEAR, (BIT64(0) | BITS64(2, 2)) ) );
 #endif
 
         FAPI_DBG("Wait for FDCR_UPDATE_IN_PROGRESS to be 0x0 via CUCR[31]");
