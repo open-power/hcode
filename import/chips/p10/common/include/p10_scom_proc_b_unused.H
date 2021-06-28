@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -483,24 +483,6 @@ static const uint32_t NX_PBI_CQ_WRAP_NXCQ_SCOM_TOPOID_XLAT_TBL3_REG_VALID_BITS_F
 static const uint32_t NX_PBI_CQ_WRAP_NXCQ_SCOM_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31 = 8;
 static const uint32_t NX_PBI_CQ_WRAP_NXCQ_SCOM_TOPOID_XLAT_TBL3_REG_TOPOID_XLAT_TBL_ENTRIES_24_31_LEN = 32;
 //<< [NX_PBI_CQ_WRAP_NXCQ_SCOM_TOPOID_XLAT_TBL3_REG]
-// proc/reg00055.H
-
-//>> [NX_PBI_RNG_ST2]
-static const uint64_t NX_PBI_RNG_ST2 = 0x020110e3ull;
-
-static const uint32_t NX_PBI_RNG_ST2_ADAPTEST_SOFT_FAIL_COUNT_RRN_RNG0 = 0;
-static const uint32_t NX_PBI_RNG_ST2_ADAPTEST_SOFT_FAIL_COUNT_RRN_RNG0_LEN = 8;
-static const uint32_t NX_PBI_RNG_ST2_ADAPTEST_SOFT_FAIL_COUNT_RRN_RNG1 = 8;
-static const uint32_t NX_PBI_RNG_ST2_ADAPTEST_SOFT_FAIL_COUNT_RRN_RNG1_LEN = 8;
-static const uint32_t NX_PBI_RNG_ST2_ADAPTEST_SOFT_FAIL_COUNT_CRN_RNG0 = 16;
-static const uint32_t NX_PBI_RNG_ST2_ADAPTEST_SOFT_FAIL_COUNT_CRN_RNG0_LEN = 8;
-static const uint32_t NX_PBI_RNG_ST2_ADAPTEST_SOFT_FAIL_COUNT_CRN_RNG1 = 24;
-static const uint32_t NX_PBI_RNG_ST2_ADAPTEST_SOFT_FAIL_COUNT_CRN_RNG1_LEN = 8;
-static const uint32_t NX_PBI_RNG_ST2_REPTEST_SOFT_FAIL_COUNT_RNG0 = 32;
-static const uint32_t NX_PBI_RNG_ST2_REPTEST_SOFT_FAIL_COUNT_RNG0_LEN = 6;
-static const uint32_t NX_PBI_RNG_ST2_REPTEST_SOFT_FAIL_COUNT_RNG1 = 38;
-static const uint32_t NX_PBI_RNG_ST2_REPTEST_SOFT_FAIL_COUNT_RNG1_LEN = 6;
-//<< [NX_PBI_RNG_ST2]
 // proc/reg00055.H
 
 //>> [NX_PBI_UMAC_EFT_HI_PRIOR_RCV_FIFO_ASB]
