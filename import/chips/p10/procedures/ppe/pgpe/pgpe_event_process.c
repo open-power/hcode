@@ -929,11 +929,11 @@ void pgpe_process_pvref_fault()
     //disable the rVRMs through setting RVCSR[RVID_OVERRIDE]
     PPE_PUTSCOM_MC(CPMS_RVCSR_WO_CLEAR, 0xF, BIT64(CPMS_RVCSR_RVID_OVERRIDE));
 
-    //Notify error module
-    pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_PVREF_ERROR);
-
     //Take out a log
-    pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_PVREF_ERROR);
+    pgpe_error_info_log(PGPE_ERR_CODE_PGPE_PVREF_ERROR);
+
+    //Notify error module
+    pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_PVREF_ERROR);
 
 }
 
