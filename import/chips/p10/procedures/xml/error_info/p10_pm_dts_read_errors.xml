@@ -37,10 +37,12 @@
     <description>
       None of the DTS sensors are enabled in for chiplet.
     </description>
+    <ffdc>RC_INSTANCE</ffdc>
     <ffdc>TARGET</ffdc>
     <ffdc>UNIT_POS</ffdc>
     <ffdc>THERM_MODE_REG</ffdc>
     <!-- Do not callout/deconfig/gard for this error -->
+    <!-- This error will never surface to firmware -->
   </hwpError>
 
   <hwpError>
@@ -48,23 +50,12 @@
     <description>
     DTS Timeout error.
     </description>
+    <ffdc>RC_INSTANCE</ffdc>
     <ffdc>TARGET</ffdc>
     <ffdc>UNIT_POS</ffdc>
     <ffdc>CHIPLET_ERR_STATUS_REG</ffdc>
     <!-- Do not callout/deconfig/gard for this error -->
-  </hwpError>
-
-  <hwpError>
-    <rc>RC_DTS_INVALID_CHIPLET_ERROR</rc>
-    <description>
-    There are no DTS sensors in selected chiplet
-    </description>
-    <ffdc>TARGET</ffdc>
-    <ffdc>CHIPLET_TYPE</ffdc>
-    <callout>
-      <procedure>CODE</procedure>
-      <priority>HIGH</priority>
-    </callout>
+    <!-- This error will never surface to firmware -->
   </hwpError>
 
 </hwpErrors>
