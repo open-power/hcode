@@ -134,16 +134,17 @@ p10_hcd_core_vmin_disable(
         }
         while( (--l_timeout) != 0 );
 
-        HCD_ASSERT( (
+        HCD_ASSERT4( (
 #ifdef USE_RUNN
-                        l_attr_runn_mode ? ( SCOM_GET(34) == 1 ) :
+                         l_attr_runn_mode ? ( SCOM_GET(34) == 1 ) :
 #endif
-                        (l_timeout != 0) ),
-                    VMIN_DIS_RVID_ENABLED_TIMEOUT,
-                    set_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS, HCD_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS,
-                    set_CPMS_RVCSR, l_scomData,
-                    set_CORE_TARGET, i_target,
-                    "ERROR: Vmin Disable Rvid Enabled Timeout");
+                         (l_timeout != 0) ),
+                     VMIN_DIS_RVID_ENABLED_TIMEOUT,
+                     set_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS, HCD_VMIN_DIS_RVID_ENABLED_POLL_TIMEOUT_HW_NS,
+                     set_CPMS_RVCSR, l_scomData,
+                     set_MC_CORE_TARGET, i_target,
+                     set_CORE_SELECT, i_target.getCoreSelect(),
+                     "ERROR: Vmin Disable Rvid Enabled Timeout");
 
         // TODO enable this once settings is known
         //FAPI_DBG("Set RVRM_TUNE to be 64ns(0b110) via CPMS_RVCSR[6:8]");
@@ -182,7 +183,7 @@ p10_hcd_core_vmin_disable(
         }
 
         /*HW563996
-        HCD_ASSERT( (
+        HCD_ASSERT4( (
         #ifdef USE_RUNN
                     l_attr_runn_mode ? ( SCOM_GET(33) == 1 ) :
         #endif
@@ -190,7 +191,8 @@ p10_hcd_core_vmin_disable(
                     VMIN_DIS_RVID_BYPASS_TIMEOUT,
                     set_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS, HCD_VMIN_DIS_RVID_BYPASS_POLL_TIMEOUT_HW_NS,
                     set_CPMS_RVCSR, l_scomData,
-                    set_CORE_TARGET, i_target,
+                    set_MC_CORE_TARGET, i_target,
+                    set_CORE_SELECT, i_target.getCoreSelect(),
                     "ERROR: Vmin Disable Rvid Bypass Timeout");
         */
 
@@ -224,21 +226,22 @@ p10_hcd_core_vmin_disable(
         }
         while( (--l_timeout) != 0 );
 
-        HCD_ASSERT( (
+        HCD_ASSERT4( (
 #ifdef USE_RUNN
-                        l_attr_runn_mode ?
+                         l_attr_runn_mode ?
 #if defined(POWER10_DD_LEVEL) && POWER10_DD_LEVEL != 10
-                        ( SCOM_GET(4) == 1 ) :
+                         ( SCOM_GET(4) == 1 ) :
 #else
-                        ( SCOM_GET(0) == 1 ) :
+                         ( SCOM_GET(0) == 1 ) :
 #endif
 #endif
-                        (l_timeout != 0) ),
-                    VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT,
-                    set_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS, HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS,
-                    set_CPMS_CL2_PFETSTAT, l_scomData,
-                    set_CORE_TARGET, i_target,
-                    "ERROR: Vmin Disable VDD Pfet Enable Timeout");
+                         (l_timeout != 0) ),
+                     VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT,
+                     set_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS, HCD_VMIN_DIS_VDD_PFET_ENABLE_POLL_TIMEOUT_HW_NS,
+                     set_CPMS_CL2_PFETSTAT, l_scomData,
+                     set_MC_CORE_TARGET, i_target,
+                     set_CORE_SELECT, i_target.getCoreSelect(),
+                     "ERROR: Vmin Disable VDD Pfet Enable Timeout");
 
         FAPI_DBG("Wait for VDD_PG_STATE == 0x8 via CPMS_CL2_PFETCNTL[42-45]");
         l_timeout = HCD_VMIN_DIS_VDD_PG_STATE_POLL_TIMEOUT_HW_NS /
@@ -263,15 +266,16 @@ p10_hcd_core_vmin_disable(
         }
         while( (--l_timeout) != 0 );
 
-        FAPI_ASSERT( (
+        HCD_ASSERT4( (
 #ifdef USE_RUNN
                          l_attr_runn_mode ? ( MMIO_GET(MMIO_LOWBIT(42)) == 1 ) :
 #endif
                          (l_timeout != 0) ),
-                     fapi2::VMIN_ENA_VDD_PG_STATE_TIMEOUT()
-                     .set_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS(HCD_VMIN_DIS_VDD_PG_STATE_POLL_TIMEOUT_HW_NS)
-                     .set_CPMS_CL2_PFETCNTL(l_mmioData)
-                     .set_CORE_TARGET(i_target),
+                     VMIN_DIS_VDD_PG_STATE_TIMEOUT,
+                     set_VMIN_DIS_VDD_PG_STATE_POLL_TIMEOUT_HW_NS, HCD_VMIN_DIS_VDD_PG_STATE_POLL_TIMEOUT_HW_NS,
+                     set_CPMS_CL2_PFETCNTL, l_mmioData,
+                     set_MC_CORE_TARGET, i_target,
+                     set_CORE_SELECT, i_target.getCoreSelect(),
                      "ERROR: Vmin Disable VDD_PG_STATE Timeout");
 
         FAPI_DBG("Reset VDD_PFET_SEQ_STATE to No-Op(0b00) via CPMS_CL2_PFETCNTL[0-1]");

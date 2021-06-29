@@ -150,25 +150,28 @@ p10_hcd_core_vmin_enable(
         }
         while( (--l_timeout) != 0 );
 
-        HCD_ASSERT( (
+        HCD_ASSERT4( (
 #ifdef USE_RUNN
-                        l_attr_runn_mode ? ( SCOM_GET(42) == 1 ) :
+                         l_attr_runn_mode ? ( SCOM_GET(42) == 1 ) :
 #endif
-                        (l_timeout != 0) ),
-                    VMIN_ENA_VDD_PG_STATE_TIMEOUT,
-                    set_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS, HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS,
-                    set_CPMS_CL2_PFETCNTL, l_scomData,
-                    set_CORE_TARGET, i_target,
-                    "ERROR: Vmin Enable VDD_PG_STATE Timeout");
+                         (l_timeout != 0) ),
+                     VMIN_ENA_VDD_PG_STATE_TIMEOUT,
+                     set_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS, HCD_VMIN_ENA_VDD_PG_STATE_POLL_TIMEOUT_HW_NS,
+                     set_CPMS_CL2_PFETCNTL, l_scomData,
+                     set_MC_CORE_TARGET, i_target,
+                     set_CORE_SELECT, i_target.getCoreSelect(),
+                     "ERROR: Vmin Enable VDD_PG_STATE Timeout");
 
         FAPI_DBG("Check VDD_PFET_ENABLE_ACTUAL == 0x80 via CPMS_CL2_PFETSTAT[16-23]");
         FAPI_TRY( HCD_GETMMIO_S( i_target, CPMS_CL2_PFETSTAT, l_scomData ) );
 
         SCOM_EXTRACT(16, 8, l_vdd_pfet_enable_actual);
-        FAPI_ASSERT((l_vdd_pfet_enable_actual == 0x80),
-                    fapi2::VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED()
-                    .set_CPMS_CL2_PFETSTAT(l_scomData)
-                    .set_CORE_TARGET(i_target),
+        HCD_ASSERT4((l_vdd_pfet_enable_actual == 0x80),
+                    VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED,
+                    set_VDD_PFET_ENABLE_ACTUAL, l_vdd_pfet_enable_actual,
+                    set_CPMS_CL2_PFETSTAT, l_scomData,
+                    set_MC_CORE_TARGET, i_target,
+                    set_CORE_SELECT, i_target.getCoreSelect(),
                     "ERROR: Vmin Enable VDD_PFET_ENABLE_ACTUAL Failed");
 
         FAPI_DBG("Delay 50ns");
@@ -209,16 +212,17 @@ p10_hcd_core_vmin_enable(
         }
         while( (--l_timeout) != 0 );
 
-        HCD_ASSERT( (
+        HCD_ASSERT4( (
 #ifdef USE_RUNN
-                        l_attr_runn_mode ? ( ( SCOM_GET(32) == 1 ) && ( SCOM_GET(34) == 1 ) ) :
+                         l_attr_runn_mode ? ( ( SCOM_GET(32) == 1 ) && ( SCOM_GET(34) == 1 ) ) :
 #endif
-                        (l_timeout != 0) ),
-                    VMIN_ENA_RVID_ACTIVE_TIMEOUT,
-                    set_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS, HCD_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS,
-                    set_CPMS_RVCSR, l_scomData,
-                    set_CORE_TARGET, i_target,
-                    "ERROR: Vmin Enable Rvid Active/Enabled Timeout");
+                         (l_timeout != 0) ),
+                     VMIN_ENA_RVID_ACTIVE_TIMEOUT,
+                     set_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS, HCD_VMIN_ENA_RVID_ACTIVE_POLL_TIMEOUT_HW_NS,
+                     set_CPMS_RVCSR, l_scomData,
+                     set_MC_CORE_TARGET, i_target,
+                     set_CORE_SELECT, i_target.getCoreSelect(),
+                     "ERROR: Vmin Enable Rvid Active/Enabled Timeout");
     }
 
 fapi_try_exit:

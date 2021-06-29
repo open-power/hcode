@@ -146,12 +146,12 @@ p10_hcd_core_timefac_from_pc(
                 }
                 while( (--l_timeout) != 0 );
 
-                HCD_ASSERT((l_timeout != 0),
-                           TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_TIMEOUT,
-                           set_TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_POLL_TIMEOUT_HW_NS, HCD_TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_POLL_TIMEOUT_HW_NS,
-                           set_QME_TFCSR, l_mmioData,
-                           set_CORE_TARGET, l_core,
-                           "ERROR: TimeFac From PC Xfer Receive Done Timeout");
+                HCD_ASSERT3((l_timeout != 0),
+                            TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_TIMEOUT,
+                            set_TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_POLL_TIMEOUT_HW_NS, HCD_TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_POLL_TIMEOUT_HW_NS,
+                            set_QME_TFCSR, l_mmioData,
+                            set_CORE_TARGET, l_core,
+                            "ERROR: TimeFac From PC Xfer Receive Done Timeout");
 
                 FAPI_DBG("Drop XFER_RECEIVE_DONE via PCR_TFCSR[32]");
                 FAPI_TRY( HCD_PUTMMIO_C( l_core, MMIO_LOWADDR(QME_TFCSR_WO_CLEAR), MMIO_1BIT( MMIO_LOWBIT(32) ) ) );
@@ -166,12 +166,12 @@ p10_hcd_core_timefac_from_pc(
                 FAPI_DBG("Core[%x] Check PC_TFX_XSTOP_ERROR/PC_TFAC_XSTOP_ERROR[%x] == 0 via CORE_FIR[46,47]",
                          l_attr_chip_unit_pos, l_pc_fir_errors);
 
-                HCD_ASSERT( ( (l_tfcsr_errors == 0) || (l_tfcsr_errors & 0x1) ),
-                            TIMEFAC_FROM_PC_TFCSR_ERROR_CHECK_FAILED,
-                            set_PC_FIR, l_pc_fir_errors,
-                            set_QME_TFCSR, l_tfcsr_errors,
-                            set_CORE_TARGET, i_target,
-                            "ERROR: TimeFac From PC TFCSR Error Check Failed");
+                HCD_ASSERT3( ( (l_tfcsr_errors == 0) || (l_tfcsr_errors & 0x1) ),
+                             TIMEFAC_FROM_PC_TFCSR_ERROR_CHECK_FAILED,
+                             set_PC_FIR, l_pc_fir_errors,
+                             set_QME_TFCSR, l_tfcsr_errors,
+                             set_CORE_TARGET, l_core,
+                             "ERROR: TimeFac From PC TFCSR Error Check Failed");
 
                 // on stop entry detect that it happened, reset the shadow, and write PC to shift it again
                 if( l_tfcsr_errors || l_pc_fir_errors )

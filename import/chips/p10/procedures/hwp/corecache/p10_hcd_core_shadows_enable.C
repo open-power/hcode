@@ -181,12 +181,13 @@ p10_hcd_core_shadows_enable(
     }
     while( (--l_timeout) != 0 );
 
-    HCD_ASSERT((l_timeout != 0),
-               SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT,
-               set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS, HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS,
-               set_CPMS_CUCR, l_core_refresh_active,
-               set_CORE_TARGET, i_target,
-               "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 0)");
+    HCD_ASSERT4((l_timeout != 0),
+                SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT,
+                set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS, HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS,
+                set_CPMS_CUCR, l_core_refresh_active,
+                set_MC_CORE_TARGET, i_target,
+                set_CORE_SELECT, i_target.getCoreSelect(),
+                "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 0)");
 
     if( l_dds_operable )
     {
@@ -216,12 +217,13 @@ p10_hcd_core_shadows_enable(
         }
         while( (--l_timeout) != 0 );
 
-        HCD_ASSERT((l_timeout != 0),
-                   SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT,
-                   set_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS, HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS,
-                   set_CPMS_CUCR, l_scomData,
-                   set_CORE_TARGET, i_target,
-                   "ERROR: FDCR Update Timeout");
+        HCD_ASSERT4((l_timeout != 0),
+                    SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT,
+                    set_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS, HCD_SHADOW_ENA_FDCR_UPDATE_IN_PROG_POLL_TIMEOUT_HW_NS,
+                    set_CPMS_CUCR, l_scomData,
+                    set_MC_CORE_TARGET, i_target,
+                    set_CORE_SELECT, i_target.getCoreSelect(),
+                    "ERROR: FDCR Update Timeout");
     }
 
     // wait for remaining registers to be done (overlap with DDS enable) -- DD1 may be partially done
@@ -246,12 +248,13 @@ p10_hcd_core_shadows_enable(
     }
     while( (--l_timeout) != 0 );
 
-    HCD_ASSERT((l_timeout != 0),
-               SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT,
-               set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS, HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS,
-               set_CPMS_CUCR, l_core_refresh_active,
-               set_CORE_TARGET, i_target,
-               "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 1)");
+    HCD_ASSERT4((l_timeout != 0),
+                SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT,
+                set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS, HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS,
+                set_CPMS_CUCR, l_core_refresh_active,
+                set_MC_CORE_TARGET, i_target,
+                set_CORE_SELECT, i_target.getCoreSelect(),
+                "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 1)");
 
 #if POWER10_DD_LEVEL == 10 //HW527679
 
@@ -282,12 +285,13 @@ p10_hcd_core_shadows_enable(
     }
     while( (--l_timeout) != 0 );
 
-    HCD_ASSERT((l_timeout != 0),
-               SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT,
-               set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS, HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS,
-               set_CPMS_CUCR, l_core_refresh_active,
-               set_CORE_TARGET, i_target,
-               "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 2)");
+    HCD_ASSERT4((l_timeout != 0),
+                SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT,
+                set_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS, HCD_SHADOW_ENA_CORE_REFRESH_ACTIVE_POLL_TIMEOUT_HW_NS,
+                set_CPMS_CUCR, l_core_refresh_active,
+                set_MC_CORE_TARGET, i_target,
+                set_CORE_SELECT, i_target.getCoreSelect(),
+                "ERROR: CORE_REFRESH_ACTIVE Timeout (phase 2)");
 
 #endif // DD1 WORKAROUND END
 

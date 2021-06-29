@@ -83,7 +83,7 @@ QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED   = 0x1d0a,
 CORECACHE_CLK_CTRL_TIMEOUT                = 0x1d1c, // 11xxx
 CORECACHE_POW_CTRL_TIMEOUT                = 0x1d1d,
 CORECACHE_PFET_SEQ_STATE_ERROR            = 0x1d1e,
-//_UNUSED_1d1f                            = 0x1d1f,
+CORECACHE_CLK_CTRL_TIMEOUT_CORE           = 0x1d1f,
 
 // stop entry
 
@@ -117,7 +117,7 @@ TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED    = 0x1f05,
 VMIN_DIS_RVID_BYPASS_TIMEOUT              = 0x1f08, // 01xxx
 VMIN_DIS_RVID_ENABLED_TIMEOUT             = 0x1f09,
 VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT          = 0x1f0a,
-//UNUSED                                  = 0x1f0d,
+VMIN_DIS_VDD_PG_STATE_TIMEOUT           = 0x1f0d,
 L3_CLK_SYNC_DONE_TIMEOUT                  = 0x1f1c, // 11xxx
 QME_STOP_BLOCK_COPY_SCAN_RING_FAILED      = 0x1f1d,
 QME_STOP_BLOCK_COPY_CL2_SCOM_FAILED       = 0x1f1e,
