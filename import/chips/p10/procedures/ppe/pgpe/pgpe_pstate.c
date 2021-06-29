@@ -119,6 +119,9 @@ void pgpe_pstate_init()
     G_pgpe_pstate.vcs_curr_ext      = 0;
     G_pgpe_pstate.vcs_next_ext      = 0;
 
+    G_pgpe_pstate.pmsr.value = 0;
+    G_pgpe_pstate.pmsr.fields.version = PMCR_PMSR_VERSION_3;
+
     G_pgpe_pstate.vrt                = 0;
     G_pgpe_pstate.vindex             = 0;
     G_pgpe_pstate.active_core_ratio_64th    = 0;

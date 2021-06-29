@@ -33,6 +33,8 @@
     #define MAX_CORES  32
 #endif
 
+#define PMCR_PMSR_VERSION_3 3
+
 //Types
 enum PSTATE_STATUS
 {
