@@ -229,6 +229,7 @@ qme_parse_pm_state_active_fast()
                  G_qme_record.c_block_stop_done);
 
     c_mask = G_qme_record.c_pm_state_active_fast_req &
+             (~G_qme_record.c_cache_only_enabled) &
              G_qme_record.c_configured &
              (~G_qme_record.c_stop2_reached) &
              (~G_qme_record.c_block_stop_done);
@@ -336,6 +337,7 @@ qme_parse_regular_wakeup_fast()
 
     uint32_t c_mask = G_qme_record.c_regular_wakeup_fast_req &
                       G_qme_record.c_configured &
+                      (~G_qme_record.c_cache_only_enabled) &
                       (G_qme_record.c_stop1_targets |
                        G_qme_record.c_stop2_reached) & // not clear or handle wakeup until we enter stop first
                       (~(G_qme_record.c_block_wake_done | G_qme_record.c_block_wake_override));
@@ -846,6 +848,7 @@ qme_parse_pm_state_active_slow()
 
     c_mask = G_qme_record.c_pm_state_active_slow_req &
              G_qme_record.c_configured &
+             (~G_qme_record.c_cache_only_enabled) &
              (~G_qme_record.c_stop2_reached) &
              (~G_qme_record.c_block_stop_done);
 
@@ -907,6 +910,7 @@ qme_parse_regular_wakeup_slow()
     G_qme_record.c_regular_wakeup_slow_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(44, 4) ) >> SHIFT64SH(47);
 
     uint32_t c_mask = G_qme_record.c_regular_wakeup_slow_req &
+                      (~G_qme_record.c_cache_only_enabled) &
                       G_qme_record.c_configured &
                       (G_qme_record.c_stop1_targets |
                        G_qme_record.c_stop2_reached) &   // not clear or handle wakeup until we enter stop11

@@ -211,7 +211,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
         PK_TRACE("Polling for Core Waking up(pm_active=0) via QME_SSDR[12-15]");
 
-        while( ( ( (~in32(QME_LCL_SSDR)) >> SHIFT32(15) ) & core_wakeup ) != core_target );
+        while( ( ( (~in32(QME_LCL_SSDR)) >> SHIFT32(15) ) & core_wakeup ) != core_wakeup );
     }
 
     //===============//
@@ -901,7 +901,15 @@ qme_stop_exit()
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_ENABLE_SHADOWS )
 
-        p10_hcd_core_shadows_enable(core_target);
+        c_not_eco = G_qme_record.c_stop2_exit_targets & (~G_qme_record.c_cache_only_enabled);
+
+        if( c_not_eco )
+        {
+            core_not_eco = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
+                           static_cast<fapi2::MulticastCoreSelect>(c_not_eco));
+
+            p10_hcd_core_shadows_enable(core_not_eco);
+        }
 
         MARK_TAG( G_qme_record.c_stop2_exit_targets, SX_CORE_CLOCKED )
     }
@@ -912,13 +920,11 @@ qme_stop_exit()
 
     if( G_qme_record.c_stop2p_exit_targets )
     {
-        PK_TRACE_INF("WAKE5/11: Scominit Cores[%x] in STOP5[%x]/11[%x]",
+        PK_TRACE_INF("WAKE5/11: Scominit Cores[%x] in STOP5[%x]/11[%x], ECO Cores[%x]",
                      G_qme_record.c_stop2p_exit_targets,
                      G_qme_record.c_stop5_exit_targets,
-                     G_qme_record.c_stop11_exit_targets);
-
-        core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
-                      static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop2p_exit_targets));
+                     G_qme_record.c_stop11_exit_targets,
+                     G_qme_record.c_cache_only_enabled);
 
         //===============//
 
@@ -936,6 +942,11 @@ qme_stop_exit()
             {
                 core_not_eco = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
                                static_cast<fapi2::MulticastCoreSelect>(c_not_eco));
+
+                PK_TRACE("Debug1: c_not_eco %x stop2p %x eco %x",
+                         c_not_eco,
+                         G_qme_record.c_stop2p_exit_targets,
+                         G_qme_record.c_cache_only_enabled);
 
                 p10_hcd_core_scominit(core_not_eco);
             }
@@ -1071,7 +1082,9 @@ qme_stop_exit()
 
     if( G_qme_record.c_stop2_exit_targets )
     {
-        PK_TRACE_INF("WAKE0: Waking up Cores in STOP0[%x]", G_qme_record.c_stop2_exit_targets);
+        PK_TRACE_INF("WAKE0: Waking up Cores in STOP0[%x], ECO Cores[%x]",
+                     G_qme_record.c_stop2_exit_targets,
+                     G_qme_record.c_cache_only_enabled);
 
         //===============//
 
@@ -1083,6 +1096,11 @@ qme_stop_exit()
         {
             core_not_eco = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
                            static_cast<fapi2::MulticastCoreSelect>(c_not_eco));
+
+            PK_TRACE("Debug2: c_not_eco %x stop2 %x eco %x",
+                     c_not_eco,
+                     G_qme_record.c_stop2_exit_targets,
+                     G_qme_record.c_cache_only_enabled);
 
             // HW534619 DD1 workaround move to after self restore
             p10_hcd_core_timefac_to_pc(core_not_eco);
