@@ -861,9 +861,6 @@ void pgpe_process_occ_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag)
     //Mask interrupt except IPC and Error
     pgpe_error_mask_irqs();
 
-    //Take out a critical log
-    pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ);
-
     //Notify error module
     pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ);
 
@@ -873,8 +870,6 @@ void pgpe_process_occ_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag)
         pgpe_pstate_actuate_safe_mode();
     }
 
-    //Stop Beacon Updates. Should we even care. OCC is dead already
-    pgpe_error_stop_beacon();
 }
 
 void pgpe_process_xstop_fault()
