@@ -105,7 +105,10 @@ uint32_t __ext_irq_handler(void)
         IOTA_PANIC(UIH_OIMR_STACK_OVERFLOW);
     }
 
-    PK_TRACE("IRQ SET: prty_lvl=%d,  g_oimr_stack_ctr=0x%x", g_current_prty_level, g_oimr_stack_ctr);
+    uint32_t oisr0 = in32(0xc0060000ull);
+    uint32_t oimr0 = in32(0xc0060020ull);
+    PK_TRACE_INF("IRQ SET: prty_lvl=%d,  g_oimr_stack_ctr=0x%x oisr0=0x%08x oimr0=0x%08x", g_current_prty_level,
+                 g_oimr_stack_ctr, oisr0, oimr0);
 
     return l_priority_level;
 }
