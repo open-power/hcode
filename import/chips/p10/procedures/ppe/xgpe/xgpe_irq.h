@@ -36,11 +36,11 @@
 #define IRQ_VEC_PRTY3_GPE 0x0010000000000000ull
 // Group4: PCB type E ( QME error log)
 #define IRQ_VEC_PRTY4_GPE 0x0000000200000000ull
-// Group5: PCB type F
-#define IRQ_VEC_PRTY5_GPE 0x0000000100000000ull
+// Group5: PCB type A and F(A is polled only)
+#define IRQ_VEC_PRTY5_GPE 0x0000002100000000ull
 // Group6: Other Engines IRQs
 #ifdef _XGPE_STANDALONE_
-    #define IRQ_VEC_PRTY6_GPE 0xDBACFFFEFFFFFFFFull
+    #define IRQ_VEC_PRTY6_GPE 0xDBACFFDEFFFFFFFFull
 #else
     #define IRQ_VEC_PRTY6_GPE 0x0000000000000000ull
 #endif

@@ -48,6 +48,7 @@ void pgpe_irq_occ_fault_handler();
 void pgpe_irq_xgpe_fault_handler();
 void pgpe_irq_pvref_fault_handler();
 void pgpe_irq_xstop_handler();
+void pgpe_irq_other_engine();
 void pgpe_ipc_done_hook();
 
 // IRQ handler table
@@ -56,7 +57,7 @@ IOTA_TASK(pgpe_irq_fault_handler),
           IOTA_TASK(pgpe_irq_pbax_handler),
           IOTA_TASK(ipc_irq_handler),
           IOTA_TASK(pgpe_irq_pcb_handler),
-          IOTA_TASK(IOTA_NO_TASK)
+          IOTA_TASK(pgpe_irq_other_engine)
           IOTA_END_TASK_TABLE;
 
 pcb_set_pmcr_args_t G_pcb_set_pmcr_args;
@@ -231,7 +232,6 @@ void pgpe_irq_xstop_handler()
     out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_CHECK_STOP_GPE2));
 
     pgpe_event_tbl_set_status(EV_XSTOP_FAULT, EVENT_PENDING);
-
 }
 
 void pgpe_irq_pvref_fault_handler()
@@ -242,5 +242,11 @@ void pgpe_irq_pvref_fault_handler()
     out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_PVREF_ERROR));
 
     pgpe_event_tbl_set_status(EV_PVREF_FAULT, EVENT_PENDING);
+}
+
+void pgpe_irq_other_engine()
+{
+    uint32_t oisr = in32(TP_TPCHIP_OCC_OCI_OCB_OISR0_RO);
+    PK_TRACE_INF("IRQ: ERROR Other Engine IRQ oisr0=0x%08x", oisr); //We just log this and no action is taken
 
 }

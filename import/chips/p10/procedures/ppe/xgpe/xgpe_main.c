@@ -48,7 +48,7 @@ uint32_t G_OCB_OPITEPRD      = OCB_OPITEPRD;
 uint32_t G_OCB_OPITEPRD_CLR  = OCB_OPITEPRD_WO_CLEAR;
 uint32_t G_OCB_OPITFSVRR     = OCB_OPITFSVRR;
 uint32_t G_OCB_OPITESVRR     = OCB_OPITESVRR;
-
+extern uint64_t  g_oimr_override;
 
 int main()
 {
@@ -107,6 +107,7 @@ void xgpe_init()
     IOTA_MC_HANDLER(__xgpe_machine_check_handler);
 #endif
 
+    g_oimr_override |= BIT32(26); //Type A is only polled by XGPE
 #if (ENABLE_FIT_TIMER || ENABLE_DEC_TIMER)
 
     uint32_t TCR_VAL = 0;
