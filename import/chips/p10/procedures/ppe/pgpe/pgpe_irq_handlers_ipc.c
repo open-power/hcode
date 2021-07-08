@@ -25,6 +25,7 @@
 #include "pgpe.h"
 #include "pgpe_irq_handlers.h"
 #include "pgpe_event_table.h"
+#include "pgpe_error.h"
 
 
 // Function table for multi target (common) functions
@@ -90,6 +91,8 @@ void pgpe_irq_ipc_405_start_stop(ipc_msg_t* cmd, void* arg)
         ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING);
     }
     else
     {
@@ -118,6 +121,8 @@ void pgpe_irq_ipc_405_clips(ipc_msg_t* cmd, void* arg)
         ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_CLIP_UPDT_WHILE_PENDING);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_CLIP_UPDT_WHILE_PENDING);
     }
     else
     {
@@ -154,6 +159,8 @@ void pgpe_irq_ipc_405_set_pmcr(ipc_msg_t* cmd, void* arg)
         ipcmsg_start_stop_t* args = (ipcmsg_start_stop_t*)async_cmd->cmd_data;
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_SET_PMCR_WHILE_PENDING);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_SET_PMCR_WHILE_PENDING);
     }
     else
     {
@@ -183,6 +190,8 @@ void pgpe_irq_ipc_405_wof_control(ipc_msg_t* cmd, void* arg)
         ipcmsg_wof_control_t* args = (ipcmsg_wof_control_t*)async_cmd->cmd_data;
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_CTRL_WHILE_PENDING);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_CTRL_WHILE_PENDING);
     }
     else
     {
@@ -212,6 +221,8 @@ void pgpe_irq_ipc_405_wof_vfrt(ipc_msg_t* cmd, void* arg)
         ipcmsg_wof_vrt_t* args = (ipcmsg_wof_vrt_t*)async_cmd->cmd_data;
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_VRT_WHILE_PENDING);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_VRT_WHILE_PENDING);
     }
     else
     {
@@ -236,6 +247,8 @@ void pgpe_irq_ipc_xgpe_stop_beacon(ipc_msg_t* cmd, void* arg)
         ipcmsg_wof_vrt_t* args = (ipcmsg_wof_vrt_t*)async_cmd->cmd_data;
         args->msg_cb.rc = PGPE_RC_REQ_WHILE_PENDING_ACK;
         ipc_send_rsp(cmd, IPC_RC_SUCCESS);
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING);
     }
     else
     {

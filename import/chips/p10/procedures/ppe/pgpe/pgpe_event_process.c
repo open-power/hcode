@@ -49,8 +49,8 @@ extern  uint64_t  g_oimr_override;
 
 //Local Functions
 void pgpe_process_clip_update_post_actuate();
-void pgpe_process_wof_enable();
-void pgpe_process_wof_disable();
+uint32_t pgpe_process_wof_enable();
+uint32_t pgpe_process_wof_disable();
 void pgpe_process_wof_ctrl_post_actuate();
 void pgpe_process_wof_vrt_post_actuate();
 
@@ -98,6 +98,8 @@ void pgpe_process_pstate_start_stop(void* eargs)
             {
                 PK_TRACE_ERR("PEP: Invalid PMCR Owner");
                 args->msg_cb.rc = PGPE_RC_INVALID_PMCR_OWNER;
+                pgpe_error_info_log(PGPE_ERR_CODE_PGPE_INVALID_PMCR_OWNER);
+                pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_INVALID_PMCR_OWNER);
             }
         }
         else
@@ -123,6 +125,13 @@ void pgpe_process_pstate_start_stop(void* eargs)
             if(pgpe_pstate_is_pstate_enabled())
             {
                 pgpe_process_pstate_stop();
+            }
+            else
+            {
+                //The operation is effectively a nop, so we return a good RC to OCC. However,
+                //we create an info log
+                pgpe_error_info_log(PGPE_ERR_CODE_PGPE_PSTATE_STOP_IN_PSTATE_STOPPED);
+                pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_PSTATE_STOP_IN_PSTATE_STOPPED);
             }
         }
         else
@@ -606,6 +615,7 @@ void pgpe_process_pcb_pmcr_request(void* eargs)
 void pgpe_process_wof_ctrl(void* eargs)
 {
     PK_TRACE_INF("PEP: WOF CTRL");
+    uint32_t rc;
     ipc_async_cmd_t* async_cmd = (ipc_async_cmd_t*)eargs;
     ipcmsg_wof_control_t* args = (ipcmsg_wof_control_t*)async_cmd->cmd_data;
     args->msg_cb.rc = PGPE_RC_SUCCESS; //Assume IPC will process ok. Any error case set other RCs
@@ -619,9 +629,17 @@ void pgpe_process_wof_ctrl(void* eargs)
     {
         if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOF_IPC_IMMEDIATE_MODE) == 0)
         {
-            pgpe_process_wof_enable();
-            pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_PENDING_ACTUATION);
-            ack_now = 0;
+            rc = pgpe_process_wof_enable();
+
+            if (rc == PGPE_RC_SUCCESS)
+            {
+                pgpe_event_tbl_set_status(EV_IPC_WOF_CTRL, EVENT_PENDING_ACTUATION);
+                ack_now = 0;
+            }
+            else
+            {
+                args->msg_cb.rc = rc;
+            }
         }
         else
         {
@@ -630,7 +648,7 @@ void pgpe_process_wof_ctrl(void* eargs)
     }
     else if(args->action == PGPE_ACTION_WOF_OFF)
     {
-        pgpe_process_wof_disable();
+        args->msg_cb.rc  = pgpe_process_wof_disable();
         pgpe_pstate_set(wof_status, WOF_STATUS_DISABLED);
     }
     else
@@ -646,59 +664,76 @@ void pgpe_process_wof_ctrl(void* eargs)
     }
 }
 
-void pgpe_process_wof_enable(ipcmsg_wof_control_t* args)
+uint32_t pgpe_process_wof_enable(ipcmsg_wof_control_t* args)
 {
+    uint32_t rc;
+
     if(!pgpe_pstate_is_pstate_enabled())
     {
-        //\\todo RTC: 214435 INFO_ERROR
-        //PGPE_RC_PSTATES_NOT_STARTED
-    }
-
-    //if wof already enabled
-    if(pgpe_pstate_is_wof_enabled())
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_VRT_IN_PSTATE_STOPPED);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_VRT_IN_PSTATE_STOPPED);
+        rc = PGPE_RC_PSTATES_NOT_STARTED;
+    } //if wof already enabled
+    else if(pgpe_pstate_is_wof_enabled())
     {
-        //\\todo RTC: 214435 INFO_ERROR
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_CTRL_ENABLE_WHEN_ENABLED);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_CTRL_ENABLE_WHEN_ENABLED);
+        rc = PGPE_RC_SUCCESS;
     }
-
-    if(pgpe_pstate_get(vrt) == NULL)
+    else if(pgpe_pstate_get(vrt) == NULL)
     {
-        //\\todo RTC: 214435 ERROR
-        //PGPE_RC_WOF_START_WITHOUT_VRT
+        pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_WOF_CTRL_ENABLE_WITHOUT_VRT);
+        pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_WOF_CTRL_ENABLE_WITHOUT_VRT);
+        rc = PGPE_RC_NULL_VRT_POINTER;
+    }
+    else
+    {
+        //Do wof_calc
+        pgpe_pstate_compute_vratio(pgpe_pstate_get(pstate_curr));
+        pgpe_pstate_compute_vindex();
+        pgpe_pstate_set(clip_wof, pgpe_pstate_get(vrt)->data[pgpe_pstate_get(vindex)]);
+        pgpe_opt_set_word(0, 0);
+        pgpe_opt_set_half(0, pgpe_pstate_get(vratio_index_format));
+        pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
+        pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
+        ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
+
+        PK_TRACE_INF("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
+                     pgpe_pstate_get(vindex),
+                     pgpe_pstate_get(clip_wof));
+
+        pgpe_pstate_compute();
+        pgpe_pstate_apply_clips();
+        rc = PGPE_RC_SUCCESS;
     }
 
-    //Do wof_calc
-    pgpe_pstate_compute_vratio(pgpe_pstate_get(pstate_curr));
-    pgpe_pstate_compute_vindex();
-    pgpe_pstate_set(clip_wof, pgpe_pstate_get(vrt)->data[pgpe_pstate_get(vindex)]);
-    pgpe_opt_set_word(0, 0);
-    pgpe_opt_set_half(0, pgpe_pstate_get(vratio_index_format));
-    pgpe_opt_set_byte(2, pgpe_pstate_get(vindex));
-    pgpe_opt_set_byte(3, pgpe_pstate_get(clip_wof));
-    ppe_trace_op(PGPE_OPT_WOF_CALC_DONE, pgpe_opt_get());
-
-    PK_TRACE_INF("PEP: Vratio=0x%x, Vindex=0x%x, Clip_WOF=0x%x", pgpe_pstate_get(vratio_index_format),
-                 pgpe_pstate_get(vindex),
-                 pgpe_pstate_get(clip_wof));
-
-    pgpe_pstate_compute();
-    pgpe_pstate_apply_clips();
+    return rc;
 }
 
-void pgpe_process_wof_disable()
+uint32_t pgpe_process_wof_disable()
 {
+    uint32_t rc;
+
     if(!pgpe_pstate_is_wof_enabled())
     {
-        //\\todo RTC: 214435 INFO_ERROR
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED);
+        rc = PGPE_RC_SUCCESS;
     }
-
-    if(!pgpe_pstate_is_pstate_enabled())
+    else if(!pgpe_pstate_is_pstate_enabled())
     {
-        //\\todo RTC: 214435 INFO_ERROR
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED);
+        pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED);
+        rc = PGPE_RC_PSTATES_NOT_STARTED;
+    }
+    else
+    {
+        //Set WOF Clip used by pstate actuation to 0(remove clip)
+        pgpe_pstate_set(clip_wof, 0);
+        rc = PGPE_RC_SUCCESS;
     }
 
-    //Set WOF Clip used by pstate actuation to 0(remove clip)
-    pgpe_pstate_set(clip_wof, 0);
-
+    return rc;
 }
 
 void pgpe_process_wof_ctrl_post_actuate()
@@ -733,7 +768,8 @@ void pgpe_process_wof_vrt(void* eargs)
         if (args->idd_vrt_ptr == NULL)
         {
             PK_TRACE_ERR("PEP: NULL VRT");
-            //\todo Take out an error log
+            pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_WOF_NULL_VRT_PTR);
+            pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_WOF_NULL_VRT_PTR);
             ack_back = 1;
             args->msg_cb.rc = PGPE_RC_NULL_VRT_POINTER;
         }
