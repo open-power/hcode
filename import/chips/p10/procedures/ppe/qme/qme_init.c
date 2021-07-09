@@ -51,7 +51,7 @@ qme_init()
     // Initialize Software Scoreboard
     //--------------------------------------------------------------------------
 
-    uint32_t c_loop, c_end, act_stop_level;
+    uint32_t c_loop, c_end, act_stop_level, c_mask;
     uint32_t local_data = in32_sh(QME_LCL_QMCR);
     G_qme_record.c_configured       = local_data & BITS64SH(60, 4);
     G_qme_record.fused_core_enabled = ( local_data >> SHIFT64SH(47) ) & 0x1;
@@ -394,6 +394,25 @@ qme_init()
     PK_TRACE_INF("Setup: QME STOP READY");
     out32( QME_LCL_FLAGS_OR, BIT32(QME_FLAGS_STOP_READY) );
     asm volatile ("tw 0, 31, 0"); // Marker for EPM
+
+    // initialize mma available in case of qme reboot, where you cannot assume the same state as cold boot
+    for( c_mask = 8; c_mask > 0; c_mask = c_mask >> 1 )
+    {
+        if ( c_mask & G_qme_record.c_configured)
+        {
+            if( in64( QME_LCL_CORE_ADDR_WR(CPMS_MMAR, c_mask) ) & BIT64(0) )
+            {
+                G_qme_record.c_mma_available |= c_mask;
+            }
+            else
+            {
+                G_qme_record.c_mma_available &= ~c_mask;
+            }
+        }
+    }
+
+    PK_TRACE_INF("Setup: Current MMA Available[%x]", G_qme_record.c_mma_available);
+
 
     //--------------------------------------------------------------------------
     // Enable Interrupts
