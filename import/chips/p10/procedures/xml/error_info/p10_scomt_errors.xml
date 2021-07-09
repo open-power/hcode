@@ -35,6 +35,10 @@
   <ffdc>SCOMT_CHIP</ffdc>
   <ffdc>SCOMT_EC</ffdc>
   <ffdc>SCOMT_ADDRESS</ffdc>
+  <callout>
+    <procedure>CODE</procedure>
+    <priority>HIGH</priority>
+  </callout>
 </hwpError>
 <!-- ******************************************************************** -->
 </hwpErrors>
