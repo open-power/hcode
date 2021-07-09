@@ -412,6 +412,8 @@ qme_parse_special_wakeup_rise()
 
         if( c_mma_down && G_qme_record.mma_modes_enabled == MMA_POFF_DYNAMIC )
         {
+            PK_TRACE_INF("Event: Bring Up MMAs[%x] as part of Spwu Cores[%x], current MMA available[%x]",
+                         c_mma_down, c_spwu, G_qme_record.c_mma_available);
             qme_mma_stop_exit(c_mma_down);
         }
 
