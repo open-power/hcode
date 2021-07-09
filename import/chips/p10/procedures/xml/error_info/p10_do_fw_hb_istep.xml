@@ -29,6 +29,15 @@
         <description>The ready bit that indicates IStep Dispatcher is ready to run individual isteps was not set.</description>
         <ffdc>TARGET</ffdc>
         <ffdc>KEY</ffdc>
+        <ffdc>RETRY_LIMIT_MS</ffdc>
+        <callout>
+          <procedure>CODE</procedure>
+          <priority>HIGH</priority>
+        </callout>
+        <callout>
+            <target>TARGET</target>
+            <priority>MEDIUM</priority>
+        </callout>
     </hwpError>
     <!-- ******************************************************************* -->
     <hwpError>
@@ -36,6 +45,14 @@
         <description>Non-zero value from hostboot istep status reg</description>
         <ffdc>TARGET</ffdc>
         <ffdc>STATUS</ffdc>
+        <callout>
+          <procedure>CODE</procedure>
+          <priority>HIGH</priority>
+        </callout>
+        <callout>
+            <target>TARGET</target>
+            <priority>MEDIUM</priority>
+        </callout>
     </hwpError>
     <!-- ******************************************************************* -->
     <hwpError>
@@ -49,5 +66,13 @@
         <ffdc>MAX_RETRY_TIME_MS</ffdc>
         <ffdc>DELAY_MS</ffdc>
         <ffdc>SIM_CYCLES_DELAY_MS</ffdc>
+        <callout>
+          <procedure>CODE</procedure>
+          <priority>HIGH</priority>
+        </callout>
+        <callout>
+            <target>TARGET</target>
+            <priority>MEDIUM</priority>
+        </callout>
     </hwpError>
 </hwpErrors>
