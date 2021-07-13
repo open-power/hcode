@@ -134,11 +134,6 @@
   </hwpError>
   <!-- ********************************************************************* -->
   <hwpError>
-    <rc>RC_MVPD_RING_REDUNDANT_DATA</rc>
-    <description>MVPD ring has redundant data (Not a bug. Info to caller.)</description>
-  </hwpError>
-  <!-- ********************************************************************* -->
-  <hwpError>
     <rc>RC_MVPD_CODE_BUG</rc>
     <description>Code bug: Fix code!</description>
     <ffdc>CHIP_TARGET</ffdc>
