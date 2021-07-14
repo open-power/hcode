@@ -63,4 +63,5 @@ void pgpe_error_mask_irqs();
 void pgpe_error_ack_pending();
 void pgpe_error_handle_fault(uint32_t pgpe_irr_id);
 void pgpe_error_state_loop();
+void pgpe_error_machine_check_handler() ;
 #endif
