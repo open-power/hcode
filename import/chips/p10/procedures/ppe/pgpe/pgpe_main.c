@@ -38,6 +38,7 @@
 #include "pgpe_dds.h"
 #include "iota_trace.h"
 #include "p10_oci_proc.H"
+#include "pgpe_error.h"
 
 IOTA_BEGIN_IDLE_TASK_TABLE
 { IOTA_IDLE_ENABLED, IOTA_TASK(pgpe_event_manager_run) }
@@ -98,6 +99,7 @@ int main()
     pgpe_wov_ocs_init();
     pgpe_irq_init();
     pgpe_event_manager_init();
+    pgpe_error_init();
 
     PK_TRACE_INF("PGPE Booted");
     ppe_trace_op(PGPE_OPT_PGPE_BOOTED, 0);

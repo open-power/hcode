@@ -73,7 +73,7 @@ void pgpe_opCodeTable(
 
         {PGPE_OPT_HALT_CONDITION,   OP_HASH("OP: HALT_CONDITION "), {0, 0, 0, 0, 0, 0, 0, 0, 0}},
         {PGPE_OPT_UNEXP_EVENT,      OP_HASH("OP: UNEXP_EVENT    | Err=0x%02x"), {4, 0, 0, 0, 0, 0, 0, 0, 0}},
-        {PGPE_OPT_WOF_CTRL,         OP_HASH("OP: WOF_CTRL       | Control=%u(0:OFF,1:ON"), {2, 0, 0, 0, 0, 0, 0, 0, 0}},
+        {PGPE_OPT_WOF_CTRL,         OP_HASH("OP: WOF_CTRL       | Control=%u(2:OFF,1:ON"), {2, 0, 0, 0, 0, 0, 0, 0, 0}},
         {PGPE_OPT_WOV,              OP_HASH("OP: WOV            | Vdd=0x%umV Vcs=%umV VddOffset=%dmV VcsOffset=%dmV"), {2, 2, 2, 2, 0, 0, 0, 0, 0}},
 
         {PGPE_OPT_PCB_TYPE1,        OP_HASH("OP: PCB_TYPE1(PMCR)| CoreNum=%u PresentPS=0x%02x ReqPS=0x%02x"), {1, 1, 1, 0, 0, 0, 0, 0, 0}},

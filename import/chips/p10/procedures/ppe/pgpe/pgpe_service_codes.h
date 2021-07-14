@@ -48,6 +48,7 @@ enum pgpeModuleId
     PGPE_ERR_MODULE_UIH             =       0x12,
     PGPE_ERR_MODULE_WOV_OCS         =       0x13,
     PGPE_ERR_MODULE_XGPE            =       0x14,
+    PGPE_ERR_MODULE_MACHINE_CHECK   =       0x15,
 };
 
 enum pgpeReasonCode
@@ -107,6 +108,7 @@ enum pgpeExtReasonCode
     PGPE_ERR_EXT_CODE_PGPE_XSTOP_GPE2                               =   0x1081,
     PGPE_ERR_EXT_CODE_PGPE_GPE3_ERROR                               =   0x1082,
     PGPE_ERR_EXT_CODE_PGPE_PVREF_ERROR                              =   0x1083,
+    PGPE_ERR_EXT_CODE_PGPE_MACHINE_CHECK                            =   0x1084,
     //#define PGPE_BAD_DD_LEVEL                               0x1064
 
     //PSTATES
