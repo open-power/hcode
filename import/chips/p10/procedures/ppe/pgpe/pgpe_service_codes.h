@@ -83,6 +83,7 @@ enum pgpeExtReasonCode
     //DPLL
     PGPE_ERR_EXT_CODE_DPLL_WRITE_UPDATE_COMPLETE_AND_LOCK_TIMEOUT   =   0x1040,
     PGPE_ERR_EXT_CODE_DPLL_UNSUPPORTED_MODE                         =   0x1041,
+    PGPE_ERR_EXT_CODE_DPLL_PARITY_ERROR                             =   0x1042,
 
     //Resclk
     PGPE_ERR_EXT_CODE_RESCLK_RCIMR_AT_ENABLEMENT_NOT_EQUAL          =   0x1050,

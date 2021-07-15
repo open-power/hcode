@@ -31,6 +31,8 @@
 #include "pgpe_error.h"
 #include "pgpe_utils.h"
 
+#define DPLL_ADDR_PARITY_RETRIES 4
+
 void pgpe_dpll_init()
 {
 }
@@ -156,9 +158,10 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
             cnt++;
         }
 
-        if (cnt > 1)
+        if (cnt > DPLL_ADDR_PARITY_RETRIES)
         {
-            IOTA_PANIC(DPLL_ADDRESS_PARITY);
+            pgpe_error_handle_fault(PGPE_ERR_CODE_DPLL_PARITY_ERROR);
+            pgpe_error_state_loop();
         }
     }
 
