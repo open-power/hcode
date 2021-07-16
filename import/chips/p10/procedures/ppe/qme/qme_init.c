@@ -108,8 +108,13 @@ qme_init()
 
     if( G_qme_record.c_in_error )
     {
-        PK_TRACE("Drop spwu_done and pm_exit on callout Cores");
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_in_error ), (BIT32(1) | BIT32(16)) );
+        // assert Block interrupt and block interrupt output and disable auto special wakeup
+        out32 (QME_LCL_CORE_ADDR_WR (QME_SCSR_WO_OR, G_qme_record.c_in_error),
+               (BIT32(0) | BIT32(20) | BIT32(24)) );
+
+        // drop pm_exit, entry_limit, special wakeup_done
+        out32 (QME_LCL_CORE_ADDR_WR (QME_SCSR_WO_CLEAR, G_qme_record.c_in_error),
+               (BIT32(1) | BIT32(2) | BIT32(16)) );
     }
 
     if( G_qme_record.c_special_wakeup_done )

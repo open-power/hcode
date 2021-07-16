@@ -117,6 +117,7 @@ qme_panic_handler()
         // Cannot special wakup stopped cores without QME
         // As default, only select cores that can be auto special woken up
         // also when mma isnt available, make sure auto mode isnt given to the core
+        uint32_t bad_cores  = 0;
         uint32_t good_cores = 0xF & (~G_qme_record.c_stop2_reached) & G_qme_record.c_mma_available;
         PK_TRACE_DBG ("Cores running 0x%X, Cores in stop: 0x%X, MMA not in stop 0x%X",
                       good_cores,
@@ -131,10 +132,12 @@ qme_panic_handler()
         {
             PK_TRACE_DBG ("Good cores in user data2: 0x%X", G_qme_record.errl_data2);
             good_cores &= (~G_qme_record.errl_data2);
+            bad_cores   = ( 0xF & (~good_cores) );
             G_qme_record.c_in_error = G_qme_record.errl_data2;
         }
 
-        PK_TRACE_DBG ("Net good cores not in stop: 0x%X", good_cores);
+        PK_TRACE_DBG ("Net good cores not in stop and/or mma is not available: 0x%X, while bad cores being 0x%X",
+                      good_cores, bad_cores);
 
         if (G_qme_record.fused_core_enabled)
         {
@@ -149,9 +152,18 @@ qme_panic_handler()
                     // one half of the fused core is bad, mark full smt8 bad
                     good_cores &= ~fuse_mask;
                 }
+
+                smt8_core = fuse_mask & bad_cores;
+
+                if (smt8_core && (smt8_core != fuse_mask))
+                {
+                    // one half of the fused core is bad, mark full smt8 bad
+                    bad_cores |= fuse_mask;
+                }
             }
 
-            PK_TRACE_DBG ("SMT8 good cores for auto spwu: 0x%X", good_cores);
+            PK_TRACE_INF ("SMT8 good cores for auto spwu: 0x%X, while bad cores are not getting spwu done: 0x%X",
+                          good_cores, bad_cores);
         }
 
         //only make spwu_done to good cores (non_stop ones are the only possible ones)
@@ -167,6 +179,17 @@ qme_panic_handler()
             // Enable the auto special wake-up hardware function for good cores
             // Clear AUTO_SPECIAL_WAKEUP_DISABLE
             out32 (QME_LCL_CORE_ADDR_WR (QME_SCSR_WO_CLEAR, good_cores), BIT32(20));
+        }
+
+        if( bad_cores )
+        {
+            // assert Block interrupt and block interrupt output and disable auto special wakeup
+            out32 (QME_LCL_CORE_ADDR_WR (QME_SCSR_WO_OR, bad_cores),
+                   (BIT32(0) | BIT32(20) | BIT32(24)) );
+
+            // drop pm_exit, entry_limit, special wakeup_done
+            out32 (QME_LCL_CORE_ADDR_WR (QME_SCSR_WO_CLEAR, bad_cores),
+                   (BIT32(1) | BIT32(2) | BIT32(16)) );
         }
 
         // Mask all regular and special wake-up interrupts
