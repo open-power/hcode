@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -770,28 +770,6 @@ static const uint32_t PB_COM_SCOM_EQ0_STATION_FIR_REG_LINK1_PROTOCOL_ERROR = 19;
 static const uint32_t PB_COM_SCOM_EQ0_STATION_FIR_REG_LINK1_OVERFLOW_ERROR = 20;
 static const uint32_t PB_COM_SCOM_EQ0_STATION_FIR_REG_LINK1_HW_PARITY_ERROR = 21;
 //<< [PB_COM_SCOM_EQ0_STATION_FIR_REG]
-// proc/reg00000.H
-
-//>> [PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE]
-static const uint64_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE = 0x0301102bull;
-
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_0_EQ0 = 0;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_0_EQ0_LEN = 8;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_1_EQ0 = 8;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_1_EQ0_LEN = 8;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_2_EQ0 = 16;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_2_EQ0_LEN = 8;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_3_EQ0 = 24;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_3_EQ0_LEN = 8;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_4_EQ0 = 32;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_4_EQ0_LEN = 8;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_5_EQ0 = 40;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_5_EQ0_LEN = 8;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_6_EQ0 = 48;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_6_EQ0_LEN = 8;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_7_EQ0 = 56;
-static const uint32_t PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE_7_EQ0_LEN = 8;
-//<< [PB_COM_SCOM_EQ0_STATION_SP_CMD_RATE]
 // proc/reg00000.H
 
 //>> [PB_COM_SCOM_EQ1_STATION_FIR_ACTION0_REG]
