@@ -107,12 +107,22 @@ fapi2::ReturnCode getRS4ImageFromTor(
                                 i_target.getChildren< fapi2::TARGET_TYPE_CORE > ();
     uint32_t l_magicWord        =   rev_32( ((TorHeader_t*)i_pRingSectn)->magic );
 
+    // Creating local variables for creating ffdc for image pointers
+    uint64_t l_ringSectionAddr;
+
+    l_ringSectionAddr = reinterpret_cast<uint64_t>(i_pRingSectn);
+
+    // Trace added to suppress compiler error, not using l_ringSectionAddr
+    FAPI_IMP("l_ringSectionAddr=0x%lX", l_ringSectionAddr);
+
     FAPI_TRY( FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_ucCoreTgt[0], l_corePos ) );
 
     FAPI_ASSERT( ((( l_torVersion == TOR_VERSION ) && ( l_magicWord == TOR_MAGIC_QME )) ||
                   ( l_magicWord == TOR_MAGIC_OVRD )),
                  fapi2::INVALID_TOR_VERSION()
-                 .set_TOR_VER( l_torVersion ),
+                 .set_RING_SECTION(l_ringSectionAddr)
+                 .set_TOR_VER( l_torVersion )
+                 .set_TOR_MAGIC_WORD(l_magicWord),
                  "Invalid TOR Version 0x%04x ", l_torVersion  );
 
     // Get the ring properties (rp) index
