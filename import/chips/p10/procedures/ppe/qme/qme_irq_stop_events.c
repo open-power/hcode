@@ -44,6 +44,7 @@ qme_eval_eimr_override()
 {
     G_qme_record.c_pm_state_active_mask =
         (((~G_qme_record.c_configured)       |
+          G_qme_record.c_stop1_targets       |
           G_qme_record.c_stop2_reached       |
           G_qme_record.c_cache_only_enabled  |
           G_qme_record.c_in_error            |
@@ -135,6 +136,7 @@ qme_stop1_exit(uint32_t c_mask)
 
     if( c_mask )
     {
+        PK_TRACE_INF("stop1 wakeup: %x", G_qme_record.c_stop1_targets);
         G_qme_record.c_stop1_targets &= ~c_mask;
 
         PK_TRACE_INF("Core %x Waking up(pm_exit=1) via PCR_SCSR[1]", c_mask);
@@ -183,13 +185,14 @@ qme_parse_pm_state_active_fast()
         c_stop11 = ( in32_sh(QME_LCL_EISR) & BITS64SH(52, 4) ) >> SHIFT64SH(55);
         c_stops  = G_qme_record.c_pm_state_active_fast_req | c_stop11;
 
-        PK_TRACE_INF("Parse: Fused Core Mode Entry Request on Cores: Fast[%x] Slow[%x] OR of both[%x] (both Siblings required)",
-                     G_qme_record.c_pm_state_active_fast_req, c_stop11, c_stops);
+        PK_TRACE_INF("Parse: Fused Core Mode Entry Request on Cores: Fast[%x] Slow[%x] Stop1[%x] OR of Three[%x] (both Siblings required)",
+                     G_qme_record.c_pm_state_active_fast_req, c_stop11, G_qme_record.c_stop1_targets, c_stops);
 
         if( G_qme_record.c_pm_state_active_fast_req & 0xc )
         {
             if( ( c_stops & 0xc ) != 0xc )
             {
+                G_qme_record.c_stop1_targets &= ~0xc;
                 G_qme_record.c_stop1_targets |= G_qme_record.c_pm_state_active_fast_req & 0xc;
                 G_qme_record.c_pm_state_active_fast_req &= ~0xc;
             }
@@ -204,6 +207,7 @@ qme_parse_pm_state_active_fast()
         {
             if( ( c_stops & 0x3 ) != 0x3 )
             {
+                G_qme_record.c_stop1_targets &= ~0x3;
                 G_qme_record.c_stop1_targets |= G_qme_record.c_pm_state_active_fast_req & 0x3;
                 G_qme_record.c_pm_state_active_fast_req &= ~0x3;
             }
@@ -321,6 +325,7 @@ qme_parse_pm_state_active_fast()
 
     //stop0 pm_state_active is blocked from qme by hw.
     G_qme_record.c_stop1_targets |= c_mask & (~G_qme_record.c_stop2_enter_targets);
+    PK_TRACE_INF("stop1 entry: %x", G_qme_record.c_stop1_targets);
 
     PK_TRACE_DBG("Check: PM State Core0[%x], PM State Core1[%x], PM State Core2[%x], PM State Core3[%x]",
                  G_qme_record.c_pm_state[0],
@@ -812,6 +817,7 @@ qme_parse_pm_state_active_slow()
 
         if( (G_qme_record.c_pm_state_active_slow_req & 0xc) != 0xc )
         {
+            G_qme_record.c_stop1_targets &= ~0xc;
             G_qme_record.c_stop1_targets |= G_qme_record.c_pm_state_active_slow_req & 0xc;
             G_qme_record.c_pm_state_active_slow_req &= ~0xc;
         }
@@ -822,6 +828,7 @@ qme_parse_pm_state_active_slow()
 
         if( (G_qme_record.c_pm_state_active_slow_req & 0x3) != 0x3 )
         {
+            G_qme_record.c_stop1_targets &= ~0x3;
             G_qme_record.c_stop1_targets |= G_qme_record.c_pm_state_active_slow_req & 0x3;
             G_qme_record.c_pm_state_active_slow_req &= ~0x3;
         }

@@ -144,7 +144,11 @@ void xgpe_gpe3_func_handler()
         l_db1_data |= (uint64_t)(UNSUSPEND_STOP_ENTRY) << 56;
     }
 
-    xgpe_send_db1_to_qme(l_db1_data);
+    if( l_db1_data )
+    {
+        xgpe_send_db1_to_qme(l_db1_data);
+    }
+
     g_oimr_override |= BIT64(11);
     g_oimr_override |= BITS64(30, 2);
 }

@@ -128,10 +128,10 @@ qme_doorbell1_event()
 #else
     out32(QME_LCL_EISR_CLR, BIT32(17));
 #endif
-    uint32_t scratchB = in32(QME_LCL_SCRB);
+    uint32_t scratchB = in32(QME_LCL_SCRB) & BITS32(0, 8);
     uint32_t pig_data = 0;
 
-    PK_TRACE_INF("Event: UIH Status[%x], Doorbell 1 Message[%x], Scratch B[%x]",
+    PK_TRACE_INF("Event: UIH Status[%x], Doorbell 1 Message[%x], Scratch B[%x] could be 0 due to XGPE multicast",
                  G_qme_record.uih_status,
                  G_qme_record.doorbell1_msg,
                  scratchB);
@@ -157,7 +157,7 @@ qme_doorbell1_event()
                 // (including Decrementer and Hypervisor Decrementer).
                 out32( QME_LCL_CORE_ADDR_WR(
                            QME_SCSR_WO_OR, G_qme_record.c_block_wake_req ),
-                       BIT32(0) );
+                       (BIT32(0) | BIT32(24)) );
 
                 // Block Exit Enabled
                 out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_wake_req <<
@@ -217,7 +217,7 @@ qme_doorbell1_event()
                 // Clear PM_BLOCK_INTERRUPTS
                 out32( QME_LCL_CORE_ADDR_WR(
                            QME_SCSR_WO_CLEAR, G_qme_record.c_block_wake_req ),
-                       BIT32(0) );
+                       (BIT32(0) | BIT32(24)) );
 
                 // Block Exit Disabled
                 out32(QME_LCL_SCRB_CLR, ( G_qme_record.c_block_wake_req <<
@@ -259,7 +259,7 @@ qme_doorbell1_event()
         qme_send_pig_packet(pig_data);
     }
 
-    PK_TRACE_DBG("Block Exit Req[%x], Block Exit Done[%x], Block Entry Req[%x], Block Entry Done[%x]",
+    PK_TRACE_INF("Block Exit Req[%x], Block Exit Done[%x], Block Entry Req[%x], Block Entry Done[%x]",
                  G_qme_record.c_block_wake_req,
                  G_qme_record.c_block_wake_done,
                  G_qme_record.c_block_stop_req,
