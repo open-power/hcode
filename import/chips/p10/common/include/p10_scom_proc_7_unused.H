@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -853,26 +853,6 @@ static const uint32_t P10_20_PB_COM_SCOM_EN3_STATION_TRACE_PB_CFG_COMPAB_FIR_SEL
 static const uint32_t P10_20_PB_COM_SCOM_EN3_STATION_TRACE_PB_CFG_TRACE_SPARE2 = 32;
 static const uint32_t P10_20_PB_COM_SCOM_EN3_STATION_TRACE_PB_CFG_TRACE_SPARE2_LEN = 32;
 //<< [P10_20_PB_COM_SCOM_EN3_STATION_TRACE]
-// proc/reg00036.H
-
-//>> [PB_COM_SCOM_EN4_STATION_CFG3]
-static const uint64_t PB_COM_SCOM_EN4_STATION_CFG3 = 0x030112d5ull;
-
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_CHIP_TSNOOP_DELAY_EN4 = 0;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_CHIP_TSNOOP_DELAY_EN4_LEN = 4;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_SPARE1 = 4;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_SPARE1_LEN = 12;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_PBIASY_PA3_DISABLE = 16;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_PBIASY_UNIT1_DISABLE = 17;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_PBIASY_PTL2_DISABLE = 18;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_PBIASY_PTL3_DISABLE = 19;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_PBIASY_PA3_SELCD = 20;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_PBIASY_UNIT1_SELCD = 21;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_PBIASY_PTL2_SELCD = 22;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_PBIASY_PTL3_SELCD = 23;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_SPARE2 = 24;
-static const uint32_t PB_COM_SCOM_EN4_STATION_CFG3_PB_CFG_SPARE2_LEN = 40;
-//<< [PB_COM_SCOM_EN4_STATION_CFG3]
 // proc/reg00036.H
 
 //>> [PB_COM_SCOM_EN4_STATION_EVENT_SEL]
