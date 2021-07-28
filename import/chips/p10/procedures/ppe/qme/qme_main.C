@@ -86,7 +86,6 @@ qme_attr_init()
     uint8_t  mma_pon_dis  = 0;
     uint8_t  mma_poff_dis = 0;
     uint8_t  mma_powerof2 = 0;
-    uint64_t mma_delay_ms = 0;
 
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DELAY_POWEROF2_MS, l_sys, mma_powerof2 ) );
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE,           l_sys, mma_poff_dis ) );
@@ -108,6 +107,13 @@ qme_attr_init()
     }
     else
     {
+#if POWER10_DD_LEVEL == 10
+        G_qme_record.mma_modes_enabled = MMA_POFF_STATIC;
+        G_qme_record.c_mma_available = 0xF;
+        g_eimr_override |= BITS64(28, 4);
+#else
+        uint64_t mma_delay_ms = 0;
+
         // disable hwp to poweron MMA, EISR[mma_active] will take over
         mma_pon_dis = 1;
         FAPI_TRY( FAPI_ATTR_SET( fapi2::ATTR_SYSTEM_MMA_POWERON_DISABLE, l_sys, mma_pon_dis ) );
@@ -159,6 +165,7 @@ qme_attr_init()
 #endif
 
         mtspr(SPRN_DEC, G_qme_record.mma_pwoff_dec_val);
+#endif
     }
 }
 
