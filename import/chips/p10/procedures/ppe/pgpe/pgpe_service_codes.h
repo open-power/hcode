@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2021                                                    */
+/* COPYRIGHT 2018,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -82,12 +82,14 @@ enum pgpeExtReasonCode
     PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_NOT_IN_PGPE_CONTROL      =   0x101a,
     PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_UNKNOWN_ERROR            =   0x101b,
     PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION       =   0x101c,
+    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE                =   0x101d,
 
     //CURRENT
     PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT           =   0x1030,
     PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_RESYNC_ERROR              =   0x1031,
     PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_NOT_IN_PGPE_CONTROL       =   0x1032,
-    PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_UNKNOWN_ERROR              =   0x1033,
+    PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_UNKNOWN_ERROR             =   0x1033,
+    PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE                =   0x1034,
 
     //DPLL
     PGPE_ERR_EXT_CODE_DPLL_WRITE_UPDATE_COMPLETE_AND_LOCK_TIMEOUT   =   0x1040,

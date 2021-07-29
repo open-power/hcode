@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2021                                                    */
+/* COPYRIGHT 2018,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -134,4 +134,6 @@ void init_data_struct_table()
     G_data_struct_table.entry[DATA_THR_CTRL].address = (uint32_t)pgpe_thr_ctrl_data_addr();
     G_data_struct_table.entry[DATA_THR_CTRL].size = sizeof(pgpe_thr_ctrl_t);
 
+    G_data_struct_table.entry[DATA_AVSBUS_DRIVER].address = (uint32_t)pgpe_avsbus_data_addr();
+    G_data_struct_table.entry[DATA_AVSBUS_DRIVER].size = sizeof(pgpe_avsbus_t);
 }

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -936,7 +936,7 @@ void pgpe_process_occ_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag, void* ea
                                    BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OPIT_PARITY_ERROR) |
                                    BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_C405_ECC_UE)))
     {
-        pgpe_error_critical_log_usrdata1(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ, occ_fault_args->occlfir);
+        pgpe_error_critical_log_usrdata(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ, occ_fault_args->occlfir, 0, 0);
     }
 
     //Notify error module

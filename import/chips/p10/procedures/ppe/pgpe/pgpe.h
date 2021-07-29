@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -73,6 +73,7 @@ enum  DATA_STRUCT_TABLE_IDX
     DATA_WOV_OCS            = 5,
     DATA_DDS                = 6,
     DATA_THR_CTRL           = 7,
+    DATA_AVSBUS_DRIVER      = 8,
 };
 
 typedef struct data_struct_entry

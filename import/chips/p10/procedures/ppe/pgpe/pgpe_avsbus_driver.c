@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -37,6 +37,8 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
 
 static uint32_t AVS_CONTROL_RETRIES = 500;
 static uint32_t AVS_RESYNC_RETRIES = 1;
+
+pgpe_avsbus_t G_pgpe_avsbus __attribute__((section (".data_structs")));
 
 uint32_t pgpe_avsbus_calc_crc(uint32_t data)
 {
@@ -333,11 +335,19 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
     return rc;
 }
 
+void* pgpe_avsbus_data_addr()
+{
+    return &G_pgpe_avsbus;
+}
+
 void pgpe_avsbus_init()
 {
     PK_TRACE_INF("AVS: Init");
     PK_TRACE_INF("AVS: VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                  pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(), pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
+
+    G_pgpe_avsbus.voltage_zero_cnt = 0;
+    G_pgpe_avsbus.current_zero_cnt = 0;
 
     //Initialize VDD
     if (pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num() != 0xFF)
@@ -509,6 +519,14 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
         {
             case AVS_RC_SUCCESS:
                 PK_TRACE_DBG("AVS: Volt_R, Success!");
+
+                if(*ret_volt == 0)
+                {
+                    pgpe_error_info_log_usrdata(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE, bus_num, rail_num,
+                                                G_pgpe_avsbus.voltage_zero_cnt);
+                    pgpe_error_notify_info(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE);
+                }
+
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
@@ -519,7 +537,7 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
             case AVS_RC_NO_ACTION:
                 PK_TRACE_ERR("AVS: Volt_R, OnGoing Flag Timeout");
-                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT);
+                pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION);
                 pgpe_error_state_loop();
                 break;
 
@@ -567,7 +585,18 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
         {
             case AVS_RC_SUCCESS:
                 PK_TRACE_DBG("AVS: Curr_R, Success!");
-                *ret_current = *ret_current * pgpe_gppb_get_current_scale_factor(current_scale_idx);
+
+                if(*ret_current == 0)
+                {
+                    pgpe_error_info_log_usrdata(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE, bus_num, rail_num,
+                                                G_pgpe_avsbus.current_zero_cnt);
+                    pgpe_error_notify_info(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE);
+                }
+                else
+                {
+                    *ret_current = *ret_current * pgpe_gppb_get_current_scale_factor(current_scale_idx);
+                }
+
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -42,7 +42,14 @@ enum AVSBUS_DRIVER_RETURN_CODES
     AVS_RC_NO_ACTION                    = 4
 };
 
+typedef struct pgpe_avsbus
+{
+    uint32_t voltage_zero_cnt;
+    uint32_t current_zero_cnt;
+} pgpe_avsbus_t;
+
 void pgpe_avsbus_init();
+void* pgpe_avsbus_data_addr();
 void pgpe_avsbus_init_bus(uint32_t bus_num);
 void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv);
 void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_volt);

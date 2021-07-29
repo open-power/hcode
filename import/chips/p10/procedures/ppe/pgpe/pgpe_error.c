@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021                                                         */
+/* COPYRIGHT 2021,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -592,6 +592,27 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     */
     {PGPE_ERR_MODULE_WOV_OCS, PGPE_ERR_REASON_CODE_WOV_OCS, 0, PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT}, //59
 
+    //Machine Check
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata1   0
+    * @userdata4   ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE
+    * @devdesc     PStates: An AVSBus voltage read returned a value of 0.
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE}, //60
+
+    //Machine Check
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_CURRENT
+    * @userdata1   0
+    * @userdata4   ERR_EXT_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE
+    * @devdesc     PStates: An AVSBus current read returned a value of 0.
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_CURRENT, 0, PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE} //61
 };
 
 
@@ -614,8 +635,6 @@ void pgpe_error_init()
 void pgpe_error_info_log(uint32_t pgpe_err_id)
 {
     //Create Info Error Log
-    // @TODO via RTC: 282696 - tmp disable info errors on pgpe
-#ifdef __PPE_PGPE
     uint32_t o_status;
     PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                     G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
@@ -626,10 +645,20 @@ void pgpe_error_info_log(uint32_t pgpe_err_id)
                     NULL,
                     o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status); //TODO Check error code
-#else
-    PK_TRACE_INF("SKIPPING INFO ERRL: 0x%08X", pgpe_err_id);
-#endif
+}
 
+void pgpe_error_info_log_usrdata(uint32_t pgpe_err_id, uint32_t usrdata1, uint32_t usrdata2, uint32_t usrdata3)
+{
+    uint32_t o_status;
+    PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
+                    G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
+                    G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
+                    usrdata1,
+                    usrdata2,
+                    usrdata3,
+                    NULL,
+                    o_status);
+    PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
 }
 
 void pgpe_error_critical_log(uint32_t pgpe_err_id)
@@ -648,21 +677,22 @@ void pgpe_error_critical_log(uint32_t pgpe_err_id)
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
 }
 
-void pgpe_error_critical_log_usrdata1(uint32_t pgpe_err_id, uint32_t usrdata1)
+void pgpe_error_critical_log_usrdata(uint32_t pgpe_err_id, uint32_t usrdata1, uint32_t usrdata2, uint32_t usrdata3)
 {
-    //Create Critical Log
     uint32_t o_status;
     PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                          G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
                          G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
                          usrdata1,
-                         0x0,
-                         0x0,
+                         usrdata2,
+                         usrdata3,
                          NULL,
                          NULL,
                          o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
 }
+
+
 void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dtls)
 {
     //Create Critical Log
@@ -678,6 +708,7 @@ void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dt
                          o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
 }
+
 void pgpe_error_notify_critical(uint32_t pgpe_err_id)
 {
     G_pgpe_error.critical_cnt++;
@@ -813,6 +844,24 @@ void pgpe_error_handle_fault_w_safe_mode(uint32_t pgpe_err_id)
 
     //Go to safe mode
     pgpe_pstate_actuate_safe_mode();
+
+    //Stop beacon updates
+    pgpe_error_stop_beacon();
+
+    //Notify error module
+    pgpe_error_notify_critical(pgpe_err_id);
+
+    //ack any pending IPCS with bad rc
+    pgpe_error_ack_pending();
+}
+
+void pgpe_error_handle_fault_usr_data(uint32_t pgpe_err_id, uint32_t data1, uint32_t data2, uint32_t data3)
+{
+    //Mask interrupt except IPC and Error
+    pgpe_error_mask_irqs();
+
+    //Take out a critical log
+    pgpe_error_critical_log_usrdata(pgpe_err_id, data1, data2, data3);
 
     //Stop beacon updates
     pgpe_error_stop_beacon();

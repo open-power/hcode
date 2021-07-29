@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021                                                         */
+/* COPYRIGHT 2021,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -55,7 +55,8 @@ typedef struct pgpe_error
 void pgpe_error_init();
 void pgpe_error_critical_log(uint32_t pgpe_err_id);
 void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dtls);
-void pgpe_error_critical_log_usrdata1(uint32_t pgpe_err_id, uint32_t usrdata1);
+void pgpe_error_critical_log_usrdata(uint32_t pgpe_err_id, uint32_t usrdata1, uint32_t usrdata2, uint32_t usrdata3);
+void pgpe_error_info_log_usrdata(uint32_t pgpe_err_id, uint32_t usrdata1, uint32_t usrdata2, uint32_t usrdata3);
 void pgpe_error_info_log(uint32_t pgpe_err_id);
 void pgpe_error_notify_critical(uint32_t pgpe_irr_id);
 void pgpe_error_notify_info(uint32_t pgpe_irr_id);
@@ -64,6 +65,7 @@ void pgpe_error_mask_irqs();
 void pgpe_error_ack_pending();
 void pgpe_error_handle_fault(uint32_t pgpe_irr_id);
 void pgpe_error_handle_fault_w_safe_mode(uint32_t pgpe_irr_id);
+void pgpe_error_handle_fault_usr_data(uint32_t pgpe_err_id, uint32_t data1, uint32_t data2, uint32_t data3);
 void pgpe_error_state_loop();
 void pgpe_error_machine_check_handler() ;
 #endif
