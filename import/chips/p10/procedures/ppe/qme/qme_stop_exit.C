@@ -948,6 +948,12 @@ qme_stop_exit()
                          G_qme_record.c_stop2p_exit_targets,
                          G_qme_record.c_cache_only_enabled);
 
+                // disable the SPURR scale override by writing 0x40 into bits 0:7
+                // if the VPD data resulted in a bad reference value, write all 0x0 to stop the SPURR
+                PPE_PUTSCOM_MC( SPURR_FREQ_SCALE, c_not_eco, ((G_qme_record.spurr_freq_ref_upper & BIT32(0)) ? BIT64(1) : 0x0));
+                // setup the SPURR reference to the nominal pre-calculated value
+                PPE_PUTSCOM_MC( SPURR_FREQ_REF,   c_not_eco, (uint64_t)G_qme_record.spurr_freq_ref_upper << 32);
+
                 p10_hcd_core_scominit(core_not_eco);
             }
 

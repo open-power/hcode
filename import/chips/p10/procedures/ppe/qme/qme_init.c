@@ -51,7 +51,9 @@ qme_init()
     // Initialize Software Scoreboard
     //--------------------------------------------------------------------------
 
-    uint32_t c_loop, c_end, act_stop_level, c_mask;
+    QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
+
+    uint32_t c_loop, c_end, act_stop_level, c_mask, core_freq;
     uint32_t local_data = in32_sh(QME_LCL_QMCR);
     G_qme_record.c_configured       = local_data & BITS64SH(60, 4);
     G_qme_record.fused_core_enabled = ( local_data >> SHIFT64SH(47) ) & 0x1;
@@ -236,6 +238,24 @@ qme_init()
     // Initialize Hardware Settings
     //--------------------------------------------------------------------------
 
+
+    // Pre-compute the value to be used as the SPURR reference during CME Boot and
+    // save in a variable to be used later during Stop exit.
+    // The value is the 2's complement of ROUND((Core Nominal Frequency in Mhz)/64)
+
+    // grab the core freq in MHz from the pstate parameter block
+    core_freq = pQmeImgHdr->g_qme_spurr_ref_freq_mhz;
+
+    // generate a rounded up divide by 64 to normalize
+    // (to the number of cycles/32 in 16x 32Mhz TOD pulses)
+    core_freq = (core_freq >> 5 & 0x1) ? (1 + (core_freq >> 6)) : (core_freq >> 6);
+
+    // generate 2's complement and shift into bits 0:7 of 32-bit value
+    G_qme_record.spurr_freq_ref_upper = ((~core_freq) + 1) << 24;
+
+    PK_TRACE_INF("Setup: QmeHeader=0x%x, Nominal_Freq_Mhz=%d, Core_Freq=%x, Spurr_Freq_Ref_Upper=%x",
+                 (uint32_t)pQmeImgHdr, pQmeImgHdr->g_qme_spurr_ref_freq_mhz, core_freq, G_qme_record.spurr_freq_ref_upper);
+
     // Initialize the throttle table
 
     PK_TRACE("Assert SRAM_SCRUB_ENABLE via QSCR[1]and set QSCR[DTCBASE] to the throttle table");
@@ -330,8 +350,6 @@ qme_init()
     //--------------------------------------------------------------------------
     // BCE Core Specific Scan Ring
     //--------------------------------------------------------------------------
-
-    QmeHeader_t* pQmeImgHdr = (QmeHeader_t*)(QME_SRAM_HEADER_ADDR);
 
     if( pQmeImgHdr->g_qme_common_ring_offset == pQmeImgHdr->g_qme_inst_spec_ring_offset )
     {

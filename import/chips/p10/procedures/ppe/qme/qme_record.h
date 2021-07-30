@@ -124,10 +124,10 @@ typedef struct
     uint32_t    c_stop5_exit_targets;
     uint32_t    c_stop11_exit_targets;
     // 18
-    uint32_t    c_stop2p_exit_targets;
-    uint32_t    reserved;
+    uint32_t    c_stop2p_exit_targets;//core_scom after stop2 exit for stop5/11
+    uint32_t    spurr_freq_ref_upper; //init before core_scominit
     uint32_t    c_mma_active_req;
-    uint32_t    c_mma_available; // invert PIG TypeA 16:19
+    uint32_t    c_mma_available;      // invert PIG TypeA 16:19
     // 19
     uint32_t    c_mma_poweroff_count[4];
 
