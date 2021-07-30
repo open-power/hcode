@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -38,14 +38,6 @@ namespace omic
 {
 #endif
 
-
-//>> [CTL_REGS_TX_CNTL8_PG]
-static const uint64_t CTL_REGS_TX_CNTL8_PG = 0x800c7c4010012c3full;
-
-static const uint32_t CTL_REGS_TX_CNTL8_PG_TX_PATTERN_16_31 = 48;
-static const uint32_t CTL_REGS_TX_CNTL8_PG_TX_PATTERN_16_31_LEN = 16;
-//<< [CTL_REGS_TX_CNTL8_PG]
-// omic/reg00014.H
 
 //>> [DATASM_REGS_RX_CNT18_PG]
 static const uint64_t DATASM_REGS_RX_CNT18_PG = 0x800a104010012c3full;

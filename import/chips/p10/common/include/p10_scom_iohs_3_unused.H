@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -2055,26 +2055,6 @@ static const uint64_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL10_PG = 0x800c2c0010012c3ful
 static const uint32_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL10_PG_TX_PATTERN_48_63 = 48;
 static const uint32_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL10_PG_TX_PATTERN_48_63_LEN = 16;
 //<< [IOO_TX0_TXCTL_CTL_REGS_TX_CNTL10_PG]
-// iohs/reg00015.H
-
-//>> [IOO_TX0_TXCTL_CTL_REGS_TX_CNTL3_PG]
-static const uint64_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL3_PG = 0x800c540010012c3full;
-
-static const uint32_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL3_PG_FINE_SEL = 48;
-static const uint32_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL3_PG_FINE_SEL_LEN = 3;
-static const uint32_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL3_PG_COARSE_SEL = 51;
-static const uint32_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL3_PG_COARSE_SEL_LEN = 4;
-static const uint32_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL3_PG_BER_SEL = 55;
-static const uint32_t IOO_TX0_TXCTL_CTL_REGS_TX_CNTL3_PG_BER_SEL_LEN = 6;
-//<< [IOO_TX0_TXCTL_CTL_REGS_TX_CNTL3_PG]
-// iohs/reg00015.H
-
-//>> [IOO_TX0_TXCTL_TX_CTL_SM_REGS_CTLSM_CNTL7_PG]
-static const uint64_t IOO_TX0_TXCTL_TX_CTL_SM_REGS_CTLSM_CNTL7_PG = 0x800cf40010012c3full;
-
-static const uint32_t IOO_TX0_TXCTL_TX_CTL_SM_REGS_CTLSM_CNTL7_PG_TX_PSAVE_FORCE_STS_0_15 = 48;
-static const uint32_t IOO_TX0_TXCTL_TX_CTL_SM_REGS_CTLSM_CNTL7_PG_TX_PSAVE_FORCE_STS_0_15_LEN = 16;
-//<< [IOO_TX0_TXCTL_TX_CTL_SM_REGS_CTLSM_CNTL7_PG]
 // iohs/reg00015.H
 
 //>> [IOO_TX0_TXCTL_TX_CTL_SM_REGS_FIR_PG]
