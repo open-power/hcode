@@ -112,9 +112,6 @@ fapi2::ReturnCode getRS4ImageFromTor(
 
     l_ringSectionAddr = reinterpret_cast<uint64_t>(i_pRingSectn);
 
-    // Trace added to suppress compiler error, not using l_ringSectionAddr
-    FAPI_IMP("l_ringSectionAddr=0x%lX", l_ringSectionAddr);
-
     FAPI_TRY( FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, l_ucCoreTgt[0], l_corePos ) );
 
     FAPI_ASSERT( ((( l_torVersion == TOR_VERSION ) && ( l_magicWord == TOR_MAGIC_QME )) ||
@@ -131,7 +128,8 @@ fapi2::ReturnCode getRS4ImageFromTor(
     FAPI_ASSERT( ( l_rpIndex < NUM_RING_IDS ),
                  fapi2::INVALID_RING_ID()
                  .set_RING_ID( i_ringId ),
-                 "ERROR: getRS4ImageFromTor: Invalid Ring Id 0x%04x", i_ringId );
+                 "ERROR: getRS4ImageFromTor: Invalid Ring Id 0x%04x l_ringSectionAddr=0x%lX", 
+                 i_ringId, l_ringSectionAddr);
 
     l_torIndex      =   ( INSTANCE_RING_MASK    &  ( RING_PROPERTIES[l_rpIndex].idxRing ) );
     l_ringType      =   ( INSTANCE_RING_MARK    &  ( RING_PROPERTIES[l_rpIndex].idxRing ) ) ?

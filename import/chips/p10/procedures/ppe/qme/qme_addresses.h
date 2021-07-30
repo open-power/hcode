@@ -50,6 +50,8 @@ extern uint32_t SCRATCH0;
 extern uint32_t SCRATCH1;
 extern uint32_t SPATTN_MASK;
 extern uint32_t EC_PC_TFX_SM;
+extern uint32_t SPURR_FREQ_SCALE;
+extern uint32_t SPURR_FREQ_REF;
 extern uint32_t RECOV;
 extern uint32_t LOCAL_XSTOP;
 extern uint32_t RECOV_UNMASKED;
