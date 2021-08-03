@@ -127,8 +127,9 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
 
 
     // Wait until frequency update is complete
-    pk_critical_section_enter(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
+
     TIMER_START()
+
     dpll_stat_t dpll_stat;
     dpll_stat.value = 0;
 
@@ -138,19 +139,29 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
 
     while(!dpll_stat.fields.update_complete || !dpll_stat.fields.lock)
     {
-        TIMER_DELTA()
 
-        if (TIMER_DETECT_TIMEOUT_US(75))
+        //Status ead and timeout detection should be inside a critical section.
+        //Otherwise, FIT interrupt can result in false timeouts being detected
+        pk_critical_section_enter(&ctx);
+        PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value); //Read status
+
+        if(!dpll_stat.fields.update_complete
+           || !dpll_stat.fields.lock)  //If not done check for timeout. Otherwise, we are done.
         {
-            TIMER_DELTA_PRINT()
+            TIMER_DELTA() //Compute timebase delta
+            TIMER_DETECT_TIMEOUT_US(75) //Detect and set timeout, but take out log outside of critical section
+        }
 
-            PK_TRACE("dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
-            PK_TRACE("DPLL: Update Complete Timeout otbr_t0=0x%x otbr_t1=0x%x, otbr_delta=0x%x", otbr_t0, otbr_t1, otbr_delta);
+        pk_critical_section_exit(&ctx);
+
+        //If timeout detected, then take out log and go to error state
+        //if(timeout==1)
+        if(TIMER_GET_TIMEOUT)
+        {
+            PK_TRACE_INF("DPL: Error DPLL Update Timed out! dpll_stat=0x%08x%08x", dpll_stat.value >> 32, dpll_stat.value);
             pgpe_error_handle_fault(PGPE_ERR_CODE_DPLL_WRITE_UPDATE_COMPLETE_AND_LOCK_TIMEOUT);
             pgpe_error_state_loop();
         }
-
-        PPE_GETSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_STAT, dpll_stat.value);
 
         if ((mfmsr() & MSR_SIBRC) != 0)
         {
@@ -165,7 +176,6 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
         }
     }
 
-    pk_critical_section_exit(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
     mtmsr(saved_msr);
 
     //CLear the pll unlock error bit

@@ -49,7 +49,7 @@ PGPE-C-SOURCES = pgpe_main.c \
 				pgpe_wov_ocs.c \
 				pgpe_optrace.c \
 				pgpe_xgpe.c \
-				pgpe_error.c
+				pgpe_error.c 
 
 
 PGPE-CXX-SOURCES = pgpe_opCodes.C
