@@ -30,7 +30,8 @@
 #define TIMER_START() \
     uint32_t otbr_t0 = in32(0xc00604f8ull); \
     uint32_t otbr_t1 = 0; \
-    uint32_t otbr_delta = 0;
+    uint32_t otbr_delta = 0; \
+    uint32_t timeout = 0;
 
 
 #define TIMER_DELTA() \
@@ -38,9 +39,12 @@
     if(otbr_t1 >= otbr_t0) { otbr_delta  = otbr_t1 - otbr_t0;} \
     else { otbr_delta  = otbr_t1 - otbr_t0 + 0xFFFFFFFF; }
 
+#define TIMER_GET_TIMEOUT timeout
+
 //OTBR ticks every 32ns, so there are 31.25 OTBR ticks in 1uS. We round it off to 32
 #define TIMER_DETECT_TIMEOUT_US(val) \
-    (otbr_delta >= val*32)  \
+    if (otbr_delta >= val*32) { timeout = 1;}
+
 
 #define TIMER_DELTA_PRINT() \
     PK_TRACE_INF("OTBR delta=0x%x, t0=0x%x, t1=0x%x",otbr_delta, otbr_t0, otbr_t1);

@@ -374,27 +374,35 @@ void pgpe_resclk_rcptr_poll_done(uint32_t compare, uint32_t pstate_target)
 #else
     rcptr.fields.pstate_ack_pending = 1;
 
-    pk_critical_section_enter(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
+
     TIMER_START()
 
-    while(rcptr.fields.pstate_ack_pending) //Timeout: 50us, critical error
+    //Status ead and timeout detection should be inside a critical section.
+    //Otherwise, FIT interrupt can result in false timeouts being detected
+    while(rcptr.value & BIT64(8)) //Timeout: 50us, critical error
     {
-        TIMER_DELTA()
+        pk_critical_section_enter(&ctx);
+        PPE_GETSCOM_MC_Q_AND(QME_RCPTR, rcptr.value);//Read status
 
-        if(TIMER_DETECT_TIMEOUT_US(50))
+        if(rcptr.value & BIT64(8))  //If not done check for timeout. Otherwise, we are done.
         {
-            TIMER_DELTA_PRINT()
+            TIMER_DELTA()//Compute timebase delta
+            TIMER_DETECT_TIMEOUT_US(50)//Detect and set timeout, but take out log outside of critical section
+        }
+
+        pk_critical_section_exit(&ctx);
+
+        //If timeout detected, then take out log and go to error state
+        if(TIMER_GET_TIMEOUT)
+        {
             PK_TRACE_INF("RCK: RCPTR_PSTATE_ACK_TIMEOUT");
             pgpe_error_handle_fault(PGPE_ERR_CODE_RESCLK_RCPTR_PSTATE_ACK_TIMEOUT);
             pgpe_error_state_loop();
         }
 
-        PPE_GETSCOM_MC_Q_AND(QME_RCPTR, rcptr.value);
         //PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,
         //         rcptr.words.low_order);
     }
-
-    pk_critical_section_exit(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
 
 
     //PK_TRACE("RCK: RCPTR_MC_Q_AND=0x%08x, rcptr=0x%08x%08x", PPE_SCOM_ADDR_MC_Q_AND(QME_RCPTR), rcptr.words.high_order,

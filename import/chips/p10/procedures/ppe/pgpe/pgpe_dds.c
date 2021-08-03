@@ -434,7 +434,7 @@ void pgpe_dds_update_pre(uint32_t pstate)
         }
     }
 
-    //PK_TRACE("DDS: Update Pre Exit");
+    PK_TRACE("DDS: Update Pre Exit");
 }
 
 //
@@ -445,6 +445,7 @@ void pgpe_dds_update_pre(uint32_t pstate)
 void pgpe_dds_update_post(uint32_t pstate)
 {
     PK_TRACE_INF("DDS: Update Post");
+
     uint32_t ducr_upd_needed = 0;
     uint32_t q, c;
     uint32_t ccsr;
@@ -550,7 +551,9 @@ void pgpe_dds_update_post(uint32_t pstate)
         }
     }
 
-    //PK_TRACE("DDS: Update Post Exit");
+
+
+    PK_TRACE("DDS: Update Post Exit");
 }
 
 
@@ -566,25 +569,32 @@ void pgpe_dds_poll_done()
 
     PPE_GETSCOM_MC_OR(CPMS_CUCR, 0xF, data);
 
-    pk_critical_section_enter(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
     TIMER_START()
 
-    while(data & BIT64(56))   //todo: Timeout and take critical error log
+    while(data & BIT64(56))
     {
-        TIMER_DELTA()
+        //Status should be read and timeout should be detected inside a critical section.
+        //Otherwise, FIT interval can result in false timeouts being detected
+        pk_critical_section_enter(&ctx);
+        PPE_GETSCOM_MC_OR(CPMS_CUCR, 0xF, data); //Read Status
 
-        if(TIMER_DETECT_TIMEOUT_US(50))
+        if (data & BIT64(56))  //If not done check for timeout. Otherwise, we are done.
         {
-            TIMER_DELTA_PRINT()
+            TIMER_DELTA()//Compute timebase delta
+            TIMER_DETECT_TIMEOUT_US(50);//Detect and set timeout, but take out log outside of critical section
+        }
+
+        pk_critical_section_exit(&ctx);
+
+        //If timeout detected, then take out log and go to error state
+        if(TIMER_GET_TIMEOUT)
+        {
             PK_TRACE("DDS: FDCR_UPDATE_TIMEOUT");
             pgpe_error_handle_fault(PGPE_ERR_CODE_DDS_FDCR_UPDATE_TIMEOUT);
             pgpe_error_state_loop();
         }
 
-        PPE_GETSCOM_MC_OR(CPMS_CUCR, 0xF, data);
     }
-
-    pk_critical_section_exit(&ctx); //Prevent any interrupts from coming in. Otherwise, timer interval will be wrong
 }
 
 //
