@@ -74,6 +74,22 @@ void pgpe_wov_ocs_init()
     //Store rdp_limit_10ma value in occ sram space
     G_pgpe_wov_ocs.pwof_val->dw1.fields.rdp_limit_10ma = G_pgpe_wov_ocs.idd_current_thresh;
 
+    uint32_t ecomask;
+    ecomask = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG6_RW);
+    G_pgpe_wov_ocs.eco_ttsr_mask = 0;
+    uint32_t i;
+
+    for (i = 0; i < MAX_CORES; i++)
+    {
+        if (ecomask & CORE_MASK(i))
+        {
+            G_pgpe_wov_ocs.eco_ttsr_mask |= (0x8800000000000000 >> (8 * (i / 4) + (i % 4)));
+        }
+    }
+
+    G_pgpe_wov_ocs.eco_ttsr_mask = ~G_pgpe_wov_ocs.eco_ttsr_mask;
+    PK_TRACE_INF("WOV: ECO TTSR Mask 0x%llX",  G_pgpe_wov_ocs.eco_ttsr_mask);
+
     /*PK_TRACE_DBG("WOV: overv_max_pct  = 0x%x", pgpe_gppb_get_wov_overv_max_pct());
     PK_TRACE_DBG("WOV: underv_max_pct = 0x%x", pgpe_gppb_get_wov_underv_max_pct());
 
@@ -144,8 +160,8 @@ void pgpe_wov_ocs_determine_perf_loss()
             //Read TTSR
             uint64_t ttsr = 0;
             PPE_GETSCOM_MC_Q_OR(QME_TTSR, ttsr);
-            thr_light_loss = ttsr & 0XF0F0F0F0F0F0F0F0;
-            thr_heavy_loss = ttsr & 0X0F0F0F0F0F0F0F0F;
+            thr_light_loss = ttsr & 0XF0F0F0F0F0F0F0F0 & G_pgpe_wov_ocs.eco_ttsr_mask;
+            thr_heavy_loss = ttsr & 0X0F0F0F0F0F0F0F0F & G_pgpe_wov_ocs.eco_ttsr_mask;
             //PK_TRACE("OCS: light_loss=0x%x, heavy_loss=0x%x, ttsr=0x%08x%08x",thr_light_loss,thr_heavy_loss, (ttsr>>32)&0xFFFFFFFF,ttsr&0xFFFFFFFF);
 
             if (ttsr)
