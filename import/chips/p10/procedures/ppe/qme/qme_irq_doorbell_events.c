@@ -158,7 +158,7 @@ qme_doorbell1_event()
                 // (including Decrementer and Hypervisor Decrementer).
                 out32( QME_LCL_CORE_ADDR_WR(
                            QME_SCSR_WO_OR, G_qme_record.c_block_wake_req ),
-                       (BIT32(0) | BIT32(24)) );
+                       (BIT32(0)) );
 
                 // Block Exit Enabled
                 out32(QME_LCL_SCRB_OR, ( G_qme_record.c_block_wake_req <<
@@ -220,7 +220,7 @@ qme_doorbell1_event()
                 // Clear PM_BLOCK_INTERRUPTS
                 out32( QME_LCL_CORE_ADDR_WR(
                            QME_SCSR_WO_CLEAR, G_qme_record.c_block_wake_req ),
-                       (BIT32(0) | BIT32(24)) );
+                       (BIT32(0)) );
 
                 // Block Exit Disabled
                 out32(QME_LCL_SCRB_CLR, ( G_qme_record.c_block_wake_req <<
