@@ -149,6 +149,7 @@ qme_doorbell1_event()
                                               SHIFT32((QME_SCRB_STOP_BLOCK_EXIT_VECTOR_BASE + QME_SCRB_STOP_BLOCK_EXIT_VECTOR_SIZE - 1));
 
             G_qme_record.c_block_wake_req &= ~G_qme_record.c_cache_only_enabled;
+            G_qme_record.c_block_wake_req &=  G_qme_record.c_configured;
 
             if( G_qme_record.c_block_wake_req )
             {
@@ -174,6 +175,7 @@ qme_doorbell1_event()
                                               SHIFT32((QME_SCRB_STOP_BLOCK_ENTRY_VECTOR_BASE + QME_SCRB_STOP_BLOCK_ENTRY_VECTOR_SIZE - 1));
 
             G_qme_record.c_block_stop_req &= ~G_qme_record.c_cache_only_enabled;
+            G_qme_record.c_block_stop_req &=  G_qme_record.c_configured;
 
             if( G_qme_record.c_block_stop_req )
             {
@@ -211,6 +213,7 @@ qme_doorbell1_event()
                                               SHIFT32((QME_SCRB_STOP_BLOCK_EXIT_VECTOR_BASE + QME_SCRB_STOP_BLOCK_EXIT_VECTOR_SIZE - 1));
 
             G_qme_record.c_block_wake_req &= ~G_qme_record.c_cache_only_enabled;
+            G_qme_record.c_block_wake_req &=  G_qme_record.c_configured;
 
             if( G_qme_record.c_block_wake_req )
             {
@@ -234,6 +237,7 @@ qme_doorbell1_event()
                                               SHIFT32((QME_SCRB_STOP_BLOCK_ENTRY_VECTOR_BASE + QME_SCRB_STOP_BLOCK_ENTRY_VECTOR_SIZE - 1));
 
             G_qme_record.c_block_stop_req &= ~G_qme_record.c_cache_only_enabled;
+            G_qme_record.c_block_stop_req &=  G_qme_record.c_configured;
 
             if( G_qme_record.c_block_stop_req )
             {
