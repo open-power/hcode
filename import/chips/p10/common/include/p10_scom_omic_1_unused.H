@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -154,14 +154,6 @@ static const uint32_t TX_CTL_SM_REGS_CTLSM_CNTL11_PG_4_LEN = 6;
 static const uint32_t TX_CTL_SM_REGS_CTLSM_CNTL11_PG_5 = 54;
 static const uint32_t TX_CTL_SM_REGS_CTLSM_CNTL11_PG_5_LEN = 6;
 //<< [TX_CTL_SM_REGS_CTLSM_CNTL11_PG]
-// omic/reg00001.H
-
-//>> [TX_CTL_SM_REGS_CTLSM_CNTL1_PG]
-static const uint64_t TX_CTL_SM_REGS_CTLSM_CNTL1_PG = 0x800cc44010012c3full;
-
-static const uint32_t TX_CTL_SM_REGS_CTLSM_CNTL1_PG_TX_PSAVE_FENCE_REQ_DL_IO_0_15 = 48;
-static const uint32_t TX_CTL_SM_REGS_CTLSM_CNTL1_PG_TX_PSAVE_FENCE_REQ_DL_IO_0_15_LEN = 16;
-//<< [TX_CTL_SM_REGS_CTLSM_CNTL1_PG]
 // omic/reg00001.H
 
 //>>THE END<<
