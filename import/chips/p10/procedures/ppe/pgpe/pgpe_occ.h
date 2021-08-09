@@ -52,6 +52,9 @@ typedef struct pgpe_occ
     uint32_t vratio_vdd_tb_accum, vratio_vdd_fit_avg, vratio_vdd_wof_accum;
     uint32_t vratio_vcs_tb_accum, vratio_vcs_fit_avg, vratio_vcs_wof_accum;
     uint32_t idd_ocs_accum[PGPE_OCS_SAMPLE_SIZE], idd_ocs_accum_idx, idd_ocs_running_sum, idd_ocs_running_avg;
+    uint32_t uv_avg_pct_tb_accum, uv_avg_pct_fit, uv_avg_pct_wof_accum;
+    uint32_t ov_avg_pct_tb_accum, ov_avg_pct_fit, ov_avg_pct_wof_accum;
+    uint32_t init_tb;
     uint32_t wof_tick_rnd;
     uint32_t ocs_tick;
 } pgpe_occ_t;
