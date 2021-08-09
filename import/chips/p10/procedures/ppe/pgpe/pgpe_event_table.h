@@ -84,6 +84,12 @@ typedef void (*fn_event_handler)(void* args);
 typedef struct event
 {
     uint32_t status;
+    uint32_t cnt;
+    uint32_t total_time;
+    uint32_t max_time;
+    uint32_t min_time;
+    uint32_t start_time;
+    uint32_t end_time;
     void* args;
 } event_t;
 

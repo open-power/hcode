@@ -32,6 +32,7 @@
 #include "pgpe_event_table.h"
 #include "p10_oci_proc_6.H"
 #include "p10_oci_proc_7.H"
+#include "p10_oci_proc_8.H"
 
 uint32_t G_beacon_count_threshold;
 uint32_t G_beacon_count;
@@ -163,6 +164,7 @@ __attribute__((always_inline)) inline void handle_wov_ocs()
 //
 void pgpe_irq_fit_handler()
 {
+    uint32_t start_time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
     handle_occflg_requests();
     handle_occ_beacon();
     handle_produce_wof();
@@ -172,6 +174,8 @@ void pgpe_irq_fit_handler()
         handle_wov_ocs();
 
     }
+
+    pgpe_pstate_profile(&G_pgpe_pstate.fit_prof, start_time);
 
     mtspr(SPRN_TSR, TSR_FIS);
 }

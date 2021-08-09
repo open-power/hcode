@@ -159,6 +159,38 @@ void pgpe_pstate_init()
     G_pgpe_pstate.throttle_target = 0;
     G_pgpe_pstate.throttle_curr = 0;
 
+    G_pgpe_pstate.fit_prof.cnt  = 0;
+    G_pgpe_pstate.fit_prof.total_time = 0;
+    G_pgpe_pstate.fit_prof.max_time = 0;
+    G_pgpe_pstate.fit_prof.min_time = 0xFFFFFFFF;
+
+    G_pgpe_pstate.step_prof.cnt = 0;
+    G_pgpe_pstate.step_prof.total_time = 0;
+    G_pgpe_pstate.step_prof.max_time = 0;
+    G_pgpe_pstate.step_prof.min_time = 0xFFFFFFFF;
+
+
+    G_pgpe_pstate.dds_prof_cmp.cnt = 0;
+    G_pgpe_pstate.dds_prof_cmp.total_time = 0;
+    G_pgpe_pstate.dds_prof_cmp.max_time = 0;
+    G_pgpe_pstate.dds_prof_cmp.min_time = 0xFFFFFFFF;
+
+    G_pgpe_pstate.dds_prof_pre.cnt = 0;
+    G_pgpe_pstate.dds_prof_pre.total_time = 0;
+    G_pgpe_pstate.dds_prof_pre.max_time = 0;
+    G_pgpe_pstate.dds_prof_pre.min_time = 0xFFFFFFFF;
+
+    G_pgpe_pstate.dds_prof_post.cnt = 0;
+    G_pgpe_pstate.dds_prof_post.total_time = 0;
+    G_pgpe_pstate.dds_prof_post.max_time = 0;
+    G_pgpe_pstate.dds_prof_post.min_time = 0xFFFFFFFF;
+
+    G_pgpe_pstate.resclk_prof.cnt = 0;
+    G_pgpe_pstate.resclk_prof.total_time = 0;
+    G_pgpe_pstate.resclk_prof.max_time = 0;
+    G_pgpe_pstate.resclk_prof.min_time = 0xFFFFFFFF;
+
+    G_pgpe_pstate.marker = 0xbabadead;
 
     PPE_GETSCOM_MC_Q_EQU(QME_RVCR, rvcr);
     G_pgpe_pstate.rvrm_volt  = (((rvcr >> 56) & 0xFF) <<
@@ -210,6 +242,8 @@ void pgpe_pstate_actuate_step()
     PK_TRACE_INF("PSS: Enter Act_S PsCurr=0x%x, PsTgt=0x%x", G_pgpe_pstate.pstate_curr, G_pgpe_pstate.pstate_target);
 
 
+    uint32_t start_time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+
     //Compute vdd_next corresponding to pstate_target, and set pstate_next = pstate_target for now
     G_pgpe_pstate.vdd_next = pgpe_pstate_intp_vdd_from_ps(G_pgpe_pstate.pstate_target, VPD_PT_SET_BIASED);
     G_pgpe_pstate.pstate_next = G_pgpe_pstate.pstate_target;
@@ -227,7 +261,7 @@ void pgpe_pstate_actuate_step()
     uint32_t step_size = pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD);
     PK_TRACE_INF("PSS: Act_S VddCurr=%u, VddCurrUp=%u, VddCurrWovBias=%d, VddCurrExt=%u", G_pgpe_pstate.vdd_curr,
                  G_pgpe_pstate.vdd_curr_uplift, G_pgpe_pstate.vdd_wov_bias, G_pgpe_pstate.vdd_curr_ext);
-    PK_TRACE_INF("PSS: Act_S VddNext=%u, VddNextUp=%u, VddNextWovBias=%d, VddCurrExt=%u", G_pgpe_pstate.vdd_next,
+    PK_TRACE_INF("PSS: Act_S VddNext=%u, VddNextUp=%u, VddNextWovBias=%d, VddNextExt=%u", G_pgpe_pstate.vdd_next,
                  G_pgpe_pstate.vdd_next_uplift, vdd_wov_bias_next, G_pgpe_pstate.vdd_next_ext);
     PK_TRACE_INF("PSS: Act_S VddCurrWWov=%u, VddNextWWov=%u CurrWovPct=%d", vdd_curr_w_wov  , vdd_next_w_wov, curr_wov_pct);
 
@@ -474,8 +508,13 @@ void pgpe_pstate_actuate_step()
     //DDS Compute
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
     {
+        uint32_t time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
         pgpe_dds_compute(G_pgpe_pstate.pstate_next);
+        pgpe_pstate_profile(&G_pgpe_pstate.dds_prof_cmp, time);
+
+        time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
         pgpe_dds_update_pre(G_pgpe_pstate.pstate_next);
+        pgpe_pstate_profile(&G_pgpe_pstate.dds_prof_pre, time);
     }
 
     //See whether to set rVRM enablement override
@@ -509,7 +548,9 @@ void pgpe_pstate_actuate_step()
     if (G_pgpe_pstate.pstate_next > G_pgpe_pstate.pstate_curr)
     {
         //resclk
+        uint32_t time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
         pgpe_resclk_update(G_pgpe_pstate.pstate_next);
+        pgpe_pstate_profile(&G_pgpe_pstate.resclk_prof, time);
 
         //write DPLL(Update freq)
         pgpe_dpll_write_dpll_freq_ps(G_pgpe_pstate.pstate_next);
@@ -540,7 +581,9 @@ void pgpe_pstate_actuate_step()
 
         if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
         {
+            time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
             pgpe_dds_update_post(G_pgpe_pstate.pstate_next);
+            pgpe_pstate_profile(&G_pgpe_pstate.dds_prof_post, time);
         }
     }
 
@@ -575,11 +618,15 @@ void pgpe_pstate_actuate_step()
         pgpe_dpll_write_dpll_freq_ps(G_pgpe_pstate.pstate_next);
 
         //resclk
+        uint32_t time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
         pgpe_resclk_update(G_pgpe_pstate.pstate_next);
+        pgpe_pstate_profile(&G_pgpe_pstate.resclk_prof, time);
 
         if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
         {
+            time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
             pgpe_dds_update_post(G_pgpe_pstate.pstate_next);
+            pgpe_pstate_profile(&G_pgpe_pstate.dds_prof_post, time);
         }
     }
 
@@ -628,6 +675,8 @@ void pgpe_pstate_actuate_step()
     pgpe_opt_set_half(2, pgpe_pstate_get(vcs_curr_ext));
     //pgpe_opt_set_byte(6, );  //\TODO Add RVRM Transition
     ppe_trace_op(PGPE_OPT_ACTUATE_STEP_DONE, pgpe_opt_get());
+    pgpe_pstate_profile(&G_pgpe_pstate.step_prof, start_time);
+
 }
 
 void pgpe_pstate_actuate_voltage_step()
@@ -1749,4 +1798,34 @@ void pgpe_pstate_update_vdd_vcs_ps()
     uint32_t occs2  =  (G_pgpe_pstate.vdd_curr_ext << 16) | G_pgpe_pstate.vcs_curr_ext;
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCS2_RW, occs2);
 
+}
+
+void pgpe_pstate_profile(pgpe_profile_t* p, uint32_t start_time)
+{
+    uint32_t end_time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+    uint32_t tb_delta = end_time - start_time;
+
+    if(start_time > end_time)
+    {
+        tb_delta += 0xFFFFFFFF;
+    }
+
+    if(tb_delta > p->max_time)
+    {
+        p->max_time = tb_delta;
+    }
+
+    if(tb_delta < p->min_time)
+    {
+        p->min_time = tb_delta;
+    }
+
+    p->total_time += tb_delta;
+    p->cnt++;
+
+    if(p->total_time & 0x80000000)
+    {
+        p->total_time = tb_delta;
+        p->cnt = 1;
+    }
 }

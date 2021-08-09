@@ -69,6 +69,14 @@ enum PS_FROM_FREQ_ROUNDING
     PS_FROM_FREQ_ROUND_UP       = 1,
 };
 
+typedef struct pgpe_profile
+{
+    uint32_t cnt;
+    uint32_t total_time;
+    uint32_t max_time;
+    uint32_t min_time;
+} pgpe_profile_t;
+
 typedef struct pgpe_pstate
 {
     uint32_t pstate_status;         //0
@@ -102,6 +110,13 @@ typedef struct pgpe_pstate
     uint32_t vratio_core_count;     //74
     uint32_t throttle_pmcr, throttle_clip, throttle_vrt;
     uint32_t throttle_target, throttle_curr;
+    pgpe_profile_t fit_prof; //78
+    pgpe_profile_t step_prof; //82
+    pgpe_profile_t dds_prof_cmp; //86
+    pgpe_profile_t dds_prof_pre; //90
+    pgpe_profile_t dds_prof_post; //94
+    pgpe_profile_t resclk_prof; //98
+    uint32_t marker; //99
 } pgpe_pstate_t;
 
 
@@ -130,6 +145,7 @@ void pgpe_pstate_pmsr_updt();
 void pgpe_pstate_pmsr_set_safe_mode();
 void pgpe_pstate_pmsr_write();
 void pgpe_pstate_set_safe_mode();
+void pgpe_pstate_profile(pgpe_profile_t* p, uint32_t time);
 
 //Macro accessor function
 #define pgpe_pstate_get(x) G_pgpe_pstate.x
