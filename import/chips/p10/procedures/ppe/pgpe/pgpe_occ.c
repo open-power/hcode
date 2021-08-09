@@ -97,12 +97,13 @@ void pgpe_occ_init()
     //of 131us and nest frequency of 2Ghz
     G_pgpe_occ.max_tb_delta = 4096;
     G_pgpe_occ.prev_tb = 0;
-    G_pgpe_occ.present_tb = 0;
+    G_pgpe_occ.present_tb = 4096; //Initial delta tb of 4096
     G_pgpe_occ.vdd_accum = 0;
     G_pgpe_occ.vcs_accum = 0;
     G_pgpe_occ.fit_tick = 0;
     G_pgpe_occ.wof_tick = 4; //TODO RTC: 214486 This WOF_TICK_TIME/FIT_TICK_TIME. Should get it from somewhere else
     G_pgpe_occ.wof_tick_rnd = 2; //Half of wof_tick
+    G_pgpe_occ.init_tb = 0;
 
     G_pgpe_occ.idd_ocs_accum_idx = 0;
     G_pgpe_occ.idd_ocs_running_avg = 0;
@@ -201,6 +202,20 @@ void pgpe_occ_produce_wof_values()
             //PK_TRACE("OCC: FIT Tick");
         }
 
+        if (pgpe_wov_ocs_is_wov_underv_enabled())
+        {
+            G_pgpe_occ.pwof_val->dw3.fields.uv_avg_0p1pct = (G_pgpe_occ.uv_avg_pct_wof_accum  + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;
+            G_pgpe_occ.uv_avg_pct_wof_accum = 0;
+        }
+
+        if (pgpe_wov_ocs_is_wov_overv_enabled())
+        {
+            G_pgpe_occ.pwof_val->dw3.fields.ov_avg_0p1pct = (G_pgpe_occ.ov_avg_pct_wof_accum  + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;
+            G_pgpe_occ.ov_avg_pct_wof_accum = 0;
+        }
+
         //PK_TRACE("OCC: woftick vdd_wof=0x%x,vcs_wof=%u,idd_wof=%u,ics_wof=%u",G_pgpe_occ.vdd_wof_avg_accum_mv,G_pgpe_occ.vcs_wof_avg_accum_mv,G_pgpe_occ.idd_wof_avg_accum_ma,G_pgpe_occ.ics_wof_avg_accum_ma);
         //Write to SRAM
         G_pgpe_occ.fit_tick = 0;
@@ -289,6 +304,19 @@ void pgpe_occ_produce_fit_values()
         G_pgpe_occ.vratio_vcs_tb_accum = 0;
     }
 
+
+    if (pgpe_wov_ocs_is_wov_underv_enabled())
+    {
+        G_pgpe_occ.uv_avg_pct_fit =  G_pgpe_occ.uv_avg_pct_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.uv_avg_pct_wof_accum += G_pgpe_occ.uv_avg_pct_fit;
+    }
+
+    if (pgpe_wov_ocs_is_wov_overv_enabled())
+    {
+        G_pgpe_occ.ov_avg_pct_fit =  G_pgpe_occ.ov_avg_pct_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.ov_avg_pct_wof_accum += G_pgpe_occ.ov_avg_pct_fit;
+    }
+
     G_pgpe_occ.fit_tick++;
     //PK_TRACE("OCC: fit vdd_fit=0x%x,vcs_fit=%u,idd_fit=%u,ics_fit=%u",G_pgpe_occ.vdd_fit_avg_mv,G_pgpe_occ.vcs_fit_avg_mv,G_pgpe_occ.idd_fit_avg_ma,G_pgpe_occ.ics_fit_avg_ma);
     //PK_TRACE("OCC: fit vdd_wof=0x%x,vcs_wof=%u,idd_wof=%u,ics_wof=%u",G_pgpe_occ.vdd_wof_avg_accum_mv,G_pgpe_occ.vcs_wof_avg_accum_mv,G_pgpe_occ.idd_wof_avg_accum_ma,G_pgpe_occ.ics_wof_avg_accum_ma);
@@ -308,6 +336,12 @@ void pgpe_occ_sample_values()
     else
     {
         delta_tb = G_pgpe_occ.present_tb - G_pgpe_occ.prev_tb + 0xFFFFFFFF;
+    }
+
+    if(G_pgpe_occ.init_tb == 0)
+    {
+        delta_tb = 4096;
+        G_pgpe_occ.init_tb = 1;
     }
 
     //Read IDD and ICS
@@ -349,6 +383,22 @@ void pgpe_occ_sample_values()
         G_pgpe_occ.pwof_val->dw0.fields.wof_clip_pstate = pgpe_pstate_get(clip_wof) ;
         /*PK_TRACE("OCC: vratio_vdd_tb_accum=0x%08x vratio_vcs_tb_accum=0x%08x delta_tb=0x%08x", G_pgpe_occ.vratio_vdd_tb_accum,
                  G_pgpe_occ.vratio_vcs_tb_accum, delta_tb);*/
+    }
+
+    if (pgpe_wov_ocs_is_wov_underv_enabled() || pgpe_wov_ocs_is_wov_overv_enabled())
+    {
+        if(pgpe_wov_ocs_get_wov_curr_pct() < 0)
+        {
+            G_pgpe_occ.uv_avg_pct_tb_accum = -pgpe_wov_ocs_get_wov_curr_pct();
+            G_pgpe_occ.ov_avg_pct_tb_accum = 0;
+            G_pgpe_occ.uv_avg_pct_tb_accum *=  delta_tb;
+        }
+        else
+        {
+            G_pgpe_occ.uv_avg_pct_tb_accum = 0;
+            G_pgpe_occ.ov_avg_pct_tb_accum = pgpe_wov_ocs_get_wov_curr_pct();
+            G_pgpe_occ.ov_avg_pct_tb_accum *=  delta_tb;
+        }
     }
 
     G_pgpe_occ.prev_tb = G_pgpe_occ.present_tb;
