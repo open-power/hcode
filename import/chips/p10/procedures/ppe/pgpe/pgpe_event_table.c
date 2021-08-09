@@ -23,6 +23,9 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 #include "pgpe_event_table.h"
+#include "p10_oci_proc_8.H"
+
+void pgpe_event_tbl_profile(uint32_t event_idx);
 
 //Static Event Table
 event_t pgpe_event_table[MAX_EVENT_TABLE_ENTRIES] __attribute__((section (".data_structs")));
@@ -36,6 +39,12 @@ void pgpe_event_tbl_init()
     {
         pgpe_event_table[i].status = EVENT_INACTIVE;
         pgpe_event_table[i].args = NULL;
+        pgpe_event_table[i].cnt = 0;
+        pgpe_event_table[i].total_time = 0;
+        pgpe_event_table[i].max_time = 0;
+        pgpe_event_table[i].min_time = 0xFFFFFFFF;
+        pgpe_event_table[i].start_time = 0;
+        pgpe_event_table[i].end_time = 0;
     }
 }
 
@@ -61,11 +70,59 @@ void* pgpe_event_tbl_get_args(uint32_t event_idx)
 
 void pgpe_event_tbl_set(uint32_t event_idx, uint32_t status, void* args)
 {
+    if(status == EVENT_PENDING)
+    {
+        pgpe_event_table[event_idx].start_time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+    }
+    else if(status == EVENT_INACTIVE)
+    {
+        pgpe_event_tbl_profile(event_idx);
+    }
+
     pgpe_event_table[event_idx].status = status;
     pgpe_event_table[event_idx].args = args;
 }
 
 void pgpe_event_tbl_set_status(uint32_t event_idx, uint32_t status)
 {
+    if(status == EVENT_PENDING)
+    {
+        pgpe_event_table[event_idx].start_time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+    }
+    else if(status == EVENT_INACTIVE)
+    {
+        pgpe_event_tbl_profile(event_idx);
+    }
+
     pgpe_event_table[event_idx].status = status;
+}
+
+void pgpe_event_tbl_profile(uint32_t event_idx)
+{
+    pgpe_event_table[event_idx].end_time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+    uint32_t delta = pgpe_event_table[event_idx].end_time - pgpe_event_table[event_idx].start_time;
+
+    if (pgpe_event_table[event_idx].start_time > pgpe_event_table[event_idx].end_time)
+    {
+        delta += 0xFFFFFFFF;
+    }
+
+    if(delta > pgpe_event_table[event_idx].max_time)
+    {
+        pgpe_event_table[event_idx].max_time = delta;
+    }
+
+    if(delta < pgpe_event_table[event_idx].min_time)
+    {
+        pgpe_event_table[event_idx].min_time = delta;
+    }
+
+    pgpe_event_table[event_idx].cnt++;
+    pgpe_event_table[event_idx].total_time += delta;
+
+    if(pgpe_event_table[event_idx].total_time & 0x80000000)
+    {
+        pgpe_event_table[event_idx].cnt = 1;
+        pgpe_event_table[event_idx].total_time = delta;
+    }
 }
