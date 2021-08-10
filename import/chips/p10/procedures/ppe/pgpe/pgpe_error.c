@@ -112,7 +112,9 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_CURRENT, 0, PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_UNKNOWN_ERROR}, //56
 
     //Machine Check
-    {PGPE_ERR_MODULE_MACHINE_CHECK, PGPE_ERR_REASON_CODE_IRQ_FAULT, 0, PGPE_ERR_EXT_CODE_PGPE_MACHINE_CHECK}//57
+    {PGPE_ERR_MODULE_MACHINE_CHECK, PGPE_ERR_REASON_CODE_IRQ_FAULT, 0, PGPE_ERR_EXT_CODE_PGPE_MACHINE_CHECK},//57
+
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION } //58
 };
 
 
@@ -298,6 +300,27 @@ void pgpe_error_handle_fault(uint32_t pgpe_err_id)
 
     //Take out a critical log
     pgpe_error_critical_log(pgpe_err_id);
+
+    //Stop beacon updates
+    pgpe_error_stop_beacon();
+
+    //Notify error module
+    pgpe_error_notify_critical(pgpe_err_id);
+
+    //ack any pending IPCS with bad rc
+    pgpe_error_ack_pending();
+}
+
+void pgpe_error_handle_fault_w_safe_mode(uint32_t pgpe_err_id)
+{
+    //Mask interrupt except IPC and Error
+    pgpe_error_mask_irqs();
+
+    //Take out a critical log
+    pgpe_error_critical_log(pgpe_err_id);
+
+    //Go to safe mode
+    pgpe_pstate_actuate_safe_mode();
 
     //Stop beacon updates
     pgpe_error_stop_beacon();

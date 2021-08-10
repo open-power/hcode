@@ -709,6 +709,8 @@ void pgpe_pstate_actuate_voltage_step()
 
 void pgpe_pstate_actuate_safe_mode()
 {
+    PkMachineContext ctx;
+
     //Move throttling to ATTR_SAFE_MODE_THROTTLE_IDX
     if (pgpe_thr_ctrl_is_enabled())
     {
@@ -730,6 +732,13 @@ void pgpe_pstate_actuate_safe_mode()
     pgpe_pstate_apply_clips();
 
     //Actuate to safe mode
+    //Actuate to safe mode(disable WOV before)
+    pk_critical_section_enter(&ctx);
+    pgpe_wov_ocs_disable();
+    pgpe_wov_ocs_clear_wov_tgt_pct();
+    pgpe_wov_ocs_set_wov_curr_pct(0);
+    pk_critical_section_exit(&ctx);
+
     while(!pgpe_pstate_is_at_target())
     {
         pgpe_pstate_actuate_step();
