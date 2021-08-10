@@ -30,6 +30,7 @@
 #include "p10_oci_proc.H"
 #include "pgpe_gppb.h"
 #include "p10_scom_eq_7.H"
+#include "p10_scom_c_3.H"
 #include "pgpe_occ.h"
 #include "pgpe_pstate.h"
 
@@ -145,23 +146,32 @@ void pgpe_wov_ocs_determine_perf_loss()
 {
     //PK_TRACE("OCS: Perf loss");
 
+    uint64_t thr_light_loss = 0;
+    uint64_t thr_heavy_loss = 0;
+    uint64_t ttsr_masked = 0;
+    uint64_t ttsr = 0;
+    uint32_t thr_light_loss_upper = 0;
+    uint32_t thr_light_loss_lower = 0;
+    uint32_t thr_heavy_loss_upper = 0;
+    uint32_t thr_heavy_loss_lower = 0;
+    uint64_t chip_idle = 0;
+    uint32_t chip_idle_upper = 0;
+
     if ((G_pgpe_wov_ocs.ocs_status == OCS_STATUS_ENABLED) ||
         (G_pgpe_wov_ocs.wov_uv_status  & WOV_STATUS_ENABLED)
         || (G_pgpe_wov_ocs.wov_ov_status & WOV_STATUS_ENABLED))
     {
-        uint64_t thr_light_loss = 0;
-        uint64_t thr_heavy_loss = 0;
-        uint64_t freq_light_loss = 0;
-        uint64_t freq_heavy_loss = 0;
 
 
         if(G_pgpe_wov_ocs.wov_thr_loss_enable == WOV_THR_LOSS_STATUS_ENABLED)
         {
             //Read TTSR
-            uint64_t ttsr = 0;
             PPE_GETSCOM_MC_Q_OR(QME_TTSR, ttsr);
-            thr_light_loss = ttsr & 0XF0F0F0F0F0F0F0F0 & G_pgpe_wov_ocs.eco_ttsr_mask;
-            thr_heavy_loss = ttsr & 0X0F0F0F0F0F0F0F0F & G_pgpe_wov_ocs.eco_ttsr_mask;
+            PPE_GETSCOM(PPE_SCOM_ADDR_MC_AND(CPMS_FDCR, 0xF), chip_idle);
+            chip_idle_upper = chip_idle >> 32;
+            ttsr_masked = ttsr & G_pgpe_wov_ocs.eco_ttsr_mask;
+            thr_light_loss = ttsr_masked & 0XF0F0F0F0F0F0F0F0;
+            thr_heavy_loss = ttsr_masked & 0X0F0F0F0F0F0F0F0F;
             //PK_TRACE("OCS: light_loss=0x%x, heavy_loss=0x%x, ttsr=0x%08x%08x",thr_light_loss,thr_heavy_loss, (ttsr>>32)&0xFFFFFFFF,ttsr&0xFFFFFFFF);
 
             if (ttsr)
@@ -171,13 +181,38 @@ void pgpe_wov_ocs_determine_perf_loss()
             }
         }
 
-        //\todo RTC 247186
-        if(G_pgpe_wov_ocs.wov_freq_loss_enable == WOV_FREQ_LOSS_STATUS_ENABLED)
+        thr_light_loss_upper = thr_light_loss >> 32;
+        thr_light_loss_lower = thr_light_loss & 0xFFFFFFFF;
+
+        if((thr_light_loss_upper != 0) || (thr_light_loss_lower != 0))
         {
+            G_pgpe_wov_ocs.light_loss = 1;
+        }
+        else
+        {
+            G_pgpe_wov_ocs.light_loss = 0;
         }
 
-        G_pgpe_wov_ocs.light_loss = thr_light_loss || freq_light_loss;
-        G_pgpe_wov_ocs.heavy_loss = thr_heavy_loss || freq_heavy_loss;
+        thr_heavy_loss_upper = thr_heavy_loss >> 32;
+        thr_heavy_loss_lower = thr_heavy_loss & 0xFFFFFFFF;
+
+        if((thr_heavy_loss_upper != 0) || (thr_heavy_loss_lower != 0))
+        {
+            G_pgpe_wov_ocs.heavy_loss = 1;
+        }
+        else
+        {
+            G_pgpe_wov_ocs.heavy_loss = 0;
+        }
+
+        if(chip_idle_upper & 0x80000000)
+        {
+            G_pgpe_wov_ocs.chip_idle = 1;
+        }
+        else
+        {
+            G_pgpe_wov_ocs.chip_idle = 0;
+        }
 
     }
 }
@@ -195,6 +230,10 @@ void pgpe_wov_ocs_update_dirty()
     else if (G_pgpe_wov_ocs.light_loss)
     {
         droop = DROOP_LVL_LIGHT;
+    }
+    else if(G_pgpe_wov_ocs.chip_idle)
+    {
+        droop = DROOP_LVL_CHIP_IDLE;
     }
     else
     {
@@ -260,15 +299,15 @@ void pgpe_wov_ocs_update_dirty()
             if (G_pgpe_wov_ocs.hysteresis_cnt == 0)
             {
                 pgpe_wov_ocs_dec_tgt_pct(); //Bound this by attributes
+                out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
+                out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+                dirty = OCS_DIRTY_SAMPLE_TYPE_00;
             }
 
             //Update instrumentation counters
             G_pgpe_wov_ocs.cnt_droop_ok++;
 
             //Buffer trace \\todo
-            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
-            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
-            dirty = OCS_DIRTY_SAMPLE_TYPE_00;
         }
 
     }
@@ -290,6 +329,8 @@ void pgpe_wov_ocs_update_dirty()
         }
         else
         {
+            dirty = OCS_DIRTY_SAMPLE_TYPE_00;
+
             if (pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_LIGHT_DROOP) == 0)
             {
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
@@ -299,6 +340,7 @@ void pgpe_wov_ocs_update_dirty()
             {
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+                dirty = OCS_DIRTY_SAMPLE_TYPE_10;
             }
             else if  (pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_LIGHT_DROOP) == 3)
             {
@@ -306,18 +348,18 @@ void pgpe_wov_ocs_update_dirty()
                 G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+                dirty = OCS_DIRTY_SAMPLE_TYPE_11;
             }
 
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
             pgpe_wov_ocs_inc_tgt_pct();
-            dirty = OCS_DIRTY_SAMPLE_TYPE_00;
             //Update instrumentation counters
             G_pgpe_wov_ocs.cnt_droop_light++;
 
             //Buffer trace \\todo
         }
     }
-    else
+    else if (droop == DROOP_LVL_HEAVY)
     {
         if (overcurrent == OCS_OVER_THRESH)
         {
@@ -335,6 +377,8 @@ void pgpe_wov_ocs_update_dirty()
         }
         else
         {
+            dirty = OCS_DIRTY_SAMPLE_TYPE_00;
+
             if (pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_HEAVY_DROOP) == 0)
             {
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
@@ -344,6 +388,7 @@ void pgpe_wov_ocs_update_dirty()
             {
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+                dirty = OCS_DIRTY_SAMPLE_TYPE_10;
             }
             else if (pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_HEAVY_DROOP) == 3)
             {
@@ -351,17 +396,48 @@ void pgpe_wov_ocs_update_dirty()
                 G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+                dirty = OCS_DIRTY_SAMPLE_TYPE_11;
             }
 
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
             pgpe_wov_ocs_inc_tgt_pct();
-            dirty = OCS_DIRTY_SAMPLE_TYPE_10;
 
             //update instrumentation counters
             G_pgpe_wov_ocs.cnt_droop_heavy++;
 
             //Buffer trace \\todo
         }
+    }
+    else
+    {
+        if (overcurrent == OCS_OVER_THRESH)
+        {
+            //Update current running avg value to occ sram space
+            G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
+
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+            G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
+            dirty = OCS_DIRTY_SAMPLE_TYPE_11;
+            //update instrumentation counters
+            G_pgpe_wov_ocs.cnt_droop_chip_idle_oc++;
+
+            //Buffer trace \\todo
+        }
+        else
+        {
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
+            out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
+
+            G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
+            dirty = OCS_DIRTY_SAMPLE_TYPE_00;
+
+            //update instrumentation counters
+            G_pgpe_wov_ocs.cnt_droop_chip_idle++;
+
+            //Buffer trace \\todo
+        }
+
     }
 
     if (G_pgpe_wov_ocs.tgt_pct > pgpe_gppb_get_wov_overv_max_pct())
