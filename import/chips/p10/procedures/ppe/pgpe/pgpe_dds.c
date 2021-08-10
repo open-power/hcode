@@ -53,7 +53,7 @@ void* pgpe_dds_data_addr()
 void pgpe_dds_init(uint32_t pstate)
 {
     PK_TRACE_INF("DDS: Init");
-    uint32_t q, c, f;
+    uint32_t q, c, f, core, core_num;
 
     //1. Write DCCR, FLMR and FMMR values
     //Write DCCR
@@ -127,7 +127,25 @@ void pgpe_dds_init(uint32_t pstate)
     pgpe_dds_update_pre(pstate);
 
     //4. Multicast write-CLEAR FDCR[DISABLE](0) = 1
-    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDCR_WO_CLEAR, 0xF), BIT64(0));
+    uint32_t ccsr;
+    ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
+    uint32_t ecomask = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG6_RW);
+    uint32_t core_mask = ccsr & (~ecomask);
+    PK_TRACE_INF("DDS: Ecomask=0x%08x, ccsr=0x%08x, core_mask=0x%08x");
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        for (c = 0; c < CORES_PER_QUAD; c++)
+        {
+            core_num = q * CORES_PER_QUAD + c;
+
+            if ((core_mask & CORE_MASK(core_num)))
+            {
+                core = 0x8 >> c;
+                PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_FDCR_WO_CLEAR, q, core), BIT64(0));
+            }
+        }
+    }
 
     //5. Multicast write-OR QME FLAG[DDS Enable] = 1
     PPE_PUTSCOM_MC_Q(QME_FLAGS_WO_OR, BIT64(QME_FLAGS_DDS_OPERABLE));

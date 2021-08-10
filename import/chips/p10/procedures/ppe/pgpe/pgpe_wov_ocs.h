@@ -56,9 +56,10 @@ enum OCS_THRESH
 
 enum DROOP_LEVEL
 {
-    DROOP_LVL_HEAVY  =       0x1,
-    DROOP_LVL_LIGHT  =       0x2,
-    DROOP_LVL_OK     =       0x3
+    DROOP_LVL_HEAVY         =       0x1,
+    DROOP_LVL_LIGHT         =       0x2,
+    DROOP_LVL_OK            =       0x3,
+    DROOP_LVL_CHIP_IDLE     =       0x4
 };
 
 enum WOV_THR_LOSS_STATUS
@@ -90,6 +91,7 @@ typedef struct pgpe_wov_ocs
     uint32_t wov_freq_loss_enable;
     uint32_t light_loss;
     uint32_t heavy_loss;
+    uint32_t chip_idle;
     uint32_t droop_level;
     uint32_t dirty;
     uint32_t hysteresis_cnt;
@@ -102,6 +104,8 @@ typedef struct pgpe_wov_ocs
     uint32_t cnt_droop_light_oc;
     uint32_t cnt_droop_heavy;
     uint32_t cnt_droop_heavy_oc;
+    uint32_t cnt_droop_chip_idle;
+    uint32_t cnt_droop_chip_idle_oc;
     uint32_t cnt_wov_total_ticks;
     uint32_t cnt_wov_uv_ticks;
     uint32_t cnt_wov_ov_ticks;

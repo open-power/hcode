@@ -198,7 +198,16 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
                 else if (retry_cnt > AVS_RESYNC_RETRIES)
                 {
                     PK_TRACE_INF("AVS: Drive_W Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
-                    rc = AVS_RC_RESYNC_ERROR;
+
+                    if(slave_ack & 0x40000000)
+                    {
+                        rc = AVS_RC_NO_ACTION;
+                    }
+                    else
+                    {
+                        rc = AVS_RC_RESYNC_ERROR;
+                    }
+
                     done = 1;
                 }
                 //Retry once on resync error
@@ -453,6 +462,12 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
                 pgpe_error_state_loop();
                 break;
 
+            case AVS_RC_NO_ACTION:
+                PK_TRACE_ERR("AVS: Volt_W, Good CRC, but no action");
+                pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION);
+                pgpe_error_state_loop();
+                break;
+
             case AVS_RC_RESYNC_ERROR:
                 PK_TRACE_ERR("AVS: Volt_W Resync Error");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_RESYNC_ERROR);
@@ -497,6 +512,12 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
+                PK_TRACE_ERR("AVS: Volt_R, OnGoing Flag Timeout");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_NO_ACTION:
                 PK_TRACE_ERR("AVS: Volt_R, OnGoing Flag Timeout");
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT);
                 pgpe_error_state_loop();
