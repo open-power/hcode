@@ -45,7 +45,7 @@ typedef struct
     uint32_t    mma_modes_enabled;  // POff:0b001, POff_Delay:0b010(Dynamic), POn:0b100(Static)
     uint32_t    mma_pwoff_dec_ticks;// number of ticks of dec timer to poweroff mma
     uint32_t    mma_pwoff_dec_val;  // dec value to setup for each dec tick
-    uint32_t    bce_buf_content_type;//bce paging content selection
+    uint32_t    dds_sync_req;       // 0xFC auto 0xFD disable
 
     // Wof and Pstate and Doorbells
     //   Note: PMCR and throttle are handled by HW
@@ -133,7 +133,7 @@ typedef struct
 
     // Errlog
     // 20
-    uint16_t    pad;
+    uint16_t    pad_zeros; // do not use this
     uint16_t    errl_panic;
     uint32_t    errl_data0;
     uint32_t    errl_data1;
@@ -141,19 +141,22 @@ typedef struct
     // 21
     uint16_t    c_failed_ring[4]; // Field needs to be at 8B boundary
     uint32_t    c_scan_failed;
-    uint32_t    cts_timeout_count;
+    uint32_t    bce_buf_content_type;//bce paging content selection
     // 22
     uint32_t    c_self_fault_vector;
     uint32_t    c_self_failed;
+    uint32_t    cts_timeout_count;
+    uint32_t    reserved;
+    // 23
     uint32_t    c_in_recovery;    // Deadly paint
     uint32_t    recovery_ongoing;
-    // 23,24,25,26
+    uint64_t    qme_lfir;
+
+    // 24,25,26,27
     uint32_t    c_tfac_c2s_retry_limit[4];
     uint32_t    c_tfac_c2s_retry_total[4];
     uint32_t    c_tfac_s2c_retry_limit[4];
     uint32_t    c_tfac_s2c_retry_total[4];
-    // 27
-    uint64_t    qme_lfir;
 
     /*DEBUG_ONLY
         uint32_t    c_act_stop_level[4];

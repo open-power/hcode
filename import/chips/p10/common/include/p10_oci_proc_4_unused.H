@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -138,21 +138,6 @@ static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT0Q2 = 0xc0062010ull;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT0Q2_OCB_OCI_OPIT0Q2RR_PCB_INTR_PAYLOAD = 13;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT0Q2_OCB_OCI_OPIT0Q2RR_PCB_INTR_PAYLOAD_LEN = 19;
 //<< [TP_TPCHIP_OCC_OCI_OCB_OPIT0Q2]
-// oci_proc/reg00006.H
-
-//>> [TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA]
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_RO = 0xc0063080ull;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_WO_CLEAR = 0xc0063088ull;
-
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_0 = 0;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_1 = 1;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_2 = 2;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_3 = 3;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_4 = 4;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_5 = 5;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_6 = 6;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_7 = 7;
-//<< [TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA]
 // oci_proc/reg00006.H
 
 //>> [TP_TPCHIP_OCC_OCI_OCB_OPIT3Q6]

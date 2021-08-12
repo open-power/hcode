@@ -115,6 +115,64 @@ qme_send_pig_type_a()
 }
 
 void
+qme_dds_sync()
+{
+    uint32_t pig_data = 0;
+    uint32_t c_stop = 0;
+    uint32_t c_wake = 0;
+    uint32_t c_tran = 0;
+
+    if( !G_qme_record.dds_sync_req )
+    {
+        return;
+    }
+
+    // disable DDS on stopped cores and ECO cores(even they are special wakenup)
+    c_stop = G_qme_record.c_configured & (G_qme_record.c_stop2_reached | G_qme_record.c_cache_only_enabled);
+
+    // this include stop0 and stop1 cores by default. exclude eco in special wakeup
+    c_wake = G_qme_record.c_configured & (~G_qme_record.c_stop2_reached) & (~G_qme_record.c_cache_only_enabled);
+
+    // there shouldnt be any, error checking
+    c_tran = G_qme_record.c_configured & (~c_wake) & (~c_stop);
+
+    PK_TRACE_INF("DEBUG: c_configured[%x], c_stop[%x], c_wake[%x] c_tran[%x]",
+                 G_qme_record.c_configured, c_stop, c_wake, c_tran);
+
+    if( G_qme_record.dds_sync_req == 0xFD && G_qme_record.c_configured )
+    {
+        out64( QME_LCL_CORE_ADDR_WR( CPMS_FDCR_WO_OR, G_qme_record.c_configured ), ( BIT64(0) | BITS64(2, 2) ) );
+    }
+
+    if( G_qme_record.dds_sync_req == 0xFC )
+    {
+        if( c_stop )
+        {
+            out64( QME_LCL_CORE_ADDR_WR( CPMS_FDCR_WO_OR,    c_stop ), ( BIT64(0) | BITS64(2, 2) ) );
+        }
+
+        if( c_wake )
+        {
+            out64( QME_LCL_CORE_ADDR_WR( CPMS_FDCR_WO_CLEAR, c_wake ), ( BIT64(0) | BITS64(2, 2) ) );
+        }
+    }
+
+    if( c_tran )
+    {
+        pig_data = ( PIG_TYPE_2 << SHIFT32(4) ) |
+                   ( 0xFF << SHIFT32(23) );
+    }
+    else
+    {
+        pig_data = ( PIG_TYPE_2 << SHIFT32(4) ) |
+                   ( G_qme_record.dds_sync_req << SHIFT32(23) );
+    }
+
+    qme_send_pig_packet(pig_data);
+    G_qme_record.dds_sync_req = 0;
+}
+
+void
 qme_stop1_exit(uint32_t c_mask)
 {
     // handle stop1 wakeup
@@ -610,6 +668,7 @@ qme_special_wakeup_rise_event()
         wrteei(1);
         qme_stop_exit();
         qme_send_pig_type_a();
+        qme_dds_sync();
         wrteei(0);
     }
 
@@ -721,6 +780,7 @@ qme_regular_wakeup_fast_event()
         wrteei(1);
         qme_stop_exit();
         qme_send_pig_type_a();
+        qme_dds_sync();
         wrteei(0);
     }
 
@@ -779,6 +839,7 @@ qme_pm_state_active_fast_event()
         wrteei(1);
         qme_stop_entry();
         qme_send_pig_type_a();
+        qme_dds_sync();
         wrteei(0);
     }
 
@@ -1006,6 +1067,7 @@ qme_regular_wakeup_slow_event()
         wrteei(1);
         qme_stop_exit();
         qme_send_pig_type_a();
+        qme_dds_sync();
         wrteei(0);
     }
 
@@ -1125,6 +1187,7 @@ qme_pm_state_active_slow_event()
         wrteei(1);
         qme_stop_entry();
         qme_send_pig_type_a();
+        qme_dds_sync();
 
         // TODO  Read Auto Wake-up Controls from HOMER for this chip Parse to bit X and, if set
 
@@ -1156,6 +1219,7 @@ qme_pm_state_active_slow_event()
 
                 G_qme_record.c_auto_stop11_wakeup = 0;
                 qme_send_pig_type_a();
+                qme_dds_sync();
             }
         }
 
@@ -1168,5 +1232,4 @@ qme_pm_state_active_slow_event()
     qme_eval_eimr_override();
 
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_STOP_SLOW);
-
 }
