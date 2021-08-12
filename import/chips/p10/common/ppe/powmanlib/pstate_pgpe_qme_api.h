@@ -25,6 +25,20 @@
 #ifndef __PSTATE_PGPE_QME_API_H__
 #define __PSTATE_PGPE_QME_API_H__
 
+
+enum MESSAGE_ID_DB2
+{
+    MSGID_DB2_DDS_AUTO          = 0xFC,
+    MSGID_DB2_DDS_DISABLE       = 0xFD,
+};
+
+enum MESSAGE_ID_PCB_TYPE2_ACK_TYPES
+{
+    MSGID_PCB_TYPE2_ACK_AUTO_DDS_SUCCESS        = 0xFC,
+    MSGID_PCB_TYPE2_ACK_DDS_DISABLE_SUCCESS     = 0xFD,
+    MSGID_PCB_TYPE2_ACK_QME_ERROR               = 0xFF,
+};
+
 typedef union qme_pgpe_pcb0
 {
     uint32_t value;
@@ -39,6 +53,7 @@ typedef union qme_pgpe_pcb0
 #endif
     } fields;
 }   qme_pgpe_pcb0_t;
+
 
 
 #endif //__PSTATE_PGPE_QME_API_H__
