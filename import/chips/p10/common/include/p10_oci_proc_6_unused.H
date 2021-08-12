@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -208,14 +208,6 @@ static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT1Q4 = 0xc0062060ull;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT1Q4_OCB_OCI_OPIT1Q4RR_PCB_INTR_PAYLOAD = 13;
 static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT1Q4_OCB_OCI_OPIT1Q4RR_PCB_INTR_PAYLOAD_LEN = 19;
 //<< [TP_TPCHIP_OCC_OCI_OCB_OPIT1Q4]
-// oci_proc/reg00008.H
-
-//>> [TP_TPCHIP_OCC_OCI_OCB_OPIT2Q0]
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2Q0 = 0xc0062080ull;
-
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2Q0_OCB_OCI_OPIT2Q0RR_PCB_INTR_PAYLOAD = 13;
-static const uint32_t TP_TPCHIP_OCC_OCI_OCB_OPIT2Q0_OCB_OCI_OPIT2Q0RR_PCB_INTR_PAYLOAD_LEN = 19;
-//<< [TP_TPCHIP_OCC_OCI_OCB_OPIT2Q0]
 // oci_proc/reg00008.H
 
 //>> [TP_TPCHIP_OCC_OCI_OCB_OPIT5Q6]

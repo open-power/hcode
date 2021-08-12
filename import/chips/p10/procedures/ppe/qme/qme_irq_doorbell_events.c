@@ -30,13 +30,13 @@ extern uint64_t g_eimr_override;
 
 IOTA_BEGIN_TASK_TABLE
 IOTA_TASK(qme_top_priority_event),                   // 0 Top  (Debugger/HB_Loss/QuadXstop)
-          IOTA_TASK(qme_doorbell2_event),            // 1 DB2  (WOF/SafeMode/BlockStopWake)
-          IOTA_TASK(qme_doorbell1_event),            // 2 DB1  (XGPE reserved)
+          IOTA_TASK(qme_doorbell2_event),            // 1 DB2  (PGPE DDS Requests)
+          IOTA_TASK(qme_doorbell1_event),            // 2 DB1  (XGPE BlockStopWake)
           IOTA_TASK(qme_special_wakeup_rise_event),  // 3 SPWU_RISE
           IOTA_TASK(qme_special_wakeup_fall_event),  // 4 SPWU_FALL
           IOTA_TASK(qme_regular_wakeup_fast_event),  // 5 RGWU_Hipri
           IOTA_TASK(qme_pmcr_update_event),          // 6 PMCR (Permentaly masked as handled by PSREQ reg)
-          IOTA_TASK(qme_doorbell0_event),            // 7 DB0  (Core Throttle)
+          IOTA_TASK(qme_doorbell0_event),            // 7 DB0  (QME Quiesce mode)
           IOTA_TASK(qme_mma_active_event),           // 8 MMA  (TODO MMA priority tops spwu to be discussed)
           IOTA_TASK(qme_pm_state_active_fast_event), // 9 STOP_Hipri
           IOTA_TASK(qme_regular_wakeup_slow_event),  // 10 RGWU_Lopri
@@ -100,21 +100,48 @@ qme_top_priority_event()
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_TOPPRI);
 }
 
-//wof interlock, safe mode
+
+
+//PGPE DDS Requests
 void
 qme_doorbell2_event()
 {
     G_qme_record.uih_status |= BIT32(IDX_PRTY_LVL_DB2);
-    PK_TRACE("Event: Doorbell 2");
+
+    G_qme_record.doorbell2_msg = in32(QME_LCL_DB2) >> SHIFT32(7);
+    out32(QME_LCL_DB2,  0);
+    //HW525040
 #if POWER10_DD_LEVEL == 10
     out64( QME_LCL_EISR_CLR, BIT64(18) );
 #else
     out32( QME_LCL_EISR_CLR, BIT32(18) );
 #endif
+
+    PK_TRACE_INF("Event: UIH Status[%x], Doorbell 2 Message[%x]", G_qme_record.doorbell2_msg);
+
+    // 0xFD: DDS disable sync request globally disable DDS
+    // 0xFC: DDS auto sync request keeps the DDS mode as they should be per core
+    // Stop: DDS should be disabled: disable DDS
+    //       if QME DDS flag is off: disable DDS
+    // Wake: DDS should be enabled:  enable  DDS
+    //       if QME DDS flag is off: enable  DDS
+    // ECO:  DDS should be disabled: disable DDS
+    if( G_qme_record.doorbell2_msg == 0xFC || // DDS auto sync request
+        G_qme_record.doorbell2_msg == 0xFD )  // DDS disable sync request
+    {
+        G_qme_record.dds_sync_req = G_qme_record.doorbell2_msg;
+        out32( QME_LCL_FLAGS_OR, BIT32( QME_FLAGS_DDS_OPERABLE ) );
+
+        if( !( G_qme_record.uih_status & UIH_STOP_EVENT_MASKING ) )
+        {
+            qme_dds_sync();
+        }
+    }
+
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_DB2);
 }
 
-//block entry/exit
+//XGPE Block Entry/Exit
 void
 qme_doorbell1_event()
 {
@@ -277,7 +304,7 @@ qme_doorbell1_event()
     G_qme_record.uih_status &= ~BIT32(IDX_PRTY_LVL_DB1);
 }
 
-//core throttle
+//QME Quiesce Mode
 void
 qme_doorbell0_event()
 {

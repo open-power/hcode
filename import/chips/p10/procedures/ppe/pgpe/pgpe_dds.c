@@ -27,11 +27,15 @@
 #include "pgpe_pstate.h"
 #include "pgpe_gppb.h"
 #include "p10_scom_eq.H"
+#include "p10_scom_eq_9.H"
 #include "p10_scom_c.H"
 #include "p10_scom_c_d.H"
 #include "p10_oci_proc.H"
+#include "p10_oci_proc_4.H"
+#include "p10_oci_proc_5.H"
 #include "pgpe_utils.h"
 #include "pgpe_error.h"
+#include "pstate_pgpe_qme_api.h"
 
 pgpe_dds_t G_pgpe_dds __attribute__((section (".data_structs")));
 
@@ -53,7 +57,7 @@ void* pgpe_dds_data_addr()
 void pgpe_dds_init(uint32_t pstate)
 {
     PK_TRACE_INF("DDS: Init");
-    uint32_t q, c, f, core, core_num;
+    uint32_t q, c, f;
 
     //1. Write DCCR, FLMR and FMMR values
     //Write DCCR
@@ -70,19 +74,6 @@ void pgpe_dds_init(uint32_t pstate)
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FMMR_RW, 0xF), pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting());
     /*PK_TRACE("DDS: FMMR=0x%08x%08x", pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting() >> 32,
              pgpe_gppb_get_dds_other_ftc_misc_droop_mode_reg_setting());*/
-
-    //2 Set OTR Special Wake-up (200E0830[0]=1) on all cores
-    //RTC:214435 Add timeout
-    //\TODO We really should poll for for special wake-up done to make sure all is well
-    // especially as this is done via PM Restart. The cores should already be in Special Wake-up
-    // in that path but we don't want to make assumptions.
-    //
-    //The timeout for this check needs to be in the 100ms range as there could possibly
-    //be cores in STOP 11 and there could be more than 1 in any given EQ.
-    //Polling time should be small (eg 10us) as the done should already set.
-    //We don't want a tight polling loop so that the PIB/PCB is not flooded with polling
-    //operations.  Also, a 10us latency adder for a Pstate Start operation is not a problem.
-    //PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SPWU_OTR, 0xF), BIT64(0));
 
     //2. Clear PGPE internal DDS structure state to 0s
     for (q = 0; q < MAX_QUADS; q++)
@@ -126,6 +117,7 @@ void pgpe_dds_init(uint32_t pstate)
     pgpe_dds_compare_trip_and_delay();
     pgpe_dds_update_pre(pstate);
 
+    /*
     //4. Multicast write-CLEAR FDCR[DISABLE](0) = 1
     uint32_t ccsr;
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
@@ -145,13 +137,53 @@ void pgpe_dds_init(uint32_t pstate)
                 PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_FDCR_WO_CLEAR, q, core), BIT64(0));
             }
         }
+    }*/
+
+    //4. Send Doorbell2 interrupt to QME
+    uint32_t ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
+    uint64_t data = (uint64_t)MSGID_DB2_DDS_AUTO << 56;
+    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_Q_WR(QME_DB2), data);
+
+    //5. Collect ACKs from QME(PCB Type2)
+    //Read Pending bits
+    uint32_t opit2pra;
+    uint32_t expAck, ack;
+    expAck = 0;
+
+    for(q = 0; q < MAX_QUADS; q++)
+    {
+        if(ccsr & (0xF0000000 >> (q << 2)))
+        {
+            expAck |= (0x80000000 >> q);
+        }
     }
 
-    //5. Multicast write-OR QME FLAG[DDS Enable] = 1
-    PPE_PUTSCOM_MC_Q(QME_FLAGS_WO_OR, BIT64(QME_FLAGS_DDS_OPERABLE));
+    PK_TRACE_INF("DDS: ccsr=0x%08x", ccsr);
+    PK_TRACE_INF("DDS: expAck=0x%08x", expAck);
 
-    //6. Clear OTR Special Wake-up register on all cores
-    //PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SPWU_OTR, 0xF), 0x0);
+    while (expAck)
+    {
+        opit2pra = in32(TP_TPCHIP_OCC_OCI_OCB_OPIT2PRA_RO);
+
+        //Loop through quads
+        for (q = 0; q < MAX_QUADS; q++)
+        {
+            //Read payload
+            if ((expAck & QUAD_MASK(q)) && opit2pra & QUAD_MASK(q))
+            {
+                ack = in32(TP_TPCHIP_OCC_OCI_OCB_OPIT2Q0RR + (q << 3));
+                PK_TRACE_INF("DDS: Received Ack from Quad[%u], ack=0x%08x", q, ack);
+
+                if (ack != MSGID_PCB_TYPE2_ACK_AUTO_DDS_SUCCESS)
+                {
+                    //Take out an error log \\TODO
+                }
+
+                expAck = expAck & (~QUAD_MASK(q));
+                //PK_TRACE_INF("DDS: quad_mask=0x%08x, ~quad_mask=0x%08x, expAck=0x%08x", QUAD_MASK(q), ~QUAD_MASK(q), expAck);
+            }
+        }
+    }
 
     //PK_TRACE("DDS: Init Exit");
 }
