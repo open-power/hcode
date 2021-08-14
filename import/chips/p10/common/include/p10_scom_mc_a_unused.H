@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -178,14 +178,6 @@ static const uint32_t MBA_SCOMFIR_WATFNC_5_CFG_LEN = 22;
 static const uint32_t MBA_SCOMFIR_WATFNC_6_CFG = 22;
 static const uint32_t MBA_SCOMFIR_WATFNC_6_CFG_LEN = 22;
 //<< [MBA_SCOMFIR_WATFNC]
-// mc/reg00010.H
-
-//>> [MBA_SCOMFIR_WATFNSEL]
-static const uint64_t MBA_SCOMFIR_WATFNSEL = 0x0c010f90ull;
-
-static const uint32_t MBA_SCOMFIR_WATFNSEL_WAT_FN_SELECT = 0;
-static const uint32_t MBA_SCOMFIR_WATFNSEL_WAT_FN_SELECT_LEN = 55;
-//<< [MBA_SCOMFIR_WATFNSEL]
 // mc/reg00010.H
 
 //>>THE END<<

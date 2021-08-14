@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -58,14 +58,6 @@ static const uint32_t EPS_THERM_WSUB_SKITTER_MODE_REG_SKITTER_SAMPLE_GUTS_LEN = 
 static const uint32_t EPS_THERM_WSUB_SKITTER_MODE_REG_SKITTER_HOLD_SAMPLE_WITH_TRIGGER = 44;
 static const uint32_t EPS_THERM_WSUB_SKITTER_MODE_REG_SKITTER_DATA_V_LT = 45;
 //<< [EPS_THERM_WSUB_SKITTER_MODE_REG]
-// mc/reg00005.H
-
-//>> [MBA_SCOMFIR_WATCFG0]
-static const uint64_t MBA_SCOMFIR_WATCFG0 = 0x0c010f88ull;
-
-static const uint32_t MBA_SCOMFIR_WATCFG0_WAT_0_CFG = 0;
-static const uint32_t MBA_SCOMFIR_WATCFG0_WAT_0_CFG_LEN = 60;
-//<< [MBA_SCOMFIR_WATCFG0]
 // mc/reg00005.H
 
 //>> [SCOMFIR_MCERPT1]

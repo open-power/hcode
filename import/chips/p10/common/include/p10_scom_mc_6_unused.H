@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -114,16 +114,6 @@ static const uint64_t LOCAL_XSTOP_UNMASKED = 0x0c040013ull;
 static const uint32_t LOCAL_XSTOP_UNMASKED_IN = 1;
 static const uint32_t LOCAL_XSTOP_UNMASKED_IN_LEN = 15;
 //<< [LOCAL_XSTOP_UNMASKED]
-// mc/reg00006.H
-
-//>> [MBA_SCOMFIR_WATFNA]
-static const uint64_t MBA_SCOMFIR_WATFNA = 0x0c010f8cull;
-
-static const uint32_t MBA_SCOMFIR_WATFNA_1_CFG = 0;
-static const uint32_t MBA_SCOMFIR_WATFNA_1_CFG_LEN = 22;
-static const uint32_t MBA_SCOMFIR_WATFNA_2_CFG = 22;
-static const uint32_t MBA_SCOMFIR_WATFNA_2_CFG_LEN = 22;
-//<< [MBA_SCOMFIR_WATFNA]
 // mc/reg00006.H
 
 //>> [SCOMFIR_MCMODE3]

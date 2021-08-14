@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -45,14 +45,6 @@ static const uint64_t MBA_SCOMFIR_DBG0_SCOM0Q = 0x0c010f94ull;
 static const uint32_t MBA_SCOMFIR_DBG0_SCOM0Q_DBG0_SCOM0Q_DEBUG_BUS_0_43 = 0;
 static const uint32_t MBA_SCOMFIR_DBG0_SCOM0Q_DBG0_SCOM0Q_DEBUG_BUS_0_43_LEN = 44;
 //<< [MBA_SCOMFIR_DBG0_SCOM0Q]
-// mc/reg00002.H
-
-//>> [MBA_SCOMFIR_WATMSKA0]
-static const uint64_t MBA_SCOMFIR_WATMSKA0 = 0x0c010f80ull;
-
-static const uint32_t MBA_SCOMFIR_WATMSKA0_WAT_MASK_A0 = 0;
-static const uint32_t MBA_SCOMFIR_WATMSKA0_WAT_MASK_A0_LEN = 44;
-//<< [MBA_SCOMFIR_WATMSKA0]
 // mc/reg00002.H
 
 //>> [TRA1_TR0_CONFIG_3]
