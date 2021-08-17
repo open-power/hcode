@@ -705,7 +705,10 @@ load_auto_wakeup_vector()
     if( BLOCK_COPY_SUCCESS != qme_block_copy_check() )
     {
         PK_TRACE_INF("ERROR: BCE Failed For Block Copy Of Auto Wakeup Vector" );
-        IOTA_PANIC(QME_STOP_BLOCK_COPY_AUTO_WKUP_FAILED);
+        QME_ERROR_HANDLER(QME_STOP_BLOCK_COPY_AUTO_WKUP_FAILED,
+                          0,
+                          l_cpmrOffset,
+                          l_sramOffset);
     }
 
     //Copying Auto Wakeup Vector from temp location to QME Record
