@@ -237,7 +237,7 @@ qme_errlog()
 {
     uint32_t errStatus __attribute__((unused));
     uint16_t module_id   = 1 + ((G_qme_record.errl_panic & 300) >> 8);
-    uint8_t  reason_code = (module_id << 4) | ((G_qme_record.errl_panic & 0x180) >> 3);
+    uint8_t  reason_code = (module_id << 4) | ((G_qme_record.errl_panic & 0x18) >> 3);
     uint32_t fault_cores = 0;
     uint32_t timeout = 0;
     uint32_t sprg0 = mfspr(SPRN_SPRG0);
