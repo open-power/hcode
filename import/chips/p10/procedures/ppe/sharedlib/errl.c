@@ -651,8 +651,8 @@ errlHndl_t createErrl(
     errlUDWords_t* p_uDWords,
     uint32_t*      o_status )
 {
-    PK_TRACE_INF (">> createErrl: modid 0x%X rc 0x%X sev 0x%X",
-                  i_modId, i_reasonCode, i_sev);
+    PK_TRACE_INF (">> createErrl: modid 0x%X rc 0x%X extrc 0x%X sev 0x%X",
+                  i_modId, i_reasonCode, i_extReasonCode, i_sev);
 
     errlHndl_t  l_rc = NULL;
     uint64_t    l_time = 0;
