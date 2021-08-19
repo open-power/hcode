@@ -214,8 +214,7 @@ static const t_data_rate_settings* get_data_rate_settings(int i_data_rate)
 
 
 // CDR Settings: rx_pr_phase_step (KP) = 0.296875; rx_pr_fw_inertia_amt (KI) = 4
-//#define CDR_KP_RESET_VALUE 0b0100110
-#define CDR_KP_RESET_VALUE 0b0010000 // HW573685
+#define CDR_KP_RESET_VALUE 0b0100110
 #define CDR_KI_RESET_VALUE 0b0100
 
 
