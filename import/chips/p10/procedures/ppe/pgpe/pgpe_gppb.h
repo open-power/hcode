@@ -52,7 +52,6 @@ extern GlobalPstateParmBlockWOV_t* G_gppb_wov;
 void pgpe_gppb_init();
 void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 
-
 //Macro accessor functions
 #define pgpe_gppb_get_pgpe_flags(x) G_gppb_pgpe_flags[x]
 #define pgpe_gppb_get_reference_frequency() G_gppb_base->reference_frequency_khz
@@ -132,6 +131,5 @@ void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 //WOF
 #define pgpe_gppb_get_vratio_vdd(idx)  G_gppb_wof->vratio_vdd_64ths[idx]
 #define pgpe_gppb_get_vratio_vcs(idx)  G_gppb_wof->vratio_vcs_64ths[idx]
-
 
 #endif

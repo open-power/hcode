@@ -40,11 +40,10 @@
 pgpe_dds_t G_pgpe_dds __attribute__((section (".data_structs")));
 
 //Local Function Prototypes
-uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c);
-uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c);
-uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c);
-uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c);
-void pgpe_dds_compare_trip_and_delay();
+inline uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c, uint32_t r, uint32_t ps_delta);
+inline uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c);
+inline uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c, uint32_t r, uint32_t ps_delta);
+inline uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c, uint32_t r, uint32_t ps_delta);
 
 void* pgpe_dds_data_addr()
 {
@@ -114,33 +113,16 @@ void pgpe_dds_init(uint32_t pstate)
 
     //3.Pre-DVFS DDS Update.
     pgpe_dds_compute(pstate);
-    pgpe_dds_compare_trip_and_delay();
     pgpe_dds_update_pre(pstate);
 
-    /*
-    //4. Multicast write-CLEAR FDCR[DISABLE](0) = 1
     uint32_t ccsr;
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
     uint32_t ecomask = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG6_RW);
-    uint32_t core_mask = ccsr & (~ecomask);
+    G_pgpe_dds.core_mask = ccsr & (~ecomask);
     PK_TRACE_INF("DDS: Ecomask=0x%08x, ccsr=0x%08x, core_mask=0x%08x");
 
-    for (q = 0; q < MAX_QUADS; q++)
-    {
-        for (c = 0; c < CORES_PER_QUAD; c++)
-        {
-            core_num = q * CORES_PER_QUAD + c;
-
-            if ((core_mask & CORE_MASK(core_num)))
-            {
-                core = 0x8 >> c;
-                PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_FDCR_WO_CLEAR, q, core), BIT64(0));
-            }
-        }
-    }*/
-
     //4. Send Doorbell2 interrupt to QME
-    uint32_t ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
+    //uint32_t ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
     uint64_t data = (uint64_t)MSGID_DB2_DDS_AUTO << 56;
     PPE_PUTSCOM(PPE_SCOM_ADDR_MC_Q_WR(QME_DB2), data);
 
@@ -195,83 +177,14 @@ void pgpe_dds_compute(uint32_t pstate)
 {
     PK_TRACE_INF("DDS: Compute");
     uint32_t q, c, core;
-    uint32_t ccsr;
-    ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
+    //uint32_t ccsr;
+    //ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
     //Compute delay and cal adjust
+    uint32_t region  = pgpe_pstate_get_ps_region(pstate, VPD_PT_SET_BIASED);
+    uint32_t ps_delta = pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, region) - pstate;
+
     for (q = 0; q < MAX_QUADS; q++)
-    {
-        for (c = 0; c < CORES_PER_QUAD; c++)
-        {
-            uint32_t core_num = q * CORES_PER_QUAD + c;
-
-            if (ccsr & CORE_MASK(core_num))
-            {
-                core = (q << 2 ) + c;
-                G_pgpe_dds.delay_prev[q][c] = G_pgpe_dds.delay[q][c];
-                G_pgpe_dds.delay[q][c] = pgpe_dds_intp_ins_delay_from_ps(pgpe_pstate_get(pstate_next), core) & 0x000000FF;
-                G_pgpe_dds.cal_adjust_prev[q][c] = G_pgpe_dds.cal_adjust[q][c];
-                G_pgpe_dds.cal_adjust[q][c] = pgpe_dds_intp_cal_adj_from_ps(pstate, core);
-
-                PK_TRACE_DBG("DDS: delay=0x%08x, cal_adjust=0x%08x", G_pgpe_dds.delay[q][c], G_pgpe_dds.cal_adjust[q][c]);
-
-                if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
-                {
-                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET))
-                    {
-                        G_pgpe_dds.other_prev[PGPE_DDS_OTHER_TRIP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c];
-                        G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c] = pgpe_dds_intp_trip(pstate, core);
-                        PK_TRACE_DBG("DDS: trip=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c]);
-                    }
-
-                    if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE))
-                    {
-                        G_pgpe_dds.other_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c];
-                        G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] = pgpe_dds_intp_large(pstate, core);
-                        PK_TRACE_DBG("DDS: large=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]);
-                    }
-                }
-
-            }
-        }
-    }
-
-    //Trip Offsets
-    if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
-    {
-        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET))
-        {
-            G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_TRIP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX];
-            G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX] = pgpe_dds_intp_trip(pstate, 0);
-            //PK_TRACE("DDS: trip=0x%08x", G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX]);
-        }
-
-        //Large
-        if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE))
-        {
-            G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX];
-            G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] = pgpe_dds_intp_large(pstate, 0);
-            //PK_TRACE("DDS: large=0x%08x", G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX]);
-        }
-    }
-
-    //Compare trip and delay
-    pgpe_dds_compare_trip_and_delay();
-    //PK_TRACE("DDS: Compute Exit");
-}
-
-//
-//pgpe_dds_compare_trip_and_delay()
-//
-void pgpe_dds_compare_trip_and_delay()
-{
-    PK_TRACE_INF("DDS: Compare Trip and Delay");
-    uint32_t q, c;
-
-    uint32_t ccsr;
-    ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
-
-    for(q = 0; q < MAX_QUADS; q++)
     {
         G_pgpe_dds.any_delay_larger[q] = 0;
         G_pgpe_dds.any_delay_smaller[q] = 0;
@@ -280,8 +193,16 @@ void pgpe_dds_compare_trip_and_delay()
         {
             uint32_t core_num = q * CORES_PER_QUAD + c;
 
-            if (ccsr & CORE_MASK(core_num))
+            if (G_pgpe_dds.core_mask & CORE_MASK(core_num))
             {
+                core = (q << 2 ) + c;
+                G_pgpe_dds.delay_prev[q][c] = G_pgpe_dds.delay[q][c];
+                G_pgpe_dds.delay[q][c] = pgpe_dds_intp_ins_delay_from_ps(pstate, core, region,
+                                         ps_delta) & 0x000000FF;
+                G_pgpe_dds.cal_adjust_prev[q][c] = G_pgpe_dds.cal_adjust[q][c];
+                G_pgpe_dds.cal_adjust[q][c] = pgpe_dds_intp_cal_adj_from_ps(pstate, core);
+
+                //PK_TRACE_INF("DDS: delay=0x%08x, cal_adjust=0x%08x", G_pgpe_dds.delay[q][c], G_pgpe_dds.cal_adjust[q][c]);
                 if (G_pgpe_dds.any_delay_larger[q] == 0)
                 {
                     G_pgpe_dds.any_delay_larger[q] = G_pgpe_dds.delay[q][c] > G_pgpe_dds.delay_prev[q][c] ? 1 : 0;
@@ -302,15 +223,13 @@ void pgpe_dds_compare_trip_and_delay()
                     G_pgpe_dds.any_cal_earlier[q] = G_pgpe_dds.cal_adjust[q][c] < G_pgpe_dds.cal_adjust_prev[q][c] ? 1 : 0;
                 }
 
-                PK_TRACE_DBG("DDS: delay_smaller=%u,delay_larger=%u,cal_later=%u,cal_earlier=%u", G_pgpe_dds.any_delay_larger[q],
-                             G_pgpe_dds.any_delay_smaller[q],
-                             G_pgpe_dds.any_cal_later[q],
-                             G_pgpe_dds.any_cal_earlier[q]);
-
                 if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
                 {
                     if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET))
                     {
+                        G_pgpe_dds.other_prev[PGPE_DDS_OTHER_TRIP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c];
+                        G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c] = pgpe_dds_intp_trip(pstate, core, region, ps_delta);
+                        PK_TRACE_DBG("DDS: trip=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c]);
                         G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_TRIP_IDX][q][c]  = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c] >
                                 G_pgpe_dds.other_prev[PGPE_DDS_OTHER_TRIP_IDX][q][c] ? 1 : 0;
                         G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_TRIP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c] <
@@ -319,48 +238,52 @@ void pgpe_dds_compare_trip_and_delay()
 
                     if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE))
                     {
+                        G_pgpe_dds.other_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] = G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c];
+                        G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] = pgpe_dds_intp_large(pstate, core, region, ps_delta);
+                        PK_TRACE_DBG("DDS: large=0x%08x", G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]);
                         G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]  =
                             G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] >
                             G_pgpe_dds.other_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] ? 1 : 0;
                         G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] =
                             G_pgpe_dds.other[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] <
                             G_pgpe_dds.other_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c] ? 1 : 0;
-                    }
 
-                    PK_TRACE_DBG("DDS:[%u][%u] trip_larger=%u,trip_smaller=%u", q, c,
-                                 G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_TRIP_IDX][q][c],
-                                 G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_TRIP_IDX][q][c]);
-                    PK_TRACE_DBG("DDS: [%u][%u]large_larger=%u,large_smaller=%u", q, c,
-                                 G_pgpe_dds.any_other_larger[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c],
-                                 G_pgpe_dds.any_other_smaller[PGPE_DDS_OTHER_LARGE_DROOP_IDX][q][c]);
+                    }
                 }
+
             }
         }
     }
 
+    //Trip Offsets
     if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
     {
         if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_TRIP_OFFSET))
         {
+            G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_TRIP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX];
+            G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX] = pgpe_dds_intp_trip(pstate, 0, region, ps_delta);
             G_pgpe_dds.any_other_larger_chip[PGPE_DDS_OTHER_TRIP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX] >
                     G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_TRIP_IDX] ? 1 : 0;
             G_pgpe_dds.any_other_smaller_chip[PGPE_DDS_OTHER_TRIP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX] <
                     G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_TRIP_IDX] ? 1 : 0;
+
+            //PK_TRACE("DDS: trip=0x%08x", G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX]);
         }
 
+        //Large
         if (pgpe_gppb_get_dds_trip_intp_ctrl(DDS_TRIP_INTP_CTRL_LARGE))
         {
+            G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX];
+            G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] = pgpe_dds_intp_large(pstate, 0, region, ps_delta);
             G_pgpe_dds.any_other_larger_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX]
-                    >
-                    G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX] ? 1 : 0;
+                    > G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX] ? 1 : 0;
             G_pgpe_dds.any_other_smaller_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] =
-                G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] <
-                G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX] ? 1 : 0;
+                G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX] < G_pgpe_dds.other_chip_prev[PGPE_DDS_OTHER_LARGE_DROOP_IDX] ? 1 :
+                0;
+
+            //PK_TRACE("DDS: large=0x%08x", G_pgpe_dds.other_chip[PGPE_DDS_OTHER_LARGE_DROOP_IDX]);
         }
-
     }
-
-    //PK_TRACE("DDS: Compare Trip and Delay Exit");
 }
 
 //
@@ -373,9 +296,7 @@ void pgpe_dds_update_pre(uint32_t pstate)
     PK_TRACE_INF("DDS: Update Pre ");
     uint32_t ducr_upd_needed = 0;
     uint32_t q, c;
-    uint32_t ccsr;
     uint32_t update = 0;
-    ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
     //1. If TripMode=chip and any_trip_larger
     if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
@@ -418,7 +339,7 @@ void pgpe_dds_update_pre(uint32_t pstate)
         {
             uint32_t core_num = q * CORES_PER_QUAD + c;
 
-            if (ccsr & CORE_MASK(core_num))
+            if (G_pgpe_dds.core_mask & CORE_MASK(core_num))
             {
                 //1. If TripMode=Core
                 if ((pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE))
@@ -498,9 +419,7 @@ void pgpe_dds_update_post(uint32_t pstate)
 
     uint32_t ducr_upd_needed = 0;
     uint32_t q, c;
-    uint32_t ccsr;
     uint32_t update = 0;
-    ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
     //1. If TripMode=chip and any_trip_smaller
     if( pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
@@ -538,7 +457,7 @@ void pgpe_dds_update_post(uint32_t pstate)
         //1. For each core c
         for (c = 0; c < CORES_PER_QUAD; c++)
         {
-            if (ccsr & CORE_MASK(((q << 2) + c)))
+            if (G_pgpe_dds.core_mask & CORE_MASK(((q << 2) + c)))
             {
                 //1. If TripMode=Core
                 if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CORE)
@@ -650,15 +569,14 @@ void pgpe_dds_poll_done()
 //
 //pgpe_dds_delay()
 //
-uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c)
+inline uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c, uint32_t r, uint32_t ps_delta)
 {
     PK_TRACE_DBG("DDS: Intp Delay ps=0x%x, c=%u", ps, c);
     uint32_t delay;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_BIASED);
 
     //Round-up by adding 1/2
     delay = (((pgpe_gppb_get_dds_delay_ps_slope(VPD_PT_SET_BIASED, c, r)) *
-              (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r))) >> (DDS_DELAY_SLOPE_FP_SHIFT_12 - 1));
+              (ps_delta)) >> (DDS_DELAY_SLOPE_FP_SHIFT_12 - 1));
 
     if (pgpe_gppb_get_dds_delay(c, r) <= pgpe_gppb_get_dds_delay(c, r + 1))
     {
@@ -678,7 +596,7 @@ uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c)
 //
 //pgpe_dds_cal_adjust()
 //
-uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c)
+inline uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c)
 {
     uint32_t cal_adj;
 
@@ -695,14 +613,13 @@ uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c)
 //
 //pgpe_dds_intp_trip()
 //
-uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c)
+inline uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c, uint32_t r, uint32_t ps_delta)
 {
     uint32_t trip;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_BIASED);
 
     //Round-up by adding 1/2
     trip = (((pgpe_gppb_get_dds_trip_ps_slope(VPD_PT_SET_BIASED, c, r)) *
-             (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r))) >> (DDS_SLOPE_FP_SHIFT_6 - 1));
+             (ps_delta)) >> (DDS_SLOPE_FP_SHIFT_6 - 1));
 
     if (pgpe_gppb_get_dds_trip(c, r) <= pgpe_gppb_get_dds_trip(c, r + 1))
     {
@@ -721,14 +638,13 @@ uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c)
 //
 //pgpe_dds_intp_large()
 //
-uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c)
+inline uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c, uint32_t r, uint32_t ps_delta)
 {
     uint32_t large;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, VPD_PT_SET_BIASED);
 
     //Round-up by adding 1/2
     large = (((pgpe_gppb_get_dds_large_ps_slope(VPD_PT_SET_BIASED, c, r)) *
-              (-ps + pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r))) >> (DDS_SLOPE_FP_SHIFT_6 - 1));
+              (ps_delta )) >> (DDS_SLOPE_FP_SHIFT_6 - 1));
 
     PK_TRACE_DBG("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
 

@@ -62,6 +62,7 @@ typedef struct pgpe_dds
     uint32_t other_chip[PGPE_DDS_OTHER_MAX], other_chip_prev[PGPE_DDS_OTHER_MAX];
     uint32_t any_other_larger_chip[PGPE_DDS_OTHER_MAX], any_other_smaller_chip[PGPE_DDS_OTHER_MAX];
     qme_fdcr_t fdcr_chip;
+    uint32_t core_mask;
 } pgpe_dds_t;
 
 extern pgpe_dds_t G_pgpe_dds;
