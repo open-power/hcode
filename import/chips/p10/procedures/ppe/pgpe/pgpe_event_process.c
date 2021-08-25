@@ -913,11 +913,11 @@ void pgpe_process_xstop_fault()
     //Mask interrupt except IPC and Error
     pgpe_error_mask_irqs();
 
-    //Take out a critical log
-    pgpe_error_critical_log(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
+    //Take out a info log
+    pgpe_error_info_log(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
 
     //Notify error module
-    pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
+    pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
 
     //Check whether PGPE should halt
     if (in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW) & BIT32(PGPE_DEBUG_HALT_ENABLE))
