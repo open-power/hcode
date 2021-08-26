@@ -40,6 +40,7 @@
 #include "p10_scom_eq_3.H"
 #include "p10_scom_c_4.H"
 #include "p10_scom_eq_8.H"
+#include "pstates_occ.H"
 
 //
 //Local function prototypes
@@ -76,13 +77,18 @@ void pgpe_pstate_init()
         G_pgpe_pstate.ps_request[i] = 0xFF;
     }
 
+
+    uint32_t* oppb_address = (uint32_t*)0x80300040;
+    OCCPstateParmBlock_t* oppb = (OCCPstateParmBlock_t*)(*oppb_address + 0x80300000);
+    PK_TRACE_INF("PSS: OPPB_Offset=0x%08x, OPPB_Addr=0x%08x", *oppb_address, (uint32_t)oppb);
+    uint32_t msr = mfmsr();
+    mtmsr(msr & ~MSR_IPE);
+    G_pgpe_pstate.sort_core_count =  oppb->iddq.good_normal_cores_per_sort;
+    mtmsr(msr);//Restore MSR
+    PK_TRACE_INF("PSS: sort_core_cores=%u", G_pgpe_pstate.sort_core_count);
+
     for (i = 0; i < MAX_CORES; i++)
     {
-        if (ccsr & CORE_MASK(i))
-        {
-            G_pgpe_pstate.sort_core_count++;
-        }
-
         if (ecomask & CORE_MASK(i))
         {
             G_pgpe_pstate.eco_core_count++;
