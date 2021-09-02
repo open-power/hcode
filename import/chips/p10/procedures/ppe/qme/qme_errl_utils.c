@@ -225,10 +225,17 @@ qme_panic_handler()
         PK_TRACE_INF ("Panic: QME Quiesced, Wait in endless loop .. ");
         out32( QME_LCL_FLAGS_OR, BIT32(QME_FLAGS_QUIESCE_MODE) );
 
-        // keep the fit timer workaround alive while mask external interrupts
-        wrteei(1);
+        if( G_IsSimics )
+        {
+            iota_halt();
+        }
+        else
+        {
+            // keep the fit timer workaround alive while mask external interrupts
+            wrteei(1);
 
-        while(1);
+            while(1);
+        }
     }
 }
 
