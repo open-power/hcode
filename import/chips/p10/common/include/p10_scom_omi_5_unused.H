@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -65,17 +65,6 @@ static const uint64_t RXCTL_DATASM_2_PLREGS_RX_CNTL3_PL = 0x8003d84210012c3full;
 static const uint32_t RXCTL_DATASM_2_PLREGS_RX_CNTL3_PL_REQ_ALT = 48;
 static const uint32_t RXCTL_DATASM_2_PLREGS_RX_CNTL3_PL_STS_ALT = 49;
 //<< [RXCTL_DATASM_2_PLREGS_RX_CNTL3_PL]
-// omi/reg00010.H
-
-//>> [RXCTL_DATASM_4_PLREGS_RX_MODE1_PL]
-static const uint64_t RXCTL_DATASM_4_PLREGS_RX_MODE1_PL = 0x8003d04410012c3full;
-
-static const uint32_t RXCTL_DATASM_4_PLREGS_RX_MODE1_PL_RECAL_REQ_DL_MASK = 48;
-static const uint32_t RXCTL_DATASM_4_PLREGS_RX_MODE1_PL_RECAL_DONE_DL_MASK = 49;
-static const uint32_t RXCTL_DATASM_4_PLREGS_RX_MODE1_PL_RUN_LANE_DL_MASK = 50;
-static const uint32_t RXCTL_DATASM_4_PLREGS_RX_MODE1_PL_RECAL_ABORT_DL_MASK = 51;
-static const uint32_t RXCTL_DATASM_4_PLREGS_RX_MODE1_PL_INIT_DONE_DL_MASK = 52;
-//<< [RXCTL_DATASM_4_PLREGS_RX_MODE1_PL]
 // omi/reg00010.H
 
 //>> [RXCTL_DATASM_6_PLREGS_RX_CNTL2_PL]
