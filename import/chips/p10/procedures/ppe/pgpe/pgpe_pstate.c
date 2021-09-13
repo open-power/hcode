@@ -192,6 +192,9 @@ void* pgpe_pstate_data_addr()
 void pgpe_pstate_actuate_step()
 {
     PkMachineContext ctx;
+    uint32_t q, c;
+    uint32_t ccsr;
+    ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
     PK_TRACE_INF("PSS: Enter Act_S PsCurr=0x%x, PsTgt=0x%x", G_pgpe_pstate.pstate_curr, G_pgpe_pstate.pstate_target);
 
@@ -470,8 +473,24 @@ void pgpe_pstate_actuate_step()
         if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) < pgpe_gppb_get_rvrm_deadzone_mv())
         {
             pgpe_xgpe_send_vret_updt(UPDATE_VRET_TYPE_SET);
+
             //Set RVCSR[RVID_OVERRIDE]
-            PPE_PUTSCOM_MC(CPMS_RVCSR_WO_OR, 0xF, BIT64(CPMS_RVCSR_RVID_OVERRIDE));
+            for(q = 0; q < MAX_QUADS; q++)
+            {
+                if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RVRM_QVID_ENABLE_VEC) & (0x00000080 >> q))
+                {
+                    for (c = 0; c < CORES_PER_QUAD; c++)
+                    {
+                        uint32_t core_num = q * CORES_PER_QUAD + c;
+
+                        if (ccsr & CORE_MASK(core_num))
+                        {
+                            uint32_t core = 0x8 >> c;
+                            PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_RVCSR_WO_OR, q, core), BIT64(CPMS_RVCSR_RVID_OVERRIDE));
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -559,8 +578,24 @@ void pgpe_pstate_actuate_step()
         if ((G_pgpe_pstate.vdd_next_ext - G_pgpe_pstate.rvrm_volt) >= pgpe_gppb_get_rvrm_deadzone_mv())
         {
             pgpe_xgpe_send_vret_updt(UPDATE_VRET_TYPE_CLEAR);
-            //Set RVCSR[RVID_OVERRIDE]
-            PPE_PUTSCOM_MC(CPMS_RVCSR_WO_CLEAR, 0xF, BIT64(CPMS_RVCSR_RVID_OVERRIDE));
+
+            for(q = 0; q < MAX_QUADS; q++)
+            {
+                if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_RVRM_QVID_ENABLE_VEC) & (0x00000080 >> q))
+                {
+                    for (c = 0; c < CORES_PER_QUAD; c++)
+                    {
+                        uint32_t core_num = q * CORES_PER_QUAD + c;
+
+                        if (ccsr & CORE_MASK(core_num))
+                        {
+                            //Set RVCSR[RVID_OVERRIDE]
+                            uint32_t core = 0x8 >> c;
+                            PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_RVCSR_WO_CLEAR, q, core), BIT64(CPMS_RVCSR_RVID_OVERRIDE));
+                        }
+                    }
+                }
+            }
         }
     }
 
