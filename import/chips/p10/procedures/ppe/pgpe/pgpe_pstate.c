@@ -153,6 +153,11 @@ void pgpe_pstate_init()
     G_pgpe_pstate.power_proxy_scale  = 0;
     G_pgpe_pstate.update_pgpe_beacon = 1;
     G_pgpe_pstate.voltage_step_trace_cnt = 0;
+    G_pgpe_pstate.throttle_clip = 0;
+    G_pgpe_pstate.throttle_vrt = 0;
+    G_pgpe_pstate.throttle_pmcr = 0;
+    G_pgpe_pstate.throttle_target = 0;
+    G_pgpe_pstate.throttle_curr = 0;
 
 
     PPE_GETSCOM_MC_Q_EQU(QME_RVCR, rvcr);
@@ -757,6 +762,24 @@ void pgpe_pstate_actuate_voltage_step()
     }
 }
 
+void pgpe_pstate_actuate_throttle()
+{
+    //Throttle PI Loop
+    if(pgpe_pstate_is_wof_enabled())
+    {
+        pgpe_thr_ctrl_update(G_pgpe_pstate.throttle_target);
+    }
+    //Directly go to throttle
+    else
+    {
+        pgpe_thr_ctrl_set_next_ftx(G_pgpe_pstate.throttle_target);
+        pgpe_thr_ctrl_write_wcor(G_pgpe_pstate.throttle_target);
+        pgpe_thr_ctrl_set_curr_ftx(G_pgpe_pstate.throttle_target);
+    }
+
+    G_pgpe_pstate.throttle_curr = pgpe_thr_ctrl_get_curr_ftx();
+}
+
 void pgpe_pstate_actuate_safe_mode()
 {
     PkMachineContext ctx;
@@ -764,8 +787,8 @@ void pgpe_pstate_actuate_safe_mode()
     //Move throttling to ATTR_SAFE_MODE_THROTTLE_IDX
     if (pgpe_thr_ctrl_is_enabled())
     {
-        pgpe_thr_ctrl_set_ceff_ovr_idx(pgpe_gppb_get_safe_throttle_idx());
-        pgpe_thr_ctrl_write_wcor();
+        pgpe_thr_ctrl_set_curr_ftx(pgpe_gppb_get_safe_throttle_idx());
+        pgpe_thr_ctrl_write_wcor(pgpe_gppb_get_safe_throttle_idx());
     }
 
     //Set ps request, clips and target to safe mode
@@ -805,21 +828,6 @@ void pgpe_pstate_actuate_safe_mode()
 
 }
 
-void pgpe_pstate_do_throttle()
-{
-    if (pgpe_thr_ctrl_is_enabled())
-    {
-        if (G_pgpe_pstate.pstate_computed > G_pgpe_pstate.pstate_safe)
-        {
-            pgpe_thr_ctrl_update(G_pgpe_pstate.pstate_computed);
-        }
-        else
-        {
-            pgpe_thr_ctrl_update(G_pgpe_pstate.pstate_safe);
-        }
-    }
-}
-
 //\todo Determine if this is really needed. One optimization
 //is to keep a minimum value which is updated whenever a set_pmcr IPC comes in
 //or pmcr request is forwarded. That is update the min whenever G_pgpe_pstate.ps_request
@@ -840,6 +848,49 @@ void pgpe_pstate_compute()
     G_pgpe_pstate.pstate_computed = min;
 
     PK_TRACE_INF("PSS: PsComputed=0x%x", G_pgpe_pstate.pstate_computed);
+}
+
+void pgpe_pstate_set_throttle_pmcr()
+{
+    G_pgpe_pstate.throttle_pmcr = G_pgpe_pstate.pstate_computed > pgpe_pstate_get(pstate_safe)
+                                  ? G_pgpe_pstate.pstate_computed - pgpe_pstate_get(pstate_safe) : 0;
+    PK_TRACE_INF("PSS: PMCRThr=0x%x", G_pgpe_pstate.throttle_pmcr);
+}
+
+void pgpe_pstate_set_throttle_clip()
+{
+    G_pgpe_pstate.throttle_clip = G_pgpe_pstate.clip_min  > pgpe_pstate_get(pstate_safe)
+                                  ? G_pgpe_pstate.clip_min - pgpe_pstate_get(pstate_safe) : 0;
+    PK_TRACE_INF("PSS: ClipThr=0x%x", G_pgpe_pstate.throttle_clip);
+}
+
+void pgpe_pstate_set_throttle_vrt()
+{
+    G_pgpe_pstate.throttle_vrt = G_pgpe_pstate.clip_wof  > pgpe_pstate_get(pstate_safe)
+                                 ? G_pgpe_pstate.clip_wof - pgpe_pstate_get(pstate_safe) : 0;
+    PK_TRACE_INF("PSS: VRTThr=0x%x", G_pgpe_pstate.throttle_vrt);
+}
+
+void pgpe_pstate_throttle_compute()
+{
+    G_pgpe_pstate.throttle_target = G_pgpe_pstate.throttle_pmcr;
+
+    if(G_pgpe_pstate.throttle_target < G_pgpe_pstate.throttle_clip)
+    {
+        G_pgpe_pstate.throttle_target = G_pgpe_pstate.throttle_clip;
+    }
+
+    if(G_pgpe_pstate.throttle_target < G_pgpe_pstate.throttle_vrt)
+    {
+        G_pgpe_pstate.throttle_target = G_pgpe_pstate.throttle_vrt;
+    }
+
+    PK_TRACE_INF("PSS: PsThrTarget=0x%x", G_pgpe_pstate.throttle_target);
+}
+
+uint32_t pgpe_pstate_is_at_throttle_target()
+{
+    return (G_pgpe_pstate.throttle_target == G_pgpe_pstate.throttle_curr);
 }
 
 void pgpe_pstate_apply_clips()
@@ -1579,15 +1630,24 @@ uint32_t pgpe_pstate_is_clip_bounded()
     uint32_t clip_min = G_pgpe_pstate.clip_min > G_pgpe_pstate.pstate_safe ? G_pgpe_pstate.pstate_safe :
                         G_pgpe_pstate.clip_min;
 
+    uint32_t ps_bounded = 0;
+    uint32_t thr_bounded = 1;
+
     if ((G_pgpe_pstate.pstate_curr >= clip_min) &&
         (G_pgpe_pstate.pstate_curr <= G_pgpe_pstate.clip_max))
     {
-        return 1;
+        ps_bounded = 1;
     }
-    else
+
+    if (pgpe_thr_ctrl_is_enabled())
     {
-        return 0;
+        if(G_pgpe_pstate.throttle_clip > G_pgpe_pstate.throttle_curr)
+        {
+            thr_bounded = 0;
+        }
     }
+
+    return (thr_bounded && ps_bounded);
 }
 
 uint32_t pgpe_pstate_is_wof_clip_bounded()
@@ -1612,15 +1672,24 @@ uint32_t pgpe_pstate_is_wof_clip_bounded()
         clip_bound = G_pgpe_pstate.pstate_safe;
     }
 
+    uint32_t ps_bounded = 0;
+    uint32_t thr_bounded = 1;
+
     //Now, check if current pstate is within bound
     if (G_pgpe_pstate.pstate_curr >= clip_bound)
     {
-        return 1;
+        ps_bounded = 1;
     }
-    else
+
+    if (pgpe_thr_ctrl_is_enabled())
     {
-        return 0;
+        if(G_pgpe_pstate.throttle_vrt > G_pgpe_pstate.throttle_curr)
+        {
+            thr_bounded = 0;
+        }
     }
+
+    return (thr_bounded && ps_bounded);
 }
 
 void pgpe_pstate_pmsr_updt()
