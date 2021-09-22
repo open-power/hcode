@@ -407,7 +407,10 @@ void pgpe_process_pstate_stop()
     //DDS left untouched
 
     //Disable WOF
-    pgpe_process_wof_disable();
+    if (pgpe_pstate_is_wof_enabled())
+    {
+        pgpe_process_wof_disable();
+    }
 
     //Disable WOV and OCS
     pgpe_wov_ocs_disable();
@@ -474,6 +477,12 @@ void pgpe_process_clip_update(void* eargs)
         pgpe_pstate_compute();
         pgpe_pstate_apply_clips();
         pgpe_event_tbl_set_status(EV_IPC_CLIP_UPDT, EVENT_PENDING_ACTUATION);
+
+        if (pgpe_thr_ctrl_is_enabled())
+        {
+            pgpe_pstate_set_throttle_clip();
+            pgpe_pstate_throttle_compute();
+        }
     }
     else
     {
@@ -519,6 +528,7 @@ void pgpe_process_clip_update_post_actuate()
     {
         PK_TRACE_INF("PEP: PS Clips Bounded");
 
+        /*
         if (pgpe_thr_ctrl_is_enabled())
         {
             uint32_t pstate = (pgpe_pstate_get(clip_min) >= pgpe_pstate_get(pstate_safe)) ? pgpe_pstate_get(
@@ -536,7 +546,7 @@ void pgpe_process_clip_update_post_actuate()
                 pgpe_thr_ctrl_set_ceff_ovr_idx(overrage);
                 pgpe_thr_ctrl_write_wcor();
             }
-        }
+        }*/
 
         //Update PMSR
         pgpe_pstate_pmsr_updt();
@@ -573,6 +583,12 @@ void pgpe_process_pmcr_request(void* eargs)
 
         pgpe_pstate_compute();
         pgpe_pstate_apply_clips();
+
+        if (pgpe_thr_ctrl_is_enabled())
+        {
+            pgpe_pstate_set_throttle_pmcr();
+            pgpe_pstate_throttle_compute();
+        }
     }
 
     pgpe_event_tbl_set_status(EV_IPC_SET_PMCR, EVENT_INACTIVE);
@@ -608,6 +624,12 @@ void pgpe_process_pcb_pmcr_request(void* eargs)
 
     pgpe_pstate_compute();
     pgpe_pstate_apply_clips();
+
+    if (pgpe_thr_ctrl_is_enabled())
+    {
+        pgpe_pstate_set_throttle_pmcr();
+        pgpe_pstate_throttle_compute();
+    }
 
     pgpe_event_tbl_set_status(EV_PCB_SET_PMCR, EVENT_INACTIVE);
 }
@@ -821,6 +843,12 @@ void pgpe_process_wof_vrt(void* eargs)
 
                     pgpe_pstate_compute();
                     pgpe_pstate_apply_clips();
+
+                    if (pgpe_thr_ctrl_is_enabled())
+                    {
+                        pgpe_pstate_set_throttle_vrt();
+                        pgpe_pstate_throttle_compute();
+                    }
                 }
             }
             else
@@ -852,6 +880,7 @@ void pgpe_process_wof_vrt_post_actuate()
     {
         PK_TRACE_INF("PEP: WOF Clip Bounded");
 
+        /*
         if (pgpe_thr_ctrl_is_enabled())
         {
             if(pgpe_pstate_get(clip_wof) >= pgpe_pstate_get(pstate_safe))
@@ -862,7 +891,7 @@ void pgpe_process_wof_vrt_post_actuate()
             {
                 pgpe_thr_ctrl_update(pgpe_pstate_get(pstate_safe));
             }
-        }
+        }*/
 
         pgpe_event_tbl_set_status(EV_IPC_WOF_VRT, EVENT_INACTIVE);
         pgpe_occ_send_ipc_ack_type_rc(EV_IPC_WOF_VRT, PGPE_RC_SUCCESS);

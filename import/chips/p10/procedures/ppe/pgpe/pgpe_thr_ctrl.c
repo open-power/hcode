@@ -48,51 +48,107 @@ void pgpe_thr_ctrl_init()
         PK_TRACE_INF("THR: Inited");
     }
 
-    G_pgpe_thr_ctrl.ceff_ovr = 0;
-    G_pgpe_thr_ctrl.curr_ceff_ovr_idx = 0;
+    //G_pgpe_thr_ctrl.ceff_ovr = 0;
+    //G_pgpe_thr_ctrl.curr_ceff_ovr_idx = 0;
+    uint32_t i = 0;
+
+    for (i = 0; i < PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE; i++)
+    {
+        G_pgpe_thr_ctrl.ceff_err_array[i] = 0;
+    }
+
+    G_pgpe_thr_ctrl.ceff_err_idx = 0;
+    G_pgpe_thr_ctrl.ceff_err_sum = 0;
+    G_pgpe_thr_ctrl.ceff_err_avg = 0;
+    G_pgpe_thr_ctrl.curr_ftx = 0;
+    G_pgpe_thr_ctrl.next_ftx = 0;
 }
 
 void pgpe_thr_ctrl_update(uint32_t pstate)
 {
-    uint32_t vrt_overage =  pstate - pgpe_pstate_get(pstate_safe);
+    uint32_t target_ftx = pstate - pgpe_pstate_get(pstate_safe);
+    uint32_t ceff_err, ceff_prop, ceff_intg, ceff_adj;
 
-    PK_TRACE_INF("THR: vrt_over=0x%x, curr_ceff_ovr_idx=0x%x", vrt_overage, G_pgpe_thr_ctrl.curr_ceff_ovr_idx);
-    uint32_t prev_ceff_ovr_idx = G_pgpe_thr_ctrl.curr_ceff_ovr_idx;
+    PK_TRACE_INF("THR: Update, ps=%u, target_ftx=%u", pstate, target_ftx);
 
-    //if  VRT overage == 0 && present_ceff_overage_index == 0
-    if ((vrt_overage == 0) && (G_pgpe_thr_ctrl.curr_ceff_ovr_idx == 0))
+    do
     {
-        //nop
-    }
-    else if ((vrt_overage > 0) &&  (vrt_overage > G_pgpe_thr_ctrl.curr_ceff_ovr_idx))
-    {
-        G_pgpe_thr_ctrl.curr_ceff_ovr_idx = vrt_overage;
-        pgpe_thr_ctrl_write_wcor();
-    }
-    else if ((vrt_overage > 0) &&  (vrt_overage < G_pgpe_thr_ctrl.curr_ceff_ovr_idx))
-    {
-        G_pgpe_thr_ctrl.curr_ceff_ovr_idx = (G_pgpe_thr_ctrl.curr_ceff_ovr_idx - vrt_overage) / 2 + vrt_overage;
-        pgpe_thr_ctrl_write_wcor();
-    }
-    else if ((vrt_overage == 0) && (G_pgpe_thr_ctrl.curr_ceff_ovr_idx != 0))
-    {
-        G_pgpe_thr_ctrl.curr_ceff_ovr_idx = (G_pgpe_thr_ctrl.curr_ceff_ovr_idx) / 2;
-        pgpe_thr_ctrl_write_wcor();
-    }
-    else
-    {
-        //ERROR \\todo
-    }
+        ceff_err = (target_ftx - G_pgpe_thr_ctrl.curr_ftx) > 0 ? (target_ftx - G_pgpe_thr_ctrl.curr_ftx) : 0;
 
-    pgpe_opt_set_word(0, 0);
-    pgpe_opt_set_byte(0, (uint8_t)vrt_overage);
-    pgpe_opt_set_byte(1, (uint8_t)G_pgpe_thr_ctrl.ceff_ovr);
-    pgpe_opt_set_byte(2, (uint8_t)G_pgpe_thr_ctrl.curr_ceff_ovr_idx);
-    pgpe_opt_set_byte(3, (uint8_t)prev_ceff_ovr_idx);
-    ppe_trace_op(PGPE_OPT_CEFF_OVERAGE_UPDT, pgpe_opt_get());
-    PK_TRACE_INF("THR: vrt_over=0x%x, curr_ceff_ovr_idx=0x%x", vrt_overage, G_pgpe_thr_ctrl.curr_ceff_ovr_idx);
+        //Compute CEFF_AVG_ERR
+        G_pgpe_thr_ctrl.ceff_err_sum = G_pgpe_thr_ctrl.ceff_err_sum -
+                                       G_pgpe_thr_ctrl.ceff_err_array[G_pgpe_thr_ctrl.ceff_err_idx] + ceff_err;
+        G_pgpe_thr_ctrl.ceff_err_avg = (G_pgpe_thr_ctrl.ceff_err_sum + PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE) >>
+                                       (PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE_SHIFT);
+        G_pgpe_thr_ctrl.ceff_err_array[G_pgpe_thr_ctrl.ceff_err_idx] = ceff_err;
+        G_pgpe_thr_ctrl.ceff_err_idx = (G_pgpe_thr_ctrl.ceff_err_idx + 1) % PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE;
+
+        PK_TRACE_INF("THR: ceff_err_sum=%u, ceff_err_avg=%u,ceff_err_idx=%u", G_pgpe_thr_ctrl.ceff_err_sum,
+                     G_pgpe_thr_ctrl.ceff_err_avg, G_pgpe_thr_ctrl.ceff_err_idx);
+
+        //No throttle
+        if ((ceff_err == 0) && target_ftx <= 0)
+        {
+            G_pgpe_thr_ctrl.next_ftx = 0;
+            break;
+        }
+
+        //PI coefficients
+        ceff_prop = pgpe_gppb_get_thr_ctrl_kp() * ceff_err;
+        ceff_intg = ((target_ftx + G_pgpe_thr_ctrl.curr_ftx) != 0) ? pgpe_gppb_get_thr_ctrl_ki() *
+                    G_pgpe_thr_ctrl.ceff_err_avg : 0;
+        ceff_adj  = (ceff_prop + ceff_intg) >> 6;
+
+        //Next FTX
+        if (ceff_err > 0 && target_ftx <= 0)
+        {
+            G_pgpe_thr_ctrl.next_ftx = ceff_adj;
+        }
+        else if (ceff_err > 0 && (target_ftx > G_pgpe_thr_ctrl.curr_ftx))
+        {
+            G_pgpe_thr_ctrl.next_ftx = target_ftx + ceff_adj;
+        }
+        else if(ceff_err > 0 && (target_ftx < G_pgpe_thr_ctrl.curr_ftx))
+        {
+            G_pgpe_thr_ctrl.next_ftx = target_ftx + (ceff_adj >> 1);
+        }
+        else if(ceff_err == 0 && (target_ftx > G_pgpe_thr_ctrl.curr_ftx))
+        {
+            G_pgpe_thr_ctrl.next_ftx = target_ftx + (ceff_adj >> 1);
+        }
+        else if(ceff_err == 0 && (target_ftx < G_pgpe_thr_ctrl.curr_ftx))
+        {
+            G_pgpe_thr_ctrl.next_ftx = target_ftx + ceff_adj;
+        }
+
+        PK_TRACE_INF("THR: ceff_prop=%u, ceff_intg=%u,ceff_adj=%u", ceff_prop, ceff_intg, ceff_adj);
+        PK_TRACE_INF("THR: next_ftx=%u", G_pgpe_thr_ctrl.next_ftx);
+
+    }
+    while(0);
+
+    //prev_ftx = next_ftx;
+    pgpe_thr_ctrl_write_wcor(G_pgpe_thr_ctrl.next_ftx);
+    G_pgpe_thr_ctrl.next_ftx = G_pgpe_thr_ctrl.curr_ftx;
 }
 
+void pgpe_thr_ctrl_write_wcor(uint32_t ceff_ovr_idx)
+{
+    qme_wcor_t wcor;
+    wcor.value = 0;
+
+    //Replicate present_ceff_overage_index to all Cx_THROTTLE_INDEX fields
+    wcor.fields.c3_thr_idx = ceff_ovr_idx;
+    wcor.fields.c2_thr_idx = ceff_ovr_idx;
+    wcor.fields.c1_thr_idx = ceff_ovr_idx;
+    wcor.fields.c0_thr_idx = ceff_ovr_idx;
+
+    //Multicast Write all QMEs WCOR with above value
+    PPE_PUTSCOM_MC_Q(QME_WCOR, wcor.value);
+    PK_TRACE_INF("THR: ceff_ovr_idx=0x%08x", ceff_ovr_idx);
+}
+
+/*
 void pgpe_thr_ctrl_set_ceff_ovr_idx(uint32_t idx)
 {
     G_pgpe_thr_ctrl.curr_ceff_ovr_idx = idx;
@@ -111,4 +167,4 @@ void pgpe_thr_ctrl_write_wcor()
 
     //Multicast Write all QMEs WCOR with above value
     PPE_PUTSCOM_MC_Q(QME_WCOR, wcor.value);
-}
+}*/

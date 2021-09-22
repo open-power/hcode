@@ -47,6 +47,7 @@ extern vdd_calibration*         G_gppb_vdd_cal;
 extern PoundWSlopes_t*          G_gppb_poundw_slopes;
 extern GlobalPstateParmBlockWOF_t* G_gppb_wof;
 extern GlobalPstateParmBlockWOV_t* G_gppb_wov;
+extern GlobalPstateParmBlockThr_t* G_gppb_thr_ctrl;
 
 
 void pgpe_gppb_init();
@@ -131,5 +132,9 @@ void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 //WOF
 #define pgpe_gppb_get_vratio_vdd(idx)  G_gppb_wof->vratio_vdd_64ths[idx]
 #define pgpe_gppb_get_vratio_vcs(idx)  G_gppb_wof->vratio_vcs_64ths[idx]
+
+//THR
+#define pgpe_gppb_get_thr_ctrl_kp()    G_gppb_thr_ctrl->thr_kp
+#define pgpe_gppb_get_thr_ctrl_ki()    G_gppb_thr_ctrl->thr_ki
 
 #endif

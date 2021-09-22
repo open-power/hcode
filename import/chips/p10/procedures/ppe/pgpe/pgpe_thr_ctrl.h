@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -34,24 +34,28 @@ enum PGPE_THR_CTRL_STATUS
     PGPE_THR_CTRL_DISABLED    = 0xFFFFFFFF,
     PGPE_THR_CTRL_ENABLED     = 0x00000002,
 };
+#define PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE 4
+#define PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE_SHIFT 2
 
 typedef struct pgpe_thr_ctrl
 {
     uint32_t status;
-    uint32_t ceff_ovr;
-    uint32_t curr_ceff_ovr_idx;
-    uint32_t mode;
+    uint32_t ceff_err_array[PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE];
+    uint32_t ceff_err_idx;
+    uint32_t ceff_err_sum, ceff_err_avg;
+    uint32_t curr_ftx, next_ftx;
 } pgpe_thr_ctrl_t;
 
 void pgpe_thr_ctrl_init();
 void* pgpe_thr_ctrl_data_addr();
 void pgpe_thr_ctrl_update(uint32_t pstate);
-void pgpe_thr_ctrl_set_ceff_ovr_idx(uint32_t idx);
 void pgpe_thr_ctrl_write_wcor();
 
 extern pgpe_thr_ctrl_t G_pgpe_thr_ctrl;
 
-#define pgpe_thr_ctrl_get_thr_idx() (G_pgpe_thr_ctrl.curr_ceff_ovr_idx)
 #define pgpe_thr_ctrl_is_enabled() (G_pgpe_thr_ctrl.status == PGPE_THR_CTRL_ENABLED)
+#define pgpe_thr_ctrl_set_curr_ftx(ftx) G_pgpe_thr_ctrl.curr_ftx = ftx
+#define pgpe_thr_ctrl_get_curr_ftx() G_pgpe_thr_ctrl.curr_ftx
+#define pgpe_thr_ctrl_set_next_ftx(ftx) G_pgpe_thr_ctrl.next_ftx = ftx
 
 #endif

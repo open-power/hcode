@@ -366,12 +366,12 @@ void pgpe_occ_sample_values()
     //Pstate, Pstate_Freq, Vdd, Vcs, and throttle index
     if (pgpe_pstate_is_pstate_enabled())
     {
-        G_pgpe_occ.ps_tb_accum = (pgpe_pstate_get(pstate_curr) + pgpe_thr_ctrl_get_thr_idx()) * delta_tb;
+        G_pgpe_occ.ps_tb_accum = (pgpe_pstate_get(pstate_curr) + pgpe_thr_ctrl_get_curr_ftx()) * delta_tb;
         G_pgpe_occ.ps_freq_tb_accum = pgpe_pstate_get(pstate_curr) *
                                       delta_tb; //Pstate written to DPLL(no throttle value included)
         G_pgpe_occ.vdd_tb_accum = pgpe_pstate_get(vdd_curr_ext) * delta_tb;
         G_pgpe_occ.vcs_tb_accum = pgpe_pstate_get(vcs_curr_ext) * delta_tb;
-        G_pgpe_occ.thr_idx_tb_accum = pgpe_thr_ctrl_get_thr_idx();
+        G_pgpe_occ.thr_idx_tb_accum = pgpe_thr_ctrl_get_curr_ftx();
     }
 
     if (pgpe_pstate_is_wof_enabled())

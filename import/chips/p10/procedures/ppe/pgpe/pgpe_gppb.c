@@ -56,6 +56,7 @@ vdd_calibration*         G_gppb_vdd_cal;
 PoundWSlopes_t*          G_gppb_poundw_slopes;
 GlobalPstateParmBlockWOF_t* G_gppb_wof;
 GlobalPstateParmBlockWOV_t* G_gppb_wov;
+GlobalPstateParmBlockThr_t* G_gppb_thr_ctrl;
 
 void pgpe_gppb_init()
 {
@@ -108,6 +109,8 @@ void pgpe_gppb_init()
                            G_gppb_v1->offsets[POUNDW_SLOPES_OFFSET_IDX]);
     G_gppb_wof = (GlobalPstateParmBlockWOF_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[WOF_OFFSET_IDX]);
     G_gppb_wov = (GlobalPstateParmBlockWOV_t*)((uint32_t)gppb_sram_offset + (uint32_t)G_gppb_v1->offsets[WOV_OFFSET_IDX]);
+    G_gppb_thr_ctrl  = (GlobalPstateParmBlockThr_t*)((uint32_t)gppb_sram_offset + (uint32_t)
+                       G_gppb_v1->offsets[THR_OFFSET_IDX]);
 
     PK_TRACE_INF("GPB: GPB Sram Addr=0x%08x Magic=PSTATE_PARMSBLOCK_MAGIC_V1", (uint32_t)G_gppb_v1);
     PK_TRACE_INF("GPB: OCC Cmpl. Freq=%u(0x%x) Mhz", (uint32_t)G_gppb_base->occ_complex_frequency_mhz,
