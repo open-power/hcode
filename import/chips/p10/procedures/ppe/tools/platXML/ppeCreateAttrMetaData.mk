@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019,2020
+# COPYRIGHT 2019,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -33,6 +33,6 @@ TARGETS+=qme_attr_meta.bin
 $(GENERATED)_PATH=$(IMAGEPATH)/qme_image
 
 define ppeCreateAttrMetaData_qme_RUN
-                $(C1) $$< -e $(ROOTPATH) -o $(OUTPUTPATH) -b $($(GENERATED)_PATH)/qme_attr_meta.bin;
+                $(C1) $(PATH_PYTHON3) $$< -e $(ROOTPATH) -o $(OUTPUTPATH) -b $($(GENERATED)_PATH)/qme_attr_meta.bin;
 endef
 $(call BUILD_GENERATED)

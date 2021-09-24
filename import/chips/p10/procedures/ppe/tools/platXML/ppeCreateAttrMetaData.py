@@ -6,7 +6,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2020
+# COPYRIGHT 2020,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -116,14 +116,14 @@ def parse_attr(attrIdFile):
   #print attr_meta
 
 def write_meta(binaryFile, hwPrcdFile):
-  hwp_file  = open(hwPrcdFile, "wb")
-  meta_data = open(binaryFile, "wb")
+  hwp_file  = open(hwPrcdFile, "w")
+  meta_data = open(binaryFile, "w")
 
   magic_word = [ord(c) for c in META_MAGIC_WORD]
   #for num in magic_word:
   #  print(hex(num)),
-  meta_data.write(bytearray(magic_word))
-  meta_data.write(struct.pack('>b', META_DATA_VERSION))
+  meta_data.write(str(magic_word))
+  meta_data.write(str(META_DATA_VERSION))
 
   # do this to avoid stupid tagging tool think this is tagging
   hwp_file.write("/* IBM_PRO" + "LOG_BEGIN_TAG                                                   */\n")
@@ -281,8 +281,8 @@ def write_meta(binaryFile, hwPrcdFile):
         hwp_file.write("        i_pQmeAttrTank = (uint8_t*)i_pQmeAttrTank + " + str(data_size) + ";\n")
       hwp_file.write("    }\n")
   
-    meta_data.write(struct.pack('>h', entries))
-    meta_data.write(struct.pack('>h', total_size))
+    meta_data.write(str(entries))
+    meta_data.write(str(total_size))
     #print "Alignment is currently: " + str(total_size)
     leftover  = (8 - (total_size % 8)) % 8
     #print "Alignment is off by: " + str(leftover)
@@ -371,21 +371,21 @@ def attr2meta():
     #print "EkbRoot " + options.ekbRoot
     hwPrcdFile = options.ekbRoot + "/chips/p10/procedures/hwp/pm/p10_qme_build_attributes.C"
   else:
-    print "ERROR: Please specify EKB root directory path with -e option"
+    print ("ERROR: Please specify EKB root directory path with -e option")
     return
 
   if options.outputPath:
     #print "outputPath " + options.outputPath
     attrIdFile = options.outputPath + "/gen/qme/attribute_ids.H"
   else:
-    print "ERROR: Please specify EKB output directory path with -o option"
+    print ("ERROR: Please specify EKB output directory path with -o option")
     return
 
   if options.binFile:
     #print "binFile " + options.binFile
     binaryFile = options.binFile
   else:
-    print "ERROR: Please specify output binary filename and path with -b option"
+    print ("ERROR: Please specify output binary filename and path with -b option")
     return
 
   parse_attr(attrIdFile)
