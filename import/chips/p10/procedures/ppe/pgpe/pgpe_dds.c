@@ -112,14 +112,15 @@ void pgpe_dds_init(uint32_t pstate)
     G_pgpe_dds.fdcr_chip.value = 0;
 
     //3.Pre-DVFS DDS Update.
-    pgpe_dds_compute(pstate);
-    pgpe_dds_update_pre(pstate);
 
     uint32_t ccsr;
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
     uint32_t ecomask = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG6_RW);
     G_pgpe_dds.core_mask = ccsr & (~ecomask);
-    PK_TRACE_INF("DDS: Ecomask=0x%08x, ccsr=0x%08x, core_mask=0x%08x");
+    PK_TRACE_INF("DDS: Ecomask=0x%08x, ccsr=0x%08x, core_mask=0x%08x", ecomask, ccsr, G_pgpe_dds.core_mask);
+
+    pgpe_dds_compute(pstate);
+    pgpe_dds_update_pre(pstate);
 
     //4. Send Doorbell2 interrupt to QME
     //uint32_t ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
