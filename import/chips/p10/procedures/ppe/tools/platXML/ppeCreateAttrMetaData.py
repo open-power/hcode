@@ -117,13 +117,13 @@ def parse_attr(attrIdFile):
 
 def write_meta(binaryFile, hwPrcdFile):
   hwp_file  = open(hwPrcdFile, "w")
-  meta_data = open(binaryFile, "w")
+  meta_data = open(binaryFile, "wb")
 
   magic_word = [ord(c) for c in META_MAGIC_WORD]
   #for num in magic_word:
   #  print(hex(num)),
-  meta_data.write(str(magic_word))
-  meta_data.write(str(META_DATA_VERSION))
+  meta_data.write(bytearray(magic_word))
+  meta_data.write(struct.pack('>b', META_DATA_VERSION))
 
   # do this to avoid stupid tagging tool think this is tagging
   hwp_file.write("/* IBM_PRO" + "LOG_BEGIN_TAG                                                   */\n")
@@ -281,8 +281,8 @@ def write_meta(binaryFile, hwPrcdFile):
         hwp_file.write("        i_pQmeAttrTank = (uint8_t*)i_pQmeAttrTank + " + str(data_size) + ";\n")
       hwp_file.write("    }\n")
   
-    meta_data.write(str(entries))
-    meta_data.write(str(total_size))
+    meta_data.write(struct.pack('>h', entries))
+    meta_data.write(struct.pack('>h', total_size))
     #print "Alignment is currently: " + str(total_size)
     leftover  = (8 - (total_size % 8)) % 8
     #print "Alignment is off by: " + str(leftover)
