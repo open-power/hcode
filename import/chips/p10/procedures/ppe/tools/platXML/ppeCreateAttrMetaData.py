@@ -6,7 +6,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2020,2021
+# COPYRIGHT 2020,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -26,6 +26,7 @@
 
 import re
 import struct
+import os
 
 COMMENTS = re.compile(r'''
     (//[^\n]*(?:\n|$))    # Everything between // and the end of the line/file
@@ -376,7 +377,7 @@ def attr2meta():
 
   if options.outputPath:
     #print "outputPath " + options.outputPath
-    attrIdFile = options.outputPath + "/gen/qme/attribute_ids.H"
+    attrIdFile = options.outputPath + "/gen_" + os.environ["ECMD_ARCH"] + "/qme/attribute_ids.H"
   else:
     print ("ERROR: Please specify EKB output directory path with -o option")
     return
