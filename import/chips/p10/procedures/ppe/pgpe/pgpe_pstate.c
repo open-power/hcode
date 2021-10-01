@@ -89,15 +89,6 @@ void pgpe_pstate_init()
         }
     }
 
-    if(G_pgpe_pstate.sort_core_count <= G_pgpe_pstate.eco_core_count)
-    {
-        G_pgpe_pstate.vratio_core_count = 1;
-    }
-    else
-    {
-        G_pgpe_pstate.vratio_core_count = G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count;
-    }
-
     // If we don't have core bits set in CSSR, then
     // we shouldn't run any following features
     if (!ccsr)
@@ -892,16 +883,16 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
                  active_core_accum_64th, vratio_vdd_accum_64th, vratio_vcs_accum_64th);
     //Index Format is 16-bits. We accumulate in 6bits, so do a shift by 10
     G_pgpe_pstate.vratio_index_format       = ((((active_core_accum_64th) << 10) - 1) /
-            (G_pgpe_pstate.vratio_core_count));
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.active_core_ratio_64th    = G_pgpe_pstate.vratio_index_format >> 10; //Index format back to 64ths
     G_pgpe_pstate.vratio_vdd_snapup_64th    = ((vratio_vdd_accum_64th + 63) /
-            (G_pgpe_pstate.vratio_core_count));
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.vratio_vcs_snapup_64th    = ((vratio_vcs_accum_64th + 63) /
-            (G_pgpe_pstate.vratio_core_count));
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.vratio_vdd_rounded_64th   = ((vratio_vdd_accum_64th + 32) /
-            (G_pgpe_pstate.vratio_core_count));
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.vratio_vcs_rounded_64th   = ((vratio_vcs_accum_64th + 32) /
-            (G_pgpe_pstate.vratio_core_count));
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.vratio_vdd_snapup_64th    = G_pgpe_pstate.vratio_vdd_snapup_64th < 64 ?
             G_pgpe_pstate.vratio_vdd_snapup_64th : 64;
     G_pgpe_pstate.vratio_vcs_snapup_64th    = G_pgpe_pstate.vratio_vcs_snapup_64th < 64 ?
@@ -913,9 +904,9 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
 
 
     G_pgpe_pstate.vratio_vdd_rounded        = ((((vratio_vdd_accum_64th + 32) << 10) - 1) /
-            (G_pgpe_pstate.vratio_core_count));
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.vratio_vcs_rounded        = ((((vratio_vcs_accum_64th + 32) << 10) - 1) /
-            (G_pgpe_pstate.vratio_core_count));
+            (G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count));
     G_pgpe_pstate.vratio_vdd_rounded        = G_pgpe_pstate.vratio_vdd_rounded <= 0xFFFF ? G_pgpe_pstate.vratio_vdd_rounded
             : 0xFFFF;
     G_pgpe_pstate.vratio_vcs_rounded        = G_pgpe_pstate.vratio_vcs_rounded <= 0xFFFF ? G_pgpe_pstate.vratio_vcs_rounded
@@ -1089,6 +1080,14 @@ uint32_t pgpe_pstate_intp_ps_from_vdd(uint32_t vdd)
             (vdd - pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, r))) >> (VID_SLOPE_FP_SHIFT_12 - 1)) +
          (pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r) << 1)  ;
     ps = ps >> 1;//Shift it back
+
+    //We need to make sure ps doesn't go below region0
+    //Here pstate value is greater means lower frequency, it should be
+    //with in the safe mode pstate
+    if ( ps > G_pgpe_pstate.pstate_safe)
+    {
+        ps = G_pgpe_pstate.pstate_safe;
+    }
 
     return ps;
 }
