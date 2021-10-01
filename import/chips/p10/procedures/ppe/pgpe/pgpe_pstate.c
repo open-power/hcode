@@ -1125,6 +1125,16 @@ uint32_t pgpe_pstate_intp_ps_from_vdd(uint32_t vdd)
          (pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r) << 1)  ;
     ps = ps >> 1;//Shift it back
 
+    //We need to make sure ps doesn't go below region0
+    //Here pstate value is greater means lower frequency, it should be
+    //with in the safe mode pstate
+    if ( ps > G_pgpe_pstate.pstate_safe)
+    {
+        ps = G_pgpe_pstate.pstate_safe;
+    }
+
+
+
     return ps;
 }
 
