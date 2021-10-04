@@ -781,6 +781,8 @@ void pgpe_pstate_actuate_safe_mode()
     pgpe_wov_ocs_disable();
     pgpe_wov_ocs_clear_wov_tgt_pct();
     pgpe_wov_ocs_set_wov_curr_pct(0);
+    pgpe_pstate_set(vdd_wov_bias, 0);
+    pgpe_pstate_set(vcs_wov_bias, 0);
     pk_critical_section_exit(&ctx);
 
     while(!pgpe_pstate_is_at_target())

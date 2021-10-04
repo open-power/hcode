@@ -114,7 +114,20 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     // Write fmax and fmult fields
     dpll_freq_t dpll_freq;
     dpll_freq.value = 0;
-    dpll_freq.fields.fmax  = pgpe_gppb_get_dpll_pstate0_value() - pstate;
+    uint32_t ps = pstate;
+
+    //Bound the pstate
+    if(ps > pgpe_pstate_get(pstate_safe))
+    {
+        ps = pgpe_pstate_get(pstate_safe);
+    }
+
+    if(ps < pgpe_pstate_get(pstate_ceiling))
+    {
+        ps = pgpe_pstate_get(pstate_ceiling);
+    }
+
+    dpll_freq.fields.fmax  = pgpe_gppb_get_dpll_pstate0_value() - ps;
     dpll_freq.fields.fmult = dpll_freq.fields.fmax;
 
     // Mask the NEST DPLL Unlock check via TP Slave Config Reg
