@@ -815,7 +815,7 @@ add     QUAD_MSG_SND_LOCK_ADDR_REG, QUAD_MSG_SND_LOCK_ADDR_REG, TEMP_REG1 #Lock 
 
 andi.   TEMP_REG2,   CORE_ID_REG,   RELATIVE_CORE_ID_MASK     # Get relative core id within a quad
 addi    TEMP_REG1,   QUAD_MSG_SND_LOCK_ADDR_REG,   LOCK_TO_MSG_SND_FLAG_OFFSET
-add     QUAD_MSG_SND_VECTOR_ADD,    TEMP_REG2,     TEMP_REG1  #address of msgsnd vector
+add     QUAD_MSG_SND_VECTOR_ADD,    TEMP_REG2,     TEMP_REG1  #address of msgsnd vect
 
 cmplwi  SELF_REST_ERR_REG,  0x0A00
 bne     hyp_db_int_vect_add
@@ -858,10 +858,10 @@ isync
 
 lbz     TEMP_REG1,  0( QUAD_MSG_SND_VECTOR_ADD )
 srd     TEMP_REG2,  TEMP_REG3,  THREAD_ID_REG
-or      TEMP_REG1,  TEMP_REG1,  TEMP_REG2    # NOP for restore, setup msg send vector for self-save
+or      TEMP_REG1,  TEMP_REG1,  TEMP_REG2    # NOP for restore, setup msg send vect. for self-save
 cmplwi  TEMP_REG2,  0
 bne     update_vect
-li      TEMP_REG1,  0                        # self-restore case - will cleanup msg send vector
+li      TEMP_REG1,  0                        # self-restore case - will cleanup msg send vect.
 
 update_vect: 
 stb     TEMP_REG1,  0( QUAD_MSG_SND_VECTOR_ADD ) #finally update memory
