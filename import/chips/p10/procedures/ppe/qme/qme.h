@@ -165,10 +165,7 @@ enum BCE_SCOPE
     QME_SPECIFIC = 1,
 };
 
-// todo
-// (auto) pmcr fwd enable, throttle enable,
-// pstate enable, wof enable, safe mode enable
-#define ENABLED_HCODE_FUNCTIONS 0x1FFFF000
+#define ENABLED_HCODE_FUNCTIONS 0x9FFFF000
 
 enum QME_HCODE_FUNCTIONAL_ENABLES
 {
