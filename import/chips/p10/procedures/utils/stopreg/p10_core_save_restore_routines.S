@@ -378,6 +378,11 @@ little_endian_start:
 
 
 big_endian_start:
+li          TEMP_REG1,      0x00
+mfmsr       MSR_INIT_REG
+insrdi      MSR_INIT_REG,   TEMP_REG1,  1,  MSR_REG_EE_BIT_POS # clearing MSR[EE]
+mtmsr       MSR_INIT_REG
+
 mfspr       SPR_DATA_REG,   HID
 li          TEMP_REG1,   0
 insrdi      SPR_DATA_REG,   TEMP_REG1,  1,  HILE_BIT_POS
