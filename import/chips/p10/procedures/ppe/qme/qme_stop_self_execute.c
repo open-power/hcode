@@ -300,10 +300,18 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
         }
     }
 
+    uint32_t core_not_block = core_target & (~G_qme_record.c_block_wake_done);
+
+    if( core_not_block )
+    {
+        PK_TRACE("Drop BLOCK_INTERRUPT to PC if not under block wakeup protocol");
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_not_block ), ( BIT32(0) ) );
+    }
+
     if( SPR_SELF_SAVE != i_saveRestore )
     {
-        PK_TRACE("Drop BLOCK_INTERRUPT to PC and IGNORE_RECENT_PMCR via SCSR[0/19]");
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), ( BIT32(0) | BIT32(19) ) );
+        PK_TRACE("Drop IGNORE_RECENT_PMCR via SCSR[19]");
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), ( BIT32(19) ) );
     }
 
     PK_TRACE("Clear pm_active status via EISR[52:55]");
@@ -502,4 +510,12 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 
     PK_TRACE("Allow threads to run(pm_exit=0)");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(1) );
+
+    PPE_WAIT_4NOP_CYCLES
+
+    if( SPR_SELF_SAVE == i_saveRestore )
+    {
+        PK_TRACE("Drop BLOCK_INTERRUPT to PC for msgsnd workaround");
+        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), ( BIT32(0) ) );
+    }
 }
