@@ -1255,15 +1255,6 @@ qme_pm_state_active_slow_event()
 
                 qme_stop_exit();
 
-                // After self-restore, Sreset the core(s) with PHYP URMOR/HRMOR.
-                // This is unique for this flow as interrupts normally cause
-                // the hardware to perform the sreset.
-                wrteei(0);
-                PPE_PUTSCOM_MC( DIRECT_CONTROLS, l_quad_auto_wkup_vect,
-                                BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
-                sync();
-                wrteei(1);
-
                 G_qme_record.c_auto_stop11_wakeup = 0;
                 qme_send_pig_type_a();
                 qme_dds_sync();

@@ -230,6 +230,22 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
     PK_TRACE("Drop halt STOP override disable via PCR_SCSR[21]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(21) );
 
+    if( G_qme_record.c_auto_stop11_wakeup )
+    {
+        uint32_t l_quad_auto_wkup_vect = G_qme_record.c_auto_stop11_wakeup;
+        l_quad_auto_wkup_vect = ( l_quad_auto_wkup_vect >> ( 28 - ( G_qme_record.quad_id * 4 ) ) );
+        l_quad_auto_wkup_vect = l_quad_auto_wkup_vect & 0x0f;
+
+        // After self-restore, Sreset the core(s) with PHYP URMOR/HRMOR.
+        // This is unique for this flow as interrupts normally cause
+        // the hardware to perform the sreset.
+        wrteei(0);
+        PPE_PUTSCOM_MC( DIRECT_CONTROLS, l_quad_auto_wkup_vect,
+                        BIT64(4) | BIT64(12) | BIT64(20) | BIT64(28));
+        sync();
+        wrteei(1);
+    }
+
     //===============//
 
     if( ( core_done = ( core_spwu & core_target ) ) )
