@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -886,17 +886,6 @@ static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_FIR_ERROR_INJECT_PL = 0x8
 static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_FIR_ERROR_INJECT_PL_TX_PL_FIR_ERR_INJ = 48;
 static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_FIR_ERROR_INJECT_PL_TX_PL_FIR_ERR_INJ_LEN = 2;
 //<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_FIR_ERROR_INJECT_PL]
-// omi/reg00005.H
-
-//>> [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_STAT1_PL]
-static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_STAT1_PL = 0x8005244010012c3full;
-
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_STAT1_PL_BIST_PRBS_ERR_DET_RO_SIGNAL = 48;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_STAT1_PL_BIST_PRBS_ACTIVITY_DET_RO_SIGNAL = 49;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_STAT1_PL_SEG_TEST_STATUS_RO_SIGNAL = 50;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_STAT1_PL_SEG_TEST_STATUS_RO_SIGNAL_LEN = 2;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_STAT1_PL_TDR_CAPT_VAL_RO_SIGNAL = 63;
-//<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_STAT1_PL]
 // omi/reg00005.H
 
 //>> [TXPACKS_1_DD_3_TX_BIT_REGS_CNTL14_PL]
