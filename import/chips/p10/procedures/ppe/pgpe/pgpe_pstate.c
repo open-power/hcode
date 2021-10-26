@@ -257,7 +257,8 @@ void pgpe_pstate_actuate_step()
     uint32_t vdd_next_w_wov = (uint32_t)((int32_t)G_pgpe_pstate.vdd_next + vdd_wov_bias_next);
     uint32_t vdd_curr_w_wov = (uint32_t)((int32_t)G_pgpe_pstate.vdd_curr + G_pgpe_pstate.vdd_wov_bias);
     uint32_t delta;
-    uint32_t clear_tgt_wov_pct = 0;
+    uint32_t set_tgt_wov_pct = 0;
+    uint32_t tgt_wov_pct = 0;
     uint32_t step_size = pgpe_gppb_get_ext_vrm_parms_step_size_mv(RUNTIME_RAIL_VDD);
     PK_TRACE_INF("PSS: Act_S VddCurr=%u, VddCurrUp=%u, VddCurrWovBias=%d, VddCurrExt=%u", G_pgpe_pstate.vdd_curr,
                  G_pgpe_pstate.vdd_curr_uplift, G_pgpe_pstate.vdd_wov_bias, G_pgpe_pstate.vdd_curr_ext);
@@ -270,7 +271,7 @@ void pgpe_pstate_actuate_step()
     {
         PK_TRACE_INF("Lowering Frequency");
 
-        if (curr_wov_pct < 0)   // Undervolting
+        if (G_pgpe_pstate.vdd_wov_bias < 0)   // Undervolting
         {
             PK_TRACE_INF("Undervolt");
 
@@ -301,10 +302,11 @@ void pgpe_pstate_actuate_step()
             {
                 curr_wov_pct = 0;
                 vdd_wov_bias_next = 0;
-                clear_tgt_wov_pct = 1;
+                set_tgt_wov_pct = 1;
+                tgt_wov_pct = 0;
 
                 //Make sure voltage jump isn't more than step size
-                if ((vdd_curr_w_wov - G_pgpe_pstate.vdd_next) > step_size)
+                if ((int32_t)((int32_t)vdd_curr_w_wov - (int32_t)vdd_next_w_wov) > (int32_t)step_size)
                 {
                     PK_TRACE_INF("PSS: Act_S Lowering Freq, Case2 jump > 50mV, clear(Pre) wov_pct=%d,vdd_wov_bias=%d", curr_wov_pct,
                                  vdd_wov_bias_next);
@@ -329,7 +331,7 @@ void pgpe_pstate_actuate_step()
             PK_TRACE_INF("NO WOV or Overvolting");
 
             //Case3: Retain WOV(will be 0 if no WOV)
-            if ( (vdd_curr_w_wov - vdd_next_w_wov) > step_size)
+            if ((int32_t)((int32_t)vdd_curr_w_wov - (int32_t)vdd_next_w_wov) > (int32_t)step_size)
             {
                 PK_TRACE_INF("PSS: Act_S Lowering Freq, Case3 jump > 50mV, retain(Pre) wov_pct=%d,vdd_wov_bias=%d", curr_wov_pct,
                              vdd_wov_bias_next);
@@ -357,20 +359,20 @@ void pgpe_pstate_actuate_step()
     {
         PK_TRACE_INF("Raising Frequency");
 
-        if (curr_wov_pct < 0)   // Undervolting
+        if (G_pgpe_pstate.vdd_wov_bias < 0)   // Undervolting
         {
             PK_TRACE_INF("Undervolting");
-            delta = vdd_next_w_wov - vdd_curr_w_wov;
             PK_TRACE_INF("PSS: Act_S VddCurrWWov=%u(0x%x), VddNextWWov=%u(0x%x)", vdd_curr_w_wov, vdd_curr_w_wov, vdd_next_w_wov,
                          vdd_next_w_wov);
-            PK_TRACE_INF("PSS: Act_S delta=0x%x, stepsize=%u", delta, step_size);
+            delta = vdd_next_w_wov - vdd_curr_w_wov;
+            PK_TRACE_INF("PSS: Act_S delta=%d(0x%x), stepsize=%u", (int32_t)delta, delta, step_size);
 
-            if (delta > step_size)
+            if ((int32_t)((int32_t)vdd_next_w_wov - (int32_t)vdd_curr_w_wov) > (int32_t)step_size)
             {
                 PK_TRACE_INF("PSS: Act_S Raising Freq, Case1 jump > 50mV, retain(Pre), wov_pct=%d,vdd_wov_bias=%d", curr_wov_pct,
                              vdd_wov_bias_next);
-                uint32_t delta = (uint32_t)((int32_t)(step_size * 1000) /
-                                            (1000 + curr_wov_pct));
+                delta = (uint32_t)((int32_t)(step_size * 1000) /
+                                   (1000 + curr_wov_pct));
                 G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr + delta;
                 G_pgpe_pstate.pstate_next = pgpe_pstate_intp_ps_from_vdd(
                                                 G_pgpe_pstate.vdd_next);//Interpolate next pstate based on next_voltage
@@ -387,12 +389,12 @@ void pgpe_pstate_actuate_step()
                                                     (int32_t) G_pgpe_pstate.vdd_next_uplift);
 
         }
-        else if (curr_wov_pct > 0)
+        else if (G_pgpe_pstate.vdd_wov_bias > 0)
         {
             PK_TRACE_INF("Overvolting");
 
             //Case2: Retain WOV
-            if ( (vdd_next_w_wov - vdd_curr_w_wov) > step_size)
+            if ((int32_t)((int32_t)vdd_next_w_wov - (int32_t)vdd_curr_w_wov) > (int32_t)step_size)
             {
                 PK_TRACE_INF("PSS: Act_S Raising Freq, Case2 jump > 50mV, retain(Pre) wov_pct=%d,vdd_wov_bias=%d", curr_wov_pct,
                              vdd_wov_bias_next);
@@ -419,7 +421,7 @@ void pgpe_pstate_actuate_step()
         {
             PK_TRACE_INF("NO WOV");
 
-            if ((vdd_next_w_wov - vdd_curr_w_wov) > step_size)
+            if ((int32_t)((int32_t)vdd_next_w_wov - (int32_t)vdd_curr_w_wov) > (int32_t)step_size)
             {
                 G_pgpe_pstate.vdd_next = G_pgpe_pstate.vdd_curr + step_size;
                 G_pgpe_pstate.pstate_next = pgpe_pstate_intp_ps_from_vdd(
@@ -441,10 +443,16 @@ void pgpe_pstate_actuate_step()
         if (((int32_t)G_pgpe_pstate.vdd_next + vdd_wov_bias_next) < (int32_t)pgpe_gppb_get_wov_underv_vmin_mv())
         {
             vdd_wov_bias_next = pgpe_gppb_get_wov_underv_vmin_mv() - G_pgpe_pstate.vdd_next;
-            curr_wov_pct = pgpe_wov_ocs_get_wov_tgt_pct();
+            curr_wov_pct = (vdd_wov_bias_next * 1000) / (int32_t)G_pgpe_pstate.vdd_next;
+            curr_wov_pct = curr_wov_pct / pgpe_gppb_get_wov_underv_step_decr_pct();
+            curr_wov_pct = curr_wov_pct * pgpe_gppb_get_wov_underv_step_decr_pct();
+            set_tgt_wov_pct = 1;
+            tgt_wov_pct = curr_wov_pct;
+            vdd_wov_bias_next = ((int32_t)(G_pgpe_pstate.vdd_next) * (curr_wov_pct)) / 1000;
             G_pgpe_pstate.vdd_next_ext = (uint32_t)((int32_t)G_pgpe_pstate.vdd_next + vdd_wov_bias_next +
                                                     (int32_t) G_pgpe_pstate.vdd_next_uplift);
-            PK_TRACE_INF("PSS: Act_S UnderV_Vmin=%u, VddWovBiasNext=%d, CurrWovPct=%d", pgpe_gppb_get_wov_underv_vmin_mv()
+            PK_TRACE_INF("PSS: Act_S UnderV_Vmin=%u, VddNext=%d, VddWovBiasNext=%d, CurrWovPct=%d",
+                         pgpe_gppb_get_wov_underv_vmin_mv(), G_pgpe_pstate.vdd_next
                          , vdd_wov_bias_next,  curr_wov_pct);
         }
     }
@@ -455,7 +463,11 @@ void pgpe_pstate_actuate_step()
         if (((int32_t)G_pgpe_pstate.vdd_next + vdd_wov_bias_next) > (int32_t)pgpe_gppb_get_wov_overv_vmax_mv())
         {
             vdd_wov_bias_next = pgpe_gppb_get_wov_overv_vmax_mv() - G_pgpe_pstate.vdd_next;
-            curr_wov_pct = pgpe_wov_ocs_get_wov_tgt_pct();
+            curr_wov_pct = (vdd_wov_bias_next * 1000) / (int32_t)G_pgpe_pstate.vdd_next;
+            curr_wov_pct = curr_wov_pct / pgpe_gppb_get_wov_overv_step_incr_pct();
+            curr_wov_pct = curr_wov_pct * pgpe_gppb_get_wov_overv_step_incr_pct();
+            set_tgt_wov_pct = 1;
+            tgt_wov_pct = curr_wov_pct;
             G_pgpe_pstate.vdd_next_ext = (uint32_t)((int32_t)G_pgpe_pstate.vdd_next + vdd_wov_bias_next +
                                                     (int32_t) G_pgpe_pstate.vdd_next_uplift);
             PK_TRACE_INF("PSS: Act_S OverV_Vmax=%u, VddWovBiasNext=%d, CurrWovPct=%d", pgpe_gppb_get_wov_overv_vmax_mv()
@@ -468,9 +480,9 @@ void pgpe_pstate_actuate_step()
     pgpe_wov_ocs_set_wov_curr_pct(curr_wov_pct);
     pk_critical_section_enter(&ctx);
 
-    if(clear_tgt_wov_pct)
+    if(set_tgt_wov_pct)
     {
-        pgpe_wov_ocs_clear_wov_tgt_pct();
+        pgpe_wov_ocs_set_wov_tgt_pct(tgt_wov_pct);
     }
 
     pk_critical_section_exit(&ctx);
