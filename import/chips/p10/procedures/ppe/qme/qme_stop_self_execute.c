@@ -377,7 +377,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
             else
             {
                 PK_TRACE_INF("SMF core wakeup, write HRMOR un-secure HOMER address");
-                scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
+                scom_data.words.upper =  scom_data.words.upper & ~BIT32(12);
             }
 
             // Write HRMOR
@@ -395,7 +395,7 @@ qme_stop_self_execute(uint32_t core_target, uint32_t i_saveRestore )
 #ifdef EPM_TUNING
     scom_data.value = 0xA200000;
 #else
-    scom_data.words.upper =  scom_data.words.upper & ~BIT32(15);
+    scom_data.words.upper =  scom_data.words.upper & ~BIT32(12);
 #endif
 
     // Write HRMOR
