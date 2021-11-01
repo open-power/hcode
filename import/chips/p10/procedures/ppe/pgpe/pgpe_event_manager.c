@@ -494,6 +494,10 @@ void pgpe_event_manager_run_active()
                 pgpe_pstate_actuate_step();
             }
         }
+        else if(!pgpe_pstate_is_at_throttle_target())
+        {
+            pgpe_pstate_actuate_throttle();
+        }
         else
         {
             if(!pgpe_wov_is_wov_at_target())

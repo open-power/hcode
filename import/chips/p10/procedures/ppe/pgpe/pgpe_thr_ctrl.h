@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2021                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -45,7 +45,7 @@ typedef struct pgpe_thr_ctrl
 
 void pgpe_thr_ctrl_init();
 void* pgpe_thr_ctrl_data_addr();
-void pgpe_thr_ctrl_update(uint32_t pstate);
+void pgpe_thr_ctrl_update(uint32_t idx);
 void pgpe_thr_ctrl_set_ceff_ovr_idx(uint32_t idx);
 void pgpe_thr_ctrl_write_wcor();
 

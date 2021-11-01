@@ -52,9 +52,9 @@ void pgpe_thr_ctrl_init()
     G_pgpe_thr_ctrl.curr_ceff_ovr_idx = 0;
 }
 
-void pgpe_thr_ctrl_update(uint32_t pstate)
+void pgpe_thr_ctrl_update(uint32_t idx)
 {
-    uint32_t vrt_overage =  pstate - pgpe_pstate_get(pstate_safe);
+    uint32_t vrt_overage =  idx;
 
     PK_TRACE_INF("THR: vrt_over=0x%x, curr_ceff_ovr_idx=0x%x", vrt_overage, G_pgpe_thr_ctrl.curr_ceff_ovr_idx);
     uint32_t prev_ceff_ovr_idx = G_pgpe_thr_ctrl.curr_ceff_ovr_idx;
