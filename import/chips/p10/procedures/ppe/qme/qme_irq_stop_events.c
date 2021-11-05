@@ -445,6 +445,7 @@ qme_parse_regular_wakeup_fast()
 void
 qme_parse_special_wakeup_rise()
 {
+    uint32_t c_einr_spwu_rise              = ( in32_sh(QME_LCL_EINR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
     G_qme_record.c_special_wakeup_rise_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
 
     uint32_t c_mask = G_qme_record.c_special_wakeup_rise_req &
@@ -452,6 +453,10 @@ qme_parse_special_wakeup_rise()
                       (~(G_qme_record.c_block_wake_done | G_qme_record.c_block_wake_override));
 
     out32_sh(QME_LCL_EISR_CLR, (c_mask << SHIFT64SH(35)) );
+
+    // IF pending EISR spwu rise without realtime EINR request,
+    // then it is phantom or leftover, Clear first then ignore.
+    c_mask &= c_einr_spwu_rise;
 
     if( G_qme_record.fused_core_enabled )
     {
@@ -500,18 +505,39 @@ qme_parse_special_wakeup_rise()
 }
 
 
-
+//Spwu window conditions
+//
+//Rise 8
+//EINR 1010
+//EISR 1000
+//
+//Hcode(r8)
+//EINR 1010
+//EISR 0000
+//
+//Rise 4 (behind hcode is possible)
+//EINR 1111
+//EISR 0100
+//
+//Drop 8    +rise 8 +drop 4 +both
+//EINR 0101  1111    0000    1010
+//EISR 0110  1110    0111    1111
+//
+//Hcode(d8)
+//EINR 0101  1111    0000   1010
+//EISR 0100  1100    0101   1101
+//EISR 0000  0000    0100   0001
+//     d1cR  d1cR    d0cD   d1cR
+//                   phantom will clear in above rise handler
+//                          phantom but ok as sibling still needs to drop
 
 void
 qme_parse_special_wakeup_fall()
 {
-    uint32_t c_einr = 0;
-    uint32_t c_eisr = 0;
-    uint32_t c_rise = 0;
-    uint32_t c_fall = 0;
-    uint32_t c_rise_rise = 0;
-    uint32_t c_rise_fall = 0;
-    uint32_t c_fall_fall = 0;
+    uint32_t c_eisr_half0 = 0;
+    uint32_t c_eisr_half1 = 0;
+    uint32_t c_einr_half0 = 0;
+    uint32_t c_einr_half1 = 0;
 
     G_qme_record.c_special_wakeup_fall_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(36, 4) );
     out32_sh(QME_LCL_EISR_CLR, G_qme_record.c_special_wakeup_fall_req);
@@ -523,84 +549,84 @@ qme_parse_special_wakeup_fall()
 
     if( G_qme_record.fused_core_enabled )
     {
-        PK_TRACE_INF("Parse: Fused Core Mode Special Wakeup Fall[%x] on Cores[%x] (both Siblings required)",
-                     G_qme_record.c_fused_spwu_fall, c_mask);
-
-        uint32_t spwu_assert = ( in32_sh(QME_LCL_EINR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
-        G_qme_record.c_fused_spwu_fall |= c_mask;
-
-        if( ( G_qme_record.c_fused_spwu_fall & 0xc ) &&
-            ( (spwu_assert & 0xC) == 0 ) )
-        {
-            G_qme_record.c_fused_spwu_fall &= ~0xc;
-            c_mask |= 0xc;
-        }
-        else
+        if( c_mask & 0xc )
         {
             c_mask &= ~0xc;
+            c_eisr_half0 = ( in32_sh(QME_LCL_EISR) & BITS64SH(32, 2) ) >> SHIFT64SH(35);
+            c_einr_half0 = ( in32_sh(QME_LCL_EINR) & BITS64SH(32, 2) ) >> SHIFT64SH(35);
+
+            if( c_einr_half0 )
+            {
+                //keep spwu done, clear spwu rise
+                out32_sh( QME_LCL_EISR_CLR, ( c_einr_half0 << SHIFT64SH(35) ) );
+            }
+            else
+            {
+                //drop spwu done, clear spwu drop
+                out32_sh( QME_LCL_EISR_CLR, ( c_einr_half0 << SHIFT64SH(39) ) );
+                out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, 0xc ), ( BIT32(1) | BIT32(16) ) );
+                G_qme_record.c_special_wakeup_done &= ~0xc;
+                c_mask |= 0xc;
+            }
+
         }
 
-        if( ( G_qme_record.c_fused_spwu_fall & 0x3 ) &&
-            ( (spwu_assert & 0x3) == 0 ) )
-        {
-            G_qme_record.c_fused_spwu_fall &= ~0x3;
-            c_mask |= 0x3;
-        }
-        else
+        if( c_mask & 0x3 )
         {
             c_mask &= ~0x3;
+            c_eisr_half1 = ( in32_sh(QME_LCL_EISR) & BITS64SH(34, 2) ) >> SHIFT64SH(35);
+            c_einr_half1 = ( in32_sh(QME_LCL_EINR) & BITS64SH(34, 2) ) >> SHIFT64SH(35);
+
+            if( c_einr_half1 )
+            {
+                //keep spwu done, clear spwu rise
+                out32_sh( QME_LCL_EISR_CLR, ( c_einr_half1 << SHIFT64SH(35) ) );
+            }
+            else
+            {
+                //drop spwu done, clear spwu drop
+                out32_sh( QME_LCL_EISR_CLR, ( c_einr_half1 << SHIFT64SH(39) ) );
+                out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, 0x3 ), ( BIT32(1) | BIT32(16) ) );
+                G_qme_record.c_special_wakeup_done &= ~0x3;
+                c_mask |= 0x3;
+            }
+        }
+
+        G_qme_record.c_fused_spwu_rise_einr = c_einr_half0 | c_einr_half1 ;
+        PK_TRACE_INF("Check: Fused Core Mode Special Wakeup Drop on Cores[%x] while EINR[%x] EISR[%x][%x] (both Siblings required)",
+                     c_mask, G_qme_record.c_fused_spwu_rise_einr, c_eisr_half0, c_eisr_half1);
+    }
+    else
+    {
+        G_qme_record.c_fused_spwu_rise_einr = ( in32_sh(QME_LCL_EINR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
+        out32_sh( QME_LCL_EISR_CLR,
+                  ( ((G_qme_record.c_fused_spwu_rise_einr & c_mask) << SHIFT64SH(35)) |
+                    ((G_qme_record.c_fused_spwu_rise_einr & c_mask) << SHIFT64SH(39)) ) );
+        c_mask &= ~G_qme_record.c_fused_spwu_rise_einr;
+
+        if( c_mask )
+        {
+            out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, c_mask ), ( BIT32(1) | BIT32(16) ) );
+            G_qme_record.c_special_wakeup_done &= ~c_mask;
+            PK_TRACE("Check: Normal Core Mode Special Wakeup Drop on Cores[%x] while EINR[%x]", c_mask,
+                     G_qme_record.c_fused_spwu_rise_einr);
         }
     }
 
     if( c_mask )
     {
-        PK_TRACE("Check: Drop Special Wakeup Done on Cores[%x]", c_mask);
-        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, c_mask ), BIT32(16) );
+        G_qme_record.c_stop2_enter_targets = c_mask &
+                                             G_qme_record.c_configured &
+                                             G_qme_record.c_cache_only_enabled &
+                                             (~G_qme_record.c_stop2_reached);
+        G_qme_record.c_stop5_enter_targets = G_qme_record.c_stop2_enter_targets ;
 
-        c_eisr = ( in32_sh(QME_LCL_EISR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
-        c_einr = ( in32_sh(QME_LCL_EINR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
-
-        c_rise      = c_mask & c_eisr;
-        out32_sh( QME_LCL_EISR_CLR, (c_rise << SHIFT64SH(35)) );
-
-        c_rise_fall = c_rise & (~c_einr);
-        out32_sh( QME_LCL_EISR_CLR, (c_rise_fall << SHIFT64SH(39)) );
-
-        c_fall      = c_mask & (~c_eisr);
-        c_rise_rise = c_rise & c_einr;
-        c_fall_fall = c_fall | c_rise_fall;
-
-        // if spwu has been re-asserted after spwu_done is dropped:
-        if( c_rise_rise )
+        if( G_qme_record.c_stop2_enter_targets )
         {
-            out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_rise_rise ), BIT32(16) );
-            PK_TRACE("Check: SPWU asserts again on Cores:c_rise[%x], Re-assert Special Wakeup Done on Cores:c_rise_rise[%x]",
-                     c_rise, c_rise_rise);
+            PK_TRACE_INF("STOP6: Cache Only Cores[%x] Detected, Drop SpWu leading to Stop6 Entry",
+                         G_qme_record.c_stop2_enter_targets);
+            qme_stop_entry();
         }
-
-        // if spwu truly dropped
-        if( c_fall_fall )
-        {
-            out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, c_fall_fall ), BIT32(1) );
-            G_qme_record.c_special_wakeup_done &= ~c_fall_fall;
-            PK_TRACE("Check: SPWU drop confirmed, now drop PM_EXIT on Cores[%x]", c_fall);
-
-            G_qme_record.c_stop2_enter_targets = c_fall_fall &
-                                                 G_qme_record.c_configured &
-                                                 G_qme_record.c_cache_only_enabled &
-                                                 (~G_qme_record.c_stop2_reached);
-            G_qme_record.c_stop5_enter_targets = G_qme_record.c_stop2_enter_targets ;
-
-            if( G_qme_record.c_stop2_enter_targets )
-            {
-                PK_TRACE_INF("STOP6: Cache Only Cores[%x] Detected, Drop SpWu leading to Stop6 Entry",
-                             G_qme_record.c_stop2_enter_targets);
-                qme_stop_entry();
-            }
-        }
-
-        PK_TRACE_INF("Check: Keep SPWU Done on Cores(c_rise[%x] c_rise_rise[%x]) Drop SPWU Done+PM_EXIT on Cores(c_fall[%x] c_rise_fall[%x])",
-                     c_rise, c_rise_rise, c_fall, c_rise_fall);
     }
 
     PK_TRACE("Parse: Special Wakeup Fall on Cores[%x], Cores in STOP2+[%x], Partial Good Cores[%x], Block Entry on Cores[%x]",

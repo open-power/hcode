@@ -76,7 +76,7 @@ typedef struct
     uint32_t    c_block_wake_req;
     // 8
     uint32_t    c_block_wake_override;
-    uint32_t    c_fused_spwu_fall;
+    uint32_t    c_fused_spwu_rise_einr;
     uint32_t    c_special_wakeup_done;
     uint32_t    c_hostboot_cores;
     // 9
