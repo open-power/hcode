@@ -40,10 +40,11 @@ enum PGPE_THR_CTRL_STATUS
 typedef struct pgpe_thr_ctrl
 {
     uint32_t status;
-    uint32_t ceff_err_array[PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE];
+    uint32_t ceff_err_sum;
     uint32_t ceff_err_idx;
-    uint32_t ceff_err_sum, ceff_err_avg;
+    uint32_t ceff_err_avg;
     uint32_t curr_ftx, next_ftx;
+    uint32_t ceff_err_array[PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE];
 } pgpe_thr_ctrl_t;
 
 void pgpe_thr_ctrl_init();
