@@ -248,7 +248,10 @@ qme_init()
 
     // generate a rounded up divide by 64 to normalize
     // (to the number of cycles/32 in 16x 32Mhz TOD pulses)
-    core_freq = (core_freq >> 5 & 0x1) ? (1 + (core_freq >> 6)) : (core_freq >> 6);
+    // JimB: Given 128 TOD step intervals for p10 instead 16 for p9
+    //       P10 to change allowed ratio from 1.5 to 3.99 so that
+    //       added 3 bits to the cycle count so hence the shift of 8 now instead of 5
+    core_freq = (core_freq >> 8 & 0x1) ? (1 + (core_freq >> 6)) : (core_freq >> 6);
 
     // generate 2's complement and shift into bits 0:7 of 32-bit value
     G_qme_record.spurr_freq_ref_upper = ((~core_freq) + 1) << 24;
