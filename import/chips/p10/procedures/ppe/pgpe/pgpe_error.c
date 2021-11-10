@@ -581,6 +581,17 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     */
     {PGPE_ERR_MODULE_MACHINE_CHECK, PGPE_ERR_REASON_CODE_IRQ_FAULT, 0, PGPE_ERR_EXT_CODE_PGPE_MACHINE_CHECK}, //58
 
+    //WOV Overvolt Max Cnt
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_WOV_OCS
+    * @reasoncode  PGPE_ERR_REASON_CODE_WOV_OCS
+    * @userdata1   0
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT
+    * @devdesc     PStates: WOV Overvolt Max seen for 3 FIT ticks.
+    */
+    {PGPE_ERR_MODULE_WOV_OCS, PGPE_ERR_REASON_CODE_WOV_OCS, 0, PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT}, //59
+
 };
 
 

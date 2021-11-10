@@ -63,6 +63,7 @@ enum pgpeReasonCode
     PGPE_ERR_REASON_CODE_PSTATES    =     0x90,
     PGPE_ERR_REASON_CODE_WOF        =     0xb0,
     PGPE_ERR_REASON_CODE_INJECT     =     0xc0,
+    PGPE_ERR_REASON_CODE_WOV_OCS    =     0xd0,
 };
 
 enum pgpeExtReasonCode
@@ -140,6 +141,9 @@ enum pgpeExtReasonCode
     PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED       =   0x10b8,
     PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED       =   0x10b9,
     PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WITHOUT_VRT              =   0x10ba,
+
+    //WOV
+    PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT                        =   0x10c0,
 
     //Error Injection
     PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL            =   0x10d0,

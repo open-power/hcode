@@ -33,6 +33,7 @@
 #include "p10_scom_c_3.H"
 #include "pgpe_occ.h"
 #include "pgpe_pstate.h"
+#include "pgpe_error.h"
 
 pgpe_wov_ocs_t G_pgpe_wov_ocs __attribute__((section (".data_structs")));
 void pgpe_wov_ocs_dec_tgt_pct();
@@ -71,6 +72,7 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.cnt_droop_light_oc = 0;
     G_pgpe_wov_ocs.cnt_droop_heavy = 0;
     G_pgpe_wov_ocs.cnt_droop_heavy_oc = 0;
+    G_pgpe_wov_ocs.overv_max_cnt = 0;
 
     //Store rdp_limit_10ma value in occ sram space
     G_pgpe_wov_ocs.pwof_val->dw1.fields.rdp_limit_10ma = G_pgpe_wov_ocs.idd_current_thresh;
@@ -446,12 +448,22 @@ void pgpe_wov_ocs_update_dirty()
 
     }
 
-    if (G_pgpe_wov_ocs.tgt_pct > pgpe_gppb_get_wov_overv_max_pct())
+    if (G_pgpe_wov_ocs.tgt_pct >= pgpe_gppb_get_wov_overv_max_pct())
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
         dirty = OCS_DIRTY_SAMPLE_TYPE_11;
+        G_pgpe_wov_ocs.overv_max_cnt += 1;
         PK_TRACE_INF("WOV: tgt_pct=0x%x, overv_max_pct=0x%x", G_pgpe_wov_ocs.tgt_pct, pgpe_gppb_get_wov_overv_max_pct());
+    }
+    else
+    {
+        G_pgpe_wov_ocs.overv_max_cnt = 0;
+    }
+
+    if(G_pgpe_wov_ocs.overv_max_cnt == 3)
+    {
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOV_OVERV_MAX_CNT);
     }
 
     if (G_pgpe_wov_ocs.dirty != dirty)

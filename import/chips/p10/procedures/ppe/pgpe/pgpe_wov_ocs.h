@@ -111,6 +111,7 @@ typedef struct pgpe_wov_ocs
     uint32_t cnt_wov_ov_ticks;
     uint64_t eco_ttsr_mask;
     uint64_t ttsr_masked;
+    uint32_t overv_max_cnt;
 } pgpe_wov_ocs_t;
 
 extern pgpe_wov_ocs_t G_pgpe_wov_ocs;
