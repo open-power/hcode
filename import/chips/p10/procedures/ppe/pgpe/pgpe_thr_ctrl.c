@@ -26,6 +26,7 @@
 #include "pgpe_pstate.h"
 #include "p10_scom_eq_d.H"
 #include "p10_scom_eq_7.H"
+#include "p10_scom_c_9.H"
 #include "pgpe_gppb.h"
 
 
@@ -144,6 +145,17 @@ void pgpe_thr_ctrl_write_wcor(uint32_t ceff_ovr_idx)
     wcor.fields.c0_thr_idx = ceff_ovr_idx;
 
     //Multicast Write all QMEs WCOR with above value
+    if (ceff_ovr_idx != 0)
+    {
+        PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDIR_WO_OR, 0xF), BITS64(CPMS_FDIR_PREFETCH_THROTTLE_INJECT,
+                    CPMS_FDIR_PREFETCH_THROTTLE_INJECT_LEN));
+    }
+    else
+    {
+        PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDIR_WO_CLEAR, 0xF), BITS64(CPMS_FDIR_PREFETCH_THROTTLE_INJECT,
+                    CPMS_FDIR_PREFETCH_THROTTLE_INJECT_LEN));
+    }
+
     PPE_PUTSCOM_MC_Q(QME_WCOR, wcor.value);
     PK_TRACE_INF("THR: ceff_ovr_idx=0x%08x", ceff_ovr_idx);
 }
