@@ -445,8 +445,8 @@ qme_parse_regular_wakeup_fast()
 void
 qme_parse_special_wakeup_rise()
 {
-    uint32_t c_einr_spwu_rise              = ( in32_sh(QME_LCL_EINR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
     G_qme_record.c_special_wakeup_rise_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
+    uint32_t c_einr_spwu_rise              = ( in32_sh(QME_LCL_EINR) & BITS64SH(32, 4) ) >> SHIFT64SH(35);
 
     uint32_t c_mask = G_qme_record.c_special_wakeup_rise_req &
                       G_qme_record.c_configured &
@@ -460,7 +460,8 @@ qme_parse_special_wakeup_rise()
 
     if( G_qme_record.fused_core_enabled )
     {
-        PK_TRACE_INF("Parse: Consider Fused SMT4 Cores[%x] Pairing together for Stop and Wake", c_mask);
+        PK_TRACE_INF("Parse: Consider Fused SMT4 Cores[%x] EINR[%x] EISR[%x] Pairing together for Stop and Wake",
+                     c_mask, c_einr_spwu_rise, G_qme_record.c_special_wakeup_rise_req);
 
         if( c_mask & 0x3 )
         {
