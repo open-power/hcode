@@ -640,18 +640,14 @@ rfid
 #--------------------------------------------------------------------#
 .org _start + HRMOR_RESTORE_OFFSET
 
-#restore the URMOR/HRMOR to the value needed by the Ultravisor upon wakeup
-#there can be no future I-fetches after this point, so no more than 7
-#instructions after this
+#Executing last two instruction in absolute address mode (EA[0] = 1). We are updating
+#HRMOR which points to Hyp. But we still need to execute last instruction (stop) within  
+#PowMan context. We can only do it if we execute last two instructions
+#without using HRMOR value.
+
 restore_hrmor:
-
 mtspr HRMOR,     HRMOR_RESTORE_REG
-
-#necessary to invalidate stale translations in the ERATs that were created
-#during the self-restore code execution.
-
 save_restore_done:
-slbia
 .long STOP                  # Core entering STOP state from HV state
 .long ATTN
 #--------------------------------------------------------------------
@@ -1257,6 +1253,11 @@ beq         update_srrx
 addi        TEMP_REG1,      TEMP_REG1, SKIP_HRMOR_UPDATE_OFFSET # restore HRMOR only if thread0
 
 update_srrx:
+li          TEMP_REG2,      0x01
+sldi        TEMP_REG2 ,     TEMP_REG2,  63
+or          TEMP_REG1,      TEMP_REG2,  TEMP_REG1 
+#setting Most Significant Bit. Once, SRR0 is copied to HRMOR, core starts to execute instruction
+#from absolute address and stops using HRMOR. 
 mtsrr0      TEMP_REG1
 mtsrr1      MSR_INIT_REG
 rfid
