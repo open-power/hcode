@@ -138,35 +138,35 @@
 #if (PK_TRACE_SUPPORT)
 #if (PK_TRACE_VERSION == 3)
 
-#define PPETRACE0(...) ppe_trace_op()  //will fail at compile time
-#define PPETRACE1(str) ppe_trace_op1(HASH_ARG_MARK_COMBO(str, 0, PPE_TRACE_TINY_MARK))
+#define PPETRACE0(...) ppe_trace_pk()  //will fail at compile time
+#define PPETRACE1(str) ppe_trace_pk1(HASH_ARG_MARK_COMBO(str, 0, PPE_TRACE_TINY_MARK))
 #define PPETRACE2(str, parm0) \
     { \
         ((sizeof(parm0) <=2) ? \
-         ppe_trace_op2(HASH_ARG_MARK_COMBO(str, 0, PPE_TRACE_TINY_MARK), parm0): \
-         ppe_trace_op2(HASH_ARG_MARK_COMBO(str, 1, PPE_TRACE_BIG_MARK), parm0)); }
+         ppe_trace_pk2(HASH_ARG_MARK_COMBO(str, 0, PPE_TRACE_TINY_MARK), parm0): \
+         ppe_trace_pk2(HASH_ARG_MARK_COMBO(str, 1, PPE_TRACE_BIG_MARK), parm0)); }
 
 #define PPETRACE3(str, parm0, parm1) \
     { \
-        ppe_trace_op3(HASH_ARG_MARK_COMBO(str, 2, PPE_TRACE_BIG_MARK), parm0, parm1); }
+        ppe_trace_pk3(HASH_ARG_MARK_COMBO(str, 2, PPE_TRACE_BIG_MARK), parm0, parm1); }
 
 #define PPETRACE4(str, parm0, parm1, parm2) \
     { \
-        ppe_trace_op5(HASH_ARG_MARK_COMBO(str,3,PPE_TRACE_BIG_MARK), parm0, parm1, parm2, 0); }
+        ppe_trace_pk5(HASH_ARG_MARK_COMBO(str,3,PPE_TRACE_BIG_MARK), parm0, parm1, parm2, 0); }
 
 #define PPETRACE5(str, parm0, parm1, parm2, parm3) \
     { \
-        ppe_trace_op5(HASH_ARG_MARK_COMBO(str,4,PPE_TRACE_BIG_MARK), parm0, parm1, parm2, parm3); }
+        ppe_trace_pk5(HASH_ARG_MARK_COMBO(str,4,PPE_TRACE_BIG_MARK), parm0, parm1, parm2, parm3); }
 
-#define PPETRACE6(...) ppe_trace_op() //will fail at compile time
-#define PPETRACE7(...) ppe_trace_op() //will fail at compile time
+#define PPETRACE6(...) ppe_trace_pk() //will fail at compile time
+#define PPETRACE7(...) ppe_trace_pk() //will fail at compile time
 
 #define PPETRACE_HELPER2(count, ...) PPETRACE ## count (__VA_ARGS__)
 #define PPETRACE_HELPER(count, ...) PPETRACE_HELPER2(count, __VA_ARGS__)
 #define PKTRACE(...) PPETRACE_HELPER(VARG_COUNT(__VA_ARGS__), __VA_ARGS__)
 
 #define PKTRACE_BIN(str, bufp, buf_size) \
-    ppe_trace_op( HASH_ARG_MARK_COMBO(str, buf_size, PPE_TRACE_BIN_MARK), bufp)
+    ppe_trace_pk( HASH_ARG_MARK_COMBO(str, buf_size, PPE_TRACE_BIN_MARK), bufp)
 
 #else // PK_TRACE_VERSION != 3
 
@@ -220,12 +220,19 @@ extern "C"
 void pk_trace_set_freq(uint32_t i_freq);
 
 #if (PK_TRACE_VERSION == 3)
+void ppe_trace_pk(uint32_t i_mark, uint32_t* i_parms);
+void ppe_trace_pk1(uint32_t i_mark);
+void ppe_trace_pk2(uint32_t i_mark, uint32_t parm1);
+void ppe_trace_pk3(uint32_t i_mark, uint32_t parm1, uint32_t parm2);
+void ppe_trace_pk5(uint32_t i_mark, uint32_t parm1, uint32_t parm2,
+                   uint32_t parm3, uint32_t parm4);
 void ppe_trace_op(uint32_t i_mark, uint32_t* i_parms);
 void ppe_trace_op1(uint32_t i_mark);
 void ppe_trace_op2(uint32_t i_mark, uint32_t parm1);
 void ppe_trace_op3(uint32_t i_mark, uint32_t parm1, uint32_t parm2);
 void ppe_trace_op5(uint32_t i_mark, uint32_t parm1, uint32_t parm2,
                    uint32_t parm3, uint32_t parm4);
+
 #else
 void pk_trace_tiny(uint32_t i_parm);
 void pk_trace_big(uint32_t i_hash_and_count,
