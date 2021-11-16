@@ -50,6 +50,11 @@ void pgpe_header_init()
 
     G_pgpe_header_data->g_pgpe_scrBrdAddr = (uint32_t)&G_pgpe_pstate;
     G_pgpe_header_data->g_pgpe_traceAddr  = (uint32_t)&g_pk_trace_buf;
+    G_pgpe_header_data->g_pgpe_opTracePtr = (uint32_t)&g_pk_op_trace_buf;
+    G_pgpe_header_data->g_pgpe_traceLength = (uint32_t)sizeof(g_pk_trace_buf);
+    G_pgpe_header_data->g_pgpe_opTraceLength = (uint32_t)sizeof(g_pk_op_trace_buf);
+
+
 
     //OCC Shared SRAM address and length
     G_pgpe_header_data->g_pgpe_sharedSramAddress = (uint32_t)OCC_SHARED_SRAM_ADDR_START;
