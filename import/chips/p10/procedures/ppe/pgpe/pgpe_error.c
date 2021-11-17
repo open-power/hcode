@@ -40,7 +40,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VDD_INVALID_BUSNUM
     * @devdesc     AVS: Voltage operation invalid VDD bus number
     */
@@ -49,7 +48,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VCS_INVALID_BUSNUM
     * @devdesc     AVS: Voltage operation invalid VCS bus number
     */
@@ -58,7 +56,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_INIT_ERR
     * @devdesc     AVS: Voltage operation bus initialization error.
     */
@@ -67,7 +64,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_OUT_OF_BOUNDS
     * @devdesc     AVS: Voltage Write is beyond the Hcode defined bounds
     */
@@ -76,7 +72,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT
     * @devdesc     AVS: Voltage Read - OnGoing Flag Timeout
     */
@@ -85,7 +80,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_RESYNC_ERROR
     * @devdesc     AVS: Voltage Read - Bus resync failed
     */
@@ -94,7 +88,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_ONGOING_TIMEOUT
     * @devdesc     AVS: Voltage Write - OnGoing Flag Timeout.
     */
@@ -103,8 +96,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
-    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_ONGOING_TIMEOUT
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_RESYNC_ERROR
     * @devdesc     AVS: Voltage Write - Bus resync failed
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_RESYNC_ERROR},//8
@@ -114,7 +106,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_CURRENT
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT
     * @devdesc     AVS: Current Read - Ongoing Timeout
     */
@@ -123,7 +114,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_CURRENT
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_RESYNC_ERROR
     * @devdesc     AVS: Current Read - Bus resync failed
     */
@@ -134,7 +124,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_DPLL
     * @reasoncode  PGPE_ERR_REASON_CODE_DPLL
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_DPLL_WRITE_UPDATE_COMPLETE_AND_LOCK_TIMEOUT
     * @devdesc     DPLL: Did not get update complete and lock
     */
@@ -143,7 +132,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_DPLL
     * @reasoncode  PGPE_ERR_REASON_CODE_DPLL
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_DPLL_UNSUPPORTED_MODE
     * @devdesc     DPLL: Attempt was made to put the DPLL in an unsupported mode.
     */
@@ -154,7 +142,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_RESCLK
     * @reasoncode  PGPE_ERR_REASON_CODE_RESCLK
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_RESCLK_RCIMR_AT_ENABLEMENT_NOT_EQUAL
     * @devdesc     RES: Mode register at enablement is does not match
     */
@@ -163,7 +150,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_RESCLK
     * @reasoncode  PGPE_ERR_REASON_CODE_RESCLK
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_RESCLK_RCPTR_PSTATE_ACK_TIMEOUT
     * @devdesc     RES: Pstate movement did not receive the necessary resonant clock acknowledgment
     */
@@ -172,7 +158,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_RESCLK
     * @reasoncode  PGPE_ERR_REASON_CODE_RESCLK
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_RESCLK_RCPTR_TGT_PSTATE_NOT_EQUAL
     * @devdesc     RES: Index pointer does not match the targeted Pstate value
     */
@@ -183,7 +168,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_DDS
     * @reasoncode  PGPE_ERR_REASON_CODE_DDS
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_DDS_FDCR_UPDATE_TIMEOUT
     * @devdesc     DDS: Update to the FDCR timed
     */
@@ -195,7 +179,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_XGPE
     * @reasoncode  PGPE_ERR_REASON_CODE_XGPE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_XGPE_PGPE_VRET_UPDATE_BAD_ACK
     * @devdesc     XGPE: Vretention for STOP 3 had a bad acknowledgement
     */
@@ -206,7 +189,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_OCC_FAULT
     * @reasoncode  PGPE_ERR_REASON_CODE_IRQ_FAULT
-    * @userdata1   0
+    * @userdata1   OCCLFIR
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ
     * @devdesc     FIR: Unexpected OCC fault FIR event
     */
@@ -215,7 +198,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_XSTOP
     * @reasoncode  PGPE_ERR_REASON_CODE_IRQ_FAULT
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_XSTOP_GPE2
     * @devdesc     XSTOP: PGPE halted due to system checkstop
     */
@@ -224,7 +206,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_XSTOP
     * @reasoncode  PGPE_ERR_REASON_CODE_IRQ_FAULT
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_GPE3_ERROR
     * @devdesc     XGPE: Engine halted
     */
@@ -233,7 +214,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PVREF_FAULT
     * @reasoncode  PGPE_ERR_REASON_CODE_IRQ_FAULT
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PVREF_ERROR
     * @devdesc     PVREF: Precision voltage reference error.  Only significant if RVRMs are enabled.
     *
@@ -245,7 +225,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_INVALID_PMCR_OWNER
     * @devdesc     PStates: Invalid Power Management Control Register owner requested
     */
@@ -254,7 +233,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_CLIP_UPDT_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a clip update while in Safe Mode
     */
@@ -263,7 +241,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_CLIP_UPDT_WHILE_PENDING
     * @devdesc     PStates: PGPE received a clip update while a clip is pending
     */
@@ -272,7 +249,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PSTATE_START_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a Pstate start while in safe mode
     */
@@ -281,7 +257,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PSTATE_STOP_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a Pstate stop while in safe mode
     */
@@ -290,7 +265,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PSTATE_STOP_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a Pstate stop when already stopped
     */
@@ -299,16 +273,14 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
-    * @userdata4   PGPE_ERR_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING
     * @devdesc     PStates: PGPE received a Pstate stop while a stop is pending
     */
-    {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING },//28
+    {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING },//28
     /*
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_AND_PMCR_OWNER_NOT_OCC
     * @devdesc     PStates: PGPE received a set PMCR operation from OCC when it is not the PMCR owner
     */
@@ -317,7 +289,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a set PMCR operation from OCC while Pstates are stopped
     */
@@ -326,7 +297,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a set PMCR operation from OCC while in safe mode
     */
@@ -335,7 +305,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_WHILE_PENDING
     * @devdesc     PStates: PGPE received a set PMCR operation from OCC while one is pending
     */
@@ -344,7 +313,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a set PCB type 1 PMCR request while Pstates are stopped
     */
@@ -353,7 +321,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PMCR_OWNER_OCC
     * @devdesc     PStates: PGPE received a set PCB type 1 PMCR request while Pstates are owned by OCC
     */
@@ -362,7 +329,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received request to enter safe mode while Pstates are stopped
     */
@@ -373,7 +339,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_NULL_VRT_PTR
     * @devdesc     PStates: PGPE pointer from OCC to Voltage Ratio Table (VRT) is NULL
     */
@@ -382,7 +347,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a Voltage Ratio Table (VRT) from OCC while in safe mode
     */
@@ -391,7 +355,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a Voltage Ratio Table (VRT) from OCC while Pstates are stopped
     */
@@ -400,7 +363,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_WHILE_PENDING
     * @devdesc     PStates: PGPE received a Voltage Ratio Table (VRT) from OCC while one is pending
     */
@@ -409,7 +371,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_WHILE_PENDING
     * @devdesc     PStates: PGPE received a WOF control operation from OCC while one is pending
     */
@@ -418,7 +379,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a WOF control operation from OCC while in safe mode
     */
@@ -427,7 +387,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a WOF control operation from OCC while Pstates are stopped
     */
@@ -436,7 +395,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WHEN_ENABLED
     * @devdesc     PStates: PGPE received a WOF control enable operation from OCC while WOF is enabled
     */
@@ -445,7 +403,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED
     * @devdesc     PStates: PGPE received a WOF control disable operation from OCC while PGPE WOF is not enabled
     */
@@ -454,7 +411,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a WOF control disable operation from OCC while Pstates are stopped
     */
@@ -463,7 +419,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_PSTATE
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WITHOUT_VRT
     * @devdesc     PStates: PGPE received a WOF control enable operation from OCC without a previous VRT operation
     */
@@ -472,25 +427,22 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_EVENT_MANAGER
     * @reasoncode  PGPE_ERR_REASON_CODE_INJECT
-    * @userdata1   0
-    * @userdata4   PGPE_ERR_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL
     * @devdesc     PStates: An injected critical error during Pstate actuation detected
     */
-    {PGPE_ERR_MODULE_EVENT_MANAGER, PGPE_ERR_REASON_CODE_INJECT, 0, PGPE_ERR_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL}, //47
+    {PGPE_ERR_MODULE_EVENT_MANAGER, PGPE_ERR_REASON_CODE_INJECT, 0, PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL}, //47
     /*
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_EVENT_MANAGER
     * @reasoncode  PGPE_ERR_REASON_CODE_INJECT
-    * @userdata1   0
-    * @userdata4   PGPE_ERR_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO
     * @devdesc     PStates: An injected info error during Pstate actuation detected
     */
-    {PGPE_ERR_MODULE_EVENT_MANAGER, PGPE_ERR_REASON_CODE_INJECT, 0, PGPE_ERR_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO}, //48
+    {PGPE_ERR_MODULE_EVENT_MANAGER, PGPE_ERR_REASON_CODE_INJECT, 0, PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO}, //48
     /*
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_EVENT_MANAGER
     * @reasoncode  PGPE_ERR_REASON_CODE_INJECT
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_FIT_ERROR_INJECT
     * @devdesc     PStates: An injected error during PGPE Fixed Interval Timer (FIT) detected
     */
@@ -500,7 +452,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_DPLL
     * @reasoncode  PGPE_ERR_REASON_CODE_DPLL
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_DPLL_PARITY_ERROR
     * @devdesc     PStates: A parity error was detected in accessing the Digital Phased Locked Loop (DPLL) circuit
     */
@@ -510,7 +461,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_NOT_IN_PGPE_CONTROL
     * @devdesc     PStates: A volage write was attempted to the AVSBus but control had been removed
     */
@@ -519,7 +469,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_UNKNOWN_ERROR
     * @devdesc     PStates: A volage write was attempted to the AVSBus but an unknown error occurred
     */
@@ -528,7 +477,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_NOT_IN_PGPE_CONTROL
     * @devdesc     PStates: A volage read was attempted to the AVSBus but control had been removed
     */
@@ -537,7 +485,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_UNKNOWN_ERROR
     * @devdesc     PStates: A volage read was attempted to the AVSBus but an unknown error occurred
     */
@@ -546,7 +493,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_NOT_IN_PGPE_CONTROL
     * @devdesc     PStates: A currect read was attempted to the AVSBus but control had been removed
     */
@@ -555,7 +501,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_UNKNOWN_ERROR
     * @devdesc     PStates: A current read was attempted to the AVSBus but an unknown error occurred
     */
@@ -564,7 +509,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION
     * @devdesc     PStates: An AVSBus Write returned status where the VRM took no action.  This is typically for a voltage that is higher than supported.
     */
@@ -575,7 +519,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_MACHINE_CHECK
     * @reasoncode  PGPE_ERR_REASON_CODE_IRQ_FAULT
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_MACHINE_CHECK
     * @devdesc     PStates: A PGPE machiine check occured.  A common reason is SCOM failures wiith the address captured in the EDR
     */
@@ -586,7 +529,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_WOV_OCS
     * @reasoncode  PGPE_ERR_REASON_CODE_WOV_OCS
-    * @userdata1   0
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT
     * @devdesc     PStates: WOV Overvolt Max seen for 3 FIT ticks.
     */
@@ -597,7 +539,9 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
-    * @userdata1   0
+    * @userdata1   Bus number
+    * @userdata2   Rail number
+    * @userdata3   Voltage zero count
     * @userdata4   ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE
     * @devdesc     PStates: An AVSBus voltage read returned a value of 0.
     */
@@ -608,7 +552,6 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_CURRENT
-    * @userdata1   0
     * @userdata4   ERR_EXT_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE
     * @devdesc     PStates: An AVSBus current read returned a value of 0.
     */

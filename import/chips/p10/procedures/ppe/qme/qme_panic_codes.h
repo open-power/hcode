@@ -259,7 +259,7 @@ QME_STOP_SELF_CORE_FIR                    = 0x1d0d,
 * @userdata1   panic_code
 * @userdata2   l_scomData
 * @userdata3   l_target
-* @userdata4   RC_CORECACHE_CLK_CTRL_TIMEOUT_CORE
+* @userdata4   CORECACHE_CLK_CTRL_TIMEOUT_CORE
 * @devdesc     QME Clock Start/Stop Command Timed Out
 */
 CORECACHE_CLK_CTRL_TIMEOUT_CORE           = 0x1d1c, // 11xxx
@@ -270,7 +270,7 @@ CORECACHE_CLK_CTRL_TIMEOUT_CORE           = 0x1d1c, // 11xxx
 * @userdata1   panic_code
 * @userdata2   l_pfet_stat
 * @userdata3   i_target
-* @userdata4   RC_CORECACHE_POW_CTRL_TIMEOUT
+* @userdata4   CORECACHE_POW_CTRL_TIMEOUT
 * @devdesc     QME PFET Start/Stop Command Timed Out
 */
 CORECACHE_POW_CTRL_TIMEOUT                = 0x1d1d,
@@ -281,7 +281,7 @@ CORECACHE_POW_CTRL_TIMEOUT                = 0x1d1d,
 * @userdata1   panic_code
 * @userdata2   l_pfet_seq_states
 * @userdata3   i_target
-* @userdata4   RC_CORECACHE_PFET_SEQ_STATE_ERROR
+* @userdata4   CORECACHE_PFET_SEQ_STATE_ERROR
 * @devdesc     QME PFET Sequencer State Not in Idle
 */
 CORECACHE_PFET_SEQ_STATE_ERROR            = 0x1d1e,
@@ -296,7 +296,7 @@ CORECACHE_PFET_SEQ_STATE_ERROR            = 0x1d1e,
 * @userdata1   panic_code
 * @userdata2   QME_SCSR
 * @userdata3   i_target
-* @userdata4   RC_L2_PURGE_DONE_TIMEOUT
+* @userdata4   L2_PURGE_DONE_TIMEOUT
 * @devdesc     QME Stop2 Entry L2 Purge timeout
 */
 L2_PURGE_DONE_TIMEOUT                     = 0x1e00, // 00xxx
@@ -307,7 +307,7 @@ L2_PURGE_DONE_TIMEOUT                     = 0x1e00, // 00xxx
 * @userdata1   panic_code
 * @userdata2   QME_SCSR
 * @userdata3   i_target
-* @userdata4   RC_NCU_PURGE_DONE_TIMEOUT
+* @userdata4   NCU_PURGE_DONE_TIMEOUT
 * @devdesc     QME Stop2 Entry NCU Purge timeout
 */
 NCU_PURGE_DONE_TIMEOUT                    = 0x1e01,
@@ -318,7 +318,7 @@ NCU_PURGE_DONE_TIMEOUT                    = 0x1e01,
 * @userdata1   panic_code
 * @userdata2   QME_SCSR
 * @userdata3   i_target
-* @userdata4   RC_PMSR_SHIFT_INACTIVE_TIMEOUT
+* @userdata4   PMSR_SHIFT_INACTIVE_TIMEOUT
 * @devdesc     QME PMSR Shift Disable timeout
 */
 PMSR_SHIFT_INACTIVE_TIMEOUT               = 0x1e02,
@@ -329,7 +329,7 @@ PMSR_SHIFT_INACTIVE_TIMEOUT               = 0x1e02,
 * @userdata1   panic_code
 * @userdata2   CPMS_CUCR
 * @userdata3   i_target
-* @userdata4   RC_SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT
+* @userdata4   SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT
 * @devdesc     QME Shadow Enable FDCR Update Timeout
 */
 SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT    = 0x1e03,
@@ -340,7 +340,7 @@ SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT    = 0x1e03,
 * @userdata1   panic_code
 * @userdata2   CPMS_CUCR
 * @userdata3   i_target
-* @userdata4   RC_SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT
+* @userdata4   SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT
 * @devdesc     QME Shadow Enable Core Refresh Timeout
 */
 SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT    = 0x1e04,
@@ -351,7 +351,7 @@ SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT    = 0x1e04,
 * @userdata1   panic_code
 * @userdata2   QME_TFCSR
 * @userdata3   i_target
-* @userdata4   RC_TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_TIMEOUT
+* @userdata4   TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_TIMEOUT
 * @devdesc     QME TimeFac Receive Timeout
 */
 TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_TIMEOUT = 0x1e05,
@@ -362,7 +362,7 @@ TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_TIMEOUT = 0x1e05,
 * @userdata1   panic_code
 * @userdata2   QME_TFCSR
 * @userdata3   i_target
-* @userdata4   RC_TIMEFAC_FROM_PC_TFCSR_ERROR_CHECK_FAILED
+* @userdata4   TIMEFAC_FROM_PC_TFCSR_ERROR_CHECK_FAILED
 * @devdesc     QME TimeFac Receive Error detected
 */
 TIMEFAC_FROM_PC_TFCSR_ERROR_CHECK_FAILED  = 0x1e06,
@@ -373,7 +373,7 @@ TIMEFAC_FROM_PC_TFCSR_ERROR_CHECK_FAILED  = 0x1e06,
 * @userdata1   panic_code
 * @userdata2   QME_CGCSR
 * @userdata3   i_target
-* @userdata4   RC_ECL2_CLK_SYNC_DROP_TIMEOUT
+* @userdata4   ECL2_CLK_SYNC_DROP_TIMEOUT
 * @devdesc     QME CL2 Clock Sync Drop Timeout
 */
 ECL2_CLK_SYNC_DROP_TIMEOUT                = 0x1e07,
@@ -384,7 +384,7 @@ ECL2_CLK_SYNC_DROP_TIMEOUT                = 0x1e07,
 * @userdata1   panic_code
 * @userdata2   QME_RCSCR.core_change_done
 * @userdata3   i_target
-* @userdata4   RC_CORE_CHANGE_DONE_RESCLK_ENTRY_TIMEOUT
+* @userdata4   CORE_CHANGE_DONE_RESCLK_ENTRY_TIMEOUT
 * @devdesc     QME Resclk Entry Timeout
 */
 CORE_CHANGE_DONE_RESCLK_ENTRY_TIMEOUT     = 0x1e08, // 01xxx
@@ -395,7 +395,7 @@ CORE_CHANGE_DONE_RESCLK_ENTRY_TIMEOUT     = 0x1e08, // 01xxx
 * @userdata1   panic_code
 * @userdata2   CPMS_RVCSR
 * @userdata3   i_target
-* @userdata4   RC_VMIN_ENA_RVID_ACTIVE_TIMEOUT
+* @userdata4   VMIN_ENA_RVID_ACTIVE_TIMEOUT
 * @devdesc     QME Rvid Enable Timeout
 */
 VMIN_ENA_RVID_ACTIVE_TIMEOUT              = 0x1e09,
@@ -406,7 +406,7 @@ VMIN_ENA_RVID_ACTIVE_TIMEOUT              = 0x1e09,
 * @userdata1   panic_code
 * @userdata2   CPMS_CL2_PFETSTAT
 * @userdata3   i_target
-* @userdata4   RC_VMIN_ENA_VDD_PG_STATE_TIMEOUT
+* @userdata4   VMIN_ENA_VDD_PG_STATE_TIMEOUT
 * @devdesc     QME Vmin PG State Idle Timeout
 */
 VMIN_ENA_VDD_PG_STATE_TIMEOUT             = 0x1e0a,
@@ -417,7 +417,7 @@ VMIN_ENA_VDD_PG_STATE_TIMEOUT             = 0x1e0a,
 * @userdata1   panic_code
 * @userdata2   CPMS_CL2_PFETSTAT
 * @userdata3   i_target
-* @userdata4   RC_VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED
+* @userdata4   VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED
 * @devdesc     QME Vmin PFET Enable Actual Unexpected
 */
 VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED    = 0x1e0d,
@@ -428,7 +428,7 @@ VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED    = 0x1e0d,
 * @userdata1   panic_code
 * @userdata2   L3_MISC_L3CERRS_PM_PURGE_REG
 * @userdata3   i_target
-* @userdata4   RC_L3_PURGE_DONE_TIMEOUT
+* @userdata4   L3_PURGE_DONE_TIMEOUT
 * @devdesc     QME L3 Purge Timeout
 */
 L3_PURGE_DONE_TIMEOUT                     = 0x1e1c, // 11xxx
@@ -439,7 +439,7 @@ L3_PURGE_DONE_TIMEOUT                     = 0x1e1c, // 11xxx
 * @userdata1   panic_code
 * @userdata2   QME_SCSR
 * @userdata3   i_target
-* @userdata4   RC_POWERBUS_PURGE_DONE_TIMEOUT
+* @userdata4   POWERBUS_PURGE_DONE_TIMEOUT
 * @devdesc     QME Powerbus Purge Timeout
 */
 POWERBUS_PURGE_DONE_TIMEOUT               = 0x1e1d,
@@ -450,7 +450,7 @@ POWERBUS_PURGE_DONE_TIMEOUT               = 0x1e1d,
 * @userdata1   panic_code
 * @userdata2   QME_SCSR
 * @userdata3   i_target
-* @userdata4   RC_CHTM_PURGE_DONE_TIMEOUT
+* @userdata4   CHTM_PURGE_DONE_TIMEOUT
 * @devdesc     QME Chtm Purge Timeout
 */
 CHTM_PURGE_DONE_TIMEOUT                   = 0x1e1e,
@@ -461,7 +461,7 @@ CHTM_PURGE_DONE_TIMEOUT                   = 0x1e1e,
 * @userdata1   panic_code
 * @userdata2   QME_CGCSR
 * @userdata3   i_target
-* @userdata4   RC_L3_CLK_SYNC_DROP_TIMEOUT
+* @userdata4   L3_CLK_SYNC_DROP_TIMEOUT
 * @devdesc     QME L3 Clock Sync Drop Timeout
 */
 L3_CLK_SYNC_DROP_TIMEOUT                  = 0x1e1f,
@@ -475,7 +475,7 @@ L3_CLK_SYNC_DROP_TIMEOUT                  = 0x1e1f,
 * @userdata1   panic_code
 * @userdata2   QME_CGCSR
 * @userdata3   i_target
-* @userdata4   RC_ECL2_CLK_SYNC_DONE_TIMEOUT
+* @userdata4   ECL2_CLK_SYNC_DONE_TIMEOUT
 * @devdesc     QME CL2 Clock Sync Done Timeout
 */
 ECL2_CLK_SYNC_DONE_TIMEOUT                = 0x1f00, // 00xxx
@@ -486,7 +486,7 @@ ECL2_CLK_SYNC_DONE_TIMEOUT                = 0x1f00, // 00xxx
 * @userdata1   panic_code
 * @userdata2   QME_RCSCR
 * @userdata3   i_target
-* @userdata4   RC_CORE_CHANGE_DONE_RESCLK_EXIT_TIMEOUT
+* @userdata4   CORE_CHANGE_DONE_RESCLK_EXIT_TIMEOUT
 * @devdesc     QME Resclk Exit Timeout
 */
 CORE_CHANGE_DONE_RESCLK_EXIT_TIMEOUT      = 0x1f01,
@@ -497,7 +497,7 @@ CORE_CHANGE_DONE_RESCLK_EXIT_TIMEOUT      = 0x1f01,
 * @userdata1   panic_code
 * @userdata2   QME_CUCR
 * @userdata3   i_target
-* @userdata4   RC_SHADOW_DIS_FDCR_UPDATE_IN_PROG_TIMEOUT
+* @userdata4   SHADOW_DIS_FDCR_UPDATE_IN_PROG_TIMEOUT
 * @devdesc     QME Shadow Disable FDCR Update Timeout
 */
 SHADOW_DIS_FDCR_UPDATE_IN_PROG_TIMEOUT    = 0x1f02,
@@ -508,7 +508,7 @@ SHADOW_DIS_FDCR_UPDATE_IN_PROG_TIMEOUT    = 0x1f02,
 * @userdata1   panic_code
 * @userdata2   QME_CUCR.core_shadow_state
 * @userdata3   i_target
-* @userdata4   RC_SHADOW_DIS_CORE_SHADOW_STATE_TIMEOUT
+* @userdata4   SHADOW_DIS_CORE_SHADOW_STATE_TIMEOUT
 * @devdesc     QME Shadow Disable State Timeout
 */
 SHADOW_DIS_CORE_SHADOW_STATE_TIMEOUT      = 0x1f03,
@@ -519,7 +519,7 @@ SHADOW_DIS_CORE_SHADOW_STATE_TIMEOUT      = 0x1f03,
 * @userdata1   panic_code
 * @userdata2   QME_TFCSR
 * @userdata3   i_target
-* @userdata4   RC_TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT
+* @userdata4   TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT
 * @devdesc     QME TimeFac Sent Done Timeout
 */
 TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT      = 0x1f04,
@@ -530,7 +530,7 @@ TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT      = 0x1f04,
 * @userdata1   panic_code
 * @userdata2   QME_TFCSR
 * @userdata3   i_target
-* @userdata4   RC_TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED
+* @userdata4   TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED
 * @devdesc     QME TimeFac Sent Error detected
 */
 TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED    = 0x1f05,
@@ -553,7 +553,7 @@ QME_STOP_WAKEUP_PAIR_MISMATCH             = 0x1f07,
 * @userdata1   panic_code
 * @userdata2   QME_RVCSR
 * @userdata3   i_target
-* @userdata4   RC_VMIN_DIS_RVID_BYPASS_TIMEOUT
+* @userdata4   VMIN_DIS_RVID_BYPASS_TIMEOUT
 * @devdesc     QME Rvid Bypass Timeout
 */
 VMIN_DIS_RVID_BYPASS_TIMEOUT              = 0x1f08, // 01xxx
@@ -564,7 +564,7 @@ VMIN_DIS_RVID_BYPASS_TIMEOUT              = 0x1f08, // 01xxx
 * @userdata1   panic_code
 * @userdata2   QME_RVCSR
 * @userdata3   i_target
-* @userdata4   RC_VMIN_DIS_RVID_ENABLED_TIMEOUT
+* @userdata4   VMIN_DIS_RVID_ENABLED_TIMEOUT
 * @devdesc     QME Rvid Enabled Timeout
 */
 VMIN_DIS_RVID_ENABLED_TIMEOUT             = 0x1f09,
@@ -575,7 +575,7 @@ VMIN_DIS_RVID_ENABLED_TIMEOUT             = 0x1f09,
 * @userdata1   panic_code
 * @userdata2   CPMS_CL2_PFETSTAT
 * @userdata3   i_target
-* @userdata4   RC_VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT
+* @userdata4   VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT
 * @devdesc     QME Vmin Disable PFET Enable Timeout
 */
 VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT          = 0x1f0a,
@@ -586,7 +586,7 @@ VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT          = 0x1f0a,
 * @userdata1   panic_code
 * @userdata2   CPMS_CL2_PFETCNTL
 * @userdata3   i_target
-* @userdata4   RC_VMIN_DIS_VDD_PG_STATE_TIMEOUT
+* @userdata4   VMIN_DIS_VDD_PG_STATE_TIMEOUT
 * @devdesc     QME Vmin Disable PG State Timeout
 */
 VMIN_DIS_VDD_PG_STATE_TIMEOUT             = 0x1f0d,
@@ -597,7 +597,7 @@ VMIN_DIS_VDD_PG_STATE_TIMEOUT             = 0x1f0d,
 * @userdata1   panic_code
 * @userdata2   QME_CGCSR
 * @userdata3   i_target
-* @userdata4   RC_L3_CLK_SYNC_DONE_TIMEOUT
+* @userdata4   L3_CLK_SYNC_DONE_TIMEOUT
 * @devdesc     QME L3 Clock Sync Done Timeout
 */
 L3_CLK_SYNC_DONE_TIMEOUT                  = 0x1f1c, // 11xxx

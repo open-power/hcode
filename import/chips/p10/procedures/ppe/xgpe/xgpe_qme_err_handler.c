@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021                                                         */
+/* COPYRIGHT 2021,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -153,6 +153,15 @@ uint32_t handleQmeErrl (const uint32_t i_quadId,
 
     if (ERRL_STATUS_SUCCESS != status)
     {
+        /*
+         * @errortype
+         * @moduleid    XGPE_MODID_HANDLE_QME_ERRL
+         * @reasoncode  XGPE_RC_QME_ERR_DOWNLOAD
+         * @userdata1   QME Quad Id
+         * @userdata2   QME Error Code
+         * @userdata3   Failure Status
+         * @devdesc     XGPE detected a failure downloading QME error log
+         */
         // 2. Download failed, create critical error indicating the same
         PPE_LOG_ERR_CRITICAL ( XGPE_RC_QME_ERR_DOWNLOAD,
                                0, XGPE_MODID_HANDLE_QME_ERRL,
@@ -209,6 +218,16 @@ uint32_t handleQmeErrl (const uint32_t i_quadId,
     //     QME is belly-up
     if (XGPE_QME_ERR_FIRMWARE != i_errCode)
     {
+        /*
+         * @errortype
+         * @moduleid    XGPE_MODID_HANDLE_QME_ERRL
+         * @reasoncode  XGPE_RC_QME_CRITICAL_ERR
+         * @userdata1   QME Quad Id
+         * @userdata2   QME Error Code
+         * @userdata3   Failed Cores
+         * @userdata4   XGPE Extended Reason Code
+         * @devdesc     XGPE detected a QME fault error log
+         */
         status = createQmeErrl (extRc,
                                 i_quadId,
                                 i_errCode,

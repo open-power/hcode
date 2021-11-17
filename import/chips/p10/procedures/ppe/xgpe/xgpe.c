@@ -79,6 +79,15 @@ __xgpe_machine_check_handler()
     }
     else
     {
+        /*
+         * @errortype
+         * @moduleid    XGPE_HCODE_SCOM
+         * @reasoncode  XGPE_SCOM_MACHINE_CHECK_ERROR
+         * @userdata1   EDR
+         * @userdata2   SRR0
+         * @userdata3   SPRG0
+         * @devdesc     XGPE had a SCOM failure
+         */
         xgpe_errl_create(XGPE_SCOM_MACHINE_CHECK_ERROR,
                          0, XGPE_HCODE_SCOM,
                          edr, srr0, sprg0, ERRL_SEV_UNRECOVERABLE);
@@ -164,12 +173,27 @@ void createPgpelog()
 
     getPpeScrBrdUsrDtls (ERRL_SOURCE_PGPE, 0, (uint8_t*)g_pgpe_scr_brd_addr, &usrDtlsSect1);
 
+    /*
+     * @errortype
+     * @moduleid    XGPE_MODID_HANDLE_PGPE_ERRL
+     * @reasoncode  XGPE_RC_PGPE_CRITICAL_ERR
+     * @userdata1   SRR0
+     * @userdata2   LR
+     * @userdata3   CTR
+     * @devdesc     Critical Error Detected from PGPE
+     */
     PPE_LOG_ERR_CRITICAL ( XGPE_RC_PGPE_CRITICAL_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
                            srr0, lr, ctr,
                            &usrDtlsSect, NULL, status );
 
     PK_TRACE ("createPgpelog critical: status %d",  status);
 
+    /*
+     * @errortype
+     * @moduleid    XGPE_MODID_HANDLE_PGPE_ERRL
+     * @reasoncode  XGPE_RC_PGPE_INFO_ERR
+     * @devdesc     Supplementary log for Error Detected from PGPE
+     */
     getPpePkTraceUsrDtls(ERRL_SOURCE_PGPE, 0, (uint8_t*)g_pgpe_pk_trace_buf, &usrDtlsSect);
 
     PPE_LOG_ERR_INF ( XGPE_RC_PGPE_INFO_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
