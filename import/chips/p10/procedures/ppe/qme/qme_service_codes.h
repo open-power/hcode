@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021                                                         */
+/* COPYRIGHT 2021,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -24,8 +24,6 @@
 /* IBM_PROLOG_END_TAG                                                     */
 #ifndef _QME_SERVICE_CODES_H_
 #define _QME_SERVICE_CODES_H_
-
-#include "qme_panic_codes.h"
 
 enum qmeReasonCode
 {
@@ -56,6 +54,9 @@ enum qmeExtReasonCode
     QME_STOP11_EXIT         =   0x01,
     QME_PUT_RING_FAIL       =   0x02,
     // see others in qme_panic_codes.h
+    // qme error SRC doxygen tags are added to the below file
+    // and it gets used as ext rc as well
+#include "qme_panic_codes.h"
 };
 
 enum qmeModuleId

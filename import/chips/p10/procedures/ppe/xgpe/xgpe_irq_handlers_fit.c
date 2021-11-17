@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -148,6 +148,16 @@ void handle_error_inject()
         PK_TRACE("OCCFLG3[XGPE_HCODE_ERROR_INJECT]=0x3. FIT ERROR INJECT 0x%08x", l_occflg3);
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_WO_CLEAR, BITS32(XGPE_HCODE_ERROR_INJECT, XGPE_HCODE_ERROR_INJECT_LEN));
 
+        /*
+         * @errortype
+         * @moduleid    XGPE_MODID_FIT_HANDLER
+         * @reasoncode  XGPE_RC_HCODE_ERR_INJECT
+         * @userdata1   OCC Flag 3
+         * @userdata2   Error Pattern
+         * @userdata3   Error Pattern
+         * @userdata4   0
+         * @devdesc     XGPE detected an user error injection
+         */
         xgpe_errl_create(XGPE_RC_HCODE_ERR_INJECT, 0, XGPE_MODID_FIT_HANDLER,
                          l_occflg3, 0xdeadbeef, 0xdeadbeef, ERRL_SEV_UNRECOVERABLE);
     }
