@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -197,14 +197,6 @@ static const uint32_t P10_20_PHY_PPE_WRAP_MIB_XISGB_SGB_BYTE_VALID_LEN = 4;
 static const uint32_t PHY_PPE_WRAP_MIB_XISGB_SGB_FLUSH_PENDING = 63;
 static const uint32_t P10_20_PHY_PPE_WRAP_MIB_XISGB_SGB_FLUSH_PENDING = 63; // p10:20,
 //<< [PHY_PPE_WRAP_MIB_XISGB]
-// pauc/reg00003.H
-
-//>> [PHY_PPE_WRAP_SCOM_WORK_REG1]
-static const uint64_t PHY_PPE_WRAP_SCOM_WORK_REG1 = 0x10012c21ull;
-
-static const uint32_t PHY_PPE_WRAP_SCOM_WORK_REG1_SCOM_PPE_WORK1 = 0;
-static const uint32_t PHY_PPE_WRAP_SCOM_WORK_REG1_SCOM_PPE_WORK1_LEN = 32;
-//<< [PHY_PPE_WRAP_SCOM_WORK_REG1]
 // pauc/reg00003.H
 
 //>> [TRA0_TR0_CONFIG_3]
