@@ -23,7 +23,7 @@
 #
 # IBM_PROLOG_END_TAG
 ifdef IMAGE
-
+# Testing
 
 # common cme compile directives
 IMAGE_EDITOR=qmeImgEdit.exe
