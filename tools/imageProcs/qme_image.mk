@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2016,2020
+# COPYRIGHT 2016,2021
 # [+] International Business Machines Corp.
 #
 #
@@ -22,7 +22,7 @@
 # permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
-
+# Testing 
 # $1 == type (hw/sim)
 # $2 == chip
 # $3 == chipId
