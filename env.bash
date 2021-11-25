@@ -23,8 +23,6 @@
 #
 # IBM_PROLOG_END_TAG
 
-# Testing for trigger
-
 ROOTDIR=.
 
 if [ -e ./customrc ]; then
