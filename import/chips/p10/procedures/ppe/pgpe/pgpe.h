@@ -92,6 +92,10 @@ typedef struct pcb_set_pmcr_arg
     uint32_t ps_valid[MAX_QUADS];
 } pcb_set_pmcr_args_t;
 
+typedef struct occ_fault_args
+{
+    uint64_t occlfir;
+} occ_fault_args_t;
 
 static const uint32_t PLL_LOCK_TIMEOUT_COUNT = 8;
 

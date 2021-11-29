@@ -55,6 +55,7 @@ typedef struct pgpe_error
 void pgpe_error_init();
 void pgpe_error_critical_log(uint32_t pgpe_err_id);
 void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dtls);
+void pgpe_error_critical_log_usrdata1(uint32_t pgpe_err_id, uint32_t usrdata1);
 void pgpe_error_info_log(uint32_t pgpe_err_id);
 void pgpe_error_notify_critical(uint32_t pgpe_irr_id);
 void pgpe_error_notify_info(uint32_t pgpe_irr_id);

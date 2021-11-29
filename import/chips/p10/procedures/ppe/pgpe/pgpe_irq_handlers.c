@@ -61,6 +61,7 @@ IOTA_TASK(pgpe_irq_fault_handler),
           IOTA_END_TASK_TABLE;
 
 pcb_set_pmcr_args_t G_pcb_set_pmcr_args;
+occ_fault_args_t G_occ_fault_args;
 
 void pgpe_irq_init()
 {
@@ -101,19 +102,29 @@ void pgpe_ocb_hb_error_init()
     PK_TRACE("IRQ: OCC Heartbeat Setup");
 
     uint64_t firact;
+    uint64_t mask  =
+        BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OCC_HB_ERROR) |
+        BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OCB_ERROR) |
+        BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_SRT_UE) |
+        BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OPIT_PARITY_ERROR) |
+        BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_C405_ECC_UE);
 
-    //Set up OCB_HB loss FIR bit to generate interrupt
+    //Set up OCB_HB loss(4), OCB_ERROR(13), SRT_UE(14), OPT_PARITY_ERROR(35), c405_ECC_UE(44)  FIR bit to generate interrupt
+    //FIRACTION0
     PPE_GETSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRACT0, firact);
-    firact |= BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OCC_HB_ERROR);
+    firact |= mask;
     PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRACT0, firact);
 
+    //FIRACTION1
     PPE_GETSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRACT1, firact);
-    firact &= ~BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OCC_HB_ERROR);
+    firact &= ~mask;
     PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRACT1, firact);
 
-    PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRMASK_WO_AND, ~BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRMASK_OCC_HB_ERROR_MASK));
+    //FIRMASK
+    PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIRMASK_WO_AND, ~mask);
     out64(OCB_OCCHBR, 0); //Clear and Disable OCC Heartbeat Register
-    PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_WO_AND, ~BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OCC_HB_ERROR));
+
+    PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_WO_AND, ~mask);//Clear any FIR bits
     out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_OCC_ERROR));//Clear any pending interrupts
     out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_OCC_ERROR));//Unmask interrupt
 }
@@ -155,7 +166,7 @@ void pgpe_irq_fault_handler()
 void pgpe_irq_pbax_handler()
 {
     //This should not happen. We have this masked
-    PK_TRACE("IRQ: PBAX IRQ");
+    PK_TRACE_INF("IRQ: PBAX IRQ");
 
     //\todo Decide what to do if this fires
 }
@@ -210,16 +221,23 @@ void pgpe_irq_pcb_handler()
 
 void pgpe_irq_occ_fault_handler()
 {
-    PK_TRACE("IRQ: OCC Fault");
+    PK_TRACE_INF("IRQ: OCC Fault");
+
+    uint64_t occlfir;
+
+    //Read OCCLFIR
+    PPE_GETSCOM(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_RW, occlfir);
+    G_occ_fault_args.occlfir = occlfir ;
+    pgpe_event_tbl_set(EV_OCC_FAULT, EVENT_PENDING, (void*)&G_occ_fault_args);
+
     out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_OCC_ERROR));
 
-    pgpe_event_tbl_set_status(EV_OCC_FAULT, EVENT_PENDING);
-
+    PK_TRACE_INF("IRQ: OCCLFIR=0x%08x%08x", occlfir >> 32, occlfir & 0xFFFFFFFF);
 }
 
 void pgpe_irq_xgpe_fault_handler()
 {
-    PK_TRACE("IRQ: XGPE Fault");
+    PK_TRACE_INF("IRQ: XGPE Fault");
     out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_GPE3_ERROR));
 
     pgpe_event_tbl_set_status(EV_XGPE_FAULT, EVENT_PENDING);

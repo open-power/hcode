@@ -648,6 +648,21 @@ void pgpe_error_critical_log(uint32_t pgpe_err_id)
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
 }
 
+void pgpe_error_critical_log_usrdata1(uint32_t pgpe_err_id, uint32_t usrdata1)
+{
+    //Create Critical Log
+    uint32_t o_status;
+    PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
+                         G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
+                         G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
+                         usrdata1,
+                         0x0,
+                         0x0,
+                         NULL,
+                         NULL,
+                         o_status);
+    PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
+}
 void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dtls)
 {
     //Create Critical Log

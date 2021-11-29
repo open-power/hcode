@@ -44,6 +44,7 @@
 #include "pgpe_error.h"
 #include "errldefs.h"
 #include "errlutil.h"
+#include "p10_scom_proc_9.H"
 
 extern  uint64_t  g_oimr_override;
 
@@ -921,10 +922,22 @@ void pgpe_process_safe_mode(void* args)
     ppe_trace_op(PGPE_OPT_SAFE_MODE_DONE, 0);
 }
 
-void pgpe_process_occ_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag)
+void pgpe_process_occ_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag, void* eargs)
 {
+
+    occ_fault_args_t* occ_fault_args = (occ_fault_args_t*)eargs;
+
     //Mask interrupt except IPC and Error
     pgpe_error_mask_irqs();
+
+    //Take out critical log(except for OCC HB loss)
+    if (occ_fault_args->occlfir & (BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OCB_ERROR) |
+                                   BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_SRT_UE) |
+                                   BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_OPIT_PARITY_ERROR) |
+                                   BIT64(TP_TPCHIP_OCC_OCI_SCOM_OCCLFIR_C405_ECC_UE)))
+    {
+        pgpe_error_critical_log_usrdata1(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ, occ_fault_args->occlfir);
+    }
 
     //Notify error module
     pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ);
@@ -934,7 +947,6 @@ void pgpe_process_occ_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag)
     {
         pgpe_pstate_actuate_safe_mode();
     }
-
 }
 
 void pgpe_process_xstop_fault()
