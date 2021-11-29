@@ -653,6 +653,11 @@ save_restore_done:
 #--------------------------------------------------------------------
 
 .org _start + URMOR_RESTORE_OFFSET
+#Executing last two instruction in absolute address mode (EA[0] = 1). We are updating
+#URMOR which points to Hyp. But we still need to execute last instruction (stop) within  
+#PowMan context. We can only do it if we execute last two instructions
+#without using URMOR value.
+restore_urmor:
 mtspr HRMOR,     HRMOR_RESTORE_REG
 mtspr URMOR,     URMOR_RESTORE_REG
 slbia
@@ -1270,6 +1275,11 @@ beq         update_uv_exit
 addi        TEMP_REG1,      TEMP_REG1,      SKIP_URMOR_UPDATE_OFFSET # restore URMOR only if thread0
 
 update_uv_exit:
+li          TEMP_REG2,      0x01
+sldi        TEMP_REG2 ,     TEMP_REG2,  63
+or          TEMP_REG1,      TEMP_REG2,  TEMP_REG1 
+#setting Most Significant Bit. Once, USRR0 is copied to URMOR, core starts to execute instruction
+#from absolute address and stops using URMOR. 
 mtspr       USRR0,          TEMP_REG1
 mtspr       USRR1,          MSR_INIT_REG
 .long       urfid
