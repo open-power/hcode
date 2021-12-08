@@ -693,9 +693,12 @@ void pgpe_pstate_actuate_step()
 
 void pgpe_pstate_actuate_voltage_step()
 {
+    PkMachineContext ctx;
+
     if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
     {
-        int32_t curr_wov_pct, vdd_wov_bias_next;
+        int32_t curr_wov_pct, tgt_wov_pct, vdd_wov_bias_next, updt_wov_pct;
+        updt_wov_pct = 0;
 
         //1 Step WOV Curr Pct towards WOV Target Pct
         pgpe_wov_ocs_step_curr_pct();
@@ -719,23 +722,48 @@ void pgpe_pstate_actuate_voltage_step()
             if (((int32_t)G_pgpe_pstate.vdd_curr + vdd_wov_bias_next) < (int32_t)pgpe_gppb_get_wov_underv_vmin_mv())
             {
                 vdd_wov_bias_next = pgpe_gppb_get_wov_underv_vmin_mv() - G_pgpe_pstate.vdd_curr;
-                curr_wov_pct = pgpe_wov_ocs_get_wov_tgt_pct();
-                pgpe_wov_ocs_set_wov_curr_pct(curr_wov_pct);
+                curr_wov_pct = (vdd_wov_bias_next * 1000) / (int32_t)G_pgpe_pstate.vdd_next;
+                curr_wov_pct = curr_wov_pct / pgpe_gppb_get_wov_underv_step_decr_pct();
+                curr_wov_pct = curr_wov_pct * pgpe_gppb_get_wov_underv_step_decr_pct();
+                tgt_wov_pct = curr_wov_pct;
+                updt_wov_pct = 1;
+                vdd_wov_bias_next = ((int32_t)(G_pgpe_pstate.vdd_next) * (curr_wov_pct)) / 1000;
+
+
                 //PK_TRACE_INF("PSS: Act_V UnderV_Vmin =%u, VddWovBiasNext=%d, CurrWovPct=%d", pgpe_gppb_get_wov_underv_vmin_mv()
                 //             , vdd_wov_bias_next,  curr_wov_pct);
             }
         }
 
-        //TODO Add overvolting vmax check
+        //Overvolting vmax check
+        if (curr_wov_pct > 0)
+        {
+            if (((int32_t)G_pgpe_pstate.vdd_next + vdd_wov_bias_next) > (int32_t)pgpe_gppb_get_wov_overv_vmax_mv())
+            {
+                vdd_wov_bias_next = pgpe_gppb_get_wov_overv_vmax_mv() - G_pgpe_pstate.vdd_next;
+                curr_wov_pct = (vdd_wov_bias_next * 1000) / (int32_t)G_pgpe_pstate.vdd_next;
+                curr_wov_pct = curr_wov_pct / pgpe_gppb_get_wov_overv_step_incr_pct();
+                curr_wov_pct = curr_wov_pct * pgpe_gppb_get_wov_overv_step_incr_pct();
+                tgt_wov_pct = curr_wov_pct;
+                updt_wov_pct = 1;
+                //PK_TRACE_INF("PSS: Act_S OverV_Vmax=%u, VddWovBiasNext=%d, CurrWovPct=%d", pgpe_gppb_get_wov_overv_vmax_mv()
+                //         , vdd_wov_bias_next,  curr_wov_pct);
+            }
+        }
 
         G_pgpe_pstate.vdd_wov_bias = vdd_wov_bias_next;
         G_pgpe_pstate.vdd_next_ext = G_pgpe_pstate.vdd_next + G_pgpe_pstate.vdd_next_uplift + G_pgpe_pstate.vdd_wov_bias;
 
-        if(G_pgpe_pstate.voltage_step_trace_cnt < 10)
+        //Update target and curr wov pct
+        if(updt_wov_pct)
         {
-            PK_TRACE_INF("PSS: Act_V, VddNextExt=%d VddWovBias=%d WovTgtPct=%d WovCurrPct=%d", G_pgpe_pstate.vdd_next_ext,
-                         G_pgpe_pstate.vdd_wov_bias, pgpe_wov_ocs_get_wov_tgt_pct(), pgpe_wov_ocs_get_wov_curr_pct());
-            G_pgpe_pstate.voltage_step_trace_cnt++;
+            pgpe_wov_ocs_set_wov_curr_pct(curr_wov_pct); //This is update only during actuate step or actuate voltage step
+            //Need this inside critical section because tgt_pct is updated inside FIT
+            pk_critical_section_enter(&ctx);
+            {
+                pgpe_wov_ocs_set_wov_tgt_pct(tgt_wov_pct);
+            }
+            pk_critical_section_exit(&ctx);
         }
 
 
@@ -820,6 +848,14 @@ void pgpe_pstate_actuate_voltage_step()
 
         G_pgpe_pstate.power_proxy_scale = power_proxy_scale_tgt;
         pgpe_pstate_update_vdd_vcs_ps();
+
+        if(G_pgpe_pstate.voltage_step_trace_cnt < 10)
+        {
+            PK_TRACE_INF("PSS: Act_V, VddNextExt=%d VddWovBias=%d WovTgtPct=%d WovCurrPct=%d", G_pgpe_pstate.vdd_next_ext,
+                         G_pgpe_pstate.vdd_wov_bias, pgpe_wov_ocs_get_wov_tgt_pct(), pgpe_wov_ocs_get_wov_curr_pct());
+            G_pgpe_pstate.voltage_step_trace_cnt++;
+        }
+
     }
 }
 
