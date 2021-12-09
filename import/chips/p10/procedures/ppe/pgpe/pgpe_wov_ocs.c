@@ -285,11 +285,16 @@ void pgpe_wov_ocs_update_dirty()
             G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
             G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
 
-            //Update instrumentation counters
+            //Use pstate_next because either the FIT will occur in the middle of actuate step or outside. In case,
+            //it happens in the middle of actuate step, then pstate_next and pstate_curr may not be equal for a little bit and pstate_next
+            //represents pstate actuated to. In case, FIT occurs outside actuate step, then pstate_next == pstate_curr
+            G_pgpe_wov_ocs.pwof_val->dw2.fields.dirty_pstate_inst = pgpe_pstate_get(pstate_next);
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
             dirty = OCS_DIRTY_SAMPLE_TYPE_11;
+
+            //Update instrumentation counters
             G_pgpe_wov_ocs.cnt_droop_ok_oc++;
         }
         else
@@ -351,6 +356,10 @@ void pgpe_wov_ocs_update_dirty()
                 //Update current running avg value to occ sram space
                 G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
                 G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
+                //Use pstate_next because either the FIT will occur in the middle of actuate step or outside. In case,
+                //it happens in the middle of actuate step, then pstate_next and pstate_curr may not be equal for a little bit and pstate_next
+                //represents pstate actuated to. In case, FIT occurs outside actuate step, then pstate_next == pstate_curr
+                G_pgpe_wov_ocs.pwof_val->dw2.fields.dirty_pstate_inst = pgpe_pstate_get(pstate_next);
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
                 dirty = OCS_DIRTY_SAMPLE_TYPE_11;
@@ -401,6 +410,10 @@ void pgpe_wov_ocs_update_dirty()
                 //Update current running avg value to occ sram space
                 G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
                 G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
+                //Use pstate_next because either the FIT will occur in the middle of actuate step or outside. In case,
+                //it happens in the middle of actuate step, then pstate_next and pstate_curr may not be equal for a little bit and pstate_next
+                //represents pstate actuated to. In case, FIT occurs outside actuate step, then pstate_next == pstate_curr
+                G_pgpe_wov_ocs.pwof_val->dw2.fields.dirty_pstate_inst = pgpe_pstate_get(pstate_next);
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
                 dirty = OCS_DIRTY_SAMPLE_TYPE_11;
@@ -423,6 +436,10 @@ void pgpe_wov_ocs_update_dirty()
             G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
             G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
 
+            //Use pstate_next because either the FIT will occur in the middle of actuate step or outside. In case,
+            //it happens in the middle of actuate step, then pstate_next and pstate_curr may not be equal for a little bit and pstate_next
+            //represents pstate actuated to. In case, FIT occurs outside actuate step, then pstate_next == pstate_curr
+            G_pgpe_wov_ocs.pwof_val->dw2.fields.dirty_pstate_inst = pgpe_pstate_get(pstate_next);
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
