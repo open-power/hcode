@@ -233,7 +233,8 @@ typedef struct
             uint64_t vdd_avg_mv                 : 16;
             uint64_t vcs_avg_mv                 : 16;
             uint64_t vdn_avg_mv                 : 16;
-            uint64_t vio_avg_mv                 : 16;
+            uint64_t dirty_pstate_inst          : 8;
+            uint64_t reserved                   : 8;
         } fields;
     } dw2;
     union
