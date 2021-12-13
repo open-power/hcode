@@ -257,6 +257,28 @@ ReturnCode putRing(const Target<K, M, V>& i_target,
     return FAPI2_RC_SUCCESS;
 }
 
+/// @brief Platform-level implementation  of putRing()
+/// Hardware procedures writers will not call this function.
+/// @tparam K template parameter, passed in target.
+/// @param[in] i_target   Target to operate on.
+/// @param[in] i_ringID   Ring ID name that will identify the Ring in the image.
+/// @param[in] i_ringMode Ring operation mode.
+/// @return fapi::ReturnCode. FAPI2_RC_SUCCESS if success, else error code.
+template< TargetType K, MulticastType M, typename V >
+ReturnCode putRing(const Target<K, M, V>& i_target,
+                   const char* i_ringID,
+                   const RingMode i_ringMode)
+{
+    std::cout << std::hex << "   putRing "
+              << "target: {" << i_target.getType() << ","
+              << uint64_t(i_target) << "}; "
+              << "Ring ID: " << i_ringID << "; "
+              << "ring mode: " << i_ringMode
+              << std::endl;
+
+    return FAPI2_RC_SUCCESS;
+}
+
 // variable_buffer isn't supported on PPE
 #ifndef __PPE__
 ///
