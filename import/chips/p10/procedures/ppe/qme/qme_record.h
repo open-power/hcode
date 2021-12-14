@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2021                                                    */
+/* COPYRIGHT 2020,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -145,22 +145,21 @@ typedef struct
     // 22
     uint32_t    c_self_fault_vector;
     uint32_t    c_self_failed;
-    uint32_t    cts_timeout_count;
-    uint32_t    reserved;
+    uint32_t    cts_timeout_count;// self restore
+    uint32_t    msg_snd_interrupt;// msgsnd vector
     // 23
     uint32_t    c_in_recovery;    // Deadly paint
     uint32_t    recovery_ongoing;
     uint64_t    qme_lfir;
-
-    // 24,25,26,27
+    // 24,25
+    uint64_t    core_fir[4];
+    // 26
+    uint32_t    stop11_counter[4];
+    // 27,28,29,30
     uint32_t    c_tfac_c2s_retry_limit[4];
     uint32_t    c_tfac_c2s_retry_total[4];
     uint32_t    c_tfac_s2c_retry_limit[4];
     uint32_t    c_tfac_s2c_retry_total[4];
-
-    uint32_t    stop11_counter[4];
-    uint32_t    msg_snd_interrupt;
-
     /*DEBUG_ONLY
         uint32_t    c_act_stop_level[4];
         uint32_t    t_old_pls[4][4];

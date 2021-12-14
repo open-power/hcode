@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2021                                                    */
+/* COPYRIGHT 2016,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -241,7 +241,17 @@ QME_FUSED_EVEN_STOP_LEVELS_DD1            = 0x1d09,
 * @devdesc     QME requested with stop11 but ESL/EC disabled
 */
 QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED   = 0x1d0a,
-//UNUSED                                  = 0x1d0d,
+/*
+* @errortype
+* @moduleid    QME_MODULE_ID_STOP_FLOW
+* @reasoncode  ERR_REASON_ID_STOP_REQ
+* @userdata1   core_index
+* @userdata2   core_fir_upper
+* @userdata3   core_fir_lower
+* @userdata4   QME_STOP_SELF_CORE_FIR
+* @devdesc     QME detect CORE_FIR after self restore
+*/
+QME_STOP_SELF_CORE_FIR                    = 0x1d0d,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -275,7 +285,7 @@ CORECACHE_POW_CTRL_TIMEOUT                = 0x1d1d,
 * @devdesc     QME PFET Sequencer State Not in Idle
 */
 CORECACHE_PFET_SEQ_STATE_ERROR            = 0x1d1e,
-//_UNUSED_1d1f                            = 0x1d1f,
+//UNUSED                                  = 0x1d1f,
 
 // -----------------------------------------------------------
 // stop entry

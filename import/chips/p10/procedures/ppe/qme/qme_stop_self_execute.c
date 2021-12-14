@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -294,7 +294,31 @@ qme_stop_self_complete(uint32_t core_target, uint32_t i_saveRestore)
     {
         if( core_mask & core_target )
         {
-            PPE_PUTSCOM_UC( SPATTN_MASK,   0, core_mask, G_spattn_mask[core_index] );
+            PPE_GETSCOM_UC( CORE_FIR, 0, core_mask, scom_data.value );
+
+            if( scom_data.value )
+            {
+                G_qme_record.core_fir[core_index] = scom_data.value;
+                G_qme_record.errl_panic = QME_STOP_SELF_CORE_FIR;
+                G_qme_record.errl_data0 = core_index;
+                G_qme_record.errl_data1 = scom_data.words.upper;
+                G_qme_record.errl_data2 = scom_data.words.lower;
+                uint32_t errStatus __attribute__((unused));
+                uint16_t module_id   = 1 + ((G_qme_record.errl_panic & 300) >> 8);
+                uint8_t  reason_code = (module_id << 4) | ((G_qme_record.errl_panic & 0x18) >> 3);
+
+                PPE_LOG_ERR_CRITICAL ( reason_code,               // reason code
+                                       G_qme_record.errl_panic,   // ext reason code
+                                       module_id,                 // mod id
+                                       G_qme_record.errl_data0,   // i_userData1,
+                                       G_qme_record.errl_data1,   // i_userData2,
+                                       G_qme_record.errl_data2,   // i_userData3
+                                       NULL,         // no user details
+                                       NULL,         // no callouts
+                                       errStatus );  // status
+            }
+
+            PPE_PUTSCOM_UC( SPATTN_MASK,    0, core_mask, G_spattn_mask[core_index] );
             PPE_GETSCOM_UC( IMA_EVENT_MASK, 0, core_mask, scom_data.value);
             PPE_PUTSCOM_UC( IMA_EVENT_MASK, 0, core_mask, scom_data.value & ~BIT64(34));
         }
