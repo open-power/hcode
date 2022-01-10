@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -111,7 +111,7 @@ void pgpe_event_manager_run()
             case PGPE_SM_ACTIVE:
                 pgpe_event_manager_run_active();
 
-                if(!pgpe_pstate_is_at_target() || !pgpe_wov_is_wov_at_target())
+                if(!pgpe_pstate_is_at_target() || !pgpe_wov_is_wov_at_target() || pgpe_pstate_is_throttle_pending())
                 {
                     done = 0;
                 }
@@ -470,7 +470,9 @@ void pgpe_event_manager_run_active()
         }
 
         //Do actuation
-        if(!pgpe_pstate_is_at_target())
+        //Only do pstates actuation if Pstate not at target, and currently not
+        //in throttle space
+        if (!pgpe_pstate_is_at_target() && !pgpe_pstate_get(throttle_curr))
         {
             //Error Injection
             uint32_t occFlag = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW);
@@ -493,11 +495,15 @@ void pgpe_event_manager_run_active()
             {
                 pgpe_pstate_actuate_step();
             }
+
+            //Pstate at target, but throttle pending
         }
-        else if(!pgpe_pstate_is_at_throttle_target())
+        else if (pgpe_pstate_is_throttle_pending())
         {
             pgpe_pstate_actuate_throttle();
+            pgpe_pstate_set(throttle_pending, 0); // Clear out
         }
+        //Pstate at target, and no throttle pending
         else
         {
             if(!pgpe_wov_is_wov_at_target())

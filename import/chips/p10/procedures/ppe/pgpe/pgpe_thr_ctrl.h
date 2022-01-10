@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -35,22 +35,24 @@ enum PGPE_THR_CTRL_STATUS
     PGPE_THR_CTRL_ENABLED     = 0x00000002,
 };
 #define PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE 4
-#define PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE_SHIFT 2
+#define PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE_SHIFT 1
 
 typedef struct pgpe_thr_ctrl
 {
     uint32_t status;
-    uint32_t ceff_err_sum;
+    int32_t ceff_err_sum;
     uint32_t ceff_err_idx;
-    uint32_t ceff_err_avg;
-    uint32_t curr_ftx, next_ftx;
-    uint32_t ceff_err_array[PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE];
-} pgpe_thr_ctrl_t;
+    uint32_t ceff_err_prev_idx;
+    int32_t ceff_err_avg;
+    int32_t curr_ftx, next_ftx;
+    int32_t ceff_err_array[PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE];
+} pgpe_thr_ctrl_t __attribute__((aligned (8)));
 
 void pgpe_thr_ctrl_init();
 void* pgpe_thr_ctrl_data_addr();
-void pgpe_thr_ctrl_update(uint32_t pstate);
+void pgpe_thr_ctrl_update(uint32_t target_throttle);
 void pgpe_thr_ctrl_write_wcor();
+void pgpe_thr_ctr_clear_ceff_err_array();
 
 extern pgpe_thr_ctrl_t G_pgpe_thr_ctrl;
 

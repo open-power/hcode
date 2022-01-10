@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -158,6 +158,7 @@ void pgpe_pstate_init()
     G_pgpe_pstate.throttle_pmcr = 0;
     G_pgpe_pstate.throttle_target = 0;
     G_pgpe_pstate.throttle_curr = 0;
+    G_pgpe_pstate.throttle_pending = 0;
 
     G_pgpe_pstate.fit_prof.cnt  = 0;
     G_pgpe_pstate.fit_prof.total_time = 0;
@@ -861,6 +862,9 @@ void pgpe_pstate_actuate_voltage_step()
 
 void pgpe_pstate_actuate_throttle()
 {
+    PK_TRACE_INF("PSS: Actuate Throttle thr_tgt=%u thr_curr=%u", G_pgpe_pstate.throttle_target,
+                 G_pgpe_pstate.throttle_curr);
+
     //Throttle PI Loop
     if(pgpe_pstate_is_wof_enabled())
     {
@@ -982,12 +986,22 @@ void pgpe_pstate_throttle_compute()
         G_pgpe_pstate.throttle_target = G_pgpe_pstate.throttle_vrt;
     }
 
-    PK_TRACE_INF("PSS: PsThrTarget=0x%x", G_pgpe_pstate.throttle_target);
+    G_pgpe_pstate.throttle_pending = 1;
+
+
+    //Currently not in throttle space and throttle target is zero
+    if ((G_pgpe_pstate.throttle_curr == 0) && (G_pgpe_pstate.throttle_target == 0))
+    {
+        pgpe_thr_ctr_clear_ceff_err_array();
+        G_pgpe_pstate.throttle_pending = 0;
+    }
+
+    PK_TRACE_INF("PSS: PsThrCurr =0x%08x, PsThrTarget=0x%x", G_pgpe_pstate.throttle_curr, G_pgpe_pstate.throttle_target);
 }
 
-uint32_t pgpe_pstate_is_at_throttle_target()
+uint32_t pgpe_pstate_is_throttle_pending()
 {
-    return (G_pgpe_pstate.throttle_target == G_pgpe_pstate.throttle_curr);
+    return (G_pgpe_pstate.throttle_pending);
 }
 
 void pgpe_pstate_apply_clips()
@@ -1750,6 +1764,8 @@ uint32_t pgpe_pstate_is_clip_bounded()
 uint32_t pgpe_pstate_is_wof_clip_bounded()
 {
     uint32_t clip_bound;
+    uint32_t ps_bounded = 0;
+    uint32_t thr_bounded = 1;
 
 
     //If wof clip is between thermal clips, then the wof_clip becomes the bound
@@ -1769,8 +1785,6 @@ uint32_t pgpe_pstate_is_wof_clip_bounded()
         clip_bound = G_pgpe_pstate.pstate_safe;
     }
 
-    uint32_t ps_bounded = 0;
-    uint32_t thr_bounded = 1;
 
     //Now, check if current pstate is within bound
     if (G_pgpe_pstate.pstate_curr >= clip_bound)
@@ -1778,15 +1792,19 @@ uint32_t pgpe_pstate_is_wof_clip_bounded()
         ps_bounded = 1;
     }
 
+    //If throttle is enabled, and throttle action is pending then wof is not bounded yet.
+    //Note, unlike the clip throttle bound, we can't use absolute value because throttling
+    //due to VRT is done using the PI loop which may not reach the throttling target in one
+    //iteration. So, before acking VRT we make sure that at one throttle movement was done
     if (pgpe_thr_ctrl_is_enabled())
     {
-        if(G_pgpe_pstate.throttle_vrt > G_pgpe_pstate.throttle_curr)
+        if(G_pgpe_pstate.throttle_pending)
         {
             thr_bounded = 0;
         }
     }
 
-    return (thr_bounded && ps_bounded);
+    return ps_bounded && thr_bounded;
 }
 
 void pgpe_pstate_pmsr_updt()

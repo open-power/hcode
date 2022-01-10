@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -109,7 +109,7 @@ typedef struct pgpe_pstate
     uint32_t voltage_step_trace_cnt;//73
     uint32_t vratio_core_count;     //74
     uint32_t throttle_pmcr, throttle_clip, throttle_vrt;
-    uint32_t throttle_target, throttle_curr;
+    uint32_t throttle_target, throttle_curr, throttle_pending;
     pgpe_profile_t fit_prof; //78
     pgpe_profile_t step_prof; //82
     pgpe_profile_t dds_prof_cmp; //86
@@ -138,7 +138,7 @@ void pgpe_pstate_set_throttle_vrt();
 void pgpe_pstate_compute_vratio(uint32_t pstate);
 void pgpe_pstate_compute_vindex();
 uint32_t pgpe_pstate_is_at_target();
-uint32_t pgpe_pstate_is_at_throttle_target();
+uint32_t pgpe_pstate_is_throttle_pending();
 uint32_t pgpe_pstate_is_clip_bounded();
 uint32_t pgpe_pstate_is_wof_clip_bounded();
 void pgpe_pstate_pmsr_updt();

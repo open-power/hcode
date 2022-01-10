@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -49,8 +49,6 @@ void pgpe_thr_ctrl_init()
         PK_TRACE_INF("THR: Inited");
     }
 
-    //G_pgpe_thr_ctrl.ceff_ovr = 0;
-    //G_pgpe_thr_ctrl.curr_ceff_ovr_idx = 0;
     uint32_t i = 0;
 
     for (i = 0; i < PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE; i++)
@@ -65,26 +63,28 @@ void pgpe_thr_ctrl_init()
     G_pgpe_thr_ctrl.next_ftx = 0;
 }
 
-void pgpe_thr_ctrl_update(uint32_t pstate)
+void pgpe_thr_ctrl_update(uint32_t target_throttle)
 {
-    uint32_t target_ftx = pstate - pgpe_pstate_get(pstate_safe);
-    uint32_t ceff_err, ceff_prop, ceff_intg, ceff_adj;
+    uint32_t target_ftx = target_throttle;
+    int32_t ceff_err, ceff_prop, ceff_intg, ceff_adj;
 
-    PK_TRACE_INF("THR: Update, ps=%u, target_ftx=%u", pstate, target_ftx);
+    PK_TRACE_INF("THR: Update, target_ftx=%u", target_ftx);
 
     do
     {
-        ceff_err = (target_ftx - G_pgpe_thr_ctrl.curr_ftx) > 0 ? (target_ftx - G_pgpe_thr_ctrl.curr_ftx) : 0;
+        ceff_err = target_ftx - G_pgpe_thr_ctrl.curr_ftx;
 
         //Compute CEFF_AVG_ERR
         G_pgpe_thr_ctrl.ceff_err_sum = G_pgpe_thr_ctrl.ceff_err_sum -
                                        G_pgpe_thr_ctrl.ceff_err_array[G_pgpe_thr_ctrl.ceff_err_idx] + ceff_err;
-        G_pgpe_thr_ctrl.ceff_err_avg = (G_pgpe_thr_ctrl.ceff_err_sum + PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE) >>
-                                       (PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE_SHIFT);
+        G_pgpe_thr_ctrl.ceff_err_avg = (G_pgpe_thr_ctrl.ceff_err_sum + (PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE / 2)) /
+                                       PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE;
         G_pgpe_thr_ctrl.ceff_err_array[G_pgpe_thr_ctrl.ceff_err_idx] = ceff_err;
+        G_pgpe_thr_ctrl.ceff_err_prev_idx = G_pgpe_thr_ctrl.ceff_err_idx;
         G_pgpe_thr_ctrl.ceff_err_idx = (G_pgpe_thr_ctrl.ceff_err_idx + 1) % PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE;
 
-        PK_TRACE_INF("THR: ceff_err_sum=%u, ceff_err_avg=%u,ceff_err_idx=%u", G_pgpe_thr_ctrl.ceff_err_sum,
+        PK_TRACE_INF("THR: ceff_err=%d, ceff_err_sum=%d, ceff_err_avg=%d,ceff_err_idx=%u", ceff_err,
+                     G_pgpe_thr_ctrl.ceff_err_sum,
                      G_pgpe_thr_ctrl.ceff_err_avg, G_pgpe_thr_ctrl.ceff_err_idx);
 
         //No throttle
@@ -100,37 +100,25 @@ void pgpe_thr_ctrl_update(uint32_t pstate)
                     G_pgpe_thr_ctrl.ceff_err_avg : 0;
         ceff_adj  = (ceff_prop + ceff_intg) >> 6;
 
-        //Next FTX
-        if (ceff_err > 0 && target_ftx <= 0)
+
+        if ((ceff_err > 0 &&  (G_pgpe_thr_ctrl.ceff_err_array[G_pgpe_thr_ctrl.ceff_err_prev_idx] > 0)) ||
+            (ceff_err < 0 && (G_pgpe_thr_ctrl.ceff_err_array[G_pgpe_thr_ctrl.ceff_err_prev_idx] < 0)))
         {
-            G_pgpe_thr_ctrl.next_ftx = ceff_adj;
+            G_pgpe_thr_ctrl.next_ftx = G_pgpe_thr_ctrl.curr_ftx + ceff_adj;
         }
-        else if (ceff_err > 0 && (target_ftx > G_pgpe_thr_ctrl.curr_ftx))
+        else
         {
-            G_pgpe_thr_ctrl.next_ftx = target_ftx + ceff_adj;
-        }
-        else if(ceff_err > 0 && (target_ftx < G_pgpe_thr_ctrl.curr_ftx))
-        {
-            G_pgpe_thr_ctrl.next_ftx = target_ftx + (ceff_adj >> 1);
-        }
-        else if(ceff_err == 0 && (target_ftx > G_pgpe_thr_ctrl.curr_ftx))
-        {
-            G_pgpe_thr_ctrl.next_ftx = target_ftx + (ceff_adj >> 1);
-        }
-        else if(ceff_err == 0 && (target_ftx < G_pgpe_thr_ctrl.curr_ftx))
-        {
-            G_pgpe_thr_ctrl.next_ftx = target_ftx + ceff_adj;
+            G_pgpe_thr_ctrl.next_ftx = G_pgpe_thr_ctrl.curr_ftx + (ceff_adj >> 1);
         }
 
-        PK_TRACE_INF("THR: ceff_prop=%u, ceff_intg=%u,ceff_adj=%u", ceff_prop, ceff_intg, ceff_adj);
-        PK_TRACE_INF("THR: next_ftx=%u", G_pgpe_thr_ctrl.next_ftx);
+        PK_TRACE_INF("THR: ceff_prop=%d, ceff_intg=%d,ceff_adj=%d", ceff_prop, ceff_intg, ceff_adj);
+        PK_TRACE_INF("THR: curr_ftx=%d, next_ftx=%d", G_pgpe_thr_ctrl.curr_ftx, G_pgpe_thr_ctrl.next_ftx);
 
     }
     while(0);
 
-    //prev_ftx = next_ftx;
     pgpe_thr_ctrl_write_wcor(G_pgpe_thr_ctrl.next_ftx);
-    G_pgpe_thr_ctrl.next_ftx = G_pgpe_thr_ctrl.curr_ftx;
+    G_pgpe_thr_ctrl.curr_ftx = G_pgpe_thr_ctrl.next_ftx;
 }
 
 void pgpe_thr_ctrl_write_wcor(uint32_t ceff_ovr_idx)
@@ -157,26 +145,19 @@ void pgpe_thr_ctrl_write_wcor(uint32_t ceff_ovr_idx)
     }
 
     PPE_PUTSCOM_MC_Q(QME_WCOR, wcor.value);
-    PK_TRACE_INF("THR: ceff_ovr_idx=0x%08x", ceff_ovr_idx);
+    PK_TRACE_INF("THR: Writing wcor, ceff_ovr_idx=0x%08x", ceff_ovr_idx);
 }
 
-/*
-void pgpe_thr_ctrl_set_ceff_ovr_idx(uint32_t idx)
+
+
+void pgpe_thr_ctr_clear_ceff_err_array()
 {
-    G_pgpe_thr_ctrl.curr_ceff_ovr_idx = idx;
+    uint32_t i = 0;
+
+    for (i = 0; i < PGPE_THR_CTRL_CEFF_ERR_SAMPLE_SIZE; i++)
+    {
+        G_pgpe_thr_ctrl.ceff_err_array[i] = 0;
+    }
+
+
 }
-
-void pgpe_thr_ctrl_write_wcor()
-{
-    qme_wcor_t wcor;
-    wcor.value = 0;
-
-    //Replicate present_ceff_overage_index to all Cx_THROTTLE_INDEX fields
-    wcor.fields.c3_thr_idx = G_pgpe_thr_ctrl.curr_ceff_ovr_idx;
-    wcor.fields.c2_thr_idx = G_pgpe_thr_ctrl.curr_ceff_ovr_idx;
-    wcor.fields.c1_thr_idx = G_pgpe_thr_ctrl.curr_ceff_ovr_idx;
-    wcor.fields.c0_thr_idx = G_pgpe_thr_ctrl.curr_ceff_ovr_idx;
-
-    //Multicast Write all QMEs WCOR with above value
-    PPE_PUTSCOM_MC_Q(QME_WCOR, wcor.value);
-}*/
