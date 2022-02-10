@@ -85,15 +85,23 @@ void pgpe_pstate_init()
     mtmsr(msr & ~MSR_IPE);
     G_pgpe_pstate.sort_core_count =  oppb->iddq.good_normal_cores_per_sort;
     mtmsr(msr);//Restore MSR
-    PK_TRACE_INF("PSS: sort_core_cores=%u", G_pgpe_pstate.sort_core_count);
 
-    for (i = 0; i < MAX_CORES; i++)
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_ECO_COUNT) & 0x80)
     {
-        if (ecomask & CORE_MASK(i))
+        G_pgpe_pstate.eco_core_count = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_ECO_COUNT) & 0x7F;
+    }
+    else
+    {
+        for (i = 0; i < MAX_CORES; i++)
         {
-            G_pgpe_pstate.eco_core_count++;
+            if (ecomask & CORE_MASK(i))
+            {
+                G_pgpe_pstate.eco_core_count++;
+            }
         }
     }
+
+    PK_TRACE_INF("PSS: sort_core_cores=%u; eco_core_count", G_pgpe_pstate.sort_core_count, G_pgpe_pstate.eco_core_count);
 
     if(G_pgpe_pstate.sort_core_count <= G_pgpe_pstate.eco_core_count)
     {
