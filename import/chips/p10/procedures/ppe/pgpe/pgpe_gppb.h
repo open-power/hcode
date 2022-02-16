@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -121,7 +121,7 @@ void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 #define pgpe_gppb_get_dds_large_ps_slope(pt_set, core, region) G_gppb_poundw_slopes->ps_dds_slopes[LARGE_DROOP_DETECT][pt_set][core][region]
 #define pgpe_gppb_get_dds_delay(core, idx) G_gppb_dds[idx][core].ddsc.fields.insrtn_dely
 #define pgpe_gppb_get_dds_trip(core, idx)  G_gppb_dds[idx][core].ddsc.fields.trip_offset
-#define pgpe_gppb_get_dds_large(core, idx) G_gppb_dds[idx][core].ddsc.fields.trip_offset
+#define pgpe_gppb_get_dds_large(core, idx) G_gppb_dds[idx][core].ddsc.fields.large_droop
 #define pgpe_gppb_get_dds_cal_adj(core, idx) G_gppb_dds[idx][core].ddsc.fields.calb_adj
 #define pgpe_gppb_get_dds_other_droop_count_control() G_gppb_dds_other->droop_count_control
 #define pgpe_gppb_get_dds_other_ftc_large_droop_mode_reg_setting() G_gppb_dds_other->ftc_large_droop_mode_reg_setting
