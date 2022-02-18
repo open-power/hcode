@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2019,2021                                                    -->
+<!-- COPYRIGHT 2019,2022                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -648,6 +648,10 @@
     <virtual/>
   </entry>
   <!-- override-only attributes -->
+  <entry>
+    <name>ATTR_PROC_LCO_MODE_DISABLE</name>
+    <value>0x0</value>
+  </entry>
   <entry>
     <name>ATTR_PROC_FORCE_MC_PLL_BANDSEL</name>
     <value>0x0</value>
