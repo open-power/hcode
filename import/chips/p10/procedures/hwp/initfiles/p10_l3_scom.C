@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -52,6 +52,8 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
             l_TGT2_ATTR_PROC_LCO_TARGETS_COUNT[fapi2::ENUM_ATTR_PROC_LCO_TARGETS_COUNT_CHIP];
         fapi2::ATTR_PROC_FABRIC_SL_DOMAIN_Type l_TGT2_ATTR_PROC_FABRIC_SL_DOMAIN;
         FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_FABRIC_SL_DOMAIN, TGT2, l_TGT2_ATTR_PROC_FABRIC_SL_DOMAIN));
+        fapi2::ATTR_PROC_LCO_MODE_DISABLE_Type l_TGT1_ATTR_PROC_LCO_MODE_DISABLE;
+        FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_PROC_LCO_MODE_DISABLE, TGT1, l_TGT1_ATTR_PROC_LCO_MODE_DISABLE));
         fapi2::ATTR_CHIP_UNIT_POS_Type l_TGT0_ATTR_CHIP_UNIT_POS;
         FAPI_TRY(FAPI_ATTR_GET(fapi2::ATTR_CHIP_UNIT_POS, TGT0, l_TGT0_ATTR_CHIP_UNIT_POS));
         uint64_t l_def_WEST_EQ = (((l_TGT0_ATTR_CHIP_UNIT_POS / literal_4) % literal_2) == literal_0);
@@ -85,19 +87,22 @@ fapi2::ReturnCode p10_l3_scom(const fapi2::Target<fapi2::TARGET_TYPE_CORE>& TGT0
         {
             FAPI_TRY(fapi2::getScom( TGT0, 0x2001060aull, l_scom_buffer ));
 
-            if (((l_TGT2_ATTR_PROC_FABRIC_SL_DOMAIN == fapi2::ENUM_ATTR_PROC_FABRIC_SL_DOMAIN_CHIP)
+            if ((((l_TGT1_ATTR_PROC_LCO_MODE_DISABLE == fapi2::ENUM_ATTR_PROC_LCO_MODE_DISABLE_FALSE)
+                  && (l_TGT2_ATTR_PROC_FABRIC_SL_DOMAIN == fapi2::ENUM_ATTR_PROC_FABRIC_SL_DOMAIN_CHIP))
                  && (l_def_LCO_TARGETS_COUNT_CHIP >= literal_3)))
             {
                 constexpr auto l_ECP_L3_L3_MISC_L3CERRS_L3_LCO_ENABLE_CFG_ON = 0x1;
                 l_scom_buffer.insert<0, 1, 63, uint64_t>(l_ECP_L3_L3_MISC_L3CERRS_L3_LCO_ENABLE_CFG_ON );
             }
-            else if ((((l_TGT2_ATTR_PROC_FABRIC_SL_DOMAIN == fapi2::ENUM_ATTR_PROC_FABRIC_SL_DOMAIN_HEMISPHERE)
+            else if (((((l_TGT1_ATTR_PROC_LCO_MODE_DISABLE == fapi2::ENUM_ATTR_PROC_LCO_MODE_DISABLE_FALSE)
+                        && (l_TGT2_ATTR_PROC_FABRIC_SL_DOMAIN == fapi2::ENUM_ATTR_PROC_FABRIC_SL_DOMAIN_HEMISPHERE))
                        && (l_def_LCO_TARGETS_COUNT_WEST >= literal_3)) && l_def_WEST_EQ))
             {
                 constexpr auto l_ECP_L3_L3_MISC_L3CERRS_L3_LCO_ENABLE_CFG_ON = 0x1;
                 l_scom_buffer.insert<0, 1, 63, uint64_t>(l_ECP_L3_L3_MISC_L3CERRS_L3_LCO_ENABLE_CFG_ON );
             }
-            else if ((((l_TGT2_ATTR_PROC_FABRIC_SL_DOMAIN == fapi2::ENUM_ATTR_PROC_FABRIC_SL_DOMAIN_HEMISPHERE)
+            else if (((((l_TGT1_ATTR_PROC_LCO_MODE_DISABLE == fapi2::ENUM_ATTR_PROC_LCO_MODE_DISABLE_FALSE)
+                        && (l_TGT2_ATTR_PROC_FABRIC_SL_DOMAIN == fapi2::ENUM_ATTR_PROC_FABRIC_SL_DOMAIN_HEMISPHERE))
                        && (l_def_LCO_TARGETS_COUNT_EAST >= literal_3)) && l_def_EAST_EQ))
             {
                 constexpr auto l_ECP_L3_L3_MISC_L3CERRS_L3_LCO_ENABLE_CFG_ON = 0x1;
