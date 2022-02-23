@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2021
+# COPYRIGHT 2015,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -37,8 +37,12 @@ export PERLMODULES=$TOOLSDIR/perl.modules
 export HOOKSDIR=$PROJECT_ROOT/.git/hooks
 export EKBHOOKSDIR=$TOOLSDIR/hooks
 export EKBENVDIR=$TOOLSDIR/envsetup
-
 export UNAME=`uname -s`
+export UNAMEM=`uname -m`
+
+if [ -z "${ECMD_ARCH}" ]; then
+    export ECMD_ARCH=${UNAMEM}
+fi
 
 # set path for Python 3
 if [ -f /opt/xsite/cte/tools/python/bin/python3 ]; then
@@ -71,7 +75,7 @@ export PATH=${PATH}:$TOOLSDIR:"$TOOLSDIR/test"
 if [ -z "${ECMD_RELEASE}" ]; then
     export ECMD_RELEASE=ver-14-21
 fi
-ECMD_LIB_PATH=${CTEPATH}/tools/ecmd/${ECMD_RELEASE}/x86_64/lib
+ECMD_LIB_PATH=${CTEPATH}/tools/ecmd/${ECMD_RELEASE}/${ECMD_ARCH}/lib
 
 PPE_LIB_PATH=${CTEPATH}/tools/ppetools/prod/lib
 

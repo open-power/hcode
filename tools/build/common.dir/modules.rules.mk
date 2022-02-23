@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2019
+# COPYRIGHT 2015,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -100,7 +100,7 @@ $(call __CALL_AR,$$(or $$(lib$(MODULE)_TARGET),TARGET))
 
 $(call __CLEAN_TARGET,$$(lib$(MODULE)_LIBPATH)/lib$(MODULE).so)
 $(call __CLEAN_TARGET,$$(lib$(MODULE)_LIBPATH)/lib$(MODULE).a)
-$(call __CLEAN_TARGET,$$(lib$(MODULE)_LIBPATH)/$(MODULE)_x86_64.so)
+$(call __CLEAN_TARGET,$$(lib$(MODULE)_LIBPATH)/$(MODULE)_$(ECMD_ARCH).so)
 
 .PHONY: $(MODULE)
 $(MODULE) : _BUILD/GEN_TARGETS

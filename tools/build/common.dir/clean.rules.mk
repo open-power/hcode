@@ -3,17 +3,23 @@
 #
 # $Source: tools/build/common.dir/clean.rules.mk $
 #
-# IBM CONFIDENTIAL
+# OpenPOWER EKB Project
 #
-# EKB Project
-#
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2022
 # [+] International Business Machines Corp.
 #
 #
-# The source code for this program is not published or otherwise
-# divested of its trade secrets, irrespective of what has been
-# deposited with the U.S. Copyright Office.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
 #
 # IBM_PROLOG_END_TAG
 
@@ -31,5 +37,5 @@ __CLEAN_TARGET = __CLEAN_TARGETS += $(1)
 _BUILD/CLEAN/% :
 		$(C2) "    RM         $(notdir $@)"
 		$(C1) rm -rf $(subst _BUILD/CLEAN/,,$@)
-		$(C1) rm -rf $(subst .so,_x86_64.so,$(subst libp,p, $(subst _BUILD/CLEAN/,,$@)))
+		$(C1) rm -rf $(subst .so,_$(ECMD_ARCH).so,$(subst libp,p, $(subst _BUILD/CLEAN/,,$@)))
 

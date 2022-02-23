@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2021
+# COPYRIGHT 2015,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -28,14 +28,28 @@
 # Default output paths.
 ROOTPATH=../../import
 OUTPUTPATH?=$(ROOTPATH)/../output
-LIBPATH?=$(OUTPUTPATH)/lib
-EXEPATH?=$(OUTPUTPATH)/bin
-OBJPATH?=$(OUTPUTPATH)/obj
-GENPATH?=$(OUTPUTPATH)/gen
-IMAGEPATH?=$(OUTPUTPATH)/images
+LIBPATH?=$(OUTPUTPATH)/lib_$(ECMD_ARCH)
+EXEPATH?=$(OUTPUTPATH)/bin_$(ECMD_ARCH)
+OBJPATH?=$(OUTPUTPATH)/obj_$(ECMD_ARCH)
+GENPATH?=$(OUTPUTPATH)/gen_$(ECMD_ARCH)
+IMAGEPATH?=$(OUTPUTPATH)/images_$(ECMD_ARCH)
 ifeq ($(PROJECT_NAME),p9)
 XIPPATH?=$(ROOTPATH)/chips/p9/xip
 endif
+
+# Create the output paths and original name links
+# It has to be done here so it occurs for any build method
+# i.e. a full build or a specific binary or image build
+$(shell mkdir -p ${LIBPATH})
+$(shell mkdir -p ${EXEPATH})
+$(shell mkdir -p ${OBJPATH})
+$(shell mkdir -p ${GENPATH})
+$(shell mkdir -p ${IMAGEPATH})
+$(shell ln -frsn ${LIBPATH} ${OUTPUTPATH}/lib)
+$(shell ln -frsn ${EXEPATH} ${OUTPUTPATH}/bin)
+$(shell ln -frsn ${OBJPATH} ${OUTPUTPATH}/obj)
+$(shell ln -frsn ${GENPATH} ${OUTPUTPATH}/gen)
+$(shell ln -frsn ${IMAGEPATH} ${OUTPUTPATH}/images)
 
 # Location of the cross-compiler toolchain.
 UNAME = $(shell uname)
@@ -53,7 +67,7 @@ HOST_PREFIX?=$(__EKB_PREFIX)
 TARGET_PREFIX?=$(__EKB_PREFIX)
 
 # Location of PPE42 cross-compiler toolchain
-PPE_TOOL_PATH ?= $(CTEPATH)/tools/ppetools/prod
+PPE_TOOL_PATH ?= $(CTEPATH)/tools/ppetools/$(ECMD_ARCH)_prod
 
 PPE_PREFIX    ?= $(PPE_TOOL_PATH)/bin/powerpc-eabi-
 PPE_BINUTILS_PREFIX ?= $(PPE_TOOL_PATH)/powerpc-eabi/bin/

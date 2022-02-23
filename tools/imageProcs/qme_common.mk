@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2017,2021
+# COPYRIGHT 2017,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -110,7 +110,7 @@ FAPI2PLAT-CPP-SOURCES=
 # to generate the real include file in the genfile path,
 # thus the path is placed before other pathes to avoid
 # base file being included without expected content
-GENFILES_DIR=$(OUTPUTPATH)/gen/qme/
+GENFILES_DIR=$(OUTPUTPATH)/gen_$(ECMD_ARCH)/qme/
 RING_INCDIR=$(ROOTPATH)/chips/p10/utils/imageProcs/
 
 $(call ADD_PPEIMAGE_SRCDIR,$(IMAGE),$(GENFILES_DIR))

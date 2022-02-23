@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2019
+# COPYRIGHT 2015,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -79,9 +79,13 @@ _BUILD/IMAGE_TARGETS: _BUILD/PRE_IMAGE_TARGETS
 _BUILD/IMAGE_TARGETS/ACT: $(IMAGE_TARGETS) suppress_nothing_to_do
 
 .PHONY: all _BUILD/ALL_TARGETS/ACT
+# Image build is not supported on ppc64le, due to lack of self restore compiler
+# The other parts of image build do work and have a compiler for both arch's
+# In that case, change the all target to just exe and earlier
+ifneq ($(ECMD_ARCH), ppc64le)
 all: _BUILD/IMAGE_TARGETS
+else
+all: _BUILD/EXE_TARGETS
+endif
 		@$(MAKE) _BUILD/ALL_TARGETS/ACT
 _BUILD/ALL_TARGETS/ACT: $(ALL_TARGETS) suppress_nothing_to_do
-
-
-

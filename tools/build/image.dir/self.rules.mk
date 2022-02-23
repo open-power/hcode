@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2018,2019
+# COPYRIGHT 2018,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -45,13 +45,13 @@ endef
 
 define __BUILD_SELF_PROCEDURE
 $(eval SRCS:= $(ROOTPATH)/chips/p10/procedures/utils/stopreg)
-$(eval SELF_REST_IMG_PATH := $(addprefix $(OUTPUTPATH)/images/, self_save_restore))
-$(eval SELF_REST_IMG := $(OUTPUTPATH)/images/self_save_restore)
+$(eval SELF_REST_IMG_PATH := $(addprefix $(IMAGEPATH)/, self_save_restore))
+$(eval SELF_REST_IMG := $(IMAGEPATH)/self_save_restore)
 $(eval SELF_LINK := $(SRCS)/link.c)
 $(eval LINK_SCRIPT := $(SELF_REST_IMG_PATH)/selfLink)
 $(eval SELF_ASFLAGS := -std=c99 -c -O3 -nostdlib -mcpu=power7 -mbig-endian -ffreestanding -mabi=elfv1)
 $(eval SELF_REST_PREFIX ?= $(CTEPATH)/tools/p9_ppc64/prod/bin/powerpc64le-buildroot-linux-gnu-)
-$(eval SELF_PROCEDURE_OBJ_PATH := $(addprefix $(OUTPUTPATH)/obj/, self_save_restore))
+$(eval SELF_PROCEDURE_OBJ_PATH := $(addprefix $(OBJPATH)/, self_save_restore))
 $(eval $(call __CLEAN_TARGET, $(SELF_PROCEDURE_OBJ_PATH)))
 $(eval $(call __CLEAN_TARGET, $(SELF_REST_IMG_PATH)))
 $(call SELF_ASM_OBJECTRULES,$(SELF_PROCEDURE_OBJ_PATH),$(SRCS),SELF_REST)
@@ -60,7 +60,7 @@ $(call SELF_ASM_OBJECTRULES,$(SELF_PROCEDURE_OBJ_PATH),$(SRCS),SELF_REST)
 
 $(LINK_SCRIPT) :
 		$(C2) "    DEP        $$(@F:.o=.dep)"
-		$(C1)mkdir -p $(SELF_REST_IMG_PATH) && $(SELF_REST_PREFIX)$(CC) -E -c -P $(SELF_LINK) -o $(LINK_SCRIPT)		
+		$(C1)mkdir -p $(SELF_REST_IMG_PATH) && $(SELF_REST_PREFIX)$(CC) -E -c -P $(SELF_LINK) -o $(LINK_SCRIPT)
 .PHONY: $(SELF_PROCEDURE)
 
 $(SELF_PROCEDURE) :

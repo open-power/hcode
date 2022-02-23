@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2020
+# COPYRIGHT 2015,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -29,6 +29,9 @@ LOCALCOMMONFLAGS += -O3 -fPIC -Wall -Werror
 LOCALCOMMONFLAGS += -Wno-unused-label
 LOCALCOMMONFLAGS += -fsigned-char
 LOCALCOMMONFLAGS += -fno-inline-functions-called-once
+ifeq ($(ECMD_ARCH),ppc64le)
+LOCALCOMMONFLAGS += -ffunction-sections -fplt
+endif
 LOCALLDFLAGS += --std=gnu++11
 ifeq ($(UNAME),Linux)
 LOCALLDFLAGS += -rdynamic

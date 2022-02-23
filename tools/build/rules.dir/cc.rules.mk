@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2019
+# COPYRIGHT 2015,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -73,7 +73,7 @@ endif
 			-Wl,--no-whole-archive \
 			$$(filter $$(CTEPATH)%, $$(filter %.a,$$^)) -o $$@
 		$(C1) ln -sf  $$@  \
-		$$(addprefix $$(dir $$@),$$(patsubst lib%.so, %_x86_64.so,$$(notdir $$@)))
+		$$(addprefix $$(dir $$@),$$(patsubst lib%.so, %_${ECMD_ARCH}.so,$$(notdir $$@)))
 endef
 
 define __CALL_LD
