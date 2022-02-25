@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2021                                                    */
+/* COPYRIGHT 2018,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -197,6 +197,9 @@ qme_stop2_abort_cleanup(uint32_t abort_targets)
 void
 qme_stop_entry()
 {
+#ifdef CISR_TRACE
+    uint32_t core_index = 0;
+#endif
     uint32_t core_mask  = 0;
     uint32_t xstop_mask = 0;
     data64_t scom_data  = {0};
@@ -729,7 +732,24 @@ qme_stop_entry()
         PK_TRACE_INF("STOP11: Completed STOP11 on Cores[%x], Total Cores in STOP11[%x]",
                      G_qme_record.c_stop11_enter_targets,
                      G_qme_record.c_stop11_reached);
+#ifdef CISR_TRACE
 
+        for( core_mask = 8, core_index = 0;
+             core_mask > 0; core_index++,
+             core_mask = core_mask >> 1 )
+        {
+            if ( G_qme_record.c_stop11_enter_targets & core_mask )
+            {
+                G_qme_record.cisr1_s11e[core_index] = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+                G_qme_record.cisr0_s11e[core_index] = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+                PKTRACE("Stop11: CISR %x %x on Core mask %x",
+                        G_qme_record.cisr0_s11e[core_index],
+                        G_qme_record.cisr1_s11e[core_index],
+                        core_mask);
+            }
+        }
+
+#endif
         // for qme_stop11_msgsnd_abort
         PK_TRACE("Drop BLOCK_INTERRUPT_OUTPUT to PC via SCSR[24]");
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, G_qme_record.c_stop11_enter_targets ), BIT32(24) );

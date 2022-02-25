@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2021                                                    */
+/* COPYRIGHT 2018,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -158,7 +158,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 {
     uint32_t core_done = 0;
     uint32_t core_mask = 0;
-    uint32_t cisr1     = 0;
+    uint32_t core_index = 0;
     //===============//
 
     wrteei(0);
@@ -180,22 +180,37 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
     if( G_qme_record.fused_core_enabled )
     {
-        for( core_mask = 8; core_mask > 0; core_mask = core_mask >> 1 )
+        for( core_mask = 8, core_index = 0;
+             core_mask > 0; core_index++,
+             core_mask = core_mask >> 1 )
         {
             if ( core_target & core_mask )
             {
-                cisr1 = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
-
-                // No interrupt pending AND no special wakeup
-                if( ( ! ( cisr1 & 0xA ) ) &&
-                    ( ! ( core_spwu & core_mask ) ) )
+#ifdef CISR_TRACE
+                G_qme_record.cisr1_sNx[core_index] = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+                G_qme_record.cisr0_sNx[core_index] = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+                PKTRACE("Exit: CISR %x %x on Core mask %x Spwu %x",
+                        G_qme_record.cisr0_sNx[core_index],
+                        G_qme_record.cisr1_sNx[core_index],
+                        core_mask, core_spwu);
+#endif
+                /*// No interrupt pending AND no special wakeup
+                if( ( ! ( G_qme_record.cisr1_sNx[core_index] & 0xA ) ) &&
                 {
                     PK_TRACE_INF("Warning: No PC_INTR_PENDING or REG_WKUP_PRESENT on Core %x via QME_CISR[60,62]", core_mask);
+                }*/
+
+                // put the fused pair sibling to stop1 holding if it did not have the wakeup req
+                if ( ( ! ( G_qme_record.c_regular_wakeup_fast_before_pair & core_mask ) ) &&
+                     ( ! ( G_qme_record.c_regular_wakeup_slow_before_pair & core_mask ) ) &&
+                     ( ! ( core_spwu & core_mask ) ) )
+                {
                     G_qme_record.c_stop1_targets |= core_mask;
                 }
             }
         }
     }
+
 
     //===============//
 
@@ -225,7 +240,8 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
     //clear them here, and pm_active will be taking care of via pm_exit below
     //special wakeup shouldnt be affacted via fences.
     PK_TRACE("Clear EISR on Regular Wakeup for extra edge caused by fencing/unfencing between entry and exit");
-    out32_sh(QME_LCL_EISR_CLR, ( (core_target << SHIFT64SH(43)) | (core_target << SHIFT64SH(47)) ) );
+    out32_sh(QME_LCL_EISR_CLR, ( (G_qme_record.c_regular_wakeup_fast_before_pair << SHIFT64SH(43)) |
+                                 (G_qme_record.c_regular_wakeup_slow_before_pair << SHIFT64SH(47)) ) );
 
     PK_TRACE("Drop halt STOP override disable via PCR_SCSR[21]");
     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(21) );

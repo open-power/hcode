@@ -27,6 +27,7 @@
 #define __QME_RECORD_H__
 
 #define QME_SCOREBOARD_VERSION  0x514d4531 //QME1
+#define CISR_TRACE 1
 
 typedef struct
 {
@@ -102,65 +103,84 @@ typedef struct
     uint32_t    c_special_wakeup_exit_pending;
     uint32_t    c_special_wakeup_abort_pending;
     // 13
-    uint32_t    c_pm_state[4];
+    uint32_t    c_regular_wakeup_fast_before_pair;
+    uint32_t    c_regular_wakeup_slow_before_pair;
+    uint32_t    c_special_wakeup_rise_before_pair;
+    uint32_t    c_special_wakeup_fall_before_pair;
     // 14
+    uint32_t    c_pm_state[4];
+    // 15
     uint32_t    c_stop2_enter_targets;
     uint32_t    c_stop3_enter_targets;
     uint32_t    c_stop5_enter_targets;
     uint32_t    c_stop11_enter_targets;
-    // 15
+    // 16
     uint32_t    c_l2_purge_catchup_targets;
     uint32_t    c_stop3or5_catchup_targets;
     uint32_t    c_l2_purge_abort_targets;
     uint32_t    c_ncu_purge_abort_targets;
-    // 16
+    // 17
     uint32_t    c_stop3or5_abort_targets;
     uint32_t    c_xstop_clock_abort_targets;
     uint32_t    c_xstop_power_abort_targets;
     uint32_t    c_stop2_exit_express;
-    // 17
+    // 18
     uint32_t    c_stop2_exit_targets;
     uint32_t    c_stop3_exit_targets;
     uint32_t    c_stop5_exit_targets;
     uint32_t    c_stop11_exit_targets;
-    // 18
+    // 19
     uint32_t    c_stop2p_exit_targets;//core_scom after stop2 exit for stop5/11
     uint32_t    spurr_freq_ref_upper; //init before core_scominit
     uint32_t    c_mma_active_req;
     uint32_t    c_mma_available;      // invert PIG TypeA 16:19
-    // 19
+    // 20
     uint32_t    c_mma_poweroff_count[4];
 
     // Errlog
-    // 20
+    // 21
     uint16_t    pad_zeros; // do not use this
     uint16_t    errl_panic;
     uint32_t    errl_data0;
     uint32_t    errl_data1;
     uint32_t    errl_data2;
-    // 21
+    // 22
     uint16_t    c_failed_ring[4]; // Field needs to be at 8B boundary
     uint32_t    c_scan_failed;
     uint32_t    bce_buf_content_type;//bce paging content selection
-    // 22
+    // 23
     uint32_t    c_self_fault_vector;
     uint32_t    c_self_failed;
     uint32_t    cts_timeout_count;// self restore
     uint32_t    msg_snd_interrupt;// msgsnd vector
-    // 23
+    // 24
     uint32_t    c_in_recovery;    // Deadly paint
     uint32_t    recovery_ongoing;
     uint64_t    qme_lfir;
-    // 24,25
+    // 25,26
     uint64_t    core_fir[4];
-    // 26
+    // 27
     uint32_t    stop11_counter[4];
-    // 27,28,29,30
+    // 28,29,30,31
     uint32_t    c_tfac_c2s_retry_limit[4];
     uint32_t    c_tfac_c2s_retry_total[4];
     uint32_t    c_tfac_s2c_retry_limit[4];
     uint32_t    c_tfac_s2c_retry_total[4];
+    // 32,33,34,35,36,37,38,39,40,41
+    uint32_t    cisr0_s11e[4];
+    uint32_t    cisr1_s11e[4];
+    uint32_t    cisr0_rwus[4];
+    uint32_t    cisr1_rwus[4];
+    uint32_t    cisr0_rwuf[4];
+    uint32_t    cisr1_rwuf[4];
+    uint32_t    cisr0_sNx[4];
+    uint32_t    cisr1_sNx[4];
+    uint32_t    cisr0_s1x[4];
+    uint32_t    cisr1_s1x[4];
+
     /*DEBUG_ONLY
+    uint32_t    cisr0_idle[4];
+    uint32_t    cisr1_idle[4];
         uint32_t    c_act_stop_level[4];
         uint32_t    t_old_pls[4][4];
         uint32_t    t_new_pls[4][4];

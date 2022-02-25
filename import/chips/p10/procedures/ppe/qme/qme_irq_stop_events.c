@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2021                                                    */
+/* COPYRIGHT 2018,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -176,6 +176,26 @@ qme_dds_sync()
 void
 qme_stop1_exit(uint32_t c_mask)
 {
+#ifdef CISR_TRACE
+    uint32_t core_mask, core_index;
+
+    for( core_mask = 8, core_index = 0;
+         core_mask > 0; core_index++,
+         core_mask = core_mask >> 1 )
+    {
+        if ( c_mask & core_mask )
+        {
+            G_qme_record.cisr1_s1x[core_index] = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+            G_qme_record.cisr0_s1x[core_index] = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+            PKTRACE("Stop1: cisr %x %x on core mask %x",
+                    G_qme_record.cisr0_s1x[core_index],
+                    G_qme_record.cisr1_s1x[core_index],
+                    core_mask);
+        }
+    }
+
+#endif
+
     // handle stop1 wakeup
     // normal core mode
     // a) runtime wakeup: Covered by HW520675 and HW527893
@@ -397,19 +417,46 @@ qme_parse_pm_state_active_fast()
 void
 qme_parse_regular_wakeup_fast()
 {
+#ifdef CISR_TRACE
+    uint32_t core_mask, core_index;
+#endif
     G_qme_record.c_regular_wakeup_fast_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(40, 4) ) >> SHIFT64SH(43);
 
-    uint32_t c_mask = G_qme_record.c_regular_wakeup_fast_req &
+    uint32_t c_temp = G_qme_record.c_regular_wakeup_fast_req &
                       G_qme_record.c_configured &
                       (~G_qme_record.c_cache_only_enabled) &
-                      (G_qme_record.c_stop1_targets |
-                       G_qme_record.c_stop2_reached) & // not clear or handle wakeup until we enter stop first
                       (~(G_qme_record.c_block_wake_done | G_qme_record.c_block_wake_override));
+
+    uint32_t c_mask = c_temp &
+                      (G_qme_record.c_stop1_targets |
+                       G_qme_record.c_stop2_reached); // not clear or handle wakeup until we enter stop first
 
     // leave block wakeup interrupts asserted until the protocol releases
     // and leave deconfigured core signal alone as they are always masked
     out32_sh(QME_LCL_EISR_CLR, (c_mask << SHIFT64SH(43)) );
 
+    qme_stop1_exit(c_temp);
+
+    G_qme_record.c_regular_wakeup_fast_before_pair = c_mask;
+    G_qme_record.c_regular_wakeup_slow_before_pair = 0;
+#ifdef CISR_TRACE
+
+    for( core_mask = 8, core_index = 0;
+         core_mask > 0; core_index++,
+         core_mask = core_mask >> 1 )
+    {
+        if ( c_mask & core_mask )
+        {
+            G_qme_record.cisr1_rwuf[core_index] = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+            G_qme_record.cisr0_rwuf[core_index] = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+            PKTRACE("fast wakeup: cisr %x %x on core mask %x",
+                    G_qme_record.cisr0_rwuf[core_index],
+                    G_qme_record.cisr1_rwuf[core_index],
+                    core_mask);
+        }
+    }
+
+#endif
     PK_TRACE_INF("Parse: Regular Wakeup Fast on Cores[%x], Partial Good Cores[%x], Cores in STOP2+[%x], Block Exit on Cores[%x]",
                  G_qme_record.c_regular_wakeup_fast_req,
                  G_qme_record.c_configured,
@@ -436,8 +483,6 @@ qme_parse_regular_wakeup_fast()
     G_qme_record.c_stop2_exit_targets |= c_mask & G_qme_record.c_stop2_reached;
     G_qme_record.c_stop3_exit_targets |= c_mask & G_qme_record.c_stop3_reached;
     G_qme_record.c_stop5_exit_targets |= c_mask & G_qme_record.c_stop5_reached;
-
-    qme_stop1_exit(c_mask);
 }
 
 
@@ -457,6 +502,7 @@ qme_parse_special_wakeup_rise()
     // IF pending EISR spwu rise without realtime EINR request,
     // then it is phantom or leftover, Clear first then ignore.
     c_mask &= c_einr_spwu_rise;
+    G_qme_record.c_special_wakeup_rise_before_pair = c_mask;
 
     if( G_qme_record.fused_core_enabled )
     {
@@ -547,6 +593,7 @@ qme_parse_special_wakeup_fall()
     uint32_t c_mask = G_qme_record.c_special_wakeup_fall_req &
                       G_qme_record.c_special_wakeup_done &
                       G_qme_record.c_configured;
+    G_qme_record.c_special_wakeup_fall_before_pair = c_mask;
 
     if( G_qme_record.fused_core_enabled )
     {
@@ -1008,14 +1055,19 @@ qme_parse_pm_state_active_slow()
 void
 qme_parse_regular_wakeup_slow()
 {
+#ifdef CISR_TRACE
+    uint32_t core_mask, core_index;
+#endif
     G_qme_record.c_regular_wakeup_slow_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(44, 4) ) >> SHIFT64SH(47);
 
-    uint32_t c_mask = G_qme_record.c_regular_wakeup_slow_req &
+    uint32_t c_temp = G_qme_record.c_regular_wakeup_slow_req &
                       (~G_qme_record.c_cache_only_enabled) &
                       G_qme_record.c_configured &
-                      (G_qme_record.c_stop1_targets |
-                       G_qme_record.c_stop2_reached) &   // not clear or handle wakeup until we enter stop11
                       (~(G_qme_record.c_block_wake_done | G_qme_record.c_block_wake_override));
+
+    uint32_t c_mask = c_temp &
+                      (G_qme_record.c_stop1_targets |
+                       G_qme_record.c_stop2_reached); // not clear or handle wakeup until we enter stop11
 
     // Note: not possible to get this wakeup when core is only entered stop2
     // In that case if happened, we should clear the wakeup and do nothing.
@@ -1024,6 +1076,28 @@ qme_parse_regular_wakeup_slow()
     // and leave deconfigured core signal alone as they are always masked
     out32_sh(QME_LCL_EISR_CLR, (c_mask << SHIFT64SH(47)) );
 
+    qme_stop1_exit(c_temp);
+
+    G_qme_record.c_regular_wakeup_slow_before_pair = c_mask;
+    G_qme_record.c_regular_wakeup_fast_before_pair = 0;
+#ifdef CISR_TRACE
+
+    for( core_mask = 8, core_index = 0;
+         core_mask > 0; core_index++,
+         core_mask = core_mask >> 1 )
+    {
+        if ( c_mask & core_mask )
+        {
+            G_qme_record.cisr1_rwus[core_index] = in32_sh( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+            G_qme_record.cisr0_rwus[core_index] = in32( QME_LCL_CORE_ADDR_OR( QME_CISR, core_mask ) );
+            PKTRACE("slow wakeup: cisr %x %x on core mask %x",
+                    G_qme_record.cisr0_rwus[core_index],
+                    G_qme_record.cisr1_rwus[core_index],
+                    core_mask);
+        }
+    }
+
+#endif
     PK_TRACE_INF("Parse: Regular Wakeup Slow on Cores[%x], Partial Good Cores[%x], Cores in STOP11[%x], Block Exit on Cores[%x]",
                  G_qme_record.c_regular_wakeup_slow_req,
                  G_qme_record.c_configured,
@@ -1049,8 +1123,6 @@ qme_parse_regular_wakeup_slow()
     G_qme_record.c_stop2_exit_targets  |= c_mask & G_qme_record.c_stop11_reached;
     G_qme_record.c_stop5_exit_targets  |= c_mask & G_qme_record.c_stop11_reached;
     G_qme_record.c_stop11_exit_targets |= c_mask & G_qme_record.c_stop11_reached;
-
-    qme_stop1_exit(c_mask);
 }
 
 void
