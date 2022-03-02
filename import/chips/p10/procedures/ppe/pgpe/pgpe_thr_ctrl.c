@@ -159,5 +159,8 @@ void pgpe_thr_ctr_clear_ceff_err_array()
         G_pgpe_thr_ctrl.ceff_err_array[i] = 0;
     }
 
+    G_pgpe_thr_ctrl.ceff_err_idx = 0;
+    G_pgpe_thr_ctrl.ceff_err_sum = 0;
+    G_pgpe_thr_ctrl.ceff_err_avg = 0;
 
 }
