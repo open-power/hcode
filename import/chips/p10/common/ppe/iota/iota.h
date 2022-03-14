@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2021                                                    */
+/* COPYRIGHT 2017,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -277,6 +277,7 @@ extern void __hwmacro_setup(void);
 extern uint32_t __ext_irq_handler(void);
 extern void     __ext_irq_resume(void);
 
+void __ppe42_pib_reset_handler();
 // To satisfy pk_trace
 typedef uint64_t PkTimebase;
 PkTimebase pk_timebase_get(void);

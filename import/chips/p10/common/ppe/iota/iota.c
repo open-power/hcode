@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2021                                                    */
+/* COPYRIGHT 2017,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -257,3 +257,27 @@ uint64_t pk_timebase_get()
     ppe42_64bit_timebase.lower = hw_timebase;
     return ppe42_64bit_timebase.value;
 }
+#if defined __PPE_PGPE || __PPE_XGPE
+uint32_t G_pib_reset_flag = 0;
+
+void
+__ppe42_pib_reset_handler()
+{
+    // if already waited for pib to reset, panic as still fail
+    if (G_pib_reset_flag == 10 )
+    {
+        G_pib_reset_flag = 0;
+        iota_halt();
+    }
+
+    // note pib reset is being detected
+    // this flag will be cleared by fit timer if pib reset recovers
+    G_pib_reset_flag++;
+
+    // DELAY to wait pib reset to complete
+    volatile uint32_t loop;
+
+    for(loop = 0; loop < 6400; loop++);
+
+}
+#endif

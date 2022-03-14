@@ -879,30 +879,38 @@ void pgpe_error_machine_check_handler()
     uint32_t srr1  = mfspr(SPRN_SRR1);
     uint32_t edr   = mfspr(SPRN_EDR);
 
-    PK_TRACE_INF("ERR: Machine Check  EDR:%x SRR1:%x SRR0:%x", edr, srr1, srr0);
-    uint32_t o_status;
-    PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[PGPE_ERR_CODE_PGPE_MACHINE_CHECK].reason_code,
-                         G_PGPE_ERROR_CODES[PGPE_ERR_CODE_PGPE_MACHINE_CHECK].ext_reason_code,
-                         G_PGPE_ERROR_CODES[PGPE_ERR_CODE_PGPE_MACHINE_CHECK].mod_id,
-                         srr0,
-                         srr1,
-                         edr,
-                         NULL,
-                         NULL,
-                         o_status);
-    PK_TRACE_INF("ERRL: o_status=0x%x", o_status);
+    if (((srr1 & MSR_SIBRC) == MSR_SIBRC))
+    {
+        asm volatile("b __special_machine_check_handler");
+    }
+    else
+    {
 
-    //Mask interrupt except IPC and Error
-    pgpe_error_mask_irqs();
+        PK_TRACE_INF("ERR: Machine Check  EDR:%x SRR1:%x SRR0:%x", edr, srr1, srr0);
+        uint32_t o_status;
+        PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[PGPE_ERR_CODE_PGPE_MACHINE_CHECK].reason_code,
+                             G_PGPE_ERROR_CODES[PGPE_ERR_CODE_PGPE_MACHINE_CHECK].ext_reason_code,
+                             G_PGPE_ERROR_CODES[PGPE_ERR_CODE_PGPE_MACHINE_CHECK].mod_id,
+                             srr0,
+                             srr1,
+                             edr,
+                             NULL,
+                             NULL,
+                             o_status);
+        PK_TRACE_INF("ERRL: o_status=0x%x", o_status);
 
-    //Notify error module
-    pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_MACHINE_CHECK);
+        //Mask interrupt except IPC and Error
+        pgpe_error_mask_irqs();
 
-    //Stop Beacon Updates
-    pgpe_error_stop_beacon();
+        //Notify error module
+        pgpe_error_notify_critical(PGPE_ERR_CODE_PGPE_MACHINE_CHECK);
 
-    //Ack any pending IPCS with bad rc
-    pgpe_error_ack_pending();
+        //Stop Beacon Updates
+        pgpe_error_stop_beacon();
+
+        //Ack any pending IPCS with bad rc
+        pgpe_error_ack_pending();
+    }
 
 }
 

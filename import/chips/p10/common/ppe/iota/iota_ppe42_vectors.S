@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2021                                                    */
+/* COPYRIGHT 2017,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -44,7 +44,9 @@ __set_msr:
 .org    __vectors + 0x0020
 __machine_check:
     __m_iota_machine_check_handler
+#if  !defined  __PPE_PGPE || !defined __PPE_XGPE
     _pk_panic IOTA_MACHINE_CHECK_PANIC
+#endif
 
 .global __system_reset
 .org    __vectors + 0x0040
@@ -99,3 +101,16 @@ __watchdog_interrupt:
 .org    __vectors + 0x0160
 __virtual_exception:
     _pk_panic IOTA_VIRTUAL_EXCEPTION
+
+
+#if defined __PPE_PGPE || __PPE_XGPE
+.global __special_machine_check_handler
+__special_machine_check_handler:
+     mfedr     %r2
+     stcxu     %r1,-IOTA_CTX_SIZE(%r1)
+     mtedr     %r2
+     _liw      %r2, _SDA2_BASE_
+     bl        __ppe42_pib_reset_handler
+     lcxu      %r1, IOTA_CTX_SIZE(%r1)
+     rfi
+#endif

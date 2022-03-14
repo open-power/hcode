@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2021                                                    */
+/* COPYRIGHT 2017,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -38,6 +38,7 @@
 #include "ppe42_spr.h"
 #include "ppe42_mmio.h"
 #include "ppe_port.h"
+
 
 #ifdef __PPE42_CORE_C__
     #define IF__PPE42_CORE_C__(x) x

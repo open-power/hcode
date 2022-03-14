@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -36,6 +36,7 @@
 
 uint32_t G_beacon_count_threshold;
 uint32_t G_beacon_count;
+extern uint32_t G_pib_reset_flag;
 
 //
 //  Local function declarations
@@ -165,6 +166,7 @@ __attribute__((always_inline)) inline void handle_wov_ocs()
 void pgpe_irq_fit_handler()
 {
     uint32_t start_time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+    G_pib_reset_flag = 0;
     handle_occflg_requests();
     handle_occ_beacon();
     handle_produce_wof();
