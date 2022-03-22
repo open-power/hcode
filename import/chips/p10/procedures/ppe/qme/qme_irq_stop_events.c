@@ -211,12 +211,13 @@ qme_stop1_exit(uint32_t c_mask)
     // c1 in stop state, no pc_intr_pending, pm_exit is noop
     // c1 in stop state, pc_intr_pending, pm_exit wakes it up
 
-    c_mask &= ~G_qme_record.c_stop2_reached;
+    c_mask &= G_qme_record.c_stop1_targets;
 
     if( c_mask )
     {
         PK_TRACE_INF("stop1 wakeup: %x", G_qme_record.c_stop1_targets);
         G_qme_record.c_stop1_targets &= ~c_mask;
+
 
         PK_TRACE_INF("Core %x Waking up(pm_exit=1) via PCR_SCSR[1]", c_mask);
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, c_mask ), BIT32(1) );
@@ -236,6 +237,8 @@ qme_stop1_exit(uint32_t c_mask)
             PK_TRACE_INF("WAKE1: Core[%x] Drop PM_EXIT via PCR_SCSR[1]", c_mask );
             out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, c_mask ), BIT32(1) );
         }
+
+        PKTRACE("Stop1 target state %x after dropping PM_EXIT", G_qme_record.c_stop1_targets);
     }
 }
 
@@ -422,23 +425,28 @@ qme_parse_regular_wakeup_fast()
 #endif
     G_qme_record.c_regular_wakeup_fast_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(40, 4) ) >> SHIFT64SH(43);
 
+    // leave block wakeup interrupts asserted until the protocol releases
+    // and leave deconfigured core signal alone as they are always masked
     uint32_t c_temp = G_qme_record.c_regular_wakeup_fast_req &
                       G_qme_record.c_configured &
                       (~G_qme_record.c_cache_only_enabled) &
                       (~(G_qme_record.c_block_wake_done | G_qme_record.c_block_wake_override));
 
-    uint32_t c_mask = c_temp &
-                      (G_qme_record.c_stop1_targets |
-                       G_qme_record.c_stop2_reached); // not clear or handle wakeup until we enter stop first
 
-    // leave block wakeup interrupts asserted until the protocol releases
-    // and leave deconfigured core signal alone as they are always masked
-    out32_sh(QME_LCL_EISR_CLR, (c_mask << SHIFT64SH(43)) );
+    uint32_t c_temp1 = c_temp & (G_qme_record.c_stop1_targets | G_qme_record.c_stop2_reached);
+
+
+    out32_sh(QME_LCL_EISR_CLR, (c_temp1 << SHIFT64SH(43)) );
 
     qme_stop1_exit(c_temp);
 
+
+    uint32_t c_mask = c_temp &
+                      G_qme_record.c_stop2_reached; // not clear or handle wakeup until we enter stop first
+
     G_qme_record.c_regular_wakeup_fast_before_pair = c_mask;
     G_qme_record.c_regular_wakeup_slow_before_pair = 0;
+
 #ifdef CISR_TRACE
 
     for( core_mask = 8, core_index = 0;
@@ -827,6 +835,7 @@ qme_regular_wakeup_fast_event()
 
     qme_parse_regular_wakeup_fast();
 
+    PK_TRACE_INF("Regular Wakeup fast on on stop1_targets %x", G_qme_record.c_stop1_targets);
     PK_TRACE_INF("Event: UIH Status[%x], Regular Wakeup Fast on Core[%x], Cores reached STOP2+[%x], Cores reached STOP5+[%x]",
                  G_qme_record.uih_status,
                  G_qme_record.c_regular_wakeup_fast_req,
@@ -880,6 +889,7 @@ qme_pm_state_active_fast_event()
 
     qme_parse_pm_state_active_fast();
 
+    PK_TRACE_INF("PM State Active Fast on stop1_targets %x", G_qme_record.c_stop1_targets);
     PK_TRACE_INF("Event: UIH Status[%x], PM State Active Fast on Cores[%x], STOP2+ Request on Cores[%x], STOP5 Request on Cores[%x]",
                  G_qme_record.uih_status,
                  G_qme_record.c_pm_state_active_fast_req,
@@ -1060,26 +1070,29 @@ qme_parse_regular_wakeup_slow()
 #endif
     G_qme_record.c_regular_wakeup_slow_req = ( in32_sh(QME_LCL_EISR) & BITS64SH(44, 4) ) >> SHIFT64SH(47);
 
+    // leave block wakeup interrupts asserted until the protocol releases
+    // and leave deconfigured core signal alone as they are always masked
     uint32_t c_temp = G_qme_record.c_regular_wakeup_slow_req &
                       (~G_qme_record.c_cache_only_enabled) &
                       G_qme_record.c_configured &
                       (~(G_qme_record.c_block_wake_done | G_qme_record.c_block_wake_override));
 
-    uint32_t c_mask = c_temp &
-                      (G_qme_record.c_stop1_targets |
-                       G_qme_record.c_stop2_reached); // not clear or handle wakeup until we enter stop11
 
     // Note: not possible to get this wakeup when core is only entered stop2
     // In that case if happened, we should clear the wakeup and do nothing.
 
-    // leave block wakeup interrupts asserted until the protocol releases
-    // and leave deconfigured core signal alone as they are always masked
-    out32_sh(QME_LCL_EISR_CLR, (c_mask << SHIFT64SH(47)) );
+    uint32_t c_temp1 = c_temp & (G_qme_record.c_stop1_targets | G_qme_record.c_stop2_reached);
+
+    out32_sh(QME_LCL_EISR_CLR, (c_temp1 << SHIFT64SH(47)) );
 
     qme_stop1_exit(c_temp);
 
+    uint32_t c_mask = c_temp &
+                      G_qme_record.c_stop2_reached; // not clear or handle wakeup until we enter stop11
+
     G_qme_record.c_regular_wakeup_slow_before_pair = c_mask;
     G_qme_record.c_regular_wakeup_fast_before_pair = 0;
+
 #ifdef CISR_TRACE
 
     for( core_mask = 8, core_index = 0;
@@ -1143,6 +1156,7 @@ qme_regular_wakeup_slow_event()
 
     qme_parse_regular_wakeup_slow();
 
+    PK_TRACE_INF("Regular Wakeup Slow on on stop1_targets %x", G_qme_record.c_stop1_targets);
     PK_TRACE_INF("Event: UIH Status[%x], Regular Wakeup Slow on Core[%x], Cores Waking up from STOP11[%x], Cores reached STOP11[%x]",
                  G_qme_record.uih_status,
                  G_qme_record.c_regular_wakeup_slow_req,
@@ -1273,6 +1287,7 @@ qme_pm_state_active_slow_event()
 
     qme_parse_pm_state_active_slow();
 
+    PK_TRACE_INF("PM State Active Slow on stop1_targets %x", G_qme_record.c_stop1_targets);
     PK_TRACE("Event: UIH Status[%x], PM State Active Slow on Cores[%x], STOP11 Request on Cores[%x], STOP11 Reached on Cores[%x]",
              G_qme_record.uih_status,
              G_qme_record.c_pm_state_active_slow_req,

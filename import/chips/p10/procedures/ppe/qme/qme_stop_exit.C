@@ -159,6 +159,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
     uint32_t core_done = 0;
     uint32_t core_mask = 0;
     uint32_t core_index = 0;
+    uint32_t core_wakeup  = 0;
     //===============//
 
     wrteei(0);
@@ -213,9 +214,34 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
 
     //===============//
+    if ( (core_target && !core_spwu) ||
+         (G_qme_record.c_regular_wakeup_fast_before_pair | G_qme_record.c_regular_wakeup_slow_before_pair))
+    {
+        //Dont assert pm_exit for the sibling one
+        core_wakeup = core_target &
+                      (G_qme_record.c_regular_wakeup_fast_before_pair | G_qme_record.c_regular_wakeup_slow_before_pair);
 
-    // do not mess pm_exit for cache_only cores
-    uint32_t core_wakeup = core_target & ~G_qme_record.c_cache_only_enabled;
+        if (!core_wakeup)
+        {
+            PK_TRACE_INF("G_qme_record.c_regular_wakeup_fast_before_pair %x G_qme_record.c_regular_wakeup_slow_before_pair %x",
+                         G_qme_record.c_regular_wakeup_fast_before_pair, G_qme_record.c_regular_wakeup_slow_before_pair);
+
+            G_qme_record.errl_panic = QME_STOP_WAKEUP_PAIR_MISMATCH;
+            G_qme_record.errl_data0 = core_target;
+            G_qme_record.errl_data1 = G_qme_record.c_regular_wakeup_fast_before_pair;
+            G_qme_record.errl_data2 = G_qme_record.c_regular_wakeup_slow_before_pair;
+            qme_errlog();
+        }
+
+        // do not mess pm_exit for cache_only cores
+        core_wakeup &= ~G_qme_record.c_cache_only_enabled;
+    }
+    else
+    {
+        core_wakeup = core_target & ~G_qme_record.c_cache_only_enabled;
+    }
+
+
 
     if( core_wakeup )
     {
@@ -232,7 +258,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
     //===============//
 
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
-    out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, core_target ), SSH_EXIT_COMPLETE );
+    out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, core_wakeup), SSH_EXIT_COMPLETE );
 
     // HW527893
     //stopclocks will take pm_active and regular wakeup away from EINR via its fencing
@@ -262,7 +288,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
         G_qme_record.c_special_wakeup_done |= core_done;
     }
 
-    if( ( core_target = ( core_target & (~core_spwu) ) ) )
+    if( ( core_target = ( core_target & (~core_spwu) & core_wakeup) ) )
     {
         PK_TRACE_INF("SX.0B: Cores[%x] Drop PM_EXIT via PCR_SCSR[1]", core_target);
         out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_target ), BIT32(1) );
