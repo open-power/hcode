@@ -535,7 +535,17 @@ TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT      = 0x1f04,
 */
 TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED    = 0x1f05,
 MSG_SEND_BLOCK_COPY_FAILED                = 0x1f06,
-//UNUSED                                  = 0x1f07,
+/*
+* @errortype
+* @moduleid    QME_MODULE_ID_STOP_EXIT
+* @reasoncode  ERR_REASON_ID_STOP2_EXIT
+* @userdata1   panic_code
+* @userdata2   QME_TFCSR
+* @userdata3   i_target
+* @userdata4   RC_TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED
+* @devdesc     QME TimeFac Sent Error detected
+*/
+QME_STOP_WAKEUP_PAIR_MISMATCH             = 0x1f07,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
