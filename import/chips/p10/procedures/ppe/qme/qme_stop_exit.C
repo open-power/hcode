@@ -214,8 +214,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
 
     //===============//
-    if ( (core_target && !core_spwu) ||
-         (G_qme_record.c_regular_wakeup_fast_before_pair | G_qme_record.c_regular_wakeup_slow_before_pair))
+    if (G_qme_record.c_regular_wakeup_fast_before_pair | G_qme_record.c_regular_wakeup_slow_before_pair)
     {
         //Dont assert pm_exit for the sibling one
         core_wakeup = core_target &
@@ -233,7 +232,6 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
             qme_errlog();
         }
 
-        // do not mess pm_exit for cache_only cores
         core_wakeup &= ~G_qme_record.c_cache_only_enabled;
     }
     else
@@ -243,6 +241,7 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
 
 
+    // do not mess pm_exit for cache_only cores
     if( core_wakeup )
     {
         PK_TRACE("Core Waking up(pm_exit=1) via PCR_SCSR[1]");
@@ -254,8 +253,23 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
         while( ( ( (~in32(QME_LCL_SSDR)) >> SHIFT32(15) ) & core_wakeup ) != core_wakeup );
     }
+    else
+    {
+        //Here we will come, when core_target is same as
+        //G_qme_record.c_cache_only_enabled, so we need to continue below
+        //further to mark complete in SSH_SRC
+        core_wakeup = core_target;
+
+        if (G_qme_record.c_cache_only_enabled)
+        {
+            core_wakeup = G_qme_record.c_cache_only_enabled & core_target;
+        }
+    }
 
     //===============//
+    //We need to mark the complete for the cores that got real wakeup interrupt
+    //for the stop1, we mark complete in stop1_exit function, when stop1 target
+    //get the real wakeup interrupt.
 
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
     out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, core_wakeup), SSH_EXIT_COMPLETE );

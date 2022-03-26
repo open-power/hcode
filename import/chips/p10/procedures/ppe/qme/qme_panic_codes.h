@@ -529,11 +529,11 @@ MSG_SEND_BLOCK_COPY_FAILED                = 0x1f06,
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
 * @reasoncode  ERR_REASON_ID_STOP2_EXIT
-* @userdata1   panic_code
-* @userdata2   QME_TFCSR
+* @userdata1   fast exit target
+* @userdata2   slow exit target
 * @userdata3   i_target
-* @userdata4   RC_TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED
-* @devdesc     QME TimeFac Sent Error detected
+* @userdata4   QME_STOP_WAKEUP_PAIR_MISMATCH
+* @devdesc     Sibling cores that are in stop1 are not recorded
 */
 QME_STOP_WAKEUP_PAIR_MISMATCH             = 0x1f07,
 /*
