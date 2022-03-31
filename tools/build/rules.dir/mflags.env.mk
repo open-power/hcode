@@ -45,18 +45,30 @@ $(shell mkdir -p ${EXEPATH})
 $(shell mkdir -p ${OBJPATH})
 $(shell mkdir -p ${GENPATH})
 $(shell mkdir -p ${IMAGEPATH})
+ifeq ("$(wildcard $(OUTPUTPATH)/lib)","")
 $(shell ln -frsn ${LIBPATH} ${OUTPUTPATH}/lib)
+endif
+ifeq ("$(wildcard $(OUTPUTPATH)/bin)","")
 $(shell ln -frsn ${EXEPATH} ${OUTPUTPATH}/bin)
+endif
+ifeq ("$(wildcard $(OUTPUTPATH)/obj)","")
 $(shell ln -frsn ${OBJPATH} ${OUTPUTPATH}/obj)
+endif
+ifeq ("$(wildcard $(OUTPUTPATH)/gen)","")
 $(shell ln -frsn ${GENPATH} ${OUTPUTPATH}/gen)
+endif
+ifeq ("$(wildcard $(OUTPUTPATH)/images)","")
 $(shell ln -frsn ${IMAGEPATH} ${OUTPUTPATH}/images)
+endif
 
 # Location of the cross-compiler toolchain.
 UNAME = $(shell uname)
 ifneq ($(wildcard /opt/rh/devtoolset-8/root/usr/bin),)
 __EKB_PREFIX?=/opt/rh/devtoolset-8/root/usr/bin/
-else
+else ifneq ($(wildcard /opt/rh/devtoolset-2/root/usr/bin),)
 __EKB_PREFIX?=/opt/rh/devtoolset-2/root/usr/bin/
+else
+__EKB_PREFIX?=/bin/
 endif
 
 ifeq ($(UNAME),AIX)
