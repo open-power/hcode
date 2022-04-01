@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -358,8 +358,16 @@ void pgpe_occ_sample_values()
                                  CURRENT_SCALE_IDX_VCS);
 
         //PK_TRACE("OCC: idd_ma=%u, ics_ma=%u, delta_tb=%u",G_pgpe_occ.idd_ma, G_pgpe_occ.ics_ma, delta_tb);
-        G_pgpe_occ.idd_tb_accum = G_pgpe_occ.idd_ma * delta_tb;
-        G_pgpe_occ.ics_tb_accum = G_pgpe_occ.ics_ma * delta_tb;
+        if ( G_pgpe_occ.idd_ma )
+        {
+            G_pgpe_occ.idd_tb_accum = G_pgpe_occ.idd_ma * delta_tb;
+        }
+
+        if ( G_pgpe_occ.ics_ma )
+        {
+            G_pgpe_occ.ics_tb_accum = G_pgpe_occ.ics_ma * delta_tb;
+        }
+
         G_pgpe_occ.ocs_avg_pct_tb_accum = pgpe_wov_ocs_is_overcurrent();
     }
 

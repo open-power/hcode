@@ -348,6 +348,8 @@ void pgpe_avsbus_init()
 
     G_pgpe_avsbus.voltage_zero_cnt = 0;
     G_pgpe_avsbus.current_zero_cnt = 0;
+    G_pgpe_avsbus.idd_current_thrshd = 0;
+    G_pgpe_avsbus.ics_current_thrshd = 0;
 
     //Initialize VDD
     if (pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num() != 0xFF)
@@ -586,14 +588,37 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
             case AVS_RC_SUCCESS:
                 PK_TRACE_DBG("AVS: Curr_R, Success!");
 
-                if(*ret_current == 0)
+                if(*ret_current == 0 &&
+                   ((G_pgpe_avsbus.idd_current_thrshd == AVS_CURRENT_READ_ERROR_THRESHOLD)
+                    || (G_pgpe_avsbus.ics_current_thrshd == AVS_CURRENT_READ_ERROR_THRESHOLD)))
                 {
                     pgpe_error_info_log_usrdata(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE, bus_num, rail_num,
                                                 G_pgpe_avsbus.current_zero_cnt);
                     pgpe_error_notify_info(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE);
+
+                    if (current_scale_idx == CURRENT_SCALE_IDX_VDD)
+                    {
+                        G_pgpe_avsbus.idd_current_thrshd = 0;
+                    }
+                    else
+                    {
+                        G_pgpe_avsbus.ics_current_thrshd = 0;
+                    }
                 }
                 else
                 {
+                    if (*ret_current == 0)
+                    {
+                        if (current_scale_idx == CURRENT_SCALE_IDX_VDD)
+                        {
+                            G_pgpe_avsbus.idd_current_thrshd += 1;
+                        }
+                        else
+                        {
+                            G_pgpe_avsbus.ics_current_thrshd += 1;
+                        }
+                    }
+
                     *ret_current = *ret_current * pgpe_gppb_get_current_scale_factor(current_scale_idx);
                 }
 

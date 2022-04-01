@@ -32,6 +32,7 @@
 #define AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  1350
 #define AVS_DRIVER_MIN_EXTERNAL_VOLTAGE  500
 #define O2S_BUSNUM_OFFSET_SHIFT  8
+#define AVS_CURRENT_READ_ERROR_THRESHOLD 3
 
 enum AVSBUS_DRIVER_RETURN_CODES
 {
@@ -46,6 +47,8 @@ typedef struct pgpe_avsbus
 {
     uint32_t voltage_zero_cnt;
     uint32_t current_zero_cnt;
+    uint16_t idd_current_thrshd;
+    uint16_t ics_current_thrshd;
 } pgpe_avsbus_t;
 
 void pgpe_avsbus_init();
