@@ -270,9 +270,13 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
     //We need to mark the complete for the cores that got real wakeup interrupt
     //for the stop1, we mark complete in stop1_exit function, when stop1 target
     //get the real wakeup interrupt.
-
+    //
+    // Note here we need to mark both fused half as not STOP Gated
+    // as they are paired, even one of them are one wakeup away,
+    // but not STOP Gated nonetheless.
+    // Therefore, use CORE_TARGET below only for SSH but not CORE_WAKEUP
     PK_TRACE("Update STOP history: STOP exit completed, core ready");
-    out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, core_wakeup), SSH_EXIT_COMPLETE );
+    out32( QME_LCL_CORE_ADDR_WR( QME_SSH_SRC, core_target), SSH_EXIT_COMPLETE );
 
     // HW527893
     //stopclocks will take pm_active and regular wakeup away from EINR via its fencing
