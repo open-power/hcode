@@ -1161,10 +1161,12 @@ uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set)
           (pgpe_gppb_get_ops_vdd(vpd_pt_set, r) << 1) + 1;
 
     vdd = vdd >> 1; //Shift back
-    //PK_TRACE("PS: ps=0x%x, r=%u, vdd=0x%x", ps, r, vdd);
-    /*PK_TRACE("PS: slope=0x%x,ps=%u,vdd=0x%x", pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r),
-             pgpe_gppb_get_ops_ps(vpd_pt_set, r),
-             pgpe_gppb_get_ops_vdd(vpd_pt_set, r));*/
+
+    PK_TRACE_DBG("PS: ps=0x%x, r=%u, vdd=0x%x", ps, r, vdd);
+    PK_TRACE_DBG("PS: slope=0x%x,ps=%u,vdd=0x%x", pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r),
+                 pgpe_gppb_get_ops_ps(vpd_pt_set, r),
+                 pgpe_gppb_get_ops_vdd(vpd_pt_set, r));
+
     return vdd;
 }
 
@@ -1190,22 +1192,26 @@ uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vdd)
 {
     //interpolate new current(AC and DC) based on pstate next
-    uint32_t idd_ac = pgpe_pstate_intp_idd_ac_from_ps(ps, VPD_PT_SET_BIASED);
-    uint32_t idd_dc = pgpe_pstate_intp_idd_dc_from_ps(ps, VPD_PT_SET_BIASED);
+    uint32_t idd_ac_10ma = pgpe_pstate_intp_idd_ac_from_ps(ps, vpd_pt_set);
+    uint32_t idd_dc_10ma = pgpe_pstate_intp_idd_dc_from_ps(ps, vpd_pt_set);
 
     //compute load line drop
-    uint32_t vdd_uplift = ((((idd_ac + idd_dc) * vratio_vdd) * (pgpe_gppb_get_vdd_sysparm_loadline() +
-                            pgpe_gppb_get_vdd_sysparm_distloss())) / 100
-                           + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
+    uint32_t vdd_uplift_mv = ((((idd_ac_10ma + idd_dc_10ma) * vratio_vdd) * (pgpe_gppb_get_vdd_sysparm_loadline() +
+                               pgpe_gppb_get_vdd_sysparm_distloss())) / 100
+                              + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
 
-    PK_TRACE_DBG("PSS: ps=0x%x, idd_ac=0x%x, idd_dc=0x%x, vdd_up=0x%x", ps, idd_ac, idd_dc, vdd_uplift);
-    return vdd_uplift;
+
+    PK_TRACE_DBG("PSSX: ps=0x%x, idd_ac_10ma=%d , idd_dc_10ma=%d, vdd_up_mv=%u", ps, idd_ac_10ma, idd_dc_10ma,
+                 vdd_uplift_mv / 64);
+
+
+    return vdd_uplift_mv;
 }
 
 uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vcs)
 {
-    uint32_t ics_ac = pgpe_pstate_intp_ics_ac_from_ps(ps, VPD_PT_SET_BIASED);
-    uint32_t ics_dc = pgpe_pstate_intp_ics_dc_from_ps(ps, VPD_PT_SET_BIASED);
+    uint32_t ics_ac = pgpe_pstate_intp_ics_ac_from_ps(ps, vpd_pt_set);
+    uint32_t ics_dc = pgpe_pstate_intp_ics_dc_from_ps(ps, vpd_pt_set);
 
     uint32_t vcs_uplift = ((((ics_ac + ics_dc) * vratio_vcs) *  (pgpe_gppb_get_vcs_sysparm_loadline() +
                             pgpe_gppb_get_vcs_sysparm_distloss())) / 100
