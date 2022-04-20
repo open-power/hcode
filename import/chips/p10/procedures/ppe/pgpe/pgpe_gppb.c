@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -37,7 +37,7 @@ void pgpe_gppb_biased_pstate_tbl(PstateTable_t* tbl);
 void pgpe_gppb_occ_tbl();
 
 GlobalPstateParmBlock_v1_t* G_gppb_v1;
-GeneratedPstateInfo_v1_t* G_gpi_v1;
+GeneratedPstateInfo_v2_t* G_gpi_v2;
 uint8_t* G_gppb_pgpe_flags;
 GlobalPstateParmBlockBase_t* G_gppb_base;
 AvsBusTopology_t* G_gppb_avsbus;
@@ -112,7 +112,7 @@ void pgpe_gppb_init()
     G_gppb_thr_ctrl  = (GlobalPstateParmBlockThr_t*)((uint32_t)gppb_sram_offset + (uint32_t)
                        G_gppb_v1->offsets[THR_OFFSET_IDX]);
 
-    PK_TRACE_INF("GPB: GPB Sram Addr=0x%08x Magic=PSTATE_PARMSBLOCK_MAGIC_V1", (uint32_t)G_gppb_v1);
+    PK_TRACE_INF("GPB: GPB Sram Addr=0x%08x Magic=PSTATE_PARMSBLOCK_MAGIC_V2", (uint32_t)G_gppb_v1);
     PK_TRACE_INF("GPB: OCC Cmpl. Freq=%u(0x%x) Mhz", (uint32_t)G_gppb_base->occ_complex_frequency_mhz,
                  (uint32_t)G_gppb_base->occ_complex_frequency_mhz);
     PK_TRACE_INF("GPB: PGPE Flag SRAM Addr=0x%08x", (uint32_t)G_gppb_pgpe_flags);
@@ -135,19 +135,20 @@ void pgpe_gppb_init()
     //Fill out GeneratedPstateInfo structure
     PK_TRACE_INF("GPB: Pstate Table HOMER Addr=0x%08x", (uint32_t)pgpe_header_get(g_pgpe_genPsTableMemOffset));
 
-    G_gpi_v1 = (GeneratedPstateInfo_v1_t*)pgpe_header_get(g_pgpe_genPsTableMemOffset);
-    G_gpi_v1->magic = GEN_PSTATES_TBL_MAGIC_V1;
-    G_gpi_v1->globalppb = *G_gppb_v1;
-    G_gpi_v1->pstate0_frequency_khz = G_gppb_v1->base.reference_frequency_khz;
-    G_gpi_v1->highest_pstate = G_gppb_v1->operating_points_set[VPD_PT_SET_BIASED][CF0].pstate;
-    G_gpi_v1->pgpe_header  = *(pgpe_header_get_ptr());
+    G_gpi_v2 = (GeneratedPstateInfo_v2_t*)pgpe_header_get(g_pgpe_genPsTableMemOffset);
+    G_gpi_v2->magic = GEN_PSTATES_TBL_MAGIC_V2;
+    // G_gpi_v2->table_entries =  MAX_PSTATE_TABLE_ENTRIES_V2;
+    G_gpi_v2->globalppb = *G_gppb_v1;
+    G_gpi_v2->pstate0_frequency_khz = G_gppb_v1->base.reference_frequency_khz;
+    G_gpi_v2->highest_pstate = G_gppb_v1->operating_points_set[VPD_PT_SET_BIASED][CF0].pstate;
+    G_gpi_v2->pgpe_header  = *(pgpe_header_get_ptr());
 
     //Clear the IPE bit because we are about to do 1B and 2B operations to main memory
     uint32_t msr = mfmsr();
     mtmsr(msr & ~MSR_IPE);
 
-    pgpe_gppb_raw_pstate_tbl((PstateTable_t*)(&G_gpi_v1->raw_pstates));
-    pgpe_gppb_biased_pstate_tbl((PstateTable_t*)(&G_gpi_v1->biased_pstates));
+    pgpe_gppb_raw_pstate_tbl((PstateTable_t*)(&G_gpi_v2->raw_pstates));
+    pgpe_gppb_biased_pstate_tbl((PstateTable_t*)(&G_gpi_v2->biased_pstates));
 
     pgpe_gppb_occ_tbl();
 
@@ -164,23 +165,42 @@ void pgpe_gppb_raw_pstate_tbl(PstateTable_t* tbl)
 {
     uint32_t p;
     uint32_t freq_khz_offset = 0;
-
+    uint32_t ps_f_mhz;
     uint32_t step_size;
     uint32_t max_ps;
+    uint32_t max_f_mhz;
 
     max_ps = G_gppb_v1->operating_points_set[VPD_PT_SET_RAW][CF0].pstate;
+    max_f_mhz = G_gppb_v1->operating_points_set[VPD_PT_SET_RAW][CF7].frequency_mhz;
     step_size = G_gppb_v1->base.frequency_step_khz;
 
-    PK_TRACE_INF("GPB: Generating Raw Pstate Tbl, HOMER Addr=0x%08x, max_ps=%u(0x%x)", (uint32_t)tbl, max_ps, max_ps);
+    PK_TRACE_INF("GPB: Generating Raw Pstate Tbl, HOMER Addr=0x%08x, max_ps=%u(0x%x) BPSF=%u", (uint32_t)tbl, max_ps,
+                 max_ps, G_gppb_v1->base.reference_frequency_khz);
+
+    // Set vratio to the equivalent of 1 for the generation
+    G_pgpe_pstate.vratio_vdd_loadline_64th = 64;
 
     for (p = 0; p <= max_ps; p++)
     {
         tbl[p].pstate = p;
-        tbl[p].frequency_mhz = (G_gppb_v1->base.reference_frequency_khz - freq_khz_offset) / 1000;
-        tbl[p].external_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
-        tbl[p].effective_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
+        ps_f_mhz = (G_gppb_v1->base.reference_frequency_khz - freq_khz_offset) / 1000;
+
+        if (ps_f_mhz <= max_f_mhz)
+        {
+            tbl[p].frequency_mhz = ps_f_mhz;
+            tbl[p].effective_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_RAW);
+            tbl[p].external_vdd_mv = tbl[p].effective_vdd_mv +
+                                     (pgpe_pstate_intp_vddup_from_ps(p, VPD_PT_SET_RAW,
+                                             G_pgpe_pstate.vratio_vdd_loadline_64th) >> 6);
+        }
+        else
+        {
+            tbl[p].frequency_mhz = 0xFFFF;
+            tbl[p].effective_vdd_mv = 0xFFFF;
+            tbl[p].external_vdd_mv = 0xFFFF;
+        }
+
         freq_khz_offset += step_size;
-        //\TODO Need Update spec as to what else needs to be in here
     }
 
 }
@@ -190,25 +210,51 @@ void pgpe_gppb_biased_pstate_tbl(PstateTable_t* tbl)
     uint32_t p;
     uint32_t freq_khz_offset = 0;
     uint32_t step_size;
+    uint32_t ps_f_mhz;
     uint32_t max_ps;
+    uint32_t max_f_mhz;
+    uint16_t uplift_mv = 0;
 
     max_ps = G_gppb_v1->operating_points_set[VPD_PT_SET_BIASED][CF0].pstate;
+    max_f_mhz = G_gppb_v1->operating_points_set[VPD_PT_SET_BIASED][CF7].frequency_mhz;
     step_size = G_gppb_v1->base.frequency_step_khz;
 
     PK_TRACE_INF("GPB: Generating Biased Pstate Tbl, HOMER Addr=0x%08x, max_ps=%u(0x%x)", (uint32_t)tbl, max_ps, max_ps);
 
+    // Set vratio to the equivalent of 1 for the generation
+    G_pgpe_pstate.vratio_vdd_loadline_64th = 64;
+
     for (p = 0; p <= max_ps; p++)
     {
         tbl[p].pstate = p;
-        tbl[p].frequency_mhz = (G_gppb_v1->base.reference_frequency_khz - freq_khz_offset) / 1000;
-        tbl[p].external_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
-        tbl[p].effective_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
+        ps_f_mhz = (G_gppb_v1->base.reference_frequency_khz - freq_khz_offset) / 1000;
+
+        if (ps_f_mhz <= max_f_mhz)
+        {
+            tbl[p].frequency_mhz = ps_f_mhz;
+            tbl[p].effective_vdd_mv = pgpe_pstate_intp_vdd_from_ps(p, VPD_PT_SET_BIASED);
+
+            uplift_mv = (pgpe_pstate_intp_vddup_from_ps(p, VPD_PT_SET_BIASED,
+                         G_pgpe_pstate.vratio_vdd_loadline_64th) >> 6);
+            tbl[p].external_vdd_mv = tbl[p].effective_vdd_mv + uplift_mv;
+        }
+        else
+        {
+            tbl[p].frequency_mhz = 0xFFFF;
+            tbl[p].effective_vdd_mv = 0xFFFF;
+            tbl[p].external_vdd_mv = 0xFFFF;
+        }
+
+        PK_TRACE_DBG("BIAS: external_vdd_mv %d (0x%X) for index %X F %d)",
+                     tbl[p].external_vdd_mv, tbl[p].external_vdd_mv, p,  tbl[p].frequency_mhz );
+        PK_TRACE_DBG("BIAS: effective_vdd_mv %d (0x%X) uplift_mv %d (0x%X)" ,
+                     tbl[p].effective_vdd_mv , tbl[p].effective_vdd_mv, uplift_mv, uplift_mv );
+
         freq_khz_offset += step_size;
-        //\TODO Need Update spec as to what else needs to be in here
     }
 }
 //
-//Generate OCC Table
+//generate occ table
 //
 void pgpe_gppb_occ_tbl()
 {
@@ -217,14 +263,14 @@ void pgpe_gppb_occ_tbl()
     OCCPstateTable_t* opst = (OCCPstateTable_t*)pgpe_header_get(g_pgpe_opspbTableAddress);
     opst->entries = pgpe_header_get(g_pgpe_opspbTableLength) / sizeof(OCCPstateTable_entry_t);
 
-    PK_TRACE_INF("GPB: Generating OCC Tbl, Addr=0x%08x", (uint32_t)opst);
+    PK_TRACE_INF("GPB: generating OCC TBL, addr=0x%08x", (uint32_t)opst);
 
     for (p = 0; p < opst->entries; p++)
     {
-        opst->table[p].pstate = G_gpi_v1->biased_pstates[p].pstate;
-        opst->table[p].frequency_mhz = G_gpi_v1->biased_pstates[p].frequency_mhz ;
+        opst->table[p].pstate = G_gpi_v2->biased_pstates[p].pstate;
+        opst->table[p].frequency_mhz = G_gpi_v2->biased_pstates[p].frequency_mhz ;
 
-        //\TODO Need Update spec as to what else needs to be in here
+        //\todo need update spec as to what else needs to be in here
     }
 
 }
