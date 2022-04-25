@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2021                                                    */
+/* COPYRIGHT 2015,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -160,7 +160,9 @@ enum PGPE_FLAGS_IDX
     PGPE_FLAG_WOF_THROTTLE_ENABLE           = 18,
     PGPE_FLAG_WOF_THROTTLE_CONTROL_MODE     = 19,
     PGPE_FLAG_WOF_DISABLE_VRATIO            = 20,
-    PGPE_FLAG_MAX_DEFINED                   = 21
+    PGPE_FLAG_RVRM_QVID_ENABLE_VEC          = 21,
+    PGPE_FLAG_ECO_COUNT                     = 22,   // 8b: 0=valid; 1:7=eco_count
+    PGPE_FLAG_MAX_DEFINED                   = 23
 };
 
 //WOF Vratio vdd attribute indices
@@ -723,8 +725,12 @@ typedef struct
     uint16_t array_write_vdd_mv;
 
     uint8_t rvrm_deadzone_mv;
+    uint8_t pad[3];  // word alignment
 
-    uint8_t reserved[87];
+    // Placeholder field whose value comes from ATTR_DVFS_ADJUSMENT.
+    uint32_t dvfs_adjustment;
+
+    uint8_t reserved[80];
 } GlobalPstateParmBlockBase_t;
 
 //WOF

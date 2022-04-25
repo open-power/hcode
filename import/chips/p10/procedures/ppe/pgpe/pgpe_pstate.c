@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -36,6 +36,7 @@
 #include "pgpe_thr_ctrl.h"
 #include "p10_hcd_common.H"
 #include "pstate_pgpe_occ_api.h"
+#include "pstates_occ.H"
 #include "pgpe_header.h"
 #include "p10_scom_eq_3.H"
 #include "p10_scom_c_4.H"
@@ -76,17 +77,38 @@ void pgpe_pstate_init()
         G_pgpe_pstate.ps_request[i] = 0xFF;
     }
 
-    for (i = 0; i < MAX_CORES; i++)
-    {
-        if (ccsr & CORE_MASK(i))
-        {
-            G_pgpe_pstate.sort_core_count++;
-        }
+    uint32_t* oppb_address = (uint32_t*)0x80300040;
+    OCCPstateParmBlock_t* oppb = (OCCPstateParmBlock_t*)(*oppb_address + 0x80300000);
+    PK_TRACE_INF("PSS: OPPB_Offset=0x%08x, OPPB_Addr=0x%08x", *oppb_address, (uint32_t)oppb);
+    uint32_t msr = mfmsr();
+    mtmsr(msr & ~MSR_IPE);
+    G_pgpe_pstate.sort_core_count =  oppb->iddq.good_normal_cores_per_sort;
+    mtmsr(msr);//Restore MSR
 
-        if (ecomask & CORE_MASK(i))
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_ECO_COUNT) & 0x80)
+    {
+        G_pgpe_pstate.eco_core_count = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_ECO_COUNT) & 0x7F;
+    }
+    else
+    {
+        for (i = 0; i < MAX_CORES; i++)
         {
-            G_pgpe_pstate.eco_core_count++;
+            if (ecomask & CORE_MASK(i))
+            {
+                G_pgpe_pstate.eco_core_count++;
+            }
         }
+    }
+
+    PK_TRACE_INF("PSS: sort_core_cores=%u; eco_core_count", G_pgpe_pstate.sort_core_count, G_pgpe_pstate.eco_core_count);
+
+    if(G_pgpe_pstate.sort_core_count <= G_pgpe_pstate.eco_core_count)
+    {
+        G_pgpe_pstate.vratio_core_count = 1;
+    }
+    else
+    {
+        G_pgpe_pstate.vratio_core_count = G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count;
     }
 
     // If we don't have core bits set in CSSR, then
