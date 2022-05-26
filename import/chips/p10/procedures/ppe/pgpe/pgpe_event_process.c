@@ -954,6 +954,8 @@ void pgpe_process_xstop_fault()
     //Mask interrupt except IPC and Error
     pgpe_error_mask_irqs();
 
+    G_pgpe_pstate.log_scr_brd = 1;
+
     //Take out a info log
     pgpe_error_info_log(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
 

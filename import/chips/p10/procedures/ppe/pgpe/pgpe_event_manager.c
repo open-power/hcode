@@ -111,7 +111,11 @@ void pgpe_event_manager_run()
             case PGPE_SM_ACTIVE:
                 pgpe_event_manager_run_active();
 
-                if(!pgpe_pstate_is_at_target() || !pgpe_wov_is_wov_at_target() || pgpe_pstate_is_throttle_pending())
+                if( !pgpe_pstate_is_at_target()                  ||
+                    !pgpe_wov_is_wov_at_target()                 ||
+                    pgpe_pstate_is_throttle_pending()            ||
+                    G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_REDUCE ||
+                    G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_RESTORE)
                 {
                     done = 0;
                 }
@@ -509,6 +513,26 @@ void pgpe_event_manager_run_active()
             if(!pgpe_wov_is_wov_at_target())
             {
                 pgpe_pstate_actuate_voltage_step();
+            }
+            else
+            {
+                if (G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_REDUCE)
+                {
+                    // move to Fixed Frequency Mode Freq
+                    pgpe_dpll_write_dpll_freq_ps(G_pgpe_pstate.ffm_pstate);
+                    PK_TRACE_INF("EVM: CHIP_IDLE_FREQ - moved to ffm ps 0x%03X (%d)",
+                                 G_pgpe_pstate.ffm_pstate, G_pgpe_pstate.ffm_pstate);
+                    G_pgpe_wov_ocs.chip_idle = CHIP_IDLE_FREQ;
+                }
+
+                if (G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_RESTORE)
+                {
+                    // move to PS frequency as the voltage hasn't moved
+                    pgpe_dpll_write_dpll_freq_ps(G_pgpe_pstate.pstate_curr);
+                    PK_TRACE_INF("EVM: CHIP_IDLE_NONE - moved DPLL to curr ps 0x%03X (%d) frequency",
+                                 G_pgpe_pstate.pstate_curr, G_pgpe_pstate.pstate_curr);
+                    G_pgpe_wov_ocs.chip_idle = CHIP_IDLE_NONE;
+                }
             }
         }
 
