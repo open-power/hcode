@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -207,15 +207,31 @@ void pgpe_wov_ocs_determine_perf_loss()
             G_pgpe_wov_ocs.heavy_loss = 0;
         }
 
-        if(chip_idle_upper & 0x80000000)
+        if (G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_NONE ||
+            G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_FREQ   )
         {
-            G_pgpe_wov_ocs.chip_idle = 1;
-        }
-        else
-        {
-            G_pgpe_wov_ocs.chip_idle = 0;
-        }
+            // Check for all DDSs being disabled
+            if((chip_idle_upper & 0x80000000) && (G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_NONE))
+            {
+                // entering chip idle
+                G_pgpe_wov_ocs.chip_idle = CHIP_IDLE_REDUCE;
+                PK_TRACE_INF("WOV: CHIP_IDLE_REDUCE");
+            }
+            else if((chip_idle_upper & 0x80000000) && (G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_FREQ))
+            {
+                // DDS all disabled and still at the chip idle frequency, do nothing.
+            }
+            else
+            {
+                // DDSs are visible, get out of chip idle if there
+                if (G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_FREQ)
+                {
+                    G_pgpe_wov_ocs.chip_idle = CHIP_IDLE_RESTORE;
+                }
 
+                // Otherwise, stay in CHIP_IDLE_NONE
+            }
+        }
     }
 }
 
@@ -428,7 +444,7 @@ void pgpe_wov_ocs_update_dirty()
             //Buffer trace \\todo
         }
     }
-    else
+    else   // DROOP_LVL_CHIP_IDLE
     {
         if (overcurrent == OCS_OVER_THRESH)
         {
@@ -451,14 +467,18 @@ void pgpe_wov_ocs_update_dirty()
         }
         else
         {
+
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
 
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
             dirty = OCS_DIRTY_SAMPLE_TYPE_00;
 
+            pgpe_wov_ocs_inc_tgt_pct();
+
             //update instrumentation counters
             G_pgpe_wov_ocs.cnt_droop_chip_idle++;
+
 
             //Buffer trace \\todo
         }
@@ -552,22 +572,40 @@ void pgpe_wov_ocs_inc_tgt_pct()
         max_pct = 0;
     }
 
-    if (G_pgpe_wov_ocs.tgt_pct > 0)
+    // Remove undervolting upon exit from chip idle so that the new
+    // workload can be as heavy as needs be.  Leave the present target
+    // in place while in chip idle (with lower frequency) to avoid
+    // technology Vmax risk.
+    if ( G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_RESTORE)
     {
-        step_size =  pgpe_gppb_get_wov_overv_step_incr_pct();
+        // Remove undervolting upon exiting from chip idle so that the new
+        // workload can be as heavy as needs be.
+        G_pgpe_wov_ocs.tgt_pct = 0;
+        PK_TRACE_INF("WOV: CHIP_IDLE_RESTORE - tgt_pct=0x%x", G_pgpe_wov_ocs.tgt_pct);
+    }
+    else if ( G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_REDUCE ||  G_pgpe_wov_ocs.chip_idle == CHIP_IDLE_FREQ )
+    {
+        // Leave the tgt pct while in chip idle
     }
     else
     {
-        step_size =  pgpe_gppb_get_wov_underv_step_incr_pct();
-    }
+        if (G_pgpe_wov_ocs.tgt_pct > 0)
+        {
+            step_size =  pgpe_gppb_get_wov_overv_step_incr_pct();
+        }
+        else
+        {
+            step_size =  pgpe_gppb_get_wov_underv_step_incr_pct();
+        }
 
-    if (G_pgpe_wov_ocs.tgt_pct < max_pct)
-    {
-        G_pgpe_wov_ocs.tgt_pct += step_size;
-    }
-    else
-    {
-        G_pgpe_wov_ocs.tgt_pct = max_pct;
+        if (G_pgpe_wov_ocs.tgt_pct < max_pct)
+        {
+            G_pgpe_wov_ocs.tgt_pct += step_size;
+        }
+        else
+        {
+            G_pgpe_wov_ocs.tgt_pct = max_pct;
+        }
     }
 }
 

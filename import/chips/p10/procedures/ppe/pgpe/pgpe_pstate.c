@@ -84,6 +84,7 @@ void pgpe_pstate_init()
     uint32_t msr = mfmsr();
     mtmsr(msr & ~MSR_IPE);
     G_pgpe_pstate.sort_core_count =  oppb->iddq.good_normal_cores_per_sort;
+    G_pgpe_pstate.ffm_mhz  = oppb->fixed_freq_mode_frequency_mhz;
     mtmsr(msr);//Restore MSR
 
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_ECO_COUNT) & 0x80)
@@ -225,6 +226,16 @@ void pgpe_pstate_init()
     else
     {
         G_pgpe_pstate.pstate_ceiling = 0;
+    }
+
+    if(G_pgpe_pstate.ffm_mhz)
+    {
+        G_pgpe_pstate.ffm_pstate = (pgpe_gppb_get_reference_frequency() -
+                                    (G_pgpe_pstate.ffm_mhz * 1000) + (pgpe_gppb_get_frequency_step() >> 1)) / pgpe_gppb_get_frequency_step();
+    }
+    else
+    {
+        G_pgpe_pstate.ffm_pstate = 0;
     }
 
     G_pgpe_pstate.stopped_ac_vdd_64ths = pgpe_gppb_get_vratio_vdd(WOF_VRATIO_VDD_IDX_CORE)  + pgpe_gppb_get_vratio_vdd(
