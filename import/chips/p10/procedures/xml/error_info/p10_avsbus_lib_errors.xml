@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2019,2021                                                    -->
+<!-- COPYRIGHT 2019,2022                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -36,7 +36,7 @@
       <ffdc>SCOMREG_ADDR</ffdc>
       <ffdc>SCOMREG_DATA</ffdc>
     <callout>
-      <target>VRM</target>
+      <target>SPIVID_SLAVE_PART</target>
       <priority>HIGH</priority>
     </callout>
     <callout>
