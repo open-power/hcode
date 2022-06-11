@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021                                                         */
+/* COPYRIGHT 2021,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -118,7 +118,11 @@ qme_panic_handler()
         // As default, only select cores that can be auto special woken up
         // also when mma isnt available, make sure auto mode isnt given to the core
         uint32_t bad_cores  = 0;
-        uint32_t good_cores = 0xF & (~G_qme_record.c_stop2_reached) & G_qme_record.c_mma_available;
+        // PHYP needs the core without mma up and execute their routine to handle the case,
+        // they will read MMAR.mma_available to know among good cores that whose mma is down,
+        // thus guard them out as well. Therefore treat such cores as good cores here and
+        // leave the rest to phyp.
+        uint32_t good_cores = 0xF & (~G_qme_record.c_stop2_reached);
         PK_TRACE_DBG ("Cores running 0x%X, Cores in stop: 0x%X, MMA not in stop 0x%X",
                       good_cores,
                       G_qme_record.c_stop2_reached,
@@ -162,7 +166,7 @@ qme_panic_handler()
                 }
             }
 
-            PK_TRACE_INF ("SMT8 good cores for auto spwu: 0x%X, while bad cores are not getting spwu done: 0x%X",
+            PK_TRACE_INF ("SMT8 good cores for auto spwu:0x%X, while bad cores are not getting spwu done:0x%X",
                           good_cores, bad_cores);
         }
 
