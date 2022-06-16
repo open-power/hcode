@@ -579,23 +579,13 @@ void pgpe_error_info_log(uint32_t pgpe_err_id)
 {
     //Create Info Error Log
     uint32_t o_status;
-
-    errlDataUsrDtls_t usrDtlsSect = {0};
-    usrDtlsSect.pNext = NULL;
-
-    if (G_pgpe_pstate.log_scr_brd)
-    {
-        getPpeScrBrdUsrDtls (ERRL_SOURCE_PGPE, 0, (uint8_t*)&G_pgpe_pstate, &usrDtlsSect);
-        G_pgpe_pstate.log_scr_brd = 0;
-    }
-
     PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                     G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
                     G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
                     0x0,
                     0x0,
                     0x0,
-                    &usrDtlsSect,
+                    NULL,
                     o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status); //TODO Check error code
 }
