@@ -81,14 +81,6 @@ enum OCS_DIRTY_SAMPLE_TYPE
     OCS_DIRTY_SAMPLE_TYPE_11 = 0x3, //Overcurrent Sensor Dirty=1,Type=1
 };
 
-enum CHIP_IDLE_TYPE
-{
-    CHIP_IDLE_NONE           = 0x0, // Not in CHIP IDLE
-    CHIP_IDLE_REDUCE         = 0x1, // Reduce to CHIP IDLE frequency
-    CHIP_IDLE_RESTORE        = 0x2, // Restore to PState frequency
-    CHIP_IDLE_FREQ           = 0x3, // At the CHIP IDLE frequency
-};
-
 typedef struct pgpe_wov_ocs
 {
     uint32_t wov_uv_status;

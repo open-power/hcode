@@ -30,9 +30,6 @@
 #include "ppe42_msr.h"
 #include "pgpe_error.h"
 #include "pgpe_utils.h"
-#include "pgpe_wov_ocs.h"
-
-extern pgpe_wov_ocs_t G_pgpe_wov_ocs;
 
 #define DPLL_ADDR_PARITY_RETRIES 4
 
@@ -138,8 +135,7 @@ void pgpe_dpll_write_dpll_freq_ps(uint32_t pstate)
     pgpe_dpll_mask_and_clear_pll_unlock();
 
     // Write DPLL_FREQ
-    PK_TRACE_INF("DPL: Write DPLL_CNTL=0x%08x%08x Chip_idle=%d",
-                 dpll_freq.value >> 32, dpll_freq.value, G_pgpe_wov_ocs.chip_idle);
+    PK_TRACE_INF("DPL: Write DPLL_CNTL=0x%08x%08x", dpll_freq.value >> 32, dpll_freq.value);
     PPE_PUTSCOM(TP_TPCHIP_TPC_DPLL_CNTL_NEST_REGS_FREQ, dpll_freq.value);
 
 
