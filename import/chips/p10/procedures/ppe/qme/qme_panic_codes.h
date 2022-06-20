@@ -96,7 +96,16 @@ QME_STOP_BLOCK_COPY_AT_BOOT_FAILED        = 0x1c03,
 * @devdesc     Block Copy Auto Wakeup Vector Failed during stop11
 */
 QME_STOP_BLOCK_COPY_AUTO_WKUP_FAILED      = 0x1c04,
-//UNUSED                                  = 0x1c05,
+/*
+* @errortype
+* @moduleid    QME_MODULE_ID_BASE_ERR
+* @reasoncode  ERR_REASON_ID_QME_SETUP
+* @userdata2   qme_scratchB
+* @userdata3   qme_scratchA
+* @userdata4   doorbell1_msg
+* @devdesc     targets used for block stop/wake detect mismatch
+*/
+QME_STOP_BLOCK_PROTOCOL_TARGET_ERROR      = 0x1c05,
 //UNUSED                                  = 0x1c06,
 //UNUSED                                  = 0x1c07,
 /*

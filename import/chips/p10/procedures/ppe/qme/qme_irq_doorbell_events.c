@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2021                                                    */
+/* COPYRIGHT 2018,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -155,13 +155,31 @@ qme_doorbell1_event()
 #else
     out32(QME_LCL_EISR_CLR, BIT32(17));
 #endif
+    G_qme_record.scratchA = in32(QME_LCL_SCRA);
+    G_qme_record.scratchB = in32(QME_LCL_SCRB);
     uint32_t scratchB = in32(QME_LCL_SCRB) & BITS32(0, 8);
+    uint32_t scratchA = in32(QME_LCL_SCRA) & BITS32(24, 8);
     uint32_t pig_data = 0;
+    uint32_t missed_targets = 0;
 
-    PK_TRACE_INF("Event: UIH Status[%x], Doorbell 1 Message[%x], Scratch B[%x] could be 0 due to XGPE multicast",
+    PK_TRACE_INF("Event: UIH Status[%x], Doorbell 1 Message[%x], Scratch B[%x] Scratch A[%x] could be 0 due to XGPE multicast",
                  G_qme_record.uih_status,
                  G_qme_record.doorbell1_msg,
-                 scratchB);
+                 scratchB, scratchA);
+
+    if( (scratchB >> 24) != scratchA )
+    {
+        missed_targets = (scratchB >> 24);
+        missed_targets = scratchA & (~missed_targets);
+        missed_targets = (missed_targets & 0xF) | ((missed_targets & 0xF0) >> 4);
+
+        if( missed_targets )
+        {
+            PPE_PUTSCOM_MC(CORE_FIR_OR, missed_targets, BIT64(60));
+        }
+
+        QME_ERROR_HANDLER(QME_STOP_BLOCK_PROTOCOL_TARGET_ERROR, scratchB, scratchA, G_qme_record.doorbell1_msg);
+    }
 
     // block msgs(0x5-0x7) and scratchB register shouldn't be 0
     if ( (G_qme_record.doorbell1_msg > STOP_BLOCK_ACTION) &&
@@ -177,6 +195,23 @@ qme_doorbell1_event()
 
             G_qme_record.c_block_wake_req &= ~G_qme_record.c_cache_only_enabled;
             G_qme_record.c_block_wake_req &=  G_qme_record.c_configured;
+
+            // fused core mode rule:
+            // when one core is blocked, block both
+            // when needs to be unblocked, both needs to request unblock
+
+            if( G_qme_record.fused_core_enabled )
+            {
+                if( G_qme_record.c_block_wake_req & 0x3 )
+                {
+                    G_qme_record.c_block_wake_req |= 0x3;
+                }
+
+                if( G_qme_record.c_block_wake_req & 0xc )
+                {
+                    G_qme_record.c_block_wake_req |= 0xC;
+                }
+            }
 
             if( G_qme_record.c_block_wake_req )
             {
@@ -203,6 +238,19 @@ qme_doorbell1_event()
 
             G_qme_record.c_block_stop_req &= ~G_qme_record.c_cache_only_enabled;
             G_qme_record.c_block_stop_req &=  G_qme_record.c_configured;
+
+            if( G_qme_record.fused_core_enabled )
+            {
+                if( G_qme_record.c_block_stop_req & 0x3 )
+                {
+                    G_qme_record.c_block_stop_req |= 0x3;
+                }
+
+                if( G_qme_record.c_block_stop_req & 0xc )
+                {
+                    G_qme_record.c_block_stop_req |= 0xC;
+                }
+            }
 
             if( G_qme_record.c_block_stop_req )
             {
@@ -242,6 +290,31 @@ qme_doorbell1_event()
             G_qme_record.c_block_wake_req &= ~G_qme_record.c_cache_only_enabled;
             G_qme_record.c_block_wake_req &=  G_qme_record.c_configured;
 
+            if( G_qme_record.fused_core_enabled )
+            {
+                G_qme_record.c_block_wake_fused |= G_qme_record.c_block_wake_req;
+
+                if( (G_qme_record.c_block_wake_fused & 0x3) == 0x3 )
+                {
+                    G_qme_record.c_block_wake_req   |= 0x3;
+                    G_qme_record.c_block_wake_fused &= ~0x3;
+                }
+                else
+                {
+                    G_qme_record.c_block_wake_req &= ~0x3;
+                }
+
+                if( (G_qme_record.c_block_wake_fused & 0xc) == 0xc )
+                {
+                    G_qme_record.c_block_wake_req |= 0xc;
+                    G_qme_record.c_block_wake_fused &= ~0xc;
+                }
+                else
+                {
+                    G_qme_record.c_block_wake_req &= ~0xc;
+                }
+            }
+
             if( G_qme_record.c_block_wake_req )
             {
                 // Clear PM_BLOCK_INTERRUPTS
@@ -265,6 +338,31 @@ qme_doorbell1_event()
 
             G_qme_record.c_block_stop_req &= ~G_qme_record.c_cache_only_enabled;
             G_qme_record.c_block_stop_req &=  G_qme_record.c_configured;
+
+            if( G_qme_record.fused_core_enabled )
+            {
+                G_qme_record.c_block_stop_fused |= G_qme_record.c_block_stop_req;
+
+                if( (G_qme_record.c_block_stop_fused & 0x3) == 0x3 )
+                {
+                    G_qme_record.c_block_stop_req |= 0x3;
+                    G_qme_record.c_block_stop_fused &= ~0x3;
+                }
+                else
+                {
+                    G_qme_record.c_block_stop_req &= ~0x3;
+                }
+
+                if( (G_qme_record.c_block_stop_fused & 0xc) == 0xc )
+                {
+                    G_qme_record.c_block_stop_req |= 0xc;
+                    G_qme_record.c_block_stop_fused &= ~0xc;
+                }
+                else
+                {
+                    G_qme_record.c_block_stop_req &= ~0xc;
+                }
+            }
 
             if( G_qme_record.c_block_stop_req )
             {

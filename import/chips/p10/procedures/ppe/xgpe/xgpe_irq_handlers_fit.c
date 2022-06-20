@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -451,12 +451,16 @@ void handle_pm_suspend()
                     //Enabled[0:3] fields
                     PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRB_WO_CLEAR, (l_quad - 1)),
                                 BITS64(0, 16));
+                    PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRA_WO_CLEAR, (l_quad - 1)),
+                                BITS64(24, 8));
 
                     //Multicast QME_Scratch_B_OR(q, 0xFF00000000000000)
                     //Clearing Ignore STOP Exits[0:3] and Ignore STOP Entries [0:3]
                     //fields
                     PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRB_WO_OR, (l_quad - 1)),
                                 BITS64(0, 8));
+                    PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRA_WO_OR, (l_quad - 1)),
+                                BITS64(24, 8));
                 }
             }
 
@@ -472,12 +476,16 @@ void handle_pm_suspend()
             //Enabled[0:3] fields
             PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SCRB_WO_CLEAR, 0xF),
                         BITS64(0, 16));
+            PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SCRA_WO_CLEAR, 0xF),
+                        BITS64(24, 8));
 
             //Multicast QME_Scratch_B_OR(q, 0xFF00000000000000)
             //Clearing Ignore STOP Exits[0:3] and Ignore STOP Entries [0:3]
             //fields
             PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SCRB_WO_OR, 0xF),
                         BITS64(0, 8));
+            PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(QME_SCRA_WO_OR, 0xF),
+                        BITS64(24, 8));
 #endif
 
             //Check any pcb type f interrupt is pending

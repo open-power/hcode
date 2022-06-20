@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2021                                                    */
+/* COPYRIGHT 2016,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -167,6 +167,8 @@ qme_init()
     G_qme_record.c_block_wake_done = ((in32_sh(QME_LCL_SSDR) & BITS64SH(36, 4)) >> SHIFT64SH(39));
     G_qme_record.c_block_wake_done &= ~G_qme_record.c_cache_only_enabled;
     G_qme_record.c_block_stop_done = 0;
+    out32(QME_LCL_SCRB_CLR, BITS32(0, 8));
+    out32(QME_LCL_SCRA_CLR, BITS32(24, 8));
 
     PK_TRACE_INF("Setup: Core Stop Gated[%x], Core in Special Wakeup[%x], Core in Block Wakeup[%x], Core in Cache Only[%x]",
                  G_qme_record.c_stop11_reached,
