@@ -156,17 +156,22 @@ typedef struct
     // 24
     uint32_t    c_in_recovery;    // Deadly paint
     uint32_t    recovery_ongoing;
+    uint32_t    c_block_wake_fused;
+    uint32_t    c_block_stop_fused;
+    // 25
+    uint32_t    scratchA;
+    uint32_t    scratchB;
     uint64_t    qme_lfir;
-    // 25,26
+    // 26,27
     uint64_t    core_fir[4];
-    // 27
+    // 28
     uint32_t    stop11_counter[4];
-    // 28,29,30,31
+    // 29,30,31,32
     uint32_t    c_tfac_c2s_retry_limit[4];
     uint32_t    c_tfac_c2s_retry_total[4];
     uint32_t    c_tfac_s2c_retry_limit[4];
     uint32_t    c_tfac_s2c_retry_total[4];
-    // 32,33,34,35,36,37,38,39,40,41
+    // 33,34,35,36,37,38,39,40,41,42
     uint32_t    cisr0_s11e[4];
     uint32_t    cisr1_s11e[4];
     uint32_t    cisr0_rwus[4];

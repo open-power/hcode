@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -99,6 +99,26 @@ void xgpe_gpe3_func_handler()
     //Clear OISR0[GPE3_FUNC_TRIGGER]
     out32(G_OCB_OISR0_CLR, BIT32(11));
     uint64_t l_db1_data = 0;
+    uint64_t l_scra_data = 0;
+    uint64_t l_scrb_data = 0;
+    uint32_t l_quad = 0;
+    uint32_t l_ccsr = in32(G_OCB_CCSR);
+
+    for (l_quad = 1; l_quad <= MAX_QUADS; ++l_quad)
+    {
+        if (IS_QUAD_CONFIG(l_ccsr, (l_quad << 2)))
+        {
+            PPE_GETSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRB_RW, (l_quad - 1)), l_scrb_data);
+            l_scra_data = (l_scrb_data & BITS64(0, 8)) >> 24;
+            PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRA_WO_CLEAR, (l_quad - 1)), BITS64(24, 8));
+            PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRA_WO_OR, (l_quad - 1)), l_scra_data);
+
+            if( l_scra_data )
+            {
+                PKTRACE("quad %x, SCRA %x SCRB %x", l_quad, l_scrb_data >> 32, l_scra_data >> 32);
+            }
+        }
+    }
 
     PK_TRACE("GPE3 interrupt handler %08x", l_occflg3);
 
