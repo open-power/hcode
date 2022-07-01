@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2020                                                    */
+/* COPYRIGHT 2016,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -200,6 +200,7 @@ static const uint32_t SIZE_OF_MVPD_FILE = 64 * 1024;
 enum ChipId
 {
     CID_EXPLORER = 0x8,
+    CID_ODYSSEY = 0xC,
     CID_P10 = 0xA,
 };
 
