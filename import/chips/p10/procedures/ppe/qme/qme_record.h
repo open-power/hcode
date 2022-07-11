@@ -27,7 +27,7 @@
 #define __QME_RECORD_H__
 
 #define QME_SCOREBOARD_VERSION  0x514d4531 //QME1
-#define CISR_TRACE 1
+///#define CISR_TRACE 1
 
 typedef struct
 {
@@ -171,6 +171,7 @@ typedef struct
     uint32_t    c_tfac_c2s_retry_total[4];
     uint32_t    c_tfac_s2c_retry_limit[4];
     uint32_t    c_tfac_s2c_retry_total[4];
+#ifdef CISR_TRACE
     // 33,34,35,36,37,38,39,40,41,42
     uint32_t    cisr0_s11e[4];
     uint32_t    cisr1_s11e[4];
@@ -182,7 +183,7 @@ typedef struct
     uint32_t    cisr1_sNx[4];
     uint32_t    cisr0_s1x[4];
     uint32_t    cisr1_s1x[4];
-
+#endif
     /*DEBUG_ONLY
     uint32_t    cisr0_idle[4];
     uint32_t    cisr1_idle[4];
