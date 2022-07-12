@@ -45,7 +45,7 @@ void pgpe_thr_ctrl_init()
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_WOF_THROTTLE_ENABLE))
     {
         G_pgpe_thr_ctrl.status = PGPE_THR_CTRL_ENABLED;
-        PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BIT64(33)); //Set QMCR[WOF_AUTO_SEQ_ENABLE]
+        PPE_PUTSCOM_MC_Q(QME_QMCR_SCOM2, BITS64(32, 2)); //Set QMCR[DTC_SEQUENCER_ENABLE, WOF_AUTO_SEQ_ENABLE]
         PK_TRACE_INF("THR: Inited");
     }
 
