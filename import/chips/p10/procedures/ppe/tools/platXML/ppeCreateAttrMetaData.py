@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
@@ -6,7 +6,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2020,2022
+# COPYRIGHT 2020,2023
 # [+] International Business Machines Corp.
 #
 #

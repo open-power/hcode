@@ -1,12 +1,12 @@
-#!/usr/bin/python2.6
+#!/usr/bin/env python2
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
 # $Source: import/chips/p9/procedures/ppe/tools/PowerPCtoPPE/ppc-ppe-pcp.py $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2023
 # [+] International Business Machines Corp.
 #
 #
