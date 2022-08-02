@@ -156,7 +156,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_RESCLK
     * @userdata4   PGPE_ERR_EXT_CODE_RESCLK_RCIMR_AT_ENABLEMENT_NOT_EQUAL
     * @devdesc     RES: Mode register at enablement is does not match
-    * @custdesc    Not applicable
+    * @custdesc    Runtime embedded firmware detected an initialization issue
     */
     {PGPE_ERR_MODULE_RESCLK, PGPE_ERR_REASON_CODE_RESCLK, 0, PGPE_ERR_EXT_CODE_RESCLK_RCIMR_AT_ENABLEMENT_NOT_EQUAL},//13
     /*
@@ -312,7 +312,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_AND_PMCR_OWNER_NOT_OCC
     * @devdesc     PStates: PGPE received a set PMCR operation from OCC when it is not the PMCR owner
-    * @custdesc    Not applicable
+    * @custdesc    Runtime embedded firmware detected a configuration issue
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_AND_PMCR_OWNER_NOT_OCC},//29
     /*
@@ -348,7 +348,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a set PCB type 1 PMCR request while Pstates are stopped
-    * @custdesc    Not applicable
+    * @custdesc    Runtime embedded firmware detected a configuration issue
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PSTATE_STOPPED},//33
     /*
@@ -357,7 +357,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PMCR_OWNER_OCC
     * @devdesc     PStates: PGPE received a set PCB type 1 PMCR request while Pstates are owned by OCC
-    * @custdesc     Not applicable
+    * @custdesc    Runtime embedded firmware detected a configuration issue
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PMCR_OWNER_OCC},//34
     /*
