@@ -161,6 +161,7 @@ uint32_t handleQmeErrl (const uint32_t i_quadId,
          * @userdata2   QME Error Code
          * @userdata3   Failure Status
          * @devdesc     XGPE detected a failure downloading QME error log
+         * @custdesc    Runtime embedded firmware error during sram dowload
          */
         // 2. Download failed, create critical error indicating the same
         PPE_LOG_ERR_CRITICAL ( XGPE_RC_QME_ERR_DOWNLOAD,
@@ -227,6 +228,7 @@ uint32_t handleQmeErrl (const uint32_t i_quadId,
          * @userdata3   Failed Cores
          * @userdata4   XGPE Extended Reason Code
          * @devdesc     XGPE detected a QME fault error log
+         * @custdesc    Runtime embedded firmware error, QME fault detected
          */
         status = createQmeErrl (extRc,
                                 i_quadId,

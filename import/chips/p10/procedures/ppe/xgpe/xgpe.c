@@ -87,6 +87,7 @@ __xgpe_machine_check_handler()
          * @userdata2   SRR0
          * @userdata3   SPRG0
          * @devdesc     XGPE had a SCOM failure
+         * @custdesc    Runtime embedded firmware error, detected scom failure
          */
         xgpe_errl_create(XGPE_SCOM_MACHINE_CHECK_ERROR,
                          0, XGPE_HCODE_SCOM,
@@ -181,6 +182,7 @@ void createPgpelog()
      * @userdata2   LR
      * @userdata3   CTR
      * @devdesc     Critical Error Detected from PGPE
+     * @custdesc    Runtime embedded firmware error, detected pgpe error
      */
     PPE_LOG_ERR_CRITICAL ( XGPE_RC_PGPE_CRITICAL_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
                            srr0, lr, ctr,
@@ -193,6 +195,7 @@ void createPgpelog()
      * @moduleid    XGPE_MODID_HANDLE_PGPE_ERRL
      * @reasoncode  XGPE_RC_PGPE_INFO_ERR
      * @devdesc     Supplementary log for Error Detected from PGPE
+     * @custdesc    Runtime embedded firmware error, detected pgpe error
      */
     getPpePkTraceUsrDtls(ERRL_SOURCE_PGPE, 0, (uint8_t*)g_pgpe_pk_trace_buf, &usrDtlsSect);
 

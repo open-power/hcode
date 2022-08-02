@@ -157,6 +157,7 @@ void handle_error_inject()
          * @userdata3   Error Pattern
          * @userdata4   0
          * @devdesc     XGPE detected an user error injection
+         * @custdesc    Runtime embedded firmware error,during error injection
          */
         xgpe_errl_create(XGPE_RC_HCODE_ERR_INJECT, 0, XGPE_MODID_FIT_HANDLER,
                          l_occflg3, 0xdeadbeef, 0xdeadbeef, ERRL_SEV_UNRECOVERABLE);

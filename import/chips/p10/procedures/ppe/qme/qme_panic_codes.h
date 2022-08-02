@@ -58,7 +58,6 @@
 * @devdesc     RIT level Mismatch between QME Image and HW
 * @custdesc    Microcode version doesn't match Processor version
 */
-QME_BAD_DD_LEVEL                          = 0x1c00, // 00xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -68,7 +67,6 @@ QME_BAD_DD_LEVEL                          = 0x1c00, // 00xxx
 * @devdesc     FAPI2 Target setup failed, probably illegal quad id from PIR
 * @custdesc    Microcode initialization error
 */
-QME_MAIN_FAPI2_INIT_FAILED                = 0x1c01,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -77,7 +75,6 @@ QME_MAIN_FAPI2_INIT_FAILED                = 0x1c01,
 * @devdesc     Requesting Stop11 under Runn/Contained Mode
 * @custdesc    Microcode mode isn't at factory settings
 */
-QME_STOP11_RUNN_CONTAINED_MODE_ERROR      = 0x1c02,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -89,7 +86,6 @@ QME_STOP11_RUNN_CONTAINED_MODE_ERROR      = 0x1c02,
 * @devdesc     Block Copy Common Ring Failed at QME Init
 * @custdesc    Microcode data initialization error
 */
-QME_STOP_BLOCK_COPY_AT_BOOT_FAILED        = 0x1c03,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -100,7 +96,6 @@ QME_STOP_BLOCK_COPY_AT_BOOT_FAILED        = 0x1c03,
 * @devdesc     Block Copy Auto Wakeup Vector Failed during stop11
 * @custdesc    Microcode FW support error
 */
-QME_STOP_BLOCK_COPY_AUTO_WKUP_FAILED      = 0x1c04,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -111,7 +106,6 @@ QME_STOP_BLOCK_COPY_AUTO_WKUP_FAILED      = 0x1c04,
 * @devdesc     targets used for block stop/wake detect mismatch
 * @custdesc    Microcode stop service suspend error
 */
-QME_STOP_BLOCK_PROTOCOL_TARGET_ERROR      = 0x1c05,
 //UNUSED                                  = 0x1c06,
 //UNUSED                                  = 0x1c07,
 /*
@@ -122,7 +116,6 @@ QME_STOP_BLOCK_PROTOCOL_TARGET_ERROR      = 0x1c05,
 * @devdesc     EISR[0 or 1] detected, currently no errlog created
 * @custdesc    Microcode debug injection error
 */
-QME_DEBUGGER_TRIGGER_DETECTED             = 0x1c08, // 01xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -131,7 +124,6 @@ QME_DEBUGGER_TRIGGER_DETECTED             = 0x1c08, // 01xxx
 * @devdesc     System Checkstop detected, currently no errlog created
 * @custdesc    Microcode detects system level checkstop
 */
-QME_SYSTEM_CHECKSTOP_DETECTED             = 0x1c09,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -140,7 +132,6 @@ QME_SYSTEM_CHECKSTOP_DETECTED             = 0x1c09,
 * @devdesc     QME LFIR detected, currently no errlog created
 * @custdesc    Microcode injected error
 */
-QME_LFIR_INDICATION_DETECTED              = 0x1c0a,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -152,7 +143,6 @@ QME_LFIR_INDICATION_DETECTED              = 0x1c0a,
 * @devdesc     QME Machine Check for non data storage reasons
 * @custdesc    Microcode engine machine check error
 */
-QME_MACHINE_CHECK_COMMON_ERROR            = 0x1c0d,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -164,7 +154,6 @@ QME_MACHINE_CHECK_COMMON_ERROR            = 0x1c0d,
 * @devdesc     QME Machine Check due to Scom Error
 * @custdesc    Microcode engine machine check on external communication
 */
-QME_MACHINE_CHECK_SCOM_ERROR              = 0x1c1c, // 11xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
@@ -176,7 +165,6 @@ QME_MACHINE_CHECK_SCOM_ERROR              = 0x1c1c, // 11xxx
 * @devdesc     QME Machine Check due to a local address access
 * @custdesc    Microcode engine machine check on internal communication
 */
-QME_MACHINE_CHECK_LOCAL_ERROR             = 0x1c1d,
 //UNUSED                                  = 0x1c1e,
 //UNUSED                                  = 0x1c1f,
 
@@ -194,7 +182,6 @@ QME_MACHINE_CHECK_LOCAL_ERROR             = 0x1c1d,
 * @devdesc     QME Stop2/3 Entry Error Inject
 * @custdesc    Microcode light stop level error injection
 */
-QME_STOP23_ENTRY_FAULT_INJECT             = 0x1d02,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -204,7 +191,6 @@ QME_STOP23_ENTRY_FAULT_INJECT             = 0x1d02,
 * @devdesc     QME Stop11 Entry Error Inject
 * @custdesc    Microcode deep stop level error injection
 */
-QME_STOP11_ENTRY_FAULT_INJECT             = 0x1d03,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -214,7 +200,6 @@ QME_STOP11_ENTRY_FAULT_INJECT             = 0x1d03,
 * @devdesc     QME Stop2 Exit Error Inject
 * @custdesc    Microcode light stop disable error injection
 */
-QME_STOP2_EXIT_FAULT_INJECT               = 0x1d04,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -224,7 +209,6 @@ QME_STOP2_EXIT_FAULT_INJECT               = 0x1d04,
 * @devdesc     QME Stop3 Exit Error Inject
 * @custdesc    Microcode minimal voltage disable error injection
 */
-QME_STOP3_RVRM_POWON_FAULT_INJECT         = 0x1d05,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -234,7 +218,6 @@ QME_STOP3_RVRM_POWON_FAULT_INJECT         = 0x1d05,
 * @devdesc     QME Stop11 Exit Error Inject
 * @custdesc    Microcode deep stop disable error injection
 */
-QME_STOP11_POWON_FAULT_INJECT             = 0x1d06,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -244,7 +227,6 @@ QME_STOP11_POWON_FAULT_INJECT             = 0x1d06,
 * @devdesc     QME Self Restore Error Inject
 * @custdesc    Microcode core self init error injection
 */
-QME_SELF_RESTORE_FAULT_INJECT             = 0x1d07,
 //UNUSED                                  = 0x1d08, // 01xxx
 /*
 * @errortype
@@ -257,7 +239,6 @@ QME_SELF_RESTORE_FAULT_INJECT             = 0x1d07,
 * @devdesc     QME reuqested with two different stop states between fused
 * @custdesc    Microcode fused mode support error with this chip version
 */
-QME_FUSED_EVEN_STOP_LEVELS_DD1            = 0x1d09,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -269,7 +250,6 @@ QME_FUSED_EVEN_STOP_LEVELS_DD1            = 0x1d09,
 * @devdesc     QME requested with stop11 but ESL/EC disabled
 * @custdesc    Microcode deep stop function config error
 */
-QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED   = 0x1d0a,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -281,7 +261,6 @@ QME_POWER_LOSS_WITH_STATE_LOSS_DISABLED   = 0x1d0a,
 * @devdesc     QME detect CORE_FIR after self restore
 * @custdesc    Microcode detects failure while waking up a core in deep stop state
 */
-QME_STOP_SELF_CORE_FIR                    = 0x1d0d,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -293,7 +272,6 @@ QME_STOP_SELF_CORE_FIR                    = 0x1d0d,
 * @devdesc     QME Clock Start/Stop Command Timed Out
 * @custdesc    Microcode clock controller detects error
 */
-CORECACHE_CLK_CTRL_TIMEOUT_CORE           = 0x1d1c, // 11xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -305,7 +283,6 @@ CORECACHE_CLK_CTRL_TIMEOUT_CORE           = 0x1d1c, // 11xxx
 * @devdesc     QME PFET Start/Stop Command Timed Out
 * @custdesc    Microcode voltage controller detects error
 */
-CORECACHE_POW_CTRL_TIMEOUT                = 0x1d1d,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_FLOW
@@ -317,7 +294,6 @@ CORECACHE_POW_CTRL_TIMEOUT                = 0x1d1d,
 * @devdesc     QME PFET Sequencer State Not in Idle
 * @custdesc    Microcode voltage sequencer detects error
 */
-CORECACHE_PFET_SEQ_STATE_ERROR            = 0x1d1e,
 //UNUSED                                  = 0x1d1f,
 
 // -----------------------------------------------------------
@@ -333,7 +309,6 @@ CORECACHE_PFET_SEQ_STATE_ERROR            = 0x1d1e,
 * @devdesc     QME Stop2 Entry L2 Purge timeout
 * @custdesc    Microcode cache purging function error 2
 */
-L2_PURGE_DONE_TIMEOUT                     = 0x1e00, // 00xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -345,7 +320,6 @@ L2_PURGE_DONE_TIMEOUT                     = 0x1e00, // 00xxx
 * @devdesc     QME Stop2 Entry NCU Purge timeout
 * @custdesc    Microcode cache purging function error 1
 */
-NCU_PURGE_DONE_TIMEOUT                    = 0x1e01,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -357,7 +331,6 @@ NCU_PURGE_DONE_TIMEOUT                    = 0x1e01,
 * @devdesc     QME PMSR Shift Disable timeout
 * @custdesc    Microcode pstate request error
 */
-PMSR_SHIFT_INACTIVE_TIMEOUT               = 0x1e02,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -369,7 +342,6 @@ PMSR_SHIFT_INACTIVE_TIMEOUT               = 0x1e02,
 * @devdesc     QME Shadow Enable FDCR Update Timeout
 * @custdesc    Microcode voltage droop config update error
 */
-SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT    = 0x1e03,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -381,7 +353,6 @@ SHADOW_ENA_FDCR_UPDATE_IN_PROG_TIMEOUT    = 0x1e03,
 * @devdesc     QME Shadow Enable Core Refresh Timeout
 * @custdesc    Microcode core state backup error
 */
-SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT    = 0x1e04,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -393,7 +364,6 @@ SHADOW_ENA_CORE_REFRESH_ACTIVE_TIMEOUT    = 0x1e04,
 * @devdesc     QME TimeFac Receive Timeout
 * @custdesc    Microcode core time backup error
 */
-TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_TIMEOUT = 0x1e05,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -405,7 +375,6 @@ TIMEFAC_FROM_PC_XFER_RECEIVE_DONE_TIMEOUT = 0x1e05,
 * @devdesc     QME TimeFac Receive Error detected
 * @custdesc    Microcode core time check error
 */
-TIMEFAC_FROM_PC_TFCSR_ERROR_CHECK_FAILED  = 0x1e06,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -417,7 +386,6 @@ TIMEFAC_FROM_PC_TFCSR_ERROR_CHECK_FAILED  = 0x1e06,
 * @devdesc     QME CL2 Clock Sync Drop Timeout
 * @custdesc    Microcode core clock synchronization disable error
 */
-ECL2_CLK_SYNC_DROP_TIMEOUT                = 0x1e07,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -429,7 +397,6 @@ ECL2_CLK_SYNC_DROP_TIMEOUT                = 0x1e07,
 * @devdesc     QME Resclk Entry Timeout
 * @custdesc    Microcode resonant clocking error
 */
-CORE_CHANGE_DONE_RESCLK_ENTRY_TIMEOUT     = 0x1e08, // 01xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -441,7 +408,6 @@ CORE_CHANGE_DONE_RESCLK_ENTRY_TIMEOUT     = 0x1e08, // 01xxx
 * @devdesc     QME Rvid Enable Timeout
 * @custdesc    Microcode minimal voltage enable error
 */
-VMIN_ENA_RVID_ACTIVE_TIMEOUT              = 0x1e09,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -453,7 +419,6 @@ VMIN_ENA_RVID_ACTIVE_TIMEOUT              = 0x1e09,
 * @devdesc     QME Vmin PG State Idle Timeout
 * @custdesc    Microcode minimal voltage sequence error
 */
-VMIN_ENA_VDD_PG_STATE_TIMEOUT             = 0x1e0a,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -465,7 +430,6 @@ VMIN_ENA_VDD_PG_STATE_TIMEOUT             = 0x1e0a,
 * @devdesc     QME Vmin PFET Enable Actual Unexpected
 * @custdesc    Microcode minimal voltage check error
 */
-VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED    = 0x1e0d,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -477,7 +441,6 @@ VMIN_ENA_VDD_PFET_ENABLE_ACTUAL_FAILED    = 0x1e0d,
 * @devdesc     QME L3 Purge Timeout
 * @custdesc    Microcode cache purging function error 3
 */
-L3_PURGE_DONE_TIMEOUT                     = 0x1e1c, // 11xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -489,7 +452,6 @@ L3_PURGE_DONE_TIMEOUT                     = 0x1e1c, // 11xxx
 * @devdesc     QME Powerbus Purge Timeout
 * @custdesc    Microcode bus purging function error
 */
-POWERBUS_PURGE_DONE_TIMEOUT               = 0x1e1d,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -501,7 +463,6 @@ POWERBUS_PURGE_DONE_TIMEOUT               = 0x1e1d,
 * @devdesc     QME Chtm Purge Timeout
 * @custdesc    Microcode trace purging function error
 */
-CHTM_PURGE_DONE_TIMEOUT                   = 0x1e1e,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_ENTRY
@@ -513,7 +474,6 @@ CHTM_PURGE_DONE_TIMEOUT                   = 0x1e1e,
 * @devdesc     QME L3 Clock Sync Drop Timeout
 * @custdesc    Microcode cache clock synchronization disable error
 */
-L3_CLK_SYNC_DROP_TIMEOUT                  = 0x1e1f,
 
 // -----------------------------------------------------------
 // stop exit
@@ -528,7 +488,6 @@ L3_CLK_SYNC_DROP_TIMEOUT                  = 0x1e1f,
 * @devdesc     QME CL2 Clock Sync Done Timeout
 * @custdesc    Microcode core clock synchronization error
 */
-ECL2_CLK_SYNC_DONE_TIMEOUT                = 0x1f00, // 00xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -540,7 +499,6 @@ ECL2_CLK_SYNC_DONE_TIMEOUT                = 0x1f00, // 00xxx
 * @devdesc     QME Resclk Exit Timeout
 * @custdesc    Microcode resonant clocking disable error
 */
-CORE_CHANGE_DONE_RESCLK_EXIT_TIMEOUT      = 0x1f01,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -552,7 +510,6 @@ CORE_CHANGE_DONE_RESCLK_EXIT_TIMEOUT      = 0x1f01,
 * @devdesc     QME Shadow Disable FDCR Update Timeout
 * @custdesc    Microcode voltage droop config backup disable error
 */
-SHADOW_DIS_FDCR_UPDATE_IN_PROG_TIMEOUT    = 0x1f02,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -564,7 +521,6 @@ SHADOW_DIS_FDCR_UPDATE_IN_PROG_TIMEOUT    = 0x1f02,
 * @devdesc     QME Shadow Disable State Timeout
 * @custdesc    Microcode core state backup disable error
 */
-SHADOW_DIS_CORE_SHADOW_STATE_TIMEOUT      = 0x1f03,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -576,7 +532,6 @@ SHADOW_DIS_CORE_SHADOW_STATE_TIMEOUT      = 0x1f03,
 * @devdesc     QME TimeFac Sent Done Timeout
 * @custdesc    Microcode core time backup disable error
 */
-TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT      = 0x1f04,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -588,7 +543,6 @@ TIMEFAC_TO_PC_XFER_SENT_DONE_TIMEOUT      = 0x1f04,
 * @devdesc     QME TimeFac Sent Error detected
 * @custdesc    Microcode core time backup disable check error
 */
-TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED    = 0x1f05,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -600,7 +554,6 @@ TIMEFAC_TO_PC_TFCSR_ERROR_CHECK_FAILED    = 0x1f05,
 * @devdesc     msgsnd vector block copy fail detected
 * @custdesc    Microcode deep stop function workaround error
 */
-MSG_SEND_BLOCK_COPY_FAILED                = 0x1f06,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -612,7 +565,6 @@ MSG_SEND_BLOCK_COPY_FAILED                = 0x1f06,
 * @devdesc     Sibling cores that are in stop1 are not recorded
 * @custdesc    Microcode fused core pair wakeup error
 */
-QME_STOP_WAKEUP_PAIR_MISMATCH             = 0x1f07,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -624,7 +576,6 @@ QME_STOP_WAKEUP_PAIR_MISMATCH             = 0x1f07,
 * @devdesc     QME Rvid Bypass Timeout
 * @custdesc    Microcode minimal voltage bypass error
 */
-VMIN_DIS_RVID_BYPASS_TIMEOUT              = 0x1f08, // 01xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -636,7 +587,6 @@ VMIN_DIS_RVID_BYPASS_TIMEOUT              = 0x1f08, // 01xxx
 * @devdesc     QME Rvid Enabled Timeout
 * @custdesc    Microcode minimal voltage disable error
 */
-VMIN_DIS_RVID_ENABLED_TIMEOUT             = 0x1f09,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -648,7 +598,6 @@ VMIN_DIS_RVID_ENABLED_TIMEOUT             = 0x1f09,
 * @devdesc     QME Vmin Disable PFET Enable Timeout
 * @custdesc    Microcode minimal voltage control disable error
 */
-VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT          = 0x1f0a,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -660,7 +609,6 @@ VMIN_DIS_VDD_PFET_ENABLE_TIMEOUT          = 0x1f0a,
 * @devdesc     QME Vmin Disable PG State Timeout
 * @custdesc    Microcode minimal voltage sequence disable error
 */
-VMIN_DIS_VDD_PG_STATE_TIMEOUT             = 0x1f0d,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -672,7 +620,6 @@ VMIN_DIS_VDD_PG_STATE_TIMEOUT             = 0x1f0d,
 * @devdesc     QME L3 Clock Sync Done Timeout
 * @custdesc    Microcode cache clock synchronization error
 */
-L3_CLK_SYNC_DONE_TIMEOUT                  = 0x1f1c, // 11xxx
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -684,7 +631,6 @@ L3_CLK_SYNC_DONE_TIMEOUT                  = 0x1f1c, // 11xxx
 * @devdesc     QME Block Copy Scan Ring Failed
 * @custdesc    Microcode deep stop core data error
 */
-QME_STOP_BLOCK_COPY_SCAN_RING_FAILED      = 0x1f1d,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -696,7 +642,6 @@ QME_STOP_BLOCK_COPY_SCAN_RING_FAILED      = 0x1f1d,
 * @devdesc     QME Block Copy Cl2 Scom Failed
 * @custdesc    Microcode deep stop core setting error
 */
-QME_STOP_BLOCK_COPY_CL2_SCOM_FAILED       = 0x1f1e,
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_STOP_EXIT
@@ -708,7 +653,6 @@ QME_STOP_BLOCK_COPY_CL2_SCOM_FAILED       = 0x1f1e,
 * @devdesc     QME Block Copy L3 Scom Failed
 * @custdesc    Microcode deep stop cache setting error
 */
-QME_STOP_BLOCK_COPY_L3_SCOM_FAILED        = 0x1f1f,
 
 // -----------------------------------------------------------
 // putring, code not defined here but in qme_service_codes.h
