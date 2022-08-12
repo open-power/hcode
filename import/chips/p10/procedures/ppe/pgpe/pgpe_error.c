@@ -42,6 +42,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VDD_INVALID_BUSNUM
     * @devdesc     AVS: Voltage operation invalid VDD bus number
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VDD_INVALID_BUSNUM},//1
     /*
@@ -50,6 +51,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VCS_INVALID_BUSNUM
     * @devdesc     AVS: Voltage operation invalid VCS bus number
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VCS_INVALID_BUSNUM},//2
     /*
@@ -58,6 +60,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_INIT_ERR
     * @devdesc     AVS: Voltage operation bus initialization error.
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_INIT_ERR},//3
     /*
@@ -66,6 +69,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_OUT_OF_BOUNDS
     * @devdesc     AVS: Voltage Write is beyond the Hcode defined bounds
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_OUT_OF_BOUNDS},//4
     /*
@@ -74,6 +78,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT
     * @devdesc     AVS: Voltage Read - OnGoing Flag Timeout
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT},//5
     /*
@@ -82,6 +87,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_RESYNC_ERROR
     * @devdesc     AVS: Voltage Read - Bus resync failed
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_RESYNC_ERROR},//6
     /*
@@ -90,6 +96,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_ONGOING_TIMEOUT
     * @devdesc     AVS: Voltage Write - OnGoing Flag Timeout.
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_ONGOING_TIMEOUT},//7
     /*
@@ -98,6 +105,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_RESYNC_ERROR
     * @devdesc     AVS: Voltage Write - Bus resync failed
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_RESYNC_ERROR},//8
 
@@ -108,6 +116,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_CURRENT
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT
     * @devdesc     AVS: Current Read - Ongoing Timeout
+    * @custdesc    Runtime embedded firmware error during AVS current operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_CURRENT, 0, PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT},//9
     /*
@@ -116,6 +125,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_CURRENT
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_RESYNC_ERROR
     * @devdesc     AVS: Current Read - Bus resync failed
+    * @custdesc    Runtime embedded firmware error during AVS current operation
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_CURRENT, 0, PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_RESYNC_ERROR},//10
 
@@ -126,6 +136,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_DPLL
     * @userdata4   PGPE_ERR_EXT_CODE_DPLL_WRITE_UPDATE_COMPLETE_AND_LOCK_TIMEOUT
     * @devdesc     DPLL: Did not get update complete and lock
+    * @custdesc    Runtime embedded firmware error during frequency update
     */
     {PGPE_ERR_MODULE_DPLL, PGPE_ERR_REASON_CODE_DPLL, 0, PGPE_ERR_EXT_CODE_DPLL_WRITE_UPDATE_COMPLETE_AND_LOCK_TIMEOUT},//11
     /*
@@ -134,6 +145,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_DPLL
     * @userdata4   PGPE_ERR_EXT_CODE_DPLL_UNSUPPORTED_MODE
     * @devdesc     DPLL: Attempt was made to put the DPLL in an unsupported mode.
+    * @custdesc    Runtime embedded firmware error during frequency update
     */
     {PGPE_ERR_MODULE_DPLL, PGPE_ERR_REASON_CODE_DPLL, 0, PGPE_ERR_EXT_CODE_DPLL_UNSUPPORTED_MODE},//12
 
@@ -144,6 +156,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_RESCLK
     * @userdata4   PGPE_ERR_EXT_CODE_RESCLK_RCIMR_AT_ENABLEMENT_NOT_EQUAL
     * @devdesc     RES: Mode register at enablement is does not match
+    * @custdesc    Not applicable
     */
     {PGPE_ERR_MODULE_RESCLK, PGPE_ERR_REASON_CODE_RESCLK, 0, PGPE_ERR_EXT_CODE_RESCLK_RCIMR_AT_ENABLEMENT_NOT_EQUAL},//13
     /*
@@ -152,6 +165,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_RESCLK
     * @userdata4   PGPE_ERR_EXT_CODE_RESCLK_RCPTR_PSTATE_ACK_TIMEOUT
     * @devdesc     RES: Pstate movement did not receive the necessary resonant clock acknowledgment
+    * @custdesc    Runtime embedded firmware error during resonance clock operation
     */
     {PGPE_ERR_MODULE_RESCLK, PGPE_ERR_REASON_CODE_RESCLK, 0, PGPE_ERR_EXT_CODE_RESCLK_RCPTR_PSTATE_ACK_TIMEOUT},//14
     /*
@@ -160,6 +174,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_RESCLK
     * @userdata4   PGPE_ERR_EXT_CODE_RESCLK_RCPTR_TGT_PSTATE_NOT_EQUAL
     * @devdesc     RES: Index pointer does not match the targeted Pstate value
+    * @custdesc    Runtime embedded firmware error during resonance clock operation
     */
     {PGPE_ERR_MODULE_RESCLK, PGPE_ERR_REASON_CODE_RESCLK, 0, PGPE_ERR_EXT_CODE_RESCLK_RCPTR_TGT_PSTATE_NOT_EQUAL},//15
 
@@ -170,6 +185,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_DDS
     * @userdata4   PGPE_ERR_EXT_CODE_DDS_FDCR_UPDATE_TIMEOUT
     * @devdesc     DDS: Update to the FDCR timed
+    * @custdesc    Runtime embedded firmware error during voltage droop sensor operation
     */
     {PGPE_ERR_MODULE_DDS, PGPE_ERR_REASON_CODE_DDS, 0, PGPE_ERR_EXT_CODE_DDS_FDCR_UPDATE_TIMEOUT},//16
 
@@ -181,6 +197,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_XGPE
     * @userdata4   PGPE_ERR_EXT_CODE_XGPE_PGPE_VRET_UPDATE_BAD_ACK
     * @devdesc     XGPE: Vretention for STOP 3 had a bad acknowledgement
+    * @custdesc    Runtime embedded firmware error during retention voltage operation
     */
     {PGPE_ERR_MODULE_XGPE, PGPE_ERR_REASON_CODE_XGPE, 0, PGPE_ERR_EXT_CODE_XGPE_PGPE_VRET_UPDATE_BAD_ACK},//17
 
@@ -192,6 +209,8 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @userdata1   OCCLFIR
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ
     * @devdesc     FIR: Unexpected OCC fault FIR event
+    * @custdesc    Runtime embedded fatal error
+    *
     */
     {PGPE_ERR_MODULE_OCC_FAULT, PGPE_ERR_REASON_CODE_IRQ_FAULT, 0, PGPE_ERR_EXT_CODE_PGPE_UNEXPECTED_OCC_FIR_IRQ },//18
     /*
@@ -200,6 +219,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_IRQ_FAULT
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_XSTOP_GPE2
     * @devdesc     XSTOP: PGPE halted due to system checkstop
+    * @custdesc    Runtime embedded fatal error
     */
     {PGPE_ERR_MODULE_XSTOP, PGPE_ERR_REASON_CODE_IRQ_FAULT, 0, PGPE_ERR_EXT_CODE_PGPE_XSTOP_GPE2},//19
     /*
@@ -208,6 +228,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_IRQ_FAULT
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_GPE3_ERROR
     * @devdesc     XGPE: Engine halted
+    * @custdesc    Runtime embedded fatal error
     */
     {PGPE_ERR_MODULE_XGPE_FAULT, PGPE_ERR_REASON_CODE_IRQ_FAULT, 0, PGPE_ERR_EXT_CODE_PGPE_GPE3_ERROR},//20
     /*
@@ -216,6 +237,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_IRQ_FAULT
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PVREF_ERROR
     * @devdesc     PVREF: Precision voltage reference error.  Only significant if RVRMs are enabled.
+    * @custdesc    Runtime embedded fatal error from RVRM
     *
     */
     {PGPE_ERR_MODULE_PVREF_FAULT, PGPE_ERR_REASON_CODE_IRQ_FAULT, 0, PGPE_ERR_EXT_CODE_PGPE_PVREF_ERROR},//21
@@ -227,6 +249,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_INVALID_PMCR_OWNER
     * @devdesc     PStates: Invalid Power Management Control Register owner requested
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_INVALID_PMCR_OWNER },//22
     /*
@@ -235,6 +258,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_CLIP_UPDT_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a clip update while in Safe Mode
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_CLIP_UPDT_IN_SAFE_MODE},//23
     /*
@@ -243,6 +267,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_CLIP_UPDT_WHILE_PENDING
     * @devdesc     PStates: PGPE received a clip update while a clip is pending
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_CLIP_UPDT_WHILE_PENDING},//24
     /*
@@ -251,6 +276,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PSTATE_START_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a Pstate start while in safe mode
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_PSTATE_START_IN_SAFE_MODE},//25
     /*
@@ -259,6 +285,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PSTATE_STOP_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a Pstate stop while in safe mode
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_PSTATE_STOP_IN_SAFE_MODE},//26
     /*
@@ -267,6 +294,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PSTATE_STOP_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a Pstate stop when already stopped
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_PSTATE_STOP_IN_PSTATE_STOPPED},//27
     /*
@@ -275,6 +303,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING
     * @devdesc     PStates: PGPE received a Pstate stop while a stop is pending
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_PSTATE_START_STOP_WHILE_PENDING },//28
     /*
@@ -283,6 +312,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_AND_PMCR_OWNER_NOT_OCC
     * @devdesc     PStates: PGPE received a set PMCR operation from OCC when it is not the PMCR owner
+    * @custdesc    Not applicable
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_AND_PMCR_OWNER_NOT_OCC},//29
     /*
@@ -291,6 +321,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a set PMCR operation from OCC while Pstates are stopped
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_IN_PSTATE_STOPPED},//30
     /*
@@ -299,6 +330,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a set PMCR operation from OCC while in safe mode
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_IN_SAFE_MODE},//31
     /*
@@ -307,6 +339,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_WHILE_PENDING
     * @devdesc     PStates: PGPE received a set PMCR operation from OCC while one is pending
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_WHILE_PENDING},//32
     /*
@@ -315,6 +348,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a set PCB type 1 PMCR request while Pstates are stopped
+    * @custdesc    Not applicable
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PSTATE_STOPPED},//33
     /*
@@ -323,6 +357,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PMCR_OWNER_OCC
     * @devdesc     PStates: PGPE received a set PCB type 1 PMCR request while Pstates are owned by OCC
+    * @custdesc     Not applicable
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PMCR_OWNER_OCC},//34
     /*
@@ -331,6 +366,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_PSTATES
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received request to enter safe mode while Pstates are stopped
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_EVENT_PROCESS, PGPE_ERR_REASON_CODE_PSTATES, 0, PGPE_ERR_EXT_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED},//35
 
@@ -341,6 +377,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_NULL_VRT_PTR
     * @devdesc     PStates: PGPE pointer from OCC to Voltage Ratio Table (VRT) is NULL
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_NULL_VRT_PTR}, //36
     /*
@@ -349,6 +386,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a Voltage Ratio Table (VRT) from OCC while in safe mode
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_SAFE_MODE}, //37
     /*
@@ -357,6 +395,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a Voltage Ratio Table (VRT) from OCC while Pstates are stopped
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_PSTATE_STOPPED}, //38
     /*
@@ -365,6 +404,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_WHILE_PENDING
     * @devdesc     PStates: PGPE received a Voltage Ratio Table (VRT) from OCC while one is pending
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_WHILE_PENDING}, //39
     /*
@@ -373,6 +413,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_WHILE_PENDING
     * @devdesc     PStates: PGPE received a WOF control operation from OCC while one is pending
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_WHILE_PENDING}, //40
     /*
@@ -381,6 +422,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_SAFE_MODE
     * @devdesc     PStates: PGPE received a WOF control operation from OCC while in safe mode
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_SAFE_MODE}, //41
     /*
@@ -389,6 +431,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a WOF control operation from OCC while Pstates are stopped
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_PSTATE_STOPPED}, //42
     /*
@@ -397,6 +440,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WHEN_ENABLED
     * @devdesc     PStates: PGPE received a WOF control enable operation from OCC while WOF is enabled
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WHEN_ENABLED}, //43
     /*
@@ -405,6 +449,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED
     * @devdesc     PStates: PGPE received a WOF control disable operation from OCC while PGPE WOF is not enabled
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED}, //44
     /*
@@ -413,6 +458,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED
     * @devdesc     PStates: PGPE received a WOF control disable operation from OCC while Pstates are stopped
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED}, //45
     /*
@@ -421,6 +467,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOF
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WITHOUT_VRT
     * @devdesc     PStates: PGPE received a WOF control enable operation from OCC without a previous VRT operation
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_PSTATE, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WITHOUT_VRT}, //46
     /*
@@ -429,6 +476,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_INJECT
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL
     * @devdesc     PStates: An injected critical error during Pstate actuation detected
+    * @custdesc    Runtime embedded firmware detected error injection
     */
     {PGPE_ERR_MODULE_EVENT_MANAGER, PGPE_ERR_REASON_CODE_INJECT, 0, PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL}, //47
     /*
@@ -437,6 +485,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_INJECT
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO
     * @devdesc     PStates: An injected info error during Pstate actuation detected
+    * @custdesc    Runtime embedded firmware detected error injection
     */
     {PGPE_ERR_MODULE_EVENT_MANAGER, PGPE_ERR_REASON_CODE_INJECT, 0, PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO}, //48
     /*
@@ -445,6 +494,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_INJECT
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_FIT_ERROR_INJECT
     * @devdesc     PStates: An injected error during PGPE Fixed Interval Timer (FIT) detected
+    * @custdesc    Runtime embedded firmware detected error injection
     */
     {PGPE_ERR_MODULE_EVENT_MANAGER, PGPE_ERR_REASON_CODE_INJECT, 0, PGPE_ERR_EXT_CODE_PGPE_FIT_ERROR_INJECT}, //49
 
@@ -454,6 +504,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_DPLL
     * @userdata4   PGPE_ERR_EXT_CODE_DPLL_PARITY_ERROR
     * @devdesc     PStates: A parity error was detected in accessing the Digital Phased Locked Loop (DPLL) circuit
+    * @custdesc    Runtime embedded fatal error from digital phase lock loop
     */
     {PGPE_ERR_MODULE_DPLL, PGPE_ERR_REASON_CODE_DPLL, 0, PGPE_ERR_EXT_CODE_DPLL_PARITY_ERROR}, //50
 
@@ -463,6 +514,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_NOT_IN_PGPE_CONTROL
     * @devdesc     PStates: A volage write was attempted to the AVSBus but control had been removed
+    * @custdesc    Runtime embedded firmware error during voltage update
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_NOT_IN_PGPE_CONTROL}, //51
     /*
@@ -471,6 +523,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_UNKNOWN_ERROR
     * @devdesc     PStates: A volage write was attempted to the AVSBus but an unknown error occurred
+    * @custdesc    Runtime embedded firmware error during voltage update
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_UNKNOWN_ERROR}, //52
     /*
@@ -479,6 +532,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_NOT_IN_PGPE_CONTROL
     * @devdesc     PStates: A volage read was attempted to the AVSBus but control had been removed
+    * @custdesc    Runtime embedded firmware error during voltage read
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_NOT_IN_PGPE_CONTROL},//53
     /*
@@ -487,6 +541,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_UNKNOWN_ERROR
     * @devdesc     PStates: A volage read was attempted to the AVSBus but an unknown error occurred
+    * @custdesc    Runtime embedded firmware error during voltage read
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_UNKNOWN_ERROR}, //54
     /*
@@ -495,6 +550,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_NOT_IN_PGPE_CONTROL
     * @devdesc     PStates: A currect read was attempted to the AVSBus but control had been removed
+    * @custdesc    Runtime embedded firmware error during current read
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_CURRENT, 0, PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_NOT_IN_PGPE_CONTROL}, //55
     /*
@@ -503,6 +559,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_UNKNOWN_ERROR
     * @devdesc     PStates: A current read was attempted to the AVSBus but an unknown error occurred
+    * @custdesc    Runtime embedded firmware error during current read
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_CURRENT, 0, PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_UNKNOWN_ERROR}, //56
     /*
@@ -511,6 +568,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
     * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION
     * @devdesc     PStates: An AVSBus Write returned status where the VRM took no action.  This is typically for a voltage that is higher than supported.
+    * @custdesc    Runtime embedded firmware error during voltage write
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION }, //57
 
@@ -521,6 +579,8 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_IRQ_FAULT
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_MACHINE_CHECK
     * @devdesc     PStates: A PGPE machiine check occured.  A common reason is SCOM failures wiith the address captured in the EDR
+    * @custdesc     PGPE IOTA: Kernel machine check due to register access failure.
+    * @custdesc    Runtime embedded firmware error
     */
     {PGPE_ERR_MODULE_MACHINE_CHECK, PGPE_ERR_REASON_CODE_IRQ_FAULT, 0, PGPE_ERR_EXT_CODE_PGPE_MACHINE_CHECK}, //58
 
@@ -531,6 +591,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @reasoncode  PGPE_ERR_REASON_CODE_WOV_OCS
     * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT
     * @devdesc     PStates: WOV Overvolt Max seen for 3 FIT ticks.
+    * @custdesc    Runtime embedded firmware error during frequency/voltage update
     */
     {PGPE_ERR_MODULE_WOV_OCS, PGPE_ERR_REASON_CODE_WOV_OCS, 0, PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT}, //59
 
@@ -542,8 +603,9 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @userdata1   Bus number
     * @userdata2   Rail number
     * @userdata3   Voltage zero count
-    * @userdata4   ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE
     * @devdesc     PStates: An AVSBus voltage read returned a value of 0.
+    * @custdesc    Runtime embedded firmware error during voltage read
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE}, //60
 
@@ -552,8 +614,9 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
     * @reasoncode  PGPE_ERR_REASON_CODE_CURRENT
-    * @userdata4   ERR_EXT_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE
     * @devdesc     PStates: An AVSBus current read returned a value of 0.
+    * @custdesc    Runtime embedded firmware error during current read
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_CURRENT, 0, PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE} //61
 };
