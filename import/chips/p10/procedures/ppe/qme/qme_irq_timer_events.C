@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2021                                                    */
+/* COPYRIGHT 2018,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -135,6 +135,7 @@ qme_mma_active_event()
     if( c_mask && G_qme_record.mma_modes_enabled == MMA_POFF_DYNAMIC )
     {
         qme_mma_stop_exit(c_mask);
+        qme_send_pig_type_a();
 
         //mask EIMR[28+c] mma_active
         data64_t mask_irqs     = {0};
@@ -263,6 +264,8 @@ qme_dec_handler()
                 p10_hcd_mma_poweroff(core_target);
 
                 MARK_TAG( c_mask, SE_MMA_STOPPED )
+
+                qme_send_pig_type_a();
 
                 // clean eisr for any leftover, check if einr is set so mma_active here would be real
                 c_eisr   = in32(QME_LCL_EISR) & BITS32(28, 4) & c_mask;

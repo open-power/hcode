@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2021                                                    */
+/* COPYRIGHT 2017,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -237,6 +237,7 @@ void qme_mma_active_event();
 void qme_pm_state_active_fast_event();
 void qme_regular_wakeup_slow_event();
 void qme_pm_state_active_slow_event();
+void qme_send_pig_type_a();
 
 // QME Timer Handlers
 void qme_fit_handler();
