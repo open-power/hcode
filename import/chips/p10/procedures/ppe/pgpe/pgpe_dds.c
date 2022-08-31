@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,6 +25,7 @@
 #include "pgpe.h"
 #include "pgpe_dds.h"
 #include "pgpe_pstate.h"
+#include "pgpe_wov_ocs.h"
 #include "pgpe_gppb.h"
 #include "p10_scom_eq.H"
 #include "p10_scom_eq_9.H"
@@ -111,6 +112,9 @@ void pgpe_dds_init(uint32_t pstate)
 
     G_pgpe_dds.fdcr_chip.value = 0;
 
+    G_pgpe_dds.init_ttsr_cnt = 0;
+    G_pgpe_dds.init_ttsr = 0;
+
     //3.Pre-DVFS DDS Update.
 
     uint32_t ccsr;
@@ -165,6 +169,25 @@ void pgpe_dds_init(uint32_t pstate)
                 expAck = expAck & (~QUAD_MASK(q));
                 //PK_TRACE_INF("DDS: quad_mask=0x%08x, ~quad_mask=0x%08x, expAck=0x%08x", QUAD_MASK(q), ~QUAD_MASK(q), expAck);
             }
+        }
+    }
+
+    {
+        // Read TTSR
+        uint64_t ttsr;
+        PPE_GETSCOM_MC_Q_OR(QME_TTSR, ttsr);
+
+        uint64_t ttsr_masked = ttsr & G_pgpe_wov_ocs.eco_ttsr_mask;
+        uint64_t thr_heavy_loss = ttsr_masked & 0X0F0F0F0F0F0F0F0F;
+
+        if (thr_heavy_loss)
+        {
+            pgpe_opt_set_word(0, (thr_heavy_loss & 0xFFFF0000) >> 32);
+            pgpe_opt_set_word(1, (thr_heavy_loss & 0x0000FFFF));
+            ppe_trace_op(PGPE_OPT_DDS_INIT_HVY, pgpe_opt_get());
+
+            G_pgpe_dds.init_ttsr_cnt++;
+            G_pgpe_dds.init_ttsr = thr_heavy_loss;
         }
     }
 

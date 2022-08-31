@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2017,2021
+# COPYRIGHT 2017,2022
 # [+] International Business Machines Corp.
 #
 #
@@ -58,6 +58,8 @@ PGPE_OBJS += iota_ppe42_vectors.o
 PGPE_OBJS += iota.o
 PGPE_OBJS += iota_debug_ptrs.o
 PGPE_OBJS += eabi.o
+PGPE_OBJS += div32.o
+PGPE_OBJS += div64.o
 PGPE_OBJS += ppe42_math.o
 PGPE_OBJS += ppe42_gcc.o
 PGPE_OBJS += ppe42_string.o
