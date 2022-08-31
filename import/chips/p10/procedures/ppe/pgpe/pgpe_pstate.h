@@ -117,6 +117,8 @@ typedef struct pgpe_pstate
     pgpe_profile_t dds_prof_post; //94
     pgpe_profile_t resclk_prof; //98
     uint32_t marker; //99
+    uint32_t start_ttsr_cnt;  //100
+    uint64_t start_ttsr;   //101
 } pgpe_pstate_t;
 
 

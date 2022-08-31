@@ -23,22 +23,125 @@
 /*                                                                        */
 /* IBM_PROLOG_END_TAG                                                     */
 
+#include "pgpe.h"
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_gppb.h"
 #include "p10_oci_proc.H"
+#include "p10_scom_perv_a.H"
 #include "pgpe_error.h"
+#include "pgpe_gppb.h"
+
+typedef union
+{
+    uint64_t value;
+    struct
+    {
+        uint32_t upper;
+        uint32_t lower;
+    } words;
+} tod_t;
 
 //Local Functions
-uint32_t pgpe_avsbus_calc_crc(uint32_t data);
-uint32_t pgpe_avsbus_poll_trans_done(uint32_t bus_num);
-uint32_t pgpe_avsbus_drive_idle_frame(uint32_t bus_num);
-uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint32_t bus_num, uint32_t rail_num);
-uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint32_t bus_num, uint32_t rail_num);
+// uint32_t pgpe_avsbus_calc_crc(uint32_t data);
+// uint32_t pgpe_avsbus_poll_trans_done(uint32_t bus_num);
+// uint32_t pgpe_avsbus_drive_idle_frame(uint32_t bus_num);
+// uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint32_t bus_num, uint32_t rail_num);
+// uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint32_t bus_num, uint32_t rail_num);
 
 static uint32_t AVS_CONTROL_RETRIES = 500;
 static uint32_t AVS_RESYNC_RETRIES = 1;
 
 pgpe_avsbus_t G_pgpe_avsbus __attribute__((section (".data_structs")));
+
+inline uint32_t round_dec(uint32_t value)
+{
+    return (value * 10 + 5) / 10;
+}
+
+// Function to compute the difference in the timebase
+uint32_t delta_tb(uint32_t start_time, uint32_t end_time)
+{
+    uint32_t tb_delta;
+
+    if(start_time > end_time)
+    {
+        start_time += 0xFFFFFFFF;
+    }
+
+    tb_delta = end_time - start_time;
+    return tb_delta;
+}
+
+// Function to compute number of timebase ticks given time (in us)
+uint32_t us_to_tb(uint32_t us)
+{
+    // ns/(ns/tb) = tb
+    return round_dec(us * 1000 / G_pgpe_avsbus.timebase_tick_ns);
+}
+
+static inline void probe0_assert()
+{
+    if(in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW) & BIT32(PGPE_PROBE_ENABLE))
+    {
+        uint64_t data = 0;
+
+        // Assert
+        // putscom pu 01000008 0 8 28     # read-modify-write
+        // 28 = 0010 1000
+        PPE_GETSCOM(0x01000008, data);
+
+        data = data & ~BIT64(11) & ~BIT64(13); //clear deassert bits
+
+        PPE_PUTSCOM(0x01000008, (data | BIT64(10) | BIT64 (12)));
+    }
+}
+
+static inline void probe0_deassert()
+{
+    if(in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW) & BIT32(PGPE_PROBE_ENABLE))
+    {
+        uint64_t data = 0;
+
+        // Deassert
+        // putscom pu 01000008 0 8 14     # read-modify-write
+        // 14 = 0001 0100
+
+        PPE_GETSCOM(0x01000008, data);
+
+        data = data & ~BIT64(10) & ~BIT64(12); //clear assert bits 2 and 4
+
+        PPE_PUTSCOM(0x01000008, (data | BIT64(11) | BIT64 (13)));
+    }
+}
+
+void pgpe_avs_profile(avs_profile_t* p, uint32_t start_time)
+{
+    if(in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_RW) & BIT32(PGPE_AVS_PROFILE_ENABLE))
+    {
+        uint32_t end_time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+        uint32_t tb_delta = end_time - start_time;
+
+        if(start_time > end_time)
+        {
+            tb_delta += 0xFFFFFFFF;
+        }
+
+        if(tb_delta > p->max_time)
+        {
+            p->max_time = tb_delta;
+        }
+
+        if(p->min_time == 0 || tb_delta < p->min_time)
+        {
+            p->min_time = tb_delta;
+        }
+
+        p->total_time += tb_delta;
+        p->cnt++;
+
+        p->avg_time = p->total_time / p->cnt;
+    }
+}
 
 uint32_t pgpe_avsbus_calc_crc(uint32_t data)
 {
@@ -132,9 +235,12 @@ uint32_t pgpe_avsbus_drive_idle_frame(uint32_t bus_num)
 //#################################################################################################
 // Function which writes to OCB registers to initiate a AVS write transaction
 //#################################################################################################
-uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint32_t bus_num, uint32_t rail_num)
+uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data,  int32_t delta_volt_mv, uint32_t bus_num,
+                                 uint32_t rail_num)
 {
     uint8_t  rc = 0, retry_cnt = 0, done = 0, retry_cnt_avsbus_not_in_ctrl = 0;
+
+
     uint32_t cmd_frame = 0;
     uint32_t slave_ack  = 0;
 
@@ -144,7 +250,6 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
     uint32_t cmd_group = 0;
     uint32_t crc = 0;
     uint32_t bus_mask = bus_num << O2S_BUSNUM_OFFSET_SHIFT;
-
 
     // Clear sticky bits in o2s_status_reg
     out32(TP_TPCHIP_OCC_OCI_OCB_O2SCMD0A  | bus_mask, 0x40000000);
@@ -168,21 +273,19 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint
 
         // Wait on o2s_ongoing = 0
         rc = pgpe_avsbus_poll_trans_done(bus_num);
+        slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A | bus_mask);
 
-        if (rc)
+        if (!rc)
         {
             done = 1;
         }
         else
         {
-            slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A | bus_mask);
-
             //Non-zero SlaveAck
-            if(slave_ack & 0xC0000000)
+            if(slave_ack & AVS_ACK_PREFIX)
             {
-
                 //If AVSBUS Control taken away then retry multiple times
-                if (!(slave_ack & 0x04000000))
+                if (!(slave_ack & AVS_ACK_BUS_CONTROL))
                 {
                     if (retry_cnt_avsbus_not_in_ctrl < AVS_CONTROL_RETRIES)
                     {
@@ -266,7 +369,7 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
     crc = pgpe_avsbus_calc_crc(cmd_frame);
     cmd_frame = cmd_frame | crc;
 
-    PK_TRACE_DBG("AVS: Drive_R Cmd_Frame=0x%08x", cmd_frame);
+    // PK_TRACE_DBG("AVS: Drive_R Cmd_Frame=0x%08x", cmd_frame);
 
     do
     {
@@ -285,12 +388,21 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
             // Read returned voltage value from Read frame
             slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A  | bus_mask);
 
+            //                  bits
+            // Slave Ack Frame: 0:1 Slave Ack encode (with 0b00 being a "good" value)
+            //                  2   Reserved
+            //                  3:7 Status Response
+            //                      3: Vdone
+            //                      4: Status Alert,
+            //                      5: AVSControl
+            //                      6-7: MfgSpecific
+
             //Non-zero SlaveAck
-            if(slave_ack & 0xC0000000)
+            if(slave_ack & AVS_ACK_PREFIX)
             {
 
                 //If AVSBUS Control taken away then retry multiple times
-                if (!(slave_ack & 0x04000000))
+                if (!(slave_ack & AVS_ACK_BUS_CONTROL))
                 {
                     if (retry_cnt_avsbus_not_in_ctrl < AVS_CONTROL_RETRIES)
                     {
@@ -346,15 +458,32 @@ void pgpe_avsbus_init()
     PK_TRACE_INF("AVS: VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                  pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(), pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
 
+    G_pgpe_avsbus.to_dly_mult = 10;  // Timeout multiplier
+
     G_pgpe_avsbus.voltage_zero_cnt = 0;
     G_pgpe_avsbus.current_zero_cnt = 0;
     G_pgpe_avsbus.idd_current_thrshd = 0;
     G_pgpe_avsbus.ics_current_thrshd = 0;
 
+    //Initialize PGPE cycle time to a picosecond value (for integer representation)
+    // 1/600MHz = 0.001667 => 1e7/600 = 16666 (1666.6ps)
+    // Round:  16666 + 5 => 16671 / 10 = 1667ps
+    G_pgpe_avsbus.occ_cyc_time_ps = round_dec(1000000 / (pgpe_gppb_get_occ_complex_frequency_mhz()));
+
+    G_pgpe_avsbus.timebase_tick_ns = round_dec(2 * 10 * 1000 / pgpe_gppb_get_occ_complex_frequency_mhz());
+
+    PK_TRACE_INF("AVS: occ_freq Mhz                         = %u",    pgpe_gppb_get_occ_complex_frequency_mhz());
+    PK_TRACE_INF("AVS: occ_cyc_time_ps                      = %u",    G_pgpe_avsbus.occ_cyc_time_ps);
+    PK_TRACE_INF("AVS: TB tick time                         = %u ns", G_pgpe_avsbus.timebase_tick_ns);
+
     //Initialize VDD
     if (pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num() != 0xFF)
     {
         pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num());
+
+        // Set the Vdone timeout
+        G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VDD] = us_to_tb(2000);  // 2ms
+        G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VDD] = G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VDD];
     }
     else
     {
@@ -367,6 +496,9 @@ void pgpe_avsbus_init()
     if (pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num() != 0xFF)
     {
         pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num());
+
+        // Set the Vdone timeout
+        G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VCS] = us_to_tb(2000);  // 2ms
     }
     else
     {
@@ -379,6 +511,10 @@ void pgpe_avsbus_init()
     if (pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num() != 0xFF)
     {
         pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
+
+        // Set the Vdone timeout
+        G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VCS] = us_to_tb(2000);  // 2ms
+        G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VCS] = G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VCS];
     }
     else
     {
@@ -386,6 +522,11 @@ void pgpe_avsbus_init()
         pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VCS_INVALID_BUSNUM);
         pgpe_error_state_loop();
     }
+
+    PK_TRACE_INF("AVS: VDD TB tick time (incr, decr)         = %u %u tb ticks",
+                 G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VDD], G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VDD]);
+    PK_TRACE_INF("AVS: VCS TB tick time (incr, decr)         = %u %u tb ticks",
+                 G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VCS], G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VCS]);
 }
 
 
@@ -443,12 +584,74 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
     }
 }
 
-void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv)
+// Note: this is called by routine already in protected context
+uint32_t pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_status)
 {
+    uint32_t rc = AVS_RC_SUCCESS;
+
+    if (bus_num != 0xFF)
+    {
+        rc = pgpe_avsbus_drive_read(AVS_CMD_STATUS_RW, ret_status, bus_num, rail_num);
+
+        switch (rc)
+        {
+            case AVS_RC_SUCCESS:
+                PK_TRACE_DBG("AVS: Stat_R, Success!");
+                break;
+
+            case AVS_RC_ONGOING_TIMEOUT:
+                PK_TRACE_ERR("AVS: Stat_R, OnGoing Flag Timeout");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_NO_ACTION:
+                PK_TRACE_ERR("AVS: Stat_R, OnGoing Flag Timeout");
+                pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_RESYNC_ERROR:
+                PK_TRACE_ERR("AVS: Stat_R, Resync Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_RESYNC_ERROR);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
+                PK_TRACE_ERR("AVS: Stat_R, Not in PGPE Control");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_NOT_IN_PGPE_CONTROL);
+                pgpe_error_state_loop();
+                break;
+
+            default:
+                PK_TRACE_ERR("AVS: Stat_R, Unknown Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_UNKNOWN_ERROR);
+                pgpe_error_state_loop();
+                break;
+        }
+    }
+    else
+    {
+        PK_TRACE_ERR("AVS: Stat_R, bus_num=%u not available", bus_num)
+        *ret_status = 0;
+        rc = 0xFF;
+    }
+
+    return rc;
+}
+
+void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv,  int32_t delta_volt_mv,
+                               uint32_t rail)
+{
+    uint32_t rc = 0;
+    uint32_t done = 0;
+    uint32_t vdone_retry_cnt = 0;
+    uint32_t write_start_tb = 0;
+    uint32_t vdone_end_tb = 0;
+    uint32_t vdone_timeout_delta_tb = 0;
+
     PkMachineContext ctx;
     pk_critical_section_enter(&ctx);
-    uint32_t  rc = 0;
-    uint32_t  cmd_data_type = 0; // 0b0000=Target rail voltage
 
     if (bus_num != 0xFF)
     {
@@ -459,8 +662,24 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
             pgpe_error_state_loop();
         }
 
+        // Assert probe0
+        probe0_assert();
+
+        uint32_t time = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+
+        if (delta_volt_mv >= 0)
+        {
+            G_pgpe_avsbus.delta_tb[rail] = G_pgpe_avsbus.incr_to_dly_tb[rail];
+        }
+        else
+        {
+            G_pgpe_avsbus.delta_tb[rail] = G_pgpe_avsbus.decr_to_dly_tb[rail];
+        }
+
         // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
-        rc = pgpe_avsbus_drive_write(cmd_data_type, volt_mv, bus_num, rail_num);
+        write_start_tb = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+
+        rc = pgpe_avsbus_drive_write(AVS_CMD_VOLTAGE_RW, volt_mv, delta_volt_mv, bus_num, rail_num);
 
         switch (rc)
         {
@@ -498,6 +717,53 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
                 pgpe_error_state_loop();
                 break;
         }
+
+        // Poll for Vdone with timeout
+        do
+        {
+            uint32_t ret_status;
+
+            rc = pgpe_avsbus_status_read( bus_num, rail_num, &ret_status);
+
+            if ( rc )
+            {
+                done = 1;  // due to error
+            }
+            else
+            {
+                // Check for Vdone being set to indicate the transition has completed
+                //
+                // <VDone> - A single bit flag that will be 0b while the rail
+                // is off or powering up, it will change to 1b as soon as the
+                // voltage has reached the set operating point, and will
+                // again transition to 0b when a new target is committed.
+                vdone_end_tb = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+                vdone_timeout_delta_tb = delta_tb(write_start_tb, vdone_end_tb);
+
+                if ( ret_status & AVS_STAT_VDONE )
+                {
+                    probe0_deassert();
+                    pgpe_avs_profile(&G_pgpe_avsbus.voltage_write[rail], time);
+                    done = 1;
+                }
+                else
+                {
+                    if ( vdone_timeout_delta_tb > G_pgpe_avsbus.delta_tb[rail] )
+                    {
+                        PK_TRACE_INF("AVS: Volt_W Timeout:  retries %d", vdone_retry_cnt);
+                        PK_TRACE_INF("AVS: Volt_W Timeout:  actual %d threshold %d", vdone_timeout_delta_tb, G_pgpe_avsbus.delta_tb[rail]);
+                        rc = AVS_RC_VDONE_TIMEOUT;
+                        pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_VDONE_TIMEOUT);
+                        pgpe_error_state_loop();
+                    }
+                    else
+                    {
+                        vdone_retry_cnt++;
+                    }
+                }
+            }
+        }
+        while(!done);
     }
     else
     {
@@ -515,7 +781,7 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
     if (bus_num != 0xFF)
     {
-        rc = pgpe_avsbus_drive_read(0x0, ret_volt, bus_num, rail_num);
+        rc = pgpe_avsbus_drive_read(AVS_CMD_VOLTAGE_RW, ret_volt, bus_num, rail_num);
 
         switch (rc)
         {
@@ -581,7 +847,7 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
     if (bus_num != 0xFF)
     {
-        rc = pgpe_avsbus_drive_read(0x2, ret_current, bus_num, rail_num);
+        rc = pgpe_avsbus_drive_read(AVS_CMD_CURRENT_READ, ret_current, bus_num, rail_num);
 
         switch (rc)
         {

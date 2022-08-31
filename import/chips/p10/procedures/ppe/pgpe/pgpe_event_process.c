@@ -34,6 +34,7 @@
 #include "p10_oci_proc_7.H"
 #include "p10_scom_eq_7.H"
 #include "p10_scom_eq_3.H"
+#include "p10_scom_eq_b.H"
 #include "p10_scom_c_4.H"
 #include "p10_scom_proc_a.H"
 #include "p10_scom_proc_b.H"
@@ -155,6 +156,7 @@ void pgpe_process_pstate_start()
     uint32_t voltage, vcs_before_vdd = 0;
     int32_t move_frequency;
     dpll_mode_t dpll_mode;
+    int32_t delta_mv;
 
     //1.Set slewrate
     pgpe_dpll_set_slewrate(0x4, 0x4);
@@ -269,23 +271,48 @@ void pgpe_process_pstate_start()
 
     if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
     {
+        // As the voltages read may not have been from a Pstate (eg during boot),
+        // we'll use that voltage anyway for the delta calcuation as it's the best
+        // we have.
         if(vcs_before_vdd)
         {
+            delta_mv = G_pgpe_pstate.vcs_next - G_pgpe_pstate.vcs_curr_ext;
+            PK_TRACE_INF("PEP: Pstate start VCS first delta %d, next %d curr %d",
+                         delta_mv, G_pgpe_pstate.vcs_next, G_pgpe_pstate.vcs_curr)
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                                      pgpe_pstate_get(vcs_next_ext));
+                                      G_pgpe_pstate.vcs_next_ext,
+                                      delta_mv,
+                                      RUNTIME_RAIL_VCS);
+
+            delta_mv = G_pgpe_pstate.vdd_next - G_pgpe_pstate.vdd_curr_ext;
+            PK_TRACE_INF("PEP: Pstate start VDD first delta %d, next %d curr %d",
+                         delta_mv, G_pgpe_pstate.vdd_next, G_pgpe_pstate.vdd_curr);
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                      pgpe_pstate_get(vdd_next_ext));
+                                      G_pgpe_pstate.vdd_next_ext,
+                                      delta_mv,
+                                      RUNTIME_RAIL_VDD);
         }
         else
         {
+            delta_mv = G_pgpe_pstate.vdd_next - G_pgpe_pstate.vdd_curr_ext;
+            PK_TRACE_INF("PEP: Pstate start VDD first delta %d, next %d curr %d",
+                         delta_mv, G_pgpe_pstate.vdd_next, G_pgpe_pstate.vdd_curr);
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                      pgpe_pstate_get(vdd_next_ext));
+                                      G_pgpe_pstate.vdd_next_ext,
+                                      delta_mv,
+                                      RUNTIME_RAIL_VDD);
+
+            delta_mv = G_pgpe_pstate.vcs_next - G_pgpe_pstate.vcs_curr_ext;
+            PK_TRACE_INF("PEP: Pstate start VCS first delta %d, next %d curr %d",
+                         delta_mv, G_pgpe_pstate.vcs_next, G_pgpe_pstate.vcs_curr)
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                                      pgpe_pstate_get(vcs_next_ext));
+                                      G_pgpe_pstate.vcs_next_ext,
+                                      delta_mv,
+                                      RUNTIME_RAIL_VCS);
         }
     }
 
@@ -366,7 +393,7 @@ void pgpe_process_pstate_start()
             //SCOM should complete in roughly 50-70ns, so in ideal case the first SCOM read of
             //DPLL_STAT should have STAT_LOCK bit set. In case, it isn't, then we keep reading and
             //eventually timeout when DPLL_STAT has been read 8 times(~400-500ns), and STAT_LOCK bit
-            //is still not set.
+            //is still not set.pgp
             uint32_t cnt = 0;
 
             for (cnt = 0; cnt < PLL_LOCK_TIMEOUT_COUNT; ++cnt)
@@ -393,6 +420,30 @@ void pgpe_process_pstate_start()
 
     //Set OCCFLG2[PSTATE_PROTOCOL_ACTIVE]
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_PSTATE_PROTOCOL_ACTIVE));
+
+    {
+        // Read TTSR
+        uint64_t ttsr;
+        PPE_GETSCOM_MC_Q_OR(QME_TTSR, ttsr);
+
+        uint64_t ttsr_masked = ttsr & G_pgpe_wov_ocs.eco_ttsr_mask;
+        uint64_t thr_heavy_loss = ttsr_masked & 0X0F0F0F0F0F0F0F0F;
+
+        if (thr_heavy_loss)
+        {
+            pgpe_opt_set_word(0, (thr_heavy_loss & 0xFFFF0000) >> 32);
+            pgpe_opt_set_word(1, (thr_heavy_loss & 0x0000FFFF));
+            ppe_trace_op(PGPE_OPT_PSTATE_START_HVY, pgpe_opt_get());
+
+            G_pgpe_pstate.start_ttsr_cnt++;
+            G_pgpe_pstate.start_ttsr = thr_heavy_loss;
+        }
+    }
+    /*
+     *         PK_TRACE_INF("Halting on Pstate Start");
+     *         IOTA_PANIC(PGPE_XSTOP_GPE2)
+     */
+
 }
 
 void pgpe_process_pstate_stop()

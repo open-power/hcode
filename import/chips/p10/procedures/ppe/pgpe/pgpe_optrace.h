@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -51,6 +51,8 @@ enum PGPE_OPT_CODES
     PGPE_OPT_OCS_DIRTY_TYPE         = 0x93,
     PGPE_OPT_OCS_DROOP_COND         = 0x9e,
     PGPE_OPT_CEFF_OVERAGE_UPDT      = 0x9f,
+    PGPE_OPT_DDS_INIT_HVY           = 0xA2,
+    PGPE_OPT_PSTATE_START_HVY       = 0xA3,
 
     PGPE_OPT_WOF_VRT_ACK            = 0xc2,
     PGPE_OPT_WOF_CTRL_ACK           = 0xc4,
